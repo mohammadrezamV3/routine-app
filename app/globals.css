@@ -425,35 +425,39 @@
     .cal-controls{position:relative;}
     .cal-label{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); min-width:0;}
   }
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
   .cal-weekday{font-family:var(--font-plexmono), monospace; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
   .cal-cell{
-    aspect-ratio:1; border:1px solid var(--line); border-radius:9px; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:.15s; position:relative;
-    background:rgba(var(--bg-rgb), .042);
+    aspect-ratio:1; border:1px solid var(--line); border-radius:13px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:transform .15s ease, border-color .15s ease, background .2s ease; position:relative;
+    background:rgba(var(--bg-rgb), .05);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   }
-  .cal-cell:hover{border-color:var(--accent);}
+  .cal-cell:hover{border-color:var(--accent); transform:translateY(-1px);}
   .cal-cell:hover .cal-daynum{color:var(--accent);}
-  .cal-cell.empty{border-color:transparent; cursor:default; background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none;}
-  .cal-cell.empty:hover{border-color:transparent;}
-  .cal-cell.today{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent);}
+  .cal-cell.empty{border-color:transparent; cursor:default; background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;}
+  .cal-cell.empty:hover{border-color:transparent; transform:none;}
+  .cal-cell.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 14px rgba(var(--accent-rgb),.25);}
   .cal-cell.today .cal-daynum{color:var(--accent); font-weight:700;}
-  .cal-cell.done{background:var(--accent-dim); border-color:var(--accent);}
+  .cal-cell.done{
+    background:linear-gradient(155deg, rgba(var(--accent-rgb),.24), rgba(var(--accent-rgb),.06));
+    border-color:var(--accent);
+  }
   .cal-cell.done .cal-daynum{color:var(--accent); font-weight:700;}
   .cal-daynum{font-family:var(--font-plexmono), monospace; font-size:12.5px; color:var(--text); transition:color .15s ease;}
   .cal-check{
-    position:absolute; top:3px; left:3px; width:15px; height:15px; min-width:15px; border-radius:50%;
+    position:absolute; top:4px; left:4px; width:16px; height:16px; min-width:16px; border-radius:50%;
     background:var(--accent); display:flex; align-items:center; justify-content:center;
     opacity:0; transform:scale(.3) rotate(-15deg);
     transition:opacity .18s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
-    filter:drop-shadow(0 0 3px var(--accent-dim));
+    box-shadow:0 2px 6px rgba(var(--accent-rgb),.4);
   }
   .cal-cell.done .cal-check{opacity:1; transform:scale(1) rotate(0deg);}
   .cal-check svg{width:9px; height:9px; display:block;}
   .outing-dot{
     position:absolute; bottom:5px; left:50%; transform:translateX(-50%);
-    width:5px; height:5px; border-radius:50%; background:var(--accent);
+    width:5px; height:5px; border-radius:50%; background:var(--secondary);
   }
 
   .cal-head-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
@@ -565,6 +569,39 @@
     padding:6px 20px; margin-top:8px;
   }
   .checklist-glass .task:last-of-type{border-bottom:none;}
+
+  /* چک‌لیست دست‌ساز ترید — هر ردیف تیک + متن قابل‌ویرایش + کنترل‌های
+     جابه‌جایی/حذف؛ دکمه‌های بالا/پایین به‌جای درگ‌اند‌دراپ چون رو موبایل
+     برای لیست‌های کوتاه-متوسط قابل‌اعتمادتر و در دسترس‌تره */
+  .trade-checklist-row{
+    display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line);
+  }
+  .trade-checklist-row:last-of-type{border-bottom:none;}
+  .trade-checklist-row .task-name{flex:1; min-width:0;}
+  .trade-checklist-edit-input{
+    flex:1; min-width:0; background:none; border:none; border-bottom:1px dashed var(--accent);
+    color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:14.5px; padding:2px 0; outline:none;
+  }
+  .trade-checklist-controls{ display:flex; align-items:center; gap:2px; flex-shrink:0; }
+  .trade-checklist-controls button{
+    width:26px; height:26px; padding:0; border-radius:8px; border:none; background:none; color:var(--muted2);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:none;
+    backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .15s ease;
+  }
+  .trade-checklist-controls button:hover:not(:disabled){ color:var(--accent); background:none; box-shadow:none; }
+  .trade-checklist-controls button:disabled{ opacity:.25; cursor:default; }
+  .trade-checklist-controls button svg{ width:15px; height:15px; }
+  .trade-checklist-remove{ font-size:17px; color:var(--muted2); }
+  .trade-checklist-controls button.trade-checklist-remove:hover{ color:#E05252; }
+
+  .trade-checklist-add-row{ display:flex; gap:8px; padding:12px 0; align-items:center; }
+  .trade-checklist-add-row input{ flex:1; }
+  .trade-checklist-add-btn{
+    width:34px; height:34px; min-width:34px; border-radius:10px; font-size:18px; line-height:1;
+    padding:0; border:1px solid var(--accent); color:var(--accent); background:none;
+  }
+  .trade-checklist-add-btn:disabled{ opacity:.4; }
+  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-plexmono), monospace; padding-bottom:8px; }
   /* یک باکس شیشه‌ای عمومی و ساده — برای جعبه‌های کوچیک مثل وضعیت لودینگ رودمپ‌ساز */
   .glass-box{
     background:rgba(var(--bg-rgb), .13); border:1px solid var(--line); border-radius:16px;
@@ -607,11 +644,10 @@
 
   .week-timeline{position:relative; padding:10px 4px 6px; overflow:visible;}
   .week-timeline-track{position:relative; height:118px; width:100%; padding:0 20px;}
+  /* یک خط توپر که پر می‌شه، نه دیگه راه‌راه/چین‌دار */
   .wt-fill-track{
     position:absolute; right:20px; left:20px; top:26px; height:5px;
-    -webkit-mask-image:repeating-linear-gradient(to left, #000 0 9px, transparent 9px 17px);
-    mask-image:repeating-linear-gradient(to left, #000 0 9px, transparent 9px 17px);
-    background:var(--muted2); overflow:hidden; border-radius:3px;
+    background:var(--line); overflow:hidden; border-radius:3px;
   }
   .wt-fill-green{
     position:absolute; top:0; right:0; height:100%; width:var(--fill); background:var(--accent);
@@ -634,13 +670,15 @@
   }
   .wt-marker-col{display:flex; flex-direction:column; align-items:center; height:33px; justify-content:flex-end; position:relative;}
   .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-plexmono), monospace;}
+  /* هر برنامه یه ضربدر رو خط تایم‌لاینه — تا نگذشته رنگ اصلی‌شو داره،
+     بعد از گذشتنش (انجام‌شده) دایره‌ش سبز پر می‌شه و ضربدر رنگ پس‌زمینه می‌گیره */
   .wt-dot{
     width:14px; height:14px; border-radius:50%; background:var(--bg);
     border:2px solid var(--accent); box-sizing:border-box;
     position:relative; z-index:3; margin-bottom:-2.5px;
-    display:flex; align-items:center; justify-content:center; color:var(--bg);
+    display:flex; align-items:center; justify-content:center; color:var(--accent);
   }
-  .wt-dot-done{background:var(--accent);}
+  .wt-dot-done{background:var(--accent); color:var(--bg);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
   .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; margin-bottom:3px; white-space:nowrap;}
@@ -738,8 +776,6 @@
 
     .wt-fill-track{
       top:20px; bottom:20px; left:auto; right:46.5px; width:5px; height:auto;
-      -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0 9px, transparent 9px 17px);
-      mask-image:repeating-linear-gradient(to bottom, #000 0 9px, transparent 9px 17px);
     }
     .wt-fill-green{ top:0; right:0; height:var(--fill); width:100%; }
     .wt-fill-wave{ inset:-60% -3px auto -3px; width:calc(100% + 6px); height:220%; animation:wtWaveMoveV 5s linear infinite; }
@@ -1221,9 +1257,12 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 /* صفحات ورود/ثبت‌نام هدر سراسری رو مخفی می‌کنن (NavDrawer)، پس فضای همیشگیِ
    body برای اون هدر ثابت (padding-top:118px) دیگه لازم نیست؛ همون‌قدر که
    برای فلش بازگشت بالای باکس کافیه نگه می‌داریم */
-.auth-page{ margin-top:-98px; }
-.auth-shell{ max-width:440px; margin:0 auto; }
+/* باکس وسط صفحه بمونه: فلش بازگشت بالا ثابته، ولی شل (تب‌ها+باکس) توی فضای
+   باقی‌مونده‌ی ویوپورت عمودی وسط‌چین می‌شه */
+.auth-page{ margin-top:-98px; min-height:100vh; display:flex; flex-direction:column; }
+.auth-shell{ max-width:440px; margin:0 auto; width:100%; flex:1; display:flex; flex-direction:column; justify-content:center; padding-bottom:40px; }
 .auth-box{
+  position:relative;
   width:100%; box-sizing:border-box; margin-top:16px;
   border-radius:22px; padding:24px;
   background:rgba(255,255,255,.03);
@@ -1270,9 +1309,58 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .field-error .wsearch-newform-name{ border-color:#E05252; }
 .auth-terms-row{ border-bottom:none; padding:10px 0; }
 
+/* گام‌های ثبت‌نام چندمرحله‌ای — هر گام موقع ورود محو-بالا میاد، دقیقاً مثل
+   خودِ باکس؛ استفاده دوباره از همون keyframe */
+.auth-step{ animation:authBoxIn .32s ease both; }
+
+/* دکمه «گام قبل» داخل باکس، بالا-راست، فلشش سمت راسته — برعکسِ فلش
+   بازگشت‌به‌خانه‌ی بالای صفحه که سمت چپه، چون این یکی یعنی «یک قدم عقب توی
+   همین جریان RTL»، نه خروج از کل صفحه */
+.auth-step-back-btn{
+  position:absolute; top:16px; right:16px; z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  width:32px; height:32px; border-radius:999px;
+  border:1px solid var(--line); background:rgba(var(--bg-rgb),.5); color:var(--muted);
+  cursor:pointer; transition:border-color .2s ease, color .2s ease;
+}
+.auth-step-back-btn:hover{ border-color:var(--accent); color:var(--accent); }
+.auth-step-back-btn svg{ width:16px; height:16px; }
+
+/* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی */
+.auth-full-btn{
+  width:100%; margin-top:18px; border-radius:10px; padding:12px 0;
+  border:1px solid var(--accent); color:var(--bg); background:var(--accent);
+  font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+  transition:filter .15s ease;
+}
+.auth-full-btn:hover{ filter:brightness(1.08); }
+.auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; }
+
+/* ردیف مشترک دکمه ورود + فراموشی رمز، دقیقاً هم‌ردیف */
+.auth-submit-row{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; gap:12px; }
+.auth-submit-row .auth-forgot-link{ margin:0; }
+
+/* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
+.pw-strength{ margin-top:8px; }
+.pw-strength-bars{ display:flex; gap:4px; }
+.pw-strength-bar{ height:4px; flex:1 1 0; border-radius:2px; background:var(--line); transition:background .25s ease; }
+.pw-strength-label{ font-size:11px; margin-top:5px; font-weight:600; }
+.pw-strength-weak .pw-strength-bar.filled{ background:#E05252; }
+.pw-strength-weak .pw-strength-label{ color:#E05252; }
+.pw-strength-medium .pw-strength-bar.filled{ background:var(--secondary); }
+.pw-strength-medium .pw-strength-label{ color:var(--secondary); }
+.pw-strength-good .pw-strength-bar.filled{ background:var(--accent-soft); }
+.pw-strength-good .pw-strength-label{ color:var(--accent-soft); }
+.pw-strength-strong .pw-strength-bar.filled{ background:var(--accent); }
+.pw-strength-strong .pw-strength-label{ color:var(--accent); }
+
 /* ردیف بالای باکس ورود/ثبت‌نام — جایگزین هدر سایت که توی این بخش مخفیه؛
    فقط یک فلش بازگشت به صفحه اصلی، سرِ فلش سمت چپ (جهتِ «برگشت») */
-.auth-chrome-row{ display:flex; justify-content:flex-end; max-width:440px; margin:0 auto 10px; }
+/* width:100% عمداً صریحه — چون .auth-page الان flex-column‌ه (برای وسط‌چین
+   عمودیِ باکس)، بدون این، margin:auto این ردیف رو به‌جای کشیده‌شدن تمام‌عرض،
+   جمعش می‌کرد به‌اندازه‌ی خودِ دکمه و وسطِ صفحه قرارش می‌داد — یعنی
+   justify-content:flex-end اثری نداشت چون دیگه فضای خالی‌ای توی ردیف نبود */
+.auth-chrome-row{ display:flex; justify-content:flex-end; width:100%; max-width:440px; margin:0 auto 10px; box-sizing:border-box; }
 .auth-back-btn{
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
   width:38px; height:38px; border-radius:999px;
@@ -1391,18 +1479,25 @@ body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); b
 .landing-guest-link:hover{ color:var(--accent); background:none; box-shadow:none; border:none; }
 .landing-guest-link:active{ transform:none; }
 
-.landing-features{ display:flex; flex-direction:column; gap:12px; }
-@media (min-width:640px){
-  .landing-features{ display:grid; grid-template-columns:1fr 1fr; }
-}
-.landing-feature-card{
-  border-radius:22px; padding:18px 20px; border:1px solid rgba(var(--accent-rgb),.14);
+/* یک باکس واحد که هر ۱۲ ثانیه بین قابلیت‌های اپ می‌چرخه، به‌جای گرید جدا از
+   کارت‌ها — روی هاور/فوکس مکث می‌کنه تا وسط خوندن قطع نشه */
+.landing-carousel{ position:relative; }
+.landing-carousel-box{
+  border-radius:22px; padding:26px 24px; border:1px solid rgba(var(--accent-rgb),.14);
   background:rgba(255,255,255,.025);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
-  transition:border-color .2s ease, transform .2s ease;
+  text-align:center; min-height:130px;
+  display:flex; flex-direction:column; align-items:center;
+  animation:landingCarouselIn .42s ease both;
 }
-body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.5); }
-.landing-feature-card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+body[data-theme="light"] .landing-carousel-box{ background:rgba(255,255,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.5); }
+@keyframes landingCarouselIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+.landing-carousel-dots{ display:flex; justify-content:center; gap:8px; margin-top:16px; }
+.landing-carousel-dot{
+  width:8px; height:8px; border-radius:50%; border:none; padding:0; cursor:pointer;
+  background:var(--line); transition:background .2s ease, transform .2s ease;
+}
+.landing-carousel-dot.on{ background:var(--accent); transform:scale(1.3); }
 .landing-feature-icon{
   display:flex; align-items:center; justify-content:center; width:38px; height:38px;
   border-radius:50%; background:var(--accent-dim); color:var(--accent); margin-bottom:12px;
@@ -1419,13 +1514,11 @@ body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4);
 .landing-trust-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); }
 .landing-trust-item svg{ width:17px; height:17px; min-width:17px; }
 
-/* پلن‌ها — کارت‌ها روی موبایل همیشه یک‌ستونه، پلن مکس با بج و بردر سبز
-   برجسته می‌شه؛ جدول مقایسه‌ی زیرش (که عریض‌تره) داخل رَپر خودش با اسکرول
-   افقی جدا می‌شه تا چیدمان کلی صفحه توی موبایل بهم نریزه */
+/* پلن‌ها — عمداً همیشه یک‌ستونه و عمودی (حتی روی دسکتاپ)، چون هر کارت حالا
+   چند خط قابلیت + قیمت + ۴ گزینه مدت رو داره و توی گرید تنگ می‌شد؛ پلن مکس
+   با بج و بردر برجسته می‌شه؛ جدول مقایسه‌ی زیرش (عریض‌تره) داخل رَپر خودش
+   با اسکرول افقی جدا می‌شه تا چیدمان کلی صفحه توی موبایل بهم نریزه */
 .landing-plans{ display:flex; flex-direction:column; gap:14px; }
-@media (min-width:640px){
-  .landing-plans{ display:grid; grid-template-columns:repeat(4, 1fr); align-items:stretch; }
-}
 .landing-plan-card{
   position:relative; display:flex; flex-direction:column;
   border-radius:22px; padding:20px 18px; border:1px solid var(--line);
@@ -1444,8 +1537,25 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
   background:var(--secondary); color:#fff; font-size:10.5px; font-weight:800;
 }
 .landing-plan-name{ font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; }
-.landing-plan-price{ font-size:19px; font-weight:800; margin-top:6px; }
+
+.landing-plan-lines{ list-style:none; margin-top:12px; display:flex; flex-direction:column; gap:7px; }
+.landing-plan-lines li{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; color:var(--text); line-height:1.55; }
+.landing-plan-lines svg{ width:15px; height:15px; min-width:15px; color:var(--accent); margin-top:2px; }
+
+.landing-plan-price{ font-size:19px; font-weight:800; margin-top:14px; }
 .landing-plan-price span{ font-size:11px; font-weight:600; color:var(--muted2); margin-right:4px; }
+
+/* ۴ گزینه مدت اشتراک — انتخاب هرکدوم فقط قیمت بالای سرش رو عوض می‌کنه،
+   بدون رفتن به صفحه‌ی دیگه، تا مقایسه‌ی سریع باشه */
+.landing-plan-duration-row{ display:flex; gap:6px; margin-top:10px; }
+.landing-plan-duration{
+  flex:1 1 0; min-width:0; padding:7px 0; border-radius:8px; text-align:center;
+  border:1px solid var(--line); background:rgba(var(--bg-rgb),.5); color:var(--muted);
+  font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; cursor:pointer;
+  transition:border-color .15s ease, color .15s ease, background .15s ease;
+}
+.landing-plan-duration:hover{ border-color:var(--accent); color:var(--text); }
+.landing-plan-duration.on{ background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
 .landing-plan-blurb{ margin-top:10px; font-size:12.5px; color:var(--muted); line-height:1.6; flex:1; }
 
 /* جدول مقایسه زیر کارت‌های پلن — عریض‌تر از عرض ثابتِ .wrap می‌شه، پس

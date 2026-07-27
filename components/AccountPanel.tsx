@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
+import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -53,6 +55,8 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
+  const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
+  const [editingWakeSleep, setEditingWakeSleep] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -60,6 +64,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       setData(res.user || null);
       setLoading(false);
     });
+    getWakeSleepTimes().then(setWakeSleep);
   }, [status]);
 
   useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
@@ -155,7 +160,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           <div className="item-line">دسترسی نامحدود — نیازی به اشتراک نداری</div>
         ) : currentSub ? (
           <div className="item-line">
-            پلن {currentSub.plan.nameFa} — {currentSub.status === "ACTIVE" ? "فعال" : currentSub.status === "TRIAL" ? "دوره آزمایشی" : currentSub.status}
+            {currentSub.plan.nameFa} — {currentSub.status === "ACTIVE" ? "فعال" : currentSub.status === "TRIAL" ? "دوره آزمایشی" : currentSub.status}
           </div>
         ) : (
           <div className="item-line empty">
@@ -182,6 +187,17 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="item-line empty">هیچ ماژول فعالی نداری.</div>
         )}
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">ساعت بیداری و خواب</div>
+        <div className="item-line">
+          بیداری <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.wake || DEFAULT_WAKE}</b>
+          {" — "}خواب <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.sleep || DEFAULT_SLEEP}</b>
+        </div>
+        <button onClick={() => setEditingWakeSleep(true)} style={{ marginTop: 8, borderColor: "var(--accent)", color: "var(--accent)" }}>
+          تغییر ساعت‌ها
+        </button>
       </div>
 
       <div className="tm-extra">
@@ -215,6 +231,14 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           خروج از حساب
         </button>
       </div>
+
+      {editingWakeSleep && (
+        <WakeSleepSetup
+          initial={wakeSleep}
+          onClose={() => setEditingWakeSleep(false)}
+          onDone={(v) => { setWakeSleep(v); setEditingWakeSleep(false); }}
+        />
+      )}
     </ModalShell>
   );
 }

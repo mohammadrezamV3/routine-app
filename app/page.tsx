@@ -3,58 +3,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { LandingPage } from "@/components/LandingPage";
-import {
-  CAL_WEEK_ORDER,
-  FA_WEEKDAY,
-  FA_WEEKDAY_SHORT,
-  J_MONTHS,
-  faNum,
-  isoLocal,
-  jalaliMonthLength,
-  jalaliToGregorianApprox,
-  pad,
-  toJalali,
-} from "@/lib/jalali";
+import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, pad, toJalali } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
-import {
-  getCustomOccurrences,
-  getDailyRange,
-  getRemovedOccurrences,
-  getOutingDates,
-} from "@/lib/storage";
-import { DayModal } from "@/components/DayModal";
+import { getCustomOccurrences, getDailyRange, getRemovedOccurrences } from "@/lib/storage";
+import { getWakeSleepTimes, isWakeOnTime, timeToMinutes, DEFAULT_WAKE } from "@/lib/wakeSleep";
 
 const now = new Date();
 const todayKey = isoLocal(now);
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
-function isWakeOnTime(iso: string) {
-  const d = new Date(iso);
-  const h = d.getHours(), m = d.getMinutes();
-  return h < 9 || (h === 9 && m <= 30);
-}
-
 export default function HomePage() {
   const { status } = useSession();
   const [guestPreview, setGuestPreview] = useState(false);
-  const [calYear, setCalYear] = useState(jToday[0]);
-  const [calMonth, setCalMonth] = useState(jToday[1]);
-  const [monthCompletion, setMonthCompletion] = useState<Record<string, boolean>>({});
   const [streak, setStreak] = useState<number | null>(null);
   const [clock, setClock] = useState("");
-  const [openDate, setOpenDate] = useState<Date | null>(null);
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
-  const [outingDates, setOutingDates] = useState<Set<string>>(new Set());
-
-  function loadOutingDates() {
-    getOutingDates().then((arr) => setOutingDates(new Set(arr)));
-  }
+  const [wakeMinutes, setWakeMinutes] = useState(timeToMinutes(DEFAULT_WAKE));
 
   useEffect(() => {
     getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
     getCustomOccurrences().then(setCustomOcc);
-    loadOutingDates();
+    getWakeSleepTimes().then((v) => { if (v) setWakeMinutes(timeToMinutes(v.wake)); });
   }, []);
 
   useEffect(() => {
@@ -71,29 +41,6 @@ export default function HomePage() {
     () => ({ removedOccurrences: removedOcc, customOccurrences: customOcc }),
     [removedOcc, customOcc]
   );
-
-  async function loadMonth(jy: number, jm: number) {
-    const monthLen = jalaliMonthLength(jm);
-    const firstIso = isoLocal(jalaliToGregorianApprox(jy, jm, 1));
-    const lastIso = isoLocal(jalaliToGregorianApprox(jy, jm, monthLen));
-    const entries = await getDailyRange(firstIso, lastIso); // یک درخواست برای کل ماه
-
-    const result: Record<string, boolean> = {};
-    for (let d = 1; d <= monthLen; d++) {
-      const gd = jalaliToGregorianApprox(jy, jm, d);
-      const iso = isoLocal(gd);
-      const rec = entries[iso];
-      if (rec) {
-        const expected = tasksForDate(gd, opts);
-        const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        const wakeOK = rec.wake ? isWakeOnTime(rec.wake) : false;
-        result[iso] = expected.length > 0 && doneCount === expected.length && wakeOK;
-      } else {
-        result[iso] = false;
-      }
-    }
-    setMonthCompletion(result);
-  }
 
   async function computeStreak() {
     // یک درخواست برای کل بازه ۹۰ روزه، به‌جای تا ۹۰ درخواست جدا
@@ -114,7 +61,7 @@ export default function HomePage() {
       const rec = entries[key];
       if (!rec) break;
       const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-      const wakeOK = rec.wake ? isWakeOnTime(rec.wake) : false;
+      const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
       const fullDay = doneCount === expected.length && wakeOK;
       if (fullDay) {
         s++;
@@ -125,45 +72,9 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    loadMonth(calYear, calMonth);
     computeStreak();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calYear, calMonth, removedOcc, customOcc]);
-
-  const monthLen = jalaliMonthLength(calMonth);
-  const firstG = jalaliToGregorianApprox(calYear, calMonth, 1);
-  const startCol = (firstG.getDay() + 1) % 7;
-
-  const weekdayHeaders = CAL_WEEK_ORDER.map((d) => (
-    <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>
-  ));
-
-  const cells: JSX.Element[] = [];
-  for (let i = 0; i < startCol; i++) {
-    cells.push(<div key={"e" + i} className="cal-cell empty" />);
-  }
-  for (let d = 1; d <= monthLen; d++) {
-    const gd = jalaliToGregorianApprox(calYear, calMonth, d);
-    const iso = isoLocal(gd);
-    const isToday = iso === todayKey;
-    const done = !!monthCompletion[iso];
-    const hasOuting = outingDates.has(iso);
-    cells.push(
-      <div
-        key={iso}
-        onClick={() => setOpenDate(gd)}
-        className={`cal-cell ${isToday ? "today " : ""}${done ? "done" : ""}`}
-      >
-        <span className="cal-check">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-        <span className="cal-daynum mono">{faNum(d)}</span>
-        {hasOuting && <span className="outing-dot" />}
-      </div>
-    );
-  }
+  }, [removedOcc, customOcc, wakeMinutes]);
 
   const weekdayName = FA_WEEKDAY[now.getDay()];
 
@@ -172,67 +83,24 @@ export default function HomePage() {
   }
 
   return (
-    <>
-      <section id="sec-top">
-        <h1>روتین من</h1>
-        <div className="dateline">
-          <span>{weekdayName}</span>
-          <span className="mono">{faNum(jToday[2])} {J_MONTHS[jToday[1] - 1]} {faNum(jToday[0])}</span>
-          <span className="mono">{todayKey}</span>
-          <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>{clock}</span>
-        </div>
-        <div className="home-stats">
-          <svg className="streak-flame" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2.2c1.1 3.1-2.6 4.7-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-1.1-.5-1.6-.5-2.7 1.6.9 2.7 2.7 2.7 4.8a4.8 4.8 0 0 1-9.6 0c0-4.3 3.2-6.4 4.8-10.4Z" fill="currentColor" />
-          </svg>
-          استریک: <b>{streak === null ? "…" : faNum(streak)}</b> روز
-        </div>
-      </section>
+    <section id="sec-top">
+      <h1>روتین من</h1>
+      <div className="dateline">
+        <span>{weekdayName}</span>
+        <span className="mono">{faNum(jToday[2])} {J_MONTHS[jToday[1] - 1]} {faNum(jToday[0])}</span>
+        <span className="mono">{todayKey}</span>
+        <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>{clock}</span>
+      </div>
+      <div className="home-stats">
+        <svg className="streak-flame" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2.2c1.1 3.1-2.6 4.7-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-1.1-.5-1.6-.5-2.7 1.6.9 2.7 2.7 2.7 4.8a4.8 4.8 0 0 1-9.6 0c0-4.3 3.2-6.4 4.8-10.4Z" fill="currentColor" />
+        </svg>
+        استریک: <b>{streak === null ? "…" : faNum(streak)}</b> روز
+      </div>
 
-      <section id="sec-calendar">
-        <div className="cal-head-row">
-          <h2>تقویم ماهانه</h2>
-          <button
-            className="cal-return-btn"
-            aria-label="برگشت به امروز"
-            onClick={() => { setCalYear(jToday[0]); setCalMonth(jToday[1]); }}
-          >
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M19.5 12a7.5 7.5 0 1 1-2.6-5.68" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M19.8 4v5.2h-5.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="12" cy="12.3" r="1.7" fill="currentColor" />
-            </svg>
-          </button>
-        </div>
-        <div className="cal-controls">
-          <div className="cal-nav">
-            <button
-              className="small mono"
-              onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1); }}
-            >‹</button>
-          </div>
-          <div className="cal-label">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
-          <div className="cal-nav">
-            <button
-              className="small mono"
-              onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear((y) => y + 1); } else setCalMonth((m) => m + 1); }}
-            >›</button>
-          </div>
-        </div>
-        <div className="cal-grid">
-          {weekdayHeaders}
-          {cells}
-        </div>
-      </section>
-
-      {openDate && (
-        <DayModal
-          date={openDate}
-          onClose={() => setOpenDate(null)}
-          onChanged={() => { loadMonth(calYear, calMonth); computeStreak(); loadOutingDates(); }}
-          scheduleOpts={opts}
-        />
-      )}
-    </>
+      <div className="section-note" style={{ marginTop: 18 }}>
+        برنامه امروزت و تاریخچه‌ی روزهای قبل رو توی «برنامه هفتگی» ببین.
+      </div>
+    </section>
   );
 }

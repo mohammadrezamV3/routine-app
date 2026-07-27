@@ -32,9 +32,17 @@ export function NotificationEngine() {
       const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
       for (const t of tasks) {
         const startMinutes = timeStartMinutes(t.time);
-        if (startMinutes === null || nowMinutes < startMinutes) continue;
+        if (startMinutes === null) continue;
         if (daily.tasks[t.id]) continue; // قبلاً انجام‌شده علامت خورده
-        fireReminder(`routine:${t.id}`, "یادآوری برنامه", `وقت «${t.name}» رسیده.`);
+
+        // نیم ساعت مونده به شروع — یک‌بار در روز، جدا از یادآوریِ لحظه‌ی شروع
+        if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
+          fireReminder(`routine-soon:${t.id}`, "یادآوری برنامه", `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.`);
+          continue;
+        }
+        if (nowMinutes >= startMinutes) {
+          fireReminder(`routine:${t.id}`, "یادآوری برنامه", `وقت «${t.name}» رسیده.`);
+        }
       }
     }
 

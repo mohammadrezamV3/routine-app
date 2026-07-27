@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { animate } from "animejs";
 import { staggerFieldsIn, revealOnScroll } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
 import { getSiteMarket } from "@/lib/market";
@@ -39,8 +40,8 @@ const FEATURES = [
   {
     icon: ICONS.trade,
     title: "ژورنال ترید",
-    hook: "شفاف و حرفه‌ای",
-    body: "سود/زیان، نرخ برد، میانگین سود و ضرر و تقویم کامل معاملاتت — همه در یک نگاه، دقیق و منظم.",
+    hook: "ژورنال ماهانه و آنالیز",
+    body: "پنل ترید و آمار کامل: سود/زیان، نرخ برد، میانگین سود و ضرر و تقویم معاملاتت — همه در یک نگاه، دقیق و منظم.",
   },
   {
     icon: ICONS.roadmaps,
@@ -56,20 +57,58 @@ const TRUST_POINTS = [
   "فارسی، سریع، بدون شلوغی",
 ];
 
-type PlanCard = { key: string; nameFa: string; price: string; blurb: string; highlight?: boolean };
+type Duration = "1" | "3" | "6" | "12";
+const DURATIONS: Duration[] = ["1", "3", "6", "12"];
+const DURATION_LABELS: Record<Duration, string> = { "1": "۱ ماهه", "3": "۳ ماهه", "6": "۶ ماهه", "12": "۱۲ ماهه" };
+const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3": "3 mo", "6": "6 mo", "12": "12 mo" };
+
+type PlanCard = {
+  key: string; nameFa: string; blurb: string[]; highlight?: boolean;
+  free?: boolean; prices?: Record<Duration, string>;
+};
 
 const PLANS_IRAN: PlanCard[] = [
-  { key: "basic", nameFa: "پلن پایه", price: "۴۹,۰۰۰ تومان", blurb: "روتین روزانه، خواب و کارهای روزمره" },
-  { key: "exercise", nameFa: "پلن پایه بخش بدنسازی", price: "۹۹,۰۰۰ تومان", blurb: "همه‌ی پایه + برنامه بدنسازی و کالری" },
-  { key: "trade", nameFa: "پلن پایه پلن ترید", price: "۱۲۹,۰۰۰ تومان", blurb: "همه‌ی پایه + ژورنال حرفه‌ای ترید" },
-  { key: "max", nameFa: "پلن مکس", price: "۱۹۹,۰۰۰ تومان", blurb: "همه‌چیز، بدون محدودیت", highlight: true },
+  {
+    key: "basic", nameFa: "پلن پایه", free: true,
+    blurb: ["روتین روزانه", "خواب", "کارهای روزمره"],
+  },
+  {
+    key: "exercise", nameFa: "Plan Gym",
+    blurb: ["همه‌ی پلن پایه", "برنامه بدنسازی بر اساس هدفت (حجم، کات، قدرت یا استقامت)", "شمارش کالری و ماکرو", "ai mapping"],
+    prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۸۳۰,۰۰۰ تومان" },
+  },
+  {
+    key: "trade", nameFa: "Plan Trader",
+    blurb: ["همه‌ی پلن پایه", "ژورنال ماهانه و آنالیز، پنل ترید و آمار", "ai mapping"],
+    prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۰۸۰,۰۰۰ تومان" },
+  },
+  {
+    key: "max", nameFa: "Plan Max", highlight: true,
+    blurb: ["همه‌ی ماژول‌ها، بدون محدودیت", "بدنسازی + کالری، ژورنال ترید، ai mapping", "تحلیل هوشمند اختصاصی"],
+    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
+  },
 ];
 
 const PLANS_INTL: PlanCard[] = [
-  { key: "basic", nameFa: "Basic", price: "$3.99", blurb: "Daily routine, sleep & tasks" },
-  { key: "exercise", nameFa: "Basic + Bodybuilding", price: "$7.99", blurb: "Everything in Basic + workouts & calories" },
-  { key: "trade", nameFa: "Basic + Trade", price: "$12.99", blurb: "Everything in Basic + trade journal" },
-  { key: "max", nameFa: "Max", price: "$17.99", blurb: "Everything, unlimited", highlight: true },
+  {
+    key: "basic", nameFa: "Basic", free: true,
+    blurb: ["Daily routine", "Sleep", "Daily tasks"],
+  },
+  {
+    key: "exercise", nameFa: "Plan Gym",
+    blurb: ["Everything in Basic", "Goal-based bodybuilding program (bulk, cut, strength, endurance)", "Calorie & macro tracking", "ai mapping"],
+    prices: { "1": "$7.99", "3": "$21.99", "6": "$38.99", "12": "$67.99" },
+  },
+  {
+    key: "trade", nameFa: "Plan Trader",
+    blurb: ["Everything in Basic", "Monthly journal & analysis, trade panel and stats", "ai mapping"],
+    prices: { "1": "$12.99", "3": "$34.99", "6": "$62.99", "12": "$109.99" },
+  },
+  {
+    key: "max", nameFa: "Plan Max", highlight: true,
+    blurb: ["Every module, unlimited", "Bodybuilding + calories, trade journal, ai mapping", "Dedicated smart insights"],
+    prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$149.99" },
+  },
 ];
 
 type CompareRow = { label: string; included: Record<string, boolean> };
@@ -78,7 +117,7 @@ const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "روتین روزانه، خواب و کارهای روزمره", included: { basic: true, exercise: true, trade: true, max: true } },
   { label: "برنامه بدنسازی + شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "ژورنال حرفه‌ای ترید", included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: "ai mapping", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
   { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
 ];
 
@@ -86,20 +125,118 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Daily routine, sleep & tasks", included: { basic: true, exercise: true, trade: true, max: true } },
   { label: "Bodybuilding plan + calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "Professional trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: "ai mapping", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
   { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true } },
 ];
 
+function FeatureCarousel() {
+  const [index, setIndex] = useState(0);
+  const pausedRef = useRef(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!pausedRef.current) setIndex((i) => (i + 1) % FEATURES.length);
+    }, 12000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!boxRef.current) return;
+    animate(boxRef.current, { opacity: [0, 1], translateY: [10, 0], duration: 420, ease: "outQuad" });
+  }, [index]);
+
+  const f = FEATURES[index];
+
+  return (
+    <div
+      className="landing-carousel"
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
+    >
+      <div className="landing-carousel-box" ref={boxRef} key={index}>
+        <span className="landing-feature-icon">{f.icon}</span>
+        <div className="landing-feature-title">{f.title}</div>
+        <div className="landing-feature-hook">{f.hook}</div>
+        <div className="landing-feature-body">{f.body}</div>
+      </div>
+      <div className="landing-carousel-dots">
+        {FEATURES.map((feat, i) => (
+          <button
+            key={feat.title}
+            className={`landing-carousel-dot${i === index ? " on" : ""}`}
+            aria-label={feat.title}
+            onClick={() => setIndex(i)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
+  const [duration, setDuration] = useState<Duration>("1");
+  const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
+
+  return (
+    <div className={`landing-plan-card${p.highlight ? " highlight" : ""}`} data-reveal>
+      {p.highlight && <span className="landing-plan-badge">محبوب‌ترین</span>}
+      <div className="landing-plan-name">{p.nameFa}</div>
+
+      <ul className="landing-plan-lines">
+        {p.blurb.map((line) => (
+          <li key={line}>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {line}
+          </li>
+        ))}
+      </ul>
+
+      {p.free ? (
+        <>
+          <div className="landing-plan-price">رایگان</div>
+          <Link href="/auth/signup" className="landing-cta-primary" style={{ width: "100%", marginTop: 14 }}>
+            شروع رایگان
+          </Link>
+        </>
+      ) : (
+        <>
+          <div className="landing-plan-price">
+            {p.prices![duration]}<span>/ {labels[duration]}</span>
+          </div>
+          <div className="landing-plan-duration-row">
+            {DURATIONS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className={`landing-plan-duration${d === duration ? " on" : ""}`}
+                onClick={() => setDuration(d)}
+              >
+                {labels[d]}
+              </button>
+            ))}
+          </div>
+          <Link
+            href={`/auth/signup?plan=${p.key}&duration=${duration}`}
+            className={p.highlight ? "landing-cta-primary" : "landing-cta-secondary"}
+            style={{ width: "100%", marginTop: 14 }}
+          >
+            فعال‌سازی این پلن
+          </Link>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }) {
   const heroRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
   const plansRef = useRef<HTMLDivElement>(null);
   const isIntl = getSiteMarket() === "INTERNATIONAL";
   const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
   const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
 
   useEffect(() => { staggerFieldsIn(heroRef.current); }, []);
-  useEffect(() => revealOnScroll(featuresRef.current), []);
   useEffect(() => revealOnScroll(plansRef.current), []);
 
   return (
@@ -123,16 +260,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
       </section>
 
       <section id="sec-landing-features" style={{ paddingTop: 20 }}>
-        <div ref={featuresRef} className="landing-features">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="landing-feature-card" data-reveal>
-              <span className="landing-feature-icon">{f.icon}</span>
-              <div className="landing-feature-title">{f.title}</div>
-              <div className="landing-feature-hook">{f.hook}</div>
-              <div className="landing-feature-body">{f.body}</div>
-            </div>
-          ))}
-        </div>
+        <FeatureCarousel />
       </section>
 
       <section id="sec-landing-trust" style={{ paddingTop: 8 }}>
@@ -152,17 +280,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
           <h2 style={{ fontSize: 18, marginTop: 4 }}>هر چقدر لازم داری، همون رو بردار</h2>
         </div>
         <div ref={plansRef} className="landing-plans">
-          {plans.map((p) => (
-            <div key={p.key} className={`landing-plan-card${p.highlight ? " highlight" : ""}`} data-reveal>
-              {p.highlight && <span className="landing-plan-badge">محبوب‌ترین</span>}
-              <div className="landing-plan-name">{p.nameFa}</div>
-              <div className="landing-plan-price">{p.price}<span>/ ماهانه</span></div>
-              <div className="landing-plan-blurb">{p.blurb}</div>
-              <Link href="/auth/signup" className={p.highlight ? "landing-cta-primary" : "landing-cta-secondary"} style={{ width: "100%", marginTop: 14 }}>
-                شروع کن
-              </Link>
-            </div>
-          ))}
+          {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
         </div>
 
         <div className="landing-compare-wrap" data-reveal>

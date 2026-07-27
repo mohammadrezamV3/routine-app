@@ -94,15 +94,15 @@ export default function LoginPage() {
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
             </AuthField>
-            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-          <div className="wsearch-newform-actions" style={{ justifyContent: "flex-start", marginTop: 18 }} data-anim-field>
-            <button type="submit" disabled={loading} style={{ borderRadius: 8, padding: "9px 20px", borderColor: "var(--accent)", color: "var(--accent)" }}>
+          <div className="auth-submit-row" data-anim-field>
+            <button type="submit" disabled={loading} style={{ borderRadius: 8, padding: "9px 24px", borderColor: "var(--accent)", color: "var(--accent)" }}>
               {loading ? "در حال ورود…" : "ورود"}
             </button>
+            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
           </div>
         </form>
       </div>
