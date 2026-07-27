@@ -182,6 +182,9 @@ export default function HomePage() {
           <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>{clock}</span>
         </div>
         <div className="home-stats">
+          <svg className="streak-flame" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2.2c1.1 3.1-2.6 4.7-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-1.1-.5-1.6-.5-2.7 1.6.9 2.7 2.7 2.7 4.8a4.8 4.8 0 0 1-9.6 0c0-4.3 3.2-6.4 4.8-10.4Z" fill="currentColor" />
+          </svg>
           استریک: <b>{streak === null ? "…" : faNum(streak)}</b> روز
         </div>
       </section>

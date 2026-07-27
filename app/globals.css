@@ -9,17 +9,24 @@
    ============================================================ */
 
   :root{
-    --bg:#141516;
-    --bg-rgb:20,21,22;
+    --bg:#16150F;
+    --bg-rgb:22,21,15;
     --text:#F2F3F1;
     --muted:#8A9099;
     --muted2:#4E545C;
     --accent:#00A86B;
     --accent-dim:rgba(0,168,107,.20);
-    --line:#23262B;
+    --accent-soft:#5FBE93;
+    --accent-deep:#00623D;
+    --line:#26241E;
     --particle:#4E545C;
     --sun:#FFC94A;
     --moon:#7B4FE0;
+    /* طلایی/کهربایی — مخصوص لحظه‌های محدود «ویژه» (پلن پیشنهادی، استریک)،
+       جدا از --sun که فقط مال آیکون خورشیدِ سوییچ تم‌ست، تا تغییرش روی
+       اون آیکون اثر نذاره */
+    --gold:#FFC94A;
+    --gold-dim:rgba(255,201,74,.16);
   }
   body[data-theme="light"]{
     --bg:#EAEBE7;
@@ -29,10 +36,14 @@
     --muted2:#A6ACA9;
     --accent:#00A86B;
     --accent-dim:rgba(0,168,107,.16);
+    --accent-soft:#2F8F63;
+    --accent-deep:#00512F;
     --line:#E2E5E2;
     --particle:#C7CCC8;
     --sun:#FFC94A;
     --moon:#7B4FE0;
+    --gold:#B8863F;
+    --gold-dim:rgba(184,134,63,.14);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
 
@@ -98,11 +109,12 @@
   h1{font-size:23px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px;}
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
-  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-plexmono), monospace;}
-  .home-stats b{color:var(--accent); font-weight:600;}
+  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-plexmono), monospace; display:inline-flex; align-items:center; gap:5px;}
+  .home-stats b{color:var(--gold); font-weight:600;}
+  .streak-flame{width:13px; height:13px; color:var(--gold); flex-shrink:0;}
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
-  .section-note{font-size:11.5px; color:var(--accent); font-family:var(--font-plexmono), monospace; margin-bottom:18px;}
+  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-plexmono), monospace; margin-bottom:18px;}
   .disclaimer-note{font-size:11px; color:var(--muted2); margin-top:14px; line-height:1.7;}
 
   .task{
@@ -1305,8 +1317,10 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   background:radial-gradient(circle at 60% 60%, rgba(0,168,107,.22), rgba(0,168,107,0) 70%);
   animation:auroraDriftB 32s ease-in-out infinite;
 }
+/* بلاب سوم عمداً طلایی‌ه نه سبز — یه ذره گرمای رنگی به فضا اضافه می‌کنه
+   که پس‌زمینه فقط یک سبز تخت به‌نظر نرسه */
 .aurora-blob-c{
-  background:radial-gradient(circle, rgba(0,168,107,.16), rgba(0,168,107,0) 70%);
+  background:radial-gradient(circle, rgba(255,201,74,.13), rgba(255,201,74,0) 70%);
   animation:auroraDriftC 40s ease-in-out infinite;
 }
 body[data-theme="light"] .aurora-blob{ opacity:.45; }
@@ -1372,7 +1386,7 @@ body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); b
   .landing-features{ display:grid; grid-template-columns:1fr 1fr; }
 }
 .landing-feature-card{
-  border-radius:22px; padding:18px 20px; border:1px solid var(--line);
+  border-radius:22px; padding:18px 20px; border:1px solid rgba(0,168,107,.14);
   background:rgba(255,255,255,.025);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   transition:border-color .2s ease, transform .2s ease;
@@ -1408,13 +1422,15 @@ body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4);
   background:rgba(255,255,255,.025);
 }
 body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
+/* پلن برجسته (مکس) عمداً طلایی‌ه نه سبز — سبز مال دکمه‌های عمل اصلیه،
+   طلایی یعنی «تراز ویژه»، این دوتا معنای بصری جدا رو روشن نگه می‌داره */
 .landing-plan-card.highlight{
-  border-color:var(--accent); background:rgba(0,168,107,.06);
-  box-shadow:0 0 0 1px var(--accent), 0 20px 40px rgba(0,168,107,.12);
+  border-color:var(--gold); background:var(--gold-dim);
+  box-shadow:0 0 0 1px var(--gold), 0 20px 40px rgba(255,201,74,.14);
 }
 .landing-plan-badge{
   position:absolute; top:-11px; right:18px; padding:3px 12px; border-radius:999px;
-  background:var(--accent); color:var(--bg); font-size:10.5px; font-weight:800;
+  background:var(--gold); color:#1A1508; font-size:10.5px; font-weight:800;
 }
 .landing-plan-name{ font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; }
 .landing-plan-price{ font-size:19px; font-weight:800; margin-top:6px; }
