@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { animate } from "animejs";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -59,12 +60,23 @@ export function NavDrawer() {
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
+  const authSlotRef = useRef<HTMLDivElement>(null);
 
   function go(href: string) {
     setOpen(false);
     router.push(href);
   }
+
+  useEffect(() => {
+    if (status === "loading" || !authSlotRef.current) return;
+    animate(authSlotRef.current, {
+      opacity: [0, 1],
+      scale: [0.85, 1],
+      duration: 380,
+      ease: "outBack",
+    });
+  }, [status]);
 
   return (
     <>
@@ -78,16 +90,28 @@ export function NavDrawer() {
           >
             <span></span><span></span><span></span>
           </button>
-          <button
-            className="profile-btn"
-            aria-label="پروفایل"
-            onClick={() => setAccountOpen(true)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="3.5" />
-              <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
-            </svg>
-          </button>
+          {status === "loading" ? (
+            <span className="topbar-auth-placeholder" />
+          ) : status === "authenticated" ? (
+            <div ref={authSlotRef}>
+              <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
+                <span className="profile-chip-avatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="3.5" />
+                    <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
+                  </svg>
+                </span>
+                {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
+              </button>
+            </div>
+          ) : (
+            <div ref={authSlotRef}>
+              <button className="topbar-signin-btn" onClick={() => router.push("/auth/login")}>
+                <span className="topbar-signin-icon">{ICONS.login}</span>
+                <span>ورود</span>
+              </button>
+            </div>
+          )}
         </div>
       </header>
 

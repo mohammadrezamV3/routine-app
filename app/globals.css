@@ -1082,4 +1082,74 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
   background:rgba(255,255,255,.05);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
 }
+
+/* ============================================================
+   ورود/ثبت‌نام — دکمه هدر، تب‌های انیمیشنی، تکمیل حالت خطای فیلدها
+   ============================================================ */
+
+/* دکمه «ورود» توی هدر، وقتی هنوز لاگین نشده */
+.topbar-signin-btn{
+  display:flex; align-items:center; gap:6px;
+  height:34px; padding:0 15px; border-radius:999px;
+  border:1.5px solid var(--accent); background:rgba(0,168,107,.08); color:var(--accent);
+  font-family:var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700;
+  cursor:pointer; white-space:nowrap;
+  transition:background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
+}
+.topbar-signin-icon{width:15px; height:15px; display:flex;}
+.topbar-signin-icon svg{width:15px; height:15px; display:block;}
+.topbar-signin-btn:hover{background:var(--accent); color:var(--bg); box-shadow:0 0 0 5px var(--accent-dim);}
+.topbar-signin-btn:active{transform:scale(.94);}
+
+/* اسکلتون خنثی حین بارگذاری session — از پرش ناگهانی جلوگیری می‌کنه */
+.topbar-auth-placeholder{
+  display:block; width:64px; height:34px; border-radius:999px;
+  background:rgba(255,255,255,.05);
+}
+
+/* چیپ پروفایل، وقتی لاگین شده — آواتار سمت راست، اسم سمت چپش (چیدمان RTL پیش‌فرض) */
+.profile-chip{
+  display:flex; align-items:center; gap:8px;
+  height:38px; padding:0 14px 0 4px; border-radius:999px;
+  background:none; border:none; cursor:pointer;
+  transition:background .2s ease, transform .15s ease;
+}
+.profile-chip:hover{background:rgba(255,255,255,.06);}
+.profile-chip:active{transform:scale(.96);}
+.profile-chip-avatar{
+  width:30px; height:30px; min-width:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  border:1.5px solid var(--line); color:var(--muted);
+  transition:border-color .2s ease, color .2s ease;
+}
+.profile-chip:hover .profile-chip-avatar{border-color:var(--accent); color:var(--accent);}
+.profile-chip-avatar svg{width:15px; height:15px;}
+.profile-chip-name{
+  font-size:12.5px; font-weight:600; color:var(--text);
+  max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه */
+.auth-tabs{
+  position:relative; display:flex; margin-top:16px;
+  background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:999px; padding:4px;
+}
+body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba(255,255,255,.08); }
+.auth-tab{
+  position:relative; z-index:1; flex:1 1 50%; text-align:center; padding:10px 0;
+  border:none; background:none; border-radius:999px;
+  font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:700; color:var(--muted);
+  cursor:pointer; transition:color .25s ease;
+}
+.auth-tab.active{color:var(--bg);}
+.auth-tab-indicator{
+  position:absolute; top:4px; bottom:4px; z-index:0;
+  background:var(--accent); border-radius:999px;
+  box-shadow:0 4px 14px rgba(0,168,107,.35);
+}
+
+/* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلاً
+   فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */
+.field-error .wsearch-newform-name{ border-color:#E05252; }
+.auth-terms-row{ border-bottom:none; padding:10px 0; }
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }

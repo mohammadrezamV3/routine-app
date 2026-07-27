@@ -79,6 +79,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.userId = (user as any).id;
+        token.name = (user as any).name;
         token.market = (user as any).market;
         token.isSuperAdmin = (user as any).isSuperAdmin;
       }
@@ -87,6 +88,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.userId;
+        (session.user as any).name = token.name;
         (session.user as any).market = token.market;
         (session.user as any).isSuperAdmin = token.isSuperAdmin;
       }
