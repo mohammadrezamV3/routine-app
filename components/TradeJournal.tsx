@@ -1,0 +1,176 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  J_MONTHS, CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, faNum,
+  toJalali, jalaliMonthLength, jalaliToGregorianApprox, isoLocal,
+} from "@/lib/jalali";
+
+type TradeEntry = {
+  id: string;
+  pair: string;
+  direction: "long" | "short";
+  entryPrice: number;
+  exitPrice: number | null;
+  lotSize: number;
+  pnl: number | null;
+  openedAt: string;
+  notes: string | null;
+};
+
+const now = new Date();
+const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+export function TradeJournal() {
+  const [calYear, setCalYear] = useState(jToday[0]);
+  const [calMonth, setCalMonth] = useState(jToday[1]);
+  const [entries, setEntries] = useState<TradeEntry[]>([]);
+  const [selectedIso, setSelectedIso] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const [pair, setPair] = useState("EURUSD");
+  const [direction, setDirection] = useState<"long" | "short">("long");
+  const [entryPrice, setEntryPrice] = useState("");
+  const [exitPrice, setExitPrice] = useState("");
+  const [lotSize, setLotSize] = useState("");
+  const [pnl, setPnl] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const monthLen = jalaliMonthLength(calMonth);
+  const firstG = jalaliToGregorianApprox(calYear, calMonth, 1);
+  const startCol = (firstG.getDay() + 1) % 7;
+  const monthStartIso = isoLocal(jalaliToGregorianApprox(calYear, calMonth, 1));
+  const monthEndIso = isoLocal(jalaliToGregorianApprox(calYear, calMonth, monthLen));
+
+  async function loadMonth() {
+    setLoading(true);
+    const res = await fetch(`/api/trade/entries?from=${monthStartIso}&to=${monthEndIso}`);
+    const data = await res.json();
+    setEntries(data.entries || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { loadMonth(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [calYear, calMonth]);
+
+  const byDay = useMemo(() => {
+    const map: Record<string, TradeEntry[]> = {};
+    entries.forEach((e) => {
+      const iso = isoLocal(new Date(e.openedAt));
+      if (!map[iso]) map[iso] = [];
+      map[iso].push(e);
+    });
+    return map;
+  }, [entries]);
+
+  const monthTotal = entries.reduce((s, e) => s + (e.pnl ?? 0), 0);
+
+  async function addTrade() {
+    if (!selectedIso || !entryPrice || !lotSize) return;
+    const body = {
+      pair, direction,
+      entryPrice: +entryPrice,
+      exitPrice: exitPrice ? +exitPrice : undefined,
+      lotSize: +lotSize,
+      pnl: pnl ? +pnl : undefined,
+      openedAt: new Date(selectedIso + "T12:00:00").toISOString(),
+      notes: notes || undefined,
+    };
+    const res = await fetch("/api/trade/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      setEntryPrice(""); setExitPrice(""); setLotSize(""); setPnl(""); setNotes("");
+      loadMonth();
+    }
+  }
+
+  async function removeTrade(id: string) {
+    setEntries((e) => e.filter((x) => x.id !== id));
+    await fetch(`/api/trade/entries?id=${id}`, { method: "DELETE" });
+  }
+
+  const cells: JSX.Element[] = [];
+  for (let i = 0; i < startCol; i++) cells.push(<div key={"e" + i} className="cal-cell empty" />);
+  for (let d = 1; d <= monthLen; d++) {
+    const gd = jalaliToGregorianApprox(calYear, calMonth, d);
+    const iso = isoLocal(gd);
+    const dayEntries = byDay[iso] || [];
+    const dayTotal = dayEntries.reduce((s, e) => s + (e.pnl ?? 0), 0);
+    const hasEntries = dayEntries.length > 0;
+    cells.push(
+      <div
+        key={iso}
+        onClick={() => setSelectedIso(iso)}
+        className={`cal-cell${iso === selectedIso ? " today" : ""}`}
+        style={hasEntries ? { background: dayTotal >= 0 ? "var(--accent-dim)" : "rgba(224,82,82,.14)", borderColor: dayTotal >= 0 ? "var(--accent)" : "#E05252" } : {}}
+      >
+        <span className="cal-daynum mono">{faNum(d)}</span>
+      </div>
+    );
+  }
+
+  const selectedEntries = selectedIso ? byDay[selectedIso] || [] : [];
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div className="home-stats">
+        مجموع این ماه: <b style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>{faNum(monthTotal.toFixed(2))}</b>
+      </div>
+
+      <div className="cal-controls">
+        <button className="small mono" onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1); }}>‹</button>
+        <div className="cal-label">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
+        <button className="small mono" onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear((y) => y + 1); } else setCalMonth((m) => m + 1); }}>›</button>
+      </div>
+
+      <div className="cal-grid">
+        {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
+        {cells}
+      </div>
+
+      {loading && <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>}
+
+      {selectedIso && (
+        <div className="tm-extra">
+          <div className="domain-sub">معاملات {selectedIso}</div>
+
+          {selectedEntries.length ? (
+            selectedEntries.map((e) => (
+              <div key={e.id} className="item-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span className="name">
+                  {e.pair} <span className="mono" style={{ color: "var(--muted2)" }}>({e.direction === "long" ? "خرید" : "فروش"}، لات {faNum(e.lotSize)})</span>
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {e.pnl !== null && (
+                    <span className="mono" style={{ color: e.pnl >= 0 ? "var(--accent)" : "#E05252" }}>{faNum(e.pnl)}</span>
+                  )}
+                  <button className="small" onClick={() => removeTrade(e.id)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="item-line empty">معامله‌ای برای این روز ثبت نشده</div>
+          )}
+
+          <div style={{ marginTop: 12 }}>
+            <div className="day-picker">
+              <span className={`day-pill${direction === "long" ? " on" : ""}`} onClick={() => setDirection("long")}>خرید (Long)</span>
+              <span className={`day-pill${direction === "short" ? " on" : ""}`} onClick={() => setDirection("short")}>فروش (Short)</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+              <input className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="جفت‌ارز" value={pair} onChange={(e) => setPair(e.target.value)} />
+              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت ورود" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} />
+              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت خروج" value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} />
+              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 70px" }} placeholder="لات" value={lotSize} onChange={(e) => setLotSize(e.target.value)} />
+              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="سود/زیان" value={pnl} onChange={(e) => setPnl(e.target.value)} />
+            </div>
+            <input className="wsearch-newform-name" style={{ marginTop: 8 }} placeholder="یادداشت (اختیاری)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <button onClick={addTrade} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>ثبت معامله</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

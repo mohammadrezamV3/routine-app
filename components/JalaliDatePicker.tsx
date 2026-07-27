@@ -1,0 +1,80 @@
+"use client";
+
+import { useState } from "react";
+import {
+  FA_WEEKDAY_SHORT,
+  CAL_WEEK_ORDER,
+  J_MONTHS,
+  faNum,
+  jalaliMonthLength,
+  jalaliToGregorianApprox,
+  toJalali,
+  JalaliDate,
+} from "@/lib/jalali";
+
+export function JalaliDatePicker({
+  initial,
+  onPick,
+  onClose,
+}: {
+  initial: JalaliDate | null;
+  onPick: (d: JalaliDate) => void;
+  onClose: () => void;
+}) {
+  const now = new Date();
+  const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const [view, setView] = useState<{ jy: number; jm: number }>(
+    initial ? { jy: initial[0], jm: initial[1] } : { jy: jNow[0], jm: jNow[1] }
+  );
+
+  const monthLen = jalaliMonthLength(view.jm);
+  const firstGDate = jalaliToGregorianApprox(view.jy, view.jm, 1);
+  const firstJsDay = firstGDate.getDay();
+  const leading = CAL_WEEK_ORDER.indexOf(firstJsDay);
+
+  const cells: JSX.Element[] = [];
+  for (let i = 0; i < leading; i++) cells.push(<div key={"e" + i} className="jdate-cell empty" />);
+  for (let d = 1; d <= monthLen; d++) {
+    const isToday = view.jy === jNow[0] && view.jm === jNow[1] && d === jNow[2];
+    const isSelected = initial && initial[0] === view.jy && initial[1] === view.jm && initial[2] === d;
+    cells.push(
+      <div
+        key={d}
+        className={`jdate-cell${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+        onClick={() => onPick([view.jy, view.jm, d])}
+      >
+        {d}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="jdate-overlay open" onClick={onClose} />
+      <div className="jdate-popup open">
+        <div className="jdate-popup-head">
+          <button type="button" className="jdate-popup-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="jdate-popup-title">{J_MONTHS[view.jm - 1]} {view.jy}</div>
+          <div className="jdate-popup-nav">
+            <button
+              type="button"
+              className="jdate-nav-btn"
+              onClick={() => setView((v) => (v.jm - 1 < 1 ? { jy: v.jy - 1, jm: 12 } : { jy: v.jy, jm: v.jm - 1 }))}
+              aria-label="ماه قبل"
+            >‹</button>
+            <button
+              type="button"
+              className="jdate-nav-btn"
+              onClick={() => setView((v) => (v.jm + 1 > 12 ? { jy: v.jy + 1, jm: 1 } : { jy: v.jy, jm: v.jm + 1 }))}
+              aria-label="ماه بعد"
+            >›</button>
+          </div>
+        </div>
+        <div className="jdate-weekdays">
+          {CAL_WEEK_ORDER.map((d) => <div key={d} className="jdate-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
+        </div>
+        <div className="jdate-grid">{cells}</div>
+      </div>
+    </>
+  );
+}

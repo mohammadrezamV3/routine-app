@@ -1,0 +1,669 @@
+// ============================================================================
+// PRISMA SCHEMA — پلتفرم روتین/سلامت/ترید چندپلنی و دو-بازاری
+// ============================================================================
+// طراحی‌شده برای:
+//  - دو بازار مستقل (ایران/تومان و بین‌المللی/دلار) زیر یک دیتابیس
+//  - ۴ پلن قابل‌ترکیب (پایه، ورزش، ترید، مکس) بدون هاردکد کردن منطق دسترسی
+//  - رفرال کاربر-به-کاربر + قرارداد باشگاه (٪سهم و ٪تخفیف)
+//  - سقف مصرف ماهانه AI (Haiku برای ایران، Sonnet برای بین‌المللی)
+//  - هر ماژول محصول (روتین، خواب، کار روزمره، ورزش، کالری، ترید، رودمپ) کاملاً مجزا
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Market {
+  IRAN
+  INTERNATIONAL
+}
+
+enum Currency {
+  IRR
+  USD
+}
+
+enum AiModel {
+  HAIKU  // بازار ایران — ارزون‌تر
+  SONNET // بازار بین‌المللی
+}
+
+enum ModuleKey {
+  ROUTINE   // روتین/چک‌لیست روزانه — همیشه در پلن پایه
+  SLEEP     // خواب — همیشه در پلن پایه
+  TASKS     // کارهای روزمره — همیشه در پلن پایه
+  EXERCISE  // ورزش
+  CALORIE   // کالری
+  TRADE     // ژورنال ترید
+  ROADMAP   // رودمپ آموزشی — همراه با پلن مکس یا جدا، به‌صورت پیکربندی‌شده
+  AI_INSIGHT // Correlation Insight — فقط پلن مکس
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum ReferralUsageStatus {
+  PENDING    // ثبت شده ولی هنوز شرط تکمیل (مثلاً اولین پرداخت) برقرار نشده
+  REWARDED   // پاداش (ماه رایگان / سهم باشگاه) اعمال شده
+  REVOKED    // به هر دلیل باطل شده (مثلاً استرداد وجه)
+}
+
+enum PartnerType {
+  GYM
+  OTHER
+}
+
+enum AiFeatureKey {
+  DAILY_BRIEFING
+  WEEKLY_COACH_REPORT
+  CORRELATION_INSIGHT
+}
+
+// ============================================================================
+// USER & AUTH
+// ============================================================================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  phone         String?  @unique
+  username      String?  @unique
+  passwordHash  String?
+  name          String?
+  lastName      String?
+  avatarUrl     String?
+  birthDate     DateTime?
+
+  // سوپریوزر/ادمین — دسترسی نامحدود به همه ماژول‌ها بدون نیاز به اشتراک
+  isSuperAdmin  Boolean  @default(false)
+
+  market        Market   // بازار کاربر — تعیین‌کننده ارز/پلن/مدل AI/زبان پیش‌فرض
+  locale        String   @default("fa") // fa | en
+  timezone      String   @default("Asia/Tehran")
+
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime? // soft delete برای نگهداری تاریخچه مالی/رفرال
+
+  // روابط احراز هویت
+  accounts      OAuthAccount[]
+  sessions      Session[]
+
+  // روابط تجاری
+  subscriptions       Subscription[]
+  moduleAccess         ModuleAccess[]
+  aiUsage              AiUsageRecord[]
+
+  // رفرال — کد خودِ کاربر برای دعوت دیگران
+  referralCode         ReferralCode?
+  referralUsagesAsInvitee  ReferralUsage[] @relation("InviteeUsages")
+
+  // اگر کاربر از طریق باشگاه اومده
+  gymPartnerId         String?
+  gymPartner           Partner? @relation("GymUsers", fields: [gymPartnerId], references: [id])
+
+  // داده‌های ماژول‌ها
+  dailyEntries      DailyEntry[]
+  sleepEntries      SleepEntry[]
+  tasks             Task[]
+  exercisePlans     ExercisePlan[]
+  exerciseLogs      ExerciseLog[]
+  foodLogs          FoodLogEntry[]
+  calorieTargets    CalorieTarget[]
+  tradeEntries      TradeEntry[]
+  roadmaps          Roadmap[]
+
+  userSettings      UserSetting[]
+  exportRequests    ExportRequest[]
+  sharedLinks       SharedProgressLink[]
+
+  @@index([market])
+  @@index([gymPartnerId])
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String   // google | apple | ...
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============================================================================
+// PLANS, PRICING & SUBSCRIPTIONS
+// ============================================================================
+
+// یک "Plan" فقط یک قالب تجاری/قیمتی‌ست. اینکه کدام ماژول‌ها را باز می‌کند
+// در PlanModule تعریف می‌شود، نه هاردکد در کد — همین باعث می‌شود اگر بعداً
+// پلن‌بندی عوض شد (مثلاً ماژول جدید یا تغییر ترکیب)، فقط داده تغییر کند.
+model Plan {
+  id            String   @id @default(cuid())
+  key           String   // "basic" | "exercise" | "trade" | "max"
+  nameFa        String
+  nameEn        String
+
+  market        Market   // هر پلن مخصوص یک بازار تعریف می‌شود (قیمت‌گذاری جدا)
+  currency      Currency
+
+  priceMonthly  Int      // به کوچک‌ترین واحد ارز (ریال برای IRR، سنت برای USD) تا خطای اعشار نداشته باشیم
+  priceYearly   Int?
+
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  modules       PlanModule[]
+  subscriptions Subscription[]
+
+  @@unique([key, market])
+  @@index([market])
+}
+
+model PlanModule {
+  id       String    @id @default(cuid())
+  planId   String
+  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  module   ModuleKey
+
+  @@unique([planId, module])
+}
+
+model Subscription {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId          String
+  plan            Plan                @relation(fields: [planId], references: [id])
+
+  status          SubscriptionStatus  @default(TRIAL)
+  interval        BillingInterval     @default(MONTHLY)
+
+  startDate       DateTime            @default(now())
+  currentPeriodEnd DateTime
+  canceledAt      DateTime?
+  trialEndsAt     DateTime?
+
+  // درصد تخفیف اعمال‌شده از قرارداد باشگاه یا کد تخفیف (مثلاً ۱۰٪ = 10)
+  discountPercent Int                 @default(0)
+  appliedReferralUsageId String?
+  appliedReferralUsage   ReferralUsage? @relation(fields: [appliedReferralUsageId], references: [id])
+
+  payments        Payment[]
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  amount         Int      // واحد کوچک ارز، بعد از اعمال تخفیف
+  currency       Currency
+  provider       String   // zarinpal | stripe | ...
+  providerRef    String?  // شناسه تراکنش سمت درگاه
+
+  // برای محاسبه سهم باشگاه از سود واقعی، نه از قیمت لیست
+  gymRevenueShareAmount Int? // مبلغی که باید به باشگاه پرداخت شود (۱۵٪ سهم)
+
+  paidAt         DateTime?
+  refundedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([subscriptionId])
+}
+
+// دسترسی محاسبه‌شده به هر ماژول — این جدول را یک job/webhook بعد از هر تغییر
+// در Subscription دوباره می‌سازد. کد سمت اپ فقط همین جدول را چک می‌کند و
+// هیچ‌وقت مستقیماً به Plan/PlanModule وابسته نیست.
+model ModuleAccess {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    ModuleKey
+  active    Boolean   @default(false)
+  expiresAt DateTime? // برای دسترسی موقت trial یا گریس‌پیریود بعد از لغو
+
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, module])
+  @@index([userId])
+}
+
+// ============================================================================
+// REFERRAL & GYM PARTNERSHIP
+// ============================================================================
+
+model ReferralCode {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  usages    ReferralUsage[] @relation("CodeUsages")
+}
+
+model ReferralUsage {
+  id              String               @id @default(cuid())
+  referralCodeId  String
+  referralCode    ReferralCode         @relation("CodeUsages", fields: [referralCodeId], references: [id])
+
+  inviteeUserId   String
+  inviteeUser     User                 @relation("InviteeUsages", fields: [inviteeUserId], references: [id])
+
+  status          ReferralUsageStatus  @default(PENDING)
+
+  // پاداش هر دو طرف: یک ماه رایگان — این مقدار وقتی status=REWARDED می‌شود اعمال می‌گردد
+  inviterRewardApplied  Boolean @default(false)
+  inviteeRewardApplied  Boolean @default(false)
+
+  subscriptions   Subscription[] // اشتراک‌هایی که این کد تخفیف را گرفتند
+
+  createdAt       DateTime             @default(now())
+  rewardedAt      DateTime?
+  revokedAt       DateTime?
+
+  @@index([inviteeUserId])
+  @@index([referralCodeId])
+}
+
+// باشگاه یا هر شریک تجاری دیگر
+model Partner {
+  id                String      @id @default(cuid())
+  type              PartnerType @default(GYM)
+  name              String
+  contactPhone      String?
+  contactEmail      String?
+
+  market            Market
+
+  revenueSharePercent Int       @default(15) // سهم باشگاه از سود واقعی
+  userDiscountPercent Int       @default(10) // تخفیف به کاربرانی که از این باشگاه می‌آیند
+
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  users             User[]      @relation("GymUsers")
+
+  @@index([market])
+}
+
+// ============================================================================
+// AI USAGE (Daily Briefing / Weekly Coach / Correlation Insight)
+// ============================================================================
+
+model AiUsageRecord {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  feature      AiFeatureKey
+  model        AiModel      // Haiku (ایران) یا Sonnet (بین‌الملل)، بر اساس market کاربر ست می‌شود
+
+  inputTokens  Int          @default(0)
+  outputTokens Int          @default(0)
+  costUsdMicros Int         @default(0) // هزینه واقعی به میکرو-دلار برای دقت محاسبات
+
+  // خروجی همیشه باید صراحتاً "پیشنهاد" باشد؛ این پرچم برای ممیزی محتوای تولیدشده
+  // (مثلاً بررسی دستی نمونه‌ای که آیا زبان دستوری/توصیه پزشکی درش نشت کرده) نگه داشته می‌شود
+  flaggedForReview Boolean   @default(false)
+
+  createdAt    DateTime     @default(now())
+
+  @@index([userId, feature, createdAt])
+}
+
+// سقف مصرف ماهانه هر کاربر برای هر فیچر AI — جلوگیری از هزینه کنترل‌نشده
+model AiMonthlyQuota {
+  id         String       @id @default(cuid())
+  userId     String
+  feature    AiFeatureKey
+  yearMonth  String       // فرمت "2026-08" برای شمارش ساده بدون کوئری تاریخ پیچیده
+  usedCount  Int          @default(0)
+  limitCount Int          // بر اساس پلن کاربر ست می‌شود
+
+  @@unique([userId, feature, yearMonth])
+}
+
+// ============================================================================
+// MODULE: ROUTINE / DAILY CHECKLIST (هسته پایه — مبتنی بر همان منطق فایل HTML فعلی)
+// ============================================================================
+
+model RoutineItem {
+  id         String   @id @default(cuid())
+  userId     String
+  // آیتم‌های تعریف‌شده توسط کاربر یا سیستم (مثل ترید/فرانسه/OWASP در نسخه فعلی)
+  name       String
+  // زمان‌بندی هفتگی به‌صورت JSON: [{jsDay, startMin, endMin}], تا از منطق سخت‌کدشده HTML جدا شود
+  schedule   Json
+  startDate  DateTime?
+  endDate    DateTime?
+  isActive   Boolean  @default(true)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model DailyEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date // یک رکورد به‌ازای هر کاربر/روز
+
+  // وضعیت تیک هر RoutineItem در آن روز: { [routineItemId]: boolean }
+  completedItems Json  @default("{}")
+  wakeUpAt   DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// ============================================================================
+// MODULE: SLEEP
+// ============================================================================
+
+model SleepEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+
+  sleptAt   DateTime?
+  wokeAt    DateTime?
+  targetSleptAt DateTime? // هدف تعیین‌شده کاربر
+  targetWokeAt  DateTime?
+
+  quality   Int?     // ۱ تا ۵، اختیاری، خودارزیابی کاربر
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// ============================================================================
+// MODULE: TASKS (کارهای روزمره)
+// ============================================================================
+
+model Task {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  notes     String?
+  dueDate   DateTime?
+  priority  Int      @default(0)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, dueDate])
+}
+
+// ============================================================================
+// MODULE: EXERCISE (سطوح مبتدی/متوسط/پیشرفته)
+// ============================================================================
+
+model ExercisePlan {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  level     String   // beginner | intermediate | advanced
+  heightCm  Int?
+  weightKg  Float?
+  goal      String?  // مثلاً "کاهش وزن" | "افزایش قدرت"
+  hasPhysicalLimitation Boolean @default(false) // چک‌باکس کلی، بدون جزئیات پزشکی
+  disclaimerAcceptedAt  DateTime? // تیک تایید اجباری قبل از فعال‌سازی ماژول
+
+  startDate DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  // ساختار برنامه هفتگی/ماهانه به‌صورت JSON، از پیش طراحی‌شده و انتخاب‌شده بر اساس level
+  planData  Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs      ExerciseLog[]
+
+  @@index([userId])
+}
+
+model ExerciseLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId    String?
+  plan      ExercisePlan? @relation(fields: [planId], references: [id])
+
+  date      DateTime @db.Date
+  completed Boolean  @default(false)
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, planId, date])
+  @@index([userId])
+}
+
+// ============================================================================
+// MODULE: CALORIE (سخت‌ترین از نظر داده — نیاز دیتابیس غذایی)
+// ============================================================================
+
+model FoodItem {
+  id          String   @id @default(cuid())
+  nameFa      String
+  nameEn      String?
+  caloriesPer100g Float
+  proteinPer100g  Float?
+  carbsPer100g    Float?
+  fatPer100g      Float?
+
+  // منبع داده (برای رفع اختلاف/آپدیت بعدی)
+  source      String?  // "internal" | "usda" | "user-submitted"
+  verifiedAt  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  logs        FoodLogEntry[]
+
+  @@index([nameFa])
+}
+
+model FoodLogEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItemId String?
+  foodItem   FoodItem? @relation(fields: [foodItemId], references: [id])
+
+  // برای غذاهای سفارشی/دستی که در دیتابیس نیستند
+  customName String?
+  customCalories Float?
+
+  date       DateTime @db.Date
+  grams      Float
+  mealType   String?  // breakfast | lunch | dinner | snack
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+model CalorieTarget {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dailyTargetKcal Int
+  effectiveFrom   DateTime @default(now())
+  effectiveTo     DateTime?
+
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============================================================================
+// MODULE: TRADE JOURNAL (فقط آمار خام — بدون تفسیر یا پیشنهاد سیستمی)
+// ============================================================================
+
+model TradeEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pair        String   // "EURUSD"
+  direction   String   // long | short
+  entryPrice  Float
+  exitPrice   Float?
+  lotSize     Float
+  pnl         Float?   // سود/زیان — عدد خام، بدون هیچ‌گونه توصیه‌ی سیستمی همراهش
+  riskPercent Float?
+
+  openedAt    DateTime
+  closedAt    DateTime?
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, openedAt])
+}
+
+// ============================================================================
+// MODULE: ROADMAP (رودمپ‌ساز — کاربر موضوع می‌دهد، سیستم/AI رودمپ می‌سازد)
+// ============================================================================
+
+model Roadmap {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  topic      String   // مثلاً "لایت‌روم" یا "مدیریت مالی"
+  title      String
+  note       String?
+
+  // ساختار ایستگاه‌ها دقیقاً مطابق همان مدل treasure-map در HTML فعلی:
+  // [{ title, items: [string], done: boolean }]
+  stations   Json
+
+  tips       Json?    // string[]
+  proTips    Json?    // string[]
+  books      Json?    // string[]
+
+  generatedByAi Boolean @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ============================================================================
+// SUPPORTING FEATURES (اعتمادسازی و اشتراک‌گذاری)
+// ============================================================================
+
+// ============================================================================
+// USER SETTINGS (key-value ساده برای بلاب‌های کوچک JSON — تم، occurrenceهای
+// حذف/اضافه‌شده‌ی برنامه هفتگی و مواردی از این دست که مدل اختصاصی نمی‌خوان)
+// ============================================================================
+
+model UserSetting {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String   // مثلاً "theme" | "removedOccurrences" | "customOccurrences"
+  value     Json
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId])
+}
+
+model ExportRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  format    String   // pdf | csv
+  module    ModuleKey?
+  fileUrl   String?
+  status    String   @default("pending") // pending | ready | failed
+
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([userId])
+}
+
+model SharedProgressLink {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token      String   @unique // برای URL عمومی read-only
+  module     ModuleKey?
+  isActive   Boolean  @default(true)
+  expiresAt  DateTime?
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
