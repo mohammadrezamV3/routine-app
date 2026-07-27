@@ -22,31 +22,32 @@ const PLANS: {
     nameEn: "Basic",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 490_000, // ۴۹,۰۰۰ تومان = ۴۹۰,۰۰۰ ریال
+    priceMonthly: 0, // رایگان
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS],
   },
   {
     key: "exercise",
-    nameFa: "ورزش",
-    nameEn: "Exercise",
+    nameFa: "Plan Gym",
+    nameEn: "Plan Gym",
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 990_000, // ۹۹,۰۰۰ تومان
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE],
+    // بدنسازی = برنامه ورزشی + شمارش کالری، هر دو با هم؛ ai mapping هم توی همه‌ی پلن‌های پولی هست، نه فقط مکس
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.ROADMAP],
   },
   {
     key: "trade",
-    nameFa: "ترید",
-    nameEn: "Trade",
+    nameFa: "Plan Trader",
+    nameEn: "Plan Trader",
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 1_290_000, // ۱۲۹,۰۰۰ تومان
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE],
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE, ModuleKey.ROADMAP],
   },
   {
     key: "max",
-    nameFa: "مکس",
-    nameEn: "Max",
+    nameFa: "Plan Max",
+    nameEn: "Plan Max",
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 1_990_000, // ۱۹۹,۰۰۰ تومان
@@ -68,31 +69,31 @@ const PLANS: {
     nameEn: "Basic",
     market: Market.INTERNATIONAL,
     currency: Currency.USD,
-    priceMonthly: 399, // $3.99 به سنت
+    priceMonthly: 0, // free
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS],
   },
   {
     key: "exercise",
-    nameFa: "ورزش",
-    nameEn: "Exercise",
+    nameFa: "Plan Gym",
+    nameEn: "Plan Gym",
     market: Market.INTERNATIONAL,
     currency: Currency.USD,
     priceMonthly: 799, // $7.99
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE],
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.ROADMAP],
   },
   {
     key: "trade",
-    nameFa: "ترید",
-    nameEn: "Trade",
+    nameFa: "Plan Trader",
+    nameEn: "Plan Trader",
     market: Market.INTERNATIONAL,
     currency: Currency.USD,
     priceMonthly: 1299, // $12.99
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE],
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE, ModuleKey.ROADMAP],
   },
   {
     key: "max",
-    nameFa: "مکس",
-    nameEn: "Max",
+    nameFa: "Plan Max",
+    nameEn: "Plan Max",
     market: Market.INTERNATIONAL,
     currency: Currency.USD,
     priceMonthly: 1799, // $17.99

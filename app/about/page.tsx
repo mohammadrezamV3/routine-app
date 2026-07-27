@@ -1,7 +1,6 @@
 export default function AboutPage() {
   const rows = [
-    { label: "سازنده", value: "محمدرضا ابوالحسن" },
-    { label: "شماره تماس", value: "+989058969548", href: "tel:+989058969548" },
+    { label: "سازنده", value: "Araksis Group" },
     { label: "ایمیل", value: "smm881517@gmail.com", href: "mailto:smm881517@gmail.com" },
   ];
 

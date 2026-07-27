@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WEEK_ORDER, tasksForDate, timeStartMinutes, timeEndMinutes, splitTimeRange } from "@/lib/schedule";
-import { dayFillFraction, positionTimedTasks, awakeFraction } from "@/lib/weeklyTimeline";
+import { awakeFraction, dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
 import { getCustomOccurrences, getRemovedOccurrences } from "@/lib/storage";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, timeToMinutes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { ProgramCard } from "@/components/ProgramCard";
 import { WeeklySearchPanel } from "@/components/WeeklySearchPanel";
 import { EditOccurrenceForm } from "@/components/EditOccurrenceForm";
+import { WakeSleepSetup } from "@/components/WakeSleepSetup";
+import { HistoryCalendar } from "@/components/HistoryCalendar";
 
 const now = new Date();
 
@@ -21,6 +24,14 @@ export default function WeeklyPage() {
   const [cardName, setCardName] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ name: string; occ: Occ } | null>(null);
+  const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const wake = wakeSleep?.wake || DEFAULT_WAKE;
+  const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
+  const awakeStartMin = timeToMinutes(wake);
+  const awakeEndMin = timeToMinutes(sleep) + 24 * 60; // خواب معمولاً بعد از نیمه‌شبه
 
   async function refresh() {
     const [removed, custom] = await Promise.all([getRemovedOccurrences(), getCustomOccurrences()]);
@@ -28,7 +39,13 @@ export default function WeeklyPage() {
     setCustomOcc(custom);
   }
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    getWakeSleepTimes().then((v) => {
+      if (v) setWakeSleep(v);
+      else setNeedsOnboarding(true);
+    });
+  }, []);
 
   const timelineRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -47,12 +64,13 @@ export default function WeeklyPage() {
       const trackH = track ? track.offsetHeight : tl.scrollHeight;
       const d = new Date();
       const mins = d.getHours() * 60 + d.getMinutes();
-      const pct = awakeFraction(mins);
+      const pct = awakeFraction(mins, awakeStartMin, awakeEndMin);
       const target = pct * trackH - tl.clientHeight / 2;
       tl.scrollTop = Math.max(0, target);
     }, 60);
     return () => clearTimeout(id);
-  }, [openIdx]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openIdx, awakeStartMin, awakeEndMin]);
 
   const opts = useMemo(
     () => ({ removedOccurrences: removedOcc, customOccurrences: customOcc }),
@@ -63,15 +81,33 @@ export default function WeeklyPage() {
     <section>
       <div className="weekly-head-row">
         <h1>برنامه هفتگی</h1>
-        <button className="fab-add" aria-label="ویرایش برنامه" onClick={() => setSearchOpen(true)}>
-          <span className="fab-add-icon">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M14.7 4.3a1.5 1.5 0 0 1 2.1 0l2.9 2.9a1.5 1.5 0 0 1 0 2.1L9.5 19.5 4 21l1.5-5.5L14.7 4.3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-              <path d="M13 6l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            </svg>
-          </span>
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="fab-add" aria-label="تاریخچه" onClick={() => setHistoryOpen((v) => !v)}>
+            <span className="fab-add-icon">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 11.5A8 8 0 1 1 6.3 17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                <path d="M4 6v5.5h5.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 8.5V12l2.5 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </button>
+          <button className="fab-add" aria-label="ویرایش برنامه" onClick={() => setSearchOpen(true)}>
+            <span className="fab-add-icon">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M14.7 4.3a1.5 1.5 0 0 1 2.1 0l2.9 2.9a1.5 1.5 0 0 1 0 2.1L9.5 19.5 4 21l1.5-5.5L14.7 4.3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                <path d="M13 6l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+            </span>
+          </button>
+        </div>
       </div>
+
+      {historyOpen && (
+        <div className="tm-extra" style={{ marginBottom: 14 }}>
+          <div className="domain-sub">تاریخچه ماهانه</div>
+          <HistoryCalendar wake={wake} sleep={sleep} />
+        </div>
+      )}
 
       <div className="weekly-glass">
         {WEEK_ORDER.map((o, idx) => {
@@ -80,7 +116,7 @@ export default function WeeklyPage() {
           const items = tasksForDate(d, opts);
           const isToday = o.jsDay === now.getDay();
           const isOpen = openIdx === idx;
-          const fillPct = Math.round(dayFillFraction(o.jsDay, WEEK_ORDER, now) * 1000) / 10;
+          const fillPct = Math.round(dayFillFraction(o.jsDay, WEEK_ORDER, now, awakeStartMin, awakeEndMin) * 1000) / 10;
 
           const timedItems = items.filter((t) => timeStartMinutes(t.time) !== null);
           const untimedItems = items.filter((t) => timeStartMinutes(t.time) === null);
@@ -92,7 +128,7 @@ export default function WeeklyPage() {
             effTodayPos = (todayPos - 1 + WEEK_ORDER.length) % WEEK_ORDER.length;
             effNowMin = nowMinRaw + 24 * 60;
           }
-          const positioned = positionTimedTasks(timedItems, timeStartMinutes, timeEndMinutes, idx, effTodayPos, effNowMin);
+          const positioned = positionTimedTasks(timedItems, timeStartMinutes, timeEndMinutes, idx, effTodayPos, effNowMin, awakeStartMin, awakeEndMin);
 
           return (
             <div key={o.jsDay} className={`week-day${isOpen ? " open" : ""}`}>
@@ -111,7 +147,7 @@ export default function WeeklyPage() {
                       </div>
 
                       <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "20px" }}>
-                        <div className="wt-marker-col"><div className="wt-time-above">۰۹:۳۰</div></div>
+                        <div className="wt-marker-col"><div className="wt-time-above">{wake}</div></div>
                         <div className="wt-content"><div className="wt-name">بیداری</div></div>
                       </div>
 
@@ -127,11 +163,9 @@ export default function WeeklyPage() {
                             <div className="wt-marker-col">
                               <div className="wt-time-above">{r.start || ""}</div>
                               <div className={`wt-dot${p.isPast ? " wt-dot-done" : ""}`}>
-                                {p.isPast && (
-                                  <svg viewBox="0 0 24 24" fill="none">
-                                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                )}
+                                <svg viewBox="0 0 24 24" fill="none">
+                                  <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                                </svg>
                               </div>
                             </div>
                             <div className="wt-content">
@@ -143,7 +177,7 @@ export default function WeeklyPage() {
                       })}
 
                       <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "calc(100% - 20px)" }}>
-                        <div className="wt-marker-col"><div className="wt-time-above">۰۱:۳۰</div></div>
+                        <div className="wt-marker-col"><div className="wt-time-above">{sleep}</div></div>
                         <div className="wt-content"><div className="wt-name">خواب</div></div>
                       </div>
                     </div>
@@ -194,6 +228,12 @@ export default function WeeklyPage() {
           scheduleOpts={opts}
           onClose={() => setEditTarget(null)}
           onChanged={refresh}
+        />
+      )}
+
+      {needsOnboarding && (
+        <WakeSleepSetup
+          onDone={(v) => { setWakeSleep(v); setNeedsOnboarding(false); }}
         />
       )}
     </section>

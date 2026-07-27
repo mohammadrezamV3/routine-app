@@ -4,14 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { Market, ModuleKey } from "@prisma/client";
 import { getSiteMarket } from "@/lib/market";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { isValidIranPhone, isValidUsername, isValidEmail, validatePassword, clampText } from "@/lib/validate";
+import { isValidIranPhone, isValidUsername, validatePassword, clampText } from "@/lib/validate";
 
 // ماژول‌هایی که پلن پایه همیشه شامل می‌شود — همون سه‌تای همیشگی
 // (روتین/خواب/کار روزمره). این لیست باید با seed.ts هماهنگ بماند.
 const BASIC_MODULES: ModuleKey[] = [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS];
 
-// ثبت‌نام حالا با شماره موبایل + یوزرنیم + رمز + تاریخ تولد انجام می‌شه؛
-// ایمیل اختیاریه. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.
+// ثبت‌نام با نام + شماره موبایل + یوزرنیم + رمز انجام می‌شه — این چهارتا
+// الزامی‌ان. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.
 export async function POST(req: NextRequest) {
   // حداکثر ۵ تلاش ثبت‌نام در ۱۰ دقیقه به‌ازای هر IP — جلوگیری از ساخت
   // انبوه حساب یا سوءاستفاده خودکار از این فرم.
@@ -21,18 +21,16 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { phone, username, password, birthDate, name, lastName, email } = body as {
+  const { phone, username, password, name, birthDate } = body as {
     phone: string;
     username: string;
     password: string;
+    name: string;
     birthDate?: string;
-    name?: string;
-    lastName?: string;
-    email?: string;
   };
 
-  if (!phone || !username || !password || !name || !lastName) {
-    return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم و رمز عبور الزامی است" }, { status: 400 });
+  if (!phone || !username || !password || !name || !birthDate) {
+    return NextResponse.json({ error: "نام، شماره موبایل، یوزرنیم، تاریخ تولد و رمز عبور الزامی است" }, { status: 400 });
   }
   if (!isValidIranPhone(phone)) {
     return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });
@@ -40,16 +38,18 @@ export async function POST(req: NextRequest) {
   if (!isValidUsername(username)) {
     return NextResponse.json({ error: "یوزرنیم باید ۳ تا ۲۰ کاراکتر و فقط شامل حروف انگلیسی/عدد/آندرلاین باشه" }, { status: 400 });
   }
-  if (email && email.trim() && !isValidEmail(email.trim())) {
-    return NextResponse.json({ error: "جیمیل معتبر نیست" }, { status: 400 });
-  }
-  const passwordError = validatePassword(password);
+  const passwordError = await validatePassword(password, [username, name, phone]);
   if (passwordError) {
     return NextResponse.json({ error: passwordError }, { status: 400 });
   }
+  const dob = new Date(birthDate);
+  const ageYears = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  if (isNaN(dob.getTime()) || ageYears < 10 || ageYears > 100) {
+    return NextResponse.json({ error: "تاریخ تولد معتبر نیست" }, { status: 400 });
+  }
 
   const existing = await prisma.user.findFirst({
-    where: { OR: [{ phone }, { username }, ...(email ? [{ email }] : [])] },
+    where: { OR: [{ phone }, { username }] },
   });
   if (existing) {
     // پیام عمداً کلیه (نه «شماره موبایل تکراریه» / «یوزرنیم تکراریه» جدا) تا
@@ -67,11 +67,9 @@ export async function POST(req: NextRequest) {
     data: {
       phone,
       username,
-      email: email && email.trim() ? email.trim() : null,
       name: clampText(name.trim(), 80),
-      lastName: clampText(lastName.trim(), 80),
+      birthDate: dob,
       passwordHash,
-      birthDate: birthDate ? new Date(birthDate) : null,
       market: siteMarket === "INTERNATIONAL" ? Market.INTERNATIONAL : Market.IRAN,
       locale: siteMarket === "INTERNATIONAL" ? "en" : "fa",
     },

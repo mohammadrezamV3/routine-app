@@ -4,16 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { TradeJournal } from "@/components/TradeJournal";
-
-const CHECKLIST = [
-  "سطح H1 با برخورد قبلی معتبره؟",
-  "گره معاملاتی در M5 شکل گرفته؟",
-  "کندل تاییدی صادر شده؟",
-  "DXY همسوئه یا حداقل واگرایی مشکوک نداره؟",
-  "خبر مهمی در ۳۰-۶۰ دقیقه آینده نیست؟",
-  "حجم پوزیشن بر اساس ریسک محاسبه شده؟",
-  "حد ضرر و هدف سود قبل از ورود مشخصه؟",
-];
+import { TradeChecklist } from "@/components/TradeChecklist";
 
 const TIPS = [
   "قبل از ورود، سطح میجور H1 رو با حداقل ۲-۳ برخورد قبلی تأیید کن، نه هر خط دلبخواهی.",
@@ -35,7 +26,6 @@ const PRO = [
 export default function TradePage() {
   const { status } = useSession();
   const [tab, setTab] = useState<"checklist" | "journal">("checklist");
-  const [checked, setChecked] = useState<Record<number, boolean>>({});
 
   return (
     <section>
@@ -48,21 +38,14 @@ export default function TradePage() {
 
       {tab === "checklist" ? (
         <>
-          <div className="checklist-glass" style={{ marginTop: 14 }}>
-            {CHECKLIST.map((label, i) => {
-              const on = !!checked[i];
-              return (
-                <div key={i} onClick={() => setChecked((c) => ({ ...c, [i]: !c[i] }))} className="task">
-                  <div className={`check${on ? " on" : ""}`}>
-                    <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                      <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <div className={`task-name${on ? " done" : ""}`}>{label}</div>
-                </div>
-              );
-            })}
-          </div>
+          {status === "authenticated" ? (
+            <TradeChecklist />
+          ) : (
+            <>
+              <div className="section-note" style={{ marginTop: 14 }}>برای ساختن چک‌لیست شخصی خودت اول وارد حساب بشو.</div>
+              <Link href="/auth/login" className="nav-link" style={{ display: "inline-block", marginTop: 10 }}>ورود / ثبت‌نام →</Link>
+            </>
+          )}
 
           <div className="tm-extra">
             <div className="domain-sub">نکات کلیدی</div>

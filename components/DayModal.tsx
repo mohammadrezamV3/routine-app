@@ -4,26 +4,27 @@ import { useEffect, useState } from "react";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { tasksForDate, ScheduleTask } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime as isWakeOnTimeShared, timeToMinutes } from "@/lib/wakeSleep";
 
 const todayKey = isoLocal(new Date());
-
-function isWakeOnTime(iso: string) {
-  const d = new Date(iso);
-  const h = d.getHours(), m = d.getMinutes();
-  return h < 9 || (h === 9 && m <= 30);
-}
 
 export function DayModal({
   date,
   onClose,
   onChanged,
   scheduleOpts,
+  wake = DEFAULT_WAKE,
+  sleep = DEFAULT_SLEEP,
 }: {
   date: Date;
   onClose: () => void;
   onChanged: () => void;
   scheduleOpts?: Parameters<typeof tasksForDate>[1];
+  wake?: string;
+  sleep?: string;
 }) {
+  const wakeMinutes = timeToMinutes(wake);
+  const isWakeOnTime = (iso: string) => isWakeOnTimeShared(iso, wakeMinutes);
   const iso = isoLocal(date);
   const [daily, setDailyState] = useState<DailyRecord | null>(null);
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
@@ -137,11 +138,11 @@ export function DayModal({
               </span>
             ) : iso === todayKey ? (
               <>
-                <span className="wake-text">هدف: خواب ۰۱:۳۰ — بیداری ۰۹:۳۰</span>
+                <span className="wake-text">هدف: خواب {sleep} — بیداری {wake}</span>
                 <button onClick={registerWake}>ثبت بیداری الان</button>
               </>
             ) : (
-              <span className="wake-text">هدف: خواب ۰۱:۳۰ — بیداری ۰۹:۳۰ — این روز بسته شده، چیزی ثبت نشد</span>
+              <span className="wake-text">هدف: خواب {sleep} — بیداری {wake} — این روز بسته شده، چیزی ثبت نشد</span>
             )}
           </div>
         </div>

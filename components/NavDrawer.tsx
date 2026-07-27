@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { animate } from "animejs";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { AccountPanel } from "./AccountPanel";
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
-const ICONS: Record<string, JSX.Element> = {
+// export شده چون LandingPage هم همین ست رو برای کارت‌های ماژول استفاده می‌کنه.
+export const ICONS: Record<string, JSX.Element> = {
   home: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20h3a1 1 0 0 0 1-1v-9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
@@ -47,7 +49,7 @@ const LINKS = [
   { href: "/", label: "صفحه اصلی", icon: "home" },
   { href: "/weekly", label: "برنامه هفتگی", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
-  { href: "/exercise", label: "ورزش و کالری", icon: "exercise" },
+  { href: "/exercise", label: "بدنسازی", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },
   { href: "/about", label: "درباره من", icon: "about" },
 ];
@@ -59,37 +61,65 @@ export function NavDrawer() {
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
+  const authSlotRef = useRef<HTMLDivElement>(null);
+  // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
+  // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
+  const hideTopbar = pathname?.startsWith("/auth");
 
   function go(href: string) {
     setOpen(false);
     router.push(href);
   }
 
+  useEffect(() => {
+    if (status === "loading" || !authSlotRef.current) return;
+    animate(authSlotRef.current, {
+      opacity: [0, 1],
+      scale: [0.85, 1],
+      duration: 380,
+      ease: "outBack",
+    });
+  }, [status]);
+
   return (
     <>
-      <header className="app-topbar">
-        <div className="topbar-actions">
-          <button
-            id="menuBtn"
-            className={`hamburger${open ? " active" : ""}`}
-            aria-label="باز کردن منو"
-            onClick={() => setOpen(true)}
-          >
-            <span></span><span></span><span></span>
-          </button>
-          <button
-            className="profile-btn"
-            aria-label="پروفایل"
-            onClick={() => setAccountOpen(true)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="3.5" />
-              <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
-            </svg>
-          </button>
-        </div>
-      </header>
+      {!hideTopbar && (
+        <header className="app-topbar">
+          <div className="topbar-actions">
+            <button
+              id="menuBtn"
+              className={`hamburger${open ? " active" : ""}`}
+              aria-label="باز کردن منو"
+              onClick={() => setOpen(true)}
+            >
+              <span></span><span></span><span></span>
+            </button>
+            {status === "loading" ? (
+              <span className="topbar-auth-placeholder" />
+            ) : status === "authenticated" ? (
+              <div ref={authSlotRef}>
+                <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
+                  <span className="profile-chip-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="3.5" />
+                      <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
+                    </svg>
+                  </span>
+                  {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
+                </button>
+              </div>
+            ) : (
+              <div ref={authSlotRef}>
+                <button className="topbar-signin-btn" onClick={() => router.push("/auth/login")}>
+                  <span className="topbar-signin-icon">{ICONS.login}</span>
+                  <span>ورود</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+      )}
 
       <div className={`nav-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
 

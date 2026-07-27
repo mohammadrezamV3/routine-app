@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
+import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 
+// EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
+// عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
 const MODULE_LABELS: Record<string, string> = {
   ROUTINE: "روتین روزانه",
   SLEEP: "خواب",
   TASKS: "کارهای روزمره",
-  EXERCISE: "ورزش",
-  CALORIE: "کالری",
+  EXERCISE: "بدنسازی",
+  CALORIE: "بدنسازی",
   TRADE: "ژورنال ترید",
-  ROADMAP: "رودمپ آموزشی",
+  ROADMAP: "رودمپ آموزشی (ai mapping)",
   AI_INSIGHT: "تحلیل هوشمند (Correlation Insight)",
 };
 
@@ -49,6 +54,9 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const { status } = useSession();
   const [data, setData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
+  const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
+  const [editingWakeSleep, setEditingWakeSleep] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -56,7 +64,15 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       setData(res.user || null);
       setLoading(false);
     });
+    getWakeSleepTimes().then(setWakeSleep);
   }, [status]);
+
+  useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
+
+  async function enableNotifications() {
+    const perm = await requestNotificationPermission();
+    setNotifPermission(perm);
+  }
 
   if (status === "unauthenticated") {
     return (
@@ -86,6 +102,15 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   }
 
   const activeModules = data.moduleAccess.filter((m) => m.active);
+  // بدنسازی هم اسم EXERCISE هم CALORIE رو به یک لیبل نگاشت می‌ده — این‌جا
+  // موقع نمایش، دومیشو حذف می‌کنیم که یک قابلیت به‌جای دو ردیف تکراری دیده بشه
+  const seenModuleLabels = new Set<string>();
+  const displayModules = activeModules.filter((m) => {
+    const label = MODULE_LABELS[m.module] || m.module;
+    if (seenModuleLabels.has(label)) return false;
+    seenModuleLabels.add(label);
+    return true;
+  });
   const currentSub = data.subscriptions[0];
 
   return (
@@ -135,7 +160,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           <div className="item-line">دسترسی نامحدود — نیازی به اشتراک نداری</div>
         ) : currentSub ? (
           <div className="item-line">
-            پلن {currentSub.plan.nameFa} — {currentSub.status === "ACTIVE" ? "فعال" : currentSub.status === "TRIAL" ? "دوره آزمایشی" : currentSub.status}
+            {currentSub.plan.nameFa} — {currentSub.status === "ACTIVE" ? "فعال" : currentSub.status === "TRIAL" ? "دوره آزمایشی" : currentSub.status}
           </div>
         ) : (
           <div className="item-line empty">
@@ -146,9 +171,9 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
 
       <div className="tm-extra">
         <div className="domain-sub">ماژول‌های فعال</div>
-        {activeModules.length ? (
+        {displayModules.length ? (
           <ul>
-            {activeModules.map((m) => (
+            {displayModules.map((m) => (
               <li key={m.module}>
                 {MODULE_LABELS[m.module] || m.module}
                 {m.expiresAt && (
@@ -165,6 +190,37 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="tm-extra">
+        <div className="domain-sub">ساعت بیداری و خواب</div>
+        <div className="item-line">
+          بیداری <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.wake || DEFAULT_WAKE}</b>
+          {" — "}خواب <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.sleep || DEFAULT_SLEEP}</b>
+        </div>
+        <button onClick={() => setEditingWakeSleep(true)} style={{ marginTop: 8, borderColor: "var(--accent)", color: "var(--accent)" }}>
+          تغییر ساعت‌ها
+        </button>
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">یادآوری‌ها</div>
+        {notifPermission === "unsupported" ? (
+          <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
+        ) : notifPermission === "granted" ? (
+          <div className="item-line">فعاله — وقتی این صفحه بازه، سر وقتِ برنامه یادآوری می‌گیری.</div>
+        ) : notifPermission === "denied" ? (
+          <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایت توی مرورگرت می‌تونی بازش کنی.</div>
+        ) : (
+          <>
+            <div className="section-note" style={{ marginBottom: 8 }}>
+              وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری — فقط تا وقتی این صفحه توی مرورگرت بازه.
+            </div>
+            <button onClick={enableNotifications} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+              فعال‌کردن یادآوری‌ها
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="tm-extra">
         <button disabled title="به‌زودی" style={{ opacity: 0.5, cursor: "not-allowed" }}>
           تحلیل برنامه‌ها
         </button>
@@ -175,6 +231,14 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           خروج از حساب
         </button>
       </div>
+
+      {editingWakeSleep && (
+        <WakeSleepSetup
+          initial={wakeSleep}
+          onClose={() => setEditingWakeSleep(false)}
+          onDone={(v) => { setWakeSleep(v); setEditingWakeSleep(false); }}
+        />
+      )}
     </ModalShell>
   );
 }

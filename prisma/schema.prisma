@@ -110,6 +110,8 @@ model User {
   // روابط احراز هویت
   accounts      OAuthAccount[]
   sessions      Session[]
+  passwordResetOtps PasswordResetOtp[]
+  tradeChecklistItems TradeChecklistItem[]
 
   // روابط تجاری
   subscriptions       Subscription[]
@@ -162,6 +164,36 @@ model Session {
   sessionToken String   @unique
   expiresAt    DateTime
   createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// چک‌لیست شخصی پیش از معامله — کاملاً دست‌ساز کاربره (نه قالب ثابت)، حداکثر
+// ۴۰ آیتم، ترتیبش با «order» مشخص می‌شه و از پنل ترید قابل ویرایش/جابه‌جایی‌ست
+model TradeChecklistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// کد یک‌بارمصرف فراموشی رمز — پیامکی به شماره کاربر می‌ره. کد به‌صورت هش‌شده
+// ذخیره می‌شه (نه متن خام)، محدود به چند تلاش (جلوگیری از حدس‌زدن brute-force
+// روی یه کد ۵رقمی)، و بعد از انقضا/مصرف دیگه معتبر نیست.
+model PasswordResetOtp {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
 }

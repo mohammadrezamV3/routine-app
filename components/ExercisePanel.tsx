@@ -4,17 +4,17 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
-import { EXERCISE_TEMPLATES, LEVEL_LABELS, ExerciseDay } from "@/lib/exercisePlans";
+import { LEVEL_LABELS, GOAL_LABELS, ExerciseDay, ExerciseGoal, ExerciseLevel } from "@/lib/exercisePlans";
 
 const todayName = FA_WEEKDAY[new Date().getDay()];
 const todayKey = isoLocal(new Date());
 
 type Plan = {
   id: string;
-  level: "beginner" | "intermediate" | "advanced";
+  level: ExerciseLevel;
   heightCm: number | null;
   weightKg: number | null;
-  goal: string | null;
+  goal: ExerciseGoal | null;
   planData: ExerciseDay[];
 };
 
@@ -23,12 +23,11 @@ export function ExercisePanel() {
   const [plan, setPlan] = useState<Plan | null | undefined>(undefined);
   const [todayDone, setTodayDone] = useState(false);
 
-  const [level, setLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
+  const [level, setLevel] = useState<ExerciseLevel>("beginner");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
-  const [goal, setGoal] = useState("");
+  const [goal, setGoal] = useState<ExerciseGoal | null>(null);
   const [hasLimitation, setHasLimitation] = useState(false);
-  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -56,7 +55,7 @@ export function ExercisePanel() {
   }
 
   async function submitPlan() {
-    if (!accepted) { setError("برای ادامه باید سلب مسئولیت رو تایید کنی"); return; }
+    if (!goal) { setError("انتخاب هدف تمرین لازمه"); return; }
     setError(null);
     setSubmitting(true);
     const res = await fetch("/api/exercise/plan", {
@@ -66,9 +65,8 @@ export function ExercisePanel() {
         level,
         heightCm: heightCm ? +heightCm : undefined,
         weightKg: weightKg ? +weightKg : undefined,
-        goal: goal || undefined,
+        goal,
         hasPhysicalLimitation: hasLimitation,
-        disclaimerAccepted: accepted,
       }),
     });
     const data = await res.json();
@@ -115,8 +113,19 @@ export function ExercisePanel() {
           </div>
         </div>
 
-        <label style={{ display: "block", fontSize: 11, color: "var(--muted2)", margin: "14px 0 6px" }}>هدف (اختیاری)</label>
-        <input type="text" className="wsearch-newform-name" placeholder="مثلاً کاهش وزن، افزایش قدرت..." value={goal} onChange={(e) => setGoal(e.target.value)} />
+        <label style={{ display: "block", fontSize: 11, color: "var(--muted2)", margin: "14px 0 6px" }}>هدف تمرین</label>
+        <div className="day-picker" style={{ flexWrap: "wrap" }}>
+          {(Object.keys(GOAL_LABELS) as ExerciseGoal[]).map((g) => (
+            <span
+              key={g}
+              className={`day-pill${goal === g ? " on" : ""}`}
+              onClick={() => setGoal(g)}
+              style={{ flex: "1 1 calc(50% - 4px)", padding: "9px 6px" }}
+            >
+              {GOAL_LABELS[g]}
+            </span>
+          ))}
+        </div>
 
         <div className="task" style={{ marginTop: 14, cursor: "pointer" }} onClick={() => setHasLimitation((v) => !v)}>
           <div className={`check${hasLimitation ? " on" : ""}`}>
@@ -125,20 +134,15 @@ export function ExercisePanel() {
           <div className="task-name">محدودیت جسمی دارم (بدون جزئیات، فقط برای احتیاط بیشتر)</div>
         </div>
 
-        <div className="task" style={{ cursor: "pointer" }} onClick={() => setAccepted((v) => !v)}>
-          <div className={`check${accepted ? " on" : ""}`}>
-            <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-          <div className="task-name">
-            این برنامه پیشنهادیه، نه توصیه پزشکی؛ قبل از شروع با پزشک مشورت می‌کنم و مسئولیت اجرا با خودمه.
-          </div>
-        </div>
-
         {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
 
         <button onClick={submitPlan} disabled={submitting} style={{ marginTop: 16, borderColor: "var(--accent)", color: "var(--accent)" }}>
           {submitting ? "در حال ساخت…" : "ساخت برنامه"}
         </button>
+
+        <div className="disclaimer-note">
+          این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
+        </div>
       </div>
     );
   }
@@ -147,7 +151,9 @@ export function ExercisePanel() {
 
   return (
     <div>
-      <div className="section-note" style={{ marginTop: 6 }}>سطح: {LEVEL_LABELS[plan.level]}</div>
+      <div className="section-note" style={{ marginTop: 6 }}>
+        سطح: {LEVEL_LABELS[plan.level]}{plan.goal && ` — هدف: ${GOAL_LABELS[plan.goal]}`}
+      </div>
 
       {todayPlan ? (
         <div className="glass-box" style={{ marginTop: 14 }}>
@@ -155,11 +161,13 @@ export function ExercisePanel() {
             <div className={`check${todayDone ? " on" : ""}`}>
               <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
-            <div>
-              <div className={`task-name${todayDone ? " done" : ""}`}>امروز ({todayName}) — {todayPlan.focus}</div>
-              <div className="task-time">{todayPlan.items.join(" · ")}</div>
-            </div>
+            <div className={`task-name${todayDone ? " done" : ""}`}>امروز ({todayName}) — {todayPlan.focus}</div>
           </div>
+          <ul className="exercise-item-list">
+            {todayPlan.items.map((it) => (
+              <li key={it} className="exercise-item">{it}</li>
+            ))}
+          </ul>
         </div>
       ) : (
         <div className="item-line" style={{ marginTop: 14 }}>امروز ({todayName}) روز استراحته — چیزی برنامه‌ریزی نشده.</div>
@@ -167,11 +175,25 @@ export function ExercisePanel() {
 
       <div className="tm-extra">
         <div className="domain-sub">برنامه کامل هفته</div>
-        <ul>
+        <div className="exercise-week-grid">
           {plan.planData.map((d) => (
-            <li key={d.day}><b>{d.day}</b> — {d.focus}: {d.items.join("، ")}</li>
+            <div key={d.day} className={`exercise-day-card${d.day === todayName ? " today" : ""}`}>
+              <div className="exercise-day-head">
+                <span>{d.day}</span>
+                <span className="exercise-day-focus">{d.focus}</span>
+              </div>
+              <ul className="exercise-item-list">
+                {d.items.map((it) => (
+                  <li key={it} className="exercise-item">{it}</li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
+      </div>
+
+      <div className="disclaimer-note">
+        این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
       </div>
     </div>
   );

@@ -1,18 +1,26 @@
 // پورت مستقیم منطق تایم‌لاین هفتگی از فایل HTML اصلی — محاسبه درصد پرشدگی
 // خط زمان هر روز و موقعیت هر آیتم روی آن، بدون تغییر در الگوریتم.
+// ساعت بیداری/خواب دیگه ثابت نیست — پارامتر اختیاریه که از تنظیمات واقعی
+// کاربر (lib/wakeSleep.ts) میاد؛ اگه داده نشه همون پیش‌فرض قبلی رو نگه می‌داره.
 
-export const AWAKE_START_MIN = 9 * 60 + 30; // 09:30
-export const AWAKE_END_MIN = 25 * 60 + 30; // 01:30 روز بعد (به‌صورت 25:30)
-export const AWAKE_SPAN_MIN = AWAKE_END_MIN - AWAKE_START_MIN;
+export const AWAKE_START_MIN = 9 * 60 + 30; // 09:30 — پیش‌فرض/fallback
+export const AWAKE_END_MIN = 25 * 60 + 30; // 01:30 روز بعد (به‌صورت 25:30) — پیش‌فرض/fallback
 
-export function awakeFraction(minutes: number): number {
+export function awakeFraction(minutes: number, awakeStartMin = AWAKE_START_MIN, awakeEndMin = AWAKE_END_MIN): number {
   let m = minutes;
   if (m < 6 * 60) m += 24 * 60;
-  const frac = (m - AWAKE_START_MIN) / AWAKE_SPAN_MIN;
+  const span = awakeEndMin - awakeStartMin;
+  const frac = (m - awakeStartMin) / span;
   return Math.max(0, Math.min(1, frac));
 }
 
-export function dayFillFraction(jsDay: number, order: { jsDay: number }[], now: Date): number {
+export function dayFillFraction(
+  jsDay: number,
+  order: { jsDay: number }[],
+  now: Date,
+  awakeStartMin = AWAKE_START_MIN,
+  awakeEndMin = AWAKE_END_MIN
+): number {
   const todayPos = order.findIndex((o) => o.jsDay === now.getDay());
   const thisPos = order.findIndex((o) => o.jsDay === jsDay);
   const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
@@ -24,9 +32,10 @@ export function dayFillFraction(jsDay: number, order: { jsDay: number }[], now: 
   }
   if (thisPos < effectiveTodayPos) return 1;
   if (thisPos > effectiveTodayPos) return 0;
-  if (effectiveNowMin < AWAKE_START_MIN) return 0;
-  const elapsed = effectiveNowMin - AWAKE_START_MIN;
-  const frac = elapsed / AWAKE_SPAN_MIN;
+  if (effectiveNowMin < awakeStartMin) return 0;
+  const span = awakeEndMin - awakeStartMin;
+  const elapsed = effectiveNowMin - awakeStartMin;
+  const frac = elapsed / span;
   return Math.max(0, Math.min(1, frac));
 }
 
@@ -52,12 +61,14 @@ export function positionTimedTasks(
   endMinutesOf: (time: string) => number | null,
   thisPos: number,
   effTodayPos: number,
-  effNowMin: number
+  effNowMin: number,
+  awakeStartMin = AWAKE_START_MIN,
+  awakeEndMin = AWAKE_END_MIN
 ): PositionedTask[] {
   const sorted = timedItems
     .map((t) => {
       const startMin = startMinutesOf(t.time)!;
-      return { t, pct: awakeFraction(startMin), startMin };
+      return { t, pct: awakeFraction(startMin, awakeStartMin, awakeEndMin), startMin };
     })
     .sort((a, b) => a.pct - b.pct);
 
