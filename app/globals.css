@@ -31,10 +31,6 @@
     --secondary:#3E7BFA;
     --secondary-rgb:62,123,250;
     --secondary-dim:rgba(62,123,250,.18);
-    /* سود/ضرر توی ژورنال ترید قرارداد جهانیه (سبز/قرمز)، نه بخشی از هویت
-       رنگی تم — پس با accent (که بین شب/روز عوض می‌شه) عوض نمی‌شه */
-    --profit:#00A86B;
-    --profit-dim:rgba(0,168,107,.20);
   }
   body[data-theme="light"]{
     --bg:#F3E9D8;
@@ -54,8 +50,6 @@
     --secondary:#9C7A23;
     --secondary-rgb:156,122,35;
     --secondary-dim:rgba(156,122,35,.16);
-    --profit:#00A86B;
-    --profit-dim:rgba(0,168,107,.20);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
 
@@ -325,7 +319,7 @@
     content:''; position:absolute; z-index:-1; border-radius:50%; pointer-events:none;
     filter:blur(46px);
     width:120px; height:120px; top:-20px; right:-20px;
-    background:rgba(0,230,150,.14);
+    background:rgba(var(--accent-rgb),.14);
   }
   .nav-title{
     font-family:var(--font-plexmono), monospace; font-size:11px; letter-spacing:.1em; color:var(--muted2);
@@ -825,7 +819,7 @@
   }
   .wbox-glowblob{
     position:absolute; top:0; left:0; border-radius:50%;
-    background:rgba(0,230,150,.85); will-change:transform;
+    background:rgba(var(--accent-rgb),.85); will-change:transform;
   }
   /* the "core" layer — plain CSS blur only (no SVG url() filter). SVG filters referenced via
      url() are unreliable across browsers (Safari in particular often silently drops them,
@@ -837,16 +831,16 @@
   }
   .wbox-blob{
     position:absolute; top:0; left:0; width:15px; height:15px; border-radius:50%;
-    background:rgba(0,215,140,.8); will-change:transform;
+    background:rgba(var(--accent-rgb),.8); will-change:transform;
   }
   .wbox-label{position:relative; z-index:1;}
   .wsearch-box:hover, .wsearch-box:active{
-    background:var(--accent-dim); border-color:var(--accent); color:#3CFF9A; font-weight:800;
+    background:var(--accent-dim); border-color:var(--accent); color:var(--accent); font-weight:800;
     box-shadow:0 0 0 1px var(--accent);
   }
   .wsearch-box:hover::after, .wsearch-box:active::after{
     content:''; position:absolute; inset:0; border-radius:14px; z-index:-1;
-    box-shadow:0 0 8px rgba(0,255,140,.65), 0 0 16px rgba(0,255,140,.4);
+    box-shadow:0 0 8px rgba(var(--accent-rgb),.65), 0 0 16px rgba(var(--accent-rgb),.4);
   }
   .wsearch-box:active{transform:scale(.94);}
   .wsearch-add-wrap{display:flex; justify-content:center; padding-top:10px;}

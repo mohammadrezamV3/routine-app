@@ -122,7 +122,7 @@ export function TradeJournal() {
         key={iso}
         onClick={() => setSelectedIso(iso)}
         className={`cal-cell${iso === selectedIso ? " today" : ""}`}
-        style={hasEntries ? { background: dayTotal >= 0 ? "var(--profit-dim)" : "rgba(224,82,82,.14)", borderColor: dayTotal >= 0 ? "var(--profit)" : "#E05252" } : {}}
+        style={hasEntries ? { background: dayTotal >= 0 ? "var(--accent-dim)" : "rgba(224,82,82,.14)", borderColor: dayTotal >= 0 ? "var(--accent)" : "#E05252" } : {}}
       >
         <span className="cal-daynum mono">{faNum(d)}</span>
       </div>
@@ -137,7 +137,7 @@ export function TradeJournal() {
       <div className="trade-stats-grid">
         <div className="trade-stat-tile trade-stat-tile-wide">
           <div className="trade-stat-label">سود/زیان این ماه</div>
-          <div className="trade-stat-value" style={{ color: monthTotal >= 0 ? "var(--profit)" : "#E05252" }}>
+          <div className="trade-stat-value" style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>
             {faNum(monthTotal.toFixed(2))}
           </div>
         </div>
@@ -151,7 +151,7 @@ export function TradeJournal() {
         </div>
         <div className="trade-stat-tile">
           <div className="trade-stat-label">میانگین سود</div>
-          <div className="trade-stat-value" style={{ color: "var(--profit)" }}>{faNum(stats.avgWin.toFixed(1))}</div>
+          <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.avgWin.toFixed(1))}</div>
         </div>
         <div className="trade-stat-tile">
           <div className="trade-stat-label">میانگین ضرر</div>
@@ -221,7 +221,7 @@ export function TradeJournal() {
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {e.pnl !== null && (
-                  <span className="mono" style={{ color: e.pnl >= 0 ? "var(--profit)" : "#E05252" }}>{faNum(e.pnl)}</span>
+                  <span className="mono" style={{ color: e.pnl >= 0 ? "var(--accent)" : "#E05252" }}>{faNum(e.pnl)}</span>
                 )}
                 <button className="small" onClick={() => removeTrade(e.id)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
               </span>
