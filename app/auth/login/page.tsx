@@ -52,44 +52,41 @@ export default function LoginPage() {
   return (
     <section>
       <h1>ورود</h1>
-      <AuthTabs active="login" />
+      <div className="auth-shell">
+        <AuthTabs active="login" />
 
-      <form
-        ref={formRef}
-        onSubmit={submit}
-        className="wsearch-newform"
-        style={{ position: "static", transform: "none", opacity: 1, pointerEvents: "auto", width: "100%", maxWidth: "none", marginTop: 0 }}
-      >
-        <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} ref={identifierRef}>
-          <input
-            id="identifier"
-            type="text"
-            className="wsearch-newform-name"
-            value={identifier}
-            onChange={(e) => { setIdentifier(e.target.value); if (e.target.value.trim()) clearError("identifier"); }}
-          />
-        </AuthField>
-
-        <div style={{ marginTop: 14 }}>
-          <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
+        <form ref={formRef} onSubmit={submit} className="auth-box">
+          <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} ref={identifierRef}>
             <input
-              id="password"
-              type="password"
+              id="identifier"
+              type="text"
               className="wsearch-newform-name"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
+              value={identifier}
+              onChange={(e) => { setIdentifier(e.target.value); if (e.target.value.trim()) clearError("identifier"); }}
             />
           </AuthField>
-        </div>
 
-        {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+          <div style={{ marginTop: 14 }}>
+            <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
+              <input
+                id="password"
+                type="password"
+                className="wsearch-newform-name"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
+              />
+            </AuthField>
+          </div>
 
-        <div className="wsearch-newform-actions" style={{ justifyContent: "flex-start", marginTop: 18 }} data-anim-field>
-          <button type="submit" disabled={loading} style={{ borderRadius: 8, padding: "9px 20px", borderColor: "var(--accent)", color: "var(--accent)" }}>
-            {loading ? "در حال ورود…" : "ورود"}
-          </button>
-        </div>
-      </form>
+          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+
+          <div className="wsearch-newform-actions" style={{ justifyContent: "flex-start", marginTop: 18 }} data-anim-field>
+            <button type="submit" disabled={loading} style={{ borderRadius: 8, padding: "9px 20px", borderColor: "var(--accent)", color: "var(--accent)" }}>
+              {loading ? "در حال ورود…" : "ورود"}
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
   );
 }

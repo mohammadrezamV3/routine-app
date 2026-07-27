@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
+import { LandingPage } from "@/components/LandingPage";
 import {
   CAL_WEEK_ORDER,
   FA_WEEKDAY,
@@ -33,6 +35,8 @@ function isWakeOnTime(iso: string) {
 }
 
 export default function HomePage() {
+  const { status } = useSession();
+  const [guestPreview, setGuestPreview] = useState(false);
   const [calYear, setCalYear] = useState(jToday[0]);
   const [calMonth, setCalMonth] = useState(jToday[1]);
   const [monthCompletion, setMonthCompletion] = useState<Record<string, boolean>>({});
@@ -162,6 +166,10 @@ export default function HomePage() {
   }
 
   const weekdayName = FA_WEEKDAY[now.getDay()];
+
+  if (status === "unauthenticated" && !guestPreview) {
+    return <LandingPage onGuestContinue={() => setGuestPreview(true)} />;
+  }
 
   return (
     <>

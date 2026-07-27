@@ -86,7 +86,7 @@
   .mono{font-family:var(--font-plexmono), monospace;}
   .wrap{max-width:620px; margin:0 auto; position:relative; z-index:1;}
 
-  #bgCanvas{position:fixed; inset:0; z-index:0; pointer-events:none; display:block;}
+  #bgCanvas{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
 
   section{padding:34px 0; border-top:1px solid var(--line);}
   section:first-child{border-top:none; padding-top:0;}
@@ -126,14 +126,39 @@
   .wake-text{font-size:13px; color:var(--muted);}
   .wake-text b{color:var(--text); font-family:var(--font-plexmono), monospace; font-weight:600;}
 
+  /* دکمه‌ها به‌سبک Liquid Glass اپل — شیشه‌ای/تار به‌جای پرشدن تخت سبز.
+     چون این قانون پایه روی همه‌ی <button>هاست، دکمه‌هایی که فقط رنگ لبه/متن
+     رو inline به سبز ست می‌کنن (سراسر اپ) به‌طور خودکار پس‌زمینه شیشه‌ای هم
+     می‌گیرن، بدون این‌که لازم باشه تک‌تک‌شون رو دستی عوض کنیم. */
   button{
     font-family:var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
-    background:none; border:1px solid var(--muted2); color:var(--text); padding:7px 14px; border-radius:6px;
-    transition:.15s;
+    color:var(--text); padding:8px 16px; border-radius:11px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.22);
+    transition:background .2s ease, border-color .2s ease, color .2s ease, box-shadow .25s ease, transform .15s ease;
   }
-  button:hover{border-color:var(--accent); color:var(--accent);}
+  body[data-theme="light"] button{
+    border-color:rgba(0,0,0,.10);
+    background:rgba(255,255,255,.55);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
+  }
+  button:hover{
+    border-color:var(--accent); color:var(--accent);
+    background:rgba(0,168,107,.10);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(0,168,107,.28), 0 6px 20px rgba(0,168,107,.16);
+  }
+  button:active{transform:scale(.96);}
   button:disabled{opacity:.4; cursor:default;}
-  button:disabled:hover{border-color:var(--muted2); color:var(--text);}
+  button:disabled:hover{
+    border-color:rgba(255,255,255,.14); color:var(--text); background:rgba(255,255,255,.05);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.22);
+  }
+  body[data-theme="light"] button:disabled:hover{
+    border-color:rgba(0,0,0,.10); background:rgba(255,255,255,.55);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
+  }
   button.small{padding:4px 9px; font-size:12px;}
 
   table{width:100%; border-collapse:collapse; font-size:12.5px;}
@@ -1087,18 +1112,25 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
    ورود/ثبت‌نام — دکمه هدر، تب‌های انیمیشنی، تکمیل حالت خطای فیلدها
    ============================================================ */
 
-/* دکمه «ورود» توی هدر، وقتی هنوز لاگین نشده */
+/* دکمه «ورود» توی هدر، وقتی هنوز لاگین نشده — همون شیشه‌ی Liquid Glass هدر،
+   با یه ذره سبز محیطی به‌جای پرشدن تخت */
 .topbar-signin-btn{
   display:flex; align-items:center; gap:6px;
-  height:34px; padding:0 15px; border-radius:999px;
-  border:1.5px solid var(--accent); background:rgba(0,168,107,.08); color:var(--accent);
+  height:34px; padding:0 16px; border-radius:999px;
+  border:1px solid rgba(0,168,107,.4); color:var(--accent);
+  background:rgba(0,168,107,.09);
+  backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(0,168,107,.12);
   font-family:var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700;
   cursor:pointer; white-space:nowrap;
   transition:background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
 }
 .topbar-signin-icon{width:15px; height:15px; display:flex;}
 .topbar-signin-icon svg{width:15px; height:15px; display:block;}
-.topbar-signin-btn:hover{background:var(--accent); color:var(--bg); box-shadow:0 0 0 5px var(--accent-dim);}
+.topbar-signin-btn:hover{
+  background:rgba(0,168,107,.18); color:var(--text);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(0,168,107,.35), 0 6px 20px rgba(0,168,107,.22);
+}
 .topbar-signin-btn:active{transform:scale(.94);}
 
 /* اسکلتون خنثی حین بارگذاری session — از پرش ناگهانی جلوگیری می‌کنه */
@@ -1129,6 +1161,23 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
   max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
+/* باکس فرم ورود/ثبت‌نام — شیشه‌ی واقعی مثل هدر (نه پس‌زمینه تقریباً تخت
+   wsearch-newform روی تم تاریک)، با عرض محدود و گرد به‌جای کل عرض صفحه */
+.auth-shell{ max-width:440px; margin:0 auto; }
+.auth-box{
+  width:100%; box-sizing:border-box; margin-top:16px;
+  border-radius:22px; padding:24px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--line);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 20px 50px rgba(0,0,0,.35);
+}
+body[data-theme="light"] .auth-box{
+  background:rgba(255,255,255,.06);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.12);
+}
+.auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
+
 /* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه */
 .auth-tabs{
   position:relative; display:flex; margin-top:16px;
@@ -1152,4 +1201,115 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */
 .field-error .wsearch-newform-name{ border-color:#E05252; }
 .auth-terms-row{ border-bottom:none; padding:10px 0; }
+
+/* ============================================================
+   بک‌گراند aurora — چند بلاب نرم و تار سبز که آروم شناورن، جایگزین
+   شبکه نقطه‌های قدیمی. عمداً کم‌رنگ و کند نگه داشته شده تا حواس‌پرت‌کن
+   نشه، فقط یه عمق و گرمای ملایم به پس‌زمینه سیاه بده.
+   ============================================================ */
+.aurora-blob{
+  position:absolute; border-radius:50%; filter:blur(120px);
+  will-change:transform; transform:translateZ(0);
+}
+.aurora-blob-a{
+  width:60vmax; height:60vmax; top:-20vmax; right:-16vmax;
+  background:radial-gradient(circle at 40% 40%, rgba(0,168,107,.30), rgba(0,168,107,0) 70%);
+  animation:auroraDriftA 26s ease-in-out infinite;
+}
+.aurora-blob-b{
+  width:52vmax; height:52vmax; bottom:-22vmax; left:-18vmax;
+  background:radial-gradient(circle at 60% 60%, rgba(0,168,107,.22), rgba(0,168,107,0) 70%);
+  animation:auroraDriftB 32s ease-in-out infinite;
+}
+.aurora-blob-c{
+  width:38vmax; height:38vmax; top:38%; left:50%;
+  background:radial-gradient(circle, rgba(0,168,107,.16), rgba(0,168,107,0) 70%);
+  transform:translate(-50%, -50%);
+  animation:auroraDriftC 40s ease-in-out infinite;
+}
+body[data-theme="light"] .aurora-blob{ opacity:.45; }
+@keyframes auroraDriftA{
+  0%,100%{ transform:translate(0,0) scale(1); }
+  50%{ transform:translate(-4%,3%) scale(1.08); }
+}
+@keyframes auroraDriftB{
+  0%,100%{ transform:translate(0,0) scale(1); }
+  50%{ transform:translate(3%,-4%) scale(1.1); }
+}
+@keyframes auroraDriftC{
+  0%,100%{ transform:translate(-50%,-50%) scale(1); }
+  50%{ transform:translate(-46%,-54%) scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce){
+  .aurora-blob{ animation:none; }
+}
+
+/* ============================================================
+   صفحه لندینگ (مهمان‌های لاگین‌نکرده) — معرفی محصول به‌جای تقویم
+   ============================================================ */
+.landing-h1{
+  font-size:29px; font-weight:800; letter-spacing:-.02em; line-height:1.35;
+  margin:10px 0 14px; color:var(--text);
+  background:linear-gradient(90deg, var(--text) 35%, var(--accent));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.landing-sub{
+  font-size:14px; color:var(--muted); max-width:440px; margin:0 auto; line-height:1.9;
+}
+.landing-cta-row{ display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap; }
+.landing-cta-primary, .landing-cta-secondary{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 26px; border-radius:999px; font-weight:700; font-size:13.5px;
+  text-decoration:none; transition:transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+}
+.landing-cta-primary{
+  color:var(--bg); background:var(--accent); box-shadow:0 10px 30px rgba(0,168,107,.35);
+}
+.landing-cta-primary:hover{ transform:translateY(-1px); box-shadow:0 14px 36px rgba(0,168,107,.45); }
+.landing-cta-primary:active{ transform:scale(.97); }
+.landing-cta-secondary{
+  color:var(--text); border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);
+  backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
+}
+.landing-cta-secondary:hover{ border-color:var(--accent); color:var(--accent); background:rgba(0,168,107,.1); }
+.landing-cta-secondary:active{ transform:scale(.97); }
+body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); background:rgba(255,255,255,.5); }
+
+.landing-guest-link{
+  display:block; margin:16px auto 0; padding:4px; border:none; border-radius:0;
+  background:none; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
+  font-family:var(--font-vazir), sans-serif; font-size:12px; font-weight:600; color:var(--muted2);
+  text-decoration:underline; text-underline-offset:3px; cursor:pointer;
+  transition:color .2s ease;
+}
+.landing-guest-link:hover{ color:var(--accent); background:none; box-shadow:none; border:none; }
+.landing-guest-link:active{ transform:none; }
+
+.landing-features{ display:flex; flex-direction:column; gap:12px; }
+@media (min-width:640px){
+  .landing-features{ display:grid; grid-template-columns:1fr 1fr; }
+}
+.landing-feature-card{
+  border-radius:18px; padding:18px 20px; border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  transition:border-color .2s ease, transform .2s ease;
+}
+body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.5); }
+.landing-feature-card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+.landing-feature-icon{
+  display:flex; align-items:center; justify-content:center; width:38px; height:38px;
+  border-radius:50%; background:var(--accent-dim); color:var(--accent); margin-bottom:12px;
+}
+.landing-feature-icon svg{ width:19px; height:19px; }
+.landing-feature-title{ font-size:12.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
+.landing-feature-hook{ font-size:15.5px; font-weight:800; margin-top:3px; }
+.landing-feature-body{ font-size:13px; color:var(--muted); margin-top:6px; line-height:1.8; }
+
+.landing-trust{
+  display:flex; flex-direction:column; gap:10px; margin-top:12px;
+  padding:18px 20px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+}
+.landing-trust-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); }
+.landing-trust-item svg{ width:17px; height:17px; min-width:17px; }
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }

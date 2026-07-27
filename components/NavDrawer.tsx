@@ -8,7 +8,8 @@ import { useSession, signOut } from "next-auth/react";
 import { AccountPanel } from "./AccountPanel";
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
-const ICONS: Record<string, JSX.Element> = {
+// export شده چون LandingPage هم همین ست رو برای کارت‌های ماژول استفاده می‌کنه.
+export const ICONS: Record<string, JSX.Element> = {
   home: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20h3a1 1 0 0 0 1-1v-9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),

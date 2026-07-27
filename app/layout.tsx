@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Vazirmatn, IBM_Plex_Mono } from "next/font/google";
+import { Vazirmatn, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
@@ -14,8 +14,12 @@ const vazir = Vazirmatn({
   variable: "--font-vazir",
 });
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
+// جایگزین IBM Plex Mono شد چون آن فونت گلیف فارسی/اعداد فارسی نداشت و برای
+// اعداد فارسی (faNum) و تاریخ‌های فارسی داخل عناصر .mono، بی‌صدا به فونت
+// mono پیش‌فرض سیستم سقوط می‌کرد؛ این فونت همون حس تکنیکال خانواده Plex رو
+// حفظ می‌کنه ولی فارسی/عربی رو هم درست پوشش می‌ده.
+const plexMono = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
   weight: ["400", "500", "600"],
   variable: "--font-plexmono",
 });
