@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { EXERCISE_TEMPLATES } from "@/lib/exercisePlans";
-import { clampText } from "@/lib/validate";
+import { getExercisePlan, ExerciseGoal, ExerciseLevel } from "@/lib/exercisePlans";
+
+const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
+const VALID_GOALS: ExerciseGoal[] = ["strength", "hypertrophy", "cut", "endurance"];
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -23,20 +25,19 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { level, heightCm, weightKg, goal, hasPhysicalLimitation, disclaimerAccepted } = body as {
-    level: "beginner" | "intermediate" | "advanced";
+  const { level, heightCm, weightKg, goal, hasPhysicalLimitation } = body as {
+    level: ExerciseLevel;
     heightCm?: number;
     weightKg?: number;
-    goal?: string;
+    goal: ExerciseGoal;
     hasPhysicalLimitation: boolean;
-    disclaimerAccepted: boolean;
   };
 
-  if (!disclaimerAccepted) {
-    return NextResponse.json({ error: "برای فعال‌سازی ماژول ورزش باید سلب مسئولیت رو تایید کنی" }, { status: 400 });
-  }
-  if (!level || !EXERCISE_TEMPLATES[level]) {
+  if (!level || !VALID_LEVELS.includes(level)) {
     return NextResponse.json({ error: "سطح نامعتبر است" }, { status: 400 });
+  }
+  if (!goal || !VALID_GOALS.includes(goal)) {
+    return NextResponse.json({ error: "هدف تمرین نامعتبر است" }, { status: 400 });
   }
   if (heightCm !== undefined && (typeof heightCm !== "number" || heightCm < 50 || heightCm > 260)) {
     return NextResponse.json({ error: "قد وارد شده معتبر نیست" }, { status: 400 });
@@ -54,10 +55,10 @@ export async function POST(req: NextRequest) {
       level,
       heightCm: heightCm || null,
       weightKg: weightKg || null,
-      goal: goal ? clampText(goal, 200) : null,
+      goal,
       hasPhysicalLimitation: !!hasPhysicalLimitation,
       disclaimerAcceptedAt: new Date(),
-      planData: EXERCISE_TEMPLATES[level] as any,
+      planData: getExercisePlan(goal, level, !!hasPhysicalLimitation) as any,
     },
   });
 

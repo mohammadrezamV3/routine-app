@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { staggerFieldsIn, revealOnScroll } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
+import { getSiteMarket } from "@/lib/market";
 
 const SLEEP_ICON = (
   <svg viewBox="0 0 24 24" fill="none"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -45,9 +46,9 @@ const FEATURES = [
   },
   {
     icon: ICONS.roadmaps,
-    title: "رودمپ آموزشی",
-    hook: "هر چی بخوای یاد بگیری، یه مسیر داریم",
-    body: "از گیتار تا اسپانیایی تا فتوشاپ؛ هوش مصنوعی یه رودمپ شخصی برات می‌سازه.",
+    title: "رودمپ‌ساز (AI Mapping)",
+    hook: "بهترین مسیر رو برات می‌چینیم",
+    body: "با هوش مصنوعی، یکی از بهترین راه‌ها برای رسیدن به هدفت رو طراحی می‌کنیم — از گیتار تا اسپانیایی تا فتوشاپ، هر چیزی بخوای یاد بگیری، یک نقطه شروع مشخص داری.",
   },
 ];
 
@@ -57,12 +58,31 @@ const TRUST_POINTS = [
   "فارسی، سریع، بدون شلوغی",
 ];
 
+type PlanCard = { key: string; nameFa: string; price: string; modules: string[]; highlight?: boolean };
+
+const PLANS_IRAN: PlanCard[] = [
+  { key: "basic", nameFa: "پایه", price: "۴۹,۰۰۰ تومان", modules: ["روتین روزانه", "خواب", "کارهای روزمره"] },
+  { key: "exercise", nameFa: "ورزش", price: "۹۹,۰۰۰ تومان", modules: ["همه‌ی پایه", "ورزش"] },
+  { key: "trade", nameFa: "ترید", price: "۱۲۹,۰۰۰ تومان", modules: ["همه‌ی پایه", "ژورنال ترید"] },
+  { key: "max", nameFa: "مکس", price: "۱۹۹,۰۰۰ تومان", modules: ["همه‌ی ماژول‌ها", "کالری", "رودمپ‌ساز AI", "تحلیل هوشمند"], highlight: true },
+];
+
+const PLANS_INTL: PlanCard[] = [
+  { key: "basic", nameFa: "Basic", price: "$3.99", modules: ["Daily routine", "Sleep", "Daily tasks"] },
+  { key: "exercise", nameFa: "Exercise", price: "$7.99", modules: ["Everything in Basic", "Exercise"] },
+  { key: "trade", nameFa: "Trade", price: "$12.99", modules: ["Everything in Basic", "Trade journal"] },
+  { key: "max", nameFa: "Max", price: "$17.99", modules: ["Every module", "Calorie tracking", "AI Roadmaps", "Smart insights"], highlight: true },
+];
+
 export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
+  const plansRef = useRef<HTMLDivElement>(null);
+  const plans = getSiteMarket() === "INTERNATIONAL" ? PLANS_INTL : PLANS_IRAN;
 
   useEffect(() => { staggerFieldsIn(heroRef.current); }, []);
   useEffect(() => revealOnScroll(featuresRef.current), []);
+  useEffect(() => revealOnScroll(plansRef.current), []);
 
   return (
     <>
@@ -103,6 +123,33 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
             <div key={t} className="landing-trust-item">
               <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
               <span>{t}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="sec-landing-plans" style={{ paddingTop: 8 }}>
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
+          <div className="eyebrow" style={{ marginBottom: 0 }}>پلن‌ها</div>
+          <h2 style={{ fontSize: 18, marginTop: 4 }}>هر چقدر لازم داری، همون رو بردار</h2>
+        </div>
+        <div ref={plansRef} className="landing-plans">
+          {plans.map((p) => (
+            <div key={p.key} className={`landing-plan-card${p.highlight ? " highlight" : ""}`} data-reveal>
+              {p.highlight && <span className="landing-plan-badge">محبوب‌ترین</span>}
+              <div className="landing-plan-name">{p.nameFa}</div>
+              <div className="landing-plan-price">{p.price}<span>/ ماهانه</span></div>
+              <ul className="landing-plan-modules">
+                {p.modules.map((m) => (
+                  <li key={m}>
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    {m}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/auth/signup" className={p.highlight ? "landing-cta-primary" : "landing-cta-secondary"} style={{ width: "100%", marginTop: 14 }}>
+                شروع کن
+              </Link>
             </div>
           ))}
         </div>

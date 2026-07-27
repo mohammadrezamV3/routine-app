@@ -103,6 +103,7 @@
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
   .section-note{font-size:11.5px; color:var(--accent); font-family:var(--font-plexmono), monospace; margin-bottom:18px;}
+  .disclaimer-note{font-size:11px; color:var(--muted2); margin-top:14px; line-height:1.7;}
 
   .task{
     display:flex; align-items:flex-start; gap:13px; padding:13px 0; border-bottom:1px solid var(--line);
@@ -365,6 +366,38 @@
   .tm-extra li::before{
     content:'—'; position:absolute; right:0; color:var(--muted2);
   }
+
+  /* برنامه ورزشی — هر حرکت ردیف خودشو داره (نه یک رشته‌ی به‌هم‌چسبیده)،
+     هر روز هفته هم یک کارت جدا، مثل اپ‌های تمرین اختصاصی */
+  .exercise-item-list{ list-style:none; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .exercise-item{
+    font-size:12.5px; color:var(--text); padding:8px 11px; border-radius:10px;
+    background:rgba(var(--bg-rgb), .35); border:1px solid var(--line);
+  }
+  li.exercise-item::before{ content:none; }
+  body:not([data-theme="light"]) .exercise-item{ background:#0B0C0D; border-color:rgba(255,255,255,.06); }
+  .exercise-week-grid{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+  .exercise-day-card{
+    border-radius:22px; padding:16px 18px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  }
+  .exercise-day-card.today{ border-color:var(--accent); background:rgba(0,168,107,.05); }
+  .exercise-day-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-size:12px; color:var(--muted2); font-family:var(--font-plexmono), monospace;
+  }
+  .exercise-day-focus{ color:var(--text); font-weight:700; font-family:var(--font-vazir), sans-serif; font-size:13px; }
+
+  /* آمار ژورنال ترید — کارت‌های کوچیک KPI، عدد اصلی proportional (نه tabular)
+     چون تک‌عددن نه ستون هم‌تراز؛ رنگ فقط برای وضعیت سود/زیانه */
+  .trade-stats-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  @media (min-width:480px){ .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); } }
+  .trade-stat-tile{
+    border-radius:22px; padding:14px 16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  }
+  .trade-stat-tile-wide{ grid-column:1 / -1; }
+  .trade-stat-label{ font-size:10.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
+  .trade-stat-value{ font-size:19px; font-weight:800; margin-top:6px; font-variant-numeric:proportional-nums; }
+  .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
 
   /* calendar */
   .cal-controls{display:flex; align-items:center; justify-content:space-between; margin:20px 0 16px;}
@@ -1184,13 +1217,18 @@ body[data-theme="light"] .auth-box{
   background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:999px; padding:4px;
 }
 body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba(255,255,255,.08); }
+/* هر تب صرفاً یک برچسب شفافه — سایه/بلور دکمه پایه اینجا عمداً خنثی می‌شه
+   چون در غیر این صورت هر تب شبیه یک دکمه‌ی شیشه‌ای جدا به‌نظر می‌رسید، نه
+   دو نیمه‌ی یک کنترل واحد */
 .auth-tab{
   position:relative; z-index:1; flex:1 1 50%; text-align:center; padding:10px 0;
-  border:none; background:none; border-radius:999px;
+  border:none; background:none; border-radius:999px; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
   font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:700; color:var(--muted);
   cursor:pointer; transition:color .25s ease;
 }
-.auth-tab.active{color:var(--bg);}
+.auth-tab:hover{ background:none; box-shadow:none; border:none; color:var(--text); }
+.auth-tab.active, .auth-tab.active:hover{color:var(--bg);}
 .auth-tab-indicator{
   position:absolute; top:4px; bottom:4px; z-index:0;
   background:var(--accent); border-radius:999px;
@@ -1206,25 +1244,29 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
    بک‌گراند aurora — چند بلاب نرم و تار سبز که آروم شناورن، جایگزین
    شبکه نقطه‌های قدیمی. عمداً کم‌رنگ و کند نگه داشته شده تا حواس‌پرت‌کن
    نشه، فقط یه عمق و گرمای ملایم به پس‌زمینه سیاه بده.
+   دو لایه‌ست: wrap فقط جای بلاب رو مشخص می‌کنه و transformش با anime.js
+   بر اساس موقعیت ماوس جابه‌جا می‌شه (حس سه‌بعدی)، خودِ blob مستقل از اون
+   انیمیشن شناور CSS همیشگی‌شو داره — چون هر دو روی transform کار می‌کنن،
+   قاطی‌شون می‌کرد اگه روی یک المان بودن.
    ============================================================ */
+.aurora-blob-wrap{ position:absolute; will-change:transform; }
+.aurora-blob-wrap-a{ width:60vmax; height:60vmax; top:-20vmax; right:-16vmax; }
+.aurora-blob-wrap-b{ width:52vmax; height:52vmax; bottom:-22vmax; left:-18vmax; }
+.aurora-blob-wrap-c{ width:38vmax; height:38vmax; top:calc(38% - 19vmax); left:calc(50% - 19vmax); }
 .aurora-blob{
-  position:absolute; border-radius:50%; filter:blur(120px);
+  position:absolute; inset:0; border-radius:50%; filter:blur(120px);
   will-change:transform; transform:translateZ(0);
 }
 .aurora-blob-a{
-  width:60vmax; height:60vmax; top:-20vmax; right:-16vmax;
   background:radial-gradient(circle at 40% 40%, rgba(0,168,107,.30), rgba(0,168,107,0) 70%);
   animation:auroraDriftA 26s ease-in-out infinite;
 }
 .aurora-blob-b{
-  width:52vmax; height:52vmax; bottom:-22vmax; left:-18vmax;
   background:radial-gradient(circle at 60% 60%, rgba(0,168,107,.22), rgba(0,168,107,0) 70%);
   animation:auroraDriftB 32s ease-in-out infinite;
 }
 .aurora-blob-c{
-  width:38vmax; height:38vmax; top:38%; left:50%;
   background:radial-gradient(circle, rgba(0,168,107,.16), rgba(0,168,107,0) 70%);
-  transform:translate(-50%, -50%);
   animation:auroraDriftC 40s ease-in-out infinite;
 }
 body[data-theme="light"] .aurora-blob{ opacity:.45; }
@@ -1237,8 +1279,8 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
   50%{ transform:translate(3%,-4%) scale(1.1); }
 }
 @keyframes auroraDriftC{
-  0%,100%{ transform:translate(-50%,-50%) scale(1); }
-  50%{ transform:translate(-46%,-54%) scale(1.15); }
+  0%,100%{ transform:translate(0,0) scale(1); }
+  50%{ transform:translate(4%,-4%) scale(1.15); }
 }
 @media (prefers-reduced-motion: reduce){
   .aurora-blob{ animation:none; }
@@ -1290,7 +1332,7 @@ body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); b
   .landing-features{ display:grid; grid-template-columns:1fr 1fr; }
 }
 .landing-feature-card{
-  border-radius:18px; padding:18px 20px; border:1px solid var(--line);
+  border-radius:22px; padding:18px 20px; border:1px solid var(--line);
   background:rgba(255,255,255,.025);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   transition:border-color .2s ease, transform .2s ease;
@@ -1308,8 +1350,35 @@ body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4);
 
 .landing-trust{
   display:flex; flex-direction:column; gap:10px; margin-top:12px;
-  padding:18px 20px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  padding:18px 20px; border-radius:22px; border:1px solid var(--line); background:rgba(255,255,255,.02);
 }
 .landing-trust-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); }
 .landing-trust-item svg{ width:17px; height:17px; min-width:17px; }
+
+/* پلن‌ها — روی موبایل همیشه یک‌ستونه (طبق تحقیق: جدول مقایسه‌ی عریض روی
+   موبایل تجربه بدی می‌ده)، پلن مکس با بج و بردر سبز برجسته می‌شه */
+.landing-plans{ display:flex; flex-direction:column; gap:14px; }
+@media (min-width:640px){
+  .landing-plans{ display:grid; grid-template-columns:repeat(4, 1fr); align-items:stretch; }
+}
+.landing-plan-card{
+  position:relative; display:flex; flex-direction:column;
+  border-radius:22px; padding:20px 18px; border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+}
+body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
+.landing-plan-card.highlight{
+  border-color:var(--accent); background:rgba(0,168,107,.06);
+  box-shadow:0 0 0 1px var(--accent), 0 20px 40px rgba(0,168,107,.12);
+}
+.landing-plan-badge{
+  position:absolute; top:-11px; right:18px; padding:3px 12px; border-radius:999px;
+  background:var(--accent); color:var(--bg); font-size:10.5px; font-weight:800;
+}
+.landing-plan-name{ font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; }
+.landing-plan-price{ font-size:19px; font-weight:800; margin-top:6px; }
+.landing-plan-price span{ font-size:11px; font-weight:600; color:var(--muted2); margin-right:4px; }
+.landing-plan-modules{ list-style:none; margin-top:14px; display:flex; flex-direction:column; gap:8px; flex:1; }
+.landing-plan-modules li{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text); }
+.landing-plan-modules svg{ width:15px; height:15px; min-width:15px; }
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }

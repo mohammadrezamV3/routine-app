@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   J_MONTHS, CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, faNum,
-  toJalali, jalaliMonthLength, jalaliToGregorianApprox, isoLocal,
+  toJalali, jalaliMonthLength, jalaliToGregorianApprox, isoLocal, formatJalali,
 } from "@/lib/jalali";
+import { JalaliDatePicker } from "./JalaliDatePicker";
 
 type TradeEntry = {
   id: string;
@@ -20,12 +21,14 @@ type TradeEntry = {
 
 const now = new Date();
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+const todayIso = isoLocal(now);
 
 export function TradeJournal() {
   const [calYear, setCalYear] = useState(jToday[0]);
   const [calMonth, setCalMonth] = useState(jToday[1]);
   const [entries, setEntries] = useState<TradeEntry[]>([]);
-  const [selectedIso, setSelectedIso] = useState<string | null>(null);
+  const [selectedIso, setSelectedIso] = useState<string>(todayIso);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [pair, setPair] = useState("EURUSD");
@@ -64,8 +67,23 @@ export function TradeJournal() {
 
   const monthTotal = entries.reduce((s, e) => s + (e.pnl ?? 0), 0);
 
+  // آمار ماه — بر اساس همون معاملاتی که pnl ثبت‌شده دارن (بسته‌شده‌ها)
+  const stats = useMemo(() => {
+    const closed = entries.filter((e) => e.pnl !== null) as (TradeEntry & { pnl: number })[];
+    const wins = closed.filter((e) => e.pnl > 0);
+    const losses = closed.filter((e) => e.pnl < 0);
+    return {
+      total: entries.length,
+      winRate: closed.length ? Math.round((wins.length / closed.length) * 100) : null,
+      avgWin: wins.length ? wins.reduce((s, e) => s + e.pnl, 0) / wins.length : 0,
+      avgLoss: losses.length ? losses.reduce((s, e) => s + e.pnl, 0) / losses.length : 0,
+      winCount: wins.length,
+      lossCount: losses.length,
+    };
+  }, [entries]);
+
   async function addTrade() {
-    if (!selectedIso || !entryPrice || !lotSize) return;
+    if (!entryPrice || !lotSize) return;
     const body = {
       pair, direction,
       entryPrice: +entryPrice,
@@ -111,66 +129,112 @@ export function TradeJournal() {
     );
   }
 
-  const selectedEntries = selectedIso ? byDay[selectedIso] || [] : [];
+  const selectedEntries = byDay[selectedIso] || [];
+  const selectedJalali = toJalali(+selectedIso.slice(0, 4), +selectedIso.slice(5, 7), +selectedIso.slice(8, 10));
 
   return (
     <div style={{ marginTop: 10 }}>
-      <div className="home-stats">
-        مجموع این ماه: <b style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>{faNum(monthTotal.toFixed(2))}</b>
-      </div>
-
-      <div className="cal-controls">
-        <button className="small mono" onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1); }}>‹</button>
-        <div className="cal-label">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
-        <button className="small mono" onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear((y) => y + 1); } else setCalMonth((m) => m + 1); }}>›</button>
-      </div>
-
-      <div className="cal-grid">
-        {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
-        {cells}
-      </div>
-
-      {loading && <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>}
-
-      {selectedIso && (
-        <div className="tm-extra">
-          <div className="domain-sub">معاملات {selectedIso}</div>
-
-          {selectedEntries.length ? (
-            selectedEntries.map((e) => (
-              <div key={e.id} className="item-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="name">
-                  {e.pair} <span className="mono" style={{ color: "var(--muted2)" }}>({e.direction === "long" ? "خرید" : "فروش"}، لات {faNum(e.lotSize)})</span>
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {e.pnl !== null && (
-                    <span className="mono" style={{ color: e.pnl >= 0 ? "var(--accent)" : "#E05252" }}>{faNum(e.pnl)}</span>
-                  )}
-                  <button className="small" onClick={() => removeTrade(e.id)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
-                </span>
-              </div>
-            ))
-          ) : (
-            <div className="item-line empty">معامله‌ای برای این روز ثبت نشده</div>
-          )}
-
-          <div style={{ marginTop: 12 }}>
-            <div className="day-picker">
-              <span className={`day-pill${direction === "long" ? " on" : ""}`} onClick={() => setDirection("long")}>خرید (Long)</span>
-              <span className={`day-pill${direction === "short" ? " on" : ""}`} onClick={() => setDirection("short")}>فروش (Short)</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-              <input className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="جفت‌ارز" value={pair} onChange={(e) => setPair(e.target.value)} />
-              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت ورود" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} />
-              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت خروج" value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} />
-              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 70px" }} placeholder="لات" value={lotSize} onChange={(e) => setLotSize(e.target.value)} />
-              <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="سود/زیان" value={pnl} onChange={(e) => setPnl(e.target.value)} />
-            </div>
-            <input className="wsearch-newform-name" style={{ marginTop: 8 }} placeholder="یادداشت (اختیاری)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            <button onClick={addTrade} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>ثبت معامله</button>
+      <div className="trade-stats-grid">
+        <div className="trade-stat-tile trade-stat-tile-wide">
+          <div className="trade-stat-label">سود/زیان این ماه</div>
+          <div className="trade-stat-value" style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>
+            {faNum(monthTotal.toFixed(2))}
           </div>
         </div>
+        <div className="trade-stat-tile">
+          <div className="trade-stat-label">تعداد معاملات</div>
+          <div className="trade-stat-value">{faNum(stats.total)}</div>
+        </div>
+        <div className="trade-stat-tile">
+          <div className="trade-stat-label">نرخ برد</div>
+          <div className="trade-stat-value">{stats.winRate === null ? "—" : `${faNum(stats.winRate)}٪`}</div>
+        </div>
+        <div className="trade-stat-tile">
+          <div className="trade-stat-label">میانگین سود</div>
+          <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.avgWin.toFixed(1))}</div>
+        </div>
+        <div className="trade-stat-tile">
+          <div className="trade-stat-label">میانگین ضرر</div>
+          <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.avgLoss.toFixed(1))}</div>
+        </div>
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">ثبت معامله جدید</div>
+        <div className="trade-entry-date-row">
+          <span>برای تاریخ:</span>
+          <button type="button" className="jdate-btn" onClick={() => setDatePickerOpen(true)}>
+            {formatJalali(selectedJalali)}
+          </button>
+        </div>
+
+        <div className="day-picker" style={{ marginTop: 10 }}>
+          <span className={`day-pill${direction === "long" ? " on" : ""}`} onClick={() => setDirection("long")}>خرید (Long)</span>
+          <span className={`day-pill${direction === "short" ? " on" : ""}`} onClick={() => setDirection("short")}>فروش (Short)</span>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+          <input className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="جفت‌ارز" value={pair} onChange={(e) => setPair(e.target.value)} />
+          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت ورود" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} />
+          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت خروج" value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} />
+          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 70px" }} placeholder="لات" value={lotSize} onChange={(e) => setLotSize(e.target.value)} />
+          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="سود/زیان" value={pnl} onChange={(e) => setPnl(e.target.value)} />
+        </div>
+        <input className="wsearch-newform-name" style={{ marginTop: 8 }} placeholder="یادداشت (اختیاری)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <button onClick={addTrade} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>ثبت معامله</button>
+      </div>
+
+      {datePickerOpen && (
+        <JalaliDatePicker
+          initial={selectedJalali}
+          onPick={(d) => {
+            setSelectedIso(isoLocal(jalaliToGregorianApprox(d[0], d[1], d[2])));
+            setCalYear(d[0]); setCalMonth(d[1]);
+            setDatePickerOpen(false);
+          }}
+          onClose={() => setDatePickerOpen(false)}
+        />
       )}
+
+      <div className="tm-extra">
+        <div className="domain-sub">تقویم معاملات</div>
+        <div className="cal-controls">
+          <button className="small mono" onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1); }}>‹</button>
+          <div className="cal-label">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
+          <button className="small mono" onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear((y) => y + 1); } else setCalMonth((m) => m + 1); }}>›</button>
+        </div>
+
+        <div className="cal-grid">
+          {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
+          {cells}
+        </div>
+
+        {loading && <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>}
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">معاملات {formatJalali(selectedJalali)}</div>
+        {selectedEntries.length ? (
+          selectedEntries.map((e) => (
+            <div key={e.id} className="item-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="name">
+                {e.pair} <span className="mono" style={{ color: "var(--muted2)" }}>({e.direction === "long" ? "خرید" : "فروش"}، لات {faNum(e.lotSize)})</span>
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {e.pnl !== null && (
+                  <span className="mono" style={{ color: e.pnl >= 0 ? "var(--accent)" : "#E05252" }}>{faNum(e.pnl)}</span>
+                )}
+                <button className="small" onClick={() => removeTrade(e.id)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="item-line empty">معامله‌ای برای این روز ثبت نشده</div>
+        )}
+      </div>
+
+      <div className="disclaimer-note">
+        این ژورنال فقط آمار خام معاملات و یادآوری‌ست، نه توصیه‌ی مالی؛ تصمیم‌های معاملاتی بر عهده‌ی کاربر است.
+      </div>
     </div>
   );
 }

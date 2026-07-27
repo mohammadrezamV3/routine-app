@@ -7,10 +7,13 @@ import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
 import { ConflictAlert } from "@/components/ConflictAlert";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
+import { NotificationEngine } from "@/components/NotificationEngine";
 
+// وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
+// فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
 const vazir = Vazirmatn({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "variable",
   variable: "--font-vazir",
 });
 
@@ -39,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthSessionProvider>
           <ThemeProvider>
             <NavDrawer />
+            <NotificationEngine />
             <div className="wrap">{children}</div>
           </ThemeProvider>
         </AuthSessionProvider>

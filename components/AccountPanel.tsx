@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 
 const MODULE_LABELS: Record<string, string> = {
   ROUTINE: "روتین روزانه",
@@ -49,6 +50,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const { status } = useSession();
   const [data, setData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -57,6 +59,13 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       setLoading(false);
     });
   }, [status]);
+
+  useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
+
+  async function enableNotifications() {
+    const perm = await requestNotificationPermission();
+    setNotifPermission(perm);
+  }
 
   if (status === "unauthenticated") {
     return (
@@ -161,6 +170,26 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           </ul>
         ) : (
           <div className="item-line empty">هیچ ماژول فعالی نداری.</div>
+        )}
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">یادآوری‌ها</div>
+        {notifPermission === "unsupported" ? (
+          <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
+        ) : notifPermission === "granted" ? (
+          <div className="item-line">فعاله — وقتی این صفحه بازه، سر وقتِ برنامه یادآوری می‌گیری.</div>
+        ) : notifPermission === "denied" ? (
+          <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایت توی مرورگرت می‌تونی بازش کنی.</div>
+        ) : (
+          <>
+            <div className="section-note" style={{ marginBottom: 8 }}>
+              وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری — فقط تا وقتی این صفحه توی مرورگرت بازه.
+            </div>
+            <button onClick={enableNotifications} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+              فعال‌کردن یادآوری‌ها
+            </button>
+          </>
         )}
       </div>
 
