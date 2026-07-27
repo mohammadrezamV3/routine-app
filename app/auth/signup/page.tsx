@@ -142,12 +142,12 @@ export default function SignupPage() {
 
   return (
     <section className="auth-page">
-      <AuthBackButton />
       <div className="auth-shell">
         <AuthTabs active="signup" />
 
         {step === 1 ? (
           <div className="auth-box">
+            <AuthBackButton />
             <AuthBrandMark />
             <div className="auth-step" key="step1">
               <AuthField id="phone" label="شماره همراه" error={fieldErrors.phone} ref={phoneRef}>
@@ -162,6 +162,7 @@ export default function SignupPage() {
           </div>
         ) : (
           <form ref={formRef} onSubmit={submit} className="auth-box">
+            <AuthBackButton />
             <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => setStep(1)}>
               <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExercisePanel } from "@/components/ExercisePanel";
 import { CaloriePanel } from "@/components/CaloriePanel";
+import { ModuleGate } from "@/components/ModuleGate";
 
 export default function BodybuildingPage() {
   const [tab, setTab] = useState<"exercise" | "calorie">("exercise");
@@ -17,7 +18,11 @@ export default function BodybuildingPage() {
       </div>
 
       <div style={{ marginTop: 14 }}>
-        {tab === "exercise" ? <ExercisePanel /> : <CaloriePanel />}
+        {tab === "exercise" ? (
+          <ModuleGate module="EXERCISE"><ExercisePanel /></ModuleGate>
+        ) : (
+          <ModuleGate module="CALORIE"><CaloriePanel /></ModuleGate>
+        )}
       </div>
     </section>
   );

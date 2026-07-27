@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { ModuleGate } from "@/components/ModuleGate";
 
 type CustomRoadmapSummary = { id: string; topic: string; title: string; note: string };
 
@@ -25,26 +26,38 @@ export default function RoadmapsHub() {
       <h1>رودمپ‌ها</h1>
       <div className="section-note">بگو چی می‌خوای یاد بگیری، یه مسیر کامل باهات می‌سازیم</div>
 
-      <div className="rm-grid">
-        {customRoadmaps.map((r) => (
-          <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
-            <div>
-              <div className="rm-box-title">{r.title}</div>
-              <div className="rm-box-desc">{r.note}</div>
+      {status === "authenticated" ? (
+        <ModuleGate module="ROADMAP">
+          <div className="rm-grid">
+            {customRoadmaps.map((r) => (
+              <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
+                <div>
+                  <div className="rm-box-title">{r.title}</div>
+                  <div className="rm-box-desc">{r.note}</div>
+                </div>
+              </div>
+            ))}
+
+            {loaded && !customRoadmaps.length && (
+              <div className="item-line empty">هنوز رودمپی نساختی</div>
+            )}
+
+            <div className="rm-box rm-box-add" onClick={() => router.push("/roadmaps/new")} style={{ cursor: "pointer" }}>
+              <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                <path d="M12 5v14M5 12h14" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
-        ))}
-
-        {loaded && !customRoadmaps.length && status === "authenticated" && (
-          <div className="item-line empty">هنوز رودمپی نساختی</div>
-        )}
-
-        <div className="rm-box rm-box-add" onClick={() => router.push("/roadmaps/new")} style={{ cursor: "pointer" }}>
-          <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
-            <path d="M12 5v14M5 12h14" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
-          </svg>
+        </ModuleGate>
+      ) : (
+        <div className="rm-grid">
+          <div className="rm-box rm-box-add" onClick={() => router.push("/roadmaps/new")} style={{ cursor: "pointer" }}>
+            <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+              <path d="M12 5v14M5 12h14" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

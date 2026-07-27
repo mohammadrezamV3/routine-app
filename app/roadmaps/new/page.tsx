@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ModuleGate } from "@/components/ModuleGate";
 
 const SUGGESTIONS = [
   "طراحی UI/UX",
@@ -83,6 +84,7 @@ export default function NewRoadmapPage() {
         بگو می‌خوای چی یاد بگیری، یه مسیر یادگیری کامل باهات می‌سازیم
       </div>
 
+      <ModuleGate module="ROADMAP">
       <div style={{ position: "relative", marginTop: 16 }}>
         <input
           ref={inputRef}
@@ -151,6 +153,7 @@ export default function NewRoadmapPage() {
           </div>
         </div>
       )}
+      </ModuleGate>
     </section>
   );
 }

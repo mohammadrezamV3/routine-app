@@ -67,11 +67,11 @@ export default function LoginPage() {
 
   return (
     <section className="auth-page">
-      <AuthBackButton />
       <div className="auth-shell">
         <AuthTabs active="login" />
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
+          <AuthBackButton />
           <AuthBrandMark />
 
           <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} ref={identifierRef}>
