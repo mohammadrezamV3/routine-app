@@ -8,42 +8,54 @@
    import گوگل‌فونت شده‌اند؛ بقیه بدون تغییر است.
    ============================================================ */
 
+  /* دو هویت رنگی جدا برای شب/روز، نه فقط یک پالت با روشنایی معکوس:
+     شب = سبز/آبی/سیاه/طوسی (جواهری، تکنولوژیک)، روز = کرمی/نارنجی/طلایی/
+     قهوه‌ای (گرم، لاکچری). --accent و --secondary تنها منبع این رنگ‌ها هستن،
+     تقریباً همه‌ی دکمه/بردر/سایه‌ها از همینا رد می‌شن، پس عوض‌کردن این دوتا
+     رنگ کل سایت رو خودکار با هم عوض می‌کنه. */
   :root{
-    --bg:#16150F;
-    --bg-rgb:22,21,15;
-    --text:#F2F3F1;
+    --bg:#0E1011;
+    --bg-rgb:14,16,17;
+    --text:#EDEFEE;
     --muted:#8A9099;
-    --muted2:#4E545C;
+    --muted2:#4A5054;
     --accent:#00A86B;
-    --accent-dim:rgba(0,168,107,.20);
+    --accent-rgb:0,168,107;
+    --accent-dim:rgba(var(--accent-rgb),.20);
     --accent-soft:#5FBE93;
     --accent-deep:#00623D;
-    --line:#26241E;
-    --particle:#4E545C;
+    --line:#262A2C;
     --sun:#FFC94A;
     --moon:#7B4FE0;
-    /* طلایی/کهربایی — مخصوص لحظه‌های محدود «ویژه» (پلن پیشنهادی، استریک)،
-       جدا از --sun که فقط مال آیکون خورشیدِ سوییچ تم‌ست، تا تغییرش روی
-       اون آیکون اثر نذاره */
-    --gold:#FFC94A;
-    --gold-dim:rgba(255,201,74,.16);
+    /* آبی — رنگ دومِ شب، مکمل سبز برای لحظه‌های «ویژه» (پلن پیشنهادی، استریک) */
+    --secondary:#3E7BFA;
+    --secondary-rgb:62,123,250;
+    --secondary-dim:rgba(62,123,250,.18);
+    /* سود/ضرر توی ژورنال ترید قرارداد جهانیه (سبز/قرمز)، نه بخشی از هویت
+       رنگی تم — پس با accent (که بین شب/روز عوض می‌شه) عوض نمی‌شه */
+    --profit:#00A86B;
+    --profit-dim:rgba(0,168,107,.20);
   }
   body[data-theme="light"]{
-    --bg:#EAEBE7;
-    --bg-rgb:234,235,231;
-    --text:#161A18;
-    --muted:#5B6167;
-    --muted2:#A6ACA9;
-    --accent:#00A86B;
-    --accent-dim:rgba(0,168,107,.16);
-    --accent-soft:#2F8F63;
-    --accent-deep:#00512F;
-    --line:#E2E5E2;
-    --particle:#C7CCC8;
+    --bg:#F3E9D8;
+    --bg-rgb:243,233,216;
+    --text:#3A2A18;
+    --muted:#8A7355;
+    --muted2:#D9C9A3;
+    --accent:#B85C1F;
+    --accent-rgb:184,92,31;
+    --accent-dim:rgba(184,92,31,.14);
+    --accent-soft:#C97A3D;
+    --accent-deep:#6B3F17;
+    --line:#E4D6B8;
     --sun:#FFC94A;
     --moon:#7B4FE0;
-    --gold:#B8863F;
-    --gold-dim:rgba(184,134,63,.14);
+    /* طلایی — رنگ دومِ روز، برای همون لحظه‌های «ویژه» */
+    --secondary:#9C7A23;
+    --secondary-rgb:156,122,35;
+    --secondary-dim:rgba(156,122,35,.16);
+    --profit:#00A86B;
+    --profit-dim:rgba(0,168,107,.20);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
 
@@ -110,8 +122,8 @@
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
   .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-plexmono), monospace; display:inline-flex; align-items:center; gap:5px;}
-  .home-stats b{color:var(--gold); font-weight:600;}
-  .streak-flame{width:13px; height:13px; color:var(--gold); flex-shrink:0;}
+  .home-stats b{color:var(--secondary); font-weight:600;}
+  .streak-flame{width:13px; height:13px; color:var(--secondary); flex-shrink:0;}
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
   .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-plexmono), monospace; margin-bottom:18px;}
@@ -159,8 +171,8 @@
   }
   button:hover{
     border-color:var(--accent); color:var(--accent);
-    background:rgba(0,168,107,.10);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(0,168,107,.28), 0 6px 20px rgba(0,168,107,.16);
+    background:rgba(var(--accent-rgb),.10);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(var(--accent-rgb),.28), 0 6px 20px rgba(var(--accent-rgb),.16);
   }
   button:active{transform:scale(.96);}
   button:disabled{opacity:.4; cursor:default;}
@@ -392,7 +404,7 @@
   .exercise-day-card{
     border-radius:22px; padding:16px 18px; border:1px solid var(--line); background:rgba(255,255,255,.02);
   }
-  .exercise-day-card.today{ border-color:var(--accent); background:rgba(0,168,107,.05); }
+  .exercise-day-card.today{ border-color:var(--accent); background:rgba(var(--accent-rgb),.05); }
   .exercise-day-head{
     display:flex; align-items:baseline; justify-content:space-between;
     font-size:12px; color:var(--muted2); font-family:var(--font-plexmono), monospace;
@@ -470,6 +482,10 @@
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     z-index:56; padding:22px; opacity:0; pointer-events:none; transition:.2s;
   }
+  /* شیشه‌ی خیلی کم‌رنگ (۴٪) پشت مودال روی پس‌زمینه‌ی گرم/روشنِ تم روز، رنگ
+     بلاب‌های پشتش رو زیادی نشون می‌داد و کثیف به‌نظر می‌رسید؛ توی روز مودال
+     خودشو یه کارت تقریباً تخت و تمیز نگه می‌داره */
+  body[data-theme="light"] .modal-panel{ background:rgba(var(--bg-rgb), .82); }
   .modal-panel.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%);}
   .modal-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;}
   .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-plexmono), monospace;}
@@ -525,7 +541,7 @@
   .tm-station.past .tm-marker .tmm-check{opacity:1; transform:scale(1) rotate(0deg);}
   .tm-station.active .tm-marker{border-color:var(--accent); color:var(--accent); box-shadow:0 0 0 5px var(--accent-dim); animation:tmPulse 2.4s ease-in-out infinite;}
   .tm-station.final .tm-marker{border-color:var(--accent); color:var(--accent); font-weight:700;}
-  @keyframes tmPulse{0%,100%{box-shadow:0 0 0 4px var(--accent-dim);} 50%{box-shadow:0 0 0 9px rgba(0,168,107,0);}}
+  @keyframes tmPulse{0%,100%{box-shadow:0 0 0 4px var(--accent-dim);} 50%{box-shadow:0 0 0 9px rgba(var(--accent-rgb),0);}}
   @keyframes tmSquash{
     0%{transform:scale(1);} 30%{transform:scale(.72,1.28);} 55%{transform:scale(1.16,.86);}
     75%{transform:scale(.95,1.05);} 100%{transform:scale(1);}
@@ -569,7 +585,7 @@
     background:var(--accent); color:var(--bg); border:none;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; flex-shrink:0;
-    box-shadow:0 8px 22px rgba(0,168,107,.35);
+    box-shadow:0 8px 22px rgba(var(--accent-rgb),.35);
   }
   .fab-add-icon{
     display:inline-flex; align-items:center; justify-content:center;
@@ -577,7 +593,7 @@
   .fab-add-icon svg{width:16px; height:16px; display:block;}
   .fab-add:hover, .fab-add:focus-visible{
     color:var(--bg); border-color:transparent; transform:scale(1.06);
-    box-shadow:0 10px 24px rgba(0,168,107,.45);
+    box-shadow:0 10px 24px rgba(var(--accent-rgb),.45);
   }
   .fab-add:active{transform:scale(.94);}
 
@@ -914,12 +930,12 @@
   .day-pill:hover{border-color:var(--accent); color:var(--text);}
   .day-pill:active{transform:scale(.92);}
   .day-pill.on{
-    background:var(--accent-dim); border-color:var(--accent); color:#3CFF9A; font-weight:800;
+    background:var(--accent-dim); border-color:var(--accent); color:var(--accent); font-weight:800;
     box-shadow:0 0 0 1px var(--accent);
   }
   .day-pill.on::after{
     content:''; position:absolute; inset:0; border-radius:10px; z-index:-1;
-    box-shadow:0 0 8px rgba(0,255,140,.65), 0 0 16px rgba(0,255,140,.4);
+    box-shadow:0 0 8px rgba(var(--accent-rgb),.65), 0 0 16px rgba(var(--accent-rgb),.4);
   }
 
   /* new-item add button, in its own footer row so it can never float on top of the list */
@@ -928,13 +944,13 @@
   .wsearch-newbtn{
     position:static; width:42px; height:42px; border-radius:50%;
     background:var(--accent); border:none; color:var(--bg); display:flex; align-items:center; justify-content:center;
-    cursor:pointer; box-shadow:0 8px 22px rgba(0,168,107,.35);
+    cursor:pointer; box-shadow:0 8px 22px rgba(var(--accent-rgb),.35);
     transition:transform .15s ease, box-shadow .15s ease;
   }
-  .wsearch-newbtn:hover, .wsearch-newbtn:focus-visible{transform:scale(1.06); box-shadow:0 10px 24px rgba(0,168,107,.45); color:var(--bg);}
+  .wsearch-newbtn:hover, .wsearch-newbtn:focus-visible{transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
   .wsearch-newbtn:active{transform:scale(.94);}
   .wsearch-newbtn svg{width:18px; height:18px; display:block;}
-  .wsearch-newbtn.active{transform:scale(1.06); box-shadow:0 10px 24px rgba(0,168,107,.45); color:var(--bg);}
+  .wsearch-newbtn.active{transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
 
   /* fab preview menu: opens above the +, offers add / bulk-delete */
   .wsearch-fab-menu{
@@ -1162,10 +1178,10 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 .topbar-signin-btn{
   display:flex; align-items:center; gap:6px;
   height:34px; padding:0 16px; border-radius:999px;
-  border:1px solid rgba(0,168,107,.4); color:var(--accent);
-  background:rgba(0,168,107,.09);
+  border:1px solid rgba(var(--accent-rgb),.4); color:var(--accent);
+  background:rgba(var(--accent-rgb),.09);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(0,168,107,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(var(--accent-rgb),.12);
   font-family:var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700;
   cursor:pointer; white-space:nowrap;
   transition:background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
@@ -1173,8 +1189,8 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 .topbar-signin-icon{width:15px; height:15px; display:flex;}
 .topbar-signin-icon svg{width:15px; height:15px; display:block;}
 .topbar-signin-btn:hover{
-  background:rgba(0,168,107,.18); color:var(--text);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(0,168,107,.35), 0 6px 20px rgba(0,168,107,.22);
+  background:rgba(var(--accent-rgb),.18); color:var(--text);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(var(--accent-rgb),.35), 0 6px 20px rgba(var(--accent-rgb),.22);
 }
 .topbar-signin-btn:active{transform:scale(.94);}
 
@@ -1252,7 +1268,7 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .auth-tab-indicator{
   position:absolute; top:4px; bottom:4px; z-index:0;
   background:var(--accent); border-radius:999px;
-  box-shadow:0 4px 14px rgba(0,168,107,.35);
+  box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
 }
 
 /* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلاً
@@ -1279,8 +1295,8 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .auth-brand-mark{
   width:46px; height:46px; margin:0 auto 4px; border-radius:16px;
   display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(155deg, rgba(0,168,107,.22), rgba(0,168,107,.05));
-  border:1px solid rgba(0,168,107,.3);
+  background:linear-gradient(155deg, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),.05));
+  border:1px solid rgba(var(--accent-rgb),.3);
   font-family:var(--font-vazir), sans-serif; font-size:21px; font-weight:800; color:var(--accent);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.15);
 }
@@ -1310,17 +1326,17 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   will-change:transform; transform:translateZ(0);
 }
 .aurora-blob-a{
-  background:radial-gradient(circle at 40% 40%, rgba(0,168,107,.30), rgba(0,168,107,0) 70%);
+  background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.30), rgba(var(--accent-rgb),0) 70%);
   animation:auroraDriftA 26s ease-in-out infinite;
 }
 .aurora-blob-b{
-  background:radial-gradient(circle at 60% 60%, rgba(0,168,107,.22), rgba(0,168,107,0) 70%);
+  background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),0) 70%);
   animation:auroraDriftB 32s ease-in-out infinite;
 }
-/* بلاب سوم عمداً طلایی‌ه نه سبز — یه ذره گرمای رنگی به فضا اضافه می‌کنه
-   که پس‌زمینه فقط یک سبز تخت به‌نظر نرسه */
+/* بلاب سوم رنگ دومِ تم رو می‌گیره (آبی توی شب، طلایی توی روز) نه رنگ اصلی —
+   یه ذره گرمای رنگی متفاوت به فضا اضافه می‌کنه که پس‌زمینه یک‌دست نباشه */
 .aurora-blob-c{
-  background:radial-gradient(circle, rgba(255,201,74,.13), rgba(255,201,74,0) 70%);
+  background:radial-gradient(circle, rgba(var(--secondary-rgb),.13), rgba(var(--secondary-rgb),0) 70%);
   animation:auroraDriftC 40s ease-in-out infinite;
 }
 body[data-theme="light"] .aurora-blob{ opacity:.45; }
@@ -1359,15 +1375,15 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
   text-decoration:none; transition:transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
 }
 .landing-cta-primary{
-  color:var(--bg); background:var(--accent); box-shadow:0 10px 30px rgba(0,168,107,.35);
+  color:var(--bg); background:var(--accent); box-shadow:0 10px 30px rgba(var(--accent-rgb),.35);
 }
-.landing-cta-primary:hover{ transform:translateY(-1px); box-shadow:0 14px 36px rgba(0,168,107,.45); }
+.landing-cta-primary:hover{ transform:translateY(-1px); box-shadow:0 14px 36px rgba(var(--accent-rgb),.45); }
 .landing-cta-primary:active{ transform:scale(.97); }
 .landing-cta-secondary{
   color:var(--text); border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
 }
-.landing-cta-secondary:hover{ border-color:var(--accent); color:var(--accent); background:rgba(0,168,107,.1); }
+.landing-cta-secondary:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.1); }
 .landing-cta-secondary:active{ transform:scale(.97); }
 body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); background:rgba(255,255,255,.5); }
 
@@ -1386,7 +1402,7 @@ body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); b
   .landing-features{ display:grid; grid-template-columns:1fr 1fr; }
 }
 .landing-feature-card{
-  border-radius:22px; padding:18px 20px; border:1px solid rgba(0,168,107,.14);
+  border-radius:22px; padding:18px 20px; border:1px solid rgba(var(--accent-rgb),.14);
   background:rgba(255,255,255,.025);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   transition:border-color .2s ease, transform .2s ease;
@@ -1422,15 +1438,16 @@ body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4);
   background:rgba(255,255,255,.025);
 }
 body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
-/* پلن برجسته (مکس) عمداً طلایی‌ه نه سبز — سبز مال دکمه‌های عمل اصلیه،
-   طلایی یعنی «تراز ویژه»، این دوتا معنای بصری جدا رو روشن نگه می‌داره */
+/* پلن برجسته (مکس) رنگ دومِ تم رو می‌گیره (آبی/طلایی) نه رنگ اصلی — رنگ اصلی
+   مال دکمه‌های عمله، این یکی یعنی «تراز ویژه»، این دوتا معنای بصری جدا رو
+   روشن نگه می‌داره */
 .landing-plan-card.highlight{
-  border-color:var(--gold); background:var(--gold-dim);
-  box-shadow:0 0 0 1px var(--gold), 0 20px 40px rgba(255,201,74,.14);
+  border-color:var(--secondary); background:var(--secondary-dim);
+  box-shadow:0 0 0 1px var(--secondary), 0 20px 40px rgba(var(--secondary-rgb),.14);
 }
 .landing-plan-badge{
   position:absolute; top:-11px; right:18px; padding:3px 12px; border-radius:999px;
-  background:var(--gold); color:#1A1508; font-size:10.5px; font-weight:800;
+  background:var(--secondary); color:#fff; font-size:10.5px; font-weight:800;
 }
 .landing-plan-name{ font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; }
 .landing-plan-price{ font-size:19px; font-weight:800; margin-top:6px; }
