@@ -23,6 +23,9 @@ const ICONS: Record<string, JSX.Element> = {
   trade: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9.5 11l3.5 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6.5h4.5V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  ideas: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 21h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.02.9 1.7V16h5.4v-.5c0-.68.3-1.25.9-1.7A6 6 0 0 0 12 3Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
@@ -49,6 +52,7 @@ const LINKS = [
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   { href: "/exercise", label: "ورزش و کالری", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },
+  { href: "/ideas", label: "ایده‌ها", icon: "ideas" },
   { href: "/about", label: "درباره من", icon: "about" },
 ];
 

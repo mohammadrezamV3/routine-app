@@ -134,6 +134,7 @@ model User {
   calorieTargets    CalorieTarget[]
   tradeEntries      TradeEntry[]
   roadmaps          Roadmap[]
+  ideas             Idea[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -611,6 +612,24 @@ model Roadmap {
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ============================================================================
+// MODULE: IDEAS (یادداشت آزاد ایده‌ها — فقط عنوان و توضیح، بدون وضعیت/اولویت)
+// ============================================================================
+
+model Idea {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
 }
