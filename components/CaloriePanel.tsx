@@ -32,6 +32,7 @@ export function CaloriePanel() {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);
+  const [customPer100, setCustomPer100] = useState("");
   const [grams, setGrams] = useState("100");
   const [mealType, setMealType] = useState("lunch");
 
@@ -75,9 +76,9 @@ export function CaloriePanel() {
 
   async function addEntry() {
     const name = selectedFood?.name || query.trim();
-    const per100 = selectedFood?.caloriesPer100g;
+    const per100 = selectedFood ? selectedFood.caloriesPer100g : +customPer100;
     const g = +grams;
-    if (!name || !per100 || !g) return;
+    if (!name || !per100 || per100 <= 0 || !g) return;
     const totalKcal = Math.round((per100 * g) / 100);
 
     const res = await fetch("/api/calorie/log", {
@@ -86,7 +87,7 @@ export function CaloriePanel() {
       body: JSON.stringify({ date: todayKey, customName: name, customCalories: totalKcal, grams: g, mealType }),
     });
     if (res.ok) {
-      setQuery(""); setSelectedFood(null); setGrams("100");
+      setQuery(""); setSelectedFood(null); setCustomPer100(""); setGrams("100");
       loadEntries();
     }
   }
@@ -145,12 +146,25 @@ export function CaloriePanel() {
                       key={f.name}
                       className="item-row"
                       style={{ padding: "8px 10px", cursor: "pointer", display: "flex", justifyContent: "space-between" }}
-                      onClick={() => { setSelectedFood(f); setQuery(f.name); }}
+                      onClick={() => { setSelectedFood(f); setQuery(f.name); setCustomPer100(""); }}
                     >
                       <span className="name">{f.name}</span>
                       <span className="mono" style={{ color: "var(--muted2)" }}>{f.caloriesPer100g} kcal/۱۰۰g</span>
                     </div>
                   ))}
+                </div>
+              )}
+              {!selectedFood && query.trim() && suggestions.length === 0 && (
+                <div style={{ marginTop: 6 }}>
+                  <div className="section-note">غذا در لیست پیدا نشد — کالری هر ۱۰۰ گرمش رو دستی وارد کن</div>
+                  <input
+                    type="number"
+                    className="wsearch-newform-name"
+                    style={{ marginTop: 6 }}
+                    placeholder="کالری به‌ازای هر ۱۰۰ گرم"
+                    value={customPer100}
+                    onChange={(e) => setCustomPer100(e.target.value)}
+                  />
                 </div>
               )}
             </div>
@@ -163,7 +177,11 @@ export function CaloriePanel() {
                 ))}
               </div>
             </div>
-            <button onClick={addEntry} disabled={!selectedFood} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>
+            <button
+              onClick={addEntry}
+              disabled={!selectedFood && !(query.trim() && +customPer100 > 0)}
+              style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}
+            >
               افزودن به امروز
             </button>
           </div>
