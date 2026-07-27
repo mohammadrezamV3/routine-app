@@ -1196,6 +1196,10 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 
 /* باکس فرم ورود/ثبت‌نام — شیشه‌ی واقعی مثل هدر (نه پس‌زمینه تقریباً تخت
    wsearch-newform روی تم تاریک)، با عرض محدود و گرد به‌جای کل عرض صفحه */
+/* صفحات ورود/ثبت‌نام هدر سراسری رو مخفی می‌کنن (NavDrawer)، پس فضای همیشگیِ
+   body برای اون هدر ثابت (padding-top:118px) دیگه لازم نیست؛ همون‌قدر که
+   برای فلش بازگشت بالای باکس کافیه نگه می‌داریم */
+.auth-page{ margin-top:-98px; }
 .auth-shell{ max-width:440px; margin:0 auto; }
 .auth-box{
   width:100%; box-sizing:border-box; margin-top:16px;
@@ -1204,7 +1208,11 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
   border:1px solid var(--line);
   backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 20px 50px rgba(0,0,0,.35);
+  animation:authBoxIn .32s ease both;
 }
+/* هر بار که بین ورود/ثبت‌نام سوییچ می‌شه (رفتن به صفحه‌ی دیگه) باکس از نو
+   mount می‌شه — این محو-و-بالا-آمدن کوتاه همون لحظه‌ی سوییچ رو نرم می‌کنه */
+@keyframes authBoxIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
 body[data-theme="light"] .auth-box{
   background:rgba(255,255,255,.06);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.12);
@@ -1239,6 +1247,38 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */
 .field-error .wsearch-newform-name{ border-color:#E05252; }
 .auth-terms-row{ border-bottom:none; padding:10px 0; }
+
+/* ردیف بالای باکس ورود/ثبت‌نام — جایگزین هدر سایت که توی این بخش مخفیه؛
+   فقط یک فلش بازگشت به صفحه اصلی، سرِ فلش سمت چپ (جهتِ «برگشت») */
+.auth-chrome-row{ display:flex; justify-content:flex-end; max-width:440px; margin:0 auto 10px; }
+.auth-back-btn{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:38px; height:38px; border-radius:999px;
+  border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text);
+  backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  transition:border-color .2s ease, color .2s ease, transform .15s ease;
+}
+.auth-back-btn:hover{ border-color:var(--accent); color:var(--accent); transform:translateX(-3px); }
+.auth-back-btn svg{ width:18px; height:18px; }
+
+/* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
+   "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست) */
+.auth-brand-mark{
+  width:46px; height:46px; margin:0 auto 4px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(155deg, rgba(0,168,107,.22), rgba(0,168,107,.05));
+  border:1px solid rgba(0,168,107,.3);
+  font-family:var(--font-vazir), sans-serif; font-size:21px; font-weight:800; color:var(--accent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15);
+}
+
+/* لینک فراموشی رمز عبور — زیر فیلد رمز، سمت چپ */
+.auth-forgot-link{
+  display:block; margin-top:8px; text-align:left;
+  font-size:12px; color:var(--muted); text-decoration:none; transition:color .2s ease;
+}
+.auth-forgot-link:hover{ color:var(--accent); }
 
 /* ============================================================
    بک‌گراند aurora — چند بلاب نرم و تار سبز که آروم شناورن، جایگزین
@@ -1355,8 +1395,9 @@ body[data-theme="light"] .landing-feature-card{ background:rgba(255,255,255,.4);
 .landing-trust-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); }
 .landing-trust-item svg{ width:17px; height:17px; min-width:17px; }
 
-/* پلن‌ها — روی موبایل همیشه یک‌ستونه (طبق تحقیق: جدول مقایسه‌ی عریض روی
-   موبایل تجربه بدی می‌ده)، پلن مکس با بج و بردر سبز برجسته می‌شه */
+/* پلن‌ها — کارت‌ها روی موبایل همیشه یک‌ستونه، پلن مکس با بج و بردر سبز
+   برجسته می‌شه؛ جدول مقایسه‌ی زیرش (که عریض‌تره) داخل رَپر خودش با اسکرول
+   افقی جدا می‌شه تا چیدمان کلی صفحه توی موبایل بهم نریزه */
 .landing-plans{ display:flex; flex-direction:column; gap:14px; }
 @media (min-width:640px){
   .landing-plans{ display:grid; grid-template-columns:repeat(4, 1fr); align-items:stretch; }
@@ -1378,7 +1419,21 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
 .landing-plan-name{ font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; }
 .landing-plan-price{ font-size:19px; font-weight:800; margin-top:6px; }
 .landing-plan-price span{ font-size:11px; font-weight:600; color:var(--muted2); margin-right:4px; }
-.landing-plan-modules{ list-style:none; margin-top:14px; display:flex; flex-direction:column; gap:8px; flex:1; }
-.landing-plan-modules li{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text); }
-.landing-plan-modules svg{ width:15px; height:15px; min-width:15px; }
+.landing-plan-blurb{ margin-top:10px; font-size:12.5px; color:var(--muted); line-height:1.6; flex:1; }
+
+/* جدول مقایسه زیر کارت‌های پلن — عریض‌تر از عرض ثابتِ .wrap می‌شه، پس
+   اسکرول افقی مال خودشه نه کل صفحه */
+.landing-compare-wrap{
+  margin-top:26px; overflow-x:auto; border-radius:22px;
+  border:1px solid var(--line); background:rgba(255,255,255,.03);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+}
+.landing-compare-table{ width:100%; min-width:560px; border-collapse:collapse; font-size:12.5px; }
+.landing-compare-table th, .landing-compare-table td{ padding:14px 14px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap; }
+.landing-compare-table thead th{ font-weight:700; color:var(--text); font-size:12.5px; font-family:var(--font-plexmono), monospace; }
+.landing-compare-table tbody tr:last-child td{ border-bottom:none; }
+.landing-compare-table td.landing-compare-label{ text-align:right; color:var(--muted); white-space:normal; font-family:var(--font-vazir), sans-serif; }
+.landing-compare-table td svg{ width:17px; height:17px; }
+.landing-compare-table .compare-yes{ color:var(--accent); }
+.landing-compare-table .compare-no{ color:#E05252; opacity:.6; }
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }

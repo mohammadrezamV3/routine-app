@@ -5,14 +5,16 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 
+// EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
+// عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
 const MODULE_LABELS: Record<string, string> = {
   ROUTINE: "روتین روزانه",
   SLEEP: "خواب",
   TASKS: "کارهای روزمره",
-  EXERCISE: "ورزش",
-  CALORIE: "کالری",
+  EXERCISE: "بدنسازی",
+  CALORIE: "بدنسازی",
   TRADE: "ژورنال ترید",
-  ROADMAP: "رودمپ آموزشی",
+  ROADMAP: "رودمپ آموزشی (ai mapping)",
   AI_INSIGHT: "تحلیل هوشمند (Correlation Insight)",
 };
 
@@ -95,6 +97,15 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   }
 
   const activeModules = data.moduleAccess.filter((m) => m.active);
+  // بدنسازی هم اسم EXERCISE هم CALORIE رو به یک لیبل نگاشت می‌ده — این‌جا
+  // موقع نمایش، دومیشو حذف می‌کنیم که یک قابلیت به‌جای دو ردیف تکراری دیده بشه
+  const seenModuleLabels = new Set<string>();
+  const displayModules = activeModules.filter((m) => {
+    const label = MODULE_LABELS[m.module] || m.module;
+    if (seenModuleLabels.has(label)) return false;
+    seenModuleLabels.add(label);
+    return true;
+  });
   const currentSub = data.subscriptions[0];
 
   return (
@@ -155,9 +166,9 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
 
       <div className="tm-extra">
         <div className="domain-sub">ماژول‌های فعال</div>
-        {activeModules.length ? (
+        {displayModules.length ? (
           <ul>
-            {activeModules.map((m) => (
+            {displayModules.map((m) => (
               <li key={m.module}>
                 {MODULE_LABELS[m.module] || m.module}
                 {m.expiresAt && (

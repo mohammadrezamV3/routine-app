@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
+import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/validate";
 
@@ -69,19 +70,35 @@ export default function SignupPage() {
     if (!validate()) return;
 
     setLoading(true);
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, username, password }),
-    });
-    const data = await res.json();
+    let res: Response;
+    let data: { error?: string; userId?: string };
+    try {
+      res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, username, password }),
+      });
+      data = await res.json();
+    } catch {
+      setLoading(false);
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      return;
+    }
     if (!res.ok) {
       setLoading(false);
-      setError(data.error || "خطایی پیش آمد");
+      setError(data.error || "خطایی پیش آمد — دوباره امتحان کن");
       return;
     }
 
-    const loginRes = await signIn("credentials", { redirect: false, identifier: username, password });
+    let loginRes;
+    try {
+      loginRes = await signIn("credentials", { redirect: false, identifier: username, password });
+    } catch {
+      setLoading(false);
+      // اکانت ساخته شد ولی ورود خودکار به مشکل خورد — نه ثبت‌نام رو ناموفق نشون بده نه بی‌جواب بذاره
+      router.push("/auth/login");
+      return;
+    }
     setLoading(false);
     if (loginRes?.error) {
       router.push("/auth/login");
@@ -91,12 +108,14 @@ export default function SignupPage() {
   }
 
   return (
-    <section>
-      <h1>ثبت‌نام</h1>
+    <section className="auth-page">
+      <AuthBackButton />
       <div className="auth-shell">
         <AuthTabs active="signup" />
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
+          <AuthBrandMark />
+
           <div className="auth-field-grid">
             <AuthField id="name" label="نام" error={fieldErrors.name} ref={nameRef}>
               <input

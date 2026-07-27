@@ -4,12 +4,12 @@ import { useState } from "react";
 import { ExercisePanel } from "@/components/ExercisePanel";
 import { CaloriePanel } from "@/components/CaloriePanel";
 
-export default function ExerciseAndCaloriePage() {
+export default function BodybuildingPage() {
   const [tab, setTab] = useState<"exercise" | "calorie">("exercise");
 
   return (
     <section>
-      <h1>ورزش و کالری</h1>
+      <h1>بدنسازی</h1>
 
       <div className="day-picker" style={{ marginTop: 10 }}>
         <span className={`day-pill${tab === "exercise" ? " on" : ""}`} onClick={() => setTab("exercise")}>ورزش</span>

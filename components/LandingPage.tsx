@@ -9,8 +9,12 @@ import { getSiteMarket } from "@/lib/market";
 const SLEEP_ICON = (
   <svg viewBox="0 0 24 24" fill="none"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
-const CALORIE_ICON = (
-  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1.5-1-2-1-3 2 1 3 3 3 5a5 5 0 0 1-10 0c0-4 3-6 5-10Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+
+const CHECK_ICON = (
+  <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+const X_ICON = (
+  <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
 
 const FEATURES = [
@@ -28,25 +32,19 @@ const FEATURES = [
   },
   {
     icon: ICONS.exercise,
-    title: "ورزش",
+    title: "بدنسازی",
     hook: "برنامه‌ای که واقعاً مالِ توئه",
-    body: "بر اساس هدفت — حجم، کات، قدرت یا استقامت — یه برنامه واقعی می‌سازیم، نه یه قالب عمومی.",
-  },
-  {
-    icon: CALORIE_ICON,
-    title: "کالری",
-    hook: "بدون حساب‌کتاب دستی",
-    body: "غذاتو جستجو کن یا دستی وارد کن، هدف روزانه‌ات رو دنبال کن.",
+    body: "لیفتینگ، حجم، کات یا استقامت — بر اساس هدفت یه برنامه واقعی می‌سازیم، نه یه قالب عمومی. شمارش کالری و ماکروها هم همراهشه، توی همون یه بخش.",
   },
   {
     icon: ICONS.trade,
     title: "ژورنال ترید",
-    hook: "شفاف، بدون توصیه",
-    body: "فقط آمار خام معاملاتت و یادآوری؛ هیچ پیشنهاد خرید/فروشی نمی‌دیم — تصمیم همیشه با خودته.",
+    hook: "شفاف و حرفه‌ای",
+    body: "سود/زیان، نرخ برد، میانگین سود و ضرر و تقویم کامل معاملاتت — همه در یک نگاه، دقیق و منظم.",
   },
   {
     icon: ICONS.roadmaps,
-    title: "رودمپ‌ساز (AI Mapping)",
+    title: "ai mapping",
     hook: "بهترین مسیر رو برات می‌چینیم",
     body: "با هوش مصنوعی، یکی از بهترین راه‌ها برای رسیدن به هدفت رو طراحی می‌کنیم — از گیتار تا اسپانیایی تا فتوشاپ، هر چیزی بخوای یاد بگیری، یک نقطه شروع مشخص داری.",
   },
@@ -54,31 +52,51 @@ const FEATURES = [
 
 const TRUST_POINTS = [
   "داده‌های تو فقط مال خودته",
-  "بدون توصیه مالی یا پزشکی — فقط ابزار",
+  "دقیق، حرفه‌ای و همیشه به‌روز",
   "فارسی، سریع، بدون شلوغی",
 ];
 
-type PlanCard = { key: string; nameFa: string; price: string; modules: string[]; highlight?: boolean };
+type PlanCard = { key: string; nameFa: string; price: string; blurb: string; highlight?: boolean };
 
 const PLANS_IRAN: PlanCard[] = [
-  { key: "basic", nameFa: "پایه", price: "۴۹,۰۰۰ تومان", modules: ["روتین روزانه", "خواب", "کارهای روزمره"] },
-  { key: "exercise", nameFa: "ورزش", price: "۹۹,۰۰۰ تومان", modules: ["همه‌ی پایه", "ورزش"] },
-  { key: "trade", nameFa: "ترید", price: "۱۲۹,۰۰۰ تومان", modules: ["همه‌ی پایه", "ژورنال ترید"] },
-  { key: "max", nameFa: "مکس", price: "۱۹۹,۰۰۰ تومان", modules: ["همه‌ی ماژول‌ها", "کالری", "رودمپ‌ساز AI", "تحلیل هوشمند"], highlight: true },
+  { key: "basic", nameFa: "پلن پایه", price: "۴۹,۰۰۰ تومان", blurb: "روتین روزانه، خواب و کارهای روزمره" },
+  { key: "exercise", nameFa: "پلن پایه بخش بدنسازی", price: "۹۹,۰۰۰ تومان", blurb: "همه‌ی پایه + برنامه بدنسازی و کالری" },
+  { key: "trade", nameFa: "پلن پایه پلن ترید", price: "۱۲۹,۰۰۰ تومان", blurb: "همه‌ی پایه + ژورنال حرفه‌ای ترید" },
+  { key: "max", nameFa: "پلن مکس", price: "۱۹۹,۰۰۰ تومان", blurb: "همه‌چیز، بدون محدودیت", highlight: true },
 ];
 
 const PLANS_INTL: PlanCard[] = [
-  { key: "basic", nameFa: "Basic", price: "$3.99", modules: ["Daily routine", "Sleep", "Daily tasks"] },
-  { key: "exercise", nameFa: "Exercise", price: "$7.99", modules: ["Everything in Basic", "Exercise"] },
-  { key: "trade", nameFa: "Trade", price: "$12.99", modules: ["Everything in Basic", "Trade journal"] },
-  { key: "max", nameFa: "Max", price: "$17.99", modules: ["Every module", "Calorie tracking", "AI Roadmaps", "Smart insights"], highlight: true },
+  { key: "basic", nameFa: "Basic", price: "$3.99", blurb: "Daily routine, sleep & tasks" },
+  { key: "exercise", nameFa: "Basic + Bodybuilding", price: "$7.99", blurb: "Everything in Basic + workouts & calories" },
+  { key: "trade", nameFa: "Basic + Trade", price: "$12.99", blurb: "Everything in Basic + trade journal" },
+  { key: "max", nameFa: "Max", price: "$17.99", blurb: "Everything, unlimited", highlight: true },
+];
+
+type CompareRow = { label: string; included: Record<string, boolean> };
+
+const COMPARE_ROWS_IRAN: CompareRow[] = [
+  { label: "روتین روزانه، خواب و کارهای روزمره", included: { basic: true, exercise: true, trade: true, max: true } },
+  { label: "برنامه بدنسازی + شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
+  { label: "ژورنال حرفه‌ای ترید", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "ai mapping", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
+];
+
+const COMPARE_ROWS_INTL: CompareRow[] = [
+  { label: "Daily routine, sleep & tasks", included: { basic: true, exercise: true, trade: true, max: true } },
+  { label: "Bodybuilding plan + calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
+  { label: "Professional trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "ai mapping", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true } },
 ];
 
 export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const plansRef = useRef<HTMLDivElement>(null);
-  const plans = getSiteMarket() === "INTERNATIONAL" ? PLANS_INTL : PLANS_IRAN;
+  const isIntl = getSiteMarket() === "INTERNATIONAL";
+  const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
+  const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
 
   useEffect(() => { staggerFieldsIn(heroRef.current); }, []);
   useEffect(() => revealOnScroll(featuresRef.current), []);
@@ -91,7 +109,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
           <div className="eyebrow" data-anim-field>روتین من</div>
           <h1 className="landing-h1" data-anim-field>همه‌ی نظم زندگی‌ات، توی یک اپ</h1>
           <p className="landing-sub" data-anim-field>
-            روتین روزانه، خواب، ورزش، کالری، ژورنال ترید و مسیر یادگیری —
+            روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
             هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
           </p>
           <div className="landing-cta-row" data-anim-field>
@@ -139,19 +157,35 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
               {p.highlight && <span className="landing-plan-badge">محبوب‌ترین</span>}
               <div className="landing-plan-name">{p.nameFa}</div>
               <div className="landing-plan-price">{p.price}<span>/ ماهانه</span></div>
-              <ul className="landing-plan-modules">
-                {p.modules.map((m) => (
-                  <li key={m}>
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    {m}
-                  </li>
-                ))}
-              </ul>
+              <div className="landing-plan-blurb">{p.blurb}</div>
               <Link href="/auth/signup" className={p.highlight ? "landing-cta-primary" : "landing-cta-secondary"} style={{ width: "100%", marginTop: 14 }}>
                 شروع کن
               </Link>
             </div>
           ))}
+        </div>
+
+        <div className="landing-compare-wrap" data-reveal>
+          <table className="landing-compare-table">
+            <thead>
+              <tr>
+                <th></th>
+                {plans.map((p) => <th key={p.key}>{p.nameFa}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map((row) => (
+                <tr key={row.label}>
+                  <td className="landing-compare-label">{row.label}</td>
+                  {plans.map((p) => (
+                    <td key={p.key} className={row.included[p.key] ? "compare-yes" : "compare-no"}>
+                      {row.included[p.key] ? CHECK_ICON : X_ICON}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

@@ -32,7 +32,8 @@ const PLANS: {
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 990_000, // ۹۹,۰۰۰ تومان
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE],
+    // بدنسازی = برنامه ورزشی + شمارش کالری، هر دو با هم (کالری زیرمجموعه‌ی همین پلنه، نه پلن مکس تنها)
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE],
   },
   {
     key: "trade",
@@ -78,7 +79,7 @@ const PLANS: {
     market: Market.INTERNATIONAL,
     currency: Currency.USD,
     priceMonthly: 799, // $7.99
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE],
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE],
   },
   {
     key: "trade",

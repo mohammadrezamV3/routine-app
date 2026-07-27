@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
+import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
 
 export default function LoginPage() {
@@ -39,23 +41,39 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const res = await signIn("credentials", { redirect: false, identifier, password });
+    let res;
+    try {
+      res = await signIn("credentials", { redirect: false, identifier, password });
+    } catch {
+      setLoading(false);
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      return;
+    }
     setLoading(false);
+
     if (res?.error) {
+      // پیام عمداً کلیه (نه «یوزرنیم اشتباهه» / «رمز اشتباهه» جدا) تا کسی که
+      // فقط رمز رو حدس می‌زنه نتونه بفهمه شناسه‌ی درست رو پیدا کرده یا نه.
       setError("یوزرنیم/شماره موبایل یا رمز عبور اشتباه است");
       shakeFields([identifierRef.current, passwordRef.current]);
+      return;
+    }
+    if (!res?.ok) {
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
       return;
     }
     router.push("/");
   }
 
   return (
-    <section>
-      <h1>ورود</h1>
+    <section className="auth-page">
+      <AuthBackButton />
       <div className="auth-shell">
         <AuthTabs active="login" />
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
+          <AuthBrandMark />
+
           <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} ref={identifierRef}>
             <input
               id="identifier"
@@ -76,6 +94,7 @@ export default function LoginPage() {
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
             </AuthField>
+            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}

@@ -49,7 +49,7 @@ const LINKS = [
   { href: "/", label: "صفحه اصلی", icon: "home" },
   { href: "/weekly", label: "برنامه هفتگی", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
-  { href: "/exercise", label: "ورزش و کالری", icon: "exercise" },
+  { href: "/exercise", label: "بدنسازی", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },
   { href: "/about", label: "درباره من", icon: "about" },
 ];
@@ -63,6 +63,9 @@ export function NavDrawer() {
   const pathname = usePathname();
   const { status, data: session } = useSession();
   const authSlotRef = useRef<HTMLDivElement>(null);
+  // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
+  // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
+  const hideTopbar = pathname?.startsWith("/auth");
 
   function go(href: string) {
     setOpen(false);
@@ -81,40 +84,42 @@ export function NavDrawer() {
 
   return (
     <>
-      <header className="app-topbar">
-        <div className="topbar-actions">
-          <button
-            id="menuBtn"
-            className={`hamburger${open ? " active" : ""}`}
-            aria-label="باز کردن منو"
-            onClick={() => setOpen(true)}
-          >
-            <span></span><span></span><span></span>
-          </button>
-          {status === "loading" ? (
-            <span className="topbar-auth-placeholder" />
-          ) : status === "authenticated" ? (
-            <div ref={authSlotRef}>
-              <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
-                <span className="profile-chip-avatar">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="8" r="3.5" />
-                    <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
-                  </svg>
-                </span>
-                {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
-              </button>
-            </div>
-          ) : (
-            <div ref={authSlotRef}>
-              <button className="topbar-signin-btn" onClick={() => router.push("/auth/login")}>
-                <span className="topbar-signin-icon">{ICONS.login}</span>
-                <span>ورود</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
+      {!hideTopbar && (
+        <header className="app-topbar">
+          <div className="topbar-actions">
+            <button
+              id="menuBtn"
+              className={`hamburger${open ? " active" : ""}`}
+              aria-label="باز کردن منو"
+              onClick={() => setOpen(true)}
+            >
+              <span></span><span></span><span></span>
+            </button>
+            {status === "loading" ? (
+              <span className="topbar-auth-placeholder" />
+            ) : status === "authenticated" ? (
+              <div ref={authSlotRef}>
+                <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
+                  <span className="profile-chip-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="3.5" />
+                      <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
+                    </svg>
+                  </span>
+                  {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
+                </button>
+              </div>
+            ) : (
+              <div ref={authSlotRef}>
+                <button className="topbar-signin-btn" onClick={() => router.push("/auth/login")}>
+                  <span className="topbar-signin-icon">{ICONS.login}</span>
+                  <span>ورود</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+      )}
 
       <div className={`nav-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
 
