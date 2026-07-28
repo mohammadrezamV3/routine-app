@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -322,29 +323,33 @@ function QuoteCard() {
   }, []);
 
   return (
-    <div className={`flex flex-col items-center gap-3 rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-8 text-center ${t.shadow} backdrop-blur-xl`}>
-      <Quote size={26} className={t.accentText} />
-      <p className={`text-[15px] font-medium leading-8 ${t.heading}`}>{quote.text}</p>
-      <span className={`text-[12.5px] font-bold ${t.muted}`}>— {quote.author}</span>
+    <div className={`overflow-hidden rounded-[24px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-xl`}>
+      <div className="relative h-24 w-full sm:h-32">
+        <Image src="/images/quote-banner.png" alt="" fill sizes="620px" className="object-cover" priority={false} />
+      </div>
+      <div className="flex flex-col items-center gap-3 p-8 text-center">
+        <Quote size={26} className={t.accentText} />
+        <p className={`text-[15px] font-medium leading-8 ${t.heading}`}>{quote.text}</p>
+        <span className={`text-[12.5px] font-bold ${t.muted}`}>— {quote.author}</span>
+      </div>
     </div>
   );
 }
 
-// تصویرسازیِ ساده‌ی گلدون — سمت چپِ هیرو، پشتِ متن، دقیقاً مطابق تصویرِ
-// مرجع (گلدونِ سفالی + برگ‌های سبز + لکه‌ی نرمِ پشت‌زمینه + نشانِ قلب).
+// عکسِ گلدون (public/images/plant-*.png) به‌جای SVG دستی — کیفیت تصویرِ
+// رستر با گرادیان/سایه، سمت چپِ هیرو، پشتِ متن، مطابق تصویرِ مرجع.
 function PlantIllustration() {
   const t = useThemeTokens();
   return (
-    <div className="relative flex h-[92px] w-[84px] shrink-0 items-center justify-center sm:h-[118px] sm:w-[108px]" data-anim-field>
+    <div className="relative h-[108px] w-[74px] shrink-0 sm:h-[140px] sm:w-[96px]" data-anim-field>
       <div className={`absolute inset-0 -z-10 rounded-full blur-xl ${t.isLight ? "bg-[#D97706]/15" : "bg-[#00A86B]/12"}`} />
-      <svg viewBox="0 0 108 118" className="h-full w-full" fill="none">
-        <path d="M54 82C38 62 32 38 43 14C55 36 56 62 54 82Z" fill={t.isLight ? "#7CA982" : "#4F8455"} />
-        <path d="M54 84C34 70 13 58 6 36C29 40 49 58 54 84Z" fill={t.isLight ? "#8FB88F" : "#5B9160"} />
-        <path d="M54 84C72 66 86 44 82 20C63 32 55 58 54 84Z" fill={t.isLight ? "#9CC299" : "#6BA26E"} />
-        <ellipse cx="54" cy="86" rx="26" ry="6.5" fill={t.isLight ? "#EADFC8" : "#3A342A"} />
-        <path d="M32 86L78 86L71 110C70.3 113.5 67.3 116 63.7 116H42.3C38.7 116 35.7 113.5 35 110L32 86Z" fill={t.isLight ? "#E4D2AE" : "#453D30"} />
-        <path d="M35.5 92H72.5" stroke={t.isLight ? "#D5BE92" : "#544A3A"} strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
+      <Image
+        src={t.isLight ? "/images/plant-light.png" : "/images/plant-dark.png"}
+        alt=""
+        fill
+        sizes="96px"
+        className="object-contain"
+      />
       <span className={`absolute -top-1 left-0 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg sm:h-9 sm:w-9 ${t.accentBg}`}>
         <Heart size={15} strokeWidth={2.3} />
       </span>
