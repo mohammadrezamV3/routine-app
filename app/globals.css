@@ -281,6 +281,11 @@
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
   }
 
+  /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
+     می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
+  .topbar-logo-lockup{ height:22px; width:auto; }
+  @media (min-width:701px){ .topbar-logo-lockup{ height:30px; } }
+
   /* animated hamburger: bars morph into an X while the whole icon spins open */
   .hamburger{
     flex-direction:column; gap:4px;
@@ -1414,11 +1419,10 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
    "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست) */
 .auth-brand-mark{
-  width:46px; height:46px; margin:0 auto 4px; border-radius:16px;
-  display:flex; align-items:center; justify-content:center;
+  position:relative; width:46px; height:46px; margin:0 auto 4px; border-radius:16px;
+  padding:7px; box-sizing:border-box;
   background:linear-gradient(155deg, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),.05));
   border:1px solid rgba(var(--accent-rgb),.3);
-  font-family:var(--font-vazir), sans-serif; font-size:21px; font-weight:800; color:var(--accent);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.15);
 }
 

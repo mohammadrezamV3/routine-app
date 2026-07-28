@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 /** فلش بازگشت به صفحه اصلی — داخل خودِ باکس، بالا-چپ (بدون بک‌گراند، فقط آیکون) */
@@ -14,6 +15,8 @@ export function AuthBackButton() {
 /** نشان برند، داخل باکس */
 export function AuthBrandMark() {
   return (
-    <div className="auth-brand-mark" aria-hidden="true">ر</div>
+    <div className="auth-brand-mark" aria-hidden="true">
+      <Image src="/images/logo-icon.png" alt="" fill sizes="46px" className="object-contain" />
+    </div>
   );
 }

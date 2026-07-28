@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
+import Image from "next/image";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -113,6 +114,14 @@ export function NavDrawer() {
               <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
               {notifPermission !== "granted" && <span className="bell-dot" />}
             </button>
+            <Image
+              src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
+              alt="Arion"
+              width={138}
+              height={34}
+              className="topbar-logo-lockup"
+              priority
+            />
           </div>
           <div className="topbar-actions">
             <button
