@@ -49,26 +49,26 @@ const FEATURES = [
 // ۲۰ نقل‌قول — یکی‌شون تصادفی (بعد از mount، برای جلوگیری از hydration
 // mismatch) به‌جای باکس اعتمادسازی قبلی نشون داده می‌شه.
 const QUOTES = [
-  { text: "موفقیت مجموعه‌ای از انتخاب‌های کوچک درست در هر روزه.", author: "برایان تریسی" },
-  { text: "همیشه به نظر غیرممکن می‌رسه، تا وقتی که انجامش بدی.", author: "نلسون ماندلا" },
-  { text: "بهترین زمان برای کاشتن یک درخت، بیست سال پیش بود؛ زمان بعدی، همین حالاست.", author: "ضرب‌المثل چینی" },
-  { text: "ما همون چیزی هستیم که مدام تکرار می‌کنیم؛ پس برتری، یک عمل نیست، یک عادته.", author: "ارسطو" },
-  { text: "هر سفر هزار مایلی، با یک قدم شروع می‌شه.", author: "لائوتزو" },
-  { text: "نظم، پُلیه بین هدف و دستاورد.", author: "جیم ران" },
-  { text: "انگیزه باعث می‌شه شروع کنی؛ عادت باعث می‌شه ادامه بدی.", author: "جیم ریان" },
-  { text: "هدف بدون برنامه، فقط یک آرزوئه.", author: "آنتوان دو سنت‌اگزوپری" },
-  { text: "هر روز یک فرصت جدیده برای بهتر شدن نسبت به دیروز.", author: "ضرب‌المثل" },
-  { text: "مسیر هزار قدمی، با تصمیم امروز شروع می‌شه، نه فردا.", author: "ضرب‌المثل" },
-  { text: "کیفیت زندگی‌ات، نتیجه‌ی کیفیت عادت‌های روزانه‌ته.", author: "جیمز کلییر" },
-  { text: "صبر و پشتکار تلخه، ولی میوه‌ش شیرینه.", author: "ژان ژاک روسو" },
-  { text: "تغییر بزرگ، همیشه از یک تصمیم کوچیک شروع می‌شه.", author: "ضرب‌المثل" },
-  { text: "هیچ باد موافقی برای کسی که نمی‌دونه به کدوم بندر می‌ره، نمی‌وزه.", author: "سنکا" },
-  { text: "نظم یعنی انتخاب بین چیزی که الان می‌خوای و چیزی که واقعاً می‌خوای.", author: "ضرب‌المثل" },
-  { text: "هر روزت رو طوری بساز که فردا بهش افتخار کنی.", author: "ضرب‌المثل" },
-  { text: "رشد، بیرون از منطقه‌ی راحتیه که اتفاق می‌افته.", author: "ضرب‌المثل" },
-  { text: "کاری که امروز می‌تونی بکنی رو به فردا موکول نکن.", author: "بنجامین فرانکلین" },
-  { text: "موفقیت یعنی از شکستی به شکست دیگه رفتن، بدون از دست دادن اشتیاق.", author: "وینستون چرچیل" },
-  { text: "بهترین نسخه‌ی خودت، همونیه که هر روز کمی بیشتر تلاش می‌کنه.", author: "ضرب‌المثل" },
+  { text: "موفقیت مجموعه‌ای از انتخاب‌های کوچک و مهربانانه با خودته، روز از پی روز.", author: "برایان تریسی" },
+  { text: "هر قدم کوچیک هم یه قدمه؛ لازم نیست همیشه بزرگ باشه.", author: "ضرب‌المثل" },
+  { text: "به خودت زمان بده؛ رشد آروم هم رشدِه.", author: "ضرب‌المثل" },
+  { text: "امروز فقط کافیه یه‌کم بهتر از دیروز باشی.", author: "ضرب‌المثل" },
+  { text: "هر سفر بلندی، با یه قدم آروم شروع می‌شه.", author: "لائوتزو" },
+  { text: "نظم یعنی مهربونی با آینده‌ی خودت.", author: "ضرب‌المثل" },
+  { text: "عادت‌های کوچیک و ملایم، آروم‌آروم زندگی رو می‌سازن.", author: "جیمز کلییر" },
+  { text: "لازم نیست عجله کنی؛ فقط ادامه بده.", author: "ضرب‌المثل" },
+  { text: "هر روز یک فرصت تازه‌ست، بدون قضاوت دیروز.", author: "ضرب‌المثل" },
+  { text: "کافیه امروز رو خوب زندگی کنی؛ فردا خودش میاد.", author: "ضرب‌المثل" },
+  { text: "کیفیت روزهات، از جنس همون عادت‌های کوچیک و آرومته.", author: "جیمز کلییر" },
+  { text: "صبر داشتن با خودت هم بخشی از مسیره.", author: "ضرب‌المثل" },
+  { text: "هر تغییر بزرگ، از یه تصمیم ساده و آروم شروع می‌شه.", author: "ضرب‌المثل" },
+  { text: "وقتی مسیرت روشنه، هر قدم راحت‌تر برداشته می‌شه.", author: "ضرب‌المثل" },
+  { text: "نظم یعنی گاهی با مهربونی به خودت «نه» گفتن.", author: "ضرب‌المثل" },
+  { text: "هر روزت رو با آرامش بساز، نه با فشار.", author: "ضرب‌المثل" },
+  { text: "رشد لازم نیست سخت باشه؛ گاهی فقط یعنی یه قدم بیرون از عادت.", author: "ضرب‌المثل" },
+  { text: "کاری که می‌تونی امروز با آرامش انجام بدی رو به فردا نسپار.", author: "بنجامین فرانکلین" },
+  { text: "همیشه می‌شه دوباره شروع کرد، آروم و بدون از دست دادن امید.", author: "وینستون چرچیل" },
+  { text: "بهترین نسخه‌ی خودت، همونیه که با خودش مهربونه.", author: "ضرب‌المثل" },
 ];
 
 type Duration = "1" | "3" | "6" | "12";
@@ -158,15 +158,20 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
 
-// کارت‌های پلن و ردیف‌های جدول مقایسه باید عیناً یک grid-template-columns رو
-// به اشتراک بذارن، وگرنه تیک هر پلن زیر کارت خودش نمی‌افته.
-const COMPARE_GRID_COLS = "grid-cols-[minmax(180px,1.4fr)_repeat(4,minmax(220px,1fr))]";
+// ردیف‌های جدول مقایسه یک ستون لیبل (اسم قابلیت) دارن، ولی خودِ کارت‌های
+// پلن نه — یه ستون خالیِ هم‌عرض برای هم‌ترازی می‌ذاشتیم، ولی چون کارت‌ها و
+// جدول دیگه توی یک باکس مشترک نیستن، اون ستون خالی فقط باعث می‌شد کارت‌ها
+// یه‌طرفه/نامتقارن به‌نظر برسن، نه وسط‌چین. برای همین دو تمپلیت جدا داریم.
+const PLANS_GRID_COLS = "grid-cols-[repeat(4,minmax(200px,1fr))] md:grid-cols-[repeat(4,1fr)]";
+const COMPARE_GRID_COLS = "grid-cols-[minmax(160px,1.4fr)_repeat(4,minmax(200px,1fr))] md:grid-cols-[300px_repeat(4,211px)]";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
 // margin-left در تعارض نادیده گرفته می‌شه و فقط margin-right اثر می‌کنه —
 // مقدار از (عرض ستون ۶۲۰px - عرض هدف ۱۲۴۰px)/۲ به دست اومده.
 const BREAKOUT = "md:w-screen md:max-w-[1240px] md:mr-[-310px]";
 
+// روز = نارنجی (طبق طرح جدید)، شب = همون هویت رنگی قبلیِ سایت (سبز اصلی +
+// آبی برای تراز ویژه‌ی پلن مکس) — یکی‌شدن دو تم فقط قالب/چیدمانه، نه رنگ.
 function useThemeTokens() {
   const { theme } = useTheme();
   const isLight = theme === "light";
@@ -179,6 +184,24 @@ function useThemeTokens() {
     muted: isLight ? "text-[#6B5D4D]" : "text-[#A79A8A]",
     line: isLight ? "border-[#E7DCC8]" : "border-white/10",
     secondaryBtnBg: isLight ? "bg-white/70 hover:bg-white" : "bg-white/5 hover:bg-white/10",
+
+    accentText: isLight ? "text-[#D97706]" : "text-[#00A86B]",
+    accentHoverText: isLight ? "hover:text-[#D97706]" : "hover:text-[#00A86B]",
+    accentBg: isLight ? "bg-[#D97706]" : "bg-[#00A86B]",
+    accentBgSoft: isLight ? "bg-[#D97706]/10" : "bg-[#00A86B]/10",
+    accentBgSofter: isLight ? "bg-[#D97706]/12" : "bg-[#00A86B]/12",
+    accentBorder: isLight ? "border-[#D97706]" : "border-[#00A86B]",
+    accentHoverBorder: isLight ? "hover:border-[#D97706]" : "hover:border-[#00A86B]",
+    accentShadow: isLight ? "shadow-[0_12px_30px_rgba(217,119,6,0.28)]" : "shadow-[0_12px_30px_rgba(0,168,107,0.28)]",
+
+    // پلن برجسته (Max) رنگ دوم رو می‌گیره — روز همون نارنجی، شب آبی؛ تا معنای
+    // «تراز ویژه» از رنگ اصلی جدا بمونه (دقیقاً هویت قبلیِ سایت)
+    secondaryText: isLight ? "text-[#D97706]" : "text-[#3E7BFA]",
+    secondaryBg: isLight ? "bg-[#D97706]" : "bg-[#3E7BFA]",
+    secondaryBgSoft: isLight ? "bg-[#D97706]/10" : "bg-[#3E7BFA]/10",
+    secondaryBorderSoft: isLight ? "border-[#D97706]/50" : "border-[#3E7BFA]/50",
+    secondaryCardShadow: isLight ? "shadow-[0_18px_45px_rgba(217,119,6,0.16)]" : "shadow-[0_18px_45px_rgba(62,123,250,0.18)]",
+    secondaryBadgeShadow: isLight ? "shadow-[0_8px_20px_rgba(217,119,6,0.35)]" : "shadow-[0_8px_20px_rgba(62,123,250,0.35)]",
   };
 }
 
@@ -229,19 +252,19 @@ function FeatureCarousel() {
       >
         <button
           type="button"
-          className={`absolute left-3 top-1/2 hidden -translate-y-1/2 transition hover:text-[#D97706] md:flex ${t.muted}`}
+          className={`absolute left-3 top-1/2 hidden -translate-y-1/2 transition md:flex ${t.muted} ${t.accentHoverText}`}
           aria-label="قابلیت قبلی"
           onClick={() => go(-1)}
         >
           <ChevronLeft size={18} />
         </button>
-        <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#D97706]/12 text-[#D97706]">{f.icon}</span>
+        <span className={`mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{f.icon}</span>
         <div className={`text-[11px] font-bold uppercase tracking-[0.12em] ${t.muted}`}>{f.title}</div>
         <div className={`mt-1.5 text-[17px] font-extrabold ${t.heading}`}>{f.hook}</div>
         <div className={`mt-1.5 text-[13.5px] leading-7 ${t.muted}`}>{f.body}</div>
         <button
           type="button"
-          className={`absolute right-3 top-1/2 hidden -translate-y-1/2 transition hover:text-[#D97706] md:flex ${t.muted}`}
+          className={`absolute right-3 top-1/2 hidden -translate-y-1/2 transition md:flex ${t.muted} ${t.accentHoverText}`}
           aria-label="قابلیت بعدی"
           onClick={() => go(1)}
         >
@@ -262,7 +285,7 @@ function QuoteCard() {
 
   return (
     <div className={`flex flex-col items-center gap-3 rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-8 text-center ${t.shadow} backdrop-blur-xl`}>
-      <Quote size={26} className="text-[#D97706]" />
+      <Quote size={26} className={t.accentText} />
       <p className={`text-[15px] font-medium leading-8 ${t.heading}`}>{quote.text}</p>
       <span className={`text-[12.5px] font-bold ${t.muted}`}>— {quote.author}</span>
     </div>
@@ -275,22 +298,22 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col rounded-[28px] border border-[#D97706]/50 bg-[#D97706]/10 p-6 backdrop-blur-xl shadow-[0_18px_45px_rgba(217,119,6,0.16)]`
+    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
     : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
 
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
       {p.highlight && (
-        <span className="absolute -top-3 right-6 rounded-full bg-[#D97706] px-3 py-1 text-[10.5px] font-extrabold text-white">
+        <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10.5px] font-extrabold text-white ${t.secondaryBg}`}>
           محبوب‌ترین
         </span>
       )}
-      <div className="text-left text-lg font-extrabold text-[#D97706]">{p.nameFa}</div>
+      <div className={`text-left text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
 
       <ul className="mt-3 flex flex-1 flex-col gap-1.5">
         {p.blurb.map((line) => (
           <li key={line} className={`flex items-start gap-2 text-[12.5px] leading-6 ${t.muted}`}>
-            <Check size={15} className="mt-0.5 shrink-0 text-[#D97706]" />
+            <Check size={15} className={`mt-0.5 shrink-0 ${t.accentText}`} />
             {line}
           </li>
         ))}
@@ -299,7 +322,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
       {p.free ? (
         <>
           <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>رایگان</div>
-          <Link href="/auth/signup" className="mt-3.5 block w-full rounded-2xl bg-[#D97706] py-2.5 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98]">
+          <Link href="/auth/signup" className={`mt-3.5 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
             شروع رایگان
           </Link>
         </>
@@ -314,7 +337,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
               <button
                 key={d}
                 type="button"
-                className={`flex-1 min-w-[58px] rounded-lg border py-1.5 text-[11.5px] font-bold transition ${d === duration ? "border-[#D97706] bg-[#D97706]/10 text-[#D97706]" : `${t.line} ${t.muted} hover:border-[#D97706]`}`}
+                className={`flex-1 min-w-[58px] rounded-lg border py-1.5 text-[11.5px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
@@ -323,7 +346,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           </div>
           <Link
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}
-            className={`mt-3.5 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? "bg-[#D97706] text-white hover:brightness-105" : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} hover:border-[#D97706]`}`}
+            className={`mt-3.5 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
             فعال‌سازی این پلن
           </Link>
@@ -348,9 +371,8 @@ export function LandingPage() {
     <>
       <section id="sec-landing-hero" style={{ textAlign: "center", paddingTop: 18 }}>
         <div ref={heroRef}>
-          <div className="inline-block text-xs font-extrabold uppercase tracking-[0.22em] text-[#D97706]" data-anim-field>Arion</div>
           <h1 className={`mt-2 text-[2.15rem] font-extrabold leading-[1.35] sm:text-[2.6rem] ${t.heading}`} data-anim-field>
-            همه‌ی نظم زندگی‌ات، توی <span className="text-[#D97706]">یک اپ</span>
+            همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
           </h1>
           <p className={`mx-auto mt-4 max-w-md text-[15px] leading-8 ${t.muted}`} data-anim-field>
             روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
@@ -359,7 +381,7 @@ export function LandingPage() {
           <div className="mt-8 flex items-center justify-center gap-3" data-anim-field>
             <Link
               href="/auth/signup"
-              className="inline-flex items-center gap-1.5 rounded-[20px] bg-[#D97706] px-7 py-3.5 text-[15px] font-bold text-white shadow-[0_12px_30px_rgba(217,119,6,0.28)] transition hover:brightness-105 active:scale-[0.97]"
+              className={`inline-flex items-center gap-1.5 rounded-[20px] px-7 py-3.5 text-[15px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] ${t.accentBg} ${t.accentShadow}`}
             >
               شروع رایگان <ArrowLeft size={16} />
             </Link>
@@ -386,12 +408,11 @@ export function LandingPage() {
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>پلن‌ها</h2>
         </div>
 
-        <div className={`grid gap-6 overflow-x-auto ${COMPARE_GRID_COLS} ${BREAKOUT}`}>
-          <div aria-hidden="true" />
+        <div className={`grid gap-6 overflow-x-auto pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
           {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
         </div>
 
-        <div className={`mt-6 overflow-x-auto rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-xl ${BREAKOUT}`}>
+        <div className={`mt-6 overflow-x-auto rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
           <div role="table" aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
             <div className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} pb-3`} role="row">
               <div className={`text-right text-[12.5px] font-bold ${t.heading}`} role="columnheader" />
@@ -404,7 +425,7 @@ export function LandingPage() {
                 <div className={`text-right text-[12.5px] ${t.muted}`} role="rowheader">{row.label}</div>
                 {plans.map((p) => (
                   <div key={p.key} className="flex justify-center" role="cell">
-                    {row.included[p.key] ? <Check size={17} className="text-[#D97706]" /> : <X size={17} className="text-[#C9524B]/60" />}
+                    {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
                   </div>
                 ))}
               </div>
@@ -412,20 +433,20 @@ export function LandingPage() {
 
             {upcomingRows.length > 0 && (
               <div className="relative mt-1">
-                <div className="pointer-events-none select-none blur-sm">
+                <div className="pointer-events-none select-none blur-md">
                   {upcomingRows.map((row) => (
                     <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3.5 last:border-none`} role="row">
                       <div className={`text-right text-[12.5px] ${t.muted}`} role="rowheader">{row.label}</div>
                       {plans.map((p) => (
                         <div key={p.key} className="flex justify-center" role="cell">
-                          {row.included[p.key] ? <Check size={17} className="text-[#D97706]" /> : <X size={17} className="text-[#C9524B]/60" />}
+                          {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
                         </div>
                       ))}
                     </div>
                   ))}
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="rounded-full bg-[#D97706] px-4 py-1.5 text-xs font-extrabold text-white shadow-[0_8px_20px_rgba(217,119,6,0.35)]">
+                  <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
                     به‌زودی
                   </span>
                 </div>
