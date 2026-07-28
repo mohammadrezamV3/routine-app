@@ -28,19 +28,19 @@ const FEATURES = [
   {
     icon: SLEEP_ICON,
     title: "خواب",
-    hook: "بیدار شو، نه فقط بخواب",
+    hook: "به موقع بیدار شو",
     body: "ساعت بیدارشدنت بخشی از هر روزِ کامله — نظم خواب یعنی نظم همه‌چیز.",
   },
   {
     icon: ICONS.exercise,
     title: "بدنسازی",
-    hook: "برنامه‌ای که واقعاً مالِ توئه",
+    hook: "بدنتو بساز",
     body: "لیفتینگ، حجم، کات یا استقامت — بر اساس هدفت یه برنامه واقعی می‌سازیم، نه یه قالب عمومی. شمارش کالری و ماکروها هم همراهشه، توی همون یه بخش.",
   },
   {
     icon: ICONS.trade,
     title: "ژورنال ترید",
-    hook: "ژورنال ماهانه و آنالیز",
+    hook: "بنویس، آنالیز کن، بهتر شو",
     body: "پنل ترید و آمار کامل: سود/زیان، نرخ برد، میانگین سود و ضرر و تقویم معاملاتت — همه در یک نگاه، دقیق و منظم.",
   },
   {
@@ -52,9 +52,9 @@ const FEATURES = [
 ];
 
 const TRUST_POINTS = [
-  "داده‌های تو فقط مال خودته",
+  "تمام داده‌ها رمزنگاری شدن",
   "دقیق، حرفه‌ای و همیشه به‌روز",
-  "فارسی، سریع، بدون شلوغی",
+  "بدون توقف!",
 ];
 
 type Duration = "1" | "3" | "6" | "12";
@@ -69,17 +69,17 @@ type PlanCard = {
 
 const PLANS_IRAN: PlanCard[] = [
   {
-    key: "basic", nameFa: "پلن پایه", free: true,
+    key: "basic", nameFa: "Base Plan", free: true,
     blurb: ["روتین روزانه", "خواب", "کارهای روزمره"],
   },
   {
     key: "exercise", nameFa: "Plan Gym",
-    blurb: ["همه‌ی پلن پایه", "برنامه بدنسازی بر اساس هدفت (حجم، کات، قدرت یا استقامت)", "شمارش کالری و ماکرو", "ai mapping"],
+    blurb: ["همه‌ی Base Plan", "برنامه بدنسازی بر اساس هدفت (حجم، کات، قدرت یا استقامت)", "شمارش کالری و ماکرو", "ai mapping"],
     prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۸۳۰,۰۰۰ تومان" },
   },
   {
     key: "trade", nameFa: "Plan Trader",
-    blurb: ["همه‌ی پلن پایه", "ژورنال ماهانه و آنالیز، پنل ترید و آمار", "ai mapping"],
+    blurb: ["همه‌ی Base Plan", "ژورنال ماهانه و آنالیز، پنل ترید و آمار", "ai mapping"],
     prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۰۸۰,۰۰۰ تومان" },
   },
   {
@@ -115,16 +115,20 @@ type CompareRow = { label: string; included: Record<string, boolean> };
 
 const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "روتین روزانه، خواب و کارهای روزمره", included: { basic: true, exercise: true, trade: true, max: true } },
-  { label: "برنامه بدنسازی + شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
-  { label: "ژورنال حرفه‌ای ترید", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "برنامه بدنسازی", included: { basic: false, exercise: true, trade: false, max: true } },
+  { label: "شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
+  { label: "ژورنال ترید", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "چک‌لیست ترید", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
   { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
 ];
 
 const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Daily routine, sleep & tasks", included: { basic: true, exercise: true, trade: true, max: true } },
-  { label: "Bodybuilding plan + calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
-  { label: "Professional trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "Bodybuilding program", included: { basic: false, exercise: true, trade: false, max: true } },
+  { label: "Calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
+  { label: "Trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "Trade checklist", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
   { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true } },
 ];
@@ -147,6 +151,7 @@ function FeatureCarousel() {
   }, [index]);
 
   const f = FEATURES[index];
+  const go = (delta: number) => setIndex((i) => (i + delta + FEATURES.length) % FEATURES.length);
 
   return (
     <div
@@ -155,20 +160,16 @@ function FeatureCarousel() {
       onMouseLeave={() => { pausedRef.current = false; }}
     >
       <div className="landing-carousel-box" ref={boxRef} key={index}>
+        <button type="button" className="landing-carousel-arrow prev" aria-label="قابلیت قبلی" onClick={() => go(-1)}>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
         <span className="landing-feature-icon">{f.icon}</span>
         <div className="landing-feature-title">{f.title}</div>
         <div className="landing-feature-hook">{f.hook}</div>
         <div className="landing-feature-body">{f.body}</div>
-      </div>
-      <div className="landing-carousel-dots">
-        {FEATURES.map((feat, i) => (
-          <button
-            key={feat.title}
-            className={`landing-carousel-dot${i === index ? " on" : ""}`}
-            aria-label={feat.title}
-            onClick={() => setIndex(i)}
-          />
-        ))}
+        <button type="button" className="landing-carousel-arrow next" aria-label="قابلیت بعدی" onClick={() => go(1)}>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 6.5 15 12l-5.5 5.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
       </div>
     </div>
   );
@@ -276,8 +277,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
 
       <section id="sec-landing-plans" style={{ paddingTop: 8 }}>
         <div style={{ textAlign: "center", marginBottom: 18 }}>
-          <div className="eyebrow" style={{ marginBottom: 0 }}>پلن‌ها</div>
-          <h2 style={{ fontSize: 18, marginTop: 4 }}>هر چقدر لازم داری، همون رو بردار</h2>
+          <h2 className="landing-section-title">پلن‌ها</h2>
         </div>
         <div ref={plansRef} className="landing-plans">
           {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
@@ -304,13 +304,6 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
               ))}
             </tbody>
           </table>
-        </div>
-      </section>
-
-      <section id="sec-landing-final" style={{ textAlign: "center" }}>
-        <h2 style={{ fontSize: 16 }}>همین امروز شروع کن</h2>
-        <div className="landing-cta-row" style={{ marginTop: 14, justifyContent: "center" }}>
-          <Link href="/auth/signup" className="landing-cta-primary">ساخت حساب رایگان</Link>
         </div>
       </section>
     </>

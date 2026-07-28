@@ -113,6 +113,7 @@
     color:var(--accent); text-transform:uppercase; margin-bottom:10px; font-weight:600;
   }
   h1{font-size:23px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px;}
+  .landing-section-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0;}
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
   .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-plexmono), monospace; display:inline-flex; align-items:center; gap:5px;}
@@ -238,20 +239,24 @@
   dl.notes{display:flex; flex-direction:column; gap:16px;}
   .footer{color:var(--muted2); font-size:11px; font-family:var(--font-plexmono), monospace; text-align:left; padding-top:30px;}
 
-  /* Liquid Glass topbar — layered per Apple's model: highlight (top rim), illumination (inner glow), shadow (depth) */
+  /* هدر شیشه‌ای — دیگه بک‌گراند پر رنگ نداره؛ فقط یک لبه‌ی نازک با افکت
+     موج‌آبِ liquidGlassFilter دورش رو نشون می‌ده (نه کل فضای باکس)، با ترفند
+     mask-composite:exclude که فقط حاشیه رو از پسودو-المنت نگه می‌داره */
   .app-topbar{
     position:fixed; top:14px; right:14px; left:14px; z-index:40; height:58px;
     display:flex; align-items:center;
     border-radius:999px;
-    background:rgba(255,255,255,.03);
-    backdrop-filter:url(#liquidGlassFilter) blur(7px) saturate(160%);
-    -webkit-backdrop-filter:blur(10px) saturate(160%);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+    background:none;
   }
-  body[data-theme="light"] .app-topbar{
-    background:rgba(255,255,255,.05);
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
+  .app-topbar::before{
+    content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    border-radius:inherit; box-sizing:border-box; padding:1.5px;
+    backdrop-filter:url(#liquidGlassFilter) blur(6px) saturate(160%);
+    -webkit-backdrop-filter:blur(6px) saturate(160%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
   }
+  body[data-theme="light"] .app-topbar{ background:none; }
   .topbar-actions{
     position:absolute; right:18px; top:50%; transform:translateY(-50%); z-index:3;
     display:flex; align-items:center; gap:10px;
@@ -570,38 +575,66 @@
   }
   .checklist-glass .task:last-of-type{border-bottom:none;}
 
-  /* چک‌لیست دست‌ساز ترید — هر ردیف تیک + متن قابل‌ویرایش + کنترل‌های
-     جابه‌جایی/حذف؛ دکمه‌های بالا/پایین به‌جای درگ‌اند‌دراپ چون رو موبایل
-     برای لیست‌های کوتاه-متوسط قابل‌اعتمادتر و در دسترس‌تره */
-  .trade-checklist-row{
-    display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line);
+  /* چک‌لیست دست‌ساز ترید — حالت «استفاده» ساده و تمیزه (فقط تیک)، دکمه‌ی
+     افزودن می‌بره به حالت «ویرایش» که همون‌جا هم آیتم‌های قبلی برای ویرایش
+     متن/جابه‌جایی میان هم می‌تونی آیتم جدید اضافه کنی؛ جابه‌جایی با درگ واقعی
+     (framer-motion) نه دکمه، چون حس گرفتن-و-کشیدن واقعی خیلی بهتر از دو تا
+     دکمه‌ی کوچیک بالا/پایینه. */
+  .tc-manage-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    margin-top:10px; padding:11px 0; border-radius:14px;
+    border:1px solid var(--line); background:rgba(var(--bg-rgb),.05); color:var(--text);
+    font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05); transition:border-color .2s ease, transform .15s ease;
   }
-  .trade-checklist-row:last-of-type{border-bottom:none;}
-  .trade-checklist-row .task-name{flex:1; min-width:0;}
-  .trade-checklist-edit-input{
-    flex:1; min-width:0; background:none; border:none; border-bottom:1px dashed var(--accent);
-    color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:14.5px; padding:2px 0; outline:none;
-  }
-  .trade-checklist-controls{ display:flex; align-items:center; gap:2px; flex-shrink:0; }
-  .trade-checklist-controls button{
-    width:26px; height:26px; padding:0; border-radius:8px; border:none; background:none; color:var(--muted2);
-    display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:none;
-    backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .15s ease;
-  }
-  .trade-checklist-controls button:hover:not(:disabled){ color:var(--accent); background:none; box-shadow:none; }
-  .trade-checklist-controls button:disabled{ opacity:.25; cursor:default; }
-  .trade-checklist-controls button svg{ width:15px; height:15px; }
-  .trade-checklist-remove{ font-size:17px; color:var(--muted2); }
-  .trade-checklist-controls button.trade-checklist-remove:hover{ color:#E05252; }
+  .tc-manage-btn:hover{ border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+  .tc-manage-btn svg{ width:16px; height:16px; }
 
-  .trade-checklist-add-row{ display:flex; gap:8px; padding:12px 0; align-items:center; }
-  .trade-checklist-add-row input{ flex:1; }
-  .trade-checklist-add-btn{
+  .tc-edit-wrap{
+    border-radius:22px; border:1px solid var(--line); background:rgba(var(--bg-rgb),.13);
+    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    padding:6px 16px 14px;
+  }
+  .tc-edit-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 4px 10px; font-size:13px; font-weight:700; color:var(--muted);
+  }
+  .tc-done-btn{
+    border-radius:999px; padding:6px 18px; font-size:12.5px; font-weight:700;
+    border:1px solid var(--accent); color:var(--accent); background:var(--accent-dim);
+  }
+  .tc-reorder-group{ display:flex; flex-direction:column; list-style:none; }
+  .tc-edit-row{
+    display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--line);
+    background:rgba(var(--bg-rgb),.4); border-radius:10px; margin-bottom:2px; list-style:none;
+  }
+  .tc-edit-row:last-of-type{ border-bottom:none; }
+  .tc-drag-handle{
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:22px; height:22px; color:var(--muted2); cursor:grab; touch-action:none;
+  }
+  .tc-drag-handle:active{ cursor:grabbing; }
+  .tc-drag-handle svg{ width:16px; height:16px; }
+  .tc-edit-input{
+    flex:1; min-width:0; background:none; border:none; color:var(--text);
+    font-family:var(--font-vazir), sans-serif; font-size:14px; padding:6px 0; outline:none;
+  }
+  .tc-delete-btn{
+    flex-shrink:0; width:26px; height:26px; padding:0; border-radius:8px; border:none;
+    background:none; color:var(--muted2); font-size:17px; line-height:1; cursor:pointer;
+    box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .15s ease;
+  }
+  .tc-delete-btn:hover{ color:#E05252; background:none; box-shadow:none; }
+
+  .tc-add-row{ display:flex; gap:8px; padding:14px 4px 4px; align-items:center; }
+  .tc-add-row input{ flex:1; }
+  .tc-add-btn{
     width:34px; height:34px; min-width:34px; border-radius:10px; font-size:18px; line-height:1;
     padding:0; border:1px solid var(--accent); color:var(--accent); background:none;
   }
-  .trade-checklist-add-btn:disabled{ opacity:.4; }
-  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-plexmono), monospace; padding-bottom:8px; }
+  .tc-add-btn:disabled{ opacity:.4; }
+  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-plexmono), monospace; padding:4px 4px 2px; }
   /* یک باکس شیشه‌ای عمومی و ساده — برای جعبه‌های کوچیک مثل وضعیت لودینگ رودمپ‌ساز */
   .glass-box{
     background:rgba(var(--bg-rgb), .13); border:1px solid var(--line); border-radius:16px;
@@ -1354,23 +1387,18 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .pw-strength-strong .pw-strength-bar.filled{ background:var(--accent); }
 .pw-strength-strong .pw-strength-label{ color:var(--accent); }
 
-/* ردیف بالای باکس ورود/ثبت‌نام — جایگزین هدر سایت که توی این بخش مخفیه؛
-   فقط یک فلش بازگشت به صفحه اصلی، سرِ فلش سمت چپ (جهتِ «برگشت») */
-/* width:100% عمداً صریحه — چون .auth-page الان flex-column‌ه (برای وسط‌چین
-   عمودیِ باکس)، بدون این، margin:auto این ردیف رو به‌جای کشیده‌شدن تمام‌عرض،
-   جمعش می‌کرد به‌اندازه‌ی خودِ دکمه و وسطِ صفحه قرارش می‌داد — یعنی
-   justify-content:flex-end اثری نداشت چون دیگه فضای خالی‌ای توی ردیف نبود */
-.auth-chrome-row{ display:flex; justify-content:flex-end; width:100%; max-width:440px; margin:0 auto 10px; box-sizing:border-box; }
-.auth-back-btn{
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:38px; height:38px; border-radius:999px;
-  border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text);
-  backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-  transition:border-color .2s ease, color .2s ease, transform .15s ease;
+/* فلش بازگشت به صفحه اصلی — حالا داخل خودِ باکس، بالا-چپ، بدون هیچ بک‌گراند/
+   بردر/بلوری، فقط آیکون خام (تا با دکمه‌ی «گام قبل» ویزارد ثبت‌نام که بالا-
+   راستِ همون باکسه تداخل نداشته باشه) */
+.auth-home-btn{
+  position:absolute; top:16px; left:16px; z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  width:32px; height:32px; border-radius:999px;
+  background:none; border:none; color:var(--muted);
+  cursor:pointer; transition:color .2s ease, transform .15s ease;
 }
-.auth-back-btn:hover{ border-color:var(--accent); color:var(--accent); transform:translateX(-3px); }
-.auth-back-btn svg{ width:18px; height:18px; }
+.auth-home-btn:hover{ color:var(--accent); transform:translateX(-3px); }
+.auth-home-btn svg{ width:18px; height:18px; }
 
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
    "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست) */
@@ -1483,7 +1511,8 @@ body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); b
    کارت‌ها — روی هاور/فوکس مکث می‌کنه تا وسط خوندن قطع نشه */
 .landing-carousel{ position:relative; }
 .landing-carousel-box{
-  border-radius:22px; padding:26px 24px; border:1px solid rgba(var(--accent-rgb),.14);
+  position:relative;
+  border-radius:22px; padding:26px 52px; border:1px solid rgba(var(--accent-rgb),.14);
   background:rgba(255,255,255,.025);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   text-align:center; min-height:130px;
@@ -1492,12 +1521,19 @@ body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); b
 }
 body[data-theme="light"] .landing-carousel-box{ background:rgba(255,255,255,.4); box-shadow:inset 0 1px 0 rgba(255,255,255,.5); }
 @keyframes landingCarouselIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
-.landing-carousel-dots{ display:flex; justify-content:center; gap:8px; margin-top:16px; }
-.landing-carousel-dot{
-  width:8px; height:8px; border-radius:50%; border:none; padding:0; cursor:pointer;
-  background:var(--line); transition:background .2s ease, transform .2s ease;
+/* دو فلش داخل باکس (نه نقطه‌های زیرش) برای جابه‌جایی دستیِ قابلیت‌ها */
+.landing-carousel-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:2;
+  width:32px; height:32px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:none; border:1px solid var(--line); color:var(--muted);
+  cursor:pointer; transition:border-color .2s ease, color .2s ease, background .2s ease;
 }
-.landing-carousel-dot.on{ background:var(--accent); transform:scale(1.3); }
+.landing-carousel-arrow:hover{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+.landing-carousel-arrow:active{ transform:translateY(-50%) scale(.92); }
+.landing-carousel-arrow.prev{ left:12px; }
+.landing-carousel-arrow.next{ right:12px; }
+.landing-carousel-arrow svg{ width:16px; height:16px; }
 .landing-feature-icon{
   display:flex; align-items:center; justify-content:center; width:38px; height:38px;
   border-radius:50%; background:var(--accent-dim); color:var(--accent); margin-bottom:12px;
@@ -1536,7 +1572,7 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
   position:absolute; top:-11px; right:18px; padding:3px 12px; border-radius:999px;
   background:var(--secondary); color:#fff; font-size:10.5px; font-weight:800;
 }
-.landing-plan-name{ font-size:13px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; }
+.landing-plan-name{ font-size:19px; font-weight:800; color:var(--accent); font-family:var(--font-plexmono), monospace; }
 
 .landing-plan-lines{ list-style:none; margin-top:12px; display:flex; flex-direction:column; gap:7px; }
 .landing-plan-lines li{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; color:var(--text); line-height:1.55; }
@@ -1574,3 +1610,36 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
 .landing-compare-table .compare-yes{ color:var(--accent); }
 .landing-compare-table .compare-no{ color:#E05252; opacity:.6; }
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }
+
+/* دیوار اشتراک — به‌جای لود دیتای واقعیِ کاربری که پلنش شامل نمی‌شه، یک
+   اسکلت تزئینیِ تار + پیام + دکمه‌ی خرید روش می‌شینه */
+.module-gate{ position:relative; min-height:260px; border-radius:18px; overflow:hidden; margin-top:14px; }
+.module-gate-blur{
+  filter:blur(7px); opacity:.55; pointer-events:none; user-select:none;
+  display:flex; flex-direction:column; gap:12px; padding:20px;
+}
+.mg-skel-line{ height:13px; border-radius:7px; background:var(--line); }
+.mg-skel-row{ display:flex; gap:12px; margin:4px 0; }
+.mg-skel-card{ flex:1; height:74px; border-radius:14px; background:var(--line); }
+.module-gate-overlay{
+  position:absolute; inset:0; z-index:1;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  text-align:center; padding:20px;
+  background:linear-gradient(180deg, rgba(var(--bg-rgb),.35), rgba(var(--bg-rgb),.65));
+}
+.module-gate-icon{
+  display:flex; align-items:center; justify-content:center; width:44px; height:44px;
+  border-radius:50%; background:var(--accent-dim); color:var(--accent); margin-bottom:2px;
+}
+.module-gate-icon svg{ width:21px; height:21px; }
+.module-gate-msg{ font-size:13.5px; font-weight:700; color:var(--text); }
+.module-gate-cta{
+  margin-top:6px; padding:11px 26px; border-radius:999px; border:none; cursor:pointer;
+  background:var(--accent); color:var(--bg); font-family:var(--font-vazir), sans-serif;
+  font-size:13px; font-weight:700;
+  animation:mgPulse 2.2s ease-in-out infinite;
+}
+@keyframes mgPulse{
+  0%, 100%{ box-shadow:0 0 0 0 rgba(var(--accent-rgb),.45); transform:scale(1); }
+  50%{ box-shadow:0 0 0 9px rgba(var(--accent-rgb),0); transform:scale(1.035); }
+}

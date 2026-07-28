@@ -73,9 +73,9 @@ export default function ForgotPasswordPage() {
 
   return (
     <section className="auth-page">
-      <AuthBackButton />
       <div className="auth-shell">
         <div className="auth-box">
+          <AuthBackButton />
           <AuthBrandMark />
           <div style={{ textAlign: "center", marginBottom: 4 }}>
             <div style={{ fontSize: 15, fontWeight: 700 }}>فراموشی رمز عبور</div>

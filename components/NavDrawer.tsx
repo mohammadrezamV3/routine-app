@@ -82,6 +82,14 @@ export function NavDrawer() {
     });
   }, [status]);
 
+  // دکمه‌ی «خرید اشتراک» توی دیوارهای پی‌وال (ModuleGate)، از هر صفحه‌ای، با
+  // این event پنل کاربری رو باز می‌کنه — بدون نیاز به query-param یا context
+  useEffect(() => {
+    const openAccount = () => setAccountOpen(true);
+    window.addEventListener("open-account-panel", openAccount);
+    return () => window.removeEventListener("open-account-panel", openAccount);
+  }, []);
+
   return (
     <>
       {!hideTopbar && (
