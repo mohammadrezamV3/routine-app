@@ -235,6 +235,11 @@ function useThemeTokens() {
     secondaryBorderSoft: isLight ? "border-[#D97706]/50" : "border-[#3E7BFA]/50",
     secondaryCardShadow: isLight ? "shadow-[0_18px_45px_rgba(217,119,6,0.16)]" : "shadow-[0_18px_45px_rgba(62,123,250,0.18)]",
     secondaryBadgeShadow: isLight ? "shadow-[0_8px_20px_rgba(217,119,6,0.35)]" : "shadow-[0_8px_20px_rgba(62,123,250,0.35)]",
+
+    // ستون sticky جدول مقایسه: زیر md باید تقریباً کدر باشه تا چک/ضربدرِ
+    // درحال‌اسکرول زیرش دیده نشه؛ از md به بعد که اصلاً اسکرول لازم نیست،
+    // برمی‌گرده به همون شیشه‌ای نیم‌شفافِ بقیه‌ی باکس تا لکه‌ی یک‌دست نشه.
+    stickyCellBg: isLight ? "bg-[var(--bg)] md:bg-white/40 md:backdrop-blur-2xl" : "bg-[var(--bg)] md:bg-white/[0.05] md:backdrop-blur-2xl",
   };
 }
 
@@ -421,7 +426,7 @@ function WhyUsSection({ isIntl }: { isIntl: boolean }) {
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.title} className={`flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-2.5 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
+            <div key={item.title} className={`flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
               <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
                 <Icon size={18} />
               </span>
@@ -441,21 +446,21 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-5 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-5 backdrop-blur-xl ${t.shadow}`;
+    ? `relative flex flex-col snap-center rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex flex-col snap-center rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
 
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
       {p.highlight && (
-        <span className={`absolute -top-3 right-5 rounded-full px-3 py-1 text-[10.5px] font-extrabold text-white ${t.secondaryBg}`}>
+        <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10.5px] font-extrabold text-white ${t.secondaryBg}`}>
           محبوب‌ترین
         </span>
       )}
-      <div className={`text-left text-base font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+      <div className={`text-left text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
 
-      <ul className="mt-2.5 flex flex-1 flex-col gap-1">
+      <ul className="mt-3 flex flex-1 flex-col gap-1.5">
         {p.blurb.map((line) => (
-          <li key={line} className={`flex items-start gap-2 text-[12px] leading-5 ${t.muted}`}>
+          <li key={line} className={`flex items-start gap-2 text-[12.5px] leading-6 ${t.muted}`}>
             <Check size={14} className={`mt-0.5 shrink-0 ${t.accentText}`} />
             {line}
           </li>
@@ -464,23 +469,23 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
 
       {p.free ? (
         <>
-          <div className={`mt-3 text-lg font-extrabold ${t.heading}`}>رایگان</div>
-          <Link href="/auth/signup" className={`mt-3 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
+          <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>رایگان</div>
+          <Link href="/auth/signup" className={`mt-3.5 block w-full rounded-2xl py-3 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
             شروع رایگان
           </Link>
         </>
       ) : (
         <>
-          <div className={`mt-3 text-lg font-extrabold ${t.heading}`}>
+          <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>
             {p.prices![duration]}
             <span className={`mr-1 text-[11px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
           </div>
-          <div className="mt-2 grid grid-cols-4 gap-1">
+          <div className="mt-2.5 grid grid-cols-4 gap-1.5">
             {DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
-                className={`rounded-lg border py-1.5 text-[10.5px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
+                className={`rounded-lg border py-2 text-[10.5px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
@@ -489,7 +494,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           </div>
           <Link
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}
-            className={`mt-3 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
+            className={`mt-3.5 block w-full rounded-2xl py-3 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
             فعال‌سازی این پلن
           </Link>
@@ -565,52 +570,75 @@ export function LandingPage() {
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>پلن‌ها</h2>
         </div>
 
-        <div className={`grid gap-6 overflow-x-auto pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
+        <div className={`grid snap-x snap-mandatory gap-6 overflow-x-auto pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
           {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
         </div>
 
-        <div className={`mt-6 overflow-x-auto rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
-          <div role="table" aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
-            <div className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} pb-3`} role="row">
-              <div className={`text-right text-[12.5px] font-bold ${t.heading}`} role="columnheader" />
-              {plans.map((p) => (
-                <div key={p.key} className={`text-center text-[12.5px] font-bold ${t.heading}`} role="columnheader">{p.nameFa}</div>
-              ))}
-            </div>
-            {mainRows.map((row) => (
-              <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3.5 last:border-none`} role="row">
-                <div className={`text-right text-[12.5px] ${t.muted}`} role="rowheader">{row.label}</div>
-                {plans.map((p) => (
-                  <div key={p.key} className="flex justify-center" role="cell">
-                    {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            {upcomingRows.length > 0 && (
-              <div className="relative mt-1">
-                <div className="pointer-events-none select-none blur-md">
-                  {upcomingRows.map((row) => (
-                    <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3.5 last:border-none`} role="row">
-                      <div className={`text-right text-[12.5px] ${t.muted}`} role="rowheader">{row.label}</div>
-                      {plans.map((p) => (
-                        <div key={p.key} className="flex justify-center" role="cell">
+        {/* یک جدول HTML واقعی (نه گرید) — چون sticky روی th یک جدول واقعی
+            دقیقاً همون الگوی استانداردِ «فریز کردن ستون اول» هست و قابل‌اعتماده؛
+            گرید تو در تو (row-grid داخل row-grid) این رفتار رو نمی‌داد. ستون
+            لیبل روی موبایل ثابت می‌مونه تا کاربر هنگام اسکرول افقی بین پلن‌ها،
+            همیشه بدونه داره چه قابلیتی رو می‌بینه. */}
+        <div className="relative">
+          <div className={`mt-6 overflow-x-auto rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
+            <table className="w-full border-collapse" style={{ tableLayout: "fixed", minWidth: 780 }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
+              <colgroup>
+                <col style={{ width: "24%" }} />
+                {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+              </colgroup>
+              <thead>
+                <tr className={`border-b ${t.line}`}>
+                  <th className={`sticky right-0 ${t.stickyCellBg} pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
+                  {plans.map((p) => (
+                    <th key={p.key} className={`pb-3 text-center text-[12.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {mainRows.map((row) => (
+                  <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
+                    <th scope="row" className={`sticky right-0 ${t.stickyCellBg} py-3.5 text-right text-[12.5px] font-normal ${t.muted}`}>{row.label}</th>
+                    {plans.map((p) => (
+                      <td key={p.key} className="py-3.5">
+                        <div className="flex justify-center">
                           {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
                         </div>
-                      ))}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* اشاره‌ی محو به این‌که جدول قابل‌اسکرول‌کردنه — فقط زیر md، چون
+              دسکتاپ با BREAKOUT کل عرض رو بدون اسکرول نشون می‌ده */}
+          <div
+            className="pointer-events-none absolute bottom-6 left-0 top-6 w-8 rounded-l-[24px] md:hidden"
+            style={{ background: "linear-gradient(to right, var(--bg), transparent)" }}
+          />
+        </div>
+
+        {upcomingRows.length > 0 && (
+          <div className={`relative mt-4 overflow-x-auto rounded-[20px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`} aria-hidden="true">
+            <div className="pointer-events-none select-none blur-md">
+              {upcomingRows.map((row) => (
+                <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3 last:border-none`}>
+                  <div className={`text-right text-[12.5px] ${t.muted}`}>{row.label}</div>
+                  {plans.map((p) => (
+                    <div key={p.key} className="flex justify-center">
+                      {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
                     </div>
                   ))}
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
-                    به‌زودی
-                  </span>
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
+                به‌زودی
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </section>
     </>
   );
