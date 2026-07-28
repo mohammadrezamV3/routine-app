@@ -92,7 +92,7 @@ export default function HomePage() {
         <span className="mono">{todayKey}</span>
         <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>{clock}</span>
       </div>
-      <TreasureTrail variant="a" className="treasure-trail-short tt-lg tt-right" duration={7} />
+      <TreasureTrail variant="a" className="treasure-trail-short tt-right" duration={7} />
 
       <div className="home-stats">
         <svg className="streak-flame" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -101,13 +101,13 @@ export default function HomePage() {
         استریک: <b>{streak === null ? "…" : faNum(streak)}</b> روز
       </div>
 
-      <TreasureTrail variant="b" className="treasure-trail-short tt-sm" duration={8} delay={1.6} />
+      <TreasureTrail variant="b" className="treasure-trail-short" duration={8} delay={1.6} />
 
       <div className="section-note" style={{ marginTop: 18 }}>
         برنامه امروزت و تاریخچه‌ی روزهای قبل رو توی «برنامه هفتگی» ببین.
       </div>
 
-      <TreasureTrail variant="c" className="treasure-trail-short tt-xl tt-left" duration={7.5} delay={3.2} />
+      <TreasureTrail variant="c" className="treasure-trail-short tt-left" duration={7.5} delay={3.2} />
     </section>
   );
 }

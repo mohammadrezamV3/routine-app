@@ -17,11 +17,10 @@ import { useId } from "react";
 
 type Variant = "a" | "b" | "c";
 
-// مسیرها عمودی‌ان: از بالا شروع می‌شن، چپ‌وراست می‌پیچن و پایین به ضربدر می‌رسن
 const TRAILS: Record<Variant, { d: string; x: number; y: number }> = {
-  a: { d: "M46 8 C 10 30, 58 48, 32 72 C 8 96, 54 118, 30 142 C 18 154, 22 166, 26 176", x: 26, y: 176 },
-  b: { d: "M26 8 C 52 26, 10 48, 34 70 C 56 90, 14 114, 32 138 C 42 152, 34 166, 30 176", x: 30, y: 176 },
-  c: { d: "M18 8 C 42 32, 12 52, 36 76 C 58 98, 22 116, 38 140 C 47 154, 40 168, 34 176", x: 34, y: 176 },
+  a: { d: "M8 46 C 30 10, 48 58, 72 32 C 96 8, 118 54, 142 30 C 154 18, 166 22, 176 26", x: 176, y: 26 },
+  b: { d: "M8 26 C 26 52, 48 10, 70 34 C 90 56, 114 14, 138 32 C 152 42, 166 34, 176 30", x: 176, y: 30 },
+  c: { d: "M8 18 C 32 42, 52 12, 76 36 C 98 58, 116 22, 140 38 C 154 47, 168 40, 176 34", x: 176, y: 34 },
 };
 
 export function TreasureTrail({
@@ -45,7 +44,7 @@ export function TreasureTrail({
   return (
     <svg
       className={`treasure-trail ${className}`}
-      viewBox="0 0 60 190"
+      viewBox="0 0 190 60"
       fill="none"
       aria-hidden="true"
       style={{ "--tt-dur": `${duration}s`, "--tt-delay": `${delay}s` } as React.CSSProperties}

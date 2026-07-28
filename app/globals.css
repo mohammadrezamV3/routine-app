@@ -1469,9 +1469,8 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 /* ============================================================
    مسیر نقشه‌ی گنج — خط‌چین کج‌وکوله که خودش پر می‌شه و تهش ضربدر می‌خوره
    ============================================================ */
-/* عمودی‌ان، پس ارتفاع تعیین‌کننده‌ست و عرض از نسبت viewBox درمیاد */
 .treasure-trail{
-  display:block; width:auto; height:150px; aspect-ratio:60/190; overflow:visible;
+  display:block; width:100%; height:auto; overflow:visible;
   color:var(--accent); /* سبز توی شب، نارنجی توی روز — از تم میاد */
 }
 .treasure-trail .tt-path{
@@ -1507,29 +1506,22 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
   100%{ opacity:0; transform:scale(1) rotate(0deg); }
 }
 /* روی صفحه اصلی کوتاه و جمع‌وجورن */
-.treasure-trail-short{ margin:14px auto; opacity:.85; }
+.treasure-trail-short{ max-width:190px; margin:16px auto; opacity:.85; }
 .treasure-trail-short.tt-right{ margin-right:0; margin-left:auto; }
 .treasure-trail-short.tt-left{ margin-left:0; margin-right:auto; }
-/* اندازه‌ها عمداً باهم فرق دارن تا یکنواخت و ماشینی به‌نظر نرسن */
-.tt-sm{ height:88px; }
-.tt-md{ height:124px; }
-.tt-lg{ height:168px; }
-.tt-xl{ height:210px; }
 /* نسخه‌ی بک‌گراند — بزرگ، خیلی کم‌رنگ، پشت محتوا */
 .treasure-trail-bg{
-  position:absolute; opacity:.16; height:min(42vh, 380px);
+  position:absolute; opacity:.16; width:min(48vw, 460px);
 }
 .treasure-trail-bg .tt-path{ stroke-width:1.6; }
 .treasure-trail-bg .tt-x path{ stroke-width:2; }
-/* ارتفاع هرکدوم فرق داره؛ جای عمودی‌شون هم طوریه که ضربدرِ ته مسیر
-   (y=176 از ۱۹۰) داخل کادر بمونه و بریده نشه */
-.tt-bg-a{ top:9%; left:3%; height:min(36vh, 320px); transform:rotate(-7deg); }
-.tt-bg-b{ top:28%; right:5%; height:min(50vh, 440px); transform:rotate(6deg); }
-.tt-bg-c{ bottom:7%; left:38%; height:min(28vh, 250px); transform:rotate(-3deg); }
+/* right/left عمداً مثبتن: ضربدر ته مسیره (x=176 از ۱۹۰)، اگه المنت از لبه
+   بزنه بیرون ضربدر بریده می‌شه و مثل یک لکه‌ی ولگرد به‌نظر می‌رسه */
+.tt-bg-a{ top:16%; left:1%; transform:rotate(-8deg); }
+.tt-bg-b{ bottom:20%; right:4%; transform:rotate(7deg); }
+.tt-bg-c{ top:56%; left:30%; transform:rotate(-3deg); }
 @media (max-width:700px){
-  .treasure-trail-bg{ opacity:.13; }
-  .tt-bg-a{ height:32vh; }
-  .tt-bg-b{ height:40vh; }
+  .treasure-trail-bg{ width:70vw; opacity:.13; }
   .tt-bg-c{ display:none; }
 }
 @media (prefers-reduced-motion: reduce){
