@@ -14,7 +14,6 @@ const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
 export default function HomePage() {
   const { status } = useSession();
-  const [guestPreview, setGuestPreview] = useState(false);
   const [streak, setStreak] = useState<number | null>(null);
   const [clock, setClock] = useState("");
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
@@ -78,8 +77,8 @@ export default function HomePage() {
 
   const weekdayName = FA_WEEKDAY[now.getDay()];
 
-  if (status === "unauthenticated" && !guestPreview) {
-    return <LandingPage onGuestContinue={() => setGuestPreview(true)} />;
+  if (status === "unauthenticated") {
+    return <LandingPage />;
   }
 
   return (

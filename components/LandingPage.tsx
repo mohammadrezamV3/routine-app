@@ -245,7 +245,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   );
 }
 
-export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }) {
+export function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const plansRef = useRef<HTMLDivElement>(null);
   const isIntl = getSiteMarket() === "INTERNATIONAL";
@@ -269,9 +269,6 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
             <Link href="/auth/signup" className="landing-cta-primary">شروع رایگان ←</Link>
             <Link href="/auth/login" className="landing-cta-secondary">ورود</Link>
           </div>
-          <button type="button" className="landing-guest-link" data-anim-field onClick={onGuestContinue}>
-            ادامه بدون ثبت‌نام، فقط نگاه کن ←
-          </button>
         </div>
       </section>
 
@@ -294,31 +291,31 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
         <div style={{ textAlign: "center", marginBottom: 18 }}>
           <h2 className="landing-section-title">پلن‌ها</h2>
         </div>
-        <div ref={plansRef} className="landing-plans">
-          {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
-        </div>
 
-        <div className="landing-compare-wrap" data-reveal>
-          <table className="landing-compare-table">
-            <thead>
-              <tr>
-                <th></th>
-                {plans.map((p) => <th key={p.key}>{p.nameFa}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {compareRows.map((row) => (
-                <tr key={row.label}>
-                  <td className="landing-compare-label">{row.label}</td>
-                  {plans.map((p) => (
-                    <td key={p.key} className={row.included[p.key] ? "compare-yes" : "compare-no"}>
-                      {row.included[p.key] ? CHECK_ICON : X_ICON}
-                    </td>
-                  ))}
-                </tr>
+        <div ref={plansRef} className="landing-plans-wrap">
+          <div className="landing-plans">
+            <div className="landing-plans-spacer" aria-hidden="true" />
+            {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
+          </div>
+
+          <div className="landing-compare" role="table" aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"} data-reveal>
+            <div className="landing-compare-row landing-compare-head" role="row">
+              <div className="landing-compare-cell landing-compare-label" role="columnheader" />
+              {plans.map((p) => (
+                <div key={p.key} className="landing-compare-cell" role="columnheader">{p.nameFa}</div>
               ))}
-            </tbody>
-          </table>
+            </div>
+            {compareRows.map((row) => (
+              <div key={row.label} className="landing-compare-row" role="row">
+                <div className="landing-compare-cell landing-compare-label" role="rowheader">{row.label}</div>
+                {plans.map((p) => (
+                  <div key={p.key} className={`landing-compare-cell ${row.included[p.key] ? "compare-yes" : "compare-no"}`} role="cell">
+                    {row.included[p.key] ? CHECK_ICON : X_ICON}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </>

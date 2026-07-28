@@ -1497,16 +1497,6 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 .landing-cta-secondary:active{ transform:scale(.97); }
 body[data-theme="light"] .landing-cta-secondary{ border-color:rgba(0,0,0,.10); background:rgba(255,255,255,.5); }
 
-.landing-guest-link{
-  display:block; margin:16px auto 0; padding:4px; border:none; border-radius:0;
-  background:none; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
-  font-family:var(--font-vazir), sans-serif; font-size:12px; font-weight:600; color:var(--muted2);
-  text-decoration:underline; text-underline-offset:3px; cursor:pointer;
-  transition:color .2s ease;
-}
-.landing-guest-link:hover{ color:var(--accent); background:none; box-shadow:none; border:none; }
-.landing-guest-link:active{ transform:none; }
-
 /* یک باکس واحد که هر ۱۲ ثانیه بین قابلیت‌های اپ می‌چرخه، به‌جای گرید جدا از
    کارت‌ها — روی هاور/فوکس مکث می‌کنه تا وسط خوندن قطع نشه */
 .landing-carousel{ position:relative; }
@@ -1555,11 +1545,27 @@ body[data-theme="light"] .landing-carousel-box{ background:rgba(255,255,255,.4);
 .landing-trust-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); }
 .landing-trust-item svg{ width:17px; height:17px; min-width:17px; }
 
-/* پلن‌ها — عمداً همیشه یک‌ستونه و عمودی (حتی روی دسکتاپ)، چون هر کارت حالا
-   چند خط قابلیت + قیمت + ۴ گزینه مدت رو داره و توی گرید تنگ می‌شد؛ پلن مکس
-   با بج و بردر برجسته می‌شه؛ جدول مقایسه‌ی زیرش (عریض‌تره) داخل رَپر خودش
-   با اسکرول افقی جدا می‌شه تا چیدمان کلی صفحه توی موبایل بهم نریزه */
-.landing-plans{ display:flex; flex-direction:column; gap:14px; }
+/* پلن‌ها — یک باکس شیشه‌ای مشترک که کارت‌ها رو افقی کنار هم نگه می‌داره؛ خودِ
+   هر کارت هنوز عمودیه (چیدمان داخلیش عوض نشده)، فقط چیدمانِ کنارهم‌قرارگیریِ
+   کارت‌ها از ستونی به grid افقی تغییر کرده. جدول مقایسه‌ی زیرش (که حالا با
+   div/grid ساخته می‌شه، نه <table>) دقیقاً همون grid-template-columns رو با
+   همون gap تکرار می‌کنه تا ستون هر پلن، هم توی کارت‌ها هم توی ردیف‌های
+   مقایسه، سر یک نقطه بیفته؛ چون هر دو توی همین یک باکس با اسکرول افقی
+   مشترکن، اسکرول‌شون هم با هم هماهنگ می‌مونه (نه دو اسکرول جدا از هم) */
+.landing-plans-wrap{
+  border-radius:22px; padding:24px 20px; border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  overflow-x:auto;
+}
+body[data-theme="light"] .landing-plans-wrap{ background:rgba(255,255,255,.4); }
+
+.landing-plans, .landing-compare-row{
+  display:grid;
+  grid-template-columns:minmax(160px,1.4fr) repeat(4, minmax(200px,1fr));
+  gap:14px;
+}
+
 .landing-plan-card{
   position:relative; display:flex; flex-direction:column;
   border-radius:22px; padding:20px 18px; border:1px solid var(--line);
@@ -1571,7 +1577,7 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
    روشن نگه می‌داره */
 .landing-plan-card.highlight{
   border-color:var(--secondary); background:var(--secondary-dim);
-  box-shadow:0 0 0 1px var(--secondary), 0 20px 40px rgba(var(--secondary-rgb),.14);
+  box-shadow:0 0 0 1px var(--secondary), 0 10px 24px rgba(var(--secondary-rgb),.16);
 }
 .landing-plan-badge{
   position:absolute; top:-11px; right:18px; padding:3px 12px; border-radius:999px;
@@ -1579,7 +1585,7 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
 }
 .landing-plan-name{ font-size:19px; font-weight:800; color:var(--accent); font-family:var(--font-plexmono), monospace; }
 
-.landing-plan-lines{ list-style:none; margin-top:12px; display:flex; flex-direction:column; gap:7px; }
+.landing-plan-lines{ list-style:none; margin-top:12px; display:flex; flex-direction:column; gap:7px; flex:1; }
 .landing-plan-lines li{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; color:var(--text); line-height:1.55; }
 .landing-plan-lines svg{ width:15px; height:15px; min-width:15px; color:var(--accent); margin-top:2px; }
 
@@ -1588,9 +1594,9 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
 
 /* ۴ گزینه مدت اشتراک — انتخاب هرکدوم فقط قیمت بالای سرش رو عوض می‌کنه،
    بدون رفتن به صفحه‌ی دیگه، تا مقایسه‌ی سریع باشه */
-.landing-plan-duration-row{ display:flex; gap:6px; margin-top:10px; }
+.landing-plan-duration-row{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
 .landing-plan-duration{
-  flex:1 1 0; min-width:0; padding:7px 0; border-radius:8px; text-align:center;
+  flex:1 1 60px; min-width:0; padding:7px 0; border-radius:8px; text-align:center;
   border:1px solid var(--line); background:rgba(var(--bg-rgb),.5); color:var(--muted);
   font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; cursor:pointer;
   transition:border-color .15s ease, color .15s ease, background .15s ease;
@@ -1599,21 +1605,17 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
 .landing-plan-duration.on{ background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
 .landing-plan-blurb{ margin-top:10px; font-size:12.5px; color:var(--muted); line-height:1.6; flex:1; }
 
-/* جدول مقایسه زیر کارت‌های پلن — عریض‌تر از عرض ثابتِ .wrap می‌شه، پس
-   اسکرول افقی مال خودشه نه کل صفحه */
-.landing-compare-wrap{
-  margin-top:26px; overflow-x:auto; border-radius:22px;
-  border:1px solid var(--line); background:rgba(255,255,255,.03);
-  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
-}
-.landing-compare-table{ width:100%; min-width:560px; border-collapse:collapse; font-size:12.5px; }
-.landing-compare-table th, .landing-compare-table td{ padding:14px 14px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap; }
-.landing-compare-table thead th{ font-weight:700; color:var(--text); font-size:12.5px; font-family:var(--font-plexmono), monospace; }
-.landing-compare-table tbody tr:last-child td{ border-bottom:none; }
-.landing-compare-table td.landing-compare-label{ text-align:right; color:var(--muted); white-space:normal; font-family:var(--font-vazir), sans-serif; }
-.landing-compare-table td svg{ width:17px; height:17px; }
-.landing-compare-table .compare-yes{ color:var(--accent); }
-.landing-compare-table .compare-no{ color:#E05252; opacity:.6; }
+/* ردیف‌های مقایسه — div/grid به‌جای <table> عمداً، تا grid-template-columns
+   بالا رو عیناً تکرار کنه و ستون‌هاش تضمینی زیر کارت‌های همون پلن بیفتن */
+.landing-compare{ margin-top:26px; }
+.landing-compare-row{ padding:14px 0; align-items:center; border-bottom:1px solid var(--line); }
+.landing-compare-row:last-child{ border-bottom:none; }
+.landing-compare-head{ font-weight:700; color:var(--text); font-size:12.5px; font-family:var(--font-plexmono), monospace; }
+.landing-compare-cell{ text-align:center; font-size:12.5px; }
+.landing-compare-cell svg{ width:17px; height:17px; display:block; margin:0 auto; }
+.landing-compare-label{ text-align:right; color:var(--muted); font-family:var(--font-vazir), sans-serif; font-weight:400; white-space:normal; }
+.compare-yes{ color:var(--accent); }
+.compare-no{ color:#E05252; opacity:.6; }
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }
 
 /* دیوار اشتراک — به‌جای لود دیتای واقعیِ کاربری که پلنش شامل نمی‌شه، یک
