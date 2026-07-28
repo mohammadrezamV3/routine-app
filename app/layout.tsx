@@ -28,7 +28,7 @@ const plexMono = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "روتین من",
+  title: "Arion",
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
 };
 
