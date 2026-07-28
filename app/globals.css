@@ -1467,6 +1467,70 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 }
 
 /* ============================================================
+   مسیر نقشه‌ی گنج — خط‌چین کج‌وکوله که خودش پر می‌شه و تهش ضربدر می‌خوره
+   ============================================================ */
+.treasure-trail{
+  display:block; width:100%; height:auto; overflow:visible;
+  color:var(--accent); /* سبز توی شب، نارنجی توی روز — از تم میاد */
+}
+.treasure-trail .tt-path{
+  stroke:currentColor; stroke-width:2.2;
+  animation:ttFade var(--tt-dur, 7s) linear var(--tt-delay, 0s) infinite;
+}
+/* ماسک: مسیرِ نرمال‌شده به طول ۱، پس dashoffset از ۱ تا ۰ یعنی «از اول تا آخر» */
+.treasure-trail .tt-reveal{
+  stroke-dasharray:1; stroke-dashoffset:1;
+  animation:ttReveal var(--tt-dur, 7s) ease-in-out var(--tt-delay, 0s) infinite;
+}
+.treasure-trail .tt-x path{
+  stroke:currentColor; stroke-width:2.8; fill:none;
+}
+/* transform-box:fill-box لازمه تا scale حول مرکز خودِ ضربدر باشه نه مبدأ svg */
+.treasure-trail .tt-x{
+  transform-box:fill-box; transform-origin:center;
+  opacity:0;
+  animation:ttXPop var(--tt-dur, 7s) ease-out var(--tt-delay, 0s) infinite;
+}
+@keyframes ttReveal{
+  0%{ stroke-dashoffset:1; }
+  55%,100%{ stroke-dashoffset:0; }
+}
+@keyframes ttFade{
+  0%,84%{ opacity:1; }
+  100%{ opacity:0; }
+}
+@keyframes ttXPop{
+  0%,54%{ opacity:0; transform:scale(.3) rotate(-25deg); }
+  64%{ opacity:1; transform:scale(1.2) rotate(0deg); }
+  70%,84%{ opacity:1; transform:scale(1) rotate(0deg); }
+  100%{ opacity:0; transform:scale(1) rotate(0deg); }
+}
+/* روی صفحه اصلی کوتاه و جمع‌وجورن */
+.treasure-trail-short{ max-width:190px; margin:16px auto; opacity:.85; }
+.treasure-trail-short.tt-right{ margin-right:0; margin-left:auto; }
+.treasure-trail-short.tt-left{ margin-left:0; margin-right:auto; }
+/* نسخه‌ی بک‌گراند — بزرگ، خیلی کم‌رنگ، پشت محتوا */
+.treasure-trail-bg{
+  position:absolute; opacity:.16; width:min(48vw, 460px);
+}
+.treasure-trail-bg .tt-path{ stroke-width:1.6; }
+.treasure-trail-bg .tt-x path{ stroke-width:2; }
+/* right/left عمداً مثبتن: ضربدر ته مسیره (x=176 از ۱۹۰)، اگه المنت از لبه
+   بزنه بیرون ضربدر بریده می‌شه و مثل یک لکه‌ی ولگرد به‌نظر می‌رسه */
+.tt-bg-a{ top:16%; left:1%; transform:rotate(-8deg); }
+.tt-bg-b{ bottom:20%; right:4%; transform:rotate(7deg); }
+.tt-bg-c{ top:56%; left:30%; transform:rotate(-3deg); }
+@media (max-width:700px){
+  .treasure-trail-bg{ width:70vw; opacity:.13; }
+  .tt-bg-c{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .treasure-trail .tt-reveal{ animation:none; stroke-dashoffset:0; }
+  .treasure-trail .tt-path{ animation:none; opacity:1; }
+  .treasure-trail .tt-x{ animation:none; opacity:1; }
+}
+
+/* ============================================================
    صفحه لندینگ (مهمان‌های لاگین‌نکرده) — معرفی محصول به‌جای تقویم
    ============================================================ */
 .landing-h1{

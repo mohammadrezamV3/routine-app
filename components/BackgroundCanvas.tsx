@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { animate } from "animejs";
+import { TreasureTrail } from "./TreasureTrail";
 
 // بک‌گراند نور محیطی (aurora) — چند بلاب نرم و تار سبز. هر بلاب توی یک
 // wrapper جداست: خودِ بلاب انیمیشن شناور CSS همیشگی‌شو داره، wrapper با
@@ -36,6 +37,11 @@ export function BackgroundCanvas() {
       <span className="aurora-blob-wrap aurora-blob-wrap-a"><span className="aurora-blob aurora-blob-a" /></span>
       <span className="aurora-blob-wrap aurora-blob-wrap-b"><span className="aurora-blob aurora-blob-b" /></span>
       <span className="aurora-blob-wrap aurora-blob-wrap-c"><span className="aurora-blob aurora-blob-c" /></span>
+
+      {/* مسیرهای نقشه‌ی گنج، بزرگ و کم‌رنگ، پشت محتوا */}
+      <TreasureTrail variant="a" className="treasure-trail-bg tt-bg-a" duration={11} />
+      <TreasureTrail variant="b" className="treasure-trail-bg tt-bg-b" duration={13} delay={2.5} />
+      <TreasureTrail variant="c" className="treasure-trail-bg tt-bg-c" duration={12} delay={5} />
     </div>
   );
 }
