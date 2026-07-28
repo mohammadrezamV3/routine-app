@@ -16,7 +16,6 @@ const MODULE_LABELS: Record<string, string> = {
   EXERCISE: "بدنسازی",
   CALORIE: "بدنسازی",
   TRADE: "ژورنال ترید",
-  CODING: "کدنویسی",
   ROADMAP: "رودمپ آموزشی (ai mapping)",
   AI_INSIGHT: "تحلیل هوشمند (Correlation Insight)",
 };

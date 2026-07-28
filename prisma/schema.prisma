@@ -44,7 +44,6 @@ enum ModuleKey {
   EXERCISE  // ورزش
   CALORIE   // کالری
   TRADE     // ژورنال ترید
-  CODING    // تمرین روزانه کدنویسی
   ROADMAP   // رودمپ آموزشی — همراه با پلن مکس یا جدا، به‌صورت پیکربندی‌شده
   AI_INSIGHT // Correlation Insight — فقط پلن مکس
 }
@@ -136,7 +135,6 @@ model User {
   foodLogs          FoodLogEntry[]
   calorieTargets    CalorieTarget[]
   tradeEntries      TradeEntry[]
-  codingLogs        CodingLog[]
   roadmaps          Roadmap[]
 
   userSettings      UserSetting[]
@@ -618,28 +616,6 @@ model TradeEntry {
   updatedAt   DateTime @updatedAt
 
   @@index([userId, openedAt])
-}
-
-// ============================================================================
-// MODULE: CODING (لاگ روزانه تمرین کدنویسی — یک رکورد به‌ازای هر کاربر/روز)
-// ============================================================================
-
-model CodingLog {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date         DateTime @db.Date
-
-  completed    Boolean  @default(false)
-  minutesSpent Int?
-  topic        String?  // مثلاً "پایتون" یا "لیت‌کد"
-  notes        String?
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([userId, date])
-  @@index([userId])
 }
 
 // ============================================================================
