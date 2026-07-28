@@ -262,7 +262,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
       </section>
 
       <section id="sec-landing-features" style={{ paddingTop: 20 }}>
-        <TreasureTrail variant="a" className="treasure-trail-short" duration={7} />
+        <TreasureTrail variant="a" className="treasure-trail-short tt-md" duration={7} />
         <FeatureCarousel />
       </section>
 
@@ -278,7 +278,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
       </section>
 
       <section id="sec-landing-plans" style={{ paddingTop: 8 }}>
-        <TreasureTrail variant="c" className="treasure-trail-short" duration={8} delay={2.2} />
+        <TreasureTrail variant="c" className="treasure-trail-short tt-lg" duration={8} delay={2.2} />
         <div style={{ textAlign: "center", marginBottom: 18 }}>
           <h2 className="landing-section-title">پلن‌ها</h2>
         </div>
