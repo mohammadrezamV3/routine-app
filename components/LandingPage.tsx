@@ -44,6 +44,12 @@ const FEATURES = [
     body: "پنل ترید و آمار کامل: سود/زیان، نرخ برد، میانگین سود و ضرر و تقویم معاملاتت — همه در یک نگاه، دقیق و منظم.",
   },
   {
+    icon: ICONS.coding,
+    title: "کدنویسی",
+    hook: "هر روز یک قدم جلوتر",
+    body: "هر روز تمرین کدنویسی‌ات رو ثبت کن، استریکت رو ببین و توی تقویم ماهانه مسیر پیشرفتت رو دنبال کن.",
+  },
+  {
     icon: ICONS.roadmaps,
     title: "ai mapping",
     hook: "بهترین مسیر رو برات می‌چینیم",
@@ -84,7 +90,7 @@ const PLANS_IRAN: PlanCard[] = [
   },
   {
     key: "max", nameFa: "Plan Max", highlight: true,
-    blurb: ["همه‌ی ماژول‌ها، بدون محدودیت", "بدنسازی + کالری، ژورنال ترید، ai mapping", "تحلیل هوشمند اختصاصی"],
+    blurb: ["همه‌ی ماژول‌ها، بدون محدودیت", "بدنسازی + کالری، ژورنال ترید، ردیابی کدنویسی، ai mapping", "تحلیل هوشمند اختصاصی"],
     prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
   },
 ];
@@ -106,7 +112,7 @@ const PLANS_INTL: PlanCard[] = [
   },
   {
     key: "max", nameFa: "Plan Max", highlight: true,
-    blurb: ["Every module, unlimited", "Bodybuilding + calories, trade journal, ai mapping", "Dedicated smart insights"],
+    blurb: ["Every module, unlimited", "Bodybuilding + calories, trade journal, coding tracker, ai mapping", "Dedicated smart insights"],
     prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$149.99" },
   },
 ];
@@ -119,6 +125,7 @@ const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "ژورنال ترید", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "چک‌لیست ترید", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "ردیابی تمرین کدنویسی", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
   { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
 ];
@@ -129,6 +136,7 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "Trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "Trade checklist", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "Coding practice tracker", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
   { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true } },
 ];

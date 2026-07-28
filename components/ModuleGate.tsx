@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
-type GateModule = "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
+type GateModule = "EXERCISE" | "CALORIE" | "TRADE" | "CODING" | "ROADMAP" | "AI_INSIGHT";
 
 /**
  * برای صفحاتی که به یک ماژول خاص از پلن نیاز دارن. اگه کاربر دسترسی نداشته

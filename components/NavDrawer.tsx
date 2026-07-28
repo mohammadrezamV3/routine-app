@@ -25,6 +25,9 @@ export const ICONS: Record<string, JSX.Element> = {
   trade: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9.5 11l3.5 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6.5h4.5V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  coding: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 8 4.5 12 9 16M15 8l4.5 4-4.5 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
@@ -51,6 +54,7 @@ const LINKS = [
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   { href: "/exercise", label: "بدنسازی", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },
+  { href: "/coding", label: "کدنویسی", icon: "coding" },
   { href: "/about", label: "درباره من", icon: "about" },
 ];
 
