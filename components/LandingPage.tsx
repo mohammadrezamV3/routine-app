@@ -247,7 +247,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
 
 export function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
-  const plansRef = useRef<HTMLDivElement>(null);
+  const plansRef = useRef<HTMLElement>(null);
   const isIntl = getSiteMarket() === "INTERNATIONAL";
   const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
   const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
@@ -287,18 +287,20 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="sec-landing-plans" style={{ paddingTop: 8 }}>
+      <section id="sec-landing-plans" ref={plansRef} style={{ paddingTop: 8 }}>
         <div style={{ textAlign: "center", marginBottom: 18 }}>
           <h2 className="landing-section-title">پلن‌ها</h2>
         </div>
 
-        <div ref={plansRef} className="landing-plans-wrap">
+        <div className="landing-plans-wrap">
           <div className="landing-plans">
             <div className="landing-plans-spacer" aria-hidden="true" />
             {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
           </div>
+        </div>
 
-          <div className="landing-compare" role="table" aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"} data-reveal>
+        <div className="landing-compare-wrap" data-reveal>
+          <div className="landing-compare" role="table" aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
             <div className="landing-compare-row landing-compare-head" role="row">
               <div className="landing-compare-cell landing-compare-label" role="columnheader" />
               {plans.map((p) => (

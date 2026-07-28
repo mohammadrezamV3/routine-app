@@ -1545,20 +1545,21 @@ body[data-theme="light"] .landing-carousel-box{ background:rgba(255,255,255,.4);
 .landing-trust-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); }
 .landing-trust-item svg{ width:17px; height:17px; min-width:17px; }
 
-/* پلن‌ها — یک باکس شیشه‌ای مشترک که کارت‌ها رو افقی کنار هم نگه می‌داره؛ خودِ
-   هر کارت هنوز عمودیه (چیدمان داخلیش عوض نشده)، فقط چیدمانِ کنارهم‌قرارگیریِ
-   کارت‌ها از ستونی به grid افقی تغییر کرده. جدول مقایسه‌ی زیرش (که حالا با
-   div/grid ساخته می‌شه، نه <table>) دقیقاً همون grid-template-columns رو با
-   همون gap تکرار می‌کنه تا ستون هر پلن، هم توی کارت‌ها هم توی ردیف‌های
-   مقایسه، سر یک نقطه بیفته؛ چون هر دو توی همین یک باکس با اسکرول افقی
-   مشترکن، اسکرول‌شون هم با هم هماهنگ می‌مونه (نه دو اسکرول جدا از هم) */
-.landing-plans-wrap{
+/* پلن‌ها — دو باکس شیشه‌ای جدا: یکی کارت‌ها رو افقی کنار هم نگه می‌داره، یکی
+   جدول جزئیات/مقایسه رو زیرش. خودِ هر کارت هنوز عمودیه (چیدمان داخلیش عوض
+   نشده)، فقط چیدمانِ کنارهم‌قرارگیریِ کارت‌ها از ستونی به grid افقی تغییر
+   کرده. جدول مقایسه (که با div/grid ساخته می‌شه، نه <table>) دقیقاً همون
+   grid-template-columns رو با همون gap تکرار می‌کنه تا ستون هر پلن، هم توی
+   کارت‌ها هم توی ردیف‌های مقایسه، سر یک نقطه بیفته — با این‌که دو باکس جدان،
+   چون عرض/پدینگ یکسون دارن هم‌تراز می‌مونن */
+.landing-plans-wrap, .landing-compare-wrap{
   border-radius:22px; padding:24px 20px; border:1px solid var(--line);
   background:rgba(255,255,255,.025);
   backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   overflow-x:auto;
 }
-body[data-theme="light"] .landing-plans-wrap{ background:rgba(255,255,255,.4); }
+body[data-theme="light"] .landing-plans-wrap, body[data-theme="light"] .landing-compare-wrap{ background:rgba(255,255,255,.4); }
+.landing-compare-wrap{ margin-top:26px; }
 
 .landing-plans, .landing-compare-row{
   display:grid;
@@ -1607,7 +1608,6 @@ body[data-theme="light"] .landing-plan-card{ background:rgba(255,255,255,.4); }
 
 /* ردیف‌های مقایسه — div/grid به‌جای <table> عمداً، تا grid-template-columns
    بالا رو عیناً تکرار کنه و ستون‌هاش تضمینی زیر کارت‌های همون پلن بیفتن */
-.landing-compare{ margin-top:26px; }
 .landing-compare-row{ padding:14px 0; align-items:center; border-bottom:1px solid var(--line); }
 .landing-compare-row:last-child{ border-bottom:none; }
 .landing-compare-head{ font-weight:700; color:var(--text); font-size:12.5px; font-family:var(--font-plexmono), monospace; }
