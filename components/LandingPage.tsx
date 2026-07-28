@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Quote, X } from "lucide-react";
+import {
+  ArrowLeft, Check, ChevronLeft, ChevronRight, Quote, X,
+  Heart, ClipboardList, Clock, ShieldCheck, TrendingUp, Headset, Lightbulb,
+} from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
 import { getSiteMarket } from "@/lib/market";
@@ -69,6 +72,36 @@ const QUOTES = [
   { text: "کاری که می‌تونی امروز با آرامش انجام بدی رو به فردا نسپار.", author: "بنجامین فرانکلین" },
   { text: "همیشه می‌شه دوباره شروع کرد، آروم و بدون از دست دادن امید.", author: "وینستون چرچیل" },
   { text: "بهترین نسخه‌ی خودت، همونیه که با خودش مهربونه.", author: "ضرب‌المثل" },
+];
+
+// نمونه‌ی تصویریِ «امروز چی داریم» — دیتای واقعیِ کاربر نیست (این بخش قبل از
+// لاگین دیده می‌شه)، فقط یک پیش‌نمایشِ نمونه از شکلِ واقعیِ چک‌لیستِ روزانه.
+const TODAY_ITEMS = [
+  { label: "مدیتیشن", done: true },
+  { label: "ورزش", done: true },
+  { label: "مطالعه", done: true },
+  { label: "نوشیدن آب", done: false },
+  { label: "یادداشت روزانه", done: false },
+];
+const TODAY_ITEMS_INTL = [
+  { label: "Meditation", done: true },
+  { label: "Workout", done: true },
+  { label: "Reading", done: true },
+  { label: "Drink water", done: false },
+  { label: "Daily journal", done: false },
+];
+
+const WHY_US = [
+  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعات تو ۱۰۰٪ محفوظ می‌مونه" },
+  { icon: TrendingUp, color: "#A855F7", title: "برنامه‌های شخصی", body: "متناسب با هدف‌ها و سبک زندگی تو" },
+  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "ما کنار توایم، هر زمان که نیاز داری" },
+  { icon: Lightbulb, color: "#F59E0B", title: "ابزارهای کاربردی", body: "همه‌چیز برای رشد در یک اپلیکیشن" },
+];
+const WHY_US_INTL = [
+  { icon: ShieldCheck, color: "#22C55E", title: "Private & secure", body: "Your data stays 100% protected" },
+  { icon: TrendingUp, color: "#A855F7", title: "Personalized plans", body: "Matched to your goals & lifestyle" },
+  { icon: Headset, color: "#3B82F6", title: "Real support", body: "We're with you whenever you need us" },
+  { icon: Lightbulb, color: "#F59E0B", title: "Practical tools", body: "Everything to grow, in one app" },
 ];
 
 type Duration = "1" | "3" | "6" | "12";
@@ -162,7 +195,7 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
 // پلن نه — یه ستون خالیِ هم‌عرض برای هم‌ترازی می‌ذاشتیم، ولی چون کارت‌ها و
 // جدول دیگه توی یک باکس مشترک نیستن، اون ستون خالی فقط باعث می‌شد کارت‌ها
 // یه‌طرفه/نامتقارن به‌نظر برسن، نه وسط‌چین. برای همین دو تمپلیت جدا داریم.
-const PLANS_GRID_COLS = "grid-cols-[repeat(4,minmax(200px,1fr))] md:grid-cols-[repeat(4,1fr)]";
+const PLANS_GRID_COLS = "grid-cols-[repeat(4,minmax(250px,1fr))] md:grid-cols-[repeat(4,1fr)]";
 const COMPARE_GRID_COLS = "grid-cols-[minmax(160px,1.4fr)_repeat(4,minmax(200px,1fr))] md:grid-cols-[300px_repeat(4,211px)]";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
@@ -292,28 +325,138 @@ function QuoteCard() {
   );
 }
 
+// تصویرسازیِ ساده‌ی گلدون — سمت چپِ هیرو، پشتِ متن، دقیقاً مطابق تصویرِ
+// مرجع (گلدونِ سفالی + برگ‌های سبز + لکه‌ی نرمِ پشت‌زمینه + نشانِ قلب).
+function PlantIllustration() {
+  const t = useThemeTokens();
+  return (
+    <div className="relative flex h-[92px] w-[84px] shrink-0 items-center justify-center sm:h-[118px] sm:w-[108px]" data-anim-field>
+      <div className={`absolute inset-0 -z-10 rounded-full blur-xl ${t.isLight ? "bg-[#D97706]/15" : "bg-[#00A86B]/12"}`} />
+      <svg viewBox="0 0 108 118" className="h-full w-full" fill="none">
+        <path d="M54 82C38 62 32 38 43 14C55 36 56 62 54 82Z" fill={t.isLight ? "#7CA982" : "#4F8455"} />
+        <path d="M54 84C34 70 13 58 6 36C29 40 49 58 54 84Z" fill={t.isLight ? "#8FB88F" : "#5B9160"} />
+        <path d="M54 84C72 66 86 44 82 20C63 32 55 58 54 84Z" fill={t.isLight ? "#9CC299" : "#6BA26E"} />
+        <ellipse cx="54" cy="86" rx="26" ry="6.5" fill={t.isLight ? "#EADFC8" : "#3A342A"} />
+        <path d="M32 86L78 86L71 110C70.3 113.5 67.3 116 63.7 116H42.3C38.7 116 35.7 113.5 35 110L32 86Z" fill={t.isLight ? "#E4D2AE" : "#453D30"} />
+        <path d="M35.5 92H72.5" stroke={t.isLight ? "#D5BE92" : "#544A3A"} strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+      <span className={`absolute -top-1 left-0 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg sm:h-9 sm:w-9 ${t.accentBg}`}>
+        <Heart size={15} strokeWidth={2.3} />
+      </span>
+    </div>
+  );
+}
+
+function RingProgress({ pct, label }: { pct: number; label: string }) {
+  const t = useThemeTokens();
+  const r = 29;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className={`relative flex h-[72px] w-[72px] shrink-0 items-center justify-center ${t.accentText}`}>
+      <svg viewBox="0 0 72 72" className="h-full w-full -rotate-90">
+        <circle cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="6" className="opacity-[0.15]" />
+        <circle
+          cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
+        />
+      </svg>
+      <span className={`absolute text-[15px] font-extrabold ${t.heading}`}>{label}</span>
+    </div>
+  );
+}
+
+function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
+  const t = useThemeTokens();
+  const items = isIntl ? TODAY_ITEMS_INTL : TODAY_ITEMS;
+  const done = items.filter((i) => i.done).length;
+
+  return (
+    <div>
+      <div className="text-right">
+        <h2 className={`text-xl font-extrabold ${t.heading}`}>{isIntl ? "Today's progress" : "امروز چی داریم؟"}</h2>
+        <p className={`mt-1 text-[13px] ${t.muted}`}>{isIntl ? "A quick look at what matters today" : "یک نگاه سریع به کارهای مهم امروزت"}</p>
+      </div>
+
+      <div className={`mt-4 rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-xl sm:p-6`}>
+        <div className="flex items-center gap-4">
+          <RingProgress pct={done / items.length} label={`${done}/${items.length}`} />
+          <div className="min-w-0 flex-1 text-right">
+            <div className={`text-[15px] font-extrabold ${t.heading}`}>{isIntl ? "You're off to a great start!" : "روزت رو عالی شروع کردی!"}</div>
+            <div className={`mt-1 text-[12.5px] ${t.muted}`}>
+              {isIntl ? `${done} of ${items.length} tasks done today` : `${done} مورد از ${items.length} کار امروز انجام شده`}
+            </div>
+          </div>
+          <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${t.accentBgSofter} ${t.accentText}`}>
+            <ClipboardList size={19} className="sm:hidden" />
+            <ClipboardList size={22} className="hidden sm:block" />
+            <span className={`absolute -bottom-1 -left-1 flex h-[18px] w-[18px] items-center justify-center rounded-full text-white sm:h-5 sm:w-5 ${t.accentBg}`}>
+              <Clock size={10} />
+            </span>
+          </span>
+        </div>
+
+        <div className={`mt-5 grid grid-cols-5 gap-1.5 border-t pt-4 ${t.line}`}>
+          {items.map((item) => (
+            <div key={item.label} className="flex flex-col items-center gap-1.5 text-center">
+              <span className={`flex h-7 w-7 items-center justify-center rounded-full border ${item.done ? `border-transparent text-white ${t.accentBg}` : `${t.line} ${t.muted}`}`}>
+                {item.done && <Check size={13} strokeWidth={2.6} />}
+              </span>
+              <span className={`text-[10.5px] leading-4 ${t.muted}`}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WhyUsSection({ isIntl }: { isIntl: boolean }) {
+  const t = useThemeTokens();
+  const items = isIntl ? WHY_US_INTL : WHY_US;
+
+  return (
+    <div>
+      <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{isIntl ? "Why us?" : "چرا ما؟"}</h2>
+      <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.title} className={`flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-2.5 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
+              <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
+                <Icon size={18} />
+              </span>
+              <div className={`text-[11px] font-extrabold leading-4 sm:text-[12.5px] ${t.heading}`}>{item.title}</div>
+              <div className={`mt-1 text-[9.5px] leading-[14px] sm:text-[11px] sm:leading-[17px] ${t.muted}`}>{item.body}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
+    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-5 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-5 backdrop-blur-xl ${t.shadow}`;
 
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
       {p.highlight && (
-        <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10.5px] font-extrabold text-white ${t.secondaryBg}`}>
+        <span className={`absolute -top-3 right-5 rounded-full px-3 py-1 text-[10.5px] font-extrabold text-white ${t.secondaryBg}`}>
           محبوب‌ترین
         </span>
       )}
-      <div className={`text-left text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+      <div className={`text-left text-base font-extrabold ${t.accentText}`}>{p.nameFa}</div>
 
-      <ul className="mt-3 flex flex-1 flex-col gap-1.5">
+      <ul className="mt-2.5 flex flex-1 flex-col gap-1">
         {p.blurb.map((line) => (
-          <li key={line} className={`flex items-start gap-2 text-[12.5px] leading-6 ${t.muted}`}>
-            <Check size={15} className={`mt-0.5 shrink-0 ${t.accentText}`} />
+          <li key={line} className={`flex items-start gap-2 text-[12px] leading-5 ${t.muted}`}>
+            <Check size={14} className={`mt-0.5 shrink-0 ${t.accentText}`} />
             {line}
           </li>
         ))}
@@ -321,23 +464,23 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
 
       {p.free ? (
         <>
-          <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>رایگان</div>
-          <Link href="/auth/signup" className={`mt-3.5 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
+          <div className={`mt-3 text-lg font-extrabold ${t.heading}`}>رایگان</div>
+          <Link href="/auth/signup" className={`mt-3 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
             شروع رایگان
           </Link>
         </>
       ) : (
         <>
-          <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>
+          <div className={`mt-3 text-lg font-extrabold ${t.heading}`}>
             {p.prices![duration]}
             <span className={`mr-1 text-[11px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
           </div>
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
+          <div className="mt-2 grid grid-cols-4 gap-1">
             {DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
-                className={`flex-1 min-w-[58px] rounded-lg border py-1.5 text-[11.5px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
+                className={`rounded-lg border py-1.5 text-[10.5px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
@@ -346,7 +489,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           </div>
           <Link
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}
-            className={`mt-3.5 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
+            className={`mt-3 block w-full rounded-2xl py-2.5 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
             فعال‌سازی این پلن
           </Link>
@@ -369,38 +512,52 @@ export function LandingPage() {
 
   return (
     <>
-      <section id="sec-landing-hero" style={{ textAlign: "center", paddingTop: 18 }}>
-        <div ref={heroRef}>
-          <h1 className={`mt-2 text-[2.15rem] font-extrabold leading-[1.35] sm:text-[2.6rem] ${t.heading}`} data-anim-field>
-            همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
-          </h1>
-          <p className={`mx-auto mt-4 max-w-md text-[15px] leading-8 ${t.muted}`} data-anim-field>
-            روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
-            هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-3" data-anim-field>
-            <Link
-              href="/auth/signup"
-              className={`inline-flex items-center gap-1.5 rounded-[20px] px-7 py-3.5 text-[15px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] ${t.accentBg} ${t.accentShadow}`}
-            >
-              شروع رایگان <ArrowLeft size={16} />
-            </Link>
-            <Link
-              href="/auth/login"
-              className={`inline-flex items-center rounded-[20px] border ${t.line} ${t.secondaryBtnBg} px-7 py-3.5 text-[15px] font-bold ${t.heading} backdrop-blur-md transition active:scale-[0.97]`}
-            >
-              ورود
-            </Link>
+      <section id="sec-landing-hero" style={{ paddingTop: 18 }}>
+        <div ref={heroRef} className="flex items-start gap-4 sm:gap-6">
+          <PlantIllustration />
+          <div className="min-w-0 flex-1 text-right">
+            <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
+              همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
+            </h1>
+            <p className={`mt-4 text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
+              روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
+              هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-2.5" data-anim-field>
+              <Link
+                href="/auth/signup"
+                className={`inline-flex items-center gap-1.5 rounded-[20px] px-5 py-3 text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-7 sm:py-3.5 sm:text-[15px] ${t.accentBg} ${t.accentShadow}`}
+              >
+                شروع رایگان <ArrowLeft size={16} />
+              </Link>
+              <Link
+                href="/auth/login"
+                className={`inline-flex items-center rounded-[20px] border ${t.line} ${t.secondaryBtnBg} px-5 py-3 text-[13.5px] font-bold ${t.heading} backdrop-blur-md transition active:scale-[0.97] sm:px-7 sm:py-3.5 sm:text-[15px]`}
+              >
+                ورود
+              </Link>
+            </div>
+            <div className={`mt-4 flex items-center justify-end gap-1.5 text-[11.5px] ${t.muted}`} data-anim-field>
+              اطلاعات شما امن و محرمانه نگه‌داری می‌شود <ShieldCheck size={14} />
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="sec-landing-features" style={{ paddingTop: 20 }}>
+      <section id="sec-landing-features" style={{ paddingTop: 24 }}>
         <FeatureCarousel />
+      </section>
+
+      <section id="sec-landing-today" style={{ paddingTop: 28 }}>
+        <TodayProgressCard isIntl={isIntl} />
       </section>
 
       <section id="sec-landing-trust" style={{ paddingTop: 8 }}>
         <QuoteCard />
+      </section>
+
+      <section id="sec-landing-whyus" style={{ paddingTop: 8 }}>
+        <WhyUsSection isIntl={isIntl} />
       </section>
 
       <section id="sec-landing-plans" style={{ paddingTop: 8 }}>

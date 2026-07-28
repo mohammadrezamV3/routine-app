@@ -261,13 +261,24 @@
     position:absolute; right:18px; top:50%; transform:translateY(-50%); z-index:3;
     display:flex; align-items:center; gap:10px;
   }
+  .topbar-actions-left{
+    position:absolute; left:18px; top:50%; transform:translateY(-50%); z-index:3;
+    display:flex; align-items:center; gap:10px;
+  }
 
   /* hamburger + nav drawer */
-  .hamburger, .profile-btn{
+  .hamburger, .profile-btn, .bell-btn{
     position:static; z-index:40; width:38px; height:38px;
     background:none; border:none; box-shadow:none;
     display:flex; align-items:center; justify-content:center;
     padding:0; cursor:pointer;
+  }
+  .bell-btn{position:relative; color:var(--muted); transition:color .2s ease;}
+  .bell-btn svg{width:19px; height:19px;}
+  .bell-btn:hover{color:var(--accent);}
+  .bell-dot{
+    position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
+    background:#E5484D; box-shadow:0 0 0 2px var(--bg);
   }
 
   /* animated hamburger: bars morph into an X while the whole icon spins open */
