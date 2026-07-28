@@ -5,7 +5,6 @@ import Link from "next/link";
 import { animate } from "animejs";
 import { staggerFieldsIn, revealOnScroll } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
-import { TreasureTrail } from "@/components/TreasureTrail";
 import { getSiteMarket } from "@/lib/market";
 
 const SLEEP_ICON = (
@@ -262,7 +261,6 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
       </section>
 
       <section id="sec-landing-features" style={{ paddingTop: 20 }}>
-        <TreasureTrail variant="a" className="treasure-trail-short" duration={7} />
         <FeatureCarousel />
       </section>
 
@@ -278,7 +276,6 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
       </section>
 
       <section id="sec-landing-plans" style={{ paddingTop: 8 }}>
-        <TreasureTrail variant="c" className="treasure-trail-short" duration={8} delay={2.2} />
         <div style={{ textAlign: "center", marginBottom: 18 }}>
           <h2 className="landing-section-title">پلن‌ها</h2>
         </div>
