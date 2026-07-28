@@ -137,6 +137,7 @@ function FeatureCarousel() {
   const [index, setIndex] = useState(0);
   const pausedRef = useRef(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -153,11 +154,25 @@ function FeatureCarousel() {
   const f = FEATURES[index];
   const go = (delta: number) => setIndex((i) => (i + delta + FEATURES.length) % FEATURES.length);
 
+  // زیر ۷۰۰px فلش‌ها مخفی‌ن (CSS) و به‌جاش با سوایپ انگشت جابه‌جا می‌شه
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    go(delta < 0 ? 1 : -1);
+  }
+
   return (
     <div
       className="landing-carousel"
       onMouseEnter={() => { pausedRef.current = true; }}
       onMouseLeave={() => { pausedRef.current = false; }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       <div className="landing-carousel-box" ref={boxRef} key={index}>
         <button type="button" className="landing-carousel-arrow prev" aria-label="قابلیت قبلی" onClick={() => go(-1)}>
@@ -244,7 +259,7 @@ export function LandingPage({ onGuestContinue }: { onGuestContinue: () => void }
     <>
       <section id="sec-landing-hero" style={{ textAlign: "center", paddingTop: 18 }}>
         <div ref={heroRef}>
-          <div className="eyebrow" data-anim-field>روتین من</div>
+          <div className="eyebrow" data-anim-field>Arion</div>
           <h1 className="landing-h1" data-anim-field>همه‌ی نظم زندگی‌ات، توی یک اپ</h1>
           <p className="landing-sub" data-anim-field>
             روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —

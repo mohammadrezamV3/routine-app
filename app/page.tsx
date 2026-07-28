@@ -84,7 +84,7 @@ export default function HomePage() {
 
   return (
     <section id="sec-top">
-      <h1>روتین من</h1>
+      <h1>Arion</h1>
       <div className="dateline">
         <span>{weekdayName}</span>
         <span className="mono">{faNum(jToday[2])} {J_MONTHS[jToday[1] - 1]} {faNum(jToday[0])}</span>
