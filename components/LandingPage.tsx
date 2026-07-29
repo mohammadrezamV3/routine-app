@@ -341,7 +341,7 @@ function QuoteCard() {
 function PlantIllustration() {
   const t = useThemeTokens();
   return (
-    <div className="relative h-[108px] w-[74px] shrink-0 sm:h-[140px] sm:w-[96px]" data-anim-field>
+    <div className="relative h-[99px] w-[80px] shrink-0 sm:h-[129px] sm:w-[104px]" data-anim-field>
       <div className={`absolute inset-0 -z-10 rounded-full blur-xl ${t.isLight ? "bg-[#D97706]/15" : "bg-[#00A86B]/12"}`} />
       <Image
         src={t.isLight ? "/images/plant-light.png" : "/images/plant-dark.png"}
