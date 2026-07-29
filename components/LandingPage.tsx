@@ -403,7 +403,7 @@ function WhyUsSection({ isIntl }: { isIntl: boolean }) {
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.title} className="flex flex-col items-center rounded-2xl p-3 text-center sm:p-4">
+            <div key={item.title} className={`flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
               <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
                 <Icon size={18} />
               </span>
