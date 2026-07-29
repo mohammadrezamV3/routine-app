@@ -1628,6 +1628,7 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 }
 @media (prefers-reduced-motion: reduce){
   .aurora-blob{ animation:none; }
+  .whyus-track{ animation:none; }
 }
 
 .nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }
@@ -1667,4 +1668,27 @@ body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) 
 @keyframes mgPulse{
   0%, 100%{ box-shadow:0 0 0 0 rgba(var(--accent-rgb),.45); transform:scale(1); }
   50%{ box-shadow:0 0 0 9px rgba(var(--accent-rgb),0); transform:scale(1.035); }
+}
+
+/* بخش «چرا ما؟» — نوارِ بی‌درزِ درحال‌عبور: لیست دوبار پشت‌سرهم چیده شده و
+   دقیقاً نصفِ عرضِ ترک translate می‌شه، پس لحظه‌ی چرخش کاملاً نامرئیه.
+   هاور/فوکوس مکث می‌کنه تا بشه محتوا رو بدون فرارِ مداوم خوند. */
+.whyus-viewport{
+  overflow:hidden;
+  -webkit-mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.whyus-track{
+  display:flex; width:max-content; gap:10px;
+  animation:whyusMarquee 38s linear infinite;
+}
+.whyus-track:hover, .whyus-track:focus-within{ animation-play-state:paused; }
+.whyus-card{ width:130px; flex:0 0 auto; }
+@media (min-width:640px){
+  .whyus-track{ gap:12px; }
+  .whyus-card{ width:158px; }
+}
+@keyframes whyusMarquee{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
 }
