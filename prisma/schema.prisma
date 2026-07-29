@@ -501,10 +501,14 @@ model ExercisePlan {
   hasPhysicalLimitation Boolean @default(false) // چک‌باکس کلی، بدون جزئیات پزشکی
   disclaimerAcceptedAt  DateTime? // تیک تایید اجباری قبل از فعال‌سازی ماژول
 
+  gymDays       Json?    // آرایه‌ای از نام فارسی روزهای هفته که کاربر باشگاه می‌ره، مثلاً ["شنبه","دوشنبه","چهارشنبه"]
+  trainingPhase String?  // bulk | cut | maintenance | none
+  generatedByAi Boolean  @default(false) // false یعنی از قالب ایستای lib/exercisePlans.ts ساخته شده (fallback بدون کلید API)
+
   startDate DateTime @default(now())
   isActive  Boolean  @default(true)
 
-  // ساختار برنامه هفتگی/ماهانه به‌صورت JSON، از پیش طراحی‌شده و انتخاب‌شده بر اساس level
+  // ساختار برنامه هفتگی/ماهانه به‌صورت JSON — یا از هوش مصنوعی، یا (fallback) از قالب ایستای از‌پیش‌طراحی‌شده
   planData  Json
 
   createdAt DateTime @default(now())
@@ -583,6 +587,14 @@ model CalorieTarget {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   dailyTargetKcal Int
+  goal            String?  // lose | maintain | gain
+  mealsPerDay     Int?
+  mealBreakdown   Json?    // [{ key, label, kcal }] — جمعش باید با dailyTargetKcal برابر باشه
+  sex             String?  // male | female — فقط برای محاسبه BMR، جای دیگه‌ای ذخیره نمی‌شه
+  ageYears        Int?     // اگه User.birthDate نبود، همینجا مستقیم پرسیده و ذخیره می‌شه
+  heightCm        Int?     // اسنپ‌شات قد/وزن لحظه‌ی محاسبه (مثل ExercisePlan)، برای محاسبه BMR
+  weightKg        Float?
+
   effectiveFrom   DateTime @default(now())
   effectiveTo     DateTime?
 

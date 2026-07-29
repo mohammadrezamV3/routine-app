@@ -1760,3 +1760,45 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
 }
 .ticker-settings-btn:hover{ border-color:var(--accent); color:var(--accent); transform:rotate(45deg); }
 .ticker-settings-btn svg{ width:14px; height:14px; }
+
+/* ===================== بدنسازی — فرم برنامه، قوانین، جایگزینی حرکت ===================== */
+
+.exercise-form-label{ display:block; font-size:11px; color:var(--muted2); margin:14px 0 6px; }
+.exercise-form-label:first-child{ margin-top:0; }
+
+.exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
+.exercise-day-select .day-pill{ flex:1 1 calc(33.33% - 6px); min-width:64px; }
+
+.exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
+.exercise-rules-list li{
+  font-size:12.5px; color:var(--muted); line-height:1.7; padding-right:16px; position:relative;
+}
+.exercise-rules-list li::before{ content:'—'; position:absolute; right:0; color:var(--muted2); }
+
+.exercise-ineligible-box{
+  margin-top:10px; padding:14px 16px; border-radius:14px; border:1px solid var(--line);
+  background:rgba(var(--bg-rgb),.35); font-size:12.5px; color:var(--muted); line-height:1.8;
+}
+
+.exercise-item.exercise-item-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.exercise-sub-btn{
+  flex-shrink:0; font-size:10px; padding:4px 9px; border-radius:8px; white-space:nowrap;
+  border:1px solid var(--line); background:none; color:var(--muted2); cursor:pointer;
+  transition:border-color .15s ease, color .15s ease;
+}
+.exercise-sub-btn:hover{ border-color:var(--accent); color:var(--accent); }
+.exercise-sub-btn:disabled{ opacity:.5; cursor:default; }
+
+/* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
+
+.calorie-meal-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+@media (min-width:480px){ .calorie-meal-grid{ grid-template-columns:repeat(3, 1fr); } }
+.calorie-meal-tile{
+  border-radius:16px; padding:12px 14px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+}
+.calorie-meal-of{ font-size:12px; color:var(--muted2); font-weight:600; }
+
+.calorie-history-day{ padding:10px 0; border-bottom:1px solid var(--line); }
+.calorie-history-day:last-child{ border-bottom:none; }
+.calorie-history-day-head{ display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+.calorie-history-day-items{ margin-top:4px; font-size:11.5px; color:var(--muted2); line-height:1.7; }
