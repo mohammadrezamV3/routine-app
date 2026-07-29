@@ -80,6 +80,7 @@ export default function LoginPage() {
               id="identifier"
               type="text"
               className="wsearch-newform-name"
+              placeholder="مثلاً: 0912xxxxxxx"
               value={identifier}
               onChange={(e) => { setIdentifier(e.target.value); if (e.target.value.trim()) clearError("identifier"); }}
             />
@@ -91,6 +92,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 className="wsearch-newform-name"
+                placeholder="رمز عبورت رو وارد کن"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
@@ -112,7 +114,7 @@ export default function LoginPage() {
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
           <div className="auth-submit-row" data-anim-field>
-            <button type="submit" disabled={loading} style={{ borderRadius: 8, padding: "9px 24px", borderColor: "var(--accent)", color: "var(--accent)" }}>
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
               {loading ? "در حال ورود…" : "ورود"}
             </button>
             <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>

@@ -1129,6 +1129,7 @@
   }
   body:not([data-theme="light"]) .wsearch-newform-name{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-newform-name:focus{border-color:var(--accent);}
+  .wsearch-newform-name::placeholder{color:var(--muted2);}
   .field-error-wrap{position:relative;}
   .field-error .field-error-wrap input, .field-error input{padding-left:32px;}
   .name-field-wrap.field-error input{padding-left:32px;}
@@ -1140,6 +1141,10 @@
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-plexmono), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
+  .name-field-wrap label{
+    display:block; margin-bottom:6px;
+    font-size:12.5px; font-weight:600; color:var(--muted);
+  }
   .wsearch-newrow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 0;}
   .wsearch-newrow:first-child{margin-top:6px;}
   .wsearch-newrow + .wsearch-newrow{border-top:1px dashed var(--line);}
@@ -1313,7 +1318,7 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 .auth-box{
   position:relative;
   width:100%; box-sizing:border-box; margin-top:16px;
-  border-radius:30px; padding:24px;
+  border-radius:36px; padding:24px;
   background:rgba(255,255,255,.03);
   border:1px solid var(--line);
   backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
@@ -1331,10 +1336,29 @@ body[data-theme="light"] .auth-box{
 
 .auth-remember-row{ margin-top:14px; }
 .auth-remember-label{
-  display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:9px; cursor:pointer;
   font-size:12.5px; font-weight:600; color:var(--muted); user-select:none;
+  transition:color .2s ease;
 }
-.auth-checkbox{ width:17px; height:17px; margin:0; cursor:pointer; accent-color:var(--accent); }
+.auth-remember-label:hover{ color:var(--text); }
+/* چک‌باکس دست‌ساز — appearance:none روی input خام، تیک با یه SVG محو-بزرگ‌شونده */
+.auth-checkbox{
+  appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0;
+  width:19px; height:19px; border-radius:6px;
+  border:1.5px solid var(--line); background:rgba(var(--bg-rgb),.5);
+  cursor:pointer; position:relative;
+  transition:background .2s ease, border-color .2s ease, transform .12s ease;
+}
+.auth-remember-label:hover .auth-checkbox{ border-color:var(--accent); }
+.auth-checkbox:active{ transform:scale(.88); }
+.auth-checkbox:checked{ background:var(--accent); border-color:var(--accent); }
+.auth-checkbox:checked::after{
+  content:""; position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:center; background-size:12px;
+  animation:authCheckIn .18s ease both;
+}
+@keyframes authCheckIn{ from{ opacity:0; transform:scale(.4); } to{ opacity:1; transform:scale(1); } }
 
 /* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه */
 .auth-tabs{
@@ -1391,6 +1415,18 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 }
 .auth-full-btn:hover{ filter:brightness(1.08); }
 .auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; }
+
+/* دکمه‌ی فشرده‌ی ورود — کنار لینک فراموشی رمز، توی auth-submit-row، پس
+   full-width نیست؛ پرشده و گرد، با انیمیشن فشردن مثل بقیه‌ی دکمه‌های اپ */
+.auth-submit-btn{
+  border-radius:999px; padding:10px 26px;
+  border:1px solid var(--accent); background:var(--accent); color:var(--bg);
+  font-family:var(--font-vazir), sans-serif; font-size:13.5px; font-weight:700; cursor:pointer;
+  transition:filter .15s ease, transform .12s ease;
+}
+.auth-submit-btn:hover{ filter:brightness(1.08); }
+.auth-submit-btn:active{ transform:scale(.95); }
+.auth-submit-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
 
 /* ردیف مشترک دکمه ورود + فراموشی رمز، دقیقاً هم‌ردیف */
 .auth-submit-row{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; gap:12px; }
