@@ -192,12 +192,10 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
 
-// ردیف‌های جدول مقایسه یک ستون لیبل (اسم قابلیت) دارن، ولی خودِ کارت‌های
-// پلن نه — یه ستون خالیِ هم‌عرض برای هم‌ترازی می‌ذاشتیم، ولی چون کارت‌ها و
-// جدول دیگه توی یک باکس مشترک نیستن، اون ستون خالی فقط باعث می‌شد کارت‌ها
-// یه‌طرفه/نامتقارن به‌نظر برسن، نه وسط‌چین. برای همین دو تمپلیت جدا داریم.
-const PLANS_GRID_COLS = "grid-cols-[repeat(4,minmax(250px,1fr))] md:grid-cols-[repeat(4,1fr)]";
-const COMPARE_GRID_COLS = "grid-cols-[minmax(160px,1.4fr)_repeat(4,minmax(200px,1fr))] md:grid-cols-[300px_repeat(4,211px)]";
+// هر دو گرید responsive و بدون minmax پیکسلی‌ان — روی موبایل آزادانه جمع
+// می‌شن (بدون نیاز به اسکرول افقی)، از md به بعد BREAKOUT کل عرض رو باز می‌کنه.
+const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
+const COMPARE_GRID_COLS = "grid-cols-[1.4fr_repeat(4,1fr)] md:grid-cols-[300px_repeat(4,211px)]";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
 // margin-left در تعارض نادیده گرفته می‌شه و فقط margin-right اثر می‌کنه —
@@ -236,11 +234,6 @@ function useThemeTokens() {
     secondaryBorderSoft: isLight ? "border-[#D97706]/50" : "border-[#3E7BFA]/50",
     secondaryCardShadow: isLight ? "shadow-[0_18px_45px_rgba(217,119,6,0.16)]" : "shadow-[0_18px_45px_rgba(62,123,250,0.18)]",
     secondaryBadgeShadow: isLight ? "shadow-[0_8px_20px_rgba(217,119,6,0.35)]" : "shadow-[0_8px_20px_rgba(62,123,250,0.35)]",
-
-    // ستون sticky جدول مقایسه: زیر md باید تقریباً کدر باشه تا چک/ضربدرِ
-    // درحال‌اسکرول زیرش دیده نشه؛ از md به بعد که اصلاً اسکرول لازم نیست،
-    // برمی‌گرده به همون شیشه‌ای نیم‌شفافِ بقیه‌ی باکس تا لکه‌ی یک‌دست نشه.
-    stickyCellBg: isLight ? "bg-[var(--bg)] md:bg-white/40 md:backdrop-blur-2xl" : "bg-[var(--bg)] md:bg-white/[0.05] md:backdrop-blur-2xl",
   };
 }
 
@@ -324,7 +317,7 @@ function QuoteCard() {
 
   return (
     <div className={`overflow-hidden rounded-[24px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-xl`}>
-      <div className="relative h-24 w-full sm:h-32">
+      <div className="relative h-12 w-full sm:h-16">
         <Image src="/images/quote-banner.png" alt="" fill sizes="620px" className="object-cover" priority={false} />
       </div>
       <div className="flex flex-col items-center gap-3 p-8 text-center">
@@ -334,12 +327,6 @@ function QuoteCard() {
       </div>
     </div>
   );
-}
-
-// عمداً خالی — نه illustration، نه پیش‌نمایش کارت؛ کاربر هر دو رو امتحان
-// کرد و نخواست، فقط فضای خالیِ سمت چپِ هیرو بمونه (طول متن رو عوض نکنه).
-function HeroSideSpacer() {
-  return <div className="h-[100px] w-[100px] shrink-0 sm:h-[124px] sm:w-[124px]" aria-hidden="true" />;
 }
 
 function RingProgress({ pct, label }: { pct: number; label: string }) {
@@ -416,7 +403,7 @@ function WhyUsSection({ isIntl }: { isIntl: boolean }) {
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.title} className={`flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
+            <div key={item.title} className="flex flex-col items-center rounded-2xl p-3 text-center sm:p-4">
               <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
                 <Icon size={18} />
               </span>
@@ -436,8 +423,8 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col snap-center rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex flex-col snap-center rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
+    ? `relative flex min-h-[440px] flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} px-6 py-8 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex min-h-[440px] flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} px-6 py-8 backdrop-blur-xl ${t.shadow}`;
 
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
@@ -508,33 +495,30 @@ export function LandingPage() {
   return (
     <>
       <section id="sec-landing-hero" style={{ paddingTop: 18 }}>
-        <div ref={heroRef} className="flex items-start gap-4 sm:gap-6">
-          <HeroSideSpacer />
-          <div className="min-w-0 flex-1 text-right">
-            <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
-              همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
-            </h1>
-            <p className={`mt-4 text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
-              روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
-              هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-2.5" data-anim-field>
-              <Link
-                href="/auth/signup"
-                className={`inline-flex items-center gap-1.5 rounded-[20px] px-5 py-3 text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-7 sm:py-3.5 sm:text-[15px] ${t.accentBg} ${t.accentShadow}`}
-              >
-                شروع رایگان <ArrowLeft size={16} />
-              </Link>
-              <Link
-                href="/auth/login"
-                className={`inline-flex items-center rounded-[20px] border ${t.line} ${t.secondaryBtnBg} px-5 py-3 text-[13.5px] font-bold ${t.heading} backdrop-blur-md transition active:scale-[0.97] sm:px-7 sm:py-3.5 sm:text-[15px]`}
-              >
-                ورود
-              </Link>
-            </div>
-            <div className={`mt-4 flex items-center justify-end gap-1.5 text-[11.5px] ${t.muted}`} data-anim-field>
-              اطلاعات شما امن و محرمانه نگه‌داری می‌شود <ShieldCheck size={14} />
-            </div>
+        <div ref={heroRef} className="text-right">
+          <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
+            همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
+          </h1>
+          <p className={`mt-4 text-right text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
+            روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
+            هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center gap-2.5" data-anim-field>
+            <Link
+              href="/auth/signup"
+              className={`inline-flex items-center gap-1.5 rounded-[20px] px-5 py-3 text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-7 sm:py-3.5 sm:text-[15px] ${t.accentBg} ${t.accentShadow}`}
+            >
+              شروع رایگان <ArrowLeft size={16} />
+            </Link>
+            <Link
+              href="/auth/login"
+              className={`inline-flex items-center rounded-[20px] border ${t.line} ${t.secondaryBtnBg} px-5 py-3 text-[13.5px] font-bold ${t.heading} backdrop-blur-md transition active:scale-[0.97] sm:px-7 sm:py-3.5 sm:text-[15px]`}
+            >
+              ورود
+            </Link>
+          </div>
+          <div className={`mt-4 flex items-center justify-end gap-1.5 text-[11.5px] ${t.muted}`} data-anim-field>
+            اطلاعات شما امن و محرمانه نگه‌داری می‌شود <ShieldCheck size={14} />
           </div>
         </div>
       </section>
@@ -560,25 +544,24 @@ export function LandingPage() {
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>پلن‌ها</h2>
         </div>
 
-        <div className={`grid snap-x snap-mandatory gap-6 overflow-x-auto pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
+        <div className={`grid gap-6 pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
           {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
         </div>
 
-        {/* یک جدول HTML واقعی (نه گرید) — چون sticky روی th یک جدول واقعی
-            دقیقاً همون الگوی استانداردِ «فریز کردن ستون اول» هست و قابل‌اعتماده؛
-            گرید تو در تو (row-grid داخل row-grid) این رفتار رو نمی‌داد. ستون
-            لیبل روی موبایل ثابت می‌مونه تا کاربر هنگام اسکرول افقی بین پلن‌ها،
-            همیشه بدونه داره چه قابلیتی رو می‌بینه. */}
-        <div className="relative">
-          <div className={`mt-6 overflow-x-auto rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
-            <table className="w-full border-collapse" style={{ tableLayout: "fixed", minWidth: 780 }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
+        {/* جزئیات پلن‌ها یک باکس متصلِ واحده: جدول اصلی + ردیف‌های به‌زودی
+            (بخش تارشده) توی همون باکس، فقط با یک خط جداکننده — نه دو باکس
+            جدا با فاصله. جدول واقعی HTML چون colgroup درصدی به‌طور طبیعی
+            بدون نیاز به عرض ثابت/اسکرول جمع می‌شه. */}
+        <div className={`mt-6 overflow-hidden rounded-[24px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
+          <div className="p-6">
+            <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
               <colgroup>
                 <col style={{ width: "24%" }} />
                 {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
               </colgroup>
               <thead>
                 <tr className={`border-b ${t.line}`}>
-                  <th className={`sticky right-0 ${t.stickyCellBg} pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
+                  <th className={`pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
                   {plans.map((p) => (
                     <th key={p.key} className={`pb-3 text-center text-[12.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
                   ))}
@@ -587,7 +570,7 @@ export function LandingPage() {
               <tbody>
                 {mainRows.map((row) => (
                   <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
-                    <th scope="row" className={`sticky right-0 ${t.stickyCellBg} py-3.5 text-right text-[12.5px] font-normal ${t.muted}`}>{row.label}</th>
+                    <th scope="row" className={`py-3.5 text-right text-[12.5px] font-normal ${t.muted}`}>{row.label}</th>
                     {plans.map((p) => (
                       <td key={p.key} className="py-3.5">
                         <div className="flex justify-center">
@@ -600,35 +583,29 @@ export function LandingPage() {
               </tbody>
             </table>
           </div>
-          {/* اشاره‌ی محو به این‌که جدول قابل‌اسکرول‌کردنه — فقط زیر md، چون
-              دسکتاپ با BREAKOUT کل عرض رو بدون اسکرول نشون می‌ده */}
-          <div
-            className="pointer-events-none absolute bottom-6 left-0 top-6 w-8 rounded-l-[24px] md:hidden"
-            style={{ background: "linear-gradient(to right, var(--bg), transparent)" }}
-          />
-        </div>
 
-        {upcomingRows.length > 0 && (
-          <div className={`relative mt-4 overflow-x-auto rounded-[20px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`} aria-hidden="true">
-            <div className="pointer-events-none select-none blur-md">
-              {upcomingRows.map((row) => (
-                <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3 last:border-none`}>
-                  <div className={`text-right text-[12.5px] ${t.muted}`}>{row.label}</div>
-                  {plans.map((p) => (
-                    <div key={p.key} className="flex justify-center">
-                      {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
-                    </div>
-                  ))}
-                </div>
-              ))}
+          {upcomingRows.length > 0 && (
+            <div className={`relative border-t ${t.line} p-6`} aria-hidden="true">
+              <div className="pointer-events-none select-none blur-md">
+                {upcomingRows.map((row) => (
+                  <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3 last:border-none`}>
+                    <div className={`text-right text-[12.5px] ${t.muted}`}>{row.label}</div>
+                    {plans.map((p) => (
+                      <div key={p.key} className="flex justify-center">
+                        {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
+                  به‌زودی
+                </span>
+              </div>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
-                به‌زودی
-              </span>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </section>
     </>
   );

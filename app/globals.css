@@ -969,13 +969,13 @@
   }
   .jdate-popup.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   .jdate-popup-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
-  .jdate-popup-title{font-size:13px; font-weight:700; font-family:var(--font-plexmono), monospace;}
-  .jdate-popup-nav{display:flex; gap:6px;}
-  .jdate-nav-btn{
-    width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background:none; color:var(--text);
-    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; padding:0;
+  .jdate-popup-title-nav{display:flex; align-items:center; gap:6px;}
+  .jdate-select{
+    background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
+    font-family:var(--font-plexmono), monospace; font-size:12px; padding:5px 4px; outline:none; cursor:pointer;
   }
-  .jdate-nav-btn:hover{border-color:var(--accent); color:var(--accent);}
+  body:not([data-theme="light"]) .jdate-select{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
+  .jdate-select:hover, .jdate-select:focus{border-color:var(--accent);}
   .jdate-popup-close{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:0;}
   .jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
   .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-plexmono), monospace;}
@@ -1433,11 +1433,11 @@ body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-t
   position:absolute; top:16px; right:16px; z-index:2;
   display:flex; align-items:center; justify-content:center;
   width:32px; height:32px; border-radius:999px;
-  border:1px solid var(--line); background:rgba(var(--bg-rgb),.5); color:var(--muted);
-  cursor:pointer; transition:border-color .2s ease, color .2s ease;
+  background:none; border:none; color:var(--muted);
+  cursor:pointer; transition:color .2s ease, transform .15s ease;
 }
-.auth-step-back-btn:hover{ border-color:var(--accent); color:var(--accent); }
-.auth-step-back-btn svg{ width:16px; height:16px; }
+.auth-step-back-btn:hover{ color:var(--accent); transform:translateX(3px); }
+.auth-step-back-btn svg{ width:16px; height:16px; flex-shrink:0; }
 
 /* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی؛
    مشترکه بین لاگین/ثبت‌نام/فراموشی‌رمز، پس گردتر و انیمیشن‌دار شدنش
