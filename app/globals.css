@@ -1337,7 +1337,7 @@ body[data-theme="light"] .auth-box{
    کانتکست، نه خودِ wsearch-newform-name که جاهای دیگه‌ی اپ (تمرین، ترید،
    کالری و...) هم ازش استفاده می‌کنن و نباید تغییر کنن */
 .auth-box .wsearch-newform-name{
-  border-radius:16px;
+  border-radius:999px; padding-right:18px; padding-left:18px;
   backdrop-filter:blur(12px) saturate(160%); -webkit-backdrop-filter:blur(12px) saturate(160%);
   transition:border-color .2s ease, background .2s ease;
 }
@@ -1379,12 +1379,16 @@ body[data-theme="light"] .auth-box .wsearch-newform-name{
 }
 @keyframes authCheckIn{ from{ opacity:0; transform:scale(.4); } to{ opacity:1; transform:scale(1); } }
 
-/* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه */
+/* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه.
+   بک‌گراندش عیناً همون فرمول .auth-box (شیشه‌ای + بلور) رو تکرار می‌کنه، نه یه
+   مقدار جدا، تا سطحش دقیقاً هم‌رنگِ باکس زیرش دیده بشه، توی هر دو تم. */
 .auth-tabs{
   position:relative; display:flex; margin-top:16px;
-  background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:999px; padding:4px;
+  border:1px solid var(--line); border-radius:999px; padding:4px;
+  background:rgba(255,255,255,.03);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
 }
-body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba(255,255,255,.08); }
+body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
 /* هر تب صرفاً یک برچسب شفافه — سایه/بلور دکمه پایه اینجا عمداً خنثی می‌شه
    چون در غیر این صورت هر تب شبیه یک دکمه‌ی شیشه‌ای جدا به‌نظر می‌رسید، نه
    دو نیمه‌ی یک کنترل واحد */
@@ -1395,7 +1399,17 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
   cursor:pointer; transition:color .25s ease;
 }
+/* body[data-theme="light"] button سراسری با اسپسیفیسیتیِ بالاتر (body+button)
+   یه بک‌گراند سفیدِ نیمه‌شفاف رو‌ی خودِ تب می‌ذاره — دقیقاً همون باگیِ همیشگی؛
+   نتیجه‌ش این بود که تبِ غیرفعال یه قرصِ سفیدِ جدا از رنگ باکس نشون می‌داد و
+   حتی رنگ تبِ فعال هم با این لایه‌ی سفید ترکیب و کم‌رنگ می‌شد. */
+body[data-theme="light"] .auth-tab, body:not([data-theme="light"]) .auth-tab{
+  background:none; box-shadow:none;
+}
 .auth-tab:hover{ background:none; box-shadow:none; border:none; color:var(--text); }
+body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-tab:hover{
+  background:none; box-shadow:none;
+}
 .auth-tab.active, .auth-tab.active:hover{color:var(--bg);}
 .auth-tab-indicator{
   position:absolute; top:4px; bottom:4px; z-index:0;
@@ -1432,11 +1446,43 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   width:100%; margin-top:18px; border-radius:999px; padding:12px 0;
   border:1px solid var(--accent); color:var(--bg); background:var(--accent);
   font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:filter .15s ease, transform .12s ease;
+}
+/* body[data-theme="light"] button سراسری، بک‌گراند/بردر رو با اسپسیفیسیتیِ
+   بالاتر (body+button) عوض می‌کنه؛ اینجا با همون ترفند (پیشوند body) خنثیش
+   می‌کنیم — دقیقاً همون باگی که روی فیلدهای ورودی هم بود */
+body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-full-btn{
+  background:var(--accent); border-color:var(--accent); color:var(--bg); box-shadow:none;
 }
 .auth-full-btn:hover{ filter:brightness(1.08); }
 .auth-full-btn:active{ transform:scale(.97); }
 .auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
+
+/* جداکننده‌ی «یا» بین ورود معمولی و ورود با گوگل */
+.auth-or-divider{
+  display:flex; align-items:center; gap:10px; margin:16px 0;
+  color:var(--muted); font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:700;
+}
+.auth-or-divider::before, .auth-or-divider::after{
+  content:""; flex:1 1 0; height:1px; background:var(--line);
+}
+
+/* دکمه‌ی ورود با گوگل — برخلاف auth-full-btn تک‌رنگ نیست، چون لوگوی G
+   گوگل خودش چندرنگه؛ بک‌گراند خنثی (شیشه‌ای هم‌رنگ صفحه) نگه داشته می‌شه */
+.auth-google-btn{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-top:0; border-radius:999px; padding:11px 0; border:1px solid var(--line);
+  font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:600; cursor:pointer;
+  box-shadow:none; transition:border-color .2s ease, filter .15s ease, transform .12s ease;
+}
+body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-google-btn{
+  background:rgba(var(--bg-rgb),.6); border-color:var(--line); color:var(--text);
+}
+.auth-google-btn:hover{ border-color:var(--accent); filter:brightness(1.05); }
+.auth-google-btn:active{ transform:scale(.97); }
+.auth-google-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
+.auth-google-btn svg{ width:18px; height:18px; flex-shrink:0; }
 
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
 .pw-strength{ margin-top:8px; }
