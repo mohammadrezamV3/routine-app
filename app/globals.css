@@ -1332,6 +1332,24 @@ body[data-theme="light"] .auth-box{
   background:rgba(255,255,255,.06);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.12);
 }
+
+/* فیلدهای ورودی داخل باکس‌های auth شیشه‌ای‌ترن — override محدود به همین
+   کانتکست، نه خودِ wsearch-newform-name که جاهای دیگه‌ی اپ (تمرین، ترید،
+   کالری و...) هم ازش استفاده می‌کنن و نباید تغییر کنن */
+.auth-box .wsearch-newform-name{
+  border-radius:16px;
+  backdrop-filter:blur(12px) saturate(160%); -webkit-backdrop-filter:blur(12px) saturate(160%);
+  transition:border-color .2s ease, background .2s ease;
+}
+/* هر دو با body تو سلکتور، تا از قانون body:not(...) .wsearch-newform-name
+   قبلی (که برای بک‌گراند حالت تاریک هست) اسپسیفیک‌تر باشن و واقعاً override بشن */
+body:not([data-theme="light"]) .auth-box .wsearch-newform-name{
+  background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+}
+body[data-theme="light"] .auth-box .wsearch-newform-name{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+
 .auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
 
 .auth-remember-row{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:12px; }
