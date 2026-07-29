@@ -188,9 +188,10 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
 
-// زیر md عمداً یک‌ستونی/بدون کف‌عرضِ پیکسلی‌ست (نه minmax با کفِ px) — تا هیچ‌کدوم
-// از عرضِ صفحه بیرون نزنه و نیازی به اسکرولِ افقی نباشه، حتی روی باریک‌ترین موبایل.
-const PLANS_GRID_COLS = "grid-cols-1 md:grid-cols-[repeat(4,1fr)]";
+// زیر md عمداً بدون کف‌عرضِ پیکسلی‌ست (نه minmax با کفِ px) — تا هیچ‌کدوم از
+// عرضِ صفحه بیرون نزنه و نیازی به اسکرولِ افقی نباشه، حتی روی باریک‌ترین موبایل؛
+// sm یک برش میانی (تبلت) هم داره تا موبایل/دسکتاپ صرف نباشه.
+const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
 // margin-left در تعارض نادیده گرفته می‌شه و فقط margin-right اثر می‌کنه —
@@ -573,7 +574,7 @@ export function LandingPage() {
           <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
             همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
           </h1>
-          <p className={`mt-4 text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
+          <p className={`mt-4 text-right text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
             روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
             هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
           </p>

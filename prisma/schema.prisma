@@ -607,6 +607,10 @@ model TradeEntry {
   lotSize     Float
   pnl         Float?   // سود/زیان — عدد خام، بدون هیچ‌گونه توصیه‌ی سیستمی همراهش
   riskPercent Float?
+  stopLoss    Float?
+  takeProfit  Float?
+  strategy    String?  // تگ آزاد استراتژی/ستاپ معامله، مثلاً "بریک‌اوت"
+  screenshotUrl String? // عکس چارت معامله به‌صورت data URL (بدون استوریج جدا)
 
   openedAt    DateTime
   closedAt    DateTime?
