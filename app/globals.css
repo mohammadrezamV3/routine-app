@@ -288,8 +288,15 @@
 
   /* animated hamburger: bars morph into an X while the whole icon spins open */
   .hamburger{
-    flex-direction:column; gap:4px;
+    flex-direction:column; gap:4px; background:none; border:none; box-shadow:none;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
     transition:transform .5s cubic-bezier(.68,-.4,.27,1.4);
+  }
+  /* button/button:hover سراسری با اسپسیفیسیتیِ بالاتر یه بک‌گراندِ شیشه‌ای
+     روی این دکمه می‌ذاشتن؛ اینجا با پیشوند body خنثی می‌کنیم */
+  body[data-theme="light"] .hamburger, body:not([data-theme="light"]) .hamburger,
+  body[data-theme="light"] .hamburger:hover, body:not([data-theme="light"]) .hamburger:hover{
+    background:none; box-shadow:none;
   }
   .hamburger.active{transform:rotate(90deg);}
   .hamburger span{
@@ -352,6 +359,12 @@
     display:inline-block;
   }
   .nav-close:hover{color:var(--accent); transform:rotate(360deg);}
+  /* دکمه‌های × سراسر سایت نباید بک‌گراند داشته باشن — همون باگ همیشگیِ
+     اسپسیفیسیتی (button:hover / body[data-theme=light] button) اینجا هم بود */
+  body[data-theme="light"] .nav-close, body:not([data-theme="light"]) .nav-close,
+  body[data-theme="light"] .nav-close:hover, body:not([data-theme="light"]) .nav-close:hover{
+    background:none; box-shadow:none;
+  }
   .theme-row{display:none;}
 
   /* mobile: keep the open drawer smaller and closer to the header */
@@ -642,6 +655,7 @@
     box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .15s ease;
   }
   .tc-delete-btn:hover{ color:#E05252; background:none; box-shadow:none; }
+  body[data-theme="light"] .tc-delete-btn, body:not([data-theme="light"]) .tc-delete-btn{ background:none; box-shadow:none; }
 
   .tc-add-row{ display:flex; gap:8px; padding:14px 4px 4px; align-items:center; }
   .tc-add-row input{ flex:1; }
@@ -667,12 +681,23 @@
     cursor:pointer; flex-shrink:0;
     box-shadow:0 8px 22px rgba(var(--accent-rgb),.35);
   }
+  /* body[data-theme="light"] button سراسری (اسپسیفیسیتیِ body+attr+button)
+     از خودِ .fab-add هم بالاتره و حتی توی حالت استراحت (نه فقط هاور) پس‌زمینه‌ی
+     نیمه‌شفافِ روشن رو جایگزین می‌کرد — نتیجه‌ش آیکون کرم‌رنگی بود که روی اون
+     پس‌زمینه‌ی روشن تقریباً محو می‌شد */
+  body[data-theme="light"] .fab-add, body:not([data-theme="light"]) .fab-add{
+    background:var(--accent);
+  }
   .fab-add-icon{
     display:inline-flex; align-items:center; justify-content:center;
   }
   .fab-add-icon svg{width:16px; height:16px; display:block;}
+  /* پس‌زمینه رو صریح این‌جا هم دوباره ست می‌کنیم — وگرنه button:hover سراسری
+     (که پس‌زمینه‌ی خیلی کم‌رنگی داره) با اسپسیفیسیتی بالاتر روی این حالت
+     می‌شینه و آیکون کرم‌رنگ (color:var(--bg)) روی یه بک‌گراند تقریباً هم‌رنگِ
+     خودش (پس‌زمینه‌ی صفحه) نامرئی می‌شه */
   .fab-add:hover, .fab-add:focus-visible{
-    color:var(--bg); border-color:transparent; transform:scale(1.06);
+    background:var(--accent); color:var(--bg); border-color:transparent; transform:scale(1.06);
     box-shadow:0 10px 24px rgba(var(--accent-rgb),.45);
   }
   .fab-add:active{transform:scale(.94);}
@@ -773,10 +798,16 @@
   .pcard-back-content{position:relative; z-index:1; display:flex; flex-direction:column; align-items:center;}
   .pcard-close{
     position:absolute; top:10px; left:10px; z-index:2; width:30px; height:30px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center; color:var(--muted); background:rgba(var(--bg-rgb), .5);
+    display:flex; align-items:center; justify-content:center; color:var(--muted); background:none;
     border:1px solid var(--line); font-size:17px; cursor:pointer; transition:.15s;
   }
   .pcard-close:hover{color:var(--accent); border-color:var(--accent); transform:rotate(90deg);}
+  /* × سراسر سایت بدون بک‌گراند — این‌جا قبلاً عمداً یه بک‌گراندِ کم‌رنگ داشت،
+     ولی طبق قاعده‌ی یکدست سایت حذف شد */
+  body[data-theme="light"] .pcard-close, body:not([data-theme="light"]) .pcard-close,
+  body[data-theme="light"] .pcard-close:hover, body:not([data-theme="light"]) .pcard-close:hover{
+    background:none;
+  }
   .pcard-back-eyebrow{font-family:var(--font-vazir), sans-serif; font-size:12.5px; letter-spacing:0; color:var(--accent); font-weight:600; margin-bottom:14px;}
   .pcard-back-lesson{font-size:22px; font-weight:800; line-height:1.4;}
   .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-plexmono), monospace;}
@@ -977,6 +1008,10 @@
   }
   .jdate-nav-btn:hover{border-color:var(--accent); color:var(--accent);}
   .jdate-popup-close{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:0;}
+  body[data-theme="light"] .jdate-popup-close, body:not([data-theme="light"]) .jdate-popup-close,
+  body[data-theme="light"] .jdate-popup-close:hover, body:not([data-theme="light"]) .jdate-popup-close:hover{
+    background:none;
+  }
   .jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
   .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-plexmono), monospace;}
   .jdate-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
@@ -1026,10 +1061,18 @@
     cursor:pointer; box-shadow:0 8px 22px rgba(var(--accent-rgb),.35);
     transition:transform .15s ease, box-shadow .15s ease;
   }
-  .wsearch-newbtn:hover, .wsearch-newbtn:focus-visible{transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
+  /* body[data-theme="light"] button سراسری حتی حالت استراحت (نه فقط هاور) رو
+     هم می‌گرفت — همون باگی که پایین‌تر برای هاور توضیح داده شده */
+  body[data-theme="light"] .wsearch-newbtn, body:not([data-theme="light"]) .wsearch-newbtn{
+    background:var(--accent);
+  }
+  /* همون باگ همیشگی: بدون این‌که background اینجا صریح تکرار بشه، button:hover
+     سراسری با اسپسیفیسیتی بالاتر پس‌زمینه‌ی توپر رو با یه پس‌زمینه‌ی تقریباً
+     شفاف عوض می‌کنه و آیکونِ color:var(--bg) روش دیده نمی‌شه */
+  .wsearch-newbtn:hover, .wsearch-newbtn:focus-visible{background:var(--accent); transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
   .wsearch-newbtn:active{transform:scale(.94);}
   .wsearch-newbtn svg{width:18px; height:18px; display:block;}
-  .wsearch-newbtn.active{transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
+  .wsearch-newbtn.active{background:var(--accent); transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
 
   /* fab preview menu: opens above the +, offers add / bulk-delete */
   .wsearch-fab-menu{
@@ -1616,6 +1659,10 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
   background:var(--accent); color:var(--bg); font-family:var(--font-vazir), sans-serif;
   font-size:13px; font-weight:700;
   animation:mgPulse 2.2s ease-in-out infinite;
+}
+body[data-theme="light"] .module-gate-cta, body:not([data-theme="light"]) .module-gate-cta,
+body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
 }
 @keyframes mgPulse{
   0%, 100%{ box-shadow:0 0 0 0 rgba(var(--accent-rgb),.45); transform:scale(1); }

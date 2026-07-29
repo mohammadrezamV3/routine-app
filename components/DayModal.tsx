@@ -110,8 +110,8 @@ export function DayModal({
           )}
 
           <div
-            className="task"
-            onClick={toggleOuting}
+            className={`task${isLocked ? " disabled" : ""}`}
+            onClick={() => !isLocked && toggleOuting()}
           >
             <div className={`check${isOuting ? " on" : ""}`}>
               <svg className="c-check" viewBox="0 0 24 24" fill="none">
