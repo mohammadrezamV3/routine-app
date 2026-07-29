@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
 
 // عکس روی همین رکورد به‌صورت data URL ذخیره می‌شه (بدون استوریج فایل جدا)؛
@@ -57,9 +57,9 @@ function isFutureDay(d: Date): boolean {
 
 // GET /api/trade/entries?from=2026-07-01&to=2026-07-31
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const from = req.nextUrl.searchParams.get("from");
   const to = req.nextUrl.searchParams.get("to");
@@ -74,9 +74,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/trade/entries  { pair, direction, entryPrice, exitPrice, lotSize, pnl, openedAt, closedAt, notes, ... }
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const body = await req.json();
   const {
@@ -123,9 +123,9 @@ export async function POST(req: NextRequest) {
 // ویرایش یک معامله‌ی موجود — عمداً تاریخ (openedAt) رو عوض نمی‌کنه، فقط بقیه‌ی
 // فیلدها؛ فرم همیشه کل مقادیر رو می‌فرسته پس این جایگزینی کامله، نه patch جزئی.
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const body = await req.json();
   const {
@@ -165,9 +165,9 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE /api/trade/entries?id=...
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Check, ChevronLeft, ChevronRight, Quote, X,
   ClipboardList, Clock, ShieldCheck, TrendingUp, Headset, Lightbulb,
+  Smartphone, BarChart3,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
@@ -97,12 +97,16 @@ const WHY_US = [
   { icon: TrendingUp, color: "#A855F7", title: "برنامه‌های شخصی", body: "متناسب با هدف‌ها و سبک زندگی تو" },
   { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "ما کنار توایم، هر زمان که نیاز داری" },
   { icon: Lightbulb, color: "#F59E0B", title: "ابزارهای کاربردی", body: "همه‌چیز برای رشد در یک اپلیکیشن" },
+  { icon: Smartphone, color: "#EC4899", title: "همه‌جا در دسترس", body: "موبایل، تبلت یا دسکتاپ — همیشه همراهته" },
+  { icon: BarChart3, color: "#06B6D4", title: "پیشرفت قابل‌مشاهده", body: "آمار و گزارش دقیق از مسیر پیشرفتت" },
 ];
 const WHY_US_INTL = [
   { icon: ShieldCheck, color: "#22C55E", title: "Private & secure", body: "Your data stays 100% protected" },
   { icon: TrendingUp, color: "#A855F7", title: "Personalized plans", body: "Matched to your goals & lifestyle" },
   { icon: Headset, color: "#3B82F6", title: "Real support", body: "We're with you whenever you need us" },
   { icon: Lightbulb, color: "#F59E0B", title: "Practical tools", body: "Everything to grow, in one app" },
+  { icon: Smartphone, color: "#EC4899", title: "Access anywhere", body: "Mobile, tablet or desktop — always with you" },
+  { icon: BarChart3, color: "#06B6D4", title: "Visible progress", body: "Clear stats and reports on your journey" },
 ];
 
 type Duration = "1" | "3" | "6" | "12";
@@ -111,7 +115,7 @@ const DURATION_LABELS: Record<Duration, string> = { "1": "۱ ماهه", "3": "۳
 const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3": "3 mo", "6": "6 mo", "12": "12 mo" };
 
 type PlanCard = {
-  key: string; nameFa: string; blurb: string[]; highlight?: boolean;
+  key: string; nameFa: string; highlight?: boolean;
   free?: boolean; prices?: Record<Duration, string>;
 };
 
@@ -119,44 +123,36 @@ type PlanCard = {
 const PLANS_IRAN: PlanCard[] = [
   {
     key: "max", nameFa: "Plan Max", highlight: true,
-    blurb: ["همه‌ی ماژول‌ها، بدون محدودیت", "بدنسازی + کالری، ژورنال ترید، ai mapping", "تحلیل هوشمند اختصاصی"],
     prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
   },
   {
     key: "exercise", nameFa: "Plan Gym",
-    blurb: ["همه‌ی Base Plan", "برنامه بدنسازی بر اساس هدفت (حجم، کات، قدرت یا استقامت)", "شمارش کالری و ماکرو", "ai mapping"],
     prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۸۳۰,۰۰۰ تومان" },
   },
   {
     key: "trade", nameFa: "Plan Trader",
-    blurb: ["همه‌ی Base Plan", "ژورنال ماهانه و آنالیز، پنل ترید و آمار", "ai mapping"],
     prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۰۸۰,۰۰۰ تومان" },
   },
   {
     key: "basic", nameFa: "Base Plan", free: true,
-    blurb: ["روتین روزانه", "خواب", "کارهای روزمره"],
   },
 ];
 
 const PLANS_INTL: PlanCard[] = [
   {
     key: "max", nameFa: "Plan Max", highlight: true,
-    blurb: ["Every module, unlimited", "Bodybuilding + calories, trade journal, ai mapping", "Dedicated smart insights"],
     prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$149.99" },
   },
   {
     key: "exercise", nameFa: "Plan Gym",
-    blurb: ["Everything in Basic", "Goal-based bodybuilding program (bulk, cut, strength, endurance)", "Calorie & macro tracking", "ai mapping"],
     prices: { "1": "$7.99", "3": "$21.99", "6": "$38.99", "12": "$67.99" },
   },
   {
     key: "trade", nameFa: "Plan Trader",
-    blurb: ["Everything in Basic", "Monthly journal & analysis, trade panel and stats", "ai mapping"],
     prices: { "1": "$12.99", "3": "$34.99", "6": "$62.99", "12": "$109.99" },
   },
   {
     key: "basic", nameFa: "Basic", free: true,
-    blurb: ["Daily routine", "Sleep", "Daily tasks"],
   },
 ];
 
@@ -192,10 +188,10 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
 
-// هر دو گرید responsive و بدون minmax پیکسلی‌ان — روی موبایل آزادانه جمع
-// می‌شن (بدون نیاز به اسکرول افقی)، از md به بعد BREAKOUT کل عرض رو باز می‌کنه.
+// زیر md عمداً بدون کف‌عرضِ پیکسلی‌ست (نه minmax با کفِ px) — تا هیچ‌کدوم از
+// عرضِ صفحه بیرون نزنه و نیازی به اسکرولِ افقی نباشه، حتی روی باریک‌ترین موبایل؛
+// sm یک برش میانی (تبلت) هم داره تا موبایل/دسکتاپ صرف نباشه.
 const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
-const COMPARE_GRID_COLS = "grid-cols-[1.4fr_repeat(4,1fr)] md:grid-cols-[300px_repeat(4,211px)]";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
 // margin-left در تعارض نادیده گرفته می‌شه و فقط margin-right اثر می‌کنه —
@@ -317,9 +313,6 @@ function QuoteCard() {
 
   return (
     <div className={`overflow-hidden rounded-[24px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-xl`}>
-      <div className="relative h-12 w-full sm:h-16">
-        <Image src="/images/quote-banner.png" alt="" fill sizes="620px" className="object-cover" priority={false} />
-      </div>
       <div className="flex flex-col items-center gap-3 p-8 text-center">
         <Quote size={26} className={t.accentText} />
         <p className={`text-[15px] font-medium leading-8 ${t.heading}`}>{quote.text}</p>
@@ -329,31 +322,89 @@ function QuoteCard() {
   );
 }
 
-function RingProgress({ pct, label }: { pct: number; label: string }) {
+function RingProgress({ pct, label, pulse }: { pct: number; label: string; pulse?: boolean }) {
   const t = useThemeTokens();
   const r = 29;
   const c = 2 * Math.PI * r;
   return (
-    <div className={`relative flex h-[72px] w-[72px] shrink-0 items-center justify-center ${t.accentText}`}>
+    <motion.div
+      className={`relative flex h-[72px] w-[72px] shrink-0 items-center justify-center ${t.accentText}`}
+      animate={pulse ? { scale: [1, 1.14, 1] } : { scale: 1 }}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+    >
       <svg viewBox="0 0 72 72" className="h-full w-full -rotate-90">
         <circle cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="6" className="opacity-[0.15]" />
-        <circle
+        <motion.circle
           cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
+          strokeDasharray={c}
+          animate={{ strokeDashoffset: c * (1 - pct) }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
         />
       </svg>
       <span className={`absolute text-[15px] font-extrabold ${t.heading}`}>{label}</span>
-    </div>
+    </motion.div>
   );
 }
 
 function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
   const t = useThemeTokens();
   const items = isIntl ? TODAY_ITEMS_INTL : TODAY_ITEMS;
-  const done = items.filter((i) => i.done).length;
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dirRef = useRef<"down" | "up" | null>(null);
+  const lastYRef = useRef<number | null>(null);
+  const everTriggeredRef = useRef(false);
+
+  // پیش‌فرض «همه‌چیز از قبل تیک‌خورده»ست — دقیقاً همون چیزی که سرور رندر
+  // می‌کنه (بدون ریسکِ hydration mismatch). فقط اگه با اسکرولِ رو‌به‌پایین
+  // برای اولین‌بار وارد دیدِ کاربر بشه، صفر می‌شه و دونه‌دونه دوباره پر می‌شه؛
+  // ورود از پایین به بالا (یعنی کاربر برگشته بالا) همون حالتِ تکمیل‌شده رو
+  // بدون انیمیشن نشون می‌ده.
+  const [revealed, setRevealed] = useState(items.length);
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      const y = window.scrollY;
+      if (lastYRef.current !== null) {
+        const delta = y - lastYRef.current;
+        if (Math.abs(delta) > 2) dirRef.current = delta > 0 ? "down" : "up";
+      }
+      lastYRef.current = y;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || everTriggeredRef.current) return;
+      everTriggeredRef.current = true;
+      obs.disconnect();
+      if (dirRef.current === "down") {
+        setRevealed(0);
+        items.forEach((_, i) => {
+          timeouts.push(setTimeout(() => setRevealed(i + 1), 260 * (i + 1)));
+        });
+        timeouts.push(
+          setTimeout(() => {
+            setPulse(true);
+            timeouts.push(setTimeout(() => setPulse(false), 650));
+          }, 260 * items.length + 200)
+        );
+      }
+    }, { threshold: 0.35 });
+    obs.observe(el);
+    return () => { obs.disconnect(); timeouts.forEach(clearTimeout); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const doneSoFar = items.reduce((acc, item, i) => acc + (i < revealed && item.done ? 1 : 0), 0);
 
   return (
-    <div>
+    <div ref={cardRef}>
       <div className="text-right">
         <h2 className={`text-xl font-extrabold ${t.heading}`}>{isIntl ? "Today's progress" : "امروز چی داریم؟"}</h2>
         <p className={`mt-1 text-[13px] ${t.muted}`}>{isIntl ? "A quick look at what matters today" : "یک نگاه سریع به کارهای مهم امروزت"}</p>
@@ -361,11 +412,11 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
 
       <div className={`mt-4 rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-xl sm:p-6`}>
         <div className="flex items-center gap-4">
-          <RingProgress pct={done / items.length} label={`${done}/${items.length}`} />
+          <RingProgress pct={doneSoFar / items.length} label={`${doneSoFar}/${items.length}`} pulse={pulse} />
           <div className="min-w-0 flex-1 text-right">
             <div className={`text-[15px] font-extrabold ${t.heading}`}>{isIntl ? "You're off to a great start!" : "روزت رو عالی شروع کردی!"}</div>
             <div className={`mt-1 text-[12.5px] ${t.muted}`}>
-              {isIntl ? `${done} of ${items.length} tasks done today` : `${done} مورد از ${items.length} کار امروز انجام شده`}
+              {isIntl ? `${doneSoFar} of ${items.length} tasks done today` : `${doneSoFar} مورد از ${items.length} کار امروز انجام شده`}
             </div>
           </div>
           <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${t.accentBgSofter} ${t.accentText}`}>
@@ -378,14 +429,30 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
         </div>
 
         <div className={`mt-5 grid grid-cols-5 gap-1.5 border-t pt-4 ${t.line}`}>
-          {items.map((item) => (
-            <div key={item.label} className="flex flex-col items-center gap-1.5 text-center">
-              <span className={`flex h-7 w-7 items-center justify-center rounded-full border ${item.done ? `border-transparent text-white ${t.accentBg}` : `${t.line} ${t.muted}`}`}>
-                {item.done && <Check size={13} strokeWidth={2.6} />}
-              </span>
-              <span className={`text-[10.5px] leading-4 ${t.muted}`}>{item.label}</span>
-            </div>
-          ))}
+          {items.map((item, i) => {
+            const ticked = i < revealed && item.done;
+            return (
+              <div key={item.label} className="flex flex-col items-center gap-1.5 text-center">
+                <span className={`flex h-7 w-7 items-center justify-center rounded-full border transition-colors duration-300 ${ticked ? `border-transparent text-white ${t.accentBg}` : `${t.line} ${t.muted}`}`}>
+                  <AnimatePresence>
+                    {ticked && (
+                      <motion.span
+                        key="check"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                        className="flex items-center justify-center"
+                      >
+                        <Check size={13} strokeWidth={2.6} />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </span>
+                <span className={`text-[10.5px] leading-4 ${t.muted}`}>{item.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -395,23 +462,29 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
 function WhyUsSection({ isIntl }: { isIntl: boolean }) {
   const t = useThemeTokens();
   const items = isIntl ? WHY_US_INTL : WHY_US;
+  // برای اسکرولِ بی‌درزِ نواری، لیست رو دوبار پشت‌سرهم می‌چینیم و دقیقاً
+  // نصفِ عرضِ کلِ ترک رو translate می‌کنیم — چون هر دو نیمه عیناً یکی‌ان،
+  // لحظه‌ی چرخش کاملاً نامرئیه، صرف‌نظر از تعداد یا عرضِ دقیقِ کارت‌ها.
+  const track = [...items, ...items];
 
   return (
     <div>
       <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{isIntl ? "Why us?" : "چرا ما؟"}</h2>
-      <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div key={item.title} className={`flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
-              <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
-                <Icon size={18} />
-              </span>
-              <div className={`text-[11px] font-extrabold leading-4 sm:text-[12.5px] ${t.heading}`}>{item.title}</div>
-              <div className={`mt-1 text-[9.5px] leading-[14px] sm:text-[11px] sm:leading-[17px] ${t.muted}`}>{item.body}</div>
-            </div>
-          );
-        })}
+      <div className="whyus-viewport mt-4">
+        <div className="whyus-track">
+          {track.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <div key={`${item.title}-${i}`} className={`whyus-card flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
+                <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
+                  <Icon size={18} />
+                </span>
+                <div className={`text-[11px] font-extrabold leading-4 sm:text-[12.5px] ${t.heading}`}>{item.title}</div>
+                <div className={`mt-1 text-[9.5px] leading-[14px] sm:text-[11px] sm:leading-[17px] ${t.muted}`}>{item.body}</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -423,8 +496,12 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex min-h-[440px] flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} px-6 py-8 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex min-h-[440px] flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} px-6 py-8 backdrop-blur-xl ${t.shadow}`;
+    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
+
+  function scrollToDetails() {
+    document.getElementById("plans-compare-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
@@ -433,16 +510,16 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           محبوب‌ترین
         </span>
       )}
-      <div className={`text-left text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+      <div className={`text-right text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+      <button
+        type="button"
+        onClick={scrollToDetails}
+        className={`plan-details-btn mt-1 self-start border-0 bg-transparent p-0 text-right text-[12px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
+      >
+        {isIntl ? "Details" : "جزئیات"}
+      </button>
 
-      <ul className="mt-3 flex flex-1 flex-col gap-1.5">
-        {p.blurb.map((line) => (
-          <li key={line} className={`flex items-start gap-2 text-[12.5px] leading-6 ${t.muted}`}>
-            <Check size={14} className={`mt-0.5 shrink-0 ${t.accentText}`} />
-            {line}
-          </li>
-        ))}
-      </ul>
+      <div className="flex-1" />
 
       {p.free ? (
         <>
@@ -453,11 +530,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
         </>
       ) : (
         <>
-          <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>
-            {p.prices![duration]}
-            <span className={`mr-1 text-[11px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
-          </div>
-          <div className="mt-2.5 grid grid-cols-4 gap-1.5">
+          <div className="mt-3.5 grid grid-cols-4 gap-1.5">
             {DURATIONS.map((d) => (
               <button
                 key={d}
@@ -468,6 +541,10 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
                 {labels[d]}
               </button>
             ))}
+          </div>
+          <div className={`mt-3 text-lg font-extrabold ${t.heading}`}>
+            {p.prices![duration]}
+            <span className={`mr-1 text-[11px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
           </div>
           <Link
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}
@@ -487,8 +564,6 @@ export function LandingPage() {
   const isIntl = getSiteMarket() === "INTERNATIONAL";
   const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
   const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
-  const mainRows = compareRows.filter((r) => !r.upcoming);
-  const upcomingRows = compareRows.filter((r) => r.upcoming);
 
   useEffect(() => { staggerFieldsIn(heroRef.current); }, []);
 
@@ -548,63 +623,48 @@ export function LandingPage() {
           {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
         </div>
 
-        {/* جزئیات پلن‌ها یک باکس متصلِ واحده: جدول اصلی + ردیف‌های به‌زودی
-            (بخش تارشده) توی همون باکس، فقط با یک خط جداکننده — نه دو باکس
-            جدا با فاصله. جدول واقعی HTML چون colgroup درصدی به‌طور طبیعی
-            بدون نیاز به عرض ثابت/اسکرول جمع می‌شه. */}
-        <div className={`mt-6 overflow-hidden rounded-[24px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
-          <div className="p-6">
-            <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
-              <colgroup>
-                <col style={{ width: "24%" }} />
-                {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
-              </colgroup>
-              <thead>
-                <tr className={`border-b ${t.line}`}>
-                  <th className={`pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
-                  {plans.map((p) => (
-                    <th key={p.key} className={`pb-3 text-center text-[12.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {mainRows.map((row) => (
-                  <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
-                    <th scope="row" className={`py-3.5 text-right text-[12.5px] font-normal ${t.muted}`}>{row.label}</th>
-                    {plans.map((p) => (
+        {/* جدول HTML واقعی؛ بدون sticky/بک‌گراندِ مخصوصِ ستونِ لیبل و بدون
+            minWidth/overflow-x — با tableLayout:fixed و عرض‌های درصدی، خودش
+            با اندازه‌ی هر صفحه (حتی موبایل باریک) جمع می‌شه، بدون نیاز به اسکرول.
+            ردیف‌های «به‌زودی» هم توی همین یک باکس/جدول‌ان، نه جدا — فقط به‌جای
+            چک/ایکس هر پلن، یک سلولِ colSpan با متنِ «به‌زودی…» نشون داده می‌شه. */}
+        <div id="plans-compare-table" className={`mt-6 scroll-mt-[96px] rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
+          <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
+            <colgroup>
+              <col style={{ width: "24%" }} />
+              {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+            </colgroup>
+            <thead>
+              <tr className={`border-b ${t.line}`}>
+                <th className={`pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
+                {plans.map((p) => (
+                  <th key={p.key} className={`pb-3 text-center text-[11.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map((row) => (
+                <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
+                  <th scope="row" className={`py-3.5 text-right text-[11.5px] font-normal ${t.muted}`}>{row.label}</th>
+                  {row.upcoming ? (
+                    <td colSpan={plans.length} className="py-3.5">
+                      <div className={`text-center text-[11px] font-extrabold ${t.accentText}`}>
+                        {isIntl ? "Coming soon…" : "به‌زودی…"}
+                      </div>
+                    </td>
+                  ) : (
+                    plans.map((p) => (
                       <td key={p.key} className="py-3.5">
                         <div className="flex justify-center">
                           {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
                         </div>
                       </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {upcomingRows.length > 0 && (
-            <div className={`relative border-t ${t.line} p-6`} aria-hidden="true">
-              <div className="pointer-events-none select-none blur-md">
-                {upcomingRows.map((row) => (
-                  <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3 last:border-none`}>
-                    <div className={`text-right text-[12.5px] ${t.muted}`}>{row.label}</div>
-                    {plans.map((p) => (
-                      <div key={p.key} className="flex justify-center">
-                        {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
-                  به‌زودی
-                </span>
-              </div>
-            </div>
-          )}
+                    ))
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
     </>

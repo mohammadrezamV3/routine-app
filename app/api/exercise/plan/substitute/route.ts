@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { suggestExerciseSubstitute } from "@/lib/anthropic";
 import { getFallbackSubstitute, ExerciseDay } from "@/lib/exercisePlans";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 
 // PATCH /api/exercise/plan/substitute { planId, day, oldItem }
 // جایگزینیِ یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
 // حساب نمی‌شه (سقف دوهفته‌ای رو دست نمی‌زنه)، فقط یک ابزار سبک با rate-limit جدا.
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.EXERCISE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const body = await req.json();
   const { planId, day, oldItem } = body as { planId: string; day: string; oldItem: string };

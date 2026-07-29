@@ -139,10 +139,27 @@ async function main() {
 
   console.log(`Seeded ${PLANS.length} plans across both markets.`);
 
-  // ---------------- سوپریوزر/ادمین ثابت ----------------
+  // ---------------- سوپریوزر/ادمین ----------------
   // دسترسی نامحدود به همه ماژول‌ها، بدون نیاز به اشتراک یا انقضا.
-  const adminUsername = "mohammadreza";
-  const adminPasswordHash = await bcrypt.hash("mohammadmV3", 12);
+  //
+  // امنیت: نام‌کاربری و رمز از env خونده می‌شن، نه هاردکد داخل سورس — چون
+  // این فایل توی گیت (و روی گیت‌هاب) هست و هر رمزِ نوشته‌شده اینجا یعنی
+  // هر کسی که سورس رو ببینه، رمزِ ادمینِ پروداکشن رو داره. اگه این دو تا
+  // env ست نشده باشن، ساختِ ادمین رو کامل رد می‌کنیم (fail-safe) به‌جای
+  // این‌که به یه رمزِ پیش‌فرضِ ضعیف برگردیم.
+  const adminUsername = process.env.SUPERADMIN_USERNAME;
+  const adminPassword = process.env.SUPERADMIN_PASSWORD;
+
+  if (!adminUsername || !adminPassword) {
+    console.warn(
+      "[seed] SUPERADMIN_USERNAME/SUPERADMIN_PASSWORD تنظیم نشده — ساختِ ادمین رد شد. " +
+      "برای ساختِ سوپریوزر، این دو env رو ست کن و دوباره seed بزن."
+    );
+    console.log(`Seeded ${PLANS.length} plans across both markets. (no super-admin created)`);
+    return;
+  }
+
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
 
   const admin = await prisma.user.upsert({
     where: { username: adminUsername },
@@ -153,8 +170,9 @@ async function main() {
       market: Market.IRAN,
       isSuperAdmin: true,
     },
+    // عمداً passwordHash رو توی update نمی‌ذاریم: اگه ادمین از قبل ساخته شده و
+    // رمزشو عوض کرده، یه seedِ دوباره نباید رمزشو به مقدار env برگردونه/ریست کنه.
     update: {
-      passwordHash: adminPasswordHash,
       isSuperAdmin: true,
     },
   });

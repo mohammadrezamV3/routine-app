@@ -77,6 +77,15 @@ export default function HomePage() {
 
   const weekdayName = FA_WEEKDAY[now.getDay()];
 
+  // status شروعش همیشه "loading"ه (useSession باید اول یه فچ به
+  // /api/auth/session بزنه)؛ قبلاً این حالت چک نمی‌شد، پس فقط unauthenticated
+  // رد می‌شد و در نتیجه هر مهمونی یه لحظه دیتای داشبوردِ کاربرِ لاگین‌کرده
+  // (استریک/تاریخ و ...) رو می‌دید و بعد ناگهان LandingPage جایگزینش می‌شد —
+  // دقیقاً همون «میپره به یه صفحه دیگه بعد میاد رو صفحه اصلی». تا این وضعیت
+  // مشخص نشه، چیزی رندر نمی‌کنیم.
+  if (status === "loading") {
+    return null;
+  }
   if (status === "unauthenticated") {
     return <LandingPage />;
   }

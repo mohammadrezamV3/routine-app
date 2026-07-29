@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 
 // GET /api/exercise/log?planId=...&date=2026-07-25
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.EXERCISE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const planId = req.nextUrl.searchParams.get("planId");
   const date = req.nextUrl.searchParams.get("date");
@@ -21,9 +21,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/exercise/log { planId, date, completed }
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.EXERCISE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const body = await req.json();
   const { planId, date, completed } = body as { planId: string; date: string; completed: boolean };

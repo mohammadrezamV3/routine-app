@@ -37,8 +37,24 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
   return true;
 }
 
-/** استخراج IP از هدرهای استاندارد پروکسی (Nginx/Cloudflare معمولاً x-forwarded-for می‌ذارن) */
+/**
+ * استخراج IP کلاینت از هدرهای پروکسی.
+ *
+ * هشدار امنیتی: `X-Forwarded-For` را خودِ کلاینت می‌تواند جعل کند. اگر اپ
+ * پشتِ یک پروکسیِ مورداعتماد (Nginx/Cloudflare/Vercel) باشد، آن پروکسی این
+ * هدر را با IP واقعی بازنویسی می‌کند و قابل‌اعتماد است؛ ولی اگر اپ مستقیم
+ * در معرض اینترنت باشد، مهاجم با هر درخواست یک IP جعلیِ تازه می‌گذارد و همه‌ی
+ * محدودیت‌های نرخِ مبتنی‌بر IP را دور می‌زند (ثبت‌نامِ انبوه، password-spraying).
+ *
+ * برای همین فقط وقتی به این هدر اعتماد می‌کنیم که به‌صراحت با
+ * `TRUST_PROXY_HEADERS=1` اعلام شده باشد که یک پروکسیِ مورداعتماد جلوی اپ هست.
+ * در غیر این صورت هدر را نادیده می‌گیریم و همه‌ی درخواست‌ها زیر کلیدِ ثابتِ
+ * "direct" شمرده می‌شوند — این یعنی محدودیت سخت‌گیرانه‌تر می‌شود، نه دورزدنی.
+ */
+const TRUST_PROXY = process.env.TRUST_PROXY_HEADERS === "1";
+
 export function getClientIp(headers: Headers | Record<string, string | string[] | undefined>): string {
+  if (!TRUST_PROXY) return "direct";
   const get = (name: string): string | undefined => {
     if (headers instanceof Headers) return headers.get(name) || undefined;
     const v = headers[name];

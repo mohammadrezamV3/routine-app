@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkNewProgramEligibility } from "@/lib/exerciseEligibility";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 
 // GET /api/exercise/plan/eligibility — آیا کاربر الان واجد شرایط برنامه‌ی جدیده؟
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.EXERCISE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const currentActive = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { startDate: "desc" } });
   const eligibility = await checkNewProgramEligibility(userId, currentActive);

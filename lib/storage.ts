@@ -18,10 +18,23 @@ function hasLocalStorage() {
   }
 }
 
+// getSession() هر بار که صدا زده بشه یه فچ تازه به /api/auth/session می‌زنه
+// (برخلاف هوک useSession که از context مشترکِ SessionProvider استفاده می‌کنه).
+// چون این تابع از خیلی جاها (هر get/setSetting، هر تابع daily/theme و...)
+// صدا زده می‌شه، توی mount اولیه‌ی یه صفحه معمولاً چندین بار همزمان صدا زده
+// می‌شد و چندتا فچ تکراری/موازی به session می‌زد — این‌جا با کش‌کردنِ همون
+// promiseِ در حالِ اجرا (نه یه TTL زمانی)، همه‌ی صداهای هم‌زمان یک فچ واحد رو
+// به اشتراک می‌ذارن؛ به‌محض resolve شدن هم کش پاک می‌شه، پس هیچ staleness‌ای
+// برای چک‌های واقعاً بعدی (مثل درست بعد از لاگین/لاگ‌اوت) ایجاد نمی‌شه.
+let inFlightSession: ReturnType<typeof getSession> | null = null;
+
 async function isLoggedIn(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   try {
-    const session = await getSession();
+    if (!inFlightSession) {
+      inFlightSession = getSession().finally(() => { inFlightSession = null; });
+    }
+    const session = await inFlightSession;
     return !!(session?.user as any)?.id;
   } catch {
     return false;
@@ -172,6 +185,13 @@ export async function getThemeSetting(): Promise<"dark" | "light" | null> {
   return getSetting<"dark" | "light" | null>("theme", null);
 }
 export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
+  // یک کوکی هم می‌نویسیم (علاوه بر localStorage/DB) — چون کوکی، برخلاف اون دوتا،
+  // سمتِ سرور توی layout.tsx هم قابل‌خوندنه؛ همین باعث می‌شه data-theme از همون
+  // اولین HTML سرور درست باشه، نه این‌که با یه تاخیر (بعد از resolve شدنِ
+  // getThemeSetting سمتِ کلاینت) یهو از تاریک به روشن (یا برعکس) عوض بشه.
+  if (typeof document !== "undefined") {
+    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax`;
+  }
   return setSetting("theme", value);
 }
 

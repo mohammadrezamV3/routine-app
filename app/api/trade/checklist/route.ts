@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 
 const MAX_ITEMS = 40;
@@ -18,14 +18,10 @@ const DEFAULT_ITEMS = [
   "حد ضرر و هدف سود قبل از ورود مشخصه؟",
 ];
 
-async function requireUserId() {
-  const session = await getServerSession(authOptions);
-  return (session?.user as any)?.id as string | undefined;
-}
-
 export async function GET() {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   let items = await prisma.tradeChecklistItem.findMany({ where: { userId }, orderBy: { order: "asc" } });
 
@@ -41,8 +37,9 @@ export async function GET() {
 
 // POST { text } — یه آیتم جدید به انتهای لیست اضافه می‌کنه
 export async function POST(req: NextRequest) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const { text } = (await req.json()) as { text: string };
   if (!text || !text.trim()) return NextResponse.json({ error: "متن آیتم الزامی است" }, { status: 400 });
@@ -60,8 +57,9 @@ export async function POST(req: NextRequest) {
 
 // PATCH { id, text } — ویرایش متن یه آیتم
 export async function PATCH(req: NextRequest) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const { id, text } = (await req.json()) as { id: string; text: string };
   if (!id || !text || !text.trim()) return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
@@ -72,8 +70,9 @@ export async function PATCH(req: NextRequest) {
 
 // PUT { order: string[] } — ترتیب جدید کل لیست (بعد از جابه‌جایی با دکمه‌های بالا/پایین)
 export async function PUT(req: NextRequest) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const { order } = (await req.json()) as { order: string[] };
   if (!Array.isArray(order)) return NextResponse.json({ error: "ترتیب نامعتبر است" }, { status: 400 });
@@ -86,8 +85,9 @@ export async function PUT(req: NextRequest) {
 
 // DELETE ?id=... — حذف یه آیتم
 export async function DELETE(req: NextRequest) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.TRADE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
