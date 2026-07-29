@@ -14,18 +14,15 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
 // یعنی برای کاربر لاگین‌کرده تم روی حساب کاربری‌اش ذخیره می‌شه (بین دستگاه‌ها
 // همگام می‌مونه)، و برای مهمان‌ها هنوز روی localStorage همین دستگاهه.
 //
-// مقدار اولیه از همون کوکی‌ای خونده می‌شه که اسکریپتِ inline توی layout.tsx
-// قبل از هیدریت روی body اعمال کرده — این‌جوری stateِ خودِ ری‌اکت هم از همون
-// اول با DOM هم‌خون می‌مونه، وگرنه افکتِ پایین با مقدارِ پیش‌فرضِ "dark"
-// دوباره رو چیزی که اسکریپت درست کرده بود می‌نوشت.
-function readThemeCookie(): Theme {
-  if (typeof document === "undefined") return "dark";
-  const m = document.cookie.match(/(?:^|; )theme=(dark|light)/);
-  return (m?.[1] as Theme) || "dark";
-}
-
+// stateِ اولیه عمداً همیشه "dark"ه — دقیقاً همون پیش‌فرضی که سرور رندر
+// می‌کنه — نه از روی کوکی. اگه این‌جا مستقیم کوکی رو می‌خوندیم، stateِ اولیه‌ی
+// کلاینت با چیزی که سرور رندر کرده فرق می‌کرد (mismatch) و React برای هر
+// جزئی که مستقیم از این state چیزی رندر می‌کنه (مثل لوگوی NavDrawer که
+// src ش به تم بستگی داره) یه warning هیدریت می‌داد. رنگ‌بندیِ سراسریِ صفحه
+// از این مسیر نمیاد — از data-theme روی body میاد که اسکریپتِ inline توی
+// layout.tsx مستقیم روی DOM (نه از راه ری‌اکت) قبل از هر پینتی درستش می‌کنه.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(readThemeCookie);
+  const [theme, setTheme] = useState<Theme>("dark");
   const mounted = useRef(false);
 
   useEffect(() => {
@@ -35,11 +32,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.body.setAttribute("data-theme", theme);
-    // اولین اجرای این افکت فقط همونی رو که سرور از قبل ست کرده تکرار می‌کنه —
-    // نیازی به نوشتنِ دوباره‌ش (کوکی/DB) نیست؛ فقط از تغییرات واقعیِ بعدی
-    // (تاگل دستی یا sync شدن از دستگاه دیگه) ذخیره می‌کنیم.
+    // اجرای اول رو کامل نادیده می‌گیریم — اسکریپتِ inline از قبل data-theme
+    // درستو روی body گذاشته؛ اگه این‌جا بی‌قیدوشرط با stateِ اولیه‌ی "dark"
+    // بنویسیم، دقیقاً همون چیزی که اسکریپت درست کرده بود (مثلاً "light") رو
+    // برای یه لحظه (تا resolve شدنِ افکتِ بالا) بازنویسی می‌کنه.
     if (!mounted.current) { mounted.current = true; return; }
+    document.body.setAttribute("data-theme", theme);
     setThemeSetting(theme);
   }, [theme]);
 
