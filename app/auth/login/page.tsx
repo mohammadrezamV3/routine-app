@@ -13,6 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,7 @@ export default function LoginPage() {
     setLoading(true);
     let res;
     try {
-      res = await signIn("credentials", { redirect: false, identifier, password });
+      res = await signIn("credentials", { redirect: false, identifier, password, remember: remember ? "1" : "0" });
     } catch {
       setLoading(false);
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
@@ -94,6 +95,18 @@ export default function LoginPage() {
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
             </AuthField>
+          </div>
+
+          <div className="auth-remember-row" data-anim-field>
+            <label className="auth-remember-label">
+              <input
+                type="checkbox"
+                className="auth-checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
+              منو به‌یاد داشته باش
+            </label>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}

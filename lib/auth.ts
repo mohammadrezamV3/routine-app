@@ -1,4 +1,5 @@
 import type { NextAuthOptions } from "next-auth";
+import { encode as encodeJwt } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +7,20 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
+  jwt: {
+    // encode پیش‌فرض next-auth فقط از پارامتر maxAge استفاده می‌کنه و اصلاً
+    // token.exp رو نمی‌خونه؛ برای اینکه «به‌یاد داشته باش»ِ تیک‌نخورده واقعاً
+    // اثر داشته باشه (نه فقط یه فیلد بی‌اثر تو payload)، maxAge رو خودمون
+    // متناسب با exp سفارشیِ ست‌شده تو callback jwt محاسبه می‌کنیم.
+    async encode(params) {
+      const customExp = (params.token as any)?.exp;
+      if (typeof customExp === "number") {
+        const maxAge = customExp - Math.floor(Date.now() / 1000);
+        return encodeJwt({ ...params, maxAge });
+      }
+      return encodeJwt(params);
+    },
+  },
   pages: {
     signIn: "/auth/login",
   },
@@ -17,6 +32,7 @@ export const authOptions: NextAuthOptions = {
         // یک فیلد ورودی، سه راه ورود.
         identifier: { label: "Email / Phone / Username", type: "text" },
         password: { label: "Password", type: "password" },
+        remember: { label: "Remember me", type: "text" },
       },
       async authorize(credentials, req) {
         if (!credentials?.identifier || !credentials.password) return null;
@@ -71,17 +87,26 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           market: user.market,
           isSuperAdmin: user.isSuperAdmin,
+          remember: credentials.remember !== "0",
         } as any;
       },
     }),
   ],
   callbacks: {
+    // «منو به‌یاد داشته باش» تیک نخورده → توکن رو کوتاه‌مدت می‌کنیم (۱ روز)
+    // به‌جای پیش‌فرض ۳۰ روزه‌ی next-auth؛ چون کوکی خودش همیشه با maxAge
+    // استاتیک ست می‌شه (نه به‌ازای هر لاگین)، این‌جوری واقعاً session رو کوتاه
+    // می‌کنیم: بعد از یک روز، exp توکن رد می‌شه و useSession/getServerSession
+    // خودشون session رو نامعتبر می‌دونن، حتی اگه کوکیِ خامش هنوز تو مرورگره.
     async jwt({ token, user }) {
       if (user) {
         token.userId = (user as any).id;
         token.name = (user as any).name;
         token.market = (user as any).market;
         token.isSuperAdmin = (user as any).isSuperAdmin;
+        const remember = (user as any).remember !== false;
+        const maxAgeSeconds = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+        token.exp = Math.floor(Date.now() / 1000) + maxAgeSeconds;
       }
       return token;
     },
