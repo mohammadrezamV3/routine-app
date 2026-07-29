@@ -171,7 +171,7 @@ export default function SignupPage() {
             <div className="auth-step" key="step2">
               <AuthField id="name" label="نام و نام خانوادگی" error={fieldErrors.name} ref={nameRef}>
                 <input
-                  id="name" type="text" className="wsearch-newform-name" value={name}
+                  id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی محمدی"
                   onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
                 />
               </AuthField>
@@ -179,7 +179,7 @@ export default function SignupPage() {
               <div style={{ marginTop: 14 }}>
                 <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} ref={usernameRef}>
                   <input
-                    id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr"
+                    id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" placeholder="ali_2024"
                     onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
                   />
                 </AuthField>
@@ -200,7 +200,7 @@ export default function SignupPage() {
               <div style={{ marginTop: 14 }}>
                 <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
                   <input
-                    id="password" type="password" className="wsearch-newform-name" value={password}
+                    id="password" type="password" className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
                     onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
                   />
                 </AuthField>
