@@ -1469,9 +1469,13 @@ body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-fu
 }
 
 /* دکمه‌ی ورود با گوگل — برخلاف auth-full-btn تک‌رنگ نیست، چون لوگوی G
-   گوگل خودش چندرنگه؛ بک‌گراند خنثی (شیشه‌ای هم‌رنگ صفحه) نگه داشته می‌شه */
+   گوگل خودش چندرنگه؛ بک‌گراند خنثی (شیشه‌ای هم‌رنگ صفحه) نگه داشته می‌شه.
+   نشانِ G به‌شکل badge سفیدِ گردگوشه، چسبیده به لبه‌ی راست (دقیقاً همون
+   الگویی که خودِ گوگل برای دکمه روی بک‌گراندهای تیره/رنگی پیشنهاد می‌ده)،
+   position:absolute گرفته تا از جریان فلکس خارج بشه و متن وسط دکمه بمونه. */
 .auth-google-btn{
-  width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+  position:relative;
+  width:100%; display:flex; align-items:center; justify-content:center;
   margin-top:0; border-radius:999px; padding:11px 0; border:1px solid var(--line);
   font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:600; cursor:pointer;
   box-shadow:none; transition:border-color .2s ease, filter .15s ease, transform .12s ease;
@@ -1482,7 +1486,15 @@ body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-
 .auth-google-btn:hover{ border-color:var(--accent); filter:brightness(1.05); }
 .auth-google-btn:active{ transform:scale(.97); }
 .auth-google-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
-.auth-google-btn svg{ width:18px; height:18px; flex-shrink:0; }
+.auth-google-badge{
+  position:absolute; top:50%; right:16px; transform:translateY(-50%);
+  display:flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:6px; background:#fff;
+}
+.auth-google-badge svg{ width:15px; height:15px; }
+/* «فاصله بین حرف‌ها» — letter-spacing منفیِ ملایم، متنِ چندکلمه‌ایِ دکمه رو
+   جمع‌وجورتر می‌کنه، بدون به‌هم‌ریختن چسبیدگی حروف فارسی داخل هر کلمه */
+.auth-google-label{ letter-spacing:-.3px; }
 
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
 .pw-strength{ margin-top:8px; }
