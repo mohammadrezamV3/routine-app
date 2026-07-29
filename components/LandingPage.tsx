@@ -510,7 +510,11 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
         </span>
       )}
       <div className={`text-right text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
-      <button type="button" onClick={scrollToDetails} className={`mt-1 text-right text-[12px] font-bold underline-offset-2 transition hover:underline ${t.muted} ${t.accentHoverText}`}>
+      <button
+        type="button"
+        onClick={scrollToDetails}
+        className={`plan-details-btn mt-1 self-start border-0 bg-transparent p-0 text-right text-[12px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
+      >
         {isIntl ? "Details" : "جزئیات"}
       </button>
 

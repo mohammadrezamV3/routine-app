@@ -1692,3 +1692,12 @@ body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) 
   from{ transform:translateX(0); }
   to{ transform:translateX(-50%); }
 }
+
+/* لینکِ «جزئیات» توی کارت پلن‌ها — button ساده‌ای که فقط باید مثل یک متنِ
+   لینک‌مانند به‌نظر برسه، نه یه دکمه‌ی شیشه‌ای؛ body[data-theme="light"] button
+   سراسری (اسپسیفیسیتیِ attr+۲عنصر) از هر کلاس تِیل‌ویندِ تک‌کلاسی قوی‌تره،
+   پس همون الگوی همیشگی رو این‌جا هم تکرار می‌کنیم. */
+body[data-theme="light"] .plan-details-btn, body:not([data-theme="light"]) .plan-details-btn,
+body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"]) .plan-details-btn:hover{
+  background:none; box-shadow:none;
+}
