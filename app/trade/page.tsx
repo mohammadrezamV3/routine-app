@@ -6,6 +6,8 @@ import Link from "next/link";
 import { TradeJournal } from "@/components/TradeJournal";
 import { TradeChecklist } from "@/components/TradeChecklist";
 import { ModuleGate } from "@/components/ModuleGate";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { MarketTicker } from "@/components/MarketTicker";
 
 export default function TradePage() {
   const { status } = useSession();
@@ -13,11 +15,18 @@ export default function TradePage() {
 
   return (
     <section>
+      <MarketTicker />
       <h1>ترید</h1>
 
-      <div className="day-picker" style={{ marginTop: 10 }}>
-        <span className={`day-pill${tab === "checklist" ? " on" : ""}`} onClick={() => setTab("checklist")}>چک‌لیست</span>
-        <span className={`day-pill${tab === "journal" ? " on" : ""}`} onClick={() => setTab("journal")}>ژورنال</span>
+      <div style={{ marginTop: 10 }}>
+        <SegmentedTabs
+          active={tab}
+          onChange={setTab}
+          options={[
+            { value: "checklist", label: "چک‌لیست" },
+            { value: "journal", label: "ژورنال" },
+          ]}
+        />
       </div>
 
       {status === "authenticated" ? (
