@@ -261,14 +261,30 @@
     position:absolute; right:18px; top:50%; transform:translateY(-50%); z-index:3;
     display:flex; align-items:center; gap:10px;
   }
+  .topbar-actions-left{
+    position:absolute; left:18px; top:50%; transform:translateY(-50%); z-index:3;
+    display:flex; align-items:center; gap:10px;
+  }
 
   /* hamburger + nav drawer */
-  .hamburger, .profile-btn{
+  .hamburger, .profile-btn, .bell-btn{
     position:static; z-index:40; width:38px; height:38px;
-    background:none; border:none; box-shadow:none;
+    background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     display:flex; align-items:center; justify-content:center;
     padding:0; cursor:pointer;
   }
+  .bell-btn{position:relative; color:var(--muted); transition:color .2s ease;}
+  .bell-btn svg{width:19px; height:19px;}
+  .bell-btn:hover{color:var(--accent);}
+  .bell-dot{
+    position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
+    background:#E5484D; box-shadow:0 0 0 2px var(--bg);
+  }
+
+  /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
+     می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
+  .topbar-logo-lockup{ height:22px; width:auto; }
+  @media (min-width:701px){ .topbar-logo-lockup{ height:30px; } }
 
   /* animated hamburger: bars morph into an X while the whole icon spins open */
   .hamburger{
@@ -1113,6 +1129,7 @@
   }
   body:not([data-theme="light"]) .wsearch-newform-name{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-newform-name:focus{border-color:var(--accent);}
+  .wsearch-newform-name::placeholder{color:var(--muted2);}
   .field-error-wrap{position:relative;}
   .field-error .field-error-wrap input, .field-error input{padding-left:32px;}
   .name-field-wrap.field-error input{padding-left:32px;}
@@ -1124,6 +1141,10 @@
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-plexmono), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
+  .name-field-wrap label{
+    display:block; margin-bottom:6px;
+    font-size:12.5px; font-weight:600; color:var(--muted);
+  }
   .wsearch-newrow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 0;}
   .wsearch-newrow:first-child{margin-top:6px;}
   .wsearch-newrow + .wsearch-newrow{border-top:1px dashed var(--line);}
@@ -1297,7 +1318,7 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 .auth-box{
   position:relative;
   width:100%; box-sizing:border-box; margin-top:16px;
-  border-radius:22px; padding:24px;
+  border-radius:36px; padding:24px;
   background:rgba(255,255,255,.03);
   border:1px solid var(--line);
   backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
@@ -1311,14 +1332,63 @@ body[data-theme="light"] .auth-box{
   background:rgba(255,255,255,.06);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.12);
 }
+
+/* فیلدهای ورودی داخل باکس‌های auth شیشه‌ای‌ترن — override محدود به همین
+   کانتکست، نه خودِ wsearch-newform-name که جاهای دیگه‌ی اپ (تمرین، ترید،
+   کالری و...) هم ازش استفاده می‌کنن و نباید تغییر کنن */
+.auth-box .wsearch-newform-name{
+  border-radius:999px; padding-right:18px; padding-left:18px;
+  backdrop-filter:blur(12px) saturate(160%); -webkit-backdrop-filter:blur(12px) saturate(160%);
+  transition:border-color .2s ease, background .2s ease;
+}
+/* هر دو با body تو سلکتور، تا از قانون body:not(...) .wsearch-newform-name
+   قبلی (که برای بک‌گراند حالت تاریک هست) اسپسیفیک‌تر باشن و واقعاً override بشن */
+body:not([data-theme="light"]) .auth-box .wsearch-newform-name{
+  background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+}
+body[data-theme="light"] .auth-box .wsearch-newform-name{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+
 .auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
 
-/* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه */
+.auth-remember-row{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:12px; }
+.auth-remember-row .auth-forgot-link{ margin:0; }
+.auth-remember-label{
+  display:inline-flex; align-items:center; gap:9px; cursor:pointer;
+  font-size:12.5px; font-weight:600; color:var(--muted); user-select:none;
+  transition:color .2s ease;
+}
+.auth-remember-label:hover{ color:var(--text); }
+/* چک‌باکس دست‌ساز — appearance:none روی input خام، تیک با یه SVG محو-بزرگ‌شونده */
+.auth-checkbox{
+  appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0;
+  width:19px; height:19px; border-radius:6px;
+  border:1.5px solid var(--line); background:rgba(var(--bg-rgb),.5);
+  cursor:pointer; position:relative;
+  transition:background .2s ease, border-color .2s ease, transform .12s ease;
+}
+.auth-remember-label:hover .auth-checkbox{ border-color:var(--accent); }
+.auth-checkbox:active{ transform:scale(.88); }
+.auth-checkbox:checked{ background:var(--accent); border-color:var(--accent); }
+.auth-checkbox:checked::after{
+  content:""; position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:center; background-size:12px;
+  animation:authCheckIn .18s ease both;
+}
+@keyframes authCheckIn{ from{ opacity:0; transform:scale(.4); } to{ opacity:1; transform:scale(1); } }
+
+/* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه.
+   بک‌گراندش عیناً همون فرمول .auth-box (شیشه‌ای + بلور) رو تکرار می‌کنه، نه یه
+   مقدار جدا، تا سطحش دقیقاً هم‌رنگِ باکس زیرش دیده بشه، توی هر دو تم. */
 .auth-tabs{
   position:relative; display:flex; margin-top:16px;
-  background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:999px; padding:4px;
+  border:1px solid var(--line); border-radius:999px; padding:4px;
+  background:rgba(255,255,255,.03);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
 }
-body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba(255,255,255,.08); }
+body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
 /* هر تب صرفاً یک برچسب شفافه — سایه/بلور دکمه پایه اینجا عمداً خنثی می‌شه
    چون در غیر این صورت هر تب شبیه یک دکمه‌ی شیشه‌ای جدا به‌نظر می‌رسید، نه
    دو نیمه‌ی یک کنترل واحد */
@@ -1326,10 +1396,20 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   position:relative; z-index:1; flex:1 1 50%; text-align:center; padding:10px 0;
   border:none; background:none; border-radius:999px; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
-  font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:700; color:var(--muted);
+  font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
   cursor:pointer; transition:color .25s ease;
 }
+/* body[data-theme="light"] button سراسری با اسپسیفیسیتیِ بالاتر (body+button)
+   یه بک‌گراند سفیدِ نیمه‌شفاف رو‌ی خودِ تب می‌ذاره — دقیقاً همون باگیِ همیشگی؛
+   نتیجه‌ش این بود که تبِ غیرفعال یه قرصِ سفیدِ جدا از رنگ باکس نشون می‌داد و
+   حتی رنگ تبِ فعال هم با این لایه‌ی سفید ترکیب و کم‌رنگ می‌شد. */
+body[data-theme="light"] .auth-tab, body:not([data-theme="light"]) .auth-tab{
+  background:none; box-shadow:none;
+}
 .auth-tab:hover{ background:none; box-shadow:none; border:none; color:var(--text); }
+body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-tab:hover{
+  background:none; box-shadow:none;
+}
 .auth-tab.active, .auth-tab.active:hover{color:var(--bg);}
 .auth-tab-indicator{
   position:absolute; top:4px; bottom:4px; z-index:0;
@@ -1359,19 +1439,60 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .auth-step-back-btn:hover{ border-color:var(--accent); color:var(--accent); }
 .auth-step-back-btn svg{ width:16px; height:16px; }
 
-/* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی */
+/* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی؛
+   مشترکه بین لاگین/ثبت‌نام/فراموشی‌رمز، پس گردتر و انیمیشن‌دار شدنش
+   همه‌جا یکسان اعمال می‌شه */
 .auth-full-btn{
-  width:100%; margin-top:18px; border-radius:10px; padding:12px 0;
+  width:100%; margin-top:18px; border-radius:999px; padding:12px 0;
   border:1px solid var(--accent); color:var(--bg); background:var(--accent);
   font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
-  transition:filter .15s ease;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:filter .15s ease, transform .12s ease;
+}
+/* body[data-theme="light"] button سراسری، بک‌گراند/بردر رو با اسپسیفیسیتیِ
+   بالاتر (body+button) عوض می‌کنه؛ اینجا با همون ترفند (پیشوند body) خنثیش
+   می‌کنیم — دقیقاً همون باگی که روی فیلدهای ورودی هم بود */
+body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-full-btn{
+  background:var(--accent); border-color:var(--accent); color:var(--bg); box-shadow:none;
 }
 .auth-full-btn:hover{ filter:brightness(1.08); }
-.auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; }
+.auth-full-btn:active{ transform:scale(.97); }
+.auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
 
-/* ردیف مشترک دکمه ورود + فراموشی رمز، دقیقاً هم‌ردیف */
-.auth-submit-row{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; gap:12px; }
-.auth-submit-row .auth-forgot-link{ margin:0; }
+/* جداکننده‌ی «یا» بین ورود معمولی و ورود با گوگل */
+.auth-or-divider{
+  display:flex; align-items:center; gap:10px; margin:16px 0;
+  color:var(--muted); font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:700;
+}
+.auth-or-divider::before, .auth-or-divider::after{
+  content:""; flex:1 1 0; height:1px; background:var(--line);
+}
+
+/* دکمه‌ی ورود با گوگل — برخلاف auth-full-btn تک‌رنگ نیست، چون لوگوی G
+   گوگل خودش چندرنگه؛ بک‌گراند خنثی (شیشه‌ای هم‌رنگ صفحه) نگه داشته می‌شه.
+   نشانِ G به‌شکل badge سفیدِ گردگوشه‌ست؛ توی جریان عادیِ فلکس (نه absolute)
+   می‌مونه و چسبیده به متن، جلوترش قرار می‌گیره — چون توی DOM قبل از متنه و
+   جهت raw کانتینر rtl هست، اولین فرزند سمت راست/جلوی جمله می‌شینه. */
+.auth-google-btn{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:0; border-radius:999px; padding:11px 0; border:1px solid var(--line);
+  font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:600; cursor:pointer;
+  box-shadow:none; transition:border-color .2s ease, filter .15s ease, transform .12s ease;
+}
+body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-google-btn{
+  background:rgba(var(--bg-rgb),.6); border-color:var(--line); color:var(--text);
+}
+.auth-google-btn:hover{ border-color:var(--accent); filter:brightness(1.05); }
+.auth-google-btn:active{ transform:scale(.97); }
+.auth-google-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
+.auth-google-badge{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:22px; height:22px; border-radius:6px; background:#fff;
+}
+.auth-google-badge svg{ width:15px; height:15px; }
+/* «فاصله بین حرف‌ها» — letter-spacing منفیِ ملایم، متنِ چندکلمه‌ایِ دکمه رو
+   جمع‌وجورتر می‌کنه، بدون به‌هم‌ریختن چسبیدگی حروف فارسی داخل هر کلمه */
+.auth-google-label{ letter-spacing:-.3px; }
 
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
 .pw-strength{ margin-top:8px; }
@@ -1398,17 +1519,17 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   cursor:pointer; transition:color .2s ease, transform .15s ease;
 }
 .auth-home-btn:hover{ color:var(--accent); transform:translateX(-3px); }
-.auth-home-btn svg{ width:18px; height:18px; }
+.auth-home-btn svg{ width:23px; height:23px; }
+.auth-home-btn-right{ left:auto; right:16px; }
+.auth-home-btn-right:hover{ transform:translateX(3px); }
 
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
-   "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست) */
-.auth-brand-mark{
-  width:46px; height:46px; margin:0 auto 4px; border-radius:16px;
-  display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(155deg, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),.05));
-  border:1px solid rgba(var(--accent-rgb),.3);
-  font-family:var(--font-vazir), sans-serif; font-size:21px; font-weight:800; color:var(--accent);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.15);
+   "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست). عمداً بدون بک‌گراند/
+   بردر — خودِ آیکون رنگی کافیه، قاب اضافه لازم نداره. */
+.auth-brand-mark-wrap{ margin:0 auto 4px; text-align:center; }
+.auth-brand-mark{ position:relative; width:38px; height:38px; margin:0 auto; }
+.auth-brand-subtitle{
+  margin-top:8px; font-size:15px; font-weight:700; color:var(--muted);
 }
 
 /* لینک فراموشی رمز عبور — زیر فیلد رمز، سمت چپ */

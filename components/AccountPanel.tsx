@@ -51,7 +51,7 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose:
 }
 
 export function AccountPanel({ onClose }: { onClose: () => void }) {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const [data, setData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
@@ -150,6 +150,14 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           <div className="about-row">
             <span className="about-label">کد رفرال شما</span>
             <span className="mono" dir="ltr" style={{ color: "var(--accent)" }}>{data.referralCode.code}</span>
+          </div>
+        )}
+        {/* اثباتِ ملموسِ اینکه «منو به‌یاد داشته باش» واقعاً روی طول نشست اثر
+            داره — تاریخ واقعیِ انقضای همین JWT، مستقیم از next-auth */}
+        {session?.expires && (
+          <div className="about-row">
+            <span className="about-label">این نشست معتبره تا</span>
+            <span className="mono" dir="ltr">{new Date(session.expires).toLocaleDateString("fa-IR")}</span>
           </div>
         )}
       </div>

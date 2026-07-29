@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { Market, ModuleKey } from "@prisma/client";
+import { Market } from "@prisma/client";
 import { getSiteMarket } from "@/lib/market";
+import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone, isValidUsername, validatePassword, clampText } from "@/lib/validate";
-
-// ماژول‌هایی که پلن پایه همیشه شامل می‌شود — همون سه‌تای همیشگی
-// (روتین/خواب/کار روزمره). این لیست باید با seed.ts هماهنگ بماند.
-const BASIC_MODULES: ModuleKey[] = [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS];
 
 // ثبت‌نام با نام + شماره موبایل + یوزرنیم + رمز انجام می‌شه — این چهارتا
 // الزامی‌ان. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.

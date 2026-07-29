@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
+import Image from "next/image";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { AccountPanel } from "./AccountPanel";
+import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
 // export شده چون LandingPage هم همین ست رو برای کارت‌های ماژول استفاده می‌کنه.
@@ -58,6 +60,7 @@ export function NavDrawer() {
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -90,10 +93,32 @@ export function NavDrawer() {
     return () => window.removeEventListener("open-account-panel", openAccount);
   }, []);
 
+  useEffect(() => {
+    setNotifPermission(getNotificationPermission());
+  }, []);
+
+  // نقطه‌ی قرمز یعنی «هنوز اجازه نگرفتیم»؛ با کلیک درخواست می‌کنیم و اگه
+  // پشتیبانی نشه (یا رد بشه) فقط بی‌صدا هیچ‌کاری نمی‌کنه.
+  async function handleBellClick() {
+    if (!notificationsSupported() || notifPermission === "granted") return;
+    const p = await requestNotificationPermission();
+    setNotifPermission(p);
+  }
+
   return (
     <>
       {!hideTopbar && (
         <header className="app-topbar">
+          <div className="topbar-actions-left">
+            <Image
+              src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
+              alt="Arion"
+              width={138}
+              height={34}
+              className="topbar-logo-lockup"
+              priority
+            />
+          </div>
           <div className="topbar-actions">
             <button
               id="menuBtn"
@@ -106,17 +131,23 @@ export function NavDrawer() {
             {status === "loading" ? (
               <span className="topbar-auth-placeholder" />
             ) : status === "authenticated" ? (
-              <div ref={authSlotRef}>
-                <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
-                  <span className="profile-chip-avatar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="8" r="3.5" />
-                      <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
-                    </svg>
-                  </span>
-                  {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
+              <>
+                <div ref={authSlotRef}>
+                  <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
+                    <span className="profile-chip-avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="3.5" />
+                        <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
+                      </svg>
+                    </span>
+                    {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
+                  </button>
+                </div>
+                <button className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
+                  {notifPermission !== "granted" && <span className="bell-dot" />}
                 </button>
-              </div>
+              </>
             ) : (
               <div ref={authSlotRef}>
                 <button className="topbar-signin-btn" onClick={() => router.push("/auth/login")}>
