@@ -71,7 +71,7 @@ export default function LoginPage() {
         <AuthTabs active="login" />
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
-          <AuthBackButton />
+          <AuthBackButton side="right" />
           <AuthBrandMark subtitle="ورود به پنل کاربری" />
 
           <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} ref={identifierRef}>

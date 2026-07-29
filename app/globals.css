@@ -1415,14 +1415,16 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 }
 .auth-home-btn:hover{ color:var(--accent); transform:translateX(-3px); }
 .auth-home-btn svg{ width:18px; height:18px; }
+.auth-home-btn-right{ left:auto; right:16px; }
+.auth-home-btn-right:hover{ transform:translateX(3px); }
 
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
    "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست). عمداً بدون بک‌گراند/
    بردر — خودِ آیکون رنگی کافیه، قاب اضافه لازم نداره. */
 .auth-brand-mark-wrap{ margin:0 auto 4px; text-align:center; }
-.auth-brand-mark{ position:relative; width:52px; height:52px; margin:0 auto; }
+.auth-brand-mark{ position:relative; width:38px; height:38px; margin:0 auto; }
 .auth-brand-subtitle{
-  margin-top:8px; font-size:12.5px; font-weight:600; color:var(--muted);
+  margin-top:8px; font-size:15px; font-weight:700; color:var(--muted);
 }
 
 /* لینک فراموشی رمز عبور — زیر فیلد رمز، سمت چپ */
