@@ -32,10 +32,23 @@ export const metadata: Metadata = {
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
 };
 
+// اسکریپتِ inline و مسدودکننده — قبل از هر پینتی روی body اجرا می‌شه (چون
+// اولین فرزندِ body ئه و مرورگر اسکریپت‌های غیر async/defer رو همون لحظه‌ای
+// که به‌شون می‌رسه سینکرون اجرا می‌کنه) و data-theme رو از روی کوکی درست
+// می‌کنه. عمداً به‌جای خوندنِ کوکی سمت سرور (cookies() توی layout.tsx) این‌جوری
+// انجام شده: cookies() کل اپ رو از static به dynamic تبدیل می‌کرد (رندر
+// سمت سرور به‌ازای هر ریکوئست) که دقیقاً برخلافِ بهینه‌سازیِ سرعتِ لود بود؛
+// این‌جوری هم فلاش از بین می‌ره هم static rendering دست‌نخورده می‌مونه.
+const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )theme=(dark|light)/);if(m)document.body.setAttribute("data-theme",m[1]);}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" className={`${vazir.variable} ${plexMono.variable}`}>
-      <body data-theme="dark">
+      {/* suppressHydrationWarning لازمه چون اسکریپتِ بالا ممکنه data-theme رو
+          قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
+          «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}
+      <body data-theme="dark" suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <SvgFilters />
         <BackgroundCanvasLoader />
         <ConflictAlert />

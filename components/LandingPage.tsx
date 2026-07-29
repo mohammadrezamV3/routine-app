@@ -196,8 +196,11 @@ const COMPARE_ROWS_INTL: CompareRow[] = [
 // پلن نه — یه ستون خالیِ هم‌عرض برای هم‌ترازی می‌ذاشتیم، ولی چون کارت‌ها و
 // جدول دیگه توی یک باکس مشترک نیستن، اون ستون خالی فقط باعث می‌شد کارت‌ها
 // یه‌طرفه/نامتقارن به‌نظر برسن، نه وسط‌چین. برای همین دو تمپلیت جدا داریم.
-const PLANS_GRID_COLS = "grid-cols-[repeat(4,minmax(250px,1fr))] md:grid-cols-[repeat(4,1fr)]";
-const COMPARE_GRID_COLS = "grid-cols-[minmax(160px,1.4fr)_repeat(4,minmax(200px,1fr))] md:grid-cols-[300px_repeat(4,211px)]";
+//
+// زیر md عمداً یک‌ستونی/بدون کف‌عرضِ پیکسلی‌ست (نه minmax با کفِ px) — تا هیچ‌کدوم
+// از عرضِ صفحه بیرون نزنه و نیازی به اسکرولِ افقی نباشه، حتی روی باریک‌ترین موبایل.
+const PLANS_GRID_COLS = "grid-cols-1 md:grid-cols-[repeat(4,1fr)]";
+const COMPARE_GRID_COLS = "grid-cols-[1.4fr_repeat(4,1fr)] md:grid-cols-[300px_repeat(4,211px)]";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
 // margin-left در تعارض نادیده گرفته می‌شه و فقط margin-right اثر می‌کنه —
@@ -236,11 +239,6 @@ function useThemeTokens() {
     secondaryBorderSoft: isLight ? "border-[#D97706]/50" : "border-[#3E7BFA]/50",
     secondaryCardShadow: isLight ? "shadow-[0_18px_45px_rgba(217,119,6,0.16)]" : "shadow-[0_18px_45px_rgba(62,123,250,0.18)]",
     secondaryBadgeShadow: isLight ? "shadow-[0_8px_20px_rgba(217,119,6,0.35)]" : "shadow-[0_8px_20px_rgba(62,123,250,0.35)]",
-
-    // ستون sticky جدول مقایسه: زیر md باید تقریباً کدر باشه تا چک/ضربدرِ
-    // درحال‌اسکرول زیرش دیده نشه؛ از md به بعد که اصلاً اسکرول لازم نیست،
-    // برمی‌گرده به همون شیشه‌ای نیم‌شفافِ بقیه‌ی باکس تا لکه‌ی یک‌دست نشه.
-    stickyCellBg: isLight ? "bg-[var(--bg)] md:bg-white/40 md:backdrop-blur-2xl" : "bg-[var(--bg)] md:bg-white/[0.05] md:backdrop-blur-2xl",
   };
 }
 
@@ -436,8 +434,8 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col snap-center rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex flex-col snap-center rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
+    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
 
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
@@ -560,60 +558,50 @@ export function LandingPage() {
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>پلن‌ها</h2>
         </div>
 
-        <div className={`grid snap-x snap-mandatory gap-6 overflow-x-auto pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
+        <div className={`grid gap-6 pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
           {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} />)}
         </div>
 
-        {/* یک جدول HTML واقعی (نه گرید) — چون sticky روی th یک جدول واقعی
-            دقیقاً همون الگوی استانداردِ «فریز کردن ستون اول» هست و قابل‌اعتماده؛
-            گرید تو در تو (row-grid داخل row-grid) این رفتار رو نمی‌داد. ستون
-            لیبل روی موبایل ثابت می‌مونه تا کاربر هنگام اسکرول افقی بین پلن‌ها،
-            همیشه بدونه داره چه قابلیتی رو می‌بینه. */}
-        <div className="relative">
-          <div className={`mt-6 overflow-x-auto rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
-            <table className="w-full border-collapse" style={{ tableLayout: "fixed", minWidth: 780 }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
-              <colgroup>
-                <col style={{ width: "24%" }} />
-                {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
-              </colgroup>
-              <thead>
-                <tr className={`border-b ${t.line}`}>
-                  <th className={`sticky right-0 ${t.stickyCellBg} pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
+        {/* جدول HTML واقعی؛ بدون sticky/بک‌گراندِ مخصوصِ ستونِ لیبل و بدون
+            minWidth/overflow-x — با tableLayout:fixed و عرض‌های درصدی، خودش
+            با اندازه‌ی هر صفحه (حتی موبایل باریک) جمع می‌شه، بدون نیاز به اسکرول. */}
+        <div className={`mt-6 rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
+          <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
+            <colgroup>
+              <col style={{ width: "24%" }} />
+              {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+            </colgroup>
+            <thead>
+              <tr className={`border-b ${t.line}`}>
+                <th className={`pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
+                {plans.map((p) => (
+                  <th key={p.key} className={`pb-3 text-center text-[11.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {mainRows.map((row) => (
+                <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
+                  <th scope="row" className={`py-3.5 text-right text-[11.5px] font-normal ${t.muted}`}>{row.label}</th>
                   {plans.map((p) => (
-                    <th key={p.key} className={`pb-3 text-center text-[12.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
+                    <td key={p.key} className="py-3.5">
+                      <div className="flex justify-center">
+                        {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
+                      </div>
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {mainRows.map((row) => (
-                  <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
-                    <th scope="row" className={`sticky right-0 ${t.stickyCellBg} py-3.5 text-right text-[12.5px] font-normal ${t.muted}`}>{row.label}</th>
-                    {plans.map((p) => (
-                      <td key={p.key} className="py-3.5">
-                        <div className="flex justify-center">
-                          {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
-                        </div>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* اشاره‌ی محو به این‌که جدول قابل‌اسکرول‌کردنه — فقط زیر md، چون
-              دسکتاپ با BREAKOUT کل عرض رو بدون اسکرول نشون می‌ده */}
-          <div
-            className="pointer-events-none absolute bottom-6 left-0 top-6 w-8 rounded-l-[24px] md:hidden"
-            style={{ background: "linear-gradient(to right, var(--bg), transparent)" }}
-          />
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {upcomingRows.length > 0 && (
-          <div className={`relative mt-4 overflow-x-auto rounded-[20px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`} aria-hidden="true">
+          <div className={`relative mt-4 rounded-[20px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`} aria-hidden="true">
             <div className="pointer-events-none select-none blur-md">
               {upcomingRows.map((row) => (
-                <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-4 border-b ${t.line} py-3 last:border-none`}>
-                  <div className={`text-right text-[12.5px] ${t.muted}`}>{row.label}</div>
+                <div key={row.label} className={`grid ${COMPARE_GRID_COLS} items-center gap-3 border-b ${t.line} py-3 last:border-none`}>
+                  <div className={`text-right text-[11.5px] ${t.muted}`}>{row.label}</div>
                   {plans.map((p) => (
                     <div key={p.key} className="flex justify-center">
                       {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
