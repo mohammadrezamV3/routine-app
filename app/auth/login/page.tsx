@@ -109,16 +109,14 @@ export default function LoginPage() {
               />
               منو به‌یاد داشته باش
             </label>
+            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-          <div className="auth-submit-row" data-anim-field>
-            <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading ? "در حال ورود…" : "ورود"}
-            </button>
-            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
-          </div>
+          <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field>
+            {loading ? "در حال ورود…" : "ورود"}
+          </button>
         </form>
       </div>
     </section>

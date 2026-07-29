@@ -1334,7 +1334,8 @@ body[data-theme="light"] .auth-box{
 }
 .auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
 
-.auth-remember-row{ margin-top:14px; }
+.auth-remember-row{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:12px; }
+.auth-remember-row .auth-forgot-link{ margin:0; }
 .auth-remember-label{
   display:inline-flex; align-items:center; gap:9px; cursor:pointer;
   font-size:12.5px; font-weight:600; color:var(--muted); user-select:none;
@@ -1406,31 +1407,18 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .auth-step-back-btn:hover{ border-color:var(--accent); color:var(--accent); }
 .auth-step-back-btn svg{ width:16px; height:16px; }
 
-/* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی */
+/* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی؛
+   مشترکه بین لاگین/ثبت‌نام/فراموشی‌رمز، پس گردتر و انیمیشن‌دار شدنش
+   همه‌جا یکسان اعمال می‌شه */
 .auth-full-btn{
-  width:100%; margin-top:18px; border-radius:10px; padding:12px 0;
+  width:100%; margin-top:18px; border-radius:999px; padding:12px 0;
   border:1px solid var(--accent); color:var(--bg); background:var(--accent);
   font-family:var(--font-vazir), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
-  transition:filter .15s ease;
-}
-.auth-full-btn:hover{ filter:brightness(1.08); }
-.auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; }
-
-/* دکمه‌ی فشرده‌ی ورود — کنار لینک فراموشی رمز، توی auth-submit-row، پس
-   full-width نیست؛ پرشده و گرد، با انیمیشن فشردن مثل بقیه‌ی دکمه‌های اپ */
-.auth-submit-btn{
-  border-radius:999px; padding:10px 26px;
-  border:1px solid var(--accent); background:var(--accent); color:var(--bg);
-  font-family:var(--font-vazir), sans-serif; font-size:13.5px; font-weight:700; cursor:pointer;
   transition:filter .15s ease, transform .12s ease;
 }
-.auth-submit-btn:hover{ filter:brightness(1.08); }
-.auth-submit-btn:active{ transform:scale(.95); }
-.auth-submit-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
-
-/* ردیف مشترک دکمه ورود + فراموشی رمز، دقیقاً هم‌ردیف */
-.auth-submit-row{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; gap:12px; }
-.auth-submit-row .auth-forgot-link{ margin:0; }
+.auth-full-btn:hover{ filter:brightness(1.08); }
+.auth-full-btn:active{ transform:scale(.97); }
+.auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
 
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
 .pw-strength{ margin-top:8px; }
