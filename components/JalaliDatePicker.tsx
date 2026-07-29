@@ -42,6 +42,11 @@ export function JalaliDatePicker({
     return d > jNow[2];
   }
 
+  // انتخاب مستقیم سال/ماه — تا برای تاریخ‌های دور (مثل سال تولد) لازم نباشه
+  // ده‌ها بار روی فلش «ماه قبل» کلیک بشه.
+  const yearOptions: number[] = [];
+  for (let y = jNow[0] + 5; y >= jNow[0] - 100; y--) yearOptions.push(y);
+
   const cells: JSX.Element[] = [];
   for (let i = 0; i < leading; i++) cells.push(<div key={"e" + i} className="jdate-cell empty" />);
   for (let d = 1; d <= monthLen; d++) {
@@ -65,20 +70,23 @@ export function JalaliDatePicker({
       <div className="jdate-popup open">
         <div className="jdate-popup-head">
           <button type="button" className="jdate-popup-close" onClick={onClose} aria-label="بستن">×</button>
-          <div className="jdate-popup-title">{J_MONTHS[view.jm - 1]} {view.jy}</div>
-          <div className="jdate-popup-nav">
-            <button
-              type="button"
-              className="jdate-nav-btn"
-              onClick={() => setView((v) => (v.jm - 1 < 1 ? { jy: v.jy - 1, jm: 12 } : { jy: v.jy, jm: v.jm - 1 }))}
-              aria-label="ماه قبل"
-            >‹</button>
-            <button
-              type="button"
-              className="jdate-nav-btn"
-              onClick={() => setView((v) => (v.jm + 1 > 12 ? { jy: v.jy + 1, jm: 1 } : { jy: v.jy, jm: v.jm + 1 }))}
-              aria-label="ماه بعد"
-            >›</button>
+          <div className="jdate-popup-title-nav">
+            <select
+              className="jdate-select"
+              value={view.jm}
+              onChange={(e) => setView((v) => ({ ...v, jm: Number(e.target.value) }))}
+              aria-label="ماه"
+            >
+              {J_MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            </select>
+            <select
+              className="jdate-select"
+              value={view.jy}
+              onChange={(e) => setView((v) => ({ ...v, jy: Number(e.target.value) }))}
+              aria-label="سال"
+            >
+              {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
         </div>
         <div className="jdate-weekdays">
