@@ -38,8 +38,10 @@ export async function POST(req: NextRequest) {
   if (typeof customCalories !== "number" || typeof grams !== "number" || customCalories < 0 || grams <= 0 || grams > 10000) {
     return NextResponse.json({ error: "عدد وارد شده معتبر نیست" }, { status: 400 });
   }
-  const ALLOWED_MEALS = ["breakfast", "lunch", "dinner", "snack"];
-  if (mealType && !ALLOWED_MEALS.includes(mealType)) {
+  // نوع وعده دیگه enum ثابت نیست — چون تعداد/چیدمان وعده‌ها رو خود کاربر توی
+  // هدف کالری‌اش تعیین می‌کنه (۲ تا ۶ وعده، کلیدهایی مثل snack1/snack2)؛
+  // فقط طول رشته رو محدود می‌کنیم.
+  if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
     return NextResponse.json({ error: "نوع وعده نامعتبر است" }, { status: 400 });
   }
 
