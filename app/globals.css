@@ -1342,7 +1342,7 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   position:relative; z-index:1; flex:1 1 50%; text-align:center; padding:10px 0;
   border:none; background:none; border-radius:999px; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
-  font-family:var(--font-vazir), sans-serif; font-size:13px; font-weight:700; color:var(--muted);
+  font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
   cursor:pointer; transition:color .25s ease;
 }
 .auth-tab:hover{ background:none; box-shadow:none; border:none; color:var(--text); }
@@ -1414,7 +1414,7 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
   cursor:pointer; transition:color .2s ease, transform .15s ease;
 }
 .auth-home-btn:hover{ color:var(--accent); transform:translateX(-3px); }
-.auth-home-btn svg{ width:18px; height:18px; }
+.auth-home-btn svg{ width:23px; height:23px; }
 .auth-home-btn-right{ left:auto; right:16px; }
 .auth-home-btn-right:hover{ transform:translateX(3px); }
 

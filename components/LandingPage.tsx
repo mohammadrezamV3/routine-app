@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Check, ChevronLeft, ChevronRight, Quote, X,
-  Heart, ClipboardList, Clock, ShieldCheck, TrendingUp, Headset, Lightbulb,
+  ClipboardList, Clock, ShieldCheck, TrendingUp, Headset, Lightbulb,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
@@ -336,32 +336,10 @@ function QuoteCard() {
   );
 }
 
-// پیش‌نمایش مینیاتوری از خودِ اپ (کارت رینگ پیشرفت)، سمت چپِ هیرو —
-// به‌جای illustration ژنریکِ گلدون، که با زبان بصریِ آیکون‌محورِ بقیه‌ی
-// اپ (بدون هیچ تصویرسازیِ دیگه‌ای) هم‌خونی نداشت.
-function HeroMockupCard() {
-  const t = useThemeTokens();
-  const r = 22;
-  const c = 2 * Math.PI * r;
-  const pct = 0.6;
-  return (
-    <div className="relative h-[100px] w-[100px] shrink-0 sm:h-[124px] sm:w-[124px]" data-anim-field>
-      <div className={`absolute inset-0 -z-10 rounded-full blur-xl ${t.isLight ? "bg-[#D97706]/15" : "bg-[#00A86B]/12"}`} />
-      <div className={`flex h-full w-full flex-col items-center justify-center gap-2 rounded-[22px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-xl`}>
-        <div className={`relative flex h-11 w-11 items-center justify-center sm:h-14 sm:w-14 ${t.accentText}`}>
-          <svg viewBox="0 0 56 56" className="h-full w-full -rotate-90">
-            <circle cx="28" cy="28" r={r} fill="none" stroke="currentColor" strokeWidth="5" className="opacity-[0.15]" />
-            <circle cx="28" cy="28" r={r} fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} />
-          </svg>
-          <span className={`absolute text-[11px] font-extrabold sm:text-[13px] ${t.heading}`}>۳/۵</span>
-        </div>
-        <span className={`text-[10px] font-bold sm:text-[11px] ${t.muted}`}>امروز</span>
-      </div>
-      <span className={`absolute -top-1 left-0 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg sm:h-9 sm:w-9 ${t.accentBg}`}>
-        <Heart size={15} strokeWidth={2.3} />
-      </span>
-    </div>
-  );
+// عمداً خالی — نه illustration، نه پیش‌نمایش کارت؛ کاربر هر دو رو امتحان
+// کرد و نخواست، فقط فضای خالیِ سمت چپِ هیرو بمونه (طول متن رو عوض نکنه).
+function HeroSideSpacer() {
+  return <div className="h-[100px] w-[100px] shrink-0 sm:h-[124px] sm:w-[124px]" aria-hidden="true" />;
 }
 
 function RingProgress({ pct, label }: { pct: number; label: string }) {
@@ -531,7 +509,7 @@ export function LandingPage() {
     <>
       <section id="sec-landing-hero" style={{ paddingTop: 18 }}>
         <div ref={heroRef} className="flex items-start gap-4 sm:gap-6">
-          <HeroMockupCard />
+          <HeroSideSpacer />
           <div className="min-w-0 flex-1 text-right">
             <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
               همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
