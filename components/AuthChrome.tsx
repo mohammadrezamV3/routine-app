@@ -12,11 +12,14 @@ export function AuthBackButton() {
   );
 }
 
-/** نشان برند، داخل باکس */
-export function AuthBrandMark() {
+/** نشان برند، داخل باکس — subtitle اختیاریه (فقط لاگین ازش استفاده می‌کنه) */
+export function AuthBrandMark({ subtitle }: { subtitle?: string }) {
   return (
-    <div className="auth-brand-mark" aria-hidden="true">
-      <Image src="/images/logo-icon.png" alt="" fill sizes="46px" className="object-contain" />
+    <div className="auth-brand-mark-wrap">
+      <div className="auth-brand-mark" aria-hidden="true">
+        <Image src="/images/logo-icon.png" alt="" fill sizes="52px" className="object-contain" />
+      </div>
+      {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
     </div>
   );
 }

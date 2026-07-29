@@ -269,7 +269,7 @@
   /* hamburger + nav drawer */
   .hamburger, .profile-btn, .bell-btn{
     position:static; z-index:40; width:38px; height:38px;
-    background:none; border:none; box-shadow:none;
+    background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     display:flex; align-items:center; justify-content:center;
     padding:0; cursor:pointer;
   }
@@ -1417,13 +1417,12 @@ body:not([data-theme="light"]) .auth-tabs{ background:#0B0C0D; border-color:rgba
 .auth-home-btn svg{ width:18px; height:18px; }
 
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
-   "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست) */
-.auth-brand-mark{
-  position:relative; width:46px; height:46px; margin:0 auto 4px; border-radius:16px;
-  padding:7px; box-sizing:border-box;
-  background:linear-gradient(155deg, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),.05));
-  border:1px solid rgba(var(--accent-rgb),.3);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.15);
+   "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست). عمداً بدون بک‌گراند/
+   بردر — خودِ آیکون رنگی کافیه، قاب اضافه لازم نداره. */
+.auth-brand-mark-wrap{ margin:0 auto 4px; text-align:center; }
+.auth-brand-mark{ position:relative; width:52px; height:52px; margin:0 auto; }
+.auth-brand-subtitle{
+  margin-top:8px; font-size:12.5px; font-weight:600; color:var(--muted);
 }
 
 /* لینک فراموشی رمز عبور — زیر فیلد رمز، سمت چپ */
