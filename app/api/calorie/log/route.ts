@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.CALORIE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const date = req.nextUrl.searchParams.get("date");
   if (!date) return NextResponse.json({ error: "date is required" }, { status: 400 });
@@ -24,9 +24,9 @@ export async function GET(req: NextRequest) {
 // customCalories اینجا کالری کل همون مقدار ثبت‌شده است (نه به‌ازای هر ۱۰۰ گرم) —
 // محاسبه‌اش سمت کلاینت انجام می‌شه تا از دوباره‌کاری منطق جلوگیری بشه.
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.CALORIE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const body = await req.json();
   const { date, customName, customCalories, grams, mealType } = body as {
@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/calorie/log?id=...
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.CALORIE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
