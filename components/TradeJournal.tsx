@@ -9,9 +9,12 @@ import { G_MONTHS, gregorianMonthLength } from "@/lib/gregorian";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { TradeDayModal } from "./TradeDayModal";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { compressImageToDataUrl } from "@/lib/image";
+import { TradeEntryFields } from "./TradeEntryFields";
 import { getSetting, setSetting } from "@/lib/storage";
-import { TradeEntry } from "@/lib/tradeTypes";
+import {
+  TradeEntry, TradeFormState, EMPTY_TRADE_FORM,
+  formStateToCreateBody, formStateToUpdateBody,
+} from "@/lib/tradeTypes";
 
 type CalSystem = "jalali" | "gregorian";
 const CAL_SYSTEM_KEY = "tradeCalendarSystem";
@@ -29,21 +32,11 @@ export function TradeJournal() {
   const [modalIso, setModalIso] = useState<string | null>(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState<TradeFormState>(EMPTY_TRADE_FORM);
 
-  const [pair, setPair] = useState("EURUSD");
-  const [direction, setDirection] = useState<"long" | "short">("long");
-  const [entryPrice, setEntryPrice] = useState("");
-  const [exitPrice, setExitPrice] = useState("");
-  const [lotSize, setLotSize] = useState("");
-  const [pnl, setPnl] = useState("");
-  const [stopLoss, setStopLoss] = useState("");
-  const [takeProfit, setTakeProfit] = useState("");
-  const [riskPercent, setRiskPercent] = useState("");
-  const [strategy, setStrategy] = useState("");
-  const [notes, setNotes] = useState("");
-  const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
-  const [screenshotError, setScreenshotError] = useState<string | null>(null);
-  const [compressing, setCompressing] = useState(false);
+  function patchForm(patch: Partial<TradeFormState>) {
+    setForm((f) => ({ ...f, ...patch }));
+  }
 
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
 
@@ -89,11 +82,25 @@ export function TradeJournal() {
 
   const monthTotal = entries.reduce((s, e) => s + (e.pnl ?? 0), 0);
 
-  // آمار ماه — بر اساس همون معاملاتی که pnl ثبت‌شده دارن (بسته‌شده‌ها)
+  // آمار ماه — بر اساس همون معاملاتی که pnl ثبت‌شده دارن (بسته‌شده‌ها)،
+  // استریک‌ها به ترتیب زمانی محاسبه می‌شن (نه ترتیب دریافت از API)
   const stats = useMemo(() => {
-    const closed = entries.filter((e) => e.pnl !== null) as (TradeEntry & { pnl: number })[];
+    const closed = entries
+      .filter((e) => e.pnl !== null)
+      .slice()
+      .sort((a, b) => new Date(a.openedAt).getTime() - new Date(b.openedAt).getTime()) as (TradeEntry & { pnl: number })[];
     const wins = closed.filter((e) => e.pnl > 0);
     const losses = closed.filter((e) => e.pnl < 0);
+
+    let curWin = 0, curLoss = 0, maxWinStreak = 0, maxLossStreak = 0;
+    for (const e of closed) {
+      if (e.pnl > 0) { curWin++; curLoss = 0; }
+      else if (e.pnl < 0) { curLoss++; curWin = 0; }
+      else { curWin = 0; curLoss = 0; }
+      if (curWin > maxWinStreak) maxWinStreak = curWin;
+      if (curLoss > maxLossStreak) maxLossStreak = curLoss;
+    }
+
     return {
       total: entries.length,
       winRate: closed.length ? Math.round((wins.length / closed.length) * 100) : null,
@@ -103,39 +110,16 @@ export function TradeJournal() {
       lossCount: losses.length,
       largestGain: wins.length ? Math.max(...wins.map((e) => e.pnl)) : 0,
       largestLoss: losses.length ? Math.min(...losses.map((e) => e.pnl)) : 0,
+      maxWinStreak,
+      maxLossStreak,
     };
   }, [entries]);
 
-  async function handleScreenshotChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setScreenshotError(null);
-    setCompressing(true);
-    try {
-      setScreenshotDataUrl(await compressImageToDataUrl(file));
-    } catch (err) {
-      setScreenshotError(err instanceof Error ? err.message : "خطا در پردازش عکس");
-    } finally {
-      setCompressing(false);
-    }
-  }
-
   async function addTrade() {
-    if (!entryPrice || !lotSize) return;
+    if (!form.entryPrice || !form.lotSize) return;
     const body = {
-      pair, direction,
-      entryPrice: +entryPrice,
-      exitPrice: exitPrice ? +exitPrice : undefined,
-      lotSize: +lotSize,
-      pnl: pnl ? +pnl : undefined,
-      stopLoss: stopLoss ? +stopLoss : undefined,
-      takeProfit: takeProfit ? +takeProfit : undefined,
-      riskPercent: riskPercent ? +riskPercent : undefined,
-      strategy: strategy || undefined,
-      screenshotUrl: screenshotDataUrl || undefined,
+      ...formStateToCreateBody(form),
       openedAt: new Date(selectedIso + "T12:00:00").toISOString(),
-      notes: notes || undefined,
     };
     const res = await fetch("/api/trade/entries", {
       method: "POST",
@@ -143,8 +127,7 @@ export function TradeJournal() {
       body: JSON.stringify(body),
     });
     if (res.ok) {
-      setEntryPrice(""); setExitPrice(""); setLotSize(""); setPnl(""); setNotes("");
-      setStopLoss(""); setTakeProfit(""); setRiskPercent(""); setStrategy(""); setScreenshotDataUrl(null);
+      setForm(EMPTY_TRADE_FORM);
       loadMonth();
     }
   }
@@ -152,6 +135,20 @@ export function TradeJournal() {
   async function removeTrade(id: string) {
     setEntries((e) => e.filter((x) => x.id !== id));
     await fetch(`/api/trade/entries?id=${id}`, { method: "DELETE" });
+  }
+
+  async function updateTrade(id: string, value: TradeFormState): Promise<string | null> {
+    const res = await fetch("/api/trade/entries", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formStateToUpdateBody(id, value)),
+    });
+    const data = await res.json().catch(() => null);
+    if (res.ok && data?.entry) {
+      setEntries((es) => es.map((e) => (e.id === id ? data.entry : e)));
+      return null;
+    }
+    return data?.error || "خطا در ذخیره تغییرات";
   }
 
   function formatIsoForDisplay(iso: string): string {
@@ -187,8 +184,8 @@ export function TradeJournal() {
 
   return (
     <div style={{ marginTop: 10 }}>
-      <div className="trade-portfolio-head">
-        <div className="domain-sub" style={{ margin: 0 }}>پرتفوی ماهانه</div>
+      <div className="domain-sub" style={{ margin: 0 }}>پرتفوی ماهانه</div>
+      <div className="trade-cal-toggle-row">
         <SegmentedTabs
           active={calSystem}
           onChange={changeCalSystem}
@@ -229,6 +226,14 @@ export function TradeJournal() {
           <div className="trade-stat-label">بیشترین ضرر</div>
           <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.largestLoss.toFixed(1))}</div>
         </div>
+        <div className="trade-stat-tile">
+          <div className="trade-stat-label">بیشترین برد پشت‌سرهم</div>
+          <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.maxWinStreak)}</div>
+        </div>
+        <div className="trade-stat-tile">
+          <div className="trade-stat-label">بیشترین باخت پشت‌سرهم</div>
+          <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.maxLossStreak)}</div>
+        </div>
       </div>
 
       <div className="tm-extra">
@@ -240,39 +245,7 @@ export function TradeJournal() {
           </button>
         </div>
 
-        <div className="day-picker" style={{ marginTop: 10 }}>
-          <span className={`day-pill${direction === "long" ? " on" : ""}`} onClick={() => setDirection("long")}>خرید (Long)</span>
-          <span className={`day-pill${direction === "short" ? " on" : ""}`} onClick={() => setDirection("short")}>فروش (Short)</span>
-        </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-          <input className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="جفت‌ارز" value={pair} onChange={(e) => setPair(e.target.value)} />
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت ورود" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} />
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="قیمت خروج" value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} />
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 70px" }} placeholder="لات" value={lotSize} onChange={(e) => setLotSize(e.target.value)} />
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="سود/زیان" value={pnl} onChange={(e) => setPnl(e.target.value)} />
-        </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="حد ضرر" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} />
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="حد سود" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} />
-          <input type="number" className="wsearch-newform-name" style={{ flex: "1 1 90px" }} placeholder="درصد ریسک" value={riskPercent} onChange={(e) => setRiskPercent(e.target.value)} />
-        </div>
-        <input className="wsearch-newform-name" style={{ marginTop: 8 }} placeholder="استراتژی/ستاپ (اختیاری)" value={strategy} onChange={(e) => setStrategy(e.target.value)} />
-        <input className="wsearch-newform-name" style={{ marginTop: 8 }} placeholder="یادداشت (اختیاری)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-
-        <div className="trade-shot-row">
-          <label className="trade-shot-btn">
-            <input type="file" accept="image/*" onChange={handleScreenshotChange} hidden />
-            {compressing ? "در حال پردازش…" : screenshotDataUrl ? "تغییر عکس معامله" : "افزودن عکس معامله"}
-          </label>
-          {screenshotDataUrl && (
-            <span className="trade-shot-preview-wrap">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={screenshotDataUrl} alt="پیش‌نمایش عکس معامله" className="trade-shot-preview" />
-              <button type="button" className="trade-shot-remove" onClick={() => setScreenshotDataUrl(null)} aria-label="حذف عکس">×</button>
-            </span>
-          )}
-        </div>
-        {screenshotError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>{screenshotError}</div>}
+        <TradeEntryFields value={form} onChange={patchForm} />
 
         <button onClick={addTrade} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>ثبت معامله</button>
       </div>
@@ -280,6 +253,7 @@ export function TradeJournal() {
       {datePickerOpen && (
         <JalaliDatePicker
           initial={selectedJalali}
+          disableFuture
           onPick={(d) => {
             setSelectedIso(isoLocal(jalaliToGregorianApprox(d[0], d[1], d[2])));
             setDatePickerOpen(false);
@@ -310,6 +284,7 @@ export function TradeJournal() {
           entries={byDay[modalIso] || []}
           onClose={() => setModalIso(null)}
           onDelete={removeTrade}
+          onUpdate={updateTrade}
         />
       )}
 
