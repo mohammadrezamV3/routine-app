@@ -44,5 +44,4 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
 
 export type EligibilityResult =
   | { eligible: true }
-  | { eligible: false; reason: "cooldown"; daysRemaining: number }
   | { eligible: false; reason: "attendance"; completedSessions: number; requiredSessions: number };

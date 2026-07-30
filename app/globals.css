@@ -1054,6 +1054,33 @@
     box-shadow:0 0 8px rgba(var(--accent-rgb),.65), 0 0 16px rgba(var(--accent-rgb),.4);
   }
 
+  /* بخش بدنسازی (ورزش+کالری، app/exercise/page.tsx) — همه‌ی دکمه‌ها و فیلدها
+     گرد کامل (پیل) و لیکوئید گلس واقعی، به‌جای بک‌گراند تخت پیش‌فرض؛ فقط
+     همین بخش رو اسکوپ می‌کنه، بقیه‌ی جاهایی که از همین کلاس‌های پایه
+     (day-pill, wsearch-newform-name, button) استفاده می‌کنن دست‌نخورده می‌مونن */
+  .bodybuilding-glass button{ border-radius:999px; }
+  .bodybuilding-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .bodybuilding-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+  body[data-theme="light"] .bodybuilding-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+  .bodybuilding-glass .day-pill.on::after{ border-radius:999px; }
+  .bodybuilding-glass .wsearch-newform-name{
+    border-radius:999px; padding-right:18px; padding-left:18px;
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .bodybuilding-glass .wsearch-newform-name{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+  body[data-theme="light"] .bodybuilding-glass .wsearch-newform-name{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+
   /* new-item add button, in its own footer row so it can never float on top of the list */
   .wsearch-footer{flex-shrink:0; display:flex; justify-content:flex-end; padding-top:12px; position:relative; z-index:6;}
   .wsearch-fab-wrap{position:relative;}
@@ -1453,7 +1480,7 @@ body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
    چون در غیر این صورت هر تب شبیه یک دکمه‌ی شیشه‌ای جدا به‌نظر می‌رسید، نه
    دو نیمه‌ی یک کنترل واحد */
 .auth-tab{
-  position:relative; z-index:1; flex:1 1 50%; text-align:center; padding:10px 0;
+  position:relative; z-index:1; flex:1 1 0; min-width:0; text-align:center; padding:10px 0;
   border:none; background:none; border-radius:999px; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
   font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);

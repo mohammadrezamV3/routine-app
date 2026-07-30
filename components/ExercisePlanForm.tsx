@@ -1,6 +1,6 @@
 "use client";
 
-import { FA_WEEKDAY } from "@/lib/jalali";
+import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { LEVEL_LABELS, GOAL_LABELS, ExerciseLevel, ExerciseGoal } from "@/lib/exercisePlans";
 import { ExercisePlanFormValue, PHASE_LABELS, TrainingPhase } from "@/lib/exerciseTypes";
 
@@ -21,7 +21,7 @@ export function ExercisePlanForm({
     <>
       <label className="exercise-form-label">کدوم روزها می‌ری باشگاه؟</label>
       <div className="exercise-day-select">
-        {FA_WEEKDAY.map((d) => (
+        {CAL_WEEK_ORDER.map((i) => FA_WEEKDAY[i]).map((d) => (
           <span key={d} className={`day-pill${value.gymDays.includes(d) ? " on" : ""}`} onClick={() => toggleDay(d)}>
             {d}
           </span>

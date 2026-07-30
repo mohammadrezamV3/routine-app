@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
+import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal } from "@/lib/jalali";
 import { LEVEL_LABELS, GOAL_LABELS } from "@/lib/exercisePlans";
 import { ExercisePlanForm, validateExerciseForm } from "./ExercisePlanForm";
 import {
@@ -197,6 +197,11 @@ export function ExercisePanel() {
 
   // ------------- دارای برنامه فعال -------------
   const todayPlan = plan.planData.find((d) => d.day === todayName);
+  // هفته‌ی ایرانی از شنبه شروع می‌شه، نه از یکشنبه — planData ممکنه به هر
+  // ترتیبی از AI/قالب برگرده، پس همیشه قبل از نمایش با CAL_WEEK_ORDER مرتبش می‌کنیم
+  const weekPlanData = [...plan.planData].sort(
+    (a, b) => CAL_WEEK_ORDER.indexOf(FA_WEEKDAY.indexOf(a.day)) - CAL_WEEK_ORDER.indexOf(FA_WEEKDAY.indexOf(b.day))
+  );
 
   function renderItem(day: string, it: string) {
     const isSubbing = subbingItem === it;
@@ -245,7 +250,7 @@ export function ExercisePanel() {
       <div className="tm-extra">
         <div className="domain-sub">برنامه کامل هفته</div>
         <div className="exercise-week-grid">
-          {plan.planData.map((d) => (
+          {weekPlanData.map((d) => (
             <div key={d.day} className={`exercise-day-card${d.day === todayName ? " today" : ""}`}>
               <div className="exercise-day-head">
                 <span>{d.day}</span>
@@ -273,14 +278,10 @@ export function ExercisePanel() {
 
         {newProgramOpen && eligibility && eligibility !== "loading" && !eligibility.eligible && (
           <div className="exercise-ineligible-box">
-            {eligibility.reason === "cooldown" ? (
-              <div>هنوز {eligibility.daysRemaining} روز مونده تا بتونی برنامه‌ی جدید بگیری — با همین برنامه کار کن، نتیجه‌اش بهتره.</div>
-            ) : (
-              <div>
-                توی این دو هفته فقط {eligibility.completedSessions} از {eligibility.requiredSessions} جلسه‌ی لازم رو رفتی — برای گرفتن برنامه‌ی جدید
-                اول باید منظم‌تر همین برنامه رو دنبال کنی.
-              </div>
-            )}
+            <div>
+              توی این دو هفته فقط {eligibility.completedSessions} از {eligibility.requiredSessions} جلسه‌ی لازم رو رفتی — برای گرفتن برنامه‌ی جدید
+              اول باید منظم‌تر همین برنامه رو دنبال کنی.
+            </div>
             <button type="button" className="small" style={{ marginTop: 10 }} onClick={() => setNewProgramOpen(false)}>بستن</button>
           </div>
         )}

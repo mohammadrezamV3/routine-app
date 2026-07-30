@@ -6,6 +6,7 @@ import Link from "next/link";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { FoodSeedItem } from "@/lib/foodSeed";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
+import { SegmentedTabs } from "./SegmentedTabs";
 
 const todayKey = isoLocal(new Date());
 const DEFAULT_MEAL_TYPES: { key: string; label: string }[] = [
@@ -289,10 +290,12 @@ export function CaloriePanel() {
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <input type="number" className="wsearch-newform-name" style={{ flex: 1 }} placeholder="گرم" value={grams} onChange={(e) => setGrams(e.target.value)} />
-              <div className="day-picker" style={{ flex: 2 }}>
-                {mealTypes.map((m) => (
-                  <span key={m.key} className={`day-pill${mealType === m.key ? " on" : ""}`} onClick={() => setMealType(m.key)}>{m.label}</span>
-                ))}
+              <div style={{ flex: 2 }}>
+                <SegmentedTabs
+                  active={mealType}
+                  onChange={setMealType}
+                  options={mealTypes.map((m) => ({ value: m.key, label: m.label }))}
+                />
               </div>
             </div>
             <button
