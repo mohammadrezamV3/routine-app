@@ -537,7 +537,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
               <button
                 key={d}
                 type="button"
-                className={`rounded-lg border py-1 text-[9.5px] font-bold backdrop-blur-md transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.secondaryBtnBg} ${t.muted} ${t.accentHoverBorder}`}`}
+                className={`whitespace-nowrap rounded-lg border px-0.5 py-1 text-[9px] font-bold backdrop-blur-md transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.isLight ? "bg-white/70" : "bg-white/10"} ${t.muted} shadow-[inset_0_1px_0_rgba(255,255,255,.14)] ${t.accentHoverBorder}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
