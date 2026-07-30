@@ -259,6 +259,7 @@ export const DEFAULT_TICKER_SYMBOLS_INTERNATIONAL = ["SPY", "QQQ", "^VIX", "DIA"
 
 export const MAX_TICKER_SYMBOLS = 20;
 export const MIN_TICKER_SYMBOLS = 1;
+export const TICKER_SETTING_KEY = "tradeTickerSymbols";
 
 export function tickerLabelFor(symbol: string): string {
   return TICKER_CATALOG.find((s) => s.symbol === symbol)?.label ?? symbol;

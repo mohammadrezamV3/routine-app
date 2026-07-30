@@ -81,7 +81,7 @@ export function TradeDayHistory({
                   <span className="trade-day-pnl-wrap">
                     <span className="trade-day-pnl-label">سود/زیان</span>
                     <span className="mono trade-day-pnl" style={{ color: e.pnl >= 0 ? "var(--accent)" : "#E05252" }}>
-                      {faNum(e.pnl)}
+                      {faNum(e.pnl.toFixed(1))}
                     </span>
                   </span>
                 )}

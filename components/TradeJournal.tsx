@@ -8,20 +8,49 @@ import {
 import { G_MONTHS, gregorianMonthLength } from "@/lib/gregorian";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { TradeDayHistory } from "./TradeDayHistory";
-import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeEntryFields } from "./TradeEntryFields";
-import { getSetting, setSetting } from "@/lib/storage";
+import { getSetting } from "@/lib/storage";
 import {
-  TradeEntry, TradeFormState, EMPTY_TRADE_FORM,
+  TradeEntry, TradeFormState, EMPTY_TRADE_FORM, CalSystem, CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY,
   formStateToCreateBody, formStateToUpdateBody,
 } from "@/lib/tradeTypes";
-
-type CalSystem = "jalali" | "gregorian";
-const CAL_SYSTEM_KEY = "tradeCalendarSystem";
 
 const now = new Date();
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 const todayIso = isoLocal(now);
+
+// حلقه‌ی پیشرفتِ هدف ماهانه — دقیقاً همون رنگ سبز/قرمزِ سود و زیانِ بقیه‌ی
+// ژورنال، فقط این‌بار به‌شکل دایره‌ای به‌جای عدد خام
+function TradeGoalRing({ current, goal }: { current: number; goal: number }) {
+  const pct = goal > 0 ? Math.min(1, Math.max(0, current / goal)) : 0;
+  const r = 30;
+  const c = 2 * Math.PI * r;
+  const positive = current >= 0;
+  return (
+    <div className="trade-goal-ring-row">
+      <div className="trade-goal-ring-wrap">
+        <svg viewBox="0 0 72 72" className="trade-goal-ring">
+          <circle cx="36" cy="36" r={r} fill="none" stroke="var(--line)" strokeWidth="6" />
+          <circle
+            cx="36" cy="36" r={r} fill="none" strokeWidth="6" strokeLinecap="round"
+            stroke={positive ? "var(--accent)" : "#E05252"}
+            strokeDasharray={c}
+            strokeDashoffset={c * (1 - pct)}
+            transform="rotate(-90 36 36)"
+            className="trade-goal-ring-fill"
+          />
+        </svg>
+        <span className="trade-goal-ring-pct mono">{faNum(Math.round(pct * 100))}٪</span>
+      </div>
+      <div className="trade-goal-ring-text">
+        <div className="trade-stat-label">هدف ماهانه</div>
+        <div className="trade-stat-value" style={{ color: positive ? "var(--accent)" : "#E05252" }}>
+          {faNum(current.toFixed(1))}<span className="calorie-meal-of"> / {faNum(goal.toFixed(1))}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function TradeJournal() {
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
@@ -31,19 +60,19 @@ export function TradeJournal() {
   const [selectedIso, setSelectedIso] = useState<string>(todayIso);
   const [historyIso, setHistoryIso] = useState<string>(todayIso);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [newTradeOpen, setNewTradeOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<TradeFormState>(EMPTY_TRADE_FORM);
+  const [monthlyGoal, setMonthlyGoal] = useState(0);
 
   function patchForm(patch: Partial<TradeFormState>) {
     setForm((f) => ({ ...f, ...patch }));
   }
 
+  useEffect(() => { getSetting<number>(MONTHLY_GOAL_KEY, 0).then(setMonthlyGoal); }, []);
+  // خودِ انتخاب شمسی/میلادی هم دیگه اینجا نیست — رفته توی پنل کاربری؛ این‌جا فقط
+  // مقدار ذخیره‌شده رو موقع mount می‌خونه
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
-
-  function changeCalSystem(v: CalSystem) {
-    setCalSystem(v);
-    setSetting(CAL_SYSTEM_KEY, v);
-  }
 
   // با عوض شدن سیستم تقویم، ماه نمایش‌داده‌شده به «همین ماه» توی همون سیستم برمی‌گرده —
   // چون ماه شمسی/میلادی جاری لزوماً عدد یکسانی ندارن و تبدیل مستقیم بین‌شون معنی نداره.
@@ -178,7 +207,7 @@ export function TradeJournal() {
         <span className="cal-daynum mono">{faNum(d)}</span>
         {hasEntries && (
           <span className="trade-cal-pnl mono" style={{ color: dayTotal >= 0 ? "var(--accent)" : "#E05252" }}>
-            {faNum(dayTotal.toFixed(0))}
+            {faNum(dayTotal.toFixed(1))}
           </span>
         )}
       </div>
@@ -190,21 +219,14 @@ export function TradeJournal() {
   return (
     <div style={{ marginTop: 10 }}>
       <div className="domain-sub" style={{ margin: 0 }}>پرتفوی ماهانه</div>
-      <div className="trade-cal-toggle-row">
-        <SegmentedTabs
-          active={calSystem}
-          onChange={changeCalSystem}
-          options={[
-            { value: "jalali", label: "شمسی" },
-            { value: "gregorian", label: "میلادی" },
-          ]}
-        />
-      </div>
+
+      {monthlyGoal > 0 && <TradeGoalRing current={monthTotal} goal={monthlyGoal} />}
+
       <div className="trade-stats-grid">
         <div className="trade-stat-tile trade-stat-tile-wide">
           <div className="trade-stat-label">سود/زیان این ماه</div>
           <div className="trade-stat-value" style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>
-            {faNum(monthTotal.toFixed(2))}
+            {faNum(monthTotal.toFixed(1))}
           </div>
         </div>
         <div className="trade-stat-tile">
@@ -242,18 +264,39 @@ export function TradeJournal() {
       </div>
 
       <div className="tm-extra">
-        <div className="domain-sub">ثبت معامله جدید</div>
-        <div className="trade-entry-date-row">
-          <span>برای تاریخ:</span>
-          <button type="button" className="jdate-btn trade-date-btn" onClick={() => setDatePickerOpen(true)}>
-            {formatJalali(selectedJalali)}
-          </button>
-        </div>
-
-        <TradeEntryFields value={form} onChange={patchForm} />
-
-        <button onClick={addTrade} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>ثبت معامله</button>
+        <button type="button" onClick={() => setNewTradeOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+          ثبت معامله جدید
+        </button>
       </div>
+
+      {newTradeOpen && (
+        <>
+          <div className="modal-overlay open" onClick={() => setNewTradeOpen(false)} />
+          <div className="modal-panel open">
+            <div className="modal-head">
+              <div className="modal-title">ثبت معامله جدید</div>
+              <button className="nav-close" onClick={() => setNewTradeOpen(false)} aria-label="بستن">×</button>
+            </div>
+            <div className="modal-body">
+              <div className="trade-entry-date-row">
+                <span>برای تاریخ:</span>
+                <button type="button" className="jdate-btn trade-date-btn" onClick={() => setDatePickerOpen(true)}>
+                  {formatJalali(selectedJalali)}
+                </button>
+              </div>
+
+              <TradeEntryFields value={form} onChange={patchForm} />
+
+              <button
+                onClick={async () => { await addTrade(); setNewTradeOpen(false); }}
+                style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}
+              >
+                ثبت معامله
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {datePickerOpen && (
         <JalaliDatePicker

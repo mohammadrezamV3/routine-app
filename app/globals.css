@@ -321,14 +321,13 @@
   .notif-panel-item-title{ font-size:12px; font-weight:700; color:var(--text); }
   .notif-panel-item-body{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.6; }
 
-  /* تایم + استریک توی هدر — سمت چپِ دکمه‌ی نوتیف */
+  /* تایم + استریک — حالا توی منوی همبرگری، نه هدر */
   .header-streak-clock{
     display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); white-space:nowrap;
   }
   .header-streak-clock-sep{ width:1px; height:12px; background:var(--line); }
   .header-streak-clock-streak{ display:flex; align-items:center; gap:3px; color:var(--accent); font-weight:600; }
   .header-streak-clock-streak .streak-flame{ width:12px; height:12px; }
-  @media (max-width:400px){ .header-streak-clock-time{ display:none; } .header-streak-clock-sep{ display:none; } }
 
   /* شعله‌ی استریک — هرچی عدد بالاتر بره، انیمیشنش خفن‌تر می‌شه: از یه فلیم
      ساکنِ خاکستری (۰) تا فلیکر آروم (۱-۶)، گلوی نورانی (۷-۲۹)، فلیکر
@@ -466,6 +465,12 @@
     background:none; box-shadow:none;
   }
   .theme-row{display:none;}
+  .nav-streak-clock-row{
+    padding:10px 4px; margin-bottom:6px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:flex-end;
+  }
+  .nav-streak-clock-row .header-streak-clock{ font-size:12.5px; }
+  .nav-streak-clock-row .header-streak-clock-streak .streak-flame{ width:14px; height:14px; }
 
   /* mobile: keep the open drawer smaller and closer to the header */
   @media (max-width:700px){
@@ -547,6 +552,21 @@
     border-radius:22px; padding:14px 16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
   }
   .trade-stat-tile-wide{ grid-column:1 / -1; }
+
+  /* حلقه‌ی هدف ماهانه — همون قاب شیشه‌ایِ کارت‌های آمار، فقط با یه دایره‌ی
+     SVG به‌جای عدد خام؛ فقط وقتی هدف توی پنل کاربری تنظیم شده باشه نشون داده می‌شه */
+  .trade-goal-ring-row{
+    display:flex; align-items:center; gap:14px; margin:10px 0 14px;
+    padding:14px 16px; border-radius:22px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  }
+  .trade-goal-ring-wrap{ position:relative; width:72px; height:72px; flex-shrink:0; }
+  .trade-goal-ring{ width:100%; height:100%; }
+  .trade-goal-ring-fill{ transition:stroke-dashoffset .5s ease; }
+  .trade-goal-ring-pct{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700; color:var(--text);
+  }
+  .trade-goal-ring-text{ flex:1; min-width:0; }
 
   /* دسکتاپ فقط: بخش ترید از ستونِ باریکِ ۶۲۰پیکسلیِ سایت بیرون می‌زنه و
      عریض‌تر می‌شه (همون ترفندِ breakout پلن‌ها توی لندینگ)، آمار KPI هم توی

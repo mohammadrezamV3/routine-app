@@ -193,7 +193,6 @@ export function NavDrawer() {
                   </button>
                   {notifPanelOpen && <NotificationPanel onClose={() => setNotifPanelOpen(false)} />}
                 </div>
-                <HeaderStreakClock />
               </>
             ) : (
               <div ref={authSlotRef}>
@@ -234,6 +233,12 @@ export function NavDrawer() {
             </button>
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
+
+          {status === "authenticated" && (
+            <div className="nav-streak-clock-row">
+              <HeaderStreakClock />
+            </div>
+          )}
 
           {LINKS.map((l) => (
             <a

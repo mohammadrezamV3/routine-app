@@ -5,11 +5,10 @@ import { getSetting, setSetting } from "@/lib/storage";
 import { getSiteMarket } from "@/lib/market";
 import {
   DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL,
-  MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, tickerLabelFor,
+  MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, tickerLabelFor, TICKER_SETTING_KEY,
 } from "@/lib/tickerSymbols";
 import { MarketPicker } from "./MarketPicker";
 
-export const TICKER_SETTING_KEY = "tradeTickerSymbols";
 const ONBOARDED_KEY = "tradeMarketsOnboarded";
 const POLL_MS = 30_000;
 
