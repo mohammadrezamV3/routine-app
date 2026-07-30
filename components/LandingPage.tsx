@@ -122,18 +122,18 @@ type PlanCard = {
 // ترتیب پلن‌ها: Base Plan (رایگان) اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
 const PLANS_IRAN: PlanCard[] = [
   {
-    key: "basic", nameFa: "Base Plan", free: true,
+    key: "basic", nameFa: "پلن پایه", free: true,
   },
   {
-    key: "exercise", nameFa: "Plan Gym",
+    key: "exercise", nameFa: "پلن بدنسازی",
     prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۸۳۰,۰۰۰ تومان" },
   },
   {
-    key: "trade", nameFa: "Plan Trader",
+    key: "trade", nameFa: "پلن ترید",
     prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۰۸۰,۰۰۰ تومان" },
   },
   {
-    key: "max", nameFa: "Plan Max", highlight: true,
+    key: "max", nameFa: "پلن مکس", highlight: true,
     prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
   },
 ];
@@ -510,14 +510,16 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           محبوب‌ترین
         </span>
       )}
-      <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
-      <button
-        type="button"
-        onClick={scrollToDetails}
-        className={`plan-details-btn mt-1 self-start border-0 bg-transparent p-0 text-right text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
-      >
-        {isIntl ? "Details" : "جزئیات"}
-      </button>
+      <div className="flex items-center justify-between gap-2">
+        <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+        <button
+          type="button"
+          onClick={scrollToDetails}
+          className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
+        >
+          {isIntl ? "Details" : "جزئیات"}
+        </button>
+      </div>
 
       <div className="flex-1" />
 
@@ -535,7 +537,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
               <button
                 key={d}
                 type="button"
-                className={`rounded-lg border py-1.5 text-[10px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
+                className={`rounded-lg border py-1 text-[9.5px] font-bold backdrop-blur-md transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.secondaryBtnBg} ${t.muted} ${t.accentHoverBorder}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
@@ -550,7 +552,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}
             className={`mt-2.5 block w-full rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
-            فعال‌سازی این پلن
+            خرید اشتراک
           </Link>
         </>
       )}
