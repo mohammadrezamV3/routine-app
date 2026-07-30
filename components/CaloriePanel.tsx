@@ -41,9 +41,9 @@ export function CaloriePanel() {
   const [entries, setEntries] = useState<Entry[]>([]);
 
   // فرم هدف کالری
-  const [goal, setGoal] = useState<CalorieGoal | null>(null);
+  const [goal, setGoal] = useState<CalorieGoal>("maintain");
   const [mealsPerDay, setMealsPerDay] = useState(4);
-  const [sex, setSex] = useState<Sex | null>(null);
+  const [sex, setSex] = useState<Sex>("male");
   const [age, setAge] = useState("");
   const [goalHeight, setGoalHeight] = useState("");
   const [goalWeight, setGoalWeight] = useState("");
@@ -182,14 +182,14 @@ export function CaloriePanel() {
 
           <label className="exercise-form-label">هدف</label>
           <SegmentedTabs
-            active={(goal ?? "") as CalorieGoal}
+            active={goal}
             onChange={setGoal}
             options={(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => ({ value: g, label: CALORIE_GOAL_LABELS[g] }))}
           />
 
           <label className="exercise-form-label">جنسیت</label>
           <SegmentedTabs
-            active={(sex ?? "") as Sex}
+            active={sex}
             onChange={setSex}
             options={[
               { value: "male", label: "مرد" },

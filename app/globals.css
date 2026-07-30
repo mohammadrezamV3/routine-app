@@ -37,7 +37,7 @@
     --bg-rgb:243,233,216;
     --text:#3A2A18;
     --muted:#8A7355;
-    --muted2:#D9C9A3;
+    --muted2:#A68A6E;
     --accent:#B85C1F;
     --accent-rgb:184,92,31;
     --accent-dim:rgba(184,92,31,.14);
@@ -46,10 +46,12 @@
     --line:#E4D6B8;
     --sun:#FFC94A;
     --moon:#7B4FE0;
-    /* طلایی — رنگ دومِ روز، برای همون لحظه‌های «ویژه» */
-    --secondary:#9C7A23;
-    --secondary-rgb:156,122,35;
-    --secondary-dim:rgba(156,122,35,.16);
+    /* قهوه‌ای تیره — رنگ دومِ روز، برای همون لحظه‌های «ویژه»؛ قبلاً طلایی بود،
+       ولی توی تم روشن هیچ فونتی نباید کرمی/طلایی باشه — عناوین نارنجی، متن‌ها
+       قهوه‌ای/سیاه */
+    --secondary:#6B3F17;
+    --secondary-rgb:107,63,23;
+    --secondary-dim:rgba(107,63,23,.16);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
 
@@ -122,6 +124,15 @@
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
   .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-plexmono), monospace; margin-bottom:18px;}
+  /* تم روشن: هیچ فونتی نباید کرمی/طلایی باشه — عنوان‌ها نارنجی (accent)،
+     متن‌های توضیحی قهوه‌ای (muted) به‌جای accent-soft که رنگش لایت-نارنجی/طلایی‌مانند بود */
+  body[data-theme="light"] h1,
+  body[data-theme="light"] h2,
+  body[data-theme="light"] .landing-section-title,
+  body[data-theme="light"] .domain-sub{
+    color:var(--accent);
+  }
+  body[data-theme="light"] .section-note{ color:var(--muted); }
   .disclaimer-note{font-size:11px; color:var(--muted2); margin-top:14px; line-height:1.7;}
 
   .task{

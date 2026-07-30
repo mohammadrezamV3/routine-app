@@ -36,7 +36,7 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   level: "beginner",
   heightCm: "",
   weightKg: "",
-  goal: null,
+  goal: "hypertrophy",
   hasLimitation: false,
   gymDays: [],
   trainingPhase: "none",

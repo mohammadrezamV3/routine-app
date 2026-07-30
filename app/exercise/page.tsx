@@ -11,14 +11,12 @@ export default function BodybuildingPage() {
 
   return (
     <section className="bodybuilding-glass">
-      <h1>بدنسازی</h1>
-
-      <div style={{ marginTop: 10 }}>
+      <div>
         <SegmentedTabs
           active={tab}
           onChange={setTab}
           options={[
-            { value: "exercise", label: "ورزش" },
+            { value: "exercise", label: "بدنسازی" },
             { value: "calorie", label: "کالری" },
           ]}
         />
