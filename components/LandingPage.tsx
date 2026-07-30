@@ -496,14 +496,8 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col gap-2 rounded-2xl border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} px-5 py-4 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex flex-col gap-2 rounded-2xl border ${t.cardBorder} ${t.cardBg} px-5 py-4 backdrop-blur-xl ${t.shadow}`;
-
-  const buyHref = p.free ? "/auth/signup" : `/auth/signup?plan=${p.key}&duration=${duration}`;
-  const buyLabel = p.free ? (isIntl ? "Start free" : "شروع رایگان") : (isIntl ? "Buy" : "خرید");
-  const buyClass = p.free || p.highlight
-    ? `text-white hover:brightness-105 ${p.free ? t.accentBg : t.secondaryBg}`
-    : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`;
+    ? `relative flex flex-col rounded-[22px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-4 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex flex-col rounded-[22px] border ${t.cardBorder} ${t.cardBg} p-4 backdrop-blur-xl ${t.shadow}`;
 
   function scrollToDetails() {
     document.getElementById("plans-compare-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -512,45 +506,54 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
       {p.highlight && (
-        <span className={`absolute -top-3 right-5 rounded-full px-3 py-1 text-[10px] font-extrabold text-white ${t.secondaryBg}`}>
+        <span className={`absolute -top-2.5 right-5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold text-white ${t.secondaryBg}`}>
           محبوب‌ترین
         </span>
       )}
+      <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+      <button
+        type="button"
+        onClick={scrollToDetails}
+        className={`plan-details-btn mt-1 self-start border-0 bg-transparent p-0 text-right text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
+      >
+        {isIntl ? "Details" : "جزئیات"}
+      </button>
 
-      {/* خط اول: فقط اسم پلن، سمت چپ */}
-      <div className={`text-left text-base font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+      <div className="flex-1" />
 
-      {/* خط دوم: جزئیات (بدون بک‌گراند) + انتخاب دوره (یک select، نه چهار دکمه) + قیمت + خرید — همه در یک ردیف */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={scrollToDetails}
-            className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
+      {p.free ? (
+        <>
+          <div className={`mt-2.5 text-[15px] font-extrabold ${t.heading}`}>رایگان</div>
+          <Link href="/auth/signup" className={`mt-2.5 block w-full rounded-xl py-2.5 text-center text-[12.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
+            شروع رایگان
+          </Link>
+        </>
+      ) : (
+        <>
+          <div className="mt-2.5 grid grid-cols-4 gap-1">
+            {DURATIONS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className={`rounded-lg border py-1.5 text-[10px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
+                onClick={() => setDuration(d)}
+              >
+                {labels[d]}
+              </button>
+            ))}
+          </div>
+          <div className={`mt-2 text-[15px] font-extrabold ${t.heading}`}>
+            {p.prices![duration]}
+            <span className={`mr-1 text-[10.5px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
+          </div>
+          <Link
+            href={`/auth/signup?plan=${p.key}&duration=${duration}`}
+            className={`mt-2.5 block w-full rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
-            {isIntl ? "Details" : "جزئیات"}
-          </button>
-
-          {!p.free && (
-            <select
-              value={duration}
-              onChange={(e) => setDuration(e.target.value as Duration)}
-              aria-label={isIntl ? "Billing period" : "دوره پرداخت"}
-              className={`rounded-lg border ${t.line} bg-transparent px-1.5 py-1 text-[11px] font-bold ${t.heading} outline-none transition ${t.accentHoverBorder}`}
-            >
-              {DURATIONS.map((d) => <option key={d} value={d}>{labels[d]}</option>)}
-            </select>
-          )}
-
-          <span className={`text-[13px] font-extrabold ${t.heading}`}>
-            {p.free ? (isIntl ? "Free" : "رایگان") : p.prices![duration]}
-          </span>
-        </div>
-
-        <Link href={buyHref} className={`rounded-xl px-4 py-1.5 text-[12px] font-bold transition active:scale-[0.97] ${buyClass}`}>
-          {buyLabel}
-        </Link>
-      </div>
+            فعال‌سازی این پلن
+          </Link>
+        </>
+      )}
     </motion.div>
   );
 }
