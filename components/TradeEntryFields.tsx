@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { compressImageToDataUrl } from "@/lib/image";
-import { TradeFormState } from "@/lib/tradeTypes";
+import { computeTradePnl, TradeFormState } from "@/lib/tradeTypes";
+import { faNum } from "@/lib/jalali";
+import { SegmentedTabs } from "./SegmentedTabs";
 
 // فیلدهای مشترک فرم معامله — هم فرم «ثبت معامله جدید» هم فرم «ویرایش معامله»
 // از همین استفاده می‌کنن، تا استایل شیشه‌ای/رفتار عکس همه‌جا یکی بمونه.
@@ -31,26 +33,74 @@ export function TradeEntryFields({
     }
   }
 
+  const pnl = computeTradePnl(
+    value.direction,
+    value.entryPrice ? +value.entryPrice : null,
+    value.exitPrice ? +value.exitPrice : null,
+    value.lotSize ? +value.lotSize : null
+  );
+
   return (
     <>
-      <div className="day-picker" style={{ marginTop: 10 }}>
-        <span className={`day-pill${value.direction === "long" ? " on" : ""}`} onClick={() => onChange({ direction: "long" })}>Long</span>
-        <span className={`day-pill${value.direction === "short" ? " on" : ""}`} onClick={() => onChange({ direction: "short" })}>Short</span>
+      <label className="exercise-form-label" style={{ marginTop: 10 }}>جهت معامله</label>
+      <SegmentedTabs
+        active={value.direction}
+        onChange={(v) => onChange({ direction: v })}
+        options={[
+          { value: "long", label: "Long" },
+          { value: "short", label: "Short" },
+        ]}
+      />
+
+      <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">جفت‌ارز</label>
+          <input className="wsearch-newform-name trade-glass-field" placeholder="EURUSD" value={value.pair} onChange={(e) => onChange({ pair: e.target.value })} />
+        </div>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">قیمت ورود</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="1.0950" value={value.entryPrice} onChange={(e) => onChange({ entryPrice: e.target.value })} />
+        </div>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">قیمت خروج</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="1.1020" value={value.exitPrice} onChange={(e) => onChange({ exitPrice: e.target.value })} />
+        </div>
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-        <input className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="جفت‌ارز" value={value.pair} onChange={(e) => onChange({ pair: e.target.value })} />
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="قیمت ورود" value={value.entryPrice} onChange={(e) => onChange({ entryPrice: e.target.value })} />
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="قیمت خروج" value={value.exitPrice} onChange={(e) => onChange({ exitPrice: e.target.value })} />
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 70px" }} placeholder="لات" value={value.lotSize} onChange={(e) => onChange({ lotSize: e.target.value })} />
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="سود/زیان" value={value.pnl} onChange={(e) => onChange({ pnl: e.target.value })} />
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">لات</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="0.10" value={value.lotSize} onChange={(e) => onChange({ lotSize: e.target.value })} />
+        </div>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">حجم معامله</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="1000" value={value.volume} onChange={(e) => onChange({ volume: e.target.value })} />
+        </div>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">سود/زیان</label>
+          <div className="trade-pnl-readout mono" style={{ color: pnl === null ? "var(--muted2)" : pnl >= 0 ? "var(--accent)" : "#E05252" }}>
+            {pnl === null ? "—" : faNum(parseFloat(pnl.toFixed(4)))}
+          </div>
+        </div>
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="حد ضرر" value={value.stopLoss} onChange={(e) => onChange({ stopLoss: e.target.value })} />
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="حد سود" value={value.takeProfit} onChange={(e) => onChange({ takeProfit: e.target.value })} />
-        <input type="number" className="wsearch-newform-name trade-glass-field" style={{ flex: "1 1 90px" }} placeholder="درصد ریسک" value={value.riskPercent} onChange={(e) => onChange({ riskPercent: e.target.value })} />
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">حد ضرر</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="1.0900" value={value.stopLoss} onChange={(e) => onChange({ stopLoss: e.target.value })} />
+        </div>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">حد سود</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="1.1050" value={value.takeProfit} onChange={(e) => onChange({ takeProfit: e.target.value })} />
+        </div>
+        <div style={{ flex: "1 1 90px" }}>
+          <label className="exercise-form-label">درصد ریسک</label>
+          <input type="number" className="wsearch-newform-name trade-glass-field" placeholder="1" value={value.riskPercent} onChange={(e) => onChange({ riskPercent: e.target.value })} />
+        </div>
       </div>
-      <input className="wsearch-newform-name trade-glass-field" style={{ marginTop: 8 }} placeholder="استراتژی/ستاپ (اختیاری)" value={value.strategy} onChange={(e) => onChange({ strategy: e.target.value })} />
-      <input className="wsearch-newform-name trade-glass-field" style={{ marginTop: 8 }} placeholder="یادداشت (اختیاری)" value={value.notes} onChange={(e) => onChange({ notes: e.target.value })} />
+
+      <label className="exercise-form-label">استراتژی/ستاپ (اختیاری)</label>
+      <input className="wsearch-newform-name trade-glass-field" placeholder="بریک‌اوت" value={value.strategy} onChange={(e) => onChange({ strategy: e.target.value })} />
+      <label className="exercise-form-label">یادداشت (اختیاری)</label>
+      <input className="wsearch-newform-name trade-glass-field" placeholder="نکات این معامله" value={value.notes} onChange={(e) => onChange({ notes: e.target.value })} />
 
       <div className="trade-shot-row">
         <label className="trade-shot-btn">

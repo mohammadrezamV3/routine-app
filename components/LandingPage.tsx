@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Check, ChevronLeft, ChevronRight, Quote, X,
   ClipboardList, Clock, ShieldCheck, TrendingUp, Headset, Lightbulb,
-  Smartphone, BarChart3,
+  Smartphone, BarChart3, Zap, Users, Sparkles,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
@@ -81,15 +81,15 @@ const TODAY_ITEMS = [
   { label: "مدیتیشن", done: true },
   { label: "ورزش", done: true },
   { label: "مطالعه", done: true },
-  { label: "نوشیدن آب", done: false },
-  { label: "یادداشت روزانه", done: false },
+  { label: "نوشیدن آب", done: true },
+  { label: "یادداشت روزانه", done: true },
 ];
 const TODAY_ITEMS_INTL = [
   { label: "Meditation", done: true },
   { label: "Workout", done: true },
   { label: "Reading", done: true },
-  { label: "Drink water", done: false },
-  { label: "Daily journal", done: false },
+  { label: "Drink water", done: true },
+  { label: "Daily journal", done: true },
 ];
 
 const WHY_US = [
@@ -99,6 +99,9 @@ const WHY_US = [
   { icon: Lightbulb, color: "#F59E0B", title: "ابزارهای کاربردی", body: "همه‌چیز برای رشد در یک اپلیکیشن" },
   { icon: Smartphone, color: "#EC4899", title: "همه‌جا در دسترس", body: "موبایل، تبلت یا دسکتاپ — همیشه همراهته" },
   { icon: BarChart3, color: "#06B6D4", title: "پیشرفت قابل‌مشاهده", body: "آمار و گزارش دقیق از مسیر پیشرفتت" },
+  { icon: Zap, color: "#F97316", title: "سریع و ساده", body: "بدون شلوغی، فقط چیزی که واقعاً لازم داری" },
+  { icon: Users, color: "#14B8A6", title: "برای همه سبک‌ها", body: "از مبتدی تا حرفه‌ای، متناسب با روال خودت" },
+  { icon: Sparkles, color: "#8B5CF6", title: "همیشه در حال بهتر شدن", body: "فیچرهای جدید مرتب اضافه می‌شن" },
 ];
 const WHY_US_INTL = [
   { icon: ShieldCheck, color: "#22C55E", title: "Private & secure", body: "Your data stays 100% protected" },
@@ -107,6 +110,9 @@ const WHY_US_INTL = [
   { icon: Lightbulb, color: "#F59E0B", title: "Practical tools", body: "Everything to grow, in one app" },
   { icon: Smartphone, color: "#EC4899", title: "Access anywhere", body: "Mobile, tablet or desktop — always with you" },
   { icon: BarChart3, color: "#06B6D4", title: "Visible progress", body: "Clear stats and reports on your journey" },
+  { icon: Zap, color: "#F97316", title: "Fast & simple", body: "No clutter, just what you actually need" },
+  { icon: Users, color: "#14B8A6", title: "For every style", body: "Beginner to pro, fits your own routine" },
+  { icon: Sparkles, color: "#8B5CF6", title: "Always improving", body: "New features shipped regularly" },
 ];
 
 type Duration = "1" | "3" | "6" | "12";
@@ -574,7 +580,7 @@ export function LandingPage() {
   return (
     <>
       <section id="sec-landing-hero" style={{ paddingTop: 18 }}>
-        <div ref={heroRef} className="text-right">
+        <div ref={heroRef} className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 text-right ${t.shadow} backdrop-blur-xl sm:p-9`}>
           <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
             همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
           </h1>
@@ -666,10 +672,10 @@ export function LandingPage() {
               <tbody>
                 <tr>
                   <td colSpan={plans.length + 1} className={`border-t ${t.line} p-0`}>
-                    <div className="relative py-4">
-                      <div className="pointer-events-none select-none space-y-2.5 blur-sm" aria-hidden="true">
+                    <div className="relative py-1">
+                      <div className="pointer-events-none w-full select-none blur-sm" aria-hidden="true">
                         {upcomingRows.map((row) => (
-                          <div key={row.label} className="flex items-center justify-between gap-4">
+                          <div key={row.label} className="flex w-full items-center justify-between gap-4 py-3.5">
                             <span className={`text-[11.5px] font-semibold ${t.heading}`}>{row.label}</span>
                             <div className="flex items-center gap-6">
                               {plans.map((p) => (

@@ -32,7 +32,7 @@ export function GoogleSignInButton() {
       className="auth-google-btn"
       disabled={loading}
       data-anim-field
-      onClick={() => { setLoading(true); signIn("google", { callbackUrl: "/" }); }}
+      onClick={() => { setLoading(true); signIn("google", { callbackUrl: "/weekly" }); }}
     >
       <span className="auth-google-badge" aria-hidden="true">
         <svg viewBox="0 0 48 48">

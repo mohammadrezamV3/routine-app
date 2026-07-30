@@ -72,7 +72,7 @@ export default function LoginPage() {
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
       return;
     }
-    router.push("/");
+    router.push("/weekly");
   }
 
   return (

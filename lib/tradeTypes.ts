@@ -5,6 +5,7 @@ export type TradeEntry = {
   entryPrice: number;
   exitPrice: number | null;
   lotSize: number;
+  volume: number | null;
   pnl: number | null;
   riskPercent: number | null;
   stopLoss: number | null;
@@ -16,14 +17,15 @@ export type TradeEntry = {
 };
 
 // حالت فرم (رشته‌ای، برای بایند شدن مستقیم به input) — هم فرم «ثبت معامله
-// جدید» و هم فرم «ویرایش معامله» از همین شکل استفاده می‌کنن
+// جدید» و هم فرم «ویرایش معامله» از همین شکل استفاده می‌کنن. سود/زیان اینجا
+// نیست چون دیگه ورودی دستی نیست — همیشه از قیمت ورود/خروج/لات/جهت محاسبه می‌شه.
 export type TradeFormState = {
   pair: string;
   direction: "long" | "short";
   entryPrice: string;
   exitPrice: string;
   lotSize: string;
-  pnl: string;
+  volume: string;
   stopLoss: string;
   takeProfit: string;
   riskPercent: string;
@@ -38,7 +40,7 @@ export const EMPTY_TRADE_FORM: TradeFormState = {
   entryPrice: "",
   exitPrice: "",
   lotSize: "",
-  pnl: "",
+  volume: "",
   stopLoss: "",
   takeProfit: "",
   riskPercent: "",
@@ -54,7 +56,7 @@ export function tradeEntryToFormState(e: TradeEntry): TradeFormState {
     entryPrice: String(e.entryPrice),
     exitPrice: e.exitPrice !== null ? String(e.exitPrice) : "",
     lotSize: String(e.lotSize),
-    pnl: e.pnl !== null ? String(e.pnl) : "",
+    volume: e.volume !== null ? String(e.volume) : "",
     stopLoss: e.stopLoss !== null ? String(e.stopLoss) : "",
     takeProfit: e.takeProfit !== null ? String(e.takeProfit) : "",
     riskPercent: e.riskPercent !== null ? String(e.riskPercent) : "",
@@ -62,6 +64,28 @@ export function tradeEntryToFormState(e: TradeEntry): TradeFormState {
     notes: e.notes || "",
     screenshotUrl: e.screenshotUrl,
   };
+}
+
+// سود/زیان رو از قیمت ورود/خروج، لات و جهت معامله حساب می‌کنیم — تا وقتی
+// قیمت خروج ثبت نشده (معامله هنوز بازه)، مقداری برای محاسبه نیست
+export function computeTradePnl(
+  direction: "long" | "short",
+  entryPrice: number | null,
+  exitPrice: number | null,
+  lotSize: number | null
+): number | null {
+  if (!entryPrice || exitPrice === null || !lotSize) return null;
+  const diff = exitPrice - entryPrice;
+  return (direction === "long" ? diff : -diff) * lotSize;
+}
+
+function formPnl(v: TradeFormState): number | null {
+  return computeTradePnl(
+    v.direction,
+    v.entryPrice ? +v.entryPrice : null,
+    v.exitPrice ? +v.exitPrice : null,
+    v.lotSize ? +v.lotSize : null
+  );
 }
 
 // برای POST — فیلد خالی یعنی «ارسال نشه» (سرور مقدار پیش‌فرض/نال خودش رو می‌ذاره)
@@ -72,7 +96,8 @@ export function formStateToCreateBody(v: TradeFormState) {
     entryPrice: v.entryPrice ? +v.entryPrice : undefined,
     exitPrice: v.exitPrice ? +v.exitPrice : undefined,
     lotSize: v.lotSize ? +v.lotSize : undefined,
-    pnl: v.pnl ? +v.pnl : undefined,
+    volume: v.volume ? +v.volume : undefined,
+    pnl: formPnl(v) ?? undefined,
     stopLoss: v.stopLoss ? +v.stopLoss : undefined,
     takeProfit: v.takeProfit ? +v.takeProfit : undefined,
     riskPercent: v.riskPercent ? +v.riskPercent : undefined,
@@ -92,7 +117,8 @@ export function formStateToUpdateBody(id: string, v: TradeFormState) {
     entryPrice: v.entryPrice ? +v.entryPrice : null,
     exitPrice: v.exitPrice ? +v.exitPrice : null,
     lotSize: v.lotSize ? +v.lotSize : null,
-    pnl: v.pnl ? +v.pnl : null,
+    volume: v.volume ? +v.volume : null,
+    pnl: formPnl(v),
     stopLoss: v.stopLoss ? +v.stopLoss : null,
     takeProfit: v.takeProfit ? +v.takeProfit : null,
     riskPercent: v.riskPercent ? +v.riskPercent : null,

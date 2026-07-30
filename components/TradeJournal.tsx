@@ -240,7 +240,7 @@ export function TradeJournal() {
         <div className="domain-sub">ثبت معامله جدید</div>
         <div className="trade-entry-date-row">
           <span>برای تاریخ:</span>
-          <button type="button" className="jdate-btn" onClick={() => setDatePickerOpen(true)}>
+          <button type="button" className="jdate-btn trade-date-btn" onClick={() => setDatePickerOpen(true)}>
             {formatJalali(selectedJalali)}
           </button>
         </div>

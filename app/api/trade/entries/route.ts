@@ -13,6 +13,7 @@ type SharedFields = {
   direction?: "long" | "short";
   entryPrice?: number | null;
   lotSize?: number | null;
+  volume?: number | null;
   stopLoss?: number | null;
   takeProfit?: number | null;
   riskPercent?: number | null;
@@ -30,7 +31,7 @@ function validateSharedFields(f: SharedFields): string | null {
   if (f.lotSize !== undefined && f.lotSize !== null && (typeof f.lotSize !== "number" || f.lotSize <= 0)) {
     return "لات باید عدد مثبت باشد";
   }
-  for (const [label, v] of [["حد ضرر", f.stopLoss], ["حد سود", f.takeProfit], ["درصد ریسک", f.riskPercent]] as const) {
+  for (const [label, v] of [["حد ضرر", f.stopLoss], ["حد سود", f.takeProfit], ["درصد ریسک", f.riskPercent], ["حجم معامله", f.volume]] as const) {
     if (v !== undefined && v !== null && (typeof v !== "number" || isNaN(v) || v < 0)) {
       return `${label} نامعتبر است`;
     }
@@ -80,11 +81,11 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const {
-    pair, direction, entryPrice, exitPrice, lotSize, pnl, openedAt, closedAt, notes,
+    pair, direction, entryPrice, exitPrice, lotSize, volume, pnl, openedAt, closedAt, notes,
     stopLoss, takeProfit, riskPercent, strategy, screenshotUrl,
   } = body as {
     pair: string; direction: "long" | "short"; entryPrice: number; exitPrice?: number;
-    lotSize: number; pnl?: number; openedAt: string; closedAt?: string; notes?: string;
+    lotSize: number; volume?: number; pnl?: number; openedAt: string; closedAt?: string; notes?: string;
     stopLoss?: number; takeProfit?: number; riskPercent?: number; strategy?: string; screenshotUrl?: string;
   };
 
@@ -98,13 +99,14 @@ export async function POST(req: NextRequest) {
   if (isFutureDay(openedAtDate)) {
     return NextResponse.json({ error: "نمی‌توانی برای تاریخ آینده معامله ثبت کنی" }, { status: 400 });
   }
-  const sharedError = validateSharedFields({ direction, entryPrice, lotSize, stopLoss, takeProfit, riskPercent, screenshotUrl });
+  const sharedError = validateSharedFields({ direction, entryPrice, lotSize, volume, stopLoss, takeProfit, riskPercent, screenshotUrl });
   if (sharedError) return NextResponse.json({ error: sharedError }, { status: 400 });
 
   const entry = await prisma.tradeEntry.create({
     data: {
       userId, pair: clampText(pair, 20), direction, entryPrice, lotSize,
       exitPrice: exitPrice ?? null,
+      volume: volume ?? null,
       pnl: pnl ?? null,
       openedAt: openedAtDate,
       closedAt: closedAt ? new Date(closedAt) : null,
@@ -129,18 +131,18 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
   const {
-    id, pair, direction, entryPrice, exitPrice, lotSize, pnl, notes,
+    id, pair, direction, entryPrice, exitPrice, lotSize, volume, pnl, notes,
     stopLoss, takeProfit, riskPercent, strategy, screenshotUrl,
   } = body as {
     id: string; pair: string; direction: "long" | "short"; entryPrice: number | null; exitPrice?: number | null;
-    lotSize: number | null; pnl?: number | null; notes?: string | null;
+    lotSize: number | null; volume?: number | null; pnl?: number | null; notes?: string | null;
     stopLoss?: number | null; takeProfit?: number | null; riskPercent?: number | null; strategy?: string | null; screenshotUrl?: string | null;
   };
 
   if (!id || !pair || !direction || !entryPrice || !lotSize) {
     return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
   }
-  const sharedError = validateSharedFields({ direction, entryPrice, lotSize, stopLoss, takeProfit, riskPercent, screenshotUrl });
+  const sharedError = validateSharedFields({ direction, entryPrice, lotSize, volume, stopLoss, takeProfit, riskPercent, screenshotUrl });
   if (sharedError) return NextResponse.json({ error: sharedError }, { status: 400 });
 
   const existing = await prisma.tradeEntry.findFirst({ where: { id, userId } });
@@ -151,6 +153,7 @@ export async function PATCH(req: NextRequest) {
     data: {
       pair: clampText(pair, 20), direction, entryPrice, lotSize,
       exitPrice: exitPrice ?? null,
+      volume: volume ?? null,
       pnl: pnl ?? null,
       notes: notes ? clampText(notes, 500) : null,
       stopLoss: stopLoss ?? null,

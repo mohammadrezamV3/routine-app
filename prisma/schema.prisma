@@ -617,7 +617,8 @@ model TradeEntry {
   entryPrice  Float
   exitPrice   Float?
   lotSize     Float
-  pnl         Float?   // سود/زیان — عدد خام، بدون هیچ‌گونه توصیه‌ی سیستمی همراهش
+  volume      Float?   // حجم معامله — جدا از لات، ورودی آزاد کاربر
+  pnl         Float?   // سود/زیان — از قیمت ورود/خروج/لات/جهت معامله محاسبه می‌شه، ورودی دستی نیست
   riskPercent Float?
   stopLoss    Float?
   takeProfit  Float?

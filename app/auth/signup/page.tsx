@@ -137,7 +137,7 @@ export default function SignupPage() {
       router.push("/auth/login");
       return;
     }
-    router.push("/");
+    router.push("/weekly");
   }
 
   return (
