@@ -111,6 +111,9 @@ export function TradeDayModal({
                       <div className="trade-day-field"><span>قیمت خروج</span><span className="mono">{faNum(e.exitPrice)}</span></div>
                     )}
                     <div className="trade-day-field"><span>لات</span><span className="mono">{faNum(e.lotSize)}</span></div>
+                    {e.volume !== null && (
+                      <div className="trade-day-field"><span>حجم معامله</span><span className="mono">{faNum(e.volume)}</span></div>
+                    )}
                     {e.stopLoss !== null && (
                       <div className="trade-day-field"><span>حد ضرر</span><span className="mono">{faNum(e.stopLoss)}</span></div>
                     )}

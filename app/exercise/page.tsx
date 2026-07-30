@@ -4,17 +4,22 @@ import { useState } from "react";
 import { ExercisePanel } from "@/components/ExercisePanel";
 import { CaloriePanel } from "@/components/CaloriePanel";
 import { ModuleGate } from "@/components/ModuleGate";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
 
 export default function BodybuildingPage() {
   const [tab, setTab] = useState<"exercise" | "calorie">("exercise");
 
   return (
-    <section>
-      <h1>بدنسازی</h1>
-
-      <div className="day-picker" style={{ marginTop: 10 }}>
-        <span className={`day-pill${tab === "exercise" ? " on" : ""}`} onClick={() => setTab("exercise")}>ورزش</span>
-        <span className={`day-pill${tab === "calorie" ? " on" : ""}`} onClick={() => setTab("calorie")}>کالری</span>
+    <section className="bodybuilding-glass">
+      <div>
+        <SegmentedTabs
+          active={tab}
+          onChange={setTab}
+          options={[
+            { value: "exercise", label: "بدنسازی" },
+            { value: "calorie", label: "کالری" },
+          ]}
+        />
       </div>
 
       <div style={{ marginTop: 14 }}>

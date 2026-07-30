@@ -1,114 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LandingPage } from "@/components/LandingPage";
-import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, pad, toJalali } from "@/lib/jalali";
-import { tasksForDate } from "@/lib/schedule";
-import { getCustomOccurrences, getDailyRange, getRemovedOccurrences } from "@/lib/storage";
-import { getWakeSleepTimes, isWakeOnTime, timeToMinutes, DEFAULT_WAKE } from "@/lib/wakeSleep";
 
-const now = new Date();
-const todayKey = isoLocal(now);
-const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
-
+// تایم/استریکِ کاربرِ لاگین‌کرده دیگه این‌جا نیست — رفته توی هدر (سمت چپ
+// دکمه‌ی نوتیف، HeaderStreakClock)، چون از هر صفحه‌ای باید دیده بشه، نه فقط
+// اینجا. صفحه‌ی اصلی برای کاربر لاگین‌کرده چیزی برای نشون دادن نداره، پس
+// مستقیم به برنامه هفتگی (مقصد واقعی بعد از ورود) هدایتش می‌کنیم.
 export default function HomePage() {
   const { status } = useSession();
-  const [streak, setStreak] = useState<number | null>(null);
-  const [clock, setClock] = useState("");
-  const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
-  const [wakeMinutes, setWakeMinutes] = useState(timeToMinutes(DEFAULT_WAKE));
+  const router = useRouter();
 
   useEffect(() => {
-    getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
-    getCustomOccurrences().then(setCustomOcc);
-    getWakeSleepTimes().then((v) => { if (v) setWakeMinutes(timeToMinutes(v.wake)); });
-  }, []);
-
-  useEffect(() => {
-    const tick = () => {
-      const d = new Date();
-      setClock(`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const opts = useMemo(
-    () => ({ removedOccurrences: removedOcc, customOccurrences: customOcc }),
-    [removedOcc, customOcc]
-  );
-
-  async function computeStreak() {
-    // یک درخواست برای کل بازه ۹۰ روزه، به‌جای تا ۹۰ درخواست جدا
-    const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() - 1);
-    const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 90);
-    const entries = await getDailyRange(isoLocal(rangeStart), isoLocal(rangeEnd));
-
-    let s = 0;
-    const cursor = new Date(now);
-    cursor.setDate(cursor.getDate() - 1);
-    for (let i = 0; i < 90; i++) {
-      const key = isoLocal(cursor);
-      const expected = tasksForDate(new Date(cursor), opts);
-      if (expected.length === 0) {
-        cursor.setDate(cursor.getDate() - 1);
-        continue;
-      }
-      const rec = entries[key];
-      if (!rec) break;
-      const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-      const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
-      const fullDay = doneCount === expected.length && wakeOK;
-      if (fullDay) {
-        s++;
-        cursor.setDate(cursor.getDate() - 1);
-      } else break;
-    }
-    setStreak(s);
-  }
-
-  useEffect(() => {
-    computeStreak();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [removedOcc, customOcc, wakeMinutes]);
-
-  const weekdayName = FA_WEEKDAY[now.getDay()];
+    if (status === "authenticated") router.replace("/weekly");
+  }, [status, router]);
 
   // status شروعش همیشه "loading"ه (useSession باید اول یه فچ به
   // /api/auth/session بزنه)؛ قبلاً این حالت چک نمی‌شد، پس فقط unauthenticated
-  // رد می‌شد و در نتیجه هر مهمونی یه لحظه دیتای داشبوردِ کاربرِ لاگین‌کرده
-  // (استریک/تاریخ و ...) رو می‌دید و بعد ناگهان LandingPage جایگزینش می‌شد —
-  // دقیقاً همون «میپره به یه صفحه دیگه بعد میاد رو صفحه اصلی». تا این وضعیت
-  // مشخص نشه، چیزی رندر نمی‌کنیم.
-  if (status === "loading") {
+  // رد می‌شد و در نتیجه هر مهمونی یه لحظه دیتای داشبوردِ کاربرِ لاگین‌کرده رو
+  // می‌دید و بعد ناگهان LandingPage جایگزینش می‌شد. تا این وضعیت مشخص نشه،
+  // چیزی رندر نمی‌کنیم.
+  if (status === "loading" || status === "authenticated") {
     return null;
   }
-  if (status === "unauthenticated") {
-    return <LandingPage />;
-  }
-
-  return (
-    <section id="sec-top">
-      <h1>Arion</h1>
-      <div className="dateline">
-        <span>{weekdayName}</span>
-        <span className="mono">{faNum(jToday[2])} {J_MONTHS[jToday[1] - 1]} {faNum(jToday[0])}</span>
-        <span className="mono">{todayKey}</span>
-        <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>{clock}</span>
-      </div>
-      <div className="home-stats">
-        <svg className="streak-flame" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2.2c1.1 3.1-2.6 4.7-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-1.1-.5-1.6-.5-2.7 1.6.9 2.7 2.7 2.7 4.8a4.8 4.8 0 0 1-9.6 0c0-4.3 3.2-6.4 4.8-10.4Z" fill="currentColor" />
-        </svg>
-        استریک: <b>{streak === null ? "…" : faNum(streak)}</b> روز
-      </div>
-
-      <div className="section-note" style={{ marginTop: 18 }}>
-        برنامه امروزت و تاریخچه‌ی روزهای قبل رو توی «برنامه هفتگی» ببین.
-      </div>
-    </section>
-  );
+  return <LandingPage />;
 }

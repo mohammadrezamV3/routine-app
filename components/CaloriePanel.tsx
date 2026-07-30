@@ -6,6 +6,7 @@ import Link from "next/link";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { FoodSeedItem } from "@/lib/foodSeed";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
+import { SegmentedTabs } from "./SegmentedTabs";
 
 const todayKey = isoLocal(new Date());
 const DEFAULT_MEAL_TYPES: { key: string; label: string }[] = [
@@ -40,9 +41,9 @@ export function CaloriePanel() {
   const [entries, setEntries] = useState<Entry[]>([]);
 
   // فرم هدف کالری
-  const [goal, setGoal] = useState<CalorieGoal | null>(null);
+  const [goal, setGoal] = useState<CalorieGoal>("maintain");
   const [mealsPerDay, setMealsPerDay] = useState(4);
-  const [sex, setSex] = useState<Sex | null>(null);
+  const [sex, setSex] = useState<Sex>("male");
   const [age, setAge] = useState("");
   const [goalHeight, setGoalHeight] = useState("");
   const [goalWeight, setGoalWeight] = useState("");
@@ -180,24 +181,28 @@ export function CaloriePanel() {
           <div className="section-note">اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم</div>
 
           <label className="exercise-form-label">هدف</label>
-          <div className="day-picker">
-            {(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => (
-              <span key={g} className={`day-pill${goal === g ? " on" : ""}`} onClick={() => setGoal(g)}>{CALORIE_GOAL_LABELS[g]}</span>
-            ))}
-          </div>
+          <SegmentedTabs
+            active={goal}
+            onChange={setGoal}
+            options={(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => ({ value: g, label: CALORIE_GOAL_LABELS[g] }))}
+          />
 
           <label className="exercise-form-label">جنسیت</label>
-          <div className="day-picker">
-            <span className={`day-pill${sex === "male" ? " on" : ""}`} onClick={() => setSex("male")}>مرد</span>
-            <span className={`day-pill${sex === "female" ? " on" : ""}`} onClick={() => setSex("female")}>زن</span>
-          </div>
+          <SegmentedTabs
+            active={sex}
+            onChange={setSex}
+            options={[
+              { value: "male", label: "مرد" },
+              { value: "female", label: "زن" },
+            ]}
+          />
 
           <label className="exercise-form-label">چند وعده در روز می‌خوای؟</label>
-          <div className="day-picker">
-            {[2, 3, 4, 5, 6].map((n) => (
-              <span key={n} className={`day-pill${mealsPerDay === n ? " on" : ""}`} onClick={() => setMealsPerDay(n)}>{faNum(n)}</span>
-            ))}
-          </div>
+          <SegmentedTabs
+            active={String(mealsPerDay)}
+            onChange={(v) => setMealsPerDay(Number(v))}
+            options={[2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: faNum(n) }))}
+          />
 
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <div style={{ flex: 1 }}>
@@ -289,10 +294,12 @@ export function CaloriePanel() {
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <input type="number" className="wsearch-newform-name" style={{ flex: 1 }} placeholder="گرم" value={grams} onChange={(e) => setGrams(e.target.value)} />
-              <div className="day-picker" style={{ flex: 2 }}>
-                {mealTypes.map((m) => (
-                  <span key={m.key} className={`day-pill${mealType === m.key ? " on" : ""}`} onClick={() => setMealType(m.key)}>{m.label}</span>
-                ))}
+              <div style={{ flex: 2 }}>
+                <SegmentedTabs
+                  active={mealType}
+                  onChange={setMealType}
+                  options={mealTypes.map((m) => ({ value: m.key, label: m.label }))}
+                />
               </div>
             </div>
             <button

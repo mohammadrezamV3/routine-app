@@ -37,7 +37,7 @@
     --bg-rgb:243,233,216;
     --text:#3A2A18;
     --muted:#8A7355;
-    --muted2:#D9C9A3;
+    --muted2:#A68A6E;
     --accent:#B85C1F;
     --accent-rgb:184,92,31;
     --accent-dim:rgba(184,92,31,.14);
@@ -46,12 +46,19 @@
     --line:#E4D6B8;
     --sun:#FFC94A;
     --moon:#7B4FE0;
-    /* طلایی — رنگ دومِ روز، برای همون لحظه‌های «ویژه» */
-    --secondary:#9C7A23;
-    --secondary-rgb:156,122,35;
-    --secondary-dim:rgba(156,122,35,.16);
+    /* قهوه‌ای تیره — رنگ دومِ روز، برای همون لحظه‌های «ویژه»؛ قبلاً طلایی بود،
+       ولی توی تم روشن هیچ فونتی نباید کرمی/طلایی باشه — عناوین نارنجی، متن‌ها
+       قهوه‌ای/سیاه */
+    --secondary:#6B3F17;
+    --secondary-rgb:107,63,23;
+    --secondary-dim:rgba(107,63,23,.16);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
+
+  /* هیچ‌جای اپ فلش بالا/پایینِ اسپینرِ عددی نمی‌خوایم — روی همه‌ی input[type=number] */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type="number"]{ -moz-appearance:textfield; appearance:textfield; }
 
   /* minimal scrollbars for scrollable panels — dark theme only, a soft elegant black */
   .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel, .week-timeline{
@@ -122,6 +129,15 @@
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
   .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-plexmono), monospace; margin-bottom:18px;}
+  /* تم روشن: هیچ فونتی نباید کرمی/طلایی باشه — عنوان‌ها نارنجی (accent)،
+     متن‌های توضیحی قهوه‌ای (muted) به‌جای accent-soft که رنگش لایت-نارنجی/طلایی‌مانند بود */
+  body[data-theme="light"] h1,
+  body[data-theme="light"] h2,
+  body[data-theme="light"] .landing-section-title,
+  body[data-theme="light"] .domain-sub{
+    color:var(--accent);
+  }
+  body[data-theme="light"] .section-note{ color:var(--muted); }
   .disclaimer-note{font-size:11px; color:var(--muted2); margin-top:14px; line-height:1.7;}
 
   .task{
@@ -239,14 +255,14 @@
   dl.notes{display:flex; flex-direction:column; gap:16px;}
   .footer{color:var(--muted2); font-size:11px; font-family:var(--font-plexmono), monospace; text-align:left; padding-top:30px;}
 
-  /* هدر شیشه‌ای — دیگه بک‌گراند پر رنگ نداره؛ فقط یک لبه‌ی نازک با افکت
-     موج‌آبِ liquidGlassFilter دورش رو نشون می‌ده (نه کل فضای باکس)، با ترفند
-     mask-composite:exclude که فقط حاشیه رو از پسودو-المنت نگه می‌داره */
+  /* هدر شیشه‌ای — علاوه بر لبه‌ی نازکِ liquidGlassFilter دورش، خودِ بدنه هم
+     یک پرِ لیکوئید گلسِ واقعی داره (بلور + شفافیتِ کم)، نه فقط بک‌گراندِ خالی */
   .app-topbar{
     position:fixed; top:14px; right:14px; left:14px; z-index:40; height:58px;
     display:flex; align-items:center;
     border-radius:999px;
-    background:none;
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   }
   .app-topbar::before{
     content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
@@ -256,7 +272,7 @@
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite:xor; mask-composite:exclude;
   }
-  body[data-theme="light"] .app-topbar{ background:none; }
+  body[data-theme="light"] .app-topbar{ background:rgba(255,255,255,.28); }
   .topbar-actions{
     position:absolute; right:18px; top:50%; transform:translateY(-50%); z-index:3;
     display:flex; align-items:center; gap:10px;
@@ -273,6 +289,7 @@
     display:flex; align-items:center; justify-content:center;
     padding:0; cursor:pointer;
   }
+  .bell-btn-wrap{ position:relative; display:flex; }
   .bell-btn{position:relative; color:var(--muted); transition:color .2s ease;}
   .bell-btn svg{width:19px; height:19px;}
   .bell-btn:hover{color:var(--accent);}
@@ -280,6 +297,38 @@
     position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
   }
+
+  /* پنل کوچیکِ اطلاعیه‌ها — دقیقاً زیر دکمه‌ی زنگوله باز می‌شه */
+  .notif-panel-overlay{ position:fixed; inset:0; z-index:44; background:none; }
+  .notif-panel{
+    position:absolute; top:calc(100% + 12px); left:50%; transform:translateX(-50%);
+    width:min(260px, calc(100vw - 32px)); max-height:320px; overflow-y:auto;
+    background:linear-gradient(180deg, rgba(9,10,11,.99), rgba(6,7,8,.995));
+    border:1px solid rgba(255,255,255,.08); border-radius:16px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5); padding:10px; z-index:45;
+    animation:notifPanelIn .16s ease both;
+  }
+  body[data-theme="light"] .notif-panel{
+    background:rgba(255,255,255,.98); border-color:var(--line); box-shadow:0 16px 40px rgba(0,0,0,.18);
+  }
+  @keyframes notifPanelIn{ from{ opacity:0; transform:translateX(-50%) translateY(6px) scale(.96); } to{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+  .notif-panel-head{ font-size:12px; font-weight:700; color:var(--muted); padding:4px 6px 8px; }
+  .notif-panel-list{ display:flex; flex-direction:column; gap:4px; }
+  .notif-panel-item{ padding:8px 8px; border-radius:10px; transition:background .15s ease; }
+  .notif-panel-item:hover{ background:rgba(var(--bg-rgb),.4); }
+  body:not([data-theme="light"]) .notif-panel-item:hover{ background:rgba(255,255,255,.06); }
+  .notif-panel-item-title{ font-size:12px; font-weight:700; color:var(--text); }
+  .notif-panel-item-body{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.6; }
+
+  /* تایم + استریک توی هدر — سمت چپِ دکمه‌ی نوتیف */
+  .header-streak-clock{
+    display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); white-space:nowrap;
+  }
+  .header-streak-clock-time{ font-weight:600; color:var(--text); }
+  .header-streak-clock-sep{ width:1px; height:12px; background:var(--line); }
+  .header-streak-clock-streak{ display:flex; align-items:center; gap:3px; color:var(--accent); font-weight:600; }
+  .header-streak-clock-streak .streak-flame{ width:12px; height:12px; }
+  @media (max-width:400px){ .header-streak-clock-time{ display:none; } .header-streak-clock-sep{ display:none; } }
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
      می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
@@ -984,6 +1033,15 @@
   body:not([data-theme="light"]) .jdate-btn{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .jdate-btn:hover, .jdate-btn:focus{border-color:var(--accent);}
   .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-vazir), sans-serif; direction:rtl;}
+
+  /* دکمه‌ی تاریخِ «ثبت معامله جدید» توی ژورنال ترید — کوچیک‌تر، گرد کامل،
+     لیکوئید گلس؛ فقط همین‌جا (نه بقیه‌ی جاهایی که از jdate-btn استفاده می‌کنن) */
+  .jdate-btn.trade-date-btn{
+    width:auto; padding:6px 16px; border-radius:999px;
+    backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  }
+  body:not([data-theme="light"]) .jdate-btn.trade-date-btn{ background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.10); }
+  body[data-theme="light"] .jdate-btn.trade-date-btn{ background:rgba(255,255,255,.35); }
   .jdate-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:70;
     opacity:0; pointer-events:none; transition:opacity .2s ease;
@@ -1052,6 +1110,33 @@
   .day-pill.on::after{
     content:''; position:absolute; inset:0; border-radius:10px; z-index:-1;
     box-shadow:0 0 8px rgba(var(--accent-rgb),.65), 0 0 16px rgba(var(--accent-rgb),.4);
+  }
+
+  /* بخش بدنسازی (ورزش+کالری، app/exercise/page.tsx) — همه‌ی دکمه‌ها و فیلدها
+     گرد کامل (پیل) و لیکوئید گلس واقعی، به‌جای بک‌گراند تخت پیش‌فرض؛ فقط
+     همین بخش رو اسکوپ می‌کنه، بقیه‌ی جاهایی که از همین کلاس‌های پایه
+     (day-pill, wsearch-newform-name, button) استفاده می‌کنن دست‌نخورده می‌مونن */
+  .bodybuilding-glass button{ border-radius:999px; }
+  .bodybuilding-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .bodybuilding-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+  body[data-theme="light"] .bodybuilding-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+  .bodybuilding-glass .day-pill.on::after{ border-radius:999px; }
+  .bodybuilding-glass .wsearch-newform-name{
+    border-radius:999px; padding-right:18px; padding-left:18px;
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .bodybuilding-glass .wsearch-newform-name{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+  body[data-theme="light"] .bodybuilding-glass .wsearch-newform-name{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
   }
 
   /* new-item add button, in its own footer row so it can never float on top of the list */
@@ -1186,6 +1271,17 @@
   body[data-theme="light"] .wsearch-newform-name.trade-glass-field{
     background:rgba(255,255,255,.35);
   }
+
+  /* نمایش فقط‌خواندنیِ سود/زیانِ محاسبه‌شده — همون قاب/سایز فیلدهای شیشه‌ای
+     ژورنال، ولی متن وسط‌چین و رنگش بسته به مثبت/منفی بودن سبز یا قرمزه */
+  .trade-pnl-readout{
+    width:100%; border-radius:8px; padding:9px 11px; font-size:13px; font-weight:700;
+    text-align:center; border:1px solid var(--line);
+    backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  }
+  body:not([data-theme="light"]) .trade-pnl-readout{ background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.10); }
+  body[data-theme="light"] .trade-pnl-readout{ background:rgba(255,255,255,.35); }
+
   .field-error-wrap{position:relative;}
   .field-error .field-error-wrap input, .field-error input{padding-left:32px;}
   .name-field-wrap.field-error input{padding-left:32px;}
@@ -1453,7 +1549,7 @@ body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
    چون در غیر این صورت هر تب شبیه یک دکمه‌ی شیشه‌ای جدا به‌نظر می‌رسید، نه
    دو نیمه‌ی یک کنترل واحد */
 .auth-tab{
-  position:relative; z-index:1; flex:1 1 50%; text-align:center; padding:10px 0;
+  position:relative; z-index:1; flex:1 1 0; min-width:0; text-align:center; padding:10px 0;
   border:none; background:none; border-radius:999px; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
   font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
@@ -1689,7 +1785,8 @@ body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) 
 
 /* بخش «چرا ما؟» — نوارِ بی‌درزِ درحال‌عبور: لیست دوبار پشت‌سرهم چیده شده و
    دقیقاً نصفِ عرضِ ترک translate می‌شه، پس لحظه‌ی چرخش کاملاً نامرئیه.
-   هاور/فوکوس مکث می‌کنه تا بشه محتوا رو بدون فرارِ مداوم خوند. */
+   عمداً هاور/فوکوس رو نادیده می‌گیره — کاربر نباید هیچ کنترلی روی توقف/تندی
+   انیمیشن داشته باشه، همیشه با سرعت ثابت خودش می‌چرخه. */
 .whyus-viewport{
   overflow:hidden;
   -webkit-mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
@@ -1699,7 +1796,6 @@ body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) 
   display:flex; width:max-content; gap:10px;
   animation:whyusMarquee 38s linear infinite;
 }
-.whyus-track:hover, .whyus-track:focus-within{ animation-play-state:paused; }
 .whyus-card{ width:130px; flex:0 0 auto; }
 @media (min-width:640px){
   .whyus-track{ gap:12px; }

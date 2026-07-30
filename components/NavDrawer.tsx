@@ -7,6 +7,8 @@ import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { AccountPanel } from "./AccountPanel";
+import { HeaderStreakClock } from "./HeaderStreakClock";
+import { NotificationPanel } from "./NotificationPanel";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
@@ -61,10 +63,11 @@ export function NavDrawer() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
+  const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { status, data: session } = useSession();
+  const { status } = useSession();
   const authSlotRef = useRef<HTMLDivElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
@@ -97,9 +100,10 @@ export function NavDrawer() {
     setNotifPermission(getNotificationPermission());
   }, []);
 
-  // نقطه‌ی قرمز یعنی «هنوز اجازه نگرفتیم»؛ با کلیک درخواست می‌کنیم و اگه
-  // پشتیبانی نشه (یا رد بشه) فقط بی‌صدا هیچ‌کاری نمی‌کنه.
+  // کلیک روی زنگوله همیشه پنل اطلاعیه‌ها رو باز/بسته می‌کنه؛ اگه هنوز اجازه‌ی
+  // نوتیف مرورگر گرفته نشده (نقطه‌ی قرمز)، جدا از باز شدن پنل، درخواستش هم می‌ره.
   async function handleBellClick() {
+    setNotifPanelOpen((v) => !v);
     if (!notificationsSupported() || notifPermission === "granted") return;
     const p = await requestNotificationPermission();
     setNotifPermission(p);
@@ -140,13 +144,16 @@ export function NavDrawer() {
                         <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
                       </svg>
                     </span>
-                    {session?.user?.name && <span className="profile-chip-name">{session.user.name}</span>}
                   </button>
                 </div>
-                <button className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
-                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
-                  {notifPermission !== "granted" && <span className="bell-dot" />}
-                </button>
+                <div className="bell-btn-wrap">
+                  <button className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
+                    {notifPermission !== "granted" && <span className="bell-dot" />}
+                  </button>
+                  {notifPanelOpen && <NotificationPanel onClose={() => setNotifPanelOpen(false)} />}
+                </div>
+                <HeaderStreakClock />
               </>
             ) : (
               <div ref={authSlotRef}>
