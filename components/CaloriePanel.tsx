@@ -181,24 +181,28 @@ export function CaloriePanel() {
           <div className="section-note">اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم</div>
 
           <label className="exercise-form-label">هدف</label>
-          <div className="day-picker">
-            {(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => (
-              <span key={g} className={`day-pill${goal === g ? " on" : ""}`} onClick={() => setGoal(g)}>{CALORIE_GOAL_LABELS[g]}</span>
-            ))}
-          </div>
+          <SegmentedTabs
+            active={(goal ?? "") as CalorieGoal}
+            onChange={setGoal}
+            options={(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => ({ value: g, label: CALORIE_GOAL_LABELS[g] }))}
+          />
 
           <label className="exercise-form-label">جنسیت</label>
-          <div className="day-picker">
-            <span className={`day-pill${sex === "male" ? " on" : ""}`} onClick={() => setSex("male")}>مرد</span>
-            <span className={`day-pill${sex === "female" ? " on" : ""}`} onClick={() => setSex("female")}>زن</span>
-          </div>
+          <SegmentedTabs
+            active={(sex ?? "") as Sex}
+            onChange={setSex}
+            options={[
+              { value: "male", label: "مرد" },
+              { value: "female", label: "زن" },
+            ]}
+          />
 
           <label className="exercise-form-label">چند وعده در روز می‌خوای؟</label>
-          <div className="day-picker">
-            {[2, 3, 4, 5, 6].map((n) => (
-              <span key={n} className={`day-pill${mealsPerDay === n ? " on" : ""}`} onClick={() => setMealsPerDay(n)}>{faNum(n)}</span>
-            ))}
-          </div>
+          <SegmentedTabs
+            active={String(mealsPerDay)}
+            onChange={(v) => setMealsPerDay(Number(v))}
+            options={[2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: faNum(n) }))}
+          />
 
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <div style={{ flex: 1 }}>
