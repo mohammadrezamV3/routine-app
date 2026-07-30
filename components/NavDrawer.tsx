@@ -1,15 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { animate } from "animejs";
 import Image from "next/image";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { AccountPanel } from "./AccountPanel";
 import { HeaderStreakClock } from "./HeaderStreakClock";
-import { NotificationPanel } from "./NotificationPanel";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
+
+// این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
+// ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
+// import بشن، باندلِ اصلیِ هر صفحه سنگین‌تر می‌شه (مخصوصاً AccountPanel که
+// حالا کاتالوگ ~۳۶۰تاییِ بازارها رو هم می‌کِشه). با dynamic+ssr:false جدا از
+// باندل اصلی لود می‌شن، دقیقاً مثل BackgroundCanvas.
+const AccountPanel = dynamic(() => import("./AccountPanel").then((m) => m.AccountPanel), { ssr: false });
+const NotificationPanel = dynamic(() => import("./NotificationPanel").then((m) => m.NotificationPanel), { ssr: false });
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
 // export شده چون LandingPage هم همین ست رو برای کارت‌های ماژول استفاده می‌کنه.
@@ -49,9 +56,11 @@ export const ICONS: Record<string, JSX.Element> = {
   ),
 };
 
+// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربرِ لاگین‌کرده مستقیم به
+// برنامه هفتگی می‌ره، پس همون این‌جا لیبل «صفحه اصلی» رو می‌گیره؛ خودِ صفحه‌ی
+// هیرو (/) دست‌نخورده می‌مونه، فقط دیگه لینک جدایی توی منو نداره.
 const LINKS = [
-  { href: "/", label: "صفحه اصلی", icon: "home" },
-  { href: "/weekly", label: "برنامه هفتگی", icon: "weekly" },
+  { href: "/weekly", label: "صفحه اصلی", icon: "home" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   { href: "/exercise", label: "بدنسازی", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },
@@ -61,7 +70,7 @@ const LINKS = [
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const { theme, toggle } = useTheme();
@@ -136,8 +145,8 @@ export function NavDrawer() {
               <span className="topbar-auth-placeholder" />
             ) : status === "authenticated" ? (
               <>
-                <div ref={authSlotRef}>
-                  <button className="profile-chip" aria-label="پروفایل" onClick={() => setAccountOpen(true)}>
+                <div ref={authSlotRef} className="profile-chip-wrap">
+                  <button className="profile-chip" aria-label="پروفایل" onClick={() => setProfileMenuOpen((v) => !v)}>
                     <span className="profile-chip-avatar">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="8" r="3.5" />
@@ -145,6 +154,37 @@ export function NavDrawer() {
                       </svg>
                     </span>
                   </button>
+                  {profileMenuOpen && (
+                    <>
+                      <div className="notif-panel-overlay" onClick={() => setProfileMenuOpen(false)} />
+                      <div className="notif-panel open">
+                        <div className="notif-panel-list">
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.account}</span>
+                            <span>پنل کاربری</span>
+                          </div>
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.subscription}</span>
+                            <span>اشتراک</span>
+                          </div>
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            style={{ color: "#E05252" }}
+                            onClick={() => { setProfileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.logout}</span>
+                            <span>خروج از حساب</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="bell-btn-wrap">
                   <button className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
@@ -153,7 +193,6 @@ export function NavDrawer() {
                   </button>
                   {notifPanelOpen && <NotificationPanel onClose={() => setNotifPanelOpen(false)} />}
                 </div>
-                <HeaderStreakClock />
               </>
             ) : (
               <div ref={authSlotRef}>
@@ -195,6 +234,12 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
+          {status === "authenticated" && (
+            <div className="nav-streak-clock-row">
+              <HeaderStreakClock />
+            </div>
+          )}
+
           {LINKS.map((l) => (
             <a
               key={l.href}
@@ -206,52 +251,21 @@ export function NavDrawer() {
             </a>
           ))}
 
-          <div style={{ borderTop: "1px solid var(--line)", marginTop: 6, paddingTop: 6 }}>
-            <a
-              onClick={() => setAccountMenuOpen((v) => !v)}
-              className={`nav-link nav-link-icon${accountMenuOpen ? " active" : ""}`}
-              style={{ cursor: "pointer" }}
-            >
-              <span className="nav-link-icon-svg">{ICONS.account}</span>
-              <span>پنل کاربری</span>
-            </a>
-
-            {accountMenuOpen && (
-              <div style={{ borderRight: "2px solid var(--line)", marginRight: 16, paddingRight: 4 }}>
-                {status === "authenticated" ? (
-                  <>
-                    <a onClick={() => { setOpen(false); setAccountOpen(true); }} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
-                      <span className="nav-link-icon-svg">{ICONS.account}</span>
-                      <span>پنل کاربری</span>
-                    </a>
-                    <a onClick={() => { setOpen(false); setAccountOpen(true); }} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
-                      <span className="nav-link-icon-svg">{ICONS.subscription}</span>
-                      <span>اشتراک</span>
-                    </a>
-                    <a
-                      onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
-                      className="nav-link nav-link-icon"
-                      style={{ cursor: "pointer", color: "#E05252" }}
-                    >
-                      <span className="nav-link-icon-svg">{ICONS.logout}</span>
-                      <span>خروج از حساب</span>
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    <a onClick={() => go("/auth/login")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
-                      <span className="nav-link-icon-svg">{ICONS.login}</span>
-                      <span>ورود</span>
-                    </a>
-                    <a onClick={() => go("/auth/signup")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
-                      <span className="nav-link-icon-svg">{ICONS.signup}</span>
-                      <span>ثبت‌نام</span>
-                    </a>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+          {/* برای کاربر لاگین‌کرده «پنل کاربری» دیگه اینجا نیست — همون گزینه‌ها
+              (پنل کاربری/اشتراک/خروج) با کلیک روی آواتار توی هدر باز می‌شن،
+              دوباره‌کاری نداره. مهمون هنوز آواتار نداره، پس ورود/ثبت‌نامش می‌مونه. */}
+          {status !== "authenticated" && (
+            <div style={{ borderTop: "1px solid var(--line)", marginTop: 6, paddingTop: 6 }}>
+              <a onClick={() => go("/auth/login")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
+                <span className="nav-link-icon-svg">{ICONS.login}</span>
+                <span>ورود</span>
+              </a>
+              <a onClick={() => go("/auth/signup")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
+                <span className="nav-link-icon-svg">{ICONS.signup}</span>
+                <span>ثبت‌نام</span>
+              </a>
+            </div>
+          )}
         </div>
       </nav>
 

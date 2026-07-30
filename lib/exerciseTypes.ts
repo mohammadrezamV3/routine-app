@@ -41,7 +41,3 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   gymDays: [],
   trainingPhase: "none",
 };
-
-export type EligibilityResult =
-  | { eligible: true }
-  | { eligible: false; reason: "attendance"; completedSessions: number; requiredSessions: number };

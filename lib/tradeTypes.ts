@@ -1,3 +1,11 @@
+// کلید تنظیمات (settings) مشترک بین TradeJournal و AccountPanel — عمداً
+// این‌جا (نه توی خودِ کامپوننت) تا AccountPanel با importشون کل باندلِ
+// TradeJournal (که خودش JalaliDatePicker/TradeDayHistory و... رو می‌کِشه)
+// رو وارد نکنه؛ AccountPanel از قبل با dynamic import جدا نگه داشته شده.
+export type CalSystem = "jalali" | "gregorian";
+export const CAL_SYSTEM_KEY = "tradeCalendarSystem";
+export const MONTHLY_GOAL_KEY = "tradeMonthlyGoal";
+
 export type TradeEntry = {
   id: string;
   pair: string;
@@ -76,7 +84,10 @@ export function computeTradePnl(
 ): number | null {
   if (!entryPrice || exitPrice === null || !lotSize) return null;
   const diff = exitPrice - entryPrice;
-  return (direction === "long" ? diff : -diff) * lotSize;
+  const raw = (direction === "long" ? diff : -diff) * lotSize;
+  // گرد کردن به دقیقاً یک رقم اعشار — هم خطای اعشاریِ عادیِ جاوااسکریپت (مثل
+  // 0.1-0.2) رو از بین می‌بره، هم دقتِ نمایش رو همه‌جا یکدست نگه می‌داره
+  return Math.round(raw * 10) / 10;
 }
 
 function formPnl(v: TradeFormState): number | null {

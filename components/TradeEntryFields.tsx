@@ -78,7 +78,7 @@ export function TradeEntryFields({
         <div style={{ flex: "1 1 90px" }}>
           <label className="exercise-form-label">سود/زیان</label>
           <div className="trade-pnl-readout mono" style={{ color: pnl === null ? "var(--muted2)" : pnl >= 0 ? "var(--accent)" : "#E05252" }}>
-            {pnl === null ? "—" : faNum(parseFloat(pnl.toFixed(4)))}
+            {pnl === null ? "—" : faNum(pnl.toFixed(1))}
           </div>
         </div>
       </div>

@@ -139,6 +139,7 @@
   }
   body[data-theme="light"] .section-note{ color:var(--muted); }
   .disclaimer-note{font-size:11px; color:var(--muted2); margin-top:14px; line-height:1.7;}
+  .disclaimer-warn{color:#E05252; font-weight:700;}
 
   .task{
     display:flex; align-items:flex-start; gap:13px; padding:13px 0; border-bottom:1px solid var(--line);
@@ -320,15 +321,64 @@
   .notif-panel-item-title{ font-size:12px; font-weight:700; color:var(--text); }
   .notif-panel-item-body{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.6; }
 
-  /* تایم + استریک توی هدر — سمت چپِ دکمه‌ی نوتیف */
+  /* تایم + استریک — حالا توی منوی همبرگری، نه هدر */
   .header-streak-clock{
     display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); white-space:nowrap;
   }
-  .header-streak-clock-time{ font-weight:600; color:var(--text); }
   .header-streak-clock-sep{ width:1px; height:12px; background:var(--line); }
   .header-streak-clock-streak{ display:flex; align-items:center; gap:3px; color:var(--accent); font-weight:600; }
   .header-streak-clock-streak .streak-flame{ width:12px; height:12px; }
-  @media (max-width:400px){ .header-streak-clock-time{ display:none; } .header-streak-clock-sep{ display:none; } }
+
+  /* شعله‌ی استریک — هرچی عدد بالاتر بره، انیمیشنش خفن‌تر می‌شه: از یه فلیم
+     ساکنِ خاکستری (۰) تا فلیکر آروم (۱-۶)، گلوی نورانی (۷-۲۹)، فلیکر
+     چندرنگ (۳۰-۹۹) و در نهایت چرخش رنگ + پالس تمام‌عیار (۱۰۰+) */
+  .streak-flame-tier0{ color:var(--muted2); }
+  .streak-flame-tier1{ animation:flameFlicker1 1.8s ease-in-out infinite; }
+  .streak-flame-tier2{
+    animation:flameFlicker2 1.1s ease-in-out infinite;
+    filter:drop-shadow(0 0 3px rgba(var(--accent-rgb),.7));
+  }
+  .streak-flame-tier3{
+    animation:flameFlicker3 0.85s ease-in-out infinite, flameColor3 2.4s linear infinite;
+    filter:drop-shadow(0 0 5px rgba(var(--accent-rgb),.85));
+  }
+  .streak-flame-tier4{
+    animation:flameFlicker4 0.6s ease-in-out infinite, flameColor4 1.6s linear infinite;
+    filter:drop-shadow(0 0 7px currentColor);
+  }
+  @keyframes flameFlicker1{
+    0%, 100%{ transform:scale(1); opacity:1; }
+    50%{ transform:scale(1.08); opacity:.85; }
+  }
+  @keyframes flameFlicker2{
+    0%, 100%{ transform:scale(1) rotate(0deg); opacity:1; }
+    30%{ transform:scale(1.12) rotate(-3deg); opacity:.8; }
+    60%{ transform:scale(0.96) rotate(2deg); opacity:1; }
+  }
+  @keyframes flameFlicker3{
+    0%, 100%{ transform:scale(1) rotate(0deg); }
+    25%{ transform:scale(1.16) rotate(-4deg); }
+    50%{ transform:scale(0.94) rotate(3deg); }
+    75%{ transform:scale(1.1) rotate(-2deg); }
+  }
+  @keyframes flameColor3{
+    0%, 100%{ color:var(--accent); }
+    50%{ color:var(--secondary); }
+  }
+  @keyframes flameFlicker4{
+    0%, 100%{ transform:scale(1) rotate(0deg); }
+    20%{ transform:scale(1.22) rotate(-6deg); }
+    40%{ transform:scale(0.9) rotate(5deg); }
+    60%{ transform:scale(1.18) rotate(-4deg); }
+    80%{ transform:scale(0.95) rotate(3deg); }
+  }
+  @keyframes flameColor4{
+    0%{ color:#FF6A00; }
+    25%{ color:#FFC400; }
+    50%{ color:#FF2D55; }
+    75%{ color:#A855F7; }
+    100%{ color:#FF6A00; }
+  }
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
      می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
@@ -415,6 +465,12 @@
     background:none; box-shadow:none;
   }
   .theme-row{display:none;}
+  .nav-streak-clock-row{
+    padding:10px 4px; margin-bottom:6px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:flex-end;
+  }
+  .nav-streak-clock-row .header-streak-clock{ font-size:12.5px; }
+  .nav-streak-clock-row .header-streak-clock-streak .streak-flame{ width:14px; height:14px; }
 
   /* mobile: keep the open drawer smaller and closer to the header */
   @media (max-width:700px){
@@ -496,6 +552,31 @@
     border-radius:22px; padding:14px 16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
   }
   .trade-stat-tile-wide{ grid-column:1 / -1; }
+
+  /* حلقه‌ی هدف ماهانه — همون قاب شیشه‌ایِ کارت‌های آمار، فقط با یه دایره‌ی
+     SVG به‌جای عدد خام؛ فقط وقتی هدف توی پنل کاربری تنظیم شده باشه نشون داده می‌شه */
+  .trade-goal-ring-row{
+    display:flex; align-items:center; gap:14px; margin:10px 0 14px;
+    padding:14px 16px; border-radius:22px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  }
+  .trade-goal-ring-wrap{ position:relative; width:72px; height:72px; flex-shrink:0; }
+  .trade-goal-ring{ width:100%; height:100%; }
+  .trade-goal-ring-fill{ transition:stroke-dashoffset .5s ease; }
+  .trade-goal-ring-pct{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700; color:var(--text);
+  }
+  .trade-goal-ring-text{ flex:1; min-width:0; }
+
+  /* دسکتاپ فقط: بخش ترید از ستونِ باریکِ ۶۲۰پیکسلیِ سایت بیرون می‌زنه و
+     عریض‌تر می‌شه (همون ترفندِ breakout پلن‌ها توی لندینگ)، آمار KPI هم توی
+     ردیف‌های بیشتری کنار هم جا می‌شن — همه‌چیز همچنان راست‌چین (RTL) می‌مونه،
+     فقط عرضِ در دسترس بیشتره. موبایل/تبلت دست‌نخورده. */
+  @media (min-width:1024px){
+    .trade-desktop{ width:960px; max-width:960px; margin-right:-170px; }
+    .trade-desktop .trade-stats-grid{ grid-template-columns:repeat(5, 1fr); }
+    .trade-desktop .cal-grid{ max-width:520px; margin-right:0; }
+  }
   .trade-stat-label{ font-size:10.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:19px; font-weight:800; margin-top:6px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
@@ -1437,6 +1518,9 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
 }
 
 /* چیپ پروفایل، وقتی لاگین شده — آواتار سمت راست، اسم سمت چپش (چیدمان RTL پیش‌فرض) */
+.profile-chip-wrap{ position:relative; display:flex; }
+.profile-menu-item{ display:flex; align-items:center; gap:8px; }
+.profile-menu-item .nav-link-icon-svg{ width:16px; height:16px; flex-shrink:0; display:flex; }
 .profile-chip{
   display:flex; align-items:center; gap:8px;
   height:38px; padding:0 14px 0 4px; border-radius:999px;
@@ -1822,11 +1906,14 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .trade-cal-toggle-row .auth-tabs{ margin-top:0; max-width:280px; }
 .trade-cal-toggle-row .auth-tab{ font-size:13px; padding:11px 0; }
 
-/* روزهای بدون معامله دیگه قابل‌کلیک نیستن (مودال فقط با معامله باز می‌شه) —
-   پس افکت هاوری که «قابل‌کلیک بودن» رو القا می‌کنه براشون خاموش می‌شه */
-.cal-cell.empty-day{ cursor:default; }
-.cal-cell.empty-day:hover{ border-color:var(--line); transform:none; }
-.cal-cell.empty-day:hover .cal-daynum{ color:var(--text); }
+/* هر روزِ تقویم معاملات (حتی بدون معامله) قابل‌انتخابه — تاریخچه‌ی زیر
+   تقویم همیشه همون روزِ انتخاب‌شده رو نشون می‌ده. روز انتخاب‌شده یک رنگ
+   جدا از «امروز» می‌گیره تا قاطی نشن. عدد سود/زیانِ ریز زیر شماره‌ی روز. */
+.cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
+.trade-cal-pnl{
+  position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+  font-size:7.5px; font-weight:700; line-height:1;
+}
 
 /* پیش‌نمایش عکس معامله توی فرم ثبت */
 .trade-shot-row{ display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
@@ -1903,19 +1990,19 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 
 /* ===================== نوار قیمت لحظه‌ای بازار ===================== */
 
+/* تمام‌صفحه (از دیوار تا دیوار مرورگر) با شکستنِ کفِ max-width ستونِ .wrap،
+   بک‌گراند شفاف — دیگه قابِ شیشه‌ای/گردِ خودش رو نداره، فقط نوارِ گذرا روی
+   بک‌گراندِ خودِ صفحه. تنظیمِ بازارها دیگه دکمه‌ی کنارش نیست — رفته توی پنل کاربری. */
 .ticker-bar{
-  display:flex; align-items:center; gap:8px; margin-bottom:16px;
-  padding:6px 8px; border-radius:999px; border:1px solid var(--line);
-  background:rgba(var(--bg-rgb), .13);
-  backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex; align-items:center; width:100vw; position:relative; left:50%; right:50%;
+  margin-left:-50vw; margin-right:-50vw; margin-bottom:16px; padding:8px 0;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
-body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); border-color:rgba(255,255,255,.08); }
 .ticker-viewport{ flex:1; min-width:0; overflow:hidden; }
-.ticker-empty-msg{ font-size:11.5px; color:var(--muted2); padding:0 8px; }
+.ticker-empty-msg{ font-size:11.5px; color:var(--muted2); padding:0 16px; }
 .ticker-track{
   display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap;
-  animation:ticker-scroll 34s linear infinite;
+  animation:ticker-scroll 40s linear infinite; padding:0 16px;
 }
 .ticker-bar:hover .ticker-track{ animation-play-state:paused; }
 @keyframes ticker-scroll{
@@ -1928,14 +2015,6 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
 .ticker-change{ font-size:11px; font-weight:700; }
 .ticker-change.up{ color:var(--accent); }
 .ticker-change.down{ color:#E05252; }
-.ticker-settings-btn{
-  flex-shrink:0; width:26px; height:26px; min-width:26px; padding:0; border-radius:50%;
-  border:1px solid var(--line); background:rgba(var(--bg-rgb),.6); color:var(--muted);
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  transition:border-color .15s ease, color .15s ease, transform .3s ease;
-}
-.ticker-settings-btn:hover{ border-color:var(--accent); color:var(--accent); transform:rotate(45deg); }
-.ticker-settings-btn svg{ width:14px; height:14px; }
 
 /* ===================== بدنسازی — فرم برنامه، قوانین، جایگزینی حرکت ===================== */
 
@@ -1950,11 +2029,6 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
   font-size:12.5px; color:var(--muted); line-height:1.7; padding-right:16px; position:relative;
 }
 .exercise-rules-list li::before{ content:'—'; position:absolute; right:0; color:var(--muted2); }
-
-.exercise-ineligible-box{
-  margin-top:10px; padding:14px 16px; border-radius:14px; border:1px solid var(--line);
-  background:rgba(var(--bg-rgb),.35); font-size:12.5px; color:var(--muted); line-height:1.8;
-}
 
 .exercise-item.exercise-item-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
 .exercise-sub-btn{
@@ -1973,6 +2047,8 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
   border-radius:16px; padding:12px 14px; border:1px solid var(--line); background:rgba(255,255,255,.02);
 }
 .calorie-meal-of{ font-size:12px; color:var(--muted2); font-weight:600; }
+.calorie-edit-meals-link{ font-size:11px; font-weight:700; color:var(--accent); cursor:pointer; }
+.calorie-edit-meals-link:hover{ text-decoration:underline; }
 
 .calorie-history-day{ padding:10px 0; border-bottom:1px solid var(--line); }
 .calorie-history-day:last-child{ border-bottom:none; }

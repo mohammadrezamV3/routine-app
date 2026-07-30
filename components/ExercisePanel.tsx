@@ -7,7 +7,7 @@ import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal } from "@/lib/jalali";
 import { LEVEL_LABELS, GOAL_LABELS } from "@/lib/exercisePlans";
 import { ExercisePlanForm, validateExerciseForm } from "./ExercisePlanForm";
 import {
-  ExercisePlan, ExercisePlanFormValue, EMPTY_EXERCISE_FORM, EligibilityResult, PHASE_LABELS,
+  ExercisePlan, ExercisePlanFormValue, EMPTY_EXERCISE_FORM, PHASE_LABELS,
 } from "@/lib/exerciseTypes";
 
 const todayName = FA_WEEKDAY[new Date().getDay()];
@@ -56,7 +56,6 @@ export function ExercisePanel() {
   const [submitting, setSubmitting] = useState(false);
 
   const [newProgramOpen, setNewProgramOpen] = useState(false);
-  const [eligibility, setEligibility] = useState<EligibilityResult | "loading" | null>(null);
   const [refreshForm, setRefreshForm] = useState<ExercisePlanFormValue>(EMPTY_EXERCISE_FORM);
   const [refreshStep, setRefreshStep] = useState<"form" | "rules">("form");
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -111,15 +110,10 @@ export function ExercisePanel() {
     onDone(null);
   }
 
-  async function openNewProgramFlow() {
+  function openNewProgramFlow() {
     setNewProgramOpen(true);
-    setEligibility("loading");
     setRefreshError(null);
-    const res = await fetch("/api/exercise/plan/eligibility");
-    const data = await res.json();
-    const elig: EligibilityResult = data.eligibility;
-    setEligibility(elig);
-    if (elig.eligible && plan) {
+    if (plan) {
       setRefreshForm({
         level: plan.level,
         heightCm: plan.heightCm ? String(plan.heightCm) : "",
@@ -272,21 +266,7 @@ export function ExercisePanel() {
           </button>
         )}
 
-        {newProgramOpen && eligibility === "loading" && (
-          <div className="item-line">در حال بررسی واجد شرایط بودنت…</div>
-        )}
-
-        {newProgramOpen && eligibility && eligibility !== "loading" && !eligibility.eligible && (
-          <div className="exercise-ineligible-box">
-            <div>
-              توی این دو هفته فقط {eligibility.completedSessions} از {eligibility.requiredSessions} جلسه‌ی لازم رو رفتی — برای گرفتن برنامه‌ی جدید
-              اول باید منظم‌تر همین برنامه رو دنبال کنی.
-            </div>
-            <button type="button" className="small" style={{ marginTop: 10 }} onClick={() => setNewProgramOpen(false)}>بستن</button>
-          </div>
-        )}
-
-        {newProgramOpen && eligibility && eligibility !== "loading" && eligibility.eligible && refreshStep === "form" && (
+        {newProgramOpen && refreshStep === "form" && (
           <div style={{ marginTop: 10 }}>
             <div className="section-note">قد/وزن جدیدت رو بررسی و در صورت نیاز به‌روز کن</div>
             <ExercisePlanForm value={refreshForm} onChange={(patch) => setRefreshForm((f) => ({ ...f, ...patch }))} />
@@ -308,7 +288,7 @@ export function ExercisePanel() {
           </div>
         )}
 
-        {newProgramOpen && eligibility && eligibility !== "loading" && eligibility.eligible && refreshStep === "rules" && (
+        {newProgramOpen && refreshStep === "rules" && (
           <RulesStep
             submitting={submitting}
             onBack={() => setRefreshStep("form")}
@@ -318,6 +298,7 @@ export function ExercisePanel() {
       </div>
 
       <div className="disclaimer-note">
+        <span className="disclaimer-warn">توجه: </span>
         این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
       </div>
     </div>

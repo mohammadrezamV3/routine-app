@@ -6,6 +6,12 @@ import Link from "next/link";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
+import { MarketPicker } from "@/components/MarketPicker";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { getSetting, setSetting } from "@/lib/storage";
+import { getSiteMarket } from "@/lib/market";
+import { DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, TICKER_SETTING_KEY } from "@/lib/tickerSymbols";
+import { CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY, CalSystem } from "@/lib/tradeTypes";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -57,6 +63,12 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editingWakeSleep, setEditingWakeSleep] = useState(false);
+  const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
+  const [marketPickerOpen, setMarketPickerOpen] = useState(false);
+  const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
+  const [monthlyGoal, setMonthlyGoal] = useState(0);
+  const [goalDraft, setGoalDraft] = useState("");
+  const [goalSaved, setGoalSaved] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -65,7 +77,35 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       setLoading(false);
     });
     getWakeSleepTimes().then(setWakeSleep);
+    const defaultSymbols = getSiteMarket() === "INTERNATIONAL" ? DEFAULT_TICKER_SYMBOLS_INTERNATIONAL : DEFAULT_TICKER_SYMBOLS_IRAN;
+    getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => setTickerSymbols(saved?.length ? saved : defaultSymbols));
+    getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
+    getSetting<number>(MONTHLY_GOAL_KEY, 0).then((v) => { setMonthlyGoal(v); setGoalDraft(v ? String(v) : ""); });
   }, [status]);
+
+  function changeCalSystem(v: CalSystem) {
+    setCalSystem(v);
+    setSetting(CAL_SYSTEM_KEY, v);
+  }
+
+  function saveMonthlyGoal() {
+    const v = Math.max(0, +goalDraft || 0);
+    setMonthlyGoal(v);
+    setSetting(MONTHLY_GOAL_KEY, v);
+    setGoalSaved(true);
+    setTimeout(() => setGoalSaved(false), 1800);
+  }
+
+  function toggleTickerSymbol(symbol: string) {
+    setTickerSymbols((prev) => {
+      const has = prev.includes(symbol);
+      if (has && prev.length <= MIN_TICKER_SYMBOLS) return prev;
+      if (!has && prev.length >= MAX_TICKER_SYMBOLS) return prev;
+      const next = has ? prev.filter((s) => s !== symbol) : [...prev, symbol];
+      setSetting(TICKER_SETTING_KEY, next);
+      return next;
+    });
+  }
 
   useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
 
@@ -229,6 +269,53 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="tm-extra">
+        <div className="domain-sub">بازارهای دنبال‌شده</div>
+        <div className="item-line">
+          {tickerSymbols.length} بازار برای نوار قیمتِ بالای صفحه‌ی ترید انتخاب شده
+        </div>
+        <button onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 8, borderColor: "var(--accent)", color: "var(--accent)" }}>
+          تغییر بازارها
+        </button>
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">تقویم ژورنال ترید</div>
+        <div className="item-line" style={{ marginBottom: 8 }}>
+          تاریخ‌های ژورنال ترید به چه تقویمی نمایش داده بشه
+        </div>
+        <SegmentedTabs
+          options={[
+            { value: "jalali", label: "شمسی" },
+            { value: "gregorian", label: "میلادی" },
+          ]}
+          active={calSystem}
+          onChange={changeCalSystem}
+        />
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">هدف سود ماهانه ترید</div>
+        <div className="item-line" style={{ marginBottom: 8 }}>
+          {monthlyGoal > 0
+            ? <>هدف فعلی: <b className="mono" style={{ color: "var(--accent)" }}>{monthlyGoal}</b> — به‌صورت آمار دایره‌ای توی صفحه ترید نشون داده می‌شه</>
+            : "هنوز هدفی تنظیم نکردی — با تعیین هدف، پیشرفتت توی صفحه ترید به‌صورت دایره نشون داده می‌شه"}
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            type="number"
+            min={0}
+            value={goalDraft}
+            onChange={(e) => setGoalDraft(e.target.value)}
+            placeholder="مثلاً 500"
+            style={{ maxWidth: 140 }}
+          />
+          <button onClick={saveMonthlyGoal} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+            {goalSaved ? "ذخیره شد ✓" : "ذخیره هدف"}
+          </button>
+        </div>
+      </div>
+
+      <div className="tm-extra">
         <button disabled title="به‌زودی" style={{ opacity: 0.5, cursor: "not-allowed" }}>
           تحلیل برنامه‌ها
         </button>
@@ -245,6 +332,15 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           initial={wakeSleep}
           onClose={() => setEditingWakeSleep(false)}
           onDone={(v) => { setWakeSleep(v); setEditingWakeSleep(false); }}
+        />
+      )}
+
+      {marketPickerOpen && (
+        <MarketPicker
+          title="بازارهای دنبال‌شده"
+          symbols={tickerSymbols}
+          onToggle={toggleTickerSymbol}
+          onClose={() => setMarketPickerOpen(false)}
         />
       )}
     </ModalShell>

@@ -58,6 +58,23 @@ export function calcDailyTargetKcal(input: {
   return Math.max(1000, Math.round(adjusted / 10) * 10);
 }
 
+// واحدهای اندازه‌گیری برای ثبت غذا — همه به گرم تبدیل می‌شن قبل از ارسال،
+// چون ذخیره‌سازی و کالریِ هر‌۱۰۰گرم (FoodItem) همیشه بر مبنای گرمه؛ ضریب‌ها
+// تقریبی و رایج آشپزی‌ان (نه دقیق آزمایشگاهی)
+export type FoodUnit = "gram" | "tsp" | "tbsp" | "cup";
+export const UNIT_LABELS: Record<FoodUnit, string> = {
+  gram: "گرم",
+  tsp: "قاشق چای‌خوری",
+  tbsp: "قاشق غذاخوری",
+  cup: "پیمانه",
+};
+export const UNIT_TO_GRAMS: Record<FoodUnit, number> = {
+  gram: 1,
+  tsp: 5,
+  tbsp: 15,
+  cup: 240,
+};
+
 export type MealBreakdownItem = { key: string; label: string; kcal: number };
 
 const MEAL_SPLITS: Record<number, { key: string; label: string; ratio: number }[]> = {
