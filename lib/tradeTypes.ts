@@ -76,7 +76,10 @@ export function computeTradePnl(
 ): number | null {
   if (!entryPrice || exitPrice === null || !lotSize) return null;
   const diff = exitPrice - entryPrice;
-  return (direction === "long" ? diff : -diff) * lotSize;
+  const raw = (direction === "long" ? diff : -diff) * lotSize;
+  // گرد کردن به ۴ رقم اعشار قبل از ذخیره — وگرنه خطای اعشاریِ عادیِ جاوااسکریپت
+  // (مثل 0.1-0.2) به‌عنوان یه عدد زشتِ ۱۵رقمی توی دیتابیس/نمایش می‌مونه
+  return Math.round(raw * 10000) / 10000;
 }
 
 function formPnl(v: TradeFormState): number | null {

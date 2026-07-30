@@ -7,7 +7,7 @@ import {
 } from "@/lib/jalali";
 import { G_MONTHS, gregorianMonthLength } from "@/lib/gregorian";
 import { JalaliDatePicker } from "./JalaliDatePicker";
-import { TradeDayModal } from "./TradeDayModal";
+import { TradeDayHistory } from "./TradeDayHistory";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeEntryFields } from "./TradeEntryFields";
 import { getSetting, setSetting } from "@/lib/storage";
@@ -29,7 +29,7 @@ export function TradeJournal() {
   const [calMonth, setCalMonth] = useState(jToday[1]);
   const [entries, setEntries] = useState<TradeEntry[]>([]);
   const [selectedIso, setSelectedIso] = useState<string>(todayIso);
-  const [modalIso, setModalIso] = useState<string | null>(null);
+  const [historyIso, setHistoryIso] = useState<string>(todayIso);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<TradeFormState>(EMPTY_TRADE_FORM);
@@ -171,11 +171,16 @@ export function TradeJournal() {
     cells.push(
       <div
         key={iso}
-        onClick={() => hasEntries && setModalIso(iso)}
-        className={`cal-cell${iso === todayIso ? " today" : ""}${hasEntries ? "" : " empty-day"}`}
+        onClick={() => setHistoryIso(iso)}
+        className={`cal-cell${iso === todayIso ? " today" : ""}${iso === historyIso ? " selected" : ""}`}
         style={hasEntries ? { background: dayTotal >= 0 ? "var(--accent-dim)" : "rgba(224,82,82,.14)", borderColor: dayTotal >= 0 ? "var(--accent)" : "#E05252" } : {}}
       >
         <span className="cal-daynum mono">{faNum(d)}</span>
+        {hasEntries && (
+          <span className="trade-cal-pnl mono" style={{ color: dayTotal >= 0 ? "var(--accent)" : "#E05252" }}>
+            {faNum(dayTotal.toFixed(0))}
+          </span>
+        )}
       </div>
     );
   }
@@ -278,17 +283,15 @@ export function TradeJournal() {
         {loading && <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>}
       </div>
 
-      {modalIso && (
-        <TradeDayModal
-          title={formatIsoForDisplay(modalIso)}
-          entries={byDay[modalIso] || []}
-          onClose={() => setModalIso(null)}
-          onDelete={removeTrade}
-          onUpdate={updateTrade}
-        />
-      )}
+      <TradeDayHistory
+        title={formatIsoForDisplay(historyIso)}
+        entries={byDay[historyIso] || []}
+        onDelete={removeTrade}
+        onUpdate={updateTrade}
+      />
 
       <div className="disclaimer-note">
+        <span className="disclaimer-warn">توجه: </span>
         این ژورنال فقط آمار خام معاملات و یادآوری‌ست، نه توصیه‌ی مالی؛ تصمیم‌های معاملاتی بر عهده‌ی کاربر است.
       </div>
     </div>

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { FoodSeedItem } from "@/lib/foodSeed";
-import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
+import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 
 const todayKey = isoLocal(new Date());
@@ -32,7 +32,12 @@ type Target = {
   goal: CalorieGoal | null;
   mealsPerDay: number | null;
   mealBreakdown: MealBreakdownItem[] | null;
+  sex: Sex | null;
+  heightCm: number | null;
+  weightKg: number | null;
 };
+
+type MealDraftRow = { key: string; label: string; kcal: string };
 
 export function CaloriePanel() {
   const { status } = useSession();
@@ -49,13 +54,21 @@ export function CaloriePanel() {
   const [goalWeight, setGoalWeight] = useState("");
   const [goalError, setGoalError] = useState<string | null>(null);
   const [savingGoal, setSavingGoal] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
+
+  // ویرایش دستیِ سهم هر وعده — جایگزین تقسیم خودکار
+  const [editingMeals, setEditingMeals] = useState(false);
+  const [mealDraft, setMealDraft] = useState<MealDraftRow[]>([]);
+  const [mealDraftError, setMealDraftError] = useState<string | null>(null);
+  const [savingMeals, setSavingMeals] = useState(false);
 
   // افزودن غذا
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);
   const [customPer100, setCustomPer100] = useState("");
-  const [grams, setGrams] = useState("100");
+  const [qty, setQty] = useState("100");
+  const [unit, setUnit] = useState<FoodUnit>("gram");
   const [mealType, setMealType] = useState("lunch");
 
   // تاریخچه
@@ -111,12 +124,65 @@ export function CaloriePanel() {
     setSavingGoal(false);
     if (!res.ok) { setGoalError(data.error || "خطایی پیش آمد"); return; }
     setTarget(data.target);
+    setEditingGoal(false);
+  }
+
+  // «تغییر برنامه کالری» — همون فرم اولیه رو با مقادیر فعلی پر می‌کنه و دوباره باز می‌کنه
+  function openEditGoal() {
+    if (target) {
+      setGoal(target.goal || "maintain");
+      setSex(target.sex || "male");
+      setMealsPerDay(target.mealsPerDay || 4);
+      setGoalHeight(target.heightCm ? String(target.heightCm) : "");
+      setGoalWeight(target.weightKg ? String(target.weightKg) : "");
+    }
+    setGoalError(null);
+    setEditingGoal(true);
+  }
+
+  function openEditMeals() {
+    setMealDraft(
+      (target?.mealBreakdown?.length ? target.mealBreakdown : []).map((m) => ({ key: m.key, label: m.label, kcal: String(m.kcal) }))
+    );
+    setMealDraftError(null);
+    setEditingMeals(true);
+  }
+
+  function addMealDraftRow() {
+    if (mealDraft.length >= 8) return;
+    setMealDraft((rows) => [...rows, { key: `meal_${Date.now()}`, label: "", kcal: "" }]);
+  }
+  function updateMealDraftRow(key: string, patch: Partial<MealDraftRow>) {
+    setMealDraft((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+  function removeMealDraftRow(key: string) {
+    setMealDraft((rows) => rows.filter((r) => r.key !== key));
+  }
+
+  async function saveMeals() {
+    if (mealDraft.length === 0) { setMealDraftError("حداقل یک وعده لازمه"); return; }
+    for (const r of mealDraft) {
+      if (!r.label.trim()) { setMealDraftError("اسم همه‌ی وعده‌ها رو وارد کن"); return; }
+      if (!r.kcal || +r.kcal <= 0) { setMealDraftError("کالری همه‌ی وعده‌ها باید عدد مثبت باشه"); return; }
+    }
+    setMealDraftError(null);
+    setSavingMeals(true);
+    const res = await fetch("/api/calorie/target", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mealBreakdown: mealDraft.map((r) => ({ key: r.key, label: r.label.trim(), kcal: +r.kcal })) }),
+    });
+    const data = await res.json();
+    setSavingMeals(false);
+    if (!res.ok) { setMealDraftError(data.error || "خطایی پیش آمد"); return; }
+    setTarget(data.target);
+    setEditingMeals(false);
   }
 
   async function addEntry() {
     const name = selectedFood?.name || query.trim();
     const per100 = selectedFood ? selectedFood.caloriesPer100g : +customPer100;
-    const g = +grams;
+    const g = +qty * UNIT_TO_GRAMS[unit];
     if (!name || !per100 || per100 <= 0 || !g) return;
     const totalKcal = Math.round((per100 * g) / 100);
 
@@ -126,7 +192,7 @@ export function CaloriePanel() {
       body: JSON.stringify({ date: todayKey, customName: name, customCalories: totalKcal, grams: g, mealType }),
     });
     if (res.ok) {
-      setQuery(""); setSelectedFood(null); setCustomPer100(""); setGrams("100");
+      setQuery(""); setSelectedFood(null); setCustomPer100(""); setQty("100"); setUnit("gram");
       loadEntries();
     }
   }
@@ -176,9 +242,11 @@ export function CaloriePanel() {
 
   return (
     <div>
-      {!target ? (
+      {!target || editingGoal ? (
         <div style={{ marginTop: 10 }}>
-          <div className="section-note">اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم</div>
+          <div className="section-note">
+            {editingGoal ? "برنامه کالری‌ات رو دوباره حساب کن" : "اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم"}
+          </div>
 
           <label className="exercise-form-label">هدف</label>
           <SegmentedTabs
@@ -222,9 +290,14 @@ export function CaloriePanel() {
           </div>
 
           {goalError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{goalError}</div>}
-          <button onClick={saveGoal} disabled={savingGoal} style={{ marginTop: 14, borderColor: "var(--accent)", color: "var(--accent)" }}>
-            {savingGoal ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
-          </button>
+          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+            {editingGoal && (
+              <button onClick={() => setEditingGoal(false)} className="small" style={{ flex: 1 }}>انصراف</button>
+            )}
+            <button onClick={saveGoal} disabled={savingGoal} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
+              {savingGoal ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -234,10 +307,55 @@ export function CaloriePanel() {
           <div className="conflict-alert-bar" style={{ position: "static", marginTop: 8, opacity: 1, transform: "none", pointerEvents: "auto" }}>
             <div className="conflict-alert-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: pct > 100 ? "#E05252" : "var(--accent)" }} />
           </div>
+          <button type="button" className="small" onClick={openEditGoal} style={{ marginTop: 10 }}>
+            تغییر برنامه کالری
+          </button>
 
-          {!!target.mealBreakdown?.length && (
-            <div className="tm-extra">
-              <div className="domain-sub">سهم هر وعده</div>
+          <div className="tm-extra">
+            <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>سهم هر وعده</span>
+              {!editingMeals && (
+                <span className="calorie-edit-meals-link" onClick={openEditMeals}>ویرایش وعده‌ها</span>
+              )}
+            </div>
+
+            {editingMeals ? (
+              <div style={{ marginTop: 8 }}>
+                {mealDraft.map((row) => (
+                  <div key={row.key} style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
+                    <input
+                      className="wsearch-newform-name"
+                      style={{ flex: 2 }}
+                      placeholder="اسم وعده"
+                      value={row.label}
+                      onChange={(e) => updateMealDraftRow(row.key, { label: e.target.value })}
+                    />
+                    <input
+                      type="number"
+                      className="wsearch-newform-name"
+                      style={{ flex: 1 }}
+                      placeholder="کالری"
+                      value={row.kcal}
+                      onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
+                    />
+                    <button type="button" className="small" onClick={() => removeMealDraftRow(row.key)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
+                  </div>
+                ))}
+                {mealDraft.length < 8 && (
+                  <button type="button" className="small" onClick={addMealDraftRow} style={{ marginTop: 8 }}>+ افزودن وعده</button>
+                )}
+                <div className="section-note" style={{ marginTop: 8, marginBottom: 0 }}>
+                  جمع: {faNum(mealDraft.reduce((s, r) => s + (+r.kcal || 0), 0))} کالری
+                </div>
+                {mealDraftError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>{mealDraftError}</div>}
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                  <button type="button" className="small" onClick={() => setEditingMeals(false)} style={{ flex: 1 }}>انصراف</button>
+                  <button type="button" disabled={savingMeals} onClick={saveMeals} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
+                    {savingMeals ? "در حال ذخیره…" : "ذخیره وعده‌ها"}
+                  </button>
+                </div>
+              </div>
+            ) : !!target.mealBreakdown?.length && (
               <div className="calorie-meal-grid">
                 {target.mealBreakdown.map((m) => {
                   const consumed = entries.filter((e) => e.mealType === m.key).reduce((s, e) => s + e.customCalories, 0);
@@ -249,8 +367,8 @@ export function CaloriePanel() {
                   );
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="tm-extra">
             <div className="domain-sub">افزودن غذا</div>
@@ -293,14 +411,21 @@ export function CaloriePanel() {
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <input type="number" className="wsearch-newform-name" style={{ flex: 1 }} placeholder="گرم" value={grams} onChange={(e) => setGrams(e.target.value)} />
+              <input type="number" className="wsearch-newform-name" style={{ flex: 1 }} placeholder="مقدار" value={qty} onChange={(e) => setQty(e.target.value)} />
               <div style={{ flex: 2 }}>
                 <SegmentedTabs
-                  active={mealType}
-                  onChange={setMealType}
-                  options={mealTypes.map((m) => ({ value: m.key, label: m.label }))}
+                  active={unit}
+                  onChange={setUnit}
+                  options={(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => ({ value: u, label: UNIT_LABELS[u] }))}
                 />
               </div>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <SegmentedTabs
+                active={mealType}
+                onChange={setMealType}
+                options={mealTypes.map((m) => ({ value: m.key, label: m.label }))}
+              />
             </div>
             <button
               onClick={addEntry}
@@ -363,6 +488,7 @@ export function CaloriePanel() {
       )}
 
       <div className="disclaimer-note">
+        <span className="disclaimer-warn">توجه: </span>
         این جدول کالری/وعده‌ها فقط یک پیشنهاد است و هیچ اجباری به اجرای دقیق آن نیست؛ مسئولیت کل برنامه‌ی غذایی با خود کاربر است.
       </div>
     </div>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { calcAge, calcDailyTargetKcal, splitMeals, CalorieGoal, Sex } from "@/lib/calorieCalc";
+import { clampText } from "@/lib/validate";
 
 const VALID_GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 const VALID_SEX: Sex[] = ["male", "female"];
@@ -80,6 +81,48 @@ export async function POST(req: NextRequest) {
       ageYears: user?.birthDate ? null : age,
       mealBreakdown: mealBreakdown as any,
     },
+  });
+
+  return NextResponse.json({ ok: true, target });
+}
+
+// PATCH /api/calorie/target { mealBreakdown: [{ key, label, kcal }] }
+// کاربر خودش می‌تونه بچینه چند وعده داره و توی هر وعده چقدر کالری می‌خواد —
+// جایگزین تقسیم خودکار splitMeals می‌شه؛ کالری روزانه هم برابر جمع همین
+// وعده‌ها می‌شه تا نوار پیشرفت بالای صفحه با «سهم هر وعده» ناسازگار نباشه.
+export async function PATCH(req: NextRequest) {
+  const guard = await requireModule(ModuleKey.CALORIE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
+
+  const body = await req.json();
+  const { mealBreakdown } = body as { mealBreakdown: { key: string; label: string; kcal: number }[] };
+
+  if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {
+    return NextResponse.json({ error: "بین ۱ تا ۸ وعده مجاز است" }, { status: 400 });
+  }
+  const cleaned: { key: string; label: string; kcal: number }[] = [];
+  for (const m of mealBreakdown) {
+    if (!m || typeof m.label !== "string" || !m.label.trim()) {
+      return NextResponse.json({ error: "اسم وعده نمی‌تواند خالی باشد" }, { status: 400 });
+    }
+    if (typeof m.kcal !== "number" || !isFinite(m.kcal) || m.kcal < 0 || m.kcal > 10000) {
+      return NextResponse.json({ error: "مقدار کالری وعده نامعتبر است" }, { status: 400 });
+    }
+    const key = m.key || `meal_${cleaned.length}_${Date.now().toString(36)}`;
+    cleaned.push({ key, label: clampText(m.label, 30), kcal: Math.round(m.kcal) });
+  }
+  const dailyTargetKcal = cleaned.reduce((s, m) => s + m.kcal, 0);
+  if (dailyTargetKcal < 500) {
+    return NextResponse.json({ error: "جمع کالری وعده‌ها خیلی کم است" }, { status: 400 });
+  }
+
+  const existing = await prisma.calorieTarget.findFirst({ where: { userId, effectiveTo: null }, orderBy: { effectiveFrom: "desc" } });
+  if (!existing) return NextResponse.json({ error: "اول باید هدف کالری‌ات را بسازی" }, { status: 400 });
+
+  const target = await prisma.calorieTarget.update({
+    where: { id: existing.id },
+    data: { mealBreakdown: cleaned as any, dailyTargetKcal, mealsPerDay: cleaned.length },
   });
 
   return NextResponse.json({ ok: true, target });

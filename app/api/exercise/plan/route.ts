@@ -4,7 +4,6 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { getExercisePlan, ExerciseGoal, ExerciseLevel } from "@/lib/exercisePlans";
 import { generateExercisePlan } from "@/lib/anthropic";
-import { checkNewProgramEligibility } from "@/lib/exerciseEligibility";
 import { FA_WEEKDAY } from "@/lib/jalali";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
@@ -60,12 +59,6 @@ export async function POST(req: NextRequest) {
   }
   if (!rulesAccepted) {
     return NextResponse.json({ error: "قبول‌کردن قوانین الزامی است" }, { status: 400 });
-  }
-
-  const currentActive = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { startDate: "desc" } });
-  const eligibility = await checkNewProgramEligibility(userId, currentActive);
-  if (!eligibility.eligible) {
-    return NextResponse.json({ error: "هنوز واجد شرایط برنامه جدید نیستی", eligibility }, { status: 403 });
   }
 
   const uniqueDays = [...new Set(gymDays)];

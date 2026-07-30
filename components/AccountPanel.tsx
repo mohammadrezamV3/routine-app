@@ -6,6 +6,11 @@ import Link from "next/link";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
+import { MarketPicker } from "@/components/MarketPicker";
+import { getSetting, setSetting } from "@/lib/storage";
+import { getSiteMarket } from "@/lib/market";
+import { DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS } from "@/lib/tickerSymbols";
+import { TICKER_SETTING_KEY } from "@/components/MarketTicker";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -57,6 +62,8 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editingWakeSleep, setEditingWakeSleep] = useState(false);
+  const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
+  const [marketPickerOpen, setMarketPickerOpen] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -65,7 +72,20 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       setLoading(false);
     });
     getWakeSleepTimes().then(setWakeSleep);
+    const defaultSymbols = getSiteMarket() === "INTERNATIONAL" ? DEFAULT_TICKER_SYMBOLS_INTERNATIONAL : DEFAULT_TICKER_SYMBOLS_IRAN;
+    getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => setTickerSymbols(saved?.length ? saved : defaultSymbols));
   }, [status]);
+
+  function toggleTickerSymbol(symbol: string) {
+    setTickerSymbols((prev) => {
+      const has = prev.includes(symbol);
+      if (has && prev.length <= MIN_TICKER_SYMBOLS) return prev;
+      if (!has && prev.length >= MAX_TICKER_SYMBOLS) return prev;
+      const next = has ? prev.filter((s) => s !== symbol) : [...prev, symbol];
+      setSetting(TICKER_SETTING_KEY, next);
+      return next;
+    });
+  }
 
   useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
 
@@ -229,6 +249,16 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="tm-extra">
+        <div className="domain-sub">بازارهای دنبال‌شده</div>
+        <div className="item-line">
+          {tickerSymbols.length} بازار برای نوار قیمتِ بالای صفحه‌ی ترید انتخاب شده
+        </div>
+        <button onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 8, borderColor: "var(--accent)", color: "var(--accent)" }}>
+          تغییر بازارها
+        </button>
+      </div>
+
+      <div className="tm-extra">
         <button disabled title="به‌زودی" style={{ opacity: 0.5, cursor: "not-allowed" }}>
           تحلیل برنامه‌ها
         </button>
@@ -245,6 +275,15 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           initial={wakeSleep}
           onClose={() => setEditingWakeSleep(false)}
           onDone={(v) => { setWakeSleep(v); setEditingWakeSleep(false); }}
+        />
+      )}
+
+      {marketPickerOpen && (
+        <MarketPicker
+          title="بازارهای دنبال‌شده"
+          symbols={tickerSymbols}
+          onToggle={toggleTickerSymbol}
+          onClose={() => setMarketPickerOpen(false)}
         />
       )}
     </ModalShell>

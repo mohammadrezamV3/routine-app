@@ -14,7 +14,7 @@ export default function TradePage() {
   const [tab, setTab] = useState<"checklist" | "journal">("checklist");
 
   return (
-    <section>
+    <section className="trade-desktop">
       <MarketTicker />
       <h1>ترید</h1>
 
