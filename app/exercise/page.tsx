@@ -9,7 +9,7 @@ export default function BodybuildingPage() {
   const [tab, setTab] = useState<"exercise" | "calorie">("exercise");
 
   return (
-    <section>
+    <section className="exercise-calorie-root">
       <h1>بدنسازی</h1>
 
       <div className="day-picker" style={{ marginTop: 10 }}>

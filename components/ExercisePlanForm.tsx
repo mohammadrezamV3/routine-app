@@ -1,8 +1,9 @@
 "use client";
 
-import { FA_WEEKDAY } from "@/lib/jalali";
+import { FA_WEEKDAY, FA_WEEKDAY_SHORT } from "@/lib/jalali";
 import { LEVEL_LABELS, GOAL_LABELS, ExerciseLevel, ExerciseGoal } from "@/lib/exercisePlans";
 import { ExercisePlanFormValue, PHASE_LABELS, TrainingPhase } from "@/lib/exerciseTypes";
+import { PillDropdown } from "./PillDropdown";
 
 export function ExercisePlanForm({
   value,
@@ -21,9 +22,9 @@ export function ExercisePlanForm({
     <>
       <label className="exercise-form-label">کدوم روزها می‌ری باشگاه؟</label>
       <div className="exercise-day-select">
-        {FA_WEEKDAY.map((d) => (
+        {FA_WEEKDAY.map((d, i) => (
           <span key={d} className={`day-pill${value.gymDays.includes(d) ? " on" : ""}`} onClick={() => toggleDay(d)}>
-            {d}
+            {FA_WEEKDAY_SHORT[i]}
           </span>
         ))}
       </div>
@@ -49,32 +50,20 @@ export function ExercisePlanForm({
       </div>
 
       <label className="exercise-form-label">هدف تمرین</label>
-      <div className="day-picker" style={{ flexWrap: "wrap" }}>
-        {(Object.keys(GOAL_LABELS) as ExerciseGoal[]).map((g) => (
-          <span
-            key={g}
-            className={`day-pill${value.goal === g ? " on" : ""}`}
-            onClick={() => onChange({ goal: g })}
-            style={{ flex: "1 1 calc(50% - 4px)" }}
-          >
-            {GOAL_LABELS[g]}
-          </span>
-        ))}
-      </div>
+      <PillDropdown
+        value={value.goal}
+        options={(Object.keys(GOAL_LABELS) as ExerciseGoal[]).map((g) => ({ value: g, label: GOAL_LABELS[g] }))}
+        placeholder="یک هدف انتخاب کن"
+        onChange={(g) => onChange({ goal: g })}
+      />
 
       <label className="exercise-form-label">دوره‌ی تمرینی‌ات چیه؟</label>
-      <div className="day-picker" style={{ flexWrap: "wrap" }}>
-        {(Object.keys(PHASE_LABELS) as TrainingPhase[]).map((p) => (
-          <span
-            key={p}
-            className={`day-pill${value.trainingPhase === p ? " on" : ""}`}
-            onClick={() => onChange({ trainingPhase: p })}
-            style={{ flex: "1 1 calc(50% - 4px)" }}
-          >
-            {PHASE_LABELS[p]}
-          </span>
-        ))}
-      </div>
+      <PillDropdown
+        value={value.trainingPhase}
+        options={(Object.keys(PHASE_LABELS) as TrainingPhase[]).map((p) => ({ value: p, label: PHASE_LABELS[p] }))}
+        placeholder="یک دوره انتخاب کن"
+        onChange={(p) => onChange({ trainingPhase: p })}
+      />
 
       <div className="task" style={{ marginTop: 14, cursor: "pointer" }} onClick={() => onChange({ hasLimitation: !value.hasLimitation })}>
         <div className={`check${value.hasLimitation ? " on" : ""}`}>

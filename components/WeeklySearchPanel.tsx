@@ -32,7 +32,7 @@ function buildWeeklyGroups(opts: ScheduleOpts) {
   return list;
 }
 
-type NewRow = { jsDay: number; start: string; end: string };
+type NewRow = { jsDays: number[]; start: string; end: string };
 
 export function WeeklySearchPanel({
   scheduleOpts,
@@ -56,7 +56,7 @@ export function WeeklySearchPanel({
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
   const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
-  const [rows, setRows] = useState<NewRow[]>([{ jsDay: WEEK_ORDER[0].jsDay, start: "", end: "" }]);
+  const [rows, setRows] = useState<NewRow[]>([{ jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean }>>({});
@@ -112,13 +112,23 @@ export function WeeklySearchPanel({
   }
 
   function addRow() {
-    setRows((r) => [...r, { jsDay: WEEK_ORDER[0].jsDay, start: "", end: "" }]);
+    setRows((r) => [...r, { jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
   }
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));
   }
   function updateRow(i: number, patch: Partial<NewRow>) {
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  }
+  // چند روز آزادانه توی همین یک ردیف — دیگه لازم نیست برای هر روز یک ردیف
+  // جدا (با ساعت شروع/پایان تکراری) بسازی؛ فقط برای بازه‌ی زمانیِ متفاوت لازمه.
+  function toggleRowDay(i: number, jsDay: number) {
+    setRows((r) => r.map((row, idx) => {
+      if (idx !== i) return row;
+      const has = row.jsDays.includes(jsDay);
+      if (has && row.jsDays.length === 1) return row;
+      return { ...row, jsDays: has ? row.jsDays.filter((d) => d !== jsDay) : [...row.jsDays, jsDay] };
+    }));
   }
 
   async function submitNew() {
@@ -138,9 +148,13 @@ export function WeeklySearchPanel({
     setRowErrors(rErrs);
     if (hasError) return;
 
+    // هر ردیف حالا چند روز می‌تونه داشته باشه — قبل از چک تداخل، صاف‌شون می‌کنیم
+    // به یک ورودیِ جدا به‌ازای هر روز (با همون ساعت شروع/پایانِ مشترکِ ردیف).
+    const perDay = rows.flatMap((r) => r.jsDays.map((jsDay) => ({ jsDay, start: r.start, end: r.end })));
+
     const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
     let conflictMsg: string | null = null;
-    for (const r of rows) {
+    for (const r of perDay) {
       const startFa = normalizeTimeToFa(r.start);
       const endFa = normalizeTimeToFa(r.end);
       const startMin = timeStartMinutes(startFa);
@@ -181,7 +195,7 @@ export function WeeklySearchPanel({
       setTimeout(() => {
         setAddOpen(false);
         setName(""); setStartJalali(null); setEndJalali(null);
-        setRows([{ jsDay: WEEK_ORDER[0].jsDay, start: "", end: "" }]);
+        setRows([{ jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
         setStatus("idle");
         onChanged();
       }, 480);
@@ -279,8 +293,8 @@ export function WeeklySearchPanel({
                     {WEEK_ORDER.map((o) => (
                       <span
                         key={o.jsDay}
-                        className={`day-pill${r.jsDay === o.jsDay ? " on" : ""}`}
-                        onClick={() => updateRow(ri, { jsDay: o.jsDay })}
+                        className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
+                        onClick={() => toggleRowDay(ri, o.jsDay)}
                       >
                         {o.short}
                       </span>
@@ -302,7 +316,7 @@ export function WeeklySearchPanel({
               ))}
 
               <div className="wsearch-newform-addrow">
-                <button type="button" className="wsearch-add-btn" onClick={addRow} aria-label="افزودن روز دیگر">+</button>
+                <button type="button" className="wsearch-add-btn" onClick={addRow} aria-label="افزودن بازه‌ی زمانی دیگر">+</button>
               </div>
 
               <div className="wsearch-newform-actions">

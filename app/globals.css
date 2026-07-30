@@ -1846,8 +1846,7 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
 .exercise-form-label{ display:block; font-size:11px; color:var(--muted2); margin:14px 0 6px; }
 .exercise-form-label:first-child{ margin-top:0; }
 
-.exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
-.exercise-day-select .day-pill{ flex:1 1 calc(33.33% - 6px); min-width:64px; }
+.exercise-day-select{ display:flex; flex-wrap:nowrap; gap:4px; }
 
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
@@ -1862,8 +1861,8 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
 
 .exercise-item.exercise-item-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
 .exercise-sub-btn{
-  flex-shrink:0; font-size:10px; padding:4px 9px; border-radius:8px; white-space:nowrap;
-  border:1px solid var(--line); background:none; color:var(--muted2); cursor:pointer;
+  flex-shrink:0; font-size:10px; padding:4px 9px; white-space:nowrap;
+  color:var(--muted2); cursor:pointer;
   transition:border-color .15s ease, color .15s ease;
 }
 .exercise-sub-btn:hover{ border-color:var(--accent); color:var(--accent); }
@@ -1882,3 +1881,60 @@ body:not([data-theme="light"]) .ticker-bar{ background:rgba(255,255,255,.045); b
 .calorie-history-day:last-child{ border-bottom:none; }
 .calorie-history-day-head{ display:flex; justify-content:space-between; align-items:center; font-size:12px; }
 .calorie-history-day-items{ margin-top:4px; font-size:11.5px; color:var(--muted2); line-height:1.7; }
+
+/* صفحه‌ی بدنسازی/کالری — همه‌ی دکمه‌ها (و پیل‌های روز/گزینه) کاملا گرد باشن؛
+   scope شده به همین صفحه تا رفتار .day-pill جاهای دیگه (برنامه هفتگی، رودمپ،
+   ترید) دست‌نخورده بمونه. بک‌گراندِ شیشه‌ای سراسریِ button رو صریح دست نمی‌زنیم
+   (نه none نه رنگ خاص) — پس همون گلَسِ پیش‌فرضِ سایت خودش نمایان می‌مونه. */
+.exercise-calorie-root button,
+.exercise-calorie-root .day-pill{
+  border-radius:999px;
+}
+/* روزهای هفته (روزهای باشگاه) استثناست — طبق درخواست باید دقیقاً مثل پیل‌های
+   روزِ برنامه‌ی هفتگی بمونه (گردیِ اصلی ۱۰px)، نه کاملا گرد. */
+.exercise-calorie-root .exercise-day-select .day-pill{
+  border-radius:10px;
+}
+/* درخشش پشتِ پیلِ انتخاب‌شده (::after) گردیِ خودش رو هاردکد داره — باید با
+   گردیِ جدیدِ کاملِ پیل هم‌راستا بشه، وگرنه پشتِ پیلِ کاملا گرد یه درخششِ
+   کمتر-گرد (مربعی‌تر) دیده می‌شه. توی روزهای باشگاه چون پیل ۱۰px مونده، نیازی
+   به override نیست (مقدارِ پیش‌فرض ::after هم ۱۰pxه). */
+.exercise-calorie-root .day-pill.on::after{
+  border-radius:999px;
+}
+.exercise-calorie-root .exercise-day-select .day-pill.on::after{
+  border-radius:10px;
+}
+
+/* لیستِ کشویی برای گزینه‌هایی که تعدادشون زیاده (هدف، دوره‌ی تمرینی، نوع وعده) —
+   یک دکمه‌ی محرک که مقدارِ انتخاب‌شده رو نشون می‌ده، با کلیک یک منوی شناور
+   (دقیقاً هم‌خانواده‌ی wsearch-fab-menu) باز می‌شه و بعد از انتخاب می‌بنده. */
+.pill-dropdown{ position:relative; }
+.pill-dropdown-trigger{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  text-align:right; font-size:12.5px;
+}
+.pill-dropdown-trigger.placeholder{ color:var(--muted2); }
+.pill-dropdown-chevron{ width:15px; height:15px; flex-shrink:0; color:var(--muted2); transition:transform .18s ease; }
+.pill-dropdown-trigger:hover .pill-dropdown-chevron{ color:var(--accent); }
+.pill-dropdown-chevron.open{ transform:rotate(180deg); }
+.pill-dropdown-menu{
+  position:absolute; top:calc(100% + 6px); right:0; left:0; z-index:5;
+  border-radius:14px; padding:6px; box-shadow:0 20px 50px rgba(0,0,0,.5);
+  opacity:0; transform:translateY(-6px) scale(.97); pointer-events:none;
+  transition:opacity .16s ease, transform .16s ease;
+  max-height:240px; overflow-y:auto;
+}
+.pill-dropdown-menu.open{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+body:not([data-theme="light"]) .pill-dropdown-menu{
+  background:linear-gradient(180deg, rgba(9,10,11,.99), rgba(6,7,8,.995)); border:1px solid rgba(255,255,255,.08);
+}
+body[data-theme="light"] .pill-dropdown-menu{
+  background:rgba(255,255,255,.98); border:1px solid var(--line); box-shadow:0 16px 40px rgba(0,0,0,.18);
+}
+.pill-dropdown-option{
+  padding:10px 12px; border-radius:10px; font-size:12.5px; cursor:pointer; color:var(--muted);
+  transition:background .12s ease, color .12s ease;
+}
+.pill-dropdown-option:hover{ background:rgba(var(--accent-rgb),.1); color:var(--text); }
+.pill-dropdown-option.on{ color:var(--accent); font-weight:700; background:rgba(var(--accent-rgb),.1); }
