@@ -119,11 +119,10 @@ type PlanCard = {
   free?: boolean; prices?: Record<Duration, string>;
 };
 
-// ترتیب: Base Plan و Plan Max جامون رو با هم عوض کردن (نسبت به قبل)
+// ترتیب پلن‌ها: Base Plan (رایگان) اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
 const PLANS_IRAN: PlanCard[] = [
   {
-    key: "max", nameFa: "Plan Max", highlight: true,
-    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
+    key: "basic", nameFa: "Base Plan", free: true,
   },
   {
     key: "exercise", nameFa: "Plan Gym",
@@ -134,14 +133,14 @@ const PLANS_IRAN: PlanCard[] = [
     prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۰۸۰,۰۰۰ تومان" },
   },
   {
-    key: "basic", nameFa: "Base Plan", free: true,
+    key: "max", nameFa: "Plan Max", highlight: true,
+    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
   },
 ];
 
 const PLANS_INTL: PlanCard[] = [
   {
-    key: "max", nameFa: "Plan Max", highlight: true,
-    prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$149.99" },
+    key: "basic", nameFa: "Basic", free: true,
   },
   {
     key: "exercise", nameFa: "Plan Gym",
@@ -152,7 +151,8 @@ const PLANS_INTL: PlanCard[] = [
     prices: { "1": "$12.99", "3": "$34.99", "6": "$62.99", "12": "$109.99" },
   },
   {
-    key: "basic", nameFa: "Basic", free: true,
+    key: "max", nameFa: "Plan Max", highlight: true,
+    prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$149.99" },
   },
 ];
 
@@ -496,8 +496,14 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
 
   const cardClass = p.highlight
-    ? `relative flex flex-col rounded-[28px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-6 backdrop-blur-xl ${t.secondaryCardShadow}`
-    : `relative flex flex-col rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 backdrop-blur-xl ${t.shadow}`;
+    ? `relative flex flex-col gap-2 rounded-2xl border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} px-5 py-4 backdrop-blur-xl ${t.secondaryCardShadow}`
+    : `relative flex flex-col gap-2 rounded-2xl border ${t.cardBorder} ${t.cardBg} px-5 py-4 backdrop-blur-xl ${t.shadow}`;
+
+  const buyHref = p.free ? "/auth/signup" : `/auth/signup?plan=${p.key}&duration=${duration}`;
+  const buyLabel = p.free ? (isIntl ? "Start free" : "شروع رایگان") : (isIntl ? "Buy" : "خرید");
+  const buyClass = p.free || p.highlight
+    ? `text-white hover:brightness-105 ${p.free ? t.accentBg : t.secondaryBg}`
+    : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`;
 
   function scrollToDetails() {
     document.getElementById("plans-compare-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -506,54 +512,45 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   return (
     <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
       {p.highlight && (
-        <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10.5px] font-extrabold text-white ${t.secondaryBg}`}>
+        <span className={`absolute -top-3 right-5 rounded-full px-3 py-1 text-[10px] font-extrabold text-white ${t.secondaryBg}`}>
           محبوب‌ترین
         </span>
       )}
-      <div className={`text-right text-lg font-extrabold ${t.accentText}`}>{p.nameFa}</div>
-      <button
-        type="button"
-        onClick={scrollToDetails}
-        className={`plan-details-btn mt-1 self-start border-0 bg-transparent p-0 text-right text-[12px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
-      >
-        {isIntl ? "Details" : "جزئیات"}
-      </button>
 
-      <div className="flex-1" />
+      {/* خط اول: فقط اسم پلن، سمت چپ */}
+      <div className={`text-left text-base font-extrabold ${t.accentText}`}>{p.nameFa}</div>
 
-      {p.free ? (
-        <>
-          <div className={`mt-3.5 text-lg font-extrabold ${t.heading}`}>رایگان</div>
-          <Link href="/auth/signup" className={`mt-3.5 block w-full rounded-2xl py-3 text-center text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
-            شروع رایگان
-          </Link>
-        </>
-      ) : (
-        <>
-          <div className="mt-3.5 grid grid-cols-4 gap-1.5">
-            {DURATIONS.map((d) => (
-              <button
-                key={d}
-                type="button"
-                className={`rounded-lg border py-2 text-[10.5px] font-bold transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.muted} ${t.accentHoverBorder}`}`}
-                onClick={() => setDuration(d)}
-              >
-                {labels[d]}
-              </button>
-            ))}
-          </div>
-          <div className={`mt-3 text-lg font-extrabold ${t.heading}`}>
-            {p.prices![duration]}
-            <span className={`mr-1 text-[11px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
-          </div>
-          <Link
-            href={`/auth/signup?plan=${p.key}&duration=${duration}`}
-            className={`mt-3.5 block w-full rounded-2xl py-3 text-center text-[13.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
+      {/* خط دوم: جزئیات (بدون بک‌گراند) + انتخاب دوره (یک select، نه چهار دکمه) + قیمت + خرید — همه در یک ردیف */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={scrollToDetails}
+            className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
           >
-            فعال‌سازی این پلن
-          </Link>
-        </>
-      )}
+            {isIntl ? "Details" : "جزئیات"}
+          </button>
+
+          {!p.free && (
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value as Duration)}
+              aria-label={isIntl ? "Billing period" : "دوره پرداخت"}
+              className={`rounded-lg border ${t.line} bg-transparent px-1.5 py-1 text-[11px] font-bold ${t.heading} outline-none transition ${t.accentHoverBorder}`}
+            >
+              {DURATIONS.map((d) => <option key={d} value={d}>{labels[d]}</option>)}
+            </select>
+          )}
+
+          <span className={`text-[13px] font-extrabold ${t.heading}`}>
+            {p.free ? (isIntl ? "Free" : "رایگان") : p.prices![duration]}
+          </span>
+        </div>
+
+        <Link href={buyHref} className={`rounded-xl px-4 py-1.5 text-[12px] font-bold transition active:scale-[0.97] ${buyClass}`}>
+          {buyLabel}
+        </Link>
+      </div>
     </motion.div>
   );
 }
@@ -564,6 +561,8 @@ export function LandingPage() {
   const isIntl = getSiteMarket() === "INTERNATIONAL";
   const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
   const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
+  const mainRows = compareRows.filter((r) => !r.upcoming);
+  const upcomingRows = compareRows.filter((r) => r.upcoming);
 
   useEffect(() => { staggerFieldsIn(heroRef.current); }, []);
 
@@ -626,8 +625,10 @@ export function LandingPage() {
         {/* جدول HTML واقعی؛ بدون sticky/بک‌گراندِ مخصوصِ ستونِ لیبل و بدون
             minWidth/overflow-x — با tableLayout:fixed و عرض‌های درصدی، خودش
             با اندازه‌ی هر صفحه (حتی موبایل باریک) جمع می‌شه، بدون نیاز به اسکرول.
-            ردیف‌های «به‌زودی» هم توی همین یک باکس/جدول‌ان، نه جدا — فقط به‌جای
-            چک/ایکس هر پلن، یک سلولِ colSpan با متنِ «به‌زودی…» نشون داده می‌شه. */}
+            ردیف‌های «به‌زودی» توی یک tbody جدا، ولی همون یک باکس/جدول‌ان —
+            به‌جای متنِ ساده‌ی «به‌زودی…» (که کم‌کنتراست و عملاً نامرئی بود)،
+            محتوای واقعیِ ردیف‌ها با بلورِ کمِ تمام‌کنتراست پیش‌نمایش می‌شه و یک
+            نشانِ صریحِ «به‌زودی» روش می‌شینه — حس شیشه‌ی مات، نه خالی. */}
         <div id="plans-compare-table" className={`mt-6 scroll-mt-[96px] rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
           <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
             <colgroup>
@@ -643,27 +644,48 @@ export function LandingPage() {
               </tr>
             </thead>
             <tbody>
-              {compareRows.map((row) => (
+              {mainRows.map((row) => (
                 <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
                   <th scope="row" className={`py-3.5 text-right text-[11.5px] font-normal ${t.muted}`}>{row.label}</th>
-                  {row.upcoming ? (
-                    <td colSpan={plans.length} className="py-3.5">
-                      <div className={`text-center text-[11px] font-extrabold ${t.accentText}`}>
-                        {isIntl ? "Coming soon…" : "به‌زودی…"}
+                  {plans.map((p) => (
+                    <td key={p.key} className="py-3.5">
+                      <div className="flex justify-center">
+                        {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
                       </div>
                     </td>
-                  ) : (
-                    plans.map((p) => (
-                      <td key={p.key} className="py-3.5">
-                        <div className="flex justify-center">
-                          {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
-                        </div>
-                      </td>
-                    ))
-                  )}
+                  ))}
                 </tr>
               ))}
             </tbody>
+            {upcomingRows.length > 0 && (
+              <tbody>
+                <tr>
+                  <td colSpan={plans.length + 1} className={`border-t ${t.line} p-0`}>
+                    <div className="relative py-4">
+                      <div className="pointer-events-none select-none space-y-2.5 blur-sm" aria-hidden="true">
+                        {upcomingRows.map((row) => (
+                          <div key={row.label} className="flex items-center justify-between gap-4">
+                            <span className={`text-[11.5px] font-semibold ${t.heading}`}>{row.label}</span>
+                            <div className="flex items-center gap-6">
+                              {plans.map((p) => (
+                                <span key={p.key}>
+                                  {row.included[p.key] ? <Check size={16} className={t.accentText} /> : <X size={16} className="text-[#C9524B]" />}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
+                          {isIntl ? "Coming soon" : "به‌زودی"}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            )}
           </table>
         </div>
       </section>
