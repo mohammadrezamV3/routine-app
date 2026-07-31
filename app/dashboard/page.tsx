@@ -25,11 +25,11 @@ export default function DashboardPreviewPage() {
   const [program, setProgram] = useState("all");
 
   return (
-    <div className="dash-breakout dash-scope min-h-screen rounded-dash bg-dash-bg px-4 pb-[calc(100px+env(safe-area-inset-bottom))] pt-4 text-dash-text sm:px-6 lg:px-8 lg:py-8">
-      <div className="flex flex-col gap-6">
+    <div className="dash-breakout dash-scope min-h-screen px-3 pb-[calc(100px+env(safe-area-inset-bottom))] pt-3 text-dash-text sm:px-6 sm:pt-4 lg:px-8 lg:py-8">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <DashHeader progress={75} />
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+        <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
           <DashDateSelector activeKey={activeDay} onSelect={setActiveDay} className="lg:order-2" />
 
           <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
@@ -49,7 +49,7 @@ export default function DashboardPreviewPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-start">
           <DashTaskList delay={0.05} className="order-1 lg:order-1 lg:flex-1" />
           <DashSidebar className="order-2 lg:order-2 lg:w-[320px] lg:shrink-0" />
         </div>

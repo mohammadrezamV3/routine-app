@@ -1,29 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { DASH_WEEKLY_STATS } from "@/lib/dashboardMockData";
 
-// نمودار میله‌ای آمار هفتگی — عمداً dir="ltr" مثل نوار تاریخ، چون محور
-// درصد و ترتیب روزها باید چپ‌به‌راست/صعودی خونده بشه.
+// نمودار میله‌ای آمار هفتگی — قبلاً عمداً dir="ltr" بود (مثل نوار تاریخ)،
+// ولی برای روزهای هفته این برعکسِ خوانشِ طبیعیِ فارسی از آب در اومد؛ حالا
+// راست‌چینِ معمولیه: شنبه (اولِ هفته) سمتِ راست، جمعه سمتِ چپ. درصدِ هر
+// روز هم بالای میله‌ش نوشته می‌شه، نه فقط توی محورِ کناری.
 export function DashWeeklyChartCard({ delay }: { delay?: number }) {
   return (
     <DashCard delay={delay}>
       <h2 className="text-right text-[15px] font-bold text-dash-text">آمار هفتگی</h2>
 
-      <div dir="ltr" className="mt-5 flex items-end gap-3">
-        <div className="flex h-32 shrink-0 flex-col justify-between pb-5 text-[10.5px] text-dash-muted">
-          <span>%100</span>
-          <span>%50</span>
-          <span>%0</span>
-        </div>
-
-        <div className="flex flex-1 items-end justify-between gap-2.5">
+      <div className="mt-5 flex items-end gap-3">
+        <div className="flex flex-1 items-end justify-between gap-2">
           {DASH_WEEKLY_STATS.map((s, i) => {
             const peak = s.pct >= 90;
             return (
-              <div key={s.dayShort} className="flex flex-1 flex-col items-center gap-2">
-                <div className="flex h-32 w-full items-end justify-center">
+              <div key={s.dayShort} className="flex flex-1 flex-col items-center gap-1.5">
+                <span className={cn("text-[10px] font-semibold", peak ? "text-dash-green" : "text-dash-muted")}>{s.pct}٪</span>
+                <div className="flex h-28 w-full items-end justify-center">
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.max(4, s.pct)}%` }}
@@ -35,10 +33,16 @@ export function DashWeeklyChartCard({ delay }: { delay?: number }) {
                     }}
                   />
                 </div>
-                <span className="text-[11.5px] text-dash-muted">{s.dayShort}</span>
+                <span className="text-[11px] text-dash-muted sm:text-[11.5px]">{s.dayShort}</span>
               </div>
             );
           })}
+        </div>
+
+        <div className="flex h-28 shrink-0 flex-col justify-between pb-4 text-[10px] text-dash-muted sm:text-[10.5px]">
+          <span>٪۱۰۰</span>
+          <span>٪۵۰</span>
+          <span>٪۰</span>
         </div>
       </div>
     </DashCard>

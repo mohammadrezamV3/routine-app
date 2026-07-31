@@ -8,6 +8,8 @@ import { DashTask } from "@/lib/dashboardMockData";
 
 // موبایل: بج دسته زیر اسم برنامه می‌ره (نه کنارش) تا اسم عرضِ کامل ردیف رو
 // داشته باشه و بی‌جهت بریده نشه؛ دسکتاپ همون آرایشِ تک‌خطیِ اصلی می‌مونه.
+// وقتی چک‌باکس زده بشه، محتوای ردیف (بج/اسم/ساعت) بلور می‌شه — خودِ
+// چک‌باکس واضح می‌مونه تا هنوز قابل‌لمس/دیدن باشه.
 export function DashTaskRow({
   task,
   onToggle,
@@ -24,20 +26,22 @@ export function DashTaskRow({
         <MoreVertical size={17} />
       </button>
 
-      <div className="hidden shrink-0 sm:block">
-        <DashCategoryBadge category={task.category} />
-      </div>
-
-      <div className="min-w-0 flex-1 text-right">
-        <div className="truncate text-[14px] font-medium text-dash-text sm:text-[15px]">{task.title}</div>
-        <div className="mt-1 sm:hidden">
+      <div className={cn("flex min-w-0 flex-1 items-center gap-2 transition-[filter] duration-300 sm:gap-4", task.done && "pointer-events-none blur-[3px]")}>
+        <div className="hidden shrink-0 sm:block">
           <DashCategoryBadge category={task.category} />
         </div>
-      </div>
 
-      <span className="shrink-0 font-mono text-[12.5px] text-dash-muted sm:text-[13px]" dir="ltr">
-        {task.time}
-      </span>
+        <div className="min-w-0 flex-1 text-right">
+          <div className="truncate text-[14px] font-medium text-dash-text sm:text-[15px]">{task.title}</div>
+          <div className="mt-1 sm:hidden">
+            <DashCategoryBadge category={task.category} />
+          </div>
+        </div>
+
+        <span className="shrink-0 font-mono text-[11.5px] text-dash-muted sm:text-[13px]" dir="ltr">
+          {task.startTime} - {task.endTime}
+        </span>
+      </div>
 
       <motion.button
         type="button"

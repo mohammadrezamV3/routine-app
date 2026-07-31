@@ -12,7 +12,7 @@ export function DashCard({ children, className, delay = 0 }: { children: ReactNo
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut", delay }}
-      className={cn("rounded-dash border border-dash-border bg-dash-card p-5 backdrop-blur-xl", className)}
+      className={cn("rounded-dash border border-dash-border bg-dash-card p-3.5 backdrop-blur-xl sm:p-5", className)}
     >
       {children}
     </motion.div>

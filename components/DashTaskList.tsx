@@ -16,11 +16,11 @@ export function DashTaskList({ className, delay }: { className?: string; delay?:
   return (
     <DashCard delay={delay} className={className}>
       <div className="flex items-center justify-between">
-        <button type="button" className="flex items-center gap-1.5 text-[13.5px] font-semibold text-dash-green transition hover:brightness-110">
+        <h2 className="text-[18px] font-bold text-dash-text sm:text-[22px]">برنامه‌های امروز</h2>
+        <button type="button" className="flex items-center gap-1.5 text-[12.5px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[13.5px]">
           <Plus size={17} />
           افزودن برنامه
         </button>
-        <h2 className="text-[22px] font-bold text-dash-text">برنامه‌های امروز</h2>
       </div>
 
       <div className="mt-4 flex flex-col divide-y divide-dash-border">

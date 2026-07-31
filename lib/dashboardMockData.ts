@@ -29,24 +29,25 @@ export const CATEGORY_COLORS: Record<DashCategory, { text: string; bg: string; b
 
 export type DashTask = {
   id: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   title: string;
   category: DashCategory;
   done: boolean;
 };
 
 export const DASH_TASKS: DashTask[] = [
-  { id: "t1", time: "07:30", title: "مدیتیشن صبحگاهی", category: "mind", done: true },
-  { id: "t2", time: "08:30", title: "ورزش و تمرین", category: "fitness", done: true },
-  { id: "t3", time: "10:00", title: "مطالعه کتاب", category: "growth", done: true },
-  { id: "t4", time: "12:30", title: "یادگیری زبان انگلیسی", category: "learning", done: false },
-  { id: "t5", time: "16:00", title: "پروژه شخصی", category: "projects", done: false },
-  { id: "t6", time: "18:30", title: "خوندن", category: "entertainment", done: false },
-  { id: "t7", time: "20:00", title: "برنامه‌ریزی فردا", category: "planning", done: false },
-  { id: "t8", time: "22:30", title: "بدون موبایل قبل خواب", category: "mind", done: false },
+  { id: "t1", startTime: "07:30", endTime: "08:00", title: "مدیتیشن صبحگاهی", category: "mind", done: true },
+  { id: "t2", startTime: "08:30", endTime: "09:15", title: "ورزش و تمرین", category: "fitness", done: true },
+  { id: "t3", startTime: "10:00", endTime: "10:45", title: "مطالعه کتاب", category: "growth", done: true },
+  { id: "t4", startTime: "12:30", endTime: "13:15", title: "یادگیری زبان انگلیسی", category: "learning", done: false },
+  { id: "t5", startTime: "16:00", endTime: "17:30", title: "پروژه شخصی", category: "projects", done: false },
+  { id: "t6", startTime: "18:30", endTime: "19:00", title: "خوندن", category: "entertainment", done: false },
+  { id: "t7", startTime: "20:00", endTime: "20:30", title: "برنامه‌ریزی فردا", category: "planning", done: false },
+  { id: "t8", startTime: "22:30", endTime: "22:45", title: "بدون موبایل قبل خواب", category: "mind", done: false },
 ];
 
-export type DashTeamMember = {
+export type DashFriend = {
   id: string;
   name: string;
   initial: string;
@@ -58,7 +59,7 @@ export type DashTeamMember = {
 
 // آواتار به‌جای عکسِ خارجی (وابسته به شبکه)، دایره‌ی رنگی با حرفِ اول اسمه —
 // مستقل از هر سرویسِ بیرونی و همیشه قابل‌اعتماد رندر می‌شه.
-export const DASH_TEAM: DashTeamMember[] = [
+export const DASH_FRIENDS: DashFriend[] = [
   { id: "m1", name: "علی رضایی", initial: "ع", color: "#3B82F6", pct: 80, completed: 12, total: 15 },
   { id: "m2", name: "مریم احمدی", initial: "م", color: "#EC4899", pct: 60, completed: 9, total: 15 },
   { id: "m3", name: "سارا محمدی", initial: "س", color: "#A855F7", pct: 50, completed: 7, total: 14 },
@@ -87,16 +88,6 @@ export const DASH_WEEKLY_STATS: DashWeeklyStat[] = [
   { dayShort: "چ", pct: 100 },
   { dayShort: "پ", pct: 20 },
   { dayShort: "ج", pct: 12 },
-];
-
-export type DashMood = "awful" | "bad" | "okay" | "good" | "great";
-
-export const DASH_MOOD_OPTIONS: { key: DashMood; label: string }[] = [
-  { key: "awful", label: "خیلی بد" },
-  { key: "bad", label: "بد" },
-  { key: "okay", label: "معمولی" },
-  { key: "good", label: "خوب" },
-  { key: "great", label: "عالی" },
 ];
 
 export type DashDay = { key: string; weekday: string; dateLabel: string };
