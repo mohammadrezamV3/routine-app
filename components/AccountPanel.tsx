@@ -75,6 +75,10 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const [goalSaved, setGoalSaved] = useState(false);
   const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
   const [statsPickerOpen, setStatsPickerOpen] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameSaving, setUsernameSaving] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -122,6 +126,22 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       setSetting(TICKER_SETTING_KEY, next);
       return next;
     });
+  }
+
+  async function saveUsername() {
+    const v = usernameDraft.trim();
+    setUsernameSaving(true);
+    setUsernameError(null);
+    const res = await fetch("/api/account/username", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: v }),
+    });
+    const resData = await res.json().catch(() => ({}));
+    setUsernameSaving(false);
+    if (!res.ok) { setUsernameError(resData.error || "خطایی پیش اومد"); return; }
+    setData((d) => (d ? { ...d, username: resData.username } : d));
+    setEditingUsername(false);
   }
 
   useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
@@ -179,10 +199,20 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
             <span style={{ color: "var(--accent)", fontWeight: 700 }}>سوپریوزر — دسترسی نامحدود به همه‌چیز</span>
           </div>
         )}
-        {data.username && (
+        {data.username && !editingUsername && (
           <div className="about-row">
             <span className="about-label">یوزرنیم</span>
-            <span className="mono" dir="ltr">{data.username}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="mono" dir="ltr">{data.username}</span>
+              <button
+                type="button"
+                className="small"
+                onClick={() => { setUsernameDraft(data.username || ""); setUsernameError(null); setEditingUsername(true); }}
+                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+              >
+                ویرایش
+              </button>
+            </span>
           </div>
         )}
         {data.phone && (
@@ -218,6 +248,37 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
+
+      {(!data.username || editingUsername) && (
+        <div className="tm-extra">
+          <div className="domain-sub">یوزرنیم</div>
+          {!data.username && !editingUsername && (
+            <div className="section-note" style={{ marginTop: 0 }}>
+              هنوز یوزرنیم نداری — بدونش کسی نمی‌تونه پیدات کنه و باهات دوست بشه (مخصوصاً اگه با گوگل ثبت‌نام کردی).
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <input
+              type="text"
+              dir="ltr"
+              className="wsearch-newform-name"
+              placeholder="username"
+              value={usernameDraft}
+              onChange={(e) => { setUsernameDraft(e.target.value); setUsernameError(null); }}
+              onFocus={() => { if (!editingUsername) setEditingUsername(true); }}
+            />
+            <button type="button" disabled={usernameSaving} onClick={saveUsername} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+              ذخیره
+            </button>
+            {editingUsername && data.username && (
+              <button type="button" onClick={() => { setEditingUsername(false); setUsernameError(null); }}>
+                انصراف
+              </button>
+            )}
+          </div>
+          {usernameError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>{usernameError}</div>}
+        </div>
+      )}
 
       <div className="tm-extra">
         <div className="domain-sub">وضعیت اشتراک</div>
