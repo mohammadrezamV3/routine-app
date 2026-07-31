@@ -17,7 +17,17 @@ const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 // تاریخچه‌ی ماهانه — دقیقاً همون تقویمی که قبلاً توی صفحه اصلی بود (حالا با
 // ظاهر تازه‌تر)، منتقل‌شده زیر برنامه هفتگی: هر روز رفته/نرفته‌ش رو نشون
 // می‌ده و با کلیک روی هر روز جزئیاتش (DayModal) باز می‌شه.
-export function HistoryCalendar({ wake = DEFAULT_WAKE, sleep = DEFAULT_SLEEP }: { wake?: string; sleep?: string }) {
+export function HistoryCalendar({
+  wake = DEFAULT_WAKE,
+  sleep = DEFAULT_SLEEP,
+  onPick,
+}: {
+  wake?: string;
+  sleep?: string;
+  /** اگه پاس داده بشه، کلیک روی هر روز به‌جای بازکردنِ DayModal همین رو صدا
+   * می‌زنه — برای حالتِ «انتخابِ تاریخِ گذشته» (دکمه‌ی تاریخچه‌ی داشبورد). */
+  onPick?: (iso: string) => void;
+}) {
   const wakeMinutes = timeToMinutes(wake);
   const [calYear, setCalYear] = useState(jToday[0]);
   const [calMonth, setCalMonth] = useState(jToday[1]);
@@ -80,7 +90,7 @@ export function HistoryCalendar({ wake = DEFAULT_WAKE, sleep = DEFAULT_SLEEP }: 
     const done = !!monthCompletion[iso];
     const hasOuting = outingDates.has(iso);
     cells.push(
-      <div key={iso} onClick={() => setOpenDate(gd)} className={`cal-cell ${isToday ? "today " : ""}${done ? "done" : ""}`}>
+      <div key={iso} onClick={() => (onPick ? onPick(iso) : setOpenDate(gd))} className={`cal-cell ${isToday ? "today " : ""}${done ? "done" : ""}`}>
         <span className="cal-check">
           <svg viewBox="0 0 24 24" fill="none">
             <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />

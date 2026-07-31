@@ -779,14 +779,27 @@
   }
   .tm-item-list li::before{ content:'—'; position:absolute; right:0; color:var(--muted2); }
 
-  /* weekly schedule box */
+  /* weekly schedule box — لیکوئید گلس (همون افکتِ wsearch-box/pcard-face-back،
+     با LiquidBlobLayers پشتِ محتوا)؛ به همین خاطر position:relative +
+     overflow:hidden لازمه (تا بلابل‌ها clip بشن)، و محتوای واقعی باید
+     position:relative + z-index بالاتر از لایه‌ی بلاب‌ها داشته باشه
+     (.weekly-glass-content) وگرنه بلاب‌ها روی متن می‌افتن. */
   .weekly-glass{
+    position:relative; overflow:hidden;
     background:rgba(var(--bg-rgb), .042); border:1px solid var(--line); border-radius:22px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:0 20px 50px rgba(0,0,0,.20);
     padding:18px 20px; margin-top:14px;
   }
   .weekly-glass table{margin:0;}
+  .weekly-glass-content{position:relative; z-index:1;}
+
+  /* روی دسکتاپ (داخل dash-breakout) برنامه‌هفتگی به‌جای کشیده‌شدنِ
+     تمام‌عرض یا وسط‌چین‌شدن، سمت راستِ فضای پهن می‌چسبه — عرضِ خودش رو
+     (همون ~620px قدیمی) حفظ می‌کنه، فضای اضافه سمتِ چپ (margin-inline-end)
+     خالی می‌مونه. توی موبایل (بیرون از dash-breakout) اثری نداره چون
+     عرضِ پدر همون‌قدره. */
+  .weekly-align-end{max-width:660px; margin-inline-start:0; margin-inline-end:auto;}
 
   .checklist-glass{
     background:rgba(var(--bg-rgb), .13); border:1px solid var(--line); border-radius:22px;
@@ -862,36 +875,8 @@
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   }
 
-  /* edit button, sits on the same row as the page title */
   .weekly-head-row{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:0;}
   .weekly-head-row h1{margin-bottom:0;}
-  .fab-add{
-    width:34px; height:34px; border-radius:50%;
-    background:var(--accent); color:var(--bg); border:none;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; flex-shrink:0;
-    box-shadow:0 8px 22px rgba(var(--accent-rgb),.35);
-  }
-  /* body[data-theme="light"] button سراسری (اسپسیفیسیتیِ body+attr+button)
-     از خودِ .fab-add هم بالاتره و حتی توی حالت استراحت (نه فقط هاور) پس‌زمینه‌ی
-     نیمه‌شفافِ روشن رو جایگزین می‌کرد — نتیجه‌ش آیکون کرم‌رنگی بود که روی اون
-     پس‌زمینه‌ی روشن تقریباً محو می‌شد */
-  body[data-theme="light"] .fab-add, body:not([data-theme="light"]) .fab-add{
-    background:var(--accent);
-  }
-  .fab-add-icon{
-    display:inline-flex; align-items:center; justify-content:center;
-  }
-  .fab-add-icon svg{width:16px; height:16px; display:block;}
-  /* پس‌زمینه رو صریح این‌جا هم دوباره ست می‌کنیم — وگرنه button:hover سراسری
-     (که پس‌زمینه‌ی خیلی کم‌رنگی داره) با اسپسیفیسیتی بالاتر روی این حالت
-     می‌شینه و آیکون کرم‌رنگ (color:var(--bg)) روی یه بک‌گراند تقریباً هم‌رنگِ
-     خودش (پس‌زمینه‌ی صفحه) نامرئی می‌شه */
-  .fab-add:hover, .fab-add:focus-visible{
-    background:var(--accent); color:var(--bg); border-color:transparent; transform:scale(1.06);
-    box-shadow:0 10px 24px rgba(var(--accent-rgb),.45);
-  }
-  .fab-add:active{transform:scale(.94);}
 
   /* weekly day rows (expandable) */
   .week-day{border-bottom:1px solid var(--line); cursor:pointer;}
