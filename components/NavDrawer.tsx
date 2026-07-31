@@ -39,9 +39,6 @@ export const ICONS: Record<string, JSX.Element> = {
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
-  dashboard: (
-    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="3.5" width="7.5" height="4.7" rx="1.6" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="10.3" width="7.5" height="10.2" rx="1.6" stroke="currentColor" strokeWidth="1.7"/><rect x="3.5" y="13.1" width="7.5" height="7.4" rx="1.6" stroke="currentColor" strokeWidth="1.7"/></svg>
-  ),
   account: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M5 19.5c1.3-3.3 4-5 7-5s5.7 1.7 7 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -64,7 +61,6 @@ export const ICONS: Record<string, JSX.Element> = {
 // هیرو (/) دست‌نخورده می‌مونه، فقط دیگه لینک جدایی توی منو نداره.
 const LINKS = [
   { href: "/weekly", label: "صفحه اصلی", icon: "home" },
-  { href: "/dashboard", label: "داشبورد", icon: "dashboard" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   { href: "/exercise", label: "بدنسازی", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },

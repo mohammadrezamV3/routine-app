@@ -8,15 +8,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // پالتِ داشبورد «روتین من» (app/dashboard) — namespace جدا (dash-*)
-        // تا با رنگ‌های بقیه‌ی اپ (که عمدتاً از globals.css می‌آن) قاطی نشه.
-        "dash-bg": "#090B0D",
-        "dash-card": "#111418",
-        "dash-border": "rgba(255,255,255,0.05)",
-        "dash-green": "#2EE66B",
-        "dash-green-glow": "rgba(46,230,107,.25)",
-        "dash-text": "#FFFFFF",
-        "dash-muted": "#9AA3AF",
+        // پالتِ داشبورد — namespace جدا (dash-*) فقط برای اینکه اسم کلاس‌ها
+        // خوانا بمونه، ولی مقدارِ هرکدوم مستقیماً روی متغیرهای CSSِ تمِ اصلیِ
+        // اپ (app/globals.css) سوار شده — یعنی با تغییر تم (روشن/تاریک) خودکار
+        // آپدیت می‌شن، برخلاف نسخه‌ی قبلی که رنگ‌های ثابتِ هاردکدشده داشت.
+        "dash-bg": "var(--bg)",
+        "dash-card": "rgba(255,255,255,.02)",
+        "dash-border": "var(--line)",
+        "dash-green": "var(--accent)",
+        "dash-green-glow": "rgba(var(--accent-rgb),.25)",
+        "dash-text": "var(--text)",
+        "dash-muted": "var(--muted)",
       },
       borderRadius: {
         dash: "18px",

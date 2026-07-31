@@ -21,20 +21,19 @@ export function DashProgressCircle({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90">
-        <circle cx={center} cy={center} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={strokeWidth} />
         <motion.circle
           cx={center}
           cy={center}
           r={r}
           fill="none"
-          stroke="#2EE66B"
+          stroke="var(--accent)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c * (1 - clamped / 100) }}
           transition={{ duration: 1, ease: "easeOut" }}
-          style={{ filter: "drop-shadow(0 0 6px rgba(46,230,107,.55))" }}
+          style={{ filter: "drop-shadow(0 0 6px rgba(var(--accent-rgb),.55))" }}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">

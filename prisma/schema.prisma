@@ -72,6 +72,11 @@ enum PartnerType {
   OTHER
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
 enum AiFeatureKey {
   DAILY_BRIEFING
   WEEKLY_COACH_REPORT
@@ -140,6 +145,10 @@ model User {
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
   sharedLinks       SharedProgressLink[]
+
+  // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
+  friendRequestsSent     Friendship[] @relation("FriendRequestsSent")
+  friendRequestsReceived Friendship[] @relation("FriendRequestsReceived")
 
   @@index([market])
   @@index([gymPartnerId])
@@ -438,6 +447,30 @@ model DailyEntry {
 
   @@unique([userId, date])
   @@index([userId])
+}
+
+// ============================================================================
+// MODULE: FRIENDS (دوستان — مشاهده‌ی درصد پیشرفتِ روزانه‌ی هم)
+// ============================================================================
+
+// درخواست دوستی — requester تا وقتی addressee قبول نکنه PENDING می‌مونه.
+// یکتا بر اساس جفت (requester, addressee) تا درخواست تکراری نره؛ دوستیِ
+// دوطرفه یعنی یا این ردیف یا معکوسش با status=ACCEPTED وجود داره — کوئری‌ها
+// همیشه هر دو جهت رو با OR چک می‌کنن (لیست دوستان/تشخیص already-friends).
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  requester   User             @relation("FriendRequestsSent", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User             @relation("FriendRequestsReceived", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      FriendshipStatus @default(PENDING)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
 }
 
 // ============================================================================

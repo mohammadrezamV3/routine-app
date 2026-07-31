@@ -87,6 +87,34 @@ export function tasksForDate(
   return sortTasksByTime(filtered);
 }
 
+// تابعِ خالصِ محاسبه‌ی «چند درصد انجام شده» — عمداً همین‌جاست (نه
+// lib/routineStats.ts) چون این فایل هیچ وابستگی‌ای به next-auth/react نداره؛
+// API routeهای سمتِ سرور (مثلاً محاسبه‌ی درصدِ یک دوست) باید بتونن این تابع
+// رو بدون کشیدنِ کل زنجیره‌ی import سمتِ کلاینتِ storage.ts صدا بزنن.
+export type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: { id: string; name: string; jsDay: number; time: string }[] };
+export type DayStats = { completed: number; total: number; pct: number };
+
+export function computeDayStats(
+  date: Date,
+  opts: ScheduleOpts,
+  record: { tasks: Record<string, boolean> } | undefined
+): DayStats {
+  const expected = tasksForDate(date, opts);
+  const total = expected.length;
+  const completed = record ? expected.filter((t) => record.tasks[t.id]).length : 0;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return { completed, total, pct };
+}
+
+// شروعِ هفته‌ی حاوی `now` — شنبه (jsDay=6). offset با گام‌های ۷روزه هفته
+// رو عقب/جلو می‌بره (برای فلش‌های قبلی/بعدیِ نوار انتخاب تاریخ).
+export function startOfWeek(now: Date, weekOffset = 0): Date {
+  const diffToSat = (now.getDay() + 1) % 7;
+  const d = new Date(now);
+  d.setDate(now.getDate() - diffToSat + weekOffset * 7);
+  return d;
+}
+
 export function isWakeOnTime(iso: string): boolean {
   const d = new Date(iso);
   const h = d.getHours(),

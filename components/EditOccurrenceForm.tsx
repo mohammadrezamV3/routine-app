@@ -7,9 +7,10 @@ import { timeStartMinutes } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
-import { CustomOccurrence, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
+import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
+import { SegmentedTabs } from "./SegmentedTabs";
 
-type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean };
+type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 const now = new Date();
@@ -31,6 +32,7 @@ export function EditOccurrenceForm({
   const [jsDay, setJsDay] = useState(occ.jsDay);
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
+  const [importance, setImportance] = useState<Importance>(occ.importance ?? "normal");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
 
@@ -72,7 +74,7 @@ export function EditOccurrenceForm({
       }
       const time = endFa ? `${startFa} – ${endFa}` : startFa;
       const newId = "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-      nextCustom = [...nextCustom, { id: newId, name, jsDay, time }];
+      nextCustom = [...nextCustom, { id: newId, name, jsDay, time, importance }];
 
       await setCustomOccurrences(nextCustom);
       await setRemovedOccurrences(Array.from(nextRemoved));
@@ -117,6 +119,13 @@ export function EditOccurrenceForm({
             </div>
           </div>
         </div>
+
+        <label>میزان اهمیت</label>
+        <SegmentedTabs
+          active={importance}
+          onChange={setImportance}
+          options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
+        />
 
         <div className="wsearch-newform-actions">
           <button

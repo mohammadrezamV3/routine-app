@@ -2179,3 +2179,8 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
   border-color:rgba(224,82,82,.35); color:#E05252; font-size:15px; line-height:1;
 }
 .entry-delete-btn:hover{ background:rgba(224,82,82,.12); border-color:#E05252; color:#E05252; }
+
+/* اسکرول‌بارِ نامرئی — برای نوار انتخاب تاریخِ داشبورد که با دست/فلش
+   اسکرول می‌شه ولی نباید نوارِ اسکرولِ زشتِ مرورگر روش دیده بشه */
+.no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
+.no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
