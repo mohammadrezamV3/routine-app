@@ -16,7 +16,9 @@ import { SegmentedTabs } from "./SegmentedTabs";
 const now = new Date();
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-type NewRow = { jsDay: number; start: string; end: string };
+// یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعتِ واحد برای همه‌شون) —
+// موقعِ ثبت، یک occurrence جدا برای هر روزِ انتخاب‌شده ساخته می‌شه.
+type NewRow = { jsDays: number[]; start: string; end: string };
 
 // فرمِ مستقلِ «افزودن برنامه جدید» — قبلاً زیرمجموعه‌ی WeeklySearchPanel بود
 // (پاپ‌آپِ جستجو هم زیرش همزمان باز می‌شد)؛ حالا کاملاً جدا و تنها راهِ
@@ -35,19 +37,29 @@ export function AddProgramForm({
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
   const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
-  const [rows, setRows] = useState<NewRow[]>([{ jsDay: WEEK_ORDER[0].jsDay, start: "", end: "" }]);
+  const [rows, setRows] = useState<NewRow[]>([{ jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
-  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean }>>({});
+  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
 
   function addRow() {
-    setRows((r) => [...r, { jsDay: WEEK_ORDER[0].jsDay, start: "", end: "" }]);
+    setRows((r) => [...r, { jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
   }
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));
   }
   function updateRow(i: number, patch: Partial<NewRow>) {
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  }
+  function toggleRowDay(i: number, jsDay: number) {
+    setRows((r) =>
+      r.map((row, idx) => {
+        if (idx !== i) return row;
+        const has = row.jsDays.includes(jsDay);
+        const next = has ? row.jsDays.filter((d) => d !== jsDay) : [...row.jsDays, jsDay];
+        return { ...row, jsDays: next };
+      })
+    );
   }
 
   async function submitNew() {
@@ -59,33 +71,36 @@ export function AddProgramForm({
 
     const rErrs: typeof rowErrors = {};
     rows.forEach((r, i) => {
-      const e: { start?: boolean; end?: boolean } = {};
+      const e: { start?: boolean; end?: boolean; days?: boolean } = {};
+      if (!r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
-      if (e.start || e.end) rErrs[i] = e;
+      if (e.start || e.end || e.days) rErrs[i] = e;
     });
     setRowErrors(rErrs);
     if (hasError) return;
 
     const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
     let conflictMsg: string | null = null;
-    for (const r of rows) {
+    outer: for (const r of rows) {
       const startFa = normalizeTimeToFa(r.start);
       const endFa = normalizeTimeToFa(r.end);
       const startMin = timeStartMinutes(startFa);
       const endMin = timeStartMinutes(endFa);
 
-      let conflict = findScheduleConflict(r.jsDay, startMin, endMin, now, scheduleOpts);
-      if (!conflict) {
-        for (const other of normalizedRows) {
-          if (other.jsDay === r.jsDay && rangesOverlap(startMin!, endMin, other.startMin!, other.endMin)) {
-            conflict = { id: "self", name } as any;
-            break;
+      for (const jsDay of r.jsDays) {
+        let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts);
+        if (!conflict) {
+          for (const other of normalizedRows) {
+            if (other.jsDay === jsDay && rangesOverlap(startMin!, endMin, other.startMin!, other.endMin)) {
+              conflict = { id: "self", name } as any;
+              break;
+            }
           }
         }
+        if (conflict) { conflictMsg = `تداخل زمانی با «${conflict.name}» — این برنامه اضافه نشد`; break outer; }
+        normalizedRows.push({ jsDay, start: startFa, end: endFa, startMin, endMin });
       }
-      if (conflict) { conflictMsg = `تداخل زمانی با «${conflict.name}» — این برنامه اضافه نشد`; break; }
-      normalizedRows.push({ jsDay: r.jsDay, start: startFa, end: endFa, startMin, endMin });
     }
 
     setStatus("loading");
@@ -120,7 +135,7 @@ export function AddProgramForm({
       <div className="wsearch-newform-overlay open" onClick={onClose} />
       <div className="wsearch-newform liquid-glass-form open">
         <LiquidBlobLayers />
-        <div className="relative z-[1]">
+        <div className="relative z-[1] add-program-glass">
           <div className="wsearch-newform-head">
             <div className="wsearch-newform-title accent">افزودن برنامه جدید</div>
             <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
@@ -168,12 +183,12 @@ export function AddProgramForm({
                   </button>
                 </div>
               )}
-              <div className="day-picker wsearch-newrow-day">
+              <div className={`day-picker wsearch-newrow-day${rowErrors[ri]?.days ? " field-error" : ""}`}>
                 {WEEK_ORDER.map((o) => (
                   <span
                     key={o.jsDay}
-                    className={`day-pill${r.jsDay === o.jsDay ? " on" : ""}`}
-                    onClick={() => updateRow(ri, { jsDay: o.jsDay })}
+                    className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
+                    onClick={() => toggleRowDay(ri, o.jsDay)}
                   >
                     {o.short}
                   </span>
@@ -195,7 +210,10 @@ export function AddProgramForm({
           ))}
 
           <div className="wsearch-newform-addrow">
-            <button type="button" className="wsearch-add-btn" onClick={addRow} aria-label="افزودن روز دیگر">+</button>
+            <button type="button" className="wsearch-add-btn" onClick={addRow}>
+              افزودن روز دیگر
+              <span className="wsearch-add-btn-icon">+</span>
+            </button>
           </div>
 
           <div className="wsearch-newform-actions">

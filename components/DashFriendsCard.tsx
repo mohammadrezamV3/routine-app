@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Star } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
@@ -140,7 +141,7 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
         )}
       </div>
 
-      {panelOpen && (
+      {panelOpen && createPortal(
         <>
           <div className="modal-overlay open" onClick={() => setPanelOpen(false)} />
           <div className="modal-panel liquid-glass-panel open">
@@ -232,7 +233,8 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </DashCard>
   );
