@@ -10,6 +10,8 @@ export function DashTaskList({
   onToggle,
   onAddProgram,
   onOpenProgram,
+  onEditTask,
+  onDeleteTask,
   className,
   delay,
 }: {
@@ -18,6 +20,8 @@ export function DashTaskList({
   onToggle: (id: string) => void;
   onAddProgram: () => void;
   onOpenProgram: (name: string) => void;
+  onEditTask: (id: string) => void;
+  onDeleteTask: (id: string) => void;
   className?: string;
   delay?: number;
 }) {
@@ -40,7 +44,15 @@ export function DashTaskList({
           <div className="py-6 text-center text-[12.5px] text-dash-muted">برنامه‌ای برای این روز ثبت نشده</div>
         ) : (
           tasks.map((t) => (
-            <DashTaskRow key={t.id} task={t} editable={editable} onToggle={onToggle} onOpen={onOpenProgram} />
+            <DashTaskRow
+              key={t.id}
+              task={t}
+              editable={editable}
+              onToggle={onToggle}
+              onOpen={onOpenProgram}
+              onEdit={onEditTask}
+              onDelete={onDeleteTask}
+            />
           ))
         )}
       </div>

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { WEEK_ORDER, tasksForDate } from "@/lib/schedule";
 import { PROGRAM_META, formatDaysLeft } from "@/lib/programMeta";
 import { faNum } from "@/lib/jalali";
-import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
+import { CustomOccurrence, Importance } from "@/lib/storage";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
 
 const now = new Date();
@@ -41,29 +41,14 @@ function countRemainingSessionsForId(id: string, endDate: Date, opts: ScheduleOp
   return count;
 }
 
-const PENCIL_SVG = (
-  <svg viewBox="0 0 24 24" fill="none">
-    <path d="M14.7 4.3a1.5 1.5 0 0 1 2.1 0l2.9 2.9a1.5 1.5 0 0 1 0 2.1L9.5 19.5 4 21l1.5-5.5L14.7 4.3Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-  </svg>
-);
-const TRASH_SVG = (
-  <svg viewBox="0 0 24 24" fill="none">
-    <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 export function ProgramCard({
   name,
   onClose,
   scheduleOpts,
-  onChanged,
-  onEditOccurrence,
 }: {
   name: string;
   onClose: () => void;
   scheduleOpts: ScheduleOpts;
-  onChanged: () => void;
-  onEditOccurrence: (name: string, occ: Occ) => void;
 }) {
   const [flipped, setFlipped] = useState(false);
   const group = useMemo(() => buildWeeklyGroups(scheduleOpts).find((g) => g.name === name), [scheduleOpts, name]);
@@ -97,17 +82,6 @@ export function ProgramCard({
     combinedStat = "پایان‌باز | نامحدود";
   }
 
-  async function removeOccurrence(o: Occ) {
-    if (o.custom) {
-      await setCustomOccurrences(scheduleOpts.customOccurrences.filter((c) => c.id !== o.id));
-    } else {
-      const next = new Set(scheduleOpts.removedOccurrences);
-      next.add(o.id + "|" + o.jsDay);
-      await setRemovedOccurrences(Array.from(next));
-    }
-    onChanged();
-  }
-
   return (
     <>
       <div className="pcard-overlay open" onClick={onClose} />
@@ -120,24 +94,6 @@ export function ProgramCard({
               {group.occ.map((o, oi) => (
                 <div key={oi} className="pcard-time-row">
                   <span className="pcard-time-text">{o.dayName} <span className="mono">{o.time}</span></span>
-                  <span className="pcard-time-actions">
-                    <button
-                      className="pcard-icon-btn pcard-edit-btn"
-                      title="ویرایش"
-                      aria-label="ویرایش"
-                      onClick={(e) => { e.stopPropagation(); onClose(); onEditOccurrence(name, o); }}
-                    >
-                      {PENCIL_SVG}
-                    </button>
-                    <button
-                      className="pcard-icon-btn pcard-trash-btn"
-                      title="حذف"
-                      aria-label="حذف"
-                      onClick={(e) => { e.stopPropagation(); removeOccurrence(o); }}
-                    >
-                      {TRASH_SVG}
-                    </button>
-                  </span>
                 </div>
               ))}
             </div>

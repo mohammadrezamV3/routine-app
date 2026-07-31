@@ -37,9 +37,9 @@ export async function getWeekStats(): Promise<WeekDayStat[]> {
   });
 }
 
-// آیتم‌های «خیلی مهم»/«مهم» که توی همین هفته (شنبه تا جمعه) حداقل یک بار
+// آیتم‌های «خیلی زیاد»/«زیاد» که توی همین هفته (شنبه تا جمعه) حداقل یک بار
 // زمان‌بندی شدن — برای بخش «یادآوری‌ها».
-export type ImportantOccurrence = { id: string; name: string; jsDay: number; time: string; importance: "high" | "medium" };
+export type ImportantOccurrence = { id: string; name: string; jsDay: number; time: string; importance: "veryHigh" | "high" };
 
 export async function getImportantThisWeek(): Promise<ImportantOccurrence[]> {
   const [removed, custom] = await Promise.all([getRemovedOccurrences(), getCustomOccurrences()]);
@@ -52,7 +52,7 @@ export async function getImportantThisWeek(): Promise<ImportantOccurrence[]> {
     d.setDate(start.getDate() + i);
     for (const t of tasksForDate(d, opts)) {
       const occ = custom.find((c) => c.id === t.id);
-      if (occ?.importance === "high" || occ?.importance === "medium") {
+      if (occ?.importance === "veryHigh" || occ?.importance === "high") {
         result.push({ id: t.id, name: t.name, jsDay: d.getDay(), time: t.time, importance: occ.importance });
       }
     }

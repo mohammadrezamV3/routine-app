@@ -6,9 +6,10 @@ import { ToggleSwitch } from "./ToggleSwitch";
 
 const IMPORTANCE_TABS: { value: "all" | Importance; label: string }[] = [
   { value: "all", label: "همه" },
-  { value: "high", label: IMPORTANCE_LABELS.high },
+  { value: "low", label: IMPORTANCE_LABELS.low },
   { value: "medium", label: IMPORTANCE_LABELS.medium },
-  { value: "normal", label: IMPORTANCE_LABELS.normal },
+  { value: "high", label: IMPORTANCE_LABELS.high },
+  { value: "veryHigh", label: IMPORTANCE_LABELS.veryHigh },
 ];
 
 // پاپ‌آپِ واحدِ فیلتر — هم میزانِ اهمیت هم انتخابِ برنامه‌ها (به‌جای دو

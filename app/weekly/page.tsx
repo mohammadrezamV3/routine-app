@@ -17,6 +17,7 @@ import {
   getRemovedOccurrences,
   getDaily,
   setDaily,
+  setCustomOccurrences,
   DailyRecord,
   Importance,
 } from "@/lib/storage";
@@ -24,11 +25,10 @@ import { getTodayStats } from "@/lib/routineStats";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, timeToMinutes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { ProgramCard } from "@/components/ProgramCard";
-import { WeeklySearchPanel } from "@/components/WeeklySearchPanel";
+import { AddProgramForm } from "@/components/AddProgramForm";
 import { EditOccurrenceForm } from "@/components/EditOccurrenceForm";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 import { HistoryCalendar } from "@/components/HistoryCalendar";
-import { LiquidBlobLayers } from "@/components/LiquidBlobBox";
 import { DashHeader } from "@/components/DashHeader";
 import { DashDateSelector } from "@/components/DashDateSelector";
 import { DashFilterButton } from "@/components/DashFilterButton";
@@ -49,8 +49,7 @@ export default function WeeklyPage() {
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; importance?: Importance }[]>([]);
   const [cardName, setCardName] = useState<string | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchInitialAdd, setSearchInitialAdd] = useState(false);
+  const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ name: string; occ: Occ } | null>(null);
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -153,7 +152,7 @@ export default function WeeklyPage() {
         const occ = customOcc.find((c) => c.id === t.id);
         return { id: t.id, name: t.name, time: t.time, importance: occ?.importance, done: !!selectedDaily?.tasks[t.id] };
       })
-      .filter((t) => importanceFilter === "all" || (t.importance ?? "normal") === importanceFilter)
+      .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
       .filter((t) => programFilter === null || programFilter.has(t.name));
   }, [selectedDate, opts, customOcc, selectedDaily, importanceFilter, programFilter]);
 
@@ -176,14 +175,19 @@ export default function WeeklyPage() {
     });
   }
 
-  function openAddProgram() {
-    setSearchInitialAdd(true);
-    setSearchOpen(true);
+  // ویرایش/حذف از منوی سه‌نقطه‌ی «برنامه‌های امروز» — روی همون occurrence ی
+  // که برای selectedIso نمایش داده شده، نه لزوماً «امروزِ واقعی».
+  function editTaskFromDash(id: string) {
+    const task = dashTasks.find((t) => t.id === id);
+    if (!task) return;
+    const jsDay = selectedDate.getDay();
+    const dayName = WEEK_ORDER.find((o) => o.jsDay === jsDay)?.name || "";
+    setEditTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance } });
   }
 
-  function closeSearch() {
-    setSearchOpen(false);
-    setSearchInitialAdd(false);
+  async function deleteTaskCompletely(id: string) {
+    await setCustomOccurrences(customOcc.filter((c) => c.id !== id));
+    refresh();
   }
 
   return (
@@ -231,8 +235,10 @@ export default function WeeklyPage() {
             tasks={dashTasks}
             editable={isSelectedToday}
             onToggle={toggleDashTask}
-            onAddProgram={openAddProgram}
+            onAddProgram={() => setAddProgramOpen(true)}
             onOpenProgram={setCardName}
+            onEditTask={editTaskFromDash}
+            onDeleteTask={deleteTaskCompletely}
             delay={0.05}
           />
 
@@ -249,7 +255,6 @@ export default function WeeklyPage() {
           </div>
 
           <div className="weekly-glass">
-            <LiquidBlobLayers />
             <div className="weekly-glass-content">
             {WEEK_ORDER.map((o, idx) => {
               const d = new Date(now);
@@ -350,18 +355,14 @@ export default function WeeklyPage() {
             name={cardName}
             onClose={() => setCardName(null)}
             scheduleOpts={opts}
-            onChanged={refresh}
-            onEditOccurrence={(name, occ) => { setCardName(null); setEditTarget({ name, occ }); }}
           />
         )}
 
-        {searchOpen && (
-          <WeeklySearchPanel
+        {addProgramOpen && (
+          <AddProgramForm
             scheduleOpts={opts}
-            initialAddOpen={searchInitialAdd}
-            onClose={closeSearch}
+            onClose={() => setAddProgramOpen(false)}
             onChanged={refresh}
-            onOpenProgram={(name) => { closeSearch(); setCardName(name); }}
           />
         )}
 

@@ -32,7 +32,7 @@ export function EditOccurrenceForm({
   const [jsDay, setJsDay] = useState(occ.jsDay);
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
-  const [importance, setImportance] = useState<Importance>(occ.importance ?? "normal");
+  const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
 

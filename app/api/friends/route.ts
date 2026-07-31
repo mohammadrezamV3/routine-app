@@ -38,37 +38,50 @@ export async function GET() {
 
   const friends = await Promise.all(
     rows.map(async (r) => {
-      const other = r.requesterId === userId ? r.addressee : r.requester;
+      const isRequester = r.requesterId === userId;
+      const other = isRequester ? r.addressee : r.requester;
       const stats = await statsForUser(other.id);
       return {
         friendshipId: r.id,
         id: other.id,
         name: other.name || other.username || "کاربر",
         username: other.username,
+        favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
         ...stats,
       };
     })
   );
 
+  // فیوریت‌ها اول
+  friends.sort((a, b) => Number(b.favorite) - Number(a.favorite));
+
   return NextResponse.json({ friends });
 }
 
-// POST /api/friends  { username }  → ارسال درخواست دوستی
+// POST /api/friends  { userId } یا { username }  → ارسال درخواست دوستی.
+// حالتِ userId برای نتیجه‌ی جستجوی زنده‌ست (کاربر از قبل با آیدی پیدا شده)؛
+// username برای سازگاری با ورودیِ مستقیمِ یوزرنیم.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
+  const targetUserId = String(body?.userId || "").trim();
   const username = String(body?.username || "").trim();
-  if (!isValidUsername(username)) {
-    return NextResponse.json({ error: "یوزرنیم نامعتبر است" }, { status: 400 });
-  }
 
-  // بدون حساسیت به بزرگ/کوچکیِ حروف — هم‌راستا با قاعده‌ی ورود (lib/auth.ts):
-  // "Ali_2024" و "ali_2024" باید یک کاربر پیدا بشن.
-  const target = await prisma.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } } });
-  if (!target) return NextResponse.json({ error: "کاربری با این یوزرنیم پیدا نشد" }, { status: 404 });
+  let target;
+  if (targetUserId) {
+    target = await prisma.user.findUnique({ where: { id: targetUserId } });
+  } else {
+    if (!isValidUsername(username)) {
+      return NextResponse.json({ error: "یوزرنیم نامعتبر است" }, { status: 400 });
+    }
+    // بدون حساسیت به بزرگ/کوچکیِ حروف — هم‌راستا با قاعده‌ی ورود (lib/auth.ts):
+    // "Ali_2024" و "ali_2024" باید یک کاربر پیدا بشن.
+    target = await prisma.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } } });
+  }
+  if (!target) return NextResponse.json({ error: "کاربری پیدا نشد" }, { status: 404 });
   if (target.id === userId) return NextResponse.json({ error: "نمی‌تونی به خودت درخواست بدی" }, { status: 400 });
 
   const existing = await prisma.friendship.findFirst({
