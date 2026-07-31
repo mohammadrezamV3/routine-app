@@ -238,7 +238,7 @@ export default function WeeklyPage() {
           {/* دسکتاپ: سه ستون کنارِ هم — راست (پهن‌تر) برنامه‌های امروز از بالا
               تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیرِ هم. موبایل/تبلت
               همچنان یک ستونِ عمودی (flex-col) می‌مونه. */}
-          <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2fr_1fr_1fr] lg:items-stretch lg:gap-6">
+          <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6">
             <DashTaskList
               tasks={dashTasks}
               editable={isSelectedToday}

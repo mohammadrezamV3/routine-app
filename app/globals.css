@@ -617,7 +617,7 @@
      نسبت‌به کل صفحه وسط‌چین بمونه. */
   @media (min-width:1024px){
     .dash-breakout{
-      --dash-w: min(1180px, calc(100vw - 64px));
+      --dash-w: min(1320px, calc(100vw - 64px));
       width: var(--dash-w);
       margin-inline: calc((620px - var(--dash-w)) / 2);
     }
