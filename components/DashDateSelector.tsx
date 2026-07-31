@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils";
 
 export type DashDay = { iso: string; weekday: string; dateLabel: string };
 
-// نوار انتخاب تاریخ — عمداً dir="ltr" (برخلاف بقیه‌ی صفحه) چون تاریخ‌ها
-// باید از قدیم به جدید، چپ‌به‌راست بچینن. فلش‌های قبلی/بعدی یک هفته‌ی کامل
-// جابه‌جا می‌کنن و فقط توی دسکتاپ دیده می‌شن — توی موبایل با انگشت اسکرول
-// می‌شه (اسکرول‌بارِ خودِ مرورگر هم مخفیه، no-scrollbar).
+// نوار انتخاب تاریخ — راست‌چین طبیعیِ صفحه (شنبه راست‌ترین، جمعه چپ‌ترین،
+// چون days از قبل به ترتیب WEEK_ORDER ساخته می‌شه و چیدمانِ RTL خودش این
+// ترتیب رو می‌ده). فلش‌های قبلی/بعدی یک هفته‌ی کامل جابه‌جا می‌کنن، رو به
+// بیرون (نه سمت لیست)، و فقط توی دسکتاپ دیده می‌شن — توی موبایل با انگشت
+// اسکرول می‌شه (اسکرول‌بارِ خودِ مرورگر هم مخفیه، no-scrollbar).
 export function DashDateSelector({
   days,
   activeIso,
@@ -35,10 +36,10 @@ export function DashDateSelector({
         onClick={onPrevWeek}
         className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:flex"
       >
-        <ChevronLeft size={18} />
+        <ChevronRight size={18} />
       </button>
 
-      <div ref={scrollRef} dir="ltr" className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto px-3 py-2.5">
+      <div ref={scrollRef} className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto px-3 py-2.5">
         {days.map((d) => {
           const active = d.iso === activeIso;
           return (
@@ -71,7 +72,7 @@ export function DashDateSelector({
         onClick={onNextWeek}
         className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:flex"
       >
-        <ChevronRight size={18} />
+        <ChevronLeft size={18} />
       </button>
     </div>
   );
