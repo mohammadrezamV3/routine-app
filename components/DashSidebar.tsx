@@ -3,12 +3,12 @@
 import { DashFriendsCard } from "./DashFriendsCard";
 import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
 
-// ردیفِ سوم — دوستان و آمار هفتگی کنارِ هم، توی همون یک ردیف (طبقِ تاکیدِ
-// صریحِ کاربر: سه ردیف — امروز/یادآوری/آمار+دوستان — نه چهار ردیفِ جدا).
+// دوستان و آمار هفتگی، دو باکسِ جدا زیرِ هم (اول دوستان بعد آمار) — کاملاً
+// عمودی، حتی توی دسکتاپ (کنارِ هم/افقی نه).
 export function DashSidebar({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <DashFriendsCard delay={0.1} />
         <DashWeeklyChartCard delay={0.15} />
       </div>
