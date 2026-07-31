@@ -86,7 +86,7 @@ export function EditOccurrenceForm({
   return (
     <>
       <div className="wsearch-newform-overlay occ-edit-overlay open" onClick={onClose} />
-      <div className="wsearch-newform occ-edit-form open">
+      <div className="wsearch-newform occ-edit-form dash-scope open">
         <div className="wsearch-newform-head">
           <div className="wsearch-newform-title accent">ویرایش «{name}» — {dayName}</div>
           <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>

@@ -133,7 +133,7 @@ export function AddProgramForm({
   return (
     <>
       <div className="wsearch-newform-overlay open" onClick={onClose} />
-      <div className="wsearch-newform liquid-glass-form open">
+      <div className="wsearch-newform liquid-glass-form dash-scope open">
         <LiquidBlobLayers />
         <div className="relative z-[1] add-program-glass">
           <div className="wsearch-newform-head">

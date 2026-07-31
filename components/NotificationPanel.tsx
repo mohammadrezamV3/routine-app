@@ -94,7 +94,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
   return (
     <>
       <div className="notif-panel-overlay" onClick={onClose} />
-      <div className="notif-panel open">
+      <div className="notif-panel dash-scope open">
         <div className="notif-panel-head">اطلاعیه‌ها</div>
         {items === null ? (
           <div className="item-line" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
