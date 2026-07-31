@@ -235,20 +235,25 @@ export default function WeeklyPage() {
             </div>
           </div>
 
-          <DashTaskList
-            tasks={dashTasks}
-            editable={isSelectedToday}
-            onToggle={toggleDashTask}
-            onAddProgram={() => setAddProgramOpen(true)}
-            onOpenProgram={setCardName}
-            onEditTask={editTaskFromDash}
-            onDeleteTask={deleteTaskCompletely}
-            delay={0.05}
-          />
+          {/* دسکتاپ: سه ستون کنارِ هم — راست (پهن‌تر) برنامه‌های امروز از بالا
+              تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیرِ هم. موبایل/تبلت
+              همچنان یک ستونِ عمودی (flex-col) می‌مونه. */}
+          <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2fr_1fr_1fr] lg:items-stretch lg:gap-6">
+            <DashTaskList
+              tasks={dashTasks}
+              editable={isSelectedToday}
+              onToggle={toggleDashTask}
+              onAddProgram={() => setAddProgramOpen(true)}
+              onOpenProgram={setCardName}
+              onEditTask={editTaskFromDash}
+              onDeleteTask={deleteTaskCompletely}
+              delay={0.05}
+            />
 
-          <DashReminderCard delay={0.1} onOpenProgram={setCardName} />
+            <DashReminderCard delay={0.1} onOpenProgram={setCardName} />
 
-          <DashSidebar />
+            <DashSidebar />
+          </div>
         </div>
       </section>
 
