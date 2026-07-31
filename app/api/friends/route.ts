@@ -65,7 +65,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "یوزرنیم نامعتبر است" }, { status: 400 });
   }
 
-  const target = await prisma.user.findUnique({ where: { username } });
+  // بدون حساسیت به بزرگ/کوچکیِ حروف — هم‌راستا با قاعده‌ی ورود (lib/auth.ts):
+  // "Ali_2024" و "ali_2024" باید یک کاربر پیدا بشن.
+  const target = await prisma.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } } });
   if (!target) return NextResponse.json({ error: "کاربری با این یوزرنیم پیدا نشد" }, { status: 404 });
   if (target.id === userId) return NextResponse.json({ error: "نمی‌تونی به خودت درخواست بدی" }, { status: 400 });
 
