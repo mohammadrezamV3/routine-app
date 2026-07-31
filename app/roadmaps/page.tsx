@@ -22,7 +22,7 @@ export default function RoadmapsHub() {
   }, [status]);
 
   return (
-    <section>
+    <section className="roadmaps-desktop">
       <h1>رودمپ‌ها</h1>
       <div className="section-note">بگو چی می‌خوای یاد بگیری، یه مسیر کامل باهات می‌سازیم</div>
 
