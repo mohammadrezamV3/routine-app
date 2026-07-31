@@ -33,6 +33,7 @@ export function AddProgramForm({
   onChanged: () => void;
 }) {
   const [name, setName] = useState("");
+  const [tag, setTag] = useState("");
   const [importance, setImportance] = useState<Importance>("low");
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
@@ -114,12 +115,14 @@ export function AddProgramForm({
       setStatus("success");
       if (navigator.vibrate) navigator.vibrate(15);
 
+      const trimmedTag = tag.trim();
       const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
         id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
         name,
         jsDay: r.jsDay,
         time: r.end ? `${r.start} – ${r.end}` : r.start,
         importance,
+        ...(trimmedTag ? { tag: trimmedTag } : {}),
       }));
       await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
 
@@ -151,6 +154,16 @@ export function AddProgramForm({
               onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(false); }}
             />
           </div>
+
+          <label htmlFor="addProgramTag">تگ (اختیاری)</label>
+          <input
+            id="addProgramTag"
+            type="text"
+            className="wsearch-newform-name"
+            placeholder="مثلاً درس، ورزش، کار…"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+          />
 
           <div className="wsearch-date-row">
             <div className="time-field">

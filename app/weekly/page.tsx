@@ -8,6 +8,7 @@ import {
   timeStartMinutes,
   timeEndMinutes,
   splitTimeRange,
+  toEnDigits,
   DayStats,
 } from "@/lib/schedule";
 import { awakeFraction, dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
@@ -39,14 +40,14 @@ import { DashSidebar } from "@/components/DashSidebar";
 
 const now = new Date();
 
-type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance };
+type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
 export default function WeeklyPage() {
   const [openIdx, setOpenIdx] = useState<number | null>(
     WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
   );
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; importance?: Importance }[]>([]);
+  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; importance?: Importance; tag?: string }[]>([]);
   const [cardName, setCardName] = useState<string | null>(null);
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ name: string; occ: Occ } | null>(null);
@@ -128,22 +129,23 @@ export default function WeeklyPage() {
     return new Date(y, m - 1, d);
   }, [selectedIso]);
 
-  // به‌جای یک هفته‌ی کامل شنبه-جمعه، یه پنجره‌ی ۵روزه‌ی داینامیک نشون می‌ده
-  // که همیشه روی «امروز» (یا مرکزِ پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
-  // مثلاً اگه امروز جمعه‌ست: چهارشنبه/پنجشنبه/جمعه/شنبه/یکشنبه.
-  const DAY_WINDOW = 5;
+  // به‌جای یک هفته‌ی کامل شنبه-جمعه، یه پنجره‌ی روزهایی نشون می‌ده که
+  // همیشه روی «امروز» (یا مرکزِ پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
+  // تعدادش هم ثابت نیست، خودِ DashDateSelector بسته‌به عرضِ واقعیِ نوار
+  // اندازه‌گیری می‌کنه و با onVisibleCountChange گزارش می‌ده.
+  const [dayWindow, setDayWindow] = useState(5);
   const dashDays = useMemo(() => {
     const center = new Date(now);
-    center.setDate(now.getDate() + weekOffset * DAY_WINDOW);
-    return Array.from({ length: DAY_WINDOW }, (_, i) => {
+    center.setDate(now.getDate() + weekOffset * dayWindow);
+    return Array.from({ length: dayWindow }, (_, i) => {
       const d = new Date(center);
-      d.setDate(center.getDate() - Math.floor(DAY_WINDOW / 2) + i);
+      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
       const iso = isoLocal(d);
       const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
       const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
       return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
     });
-  }, [weekOffset]);
+  }, [weekOffset, dayWindow]);
 
   const allProgramNames = useMemo(() => {
     const set = new Set(customOcc.map((c) => c.name));
@@ -154,7 +156,7 @@ export default function WeeklyPage() {
     return tasksForDate(selectedDate, opts)
       .map((t) => {
         const occ = customOcc.find((c) => c.id === t.id);
-        return { id: t.id, name: t.name, time: t.time, importance: occ?.importance, done: !!selectedDaily?.tasks[t.id] };
+        return { id: t.id, name: t.name, time: t.time, importance: occ?.importance, tag: occ?.tag, done: !!selectedDaily?.tasks[t.id] };
       })
       .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
       .filter((t) => programFilter === null || programFilter.has(t.name));
@@ -186,7 +188,7 @@ export default function WeeklyPage() {
     if (!task) return;
     const jsDay = selectedDate.getDay();
     const dayName = WEEK_ORDER.find((o) => o.jsDay === jsDay)?.name || "";
-    setEditTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance } });
+    setEditTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance, tag: task.tag } });
   }
 
   async function deleteTaskCompletely(id: string) {
@@ -207,6 +209,7 @@ export default function WeeklyPage() {
               onSelect={setSelectedIso}
               onPrevWeek={() => setWeekOffset((v) => v - 1)}
               onNextWeek={() => setWeekOffset((v) => v + 1)}
+              onVisibleCountChange={setDayWindow}
               className="lg:order-2"
             />
 
@@ -302,7 +305,7 @@ export default function WeeklyPage() {
                           </div>
 
                           <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "20px" }}>
-                            <div className="wt-marker-col"><div className="wt-time-above">{wake}</div></div>
+                            <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(wake)}</div></div>
                             <div className="wt-content"><div className="wt-name">بیداری</div></div>
                           </div>
 
@@ -316,7 +319,7 @@ export default function WeeklyPage() {
                                 onClick={(e) => { e.stopPropagation(); setCardName(p.name); }}
                               >
                                 <div className="wt-marker-col">
-                                  <div className="wt-time-above">{r.start || ""}</div>
+                                  <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
                                   <div className={`wt-dot${p.isPast ? " wt-dot-done" : ""}`}>
                                     <svg viewBox="0 0 24 24" fill="none">
                                       <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
@@ -324,7 +327,7 @@ export default function WeeklyPage() {
                                   </div>
                                 </div>
                                 <div className="wt-content">
-                                  <div className="wt-range">{r.full}</div>
+                                  <div className="wt-range">{toEnDigits(r.full)}</div>
                                   <div className="wt-name">{p.name}</div>
                                 </div>
                               </div>
@@ -332,7 +335,7 @@ export default function WeeklyPage() {
                           })}
 
                           <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "calc(100% - 20px)" }}>
-                            <div className="wt-marker-col"><div className="wt-time-above">{sleep}</div></div>
+                            <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(sleep)}</div></div>
                             <div className="wt-content"><div className="wt-name">خواب</div></div>
                           </div>
                         </div>
@@ -341,7 +344,7 @@ export default function WeeklyPage() {
                           <div className="wt-untimed-row">
                             {untimedItems.map((t) => (
                               <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); setCardName(t.name); }}>
-                                <div className="wt-range">{t.time}</div>
+                                <div className="wt-range">{toEnDigits(t.time)}</div>
                                 <div className="wt-name">{t.name}</div>
                               </div>
                             ))}

@@ -10,7 +10,7 @@ import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 
-type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance };
+type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 const now = new Date();
@@ -33,6 +33,7 @@ export function EditOccurrenceForm({
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
+  const [tag, setTag] = useState(occ.tag ?? "");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
 
@@ -74,7 +75,8 @@ export function EditOccurrenceForm({
       }
       const time = endFa ? `${startFa} – ${endFa}` : startFa;
       const newId = "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-      nextCustom = [...nextCustom, { id: newId, name, jsDay, time, importance }];
+      const trimmedTag = tag.trim();
+      nextCustom = [...nextCustom, { id: newId, name, jsDay, time, importance, ...(trimmedTag ? { tag: trimmedTag } : {}) }];
 
       await setCustomOccurrences(nextCustom);
       await setRemovedOccurrences(Array.from(nextRemoved));
@@ -119,6 +121,16 @@ export function EditOccurrenceForm({
             </div>
           </div>
         </div>
+
+        <label htmlFor="editOccTag">تگ (اختیاری)</label>
+        <input
+          id="editOccTag"
+          type="text"
+          className="wsearch-newform-name"
+          placeholder="مثلاً درس، ورزش، کار…"
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+        />
 
         <label>میزان اهمیت</label>
         <SegmentedTabs

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Check, MoreVertical } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
+import { toEnDigits } from "@/lib/schedule";
 
-export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; done: boolean };
+export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean };
 
 // بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). کلیک روی متنِ برنامه، کارتِ
 // واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز می‌کنه؛ سه‌نقطه یک منوی
@@ -49,14 +50,16 @@ export function DashTaskRow({
             <div className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border bg-dash-card p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl">
               <div
                 onClick={() => { setMenuOpen(false); onEdit(task.id); }}
-                className="cursor-pointer rounded-xl px-3 py-2 text-right text-[13px] text-dash-text transition hover:bg-white/5"
+                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[13px] text-dash-text transition hover:bg-white/5"
               >
+                <Pencil size={14} className="shrink-0" />
                 ویرایش برنامه
               </div>
               <div
                 onClick={() => { setMenuOpen(false); onDelete(task.id); }}
-                className="cursor-pointer rounded-xl px-3 py-2 text-right text-[13px] text-[#E05252] transition hover:bg-[#E05252]/10"
+                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[13px] text-[#E05252] transition hover:bg-[#E05252]/10"
               >
+                <Trash2 size={14} className="shrink-0" />
                 حذف کامل برنامه
               </div>
             </div>
@@ -67,16 +70,22 @@ export function DashTaskRow({
       <button
         type="button"
         onClick={() => onOpen(task.name)}
-        className={cn("flex min-w-0 flex-1 items-center gap-2 text-right transition-[filter] duration-300 sm:gap-3", task.done && "blur-[3px]")}
+        className="flex min-w-0 flex-1 items-center gap-2 text-right sm:gap-3"
       >
+        <div className="min-w-0 flex-1 truncate text-[14px] font-medium text-dash-text sm:text-[15px]">{task.name}</div>
+
+        {task.tag && (
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-[10px] font-semibold text-dash-muted sm:px-2.5 sm:py-1 sm:text-[11px]">
+            {task.tag}
+          </span>
+        )}
+
         <div className="shrink-0">
           <DashImportanceBadge importance={task.importance} />
         </div>
 
-        <div className="min-w-0 flex-1 truncate text-[14px] font-medium text-dash-text sm:text-[15px]">{task.name}</div>
-
         <span className="shrink-0 font-mono text-[11.5px] text-dash-muted sm:text-[13px]" dir="ltr">
-          {task.time}
+          {toEnDigits(task.time)}
         </span>
       </button>
 
@@ -87,8 +96,10 @@ export function DashTaskRow({
         onClick={() => onToggle(task.id)}
         aria-pressed={task.done}
         aria-label={task.done ? "علامت‌زدن به‌عنوان انجام‌نشده" : "علامت‌زدن به‌عنوان انجام‌شده"}
+        animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition",
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
           !editable && "cursor-not-allowed opacity-50",
           task.done ? "text-white" : "text-transparent hover:border-white/45"
         )}
@@ -98,7 +109,19 @@ export function DashTaskRow({
             : { background: "transparent", borderColor: "var(--muted)" }
         }
       >
-        <Check size={15} strokeWidth={3} />
+        <AnimatePresence>
+          {task.done && (
+            <motion.span
+              initial={{ scale: 0, rotate: -45, opacity: 0 }}
+              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="flex items-center justify-center"
+            >
+              <Check size={15} strokeWidth={3} />
+            </motion.span>
+          )}
+        </AnimatePresence>
       </motion.button>
     </motion.div>
   );

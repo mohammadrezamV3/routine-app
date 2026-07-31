@@ -321,6 +321,12 @@
     display:flex; align-items:center; justify-content:center;
     padding:0; cursor:pointer;
   }
+  /* body[data-theme="light"] button{} اسپسیفیسیتیِ بیشتری از قانونِ بالا
+     داره (چون کلاسِ ساده رو attribute-selector شکست می‌ده)، پس بدونِ این
+     override توی تمِ روشن دوباره بک‌گراندِ شیشه‌ای برمی‌گرده. */
+  body[data-theme="light"] .hamburger, body[data-theme="light"] .profile-btn, body[data-theme="light"] .bell-btn{
+    background:none; border:none; box-shadow:none;
+  }
   .bell-btn-wrap{ position:relative; display:flex; }
   .bell-btn{position:relative; color:var(--muted); transition:color .2s ease;}
   .bell-btn svg{width:19px; height:19px;}
@@ -655,6 +661,12 @@
   :where(.dash-scope) button:active{ transform:none; }
   :where(.dash-scope) button:disabled{ opacity:1; }
   :where(.dash-scope) button:disabled:hover{ border-color:transparent; color:inherit; background:none; box-shadow:none; }
+  /* body[data-theme="light"] button{} (پایینِ همین فایل) اسپسیفیسیتیِ
+     بیشتری از ریستِ بالا داره (چون :where() اسپسیفیسیتی‌اش صفره ولی خودِ
+     attribute-selector نه)، پس توی تمِ روشن، بدونِ این override، همون
+     بک‌گراندِ شیشه‌ایِ سراسری روی دکمه‌های dash-scope برمی‌گرده. */
+  body[data-theme="light"] :where(.dash-scope) button{ background:none; border-color:transparent; box-shadow:none; }
+  body[data-theme="light"] :where(.dash-scope) button:hover{ background:none; border-color:transparent; box-shadow:none; }
   .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
@@ -1002,7 +1014,7 @@
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     padding:22px 22px 18px; box-sizing:border-box; cursor:pointer; overflow:hidden;
   }
-  .pcard-face-back{transform:rotateY(180deg); justify-content:center; background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .5));}
+  .pcard-face-back{transform:rotateY(180deg); justify-content:center; background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));}
   .pcard-back-content{position:relative; z-index:1; display:flex; flex-direction:column; align-items:center;}
   .pcard-close{
     position:absolute; top:10px; left:10px; z-index:2; width:30px; height:30px; border-radius:50%;
@@ -1469,10 +1481,10 @@
      هاله‌ی محو می‌ندازن، نه دایره‌ی واضح. بقیه‌ی فرم‌های wsearch-newform
      (مثل ویرایشِ برنامه) دست‌نخورده. */
   .wsearch-newform.liquid-glass-form{
-    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .94));
+    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));
   }
   body:not([data-theme="light"]) .wsearch-newform.liquid-glass-form{
-    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .94));
+    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));
   }
   .wsearch-newform.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   .wsearch-newform-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}

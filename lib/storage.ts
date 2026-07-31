@@ -190,6 +190,7 @@ export type CustomOccurrence = {
   time: string;
   endDate?: string;
   importance?: Importance;
+  tag?: string;
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {
