@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { WEEK_ORDER, tasksForDate } from "@/lib/schedule";
+import { WEEK_ORDER, tasksForDate, toEnDigits } from "@/lib/schedule";
 import { PROGRAM_META, formatDaysLeft } from "@/lib/programMeta";
 import { faNum } from "@/lib/jalali";
 import { CustomOccurrence, Importance } from "@/lib/storage";
@@ -93,7 +93,8 @@ export function ProgramCard({
             <div className="pcard-times-list">
               {group.occ.map((o, oi) => (
                 <div key={oi} className="pcard-time-row">
-                  <span className="pcard-time-text">{o.dayName} <span className="mono">{o.time}</span></span>
+                  <span className="pcard-time-text">{o.dayName}</span>
+                  <span className="pcard-time-text mono" dir="ltr">{toEnDigits(o.time)}</span>
                 </div>
               ))}
             </div>

@@ -18,6 +18,7 @@ export function DashDateSelector({
   onSelect,
   onPrevWeek,
   onNextWeek,
+  onVisibleCountChange,
   className,
 }: {
   days: DashDay[];
@@ -25,6 +26,7 @@ export function DashDateSelector({
   onSelect: (iso: string) => void;
   onPrevWeek: () => void;
   onNextWeek: () => void;
+  onVisibleCountChange?: (count: number) => void;
   className?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,6 +38,29 @@ export function DashDateSelector({
   useEffect(() => {
     activeRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, [activeIso, days]);
+
+  // به‌جای یک عددِ ثابت، هرچقدر عرضِ واقعیِ نوار جا داره روز نشون می‌ده —
+  // اندازه‌ی پیل (۷۲ موبایل / ۹۲ دسکتاپ) + gap رو با عرضِ واقعیِ کانتینر
+  // می‌سنجه. همیشه فرد نگه می‌داره تا روزِ فعال دقیقاً وسط بیفته.
+  useEffect(() => {
+    if (!onVisibleCountChange) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const compute = () => {
+      const w = el.clientWidth;
+      const isSm = window.innerWidth >= 640;
+      const pillWidth = isSm ? 92 : 72;
+      const gap = 6;
+      const n = Math.floor((w + gap) / (pillWidth + gap));
+      const odd = n % 2 === 0 ? n - 1 : n;
+      onVisibleCountChange(Math.max(3, odd));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={cn("flex flex-1 items-center gap-1 rounded-dash border border-dash-border bg-dash-card backdrop-blur-xl", className)}>
