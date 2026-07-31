@@ -1,17 +1,17 @@
 "use client";
 
-import { DashReminderCard } from "./DashReminderCard";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
 
+// ردیفِ سوم — دوستان و آمار هفتگی کنار هم (طبق بازخوردِ کاربر: دیگه
+// سایدبارِ باریکِ عمودیِ قدیمی نیست، یک ردیفِ دوستونیِ تمام‌عرضه).
 export function DashSidebar({ className }: { className?: string }) {
   return (
-    <aside className={className}>
-      <div className="flex flex-col gap-4 sm:gap-6">
-        <DashReminderCard delay={0.05} />
+    <div className={className}>
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
         <DashFriendsCard delay={0.1} />
         <DashWeeklyChartCard delay={0.15} />
       </div>
-    </aside>
+    </div>
   );
 }

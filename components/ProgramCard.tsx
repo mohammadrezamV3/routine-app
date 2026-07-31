@@ -4,12 +4,12 @@ import { useMemo, useState } from "react";
 import { WEEK_ORDER, tasksForDate } from "@/lib/schedule";
 import { PROGRAM_META, formatDaysLeft } from "@/lib/programMeta";
 import { faNum } from "@/lib/jalali";
-import { CustomOccurrence, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
+import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
 
 const now = new Date();
 
-type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean };
+type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 function buildWeeklyGroups(opts: ScheduleOpts) {
@@ -21,7 +21,8 @@ function buildWeeklyGroups(opts: ScheduleOpts) {
     const items = tasksForDate(d, opts);
     items.forEach((t) => {
       if (!map[t.name]) { map[t.name] = { name: t.name, occ: [] }; list.push(map[t.name]); }
-      map[t.name].occ.push({ dayName: o.name, jsDay: o.jsDay, time: t.time, id: t.id, custom: !!t.custom });
+      const importance = opts.customOccurrences.find((c) => c.id === t.id)?.importance;
+      map[t.name].occ.push({ dayName: o.name, jsDay: o.jsDay, time: t.time, id: t.id, custom: !!t.custom, importance });
     });
   });
   return list;

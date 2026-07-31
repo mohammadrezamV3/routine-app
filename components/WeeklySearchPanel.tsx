@@ -9,13 +9,14 @@ import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, JalaliDate, isoLocal, jalaliToGregorianApprox } from "@/lib/jalali";
-import { CustomOccurrence, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
+import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
+import { SegmentedTabs } from "./SegmentedTabs";
 
 const now = new Date();
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean };
+type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance };
 
 function buildWeeklyGroups(opts: ScheduleOpts) {
   const map: Record<string, { name: string; occ: Occ[] }> = {};
@@ -26,7 +27,8 @@ function buildWeeklyGroups(opts: ScheduleOpts) {
     const items = tasksForDate(d, opts);
     items.forEach((t) => {
       if (!map[t.name]) { map[t.name] = { name: t.name, occ: [] }; list.push(map[t.name]); }
-      map[t.name].occ.push({ dayName: o.name, jsDay: o.jsDay, time: t.time, id: t.id, custom: !!t.custom });
+      const importance = opts.customOccurrences.find((c) => c.id === t.id)?.importance;
+      map[t.name].occ.push({ dayName: o.name, jsDay: o.jsDay, time: t.time, id: t.id, custom: !!t.custom, importance });
     });
   });
   return list;
@@ -39,15 +41,20 @@ export function WeeklySearchPanel({
   onClose,
   onChanged,
   onOpenProgram,
+  initialAddOpen,
 }: {
   scheduleOpts: ScheduleOpts;
   onClose: () => void;
   onChanged: () => void;
   onOpenProgram: (name: string) => void;
+  // وقتی از دکمه‌ی «افزودن برنامه»ی داشبورد باز می‌شه، مستقیم فرمِ افزودن رو
+  // نشون بده — نه لیستِ جستجو/فبِ معمولیِ دکمه‌ی مداد توی /weekly.
+  initialAddOpen?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [fabOpen, setFabOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(!!initialAddOpen);
+  const [importance, setImportance] = useState<Importance>("normal");
   const [deleteMode, setDeleteMode] = useState(false);
   const [pendingRemoved, setPendingRemoved] = useState<Set<string>>(new Set());
   const [pendingCustomRemoved, setPendingCustomRemoved] = useState<Set<string>>(new Set());
@@ -175,6 +182,7 @@ export function WeeklySearchPanel({
         name,
         jsDay: r.jsDay,
         time: r.end ? `${r.start} – ${r.end}` : r.start,
+        importance,
       }));
       await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
 
@@ -182,6 +190,7 @@ export function WeeklySearchPanel({
         setAddOpen(false);
         setName(""); setStartJalali(null); setEndJalali(null);
         setRows([{ jsDay: WEEK_ORDER[0].jsDay, start: "", end: "" }]);
+        setImportance("normal");
         setStatus("idle");
         onChanged();
       }, 480);
@@ -265,6 +274,13 @@ export function WeeklySearchPanel({
                   </button>
                 </div>
               </div>
+
+              <label>میزان اهمیت</label>
+              <SegmentedTabs
+                active={importance}
+                onChange={setImportance}
+                options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
+              />
 
               {rows.map((r, ri) => (
                 <div key={ri} className="wsearch-newrow">
