@@ -465,6 +465,11 @@ model Friendship {
   addressee   User             @relation("FriendRequestsReceived", fields: [addresseeId], references: [id], onDelete: Cascade)
   status      FriendshipStatus @default(PENDING)
 
+  // فیوریت‌بودن شخصیه، نه متقارن — رکورد Friendship یکی برای هر دو طرفه،
+  // پس باید جدا نگه داریم که کدوم طرف این دوستی رو استار زده.
+  favoritedByRequester Boolean @default(false)
+  favoritedByAddressee Boolean @default(false)
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -1,12 +1,13 @@
 import { Importance, IMPORTANCE_LABELS } from "@/lib/storage";
 
 const STYLES: Record<Importance, { text: string; bg: string; border: string }> = {
-  high: { text: "#E05252", bg: "rgba(224,82,82,.12)", border: "rgba(224,82,82,.3)" },
+  veryHigh: { text: "#E05252", bg: "rgba(224,82,82,.12)", border: "rgba(224,82,82,.3)" },
+  high: { text: "#F5A524", bg: "rgba(245,165,36,.12)", border: "rgba(245,165,36,.3)" },
   medium: { text: "#F5C518", bg: "rgba(245,197,24,.12)", border: "rgba(245,197,24,.3)" },
-  normal: { text: "var(--muted)", bg: "rgba(255,255,255,.05)", border: "var(--line)" },
+  low: { text: "var(--muted)", bg: "rgba(255,255,255,.05)", border: "var(--line)" },
 };
 
-export function DashImportanceBadge({ importance = "normal" }: { importance?: Importance }) {
+export function DashImportanceBadge({ importance = "low" }: { importance?: Importance }) {
   const s = STYLES[importance];
   return (
     <span

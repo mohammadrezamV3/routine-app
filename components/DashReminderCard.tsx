@@ -7,7 +7,7 @@ import { DashCard } from "./DashCard";
 import { getImportantThisWeek, ImportantOccurrence } from "@/lib/routineStats";
 import { WEEK_ORDER } from "@/lib/schedule";
 
-// برنامه‌های «خیلی مهم»/«مهم»ِ همین هفته — واقعاً از customOccurrences
+// برنامه‌های «خیلی زیاد»/«زیاد»ِ همین هفته — واقعاً از customOccurrences
 // (با تگِ اهمیتی که موقع افزودن/ویرایش برنامه انتخاب می‌شه) فیلتر می‌شه،
 // دیگه یادآوریِ mock نیست. کلیک روی هر ردیف همون برنامه رو باز می‌کنه.
 export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onOpenProgram?: (name: string) => void }) {
@@ -26,7 +26,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
           <div className="text-[12px] text-dash-muted">در حال بارگذاری…</div>
         ) : list.length === 0 ? (
           <div className="text-[12px] text-dash-muted">
-            برنامه‌ای با تگ «خیلی مهم» یا «مهم» توی این هفته ثبت نشده.
+            برنامه‌ای با تگ «خیلی زیاد» یا «زیاد» توی این هفته ثبت نشده.
           </div>
         ) : (
           list.map((r) => {
@@ -51,7 +51,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                   <span
                     className={cn(
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9",
-                      r.importance === "high" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
+                      r.importance === "veryHigh" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
                     )}
                   >
                     <Bell size={15} />

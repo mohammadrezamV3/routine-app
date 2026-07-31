@@ -172,14 +172,15 @@ export async function setRemovedOccurrences(arr: string[]): Promise<void> {
   return setSetting("removedOccurrences", arr);
 }
 
-// میزان حساسیت/اهمیتِ هر برنامه — پیش‌فرض «عادی» (رکوردهای قدیمی که این
-// فیلد رو ندارن هم همینطور رفتار می‌کنن). فقط موارد «خیلی مهم»/«مهم» توی
-// بخش «یادآوری‌ها»ی داشبورد نشون داده می‌شن.
-export type Importance = "high" | "medium" | "normal";
+// میزان حساسیت/اهمیتِ هر برنامه — چهار سطح، پیش‌فرض «کم» (رکوردهای قدیمی که
+// این فیلد رو ندارن هم همینطور رفتار می‌کنن). فقط موارد «زیاد»/«خیلی زیاد»
+// توی بخش «یادآوری‌ها»ی داشبورد نشون داده می‌شن.
+export type Importance = "low" | "medium" | "high" | "veryHigh";
 export const IMPORTANCE_LABELS: Record<Importance, string> = {
-  high: "خیلی مهم",
-  medium: "مهم",
-  normal: "عادی",
+  low: "کم",
+  medium: "متوسط",
+  high: "زیاد",
+  veryHigh: "خیلی زیاد",
 };
 
 export type CustomOccurrence = {
