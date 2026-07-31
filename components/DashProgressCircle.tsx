@@ -20,7 +20,7 @@ export function DashProgressCircle({
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90">
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90 overflow-visible">
         <circle
           cx={center}
           cy={center}

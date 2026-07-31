@@ -390,7 +390,6 @@ export default function WeeklyPage() {
             selectedPrograms={programFilter}
             onToggleProgram={toggleProgramFilter}
             onSelectAll={() => setProgramFilter(null)}
-            onClearAll={() => setProgramFilter(new Set())}
             onClose={() => setFilterModalOpen(false)}
           />
         )}

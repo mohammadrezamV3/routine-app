@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,14 @@ export function DashDateSelector({
   className?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  // روزِ فعال همیشه وسطِ نوار بمونه — هم موقعِ لود اولیه، هم هر بار که با
+  // فلش/کلیک عوض می‌شه (از جمله موقعی که هفته با فلش عوض می‌شه ولی همون
+  // ایزوی فعال توی هفته‌ی جدید نیست، پس این افکت روی activeIso و days هردو گوش می‌ده).
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [activeIso, days]);
 
   return (
     <div className={cn("flex flex-1 items-center gap-1 rounded-dash border border-dash-border bg-dash-card backdrop-blur-xl", className)}>
@@ -45,6 +53,7 @@ export function DashDateSelector({
           return (
             <button
               key={d.iso}
+              ref={active ? activeRef : undefined}
               type="button"
               onClick={() => onSelect(d.iso)}
               className={cn(

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Importance, IMPORTANCE_LABELS } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { ToggleSwitch } from "./ToggleSwitch";
@@ -22,7 +23,6 @@ export function DashFilterModal({
   selectedPrograms,
   onToggleProgram,
   onSelectAll,
-  onClearAll,
   onClose,
 }: {
   importance: "all" | Importance;
@@ -31,10 +31,13 @@ export function DashFilterModal({
   selectedPrograms: Set<string> | null; // null = فیلتری فعال نیست، یعنی همه نشون داده می‌شن
   onToggleProgram: (name: string) => void;
   onSelectAll: () => void;
-  onClearAll: () => void;
   onClose: () => void;
 }) {
+  const [query, setQuery] = useState("");
   const isChecked = (name: string) => selectedPrograms === null || selectedPrograms.has(name);
+  const visibleNames = query.trim()
+    ? programNames.filter((n) => n.includes(query.trim()))
+    : programNames;
 
   return (
     <>
@@ -53,21 +56,33 @@ export function DashFilterModal({
           <div className="tm-extra">
             <div className="domain-sub" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span>برنامه‌ها</span>
-              <span style={{ display: "flex", gap: 8 }}>
-                <button type="button" className="small" onClick={onSelectAll} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-                  همه
-                </button>
-                <button type="button" className="small" onClick={onClearAll}>هیچ‌کدام</button>
-              </span>
+              <button type="button" className="small" onClick={onSelectAll} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+                همه
+              </button>
             </div>
+
+            {programNames.length > 0 && (
+              <input
+                type="text"
+                dir="auto"
+                className="wsearch-newform-name trade-glass-field pill-glass-field"
+                placeholder="جستجوی برنامه…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{ marginTop: 8 }}
+              />
+            )}
+
             {programNames.length === 0 ? (
               <div className="item-line empty">هنوز برنامه‌ای ثبت نکردی.</div>
+            ) : visibleNames.length === 0 ? (
+              <div className="item-line empty">برنامه‌ای پیدا نشد.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-                {programNames.map((name) => (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+                {visibleNames.map((name) => (
                   <div key={name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                    <span className="item-line" style={{ textAlign: "right" }}>{name}</span>
                     <ToggleSwitch checked={isChecked(name)} onChange={() => onToggleProgram(name)} label={name} />
-                    <span className="item-line" style={{ flex: 1, textAlign: "right" }}>{name}</span>
                   </div>
                 ))}
               </div>
