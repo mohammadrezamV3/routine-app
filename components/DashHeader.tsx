@@ -12,7 +12,7 @@ export function DashHeader({ progress = 75 }: { progress?: number }) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col-reverse items-center gap-3 text-center sm:flex-row sm:items-start sm:justify-start sm:gap-8 sm:text-right"
+      className="flex flex-row items-center justify-start gap-3 text-right sm:items-start sm:gap-8"
     >
       <div className="flex flex-col items-center gap-1">
         <span className="sm:hidden">

@@ -186,7 +186,6 @@ export function NavDrawer() {
                     </>
                   )}
                 </div>
-                <HeaderStreakClock />
                 <div className="bell-btn-wrap">
                   <button className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
@@ -194,6 +193,7 @@ export function NavDrawer() {
                   </button>
                   {notifPanelOpen && <NotificationPanel onClose={() => setNotifPanelOpen(false)} />}
                 </div>
+                <HeaderStreakClock />
               </>
             ) : (
               <div ref={authSlotRef}>

@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 
 export type DashDay = { iso: string; weekday: string; dateLabel: string };
 
-// نوار انتخاب تاریخ — راست‌چین طبیعیِ صفحه (شنبه راست‌ترین، جمعه چپ‌ترین،
-// چون days از قبل به ترتیب WEEK_ORDER ساخته می‌شه و چیدمانِ RTL خودش این
-// ترتیب رو می‌ده). فلش‌های قبلی/بعدی یک هفته‌ی کامل جابه‌جا می‌کنن، رو به
-// بیرون (نه سمت لیست)، و فقط توی دسکتاپ دیده می‌شن — توی موبایل با انگشت
-// اسکرول می‌شه (اسکرول‌بارِ خودِ مرورگر هم مخفیه، no-scrollbar).
+// نوار انتخاب تاریخ — راست‌چین طبیعیِ صفحه (چون days از قبل به ترتیبِ
+// تاریخیِ صعودی ساخته می‌شه و چیدمانِ RTL خودش این ترتیب رو می‌ده). دیگه یک
+// هفته‌ی کامل نیست — یه پنجره‌ی داینامیکِ چندروزه که همیشه روی «امروز»
+// وسط‌چینه. فلش‌های قبلی/بعدی همون پنجره رو جابه‌جا می‌کنن، رو به بیرون (نه
+// سمت لیست)، و فقط توی دسکتاپ دیده می‌شن — توی موبایل با انگشت اسکرول
+// می‌شه (اسکرول‌بارِ خودِ مرورگر هم مخفیه، no-scrollbar).
 export function DashDateSelector({
   days,
   activeIso,
@@ -40,7 +41,7 @@ export function DashDateSelector({
     <div className={cn("flex flex-1 items-center gap-1 rounded-dash border border-dash-border bg-dash-card backdrop-blur-xl", className)}>
       <button
         type="button"
-        aria-label="هفته‌ی قبل"
+        aria-label="روزهای قبل"
         onClick={onPrevWeek}
         className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:flex"
       >
@@ -77,7 +78,7 @@ export function DashDateSelector({
 
       <button
         type="button"
-        aria-label="هفته‌ی بعد"
+        aria-label="روزهای بعد"
         onClick={onNextWeek}
         className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:flex"
       >
