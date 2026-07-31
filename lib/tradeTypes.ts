@@ -6,6 +6,33 @@ export type CalSystem = "jalali" | "gregorian";
 export const CAL_SYSTEM_KEY = "tradeCalendarSystem";
 export const MONTHLY_GOAL_KEY = "tradeMonthlyGoal";
 
+// کاربر می‌تونه از پنل کاربری انتخاب کنه کدوم کارت‌های آماریِ صفحه‌ی ترید
+// نشون داده بشن — پیش‌فرض همه روشنن
+export type TradeStatKey =
+  | "goalRing" | "monthTotal" | "total" | "winRate" | "avgWin" | "avgLoss"
+  | "largestGain" | "largestLoss" | "maxWinStreak" | "maxLossStreak";
+
+export const TRADE_STAT_LABELS: Record<TradeStatKey, string> = {
+  goalRing: "پیشرفت هدف ماهانه (دایره‌ای)",
+  monthTotal: "سود/زیان این ماه",
+  total: "تعداد معاملات",
+  winRate: "نرخ برد",
+  avgWin: "میانگین سود",
+  avgLoss: "میانگین ضرر",
+  largestGain: "بیشترین سود",
+  largestLoss: "بیشترین ضرر",
+  maxWinStreak: "بیشترین برد پشت‌سرهم",
+  maxLossStreak: "بیشترین باخت پشت‌سرهم",
+};
+
+export const TRADE_STAT_ORDER: TradeStatKey[] = [
+  "goalRing", "monthTotal", "total", "winRate", "avgWin", "avgLoss",
+  "largestGain", "largestLoss", "maxWinStreak", "maxLossStreak",
+];
+
+export const DEFAULT_VISIBLE_TRADE_STATS: TradeStatKey[] = [...TRADE_STAT_ORDER];
+export const TRADE_STATS_VISIBILITY_KEY = "tradeVisibleStats";
+
 export type TradeEntry = {
   id: string;
   pair: string;

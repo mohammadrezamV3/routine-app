@@ -7,6 +7,7 @@ import { isoLocal, faNum } from "@/lib/jalali";
 import { FoodSeedItem } from "@/lib/foodSeed";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { ProgressRing } from "./ProgressRing";
 
 const todayKey = isoLocal(new Date());
 const DEFAULT_MEAL_TYPES: { key: string; label: string }[] = [
@@ -69,6 +70,7 @@ export function CaloriePanel() {
   const [customPer100, setCustomPer100] = useState("");
   const [qty, setQty] = useState("100");
   const [unit, setUnit] = useState<FoodUnit>("gram");
+  const [unitPickerOpen, setUnitPickerOpen] = useState(false);
   const [mealType, setMealType] = useState("lunch");
 
   // تاریخچه
@@ -301,15 +303,21 @@ export function CaloriePanel() {
         </div>
       ) : (
         <>
-          <div className="home-stats" style={{ marginTop: 8 }}>
-            <b>{faNum(totalToday)}</b> از <b>{faNum(target.dailyTargetKcal)}</b> کالری امروز ({faNum(pct)}٪)
+          <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+            <span>کالری امروز</span>
+            <span className="calorie-edit-meals-link" onClick={openEditGoal}>تغییر برنامه</span>
           </div>
-          <div className="conflict-alert-bar" style={{ position: "static", marginTop: 8, opacity: 1, transform: "none", pointerEvents: "auto" }}>
-            <div className="conflict-alert-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: pct > 100 ? "#E05252" : "var(--accent)" }} />
+          <div className="calorie-today-ring-row">
+            <ProgressRing pct={pct / 100} size={88} strokeWidth={8} color={pct > 100 ? "#E05252" : "var(--accent)"}>
+              <span className="calorie-today-ring-pct mono">{faNum(pct)}٪</span>
+            </ProgressRing>
+            <div className="calorie-today-ring-text">
+              <div className="trade-stat-value" style={{ color: pct > 100 ? "#E05252" : "var(--accent)" }}>
+                {faNum(totalToday)}
+                <span className="calorie-meal-of"> / {faNum(target.dailyTargetKcal)} کالری</span>
+              </div>
+            </div>
           </div>
-          <button type="button" className="small" onClick={openEditGoal} style={{ marginTop: 10 }}>
-            تغییر برنامه کالری
-          </button>
 
           <div className="tm-extra">
             <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -338,7 +346,7 @@ export function CaloriePanel() {
                       value={row.kcal}
                       onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
                     />
-                    <button type="button" className="small" onClick={() => removeMealDraftRow(row.key)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
+                    <button type="button" className="entry-delete-btn" onClick={() => removeMealDraftRow(row.key)} aria-label="حذف وعده">×</button>
                   </div>
                 ))}
                 {mealDraft.length < 8 && (
@@ -359,10 +367,16 @@ export function CaloriePanel() {
               <div className="calorie-meal-grid">
                 {target.mealBreakdown.map((m) => {
                   const consumed = entries.filter((e) => e.mealType === m.key).reduce((s, e) => s + e.customCalories, 0);
+                  const mealPct = m.kcal > 0 ? consumed / m.kcal : 0;
                   return (
                     <div key={m.key} className="calorie-meal-tile">
+                      <ProgressRing pct={mealPct} size={50} strokeWidth={5} color={mealPct > 1 ? "#E05252" : "var(--accent)"}>
+                        <span className="calorie-meal-ring-pct mono">{faNum(Math.round(mealPct * 100))}٪</span>
+                      </ProgressRing>
                       <div className="trade-stat-label">{m.label}</div>
-                      <div className="trade-stat-value">{faNum(consumed)}<span className="calorie-meal-of"> / {faNum(m.kcal)}</span></div>
+                      <div className="trade-stat-value" style={{ fontSize: 13 }}>
+                        {faNum(consumed)}<span className="calorie-meal-of"> / {faNum(m.kcal)}</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -411,13 +425,38 @@ export function CaloriePanel() {
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <input type="number" className="wsearch-newform-name" style={{ flex: 1 }} placeholder="مقدار" value={qty} onChange={(e) => setQty(e.target.value)} />
-              <div style={{ flex: 2 }}>
-                <SegmentedTabs
-                  active={unit}
-                  onChange={setUnit}
-                  options={(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => ({ value: u, label: UNIT_LABELS[u] }))}
-                />
+              <input
+                type="number"
+                className="wsearch-newform-name calorie-qty-input"
+                placeholder="مقدار"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+              />
+              <div style={{ flex: 1, position: "relative" }}>
+                <button
+                  type="button"
+                  className={`unit-picker-btn${unitPickerOpen ? " open" : ""}`}
+                  onClick={() => setUnitPickerOpen((v) => !v)}
+                >
+                  <span>{UNIT_LABELS[unit]}</span>
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+                {unitPickerOpen && (
+                  <>
+                    <div className="unit-picker-backdrop" onClick={() => setUnitPickerOpen(false)} />
+                    <div className="unit-picker-menu">
+                      {(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => (
+                        <div
+                          key={u}
+                          className={`unit-picker-item${u === unit ? " active" : ""}`}
+                          onClick={() => { setUnit(u); setUnitPickerOpen(false); }}
+                        >
+                          {UNIT_LABELS[u]}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <div style={{ marginTop: 8 }}>
@@ -446,7 +485,7 @@ export function CaloriePanel() {
                   </span>
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span className="mono">{faNum(e.customCalories)} kcal</span>
-                    <button className="small" onClick={() => removeEntry(e.id)} style={{ borderColor: "#E05252", color: "#E05252" }}>×</button>
+                    <button type="button" className="entry-delete-btn" onClick={() => removeEntry(e.id)} aria-label="حذف">×</button>
                   </span>
                 </div>
               ))

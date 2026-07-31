@@ -67,7 +67,15 @@ export function MarketPicker({
                         <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
-                    <div className={`task-name${on ? " done" : ""}`}>{s.label} <span className="mono" style={{ color: "var(--muted2)", fontSize: 11 }}>{s.symbol}</span></div>
+                    <div className={`task-name${on ? " done" : ""}`}>
+                      {s.label}
+                      {/* برای فارکس، label و symbol (مثلاً EUR/USD و EURUSD=X) عملاً همون
+                          حروف رو تکرار می‌کنن — فقط برای بقیه‌ی دسته‌ها که واقعاً اطلاعات
+                          اضافه می‌ده (مثلاً «بیت‌کوین» در برابر BTC-USD) نماد رو هم نشون بده */}
+                      {s.category !== "forex" && (
+                        <span className="mono" style={{ color: "var(--muted2)", fontSize: 11 }}> {s.symbol}</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}

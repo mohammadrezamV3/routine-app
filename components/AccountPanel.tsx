@@ -8,10 +8,14 @@ import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { TradeStatsPicker } from "@/components/TradeStatsPicker";
 import { getSetting, setSetting } from "@/lib/storage";
 import { getSiteMarket } from "@/lib/market";
 import { DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, TICKER_SETTING_KEY } from "@/lib/tickerSymbols";
-import { CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY, CalSystem } from "@/lib/tradeTypes";
+import {
+  CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY, CalSystem,
+  TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STATS_VISIBILITY_KEY,
+} from "@/lib/tradeTypes";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -69,6 +73,8 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const [monthlyGoal, setMonthlyGoal] = useState(0);
   const [goalDraft, setGoalDraft] = useState("");
   const [goalSaved, setGoalSaved] = useState(false);
+  const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
+  const [statsPickerOpen, setStatsPickerOpen] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -81,7 +87,18 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
     getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => setTickerSymbols(saved?.length ? saved : defaultSymbols));
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
     getSetting<number>(MONTHLY_GOAL_KEY, 0).then((v) => { setMonthlyGoal(v); setGoalDraft(v ? String(v) : ""); });
+    getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS).then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
   }, [status]);
+
+  function toggleVisibleStat(key: TradeStatKey) {
+    setVisibleStats((prev) => {
+      const has = prev.includes(key);
+      if (has && prev.length <= 1) return prev;
+      const next = has ? prev.filter((k) => k !== key) : [...prev, key];
+      setSetting(TRADE_STATS_VISIBILITY_KEY, next);
+      return next;
+    });
+  }
 
   function changeCalSystem(v: CalSystem) {
     setCalSystem(v);
@@ -239,7 +256,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
 
       <div className="tm-extra">
         <div className="domain-sub">ساعت بیداری و خواب</div>
-        <div className="item-line">
+        <div className="item-line" style={{ textAlign: "center" }}>
           بیداری <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.wake || DEFAULT_WAKE}</b>
           {" — "}خواب <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.sleep || DEFAULT_SLEEP}</b>
         </div>
@@ -316,6 +333,16 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="tm-extra">
+        <div className="domain-sub">آمارهای صفحه ترید</div>
+        <div className="item-line" style={{ marginBottom: 8 }}>
+          {visibleStats.length} از ۱۰ آمار برای نمایش توی صفحه‌ی ترید انتخاب شده
+        </div>
+        <button onClick={() => setStatsPickerOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+          تغییر
+        </button>
+      </div>
+
+      <div className="tm-extra">
         <button disabled title="به‌زودی" style={{ opacity: 0.5, cursor: "not-allowed" }}>
           تحلیل برنامه‌ها
         </button>
@@ -341,6 +368,14 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           symbols={tickerSymbols}
           onToggle={toggleTickerSymbol}
           onClose={() => setMarketPickerOpen(false)}
+        />
+      )}
+
+      {statsPickerOpen && (
+        <TradeStatsPicker
+          visible={visibleStats}
+          onToggle={toggleVisibleStat}
+          onClose={() => setStatsPickerOpen(false)}
         />
       )}
     </ModalShell>
