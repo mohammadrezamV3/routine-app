@@ -64,7 +64,7 @@ const LINKS = [
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   { href: "/exercise", label: "بدنسازی", icon: "exercise" },
   { href: "/trade", label: "ترید", icon: "trade" },
-  { href: "/about", label: "درباره من", icon: "about" },
+  { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
 export function NavDrawer() {

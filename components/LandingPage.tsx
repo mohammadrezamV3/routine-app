@@ -9,6 +9,7 @@ import {
   Smartphone, BarChart3, Zap, Users, Sparkles,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
+import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
 import { ICONS } from "@/components/NavDrawer";
 import { getSiteMarket } from "@/lib/market";
 import { useTheme } from "@/components/ThemeProvider";
@@ -468,16 +469,16 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
 function WhyUsSection({ isIntl }: { isIntl: boolean }) {
   const t = useThemeTokens();
   const items = isIntl ? WHY_US_INTL : WHY_US;
-  // برای اسکرولِ بی‌درزِ نواری، لیست رو دوبار پشت‌سرهم می‌چینیم و دقیقاً
-  // نصفِ عرضِ کلِ ترک رو translate می‌کنیم — چون هر دو نیمه عیناً یکی‌ان،
-  // لحظه‌ی چرخش کاملاً نامرئیه، صرف‌نظر از تعداد یا عرضِ دقیقِ کارت‌ها.
-  const track = [...items, ...items];
+  // پایه تا حداقل ۱۶ آیتم تکرار می‌شه (حتی روی مانیتورهای خیلی عریض هیچ
+  // فاصله‌ی خالی‌ای وسطِ چرخه دیده نشه)، بعد همون پایه یک‌بار دیگه برای
+  // چرخشِ ۵۰٪ی duplicate می‌شه — لحظه‌ی چرخش کاملاً نامرئیه.
+  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 16, pxPerSecond: 22 });
 
   return (
     <div>
       <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{isIntl ? "Why us?" : "چرا ما؟"}</h2>
       <div className="whyus-viewport mt-4">
-        <div className="whyus-track">
+        <div className="whyus-track" ref={trackRef} style={{ animationDuration: `${durationSec}s` }}>
           {track.map((item, i) => {
             const Icon = item.icon;
             return (
@@ -671,22 +672,36 @@ export function LandingPage() {
             {upcomingRows.length > 0 && (
               <tbody>
                 <tr>
+                  {/* یک جدولِ تو در توی جدا با همون colgroup — قبلاً این پیش‌نمایش
+                      یه ردیفِ flex با gap ثابت بود که ستون‌هاش با ستون‌های
+                      واقعیِ بالاش هم‌تراز نمی‌شد؛ حالا چون colgroup یکسانه،
+                      چک/ضربدرها دقیقاً زیرِ همون ستونِ پلنِ خودشون می‌شینن. */}
                   <td colSpan={plans.length + 1} className={`border-t ${t.line} p-0`}>
                     <div className="relative py-1">
-                      <div className="pointer-events-none w-full select-none blur-sm" aria-hidden="true">
-                        {upcomingRows.map((row) => (
-                          <div key={row.label} className="flex w-full items-center justify-between gap-4 py-3.5">
-                            <span className={`text-[11.5px] font-semibold ${t.heading}`}>{row.label}</span>
-                            <div className="flex items-center gap-6">
+                      <table
+                        className="pointer-events-none w-full select-none border-collapse blur-sm"
+                        style={{ tableLayout: "fixed" }}
+                        aria-hidden="true"
+                      >
+                        <colgroup>
+                          <col style={{ width: "24%" }} />
+                          {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+                        </colgroup>
+                        <tbody>
+                          {upcomingRows.map((row) => (
+                            <tr key={row.label}>
+                              <th scope="row" className={`py-3.5 text-right text-[11.5px] font-normal ${t.muted}`}>{row.label}</th>
                               {plans.map((p) => (
-                                <span key={p.key}>
-                                  {row.included[p.key] ? <Check size={16} className={t.accentText} /> : <X size={16} className="text-[#C9524B]" />}
-                                </span>
+                                <td key={p.key} className="py-3.5">
+                                  <div className="flex justify-center">
+                                    {row.included[p.key] ? <Check size={16} className={t.accentText} /> : <X size={16} className="text-[#C9524B]" />}
+                                  </div>
+                                </td>
                               ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
                           {isIntl ? "Coming soon" : "به‌زودی"}

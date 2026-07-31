@@ -7,6 +7,7 @@ import {
   DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL,
   MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, tickerLabelFor, TICKER_SETTING_KEY,
 } from "@/lib/tickerSymbols";
+import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
 import { MarketPicker } from "./MarketPicker";
 
 const ONBOARDED_KEY = "tradeMarketsOnboarded";
@@ -71,13 +72,17 @@ export function MarketTicker() {
     setSetting(ONBOARDED_KEY, true);
   }
 
-  const loop = quotes.length ? [...quotes, ...quotes] : [];
+  // پایه تا حداقل ۲۴ آیتم تکرار می‌شه — حتی اگه کاربر فقط ۱-۲ نماد انتخاب
+  // کرده باشه، وسطِ چرخه‌ی نوارِ تمام‌عرض هیچ فاصله‌ی خالی‌ای دیده نمی‌شه؛
+  // سرعت هم از روی عرضِ واقعی حساب می‌شه، نه یک عددِ ثابتِ فرضی که با تعداد
+  // آیتم‌های متفاوت، کند/تند به‌نظر برسه.
+  const { trackRef, track: loop, durationSec } = useSeamlessMarquee(quotes, { minCount: 24, pxPerSecond: 22 });
 
   return (
     <div className="ticker-bar">
       {quotes.length ? (
         <div className="ticker-viewport">
-          <div className="ticker-track">
+          <div className="ticker-track" ref={trackRef} style={{ animationDuration: `${durationSec}s` }}>
             {loop.map((q, i) => (
               <span key={`${q.symbol}-${i}`} className="ticker-item">
                 <span className="ticker-symbol">{tickerLabelFor(q.symbol)}</span>
