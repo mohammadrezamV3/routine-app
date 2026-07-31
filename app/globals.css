@@ -159,6 +159,37 @@
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
   .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; margin-top:3px;}
 
+  /* سوییچ لیکوئید گلسِ سبکِ iOS — ترکِ شیشه‌ای تار با یه دسته‌ی گرد که
+     بین راست (خاموش) و چپ (روشن) اسلاید می‌شه، دقیقاً مثل تاگل کنترل‌سنترِ آیفون */
+  .ios-toggle{
+    position:relative; width:46px; height:27px; min-width:46px; border-radius:999px; padding:0; cursor:pointer;
+    border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
+    backdrop-filter:blur(14px) saturate(180%); -webkit-backdrop-filter:blur(14px) saturate(180%);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04);
+    transition:background .25s ease, border-color .25s ease, box-shadow .25s ease;
+  }
+  body[data-theme="light"] .ios-toggle{ background:rgba(0,0,0,.07); border-color:rgba(0,0,0,.08); }
+  .ios-toggle:hover{ border-color:rgba(255,255,255,.14); color:inherit; background:rgba(255,255,255,.08); box-shadow:inset 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04); }
+  body[data-theme="light"] .ios-toggle:hover{ border-color:rgba(0,0,0,.08); background:rgba(0,0,0,.07); }
+  .ios-toggle.on{ background:var(--accent); border-color:var(--accent); box-shadow:inset 0 1px 2px rgba(0,0,0,.15); }
+  .ios-toggle.on:hover{ border-color:var(--accent); background:var(--accent); }
+  .ios-toggle-knob{
+    position:absolute; top:2px; right:2px; width:21px; height:21px; border-radius:50%;
+    background:linear-gradient(180deg, #fff, #e6e6e6);
+    box-shadow:0 2px 5px rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.15);
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .ios-toggle.on .ios-toggle-knob{ transform:translateX(-19px); }
+  .ios-toggle:active .ios-toggle-knob{ width:24px; }
+  .ios-toggle.on:active .ios-toggle-knob{ transform:translateX(-22px); }
+
+  .stat-toggle-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:11px 2px; border-bottom:1px solid var(--line);
+  }
+  .stat-toggle-row:last-child{ border-bottom:none; }
+  .stat-toggle-label{ font-size:13px; color:var(--text); }
+
   .wake{display:flex; align-items:center; justify-content:space-between; padding-top:16px; margin-top:6px; gap:12px; flex-wrap:wrap;}
   .wake-text{font-size:13px; color:var(--muted);}
   .wake-text b{color:var(--text); font-family:var(--font-plexmono), monospace; font-weight:600;}
@@ -546,25 +577,25 @@
 
   /* آمار ژورنال ترید — کارت‌های کوچیک KPI، عدد اصلی proportional (نه tabular)
      چون تک‌عددن نه ستون هم‌تراز؛ رنگ فقط برای وضعیت سود/زیانه */
-  .trade-stats-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .trade-stats-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:7px; }
   @media (min-width:480px){ .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); } }
   .trade-stat-tile{
-    border-radius:22px; padding:14px 16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+    border-radius:16px; padding:10px 12px; border:1px solid var(--line); background:rgba(255,255,255,.02);
   }
   .trade-stat-tile-wide{ grid-column:1 / -1; }
 
   /* حلقه‌ی هدف ماهانه — همون قاب شیشه‌ایِ کارت‌های آمار، فقط با یه دایره‌ی
      SVG به‌جای عدد خام؛ فقط وقتی هدف توی پنل کاربری تنظیم شده باشه نشون داده می‌شه */
   .trade-goal-ring-row{
-    display:flex; align-items:center; gap:14px; margin:10px 0 14px;
-    padding:14px 16px; border-radius:22px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+    display:flex; align-items:center; gap:12px; margin:8px 0 10px;
+    padding:10px 12px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
   }
-  .trade-goal-ring-wrap{ position:relative; width:72px; height:72px; flex-shrink:0; }
+  .trade-goal-ring-wrap{ position:relative; width:56px; height:56px; flex-shrink:0; }
   .trade-goal-ring{ width:100%; height:100%; }
   .trade-goal-ring-fill{ transition:stroke-dashoffset .5s ease; }
   .trade-goal-ring-pct{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-size:12.5px; font-weight:700; color:var(--text);
+    font-size:11px; font-weight:700; color:var(--text);
   }
   .trade-goal-ring-text{ flex:1; min-width:0; }
 
@@ -577,8 +608,8 @@
     .trade-desktop .trade-stats-grid{ grid-template-columns:repeat(5, 1fr); }
     .trade-desktop .cal-grid{ max-width:520px; margin-right:0; }
   }
-  .trade-stat-label{ font-size:10.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
-  .trade-stat-value{ font-size:19px; font-weight:800; margin-top:6px; font-variant-numeric:proportional-nums; }
+  .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
+  .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
 
   /* calendar */
@@ -1915,6 +1946,21 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
   font-size:7.5px; font-weight:700; line-height:1;
 }
 
+/* دراپ‌داونِ جست‌وجوی نماد توی فیلد «جفت‌ارز» — به‌جای تایپ آزاد، از یک
+   کاتالوگِ نمادهای رایج فیلتر و انتخاب می‌شه */
+.trade-pair-suggest{
+  position:absolute; top:calc(100% + 4px); right:0; left:0; z-index:20;
+  max-height:220px; overflow-y:auto; border-radius:12px; border:1px solid var(--line);
+  background:var(--bg); box-shadow:0 12px 30px rgba(0,0,0,.3);
+}
+.trade-pair-suggest-item{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:8px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--line);
+}
+.trade-pair-suggest-item:last-child{ border-bottom:none; }
+.trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); }
+.trade-pair-suggest-label{ color:var(--muted2); font-size:11px; }
+
 /* پیش‌نمایش عکس معامله توی فرم ثبت */
 .trade-shot-row{ display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
 .trade-shot-btn{
@@ -2044,9 +2090,10 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .calorie-meal-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
 @media (min-width:480px){ .calorie-meal-grid{ grid-template-columns:repeat(3, 1fr); } }
 .calorie-meal-tile{
-  border-radius:16px; padding:12px 14px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  border-radius:16px; padding:12px 10px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
 }
-.calorie-meal-of{ font-size:12px; color:var(--muted2); font-weight:600; }
+.calorie-meal-of{ font-size:11px; color:var(--muted2); font-weight:600; display:block; }
 .calorie-edit-meals-link{ font-size:11px; font-weight:700; color:var(--accent); cursor:pointer; }
 .calorie-edit-meals-link:hover{ text-decoration:underline; }
 
@@ -2054,3 +2101,51 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .calorie-history-day:last-child{ border-bottom:none; }
 .calorie-history-day-head{ display:flex; justify-content:space-between; align-items:center; font-size:12px; }
 .calorie-history-day-items{ margin-top:4px; font-size:11.5px; color:var(--muted2); line-height:1.7; }
+
+/* باکس «مقدار» — قبلاً flex:1 بود و روی صفحه‌های عریض خیلی کش می‌اومد؛
+   حالا یه عرض ثابت و کوچیک داره و عددش وسط‌چینه */
+.calorie-qty-input{ flex:0 0 78px; width:78px; text-align:center; }
+
+/* دکمه‌ی تکی برای انتخاب واحد اندازه‌گیری (گرم/قاشق/پیمانه) — به‌جای ۴ تا
+   دکمه‌ی کنار هم، یک دکمه که با کلیک یک منوی کوچیک زیرش باز می‌کنه */
+.unit-picker-btn{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:6px;
+  padding:9px 12px; border-radius:10px; font-size:12.5px; font-weight:600;
+}
+.unit-picker-btn svg{ width:13px; height:13px; opacity:.6; transition:transform .2s ease; }
+.unit-picker-btn.open svg{ transform:rotate(180deg); }
+.unit-picker-backdrop{ position:fixed; inset:0; z-index:19; background:none; }
+.unit-picker-menu{
+  position:absolute; top:calc(100% + 4px); right:0; left:0; z-index:20;
+  max-height:200px; overflow-y:auto; border-radius:12px; border:1px solid var(--line);
+  background:var(--bg); box-shadow:0 12px 30px rgba(0,0,0,.3); padding:4px;
+}
+.unit-picker-item{ padding:9px 10px; border-radius:8px; font-size:12.5px; cursor:pointer; color:var(--muted); }
+.unit-picker-item:hover{ background:rgba(var(--accent-rgb),.08); color:var(--text); }
+.unit-picker-item.active{ color:var(--accent); font-weight:700; }
+
+/* حلقه‌ی پیشرفتِ عمومی (SVG) — کالری امروز + سهم هر وعده از همین استفاده می‌کنن */
+.progress-ring-wrap{ position:relative; flex-shrink:0; }
+.progress-ring{ width:100%; height:100%; display:block; }
+.progress-ring-fill{ transition:stroke-dashoffset .5s ease; }
+.progress-ring-center{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+}
+
+.calorie-today-ring-row{
+  display:flex; align-items:center; gap:14px; margin-top:10px;
+  padding:12px 14px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+}
+.calorie-today-ring-pct{ font-size:13px; font-weight:800; color:var(--text); }
+.calorie-today-ring-text{ flex:1; min-width:0; }
+.calorie-meal-ring-pct{ font-size:10.5px; font-weight:800; color:var(--text); }
+
+/* دکمه‌ی حذفِ آیتم غذایی — دایره‌ی تمیزِ آیکونی، به‌جای دکمه‌ی مستطیلیِ
+   کوچیکِ عمومی که دور یه «×» تک‌حرفی زشت می‌شد */
+.entry-delete-btn{
+  width:26px; height:26px; min-width:26px; border-radius:50%; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  border-color:rgba(224,82,82,.35); color:#E05252; font-size:15px; line-height:1;
+}
+.entry-delete-btn:hover{ background:rgba(224,82,82,.12); border-color:#E05252; color:#E05252; }

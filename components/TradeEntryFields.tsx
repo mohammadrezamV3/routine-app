@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { compressImageToDataUrl } from "@/lib/image";
 import { computeTradePnl, TradeFormState } from "@/lib/tradeTypes";
+import { searchTradePairs } from "@/lib/tradePairs";
 import { faNum } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 
@@ -17,6 +18,8 @@ export function TradeEntryFields({
 }) {
   const [compressing, setCompressing] = useState(false);
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
+  const [pairSuggestOpen, setPairSuggestOpen] = useState(false);
+  const pairSuggestions = pairSuggestOpen ? searchTradePairs(value.pair) : [];
 
   async function handleScreenshotChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -53,9 +56,30 @@ export function TradeEntryFields({
       />
 
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 90px" }}>
+        <div style={{ flex: "1 1 90px", position: "relative" }}>
           <label className="exercise-form-label">جفت‌ارز</label>
-          <input className="wsearch-newform-name trade-glass-field" placeholder="EURUSD" value={value.pair} onChange={(e) => onChange({ pair: e.target.value })} />
+          <input
+            className="wsearch-newform-name trade-glass-field"
+            placeholder="جستجوی نماد…"
+            value={value.pair}
+            onChange={(e) => { onChange({ pair: e.target.value.toUpperCase() }); setPairSuggestOpen(true); }}
+            onFocus={() => setPairSuggestOpen(true)}
+            onBlur={() => setTimeout(() => setPairSuggestOpen(false), 150)}
+          />
+          {pairSuggestOpen && pairSuggestions.length > 0 && (
+            <div className="trade-pair-suggest">
+              {pairSuggestions.map((p) => (
+                <div
+                  key={p.code}
+                  className="trade-pair-suggest-item"
+                  onMouseDown={() => { onChange({ pair: p.code }); setPairSuggestOpen(false); }}
+                >
+                  <span className="mono">{p.code}</span>
+                  <span className="trade-pair-suggest-label">{p.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{ flex: "1 1 90px" }}>
           <label className="exercise-form-label">قیمت ورود</label>

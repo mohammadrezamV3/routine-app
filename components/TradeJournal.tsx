@@ -13,6 +13,7 @@ import { getSetting } from "@/lib/storage";
 import {
   TradeEntry, TradeFormState, EMPTY_TRADE_FORM, CalSystem, CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY,
   formStateToCreateBody, formStateToUpdateBody,
+  TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
 
 const now = new Date();
@@ -64,12 +65,17 @@ export function TradeJournal() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<TradeFormState>(EMPTY_TRADE_FORM);
   const [monthlyGoal, setMonthlyGoal] = useState(0);
+  const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
 
   function patchForm(patch: Partial<TradeFormState>) {
     setForm((f) => ({ ...f, ...patch }));
   }
 
   useEffect(() => { getSetting<number>(MONTHLY_GOAL_KEY, 0).then(setMonthlyGoal); }, []);
+  useEffect(() => {
+    getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS)
+      .then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
+  }, []);
   // خودِ انتخاب شمسی/میلادی هم دیگه اینجا نیست — رفته توی پنل کاربری؛ این‌جا فقط
   // مقدار ذخیره‌شده رو موقع mount می‌خونه
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
@@ -220,51 +226,69 @@ export function TradeJournal() {
     <div style={{ marginTop: 10 }}>
       <div className="domain-sub" style={{ margin: 0 }}>پرتفوی ماهانه</div>
 
-      {monthlyGoal > 0 && <TradeGoalRing current={monthTotal} goal={monthlyGoal} />}
+      {monthlyGoal > 0 && visibleStats.includes("goalRing") && <TradeGoalRing current={monthTotal} goal={monthlyGoal} />}
 
       <div className="trade-stats-grid">
-        <div className="trade-stat-tile trade-stat-tile-wide">
-          <div className="trade-stat-label">سود/زیان این ماه</div>
-          <div className="trade-stat-value" style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>
-            {faNum(monthTotal.toFixed(1))}
+        {visibleStats.includes("monthTotal") && (
+          <div className="trade-stat-tile trade-stat-tile-wide">
+            <div className="trade-stat-label">سود/زیان این ماه</div>
+            <div className="trade-stat-value" style={{ color: monthTotal >= 0 ? "var(--accent)" : "#E05252" }}>
+              {faNum(monthTotal.toFixed(1))}
+            </div>
           </div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">تعداد معاملات</div>
-          <div className="trade-stat-value">{faNum(stats.total)}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">نرخ برد</div>
-          <div className="trade-stat-value">{stats.winRate === null ? "—" : `${faNum(stats.winRate)}٪`}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">میانگین سود</div>
-          <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.avgWin.toFixed(1))}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">میانگین ضرر</div>
-          <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.avgLoss.toFixed(1))}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">بیشترین سود</div>
-          <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.largestGain.toFixed(1))}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">بیشترین ضرر</div>
-          <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.largestLoss.toFixed(1))}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">بیشترین برد پشت‌سرهم</div>
-          <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.maxWinStreak)}</div>
-        </div>
-        <div className="trade-stat-tile">
-          <div className="trade-stat-label">بیشترین باخت پشت‌سرهم</div>
-          <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.maxLossStreak)}</div>
-        </div>
+        )}
+        {visibleStats.includes("total") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">تعداد معاملات</div>
+            <div className="trade-stat-value">{faNum(stats.total)}</div>
+          </div>
+        )}
+        {visibleStats.includes("winRate") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">نرخ برد</div>
+            <div className="trade-stat-value">{stats.winRate === null ? "—" : `${faNum(stats.winRate)}٪`}</div>
+          </div>
+        )}
+        {visibleStats.includes("avgWin") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">میانگین سود</div>
+            <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.avgWin.toFixed(1))}</div>
+          </div>
+        )}
+        {visibleStats.includes("avgLoss") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">میانگین ضرر</div>
+            <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.avgLoss.toFixed(1))}</div>
+          </div>
+        )}
+        {visibleStats.includes("largestGain") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">بیشترین سود</div>
+            <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.largestGain.toFixed(1))}</div>
+          </div>
+        )}
+        {visibleStats.includes("largestLoss") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">بیشترین ضرر</div>
+            <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.largestLoss.toFixed(1))}</div>
+          </div>
+        )}
+        {visibleStats.includes("maxWinStreak") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">بیشترین برد پشت‌سرهم</div>
+            <div className="trade-stat-value" style={{ color: "var(--accent)" }}>{faNum(stats.maxWinStreak)}</div>
+          </div>
+        )}
+        {visibleStats.includes("maxLossStreak") && (
+          <div className="trade-stat-tile">
+            <div className="trade-stat-label">بیشترین باخت پشت‌سرهم</div>
+            <div className="trade-stat-value" style={{ color: "#E05252" }}>{faNum(stats.maxLossStreak)}</div>
+          </div>
+        )}
       </div>
 
       <div className="tm-extra">
-        <button type="button" onClick={() => setNewTradeOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+        <button type="button" className="small" onClick={() => setNewTradeOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
           ثبت معامله جدید
         </button>
       </div>
@@ -288,6 +312,7 @@ export function TradeJournal() {
               <TradeEntryFields value={form} onChange={patchForm} />
 
               <button
+                className="small"
                 onClick={async () => { await addTrade(); setNewTradeOpen(false); }}
                 style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}
               >
