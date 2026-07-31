@@ -638,6 +638,14 @@
      یعنی چک‌باکس‌هایی مثل DashTaskRow با اینکه border-2 داشتن، هیچ‌وقت مرزِ
      واقعی نمی‌گرفتن. اینجا border-style رو solid می‌ذاریم (استاندارد Tailwind
      Preflight) تا کلاس‌های بعدی بتونن واقعاً یک مرزِ دیده‌شدنی بسازن. */
+  /* این ریست فقط داخلِ .dash-scope اثر داره — چندتا از مودال‌های خودِ
+     داشبورد (فیلترِ برنامه‌ها، افزودنِ برنامه، تاریخچه، پاپ‌آپِ دوستان،
+     اطلاعیه‌ها) بیرونِ ساختارِ .dash-scope رندر می‌شن (چه چون توی ریشه‌ی
+     صفحه‌ن چه چون پورتال به document.body شدن)، پس روی خودِ اون
+     کامپوننت‌ها هم کلاسِ dash-scope گذاشته شده تا همین ریست بهشون برسه —
+     برخلافِ .modal-panel/.wsearch-newform/.notif-panel‌ِ عمومی (پنل کاربری،
+     مارکت‌پیکر، ...) که عمداً دست‌نخورده می‌مونن، چون دکمه‌های
+     بوردردار/شیشه‌ای سراسریِ سایت رو لازم دارن. */
   :where(.dash-scope) button{
     font:inherit; color:inherit; padding:0; margin:0;
     border-style:solid; border-width:0; border-color:transparent; border-radius:0;

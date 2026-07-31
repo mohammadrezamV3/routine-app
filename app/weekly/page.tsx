@@ -401,7 +401,7 @@ export default function WeeklyPage() {
         {historyPickerOpen && (
           <>
             <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
-            <div className="modal-panel open">
+            <div className="modal-panel dash-scope open">
               <div className="modal-head">
                 <div className="modal-title">انتخاب تاریخ</div>
                 <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>

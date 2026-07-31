@@ -145,7 +145,7 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
       {panelOpen && createPortal(
         <>
           <div className="modal-overlay open" onClick={() => setPanelOpen(false)} />
-          <div className="modal-panel liquid-glass-panel open">
+          <div className="modal-panel liquid-glass-panel dash-scope open">
             <LiquidBlobLayers />
             <div className="relative z-[1]">
               <div className="modal-head">

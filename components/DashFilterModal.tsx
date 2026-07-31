@@ -42,7 +42,7 @@ export function DashFilterModal({
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel open">
+      <div className="modal-panel dash-scope open">
         <div className="modal-head">
           <div className="modal-title">فیلتر برنامه‌ها</div>
           <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
