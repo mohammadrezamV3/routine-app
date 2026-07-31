@@ -608,6 +608,36 @@
     .trade-desktop .trade-stats-grid{ grid-template-columns:repeat(5, 1fr); }
     .trade-desktop .cal-grid{ max-width:520px; margin-right:0; }
   }
+
+  /* همون ترفندِ breakout بالا، فقط برای صفحه‌ی پیش‌نمایشِ داشبورد
+     (app/dashboard) — چون سایدبار+محتوای اصلی کنار هم به عرضی خیلی بیشتر
+     از ستونِ ۶۲۰پیکسلی نیاز دارن. margin-inline با calc محاسبه می‌شه تا
+     مستقل از عرضِ دقیقِ ویوپورت (که با min() تعیین می‌شه)، همیشه درست
+     نسبت‌به کل صفحه وسط‌چین بمونه. */
+  @media (min-width:1024px){
+    .dash-breakout{
+      --dash-w: min(1180px, calc(100vw - 64px));
+      width: var(--dash-w);
+      margin-inline: calc((620px - var(--dash-w)) / 2);
+    }
+  }
+
+  /* صفحه‌ی داشبورد کاملاً با Tailwind استایل می‌شه، پس قانونِ عمومیِ
+     button{} این فایل (لیکوئید گلس — پدینگ/بوردر/بک‌گراند/بلور روی همه‌ی
+     <button>های سایت) باید همین‌جا خنثی بشه. عمداً :where(.dash-scope) —
+     نه .dash-scope ساده — چون :where() اسپسیفیسیتی صفر داره؛ اگه از کلاس
+     معمولی استفاده می‌شد، اسپسیفیسیتیِ این ریست از خودِ کلاس‌های Tailwind
+     (مثل border-dash-green روی چک‌باکس) بیشتر می‌شد و اونا رو هم بی‌اثر
+     می‌کرد. با :where() فقط استایلِ پایه‌ی سایت خنثی می‌شه، کلاس‌های
+     Tailwindِ خودِ کامپوننت‌ها همچنان طبیعی رو دستشون برنده‌ن. */
+  :where(.dash-scope) button{
+    font:inherit; color:inherit; padding:0; margin:0; border:none; border-radius:0;
+    background:none; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none; transition:none;
+  }
+  :where(.dash-scope) button:hover{ border-color:transparent; color:inherit; background:none; box-shadow:none; }
+  :where(.dash-scope) button:active{ transform:none; }
+  :where(.dash-scope) button:disabled{ opacity:1; }
+  :where(.dash-scope) button:disabled:hover{ border-color:transparent; color:inherit; background:none; box-shadow:none; }
   .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
