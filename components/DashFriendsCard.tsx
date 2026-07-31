@@ -159,14 +159,15 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
 
                 {!authRequired && (
                   <div className="tm-extra" style={{ marginTop: 0 }}>
-                    <div className="domain-sub">افزودن دوست</div>
+                    <div className="domain-sub" style={{ color: "var(--accent)" }}>افزودن دوست</div>
                     <input
                       type="text"
-                      dir="auto"
+                      dir="rtl"
                       className="wsearch-newform-name trade-glass-field pill-glass-field"
                       placeholder="جستجو با یوزرنیم یا اسم…"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
+                      style={{ textAlign: "right" }}
                     />
 
                     {query.trim().length >= 2 && (
@@ -203,31 +204,33 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
 
                 {!authRequired && query.trim().length < 2 && (
                   <div className="tm-extra">
-                    <div className="domain-sub">لیست دوستان</div>
                     {list.length === 0 ? (
                       <div className="item-line empty">هنوز دوستی اضافه نکردی.</div>
                     ) : (
-                      <div className="flex flex-col gap-2">
-                        {list.map((f) => (
-                          <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
-                            <div className="flex items-center gap-2.5">
-                              <button
-                                type="button"
-                                onClick={() => toggleFavorite(f)}
-                                aria-label={f.favorite ? "حذف از فیوریت‌ها" : "افزودن به فیوریت‌ها"}
-                                style={{ color: f.favorite ? "#F5C518" : "var(--muted)" }}
-                              >
-                                <Star size={16} fill={f.favorite ? "currentColor" : "none"} />
-                              </button>
-                              <span className="mono text-[12px] text-dash-muted">{f.pct}٪</span>
+                      <>
+                        <div className="domain-sub">لیست دوستان</div>
+                        <div className="flex flex-col gap-2">
+                          {list.map((f) => (
+                            <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
+                              <div className="flex items-center gap-2.5">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleFavorite(f)}
+                                  aria-label={f.favorite ? "حذف از فیوریت‌ها" : "افزودن به فیوریت‌ها"}
+                                  style={{ color: f.favorite ? "#F5C518" : "var(--muted)" }}
+                                >
+                                  <Star size={16} fill={f.favorite ? "currentColor" : "none"} />
+                                </button>
+                                <span className="mono text-[12px] text-dash-muted">{f.pct}٪</span>
+                              </div>
+                              <div className="flex items-center gap-2.5">
+                                <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
+                                <Avatar name={f.name} size={32} />
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2.5">
-                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
-                              <Avatar name={f.name} size={32} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}

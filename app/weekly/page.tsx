@@ -8,7 +8,6 @@ import {
   timeStartMinutes,
   timeEndMinutes,
   splitTimeRange,
-  startOfWeek,
   DayStats,
 } from "@/lib/schedule";
 import { awakeFraction, dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
@@ -129,11 +128,16 @@ export default function WeeklyPage() {
     return new Date(y, m - 1, d);
   }, [selectedIso]);
 
+  // به‌جای یک هفته‌ی کامل شنبه-جمعه، یه پنجره‌ی ۵روزه‌ی داینامیک نشون می‌ده
+  // که همیشه روی «امروز» (یا مرکزِ پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
+  // مثلاً اگه امروز جمعه‌ست: چهارشنبه/پنجشنبه/جمعه/شنبه/یکشنبه.
+  const DAY_WINDOW = 5;
   const dashDays = useMemo(() => {
-    const start = startOfWeek(now, weekOffset);
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
+    const center = new Date(now);
+    center.setDate(now.getDate() + weekOffset * DAY_WINDOW);
+    return Array.from({ length: DAY_WINDOW }, (_, i) => {
+      const d = new Date(center);
+      d.setDate(center.getDate() - Math.floor(DAY_WINDOW / 2) + i);
       const iso = isoLocal(d);
       const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
       const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
