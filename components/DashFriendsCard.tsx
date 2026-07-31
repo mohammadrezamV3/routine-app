@@ -46,6 +46,7 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
     const res = await fetch("/api/friends");
     if (res.status === 401) { setAuthRequired(true); setFriends([]); return; }
     if (res.ok) setFriends((await res.json()).friends);
+    else setFriends([]);
   }
   async function loadRequestCount() {
     const res = await fetch("/api/friends/requests");

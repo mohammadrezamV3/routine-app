@@ -47,7 +47,7 @@ export function DashDateSelector({
         <ChevronRight size={18} />
       </button>
 
-      <div ref={scrollRef} className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto px-3 py-2.5">
+      <div ref={scrollRef} className="no-scrollbar flex flex-1 items-center gap-1.5 overflow-x-auto px-3 py-2.5">
         {days.map((d) => {
           const active = d.iso === activeIso;
           return (
@@ -62,7 +62,7 @@ export function DashDateSelector({
               )}
               style={
                 active
-                  ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 18px rgba(var(--accent-rgb),.35)" }
+                  ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
                   : undefined
               }
             >

@@ -26,7 +26,7 @@ export function DashFilterButton({
       )}
       style={
         active
-          ? { background: "var(--accent)", borderColor: "rgba(var(--accent-rgb),.4)", boxShadow: "0 0 18px rgba(var(--accent-rgb),.3)" }
+          ? { background: "var(--accent)", borderColor: "rgba(var(--accent-rgb),.4)", boxShadow: "0 0 8px rgba(var(--accent-rgb),.25)" }
           : undefined
       }
     >

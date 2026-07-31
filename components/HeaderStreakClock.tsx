@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { faNum, isoLocal, pad } from "@/lib/jalali";
+import { faNum, isoLocal } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences } from "@/lib/storage";
 import { getWakeSleepTimes, isWakeOnTime, timeToMinutes, DEFAULT_WAKE } from "@/lib/wakeSleep";
 
 const now = new Date();
 
-// همون تایم/استریکی که قبلاً روی صفحه اصلیِ کاربر لاگین‌کرده بود — حالا توی
-// هدر، سمت چپ دکمه‌ی نوتیف، تا از هر صفحه‌ای دیده بشه، نه فقط صفحه اصلی.
+// استریکِ روزهای پشت‌سرهمِ کامل — توی هدر، سمت دکمه‌ی نوتیف، تا از هر
+// صفحه‌ای دیده بشه، نه فقط صفحه اصلی.
 export function HeaderStreakClock() {
   const [streak, setStreak] = useState<number | null>(null);
-  const [clock, setClock] = useState("");
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
   const [wakeMinutes, setWakeMinutes] = useState(timeToMinutes(DEFAULT_WAKE));
@@ -21,16 +20,6 @@ export function HeaderStreakClock() {
     getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
     getCustomOccurrences().then(setCustomOcc);
     getWakeSleepTimes().then((v) => { if (v) setWakeMinutes(timeToMinutes(v.wake)); });
-  }, []);
-
-  useEffect(() => {
-    const tick = () => {
-      const d = new Date();
-      setClock(`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
   }, []);
 
   const opts = useMemo(
@@ -75,8 +64,6 @@ export function HeaderStreakClock() {
 
   return (
     <div className="header-streak-clock">
-      <span className="mono header-streak-clock-time" style={{ color: "var(--accent)", fontWeight: 600 }}>{clock}</span>
-      <span className="header-streak-clock-sep" />
       <span className="header-streak-clock-streak">
         <svg className={`streak-flame streak-flame-tier${tier}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 2.2c1.1 3.1-2.6 4.7-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-1.1-.5-1.6-.5-2.7 1.6.9 2.7 2.7 2.7 4.8a4.8 4.8 0 0 1-9.6 0c0-4.3 3.2-6.4 4.8-10.4Z" fill="currentColor" />
