@@ -8,10 +8,10 @@ import { getWeekStats, WeekDayStat } from "@/lib/routineStats";
 
 // نمودار میله‌ای آمار هفتگی — درصدِ واقعیِ هرروز (از DailyEntry.completedItems
 // نسبت به تعداد برنامه‌های همون روز)، راست‌چینِ طبیعی: شنبه راست، جمعه چپ.
-export function DashWeeklyChartCard({ delay }: { delay?: number }) {
+export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; refreshKey?: number }) {
   const [stats, setStats] = useState<WeekDayStat[] | null>(null);
 
-  useEffect(() => { getWeekStats().then(setStats); }, []);
+  useEffect(() => { getWeekStats().then(setStats); }, [refreshKey]);
 
   const rows = stats ?? [];
   const maxPct = Math.max(1, ...rows.map((s) => s.pct));

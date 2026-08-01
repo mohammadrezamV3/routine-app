@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
 import Image from "next/image";
+import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -123,14 +124,16 @@ export function NavDrawer() {
       {!hideTopbar && (
         <header className="app-topbar">
           <div className="topbar-actions-left">
-            <Image
-              src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
-              alt="Arion"
-              width={138}
-              height={34}
-              className="topbar-logo-lockup"
-              priority
-            />
+            <Link href="/" aria-label="رفتن به صفحه اصلی">
+              <Image
+                src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
+                alt="Arion"
+                width={138}
+                height={34}
+                className="topbar-logo-lockup"
+                priority
+              />
+            </Link>
           </div>
           <div className="topbar-actions">
             <button

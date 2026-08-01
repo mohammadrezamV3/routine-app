@@ -66,6 +66,7 @@ export default function WeeklyPage() {
   const [programFilter, setProgramFilter] = useState<Set<string> | null>(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -152,6 +153,19 @@ export default function WeeklyPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, "fa"));
   }, [customOcc]);
 
+  // اسمِ برنامه → تگ‌هایی که بهش اضافه شده، تا توی پاپ‌آپِ فیلتر بشه با تگ
+  // هم جستجو کرد (نه فقط با اسمِ برنامه).
+  const programTags = useMemo(() => {
+    const map: Record<string, Set<string>> = {};
+    for (const c of customOcc) {
+      if (!c.tag) continue;
+      (map[c.name] ??= new Set()).add(c.tag);
+    }
+    const out: Record<string, string[]> = {};
+    for (const name of Object.keys(map)) out[name] = Array.from(map[name]);
+    return out;
+  }, [customOcc]);
+
   const dashTasks: DashTaskItem[] = useMemo(() => {
     return tasksForDate(selectedDate, opts)
       .map((t) => {
@@ -169,6 +183,7 @@ export default function WeeklyPage() {
     setSelectedDaily(next);
     await setDaily(selectedIso, next);
     getTodayStats().then(setTodayStats);
+    setStatsRefreshKey((k) => k + 1);
   }
 
   function toggleProgramFilter(name: string) {
@@ -255,7 +270,7 @@ export default function WeeklyPage() {
 
             <DashReminderCard delay={0.1} onOpenProgram={setCardName} />
 
-            <DashSidebar />
+            <DashSidebar statsRefreshKey={statsRefreshKey} />
           </div>
         </div>
       </section>
@@ -399,6 +414,7 @@ export default function WeeklyPage() {
             importance={importanceFilter}
             onImportanceChange={setImportanceFilter}
             programNames={allProgramNames}
+            programTags={programTags}
             selectedPrograms={programFilter}
             onToggleProgram={toggleProgramFilter}
             onSelectAll={() => setProgramFilter(null)}
