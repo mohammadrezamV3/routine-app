@@ -2,12 +2,53 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { computeDayStats, ScheduleOpts } from "@/lib/schedule";
+import { computeDayStats, tasksForDate, ScheduleOpts } from "@/lib/schedule";
+import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isValidUsername } from "@/lib/validate";
 import { isoLocal } from "@/lib/jalali";
 
-// درصدِ پیشرفتِ امروزِ یک کاربرِ دلخواه — مستقیم از UserSetting/DailyEntry،
-// بدون افشای خودِ برنامه‌ها (اسم/ساعت درسا) به دوست‌ها، فقط عدد خلاصه‌شده.
+// استریکِ روزهای پشت‌سرهمِ کاملِ یک کاربرِ دلخواه — همون منطقِ lib/useMyStreak.ts،
+// ولی سمتِ سرور و مستقیم روی Prisma، چون دوست‌ها نمی‌تونن به تاریخچه‌ی
+// DailyEntry همدیگه از سمتِ کلاینت دسترسی داشته باشن.
+async function streakForUser(userId: string, opts: ScheduleOpts): Promise<number> {
+  const wakeRow = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "wakeSleepTimes" } } });
+  const wakeVal = (wakeRow?.value as { wake?: string } | undefined) ?? undefined;
+  const wakeMinutes = timeToMinutes(wakeVal?.wake || DEFAULT_WAKE);
+
+  const now = new Date();
+  const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() - 1);
+  const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 90);
+
+  const rows = await prisma.dailyEntry.findMany({
+    where: { userId, date: { gte: new Date(isoLocal(rangeStart)), lte: new Date(isoLocal(rangeEnd)) } },
+  });
+  const entries: Record<string, { tasks: Record<string, boolean>; wake: string | null }> = {};
+  rows.forEach((r) => {
+    entries[isoLocal(r.date)] = {
+      tasks: (r.completedItems as Record<string, boolean>) ?? {},
+      wake: r.wakeUpAt ? r.wakeUpAt.toISOString() : null,
+    };
+  });
+
+  let s = 0;
+  const cursor = new Date(now);
+  cursor.setDate(cursor.getDate() - 1);
+  for (let i = 0; i < 90; i++) {
+    const key = isoLocal(cursor);
+    const expected = tasksForDate(new Date(cursor), opts);
+    if (expected.length === 0) { cursor.setDate(cursor.getDate() - 1); continue; }
+    const rec = entries[key];
+    if (!rec) break;
+    const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
+    const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
+    const fullDay = doneCount === expected.length && wakeOK;
+    if (fullDay) { s++; cursor.setDate(cursor.getDate() - 1); } else break;
+  }
+  return s;
+}
+
+// درصدِ پیشرفتِ امروز + استریکِ یک کاربرِ دلخواه — مستقیم از UserSetting/DailyEntry،
+// بدون افشای خودِ برنامه‌ها (اسم/ساعت درسا) به دوست‌ها، فقط عددهای خلاصه‌شده.
 async function statsForUser(userId: string) {
   const [customRow, removedRow, dailyRow] = await Promise.all([
     prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "customOccurrences" } } }),
@@ -19,7 +60,9 @@ async function statsForUser(userId: string) {
     removedOccurrences: new Set((removedRow?.value as string[]) ?? []),
   };
   const record = dailyRow ? { tasks: (dailyRow.completedItems as Record<string, boolean>) ?? {} } : undefined;
-  return computeDayStats(new Date(), opts, record);
+  const dayStats = computeDayStats(new Date(), opts, record);
+  const streak = await streakForUser(userId, opts);
+  return { ...dayStats, streak };
 }
 
 // GET /api/friends → لیست دوستانِ تأییدشده + درصد پیشرفتِ امروزِ هرکدوم

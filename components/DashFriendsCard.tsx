@@ -5,11 +5,11 @@ import { createPortal } from "react-dom";
 import { Star } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
-import { StreakBadge } from "./StreakBadge";
+import { StreakFlame } from "./StreakFlame";
 import { avatarColorFor } from "@/lib/avatarColor";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
 
-type Friend = { friendshipId: string; id: string; name: string; username: string | null; completed: number; total: number; pct: number; favorite: boolean };
+type Friend = { friendshipId: string; id: string; name: string; username: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
 type SearchUser = { id: string; name: string; username: string | null; status: SearchStatus };
 
@@ -106,7 +106,6 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
               {requestCount}
             </span>
           )}
-          <StreakBadge className="mr-2 text-[12px]" />
         </h2>
         <button
           type="button"
@@ -132,7 +131,10 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
               <DashProgressCircle value={f.pct} size={40} strokeWidth={4} />
               <div className="flex flex-1 items-center justify-end gap-2.5">
                 <div className="text-right">
-                  <div className="text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <div className="text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
+                    <StreakFlame streak={f.streak} className="text-[11px]" />
+                  </div>
                   <div className="mt-0.5 text-[10.5px] text-dash-muted sm:text-[11.5px]">
                     {f.completed} از {f.total} برنامه
                   </div>
@@ -224,6 +226,7 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
                                   <Star size={16} fill={f.favorite ? "currentColor" : "none"} />
                                 </button>
                                 <span className="mono text-[12px] text-dash-muted">{f.pct}٪</span>
+                                <StreakFlame streak={f.streak} className="text-[11px]" />
                               </div>
                               <div className="flex items-center gap-2.5">
                                 <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
