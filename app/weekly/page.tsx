@@ -298,9 +298,7 @@ export default function WeeklyPage() {
                       <div className="week-timeline">
                         <div className="week-timeline-track">
                           <div className="wt-fill-track">
-                            <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }}>
-                              <span className="wt-fill-wave" />
-                            </div>
+                            <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }} />
                           </div>
 
                           <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "20px" }}>
