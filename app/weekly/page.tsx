@@ -158,6 +158,18 @@ export default function WeeklyPage() {
       .filter((t) => programFilter === null || programFilter.has(t.name));
   }, [selectedDate, opts, customOcc, selectedDaily, importanceFilter, programFilter]);
 
+  // انتخابِ یه روزِ دلخواه (مثلاً از تقویمِ تاریخچه) — برخلافِ کلیک روی
+  // خودِ نوارِ روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
+  // می‌تونه کاملاً بیرونِ پنجره‌ی فعلی باشه؛ پس weekOffset رو هم طوری
+  // حساب می‌کنیم که پنجره‌ی نوار دورِ همین روز وسط‌چین بشه.
+  function pickDate(iso: string) {
+    setSelectedIso(iso);
+    const [y, m, d] = iso.split("-").map(Number);
+    const picked = new Date(y, m - 1, d);
+    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
+    setWeekOffset(Math.round(diffDays / dayWindow));
+  }
+
   async function toggleDashTask(id: string) {
     if (!isSelectedToday) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
@@ -419,7 +431,7 @@ export default function WeeklyPage() {
                 <HistoryCalendar
                   wake={wake}
                   sleep={sleep}
-                  onPick={(iso) => { setSelectedIso(iso); setHistoryPickerOpen(false); }}
+                  onPick={(iso) => { pickDate(iso); setHistoryPickerOpen(false); }}
                 />
               </div>
             </div>

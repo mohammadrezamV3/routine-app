@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,13 +29,29 @@ export function DashTaskRow({
   onDelete: (id: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // بستنِ منو با کلیک هرجای صفحه — یه لیسنرِ سطحِ document، نه یه لایه‌ی
+  // fixed کنارش، چون backdrop-blur روی DashCard (والدِ این ردیف) یه
+  // containing-block جدید برای position:fixed می‌سازه و باعث می‌شد اون لایه
+  // فقط داخلِ خودِ کارت رو بپوشونه، نه کلِ صفحه رو.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [menuOpen]);
 
   return (
     <motion.div
       whileHover={{ y: -2 }}
       className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
     >
-      <div className="relative shrink-0">
+      <div className="relative shrink-0" ref={menuRef}>
         <button
           type="button"
           aria-label="گزینه‌های برنامه"
@@ -45,25 +61,22 @@ export function DashTaskRow({
           <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
         </button>
         {menuOpen && (
-          <>
-            <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border bg-dash-card p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl">
-              <div
-                onClick={() => { setMenuOpen(false); onEdit(task.id); }}
-                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
-              >
-                <Pencil size={13} className="shrink-0" />
-                ویرایش برنامه
-              </div>
-              <div
-                onClick={() => { setMenuOpen(false); onDelete(task.id); }}
-                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
-              >
-                <Trash2 size={13} className="shrink-0" />
-                حذف کامل برنامه
-              </div>
+          <div className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border bg-dash-card p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl">
+            <div
+              onClick={() => { setMenuOpen(false); onEdit(task.id); }}
+              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
+            >
+              <Pencil size={13} className="shrink-0" />
+              ویرایش برنامه
             </div>
-          </>
+            <div
+              onClick={() => { setMenuOpen(false); onDelete(task.id); }}
+              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
+            >
+              <Trash2 size={13} className="shrink-0" />
+              حذف کامل برنامه
+            </div>
+          </div>
         )}
       </div>
 
