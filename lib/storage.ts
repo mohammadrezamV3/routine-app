@@ -191,6 +191,7 @@ export type CustomOccurrence = {
   endDate?: string;
   importance?: Importance;
   tag?: string;
+  notify?: boolean; // false یعنی صریحاً خاموش‌شده؛ نبودش (undefined) یعنی روشن
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {

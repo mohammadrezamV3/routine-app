@@ -34,6 +34,8 @@ export function NotificationEngine() {
         const startMinutes = timeStartMinutes(t.time);
         if (startMinutes === null) continue;
         if (daily.tasks[t.id]) continue; // قبلاً انجام‌شده علامت خورده
+        const occ = customArr.find((c) => c.id === t.id);
+        if (occ?.notify === false) continue; // کاربر یادآوریِ این برنامه رو خاموش کرده
 
         // نیم ساعت مونده به شروع — یک‌بار در روز، جدا از یادآوریِ لحظه‌ی شروع
         if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
