@@ -16,10 +16,10 @@ export function DashHeader({ progress = 75 }: { progress?: number }) {
     >
       <div className="flex flex-col items-center gap-1">
         <span className="sm:hidden">
-          <DashProgressCircle value={progress} size={60} strokeWidth={5} showArrow />
+          <DashProgressCircle value={progress} size={60} strokeWidth={5} />
         </span>
         <span className="hidden sm:inline-block">
-          <DashProgressCircle value={progress} size={72} strokeWidth={6} showArrow />
+          <DashProgressCircle value={progress} size={72} strokeWidth={6} />
         </span>
         <span className="whitespace-nowrap text-[10px] text-dash-muted sm:text-[11px]">پیشرفت امروز</span>
       </div>

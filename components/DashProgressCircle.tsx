@@ -8,20 +8,15 @@ export function DashProgressCircle({
   value,
   size = 64,
   strokeWidth = 6,
-  showArrow = false,
 }: {
   value: number;
   size?: number;
   strokeWidth?: number;
-  showArrow?: boolean;
 }) {
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
   const clamped = Math.min(100, Math.max(0, value));
   const center = size / 2;
-  const theta = (clamped / 100) * 360;
-  const arrowSize = strokeWidth * 1.1;
-  const arrowR = r + strokeWidth / 2 + 2;
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -48,17 +43,6 @@ export function DashProgressCircle({
           transition={{ duration: 1, ease: "easeOut" }}
           style={{ filter: "drop-shadow(0 0 6px rgba(var(--accent-rgb),.55))" }}
         />
-        {showArrow && clamped > 0 && (
-          <g
-            transform={`rotate(${theta} ${center} ${center})`}
-            style={{ transition: "transform 1s ease-out", opacity: 1 }}
-          >
-            <path
-              d={`M ${center + arrowR} ${center - arrowSize * 0.5} L ${center + arrowR + arrowSize} ${center} L ${center + arrowR} ${center + arrowSize * 0.5} Z`}
-              fill="var(--accent)"
-            />
-          </g>
-        )}
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="font-bold text-dash-text" style={{ fontSize: Math.max(11, size * 0.26) }}>

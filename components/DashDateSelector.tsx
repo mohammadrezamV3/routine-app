@@ -6,6 +6,35 @@ import { cn } from "@/lib/utils";
 
 export type DashDay = { iso: string; weekday: string; dateLabel: string };
 
+// بلورِ لبه، لایه‌لایه — هرچی به لبه نزدیک‌تر، هم بلورِ بیشتر هم عرضِ کمتر،
+// تا حسِ «رفته‌رفته تارتر شدن» بده، نه یک بلورِ یک‌دستِ ماسک‌شده.
+const EDGE_BLUR_LAYERS = [
+  { width: "34%", blur: 2 },
+  { width: "22%", blur: 5 },
+  { width: "12%", blur: 10 },
+];
+
+function EdgeBlur({ side }: { side: "left" | "right" }) {
+  const gradientDir = side === "right" ? "to left" : "to right";
+  return (
+    <div className={cn("pointer-events-none absolute inset-y-0 w-10 sm:w-14", side === "right" ? "right-0" : "left-0")}>
+      {EDGE_BLUR_LAYERS.map((layer, i) => (
+        <div
+          key={i}
+          className={cn("absolute inset-y-0", side === "right" ? "right-0" : "left-0")}
+          style={{
+            width: layer.width,
+            backdropFilter: `blur(${layer.blur}px)`,
+            WebkitBackdropFilter: `blur(${layer.blur}px)`,
+            maskImage: `linear-gradient(${gradientDir}, black, transparent)`,
+            WebkitMaskImage: `linear-gradient(${gradientDir}, black, transparent)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // نوار انتخاب تاریخ — راست‌چین طبیعیِ صفحه (چون days از قبل به ترتیبِ
 // تاریخیِ صعودی ساخته می‌شه و چیدمانِ RTL خودش این ترتیب رو می‌ده). دیگه یک
 // هفته‌ی کامل نیست — یه پنجره‌ی داینامیکِ چندروزه که همیشه روی «امروز»
@@ -74,7 +103,7 @@ export function DashDateSelector({
       </button>
 
       <div className="relative min-w-0 flex-1">
-        <div ref={scrollRef} className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-3 py-2.5">
+        <div ref={scrollRef} className="no-scrollbar flex items-center justify-between gap-1.5 overflow-x-auto px-3 py-2.5">
           {days.map((d) => {
             const active = d.iso === activeIso;
             return (
@@ -101,24 +130,8 @@ export function DashDateSelector({
             );
           })}
         </div>
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 w-6 transition-opacity sm:w-9"
-          style={{
-            backdropFilter: "blur(5px)",
-            WebkitBackdropFilter: "blur(5px)",
-            maskImage: "linear-gradient(to left, black, transparent)",
-            WebkitMaskImage: "linear-gradient(to left, black, transparent)",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 w-6 transition-opacity sm:w-9"
-          style={{
-            backdropFilter: "blur(5px)",
-            WebkitBackdropFilter: "blur(5px)",
-            maskImage: "linear-gradient(to right, black, transparent)",
-            WebkitMaskImage: "linear-gradient(to right, black, transparent)",
-          }}
-        />
+        <EdgeBlur side="right" />
+        <EdgeBlur side="left" />
       </div>
 
       <button
