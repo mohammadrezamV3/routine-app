@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,10 +14,16 @@ const EDGE_BLUR_LAYERS = [
   { width: "12%", blur: 10 },
 ];
 
-function EdgeBlur({ side }: { side: "left" | "right" }) {
+function EdgeBlur({ side, show }: { side: "left" | "right"; show: boolean }) {
   const gradientDir = side === "right" ? "to left" : "to right";
   return (
-    <div className={cn("pointer-events-none absolute inset-y-0 w-10 sm:w-14", side === "right" ? "right-0" : "left-0")}>
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-y-0 w-10 transition-opacity duration-200 sm:w-14",
+        side === "right" ? "right-0" : "left-0",
+        show ? "opacity-100" : "opacity-0"
+      )}
+    >
       {EDGE_BLUR_LAYERS.map((layer, i) => (
         <div
           key={i}
@@ -60,6 +66,12 @@ export function DashDateSelector({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLButtonElement>(null);
+  // بلورِ لبه فقط وقتی نشون داده بشه که واقعاً روزی رفته زیرِ لبه (اسکرولِ
+  // واقعی داره)، نه همیشه — وگرنه حتی روزِ کاملاً دیده‌شده‌ی کنارِ دکمه‌ی
+  // قبلی/بعدی هم دائم تار به‌نظر می‌رسید. راست/چپِ RTL بر اساسِ مدلِ
+  // استانداردِ scrollLeft منفی (۰ تا -(max)) که مرورگرهای امروزی استفاده می‌کنن.
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
 
   // روزِ فعال همیشه وسطِ نوار بمونه — هم موقعِ لود اولیه، هم هر بار که با
   // فلش/کلیک عوض می‌شه (از جمله موقعی که هفته با فلش عوض می‌شه ولی همون
@@ -67,6 +79,29 @@ export function DashDateSelector({
   useEffect(() => {
     activeRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, [activeIso, days]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      if (max <= 1) {
+        setCanScrollRight(false);
+        setCanScrollLeft(false);
+        return;
+      }
+      setCanScrollRight(el.scrollLeft < -1);
+      setCanScrollLeft(el.scrollLeft > -max + 1);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [days]);
 
   // به‌جای یک عددِ ثابت، هرچقدر عرضِ واقعیِ نوار جا داره روز نشون می‌ده —
   // اندازه‌ی پیل (۷۲ موبایل / ۹۲ دسکتاپ) + gap رو با عرضِ واقعیِ کانتینر
@@ -133,8 +168,8 @@ export function DashDateSelector({
             );
           })}
         </div>
-        <EdgeBlur side="right" />
-        <EdgeBlur side="left" />
+        <EdgeBlur side="right" show={canScrollRight} />
+        <EdgeBlur side="left" show={canScrollLeft} />
       </div>
 
       <button
