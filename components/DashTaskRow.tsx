@@ -74,19 +74,19 @@ export function DashTaskRow({
       >
         <div className="min-w-0 flex-1 truncate text-[14px] font-medium text-dash-text sm:text-[15px]">{task.name}</div>
 
-        {task.tag && (
-          <span className="shrink-0 whitespace-nowrap rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-[10px] font-semibold text-dash-muted sm:px-2.5 sm:py-1 sm:text-[11px]">
-            {task.tag}
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {task.tag && (
+            <span className="w-[56px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-center text-[10px] font-semibold text-dash-muted sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
+              {task.tag}
+            </span>
+          )}
 
-        <div className="shrink-0">
           <DashImportanceBadge importance={task.importance} />
-        </div>
 
-        <span className="shrink-0 font-mono text-[11.5px] text-dash-muted sm:text-[13px]" dir="ltr">
-          {toEnDigits(task.time)}
-        </span>
+          <span className="shrink-0 font-mono text-[11.5px] text-dash-muted sm:text-[13px]" dir="ltr">
+            {toEnDigits(task.time)}
+          </span>
+        </div>
       </button>
 
       <motion.button
