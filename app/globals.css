@@ -299,6 +299,12 @@
   .app-topbar::before{
     content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
     border-radius:inherit; box-sizing:border-box; padding:1.5px;
+    /* فایرفاکس معمولاً url(#filter) رو توی backdrop-filter پارس نمی‌کنه —
+       چون CSS یه مقدارِ نامعتبر رو کلِ declaration می‌شمره، بدونِ فال‌بکِ
+       ساده‌ی زیر، کل افکت (حتی بلورِ ساده) توی فایرفاکس محو می‌شد. خطِ اول
+       همه‌جا (فایرفاکس/سافاری) اعمال می‌شه؛ خطِ دوم فقط جایی که url() پارس
+       می‌شه (کروم/edge) بازنویسی‌ش می‌کنه و افکتِ لیکوئید گلسِ کامل رو می‌ده. */
+    backdrop-filter:blur(6px) saturate(160%);
     backdrop-filter:url(#liquidGlassFilter) blur(6px) saturate(160%);
     -webkit-backdrop-filter:blur(6px) saturate(160%);
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -471,7 +477,8 @@
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
     padding:22px 22px; display:flex; flex-direction:column; gap:2px;
-    max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); overflow-y:auto;
+    max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); overflow-y:auto; overflow-x:hidden;
+    isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
     will-change:backdrop-filter, transform; transform:translateZ(0);
   }
   body[data-theme="light"] .nav-drawer-glass{
@@ -736,14 +743,21 @@
        پایینِ صفحه‌ی واقعاً قابل‌دیدن بزنه بیرون. dvh با ویوپورتِ واقعی/فعلی
        حساب می‌شه؛ مرورگرهای قدیمی‌تر که dvh رو نمی‌شناسن همون خطِ vh بالا رو
        نگه می‌دارن (progressive enhancement). */
-    max-height:78vh; max-height:78dvh; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    background:rgba(var(--bg-rgb), .042); border:1px solid var(--line); border-radius:14px;
+    max-height:78vh; max-height:78dvh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+    background:rgba(var(--bg-rgb), .16); border:1px solid var(--line); border-radius:14px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    /* فایرفاکس/سافاری همیشه backdrop-filter رو دقیقاً به border-radius کلیپ
+       نمی‌کنن (گوشه‌های گردِ پنل، بلورِ پس‌زمینه رو مربعی نشون می‌دن) —
+       isolation یه کانتکستِ استکینگِ تمیز برای فایرفاکس می‌سازه و ماسکِ
+       رادیالِ سفید/سیاه ترفندِ شناخته‌شده‌ی وبکیت/سافاریه که کلیپ‌شدنِ درستِ
+       بلور به گوشه‌های گرد رو فورس می‌کنه (بدون تغییرِ ظاهریِ قابل‌دیدن). */
+    isolation:isolate;
+    -webkit-mask-image:-webkit-radial-gradient(white, black);
     z-index:56; padding:22px; opacity:0; pointer-events:none; transition:.2s;
   }
-  /* شیشه‌ی خیلی کم‌رنگ (۴٪) پشت مودال روی پس‌زمینه‌ی گرم/روشنِ تم روز، رنگ
-     بلاب‌های پشتش رو زیادی نشون می‌داد و کثیف به‌نظر می‌رسید؛ توی روز مودال
-     خودشو یه کارت تقریباً تخت و تمیز نگه می‌داره */
+  /* شیشه‌ی خیلی کم‌رنگِ قبلی (۴٪) پشت مودال هم توی تمِ روشن هم تیره بیش از حد
+     شفاف بود و محتوای پشتش (کارت‌ها/بلاب‌ها) رو خیلی واضح نشون می‌داد؛ حالا
+     پایه (تمِ تیره) هم شفافیتِ کمتری داره، تمِ روشن همچنان تقریباً تخت می‌مونه. */
   body[data-theme="light"] .modal-panel{ background:rgba(var(--bg-rgb), .82); }
   .modal-panel.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%);}
   /* نسخه‌ی لیکوئید گلسِ پاپ‌آپ (فقط دوستان) — تاریِ نزدیک به بک‌گراندِ خودِ
@@ -995,13 +1009,17 @@
   .pcard-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
   .pcard-stage{
     position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(.86); width:90%; max-width:420px;
-    aspect-ratio:3/2; z-index:61; perspective:1400px; opacity:0; pointer-events:none;
+    aspect-ratio:3/2; z-index:61; -webkit-perspective:1400px; perspective:1400px; opacity:0; pointer-events:none;
     transition:opacity .25s ease, transform .25s cubic-bezier(.2,.9,.3,1.3);
   }
   .pcard-stage.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   .pcard-inner{
     position:relative; width:100%; height:100%; text-align:center;
-    transform-style:preserve-3d; transition:transform .7s cubic-bezier(.4,.2,.2,1);
+    /* سافاری بدونِ پیشوندِ webkit این‌جا preserve-3d رو نادیده می‌گیره (حتی
+       نسخه‌های نسبتاً جدید)، و flip-card به‌جای چرخشِ سه‌بعدی، مسطح/بدونِ
+       افکت می‌شه یا هر دو رو (جلو/پشت) هم‌زمان نشون می‌ده. */
+    -webkit-transform-style:preserve-3d; transform-style:preserve-3d;
+    transition:transform .7s cubic-bezier(.4,.2,.2,1);
     transform:rotateY(180deg);
   }
   .pcard-stage.open .pcard-inner{transform:rotateY(0deg);}
