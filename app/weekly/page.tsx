@@ -313,6 +313,7 @@ export default function WeeklyPage() {
                     {items.length ? (
                       <div className="week-timeline" ref={(el) => { timelineRefs.current[idx] = el; }}>
                         <div className="week-timeline-track">
+                          <div className="wt-ticks" />
                           <div className="wt-fill-track">
                             <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }}>
                               <span className="wt-fill-wave" />

@@ -936,15 +936,22 @@
   .week-day-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
   .week-day.open .week-day-body{}
 
-  .week-timeline{position:relative; padding:10px 4px 6px; overflow:visible;}
+  /* رنگِ اختصاصیِ خودِ تایم‌لاینِ بیداری/خواب — نارنجی، جدا از سبزِ --accent
+     عمومیِ سایت، دقیقاً طبقِ طرحِ مرجع */
+  .week-timeline{position:relative; padding:10px 4px 6px; overflow:visible; --wt-accent:#F2721E; --wt-accent-rgb:242,114,30;}
   .week-timeline-track{position:relative; height:118px; width:100%; padding:0 20px;}
+  /* ردیفِ خط‌های ریزِ خط‌کش‌مانند، بالای نوارِ پر‌شونده */
+  .wt-ticks{
+    position:absolute; right:20px; left:20px; top:14px; height:8px;
+    background-image:repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 22px);
+  }
   /* یک خط توپر که پر می‌شه، نه دیگه راه‌راه/چین‌دار */
   .wt-fill-track{
     position:absolute; right:20px; left:20px; top:26px; height:5px;
     background:var(--line); overflow:hidden; border-radius:3px;
   }
   .wt-fill-green{
-    position:absolute; top:0; right:0; height:100%; width:var(--fill); background:var(--accent);
+    position:absolute; top:0; right:0; height:100%; width:var(--fill); background:var(--wt-accent);
     transition:width .6s ease; overflow:hidden;
   }
   .wt-fill-wave{
@@ -968,16 +975,16 @@
      بعد از گذشتنش (انجام‌شده) دایره‌ش سبز پر می‌شه و ضربدر رنگ پس‌زمینه می‌گیره */
   .wt-dot{
     width:14px; height:14px; border-radius:50%; background:var(--bg);
-    border:2px solid var(--accent); box-sizing:border-box;
+    border:2px solid var(--wt-accent); box-sizing:border-box;
     position:relative; z-index:3; margin-bottom:-2.5px;
-    display:flex; align-items:center; justify-content:center; color:var(--accent);
+    display:flex; align-items:center; justify-content:center; color:var(--wt-accent);
   }
-  .wt-dot-done{background:var(--accent); color:var(--bg);}
+  .wt-dot-done{background:var(--wt-accent); color:#fff;}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
   .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; margin-bottom:3px; white-space:nowrap;}
   .wt-name{font-size:11px; color:var(--text); line-height:1.3; word-break:break-word;}
-  .wt-item.wt-endpoint .wt-name{color:var(--accent); font-weight:700;}
+  .wt-item.wt-endpoint .wt-name{color:var(--wt-accent); font-weight:700;}
   .wt-untimed-row{direction:rtl; display:flex; flex-direction:row-reverse; flex-wrap:wrap; gap:18px; padding:2px 4px 14px; margin-top:8px; padding-top:12px;}
   .wt-item.wt-endpoint .wt-time-above{margin-bottom:20px;}
   .wt-untimed-item{min-width:0;}
@@ -1073,6 +1080,8 @@
       mask-image:linear-gradient(to bottom, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
     }
     .week-timeline-track{ min-width:0; width:100%; height:800px; padding:20px 16px; }
+
+    .wt-ticks{ display:none; }
 
     .wt-fill-track{
       top:20px; bottom:20px; left:auto; right:46.5px; width:5px; height:auto;
