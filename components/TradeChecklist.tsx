@@ -22,10 +22,15 @@ export function TradeChecklist() {
 
   async function load() {
     setLoading(true);
-    const res = await fetch("/api/trade/checklist");
-    const data = await res.json();
-    setItems(data.items || []);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/trade/checklist");
+      const data = await res.json();
+      setItems(res.ok ? data.items || [] : []);
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function addItem() {
