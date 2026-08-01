@@ -20,6 +20,7 @@ export function DashFilterModal({
   importance,
   onImportanceChange,
   programNames,
+  programTags,
   selectedPrograms,
   onToggleProgram,
   onSelectAll,
@@ -28,6 +29,7 @@ export function DashFilterModal({
   importance: "all" | Importance;
   onImportanceChange: (v: "all" | Importance) => void;
   programNames: string[];
+  programTags?: Record<string, string[]>; // اسمِ برنامه → تگ‌هایی که بهش اضافه شده، برای جستجو
   selectedPrograms: Set<string> | null; // null = فیلتری فعال نیست، یعنی همه نشون داده می‌شن
   onToggleProgram: (name: string) => void;
   onSelectAll: () => void;
@@ -35,8 +37,11 @@ export function DashFilterModal({
 }) {
   const [query, setQuery] = useState("");
   const isChecked = (name: string) => selectedPrograms === null || selectedPrograms.has(name);
-  const visibleNames = query.trim()
-    ? programNames.filter((n) => n.includes(query.trim()))
+  const trimmedQuery = query.trim();
+  const visibleNames = trimmedQuery
+    ? programNames.filter(
+        (n) => n.includes(trimmedQuery) || (programTags?.[n] ?? []).some((tag) => tag.includes(trimmedQuery))
+      )
     : programNames;
 
   return (
@@ -66,7 +71,7 @@ export function DashFilterModal({
                 type="text"
                 dir="auto"
                 className="wsearch-newform-name trade-glass-field pill-glass-field"
-                placeholder="جستجوی برنامه…"
+                placeholder="جستجوی برنامه یا تگ…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 style={{ marginTop: 8 }}

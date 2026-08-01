@@ -73,32 +73,52 @@ export function DashDateSelector({
         <ChevronRight size={18} />
       </button>
 
-      <div ref={scrollRef} className="no-scrollbar flex flex-1 items-center gap-1.5 overflow-x-auto px-3 py-2.5">
-        {days.map((d) => {
-          const active = d.iso === activeIso;
-          return (
-            <button
-              key={d.iso}
-              ref={active ? activeRef : undefined}
-              type="button"
-              onClick={() => onSelect(d.iso)}
-              className={cn(
-                "flex min-w-[72px] shrink-0 flex-col items-center gap-1 rounded-2xl px-2 py-1.5 text-center transition sm:min-w-[92px] sm:px-3 sm:py-2",
-                active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
-              )}
-              style={
-                active
-                  ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
-                  : undefined
-              }
-            >
-              <span className={cn("text-[11.5px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
-                {d.weekday}
-              </span>
-              <span className={cn("text-[10.5px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
-            </button>
-          );
-        })}
+      <div className="relative min-w-0 flex-1">
+        <div ref={scrollRef} className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-3 py-2.5">
+          {days.map((d) => {
+            const active = d.iso === activeIso;
+            return (
+              <button
+                key={d.iso}
+                ref={active ? activeRef : undefined}
+                type="button"
+                onClick={() => onSelect(d.iso)}
+                className={cn(
+                  "flex min-w-[72px] shrink-0 flex-col items-center gap-1 rounded-2xl px-2 py-1.5 text-center transition sm:min-w-[92px] sm:px-3 sm:py-2",
+                  active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
+                )}
+                style={
+                  active
+                    ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
+                    : undefined
+                }
+              >
+                <span className={cn("text-[11.5px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
+                  {d.weekday}
+                </span>
+                <span className={cn("text-[10.5px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-6 transition-opacity sm:w-9"
+          style={{
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
+            maskImage: "linear-gradient(to left, black, transparent)",
+            WebkitMaskImage: "linear-gradient(to left, black, transparent)",
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 w-6 transition-opacity sm:w-9"
+          style={{
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
+            maskImage: "linear-gradient(to right, black, transparent)",
+            WebkitMaskImage: "linear-gradient(to right, black, transparent)",
+          }}
+        />
       </div>
 
       <button
