@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -11,11 +11,12 @@ import {
   toEnDigits,
   DayStats,
 } from "@/lib/schedule";
-import { awakeFraction, dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
+import { dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
 import {
   getCustomOccurrences,
   getRemovedOccurrences,
   getDaily,
+  getDailyRange,
   setDaily,
   setCustomOccurrences,
   DailyRecord,
@@ -67,6 +68,9 @@ export default function WeeklyPage() {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+  // وضعیتِ تیک‌خوردنِ واقعیِ روزهای همین هفته — برای دایره‌های تایم‌لاینِ
+  // «برنامه هفتگی» (که خودِ isPast زمان‌محوره، نه انجام‌شده‌بودنِ واقعی).
+  const [weekDaily, setWeekDaily] = useState<Record<string, DailyRecord>>({});
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -87,36 +91,14 @@ export default function WeeklyPage() {
       if (v) setWakeSleep(v);
       else setNeedsOnboarding(true);
     });
+    const start = new Date(now); start.setDate(now.getDate() - 7);
+    const end = new Date(now); end.setDate(now.getDate() + 7);
+    getDailyRange(isoLocal(start), isoLocal(end)).then(setWeekDaily);
   }, []);
 
   useEffect(() => {
     getDaily(selectedIso).then(setSelectedDaily);
   }, [selectedIso]);
-
-  const timelineRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // اسکرول خودکار تایم‌لاین موبایل (عمودی) به موقعیت زمان فعلی، فقط برای
-  // روزی که باز شده و «امروز»ه — پورت از resetWeekTimelineScroll نسخه اصلی.
-  useEffect(() => {
-    if (openIdx === null) return;
-    const isMobile = window.matchMedia("(max-width:700px)").matches;
-    if (!isMobile) return;
-    const isToday = WEEK_ORDER[openIdx]?.jsDay === now.getDay();
-    if (!isToday) return;
-    const id = setTimeout(() => {
-      const tl = timelineRefs.current[openIdx];
-      if (!tl) return;
-      const track = tl.querySelector(".week-timeline-track") as HTMLElement | null;
-      const trackH = track ? track.offsetHeight : tl.scrollHeight;
-      const d = new Date();
-      const mins = d.getHours() * 60 + d.getMinutes();
-      const pct = awakeFraction(mins, awakeStartMin, awakeEndMin);
-      const target = pct * trackH - tl.clientHeight / 2;
-      tl.scrollTop = Math.max(0, target);
-    }, 60);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openIdx, awakeStartMin, awakeEndMin]);
 
   const opts = useMemo(
     () => ({ removedOccurrences: removedOcc, customOccurrences: customOcc }),
@@ -181,6 +163,7 @@ export default function WeeklyPage() {
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
+    setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
     await setDaily(selectedIso, next);
     getTodayStats().then(setTodayStats);
     setStatsRefreshKey((k) => k + 1);
@@ -286,6 +269,7 @@ export default function WeeklyPage() {
             {WEEK_ORDER.map((o, idx) => {
               const d = new Date(now);
               d.setDate(now.getDate() + (o.jsDay - now.getDay()));
+              const dDoneTasks = weekDaily[isoLocal(d)]?.tasks ?? {};
               const items = tasksForDate(d, opts);
               const isToday = o.jsDay === now.getDay();
               const isOpen = openIdx === idx;
@@ -311,7 +295,7 @@ export default function WeeklyPage() {
                   </div>
                   <div className="week-day-body" style={{ maxHeight: isOpen ? "none" : "0px", overflow: "hidden" }}>
                     {items.length ? (
-                      <div className="week-timeline" ref={(el) => { timelineRefs.current[idx] = el; }}>
+                      <div className="week-timeline">
                         <div className="week-timeline-track">
                           <div className="wt-ticks" />
                           <div className="wt-fill-track">
@@ -327,6 +311,7 @@ export default function WeeklyPage() {
 
                           {positioned.map((p) => {
                             const r = splitTimeRange(p.time);
+                            const done = !!dDoneTasks[p.id];
                             return (
                               <div
                                 key={p.id}
@@ -336,10 +321,12 @@ export default function WeeklyPage() {
                               >
                                 <div className="wt-marker-col">
                                   <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
-                                  <div className={`wt-dot${p.isPast ? " wt-dot-done" : ""}`}>
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-                                    </svg>
+                                  <div className={`wt-dot${done ? " wt-dot-done" : ""}`}>
+                                    {done && (
+                                      <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="wt-content">
