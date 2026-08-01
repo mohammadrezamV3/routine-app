@@ -92,7 +92,10 @@ export function DashDateSelector({
   }, []);
 
   return (
-    <div className={cn("flex flex-1 items-center gap-1 rounded-dash border border-dash-border bg-dash-card backdrop-blur-xl", className)}>
+    <div
+      className={cn("flex flex-1 items-center gap-1 overflow-hidden rounded-dash border border-dash-border backdrop-blur-xl", className)}
+      style={{ background: "rgba(var(--bg-rgb), .16)" }}
+    >
       <button
         type="button"
         aria-label="روزهای قبل"
