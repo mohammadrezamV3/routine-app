@@ -97,10 +97,15 @@ export function TradeJournal() {
 
   async function loadMonth() {
     setLoading(true);
-    const res = await fetch(`/api/trade/entries?from=${monthStartIso}&to=${monthEndIso}`);
-    const data = await res.json();
-    setEntries(data.entries || []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/trade/entries?from=${monthStartIso}&to=${monthEndIso}`);
+      const data = await res.json();
+      setEntries(res.ok ? data.entries || [] : []);
+    } catch {
+      setEntries([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadMonth(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [calYear, calMonth, calSystem]);
