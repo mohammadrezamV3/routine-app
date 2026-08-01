@@ -1063,42 +1063,24 @@
   .pcard-edit-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-dim);}
   .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; flex-shrink:0;}
 
-  /* desktop: horizontal timeline, unchanged */
+  /* هم دسکتاپ هم موبایل: تایم‌لاینِ افقیِ یکسان (بیداری راست، خواب چپ، نقطه‌ها
+     روی یه خطِ افقی) — موبایل فقط یه‌پله کوچیک‌تر می‌شه، ساختارش عوض نمی‌شه. */
   .week-timeline{overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; direction:ltr;}
   .week-timeline-track{min-width:520px; direction:rtl;}
 
-  /* mobile: تایمِ‌لاینِ عمودی، ولی بدون اسکرولِ داخلی — کل روز یک‌جا و ثابت
-     نمایش داده می‌شه (صفحه با اسکرولِ خودش پایین می‌ره، نه یه ویوپورتِ تودرتو)،
-     همه‌چیز هم یه‌پله کوچیک‌تر از دسکتاپه تا توی موبایل جا بشه. */
   @media (max-width:700px){
     .weekly-glass{ padding:14px 14px; }
     .week-day-head{ padding:10px 0; }
     .week-day-name{ font-size:12px; }
 
-    .week-timeline{ overflow:visible; direction:rtl; }
-    .week-timeline-track{ min-width:0; width:100%; height:400px; padding:16px 10px; }
+    .week-timeline-track{ min-width:420px; height:96px; }
 
-    .wt-ticks{ display:none; }
-
-    .wt-fill-track{
-      top:16px; bottom:16px; left:auto; right:38px; width:4px; height:auto;
-    }
-    .wt-fill-green{ top:0; right:0; height:var(--fill); width:100%; }
-    .wt-fill-wave{ inset:-60% -3px auto -3px; width:calc(100% + 6px); height:220%; animation:wtWaveMoveV 5s linear infinite; }
-
-    .wt-item{
-      top:var(--pos); right:0; left:0; transform:translateY(-50%);
-      width:100%; flex-direction:row; align-items:center;
-    }
-    .wt-marker-col{ position:static; flex-direction:row; height:auto; width:48px; flex-shrink:0; justify-content:flex-end; }
-    .wt-time-above{ margin-bottom:0; margin-left:6px; font-size:8px; }
-    .wt-dot{ width:12px; height:12px; margin-bottom:0; }
+    .wt-item{ width:46px; }
+    .wt-marker-col{ height:27px; }
+    .wt-time-above{ font-size:8px; margin-bottom:5px; }
+    .wt-dot{ width:12px; height:12px; }
     .wt-dot svg{ width:8px; height:8px; }
-    .wt-content{ padding-top:0; padding-right:10px; text-align:right; flex:1; min-width:0; }
-    .wt-item.wt-level-1 .wt-content{ padding-top:0; }
-    .wt-item.wt-level-1 .wt-content::before{ display:none; }
-    .wt-item.wt-endpoint .wt-time-above{ margin-bottom:0; }
-    .wt-item.wt-endpoint .wt-marker-col{ justify-content:flex-end; }
+    .wt-content{ padding-top:12px; }
     .wt-range{ font-size:8.5px; }
     .wt-name{ font-size:10px; }
   }
