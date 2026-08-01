@@ -11,7 +11,7 @@ export function DashImportanceBadge({ importance = "low" }: { importance?: Impor
   const s = STYLES[importance];
   return (
     <span
-      className="min-w-[56px] shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-center text-[10px] font-semibold sm:min-w-[66px] sm:px-2.5 sm:py-1 sm:text-[11px]"
+      className="min-w-[48px] shrink-0 whitespace-nowrap rounded-full border px-1.5 py-0.5 text-center text-[9px] font-semibold sm:min-w-[66px] sm:px-2.5 sm:py-1 sm:text-[11px]"
       style={{ color: s.text, backgroundColor: s.bg, borderColor: s.border }}
     >
       {IMPORTANCE_LABELS[importance]}

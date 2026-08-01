@@ -16,16 +16,16 @@ export function DashHeader({ progress = 75 }: { progress?: number }) {
     >
       <div className="flex flex-col items-center gap-1">
         <span className="sm:hidden">
-          <DashProgressCircle value={progress} size={60} strokeWidth={5} />
+          <DashProgressCircle value={progress} size={52} strokeWidth={4.5} />
         </span>
         <span className="hidden sm:inline-block">
           <DashProgressCircle value={progress} size={72} strokeWidth={6} />
         </span>
-        <span className="whitespace-nowrap text-[10px] text-dash-muted sm:text-[11px]">پیشرفت امروز</span>
+        <span className="whitespace-nowrap text-[9px] text-dash-muted sm:text-[11px]">پیشرفت امروز</span>
       </div>
       <div>
-        <h1 className="text-[21px] font-bold text-dash-text sm:text-[32px]">روتین من</h1>
-        <p className="mt-1 text-[12px] text-dash-muted sm:mt-1.5 sm:text-[14px]">
+        <h1 className="text-[19px] font-bold text-dash-text sm:text-[32px]">روتین من</h1>
+        <p className="mt-1 text-[11px] text-dash-muted sm:mt-1.5 sm:text-[14px]">
           برنامه‌های روزانه خود را مدیریت و پیگیری کنید.
         </p>
       </div>

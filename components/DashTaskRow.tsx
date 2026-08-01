@@ -42,7 +42,7 @@ export function DashTaskRow({
           onClick={() => setMenuOpen((v) => !v)}
           className="text-dash-muted transition hover:text-dash-text"
         >
-          <MoreVertical size={17} />
+          <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
         </button>
         {menuOpen && (
           <>
@@ -50,16 +50,16 @@ export function DashTaskRow({
             <div className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border bg-dash-card p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl">
               <div
                 onClick={() => { setMenuOpen(false); onEdit(task.id); }}
-                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[13px] text-dash-text transition hover:bg-white/5"
+                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
               >
-                <Pencil size={14} className="shrink-0" />
+                <Pencil size={13} className="shrink-0" />
                 ویرایش برنامه
               </div>
               <div
                 onClick={() => { setMenuOpen(false); onDelete(task.id); }}
-                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[13px] text-[#E05252] transition hover:bg-[#E05252]/10"
+                className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
               >
-                <Trash2 size={14} className="shrink-0" />
+                <Trash2 size={13} className="shrink-0" />
                 حذف کامل برنامه
               </div>
             </div>
@@ -72,18 +72,18 @@ export function DashTaskRow({
         onClick={() => onOpen(task.name)}
         className="flex min-w-0 flex-1 items-center gap-2 text-right sm:gap-3"
       >
-        <div className="min-w-0 flex-1 truncate text-[14px] font-medium text-dash-text sm:text-[15px]">{task.name}</div>
+        <div className="min-w-0 flex-1 truncate text-[13px] font-medium text-dash-text sm:text-[15px]">{task.name}</div>
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {task.tag && (
-            <span className="w-[56px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-center text-[10px] font-semibold text-dash-muted sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
+            <span className="w-[48px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-1.5 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
               {task.tag}
             </span>
           )}
 
           <DashImportanceBadge importance={task.importance} />
 
-          <span className="shrink-0 font-mono text-[11.5px] text-dash-muted sm:text-[13px]" dir="ltr">
+          <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
             {toEnDigits(task.time)}
           </span>
         </div>
@@ -99,7 +99,7 @@ export function DashTaskRow({
         animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
           !editable && "cursor-not-allowed opacity-50",
           task.done ? "text-white" : "text-transparent hover:border-white/45"
         )}
@@ -118,7 +118,7 @@ export function DashTaskRow({
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
               className="flex items-center justify-center"
             >
-              <Check size={15} strokeWidth={3} />
+              <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
             </motion.span>
           )}
         </AnimatePresence>
