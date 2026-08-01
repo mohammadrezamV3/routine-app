@@ -21,7 +21,7 @@ export function DashFilterButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex shrink-0 items-center gap-1.5 rounded-dash border px-3 py-2 text-[12px] font-semibold transition sm:px-4 sm:py-2.5 sm:text-[13px]",
+        "flex shrink-0 items-center gap-1 rounded-dash border px-2.5 py-1.5 text-[11px] font-semibold transition sm:gap-1.5 sm:px-4 sm:py-2.5 sm:text-[13px]",
         active ? "text-dash-bg" : "border-dash-border bg-dash-card text-dash-muted hover:border-white/10 hover:text-dash-text"
       )}
       style={

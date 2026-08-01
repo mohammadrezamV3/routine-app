@@ -99,10 +99,10 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
   return (
     <DashCard delay={delay}>
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center text-[14px] font-bold text-dash-text sm:text-[15px]">
+        <h2 className="flex items-center text-[13px] font-bold text-dash-text sm:text-[15px]">
           دوستان
           {requestCount > 0 && (
-            <span className="mr-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-dash-green px-1 text-[10px] font-bold text-dash-bg">
+            <span className="mr-1.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-dash-green px-1 text-[9px] font-bold text-dash-bg sm:h-4 sm:min-w-4 sm:text-[10px]">
               {requestCount}
             </span>
           )}
@@ -110,7 +110,7 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
         <button
           type="button"
           onClick={() => setPanelOpen(true)}
-          className="text-[12px] font-semibold text-dash-green hover:underline sm:text-[12.5px]"
+          className="text-[11px] font-semibold text-dash-green hover:underline sm:text-[12.5px]"
         >
           مشاهده همه
         </button>
@@ -118,28 +118,30 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
 
       <div className="mt-4 flex flex-col gap-4">
         {authRequired ? (
-          <div className="text-[12px] text-dash-muted">برای استفاده از بخش دوستان اول وارد حساب بشو.</div>
+          <div className="text-[11px] text-dash-muted sm:text-[12px]">برای استفاده از بخش دوستان اول وارد حساب بشو.</div>
         ) : friends === null ? (
-          <div className="text-[12px] text-dash-muted">در حال بارگذاری…</div>
+          <div className="text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
         ) : list.length === 0 ? (
-          <div className="text-[12px] text-dash-muted">
+          <div className="text-[11px] text-dash-muted sm:text-[12px]">
             هنوز دوستی اضافه نکردی — از «مشاهده همه» می‌تونی جستجو کنی.
           </div>
         ) : (
           list.map((f) => (
             <div key={f.friendshipId} className="flex items-center justify-between gap-3">
-              <DashProgressCircle value={f.pct} size={40} strokeWidth={4} />
+              <span className="sm:hidden"><DashProgressCircle value={f.pct} size={34} strokeWidth={3.5} /></span>
+              <span className="hidden sm:inline-block"><DashProgressCircle value={f.pct} size={40} strokeWidth={4} /></span>
               <div className="flex flex-1 items-center justify-end gap-2.5">
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <div className="text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
-                    <StreakFlame streak={f.streak} className="text-[11px]" />
+                    <div className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
+                    <StreakFlame streak={f.streak} className="text-[10px] sm:text-[11px]" />
                   </div>
-                  <div className="mt-0.5 text-[10.5px] text-dash-muted sm:text-[11.5px]">
+                  <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]">
                     {f.completed} از {f.total} برنامه
                   </div>
                 </div>
-                <Avatar name={f.name} size={36} />
+                <span className="sm:hidden"><Avatar name={f.name} size={32} /></span>
+                <span className="hidden sm:inline-flex"><Avatar name={f.name} size={36} /></span>
               </div>
             </div>
           ))
