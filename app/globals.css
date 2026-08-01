@@ -938,11 +938,6 @@
 
   .week-timeline{position:relative; padding:10px 4px 6px; overflow:visible;}
   .week-timeline-track{position:relative; height:118px; width:100%; padding:0 20px;}
-  /* ردیفِ خط‌های ریزِ خط‌کش‌مانند، بالای نوارِ پر‌شونده */
-  .wt-ticks{
-    position:absolute; right:20px; left:20px; top:14px; height:8px;
-    background-image:repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 22px);
-  }
   /* یک خط توپر که پر می‌شه، نه دیگه راه‌راه/چین‌دار */
   .wt-fill-track{
     position:absolute; right:20px; left:20px; top:26px; height:5px;
