@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Star } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
+import { StreakBadge } from "./StreakBadge";
 import { avatarColorFor } from "@/lib/avatarColor";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
 
@@ -98,13 +99,14 @@ export function DashFriendsCard({ delay }: { delay?: number }) {
   return (
     <DashCard delay={delay}>
       <div className="flex items-center justify-between">
-        <h2 className="text-[14px] font-bold text-dash-text sm:text-[15px]">
+        <h2 className="flex items-center text-[14px] font-bold text-dash-text sm:text-[15px]">
           دوستان
           {requestCount > 0 && (
             <span className="mr-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-dash-green px-1 text-[10px] font-bold text-dash-bg">
               {requestCount}
             </span>
           )}
+          <StreakBadge className="mr-2 text-[12px]" />
         </h2>
         <button
           type="button"

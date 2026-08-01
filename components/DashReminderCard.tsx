@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getImportantThisWeek, ImportantOccurrence } from "@/lib/routineStats";
 import { WEEK_ORDER } from "@/lib/schedule";
+import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 
 // برنامه‌های «خیلی زیاد»/«زیاد»ِ همین هفته — واقعاً از customOccurrences
@@ -28,10 +29,20 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
     return () => clearTimeout(t);
   }, [toast]);
 
-  async function handleBellClick(e: React.MouseEvent, name: string) {
+  async function handleBellClick(e: React.MouseEvent, occ: ImportantOccurrence) {
     e.stopPropagation();
-    if (getNotificationPermission() !== "granted") await requestNotificationPermission();
-    setToast(`نیم‌ساعت قبل از شروعِ «${name}» بهت اطلاع داده می‌شه.`);
+    const nextNotify = !occ.notify;
+    if (nextNotify && getNotificationPermission() !== "granted") await requestNotificationPermission();
+
+    setItems((prev) => prev && prev.map((it) => (it.id === occ.id ? { ...it, notify: nextNotify } : it)));
+    const all = await getCustomOccurrences();
+    await setCustomOccurrences(all.map((c) => (c.id === occ.id ? { ...c, notify: nextNotify } : c)));
+
+    setToast(
+      nextNotify
+        ? `نیم‌ساعت قبل از شروعِ «${occ.name}» بهت اطلاع داده می‌شه.`
+        : `دیگه برای «${occ.name}» یادآوری نمی‌شه.`
+    );
   }
 
   const list = items ?? [];
@@ -85,14 +96,16 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                   </div>
                   <span
                     role="button"
-                    aria-label={`اطلاع‌رسانی ۳۰ دقیقه قبل از شروع ${r.name}`}
-                    onClick={(e) => handleBellClick(e, r.name)}
+                    aria-label={r.notify ? `خاموش‌کردنِ یادآوریِ ${r.name}` : `روشن‌کردنِ یادآوریِ ${r.name}`}
+                    onClick={(e) => handleBellClick(e, r)}
                     className={cn(
                       "flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",
-                      r.importance === "veryHigh" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
+                      r.notify
+                        ? r.importance === "veryHigh" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
+                        : "bg-white/5 text-dash-muted"
                     )}
                   >
-                    <Bell size={15} />
+                    {r.notify ? <Bell size={15} /> : <BellOff size={15} />}
                   </span>
                 </button>
               );
