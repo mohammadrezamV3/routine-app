@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
-import { timeStartMinutes } from "@/lib/schedule";
+import { timeStartMinutes, WEEK_ORDER } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
@@ -37,6 +37,12 @@ export function MoveOccurrenceModal({
   onChanged: () => void;
 }) {
   const parts = String(occ.time).split(/[–—-]/);
+  // نمی‌شه به روزی زودتر از روزِ فعلیِ خودِ برنامه منتقل کرد (مثلاً از
+  // دوشنبه به یکشنبه یا قبل‌ترش) — چون برنامه‌ها هفتگی/تکرارشونده‌ان،
+  // «زودتر» یعنی موقعیتِ روز توی ترتیبِ WEEK_ORDER (شنبه..جمعه)، نه تاریخِ
+  // تقویمی. روزهای زودتر هم توی خودِ تقویم غیرفعال می‌شن، هم موقعِ ثبت چک می‌شه.
+  const occWeekIndex = WEEK_ORDER.findIndex((w) => w.jsDay === occ.jsDay);
+  const disabledWeekdays = WEEK_ORDER.slice(0, occWeekIndex).map((w) => w.jsDay);
   const [targetJalali, setTargetJalali] = useState<JalaliDate | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dayError, setDayError] = useState(false);
@@ -67,9 +73,14 @@ export function MoveOccurrenceModal({
     const startMin = timeStartMinutes(startFa);
     const endMin = timeStartMinutes(endFa);
 
-    const isPickedToday = targetJalali![0] === jNow[0] && targetJalali![1] === jNow[1] && targetJalali![2] === jNow[2];
     let pastMsg: string | null = null;
-    if (isPickedToday) {
+    const targetWeekIndex = WEEK_ORDER.findIndex((w) => w.jsDay === targetJsDay);
+    if (targetWeekIndex < occWeekIndex) {
+      pastMsg = `نمی‌شه به روزی زودتر از «${occ.dayName}» منتقل کرد`;
+    }
+
+    const isPickedToday = targetJalali![0] === jNow[0] && targetJalali![1] === jNow[1] && targetJalali![2] === jNow[2];
+    if (!pastMsg && isPickedToday) {
       const checkMin = endMin ?? startMin;
       const nowMin = now.getHours() * 60 + now.getMinutes();
       if (checkMin !== null && nowMin >= checkMin) {
@@ -184,7 +195,9 @@ export function MoveOccurrenceModal({
       {pickerOpen && (
         <JalaliDatePicker
           initial={targetJalali}
+          title="روز مقصد"
           disablePast
+          disableWeekdays={disabledWeekdays}
           onClose={() => setPickerOpen(false)}
           onPick={(d) => { setTargetJalali(d); setDayError(false); setPickerOpen(false); }}
         />

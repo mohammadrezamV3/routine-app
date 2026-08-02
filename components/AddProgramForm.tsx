@@ -172,13 +172,13 @@ export function AddProgramForm({
 
           <div className="wsearch-date-row">
             <div className="time-field">
-              <span className="time-field-label">تاریخ شروع دوره</span>
+              <span className="time-field-label">تاریخ شروع دوره (اختیاری)</span>
               <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
                 {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
               </button>
             </div>
             <div className="time-field">
-              <span className="time-field-label">تاریخ پایان دوره</span>
+              <span className="time-field-label">تاریخ پایان دوره (اختیاری)</span>
               <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
                 {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
               </button>
@@ -253,6 +253,7 @@ export function AddProgramForm({
       {pickerFor && (
         <JalaliDatePicker
           initial={pickerFor === "start" ? startJalali : endJalali}
+          title={pickerFor === "start" ? "تاریخ شروع دوره" : "تاریخ پایان دوره"}
           onClose={() => setPickerFor(null)}
           onPick={(d) => {
             if (pickerFor === "start") { setStartJalali(d); setPickerFor("end"); }

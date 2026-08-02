@@ -18,6 +18,8 @@ export function JalaliDatePicker({
   onClose,
   disableFuture = false,
   disablePast = false,
+  disableWeekdays,
+  title,
 }: {
   initial: JalaliDate | null;
   onPick: (d: JalaliDate) => void;
@@ -26,6 +28,12 @@ export function JalaliDatePicker({
   disableFuture?: boolean;
   /** روزهای قبل از امروز رو غیرفعال می‌کنه — برای جاهایی که فقط تاریخِ آینده معنی داره (مثلاً انتقالِ برنامه) */
   disablePast?: boolean;
+  /** این jsDayها (۰..۶) توی همه‌ی ماه‌ها غیرفعالن — برای مثلاً «نمی‌شه به روزی زودتر از روزِ فعلیِ برنامه منتقل کرد» */
+  disableWeekdays?: number[];
+  /** عنوانِ بالای پاپ‌آپ — وقتی همین کامپوننت پشتِ‌سرِهم برای دو فیلدِ مختلف
+      (مثلاً تاریخِ شروع بعد پایان) استفاده می‌شه، بدونِ این عنوان کاربر
+      اصلاً متوجه نمی‌شه که context عوض شده و داره یه فیلدِ دیگه رو پر می‌کنه. */
+  title?: string;
 }) {
   const now = new Date();
   const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -52,6 +60,12 @@ export function JalaliDatePicker({
     return d < jNow[2];
   }
 
+  function isDisabledWeekday(d: number): boolean {
+    if (!disableWeekdays || !disableWeekdays.length) return false;
+    const jsDay = jalaliToGregorianApprox(view.jy, view.jm, d).getDay();
+    return disableWeekdays.includes(jsDay);
+  }
+
   // انتخاب مستقیم سال/ماه — تا برای تاریخ‌های دور (مثل سال تولد) لازم نباشه
   // ده‌ها بار روی فلش «ماه قبل» کلیک بشه.
   const yearOptions: number[] = [];
@@ -64,7 +78,7 @@ export function JalaliDatePicker({
     const isSelected = initial && initial[0] === view.jy && initial[1] === view.jm && initial[2] === d;
     const future = isFuture(d);
     const past = isPast(d);
-    const disabled = future || past;
+    const disabled = future || past || isDisabledWeekday(d);
     cells.push(
       <div
         key={d}
@@ -80,6 +94,7 @@ export function JalaliDatePicker({
     <>
       <div className="jdate-overlay open" onClick={onClose} />
       <div className="jdate-popup open">
+        {title && <div className="jdate-popup-title" key={title}>{title}</div>}
         <div className="jdate-popup-head">
           <button type="button" className="jdate-popup-close" onClick={onClose} aria-label="بستن">×</button>
           <div className="jdate-popup-title-nav">
