@@ -1356,8 +1356,7 @@
   body[data-theme="light"] .add-program-glass .wsearch-add-time{
     background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
   }
-  /* دکمه‌ی «افزودن روز دیگر» — راست‌چین، بدون بک‌گراند، آیکون + متن */
-  .add-program-glass .wsearch-newform-addrow{ justify-content:flex-end; }
+  /* دکمه‌ی «افزودن روز دیگر» — راست‌چین، بدون بک‌گراند، آیکون + متن (بدون دایره دورِ +) */
   .add-program-glass .wsearch-add-btn{
     width:auto; height:auto; border-radius:999px; border:none; background:none;
     display:inline-flex; align-items:center; gap:6px; padding:4px 2px;
@@ -1365,9 +1364,17 @@
   }
   .add-program-glass .wsearch-add-btn:hover{ color:var(--accent); opacity:.8; }
   .add-program-glass .wsearch-add-btn-icon{
-    width:22px; height:22px; border-radius:50%; border:1px dashed var(--accent);
-    display:flex; align-items:center; justify-content:center; font-size:15px; line-height:1; flex-shrink:0;
+    width:auto; height:auto; border:none; background:none;
+    display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1; flex-shrink:0;
   }
+
+  /* تمامِ لیبل‌های کوچیکِ فرم (اسم برنامه، تگ، روز، ساعت شروع/پایان و...) سبز
+     می‌شن — رنگِ برندِ اپ (var(--accent))، هماهنگ با تایتلِ اصلیِ پاپ‌آپ. */
+  .add-program-glass label, .add-program-glass .time-field-label{ color:var(--accent); }
+  /* مثال‌های داخلِ فیلد (placeholder) قبلاً با var(--muted2) خیلی کم‌کنتراست
+     بودن و دیده نمی‌شدن؛ var(--muted) خواناتره. */
+  .add-program-glass .wsearch-newform-name::placeholder,
+  .add-program-glass .wsearch-add-time::placeholder{ color:var(--muted); opacity:.85; }
 
   /* new-item add button, in its own footer row so it can never float on top of the list */
   .wsearch-footer{flex-shrink:0; display:flex; justify-content:flex-end; padding-top:12px; position:relative; z-index:6;}
@@ -1462,6 +1469,8 @@
     backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px);
   }
   .wsearch-newform-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);}
+  /* پاپ‌آپ‌های افزودن/ویرایش/انتقالِ برنامه — بک‌گراندِ پشتِ پاپ‌آپ خیلی بیشتر بلور می‌شه */
+  .wsearch-newform-overlay.strong-blur.open{backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%);}
   .wsearch-newform{
     position:fixed; left:50%; top:50%; transform:translate(-50%,-46%) scale(.96); width:90%; max-width:420px;
     max-height:min(78vh,520px); overflow-x:hidden; overflow-y:auto; z-index:58;
@@ -1476,10 +1485,10 @@
     border:1px solid rgba(255,255,255,.07);
     box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);
   }
-  /* فقط فرمِ افزودنِ برنامه (LiquidBlobLayers داره) این نسخه رو می‌گیره —
-     تاریِ نزدیک به بک‌گراندِ خودِ صفحه، نه نیمه‌شفاف؛ توپ‌های بلاب فقط یه
-     هاله‌ی محو می‌ندازن، نه دایره‌ی واضح. بقیه‌ی فرم‌های wsearch-newform
-     (مثل ویرایشِ برنامه) دست‌نخورده. */
+  /* فرم‌هایی که LiquidBlobLayers دارن (افزودن/ویرایش/انتقالِ برنامه) این
+     نسخه رو می‌گیرن — تاریِ نزدیک به بک‌گراندِ خودِ صفحه، نه نیمه‌شفاف؛
+     توپ‌های بلاب فقط یه هاله‌ی محو می‌ندازن، نه دایره‌ی واضح. بقیه‌ی
+     فرم‌های wsearch-newform (بدون این کلاس) دست‌نخورده. */
   .wsearch-newform.liquid-glass-form{
     background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));
   }
@@ -1556,8 +1565,11 @@
   .wsearch-newrow-remove:active{transform:scale(.94);}
   .wsearch-newrow-remove svg{width:13px; height:13px; display:block;}
   .wsearch-newrow .time-field{order:2;}
-  .wsearch-newform-addrow{display:flex; justify-content:center; padding-top:8px;}
-  .wsearch-newform-actions{display:flex; justify-content:flex-end; margin-top:14px;}
+  /* دیرکشنِ html روی rtl هست، پس روی main-axisِ فلکس، flex-end یعنی چپ نه
+     راست — همین باعث می‌شد این ردیف‌ها به‌جای راست، چپ‌چین بشن؛ flex-start
+     همون سمتی‌یه که واقعاً «راست» حساب می‌شه. */
+  .wsearch-newform-addrow{display:flex; align-items:center; justify-content:flex-start; gap:10px; padding-top:8px;}
+  .wsearch-newform-actions{display:flex; justify-content:flex-start; margin-top:14px;}
   .wsearch-newform-submit{
     width:38px; height:38px; min-width:38px; border-radius:50%; padding:0; position:relative;
     display:flex; align-items:center; justify-content:center;

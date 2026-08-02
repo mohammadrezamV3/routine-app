@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
@@ -12,6 +12,7 @@ import { formatJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences } from "@/lib/storage";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { focusNextOnEnter } from "@/lib/formNav";
 
 const now = new Date();
 
@@ -42,6 +43,7 @@ export function AddProgramForm({
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
+  const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
     setRows((r) => [...r, { jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
@@ -135,21 +137,22 @@ export function AddProgramForm({
 
   return (
     <>
-      <div className="wsearch-newform-overlay open" onClick={onClose} />
+      <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
       <div className="wsearch-newform liquid-glass-form dash-scope open">
-        <LiquidBlobLayers />
-        <div className="relative z-[1] add-program-glass">
+        <LiquidBlobLayers static />
+        <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
             <div className="wsearch-newform-title accent">افزودن برنامه جدید</div>
             <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
           </div>
 
-          <label htmlFor="addProgramName">اسم درس</label>
+          <label htmlFor="addProgramName">اسم برنامه</label>
           <div className={`name-field-wrap${nameError ? " field-error" : ""}`}>
             <input
               id="addProgramName"
               type="text"
               className="wsearch-newform-name"
+              placeholder="ریاضی، باشگاه، جلسه کاری…"
               value={name}
               onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(false); }}
             />
@@ -160,7 +163,7 @@ export function AddProgramForm({
             id="addProgramTag"
             type="text"
             className="wsearch-newform-name"
-            placeholder="مثلاً درس، ورزش، کار…"
+            placeholder="درس، ورزش، کار…"
             value={tag}
             onChange={(e) => setTag(e.target.value)}
           />
@@ -227,9 +230,6 @@ export function AddProgramForm({
               افزودن روز دیگر
               <span className="wsearch-add-btn-icon">+</span>
             </button>
-          </div>
-
-          <div className="wsearch-newform-actions">
             <button
               type="button"
               className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
