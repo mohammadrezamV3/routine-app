@@ -8,7 +8,7 @@ import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
 
-export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean };
+export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean };
 
 // بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). کلیک روی متنِ برنامه، کارتِ
 // واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز می‌کنه؛ سه‌نقطه یک منوی
@@ -72,8 +72,15 @@ export function DashTaskRow({
               ویرایش برنامه
             </div>
             <div
-              onClick={() => { setMenuOpen(false); onMove(task.id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
+              onClick={() => { if (task.isPast) return; setMenuOpen(false); onMove(task.id); }}
+              aria-disabled={task.isPast}
+              title={task.isPast ? "زمانِ این برنامه گذشته — قابلِ انتقال نیست" : undefined}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                task.isPast
+                  ? "cursor-not-allowed text-dash-muted opacity-45"
+                  : "cursor-pointer text-dash-text hover:bg-white/5"
+              )}
             >
               <CalendarClock size={13} className="shrink-0" />
               انتقال به یک روز دیگر

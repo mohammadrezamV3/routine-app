@@ -20,8 +20,15 @@ import { getNotificationPermission, requestNotificationPermission } from "@/lib/
 export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onOpenProgram?: (name: string) => void }) {
   const [items, setItems] = useState<ImportantOccurrence[] | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // `typeof document !== "undefined"` جواب می‌ده true حتی توی همون رندرِ اولِ
+  // کلاینت که برای هیدریشن استفاده می‌شه (چون document موقعِ اجرای جاوااسکریپتِ
+  // مرورگر از قبل وجود داره) — درحالی‌که سمتِ سرور همیشه false بوده؛ همین
+  // اختلاف باعثِ ارورِ هیدریشن می‌شد. با یه state که فقط توی useEffect (بعدِ
+  // هیدریشن) true می‌شه، رندرِ اولِ سرور و کلاینت هر دو false می‌مونن.
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => { getImportantThisWeek().then(setItems); }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -49,7 +56,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
 
   return (
     <>
-      {typeof document !== "undefined" && createPortal(
+      {mounted && createPortal(
         <div className="pointer-events-none fixed inset-x-0 top-4 z-[100] flex justify-center px-4">
           <AnimatePresence>
             {toast && (

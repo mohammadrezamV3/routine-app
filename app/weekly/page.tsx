@@ -41,6 +41,22 @@ import { DashReminderCard } from "@/components/DashReminderCard";
 import { DashSidebar } from "@/components/DashSidebar";
 
 const now = new Date();
+const todayKey = isoLocal(now);
+
+// یه برنامه‌ای که زمانش گذشته (روزِ قبل، یا امروز ولی ساعتِ پایانش رد شده)
+// دیگه نباید قابلِ «انتقال به یک روز دیگر» باشه — چون در واقع اتفاق افتاده،
+// جابه‌جاییش به بعد یعنی وانمود کردن به این‌که هنوز نیفتاده. ویرایش/حذف
+// همچنان روش مجازن، فقط انتقال بلاک می‌شه.
+function isTaskPast(iso: string, time: string): boolean {
+  if (iso < todayKey) return true;
+  if (iso > todayKey) return false;
+  const endMin = timeEndMinutes(time);
+  const startMin = timeStartMinutes(time);
+  const checkMin = endMin ?? startMin;
+  if (checkMin === null) return false;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  return nowMin >= checkMin;
+}
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
@@ -154,11 +170,19 @@ export default function WeeklyPage() {
     return tasksForDate(selectedDate, opts)
       .map((t) => {
         const occ = customOcc.find((c) => c.id === t.id);
-        return { id: t.id, name: t.name, time: t.time, importance: occ?.importance, tag: occ?.tag, done: !!selectedDaily?.tasks[t.id] };
+        return {
+          id: t.id,
+          name: t.name,
+          time: t.time,
+          importance: occ?.importance,
+          tag: occ?.tag,
+          done: !!selectedDaily?.tasks[t.id],
+          isPast: isTaskPast(selectedIso, t.time),
+        };
       })
       .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
       .filter((t) => programFilter === null || programFilter.has(t.name));
-  }, [selectedDate, opts, customOcc, selectedDaily, importanceFilter, programFilter]);
+  }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter]);
 
   // انتخابِ یه روزِ دلخواه (مثلاً از تقویمِ تاریخچه) — برخلافِ کلیک روی
   // خودِ نوارِ روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
@@ -205,7 +229,7 @@ export default function WeeklyPage() {
 
   function moveTaskFromDash(id: string) {
     const task = dashTasks.find((t) => t.id === id);
-    if (!task) return;
+    if (!task || task.isPast) return;
     const jsDay = selectedDate.getDay();
     const dayName = WEEK_ORDER.find((o) => o.jsDay === jsDay)?.name || "";
     setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance, tag: task.tag } });

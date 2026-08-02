@@ -8,7 +8,6 @@ import { findScheduleConflict } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
-import { LiquidBlobLayers } from "./LiquidBlobBox";
 import { focusNextOnEnter } from "@/lib/formNav";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
@@ -100,8 +99,7 @@ export function MoveOccurrenceModal({
   return (
     <>
       <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
-      <div className="wsearch-newform liquid-glass-form dash-scope open">
-        <LiquidBlobLayers static />
+      <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
             <div className="wsearch-newform-title accent">انتقال «{name}» به یک روز دیگر</div>

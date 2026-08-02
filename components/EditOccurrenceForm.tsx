@@ -8,7 +8,6 @@ import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
-import { LiquidBlobLayers } from "./LiquidBlobBox";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 
@@ -148,8 +147,7 @@ export function EditOccurrenceForm({
   return (
     <>
       <div className="wsearch-newform-overlay occ-edit-overlay strong-blur open" onClick={onClose} />
-      <div className="wsearch-newform occ-edit-form liquid-glass-form dash-scope open">
-        <LiquidBlobLayers static />
+      <div className="wsearch-newform occ-edit-form dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
             <div className="wsearch-newform-title accent">ویرایش «{name}»</div>
