@@ -10,7 +10,6 @@ import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences } from "@/lib/storage";
-import { LiquidBlobLayers } from "./LiquidBlobBox";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 
@@ -138,8 +137,7 @@ export function AddProgramForm({
   return (
     <>
       <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
-      <div className="wsearch-newform liquid-glass-form dash-scope open">
-        <LiquidBlobLayers static />
+      <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
             <div className="wsearch-newform-title accent">افزودن برنامه جدید</div>

@@ -61,35 +61,52 @@
   input[type="number"]{ -moz-appearance:textfield; appearance:textfield; }
 
   /* minimal scrollbars for scrollable panels — dark theme only, a soft elegant black */
-  .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel, .week-timeline{
+  .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel{
     scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent;
   }
   .nav-drawer-glass::-webkit-scrollbar, .wsearch-newform::-webkit-scrollbar,
-  .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar, .week-timeline::-webkit-scrollbar{
+  .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar{
     width:5px; height:5px;
   }
   .nav-drawer-glass::-webkit-scrollbar-track, .wsearch-newform::-webkit-scrollbar-track,
-  .wsearch-list::-webkit-scrollbar-track, .wsearch-panel::-webkit-scrollbar-track, .week-timeline::-webkit-scrollbar-track{
+  .wsearch-list::-webkit-scrollbar-track, .wsearch-panel::-webkit-scrollbar-track{
     background:transparent;
   }
   .nav-drawer-glass::-webkit-scrollbar-thumb, .wsearch-newform::-webkit-scrollbar-thumb,
-  .wsearch-list::-webkit-scrollbar-thumb, .wsearch-panel::-webkit-scrollbar-thumb, .week-timeline::-webkit-scrollbar-thumb{
+  .wsearch-list::-webkit-scrollbar-thumb, .wsearch-panel::-webkit-scrollbar-thumb{
     background:rgba(255,255,255,.14); border-radius:10px;
   }
   .nav-drawer-glass::-webkit-scrollbar-thumb:hover, .wsearch-newform::-webkit-scrollbar-thumb:hover,
-  .wsearch-list::-webkit-scrollbar-thumb:hover, .wsearch-panel::-webkit-scrollbar-thumb:hover, .week-timeline::-webkit-scrollbar-thumb:hover{
+  .wsearch-list::-webkit-scrollbar-thumb:hover, .wsearch-panel::-webkit-scrollbar-thumb:hover{
     background:rgba(255,255,255,.24);
   }
   body[data-theme="light"] .nav-drawer-glass, body[data-theme="light"] .wsearch-newform,
-  body[data-theme="light"] .wsearch-list, body[data-theme="light"] .wsearch-panel, body[data-theme="light"] .week-timeline{
+  body[data-theme="light"] .wsearch-list, body[data-theme="light"] .wsearch-panel{
     scrollbar-color:rgba(0,0,0,.16) transparent;
   }
   body[data-theme="light"] .nav-drawer-glass::-webkit-scrollbar-thumb,
   body[data-theme="light"] .wsearch-newform::-webkit-scrollbar-thumb,
   body[data-theme="light"] .wsearch-list::-webkit-scrollbar-thumb,
-  body[data-theme="light"] .wsearch-panel::-webkit-scrollbar-thumb, body[data-theme="light"] .week-timeline::-webkit-scrollbar-thumb{
+  body[data-theme="light"] .wsearch-panel::-webkit-scrollbar-thumb{
     background:rgba(0,0,0,.16);
   }
+  /* اسکرول‌بارِ افقیِ داخلِ «برنامه هفتگی» کاملاً مخفیه — لمس/درگ همچنان اسکرول می‌کنه */
+  .week-timeline{ scrollbar-width:none; -ms-overflow-style:none; }
+  .week-timeline::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+  /* اسکرول‌بارِ کلیِ صفحه (html) — پیش‌فرضِ مرورگر روشن بود و توی دارک‌مود
+     چشم‌آزار می‌شد؛ با scrollbar-color/-webkit-scrollbar تیره‌ش می‌کنیم. رنگِ
+     تم با :has(body[data-theme="light"]) تشخیص داده می‌شه چون data-theme
+     روی body ست می‌شه نه html، و متغیرهای CSS از فرزند به والد سرایت نمی‌کنن. */
+  html{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) #0E1011; }
+  html::-webkit-scrollbar{ width:10px; }
+  html::-webkit-scrollbar-track{ background:#0E1011; }
+  html::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); border-radius:10px; }
+  html::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.32); }
+  html:has(body[data-theme="light"]){ scrollbar-color:rgba(0,0,0,.22) #F3E9D8; }
+  html:has(body[data-theme="light"])::-webkit-scrollbar-track{ background:#F3E9D8; }
+  html:has(body[data-theme="light"])::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.22); }
+  html:has(body[data-theme="light"])::-webkit-scrollbar-thumb:hover{ background:rgba(0,0,0,.32); }
   *{
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
     -webkit-touch-callout:none;
@@ -1484,16 +1501,6 @@
     background:linear-gradient(180deg, rgba(9,10,11,.99), rgba(6,7,8,.995));
     border:1px solid rgba(255,255,255,.07);
     box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);
-  }
-  /* فرم‌هایی که LiquidBlobLayers دارن (افزودن/ویرایش/انتقالِ برنامه) این
-     نسخه رو می‌گیرن — تاریِ نزدیک به بک‌گراندِ خودِ صفحه، نه نیمه‌شفاف؛
-     توپ‌های بلاب فقط یه هاله‌ی محو می‌ندازن، نه دایره‌ی واضح. بقیه‌ی
-     فرم‌های wsearch-newform (بدون این کلاس) دست‌نخورده. */
-  .wsearch-newform.liquid-glass-form{
-    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));
-  }
-  body:not([data-theme="light"]) .wsearch-newform.liquid-glass-form{
-    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));
   }
   .wsearch-newform.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   .wsearch-newform-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}

@@ -14,8 +14,7 @@ type Blob = {
  * این کامپوننت خودش رندر نمی‌کنه؛ فقط روی children موجود (wbox-liquid/wbox-glow)
  * سوار می‌شه و transform‌شون رو هر فریم آپدیت می‌کنه.
  */
-export function useLiquidBlobPhysics(containerRef: React.RefObject<HTMLElement>, opts?: { static?: boolean }) {
-  const isStatic = !!opts?.static;
+export function useLiquidBlobPhysics(containerRef: React.RefObject<HTMLElement>) {
   useEffect(() => {
     const box = containerRef.current;
     if (!box) return;
@@ -53,16 +52,6 @@ export function useLiquidBlobPhysics(containerRef: React.RefObject<HTMLElement>,
         phase: Math.random() * Math.PI * 2,
       };
     });
-
-    // پاپ‌آپ‌های ثابت (افزودن/ویرایش/انتقال برنامه) توپ‌ها رو فقط یک‌بار توی
-    // جای اولیه‌شون می‌ذارن، بدون فیزیک/rAF — یعنی کاملاً بی‌حرکت می‌مونن.
-    if (isStatic) {
-      for (const p of blobs) {
-        p.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
-        if (p.glowEl) p.glowEl.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px)`;
-      }
-      return;
-    }
 
     let last = performance.now();
     let rafId = 0;
@@ -111,15 +100,13 @@ export function useLiquidBlobPhysics(containerRef: React.RefObject<HTMLElement>,
     rafId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(rafId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStatic]);
+  }, []);
 }
 
-/** باکس آماده با wbox-glow + wbox-liquid داخلش و فیزیک متصل — برای استفاده در wsearch-box و pcard-face-back.
- * static=true یعنی توپ‌ها فقط یه‌بار جای اولیه‌شون می‌شینن و دیگه تکون نمی‌خورن
- * (برای پاپ‌آپ‌های افزودن/ویرایش/انتقالِ برنامه که کاربر باید بتونه راحت روی فیلدها فوکوس کنه). */
-export function LiquidBlobLayers({ static: isStatic }: { static?: boolean } = {}) {
+/** باکس آماده با wbox-glow + wbox-liquid داخلش و فیزیک متصل — برای استفاده در wsearch-box و pcard-face-back */
+export function LiquidBlobLayers() {
   const ref = useRef<HTMLDivElement>(null);
-  useLiquidBlobPhysics(ref as any, { static: isStatic });
+  useLiquidBlobPhysics(ref as any);
   return (
     <div ref={ref} style={{ position: "absolute", inset: 0 }}>
       <div className="wbox-glow"><span className="wbox-glowblob" /><span className="wbox-glowblob" /></div>
