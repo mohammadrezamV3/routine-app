@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
-import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
+import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
@@ -89,6 +89,10 @@ export function EditOccurrenceForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of r.jsDays) {
+        if (isPastToday(jsDay, startMin, endMin, now)) {
+          conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
+          break outer;
+        }
         // occ.id excluded تا خودِ همون occurrence‌ای که داریم ویرایشش می‌کنیم
         // با خودش تداخل حساب نشه.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);

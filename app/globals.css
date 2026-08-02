@@ -1856,6 +1856,7 @@ body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-t
 /* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلاً
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */
 .field-error .wsearch-newform-name{ border-color:#E05252; }
+.jdate-btn.field-error{ border-color:#E05252; }
 .auth-terms-row{ border-bottom:none; padding:10px 0; }
 
 /* گام‌های ثبت‌نام چندمرحله‌ای — هر گام موقع ورود محو-بالا میاد، دقیقاً مثل
