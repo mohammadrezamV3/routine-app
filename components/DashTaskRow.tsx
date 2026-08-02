@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Check, MoreVertical, Pencil, Trash2, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
@@ -20,6 +20,7 @@ export function DashTaskRow({
   onOpen,
   onEdit,
   onDelete,
+  onMove,
 }: {
   task: DashTaskItem;
   editable: boolean;
@@ -27,6 +28,7 @@ export function DashTaskRow({
   onOpen: (name: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onMove: (id: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -68,6 +70,13 @@ export function DashTaskRow({
             >
               <Pencil size={13} className="shrink-0" />
               ویرایش برنامه
+            </div>
+            <div
+              onClick={() => { setMenuOpen(false); onMove(task.id); }}
+              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
+            >
+              <CalendarClock size={13} className="shrink-0" />
+              انتقال به یک روز دیگر
             </div>
             <div
               onClick={() => { setMenuOpen(false); onDelete(task.id); }}

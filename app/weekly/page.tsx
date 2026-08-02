@@ -28,6 +28,7 @@ import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { ProgramCard } from "@/components/ProgramCard";
 import { AddProgramForm } from "@/components/AddProgramForm";
 import { EditOccurrenceForm } from "@/components/EditOccurrenceForm";
+import { MoveOccurrenceModal } from "@/components/MoveOccurrenceModal";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 import { HistoryCalendar } from "@/components/HistoryCalendar";
 import { DashHeader } from "@/components/DashHeader";
@@ -52,6 +53,7 @@ export default function WeeklyPage() {
   const [cardName, setCardName] = useState<string | null>(null);
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ name: string; occ: Occ } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ name: string; occ: Occ } | null>(null);
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
@@ -201,6 +203,14 @@ export default function WeeklyPage() {
     setEditTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance, tag: task.tag } });
   }
 
+  function moveTaskFromDash(id: string) {
+    const task = dashTasks.find((t) => t.id === id);
+    if (!task) return;
+    const jsDay = selectedDate.getDay();
+    const dayName = WEEK_ORDER.find((o) => o.jsDay === jsDay)?.name || "";
+    setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance, tag: task.tag } });
+  }
+
   async function deleteTaskCompletely(id: string) {
     await setCustomOccurrences(customOcc.filter((c) => c.id !== id));
     refresh();
@@ -260,6 +270,7 @@ export default function WeeklyPage() {
               onOpenProgram={setCardName}
               onEditTask={editTaskFromDash}
               onDeleteTask={deleteTaskCompletely}
+              onMoveTask={moveTaskFromDash}
               delay={0.05}
             />
 
@@ -396,6 +407,16 @@ export default function WeeklyPage() {
             occ={editTarget.occ}
             scheduleOpts={opts}
             onClose={() => setEditTarget(null)}
+            onChanged={refresh}
+          />
+        )}
+
+        {moveTarget && (
+          <MoveOccurrenceModal
+            name={moveTarget.name}
+            occ={moveTarget.occ}
+            scheduleOpts={opts}
+            onClose={() => setMoveTarget(null)}
             onChanged={refresh}
           />
         )}
