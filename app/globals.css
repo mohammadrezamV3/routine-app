@@ -113,6 +113,19 @@
   }
   ::selection{background:transparent;}
   ::-moz-selection{background:transparent;}
+  /* بی‌حسِ سراسریِ بالا حتی روی خودِ فیلدهای فرم هم اثر می‌ذاشت — نه متن
+     تایپ‌شده قابل‌سلکت بود نه قابل‌کپی. همه‌جای اپ، هر input/textarea باید
+     قابلِ سلکت‌کردن بمونه، صرف‌نظر از قانونِ کلیِ بالا. */
+  input, textarea, [contenteditable="true"]{
+    -webkit-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text;
+    -webkit-touch-callout:default;
+  }
+  input::selection, textarea::selection, [contenteditable="true"]::selection{
+    background:rgba(var(--accent-rgb), .35);
+  }
+  input::-moz-selection, textarea::-moz-selection, [contenteditable="true"]::-moz-selection{
+    background:rgba(var(--accent-rgb), .35);
+  }
   html{background:var(--bg);}
   body{
     background:var(--bg); color:var(--text);
