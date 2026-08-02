@@ -7,7 +7,7 @@ import { Bell, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getImportantThisWeek, ImportantOccurrence } from "@/lib/routineStats";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 
@@ -98,7 +98,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                   <div className="min-w-0 flex-1 text-right">
                     <div className="truncate text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{r.name}</div>
                     <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]">
-                      {dayName} — {r.time}
+                      {dayName} — <span dir="ltr">{toEnDigits(r.time)}</span>
                     </div>
                   </div>
                   <span

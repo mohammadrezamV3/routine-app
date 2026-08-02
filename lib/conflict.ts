@@ -7,6 +7,20 @@ export function rangesOverlap(aStart: number, aEnd: number | null, bStart: numbe
 }
 
 /**
+ * برنامه‌ها هفتگی‌ان (فقط روزِ هفته، بدون تاریخِ مشخص)، پس «گذشته» فقط برای
+ * امروز معنی داره — بقیه‌ی روزهای هفته همیشه یک وقوعِ آینده دارن. اگه
+ * jsDay همون امروزه و ساعتِ پایان (یا شروع، اگه پایان نداشت) رد شده باشه،
+ * یعنی این بازه برای امروز گذشته و نباید بشه چیزی توش ثبت/جابه‌جا کرد.
+ */
+export function isPastToday(jsDay: number, startMin: number | null, endMin: number | null, now: Date): boolean {
+  if (jsDay !== now.getDay()) return false;
+  const checkMin = endMin ?? startMin;
+  if (checkMin === null) return false;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  return nowMin >= checkMin;
+}
+
+/**
  * می‌گردد ببیند آیا بازه [startMin,endMin) در روز jsDay با یکی از تسک‌های
  * موجود آن روز (به‌جز excludeId، برای حالت ویرایش) تداخل دارد یا نه.
  */

@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
-import { timeStartMinutes } from "@/lib/schedule";
+import { timeStartMinutes, WEEK_ORDER } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
+import { JalaliDatePicker } from "./JalaliDatePicker";
+import { formatJalali, jalaliToGregorianApprox, toJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { focusNextOnEnter } from "@/lib/formNav";
 
@@ -14,11 +15,14 @@ type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 const now = new Date();
+const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
 // پاپ‌آپِ «انتقال به یک روز دیگر» — از منویِ سه‌نقطه‌ی یک برنامه باز می‌شه.
 // دیزاینش دقیقاً مثلِ افزودن/ویرایشِ برنامه‌ست (همون بک‌گراندِ لیکوئید گلسِ
-// بلورشده با توپ‌های ثابت). فقط روزِ مقصد رو می‌گیره؛ تغییرِ ساعت اختیاریه
-// (با یه تیک روشن/خاموش می‌شه، وگرنه همون ساعتِ قبلی برای روزِ جدید می‌مونه).
+// بلورشده). روزِ مقصد با یک تقویمِ واقعی انتخاب می‌شه (نه پیل‌های هفته)،
+// چون کاربر می‌خواد یه تاریخِ مشخص ببینه، نه فقط اسمِ روزِ هفته؛ روزهای
+// گذشته توی تقویم غیرفعالن. تغییرِ ساعت اختیاریه (با یه تیک روشن/خاموش
+// می‌شه، وگرنه همون ساعتِ قبلی برای روزِ جدید می‌مونه).
 export function MoveOccurrenceModal({
   name,
   occ,
@@ -33,7 +37,15 @@ export function MoveOccurrenceModal({
   onChanged: () => void;
 }) {
   const parts = String(occ.time).split(/[–—-]/);
-  const [targetJsDay, setTargetJsDay] = useState(occ.jsDay);
+  // نمی‌شه به روزی زودتر از روزِ فعلیِ خودِ برنامه منتقل کرد (مثلاً از
+  // دوشنبه به یکشنبه یا قبل‌ترش) — چون برنامه‌ها هفتگی/تکرارشونده‌ان،
+  // «زودتر» یعنی موقعیتِ روز توی ترتیبِ WEEK_ORDER (شنبه..جمعه)، نه تاریخِ
+  // تقویمی. روزهای زودتر هم توی خودِ تقویم غیرفعال می‌شن، هم موقعِ ثبت چک می‌شه.
+  const occWeekIndex = WEEK_ORDER.findIndex((w) => w.jsDay === occ.jsDay);
+  const disabledWeekdays = WEEK_ORDER.slice(0, occWeekIndex).map((w) => w.jsDay);
+  const [targetJalali, setTargetJalali] = useState<JalaliDate | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [dayError, setDayError] = useState(false);
   const [changeTime, setChangeTime] = useState(false);
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
@@ -43,26 +55,46 @@ export function MoveOccurrenceModal({
 
   async function submit() {
     if (status !== "idle") return;
+    const dErr = !targetJalali;
+    setDayError(dErr);
     if (changeTime) {
       const nextErrors: typeof errors = {};
       if (!start.trim()) nextErrors.start = true;
       if (!end.trim()) nextErrors.end = true;
       setErrors(nextErrors);
-      if (nextErrors.start || nextErrors.end) return;
+      if (dErr || nextErrors.start || nextErrors.end) return;
+    } else if (dErr) {
+      return;
     }
 
+    const targetJsDay = jalaliToGregorianApprox(targetJalali![0], targetJalali![1], targetJalali![2]).getDay();
     const startFa = normalizeTimeToFa(start);
     const endFa = normalizeTimeToFa(end);
     const startMin = timeStartMinutes(startFa);
     const endMin = timeStartMinutes(endFa);
 
-    const conflict = findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
+    let pastMsg: string | null = null;
+    const targetWeekIndex = WEEK_ORDER.findIndex((w) => w.jsDay === targetJsDay);
+    if (targetWeekIndex < occWeekIndex) {
+      pastMsg = `نمی‌شه به روزی زودتر از «${occ.dayName}» منتقل کرد`;
+    }
+
+    const isPickedToday = targetJalali![0] === jNow[0] && targetJalali![1] === jNow[1] && targetJalali![2] === jNow[2];
+    if (!pastMsg && isPickedToday) {
+      const checkMin = endMin ?? startMin;
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      if (checkMin !== null && nowMin >= checkMin) {
+        pastMsg = "این ساعت برای امروز گذشته — نمی‌شه منتقلش کرد";
+      }
+    }
+
+    const conflict = pastMsg ? null : findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
 
     setStatus("loading");
     setTimeout(async () => {
-      if (conflict) {
+      if (pastMsg || conflict) {
         setStatus("error");
-        showConflictAlert(`تداخل زمانی با «${conflict.name}» — منتقل نشد`);
+        showConflictAlert(pastMsg || `تداخل زمانی با «${conflict!.name}» — منتقل نشد`);
         setTimeout(() => setStatus("idle"), 900);
         return;
       }
@@ -107,17 +139,13 @@ export function MoveOccurrenceModal({
           </div>
 
           <label>روز مقصد</label>
-          <div className="day-picker">
-            {WEEK_ORDER.map((o) => (
-              <span
-                key={o.jsDay}
-                className={`day-pill${o.jsDay === targetJsDay ? " on" : ""}`}
-                onClick={() => setTargetJsDay(o.jsDay)}
-              >
-                {o.short}
-              </span>
-            ))}
-          </div>
+          <button
+            type="button"
+            className={`jdate-btn${targetJalali ? "" : " placeholder"}${dayError ? " field-error" : ""}`}
+            onClick={() => setPickerOpen(true)}
+          >
+            {targetJalali ? formatJalali(targetJalali) : "روز / ماه / سال"}
+          </button>
 
           <div className="task" onClick={() => setChangeTime((v) => !v)}>
             <div className={`check${changeTime ? " on" : ""}`}>
@@ -163,6 +191,17 @@ export function MoveOccurrenceModal({
           </div>
         </div>
       </div>
+
+      {pickerOpen && (
+        <JalaliDatePicker
+          initial={targetJalali}
+          title="روز مقصد"
+          disablePast
+          disableWeekdays={disabledWeekdays}
+          onClose={() => setPickerOpen(false)}
+          onPick={(d) => { setTargetJalali(d); setDayError(false); setPickerOpen(false); }}
+        />
+      )}
     </>
   );
 }

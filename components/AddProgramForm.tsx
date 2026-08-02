@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
-import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
+import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
@@ -91,6 +91,10 @@ export function AddProgramForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of r.jsDays) {
+        if (isPastToday(jsDay, startMin, endMin, now)) {
+          conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
+          break outer;
+        }
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts);
         if (!conflict) {
           for (const other of normalizedRows) {
@@ -168,13 +172,13 @@ export function AddProgramForm({
 
           <div className="wsearch-date-row">
             <div className="time-field">
-              <span className="time-field-label">تاریخ شروع دوره</span>
+              <span className="time-field-label">تاریخ شروع دوره (اختیاری)</span>
               <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
                 {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
               </button>
             </div>
             <div className="time-field">
-              <span className="time-field-label">تاریخ پایان دوره</span>
+              <span className="time-field-label">تاریخ پایان دوره (اختیاری)</span>
               <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
                 {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
               </button>
@@ -249,6 +253,7 @@ export function AddProgramForm({
       {pickerFor && (
         <JalaliDatePicker
           initial={pickerFor === "start" ? startJalali : endJalali}
+          title={pickerFor === "start" ? "تاریخ شروع دوره" : "تاریخ پایان دوره"}
           onClose={() => setPickerFor(null)}
           onPick={(d) => {
             if (pickerFor === "start") { setStartJalali(d); setPickerFor("end"); }

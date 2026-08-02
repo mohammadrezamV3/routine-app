@@ -1258,6 +1258,14 @@
     background:rgba(255,255,255,.98); border:1px solid var(--line); box-shadow:0 20px 50px rgba(0,0,0,.18);
   }
   .jdate-popup.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
+  /* وقتی همین پاپ‌آپ پشتِ‌سرِهم برای دو فیلد (مثلاً شروع بعد پایان) دوباره
+     باز می‌مونه، فقط عوض‌شدنِ متن به چشم نمیاد — با key={title} روی این
+     المان (توی JalaliDatePicker) هر بار عنوان عوض بشه دوباره mount می‌شه و
+     انیمیشنِ pop از نو اجرا می‌شه، تا واضح باشه که context عوض شده. */
+  .jdate-popup-title{
+    color:var(--accent); font-size:12.5px; font-weight:700; text-align:center;
+    margin-bottom:10px; animation:wnsPop .35s cubic-bezier(.34,1.56,.64,1);
+  }
   .jdate-popup-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
   .jdate-popup-title-nav{display:flex; align-items:center; gap:6px;}
   .jdate-select{
@@ -1515,6 +1523,14 @@
     border:1px solid rgba(255,255,255,.07);
     box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);
   }
+  /* پاپ‌آپ‌های افزودن/ویرایش/انتقالِ برنامه (شناسایی با add-program-glass
+     داخلشون) یه‌کوچولو بزرگ‌تر می‌شن تا معمولاً محتوا/دکمه‌ها جا بشن بدون
+     اسکرول، و اسکرول‌بارِ (در صورتِ لزوم، مثلاً چندتا ردیفِ روز) کاملاً مخفیه. */
+  .wsearch-newform:has(.add-program-glass){
+    max-height:min(84vh, 560px);
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
   .wsearch-newform.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   .wsearch-newform-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .wsearch-newform-title{font-size:13px; font-weight:700;}
@@ -1585,10 +1601,9 @@
   .wsearch-newrow-remove:active{transform:scale(.94);}
   .wsearch-newrow-remove svg{width:13px; height:13px; display:block;}
   .wsearch-newrow .time-field{order:2;}
-  /* دیرکشنِ html روی rtl هست، پس روی main-axisِ فلکس، flex-end یعنی چپ نه
-     راست — همین باعث می‌شد این ردیف‌ها به‌جای راست، چپ‌چین بشن؛ flex-start
-     همون سمتی‌یه که واقعاً «راست» حساب می‌شه. */
-  .wsearch-newform-addrow{display:flex; align-items:center; justify-content:flex-start; gap:10px; padding-top:8px;}
+  /* «افزودن روز دیگر» راستِ ردیف می‌مونه (main-start توی rtl)، دکمه‌ی تیکِ
+     ثبت با space-between به چپِ ردیف می‌ره — دو گوشه‌ی مخالفِ هم. */
+  .wsearch-newform-addrow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:8px;}
   .wsearch-newform-actions{display:flex; justify-content:flex-start; margin-top:14px;}
   .wsearch-newform-submit{
     width:38px; height:38px; min-width:38px; border-radius:50%; padding:0; position:relative;
@@ -1856,6 +1871,7 @@ body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-t
 /* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلاً
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */
 .field-error .wsearch-newform-name{ border-color:#E05252; }
+.jdate-btn.field-error{ border-color:#E05252; }
 .auth-terms-row{ border-bottom:none; padding:10px 0; }
 
 /* گام‌های ثبت‌نام چندمرحله‌ای — هر گام موقع ورود محو-بالا میاد، دقیقاً مثل
