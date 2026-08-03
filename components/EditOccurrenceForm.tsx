@@ -177,23 +177,23 @@ export function EditOccurrenceForm({
 
           {rows.map((r, ri) => (
             <div key={ri} className="wsearch-newrow">
-              {rows.length > 1 && (
-                <div className="wsearch-newrow-remove-wrap">
+              <div className="wsearch-newrow-daywrap">
+                <div className={`day-picker${rowErrors[ri]?.days ? " field-error" : ""}`}>
+                  {WEEK_ORDER.map((o) => (
+                    <span
+                      key={o.jsDay}
+                      className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
+                      onClick={() => toggleRowDay(ri, o.jsDay)}
+                    >
+                      {o.short}
+                    </span>
+                  ))}
+                </div>
+                {rows.length > 1 && (
                   <button type="button" className="wsearch-newrow-remove" onClick={() => removeRow(ri)} aria-label="حذف این ردیف">
                     <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="#E05252" strokeWidth="2.4" strokeLinecap="round" /></svg>
                   </button>
-                </div>
-              )}
-              <div className={`day-picker wsearch-newrow-day${rowErrors[ri]?.days ? " field-error" : ""}`}>
-                {WEEK_ORDER.map((o) => (
-                  <span
-                    key={o.jsDay}
-                    className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
-                    onClick={() => toggleRowDay(ri, o.jsDay)}
-                  >
-                    {o.short}
-                  </span>
-                ))}
+                )}
               </div>
               <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
                 <span className="time-field-label">ساعت شروع</span>
