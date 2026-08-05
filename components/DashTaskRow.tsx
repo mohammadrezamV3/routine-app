@@ -63,7 +63,7 @@ export function DashTaskRow({
           <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
         </button>
         {menuOpen && (
-          <div className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border bg-dash-card p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl">
+          <div className="dash-context-menu absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]">
             <div
               onClick={() => { setMenuOpen(false); onEdit(task.id); }}
               className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"

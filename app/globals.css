@@ -372,10 +372,14 @@
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
   }
 
-  /* پنل کوچیکِ اطلاعیه‌ها — دقیقاً زیر دکمه‌ی زنگوله باز می‌شه */
+  /* پنل کوچیکِ اطلاعیه‌ها/پروفایل — زیرِ دکمه‌ی خودش باز می‌شه. قبلاً با
+     left:50%+translateX(-50%) وسط‌چینِ دکمه می‌شد؛ چون هم زنگوله هم چیپِ
+     پروفایل خیلی نزدیکِ لبه‌ی راستِ صفحه‌ان (topbar-actions با right:18px
+     پینه)، نیمه‌ی راستِ پنل از صفحه می‌زد بیرون. حالا لبه‌ی راستِ پنل رو
+     به لبه‌ی راستِ دکمه می‌چسبونیم و به چپ باز می‌شه — همیشه داخلِ صفحه می‌مونه. */
   .notif-panel-overlay{ position:fixed; inset:0; z-index:44; background:none; }
   .notif-panel{
-    position:absolute; top:calc(100% + 12px); left:50%; transform:translateX(-50%);
+    position:absolute; top:calc(100% + 12px); right:0; left:auto;
     width:min(260px, calc(100vw - 32px)); max-height:320px; overflow-y:auto;
     background:rgba(var(--bg-rgb), .042);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
@@ -386,7 +390,7 @@
   body[data-theme="light"] .notif-panel{
     background:rgba(var(--bg-rgb), .82); border-color:var(--line); box-shadow:0 10px 24px rgba(0,0,0,.12);
   }
-  @keyframes notifPanelIn{ from{ opacity:0; transform:translateX(-50%) translateY(6px) scale(.96); } to{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+  @keyframes notifPanelIn{ from{ opacity:0; transform:translateY(6px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
   .notif-panel-head{ font-size:12px; font-weight:700; color:var(--muted); padding:4px 6px 8px; }
   .notif-panel-list{ display:flex; flex-direction:column; gap:4px; }
   .notif-panel-item{ padding:8px 8px; border-radius:10px; transition:background .15s ease; }
@@ -1268,12 +1272,34 @@
   }
   .jdate-popup-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
   .jdate-popup-title-nav{display:flex; align-items:center; gap:6px;}
-  .jdate-select{
-    background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-plexmono), monospace; font-size:12px; padding:5px 4px; outline:none; cursor:pointer;
+  /* دراپ‌داونِ سفارشیِ ماه/سال — بک‌گراندش هم‌رنگِ حالتِ انتخاب‌شده‌ی بقیه‌ی
+     اپ (همون accent-dim که day-pill.on و امثالش استفاده می‌کنن)، به‌جای
+     بک‌گراندِ خنثیِ قبلیِ jdate-select. */
+  .jdate-mini-select{ position:relative; }
+  .jdate-mini-btn{
+    display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:10px;
+    background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent);
+    font-family:var(--font-plexmono), monospace; font-size:12.5px; font-weight:700; cursor:pointer;
+    transition:opacity .15s ease;
   }
-  body:not([data-theme="light"]) .jdate-select{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
-  .jdate-select:hover, .jdate-select:focus{border-color:var(--accent);}
+  .jdate-mini-btn:hover{ opacity:.82; }
+  .jdate-mini-list{
+    position:absolute; top:calc(100% + 6px); right:0; z-index:10;
+    max-height:220px; overflow-y:auto; min-width:96px;
+    background:linear-gradient(180deg, rgba(9,10,11,.99), rgba(6,7,8,.995));
+    border:1px solid rgba(255,255,255,.08); border-radius:12px;
+    box-shadow:0 16px 40px rgba(0,0,0,.5); padding:6px;
+  }
+  body[data-theme="light"] .jdate-mini-list{
+    background:rgba(255,255,255,.98); border-color:var(--line); box-shadow:0 12px 30px rgba(0,0,0,.15);
+  }
+  .jdate-mini-item{
+    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-plexmono), monospace;
+    text-align:center; cursor:pointer; color:var(--text); transition:background .12s ease;
+  }
+  .jdate-mini-item:hover{ background:rgba(var(--bg-rgb),.4); }
+  body:not([data-theme="light"]) .jdate-mini-item:hover{ background:rgba(255,255,255,.06); }
+  .jdate-mini-item.active{ background:var(--accent-dim); color:var(--accent); font-weight:700; }
   .jdate-popup-close{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:0;}
   body[data-theme="light"] .jdate-popup-close, body:not([data-theme="light"]) .jdate-popup-close,
   body[data-theme="light"] .jdate-popup-close:hover, body:not([data-theme="light"]) .jdate-popup-close:hover{
@@ -1407,12 +1433,23 @@
   }
 
   /* تمامِ لیبل‌های کوچیکِ فرم (اسم برنامه، تگ، روز، ساعت شروع/پایان و...) سبز
-     می‌شن — رنگِ برندِ اپ (var(--accent))، هماهنگ با تایتلِ اصلیِ پاپ‌آپ. */
-  .add-program-glass label, .add-program-glass .time-field-label{ color:var(--accent); }
+     می‌شن — رنگِ برندِ اپ (var(--accent))، هماهنگ با تایتلِ اصلیِ پاپ‌آپ.
+     برای label، اسپسیفیسیتی با `.wsearch-newform label` (پایین‌تر توی همین
+     فایل) مساوی بود؛ چون اون دیرتر تعریف شده بود همیشه برنده می‌شد و لیبل‌ها
+     (برخلافِ .time-field-labelها که اسپسیفیسیتیِ بالاتری داشتن) خاکستری
+     می‌موندن. با اضافه‌کردنِ `.wsearch-newform` به سلکتور، واقعاً
+     اسپسیفیک‌تر می‌شه (نه فقط ترتیب) و همیشه برنده‌ست. */
+  .wsearch-newform .add-program-glass label, .add-program-glass .time-field-label{ color:var(--accent); }
   /* مثال‌های داخلِ فیلد (placeholder) قبلاً با var(--muted2) خیلی کم‌کنتراست
      بودن و دیده نمی‌شدن؛ var(--muted) خواناتره. */
   .add-program-glass .wsearch-newform-name::placeholder,
   .add-program-glass .wsearch-add-time::placeholder{ color:var(--muted); opacity:.85; }
+  /* .auth-tabs پیش‌فرض margin-top:16px داره (تنظیم‌شده برای صفحه‌ی
+     ورود/ثبت‌نام که تب زیرِ یه فاصله‌ی خودش میاد) — اینجا بلافاصله بعدِ
+     لیبلِ «میزان اهمیت»ه که خودش ۵px margin-bottom داره، پس جمعشون فاصله‌ی
+     نامتناسبِ بزرگی می‌ساخت. با بقیه‌ی فیلدها (که فاصله‌شون فقط از خودِ
+     لیبل میاد) یک‌دست شد. */
+  .add-program-glass .auth-tabs{ margin-top:6px; }
 
   /* new-item add button, in its own footer row so it can never float on top of the list */
   .wsearch-footer{flex-shrink:0; display:flex; justify-content:flex-end; padding-top:12px; position:relative; z-index:6;}
@@ -1447,6 +1484,17 @@
     background:rgba(255,255,255,.98); border:1px solid var(--line); box-shadow:0 16px 40px rgba(0,0,0,.18);
   }
   .wsearch-fab-menu.open{opacity:1; transform:translateY(0) scale(1); pointer-events:auto;}
+
+  /* منوی سه‌نقطه‌ی «برنامه‌های امروز» — bg-dash-card (۲٪ سفید) + backdrop-blur
+     پشتش تقریباً شفاف دیده می‌شد. یه بک‌گراندِ تقریباً توپر مثلِ بقیه‌ی
+     منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
+  .dash-context-menu{
+    background:linear-gradient(180deg, rgba(9,10,11,.98), rgba(6,7,8,.99));
+    backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  }
+  body[data-theme="light"] .dash-context-menu{
+    background:rgba(255,255,255,.97);
+  }
   .wsearch-fab-option{
     display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:9px; cursor:pointer;
     font-size:12.5px; font-weight:600; color:var(--text); transition:background .12s ease;

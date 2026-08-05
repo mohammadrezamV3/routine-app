@@ -93,13 +93,12 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                   type="button"
                   key={`${r.id}-${r.jsDay}`}
                   onClick={() => onOpenProgram?.(r.name)}
-                  className="flex items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right transition hover:border-white/10 sm:gap-3 sm:px-3.5 sm:py-3"
+                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right transition hover:border-white/10 sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
                 >
                   <div className="min-w-0 flex-1 text-right">
                     <div className="truncate text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{r.name}</div>
-                    <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]">
-                      {dayName} — <span dir="ltr">{toEnDigits(r.time)}</span>
-                    </div>
+                    <div className="mt-1 truncate text-[9.5px] text-dash-muted sm:text-[11.5px]">{dayName}</div>
+                    <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]" dir="ltr">{toEnDigits(r.time)}</div>
                   </div>
                   <span
                     role="button"

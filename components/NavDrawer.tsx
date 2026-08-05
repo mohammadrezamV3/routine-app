@@ -88,6 +88,22 @@ export function NavDrawer() {
     router.push(href);
   }
 
+  // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابلِ بازشدن
+  // بودن (سه تا state جدا، بدون هماهنگی) — کاربر می‌تونست چندتاشونو با هم
+  // باز کنه. الان باز کردنِ هرکدوم اون دوتای دیگه رو می‌بنده.
+  function openHamburgerDrawer() {
+    setOpen(true);
+    setProfileMenuOpen(false);
+    setNotifPanelOpen(false);
+  }
+  function toggleProfileMenu() {
+    setProfileMenuOpen((v) => {
+      const next = !v;
+      if (next) { setOpen(false); setNotifPanelOpen(false); }
+      return next;
+    });
+  }
+
   useEffect(() => {
     if (status === "loading" || !authSlotRef.current) return;
     animate(authSlotRef.current, {
@@ -113,7 +129,11 @@ export function NavDrawer() {
   // کلیک روی زنگوله همیشه پنل اطلاعیه‌ها رو باز/بسته می‌کنه؛ اگه هنوز اجازه‌ی
   // نوتیف مرورگر گرفته نشده (نقطه‌ی قرمز)، جدا از باز شدن پنل، درخواستش هم می‌ره.
   async function handleBellClick() {
-    setNotifPanelOpen((v) => !v);
+    setNotifPanelOpen((v) => {
+      const next = !v;
+      if (next) { setOpen(false); setProfileMenuOpen(false); }
+      return next;
+    });
     if (!notificationsSupported() || notifPermission === "granted") return;
     const p = await requestNotificationPermission();
     setNotifPermission(p);
@@ -140,7 +160,7 @@ export function NavDrawer() {
               id="menuBtn"
               className={`hamburger${open ? " active" : ""}`}
               aria-label="باز کردن منو"
-              onClick={() => setOpen(true)}
+              onClick={openHamburgerDrawer}
             >
               <span></span><span></span><span></span>
             </button>
@@ -149,7 +169,7 @@ export function NavDrawer() {
             ) : status === "authenticated" ? (
               <>
                 <div ref={authSlotRef} className="profile-chip-wrap">
-                  <button className="profile-chip" aria-label="پروفایل" onClick={() => setProfileMenuOpen((v) => !v)}>
+                  <button className="profile-chip" aria-label="پروفایل" onClick={toggleProfileMenu}>
                     <span className="profile-chip-avatar">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="8" r="3.5" />
