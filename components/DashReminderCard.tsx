@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bell, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
-import { getImportantThisWeek, ImportantOccurrence } from "@/lib/routineStats";
+import { getImportantUpcoming, ImportantOccurrence } from "@/lib/routineStats";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
@@ -27,7 +27,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
   // هیدریشن) true می‌شه، رندرِ اولِ سرور و کلاینت هر دو false می‌مونن.
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { getImportantThisWeek().then(setItems); }, []);
+  useEffect(() => { getImportantUpcoming().then(setItems); }, []);
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
       <DashCard delay={delay}>
         <h2 className="text-[13px] font-bold text-dash-text sm:text-[15px]">یادآوری‌ها</h2>
 
-        <div className="mt-3 flex flex-col gap-2 sm:mt-4 sm:gap-2.5">
+        <div className="no-scrollbar mt-3 flex max-h-[300px] flex-col gap-2 overflow-y-auto sm:mt-4 sm:max-h-[360px] sm:gap-2.5">
           {items === null ? (
             <div className="text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
           ) : list.length === 0 ? (

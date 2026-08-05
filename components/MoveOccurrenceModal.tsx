@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
-import { timeStartMinutes, WEEK_ORDER } from "@/lib/schedule";
+import { timeStartMinutes } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
@@ -18,11 +18,11 @@ const now = new Date();
 const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
 // پاپ‌آپِ «انتقال به یک روز دیگر» — از منویِ سه‌نقطه‌ی یک برنامه باز می‌شه.
-// دیزاینش دقیقاً مثلِ افزودن/ویرایشِ برنامه‌ست (همون بک‌گراندِ لیکوئید گلسِ
-// بلورشده). روزِ مقصد با یک تقویمِ واقعی انتخاب می‌شه (نه پیل‌های هفته)،
-// چون کاربر می‌خواد یه تاریخِ مشخص ببینه، نه فقط اسمِ روزِ هفته؛ روزهای
-// گذشته توی تقویم غیرفعالن. تغییرِ ساعت اختیاریه (با یه تیک روشن/خاموش
-// می‌شه، وگرنه همون ساعتِ قبلی برای روزِ جدید می‌مونه).
+// دیزاینش دقیقاً مثلِ افزودن/ویرایشِ برنامه‌ست. روزِ مقصد با یک تقویمِ واقعی
+// انتخاب می‌شه؛ فقط روزهایی که واقعاً از تقویم گذشتن غیرفعالن (نه کلِ یه
+// روزِ هفته برای همیشه — چون برنامه‌ها تکرارشونده‌ان، هفته‌ی بعدِ هر روزی
+// می‌تونه مقصدِ معتبر باشه). ساعتِ شروع/پایان همیشه توی پاپ‌آپن، پیش‌فرض
+// همون ساعتِ فعلیِ برنامه، ولی کاربر می‌تونه آزادانه تغییرشون بده.
 export function MoveOccurrenceModal({
   name,
   occ,
@@ -37,16 +37,9 @@ export function MoveOccurrenceModal({
   onChanged: () => void;
 }) {
   const parts = String(occ.time).split(/[–—-]/);
-  // نمی‌شه به روزی زودتر از روزِ فعلیِ خودِ برنامه منتقل کرد (مثلاً از
-  // دوشنبه به یکشنبه یا قبل‌ترش) — چون برنامه‌ها هفتگی/تکرارشونده‌ان،
-  // «زودتر» یعنی موقعیتِ روز توی ترتیبِ WEEK_ORDER (شنبه..جمعه)، نه تاریخِ
-  // تقویمی. روزهای زودتر هم توی خودِ تقویم غیرفعال می‌شن، هم موقعِ ثبت چک می‌شه.
-  const occWeekIndex = WEEK_ORDER.findIndex((w) => w.jsDay === occ.jsDay);
-  const disabledWeekdays = WEEK_ORDER.slice(0, occWeekIndex).map((w) => w.jsDay);
   const [targetJalali, setTargetJalali] = useState<JalaliDate | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dayError, setDayError] = useState(false);
-  const [changeTime, setChangeTime] = useState(false);
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -57,15 +50,11 @@ export function MoveOccurrenceModal({
     if (status !== "idle") return;
     const dErr = !targetJalali;
     setDayError(dErr);
-    if (changeTime) {
-      const nextErrors: typeof errors = {};
-      if (!start.trim()) nextErrors.start = true;
-      if (!end.trim()) nextErrors.end = true;
-      setErrors(nextErrors);
-      if (dErr || nextErrors.start || nextErrors.end) return;
-    } else if (dErr) {
-      return;
-    }
+    const nextErrors: typeof errors = {};
+    if (!start.trim()) nextErrors.start = true;
+    if (!end.trim()) nextErrors.end = true;
+    setErrors(nextErrors);
+    if (dErr || nextErrors.start || nextErrors.end) return;
 
     const targetJsDay = jalaliToGregorianApprox(targetJalali![0], targetJalali![1], targetJalali![2]).getDay();
     const startFa = normalizeTimeToFa(start);
@@ -74,13 +63,8 @@ export function MoveOccurrenceModal({
     const endMin = timeStartMinutes(endFa);
 
     let pastMsg: string | null = null;
-    const targetWeekIndex = WEEK_ORDER.findIndex((w) => w.jsDay === targetJsDay);
-    if (targetWeekIndex < occWeekIndex) {
-      pastMsg = `نمی‌شه به روزی زودتر از «${occ.dayName}» منتقل کرد`;
-    }
-
     const isPickedToday = targetJalali![0] === jNow[0] && targetJalali![1] === jNow[1] && targetJalali![2] === jNow[2];
-    if (!pastMsg && isPickedToday) {
+    if (isPickedToday) {
       const checkMin = endMin ?? startMin;
       const nowMin = now.getHours() * 60 + now.getMinutes();
       if (checkMin !== null && nowMin >= checkMin) {
@@ -138,7 +122,7 @@ export function MoveOccurrenceModal({
             <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
           </div>
 
-          <label>روز مقصد</label>
+          <label>انتقال به روز:</label>
           <button
             type="button"
             className={`jdate-btn${targetJalali ? "" : " placeholder"}${dayError ? " field-error" : ""}`}
@@ -147,31 +131,20 @@ export function MoveOccurrenceModal({
             {targetJalali ? formatJalali(targetJalali) : "روز / ماه / سال"}
           </button>
 
-          <div className="task" onClick={() => setChangeTime((v) => !v)}>
-            <div className={`check${changeTime ? " on" : ""}`}>
-              <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <div className="wsearch-newrow">
+            <div className={`time-field${errors.start ? " field-error" : ""}`}>
+              <span className="time-field-label">ساعت شروع</span>
+              <div className="field-error-wrap">
+                <TimeInput value={start} onChange={(v) => { setStart(v); if (v.trim()) setErrors((e) => ({ ...e, start: false })); }} />
+              </div>
             </div>
-            <div className="task-name">ساعتش هم تغییر کنه</div>
+            <div className={`time-field${errors.end ? " field-error" : ""}`}>
+              <span className="time-field-label">ساعت پایان</span>
+              <div className="field-error-wrap">
+                <TimeInput value={end} onChange={(v) => { setEnd(v); if (v.trim()) setErrors((e) => ({ ...e, end: false })); }} />
+              </div>
+            </div>
           </div>
-
-          {changeTime && (
-            <div className="wsearch-newrow">
-              <div className={`time-field${errors.start ? " field-error" : ""}`}>
-                <span className="time-field-label">ساعت شروع</span>
-                <div className="field-error-wrap">
-                  <TimeInput value={start} onChange={(v) => { setStart(v); if (v.trim()) setErrors((e) => ({ ...e, start: false })); }} />
-                </div>
-              </div>
-              <div className={`time-field${errors.end ? " field-error" : ""}`}>
-                <span className="time-field-label">ساعت پایان</span>
-                <div className="field-error-wrap">
-                  <TimeInput value={end} onChange={(v) => { setEnd(v); if (v.trim()) setErrors((e) => ({ ...e, end: false })); }} />
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="wsearch-newform-actions">
             <button
@@ -195,9 +168,8 @@ export function MoveOccurrenceModal({
       {pickerOpen && (
         <JalaliDatePicker
           initial={targetJalali}
-          title="روز مقصد"
+          title="انتقال به روز:"
           disablePast
-          disableWeekdays={disabledWeekdays}
           onClose={() => setPickerOpen(false)}
           onPick={(d) => { setTargetJalali(d); setDayError(false); setPickerOpen(false); }}
         />

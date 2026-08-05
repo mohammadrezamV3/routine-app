@@ -37,19 +37,20 @@ export async function getWeekStats(): Promise<WeekDayStat[]> {
   });
 }
 
-// آیتم‌های «خیلی زیاد»/«زیاد» که توی همین هفته (شنبه تا جمعه) حداقل یک بار
-// زمان‌بندی شدن — برای بخش «یادآوری‌ها».
+// آیتم‌های «خیلی زیاد»/«زیاد» که توی «امروز» و «فردا» حداقل یک بار زمان‌بندی
+// شدن — برای بخش «یادآوری‌ها». قبلاً کلِ هفته (شنبه تا جمعه) رو می‌گشت که
+// خیلی دوره‌ی بلندی بود؛ یادآوری واقعاً فقط برای چیزیه که قراره زودی برسه.
 export type ImportantOccurrence = { id: string; name: string; jsDay: number; time: string; importance: "veryHigh" | "high"; notify: boolean };
 
-export async function getImportantThisWeek(): Promise<ImportantOccurrence[]> {
+export async function getImportantUpcoming(days = 2): Promise<ImportantOccurrence[]> {
   const [removed, custom] = await Promise.all([getRemovedOccurrences(), getCustomOccurrences()]);
   const opts: ScheduleOpts = { removedOccurrences: new Set(removed), customOccurrences: custom };
 
-  const start = startOfWeek(new Date());
+  const today = new Date();
   const result: ImportantOccurrence[] = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
     for (const t of tasksForDate(d, opts)) {
       const occ = custom.find((c) => c.id === t.id);
       if (occ?.importance === "veryHigh" || occ?.importance === "high") {
