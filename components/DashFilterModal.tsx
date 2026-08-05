@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Importance, IMPORTANCE_LABELS } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { ToggleSwitch } from "./ToggleSwitch";
+import { normalizeFa } from "@/lib/utils";
 
 const IMPORTANCE_TABS: { value: "all" | Importance; label: string }[] = [
   { value: "all", label: "همه" },
@@ -37,10 +38,12 @@ export function DashFilterModal({
 }) {
   const [query, setQuery] = useState("");
   const isChecked = (name: string) => selectedPrograms === null || selectedPrograms.has(name);
-  const trimmedQuery = query.trim();
-  const visibleNames = trimmedQuery
+  const normalizedQuery = normalizeFa(query);
+  const visibleNames = normalizedQuery
     ? programNames.filter(
-        (n) => n.includes(trimmedQuery) || (programTags?.[n] ?? []).some((tag) => tag.includes(trimmedQuery))
+        (n) =>
+          normalizeFa(n).includes(normalizedQuery) ||
+          (programTags?.[n] ?? []).some((tag) => normalizeFa(tag).includes(normalizedQuery))
       )
     : programNames;
 

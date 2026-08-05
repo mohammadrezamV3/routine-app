@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FA_WEEKDAY_SHORT,
   CAL_WEEK_ORDER,
@@ -11,6 +11,63 @@ import {
   toJalali,
   JalaliDate,
 } from "@/lib/jalali";
+
+// دراپ‌داونِ سفارشیِ ماه/سال — قبلاً <select> بومیِ مرورگر بود که برای
+// لیستِ بلندِ سال‌ها (۱۰۰+ گزینه) یه اسکرول‌بارِ خامِ مرورگری نشون می‌داد و
+// اصلاً هم‌رنگِ بقیه‌ی اپ نبود. این یکی کاملاً با استایلِ خودِ اپ می‌سازه و
+// اسکرولش (مثلِ بقیه‌ی لیست‌های اپ) بدون اسکرول‌بارِ قابل‌دیدنه.
+function JdateMiniSelect({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+}: {
+  value: number;
+  options: { value: number; label: string }[];
+  onChange: (v: number) => void;
+  ariaLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    listRef.current.querySelector(".jdate-mini-item.active")?.scrollIntoView({ block: "center" });
+  }, [open]);
+
+  const current = options.find((o) => o.value === value);
+
+  return (
+    <div className="jdate-mini-select" ref={wrapRef}>
+      <button type="button" className="jdate-mini-btn" onClick={() => setOpen((v) => !v)} aria-label={ariaLabel}>
+        {current?.label ?? value}
+      </button>
+      {open && (
+        <div className="jdate-mini-list no-scrollbar" ref={listRef}>
+          {options.map((o) => (
+            <div
+              key={o.value}
+              className={`jdate-mini-item${o.value === value ? " active" : ""}`}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+            >
+              {o.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function JalaliDatePicker({
   initial,
@@ -89,22 +146,18 @@ export function JalaliDatePicker({
         <div className="jdate-popup-head">
           <button type="button" className="jdate-popup-close" onClick={onClose} aria-label="بستن">×</button>
           <div className="jdate-popup-title-nav">
-            <select
-              className="jdate-select"
+            <JdateMiniSelect
               value={view.jm}
-              onChange={(e) => setView((v) => ({ ...v, jm: Number(e.target.value) }))}
-              aria-label="ماه"
-            >
-              {J_MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-            </select>
-            <select
-              className="jdate-select"
+              options={J_MONTHS.map((m, i) => ({ value: i + 1, label: m }))}
+              onChange={(jm) => setView((v) => ({ ...v, jm }))}
+              ariaLabel="ماه"
+            />
+            <JdateMiniSelect
               value={view.jy}
-              onChange={(e) => setView((v) => ({ ...v, jy: Number(e.target.value) }))}
-              aria-label="سال"
-            >
-              {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
+              options={yearOptions.map((y) => ({ value: y, label: String(y) }))}
+              onChange={(jy) => setView((v) => ({ ...v, jy }))}
+              ariaLabel="سال"
+            />
           </div>
         </div>
         <div className="jdate-weekdays">
