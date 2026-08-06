@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { computeDayStats, tasksForDate, ScheduleOpts } from "@/lib/schedule";
 import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isValidUsername } from "@/lib/validate";
-import { isoLocal } from "@/lib/jalali";
+import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
+import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
 
 // استریکِ روزهای پشت‌سرهمِ کاملِ یک کاربرِ دلخواه — همون منطقِ lib/useMyStreak.ts،
 // ولی سمتِ سرور و مستقیم روی Prisma، چون دوست‌ها نمی‌تونن به تاریخچه‌ی
@@ -65,11 +66,44 @@ async function statsForUser(userId: string) {
   return { ...dayStats, streak };
 }
 
-// GET /api/friends → لیست دوستانِ تأییدشده + درصد پیشرفتِ امروزِ هرکدوم
-export async function GET() {
+// پیشرفتِ «بدنسازی»ِ یک دوست — بر خلافِ statsForUser (که روزانه‌ست، چون
+// روتین هر روز تسک داره)، اینجا مبنا «جلساتِ این‌هفته» است، چون تمرین فقط
+// روزهای باشگاهِ برنامه (gymDays) اتفاق می‌افته، نه هر روز.
+async function statsForUserExercise(userId: string) {
+  const plan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { startDate: "desc" } });
+  if (!plan) return { completed: 0, total: 0, pct: 0, streak: 0 };
+
+  const gymDays = (plan.gymDays as string[] | null) ?? [];
+  const now = new Date();
+  const start = new Date(now); start.setDate(start.getDate() - 90);
+
+  const rows = await prisma.exerciseLog.findMany({
+    where: { userId, planId: plan.id, date: { gte: start, lte: now } },
+  });
+  const logs: ExerciseLogRange = {};
+  rows.forEach((r) => {
+    logs[isoLocal(r.date)] = { completed: r.completed, completedItems: (r.completedItems as string[] | null) ?? [] };
+  });
+
+  const streak = computeExerciseStreak(gymDays, (d) => FA_WEEKDAY[d.getDay()], logs, now);
+  return {
+    completed: sessionsThisWeekDone(logs, now),
+    total: sessionsThisWeekTotal(gymDays),
+    pct: weekProgressPct(gymDays, logs, now),
+    streak,
+  };
+}
+
+// GET /api/friends?module=exercise → لیست دوستانِ تأییدشده + پیشرفتِ هرکدوم؛
+// module=exercise یعنی فقط پیشرفتِ بدنسازی نشون بده (برای داشبوردِ بدنسازی)،
+// وگرنه پیشرفتِ روتینِ روزانه (پیش‌فرض، برای داشبوردِ اصلی).
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const module = req.nextUrl.searchParams.get("module");
+  const statsFn = module === "exercise" ? statsForUserExercise : statsForUser;
 
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
@@ -83,7 +117,7 @@ export async function GET() {
     rows.map(async (r) => {
       const isRequester = r.requesterId === userId;
       const other = isRequester ? r.addressee : r.requester;
-      const stats = await statsForUser(other.id);
+      const stats = await statsFn(other.id);
       return {
         friendshipId: r.id,
         id: other.id,

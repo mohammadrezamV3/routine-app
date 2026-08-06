@@ -11,7 +11,9 @@ export const PHASE_LABELS: Record<TrainingPhase, string> = {
 
 export type ExercisePlan = {
   id: string;
-  level: ExerciseLevel;
+  // پلن‌های دستی (بدونِ هوش‌مصنوعی/پرسش‌نامه) "custom" ذخیره می‌شن — سه‌تای
+  // اصلی فقط برای پلن‌های ساخته‌شده با فرمِ سطح/هدف (AI یا fallback) صدق می‌کنه.
+  level: ExerciseLevel | "custom";
   heightCm: number | null;
   weightKg: number | null;
   goal: ExerciseGoal | null;
