@@ -21,27 +21,25 @@ export function ExerciseStatsCard({
 }) {
   return (
     <DashCard delay={delay}>
-      <div className="grid grid-cols-3 items-start gap-2 sm:gap-4">
-        <div className="flex flex-col items-center gap-2 sm:gap-3">
-          <span className="text-[10px] font-semibold text-dash-muted sm:text-[12px]">تعداد جلسات</span>
-          <div className="flex items-center justify-center" style={{ height: 72 }}>
-            <span className="mono whitespace-nowrap text-[18px] font-bold text-dash-text sm:text-[22px]">
+      <div className="grid grid-cols-3 items-start gap-2 sm:gap-3">
+        <div className="flex flex-col items-center gap-2.5 sm:gap-3">
+          <span className="text-center text-[9.5px] font-semibold leading-tight text-dash-muted sm:text-[11px]">تعداد جلسات</span>
+          <div className="flex items-center justify-center" style={{ height: 60 }}>
+            <span className="mono whitespace-nowrap text-[16px] font-bold text-dash-text sm:text-[19px]" dir="ltr">
               {sessionsDone}
               <span className="text-dash-muted"> / {sessionsTotal}</span>
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-2 sm:gap-3">
-          <span className="text-[10px] font-semibold text-dash-muted sm:text-[12px]">پیشرفت امروز</span>
-          <span className="sm:hidden"><DashProgressCircle value={todayPct} size={52} strokeWidth={4.5} /></span>
-          <span className="hidden sm:inline-block"><DashProgressCircle value={todayPct} size={72} strokeWidth={6} /></span>
+        <div className="flex flex-col items-center gap-2.5 sm:gap-3">
+          <span className="text-center text-[9.5px] font-semibold leading-tight text-dash-muted sm:text-[11px]">پیشرفت امروز</span>
+          <DashProgressCircle value={todayPct} size={60} strokeWidth={5} />
         </div>
 
-        <div className="flex flex-col items-center gap-2 sm:gap-3">
-          <span className="text-[10px] font-semibold text-dash-muted sm:text-[12px]">پیشرفت هفتگی</span>
-          <span className="sm:hidden"><DashProgressCircle value={weekPct} size={52} strokeWidth={4.5} /></span>
-          <span className="hidden sm:inline-block"><DashProgressCircle value={weekPct} size={72} strokeWidth={6} /></span>
+        <div className="flex flex-col items-center gap-2.5 sm:gap-3">
+          <span className="text-center text-[9.5px] font-semibold leading-tight text-dash-muted sm:text-[11px]">پیشرفت هفتگی</span>
+          <DashProgressCircle value={weekPct} size={60} strokeWidth={5} />
         </div>
       </div>
     </DashCard>

@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, History, Plus } from "lucide-react";
+import { Calendar, History } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
-import { LEVEL_LABELS, GOAL_LABELS } from "@/lib/exercisePlans";
-import { ExercisePlan, PHASE_LABELS } from "@/lib/exerciseTypes";
+import { ExercisePlan } from "@/lib/exerciseTypes";
 import {
   fetchExerciseLogRange, sessionsThisWeekTotal, sessionsThisWeekDone,
   weekProgressPct, todayProgressPct, ExerciseLogRange,
@@ -115,16 +114,8 @@ export function ExerciseDashboard({
     else setSubError(data.error || "خطا در جایگزینی");
   }
 
-  const levelLabel = plan.level === "custom" ? "برنامه‌ی شخصی" : LEVEL_LABELS[plan.level as keyof typeof LEVEL_LABELS];
-
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="section-note" style={{ marginTop: 6 }}>
-        سطح: {levelLabel}{plan.goal && ` — هدف: ${GOAL_LABELS[plan.goal]}`}
-        {plan.trainingPhase && plan.trainingPhase !== "none" && ` — دوره: ${PHASE_LABELS[plan.trainingPhase as keyof typeof PHASE_LABELS]}`}
-        {!plan.generatedByAi && plan.level !== "custom" && " — (نسخه‌ی پایه، بدون هوش مصنوعی)"}
-      </div>
-
       <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
         <DashDateSelector
           days={dashDays}
@@ -154,8 +145,9 @@ export function ExerciseDashboard({
 
       {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
 
-      {/* راست (پهن‌تر): برنامه تمرینی امروز؛ چپ: بالا آمارِ جلسات، پایین دوستان+مشاهده‌ی حرکات کنارِ هم — عیناً چیدمانِ طرح */}
-      <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.3fr_1fr] lg:items-stretch lg:gap-6">
+      {/* سه بخش، عیناً چیدمانِ روتین: راست (پهن‌تر) برنامه‌ی تمرینیِ امروز،
+          وسط دکمه‌ی «مشاهده حرکات» (هم‌جای DashReminderCard)، چپ آمار+دوستان زیرِ هم */}
+      <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6">
         <ExerciseTaskList
           planId={plan.id}
           dayPlan={selectedDayPlan}
@@ -168,25 +160,16 @@ export function ExerciseDashboard({
           onSubstitute={substituteItem}
           substitutingItem={subbingItem}
           onSessionEnd={() => setRefreshKey((k) => k + 1)}
+          onAddProgram={() => setAddProgramOpen(true)}
           delay={0.05}
         />
 
-        <div className="flex flex-col gap-4 sm:gap-6">
-          <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.1} />
-          <DashFriendsCard delay={0.15} module="exercise" unitLabel="جلسه" />
-          <ExerciseCatalogCard delay={0.2} />
-        </div>
-      </div>
+        <ExerciseCatalogCard delay={0.1} />
 
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => setAddProgramOpen(true)}
-          className="flex items-center gap-1.5 text-[12px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[13.5px]"
-        >
-          <Plus size={16} />
-          افزودن برنامه ورزشی جدید
-        </button>
+        <div className="flex flex-col gap-4 sm:gap-6">
+          <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
+          <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
+        </div>
       </div>
 
       <ExerciseWeekAccordion planData={weekPlanData} todayName={todayName} />

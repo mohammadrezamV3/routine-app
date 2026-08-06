@@ -3,49 +3,26 @@
 import { useState } from "react";
 import { ListChecks } from "lucide-react";
 import { DashCard } from "./DashCard";
-import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
 import { ExerciseCatalogModal } from "./ExerciseCatalogModal";
 
-// «مشاهده حرکات» — کنارِ کارتِ دوستان، هم‌قد و هم‌شکلش: یه پیش‌نمایشِ کوچیک
-// از کاتالوگ + دکمه‌ای که مودالِ کاملِ جستجو/جزئیاتِ حرکات رو باز می‌کنه.
-// سه حرکتِ شاخص از سه گروهِ عضلانیِ متفاوت — پیش‌نمایشِ متنوع‌تر از سه‌تا
-// اسکوات پشتِ‌سرهم (که با ترتیبِ خامِ کاتالوگ پیش میومد)
-const PREVIEW_NAMES = ["اسکوات هالتر", "پرس سینه هالتر", "زیربغل هالتر خم"];
-
+// «مشاهده حرکات» — ستونِ وسطِ داشبورد (هم‌جای DashReminderCard توی روتین)،
+// فقط یک دکمه‌ی وسط‌چین که کاتالوگِ کاملِ حرکات رو باز می‌کنه — بدون
+// پیش‌نمایشِ لیست.
 export function ExerciseCatalogCard({ delay }: { delay?: number }) {
-  const [openName, setOpenName] = useState<string | null>(null);
-  const preview = PREVIEW_NAMES
-    .map((n) => EXERCISE_CATALOG.find((e) => e.name === n))
-    .filter((e): e is (typeof EXERCISE_CATALOG)[number] => !!e);
+  const [open, setOpen] = useState(false);
 
   return (
-    <DashCard delay={delay}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-[13px] font-bold text-dash-text sm:text-[15px]">مشاهده حرکات</h2>
-        <button
-          type="button"
-          onClick={() => setOpenName("")}
-          className="text-[11px] font-semibold text-dash-green hover:underline sm:text-[12.5px]"
-        >
-          مشاهده همه
-        </button>
-      </div>
+    <DashCard delay={delay} className="flex h-full items-center justify-center">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex flex-col items-center gap-2.5 py-6 text-[13px] font-bold text-dash-text sm:text-[15px]"
+      >
+        <ListChecks className="h-6 w-6 text-dash-green sm:h-7 sm:w-7" />
+        مشاهده حرکات
+      </button>
 
-      <div className="mt-4 flex flex-col gap-2 sm:gap-2.5">
-        {preview.map((e) => (
-          <button
-            key={e.name}
-            type="button"
-            onClick={() => setOpenName(e.name)}
-            className="flex items-center gap-2 rounded-xl px-1 py-1 text-right transition hover:bg-white/[0.03]"
-          >
-            <ListChecks className="h-3.5 w-3.5 shrink-0 text-dash-muted" />
-            <span className="min-w-0 flex-1 truncate text-[11.5px] font-medium text-dash-text sm:text-[12.5px]">{e.name}</span>
-          </button>
-        ))}
-      </div>
-
-      {openName !== null && <ExerciseCatalogModal initialName={openName} onClose={() => setOpenName(null)} />}
+      {open && <ExerciseCatalogModal onClose={() => setOpen(false)} />}
     </DashCard>
   );
 }

@@ -61,33 +61,33 @@
   input[type="number"]{ -moz-appearance:textfield; appearance:textfield; }
 
   /* minimal scrollbars for scrollable panels — dark theme only, a soft elegant black */
-  .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel{
+  .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel, .thin-scroll{
     scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent;
   }
   .nav-drawer-glass::-webkit-scrollbar, .wsearch-newform::-webkit-scrollbar,
-  .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar{
+  .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar, .thin-scroll::-webkit-scrollbar{
     width:5px; height:5px;
   }
   .nav-drawer-glass::-webkit-scrollbar-track, .wsearch-newform::-webkit-scrollbar-track,
-  .wsearch-list::-webkit-scrollbar-track, .wsearch-panel::-webkit-scrollbar-track{
+  .wsearch-list::-webkit-scrollbar-track, .wsearch-panel::-webkit-scrollbar-track, .thin-scroll::-webkit-scrollbar-track{
     background:transparent;
   }
   .nav-drawer-glass::-webkit-scrollbar-thumb, .wsearch-newform::-webkit-scrollbar-thumb,
-  .wsearch-list::-webkit-scrollbar-thumb, .wsearch-panel::-webkit-scrollbar-thumb{
+  .wsearch-list::-webkit-scrollbar-thumb, .wsearch-panel::-webkit-scrollbar-thumb, .thin-scroll::-webkit-scrollbar-thumb{
     background:rgba(255,255,255,.14); border-radius:10px;
   }
   .nav-drawer-glass::-webkit-scrollbar-thumb:hover, .wsearch-newform::-webkit-scrollbar-thumb:hover,
-  .wsearch-list::-webkit-scrollbar-thumb:hover, .wsearch-panel::-webkit-scrollbar-thumb:hover{
+  .wsearch-list::-webkit-scrollbar-thumb:hover, .wsearch-panel::-webkit-scrollbar-thumb:hover, .thin-scroll::-webkit-scrollbar-thumb:hover{
     background:rgba(255,255,255,.24);
   }
   body[data-theme="light"] .nav-drawer-glass, body[data-theme="light"] .wsearch-newform,
-  body[data-theme="light"] .wsearch-list, body[data-theme="light"] .wsearch-panel{
+  body[data-theme="light"] .wsearch-list, body[data-theme="light"] .wsearch-panel, body[data-theme="light"] .thin-scroll{
     scrollbar-color:rgba(0,0,0,.16) transparent;
   }
   body[data-theme="light"] .nav-drawer-glass::-webkit-scrollbar-thumb,
   body[data-theme="light"] .wsearch-newform::-webkit-scrollbar-thumb,
   body[data-theme="light"] .wsearch-list::-webkit-scrollbar-thumb,
-  body[data-theme="light"] .wsearch-panel::-webkit-scrollbar-thumb{
+  body[data-theme="light"] .wsearch-panel::-webkit-scrollbar-thumb, body[data-theme="light"] .thin-scroll::-webkit-scrollbar-thumb{
     background:rgba(0,0,0,.16);
   }
   /* اسکرول‌بارِ افقیِ داخلِ «برنامه هفتگی» کاملاً مخفیه — لمس/درگ همچنان اسکرول می‌کنه */
@@ -636,6 +636,18 @@
   @media (min-width:1024px){
     .bodybuilding-glass{ width:900px; max-width:900px; margin-right:-140px; }
     .roadmaps-desktop{ width:900px; max-width:900px; margin-right:-140px; }
+  }
+
+  /* داشبوردِ بدنسازی (وقتی برنامه‌ی فعال داره) عرضِ ۹۰۰پیکسلیِ بالا رو نمی‌خواد —
+     دقیقاً هم‌عرضِ داشبوردِ روتین (.dash-breakout) لازمه تا نوارِ روزها و
+     چیدمانِ سه‌بخشی عیناً همون‌قدر جا داشته باشن. اسپسیفیسیتیِ بالاتر (دو کلاس)
+     رویِ همه‌ی خواصِ عرض/مارجینِ .bodybuilding-glass غالب می‌شه. */
+  @media (min-width:1024px){
+    .bodybuilding-glass.exercise-dash-breakout{
+      --dash-w: min(1320px, calc(100vw - 64px));
+      width: var(--dash-w); max-width: var(--dash-w);
+      margin-right: calc((620px - var(--dash-w)) / 2);
+    }
   }
 
   /* همون ترفندِ breakout بالا، فقط برای صفحه‌ی پیش‌نمایشِ داشبورد
@@ -1439,6 +1451,11 @@
      نامتناسبِ بزرگی می‌ساخت. با بقیه‌ی فیلدها (که فاصله‌شون فقط از خودِ
      لیبل میاد) یک‌دست شد. */
   .add-program-glass .auth-tabs{ margin-top:6px; }
+
+  /* تبِ «بدنسازی/کالری» بالای صفحه — پیش‌فرضِ .auth-tabs تمام‌عرضه (برای
+     فرمِ ورود مناسبه)؛ اینجا کوچیک و راست‌چین (سمتِ شروعِ RTL) می‌مونه */
+  .exercise-mode-tabs{ max-width:220px; margin-right:0; margin-left:auto; margin-top:0; }
+  .exercise-mode-tabs .auth-tab{ padding:7px 0; font-size:11px; }
 
   /* new-item add button, in its own footer row so it can never float on top of the list */
   .wsearch-footer{flex-shrink:0; display:flex; justify-content:flex-end; padding-top:12px; position:relative; z-index:6;}
@@ -2328,11 +2345,8 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
    دستیِ برنامه‌ی خود کاربر */
 .exercise-choice-btn{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-  padding:22px 14px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.02);
-  color:var(--text); font-size:12.5px; font-weight:700; cursor:pointer;
-  transition:border-color .15s ease, background .15s ease, color .15s ease;
+  padding:22px 14px; font-size:12.5px; font-weight:700;
 }
-.exercise-choice-btn:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.06); }
 
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 
