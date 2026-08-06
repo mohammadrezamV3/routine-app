@@ -597,26 +597,6 @@
     content:'—'; position:absolute; right:0; color:var(--muted2);
   }
 
-  /* برنامه ورزشی — هر حرکت ردیف خودشو داره (نه یک رشته‌ی به‌هم‌چسبیده)،
-     هر روز هفته هم یک کارت جدا، مثل اپ‌های تمرین اختصاصی */
-  .exercise-item-list{ list-style:none; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
-  .exercise-item{
-    font-size:12.5px; color:var(--text); padding:8px 11px; border-radius:10px;
-    background:rgba(var(--bg-rgb), .35); border:1px solid var(--line);
-  }
-  li.exercise-item::before{ content:none; }
-  body:not([data-theme="light"]) .exercise-item{ background:#0B0C0D; border-color:rgba(255,255,255,.06); }
-  .exercise-week-grid{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
-  .exercise-day-card{
-    border-radius:22px; padding:16px 18px; border:1px solid var(--line); background:rgba(255,255,255,.02);
-  }
-  .exercise-day-card.today{ border-color:var(--accent); background:rgba(var(--accent-rgb),.05); }
-  .exercise-day-head{
-    display:flex; align-items:baseline; justify-content:space-between;
-    font-size:12px; color:var(--muted2); font-family:var(--font-plexmono), monospace;
-  }
-  .exercise-day-focus{ color:var(--text); font-weight:700; font-family:var(--font-vazir), sans-serif; font-size:13px; }
-
   /* آمار ژورنال ترید — کارت‌های کوچیک KPI، عدد اصلی proportional (نه tabular)
      چون تک‌عددن نه ستون هم‌تراز؛ رنگ فقط برای وضعیت سود/زیانه */
   .trade-stats-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:7px; }
@@ -1029,6 +1009,14 @@
   .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; margin-bottom:3px;}
   .wt-untimed-item .wt-name{font-size:12.5px; color:var(--text); line-height:1.4;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
+
+  /* «برنامه هفتگی»ِ بدنسازی — همون آکاردئونِ week-day، ولی به‌جای نوارِ
+     زمانی یک لیستِ ساده‌ی حرکاتِ همون روز (حرکات ساعتِ مشخص ندارن) */
+  .exercise-week-day-list{padding:2px 0 14px;}
+  .exercise-week-day-focus{color:var(--accent); font-weight:700; font-size:12.5px; margin-bottom:8px;}
+  .exercise-week-day-list ol{list-style:none; display:flex; flex-direction:column; gap:6px;}
+  .exercise-week-day-list li{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text);}
+  .exercise-week-day-list li .mono{color:var(--muted2); font-size:11px; min-width:16px;}
 
   .wt-item[data-task-id], .wt-untimed-item[data-task-id]{cursor:pointer;}
   .wt-item[data-task-id] .wt-content, .wt-untimed-item[data-task-id]{transition:opacity .15s ease, transform .15s ease;}
@@ -2336,14 +2324,15 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 }
 .exercise-rules-list li::before{ content:'—'; position:absolute; right:0; color:var(--muted2); }
 
-.exercise-item.exercise-item-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
-.exercise-sub-btn{
-  flex-shrink:0; font-size:10px; padding:4px 9px; border-radius:8px; white-space:nowrap;
-  border:1px solid var(--line); background:none; color:var(--muted2); cursor:pointer;
-  transition:border-color .15s ease, color .15s ease;
+/* دو گزینه‌ی «افزودن برنامه ورزشی جدید» — ساخت با هوش‌مصنوعی یا وارد‌کردنِ
+   دستیِ برنامه‌ی خود کاربر */
+.exercise-choice-btn{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  padding:22px 14px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+  color:var(--text); font-size:12.5px; font-weight:700; cursor:pointer;
+  transition:border-color .15s ease, background .15s ease, color .15s ease;
 }
-.exercise-sub-btn:hover{ border-color:var(--accent); color:var(--accent); }
-.exercise-sub-btn:disabled{ opacity:.5; cursor:default; }
+.exercise-choice-btn:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.06); }
 
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 

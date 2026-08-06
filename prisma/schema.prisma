@@ -566,6 +566,9 @@ model ExerciseLog {
 
   date      DateTime @db.Date
   completed Boolean  @default(false)
+  // اسمِ حرکت‌هایی که حینِ همین جلسه تیک خوردن — برای نمایشِ ضربدرِ حرکاتِ
+  // تیک‌نخورده بعدِ «پایان تمرین» و محاسبه‌ی درصدِ پیشرفتِ امروز.
+  completedItems Json?
   notes     String?
 
   createdAt DateTime @default(now())

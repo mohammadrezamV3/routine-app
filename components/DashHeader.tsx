@@ -6,7 +6,17 @@ import { DashProgressCircle } from "./DashProgressCircle";
 // هدرِ صفحه‌ی داشبورد — عنوان + زیرعنوان، به‌همراه حلقه‌ی پیشرفتِ امروز که
 // دورترین عنصر سمت راست صفحه‌ست (دقیقاً طبق طرح). دیگه کنترل «نمای جدول/
 // نمای لیست» بالای این هدر نیست، پس صفحه مستقیماً از همین‌جا شروع می‌شه.
-export function DashHeader({ progress = 75 }: { progress?: number }) {
+export function DashHeader({
+  progress = 75,
+  title = "روتین من",
+  subtitle = "برنامه‌های روزانه خود را مدیریت و پیگیری کنید.",
+  progressLabel = "پیشرفت امروز",
+}: {
+  progress?: number;
+  title?: string;
+  subtitle?: string;
+  progressLabel?: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -21,12 +31,12 @@ export function DashHeader({ progress = 75 }: { progress?: number }) {
         <span className="hidden sm:inline-block">
           <DashProgressCircle value={progress} size={72} strokeWidth={6} />
         </span>
-        <span className="whitespace-nowrap text-[9px] text-dash-muted sm:text-[11px]">پیشرفت امروز</span>
+        <span className="whitespace-nowrap text-[9px] text-dash-muted sm:text-[11px]">{progressLabel}</span>
       </div>
       <div>
-        <h1 className="text-[19px] font-bold text-dash-text sm:text-[32px]">روتین من</h1>
+        <h1 className="text-[19px] font-bold text-dash-text sm:text-[32px]">{title}</h1>
         <p className="mt-1 text-[11px] text-dash-muted sm:mt-1.5 sm:text-[14px]">
-          برنامه‌های روزانه خود را مدیریت و پیگیری کنید.
+          {subtitle}
         </p>
       </div>
     </motion.div>
