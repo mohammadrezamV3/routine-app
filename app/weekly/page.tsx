@@ -23,7 +23,7 @@ import {
   Importance,
 } from "@/lib/storage";
 import { getTodayStats } from "@/lib/routineStats";
-import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, timeToMinutes, WakeSleepTimes } from "@/lib/wakeSleep";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, isWakeOnTime, timeToMinutes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { ProgramCard } from "@/components/ProgramCard";
 import { AddProgramForm } from "@/components/AddProgramForm";
@@ -219,6 +219,19 @@ export default function WeeklyPage() {
     setStatsRefreshKey((k) => k + 1);
   }
 
+  // ثبتِ ساعتِ بیداریِ امروز — قبلاً فقط از داخلِ DayModal ممکن بود، ولی
+  // DayModal این‌روزها فقط با onPick (برای انتخابِ تاریخ) صدا زده می‌شه، پس
+  // این دکمه هیچ‌وقت باز نمی‌شد و هیچ‌کس نمی‌تونست بیداریش رو ثبت کنه —
+  // یعنی استریک (که به doneCount کامل + بیداریِ به‌موقع نیاز داره) همیشه رو صفر می‌موند.
+  async function registerWake() {
+    if (!isSelectedToday) return;
+    const current = selectedDaily ?? { tasks: {}, wake: null };
+    const next: DailyRecord = { ...current, wake: new Date().toISOString() };
+    setSelectedDaily(next);
+    setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
+    await setDaily(selectedIso, next);
+  }
+
   function toggleProgramFilter(name: string) {
     setProgramFilter((prev) => {
       const base = prev ?? new Set(allProgramNames);
@@ -259,6 +272,32 @@ export default function WeeklyPage() {
       <section className="dash-breakout dash-scope pb-6 text-dash-text">
         <div className="flex flex-col gap-4 sm:gap-6">
           <DashHeader progress={todayStats.pct} />
+
+          {isSelectedToday && (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-dash-border bg-dash-card px-3.5 py-2.5 text-[11px] text-dash-muted sm:text-[12.5px]">
+              {selectedDaily?.wake ? (
+                <>
+                  <span>
+                    بیداریِ امروز:{" "}
+                    <b className="mono text-dash-text" dir="ltr">
+                      {new Date(selectedDaily.wake).getHours().toString().padStart(2, "0")}:
+                      {new Date(selectedDaily.wake).getMinutes().toString().padStart(2, "0")}
+                    </b>
+                  </span>
+                  <span style={{ color: isWakeOnTime(selectedDaily.wake, awakeStartMin) ? "var(--accent)" : "var(--muted)" }}>
+                    {isWakeOnTime(selectedDaily.wake, awakeStartMin) ? "به‌موقع" : "دیرتر از هدف"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>هدفِ بیداری: {wake}</span>
+                  <button type="button" onClick={registerWake} className="font-semibold text-dash-green hover:brightness-110">
+                    ثبت بیداری الان
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
             <DashDateSelector

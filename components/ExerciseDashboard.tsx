@@ -153,7 +153,7 @@ export function ExerciseDashboard({
           dayPlan={selectedDayPlan}
           dateIso={selectedIso}
           editable={isSelectedToday}
-          title={isSelectedToday ? "برنامه تمرینی امروز" : `برنامه تمرینیِ ${selectedDayName}`}
+          title={isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینیِ ${selectedDayName}`}
           restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روزِ باشگاهِ برنامه نیست."}
           initialCompleted={!!selectedLog?.completed}
           initialCompletedItems={selectedLog?.completedItems ?? []}
