@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCustomOccurrences, getRemovedOccurrences, getDaily } from "@/lib/storage";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
@@ -79,12 +79,26 @@ async function loadPendingNotifications(): Promise<NotifItem[]> {
 
 export function NotificationPanel({ onClose }: { onClose: () => void }) {
   const [items, setItems] = useState<NotifItem[] | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
     loadPendingNotifications().then((res) => { if (!cancelled) setItems(res); });
     return () => { cancelled = true; };
   }, []);
+
+  // یه لیسنرِ سطحِ document به‌جای لایه‌ی overlayِ fixed — چون app-topbar
+  // (والدِ این پنل) backdrop-filter داره و برای فرزندهای position:fixed یه
+  // containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخلِ کادرِ خودِ
+  // هدر (۵۸px بالای صفحه) پوشش می‌داد، نه کلِ صفحه، پس کلیک روی بقیه‌ی
+  // صفحه هیچ‌وقت بسته‌ش نمی‌کرد.
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [onClose]);
 
   async function respondFriendRequest(friendshipId: string, accept: boolean) {
     await fetch(`/api/friends/${friendshipId}`, { method: accept ? "PATCH" : "DELETE" });
@@ -93,8 +107,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="notif-panel-overlay" onClick={onClose} />
-      <div className="notif-panel dash-scope open">
+      <div className="notif-panel dash-scope open" ref={panelRef}>
         <div className="notif-panel-head">اطلاعیه‌ها</div>
         {items === null ? (
           <div className="item-line" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>

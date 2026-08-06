@@ -47,12 +47,6 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
               );
             })}
           </div>
-
-          <div className="flex h-24 shrink-0 flex-col justify-between pb-3 text-[9px] text-dash-muted sm:h-28 sm:pb-4 sm:text-[10.5px]">
-            <span>٪۱۰۰</span>
-            <span>٪۵۰</span>
-            <span>٪۰</span>
-          </div>
         </div>
       )}
     </DashCard>

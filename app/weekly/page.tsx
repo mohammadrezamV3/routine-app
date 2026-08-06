@@ -44,9 +44,9 @@ const now = new Date();
 const todayKey = isoLocal(now);
 
 // یه برنامه‌ای که زمانش گذشته (روزِ قبل، یا امروز ولی ساعتِ پایانش رد شده)
-// دیگه نباید قابلِ «انتقال به یک روز دیگر» باشه — چون در واقع اتفاق افتاده،
-// جابه‌جاییش به بعد یعنی وانمود کردن به این‌که هنوز نیفتاده. ویرایش/حذف
-// همچنان روش مجازن، فقط انتقال بلاک می‌شه.
+// دیگه نباید قابلِ «انتقال به یک روز دیگر» یا «حذف» باشه — چون در واقع
+// اتفاق افتاده، جابه‌جایی/حذفش یعنی وانمود کردن به این‌که هنوز نیفتاده.
+// ویرایش (مثلاً تصحیحِ ساعت/تگ) همچنان مجازه، فقط انتقال و حذف بلاک می‌شن.
 function isTaskPast(iso: string, time: string): boolean {
   if (iso < todayKey) return true;
   if (iso > todayKey) return false;
@@ -166,6 +166,18 @@ export default function WeeklyPage() {
     return out;
   }, [customOcc]);
 
+  // اسمِ برنامه → سطوحِ اهمیتی که براش ثبت شده — تا توی پاپ‌آپِ فیلتر، لیستِ
+  // برنامه‌ها بشه با «میزان اهمیت» انتخاب‌شده هم فیلتر کرد (نه فقط جست‌وجوی متنی).
+  const programImportance = useMemo(() => {
+    const map: Record<string, Set<Importance>> = {};
+    for (const c of customOcc) {
+      (map[c.name] ??= new Set()).add(c.importance ?? "low");
+    }
+    const out: Record<string, Importance[]> = {};
+    for (const name of Object.keys(map)) out[name] = Array.from(map[name]);
+    return out;
+  }, [customOcc]);
+
   const dashTasks: DashTaskItem[] = useMemo(() => {
     return tasksForDate(selectedDate, opts)
       .map((t) => {
@@ -236,6 +248,8 @@ export default function WeeklyPage() {
   }
 
   async function deleteTaskCompletely(id: string) {
+    const task = dashTasks.find((t) => t.id === id);
+    if (task?.isPast) return;
     await setCustomOccurrences(customOcc.filter((c) => c.id !== id));
     refresh();
   }
@@ -457,6 +471,7 @@ export default function WeeklyPage() {
             onImportanceChange={setImportanceFilter}
             programNames={allProgramNames}
             programTags={programTags}
+            programImportance={programImportance}
             selectedPrograms={programFilter}
             onToggleProgram={toggleProgramFilter}
             onSelectAll={() => setProgramFilter(null)}

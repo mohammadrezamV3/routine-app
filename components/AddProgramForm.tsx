@@ -206,11 +206,6 @@ export function AddProgramForm({
                     </span>
                   ))}
                 </div>
-                {rows.length > 1 && (
-                  <button type="button" className="wsearch-newrow-remove" onClick={() => removeRow(ri)} aria-label="حذف این ردیف">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="#E05252" strokeWidth="2.4" strokeLinecap="round" /></svg>
-                  </button>
-                )}
               </div>
               <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
                 <span className="time-field-label">ساعت شروع</span>
@@ -224,6 +219,11 @@ export function AddProgramForm({
                   <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
                 </div>
               </div>
+              {rows.length > 1 && (
+                <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
+                  حذف این روز
+                </button>
+              )}
             </div>
           ))}
 

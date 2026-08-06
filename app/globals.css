@@ -377,18 +377,19 @@
      پروفایل خیلی نزدیکِ لبه‌ی راستِ صفحه‌ان (topbar-actions با right:18px
      پینه)، نیمه‌ی راستِ پنل از صفحه می‌زد بیرون. حالا لبه‌ی راستِ پنل رو
      به لبه‌ی راستِ دکمه می‌چسبونیم و به چپ باز می‌شه — همیشه داخلِ صفحه می‌مونه. */
-  .notif-panel-overlay{ position:fixed; inset:0; z-index:44; background:none; }
+  /* همون شیشه‌ی هدر (app-topbar) — پروفایل/اعلان‌ها هم‌حسِ هدرِ بالای
+     صفحه بمونن، نه یه پنلِ جدا با تیرگیِ متفاوت. */
   .notif-panel{
     position:absolute; top:calc(100% + 12px); right:0; left:auto;
     width:min(260px, calc(100vw - 32px)); max-height:320px; overflow-y:auto;
-    background:rgba(var(--bg-rgb), .042);
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
     border:1px solid rgba(255,255,255,.08); border-radius:16px;
     box-shadow:0 12px 30px rgba(0,0,0,.25); padding:10px; z-index:45;
     animation:notifPanelIn .16s ease both;
   }
   body[data-theme="light"] .notif-panel{
-    background:rgba(var(--bg-rgb), .82); border-color:var(--line); box-shadow:0 10px 24px rgba(0,0,0,.12);
+    background:rgba(255,255,255,.28); border-color:var(--line); box-shadow:0 10px 24px rgba(0,0,0,.12);
   }
   @keyframes notifPanelIn{ from{ opacity:0; transform:translateY(6px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
   .notif-panel-head{ font-size:12px; font-weight:700; color:var(--muted); padding:4px 6px 8px; }
@@ -1582,6 +1583,21 @@
     scrollbar-width:none; -ms-overflow-style:none;
   }
   .wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
+  /* همون شیشه‌ی مات‌وشفافِ هدر (app-topbar) — قبلاً این پاپ‌آپ‌ها یه گرادیانِ
+     تقریباً توپرِ تیره داشتن که با بقیه‌ی اپ (هدر، پنلِ پروفایل/اعلان‌ها)
+     هم‌حس نبود؛ اسپسیفیسیتیِ این سلکتور (با :has) از قانونِ پایه‌ی
+     body:not([light]) .wsearch-newform بالاتره، پس درست override می‌شه. */
+  .wsearch-newform:has(.add-program-glass){
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass){
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.07);
+  }
+  body[data-theme="light"] .wsearch-newform:has(.add-program-glass){
+    background:rgba(255,255,255,.28);
+  }
   .wsearch-newform.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   .wsearch-newform-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .wsearch-newform-title{font-size:13px; font-weight:700;}
@@ -1641,21 +1657,20 @@
   .wsearch-newrow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 0;}
   .wsearch-newrow:first-child{margin-top:6px;}
   .wsearch-newrow + .wsearch-newrow{border-top:1px dashed var(--line);}
-  /* دکمه‌ی حذفِ ردیف قبلاً زیرِ همون ردیف ولی وسط‌چین/تمام‌عرض بود، دقیقاً
-     روی مرزِ بینِ این ردیف و ردیفِ بعدی — معلوم نبود مالِ کدوم ردیفه (حسِ
-     «دوتا دکمه‌ی منفی» می‌داد). الان کنارِ خودِ day-picker همون ردیفه، پس
-     همیشه واضحه کدوم ردیف رو حذف می‌کنه. */
   .wsearch-newrow-daywrap{display:flex; align-items:center; gap:8px; width:100%; order:1;}
   .wsearch-newrow-daywrap .day-picker{flex:1 1 auto; width:auto; min-width:0;}
-  .wsearch-newrow-remove{
-    width:24px; height:24px; min-width:24px; max-width:24px; border-radius:50%; border:1px solid var(--line); background:none;
-    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; box-sizing:border-box; flex-shrink:0;
-    transition:border-color .15s ease, background .15s ease, transform .15s ease;
-  }
-  .wsearch-newrow-remove:hover{border-color:#E05252; background:rgba(224,82,82,.12); transform:scale(1.06);}
-  .wsearch-newrow-remove:active{transform:scale(.94);}
-  .wsearch-newrow-remove svg{width:13px; height:13px; display:block;}
   .wsearch-newrow .time-field{order:2;}
+  /* دکمه‌ی حذفِ ردیف قبلاً فقط یه آیکونِ دایره‌ای بود (کنارِ day-picker) —
+     الان یه متنِ واضحِ قرمز («حذف این روز») زیرِ کلِ ردیف، راست‌چین، تا هم
+     منظورش شفاف‌تر باشه هم جاش گم نشه وسطِ بقیه‌ی دکمه‌ها. */
+  .wsearch-newrow-remove-text{
+    order:3; flex:1 1 100%; display:flex; justify-content:flex-end; align-items:center; gap:4px;
+    background:none; border:none; padding:6px 2px 0; margin-top:2px; cursor:pointer;
+    color:#E05252; font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700;
+    transition:opacity .15s ease;
+  }
+  .wsearch-newrow-remove-text:hover{ opacity:.75; }
+  .wsearch-newrow-remove-text:active{ opacity:.55; }
   /* «افزودن روز دیگر» راستِ ردیف می‌مونه (main-start توی rtl)، دکمه‌ی تیکِ
      ثبت با space-between به چپِ ردیف می‌ره — دو گوشه‌ی مخالفِ هم. */
   .wsearch-newform-addrow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:8px;}
@@ -1698,6 +1713,14 @@
     60%{transform:translateX(-3px);}
     80%{transform:translateX(3px);}
   }
+
+  /* برنامه‌ای که ساعتش گذشته و تیک نخورده — یه هاله‌ی قرمزِ ملایم که مدام
+     محو/پررنگ می‌شه، تا چشم رو بکشه سمتِ اینکه یه چیزی جا مونده. */
+  @keyframes taskMissedPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(224,82,82,.55); }
+    50%{ box-shadow:0 0 9px 2px rgba(224,82,82,.55); }
+  }
+  .task-check-missed{ animation:taskMissedPulse 1.8s ease-in-out infinite; }
 
   /* conflict alert box: pinned near the top, detached from the edge, no backdrop blur */
   .conflict-alert{
