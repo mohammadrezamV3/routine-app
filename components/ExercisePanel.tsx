@@ -18,6 +18,12 @@ export function ExercisePanel() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    // status اولش "loading"ه (نه "authenticated" نه "unauthenticated") تا
+    // خودِ NextAuth سشن رو واقعاً چک کنه — قبلاً این حالت هم مثلِ
+    // unauthenticated رفتار می‌کرد و plan رو null می‌ذاشت، یعنی هر بار
+    // ریلودِ صفحه یه لحظه فرمِ onboarding (به‌جای داشبوردِ واقعی) چشمک می‌زد،
+    // تا سشن واقعاً authenticated بشه و پلنِ واقعی فچ بشه.
+    if (status === "loading") return;
     if (status !== "authenticated") { setPlan(null); return; }
     fetch("/api/exercise/plan").then((r) => r.json()).then((res) => setPlan(res.plan || null));
   }, [status]);

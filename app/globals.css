@@ -701,6 +701,13 @@
      بک‌گراندِ شیشه‌ایِ سراسری روی دکمه‌های dash-scope برمی‌گرده. */
   body[data-theme="light"] :where(.dash-scope) button{ background:none; border-color:transparent; box-shadow:none; }
   body[data-theme="light"] :where(.dash-scope) button:hover{ background:none; border-color:transparent; box-shadow:none; }
+
+  /* bg-dash-card یه اورلی سفیدِ ثابت (rgba(255,255,255,.02)) ـه که فقط برای
+     پس‌زمینه‌ی تیره طراحی شده بود — روی پس‌زمینه‌ی کِرمیِ تمِ روشن (--bg
+     #F3E9D8) همون ۲٪ سفید عملاً دیده نمی‌شه و کارت‌ها از پسِ زمینه جدا
+     نمی‌شن. مثلِ بقیه‌ی باکس‌های مشابه (trade-pnl-readout و...) توی تمِ
+     روشن باید اپاسیتیِ خیلی بیشتری بگیره تا واقعاً به‌چشم بیاد. */
+  body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.55); }
   .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
@@ -1587,6 +1594,9 @@
     max-height:min(84vh, 560px);
     scrollbar-width:none; -ms-overflow-style:none;
   }
+  /* پاپ‌آپِ «افزودن برنامه»ی بدنسازی (AI/دستی) یه‌کوچولو عریض‌تر از بقیه‌ی
+     پاپ‌آپ‌های add-program-glass لازم داره تا دو باکسِ انتخاب جا باشن */
+  .wsearch-newform:has(.exercise-add-glass){ max-width:500px; }
   .wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
   /* همون شیشه‌ی مات‌وشفافِ هدر (app-topbar) — قبلاً این پاپ‌آپ‌ها یه گرادیانِ
      تقریباً توپرِ تیره داشتن که با بقیه‌ی اپ (هدر، پنلِ پروفایل/اعلان‌ها)
@@ -2341,12 +2351,15 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 }
 .exercise-rules-list li::before{ content:'—'; position:absolute; right:0; color:var(--muted2); }
 
-/* دو گزینه‌ی «افزودن برنامه ورزشی جدید» — ساخت با هوش‌مصنوعی یا وارد‌کردنِ
-   دستیِ برنامه‌ی خود کاربر */
+/* دو گزینه‌ی «افزودن برنامه» — ساخت با هوش‌مصنوعی یا وارد‌کردنِ دستیِ
+   برنامه‌ی خود کاربر — یه خطِ کم‌رنگِ عمودی بینشون، خودِ باکس‌ها هم بزرگ‌تر
+   از قبل (پدینگِ بیشتر) */
+.exercise-choice-row{ display:flex; align-items:stretch; gap:0; }
 .exercise-choice-btn{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-  padding:22px 14px; font-size:12.5px; font-weight:700;
+  display:flex; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding:32px 18px; font-size:13px; font-weight:700; min-height:132px;
 }
+.exercise-choice-divider{ width:1px; align-self:stretch; margin:6px 0; background:var(--line); opacity:.5; }
 
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 

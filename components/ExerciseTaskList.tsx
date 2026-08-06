@@ -24,7 +24,7 @@ export function ExerciseTaskList({
   dayPlan,
   dateIso,
   editable,
-  title = "برنامه تمرینی امروز",
+  title = "برنامه تمرینی",
   restDayLabel = "امروز روز استراحته — چیزی برنامه‌ریزی نشده.",
   initialCompleted,
   initialCompletedItems,
@@ -119,7 +119,7 @@ export function ExerciseTaskList({
             className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
           >
             <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-            افزودن برنامه ورزشی جدید
+            افزودن برنامه
           </button>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, BellOff } from "lucide-react";
+import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getImportantUpcoming, ImportantOccurrence } from "@/lib/routineStats";
@@ -97,8 +97,10 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                 >
                   <div className="min-w-0 flex-1 text-right">
                     <div className="truncate text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{r.name}</div>
-                    <div className="mt-1 truncate text-[9.5px] text-dash-muted sm:text-[11.5px]">{dayName}</div>
-                    <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]" dir="ltr">{toEnDigits(r.time)}</div>
+                    <div className="mt-1 flex items-center gap-1.5 truncate text-[9.5px] text-dash-muted sm:text-[11.5px]">
+                      <span className="truncate">{dayName}</span>
+                      <span className="mono shrink-0" dir="ltr">{toEnDigits(r.time)}</span>
+                    </div>
                   </div>
                   <span
                     role="button"
@@ -111,7 +113,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                         : "bg-white/5 text-dash-muted"
                     )}
                   >
-                    {r.notify ? <Bell className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" /> : <BellOff className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" />}
+                    <Bell className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" fill={r.notify ? "currentColor" : "none"} />
                   </span>
                 </button>
               );

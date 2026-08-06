@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Bot, PenLine } from "lucide-react";
+import { motion } from "framer-motion";
+import { PenLine } from "lucide-react";
+import { AiSparkleIcon } from "./AiSparkleIcon";
 import { ExercisePlanForm, validateExerciseForm } from "./ExercisePlanForm";
 import { ManualExercisePlanForm } from "./ManualExercisePlanForm";
 import { ExerciseRulesStep } from "./ExerciseRulesStep";
@@ -69,34 +71,39 @@ export function AddExerciseProgramForm({
     <>
       <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
       <div className="wsearch-newform dash-scope open">
-        <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
+        <div className="relative z-[1] add-program-glass exercise-add-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">افزودن برنامه ورزشی جدید</div>
+            <div className="wsearch-newform-title accent">افزودن برنامه</div>
             <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginBottom: 10 }}>{error}</div>}
 
           {mode === "choice" && (
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
+            <div className="exercise-choice-row">
+              <motion.button
                 type="button"
                 onClick={() => setMode("ai-form")}
                 className="exercise-choice-btn"
-                style={{ flex: 1 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
-                <Bot size={22} />
+                <AiSparkleIcon size={26} />
                 <span>ساخت با هوش مصنوعی</span>
-              </button>
-              <button
+              </motion.button>
+              <div className="exercise-choice-divider" />
+              <motion.button
                 type="button"
                 onClick={() => setMode("manual-form")}
                 className="exercise-choice-btn"
-                style={{ flex: 1 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
                 <PenLine size={22} />
                 <span>وارد کردن برنامه‌ی خودم</span>
-              </button>
+              </motion.button>
             </div>
           )}
 

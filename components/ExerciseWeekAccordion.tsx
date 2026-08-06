@@ -12,8 +12,13 @@ export function ExerciseWeekAccordion({ planData, todayName }: { planData: Exerc
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
+  // برخلافِ app/weekly/page.tsx (که این آکاردئون مستقیم زیرِ ستونِ ۶۲۰پیکسلیِ
+  // .wrap ـه و به dash-breakout نیاز داره)، این‌جا از قبل داخلِ
+  // .bodybuilding-glass.exercise-dash-breakout هستیم — یه dash-breakout ِ
+  // تودرتوی دیگه فرمولِ مارجینش رو دوبار حساب می‌کرد و کل بخش رو از وسط
+  // به راست می‌کشوند.
   return (
-    <section className="dash-breakout">
+    <section>
       <div className="weekly-align-end">
         <div className="weekly-head-row">
           <h1>برنامه هفتگی</h1>
