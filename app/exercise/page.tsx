@@ -10,8 +10,8 @@ export default function BodybuildingPage() {
   const [tab, setTab] = useState<"exercise" | "calorie">("exercise");
 
   return (
-    <section className="bodybuilding-glass">
-      <div>
+    <section className={`bodybuilding-glass${tab === "exercise" ? " exercise-dash-breakout" : ""}`}>
+      <div className="exercise-mode-tabs">
         <SegmentedTabs
           active={tab}
           onChange={setTab}

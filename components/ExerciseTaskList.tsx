@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Play, RotateCw, Square, X } from "lucide-react";
+import { Check, Play, Plus, RotateCw, Square, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseDay } from "@/lib/exercisePlans";
 
@@ -13,10 +13,12 @@ function formatElapsed(sec: number): string {
 }
 
 // «برنامه تمرینی امروز» — ستونِ بزرگِ سمتِ راستِ داشبوردِ بدنسازی، هم‌نقشِ
-// DashTaskList توی روتین. «شروع تمرین» یک تایمر می‌ندازه و چک‌باکس‌ها رو
-// فعال می‌کنه؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده
-// ضربدرِ قرمز می‌زنه (دقیقاً منطقِ «missed» ی که توی DashTaskRow برای
-// برنامه‌های گذشته‌ی روتین ساخته شده).
+// DashTaskList توی روتین (همون تیترِ همردیف با «افزودن برنامه»). «شروع
+// تمرین» یک تایمر می‌ندازه و چک‌باکس‌ها رو فعال می‌کنه؛ «پایان تمرین» جلسه
+// رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده ضربدرِ قرمز می‌زنه (دقیقاً منطقِ
+// «missed» ی که توی DashTaskRow برای برنامه‌های گذشته‌ی روتین ساخته شده).
+// دکمه‌ی شروع/پایان همیشه چسبیده به تهِ باکسه (flex-col h-full + mt-auto)؛
+// اگه حرکات از جا خارج بشن، خودِ لیست اسکرول می‌شه، باکس کش نمیاد.
 export function ExerciseTaskList({
   planId,
   dayPlan,
@@ -29,6 +31,7 @@ export function ExerciseTaskList({
   onSubstitute,
   substitutingItem,
   onSessionEnd,
+  onAddProgram,
   delay,
 }: {
   planId: string;
@@ -42,6 +45,7 @@ export function ExerciseTaskList({
   onSubstitute: (day: string, item: string) => void;
   substitutingItem: string | null;
   onSessionEnd: () => void;
+  onAddProgram: () => void;
   delay?: number;
 }) {
   const todayPlan = dayPlan;
@@ -102,21 +106,31 @@ export function ExerciseTaskList({
   }
 
   return (
-    <DashCard delay={delay}>
+    <DashCard delay={delay} className="flex h-full flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-[16px] font-bold text-dash-text sm:text-[22px]">{title}</h2>
-        {active && (
-          <span className="mono text-[13px] font-semibold text-dash-green sm:text-[15px]" dir="ltr">{formatElapsed(elapsed)}</span>
-        )}
+        <div className="flex items-center gap-3">
+          {active && (
+            <span className="mono text-[13px] font-semibold text-dash-green sm:text-[15px]" dir="ltr">{formatElapsed(elapsed)}</span>
+          )}
+          <button
+            type="button"
+            onClick={onAddProgram}
+            className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
+          >
+            <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
+            افزودن برنامه ورزشی جدید
+          </button>
+        </div>
       </div>
 
       {!todayPlan ? (
         <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">{restDayLabel}</div>
       ) : (
         <>
-          <div className="mt-1 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
+          <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="mt-4 flex flex-col divide-y divide-dash-border">
+          <div className="thin-scroll mt-4 flex min-h-0 flex-1 flex-col divide-y divide-dash-border overflow-y-auto" style={{ maxHeight: 360 }}>
             {todayPlan.items.map((item, idx) => {
               const isChecked = checked.has(item);
               const showMiss = ended && !isChecked;
@@ -168,16 +182,16 @@ export function ExerciseTaskList({
             })}
           </div>
 
-          {editable && (
-            <div className="mt-5">
-              {!active && !ended && (
+          {editable && (!ended || active) && (
+            <div className="mt-5 shrink-0">
+              {!active && (
                 <button
                   type="button"
                   onClick={startWorkout}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
-                  style={{ background: "var(--accent)", color: "var(--bg)" }}
+                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                 >
-                  <Play size={16} fill="currentColor" />
+                  <Play size={16} />
                   شروع تمرین
                 </button>
               )}
@@ -186,21 +200,11 @@ export function ExerciseTaskList({
                   type="button"
                   disabled={ending}
                   onClick={endWorkout}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold transition disabled:opacity-60 sm:text-[15px]"
-                  style={{ background: "#E05252", color: "#fff" }}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
+                  style={{ borderColor: "#E05252", color: "#E05252" }}
                 >
-                  <Square size={14} fill="currentColor" />
+                  <Square size={14} />
                   {ending ? "در حال ثبت…" : "پایان تمرین"}
-                </button>
-              )}
-              {ended && (
-                <button
-                  type="button"
-                  onClick={startWorkout}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dash-border py-3 text-[13px] font-bold text-dash-text transition hover:bg-white/5 sm:text-[15px]"
-                >
-                  <RotateCw size={15} />
-                  شروع دوباره
                 </button>
               )}
             </div>

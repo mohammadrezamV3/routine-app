@@ -93,9 +93,14 @@ export function ExercisePanel() {
   }
 
   // ------------- دارای برنامه فعال -------------
+  // dash-scope دقیقاً مثلِ داشبوردِ روتین (app/weekly/page.tsx) لازمه — این
+  // کلاسه که بک‌گراندِ پیش‌فرضِ لیکوئیدگلسِ سراسریِ <button> رو برای دکمه‌های
+  // سبک‌ِ Tailwindِ داشبورد (شروع/پایان تمرین، افزودن برنامه، ...) خنثی می‌کنه.
   return (
     <div>
-      <ExerciseDashboard plan={plan} onPlanChange={setPlan} />
+      <div className="dash-scope">
+        <ExerciseDashboard plan={plan} onPlanChange={setPlan} />
+      </div>
       <div className="disclaimer-note">
         <span className="disclaimer-warn">توجه: </span>
         این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
