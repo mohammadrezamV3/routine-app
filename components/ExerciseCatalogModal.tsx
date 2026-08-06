@@ -8,9 +8,11 @@ import { normalizeFa } from "@/lib/utils";
 // «مشاهده حرکات» — کاتالوگِ کاملِ حرکاتِ بدنسازی؛ کلیک روی هرکدوم نحوه‌ی
 // انجام، عضلاتِ درگیر و مزایاش رو نشون می‌ده. جستجو با normalizeFa (همون
 // نرمالایزرِ فیلترِ برنامه‌های روتین) تا کیبوردِ عربی/فارسی فرقی نکنه.
-export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
+export function ExerciseCatalogModal({ onClose, initialName }: { onClose: () => void; initialName?: string }) {
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);
+  const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(
+    () => EXERCISE_CATALOG.find((e) => e.name === initialName) ?? null
+  );
 
   const normalizedQuery = normalizeFa(query);
   const visible = EXERCISE_CATALOG.filter((e) => !normalizedQuery || normalizeFa(e.name).includes(normalizedQuery));

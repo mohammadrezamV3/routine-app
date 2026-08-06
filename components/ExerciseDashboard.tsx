@@ -1,24 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, History, ListChecks, Plus } from "lucide-react";
+import { Calendar, History, Plus } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { LEVEL_LABELS, GOAL_LABELS } from "@/lib/exercisePlans";
 import { ExercisePlan, PHASE_LABELS } from "@/lib/exerciseTypes";
 import {
   fetchExerciseLogRange, sessionsThisWeekTotal, sessionsThisWeekDone,
-  weekProgressPct, todayProgressPct, computeExerciseStreak, ExerciseLogRange,
+  weekProgressPct, todayProgressPct, ExerciseLogRange,
 } from "@/lib/exerciseStats";
-import { DashHeader } from "./DashHeader";
 import { DashDateSelector, DashDay } from "./DashDateSelector";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { ExerciseStatsCard } from "./ExerciseStatsCard";
-import { ExerciseReminderCard } from "./ExerciseReminderCard";
+import { ExerciseCatalogCard } from "./ExerciseCatalogCard";
 import { ExerciseTaskList } from "./ExerciseTaskList";
 import { ExerciseWeekAccordion } from "./ExerciseWeekAccordion";
-import { ExerciseCatalogModal } from "./ExerciseCatalogModal";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
 
@@ -43,7 +41,6 @@ export function ExerciseDashboard({
 
   const [subbingItem, setSubbingItem] = useState<string | null>(null);
   const [subError, setSubError] = useState<string | null>(null);
-  const [catalogOpen, setCatalogOpen] = useState(false);
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
 
@@ -76,7 +73,7 @@ export function ExerciseDashboard({
     setWeekOffset(Math.round(diffDays / dayWindow));
   }
 
-  // ۹۰ روزِ گذشته کافیه هم برای «این‌هفته» هم برای استریک
+  // ۹۰ روزِ گذشته کافیه برای «این‌هفته»
   useEffect(() => {
     const start = new Date(now); start.setDate(start.getDate() - 90);
     fetchExerciseLogRange(plan.id, start, now).then(setLogs);
@@ -96,16 +93,13 @@ export function ExerciseDashboard({
     [plan.planData]
   );
   const selectedDayPlan = plan.planData.find((d) => d.day === selectedDayName);
-  const todayPlanForStreak = plan.planData.find((d) => d.day === todayName);
+  const todayPlanForStats = plan.planData.find((d) => d.day === todayName);
 
   const sessionsDone = sessionsThisWeekDone(logs, now);
   const sessionsTotal = sessionsThisWeekTotal(plan.gymDays);
   const weekPct = weekProgressPct(plan.gymDays, logs, now);
   const todayLog = logs[todayIso];
-  const todayPct = todayProgressPct(todayPlanForStreak?.items.length ?? 0, todayLog);
-  const streak = computeExerciseStreak(plan.gymDays, (d) => FA_WEEKDAY[d.getDay()], logs, now);
-  const todayIsGymDay = (plan.gymDays ?? []).includes(todayName);
-  const todayDoneFlag = !!todayLog?.completed;
+  const todayPct = todayProgressPct(todayPlanForStats?.items.length ?? 0, todayLog);
 
   async function substituteItem(day: string, item: string) {
     setSubbingItem(item);
@@ -125,9 +119,7 @@ export function ExerciseDashboard({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <DashHeader progress={weekPct} title="برنامه بدنسازی" subtitle="برنامه‌ی تمرینی‌ات را دنبال و پیگیری کن." progressLabel="پیشرفت هفتگی" />
-
-      <div className="section-note" style={{ margin: 0 }}>
+      <div className="section-note" style={{ marginTop: 6 }}>
         سطح: {levelLabel}{plan.goal && ` — هدف: ${GOAL_LABELS[plan.goal]}`}
         {plan.trainingPhase && plan.trainingPhase !== "none" && ` — دوره: ${PHASE_LABELS[plan.trainingPhase as keyof typeof PHASE_LABELS]}`}
         {!plan.generatedByAi && plan.level !== "custom" && " — (نسخه‌ی پایه، بدون هوش مصنوعی)"}
@@ -157,18 +149,13 @@ export function ExerciseDashboard({
             active={isSelectedToday}
             onClick={() => { setWeekOffset(0); setSelectedIso(todayIso); }}
           />
-          <DashFilterButton
-            label="مشاهده حرکات"
-            icon={<ListChecks size={15} />}
-            active={catalogOpen}
-            onClick={() => setCatalogOpen(true)}
-          />
         </div>
       </div>
 
       {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
 
-      <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6">
+      {/* راست (پهن‌تر): برنامه تمرینی امروز؛ چپ: بالا آمارِ جلسات، پایین دوستان+مشاهده‌ی حرکات کنارِ هم — عیناً چیدمانِ طرح */}
+      <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.3fr_1fr] lg:items-stretch lg:gap-6">
         <ExerciseTaskList
           planId={plan.id}
           dayPlan={selectedDayPlan}
@@ -184,11 +171,10 @@ export function ExerciseDashboard({
           delay={0.05}
         />
 
-        <ExerciseReminderCard streak={streak} todayIsGymDay={todayIsGymDay} todayDone={todayDoneFlag} delay={0.1} />
-
         <div className="flex flex-col gap-4 sm:gap-6">
-          <DashFriendsCard delay={0.12} module="exercise" unitLabel="جلسه" />
-          <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
+          <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.1} />
+          <DashFriendsCard delay={0.15} module="exercise" unitLabel="جلسه" />
+          <ExerciseCatalogCard delay={0.2} />
         </div>
       </div>
 
@@ -204,8 +190,6 @@ export function ExerciseDashboard({
       </div>
 
       <ExerciseWeekAccordion planData={weekPlanData} todayName={todayName} />
-
-      {catalogOpen && <ExerciseCatalogModal onClose={() => setCatalogOpen(false)} />}
 
       {historyPickerOpen && (
         <>
