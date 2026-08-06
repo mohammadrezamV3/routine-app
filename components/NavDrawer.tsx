@@ -114,6 +114,19 @@ export function NavDrawer() {
     });
   }, [status]);
 
+  // یه لیسنرِ سطحِ document به‌جای لایه‌ی overlayِ fixed — چون app-topbar
+  // (والدِ چیپِ پروفایل) backdrop-filter داره و برای فرزندهای position:fixed
+  // یه containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخلِ کادرِ خودِ
+  // هدر پوشش می‌داد، نه کلِ صفحه، پس کلیک روی بقیه‌ی صفحه بسته‌ش نمی‌کرد.
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (authSlotRef.current && !authSlotRef.current.contains(e.target as Node)) setProfileMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [profileMenuOpen]);
+
   // دکمه‌ی «خرید اشتراک» توی دیوارهای پی‌وال (ModuleGate)، از هر صفحه‌ای، با
   // این event پنل کاربری رو باز می‌کنه — بدون نیاز به query-param یا context
   useEffect(() => {
@@ -178,35 +191,32 @@ export function NavDrawer() {
                     </span>
                   </button>
                   {profileMenuOpen && (
-                    <>
-                      <div className="notif-panel-overlay" onClick={() => setProfileMenuOpen(false)} />
-                      <div className="notif-panel open">
-                        <div className="notif-panel-list">
-                          <div
-                            className="notif-panel-item profile-menu-item"
-                            onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
-                          >
-                            <span className="nav-link-icon-svg">{ICONS.account}</span>
-                            <span>پنل کاربری</span>
-                          </div>
-                          <div
-                            className="notif-panel-item profile-menu-item"
-                            onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
-                          >
-                            <span className="nav-link-icon-svg">{ICONS.subscription}</span>
-                            <span>اشتراک</span>
-                          </div>
-                          <div
-                            className="notif-panel-item profile-menu-item"
-                            style={{ color: "#E05252" }}
-                            onClick={() => { setProfileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
-                          >
-                            <span className="nav-link-icon-svg">{ICONS.logout}</span>
-                            <span>خروج از حساب</span>
-                          </div>
+                    <div className="notif-panel open">
+                      <div className="notif-panel-list">
+                        <div
+                          className="notif-panel-item profile-menu-item"
+                          onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
+                        >
+                          <span className="nav-link-icon-svg">{ICONS.account}</span>
+                          <span>پنل کاربری</span>
+                        </div>
+                        <div
+                          className="notif-panel-item profile-menu-item"
+                          onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
+                        >
+                          <span className="nav-link-icon-svg">{ICONS.subscription}</span>
+                          <span>اشتراک</span>
+                        </div>
+                        <div
+                          className="notif-panel-item profile-menu-item"
+                          style={{ color: "#E05252" }}
+                          onClick={() => { setProfileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
+                        >
+                          <span className="nav-link-icon-svg">{ICONS.logout}</span>
+                          <span>خروج از حساب</span>
                         </div>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
                 <div className="bell-btn-wrap">

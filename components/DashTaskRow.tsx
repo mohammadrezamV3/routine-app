@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, MoreVertical, Pencil, Trash2, CalendarClock } from "lucide-react";
+import { Check, MoreVertical, Pencil, Trash2, CalendarClock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
@@ -50,7 +50,6 @@ export function DashTaskRow({
 
   return (
     <motion.div
-      whileHover={{ y: -2 }}
       className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
     >
       <div className="relative shrink-0" ref={menuRef}>
@@ -86,8 +85,13 @@ export function DashTaskRow({
               انتقال به یک روز دیگر
             </div>
             <div
-              onClick={() => { setMenuOpen(false); onDelete(task.id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
+              onClick={() => { if (task.isPast) return; setMenuOpen(false); onDelete(task.id); }}
+              aria-disabled={task.isPast}
+              title={task.isPast ? "زمانِ این برنامه گذشته — قابلِ حذف نیست" : undefined}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                task.isPast ? "cursor-not-allowed text-dash-muted opacity-45" : "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"
+              )}
             >
               <Trash2 size={13} className="shrink-0" />
               حذف کامل برنامه
@@ -124,23 +128,33 @@ export function DashTaskRow({
         disabled={!editable}
         onClick={() => onToggle(task.id)}
         aria-pressed={task.done}
-        aria-label={task.done ? "علامت‌زدن به‌عنوان انجام‌نشده" : "علامت‌زدن به‌عنوان انجام‌شده"}
+        aria-label={
+          task.done
+            ? "علامت‌زدن به‌عنوان انجام‌نشده"
+            : task.isPast
+            ? "این برنامه انجام نشده و زمانش گذشته"
+            : "علامت‌زدن به‌عنوان انجام‌شده"
+        }
         animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
           !editable && "cursor-not-allowed opacity-50",
-          task.done ? "text-white" : "text-transparent hover:border-white/45"
+          task.done || (task.isPast && !task.done) ? "text-white" : "text-transparent hover:border-white/45",
+          task.isPast && !task.done && "task-check-missed"
         )}
         style={
           task.done
             ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
+            : task.isPast
+            ? { background: "#E05252", borderColor: "#E05252" }
             : { background: "transparent", borderColor: "var(--muted)" }
         }
       >
-        <AnimatePresence>
-          {task.done && (
+        <AnimatePresence mode="wait">
+          {task.done ? (
             <motion.span
+              key="done"
               initial={{ scale: 0, rotate: -45, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
@@ -149,7 +163,18 @@ export function DashTaskRow({
             >
               <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
             </motion.span>
-          )}
+          ) : task.isPast ? (
+            <motion.span
+              key="missed"
+              initial={{ scale: 0, rotate: 45, opacity: 0 }}
+              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="flex items-center justify-center"
+            >
+              <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+            </motion.span>
+          ) : null}
         </AnimatePresence>
       </motion.button>
     </motion.div>

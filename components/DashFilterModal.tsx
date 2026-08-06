@@ -22,6 +22,7 @@ export function DashFilterModal({
   onImportanceChange,
   programNames,
   programTags,
+  programImportance,
   selectedPrograms,
   onToggleProgram,
   onSelectAll,
@@ -31,6 +32,7 @@ export function DashFilterModal({
   onImportanceChange: (v: "all" | Importance) => void;
   programNames: string[];
   programTags?: Record<string, string[]>; // اسمِ برنامه → تگ‌هایی که بهش اضافه شده، برای جستجو
+  programImportance?: Record<string, Importance[]>; // اسمِ برنامه → سطوحِ اهمیتی که براش ثبت شده
   selectedPrograms: Set<string> | null; // null = فیلتری فعال نیست، یعنی همه نشون داده می‌شن
   onToggleProgram: (name: string) => void;
   onSelectAll: () => void;
@@ -39,13 +41,17 @@ export function DashFilterModal({
   const [query, setQuery] = useState("");
   const isChecked = (name: string) => selectedPrograms === null || selectedPrograms.has(name);
   const normalizedQuery = normalizeFa(query);
-  const visibleNames = normalizedQuery
-    ? programNames.filter(
-        (n) =>
-          normalizeFa(n).includes(normalizedQuery) ||
-          (programTags?.[n] ?? []).some((tag) => normalizeFa(tag).includes(normalizedQuery))
-      )
-    : programNames;
+  // انتخابِ «میزان اهمیت» بالا فقط رویِ «برنامه‌های امروز» اثر نمی‌ذاره —
+  // همین‌جا هم لیستِ چک‌باکسِ برنامه‌ها رو محدود می‌کنه به اونایی که واقعاً
+  // اون سطحِ اهمیت رو دارن، تا خودِ دکمه هم قابل‌لمس/معنی‌دار باشه.
+  const visibleNames = programNames
+    .filter((n) => importance === "all" || (programImportance?.[n] ?? ["low"]).includes(importance))
+    .filter(
+      (n) =>
+        !normalizedQuery ||
+        normalizeFa(n).includes(normalizedQuery) ||
+        (programTags?.[n] ?? []).some((tag) => normalizeFa(tag).includes(normalizedQuery))
+    );
 
   return (
     <>
@@ -84,7 +90,9 @@ export function DashFilterModal({
             {programNames.length === 0 ? (
               <div className="item-line empty">هنوز برنامه‌ای ثبت نکردی.</div>
             ) : visibleNames.length === 0 ? (
-              <div className="item-line empty">برنامه‌ای پیدا نشد.</div>
+              <div className="item-line empty">
+                {importance !== "all" ? "برنامه‌ای با این میزان اهمیت پیدا نشد." : "برنامه‌ای پیدا نشد."}
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
                 {visibleNames.map((name) => (
@@ -95,6 +103,14 @@ export function DashFilterModal({
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="wsearch-newform-actions">
+            <button type="button" className="wsearch-newform-submit" onClick={onClose} aria-label="اعمال تغییرات">
+              <svg className="wns-check" viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
