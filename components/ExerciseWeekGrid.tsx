@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils";
 
 // «برنامه هفتگی» بدنسازی — یک باکسِ واحد، با پدینگِ دورش تا خطِ جداکننده‌ی
 // بینِ روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیرِ هم)، بدونِ تغییرِ
-// چیدمان؛ دسکتاپ: مستطیلِ عرضی (عرض بیشتر از ارتفاع)، نه ستون‌های باریکِ
-// درازِ ۷تایی.
+// چیدمان؛ دسکتاپ: همون ۷ ستونِ قبلی، فقط کمی عریض‌تر (پدینگِ کمتر).
 export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDay[]; todayName: string }) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
@@ -20,9 +19,9 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-dash border border-dash-border bg-dash-card p-2.5 backdrop-blur-xl sm:p-3.5"
+        className="rounded-dash border border-dash-border bg-dash-card p-2.5 backdrop-blur-xl sm:p-3"
       >
-        <div className="grid grid-cols-1 divide-y divide-dash-border sm:grid-cols-2 sm:divide-x lg:grid-cols-4">
+        <div className="grid grid-cols-1 divide-y divide-dash-border sm:grid-cols-2 sm:divide-x lg:grid-cols-7">
           {CAL_WEEK_ORDER.map((jsDay) => {
             const dayName = FA_WEEKDAY[jsDay];
             const d = byDay.get(dayName);
@@ -32,7 +31,7 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
               <div
                 key={dayName}
                 className={cn(
-                  "flex flex-col p-3 lg:min-h-[170px]",
+                  "flex flex-col p-2.5 sm:p-3 lg:min-h-[220px]",
                   isToday && "rounded-xl bg-dash-green/[0.08]"
                 )}
               >
