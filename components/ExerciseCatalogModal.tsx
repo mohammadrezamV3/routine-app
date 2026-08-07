@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey } from "@/lib/exerciseCatalog";
+import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
 import { ExercisePictogram } from "./ExercisePictogram";
 import { MuscleDiagram } from "./MuscleDiagram";
@@ -37,10 +38,14 @@ const MUSCLE_FILTERS: MuscleKey[] = [
 // اضافه شده. کلیک روی هرکدوم، دیاگرامِ بدن (عضله‌های درگیر) + نحوه‌ی انجام
 // + مزایا رو نشون می‌ده. جستجو با normalizeFa تا کیبوردِ عربی/فارسی فرقی
 // نکنه.
-export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
+export function ExerciseCatalogModal({ onClose, initialItem }: { onClose: () => void; initialItem?: string }) {
   const [query, setQuery] = useState("");
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | null>(null);
-  const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);
+  const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(() => {
+    if (!initialItem) return null;
+    const base = stripSetSuffix(initialItem);
+    return EXERCISE_CATALOG.find((e) => e.name === base) ?? null;
+  });
 
   const normalizedQuery = normalizeFa(query);
   const visible = useMemo(
