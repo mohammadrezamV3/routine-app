@@ -8,7 +8,7 @@ import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
 
-export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean };
+export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean; notStarted?: boolean };
 
 // بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). کلیک روی متنِ برنامه، کارتِ
 // واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز می‌کنه؛ سه‌نقطه یک منوی
@@ -125,21 +125,24 @@ export function DashTaskRow({
       <motion.button
         type="button"
         whileTap={{ scale: 0.85 }}
-        disabled={!editable}
+        disabled={!editable || task.notStarted}
         onClick={() => onToggle(task.id)}
         aria-pressed={task.done}
+        title={task.notStarted ? "هنوز شروع نشده — بعد از شروعش می‌تونی تیک بزنی" : undefined}
         aria-label={
           task.done
             ? "علامت‌زدن به‌عنوان انجام‌نشده"
             : task.isPast
             ? "این برنامه انجام نشده و زمانش گذشته"
+            : task.notStarted
+            ? "این برنامه هنوز شروع نشده"
             : "علامت‌زدن به‌عنوان انجام‌شده"
         }
         animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
-          !editable && "cursor-not-allowed opacity-50",
+          (!editable || task.notStarted) && "cursor-not-allowed opacity-50",
           task.done || (task.isPast && !task.done) ? "text-white" : "text-transparent hover:border-white/45",
           task.isPast && !task.done && "task-check-missed"
         )}

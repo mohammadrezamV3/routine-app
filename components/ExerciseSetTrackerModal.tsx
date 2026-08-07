@@ -301,7 +301,7 @@ export function ExerciseSetTrackerModal({
                       className="exercise-solo-play"
                       aria-label="شروع تایمر"
                     >
-                      <Play size={18} fill="currentColor" />
+                      <Play size={15} fill="currentColor" />
                     </motion.button>
                   </motion.div>
                 )
