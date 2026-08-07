@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Lock, Play, Plus, RotateCw, Square, X } from "lucide-react";
+import { Check, Lock, Play, Plus, RotateCw, Square, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
+import { parseExerciseItem } from "@/lib/exerciseSets";
+import { toFaDigits } from "@/lib/schedule";
 import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
 import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
 
@@ -15,13 +18,19 @@ function formatElapsed(sec: number): string {
   return `${m}:${s}`;
 }
 
+/** ثانیه‌ها رو به یه لیبلِ کوتاه برای جدولِ مشخصات تبدیل می‌کنه — «۳۰ ثانیه» یا «۲۵ دقیقه» */
+function formatSpecDuration(seconds: number | null): string {
+  if (!seconds) return "—";
+  if (seconds % 60 === 0) return `${toFaDigits(String(seconds / 60))} دقیقه`;
+  if (seconds < 60) return `${toFaDigits(String(seconds))} ثانیه`;
+  return `${toFaDigits(String(Math.floor(seconds / 60)))}:${toFaDigits((seconds % 60).toString().padStart(2, "0"))}`;
+}
+
 // «برنامه تمرینی امروز» — ستونِ بزرگِ سمتِ راستِ داشبوردِ بدنسازی، هم‌نقشِ
-// DashTaskList توی روتین (همون تیترِ همردیف با «افزودن برنامه»). «شروع
-// تمرین» یک تایمر می‌ندازه و چک‌باکس‌ها رو فعال می‌کنه؛ «پایان تمرین» جلسه
-// رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده ضربدرِ قرمز می‌زنه (دقیقاً منطقِ
-// «missed» ی که توی DashTaskRow برای برنامه‌های گذشته‌ی روتین ساخته شده).
-// دو روشِ تکمیلِ حرکت: (۱) کلیک روی اسمِ حرکت → پاپ‌آپِ ردیابیِ ست‌به‌ست با
-// استراحتِ زنده (ExerciseSetTrackerModal)، (۲) همون چک‌باکسِ دایره‌ایِ سریع.
+// DashTaskList توی روتین. «شروع تمرین» یک تایمر می‌ندازه و به هر حرکت دکمه‌ی
+// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده
+// ضربدرِ قرمز می‌زنه. تنها راهِ تکمیلِ یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپِ
+// ردیابیِ ست‌به‌ست با استراحتِ زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
 export function ExerciseTaskList({
   planId,
   dayPlan,
@@ -71,7 +80,7 @@ export function ExerciseTaskList({
     setChecked(new Set(initialCompletedItems));
     setActive(!initialCompleted && initialCompletedItems.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayPlan?.day, initialCompleted]);
+  }, [todayPlan?.day, initialCompleted, initialCompletedItems]);
 
   useEffect(() => {
     if (!active) { if (timerRef.current) clearInterval(timerRef.current); return; }
@@ -104,17 +113,6 @@ export function ExerciseTaskList({
     startWorkout();
   }
 
-  function toggleItem(item: string) {
-    if (!active || !editable) return;
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(item)) next.delete(item);
-      else next.add(item);
-      persist(next, false);
-      return next;
-    });
-  }
-
   function markItemDone(item: string) {
     setChecked((prev) => {
       if (prev.has(item)) return prev;
@@ -137,22 +135,22 @@ export function ExerciseTaskList({
     <DashCard delay={delay} className="flex h-full flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-[16px] font-bold text-dash-text sm:text-[22px]">{title}</h2>
-        <button
-          type="button"
-          onClick={onAddProgram}
-          className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
-        >
-          <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-          افزودن برنامه
-        </button>
+        {active ? (
+          <div className="exercise-chrono" dir="ltr">
+            <Timer className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" />
+            <span className="mono">{formatElapsed(elapsed)}</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onAddProgram}
+            className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
+          >
+            <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
+            افزودن برنامه
+          </button>
+        )}
       </div>
-
-      {active && (
-        <div className="mt-3 flex shrink-0 flex-col items-center gap-1 rounded-2xl border border-dash-border bg-dash-card py-3">
-          <span className="text-[9.5px] text-dash-muted sm:text-[10.5px]">زمانِ تمرین</span>
-          <span className="mono text-[26px] font-bold text-dash-green sm:text-[32px]" dir="ltr">{formatElapsed(elapsed)}</span>
-        </div>
-      )}
 
       {!todayPlan ? (
         <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">{restDayLabel}</div>
@@ -160,26 +158,34 @@ export function ExerciseTaskList({
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="thin-scroll mt-4 flex min-h-0 flex-1 flex-col divide-y divide-dash-border overflow-y-auto" style={{ maxHeight: 360 }}>
+          <div className="thin-scroll mt-4 flex min-h-0 flex-1 flex-col divide-y divide-dash-border overflow-y-auto px-1" style={{ maxHeight: 360 }}>
             {todayPlan.items.map((item, idx) => {
               const isChecked = checked.has(item);
               const showMiss = isPastDay ? !isChecked : ended && !isChecked;
               const isSubbing = substitutingItem === item;
-              const canTrackSets = active && editable && !isChecked && !ended;
+              const canStart = active && editable && !isChecked && !ended;
+              const spec = parseExerciseItem(item);
               return (
                 <div key={item} className="flex items-center gap-2.5 py-3 sm:gap-3.5">
                   <span className="mono w-5 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{idx + 1}-</span>
-                  {canTrackSets ? (
-                    <button
-                      type="button"
-                      onClick={() => setSetTrackerItem(item)}
-                      className="min-w-0 flex-1 truncate text-right text-[12.5px] font-medium text-dash-text underline decoration-dashed decoration-dash-border underline-offset-4 transition hover:text-dash-green sm:text-[14.5px]"
-                    >
-                      {item}
-                    </button>
-                  ) : (
-                    <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-dash-text sm:text-[14.5px]">{item}</span>
-                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-[12.5px] font-medium text-dash-text sm:text-[14.5px]">{spec.baseName}</span>
+                    {active && (
+                      <div className="exercise-spec-table">
+                        {spec.sets > 1 && (
+                          <span className="exercise-spec-cell">
+                            <span className="exercise-spec-value">{toFaDigits(String(spec.sets))}</span>
+                            <span className="exercise-spec-label">ست</span>
+                          </span>
+                        )}
+                        <span className="exercise-spec-cell">
+                          <span className="exercise-spec-value">{spec.isTimed ? formatSpecDuration(spec.seconds) : spec.reps ?? "—"}</span>
+                          <span className="exercise-spec-label">{spec.isTimed ? "زمان" : "تکرار"}</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex shrink-0 items-center gap-2.5 sm:gap-3.5">
                     <button
@@ -193,49 +199,56 @@ export function ExerciseTaskList({
                       <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
                     </button>
 
-                    <motion.button
-                      type="button"
-                      whileTap={{ scale: 0.85 }}
-                      disabled={!active}
-                      onClick={() => toggleItem(item)}
-                      aria-pressed={isChecked}
-                      animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
-                      style={
-                        isChecked
-                          ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-                          : showMiss
-                          ? { background: "#E05252", borderColor: "#E05252" }
-                          : { background: "transparent", borderColor: "var(--muted)" }
-                      }
-                    >
-                      <AnimatePresence mode="wait">
-                        {isChecked ? (
-                          <motion.span
-                            key="on"
-                            initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                            className="flex items-center justify-center text-white"
-                          >
-                            <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                          </motion.span>
-                        ) : showMiss ? (
-                          <motion.span
-                            key="x"
-                            initial={{ scale: 0, rotate: 45, opacity: 0 }}
-                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                            className="flex items-center justify-center text-white"
-                          >
-                            <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                          </motion.span>
-                        ) : null}
-                      </AnimatePresence>
-                    </motion.button>
+                    {canStart ? (
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => setSetTrackerItem(item)}
+                        className="exercise-start-btn"
+                      >
+                        شروع
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        aria-hidden
+                        animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
+                        style={
+                          isChecked
+                            ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
+                            : showMiss
+                            ? { background: "#E05252", borderColor: "#E05252" }
+                            : { background: "transparent", borderColor: "var(--muted)" }
+                        }
+                      >
+                        <AnimatePresence mode="wait">
+                          {isChecked ? (
+                            <motion.span
+                              key="on"
+                              initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                              className="flex items-center justify-center text-white"
+                            >
+                              <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                            </motion.span>
+                          ) : showMiss ? (
+                            <motion.span
+                              key="x"
+                              initial={{ scale: 0, rotate: 45, opacity: 0 }}
+                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                              className="flex items-center justify-center text-white"
+                            >
+                              <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                            </motion.span>
+                          ) : null}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
                   </div>
                 </div>
               );
@@ -279,18 +292,20 @@ export function ExerciseTaskList({
         </>
       )}
 
-      {showTutorial && (
+      {showTutorial && createPortal(
         <ExerciseSetTutorial
           onDone={() => { setShowTutorial(false); startWorkout(); }}
-        />
+        />,
+        document.body
       )}
 
-      {setTrackerItem && (
+      {setTrackerItem && createPortal(
         <ExerciseSetTrackerModal
           item={setTrackerItem}
           onClose={() => setSetTrackerItem(null)}
           onComplete={() => markItemDone(setTrackerItem)}
-        />
+        />,
+        document.body
       )}
     </DashCard>
   );
