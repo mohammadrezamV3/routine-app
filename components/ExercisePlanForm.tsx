@@ -1,7 +1,7 @@
 "use client";
 
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
-import { LEVEL_LABELS, GOAL_LABELS, ExerciseLevel, ExerciseGoal } from "@/lib/exercisePlans";
+import { LEVEL_LABELS, GOAL_LABELS, ExerciseLevel, ExerciseGoal, getRequiredDaysCount } from "@/lib/exercisePlans";
 import { ExercisePlanFormValue, PHASE_LABELS, TrainingPhase } from "@/lib/exerciseTypes";
 
 export function ExercisePlanForm({
@@ -17,9 +17,19 @@ export function ExercisePlanForm({
     });
   }
 
+  const requiredDays = value.goal ? getRequiredDaysCount(value.goal, value.level) : null;
+
   return (
     <>
-      <label className="exercise-form-label">کدوم روزها می‌ری باشگاه؟</label>
+      <label className="exercise-form-label">
+        کدوم روزها می‌ری باشگاه؟
+        {requiredDays !== null && (
+          <span style={{ color: "var(--muted2)", fontWeight: 400 }}>
+            {" "}
+            (حداقل {requiredDays} روز برای این برنامه لازمه)
+          </span>
+        )}
+      </label>
       <div className="exercise-day-select">
         {CAL_WEEK_ORDER.map((i) => FA_WEEKDAY[i]).map((d) => (
           <span key={d} className={`day-pill${value.gymDays.includes(d) ? " on" : ""}`} onClick={() => toggleDay(d)}>
@@ -89,6 +99,8 @@ export function ExercisePlanForm({
 export function validateExerciseForm(value: ExercisePlanFormValue): string | null {
   if (!value.goal) return "انتخاب هدف تمرین لازمه";
   if (value.gymDays.length === 0) return "حداقل یک روز باشگاه رو انتخاب کن";
+  const requiredDays = getRequiredDaysCount(value.goal, value.level);
+  if (value.gymDays.length < requiredDays) return `این برنامه حداقل ${requiredDays} روز در هفته لازم داره`;
   if (!value.heightCm || !value.weightKg) return "قد و وزن لازمه";
   return null;
 }

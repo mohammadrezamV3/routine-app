@@ -2,13 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Info, Lock, Play, Plus, RotateCw, Square, X } from "lucide-react";
+import { Check, Lock, Play, Plus, RotateCw, Square, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
 import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
 import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
-import { ExerciseCatalogModal } from "./ExerciseCatalogModal";
 
 function formatElapsed(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -65,7 +64,6 @@ export function ExerciseTaskList({
   const [ending, setEnding] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [setTrackerItem, setSetTrackerItem] = useState<string | null>(null);
-  const [catalogItem, setCatalogItem] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -186,16 +184,6 @@ export function ExerciseTaskList({
                   <div className="flex shrink-0 items-center gap-2.5 sm:gap-3.5">
                     <button
                       type="button"
-                      aria-label="مشاهده نحوه انجام"
-                      title="مشاهده نحوه انجام"
-                      onClick={() => setCatalogItem(item)}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:h-8 sm:w-8"
-                    >
-                      <Info className="h-[14px] w-[14px] sm:h-4 sm:w-4" />
-                    </button>
-
-                    <button
-                      type="button"
                       aria-label="جایگزینی این حرکت"
                       title="این تجهیزات رو ندارم — جایگزین کن"
                       disabled={!editable || isSubbing || active || ended}
@@ -213,7 +201,7 @@ export function ExerciseTaskList({
                       aria-pressed={isChecked}
                       animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-not-allowed sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
                       style={
                         isChecked
                           ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
@@ -303,10 +291,6 @@ export function ExerciseTaskList({
           onClose={() => setSetTrackerItem(null)}
           onComplete={() => markItemDone(setTrackerItem)}
         />
-      )}
-
-      {catalogItem && (
-        <ExerciseCatalogModal initialItem={catalogItem} onClose={() => setCatalogItem(null)} />
       )}
     </DashCard>
   );

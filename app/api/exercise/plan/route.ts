@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
   } catch {
     // بدون کلید API یا خطای موقت سرویس — به قالب ایستای از‌پیش‌طراحی‌شده برمی‌گردیم،
     // نه اینکه کل onboarding رو خراب کنیم
-    planData = getExercisePlan(goal, level, !!hasPhysicalLimitation);
+    planData = getExercisePlan(goal, level, !!hasPhysicalLimitation, uniqueDays);
   }
 
   // پلن قبلی (اگه بود) غیرفعال می‌شه؛ همیشه فقط یک پلن فعال داریم

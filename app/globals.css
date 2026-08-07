@@ -341,12 +341,18 @@
     -webkit-mask-composite:xor; mask-composite:exclude;
   }
   body[data-theme="light"] .app-topbar{ background:rgba(255,255,255,.28); }
+  /* توجه: بدونِ transform برای وسط‌چینِ عمودی — چون transform روی این
+     والد یه stacking context جدید می‌سازه و backdrop-filter بچه‌هاش
+     (مثلِ .notif-panel) دیگه نمی‌تونن محتوای واقعیِ پشتِ صفحه رو ببینن
+     (فقط داخلِ همون stacking context بلور می‌شه که تقریباً خالیه) — پنلِ
+     پروفایل/اعلان‌ها بدونِ بک‌گراندِ بلورشده می‌موند. top:0;bottom:0;margin:auto 0
+     بدونِ transform وسط‌چین می‌کنه. */
   .topbar-actions{
-    position:absolute; right:18px; top:50%; transform:translateY(-50%); z-index:3;
+    position:absolute; right:18px; top:0; bottom:0; margin:auto 0; z-index:3;
     display:flex; align-items:center; gap:10px;
   }
   .topbar-actions-left{
-    position:absolute; left:18px; top:50%; transform:translateY(-50%); z-index:3;
+    position:absolute; left:18px; top:0; bottom:0; margin:auto 0; z-index:3;
     display:flex; align-items:center; gap:10px;
   }
 
@@ -770,7 +776,7 @@
   .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:55; opacity:0; pointer-events:none; transition:opacity .2s ease, backdrop-filter .2s ease;}
   .modal-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);}
   .modal-panel{
-    position:fixed; left:50%; top:50%; transform:translate(-50%,-46%); width:88%; max-width:420px;
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-46%) scale(.96); width:88%; max-width:420px;
     /* moبایل: vh معمولاً نسبت‌به بزرگ‌ترین حالتِ ویوپورت (نوارِ آدرس مخفی)
        حساب می‌شه، نه ارتفاعِ واقعاً دیده‌شده وقتی نوارِ آدرس بازه — همین باعث
        می‌شد مودال (که با top:50% نسبت‌به همون ویوپورتِ بزرگ وسط‌چین می‌شه) از
@@ -787,13 +793,14 @@
        بلور به گوشه‌های گرد رو فورس می‌کنه (بدون تغییرِ ظاهریِ قابل‌دیدن). */
     isolation:isolate;
     -webkit-mask-image:-webkit-radial-gradient(white, black);
-    z-index:56; padding:22px; opacity:0; pointer-events:none; transition:.2s;
+    z-index:56; padding:22px; opacity:0; pointer-events:none;
+    transition:transform .28s cubic-bezier(.22,1,.36,1), opacity .22s ease;
   }
   /* شیشه‌ی خیلی کم‌رنگِ قبلی (۴٪) پشت مودال هم توی تمِ روشن هم تیره بیش از حد
      شفاف بود و محتوای پشتش (کارت‌ها/بلاب‌ها) رو خیلی واضح نشون می‌داد؛ حالا
      پایه (تمِ تیره) هم شفافیتِ کمتری داره، تمِ روشن همچنان تقریباً تخت می‌مونه. */
   body[data-theme="light"] .modal-panel{ background:rgba(var(--bg-rgb), .82); }
-  .modal-panel.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%);}
+  .modal-panel.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
   /* نسخه‌ی لیکوئید گلسِ پاپ‌آپ (فقط دوستان) — عیناً همون بک‌گراند/بلورِ
      .app-topbar (هدرِ سایت)، نه گرادیانِ تقریباً توپرِ قبلی. */
   .modal-panel.liquid-glass-panel{
@@ -2385,6 +2392,14 @@ body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,
 }
 .exercise-catalog-row:hover{ border-color:rgba(255,255,255,.18); }
 body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5); }
+/* عکسِ واقعیِ هر حرکت بعداً جایگزین می‌شه — فعلاً یه جای‌گیرِ ساده به‌جای
+   پیکتوگرامِ آدمک */
+.exercise-photo-placeholder{
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  border-radius:12px; border:1px dashed var(--line); color:var(--muted2);
+  background:rgba(255,255,255,.03);
+}
+body[data-theme="light"] .exercise-photo-placeholder{ background:rgba(255,255,255,.6); }
 
 /* جعبه‌ی قفلِ روزهای آینده — یک باکسِ واحد به‌جای تکرارِ بج روی هر ردیف،
    عیناً هم‌بک‌گراند/بلورِ هدرِ سایت (.app-topbar). */
