@@ -7,7 +7,9 @@ import { cn } from "@/lib/utils";
 
 // «برنامه هفتگی» بدنسازی — یک باکسِ واحد، با پدینگِ دورش تا خطِ جداکننده‌ی
 // بینِ روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیرِ هم)، بدونِ تغییرِ
-// چیدمان؛ دسکتاپ: همون ۷ ستونِ قبلی، فقط کمی عریض‌تر (پدینگِ کمتر).
+// چیدمان؛ دسکتاپ (lg+): تایتل و روزِ استراحت وسط‌چین، بدونِ باکسِ تودرتو
+// برای امروز (فقط رنگِ متن سبز می‌شه)، و خط‌های جداکننده به‌جای کشیدنِ
+// تمام‌ارتفاع، از بالا/پایین فاصله دارن (گرادیانِ محو به‌جای بوردرِ خام).
 export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDay[]; todayName: string }) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
@@ -21,8 +23,8 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="rounded-dash border border-dash-border bg-dash-card p-2.5 backdrop-blur-xl sm:p-3"
       >
-        <div className="grid grid-cols-1 divide-y divide-dash-border sm:grid-cols-2 sm:divide-x lg:grid-cols-7">
-          {CAL_WEEK_ORDER.map((jsDay) => {
+        <div className="grid grid-cols-1 divide-y divide-dash-border sm:grid-cols-2 sm:divide-x lg:grid-cols-7 lg:divide-x-0">
+          {CAL_WEEK_ORDER.map((jsDay, idx) => {
             const dayName = FA_WEEKDAY[jsDay];
             const d = byDay.get(dayName);
             const isToday = dayName === todayName;
@@ -32,11 +34,12 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
                 key={dayName}
                 className={cn(
                   "flex flex-col p-2.5 sm:p-3 lg:min-h-[220px]",
-                  isToday && "rounded-xl bg-dash-green/[0.08]"
+                  isToday && "rounded-xl bg-dash-green/[0.08] lg:rounded-none lg:bg-transparent",
+                  idx > 0 && "exercise-week-cell-divider"
                 )}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[12px] font-bold sm:text-[13px]", isToday ? "text-dash-green" : "text-dash-text")}>
+                <div className="flex items-center justify-between gap-2 lg:flex-col lg:justify-center lg:gap-1">
+                  <span className={cn("text-[12px] font-bold sm:text-[13px] lg:text-center", isToday ? "text-dash-green" : "text-dash-text")}>
                     {dayName}
                   </span>
                   {isToday && (
@@ -47,7 +50,7 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
                 </div>
 
                 {!d ? (
-                  <div className="flex flex-1 items-center py-1.5 text-[10.5px] text-dash-muted">روزِ استراحت</div>
+                  <div className="flex flex-1 items-center py-1.5 text-[10.5px] text-dash-muted lg:justify-center lg:text-center">روزِ استراحت</div>
                 ) : (
                   <>
                     <div className="mt-1 truncate text-[10px] font-semibold text-dash-green sm:text-[11px]" title={d.focus}>

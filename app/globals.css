@@ -2397,6 +2397,15 @@ body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5);
 }
 body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28); }
 
+/* خطِ جداکننده‌ی بینِ روزهای «برنامه هفتگی» — فقط دسکتاپ (lg+)، با فاصله
+   از بالا/پایینِ سلول به‌جای بوردرِ تمام‌ارتفاع. */
+@media (min-width:1024px){
+  .exercise-week-cell-divider{
+    background-image:linear-gradient(to bottom, transparent 14%, var(--line) 14%, var(--line) 86%, transparent 86%);
+    background-position:left; background-size:1px 100%; background-repeat:no-repeat;
+  }
+}
+
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 
 .calorie-meal-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
