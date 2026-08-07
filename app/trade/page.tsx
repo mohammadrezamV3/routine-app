@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import { TradeJournal } from "@/components/TradeJournal";
 import { TradeChecklist } from "@/components/TradeChecklist";
 import { ModuleGate } from "@/components/ModuleGate";
+import { AuthGate } from "@/components/AuthGate";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MarketTicker } from "@/components/MarketTicker";
 
@@ -34,12 +34,7 @@ export default function TradePage() {
           {tab === "checklist" ? <TradeChecklist /> : <TradeJournal />}
         </ModuleGate>
       ) : (
-        <>
-          <div className="section-note" style={{ marginTop: 14 }}>
-            {tab === "checklist" ? "برای ساختن چک‌لیست شخصی خودت اول وارد حساب بشو." : "برای ژورنال ترید اول وارد حساب بشو."}
-          </div>
-          <Link href="/auth/login" className="nav-link" style={{ display: "inline-block", marginTop: 10 }}>ورود / ثبت‌نام →</Link>
-        </>
+        <AuthGate message="برای استفاده از این سرویس وارد شوید" />
       )}
     </section>
   );

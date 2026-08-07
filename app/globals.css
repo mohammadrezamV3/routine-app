@@ -172,8 +172,10 @@
     color:var(--accent);
   }
   body[data-theme="light"] .section-note{ color:var(--muted); }
-  .disclaimer-note{font-size:11px; color:var(--muted2); margin-top:14px; line-height:1.7;}
-  .disclaimer-warn{color:#E05252; font-weight:700;}
+  /* سبزِ ثابت (نه var(--accent)) — عیناً مثلِ قرمزِ قبلی، رنگِ هشدار/توجه
+     نباید با تمِ روشن/تیره عوض بشه (تمِ روشن اکسنتش کهربایی/نارنجیه) */
+  .disclaimer-note{font-size:11px; color:#00A86B; margin-top:14px; line-height:1.7;}
+  .disclaimer-warn{color:#00A86B; font-weight:700;}
 
   .task{
     display:flex; align-items:flex-start; gap:13px; padding:13px 0; border-bottom:1px solid var(--line);
@@ -2151,6 +2153,9 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 /* دیوار اشتراک — به‌جای لود دیتای واقعیِ کاربری که پلنش شامل نمی‌شه، یک
    اسکلت تزئینیِ تار + پیام + دکمه‌ی خرید روش می‌شینه */
 .module-gate{ position:relative; min-height:260px; border-radius:18px; overflow:hidden; margin-top:14px; }
+/* گیتِ ورود (مهمون) بزرگ‌تر از گیتِ اشتراکه — قراره کلِ بخش رو (نه فقط یه
+   کارتِ کوچیک) تا قبلِ ورود بپوشونه */
+.auth-gate{ min-height:min(70vh, 460px); }
 .module-gate-blur{
   filter:blur(7px); opacity:.55; pointer-events:none; user-select:none;
   display:flex; flex-direction:column; gap:12px; padding:20px;
@@ -2444,12 +2449,25 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
 }
 .exercise-chrono .mono{ font-size:13px; letter-spacing:.3px; }
 
-/* جدولِ کوچیکِ مشخصاتِ حرکت (تعدادِ ست/تکرار یا زمان) — فقط وقتی تمرین فعاله */
-.exercise-spec-table{ display:flex; width:fit-content; margin-top:4px; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-.exercise-spec-cell{ display:flex; flex-direction:column; align-items:center; padding:3px 10px; min-width:42px; }
-.exercise-spec-cell + .exercise-spec-cell{ border-right:1px solid var(--line); }
-.exercise-spec-value{ font-family:var(--font-plexmono), monospace; font-size:11.5px; font-weight:700; color:var(--text); }
-.exercise-spec-label{ font-size:9px; color:var(--muted2); margin-top:1px; }
+/* جدولِ واقعیِ «برنامه تمرینی» — ستونِ ست/تکرار-زمان فقط وقتی تمرین فعاله
+   اضافه می‌شن (به‌جای نوشتنِ زیرِ اسمِ حرکت)، با خطِ جداکننده‌ی افقی بینِ
+   ردیف‌ها و عمودی بینِ ستون‌های عددی، عیناً شکلِ یک جدولِ واقعی. */
+.exercise-plan-table{ width:100%; border-collapse:collapse; }
+.exercise-plan-table thead th{ padding:0 6px 8px; font-weight:400; }
+.exercise-plan-table thead .epc-num{ color:var(--muted2); }
+.exercise-plan-table thead .epc-num svg{ margin:0 auto; display:block; }
+.exercise-plan-table tbody tr{ border-bottom:1px solid var(--line); }
+.exercise-plan-table tbody tr:last-child{ border-bottom:none; }
+.exercise-plan-table td{ padding:10px 6px; vertical-align:middle; }
+.epc-idx{ width:18px; font-size:11px; color:var(--muted); white-space:nowrap; }
+.epc-name{ text-align:right; font-size:12.5px; font-weight:500; color:var(--text); }
+.epc-num{ width:40px; text-align:center; font-size:11.5px; font-weight:700; color:var(--text); border-right:1px solid var(--line); white-space:nowrap; }
+.epc-actions{ width:1%; white-space:nowrap; }
+@media (min-width:640px){
+  .epc-idx{ font-size:12.5px; }
+  .epc-name{ font-size:14.5px; }
+  .epc-num{ font-size:13px; width:48px; }
+}
 
 /* دکمه‌ی «شروع» هر حرکت — جایگزینِ چک‌باکسِ قبلی، تنها راهِ بازکردنِ پاپ‌آپِ ردیابیِ ست */
 .exercise-start-btn{
@@ -2457,6 +2475,21 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
   font-size:11.5px; font-weight:700; background:transparent; transition:background .15s ease; white-space:nowrap;
 }
 .exercise-start-btn:hover{ background:rgba(var(--accent-rgb),.1); }
+
+/* دکمه‌ی شروعِ تایمرِ حرکاتِ زمان‌محورِ تکی (مثلاً دویدن) — کوچیک‌تر از قبل،
+   با یه ring نبضِ آرومِ بی‌نهایت (ادامه در ExerciseSetTrackerModal) */
+.exercise-solo-play{
+  display:flex; align-items:center; justify-content:center;
+  width:52px; height:52px; border-radius:9999px; background:var(--accent); color:var(--bg);
+}
+
+/* دکمه‌ی پاز/ادامه‌ی تایمر — هم برای ست‌های زمان‌محور هم برای استراحتِ بینِ ست‌ها */
+.exercise-pause-btn{
+  display:flex; align-items:center; gap:5px; margin-top:6px; padding:5px 13px; border-radius:9999px;
+  border:1px solid var(--line); color:var(--muted); font-size:11px; font-weight:600; background:transparent;
+  transition:border-color .15s ease, color .15s ease;
+}
+.exercise-pause-btn:hover{ border-color:var(--accent); color:var(--accent); }
 
 /* راهنمای کشیدنِ انگشت روی آموزشِ موبایل/تبلت */
 .exercise-tutorial-swipe-hint{
