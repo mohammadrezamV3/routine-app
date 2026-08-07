@@ -15,7 +15,7 @@ import { DashFriendsCard } from "./DashFriendsCard";
 import { ExerciseStatsCard } from "./ExerciseStatsCard";
 import { ExerciseCatalogCard } from "./ExerciseCatalogCard";
 import { ExerciseTaskList } from "./ExerciseTaskList";
-import { ExerciseWeekAccordion } from "./ExerciseWeekAccordion";
+import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
 
@@ -172,7 +172,7 @@ export function ExerciseDashboard({
         </div>
       </div>
 
-      <ExerciseWeekAccordion planData={weekPlanData} todayName={todayName} />
+      <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} />
 
       {historyPickerOpen && (
         <>
