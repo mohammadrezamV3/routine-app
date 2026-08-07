@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Play, Plus, RotateCw, Square, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseDay } from "@/lib/exercisePlans";
+import { isoLocal } from "@/lib/jalali";
 
 function formatElapsed(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -49,6 +50,8 @@ export function ExerciseTaskList({
   delay?: number;
 }) {
   const todayPlan = dayPlan;
+  const isFutureDay = dateIso > isoLocal(new Date());
+  const isPastDay = dateIso < isoLocal(new Date());
   const hadProgress = !initialCompleted && initialCompletedItems.length > 0;
   const [active, setActive] = useState(hadProgress);
   const [ended, setEnded] = useState(initialCompleted);
@@ -133,50 +136,76 @@ export function ExerciseTaskList({
           <div className="thin-scroll mt-4 flex min-h-0 flex-1 flex-col divide-y divide-dash-border overflow-y-auto" style={{ maxHeight: 360 }}>
             {todayPlan.items.map((item, idx) => {
               const isChecked = checked.has(item);
-              const showMiss = ended && !isChecked;
+              const showMiss = isPastDay ? !isChecked : ended && !isChecked;
               const isSubbing = substitutingItem === item;
               return (
                 <div key={item} className="flex items-center gap-2.5 py-3 sm:gap-3.5">
                   <span className="mono w-5 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{idx + 1}-</span>
                   <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-dash-text sm:text-[14.5px]">{item}</span>
 
-                  <button
-                    type="button"
-                    aria-label="جایگزینی این حرکت"
-                    title="این تجهیزات رو ندارم — جایگزین کن"
-                    disabled={!editable || isSubbing || active || ended}
-                    onClick={() => onSubstitute(todayPlan.day, item)}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
-                  >
-                    <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
-                  </button>
+                  <div className="relative flex shrink-0 items-center gap-2.5 sm:gap-3.5">
+                    {isFutureDay && (
+                      <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center whitespace-nowrap rounded-full bg-black/45 text-[9px] font-bold text-white sm:text-[10.5px]">
+                        وقتش نرسیده!
+                      </span>
+                    )}
+                    <div className={`flex items-center gap-2.5 sm:gap-3.5${isFutureDay ? " pointer-events-none blur-[3px]" : ""}`}>
+                      <button
+                        type="button"
+                        aria-label="جایگزینی این حرکت"
+                        title="این تجهیزات رو ندارم — جایگزین کن"
+                        disabled={!editable || isSubbing || active || ended}
+                        onClick={() => onSubstitute(todayPlan.day, item)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
+                      >
+                        <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
+                      </button>
 
-                  <button
-                    type="button"
-                    disabled={!active}
-                    onClick={() => toggleItem(item)}
-                    aria-pressed={isChecked}
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-not-allowed sm:h-6 sm:w-6"
-                    style={
-                      isChecked
-                        ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-                        : showMiss
-                        ? { background: "#E05252", borderColor: "#E05252" }
-                        : { background: "transparent", borderColor: "var(--muted)" }
-                    }
-                  >
-                    <AnimatePresence mode="wait">
-                      {isChecked ? (
-                        <motion.span key="on" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="flex items-center justify-center text-white">
-                          <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                        </motion.span>
-                      ) : showMiss ? (
-                        <motion.span key="x" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="flex items-center justify-center text-white">
-                          <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                        </motion.span>
-                      ) : null}
-                    </AnimatePresence>
-                  </button>
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.85 }}
+                        disabled={!active}
+                        onClick={() => toggleItem(item)}
+                        aria-pressed={isChecked}
+                        animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-not-allowed sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
+                        style={
+                          isChecked
+                            ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
+                            : showMiss
+                            ? { background: "#E05252", borderColor: "#E05252" }
+                            : { background: "transparent", borderColor: "var(--muted)" }
+                        }
+                      >
+                        <AnimatePresence mode="wait">
+                          {isChecked ? (
+                            <motion.span
+                              key="on"
+                              initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                              className="flex items-center justify-center text-white"
+                            >
+                              <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                            </motion.span>
+                          ) : showMiss ? (
+                            <motion.span
+                              key="x"
+                              initial={{ scale: 0, rotate: 45, opacity: 0 }}
+                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                              className="flex items-center justify-center text-white"
+                            >
+                              <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                            </motion.span>
+                          ) : null}
+                        </AnimatePresence>
+                      </motion.button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
