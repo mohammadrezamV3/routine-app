@@ -2,11 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ImageOff } from "lucide-react";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey } from "@/lib/exerciseCatalog";
-import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
-import { ExercisePictogram } from "./ExercisePictogram";
 import { MuscleDiagram } from "./MuscleDiagram";
 
 const MUSCLE_LABEL: Record<MuscleKey, string> = {
@@ -38,14 +36,10 @@ const MUSCLE_FILTERS: MuscleKey[] = [
 // اضافه شده. کلیک روی هرکدوم، دیاگرامِ بدن (عضله‌های درگیر) + نحوه‌ی انجام
 // + مزایا رو نشون می‌ده. جستجو با normalizeFa تا کیبوردِ عربی/فارسی فرقی
 // نکنه.
-export function ExerciseCatalogModal({ onClose, initialItem }: { onClose: () => void; initialItem?: string }) {
+export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | null>(null);
-  const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(() => {
-    if (!initialItem) return null;
-    const base = stripSetSuffix(initialItem);
-    return EXERCISE_CATALOG.find((e) => e.name === base) ?? null;
-  });
+  const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);
 
   const normalizedQuery = normalizeFa(query);
   const visible = useMemo(
@@ -91,7 +85,9 @@ export function ExerciseCatalogModal({ onClose, initialItem }: { onClose: () => 
                 <h3 className="text-center text-[16px] font-bold text-dash-text sm:text-[18px]">{selected.name}</h3>
 
                 <div className="exercise-pictogram-stage">
-                  <ExercisePictogram pattern={selected.pattern} size={84} />
+                  <div className="exercise-photo-placeholder" style={{ width: 84, height: 84 }}>
+                    <ImageOff size={26} />
+                  </div>
                 </div>
 
                 <div className="tm-extra" style={{ marginTop: 4 }}>
@@ -169,7 +165,9 @@ export function ExerciseCatalogModal({ onClose, initialItem }: { onClose: () => 
                         onClick={() => setSelected(e)}
                         className="exercise-catalog-row"
                       >
-                        <ExercisePictogram pattern={e.pattern} size={34} />
+                        <div className="exercise-photo-placeholder" style={{ width: 34, height: 34 }}>
+                          <ImageOff size={14} />
+                        </div>
                         <div className="min-w-0 flex-1 text-right">
                           <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
                           <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>

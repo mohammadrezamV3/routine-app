@@ -1,3 +1,5 @@
+import { CAL_WEEK_ORDER, FA_WEEKDAY } from "./jalali";
+
 export type ExerciseDay = { day: string; focus: string; items: string[] };
 export type ExerciseGoal = "strength" | "hypertrophy" | "cut" | "endurance";
 export type ExerciseLevel = "beginner" | "intermediate" | "advanced";
@@ -141,8 +143,31 @@ const PLAN_MATRIX: Record<ExerciseGoal, Record<ExerciseLevel, ExerciseDay[]>> = 
   endurance: ENDURANCE,
 };
 
-export function getExercisePlan(goal: ExerciseGoal, level: ExerciseLevel, hasPhysicalLimitation = false): ExerciseDay[] {
-  const days = PLAN_MATRIX[goal]?.[level] || PLAN_MATRIX.hypertrophy.beginner;
+/** تعدادِ حداقلِ روزهایی که این ترکیبِ هدف/سطح برای اجرا لازم داره (طولِ قالبش) */
+export function getRequiredDaysCount(goal: ExerciseGoal, level: ExerciseLevel): number {
+  return (PLAN_MATRIX[goal]?.[level] || PLAN_MATRIX.hypertrophy.beginner).length;
+}
+
+function sortDaysCalendarOrder(days: string[]): string[] {
+  return [...days].sort(
+    (a, b) => CAL_WEEK_ORDER.indexOf(FA_WEEKDAY.indexOf(a)) - CAL_WEEK_ORDER.indexOf(FA_WEEKDAY.indexOf(b))
+  );
+}
+
+export function getExercisePlan(
+  goal: ExerciseGoal,
+  level: ExerciseLevel,
+  hasPhysicalLimitation = false,
+  gymDays?: string[]
+): ExerciseDay[] {
+  const template = PLAN_MATRIX[goal]?.[level] || PLAN_MATRIX.hypertrophy.beginner;
+  // قالب‌ها روزهای هاردکد شده دارن (مثلاً «شنبه، دوشنبه، چهارشنبه») که به
+  // انتخابِ واقعیِ کاربر توی فرم هیچ ربطی نداشت — این باعث می‌شد مثلاً انتخابِ
+  // «جمعه» توی فرم، هیچ اثری روی روزهای برنامه‌ی نهایی نذاره. حالا اسمِ روزِ
+  // هر اسلاتِ قالب با روزِ واقعیِ انتخاب‌شده‌ی کاربر (به‌ترتیبِ هفته) جایگزین می‌شه.
+  if (!gymDays || gymDays.length === 0) return applyLimitation(template, hasPhysicalLimitation);
+  const sortedGymDays = sortDaysCalendarOrder(gymDays);
+  const days = template.map((d, i) => ({ ...d, day: sortedGymDays[i] ?? d.day }));
   return applyLimitation(days, hasPhysicalLimitation);
 }
 
