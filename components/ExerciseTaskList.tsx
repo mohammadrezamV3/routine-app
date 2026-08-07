@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Play, Plus, RotateCw, Square, X } from "lucide-react";
+import { Check, Lock, Play, Plus, RotateCw, Square, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
@@ -143,100 +143,100 @@ export function ExerciseTaskList({
                   <span className="mono w-5 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{idx + 1}-</span>
                   <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-dash-text sm:text-[14.5px]">{item}</span>
 
-                  <div className="relative flex shrink-0 items-center gap-2.5 sm:gap-3.5">
-                    {isFutureDay && (
-                      <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center whitespace-nowrap rounded-full bg-black/45 text-[9px] font-bold text-white sm:text-[10.5px]">
-                        وقتش نرسیده!
-                      </span>
-                    )}
-                    <div className={`flex items-center gap-2.5 sm:gap-3.5${isFutureDay ? " pointer-events-none blur-[3px]" : ""}`}>
-                      <button
-                        type="button"
-                        aria-label="جایگزینی این حرکت"
-                        title="این تجهیزات رو ندارم — جایگزین کن"
-                        disabled={!editable || isSubbing || active || ended}
-                        onClick={() => onSubstitute(todayPlan.day, item)}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
-                      >
-                        <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
-                      </button>
+                  <div className="flex shrink-0 items-center gap-2.5 sm:gap-3.5">
+                    <button
+                      type="button"
+                      aria-label="جایگزینی این حرکت"
+                      title="این تجهیزات رو ندارم — جایگزین کن"
+                      disabled={!editable || isSubbing || active || ended}
+                      onClick={() => onSubstitute(todayPlan.day, item)}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
+                    >
+                      <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
+                    </button>
 
-                      <motion.button
-                        type="button"
-                        whileTap={{ scale: 0.85 }}
-                        disabled={!active}
-                        onClick={() => toggleItem(item)}
-                        aria-pressed={isChecked}
-                        animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-not-allowed sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
-                        style={
-                          isChecked
-                            ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-                            : showMiss
-                            ? { background: "#E05252", borderColor: "#E05252" }
-                            : { background: "transparent", borderColor: "var(--muted)" }
-                        }
-                      >
-                        <AnimatePresence mode="wait">
-                          {isChecked ? (
-                            <motion.span
-                              key="on"
-                              initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                              className="flex items-center justify-center text-white"
-                            >
-                              <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                            </motion.span>
-                          ) : showMiss ? (
-                            <motion.span
-                              key="x"
-                              initial={{ scale: 0, rotate: 45, opacity: 0 }}
-                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                              className="flex items-center justify-center text-white"
-                            >
-                              <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                            </motion.span>
-                          ) : null}
-                        </AnimatePresence>
-                      </motion.button>
-                    </div>
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.85 }}
+                      disabled={!active}
+                      onClick={() => toggleItem(item)}
+                      aria-pressed={isChecked}
+                      animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-not-allowed sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
+                      style={
+                        isChecked
+                          ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
+                          : showMiss
+                          ? { background: "#E05252", borderColor: "#E05252" }
+                          : { background: "transparent", borderColor: "var(--muted)" }
+                      }
+                    >
+                      <AnimatePresence mode="wait">
+                        {isChecked ? (
+                          <motion.span
+                            key="on"
+                            initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                            className="flex items-center justify-center text-white"
+                          >
+                            <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                          </motion.span>
+                        ) : showMiss ? (
+                          <motion.span
+                            key="x"
+                            initial={{ scale: 0, rotate: 45, opacity: 0 }}
+                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                            className="flex items-center justify-center text-white"
+                          >
+                            <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                          </motion.span>
+                        ) : null}
+                      </AnimatePresence>
+                    </motion.button>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {editable && (!ended || active) && (
-            <div className="mt-5 shrink-0">
-              {!active && (
-                <button
-                  type="button"
-                  onClick={startWorkout}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
-                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-                >
-                  <Play size={16} />
-                  شروع تمرین
-                </button>
-              )}
-              {active && (
-                <button
-                  type="button"
-                  disabled={ending}
-                  onClick={endWorkout}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
-                  style={{ borderColor: "#E05252", color: "#E05252" }}
-                >
-                  <Square size={14} />
-                  {ending ? "در حال ثبت…" : "پایان تمرین"}
-                </button>
-              )}
+          {isFutureDay ? (
+            <div className="exercise-locked-box mt-5 shrink-0">
+              <Lock size={14} />
+              وقتش نرسیده!
             </div>
+          ) : (
+            editable && (!ended || active) && (
+              <div className="mt-5 shrink-0">
+                {!active && (
+                  <button
+                    type="button"
+                    onClick={startWorkout}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
+                    style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                  >
+                    <Play size={16} />
+                    شروع تمرین
+                  </button>
+                )}
+                {active && (
+                  <button
+                    type="button"
+                    disabled={ending}
+                    onClick={endWorkout}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
+                    style={{ borderColor: "#E05252", color: "#E05252" }}
+                  >
+                    <Square size={14} />
+                    {ending ? "در حال ثبت…" : "پایان تمرین"}
+                  </button>
+                )}
+              </div>
+            )
           )}
         </>
       )}

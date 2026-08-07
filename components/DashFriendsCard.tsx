@@ -7,7 +7,6 @@ import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
 import { avatarColorFor } from "@/lib/avatarColor";
-import { LiquidBlobLayers } from "./LiquidBlobBox";
 
 type Friend = { friendshipId: string; id: string; name: string; username: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -152,7 +151,6 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         <>
           <div className="modal-overlay open" onClick={() => setPanelOpen(false)} />
           <div className="modal-panel liquid-glass-panel dash-scope open">
-            <LiquidBlobLayers />
             <div className="relative z-[1]">
               <div className="modal-head">
                 <div className="modal-title">دوستان</div>

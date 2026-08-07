@@ -2386,6 +2386,17 @@ body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,
 .exercise-catalog-row:hover{ border-color:rgba(255,255,255,.18); }
 body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5); }
 
+/* جعبه‌ی قفلِ روزهای آینده — یک باکسِ واحد به‌جای تکرارِ بج روی هر ردیف،
+   عیناً هم‌بک‌گراند/بلورِ هدرِ سایت (.app-topbar). */
+.exercise-locked-box{
+  display:flex; align-items:center; justify-content:center; gap:7px;
+  border-radius:16px; padding:12px; font-size:13px; font-weight:700;
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  color:#4C8DFF;
+}
+body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28); }
+
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 
 .calorie-meal-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }

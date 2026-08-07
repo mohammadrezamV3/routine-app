@@ -1,10 +1,6 @@
-// کاتالوگِ حرکات بدنسازی — برای بخشِ «مشاهده حرکات»: روی هر حرکتِ برنامه کلیک
-// می‌شه و نحوه‌ی انجام، عضلاتِ درگیر (با دیاگرامِ بدن) و مزایاش نشون داده
-// می‌شه. چون اسمِ هر حرکت توی lib/exercisePlans.ts همراهِ ست×تکرار/زمانه
-// (مثلاً «اسکوات هالتر ۵×۵»)، اول با normalizeExerciseName یه اسمِ پایه
-// استخراج می‌شه، بعد با کلیدهای این کاتالوگ مچ می‌شه. اگه چیزی دقیق پیدا
-// نشد، fallback بر اساسِ خانواده‌ی حرکت (اسکوات/پرس/زیربغل/...) یه توضیحِ
-// کلی می‌ده تا هیچ‌وقت خالی نمونه.
+// کاتالوگِ حرکات بدنسازی — برای بخشِ «مشاهده حرکات»: جستجو/فیلترِ گروهِ
+// عضلانی روی این لیست انجام می‌شه و برای هر حرکت نحوه‌ی انجام، عضلاتِ
+// درگیر (با دیاگرامِ بدن) و مزایاش نشون داده می‌شه.
 
 export type MuscleKey =
   | "chest" | "back" | "traps" | "shoulders" | "biceps" | "triceps" | "forearms"
@@ -24,19 +20,6 @@ export type ExerciseCatalogEntry = {
   howTo: string[];
   benefits: string;
 };
-
-const SET_REP_SUFFIX = /[\s]*[۰-۹0-9]+\s*[×xX]\s*[۰-۹0-9]+.*$/;
-const TIME_SUFFIX = /[\s]*[۰-۹0-9]+\s*(دقیقه|ثانیه).*$/;
-const PER_LIMB_SUFFIX = /\s*(هر\s*پا|هر\s*طرف)\s*$/;
-
-/** «اسکوات هالتر ۵×۵» → «اسکوات هالتر» — اسمِ پایه‌ی حرکت بدونِ ست/تکرار/زمان */
-export function normalizeExerciseName(item: string): string {
-  return item
-    .replace(PER_LIMB_SUFFIX, "")
-    .replace(SET_REP_SUFFIX, "")
-    .replace(TIME_SUFFIX, "")
-    .trim();
-}
 
 export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ===================== پایین‌تنه — اسکوات/هینج/لانج =====================
@@ -1062,53 +1045,3 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
 ];
 
-const CATALOG_MAP: Map<string, ExerciseCatalogEntry> = new Map(
-  EXERCISE_CATALOG.map((e) => [e.name, e])
-);
-
-// خانواده‌های کلی — وقتی اسمِ دقیق توی کاتالوگ نبود (مثلاً یه حرکتِ
-// جایگزین‌شده یا برنامه‌ی دستیِ کاربر با اسمِ متفاوت)، بر اساسِ کلیدواژه
-// یه توضیحِ کلی می‌ده، تا هیچ‌وقت با «چیزی پیدا نشد» مواجه نشیم.
-const FAMILY_FALLBACK: [RegExp, ExerciseCatalogEntry][] = [
-  [/اسکوات/, { name: "اسکوات", muscleGroup: "چهارسر ران، باسن", muscleKeys: ["quads", "glutes"], pattern: "squat", howTo: ["پاها به عرضِ شونه، با کمرِ صاف پایین برو.", "از پاشنه فشار بده و بایست."], benefits: "حرکتِ پایه‌ای برای قدرت و حجمِ پایین‌تنه." }],
-  [/پرس سینه/, { name: "پرس سینه", muscleGroup: "سینه، سرشانه، پشتِ بازو", muscleKeys: ["chest", "shoulders", "triceps"], pattern: "pressHorizontal", howTo: ["وزنه رو بالای سینه نگه دار.", "کنترل‌شده پایین و بالا ببر."], benefits: "حرکتِ اصلیِ ساختِ قدرت و حجمِ سینه." }],
-  [/فلای/, { name: "فلای", muscleGroup: "سینه", muscleKeys: ["chest"], pattern: "fly", howTo: ["با آرنجِ کمی خم، دست‌ها رو به طرفین باز کن.", "با انقباضِ سینه دست‌ها رو به هم برسون."], benefits: "ایزولاسیونِ عرض و شکلِ عضله‌ی سینه." }],
-  [/پرس سرشانه/, { name: "پرس سرشانه", muscleGroup: "سرشانه، پشتِ بازو", muscleKeys: ["shoulders", "triceps"], pattern: "pressVertical", howTo: ["وزنه رو بالای شونه نگه دار.", "با فشار بالای سر ببر و برگردون."], benefits: "قدرت و حجمِ سرشانه رو می‌سازه." }],
-  [/نشر|شراگ|فیس‌پول/, { name: "نشر/شراگ", muscleGroup: "سرشانه، تراپز", muscleKeys: ["shoulders", "traps"], pattern: "raise", howTo: ["با آرنجِ کمی خم، وزنه رو تا ارتفاعِ هدف ببر.", "کنترل‌شده برگردون."], benefits: "عرض و تفکیکِ سرشانه/تراپز رو می‌سازه." }],
-  [/زیربغل|لت/, { name: "زیربغل", muscleGroup: "پشت، زیربغل", muscleKeys: ["back", "biceps"], pattern: "pullHorizontal", howTo: ["با کمرِ صاف، وزنه رو به سمتِ شکم بکش.", "کنترل‌شده برگردون."], benefits: "عرض و ضخامتِ پشت رو می‌سازه." }],
-  [/ددلیفت|هینج/, { name: "ددلیفت", muscleGroup: "همسترینگ، باسن، کمرِ پایین", muscleKeys: ["hamstrings", "glutes", "back"], pattern: "hinge", howTo: ["با کمرِ صاف، وزنه رو با کشیدنِ باسن به عقب بلند کن.", "بایست و باسن رو قفل کن."], benefits: "زنجیره‌ی خلفیِ بدن رو تقویت می‌کنه." }],
-  [/لانج/, { name: "لانج", muscleGroup: "چهارسر ران، باسن", muscleKeys: ["quads", "glutes"], pattern: "lunge", howTo: ["یک قدمِ بلند بردار و زانوی عقب رو نزدیکِ زمین ببر.", "با فشار از پای جلو برگرد."], benefits: "قدرتِ تک‌پا و تعادل رو تقویت می‌کنه." }],
-  [/هیپ تراست|باسن/, { name: "هیپ تراست", muscleGroup: "باسن", muscleKeys: ["glutes"], pattern: "hinge", howTo: ["لگن رو با فشار از پاشنه بالا ببر.", "بالا مکث کن و پایین بیا."], benefits: "مستقیم‌ترین حرکت برای عضله‌ی باسن." }],
-  [/بارفیکس|کول‌آپ/, { name: "بارفیکس", muscleGroup: "پشت، زیربغل، جلوبازو", muscleKeys: ["back", "biceps"], pattern: "pullVertical", howTo: ["میله رو بگیر و چانه رو بالای میله ببر.", "کنترل‌شده پایین بیا."], benefits: "قدرتِ کششیِ بالاتنه رو می‌سازه." }],
-  [/جلوبازو/, { name: "جلوبازو", muscleGroup: "جلوبازو", muscleKeys: ["biceps"], pattern: "curl", howTo: ["با خم‌کردنِ آرنج وزنه رو بالا بیار.", "کنترل‌شده پایین بیار."], benefits: "حجم و قدرتِ جلوبازو رو می‌سازه." }],
-  [/پشت‌بازو|دیپ/, { name: "پشتِ بازو", muscleGroup: "پشتِ بازو", muscleKeys: ["triceps"], pattern: "extension", howTo: ["با صاف‌کردنِ آرنج وزنه رو پایین/دور کن.", "کنترل‌شده برگردون."], benefits: "قدرت و حجمِ پشتِ بازو رو می‌سازه." }],
-  [/مچ دست|ساعد/, { name: "ساعد", muscleGroup: "ساعد", muscleKeys: ["forearms"], pattern: "curl", howTo: ["فقط با مچ، وزنه رو بالا ببر.", "کنترل‌شده پایین بیار."], benefits: "قدرت و استقامتِ ساعد و گرفتن رو می‌سازه." }],
-  [/شنا سوئدی/, { name: "شنا سوئدی", muscleGroup: "سینه، سرشانه، پشتِ بازو", muscleKeys: ["chest", "shoulders", "triceps"], pattern: "pressHorizontal", howTo: ["بدن یک خطِ صاف، کنترل‌شده پایین و بالا برو."], benefits: "حرکتِ ترکیبیِ بدونِ تجهیزات برای بالاتنه." }],
-  [/پلانک/, { name: "پلانک", muscleGroup: "مرکز بدن", muscleKeys: ["abs"], pattern: "core", howTo: ["روی ساعد و پنجه، بدن یک خطِ صاف نگه دار."], benefits: "ثباتِ مرکزِ بدن رو تقویت می‌کنه." }],
-  [/کرانچ|شکم|تویست|زانو بغل/, { name: "شکم", muscleGroup: "شکم", muscleKeys: ["abs"], pattern: "core", howTo: ["با انقباضِ شکم، شونه‌ها رو از زمین بلند کن.", "کنترل‌شده پایین بیا."], benefits: "عضلاتِ شکم رو ایزوله تقویت می‌کنه." }],
-  [/ساق/, { name: "ساق پا", muscleGroup: "ساق پا", muscleKeys: ["calves"], pattern: "calf", howTo: ["روی پنجه بایست و پاشنه رو بالا ببر.", "کنترل‌شده پایین بیار."], benefits: "قدرت و حجمِ ساق پا رو می‌سازه." }],
-  [/لگ اکستنشن|لگ کرل/, { name: "لگ اکستنشن/کرل", muscleGroup: "چهارسر ران، همسترینگ", muscleKeys: ["quads", "hamstrings"], pattern: "extension", howTo: ["با دستگاه، مفصلِ زانو رو کنترل‌شده باز/جمع کن."], benefits: "ایزولاسیونِ رانِ جلو/پشت." }],
-  [/دویدن|طناب|تناوبی|کاردیو|پیاده‌روی|دوچرخه/, { name: "کاردیو", muscleGroup: "قلب و عروق", muscleKeys: ["cardio"], pattern: "cardio", howTo: ["با شدتِ هدف (آرام/تمپو/تناوبی) حرکت کن.", "تا انتهای زمانِ هدف ریتم رو حفظ کن."], benefits: "ظرفیتِ هوازی و کالری‌سوزی رو بالا می‌بره." }],
-  [/برپی|پرش/, { name: "حرکاتِ انفجاری", muscleGroup: "تمامِ بدن", muscleKeys: ["fullbody", "cardio"], pattern: "explosive", howTo: ["حرکت رو با کنترل و سرعتِ مناسب انجام بده."], benefits: "قدرتِ انفجاری و ضربانِ قلب رو بالا می‌بره." }],
-  [/کشش/, { name: "کشش", muscleGroup: "انعطاف‌پذیری", muscleKeys: ["flexibility"], pattern: "flexibility", howTo: ["هر عضله رو ۲۰-۳۰ ثانیه، بدونِ تکانِ ضربه‌ای بکش."], benefits: "دامنه‌ی حرکتی رو حفظ می‌کنه و ریسکِ آسیب رو کم می‌کنه." }],
-];
-
-/** برای یک آیتمِ برنامه (با ست/تکرار/زمان) نزدیک‌ترین موردِ کاتالوگ رو برمی‌گردونه — هیچ‌وقت null نیست. */
-export function findCatalogEntry(item: string): ExerciseCatalogEntry {
-  const base = normalizeExerciseName(item);
-  const exact = CATALOG_MAP.get(base);
-  if (exact) return exact;
-
-  for (const [pattern, entry] of FAMILY_FALLBACK) {
-    if (pattern.test(base)) return entry;
-  }
-
-  return {
-    name: base || item,
-    muscleGroup: "—",
-    muscleKeys: [],
-    pattern: "core",
-    howTo: ["توضیحِ دقیقی برای این حرکت ثبت نشده — از مربیِ باشگاهت راهنمایی بگیر."],
-    benefits: "بخشی از برنامه‌ی تمرینی‌ته.",
-  };
-}
