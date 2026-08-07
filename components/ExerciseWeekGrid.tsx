@@ -7,8 +7,10 @@ import { cn } from "@/lib/utils";
 
 // «برنامه هفتگی» بدنسازی — یک باکسِ واحد، با پدینگِ دورش تا خطِ جداکننده‌ی
 // بینِ روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیرِ هم)، بدونِ تغییرِ
-// چیدمان؛ دسکتاپ (lg+): تایتل و روزِ استراحت وسط‌چین، بدونِ باکسِ تودرتو
-// برای امروز (فقط رنگِ متن سبز می‌شه)، و خط‌های جداکننده به‌جای کشیدنِ
+// چیدمان؛ دسکتاپ (lg+): تایتل راست‌چین، روزِ استراحت وسط‌چین، بدونِ باکسِ
+// تودرتو برای امروز (فقط رنگِ متن سبز می‌شه)، و خط‌های جداکننده — روی
+// سمتِ راستِ هر سلول (بینِ همون سلول و همسایه‌ی راستش، نه چپش، چون
+// تویِ RTL اولین بچه‌ی DOM سمتِ راستِ گرید می‌شینه) — به‌جای کشیدنِ
 // تمام‌ارتفاع، از بالا/پایین فاصله دارن (گرادیانِ محو به‌جای بوردرِ خام).
 export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDay[]; todayName: string }) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
@@ -23,7 +25,7 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="rounded-dash border border-dash-border bg-dash-card p-2.5 backdrop-blur-xl sm:p-3"
       >
-        <div className="grid grid-cols-1 divide-y divide-dash-border sm:grid-cols-2 sm:divide-x lg:grid-cols-7 lg:divide-x-0">
+        <div className="grid grid-cols-1 divide-y divide-dash-border sm:grid-cols-2 sm:divide-x lg:grid-cols-7 lg:divide-x-0 lg:divide-y-0">
           {CAL_WEEK_ORDER.map((jsDay, idx) => {
             const dayName = FA_WEEKDAY[jsDay];
             const d = byDay.get(dayName);
@@ -38,8 +40,8 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
                   idx > 0 && "exercise-week-cell-divider"
                 )}
               >
-                <div className="flex items-center justify-between gap-2 lg:flex-col lg:justify-center lg:gap-1">
-                  <span className={cn("text-[12px] font-bold sm:text-[13px] lg:text-center", isToday ? "text-dash-green" : "text-dash-text")}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className={cn("text-[12px] font-bold sm:text-[13px]", isToday ? "text-dash-green" : "text-dash-text")}>
                     {dayName}
                   </span>
                   {isToday && (

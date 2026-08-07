@@ -2402,7 +2402,7 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
 @media (min-width:1024px){
   .exercise-week-cell-divider{
     background-image:linear-gradient(to bottom, transparent 14%, var(--line) 14%, var(--line) 86%, transparent 86%);
-    background-position:left; background-size:1px 100%; background-repeat:no-repeat;
+    background-position:right; background-size:1px 100%; background-repeat:no-repeat;
   }
 }
 
