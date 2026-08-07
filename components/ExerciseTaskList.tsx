@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Lock, Play, Plus, RotateCw, Square, Timer, X } from "lucide-react";
+import { Check, Dumbbell, Lock, Play, Plus, Repeat2, RotateCw, Square, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
@@ -158,101 +158,108 @@ export function ExerciseTaskList({
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="thin-scroll mt-4 flex min-h-0 flex-1 flex-col divide-y divide-dash-border overflow-y-auto px-1" style={{ maxHeight: 360 }}>
-            {todayPlan.items.map((item, idx) => {
-              const isChecked = checked.has(item);
-              const showMiss = isPastDay ? !isChecked : ended && !isChecked;
-              const isSubbing = substitutingItem === item;
-              const canStart = active && editable && !isChecked && !ended;
-              const spec = parseExerciseItem(item);
-              return (
-                <div key={item} className="flex items-center gap-2.5 py-3 sm:gap-3.5">
-                  <span className="mono w-5 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{idx + 1}-</span>
+          <div className="thin-scroll mt-4 min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1" style={{ maxHeight: 360 }}>
+            <table className="exercise-plan-table">
+              {active && (
+                <thead>
+                  <tr>
+                    <th className="epc-idx" />
+                    <th className="epc-name" />
+                    <th className="epc-num"><Dumbbell size={13} /></th>
+                    <th className="epc-num"><Repeat2 size={13} /></th>
+                    <th className="epc-actions" />
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {todayPlan.items.map((item, idx) => {
+                  const isChecked = checked.has(item);
+                  const showMiss = isPastDay ? !isChecked : ended && !isChecked;
+                  const isSubbing = substitutingItem === item;
+                  const canStart = active && editable && !isChecked && !ended;
+                  const spec = parseExerciseItem(item);
+                  return (
+                    <tr key={item}>
+                      <td className="epc-idx mono">{idx + 1}-</td>
+                      <td className="epc-name">{spec.baseName}</td>
+                      {active && <td className="epc-num mono">{spec.sets > 1 ? toFaDigits(String(spec.sets)) : "—"}</td>}
+                      {active && (
+                        <td className="epc-num mono">
+                          {spec.isTimed ? formatSpecDuration(spec.seconds) : spec.reps ?? "—"}
+                        </td>
+                      )}
+                      <td className="epc-actions">
+                        <div className="flex shrink-0 items-center justify-end gap-2.5 sm:gap-3.5">
+                          <button
+                            type="button"
+                            aria-label="جایگزینی این حرکت"
+                            title="این تجهیزات رو ندارم — جایگزین کن"
+                            disabled={!editable || isSubbing || active || ended}
+                            onClick={() => onSubstitute(todayPlan.day, item)}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
+                          >
+                            <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
+                          </button>
 
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate text-[12.5px] font-medium text-dash-text sm:text-[14.5px]">{spec.baseName}</span>
-                    {active && (
-                      <div className="exercise-spec-table">
-                        {spec.sets > 1 && (
-                          <span className="exercise-spec-cell">
-                            <span className="exercise-spec-value">{toFaDigits(String(spec.sets))}</span>
-                            <span className="exercise-spec-label">ست</span>
-                          </span>
-                        )}
-                        <span className="exercise-spec-cell">
-                          <span className="exercise-spec-value">{spec.isTimed ? formatSpecDuration(spec.seconds) : spec.reps ?? "—"}</span>
-                          <span className="exercise-spec-label">{spec.isTimed ? "زمان" : "تکرار"}</span>
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-2.5 sm:gap-3.5">
-                    <button
-                      type="button"
-                      aria-label="جایگزینی این حرکت"
-                      title="این تجهیزات رو ندارم — جایگزین کن"
-                      disabled={!editable || isSubbing || active || ended}
-                      onClick={() => onSubstitute(todayPlan.day, item)}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
-                    >
-                      <RotateCw className={`h-[14px] w-[14px] sm:h-4 sm:w-4${isSubbing ? " animate-spin" : ""}`} />
-                    </button>
-
-                    {canStart ? (
-                      <motion.button
-                        type="button"
-                        whileTap={{ scale: 0.92 }}
-                        onClick={() => setSetTrackerItem(item)}
-                        className="exercise-start-btn"
-                      >
-                        شروع
-                      </motion.button>
-                    ) : (
-                      <motion.div
-                        aria-hidden
-                        animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
-                        style={
-                          isChecked
-                            ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-                            : showMiss
-                            ? { background: "#E05252", borderColor: "#E05252" }
-                            : { background: "transparent", borderColor: "var(--muted)" }
-                        }
-                      >
-                        <AnimatePresence mode="wait">
-                          {isChecked ? (
-                            <motion.span
-                              key="on"
-                              initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                              className="flex items-center justify-center text-white"
+                          {canStart ? (
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.92 }}
+                              transition={{ type: "spring", stiffness: 450, damping: 20 }}
+                              onClick={() => setSetTrackerItem(item)}
+                              className="exercise-start-btn"
                             >
-                              <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                            </motion.span>
-                          ) : showMiss ? (
-                            <motion.span
-                              key="x"
-                              initial={{ scale: 0, rotate: 45, opacity: 0 }}
-                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                              className="flex items-center justify-center text-white"
+                              شروع
+                            </motion.button>
+                          ) : (
+                            <motion.div
+                              aria-hidden
+                              animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                              transition={{ duration: 0.3, ease: "easeOut" }}
+                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
+                              style={
+                                isChecked
+                                  ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
+                                  : showMiss
+                                  ? { background: "#E05252", borderColor: "#E05252" }
+                                  : { background: "transparent", borderColor: "var(--muted)" }
+                              }
                             >
-                              <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                            </motion.span>
-                          ) : null}
-                        </AnimatePresence>
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                              <AnimatePresence mode="wait">
+                                {isChecked ? (
+                                  <motion.span
+                                    key="on"
+                                    initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                                    className="flex items-center justify-center text-white"
+                                  >
+                                    <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                                  </motion.span>
+                                ) : showMiss ? (
+                                  <motion.span
+                                    key="x"
+                                    initial={{ scale: 0, rotate: 45, opacity: 0 }}
+                                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                                    className="flex items-center justify-center text-white"
+                                  >
+                                    <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
+                                  </motion.span>
+                                ) : null}
+                              </AnimatePresence>
+                            </motion.div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           {isFutureDay ? (
@@ -301,6 +308,8 @@ export function ExerciseTaskList({
 
       {setTrackerItem && createPortal(
         <ExerciseSetTrackerModal
+          planId={planId}
+          dateIso={dateIso}
           item={setTrackerItem}
           onClose={() => setSetTrackerItem(null)}
           onComplete={() => markItemDone(setTrackerItem)}

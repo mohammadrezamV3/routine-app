@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { AuthGate } from "./AuthGate";
 import { ExercisePlanForm, validateExerciseForm } from "./ExercisePlanForm";
 import { ExerciseRulesStep } from "./ExerciseRulesStep";
 import { ExerciseDashboard } from "./ExerciseDashboard";
@@ -52,12 +52,7 @@ export function ExercisePanel() {
   }
 
   if (status === "unauthenticated") {
-    return (
-      <div>
-        <div className="section-note" style={{ marginTop: 10 }}>برای استفاده از برنامه ورزشی اول وارد حساب بشو.</div>
-        <Link href="/auth/login" className="nav-link" style={{ display: "inline-block", marginTop: 10 }}>ورود / ثبت‌نام →</Link>
-      </div>
-    );
+    return <AuthGate message="برای استفاده از این سرویس وارد شوید" />;
   }
 
   if (plan === undefined) {

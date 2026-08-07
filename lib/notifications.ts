@@ -47,3 +47,13 @@ export function fireReminder(key: string, title: string, body: string) {
     markFiredToday(key);
   } catch {}
 }
+
+/** برای تمومِ تایمرِ یک حرکت (ست یا حرکتِ زمان‌محورِ تکی) — برخلافِ fireReminder
+ * روزی یک‌بار محدود نیست، چون توی یک جلسه ممکنه چندبار تایمر تموم بشه؛ فقط
+ * اگه اجازه از قبل داده شده باشه فایر می‌شه (خودش پرامپت نمی‌کنه). */
+export function fireTimerDone(title: string, body: string) {
+  if (getNotificationPermission() !== "granted") return;
+  try {
+    new Notification(title, { body, silent: false });
+  } catch {}
+}
