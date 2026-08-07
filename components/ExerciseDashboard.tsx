@@ -15,7 +15,7 @@ import { DashFriendsCard } from "./DashFriendsCard";
 import { ExerciseStatsCard } from "./ExerciseStatsCard";
 import { ExerciseCatalogCard } from "./ExerciseCatalogCard";
 import { ExerciseTaskList } from "./ExerciseTaskList";
-import { ExerciseWeekAccordion } from "./ExerciseWeekAccordion";
+import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
 
@@ -42,6 +42,7 @@ export function ExerciseDashboard({
   const [subError, setSubError] = useState<string | null>(null);
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
+  const [sessionActive, setSessionActive] = useState(false);
 
   const isSelectedToday = selectedIso === todayIso;
 
@@ -145,9 +146,18 @@ export function ExerciseDashboard({
 
       {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
 
-      {/* سه بخش، عیناً چیدمانِ روتین: راست (پهن‌تر) برنامه‌ی تمرینیِ امروز،
-          وسط دکمه‌ی «مشاهده حرکات» (هم‌جای DashReminderCard)، چپ آمار+دوستان زیرِ هم */}
-      <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6">
+      {/* وقتی جلسه‌ی تمرین فعاله، صفحه کاملاً روی خودِ برنامه‌ی تمرینی
+          متمرکز می‌شه (تمام‌عرض، بدونِ کارت‌های کناری) — با پایانِ تمرین
+          دوباره چیدمانِ سه‌بخشیِ عادی برمی‌گرده. ExerciseTaskList همیشه
+          همون یک نمونه‌ست (نه دو تا شرطی) تا با تغییرِ چیدمان، state ی
+          داخلیش (تایمر، آیتم‌های تیک‌خورده) از دست نره. */}
+      <div
+        className={
+          sessionActive
+            ? "flex flex-col gap-4 sm:gap-6"
+            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
+        }
+      >
         <ExerciseTaskList
           planId={plan.id}
           dayPlan={selectedDayPlan}
@@ -161,18 +171,23 @@ export function ExerciseDashboard({
           substitutingItem={subbingItem}
           onSessionEnd={() => setRefreshKey((k) => k + 1)}
           onAddProgram={() => setAddProgramOpen(true)}
+          onActiveChange={setSessionActive}
           delay={0.05}
         />
 
-        <ExerciseCatalogCard delay={0.1} />
+        {!sessionActive && (
+          <>
+            <ExerciseCatalogCard delay={0.1} />
 
-        <div className="flex flex-col gap-4 sm:gap-6">
-          <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
-          <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
-        </div>
+            <div className="flex flex-col gap-4 sm:gap-6">
+              <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
+              <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
+            </div>
+          </>
+        )}
       </div>
 
-      <ExerciseWeekAccordion planData={weekPlanData} todayName={todayName} />
+      <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} />
 
       {historyPickerOpen && (
         <>

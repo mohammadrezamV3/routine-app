@@ -2386,6 +2386,37 @@ body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,
 .exercise-catalog-row:hover{ border-color:rgba(255,255,255,.18); }
 body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5); }
 
+/* جعبه‌ی قفلِ روزهای آینده — یک باکسِ واحد به‌جای تکرارِ بج روی هر ردیف،
+   عیناً هم‌بک‌گراند/بلورِ هدرِ سایت (.app-topbar). */
+.exercise-locked-box{
+  display:flex; align-items:center; justify-content:center; gap:7px;
+  border-radius:16px; padding:12px; font-size:13px; font-weight:700;
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  color:#4C8DFF;
+}
+body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28); }
+
+/* خطِ جداکننده‌ی بینِ روزهای «برنامه هفتگی» — فقط دسکتاپ (lg+)، با فاصله
+   از بالا/پایینِ سلول به‌جای بوردرِ تمام‌ارتفاع. */
+@media (min-width:1024px){
+  .exercise-week-cell-divider{
+    background-image:linear-gradient(to bottom, transparent 14%, var(--line) 14%, var(--line) 86%, transparent 86%);
+    background-position:right; background-size:1px 100%; background-repeat:no-repeat;
+  }
+}
+
+/* پاپ‌آپِ ردیابیِ ست‌به‌ست («روشِ اول») */
+.exercise-set-tracker-panel{ max-width:400px; }
+.exercise-set-circle{
+  display:flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:9999px; border:2px solid; transition:.2s;
+  font-size:15px; font-weight:700;
+}
+.exercise-set-circle:disabled{ cursor:not-allowed; }
+.exercise-rest-bar{ width:180px; height:5px; border-radius:9999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }
+.exercise-rest-bar-fill{ height:100%; background:var(--accent); border-radius:9999px; transition:width 1s linear; }
+
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 
 .calorie-meal-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
