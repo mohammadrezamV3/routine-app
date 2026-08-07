@@ -794,15 +794,15 @@
      پایه (تمِ تیره) هم شفافیتِ کمتری داره، تمِ روشن همچنان تقریباً تخت می‌مونه. */
   body[data-theme="light"] .modal-panel{ background:rgba(var(--bg-rgb), .82); }
   .modal-panel.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%);}
-  /* نسخه‌ی لیکوئید گلسِ پاپ‌آپ (فقط دوستان) — تاریِ نزدیک به بک‌گراندِ خودِ
-     صفحه (var(--bg))، نه نیمه‌شفاف؛ توپ‌های LiquidBlobLayers فقط یه هاله‌ی
-     محو پشتِ کارت می‌ندازن، نه دایره‌ی واضح — دقیقاً حسِ بک‌گراندِ خودِ اپ. */
+  /* نسخه‌ی لیکوئید گلسِ پاپ‌آپ (فقط دوستان) — عیناً همون بک‌گراند/بلورِ
+     .app-topbar (هدرِ سایت)، نه گرادیانِ تقریباً توپرِ قبلی. */
   .modal-panel.liquid-glass-panel{
     overflow-x:hidden;
-    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .985));
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   }
   body[data-theme="light"] .modal-panel.liquid-glass-panel{
-    background:linear-gradient(155deg, var(--accent-dim), rgba(var(--bg-rgb), .99));
+    background:rgba(255,255,255,.28);
   }
   .modal-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;}
   .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-plexmono), monospace;}
@@ -2360,6 +2360,31 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
   padding:32px 18px; font-size:13px; font-weight:700; min-height:132px;
 }
 .exercise-choice-divider{ width:1px; align-self:stretch; margin:6px 0; background:var(--line); opacity:.5; }
+.ai-sparkle-icon{ transition:filter .2s ease; }
+.exercise-choice-btn:hover .ai-sparkle-icon{ filter:drop-shadow(0 0 10px rgba(255,196,60,.9)) !important; }
+
+/* ===================== مشاهده حرکات — کاتالوگِ حرکات بدنسازی ===================== */
+.exercise-catalog-panel{ max-width:460px; }
+.exercise-pictogram-stage{
+  display:flex; align-items:center; justify-content:center; margin:14px 0 4px;
+  padding:14px; border-radius:16px; border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+}
+body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,.5); }
+.exercise-catalog-filters{ display:flex; gap:6px; overflow-x:auto; padding:12px 2px 2px; }
+.exercise-catalog-chip{
+  flex-shrink:0; padding:6px 14px; border-radius:9999px; font-size:11px; font-weight:600;
+  border:1px solid var(--line); color:var(--muted); background:transparent; transition:.15s;
+  white-space:nowrap;
+}
+.exercise-catalog-chip.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+.exercise-catalog-row{
+  display:flex; align-items:center; gap:10px; cursor:pointer; border-radius:16px;
+  border:1px solid var(--line); background:rgba(255,255,255,.02);
+  padding:8px 14px; text-align:right; transition:border-color .15s ease;
+}
+.exercise-catalog-row:hover{ border-color:rgba(255,255,255,.18); }
+body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5); }
 
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 

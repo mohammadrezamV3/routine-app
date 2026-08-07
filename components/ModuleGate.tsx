@@ -36,10 +36,20 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
     return () => { cancelled = true; };
   }, [status, module]);
 
-  if (status !== "authenticated") return <>{children}</>;
-  if (allowed === null) return <div className="item-line" style={{ marginTop: 14 }}>در حال بررسی دسترسی…</div>;
-  if (allowed) return <>{children}</>;
+  if (allowed === false) return <GateDenied />;
 
+  // چه سشن هنوز لودینگ/مهمونه، چه دسترسی تاییدشده، چه هنوز در حالِ چکه —
+  // children رو بلافاصله مونت می‌کنیم (نه بعد از رسیدنِ جوابِ /api/account).
+  // قبلاً تا وقتی allowed مشخص نمی‌شد یه پیامِ «در حال بررسی دسترسی…» جدا
+  // نشون داده می‌شد و children کلاً un‌mount بود — یعنی فچِ داخلیِ خودِ
+  // children (مثلاً /api/exercise/plan) فقط بعدِ این چک شروع می‌شد، نه
+  // موازیش. enforcement واقعی همیشه سمتِ سرور (requireModule) انجام می‌شه،
+  // پس مونت‌کردنِ زودترِ children مشکلی نداره — فقط اگه واقعاً دسترسی نبود
+  // (allowed===false)، به‌جاش پیش‌نمایشِ تار+پیامِ خرید نشون داده می‌شه.
+  return <>{children}</>;
+}
+
+function GateDenied() {
   return (
     <div className="module-gate">
       <div className="module-gate-blur" aria-hidden="true">
