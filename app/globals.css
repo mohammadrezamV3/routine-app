@@ -63,6 +63,10 @@
   /* minimal scrollbars for scrollable panels — dark theme only, a soft elegant black */
   .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel, .thin-scroll{
     scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent;
+    /* بدونِ این، وقتی محتوا دقیقاً دورِ ارتفاعِ maxHeight نوسان می‌کنه (مثلاً
+       با تغییرِ نوعِ یه المنتِ داخلیِ یک ردیف)، اسکرول‌بار یه لحظه ظاهر/محو
+       می‌شه و کلِ عرضِ محتوا رو تکون می‌ده — این فضا رو همیشه رزرو می‌کنیم. */
+    scrollbar-gutter:stable;
   }
   .nav-drawer-glass::-webkit-scrollbar, .wsearch-newform::-webkit-scrollbar,
   .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar, .thin-scroll::-webkit-scrollbar{
@@ -2431,6 +2435,34 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
 .exercise-set-circle:disabled{ cursor:not-allowed; }
 .exercise-rest-bar{ width:180px; height:5px; border-radius:9999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }
 .exercise-rest-bar-fill{ height:100%; background:var(--accent); border-radius:9999px; transition:width 1s linear; }
+
+/* تایمرِ زمانِ تمرین — جای دکمه‌ی «افزودن برنامه» می‌شینه وقتی جلسه فعاله، شبیهِ کرنومتر */
+.exercise-chrono{
+  display:flex; align-items:center; gap:6px; padding:6px 13px; border-radius:9999px;
+  border:1.5px solid var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.08);
+  font-size:11.5px; font-weight:700; white-space:nowrap;
+}
+.exercise-chrono .mono{ font-size:13px; letter-spacing:.3px; }
+
+/* جدولِ کوچیکِ مشخصاتِ حرکت (تعدادِ ست/تکرار یا زمان) — فقط وقتی تمرین فعاله */
+.exercise-spec-table{ display:flex; width:fit-content; margin-top:4px; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.exercise-spec-cell{ display:flex; flex-direction:column; align-items:center; padding:3px 10px; min-width:42px; }
+.exercise-spec-cell + .exercise-spec-cell{ border-right:1px solid var(--line); }
+.exercise-spec-value{ font-family:var(--font-plexmono), monospace; font-size:11.5px; font-weight:700; color:var(--text); }
+.exercise-spec-label{ font-size:9px; color:var(--muted2); margin-top:1px; }
+
+/* دکمه‌ی «شروع» هر حرکت — جایگزینِ چک‌باکسِ قبلی، تنها راهِ بازکردنِ پاپ‌آپِ ردیابیِ ست */
+.exercise-start-btn{
+  padding:6px 16px; border-radius:9999px; border:1.5px solid var(--accent); color:var(--accent);
+  font-size:11.5px; font-weight:700; background:transparent; transition:background .15s ease; white-space:nowrap;
+}
+.exercise-start-btn:hover{ background:rgba(var(--accent-rgb),.1); }
+
+/* راهنمای کشیدنِ انگشت روی آموزشِ موبایل/تبلت */
+.exercise-tutorial-swipe-hint{
+  display:flex; align-items:center; justify-content:center; gap:4px;
+  font-size:11px; color:var(--muted2); padding:8px 0 0;
+}
 
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 

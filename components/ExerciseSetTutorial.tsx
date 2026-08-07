@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { MousePointerClick, Timer, CheckCircle2, PartyPopper } from "lucide-react";
+import { AnimatePresence, motion, PanInfo } from "framer-motion";
+import { ChevronRight, MousePointerClick, Timer, CheckCircle2, PartyPopper } from "lucide-react";
 
 export const EXERCISE_TUTORIAL_SEEN_KEY = "exercise-set-tutorial-seen";
 
 const STEPS = [
   {
     icon: MousePointerClick,
-    title: "روی اسمِ هر حرکت بزن",
-    text: "با زدنِ اسمِ حرکت، یه پاپ‌آپ باز می‌شه که می‌تونی ست‌به‌ست پیشرفتت رو توش ثبت کنی.",
+    title: "روی دکمه‌ی «شروع» هر حرکت بزن",
+    text: "با زدنِ دکمه‌ی شروعِ حرکت، یه پاپ‌آپ باز می‌شه که می‌تونی ست‌به‌ست پیشرفتت رو توش ثبت کنی.",
   },
   {
     icon: CheckCircle2,
@@ -29,18 +29,34 @@ const STEPS = [
   },
 ];
 
+const SWIPE_DISTANCE = 60;
+const SWIPE_VELOCITY = 400;
+
 // اولین‌باری که کسی «شروع تمرین» رو می‌زنه، این آموزشِ مرحله‌ای (روشِ اول:
 // ردیابیِ ست‌به‌ست) نشون داده می‌شه؛ بعدِ دیدن، دیگه تکرار نمی‌شه (پرچمش
-// توی localStorage ذخیره می‌شه — این فقط یه ترجیحِ نمایشیه، نه دیتای واقعی،
-// پس نیازی به سوییچِ storage.ts نداره).
+// توی localStorage ذخیره می‌شه). موبایل/تبلت با کشیدنِ انگشت (بدونِ دکمه‌ی
+// قبلی) بینِ اسلایدها رد می‌شه، دسکتاپ با دکمه‌های قبلی/بعدی.
 export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0);
+  const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
   const isLast = step === STEPS.length - 1;
   const Icon = STEPS[step].icon;
 
   function finish() {
     try { localStorage.setItem(EXERCISE_TUTORIAL_SEEN_KEY, "1"); } catch {}
     onDone();
+  }
+
+  function goNext() {
+    if (isLast) finish();
+    else setStep((s) => s + 1);
+  }
+
+  function handleDragEnd(_: unknown, info: PanInfo) {
+    const swipedForward = info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY;
+    const swipedBack = info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY;
+    if (swipedForward) goNext();
+    else if (swipedBack && step > 0) setStep((s) => s - 1);
   }
 
   return (
@@ -60,7 +76,12 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
+              drag={isMobile ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.6}
+              onDragEnd={handleDragEnd}
               className="flex flex-col items-center gap-3 py-3 text-center"
+              style={{ touchAction: isMobile ? "pan-y" : undefined }}
             >
               <motion.span
                 animate={{ scale: [1, 1.08, 1] }}
@@ -85,20 +106,38 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
             ))}
           </div>
 
-          <div className="mt-4 flex gap-2">
-            {step > 0 && (
-              <button type="button" onClick={() => setStep((s) => s - 1)} className="small" style={{ flex: 1 }}>
-                قبلی
+          {isMobile ? (
+            <div className="mt-4">
+              {isLast ? (
+                <button
+                  type="button"
+                  onClick={finish}
+                  className="flex w-full items-center justify-center py-2.5 text-[13px] font-bold"
+                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                >
+                  شروع برنامه
+                </button>
+              ) : (
+                <div className="exercise-tutorial-swipe-hint">
+                  برای ادامه، به چپ بکش
+                  <ChevronRight size={13} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 flex items-center justify-between gap-2">
+              {step > 0 ? (
+                <button type="button" onClick={() => setStep((s) => s - 1)} className="small">
+                  قبلی
+                </button>
+              ) : (
+                <span />
+              )}
+              <button type="button" onClick={goNext} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+                {isLast ? "متوجه شدم، بزن بریم" : "بعدی"}
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
-              style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}
-            >
-              {isLast ? "متوجه شدم، بزن بریم" : "بعدی"}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </>

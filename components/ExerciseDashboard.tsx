@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, History } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
@@ -147,47 +148,71 @@ export function ExerciseDashboard({
       {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
 
       {/* وقتی جلسه‌ی تمرین فعاله، صفحه کاملاً روی خودِ برنامه‌ی تمرینی
-          متمرکز می‌شه (تمام‌عرض، بدونِ کارت‌های کناری) — با پایانِ تمرین
-          دوباره چیدمانِ سه‌بخشیِ عادی برمی‌گرده. ExerciseTaskList همیشه
-          همون یک نمونه‌ست (نه دو تا شرطی) تا با تغییرِ چیدمان، state ی
-          داخلیش (تایمر، آیتم‌های تیک‌خورده) از دست نره. */}
-      <div
+          متمرکز می‌شه (تمام‌عرض، بدونِ کارت‌های کناری و بدونِ برنامه‌ی هفتگی
+          پایینِ صفحه) — با پایانِ تمرین دوباره چیدمانِ سه‌بخشیِ عادی برمی‌گرده.
+          `layout` روی این container و ExerciseTaskList باعث می‌شه این
+          جابه‌جاییِ اندازه/چیدمان با یک انیمیشنِ نرم (FLIP) اتفاق بیفته، نه
+          یهویی. ExerciseTaskList همیشه همون یک نمونه‌ست (نه دو تا شرطی) تا
+          با تغییرِ چیدمان، state ی داخلیش (تایمر، آیتم‌های تیک‌خورده) از
+          دست نره. */}
+      <motion.div
+        layout
+        transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         className={
           sessionActive
             ? "flex flex-col gap-4 sm:gap-6"
             : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
         }
       >
-        <ExerciseTaskList
-          planId={plan.id}
-          dayPlan={selectedDayPlan}
-          dateIso={selectedIso}
-          editable={isSelectedToday}
-          title={isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینیِ ${selectedDayName}`}
-          restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روزِ باشگاهِ برنامه نیست."}
-          initialCompleted={!!selectedLog?.completed}
-          initialCompletedItems={selectedLog?.completedItems ?? []}
-          onSubstitute={substituteItem}
-          substitutingItem={subbingItem}
-          onSessionEnd={() => setRefreshKey((k) => k + 1)}
-          onAddProgram={() => setAddProgramOpen(true)}
-          onActiveChange={setSessionActive}
-          delay={0.05}
-        />
+        <motion.div layout transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}>
+          <ExerciseTaskList
+            planId={plan.id}
+            dayPlan={selectedDayPlan}
+            dateIso={selectedIso}
+            editable={isSelectedToday}
+            title={isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینیِ ${selectedDayName}`}
+            restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روزِ باشگاهِ برنامه نیست."}
+            initialCompleted={!!selectedLog?.completed}
+            initialCompletedItems={selectedLog?.completedItems ?? []}
+            onSubstitute={substituteItem}
+            substitutingItem={subbingItem}
+            onSessionEnd={() => setRefreshKey((k) => k + 1)}
+            onAddProgram={() => setAddProgramOpen(true)}
+            onActiveChange={setSessionActive}
+            delay={0.05}
+          />
+        </motion.div>
 
+        <AnimatePresence>
+          {!sessionActive && (
+            <>
+              <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <ExerciseCatalogCard delay={0.1} />
+              </motion.div>
+
+              <motion.div
+                key="side"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-4 sm:gap-6"
+              >
+                <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
+                <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      <AnimatePresence>
         {!sessionActive && (
-          <>
-            <ExerciseCatalogCard delay={0.1} />
-
-            <div className="flex flex-col gap-4 sm:gap-6">
-              <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
-              <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
-            </div>
-          </>
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}>
+            <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} />
+          </motion.div>
         )}
-      </div>
-
-      <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} />
+      </AnimatePresence>
 
       {historyPickerOpen && (
         <>
