@@ -204,7 +204,7 @@ export function ManualExercisePlanForm({
           {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
         </div>
 
-        <div className="domain-sub" style={{ marginTop: 16 }}>برنامه‌ی روزِ {activeDay}</div>
+        <label className="exercise-wizard-title" style={{ marginBottom: 4 }}>برنامه‌ی روزِ {activeDay}</label>
         {items.length > 0 && (
           <div style={{ fontSize: 11, color: "var(--muted2)", marginTop: 2 }}>{computeDayFocus(items)}</div>
         )}
@@ -222,8 +222,9 @@ export function ManualExercisePlanForm({
         <div className="manual-day-exercises-box">
           <div className="manual-day-exercises-head">
             <div className="manual-day-exercises-title">حرکات این روز</div>
-            <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpen(true)} aria-label="افزودن حرکت">
-              <Plus size={16} />
+            <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpen(true)}>
+              افزودن
+              <Plus size={14} />
             </button>
           </div>
 
@@ -260,7 +261,7 @@ export function ManualExercisePlanForm({
         </div>
       )}
 
-      <label className="exercise-form-label" style={{ marginTop: 8 }}>کدوم روزها می‌خوای برنامه داشته باشی؟</label>
+      <label className="exercise-wizard-title">کدوم روزها رو می‌خوای برنامه داشته باشی؟</label>
       <div className="exercise-day-select-row">
         {CAL_WEEK_ORDER.map((i) => (
           <span
@@ -294,7 +295,7 @@ export function ManualExercisePlanForm({
           type="button"
           onClick={submit}
           disabled={submitting}
-          style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+          className="manual-submit-btn"
         >
           {submitting ? "در حال ثبت…" : "ثبتِ برنامه"}
         </button>

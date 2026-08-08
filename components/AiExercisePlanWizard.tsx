@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { AlertCircle, ChevronRight } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import {
   LEVEL_LABELS, GOAL_OPTION_LABELS, GOAL_FALLBACK_MAP, getRequiredDaysCount,
@@ -124,25 +124,29 @@ export function AiExercisePlanWizard({
         </div>
       )}
 
-      <div className="exercise-wizard-dots">
-        {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={`exercise-wizard-dot${i === STEP_INDEX[step] ? " on" : ""}`} />
-        ))}
-      </div>
-
       {step === "hw" && (
         <>
-          <label className="exercise-form-label" style={{ marginTop: 0 }}>قد و وزن خود را وارد کنید</label>
+          <label className="exercise-wizard-title">قد و وزن خود را وارد کنید</label>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">قد (سانتی‌متر)</label>
               <input type="number" className="wsearch-newform-name" value={form.heightCm} onChange={(e) => patch({ heightCm: e.target.value })} />
-              {fieldErrors.heightCm && <div className="field-error-msg" style={{ display: "block" }}>{fieldErrors.heightCm}</div>}
+              {fieldErrors.heightCm && (
+                <div className="field-error-msg field-error-msg-inline">
+                  {fieldErrors.heightCm}
+                  <AlertCircle size={12} />
+                </div>
+              )}
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">وزن (کیلوگرم)</label>
               <input type="number" className="wsearch-newform-name" value={form.weightKg} onChange={(e) => patch({ weightKg: e.target.value })} />
-              {fieldErrors.weightKg && <div className="field-error-msg" style={{ display: "block" }}>{fieldErrors.weightKg}</div>}
+              {fieldErrors.weightKg && (
+                <div className="field-error-msg field-error-msg-inline">
+                  {fieldErrors.weightKg}
+                  <AlertCircle size={12} />
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -150,7 +154,7 @@ export function AiExercisePlanWizard({
 
       {step === "goal" && (
         <>
-          <label className="exercise-form-label" style={{ marginTop: 0 }}>هدف تمرینت چیه؟</label>
+          <label className="exercise-wizard-title">هدف تمرینت چیه؟</label>
           <div className="day-picker" style={{ flexWrap: "wrap" }}>
             {(Object.keys(GOAL_OPTION_LABELS) as ExerciseGoalOption[]).map((g) => (
               <span
@@ -168,7 +172,7 @@ export function AiExercisePlanWizard({
 
       {step === "days" && (
         <>
-          <label className="exercise-form-label" style={{ marginTop: 0 }}>کدوم روزها میخوای بری باشگاه؟</label>
+          <label className="exercise-wizard-title">کدوم روزها میخوای بری باشگاه؟</label>
           <div className="exercise-day-select-row">
             {CAL_WEEK_ORDER.map((i) => (
               <span
@@ -199,7 +203,7 @@ export function AiExercisePlanWizard({
 
       {step === "description" && (
         <>
-          <label className="exercise-form-label" style={{ marginTop: 0 }}>دوست داری برنامه‌ت چطوری باشه؟ (اختیاری)</label>
+          <label className="exercise-wizard-title">دوست داری برنامه‌ت چطوری باشه؟ (اختیاری)</label>
           <textarea
             dir="rtl"
             className="exercise-desc-textarea"
@@ -225,15 +229,28 @@ export function AiExercisePlanWizard({
         </>
       )}
 
-      {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
+      {error && (
+        <div className="field-error-msg field-error-msg-inline" style={{ marginTop: 10 }}>
+          {error}
+          <AlertCircle size={12} />
+        </div>
+      )}
 
-      <button
-        onClick={goNext}
-        disabled={submitting}
-        style={{ width: "100%", marginTop: 18, borderColor: "var(--accent)", color: "var(--accent)" }}
-      >
-        {step === "description" ? (submitting ? "در حال ساخت برنامه…" : rejection ? "ویرایش و امتحان دوباره" : "مرحله بعد") : "مرحله بعد"}
-      </button>
+      <div className="exercise-wizard-dots">
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className={`exercise-wizard-dot${i === STEP_INDEX[step] ? " on" : ""}`} />
+        ))}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button
+          onClick={goNext}
+          disabled={submitting}
+          style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+        >
+          {step === "description" ? (submitting ? "در حال ساخت برنامه…" : rejection ? "ویرایش و امتحان دوباره" : "مرحله بعد") : "مرحله بعد"}
+        </button>
+      </div>
     </div>
   );
 }

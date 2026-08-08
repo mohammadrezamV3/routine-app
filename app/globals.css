@@ -2366,6 +2366,11 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .exercise-form-label{ display:block; font-size:11px; color:var(--muted2); margin:18px 0 8px; }
 .exercise-form-label:first-child{ margin-top:0; }
 
+/* تایتلِ اصلیِ هر مرحله (نه لیبلِ ریزِ زیرفیلدها) — وقتی توی یه صفحه دو
+   سطحِ عنوان هست، اولی (این یکی) باید محسوس‌تر/بزرگ‌تر از بقیه باشه. */
+.exercise-wizard-title{ display:block; font-size:15px; font-weight:800; color:var(--text); margin:4px 0 16px; }
+.exercise-wizard-title:first-child{ margin-top:0; }
+
 .exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
 .exercise-day-select .day-pill{ flex:1 1 calc(33.33% - 6px); min-width:64px; }
 
@@ -2378,10 +2383,14 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
    طرف، بستنِ کاملِ پاپ‌آپ (×) سمتِ دیگه؛ به‌جای هدرِ ثابتِ والد */
 .exercise-wizard-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 
-/* نقاطِ پیشرفتِ فرمِ چهارمرحله‌ایِ ساخت با AI */
-.exercise-wizard-dots{ display:flex; justify-content:center; gap:6px; margin:6px 0 20px; }
+/* نقاطِ پیشرفتِ فرمِ چهارمرحله‌ایِ ساخت با AI — پایینِ صفحه، درست بالای دکمه‌ی
+   «مرحله بعد»، نه بالای هدر */
+.exercise-wizard-dots{ display:flex; justify-content:center; gap:6px; margin:18px 0 14px; }
 .exercise-wizard-dot{ width:6px; height:6px; border-radius:9999px; background:var(--line); transition:background .2s ease, transform .2s ease; }
 .exercise-wizard-dot.on{ background:var(--accent); transform:scale(1.3); }
+
+/* پیامِ خطای هر فیلد، با یه آیکونِ اخطار کنارش */
+.field-error-msg-inline{ display:flex !important; align-items:center; gap:4px; }
 
 /* باکسِ توضیحِ آزادِ فرمِ AI — مستقل از wsearch-newform-name تا زیرِ
    .add-program-glass به‌شکلِ پیل گرد نشه (برای فیلدهای تک‌خطی مناسبه، نه
@@ -2455,18 +2464,26 @@ body[data-theme="light"] .manual-day-row{ background:rgba(255,255,255,.5); }
 /* باکسِ «حرکات این روز» — پایینِ نمای جزئیاتِ روز، دکمه‌ی افزودن گوشه‌ی
    بالا-چپِ خودِ باکس (نه یه دکمه‌ی جدا زیرِ لیست) */
 .manual-day-exercises-box{
-  margin-top:16px; border:1px solid var(--line); border-radius:16px; padding:14px;
+  margin-top:16px; border:1px solid var(--line); border-radius:18px; padding:18px;
   background:rgba(255,255,255,.02);
 }
 body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,.5); }
-.manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .manual-day-exercises-title{ font-size:12.5px; font-weight:700; color:var(--text); }
 .manual-day-add-btn{
-  display:flex; align-items:center; justify-content:center; width:28px; height:28px;
-  border-radius:9999px; border:1px solid var(--accent); color:var(--accent); background:var(--accent-dim);
-  flex-shrink:0;
+  display:flex; align-items:center; gap:5px; padding:6px 14px;
+  border-radius:9999px; border:1px solid var(--accent); color:var(--accent);
+  background:rgba(var(--accent-rgb),.12); flex-shrink:0; font-size:12px; font-weight:700;
 }
 .manual-day-add-btn:hover{ opacity:.85; }
+
+/* دکمه‌ی نهاییِ «ثبتِ برنامه» — پرِ توپر و کاملاً گرد، نه فقط بوردر */
+.manual-submit-btn{
+  border-radius:9999px !important; border:none !important;
+  background:var(--accent) !important; color:var(--bg) !important;
+  padding:11px 28px; font-weight:700;
+}
+.manual-submit-btn:hover{ filter:brightness(1.05); }
 
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
@@ -2492,31 +2509,20 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 .no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
 
 /* ===================== مشاهده حرکات — کاتالوگِ حرکات بدنسازی ===================== */
-/* کلِ صفحه رو می‌گیره (نه یه پاپ‌آپِ کوچیک) — پورتال‌شده به body */
-.exercise-catalog-fullpage{
-  position:fixed; inset:0; z-index:70; background:var(--bg);
-  display:flex; flex-direction:column; overflow:hidden;
-}
-.exercise-catalog-fullpage-head{
-  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
-  padding:16px 18px; border-bottom:1px solid var(--line);
-}
+/* یک پاپ‌آپ (نه صفحه‌ی تمام‌عرض) — پورتال‌شده به body چون DashCard والدش یه
+   transform ثابت داره که position:fixed رو محدود می‌کنه. بک‌گراند دقیقاً
+   هم‌سبکِ .app-topbar (کلاسِ liquid-glass-panel مشترک با بقیه‌ی پاپ‌آپ‌ها). */
 .exercise-catalog-back-btn{
   display:flex; align-items:center; gap:3px; background:none; border:none; padding:0;
   cursor:pointer; color:var(--accent);
 }
-.exercise-catalog-fullpage-body{
-  flex:1; min-height:0; overflow-y:auto; padding:16px 18px 32px;
-  max-width:640px; width:100%; margin:0 auto;
+.exercise-catalog-popup-panel{
+  max-width:520px; max-height:82vh; max-height:82dvh;
+  display:flex; flex-direction:column; overflow:hidden;
 }
-/* همه‌ی حرکات + نوارِ جستجو + فیلترها توی یک باکسِ واحد، نه پخش‌شده روی
-   کلِ صفحه — فقط خودِ لیستِ حرکات داخلش اسکرول می‌شه */
-.exercise-catalog-box{
-  border:1px solid var(--line); border-radius:20px; padding:16px;
-  background:rgba(255,255,255,.02);
-}
-body[data-theme="light"] .exercise-catalog-box{ background:rgba(255,255,255,.5); }
-.exercise-catalog-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:56vh; overflow-y:auto; }
+.exercise-catalog-popup-panel .modal-head{ flex-shrink:0; }
+.exercise-catalog-filters{ flex-shrink:0; }
+.exercise-catalog-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; flex:1; min-height:0; overflow-y:auto; }
 /* کارتِ جزئیاتِ حرکت — از پایین بالا میاد، نه جایگزینیِ درجاست */
 .exercise-catalog-detail-overlay{ z-index:74; }
 .exercise-catalog-detail-card{
@@ -2534,6 +2540,8 @@ body[data-theme="light"] .exercise-catalog-box{ background:rgba(255,255,255,.5);
   background:rgba(255,255,255,.02);
 }
 body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,.5); }
+.exercise-difficulty-stars{ display:flex; align-items:center; gap:3px; margin-top:6px; color:var(--line); }
+.exercise-difficulty-stars svg.on{ color:#F5A623; }
 .exercise-catalog-filters{ display:flex; gap:6px; overflow-x:auto; padding:12px 2px 2px; }
 .exercise-catalog-chip{
   flex-shrink:0; padding:6px 14px; border-radius:9999px; font-size:11px; font-weight:600;

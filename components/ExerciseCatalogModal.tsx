@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ImageOff } from "lucide-react";
-import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey } from "@/lib/exerciseCatalog";
+import { ImageOff, Star } from "lucide-react";
+import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey, getExerciseDifficulty } from "@/lib/exerciseCatalog";
 import { normalizeFa } from "@/lib/utils";
 import { MuscleDiagram } from "./MuscleDiagram";
 
@@ -32,11 +32,20 @@ const MUSCLE_FILTERS: MuscleKey[] = [
   "quads", "hamstrings", "glutes", "calves", "cardio",
 ];
 
-// «مشاهده حرکات» — به‌جای یه پاپ‌آپِ کوچیک، کلِ صفحه رو با یک انیمیشنِ نرم
-// می‌گیره (پورتال‌شده به body چون DashCard والدش یه transform ثابت داره که
-// position:fixed رو محدود می‌کنه). لیستِ اسم‌ها روی خودِ صفحه‌ست؛ زدن روی
-// هرکدوم یه کارتِ جزئیات از پایین بالا میاد (نه جایگزینیِ این‌جایی) با یه
-// جای عکس بالا و دستورالعمل زیرش.
+function DifficultyStars({ level }: { level: number }) {
+  return (
+    <div className="exercise-difficulty-stars" aria-label={`میزان سختی: ${level} از ۵`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={13} fill={i <= level ? "currentColor" : "none"} className={i <= level ? "on" : ""} />
+      ))}
+    </div>
+  );
+}
+
+// «مشاهده حرکات» — یک پاپ‌آپ (نه صفحه‌ی تمام‌عرض)، پورتال‌شده به body چون
+// DashCard والدش یه transform ثابت داره که position:fixed رو محدود می‌کنه.
+// لیستِ اسم‌ها با جستجو/فیلترِ گروهِ عضلانی؛ زدن روی هرکدوم یه کارتِ جزئیات
+// از پایین بالا میاد با جای عکس، دستورالعمل، میزانِ سختی (ستاره) و مزایا.
 export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | null>(null);
@@ -54,75 +63,79 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   );
 
   return createPortal(
-    <motion.div
-      className="exercise-catalog-fullpage dash-scope"
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div className="exercise-catalog-fullpage-head">
-        <button type="button" onClick={onClose} className="exercise-catalog-back-btn" aria-label="بازگشت">
-          <ChevronRight size={20} />
-        </button>
-        <div className="modal-title">مشاهده حرکات</div>
-        <span style={{ width: 20 }} aria-hidden />
-      </div>
-
-      <div className="exercise-catalog-fullpage-body no-scrollbar">
-        <div className="exercise-catalog-box">
-          <input
-            type="text"
-            dir="auto"
-            className="wsearch-newform-name trade-glass-field pill-glass-field"
-            placeholder="جستجوی حرکت…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-
-          <div className="no-scrollbar exercise-catalog-filters">
-            <button
-              type="button"
-              onClick={() => setMuscleFilter(null)}
-              className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
-            >
-              همه
-            </button>
-            {MUSCLE_FILTERS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setMuscleFilter((v) => (v === k ? null : k))}
-                className={`exercise-catalog-chip${muscleFilter === k ? " active" : ""}`}
-              >
-                {MUSCLE_LABEL[k]}
-              </button>
-            ))}
-          </div>
-
-          <div className="no-scrollbar exercise-catalog-list">
-            {visible.length === 0 ? (
-              <div className="item-line empty">حرکتی پیدا نشد.</div>
-            ) : (
-              visible.map((e, i) => (
-                <motion.div
-                  key={e.name}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
-                  onClick={() => setSelected(e)}
-                  className="exercise-catalog-row"
-                >
-                  <div className="min-w-0 flex-1 text-right">
-                    <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
-                    <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </div>
+    <>
+      <motion.div
+        className="modal-overlay open"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      />
+      <motion.div
+        className="modal-panel liquid-glass-panel open exercise-catalog-popup-panel dash-scope"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="modal-head">
+          <div className="modal-title">مشاهده حرکات</div>
+          <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
         </div>
-      </div>
+
+        <input
+          type="text"
+          dir="rtl"
+          className="wsearch-newform-name trade-glass-field pill-glass-field"
+          placeholder="جستجوی حرکت…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+
+        <div className="no-scrollbar exercise-catalog-filters">
+          <button
+            type="button"
+            onClick={() => setMuscleFilter(null)}
+            className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
+          >
+            همه
+          </button>
+          {MUSCLE_FILTERS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setMuscleFilter((v) => (v === k ? null : k))}
+              className={`exercise-catalog-chip${muscleFilter === k ? " active" : ""}`}
+            >
+              {MUSCLE_LABEL[k]}
+            </button>
+          ))}
+        </div>
+
+        <div className="no-scrollbar exercise-catalog-list">
+          {visible.length === 0 ? (
+            <div className="item-line empty">حرکتی پیدا نشد.</div>
+          ) : (
+            visible.map((e, i) => (
+              <motion.div
+                key={e.name}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
+                onClick={() => setSelected(e)}
+                className="exercise-catalog-row"
+              >
+                <div className="min-w-0 flex-1 text-right">
+                  <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
+                  <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </motion.div>
 
       <AnimatePresence>
         {selected && (
@@ -156,6 +169,11 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="tm-extra" style={{ marginTop: 4 }}>
+                  <div className="domain-sub">میزان سختی</div>
+                  <DifficultyStars level={getExerciseDifficulty(selected)} />
+                </div>
+
+                <div className="tm-extra">
                   <div className="domain-sub">دستورالعمل</div>
                   <ol style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6, paddingRight: 18 }}>
                     {selected.howTo.map((step, i) => (
@@ -190,7 +208,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
           </>
         )}
       </AnimatePresence>
-    </motion.div>,
+    </>,
     document.body
   );
 }
