@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Search, X } from "lucide-react";
+import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { ExerciseDay, computeDayFocus } from "@/lib/exercisePlans";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry } from "@/lib/exerciseCatalog";
+import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
 import { toFaDigits } from "@/lib/schedule";
 
@@ -82,12 +83,22 @@ function ManualQuantityPrompt({
   );
 }
 
-function ManualCatalogPicker({ onAdd, onClose }: { onAdd: (formattedItem: string) => void; onClose: () => void }) {
+function ManualCatalogPicker({
+  onAdd,
+  onClose,
+  excludeNames,
+}: {
+  onAdd: (formattedItem: string) => void;
+  onClose: () => void;
+  excludeNames: Set<string>;
+}) {
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState<ExerciseCatalogEntry | null>(null);
 
   const normalizedQuery = normalizeFa(query);
-  const visible = EXERCISE_CATALOG.filter((e) => !normalizedQuery || normalizeFa(e.name).includes(normalizedQuery));
+  const visible = EXERCISE_CATALOG.filter(
+    (e) => !excludeNames.has(e.name) && (!normalizedQuery || normalizeFa(e.name).includes(normalizedQuery))
+  );
 
   if (adding) {
     return (
@@ -193,37 +204,44 @@ export function ManualExercisePlanForm({
           {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
         </div>
 
-        <div className="domain-sub" style={{ marginTop: 14 }}>برنامه‌ی روزِ {activeDay}</div>
+        <div className="domain-sub" style={{ marginTop: 16 }}>برنامه‌ی روزِ {activeDay}</div>
         {items.length > 0 && (
           <div style={{ fontSize: 11, color: "var(--muted2)", marginTop: 2 }}>{computeDayFocus(items)}</div>
         )}
 
-        {items.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12 }}>
-            {items.map((it, ii) => (
-              <div key={ii} className="manual-exercise-added-row">
-                <span className="truncate">{it}</span>
-                <button type="button" onClick={() => removeItem(activeDay, ii)} aria-label="حذف حرکت">
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {pickerOpen ? (
-          <div style={{ marginTop: 12 }}>
+        {pickerOpen && (
+          <div style={{ marginTop: 14 }}>
             <ManualCatalogPicker
               onAdd={(formatted) => addItem(activeDay, formatted)}
               onClose={() => setPickerOpen(false)}
+              excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
             />
           </div>
-        ) : (
-          <button type="button" className="wsearch-add-btn" onClick={() => setPickerOpen(true)} style={{ marginTop: 12 }}>
-            افزودن حرکت به این روز
-            <span className="wsearch-add-btn-icon">+</span>
-          </button>
         )}
+
+        <div className="manual-day-exercises-box">
+          <div className="manual-day-exercises-head">
+            <div className="manual-day-exercises-title">حرکات این روز</div>
+            <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpen(true)} aria-label="افزودن حرکت">
+              <Plus size={16} />
+            </button>
+          </div>
+
+          {items.length === 0 ? (
+            <div className="item-line empty">هنوز حرکتی اضافه نکردی</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {items.map((it, ii) => (
+                <div key={ii} className="manual-exercise-added-row">
+                  <span className="truncate">{it}</span>
+                  <button type="button" onClick={() => removeItem(activeDay, ii)} aria-label="حذف حرکت">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -242,7 +260,7 @@ export function ManualExercisePlanForm({
         </div>
       )}
 
-      <label className="exercise-form-label" style={{ marginTop: 0 }}>کدوم روزها می‌خوای برنامه داشته باشی؟</label>
+      <label className="exercise-form-label" style={{ marginTop: 8 }}>کدوم روزها می‌خوای برنامه داشته باشی؟</label>
       <div className="exercise-day-select-row">
         {CAL_WEEK_ORDER.map((i) => (
           <span
@@ -271,14 +289,16 @@ export function ManualExercisePlanForm({
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
 
-      <button
-        type="button"
-        onClick={submit}
-        disabled={submitting}
-        style={{ width: "100%", marginTop: 18, borderColor: "var(--accent)", color: "var(--accent)" }}
-      >
-        {submitting ? "در حال ثبت…" : "ثبتِ برنامه"}
-      </button>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={submitting}
+          style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+        >
+          {submitting ? "در حال ثبت…" : "ثبتِ برنامه"}
+        </button>
+      </div>
     </div>
   );
 }

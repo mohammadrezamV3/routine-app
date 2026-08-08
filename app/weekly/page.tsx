@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -39,6 +40,7 @@ import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
 import { DashReminderCard } from "@/components/DashReminderCard";
 import { DashSidebar } from "@/components/DashSidebar";
+import { AuthGate } from "@/components/AuthGate";
 
 const now = new Date();
 const todayKey = isoLocal(now);
@@ -79,6 +81,7 @@ function isTaskNotStarted(iso: string, time: string): boolean {
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
 export default function WeeklyPage() {
+  const { status } = useSession();
   const [openIdx, setOpenIdx] = useState<number | null>(
     WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
   );
@@ -322,17 +325,21 @@ export default function WeeklyPage() {
               تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیرِ هم. موبایل/تبلت
               همچنان یک ستونِ عمودی (flex-col) می‌مونه. */}
           <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6">
-            <DashTaskList
-              tasks={dashTasks}
-              editable={isSelectedToday}
-              onToggle={toggleDashTask}
-              onAddProgram={() => setAddProgramOpen(true)}
-              onOpenProgram={setCardName}
-              onEditTask={editTaskFromDash}
-              onDeleteTask={deleteTaskCompletely}
-              onMoveTask={moveTaskFromDash}
-              delay={0.05}
-            />
+            {status === "unauthenticated" ? (
+              <AuthGate message="برای مدیریت برنامه‌های امروز وارد شوید" />
+            ) : (
+              <DashTaskList
+                tasks={dashTasks}
+                editable={isSelectedToday}
+                onToggle={toggleDashTask}
+                onAddProgram={() => setAddProgramOpen(true)}
+                onOpenProgram={setCardName}
+                onEditTask={editTaskFromDash}
+                onDeleteTask={deleteTaskCompletely}
+                onMoveTask={moveTaskFromDash}
+                delay={0.05}
+              />
+            )}
 
             <DashReminderCard delay={0.1} onOpenProgram={setCardName} />
 

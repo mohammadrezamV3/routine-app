@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ModuleGate } from "@/components/ModuleGate";
+import { AuthGate } from "@/components/AuthGate";
 
 const SUGGESTIONS = [
   "طراحی UI/UX",
@@ -49,8 +49,7 @@ export default function NewRoadmapPage() {
     return (
       <section>
         <h1>رودمپ جدید</h1>
-        <div className="section-note" style={{ marginTop: 10 }}>برای ساخت رودمپ اختصاصی اول وارد حساب بشو.</div>
-        <Link href="/auth/login" className="nav-link" style={{ display: "inline-block", marginTop: 10 }}>ورود / ثبت‌نام →</Link>
+        <AuthGate message="برای استفاده از این سرویس وارد شوید" />
       </section>
     );
   }
