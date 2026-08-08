@@ -21,6 +21,27 @@ export type ExerciseCatalogEntry = {
   benefits: string;
 };
 
+// میزانِ سختی (۱ تا ۵) بر اساسِ الگوی حرکتی حساب می‌شه — نه فیلدِ دستیِ روی
+// تک‌تکِ حرکات، چون کاتالوگ صدها ورودی داره. حرکاتِ چندمفصلیِ سنگین (هینج،
+// کششِ عمودی، انفجاری) پایه‌ی بالاتر می‌گیرن؛ کلیدواژه‌های اسمِ حرکت
+// (هالتر=سنگین‌تر/تکنیکی‌تر، دستگاه/سیم‌کش/وزنِ‌بدن=مسیرِ کنترل‌شده‌تر یا
+// ساده‌تر، تک‌پا/تک‌دست=تعادلِ اضافه) این پایه رو تنظیم می‌کنن.
+const PATTERN_DIFFICULTY: Record<MovementPattern, number> = {
+  squat: 3, hinge: 4, lunge: 3, pressHorizontal: 3, pressVertical: 3,
+  pullHorizontal: 3, pullVertical: 4, curl: 2, extension: 2, raise: 2, fly: 2,
+  core: 2, calf: 1, cardio: 2, explosive: 4, flexibility: 1,
+};
+
+export function getExerciseDifficulty(entry: ExerciseCatalogEntry): number {
+  let score = PATTERN_DIFFICULTY[entry.pattern] ?? 3;
+  const n = entry.name;
+  if (n.includes("هالتر") || n.includes("وزنه‌دار")) score += 1;
+  if (n.includes("دستگاه") || n.includes("سیم‌کش") || n.includes("سیمکش")) score -= 1;
+  if (n.includes("وزن بدن") || n.includes("با کش")) score -= 1;
+  if (n.includes("تک‌پا") || n.includes("تک‌دست") || n.includes("بلغاری") || n.includes("معلق")) score += 1;
+  return Math.max(1, Math.min(5, score));
+}
+
 export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ===================== پایین‌تنه — اسکوات/هینج/لانج =====================
   {
