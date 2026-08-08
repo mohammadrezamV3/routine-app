@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ModuleGate } from "@/components/ModuleGate";
+import { AuthGate } from "@/components/AuthGate";
 
 type CustomRoadmapSummary = { id: string; topic: string; title: string; note: string };
 
@@ -50,13 +51,7 @@ export default function RoadmapsHub() {
           </div>
         </ModuleGate>
       ) : (
-        <div className="rm-grid">
-          <div className="rm-box rm-box-add" onClick={() => router.push("/roadmaps/new")} style={{ cursor: "pointer" }}>
-            <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
-              <path d="M12 5v14M5 12h14" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
-            </svg>
-          </div>
-        </div>
+        <AuthGate message="برای استفاده از این سرویس وارد شوید" />
       )}
     </section>
   );

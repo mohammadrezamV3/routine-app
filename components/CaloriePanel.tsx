@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import { isoLocal, faNum } from "@/lib/jalali";
+import { AuthGate } from "./AuthGate";
 import { FoodSeedItem } from "@/lib/foodSeed";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -218,12 +218,7 @@ export function CaloriePanel() {
   }
 
   if (status === "unauthenticated") {
-    return (
-      <div>
-        <div className="section-note" style={{ marginTop: 10 }}>برای ثبت کالری روزانه اول وارد حساب بشو.</div>
-        <Link href="/auth/login" className="nav-link" style={{ display: "inline-block", marginTop: 10 }}>ورود / ثبت‌نام →</Link>
-      </div>
-    );
+    return <AuthGate message="برای استفاده از این سرویس وارد شوید" />;
   }
 
   if (target === undefined) {

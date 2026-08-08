@@ -2340,11 +2340,15 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
   margin-left:-50vw; margin-right:-50vw; margin-bottom:16px; padding:8px 0;
   background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
-.ticker-viewport{ flex:1; min-width:0; overflow:hidden; }
-.ticker-empty-msg{ font-size:11.5px; color:var(--muted2); padding:0 16px; }
+.ticker-viewport{ flex:1; min-width:0; overflow:hidden; padding:0 16px; }
+.ticker-empty-msg{ font-size:11.5px; color:var(--muted2); }
+/* پدینگ باید روی خودِ viewport باشه نه track — چون track دقیقاً نصفِ عرضش
+   translate می‌شه (چرخِ بی‌درز)، هر پدینگِ داخلِ خودِ track این حساب رو به‌هم
+   می‌زنه (نصفِ «عرضِ کل شاملِ پدینگ» با نصفِ «عرضِ واقعیِ محتوا» یکی نیست) و
+   لحظه‌ی چرخش یک پرشِ کوچیک/شکاف نشون می‌ده. */
 .ticker-track{
   display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap;
-  animation:ticker-scroll 40s linear infinite; padding:0 16px;
+  animation:ticker-scroll 40s linear infinite;
 }
 @keyframes ticker-scroll{
   from{ transform:translateX(0); }
@@ -2447,6 +2451,22 @@ body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255
 body[data-theme="light"] .manual-day-row{ background:rgba(255,255,255,.5); }
 .manual-day-row-name{ font-size:13px; font-weight:700; color:var(--text); }
 .manual-day-row-count{ font-size:11px; color:var(--muted2); }
+
+/* باکسِ «حرکات این روز» — پایینِ نمای جزئیاتِ روز، دکمه‌ی افزودن گوشه‌ی
+   بالا-چپِ خودِ باکس (نه یه دکمه‌ی جدا زیرِ لیست) */
+.manual-day-exercises-box{
+  margin-top:16px; border:1px solid var(--line); border-radius:16px; padding:14px;
+  background:rgba(255,255,255,.02);
+}
+body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,.5); }
+.manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.manual-day-exercises-title{ font-size:12.5px; font-weight:700; color:var(--text); }
+.manual-day-add-btn{
+  display:flex; align-items:center; justify-content:center; width:28px; height:28px;
+  border-radius:9999px; border:1px solid var(--accent); color:var(--accent); background:var(--accent-dim);
+  flex-shrink:0;
+}
+.manual-day-add-btn:hover{ opacity:.85; }
 
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
