@@ -1034,6 +1034,12 @@
   .wt-name{font-size:11px; color:var(--text); line-height:1.3; word-break:break-word;}
   .wt-item.wt-endpoint .wt-name{color:var(--accent); font-weight:700; text-shadow:0 0 8px rgba(var(--accent-rgb),.5);}
   .wt-untimed-row{direction:rtl; display:flex; flex-direction:row-reverse; flex-wrap:wrap; gap:18px; padding:2px 4px 14px; margin-top:8px; padding-top:12px;}
+  /* برای بیداری/خواب، marker-col ارتفاعِ ثابتِ ۳۳px داره ولی وقتی margin-bottom
+     به ۲۰px می‌رسه، فاصله‌ی واقعیِ باقی‌مونده برای خودِ متنِ ساعت خیلی تنگ
+     می‌شه (نزدیکِ صفرِ حاشیه) و بسته به رندرِ فونتِ مرورگر، ممکنه از مرزِ
+     marker-col رد بشه و بره روی «بیداری/خواب» — ارتفاعِ خودِ ستون رو هم
+     بیشتر می‌کنیم تا فاصله واقعاً امن باشه، نه لبه‌به‌لبه. */
+  .wt-item.wt-endpoint .wt-marker-col{height:42px;}
   .wt-item.wt-endpoint .wt-time-above{margin-bottom:20px;}
   .wt-untimed-item{min-width:0;}
   .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; margin-bottom:3px;}
@@ -2359,6 +2365,57 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
 .exercise-day-select .day-pill{ flex:1 1 calc(33.33% - 6px); min-width:64px; }
 
+/* هفت‌تا باکسِ روزِ هفته، همه توی یک ردیف — با حرفِ اولِ هر روز، نه اسمِ کامل،
+   تا حتی توی موبایل هم جا بشه و لازم نباشه ردیف بشکنه */
+.exercise-day-select-row{ display:flex; flex-wrap:nowrap; gap:4px; width:100%; }
+.exercise-day-select-row .day-pill{ flex:1 1 0; min-width:0; padding:9px 0; font-size:13px; }
+
+/* نقاطِ پیشرفتِ فرمِ چهارمرحله‌ایِ ساخت با AI */
+.exercise-wizard-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:16px; }
+.exercise-wizard-dot{ width:6px; height:6px; border-radius:9999px; background:var(--line); transition:background .2s ease, transform .2s ease; }
+.exercise-wizard-dot.on{ background:var(--accent); transform:scale(1.3); }
+
+.exercise-desc-textarea{ min-height:96px; line-height:1.7; resize:vertical; }
+
+/* پیامِ ردِ AI (وقتی برنامه‌ی خواسته‌شده واقع‌بینانه نیست) — شبیهِ حبابِ چت */
+.exercise-feasibility-reject{
+  margin-top:14px; padding:12px 14px; border-radius:14px 14px 4px 14px;
+  border:1px solid var(--line); background:rgba(255,255,255,.03);
+  font-size:12.5px; line-height:1.8; color:var(--text);
+}
+body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,255,.55); }
+.exercise-feasibility-reject-badge{ font-size:10.5px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+
+/* بخشِ افزودنِ دستیِ حرکت — جستجو+لیستِ کاتالوگ، دقیقاً هم‌سبکِ افزودنِ ردیف در بقیه‌ی فرم‌ها */
+.manual-exercise-picker{
+  border:1px solid var(--line); border-radius:14px; padding:10px; background:rgba(255,255,255,.02);
+}
+body[data-theme="light"] .manual-exercise-picker{ background:rgba(255,255,255,.5); }
+.manual-exercise-picker-search{ display:flex; align-items:center; gap:8px; padding:0 4px 10px; }
+.manual-exercise-picker-search-icon{ color:var(--muted2); flex-shrink:0; }
+.manual-exercise-picker-search input{
+  flex:1; min-width:0; background:transparent; border:none; outline:none; color:var(--text);
+  font-family:var(--font-vazir), sans-serif; font-size:12.5px;
+}
+.manual-exercise-picker-search input::placeholder{ color:var(--muted2); }
+.manual-exercise-picker-close{
+  flex:0 0 auto; background:none; border:none; padding:0; cursor:pointer;
+  color:var(--muted); font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700;
+}
+.manual-exercise-picker-close:hover{ color:#E05252; }
+.manual-exercise-picker-list{ display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; }
+.manual-exercise-qty{ border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); }
+body[data-theme="light"] .manual-exercise-qty{ background:rgba(255,255,255,.5); }
+
+.manual-exercise-added-row{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:8px 12px; border-radius:10px; border:1px solid var(--line);
+  background:rgba(255,255,255,.02); font-size:12px; color:var(--text);
+}
+body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255,.5); }
+.manual-exercise-added-row button{ flex-shrink:0; color:var(--muted2); display:flex; }
+.manual-exercise-added-row button:hover{ color:#E05252; }
+
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
   font-size:12.5px; color:var(--muted); line-height:1.7; padding-right:16px; position:relative;
@@ -2378,7 +2435,33 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .exercise-choice-btn:hover .ai-sparkle-icon{ filter:drop-shadow(0 0 10px rgba(255,196,60,.9)) !important; }
 
 /* ===================== مشاهده حرکات — کاتالوگِ حرکات بدنسازی ===================== */
-.exercise-catalog-panel{ max-width:460px; }
+/* کلِ صفحه رو می‌گیره (نه یه پاپ‌آپِ کوچیک) — پورتال‌شده به body */
+.exercise-catalog-fullpage{
+  position:fixed; inset:0; z-index:70; background:var(--bg);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.exercise-catalog-fullpage-head{
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+  padding:16px 18px; border-bottom:1px solid var(--line);
+}
+.exercise-catalog-back-btn{
+  display:flex; align-items:center; gap:3px; font-size:13px; font-weight:600; color:var(--accent);
+}
+.exercise-catalog-fullpage-body{
+  flex:1; min-height:0; overflow-y:auto; padding:16px 18px 32px;
+  max-width:640px; width:100%; margin:0 auto;
+}
+/* کارتِ جزئیاتِ حرکت — از پایین بالا میاد، نه جایگزینیِ درجاست */
+.exercise-catalog-detail-overlay{ z-index:74; }
+.exercise-catalog-detail-card{
+  position:fixed; left:0; right:0; bottom:0; z-index:75; max-height:88vh; overflow:hidden;
+  display:flex; flex-direction:column;
+  background:var(--bg); border-radius:22px 22px 0 0; border:1px solid var(--line); border-bottom:none;
+  box-shadow:0 -20px 60px rgba(0,0,0,.45); padding:8px 18px 0;
+  max-width:640px; margin:0 auto;
+}
+.exercise-catalog-detail-handle{ width:40px; height:4px; border-radius:9999px; background:var(--line); margin:4px auto 8px; flex-shrink:0; }
+.exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:28px; }
 .exercise-pictogram-stage{
   display:flex; align-items:center; justify-content:center; margin:14px 0 4px;
   padding:14px; border-radius:16px; border:1px solid var(--line);

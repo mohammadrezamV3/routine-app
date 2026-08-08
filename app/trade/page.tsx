@@ -11,7 +11,7 @@ import { MarketTicker } from "@/components/MarketTicker";
 
 export default function TradePage() {
   const { status } = useSession();
-  const [tab, setTab] = useState<"checklist" | "journal">("checklist");
+  const [tab, setTab] = useState<"checklist" | "journal">("journal");
 
   return (
     <section className="trade-desktop">
@@ -23,8 +23,8 @@ export default function TradePage() {
           active={tab}
           onChange={setTab}
           options={[
-            { value: "checklist", label: "چک‌لیست" },
             { value: "journal", label: "ژورنال" },
+            { value: "checklist", label: "چک‌لیست" },
           ]}
         />
       </div>

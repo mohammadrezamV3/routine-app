@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { ListChecks } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { ExerciseCatalogModal } from "./ExerciseCatalogModal";
@@ -22,7 +23,7 @@ export function ExerciseCatalogCard({ delay }: { delay?: number }) {
         مشاهده حرکات
       </button>
 
-      {open && <ExerciseCatalogModal onClose={() => setOpen(false)} />}
+      <AnimatePresence>{open && <ExerciseCatalogModal onClose={() => setOpen(false)} />}</AnimatePresence>
     </DashCard>
   );
 }
