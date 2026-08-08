@@ -2359,7 +2359,7 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 
 /* ===================== بدنسازی — فرم برنامه، قوانین، جایگزینی حرکت ===================== */
 
-.exercise-form-label{ display:block; font-size:11px; color:var(--muted2); margin:14px 0 6px; }
+.exercise-form-label{ display:block; font-size:11px; color:var(--muted2); margin:18px 0 8px; }
 .exercise-form-label:first-child{ margin-top:0; }
 
 .exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
@@ -2370,12 +2370,26 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .exercise-day-select-row{ display:flex; flex-wrap:nowrap; gap:4px; width:100%; }
 .exercise-day-select-row .day-pill{ flex:1 1 0; min-width:0; padding:9px 0; font-size:13px; }
 
+/* هدرِ خودِ فرم‌های چندمرحله‌ای (AI/دستی) — دکمه‌ی بازگشتِ آیکونی سمتِ یک
+   طرف، بستنِ کاملِ پاپ‌آپ (×) سمتِ دیگه؛ به‌جای هدرِ ثابتِ والد */
+.exercise-wizard-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+
 /* نقاطِ پیشرفتِ فرمِ چهارمرحله‌ایِ ساخت با AI */
-.exercise-wizard-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:16px; }
+.exercise-wizard-dots{ display:flex; justify-content:center; gap:6px; margin:6px 0 20px; }
 .exercise-wizard-dot{ width:6px; height:6px; border-radius:9999px; background:var(--line); transition:background .2s ease, transform .2s ease; }
 .exercise-wizard-dot.on{ background:var(--accent); transform:scale(1.3); }
 
-.exercise-desc-textarea{ min-height:96px; line-height:1.7; resize:vertical; }
+/* باکسِ توضیحِ آزادِ فرمِ AI — مستقل از wsearch-newform-name تا زیرِ
+   .add-program-glass به‌شکلِ پیل گرد نشه (برای فیلدهای تک‌خطی مناسبه، نه
+   برای یه Textareaِ چندخطی)؛ بدونِ دستگیره‌ی ریسایز، راست‌چین. */
+.exercise-desc-textarea{
+  width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:12px; color:var(--text);
+  font-family:var(--font-vazir), sans-serif; font-size:13px; padding:12px 14px; outline:none;
+  min-height:96px; line-height:1.7; resize:none; text-align:right;
+}
+body:not([data-theme="light"]) .exercise-desc-textarea{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
+.exercise-desc-textarea:focus{ border-color:var(--accent); }
+.exercise-desc-textarea::placeholder{ color:var(--muted2); }
 
 /* پیامِ ردِ AI (وقتی برنامه‌ی خواسته‌شده واقع‌بینانه نیست) — شبیهِ حبابِ چت */
 .exercise-feasibility-reject{
@@ -2407,6 +2421,13 @@ body[data-theme="light"] .manual-exercise-picker{ background:rgba(255,255,255,.5
 .manual-exercise-qty{ border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); }
 body[data-theme="light"] .manual-exercise-qty{ background:rgba(255,255,255,.5); }
 
+.manual-exercise-picker-row{
+  display:flex; align-items:center; gap:10px; border-radius:14px;
+  border:1px solid var(--line); background:rgba(255,255,255,.02);
+  padding:8px 14px; text-align:right;
+}
+body[data-theme="light"] .manual-exercise-picker-row{ background:rgba(255,255,255,.5); }
+
 .manual-exercise-added-row{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
   padding:8px 12px; border-radius:10px; border:1px solid var(--line);
@@ -2415,6 +2436,17 @@ body[data-theme="light"] .manual-exercise-qty{ background:rgba(255,255,255,.5); 
 body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255,.5); }
 .manual-exercise-added-row button{ flex-shrink:0; color:var(--muted2); display:flex; }
 .manual-exercise-added-row button:hover{ color:#E05252; }
+
+/* لیستِ روزهای انتخاب‌شده توی برنامه‌ی دستی — با کلیک، وارد نمای همون روز می‌شه */
+.manual-day-row{
+  display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  padding:13px 16px; border-radius:14px; border:1px solid var(--line);
+  background:rgba(255,255,255,.02); transition:border-color .15s ease;
+}
+.manual-day-row:hover{ border-color:var(--accent); }
+body[data-theme="light"] .manual-day-row{ background:rgba(255,255,255,.5); }
+.manual-day-row-name{ font-size:13px; font-weight:700; color:var(--text); }
+.manual-day-row-count{ font-size:11px; color:var(--muted2); }
 
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
@@ -2434,6 +2466,11 @@ body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255
 .ai-sparkle-icon{ transition:filter .2s ease; }
 .exercise-choice-btn:hover .ai-sparkle-icon{ filter:drop-shadow(0 0 10px rgba(255,196,60,.9)) !important; }
 
+/* اسکرول‌بارِ کاملاً مخفی — لمس/درگ و اسکرولِ ماوس همچنان کار می‌کنه، فقط
+   میله‌ی بصری دیده نمی‌شه (کاتالوگِ حرکات، لیستِ افزودنِ دستی، ...) */
+.no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
+.no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
+
 /* ===================== مشاهده حرکات — کاتالوگِ حرکات بدنسازی ===================== */
 /* کلِ صفحه رو می‌گیره (نه یه پاپ‌آپِ کوچیک) — پورتال‌شده به body */
 .exercise-catalog-fullpage{
@@ -2445,12 +2482,21 @@ body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255
   padding:16px 18px; border-bottom:1px solid var(--line);
 }
 .exercise-catalog-back-btn{
-  display:flex; align-items:center; gap:3px; font-size:13px; font-weight:600; color:var(--accent);
+  display:flex; align-items:center; gap:3px; background:none; border:none; padding:0;
+  cursor:pointer; color:var(--accent);
 }
 .exercise-catalog-fullpage-body{
   flex:1; min-height:0; overflow-y:auto; padding:16px 18px 32px;
   max-width:640px; width:100%; margin:0 auto;
 }
+/* همه‌ی حرکات + نوارِ جستجو + فیلترها توی یک باکسِ واحد، نه پخش‌شده روی
+   کلِ صفحه — فقط خودِ لیستِ حرکات داخلش اسکرول می‌شه */
+.exercise-catalog-box{
+  border:1px solid var(--line); border-radius:20px; padding:16px;
+  background:rgba(255,255,255,.02);
+}
+body[data-theme="light"] .exercise-catalog-box{ background:rgba(255,255,255,.5); }
+.exercise-catalog-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:56vh; overflow-y:auto; }
 /* کارتِ جزئیاتِ حرکت — از پایین بالا میاد، نه جایگزینیِ درجاست */
 .exercise-catalog-detail-overlay{ z-index:74; }
 .exercise-catalog-detail-card{

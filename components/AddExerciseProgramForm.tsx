@@ -6,17 +6,16 @@ import { PenLine } from "lucide-react";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import { ManualExercisePlanForm } from "./ManualExercisePlanForm";
-import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { focusNextOnEnter } from "@/lib/formNav";
 
-type Mode = "choice" | "ai" | "manual-form" | "manual-rules";
+type Mode = "choice" | "ai" | "manual";
 
-// «افزودن برنامه‌ی ورزشی جدید» — طبقِ درخواست، دو مسیر داره: ساختِ خودکار
-// با هوش‌مصنوعی (سمتِ راست، فرمِ سطح/هدف/روزهای باشگاه که از قبل بود) یا
-// وارد‌کردنِ دستیِ برنامه‌ی شخصیِ کاربر (سمتِ چپ). همون قوانین/دیسکلایمر
-// قبل از فعال‌شدن، برای هر دو مسیر لازمه.
+// «افزودن برنامه‌ی ورزشی جدید» — دو مسیر: ساختِ خودکار با هوش‌مصنوعی یا
+// وارد‌کردنِ دستیِ برنامه‌ی شخصیِ کاربر. هر دو مسیر (ai/manual) خودشون
+// هدرِ بازگشت/بستنِ خودشون رو رندر می‌کنن، پس هدرِ ثابتِ این کامپوننت فقط
+// توی صفحه‌ی انتخاب (choice) دیده می‌شه.
 export function AddExerciseProgramForm({
   onClose,
   onCreated,
@@ -25,13 +24,11 @@ export function AddExerciseProgramForm({
   onCreated: (plan: ExercisePlan) => void;
 }) {
   const [mode, setMode] = useState<Mode>("choice");
-  const [manualDays, setManualDays] = useState<ExerciseDay[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   async function submitManual(days: ExerciseDay[]) {
-    markExerciseRulesSeen();
     setSubmitting(true);
     const res = await fetch("/api/exercise/plan/manual", {
       method: "POST",
@@ -40,7 +37,7 @@ export function AddExerciseProgramForm({
     });
     const data = await res.json();
     setSubmitting(false);
-    if (!res.ok) { setError(data.error || "خطایی پیش آمد"); setMode("manual-form"); return; }
+    if (!res.ok) { setError(data.error || "خطایی پیش آمد"); return; }
     onCreated(data.plan);
   }
 
@@ -49,10 +46,12 @@ export function AddExerciseProgramForm({
       <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass exercise-add-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
-          <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">افزودن برنامه</div>
-            <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
-          </div>
+          {mode === "choice" && (
+            <div className="wsearch-newform-head">
+              <div className="wsearch-newform-title accent">افزودن برنامه</div>
+              <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+            </div>
+          )}
 
           {error && <div className="field-error-msg" style={{ display: "block", marginBottom: 10 }}>{error}</div>}
 
@@ -72,7 +71,7 @@ export function AddExerciseProgramForm({
               <div className="exercise-choice-divider" />
               <motion.button
                 type="button"
-                onClick={() => setMode("manual-form")}
+                onClick={() => setMode("manual")}
                 className="exercise-choice-btn"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.96 }}
@@ -85,27 +84,15 @@ export function AddExerciseProgramForm({
           )}
 
           {mode === "ai" && (
-            <AiExercisePlanWizard onCreated={onCreated} onCancel={() => setMode("choice")} />
+            <AiExercisePlanWizard onCreated={onCreated} onCancel={() => setMode("choice")} onClose={onClose} />
           )}
 
-          {mode === "manual-form" && (
+          {mode === "manual" && (
             <ManualExercisePlanForm
-              submitting={false}
-              onSubmit={(days) => {
-                setManualDays(days);
-                setError(null);
-                if (hasSeenExerciseRules()) submitManual(days);
-                else setMode("manual-rules");
-              }}
-            />
-          )}
-
-          {mode === "manual-rules" && (
-            <ExerciseRulesStep
-              source="manual"
               submitting={submitting}
-              onBack={() => setMode("manual-form")}
-              onAccept={() => manualDays && submitManual(manualDays)}
+              onSubmit={submitManual}
+              onCancel={() => setMode("choice")}
+              onClose={onClose}
             />
           )}
         </div>

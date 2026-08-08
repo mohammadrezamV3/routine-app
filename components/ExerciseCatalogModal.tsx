@@ -62,67 +62,65 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="exercise-catalog-fullpage-head">
-        <button type="button" onClick={onClose} className="exercise-catalog-back-btn">
-          <ChevronRight size={18} />
-          بازگشت
+        <button type="button" onClick={onClose} className="exercise-catalog-back-btn" aria-label="بازگشت">
+          <ChevronRight size={20} />
         </button>
         <div className="modal-title">مشاهده حرکات</div>
-        <span style={{ width: 54 }} aria-hidden />
+        <span style={{ width: 20 }} aria-hidden />
       </div>
 
-      <div className="exercise-catalog-fullpage-body thin-scroll">
-        <input
-          type="text"
-          dir="auto"
-          className="wsearch-newform-name trade-glass-field pill-glass-field"
-          placeholder="جستجوی حرکت…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      <div className="exercise-catalog-fullpage-body no-scrollbar">
+        <div className="exercise-catalog-box">
+          <input
+            type="text"
+            dir="auto"
+            className="wsearch-newform-name trade-glass-field pill-glass-field"
+            placeholder="جستجوی حرکت…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
 
-        <div className="thin-scroll exercise-catalog-filters">
-          <button
-            type="button"
-            onClick={() => setMuscleFilter(null)}
-            className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
-          >
-            همه
-          </button>
-          {MUSCLE_FILTERS.map((k) => (
+          <div className="no-scrollbar exercise-catalog-filters">
             <button
-              key={k}
               type="button"
-              onClick={() => setMuscleFilter((v) => (v === k ? null : k))}
-              className={`exercise-catalog-chip${muscleFilter === k ? " active" : ""}`}
+              onClick={() => setMuscleFilter(null)}
+              className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
             >
-              {MUSCLE_LABEL[k]}
+              همه
             </button>
-          ))}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-          {visible.length === 0 ? (
-            <div className="item-line empty">حرکتی پیدا نشد.</div>
-          ) : (
-            visible.map((e, i) => (
-              <motion.div
-                key={e.name}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
-                onClick={() => setSelected(e)}
-                className="exercise-catalog-row"
+            {MUSCLE_FILTERS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setMuscleFilter((v) => (v === k ? null : k))}
+                className={`exercise-catalog-chip${muscleFilter === k ? " active" : ""}`}
               >
-                <div className="exercise-photo-placeholder" style={{ width: 34, height: 34 }}>
-                  <ImageOff size={14} />
-                </div>
-                <div className="min-w-0 flex-1 text-right">
-                  <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
-                  <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
-                </div>
-              </motion.div>
-            ))
-          )}
+                {MUSCLE_LABEL[k]}
+              </button>
+            ))}
+          </div>
+
+          <div className="no-scrollbar exercise-catalog-list">
+            {visible.length === 0 ? (
+              <div className="item-line empty">حرکتی پیدا نشد.</div>
+            ) : (
+              visible.map((e, i) => (
+                <motion.div
+                  key={e.name}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
+                  onClick={() => setSelected(e)}
+                  className="exercise-catalog-row"
+                >
+                  <div className="min-w-0 flex-1 text-right">
+                    <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
+                    <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -150,7 +148,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 <button className="nav-close" onClick={() => setSelected(null)} aria-label="بستن">×</button>
               </div>
 
-              <div className="thin-scroll exercise-catalog-detail-body">
+              <div className="no-scrollbar exercise-catalog-detail-body">
                 <div className="exercise-pictogram-stage">
                   <div className="exercise-photo-placeholder" style={{ width: 120, height: 120 }}>
                     <ImageOff size={32} />
