@@ -1,5 +1,5 @@
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "./jalali";
-import { EXERCISE_CATALOG } from "./exerciseCatalog";
+import { EXERCISE_CATALOG, MuscleKey } from "./exerciseCatalog";
 import { stripSetSuffix } from "./exerciseSets";
 
 export type ExerciseDay = { day: string; focus: string; items: string[] };
@@ -231,6 +231,37 @@ export function getFallbackSubstitute(item: string): string | null {
 // (lib/exerciseCatalog.ts) حرکاتی با همون الگوی حرکتی (اولویت) یا هم‌پوشانیِ
 // گروهِ عضلانی رو پیدا می‌کنه، سه‌تای برتر رو با همون پسوندِ ست/تکرار یا
 // زمانِ حرکتِ اصلی برمی‌گردونه — کاربر خودش انتخاب می‌کنه، نه سوییچِ خودکار.
+const UPPER_KEYS: MuscleKey[] = ["chest", "back", "traps", "shoulders", "biceps", "triceps", "forearms"];
+const LOWER_KEYS: MuscleKey[] = ["glutes", "quads", "hamstrings", "calves"];
+const CORE_KEYS: MuscleKey[] = ["abs", "obliques"];
+
+/** «تمرکزِ امروز» رو خودِ سیستم از روی حرکاتِ اضافه‌شده تشخیص می‌ده (نه اینکه
+ * کاربر تایپ کنه) — بر اساسِ گروهِ عضلانیِ غالب در حرکاتِ همون روز. */
+export function computeDayFocus(items: string[]): string {
+  const cats = new Set<"upper" | "lower" | "core" | "cardio" | "flex" | "full">();
+  for (const item of items) {
+    const entry = EXERCISE_CATALOG.find((e) => e.name === stripSetSuffix(item));
+    if (!entry) continue;
+    if (entry.muscleKeys.includes("fullbody")) cats.add("full");
+    if (entry.muscleKeys.some((k) => UPPER_KEYS.includes(k))) cats.add("upper");
+    if (entry.muscleKeys.some((k) => LOWER_KEYS.includes(k))) cats.add("lower");
+    if (entry.muscleKeys.some((k) => CORE_KEYS.includes(k))) cats.add("core");
+    if (entry.muscleKeys.includes("cardio")) cats.add("cardio");
+    if (entry.muscleKeys.includes("flexibility")) cats.add("flex");
+  }
+  if (cats.size === 0) return "برنامه‌ی شخصی";
+  if (cats.has("full") || (cats.has("upper") && cats.has("lower")) || cats.size >= 3) return "بدن کامل";
+  if (cats.size === 1) {
+    const [only] = cats;
+    return only === "upper" ? "بالاتنه"
+      : only === "lower" ? "پایین‌تنه"
+      : only === "core" ? "شکم و مرکز بدن"
+      : only === "cardio" ? "کاردیو"
+      : "انعطاف‌پذیری";
+  }
+  return "ترکیبی";
+}
+
 export function getCatalogSubstitutes(item: string, max = 3): string[] {
   const baseName = stripSetSuffix(item);
   const suffix = item.startsWith(baseName) ? item.slice(baseName.length) : "";
