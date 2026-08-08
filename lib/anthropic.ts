@@ -137,39 +137,48 @@ export async function generateRoadmap(topic: string): Promise<GeneratedRoadmap> 
 const EXERCISE_SYSTEM_PROMPT = `تو یک مربی بدنسازی/تناسب‌اندام حرفه‌ای هستی که طبق اصول شناخته‌شده‌ی
 تمرین مقاومتی و هوازی (NSCA/ACSM) برای کاربر یک برنامه‌ی هفتگی واقعی و اجراپذیر می‌سازی — نه یک قالب ژنریک.
 
-فقط و فقط یک JSON خام برگردون (بدون هیچ توضیح اضافه، بدون Markdown fences)، یک آرایه دقیقاً به این شکل —
+اول، با توجه به مشخصات کاربر و توضیحی که خودش نوشته (اگه نوشته باشه)، بررسی کن این درخواست از نظر
+بدنی/تمرینی واقع‌بینانه، بی‌خطر و قابل‌اجراست یا نه (مثلاً تناقض آشکار بین هدف/توضیح و روزهای موجود،
+خواسته‌ی غیرممکن یا خطرناک، یا توضیحی که با محدودیت جسمی‌ای که گفته در تضاده).
+
+اگه واقع‌بینانه نبود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن دیگه):
+{ "feasible": false, "message": "یک پیام کوتاه و دوستانه به فارسی، مثل یک چت‌بات که مستقیم با کاربر حرف می‌زنه، که توضیح بده چرا این ممکن نیست و چه پیشنهاد جایگزینی داری" }
+
+اگه واقع‌بینانه و قابل‌اجرا بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن دیگه) —
 یک آیتم به‌ازای هر روزی که کاربر گفته باشگاه می‌ره (نه کمتر نه بیشتر، و day‌ها باید دقیقاً همون روزهایی
 باشن که کاربر داده):
+{
+  "feasible": true,
+  "days": [
+    { "day": "شنبه", "focus": "پایین‌تنه — اسکوات", "items": ["اسکوات هالتر ۴×۸", "لانج دمبل ۳×۱۰ هر پا", "پلانک ۳×۳۰ ثانیه"] }
+  ]
+}
 
-[
-  { "day": "شنبه", "focus": "پایین‌تنه — اسکوات", "items": ["اسکوات هالتر ۴×۸", "لانج دمبل ۳×۱۰ هر پا", "پلانک ۳×۳۰ ثانیه"] }
-]
-
-قوانین:
+قوانین (وقتی feasible=true):
 - day دقیقاً یکی از نام‌های فارسی روزهای هفته (شنبه/یکشنبه/دوشنبه/سه‌شنبه/چهارشنبه/پنجشنبه/جمعه).
 - هر آیتم: «نام حرکت تعداد‌ست×تکرار» یا برای کاردیو «نام حرکت + مدت‌زمان»، به سبک استاندارد فارسی بدنسازی.
-- حجم/شدت متناسب با سطح، هدف، و دوره باشه: فاز حجم (bulk) = حجم تمرین بالاتر با تمرکز مقاومتی؛ فاز کات
-  (cut) = مقاومتی حفظ‌عضله + کاردیوی اضافه برای کسری کالری؛ نگهداری یا بدون دوره خاص = متعادل.
+- اگه کاربر توضیحی نوشته، برنامه رو با توجه به همون توضیح (نوع تمرین، تجهیزات، ترجیحات) بساز، نه یک قالب ژنریک.
 - اگه کاربر محدودیت جسمی داره، از حرکات پرفشار/پرضربه (پرش، برپی، دویدن سرعتی) پرهیز کن و معادل ملایم‌تر بذار.
 - بین ۲ تا ۵ حرکت برای هر روز؛ بین روزهایی که یک گروه عضلانی مشترک دارن فاصله‌ی ریکاوری منطقی بذار.
 - قد/وزن فقط برای کالیبره‌کردن شدت/حجمه؛ هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.`;
 
 export type ExercisePlanProfile = {
   level: "beginner" | "intermediate" | "advanced";
-  goal: "strength" | "hypertrophy" | "cut" | "endurance";
+  goalLabel: string; // برچسبِ فارسیِ هدف، از قبل توسط caller حل‌شده (چون گزینه‌های هدف سمتِ UI بیشتر از این تایپِ محدودن)
   gymDays: string[]; // نام فارسی روزهای هفته
   heightCm?: number | null;
   weightKg?: number | null;
-  trainingPhase: "bulk" | "cut" | "maintenance" | "none";
   hasPhysicalLimitation: boolean;
+  description?: string | null;
 };
 
 export type GeneratedExerciseDay = { day: string; focus: string; items: string[] };
+export type ExercisePlanResult =
+  | { feasible: true; days: GeneratedExerciseDay[] }
+  | { feasible: false; message: string };
 
 const VALID_FA_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 const LEVEL_LABELS_FA: Record<ExercisePlanProfile["level"], string> = { beginner: "مبتدی", intermediate: "متوسط", advanced: "پیشرفته" };
-const GOAL_LABELS_FA: Record<ExercisePlanProfile["goal"], string> = { strength: "قدرت", hypertrophy: "حجم عضلانی", cut: "کاهش چربی", endurance: "استقامت" };
-const PHASE_LABELS_FA: Record<ExercisePlanProfile["trainingPhase"], string> = { bulk: "حجم (بالک)", cut: "کات (کاهش چربی)", maintenance: "نگهداری", none: "بدون دوره خاص" };
 
 function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerciseDay[] {
   if (!Array.isArray(raw)) throw new Error("خروجی مدل ساختار معتبری نداشت");
@@ -187,7 +196,7 @@ function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerci
   return days;
 }
 
-async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<GeneratedExerciseDay[]> {
+async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<ExercisePlanResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY تنظیم نشده — این فیچر بدون کلید API کار نمی‌کند");
@@ -195,12 +204,12 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<Gener
 
   const profileText = [
     `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
-    `هدف: ${GOAL_LABELS_FA[profile.goal]}`,
+    `هدف: ${profile.goalLabel}`,
     `روزهای باشگاه: ${profile.gymDays.join("، ")}`,
     profile.heightCm ? `قد: ${profile.heightCm} سانتی‌متر` : null,
     profile.weightKg ? `وزن: ${profile.weightKg} کیلوگرم` : null,
-    `دوره: ${PHASE_LABELS_FA[profile.trainingPhase]}`,
     profile.hasPhysicalLimitation ? "محدودیت جسمی داره — از حرکات پرفشار/پرضربه پرهیز کن" : null,
+    profile.description ? `توضیحِ کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
   ].filter(Boolean).join("\n");
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -236,14 +245,24 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<Gener
     throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
   }
 
-  return normalizeExercisePlan(parsed, profile.gymDays);
+  if (parsed?.feasible === false) {
+    const message = typeof parsed?.message === "string" && parsed.message.trim()
+      ? parsed.message.trim()
+      : "این برنامه با مشخصاتی که وارد کردی قابل‌اجرا نیست.";
+    return { feasible: false, message };
+  }
+
+  return { feasible: true, days: normalizeExercisePlan(parsed?.days, profile.gymDays) };
 }
 
-export async function generateExercisePlan(profile: ExercisePlanProfile): Promise<GeneratedExerciseDay[]> {
+export async function generateExercisePlan(profile: ExercisePlanProfile): Promise<ExercisePlanResult> {
   let lastError: any;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await callExercisePlanOnce(profile);
+      const result = await callExercisePlanOnce(profile);
+      // «feasible: false» یک پاسخِ معتبرِ مدلِه، نه خطای موقتِ شبکه/پارس —
+      // نباید دوباره تلاش کنیم، همون رد رو مستقیم برگردونیم.
+      return result;
     } catch (err) {
       lastError = err;
     }

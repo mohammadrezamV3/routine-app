@@ -58,6 +58,14 @@ function isTaskPast(iso: string, time: string): boolean {
   return nowMin >= checkMin;
 }
 
+// برخلافِ isTaskPast (که برای غیرفعال‌کردنِ انتقال/حذف، ساعتِ دقیقِ امروز رو
+// هم حساب می‌کنه)، ضربدرِ قرمزِ «انجام‌نشده» فقط باید برای روزهای واقعاً
+// گذشته (نه امروز، حتی اگه ساعتِ برنامه رد شده باشه) نشون داده بشه — کاربر
+// تا آخرِ همون روز فرصت داره تیکش بزنه، نباید زودتر از موعد «ازدست‌رفته» جلوه کنه.
+function isDayPast(iso: string): boolean {
+  return iso < todayKey;
+}
+
 // برنامه‌ی امروزی که ساعتِ شروعش هنوز نرسیده — نباید بشه زودتر از موعد
 // تیکش زد (وانمود به انجام‌شدنِ کاری که هنوز شروع نشده).
 function isTaskNotStarted(iso: string, time: string): boolean {
@@ -200,6 +208,7 @@ export default function WeeklyPage() {
           tag: occ?.tag,
           done: !!selectedDaily?.tasks[t.id],
           isPast: isTaskPast(selectedIso, t.time),
+          dayPast: isDayPast(selectedIso),
           notStarted: isTaskNotStarted(selectedIso, t.time),
         };
       })

@@ -8,7 +8,7 @@ import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
 
-export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean; notStarted?: boolean };
+export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean; dayPast?: boolean; notStarted?: boolean };
 
 // بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). کلیک روی متنِ برنامه، کارتِ
 // واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز می‌کنه؛ سه‌نقطه یک منوی
@@ -124,7 +124,7 @@ export function DashTaskRow({
 
       <motion.button
         type="button"
-        whileTap={{ scale: 0.85 }}
+        whileTap={{ scale: 0.85, transition: { duration: 0.1 } }}
         disabled={!editable || task.notStarted}
         onClick={() => onToggle(task.id)}
         aria-pressed={task.done}
@@ -132,48 +132,48 @@ export function DashTaskRow({
         aria-label={
           task.done
             ? "علامت‌زدن به‌عنوان انجام‌نشده"
-            : task.isPast
-            ? "این برنامه انجام نشده و زمانش گذشته"
+            : task.dayPast
+            ? "این برنامه انجام نشده و روزش گذشته"
             : task.notStarted
             ? "این برنامه هنوز شروع نشده"
             : "علامت‌زدن به‌عنوان انجام‌شده"
         }
         animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        transition={{ duration: 0.16, ease: "easeOut" }}
         className={cn(
-          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
+          "relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
           (!editable || task.notStarted) && "cursor-not-allowed opacity-50",
-          task.done || (task.isPast && !task.done) ? "text-white" : "text-transparent hover:border-white/45",
-          task.isPast && !task.done && "task-check-missed"
+          task.done || (task.dayPast && !task.done) ? "text-white" : "text-transparent hover:border-white/45",
+          task.dayPast && !task.done && "task-check-missed"
         )}
         style={
           task.done
             ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-            : task.isPast
+            : task.dayPast
             ? { background: "#E05252", borderColor: "#E05252" }
             : { background: "transparent", borderColor: "var(--muted)" }
         }
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {task.done ? (
             <motion.span
               key="done"
               initial={{ scale: 0, rotate: -45, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className="flex items-center justify-center"
+              transition={{ type: "spring", stiffness: 650, damping: 26 }}
+              className="absolute inset-0 flex items-center justify-center"
             >
               <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
             </motion.span>
-          ) : task.isPast ? (
+          ) : task.dayPast ? (
             <motion.span
               key="missed"
               initial={{ scale: 0, rotate: 45, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className="flex items-center justify-center"
+              transition={{ type: "spring", stiffness: 650, damping: 26 }}
+              className="absolute inset-0 flex items-center justify-center"
             >
               <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
             </motion.span>

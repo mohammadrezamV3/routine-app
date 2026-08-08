@@ -1,13 +1,4 @@
-import { ExerciseDay, ExerciseGoal, ExerciseLevel } from "./exercisePlans";
-
-export type TrainingPhase = "bulk" | "cut" | "maintenance" | "none";
-
-export const PHASE_LABELS: Record<TrainingPhase, string> = {
-  bulk: "حجم (بالک)",
-  cut: "کات (کاهش چربی)",
-  maintenance: "نگهداری",
-  none: "بدون دوره خاص",
-};
+import { ExerciseDay, ExerciseGoalOption, ExerciseLevel } from "./exercisePlans";
 
 export type ExercisePlan = {
   id: string;
@@ -16,9 +7,8 @@ export type ExercisePlan = {
   level: ExerciseLevel | "custom";
   heightCm: number | null;
   weightKg: number | null;
-  goal: ExerciseGoal | null;
+  goal: ExerciseGoalOption | null;
   gymDays: string[] | null;
-  trainingPhase: TrainingPhase | null;
   generatedByAi: boolean;
   createdAt: string;
   planData: ExerciseDay[];
@@ -28,18 +18,18 @@ export type ExercisePlanFormValue = {
   level: ExerciseLevel;
   heightCm: string;
   weightKg: string;
-  goal: ExerciseGoal | null;
+  goal: ExerciseGoalOption | null;
   hasLimitation: boolean;
   gymDays: string[];
-  trainingPhase: TrainingPhase;
+  description: string;
 };
 
 export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   level: "beginner",
   heightCm: "",
   weightKg: "",
-  goal: "hypertrophy",
+  goal: null,
   hasLimitation: false,
   gymDays: [],
-  trainingPhase: "none",
+  description: "",
 };

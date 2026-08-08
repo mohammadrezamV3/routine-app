@@ -19,6 +19,40 @@ export const GOAL_LABELS: Record<ExerciseGoal, string> = {
   endurance: "استقامت",
 };
 
+// گزینه‌های هدفِ نمایش‌داده‌شده به کاربر توی فرمِ ساخت با AI — بیشتر از
+// چهارتای اصلیِ بالا (که فقط برای قالبِ ایستای fallback لازمه). هر گزینه
+// به یکی از همون چهارتا برای fallback/محاسبه‌ی حداقلِ روزها نگاشت می‌شه؛
+// وقتی AI در دسترسه، از خودِ برچسبِ فارسی برای پرامپت استفاده می‌شه، نه از
+// این نگاشت.
+export type ExerciseGoalOption =
+  | ExerciseGoal
+  | "general_fitness"
+  | "athletic_performance"
+  | "toning"
+  | "mobility";
+
+export const GOAL_OPTION_LABELS: Record<ExerciseGoalOption, string> = {
+  strength: "قدرت / لیفتینگ",
+  hypertrophy: "حجم عضلانی",
+  cut: "کات (کاهش چربی)",
+  endurance: "استقامت",
+  general_fitness: "تناسب‌اندام عمومی",
+  athletic_performance: "عملکرد و چابکی ورزشی",
+  toning: "فرم‌دهی بدن",
+  mobility: "انعطاف‌پذیری و تحرک‌پذیری",
+};
+
+export const GOAL_FALLBACK_MAP: Record<ExerciseGoalOption, ExerciseGoal> = {
+  strength: "strength",
+  hypertrophy: "hypertrophy",
+  cut: "cut",
+  endurance: "endurance",
+  general_fitness: "hypertrophy",
+  athletic_performance: "strength",
+  toning: "cut",
+  mobility: "endurance",
+};
+
 // ============================================================
 // منطق برنامه‌ریزی بر اساس هدف + سطح — نه یک قالب ثابت برای همه.
 // دامنه تکرار/حجم هرکدوم از این چهار مسیر از اصول شناخته‌شده تمرین مقاومتی
