@@ -19,6 +19,7 @@ import { ExerciseTaskList } from "./ExerciseTaskList";
 import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
+import { ExerciseSubstitutePicker } from "./ExerciseSubstitutePicker";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -41,6 +42,9 @@ export function ExerciseDashboard({
 
   const [subbingItem, setSubbingItem] = useState<string | null>(null);
   const [subError, setSubError] = useState<string | null>(null);
+  const [subTarget, setSubTarget] = useState<{ day: string; oldItem: string } | null>(null);
+  const [subCandidates, setSubCandidates] = useState<string[] | null>(null);
+  const [subPicking, setSubPicking] = useState(false);
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
@@ -102,7 +106,9 @@ export function ExerciseDashboard({
   const todayLog = logs[todayIso];
   const todayPct = todayProgressPct(todayPlanForStats?.items.length ?? 0, todayLog);
 
-  async function substituteItem(day: string, item: string) {
+  // «این تجهیزات رو ندارم» — اول سه‌تا پیشنهادِ آماده می‌گیریم (بدونِ سویچِ
+  // خودکار)، بعد خودِ کاربر از پاپ‌آپ یکیشون رو انتخاب می‌کنه.
+  async function openSubstitutePicker(day: string, item: string) {
     setSubbingItem(item);
     setSubError(null);
     const res = await fetch("/api/exercise/plan/substitute", {
@@ -112,8 +118,27 @@ export function ExerciseDashboard({
     });
     const data = await res.json();
     setSubbingItem(null);
-    if (res.ok) onPlanChange(data.plan);
+    if (res.ok) { setSubTarget({ day, oldItem: item }); setSubCandidates(data.candidates); }
     else setSubError(data.error || "خطا در جایگزینی");
+  }
+
+  async function applySubstitute(newItem: string) {
+    if (!subTarget) return;
+    setSubPicking(true);
+    const res = await fetch("/api/exercise/plan/substitute", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId: plan.id, day: subTarget.day, oldItem: subTarget.oldItem, newItem }),
+    });
+    const data = await res.json();
+    setSubPicking(false);
+    if (res.ok) {
+      onPlanChange(data.plan);
+      setSubTarget(null);
+      setSubCandidates(null);
+    } else {
+      setSubError(data.error || "خطا در جایگزینی");
+    }
   }
 
   return (
@@ -150,11 +175,15 @@ export function ExerciseDashboard({
       {/* وقتی جلسه‌ی تمرین فعاله، صفحه کاملاً روی خودِ برنامه‌ی تمرینی
           متمرکز می‌شه (تمام‌عرض، بدونِ کارت‌های کناری و بدونِ برنامه‌ی هفتگی
           پایینِ صفحه) — با پایانِ تمرین دوباره چیدمانِ سه‌بخشیِ عادی برمی‌گرده.
-          `layout` روی این container و ExerciseTaskList باعث می‌شه این
+          `layout` روی این container و روی خودِ کارت‌های کناری باعث می‌شه این
           جابه‌جاییِ اندازه/چیدمان با یک انیمیشنِ نرم (FLIP) اتفاق بیفته، نه
-          یهویی. ExerciseTaskList همیشه همون یک نمونه‌ست (نه دو تا شرطی) تا
-          با تغییرِ چیدمان، state ی داخلیش (تایمر، آیتم‌های تیک‌خورده) از
-          دست نره. */}
+          یهویی. `mode="popLayout"` لازمه چون بدونش، کارت‌های کناری تا آخرِ
+          انیمیشنِ محوشدنشون هنوز فضای گریدِ خودشون رو اشغال می‌کنن و همون
+          لحظه‌ای که سشن فعال می‌شه (و گرید به یک‌ستونه سویچ می‌کنه) یهو به‌جای
+          خودشون می‌پرن — با popLayout همون لحظه‌ی شروعِ اگزیت از فلو در میان
+          (position:absolute می‌شن) و بقیه بدونِ پرش/تکون جا میفتن. ExerciseTaskList
+          همیشه همون یک نمونه‌ست (نه دو تا شرطی) تا با تغییرِ چیدمان، state ی
+          داخلیش (تایمر، آیتم‌های تیک‌خورده) از دست نره. */}
       <motion.div
         layout
         transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
@@ -164,34 +193,33 @@ export function ExerciseDashboard({
             : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
         }
       >
-        <motion.div layout transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}>
-          <ExerciseTaskList
-            planId={plan.id}
-            dayPlan={selectedDayPlan}
-            dateIso={selectedIso}
-            editable={isSelectedToday}
-            title={isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینیِ ${selectedDayName}`}
-            restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روزِ باشگاهِ برنامه نیست."}
-            initialCompleted={!!selectedLog?.completed}
-            initialCompletedItems={selectedLog?.completedItems ?? []}
-            onSubstitute={substituteItem}
-            substitutingItem={subbingItem}
-            onSessionEnd={() => setRefreshKey((k) => k + 1)}
-            onAddProgram={() => setAddProgramOpen(true)}
-            onActiveChange={setSessionActive}
-            delay={0.05}
-          />
-        </motion.div>
+        <ExerciseTaskList
+          planId={plan.id}
+          dayPlan={selectedDayPlan}
+          dateIso={selectedIso}
+          editable={isSelectedToday}
+          title={isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینیِ ${selectedDayName}`}
+          restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روزِ باشگاهِ برنامه نیست."}
+          initialCompleted={!!selectedLog?.completed}
+          initialCompletedItems={selectedLog?.completedItems ?? []}
+          onSubstitute={openSubstitutePicker}
+          substitutingItem={subbingItem}
+          onSessionEnd={() => setRefreshKey((k) => k + 1)}
+          onAddProgram={() => setAddProgramOpen(true)}
+          onActiveChange={setSessionActive}
+          delay={0.05}
+        />
 
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {!sessionActive && (
             <>
-              <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <motion.div key="catalog" layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                 <ExerciseCatalogCard delay={0.1} />
               </motion.div>
 
               <motion.div
                 key="side"
+                layout
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -233,6 +261,16 @@ export function ExerciseDashboard({
         <AddExerciseProgramForm
           onClose={() => setAddProgramOpen(false)}
           onCreated={(newPlan) => { onPlanChange(newPlan); setAddProgramOpen(false); setRefreshKey((k) => k + 1); }}
+        />
+      )}
+
+      {subTarget && subCandidates && (
+        <ExerciseSubstitutePicker
+          oldItem={subTarget.oldItem}
+          candidates={subCandidates}
+          picking={subPicking}
+          onPick={applySubstitute}
+          onClose={() => { setSubTarget(null); setSubCandidates(null); }}
         />
       )}
     </div>

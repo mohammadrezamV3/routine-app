@@ -1,4 +1,6 @@
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "./jalali";
+import { EXERCISE_CATALOG } from "./exerciseCatalog";
+import { stripSetSuffix } from "./exerciseSets";
 
 export type ExerciseDay = { day: string; focus: string; items: string[] };
 export type ExerciseGoal = "strength" | "hypertrophy" | "cut" | "endurance";
@@ -189,4 +191,27 @@ export function getFallbackSubstitute(item: string): string | null {
     if (pattern.test(item)) return item.replace(pattern, replacement);
   }
   return null;
+}
+
+// سه حرکتِ جایگزینِ آماده (بدونِ هوش‌مصنوعی) — از کاتالوگِ حرکات
+// (lib/exerciseCatalog.ts) حرکاتی با همون الگوی حرکتی (اولویت) یا هم‌پوشانیِ
+// گروهِ عضلانی رو پیدا می‌کنه، سه‌تای برتر رو با همون پسوندِ ست/تکرار یا
+// زمانِ حرکتِ اصلی برمی‌گردونه — کاربر خودش انتخاب می‌کنه، نه سوییچِ خودکار.
+export function getCatalogSubstitutes(item: string, max = 3): string[] {
+  const baseName = stripSetSuffix(item);
+  const suffix = item.startsWith(baseName) ? item.slice(baseName.length) : "";
+  const source = EXERCISE_CATALOG.find((e) => e.name === baseName);
+  if (!source) return [];
+
+  return EXERCISE_CATALOG
+    .filter((e) => e.name !== baseName)
+    .map((e) => {
+      const sharedMuscles = e.muscleKeys.filter((k) => source.muscleKeys.includes(k)).length;
+      const score = (e.pattern === source.pattern ? 3 : 0) + sharedMuscles;
+      return { name: e.name, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, max)
+    .map((x) => x.name + suffix);
 }

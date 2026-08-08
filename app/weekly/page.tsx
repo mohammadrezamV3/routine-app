@@ -58,6 +58,16 @@ function isTaskPast(iso: string, time: string): boolean {
   return nowMin >= checkMin;
 }
 
+// برنامه‌ی امروزی که ساعتِ شروعش هنوز نرسیده — نباید بشه زودتر از موعد
+// تیکش زد (وانمود به انجام‌شدنِ کاری که هنوز شروع نشده).
+function isTaskNotStarted(iso: string, time: string): boolean {
+  if (iso !== todayKey) return false;
+  const startMin = timeStartMinutes(time);
+  if (startMin === null) return false;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  return nowMin < startMin;
+}
+
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
 export default function WeeklyPage() {
@@ -190,6 +200,7 @@ export default function WeeklyPage() {
           tag: occ?.tag,
           done: !!selectedDaily?.tasks[t.id],
           isPast: isTaskPast(selectedIso, t.time),
+          notStarted: isTaskNotStarted(selectedIso, t.time),
         };
       })
       .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
@@ -210,6 +221,8 @@ export default function WeeklyPage() {
 
   async function toggleDashTask(id: string) {
     if (!isSelectedToday) return;
+    const task = dashTasks.find((t) => t.id === id);
+    if (task?.notStarted) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
