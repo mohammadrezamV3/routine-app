@@ -65,76 +65,77 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   return createPortal(
     <>
       <motion.div
-        className="modal-overlay open"
+        className="exercise-catalog-popup-wrap"
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-      />
-      <motion.div
-        className="modal-panel liquid-glass-panel open exercise-catalog-popup-panel dash-scope"
-        onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.96 }}
-        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="modal-head">
-          <div className="modal-title">مشاهده حرکات</div>
-          <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
-        </div>
+        <motion.div
+          className="exercise-catalog-popup-panel dash-scope"
+          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="modal-head">
+            <div className="modal-title">مشاهده حرکات</div>
+            <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          </div>
 
-        <input
-          type="text"
-          dir="rtl"
-          className="wsearch-newform-name trade-glass-field pill-glass-field"
-          placeholder="جستجوی حرکت…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+          <input
+            type="text"
+            dir="rtl"
+            className="wsearch-newform-name trade-glass-field pill-glass-field"
+            placeholder="جستجوی حرکت…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
 
-        <div className="no-scrollbar exercise-catalog-filters">
-          <button
-            type="button"
-            onClick={() => setMuscleFilter(null)}
-            className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
-          >
-            همه
-          </button>
-          {MUSCLE_FILTERS.map((k) => (
+          <div className="no-scrollbar exercise-catalog-filters">
             <button
-              key={k}
               type="button"
-              onClick={() => setMuscleFilter((v) => (v === k ? null : k))}
-              className={`exercise-catalog-chip${muscleFilter === k ? " active" : ""}`}
+              onClick={() => setMuscleFilter(null)}
+              className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
             >
-              {MUSCLE_LABEL[k]}
+              همه
             </button>
-          ))}
-        </div>
-
-        <div className="no-scrollbar exercise-catalog-list">
-          {visible.length === 0 ? (
-            <div className="item-line empty">حرکتی پیدا نشد.</div>
-          ) : (
-            visible.map((e, i) => (
-              <motion.div
-                key={e.name}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
-                onClick={() => setSelected(e)}
-                className="exercise-catalog-row"
+            {MUSCLE_FILTERS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setMuscleFilter((v) => (v === k ? null : k))}
+                className={`exercise-catalog-chip${muscleFilter === k ? " active" : ""}`}
               >
-                <div className="min-w-0 flex-1 text-right">
-                  <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
-                  <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
+                {MUSCLE_LABEL[k]}
+              </button>
+            ))}
+          </div>
+
+          <div className="no-scrollbar exercise-catalog-list">
+            {visible.length === 0 ? (
+              <div className="item-line empty">حرکتی پیدا نشد.</div>
+            ) : (
+              visible.map((e, i) => (
+                <motion.div
+                  key={e.name}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
+                  onClick={() => setSelected(e)}
+                  className="exercise-catalog-row"
+                >
+                  <div className="min-w-0 flex-1 text-right">
+                    <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
+                    <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </motion.div>
       </motion.div>
 
       <AnimatePresence>

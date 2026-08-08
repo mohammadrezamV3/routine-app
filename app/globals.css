@@ -2485,6 +2485,24 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .manual-submit-btn:hover{ filter:brightness(1.05); }
 
+/* دکمه‌ی «مرحله بعد»ِ ویزاردِ AI — قبلاً فقط بوردر/متنِ رنگی (بدونِ
+   بک‌گراند، چون ریستِ dash-scope پهنای بوردر رو صفر می‌کرد) و اندازه‌ش هم
+   با دکمه‌ی پیش‌فرض یکی بود؛ حالا مثلِ manual-submit-btn پرِ توپره ولی
+   کوچیک‌تر */
+.exercise-wizard-next-btn{
+  border-radius:9999px !important; border:none !important;
+  background:var(--accent) !important; color:var(--bg) !important;
+  padding:7px 20px !important; font-size:11.5px !important; font-weight:700;
+}
+.exercise-wizard-next-btn:hover{ filter:brightness(1.05); }
+.exercise-wizard-next-btn:disabled{ opacity:.6 !important; }
+
+/* تایتلِ صفحه‌ی انتخابِ «افزودن برنامه» (AI/دستی) — بزرگ‌تر از تایتلِ
+   پیش‌فرضِ wsearch-newform-title (که جاهای دیگه‌ی اپ هم استفاده می‌شه، پس
+   دست‌نخورده می‌مونه) + فاصله‌ی بیشتر از بالا و از ردیفِ انتخاب زیرش */
+.exercise-add-glass .wsearch-newform-head{ margin-top:6px; margin-bottom:20px; }
+.exercise-add-glass .wsearch-newform-title{ font-size:17px; }
+
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
   font-size:12.5px; color:var(--muted); line-height:1.7; padding-right:16px; position:relative;
@@ -2516,22 +2534,41 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
   display:flex; align-items:center; gap:3px; background:none; border:none; padding:0;
   cursor:pointer; color:var(--accent);
 }
-.exercise-catalog-popup-panel{
-  max-width:520px; max-height:82vh; max-height:82dvh;
-  display:flex; flex-direction:column; overflow:hidden;
+/* پاپ‌آپِ مستقل (نه از روی .modal-panel پایه) — چون انیمیشنِ scale ی
+   framer-motion مستقیم روی style.transform می‌نویسه و transform:translate
+   ِ centering کلاسِ پایه رو کامل override می‌کنه (باعث می‌شد پاپ‌آپ گوشه‌ی
+   بالا-چپِ صفحه بیفته، نه وسط) — این‌جا centering با flexbox روی خودِ
+   wrapperِ overlay انجام می‌شه، بدونِ هیچ transformِ رقیب. */
+.exercise-catalog-popup-wrap{
+  position:fixed; inset:0; z-index:56; display:flex; align-items:center; justify-content:center;
+  padding:20px; background:rgba(0,0,0,.55);
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
 }
+.exercise-catalog-popup-panel{
+  position:relative; width:100%; max-width:520px; max-height:82vh; max-height:82dvh;
+  display:flex; flex-direction:column; overflow:hidden;
+  border:1px solid var(--line); border-radius:14px; padding:22px;
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
+}
+body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,255,.28); }
 .exercise-catalog-popup-panel .modal-head{ flex-shrink:0; }
 .exercise-catalog-filters{ flex-shrink:0; }
 .exercise-catalog-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; flex:1; min-height:0; overflow-y:auto; }
-/* کارتِ جزئیاتِ حرکت — از پایین بالا میاد، نه جایگزینیِ درجاست */
+/* کارتِ جزئیاتِ حرکت — از پایین بالا میاد، نه جایگزینیِ درجاست؛ همون بک‌گراندِ
+   لیکوئیدگلسِ خودِ پاپ‌آپ/هدرِ سایت، نه یه رنگِ توپرِ جدا */
 .exercise-catalog-detail-overlay{ z-index:74; }
 .exercise-catalog-detail-card{
   position:fixed; left:0; right:0; bottom:0; z-index:75; max-height:88vh; overflow:hidden;
   display:flex; flex-direction:column;
-  background:var(--bg); border-radius:22px 22px 0 0; border:1px solid var(--line); border-bottom:none;
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  border-radius:22px 22px 0 0; border:1px solid var(--line); border-bottom:none;
   box-shadow:0 -20px 60px rgba(0,0,0,.45); padding:8px 18px 0;
   max-width:640px; margin:0 auto;
 }
+body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.28); }
 .exercise-catalog-detail-handle{ width:40px; height:4px; border-radius:9999px; background:var(--line); margin:4px auto 8px; flex-shrink:0; }
 .exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:28px; }
 .exercise-pictogram-stage{
