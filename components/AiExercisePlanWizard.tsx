@@ -133,8 +133,8 @@ export function AiExercisePlanWizard({
               <input type="number" className="wsearch-newform-name" value={form.heightCm} onChange={(e) => patch({ heightCm: e.target.value })} />
               {fieldErrors.heightCm && (
                 <div className="field-error-msg field-error-msg-inline">
-                  {fieldErrors.heightCm}
                   <AlertCircle size={12} />
+                  {fieldErrors.heightCm}
                 </div>
               )}
             </div>
@@ -143,8 +143,8 @@ export function AiExercisePlanWizard({
               <input type="number" className="wsearch-newform-name" value={form.weightKg} onChange={(e) => patch({ weightKg: e.target.value })} />
               {fieldErrors.weightKg && (
                 <div className="field-error-msg field-error-msg-inline">
-                  {fieldErrors.weightKg}
                   <AlertCircle size={12} />
+                  {fieldErrors.weightKg}
                 </div>
               )}
             </div>
@@ -231,8 +231,8 @@ export function AiExercisePlanWizard({
 
       {error && (
         <div className="field-error-msg field-error-msg-inline" style={{ marginTop: 10 }}>
-          {error}
           <AlertCircle size={12} />
+          {error}
         </div>
       )}
 
@@ -243,11 +243,7 @@ export function AiExercisePlanWizard({
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <button
-          onClick={goNext}
-          disabled={submitting}
-          style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-        >
+        <button type="button" onClick={goNext} disabled={submitting} className="exercise-wizard-next-btn">
           {step === "description" ? (submitting ? "در حال ساخت برنامه…" : rejection ? "ویرایش و امتحان دوباره" : "مرحله بعد") : "مرحله بعد"}
         </button>
       </div>
