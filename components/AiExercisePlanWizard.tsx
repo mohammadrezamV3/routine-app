@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/lib/exercisePlans";
 import { ExercisePlanFormValue, EMPTY_EXERCISE_FORM, ExercisePlan } from "@/lib/exerciseTypes";
 import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
+import { focusNextOnEnter } from "@/lib/formNav";
 
 type Step = "hw" | "goal" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, days: 2, description: 3, rules: 3 };
@@ -34,6 +35,7 @@ export function AiExercisePlanWizard({
   const [error, setError] = useState<string | null>(null);
   const [rejection, setRejection] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const stepRef = useRef<HTMLDivElement>(null);
 
   function patch(p: Partial<ExercisePlanFormValue>) {
     setForm((f) => ({ ...f, ...p }));
@@ -112,7 +114,7 @@ export function AiExercisePlanWizard({
   const showBack = step !== "hw" || !!onCancel;
 
   return (
-    <div key={step} className="auth-step">
+    <div key={step} className="auth-step" ref={stepRef} onKeyDown={(e) => focusNextOnEnter(e, stepRef, goNext)}>
       {(showBack || onClose) && (
         <div className="exercise-wizard-head">
           {showBack ? (
@@ -126,7 +128,7 @@ export function AiExercisePlanWizard({
 
       {step === "hw" && (
         <>
-          <label className="exercise-wizard-title">قد و وزن خود را وارد کنید</label>
+          <label className="exercise-wizard-title exercise-wizard-title-hw">قد و وزن خود را وارد کنید</label>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">قد (سانتی‌متر)</label>
