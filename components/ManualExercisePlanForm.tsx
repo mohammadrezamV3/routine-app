@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Plus, Search, X } from "lucide-react";
+import { ChevronRight, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { ExerciseDay, computeDayFocus } from "@/lib/exercisePlans";
-import { EXERCISE_CATALOG, ExerciseCatalogEntry } from "@/lib/exerciseCatalog";
+import { EXERCISE_CATALOG, ExerciseCatalogEntry, getExerciseDifficulty } from "@/lib/exerciseCatalog";
 import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
 import { toFaDigits } from "@/lib/schedule";
+import { DifficultyStars } from "./ExerciseCatalogModal";
 
 // وقتی کاربر روی «افزودن» یک حرکت از کاتالوگ می‌زنه، بسته به الگوی حرکت
 // پیش‌فرض رو زمان‌محور (کاردیو/انعطاف‌پذیری) یا ست‌وتکرار می‌ذاریم — ولی
@@ -138,31 +139,28 @@ function ManualExerciseAddPopup({
               <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
             </div>
 
-            <div className="manual-exercise-picker-search">
-              <Search size={14} className="manual-exercise-picker-search-icon" />
-              <input
-                type="text"
-                dir="auto"
-                placeholder="جستجوی حرکت…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                autoFocus
-              />
-            </div>
+            <input
+              type="text"
+              dir="rtl"
+              className="manual-exercise-picker-search"
+              placeholder="جستجوی حرکت…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoFocus
+            />
 
             <div className="no-scrollbar manual-exercise-picker-list">
               {visible.length === 0 ? (
                 <div className="item-line empty">حرکتی پیدا نشد.</div>
               ) : (
                 visible.map((e) => (
-                  <div key={e.name} className="manual-exercise-picker-row">
-                    <div className="min-w-0 flex-1 text-right">
-                      <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
-                      <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
+                  <div key={e.name} className="exercise-catalog-row">
+                    <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
+                      {e.name}
                     </div>
-                    <button type="button" className="wsearch-add-btn" onClick={() => setAdding(e)}>
+                    <DifficultyStars level={getExerciseDifficulty(e)} className="exercise-catalog-row-stars" />
+                    <button type="button" className="manual-exercise-row-add-btn" onClick={() => setAdding(e)}>
                       افزودن
-                      <span className="wsearch-add-btn-icon">+</span>
                     </button>
                   </div>
                 ))
@@ -202,9 +200,10 @@ export function ManualExercisePlanForm({
   const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function toggleDay(day: string) {
-    setGymDays((d) => (d.includes(day) ? d.filter((x) => x !== day) : [...d, day]));
+  function openDay(day: string) {
+    setGymDays((d) => (d.includes(day) ? d : [...d, day]));
     setError(null);
+    setActiveDay(day);
   }
   function addItem(day: string, formatted: string) {
     setDayItems((m) => ({ ...m, [day]: [...(m[day] || []), formatted] }));
@@ -289,14 +288,12 @@ export function ManualExercisePlanForm({
           {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
         </div>
 
-        <label className="exercise-wizard-title" style={{ marginBottom: 4 }}>برنامه‌ی روزِ {activeDay}</label>
-        {items.length > 0 && (
-          <div style={{ fontSize: 11, color: "var(--muted2)", marginTop: 2 }}>{computeDayFocus(items)}</div>
-        )}
-
         <div className="manual-day-exercises-box">
           <div className="manual-day-exercises-head">
-            <div className="manual-day-exercises-title">حرکات این روز</div>
+            <div>
+              <div className="manual-day-exercises-title">روز {activeDay}</div>
+              {items.length > 0 && <div className="manual-day-exercises-focus">{computeDayFocus(items)}</div>}
+            </div>
             <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpen(true)}>
               افزودن
               <Plus size={14} />
@@ -356,26 +353,12 @@ export function ManualExercisePlanForm({
           <span
             key={FA_WEEKDAY[i]}
             className={`day-pill${gymDays.includes(FA_WEEKDAY[i]) ? " on" : ""}`}
-            onClick={() => toggleDay(FA_WEEKDAY[i])}
+            onClick={() => openDay(FA_WEEKDAY[i])}
           >
             {FA_WEEKDAY_SHORT[i]}
           </span>
         ))}
       </div>
-
-      {gymDays.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 16 }}>
-          {gymDays.map((d) => {
-            const count = (dayItems[d] || []).length;
-            return (
-              <div key={d} className="manual-day-row" onClick={() => setActiveDay(d)}>
-                <span className="manual-day-row-name">{d}</span>
-                <span className="manual-day-row-count">{count > 0 ? `${toFaDigits(String(count))} حرکت` : "افزودن حرکت"}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
 

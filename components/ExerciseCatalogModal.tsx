@@ -32,9 +32,9 @@ const MUSCLE_FILTERS: MuscleKey[] = [
   "quads", "hamstrings", "glutes", "calves", "cardio",
 ];
 
-function DifficultyStars({ level }: { level: number }) {
+export function DifficultyStars({ level, className }: { level: number; className?: string }) {
   return (
-    <div className="exercise-difficulty-stars" aria-label={`میزان سختی: ${level} از ۵`}>
+    <div className={`exercise-difficulty-stars${className ? ` ${className}` : ""}`} aria-label={`میزان سختی: ${level} از ۵`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={13} fill={i <= level ? "currentColor" : "none"} className={i <= level ? "on" : ""} />
       ))}
@@ -127,10 +127,10 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                   onClick={() => setSelected(e)}
                   className="exercise-catalog-row"
                 >
-                  <div className="min-w-0 flex-1 text-right">
-                    <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
-                    <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
+                  <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
+                    {e.name}
                   </div>
+                  <DifficultyStars level={getExerciseDifficulty(e)} className="exercise-catalog-row-stars" />
                 </motion.div>
               ))
             )}
