@@ -150,13 +150,12 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
               transition={{ duration: 0.2 }}
             />
             <motion.div
-              className="exercise-catalog-detail-card"
+              className="exercise-catalog-detail-card dash-scope"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 340, damping: 34 }}
             >
-              <div className="exercise-catalog-detail-handle" />
               <div className="modal-head">
                 <div className="modal-title">{selected.name}</div>
                 <button className="nav-close" onClick={() => setSelected(null)} aria-label="بستن">×</button>
@@ -170,12 +169,12 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="tm-extra" style={{ marginTop: 4 }}>
-                  <div className="domain-sub">میزان سختی</div>
+                  <div className="domain-sub exercise-detail-label">میزان سختی</div>
                   <DifficultyStars level={getExerciseDifficulty(selected)} />
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub">دستورالعمل</div>
+                  <div className="domain-sub exercise-detail-label">دستورالعمل</div>
                   <ol style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6, paddingRight: 18 }}>
                     {selected.howTo.map((step, i) => (
                       <motion.li
@@ -193,7 +192,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub">عضلاتِ درگیر</div>
+                  <div className="domain-sub exercise-detail-label">عضلاتِ درگیر</div>
                   <div className="item-line">{selected.muscleGroup}</div>
                   <div style={{ marginTop: 10 }}>
                     <MuscleDiagram keys={selected.muscleKeys} />
@@ -201,7 +200,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub">مزایا</div>
+                  <div className="domain-sub exercise-detail-label">مزایا</div>
                   <div className="item-line">{selected.benefits}</div>
                 </div>
               </div>
