@@ -2375,6 +2375,8 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
    بزرگ‌تر از بقیه‌ی تایتل‌های هم‌کلاسِ ویزارد، پس یه مادیفایرِ جدا به‌جای
    تغییرِ خودِ exercise-wizard-title (که مراحلِ دیگه هم ازش استفاده می‌کنن) */
 .exercise-wizard-title-hw{ font-size:19px; }
+/* تایتلِ مرحله‌ی انتخابِ روزهای برنامه‌ی دستی — همون درخواستِ فونتِ بزرگ‌تر */
+.exercise-wizard-title-days{ font-size:19px; }
 
 .exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
 .exercise-day-select .day-pill{ flex:1 1 calc(33.33% - 6px); min-width:64px; }
@@ -2450,12 +2452,10 @@ body[data-theme="light"] .manual-exercise-picker-search{ background:rgba(255,255
 }
 .manual-exercise-row-add-btn:hover{ opacity:.8; }
 
-.manual-exercise-added-row{
-  display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:8px 12px; border-radius:10px; border:1px solid var(--line);
-  background:rgba(255,255,255,.02); font-size:12px; color:var(--text);
-}
-body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255,.5); }
+/* حالا هم‌کلاسِ exercise-catalog-row هم روش هست (که بوردر/بک‌گراند/رادیوس/
+   پدینگ رو می‌ده — دقیقاً هم‌سبکِ ردیف‌های «مشاهده حرکات»)؛ اینجا فقط چیزی
+   که اون کلاس نداره اضافه می‌شه: چیدمانِ دو-سرِ نام+دکمه‌ی حذف */
+.manual-exercise-added-row{ justify-content:space-between; cursor:default; font-size:12px; color:var(--text); }
 .manual-exercise-added-row button{ flex-shrink:0; color:var(--muted2); display:flex; }
 .manual-exercise-added-row button:hover{ color:#E05252; }
 
@@ -2496,12 +2496,6 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
    exercise-catalog-popup-wrap (۵۶) کافی نیست و پاپ‌آپ پشتِ فرمِ افزودنِ
    برنامه گم می‌شد؛ اینجا بالاتر از همه‌ی لایه‌های شناخته‌شده‌ی اپ می‌بریمش */
 .exercise-catalog-popup-wrap.manual-exercise-popup-wrap{ z-index:64; }
-/* پاپ‌آپِ «افزودن حرکت» — درخواستِ صریحِ کاربر: هم‌سبکِ هدر (بلور/شکلِ
-   لیکوئیدگلس) ولی سیاه، نه همون شیشه‌ای‌ِ کم‌رنگِ مشترکِ مشاهده‌ی حرکات */
-.exercise-catalog-popup-panel.manual-exercise-add-panel,
-body[data-theme="light"] .exercise-catalog-popup-panel.manual-exercise-add-panel{
-  background:rgba(0,0,0,.62);
-}
 
 /* دکمه‌ی نهاییِ «ثبتِ برنامه» — پرِ توپر و کاملاً گرد، نه فقط بوردر */
 .manual-submit-btn{
@@ -2586,25 +2580,36 @@ body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,
 /* کارتِ جزئیاتِ حرکت — از پایین بالا میاد، نه جایگزینیِ درجاست؛ همون بک‌گراندِ
    لیکوئیدگلسِ خودِ پاپ‌آپ/هدرِ سایت، نه یه رنگِ توپرِ جدا */
 .exercise-catalog-detail-overlay{ z-index:74; }
+/* قبلاً یه بوتم‌شیتِ کاملاً چسبیده به لبه‌ی پایینِ صفحه بود (بدونِ فاصله،
+   بدونِ رادیوسِ پایین) — حالا مثلِ پاپ‌آپِ اصلی یه کارتِ شناورِ با فاصله از
+   هر ۴ لبه‌ست، با رادیوسِ کاملِ گرد */
 .exercise-catalog-detail-card{
-  position:fixed; left:0; right:0; bottom:0; z-index:75; max-height:88vh; overflow:hidden;
+  position:fixed; left:12px; right:12px; bottom:12px; z-index:75; max-height:82vh; overflow:hidden;
   display:flex; flex-direction:column;
   background:rgba(255,255,255,.04);
   backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
-  border-radius:22px 22px 0 0; border:1px solid var(--line); border-bottom:none;
-  box-shadow:0 -20px 60px rgba(0,0,0,.45); padding:20px 18px 0;
+  border-radius:26px; border:1px solid var(--line);
+  box-shadow:0 20px 60px rgba(0,0,0,.45); padding:18px 18px 0;
   max-width:640px; margin:0 auto;
 }
 body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.28); }
-.exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:28px; }
+.exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:24px; }
+/* هدرِ کارتِ جزئیات دیگه تایتل نداره (اسمِ حرکت رفته زیرِ عکس) — فقط
+   ضربدرِ بستن سمتِ چپ می‌مونه، پس هدر بدونِ مارجینِ اضافه‌ی زیرش می‌مونه */
+.exercise-detail-head{ margin-bottom:2px; }
+/* اسمِ حرکت — زیرِ جای‌عکس، وسط‌چین مثلِ زیرنویسِ خودِ عکس */
+.exercise-detail-name{ text-align:center; margin-top:0; }
 /* تایتل‌های داخلِ کارتِ جزئیاتِ حرکت (میزانِ سختی/دستورالعمل/عضلاتِ درگیر/
    مزایا) — پایه‌ی domain-sub خاکستری/مونواسپیسه (برای جاهای دیگه‌ی سایت
    مناسبه)، اینجا رنگِ اکسنتِ برند می‌گیره تا بینِ بخش‌های مختلفِ کارت
    برجسته‌تر باشه */
 .exercise-detail-label{ color:var(--accent); }
+/* ریتمِ فاصله‌ی بخش‌ها یکم فشرده‌تر از پیش‌فرضِ tm-extra (که برای صفحاتِ
+   دیگه طراحی شده) — این کارت خودش یه پاپ‌آپِ کوچیکه، فاصله‌ی ۲۲px زیادی باز بود */
+.exercise-catalog-detail-body .tm-extra{ margin-top:18px; }
 .exercise-pictogram-stage{
-  display:flex; align-items:center; justify-content:center; margin:14px 0 4px;
-  padding:14px; border-radius:16px; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; margin:10px 0 10px;
+  padding:16px; border-radius:16px; border:1px solid var(--line);
   background:rgba(255,255,255,.02);
 }
 body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,.5); }
