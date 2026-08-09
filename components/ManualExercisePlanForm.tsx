@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { ExerciseDay, computeDayFocus } from "@/lib/exercisePlans";
@@ -16,6 +18,9 @@ function isTimedByDefault(entry: ExerciseCatalogEntry): boolean {
   return entry.pattern === "cardio" || entry.pattern === "flexibility";
 }
 
+// کارتِ تعیینِ مشخصاتِ یک حرکت — فقط یک ضربدرِ بی‌بک‌گراند بالا داره (نه
+// دکمه‌ی بازگشتِ جدا)؛ زدنِ ضربدر یعنی برگشت به لیستِ جستجو، نه بستنِ کاملِ
+// پاپ‌آپِ افزودن.
 function ManualQuantityPrompt({
   entry,
   onConfirm,
@@ -40,7 +45,10 @@ function ManualQuantityPrompt({
 
   return (
     <div className="manual-exercise-qty">
-      <div className="domain-sub" style={{ marginTop: 0 }}>{entry.name}</div>
+      <div className="modal-head" style={{ marginBottom: 6 }}>
+        <div className="domain-sub" style={{ marginTop: 0 }}>{entry.name}</div>
+        <button type="button" className="nav-close" onClick={onCancel} aria-label="بازگشت">×</button>
+      </div>
       <div className="day-picker" style={{ marginTop: 10 }}>
         <span className={`day-pill${!timed ? " on" : ""}`} onClick={() => setTimed(false)}>ست و تکرار</span>
         <span className={`day-pill${timed ? " on" : ""}`} onClick={() => setTimed(true)}>زمان‌محور</span>
@@ -73,17 +81,17 @@ function ManualQuantityPrompt({
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-        <button type="button" className="small" style={{ flex: 1 }} onClick={onCancel}>انصراف</button>
-        <button type="button" style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }} onClick={confirm}>
-          افزودن به برنامه
-        </button>
-      </div>
+      <button type="button" className="manual-submit-btn" style={{ width: "100%", marginTop: 16 }} onClick={confirm}>
+        افزودن به برنامه
+      </button>
     </div>
   );
 }
 
-function ManualCatalogPicker({
+// پاپ‌آپِ مستقلِ «افزودنِ حرکت» — قبلاً این جستجو/لیست همون‌جا توی نمای روز
+// اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثلِ ExerciseCatalogModal یه
+// پاپ‌آپِ پورتال‌شده‌ست، مستقل از باکسِ «حرکات این روز» زیرش.
+function ManualExerciseAddPopup({
   onAdd,
   onClose,
   excludeNames,
@@ -100,56 +108,81 @@ function ManualCatalogPicker({
     (e) => !excludeNames.has(e.name) && (!normalizedQuery || normalizeFa(e.name).includes(normalizedQuery))
   );
 
-  if (adding) {
-    return (
-      <ManualQuantityPrompt
-        entry={adding}
-        onCancel={() => setAdding(null)}
-        onConfirm={(formatted) => { onAdd(formatted); setAdding(null); }}
-      />
-    );
-  }
-
-  return (
-    <div className="manual-exercise-picker">
-      <div className="manual-exercise-picker-search">
-        <Search size={14} className="manual-exercise-picker-search-icon" />
-        <input
-          type="text"
-          dir="auto"
-          placeholder="جستجوی حرکت…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button type="button" className="manual-exercise-picker-close" onClick={onClose}>بستن</button>
-      </div>
-      <div className="no-scrollbar manual-exercise-picker-list">
-        {visible.length === 0 ? (
-          <div className="item-line empty">حرکتی پیدا نشد.</div>
+  return createPortal(
+    <motion.div
+      className="exercise-catalog-popup-wrap manual-exercise-popup-wrap"
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className="exercise-catalog-popup-panel dash-scope"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {adding ? (
+          <ManualQuantityPrompt
+            entry={adding}
+            onCancel={() => setAdding(null)}
+            onConfirm={(formatted) => { onAdd(formatted); setAdding(null); }}
+          />
         ) : (
-          visible.map((e) => (
-            <div key={e.name} className="manual-exercise-picker-row">
-              <div className="min-w-0 flex-1 text-right">
-                <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
-                <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
-              </div>
-              <button type="button" className="wsearch-add-btn" onClick={() => setAdding(e)}>
-                افزودن
-                <span className="wsearch-add-btn-icon">+</span>
-              </button>
+          <>
+            <div className="modal-head">
+              <div className="modal-title">افزودن حرکت</div>
+              <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
             </div>
-          ))
+
+            <div className="manual-exercise-picker-search">
+              <Search size={14} className="manual-exercise-picker-search-icon" />
+              <input
+                type="text"
+                dir="auto"
+                placeholder="جستجوی حرکت…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="no-scrollbar manual-exercise-picker-list">
+              {visible.length === 0 ? (
+                <div className="item-line empty">حرکتی پیدا نشد.</div>
+              ) : (
+                visible.map((e) => (
+                  <div key={e.name} className="manual-exercise-picker-row">
+                    <div className="min-w-0 flex-1 text-right">
+                      <div className="truncate text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">{e.name}</div>
+                      <div className="truncate text-[10px] text-dash-muted sm:text-[11px]">{e.muscleGroup}</div>
+                    </div>
+                    <button type="button" className="wsearch-add-btn" onClick={() => setAdding(e)}>
+                      افزودن
+                      <span className="wsearch-add-btn-icon">+</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
 // برنامه‌ی دستی/شخصیِ کاربر — کاربر اول روزهای باشگاهش رو (چندتایی) انتخاب
-// می‌کنه، بعد با کلیک روی هر روز وارد نمای همون روز می‌شه و از کاتالوگ
-// حرکت اضافه می‌کنه. تمرکزِ هر روز («بالاتنه»/«پایین‌تنه»/...) رو خودِ
-// سیستم از روی گروهِ عضلانیِ حرکاتِ اضافه‌شده تشخیص می‌ده، نه اینکه کاربر
-// تایپ کنه. بدونِ مرحله‌ی قبول‌کردنِ قوانین — چون خودِ کاربر برنامه رو نوشته.
+// می‌کنه، بعد با کلیک روی هر روز وارد نمای همون روز می‌شه و از یه پاپ‌آپِ
+// مستقل حرکت اضافه می‌کنه. تمرکزِ هر روز («بالاتنه»/«پایین‌تنه»/...) رو
+// خودِ سیستم از روی گروهِ عضلانیِ حرکاتِ اضافه‌شده تشخیص می‌ده. بعدِ تکمیلِ
+// همه‌ی روزها، یه مرحله‌ی مرورِ کاملِ برنامه هست که یا تایید و ثبت می‌شه یا
+// با دکمه‌ی «ویرایش» برمی‌گرده به لیستِ روزها. بدونِ مرحله‌ی قبول‌کردنِ
+// قوانین — چون خودِ کاربر برنامه رو نوشته.
 export function ManualExercisePlanForm({
   onSubmit,
   submitting,
@@ -165,6 +198,8 @@ export function ManualExercisePlanForm({
   const [dayItems, setDayItems] = useState<Record<string, string[]>>({});
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [dayError, setDayError] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function toggleDay(day: string) {
@@ -178,12 +213,16 @@ export function ManualExercisePlanForm({
     setDayItems((m) => ({ ...m, [day]: (m[day] || []).filter((_, i) => i !== idx) }));
   }
 
-  function submit() {
+  function goReview() {
     if (gymDays.length === 0) { setError("حداقل یک روز رو انتخاب کن"); return; }
     for (const d of gymDays) {
       if (!(dayItems[d] || []).length) { setError(`برای روزِ «${d}» حداقل یک حرکت اضافه کن.`); return; }
     }
     setError(null);
+    setReviewing(true);
+  }
+
+  function submit() {
     const days: ExerciseDay[] = gymDays.map((d) => ({
       day: d,
       focus: computeDayFocus(dayItems[d] || []),
@@ -192,13 +231,59 @@ export function ManualExercisePlanForm({
     onSubmit(days);
   }
 
+  function finishDay() {
+    if (!activeDay) return;
+    if (!(dayItems[activeDay] || []).length) { setDayError("حداقل یک حرکت اضافه کن"); return; }
+    setDayError(null);
+    setActiveDay(null);
+    setPickerOpen(false);
+  }
+
+  // ------------- نمای مرورِ نهاییِ برنامه -------------
+  if (reviewing) {
+    return (
+      <div>
+        <div className="exercise-wizard-head">
+          <span />
+          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
+        </div>
+
+        <label className="exercise-wizard-title">مرورِ برنامه</label>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {gymDays.map((d) => (
+            <div key={d} className="manual-day-exercises-box" style={{ margin: 0 }}>
+              <div className="manual-day-exercises-head">
+                <div className="manual-day-exercises-title">{d} — {computeDayFocus(dayItems[d] || [])}</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {(dayItems[d] || []).map((it, ii) => (
+                  <div key={ii} className="manual-exercise-added-row">
+                    <span className="truncate">{it}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
+          <button type="button" className="small" onClick={() => setReviewing(false)}>ویرایش</button>
+          <button type="button" onClick={submit} disabled={submitting} className="manual-submit-btn">
+            {submitting ? "در حال ثبت…" : "ثبتِ برنامه"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ------------- نمای جزئیاتِ یک روز -------------
   if (activeDay) {
     const items = dayItems[activeDay] || [];
     return (
       <div>
         <div className="exercise-wizard-head">
-          <button type="button" className="exercise-catalog-back-btn" onClick={() => { setActiveDay(null); setPickerOpen(false); }} aria-label="بازگشت">
+          <button type="button" className="exercise-catalog-back-btn" onClick={() => { setActiveDay(null); setPickerOpen(false); setDayError(null); }} aria-label="بازگشت">
             <ChevronRight size={20} />
           </button>
           {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
@@ -207,16 +292,6 @@ export function ManualExercisePlanForm({
         <label className="exercise-wizard-title" style={{ marginBottom: 4 }}>برنامه‌ی روزِ {activeDay}</label>
         {items.length > 0 && (
           <div style={{ fontSize: 11, color: "var(--muted2)", marginTop: 2 }}>{computeDayFocus(items)}</div>
-        )}
-
-        {pickerOpen && (
-          <div style={{ marginTop: 14 }}>
-            <ManualCatalogPicker
-              onAdd={(formatted) => addItem(activeDay, formatted)}
-              onClose={() => setPickerOpen(false)}
-              excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
-            />
-          </div>
         )}
 
         <div className="manual-day-exercises-box">
@@ -243,6 +318,20 @@ export function ManualExercisePlanForm({
             </div>
           )}
         </div>
+
+        {dayError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{dayError}</div>}
+
+        <button type="button" className="manual-day-done-btn" onClick={finishDay}>ثبت</button>
+
+        <AnimatePresence>
+          {pickerOpen && (
+            <ManualExerciseAddPopup
+              onAdd={(formatted) => addItem(activeDay, formatted)}
+              onClose={() => setPickerOpen(false)}
+              excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
+            />
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -293,11 +382,10 @@ export function ManualExercisePlanForm({
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
         <button
           type="button"
-          onClick={submit}
-          disabled={submitting}
+          onClick={goReview}
           className="manual-submit-btn"
         >
-          {submitting ? "در حال ثبت…" : "ثبتِ برنامه"}
+          مرحله بعد
         </button>
       </div>
     </div>

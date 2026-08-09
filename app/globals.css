@@ -2371,6 +2371,11 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
 .exercise-wizard-title{ display:block; font-size:15px; font-weight:800; color:var(--text); margin:4px 0 16px; }
 .exercise-wizard-title:first-child{ margin-top:0; }
 
+/* تایتلِ مرحله‌ی قد/وزنِ ویزاردِ AI — درخواستِ صریحِ کاربر برای فونتِ
+   بزرگ‌تر از بقیه‌ی تایتل‌های هم‌کلاسِ ویزارد، پس یه مادیفایرِ جدا به‌جای
+   تغییرِ خودِ exercise-wizard-title (که مراحلِ دیگه هم ازش استفاده می‌کنن) */
+.exercise-wizard-title-hw{ font-size:19px; }
+
 .exercise-day-select{ display:flex; flex-wrap:wrap; gap:6px; }
 .exercise-day-select .day-pill{ flex:1 1 calc(33.33% - 6px); min-width:64px; }
 
@@ -2413,26 +2418,21 @@ body:not([data-theme="light"]) .exercise-desc-textarea{ background:#0B0C0D; bord
 body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,255,.55); }
 .exercise-feasibility-reject-badge{ font-size:10.5px; font-weight:700; color:var(--accent); margin-bottom:6px; }
 
-/* بخشِ افزودنِ دستیِ حرکت — جستجو+لیستِ کاتالوگ، دقیقاً هم‌سبکِ افزودنِ ردیف در بقیه‌ی فرم‌ها */
-.manual-exercise-picker{
-  border:1px solid var(--line); border-radius:14px; padding:10px; background:rgba(255,255,255,.02);
-}
-body[data-theme="light"] .manual-exercise-picker{ background:rgba(255,255,255,.5); }
-.manual-exercise-picker-search{ display:flex; align-items:center; gap:8px; padding:0 4px 10px; }
+/* بخشِ افزودنِ دستیِ حرکت — جستجو+لیستِ کاتالوگ، حالا توی پاپ‌آپِ مستقلِ
+   exercise-catalog-popup-panel رندر می‌شه، پس دیگه بک‌گراند/بوردرِ خودش رو
+   لازم نداره؛ فقط چیدمانِ ردیفِ جستجو و لیست زیرش */
+.manual-exercise-picker-search{ display:flex; align-items:center; gap:8px; padding:0 4px 10px; margin-top:2px; }
 .manual-exercise-picker-search-icon{ color:var(--muted2); flex-shrink:0; }
 .manual-exercise-picker-search input{
   flex:1; min-width:0; background:transparent; border:none; outline:none; color:var(--text);
   font-family:var(--font-vazir), sans-serif; font-size:12.5px;
 }
 .manual-exercise-picker-search input::placeholder{ color:var(--muted2); }
-.manual-exercise-picker-close{
-  flex:0 0 auto; background:none; border:none; padding:0; cursor:pointer;
-  color:var(--muted); font-family:var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700;
-}
-.manual-exercise-picker-close:hover{ color:#E05252; }
 .manual-exercise-picker-list{ display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; }
-.manual-exercise-qty{ border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); }
-body[data-theme="light"] .manual-exercise-qty{ background:rgba(255,255,255,.5); }
+/* دیگه باکسِ جدا با بوردر/بک‌گراندِ خودش نیست — چون حالا داخلِ همون
+   exercise-catalog-popup-panel (که خودش قبلاً لیکوئیدگلس داره) رندر می‌شه؛
+   یه باکسِ تودرتو باعثِ دو تا بوردرِ روی‌هم می‌شد */
+.manual-exercise-qty{ padding-top:2px; }
 
 .manual-exercise-picker-row{
   display:flex; align-items:center; gap:10px; border-radius:14px;
@@ -2470,12 +2470,28 @@ body[data-theme="light"] .manual-day-row{ background:rgba(255,255,255,.5); }
 body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,.5); }
 .manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .manual-day-exercises-title{ font-size:12.5px; font-weight:700; color:var(--text); }
+/* دکمه‌ی «افزودن»ِ باکسِ حرکاتِ روز — عمداً بدونِ بک‌گراند/بوردر (فقط
+   متن+آیکونِ رنگیِ اکسنت)، طبقِ درخواستِ صریحِ کاربر که هیچ‌کدوم از
+   دکمه‌های این باکس بک‌گراند نداشته باشن */
 .manual-day-add-btn{
-  display:flex; align-items:center; gap:5px; padding:6px 14px;
-  border-radius:9999px; border:1px solid var(--accent); color:var(--accent);
-  background:rgba(var(--accent-rgb),.12); flex-shrink:0; font-size:12px; font-weight:700;
+  display:flex; align-items:center; gap:5px; padding:6px 4px;
+  color:var(--accent); flex-shrink:0; font-size:12px; font-weight:700;
 }
 .manual-day-add-btn:hover{ opacity:.85; }
+
+/* دکمه‌ی «ثبت»ِ پایینِ نمای جزئیاتِ روز — تمومِ حرکاتِ اون روز رو تاییدی
+   می‌کنه و برمی‌گردونه به لیستِ روزها؛ بدونِ بک‌گراند، فقط متنِ اکسنت */
+.manual-day-done-btn{
+  display:block; width:100%; margin-top:14px; padding:10px 0;
+  text-align:center; color:var(--accent); font-size:13px; font-weight:700;
+}
+.manual-day-done-btn:hover{ opacity:.85; }
+
+/* پاپ‌آپِ افزودنِ حرکت وقتی از داخلِ برنامه‌ی دستی باز می‌شه، خودش زیرمجموعه‌ی
+   یه پاپ‌آپِ دیگه‌ست (wsearch-newform با z-index:58) — z-index پایه‌ی
+   exercise-catalog-popup-wrap (۵۶) کافی نیست و پاپ‌آپ پشتِ فرمِ افزودنِ
+   برنامه گم می‌شد؛ اینجا بالاتر از همه‌ی لایه‌های شناخته‌شده‌ی اپ می‌بریمش */
+.exercise-catalog-popup-wrap.manual-exercise-popup-wrap{ z-index:64; }
 
 /* دکمه‌ی نهاییِ «ثبتِ برنامه» — پرِ توپر و کاملاً گرد، نه فقط بوردر */
 .manual-submit-btn{

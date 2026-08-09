@@ -5,7 +5,11 @@ import type { KeyboardEvent, RefObject } from "react";
 // دونه‌دونه روی هر فیلد کلیک کنه. فقط روی <input>هایی که مستقیم توی
 // containerRef هستن اثر می‌ذاره — دکمه‌ها (مثلاً دکمه‌ی تاریخ) دست‌نخورده
 // می‌مونن تا رفتارِ پیش‌فرضِ اینترشون (کلیک) خراب نشه.
-export function focusNextOnEnter(e: KeyboardEvent<HTMLElement>, containerRef: RefObject<HTMLElement>) {
+export function focusNextOnEnter(
+  e: KeyboardEvent<HTMLElement>,
+  containerRef: RefObject<HTMLElement>,
+  onLastEnter?: () => void
+) {
   if (e.key !== "Enter") return;
   const target = e.target as HTMLElement;
   if (target.tagName !== "INPUT") return;
@@ -16,4 +20,5 @@ export function focusNextOnEnter(e: KeyboardEvent<HTMLElement>, containerRef: Re
   if (idx === -1) return;
   e.preventDefault();
   if (idx < focusables.length - 1) focusables[idx + 1].focus();
+  else onLastEnter?.();
 }
