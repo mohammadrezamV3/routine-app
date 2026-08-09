@@ -119,7 +119,7 @@ function ManualExerciseAddPopup({
       transition={{ duration: 0.2 }}
     >
       <motion.div
-        className="exercise-catalog-popup-panel dash-scope"
+        className="exercise-catalog-popup-panel manual-exercise-add-panel dash-scope"
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}

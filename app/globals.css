@@ -2460,18 +2460,20 @@ body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255
 .manual-exercise-added-row button:hover{ color:#E05252; }
 
 /* باکسِ «حرکات این روز» — پایینِ نمای جزئیاتِ روز، دکمه‌ی افزودن گوشه‌ی
-   بالا-چپِ خودِ باکس (نه یه دکمه‌ی جدا زیرِ لیست) */
+   بالا-چپِ خودِ باکس (نه یه دکمه‌ی جدا زیرِ لیست). بزرگ‌تر/پررنگ‌تر از قبل —
+   وقتی تایتلِ جداگانه‌ی بالای صفحه حذف شد، این باکس تنها لنگرِ بصریِ صفحه
+   موند، پس باید خودش وزنِ بیشتری داشته باشه (پدینگ/رادیوس/فونتِ بزرگ‌تر) */
 .manual-day-exercises-box{
-  margin-top:16px; border:1px solid var(--line); border-radius:18px; padding:18px;
-  background:rgba(255,255,255,.02);
+  margin-top:20px; border:1px solid var(--line); border-radius:22px; padding:22px;
+  background:rgba(255,255,255,.03);
 }
-body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,.5); }
-.manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.manual-day-exercises-title{ font-size:12.5px; font-weight:700; color:var(--text); }
+body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,.55); }
+.manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.manual-day-exercises-title{ font-size:15px; font-weight:800; color:var(--text); }
 /* زیرنویسِ تمرکزِ روز («بالاتنه»/«پایین‌تنه»/...) — قبلاً بالای صفحه زیرِ
    تایتلِ جداگانه بود؛ اون تایتل حذف شد، پس این زیرنویس اومد زیرِ تایتلِ خودِ
    باکس («روز شنبه») */
-.manual-day-exercises-focus{ font-size:11px; color:var(--muted2); margin-top:2px; }
+.manual-day-exercises-focus{ font-size:11.5px; color:var(--muted2); margin-top:4px; }
 /* دکمه‌ی «افزودن»ِ باکسِ حرکاتِ روز — عمداً بدونِ بک‌گراند/بوردر (فقط
    متن+آیکونِ رنگیِ اکسنت)، طبقِ درخواستِ صریحِ کاربر که هیچ‌کدوم از
    دکمه‌های این باکس بک‌گراند نداشته باشن */
@@ -2494,6 +2496,12 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
    exercise-catalog-popup-wrap (۵۶) کافی نیست و پاپ‌آپ پشتِ فرمِ افزودنِ
    برنامه گم می‌شد؛ اینجا بالاتر از همه‌ی لایه‌های شناخته‌شده‌ی اپ می‌بریمش */
 .exercise-catalog-popup-wrap.manual-exercise-popup-wrap{ z-index:64; }
+/* پاپ‌آپِ «افزودن حرکت» — درخواستِ صریحِ کاربر: هم‌سبکِ هدر (بلور/شکلِ
+   لیکوئیدگلس) ولی سیاه، نه همون شیشه‌ای‌ِ کم‌رنگِ مشترکِ مشاهده‌ی حرکات */
+.exercise-catalog-popup-panel.manual-exercise-add-panel,
+body[data-theme="light"] .exercise-catalog-popup-panel.manual-exercise-add-panel{
+  background:rgba(0,0,0,.62);
+}
 
 /* دکمه‌ی نهاییِ «ثبتِ برنامه» — پرِ توپر و کاملاً گرد، نه فقط بوردر */
 .manual-submit-btn{
@@ -2584,12 +2592,16 @@ body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,
   background:rgba(255,255,255,.04);
   backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   border-radius:22px 22px 0 0; border:1px solid var(--line); border-bottom:none;
-  box-shadow:0 -20px 60px rgba(0,0,0,.45); padding:8px 18px 0;
+  box-shadow:0 -20px 60px rgba(0,0,0,.45); padding:20px 18px 0;
   max-width:640px; margin:0 auto;
 }
 body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.28); }
-.exercise-catalog-detail-handle{ width:40px; height:4px; border-radius:9999px; background:var(--line); margin:4px auto 8px; flex-shrink:0; }
 .exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:28px; }
+/* تایتل‌های داخلِ کارتِ جزئیاتِ حرکت (میزانِ سختی/دستورالعمل/عضلاتِ درگیر/
+   مزایا) — پایه‌ی domain-sub خاکستری/مونواسپیسه (برای جاهای دیگه‌ی سایت
+   مناسبه)، اینجا رنگِ اکسنتِ برند می‌گیره تا بینِ بخش‌های مختلفِ کارت
+   برجسته‌تر باشه */
+.exercise-detail-label{ color:var(--accent); }
 .exercise-pictogram-stage{
   display:flex; align-items:center; justify-content:center; margin:14px 0 4px;
   padding:14px; border-radius:16px; border:1px solid var(--line);
