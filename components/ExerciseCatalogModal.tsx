@@ -156,8 +156,8 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 340, damping: 34 }}
             >
-              <div className="modal-head">
-                <div className="modal-title">{selected.name}</div>
+              <div className="modal-head exercise-detail-head">
+                <span />
                 <button className="nav-close" onClick={() => setSelected(null)} aria-label="بستن">×</button>
               </div>
 
@@ -167,8 +167,9 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                     <ImageOff size={32} />
                   </div>
                 </div>
+                <div className="modal-title exercise-detail-name">{selected.name}</div>
 
-                <div className="tm-extra" style={{ marginTop: 4 }}>
+                <div className="tm-extra">
                   <div className="domain-sub exercise-detail-label">میزان سختی</div>
                   <DifficultyStars level={getExerciseDifficulty(selected)} />
                 </div>

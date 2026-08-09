@@ -119,7 +119,7 @@ function ManualExerciseAddPopup({
       transition={{ duration: 0.2 }}
     >
       <motion.div
-        className="exercise-catalog-popup-panel manual-exercise-add-panel dash-scope"
+        className="exercise-catalog-popup-panel dash-scope"
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -257,7 +257,7 @@ export function ManualExercisePlanForm({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {(dayItems[d] || []).map((it, ii) => (
-                  <div key={ii} className="manual-exercise-added-row">
+                  <div key={ii} className="exercise-catalog-row manual-exercise-added-row">
                     <span className="truncate">{it}</span>
                   </div>
                 ))}
@@ -305,7 +305,7 @@ export function ManualExercisePlanForm({
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {items.map((it, ii) => (
-                <div key={ii} className="manual-exercise-added-row">
+                <div key={ii} className="exercise-catalog-row manual-exercise-added-row">
                   <span className="truncate">{it}</span>
                   <button type="button" onClick={() => removeItem(activeDay, ii)} aria-label="حذف حرکت">
                     <X size={14} />
@@ -347,7 +347,7 @@ export function ManualExercisePlanForm({
         </div>
       )}
 
-      <label className="exercise-wizard-title">کدوم روزها رو می‌خوای برنامه داشته باشی؟</label>
+      <label className="exercise-wizard-title exercise-wizard-title-days">کدوم روزها رو می‌خوای برنامه داشته باشی؟</label>
       <div className="exercise-day-select-row">
         {CAL_WEEK_ORDER.map((i) => (
           <span
@@ -366,7 +366,7 @@ export function ManualExercisePlanForm({
         <button
           type="button"
           onClick={goReview}
-          className="manual-submit-btn"
+          className="exercise-wizard-next-btn"
         >
           مرحله بعد
         </button>
