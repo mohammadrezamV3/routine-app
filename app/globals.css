@@ -2421,25 +2421,34 @@ body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,2
 /* بخشِ افزودنِ دستیِ حرکت — جستجو+لیستِ کاتالوگ، حالا توی پاپ‌آپِ مستقلِ
    exercise-catalog-popup-panel رندر می‌شه، پس دیگه بک‌گراند/بوردرِ خودش رو
    لازم نداره؛ فقط چیدمانِ ردیفِ جستجو و لیست زیرش */
-.manual-exercise-picker-search{ display:flex; align-items:center; gap:8px; padding:0 4px 10px; margin-top:2px; }
-.manual-exercise-picker-search-icon{ color:var(--muted2); flex-shrink:0; }
-.manual-exercise-picker-search input{
-  flex:1; min-width:0; background:transparent; border:none; outline:none; color:var(--text);
-  font-family:var(--font-vazir), sans-serif; font-size:12.5px;
+/* نوارِ جستجو — قبلاً یه دیوِ فلکس با آیکونِ Search + اینپوتِ dir="auto"
+   بود که جهتش قاطی می‌شد؛ حالا یه اینپوتِ raw با dir="rtl" صریح، و بک‌گراندش
+   دقیقاً هم‌سبکِ .app-topbar (لیکوئیدگلسِ پیلِ هدرِ سایت) */
+.manual-exercise-picker-search{
+  display:block; width:100%; margin:2px 0 12px; border:none; outline:none;
+  border-radius:9999px; padding:11px 18px; text-align:right;
+  color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:12.5px;
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
 }
-.manual-exercise-picker-search input::placeholder{ color:var(--muted2); }
+body[data-theme="light"] .manual-exercise-picker-search{ background:rgba(255,255,255,.28); }
+.manual-exercise-picker-search::placeholder{ color:var(--muted2); }
 .manual-exercise-picker-list{ display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; }
 /* دیگه باکسِ جدا با بوردر/بک‌گراندِ خودش نیست — چون حالا داخلِ همون
    exercise-catalog-popup-panel (که خودش قبلاً لیکوئیدگلس داره) رندر می‌شه؛
    یه باکسِ تودرتو باعثِ دو تا بوردرِ روی‌هم می‌شد */
 .manual-exercise-qty{ padding-top:2px; }
 
-.manual-exercise-picker-row{
-  display:flex; align-items:center; gap:10px; border-radius:14px;
-  border:1px solid var(--line); background:rgba(255,255,255,.02);
-  padding:8px 14px; text-align:right;
+/* دکمه‌ی «افزودن»ِ هر ردیفِ حرکت — قبلاً کلاسِ مشترکِ wsearch-add-btn رو
+   داشت که چون این پاپ‌آپ پورتال‌شده به body، به override ویژه‌ی
+   .add-program-glass نمی‌رسید (سلکتورِ فرزندی روی DOM واقعی چک می‌شه، نه
+   درختِ React) و می‌افتاد رو حالتِ پایه (دایره‌ی نقطه‌چین ۳۰در۳۰، برای متن
+   نامناسب) — این‌جا یه کلاسِ مستقلِ خودِ همین پاپ‌آپه */
+.manual-exercise-row-add-btn{
+  flex-shrink:0; border-radius:9999px; padding:6px 14px;
+  color:var(--accent); font-size:12px; font-weight:700;
 }
-body[data-theme="light"] .manual-exercise-picker-row{ background:rgba(255,255,255,.5); }
+.manual-exercise-row-add-btn:hover{ opacity:.8; }
 
 .manual-exercise-added-row{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -2450,17 +2459,6 @@ body[data-theme="light"] .manual-exercise-added-row{ background:rgba(255,255,255
 .manual-exercise-added-row button{ flex-shrink:0; color:var(--muted2); display:flex; }
 .manual-exercise-added-row button:hover{ color:#E05252; }
 
-/* لیستِ روزهای انتخاب‌شده توی برنامه‌ی دستی — با کلیک، وارد نمای همون روز می‌شه */
-.manual-day-row{
-  display:flex; align-items:center; justify-content:space-between; cursor:pointer;
-  padding:13px 16px; border-radius:14px; border:1px solid var(--line);
-  background:rgba(255,255,255,.02); transition:border-color .15s ease;
-}
-.manual-day-row:hover{ border-color:var(--accent); }
-body[data-theme="light"] .manual-day-row{ background:rgba(255,255,255,.5); }
-.manual-day-row-name{ font-size:13px; font-weight:700; color:var(--text); }
-.manual-day-row-count{ font-size:11px; color:var(--muted2); }
-
 /* باکسِ «حرکات این روز» — پایینِ نمای جزئیاتِ روز، دکمه‌ی افزودن گوشه‌ی
    بالا-چپِ خودِ باکس (نه یه دکمه‌ی جدا زیرِ لیست) */
 .manual-day-exercises-box{
@@ -2470,6 +2468,10 @@ body[data-theme="light"] .manual-day-row{ background:rgba(255,255,255,.5); }
 body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,.5); }
 .manual-day-exercises-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .manual-day-exercises-title{ font-size:12.5px; font-weight:700; color:var(--text); }
+/* زیرنویسِ تمرکزِ روز («بالاتنه»/«پایین‌تنه»/...) — قبلاً بالای صفحه زیرِ
+   تایتلِ جداگانه بود؛ اون تایتل حذف شد، پس این زیرنویس اومد زیرِ تایتلِ خودِ
+   باکس («روز شنبه») */
+.manual-day-exercises-focus{ font-size:11px; color:var(--muted2); margin-top:2px; }
 /* دکمه‌ی «افزودن»ِ باکسِ حرکاتِ روز — عمداً بدونِ بک‌گراند/بوردر (فقط
    متن+آیکونِ رنگیِ اکسنت)، طبقِ درخواستِ صریحِ کاربر که هیچ‌کدوم از
    دکمه‌های این باکس بک‌گراند نداشته باشن */
@@ -2563,7 +2565,8 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 .exercise-catalog-popup-panel{
   position:relative; width:100%; max-width:520px; max-height:82vh; max-height:82dvh;
   display:flex; flex-direction:column; overflow:hidden;
-  border:1px solid var(--line); border-radius:14px; padding:22px;
+  /* گوشه‌ی گردترِ سبکِ اپل (به‌جای ۱۴px قبلی) — درخواستِ صریحِ کاربر */
+  border:1px solid var(--line); border-radius:28px; padding:22px;
   background:rgba(255,255,255,.04);
   backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
@@ -2595,6 +2598,9 @@ body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,
 body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,.5); }
 .exercise-difficulty-stars{ display:flex; align-items:center; gap:3px; margin-top:6px; color:var(--line); }
 .exercise-difficulty-stars svg.on{ color:#F5A623; }
+/* وقتی ستاره‌ها کنارِ اسمِ حرکت توی ردیفِ لیست (نه زیرِ لیبل توی کارتِ
+   جزئیات) میان، مارجین‌تاپِ عمودی لازم نیست */
+.exercise-catalog-row-stars{ margin-top:0; flex-shrink:0; }
 .exercise-catalog-filters{ display:flex; gap:6px; overflow-x:auto; padding:12px 2px 2px; }
 .exercise-catalog-chip{
   flex-shrink:0; padding:6px 14px; border-radius:9999px; font-size:11px; font-weight:600;
