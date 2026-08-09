@@ -12,10 +12,9 @@ import { normalizeFa } from "@/lib/utils";
 import { toFaDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
 
-// وقتی کاربر روی «افزودن» یک حرکت از کاتالوگ می‌زنه، بسته به الگوی حرکت
-// پیش‌فرض رو زمان‌محور (کاردیو/انعطاف‌پذیری) یا ست‌وتکرار می‌ذاریم — ولی
-// خودش می‌تونه عوضش کنه.
-function isTimedByDefault(entry: ExerciseCatalogEntry): boolean {
+// نوعِ ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکتِ خودِ حرکت تعیین
+// می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
+function isTimedExercise(entry: ExerciseCatalogEntry): boolean {
   return entry.pattern === "cardio" || entry.pattern === "flexibility";
 }
 
@@ -31,7 +30,7 @@ function ManualQuantityPrompt({
   onConfirm: (formattedItem: string) => void;
   onCancel: () => void;
 }) {
-  const [timed, setTimed] = useState(isTimedByDefault(entry));
+  const timed = isTimedExercise(entry);
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("10");
   const [amount, setAmount] = useState("30");
@@ -50,13 +49,8 @@ function ManualQuantityPrompt({
         <div className="domain-sub" style={{ marginTop: 0 }}>{entry.name}</div>
         <button type="button" className="nav-close" onClick={onCancel} aria-label="بازگشت">×</button>
       </div>
-      <div className="day-picker" style={{ marginTop: 10 }}>
-        <span className={`day-pill${!timed ? " on" : ""}`} onClick={() => setTimed(false)}>ست و تکرار</span>
-        <span className={`day-pill${timed ? " on" : ""}`} onClick={() => setTimed(true)}>زمان‌محور</span>
-      </div>
-
       {!timed ? (
-        <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تعداد ست</label>
             <input type="number" className="wsearch-newform-name" value={sets} onChange={(e) => setSets(e.target.value)} />

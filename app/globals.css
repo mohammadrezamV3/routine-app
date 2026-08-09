@@ -2569,11 +2569,13 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
   display:flex; flex-direction:column; overflow:hidden;
   /* گوشه‌ی گردترِ سبکِ اپل (به‌جای ۱۴px قبلی) — درخواستِ صریحِ کاربر */
   border:1px solid var(--line); border-radius:28px; padding:22px;
-  background:rgba(255,255,255,.04);
-  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  /* بلورِ بیشتر/کدرترِ از قبل (بلور ۲۲→۳۲، بک‌گراند .04→.08) — درخواستِ
+     صریحِ کاربر که پاپ‌آپ خیلی شفاف بود و پشتش زیادی معلوم بود */
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(32px) saturate(170%); -webkit-backdrop-filter:blur(32px) saturate(170%);
   isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
 }
-body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,255,.28); }
+body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,255,.4); }
 .exercise-catalog-popup-panel .modal-head{ flex-shrink:0; }
 .exercise-catalog-filters{ flex-shrink:0; }
 .exercise-catalog-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; flex:1; min-height:0; overflow-y:auto; }
@@ -2586,13 +2588,13 @@ body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,
 .exercise-catalog-detail-card{
   position:fixed; left:12px; right:12px; bottom:12px; z-index:75; max-height:82vh; overflow:hidden;
   display:flex; flex-direction:column;
-  background:rgba(255,255,255,.04);
-  backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(32px) saturate(170%); -webkit-backdrop-filter:blur(32px) saturate(170%);
   border-radius:26px; border:1px solid var(--line);
   box-shadow:0 20px 60px rgba(0,0,0,.45); padding:18px 18px 0;
   max-width:640px; margin:0 auto;
 }
-body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.28); }
+body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.4); }
 .exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:24px; }
 /* هدرِ کارتِ جزئیات دیگه تایتل نداره (اسمِ حرکت رفته زیرِ عکس) — فقط
    ضربدرِ بستن سمتِ چپ می‌مونه، پس هدر بدونِ مارجینِ اضافه‌ی زیرش می‌مونه */
