@@ -2483,6 +2483,14 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .manual-day-add-btn:hover{ opacity:.85; }
 
+/* آیکونِ ویرایشِ گوشه‌ی هر باکسِ روز توی مرحله‌ی مرورِ برنامه — با کلیک،
+   مستقیم می‌بره تو نمای همون روز؛ بدونِ بک‌گراند، فقط آیکونِ رنگیِ اکسنت */
+.manual-day-edit-btn{
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; padding:4px; color:var(--accent);
+}
+.manual-day-edit-btn:hover{ opacity:.8; }
+
 /* دکمه‌ی «ثبت»ِ پایینِ نمای جزئیاتِ روز — تمومِ حرکاتِ اون روز رو تاییدی
    می‌کنه و برمی‌گردونه به لیستِ روزها؛ بدونِ بک‌گراند، فقط متنِ اکسنت */
 .manual-day-done-btn{

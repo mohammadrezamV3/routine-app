@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Plus, X } from "lucide-react";
+import { ChevronRight, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { ExerciseDay, computeDayFocus } from "@/lib/exercisePlans";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, getExerciseDifficulty } from "@/lib/exerciseCatalog";
@@ -173,8 +173,8 @@ function ManualExerciseAddPopup({
 // مستقل حرکت اضافه می‌کنه. تمرکزِ هر روز («بالاتنه»/«پایین‌تنه»/...) رو
 // خودِ سیستم از روی گروهِ عضلانیِ حرکاتِ اضافه‌شده تشخیص می‌ده. بعدِ تکمیلِ
 // همه‌ی روزها، یه مرحله‌ی مرورِ کاملِ برنامه هست که یا تایید و ثبت می‌شه یا
-// با دکمه‌ی «ویرایش» برمی‌گرده به لیستِ روزها. بدونِ مرحله‌ی قبول‌کردنِ
-// قوانین — چون خودِ کاربر برنامه رو نوشته.
+// با آیکونِ مدادِ گوشه‌ی هر باکسِ روز مستقیم برمی‌گرده به همون روز برای
+// ویرایش. بدونِ مرحله‌ی قبول‌کردنِ قوانین — چون خودِ کاربر برنامه رو نوشته.
 export function ManualExercisePlanForm({
   onSubmit,
   submitting,
@@ -248,6 +248,14 @@ export function ManualExercisePlanForm({
             <div key={d} className="manual-day-exercises-box" style={{ margin: 0 }}>
               <div className="manual-day-exercises-head">
                 <div className="manual-day-exercises-title">{d} — {computeDayFocus(dayItems[d] || [])}</div>
+                <button
+                  type="button"
+                  className="manual-day-edit-btn"
+                  onClick={() => { setReviewing(false); setActiveDay(d); }}
+                  aria-label={`ویرایشِ روزِ ${d}`}
+                >
+                  <Pencil size={13} />
+                </button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {(dayItems[d] || []).map((it, ii) => (
@@ -260,10 +268,9 @@ export function ManualExercisePlanForm({
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
-          <button type="button" className="small" onClick={() => setReviewing(false)}>ویرایش</button>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
           <button type="button" onClick={submit} disabled={submitting} className="manual-submit-btn">
-            {submitting ? "در حال ثبت…" : "ثبتِ برنامه"}
+            {submitting ? "در حال ثبت…" : "ثبت برنامه"}
           </button>
         </div>
       </div>
