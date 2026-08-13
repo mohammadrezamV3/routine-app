@@ -1,0 +1,207 @@
+"use client";
+
+import { useState } from "react";
+import { Flame, Pencil, Plus, X } from "lucide-react";
+import { faNum } from "@/lib/jalali";
+import { DashCard } from "./DashCard";
+import { ProgressRing } from "./ProgressRing";
+import type { Target } from "./CaloriePanel";
+
+type Entry = { customCalories: number; mealType: string | null };
+type MealDraftRow = { key: string; label: string; kcal: string };
+
+// «کالری امروز» — ستونِ اصلیِ داشبوردِ کالری، هم‌نقشِ ExerciseStatsCard/
+// ExerciseTaskList توی بدنسازی: حلقه‌ی پیشرفتِ کلِ روز + شبکه‌ی سهمِ هر
+// وعده (با امکانِ ویرایشِ دستیِ سهم‌ها، خودش با API صحبت می‌کنه و بعدِ
+// موفقیت target رو به والد برمی‌گردونه — دقیقاً مثلِ onPlanChange).
+export function CalorieTodayCard({
+  target,
+  entries,
+  totalToday,
+  pct,
+  onEditGoal,
+  onTargetChange,
+  delay,
+}: {
+  target: Target;
+  entries: Entry[];
+  totalToday: number;
+  pct: number;
+  onEditGoal: () => void;
+  onTargetChange: (target: Target) => void;
+  delay?: number;
+}) {
+  const [editingMeals, setEditingMeals] = useState(false);
+  const [mealDraft, setMealDraft] = useState<MealDraftRow[]>([]);
+  const [mealDraftError, setMealDraftError] = useState<string | null>(null);
+  const [savingMeals, setSavingMeals] = useState(false);
+
+  const overGoal = pct > 100;
+  const ringColor = overGoal ? "#E05252" : "var(--accent)";
+
+  function openEditMeals() {
+    setMealDraft((target.mealBreakdown?.length ? target.mealBreakdown : []).map((m) => ({ key: m.key, label: m.label, kcal: String(m.kcal) })));
+    setMealDraftError(null);
+    setEditingMeals(true);
+  }
+
+  function addMealDraftRow() {
+    if (mealDraft.length >= 8) return;
+    setMealDraft((rows) => [...rows, { key: `meal_${Date.now()}`, label: "", kcal: "" }]);
+  }
+  function updateMealDraftRow(key: string, patch: Partial<MealDraftRow>) {
+    setMealDraft((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+  function removeMealDraftRow(key: string) {
+    setMealDraft((rows) => rows.filter((r) => r.key !== key));
+  }
+
+  async function saveMeals() {
+    if (mealDraft.length === 0) { setMealDraftError("حداقل یک وعده لازمه"); return; }
+    for (const r of mealDraft) {
+      if (!r.label.trim()) { setMealDraftError("اسم همه‌ی وعده‌ها رو وارد کن"); return; }
+      if (!r.kcal || +r.kcal <= 0) { setMealDraftError("کالری همه‌ی وعده‌ها باید عدد مثبت باشه"); return; }
+    }
+    setMealDraftError(null);
+    setSavingMeals(true);
+    const res = await fetch("/api/calorie/target", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mealBreakdown: mealDraft.map((r) => ({ key: r.key, label: r.label.trim(), kcal: +r.kcal })) }),
+    });
+    const data = await res.json();
+    setSavingMeals(false);
+    if (!res.ok) { setMealDraftError(data.error || "خطایی پیش آمد"); return; }
+    onTargetChange(data.target);
+    setEditingMeals(false);
+  }
+
+  return (
+    <DashCard delay={delay}>
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+          <Flame className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+          کالری امروز
+        </h2>
+        <button type="button" onClick={onEditGoal} className="text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]">
+          تغییر برنامه
+        </button>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3.5 sm:gap-5">
+        <span className="shrink-0 sm:hidden">
+          <ProgressRing pct={pct / 100} size={76} strokeWidth={7} color={ringColor}>
+            <span className="mono text-[12px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(pct)}٪</span>
+          </ProgressRing>
+        </span>
+        <span className="hidden shrink-0 sm:inline-flex">
+          <ProgressRing pct={pct / 100} size={96} strokeWidth={8} color={ringColor}>
+            <span className="mono text-[14px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(pct)}٪</span>
+          </ProgressRing>
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="mono text-[19px] font-extrabold sm:text-[25px]" style={{ color: ringColor }}>
+            {faNum(totalToday)}
+            <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted sm:text-[12.5px]"> / {faNum(target.dailyTargetKcal)} کالری</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-between sm:mt-6">
+        <h3 className="text-[11.5px] font-bold text-dash-text sm:text-[13px]">سهم هر وعده</h3>
+        {!editingMeals && (
+          <button type="button" onClick={openEditMeals} className="text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]">
+            ویرایش وعده‌ها
+          </button>
+        )}
+      </div>
+
+      {editingMeals ? (
+        <div className="mt-3 flex flex-col gap-2.5">
+          {mealDraft.map((row) => (
+            <div key={row.key} className="flex items-center gap-1.5">
+              <input
+                className="wsearch-newform-name flex-[2]"
+                placeholder="اسم وعده"
+                value={row.label}
+                onChange={(e) => updateMealDraftRow(row.key, { label: e.target.value })}
+              />
+              <input
+                type="number"
+                className="wsearch-newform-name flex-1"
+                placeholder="کالری"
+                value={row.kcal}
+                onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => removeMealDraftRow(row.key)}
+                aria-label="حذف وعده"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[13px] transition hover:bg-[rgba(224,82,82,.12)] hover:border-[#E05252] hover:text-[#E05252]"
+                style={{ borderColor: "rgba(224,82,82,.35)", color: "#E05252" }}
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+
+          {mealDraft.length < 8 && (
+            <button
+              type="button"
+              onClick={addMealDraftRow}
+              className="flex items-center justify-center gap-1 self-start text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+            >
+              <Plus size={14} />
+              افزودن وعده
+            </button>
+          )}
+
+          <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">جمع: {faNum(mealDraft.reduce((s, r) => s + (+r.kcal || 0), 0))} کالری</div>
+
+          {mealDraftError && <div className="field-error-msg" style={{ display: "block" }}>{mealDraftError}</div>}
+
+          <div className="mt-1 flex gap-2">
+            <button type="button" onClick={() => setEditingMeals(false)} className="flex-1 rounded-2xl border py-2.5 text-[12px] font-semibold text-dash-muted" style={{ borderColor: "var(--line)" }}>
+              انصراف
+            </button>
+            <button
+              type="button"
+              disabled={savingMeals}
+              onClick={saveMeals}
+              className="flex-[2] rounded-2xl border py-2.5 text-[12px] font-bold disabled:opacity-40"
+              style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+            >
+              {savingMeals ? "در حال ذخیره…" : "ذخیره وعده‌ها"}
+            </button>
+          </div>
+        </div>
+      ) : !!target.mealBreakdown?.length && (
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+          {target.mealBreakdown.map((m) => {
+            const consumed = entries.filter((e) => e.mealType === m.key).reduce((s, e) => s + e.customCalories, 0);
+            const mealPct = m.kcal > 0 ? consumed / m.kcal : 0;
+            const over = mealPct > 1;
+            return (
+              <div key={m.key} className="flex flex-col items-center gap-2 rounded-2xl border border-dash-border bg-white/[0.02] px-2.5 py-3 text-center">
+                <span className="shrink-0 sm:hidden">
+                  <ProgressRing pct={mealPct} size={44} strokeWidth={4.5} color={over ? "#E05252" : "var(--accent)"}>
+                    <span className="mono text-[9px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}٪</span>
+                  </ProgressRing>
+                </span>
+                <span className="hidden shrink-0 sm:inline-flex">
+                  <ProgressRing pct={mealPct} size={54} strokeWidth={5} color={over ? "#E05252" : "var(--accent)"}>
+                    <span className="mono text-[10.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}٪</span>
+                  </ProgressRing>
+                </span>
+                <div className="text-[9.5px] font-semibold text-dash-muted sm:text-[11px]">{m.label}</div>
+                <div className="mono text-[11px] font-bold text-dash-text sm:text-[13px]">
+                  {faNum(consumed)}<span className="text-[9.5px] font-semibold text-dash-muted sm:text-[11px]"> / {faNum(m.kcal)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </DashCard>
+  );
+}

@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { LineChart } from "lucide-react";
 import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { DashCard } from "./DashCard";
 
 type Entry = { customCalories: number; date?: string; createdAt?: string };
 type ChartRange = "daily" | "weekly" | "monthly";
@@ -27,15 +29,19 @@ function niceCeil(n: number): number {
 // نمودارِ روندِ کالری — روزانه (تجمعیِ امروز بر اساسِ ساعتِ ثبت)، هفتگی و
 // ماهانه (جمعِ هر روز، آخرین N روز). بدونِ کتابخانه‌ی چارت — یه SVGِ
 // دست‌ساز با همون قراردادِ خطِ صاف/گرادیانِ زیرِ خط که بقیه‌ی اپ برای
-// نمودار میله‌ای هفتگی استفاده می‌کنه، فقط این‌جا خطیه.
+// نمودار میله‌ای هفتگی استفاده می‌کنه، فقط این‌جا خطیه. viewBox با
+// preserveAspectRatio="xMidYMid meet" رندر می‌شه (نه "none") تا با تغییرِ
+// عرضِ کانتینر (موبایل/دسکتاپ) نسبتِ ابعادش خراب نشه.
 export function CalorieChartCard({
   todayEntries,
   rangeEntries,
   targetKcal,
+  delay,
 }: {
   todayEntries: Entry[];
   rangeEntries: Entry[];
   targetKcal: number;
+  delay?: number;
 }) {
   const [range, setRange] = useState<ChartRange>("daily");
   const [selected, setSelected] = useState<number | null>(null);
@@ -93,12 +99,15 @@ export function CalorieChartCard({
   const sel = selected !== null ? points[selected] : null;
 
   return (
-    <div className="tm-extra calorie-chart-card">
-      <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>نمودار کالری</span>
+    <DashCard delay={delay}>
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+          <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+          نمودار کالری
+        </h2>
       </div>
 
-      <div style={{ marginTop: 8 }}>
+      <div className="mt-3">
         <SegmentedTabs
           active={range}
           onChange={(v) => { setRange(v); setSelected(null); }}
@@ -110,10 +119,12 @@ export function CalorieChartCard({
         />
       </div>
 
-      <div className="calorie-chart-goal-note mono">هدف: {faNum(targetKcal)} کالری</div>
+      <div className="mono mt-2.5 text-[10.5px] font-bold sm:text-[11.5px]" style={{ color: "#F5A623" }}>
+        هدف: {faNum(targetKcal)} کالری
+      </div>
 
-      <div className="calorie-chart-svg-wrap">
-        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" preserveAspectRatio="none">
+      <div className="relative mt-1.5 w-full" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
+        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block">
           <defs>
             <linearGradient id="calorie-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
@@ -183,13 +194,20 @@ export function CalorieChartCard({
 
         {sel && (
           <div
-            className="calorie-chart-tooltip mono"
-            style={{ left: `${(sel.x / VB_W) * 100}%`, top: `${(sel.y / VB_H) * 100}%` }}
+            className="mono pointer-events-none absolute z-[2] whitespace-nowrap rounded-lg border px-2 py-1 text-[11px] font-bold shadow-lg"
+            style={{
+              left: `${(sel.x / VB_W) * 100}%`,
+              top: `${(sel.y / VB_H) * 100}%`,
+              transform: "translate(-50%, calc(-100% - 8px))",
+              background: "var(--dash-bg, var(--bg))",
+              borderColor: "var(--accent)",
+              color: "var(--accent)",
+            }}
           >
             {faNum(Math.round(sel.value))} کالری
           </div>
         )}
       </div>
-    </div>
+    </DashCard>
   );
 }
