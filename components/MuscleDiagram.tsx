@@ -67,10 +67,12 @@ const REGIONS: Region[] = [
 
 // سیلوئتِ توپرِ بدن (سر، گردن، تنه، بازوها، پاها) — هم‌زمینه‌ی هر دو نما،
 // چون طرحِ کلیِ بدن از جلو/پشت تقریباً یکیه؛ فقط ناحیه‌های روش فرق می‌کنن.
-// بدونِ این زمینه، عضله‌ها فقط چندتا شکلِ معلق روی یه فضای خالی بودن.
+// یه خطِ دورِ نازک (هم‌رنگِ بک‌گراندِ کارت) هم داره — دقیقاً مثلِ عکسِ
+// آناتومیِ مرجع که هر عضله با یه خطِ باریک از بقیه جدا می‌شه، نه یه سیلوئتِ
+// یک‌دستِ بدونِ مرز.
 function BodySilhouette() {
   return (
-    <g fill="var(--muted)" opacity=".14">
+    <g fill="var(--muted)" stroke="var(--bg)" strokeWidth="1" strokeLinejoin="round" opacity=".22">
       <circle cx="60" cy="13" r="11" />
       <path d="M52,22 L52,30 Q60,34 68,30 L68,22 Z" />
       <path d="M18,32 Q60,20 102,32 L96,58 Q91,82 84,100 Q60,112 36,100 Q29,82 24,58 Z" />
@@ -96,8 +98,11 @@ function DiagramView({ view, active }: { view: "front" | "back"; active: Set<Mus
           <motion.path
             key={`${view}-${r.key}-${i}`}
             d={r.d}
+            stroke="var(--bg)"
+            strokeWidth="1"
+            strokeLinejoin="round"
             initial={false}
-            animate={{ opacity: isActive ? 1 : 0.22 }}
+            animate={{ opacity: isActive ? 1 : 0.38 }}
             transition={{ duration: 0.25 }}
             fill={isActive ? "url(#muscle-diagram-grad)" : "var(--muted)"}
             style={isActive ? { filter: "drop-shadow(0 0 4px rgba(255,196,60,.7))" } : undefined}

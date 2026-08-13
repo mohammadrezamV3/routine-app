@@ -2483,6 +2483,14 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .manual-day-add-btn:hover{ opacity:.85; }
 
+/* آیکونِ ویرایشِ گوشه‌ی هر باکسِ روز توی مرحله‌ی مرورِ برنامه — با کلیک،
+   مستقیم می‌بره تو نمای همون روز؛ بدونِ بک‌گراند، فقط آیکونِ رنگیِ اکسنت */
+.manual-day-edit-btn{
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; padding:4px; color:var(--accent);
+}
+.manual-day-edit-btn:hover{ opacity:.8; }
+
 /* دکمه‌ی «ثبت»ِ پایینِ نمای جزئیاتِ روز — تمومِ حرکاتِ اون روز رو تاییدی
    می‌کنه و برمی‌گردونه به لیستِ روزها؛ بدونِ بک‌گراند، فقط متنِ اکسنت */
 .manual-day-done-btn{
@@ -2795,6 +2803,33 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
 .calorie-today-ring-pct{ font-size:13px; font-weight:800; color:var(--text); }
 .calorie-today-ring-text{ flex:1; min-width:0; }
 .calorie-meal-ring-pct{ font-size:10.5px; font-weight:800; color:var(--text); }
+
+/* ===================== کالری — نمودارِ روند و روندِ موفقیت ===================== */
+
+.calorie-chart-card{ border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.02); padding:14px; }
+body[data-theme="light"] .calorie-chart-card{ background:rgba(255,255,255,.5); }
+.calorie-chart-goal-note{ font-size:11px; color:#F5A623; font-weight:700; margin-top:10px; }
+.calorie-chart-svg-wrap{ position:relative; width:100%; height:150px; margin-top:6px; }
+.calorie-chart-tooltip{
+  position:absolute; transform:translate(-50%, calc(-100% - 8px)); white-space:nowrap;
+  background:var(--bg); border:1px solid var(--accent); border-radius:8px; padding:4px 8px;
+  font-size:11px; font-weight:700; color:var(--accent); pointer-events:none; z-index:2;
+  box-shadow:0 6px 16px rgba(0,0,0,.3);
+}
+
+.calorie-streak-card{ border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.02); padding:14px; }
+body[data-theme="light"] .calorie-streak-card{ background:rgba(255,255,255,.5); }
+.calorie-streak-count{ display:flex; align-items:baseline; gap:8px; margin-top:10px; }
+.calorie-streak-count-num{ font-size:32px; font-weight:800; color:var(--accent); line-height:1; }
+.calorie-streak-count-label{ font-size:11.5px; color:var(--muted2); line-height:1.4; }
+.calorie-streak-days{ display:flex; justify-content:space-between; gap:6px; margin-top:16px; }
+.calorie-streak-day{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
+.calorie-streak-dot{
+  width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  border:1.5px solid var(--line); color:var(--muted2);
+}
+.calorie-streak-dot.on{ border-color:var(--accent); background:var(--accent); color:var(--bg); }
+.calorie-streak-day-letter{ font-size:11px; color:var(--muted2); font-weight:700; }
 
 /* دکمه‌ی حذفِ آیتم غذایی — دایره‌ی تمیزِ آیکونی، به‌جای دکمه‌ی مستطیلیِ
    کوچیکِ عمومی که دور یه «×» تک‌حرفی زشت می‌شد */
