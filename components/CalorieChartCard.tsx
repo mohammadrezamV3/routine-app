@@ -35,6 +35,13 @@ function formatKcal(n: number): string {
 
 const HOUR_TICKS = [0, 4, 8, 12, 16, 20, 24];
 
+// سبزِ اختصاصیِ خودِ نمودار — var(--accent) سایتِ اصلی یه سبزِ کدرِ جواهریه
+// (#00A86B) که کنارِ عکسِ رفرنس کم‌رنگ به‌نظر می‌رسید؛ این‌جا از یه سبزِ
+// روشن‌تر و نئونی‌تر استفاده می‌شه (دقیقاً مثلِ الگوی #F5A623ِ قبلی برای
+// خطِ هدف — بعضی رنگ‌های خاصِ نمودار عمداً مستقل از پالتِ سراسری‌ان).
+const CHART_GREEN = "#22C55E";
+const CHART_GREEN_RGB = "34,197,94";
+
 // نمودارِ روندِ کالری — دقیقاً هم‌طرحِ عکسِ رفرنس: تایتل+تب‌ها توی یه ردیف،
 // محورِ افقیِ روزانه با تیک‌های ثابتِ هر ۴ ساعت (۰۰:۰۰ تا ۲۴:۰۰) و نقطه‌ها
 // بر اساسِ ساعتِ واقعیِ ثبت روی همون محور جا می‌گیرن (نه به‌ترتیبِ ایندکس)،
@@ -103,6 +110,9 @@ export function CalorieChartCard({
   }));
 
   const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPath = points.length
+    ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} L${points[0].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} Z`
+    : "";
 
   const goalY = PAD_T + PLOT_H - (targetKcal / maxY) * PLOT_H;
   const yLabels = [0, 1, 2, 3, 4, 5].map((m) => m * step);
@@ -132,11 +142,18 @@ export function CalorieChartCard({
 
       <div className="relative mt-4 w-full" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
         <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block overflow-visible">
+          <defs>
+            <linearGradient id="calorie-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={CHART_GREEN} stopOpacity="0.32" />
+              <stop offset="100%" stopColor={CHART_GREEN} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
           {yLabels.map((v, i) => {
             const y = PAD_T + PLOT_H - (v / maxY) * PLOT_H;
             return (
               <g key={i}>
-                <line x1={PAD_L} y1={y} x2={VB_W - PAD_R} y2={y} stroke="var(--line)" strokeWidth="0.5" opacity="0.35" />
+                <line x1={PAD_L} y1={y} x2={VB_W - PAD_R} y2={y} stroke="var(--line)" strokeWidth="0.6" opacity="0.9" />
                 <text x={PAD_L - 5} y={y + 2.6} fontSize="7" fill="var(--dash-muted)" textAnchor="end">{formatKcal(v)}</text>
               </g>
             );
@@ -152,17 +169,27 @@ export function CalorieChartCard({
                 ) : null
               )}
 
-          <line x1={PAD_L} y1={goalY} x2={VB_W - PAD_R} y2={goalY} stroke="var(--accent)" strokeWidth="1" strokeDasharray="3.5 3" opacity="0.85" />
+          <line x1={PAD_L} y1={goalY} x2={VB_W - PAD_R} y2={goalY} stroke={CHART_GREEN} strokeWidth="1" strokeDasharray="3.5 3" opacity="0.85" />
+
+          {points.length > 1 && (
+            <motion.path
+              d={areaPath}
+              fill="url(#calorie-chart-area-grad)"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            />
+          )}
 
           {points.length > 1 && (
             <motion.path
               d={linePath}
               fill="none"
-              stroke="var(--accent)"
+              stroke={CHART_GREEN}
               strokeWidth="2.4"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ filter: "drop-shadow(0 0 5px rgba(var(--accent-rgb),.85)) drop-shadow(0 0 1px rgba(var(--accent-rgb),1))" }}
+              style={{ filter: `drop-shadow(0 0 1.5px rgba(${CHART_GREEN_RGB},.9))` }}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 0.9, ease: "easeOut" }}
@@ -180,15 +207,15 @@ export function CalorieChartCard({
                 onClick={() => setSelected(selected === i ? null : i)}
                 style={{ cursor: "pointer" }}
               >
-                <circle cx={p.x} cy={p.y} r={isLast ? 7 : 5} fill="var(--accent)" opacity={isLast ? 0.32 : 0.2} />
+                <circle cx={p.x} cy={p.y} r={isLast ? 6 : 4.2} fill={CHART_GREEN} opacity={isLast ? 0.28 : 0.16} />
                 <circle
                   cx={p.x}
                   cy={p.y}
                   r={isLast || selected === i ? 3.1 : 2.3}
                   fill={p.value > targetKcal ? "#E05252" : "#fff"}
-                  stroke="var(--accent)"
+                  stroke={CHART_GREEN}
                   strokeWidth="1.3"
-                  style={{ filter: "drop-shadow(0 0 3px rgba(var(--accent-rgb),.9))" }}
+                  style={{ filter: `drop-shadow(0 0 1.2px rgba(${CHART_GREEN_RGB},.9))` }}
                 />
               </motion.g>
             );
@@ -216,8 +243,8 @@ export function CalorieChartCard({
               left: `${(sel.x / VB_W) * 100}%`,
               top: `${(sel.y / VB_H) * 100}%`,
               transform: "translate(-50%, calc(-100% - 10px))",
-              background: "var(--accent)",
-              color: "var(--dash-bg, var(--bg))",
+              background: CHART_GREEN,
+              color: "#04160D",
             }}
           >
             {formatKcal(sel.value)} کالری
