@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { AuthGate } from "./AuthGate";
@@ -8,6 +10,9 @@ import { FoodSeedItem } from "@/lib/foodSeed";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { ProgressRing } from "./ProgressRing";
+import { CalorieChartCard } from "./CalorieChartCard";
+import { CalorieStreakCard } from "./CalorieStreakCard";
+import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 
 const todayKey = isoLocal(new Date());
 const DEFAULT_MEAL_TYPES: { key: string; label: string }[] = [
@@ -24,6 +29,7 @@ type Entry = {
   grams: number;
   mealType: string | null;
   date?: string;
+  createdAt?: string;
 };
 
 type MealBreakdownItem = { key: string; label: string; kcal: number };
@@ -73,10 +79,15 @@ export function CaloriePanel() {
   const [unitPickerOpen, setUnitPickerOpen] = useState(false);
   const [mealType, setMealType] = useState("lunch");
 
-  // تاریخچه
+  // تاریخچه — دیگه lazy نیست، چون نمودار و روند موفقیت هم به همین ۳۰ روزِ
+  // اخیر نیاز دارن؛ فقط نمایشِ لیستِ بازشونده‌ش همچنان با کلیک تا می‌شه
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<Entry[]>([]);
+
+  // راهنمای اولین‌بار — دقیقاً وقتی صفحه با یه هدفِ کالریِ ازقبل‌ساخته‌شده
+  // باز می‌شه (نه توی فرمِ ساختِ هدف) نشون داده می‌شه، یه بار برای همیشه
+  const [showTutorial, setShowTutorial] = useState(false);
 
   async function loadTarget() {
     const res = await fetch("/api/calorie/target");
@@ -89,12 +100,25 @@ export function CaloriePanel() {
     const data = await res.json();
     setEntries(data.entries || []);
   }
+  async function loadHistory() {
+    setHistoryLoading(true);
+    const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
+    const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayKey}`);
+    const data = await res.json();
+    setHistoryEntries(data.entries || []);
+    setHistoryLoading(false);
+  }
 
   useEffect(() => {
     if (status !== "authenticated") return;
     loadTarget();
     loadEntries();
+    loadHistory();
   }, [status]);
+
+  useEffect(() => {
+    if (target && !editingGoal && !hasSeenCalorieTutorial()) setShowTutorial(true);
+  }, [target, editingGoal]);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -204,17 +228,8 @@ export function CaloriePanel() {
     await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" });
   }
 
-  async function toggleHistory() {
-    const next = !historyOpen;
-    setHistoryOpen(next);
-    if (next && historyEntries.length === 0) {
-      setHistoryLoading(true);
-      const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
-      const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayKey}`);
-      const data = await res.json();
-      setHistoryEntries(data.entries || []);
-      setHistoryLoading(false);
-    }
+  function toggleHistory() {
+    setHistoryOpen((v) => !v);
   }
 
   if (status === "unauthenticated") {
@@ -298,21 +313,31 @@ export function CaloriePanel() {
         </div>
       ) : (
         <>
-          <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <span>کالری امروز</span>
-            <span className="calorie-edit-meals-link" onClick={openEditGoal}>تغییر برنامه</span>
-          </div>
-          <div className="calorie-today-ring-row">
-            <ProgressRing pct={pct / 100} size={88} strokeWidth={8} color={pct > 100 ? "#E05252" : "var(--accent)"}>
-              <span className="calorie-today-ring-pct mono">{faNum(pct)}٪</span>
-            </ProgressRing>
-            <div className="calorie-today-ring-text">
-              <div className="trade-stat-value" style={{ color: pct > 100 ? "#E05252" : "var(--accent)" }}>
-                {faNum(totalToday)}
-                <span className="calorie-meal-of"> / {faNum(target.dailyTargetKcal)} کالری</span>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+              <span>کالری امروز</span>
+              <span className="calorie-edit-meals-link" onClick={openEditGoal}>تغییر برنامه</span>
+            </div>
+            <div className="calorie-today-ring-row">
+              <ProgressRing pct={pct / 100} size={88} strokeWidth={8} color={pct > 100 ? "#E05252" : "var(--accent)"}>
+                <span className="calorie-today-ring-pct mono">{faNum(pct)}٪</span>
+              </ProgressRing>
+              <div className="calorie-today-ring-text">
+                <div className="trade-stat-value" style={{ color: pct > 100 ? "#E05252" : "var(--accent)" }}>
+                  {faNum(totalToday)}
+                  <span className="calorie-meal-of"> / {faNum(target.dailyTargetKcal)} کالری</span>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 }}>
+            <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.14 }}>
+            <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} />
+          </motion.div>
 
           <div className="tm-extra">
             <div className="domain-sub" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -525,6 +550,11 @@ export function CaloriePanel() {
         <span className="disclaimer-warn">توجه: </span>
         این جدول کالری/وعده‌ها فقط یک پیشنهاد است و هیچ اجباری به اجرای دقیق آن نیست؛ مسئولیت کل برنامه‌ی غذایی با خود کاربر است.
       </div>
+
+      {showTutorial && createPortal(
+        <CalorieTutorial onDone={() => setShowTutorial(false)} />,
+        document.body
+      )}
     </div>
   );
 }
