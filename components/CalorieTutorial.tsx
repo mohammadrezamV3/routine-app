@@ -118,7 +118,7 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
                 <button
                   type="button"
                   onClick={finish}
-                  className="flex w-full items-center justify-center py-2.5 text-[13px] font-bold"
+                  className="flex w-full items-center justify-center rounded-2xl border py-2.5 text-[13px] font-bold"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                 >
                   متوجه شدم
@@ -133,13 +133,23 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
           ) : (
             <div className="mt-4 flex items-center justify-between gap-2">
               {step > 0 ? (
-                <button type="button" onClick={() => setStep((s) => s - 1)} className="small">
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => s - 1)}
+                  className="rounded-xl border px-3 py-1.5 text-[12px] font-semibold text-dash-muted"
+                  style={{ borderColor: "var(--line)" }}
+                >
                   قبلی
                 </button>
               ) : (
                 <span />
               )}
-              <button type="button" onClick={goNext} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+              <button
+                type="button"
+                onClick={goNext}
+                className="rounded-2xl border px-5 py-2 text-[13px] font-bold"
+                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+              >
                 {isLast ? "متوجه شدم" : "بعدی"}
               </button>
             </div>
