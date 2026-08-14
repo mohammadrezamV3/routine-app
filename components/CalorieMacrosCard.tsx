@@ -11,25 +11,30 @@ type Entry = { proteinG?: number | null; carbsG?: number | null; fatG?: number |
 
 // «ریز درشت‌مغذی‌ها» — طبق طرح کاربر، سه باکس جداگانه‌ی پروتئین/کربوهیدرات/
 // چربی توی یک باکس واحد ادغام شدن. این بخش فقط وقتی عدد نشون می‌ده که
-// کاربر حداقل یک غذا رو امروز با اسکن AI ثبت کرده باشه — چون تنها راه
-// این اپ برای داشتن داده‌ی واقعی درشت‌مغذی (بدون کاتالوگ دستی هزاران
-// غذا) همینه؛ وگرنه یک حالت قفل با دعوت به اسکن نشون می‌ده.
+// حداقل یک غذای این روز درشت‌مغذی ثبت‌شده داشته باشه — چه با اسکنِ AI، چه
+// با واردکردنِ دستی توی فرمِ افزودنِ غذا؛ چون کاتالوگِ دستیِ درشت‌مغذی برای
+// هزاران غذا نداریم و این تنها دو راهِ داشتنِ عددِ واقعی‌ان. وگرنه یک
+// حالتِ قفل با دعوت به اسکن نشون می‌ده.
 export function CalorieMacrosCard({
   entries,
+  date,
+  isToday,
   mealTypes,
   onLogged,
   delay,
 }: {
   entries: Entry[];
+  date: string;
+  isToday: boolean;
   mealTypes: { key: string; label: string }[];
   onLogged: () => void;
   delay?: number;
 }) {
   const [scanOpen, setScanOpen] = useState(false);
 
-  const scanned = entries.filter((e) => e.aiScanned);
-  const hasData = scanned.length > 0;
-  const totals = scanned.reduce(
+  const withMacros = entries.filter((e) => e.proteinG != null || e.carbsG != null || e.fatG != null);
+  const hasData = withMacros.length > 0;
+  const totals = withMacros.reduce(
     (acc, e) => ({
       protein: acc.protein + (e.proteinG || 0),
       carbs: acc.carbs + (e.carbsG || 0),
@@ -60,34 +65,40 @@ export function CalorieMacrosCard({
               </div>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => setScanOpen(true)}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
-          >
-            <Sparkles size={14} />
-            اسکن غذای دیگه
-          </button>
+          {isToday && (
+            <button
+              type="button"
+              onClick={() => setScanOpen(true)}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+            >
+              <Sparkles size={14} />
+              اسکن غذای دیگه
+            </button>
+          )}
         </>
       ) : (
         <div className="mt-3.5 flex flex-col items-center gap-3 py-2 text-center">
           <div className="text-[11px] leading-relaxed text-dash-muted sm:text-[12.5px]">
-            برای دیدن ریز پروتئین/کربوهیدرات/چربی، یه عکس از غذات بگیر تا هوش مصنوعی تحلیلش کنه.
+            {isToday
+              ? "برای دیدن ریز پروتئین/کربوهیدرات/چربی، یه غذا رو با هوش مصنوعی اسکن کن یا موقعِ افزودنِ دستی واردشون کن."
+              : "برای این روز درشت‌مغذی‌ای ثبت نشده."}
           </div>
-          <button
-            type="button"
-            onClick={() => setScanOpen(true)}
-            className="flex items-center justify-center gap-1.5 rounded-2xl border px-4 py-2.5 text-[11.5px] font-bold sm:text-[13px]"
-            style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-          >
-            <Sparkles size={14} />
-            اسکن غذا با هوش مصنوعی
-          </button>
+          {isToday && (
+            <button
+              type="button"
+              onClick={() => setScanOpen(true)}
+              className="flex items-center justify-center gap-1.5 rounded-2xl border px-4 py-2.5 text-[11.5px] font-bold sm:text-[13px]"
+              style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+            >
+              <Sparkles size={14} />
+              اسکن غذا با هوش مصنوعی
+            </button>
+          )}
         </div>
       )}
 
       {scanOpen && createPortal(
-        <CalorieAiScanModal mealTypes={mealTypes} onClose={() => setScanOpen(false)} onLogged={onLogged} />,
+        <CalorieAiScanModal date={date} mealTypes={mealTypes} onClose={() => setScanOpen(false)} onLogged={onLogged} />,
         document.body
       )}
     </DashCard>

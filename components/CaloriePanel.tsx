@@ -1,21 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { isoLocal, faNum } from "@/lib/jalali";
+import { isoLocal, faNum, FA_WEEKDAY, toJalali, J_MONTHS } from "@/lib/jalali";
+import { WEEK_ORDER } from "@/lib/schedule";
 import { AuthGate } from "./AuthGate";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { DashDateSelector, DashDay } from "./DashDateSelector";
+import { DashFilterButton } from "./DashFilterButton";
 import { CalorieTodayCard } from "./CalorieTodayCard";
 import { CalorieChartCard } from "./CalorieChartCard";
 import { CalorieStreakCard } from "./CalorieStreakCard";
-import { CalorieAddFoodCard } from "./CalorieAddFoodCard";
-import { CalorieLogCard } from "./CalorieLogCard";
 import { CalorieMacrosCard } from "./CalorieMacrosCard";
+import { CalorieMealBreakdownCard } from "./CalorieMealBreakdownCard";
+import { CalorieFoodPlanCard } from "./CalorieFoodPlanCard";
+import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 
-const todayKey = isoLocal(new Date());
+const now = new Date();
+const todayIso = isoLocal(now);
 const DEFAULT_MEAL_TYPES: { key: string; label: string }[] = [
   { key: "breakfast", label: "صبحانه" },
   { key: "lunch", label: "ناهار" },
@@ -53,6 +59,47 @@ export function CaloriePanel() {
   const { status } = useSession();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
   const [needsAge, setNeedsAge] = useState(false);
+
+  // انتخابِ روز — طبقِ طرحِ کاربر، بالای صفحه یه نوارِ روزهای هفته‌ست که
+  // مشخص می‌کنه داری کدوم روز رو می‌بینی/واردش می‌کنی؛ دقیقاً هم‌الگوی
+  // انتخابِ روزِ داشبوردِ بدنسازی (DashDateSelector + weekOffset/dayWindow).
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedIso, setSelectedIso] = useState(todayIso);
+  const [dayWindow, setDayWindow] = useState(5);
+  const isSelectedToday = selectedIso === todayIso;
+
+  const dashDays: DashDay[] = useMemo(() => {
+    const center = new Date(now);
+    center.setDate(now.getDate() + weekOffset * dayWindow);
+    return Array.from({ length: dayWindow }, (_, i) => {
+      const d = new Date(center);
+      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
+      const iso = isoLocal(d);
+      const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
+      const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
+    });
+  }, [weekOffset, dayWindow]);
+
+  const selectedDayLabel = useMemo(() => {
+    const [y, m, d] = selectedIso.split("-").map(Number);
+    return FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
+  }, [selectedIso]);
+
+  const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
+
+  // انتخابِ یه تاریخِ دلخواه از تقویم — پنجره‌ی نوارِ روزها هم باید دورِ همون
+  // تاریخ وسط‌چین بشه، نه اینکه روزِ انتخاب‌شده بیرونِ پنجره‌ی فعلی بمونه
+  // (دقیقاً هم‌منطقِ pickDate توی داشبوردِ بدنسازی).
+  function pickDate(iso: string) {
+    setSelectedIso(iso);
+    const [y, m, d] = iso.split("-").map(Number);
+    const picked = new Date(y, m - 1, d);
+    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
+    setWeekOffset(Math.round(diffDays / dayWindow));
+    setHistoryPickerOpen(false);
+  }
+
   const [entries, setEntries] = useState<Entry[]>([]);
 
   // فرم هدف کالری
@@ -66,8 +113,8 @@ export function CaloriePanel() {
   const [savingGoal, setSavingGoal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(false);
 
-  // تاریخچه — دیگه lazy نیست، چون نمودار و روند موفقیت هم به همین ۳۰ روزِ
-  // اخیر نیاز دارن
+  // تاریخچه — ۳۰ روزِ واقعیِ اخیر از «امروز»، مستقل از روزی که کاربر داره
+  // می‌بینه؛ چون نمودارِ هفتگی/ماهانه و روندِ موفقیت به تاریخِ واقعی نیاز دارن
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<Entry[]>([]);
 
@@ -82,14 +129,14 @@ export function CaloriePanel() {
     setNeedsAge(!!data.needsAge);
   }
   async function loadEntries() {
-    const res = await fetch(`/api/calorie/log?date=${todayKey}`);
+    const res = await fetch(`/api/calorie/log?date=${selectedIso}`);
     const data = await res.json();
     setEntries(data.entries || []);
   }
   async function loadHistory() {
     setHistoryLoading(true);
     const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
-    const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayKey}`);
+    const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayIso}`);
     const data = await res.json();
     setHistoryEntries(data.entries || []);
     setHistoryLoading(false);
@@ -98,9 +145,15 @@ export function CaloriePanel() {
   useEffect(() => {
     if (status !== "authenticated") return;
     loadTarget();
-    loadEntries();
     loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    loadEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, selectedIso]);
 
   useEffect(() => {
     if (target && !editingGoal && !hasSeenCalorieTutorial()) setShowTutorial(true);
@@ -148,6 +201,13 @@ export function CaloriePanel() {
     await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" });
   }
 
+  // بعدِ افزودن/حذف/اسکن، هم لیستِ روزِ انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
+  // به‌روز بشن — چون نمودار/روندِ موفقیت/ریزِ درشت‌مغذی‌ها به هردو وابسته‌ن
+  function refreshAfterChange() {
+    loadEntries();
+    loadHistory();
+  }
+
   if (status === "unauthenticated") {
     return <AuthGate message="برای استفاده از این سرویس وارد شوید" />;
   }
@@ -158,7 +218,11 @@ export function CaloriePanel() {
 
   const mealTypes = target?.mealBreakdown?.length ? target.mealBreakdown.map((m) => ({ key: m.key, label: m.label })) : DEFAULT_MEAL_TYPES;
   const totalToday = entries.reduce((s, e) => s + e.customCalories, 0);
-  const pct = target ? Math.min(100, Math.round((totalToday / target.dailyTargetKcal) * 100)) : 0;
+  // عمداً اینجا سقف ۱۰۰٪ زده نمی‌شه — کارتِ کالری امروز خودش برای طولِ نوار
+  // سقف می‌زنه ولی برای تشخیصِ «رد شدن از هدف» (رنگِ قرمز) به همون درصدِ
+  // واقعی نیاز داره؛ سقف‌زدن اینجا باعث می‌شد pct هیچ‌وقت از ۱۰۰ رد نشه و
+  // رنگِ قرمز هیچ‌وقت فعال نشه، حتی وقتی کاربر چند برابرِ هدفش خورده بود.
+  const pct = target ? Math.round((totalToday / target.dailyTargetKcal) * 100) : 0;
 
   return (
     <div>
@@ -221,27 +285,67 @@ export function CaloriePanel() {
         </div>
       ) : (
         <>
-          <div className="dash-scope">
-            <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[1.6fr_1fr] lg:items-start lg:gap-6">
+          <div className="dash-scope flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
+              <DashDateSelector
+                days={dashDays}
+                activeIso={selectedIso}
+                onSelect={setSelectedIso}
+                onPrevWeek={() => setWeekOffset((v) => v - 1)}
+                onNextWeek={() => setWeekOffset((v) => v + 1)}
+                onVisibleCountChange={setDayWindow}
+                className="lg:order-2"
+              />
+              <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
+                <DashFilterButton
+                  label="تاریخچه"
+                  icon={<History size={15} />}
+                  active={!isSelectedToday}
+                  onClick={() => setHistoryPickerOpen(true)}
+                />
+                <DashFilterButton
+                  label="امروز"
+                  icon={<Calendar size={15} />}
+                  active={isSelectedToday}
+                  onClick={() => { setWeekOffset(0); setSelectedIso(todayIso); }}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-start lg:gap-6">
               {/* ستونِ اصلی — اولین فرزندِ DOM، توی RTL سمتِ راست */}
               <div className="flex flex-col gap-4 sm:gap-6">
                 <CalorieTodayCard
                   target={target}
-                  entries={entries}
                   totalToday={totalToday}
                   pct={pct}
+                  dayLabel={selectedDayLabel}
+                  isToday={isSelectedToday}
                   onEditGoal={openEditGoal}
-                  onTargetChange={setTarget}
                 />
-                <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.08} />
-                <CalorieMacrosCard entries={entries} mealTypes={mealTypes} onLogged={loadEntries} delay={0.1} />
+                <CalorieFoodPlanCard
+                  date={selectedIso}
+                  isToday={isSelectedToday}
+                  entries={entries}
+                  onRemove={removeEntry}
+                  onAdded={refreshAfterChange}
+                  mealTypes={mealTypes}
+                  historyEntries={historyEntries}
+                  historyLoading={historyLoading}
+                  delay={0.06}
+                />
               </div>
 
-              {/* ستونِ کناری */}
+              {/* ستونِ وسط — استریک */}
               <div className="flex flex-col gap-4 sm:gap-6">
-                <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.05} />
-                <CalorieAddFoodCard mealTypes={mealTypes} onAdded={loadEntries} delay={0.12} />
-                <CalorieLogCard entries={entries} onRemove={removeEntry} historyEntries={historyEntries} historyLoading={historyLoading} delay={0.16} />
+                <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
+              </div>
+
+              {/* ستونِ چپ — نمودار، ریزِ درشت‌مغذی‌ها، کالری هر وعده */}
+              <div className="flex flex-col gap-4 sm:gap-6">
+                <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.14} />
+                <CalorieMacrosCard entries={entries} date={selectedIso} isToday={isSelectedToday} mealTypes={mealTypes} onLogged={refreshAfterChange} delay={0.18} />
+                <CalorieMealBreakdownCard target={target} entries={entries} onTargetChange={setTarget} delay={0.22} />
               </div>
             </div>
           </div>
@@ -255,6 +359,22 @@ export function CaloriePanel() {
 
       {showTutorial && createPortal(
         <CalorieTutorial onDone={() => setShowTutorial(false)} />,
+        document.body
+      )}
+
+      {historyPickerOpen && target && createPortal(
+        <>
+          <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
+          <div className="modal-panel dash-scope open">
+            <div className="modal-head">
+              <div className="modal-title">انتخاب تاریخ</div>
+              <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>
+            </div>
+            <div className="modal-body">
+              <CalorieHistoryCalendar targetKcal={target.dailyTargetKcal} onPick={pickDate} />
+            </div>
+          </div>
+        </>,
         document.body
       )}
     </div>
