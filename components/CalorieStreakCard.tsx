@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Trophy } from "lucide-react";
+import { Check, Flame, Trophy } from "lucide-react";
 import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 
@@ -19,11 +19,11 @@ function dailyTotals(entries: Entry[]): Record<string, number> {
   return byDate;
 }
 
-// «روند موفقیت» — دقیقاً هم‌سبکِ رفرنسی که کاربر داد: عددِ بزرگِ روزهای
-// متوالی + یه ردیف دایره‌ی حرفِ‌روزها (تیکِ سبز = اون روز کالری ثبت شده و
-// از هدف رد نشده). امروز همیشه «در انتظار»ه (دایره‌ی خالی، بدون تیک) چون
-// هنوز روز تموم نشده؛ شمارشِ روزهای متوالی از دیروز به عقب حساب می‌شه.
-// عمداً بدونِ دکمه‌ی «مشاهده جزئیات» — طبقِ درخواستِ صریحِ کاربر.
+// «روند موفقیت» — خلاصه‌ی بالای کارت به‌جای «عددِ بزرگ + متنِ روز متوالی»
+// حالا یه «تمبرِ» دایره‌ای‌ـه: فقط آیکون + عدد، بدون هیچ متنی. ردیفِ
+// دایره‌ی روزها زیرش دست‌نخورده مونده. امروز همیشه «در انتظار»ه (دایره‌ی
+// خالی، بدون تیک) چون هنوز روز تموم نشده. عمداً بدونِ دکمه‌ی «مشاهده
+// جزئیات» — طبقِ درخواستِ صریحِ کاربر.
 export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEntries: Entry[]; targetKcal: number; delay?: number }) {
   const byDate = dailyTotals(rangeEntries);
   const todayKey = isoLocal(new Date());
@@ -57,13 +57,21 @@ export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEn
         روند موفقیت
       </h2>
 
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="mono text-[26px] font-extrabold leading-none text-dash-green sm:text-[32px]">{faNum(streak)}</span>
-        <span className="text-[10.5px] leading-tight text-dash-muted sm:text-[11.5px]">
-          روز
-          <br />
-          متوالی
-        </span>
+      <div className="mt-3 flex justify-center">
+        <motion.div
+          className="flex flex-col items-center justify-center gap-0.5 rounded-full"
+          style={{
+            width: 76, height: 76,
+            border: "2px solid var(--accent)",
+            boxShadow: "0 0 0 3px rgba(var(--accent-rgb),.12), 0 0 16px rgba(var(--accent-rgb),.25)",
+          }}
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.35, ease: "backOut" }}
+        >
+          <Flame className="h-4 w-4 text-dash-green" />
+          <span className="mono text-[22px] font-extrabold leading-none text-dash-green">{faNum(streak)}</span>
+        </motion.div>
       </div>
 
       <div className="mt-4 flex justify-between gap-1.5 sm:mt-5 sm:gap-2">

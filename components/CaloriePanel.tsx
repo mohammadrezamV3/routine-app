@@ -4,14 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { isoLocal, faNum, FA_WEEKDAY, toJalali, J_MONTHS } from "@/lib/jalali";
+import { isoLocal, faNum, toJalali, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { AuthGate } from "./AuthGate";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashDateSelector, DashDay } from "./DashDateSelector";
 import { DashFilterButton } from "./DashFilterButton";
-import { CalorieTodayCard } from "./CalorieTodayCard";
+import { CalorieGoalModal } from "./CalorieGoalModal";
 import { CalorieChartCard } from "./CalorieChartCard";
 import { CalorieStreakCard } from "./CalorieStreakCard";
 import { CalorieMacrosCard } from "./CalorieMacrosCard";
@@ -80,11 +80,6 @@ export function CaloriePanel() {
       return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
     });
   }, [weekOffset, dayWindow]);
-
-  const selectedDayLabel = useMemo(() => {
-    const [y, m, d] = selectedIso.split("-").map(Number);
-    return FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
-  }, [selectedIso]);
 
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
 
@@ -177,20 +172,6 @@ export function CaloriePanel() {
     setSavingGoal(false);
     if (!res.ok) { setGoalError(data.error || "خطایی پیش آمد"); return; }
     setTarget(data.target);
-    setEditingGoal(false);
-  }
-
-  // «تغییر برنامه کالری» — همون فرم اولیه رو با مقادیر فعلی پر می‌کنه و دوباره باز می‌کنه
-  function openEditGoal() {
-    if (target) {
-      setGoal(target.goal || "maintain");
-      setSex(target.sex || "male");
-      setMealsPerDay(target.mealsPerDay || 4);
-      setGoalHeight(target.heightCm ? String(target.heightCm) : "");
-      setGoalWeight(target.weightKg ? String(target.weightKg) : "");
-    }
-    setGoalError(null);
-    setEditingGoal(true);
   }
 
   async function removeEntry(id: string) {
@@ -223,10 +204,10 @@ export function CaloriePanel() {
 
   return (
     <div>
-      {!target || editingGoal ? (
+      {!target ? (
         <div style={{ marginTop: 10 }}>
           <div className="section-note">
-            {editingGoal ? "برنامه کالری‌ات رو دوباره حساب کن" : "اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم"}
+            اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم
           </div>
 
           <label className="exercise-form-label">هدف</label>
@@ -272,9 +253,6 @@ export function CaloriePanel() {
 
           {goalError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{goalError}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            {editingGoal && (
-              <button onClick={() => setEditingGoal(false)} className="small" style={{ flex: 1 }}>انصراف</button>
-            )}
             <button onClick={saveGoal} disabled={savingGoal} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
               {savingGoal ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
             </button>
@@ -312,14 +290,6 @@ export function CaloriePanel() {
             <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-start lg:gap-6">
               {/* ستونِ اصلی — اولین فرزندِ DOM، توی RTL سمتِ راست */}
               <div className="flex flex-col gap-4 sm:gap-6">
-                <CalorieTodayCard
-                  target={target}
-                  totalToday={totalToday}
-                  pct={pct}
-                  dayLabel={selectedDayLabel}
-                  isToday={isSelectedToday}
-                  onEditGoal={openEditGoal}
-                />
                 <CalorieFoodPlanCard
                   date={selectedIso}
                   isToday={isSelectedToday}
@@ -327,6 +297,10 @@ export function CaloriePanel() {
                   onRemove={removeEntry}
                   onAdded={refreshAfterChange}
                   mealTypes={mealTypes}
+                  target={target}
+                  totalToday={totalToday}
+                  pct={pct}
+                  onEditGoal={() => setEditingGoal(true)}
                   delay={0.06}
                 />
               </div>
@@ -370,6 +344,16 @@ export function CaloriePanel() {
             </div>
           </div>
         </>,
+        document.body
+      )}
+
+      {editingGoal && target && createPortal(
+        <CalorieGoalModal
+          target={target}
+          needsAge={needsAge}
+          onClose={() => setEditingGoal(false)}
+          onSaved={setTarget}
+        />,
         document.body
       )}
     </div>

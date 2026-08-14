@@ -2,18 +2,21 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { Plus, UtensilsCrossed, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
 import { CalorieAiScanModal } from "./CalorieAiScanModal";
+import type { Target } from "./CaloriePanel";
 
 type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
 
-// «برنامه غذایی» — کارتِ اصلیِ ستونِ راست، لیستِ غذاهای همون روزِ انتخاب‌شده
-// + دکمه‌ی «افزودن» (که پاپ‌آپِ افزودن رو باز می‌کنه). دکمه‌ی افزودن فقط
-// برای «امروز» فعاله — روزهای گذشته/آینده فقط نمایشی‌ان (دقیقاً هم‌قاعده‌ی
-// برنامه‌ی تمرینیِ بدنسازی که فقط امروز قابل‌ویرایشه).
+// «برنامه غذایی» — کارتِ اصلیِ ستونِ راست. بالای کارت خلاصه‌ی مصرفِ همون
+// روزِ انتخاب‌شده (عدد/هدف + خطِ نازکِ پیشرفت + دکمه‌ی «تغییر برنامه»،
+// بدونِ متنِ «کالری امروز» و بدونِ درصد — طبقِ طرحِ کاربر)، بعدش یه
+// جداکننده و لیستِ غذاها + دکمه‌ی «افزودن». دکمه‌ی افزودن فقط برای «امروز»
+// فعاله — روزهای گذشته/آینده فقط نمایشی‌ان.
 export function CalorieFoodPlanCard({
   date,
   isToday,
@@ -21,6 +24,10 @@ export function CalorieFoodPlanCard({
   onRemove,
   onAdded,
   mealTypes,
+  target,
+  totalToday,
+  pct,
+  onEditGoal,
   delay,
 }: {
   date: string;
@@ -29,14 +36,42 @@ export function CalorieFoodPlanCard({
   onRemove: (id: string) => void;
   onAdded: () => void;
   mealTypes: { key: string; label: string }[];
+  target: Target;
+  totalToday: number;
+  pct: number;
+  onEditGoal: () => void;
   delay?: number;
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const overGoal = pct > 100;
+  const barColor = overGoal ? "#E05252" : "var(--accent)";
 
   return (
     <DashCard delay={delay}>
       <div className="flex items-center justify-between">
+        <div className="mono text-[15px] font-extrabold sm:text-[18px]" style={{ color: barColor }}>
+          {faNum(totalToday)}
+          <span className="mx-1 text-dash-muted">/</span>
+          {faNum(target.dailyTargetKcal)}
+          <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted sm:text-[12px]">کالری</span>
+        </div>
+        <button type="button" onClick={onEditGoal} className="text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]">
+          تغییر برنامه
+        </button>
+      </div>
+
+      <div className="mt-2.5" style={{ height: 2, background: "rgba(255,255,255,.08)" }}>
+        <motion.div
+          className="h-full"
+          style={{ background: barColor }}
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.min(100, pct)}%` }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+        />
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t pt-3.5 sm:mt-5 sm:pt-4" style={{ borderColor: "var(--line)" }}>
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <UtensilsCrossed className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
           برنامه غذایی

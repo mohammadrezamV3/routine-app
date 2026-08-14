@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { LineChart } from "lucide-react";
 import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashCard } from "./DashCard";
@@ -14,12 +15,12 @@ const VB_W = 320;
 const VB_H = 160;
 const PAD_L = 34;
 const PAD_R = 6;
-const PAD_T = 14;
+const PAD_T = 16;
 const PAD_B = 20;
 const PLOT_W = VB_W - PAD_L - PAD_R;
 const PLOT_H = VB_H - PAD_T - PAD_B;
 
-// محورِ Y همیشه ۵ فاصله‌ی «گرد» داره (دقیقاً مثلِ رفرنس: ۰/۵۰۰/۱۰۰۰/۱۵۰۰/۲۰۰۰/۲۵۰۰) —
+// محورِ Y همیشه ۵ فاصله‌ی «گرد» داره (مثلاً ۰/۵۰۰/۱۰۰۰/۱۵۰۰/۲۰۰۰/۲۵۰۰) —
 // نه فاصله‌های درصدی؛ گامِ گرد بر اساسِ بزرگیِ عدد انتخاب می‌شه.
 function niceStep(rawMax: number): number {
   const roughStep = Math.max(rawMax, 1) / 5;
@@ -35,18 +36,13 @@ function formatKcal(n: number): string {
 
 const HOUR_TICKS = [0, 4, 8, 12, 16, 20, 24];
 
-// سبزِ اختصاصیِ خودِ نمودار — var(--accent) سایتِ اصلی یه سبزِ کدرِ جواهریه
-// (#00A86B) که کنارِ عکسِ رفرنس کم‌رنگ به‌نظر می‌رسید؛ این‌جا از یه سبزِ
-// روشن‌تر و نئونی‌تر استفاده می‌شه (دقیقاً مثلِ الگوی #F5A623ِ قبلی برای
-// خطِ هدف — بعضی رنگ‌های خاصِ نمودار عمداً مستقل از پالتِ سراسری‌ان).
-const CHART_GREEN = "#22C55E";
-const CHART_GREEN_RGB = "34,197,94";
-
-// نمودارِ روندِ کالری — دقیقاً هم‌طرحِ عکسِ رفرنس: تایتل+تب‌ها توی یه ردیف،
-// محورِ افقیِ روزانه با تیک‌های ثابتِ هر ۴ ساعت (۰۰:۰۰ تا ۲۴:۰۰) و نقطه‌ها
-// بر اساسِ ساعتِ واقعیِ ثبت روی همون محور جا می‌گیرن (نه به‌ترتیبِ ایندکس)،
-// خطِ هدفِ سبزِ نقطه‌چین با لیبلِ داخلِ نمودار بالا-راست، نقطه‌های سفیدِ
-// درخشان با هاله‌ی سبز و تولتیپِ قرصی‌شکلِ سبز.
+// نمودارِ روندِ کالری — بازطراحیِ کامل تا با بقیه‌ی کارت‌های داشبورد یکدست
+// باشه: تایتل با آیکون هم‌اندازه‌ی بقیه‌ی کارت‌ها، رنگ‌ها دقیقاً همون
+// var(--accent) سراسریِ اپ (نه یه سبزِ نئونیِ مستقل)، و بجایِ نمودارِ
+// خطیِ شلوغِ قبلی: روزانه = خط/ناحیه‌ی نرمِ تجمعیِ روز (چون فقط یه روزه و
+// خط منطقی‌تره)، هفتگی/ماهانه = میله‌ایِ ساده با سرِ گردِ هم‌قاعده‌ی
+// rounded-2xl سایتِ اصلی. خطِ هدف حالا یه پیلِ ساده‌ست (هم‌قاعده‌ی
+// DashFilterButton)، نه یه <text> شناور که ممکنه از لبه بیرون بزنه.
 export function CalorieChartCard({
   todayEntries,
   rangeEntries,
@@ -60,6 +56,7 @@ export function CalorieChartCard({
 }) {
   const [range, setRange] = useState<ChartRange>("daily");
   const [selected, setSelected] = useState<number | null>(null);
+  const isDaily = range === "daily";
 
   const rawPoints = useMemo(() => {
     if (range === "daily") {
@@ -98,12 +95,12 @@ export function CalorieChartCard({
 
   const step = niceStep(Math.max(targetKcal * 1.15, ...rawPoints.map((p) => p.value), 100));
   const maxY = step * 5;
+  const n = rawPoints.length;
 
   const points: Point[] = rawPoints.map((p, i) => ({
-    x:
-      range === "daily"
-        ? PAD_L + (("hour" in p ? p.hour! : i) / 24) * PLOT_W
-        : PAD_L + (rawPoints.length > 1 ? (i / (rawPoints.length - 1)) * PLOT_W : PLOT_W / 2),
+    x: isDaily
+      ? PAD_L + (("hour" in p ? p.hour! : i) / 24) * PLOT_W
+      : PAD_L + ((i + 0.5) / n) * PLOT_W,
     y: PAD_T + PLOT_H - (p.value / maxY) * PLOT_H,
     value: p.value,
     label: p.label,
@@ -114,20 +111,20 @@ export function CalorieChartCard({
     ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} L${points[0].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} Z`
     : "";
 
+  const barWidth = isDaily ? 0 : Math.min(22, (PLOT_W / n) * 0.55);
   const goalY = PAD_T + PLOT_H - (targetKcal / maxY) * PLOT_H;
   const yLabels = [0, 1, 2, 3, 4, 5].map((m) => m * step);
-  const xTicks = range === "daily" ? HOUR_TICKS.map((h) => ({ x: PAD_L + (h / 24) * PLOT_W, label: `${faNum(String(h).padStart(2, "0"))}:۰۰` })) : null;
+  const xTicks = isDaily ? HOUR_TICKS.map((h) => ({ x: PAD_L + (h / 24) * PLOT_W, label: `${faNum(String(h).padStart(2, "0"))}:۰۰` })) : null;
   const sel = selected !== null ? points[selected] : null;
 
   return (
     <DashCard delay={delay}>
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="shrink-0 text-[15px] font-bold text-dash-text sm:text-[19px]">نمودار کالری</h2>
-        {/* .auth-tabs بدونِ عرضِ صریح، وقتی کنارِ تایتل توی یه ردیفِ flex
-            می‌شینه (نه توی ردیفِ تمام‌عرضِ خودش)، بچه‌های flex:1/min-width:0
-            داخلش به حداقل جمع می‌شن و کل کنترل جمع‌وجور/رویِ‌هم می‌افته؛
-            یه عرضِ ثابتِ معقول (هم‌قدِ exercise-mode-tabs) این‌و می‌گیره. */}
-        <div className="w-[184px] shrink-0 sm:w-[212px]">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+          <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+          نمودار کالری
+        </h2>
+        <div className="w-full shrink-0 sm:w-[212px]">
           <SegmentedTabs
             active={range}
             onChange={(v) => { setRange(v); setSelected(null); }}
@@ -144,8 +141,12 @@ export function CalorieChartCard({
         <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block overflow-visible">
           <defs>
             <linearGradient id="calorie-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={CHART_GREEN} stopOpacity="0.32" />
-              <stop offset="100%" stopColor={CHART_GREEN} stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="calorie-chart-bar-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.45" />
             </linearGradient>
           </defs>
 
@@ -153,7 +154,7 @@ export function CalorieChartCard({
             const y = PAD_T + PLOT_H - (v / maxY) * PLOT_H;
             return (
               <g key={i}>
-                <line x1={PAD_L} y1={y} x2={VB_W - PAD_R} y2={y} stroke="var(--line)" strokeWidth="0.6" opacity="0.9" />
+                <line x1={PAD_L} y1={y} x2={VB_W - PAD_R} y2={y} stroke="var(--line)" strokeWidth="0.6" opacity="0.6" />
                 <text x={PAD_L - 5} y={y + 2.6} fontSize="7" fill="var(--dash-muted)" textAnchor="end">{formatKcal(v)}</text>
               </g>
             );
@@ -169,71 +170,88 @@ export function CalorieChartCard({
                 ) : null
               )}
 
-          <line x1={PAD_L} y1={goalY} x2={VB_W - PAD_R} y2={goalY} stroke={CHART_GREEN} strokeWidth="1" strokeDasharray="3.5 3" opacity="0.85" />
+          <line x1={PAD_L} y1={goalY} x2={VB_W - PAD_R} y2={goalY} stroke="var(--accent)" strokeWidth="1" strokeDasharray="3.5 3" opacity="0.6" />
 
-          {points.length > 1 && (
-            <motion.path
-              d={areaPath}
-              fill="url(#calorie-chart-area-grad)"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            />
-          )}
-
-          {points.length > 1 && (
-            <motion.path
-              d={linePath}
-              fill="none"
-              stroke={CHART_GREEN}
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ filter: `drop-shadow(0 0 1.5px rgba(${CHART_GREEN_RGB},.9))` }}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.9, ease: "easeOut" }}
-            />
-          )}
-
-          {points.map((p, i) => {
-            const isLast = i === points.length - 1;
-            return (
-              <motion.g
-                key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.4 + i * 0.02 }}
-                onClick={() => setSelected(selected === i ? null : i)}
-                style={{ cursor: "pointer" }}
-              >
-                <circle cx={p.x} cy={p.y} r={isLast ? 6 : 4.2} fill={CHART_GREEN} opacity={isLast ? 0.28 : 0.16} />
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={isLast || selected === i ? 3.1 : 2.3}
-                  fill="#fff"
-                  stroke={CHART_GREEN}
-                  strokeWidth="1.3"
-                  style={{ filter: `drop-shadow(0 0 1.2px rgba(${CHART_GREEN_RGB},.9))` }}
+          {isDaily ? (
+            <>
+              {points.length > 1 && (
+                <motion.path
+                  d={areaPath}
+                  fill="url(#calorie-chart-area-grad)"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
                 />
-              </motion.g>
-            );
-          })}
+              )}
+              {points.length > 1 && (
+                <motion.path
+                  d={linePath}
+                  fill="none"
+                  stroke="var(--accent)"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.9, ease: "easeOut" }}
+                />
+              )}
+              {points.map((p, i) => {
+                const isLast = i === points.length - 1;
+                return (
+                  <motion.g
+                    key={i}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.4 + i * 0.02 }}
+                    onClick={() => setSelected(selected === i ? null : i)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <circle cx={p.x} cy={p.y} r={isLast ? 5.5 : 4} fill="var(--accent)" opacity={isLast ? 0.22 : 0.14} />
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={isLast || selected === i ? 2.8 : 2.1}
+                      fill="var(--bg)"
+                      stroke="var(--accent)"
+                      strokeWidth="1.3"
+                    />
+                  </motion.g>
+                );
+              })}
+            </>
+          ) : (
+            points.map((p, i) => {
+              const barTop = Math.min(p.y, PAD_T + PLOT_H - 1.5);
+              const barH = Math.max(0, PAD_T + PLOT_H - barTop);
+              const isActive = selected === i;
+              return (
+                <motion.rect
+                  key={i}
+                  x={p.x - barWidth / 2}
+                  width={barWidth}
+                  rx={barWidth / 2.6}
+                  fill="url(#calorie-chart-bar-grad)"
+                  opacity={p.value === 0 ? 0.08 : isActive ? 1 : 0.85}
+                  style={{ cursor: p.value ? "pointer" : "default" }}
+                  onClick={() => p.value && setSelected(isActive ? null : i)}
+                  initial={{ y: PAD_T + PLOT_H, height: 0 }}
+                  animate={{ y: p.value === 0 ? PAD_T + PLOT_H - 1.5 : barTop, height: p.value === 0 ? 1.5 : barH }}
+                  transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.015 }}
+                />
+              );
+            })
+          )}
         </svg>
 
-        {/* لیبلِ هدف به‌جای <text>ِ SVG (که با مقادیرِ راست‌به‌چپِ ترکیبی مثلِ
-            «هدف: ۲۷۲۰ کالری» توی مرورگرها گاهی text-anchor="end" رو غلط
-            حساب می‌کنه و از لبه‌ی نمودار بیرون می‌زنه) یه overlayِ معمولیِ
-            HTML ـه — دقیقاً مثلِ تولتیپِ زیرش، که RTL رو درست هندل می‌کنه. */}
         <div
-          className="pointer-events-none absolute whitespace-nowrap text-[9.5px] font-bold text-dash-text sm:text-[11px]"
+          className="pointer-events-none absolute flex items-center whitespace-nowrap rounded-dash border border-dash-border bg-dash-card px-2 py-0.5 text-[9px] font-bold text-dash-text sm:text-[10.5px]"
           style={{
             right: `${(PAD_R / VB_W) * 100}%`,
-            top: `${(Math.max(PAD_T - 2, goalY - 9) / VB_H) * 100}%`,
+            top: `${(Math.max(PAD_T - 8, goalY - 9) / VB_H) * 100}%`,
           }}
         >
-          هدف: {formatKcal(targetKcal)} کالری
+          هدف: {formatKcal(targetKcal)}
         </div>
 
         {sel && (
@@ -243,8 +261,8 @@ export function CalorieChartCard({
               left: `${(sel.x / VB_W) * 100}%`,
               top: `${(sel.y / VB_H) * 100}%`,
               transform: "translate(-50%, calc(-100% - 10px))",
-              background: CHART_GREEN,
-              color: "#04160D",
+              background: "var(--accent)",
+              color: "var(--bg)",
             }}
           >
             {formatKcal(sel.value)} کالری
