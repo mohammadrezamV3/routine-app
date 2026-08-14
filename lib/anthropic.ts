@@ -324,3 +324,109 @@ export async function suggestExerciseSubstitute(exerciseItem: string): Promise<s
   }
   return substitute;
 }
+
+// ============================================================================
+// اسکنِ عکسِ غذا با هوش مصنوعی — تنها فراخوانیِ چندوجهی (multimodal) این فایل؛
+// بقیه‌ی فراخوان‌ها فقط متنی‌ان. خروجی شاملِ کالری + درشت‌مغذی‌هاست، چون
+// این تنها راهِ عملیِ این اپه که بدونِ کاتالوگِ دستیِ درشت‌مغذی برای هزاران
+// غذا، بخشِ «ریزِ درشت‌مغذی‌ها» عدد داشته باشه.
+// ============================================================================
+
+const FOOD_SCAN_SYSTEM_PROMPT = `تو یک متخصص تغذیه هستی که با نگاه‌کردن به عکسِ یک وعده غذا، مقدارِ کالری و
+درشت‌مغذی‌هاش رو تخمین می‌زنی. این یک تخمینِ بصریه، نه اندازه‌گیریِ آزمایشگاهی — بر اساسِ نوع و حجمِ ظاهریِ
+غذا در عکس بهترین حدسِ واقع‌بینانه رو بزن.
+
+اگه عکس اصلاً غذا/نوشیدنیِ قابل‌تشخیصی نشون نمی‌ده، فقط همین JSON خام رو برگردون:
+{ "recognized": false, "message": "یک جمله‌ی کوتاه و دوستانه به فارسی که بگه غذایی توی عکس تشخیص داده نشد" }
+
+اگه غذا قابل‌تشخیص بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متنِ اضافه):
+{
+  "recognized": true,
+  "name": "نامِ فارسیِ کوتاهِ غذا",
+  "estimatedGrams": 250,
+  "calories": 480,
+  "proteinG": 22,
+  "carbsG": 55,
+  "fatG": 18
+}
+
+قوانین: همه‌ی اعدادِ بالا باید عددِ مثبت باشن (نه رشته)؛ calories باید با estimatedGrams/proteinG/carbsG/fatG
+هم‌خوانیِ تقریبی داشته باشه (پروتئین×۴ + کربوهیدرات×۴ + چربی×۹ ≈ calories)؛ هیچ توصیه‌ی پزشکی یا تشخیصی نده،
+فقط تخمینِ عددی.`;
+
+export type FoodScanResult =
+  | { recognized: true; name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number }
+  | { recognized: false; message: string };
+
+function asPositiveNumber(v: unknown): number | null {
+  const n = typeof v === "number" ? v : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpeg" | "image/png" | "image/webp"): Promise<FoodScanResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY تنظیم نشده — این فیچر بدون کلید API کار نمی‌کند");
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-5",
+      max_tokens: 500,
+      system: FOOD_SCAN_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+            { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`خطا در فراخوانی Claude API: ${response.status} ${text}`);
+  }
+
+  const data = await response.json();
+  const text: string = (data.content || [])
+    .map((block: any) => (block.type === "text" ? block.text : ""))
+    .join("");
+
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  let parsed: any;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
+  }
+
+  if (parsed?.recognized === false) {
+    const message = typeof parsed?.message === "string" && parsed.message.trim()
+      ? parsed.message.trim()
+      : "غذایی توی این عکس تشخیص داده نشد.";
+    return { recognized: false, message };
+  }
+
+  const calories = asPositiveNumber(parsed?.calories);
+  const estimatedGrams = asPositiveNumber(parsed?.estimatedGrams);
+  const proteinG = asPositiveNumber(parsed?.proteinG) ?? 0;
+  const carbsG = asPositiveNumber(parsed?.carbsG) ?? 0;
+  const fatG = asPositiveNumber(parsed?.fatG) ?? 0;
+  const name = typeof parsed?.name === "string" && parsed.name.trim() ? parsed.name.trim() : "";
+
+  if (!calories || !estimatedGrams || !name) {
+    throw new Error("مدل تخمین قابل‌استفاده‌ای برنگردوند");
+  }
+
+  return { recognized: true, name, estimatedGrams, calories, proteinG, carbsG, fatG };
+}

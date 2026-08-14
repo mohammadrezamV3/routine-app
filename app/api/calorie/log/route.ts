@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
   const userId = guard.userId;
 
   const body = await req.json();
-  const { date, customName, customCalories, grams, mealType } = body as {
+  const { date, customName, customCalories, grams, mealType, proteinG, carbsG, fatG, aiScanned } = body as {
     date: string; customName: string; customCalories: number; grams: number; mealType?: string;
+    proteinG?: number; carbsG?: number; fatG?: number; aiScanned?: boolean;
   };
   if (!date || !customName || !customCalories || !grams) {
     return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
@@ -44,9 +45,19 @@ export async function POST(req: NextRequest) {
   if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
     return NextResponse.json({ error: "نوع وعده نامعتبر است" }, { status: 400 });
   }
+  // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عددِ نامنفی باشن —
+  // یا هر سه ثبت می‌شن (نتیجه‌ی اسکنِ AI) یا هیچ‌کدوم (ثبتِ دستی/کاتالوگ معمولی).
+  const hasMacros = proteinG !== undefined || carbsG !== undefined || fatG !== undefined;
+  const macrosValid = [proteinG, carbsG, fatG].every((v) => typeof v === "number" && v >= 0 && v <= 2000);
+  if (hasMacros && !macrosValid) {
+    return NextResponse.json({ error: "مقادیرِ درشت‌مغذی نامعتبره" }, { status: 400 });
+  }
 
   const entry = await prisma.foodLogEntry.create({
-    data: { userId, date: new Date(date), customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null },
+    data: {
+      userId, date: new Date(date), customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
+      ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG, aiScanned: !!aiScanned } : {}),
+    },
   });
   return NextResponse.json({ ok: true, entry });
 }

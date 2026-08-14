@@ -617,6 +617,16 @@ model FoodLogEntry {
   grams      Float
   mealType   String?  // breakfast | lunch | dinner | snack
 
+  // درشت‌مغذی‌ها — فقط برای ثبت‌هایی که با اسکنِ عکسِ غذا با هوش مصنوعی
+  // اومدن پر می‌شن (چون تخمینِ دقیقِ پروتئین/کربوهیدرات/چربی از روی عکس
+  // نیاز به مدلِ AI داره، نه یه فرمولِ ساده)؛ برای ثبت‌های دستی/کاتالوگ
+  // همیشه null می‌مونن. aiScanned مشخص می‌کنه کدوم ثبت از این مسیر اومده،
+  // تا کارتِ خلاصه‌ی درشت‌مغذی‌ها بدونه کِی داده‌ی واقعی برای نمایش داره.
+  proteinG   Float?
+  carbsG     Float?
+  fatG       Float?
+  aiScanned  Boolean  @default(false)
+
   createdAt  DateTime @default(now())
 
   @@index([userId, date])
