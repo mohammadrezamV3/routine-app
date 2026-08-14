@@ -186,7 +186,7 @@ export function CalorieChartCard({
               d={linePath}
               fill="none"
               stroke={CHART_GREEN}
-              strokeWidth="2.4"
+              strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{ filter: `drop-shadow(0 0 1.5px rgba(${CHART_GREEN_RGB},.9))` }}
@@ -212,7 +212,7 @@ export function CalorieChartCard({
                   cx={p.x}
                   cy={p.y}
                   r={isLast || selected === i ? 3.1 : 2.3}
-                  fill={p.value > targetKcal ? "#E05252" : "#fff"}
+                  fill="#fff"
                   stroke={CHART_GREEN}
                   strokeWidth="1.3"
                   style={{ filter: `drop-shadow(0 0 1.2px rgba(${CHART_GREEN_RGB},.9))` }}
