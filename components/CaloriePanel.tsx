@@ -12,6 +12,7 @@ import { CalorieChartCard } from "./CalorieChartCard";
 import { CalorieStreakCard } from "./CalorieStreakCard";
 import { CalorieAddFoodCard } from "./CalorieAddFoodCard";
 import { CalorieLogCard } from "./CalorieLogCard";
+import { CalorieMacrosCard } from "./CalorieMacrosCard";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 
 const todayKey = isoLocal(new Date());
@@ -30,6 +31,10 @@ type Entry = {
   mealType: string | null;
   date?: string;
   createdAt?: string;
+  proteinG?: number | null;
+  carbsG?: number | null;
+  fatG?: number | null;
+  aiScanned?: boolean;
 };
 
 type MealBreakdownItem = { key: string; label: string; kcal: number };
@@ -229,6 +234,7 @@ export function CaloriePanel() {
                   onTargetChange={setTarget}
                 />
                 <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.08} />
+                <CalorieMacrosCard entries={entries} mealTypes={mealTypes} onLogged={loadEntries} delay={0.1} />
               </div>
 
               {/* ستونِ کناری */}
