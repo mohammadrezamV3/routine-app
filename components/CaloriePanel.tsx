@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calendar } from "lucide-react";
+import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { isoLocal, faNum, FA_WEEKDAY, toJalali, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
@@ -17,6 +17,7 @@ import { CalorieStreakCard } from "./CalorieStreakCard";
 import { CalorieMacrosCard } from "./CalorieMacrosCard";
 import { CalorieMealBreakdownCard } from "./CalorieMealBreakdownCard";
 import { CalorieFoodPlanCard } from "./CalorieFoodPlanCard";
+import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 
 const now = new Date();
@@ -84,6 +85,20 @@ export function CaloriePanel() {
     const [y, m, d] = selectedIso.split("-").map(Number);
     return FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
   }, [selectedIso]);
+
+  const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
+
+  // انتخابِ یه تاریخِ دلخواه از تقویم — پنجره‌ی نوارِ روزها هم باید دورِ همون
+  // تاریخ وسط‌چین بشه، نه اینکه روزِ انتخاب‌شده بیرونِ پنجره‌ی فعلی بمونه
+  // (دقیقاً هم‌منطقِ pickDate توی داشبوردِ بدنسازی).
+  function pickDate(iso: string) {
+    setSelectedIso(iso);
+    const [y, m, d] = iso.split("-").map(Number);
+    const picked = new Date(y, m - 1, d);
+    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
+    setWeekOffset(Math.round(diffDays / dayWindow));
+    setHistoryPickerOpen(false);
+  }
 
   const [entries, setEntries] = useState<Entry[]>([]);
 
@@ -283,6 +298,12 @@ export function CaloriePanel() {
               />
               <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
                 <DashFilterButton
+                  label="تاریخچه"
+                  icon={<History size={15} />}
+                  active={!isSelectedToday}
+                  onClick={() => setHistoryPickerOpen(true)}
+                />
+                <DashFilterButton
                   label="امروز"
                   icon={<Calendar size={15} />}
                   active={isSelectedToday}
@@ -338,6 +359,22 @@ export function CaloriePanel() {
 
       {showTutorial && createPortal(
         <CalorieTutorial onDone={() => setShowTutorial(false)} />,
+        document.body
+      )}
+
+      {historyPickerOpen && target && createPortal(
+        <>
+          <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
+          <div className="modal-panel dash-scope open">
+            <div className="modal-head">
+              <div className="modal-title">انتخاب تاریخ</div>
+              <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>
+            </div>
+            <div className="modal-body">
+              <CalorieHistoryCalendar targetKcal={target.dailyTargetKcal} onPick={pickDate} />
+            </div>
+          </div>
+        </>,
         document.body
       )}
     </div>
