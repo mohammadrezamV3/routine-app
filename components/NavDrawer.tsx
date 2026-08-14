@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
@@ -60,16 +62,43 @@ export const ICONS: Record<string, JSX.Element> = {
 // «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربرِ لاگین‌کرده مستقیم به
 // برنامه هفتگی می‌ره، پس همون این‌جا لیبل «روتین» رو می‌گیره؛ خودِ صفحه‌ی
 // هیرو (/) دست‌نخورده می‌مونه، فقط دیگه لینک جدایی توی منو نداره.
-const LINKS = [
+//
+// «بدنسازی» و «ترید» دیگه لینکِ مستقیم نیستن — با کلیک زیرمجموعه‌هاشون باز
+// می‌شن (برنامه‌ی تمرینی/برنامه‌ی غذایی، چک‌لیست/ژورنال) تا کاربر مستقیم از
+// منو به تبِ موردنظر بره، نه اینکه اول صفحه باز شه و بعد از توی خودش تب بزنه.
+type NavLink = { href: string; label: string; icon: string };
+type NavGroup = { label: string; icon: string; children: NavLink[] };
+type NavItem = NavLink | NavGroup;
+
+function isGroup(item: NavItem): item is NavGroup {
+  return "children" in item;
+}
+
+const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "home" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
-  { href: "/exercise", label: "بدنسازی", icon: "exercise" },
-  { href: "/trade", label: "ترید", icon: "trade" },
+  {
+    label: "بدنسازی", icon: "exercise",
+    children: [
+      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise" },
+      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "exercise" },
+    ],
+  },
+  {
+    label: "ترید", icon: "trade",
+    children: [
+      { href: "/trade?tab=journal", label: "ژورنال", icon: "trade" },
+      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "trade" },
+    ],
+  },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
+  // گروهِ بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
+  // اگه صفحه‌ی فعلی زیرمجموعه‌ی یه گروهه، همون گروه پیش‌فرض باز می‌مونه.
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
@@ -138,6 +167,13 @@ export function NavDrawer() {
   useEffect(() => {
     setNotifPermission(getNotificationPermission());
   }, []);
+
+  // وقتی صفحه‌ی فعلی زیرمجموعه‌ی یه گروهه (مثلاً روی /exercise هستیم)،
+  // همون گروه پیش‌فرض باز باشه — کاربر نباید مجبور باشه اول باز کنه تا ببینه کجاست
+  useEffect(() => {
+    const activeGroup = LINKS.find((item) => isGroup(item) && item.children.some((c) => c.href.startsWith(pathname || "")));
+    if (activeGroup && isGroup(activeGroup)) setExpandedGroup(activeGroup.label);
+  }, [pathname]);
 
   // کلیک روی زنگوله همیشه پنل اطلاعیه‌ها رو باز/بسته می‌کنه؛ اگه هنوز اجازه‌ی
   // نوتیف مرورگر گرفته نشده (نقطه‌ی قرمز)، جدا از باز شدن پنل، درخواستش هم می‌ره.
@@ -268,16 +304,63 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
-          {LINKS.map((l) => (
-            <a
-              key={l.href}
-              onClick={() => go(l.href)}
-              className={`nav-link nav-link-icon${pathname === l.href ? " active" : ""}`}
-            >
-              <span className="nav-link-icon-svg">{ICONS[l.icon]}</span>
-              <span>{l.label}</span>
-            </a>
-          ))}
+          {LINKS.map((item) => {
+            if (isGroup(item)) {
+              const isExpanded = expandedGroup === item.label;
+              const isActive = item.children.some((c) => pathname === c.href.split("?")[0]);
+              return (
+                <div key={item.label}>
+                  <a
+                    onClick={() => setExpandedGroup((g) => (g === item.label ? null : item.label))}
+                    className={`nav-link nav-link-icon${isActive ? " active" : ""}`}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    <motion.span
+                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ display: "flex" }}
+                    >
+                      <ChevronDown size={16} />
+                    </motion.span>
+                  </a>
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22, ease: "easeInOut" }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        {item.children.map((c) => (
+                          <a
+                            key={c.href}
+                            onClick={() => go(c.href)}
+                            className={`nav-link nav-link-icon nav-link-sub${pathname === c.href.split("?")[0] ? " active" : ""}`}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS[c.icon]}</span>
+                            <span>{c.label}</span>
+                          </a>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+            return (
+              <a
+                key={item.href}
+                onClick={() => go(item.href)}
+                className={`nav-link nav-link-icon${pathname === item.href ? " active" : ""}`}
+              >
+                <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
 
           {/* برای کاربر لاگین‌کرده «پنل کاربری» دیگه اینجا نیست — همون گزینه‌ها
               (پنل کاربری/اشتراک/خروج) با کلیک روی آواتار توی هدر باز می‌شن،

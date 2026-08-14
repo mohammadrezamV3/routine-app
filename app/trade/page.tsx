@@ -9,9 +9,17 @@ import { AuthGate } from "@/components/AuthGate";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MarketTicker } from "@/components/MarketTicker";
 
+// خوندنِ ?tab= مستقیم از window.location (نه useSearchParams) — هم‌قاعده‌ی
+// app/auth/login/page.tsx، برای دیپ‌لینک از منوی «ترید» ← «چک‌لیست»/«ژورنال»
+function initialTab(): "checklist" | "journal" {
+  if (typeof window === "undefined") return "journal";
+  const t = new URLSearchParams(window.location.search).get("tab");
+  return t === "checklist" ? "checklist" : "journal";
+}
+
 export default function TradePage() {
   const { status } = useSession();
-  const [tab, setTab] = useState<"checklist" | "journal">("journal");
+  const [tab, setTab] = useState<"checklist" | "journal">(initialTab);
 
   return (
     <section className="trade-desktop">

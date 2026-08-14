@@ -6,8 +6,18 @@ import { CaloriePanel } from "@/components/CaloriePanel";
 import { ModuleGate } from "@/components/ModuleGate";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 
+// خوندنِ ?tab= مستقیم از window.location (نه useSearchParams) — هم‌قاعده‌ی
+// app/auth/login/page.tsx، چون useSearchParams نیاز به Suspense boundary
+// داره و این‌جا لازم نیست؛ فقط برای دیپ‌لینک از منوی «بدنسازی» ← «برنامه
+// غذایی»/«برنامه تمرینی» استفاده می‌شه.
+function initialTab(): "exercise" | "calorie" {
+  if (typeof window === "undefined") return "exercise";
+  const t = new URLSearchParams(window.location.search).get("tab");
+  return t === "calorie" ? "calorie" : "exercise";
+}
+
 export default function BodybuildingPage() {
-  const [tab, setTab] = useState<"exercise" | "calorie">("exercise");
+  const [tab, setTab] = useState<"exercise" | "calorie">(initialTab);
 
   return (
     <section className="bodybuilding-glass exercise-dash-breakout">
@@ -16,8 +26,8 @@ export default function BodybuildingPage() {
           active={tab}
           onChange={setTab}
           options={[
-            { value: "exercise", label: "بدنسازی" },
-            { value: "calorie", label: "کالری" },
+            { value: "exercise", label: "برنامه تمرینی" },
+            { value: "calorie", label: "برنامه غذایی" },
           ]}
         />
       </div>
