@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Flame, Trophy } from "lucide-react";
+import { Check, Trophy } from "lucide-react";
 import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
+import { StreakFlame } from "./StreakFlame";
 
 type Entry = { customCalories: number; date?: string };
 
@@ -19,11 +20,12 @@ function dailyTotals(entries: Entry[]): Record<string, number> {
   return byDate;
 }
 
-// «روند موفقیت» — خلاصه‌ی بالای کارت به‌جای «عددِ بزرگ + متنِ روز متوالی»
-// حالا یه «تمبرِ» دایره‌ای‌ـه: فقط آیکون + عدد، بدون هیچ متنی. ردیفِ
-// دایره‌ی روزها زیرش دست‌نخورده مونده. امروز همیشه «در انتظار»ه (دایره‌ی
-// خالی، بدون تیک) چون هنوز روز تموم نشده. عمداً بدونِ دکمه‌ی «مشاهده
-// جزئیات» — طبقِ درخواستِ صریحِ کاربر.
+// «روند موفقیت» — خلاصه‌ی استریک دیگه یه تمبرِ دایره‌ایِ بزرگِ وسطِ کارت
+// نیست؛ طبقِ درخواستِ صریحِ کاربر همون بالای کارت، سمتِ چپ (کنارِ تایتل)
+// جا گرفته — فقط آیکونِ شعله + عدد، بدونِ هیچ دایره/باکسی دورش (از
+// `StreakFlame`ِ مشترک استفاده می‌کنه، هم‌قاعده‌ی استریکِ دوست‌ها توی
+// DashFriendsCard). ردیفِ دایره‌ی روزها زیرش دست‌نخورده مونده. امروز
+// همیشه «در انتظار»ه (دایره‌ی خالی، بدون تیک) چون هنوز روز تموم نشده.
 export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEntries: Entry[]; targetKcal: number; delay?: number }) {
   const byDate = dailyTotals(rangeEntries);
   const todayKey = isoLocal(new Date());
@@ -52,29 +54,21 @@ export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEn
 
   return (
     <DashCard delay={delay}>
-      <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
-        <Trophy className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-        روند موفقیت
-      </h2>
-
-      <div className="mt-3 flex justify-center">
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+          <Trophy className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+          روند موفقیت
+        </h2>
         <motion.div
-          className="flex flex-col items-center justify-center gap-0.5 rounded-full"
-          style={{
-            width: 76, height: 76,
-            border: "2px solid var(--accent)",
-            boxShadow: "0 0 0 3px rgba(var(--accent-rgb),.12), 0 0 16px rgba(var(--accent-rgb),.25)",
-          }}
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.35, ease: "backOut" }}
         >
-          <Flame className="h-4 w-4 text-dash-green" />
-          <span className="mono text-[22px] font-extrabold leading-none text-dash-green">{faNum(streak)}</span>
+          <StreakFlame streak={streak} className="text-[13px] font-extrabold sm:text-[15px]" />
         </motion.div>
       </div>
 
-      <div className="mt-4 flex justify-between gap-1.5 sm:mt-5 sm:gap-2">
+      <div className="mt-3.5 flex justify-between gap-1.5 sm:mt-4 sm:gap-2">
         {days.map((d, i) => (
           <div key={d.key} className="flex flex-1 flex-col items-center gap-1.5 sm:gap-2">
             <motion.div

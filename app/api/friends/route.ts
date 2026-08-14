@@ -94,8 +94,48 @@ async function statsForUserExercise(userId: string) {
   };
 }
 
-// GET /api/friends?module=exercise → لیست دوستانِ تأییدشده + پیشرفتِ هرکدوم؛
-// module=exercise یعنی فقط پیشرفتِ بدنسازی نشون بده (برای داشبوردِ بدنسازی)،
+// پیشرفتِ «کالری»ِ یک دوست — روزهایی که توی هفتِ اخیر جمعِ کالریِ ثبت‌شده‌شون
+// بین صفر تا هدفِ روزانه بوده («روزِ موفق»)، به‌علاوه‌ی استریکِ روزهای پشتِ‌سرهمِ
+// موفق (دقیقاً هم‌منطقِ CalorieStreakCard سمتِ کلاینت، ولی سمتِ سرور روی دیتای
+// خودِ دوست چون کلاینت به FoodLogEntry دوست‌ها دسترسی نداره).
+async function statsForUserCalorie(userId: string) {
+  const target = await prisma.calorieTarget.findFirst({ where: { userId, effectiveTo: null }, orderBy: { effectiveFrom: "desc" } });
+  if (!target) return { completed: 0, total: 0, pct: 0, streak: 0 };
+
+  const now = new Date();
+  const start = new Date(now); start.setDate(start.getDate() - 90);
+  const rows = await prisma.foodLogEntry.findMany({
+    where: { userId, date: { gte: start, lte: now } },
+    select: { date: true, customCalories: true },
+  });
+  const byDate: Record<string, number> = {};
+  rows.forEach((r) => {
+    const key = isoLocal(r.date);
+    byDate[key] = (byDate[key] || 0) + (r.customCalories || 0);
+  });
+
+  function isSuccess(key: string): boolean {
+    const total = byDate[key];
+    return !!total && total > 0 && total <= target!.dailyTargetKcal;
+  }
+
+  let streak = 0;
+  const cursor = new Date(now); cursor.setDate(cursor.getDate() - 1);
+  for (let i = 0; i < 90; i++) {
+    if (isSuccess(isoLocal(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); } else break;
+  }
+
+  let completed = 0;
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    if (isSuccess(isoLocal(d))) completed++;
+  }
+  const total = 7;
+  return { completed, total, pct: Math.round((completed / total) * 100), streak };
+}
+
+// GET /api/friends?module=exercise|calorie → لیست دوستانِ تأییدشده + پیشرفتِ
+// هرکدوم؛ exercise یعنی پیشرفتِ بدنسازی، calorie یعنی روزهای موفقِ کالری،
 // وگرنه پیشرفتِ روتینِ روزانه (پیش‌فرض، برای داشبوردِ اصلی).
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -103,7 +143,7 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const module = req.nextUrl.searchParams.get("module");
-  const statsFn = module === "exercise" ? statsForUserExercise : statsForUser;
+  const statsFn = module === "exercise" ? statsForUserExercise : module === "calorie" ? statsForUserCalorie : statsForUser;
 
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
