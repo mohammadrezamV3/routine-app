@@ -2750,8 +2750,9 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
 
 /* ===================== کالری — سهم هر وعده، تاریخچه ===================== */
 /* کارت‌های کالری الان با DashCard/Tailwind ساخته می‌شن (CalorieTodayCard،
-   CalorieChartCard، CalorieStreakCard، CalorieAddFoodCard، CalorieLogCard)؛
-   .calorie-meal-of هنوز توسطِ TradeJournal استفاده می‌شه، پس نگه داشته شده. */
+   CalorieChartCard، CalorieStreakCard، CalorieMacrosCard، CalorieMealBreakdownCard،
+   CalorieFoodPlanCard)؛ .calorie-meal-of هنوز توسطِ TradeJournal استفاده می‌شه،
+   پس نگه داشته شده. */
 .calorie-meal-of{ font-size:11px; color:var(--muted2); font-weight:600; display:block; }
 
 /* عرضِ ثابتِ فیلدِ «مقدار» توی فرمِ افزودنِ غذا — چون @tailwind utilities

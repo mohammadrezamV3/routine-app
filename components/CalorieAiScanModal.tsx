@@ -2,12 +2,10 @@
 
 import { useRef, useState } from "react";
 import { Camera, Loader2, Sparkles } from "lucide-react";
-import { faNum, isoLocal } from "@/lib/jalali";
+import { faNum } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 
 type ScanResult = { name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number };
-
-const todayKey = isoLocal(new Date());
 
 function fileToBase64(file: File): Promise<{ data: string; mediaType: string }> {
   return new Promise((resolve, reject) => {
@@ -26,10 +24,12 @@ function fileToBase64(file: File): Promise<{ data: string; mediaType: string }> 
 // نشون می‌ده، کاربر می‌تونه قبل از ثبت نهایی مقادیر رو ویرایش کنه (دقیقاً
 // همون الگوی «بازبینی قبل از ذخیره» که رودمپ/برنامه‌ی ورزشی AI هم دارن).
 export function CalorieAiScanModal({
+  date,
   mealTypes,
   onClose,
   onLogged,
 }: {
+  date: string;
   mealTypes: { key: string; label: string }[];
   onClose: () => void;
   onLogged: () => void;
@@ -72,7 +72,7 @@ export function CalorieAiScanModal({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        date: todayKey,
+        date,
         customName: result.name,
         customCalories: Math.round(result.calories),
         grams: result.estimatedGrams,
@@ -174,7 +174,7 @@ export function CalorieAiScanModal({
                   className="flex-[2] rounded-2xl border py-2.5 text-[12.5px] font-bold disabled:opacity-40"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                 >
-                  {saving ? "در حال ثبت…" : "ثبت به امروز"}
+                  {saving ? "در حال ثبت…" : "ثبت غذا"}
                 </button>
               </div>
             </div>
