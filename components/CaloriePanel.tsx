@@ -115,7 +115,6 @@ export function CaloriePanel() {
 
   // تاریخچه — ۳۰ روزِ واقعیِ اخیر از «امروز»، مستقل از روزی که کاربر داره
   // می‌بینه؛ چون نمودارِ هفتگی/ماهانه و روندِ موفقیت به تاریخِ واقعی نیاز دارن
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<Entry[]>([]);
 
   // راهنمای اولین‌بار — دقیقاً وقتی صفحه با یه هدفِ کالریِ ازقبل‌ساخته‌شده
@@ -134,12 +133,10 @@ export function CaloriePanel() {
     setEntries(data.entries || []);
   }
   async function loadHistory() {
-    setHistoryLoading(true);
     const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
     const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayIso}`);
     const data = await res.json();
     setHistoryEntries(data.entries || []);
-    setHistoryLoading(false);
   }
 
   useEffect(() => {
@@ -330,8 +327,6 @@ export function CaloriePanel() {
                   onRemove={removeEntry}
                   onAdded={refreshAfterChange}
                   mealTypes={mealTypes}
-                  historyEntries={historyEntries}
-                  historyLoading={historyLoading}
                   delay={0.06}
                 />
               </div>

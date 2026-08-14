@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Plus, UtensilsCrossed, X } from "lucide-react";
+import { Plus, UtensilsCrossed, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
@@ -11,9 +11,9 @@ import { CalorieAiScanModal } from "./CalorieAiScanModal";
 type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
 
 // «برنامه غذایی» — کارتِ اصلیِ ستونِ راست، لیستِ غذاهای همون روزِ انتخاب‌شده
-// + دکمه‌ی «افزودن» (که پاپ‌آپِ افزودن رو باز می‌کنه) + آکاردئونِ تاریخچه.
-// دکمه‌ی افزودن فقط برای «امروز» فعاله — روزهای گذشته/آینده فقط نمایشی‌ان
-// (دقیقاً هم‌قاعده‌ی برنامه‌ی تمرینیِ بدنسازی که فقط امروز قابل‌ویرایشه).
+// + دکمه‌ی «افزودن» (که پاپ‌آپِ افزودن رو باز می‌کنه). دکمه‌ی افزودن فقط
+// برای «امروز» فعاله — روزهای گذشته/آینده فقط نمایشی‌ان (دقیقاً هم‌قاعده‌ی
+// برنامه‌ی تمرینیِ بدنسازی که فقط امروز قابل‌ویرایشه).
 export function CalorieFoodPlanCard({
   date,
   isToday,
@@ -21,8 +21,6 @@ export function CalorieFoodPlanCard({
   onRemove,
   onAdded,
   mealTypes,
-  historyEntries,
-  historyLoading,
   delay,
 }: {
   date: string;
@@ -31,21 +29,10 @@ export function CalorieFoodPlanCard({
   onRemove: (id: string) => void;
   onAdded: () => void;
   mealTypes: { key: string; label: string }[];
-  historyEntries: Entry[];
-  historyLoading: boolean;
   delay?: number;
 }) {
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-
-  const historyByDate = historyEntries.reduce<Record<string, Entry[]>>((acc, e) => {
-    const d = (e.date || "").slice(0, 10);
-    if (!acc[d]) acc[d] = [];
-    acc[d].push(e);
-    return acc;
-  }, {});
-  const historyDates = Object.keys(historyByDate).sort((a, b) => (a < b ? 1 : -1));
 
   return (
     <DashCard delay={delay}>
@@ -95,42 +82,6 @@ export function CalorieFoodPlanCard({
           </div>
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={() => setHistoryOpen((v) => !v)}
-        className="mt-5 flex w-full items-center justify-between border-t pt-4 text-[11.5px] font-bold text-dash-text sm:text-[13px]"
-        style={{ borderColor: "var(--line)" }}
-      >
-        <span>تاریخچه غذایی (۳۰ روز اخیر)</span>
-        <ChevronDown className={`h-4 w-4 text-dash-muted transition-transform ${historyOpen ? "rotate-180" : ""}`} />
-      </button>
-
-      {historyOpen && (
-        <div className="mt-3 flex flex-col">
-          {historyLoading ? (
-            <div className="text-[11.5px] text-dash-muted sm:text-[12.5px]">در حال بارگذاری…</div>
-          ) : historyDates.length ? (
-            historyDates.map((d) => {
-              const dayEntries = historyByDate[d];
-              const dayTotal = dayEntries.reduce((s, e) => s + e.customCalories, 0);
-              return (
-                <div key={d} className="border-b py-2.5 last:border-b-0" style={{ borderColor: "var(--line)" }}>
-                  <div className="flex items-center justify-between text-[11.5px] sm:text-[12.5px]">
-                    <span className="mono text-dash-muted">{d}</span>
-                    <span className="mono font-bold text-dash-green">{faNum(dayTotal)} kcal</span>
-                  </div>
-                  <div className="mt-1 text-[10.5px] leading-relaxed text-dash-muted sm:text-[11.5px]">
-                    {dayEntries.map((e) => `${e.customName} (${faNum(e.customCalories)}kcal)`).join("، ")}
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-[11.5px] text-dash-muted sm:text-[12.5px]">هنوز تاریخچه‌ای ثبت نشده</div>
-          )}
-        </div>
-      )}
 
       {addOpen && createPortal(
         <CalorieAddEntryModal
