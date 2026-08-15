@@ -274,7 +274,7 @@ export function ExerciseTaskList({
                   <button
                     type="button"
                     onClick={handleStartClick}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
                     style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                   >
                     <Play size={16} />
@@ -286,7 +286,7 @@ export function ExerciseTaskList({
                     type="button"
                     disabled={ending}
                     onClick={endWorkout}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[15px]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
                     style={{ borderColor: "#E05252", color: "#E05252" }}
                   >
                     <Square size={14} />

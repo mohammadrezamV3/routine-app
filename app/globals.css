@@ -712,12 +712,13 @@
   body[data-theme="light"] :where(.dash-scope) button{ background:none; border-color:transparent; box-shadow:none; }
   body[data-theme="light"] :where(.dash-scope) button:hover{ background:none; border-color:transparent; box-shadow:none; }
 
-  /* bg-dash-card یه اورلی سفیدِ ثابت (rgba(255,255,255,.02)) ـه که فقط برای
-     پس‌زمینه‌ی تیره طراحی شده بود — روی پس‌زمینه‌ی کِرمیِ تمِ روشن (--bg
-     #F3E9D8) همون ۲٪ سفید عملاً دیده نمی‌شه و کارت‌ها از پسِ زمینه جدا
-     نمی‌شن. مثلِ بقیه‌ی باکس‌های مشابه (trade-pnl-readout و...) توی تمِ
-     روشن باید اپاسیتیِ خیلی بیشتری بگیره تا واقعاً به‌چشم بیاد. */
-  body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.55); }
+  /* توی تمِ روشن، bg-dash-card قبلاً rgba(255,255,255,.55) بود — اپاسیتیِ
+     این‌قدر بالا با وجودِ backdrop-blur باعث می‌شد باکس‌ها «سفیدِ توپر»
+     دیده بشن، نه شیشه‌ای. طبقِ درخواستِ صریحِ کاربر، دقیقاً همون دستورِ
+     شیشه‌ایِ خودِ منو (.nav-drawer-glass توی تمِ روشن) این‌جا هم پیاده شد —
+     اپاسیتیِ خیلی کم (۵٪) که بیشترِ جداشدنِ باکس از پس‌زمینه رو خودِ
+     backdrop-blur (روی DashCard از قبل هست) انجام می‌ده، نه رنگِ توپر. */
+  body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.05); }
   .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
@@ -1809,19 +1810,22 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
 }
 
-/* زیرمجموعه‌ی یه گروهِ منو (مثلاً برنامه‌ی تمرینی/غذایی زیرِ بدنسازی) — همه‌ی
-   بچه‌ها توی یک باکسِ واحد دقیقاً زیرِ خودِ گروه (نه تورفتگیِ عمیق/لینک‌های
-   شناور)، هرکدوم آیکونِ اختصاصیِ خودشون، فونتِ کوچیک‌تر از لینک‌های اصلی */
-.nav-subgroup-box{
-  display:flex; flex-direction:column; gap:1px;
-  margin:2px 10px 6px; padding:4px;
-  border-radius:14px; border:1px solid var(--line);
+/* زیرمجموعه‌ی یه گروهِ منو (مثلاً برنامه‌ی تمرینی/غذایی زیرِ بدنسازی) — طبقِ
+   اصلاحِ کاربر، دیگه یه باکسِ جداگانه‌ی زیرِ دکمه‌ی گروه نیست؛ وقتی گروه باز
+   می‌شه، خودِ دکمه‌ی گروه + زیرمجموعه‌ها هردو داخلِ یه باکسِ واحد (این کلاس،
+   روی والدِ مشترکشون) جا می‌گیرن — یعنی باکس بزرگ می‌شه، نه اینکه یه باکسِ
+   جدید زیرش اضافه بشه. هرکدوم آیکونِ اختصاصیِ خودشون، فونتِ کوچیک‌تر از
+   لینک‌های اصلی. */
+.nav-group-expanded{
+  border-radius:18px; border:1px solid var(--line);
   background:rgba(255,255,255,.02);
+  padding:2px; margin:1px 0;
 }
-body[data-theme="light"] .nav-subgroup-box{ background:rgba(0,0,0,.02); }
+body[data-theme="light"] .nav-group-expanded{ background:rgba(0,0,0,.02); }
+.nav-group-children{ display:flex; flex-direction:column; gap:1px; padding:2px 2px 3px; }
 .nav-link-sub-item{
   display:flex; align-items:center; gap:8px;
-  border-radius:10px; padding:8px 10px; font-size:12px; color:var(--muted2);
+  border-radius:10px; padding:8px 10px; font-size:12px; color:var(--muted);
   transition:background .16s ease, color .16s ease;
 }
 .nav-link-sub-item .nav-link-icon-svg{ width:14px; height:14px; min-width:14px; color:inherit; }
@@ -1832,25 +1836,23 @@ body[data-theme="light"] .nav-link-sub-item:hover{ background:rgba(0,0,0,.04); }
 
 /* ---------- چیدمانِ داشبوردِ کالری ----------
    موبایل: فقط یه ستونِ ساده، به همون ترتیبِ DOM (برنامه غذایی، روند
-   موفقیت، دوستان، کالری هر وعده، ریزِ درشت‌مغذی‌ها، نمودار). دسکتاپ: یه
-   گریدِ نام‌دار که DOMِ بالا رو بدونِ توجه به ترتیبش دوباره می‌چینه —
-   برنامه‌ی غذایی ستونِ اصلیِ سمتِ راست (RTL، اولین ستونِ گرید)، بقیه توی
-   دو ردیفِ سمتِ چپ: ردیفِ اول نمودار/استریک/دوستان، ردیفِ دوم ریزِ
-   درشت‌مغذی‌ها/کالری هر وعده. از grid-template-areas استفاده شده چون
-   grid-area مستقل از ترتیبِ DOM جا می‌ده — نیازی به رندرِ دوباره‌ی
-   کامپوننت‌های استیت‌دار (دوستان/نمودار) برای هر بریک‌پوینت نیست. */
+   موفقیت، دوستان، کالری هر وعده، ریزِ درشت‌مغذی‌ها، نمودار). دسکتاپ: سه
+   «ستونِ» عمودی (نه ردیفِ افقی — طبقِ اصلاحِ صریحِ کاربر): ستونِ اصلی
+   سمتِ راست برنامه‌ی غذایی، ستونِ وسط از بالا به پایین کالری‌هروعده/ریزِ
+   درشت‌مغذی‌ها، ستونِ چپ از بالا به پایین دوستان/روندِ موفقیت/نمودار. از
+   grid-template-areas استفاده شده چون grid-area مستقل از ترتیبِ DOM جا
+   می‌ده — نیازی به رندرِ دوباره‌ی کامپوننت‌های استیت‌دار (دوستان/نمودار)
+   برای هر بریک‌پوینت نیست. */
 .calorie-dash-grid{ display:flex; flex-direction:column; gap:12px; }
 @media (min-width:1024px){
   .calorie-dash-grid{
     display:grid; gap:16px;
-    /* نمودار سهمِ عرضِ بیشتری از استریک/دوستان می‌گیره (۴ واحد در برابرِ
-       ۳تا) چون محتواش (محورِ Y + برچسب‌ها) به فضای افقیِ بیشتری نیاز داره؛
-       خودِ ستون‌های استریک/دوستان هم به‌اندازه‌ی کافی عریض‌ان که تایتل +
-       دکمه/بج‌شون توی یک خط جا بشه، بدونِ شکستنِ ناخواسته‌ی متن. */
-    grid-template-columns:12fr repeat(10, 1fr);
+    grid-template-columns:2.3fr 1fr 1.15fr;
+    grid-template-rows:auto auto auto;
     grid-template-areas:
-      "food chart chart chart chart streak streak streak friends friends friends"
-      "food macros macros macros macros macros mealbreak mealbreak mealbreak mealbreak mealbreak";
+      "food mealbreak friends"
+      "food macros streak"
+      "food . chart";
   }
 }
 .calorie-area-food{ grid-area:food; }
