@@ -47,54 +47,31 @@ export function CalorieMacrosCard({
     <DashCard delay={delay} className="p-3 sm:p-4">
       <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
         <Sparkles className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-        ریز درشت‌مغذی‌ها
+        پروفایل مغذی‌ها
       </h2>
 
-      {hasData ? (
-        <>
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-2.5">
-            {[
-              { icon: Beef, label: "پروتئین", value: totals.protein },
-              { icon: Wheat, label: "کربوهیدرات", value: totals.carbs },
-              { icon: Droplet, label: "چربی", value: totals.fat },
-            ].map((m) => (
-              <div key={m.label} className="flex flex-col items-center gap-1 rounded-2xl border border-dash-border bg-white/[0.02] px-2 py-2.5 text-center">
-                <m.icon className="h-3.5 w-3.5 text-dash-green" />
-                <div className="mono text-[12px] font-bold text-dash-text sm:text-[13.5px]">{faNum(Math.round(m.value))}<span className="text-[9px] font-semibold text-dash-muted"> گرم</span></div>
-                <div className="text-[8.5px] font-semibold text-dash-muted sm:text-[10px]">{m.label}</div>
-              </div>
-            ))}
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-2.5">
+        {[
+          { icon: Beef, label: "پروتئین", value: totals.protein },
+          { icon: Wheat, label: "کربوهیدرات", value: totals.carbs },
+          { icon: Droplet, label: "چربی", value: totals.fat },
+        ].map((m) => (
+          <div key={m.label} className="flex flex-col items-center gap-1 rounded-2xl border border-dash-border bg-white/[0.02] px-2 py-2.5 text-center">
+            <m.icon className="h-3.5 w-3.5 text-dash-green" />
+            <div className="mono text-[12px] font-bold text-dash-text sm:text-[13.5px]">{faNum(Math.round(m.value))}<span className="text-[9px] font-semibold text-dash-muted"> گرم</span></div>
+            <div className="text-[8.5px] font-semibold text-dash-muted sm:text-[10px]">{m.label}</div>
           </div>
-          {isToday && (
-            <button
-              type="button"
-              onClick={() => setScanOpen(true)}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
-            >
-              <Sparkles size={14} />
-              اسکن غذای دیگه
-            </button>
-          )}
-        </>
-      ) : (
-        <div className="mt-3.5 flex flex-col items-center gap-3 py-2 text-center">
-          <div className="text-[11px] leading-relaxed text-dash-muted sm:text-[12.5px]">
-            {isToday
-              ? "برای دیدن ریز پروتئین/کربوهیدرات/چربی، یه غذا رو با هوش مصنوعی اسکن کن یا موقعِ افزودنِ دستی واردشون کن."
-              : "برای این روز درشت‌مغذی‌ای ثبت نشده."}
-          </div>
-          {isToday && (
-            <button
-              type="button"
-              onClick={() => setScanOpen(true)}
-              className="flex items-center justify-center gap-1.5 rounded-2xl border px-4 py-2.5 text-[11.5px] font-bold sm:text-[13px]"
-              style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-            >
-              <Sparkles size={14} />
-              اسکن غذا با هوش مصنوعی
-            </button>
-          )}
-        </div>
+        ))}
+      </div>
+      {isToday && (
+        <button
+          type="button"
+          onClick={() => setScanOpen(true)}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+        >
+          <Sparkles size={14} />
+          {hasData ? "اسکن غذای دیگه" : "اسکن غذا با هوش مصنوعی"}
+        </button>
       )}
 
       {scanOpen && createPortal(

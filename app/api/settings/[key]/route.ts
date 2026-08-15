@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { key: string 
   const row = await prisma.userSetting.findUnique({
     where: { userId_key: { userId, key: params.key } },
   });
-  return NextResponse.json({ value: row?.value ?? null });
+  return NextResponse.json({ value: row?.value ?? null, updatedAt: row?.updatedAt ?? null });
 }
 
 // POST /api/settings/theme  { value }

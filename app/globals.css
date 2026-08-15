@@ -33,8 +33,8 @@
     --secondary-dim:rgba(62,123,250,.18);
   }
   body[data-theme="light"]{
-    --bg:#F3E9D8;
-    --bg-rgb:243,233,216;
+    --bg:#F4E3C9;
+    --bg-rgb:244,227,201;
     --text:#3A2A18;
     --muted:#8A7355;
     --muted2:#A68A6E;
@@ -374,9 +374,9 @@
     background:none; border:none; box-shadow:none;
   }
   .bell-btn-wrap{ position:relative; display:flex; }
-  .bell-btn{position:relative; color:var(--muted); transition:color .2s ease;}
+  .bell-btn{position:relative; color:var(--muted); background:none; transition:color .2s ease;}
   .bell-btn svg{width:19px; height:19px;}
-  .bell-btn:hover{color:var(--accent);}
+  .bell-btn:hover, .bell-btn:focus, .bell-btn:active{color:var(--accent); background:none; box-shadow:none;}
   .bell-dot{
     position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
@@ -392,14 +392,14 @@
   .notif-panel{
     position:absolute; top:calc(100% + 12px); right:0; left:auto;
     width:min(260px, calc(100vw - 32px)); max-height:320px; overflow-y:auto;
-    background:rgba(255,255,255,.04);
-    backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
-    border:1px solid rgba(255,255,255,.08); border-radius:16px;
-    box-shadow:0 12px 30px rgba(0,0,0,.25); padding:10px; z-index:45;
+    background:rgba(255,255,255,.03);
+    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    border:1px solid var(--line); border-radius:16px;
+    box-shadow:0 12px 30px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.14); padding:10px; z-index:45;
     animation:notifPanelIn .16s ease both;
   }
   body[data-theme="light"] .notif-panel{
-    background:rgba(255,255,255,.28); border-color:var(--line); box-shadow:0 10px 24px rgba(0,0,0,.12);
+    background:rgba(255,255,255,.05); box-shadow:0 10px 24px rgba(0,0,0,.12), inset 0 0 0 1px rgba(0,0,0,.10);
   }
   @keyframes notifPanelIn{ from{ opacity:0; transform:translateY(6px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
   .notif-panel-head{ font-size:12px; font-weight:700; color:var(--muted); padding:4px 6px 8px; }
@@ -521,7 +521,7 @@
     background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:22px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
-    padding:22px 22px; display:flex; flex-direction:column; gap:2px;
+    padding:14px 12px; display:flex; flex-direction:column; gap:2px;
     max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); overflow-y:auto; overflow-x:hidden;
     isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
     will-change:backdrop-filter, transform; transform:translateZ(0);
@@ -550,15 +550,17 @@
   /* دکمه‌های × سراسر سایت نباید بک‌گراند داشته باشن — همون باگ همیشگیِ
      اسپسیفیسیتی (button:hover / body[data-theme=light] button) اینجا هم بود */
   body[data-theme="light"] .nav-close, body:not([data-theme="light"]) .nav-close,
-  body[data-theme="light"] .nav-close:hover, body:not([data-theme="light"]) .nav-close:hover{
-    background:none; box-shadow:none;
+  body[data-theme="light"] .nav-close:hover, body:not([data-theme="light"]) .nav-close:hover,
+  body[data-theme="light"] .nav-close:focus, body:not([data-theme="light"]) .nav-close:focus,
+  body[data-theme="light"] .nav-close:active, body:not([data-theme="light"]) .nav-close:active{
+    background:none; box-shadow:none; outline:none;
   }
   .theme-row{display:none;}
 
   /* mobile: keep the open drawer smaller and closer to the header */
   @media (max-width:700px){
     .nav-drawer{ top:28px; right:14px; width:58%; max-width:220px; }
-    .nav-drawer-glass{ padding:16px 16px; border-radius:18px; gap:0; }
+    .nav-drawer-glass{ padding:10px 10px; border-radius:18px; gap:0; }
     .nav-title{ font-size:10px; margin-bottom:10px; }
     .nav-link{ font-size:13px; padding:9px 2px; }
   }
@@ -569,7 +571,8 @@
     border:1px solid var(--line); background:rgba(var(--bg-rgb), .79); cursor:pointer; padding:0; flex-shrink:0;
     transition:background .2s ease, border-color .2s ease;
   }
-  .theme-switch:hover{border-color:var(--muted2);}
+  /* طبق درخواستِ صریحِ کاربر، هاورِ این دکمه هیچ انیمیشن/تغییرِ رنگی نداره —
+     همون رنگِ خودش می‌مونه */
   .theme-switch .ts-knob{
     position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:rgba(var(--bg-rgb), .79);
     border:1px solid var(--line);
@@ -836,6 +839,38 @@
   .rm-box-add svg path{transition:stroke .18s ease;}
   .rm-box-add:hover svg path{stroke:var(--accent);}
 
+  /* صفحه‌ی «اشتراک» — لیستِ پلن‌ها + جزئیات، هم‌قاعده‌ی شیشه‌ایِ rm-box */
+  .subscription-page{ max-width:900px; }
+  .sub-interval-toggle{ margin-top:16px; max-width:260px; }
+  .sub-plans-grid{
+    display:grid; grid-template-columns:1fr; gap:14px; margin-top:20px;
+  }
+  @media (min-width:640px){ .sub-plans-grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (min-width:1100px){ .sub-plans-grid{ grid-template-columns:repeat(4, 1fr); } }
+  .sub-plan-card{
+    position:relative; display:flex; flex-direction:column; gap:12px;
+    border:1px solid var(--line); border-radius:16px; padding:20px 18px;
+    background:rgba(var(--bg-rgb), .13);
+    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    transition:border-color .18s ease;
+  }
+  .sub-plan-card.current{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .sub-plan-badge{
+    position:absolute; top:-11px; right:16px; padding:3px 12px; border-radius:999px;
+    background:var(--accent); color:var(--bg); font-size:10.5px; font-weight:700;
+  }
+  .sub-plan-name{ font-size:16px; font-weight:800; color:var(--text); }
+  .sub-plan-price{ font-size:20px; font-weight:800; color:var(--accent); }
+  .sub-plan-price-unit{ font-size:11px; font-weight:600; color:var(--muted); margin-right:4px; }
+  .sub-plan-modules{ display:flex; flex-direction:column; gap:7px; list-style:none; flex:1; }
+  .sub-plan-modules li{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted); }
+  .sub-plan-modules li svg{ color:var(--accent); flex-shrink:0; }
+  .sub-plan-cta{
+    border-radius:12px; border:1px solid var(--line); padding:10px; font-size:12.5px; font-weight:700;
+    color:var(--muted); cursor:not-allowed; background:none;
+  }
+  .sub-plan-card.current .sub-plan-cta{ border-color:var(--accent); color:var(--accent); }
+
   /* treasure map */
   .tm-head-row{display:flex; align-items:center; justify-content:flex-start; gap:12px; margin-bottom:6px;}
   .tm-head-row h1{margin-bottom:0;}
@@ -850,10 +885,28 @@
   .tm-back-btn:hover{border-color:var(--accent); color:var(--accent); border-radius:50%; box-shadow:0 4px 16px rgba(0,0,0,.16);}
   .tm-back-btn:active{transform:scale(.96);}
   .tm-back-btn svg{width:22px; height:22px; display:block;}
-  .treasure-map{position:relative; margin:28px 0 6px; padding-right:30px;}
-  .tm-station{position:relative; margin-bottom:30px;}
+  /* خلاصه‌ی پیشرفتِ رودمپ — بالای مسیر، همون قاعده‌ی «عدد/هدف + خط نازکِ
+     پیشرفت»ِ بقیه‌ی داشبوردها (مثلاً CalorieFoodPlanCard) */
+  .tm-progress-summary{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; }
+  .tm-progress-summary .mono{ font-size:15px; font-weight:800; color:var(--accent); }
+  .tm-progress-summary .mono span{ color:var(--muted); font-weight:600; font-size:12px; }
+  .tm-progress-bar{ margin-top:8px; height:3px; border-radius:3px; background:var(--line); overflow:hidden; }
+  .tm-progress-bar-fill{ height:100%; background:var(--accent); border-radius:3px; transition:width .5s ease; }
+
+  .treasure-map{position:relative; margin:20px 0 6px; padding-right:34px;}
+  /* ریلِ اتصالِ ایستگاه‌ها به هم — یه مسیرِ واقعی، نه فقط دایره‌های شناور */
+  .tm-rail{ position:absolute; right:14px; top:14px; bottom:14px; width:2px; background:var(--line); border-radius:2px; }
+  .tm-rail-fill{ position:absolute; right:0; top:0; width:100%; background:var(--accent); border-radius:2px; transition:height .5s ease; box-shadow:0 0 10px rgba(var(--accent-rgb),.5); }
+  .tm-station{
+    position:relative; margin-bottom:16px; padding:14px 16px 14px 14px; border-radius:16px;
+    border:1px solid var(--line); background:rgba(var(--bg-rgb), .13);
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .tm-station.past{ border-color:rgba(var(--accent-rgb),.3); }
+  .tm-station.active{ border-color:var(--accent); }
   .tm-marker{
-    position:absolute; right:-30px; top:0; width:28px; height:28px; border-radius:50%;
+    position:absolute; right:-34px; top:14px; width:28px; height:28px; border-radius:50%;
     border:2px solid var(--muted2); background:var(--bg); display:flex; align-items:center; justify-content:center;
     font-size:11.5px; color:var(--muted); z-index:1;
   }
@@ -882,6 +935,15 @@
     font-size:12.5px; color:var(--muted); line-height:1.7; padding-right:14px; position:relative;
   }
   .tm-item-list li::before{ content:'—'; position:absolute; right:0; color:var(--muted2); }
+  /* آیتم‌های قابلِ‌کلیک — به جست‌وجوی همون منبع/کار توی وب لینک می‌شن، تا
+     رودمپ فقط یه چک‌لیستِ متنی نباشه و واقعاً قابلِ‌اجرا باشه */
+  .tm-item-list a, .tm-extra a{
+    color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:4px;
+    transition:color .15s ease;
+  }
+  .tm-item-list a:hover, .tm-extra a:hover{ color:var(--accent); }
+  .tm-item-list a svg, .tm-extra a svg{ flex-shrink:0; opacity:.6; }
+  .tm-item-list a:hover svg, .tm-extra a:hover svg{ opacity:1; }
 
   /* weekly schedule box — لیکوئید گلس (همون افکتِ wsearch-box/pcard-face-back،
      با LiquidBlobLayers پشتِ محتوا)؛ به همین خاطر position:relative +
@@ -1810,6 +1872,10 @@
   color:var(--muted2); transition:color .18s ease;
 }
 .nav-link-icon-svg svg{width:18px; height:18px; display:block;}
+/* توی تمِ روشن، muted2 (تن/طلاییِ خیلی کم‌رنگ) رویِ بک‌گراندِ کرمی تقریباً
+   دیده نمی‌شه — یه قهوه‌ایِ واضح‌تر و مجزا از accent (نارنجی‌سوخته) و از
+   طلایی‌بودن */
+body[data-theme="light"] .nav-link-icon-svg{ color:#9C6B3E; }
 .nav-link-icon:hover{
   background:rgba(255,255,255,.03);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
@@ -1840,41 +1906,40 @@ body[data-theme="light"] .nav-group-expanded{ background:rgba(0,0,0,.02); }
 }
 .nav-link-sub-item:hover{ background:rgba(255,255,255,.04); color:var(--text); }
 body[data-theme="light"] .nav-link-sub-item:hover{ background:rgba(0,0,0,.04); }
+/* طبقِ درخواستِ کاربر: قهوه‌ایِ مشخص، نه طلایی/تنِ کم‌رنگ */
+body[data-theme="light"] .nav-link-sub-item{ color:#7A5230; }
+body[data-theme="light"] .nav-link-sub-item:hover{ color:#5C3D22; }
+/* گروهِ بازشده تا وقتی بسته نشه، خودِ سرآیتمِ گروه (آیکون+متن) رنگِ
+   accent می‌گیره — این با isExpanded کنترل می‌شه (کلاسِ nav-link-active که
+   NavDrawer بهش می‌ده)، نه با روتِ صفحه */
+.nav-link-icon.nav-link-active,
+.nav-link-icon.nav-link-active .nav-link-icon-svg{ color:var(--accent); }
 
 /* ---------- چیدمانِ داشبوردِ کالری ----------
-   موبایل: فقط یه ستونِ ساده، به همون ترتیبِ DOM (برنامه غذایی، روند
-   موفقیت، دوستان، کالری هر وعده، ریزِ درشت‌مغذی‌ها، نمودار). دسکتاپ: سه
-   «ستونِ» عمودی (نه ردیفِ افقی — طبقِ اصلاحِ صریحِ کاربر): ستونِ اصلی
-   سمتِ راست برنامه‌ی غذایی، ستونِ وسط از بالا به پایین کالری‌هروعده/ریزِ
-   درشت‌مغذی‌ها، ستونِ چپ از بالا به پایین دوستان/روندِ موفقیت/نمودار. از
-   grid-template-areas استفاده شده چون grid-area مستقل از ترتیبِ DOM جا
-   می‌ده — نیازی به رندرِ دوباره‌ی کامپوننت‌های استیت‌دار (دوستان/نمودار)
-   برای هر بریک‌پوینت نیست. */
+   موبایل: فقط یه ستونِ ساده، به همون ترتیبِ DOM. دسکتاپ: سه «ستونِ» عمودیِ
+   واقعاً مستقل — راست برنامه‌ی غذایی، وسط کالری‌هروعده/ریزِ درشت‌مغذی‌ها،
+   چپ دوستان/روندِ پیشرفت/نمودار.
+   قبلاً این سه ستون با grid-template-areas پیاده می‌شد؛ مشکل این بود که
+   CSS Grid ارتفاعِ هر «ردیف» رو بر اساسِ بلندترین سلولِ همون ردیف (در همه‌ی
+   ستون‌ها) تعیین می‌کنه — align-items:start فقط از کِش‌اومدنِ خودِ کارت
+   جلوگیری می‌کرد، ولی خودِ ردیف همچنان به‌اندازه‌ی بلندترین سلول جا اشغال
+   می‌کرد و زیرِ کارتِ کوتاه‌تر (مثلاً «دوستان») یه فضای خالیِ بزرگ قبل از
+   شروعِ ردیفِ بعدی می‌موند. راه‌حلِ واقعی: ستونِ وسط و ستونِ چپ هرکدوم یه
+   flex column مستقل‌ان (نه سهم‌گیرنده‌ی ردیفِ مشترک با بقیه‌ی ستون‌ها)، پس
+   ارتفاعِ هرکدوم فقط به محتوای خودشون بستگی داره. */
 .calorie-dash-grid{ display:flex; flex-direction:column; gap:12px; }
+.calorie-col-food{ display:flex; }
+.calorie-col-food > *{ flex:1; }
+.calorie-col-mid, .calorie-col-side{ display:flex; flex-direction:column; gap:12px; }
 @media (min-width:1024px){
   .calorie-dash-grid{
     display:grid; gap:16px;
     grid-template-columns:2.3fr 1fr 1.15fr;
-    grid-template-rows:auto auto auto;
-    grid-template-areas:
-      "food mealbreak friends"
-      "food macros streak"
-      "food . chart";
-    /* پیش‌فرضِ گرید (stretch) باعث می‌شد وقتی یه سلول توی یه ردیف بلندتر از
-       بقیه بود (مثلاً «دوستان» کوتاه‌تر از «کالری هر وعده» توی همون ردیف)،
-       کارتِ کوتاه‌تر تا قدِّ کل سلول کش بیاد و یه فضای خالیِ بزرگ زیرِ خودش
-       جا بذاره، قبل از کارتِ بعدی. با start هر کارت فقط قدِّ طبیعیِ خودش رو
-       می‌گیره؛ فقط «برنامه غذایی» (که با h-full عمداً کلِ ارتفاعِ ستون رو
-       پر می‌کنه) دوباره stretch می‌شه. */
     align-items:start;
   }
+  .calorie-col-food{ align-self:stretch; }
+  .calorie-col-mid, .calorie-col-side{ gap:16px; }
 }
-.calorie-area-food{ grid-area:food; align-self:stretch; }
-.calorie-area-chart{ grid-area:chart; }
-.calorie-area-streak{ grid-area:streak; }
-.calorie-area-friends{ grid-area:friends; }
-.calorie-area-macros{ grid-area:macros; }
-.calorie-area-mealbreak{ grid-area:mealbreak; }
 
 /* ============================================================
    ورود/ثبت‌نام — دکمه هدر، تب‌های انیمیشنی، تکمیل حالت خطای فیلدها

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import {
@@ -10,6 +10,7 @@ import {
 import { ExercisePlanFormValue, EMPTY_EXERCISE_FORM, ExercisePlan } from "@/lib/exerciseTypes";
 import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
 import { focusNextOnEnter } from "@/lib/formNav";
+import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 
 type Step = "hw" | "goal" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, days: 2, description: 3, rules: 3 };
@@ -40,6 +41,19 @@ export function AiExercisePlanWizard({
   function patch(p: Partial<ExercisePlanFormValue>) {
     setForm((f) => ({ ...f, ...p }));
   }
+
+  // مثلِ پاپ‌آپِ «تغییر برنامه»ی کالری — اگه قد/وزن قبلاً یه‌جای دیگه ثبت
+  // شده، همینجا هم از قبل پر می‌شه
+  useEffect(() => {
+    getBodyMetrics().then(({ data }) => {
+      if (!data) return;
+      setForm((f) => ({
+        ...f,
+        heightCm: f.heightCm || (data.heightCm ? String(data.heightCm) : f.heightCm),
+        weightKg: f.weightKg || (data.weightKg ? String(data.weightKg) : f.weightKg),
+      }));
+    });
+  }, []);
   function toggleDay(day: string) {
     patch({ gymDays: form.gymDays.includes(day) ? form.gymDays.filter((d) => d !== day) : [...form.gymDays, day] });
   }
@@ -70,6 +84,7 @@ export function AiExercisePlanWizard({
     setSubmitting(false);
     if (!res.ok) { setError(data.error || "خطایی پیش آمد"); setStep("description"); return; }
     if (data.feasible === false) { setRejection(data.message); setStep("description"); return; }
+    if (form.heightCm && form.weightKg) saveBodyMetrics({ heightCm: +form.heightCm, weightKg: +form.weightKg });
     onCreated(data.plan);
   }
 

@@ -54,6 +54,25 @@ const MIN_GAP = 0.22;
 // بیشتر یعنی همیشه یه حداقل فضای امن بینِ اولین/آخرین آیتم و دو تا انتها.
 const EDGE_GAP = 0.19;
 
+// وقتی تعداد آیتم‌های زمان‌دار یک روز زیاد می‌شه، gap (که همیشه بین ۰ تا
+// MIN_GAP از سهمِ عرض track است) کوچیک‌تر می‌شه؛ اگه عرضِ خودِ track ثابت
+// بمونه، فاصله‌ی واقعیِ پیکسلی بینِ دو آیتم از عرضِ جعبه‌ی متنشون (بازه‌ی
+// ساعت + اسمِ برنامه، حدود ۵۶px) کمتر می‌شه و متن‌ها روی هم می‌افتن — دقیقاً
+// همون باگِ گزارش‌شده. راه‌حل: عرضِ track رو متناسب با تعدادِ آیتم‌ها زیاد
+// می‌کنیم تا فاصله‌ی پیکسلیِ هر جفت آیتمِ کنار هم همیشه حداقل MIN_PX_GAP
+// بمونه؛ week-timeline از قبل overflow-x:auto داره، پس عرضِ بیشتر یعنی
+// اسکرولِ افقیِ بیشتر، نه شکستنِ چیدمان.
+const MIN_PX_GAP = 92;
+const BASE_TRACK_WIDTH = 520;
+
+export function timelineTrackMinWidth(itemCount: number): number {
+  if (itemCount <= 1) return BASE_TRACK_WIDTH;
+  const span = 1 - 2 * EDGE_GAP;
+  const gap = Math.min(MIN_GAP, span / (itemCount - 1));
+  if (gap <= 0) return BASE_TRACK_WIDTH;
+  return Math.max(BASE_TRACK_WIDTH, Math.ceil(MIN_PX_GAP / gap));
+}
+
 /**
  * محاسبه موقعیت (pct بین ۰ و ۱) هر تسکِ زمان‌دار روی خط تایم‌لاین، طوری که
  * حداقل فاصله MIN_GAP بین نقطه‌ها و EDGE_GAP از دو انتها (بیداری/خواب) حفظ شود.

@@ -9,6 +9,7 @@ import { fireTimerDone } from "@/lib/notifications";
 import {
   clearExerciseTimer, loadExerciseTimer, saveExerciseTimer, PersistedExerciseTimer,
 } from "@/lib/exerciseTimerStore";
+import { ProgressRing } from "./ProgressRing";
 
 const REST_SECONDS = 90;
 
@@ -255,12 +256,11 @@ export function ExerciseSetTrackerModal({
                   </button>
                 </motion.div>
               ) : state.phase === "resting" ? (
-                <motion.div key="resting" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2">
+                <motion.div key="resting" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2.5">
                   <div className="text-[11.5px] text-dash-muted">{paused ? "استراحت — موقتاً متوقف شده" : "استراحت تا ستِ بعدی"}</div>
-                  <div className="mono text-[26px] font-bold text-dash-green" dir="ltr">{remainingSec}</div>
-                  <div className="exercise-rest-bar">
-                    <div className="exercise-rest-bar-fill" style={{ width: `${restPct}%` }} />
-                  </div>
+                  <ProgressRing pct={restPct / 100} size={92} strokeWidth={7} color="var(--accent)">
+                    <span className="mono text-[24px] font-bold text-dash-green" dir="ltr">{remainingSec}</span>
+                  </ProgressRing>
                   {pauseResumeBtn}
                 </motion.div>
               ) : !soloTimer && state.phase === "timing" ? (
@@ -310,10 +310,10 @@ export function ExerciseSetTrackerModal({
                   {isTimed
                     ? state.completedSets === 0
                       ? "برای شروعِ ستِ اول، دایره رو بزن تا شمارش‌معکوس شروع بشه"
-                      : "آماده‌ای برای ستِ بعدی؟ دایره رو بزن تا شمارش‌معکوس شروع بشه"
+                      : "استراحت تموم شد — ستِ بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"
                     : state.completedSets === 0
                     ? "وقتی این ست رو زدی، روی دایره‌ی اول بزن"
-                    : "آماده‌ای برای ستِ بعدی؟ بزن روش"}
+                    : "استراحت تموم شد — ستِ بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"}
                 </motion.div>
               )}
             </AnimatePresence>

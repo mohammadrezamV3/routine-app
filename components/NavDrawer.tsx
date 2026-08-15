@@ -169,14 +169,6 @@ export function NavDrawer() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [profileMenuOpen]);
 
-  // دکمه‌ی «خرید اشتراک» توی دیوارهای پی‌وال (ModuleGate)، از هر صفحه‌ای، با
-  // این event پنل کاربری رو باز می‌کنه — بدون نیاز به query-param یا context
-  useEffect(() => {
-    const openAccount = () => setAccountOpen(true);
-    window.addEventListener("open-account-panel", openAccount);
-    return () => window.removeEventListener("open-account-panel", openAccount);
-  }, []);
-
   useEffect(() => {
     setNotifPermission(getNotificationPermission());
   }, []);
@@ -251,7 +243,7 @@ export function NavDrawer() {
                         </div>
                         <div
                           className="notif-panel-item profile-menu-item"
-                          onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
+                          onClick={() => { setProfileMenuOpen(false); router.push("/subscription"); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.subscription}</span>
                           <span>اشتراک</span>
@@ -324,7 +316,7 @@ export function NavDrawer() {
                 <div key={item.label} className={isExpanded ? "nav-group-expanded" : undefined}>
                   <a
                     onClick={() => setExpandedGroup((g) => (g === item.label ? null : item.label))}
-                    className="nav-link nav-link-icon"
+                    className={`nav-link nav-link-icon${isExpanded ? " nav-link-active" : ""}`}
                     style={{ cursor: "pointer" }}
                   >
                     <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>

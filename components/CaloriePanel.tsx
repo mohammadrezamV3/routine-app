@@ -20,6 +20,7 @@ import { CalorieMealBreakdownCard } from "./CalorieMealBreakdownCard";
 import { CalorieFoodPlanCard } from "./CalorieFoodPlanCard";
 import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
+import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -117,6 +118,19 @@ export function CaloriePanel() {
   // باز می‌شه (نه توی فرمِ ساختِ هدف) نشون داده می‌شه، یه بار برای همیشه
   const [showTutorial, setShowTutorial] = useState(false);
 
+  // یادآوریِ به‌روزکردنِ وزن — هر دو هفته یک‌بار
+  const [weightReminder, setWeightReminder] = useState(false);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    getBodyMetrics().then(({ data, updatedAt }) => {
+      if (data?.heightCm) setGoalHeight((v) => v || String(data.heightCm));
+      if (data?.weightKg) setGoalWeight((v) => v || String(data.weightKg));
+      if (data?.ageYears) setAge((v) => v || String(data.ageYears));
+      setWeightReminder(isWeightStale(updatedAt));
+    });
+  }, [status]);
+
   async function loadTarget() {
     const res = await fetch("/api/calorie/target");
     const data = await res.json();
@@ -172,6 +186,8 @@ export function CaloriePanel() {
     const data = await res.json();
     setSavingGoal(false);
     if (!res.ok) { setGoalError(data.error || "خطایی پیش آمد"); return; }
+    saveBodyMetrics({ heightCm: +goalHeight, weightKg: +goalWeight, ageYears: age ? +age : undefined });
+    setWeightReminder(false);
     setTarget(data.target);
   }
 
@@ -288,13 +304,28 @@ export function CaloriePanel() {
               </div>
             </div>
 
+            {weightReminder && (
+              <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-3.5 py-2.5" style={{ borderColor: "rgba(var(--accent-rgb),.35)", background: "rgba(var(--accent-rgb),.08)" }}>
+                <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">
+                  دو هفته از آخرین ثبتِ وزنت گذشته — برای دقیق‌موندنِ محاسبه‌ها به‌روزش کن
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingGoal(true)}
+                  className="text-[11px] font-bold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+                >
+                  به‌روزرسانیِ وزن
+                </button>
+              </div>
+            )}
+
             {/* موبایل: یه ستونِ ساده به ترتیبِ DOM. دسکتاپ: گریدِ نام‌دار
                 (.calorie-dash-grid توی globals.css) که مستقلِ از این ترتیب،
                 برنامه‌ی غذایی رو ستونِ اصلیِ راست می‌کنه و بقیه رو توی دو
                 ردیفِ سمتِ چپ می‌چینه — نمودار/استریک/دوستان بالا،
                 ریزِ درشت‌مغذی‌ها/کالری هر وعده پایین. */}
             <div className="calorie-dash-grid">
-              <div className="calorie-area-food">
+              <div className="calorie-col-food">
                 <CalorieFoodPlanCard
                   date={selectedIso}
                   isToday={isSelectedToday}
@@ -310,23 +341,14 @@ export function CaloriePanel() {
                 />
               </div>
 
-              <div className="calorie-area-streak">
-                <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
-              </div>
-
-              <div className="calorie-area-friends">
-                <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />
-              </div>
-
-              <div className="calorie-area-mealbreak">
-                <CalorieMealBreakdownCard target={target} entries={entries} onTargetChange={setTarget} delay={0.16} />
-              </div>
-
-              <div className="calorie-area-macros">
+              <div className="calorie-col-mid">
+                <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
                 <CalorieMacrosCard entries={entries} date={selectedIso} isToday={isSelectedToday} mealTypes={mealTypes} onLogged={refreshAfterChange} delay={0.19} />
               </div>
 
-              <div className="calorie-area-chart">
+              <div className="calorie-col-side">
+                <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />
+                <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
                 <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />
               </div>
             </div>
@@ -365,7 +387,7 @@ export function CaloriePanel() {
           target={target}
           needsAge={needsAge}
           onClose={() => setEditingGoal(false)}
-          onSaved={setTarget}
+          onSaved={(t) => { setWeightReminder(false); setTarget(t); }}
         />,
         document.body
       )}
