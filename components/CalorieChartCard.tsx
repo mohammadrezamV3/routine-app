@@ -9,40 +9,23 @@ import { DashCard } from "./DashCard";
 
 type Entry = { customCalories: number; date?: string; createdAt?: string };
 type ChartRange = "daily" | "weekly" | "monthly";
-type Point = { x: number; y: number; value: number; label: string };
 
-const VB_W = 320;
-const VB_H = 160;
-const PAD_L = 34;
-const PAD_R = 6;
-const PAD_T = 16;
-const PAD_B = 20;
-const PLOT_W = VB_W - PAD_L - PAD_R;
+// نمودارِ روندِ کالری — نسخه‌ی دوم، از صفر بازساخته‌شده تا با ابعادِ کوچیک‌ترِ
+// باکسِ جدید (ستونِ فشرده‌ی سمتِ چپ، کنارِ ریزِ درشت‌مغذی‌ها و کالری هر
+// وعده) جفت‌وجور باشه: ارتفاعِ کمتر، بدونِ محورِ Yِ شلوغ (فقط خطِ هدف +
+// مقدارِ خودِ هدف)، میله‌ایِ ساده برای هفتگی/ماهانه، خطِ نرم برای روزانه.
+const VB_W = 300;
+const VB_H = 96;
+const PAD_X = 4;
+const PAD_T = 10;
+const PAD_B = 16;
+const PLOT_W = VB_W - PAD_X * 2;
 const PLOT_H = VB_H - PAD_T - PAD_B;
-
-// محورِ Y همیشه ۵ فاصله‌ی «گرد» داره (مثلاً ۰/۵۰۰/۱۰۰۰/۱۵۰۰/۲۰۰۰/۲۵۰۰) —
-// نه فاصله‌های درصدی؛ گامِ گرد بر اساسِ بزرگیِ عدد انتخاب می‌شه.
-function niceStep(rawMax: number): number {
-  const roughStep = Math.max(rawMax, 1) / 5;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-  const residual = roughStep / magnitude;
-  const niceResidual = residual <= 1 ? 1 : residual <= 2 ? 2 : residual <= 5 ? 5 : 10;
-  return niceResidual * magnitude;
-}
 
 function formatKcal(n: number): string {
   return faNum(Math.round(n).toLocaleString("en-US"));
 }
 
-const HOUR_TICKS = [0, 4, 8, 12, 16, 20, 24];
-
-// نمودارِ روندِ کالری — بازطراحیِ کامل تا با بقیه‌ی کارت‌های داشبورد یکدست
-// باشه: تایتل با آیکون هم‌اندازه‌ی بقیه‌ی کارت‌ها، رنگ‌ها دقیقاً همون
-// var(--accent) سراسریِ اپ (نه یه سبزِ نئونیِ مستقل)، و بجایِ نمودارِ
-// خطیِ شلوغِ قبلی: روزانه = خط/ناحیه‌ی نرمِ تجمعیِ روز (چون فقط یه روزه و
-// خط منطقی‌تره)، هفتگی/ماهانه = میله‌ایِ ساده با سرِ گردِ هم‌قاعده‌ی
-// rounded-2xl سایتِ اصلی. خطِ هدف حالا یه پیلِ ساده‌ست (هم‌قاعده‌ی
-// DashFilterButton)، نه یه <text> شناور که ممکنه از لبه بیرون بزنه.
 export function CalorieChartCard({
   todayEntries,
   rangeEntries,
@@ -67,12 +50,10 @@ export function CalorieChartCard({
       const pts = sorted.map((e) => {
         running += e.customCalories;
         const d = new Date(e.createdAt!);
-        const hour = d.getHours() + d.getMinutes() / 60;
-        return { value: running, label: `${faNum(d.getHours())}:${faNum(String(d.getMinutes()).padStart(2, "0"))}`, hour };
+        return { value: running, hour: d.getHours() + d.getMinutes() / 60 };
       });
       const now = new Date();
-      const nowHour = now.getHours() + now.getMinutes() / 60;
-      return [{ value: 0, label: "۰۰:۰۰", hour: 0 }, ...pts, ...(pts.length ? [{ value: running, label: "اکنون", hour: nowHour }] : [])];
+      return [{ value: 0, hour: 0 }, ...pts, ...(pts.length ? [{ value: running, hour: now.getHours() + now.getMinutes() / 60 }] : [])];
     }
 
     const days = range === "weekly" ? 7 : 30;
@@ -82,28 +63,26 @@ export function CalorieChartCard({
       if (!d) continue;
       byDate[d] = (byDate[d] || 0) + e.customCalories;
     }
-    const out: { value: number; label: string; hour?: number }[] = [];
+    const out: { value: number; label: string }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
       const key = isoLocal(d);
-      const value = byDate[key] || 0;
       const showLabel = range === "weekly" || i % 6 === 0;
-      out.push({ value, label: showLabel ? (range === "weekly" ? FA_WEEKDAY_SHORT[d.getDay()] : faNum(d.getDate())) : "" });
+      out.push({ value: byDate[key] || 0, label: showLabel ? (range === "weekly" ? FA_WEEKDAY_SHORT[d.getDay()] : faNum(d.getDate())) : "" });
     }
     return out;
   }, [range, todayEntries, rangeEntries]);
 
-  const step = niceStep(Math.max(targetKcal * 1.15, ...rawPoints.map((p) => p.value), 100));
-  const maxY = step * 5;
   const n = rawPoints.length;
+  const maxVal = Math.max(targetKcal * 1.1, ...rawPoints.map((p) => p.value), 1);
 
-  const points: Point[] = rawPoints.map((p, i) => ({
+  const points = rawPoints.map((p, i) => ({
     x: isDaily
-      ? PAD_L + (("hour" in p ? p.hour! : i) / 24) * PLOT_W
-      : PAD_L + ((i + 0.5) / n) * PLOT_W,
-    y: PAD_T + PLOT_H - (p.value / maxY) * PLOT_H,
+      ? PAD_X + (("hour" in p ? p.hour! : i) / 24) * PLOT_W
+      : PAD_X + ((i + 0.5) / n) * PLOT_W,
+    y: PAD_T + PLOT_H - (p.value / maxVal) * PLOT_H,
     value: p.value,
-    label: p.label,
+    label: "label" in p ? p.label : "",
   }));
 
   const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
@@ -111,20 +90,18 @@ export function CalorieChartCard({
     ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} L${points[0].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} Z`
     : "";
 
-  const barWidth = isDaily ? 0 : Math.min(22, (PLOT_W / n) * 0.55);
-  const goalY = PAD_T + PLOT_H - (targetKcal / maxY) * PLOT_H;
-  const yLabels = [0, 1, 2, 3, 4, 5].map((m) => m * step);
-  const xTicks = isDaily ? HOUR_TICKS.map((h) => ({ x: PAD_L + (h / 24) * PLOT_W, label: `${faNum(String(h).padStart(2, "0"))}:۰۰` })) : null;
+  const barWidth = isDaily ? 0 : Math.min(16, (PLOT_W / n) * 0.55);
+  const goalY = PAD_T + PLOT_H - (targetKcal / maxVal) * PLOT_H;
   const sel = selected !== null ? points[selected] : null;
 
   return (
-    <DashCard delay={delay}>
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+    <DashCard delay={delay} className="p-3 sm:p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
           نمودار کالری
         </h2>
-        <div className="w-full shrink-0 sm:w-[212px]">
+        <div className="w-[150px] shrink-0 sm:w-[172px]">
           <SegmentedTabs
             active={range}
             onChange={(v) => { setRange(v); setSelected(null); }}
@@ -137,7 +114,7 @@ export function CalorieChartCard({
         </div>
       </div>
 
-      <div className="relative mt-4 w-full" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
+      <div className="relative mt-3 w-full" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
         <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block overflow-visible">
           <defs>
             <linearGradient id="calorie-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
@@ -150,27 +127,14 @@ export function CalorieChartCard({
             </linearGradient>
           </defs>
 
-          {yLabels.map((v, i) => {
-            const y = PAD_T + PLOT_H - (v / maxY) * PLOT_H;
-            return (
-              <g key={i}>
-                <line x1={PAD_L} y1={y} x2={VB_W - PAD_R} y2={y} stroke="var(--line)" strokeWidth="0.6" opacity="0.6" />
-                <text x={PAD_L - 5} y={y + 2.6} fontSize="7" fill="var(--dash-muted)" textAnchor="end">{formatKcal(v)}</text>
-              </g>
-            );
-          })}
+          <line x1={PAD_X} y1={goalY} x2={VB_W - PAD_X} y2={goalY} stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 2.5" opacity="0.55" />
 
-          {xTicks
-            ? xTicks.map((t, i) => (
-                <text key={i} x={t.x} y={VB_H - 3} fontSize="7" fill="var(--dash-muted)" textAnchor="middle">{t.label}</text>
-              ))
-            : points.map((p, i) =>
-                p.label ? (
-                  <text key={`l${i}`} x={p.x} y={VB_H - 3} fontSize="7" fill="var(--dash-muted)" textAnchor="middle">{p.label}</text>
-                ) : null
-              )}
-
-          <line x1={PAD_L} y1={goalY} x2={VB_W - PAD_R} y2={goalY} stroke="var(--accent)" strokeWidth="1" strokeDasharray="3.5 3" opacity="0.6" />
+          {!isDaily &&
+            points.map((p, i) =>
+              p.label ? (
+                <text key={`l${i}`} x={p.x} y={VB_H - 3} fontSize="7" fill="var(--dash-muted)" textAnchor="middle">{p.label}</text>
+              ) : null
+            )}
 
           {isDaily ? (
             <>
@@ -180,7 +144,7 @@ export function CalorieChartCard({
                   fill="url(#calorie-chart-area-grad)"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
+                  transition={{ duration: 0.5, delay: 0.25 }}
                 />
               )}
               {points.length > 1 && (
@@ -193,7 +157,7 @@ export function CalorieChartCard({
                   strokeLinejoin="round"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.9, ease: "easeOut" }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
                 />
               )}
               {points.map((p, i) => {
@@ -203,19 +167,12 @@ export function CalorieChartCard({
                     key={i}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.4 + i * 0.02 }}
+                    transition={{ duration: 0.25, delay: 0.35 + i * 0.02 }}
                     onClick={() => setSelected(selected === i ? null : i)}
                     style={{ cursor: "pointer" }}
                   >
-                    <circle cx={p.x} cy={p.y} r={isLast ? 5.5 : 4} fill="var(--accent)" opacity={isLast ? 0.22 : 0.14} />
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={isLast || selected === i ? 2.8 : 2.1}
-                      fill="var(--bg)"
-                      stroke="var(--accent)"
-                      strokeWidth="1.3"
-                    />
+                    <circle cx={p.x} cy={p.y} r={isLast ? 5 : 3.6} fill="var(--accent)" opacity={isLast ? 0.22 : 0.14} />
+                    <circle cx={p.x} cy={p.y} r={isLast || selected === i ? 2.4 : 1.8} fill="var(--bg)" stroke="var(--accent)" strokeWidth="1.2" />
                   </motion.g>
                 );
               })}
@@ -237,7 +194,7 @@ export function CalorieChartCard({
                   onClick={() => p.value && setSelected(isActive ? null : i)}
                   initial={{ y: PAD_T + PLOT_H, height: 0 }}
                   animate={{ y: p.value === 0 ? PAD_T + PLOT_H - 1.5 : barTop, height: p.value === 0 ? 1.5 : barH }}
-                  transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.015 }}
+                  transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.012 }}
                 />
               );
             })
@@ -245,22 +202,19 @@ export function CalorieChartCard({
         </svg>
 
         <div
-          className="pointer-events-none absolute flex items-center whitespace-nowrap rounded-dash border border-dash-border bg-dash-card px-2 py-0.5 text-[9px] font-bold text-dash-text sm:text-[10.5px]"
-          style={{
-            right: `${(PAD_R / VB_W) * 100}%`,
-            top: `${(Math.max(PAD_T - 8, goalY - 9) / VB_H) * 100}%`,
-          }}
+          className="pointer-events-none absolute flex items-center whitespace-nowrap rounded-dash border border-dash-border bg-dash-card px-1.5 py-0.5 text-[8.5px] font-bold text-dash-text sm:text-[9.5px]"
+          style={{ right: `${(PAD_X / VB_W) * 100}%`, top: `${(Math.max(PAD_T - 8, goalY - 8) / VB_H) * 100}%` }}
         >
           هدف: {formatKcal(targetKcal)}
         </div>
 
         {sel && (
           <div
-            className="mono pointer-events-none absolute z-[2] whitespace-nowrap rounded-full px-2.5 py-1 text-[10.5px] font-bold shadow-lg"
+            className="mono pointer-events-none absolute z-[2] whitespace-nowrap rounded-full px-2 py-0.5 text-[9.5px] font-bold shadow-lg"
             style={{
               left: `${(sel.x / VB_W) * 100}%`,
               top: `${(sel.y / VB_H) * 100}%`,
-              transform: "translate(-50%, calc(-100% - 10px))",
+              transform: "translate(-50%, calc(-100% - 8px))",
               background: "var(--accent)",
               color: "var(--bg)",
             }}

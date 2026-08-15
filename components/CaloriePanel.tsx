@@ -11,6 +11,7 @@ import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashDateSelector, DashDay } from "./DashDateSelector";
 import { DashFilterButton } from "./DashFilterButton";
+import { DashFriendsCard } from "./DashFriendsCard";
 import { CalorieGoalModal } from "./CalorieGoalModal";
 import { CalorieChartCard } from "./CalorieChartCard";
 import { CalorieStreakCard } from "./CalorieStreakCard";
@@ -260,7 +261,7 @@ export function CaloriePanel() {
         </div>
       ) : (
         <>
-          <div className="dash-scope flex flex-col gap-4 sm:gap-6">
+          <div className="dash-scope flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
               <DashDateSelector
                 days={dashDays}
@@ -287,9 +288,11 @@ export function CaloriePanel() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-start lg:gap-6">
-              {/* ستونِ اصلی — اولین فرزندِ DOM، توی RTL سمتِ راست */}
-              <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-4">
+              {/* ستونِ اصلی — اولین فرزندِ DOM، توی RTL سمتِ راست. با h-full
+                  (توی CalorieFoodPlanCard) هم‌قدِّ ستون‌های کناری می‌شه —
+                  دقیقاً هم‌قاعده‌ی ExerciseTaskList توی داشبوردِ بدنسازی. */}
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <CalorieFoodPlanCard
                   date={selectedIso}
                   isToday={isSelectedToday}
@@ -305,13 +308,15 @@ export function CaloriePanel() {
                 />
               </div>
 
-              {/* ستونِ وسط — استریک */}
-              <div className="flex flex-col gap-4 sm:gap-6">
+              {/* ستونِ وسط — استریک + دوستان، هم‌قاعده‌ی ستونِ وسطِ داشبوردِ
+                  بدنسازی (ExerciseStatsCard + DashFriendsCard) */}
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
+                <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />
               </div>
 
               {/* ستونِ چپ — نمودار، ریزِ درشت‌مغذی‌ها، کالری هر وعده */}
-              <div className="flex flex-col gap-4 sm:gap-6">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.14} />
                 <CalorieMacrosCard entries={entries} date={selectedIso} isToday={isSelectedToday} mealTypes={mealTypes} onLogged={refreshAfterChange} delay={0.18} />
                 <CalorieMealBreakdownCard target={target} entries={entries} onTargetChange={setTarget} delay={0.22} />

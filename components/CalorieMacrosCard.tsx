@@ -44,7 +44,7 @@ export function CalorieMacrosCard({
   );
 
   return (
-    <DashCard delay={delay}>
+    <DashCard delay={delay} className="p-3 sm:p-4">
       <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
         <Sparkles className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
         ریز درشت‌مغذی‌ها
@@ -52,16 +52,16 @@ export function CalorieMacrosCard({
 
       {hasData ? (
         <>
-          <div className="mt-3.5 grid grid-cols-3 gap-2.5 sm:gap-3">
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-2.5">
             {[
               { icon: Beef, label: "پروتئین", value: totals.protein },
               { icon: Wheat, label: "کربوهیدرات", value: totals.carbs },
               { icon: Droplet, label: "چربی", value: totals.fat },
             ].map((m) => (
-              <div key={m.label} className="flex flex-col items-center gap-1.5 rounded-2xl border border-dash-border bg-white/[0.02] px-2 py-3 text-center">
-                <m.icon className="h-4 w-4 text-dash-green" />
-                <div className="mono text-[13px] font-bold text-dash-text sm:text-[15px]">{faNum(Math.round(m.value))}<span className="text-[9.5px] font-semibold text-dash-muted"> گرم</span></div>
-                <div className="text-[9px] font-semibold text-dash-muted sm:text-[10.5px]">{m.label}</div>
+              <div key={m.label} className="flex flex-col items-center gap-1 rounded-2xl border border-dash-border bg-white/[0.02] px-2 py-2.5 text-center">
+                <m.icon className="h-3.5 w-3.5 text-dash-green" />
+                <div className="mono text-[12px] font-bold text-dash-text sm:text-[13.5px]">{faNum(Math.round(m.value))}<span className="text-[9px] font-semibold text-dash-muted"> گرم</span></div>
+                <div className="text-[8.5px] font-semibold text-dash-muted sm:text-[10px]">{m.label}</div>
               </div>
             ))}
           </div>

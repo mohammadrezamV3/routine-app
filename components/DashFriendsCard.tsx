@@ -32,7 +32,7 @@ const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
 // کارتِ «دوستان» — واقعاً به /api/friends وصله. جستجوی زنده (بدون دکمه‌ی
 // ارسالِ جدا) برای افزودنِ دوستِ جدید؛ درخواست‌های واردشده دیگه این‌جا
 // قبول/رد نمی‌شن — از بخشِ اطلاعیه‌ها (زنگوله‌ی هدر) مدیریت می‌شن.
-export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise"; unitLabel?: string }) {
+export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
   const [friends, setFriends] = useState<Friend[] | null>(null);
   const [requestCount, setRequestCount] = useState(0);
   const [authRequired, setAuthRequired] = useState(false);
