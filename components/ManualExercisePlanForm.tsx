@@ -268,11 +268,14 @@ export function ManualExercisePlanForm({
           ))}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-          <button type="button" onClick={submit} disabled={submitting} className="manual-submit-btn">
-            {submitting ? "در حال ثبت…" : "ثبت برنامه"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={submitting}
+          style={{ width: "100%", marginTop: 16, borderColor: "var(--accent)", color: "var(--accent)" }}
+        >
+          {submitting ? "در حال ثبت…" : "ثبت برنامه"}
+        </button>
       </div>
     );
   }

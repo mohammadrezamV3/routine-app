@@ -57,7 +57,7 @@ export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEn
       <div className="flex items-center justify-between pl-2 sm:pl-0">
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <Trophy className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          مسیر پیشرفت
+          استرایک
         </h2>
         <motion.div
           initial={{ scale: 0.7, opacity: 0 }}

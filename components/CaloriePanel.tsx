@@ -343,7 +343,7 @@ export function CaloriePanel() {
 
               <div className="calorie-col-mid">
                 <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
-                <CalorieMacrosCard entries={entries} date={selectedIso} isToday={isSelectedToday} mealTypes={mealTypes} onLogged={refreshAfterChange} delay={0.19} />
+                <CalorieMacrosCard entries={entries} delay={0.19} />
               </div>
 
               <div className="calorie-col-side">

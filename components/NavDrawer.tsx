@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
 import { AnimatePresence, motion } from "framer-motion";
@@ -116,11 +117,21 @@ export function NavDrawer() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+  // موقعیتِ لنگرِ پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
+  // پورتال می‌شن (نه دیگه فرزندِ app-topbar)، باید مختصاتشون رو خودمون از
+  // روی دکمه‌ی محرک حساب کنیم. علتِ پورتال‌کردن: app-topbar خودش
+  // backdrop-filter داره، و یه پنلِ توی فرزندانش که خودش هم backdrop-filter
+  // داره فقط لایه‌ی از‌قبل‌بلورشده‌ی تقریباً خالیِ همون stacking context رو
+  // می‌بینه، نه محتوای واقعیِ پشتِ صفحه — پس هیچ‌وقت واقعاً مات نمی‌شد.
+  const [profileAnchor, setProfileAnchor] = useState<{ top: number; right: number } | null>(null);
+  const [bellAnchor, setBellAnchor] = useState<{ top: number; right: number } | null>(null);
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const { status } = useSession();
   const authSlotRef = useRef<HTMLDivElement>(null);
+  const profileBtnRef = useRef<HTMLButtonElement>(null);
+  const bellBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
   const hideTopbar = pathname?.startsWith("/auth");
@@ -141,7 +152,12 @@ export function NavDrawer() {
   function toggleProfileMenu() {
     setProfileMenuOpen((v) => {
       const next = !v;
-      if (next) { setOpen(false); setNotifPanelOpen(false); }
+      if (next) {
+        setOpen(false);
+        setNotifPanelOpen(false);
+        const r = profileBtnRef.current?.getBoundingClientRect();
+        if (r) setProfileAnchor({ top: r.bottom + 12, right: window.innerWidth - r.right });
+      }
       return next;
     });
   }
@@ -160,10 +176,17 @@ export function NavDrawer() {
   // (والدِ چیپِ پروفایل) backdrop-filter داره و برای فرزندهای position:fixed
   // یه containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخلِ کادرِ خودِ
   // هدر پوشش می‌داد، نه کلِ صفحه، پس کلیک روی بقیه‌ی صفحه بسته‌ش نمی‌کرد.
+  // خودِ پنل حالا به بادی پورتال می‌شه (دیگه فرزندِ authSlotRef نیست)، پس
+  // یه ref جدا برای خودِ پنلِ پورتال‌شده هم لازمه — وگرنه کلیک روی خودِ
+  // آیتم‌های پنل هم «بیرون» حساب می‌شد و فوراً می‌بستش.
+  const profilePanelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!profileMenuOpen) return;
     function onDocClick(e: MouseEvent) {
-      if (authSlotRef.current && !authSlotRef.current.contains(e.target as Node)) setProfileMenuOpen(false);
+      const target = e.target as Node;
+      if (authSlotRef.current?.contains(target)) return;
+      if (profilePanelRef.current?.contains(target)) return;
+      setProfileMenuOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -185,7 +208,12 @@ export function NavDrawer() {
   async function handleBellClick() {
     setNotifPanelOpen((v) => {
       const next = !v;
-      if (next) { setOpen(false); setProfileMenuOpen(false); }
+      if (next) {
+        setOpen(false);
+        setProfileMenuOpen(false);
+        const r = bellBtnRef.current?.getBoundingClientRect();
+        if (r) setBellAnchor({ top: r.bottom + 12, right: window.innerWidth - r.right });
+      }
       return next;
     });
     if (!notificationsSupported() || notifPermission === "granted") return;
@@ -223,7 +251,7 @@ export function NavDrawer() {
             ) : status === "authenticated" ? (
               <>
                 <div ref={authSlotRef} className="profile-chip-wrap">
-                  <button className="profile-chip" aria-label="پروفایل" onClick={toggleProfileMenu}>
+                  <button ref={profileBtnRef} className="profile-chip" aria-label="پروفایل" onClick={toggleProfileMenu}>
                     <span className="profile-chip-avatar">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="8" r="3.5" />
@@ -231,8 +259,12 @@ export function NavDrawer() {
                       </svg>
                     </span>
                   </button>
-                  {profileMenuOpen && (
-                    <div className="notif-panel open">
+                  {profileMenuOpen && profileAnchor && createPortal(
+                    <div
+                      ref={profilePanelRef}
+                      className="notif-panel open"
+                      style={{ position: "fixed", top: profileAnchor.top, right: profileAnchor.right, left: "auto" }}
+                    >
                       <div className="notif-panel-list">
                         <div
                           className="notif-panel-item profile-menu-item"
@@ -257,15 +289,19 @@ export function NavDrawer() {
                           <span>خروج از حساب</span>
                         </div>
                       </div>
-                    </div>
+                    </div>,
+                    document.body
                   )}
                 </div>
                 <div className="bell-btn-wrap">
-                  <button className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
+                  <button ref={bellBtnRef} className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
                     {notifPermission !== "granted" && <span className="bell-dot" />}
                   </button>
-                  {notifPanelOpen && <NotificationPanel onClose={() => setNotifPanelOpen(false)} />}
+                  {notifPanelOpen && bellAnchor && createPortal(
+                    <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} />,
+                    document.body
+                  )}
                 </div>
                 <HeaderStreakClock />
               </>

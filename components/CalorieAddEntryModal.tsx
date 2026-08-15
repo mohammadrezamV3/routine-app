@@ -142,12 +142,6 @@ export function CalorieAddEntryModal({
                 </div>
               )}
 
-              <div className="mt-2.5 text-[10.5px] text-dash-muted sm:text-[11.5px]">درشت‌مغذی‌ها (اختیاری — کلِ مقدارِ ثبت‌شده، نه هر ۱۰۰ گرم)</div>
-              <div className="mt-1.5 flex gap-2">
-                <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(e) => setProteinG(e.target.value)} />
-                <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(e) => setCarbsG(e.target.value)} />
-                <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(e) => setFatG(e.target.value)} />
-              </div>
             </div>
 
             <div className="mt-2.5 flex gap-2">
@@ -170,16 +164,18 @@ export function CalorieAddEntryModal({
                 {unitPickerOpen && (
                   <>
                     <div className="fixed inset-0 z-[19]" onClick={() => setUnitPickerOpen(false)} />
-                    <div className="calorie-glass-field absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-[220px] overflow-y-auto border p-1 shadow-lg">
-                      {(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => (
-                        <div
-                          key={u}
-                          onClick={() => changeUnit(u)}
-                          className={`cursor-pointer rounded-lg px-2.5 py-2 text-[11.5px] transition ${u === unit ? "font-bold text-dash-green" : "text-dash-muted hover:text-dash-text"}`}
-                        >
-                          {UNIT_LABELS[u]}
-                        </div>
-                      ))}
+                    <div className="calorie-unit-dropdown absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-[220px] border p-1 shadow-lg" dir="ltr">
+                      <div className="calorie-unit-dropdown-inner thin-scroll" dir="rtl">
+                        {(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => (
+                          <div
+                            key={u}
+                            onClick={() => changeUnit(u)}
+                            className={`cursor-pointer rounded-lg px-2.5 py-2 text-[11.5px] transition ${u === unit ? "font-bold text-dash-green" : "text-dash-muted hover:text-dash-text"}`}
+                          >
+                            {UNIT_LABELS[u]}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
@@ -188,6 +184,13 @@ export function CalorieAddEntryModal({
 
             <div className="mt-2.5">
               <SegmentedTabs active={mealType} onChange={setMealType} options={mealTypes.map((m) => ({ value: m.key, label: m.label }))} />
+            </div>
+
+            <div className="mt-2.5 text-[10.5px] text-dash-muted sm:text-[11.5px]">درشت‌مغذی‌ها</div>
+            <div className="mt-1.5 flex gap-2">
+              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(e) => setProteinG(e.target.value)} />
+              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(e) => setCarbsG(e.target.value)} />
+              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(e) => setFatG(e.target.value)} />
             </div>
 
             <button
