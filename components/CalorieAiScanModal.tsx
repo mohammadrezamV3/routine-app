@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Loader2, Sparkles } from "lucide-react";
+import { Camera, ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 
@@ -34,7 +34,8 @@ export function CalorieAiScanModal({
   onClose: () => void;
   onLogged: () => void;
 }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,24 +98,45 @@ export function CalorieAiScanModal({
         </div>
         <div className="modal-body">
           <input
-            ref={fileInputRef}
+            ref={cameraInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             capture="environment"
             className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
           />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          />
 
           {!preview && (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex w-full flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed py-10 text-[12.5px] font-semibold text-dash-muted"
-              style={{ borderColor: "var(--line)" }}
-            >
-              <Camera className="h-7 w-7 text-dash-green" />
-              عکس بگیر یا از گالری انتخاب کن
-            </button>
+            <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed py-8" style={{ borderColor: "var(--line)" }}>
+              <div className="text-[12px] font-semibold text-dash-muted sm:text-[12.5px]">می‌خوای عکس بگیری یا از گالری انتخاب کنی؟</div>
+              <div className="flex w-full gap-2.5 px-5">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl border py-3.5 text-[11.5px] font-bold"
+                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                >
+                  <Camera className="h-6 w-6" />
+                  دوربین
+                </button>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl border py-3.5 text-[11.5px] font-bold text-dash-muted"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  <ImageIcon className="h-6 w-6" />
+                  گالری
+                </button>
+              </div>
+            </div>
           )}
 
           {preview && (

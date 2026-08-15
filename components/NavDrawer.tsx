@@ -39,6 +39,19 @@ export const ICONS: Record<string, JSX.Element> = {
   trade: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9.5 11l3.5 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6.5h4.5V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  // آیکونِ اختصاصیِ «برنامه غذایی» (زیرمجموعه‌ی بدنسازی) — سیب، تا از
+  // آیکونِ دمبلِ «برنامه تمرینی» واضح جدا باشه
+  food: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 8.3c-2.7-2.5-6.4-1.5-7.7 1.1-1.7 3.3-.4 8.3 2.5 10.4 1.3 1 2.7 1 3.9.3.6-.3 1.1-.3 1.7 0 1.2.7 2.6.7 3.9-.3 2.9-2.1 4.2-7.1 2.5-10.4-1.3-2.6-5-3.6-7.7-1.1Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 8.3c0-1.9.8-3.4 2.2-4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  // آیکونِ اختصاصیِ «ژورنال» (زیرمجموعه‌ی ترید) — دفترچه
+  journal: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M9 8h6M9 12h6M9 16h3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  // آیکونِ اختصاصیِ «چک‌لیست» (زیرمجموعه‌ی ترید) — چک‌باکس‌های ردیفی
+  checklist: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 6.5 5.2 7.4 6.8 5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><rect x="3.5" y="14" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 16 5.2 16.9 6.8 15.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 6.5h9.5M11 16h9.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
@@ -75,20 +88,20 @@ function isGroup(item: NavItem): item is NavGroup {
 }
 
 const LINKS: NavItem[] = [
-  { href: "/weekly", label: "روتین", icon: "home" },
+  { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
       { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise" },
-      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "exercise" },
+      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food" },
     ],
   },
   {
     label: "ترید", icon: "trade",
     children: [
-      { href: "/trade?tab=journal", label: "ژورنال", icon: "trade" },
-      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "trade" },
+      { href: "/trade?tab=journal", label: "ژورنال", icon: "journal" },
+      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist" },
     ],
   },
   { href: "/about", label: "درباره ما", icon: "about" },
@@ -334,16 +347,18 @@ export function NavDrawer() {
                         transition={{ duration: 0.22, ease: "easeInOut" }}
                         style={{ overflow: "hidden" }}
                       >
-                        {item.children.map((c) => (
-                          <a
-                            key={c.href}
-                            onClick={() => go(c.href)}
-                            className={`nav-link nav-link-icon nav-link-sub${pathname === c.href.split("?")[0] ? " active" : ""}`}
-                          >
-                            <span className="nav-link-icon-svg">{ICONS[c.icon]}</span>
-                            <span>{c.label}</span>
-                          </a>
-                        ))}
+                        <div className="nav-subgroup-box">
+                          {item.children.map((c) => (
+                            <a
+                              key={c.href}
+                              onClick={() => go(c.href)}
+                              className={`nav-link-sub-item${pathname === c.href.split("?")[0] ? " active" : ""}`}
+                            >
+                              <span className="nav-link-icon-svg">{ICONS[c.icon]}</span>
+                              <span>{c.label}</span>
+                            </a>
+                          ))}
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
