@@ -392,7 +392,12 @@ export function NavDrawer() {
                                 onClick={() => go(c.href)}
                                 className={`nav-link-sub-item${childActive ? " active" : ""}`}
                               >
-                                <span className="nav-link-icon-svg">{ICONS[c.icon]}</span>
+                                <span className="nav-link-sub-rail" aria-hidden="true">
+                                  <span className="nav-link-sub-dot" />
+                                </span>
+                                <span className="nav-link-sub-icon-chip">
+                                  <span className="nav-link-icon-svg">{ICONS[c.icon]}</span>
+                                </span>
                                 <span>{c.label}</span>
                               </a>
                             );
