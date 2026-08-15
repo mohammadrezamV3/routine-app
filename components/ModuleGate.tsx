@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 type GateModule = "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
@@ -50,6 +51,7 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
 }
 
 function GateDenied() {
+  const router = useRouter();
   return (
     <div className="module-gate">
       <div className="module-gate-blur" aria-hidden="true">
@@ -70,7 +72,7 @@ function GateDenied() {
         <button
           type="button"
           className="module-gate-cta"
-          onClick={() => window.dispatchEvent(new Event("open-account-panel"))}
+          onClick={() => router.push("/subscription")}
         >
           خرید اشتراک
         </button>

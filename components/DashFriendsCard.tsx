@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
@@ -40,6 +40,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [confirmDeleteFriend, setConfirmDeleteFriend] = useState<Friend | null>(null);
+  const [deletingFriend, setDeletingFriend] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function loadFriends() {
@@ -91,6 +93,14 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
       body: JSON.stringify({ favorite: next }),
     });
     loadFriends();
+  }
+
+  async function deleteFriend(f: Friend) {
+    setDeletingFriend(true);
+    await fetch(`/api/friends/${f.friendshipId}`, { method: "DELETE" });
+    setFriends((prev) => prev && prev.filter((x) => x.friendshipId !== f.friendshipId));
+    setDeletingFriend(false);
+    setConfirmDeleteFriend(null);
   }
 
   const list = friends ?? [];
@@ -219,6 +229,14 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                               <div className="flex items-center gap-2.5">
                                 <button
                                   type="button"
+                                  onClick={() => setConfirmDeleteFriend(f)}
+                                  aria-label="حذف دوست"
+                                  className="bg-transparent text-dash-muted transition hover:text-[#E05252]"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => toggleFavorite(f)}
                                   aria-label={f.favorite ? "حذف از فیوریت‌ها" : "افزودن به فیوریت‌ها"}
                                   style={{ color: f.favorite ? "#F5C518" : "var(--muted)" }}
@@ -239,6 +257,40 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                     )}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {confirmDeleteFriend && createPortal(
+        <>
+          <div className="modal-overlay open" onClick={() => !deletingFriend && setConfirmDeleteFriend(null)} style={{ zIndex: 80 }} />
+          <div className="modal-panel liquid-glass-panel dash-scope open" style={{ zIndex: 81, maxWidth: 340 }}>
+            <div className="modal-body" style={{ paddingTop: 22, textAlign: "center" }}>
+              <div className="text-[13px] font-bold text-dash-text sm:text-[14.5px]">
+                واقعاً می‌خوای «{confirmDeleteFriend.name}» رو از دوستات حذف کنی؟
+              </div>
+              <div className="mt-5 flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteFriend(null)}
+                  disabled={deletingFriend}
+                  className="flex-1 rounded-2xl border py-2.5 text-[12px] font-semibold text-dash-muted disabled:opacity-40"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  نه
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteFriend(confirmDeleteFriend)}
+                  disabled={deletingFriend}
+                  className="flex-1 rounded-2xl py-2.5 text-[12px] font-bold disabled:opacity-40"
+                  style={{ background: "#E05252", color: "#fff" }}
+                >
+                  {deletingFriend ? "در حال حذف…" : "بله، حذف کن"}
+                </button>
               </div>
             </div>
           </div>

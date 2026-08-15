@@ -96,7 +96,7 @@ export function CalorieFoodPlanCard({
         <div className="flex flex-col gap-2">
           {entries.length ? (
             entries.map((e) => (
-              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 border px-3 py-2.5">
+              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 rounded-2xl border px-3 py-2.5">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(var(--accent-rgb),.12)" }}>
                     <UtensilsCrossed className="h-4 w-4 text-dash-green" />
@@ -106,17 +106,19 @@ export function CalorieFoodPlanCard({
                     <div className="mono mt-0.5 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</div>
                   </div>
                 </div>
-                <span className="flex shrink-0 items-center gap-2">
-                  <span className="mono text-[12px] font-bold text-dash-green sm:text-[13px]">
-                    {faNum(e.customCalories)}<span className="mr-1 text-[9.5px] font-semibold text-dash-muted">kcal</span>
+                <span className="flex shrink-0 items-center gap-2.5">
+                  <span
+                    className="mono flex items-baseline gap-1 rounded-lg px-2 py-1 text-[12px] font-extrabold sm:text-[13.5px]"
+                    style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}
+                  >
+                    {faNum(e.customCalories)}<span className="text-[9px] font-semibold" style={{ color: "var(--accent)", opacity: 0.75 }}>kcal</span>
                   </span>
                   {isToday && (
                     <button
                       type="button"
                       onClick={() => onRemove(e.id)}
                       aria-label="حذف"
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[13px] transition hover:bg-[rgba(224,82,82,.12)] hover:border-[#E05252] hover:text-[#E05252] sm:h-[26px] sm:w-[26px]"
-                      style={{ borderColor: "rgba(224,82,82,.35)", color: "#E05252" }}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent text-[13px] text-dash-muted transition hover:text-[#E05252] sm:h-[26px] sm:w-[26px]"
                     >
                       <X size={13} />
                     </button>

@@ -189,7 +189,7 @@ export function ExerciseDashboard({
         transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         className={
           sessionActive
-            ? "flex flex-col gap-4 sm:gap-6"
+            ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-start lg:gap-6"
             : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
         }
       >
@@ -210,26 +210,27 @@ export function ExerciseDashboard({
           delay={0.05}
         />
 
+        {/* «مشاهده حرکات» طبقِ درخواستِ صریحِ کاربر، وقتی تمرین شروع می‌شه هم
+            باید بمونه (نه فقط قبل از شروع) — فقط آمار/دوستان و برنامه‌ی هفتگیِ
+            پایینِ صفحه‌ان که توی حالتِ تمرکز روی جلسه مخفی می‌شن. */}
+        <motion.div key="catalog" layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <ExerciseCatalogCard delay={0.1} />
+        </motion.div>
+
         <AnimatePresence mode="popLayout">
           {!sessionActive && (
-            <>
-              <motion.div key="catalog" layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <ExerciseCatalogCard delay={0.1} />
-              </motion.div>
-
-              <motion.div
-                key="side"
-                layout
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-col gap-4 sm:gap-6"
-              >
-                <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
-                <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
-              </motion.div>
-            </>
+            <motion.div
+              key="side"
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-4 sm:gap-6"
+            >
+              <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
+              <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>

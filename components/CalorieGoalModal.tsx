@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Calculator, ChevronRight, PenLine, Plus, X } from "lucide-react";
+import { motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
-import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, splitMeals } from "@/lib/calorieCalc";
+import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, splitMeals, MealBreakdownItem } from "@/lib/calorieCalc";
+import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { SegmentedTabs } from "./SegmentedTabs";
 import type { Target } from "./CaloriePanel";
 
-type Mode = "smart" | "manual";
+type Mode = "choice" | "smart" | "manual";
+type MealDraftRow = { key: string; label: string; kcal: string };
 
 // پاپ‌آپِ «تغییر برنامه» — قبلاً کلیک روش کلِ صفحه‌ی کالری رو با فرم عوض
 // می‌کرد (حسِ رفتن به یه صفحه‌ی جدید می‌داد)؛ الان یه پاپ‌آپِ واقعیه که روی
-// همون داشبورد باز می‌شه و با بستنش دقیقاً برمی‌گردی به همون‌جا. دو راه
-// برای تعیینِ برنامه: «هوشمند» (فرمولِ Mifflin-St Jeor روی هدف/جنسیت/قد/وزن،
-// از قبل بود) یا «دستی» (خودِ کاربر یه عددِ کالریِ روزانه می‌ده، بینِ
-// تعداد وعده‌ها با همون splitMeالsِ سمتِ کلاینت تقسیم می‌شه و با PATCH
-// ثبت می‌شه — دقیقاً همون مسیرِ «ویرایش وعده‌ها»ی CalorieMealBreakdownCard).
+// همون داشبورد باز می‌شه و با بستنش دقیقاً برمی‌گردی به همون‌جا. صفحه‌ی
+// انتخابِ اولش دقیقاً هم‌قاعده‌ی «افزودن برنامه»ی بدنسازیه (دو دکمه‌ی
+// بزرگ کنارِ هم، طبقِ درخواستِ صریحِ کاربر): «هوشمند» (فرمولِ
+// Mifflin-St Jeor روی هدف/جنسیت/قد/وزن) یا «دستی» (خودِ کاربر مستقیماً
+// کالریِ هرِ وعده رو تعیین می‌کنه — همون ویرایشگرِ ردیفی‌ای که قبلاً توی
+// CalorieMealBreakdownCard بود، حالا فقط اینجاست).
 export function CalorieGoalModal({
   target,
   needsAge,
@@ -26,7 +31,7 @@ export function CalorieGoalModal({
   onClose: () => void;
   onSaved: (target: Target) => void;
 }) {
-  const [mode, setMode] = useState<Mode>("smart");
+  const [mode, setMode] = useState<Mode>("choice");
 
   const [goal, setGoal] = useState<CalorieGoal>(target.goal || "maintain");
   const [mealsPerDay, setMealsPerDay] = useState(target.mealsPerDay || 4);
@@ -37,10 +42,41 @@ export function CalorieGoalModal({
   const [goalError, setGoalError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [manualKcal, setManualKcal] = useState(target.dailyTargetKcal ? String(target.dailyTargetKcal) : "");
-  const [manualMeals, setManualMeals] = useState(target.mealsPerDay || 4);
+  // اگه کاربر قبلاً یه‌جای دیگه (مثلاً فرمِ بدنسازی) قد/وزن/سنش رو وارد کرده،
+  // همینجا هم از قبل پر می‌شه — فقط وقتی که خودِ این پاپ‌آپ مقدارِ قبلی نداره
+  // (یعنی هدفِ کالری هنوز هیچ‌وقت محاسبه نشده)، تا داده‌ی قبلاً محاسبه‌شده رو بی‌جهت عوض نکنه.
+  useEffect(() => {
+    if (goalHeight && goalWeight) return;
+    getBodyMetrics().then(({ data }) => {
+      if (!data) return;
+      if (!goalHeight && data.heightCm) setGoalHeight(String(data.heightCm));
+      if (!goalWeight && data.weightKg) setGoalWeight(String(data.weightKg));
+      if (!age && data.ageYears) setAge(String(data.ageYears));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const defaultMealDraft = (): MealDraftRow[] => {
+    const base: MealBreakdownItem[] = target.mealBreakdown?.length
+      ? target.mealBreakdown
+      : splitMeals(target.dailyTargetKcal || 2200, target.mealsPerDay || 4);
+    return base.map((m) => ({ key: m.key, label: m.label, kcal: String(m.kcal) }));
+  };
+  const [mealDraft, setMealDraft] = useState<MealDraftRow[]>(defaultMealDraft);
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSaving, setManualSaving] = useState(false);
+
+  function addMealDraftRow() {
+    if (mealDraft.length >= 8) return;
+    setMealDraft((rows) => [...rows, { key: `meal_${Date.now()}`, label: "", kcal: "" }]);
+  }
+  function updateMealDraftRow(key: string, patch: Partial<MealDraftRow>) {
+    setMealDraft((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+  function removeMealDraftRow(key: string) {
+    setMealDraft((rows) => rows.filter((r) => r.key !== key));
+  }
+  const mealDraftSum = mealDraft.reduce((s, r) => s + (+r.kcal || 0), 0);
 
   async function saveSmart() {
     if (!goal) { setGoalError("انتخاب هدف لازمه"); return; }
@@ -62,22 +98,23 @@ export function CalorieGoalModal({
     const data = await res.json();
     setSaving(false);
     if (!res.ok) { setGoalError(data.error || "خطایی پیش آمد"); return; }
+    saveBodyMetrics({ heightCm: +goalHeight, weightKg: +goalWeight, ageYears: age ? +age : undefined });
     onSaved(data.target);
     onClose();
   }
 
   async function saveManual() {
-    const kcal = +manualKcal;
-    if (!manualKcal || !kcal || kcal < 800 || kcal > 8000) {
-      setManualError("کالری روزانه باید عددی بین ۸۰۰ تا ۸۰۰۰ باشه");
-      return;
+    if (mealDraft.length === 0) { setManualError("حداقل یک وعده لازمه"); return; }
+    for (const r of mealDraft) {
+      if (!r.label.trim()) { setManualError("اسم همه‌ی وعده‌ها رو وارد کن"); return; }
+      if (!r.kcal || +r.kcal <= 0) { setManualError("کالری همه‌ی وعده‌ها باید عدد مثبت باشه"); return; }
     }
     setManualError(null);
     setManualSaving(true);
     const res = await fetch("/api/calorie/target", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mealBreakdown: splitMeals(kcal, manualMeals) }),
+      body: JSON.stringify({ mealBreakdown: mealDraft.map((r) => ({ key: r.key, label: r.label.trim(), kcal: +r.kcal })) }),
     });
     const data = await res.json();
     setManualSaving(false);
@@ -91,22 +128,46 @@ export function CalorieGoalModal({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel liquid-glass-panel dash-scope open">
         <div className="modal-head">
-          <div className="modal-title">تغییر برنامه کالری</div>
+          {mode !== "choice" && (
+            <button type="button" className="nav-close" onClick={() => setMode("choice")} aria-label="بازگشت">
+              <ChevronRight size={20} />
+            </button>
+          )}
+          <div className="modal-title" style={{ flex: 1 }}>تغییر برنامه کالری</div>
           <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
         </div>
         <div className="modal-body">
-          <SegmentedTabs
-            active={mode}
-            onChange={setMode}
-            options={[
-              { value: "smart" as Mode, label: "محاسبه‌ی هوشمند" },
-              { value: "manual" as Mode, label: "وارد کردن دستی" },
-            ]}
-          />
+          {mode === "choice" && (
+            <div className="exercise-choice-row">
+              <motion.button
+                type="button"
+                onClick={() => setMode("smart")}
+                className="exercise-choice-btn"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              >
+                <Calculator size={26} style={{ color: "var(--accent)" }} />
+                <span>محاسبه‌ی هوشمند</span>
+              </motion.button>
+              <div className="exercise-choice-divider" />
+              <motion.button
+                type="button"
+                onClick={() => setMode("manual")}
+                className="exercise-choice-btn"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              >
+                <PenLine size={22} style={{ color: "var(--accent)" }} />
+                <span>وارد کردن دستی</span>
+              </motion.button>
+            </div>
+          )}
 
-          {mode === "smart" ? (
+          {mode === "smart" && (
             <>
-              <div className="mt-3.5 text-[11px] text-dash-muted sm:text-[12px]">
+              <div className="mt-1 text-[11px] text-dash-muted sm:text-[12px]">
                 با فرمول استاندارد تغذیه، بر اساس هدف/جنسیت/قد/وزنت کالری روزانه‌ات رو حساب می‌کنیم
               </div>
 
@@ -169,28 +230,53 @@ export function CalorieGoalModal({
                 {saving ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
               </button>
             </>
-          ) : (
+          )}
+
+          {mode === "manual" && (
             <>
-              <div className="mt-3.5 text-[11px] text-dash-muted sm:text-[12px]">
-                کالری روزانه‌ی هدفت رو خودت وارد کن — بینِ وعده‌ها به‌طورِ مساوی تقسیمش می‌کنیم
+              <div className="mt-1 text-[11px] text-dash-muted sm:text-[12px]">
+                کالریِ هر وعده رو خودت مشخص کن — جمعِ همه‌شون کالری روزانه‌ی هدفت می‌شه
               </div>
 
-              <label className="mt-4 block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">کالری روزانه (kcal)</label>
-              <input
-                type="number"
-                className="wsearch-newform-name calorie-glass-field mt-1.5 w-full"
-                placeholder="مثلاً ۲۲۰۰"
-                value={manualKcal}
-                onChange={(e) => setManualKcal(e.target.value)}
-              />
+              <div className="mt-3.5 flex flex-col gap-2.5">
+                {mealDraft.map((row) => (
+                  <div key={row.key} className="flex items-center gap-1.5">
+                    <input
+                      className="wsearch-newform-name calorie-glass-field flex-[2]"
+                      placeholder="اسم وعده"
+                      value={row.label}
+                      onChange={(e) => updateMealDraftRow(row.key, { label: e.target.value })}
+                    />
+                    <input
+                      type="number"
+                      className="wsearch-newform-name calorie-glass-field flex-1"
+                      placeholder="کالری"
+                      value={row.kcal}
+                      onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeMealDraftRow(row.key)}
+                      aria-label="حذف وعده"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-[13px] text-dash-muted transition hover:text-[#E05252]"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
 
-              <label className="mt-3.5 block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">چند وعده در روز می‌خوای؟</label>
-              <div className="mt-1.5">
-                <SegmentedTabs
-                  active={String(manualMeals)}
-                  onChange={(v) => setManualMeals(Number(v))}
-                  options={[2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: faNum(n) }))}
-                />
+                {mealDraft.length < 8 && (
+                  <button
+                    type="button"
+                    onClick={addMealDraftRow}
+                    className="flex items-center justify-center gap-1 self-start text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+                  >
+                    <Plus size={14} />
+                    افزودن وعده
+                  </button>
+                )}
+
+                <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">جمع: {faNum(mealDraftSum)} کالری</div>
               </div>
 
               {manualError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{manualError}</div>}

@@ -12,7 +12,7 @@ import {
   toEnDigits,
   DayStats,
 } from "@/lib/schedule";
-import { dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
+import { dayFillFraction, positionTimedTasks, timelineTrackMinWidth } from "@/lib/weeklyTimeline";
 import {
   getCustomOccurrences,
   getRemovedOccurrences,
@@ -386,7 +386,7 @@ export default function WeeklyPage() {
                   <div className="week-day-body" style={{ maxHeight: isOpen ? "none" : "0px", overflow: "hidden" }}>
                     {items.length ? (
                       <div className="week-timeline">
-                        <div className="week-timeline-track">
+                        <div className="week-timeline-track" style={{ minWidth: timelineTrackMinWidth(timedItems.length) }}>
                           <div className="wt-fill-track">
                             <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }} />
                           </div>

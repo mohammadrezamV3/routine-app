@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getSetting, setSetting } from "@/lib/storage";
+
+// لینک‌کردنِ منابع/کارهای رودمپ به یه جست‌وجوی واقعی — نه یه URL ساختگی
+// (که معلوم نیست واقعاً درست باشه)، بلکه یه جست‌وجوی گوگل برای همون عنوان،
+// همراه با موضوعِ رودمپ برای دقیق‌تر بودنِ نتیجه؛ این یعنی هر آیتم واقعاً
+// «قابلِ‌اجرا»ست، نه فقط یه متنِ ایستا.
+function searchUrl(query: string, topic: string): string {
+  return `https://www.google.com/search?q=${encodeURIComponent(`${query} ${topic}`)}`;
+}
 
 type Roadmap = {
   id: string;
   title: string;
+  topic: string;
   note: string;
   stations: { t: string; items: string[] }[];
   tips: string[];
@@ -71,6 +81,11 @@ export default function CustomRoadmapDetailPage() {
     );
   }
 
+  const stations = data.stations || [];
+  const doneCount = stations.reduce((s, _st, i) => s + (done[i] ? 1 : 0), 0);
+  const pct = stations.length ? Math.round((doneCount / stations.length) * 100) : 0;
+  const railPct = stations.length > 1 ? (doneCount / (stations.length - 1)) * 100 : doneCount ? 100 : 0;
+
   return (
     <section style={{ borderTop: "none" }}>
       <div className="tm-head-row" style={{ justifyContent: "space-between" }}>
@@ -82,8 +97,23 @@ export default function CustomRoadmapDetailPage() {
       </div>
       <div className="section-note">{data.note}</div>
 
+      {!!stations.length && (
+        <div className="tm-progress-summary">
+          <div className="mono">
+            {faNum(doneCount)}<span className="mx-1">/</span>{faNum(stations.length)}<span> ایستگاه تکمیل‌شده</span>
+          </div>
+          <div className="mono" style={{ color: "var(--muted)", fontSize: 12 }}>{faNum(pct)}٪</div>
+        </div>
+      )}
+      {!!stations.length && (
+        <div className="tm-progress-bar"><div className="tm-progress-bar-fill" style={{ width: `${pct}%` }} /></div>
+      )}
+
       <div className="treasure-map">
-        {(data.stations || []).map((s, i) => {
+        {!!stations.length && (
+          <div className="tm-rail"><div className="tm-rail-fill" style={{ height: `${railPct}%` }} /></div>
+        )}
+        {stations.map((s, i) => {
           const isDone = !!done[i];
           return (
             <div key={i} className={`tm-station clickable ${isDone ? "past" : ""}`}>
@@ -96,7 +126,14 @@ export default function CustomRoadmapDetailPage() {
               <div className="tm-title">{s.t}</div>
               {!!s.items?.length && (
                 <ul className="tm-item-list">
-                  {s.items.map((it, ii) => <li key={ii}>{it}</li>)}
+                  {s.items.map((it, ii) => (
+                    <li key={ii}>
+                      <a href={searchUrl(it, data.topic)} target="_blank" rel="noopener noreferrer">
+                        {it}
+                        <ExternalLink size={11} />
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               )}
             </div>
@@ -117,7 +154,16 @@ export default function CustomRoadmapDetailPage() {
       {!!data.books?.length && (
         <div className="tm-extra">
           <div className="domain-sub">منابع پیشنهادی</div>
-          <ul>{data.books.map((t, i) => <li key={i}>{t}</li>)}</ul>
+          <ul>
+            {data.books.map((t, i) => (
+              <li key={i}>
+                <a href={searchUrl(t, data.topic)} target="_blank" rel="noopener noreferrer">
+                  {t}
+                  <ExternalLink size={11} />
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </section>
