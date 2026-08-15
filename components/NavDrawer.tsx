@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,22 +8,10 @@ import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { HeaderStreakClock } from "./HeaderStreakClock";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
-
-// خوندنِ ?tab= فعلی برای تشخیصِ دقیقِ زیرمجموعه‌ی فعال (مثلاً «برنامه
-// غذایی» یا «برنامه تمرینی» — هر دو روی همون pathname/exercise ان و فقط با
-// query فرق دارن، پس usePathname به‌تنهایی نمی‌تونه بینشون فرق بذاره).
-// useSearchParams نیاز به Suspense داره، برای همینم جدا از بقیه‌ی NavDrawer
-// (که نباید منتظرِ این بمونه) توی یه کامپوننتِ کوچیکِ بی‌رندر جدا شده.
-function TabQueryReader({ onChange }: { onChange: (tab: string | null) => void }) {
-  const searchParams = useSearchParams();
-  const tab = searchParams.get("tab");
-  useEffect(() => { onChange(tab); }, [tab, onChange]);
-  return null;
-}
 
 // این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
 // ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -99,22 +87,6 @@ function isGroup(item: NavItem): item is NavGroup {
   return "children" in item;
 }
 
-// استخراجِ مقدارِ ?tab= از href یه زیرمجموعه — برای تشخیصِ اینکه دقیقاً
-// کدوم بچه (نه فقط کدوم گروه) الان فعاله، چون چندتا بچه می‌تونن روی همون
-// pathname باشن (مثلاً هر دو بچه‌ی «بدنسازی» روی /exercise ان).
-function tabParam(href: string): string | null {
-  const q = href.split("?")[1];
-  return q ? new URLSearchParams(q).get("tab") : null;
-}
-// وقتی هنوز هیچ ?tab= توی URL نیست (مثلاً کاربر مستقیم /exercise رو باز
-// کرده)، خودِ صفحه یه تبِ پیش‌فرض نشون می‌ده — این‌جا هم باید هم‌قاعده‌ی
-// همون پیش‌فرض باشه (app/exercise/page.tsx, app/trade/page.tsx).
-function defaultTabFor(basePath: string): string | null {
-  if (basePath === "/exercise") return "exercise";
-  if (basePath === "/trade") return "journal";
-  return null;
-}
-
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
@@ -140,7 +112,6 @@ export function NavDrawer() {
   // گروهِ بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
   // اگه صفحه‌ی فعلی زیرمجموعه‌ی یه گروهه، همون گروه پیش‌فرض باز می‌مونه.
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [currentTab, setCurrentTab] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
@@ -232,10 +203,6 @@ export function NavDrawer() {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <TabQueryReader onChange={setCurrentTab} />
-      </Suspense>
-
       {!hideTopbar && (
         <header className="app-topbar">
           <div className="topbar-actions-left">
@@ -353,12 +320,11 @@ export function NavDrawer() {
           {LINKS.map((item) => {
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;
-              const isActive = item.children.some((c) => pathname === c.href.split("?")[0]);
               return (
                 <div key={item.label} className={isExpanded ? "nav-group-expanded" : undefined}>
                   <a
                     onClick={() => setExpandedGroup((g) => (g === item.label ? null : item.label))}
-                    className={`nav-link nav-link-icon${isActive ? " active" : ""}`}
+                    className="nav-link nav-link-icon"
                     style={{ cursor: "pointer" }}
                   >
                     <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
@@ -381,27 +347,11 @@ export function NavDrawer() {
                         style={{ overflow: "hidden" }}
                       >
                         <div className="nav-group-children">
-                          {item.children.map((c) => {
-                            const base = c.href.split("?")[0];
-                            const wantedTab = tabParam(c.href);
-                            const activeTab = currentTab ?? defaultTabFor(base);
-                            const childActive = pathname === base && wantedTab === activeTab;
-                            return (
-                              <a
-                                key={c.href}
-                                onClick={() => go(c.href)}
-                                className={`nav-link-sub-item${childActive ? " active" : ""}`}
-                              >
-                                <span className="nav-link-sub-rail" aria-hidden="true">
-                                  <span className="nav-link-sub-dot" />
-                                </span>
-                                <span className="nav-link-sub-icon-chip">
-                                  <span className="nav-link-icon-svg">{ICONS[c.icon]}</span>
-                                </span>
-                                <span>{c.label}</span>
-                              </a>
-                            );
-                          })}
+                          {item.children.map((c) => (
+                            <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
+                              <span>{c.label}</span>
+                            </a>
+                          ))}
                         </div>
                       </motion.div>
                     )}
@@ -410,11 +360,7 @@ export function NavDrawer() {
               );
             }
             return (
-              <a
-                key={item.href}
-                onClick={() => go(item.href)}
-                className={`nav-link nav-link-icon${pathname === item.href ? " active" : ""}`}
-              >
+              <a key={item.href} onClick={() => go(item.href)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                 <span>{item.label}</span>
               </a>

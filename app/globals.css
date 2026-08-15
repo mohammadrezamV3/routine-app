@@ -172,7 +172,7 @@
     color:var(--accent);
   }
   body[data-theme="light"] .section-note{ color:var(--muted); }
-  .disclaimer-note{font-size:11px; color:var(--accent); margin-top:14px; line-height:1.7;}
+  .disclaimer-note{font-size:11px; color:var(--text); margin-top:14px; line-height:1.7;}
   .disclaimer-warn{color:#E05252; font-weight:700;}
 
   .task{
@@ -590,7 +590,6 @@
     padding:12px 2px; transition:.15s;
   }
   .nav-link:hover{color:var(--accent);}
-  .nav-link.active{color:var(--accent);}
 
   /* tips / extra lists */
   .tm-extra{margin-top:22px;}
@@ -1645,6 +1644,18 @@
   .wsearch-newform-name:focus{border-color:var(--accent);}
   .wsearch-newform-name::placeholder{color:var(--muted2);}
 
+  /* فیلدهای پاپ‌آپ‌های کالری (تغییر برنامه/افزودن غذا) — بکگراندِ تختِ
+     پیش‌فرضِ wsearch-newform-name (مشکیِ کامل توی تمِ تیره) با
+     SegmentedTabsِ شیشه‌ایِ بالای‌سرشون (.auth-tabs) هم‌خونی نداشت؛ این کلاس
+     دقیقاً همون دستورِ شیشه‌ایِ auth-tabs رو می‌ذاره، به‌علاوه‌ی گردیِ بیشتر
+     که با بقیه‌ی عناصرِ rounded-2xl این پاپ‌آپ‌ها جفت‌وجور باشه. */
+  .calorie-glass-field{
+    border-radius:14px;
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .calorie-glass-field{ background:rgba(255,255,255,.03); border-color:var(--line); }
+  body[data-theme="light"] .calorie-glass-field{ background:rgba(255,255,255,.06); border-color:var(--line); }
+
   /* فیلدهای ژورنال ترید — لیکوئید گلس واقعی به‌جای بک‌گراند تخت، فقط همین‌جا */
   .wsearch-newform-name.trade-glass-field{
     backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
@@ -1799,66 +1810,36 @@
   color:var(--muted2); transition:color .18s ease;
 }
 .nav-link-icon-svg svg{width:18px; height:18px; display:block;}
-.nav-link-icon:hover, .nav-link-icon.active{
+.nav-link-icon:hover{
   background:rgba(255,255,255,.03);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
 }
-body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-link-icon.active{
+body[data-theme="light"] .nav-link-icon:hover{
   background:rgba(255,255,255,.05);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
 }
 
-/* زیرمجموعه‌ی یه گروهِ منو (مثلاً برنامه‌ی تمرینی/غذایی زیرِ بدنسازی) — طبقِ
-   اصلاحِ کاربر، دیگه یه باکسِ جداگانه‌ی زیرِ دکمه‌ی گروه نیست؛ وقتی گروه باز
-   می‌شه، خودِ دکمه‌ی گروه + زیرمجموعه‌ها هردو داخلِ یه باکسِ واحد (این کلاس،
-   روی والدِ مشترکشون) جا می‌گیرن — یعنی باکس بزرگ می‌شه، نه اینکه یه باکسِ
-   جدید زیرش اضافه بشه. هرکدوم آیکونِ اختصاصیِ خودشون، فونتِ کوچیک‌تر از
-   لینک‌های اصلی. */
+/* زیرمجموعه‌ی یه گروهِ منو (مثلاً برنامه‌ی تمرینی/غذایی زیرِ بدنسازی) — یه
+   باکسِ جداگانه‌ی زیرِ دکمه‌ی گروه نیست؛ وقتی گروه باز می‌شه، خودِ دکمه‌ی
+   گروه + زیرمجموعه‌ها هردو داخلِ یه باکسِ واحد (این کلاس، روی والدِ
+   مشترکشون) جا می‌گیرن. طبقِ درخواستِ صریحِ کاربر، دیگه نه آیکون دارن نه
+   وضعیتِ فعال/سبز رنگ (منو دیگه نشون نمی‌ده کاربر دقیقاً کدوم زیرصفحه‌ست)
+   — فقط لینک‌های ساده‌ی متنی با فاصله‌بندیِ درست. */
 .nav-group-expanded{
   border-radius:18px; border:1px solid var(--line);
   background:rgba(255,255,255,.02);
-  padding:2px; margin:1px 0;
+  padding:4px; margin:1px 0;
 }
 body[data-theme="light"] .nav-group-expanded{ background:rgba(0,0,0,.02); }
-.nav-group-children{ display:flex; flex-direction:column; gap:1px; padding:3px 4px 4px; }
-/* درختِ اتصالِ گروه به زیرمجموعه‌ها — یه خطِ عمودیِ نازک زیرِ آیکونِ گروه
-   (سمتِ راست، چون توی RTL آیکون اولین فرزنده) که از این ردیف به اون ردیف
-   رد می‌شه، با یه نقطه روی هرکدوم؛ رابطه‌ی «این‌ها زیرمجموعه‌ی همونن» رو
-   با یه نگاه نشون می‌ده، نه فقط با تورفتگیِ خام. */
+.nav-group-children{ display:flex; flex-direction:column; gap:2px; padding:2px; }
 .nav-link-sub-item{
-  display:flex; align-items:center; gap:9px;
-  border-radius:12px; padding:7px 10px; font-size:12px; color:var(--muted);
+  display:flex; align-items:center;
+  border-radius:12px; padding:10px 14px; font-size:12.5px; color:var(--muted);
   transition:background .16s ease, color .16s ease;
 }
-.nav-link-sub-rail{
-  position:relative; width:16px; align-self:stretch; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.nav-link-sub-rail::before{
-  content:''; position:absolute; top:-4px; bottom:-4px; right:calc(50% - .75px);
-  width:1.5px; background:var(--line);
-}
-.nav-link-sub-item:first-child .nav-link-sub-rail::before{ top:50%; }
-.nav-link-sub-item:last-child .nav-link-sub-rail::before{ bottom:50%; }
-.nav-link-sub-dot{
-  position:relative; z-index:1; width:5px; height:5px; border-radius:50%;
-  background:var(--muted2); transition:background .16s ease, box-shadow .16s ease;
-}
-.nav-link-sub-item.active .nav-link-sub-dot{ background:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2); }
-.nav-link-sub-icon-chip{
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:24px; height:24px; border-radius:8px;
-  background:rgba(255,255,255,.045); color:var(--muted);
-  transition:background .16s ease, color .16s ease;
-}
-body[data-theme="light"] .nav-link-sub-icon-chip{ background:rgba(0,0,0,.045); }
-.nav-link-sub-item .nav-link-icon-svg{ width:13px; height:13px; min-width:13px; color:inherit; }
-.nav-link-sub-item .nav-link-icon-svg svg{ width:13px; height:13px; }
 .nav-link-sub-item:hover{ background:rgba(255,255,255,.04); color:var(--text); }
 body[data-theme="light"] .nav-link-sub-item:hover{ background:rgba(0,0,0,.04); }
-.nav-link-sub-item.active{ background:rgba(var(--accent-rgb),.12); color:var(--accent); font-weight:700; }
-.nav-link-sub-item.active .nav-link-sub-icon-chip{ background:rgba(var(--accent-rgb),.18); color:var(--accent); }
 
 /* ---------- چیدمانِ داشبوردِ کالری ----------
    موبایل: فقط یه ستونِ ساده، به همون ترتیبِ DOM (برنامه غذایی، روند
@@ -2238,7 +2219,7 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
   .whyus-track{ animation:none; }
 }
 
-.nav-link-icon:hover .nav-link-icon-svg, .nav-link-icon.active .nav-link-icon-svg{ color:var(--accent); }
+.nav-link-icon:hover .nav-link-icon-svg{ color:var(--accent); }
 
 /* دیوار اشتراک — به‌جای لود دیتای واقعیِ کاربری که پلنش شامل نمی‌شه، یک
    اسکلت تزئینیِ تار + پیام + دکمه‌ی خرید روش می‌شینه */

@@ -96,12 +96,20 @@ export function CalorieFoodPlanCard({
         <div className="flex flex-col gap-2">
           {entries.length ? (
             entries.map((e) => (
-              <div key={e.id} className="flex items-center justify-between gap-2 rounded-xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
-                <span className="min-w-0 truncate text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">
-                  {e.customName} <span className="mono text-dash-muted">({faNum(e.grams)}g)</span>
-                </span>
+              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 border px-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(var(--accent-rgb),.12)" }}>
+                    <UtensilsCrossed className="h-4 w-4 text-dash-green" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{e.customName}</div>
+                    <div className="mono mt-0.5 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</div>
+                  </div>
+                </div>
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="mono text-[11px] text-dash-muted sm:text-[12px]">{faNum(e.customCalories)} kcal</span>
+                  <span className="mono text-[12px] font-bold text-dash-green sm:text-[13px]">
+                    {faNum(e.customCalories)}<span className="mr-1 text-[9.5px] font-semibold text-dash-muted">kcal</span>
+                  </span>
                   {isToday && (
                     <button
                       type="button"
