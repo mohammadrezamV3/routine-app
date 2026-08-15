@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Star, Trash2 } from "lucide-react";
+import { Plus, Star, Trash2 } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
@@ -43,6 +43,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const [confirmDeleteFriend, setConfirmDeleteFriend] = useState<Friend | null>(null);
   const [deletingFriend, setDeletingFriend] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   async function loadFriends() {
     const res = await fetch(module ? `/api/friends?module=${module}` : "/api/friends");
@@ -131,9 +132,14 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         ) : friends === null ? (
           <div className="text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
         ) : list.length === 0 ? (
-          <div className="text-[11px] text-dash-muted sm:text-[12px]">
-            هنوز دوستی اضافه نکردی — از «مشاهده همه» می‌تونی جستجو کنی.
-          </div>
+          <button
+            type="button"
+            onClick={() => setPanelOpen(true)}
+            className="flex items-center gap-1.5 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+          >
+            <Plus size={15} />
+            افزودن دوست
+          </button>
         ) : (
           list.map((f) => (
             <div key={f.friendshipId} className="flex items-center justify-between gap-3">
@@ -175,6 +181,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                   <div className="tm-extra" style={{ marginTop: 0 }}>
                     <div className="domain-sub" style={{ color: "var(--accent)" }}>افزودن دوست</div>
                     <input
+                      ref={searchInputRef}
                       type="text"
                       dir="rtl"
                       className="wsearch-newform-name trade-glass-field pill-glass-field"
@@ -219,7 +226,14 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                 {!authRequired && query.trim().length < 2 && (
                   <div className="tm-extra">
                     {list.length === 0 ? (
-                      <div className="item-line empty">هنوز دوستی اضافه نکردی.</div>
+                      <button
+                        type="button"
+                        onClick={() => searchInputRef.current?.focus()}
+                        className="flex items-center gap-1.5 text-[12px] font-semibold text-dash-green transition hover:brightness-110"
+                      >
+                        <Plus size={15} />
+                        افزودن دوست
+                      </button>
                     ) : (
                       <>
                         <div className="domain-sub">لیست دوستان</div>

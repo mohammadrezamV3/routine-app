@@ -96,22 +96,17 @@ export function CalorieFoodPlanCard({
         <div className="flex flex-col gap-2">
           {entries.length ? (
             entries.map((e) => (
-              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 rounded-2xl border px-3 py-2.5">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(var(--accent-rgb),.12)" }}>
-                    <UtensilsCrossed className="h-4 w-4 text-dash-green" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{e.customName}</div>
-                    <div className="mono mt-0.5 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</div>
-                  </div>
+              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 rounded-3xl border px-3.5 py-2.5">
+                <div className="min-w-0">
+                  <div className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{e.customName}</div>
+                  <div className="mono mt-0.5 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</div>
                 </div>
                 <span className="flex shrink-0 items-center gap-2.5">
                   <span
                     className="mono flex items-baseline gap-1 rounded-lg px-2 py-1 text-[12px] font-extrabold sm:text-[13.5px]"
                     style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}
                   >
-                    {faNum(e.customCalories)}<span className="text-[9px] font-semibold" style={{ color: "var(--accent)", opacity: 0.75 }}>kcal</span>
+                    <span className="text-[9px] font-semibold" style={{ color: "var(--accent)", opacity: 0.75 }}>kcal</span>{faNum(e.customCalories)}
                   </span>
                   {isToday && (
                     <button

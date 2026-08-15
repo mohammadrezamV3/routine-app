@@ -77,13 +77,24 @@ async function loadPendingNotifications(): Promise<NotifItem[]> {
   return [...friendRequests, ...items];
 }
 
-export function NotificationPanel({ onClose }: { onClose: () => void }) {
-  const [items, setItems] = useState<NotifItem[] | null>(null);
+// کش‌شده بیرونِ کامپوننت (نه یه stateِ داخلی) — پنل هر بار که باز/بسته
+// می‌شه کاملاً unmount/mount می‌شه (طبقِ رندرِ شرطیِ NavDrawer)، پس یه
+// stateِ معمولی هر بار از صفر می‌رفت روی «در حال بارگذاری…». با این کش،
+// دفعه‌ی اول لود می‌شه و بعدش هر بار که باز می‌شه بلافاصله همون دیتای
+// قبلی رو نشون می‌ده (و بی‌سروصدا در پس‌زمینه دوباره تازه‌ش می‌کنه).
+let cachedItems: NotifItem[] | null = null;
+
+export function NotificationPanel({ onClose, anchor }: { onClose: () => void; anchor: { top: number; right: number } }) {
+  const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
-    loadPendingNotifications().then((res) => { if (!cancelled) setItems(res); });
+    loadPendingNotifications().then((res) => {
+      if (cancelled) return;
+      cachedItems = res;
+      setItems(res);
+    });
     return () => { cancelled = true; };
   }, []);
 
@@ -107,7 +118,11 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="notif-panel dash-scope open" ref={panelRef}>
+      <div
+        className="notif-panel dash-scope open"
+        ref={panelRef}
+        style={{ position: "fixed", top: anchor.top, right: anchor.right, left: "auto" }}
+      >
         <div className="notif-panel-head">اطلاعیه‌ها</div>
         {items === null ? (
           <div className="item-line" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>

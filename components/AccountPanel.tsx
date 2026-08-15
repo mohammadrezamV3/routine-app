@@ -60,10 +60,15 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose:
   );
 }
 
+// کش‌شده بیرونِ کامپوننت — این پنل هم مثلِ NotificationPanel با هر
+// باز/بسته‌شدن کاملاً unmount/mount می‌شه؛ بدونِ این کش هر بار «در حال
+// بارگذاری…» رو دوباره نشون می‌داد، حتی وقتی چیزی عوض نشده بود.
+let cachedAccountData: AccountData | null = null;
+
 export function AccountPanel({ onClose }: { onClose: () => void }) {
   const { status, data: session } = useSession();
-  const [data, setData] = useState<AccountData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<AccountData | null>(cachedAccountData);
+  const [loading, setLoading] = useState(!cachedAccountData);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editingWakeSleep, setEditingWakeSleep] = useState(false);
@@ -83,7 +88,8 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
     fetch("/api/account").then((r) => r.json()).then((res) => {
-      setData(res.user || null);
+      cachedAccountData = res.user || null;
+      setData(cachedAccountData);
       setLoading(false);
     });
     getWakeSleepTimes().then(setWakeSleep);
