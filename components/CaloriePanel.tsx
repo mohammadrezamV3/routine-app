@@ -288,11 +288,13 @@ export function CaloriePanel() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-4">
-              {/* ستونِ اصلی — اولین فرزندِ DOM، توی RTL سمتِ راست. با h-full
-                  (توی CalorieFoodPlanCard) هم‌قدِّ ستون‌های کناری می‌شه —
-                  دقیقاً هم‌قاعده‌ی ExerciseTaskList توی داشبوردِ بدنسازی. */}
-              <div className="flex flex-col gap-3 sm:gap-4">
+            {/* موبایل: یه ستونِ ساده به ترتیبِ DOM. دسکتاپ: گریدِ نام‌دار
+                (.calorie-dash-grid توی globals.css) که مستقلِ از این ترتیب،
+                برنامه‌ی غذایی رو ستونِ اصلیِ راست می‌کنه و بقیه رو توی دو
+                ردیفِ سمتِ چپ می‌چینه — نمودار/استریک/دوستان بالا،
+                ریزِ درشت‌مغذی‌ها/کالری هر وعده پایین. */}
+            <div className="calorie-dash-grid">
+              <div className="calorie-area-food">
                 <CalorieFoodPlanCard
                   date={selectedIso}
                   isToday={isSelectedToday}
@@ -308,18 +310,24 @@ export function CaloriePanel() {
                 />
               </div>
 
-              {/* ستونِ وسط — استریک + دوستان، هم‌قاعده‌ی ستونِ وسطِ داشبوردِ
-                  بدنسازی (ExerciseStatsCard + DashFriendsCard) */}
-              <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="calorie-area-streak">
                 <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
+              </div>
+
+              <div className="calorie-area-friends">
                 <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />
               </div>
 
-              {/* ستونِ چپ — نمودار، ریزِ درشت‌مغذی‌ها، کالری هر وعده */}
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.14} />
-                <CalorieMacrosCard entries={entries} date={selectedIso} isToday={isSelectedToday} mealTypes={mealTypes} onLogged={refreshAfterChange} delay={0.18} />
-                <CalorieMealBreakdownCard target={target} entries={entries} onTargetChange={setTarget} delay={0.22} />
+              <div className="calorie-area-mealbreak">
+                <CalorieMealBreakdownCard target={target} entries={entries} onTargetChange={setTarget} delay={0.16} />
+              </div>
+
+              <div className="calorie-area-macros">
+                <CalorieMacrosCard entries={entries} date={selectedIso} isToday={isSelectedToday} mealTypes={mealTypes} onLogged={refreshAfterChange} delay={0.19} />
+              </div>
+
+              <div className="calorie-area-chart">
+                <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />
               </div>
             </div>
           </div>
@@ -339,7 +347,7 @@ export function CaloriePanel() {
       {historyPickerOpen && target && createPortal(
         <>
           <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
-          <div className="modal-panel dash-scope open">
+          <div className="modal-panel liquid-glass-panel dash-scope open">
             <div className="modal-head">
               <div className="modal-title">انتخاب تاریخ</div>
               <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>

@@ -1809,11 +1809,56 @@ body[data-theme="light"] .nav-link-icon:hover, body[data-theme="light"] .nav-lin
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
 }
 
-/* زیرمجموعه‌ی یه گروهِ منو (مثلاً برنامه‌ی تمرینی/غذایی زیرِ بدنسازی) —
-   تورفتگیِ کمتر + آیکونِ کوچیک‌تر تا واضح باشه که فرزندِ همون گروهه */
-.nav-link-sub{ padding-right:34px; font-size:12.5px; }
-.nav-link-sub .nav-link-icon-svg{ width:14px; height:14px; min-width:14px; }
-.nav-link-sub .nav-link-icon-svg svg{ width:14px; height:14px; }
+/* زیرمجموعه‌ی یه گروهِ منو (مثلاً برنامه‌ی تمرینی/غذایی زیرِ بدنسازی) — همه‌ی
+   بچه‌ها توی یک باکسِ واحد دقیقاً زیرِ خودِ گروه (نه تورفتگیِ عمیق/لینک‌های
+   شناور)، هرکدوم آیکونِ اختصاصیِ خودشون، فونتِ کوچیک‌تر از لینک‌های اصلی */
+.nav-subgroup-box{
+  display:flex; flex-direction:column; gap:1px;
+  margin:2px 10px 6px; padding:4px;
+  border-radius:14px; border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+}
+body[data-theme="light"] .nav-subgroup-box{ background:rgba(0,0,0,.02); }
+.nav-link-sub-item{
+  display:flex; align-items:center; gap:8px;
+  border-radius:10px; padding:8px 10px; font-size:12px; color:var(--muted2);
+  transition:background .16s ease, color .16s ease;
+}
+.nav-link-sub-item .nav-link-icon-svg{ width:14px; height:14px; min-width:14px; color:inherit; }
+.nav-link-sub-item .nav-link-icon-svg svg{ width:14px; height:14px; }
+.nav-link-sub-item:hover{ background:rgba(255,255,255,.04); color:var(--text); }
+body[data-theme="light"] .nav-link-sub-item:hover{ background:rgba(0,0,0,.04); }
+.nav-link-sub-item.active{ background:rgba(var(--accent-rgb),.12); color:var(--accent); font-weight:600; }
+
+/* ---------- چیدمانِ داشبوردِ کالری ----------
+   موبایل: فقط یه ستونِ ساده، به همون ترتیبِ DOM (برنامه غذایی، روند
+   موفقیت، دوستان، کالری هر وعده، ریزِ درشت‌مغذی‌ها، نمودار). دسکتاپ: یه
+   گریدِ نام‌دار که DOMِ بالا رو بدونِ توجه به ترتیبش دوباره می‌چینه —
+   برنامه‌ی غذایی ستونِ اصلیِ سمتِ راست (RTL، اولین ستونِ گرید)، بقیه توی
+   دو ردیفِ سمتِ چپ: ردیفِ اول نمودار/استریک/دوستان، ردیفِ دوم ریزِ
+   درشت‌مغذی‌ها/کالری هر وعده. از grid-template-areas استفاده شده چون
+   grid-area مستقل از ترتیبِ DOM جا می‌ده — نیازی به رندرِ دوباره‌ی
+   کامپوننت‌های استیت‌دار (دوستان/نمودار) برای هر بریک‌پوینت نیست. */
+.calorie-dash-grid{ display:flex; flex-direction:column; gap:12px; }
+@media (min-width:1024px){
+  .calorie-dash-grid{
+    display:grid; gap:16px;
+    /* نمودار سهمِ عرضِ بیشتری از استریک/دوستان می‌گیره (۴ واحد در برابرِ
+       ۳تا) چون محتواش (محورِ Y + برچسب‌ها) به فضای افقیِ بیشتری نیاز داره؛
+       خودِ ستون‌های استریک/دوستان هم به‌اندازه‌ی کافی عریض‌ان که تایتل +
+       دکمه/بج‌شون توی یک خط جا بشه، بدونِ شکستنِ ناخواسته‌ی متن. */
+    grid-template-columns:12fr repeat(10, 1fr);
+    grid-template-areas:
+      "food chart chart chart chart streak streak streak friends friends friends"
+      "food macros macros macros macros macros mealbreak mealbreak mealbreak mealbreak mealbreak";
+  }
+}
+.calorie-area-food{ grid-area:food; }
+.calorie-area-chart{ grid-area:chart; }
+.calorie-area-streak{ grid-area:streak; }
+.calorie-area-friends{ grid-area:friends; }
+.calorie-area-macros{ grid-area:macros; }
+.calorie-area-mealbreak{ grid-area:mealbreak; }
 
 /* ============================================================
    ورود/ثبت‌نام — دکمه هدر، تب‌های انیمیشنی، تکمیل حالت خطای فیلدها
