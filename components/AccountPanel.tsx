@@ -18,6 +18,7 @@ import {
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
 import { resizeImageToDataUrl } from "@/lib/avatarUpload";
+import { AgentAvatar } from "@/components/AgentAvatar";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
@@ -263,7 +264,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           {avatarUrl ? (
             <img src={avatarUrl} alt="عکس پروفایل" className="account-avatar-img" />
           ) : (
-            <span className="account-avatar-fallback">{(data.name || data.username || "؟").trim().charAt(0)}</span>
+            <AgentAvatar name={data.name || data.username || "؟"} size={76} className="account-avatar-fallback" />
           )}
           <button
             type="button"

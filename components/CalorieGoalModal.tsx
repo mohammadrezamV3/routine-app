@@ -127,16 +127,23 @@ export function CalorieGoalModal({
     <>
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel liquid-glass-panel dash-scope open">
-        <div className="modal-head">
-          {mode !== "choice" && (
-            <button type="button" className="nav-close" onClick={() => setMode("choice")} aria-label="بازگشت">
+        {mode === "choice" ? (
+          <div className="modal-head">
+            <div className="modal-title" style={{ flex: 1 }}>تغییر برنامه کالری</div>
+            <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          </div>
+        ) : (
+          <div className="exercise-wizard-head">
+            <button type="button" className="exercise-catalog-back-btn" onClick={() => setMode("choice")} aria-label="بازگشت">
               <ChevronRight size={20} />
             </button>
-          )}
-          <div className="modal-title" style={{ flex: 1 }}>تغییر برنامه کالری</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
-        </div>
+            <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          </div>
+        )}
         <div className="modal-body">
+          {mode === "smart" && <label className="exercise-wizard-title">محاسبه‌ی هوشمند</label>}
+          {mode === "manual" && <label className="exercise-wizard-title">وارد کردن دستی</label>}
+
           {mode === "choice" && (
             <div className="exercise-choice-row">
               <motion.button

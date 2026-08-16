@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Pencil, Plus, X } from "lucide-react";
-import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
+import { ChevronDown, ChevronRight, ChevronUp, Pencil, Plus, X } from "lucide-react";
+import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { ExerciseDay, computeDayFocus } from "@/lib/exercisePlans";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, getExerciseDifficulty } from "@/lib/exerciseCatalog";
 import { stripSetSuffix } from "@/lib/exerciseSets";
@@ -168,13 +168,13 @@ function ManualExerciseAddPopup({
   );
 }
 
-// برنامه‌ی دستی/شخصیِ کاربر — کاربر اول روزهای باشگاهش رو (چندتایی) انتخاب
-// می‌کنه، بعد با کلیک روی هر روز وارد نمای همون روز می‌شه و از یه پاپ‌آپِ
-// مستقل حرکت اضافه می‌کنه. تمرکزِ هر روز («بالاتنه»/«پایین‌تنه»/...) رو
-// خودِ سیستم از روی گروهِ عضلانیِ حرکاتِ اضافه‌شده تشخیص می‌ده. بعدِ تکمیلِ
-// همه‌ی روزها، یه مرحله‌ی مرورِ کاملِ برنامه هست که یا تایید و ثبت می‌شه یا
-// با آیکونِ مدادِ گوشه‌ی هر باکسِ روز مستقیم برمی‌گرده به همون روز برای
-// ویرایش. بدونِ مرحله‌ی قبول‌کردنِ قوانین — چون خودِ کاربر برنامه رو نوشته.
+// برنامه‌ی دستی/شخصیِ کاربر — دقیقاً هم‌قاعده‌ی نمای «برنامه هفتگی»: یه
+// آکاردئونِ عمودیِ روزهای هفته، با کلیک روی هر روز باز می‌شه و برنامه‌ی
+// همون روز رو نشون می‌ده. هر روزِ بازشده یه دکمه‌ی «افزودن» داره (پاپ‌آپِ
+// مستقلِ انتخابِ حرکت) و — وقتی حداقل یک حرکت داره — یه دکمه‌ی «ویرایش» که
+// حالتِ جابه‌جایی/حذفِ حرکات رو باز/بسته می‌کنه. روزی که هیچ حرکتی نداره
+// یعنی روزِ استراحته؛ نیازی به یه مرحله‌ی جداگانه‌ی «انتخابِ روزهای باشگاه»
+// نیست — همون روزهایی که حرکت دارن، روزهای باشگاهن.
 export function ManualExercisePlanForm({
   onSubmit,
   submitting,
@@ -186,18 +186,15 @@ export function ManualExercisePlanForm({
   onCancel?: () => void;
   onClose?: () => void;
 }) {
-  const [gymDays, setGymDays] = useState<string[]>([]);
   const [dayItems, setDayItems] = useState<Record<string, string[]>>({});
-  const [activeDay, setActiveDay] = useState<string | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [dayError, setDayError] = useState<string | null>(null);
-  const [reviewing, setReviewing] = useState(false);
+  const [openDay, setOpenDay] = useState<string | null>(null);
+  const [editDay, setEditDay] = useState<string | null>(null);
+  const [pickerOpenFor, setPickerOpenFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function openDay(day: string) {
-    setGymDays((d) => (d.includes(day) ? d : [...d, day]));
-    setError(null);
-    setActiveDay(day);
+  function toggleDay(day: string) {
+    setOpenDay((d) => (d === day ? null : day));
+    if (editDay !== day) setEditDay(null);
   }
   function addItem(day: string, formatted: string) {
     setDayItems((m) => ({ ...m, [day]: [...(m[day] || []), formatted] }));
@@ -205,17 +202,20 @@ export function ManualExercisePlanForm({
   function removeItem(day: string, idx: number) {
     setDayItems((m) => ({ ...m, [day]: (m[day] || []).filter((_, i) => i !== idx) }));
   }
-
-  function goReview() {
-    if (gymDays.length === 0) { setError("حداقل یک روز رو انتخاب کن"); return; }
-    for (const d of gymDays) {
-      if (!(dayItems[d] || []).length) { setError(`برای روزِ «${d}» حداقل یک حرکت اضافه کن.`); return; }
-    }
-    setError(null);
-    setReviewing(true);
+  function moveItem(day: string, idx: number, dir: -1 | 1) {
+    setDayItems((m) => {
+      const items = [...(m[day] || [])];
+      const target = idx + dir;
+      if (target < 0 || target >= items.length) return m;
+      [items[idx], items[target]] = [items[target], items[idx]];
+      return { ...m, [day]: items };
+    });
   }
 
   function submit() {
+    const gymDays = CAL_WEEK_ORDER.map((i) => FA_WEEKDAY[i]).filter((d) => (dayItems[d] || []).length > 0);
+    if (gymDays.length === 0) { setError("حداقل برای یک روز حرکت اضافه کن"); return; }
+    setError(null);
     const days: ExerciseDay[] = gymDays.map((d) => ({
       day: d,
       focus: computeDayFocus(dayItems[d] || []),
@@ -224,120 +224,8 @@ export function ManualExercisePlanForm({
     onSubmit(days);
   }
 
-  function finishDay() {
-    if (!activeDay) return;
-    if (!(dayItems[activeDay] || []).length) { setDayError("حداقل یک حرکت اضافه کن"); return; }
-    setDayError(null);
-    setActiveDay(null);
-    setPickerOpen(false);
-  }
+  const hasAnyItems = Object.values(dayItems).some((arr) => arr.length > 0);
 
-  // ------------- نمای مرورِ نهاییِ برنامه -------------
-  if (reviewing) {
-    return (
-      <div>
-        <div className="exercise-wizard-head">
-          <span />
-          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
-        </div>
-
-        <label className="exercise-wizard-title">مرورِ برنامه</label>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {gymDays.map((d) => (
-            <div key={d} className="manual-day-exercises-box" style={{ margin: 0 }}>
-              <div className="manual-day-exercises-head">
-                <div className="manual-day-exercises-title">{d} — {computeDayFocus(dayItems[d] || [])}</div>
-                <button
-                  type="button"
-                  className="manual-day-edit-btn"
-                  onClick={() => { setReviewing(false); setActiveDay(d); }}
-                  aria-label={`ویرایشِ روزِ ${d}`}
-                >
-                  <Pencil size={13} />
-                </button>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {(dayItems[d] || []).map((it, ii) => (
-                  <div key={ii} className="exercise-catalog-row manual-exercise-added-row">
-                    <span className="truncate">{it}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={submit}
-          disabled={submitting}
-          style={{ width: "100%", marginTop: 16, borderColor: "var(--accent)", color: "var(--accent)" }}
-        >
-          {submitting ? "در حال ثبت…" : "ثبت برنامه"}
-        </button>
-      </div>
-    );
-  }
-
-  // ------------- نمای جزئیاتِ یک روز -------------
-  if (activeDay) {
-    const items = dayItems[activeDay] || [];
-    return (
-      <div>
-        <div className="exercise-wizard-head">
-          <button type="button" className="exercise-catalog-back-btn" onClick={() => { setActiveDay(null); setPickerOpen(false); setDayError(null); }} aria-label="بازگشت">
-            <ChevronRight size={20} />
-          </button>
-          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
-        </div>
-
-        <div className="manual-day-exercises-box">
-          <div className="manual-day-exercises-head">
-            <div>
-              <div className="manual-day-exercises-title">روز {activeDay}</div>
-              {items.length > 0 && <div className="manual-day-exercises-focus">{computeDayFocus(items)}</div>}
-            </div>
-            <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpen(true)}>
-              افزودن
-              <Plus size={14} />
-            </button>
-          </div>
-
-          {items.length === 0 ? (
-            <div className="item-line empty">هنوز حرکتی اضافه نکردی</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {items.map((it, ii) => (
-                <div key={ii} className="exercise-catalog-row manual-exercise-added-row">
-                  <span className="truncate">{it}</span>
-                  <button type="button" onClick={() => removeItem(activeDay, ii)} aria-label="حذف حرکت">
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {dayError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{dayError}</div>}
-
-        <button type="button" className="manual-day-done-btn" onClick={finishDay}>ثبت</button>
-
-        <AnimatePresence>
-          {pickerOpen && (
-            <ManualExerciseAddPopup
-              onAdd={(formatted) => addItem(activeDay, formatted)}
-              onClose={() => setPickerOpen(false)}
-              excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  }
-
-  // ------------- نمای انتخابِ روزها -------------
   return (
     <div>
       {(onCancel || onClose) && (
@@ -351,30 +239,96 @@ export function ManualExercisePlanForm({
         </div>
       )}
 
-      <label className="exercise-wizard-title exercise-wizard-title-days">کدوم روزها رو می‌خوای برنامه داشته باشی؟</label>
-      <div className="exercise-day-select-row">
-        {CAL_WEEK_ORDER.map((i) => (
-          <span
-            key={FA_WEEKDAY[i]}
-            className={`day-pill${gymDays.includes(FA_WEEKDAY[i]) ? " on" : ""}`}
-            onClick={() => openDay(FA_WEEKDAY[i])}
-          >
-            {FA_WEEKDAY_SHORT[i]}
-          </span>
-        ))}
+      <label className="exercise-wizard-title">برنامه‌ی تمرینی‌ت رو بساز</label>
+
+      <div className="manual-week-accordion">
+        {CAL_WEEK_ORDER.map((i) => {
+          const day = FA_WEEKDAY[i];
+          const items = dayItems[day] || [];
+          const isOpen = openDay === day;
+          const isEditing = editDay === day;
+          return (
+            <div key={day} className={`week-day${isOpen ? " open" : ""}`}>
+              <div className="week-day-head" onClick={() => toggleDay(day)}>
+                <span className="week-day-name">{day}</span>
+                {items.length > 0 && <span className="manual-day-count-badge">{items.length} حرکت</span>}
+                <span className="week-day-chevron" />
+              </div>
+              <div className="week-day-body" style={{ maxHeight: isOpen ? "none" : "0px" }}>
+                <div className="manual-day-panel">
+                  {items.length > 0 && <div className="manual-day-exercises-focus">{computeDayFocus(items)}</div>}
+
+                  <div className="manual-day-panel-actions">
+                    <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpenFor(day)}>
+                      افزودن
+                      <Plus size={14} />
+                    </button>
+                    {items.length > 0 && (
+                      <button
+                        type="button"
+                        className="manual-day-edit-btn"
+                        onClick={() => setEditDay(isEditing ? null : day)}
+                        aria-label={isEditing ? "پایانِ ویرایش" : `ویرایشِ روزِ ${day}`}
+                      >
+                        <Pencil size={13} />
+                        {isEditing ? "پایانِ ویرایش" : "ویرایش"}
+                      </button>
+                    )}
+                  </div>
+
+                  {items.length === 0 ? (
+                    <div className="item-line empty">هنوز حرکتی اضافه نکردی — امروز استراحته</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                      {items.map((it, ii) => (
+                        <div key={ii} className="exercise-catalog-row manual-exercise-added-row">
+                          {isEditing && (
+                            <div className="manual-reorder-btns">
+                              <button type="button" disabled={ii === 0} onClick={() => moveItem(day, ii, -1)} aria-label="جابه‌جایی به بالا">
+                                <ChevronUp size={12} />
+                              </button>
+                              <button type="button" disabled={ii === items.length - 1} onClick={() => moveItem(day, ii, 1)} aria-label="جابه‌جایی به پایین">
+                                <ChevronDown size={12} />
+                              </button>
+                            </div>
+                          )}
+                          <span className="truncate">{it}</span>
+                          {isEditing && (
+                            <button type="button" onClick={() => removeItem(day, ii)} aria-label="حذف حرکت">
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <AnimatePresence>
+                {pickerOpenFor === day && (
+                  <ManualExerciseAddPopup
+                    onAdd={(formatted) => addItem(day, formatted)}
+                    onClose={() => setPickerOpenFor(null)}
+                    excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-        <button
-          type="button"
-          onClick={goReview}
-          className="exercise-wizard-next-btn"
-        >
-          مرحله بعد
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={submit}
+        disabled={submitting || !hasAnyItems}
+        style={{ width: "100%", marginTop: 16, borderColor: "var(--accent)", color: "var(--accent)" }}
+      >
+        {submitting ? "در حال ثبت…" : "ثبت برنامه"}
+      </button>
     </div>
   );
 }

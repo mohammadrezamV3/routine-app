@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Star, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Star, Trash2 } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
@@ -37,6 +37,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const [requestCount, setRequestCount] = useState(0);
   const [authRequired, setAuthRequired] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [addMode, setAddMode] = useState(false);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[] | null>(null);
   const [searching, setSearching] = useState(false);
@@ -94,6 +95,12 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
       body: JSON.stringify({ favorite: next }),
     });
     loadFriends();
+  }
+
+  function closePanel() {
+    setPanelOpen(false);
+    setAddMode(false);
+    setQuery("");
   }
 
   async function deleteFriend(f: Friend) {
@@ -165,19 +172,38 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
 
       {panelOpen && createPortal(
         <>
-          <div className="modal-overlay open" onClick={() => setPanelOpen(false)} />
+          <div className="modal-overlay open" onClick={closePanel} />
           <div className="modal-panel liquid-glass-panel dash-scope open">
             <div className="relative z-[1]">
               <div className="modal-head">
-                <div className="modal-title">دوستان</div>
-                <button className="nav-close" onClick={() => setPanelOpen(false)} aria-label="بستن">×</button>
+                {addMode ? (
+                  <button type="button" className="exercise-catalog-back-btn" onClick={() => { setAddMode(false); setQuery(""); }} aria-label="بازگشت">
+                    <ChevronRight size={20} />
+                  </button>
+                ) : (
+                  <div className="modal-title">دوستان</div>
+                )}
+                <div className="flex items-center gap-1">
+                  {!addMode && !authRequired && (
+                    <button
+                      type="button"
+                      onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+                      aria-label="افزودن دوست"
+                      className="nav-close"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      <Plus size={18} />
+                    </button>
+                  )}
+                  <button className="nav-close" onClick={closePanel} aria-label="بستن">×</button>
+                </div>
               </div>
               <div className="modal-body">
                 {authRequired && (
                   <div className="section-note">برای استفاده از بخش دوستان اول وارد حساب بشو.</div>
                 )}
 
-                {!authRequired && (
+                {!authRequired && addMode && (
                   <div className="tm-extra" style={{ marginTop: 0 }}>
                     <div className="domain-sub" style={{ color: "var(--accent)" }}>افزودن دوست</div>
                     <input
@@ -223,51 +249,48 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                   </div>
                 )}
 
-                {!authRequired && query.trim().length < 2 && (
+                {!authRequired && !addMode && (
                   <div className="tm-extra">
                     {list.length === 0 ? (
                       <button
                         type="button"
-                        onClick={() => searchInputRef.current?.focus()}
+                        onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
                         className="flex items-center gap-1.5 text-[12px] font-semibold text-dash-green transition hover:brightness-110"
                       >
                         <Plus size={15} />
                         افزودن دوست
                       </button>
                     ) : (
-                      <>
-                        <div className="domain-sub">لیست دوستان</div>
-                        <div className="flex flex-col gap-2">
-                          {list.map((f) => (
-                            <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
-                              <div className="flex items-center gap-2.5">
-                                <button
-                                  type="button"
-                                  onClick={() => setConfirmDeleteFriend(f)}
-                                  aria-label="حذف دوست"
-                                  className="bg-transparent text-dash-muted transition hover:text-[#E05252]"
-                                >
-                                  <Trash2 size={15} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => toggleFavorite(f)}
-                                  aria-label={f.favorite ? "حذف از فیوریت‌ها" : "افزودن به فیوریت‌ها"}
-                                  style={{ color: f.favorite ? "#F5C518" : "var(--muted)" }}
-                                >
-                                  <Star size={16} fill={f.favorite ? "currentColor" : "none"} />
-                                </button>
-                                <span className="mono text-[12px] text-dash-muted">{f.pct}٪</span>
-                                <StreakFlame streak={f.streak} className="text-[11px]" />
-                              </div>
-                              <div className="flex items-center gap-2.5">
-                                <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
-                                <Avatar name={f.name} size={32} />
-                              </div>
+                      <div className="flex flex-col gap-2">
+                        {list.map((f) => (
+                          <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteFriend(f)}
+                                aria-label="حذف دوست"
+                                className="bg-transparent text-dash-muted transition hover:text-[#E05252]"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleFavorite(f)}
+                                aria-label={f.favorite ? "حذف از فیوریت‌ها" : "افزودن به فیوریت‌ها"}
+                                style={{ color: f.favorite ? "#F5C518" : "var(--muted)" }}
+                              >
+                                <Star size={16} fill={f.favorite ? "currentColor" : "none"} />
+                              </button>
+                              <span className="mono text-[12px] text-dash-muted">{f.pct}٪</span>
+                              <StreakFlame streak={f.streak} className="text-[11px]" />
                             </div>
-                          ))}
-                        </div>
-                      </>
+                            <div className="flex items-center gap-2.5">
+                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
+                              <Avatar name={f.name} size={32} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}

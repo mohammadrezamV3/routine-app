@@ -156,7 +156,7 @@ export function CalorieAddEntryModal({
                 <button
                   type="button"
                   onClick={() => setUnitPickerOpen((v) => !v)}
-                  className="calorie-glass-field flex w-full items-center justify-between gap-1.5 border px-3 py-2.5 text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]"
+                  className="calorie-glass-field flex w-full items-center justify-between gap-1.5 border px-3 py-2 text-[11px] font-semibold text-dash-text sm:text-[12px]"
                 >
                   <span>{UNIT_LABELS[unit]}</span>
                   <ChevronDown className={`h-3.5 w-3.5 text-dash-muted transition-transform ${unitPickerOpen ? "rotate-180" : ""}`} />
@@ -164,13 +164,13 @@ export function CalorieAddEntryModal({
                 {unitPickerOpen && (
                   <>
                     <div className="fixed inset-0 z-[19]" onClick={() => setUnitPickerOpen(false)} />
-                    <div className="calorie-unit-dropdown absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-[220px] border p-1 shadow-lg" dir="ltr">
+                    <div className="calorie-unit-dropdown absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-[172px] border p-1 shadow-lg" dir="ltr">
                       <div className="calorie-unit-dropdown-inner thin-scroll" dir="rtl">
                         {(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => (
                           <div
                             key={u}
                             onClick={() => changeUnit(u)}
-                            className={`cursor-pointer rounded-lg px-2.5 py-2 text-[11.5px] transition ${u === unit ? "font-bold text-dash-green" : "text-dash-muted hover:text-dash-text"}`}
+                            className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] transition ${u === unit ? "font-bold text-dash-green" : "text-dash-muted hover:text-dash-text"}`}
                           >
                             {UNIT_LABELS[u]}
                           </div>
