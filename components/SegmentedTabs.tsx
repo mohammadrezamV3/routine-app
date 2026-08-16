@@ -21,21 +21,24 @@ export function SegmentedTabs<T extends string>({
   const mounted = useRef(false);
 
   useLayoutEffect(() => {
-    const container = containerRef.current;
     const target = btnRefs.current.get(active);
     const indicator = indicatorRef.current;
-    if (!container || !target || !indicator) return;
-    const cRect = container.getBoundingClientRect();
-    const tRect = target.getBoundingClientRect();
-    const left = tRect.left - cRect.left;
+    if (!target || !indicator) return;
+    // عمداً به‌جای getBoundingClientRect از offsetLeft/offsetWidth استفاده
+    // می‌شه — این پاپ‌آپِ میزبان (.modal-panel) موقعِ باز شدن یک انیمیشنِ
+    // CSS با transform:scale داره؛ getBoundingClientRect همون لحظه‌ی
+    // رندرِ اول رو که هنوز مقیاس کوچیک‌تره اندازه می‌گیره و نشانگر رو جای
+    // اشتباه می‌ذاره. offsetLeft/offsetWidth مقادیرِ layoutِ واقعی‌ان و از
+    // transform روی والد اصلاً اثر نمی‌گیرن.
+    const left = target.offsetLeft;
 
     if (!mounted.current) {
       indicator.style.left = `${left}px`;
-      indicator.style.width = `${tRect.width}px`;
+      indicator.style.width = `${target.offsetWidth}px`;
       mounted.current = true;
       return;
     }
-    animate(indicator, { left, width: tRect.width, duration: 380, ease: "inOutQuad" });
+    animate(indicator, { left, width: target.offsetWidth, duration: 380, ease: "inOutQuad" });
   }, [active]);
 
   return (

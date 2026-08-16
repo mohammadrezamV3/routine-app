@@ -72,6 +72,7 @@
   .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar, .thin-scroll::-webkit-scrollbar{
     width:5px; height:5px;
   }
+  .thin-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
   .nav-drawer-glass::-webkit-scrollbar-track, .wsearch-newform::-webkit-scrollbar-track,
   .wsearch-list::-webkit-scrollbar-track, .wsearch-panel::-webkit-scrollbar-track, .thin-scroll::-webkit-scrollbar-track{
     background:transparent;
@@ -1770,7 +1771,7 @@
     backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
     border-color:var(--line);
   }
-  .calorie-unit-dropdown-inner{ max-height:220px; overflow-y:auto; padding:2px; }
+  .calorie-unit-dropdown-inner{ max-height:172px; overflow-y:auto; padding:2px; }
   .calorie-unit-dropdown-inner::-webkit-scrollbar{ width:5px; }
   .calorie-unit-dropdown-inner::-webkit-scrollbar-track{ background:transparent; }
   .calorie-unit-dropdown-inner::-webkit-scrollbar-button{ display:none; width:0; height:0; }
@@ -2678,10 +2679,44 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 /* آیکونِ ویرایشِ گوشه‌ی هر باکسِ روز توی مرحله‌ی مرورِ برنامه — با کلیک،
    مستقیم می‌بره تو نمای همون روز؛ بدونِ بک‌گراند، فقط آیکونِ رنگیِ اکسنت */
 .manual-day-edit-btn{
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; padding:4px; color:var(--accent);
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  flex-shrink:0; padding:6px 4px; color:var(--accent); font-size:12px; font-weight:700;
 }
 .manual-day-edit-btn:hover{ opacity:.8; }
+
+/* آکاردئونِ آموزشِ دستیِ برنامه — دقیقاً هم‌قاعده‌ی week-day/week-day-head/
+   week-day-body صفحه‌ی «برنامه هفتگی»، فقط بدونِ ظرفِ weekly-glass چون
+   داخلِ یه پاپ‌آپه نه یه صفحه‌ی مستقل */
+.manual-week-accordion{ margin-top:14px; }
+.manual-week-accordion .week-day-head{ cursor:pointer; }
+.manual-day-count-badge{
+  flex-shrink:0; font-size:10.5px; font-weight:700; color:var(--accent);
+  background:var(--accent-dim); border-radius:9999px; padding:3px 10px;
+}
+.manual-day-panel{ padding:2px 0 16px; }
+.manual-day-panel-actions{ display:flex; align-items:center; gap:14px; margin-top:2px; }
+.manual-reorder-btns{ display:flex; flex-direction:column; gap:2px; flex-shrink:0; color:var(--muted2); }
+.manual-reorder-btns button{ display:flex; padding:1px; }
+.manual-reorder-btns button:hover:not(:disabled){ color:var(--text); }
+.manual-reorder-btns button:disabled{ opacity:.3; cursor:default; }
+
+/* آواتارِ پیش‌فرضِ پروفایل — یه گرادیانِ درحال‌چرخش به‌جای آیکونِ ثابتِ
+   آدمک/دایره‌ی تک‌رنگ؛ لایه‌ی تیره‌ی نیمه‌شفافِ روش برای خوانا موندنِ حرف */
+.agent-avatar{
+  position:relative; border-radius:50%; overflow:hidden; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.agent-avatar::before{
+  content:""; position:absolute; inset:-20%;
+  background:conic-gradient(from 0deg, var(--accent), #4C6FFF, #21D4C4, var(--accent));
+  animation:agentAvatarSpin 7s linear infinite;
+}
+.agent-avatar::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  background:rgba(0,0,0,.24); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+}
+.agent-avatar-letter{ position:relative; z-index:1; color:#fff; font-weight:800; }
+@keyframes agentAvatarSpin{ to{ transform:rotate(360deg); } }
 
 /* دکمه‌ی «ثبت»ِ پایینِ نمای جزئیاتِ روز — تمومِ حرکاتِ اون روز رو تاییدی
    می‌کنه و برمی‌گردونه به لیستِ روزها؛ بدونِ بک‌گراند، فقط متنِ اکسنت */

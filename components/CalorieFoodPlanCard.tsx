@@ -92,7 +92,8 @@ export function CalorieFoodPlanCard({
         )}
       </div>
 
-      <div className="thin-scroll mt-3 min-h-0 flex-1 overflow-y-auto overflow-x-hidden" style={{ maxHeight: 360 }}>
+      <div className="mt-3 min-h-0 flex-1" dir="ltr" style={{ maxHeight: 360 }}>
+      <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden" dir="rtl">
         <div className="flex flex-col gap-2">
           {entries.length ? (
             entries.map((e) => (
@@ -127,6 +128,7 @@ export function CalorieFoodPlanCard({
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {addOpen && createPortal(

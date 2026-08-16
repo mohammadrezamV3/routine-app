@@ -158,7 +158,8 @@ export function ExerciseTaskList({
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="thin-scroll mt-4 min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1" style={{ maxHeight: 360 }}>
+          <div className="mt-4 min-h-0 flex-1" dir="ltr" style={{ maxHeight: 360 }}>
+          <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden px-1" dir="rtl">
             <table className="exercise-plan-table">
               {active && (
                 <thead>
@@ -260,6 +261,7 @@ export function ExerciseTaskList({
                 })}
               </tbody>
             </table>
+          </div>
           </div>
 
           {isFutureDay ? (

@@ -215,7 +215,7 @@ export function ExerciseDashboard({
         {/* «مشاهده حرکات» طبقِ درخواستِ صریحِ کاربر، وقتی تمرین شروع می‌شه هم
             باید بمونه (نه فقط قبل از شروع) — فقط آمار/دوستان و برنامه‌ی هفتگیِ
             پایینِ صفحه‌ان که توی حالتِ تمرکز روی جلسه مخفی می‌شن. */}
-        <motion.div key="catalog" layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="catalog" layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="order-3 lg:order-2">
           <ExerciseCatalogCard delay={0.1} />
         </motion.div>
 
@@ -228,7 +228,7 @@ export function ExerciseDashboard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col gap-4 sm:gap-6"
+              className="order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"
             >
               {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" unitLabel="جلسه" />}
               <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />

@@ -12,6 +12,7 @@ import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { HeaderStreakClock } from "./HeaderStreakClock";
+import { AgentAvatar } from "./AgentAvatar";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 
 // این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
@@ -133,7 +134,7 @@ export function NavDrawer() {
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const authSlotRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const bellBtnRef = useRef<HTMLButtonElement>(null);
@@ -274,10 +275,7 @@ export function NavDrawer() {
                       {avatarUrl ? (
                         <img src={avatarUrl} alt="" className="profile-chip-avatar-img" />
                       ) : (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="8" r="3.5" />
-                          <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
-                        </svg>
+                        <AgentAvatar name={session?.user?.name || "؟"} size={27} />
                       )}
                     </span>
                   </button>
