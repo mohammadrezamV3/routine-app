@@ -39,6 +39,7 @@ import { DashFilterModal } from "@/components/DashFilterModal";
 import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
 import { DashReminderCard } from "@/components/DashReminderCard";
+import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
 
@@ -82,6 +83,7 @@ type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: 
 
 export default function WeeklyPage() {
   const { status } = useSession();
+  const dashboardPrefs = useDashboardPrefs();
   const [openIdx, setOpenIdx] = useState<number | null>(
     WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
   );
@@ -341,7 +343,7 @@ export default function WeeklyPage() {
               />
             )}
 
-            <DashReminderCard delay={0.1} onOpenProgram={setCardName} />
+            {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} onOpenProgram={setCardName} />}
 
             <DashSidebar statsRefreshKey={statsRefreshKey} />
           </div>

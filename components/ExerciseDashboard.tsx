@@ -20,6 +20,7 @@ import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
 import { ExerciseSubstitutePicker } from "./ExerciseSubstitutePicker";
+import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -48,6 +49,7 @@ export function ExerciseDashboard({
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const dashboardPrefs = useDashboardPrefs();
 
   const isSelectedToday = selectedIso === todayIso;
 
@@ -228,8 +230,8 @@ export function ExerciseDashboard({
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-4 sm:gap-6"
             >
-              <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.15} />
-              <DashFriendsCard delay={0.2} module="exercise" unitLabel="جلسه" />
+              {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" unitLabel="جلسه" />}
+              <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
             </motion.div>
           )}
         </AnimatePresence>

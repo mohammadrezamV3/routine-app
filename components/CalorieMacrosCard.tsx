@@ -32,7 +32,7 @@ export function CalorieMacrosCard({
     <DashCard delay={delay} className="p-3 sm:p-4">
       <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
         <Sparkles className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-        جزئیات برنامه غذایی
+        درشت مغذی‌ها
       </h2>
 
       <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-2.5">

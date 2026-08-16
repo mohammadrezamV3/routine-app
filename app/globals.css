@@ -313,6 +313,26 @@
   }
   .outing-box.outing-blocked{animation:outingShake .4s ease; border-color:#E05252;}
 
+  /* عکسِ پروفایل — بالای پنلِ کاربری، یه دایره با دکمه‌ی دوربینِ کوچیکِ
+     گوشه‌ش برای تغییر؛ بدونِ عکس، حرفِ اولِ اسم/یوزرنیم به‌جاش نشون داده می‌شه. */
+  .account-avatar-row{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:6px; }
+  .account-avatar-wrap{ position:relative; width:76px; height:76px; }
+  .account-avatar-img{ width:76px; height:76px; border-radius:50%; object-fit:cover; border:2px solid var(--line); display:block; }
+  .account-avatar-fallback{
+    width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:800; color:var(--accent); background:rgba(var(--accent-rgb),.12); border:2px solid var(--line);
+  }
+  .account-avatar-edit-btn{
+    position:absolute; bottom:-2px; left:-2px; width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:var(--bg); border:2px solid var(--bg); cursor:pointer;
+  }
+  .account-avatar-remove-btn{
+    display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--muted);
+    background:none; border:none; cursor:pointer; transition:color .15s ease;
+  }
+  .account-avatar-remove-btn:hover{ color:#E05252; }
+
   .about-list{display:flex; flex-direction:column; gap:0; margin-top:8px;}
   .about-row{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);}
   .about-row:last-child{border-bottom:none;}
@@ -806,7 +826,20 @@
      شفاف بود و محتوای پشتش (کارت‌ها/بلاب‌ها) رو خیلی واضح نشون می‌داد؛ حالا
      پایه (تمِ تیره) هم شفافیتِ کمتری داره، تمِ روشن همچنان تقریباً تخت می‌مونه. */
   body[data-theme="light"] .modal-panel{ background:rgba(var(--bg-rgb), .82); }
-  .modal-panel.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
+  /* اکثرِ پاپ‌آپ‌ها با رندرِ شرطی mount می‌شن ({state && <Modal/>})، یعنی
+     کلاسِ open از همون اولین رندر روی عنصر هست — transition نمی‌تونه چیزی
+     رو انیمیت کنه چون هیچ‌وقت یه فریمِ «بسته» قبلش پینت نشده. animation
+     (برخلافِ transition) با insert‌شدنِ عنصر همیشه از from اجرا می‌شه، پس
+     همیشه نرم از پایین‌تر میاد بالا، حتی برای پاپ‌آپ‌هایی که mount/unmount
+     می‌شن نه فقط toggle کلاس. */
+  @keyframes modalPopIn{
+    from{ opacity:0; transform:translate(-50%, calc(-50% + 26px)) scale(.96); }
+    to{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .modal-panel.open{
+    opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);
+    animation:modalPopIn .38s cubic-bezier(.22,1,.36,1) both;
+  }
   /* نسخه‌ی لیکوئید گلسِ پاپ‌آپ (فقط دوستان) — عیناً همون بک‌گراند/بلورِ
      .app-topbar (هدرِ سایت)، نه گرادیانِ تقریباً توپرِ قبلی. */
   .modal-panel.liquid-glass-panel{
@@ -1691,7 +1724,14 @@
   body[data-theme="light"] .wsearch-newform:has(.add-program-glass){
     background:rgba(255,255,255,.28);
   }
-  .wsearch-newform.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
+  @keyframes newformPopIn{
+    from{ opacity:0; transform:translate(-50%, calc(-50% + 26px)) scale(.96); }
+    to{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .wsearch-newform.open{
+    opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);
+    animation:newformPopIn .38s cubic-bezier(.22,1,.36,1) both;
+  }
   .wsearch-newform-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .wsearch-newform-title{font-size:13px; font-weight:700;}
   .wsearch-newform-title.accent{color:var(--accent);}
@@ -2015,6 +2055,7 @@ body[data-theme="light"] .profile-chip, body:not([data-theme="light"]) .profile-
 }
 .profile-chip:hover .profile-chip-avatar{border-color:var(--accent); color:var(--accent);}
 .profile-chip-avatar svg{width:15px; height:15px;}
+.profile-chip-avatar-img{width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;}
 .profile-chip-name{
   font-size:12.5px; font-weight:600; color:var(--text);
   max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
