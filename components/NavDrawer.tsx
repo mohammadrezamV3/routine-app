@@ -108,6 +108,10 @@ const LINKS: NavItem[] = [
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
+// کش‌شده بیرونِ کامپوننت — مثلِ الگوی NotificationPanel/AccountPanel، تا
+// هدر (که توی همه‌ی صفحه‌ها mount می‌شه) هر بار عکس رو دوباره فچ نکنه.
+let cachedAvatarUrl: string | null = null;
+
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
   // گروهِ بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
@@ -125,6 +129,7 @@ export function NavDrawer() {
   // می‌بینه، نه محتوای واقعیِ پشتِ صفحه — پس هیچ‌وقت واقعاً مات نمی‌شد.
   const [profileAnchor, setProfileAnchor] = useState<{ top: number; right: number } | null>(null);
   const [bellAnchor, setBellAnchor] = useState<{ top: number; right: number } | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedAvatarUrl);
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -196,6 +201,19 @@ export function NavDrawer() {
     setNotifPermission(getNotificationPermission());
   }, []);
 
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    function loadAvatar() {
+      fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null)).then((res) => {
+        cachedAvatarUrl = res?.avatarUrl ?? null;
+        setAvatarUrl(cachedAvatarUrl);
+      });
+    }
+    loadAvatar();
+    window.addEventListener("avatar-updated", loadAvatar);
+    return () => window.removeEventListener("avatar-updated", loadAvatar);
+  }, [status]);
+
   // وقتی صفحه‌ی فعلی زیرمجموعه‌ی یه گروهه (مثلاً روی /exercise هستیم)،
   // همون گروه پیش‌فرض باز باشه — کاربر نباید مجبور باشه اول باز کنه تا ببینه کجاست
   useEffect(() => {
@@ -253,10 +271,14 @@ export function NavDrawer() {
                 <div ref={authSlotRef} className="profile-chip-wrap">
                   <button ref={profileBtnRef} className="profile-chip" aria-label="پروفایل" onClick={toggleProfileMenu}>
                     <span className="profile-chip-avatar">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="3.5" />
-                        <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
-                      </svg>
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="" className="profile-chip-avatar-img" />
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="8" r="3.5" />
+                          <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
+                        </svg>
+                      )}
                     </span>
                   </button>
                   {profileMenuOpen && profileAnchor && createPortal(

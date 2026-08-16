@@ -96,10 +96,10 @@ export function CalorieFoodPlanCard({
         <div className="flex flex-col gap-2">
           {entries.length ? (
             entries.map((e) => (
-              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 rounded-3xl border px-3.5 py-2.5">
-                <div className="min-w-0">
-                  <div className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{e.customName}</div>
-                  <div className="mono mt-0.5 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</div>
+              <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 border px-4 py-2.5" style={{ borderRadius: 9999 }}>
+                <div className="flex min-w-0 items-baseline gap-1.5">
+                  <span className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{e.customName}</span>
+                  <span className="mono shrink-0 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</span>
                 </div>
                 <span className="flex shrink-0 items-center gap-2.5">
                   <span

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { Camera, Trash2 } from "lucide-react";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
@@ -16,6 +17,9 @@ import {
   CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY, CalSystem,
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
+import { resizeImageToDataUrl } from "@/lib/avatarUpload";
+import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
+import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -84,6 +88,12 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
   const [usernameDraft, setUsernameDraft] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [usernameSaving, setUsernameSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
+  const [dashboardPrefs, setDashboardPrefs] = useState<DashboardPrefs>(DEFAULT_DASHBOARD_PREFS);
 
   useEffect(() => {
     if (status !== "authenticated") { setLoading(false); return; }
@@ -98,7 +108,57 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
     getSetting<number>(MONTHLY_GOAL_KEY, 0).then((v) => { setMonthlyGoal(v); setGoalDraft(v ? String(v) : ""); });
     getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS).then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
+    fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null)).then((res) => { if (res?.avatarUrl) setAvatarUrl(res.avatarUrl); });
+    getNotifPrefs().then(setNotifPrefs);
+    getDashboardPrefs().then(setDashboardPrefs);
   }, [status]);
+
+  async function uploadAvatar(file: File) {
+    setAvatarError(null);
+    setAvatarSaving(true);
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      const res = await fetch("/api/account/avatar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) { setAvatarError(resData.error || "خطایی پیش اومد"); return; }
+      setAvatarUrl(resData.avatarUrl);
+      window.dispatchEvent(new Event("avatar-updated"));
+    } catch {
+      setAvatarError("خطا در پردازش عکس");
+    } finally {
+      setAvatarSaving(false);
+    }
+  }
+
+  async function removeAvatar() {
+    setAvatarSaving(true);
+    await fetch("/api/account/avatar", { method: "DELETE" });
+    setAvatarUrl(null);
+    setAvatarSaving(false);
+    window.dispatchEvent(new Event("avatar-updated"));
+  }
+
+  function toggleNotifPref(key: keyof NotifPrefs) {
+    setNotifPrefs((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      saveNotifPrefs(next);
+      return next;
+    });
+  }
+
+  function toggleDashboardPref(key: keyof DashboardPrefs) {
+    setDashboardPrefs((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      saveDashboardPrefs(next);
+      setCachedDashboardPrefs(next);
+      window.dispatchEvent(new Event("dashboard-prefs-updated"));
+      return next;
+    });
+  }
 
   function toggleVisibleStat(key: TradeStatKey) {
     setVisibleStats((prev) => {
@@ -198,6 +258,39 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <ModalShell onClose={onClose}>
+      <div className="account-avatar-row">
+        <div className="account-avatar-wrap">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="عکس پروفایل" className="account-avatar-img" />
+          ) : (
+            <span className="account-avatar-fallback">{(data.name || data.username || "؟").trim().charAt(0)}</span>
+          )}
+          <button
+            type="button"
+            className="account-avatar-edit-btn"
+            onClick={() => avatarInputRef.current?.click()}
+            aria-label="تغییر عکس پروفایل"
+            disabled={avatarSaving}
+          >
+            <Camera size={13} />
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = ""; }}
+          />
+        </div>
+        {avatarUrl && (
+          <button type="button" className="account-avatar-remove-btn" onClick={removeAvatar} disabled={avatarSaving} aria-label="حذف عکس پروفایل">
+            <Trash2 size={13} />
+            حذف عکس
+          </button>
+        )}
+      </div>
+      {avatarError && <div className="field-error-msg" style={{ display: "block", marginBottom: 10 }}>{avatarError}</div>}
+
       <div className="about-list">
         {data.isSuperAdmin && (
           <div className="about-row">
@@ -350,6 +443,40 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
             </button>
           </>
         )}
+        <div className="section-note" style={{ marginTop: 12, marginBottom: 6 }}>کدوم دسته‌ها یادآوری بگیرن</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {([
+            ["taskReminders", "یادآوریِ برنامه‌های روزانه"],
+            ["exerciseReminders", "یادآوریِ تمرینِ ثبت‌نشده"],
+            ["friendRequests", "درخواستِ دوستی"],
+          ] as [keyof NotifPrefs, string][]).map(([key, label]) => (
+            <div key={key} className="task" style={{ cursor: "pointer", padding: "4px 0" }} onClick={() => toggleNotifPref(key)}>
+              <div className={`check${notifPrefs[key] ? " on" : ""}`}>
+                <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <div className="task-name">{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="tm-extra">
+        <div className="domain-sub">شخصی‌سازیِ چیدمانِ داشبورد</div>
+        <div className="section-note" style={{ marginBottom: 6 }}>کدوم کارت‌های اختیاری توی داشبوردها نشون داده بشن</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {([
+            ["showReminders", "کارتِ «یادآوری‌ها» (داشبوردِ روتین)"],
+            ["showFriends", "کارتِ «دوستان»"],
+            ["showChart", "نمودارها"],
+          ] as [keyof DashboardPrefs, string][]).map(([key, label]) => (
+            <div key={key} className="task" style={{ cursor: "pointer", padding: "4px 0" }} onClick={() => toggleDashboardPref(key)}>
+              <div className={`check${dashboardPrefs[key] ? " on" : ""}`}>
+                <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <div className="task-name">{label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="tm-extra">

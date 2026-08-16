@@ -120,7 +120,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         <button
           type="button"
           onClick={() => setPanelOpen(true)}
-          className="text-[11px] font-semibold text-dash-green hover:underline sm:text-[12.5px]"
+          className="text-[11px] font-semibold text-dash-green no-underline hover:no-underline sm:text-[12.5px]"
         >
           مشاهده همه
         </button>
@@ -135,7 +135,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
           <button
             type="button"
             onClick={() => setPanelOpen(true)}
-            className="flex items-center gap-1.5 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
+            className="flex w-full items-center justify-center gap-1.5 py-2 text-[11.5px] font-semibold text-dash-muted transition hover:text-dash-green sm:text-[12.5px]"
           >
             <Plus size={15} />
             افزودن دوست

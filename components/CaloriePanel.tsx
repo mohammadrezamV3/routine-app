@@ -21,6 +21,7 @@ import { CalorieFoodPlanCard } from "./CalorieFoodPlanCard";
 import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
+import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -59,6 +60,7 @@ export type Target = {
 
 export function CaloriePanel() {
   const { status } = useSession();
+  const dashboardPrefs = useDashboardPrefs();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
   const [needsAge, setNeedsAge] = useState(false);
 
@@ -347,9 +349,9 @@ export function CaloriePanel() {
               </div>
 
               <div className="calorie-col-side">
-                <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />
+                {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />}
                 <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
-                <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />
+                {dashboardPrefs.showChart && <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
               </div>
             </div>
           </div>

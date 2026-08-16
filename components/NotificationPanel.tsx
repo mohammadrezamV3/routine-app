@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getCustomOccurrences, getRemovedOccurrences, getDaily } from "@/lib/storage";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
+import { getNotifPrefs } from "@/lib/notifPrefs";
 
 type NotifItem =
   | { kind: "info"; id: string; title: string; body: string }
@@ -33,27 +34,30 @@ async function loadFriendRequests(): Promise<NotifItem[]> {
 // مونده» رو نشون می‌ده، نه تاریخچه‌ی نوتیف‌های قبلی.
 async function loadPendingNotifications(): Promise<NotifItem[]> {
   const items: NotifItem[] = [];
+  const prefs = await getNotifPrefs();
   const [removedArr, customArr, daily] = await Promise.all([
     getRemovedOccurrences(),
     getCustomOccurrences(),
     getDaily(isoLocal(new Date())),
   ]);
 
-  const tasks = tasksForDate(new Date(), { removedOccurrences: new Set(removedArr), customOccurrences: customArr });
-  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
-  for (const t of tasks) {
-    const startMinutes = timeStartMinutes(t.time);
-    if (startMinutes === null) continue;
-    if (daily.tasks[t.id]) continue;
+  if (prefs.taskReminders) {
+    const tasks = tasksForDate(new Date(), { removedOccurrences: new Set(removedArr), customOccurrences: customArr });
+    const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    for (const t of tasks) {
+      const startMinutes = timeStartMinutes(t.time);
+      if (startMinutes === null) continue;
+      if (daily.tasks[t.id]) continue;
 
-    if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
-      items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.` });
-    } else if (nowMinutes >= startMinutes) {
-      items.push({ kind: "info", id: `now:${t.id}`, title: "یادآوری برنامه", body: `وقت «${t.name}» رسیده.` });
+      if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
+        items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.` });
+      } else if (nowMinutes >= startMinutes) {
+        items.push({ kind: "info", id: `now:${t.id}`, title: "یادآوری برنامه", body: `وقت «${t.name}» رسیده.` });
+      }
     }
   }
 
-  if (new Date().getHours() >= EXERCISE_REMINDER_HOUR) {
+  if (prefs.exerciseReminders && new Date().getHours() >= EXERCISE_REMINDER_HOUR) {
     try {
       const planRes = await fetch("/api/exercise/plan");
       if (planRes.ok) {
@@ -73,7 +77,7 @@ async function loadPendingNotifications(): Promise<NotifItem[]> {
     } catch {}
   }
 
-  const friendRequests = await loadFriendRequests();
+  const friendRequests = prefs.friendRequests ? await loadFriendRequests() : [];
   return [...friendRequests, ...items];
 }
 

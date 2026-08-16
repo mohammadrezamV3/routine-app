@@ -262,14 +262,19 @@ export function computeDayFocus(items: string[]): string {
   return "ترکیبی";
 }
 
-export function getCatalogSubstitutes(item: string, max = 3): string[] {
+// excludeNames: اسمِ (بدونِ پسوندِ ست/تکرار) بقیه‌ی حرکاتِ همون روز — وگرنه
+// پیشنهاد ممکنه دقیقاً یکی از حرکاتِ از‌قبل‌توی‌برنامه رو برگردونه؛ جایگزینی
+// با اون فقط یه هم‌نامِ تکراری می‌سازه (حرکتِ قدیمی درست حذف می‌شه ولی یه
+// کپیِ دیگه از یه حرکتِ دیگه‌ی برنامه به‌جاش میاد)، نه یه جایگزینِ واقعاً جدید.
+export function getCatalogSubstitutes(item: string, max = 3, excludeNames: string[] = []): string[] {
   const baseName = stripSetSuffix(item);
   const suffix = item.startsWith(baseName) ? item.slice(baseName.length) : "";
   const source = EXERCISE_CATALOG.find((e) => e.name === baseName);
   if (!source) return [];
 
+  const excluded = new Set([baseName, ...excludeNames]);
   return EXERCISE_CATALOG
-    .filter((e) => e.name !== baseName)
+    .filter((e) => !excluded.has(e.name))
     .map((e) => {
       const sharedMuscles = e.muscleKeys.filter((k) => source.muscleKeys.includes(k)).length;
       const score = (e.pattern === source.pattern ? 3 : 0) + sharedMuscles;
