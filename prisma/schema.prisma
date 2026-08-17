@@ -142,6 +142,7 @@ model User {
   tradeEntries      TradeEntry[]
   roadmaps          Roadmap[]
   notes             Note[]
+  notepadPages      NotepadPage[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -746,6 +747,79 @@ model Note {
 
   @@index([userId])
   @@index([userId, reminderAt])
+}
+
+// ============================================================================
+// MODULE: NOTEPAD (Workspace بلاک‌محورِ کامل — Phase 1: صفحاتِ تودرتو +
+// ادیتورِ بلاکی. جزوِ پلنِ پایه‌ست (بدونِ ModuleGate)، مثلِ Note بالا؛ کاملاً
+// مستقل از مدلِ Note (که ساده و برای یادداشتِ سریع می‌مونه) — این یکی برای
+// Workspaceِ واقعی/تودرتوئه. هر Page و هر Block شناسه‌ی مستقلِ خودشو داره
+// (طبق درخواستِ صریح)، تا در آینده Sharing/Collaboration/Backlink/Relation
+// با ماژول‌های دیگه‌ی Arion بشه بهش اضافه کرد بدونِ تغییرِ ساختار.
+// ============================================================================
+
+model NotepadPage {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // صفحاتِ تودرتو — یک صفحه می‌تونه زیرمجموعه‌ی صفحه‌ی دیگه‌ای باشه
+  parentId     String?
+  parent       NotepadPage?  @relation("NotepadPageChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children     NotepadPage[] @relation("NotepadPageChildren")
+
+  title        String        @default("")
+  icon         String?       // ایموجی
+  coverUrl     String?       // data-URL فشرده، مثلِ الگوی آواتار — بدونِ storage ابری
+
+  // موقعیتِ بین خواهر/برادرها — عددِ اعشاری تا افزودن/جابه‌جاییِ یک آیتم بینِ
+  // دوتای دیگه بدونِ renumber کردنِ بقیه ممکن باشه
+  position     Float         @default(0)
+  isFavorite   Boolean       @default(false)
+  isArchived   Boolean       @default(false) // یعنی توی Trash
+  archivedAt   DateTime?
+  lastOpenedAt DateTime?
+
+  blocks       NotepadBlock[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([userId, parentId])
+  @@index([userId, isFavorite])
+  @@index([userId, isArchived])
+  @@index([userId, lastOpenedAt])
+}
+
+model NotepadBlock {
+  id            String        @id @default(cuid())
+  pageId        String
+  page          NotepadPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  // فقط برای بلاکِ Toggle معنی داره — بچه‌های تودرتوی همون بلاک. بدونِ FK
+  // مستقیم به User (برای جلوگیری از خطای «چند مسیرِ cascade» توی پستگرس؛
+  // مالکیت از طریقِ pageId.userId چک می‌شه، دقیقاً مثلِ بقیه‌ی روت‌های اپ)
+  parentBlockId String?
+  parent        NotepadBlock? @relation("NotepadBlockChildren", fields: [parentBlockId], references: [id], onDelete: Cascade)
+  children      NotepadBlock[] @relation("NotepadBlockChildren")
+
+  type          String        // "paragraph" | "heading1" | "heading2" | "heading3" |
+                               // "bulleted_list" | "numbered_list" | "todo" | "toggle" |
+                               // "quote" | "divider" | "image"
+  // آرایه‌ی RichLeaf — [{ text, bold?, italic?, underline?, strike?, code?, link? }]
+  content       Json          @default("[]")
+  checked       Boolean       @default(false) // فقط برای todo
+  collapsed     Boolean       @default(false) // فقط برای toggle
+  imageUrl      String?       // فقط برای image — data-URL فشرده یا لینکِ خارجی
+
+  position      Float         @default(0)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([pageId])
+  @@index([pageId, parentBlockId])
 }
 
 // ============================================================================
