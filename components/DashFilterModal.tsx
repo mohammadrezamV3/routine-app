@@ -5,6 +5,7 @@ import { Importance, IMPORTANCE_LABELS } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { ToggleSwitch } from "./ToggleSwitch";
 import { normalizeFa } from "@/lib/utils";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const IMPORTANCE_TABS: { value: "all" | Importance; label: string }[] = [
   { value: "all", label: "همه" },
@@ -38,6 +39,7 @@ export function DashFilterModal({
   onSelectAll: () => void;
   onClose: () => void;
 }) {
+  useLockBodyScroll();
   const [query, setQuery] = useState("");
   const isChecked = (name: string) => selectedPrograms === null || selectedPrograms.has(name);
   const normalizedQuery = normalizeFa(query);

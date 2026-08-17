@@ -5,6 +5,7 @@ import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { tasksForDate, ScheduleTask } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime as isWakeOnTimeShared, timeToMinutes } from "@/lib/wakeSleep";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const todayKey = isoLocal(new Date());
 
@@ -23,6 +24,7 @@ export function DayModal({
   wake?: string;
   sleep?: string;
 }) {
+  useLockBodyScroll();
   const wakeMinutes = timeToMinutes(wake);
   const isWakeOnTime = (iso: string) => isWakeOnTimeShared(iso, wakeMinutes);
   const iso = isoLocal(date);

@@ -21,6 +21,7 @@ import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
 import { ExerciseSubstitutePicker } from "./ExerciseSubstitutePicker";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
+import { LockBodyScroll } from "./LockBodyScroll";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -247,6 +248,7 @@ export function ExerciseDashboard({
 
       {historyPickerOpen && (
         <>
+          <LockBodyScroll />
           <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
           <div className="modal-panel dash-scope open">
             <div className="modal-head">

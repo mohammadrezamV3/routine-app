@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { TICKER_CATALOG, CATEGORY_LABELS, MAX_TICKER_SYMBOLS, TickerSymbol } from "@/lib/tickerSymbols";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // انتخاب‌گر بازارها — هم توی پنل کاربری (مدیریت همیشگی) و هم توی خودِ
 // صفحه‌ی ترید (فقط دفعه‌ی اول، برای onboarding) استفاده می‌شه. کاتالوگ حدود
@@ -19,6 +20,7 @@ export function MarketPicker({
   title: string;
   intro?: string;
 }) {
+  useLockBodyScroll();
   const [query, setQuery] = useState("");
 
   const grouped = useMemo(() => {

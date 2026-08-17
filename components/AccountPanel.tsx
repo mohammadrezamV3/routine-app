@@ -21,6 +21,7 @@ import { resizeImageToDataUrl } from "@/lib/avatarUpload";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -71,6 +72,7 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose:
 let cachedAccountData: AccountData | null = null;
 
 export function AccountPanel({ onClose }: { onClose: () => void }) {
+  useLockBodyScroll();
   const { status, data: session } = useSession();
   const [data, setData] = useState<AccountData | null>(cachedAccountData);
   const [loading, setLoading] = useState(!cachedAccountData);

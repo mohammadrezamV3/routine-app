@@ -10,6 +10,7 @@ import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -36,6 +37,7 @@ export function EditOccurrenceForm({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  useLockBodyScroll();
   const parts = String(occ.time).split(/[–—-]/);
   const [rows, setRows] = useState<EditRow[]>([
     { jsDays: [occ.jsDay], start: (parts[0] || "").trim(), end: (parts[1] || "").trim() },

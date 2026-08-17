@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, setWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // اولین بار که کاربر بعد از ثبت‌نام میره توی برنامه هفتگی، این ازش پرسیده
 // می‌شه؛ همون کامپوننت از پنل کاربری هم برای تغییر دوباره استفاده می‌شه.
@@ -14,6 +15,7 @@ export function WakeSleepSetup({
   onDone: (v: WakeSleepTimes) => void;
   onClose?: () => void;
 }) {
+  useLockBodyScroll();
   const [wake, setWake] = useState(initial?.wake || DEFAULT_WAKE);
   const [sleep, setSleep] = useState(initial?.sleep || DEFAULT_SLEEP);
   const [saving, setSaving] = useState(false);

@@ -7,6 +7,7 @@ import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
 import { avatarColorFor } from "@/lib/avatarColor";
+import { LockBodyScroll } from "./LockBodyScroll";
 
 type Friend = { friendshipId: string; id: string; name: string; username: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -172,6 +173,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
 
       {panelOpen && createPortal(
         <>
+          <LockBodyScroll />
           <div className="modal-overlay open" onClick={closePanel} />
           <div className="modal-panel liquid-glass-panel dash-scope open">
             <div className="relative z-[1]">
@@ -183,20 +185,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                 ) : (
                   <div className="modal-title">دوستان</div>
                 )}
-                <div className="flex items-center gap-1">
-                  {!addMode && !authRequired && (
-                    <button
-                      type="button"
-                      onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-                      aria-label="افزودن دوست"
-                      className="nav-close"
-                      style={{ color: "var(--accent)" }}
-                    >
-                      <Plus size={18} />
-                    </button>
-                  )}
-                  <button className="nav-close" onClick={closePanel} aria-label="بستن">×</button>
-                </div>
+                <button className="nav-close" onClick={closePanel} aria-label="بستن">×</button>
               </div>
               <div className="modal-body">
                 {authRequired && (
@@ -251,16 +240,16 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
 
                 {!authRequired && !addMode && (
                   <div className="tm-extra">
-                    {list.length === 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-                        className="flex items-center gap-1.5 text-[12px] font-semibold text-dash-green transition hover:brightness-110"
-                      >
-                        <Plus size={15} />
-                        افزودن دوست
-                      </button>
-                    ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+                      className="flex items-center gap-1.5 text-[12px] font-semibold text-dash-green transition hover:brightness-110"
+                      style={{ marginBottom: list.length ? 12 : 0 }}
+                    >
+                      <Plus size={15} />
+                      افزودن دوست
+                    </button>
+                    {list.length > 0 && (
                       <div className="flex flex-col gap-2">
                         {list.map((f) => (
                           <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
@@ -303,6 +292,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
 
       {confirmDeleteFriend && createPortal(
         <>
+          <LockBodyScroll />
           <div className="modal-overlay open" onClick={() => !deletingFriend && setConfirmDeleteFriend(null)} style={{ zIndex: 80 }} />
           <div className="modal-panel liquid-glass-panel dash-scope open" style={{ zIndex: 81, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 22, textAlign: "center" }}>

@@ -15,6 +15,7 @@ import {
   formStateToCreateBody, formStateToUpdateBody,
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
+import { LockBodyScroll } from "./LockBodyScroll";
 
 const now = new Date();
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -300,6 +301,7 @@ export function TradeJournal() {
 
       {newTradeOpen && (
         <>
+          <LockBodyScroll />
           <div className="modal-overlay open" onClick={() => setNewTradeOpen(false)} />
           <div className="modal-panel open">
             <div className="modal-head">

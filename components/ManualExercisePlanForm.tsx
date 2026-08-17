@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronRight, ChevronUp, Pencil, Plus, X } from "lucide-react";
+import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
+import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { ExerciseDay, computeDayFocus } from "@/lib/exercisePlans";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, getExerciseDifficulty } from "@/lib/exerciseCatalog";
@@ -11,6 +11,7 @@ import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
 import { toFaDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // نوعِ ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکتِ خودِ حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
@@ -95,6 +96,7 @@ function ManualExerciseAddPopup({
   onClose: () => void;
   excludeNames: Set<string>;
 }) {
+  useLockBodyScroll();
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState<ExerciseCatalogEntry | null>(null);
 
@@ -168,6 +170,45 @@ function ManualExerciseAddPopup({
   );
 }
 
+// ردیفِ یک حرکتِ اضافه‌شده — توی حالتِ ویرایش، به‌جای دو دکمه‌ی بالا/پایین،
+// یه دسته‌ی درگ («⠿») می‌گیره که با framer-motion's Reorder واقعاً کشیدنی‌ه.
+function ManualExerciseRow({
+  item,
+  isEditing,
+  onRemove,
+}: {
+  item: string;
+  isEditing: boolean;
+  onRemove: () => void;
+}) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={controls}
+      className="exercise-catalog-row manual-exercise-added-row"
+    >
+      {isEditing && (
+        <button
+          type="button"
+          className="manual-reorder-handle"
+          onPointerDown={(e) => controls.start(e)}
+          aria-label="جابه‌جاییِ این حرکت"
+        >
+          <GripVertical size={15} />
+        </button>
+      )}
+      <span className="truncate">{item}</span>
+      {isEditing && (
+        <button type="button" onClick={onRemove} aria-label="حذف حرکت">
+          <X size={14} />
+        </button>
+      )}
+    </Reorder.Item>
+  );
+}
+
 // برنامه‌ی دستی/شخصیِ کاربر — دقیقاً هم‌قاعده‌ی نمای «برنامه هفتگی»: یه
 // آکاردئونِ عمودیِ روزهای هفته، با کلیک روی هر روز باز می‌شه و برنامه‌ی
 // همون روز رو نشون می‌ده. هر روزِ بازشده یه دکمه‌ی «افزودن» داره (پاپ‌آپِ
@@ -202,14 +243,8 @@ export function ManualExercisePlanForm({
   function removeItem(day: string, idx: number) {
     setDayItems((m) => ({ ...m, [day]: (m[day] || []).filter((_, i) => i !== idx) }));
   }
-  function moveItem(day: string, idx: number, dir: -1 | 1) {
-    setDayItems((m) => {
-      const items = [...(m[day] || [])];
-      const target = idx + dir;
-      if (target < 0 || target >= items.length) return m;
-      [items[idx], items[target]] = [items[target], items[idx]];
-      return { ...m, [day]: items };
-    });
+  function reorderItems(day: string, newOrder: string[]) {
+    setDayItems((m) => ({ ...m, [day]: newOrder }));
   }
 
   function submit() {
@@ -254,56 +289,56 @@ export function ManualExercisePlanForm({
                 {items.length > 0 && <span className="manual-day-count-badge">{items.length} حرکت</span>}
                 <span className="week-day-chevron" />
               </div>
-              <div className="week-day-body" style={{ maxHeight: isOpen ? "none" : "0px" }}>
-                <div className="manual-day-panel">
-                  {items.length > 0 && <div className="manual-day-exercises-focus">{computeDayFocus(items)}</div>}
-
-                  <div className="manual-day-panel-actions">
-                    <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpenFor(day)}>
-                      افزودن
-                      <Plus size={14} />
-                    </button>
-                    {items.length > 0 && (
-                      <button
-                        type="button"
-                        className="manual-day-edit-btn"
-                        onClick={() => setEditDay(isEditing ? null : day)}
-                        aria-label={isEditing ? "پایانِ ویرایش" : `ویرایشِ روزِ ${day}`}
-                      >
-                        <Pencil size={13} />
-                        {isEditing ? "پایانِ ویرایش" : "ویرایش"}
-                      </button>
-                    )}
-                  </div>
-
-                  {items.length === 0 ? (
-                    <div className="item-line empty">هنوز حرکتی اضافه نکردی — امروز استراحته</div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
-                      {items.map((it, ii) => (
-                        <div key={ii} className="exercise-catalog-row manual-exercise-added-row">
-                          {isEditing && (
-                            <div className="manual-reorder-btns">
-                              <button type="button" disabled={ii === 0} onClick={() => moveItem(day, ii, -1)} aria-label="جابه‌جایی به بالا">
-                                <ChevronUp size={12} />
-                              </button>
-                              <button type="button" disabled={ii === items.length - 1} onClick={() => moveItem(day, ii, 1)} aria-label="جابه‌جایی به پایین">
-                                <ChevronDown size={12} />
-                              </button>
-                            </div>
-                          )}
-                          <span className="truncate">{it}</span>
-                          {isEditing && (
-                            <button type="button" onClick={() => removeItem(day, ii)} aria-label="حذف حرکت">
-                              <X size={14} />
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key="body"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ height: { duration: 0.32, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.22 } }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div className="manual-day-panel">
+                      <div className="manual-day-panel-head">
+                        <div className="manual-day-panel-headinfo">
+                          {items.length > 0 && <div className="manual-day-exercises-focus" style={{ margin: 0 }}>{computeDayFocus(items)}</div>}
+                          {items.length > 0 && (
+                            <button
+                              type="button"
+                              className="manual-day-edit-btn"
+                              onClick={() => setEditDay(isEditing ? null : day)}
+                              aria-label={isEditing ? "پایانِ ویرایش" : `ویرایشِ روزِ ${day}`}
+                            >
+                              <Pencil size={13} />
+                              {isEditing ? "پایانِ ویرایش" : "ویرایش"}
                             </button>
                           )}
                         </div>
-                      ))}
+                        <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpenFor(day)}>
+                          <Plus size={14} />
+                          افزودن
+                        </button>
+                      </div>
+
+                      {items.length === 0 ? (
+                        <div className="item-line empty">هنوز حرکتی اضافه نکردی — امروز استراحته</div>
+                      ) : (
+                        <Reorder.Group
+                          axis="y"
+                          values={items}
+                          onReorder={(newOrder) => reorderItems(day, newOrder)}
+                          style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}
+                        >
+                          {items.map((it, ii) => (
+                            <ManualExerciseRow key={it} item={it} isEditing={isEditing} onRemove={() => removeItem(day, ii)} />
+                          ))}
+                        </Reorder.Group>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <AnimatePresence>
                 {pickerOpenFor === day && (
@@ -321,14 +356,19 @@ export function ManualExercisePlanForm({
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
 
-      <button
-        type="button"
-        onClick={submit}
-        disabled={submitting || !hasAnyItems}
-        style={{ width: "100%", marginTop: 16, borderColor: "var(--accent)", color: "var(--accent)" }}
-      >
-        {submitting ? "در حال ثبت…" : "ثبت برنامه"}
-      </button>
+      <div className="manual-submit-row">
+        <motion.button
+          type="button"
+          onClick={submit}
+          disabled={submitting || !hasAnyItems}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 400, damping: 22 }}
+          className="manual-plan-submit-btn"
+        >
+          {submitting ? "در حال ثبت…" : "ثبت برنامه"}
+        </motion.button>
+      </div>
     </div>
   );
 }

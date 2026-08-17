@@ -1087,8 +1087,6 @@
     transform:rotate(45deg); transition:transform .25s ease;
   }
   .week-day.open .week-day-chevron{transform:rotate(-135deg);}
-  .week-day-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
-  .week-day.open .week-day-body{}
 
   .week-timeline{position:relative; padding:10px 4px 6px; overflow:visible;}
   .week-timeline-track{position:relative; height:118px; width:100%; padding:0 20px;}
@@ -2694,11 +2692,28 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
   background:var(--accent-dim); border-radius:9999px; padding:3px 10px;
 }
 .manual-day-panel{ padding:2px 0 16px; }
-.manual-day-panel-actions{ display:flex; align-items:center; gap:14px; margin-top:2px; }
-.manual-reorder-btns{ display:flex; flex-direction:column; gap:2px; flex-shrink:0; color:var(--muted2); }
-.manual-reorder-btns button{ display:flex; padding:1px; }
-.manual-reorder-btns button:hover:not(:disabled){ color:var(--text); }
-.manual-reorder-btns button:disabled{ opacity:.3; cursor:default; }
+/* هدِ باکسِ هر روز — «افزودن» بالا-چپ (طبقِ درخواستِ صریحِ کاربر)، تمرکزِ
+   روز + دکمه‌ی «ویرایش» سمتِ راست کنارِ هم */
+.manual-day-panel-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.manual-day-panel-headinfo{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
+/* دسته‌ی درگِ جابه‌جاییِ حرکات — با framer-motion's Reorder واقعاً کشیدنی؛
+   قبلاً دو دکمه‌ی بالا/پایین بود که کاربر خواست به‌جاش یه دستگیره‌ی نقطه‌ای بیاد */
+.manual-reorder-handle{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  padding:2px; color:var(--muted2); cursor:grab; touch-action:none;
+}
+.manual-reorder-handle:hover{ color:var(--text); }
+.manual-reorder-handle:active{ cursor:grabbing; }
+
+/* دکمه‌ی نهاییِ «ثبت برنامه» — چپ‌چین (نه تمام‌عرض)، پرِ توپر با انیمیشنِ
+   اسپرینگِ هاور/فشار (motion.button توی خودِ کامپوننت) */
+.manual-submit-row{ display:flex; justify-content:flex-end; margin-top:18px; }
+.manual-plan-submit-btn{
+  border-radius:9999px !important; border:none !important; padding:11px 28px !important;
+  background:var(--accent) !important; color:var(--bg) !important;
+  font-weight:700; font-size:13px; box-shadow:0 8px 20px rgba(var(--accent-rgb),.3);
+}
+.manual-plan-submit-btn:disabled{ opacity:.5 !important; }
 
 /* آواتارِ پیش‌فرضِ پروفایل — یه گرادیانِ درحال‌چرخش به‌جای آیکونِ ثابتِ
    آدمک/دایره‌ی تک‌رنگ؛ لایه‌ی تیره‌ی نیمه‌شفافِ روش برای خوانا موندنِ حرف */
@@ -2717,6 +2732,26 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .agent-avatar-letter{ position:relative; z-index:1; color:#fff; font-weight:800; }
 @keyframes agentAvatarSpin{ to{ transform:rotate(360deg); } }
+
+/* ردیفِ هر وعده توی حالتِ «وارد کردنِ دستی»ِ برنامه‌ی کالری — یه کارتِ
+   شیشه‌ایِ واحد به‌جای دو تا اینپوتِ باکس‌دارِ جدا؛ اینپوت‌های داخلش بی‌بک‌گراند */
+.manual-meal-row{
+  display:flex; align-items:center; gap:8px; border-radius:16px; padding:9px 12px;
+}
+.manual-meal-row-input{
+  background:transparent; border:none; outline:none; color:var(--text); min-width:0;
+  font-family:var(--font-vazir), sans-serif; font-size:12.5px; padding:0; text-align:right;
+}
+.manual-meal-row-input::placeholder{ color:var(--muted2); }
+.manual-meal-kcal-input{ width:38px; flex-shrink:0; text-align:center; font-weight:800; font-size:13.5px; }
+.manual-meal-row-divider{ width:1px; height:18px; flex-shrink:0; background:var(--line); }
+
+/* جمعِ کالریِ روزانه — بزرگ‌تر و متمایزتر از یه خطِ متنِ ساده */
+.manual-meal-total{
+  display:flex; align-items:baseline; justify-content:space-between; margin-top:2px;
+  border-radius:16px; padding:12px 16px; background:rgba(var(--accent-rgb),.09);
+}
+.manual-meal-total-num{ font-size:21px; font-weight:800; color:var(--accent); }
 
 /* دکمه‌ی «ثبت»ِ پایینِ نمای جزئیاتِ روز — تمومِ حرکاتِ اون روز رو تاییدی
    می‌کنه و برمی‌گردونه به لیستِ روزها؛ بدونِ بک‌گراند، فقط متنِ اکسنت */

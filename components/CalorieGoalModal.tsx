@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calculator, ChevronRight, PenLine, Plus, X } from "lucide-react";
+import { ChevronRight, PenLine, Plus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, splitMeals, MealBreakdownItem } from "@/lib/calorieCalc";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { AiSparkleIcon } from "./AiSparkleIcon";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import type { Target } from "./CaloriePanel";
 
 type Mode = "choice" | "smart" | "manual";
@@ -31,6 +33,7 @@ export function CalorieGoalModal({
   onClose: () => void;
   onSaved: (target: Target) => void;
 }) {
+  useLockBodyScroll();
   const [mode, setMode] = useState<Mode>("choice");
 
   const [goal, setGoal] = useState<CalorieGoal>(target.goal || "maintain");
@@ -154,7 +157,7 @@ export function CalorieGoalModal({
                 whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
-                <Calculator size={26} style={{ color: "var(--accent)" }} />
+                <AiSparkleIcon size={26} />
                 <span>محاسبه‌ی هوشمند</span>
               </motion.button>
               <div className="exercise-choice-divider" />
@@ -247,28 +250,30 @@ export function CalorieGoalModal({
 
               <div className="mt-3.5 flex flex-col gap-2.5">
                 {mealDraft.map((row) => (
-                  <div key={row.key} className="flex items-center gap-1.5">
-                    <input
-                      className="wsearch-newform-name calorie-glass-field flex-[2]"
-                      placeholder="اسم وعده"
-                      value={row.label}
-                      onChange={(e) => updateMealDraftRow(row.key, { label: e.target.value })}
-                    />
-                    <input
-                      type="number"
-                      className="wsearch-newform-name calorie-glass-field flex-1"
-                      placeholder="کالری"
-                      value={row.kcal}
-                      onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
-                    />
+                  <div key={row.key} className="calorie-glass-field manual-meal-row border">
                     <button
                       type="button"
                       onClick={() => removeMealDraftRow(row.key)}
                       aria-label="حذف وعده"
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-[13px] text-dash-muted transition hover:text-[#E05252]"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent text-[13px] text-dash-muted transition hover:text-[#E05252]"
                     >
                       <X size={13} />
                     </button>
+                    <input
+                      type="number"
+                      className="manual-meal-row-input manual-meal-kcal-input mono"
+                      placeholder="۰"
+                      value={row.kcal}
+                      onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
+                    />
+                    <span className="shrink-0 text-[10px] font-semibold text-dash-muted">کالری</span>
+                    <span className="manual-meal-row-divider" />
+                    <input
+                      className="manual-meal-row-input flex-1"
+                      placeholder="اسم وعده"
+                      value={row.label}
+                      onChange={(e) => updateMealDraftRow(row.key, { label: e.target.value })}
+                    />
                   </div>
                 ))}
 
@@ -283,7 +288,10 @@ export function CalorieGoalModal({
                   </button>
                 )}
 
-                <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">جمع: {faNum(mealDraftSum)} کالری</div>
+                <div className="manual-meal-total">
+                  <span className="mono manual-meal-total-num">{faNum(mealDraftSum)}</span>
+                  <span className="text-[11.5px] font-semibold text-dash-muted sm:text-[12.5px]">جمعِ کالریِ روزانه</span>
+                </div>
               </div>
 
               {manualError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{manualError}</div>}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { ChevronRight, MousePointerClick, Timer, CheckCircle2, PartyPopper } from "lucide-react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 export const EXERCISE_TUTORIAL_SEEN_KEY = "exercise-set-tutorial-seen";
 
@@ -37,6 +38,7 @@ const SWIPE_VELOCITY = 400;
 // توی localStorage ذخیره می‌شه). موبایل/تبلت با کشیدنِ انگشت (بدونِ دکمه‌ی
 // قبلی) بینِ اسلایدها رد می‌شه، دسکتاپ با دکمه‌های قبلی/بعدی.
 export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
+  useLockBodyScroll();
   const [step, setStep] = useState(0);
   const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
   const isLast = step === STEPS.length - 1;

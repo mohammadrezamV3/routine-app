@@ -12,6 +12,7 @@ import { formatJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const now = new Date();
 
@@ -32,6 +33,7 @@ export function AddProgramForm({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  useLockBodyScroll();
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
   const [importance, setImportance] = useState<Importance>("low");

@@ -7,6 +7,7 @@ import { ImageOff, Star } from "lucide-react";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey, getExerciseDifficulty } from "@/lib/exerciseCatalog";
 import { normalizeFa } from "@/lib/utils";
 import { MuscleDiagram } from "./MuscleDiagram";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const MUSCLE_LABEL: Record<MuscleKey, string> = {
   chest: "سینه",
@@ -47,6 +48,7 @@ export function DifficultyStars({ level, className }: { level: number; className
 // لیستِ اسم‌ها با جستجو/فیلترِ گروهِ عضلانی؛ زدن روی هرکدوم یه کارتِ جزئیات
 // از پایین بالا میاد با جای عکس، دستورالعمل، میزانِ سختی (ستاره) و مزایا.
 export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
+  useLockBodyScroll();
   const [query, setQuery] = useState("");
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | null>(null);
   const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);

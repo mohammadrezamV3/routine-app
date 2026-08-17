@@ -6,6 +6,7 @@ import { Check, ChevronDown, Sparkles } from "lucide-react";
 import { FoodSeedItem } from "@/lib/foodSeed";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -34,6 +35,7 @@ export function CalorieAddEntryModal({
   onAdded: () => void;
   onOpenAiScan: () => void;
 }) {
+  useLockBodyScroll();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Camera, ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type ScanResult = { name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number };
 
@@ -34,6 +35,7 @@ export function CalorieAiScanModal({
   onClose: () => void;
   onLogged: () => void;
 }) {
+  useLockBodyScroll();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);

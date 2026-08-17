@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
+import { LockBodyScroll } from "@/components/LockBodyScroll";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -116,7 +118,15 @@ export default function WeeklyPage() {
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
   const awakeStartMin = timeToMinutes(wake);
-  const awakeEndMin = timeToMinutes(sleep) + 24 * 60; // خواب معمولاً بعد از نیمه‌شبه
+  // ساعتِ خواب همیشه بعدِ نیمه‌شب نیست — کاربرهایی که مثلاً ۲۳:۳۰ می‌خوابن هم
+  // هستن. قبلاً همیشه ۲۴ساعت به ساعتِ خواب اضافه می‌شد (فرضِ «خواب همیشه بعدِ
+  // نیمه‌شبه»)، که برای این کاربرها بازه‌ی «بیداری» رو به‌جای ~۱۶ ساعتِ واقعی،
+  // غلط ~۴۰ ساعت حساب می‌کرد — همین باعث می‌شد برنامه‌های نزدیکِ ساعتِ خوابِ
+  // واقعی، خیلی دورتر از انتهای خط زمان (نزدیکِ وسط) جا بگیرن. الان فقط وقتی
+  // ساعتِ خواب از نظرِ عددی زودتر یا مساویِ ساعتِ بیداریه (یعنی واقعاً بعدِ
+  // نیمه‌شبِ روزِ بعده) ۲۴ ساعت اضافه می‌شه.
+  const rawSleepMin = timeToMinutes(sleep);
+  const awakeEndMin = rawSleepMin > awakeStartMin ? rawSleepMin : rawSleepMin + 24 * 60;
 
   async function refresh() {
     const [removed, custom] = await Promise.all([getRemovedOccurrences(), getCustomOccurrences()]);
@@ -385,68 +395,79 @@ export default function WeeklyPage() {
                     <span className={`week-day-name${isToday ? " today" : ""}`}>{o.name}</span>
                     <span className="week-day-chevron" />
                   </div>
-                  <div className="week-day-body" style={{ maxHeight: isOpen ? "none" : "0px", overflow: "hidden" }}>
-                    {items.length ? (
-                      <div className="week-timeline">
-                        <div className="week-timeline-track" style={{ minWidth: timelineTrackMinWidth(timedItems.length) }}>
-                          <div className="wt-fill-track">
-                            <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }} />
-                          </div>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key="body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ height: { duration: 0.32, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.22 } }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        {items.length ? (
+                          <div className="week-timeline">
+                            <div className="week-timeline-track" style={{ minWidth: timelineTrackMinWidth(timedItems.length) }}>
+                              <div className="wt-fill-track">
+                                <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }} />
+                              </div>
 
-                          <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "20px" }}>
-                            <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(wake)}</div></div>
-                            <div className="wt-content"><div className="wt-name">بیداری</div></div>
-                          </div>
+                              <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "20px" }}>
+                                <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(wake)}</div></div>
+                                <div className="wt-content"><div className="wt-name">بیداری</div></div>
+                              </div>
 
-                          {positioned.map((p) => {
-                            const r = splitTimeRange(p.time);
-                            const done = !!dDoneTasks[p.id];
-                            return (
-                              <div
-                                key={p.id}
-                                className="wt-item wt-level-0"
-                                style={{ ["--pos" as any]: `calc(20px + (100% - 40px) * ${p.pct})` }}
-                                onClick={(e) => { e.stopPropagation(); setCardName(p.name); }}
-                              >
-                                <div className="wt-marker-col">
-                                  <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
-                                  <div className={`wt-dot${done ? " wt-dot-done" : ""}`}>
-                                    {done && (
-                                      <svg viewBox="0 0 24 24" fill="none">
-                                        <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                                      </svg>
-                                    )}
+                              {positioned.map((p) => {
+                                const r = splitTimeRange(p.time);
+                                const done = !!dDoneTasks[p.id];
+                                return (
+                                  <div
+                                    key={p.id}
+                                    className="wt-item wt-level-0"
+                                    style={{ ["--pos" as any]: `calc(20px + (100% - 40px) * ${p.pct})` }}
+                                    onClick={(e) => { e.stopPropagation(); setCardName(p.name); }}
+                                  >
+                                    <div className="wt-marker-col">
+                                      <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
+                                      <div className={`wt-dot${done ? " wt-dot-done" : ""}`}>
+                                        {done && (
+                                          <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="wt-content">
+                                      <div className="wt-range">{toEnDigits(r.full)}</div>
+                                      <div className="wt-name">{p.name}</div>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="wt-content">
-                                  <div className="wt-range">{toEnDigits(r.full)}</div>
-                                  <div className="wt-name">{p.name}</div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                                );
+                              })}
 
-                          <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "calc(100% - 20px)" }}>
-                            <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(sleep)}</div></div>
-                            <div className="wt-content"><div className="wt-name">خواب</div></div>
-                          </div>
-                        </div>
-
-                        {!!untimedItems.length && (
-                          <div className="wt-untimed-row">
-                            {untimedItems.map((t) => (
-                              <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); setCardName(t.name); }}>
-                                <div className="wt-range">{toEnDigits(t.time)}</div>
-                                <div className="wt-name">{t.name}</div>
+                              <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "calc(100% - 20px)" }}>
+                                <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(sleep)}</div></div>
+                                <div className="wt-content"><div className="wt-name">خواب</div></div>
                               </div>
-                            ))}
+                            </div>
+
+                            {!!untimedItems.length && (
+                              <div className="wt-untimed-row">
+                                {untimedItems.map((t) => (
+                                  <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); setCardName(t.name); }}>
+                                    <div className="wt-range">{toEnDigits(t.time)}</div>
+                                    <div className="wt-name">{t.name}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
+                        ) : (
+                          <div className="week-day-empty">برنامه‌ای برای این روز ثبت نشده</div>
                         )}
-                      </div>
-                    ) : (
-                      <div className="week-day-empty">برنامه‌ای برای این روز ثبت نشده</div>
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -512,6 +533,7 @@ export default function WeeklyPage() {
 
         {historyPickerOpen && (
           <>
+            <LockBodyScroll />
             <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
             <div className="modal-panel dash-scope open">
               <div className="modal-head">
