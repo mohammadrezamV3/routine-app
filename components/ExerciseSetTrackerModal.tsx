@@ -10,6 +10,7 @@ import {
   clearExerciseTimer, loadExerciseTimer, saveExerciseTimer, PersistedExerciseTimer,
 } from "@/lib/exerciseTimerStore";
 import { ProgressRing } from "./ProgressRing";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const REST_SECONDS = 90;
 
@@ -49,6 +50,7 @@ export function ExerciseSetTrackerModal({
   onClose: () => void;
   onComplete: () => void;
 }) {
+  useLockBodyScroll();
   const spec = parseExerciseItem(item);
   const { baseName, sets: setCount, isTimed, seconds } = spec;
   const soloTimer = isTimed && setCount === 1 && seconds !== null;

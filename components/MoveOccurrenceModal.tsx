@@ -10,6 +10,7 @@ import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, jalaliToGregorianApprox, toJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { focusNextOnEnter } from "@/lib/formNav";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -36,6 +37,7 @@ export function MoveOccurrenceModal({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  useLockBodyScroll();
   const parts = String(occ.time).split(/[–—-]/);
   const [targetJalali, setTargetJalali] = useState<JalaliDate | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);

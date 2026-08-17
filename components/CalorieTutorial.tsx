@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { ChevronRight, Flame, LineChart, PlusCircle, Trophy } from "lucide-react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 export const CALORIE_TUTORIAL_SEEN_KEY = "calorie-tutorial-seen";
 
@@ -43,6 +44,7 @@ const SWIPE_VELOCITY = 400;
 // نه پشتِ یه کلیکِ خاص — چون درخواست دقیقاً همینه: «اولین بار که صفحه باز
 // میشه راهنمایی هم بکن».
 export function CalorieTutorial({ onDone }: { onDone: () => void }) {
+  useLockBodyScroll();
   const [step, setStep] = useState(0);
   const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
   const isLast = step === STEPS.length - 1;

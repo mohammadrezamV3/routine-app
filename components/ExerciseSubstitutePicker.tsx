@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // وقتی «این تجهیزات رو ندارم» می‌زنی، به‌جای سوییچِ خودکار به یک حرکتِ
 // تصادفی، سه حرکتِ جایگزینِ آماده (از کاتالوگ، هم‌الگو/هم‌عضله با حرکتِ
@@ -18,6 +19,7 @@ export function ExerciseSubstitutePicker({
   onClose: () => void;
   picking: boolean;
 }) {
+  useLockBodyScroll();
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />

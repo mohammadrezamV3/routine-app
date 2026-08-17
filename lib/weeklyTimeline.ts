@@ -99,17 +99,26 @@ export function positionTimedTasks(
     const span = 1 - 2 * EDGE_GAP;
     let gap = n > 1 ? Math.min(MIN_GAP, span / (n - 1)) : MIN_GAP;
     if (gap < 0) gap = 0;
-
-    sorted[0].pct = Math.max(sorted[0].pct, EDGE_GAP);
-    for (let i = 1; i < n; i++) {
-      const minPct = sorted[i - 1].pct + gap;
-      sorted[i].pct = Math.max(sorted[i].pct, minPct);
-    }
     const lastIdx = n - 1;
-    if (sorted[lastIdx].pct > 1 - EDGE_GAP) {
-      const overflow = sorted[lastIdx].pct - (1 - EDGE_GAP);
-      for (let j = 0; j < n; j++) sorted[j].pct -= overflow;
+
+    // پیش‌کلمپ: هر آیتم اول توی بازه‌ی مجازِ [EDGE_GAP, 1-EDGE_GAP] جا می‌گیره —
+    // بدونِ این، آیتمِ آخری که ساعتش خیلی نزدیکِ خوابه یه pct خامِ نزدیکِ ۱
+    // داره که پاسِ رفتِ زیر رو رد می‌کنه و مجبور به «شیفتِ یکجای همه به عقب»
+    // می‌شد؛ اون شیفت آیتمِ اول (نزدیکِ بیداری) رو زیرِ EDGE_GAP می‌فرستاد و
+    // دقیقاً باعثِ همون باگِ گزارش‌شده می‌شد (افتادنِ روی کلمه‌ی «بیداری»).
+    for (let i = 0; i < n; i++) {
+      sorted[i].pct = Math.min(Math.max(sorted[i].pct, EDGE_GAP), 1 - EDGE_GAP);
     }
+    // پاسِ رفت: هرکدوم حداقل gap بعدِ قبلی
+    sorted[0].pct = Math.max(sorted[0].pct, EDGE_GAP);
+    for (let i = 1; i < n; i++) sorted[i].pct = Math.max(sorted[i].pct, sorted[i - 1].pct + gap);
+    // پاسِ برگشت: هرکدوم حداقل gap قبلِ بعدی — وقتی پاسِ رفت آخری رو از سقف
+    // رد کرده بود (چند آیتمِ نزدیکِ همِ ته لیست)
+    sorted[lastIdx].pct = Math.min(sorted[lastIdx].pct, 1 - EDGE_GAP);
+    for (let i = lastIdx - 1; i >= 0; i--) sorted[i].pct = Math.min(sorted[i].pct, sorted[i + 1].pct - gap);
+    // پاسِ رفتِ دوم: پاسِ برگشت ممکنه آیتمِ اول رو زیرِ EDGE_GAP برده باشه
+    sorted[0].pct = Math.max(sorted[0].pct, EDGE_GAP);
+    for (let i = 1; i < n; i++) sorted[i].pct = Math.max(sorted[i].pct, sorted[i - 1].pct + gap);
   }
 
   return sorted.map((entry) => {

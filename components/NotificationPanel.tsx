@@ -5,6 +5,7 @@ import { getCustomOccurrences, getRemovedOccurrences, getDaily } from "@/lib/sto
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { getNotifPrefs } from "@/lib/notifPrefs";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type NotifItem =
   | { kind: "info"; id: string; title: string; body: string }
@@ -89,6 +90,7 @@ async function loadPendingNotifications(): Promise<NotifItem[]> {
 let cachedItems: NotifItem[] | null = null;
 
 export function NotificationPanel({ onClose, anchor }: { onClose: () => void; anchor: { top: number; right: number } }) {
+  useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
   const panelRef = useRef<HTMLDivElement>(null);
 

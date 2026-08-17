@@ -6,6 +6,7 @@ import { PROGRAM_META, formatDaysLeft } from "@/lib/programMeta";
 import { faNum } from "@/lib/jalali";
 import { CustomOccurrence, Importance } from "@/lib/storage";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const now = new Date();
 
@@ -50,6 +51,7 @@ export function ProgramCard({
   onClose: () => void;
   scheduleOpts: ScheduleOpts;
 }) {
+  useLockBodyScroll();
   const [flipped, setFlipped] = useState(false);
   const group = useMemo(() => buildWeeklyGroups(scheduleOpts).find((g) => g.name === name), [scheduleOpts, name]);
 

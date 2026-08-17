@@ -11,6 +11,7 @@ import {
   toJalali,
   JalaliDate,
 } from "@/lib/jalali";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // دراپ‌داونِ سفارشیِ ماه/سال — قبلاً <select> بومیِ مرورگر بود که برای
 // لیستِ بلندِ سال‌ها (۱۰۰+ گزینه) یه اسکرول‌بارِ خامِ مرورگری نشون می‌داد و
@@ -89,6 +90,7 @@ export function JalaliDatePicker({
       اصلاً متوجه نمی‌شه که context عوض شده و داره یه فیلدِ دیگه رو پر می‌کنه. */
   title?: string;
 }) {
+  useLockBodyScroll();
   const now = new Date();
   const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
   const [view, setView] = useState<{ jy: number; jm: number }>(

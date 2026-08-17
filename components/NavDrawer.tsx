@@ -13,6 +13,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { HeaderStreakClock } from "./HeaderStreakClock";
 import { AgentAvatar } from "./AgentAvatar";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 
 // این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
@@ -122,6 +123,7 @@ export function NavDrawer() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+  useLockBodyScroll(open || profileMenuOpen);
   // موقعیتِ لنگرِ پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
   // پورتال می‌شن (نه دیگه فرزندِ app-topbar)، باید مختصاتشون رو خودمون از
   // روی دکمه‌ی محرک حساب کنیم. علتِ پورتال‌کردن: app-topbar خودش

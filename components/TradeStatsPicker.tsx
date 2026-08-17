@@ -2,6 +2,7 @@
 
 import { TRADE_STAT_LABELS, TRADE_STAT_ORDER, TradeStatKey } from "@/lib/tradeTypes";
 import { ToggleSwitch } from "./ToggleSwitch";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // صفحه‌ی انتخاب آمارهای قابل‌نمایش توی صفحه‌ی ترید — از پنل کاربری با دکمه‌ی
 // «تغییر» باز می‌شه؛ هر ردیف یک تاگل لیکوئید گلسِ سبک iOS داره.
@@ -14,6 +15,7 @@ export function TradeStatsPicker({
   onToggle: (key: TradeStatKey) => void;
   onClose: () => void;
 }) {
+  useLockBodyScroll();
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />

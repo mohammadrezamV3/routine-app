@@ -9,6 +9,7 @@ import { ManualExercisePlanForm } from "./ManualExercisePlanForm";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { focusNextOnEnter } from "@/lib/formNav";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Mode = "choice" | "ai" | "manual";
 
@@ -23,6 +24,7 @@ export function AddExerciseProgramForm({
   onClose: () => void;
   onCreated: (plan: ExercisePlan) => void;
 }) {
+  useLockBodyScroll();
   const [mode, setMode] = useState<Mode>("choice");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

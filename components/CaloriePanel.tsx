@@ -10,6 +10,7 @@ import { AuthGate } from "./AuthGate";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashDateSelector, DashDay } from "./DashDateSelector";
+import { LockBodyScroll } from "./LockBodyScroll";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { CalorieGoalModal } from "./CalorieGoalModal";
@@ -370,6 +371,7 @@ export function CaloriePanel() {
 
       {historyPickerOpen && target && createPortal(
         <>
+          <LockBodyScroll />
           <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
           <div className="modal-panel liquid-glass-panel dash-scope open">
             <div className="modal-head">

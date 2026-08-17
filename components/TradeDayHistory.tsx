@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { faNum } from "@/lib/jalali";
 import { TradeEntry, TradeFormState, tradeEntryToFormState } from "@/lib/tradeTypes";
 import { TradeEntryFields } from "./TradeEntryFields";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // تاریخچه‌ی معاملاتِ یک روزِ انتخاب‌شده، درست زیر تقویم — قبلاً یک مودالِ
 // جدا بود که فقط با کلیک روی روزهای دارای معامله باز می‌شد؛ حالا هر روزی
@@ -25,6 +26,7 @@ export function TradeDayHistory({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  useLockBodyScroll(!!lightboxUrl);
 
   function startEdit(e: TradeEntry) {
     setEditingId(e.id);
