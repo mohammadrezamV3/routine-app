@@ -141,6 +141,7 @@ model User {
   calorieTargets    CalorieTarget[]
   tradeEntries      TradeEntry[]
   roadmaps          Roadmap[]
+  notes             Note[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -718,6 +719,34 @@ model Roadmap {
 // ============================================================================
 // SUPPORTING FEATURES (اعتمادسازی و اشتراک‌گذاری)
 // ============================================================================
+
+// ============================================================================
+// MODULE: NOTES (یادداشت‌ها — بخشِ پایه، مثلِ ROUTINE/TASKS برای همه‌ی
+// کاربرها آزاده. هر یادداشت می‌تونه متنِ ساده باشه یا چک‌لیست (وقتی
+// checklist ست شده)، تگ‌های آزاد داره، و یک یادآوری/الرتِ اختیاری که با
+// همون سیستمِ نوتیفیکیشنِ موجودِ اپ هماهنگ می‌شه)
+// ============================================================================
+
+model Note {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title      String
+  content    String    @default("")
+  tags       String[]  @default([])
+  // چک‌لیستِ اختیاری — [{ id, text, done }]؛ null یعنی یادداشتِ متنیِ ساده
+  checklist  Json?
+  reminderAt DateTime?
+  pinned     Boolean   @default(false)
+  color      String?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, reminderAt])
+}
 
 // ============================================================================
 // USER SETTINGS (key-value ساده برای بلاب‌های کوچک JSON — تم، occurrenceهای

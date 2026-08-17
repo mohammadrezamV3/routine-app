@@ -54,22 +54,22 @@ function ManualQuantityPrompt({
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تعداد ست</label>
-            <input type="number" className="wsearch-newform-name" value={sets} onChange={(e) => setSets(e.target.value)} />
+            <input type="number" className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(e) => setSets(e.target.value)} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تکرار در هر ست</label>
-            <input type="number" className="wsearch-newform-name" value={reps} onChange={(e) => setReps(e.target.value)} />
+            <input type="number" className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(e) => setReps(e.target.value)} />
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">مدت زمان</label>
-            <input type="number" className="wsearch-newform-name" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <input type="number" className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">واحد</label>
-            <div className="day-picker">
+            <div className="day-picker manual-timer-unit-picker">
               <span className={`day-pill${unit === "ثانیه" ? " on" : ""}`} onClick={() => setUnit("ثانیه")}>ثانیه</span>
               <span className={`day-pill${unit === "دقیقه" ? " on" : ""}`} onClick={() => setUnit("دقیقه")}>دقیقه</span>
             </div>
@@ -77,9 +77,18 @@ function ManualQuantityPrompt({
         </div>
       )}
 
-      <button type="button" className="manual-submit-btn" style={{ width: "100%", marginTop: 16 }} onClick={confirm}>
-        افزودن به برنامه
-      </button>
+      <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 16 }}>
+        <motion.button
+          type="button"
+          className="manual-plan-submit-btn"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 400, damping: 22 }}
+          onClick={confirm}
+        >
+          افزودن به برنامه
+        </motion.button>
+      </div>
     </div>
   );
 }
