@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
@@ -20,10 +21,11 @@ type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: Custom
 // یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعتِ واحد برای همه‌شون) —
 // موقعِ ثبت، یک occurrence جدا برای هر روزِ انتخاب‌شده ساخته می‌شه.
 type NewRow = { jsDays: number[]; start: string; end: string };
+type Step = "info" | "details";
 
-// فرمِ مستقلِ «افزودن برنامه جدید» — قبلاً زیرمجموعه‌ی WeeklySearchPanel بود
-// (پاپ‌آپِ جستجو هم زیرش همزمان باز می‌شد)؛ حالا کاملاً جدا و تنها راهِ
-// افزودنِ برنامه‌ست، با بک‌گراندِ لیکوئید گلس مثلِ بقیه‌ی کارت‌های اپ.
+// فرمِ مستقلِ «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
+// بعدش میزان اهمیت و تگ. اعتبارسنجی هر مرحله جدا انجام می‌شه؛ دکمه‌ی «بعدی»
+// اگه چیزی ناقصه یه لرزشِ خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
 export function AddProgramForm({
   scheduleOpts,
   onClose,
@@ -34,9 +36,11 @@ export function AddProgramForm({
   onChanged: () => void;
 }) {
   useLockBodyScroll();
+  const [step, setStep] = useState<Step>("info");
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
-  const [importance, setImportance] = useState<Importance>("low");
+  const [importance, setImportance] = useState<Importance>("medium");
+  const [isPeriod, setIsPeriod] = useState(false);
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
   const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
@@ -44,6 +48,8 @@ export function AddProgramForm({
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
+  const [periodError, setPeriodError] = useState(false);
+  const [shakeNext, setShakeNext] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
@@ -66,8 +72,7 @@ export function AddProgramForm({
     );
   }
 
-  async function submitNew() {
-    if (status !== "idle") return;
+  function validateInfoStep(): boolean {
     let hasError = false;
     const nErr = !name.trim();
     setNameError(nErr);
@@ -82,7 +87,26 @@ export function AddProgramForm({
       if (e.start || e.end || e.days) rErrs[i] = e;
     });
     setRowErrors(rErrs);
-    if (hasError) return;
+
+    const pErr = isPeriod && (!startJalali || !endJalali);
+    setPeriodError(pErr);
+    if (pErr) hasError = true;
+
+    return !hasError;
+  }
+
+  function goNext() {
+    if (validateInfoStep()) {
+      setStep("details");
+      return;
+    }
+    setShakeNext(true);
+    setTimeout(() => setShakeNext(false), 350);
+  }
+
+  async function submitNew() {
+    if (status !== "idle") return;
+    if (!validateInfoStep()) { setStep("info"); return; }
 
     const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
     let conflictMsg: string | null = null;
@@ -145,110 +169,152 @@ export function AddProgramForm({
       <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
-          <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">افزودن برنامه جدید</div>
-            <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
-          </div>
-
-          <label htmlFor="addProgramName">اسم برنامه</label>
-          <div className={`name-field-wrap${nameError ? " field-error" : ""}`}>
-            <input
-              id="addProgramName"
-              type="text"
-              className="wsearch-newform-name"
-              placeholder="ریاضی، باشگاه، جلسه کاری…"
-              value={name}
-              onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(false); }}
-            />
-          </div>
-
-          <label htmlFor="addProgramTag">تگ (اختیاری)</label>
-          <input
-            id="addProgramTag"
-            type="text"
-            className="wsearch-newform-name"
-            placeholder="درس، ورزش، کار…"
-            value={tag}
-            onChange={(e) => setTag(e.target.value)}
-          />
-
-          <div className="wsearch-date-row">
-            <div className="time-field">
-              <span className="time-field-label">تاریخ شروع دوره (اختیاری)</span>
-              <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
-                {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
-              </button>
+          {step === "info" ? (
+            <div className="wsearch-newform-head">
+              <div className="wsearch-newform-title accent">افزودن برنامه جدید</div>
+              <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
             </div>
-            <div className="time-field">
-              <span className="time-field-label">تاریخ پایان دوره (اختیاری)</span>
-              <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
-                {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
+          ) : (
+            <div className="exercise-wizard-head">
+              <button type="button" className="exercise-catalog-back-btn" onClick={() => setStep("info")} aria-label="بازگشت">
+                <ChevronRight size={20} />
               </button>
+              <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
             </div>
-          </div>
+          )}
 
-          <label>میزان اهمیت</label>
-          <SegmentedTabs
-            active={importance}
-            onChange={setImportance}
-            options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
-          />
+          {step === "info" && (
+            <>
+              <label htmlFor="addProgramName">اسم برنامه</label>
+              <div className={`name-field-wrap${nameError ? " field-error" : ""}`}>
+                <input
+                  id="addProgramName"
+                  type="text"
+                  className="wsearch-newform-name"
+                  placeholder="ریاضی، باشگاه، جلسه کاری…"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(false); }}
+                />
+              </div>
 
-          {rows.map((r, ri) => (
-            <div key={ri} className="wsearch-newrow">
-              <div className="wsearch-newrow-daywrap">
-                <div className={`day-picker${rowErrors[ri]?.days ? " field-error" : ""}`}>
-                  {WEEK_ORDER.map((o) => (
-                    <span
-                      key={o.jsDay}
-                      className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
-                      onClick={() => toggleRowDay(ri, o.jsDay)}
-                    >
-                      {o.short}
-                    </span>
-                  ))}
+              {rows.map((r, ri) => (
+                <div key={ri} className="wsearch-newrow">
+                  <div className="wsearch-newrow-daywrap">
+                    <div className={`day-picker${rowErrors[ri]?.days ? " field-error" : ""}`}>
+                      {WEEK_ORDER.map((o) => (
+                        <span
+                          key={o.jsDay}
+                          className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
+                          onClick={() => toggleRowDay(ri, o.jsDay)}
+                        >
+                          {o.short}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
+                    <span className="time-field-label">ساعت شروع</span>
+                    <div className="field-error-wrap">
+                      <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
+                    </div>
+                  </div>
+                  <div className={`time-field${rowErrors[ri]?.end ? " field-error" : ""}`}>
+                    <span className="time-field-label">ساعت پایان</span>
+                    <div className="field-error-wrap">
+                      <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
+                    </div>
+                  </div>
+                  {rows.length > 1 && (
+                    <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
+                      حذف این روز
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
-                <span className="time-field-label">ساعت شروع</span>
-                <div className="field-error-wrap">
-                  <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
+              ))}
+
+              <button type="button" className="wsearch-add-btn" onClick={addRow}>
+                افزودن روز دیگر
+                <span className="wsearch-add-btn-icon">+</span>
+              </button>
+
+              <label className="auth-remember-label" style={{ marginTop: 16 }}>
+                <input
+                  type="checkbox"
+                  className="auth-checkbox"
+                  checked={isPeriod}
+                  onChange={(e) => { setIsPeriod(e.target.checked); if (!e.target.checked) setPeriodError(false); }}
+                />
+                این یک دوره است
+              </label>
+
+              {isPeriod && (
+                <div className={`wsearch-date-row${periodError ? " field-error" : ""}`}>
+                  <div className="time-field">
+                    <span className="time-field-label">تاریخ شروع دوره</span>
+                    <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
+                      {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
+                    </button>
+                  </div>
+                  <div className="time-field">
+                    <span className="time-field-label">تاریخ پایان دوره</span>
+                    <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
+                      {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className={`time-field${rowErrors[ri]?.end ? " field-error" : ""}`}>
-                <span className="time-field-label">ساعت پایان</span>
-                <div className="field-error-wrap">
-                  <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
-                </div>
-              </div>
-              {rows.length > 1 && (
-                <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
-                  حذف این روز
-                </button>
               )}
-            </div>
-          ))}
+              {periodError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>تاریخ شروع و پایان دوره رو انتخاب کن</div>}
 
-          <div className="wsearch-newform-addrow">
-            <button type="button" className="wsearch-add-btn" onClick={addRow}>
-              افزودن روز دیگر
-              <span className="wsearch-add-btn-icon">+</span>
-            </button>
-            <button
-              type="button"
-              className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
-              onClick={submitNew}
-              aria-label="ثبت"
-            >
-              <span className="wns-spinner" />
-              <svg className="wns-check" viewBox="0 0 24 24" fill="none">
-                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <svg className="wns-x" viewBox="0 0 24 24" fill="none">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
+              <button
+                type="button"
+                className={`exercise-wizard-next-btn${shakeNext ? " shake" : ""}`}
+                style={{ marginTop: 18, width: "100%", padding: "12px 0", fontSize: 13 }}
+                onClick={goNext}
+              >
+                بعدی
+              </button>
+            </>
+          )}
+
+          {step === "details" && (
+            <>
+              <label className="exercise-wizard-title">میزان اهمیت و تگ</label>
+
+              <label>میزان اهمیت</label>
+              <SegmentedTabs
+                active={importance}
+                onChange={setImportance}
+                options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
+              />
+
+              <label htmlFor="addProgramTag" style={{ marginTop: 14, display: "block" }}>تگ (اختیاری)</label>
+              <input
+                id="addProgramTag"
+                type="text"
+                className="wsearch-newform-name"
+                placeholder="درس، ورزش، کار…"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+              />
+
+              <div className="wsearch-newform-actions">
+                <button
+                  type="button"
+                  className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
+                  onClick={submitNew}
+                  aria-label="ثبت"
+                >
+                  <span className="wns-spinner" />
+                  <svg className="wns-check" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <svg className="wns-x" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

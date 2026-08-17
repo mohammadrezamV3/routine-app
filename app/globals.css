@@ -14,8 +14,8 @@
      تقریباً همه‌ی دکمه/بردر/سایه‌ها از همینا رد می‌شن، پس عوض‌کردن این دوتا
      رنگ کل سایت رو خودکار با هم عوض می‌کنه. */
   :root{
-    --bg:#0E1011;
-    --bg-rgb:14,16,17;
+    --bg:#000000;
+    --bg-rgb:0,0,0;
     --text:#EDEFEE;
     --muted:#8A9099;
     --muted2:#4A5054;
@@ -103,9 +103,9 @@
      چشم‌آزار می‌شد؛ با scrollbar-color/-webkit-scrollbar تیره‌ش می‌کنیم. رنگِ
      تم با :has(body[data-theme="light"]) تشخیص داده می‌شه چون data-theme
      روی body ست می‌شه نه html، و متغیرهای CSS از فرزند به والد سرایت نمی‌کنن. */
-  html{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) #0E1011; }
+  html{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) #000000; }
   html::-webkit-scrollbar{ width:10px; }
-  html::-webkit-scrollbar-track{ background:#0E1011; }
+  html::-webkit-scrollbar-track{ background:#000000; }
   html::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); border-radius:10px; }
   html::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.32); }
   html:has(body[data-theme="light"]){ scrollbar-color:rgba(0,0,0,.22) #F3E9D8; }
@@ -2706,14 +2706,33 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 .manual-reorder-handle:active{ cursor:grabbing; }
 
 /* دکمه‌ی نهاییِ «ثبت برنامه» — چپ‌چین (نه تمام‌عرض)، پرِ توپر با انیمیشنِ
-   اسپرینگِ هاور/فشار (motion.button توی خودِ کامپوننت) */
-.manual-submit-row{ display:flex; justify-content:flex-end; margin-top:18px; }
+   اسپرینگِ هاور/فشار (motion.button توی خودِ کامپوننت). حالا به‌جای اینکه
+   فقط انتهای محتوای اسکرول‌شونده باشه، به‌صورتِ فوترِ ثابتِ ته‌پاپ‌آپ می‌چسبه —
+   مارجینِ منفی، پدینگِ خودشو پدینگِ ۲۲پیکسلیِ wsearch-newform رو خنثی
+   می‌کنه تا واقعاً لبه‌به‌لبه بشینه، بکگراندِ خودش هم مات/غیرشفافه تا محتوای
+   پشتش موقعِ اسکرول از زیرش رد نشه. */
+.manual-submit-row{
+  position:sticky; bottom:-22px; z-index:5;
+  display:flex; justify-content:flex-end; margin:18px -22px -22px; padding:14px 22px;
+  background:rgba(var(--bg-rgb), .92); backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
+  border-top:1px solid var(--line); border-radius:0 0 26px 26px;
+}
 .manual-plan-submit-btn{
   border-radius:9999px !important; border:none !important; padding:11px 28px !important;
   background:var(--accent) !important; color:var(--bg) !important;
   font-weight:700; font-size:13px; box-shadow:0 8px 20px rgba(var(--accent-rgb),.3);
 }
 .manual-plan-submit-btn:disabled{ opacity:.5 !important; }
+
+/* واحدِ ثانیه/دقیقه‌ی پاپ‌آپِ افزودنِ حرکتِ زمان‌محور — شیشه‌ای و کروتر از
+   پیشِ‌فرضِ day-pill (که جاهای دیگه‌ی اپ، مثلاً انتخابِ روزهای هفته، هنوز
+   شکلِ خودش رو داره) */
+.manual-timer-unit-picker .day-pill{
+  border-radius:14px;
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+}
+body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:rgba(255,255,255,.03); border-color:var(--line); }
+.manual-timer-unit-picker .day-pill.on{ background:var(--accent-dim); border-color:var(--accent); }
 
 /* آواتارِ پیش‌فرضِ پروفایل — یه گرادیانِ درحال‌چرخش به‌جای آیکونِ ثابتِ
    آدمک/دایره‌ی تک‌رنگ؛ لایه‌ی تیره‌ی نیمه‌شفافِ روش برای خوانا موندنِ حرف */
@@ -2753,6 +2772,22 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .manual-meal-total-num{ font-size:21px; font-weight:800; color:var(--accent); }
 
+/* منویِ سه‌نقطه‌ی هر ردیفِ وعده (ویرایش/حذف) — پاپ‌آپِ کوچیکِ شناور، هم‌سبکِ
+   بقیه‌ی دراپ‌داون‌های اپ */
+.manual-meal-row-menu{
+  position:absolute; top:calc(100% + 4px); right:0; z-index:20; min-width:96px;
+  border-radius:14px; padding:4px; border:1px solid var(--line);
+  background:rgba(var(--bg-rgb), .97);
+  backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  display:flex; flex-direction:column;
+}
+.manual-meal-row-menu button{
+  padding:8px 10px; border-radius:10px; text-align:right; font-size:12px; font-weight:600; color:var(--text);
+}
+.manual-meal-row-menu button:hover{ background:rgba(255,255,255,.06); }
+.manual-meal-row-menu-danger{ color:#E05252 !important; }
+
 /* دکمه‌ی «ثبت»ِ پایینِ نمای جزئیاتِ روز — تمومِ حرکاتِ اون روز رو تاییدی
    می‌کنه و برمی‌گردونه به لیستِ روزها؛ بدونِ بک‌گراند، فقط متنِ اکسنت */
 .manual-day-done-btn{
@@ -2786,6 +2821,15 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .exercise-wizard-next-btn:hover{ filter:brightness(1.05); }
 .exercise-wizard-next-btn:disabled{ opacity:.6 !important; }
+/* وقتی مرحله‌ی فعلیِ ویزارد ناقصه و کاربر «بعدی» رو می‌زنه — یه لرزشِ خیلی
+   ملایم (فقط ۲px) تا حسِ خطا بده بدون اینکه پرت/اغراق‌آمیز باشه */
+@keyframes wizardNextShake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-2px);}
+  50%{transform:translateX(2px);}
+  75%{transform:translateX(-1px);}
+}
+.exercise-wizard-next-btn.shake{ animation:wizardNextShake .3s ease; }
 
 /* تایتلِ صفحه‌ی انتخابِ «افزودن برنامه» (AI/دستی) — بزرگ‌تر از تایتلِ
    پیش‌فرضِ wsearch-newform-title (که جاهای دیگه‌ی اپ هم استفاده می‌شه، پس
@@ -3024,6 +3068,10 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
    فایل تعریف شده، همیشه برنده‌ست. */
 .calorie-qty-input{ width:68px; }
 @media (min-width:640px){ .calorie-qty-input{ width:78px; } }
+/* دکمه‌ی واحدِ اندازه‌گیری — قبلاً flex-1 بود و تا آخرِ ردیف کشیده می‌شد؛
+   حالا یه عرضِ ثابتِ جمع‌وجورِ خودش رو داره، فیلدِ مقدار بقیه‌ی جا رو می‌گیره */
+.calorie-unit-btn-wrap{ width:92px; }
+@media (min-width:640px){ .calorie-unit-btn-wrap{ width:104px; } }
 
 /* حلقه‌ی پیشرفتِ عمومی (SVG) — کالری امروز + سهم هر وعده از همین استفاده می‌کنن */
 .progress-ring-wrap{ position:relative; flex-shrink:0; }
@@ -3038,3 +3086,122 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
    اسکرول می‌شه ولی نباید نوارِ اسکرولِ زشتِ مرورگر روش دیده بشه */
 .no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
 .no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+/* ============================================================================
+   بخشِ «یادداشت‌ها» — کارت‌های یادداشت/چک‌لیست، تگ‌ها، یادآوری
+   ============================================================================ */
+.notes-add-btn{
+  display:flex; align-items:center; gap:6px; flex-shrink:0; padding:9px 18px; border-radius:9999px;
+  background:var(--accent); color:var(--bg); font-size:12.5px; font-weight:700;
+  box-shadow:0 6px 18px rgba(var(--accent-rgb),.3); transition:filter .15s ease;
+}
+.notes-add-btn:hover{ filter:brightness(1.05); }
+
+.notes-tag-filter-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+.notes-tag-filter-chip{
+  padding:6px 14px; border-radius:9999px; font-size:11px; font-weight:600;
+  border:1px solid var(--line); color:var(--muted); background:transparent; transition:.15s;
+}
+.notes-tag-filter-chip.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+.notes-empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  padding:60px 20px; text-align:center;
+}
+
+.notes-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px; margin-top:16px;
+}
+@media (max-width:640px){ .notes-grid{ grid-template-columns:1fr; } }
+
+.note-card{
+  border-radius:20px; border:1px solid var(--line); background:rgba(255,255,255,.03);
+  padding:14px 16px; display:flex; flex-direction:column; gap:8px; min-height:96px;
+}
+body[data-theme="light"] .note-card{ background:rgba(255,255,255,.5); }
+.note-card-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.note-card-menu-btn{
+  display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:9999px;
+  color:var(--muted); background:transparent; transition:color .15s ease;
+}
+.note-card-menu-btn:hover{ color:var(--text); }
+.note-card-menu{
+  position:absolute; top:calc(100% + 4px); left:0; z-index:20; min-width:110px;
+  border-radius:14px; padding:4px; border:1px solid var(--line);
+  background:rgba(var(--bg-rgb), .97);
+  backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  display:flex; flex-direction:column;
+}
+.note-card-menu button{ padding:8px 10px; border-radius:10px; text-align:right; font-size:11.5px; font-weight:600; color:var(--text); }
+.note-card-menu button:hover{ background:rgba(255,255,255,.06); }
+.note-card-menu-danger{ color:#E05252 !important; }
+
+.note-card-content{ font-size:12px; color:var(--muted); line-height:1.7; white-space:pre-wrap; word-break:break-word; max-height:110px; overflow:hidden; }
+.note-card-checklist{ display:flex; flex-direction:column; gap:4px; }
+.note-checklist-row-view{ display:flex; align-items:center; gap:7px; cursor:pointer; }
+.note-checklist-text-done{ color:var(--muted2); text-decoration:line-through; }
+
+.note-card-footer{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:2px; }
+.note-card-reminder{
+  display:flex; align-items:center; gap:4px; font-size:10px; font-weight:600; color:var(--accent);
+  background:var(--accent-dim); border-radius:9999px; padding:3px 9px;
+}
+.note-tag-pill-view{ margin:0; }
+
+/* تگ‌ها — هم توی فرمِ ساخت/ویرایش (قابلِ حذف) هم روی خودِ کارت (فقط نمایشی) */
+.note-tag-pill{
+  display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:9999px;
+  font-size:10.5px; font-weight:600; color:var(--muted); background:rgba(255,255,255,.05); border:1px solid var(--line);
+}
+.note-tag-pill button{ display:flex; color:var(--muted2); }
+.note-tag-pill button:hover{ color:#E05252; }
+
+/* سوییچِ متن/چک‌لیستِ بالای فرمِ یادداشت */
+.note-type-toggle{ display:flex; gap:6px; margin-top:10px; }
+.note-type-toggle button{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 0;
+  border-radius:14px; border:1px solid var(--line); color:var(--muted); font-size:12px; font-weight:700;
+  background:rgba(255,255,255,.02); transition:.15s;
+}
+.note-type-toggle button.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+.note-content-textarea{
+  display:block; width:100%; min-height:120px; border-radius:16px; border:1px solid var(--line); padding:12px 14px;
+  color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:12.5px; line-height:1.8; resize:vertical;
+}
+.note-content-textarea::placeholder{ color:var(--muted2); }
+
+.note-checklist-row{ display:flex; align-items:center; gap:8px; }
+.note-checklist-check{
+  flex-shrink:0; width:19px; height:19px; border-radius:6px; border:1.5px solid var(--line);
+  display:flex; align-items:center; justify-content:center; color:#fff; transition:.15s;
+}
+.note-checklist-check.done{ background:var(--accent); border-color:var(--accent); }
+.note-checklist-input{
+  flex:1; min-width:0; background:transparent; border:none; border-bottom:1px solid var(--line); outline:none;
+  padding:6px 2px; color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:12.5px;
+}
+.note-checklist-input::placeholder{ color:var(--muted2); }
+.note-checklist-remove{ flex-shrink:0; color:var(--muted2); transition:color .15s ease; }
+.note-checklist-remove:hover{ color:#E05252; }
+
+.note-tag-input-row{ display:flex; gap:6px; }
+.note-tag-input{ flex:1; padding:9px 12px; font-size:12px; }
+.note-tag-add-btn{
+  flex-shrink:0; width:36px; display:flex; align-items:center; justify-content:center; border-radius:12px;
+  border:1px solid var(--line); color:var(--accent); background:rgba(255,255,255,.03);
+}
+
+.note-reminder-toggle{
+  display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--text);
+}
+.note-reminder-switch{
+  margin-right:auto; width:36px; height:20px; border-radius:9999px; background:var(--line); position:relative; transition:background .2s ease;
+}
+.note-reminder-switch::after{
+  content:''; position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:50%; background:#fff;
+  transition:transform .2s ease;
+}
+.note-reminder-switch.on{ background:var(--accent); }
+.note-reminder-switch.on::after{ transform:translateX(-16px); }

@@ -149,12 +149,12 @@ export function CalorieAddEntryModal({
             <div className="mt-2.5 flex gap-2">
               <input
                 type="number"
-                className="wsearch-newform-name calorie-glass-field calorie-qty-input shrink-0 text-center"
+                className="wsearch-newform-name calorie-glass-field flex-1 text-center"
                 placeholder="مقدار"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
               />
-              <div className="relative flex-1">
+              <div className="calorie-unit-btn-wrap relative shrink-0">
                 <button
                   type="button"
                   onClick={() => setUnitPickerOpen((v) => !v)}

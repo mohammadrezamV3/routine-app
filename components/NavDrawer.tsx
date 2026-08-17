@@ -58,6 +58,9 @@ export const ICONS: Record<string, JSX.Element> = {
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
+  notes: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 3.5h9.5L18.5 6.5V20.5H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M15.3 3.5V6a1 1 0 0 0 1 1h2.2" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M8.3 11h7M8.3 14.3h7M8.3 17.5h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
   account: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M5 19.5c1.3-3.3 4-5 7-5s5.7 1.7 7 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -92,6 +95,7 @@ function isGroup(item: NavItem): item is NavGroup {
 
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
+  { href: "/notes", label: "یادداشت‌ها", icon: "notes" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
   {
     label: "بدنسازی", icon: "exercise",
