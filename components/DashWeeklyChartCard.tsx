@@ -37,7 +37,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
                       transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 + i * 0.05 }}
                       className="w-2 rounded-full sm:w-2.5"
                       style={{
-                        background: peak ? "linear-gradient(180deg, var(--accent-hover), var(--accent))" : "rgba(var(--accent-rgb),.45)",
+                        background: peak ? "var(--accent)" : "rgba(var(--accent-rgb),.45)",
                         boxShadow: peak ? "0 0 12px rgba(var(--accent-rgb),.6)" : "none",
                       }}
                     />
