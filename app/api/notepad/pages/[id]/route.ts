@@ -63,6 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (body.icon !== undefined) data.icon = body.icon === null ? null : String(body.icon).slice(0, 8);
   if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl === null ? null : String(body.coverUrl).slice(0, 1_000_000);
   if (body.isFavorite !== undefined) data.isFavorite = !!body.isFavorite;
+  if (body.isLocked !== undefined) data.isLocked = !!body.isLocked;
   if (body.lastOpenedAt !== undefined) data.lastOpenedAt = new Date();
   if (body.position !== undefined && typeof body.position === "number") data.position = body.position;
 

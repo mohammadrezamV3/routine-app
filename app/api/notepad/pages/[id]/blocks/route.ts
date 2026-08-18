@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       checked: !!b.checked,
       collapsed: !!b.collapsed,
       imageUrl: typeof b.imageUrl === "string" ? b.imageUrl.slice(0, 1_000_000) : null,
+      language: typeof b.language === "string" ? b.language.slice(0, 40) : null,
       position: b.position,
     }));
 

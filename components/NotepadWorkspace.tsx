@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Menu, Plus, StickyNote } from "lucide-react";
+import { Clock, FileText, Menu, Plus, StickyNote } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { NotepadSidebar } from "./NotepadSidebar";
 import { NotepadEditor } from "./NotepadEditor";
@@ -13,6 +13,65 @@ import {
   NotepadPage, NotepadPageWithBlocks, createNotepadPage, deleteNotepadPage,
   duplicateNotepadPage, fetchNotepadPage, fetchNotepadPages, updateNotepadPage,
 } from "@/lib/notepad";
+
+// کارتِ Recentsِ صفحه‌ی Home — کاورِ عکس اگه باشه، وگرنه یه کاشیِ سادهِ آیکونی
+function NotepadHomeCard({ page, onNavigate }: { page: NotepadPage; onNavigate: (id: string) => void }) {
+  return (
+    <button type="button" className="notepad-home-card" onClick={() => onNavigate(page.id)}>
+      <div className="notepad-home-card-cover">
+        {page.coverUrl ? <img src={page.coverUrl} alt="" /> : <span>{page.icon || "📄"}</span>}
+      </div>
+      <div className="notepad-home-card-foot">
+        <span className="notepad-home-card-icon">{page.icon || "📄"}</span>
+        <span className="notepad-home-card-title">{page.title || "بدونِ عنوان"}</span>
+      </div>
+    </button>
+  );
+}
+
+function NotepadHome({ pages, onNavigate, onCreatePage }: { pages: NotepadPage[]; onNavigate: (id: string) => void; onCreatePage: () => void }) {
+  const active = useMemo(() => pages.filter((p) => !p.isArchived), [pages]);
+  const recent = useMemo(
+    () => [...active].filter((p) => p.lastOpenedAt).sort((a, b) => +new Date(b.lastOpenedAt!) - +new Date(a.lastOpenedAt!)).slice(0, 8),
+    [active]
+  );
+  const roots = useMemo(
+    () => [...active].filter((p) => !p.parentId).sort((a, b) => a.position - b.position),
+    [active]
+  );
+
+  return (
+    <div className="notepad-home">
+      {recent.length > 0 && (
+        <div className="notepad-home-section">
+          <div className="notepad-home-section-title"><Clock size={12} /> اخیر</div>
+          <div className="notepad-home-cards thin-scroll">
+            {recent.map((p) => <NotepadHomeCard key={p.id} page={p} onNavigate={onNavigate} />)}
+          </div>
+        </div>
+      )}
+
+      <div className="notepad-home-section">
+        <div className="notepad-home-section-title"><FileText size={12} /> خصوصی</div>
+        <div className="notepad-home-list">
+          {roots.length === 0 ? (
+            <div className="notepad-sidebar-empty">هنوز صفحه‌ای نساختی</div>
+          ) : (
+            roots.map((p) => (
+              <button key={p.id} type="button" className="notepad-home-list-row" onClick={() => onNavigate(p.id)}>
+                <span className="notepad-tree-icon">{p.icon || "📄"}</span>
+                <span className="notepad-tree-title">{p.title || "بدونِ عنوان"}</span>
+              </button>
+            ))
+          )}
+          <button type="button" className="notepad-home-list-row notepad-home-list-add" onClick={onCreatePage}>
+            <Plus size={13} /> صفحه‌ی جدید
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function NotepadWorkspace() {
   const { status } = useSession();
@@ -158,14 +217,18 @@ export function NotepadWorkspace() {
         </button>
 
         {!activePageId || !activePage ? (
-          <div className="notepad-landing">
-            <StickyNote size={26} strokeWidth={1.5} className="text-dash-muted" />
-            <div className="notepad-landing-title">شروع به نوشتن کنید</div>
-            <div className="notepad-landing-sub">ایده‌ها، یادداشت‌ها و برنامه‌های خود را در Arion ثبت کنید.</div>
-            <button type="button" className="notepad-add-btn" onClick={() => handleCreatePage(null)}>
-              <Plus size={14} strokeWidth={2.5} /> صفحه جدید
-            </button>
-          </div>
+          pages && pages.some((p) => !p.isArchived) ? (
+            <NotepadHome pages={pages} onNavigate={navigate} onCreatePage={() => handleCreatePage(null)} />
+          ) : (
+            <div className="notepad-landing">
+              <StickyNote size={26} strokeWidth={1.5} className="text-dash-muted" />
+              <div className="notepad-landing-title">شروع به نوشتن کنید</div>
+              <div className="notepad-landing-sub">ایده‌ها، یادداشت‌ها و برنامه‌های خود را در Arion ثبت کنید.</div>
+              <button type="button" className="notepad-add-btn" onClick={() => handleCreatePage(null)}>
+                <Plus size={14} strokeWidth={2.5} /> صفحه جدید
+              </button>
+            </div>
+          )
         ) : (
           <NotepadEditor
             key={activePage.id}

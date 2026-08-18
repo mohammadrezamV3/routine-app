@@ -17,6 +17,7 @@ import {
   setCaretAtOffset,
 } from "@/lib/notepad";
 import { NotepadDatabaseBlock } from "./NotepadDatabaseBlock";
+import { NotepadCodeBlock } from "./NotepadCodeBlock";
 
 export type BlockRowHandlers = {
   onChangeContent: (id: string, leaves: RichLeaf[]) => void;
@@ -33,6 +34,7 @@ export type BlockRowHandlers = {
   onSlashClose: () => void;
   onImageSet: (id: string, url: string) => void;
   onDatabaseCreated: (id: string, databaseId: string) => void;
+  onCodeChange: (id: string, text: string, language: string) => void;
   registerRef: (id: string, el: HTMLElement | null) => void;
 };
 
@@ -42,12 +44,14 @@ function BlockContentEditable({
   className,
   style,
   handlers,
+  locked,
 }: {
   block: NotepadBlock;
   placeholder?: string;
   className?: string;
   style?: React.CSSProperties;
   handlers: BlockRowHandlers;
+  locked?: boolean;
 }) {
   const elRef = useRef<HTMLDivElement>(null);
   const lastEmitted = useRef<string>(JSON.stringify(block.content));
@@ -185,12 +189,12 @@ function BlockContentEditable({
       }}
       className={`notepad-block-text${className ? " " + className : ""}`}
       style={style}
-      contentEditable
+      contentEditable={!locked}
       suppressContentEditableWarning
       data-placeholder={placeholder}
-      onInput={handleInput}
-      onKeyDown={handleKeyDown}
-      onBlur={commit}
+      onInput={locked ? undefined : handleInput}
+      onKeyDown={locked ? undefined : handleKeyDown}
+      onBlur={locked ? undefined : commit}
     />
   );
 }
@@ -200,12 +204,14 @@ export function NotepadBlockRow({
   index,
   numberedIndex,
   editable,
+  locked,
   handlers,
 }: {
   block: NotepadBlock;
   index: number;
   numberedIndex?: number;
   editable: boolean;
+  locked?: boolean;
   handlers: BlockRowHandlers;
 }) {
   const controls = useDragControls();
@@ -213,29 +219,29 @@ export function NotepadBlockRow({
   const inner = (() => {
     switch (block.type) {
       case "heading1":
-        return <BlockContentEditable block={block} placeholder="عنوان ۱" className="np-h1" handlers={handlers} />;
+        return <BlockContentEditable block={block} placeholder="عنوان ۱" className="np-h1" handlers={handlers} locked={locked} />;
       case "heading2":
-        return <BlockContentEditable block={block} placeholder="عنوان ۲" className="np-h2" handlers={handlers} />;
+        return <BlockContentEditable block={block} placeholder="عنوان ۲" className="np-h2" handlers={handlers} locked={locked} />;
       case "heading3":
-        return <BlockContentEditable block={block} placeholder="عنوان ۳" className="np-h3" handlers={handlers} />;
+        return <BlockContentEditable block={block} placeholder="عنوان ۳" className="np-h3" handlers={handlers} locked={locked} />;
       case "quote":
         return (
           <div className="notepad-quote-wrap">
-            <BlockContentEditable block={block} placeholder="نقل‌قول" className="np-quote" handlers={handlers} />
+            <BlockContentEditable block={block} placeholder="نقل‌قول" className="np-quote" handlers={handlers} locked={locked} />
           </div>
         );
       case "bulleted_list":
         return (
           <div className="notepad-list-row">
             <span className="notepad-bullet-dot" />
-            <BlockContentEditable block={block} placeholder="لیست" handlers={handlers} />
+            <BlockContentEditable block={block} placeholder="لیست" handlers={handlers} locked={locked} />
           </div>
         );
       case "numbered_list":
         return (
           <div className="notepad-list-row">
             <span className="notepad-number-marker">{numberedIndex ?? 1}.</span>
-            <BlockContentEditable block={block} placeholder="لیست" handlers={handlers} />
+            <BlockContentEditable block={block} placeholder="لیست" handlers={handlers} locked={locked} />
           </div>
         );
       case "todo":
@@ -244,8 +250,9 @@ export function NotepadBlockRow({
             <button
               type="button"
               className={`notepad-todo-check${block.checked ? " done" : ""}`}
-              onClick={() => handlers.onToggleChecked(block.id)}
+              onClick={locked ? undefined : () => handlers.onToggleChecked(block.id)}
               aria-label={block.checked ? "انجام‌نشده علامت بزن" : "انجام‌شده علامت بزن"}
+              disabled={locked}
             >
               {block.checked && (
                 <svg viewBox="0 0 24 24" fill="none" width="11" height="11">
@@ -258,6 +265,7 @@ export function NotepadBlockRow({
               placeholder="کار جدید"
               className={block.checked ? "notepad-todo-done" : undefined}
               handlers={handlers}
+              locked={locked}
             />
           </div>
         );
@@ -272,7 +280,7 @@ export function NotepadBlockRow({
             >
               <ChevronRight size={14} />
             </button>
-            <BlockContentEditable block={block} placeholder="تاگل" className="notepad-toggle-title" handlers={handlers} />
+            <BlockContentEditable block={block} placeholder="تاگل" className="notepad-toggle-title" handlers={handlers} locked={locked} />
           </div>
         );
       case "divider":
@@ -281,7 +289,7 @@ export function NotepadBlockRow({
             className="notepad-divider-row"
             tabIndex={0}
             onKeyDown={(e) => {
-              if (e.key === "Backspace" || e.key === "Delete") {
+              if (!locked && (e.key === "Backspace" || e.key === "Delete")) {
                 e.preventDefault();
                 handlers.onDelete(block.id);
               }
@@ -291,7 +299,7 @@ export function NotepadBlockRow({
           </div>
         );
       case "image":
-        return <NotepadImageBlock block={block} onImageSet={handlers.onImageSet} />;
+        return <NotepadImageBlock block={block} onImageSet={handlers.onImageSet} locked={locked} />;
       case "database":
         return (
           <NotepadDatabaseBlock
@@ -300,8 +308,10 @@ export function NotepadBlockRow({
             onDatabaseCreated={(databaseId) => handlers.onDatabaseCreated(block.id, databaseId)}
           />
         );
+      case "code":
+        return <NotepadCodeBlock block={block} locked={locked} onChange={handlers.onCodeChange} />;
       default:
-        return <BlockContentEditable block={block} placeholder="برای نوشتن، یا / برای دستورات" handlers={handlers} />;
+        return <BlockContentEditable block={block} placeholder="برای نوشتن، یا / برای دستورات" handlers={handlers} locked={locked} />;
     }
   })();
 
@@ -310,19 +320,23 @@ export function NotepadBlockRow({
   }
 
   return (
-    <Reorder.Item value={block.id} dragListener={false} dragControls={controls} className="notepad-block-row" as="div">
-      <button type="button" className="notepad-block-drag-handle" onPointerDown={(e) => controls.start(e)} aria-label="جابه‌جایی">
-        <GripVertical size={14} />
-      </button>
+    <Reorder.Item value={block.id} dragListener={false} dragControls={locked ? undefined : controls} className="notepad-block-row" as="div">
+      {!locked && (
+        <button type="button" className="notepad-block-drag-handle" onPointerDown={(e) => controls.start(e)} aria-label="جابه‌جایی">
+          <GripVertical size={14} />
+        </button>
+      )}
       <div className="notepad-block-content">{inner}</div>
-      <button type="button" className="notepad-block-delete-btn" onClick={() => handlers.onDelete(block.id)} aria-label="حذفِ بلاک">
-        <Trash2 size={13} />
-      </button>
+      {!locked && (
+        <button type="button" className="notepad-block-delete-btn" onClick={() => handlers.onDelete(block.id)} aria-label="حذفِ بلاک">
+          <Trash2 size={13} />
+        </button>
+      )}
     </Reorder.Item>
   );
 }
 
-function NotepadImageBlock({ block, onImageSet }: { block: NotepadBlock; onImageSet: (id: string, url: string) => void }) {
+function NotepadImageBlock({ block, onImageSet, locked }: { block: NotepadBlock; onImageSet: (id: string, url: string) => void; locked?: boolean }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(file: File) {
@@ -348,11 +362,16 @@ function NotepadImageBlock({ block, onImageSet }: { block: NotepadBlock; onImage
     return (
       <div className="notepad-image-block">
         <img src={block.imageUrl} alt="" />
-        <button type="button" className="notepad-image-change-btn" onClick={() => fileRef.current?.click()}>تغییرِ عکس</button>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+        {!locked && (
+          <>
+            <button type="button" className="notepad-image-change-btn" onClick={() => fileRef.current?.click()}>تغییرِ عکس</button>
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+          </>
+        )}
       </div>
     );
   }
+  if (locked) return <div className="notepad-image-empty notepad-image-empty-locked">بدونِ تصویر</div>;
   return (
     <div className="notepad-image-empty">
       <button type="button" onClick={() => fileRef.current?.click()}>

@@ -748,6 +748,7 @@ model NotepadPage {
   position     Float         @default(0)
   isFavorite   Boolean       @default(false)
   isArchived   Boolean       @default(false) // یعنی توی Trash
+  isLocked     Boolean       @default(false) // ادیت غیرفعاله تا وقتی از منوی Actions باز بشه
   archivedAt   DateTime?
   lastOpenedAt DateTime?
 
@@ -777,12 +778,13 @@ model NotepadBlock {
 
   type          String        // "paragraph" | "heading1" | "heading2" | "heading3" |
                                // "bulleted_list" | "numbered_list" | "todo" | "toggle" |
-                               // "quote" | "divider" | "image" | "database"
+                               // "quote" | "divider" | "image" | "database" | "code"
   // آرایه‌ی RichLeaf — [{ text, bold?, italic?, underline?, strike?, code?, link? }]
   content       Json          @default("[]")
   checked       Boolean       @default(false) // فقط برای todo
   collapsed     Boolean       @default(false) // فقط برای toggle
   imageUrl      String?       // فقط برای image — data-URL فشرده یا لینکِ خارجی
+  language      String?       // فقط برای code — اسمِ زبان برای رنگ‌بندیِ نحوی
 
   position      Float         @default(0)
 

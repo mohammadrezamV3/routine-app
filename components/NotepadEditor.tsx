@@ -2,16 +2,26 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
-import { ChevronLeft, MoreHorizontal, Plus, Star } from "lucide-react";
+import { ChevronLeft, ImagePlus, Lock, MoreHorizontal, Plus, Star } from "lucide-react";
 import {
   BlockType, NotepadBlock, NotepadPage, NotepadPageWithBlocks, RichLeaf,
-  leavesToPlainText, makeBlock, midPosition, plainTextToLeaves, saveNotepadBlocks,
+  blocksToPlainText, leavesToPlainText, makeBlock, midPosition, plainTextToLeaves, saveNotepadBlocks,
   setCaretAtOffset, updateNotepadPage, NOTEPAD_TITLE_MAX,
 } from "@/lib/notepad";
+import { getSetting, setSetting } from "@/lib/storage";
 import { NotepadBlockRow, BlockRowHandlers } from "./NotepadBlockRow";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { NotepadFormatToolbar } from "./NotepadFormatToolbar";
 import { NotepadIconPicker } from "./NotepadIconPicker";
+
+type NotepadFont = "default" | "serif" | "mono";
+type NotepadLayoutSetting = { font: NotepadFont; wide: boolean; smallText: boolean };
+const DEFAULT_LAYOUT: NotepadLayoutSetting = { font: "default", wide: false, smallText: false };
+const FONT_OPTIONS: { id: NotepadFont; label: string }[] = [
+  { id: "default", label: "پیش‌فرض" },
+  { id: "serif", label: "سریف" },
+  { id: "mono", label: "مونو" },
+];
 
 type SlashState = { blockId: string; query: string; anchorRect: DOMRect } | null;
 
@@ -40,26 +50,47 @@ export function NotepadEditor({
 }) {
   const [title, setTitle] = useState(page.title);
   const [icon, setIcon] = useState(page.icon);
+  const [coverUrl, setCoverUrl] = useState(page.coverUrl);
+  const [isLocked, setIsLocked] = useState(page.isLocked);
   const [blocks, setBlocks] = useState<NotepadBlock[]>(page.blocks);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [slash, setSlash] = useState<SlashState>(null);
   const [pageMenuOpen, setPageMenuOpen] = useState(false);
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [layout, setLayout] = useState<NotepadLayoutSetting>(DEFAULT_LAYOUT);
+  const [toast, setToast] = useState<string | null>(null);
 
   const editorScopeRef = useRef<HTMLDivElement>(null);
   const blockRefs = useRef(new Map<string, HTMLElement>());
   const pendingFocus = useRef<{ id: string; offset: number } | null>(null);
   const skipNextSave = useRef(true);
+  const coverFileRef = useRef<HTMLInputElement>(null);
+
+  function showToast(text: string) {
+    setToast(text);
+    setTimeout(() => setToast((t) => (t === text ? null : t)), 2200);
+  }
 
   // ناوبری به یه صفحه‌ی دیگه — کلِ استیتِ محلی از سرور reseed می‌شه
   useEffect(() => {
     setTitle(page.title);
     setIcon(page.icon);
+    setCoverUrl(page.coverUrl);
+    setIsLocked(page.isLocked);
     setBlocks(page.blocks.length ? page.blocks : [makeBlock(page.id, "paragraph", 1000)]);
     skipNextSave.current = true;
     setSaveStatus("idle");
+    getSetting<NotepadLayoutSetting>(`notepad-layout:${page.id}`, DEFAULT_LAYOUT).then(setLayout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page.id]);
+
+  function patchLayout(patch: Partial<NotepadLayoutSetting>) {
+    setLayout((prev) => {
+      const next = { ...prev, ...patch };
+      setSetting(`notepad-layout:${page.id}`, next);
+      return next;
+    });
+  }
 
   // اتوسیوِ بلاک‌ها — دیبانس‌شده، بعدِ هر تغییرِ واقعیِ blocks (نه seed اولیه).
   // یه قفلِ ساده هم داره (isSavingRef/saveAgainRef) تا دو درخواستِ PUT هیچ‌وقت
@@ -102,6 +133,57 @@ export function NotepadEditor({
       setSaveStatus("saved");
       if (updated) onPageMetaChange(updated);
     }, 500);
+  }
+
+  async function setCover(url: string | null) {
+    setCoverUrl(url);
+    const updated = await updateNotepadPage(page.id, { coverUrl: url });
+    if (updated) onPageMetaChange(updated);
+  }
+
+  function handleCoverFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const canvas = document.createElement("canvas");
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 1400;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setCover(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function toggleLock() {
+    const next = !isLocked;
+    setIsLocked(next);
+    const updated = await updateNotepadPage(page.id, { isLocked: next });
+    if (updated) onPageMetaChange(updated);
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/notepad/${page.id}`);
+      showToast("لینک کپی شد");
+    } catch { showToast("کپی نشد"); }
+  }
+
+  async function copyContents() {
+    try {
+      await navigator.clipboard.writeText(blocksToPlainText(blocks));
+      showToast("محتوای صفحه کپی شد");
+    } catch { showToast("کپی نشد"); }
+  }
+
+  function viewBreadcrumbPath() {
+    if (!breadcrumb.length) { showToast("این صفحه زیرِ هیچ صفحه‌ای نیست"); return; }
+    showToast(breadcrumb.map((p) => p.title || "بدونِ عنوان").join(" / "));
   }
 
   // synchronous (قبل از پینت) نه requestAnimationFrame — چون یه keydown بعدی
@@ -158,6 +240,7 @@ export function NotepadEditor({
     onToggleCollapsed: (id) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, collapsed: !b.collapsed } : b))),
     onImageSet: (id, url) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, imageUrl: url } : b))),
     onDatabaseCreated: (id, databaseId) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, databaseId } : b))),
+    onCodeChange: (id, text, language) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content: plainTextToLeaves(text), language } : b))),
     onConvertType: (id, type) => {
       setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, type, content: [], checked: false } : b)));
       // بعدِ خالی‌کردنِ محتوا، innerHTML ریست می‌شه و caret نامعتبر می‌مونه —
@@ -279,9 +362,34 @@ export function NotepadEditor({
   }
 
   let numberedCounter = 0;
+  const editorClassName = [
+    "notepad-editor",
+    layout.font !== "default" && `notepad-font-${layout.font}`,
+    layout.wide && "notepad-editor-wide",
+    layout.smallText && "notepad-editor-small-text",
+  ].filter(Boolean).join(" ");
 
   return (
-    <div className="notepad-editor" ref={editorScopeRef}>
+    <div className={editorClassName} ref={editorScopeRef}>
+      {coverUrl && (
+        <div className="notepad-cover">
+          <img src={coverUrl} alt="" />
+          {!isLocked && (
+            <div className="notepad-cover-actions">
+              <button type="button" onClick={() => coverFileRef.current?.click()}>تغییرِ کاور</button>
+              <button type="button" onClick={() => setCover(null)}>حذف</button>
+            </div>
+          )}
+        </div>
+      )}
+      <input
+        ref={coverFileRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => e.target.files?.[0] && handleCoverFile(e.target.files[0])}
+      />
+
       {breadcrumb.length > 0 && (
         <div className="notepad-breadcrumb">
           {breadcrumb.map((p, i) => (
@@ -294,7 +402,10 @@ export function NotepadEditor({
       )}
 
       <div className="notepad-editor-head">
-        <div className="notepad-save-status">{saveStatus === "saving" ? "در حال ذخیره…" : saveStatus === "saved" ? "ذخیره شد" : ""}</div>
+        <div className="notepad-save-status">
+          {saveStatus === "saving" ? "در حال ذخیره…" : saveStatus === "saved" ? "ذخیره شد" : ""}
+          {isLocked && <span className="notepad-locked-badge"><Lock size={10} /> قفل</span>}
+        </div>
         <div className="notepad-editor-head-actions">
           <button type="button" className={`notepad-fav-btn${page.isFavorite ? " on" : ""}`} onClick={onRequestToggleFavorite} aria-label="سنجاق">
             <Star size={15} fill={page.isFavorite ? "currentColor" : "none"} />
@@ -306,9 +417,55 @@ export function NotepadEditor({
             {pageMenuOpen && (
               <>
                 <div className="fixed inset-0 z-[19]" onClick={() => setPageMenuOpen(false)} />
-                <div className="notepad-page-menu">
+                <div className="notepad-page-menu thin-scroll">
+                  <div className="notepad-page-menu-fonts">
+                    {FONT_OPTIONS.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={`notepad-font-swatch notepad-font-${f.id}${layout.font === f.id ? " active" : ""}`}
+                        onClick={() => patchLayout({ font: f.id })}
+                      >
+                        <span className="notepad-font-swatch-sample">Ag</span>
+                        <span className="notepad-font-swatch-label">{f.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="notepad-page-menu-divider" />
+                  <button type="button" onClick={() => { setPageMenuOpen(false); copyLink(); }}>کپیِ لینک</button>
+                  <button type="button" onClick={() => { setPageMenuOpen(false); copyContents(); }}>کپیِ محتوای صفحه</button>
                   <button type="button" onClick={() => { setPageMenuOpen(false); onRequestDuplicate(); }}>کپی از این صفحه</button>
                   <button type="button" onClick={() => { setPageMenuOpen(false); onRequestMove(); }}>جابه‌جاکردن…</button>
+                  <div className="notepad-page-menu-divider" />
+                  {coverUrl ? (
+                    <>
+                      <button type="button" onClick={() => { setPageMenuOpen(false); coverFileRef.current?.click(); }}>تغییرِ کاور</button>
+                      <button type="button" onClick={() => { setPageMenuOpen(false); setCover(null); }}>حذفِ کاور</button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => { setPageMenuOpen(false); coverFileRef.current?.click(); }}>افزودنِ کاور</button>
+                  )}
+                  <button type="button" onClick={() => { setPageMenuOpen(false); viewBreadcrumbPath(); }}>دیدنِ مسیر</button>
+                  <div className="notepad-page-menu-divider" />
+                  <div className="stat-toggle-row">
+                    <span className="notepad-page-menu-toggle-label">عرضِ کامل</span>
+                    <button type="button" className={`ios-toggle${layout.wide ? " on" : ""}`} onClick={() => patchLayout({ wide: !layout.wide })}>
+                      <span className="ios-toggle-knob" />
+                    </button>
+                  </div>
+                  <div className="stat-toggle-row">
+                    <span className="notepad-page-menu-toggle-label">متنِ کوچک</span>
+                    <button type="button" className={`ios-toggle${layout.smallText ? " on" : ""}`} onClick={() => patchLayout({ smallText: !layout.smallText })}>
+                      <span className="ios-toggle-knob" />
+                    </button>
+                  </div>
+                  <div className="stat-toggle-row">
+                    <span className="notepad-page-menu-toggle-label">قفلِ صفحه</span>
+                    <button type="button" className={`ios-toggle${isLocked ? " on" : ""}`} onClick={toggleLock}>
+                      <span className="ios-toggle-knob" />
+                    </button>
+                  </div>
+                  <div className="notepad-page-menu-divider" />
                   <button type="button" className="notepad-page-menu-danger" onClick={() => { setPageMenuOpen(false); onRequestDelete(); }}>انتقال به سطلِ زباله</button>
                 </div>
               </>
@@ -318,10 +475,14 @@ export function NotepadEditor({
       </div>
 
       <div className="notepad-title-row">
-        <button type="button" className="notepad-icon-btn" onClick={() => setIconPickerOpen((v) => !v)}>
+        <button
+          type="button"
+          className={`notepad-icon-btn${coverUrl ? " overlap" : ""}`}
+          onClick={() => !isLocked && setIconPickerOpen((v) => !v)}
+        >
           {icon || "📄"}
         </button>
-        {iconPickerOpen && (
+        {iconPickerOpen && !isLocked && (
           <NotepadIconPicker
             onPick={(emoji) => { setIcon(emoji); setIconPickerOpen(false); scheduleMetaSave({ icon: emoji }); }}
             onClose={() => setIconPickerOpen(false)}
@@ -333,6 +494,7 @@ export function NotepadEditor({
           placeholder="بدونِ عنوان"
           maxLength={NOTEPAD_TITLE_MAX}
           value={title}
+          readOnly={isLocked}
           onChange={(e) => { setTitle(e.target.value); scheduleMetaSave({ title: e.target.value }); }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -343,6 +505,11 @@ export function NotepadEditor({
           }}
         />
       </div>
+      {!coverUrl && !isLocked && (
+        <button type="button" className="notepad-add-cover-btn" onClick={() => coverFileRef.current?.click()}>
+          <ImagePlus size={12} /> افزودنِ کاور
+        </button>
+      )}
 
       <Reorder.Group axis="y" values={topLevel.map((b) => b.id)} onReorder={handleTopLevelReorder} as="div" className="notepad-blocks-list">
         {topLevel.map((block) => {
@@ -352,7 +519,7 @@ export function NotepadEditor({
 
           return (
             <div key={block.id}>
-              <NotepadBlockRow block={block} index={0} numberedIndex={numberedIndex} editable handlers={handlers} />
+              <NotepadBlockRow block={block} index={0} numberedIndex={numberedIndex} editable locked={isLocked} handlers={handlers} />
               {block.type === "toggle" && !block.collapsed && (
                 <Reorder.Group
                   axis="y"
@@ -362,11 +529,13 @@ export function NotepadEditor({
                   className="notepad-toggle-children"
                 >
                   {childrenOf(block.id).map((child) => (
-                    <NotepadBlockRow key={child.id} block={child} index={0} editable handlers={handlers} />
+                    <NotepadBlockRow key={child.id} block={child} index={0} editable locked={isLocked} handlers={handlers} />
                   ))}
-                  <button type="button" className="notepad-toggle-add-child" onClick={() => insertBlockAfter(null, "paragraph", [], block.id)}>
-                    <Plus size={12} /> افزودن به داخلِ تاگل
-                  </button>
+                  {!isLocked && (
+                    <button type="button" className="notepad-toggle-add-child" onClick={() => insertBlockAfter(null, "paragraph", [], block.id)}>
+                      <Plus size={12} /> افزودن به داخلِ تاگل
+                    </button>
+                  )}
                 </Reorder.Group>
               )}
             </div>
@@ -374,7 +543,7 @@ export function NotepadEditor({
         })}
       </Reorder.Group>
 
-      <div className="notepad-editor-bottom-space" onClick={appendParagraphAtEnd} />
+      {!isLocked && <div className="notepad-editor-bottom-space" onClick={appendParagraphAtEnd} />}
 
       {slash && (
         <SlashCommandMenu
@@ -385,6 +554,7 @@ export function NotepadEditor({
         />
       )}
       <NotepadFormatToolbar containerRef={editorScopeRef} />
+      {toast && <div className="notepad-toast">{toast}</div>}
     </div>
   );
 }
