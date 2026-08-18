@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Menu, StickyNote } from "lucide-react";
+import { Menu, Plus, StickyNote } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { NotepadSidebar } from "./NotepadSidebar";
 import { NotepadEditor } from "./NotepadEditor";
@@ -139,7 +139,7 @@ export function NotepadWorkspace() {
   }
 
   return (
-    <div className="notepad-workspace">
+    <div className="notepad-workspace dash-breakout">
       <NotepadSidebar
         pages={pages || []}
         activePageId={activePageId}
@@ -159,10 +159,12 @@ export function NotepadWorkspace() {
 
         {!activePageId || !activePage ? (
           <div className="notepad-landing">
-            <StickyNote size={30} className="text-dash-muted" />
-            <div className="notepad-landing-title">Arion Notepad</div>
-            <div className="notepad-landing-sub">یک Workspace شخصی برای نوشتن، سازمان‌دادن، و فکرکردن</div>
-            <button type="button" className="notepad-add-btn" onClick={() => handleCreatePage(null)}>صفحه‌ی جدید بساز</button>
+            <StickyNote size={26} strokeWidth={1.5} className="text-dash-muted" />
+            <div className="notepad-landing-title">شروع به نوشتن کنید</div>
+            <div className="notepad-landing-sub">ایده‌ها، یادداشت‌ها و برنامه‌های خود را در Arion ثبت کنید.</div>
+            <button type="button" className="notepad-add-btn" onClick={() => handleCreatePage(null)}>
+              <Plus size={14} strokeWidth={2.5} /> صفحه جدید
+            </button>
           </div>
         ) : (
           <NotepadEditor
