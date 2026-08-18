@@ -373,7 +373,6 @@ export default function WeeklyPage() {
               d.setDate(now.getDate() + (o.jsDay - now.getDay()));
               const dDoneTasks = weekDaily[isoLocal(d)]?.tasks ?? {};
               const items = tasksForDate(d, opts);
-              const doneCount = items.filter((t) => dDoneTasks[t.id]).length;
               const isToday = o.jsDay === now.getDay();
               const isOpen = openIdx === idx;
               const fillPct = Math.round(dayFillFraction(o.jsDay, WEEK_ORDER, now, awakeStartMin, awakeEndMin) * 1000) / 10;
@@ -394,13 +393,6 @@ export default function WeeklyPage() {
                 <div key={o.jsDay} className={`week-day${isOpen ? " open" : ""}`}>
                   <div className="week-day-head" onClick={() => setOpenIdx(isOpen ? null : idx)}>
                     <span className={`week-day-name${isToday ? " today" : ""}`}>{o.name}</span>
-                    {items.length ? (
-                      <span className={`week-day-summary${doneCount === items.length ? " done" : ""}`}>
-                        {faNum(doneCount)}/{faNum(items.length)}
-                      </span>
-                    ) : (
-                      <span className="week-day-summary empty">—</span>
-                    )}
                     <span className="week-day-chevron" />
                   </div>
                   <AnimatePresence initial={false}>

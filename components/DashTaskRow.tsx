@@ -50,7 +50,7 @@ export function DashTaskRow({
 
   return (
     <motion.div
-      className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-dash-surface2 sm:gap-4 sm:px-3 sm:py-3.5"
+      className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
     >
       <div className="relative shrink-0" ref={menuRef}>
         <button
@@ -109,14 +109,14 @@ export function DashTaskRow({
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {task.tag && (
-            <span className="w-[48px] shrink-0 truncate rounded-full border border-dash-border bg-dash-surface2 px-1.5 py-0.5 text-center text-[9px] font-semibold text-dash-muted2 sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
+            <span className="w-[48px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-1.5 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
               {task.tag}
             </span>
           )}
 
           <DashImportanceBadge importance={task.importance} />
 
-          <span className="shrink-0 font-mono text-[10.5px] text-dash-muted2 sm:text-[13px]" dir="ltr">
+          <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
             {toEnDigits(task.time)}
           </span>
         </div>
@@ -148,7 +148,7 @@ export function DashTaskRow({
         )}
         style={
           task.done
-            ? { background: "var(--accent)", borderColor: "var(--accent)" }
+            ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
             : task.dayPast
             ? { background: "#E05252", borderColor: "#E05252" }
             : { background: "transparent", borderColor: "var(--muted)" }

@@ -29,7 +29,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
               const peak = s.pct > 0 && s.pct === maxPct;
               return (
                 <div key={s.iso} className="flex flex-1 flex-col items-center gap-1 sm:gap-1.5">
-                  <span className={cn("text-[10px] font-bold sm:text-[11.5px]", peak ? "text-dash-green" : "text-dash-text")}>{s.pct}٪</span>
+                  <span className={cn("text-[9px] font-semibold sm:text-[10px]", peak ? "text-dash-green" : "text-dash-muted")}>{s.pct}٪</span>
                   <div className="flex h-24 w-full items-end justify-center sm:h-28">
                     <motion.div
                       initial={{ height: 0 }}
@@ -38,11 +38,11 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
                       className="w-2 rounded-full sm:w-2.5"
                       style={{
                         background: peak ? "linear-gradient(180deg, var(--accent-hover), var(--accent))" : "rgba(var(--accent-rgb),.45)",
-                        boxShadow: peak ? "0 0 6px rgba(var(--accent-rgb),.35)" : "none",
+                        boxShadow: peak ? "0 0 12px rgba(var(--accent-rgb),.6)" : "none",
                       }}
                     />
                   </div>
-                  <span className="text-[9.5px] text-dash-muted2 sm:text-[11.5px]">{s.short}</span>
+                  <span className="text-[9.5px] text-dash-muted sm:text-[11.5px]">{s.short}</span>
                 </div>
               );
             })}

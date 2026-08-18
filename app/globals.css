@@ -14,28 +14,26 @@
      تقریباً همه‌ی دکمه/بردر/سایه‌ها از همینا رد می‌شن، پس عوض‌کردن این دوتا
      رنگ کل سایت رو خودکار با هم عوض می‌کنه. */
   :root{
-    --bg:#0D1110;
-    --bg-rgb:13,17,16;
-    --text:#F2F5F3;
-    --muted:#A0AAA4;
-    --muted2:#68736D;
-    --accent:#36D98A;
-    --accent-rgb:54,217,138;
+    --bg:#0B0F0D;
+    --bg-rgb:11,15,13;
+    --text:#F1F5F3;
+    --muted:#8B9690;
+    --muted2:#4C564F;
+    --accent:#39D98A;
+    --accent-rgb:57,217,138;
     /* هاور/اکتیوِ اکشن‌های اصلی (CTA، آیتم فعالِ منو) یک پله تیره‌تر از اکسنت پایه —
        تمایزِ واقعیِ رنگ روی هاور، نه فقط تغییرِ سایه/شفافیت */
-    --accent-hover:#1FAF6B;
-    --accent-hover-rgb:31,175,107;
+    --accent-hover:#2FC47B;
+    --accent-hover-rgb:47,196,123;
     --accent-dim:rgba(var(--accent-rgb),.20);
     --accent-soft:#7EE6B3;
     --accent-deep:#1A6238;
-    /* سه سطحِ روشنیِ جدا از هم برای hierarchy واقعی: صفحه → کارت → آیتم/inner
-       card — هرکدوم یه‌ذره روشن‌تر از قبلی، نه فقط شیشه‌ی نیمه‌شفاف روی سیاه */
-    --card-bg:#151B18;
-    --card-bg-rgb:21,27,24;
-    --surface-2:#19211D;
-    --surface-2-rgb:25,33,29;
-    --input-bg:#121815;
-    --line:#26312B;
+    /* کارت (پس‌زمینه‌ی داشبورد/تایل‌های KPI) و اینپوت — دو سطحِ روشنیِ جدا از
+       --bg، برای عمقِ بصریِ واقعی به‌جای فقط شیشه‌ی نیمه‌شفاف روی سیاه */
+    --card-bg:#121815;
+    --card-bg-rgb:18,24,21;
+    --input-bg:#151C18;
+    --line:#202923;
     --sun:#FFC94A;
     --moon:#7B4FE0;
     /* آبی — رنگ دومِ شب، مکمل سبز برای لحظه‌های «ویژه» (پلن پیشنهادی، استریک) */
@@ -58,8 +56,6 @@
     --accent-deep:#6B3F17;
     --card-bg:#F8ECD8;
     --card-bg-rgb:248,236,216;
-    --surface-2:#F6E7CD;
-    --surface-2-rgb:246,231,205;
     --line:#E4D6B8;
     --sun:#FFC94A;
     --moon:#7B4FE0;
@@ -998,12 +994,16 @@
   .tm-item-list a svg, .tm-extra a svg{ flex-shrink:0; opacity:.6; }
   .tm-item-list a:hover svg, .tm-extra a:hover svg{ opacity:1; }
 
-  /* کارتِ برنامه‌هفتگی — سطحِ کارتِ استانداردِ داشبورد (همون --card-bg/--line)
-     به‌جای شیشه‌ی نیمه‌شفافِ قبلی؛ سایه فقط برای عمقِ ملایم، نه گلو. */
+  /* weekly schedule box — لیکوئید گلس (همون افکتِ wsearch-box/pcard-face-back،
+     با LiquidBlobLayers پشتِ محتوا)؛ به همین خاطر position:relative +
+     overflow:hidden لازمه (تا بلابل‌ها clip بشن)، و محتوای واقعی باید
+     position:relative + z-index بالاتر از لایه‌ی بلاب‌ها داشته باشه
+     (.weekly-glass-content) وگرنه بلاب‌ها روی متن می‌افتن. */
   .weekly-glass{
-    position:relative;
-    background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
-    box-shadow:0 4px 16px rgba(0,0,0,.18);
+    position:relative; overflow:hidden;
+    background:rgba(var(--bg-rgb), .042); border:1px solid var(--line); border-radius:22px;
+    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    box-shadow:0 20px 50px rgba(0,0,0,.20);
     padding:18px 20px; margin-top:14px;
   }
   .weekly-glass table{margin:0;}
@@ -1097,15 +1097,6 @@
   .week-day-head{display:flex; align-items:center; gap:10px; padding:13px 0;}
   .week-day-name{font-weight:600; font-size:13px; flex:1;}
   .week-day-name.today{color:var(--accent);}
-  /* خلاصه‌ی وضعیتِ روز (تعداد انجام‌شده/کل) — همون لحظه‌ای که ردیف بسته‌ست
-     هم یه وضعیتِ کوتاه دیده بشه، نه فقط اسمِ روز + فلش */
-  .week-day-summary{
-    flex-shrink:0; font-family:var(--font-plexmono), monospace; font-size:11px; font-weight:600;
-    color:var(--muted); padding:3px 9px; border-radius:999px;
-    background:var(--surface-2); border:1px solid var(--line);
-  }
-  .week-day-summary.done{ color:var(--accent); border-color:rgba(var(--accent-rgb),.3); }
-  .week-day-summary.empty{ color:var(--muted2); }
   .week-day-chevron{
     width:8px; height:8px; flex-shrink:0; border-right:1.5px solid var(--muted2); border-bottom:1.5px solid var(--muted2);
     transform:rotate(45deg); transition:transform .25s ease;
@@ -1123,6 +1114,7 @@
   .wt-fill-green{
     position:absolute; top:0; right:0; height:100%; width:var(--fill); background:linear-gradient(90deg, var(--accent-hover), var(--accent));
     transition:width .6s ease; border-radius:3px;
+    box-shadow:0 0 6px rgba(var(--accent-rgb),.75), 0 0 14px rgba(var(--accent-rgb),.4);
   }
   .wt-item{
     position:absolute; top:0; right:var(--pos); transform:translateX(50%);
@@ -1141,8 +1133,9 @@
     border:2px solid var(--accent); box-sizing:border-box;
     position:relative; z-index:3; margin-bottom:-2.5px;
     display:flex; align-items:center; justify-content:center; color:var(--accent);
+    box-shadow:0 0 6px rgba(var(--accent-rgb),.45);
   }
-  .wt-dot-done{background:var(--accent); color:#fff;}
+  .wt-dot-done{background:var(--accent); color:#fff; box-shadow:0 0 8px rgba(var(--accent-rgb),.85), 0 0 16px rgba(var(--accent-rgb),.4);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
   .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-plexmono), monospace; margin-bottom:3px; white-space:nowrap;}
@@ -1631,11 +1624,15 @@
   }
   .wsearch-fab-menu.open{opacity:1; transform:translateY(0) scale(1); pointer-events:auto;}
 
-  /* منوی سه‌نقطه‌ی «برنامه‌های امروز» — سطحِ سومِ hierarchy (surface-2)، توپر
-     و بدونِ نیاز به backdrop-blur (برخلافِ قبل که با bg-dash-card نیمه‌شفاف
-     پشتش دیده می‌شد). */
+  /* منوی سه‌نقطه‌ی «برنامه‌های امروز» — bg-dash-card (۲٪ سفید) + backdrop-blur
+     پشتش تقریباً شفاف دیده می‌شد. یه بک‌گراندِ تقریباً توپر مثلِ بقیه‌ی
+     منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
   .dash-context-menu{
-    background:var(--surface-2);
+    background:linear-gradient(180deg, rgba(9,10,11,.98), rgba(6,7,8,.99));
+    backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  }
+  body[data-theme="light"] .dash-context-menu{
+    background:rgba(255,255,255,.97);
   }
   .wsearch-fab-option{
     display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:9px; cursor:pointer;

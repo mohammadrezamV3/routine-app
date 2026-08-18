@@ -24,14 +24,14 @@ export function DashHeader({
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="flex flex-row items-center justify-start gap-3 text-right sm:items-start sm:gap-8"
     >
-      <div className="flex flex-col items-center gap-1.5">
+      <div className="flex flex-col items-center gap-1">
         <span className="sm:hidden">
           <DashProgressCircle value={progress} size={52} strokeWidth={4.5} />
         </span>
         <span className="hidden sm:inline-block">
           <DashProgressCircle value={progress} size={72} strokeWidth={6} />
         </span>
-        <span className="whitespace-nowrap text-[9px] font-medium tracking-wide text-dash-muted2 sm:text-[11px]">{progressLabel}</span>
+        <span className="whitespace-nowrap text-[9px] text-dash-muted sm:text-[11px]">{progressLabel}</span>
       </div>
       <div>
         <h1 className="text-[19px] font-bold text-dash-text sm:text-[32px]">{title}</h1>

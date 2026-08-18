@@ -49,7 +49,7 @@ export function DashProgressCircle({
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c * (1 - clamped / 100) }}
           transition={{ duration: 1, ease: "easeOut" }}
-          style={{ filter: "drop-shadow(0 0 3px rgba(var(--accent-rgb),.3))" }}
+          style={{ filter: "drop-shadow(0 0 6px rgba(var(--accent-rgb),.55))" }}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">

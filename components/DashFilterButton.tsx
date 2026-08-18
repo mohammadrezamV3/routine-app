@@ -22,10 +22,13 @@ export function DashFilterButton({
       onClick={onClick}
       className={cn(
         "flex shrink-0 items-center gap-1 rounded-dash border px-2.5 py-1.5 text-[11px] font-semibold transition sm:gap-1.5 sm:px-4 sm:py-2.5 sm:text-[13px]",
-        active
-          ? "border-transparent bg-dash-green text-dash-bg"
-          : "border-dash-border bg-dash-card text-dash-muted hover:border-[rgba(var(--accent-rgb),.25)] hover:text-dash-text"
+        active ? "text-dash-bg" : "border-dash-border bg-dash-card text-dash-muted hover:border-white/10 hover:text-dash-text"
       )}
+      style={
+        active
+          ? { background: "var(--accent)", borderColor: "rgba(var(--accent-rgb),.4)", boxShadow: "0 0 8px rgba(var(--accent-rgb),.25)" }
+          : undefined
+      }
     >
       {icon}
       {label}

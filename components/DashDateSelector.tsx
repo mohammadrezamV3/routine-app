@@ -128,7 +128,8 @@ export function DashDateSelector({
 
   return (
     <div
-      className={cn("flex flex-1 items-center gap-1 overflow-hidden rounded-dash border border-dash-border bg-dash-card", className)}
+      className={cn("flex flex-1 items-center gap-1 overflow-hidden rounded-dash border border-dash-border backdrop-blur-xl", className)}
+      style={{ background: "rgba(var(--bg-rgb), .16)" }}
     >
       <button
         type="button"
@@ -150,16 +151,19 @@ export function DashDateSelector({
                 type="button"
                 onClick={() => onSelect(d.iso)}
                 className={cn(
-                  "flex min-w-[62px] shrink-0 flex-col items-center gap-0.5 rounded-2xl border px-1.5 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
-                  active
-                    ? "border-[rgba(var(--accent-rgb),.4)] bg-[rgba(var(--accent-rgb),.12)]"
-                    : "border-transparent text-dash-muted hover:bg-dash-surface2"
+                  "flex min-w-[62px] shrink-0 flex-col items-center gap-0.5 rounded-2xl px-1.5 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
+                  active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
                 )}
+                style={
+                  active
+                    ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
+                    : undefined
+                }
               >
-                <span className={cn("text-[10.5px] font-semibold sm:text-[13px]", active ? "text-dash-green" : "text-dash-text")}>
+                <span className={cn("text-[10.5px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
                   {d.weekday}
                 </span>
-                <span className={cn("text-[9.5px] sm:text-[12px]", active ? "text-[rgba(var(--accent-rgb),.8)]" : "text-dash-muted2")}>{d.dateLabel}</span>
+                <span className={cn("text-[9.5px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
               </button>
             );
           })}
