@@ -3068,66 +3068,33 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
    ============================================================================ */
 
 .notepad-workspace{
-  --np-bg:#161619;
-  --np-canvas:#1b1b1f;
-  --np-surface:#202024;
-  --np-surface-hover:#27272c;
-  --np-border:#2d2d33;
-  --np-border-soft:#252529;
-  --np-text:#e9e9ec;
-  --np-muted:#9d9da6;
-  --np-muted2:#616168;
-  --np-accent:#7C6AF2;
-  --np-accent-rgb:124,106,242;
-  --np-accent-soft:rgba(124,106,242,.16);
-  --np-accent-ink:#ffffff;
-  --np-danger:#EF5A5F;
+  --np-surface:var(--card-bg);
+  --np-canvas:var(--input-bg);
+  --np-surface-hover:rgba(255,255,255,.05);
+  --np-border:var(--line);
+  --np-border-soft:var(--line);
+  --np-text:var(--text);
+  --np-muted:var(--muted);
+  --np-muted2:var(--muted2);
+  --np-accent:var(--accent);
+  --np-accent-rgb:var(--accent-rgb);
+  --np-accent-soft:var(--accent-dim);
+  --np-accent-ink:var(--bg);
+  --np-danger:#E05252;
   --np-warn:#E0A339;
-  --np-good:#3FB37F;
-  --np-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
-  --np-radius-sm:6px;
-  --np-radius-md:8px;
-  --np-radius-lg:10px;
+  --np-shadow:0 8px 28px rgba(0,0,0,.28);
+  --np-radius-sm:8px;
+  --np-radius-md:12px;
+  --np-radius-lg:16px;
 
   display:flex; align-items:flex-start; gap:0;
-  margin:0 -20px; width:calc(100% + 40px);
-  min-height:calc(100vh - 150px); min-height:calc(100dvh - 150px);
-  background:var(--np-bg);
+  min-height:calc(100vh - 120px); min-height:calc(100dvh - 120px);
   font-family:var(--font-vazir), sans-serif;
-  border-top:1px solid var(--np-border-soft);
 }
 body[data-theme="light"] .notepad-workspace{
-  --np-bg:#ffffff;
-  --np-canvas:#ffffff;
-  --np-surface:#f7f7f8;
-  --np-surface-hover:#eeeef0;
-  --np-border:#e5e5e9;
-  --np-border-soft:#ececef;
-  --np-text:#20212a;
-  --np-muted:#6c6d78;
-  --np-muted2:#a2a3ac;
-  --np-accent:#6552E0;
-  --np-accent-rgb:101,82,224;
-  --np-accent-soft:rgba(101,82,224,.10);
-  --np-accent-ink:#ffffff;
-  --np-danger:#D8434A;
-  --np-warn:#B9791E;
-  --np-good:#25925E;
-  --np-shadow:0 1px 2px rgba(20,20,30,.06), 0 8px 24px rgba(20,20,30,.06);
+  --np-surface-hover:rgba(0,0,0,.035);
 }
 .notepad-workspace *{ box-sizing:border-box; }
-
-/* .wrap (لایوت‌ سراسری) کلِ محتوای هر صفحه رو به ستونِ ۶۲۰پیکسلیِ وسط‌چین
-   محدود می‌کنه — همون ترفندِ breakoutِ .dash-breakout/.exercise-dash-breakout
-   رو اینجا هم تکرار می‌کنیم تا Notepad روی دسکتاپ واقعاً بزرگ/immersive بشه،
-   نه گیرافتاده توی همون ستونِ باریک. موبایل/تبلت دست‌نخورده. */
-@media (min-width:1024px){
-  .notepad-workspace{
-    --dash-w: min(1400px, calc(100vw - 64px));
-    width: var(--dash-w); max-width: var(--dash-w);
-    margin-inline: calc((620px - var(--dash-w)) / 2);
-  }
-}
 
 /* --- سایدبار --- */
 .notepad-sidebar-overlay{
@@ -3136,11 +3103,10 @@ body[data-theme="light"] .notepad-workspace{
 }
 .notepad-sidebar-overlay.open{ opacity:1; pointer-events:auto; }
 .notepad-sidebar{
-  width:264px; flex-shrink:0;
-  background:var(--np-surface); border-left:1px solid var(--np-border-soft);
-  padding:14px 10px; display:flex; flex-direction:column; gap:6px;
+  width:224px; flex-shrink:0;
+  background:transparent; border-left:1px solid var(--np-border);
+  padding:16px 8px; display:flex; flex-direction:column; gap:6px;
   position:sticky; top:0; align-self:stretch;
-  min-height:calc(100vh - 150px); min-height:calc(100dvh - 150px);
 }
 .notepad-sidebar-head{ display:none; align-items:center; justify-content:space-between; padding:2px 6px 8px; }
 .notepad-sidebar-title{
@@ -3150,16 +3116,16 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-sidebar-close{ background:none; border:none; color:var(--np-muted); padding:4px; cursor:pointer; }
 .notepad-sidebar-search-btn, .notepad-sidebar-new-btn{
   display:flex; align-items:center; gap:8px; width:100%; padding:7px 9px; border-radius:var(--np-radius-md);
-  background:transparent; border:1px solid transparent; color:var(--np-muted);
+  background:transparent; border:none; color:var(--np-muted);
   font-family:var(--font-vazir), sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
-  transition:background .12s ease, color .12s ease, border-color .12s ease;
+  transition:background .12s ease, color .12s ease;
 }
 .notepad-sidebar-search-btn:hover, .notepad-sidebar-new-btn:hover{ color:var(--np-text); background:var(--np-surface-hover); }
 .notepad-sidebar-search-kbd{
   margin-right:auto; font-family:var(--font-plexmono), monospace; font-size:9px; color:var(--np-muted2);
   border:1px solid var(--np-border); border-radius:4px; padding:1px 5px;
 }
-.notepad-sidebar-new-btn{ color:var(--np-accent); font-weight:700; border:1px dashed var(--np-border); }
+.notepad-sidebar-new-btn{ color:var(--np-accent); font-weight:700; }
 .notepad-sidebar-scroll{ overflow-y:auto; overflow-x:hidden; flex:1; min-height:0; scrollbar-gutter:stable; }
 .notepad-sidebar-section{ margin-top:14px; display:flex; flex-direction:column; gap:0; }
 .notepad-sidebar-section-title{
@@ -3174,7 +3140,7 @@ body[data-theme="light"] .notepad-workspace{
   cursor:pointer; transition:background .1s ease;
 }
 .notepad-tree-row:hover{ background:var(--np-surface-hover); }
-.notepad-tree-row.active{ background:var(--np-accent-soft); }
+.notepad-tree-row.active{ background:var(--np-surface-hover); }
 .notepad-tree-row.active .notepad-tree-title{ color:var(--np-accent); font-weight:700; }
 .notepad-flat-row{ width:100%; border:none; background:none; text-align:right; font-family:inherit; padding-right:8px; }
 .notepad-tree-caret{
@@ -3226,12 +3192,12 @@ body[data-theme="light"] .notepad-workspace{
   padding:90px 20px; text-align:center; max-width:760px; margin:0 auto;
 }
 .notepad-landing-title{
-  font-size:19px; font-weight:800; color:var(--np-text); margin-top:6px;
-  font-family:var(--font-plexmono), monospace; letter-spacing:-.01em;
+  font-size:18px; font-weight:800; color:var(--np-text); margin-top:8px;
+  letter-spacing:-.01em;
 }
 .notepad-landing-sub{ font-size:12.5px; color:var(--np-muted); max-width:340px; }
 .notepad-add-btn{
-  margin-top:10px; padding:9px 22px; border-radius:var(--np-radius-md); border:none;
+  display:flex; align-items:center; gap:6px; margin-top:10px; padding:9px 20px; border-radius:var(--np-radius-md); border:none;
   background:var(--np-accent); color:var(--np-accent-ink); font-weight:700; font-size:12.5px; cursor:pointer;
   transition:filter .12s ease;
 }
@@ -3297,7 +3263,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-icon-picker-grid button:hover{ background:var(--np-surface-hover); }
 .notepad-icon-picker-input{
   width:100%; margin-top:8px; padding:7px 9px; border-radius:var(--np-radius-sm); font-size:11px;
-  background:var(--np-bg); border:1px solid var(--np-border); color:var(--np-text); outline:none;
+  background:var(--np-canvas); border:1px solid var(--np-border); color:var(--np-text); outline:none;
 }
 
 /* --- بلاک‌ها --- */
@@ -3345,7 +3311,7 @@ body[data-theme="light"] .notepad-workspace{
 
 .notepad-todo-check{
   flex-shrink:0; margin-top:5px; width:16px; height:16px; border-radius:4px; border:1.6px solid var(--np-muted2);
-  background:none; display:flex; align-items:center; justify-content:center; color:#fff;
+  background:none; display:flex; align-items:center; justify-content:center; color:var(--np-accent-ink);
   cursor:pointer; transition:background .12s ease, border-color .12s ease;
 }
 .notepad-todo-check.done{ background:var(--np-accent); border-color:var(--np-accent); }
@@ -3399,7 +3365,7 @@ body[data-theme="light"] .notepad-workspace{
   display:flex; align-items:center; gap:9px; width:100%; text-align:right; padding:7px 8px; border-radius:var(--np-radius-sm);
   background:none; border:none; cursor:pointer;
 }
-.notepad-slash-item.active{ background:var(--np-accent-soft); }
+.notepad-slash-item.active{ background:var(--np-surface-hover); }
 .notepad-slash-item-icon{ flex-shrink:0; color:var(--np-accent); display:flex; }
 .notepad-slash-item-text{ display:flex; flex-direction:column; min-width:0; }
 .notepad-slash-item-label{ font-size:12.5px; font-weight:700; color:var(--np-text); }
@@ -3421,39 +3387,40 @@ body[data-theme="light"] .notepad-workspace{
   color:#fff; outline:none; width:150px;
 }
 .notepad-format-link-row button{
-  background:var(--np-accent); color:#fff; font-size:11px; font-weight:700; padding:5px 10px; border-radius:var(--np-radius-sm);
+  background:var(--np-accent); color:var(--np-accent-ink); font-size:11px; font-weight:700; padding:5px 10px; border-radius:var(--np-radius-sm);
 }
 
 /* --- Command Palette / Move Picker --- */
 .notepad-palette{
   position:fixed; left:50%; top:14%; transform:translateX(-50%) scale(.98); width:92%; max-width:480px; z-index:70;
-  background:var(--np-surface, #202024); border:1px solid var(--np-border, #2d2d33); border-radius:var(--np-radius-lg, 10px); overflow:hidden;
+  background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); overflow:hidden;
   box-shadow:0 24px 60px rgba(0,0,0,.45);
   opacity:0; animation:notepadPaletteIn .16s ease forwards;
 }
 @keyframes notepadPaletteIn{ from{opacity:0; transform:translateX(-50%) scale(.98) translateY(-6px);} to{opacity:1; transform:translateX(-50%) scale(1) translateY(0);} }
 .notepad-palette-input-row{
-  display:flex; align-items:center; gap:9px; padding:14px 16px; border-bottom:1px solid var(--np-border, #2d2d33); color:var(--np-muted, #9d9da6);
+  display:flex; align-items:center; gap:9px; padding:14px 16px; border-bottom:1px solid var(--np-border); color:var(--np-muted);
 }
 .notepad-palette-input-row input{
-  flex:1; background:none; border:none; outline:none; color:var(--np-text, #e9e9ec); font-size:14px;
+  flex:1; background:none; border:none; outline:none; color:var(--np-text); font-size:14px;
   font-family:var(--font-vazir), sans-serif;
 }
 .notepad-palette-list{ max-height:340px; overflow-y:auto; padding:6px; display:flex; flex-direction:column; gap:1px; }
 .notepad-palette-item{
-  display:flex; align-items:center; gap:10px; width:100%; text-align:right; padding:9px 10px; border-radius:var(--np-radius-md, 8px);
-  background:none; border:none; color:var(--np-text, #e9e9ec); font-size:12.5px; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; gap:10px; width:100%; text-align:right; padding:9px 10px; border-radius:var(--np-radius-md);
+  background:none; border:none; color:var(--np-text); font-size:12.5px; font-weight:600; cursor:pointer;
   font-family:var(--font-vazir), sans-serif;
 }
-.notepad-palette-item:hover{ background:var(--np-surface-hover, #27272c); }
-.notepad-palette-item svg{ flex-shrink:0; color:var(--np-muted, #9d9da6); }
-.notepad-palette-snippet{ font-size:10.5px; color:var(--np-muted2, #616168); font-weight:400; }
-.notepad-palette-empty{ padding:14px; text-align:center; font-size:12px; color:var(--np-muted2, #616168); }
+.notepad-palette-item:hover{ background:var(--np-surface-hover); }
+.notepad-palette-item svg{ flex-shrink:0; color:var(--np-muted); }
+.notepad-palette-snippet{ font-size:10.5px; color:var(--np-muted2); font-weight:400; }
+.notepad-palette-empty{ padding:14px; text-align:center; font-size:12px; color:var(--np-muted2); }
 
 /* --- ریسپانسیو: زیر ۹۶۰px سایدبار می‌شه Drawer --- */
 @media (max-width:960px){
   .notepad-sidebar{
     position:fixed; top:0; right:0; bottom:0; z-index:50; width:78%; max-width:280px;
+    background:var(--np-surface);
     transform:translateX(100%); opacity:0; border-left:none; border-radius:0;
     min-height:100vh; min-height:100dvh;
     transition:transform .26s cubic-bezier(.22,1,.36,1), opacity .2s ease;
