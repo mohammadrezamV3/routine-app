@@ -158,8 +158,6 @@
   .mono{font-family:var(--font-plexmono), monospace;}
   .wrap{max-width:620px; margin:0 auto; position:relative; z-index:1;}
 
-  #bgCanvas{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
-
   section{padding:34px 0; border-top:1px solid var(--line);}
   section:first-child{border-top:none; padding-top:0;}
 
@@ -2312,52 +2310,7 @@ body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-
 }
 .auth-forgot-link:hover{ color:var(--accent); }
 
-/* ============================================================
-   بک‌گراند aurora — چند بلاب نرم و تار سبز که آروم شناورن، جایگزین
-   شبکه نقطه‌های قدیمی. عمداً کم‌رنگ و کند نگه داشته شده تا حواس‌پرت‌کن
-   نشه، فقط یه عمق و گرمای ملایم به پس‌زمینه سیاه بده.
-   دو لایه‌ست: wrap فقط جای بلاب رو مشخص می‌کنه و transformش با anime.js
-   بر اساس موقعیت ماوس جابه‌جا می‌شه (حس سه‌بعدی)، خودِ blob مستقل از اون
-   انیمیشن شناور CSS همیشگی‌شو داره — چون هر دو روی transform کار می‌کنن،
-   قاطی‌شون می‌کرد اگه روی یک المان بودن.
-   ============================================================ */
-.aurora-blob-wrap{ position:absolute; will-change:transform; }
-.aurora-blob-wrap-a{ width:60vmax; height:60vmax; top:-20vmax; right:-16vmax; }
-.aurora-blob-wrap-b{ width:52vmax; height:52vmax; bottom:-22vmax; left:-18vmax; }
-.aurora-blob-wrap-c{ width:38vmax; height:38vmax; top:calc(38% - 19vmax); left:calc(50% - 19vmax); }
-.aurora-blob{
-  position:absolute; inset:0; border-radius:50%; filter:blur(120px);
-  will-change:transform; transform:translateZ(0);
-}
-.aurora-blob-a{
-  background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.30), rgba(var(--accent-rgb),0) 70%);
-  animation:auroraDriftA 26s ease-in-out infinite;
-}
-.aurora-blob-b{
-  background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),0) 70%);
-  animation:auroraDriftB 32s ease-in-out infinite;
-}
-/* بلاب سوم رنگ دومِ تم رو می‌گیره (آبی توی شب، طلایی توی روز) نه رنگ اصلی —
-   یه ذره گرمای رنگی متفاوت به فضا اضافه می‌کنه که پس‌زمینه یک‌دست نباشه */
-.aurora-blob-c{
-  background:radial-gradient(circle, rgba(var(--secondary-rgb),.13), rgba(var(--secondary-rgb),0) 70%);
-  animation:auroraDriftC 40s ease-in-out infinite;
-}
-body[data-theme="light"] .aurora-blob{ opacity:.45; }
-@keyframes auroraDriftA{
-  0%,100%{ transform:translate(0,0) scale(1); }
-  50%{ transform:translate(-4%,3%) scale(1.08); }
-}
-@keyframes auroraDriftB{
-  0%,100%{ transform:translate(0,0) scale(1); }
-  50%{ transform:translate(3%,-4%) scale(1.1); }
-}
-@keyframes auroraDriftC{
-  0%,100%{ transform:translate(0,0) scale(1); }
-  50%{ transform:translate(4%,-4%) scale(1.15); }
-}
 @media (prefers-reduced-motion: reduce){
-  .aurora-blob{ animation:none; }
   .whyus-track{ animation:none; }
 }
 

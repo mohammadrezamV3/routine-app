@@ -3,7 +3,6 @@ import { Vazirmatn, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
-import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
 import { ConflictAlert } from "@/components/ConflictAlert";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
@@ -50,7 +49,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body data-theme="dark" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <SvgFilters />
-        <BackgroundCanvasLoader />
         <ConflictAlert />
         <AuthSessionProvider>
           <ThemeProvider>
