@@ -14,7 +14,8 @@ export type BlockType =
   | "quote"
   | "divider"
   | "image"
-  | "database";
+  | "database"
+  | "code";
 
 export type RichLeaf = {
   text: string;
@@ -39,6 +40,8 @@ export type NotepadBlock = {
   // فقط برای type==="database" — اگه هنوز دیتابیسِ پشتِ این بلاک ساخته نشده
   // باشه null‌ه (بلافاصله بعدِ تبدیلِ نوع، قبل از فراخوانیِ createDatabaseForBlock)
   databaseId?: string | null;
+  // فقط برای type==="code" — اسمِ زبان برای رنگ‌بندیِ نحوی (یکی از CODE_LANGUAGES)
+  language?: string | null;
 };
 
 export type NotepadPage = {
@@ -50,6 +53,7 @@ export type NotepadPage = {
   position: number;
   isFavorite: boolean;
   isArchived: boolean;
+  isLocked: boolean;
   archivedAt: string | null;
   lastOpenedAt: string | null;
   createdAt: string;
@@ -77,11 +81,12 @@ export const BLOCK_TYPE_META: Record<BlockType, { label: string; hint: string; g
   divider: { label: "خط جدا کننده", hint: "یک خطِ افقی", group: "basic" },
   image: { label: "تصویر", hint: "یک عکس (لینک یا آپلود)", group: "media" },
   database: { label: "دیتابیس", hint: "جدول/بورد/تقویم با پراپرتی‌های دلخواه", group: "media" },
+  code: { label: "کد", hint: "قطعه‌کد با انتخابِ زبان و رنگ‌بندیِ نحوی", group: "media" },
 };
 export const SLASH_MENU_ORDER: BlockType[] = [
   "paragraph", "heading1", "heading2", "heading3",
   "bulleted_list", "numbered_list", "todo", "toggle", "quote", "divider",
-  "image", "database",
+  "image", "database", "code",
 ];
 
 const VALID_BLOCK_TYPES = new Set<BlockType>(Object.keys(BLOCK_TYPE_META) as BlockType[]);
@@ -185,7 +190,105 @@ export function makeBlock(pageId: string, type: BlockType, position: number, par
     imageUrl: null,
     position,
     databaseId: null,
+    language: type === "code" ? "plaintext" : null,
   };
+}
+
+// ============================================================================
+// بلاکِ کد — لیستِ زبان‌های پشتیبانی‌شده + یه tokenizerِ سبکِ رجکسی برای
+// رنگ‌بندیِ نحوی (بدونِ هیچ کتابخانه‌ی خارجی‌ای مثلِ Prism/highlight.js —
+// عمداً محدود نگه داشته شده، دقیقاً همون فلسفه‌ی ارزیاب‌گرِ فرمولِ Database)
+// ============================================================================
+
+export const CODE_LANGUAGES: { id: string; label: string }[] = [
+  { id: "plaintext", label: "متنِ ساده" },
+  { id: "javascript", label: "JavaScript" },
+  { id: "typescript", label: "TypeScript" },
+  { id: "python", label: "Python" },
+  { id: "sql", label: "SQL" },
+  { id: "bash", label: "Bash" },
+  { id: "json", label: "JSON" },
+  { id: "css", label: "CSS" },
+  { id: "html", label: "HTML" },
+];
+
+const CODE_KEYWORDS: Record<string, string[]> = {
+  javascript: ["const", "let", "var", "function", "return", "if", "else", "for", "while", "do", "switch", "case", "break", "continue", "class", "extends", "new", "this", "import", "export", "default", "from", "async", "await", "try", "catch", "finally", "throw", "typeof", "instanceof", "null", "undefined", "true", "false", "void", "yield", "of", "in", "delete"],
+  typescript: ["const", "let", "var", "function", "return", "if", "else", "for", "while", "do", "switch", "case", "break", "continue", "class", "extends", "implements", "interface", "type", "enum", "new", "this", "import", "export", "default", "from", "async", "await", "try", "catch", "finally", "throw", "typeof", "instanceof", "null", "undefined", "true", "false", "void", "yield", "of", "in", "delete", "public", "private", "protected", "readonly", "as"],
+  python: ["def", "return", "if", "elif", "else", "for", "while", "break", "continue", "class", "import", "from", "as", "try", "except", "finally", "raise", "with", "lambda", "None", "True", "False", "and", "or", "not", "in", "is", "pass", "yield", "async", "await", "global", "self"],
+  sql: ["SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE", "CREATE", "DATABASE", "TABLE", "ALTER", "DROP", "PRIMARY", "KEY", "FOREIGN", "REFERENCES", "NOT", "NULL", "DEFAULT", "JOIN", "INNER", "LEFT", "RIGHT", "ON", "GROUP", "BY", "ORDER", "HAVING", "LIMIT", "AND", "OR", "AS", "DISTINCT", "COUNT", "SUM", "AVG", "USE", "INDEX", "UNIQUE", "AUTO_INCREMENT"],
+  bash: ["if", "then", "else", "elif", "fi", "for", "while", "do", "done", "case", "esac", "function", "return", "export", "echo", "local", "sudo", "apt", "cd", "ls", "grep", "cat", "in"],
+  json: ["true", "false", "null"],
+  css: ["important", "inherit", "initial", "unset", "auto", "none", "solid", "flex", "grid", "block", "absolute", "relative", "fixed"],
+  html: ["DOCTYPE", "html", "head", "body", "div", "span", "script", "style", "meta", "link", "title"],
+};
+
+export function tokenizeCode(code: string, language: string): { text: string; cls: string }[] {
+  const keywords = new Set(CODE_KEYWORDS[language] || []);
+  const tokens: { text: string; cls: string }[] = [];
+  const isSqlLike = language === "sql";
+  const commentRe = language === "python" || language === "bash" ? /^#.*/
+    : language === "sql" ? /^--.*/
+    : /^\/\/.*|^\/\*[\s\S]*?\*\//;
+  let i = 0;
+  while (i < code.length) {
+    const rest = code.slice(i);
+    let m: RegExpExecArray | null;
+
+    if ((m = commentRe.exec(rest)) && m[0]) {
+      tokens.push({ text: m[0], cls: "cm" }); i += m[0].length; continue;
+    }
+    if ((m = /^"(?:[^"\\]|\\.)*"|^'(?:[^'\\]|\\.)*'|^`(?:[^`\\]|\\.)*`/.exec(rest))) {
+      tokens.push({ text: m[0], cls: "str" }); i += m[0].length; continue;
+    }
+    if ((m = /^-?\d+(\.\d+)?/.exec(rest))) {
+      tokens.push({ text: m[0], cls: "num" }); i += m[0].length; continue;
+    }
+    if ((m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(rest))) {
+      const word = m[0];
+      const test = isSqlLike ? word.toUpperCase() : word;
+      tokens.push({ text: word, cls: keywords.has(test) ? "kw" : "id" });
+      i += word.length; continue;
+    }
+    if ((m = /^\s+/.exec(rest))) { tokens.push({ text: m[0], cls: "" }); i += m[0].length; continue; }
+    tokens.push({ text: rest[0], cls: "op" });
+    i += 1;
+  }
+  return tokens;
+}
+
+// ============================================================================
+// خروجیِ متنِ ساده از کلِ بلاک‌های یه صفحه — برای «کپیِ محتوای صفحه»
+// ============================================================================
+export function blocksToPlainText(blocks: NotepadBlock[]): string {
+  const sorted = [...blocks].sort((a, b) => a.position - b.position);
+  const roots = sorted.filter((b) => !b.parentBlockId);
+  const childrenOf = (id: string) => sorted.filter((b) => b.parentBlockId === id);
+  const lines: string[] = [];
+  let numberedCounter = 0;
+
+  function render(b: NotepadBlock) {
+    const text = leavesToPlainText(b.content);
+    switch (b.type) {
+      case "heading1": lines.push(`# ${text}`); numberedCounter = 0; break;
+      case "heading2": lines.push(`## ${text}`); numberedCounter = 0; break;
+      case "heading3": lines.push(`### ${text}`); numberedCounter = 0; break;
+      case "bulleted_list": lines.push(`• ${text}`); numberedCounter = 0; break;
+      case "numbered_list": numberedCounter += 1; lines.push(`${numberedCounter}. ${text}`); break;
+      case "todo": lines.push(`${b.checked ? "[x]" : "[ ]"} ${text}`); numberedCounter = 0; break;
+      case "quote": lines.push(`> ${text}`); numberedCounter = 0; break;
+      case "divider": lines.push("---"); numberedCounter = 0; break;
+      case "image": lines.push("[تصویر]"); numberedCounter = 0; break;
+      case "database": lines.push("[دیتابیس]"); numberedCounter = 0; break;
+      case "code": lines.push(text); numberedCounter = 0; break;
+      default: lines.push(text); numberedCounter = 0;
+    }
+    if (b.type === "toggle") {
+      for (const child of childrenOf(b.id)) render(child);
+    }
+  }
+  for (const b of roots) render(b);
+  return lines.join("\n");
 }
 
 // ============================================================================
@@ -348,7 +451,7 @@ export async function createNotepadPage(input: { parentId?: string | null; title
   return data.page || null;
 }
 
-export async function updateNotepadPage(id: string, patch: Partial<Pick<NotepadPage, "title" | "icon" | "coverUrl" | "parentId" | "position" | "isFavorite" | "isArchived" | "lastOpenedAt">>): Promise<NotepadPage | null> {
+export async function updateNotepadPage(id: string, patch: Partial<Pick<NotepadPage, "title" | "icon" | "coverUrl" | "parentId" | "position" | "isFavorite" | "isArchived" | "isLocked" | "lastOpenedAt">>): Promise<NotepadPage | null> {
   const res = await fetch(`/api/notepad/pages/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
