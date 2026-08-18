@@ -93,7 +93,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                   type="button"
                   key={`${r.id}-${r.jsDay}`}
                   onClick={() => onOpenProgram?.(r.name)}
-                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right transition hover:border-white/10 sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
+                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-dash-surface2 px-3 py-2.5 text-right transition hover:border-[rgba(var(--accent-rgb),.2)] sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
                 >
                   <div className="min-w-0 flex-1 text-right">
                     <div className="truncate text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{r.name}</div>
@@ -109,8 +109,10 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",
                       r.notify
-                        ? r.importance === "veryHigh" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
-                        : "bg-white/5 text-dash-muted"
+                        ? r.importance === "veryHigh"
+                          ? "bg-[rgba(var(--accent-rgb),.25)] text-dash-green"
+                          : "bg-[rgba(var(--accent-rgb),.15)] text-dash-green"
+                        : "bg-dash-surface2 text-dash-muted"
                     )}
                   >
                     <Bell className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" fill={r.notify ? "currentColor" : "none"} />

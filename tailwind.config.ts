@@ -14,6 +14,7 @@ const config: Config = {
         // آپدیت می‌شن، برخلاف نسخه‌ی قبلی که رنگ‌های ثابتِ هاردکدشده داشت.
         "dash-bg": "var(--bg)",
         "dash-card": "var(--card-bg)",
+        "dash-surface2": "var(--surface-2)",
         "dash-input": "var(--input-bg)",
         "dash-border": "var(--line)",
         "dash-green": "var(--accent)",
@@ -21,9 +22,10 @@ const config: Config = {
         "dash-green-glow": "rgba(var(--accent-rgb),.25)",
         "dash-text": "var(--text)",
         "dash-muted": "var(--muted)",
+        "dash-muted2": "var(--muted2)",
       },
       borderRadius: {
-        dash: "18px",
+        dash: "16px",
       },
     },
   },

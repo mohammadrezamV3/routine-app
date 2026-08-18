@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashTaskRow, DashTaskItem } from "./DashTaskRow";
 
@@ -43,7 +43,20 @@ export function DashTaskList({
 
       <div className="mt-4 flex flex-col divide-y divide-dash-border">
         {tasks.length === 0 ? (
-          <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">برنامه‌ای برای این روز ثبت نشده</div>
+          <div className="flex flex-col items-center gap-2.5 py-7 text-center sm:py-8">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-dash-surface2 text-dash-muted">
+              <ClipboardList className="h-4 w-4" />
+            </div>
+            <div className="text-[12.5px] font-medium text-dash-text sm:text-[13.5px]">برنامه‌ای برای این روز ثبت نشده</div>
+            <button
+              type="button"
+              onClick={onAddProgram}
+              className="mt-0.5 flex items-center gap-1 rounded-full border border-[rgba(var(--accent-rgb),.3)] bg-[rgba(var(--accent-rgb),.1)] px-3 py-1.5 text-[11.5px] font-semibold text-dash-green transition hover:bg-[rgba(var(--accent-rgb),.15)]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              افزودن برنامه
+            </button>
+          </div>
         ) : (
           tasks.map((t) => (
             <DashTaskRow
