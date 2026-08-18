@@ -1,6 +1,5 @@
 "use client";
 
-import { useId } from "react";
 import { motion } from "framer-motion";
 
 // حلقه‌ی پیشرفتِ دایره‌ای عمومیِ داشبورد — هم توی هدر (بزرگ، ۷۵٪) هم کنارِ
@@ -14,7 +13,6 @@ export function DashProgressCircle({
   size?: number;
   strokeWidth?: number;
 }) {
-  const gradId = `dash-progress-grad-${useId()}`;
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
   const clamped = Math.min(100, Math.max(0, value));
@@ -23,12 +21,6 @@ export function DashProgressCircle({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90 overflow-visible">
-        <defs>
-          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--accent-hover)" />
-            <stop offset="100%" stopColor="var(--accent)" />
-          </linearGradient>
-        </defs>
         <circle
           cx={center}
           cy={center}
@@ -42,7 +34,7 @@ export function DashProgressCircle({
           cy={center}
           r={r}
           fill="none"
-          stroke={`url(#${gradId})`}
+          stroke="var(--accent)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={c}

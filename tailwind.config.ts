@@ -13,11 +13,9 @@ const config: Config = {
         // اپ (app/globals.css) سوار شده — یعنی با تغییر تم (روشن/تاریک) خودکار
         // آپدیت می‌شن، برخلاف نسخه‌ی قبلی که رنگ‌های ثابتِ هاردکدشده داشت.
         "dash-bg": "var(--bg)",
-        "dash-card": "var(--card-bg)",
-        "dash-input": "var(--input-bg)",
+        "dash-card": "rgba(255,255,255,.02)",
         "dash-border": "var(--line)",
         "dash-green": "var(--accent)",
-        "dash-green-hover": "var(--accent-hover)",
         "dash-green-glow": "rgba(var(--accent-rgb),.25)",
         "dash-text": "var(--text)",
         "dash-muted": "var(--muted)",
