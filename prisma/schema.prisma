@@ -141,7 +141,6 @@ model User {
   calorieTargets    CalorieTarget[]
   tradeEntries      TradeEntry[]
   roadmaps          Roadmap[]
-  notes             Note[]
   notepadPages      NotepadPage[]
 
   userSettings      UserSetting[]
@@ -722,37 +721,9 @@ model Roadmap {
 // ============================================================================
 
 // ============================================================================
-// MODULE: NOTES (یادداشت‌ها — بخشِ پایه، مثلِ ROUTINE/TASKS برای همه‌ی
-// کاربرها آزاده. هر یادداشت می‌تونه متنِ ساده باشه یا چک‌لیست (وقتی
-// checklist ست شده)، تگ‌های آزاد داره، و یک یادآوری/الرتِ اختیاری که با
-// همون سیستمِ نوتیفیکیشنِ موجودِ اپ هماهنگ می‌شه)
-// ============================================================================
-
-model Note {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  title      String
-  content    String    @default("")
-  tags       String[]  @default([])
-  // چک‌لیستِ اختیاری — [{ id, text, done }]؛ null یعنی یادداشتِ متنیِ ساده
-  checklist  Json?
-  reminderAt DateTime?
-  pinned     Boolean   @default(false)
-  color      String?
-
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([userId, reminderAt])
-}
-
-// ============================================================================
-// MODULE: NOTEPAD (Workspace بلاک‌محورِ کامل — Phase 1: صفحاتِ تودرتو +
-// ادیتورِ بلاکی. جزوِ پلنِ پایه‌ست (بدونِ ModuleGate)، مثلِ Note بالا؛ کاملاً
-// مستقل از مدلِ Note (که ساده و برای یادداشتِ سریع می‌مونه) — این یکی برای
+// MODULE: NOTEPAD (Workspace بلاک‌محورِ کامل — تنها بخشِ یادداشت/دانشِ اپ؛
+// جایگزینِ کاملِ MODULE NOTESِ قدیمی که حذف شد. جزوِ پلنِ پایه‌ست (بدونِ
+// ModuleGate). Phase 1: صفحاتِ تودرتو + ادیتورِ بلاکی. این یکی برای
 // Workspaceِ واقعی/تودرتوئه. هر Page و هر Block شناسه‌ی مستقلِ خودشو داره
 // (طبق درخواستِ صریح)، تا در آینده Sharing/Collaboration/Backlink/Relation
 // با ماژول‌های دیگه‌ی Arion بشه بهش اضافه کرد بدونِ تغییرِ ساختار.
@@ -806,7 +777,7 @@ model NotepadBlock {
 
   type          String        // "paragraph" | "heading1" | "heading2" | "heading3" |
                                // "bulleted_list" | "numbered_list" | "todo" | "toggle" |
-                               // "quote" | "divider" | "image"
+                               // "quote" | "divider" | "image" | "database"
   // آرایه‌ی RichLeaf — [{ text, bold?, italic?, underline?, strike?, code?, link? }]
   content       Json          @default("[]")
   checked       Boolean       @default(false) // فقط برای todo
@@ -818,8 +789,79 @@ model NotepadBlock {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  database      NotepadDatabase?
+
   @@index([pageId])
   @@index([pageId, parentBlockId])
+}
+
+// ============================================================================
+// NOTEPAD — Phase 2: Database (Table/Board/Calendar/Gallery/List). یک
+// دیتابیس همیشه به یه بلاکِ type="database" وصله (نه مستقیم به Page) — یعنی
+// هر صفحه می‌تونه چند دیتابیسِ inline داشته باشه، دقیقاً مثلِ Notion. مالکیت
+// همه‌جا از طریقِ block.page.userId چک می‌شه (بدونِ FK مستقیم به User، طبقِ
+// همون قاعده‌ی جلوگیری از چند-مسیر-cascade که بالا هم رعایت شده).
+// ============================================================================
+
+model NotepadDatabase {
+  id        String   @id @default(cuid())
+  blockId   String   @unique
+  block     NotepadBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  name      String   @default("دیتابیس")
+  activeView String  @default("table") // "table" | "board" | "calendar" | "gallery" | "list"
+
+  // فیلتر/سورت/گروه‌بندی — مشترک بینِ همه‌ی ویوها (نه جدا برای هرکدوم، برای
+  // سادگی)؛ Board/Calendar علاوه‌بر این، یه propertyِ اختصاصی برای
+  // ستون‌بندی/تاریخ‌گذاری دارن
+  filters   Json     @default("[]") // [{ propertyId, op, value }]
+  sorts     Json     @default("[]") // [{ propertyId, dir: "asc"|"desc" }]
+  hiddenPropertyIds Json @default("[]") // string[]
+  boardGroupPropertyId    String?
+  calendarDatePropertyId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties NotepadDatabaseProperty[]
+  records    NotepadDatabaseRecord[]
+
+  @@index([blockId])
+}
+
+model NotepadDatabaseProperty {
+  id         String   @id @default(cuid())
+  databaseId String
+  database   NotepadDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  name       String
+  type       String   // "text" | "number" | "select" | "multi_select" | "checkbox" |
+                       // "date" | "url" | "email" | "relation" | "formula"
+  // select/multi_select: [{id,label,color}] — relation: {targetDatabaseId} —
+  // formula: {expression}
+  options    Json?
+  position   Float    @default(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([databaseId])
+}
+
+model NotepadDatabaseRecord {
+  id         String   @id @default(cuid())
+  databaseId String
+  database   NotepadDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  // مقدارِ همه‌ی propertyها یک‌جا: { [propertyId]: value } — نوعِ value بسته
+  // به نوعِ property فرق می‌کنه (string/number/boolean/string[]/ISO date)
+  values     Json     @default("{}")
+  position   Float    @default(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([databaseId])
 }
 
 // ============================================================================

@@ -157,6 +157,7 @@ export function NotepadEditor({
     onToggleChecked: (id) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, checked: !b.checked } : b))),
     onToggleCollapsed: (id) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, collapsed: !b.collapsed } : b))),
     onImageSet: (id, url) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, imageUrl: url } : b))),
+    onDatabaseCreated: (id, databaseId) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, databaseId } : b))),
     onConvertType: (id, type) => {
       setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, type, content: [], checked: false } : b)));
       // بعدِ خالی‌کردنِ محتوا، innerHTML ریست می‌شه و caret نامعتبر می‌مونه —

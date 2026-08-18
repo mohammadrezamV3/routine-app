@@ -13,7 +13,8 @@ export type BlockType =
   | "toggle"
   | "quote"
   | "divider"
-  | "image";
+  | "image"
+  | "database";
 
 export type RichLeaf = {
   text: string;
@@ -35,6 +36,9 @@ export type NotepadBlock = {
   collapsed: boolean;
   imageUrl: string | null;
   position: number;
+  // فقط برای type==="database" — اگه هنوز دیتابیسِ پشتِ این بلاک ساخته نشده
+  // باشه null‌ه (بلافاصله بعدِ تبدیلِ نوع، قبل از فراخوانیِ createDatabaseForBlock)
+  databaseId?: string | null;
 };
 
 export type NotepadPage = {
@@ -72,11 +76,12 @@ export const BLOCK_TYPE_META: Record<BlockType, { label: string; hint: string; g
   quote: { label: "نقل‌قول", hint: "یک تکه متنِ نقل‌شده", group: "basic" },
   divider: { label: "خط جدا کننده", hint: "یک خطِ افقی", group: "basic" },
   image: { label: "تصویر", hint: "یک عکس (لینک یا آپلود)", group: "media" },
+  database: { label: "دیتابیس", hint: "جدول/بورد/تقویم با پراپرتی‌های دلخواه", group: "media" },
 };
 export const SLASH_MENU_ORDER: BlockType[] = [
   "paragraph", "heading1", "heading2", "heading3",
   "bulleted_list", "numbered_list", "todo", "toggle", "quote", "divider",
-  "image",
+  "image", "database",
 ];
 
 const VALID_BLOCK_TYPES = new Set<BlockType>(Object.keys(BLOCK_TYPE_META) as BlockType[]);
@@ -179,6 +184,7 @@ export function makeBlock(pageId: string, type: BlockType, position: number, par
     collapsed: false,
     imageUrl: null,
     position,
+    databaseId: null,
   };
 }
 
