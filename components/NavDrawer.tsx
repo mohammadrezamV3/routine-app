@@ -20,7 +20,7 @@ import { getNotificationPermission, requestNotificationPermission, notifications
 // ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
 // import بشن، باندلِ اصلیِ هر صفحه سنگین‌تر می‌شه (مخصوصاً AccountPanel که
 // حالا کاتالوگ ~۳۶۰تاییِ بازارها رو هم می‌کِشه). با dynamic+ssr:false جدا از
-// باندل اصلی لود می‌شن، دقیقاً مثل BackgroundCanvas.
+// باندل اصلی لود می‌شن.
 const AccountPanel = dynamic(() => import("./AccountPanel").then((m) => m.AccountPanel), { ssr: false });
 const NotificationPanel = dynamic(() => import("./NotificationPanel").then((m) => m.NotificationPanel), { ssr: false });
 
