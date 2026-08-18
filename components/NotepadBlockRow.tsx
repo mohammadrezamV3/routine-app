@@ -16,6 +16,7 @@ import {
   rangeFromOffsets,
   setCaretAtOffset,
 } from "@/lib/notepad";
+import { NotepadDatabaseBlock } from "./NotepadDatabaseBlock";
 
 export type BlockRowHandlers = {
   onChangeContent: (id: string, leaves: RichLeaf[]) => void;
@@ -31,6 +32,7 @@ export type BlockRowHandlers = {
   onSlashUpdateQuery: (query: string) => void;
   onSlashClose: () => void;
   onImageSet: (id: string, url: string) => void;
+  onDatabaseCreated: (id: string, databaseId: string) => void;
   registerRef: (id: string, el: HTMLElement | null) => void;
 };
 
@@ -290,6 +292,14 @@ export function NotepadBlockRow({
         );
       case "image":
         return <NotepadImageBlock block={block} onImageSet={handlers.onImageSet} />;
+      case "database":
+        return (
+          <NotepadDatabaseBlock
+            blockId={block.id}
+            databaseId={block.databaseId ?? null}
+            onDatabaseCreated={(databaseId) => handlers.onDatabaseCreated(block.id, databaseId)}
+          />
+        );
       default:
         return <BlockContentEditable block={block} placeholder="برای نوشتن، یا / برای دستورات" handlers={handlers} />;
     }

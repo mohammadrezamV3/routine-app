@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Heading1, Heading2, Heading3, Image as ImageIcon, List, ListChecks,
-  ListOrdered, Minus, Pilcrow, Quote, ChevronRight as ToggleIcon,
+  ListOrdered, Minus, Pilcrow, Quote, Table as DatabaseIcon, ChevronRight as ToggleIcon,
 } from "lucide-react";
 import { BLOCK_TYPE_META, BlockType, SLASH_MENU_ORDER } from "@/lib/notepad";
 
@@ -19,6 +19,7 @@ const ICONS: Record<BlockType, JSX.Element> = {
   quote: <Quote size={15} />,
   divider: <Minus size={15} />,
   image: <ImageIcon size={15} />,
+  database: <DatabaseIcon size={15} />,
 };
 
 // منویِ اسلش‌کامند — با تایپِ "/" داخلِ یه بلاک باز می‌شه، با ادامه‌ی تایپ

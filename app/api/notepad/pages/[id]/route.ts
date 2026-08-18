@@ -33,10 +33,15 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const page = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!page) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });
 
-  const [blocks] = await Promise.all([
-    prisma.notepadBlock.findMany({ where: { pageId: page.id }, orderBy: { position: "asc" } }),
+  const [rawBlocks] = await Promise.all([
+    prisma.notepadBlock.findMany({
+      where: { pageId: page.id },
+      orderBy: { position: "asc" },
+      include: { database: { select: { id: true } } },
+    }),
     prisma.notepadPage.update({ where: { id: page.id }, data: { lastOpenedAt: new Date() } }),
   ]);
+  const blocks = rawBlocks.map(({ database, ...b }) => ({ ...b, databaseId: database?.id ?? null }));
 
   return NextResponse.json({ page: { ...page, lastOpenedAt: new Date(), blocks } });
 }
