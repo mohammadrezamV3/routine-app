@@ -14,17 +14,26 @@
      تقریباً همه‌ی دکمه/بردر/سایه‌ها از همینا رد می‌شن، پس عوض‌کردن این دوتا
      رنگ کل سایت رو خودکار با هم عوض می‌کنه. */
   :root{
-    --bg:#000000;
-    --bg-rgb:0,0,0;
-    --text:#EDEFEE;
-    --muted:#8A9099;
-    --muted2:#4A5054;
-    --accent:#00A86B;
-    --accent-rgb:0,168,107;
+    --bg:#0B0F0D;
+    --bg-rgb:11,15,13;
+    --text:#F1F5F3;
+    --muted:#8B9690;
+    --muted2:#4C564F;
+    --accent:#39D98A;
+    --accent-rgb:57,217,138;
+    /* هاور/اکتیوِ اکشن‌های اصلی (CTA، آیتم فعالِ منو) یک پله تیره‌تر از اکسنت پایه —
+       تمایزِ واقعیِ رنگ روی هاور، نه فقط تغییرِ سایه/شفافیت */
+    --accent-hover:#2FC47B;
+    --accent-hover-rgb:47,196,123;
     --accent-dim:rgba(var(--accent-rgb),.20);
-    --accent-soft:#5FBE93;
-    --accent-deep:#00623D;
-    --line:#262A2C;
+    --accent-soft:#7EE6B3;
+    --accent-deep:#1A6238;
+    /* کارت (پس‌زمینه‌ی داشبورد/تایل‌های KPI) و اینپوت — دو سطحِ روشنیِ جدا از
+       --bg، برای عمقِ بصریِ واقعی به‌جای فقط شیشه‌ی نیمه‌شفاف روی سیاه */
+    --card-bg:#121815;
+    --card-bg-rgb:18,24,21;
+    --input-bg:#151C18;
+    --line:#202923;
     --sun:#FFC94A;
     --moon:#7B4FE0;
     /* آبی — رنگ دومِ شب، مکمل سبز برای لحظه‌های «ویژه» (پلن پیشنهادی، استریک) */
@@ -40,9 +49,13 @@
     --muted2:#A68A6E;
     --accent:#B85C1F;
     --accent-rgb:184,92,31;
+    --accent-hover:#9C4E1A;
+    --accent-hover-rgb:156,78,26;
     --accent-dim:rgba(184,92,31,.14);
     --accent-soft:#C97A3D;
     --accent-deep:#6B3F17;
+    --card-bg:#F8ECD8;
+    --card-bg-rgb:248,236,216;
     --line:#E4D6B8;
     --sun:#FFC94A;
     --moon:#7B4FE0;
@@ -207,7 +220,7 @@
   .ios-toggle:hover{ border-color:rgba(255,255,255,.14); color:inherit; background:rgba(255,255,255,.08); box-shadow:inset 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04); }
   body[data-theme="light"] .ios-toggle:hover{ border-color:rgba(0,0,0,.08); background:rgba(0,0,0,.07); }
   .ios-toggle.on{ background:var(--accent); border-color:var(--accent); box-shadow:inset 0 1px 2px rgba(0,0,0,.15); }
-  .ios-toggle.on:hover{ border-color:var(--accent); background:var(--accent); }
+  .ios-toggle.on:hover{ border-color:var(--accent-hover); background:var(--accent-hover); }
   .ios-toggle-knob{
     position:absolute; top:2px; right:2px; width:21px; height:21px; border-radius:50%;
     background:linear-gradient(180deg, #fff, #e6e6e6);
@@ -248,9 +261,13 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
   }
   button:hover{
-    border-color:var(--accent); color:var(--accent);
-    background:rgba(var(--accent-rgb),.10);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(var(--accent-rgb),.28), 0 6px 20px rgba(var(--accent-rgb),.16);
+    border-color:var(--accent-hover); color:var(--accent-hover);
+    background:rgba(var(--accent-hover-rgb),.10);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(var(--accent-hover-rgb),.28), 0 6px 20px rgba(var(--accent-hover-rgb),.16);
+  }
+  button:focus-visible{
+    outline:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(var(--accent-rgb),.05), 0 0 0 3px rgba(var(--accent-rgb),.28);
   }
   button:active{transform:scale(.96);}
   button:disabled{opacity:.4; cursor:default;}
@@ -397,7 +414,7 @@
   .bell-btn-wrap{ position:relative; display:flex; }
   .bell-btn{position:relative; color:var(--muted); background:none; transition:color .2s ease;}
   .bell-btn svg{width:19px; height:19px;}
-  .bell-btn:hover, .bell-btn:focus, .bell-btn:active{color:var(--accent); background:none; box-shadow:none;}
+  .bell-btn:hover, .bell-btn:focus, .bell-btn:active{color:var(--accent-hover); background:none; box-shadow:none;}
   .bell-dot{
     position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
@@ -511,7 +528,7 @@
     width:18px; height:2px; border-radius:2px; background:var(--text); display:block;
     transition:transform .35s cubic-bezier(.68,-.4,.27,1.4), opacity .22s ease, width .25s ease, background .2s ease;
   }
-  .hamburger:hover span{background:var(--accent);}
+  .hamburger:hover span{background:var(--accent-hover);}
   .hamburger.active span{background:var(--accent);}
   .hamburger.active span:nth-child(1){transform:translateY(6px) rotate(45deg);}
   .hamburger.active span:nth-child(2){opacity:0; width:0;}
@@ -521,7 +538,7 @@
   /* profile icon: fixed circle shape, no box — only turns accent green on hover */
 
   .profile-btn svg{width:19px; height:19px; color:var(--muted); transition:color .2s ease;}
-  .profile-btn:hover svg{color:var(--accent);}
+  .profile-btn:hover svg{color:var(--accent-hover);}
 
   .nav-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:45;
@@ -567,7 +584,7 @@
     transition:color .2s ease, transform .5s ease;
     display:inline-block;
   }
-  .nav-close:hover{color:var(--accent); transform:rotate(360deg);}
+  .nav-close:hover{color:var(--accent-hover); transform:rotate(360deg);}
   /* دکمه‌های × سراسر سایت نباید بک‌گراند داشته باشن — همون باگ همیشگیِ
      اسپسیفیسیتی (button:hover / body[data-theme=light] button) اینجا هم بود */
   body[data-theme="light"] .nav-close, body:not([data-theme="light"]) .nav-close,
@@ -613,7 +630,7 @@
     display:block; color:var(--text); text-decoration:none; font-size:14.5px; font-weight:500;
     padding:12px 2px; transition:.15s;
   }
-  .nav-link:hover{color:var(--accent);}
+  .nav-link:hover{color:var(--accent-hover);}
 
   /* tips / extra lists */
   .tm-extra{margin-top:22px;}
@@ -635,7 +652,7 @@
   .trade-stats-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:7px; }
   @media (min-width:480px){ .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); } }
   .trade-stat-tile{
-    border-radius:16px; padding:10px 12px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+    border-radius:16px; padding:10px 12px; border:1px solid var(--line); background:var(--card-bg);
   }
   .trade-stat-tile-wide{ grid-column:1 / -1; }
 
@@ -643,7 +660,7 @@
      SVG به‌جای عدد خام؛ فقط وقتی هدف توی پنل کاربری تنظیم شده باشه نشون داده می‌شه */
   .trade-goal-ring-row{
     display:flex; align-items:center; gap:12px; margin:8px 0 10px;
-    padding:10px 12px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
+    padding:10px 12px; border-radius:16px; border:1px solid var(--line); background:var(--card-bg);
   }
   .trade-goal-ring-wrap{ position:relative; width:56px; height:56px; flex-shrink:0; }
   .trade-goal-ring{ width:100%; height:100%; }
@@ -925,12 +942,12 @@
   .tm-progress-summary .mono{ font-size:15px; font-weight:800; color:var(--accent); }
   .tm-progress-summary .mono span{ color:var(--muted); font-weight:600; font-size:12px; }
   .tm-progress-bar{ margin-top:8px; height:3px; border-radius:3px; background:var(--line); overflow:hidden; }
-  .tm-progress-bar-fill{ height:100%; background:var(--accent); border-radius:3px; transition:width .5s ease; }
+  .tm-progress-bar-fill{ height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-hover)); border-radius:3px; transition:width .5s ease; }
 
   .treasure-map{position:relative; margin:20px 0 6px; padding-right:34px;}
   /* ریلِ اتصالِ ایستگاه‌ها به هم — یه مسیرِ واقعی، نه فقط دایره‌های شناور */
   .tm-rail{ position:absolute; right:14px; top:14px; bottom:14px; width:2px; background:var(--line); border-radius:2px; }
-  .tm-rail-fill{ position:absolute; right:0; top:0; width:100%; background:var(--accent); border-radius:2px; transition:height .5s ease; box-shadow:0 0 10px rgba(var(--accent-rgb),.5); }
+  .tm-rail-fill{ position:absolute; right:0; top:0; width:100%; background:linear-gradient(180deg, var(--accent-hover), var(--accent)); border-radius:2px; transition:height .5s ease; box-shadow:0 0 10px rgba(var(--accent-rgb),.5); }
   .tm-station{
     position:relative; margin-bottom:16px; padding:14px 16px 14px 14px; border-radius:16px;
     border:1px solid var(--line); background:rgba(var(--bg-rgb), .13);
@@ -1097,7 +1114,7 @@
     background:var(--line); border-radius:3px;
   }
   .wt-fill-green{
-    position:absolute; top:0; right:0; height:100%; width:var(--fill); background:var(--accent);
+    position:absolute; top:0; right:0; height:100%; width:var(--fill); background:linear-gradient(90deg, var(--accent-hover), var(--accent));
     transition:width .6s ease; border-radius:3px;
     box-shadow:0 0 6px rgba(var(--accent-rgb),.75), 0 0 14px rgba(var(--accent-rgb),.4);
   }
@@ -1270,9 +1287,9 @@
     outline:none; transition:border-color .15s ease, background .15s ease;
   }
   body:not([data-theme="light"]) .wsearch-input{
-    background:#0B0C0D; border:1px solid rgba(255,255,255,.08);
+    background:var(--input-bg); border:1px solid rgba(255,255,255,.08);
   }
-  .wsearch-input:focus{border-color:var(--accent);}
+  .wsearch-input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.15);}
   .wsearch-input::placeholder{color:var(--muted2);}
   .wsearch-list{overflow-y:auto; flex:1; margin-top:18px; padding-bottom:6px;}
   .wsearch-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; overflow:hidden; padding:3px;}
@@ -1343,18 +1360,19 @@
     background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
     font-family:var(--font-vazir), sans-serif; font-size:12.5px; padding:8px 10px; outline:none;
   }
-  body:not([data-theme="light"]) .wsearch-add-time{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
+  body:not([data-theme="light"]) .wsearch-add-time{ background:var(--input-bg); border:1px solid rgba(255,255,255,.08); }
   .wsearch-add-row > .wsearch-add-time{flex:1 1 calc(50% - 4px); min-width:0;}
   .time-field .wsearch-add-time{width:100%;}
-  .wsearch-add-time:focus{border-color:var(--accent);}
+  .wsearch-add-time:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.15);}
   .wsearch-date-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
   .jdate-btn{
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
     font-family:var(--font-plexmono), monospace; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
     direction:ltr;
   }
-  body:not([data-theme="light"]) .jdate-btn{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
-  .jdate-btn:hover, .jdate-btn:focus{border-color:var(--accent);}
+  body:not([data-theme="light"]) .jdate-btn{ background:var(--input-bg); border:1px solid rgba(255,255,255,.08); }
+  .jdate-btn:hover{border-color:var(--accent-hover);}
+  .jdate-btn:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.15);}
   .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-vazir), sans-serif; direction:rtl;}
 
   /* دکمه‌ی تاریخِ «ثبت معامله جدید» توی ژورنال ترید — کوچیک‌تر، گرد کامل،
@@ -1453,7 +1471,7 @@
     position:relative; z-index:1;
     transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
   }
-  body:not([data-theme="light"]) .day-pill{ background:#0B0C0D; border:1px solid rgba(255,255,255,.07); }
+  body:not([data-theme="light"]) .day-pill{ background:var(--input-bg); border:1px solid rgba(255,255,255,.07); }
   .day-pill:hover{border-color:var(--accent); color:var(--text);}
   .day-pill:active{transform:scale(.92);}
   .day-pill.on{
@@ -1591,10 +1609,10 @@
   /* همون باگ همیشگی: بدون این‌که background اینجا صریح تکرار بشه، button:hover
      سراسری با اسپسیفیسیتی بالاتر پس‌زمینه‌ی توپر رو با یه پس‌زمینه‌ی تقریباً
      شفاف عوض می‌کنه و آیکونِ color:var(--bg) روش دیده نمی‌شه */
-  .wsearch-newbtn:hover, .wsearch-newbtn:focus-visible{background:var(--accent); transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
+  .wsearch-newbtn:hover, .wsearch-newbtn:focus-visible{background:var(--accent-hover); transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-hover-rgb),.45); color:var(--bg);}
   .wsearch-newbtn:active{transform:scale(.94);}
   .wsearch-newbtn svg{width:18px; height:18px; display:block;}
-  .wsearch-newbtn.active{background:var(--accent); transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-rgb),.45); color:var(--bg);}
+  .wsearch-newbtn.active{background:var(--accent-hover); transform:scale(1.06); box-shadow:0 10px 24px rgba(var(--accent-hover-rgb),.45); color:var(--bg);}
 
   /* fab preview menu: opens above the +, offers add / bulk-delete */
   .wsearch-fab-menu{
@@ -1663,7 +1681,7 @@
   }
   .wsearch-confirm-btn{border:1.5px solid var(--accent); color:var(--accent);}
   .wsearch-confirm-btn:hover, .wsearch-confirm-btn:focus-visible{
-    background:var(--accent); border-color:var(--accent); color:var(--bg); transform:scale(1.06);
+    background:var(--accent-hover); border-color:var(--accent-hover); color:var(--bg); transform:scale(1.06);
   }
   .wsearch-confirm-btn:active{transform:scale(.94);}
   .wsearch-cancel-btn{border:1.5px solid #E05252; color:#E05252;}
@@ -1741,8 +1759,8 @@
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
     font-family:var(--font-vazir), sans-serif; font-size:13px; padding:9px 11px; outline:none;
   }
-  body:not([data-theme="light"]) .wsearch-newform-name{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
-  .wsearch-newform-name:focus{border-color:var(--accent);}
+  body:not([data-theme="light"]) .wsearch-newform-name{ background:var(--input-bg); border:1px solid rgba(255,255,255,.08); }
+  .wsearch-newform-name:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.15);}
   .wsearch-newform-name::placeholder{color:var(--muted2);}
 
   /* فیلدهای پاپ‌آپ‌های کالری (تغییر برنامه/افزودن غذا) — بکگراندِ تختِ
@@ -1846,7 +1864,7 @@
     border:1px solid var(--accent); color:var(--accent); background:none;
     transition:background .2s ease, color .2s ease, transform .15s ease;
   }
-  .wsearch-newform-submit:hover{background:var(--accent); color:var(--bg);}
+  .wsearch-newform-submit:hover{background:var(--accent-hover); border-color:var(--accent-hover); color:var(--bg);}
   .wsearch-newform-submit:active{transform:scale(.92);}
   .wsearch-newform-submit .wns-check, .wsearch-newform-submit .wns-x{width:16px; height:16px; display:block; transition:opacity .15s ease, transform .2s ease;}
   .wsearch-newform-submit .wns-x{position:absolute; opacity:0; transform:scale(.5);}
@@ -1858,7 +1876,7 @@
   .wsearch-newform-submit.loading{pointer-events:none;}
   .wsearch-newform-submit.loading .wns-check{opacity:0; transform:scale(.5);}
   .wsearch-newform-submit.loading .wns-spinner{opacity:1; animation:wnsSpin .7s linear infinite;}
-  .wsearch-newform-submit.success{pointer-events:none; background:var(--accent); color:var(--bg); border-color:var(--accent);}
+  .wsearch-newform-submit.success{pointer-events:none; background:var(--accent-hover); color:var(--bg); border-color:var(--accent-hover);}
   .wsearch-newform-submit.success .wns-spinner{opacity:0;}
   .wsearch-newform-submit.success .wns-check{opacity:1; animation:wnsPop .4s cubic-bezier(.34,1.56,.64,1);}
   .wsearch-newform-submit.error{pointer-events:none; background:#E05252; color:#fff; border-color:#E05252; animation:wnsShake .4s ease;}
@@ -2598,8 +2616,8 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
   font-family:var(--font-vazir), sans-serif; font-size:13px; padding:12px 14px; outline:none;
   min-height:96px; line-height:1.7; resize:none; text-align:right;
 }
-body:not([data-theme="light"]) .exercise-desc-textarea{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
-.exercise-desc-textarea:focus{ border-color:var(--accent); }
+body:not([data-theme="light"]) .exercise-desc-textarea{ background:var(--input-bg); border:1px solid rgba(255,255,255,.08); }
+.exercise-desc-textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.15); }
 .exercise-desc-textarea::placeholder{ color:var(--muted2); }
 
 /* پیامِ ردِ AI (وقتی برنامه‌ی خواسته‌شده واقع‌بینانه نیست) — شبیهِ حبابِ چت */
@@ -2986,7 +3004,7 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
 }
 .exercise-set-circle:disabled{ cursor:not-allowed; }
 .exercise-rest-bar{ width:180px; height:5px; border-radius:9999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }
-.exercise-rest-bar-fill{ height:100%; background:var(--accent); border-radius:9999px; transition:width 1s linear; }
+.exercise-rest-bar-fill{ height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-hover)); border-radius:9999px; transition:width 1s linear; }
 
 /* تایمرِ زمانِ تمرین — جای دکمه‌ی «افزودن برنامه» می‌شینه وقتی جلسه فعاله، شبیهِ کرنومتر */
 .exercise-chrono{
