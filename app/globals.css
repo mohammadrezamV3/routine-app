@@ -1935,6 +1935,9 @@
   width:18px; height:18px; min-width:18px; display:flex; align-items:center; justify-content:center;
   color:var(--muted2); transition:color .18s ease;
 }
+/* آیکونِ قفلِ آیتم‌های پولیِ نخریده — فقط یه نشونه‌ست، کم‌رنگ و کوچیک تا
+   شلوغ نکنه، نه یه هشدارِ قرمز */
+.nav-link-lock{ color:var(--muted2); flex-shrink:0; margin-inline-start:4px; }
 .nav-link-icon-svg svg{width:18px; height:18px; display:block;}
 /* توی تمِ روشن، muted2 (تن/طلاییِ خیلی کم‌رنگ) رویِ بک‌گراندِ کرمی تقریباً
    دیده نمی‌شه — یه قهوه‌ایِ واضح‌تر و مجزا از accent (نارنجی‌سوخته) و از
@@ -2350,7 +2353,9 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 }
 @media (prefers-reduced-motion: reduce){
   .aurora-blob{ animation:none; }
-  .whyus-track{ animation:none; }
+  /* .whyus-track عمداً این‌جا نیست: نوارِ «چرا ما؟» بخشِ محتواییِ اصلیه
+     (نه صرفاً تزئینی مثلِ بلاب‌های پس‌زمینه)، طبقِ درخواستِ صریح باید همیشه
+     بچرخه، حتی وقتی سیستم‌عاملِ کاربر Reduce Motion/Low Power Mode روشنه. */
 }
 /* filter:blur(120px) روی چند لایه‌ی همیشه-درحال-transform، رویِ GPUِ
    موبایل خیلی سنگینه (باعثِ داغ‌کردن/کندیِ گزارش‌شده می‌شه) — روی

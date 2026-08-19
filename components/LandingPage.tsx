@@ -287,7 +287,7 @@ function FeatureCarousel() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
         ref={boxRef}
-        className={`relative rounded-[28px] border ${t.cardBorder} ${t.cardBg} px-8 py-9 text-center ${t.shadow} backdrop-blur-xl sm:px-14`}
+        className={`relative flex min-h-[236px] flex-col items-center justify-center rounded-[28px] border ${t.cardBorder} ${t.cardBg} px-8 py-9 text-center ${t.shadow} backdrop-blur-xl sm:min-h-[208px] sm:px-14`}
       >
         <button
           type="button"
@@ -297,7 +297,7 @@ function FeatureCarousel() {
         >
           <ChevronLeft size={18} />
         </button>
-        <span className={`mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{f.icon}</span>
+        <span className={`mx-auto mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{f.icon}</span>
         <div className={`text-[11px] font-bold uppercase tracking-[0.12em] ${t.muted}`}>{f.title}</div>
         <div className={`mt-1.5 text-[17px] font-extrabold ${t.heading}`}>{f.hook}</div>
         <div className={`mt-1.5 text-[13.5px] leading-7 ${t.muted}`}>{f.body}</div>
@@ -310,6 +310,19 @@ function FeatureCarousel() {
           <ChevronRight size={18} />
         </button>
       </motion.div>
+
+      {/* نقطه‌های شماره‌ی اسلاید — نشون می‌ده کدوم قابلیت الان نمایش داده می‌شه */}
+      <div className="mt-4 flex items-center justify-center gap-2">
+        {FEATURES.map((feat, i) => (
+          <button
+            key={feat.title}
+            type="button"
+            aria-label={`قابلیت ${i + 1}`}
+            onClick={() => setIndex(i)}
+            className={`h-2 rounded-full transition-all ${i === index ? `w-5 ${t.accentBg}` : `w-2 ${t.isLight ? "bg-[#2B2118]/20" : "bg-white/20"}`}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -555,12 +568,12 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
         </>
       ) : (
         <>
-          <div className="mt-2.5 grid grid-cols-4 gap-1">
+          <div className={`mt-2.5 grid grid-cols-4 gap-1 rounded-xl p-1 ${t.isLight ? "bg-[#2B2118]/[0.06]" : "bg-black/20"}`}>
             {DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
-                className={`whitespace-nowrap rounded-lg border px-0.5 py-1 text-[9px] font-bold backdrop-blur-md transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.isLight ? "bg-white/70" : "bg-white/10"} ${t.muted} ${t.accentHoverBorder}`}`}
+                className={`whitespace-nowrap rounded-lg px-1 py-1.5 text-[10.5px] font-bold transition ${d === duration ? `text-white ${t.accentBg}` : `bg-transparent ${t.muted} hover:${t.isLight ? "text-[#2B2118]" : "text-white"}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
@@ -619,8 +632,8 @@ export function LandingPage() {
               ورود
             </Link>
           </div>
-          <div className={`mt-4 flex items-center justify-end gap-1.5 text-[11.5px] ${t.muted}`} data-anim-field>
-            اطلاعات شما امن و محرمانه نگه‌داری می‌شود <ShieldCheck size={14} />
+          <div className={`mt-4 flex items-center justify-start gap-1.5 text-[11.5px] ${t.muted}`} data-anim-field>
+            <ShieldCheck size={14} className="shrink-0" /> اطلاعات شما امن و محرمانه نگه‌داری می‌شود
           </div>
         </div>
       </section>
@@ -629,16 +642,16 @@ export function LandingPage() {
         <FeatureCarousel />
       </section>
 
-      <section id="sec-landing-today" style={{ paddingTop: 32 }}>
-        <TodayProgressCard isIntl={isIntl} />
+      <section id="sec-landing-whyus" style={{ paddingTop: 32 }}>
+        <WhyUsSection isIntl={isIntl} />
       </section>
 
       <section id="sec-landing-trust" style={{ paddingTop: 32 }}>
         <QuoteCard />
       </section>
 
-      <section id="sec-landing-whyus" style={{ paddingTop: 32 }}>
-        <WhyUsSection isIntl={isIntl} />
+      <section id="sec-landing-today" style={{ paddingTop: 32 }}>
+        <TodayProgressCard isIntl={isIntl} />
       </section>
 
       <section id="sec-landing-plans" style={{ paddingTop: 32 }}>

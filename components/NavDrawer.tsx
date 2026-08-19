@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
@@ -85,8 +85,11 @@ export const ICONS: Record<string, JSX.Element> = {
 // «بدنسازی» و «ترید» دیگه لینکِ مستقیم نیستن — با کلیک زیرمجموعه‌هاشون باز
 // می‌شن (برنامه‌ی تمرینی/برنامه‌ی غذایی، چک‌لیست/ژورنال) تا کاربر مستقیم از
 // منو به تبِ موردنظر بره، نه اینکه اول صفحه باز شه و بعد از توی خودش تب بزنه.
-type NavLink = { href: string; label: string; icon: string };
-type NavGroup = { label: string; icon: string; children: NavLink[] };
+// module: اگه ست بشه، یعنی این آیتم پولیه — اگه کاربر دسترسیِ فعال به این
+// ماژول رو نداشته باشه، کنار لیبلش یه آیکون قفل نشون داده می‌شه (فقط
+// نشانه‌ست، enforcement واقعی همچنان سمتِ سرور/ModuleGate انجام می‌شه).
+type NavLink = { href: string; label: string; icon: string; module?: string };
+type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string };
 type NavItem = NavLink | NavGroup;
 
 function isGroup(item: NavItem): item is NavGroup {
@@ -96,19 +99,19 @@ function isGroup(item: NavItem): item is NavGroup {
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/notepad", label: "Notepad", icon: "notepad" },
-  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps" },
+  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", module: "ROADMAP" },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
-      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise" },
-      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food" },
+      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE" },
+      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food", module: "CALORIE" },
     ],
   },
   {
     label: "ترید", icon: "trade",
     children: [
-      { href: "/trade?tab=journal", label: "ژورنال", icon: "journal" },
-      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist" },
+      { href: "/trade?tab=journal", label: "ژورنال", icon: "journal", module: "TRADE" },
+      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist", module: "TRADE" },
     ],
   },
   { href: "/about", label: "درباره ما", icon: "about" },
@@ -121,8 +124,11 @@ let cachedAvatarUrl: string | null = null;
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
   // گروهِ بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
-  // اگه صفحه‌ی فعلی زیرمجموعه‌ی یه گروهه، همون گروه پیش‌فرض باز می‌مونه.
+  // همیشه با همه‌چیز بسته شروع می‌شه، هیچ‌وقت خودکار باز نمی‌شه.
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  // برای نشونِ قفلِ آیتم‌های پولیِ منو — null یعنی «هنوز معلوم نیست»
+  // (چیزی رندر نمی‌کنیم تا از فلشِ اشتباه جلوگیری بشه).
+  const [activeModules, setActiveModules] = useState<Set<string> | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
@@ -221,12 +227,32 @@ export function NavDrawer() {
     return () => window.removeEventListener("avatar-updated", loadAvatar);
   }, [status]);
 
-  // وقتی صفحه‌ی فعلی زیرمجموعه‌ی یه گروهه (مثلاً روی /exercise هستیم)،
-  // همون گروه پیش‌فرض باز باشه — کاربر نباید مجبور باشه اول باز کنه تا ببینه کجاست
+  // برای نشونِ قفلِ آیتم‌های پولیِ منو — همون /api/account که ModuleGate هم
+  // استفاده می‌کنه (سوپریوزر توش خودش همه‌ی ماژول‌ها رو active برمی‌گردونه).
   useEffect(() => {
-    const activeGroup = LINKS.find((item) => isGroup(item) && item.children.some((c) => c.href.startsWith(pathname || "")));
-    if (activeGroup && isGroup(activeGroup)) setExpandedGroup(activeGroup.label);
-  }, [pathname]);
+    if (status === "unauthenticated") { setActiveModules(new Set()); return; }
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    fetch("/api/account")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const now = Date.now();
+        const active = new Set<string>(
+          (data?.user?.moduleAccess || [])
+            .filter((m: { module: string; active: boolean; expiresAt: string | null }) =>
+              m.active && (!m.expiresAt || new Date(m.expiresAt).getTime() > now))
+            .map((m: { module: string }) => m.module)
+        );
+        setActiveModules(active);
+      })
+      .catch(() => { if (!cancelled) setActiveModules(new Set()); });
+    return () => { cancelled = true; };
+  }, [status]);
+
+  // طبقِ درخواستِ صریح، منو هیچ‌وقت خودکار یه گروه رو باز/سلکت‌شده نشون نده —
+  // حتی وقتی توی زیرصفحه‌ی یه گروهی (مثلاً /exercise)، منو همیشه با همه‌چیز
+  // بسته باز می‌شه؛ کاربر خودش هرکدوم رو خواست دستی باز می‌کنه.
 
   // کلیک روی زنگوله همیشه پنل اطلاعیه‌ها رو باز/بسته می‌کنه؛ اگه هنوز اجازه‌ی
   // نوتیف مرورگر گرفته نشده (نقطه‌ی قرمز)، جدا از باز شدن پنل، درخواستش هم می‌ره.
@@ -372,8 +398,10 @@ export function NavDrawer() {
           </div>
 
           {LINKS.map((item) => {
+            const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;
+              const groupLocked = item.children.every((c) => isLocked(c.module));
               return (
                 <div key={item.label} className={isExpanded ? "nav-group-expanded" : undefined}>
                   <a
@@ -383,6 +411,7 @@ export function NavDrawer() {
                   >
                     <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                     <span style={{ flex: 1 }}>{item.label}</span>
+                    {groupLocked && <Lock size={13} className="nav-link-lock" />}
                     <motion.span
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
@@ -403,7 +432,8 @@ export function NavDrawer() {
                         <div className="nav-group-children">
                           {item.children.map((c) => (
                             <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
-                              <span>{c.label}</span>
+                              <span style={{ flex: 1 }}>{c.label}</span>
+                              {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
                             </a>
                           ))}
                         </div>
@@ -416,7 +446,8 @@ export function NavDrawer() {
             return (
               <a key={item.href} onClick={() => go(item.href)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
-                <span>{item.label}</span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {isLocked(item.module) && <Lock size={13} className="nav-link-lock" />}
               </a>
             );
           })}
