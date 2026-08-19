@@ -35,6 +35,7 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {
     if (!isProd) return []; // روی dev هیچ هدر امنیتی سخت‌گیرانه‌ای اعمال نمی‌شه
