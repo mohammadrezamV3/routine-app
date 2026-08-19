@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Check, ChevronLeft, ChevronRight, Quote, X,
   ClipboardList, Clock, ShieldCheck, TrendingUp, Headset, Lightbulb,
-  Smartphone, BarChart3, Zap, Users, Sparkles,
+  Smartphone, BarChart3, Zap, Users, Sparkles, ShoppingCart,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
@@ -117,49 +117,62 @@ const WHY_US_INTL = [
 ];
 
 type Duration = "1" | "3" | "6" | "12";
-const DURATIONS: Duration[] = ["1", "3", "6", "12"];
+const DURATIONS: Duration[] = ["12", "6", "3", "1"];
 const DURATION_LABELS: Record<Duration, string> = { "1": "۱ ماهه", "3": "۳ ماهه", "6": "۶ ماهه", "12": "۱۲ ماهه" };
 const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3": "3 mo", "6": "6 mo", "12": "12 mo" };
 
 type PlanCard = {
-  key: string; nameFa: string; highlight?: boolean;
+  key: string; nameFa: string; highlight?: boolean; icon: JSX.Element;
   free?: boolean; prices?: Record<Duration, string>;
+  // قیمتِ اصلیِ (قبل‌ازتخفیفِ) پلنِ یک‌ماهه — فقط اگه ست بشه، به‌صورت خط‌خورده
+  // کنارِ قیمتِ واقعی نشون داده می‌شه.
+  originalPrice1mo?: string;
+  // تخفیفِ سالانه: به‌ازای هر یک سال خرید، ۴۵ روز رایگانه — یعنی روی ۱۲ ماه،
+  // کاربر فقط قیمتِ ۱۰.۵ ماه رو پرداخت می‌کنه. عددِ خط‌خورده (۱۲× قیمتِ ماهانه)
+  // اینجاست؛ قیمتِ واقعیِ ۱۲ماهه (۱۰.۵× ماهانه) هم توی prices["12"] جایگزین شد.
+  original12mo?: string;
 };
 
 // ترتیب پلن‌ها: Base Plan (رایگان) اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
 const PLANS_IRAN: PlanCard[] = [
   {
-    key: "basic", nameFa: "پلن پایه", free: true,
+    key: "basic", nameFa: "پلن پایه", free: true, icon: ICONS.weekly,
   },
   {
-    key: "exercise", nameFa: "پلن بدنسازی",
-    prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۸۳۰,۰۰۰ تومان" },
+    key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
+    prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۱,۰۳۹,۵۰۰ تومان" },
+    original12mo: "۱,۱۸۸,۰۰۰ تومان",
   },
   {
-    key: "trade", nameFa: "پلن ترید",
-    prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۰۸۰,۰۰۰ تومان" },
+    key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
+    prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۳۵۴,۵۰۰ تومان" },
+    original12mo: "۱,۵۴۸,۰۰۰ تومان",
   },
   {
-    key: "max", nameFa: "پلن مکس", highlight: true,
-    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۱,۶۷۰,۰۰۰ تومان" },
+    key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
+    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۲,۰۸۹,۵۰۰ تومان" },
+    original12mo: "۲,۳۸۸,۰۰۰ تومان",
   },
 ];
 
 const PLANS_INTL: PlanCard[] = [
   {
-    key: "basic", nameFa: "Basic", free: true,
+    key: "basic", nameFa: "Basic", free: true, icon: ICONS.weekly,
   },
   {
-    key: "exercise", nameFa: "Plan Gym",
-    prices: { "1": "$7.99", "3": "$21.99", "6": "$38.99", "12": "$67.99" },
+    key: "exercise", nameFa: "Plan Gym", icon: ICONS.exercise,
+    prices: { "1": "$7.99", "3": "$21.99", "6": "$38.99", "12": "$83.90" },
+    original12mo: "$95.88",
   },
   {
-    key: "trade", nameFa: "Plan Trader",
-    prices: { "1": "$12.99", "3": "$34.99", "6": "$62.99", "12": "$109.99" },
+    key: "trade", nameFa: "Plan Trader", icon: ICONS.trade,
+    prices: { "1": "$12.99", "3": "$34.99", "6": "$62.99", "12": "$136.40" },
+    original12mo: "$155.88",
   },
   {
-    key: "max", nameFa: "Plan Max", highlight: true,
-    prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$149.99" },
+    key: "max", nameFa: "Plan Max", highlight: true, icon: <Sparkles size={16} />,
+    prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$188.90" },
+    original12mo: "$215.88",
   },
 ];
 
@@ -496,7 +509,12 @@ function WhyUsSection({ isIntl }: { isIntl: boolean }) {
   // پایه تا حداقل ۱۶ آیتم تکرار می‌شه (حتی روی مانیتورهای خیلی عریض هیچ
   // فاصله‌ی خالی‌ای وسطِ چرخه دیده نشه)، بعد همون پایه یک‌بار دیگه برای
   // چرخشِ ۵۰٪ی duplicate می‌شه — لحظه‌ی چرخش کاملاً نامرئیه.
-  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 16, pxPerSecond: 22 });
+  // pxPerSecond از ۲۲ به ۶۰ رفت — با سرعتِ قبلی، یک دورِ کاملِ چرخه ~۱۳۷ ثانیه
+  // طول می‌کشید؛ توی بازه‌ی معمولِ نگاه‌کردنِ کاربر به لندینگ (چندثانیه)
+  // عملاً حس می‌شد «چهارتا رد شد و ایستاد»، چون حرکت آنقدر کند بود که تا
+  // چرخیدنِ کامل هیچ‌وقت دیده نمی‌شد. سرعتِ بیشتر یعنی هر کارت ظرفِ چند
+  // ثانیه رد می‌شه و تداومِ بی‌پایانش زودتر حس می‌شه.
+  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 16, pxPerSecond: 60 });
 
   return (
     <div>
@@ -525,6 +543,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
+  const isAnnual = duration === "12";
 
   const cardClass = p.highlight
     ? `relative flex flex-col rounded-[22px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-4 backdrop-blur-xl ${t.secondaryCardShadow}`
@@ -541,12 +560,14 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           محبوب‌ترین
         </span>
       )}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{p.icon}</span>
         <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
+        <div className="flex-1" />
         <button
           type="button"
           onClick={scrollToDetails}
-          className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.accentText} ${t.accentHoverText}`}
+          className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none no-underline outline-none transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none focus:no-underline focus-visible:no-underline active:no-underline ${t.accentText}`}
         >
           {isIntl ? "Details" : "جزئیات"}
         </button>
@@ -556,34 +577,54 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
 
       {p.free ? (
         <>
-          <div className={`mt-2.5 text-[15px] font-extrabold ${t.heading}`}>رایگان</div>
-          <Link href="/auth/signup" className={`mt-2.5 block w-full rounded-xl py-2.5 text-center text-[12.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
-            شروع رایگان
+          <div className={`mt-3 text-[15px] font-extrabold ${t.heading}`}>رایگان</div>
+          <Link href="/auth/signup" className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
+            <ShoppingCart size={14} /> شروع رایگان
           </Link>
         </>
       ) : (
         <>
-          <div className={`mt-2.5 grid grid-cols-4 gap-1 rounded-xl p-1 ${t.isLight ? "bg-[#2B2118]/[0.06]" : "bg-black/20"}`}>
-            {DURATIONS.map((d) => (
-              <button
-                key={d}
-                type="button"
-                className={`whitespace-nowrap rounded-lg px-1 py-1.5 text-[10.5px] font-bold transition ${d === duration ? `text-white ${t.accentBg}` : `bg-transparent ${t.muted} hover:${t.isLight ? "text-[#2B2118]" : "text-white"}`}`}
-                onClick={() => setDuration(d)}
-              >
-                {labels[d]}
-              </button>
-            ))}
+          {/* دکمه‌های انتخابِ مدت — دقیقاً هم‌سبکِ عکسِ مرجعِ کاربر: پیلِ تخت،
+              انتخاب‌شده پرِ رنگِ اصلی با یه نشانِ چک‌مارکِ سفید روی گوشه‌ی
+              بالا-راستش (نه اسکیمورفیک/بوردردار/بلوردار مثلِ نسخه‌ی قبل). */}
+          <div className="mt-3 grid grid-cols-4 gap-1.5">
+            {DURATIONS.map((d) => {
+              const selected = d === duration;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDuration(d)}
+                  className={`relative whitespace-nowrap rounded-full py-2 text-[10px] font-bold transition ${selected ? `text-white ${t.accentBg}` : `${t.isLight ? "bg-[#2B2118]/[0.07]" : "bg-white/[0.06]"} ${t.muted}`}`}
+                >
+                  {labels[d]}
+                  {selected && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white">
+                      <Check size={10} strokeWidth={3.4} className={t.accentText} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          <div className={`mt-2 text-[15px] font-extrabold ${t.heading}`}>
-            {p.prices![duration]}
-            <span className={`mr-1 text-[10.5px] font-semibold ${t.muted}`}>/ {labels[duration]}</span>
+
+          <div className="mt-3 flex items-baseline gap-2">
+            {isAnnual && p.original12mo && (
+              <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{p.original12mo}</span>
+            )}
+            <span className={`text-[15px] font-extrabold ${t.heading}`}>{p.prices![duration]}</span>
           </div>
+          {isAnnual && (
+            <div className={`mt-0.5 text-[10.5px] font-bold ${t.accentText}`}>
+              {isIntl ? "45 days free on annual plans" : "به‌ازای خریدِ سالانه، ۴۵ روز رایگان"}
+            </div>
+          )}
+
           <Link
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}
-            className={`mt-2.5 block w-full rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
+            className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
-            خرید اشتراک
+            <ShoppingCart size={14} /> خرید اشتراک
           </Link>
         </>
       )}
