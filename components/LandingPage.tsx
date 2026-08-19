@@ -117,7 +117,7 @@ const WHY_US_INTL = [
 ];
 
 type Duration = "1" | "3" | "6" | "12";
-const DURATIONS: Duration[] = ["12", "6", "3", "1"];
+const DURATIONS: Duration[] = ["1", "3", "6", "12"];
 const DURATION_LABELS: Record<Duration, string> = { "1": "۱ ماهه", "3": "۳ ماهه", "6": "۶ ماهه", "12": "۱۲ ماهه" };
 const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3": "3 mo", "6": "6 mo", "12": "12 mo" };
 
@@ -237,6 +237,9 @@ function useThemeTokens() {
     line: isLight ? "border-[#E7DCC8]" : "border-[#262A2C]",
     secondaryBtnBg: isLight ? "bg-white/70 hover:bg-white" : "bg-white/5 hover:bg-white/10",
 
+    // مقدارِ خامِ رنگ (نه کلاسِ Tailwind) — برای جاهایی که باید مستقیم توی
+    // inline style بره (اسپسیفیسیتیِ بالاتر از قانونِ سراسریِ button:hover لازمه).
+    accentColorRaw: isLight ? "#D97706" : "#00A86B",
     accentText: isLight ? "text-[#D97706]" : "text-[#00A86B]",
     accentHoverText: isLight ? "hover:text-[#D97706]" : "hover:text-[#00A86B]",
     accentBg: isLight ? "bg-[#D97706]" : "bg-[#00A86B]",
@@ -584,9 +587,12 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
         </>
       ) : (
         <>
-          {/* دکمه‌های انتخابِ مدت — دقیقاً هم‌سبکِ عکسِ مرجعِ کاربر: پیلِ تخت،
-              انتخاب‌شده پرِ رنگِ اصلی با یه نشانِ چک‌مارکِ سفید روی گوشه‌ی
-              بالا-راستش (نه اسکیمورفیک/بوردردار/بلوردار مثلِ نسخه‌ی قبل). */}
+          {/* دکمه‌های انتخابِ مدت — پیلِ تخت، انتخاب‌شده پرِ رنگِ اصلی، بدونِ
+              نشانِ چک‌مارک. از راست: ۱ ماهه، ۳ ماهه، ۶ ماهه، ۱۲ ماهه.
+              رنگِ پس‌زمینه/متن عمداً inline style‌ه، نه کلاسِ Tailwind — چون
+              قانونِ سراسریِ `button:hover` (globals.css) اسپسیفیسیتی‌ش از یه
+              کلاسِ Tailwindِ تکی بیشتره و روی هاور/لمس، رنگِ انتخاب‌شده رو با
+              یه تینتِ کم‌رنگ جایگزین می‌کرد؛ inline style همیشه برنده‌ست. */}
           <div className="mt-3 grid grid-cols-4 gap-1.5">
             {DURATIONS.map((d) => {
               const selected = d === duration;
@@ -595,30 +601,23 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
                   key={d}
                   type="button"
                   onClick={() => setDuration(d)}
-                  className={`relative whitespace-nowrap rounded-full py-2 text-[10px] font-bold transition ${selected ? `text-white ${t.accentBg}` : `${t.isLight ? "bg-[#2B2118]/[0.07]" : "bg-white/[0.06]"} ${t.muted}`}`}
+                  className={`plan-duration-btn whitespace-nowrap rounded-full py-2 text-[10px] font-bold transition ${selected ? "" : t.muted}`}
+                  style={selected
+                    ? { background: t.accentColorRaw, color: "#fff" }
+                    : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" }}
                 >
                   {labels[d]}
-                  {selected && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white">
-                      <Check size={10} strokeWidth={3.4} className={t.accentText} />
-                    </span>
-                  )}
                 </button>
               );
             })}
           </div>
 
           <div className="mt-3 flex items-baseline gap-2">
+            <span className={`text-[15px] font-extrabold ${t.heading}`}>{p.prices![duration]}</span>
             {isAnnual && p.original12mo && (
               <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{p.original12mo}</span>
             )}
-            <span className={`text-[15px] font-extrabold ${t.heading}`}>{p.prices![duration]}</span>
           </div>
-          {isAnnual && (
-            <div className={`mt-0.5 text-[10.5px] font-bold ${t.accentText}`}>
-              {isIntl ? "45 days free on annual plans" : "به‌ازای خریدِ سالانه، ۴۵ روز رایگان"}
-            </div>
-          )}
 
           <Link
             href={`/auth/signup?plan=${p.key}&duration=${duration}`}

@@ -2441,6 +2441,14 @@ body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"])
   background:none; box-shadow:none;
 }
 
+/* دکمه‌های انتخابِ مدتِ پلن — پیلِ تخت بدونِ بوردر/بلور/سایه‌ی پیش‌فرضِ
+   button سراسری. رنگِ پس‌زمینه/متن خودش inline style‌ه (globals این‌جا
+   دست‌نمی‌زنه بهش)، فقط border/backdrop-filter/box-shadow رو ریست می‌کنه. */
+body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .plan-duration-btn,
+body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]) .plan-duration-btn:hover{
+  border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
 /* ===================== ترید — پرتفوی ماهانه / تقویم / روز ===================== */
 
 /* پرتفوی ماهانه — تاگل شمسی/میلادی دیگه فشرده‌ی کنار عنوان نیست، ردیف پهن خودشو داره */
