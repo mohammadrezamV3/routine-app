@@ -1,5 +1,13 @@
 # Arion — نسخه Next.js
 
+## نسخه: v1.71.1 (فیکس‌های زیرساختِ دیپلوی — پیدا شده در دیپلویِ واقعیِ روی وی‌پی‌اس)
+
+### چی تغییر کرد
+- **`Dockerfile`**: نصبِ `openssl` در هر سه مرحله (`deps`/`builder`/`runner`) — موتورهای Prisma به `libssl` نیاز دارن که `node:20-alpine` خامْ فاقدشه؛ بدونش موتور با خطای غیر-JSON کرش می‌کرد.
+- **`docker-compose.yml`**: سرویسِ یک‌بارمصرفِ `migrate` (پروفایلِ `tools`) اضافه شد که از استیجِ `builder` (نه `runner`ِ نهایی) استفاده می‌کنه — چون ایمیجِ production عمداً بدونِ devDependencies (Prisma CLI، `tsx`) ساخته می‌شه، `docker compose exec app npx prisma ...` جدیدترین نسخه‌ی Prisma رو از اینترنت می‌گرفت (ناسازگار با نسخه‌ی pin‌شده‌ی پروژه).
+- **`deploy/nginx.conf.example`**: IPِ واقعیِ کاربر از هدرِ `CF-Connecting-IP` خونده می‌شه (نه `$remote_addr`) تا وقتی سایت پشتِ Cloudflare پروکسی می‌شه، rate limiting سمتِ اپ IPِ واقعیِ بازدیدکننده رو ببینه، نه IPِ خودِ Cloudflare.
+- **`.env.example`**: متغیرهای `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` که قبلاً فقط در docker-compose لازم بودن ولی توی نمونه نبودن، اضافه شدن — با هشدارِ صریح که رمزِ Postgres نباید کاراکترهای خاصِ URL (`/ @ : # ?`) داشته باشه، چون باعثِ خطای «invalid port number»/«database string is invalid» در Prisma می‌شه (باگی که واقعاً حین دیپلوی رخ داد).
+
 ## نسخه: v1.71.0 (زیرساختِ دیپلوی — Docker + Nginx)
 
 ### چی تغییر کرد
