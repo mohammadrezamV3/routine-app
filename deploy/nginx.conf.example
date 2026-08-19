@@ -1,6 +1,19 @@
 # این فایل رو با دامنه‌ی خودت جایگزین کن و توی
 # /etc/nginx/sites-available/routine-app بذار (راهنمای کامل در چت).
-# بعد از گرفتن SSL با certbot، این فایل خودکار برای بلاک ۴۴۳ آپدیت می‌شه.
+#
+# نسخه‌ی هماهنگ با Cloudflare: چون Cloudflare جلوی سایت پروکسیِ HTTPS
+# می‌کنه (SSL/TLS mode = Flexible)، اینجا فقط پورت ۸۰/HTTP لازمه —
+# نیازی به certbot نیست، Cloudflare خودش گواهیِ رایگان به بازدیدکننده می‌ده.
+#
+# نکته‌ی امنیتیِ مهم: وقتی Cloudflare جلوی سایته، IPِ واقعیِ بازدیدکننده
+# توی هدرِ CF-Connecting-IP میاد، نه $remote_addr (که IP خودِ Cloudflare
+# می‌شه). این هدر رو به X-Forwarded-For پاس می‌دیم تا rate limiting سمتِ
+# اپ (lib/rateLimit.ts، با TRUST_PROXY_HEADERS=1) درست کار کنه.
+
+map $http_cf_connecting_ip $real_client_ip {
+    default         $http_cf_connecting_ip;
+    ""              $remote_addr;
+}
 
 server {
     listen 80;
@@ -13,9 +26,9 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $real_client_ip;
+        proxy_set_header X-Forwarded-For $real_client_ip;
+        proxy_set_header X-Forwarded-Proto https;
         proxy_cache_bypass $http_upgrade;
     }
 
