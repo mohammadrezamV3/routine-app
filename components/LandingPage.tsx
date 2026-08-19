@@ -309,20 +309,15 @@ function FeatureCarousel() {
         >
           <ChevronRight size={18} />
         </button>
-      </motion.div>
 
-      {/* نقطه‌های شماره‌ی اسلاید — نشون می‌ده کدوم قابلیت الان نمایش داده می‌شه */}
-      <div className="mt-4 flex items-center justify-center gap-2">
-        {FEATURES.map((feat, i) => (
-          <button
-            key={feat.title}
-            type="button"
-            aria-label={`قابلیت ${i + 1}`}
-            onClick={() => setIndex(i)}
-            className={`h-2 rounded-full transition-all ${i === index ? `w-5 ${t.accentBg}` : `w-2 ${t.isLight ? "bg-[#2B2118]/20" : "bg-white/20"}`}`}
-          />
-        ))}
-      </div>
+        {/* دقیقاً هم‌کلاسِ نقطه‌های ویزاردِ برنامه‌ی هوشمند (AiExercisePlanWizard) —
+            همون سایز/رنگ/حالتِ فعال، این‌بار برای شماره‌ی اسلایدِ قابلیت‌ها */}
+        <div className="exercise-wizard-dots">
+          {FEATURES.map((feat, i) => (
+            <span key={feat.title} className={`exercise-wizard-dot${i === index ? " on" : ""}`} />
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }
