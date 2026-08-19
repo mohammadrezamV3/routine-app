@@ -16,6 +16,10 @@ type Blob = {
  */
 export function useLiquidBlobPhysics(containerRef: React.RefObject<HTMLElement>) {
   useEffect(() => {
+    // فیزیکِ هر فریم (rAF) + filter:blur روی چند لایه، رویِ موبایل سنگینه —
+    // خودِ افکتِ بصری تزئینیه، پس روی دستگاه‌های لمسی کلاً اجرا نمی‌شه
+    // (همون الگویی که برای پارالاکسِ BackgroundCanvas استفاده شده).
+    if (window.matchMedia("(pointer: coarse)").matches) return;
     const box = containerRef.current;
     if (!box) return;
     const liquidWrap = box.querySelector(".wbox-liquid");
