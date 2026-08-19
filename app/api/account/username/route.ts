@@ -16,7 +16,8 @@ export async function PATCH(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`username-change:${userId}`, 5, 60 * 60 * 1000) || !checkRateLimit(`username-change-ip:${ip}`, 10, 60 * 60 * 1000)) {
+  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  if (!isSuperAdmin && (!checkRateLimit(`username-change:${userId}`, 5, 60 * 60 * 1000) || !checkRateLimit(`username-change-ip:${ip}`, 10, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

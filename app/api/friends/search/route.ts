@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`friends-search:${userId}`, 30, 60 * 1000) || !checkRateLimit(`friends-search-ip:${ip}`, 60, 60 * 1000)) {
+  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  if (!isSuperAdmin && (!checkRateLimit(`friends-search:${userId}`, 30, 60 * 1000) || !checkRateLimit(`friends-search-ip:${ip}`, 60, 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

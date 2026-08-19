@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!checkRateLimit(`avatar-change:${userId}`, 10, 60 * 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`avatar-change:${userId}`, 10, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

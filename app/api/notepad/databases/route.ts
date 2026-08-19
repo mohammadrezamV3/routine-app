@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!checkRateLimit(`notepad-db-create:${userId}`, 60, 60 * 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-db-create:${userId}`, 60, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی صبر کن" }, { status: 429 });
   }
 

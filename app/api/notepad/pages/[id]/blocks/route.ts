@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!checkRateLimit(`notepad-blocks-save:${userId}`, 600, 60 * 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-blocks-save:${userId}`, 600, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "ذخیره‌سازیِ زیاد در این ساعت — کمی صبر کن" }, { status: 429 });
   }
 

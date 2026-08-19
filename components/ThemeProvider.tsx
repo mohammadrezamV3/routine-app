@@ -39,6 +39,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted.current) { mounted.current = true; return; }
     document.body.setAttribute("data-theme", theme);
     setThemeSetting(theme);
+    // نوارِ وضعیت/ناچِ سافاری هم باید رنگِ تمِ فعلی رو بگیره، وگرنه بعد از
+    // toggle، بدنه‌ی صفحه عوض می‌شه ولی اون نوار همچنان رنگِ تمِ قبلی می‌مونه.
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) themeColorMeta.setAttribute("content", theme === "light" ? "#F4E3C9" : "#0E1011");
   }, [theme]);
 
   return (

@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
 
   // چون هر درخواست یعنی یک فراخوانی واقعی و پولی به Claude API، محدودش
   // می‌کنیم به ۱۰ رودمپ در ساعت به‌ازای هر کاربر — جلوگیری از سوءاستفاده/هزینه کنترل‌نشده.
-  if (!checkRateLimit(`roadmap-gen:${userId}`, 10, 60 * 60 * 1000)) {
+  // سوپریوزر از این سقف مستثناست (هم‌راستا با دسترسیِ نامحدودش به ماژول‌ها).
+  if (!guard.isSuperAdmin && !checkRateLimit(`roadmap-gen:${userId}`, 10, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "سقف ساخت رودمپ در این ساعت پر شده — بعداً امتحان کن" }, { status: 429 });
   }
 

@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
               </div>
               <AuthField id="phone" label="شماره همراه">
                 <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" placeholder="09xxxxxxxxx"
+                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" placeholder="09123456789"
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </AuthField>

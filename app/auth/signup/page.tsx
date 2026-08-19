@@ -148,11 +148,11 @@ export default function SignupPage() {
         {step === 1 ? (
           <div className="auth-box">
             <AuthBackButton />
-            <AuthBrandMark />
+            <AuthBrandMark subtitle="به آریون خوش اومدی!" />
             <div className="auth-step" key="step1">
               <AuthField id="phone" label="شماره همراه" error={fieldErrors.phone} ref={phoneRef}>
                 <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" placeholder="09xxxxxxxxx"
+                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" placeholder="09123456789"
                   onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) clearError("phone"); }}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); goNext(); } }}
                 />
@@ -164,9 +164,9 @@ export default function SignupPage() {
           <form ref={formRef} onSubmit={submit} className="auth-box">
             <AuthBackButton />
             <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => setStep(1)}>
-              <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-            <AuthBrandMark />
+            <AuthBrandMark subtitle="به آریون خوش اومدی!" />
 
             <div className="auth-step" key="step2">
               <AuthField id="name" label="نام و نام خانوادگی" error={fieldErrors.name} ref={nameRef}>
