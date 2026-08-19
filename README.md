@@ -1,5 +1,15 @@
 # Arion — نسخه Next.js
 
+## نسخه: v1.71.0 (زیرساختِ دیپلوی — Docker + Nginx)
+
+### چی تغییر کرد
+- **`Dockerfile`**: بیلدِ سه‌مرحله‌ای (`deps` → `builder` → `runner`)، بر پایه‌ی `node:20-alpine`. `prisma generate` قبل از `next build` اجرا می‌شه؛ ایمیجِ نهایی از خروجیِ `output: "standalone"` نکست استفاده می‌کنه (فقط فایل‌های لازمِ اجرا، نه کل `node_modules`)، با یوزرِ غیر-روت (`nextjs`).
+- **`next.config.js`**: `output: "standalone"` اضافه شد — پیش‌نیازِ ایمیجِ سبکِ داکر.
+- **`docker-compose.yml`**: دو سرویس — `app` (بیلدِ همین ریپو) و `db` (`postgres:16-alpine` با volume پایدار)؛ `app` منتظرِ healthy-شدنِ `db` می‌مونه؛ پورتِ اپ فقط روی `127.0.0.1:3000` باز می‌شه (نه مستقیم روی اینترنت) چون Nginx جلوش reverse-proxy می‌کنه.
+- **`.dockerignore`**: جلوگیری از کپی‌شدنِ `node_modules`/`.next`/`.env`/`.git` به کانتکستِ بیلد.
+- **`deploy/nginx.conf.example`**: قالبِ آماده‌ی reverse-proxy برای Nginx روی هاست (نه کانتینری) — برای هماهنگی با Certbot/SSL.
+- هیچ منطق/routing/APIِ اپ دست نخورده؛ این فقط زیرساختِ اجرا روی سرورِ شخصیه (آیتمِ ۶ از roadmap بلندمدت، با درخواستِ صریح شروع شد).
+
 ## نسخه: v1.70.0 (Notepad — صفحه‌ی Home با Recents، کاورِ صفحه، بلاکِ کد، منوی Actions کامل)
 
 ### چی تغییر کرد
