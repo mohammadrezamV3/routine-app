@@ -2310,7 +2310,11 @@ body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-
    قاطی‌شون می‌کرد اگه روی یک المان بودن.
    ============================================================ */
 .aurora-blob-wrap{ position:absolute; will-change:transform; }
-.aurora-blob-wrap-a{ width:60vmax; height:60vmax; top:-20vmax; right:-16vmax; }
+/* top از -20vmax به -26vmax عقب‌تر برده شد — بلاب قبلاً اونقدر بالا می‌زد که
+   نوارِ خامِ ۱۴px بالای هدرِ شناور (که بلوری روش نمی‌شینه) رنگِ کاملاً
+   اشباع‌شده‌ی بلاب رو نشون می‌داد، جدا از نسخه‌ی محوشده‌ای که از پشتِ شیشه‌ی
+   هدر دیده می‌شد — دقیقاً همون افکتِ «سبز از بالای هدر می‌پره». */
+.aurora-blob-wrap-a{ width:60vmax; height:60vmax; top:-26vmax; right:-16vmax; }
 .aurora-blob-wrap-b{ width:52vmax; height:52vmax; bottom:-22vmax; left:-18vmax; }
 .aurora-blob-wrap-c{ width:38vmax; height:38vmax; top:calc(38% - 19vmax); left:calc(50% - 19vmax); }
 .aurora-blob{
@@ -2347,6 +2351,15 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 @media (prefers-reduced-motion: reduce){
   .aurora-blob{ animation:none; }
   .whyus-track{ animation:none; }
+}
+/* filter:blur(120px) روی چند لایه‌ی همیشه-درحال-transform، رویِ GPUِ
+   موبایل خیلی سنگینه (باعثِ داغ‌کردن/کندیِ گزارش‌شده می‌شه) — روی
+   دستگاه‌های لمسی (pointer:coarse) اصلاً پارالاکسِ ماوس هم اجرا نمی‌شه
+   (BackgroundCanvas.tsx)، پس درحرکتِ CSSِ خودِ بلاب‌ها رو هم همونجا متوقف
+   می‌کنیم — بلاب‌ها ثابت می‌مونن (هنوز دیده می‌شن)، فقط دیگه مدام
+   repaint/recomposite نمی‌شن. */
+@media (pointer:coarse){
+  .aurora-blob{ animation:none; }
 }
 
 .nav-link-icon:hover .nav-link-icon-svg{ color:var(--accent); }

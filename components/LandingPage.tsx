@@ -166,7 +166,7 @@ const PLANS_INTL: PlanCard[] = [
 type CompareRow = { label: string; included: Record<string, boolean>; upcoming?: boolean };
 
 const COMPARE_ROWS_IRAN: CompareRow[] = [
-  { label: "روتین روزانه، خواب و کارهای روزمره", included: { basic: true, exercise: true, trade: true, max: true } },
+  { label: "روتین روزانه", included: { basic: true, exercise: true, trade: true, max: true } },
   { label: "برنامه بدنسازی", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "ژورنال ترید", included: { basic: false, exercise: false, trade: true, max: true } },
@@ -181,7 +181,7 @@ const COMPARE_ROWS_IRAN: CompareRow[] = [
 ];
 
 const COMPARE_ROWS_INTL: CompareRow[] = [
-  { label: "Daily routine, sleep & tasks", included: { basic: true, exercise: true, trade: true, max: true } },
+  { label: "Daily routine", included: { basic: true, exercise: true, trade: true, max: true } },
   { label: "Bodybuilding program", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "Calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "Trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
@@ -213,11 +213,15 @@ function useThemeTokens() {
   return {
     isLight,
     cardBg: isLight ? "bg-white/40" : "bg-white/[0.05]",
-    cardBorder: isLight ? "border-white/60" : "border-white/10",
+    // قبلاً border-white/10 بود — یعنی نیمه‌شفاف، پس رنگِ واقعیِ خط بسته به
+    // چیزی که پشتش (بلاب‌های اورا) قرار می‌گرفت عوض می‌شد و «دورنگ»/ناهماهنگ
+    // به‌نظر می‌رسید. یک رنگِ تخت و ثابت (هم‌رنگِ --line سراسری) این مشکل رو
+    // از ریشه حل می‌کنه.
+    cardBorder: isLight ? "border-white/60" : "border-[#242E28]",
     shadow: isLight ? "shadow-[0_15px_45px_rgba(0,0,0,0.06)]" : "shadow-[0_15px_45px_rgba(0,0,0,0.35)]",
     heading: isLight ? "text-[#2B2118]" : "text-[#F3EADD]",
     muted: isLight ? "text-[#6B5D4D]" : "text-[#A79A8A]",
-    line: isLight ? "border-[#E7DCC8]" : "border-white/10",
+    line: isLight ? "border-[#E7DCC8]" : "border-[#262A2C]",
     secondaryBtnBg: isLight ? "bg-white/70 hover:bg-white" : "bg-white/5 hover:bg-white/10",
 
     accentText: isLight ? "text-[#D97706]" : "text-[#00A86B]",
@@ -359,13 +363,14 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const dirRef = useRef<"down" | "up" | null>(null);
   const lastYRef = useRef<number | null>(null);
-  const everTriggeredRef = useRef(false);
 
   // پیش‌فرض «همه‌چیز از قبل تیک‌خورده»ست — دقیقاً همون چیزی که سرور رندر
-  // می‌کنه (بدون ریسکِ hydration mismatch). فقط اگه با اسکرولِ رو‌به‌پایین
-  // برای اولین‌بار وارد دیدِ کاربر بشه، صفر می‌شه و دونه‌دونه دوباره پر می‌شه؛
-  // ورود از پایین به بالا (یعنی کاربر برگشته بالا) همون حالتِ تکمیل‌شده رو
-  // بدون انیمیشن نشون می‌ده.
+  // می‌کنه (بدون ریسکِ hydration mismatch). با هر اسکرولِ رو‌به‌پایین که
+  // کارت وارد دید بشه، صفر می‌شه و دونه‌دونه دوباره پر می‌شه؛ با اسکرولِ
+  // رو‌به‌بالا که کارت از دید خارج بشه (رفته بالاتر از صفحه)، بی‌صدا
+  // ریست می‌شه تا دفعه‌ی بعد که دوباره پایین بیاد، انیمیشن از نو پخش بشه —
+  // این «حالتِ ریورس» ه، بدونِ نیاز به دیدنِ یه انیمیشنِ معکوس روی چیزی که
+  // خودش دیگه بیرونِ صفحه‌ست.
   const [revealed, setRevealed] = useState(items.length);
   const [pulse, setPulse] = useState(false);
 
@@ -385,12 +390,18 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    let timeouts: ReturnType<typeof setTimeout>[] = [];
     const obs = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting || everTriggeredRef.current) return;
-      everTriggeredRef.current = true;
-      obs.disconnect();
-      if (dirRef.current === "down") {
+      timeouts.forEach(clearTimeout);
+      timeouts = [];
+      if (entry.isIntersecting) {
+        if (dirRef.current === "up") {
+          // از پایینِ صفحه اومده بالا و دوباره به این کارت رسیده — مستقیم
+          // حالتِ کامل رو نشون بده، نیازی به پخشِ دوباره‌ی انیمیشن نیست.
+          setRevealed(items.length);
+          setPulse(false);
+          return;
+        }
         setRevealed(0);
         items.forEach((_, i) => {
           timeouts.push(setTimeout(() => setRevealed(i + 1), 260 * (i + 1)));
@@ -401,6 +412,11 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
             timeouts.push(setTimeout(() => setPulse(false), 650));
           }, 260 * items.length + 200)
         );
+      } else if (dirRef.current === "up") {
+        // با اسکرولِ رو‌به‌بالا از دید خارج شده — ریست بی‌صدا (خودِ کارت
+        // دیگه دیده نمی‌شه)، تا دفعه‌ی بعد که دوباره پایین بیاد از نو پر بشه.
+        setRevealed(0);
+        setPulse(false);
       }
     }, { threshold: 0.35 });
     obs.observe(el);
@@ -511,7 +527,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   }
 
   return (
-    <motion.div className={cardClass} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
+    <div className={cardClass}>
       {p.highlight && (
         <span className={`absolute -top-2.5 right-5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold text-white ${t.secondaryBg}`}>
           محبوب‌ترین
@@ -522,7 +538,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
         <button
           type="button"
           onClick={scrollToDetails}
-          className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.muted} ${t.accentHoverText}`}
+          className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none underline-offset-2 transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none hover:underline ${t.accentText} ${t.accentHoverText}`}
         >
           {isIntl ? "Details" : "جزئیات"}
         </button>
@@ -544,7 +560,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
               <button
                 key={d}
                 type="button"
-                className={`whitespace-nowrap rounded-lg border px-0.5 py-1 text-[9px] font-bold backdrop-blur-md transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.isLight ? "bg-white/70" : "bg-white/10"} ${t.muted} shadow-[inset_0_1px_0_rgba(255,255,255,.14)] ${t.accentHoverBorder}`}`}
+                className={`whitespace-nowrap rounded-lg border px-0.5 py-1 text-[9px] font-bold backdrop-blur-md transition ${d === duration ? `${t.accentBorder} ${t.accentBgSoft} ${t.accentText}` : `${t.line} ${t.isLight ? "bg-white/70" : "bg-white/10"} ${t.muted} ${t.accentHoverBorder}`}`}
                 onClick={() => setDuration(d)}
               >
                 {labels[d]}
@@ -563,7 +579,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
           </Link>
         </>
       )}
-    </motion.div>
+    </div>
   );
 }
 
@@ -609,23 +625,23 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="sec-landing-features" style={{ paddingTop: 24 }}>
+      <section id="sec-landing-features" style={{ paddingTop: 32 }}>
         <FeatureCarousel />
       </section>
 
-      <section id="sec-landing-today" style={{ paddingTop: 28 }}>
+      <section id="sec-landing-today" style={{ paddingTop: 32 }}>
         <TodayProgressCard isIntl={isIntl} />
       </section>
 
-      <section id="sec-landing-trust" style={{ paddingTop: 8 }}>
+      <section id="sec-landing-trust" style={{ paddingTop: 32 }}>
         <QuoteCard />
       </section>
 
-      <section id="sec-landing-whyus" style={{ paddingTop: 8 }}>
+      <section id="sec-landing-whyus" style={{ paddingTop: 32 }}>
         <WhyUsSection isIntl={isIntl} />
       </section>
 
-      <section id="sec-landing-plans" style={{ paddingTop: 8 }}>
+      <section id="sec-landing-plans" style={{ paddingTop: 32 }}>
         <div style={{ textAlign: "center", marginBottom: 18 }}>
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>پلن‌ها</h2>
         </div>
