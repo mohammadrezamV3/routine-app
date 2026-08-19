@@ -1,12 +1,17 @@
 # ─── مرحله ۱: نصب dependencies ───────────────────────────────────────────
 FROM node:20-alpine AS deps
 WORKDIR /app
+# موتورهای Prisma به libssl نیاز دارن — node:20-alpine خامْ فاقدشه؛ بدونش
+# schema/query engine با خطای غیر-JSON ("Could not parse schema engine
+# response") روی musl کرش می‌کنه.
+RUN apk add --no-cache openssl
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # ─── مرحله ۲: build ───────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Prisma Client باید قبل از build ساخته بشه وگرنه import هاش fail می‌شن
@@ -16,6 +21,7 @@ RUN npm run build
 # ─── مرحله ۳: ایمیج نهایی اجرا (سبک، بدون devDependencies) ───────────────
 FROM node:20-alpine AS runner
 WORKDIR /app
+RUN apk add --no-cache openssl
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
