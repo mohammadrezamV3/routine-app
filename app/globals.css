@@ -2423,10 +2423,18 @@ body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) 
   overflow:hidden;
   -webkit-mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
   mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  /* باگِ شناخته‌شده‌ی سافاری/وب‌کیت: عنصرِ maskدار که بچه‌ش دائم انیمیشنِ
+     transform داره، بعد از یه repaintِ اجباری (مثلاً بعد از اسکرولِ سریع
+     یا جمع‌شدنِ نوارِ آدرس) گاهی کاملاً بدونِ محتوا رندر می‌شه تا یه
+     تعاملِ بعدی دوباره مجبورش کنه ریپینت بشه — همون خانواده‌ی باگِ
+     هدرِ ثابت. راه‌حل یکسانه: با translateZ(0) این عنصر رو روی لایه‌ی
+     ترکیبِ خودش نگه می‌داریم تا وب‌کیت backing storeِ ماسک‌شده رو گم نکنه. */
+  -webkit-transform:translateZ(0); transform:translateZ(0);
 }
 .whyus-track{
   display:flex; width:max-content; gap:10px;
   animation:whyusMarquee 38s linear infinite;
+  -webkit-transform:translateZ(0); will-change:transform;
 }
 .whyus-card{ width:130px; flex:0 0 auto; }
 @media (min-width:640px){
