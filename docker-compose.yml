@@ -31,5 +31,22 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
 
+  # کانتینرِ یک‌بارمصرف برای migrate/seed — عمداً از استیجِ builder (نه runner
+  # نهایی) استفاده می‌کنه چون اونجا Prisma CLI و tsx (که devDependency هستن و
+  # عمداً از ایمیجِ سبکِ production حذف شدن) نصب و pin‌شده به نسخه‌ی درستِ
+  # پروژه موجودن. با پروفایلِ tools، توی `docker compose up` عادی اجرا نمی‌شه.
+  migrate:
+    build:
+      context: .
+      target: builder
+    profiles: ["tools"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-routine}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-routine}
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db_data:
