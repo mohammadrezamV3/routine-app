@@ -356,6 +356,12 @@
     border-radius:999px;
     background:rgba(255,255,255,.04);
     backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+    /* سافاری موبایل حین انیمیشنِ جمع‌شدنِ نوارِ آدرس (اسکرول) گاهی
+       عنصرِ position:fixed رو از بقیه‌ی صفحه جدا رندر می‌کنه (یه فریمِ
+       کوتاه که انگار دو لایه‌ی متفاوتن) — translateZ(0) این عنصر رو
+       روی لایه‌ی ترکیبِ خودش (GPU) نگه می‌داره و اون جداییِ بصری رو حذف می‌کنه. */
+    transform:translateZ(0); -webkit-transform:translateZ(0);
+    will-change:transform;
   }
   .app-topbar::before{
     content:""; position:absolute; inset:0; z-index:1; pointer-events:none;

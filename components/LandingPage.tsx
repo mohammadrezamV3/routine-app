@@ -127,10 +127,10 @@ type PlanCard = {
   // قیمتِ اصلیِ (قبل‌ازتخفیفِ) پلنِ یک‌ماهه — فقط اگه ست بشه، به‌صورت خط‌خورده
   // کنارِ قیمتِ واقعی نشون داده می‌شه.
   originalPrice1mo?: string;
-  // تخفیفِ سالانه: به‌ازای هر یک سال خرید، ۴۵ روز رایگانه — یعنی روی ۱۲ ماه،
-  // کاربر فقط قیمتِ ۱۰.۵ ماه رو پرداخت می‌کنه. عددِ خط‌خورده (۱۲× قیمتِ ماهانه)
-  // اینجاست؛ قیمتِ واقعیِ ۱۲ماهه (۱۰.۵× ماهانه) هم توی prices["12"] جایگزین شد.
-  original12mo?: string;
+  // تخفیفِ ۱۲.۵٪ (هم‌ارزِ «۴۵ روز رایگان به‌ازای هر سال») — روی ۳/۶/۱۲ ماهه هم
+  // با همین نرخ اعمال شده، نه فقط سالانه. قیمتِ واقعیِ تخفیف‌خورده توی
+  // prices جایگزین شده؛ اینجا فقط عددِ اصلیِ (پیش‌ازتخفیفِ) خط‌خورده‌ست.
+  originalPrices?: Partial<Record<Duration, string>>;
 };
 
 // ترتیب پلن‌ها: Base Plan (رایگان) اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
@@ -140,18 +140,18 @@ const PLANS_IRAN: PlanCard[] = [
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
-    prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۵,۰۰۰ تومان", "6": "۴۷۵,۰۰۰ تومان", "12": "۱,۰۳۹,۵۰۰ تومان" },
-    original12mo: "۱,۱۸۸,۰۰۰ تومان",
+    prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۰,۰۰۰ تومان", "6": "۵۲۰,۰۰۰ تومان", "12": "۱,۰۳۹,۵۰۰ تومان" },
+    originalPrices: { "3": "۲۹۷,۰۰۰ تومان", "6": "۵۹۴,۰۰۰ تومان", "12": "۱,۱۸۸,۰۰۰ تومان" },
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
-    prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۴۵,۰۰۰ تومان", "6": "۶۲۰,۰۰۰ تومان", "12": "۱,۳۵۴,۵۰۰ تومان" },
-    original12mo: "۱,۵۴۸,۰۰۰ تومان",
+    prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۳۹,۰۰۰ تومان", "6": "۶۷۷,۰۰۰ تومان", "12": "۱,۳۵۴,۵۰۰ تومان" },
+    originalPrices: { "3": "۳۸۷,۰۰۰ تومان", "6": "۷۷۴,۰۰۰ تومان", "12": "۱,۵۴۸,۰۰۰ تومان" },
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
-    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۳۵,۰۰۰ تومان", "6": "۹۵۵,۰۰۰ تومان", "12": "۲,۰۸۹,۵۰۰ تومان" },
-    original12mo: "۲,۳۸۸,۰۰۰ تومان",
+    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۲۲,۰۰۰ تومان", "6": "۱,۰۴۵,۰۰۰ تومان", "12": "۲,۰۸۹,۵۰۰ تومان" },
+    originalPrices: { "3": "۵۹۷,۰۰۰ تومان", "6": "۱,۱۹۴,۰۰۰ تومان", "12": "۲,۳۸۸,۰۰۰ تومان" },
   },
 ];
 
@@ -161,18 +161,18 @@ const PLANS_INTL: PlanCard[] = [
   },
   {
     key: "exercise", nameFa: "Plan Gym", icon: ICONS.exercise,
-    prices: { "1": "$7.99", "3": "$21.99", "6": "$38.99", "12": "$83.90" },
-    original12mo: "$95.88",
+    prices: { "1": "$7.99", "3": "$20.97", "6": "$41.95", "12": "$83.90" },
+    originalPrices: { "3": "$23.97", "6": "$47.94", "12": "$95.88" },
   },
   {
     key: "trade", nameFa: "Plan Trader", icon: ICONS.trade,
-    prices: { "1": "$12.99", "3": "$34.99", "6": "$62.99", "12": "$136.40" },
-    original12mo: "$155.88",
+    prices: { "1": "$12.99", "3": "$34.10", "6": "$68.20", "12": "$136.40" },
+    originalPrices: { "3": "$38.97", "6": "$77.94", "12": "$155.88" },
   },
   {
     key: "max", nameFa: "Plan Max", highlight: true, icon: <Sparkles size={16} />,
-    prices: { "1": "$17.99", "3": "$47.99", "6": "$85.99", "12": "$188.90" },
-    original12mo: "$215.88",
+    prices: { "1": "$17.99", "3": "$47.22", "6": "$94.45", "12": "$188.90" },
+    originalPrices: { "3": "$53.97", "6": "$107.94", "12": "$215.88" },
   },
 ];
 
@@ -263,21 +263,29 @@ function useThemeTokens() {
 function FeatureCarousel() {
   const t = useThemeTokens();
   const [index, setIndex] = useState(0);
+  const [dir, setDir] = useState(1);
   const pausedRef = useRef(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => {
-      if (!pausedRef.current) setIndex((i) => (i + 1) % FEATURES.length);
+      if (!pausedRef.current) {
+        setDir(1);
+        setIndex((i) => (i + 1) % FEATURES.length);
+      }
     }, 12000);
     return () => clearInterval(id);
   }, []);
 
   const f = FEATURES[index];
-  const go = (delta: number) => setIndex((i) => (i + delta + FEATURES.length) % FEATURES.length);
+  const go = (delta: number) => {
+    setDir(delta);
+    setIndex((i) => (i + delta + FEATURES.length) % FEATURES.length);
+  };
 
-  // زیر md فلش‌ها مخفی‌ن و به‌جاش با سوایپ انگشت جابه‌جا می‌شه
+  // زیر md فلش‌ها مخفی‌ن و به‌جاش با سوایپ انگشت جابه‌جا می‌شه —
+  // کشیدن به چپ باید عقب ببره (اسلایدِ قبلی)، کشیدن به راست باید جلو ببره (اسلایدِ بعدی)
   function onTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX;
   }
@@ -286,7 +294,7 @@ function FeatureCarousel() {
     const delta = e.changedTouches[0].clientX - touchStartX.current;
     touchStartX.current = null;
     if (Math.abs(delta) < 40) return;
-    go(delta < 0 ? 1 : -1);
+    go(delta < 0 ? -1 : 1);
   }
 
   return (
@@ -297,43 +305,49 @@ function FeatureCarousel() {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <motion.div
-        key={index}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        ref={boxRef}
-        className={`relative flex min-h-[236px] flex-col items-center justify-center rounded-[28px] border ${t.cardBorder} ${t.cardBg} px-8 py-9 text-center ${t.shadow} backdrop-blur-xl sm:min-h-[208px] sm:px-14`}
-      >
-        <button
-          type="button"
-          className={`absolute left-3 top-1/2 hidden -translate-y-1/2 transition md:flex ${t.muted} ${t.accentHoverText}`}
-          aria-label="قابلیت قبلی"
-          onClick={() => go(-1)}
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <span className={`mx-auto mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{f.icon}</span>
-        <div className={`text-[11px] font-bold uppercase tracking-[0.12em] ${t.muted}`}>{f.title}</div>
-        <div className={`mt-1.5 text-[17px] font-extrabold ${t.heading}`}>{f.hook}</div>
-        <div className={`mt-1.5 text-[13.5px] leading-7 ${t.muted}`}>{f.body}</div>
-        <button
-          type="button"
-          className={`absolute right-3 top-1/2 hidden -translate-y-1/2 transition md:flex ${t.muted} ${t.accentHoverText}`}
-          aria-label="قابلیت بعدی"
-          onClick={() => go(1)}
-        >
-          <ChevronRight size={18} />
-        </button>
+      <div className={`relative overflow-hidden rounded-[28px] border ${t.cardBorder} ${t.cardBg} ${t.shadow} backdrop-blur-xl`}>
+        <AnimatePresence initial={false} custom={dir} mode="popLayout">
+          <motion.div
+            key={index}
+            custom={dir}
+            initial={{ opacity: 0, x: dir * 36 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: dir * -36 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            ref={boxRef}
+            className={`relative flex min-h-[236px] flex-col items-center justify-center px-8 py-9 text-center sm:min-h-[208px] sm:px-14`}
+          >
+            <button
+              type="button"
+              className={`absolute left-3 top-1/2 hidden -translate-y-1/2 transition md:flex ${t.muted} ${t.accentHoverText}`}
+              aria-label="قابلیت قبلی"
+              onClick={() => go(-1)}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className={`mx-auto mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{f.icon}</span>
+            <div className={`text-[11px] font-bold uppercase tracking-[0.12em] ${t.muted}`}>{f.title}</div>
+            <div className={`mt-1.5 text-[17px] font-extrabold ${t.heading}`}>{f.hook}</div>
+            <div className={`mt-1.5 text-[13.5px] leading-7 ${t.muted}`}>{f.body}</div>
+            <button
+              type="button"
+              className={`absolute right-3 top-1/2 hidden -translate-y-1/2 transition md:flex ${t.muted} ${t.accentHoverText}`}
+              aria-label="قابلیت بعدی"
+              onClick={() => go(1)}
+            >
+              <ChevronRight size={18} />
+            </button>
 
-        {/* دقیقاً هم‌کلاسِ نقطه‌های ویزاردِ برنامه‌ی هوشمند (AiExercisePlanWizard) —
-            همون سایز/رنگ/حالتِ فعال، این‌بار برای شماره‌ی اسلایدِ قابلیت‌ها */}
-        <div className="exercise-wizard-dots">
-          {FEATURES.map((feat, i) => (
-            <span key={feat.title} className={`exercise-wizard-dot${i === index ? " on" : ""}`} />
-          ))}
-        </div>
-      </motion.div>
+            {/* دقیقاً هم‌کلاسِ نقطه‌های ویزاردِ برنامه‌ی هوشمند (AiExercisePlanWizard) —
+                همون سایز/رنگ/حالتِ فعال، این‌بار برای شماره‌ی اسلایدِ قابلیت‌ها */}
+            <div className="exercise-wizard-dots">
+              {FEATURES.map((feat, i) => (
+                <span key={feat.title} className={`exercise-wizard-dot${i === index ? " on" : ""}`} />
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -517,7 +531,7 @@ function WhyUsSection({ isIntl }: { isIntl: boolean }) {
   // عملاً حس می‌شد «چهارتا رد شد و ایستاد»، چون حرکت آنقدر کند بود که تا
   // چرخیدنِ کامل هیچ‌وقت دیده نمی‌شد. سرعتِ بیشتر یعنی هر کارت ظرفِ چند
   // ثانیه رد می‌شه و تداومِ بی‌پایانش زودتر حس می‌شه.
-  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 16, pxPerSecond: 60 });
+  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 16, pxPerSecond: 34 });
 
   return (
     <div>
@@ -546,7 +560,7 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
-  const isAnnual = duration === "12";
+  const originalPrice = p.originalPrices?.[duration];
 
   const cardClass = p.highlight
     ? `relative flex flex-col rounded-[22px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-4 backdrop-blur-xl ${t.secondaryCardShadow}`
@@ -614,8 +628,8 @@ function PlanCardView({ p, isIntl }: { p: PlanCard; isIntl: boolean }) {
 
           <div className="mt-3 flex items-baseline gap-2">
             <span className={`text-[15px] font-extrabold ${t.heading}`}>{p.prices![duration]}</span>
-            {isAnnual && p.original12mo && (
-              <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{p.original12mo}</span>
+            {originalPrice && (
+              <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{originalPrice}</span>
             )}
           </div>
 

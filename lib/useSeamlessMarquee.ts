@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 // ترکِ اسکرولِ بی‌درزِ عمومی — دو مشکلِ رایجِ نوارهای درحال‌عبور رو حل می‌کنه:
 // ۱) اگه آیتم‌ها کم باشن (مثلاً کاربر فقط چندتا نماد انتخاب کرده)، عرضِ کلِ
@@ -22,7 +22,10 @@ export function useSeamlessMarquee<T>(
   }
   const track = [...base, ...base];
 
-  useEffect(() => {
+  // useLayoutEffect (نه useEffect) عمداً — قبل از رنگ‌آمیزیِ اولِ مرورگر
+  // اجرا می‌شه، پس همون فریمِ اول با durationِ واقعی رندر می‌شه، نه با
+  // fallbackِ ۴۰ثانیه‌ای که بعداً عوض بشه و یه پرش/تاخیرِ محسوس بده.
+  useLayoutEffect(() => {
     const el = trackRef.current;
     if (!el) return;
     function measure() {
