@@ -13,6 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const database = await prisma.notepadDatabase.findFirst({
     where: { id: params.id, block: { page: { userId } } },
@@ -31,6 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const database = await prisma.notepadDatabase.findFirst({ where: { id: params.id, block: { page: { userId } } } });
   if (!database) return NextResponse.json({ error: "دیتابیس پیدا نشد" }, { status: 404 });

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey } from "@prisma/client";
+import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireModule(ModuleKey.ROADMAP);
+  const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
@@ -14,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireModule(ModuleKey.ROADMAP);
+  const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 

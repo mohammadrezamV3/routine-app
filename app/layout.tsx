@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Vazirmatn, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Vazirmatn, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
@@ -27,6 +27,18 @@ const plexMono = IBM_Plex_Sans_Arabic({
   variable: "--font-plexmono",
 });
 
+// وضیرمتن/پلکس هرچند subset لاتین هم دارن، ولی گلیف‌های لاتینِ خودشون
+// (طراحی‌شده برای هم‌وزنی با فارسی) به‌اندازه‌ی یه فونتِ لاتینِ اختصاصی
+// خوش‌فرم نیستن — برای متن/اعدادِ انگلیسی زشت به‌نظر می‌رسیدن. چون این فونت
+// (برخلافِ دوتای بالا) فقط subsetِ لاتین رو داره، در استکِ فونت هر جا قبل از
+// وضیرمتن/پلکس بیاد، فقط برای کاراکترهای لاتین/اعدادِ لاتین انتخاب می‌شه —
+// فارسی/عربی همچنان بدونِ تغییر به وضیرمتن/پلکس سقوط می‌کنه.
+const latin = Inter({
+  subsets: ["latin"],
+  weight: "variable",
+  variable: "--font-latin",
+});
+
 export const metadata: Metadata = {
   title: "Arion",
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
@@ -41,6 +53,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#0E1011",
 };
@@ -56,7 +70,7 @@ const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fa" dir="rtl" className={`${vazir.variable} ${plexMono.variable}`}>
+    <html lang="fa" dir="rtl" className={`${vazir.variable} ${plexMono.variable} ${latin.variable}`}>
       {/* suppressHydrationWarning لازمه چون اسکریپتِ بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}

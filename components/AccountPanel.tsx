@@ -55,7 +55,7 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose:
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel open">
+      <div className="modal-panel account-modal-panel open">
         <div className="modal-head">
           <div className="modal-title">پنل کاربری</div>
           <button className="nav-close" onClick={onClose}>×</button>

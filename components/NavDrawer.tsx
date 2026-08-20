@@ -89,7 +89,9 @@ export const ICONS: Record<string, JSX.Element> = {
 // module: اگه ست بشه، یعنی این آیتم پولیه — اگه کاربر دسترسیِ فعال به این
 // ماژول رو نداشته باشه، کنار لیبلش یه آیکون قفل نشون داده می‌شه (فقط
 // نشانه‌ست، enforcement واقعی همچنان سمتِ سرور/ModuleGate انجام می‌شه).
-type NavLink = { href: string; label: string; icon: string; module?: string };
+// superAdminOnly: کلاً برای همه به‌جز سوپریوزر غیرفعاله (نه یه ماژولِ
+// خریدنی مثلِ بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
+type NavLink = { href: string; label: string; icon: string; module?: string; superAdminOnly?: boolean };
 type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string };
 type NavItem = NavLink | NavGroup;
 
@@ -99,8 +101,8 @@ function isGroup(item: NavItem): item is NavGroup {
 
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
-  { href: "/notepad", label: "Notepad", icon: "notepad" },
-  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", module: "ROADMAP" },
+  { href: "/notepad", label: "Notepad", icon: "notepad", superAdminOnly: true },
+  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", superAdminOnly: true },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
@@ -407,7 +409,7 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
-          {LINKS.map((item) => {
+          {LINKS.filter((item) => !("superAdminOnly" in item && item.superAdminOnly) || (session?.user as any)?.isSuperAdmin).map((item) => {
             const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;

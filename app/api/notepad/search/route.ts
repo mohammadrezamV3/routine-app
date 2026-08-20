@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const q = (new URL(req.url).searchParams.get("q") || "").trim().toLowerCase();
   if (!q) return NextResponse.json({ results: [] });

@@ -25,6 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const record = await prisma.notepadDatabaseRecord.findFirst({
     where: { id: params.recordId, databaseId: params.id, database: { block: { page: { userId } } } },
@@ -50,6 +51,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const record = await prisma.notepadDatabaseRecord.findFirst({
     where: { id: params.recordId, databaseId: params.id, database: { block: { page: { userId } } } },
