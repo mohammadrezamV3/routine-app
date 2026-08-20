@@ -1256,16 +1256,21 @@
   .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; flex-shrink:0;}
 
   /* هم دسکتاپ هم موبایل: تایم‌لاینِ افقیِ یکسان (بیداری راست، خواب چپ، نقطه‌ها
-     روی یه خطِ افقی) — موبایل فقط یه‌پله کوچیک‌تر می‌شه، ساختارش عوض نمی‌شه. */
-  .week-timeline{overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; direction:ltr;}
-  .week-timeline-track{min-width:520px; direction:rtl;}
+     روی یه خطِ افقی) — موبایل فقط یه‌پله کوچیک‌تر می‌شه، ساختارش عوض نمی‌شه.
+     عمداً بدونِ اسکرولِ افقی: track همیشه دقیقاً عرضِ همون کارتِ روزه
+     (نه min-width بزرگ‌تر که قبلاً باعثِ overflow-x:auto می‌شد) — چیدمانِ
+     ضدِّ همپوشانیِ positionTimedTasks (lib/weeklyTimeline.ts) با درصدِ نسبی
+     کار می‌کنه، پس روزهای شلوغ فقط فاصله‌ی پیکسلیِ کمتری بینِ آیتم‌ها
+     می‌گیرن، نه اینکه صفحه اسکرول‌خور بشه. */
+  .week-timeline{overflow:visible;}
+  .week-timeline-track{width:100%; min-width:0;}
 
   @media (max-width:700px){
     .weekly-glass{ padding:14px 14px; }
     .week-day-head{ padding:10px 0; }
     .week-day-name{ font-size:12px; }
 
-    .week-timeline-track{ min-width:420px; height:96px; }
+    .week-timeline-track{ height:96px; }
 
     .wt-item{ width:46px; }
     .wt-marker-col{ height:32px; }
@@ -1485,7 +1490,13 @@
     transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
   }
   body:not([data-theme="light"]) .day-pill{ background:#0B0C0D; border:1px solid rgba(255,255,255,.07); }
-  .day-pill:hover{border-color:var(--accent); color:var(--text);}
+  /* فقط دستگاه‌هایی که واقعاً ماوس دارن (hover:hover) این افکت رو می‌گیرن —
+     روی موبایل، :hover بعدِ تپ‌کردن «چسبیده» می‌مونه تا یه تپِ دیگه جای دیگه؛
+     یعنی وقتی کاربر یه روز رو دی‌سلکت می‌کرد، متنش هنوز به‌خاطرِ همین
+     hoverِ چسبیده سفید/روشن می‌موند، انگار هنوز انتخابه. */
+  @media (hover:hover) and (pointer:fine){
+    .day-pill:hover{border-color:var(--accent); color:var(--text);}
+  }
   .day-pill:active{transform:scale(.92);}
   .day-pill.on{
     background:var(--accent-dim); border-color:var(--accent); color:var(--accent); font-weight:800;
@@ -1857,18 +1868,30 @@
   .wsearch-newrow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 0;}
   .wsearch-newrow:first-child{margin-top:6px;}
   .wsearch-newrow + .wsearch-newrow{border-top:1px dashed var(--line);}
+  /* توی AddProgramForm.tsx، هر ردیف برای انیمیشنِ ورود/خروج (framer-motion)
+     داخلِ یه wrapperِ .wsearch-newrow-anim جداگونه‌ست، پس دیگه چند
+     .wsearch-newrow مستقیماً کنارِ هم (siblingِ واقعی) نیستن و قواعدِ بالا
+     روشون اثر نمی‌کنه — این دو خط همون افکت رو رویِ خودِ wrapper تکرار
+     می‌کنن. EditOccurrenceForm هنوز بدونِ wrapper، از قواعدِ بالا مستقیم
+     استفاده می‌کنه. */
+  .wsearch-newrow-anim:first-child .wsearch-newrow{margin-top:6px;}
+  .wsearch-newrow-anim + .wsearch-newrow-anim{border-top:1px dashed var(--line);}
   .wsearch-newrow-daywrap{display:flex; align-items:center; gap:8px; width:100%; order:1;}
   .wsearch-newrow-daywrap .day-picker{flex:1 1 auto; width:auto; min-width:0;}
   .wsearch-newrow .time-field{order:2;}
   /* دکمه‌ی حذفِ ردیف قبلاً فقط یه آیکونِ دایره‌ای بود (کنارِ day-picker) —
      الان یه متنِ واضحِ قرمز («حذف این روز») زیرِ کلِ ردیف، راست‌چین، تا هم
-     منظورش شفاف‌تر باشه هم جاش گم نشه وسطِ بقیه‌ی دکمه‌ها. */
+     منظورش شفاف‌تر باشه هم جاش گم نشه وسطِ بقیه‌ی دکمه‌ها.
+     نکته: flex-end توی یه فلکسِ RTL یعنی سمتِ چپ (main-end از دیدِ RTL)، نه
+     راست — همینه که دکمه رو غلط سمتِ چپ می‌نداخت؛ flex-start همون سمتِ
+     راستِ واقعیه. */
   .wsearch-newrow-remove-text{
-    order:3; flex:1 1 100%; display:flex; justify-content:flex-end; align-items:center; gap:4px;
+    order:3; flex:1 1 100%; display:flex; justify-content:flex-start; align-items:center; gap:4px;
     background:none; border:none; padding:6px 2px 0; margin-top:2px; cursor:pointer;
     color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700;
     transition:opacity .15s ease;
   }
+  .wsearch-newrow-remove-text svg{ flex-shrink:0; }
   .wsearch-newrow-remove-text:hover{ opacity:.75; }
   .wsearch-newrow-remove-text:active{ opacity:.55; }
   /* «افزودن روز دیگر» راستِ ردیف می‌مونه (main-start توی rtl)، دکمه‌ی تیکِ
@@ -2154,10 +2177,16 @@ body[data-theme="light"] .auth-box .wsearch-newform-name{
   transition:color .2s ease;
 }
 .auth-remember-label:hover{ color:var(--text); }
-/* چک‌باکس دست‌ساز — appearance:none روی input خام، تیک با یه SVG محو-بزرگ‌شونده */
+/* توی فرم‌هایی مثل AddProgramForm، قاعده‌ی عمومیِ «.wsearch-newform label{
+   display:block }» (برای لیبل‌های معمولیِ فیلدها) اسپسیفیسیتیِ بالاتری از
+   همین .auth-remember-label داره (کلاس+المنت > تکْ‌کلاس) و flexِ ردیفِ
+   چک‌باکس رو خنثی می‌کرد — همون دلیلِ ردیف‌نبودنِ چک‌باکس با متنش. */
+.wsearch-newform .auth-remember-label{ display:inline-flex; }
+/* چک‌باکس دست‌ساز — appearance:none روی input خام، تیک با یه SVG محو-بزرگ‌شونده.
+   کمی از سایزِ استانداردِ ۱۹px بزرگ‌تر شد تا لمسِ راحت‌تری روی موبایل داشته باشه. */
 .auth-checkbox{
   appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0;
-  width:19px; height:19px; border-radius:6px;
+  width:22px; height:22px; border-radius:7px;
   border:1.5px solid var(--line); background:rgba(var(--bg-rgb),.5);
   cursor:pointer; position:relative;
   transition:background .2s ease, border-color .2s ease, transform .12s ease;
@@ -2896,6 +2925,13 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
   75%{transform:translateX(-1px);}
 }
 .exercise-wizard-next-btn.shake{ animation:wizardNextShake .3s ease; }
+/* توی فرمِ «افزودنِ برنامه‌ی جدید» (AddProgramForm) این دکمه باید تمامِ‌عرض
+   و بزرگ‌تر باشه (نه اندازه‌ی کوچیکِ پیش‌فرضِ ویزاردِ AI) — چون خودِ کلاسِ
+   پایه با !important روی padding/font-size، استایلِ inline رو بی‌اثر
+   می‌کرد؛ یه مادیفایرِ اختصاصی با همون سطحِ !important لازم بود. */
+.exercise-wizard-next-btn.wide{
+  width:100%; padding:13px 0 !important; font-size:13.5px !important;
+}
 
 /* تایتلِ صفحه‌ی انتخابِ «افزودن برنامه» (AI/دستی) — بزرگ‌تر از تایتلِ
    پیش‌فرضِ wsearch-newform-title (که جاهای دیگه‌ی اپ هم استفاده می‌شه، پس

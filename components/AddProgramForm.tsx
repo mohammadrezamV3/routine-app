@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronRight, Minus } from "lucide-react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
@@ -19,8 +20,13 @@ const now = new Date();
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 // یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعتِ واحد برای همه‌شون) —
-// موقعِ ثبت، یک occurrence جدا برای هر روزِ انتخاب‌شده ساخته می‌شه.
-type NewRow = { jsDays: number[]; start: string; end: string };
+// موقعِ ثبت، یک occurrence جدا برای هر روزِ انتخاب‌شده ساخته می‌شه. idِ
+// ثابت (نه indexِ آرایه) لازمه چون AnimatePresence برای تشخیصِ درست‌ِ
+// ورود/خروجِ هر ردیف (موقعِ افزودن/حذفِ ردیف) به یه کلیدِ پایدار نیاز داره.
+type NewRow = { id: string; jsDays: number[]; start: string; end: string };
+function newRowId(): string {
+  return "row-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
 type Step = "info" | "details";
 
 // فرمِ مستقلِ «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
@@ -44,7 +50,7 @@ export function AddProgramForm({
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
   const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
-  const [rows, setRows] = useState<NewRow[]>([{ jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
+  const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
@@ -53,7 +59,7 @@ export function AddProgramForm({
   const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
-    setRows((r) => [...r, { jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
+    setRows((r) => [...r, { id: newRowId(), jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
   }
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));
@@ -66,6 +72,10 @@ export function AddProgramForm({
       r.map((row, idx) => {
         if (idx !== i) return row;
         const has = row.jsDays.includes(jsDay);
+        // همیشه باید حداقل یک روز انتخاب‌شده بمونه — دی‌سلکت‌کردنِ آخرین
+        // روزِ باقی‌مونده نادیده گرفته می‌شه، وگرنه یه ردیفِ بدونِ هیچ روزی
+        // می‌شد که هیچ occurrence‌ای ازش قابلِ ساختن نیست.
+        if (has && row.jsDays.length === 1) return row;
         const next = has ? row.jsDays.filter((d) => d !== jsDay) : [...row.jsDays, jsDay];
         return { ...row, jsDays: next };
       })
@@ -196,41 +206,67 @@ export function AddProgramForm({
                   onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(false); }}
                 />
               </div>
+              {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>اسم برنامه رو وارد کن</div>}
 
-              {rows.map((r, ri) => (
-                <div key={ri} className="wsearch-newrow">
-                  <div className="wsearch-newrow-daywrap">
-                    <div className={`day-picker${rowErrors[ri]?.days ? " field-error" : ""}`}>
-                      {WEEK_ORDER.map((o) => (
-                        <span
-                          key={o.jsDay}
-                          className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
-                          onClick={() => toggleRowDay(ri, o.jsDay)}
-                        >
-                          {o.short}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
-                    <span className="time-field-label">ساعت شروع</span>
-                    <div className="field-error-wrap">
-                      <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
-                    </div>
-                  </div>
-                  <div className={`time-field${rowErrors[ri]?.end ? " field-error" : ""}`}>
-                    <span className="time-field-label">ساعت پایان</span>
-                    <div className="field-error-wrap">
-                      <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
-                    </div>
-                  </div>
-                  {rows.length > 1 && (
-                    <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
-                      حذف این روز
-                    </button>
-                  )}
-                </div>
-              ))}
+              <AnimatePresence initial={false}>
+                {rows.map((r, ri) => {
+                  const err = rowErrors[ri];
+                  const rowErrMsgs: string[] = [];
+                  if (err?.days) rowErrMsgs.push("حداقل یک روز رو انتخاب کن");
+                  if (err?.start) rowErrMsgs.push("ساعت شروع رو وارد کن");
+                  if (err?.end) rowErrMsgs.push("ساعت پایان رو وارد کن");
+                  return (
+                    <motion.div
+                      key={r.id}
+                      className="wsearch-newrow-anim"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ height: { duration: 0.26, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.2 } }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <div className="wsearch-newrow">
+                        <div className="wsearch-newrow-daywrap">
+                          <div className={`day-picker${err?.days ? " field-error" : ""}`}>
+                            {WEEK_ORDER.map((o) => (
+                              <span
+                                key={o.jsDay}
+                                className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
+                                onClick={() => toggleRowDay(ri, o.jsDay)}
+                              >
+                                {o.short}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={`time-field${err?.start ? " field-error" : ""}`}>
+                          <span className="time-field-label">ساعت شروع</span>
+                          <div className="field-error-wrap">
+                            <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
+                          </div>
+                        </div>
+                        <div className={`time-field${err?.end ? " field-error" : ""}`}>
+                          <span className="time-field-label">ساعت پایان</span>
+                          <div className="field-error-wrap">
+                            <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
+                          </div>
+                        </div>
+                        {rows.length > 1 && (
+                          <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
+                            <Minus size={12} />
+                            حذف این روز
+                          </button>
+                        )}
+                      </div>
+                      {!!rowErrMsgs.length && (
+                        <div className="field-error-msg" style={{ display: "block", marginTop: -4, marginBottom: 4 }}>
+                          {rowErrMsgs.join(" — ")}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
 
               <button type="button" className="wsearch-add-btn" onClick={addRow}>
                 افزودن روز دیگر
@@ -267,8 +303,8 @@ export function AddProgramForm({
 
               <button
                 type="button"
-                className={`exercise-wizard-next-btn${shakeNext ? " shake" : ""}`}
-                style={{ marginTop: 18, width: "100%", padding: "12px 0", fontSize: 13 }}
+                className={`exercise-wizard-next-btn wide${shakeNext ? " shake" : ""}`}
+                style={{ marginTop: 18 }}
                 onClick={goNext}
               >
                 بعدی

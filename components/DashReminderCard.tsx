@@ -13,11 +13,12 @@ import { getNotificationPermission, requestNotificationPermission } from "@/lib/
 
 // برنامه‌های «خیلی زیاد»/«زیاد»ِ همین هفته — واقعاً از customOccurrences
 // (با تگِ اهمیتی که موقع افزودن/ویرایش برنامه انتخاب می‌شه) فیلتر می‌شه،
-// دیگه یادآوریِ mock نیست. کلیک روی هر ردیف همون برنامه رو باز می‌کنه؛ کلیک
-// روی زنگوله یعنی «این برنامه ۳۰ دقیقه قبل شروعش بهم اطلاع بده» — اگه اجازه‌ی
-// نوتیف مرورگر هنوز گرفته نشده باشه همینجا درخواستش می‌ره (خودِ یادآوری واقعی
-// توسط NotificationEngine و ۳۰ دقیقه مونده به شروع فرستاده می‌شه).
-export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onOpenProgram?: (name: string) => void }) {
+// دیگه یادآوریِ mock نیست. عمداً هیچ‌جای این کارت کلیک‌پذیر برای بازکردنِ
+// ProgramCard نیست — تنها تعاملِ ممکن روی هر ردیف، زنگوله‌ست: «این برنامه
+// ۳۰ دقیقه قبل شروعش بهم اطلاع بده» — اگه اجازه‌ی نوتیف مرورگر هنوز گرفته
+// نشده باشه همینجا درخواستش می‌ره (خودِ یادآوری واقعی توسط NotificationEngine
+// و ۳۰ دقیقه مونده به شروع فرستاده می‌شه).
+export function DashReminderCard({ delay }: { delay?: number }) {
   const [items, setItems] = useState<ImportantOccurrence[] | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   // `typeof document !== "undefined"` جواب می‌ده true حتی توی همون رندرِ اولِ
@@ -89,11 +90,9 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
             list.map((r) => {
               const dayName = WEEK_ORDER.find((w) => w.jsDay === r.jsDay)?.name ?? "";
               return (
-                <button
-                  type="button"
+                <div
                   key={`${r.id}-${r.jsDay}`}
-                  onClick={() => onOpenProgram?.(r.name)}
-                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right transition hover:border-white/10 sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
+                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
                 >
                   <div className="min-w-0 flex-1 text-right">
                     <div className="truncate text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{r.name}</div>
@@ -115,7 +114,7 @@ export function DashReminderCard({ delay, onOpenProgram }: { delay?: number; onO
                   >
                     <Bell className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" fill={r.notify ? "currentColor" : "none"} />
                   </span>
-                </button>
+                </div>
               );
             })
           )}
