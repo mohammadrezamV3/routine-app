@@ -10,18 +10,27 @@ type ChatContentPart =
   | { type: "text"; text: string }
   | { type: "image_url"; image_url: { url: string } };
 
-// baseUrl از env میاد و شاملِ خودِ تکنِ دسترسی توی مسیرشه (طبق طراحیِ
-// گیت‌وی آروان‌کلود) — یعنی هیچ‌وقت نباید هاردکد یا کامیت بشه؛ فقط توی
-// .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیره.
+// baseUrl و apiKey هر دو از env میان — هیچ‌وقت نباید هاردکد یا کامیت بشن؛
+// فقط توی .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
+// نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
+// توکنِ احرازهویت نیست — احرازهویتِ واقعی با یه Access Key جداست که از
+// پنلِ آروان‌کلود، بخشِ «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
 async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<string> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
+  const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
     throw new Error("ARVAN_AI_BASE_URL تنظیم نشده — این فیچر بدون آدرسِ گیت‌وی کار نمی‌کند");
+  }
+  if (!apiKey) {
+    throw new Error("ARVAN_AI_API_KEY تنظیم نشده — این فیچر بدون کلید دسترسی کار نمی‌کند");
   }
 
   const response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
     body: JSON.stringify({
       model: "gpt-4o-mini",
       max_tokens: maxTokens,
