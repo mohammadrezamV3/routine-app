@@ -36,7 +36,7 @@ export default function NewRoadmapPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // پیام لودینگ هر چند ثانیه عوض می‌شه تا انتظار (که واقعاً چند ثانیه طول
-  // می‌کشه چون یک فراخوانی واقعی به Claude API‌ست) بی‌هدف به‌نظر نرسه.
+  // می‌کشه چون یک فراخوانی واقعی به گیت‌وی AIـه) بی‌هدف به‌نظر نرسه.
   useEffect(() => {
     if (!loading) { setStepIdx(0); return; }
     const id = setInterval(() => {

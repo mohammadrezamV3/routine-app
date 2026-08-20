@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { getExercisePlan, GOAL_FALLBACK_MAP, GOAL_OPTION_LABELS, ExerciseGoalOption, ExerciseLevel } from "@/lib/exercisePlans";
-import { generateExercisePlan } from "@/lib/anthropic";
+import { generateExercisePlan } from "@/lib/aiClient";
 import { FA_WEEKDAY } from "@/lib/jalali";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];

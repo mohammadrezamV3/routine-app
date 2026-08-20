@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
-import { generateRoadmap } from "@/lib/anthropic";
+import { generateRoadmap } from "@/lib/aiClient";
 import { clampText } from "@/lib/validate";
 
 export async function GET() {

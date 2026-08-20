@@ -1,7 +1,7 @@
 # روتین من — پروژه (Arion)
 
 ## Stack واقعی این ریپو
-Next.js 14 (App Router) + React 18 + TypeScript + Tailwind CSS | Prisma + PostgreSQL (db) | NextAuth.js (credentials + Google OAuth، JWT session) | Anthropic API (`lib/anthropic.ts`، تولید رودمپ با AI) | ملی‌پیامک (OTP فراموشی رمز) | Docker + Nginx (deploy — هنوز راه‌اندازی نشده)
+Next.js 14 (App Router) + React 18 + TypeScript + Tailwind CSS | Prisma + PostgreSQL (db) | NextAuth.js (credentials + Google OAuth، JWT session) | گیت‌وی AIِ آروان‌کلود، GPT-4o-mini با API سازگار OpenAI (`lib/aiClient.ts`، رودمپ/برنامه‌ی ورزشی/اسکن غذا) | ملی‌پیامک (OTP فراموشی رمز) | Docker + Nginx (deploy — هنوز راه‌اندازی نشده)
 
 > توجه: این پروژه از یک نسخه‌ی اولیه‌ی Vite+React (SPA با `window.storage`) به یک اپ کامل Next.js با بک‌اند/دیتابیس واقعی مهاجرت کرده. اگر جایی توضیحات قدیمی دیدی که می‌گفت "بک‌اند و auth واقعی هنوز نیست"، دیگه درست نیست — همون‌هاست که پایین آپدیت شده.
 
@@ -81,7 +81,7 @@ public/images/             # لوگو و asset های استاتیک
 1. ✅ فیتنس پروگرام generator (`app/exercise`, `lib/exercisePlans.ts`, `ExercisePlanForm.tsx`)
 2. ✅ دایت/کالری (`CaloriePanel.tsx`, `lib/foodSeed.ts`, `lib/calorieCalc.ts`, مدل‌های `FoodItem`/`CalorieTarget`)
 3. ✅ trading journal (`TradeJournal.tsx`, `TradeChecklist.tsx`, `TradeDayModal.tsx`)
-4. ✅ roadmap generator یادگیری با AI (`app/roadmaps/new`, `app/roadmaps/custom/[id]`, `lib/anthropic.ts`)
+4. ✅ roadmap generator یادگیری با AI (`app/roadmaps/new`, `app/roadmaps/custom/[id]`, `lib/aiClient.ts`)
 5. ✅ sleep tracking (مدل `SleepEntry`)
 6. ✅ اکانت پنل + auth کامل (`AccountPanel.tsx`, `app/auth/*`, NextAuth + Google OAuth)
 7. ✅ لوگو (`public/images/logo-*`)
