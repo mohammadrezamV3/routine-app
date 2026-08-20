@@ -1,10 +1,11 @@
+import { SETTING_KEYS } from "./userSettingKeys";
 // کلید تنظیمات (settings) مشترک بین TradeJournal و AccountPanel — عمداً
 // این‌جا (نه توی خودِ کامپوننت) تا AccountPanel با importشون کل باندلِ
 // TradeJournal (که خودش JalaliDatePicker/TradeDayHistory و... رو می‌کِشه)
 // رو وارد نکنه؛ AccountPanel از قبل با dynamic import جدا نگه داشته شده.
 export type CalSystem = "jalali" | "gregorian";
-export const CAL_SYSTEM_KEY = "tradeCalendarSystem";
-export const MONTHLY_GOAL_KEY = "tradeMonthlyGoal";
+export const CAL_SYSTEM_KEY = SETTING_KEYS.tradeCalendarSystem;
+export const MONTHLY_GOAL_KEY = SETTING_KEYS.tradeMonthlyGoal;
 
 // کاربر می‌تونه از پنل کاربری انتخاب کنه کدوم کارت‌های آماریِ صفحه‌ی ترید
 // نشون داده بشن — پیش‌فرض همه روشنن
@@ -31,7 +32,7 @@ export const TRADE_STAT_ORDER: TradeStatKey[] = [
 ];
 
 export const DEFAULT_VISIBLE_TRADE_STATS: TradeStatKey[] = [...TRADE_STAT_ORDER];
-export const TRADE_STATS_VISIBILITY_KEY = "tradeVisibleStats";
+export const TRADE_STATS_VISIBILITY_KEY = SETTING_KEYS.tradeVisibleStats;
 
 export type TradeEntry = {
   id: string;

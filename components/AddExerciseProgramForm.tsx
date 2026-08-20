@@ -5,9 +5,16 @@ import { motion } from "framer-motion";
 import { PenLine } from "lucide-react";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
-import { ManualExercisePlanForm } from "./ManualExercisePlanForm";
+import dynamic from "next/dynamic";
+
+// همون دلیلِ ExerciseCatalogCard: این فرم هم کلِ کاتالوگِ حرکات رو می‌کِشه و
+// فقط توی حالتِ «ساختِ دستی» (mode === "manual") رندر می‌شه.
+const ManualExercisePlanForm = dynamic(
+  () => import("./ManualExercisePlanForm").then((m) => m.ManualExercisePlanForm),
+  { ssr: false }
+);
 import { ExercisePlan } from "@/lib/exerciseTypes";
-import { ExerciseDay } from "@/lib/exercisePlans";
+import type { ExerciseDay } from "@/lib/exercisePlans";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
