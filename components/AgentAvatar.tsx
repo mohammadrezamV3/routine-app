@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
+import { useTheme } from "./ThemeProvider";
 
 // آواتارِ پیش‌فرضِ پروفایل — کامپوننتِ agent-avatar از smoothui، عیناً پورت
 // شده (کدِ منبع رو خودِ کاربر داد چون شبکه‌ی این سندباکس به smoothui.dev و
@@ -52,6 +53,12 @@ const HUE_SPREAD = 45;
 
 const GLOW_RADIUS_RATIO = 0.25;
 
+// عمداً دیگه hueِ پایه از seed تصادفی نمی‌شه — رنگِ آواتار باید با تمِ فعلی
+// هماهنگ باشه، نه یوزربه‌یوزر فرق کنه: سبز برای تمِ تاریک، قرمزنارنجی برای
+// تمِ روشن — دقیقاً همون hueِ رنگِ accentِ خودِ تم (--accent در globals.css:
+// #00A86B تاریک ≈ hue 158، #B85C1F روشن ≈ hue 24) تا با بقیه‌ی UI یکدست بمونه.
+const THEME_BASE_HUE: Record<"dark" | "light", number> = { dark: 158, light: 24 };
+
 /** هشِ قطعیِ ساده از یه رشته */
 const hashSeed = (str: string): number => {
   let hash = 0;
@@ -74,10 +81,9 @@ const createRng = (seed: number) => {
 
 type HSL = [hue: number, saturation: number, lightness: number];
 
-/** ساختِ پالتِ ۳رنگی توی یه خانواده‌ی هیوِ واحد */
-const generatePalette = (hash: number): [HSL, HSL, HSL] => {
+/** ساختِ پالتِ ۳رنگی توی یه خانواده‌ی هیوِ واحد، بر پایه‌ی hueِ تمِ فعلی */
+const generatePalette = (hash: number, baseHue: number): [HSL, HSL, HSL] => {
   const rng = createRng(hash);
-  const baseHue = rng() * 360;
   const sat = 75 + rng() * 20; // 75-95%
 
   return [
@@ -131,6 +137,7 @@ export function AgentAvatar({
 }: AgentAvatarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -149,7 +156,7 @@ export function AgentAvatar({
     ctx.scale(dpr, dpr);
 
     const hash = hashSeed(seed || "؟");
-    const palette = generatePalette(hash);
+    const palette = generatePalette(hash, THEME_BASE_HUE[theme]);
     const grid = generateGrid(hash);
     const cellSize = size / GRID_SIZE;
     const half = size / 2;
@@ -273,7 +280,7 @@ export function AgentAvatar({
       cancelAnimationFrame(rafRef.current);
       motionQuery.removeEventListener("change", handleMotionChange);
     };
-  }, [seed, size, animated]);
+  }, [seed, size, animated, theme]);
 
   return (
     <canvas

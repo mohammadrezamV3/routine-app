@@ -209,6 +209,24 @@ model PasswordResetOtp {
   @@index([userId])
 }
 
+// کد یک‌بارمصرف تاییدِ شماره موبایل موقعِ ثبت‌نام — برخلافِ PasswordResetOtp
+// به یک User موجود وصل نیست (چون کاربر هنوز ساخته نشده)، فقط به خودِ شماره.
+// verifiedAt یعنی کاربر کد رو درست وارد کرده؛ usedAt یعنی همون تاییدیه واقعاً
+// برای ساختِ یک حساب مصرف شده (جلوگیری از استفاده‌ی دوباره‌ی یک تاییدیه‌ی
+// قدیمی برای چند ثبت‌نام).
+model SignupOtp {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  verifiedAt DateTime?
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone])
+}
+
 // ============================================================================
 // PLANS, PRICING & SUBSCRIPTIONS
 // ============================================================================

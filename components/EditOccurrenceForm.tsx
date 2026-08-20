@@ -49,7 +49,7 @@ export function EditOccurrenceForm({
   const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
-    setRows((r) => [...r, { jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
+    setRows((r) => [...r, { jsDays: [], start: "", end: "" }]);
   }
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));
