@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { suggestExerciseSubstitute } from "@/lib/anthropic";
+import { suggestExerciseSubstitute } from "@/lib/aiClient";
 import { getFallbackSubstitute } from "@/lib/exercisePlans";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { getCatalogSubstitutes } from "@/lib/exerciseCatalogUtils";
