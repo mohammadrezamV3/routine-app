@@ -13,6 +13,7 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const pages = await prisma.notepadPage.findMany({
     where: { userId },
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-page-create:${userId}`, 100, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "تعداد صفحاتِ ساخته‌شده در این ساعت زیاده — کمی صبر کن" }, { status: 429 });

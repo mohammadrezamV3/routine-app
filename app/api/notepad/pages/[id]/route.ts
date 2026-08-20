@@ -29,6 +29,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const page = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!page) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });
@@ -52,6 +53,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const existing = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!existing) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });
@@ -111,6 +113,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
   const existing = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!existing) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });

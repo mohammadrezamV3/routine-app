@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getCustomOccurrences, getRemovedOccurrences, getDaily } from "@/lib/storage";
+import { getCustomOccurrences, getRemovedOccurrences, getDaily, getSetting, setSetting } from "@/lib/storage";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { getNotifPrefs } from "@/lib/notifPrefs";
@@ -9,9 +9,35 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type NotifItem =
   | { kind: "info"; id: string; title: string; body: string }
+  | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string }
   | { kind: "friendRequest"; id: string; friendshipId: string; name: string };
 
 const EXERCISE_REMINDER_HOUR = 17;
+
+// دو اطلاعیه‌ی ثابت که همیشه (تا وقتی کاربر روشون کلیک نکرده) اولِ لیست
+// نشون داده می‌شن — برخلافِ بقیه‌ی آیتم‌ها که هر بار از نو محاسبه می‌شن،
+// اینا فقط یک‌بار (با کلیک) به‌ازای هر کاربر/دستگاه بسته می‌شن، توی همون
+// UserSetting عمومی (کلید dismissedStaticNotifs) که برای مهمون هم localStorage کار می‌کنه.
+const STATIC_NOTIFS: Extract<NotifItem, { kind: "static" }>[] = [
+  {
+    kind: "static",
+    id: "welcome",
+    title: "به آریون خوش اومدی!",
+    body: "یه نگاه سریع به این‌که آریون چیکار برات می‌کنه.",
+    modalTitle: "به آریون خوش اومدی! 👋",
+    modalBody:
+      "آریون همه‌ی برنامه‌ت رو یه‌جا نگه می‌داره: روتینِ روزانه، خواب، بدنسازی و کالری، ژورنالِ ترید، و رودمپِ یادگیری — بدونِ اینکه لازم باشه بینِ چندتا اپ جابه‌جا بشی.\n\nهر بخش رو از منوی همبرگری (بالا-راست) پیدا می‌کنی. اگه سوالی داشتی یا چیزی گیر کرد، از همین‌جا (زنگوله‌ی بالای صفحه) یا بخشِ «درباره ما» می‌تونی پیگیرش بشی.\n\nامیدواریم روزهای بهتری رو با آریون بسازی.",
+  },
+  {
+    kind: "static",
+    id: "pwa",
+    title: "آریون رو نصب کن",
+    body: "برای تجربه‌ی بهتر و سریع‌تر، به‌جای مرورگر، به‌صورتِ اپ نصبش کن.",
+    modalTitle: "نصبِ آریون به‌عنوانِ اپ (PWA)",
+    modalBody:
+      "آریون رو می‌تونی مثل یه اپِ واقعی روی گوشیت نصب کنی — بدون کافه‌بازار/گوگل‌پلی، مستقیم از همین مرورگر:\n\nآیفون (سافاری): پایینِ صفحه، آیکونِ Share (مربع با فلشِ رو به بالا) رو بزن، بعد «Add to Home Screen» رو انتخاب کن.\n\nاندروید (کروم): از منوی سه‌نقطه‌ی بالای مرورگر، «Add to Home screen» یا «Install app» رو بزن.\n\nبعدِ نصب، آیکونِ آریون میاد رو صفحه‌ی اصلیِ گوشیت و بازش کردن دقیقاً مثلِ یه اپِ معمولیه — سریع‌تر بالا میاد و نوارِ آدرسِ مرورگر هم نشون داده نمی‌شه.",
+  },
+];
 
 async function loadFriendRequests(): Promise<NotifItem[]> {
   try {
@@ -34,6 +60,9 @@ async function loadFriendRequests(): Promise<NotifItem[]> {
 // چون دیتای نوتیف جدایی توی دیتابیس ذخیره نمی‌شه، پنل همیشه «الان چی برات
 // مونده» رو نشون می‌ده، نه تاریخچه‌ی نوتیف‌های قبلی.
 async function loadPendingNotifications(): Promise<NotifItem[]> {
+  const dismissed = await getSetting<string[]>("dismissedStaticNotifs", []);
+  const staticItems = STATIC_NOTIFS.filter((n) => !dismissed.includes(n.id));
+
   const items: NotifItem[] = [];
   const prefs = await getNotifPrefs();
   const [removedArr, customArr, daily] = await Promise.all([
@@ -79,7 +108,7 @@ async function loadPendingNotifications(): Promise<NotifItem[]> {
   }
 
   const friendRequests = prefs.friendRequests ? await loadFriendRequests() : [];
-  return [...friendRequests, ...items];
+  return [...staticItems, ...friendRequests, ...items];
 }
 
 // کش‌شده بیرونِ کامپوننت (نه یه stateِ داخلی) — پنل هر بار که باز/بسته
@@ -92,6 +121,7 @@ let cachedItems: NotifItem[] | null = null;
 export function NotificationPanel({ onClose, anchor }: { onClose: () => void; anchor: { top: number; right: number } }) {
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
+  const [openStatic, setOpenStatic] = useState<Extract<NotifItem, { kind: "static" }> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -120,6 +150,13 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
   async function respondFriendRequest(friendshipId: string, accept: boolean) {
     await fetch(`/api/friends/${friendshipId}`, { method: accept ? "PATCH" : "DELETE" });
     setItems((prev) => prev && prev.filter((it) => !(it.kind === "friendRequest" && it.friendshipId === friendshipId)));
+  }
+
+  async function openStaticNotif(it: Extract<NotifItem, { kind: "static" }>) {
+    setOpenStatic(it);
+    setItems((prev) => prev && prev.filter((x) => x.id !== it.id));
+    const dismissed = await getSetting<string[]>("dismissedStaticNotifs", []);
+    if (!dismissed.includes(it.id)) await setSetting("dismissedStaticNotifs", [...dismissed, it.id]);
   }
 
   return (
@@ -162,6 +199,11 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
                     <div className="notif-panel-item-body">{it.name} می‌خواد باهات دوست بشه.</div>
                   </div>
                 </div>
+              ) : it.kind === "static" ? (
+                <div key={it.id} className="notif-panel-item" onClick={() => openStaticNotif(it)} style={{ cursor: "pointer" }}>
+                  <div className="notif-panel-item-title">{it.title}</div>
+                  <div className="notif-panel-item-body">{it.body}</div>
+                </div>
               ) : (
                 <div key={it.id} className="notif-panel-item">
                   <div className="notif-panel-item-title">{it.title}</div>
@@ -172,6 +214,19 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
           </div>
         )}
       </div>
+
+      <div className={`modal-overlay${openStatic ? " open" : ""}`} onClick={() => setOpenStatic(null)} />
+      {openStatic && (
+        <div className="modal-panel open">
+          <div className="modal-head">
+            <div className="modal-title">{openStatic.modalTitle}</div>
+            <button className="nav-close" onClick={() => setOpenStatic(null)}>×</button>
+          </div>
+          <div className="modal-body" style={{ whiteSpace: "pre-line", lineHeight: 1.9, fontSize: 13.5 }}>
+            {openStatic.modalBody}
+          </div>
+        </div>
+      )}
     </>
   );
 }

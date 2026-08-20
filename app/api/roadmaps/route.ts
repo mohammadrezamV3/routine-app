@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey } from "@prisma/client";
+import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { generateRoadmap } from "@/lib/anthropic";
-import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 
 export async function GET() {
-  const guard = await requireModule(ModuleKey.ROADMAP);
+  const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
@@ -20,7 +18,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = await requireModule(ModuleKey.ROADMAP);
+  const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
@@ -30,13 +28,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "موضوع الزامی است" }, { status: 400 });
   }
   const cleanTopic = clampText(topic.trim(), 120);
-
-  // چون هر درخواست یعنی یک فراخوانی واقعی و پولی به Claude API، محدودش
-  // می‌کنیم به ۱۰ رودمپ در ساعت به‌ازای هر کاربر — جلوگیری از سوءاستفاده/هزینه کنترل‌نشده.
-  // سوپریوزر از این سقف مستثناست (هم‌راستا با دسترسیِ نامحدودش به ماژول‌ها).
-  if (!guard.isSuperAdmin && !checkRateLimit(`roadmap-gen:${userId}`, 10, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "سقف ساخت رودمپ در این ساعت پر شده — بعداً امتحان کن" }, { status: 429 });
-  }
 
   let generated;
   try {

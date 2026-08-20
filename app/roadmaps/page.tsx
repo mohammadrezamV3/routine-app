@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ModuleGate } from "@/components/ModuleGate";
+import { SuperAdminGate } from "@/components/SuperAdminGate";
 import { AuthGate } from "@/components/AuthGate";
 
 type CustomRoadmapSummary = { id: string; topic: string; title: string; note: string };
@@ -28,7 +28,7 @@ export default function RoadmapsHub() {
       <div className="section-note">بگو چی می‌خوای یاد بگیری، یه مسیر کامل باهات می‌سازیم</div>
 
       {status === "authenticated" ? (
-        <ModuleGate module="ROADMAP">
+        <SuperAdminGate>
           <div className="rm-grid">
             {customRoadmaps.map((r) => (
               <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
@@ -49,7 +49,7 @@ export default function RoadmapsHub() {
               </svg>
             </div>
           </div>
-        </ModuleGate>
+        </SuperAdminGate>
       ) : (
         <AuthGate message="برای استفاده از این سرویس وارد شوید" />
       )}

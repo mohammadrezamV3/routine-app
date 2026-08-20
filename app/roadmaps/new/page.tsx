@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ModuleGate } from "@/components/ModuleGate";
+import { SuperAdminGate } from "@/components/SuperAdminGate";
 import { AuthGate } from "@/components/AuthGate";
 
 const SUGGESTIONS = [
@@ -83,7 +83,7 @@ export default function NewRoadmapPage() {
         بگو می‌خوای چی یاد بگیری، یه مسیر یادگیری کامل باهات می‌سازیم
       </div>
 
-      <ModuleGate module="ROADMAP">
+      <SuperAdminGate>
       <div style={{ position: "relative", marginTop: 16 }}>
         <input
           ref={inputRef}
@@ -152,7 +152,7 @@ export default function NewRoadmapPage() {
           </div>
         </div>
       )}
-      </ModuleGate>
+      </SuperAdminGate>
     </section>
   );
 }
