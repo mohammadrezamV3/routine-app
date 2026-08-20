@@ -332,10 +332,10 @@
   .account-avatar-row{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:6px; }
   .account-avatar-wrap{ position:relative; width:76px; height:76px; }
   .account-avatar-img{ width:76px; height:76px; border-radius:50%; object-fit:cover; border:2px solid var(--line); display:block; }
-  .account-avatar-fallback{
-    width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:26px; font-weight:800; color:var(--accent); background:rgba(var(--accent-rgb),.12); border:2px solid var(--line);
-  }
+  /* دیگه لازم نیست بک‌گراند/بوردر/حرفِ اول خودمون رو بکشیم — کامپوننتِ
+     agent-avatar (canvas) خودش کاملاً خودکفاست و الگوی رنگیِ خودش رو
+     رسم می‌کنه؛ این کلاس فقط اندازه‌ی همون ۷۶px رو نگه می‌داره. */
+  .account-avatar-fallback{ width:76px; height:76px; }
   .account-avatar-edit-btn{
     position:absolute; bottom:-2px; left:-2px; width:26px; height:26px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -2810,23 +2810,13 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:rgba(255,255,255,.03); border-color:var(--line); }
 .manual-timer-unit-picker .day-pill.on{ background:var(--accent-dim); border-color:var(--accent); }
 
-/* آواتارِ پیش‌فرضِ پروفایل — یه گرادیانِ درحال‌چرخش به‌جای آیکونِ ثابتِ
-   آدمک/دایره‌ی تک‌رنگ؛ لایه‌ی تیره‌ی نیمه‌شفافِ روش برای خوانا موندنِ حرف */
-.agent-avatar{
-  position:relative; border-radius:50%; overflow:hidden; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.agent-avatar::before{
-  content:""; position:absolute; inset:-20%;
-  background:conic-gradient(from 0deg, var(--accent), #4C6FFF, #21D4C4, var(--accent));
-  animation:agentAvatarSpin 7s linear infinite;
-}
-.agent-avatar::after{
-  content:""; position:absolute; inset:0; border-radius:50%;
-  background:rgba(0,0,0,.24); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
-}
-.agent-avatar-letter{ position:relative; z-index:1; color:#fff; font-weight:800; }
-@keyframes agentAvatarSpin{ to{ transform:rotate(360deg); } }
+/* آواتارِ پیش‌فرضِ پروفایل — کامپوننتِ agent-avatar از smoothui (پورتِ
+   عینیِ منبع، AgentAvatar.tsx رو ببین): یه <canvas> که خودش گریدِ پیکسلیِ
+   رنگی + حلقه‌ی glow رو با seedِ کاربر رسم می‌کنه، بدونِ نیازی به هیچ
+   استایلِ اضافه‌ای برای پس‌زمینه/بوردر — هرچی که دیده می‌شه از خودِ canvas
+   میاد. این کلاس فقط flex-shrink رو برای جلوگیریِ فشرده‌شدنش توی ردیف‌های
+   flex تضمین می‌کنه. */
+.agent-avatar{ flex-shrink:0; display:block; }
 
 /* ردیفِ هر وعده توی حالتِ «وارد کردنِ دستی»ِ برنامه‌ی کالری — یه کارتِ
    شیشه‌ایِ واحد به‌جای دو تا اینپوتِ باکس‌دارِ جدا؛ اینپوت‌های داخلش بی‌بک‌گراند */

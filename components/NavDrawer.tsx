@@ -319,7 +319,7 @@ export function NavDrawer() {
                       {avatarUrl ? (
                         <img src={avatarUrl} alt="" className="profile-chip-avatar-img" />
                       ) : (
-                        <AgentAvatar name={session?.user?.name || "؟"} size={27} />
+                        <AgentAvatar seed={session?.user?.name || session?.user?.email || "؟"} size={27} />
                       )}
                     </span>
                   </button>
