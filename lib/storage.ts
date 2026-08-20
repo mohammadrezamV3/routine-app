@@ -124,6 +124,63 @@ export function invalidateStorageCache() {
   inFlightSession = null;
   getCache.clear();
   inFlightGets.clear();
+  clearRangeCache();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// کشِ بازه‌آگاه برای DailyEntry
+//
+// کشِ بالا کلیدش URLه، پس دو بازه‌ی *متفاوت* هیچ‌وقت به‌هم نمی‌رسن — حتی اگه
+// یکی کاملاً داخلِ اون یکی باشه. اندازه‌گیری روی `/weekly` نشون داد چهار
+// درخواستِ هم‌پوشان از یک جدول می‌رفت:
+//     range 2026-08-13..2026-08-27   (تایم‌لاینِ خودِ صفحه، ±۷ روز)
+//     range 2026-05-22..2026-08-19   (useMyStreak، ۹۰ روز)
+//     range 2026-08-15..2026-08-21   (آمارِ همین هفته)
+//     daily 2026-08-20               (امروز — که *داخلِ* بازه‌ی اوله)
+//
+// این لایه بازه‌های درخواست‌شده رو نگه می‌داره و اگه بازه‌ی تازه زیرمجموعه‌ی
+// یکی از اون‌ها باشه (چه رسیده باشه چه هنوز در راه)، از همون بریده می‌شه.
+// تاریخ‌های `YYYY-MM-DD` از نظر رشته‌ای هم‌ترتیبِ زمانی‌ان، پس مقایسه‌ی ساده کافیه.
+// ─────────────────────────────────────────────────────────────────────────
+
+type RangeEntry = { from: string; to: string; at: number; data: Promise<Record<string, DailyRecord> | null> };
+
+let rangeEntries: RangeEntry[] = [];
+
+function findCoveringRange(from: string, to: string): RangeEntry | null {
+  const now = Date.now();
+  for (const e of rangeEntries) {
+    if (e.from <= from && e.to >= to && now - e.at < GET_TTL_MS) return e;
+  }
+  return null;
+}
+
+function sliceRange(entries: Record<string, DailyRecord>, from: string, to: string): Record<string, DailyRecord> {
+  const out: Record<string, DailyRecord> = {};
+  for (const [k, v] of Object.entries(entries)) {
+    if (k >= from && k <= to) out[k] = v;
+  }
+  return out;
+}
+
+function fetchRange(from: string, to: string): RangeEntry {
+  const entry: RangeEntry = {
+    from,
+    to,
+    at: Date.now(),
+    data: fetch(`/api/tasks/daily/range?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => (json ? ((json.entries || {}) as Record<string, DailyRecord>) : null))
+      .catch(() => null),
+  };
+  // بازه‌ای که ناموفق بود نباید تا آخرِ TTL بقیه رو هم گمراه کنه
+  entry.data.then((d) => { if (d === null) rangeEntries = rangeEntries.filter((e) => e !== entry); });
+  rangeEntries.push(entry);
+  return entry;
+}
+
+function clearRangeCache() {
+  rangeEntries = [];
 }
 
 function settingsUrl(key: string) {
@@ -137,6 +194,13 @@ export type DailyRecord = {
 
 export async function getDaily(dateKey: string): Promise<DailyRecord> {
   if (await isLoggedIn()) {
+    // اگه بازه‌ای که همین روز رو در بر می‌گیره از قبل درخواست شده، همون کافیه
+    // — یه درخواستِ جدا برای یک روزِ داخلِ اون بازه فقط یه کانکشنِ اضافه‌ست.
+    const covering = findCoveringRange(dateKey, dateKey);
+    if (covering) {
+      const data = await covering.data;
+      if (data !== null) return data[dateKey] ?? { tasks: {}, wake: null };
+    }
     return cachedGet<DailyRecord>(
       `/api/tasks/daily?date=${encodeURIComponent(dateKey)}`,
       (json) => ({ tasks: json?.tasks ?? {}, wake: json?.wake ?? null }),
@@ -160,6 +224,7 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
       // باشه رو دور می‌ریزیم (بازه‌ها کلیدِ دقیق ندارن که بشه نقطه‌ای آپدیتشون کرد).
       primeCache(`/api/tasks/daily?date=${encodeURIComponent(dateKey)}`, { tasks: data.tasks, wake: data.wake });
       dropCache((url) => url.startsWith("/api/tasks/daily/range") || url === "/api/tasks/daily/keys");
+      clearRangeCache();
     } catch {}
     return;
   }
@@ -193,11 +258,14 @@ export async function listDailyKeys(): Promise<Set<string>> {
  */
 export async function getDailyRange(fromIso: string, toIso: string): Promise<Record<string, DailyRecord>> {
   if (await isLoggedIn()) {
-    return cachedGet<Record<string, DailyRecord>>(
-      `/api/tasks/daily/range?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
-      (json) => json?.entries || {},
-      {}
-    );
+    const covering = findCoveringRange(fromIso, toIso) ?? fetchRange(fromIso, toIso);
+    const data = await covering.data;
+    // اگه بازه‌ی پوشاننده شکست خورد، خودمون مستقیم می‌گیریم (نه اینکه خالی برگردونیم)
+    if (data === null) {
+      const own = await fetchRange(fromIso, toIso).data;
+      return own === null ? {} : sliceRange(own, fromIso, toIso);
+    }
+    return sliceRange(data, fromIso, toIso);
   }
   const result: Record<string, DailyRecord> = {};
   if (typeof window === "undefined" || !hasLocalStorage()) return result;
