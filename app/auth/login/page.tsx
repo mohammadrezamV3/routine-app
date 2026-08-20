@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
+import { invalidateStorageCache } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthTabs } from "@/components/AuthTabs";
@@ -72,6 +73,10 @@ export default function LoginPage() {
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
       return;
     }
+    // لایه‌ی داده تا اینجا وضعیتِ «مهمان» رو کش کرده (و از localStorage
+    // می‌خونده)؛ بدونِ این پاک‌سازی، چون این‌جا ناوبریِ کلاینتیه (نه ریلودِ
+    // کامل)، صفحه‌ی بعدی همچنان داده‌ی مهمان رو نشون می‌داد.
+    invalidateStorageCache();
     router.push("/weekly");
   }
 

@@ -9,8 +9,9 @@ import {
 } from "@/lib/tickerSymbols";
 import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
 import { MarketPicker } from "./MarketPicker";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
 
-const ONBOARDED_KEY = "tradeMarketsOnboarded";
+const ONBOARDED_KEY = SETTING_KEYS.tradeMarketsOnboarded;
 const POLL_MS = 30_000;
 
 type Quote = { symbol: string; price: number; changePercent: number; changeAbs: number };

@@ -1,4 +1,4 @@
-import { ExerciseDay, ExerciseGoalOption, ExerciseLevel } from "./exercisePlans";
+import type { ExerciseDay, ExerciseGoalOption, ExerciseLevel } from "./exercisePlans";
 
 export type ExercisePlan = {
   id: string;

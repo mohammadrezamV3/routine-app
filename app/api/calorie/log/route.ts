@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
+import { parseIsoDate, readJsonBody } from "@/lib/validate";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
@@ -10,11 +11,11 @@ export async function GET(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const date = req.nextUrl.searchParams.get("date");
-  if (!date) return NextResponse.json({ error: "date is required" }, { status: 400 });
+  const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
+  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
 
   const entries = await prisma.foodLogEntry.findMany({
-    where: { userId, date: new Date(date) },
+    where: { userId, date },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json({ entries });
@@ -28,12 +29,16 @@ export async function POST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
-  const { date, customName, customCalories, grams, mealType, proteinG, carbsG, fatG, aiScanned } = body as {
-    date: string; customName: string; customCalories: number; grams: number; mealType?: string;
+  const parsed = await readJsonBody(req);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+  const { customName, customCalories, grams, mealType, proteinG, carbsG, fatG, aiScanned } = parsed.body as {
+    customName: string; customCalories: number; grams: number; mealType?: string;
     proteinG?: number; carbsG?: number; fatG?: number; aiScanned?: boolean;
   };
-  if (!date || !customName || !customCalories || !grams) {
+
+  const date = parseIsoDate(parsed.body?.date);
+  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
+  if (!customName || typeof customName !== "string" || !customCalories || !grams) {
     return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
   }
   if (typeof customCalories !== "number" || typeof grams !== "number" || customCalories < 0 || grams <= 0 || grams > 10000) {
@@ -55,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   const entry = await prisma.foodLogEntry.create({
     data: {
-      userId, date: new Date(date), customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
+      userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
       ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG, aiScanned: !!aiScanned } : {}),
     },
   });

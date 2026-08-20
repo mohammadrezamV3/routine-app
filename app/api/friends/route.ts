@@ -8,62 +8,83 @@ import { isValidUsername } from "@/lib/validate";
 import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
 import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
 
-// استریکِ روزهای پشت‌سرهمِ کاملِ یک کاربرِ دلخواه — همون منطقِ lib/useMyStreak.ts،
-// ولی سمتِ سرور و مستقیم روی Prisma، چون دوست‌ها نمی‌تونن به تاریخچه‌ی
-// DailyEntry همدیگه از سمتِ کلاینت دسترسی داشته باشن.
-async function streakForUser(userId: string, opts: ScheduleOpts): Promise<number> {
-  const wakeRow = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "wakeSleepTimes" } } });
-  const wakeVal = (wakeRow?.value as { wake?: string } | undefined) ?? undefined;
-  const wakeMinutes = timeToMinutes(wakeVal?.wake || DEFAULT_WAKE);
+// آمارِ روتینِ *همه‌ی* دوست‌ها با تعدادِ ثابتی کوئری.
+//
+// نسخه‌ی قبلی به‌ازای هر دوست جدا صدا زده می‌شد و هرکدوم ۵ کوئری می‌زد
+// (customOccurrences + removedOccurrences + dailyEntryِ امروز + wakeSleepTimes
+// + ۹۰ روز DailyEntry). با ۲۰ دوست یعنی ~۱۰۰ کوئری برای یک بار باز کردنِ
+// داشبورد. حالا سه کوئریِ دسته‌ای می‌زنیم (`in:` روی کلِ لیستِ دوست‌ها) و
+// بقیه‌ی محاسبه در حافظه انجام می‌شه — منطق مو‌به‌مو همونه.
+type RoutineStats = { completed: number; total: number; pct: number; streak: number };
+
+const STREAK_LOOKBACK_DAYS = 90;
+
+async function routineStatsForUsers(userIds: string[]): Promise<Map<string, RoutineStats>> {
+  const out = new Map<string, RoutineStats>();
+  if (!userIds.length) return out;
 
   const now = new Date();
   const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() - 1);
-  const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 90);
+  const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - STREAK_LOOKBACK_DAYS);
+  const todayIso = isoLocal(now);
 
-  const rows = await prisma.dailyEntry.findMany({
-    where: { userId, date: { gte: new Date(isoLocal(rangeStart)), lte: new Date(isoLocal(rangeEnd)) } },
-  });
-  const entries: Record<string, { tasks: Record<string, boolean>; wake: string | null }> = {};
-  rows.forEach((r) => {
-    entries[isoLocal(r.date)] = {
+  const [settingRows, dailyRows] = await Promise.all([
+    prisma.userSetting.findMany({
+      where: { userId: { in: userIds }, key: { in: ["customOccurrences", "removedOccurrences", "wakeSleepTimes"] } },
+    }),
+    // هم ۹۰ روزِ استریک هم رکوردِ امروز از همین یک کوئری در میان
+    prisma.dailyEntry.findMany({
+      where: { userId: { in: userIds }, date: { gte: new Date(isoLocal(rangeStart)), lte: new Date(todayIso) } },
+    }),
+  ]);
+
+  const settingsByUser = new Map<string, Map<string, unknown>>();
+  for (const r of settingRows) {
+    if (!settingsByUser.has(r.userId)) settingsByUser.set(r.userId, new Map());
+    settingsByUser.get(r.userId)!.set(r.key, r.value);
+  }
+
+  const dailyByUser = new Map<string, Record<string, { tasks: Record<string, boolean>; wake: string | null }>>();
+  for (const r of dailyRows) {
+    if (!dailyByUser.has(r.userId)) dailyByUser.set(r.userId, {});
+    dailyByUser.get(r.userId)![isoLocal(r.date)] = {
       tasks: (r.completedItems as Record<string, boolean>) ?? {},
       wake: r.wakeUpAt ? r.wakeUpAt.toISOString() : null,
     };
-  });
-
-  let s = 0;
-  const cursor = new Date(now);
-  cursor.setDate(cursor.getDate() - 1);
-  for (let i = 0; i < 90; i++) {
-    const key = isoLocal(cursor);
-    const expected = tasksForDate(new Date(cursor), opts);
-    if (expected.length === 0) { cursor.setDate(cursor.getDate() - 1); continue; }
-    const rec = entries[key];
-    if (!rec) break;
-    const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-    const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
-    const fullDay = doneCount === expected.length && wakeOK;
-    if (fullDay) { s++; cursor.setDate(cursor.getDate() - 1); } else break;
   }
-  return s;
-}
 
-// درصدِ پیشرفتِ امروز + استریکِ یک کاربرِ دلخواه — مستقیم از UserSetting/DailyEntry،
-// بدون افشای خودِ برنامه‌ها (اسم/ساعت درسا) به دوست‌ها، فقط عددهای خلاصه‌شده.
-async function statsForUser(userId: string) {
-  const [customRow, removedRow, dailyRow] = await Promise.all([
-    prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "customOccurrences" } } }),
-    prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "removedOccurrences" } } }),
-    prisma.dailyEntry.findUnique({ where: { userId_date: { userId, date: new Date(isoLocal(new Date())) } } }),
-  ]);
-  const opts: ScheduleOpts = {
-    customOccurrences: (customRow?.value as any[]) ?? [],
-    removedOccurrences: new Set((removedRow?.value as string[]) ?? []),
-  };
-  const record = dailyRow ? { tasks: (dailyRow.completedItems as Record<string, boolean>) ?? {} } : undefined;
-  const dayStats = computeDayStats(new Date(), opts, record);
-  const streak = await streakForUser(userId, opts);
-  return { ...dayStats, streak };
+  for (const userId of userIds) {
+    const settings = settingsByUser.get(userId) ?? new Map();
+    const opts: ScheduleOpts = {
+      customOccurrences: (settings.get("customOccurrences") as any[]) ?? [],
+      removedOccurrences: new Set((settings.get("removedOccurrences") as string[]) ?? []),
+    };
+    const entries = dailyByUser.get(userId) ?? {};
+
+    const today = entries[todayIso];
+    const dayStats = computeDayStats(new Date(), opts, today ? { tasks: today.tasks } : undefined);
+
+    const wakeVal = settings.get("wakeSleepTimes") as { wake?: string } | undefined;
+    const wakeMinutes = timeToMinutes(wakeVal?.wake || DEFAULT_WAKE);
+
+    let streak = 0;
+    const cursor = new Date(now);
+    cursor.setDate(cursor.getDate() - 1);
+    for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
+      const key = isoLocal(cursor);
+      const expected = tasksForDate(new Date(cursor), opts);
+      if (expected.length === 0) { cursor.setDate(cursor.getDate() - 1); continue; }
+      const rec = entries[key];
+      if (!rec) break;
+      const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
+      const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
+      if (doneCount === expected.length && wakeOK) { streak++; cursor.setDate(cursor.getDate() - 1); } else break;
+    }
+
+    out.set(userId, { ...dayStats, streak });
+  }
+
+  return out;
 }
 
 // پیشرفتِ «بدنسازی»ِ یک دوست — بر خلافِ statsForUser (که روزانه‌ست، چون
@@ -143,7 +164,6 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const module = req.nextUrl.searchParams.get("module");
-  const statsFn = module === "exercise" ? statsForUserExercise : module === "calorie" ? statsForUserCalorie : statsForUser;
 
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
@@ -153,11 +173,23 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  const otherIds = rows.map((r) => (r.requesterId === userId ? r.addresseeId : r.requesterId));
+
+  // مسیرِ پیش‌فرض (روتین) کلاً دسته‌ای شد. مسیرهای ورزش/کالری هنوز به‌ازای هر
+  // دوست کوئری می‌زنن، ولی هرکدوم فقط ۲ کوئریِ سبک‌ن و این دو تب خیلی کمتر
+  // از داشبوردِ اصلی باز می‌شن — پس فعلاً همون‌طور مونده.
+  const routineStats = module === "exercise" || module === "calorie" ? null : await routineStatsForUsers(otherIds);
+  const EMPTY: RoutineStats = { completed: 0, total: 0, pct: 0, streak: 0 };
+
   const friends = await Promise.all(
     rows.map(async (r) => {
       const isRequester = r.requesterId === userId;
       const other = isRequester ? r.addressee : r.requester;
-      const stats = await statsFn(other.id);
+      const stats = routineStats
+        ? routineStats.get(other.id) ?? EMPTY
+        : module === "exercise"
+        ? await statsForUserExercise(other.id)
+        : await statsForUserCalorie(other.id);
       return {
         friendshipId: r.id,
         id: other.id,

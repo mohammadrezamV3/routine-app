@@ -18,27 +18,116 @@ function hasLocalStorage() {
   }
 }
 
-// getSession() هر بار که صدا زده بشه یه فچ تازه به /api/auth/session می‌زنه
-// (برخلاف هوک useSession که از context مشترکِ SessionProvider استفاده می‌کنه).
-// چون این تابع از خیلی جاها (هر get/setSetting، هر تابع daily/theme و...)
-// صدا زده می‌شه، توی mount اولیه‌ی یه صفحه معمولاً چندین بار همزمان صدا زده
-// می‌شد و چندتا فچ تکراری/موازی به session می‌زد — این‌جا با کش‌کردنِ همون
-// promiseِ در حالِ اجرا (نه یه TTL زمانی)، همه‌ی صداهای هم‌زمان یک فچ واحد رو
-// به اشتراک می‌ذارن؛ به‌محض resolve شدن هم کش پاک می‌شه، پس هیچ staleness‌ای
-// برای چک‌های واقعاً بعدی (مثل درست بعد از لاگین/لاگ‌اوت) ایجاد نمی‌شه.
-let inFlightSession: ReturnType<typeof getSession> | null = null;
+// ─────────────────────────────────────────────────────────────────────────
+// کش/دیدوپِ درخواست‌ها — دلیلِ اصلیِ کندیِ لودِ سایت همین‌جا بود.
+//
+// اندازه‌گیریِ واقعی (لودِ /weekly، کاربرِ لاگین‌کرده) قبل از این تغییر:
+//   ۳۵ درخواستِ API برای یک بار باز کردنِ صفحه —
+//   /api/auth/session ×۶ · settings/removedOccurrences ×۶ ·
+//   settings/customOccurrences ×۶ · tasks/daily/range ×۵ (یکیشون
+//   دقیقاً یک بازه‌ی تکراری، سه بار) · tasks/daily ×۳ · …
+// چون خیلی از کامپوننت‌ها (NotificationEngine، useMyStreak، DashReminderCard،
+// HistoryCalendar، getTodayStats و…) هرکدوم مستقلاً همون چند تا کلیدِ ثابت رو
+// می‌خونن. روی مرورگرِ واقعی که هر هاست حداکثر ~۶ کانکشنِ همزمان داره، این
+// یعنی صفحه چند «موج» پشت‌سرهم منتظرِ شبکه می‌مونه — دقیقاً همون «دیر لود
+// می‌شه / ناقص لود می‌شه».
+//
+// دو کش این‌جا اضافه شده:
+//   ۱) وضعیتِ لاگین  ۲) پاسخِ GETهای خواندنی (settings / daily / range)
+// هردو با TTLِ کوتاه + دیدوپِ درخواستِ در حالِ اجرا. نوشتن‌ها (setSetting/
+// setDaily) کش رو write-through آپدیت می‌کنن، پس هیچ‌وقت داده‌ی بیات دیده
+// نمی‌شه.
+// ─────────────────────────────────────────────────────────────────────────
 
+// TTLِ وضعیتِ لاگین — فقط باید انفجارِ فراخوانی‌های هم‌زمانِ لحظه‌ی mount رو
+// جمع کنه. لاگین/لاگ‌اوت خودشون صریحاً invalidateStorageCache() صدا می‌زنن،
+// پس این عدد سقفِ «بیات موندن» نیست، فقط تورِ ایمنیه.
+const SESSION_TTL_MS = 60_000;
+// TTLِ پاسخ‌های خواندنی — به‌اندازه‌ای که کلِ موجِ mountِ یک صفحه (و پیمایشِ
+// کلاینتیِ بلافاصله بعدش) داخلش جا بشه، و به‌اندازه‌ای کوتاه که داده‌ی
+// عوض‌شده از یه تبِ دیگه خیلی زود دیده بشه.
+const GET_TTL_MS = 15_000;
+
+let sessionCache: { loggedIn: boolean; at: number } | null = null;
+let inFlightSession: Promise<boolean> | null = null;
+
+// getSession() هر بار که صدا زده بشه یه فچِ تازه به /api/auth/session می‌زنه
+// (برخلافِ هوکِ useSession که از contextِ مشترکِ SessionProvider می‌خونه).
+// چون هر تکِ get/set از این لایه رد می‌شه، بدونِ کش هر خواندنِ داده عملاً
+// دو رفت‌وبرگشتِ شبکه‌ی *سریالی* می‌شد (اول session، بعد خودِ داده).
 async function isLoggedIn(): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  try {
-    if (!inFlightSession) {
-      inFlightSession = getSession().finally(() => { inFlightSession = null; });
-    }
-    const session = await inFlightSession;
-    return !!(session?.user as any)?.id;
-  } catch {
-    return false;
+  const cached = sessionCache;
+  if (cached && Date.now() - cached.at < SESSION_TTL_MS) return cached.loggedIn;
+  if (!inFlightSession) {
+    inFlightSession = getSession()
+      .then((session) => {
+        const loggedIn = !!(session?.user as any)?.id;
+        sessionCache = { loggedIn, at: Date.now() };
+        return loggedIn;
+      })
+      .catch(() => false)
+      .finally(() => { inFlightSession = null; });
   }
+  return inFlightSession;
+}
+
+const getCache = new Map<string, { at: number; data: any }>();
+const inFlightGets = new Map<string, Promise<any>>();
+
+/**
+ * GETِ کش‌شده و دیدوپ‌شده. همه‌ی صداهای هم‌زمان روی یک URL یک درخواستِ واحد
+ * رو به اشتراک می‌ذارن، و تا GET_TTL_MS بعدش از کش جواب می‌گیرن.
+ * خطا/پاسخِ ناموفق کش نمی‌شه (تا یه قطعیِ لحظه‌ای، داده رو برای کلِ TTL خراب نکنه).
+ */
+async function cachedGet<T>(url: string, pick: (json: any) => T, fallback: T): Promise<T> {
+  const hit = getCache.get(url);
+  if (hit && Date.now() - hit.at < GET_TTL_MS) return pick(hit.data);
+
+  let pending = inFlightGets.get(url);
+  if (!pending) {
+    pending = fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json !== null) getCache.set(url, { at: Date.now(), data: json });
+        return json;
+      })
+      .catch(() => null)
+      .finally(() => { inFlightGets.delete(url); });
+    inFlightGets.set(url, pending);
+  }
+
+  const json = await pending;
+  return json === null ? fallback : pick(json);
+}
+
+/** بعد از یک نوشتنِ موفق، پاسخِ تازه رو مستقیم توی کش می‌ذاره (بدونِ رفتِ دوباره به سرور) */
+function primeCache(url: string, data: any) {
+  getCache.set(url, { at: Date.now(), data });
+}
+
+/** ورودی‌های کشِ خواندنی که با یک الگو جور در میان رو دور می‌ریزه */
+function dropCache(predicate: (url: string) => boolean) {
+  for (const key of Array.from(getCache.keys())) {
+    if (predicate(key)) getCache.delete(key);
+  }
+}
+
+/**
+ * هر جا هویتِ کاربر عوض می‌شه (ورود/خروج) باید صدا زده بشه — وگرنه لایه‌ی
+ * داده تا انقضای TTL فکر می‌کنه هنوز همون کاربرِ قبلی (یا مهمان) پشتِ خطه و
+ * از منبعِ اشتباه (localStorage به‌جای API، یا داده‌ی کاربرِ قبلی) می‌خونه.
+ * صفحه‌ی ورود بعد از signIn موفق، و منو/پنلِ کاربری قبل از signOut، صداش می‌زنن.
+ */
+export function invalidateStorageCache() {
+  sessionCache = null;
+  inFlightSession = null;
+  getCache.clear();
+  inFlightGets.clear();
+}
+
+function settingsUrl(key: string) {
+  return `/api/settings/${encodeURIComponent(key)}`;
 }
 
 export type DailyRecord = {
@@ -48,11 +137,11 @@ export type DailyRecord = {
 
 export async function getDaily(dateKey: string): Promise<DailyRecord> {
   if (await isLoggedIn()) {
-    try {
-      const res = await fetch(`/api/tasks/daily?date=${dateKey}`);
-      if (res.ok) return await res.json();
-    } catch {}
-    return { tasks: {}, wake: null };
+    return cachedGet<DailyRecord>(
+      `/api/tasks/daily?date=${encodeURIComponent(dateKey)}`,
+      (json) => ({ tasks: json?.tasks ?? {}, wake: json?.wake ?? null }),
+      { tasks: {}, wake: null }
+    );
   }
   if (typeof window === "undefined" || !hasLocalStorage()) return { tasks: {}, wake: null };
   const raw = window.localStorage.getItem(PREFIX + "daily:" + dateKey);
@@ -67,6 +156,10 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: dateKey, tasks: data.tasks, wake: data.wake }),
       });
+      // خودِ همون روز رو write-through می‌کنیم، و هر بازه‌ای که ممکنه شاملش
+      // باشه رو دور می‌ریزیم (بازه‌ها کلیدِ دقیق ندارن که بشه نقطه‌ای آپدیتشون کرد).
+      primeCache(`/api/tasks/daily?date=${encodeURIComponent(dateKey)}`, { tasks: data.tasks, wake: data.wake });
+      dropCache((url) => url.startsWith("/api/tasks/daily/range") || url === "/api/tasks/daily/keys");
     } catch {}
     return;
   }
@@ -76,14 +169,11 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
 
 export async function listDailyKeys(): Promise<Set<string>> {
   if (await isLoggedIn()) {
-    try {
-      const res = await fetch("/api/tasks/daily/keys");
-      if (res.ok) {
-        const data = await res.json();
-        return new Set<string>(data.keys || []);
-      }
-    } catch {}
-    return new Set();
+    return cachedGet<Set<string>>(
+      "/api/tasks/daily/keys",
+      (json) => new Set<string>(json?.keys || []),
+      new Set<string>()
+    );
   }
   const keys = new Set<string>();
   if (typeof window === "undefined" || !hasLocalStorage()) return keys;
@@ -103,14 +193,11 @@ export async function listDailyKeys(): Promise<Set<string>> {
  */
 export async function getDailyRange(fromIso: string, toIso: string): Promise<Record<string, DailyRecord>> {
   if (await isLoggedIn()) {
-    try {
-      const res = await fetch(`/api/tasks/daily/range?from=${fromIso}&to=${toIso}`);
-      if (res.ok) {
-        const data = await res.json();
-        return data.entries || {};
-      }
-    } catch {}
-    return {};
+    return cachedGet<Record<string, DailyRecord>>(
+      `/api/tasks/daily/range?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
+      (json) => json?.entries || {},
+      {}
+    );
   }
   const result: Record<string, DailyRecord> = {};
   if (typeof window === "undefined" || !hasLocalStorage()) return result;
@@ -132,14 +219,7 @@ export async function getDailyRange(fromIso: string, toIso: string): Promise<Rec
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   if (await isLoggedIn()) {
-    try {
-      const res = await fetch(`/api/settings/${encodeURIComponent(key)}`);
-      if (res.ok) {
-        const data = await res.json();
-        return data.value ?? fallback;
-      }
-    } catch {}
-    return fallback;
+    return cachedGet<T>(settingsUrl(key), (json) => (json?.value ?? fallback) as T, fallback);
   }
   if (typeof window === "undefined" || !hasLocalStorage()) return fallback;
   const raw = window.localStorage.getItem(PREFIX + "settings:" + key);
@@ -153,11 +233,12 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
 export async function setSetting<T>(key: string, value: T): Promise<void> {
   if (await isLoggedIn()) {
     try {
-      await fetch(`/api/settings/${encodeURIComponent(key)}`, {
+      await fetch(settingsUrl(key), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value }),
       });
+      primeCache(settingsUrl(key), { value });
     } catch {}
     return;
   }

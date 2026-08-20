@@ -9,7 +9,11 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "check:sql": "node scripts/check-sql-safety.js",
+    "check:settings": "node scripts/check-setting-keys.js",
+    "check": "npm run check:sql && npm run check:settings && tsc --noEmit",
+    "optimize:images": "node scripts/optimize-images.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -26,6 +30,7 @@
     "next-auth": "^4.24.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sharp": "^0.35.3",
     "tailwind-merge": "^3.6.0",
     "web-push": "^3.6.7",
     "zxcvbn": "^4.4.2"

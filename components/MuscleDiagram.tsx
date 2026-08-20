@@ -1,7 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MuscleKey } from "@/lib/exerciseCatalog";
+// `import type` عمدیه، نه سلیقه‌ای: MuscleKey فقط یه typeه، ولی چون با
+// importِ معمولی نوشته شده بود، باندلر کلِ ماژولِ exerciseCatalog (~۸۵KB،
+// شاملِ EXERCISE_CATALOG) رو به گرافِ همین کامپوننت اضافه می‌کرد — و این
+// کامپوننت توی داشبوردِ /exercise همیشه رندر می‌شه. با `import type` اون
+// وابستگی موقعِ کامپایل کاملاً حذف می‌شه.
+import type { MuscleKey } from "@/lib/exerciseCatalog";
 
 // دیاگرامِ بدن (نمای جلو + پشت) — یک سیلوئتِ توپرِ بدن (سر/گردن/تنه/بازو/
 // پا، نه فقط طرح‌واره‌ی خط‌دورِ قبلی) به‌عنوانِ زمینه، و روی هر ناحیه یک

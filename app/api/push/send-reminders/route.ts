@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
@@ -22,30 +23,27 @@ function todayKey(d: Date): string {
   return isoLocal(d);
 }
 
-async function alreadySent(userId: string, key: string, today: string): Promise<boolean> {
-  const row = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "pushSentLog" } } });
-  const log = (row?.value as Record<string, string>) || {};
-  return log[key] === today;
-}
-
-async function markSent(userId: string, key: string, today: string): Promise<void> {
-  const row = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "pushSentLog" } } });
-  const log = (row?.value as Record<string, string>) || {};
-  // پاک‌سازی: کلیدهای مالِ روزهای قبل نگه داشته نمی‌شن، وگرنه این آبجکت بی‌نهایت بزرگ می‌شد.
-  const cleaned: Record<string, string> = {};
-  for (const [k, v] of Object.entries(log)) if (v === today) cleaned[k] = v;
-  cleaned[key] = today;
-  await prisma.userSetting.upsert({
-    where: { userId_key: { userId, key: "pushSentLog" } },
-    create: { userId, key: "pushSentLog", value: cleaned },
-    update: { value: cleaned },
-  });
+/**
+ * مقایسه‌ی رمزِ کران در زمانِ ثابت — `!==` معمولی به‌محضِ اولین بایتِ متفاوت
+ * برمی‌گرده، پس زمانِ پاسخ اطلاعاتی درباره‌ی طولِ پیشوندِ درست می‌ده.
+ */
+function timingSafeEqualStr(a: string | null | undefined, b: string): boolean {
+  if (typeof a !== "string") return false;
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  // طول‌های نابرابر رو هم باید در زمانِ ثابت رد کرد؛ timingSafeEqual خودش
+  // روی طولِ نابرابر throw می‌کنه، پس اول روی یه بافرِ هم‌طول مقایسه می‌کنیم.
+  if (ab.length !== bb.length) {
+    timingSafeEqual(bb, bb);
+    return false;
+  }
+  return timingSafeEqual(ab, bb);
 }
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const provided = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || req.nextUrl.searchParams.get("secret");
-  if (!secret || provided !== secret) {
+  if (!secret || !timingSafeEqualStr(provided, secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -62,14 +60,26 @@ export async function POST(req: NextRequest) {
 
   for (const { userId } of userIds) {
     checked++;
-    const prefsRow = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "notifPrefs" } } });
-    const prefs: NotifPrefs = { ...DEFAULT_NOTIF_PREFS, ...((prefsRow?.value as Partial<NotifPrefs>) || {}) };
+    // همه‌ی تنظیماتِ لازمِ این کاربر با یک کوئری خونده می‌شن. قبلاً هر کلید
+    // یک findUnique جدا بود (notifPrefs + removedOccurrences +
+    // customOccurrences + pushSentLog…) یعنی به‌ازای هر کاربرِ سابسکرایب‌شده
+    // ۴ تا ۶ رفت‌وبرگشت به دیتابیس — با چند هزار کاربر، هر اجرای کران
+    // ده‌ها هزار کوئری می‌شد.
+    const settingRows = await prisma.userSetting.findMany({
+      where: { userId, key: { in: ["notifPrefs", "removedOccurrences", "customOccurrences", "pushSentLog"] } },
+    });
+    const settings = new Map(settingRows.map((r) => [r.key, r.value]));
+    const prefs: NotifPrefs = { ...DEFAULT_NOTIF_PREFS, ...((settings.get("notifPrefs") as Partial<NotifPrefs>) || {}) };
+    // ردِ «امروز فرستاده شد» یک‌بار خونده و در حافظه نگه داشته می‌شه، و فقط
+    // اگه واقعاً چیزی فرستاده شد یک‌بار در انتها نوشته می‌شه.
+    const sentLog: Record<string, string> = { ...((settings.get("pushSentLog") as Record<string, string>) || {}) };
+    let sentLogDirty = false;
+    const wasSent = (key: string) => sentLog[key] === today;
+    const markSentLocal = (key: string) => { sentLog[key] = today; sentLogDirty = true; };
 
     if (prefs.taskReminders) {
-      const removedRow = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "removedOccurrences" } } });
-      const customRow = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "customOccurrences" } } });
-      const removedOccurrences = new Set<string>((removedRow?.value as string[]) || []);
-      const customOccurrences = (customRow?.value as { id: string; name: string; jsDay: number; time: string }[]) || [];
+      const removedOccurrences = new Set<string>((settings.get("removedOccurrences") as string[]) || []);
+      const customOccurrences = (settings.get("customOccurrences") as { id: string; name: string; jsDay: number; time: string }[]) || [];
       const dailyEntry = await prisma.dailyEntry.findUnique({ where: { userId_date: { userId, date: new Date(today) } } });
       const completedItems = (dailyEntry?.completedItems as Record<string, boolean>) || {};
 
@@ -79,9 +89,9 @@ export async function POST(req: NextRequest) {
         if (startMinutes === null || completedItems[t.id]) continue;
         if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
           const key = `soon:${t.id}:${today}`;
-          if (!(await alreadySent(userId, key, today))) {
+          if (!wasSent(key)) {
             await sendPushToUser(userId, { title: "یادآوری برنامه", body: `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.`, url: "/weekly" });
-            await markSent(userId, key, today);
+            markSentLocal(key);
             pushed++;
           }
         }
@@ -90,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     if (prefs.exerciseReminders && now.getHours() >= EXERCISE_REMINDER_HOUR) {
       const key = `exercise:${today}`;
-      if (!(await alreadySent(userId, key, today))) {
+      if (!wasSent(key)) {
         const plan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { createdAt: "desc" } });
         if (plan) {
           const todayName = FA_WEEKDAY[now.getDay()];
@@ -100,12 +110,24 @@ export async function POST(req: NextRequest) {
             const log = await prisma.exerciseLog.findFirst({ where: { planId: plan.id, userId, date: new Date(today) } });
             if (!log?.completed) {
               await sendPushToUser(userId, { title: "یادآوری تمرین", body: `برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, url: "/exercise" });
-              await markSent(userId, key, today);
+              markSentLocal(key);
               pushed++;
             }
           }
         }
       }
+    }
+
+    // یک نوشتن به‌ازای هر کاربر (فقط اگه چیزی فرستاده شده)، نه یکی به‌ازای هر
+    // یادآوری. کلیدهای مالِ روزهای قبل هم همین‌جا دور ریخته می‌شن.
+    if (sentLogDirty) {
+      const cleaned: Record<string, string> = {};
+      for (const [k, v] of Object.entries(sentLog)) if (v === today) cleaned[k] = v;
+      await prisma.userSetting.upsert({
+        where: { userId_key: { userId, key: "pushSentLog" } },
+        create: { userId, key: "pushSentLog", value: cleaned },
+        update: { value: cleaned },
+      });
     }
   }
 
