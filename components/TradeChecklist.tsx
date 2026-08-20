@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
+import { takePreloaded } from "@/lib/preload";
 
 type ChecklistItem = { id: string; text: string; order: number };
 const MAX_ITEMS = 40;
@@ -23,9 +24,13 @@ export function TradeChecklist() {
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch("/api/trade/checklist");
-      const data = await res.json();
-      setItems(res.ok ? data.items || [] : []);
+      // promiseِ پیش‌درخواست‌شده‌ی lib/preload.ts (اگه بود) — وگرنه فچِ عادی
+      const pre = takePreloaded("/api/trade/checklist");
+      const data = pre ? await pre : await (async () => {
+        const res = await fetch("/api/trade/checklist");
+        return res.ok ? res.json() : null;
+      })();
+      setItems(data?.items || []);
     } catch {
       setItems([]);
     } finally {

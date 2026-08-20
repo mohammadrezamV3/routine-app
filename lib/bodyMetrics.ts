@@ -1,4 +1,5 @@
 import { SETTING_KEYS } from "./userSettingKeys";
+import { takePreloaded } from "./preload";
 // قد/وزن/سن یک منبعِ مشترکِ واحد داره (نه یک فرمِ جدا برای هر ماژول) — یک‌بار
 // توی هر فرمی (کالری یا بدنسازی) وارد بشه، همون مقدار توی بقیه‌ی فرم‌ها هم
 // از قبل پر می‌شه. روی همون UserSetting عمومیِ کلید/مقدار ذخیره می‌شه (بدون
@@ -12,9 +13,12 @@ const WEIGHT_REMINDER_DAYS = 14;
 
 export async function getBodyMetrics(): Promise<{ data: BodyMetrics | null; updatedAt: string | null }> {
   try {
-    const res = await fetch(`/api/settings/${KEY}`);
-    if (!res.ok) return { data: null, updatedAt: null };
-    const json = await res.json();
+    const pre = takePreloaded(`/api/settings/${KEY}`);
+    const json = pre ? await pre : await (async () => {
+      const res = await fetch(`/api/settings/${KEY}`);
+      return res.ok ? res.json() : null;
+    })();
+    if (!json) return { data: null, updatedAt: null };
     return { data: (json.value as BodyMetrics) ?? null, updatedAt: json.updatedAt ?? null };
   } catch {
     return { data: null, updatedAt: null };

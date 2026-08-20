@@ -6,6 +6,7 @@ import { AuthGate } from "./AuthGate";
 import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import { ExerciseDashboard } from "./ExerciseDashboard";
 import { ExercisePlan } from "@/lib/exerciseTypes";
+import { takePreloaded } from "@/lib/preload";
 
 export function ExercisePanel() {
   const { status } = useSession();
@@ -19,7 +20,10 @@ export function ExercisePanel() {
     // تا سشن واقعاً authenticated بشه و پلنِ واقعی فچ بشه.
     if (status === "loading") return;
     if (status !== "authenticated") { setPlan(null); return; }
-    fetch("/api/exercise/plan").then((r) => r.json()).then((res) => setPlan(res.plan || null));
+    // promiseِ پیش‌درخواست‌شده‌ی lib/preload.ts (اگه بود) — وگرنه فچِ عادی
+    const pre = takePreloaded("/api/exercise/plan");
+    (pre ?? fetch("/api/exercise/plan").then((r) => (r.ok ? r.json() : null)))
+      .then((res: any) => setPlan(res?.plan || null));
   }, [status]);
 
   if (status === "unauthenticated") {

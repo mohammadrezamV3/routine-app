@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSetting, setSetting } from "./storage";
 
 // شخصی‌سازیِ چیدمانِ داشبورد — کاربر می‌تونه کارت‌های اختیاری (نه ماژول‌های
 // اصلی) رو از داشبوردهای روتین/بدنسازی/کالری مخفی کنه. روی همون UserSetting
@@ -17,22 +18,17 @@ export const DEFAULT_DASHBOARD_PREFS: DashboardPrefs = {
 };
 
 export async function getDashboardPrefs(): Promise<DashboardPrefs> {
-  try {
-    const res = await fetch("/api/settings/dashboardPrefs");
-    if (!res.ok) return DEFAULT_DASHBOARD_PREFS;
-    const json = await res.json();
-    return { ...DEFAULT_DASHBOARD_PREFS, ...(json.value || {}) };
-  } catch {
-    return DEFAULT_DASHBOARD_PREFS;
-  }
+  // از getSetting رد می‌شه (نه fetchِ خام) تا هم از کش/دیدوپِ مشترکِ
+  // lib/storage.ts استفاده کنه، هم بتونه promiseِ پیش‌درخواست‌شده‌ی
+  // lib/preload.ts رو برداره. قبلاً fetchِ مستقلِ خودش رو می‌زد، پس
+  // پیش‌درخواستِ همین کلید هدر می‌رفت و در تایم‌لاین دو بار دیده می‌شد.
+  const value = await getSetting<Partial<DashboardPrefs> | null>("dashboardPrefs", null);
+  return { ...DEFAULT_DASHBOARD_PREFS, ...(value || {}) };
 }
 
 export async function saveDashboardPrefs(prefs: DashboardPrefs): Promise<void> {
-  await fetch("/api/settings/dashboardPrefs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ value: prefs }),
-  });
+  // setSetting کشِ مشترک رو هم write-through آپدیت می‌کنه
+  await setSetting("dashboardPrefs", prefs);
 }
 
 // کش‌شده بیرونِ هوک — هر داشبوردی که این هوک رو صدا بزنه، بعد از اولین

@@ -18,6 +18,7 @@ import { AgentAvatar } from "./AgentAvatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 import { subscribeToPush } from "@/lib/pushClient";
+import { clearAuthHintCookie, takePreloaded } from "@/lib/preload";
 
 // این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
 // ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -228,7 +229,8 @@ export function NavDrawer() {
   useEffect(() => {
     if (status !== "authenticated") return;
     function loadAvatar() {
-      fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null)).then((res) => {
+      const preloaded = takePreloaded("/api/account/avatar");
+      (preloaded ?? fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null))).then((res: any) => {
         cachedAvatarUrl = res?.avatarUrl ?? null;
         setAvatarUrl(cachedAvatarUrl);
       });
@@ -341,7 +343,7 @@ export function NavDrawer() {
                         <div
                           className="notif-panel-item profile-menu-item"
                           style={{ color: "#E05252" }}
-                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
                           <span>خروج از حساب</span>
