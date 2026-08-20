@@ -134,7 +134,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="no-scrollbar mt-4 flex max-h-[210px] flex-col gap-4 overflow-y-auto sm:max-h-[250px]">
         {authRequired ? (
           <div className="text-[11px] text-dash-muted sm:text-[12px]">برای استفاده از بخش دوستان اول وارد حساب بشو.</div>
         ) : friends === null ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, MoreVertical, Pencil, Trash2, CalendarClock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,9 +11,10 @@ import { toEnDigits } from "@/lib/schedule";
 
 export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean; dayPast?: boolean; notStarted?: boolean };
 
-// بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). کلیک روی متنِ برنامه، کارتِ
-// واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز می‌کنه؛ سه‌نقطه یک منوی
-// کوچیک (ویرایش/حذف) باز می‌کنه. چک‌باکس فقط برای «امروز» فعاله.
+// بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). فقط کلیک روی خودِ متنِ اسمِ
+// برنامه (نه کل ردیف) کارتِ واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز
+// می‌کنه؛ سه‌نقطه یک منوی کوچیک (ویرایش/حذف) باز می‌کنه. چک‌باکس فقط برای
+// «امروز» فعاله.
 export function DashTaskRow({
   task,
   editable,
@@ -31,18 +33,28 @@ export function DashTaskRow({
   onMove: (id: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const btnWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // بستنِ منو با کلیک هرجای صفحه — یه لیسنرِ سطحِ document، نه یه لایه‌ی
-  // fixed کنارش، چون backdrop-blur روی DashCard (والدِ این ردیف) یه
-  // containing-block جدید برای position:fixed می‌سازه و باعث می‌شد اون لایه
-  // فقط داخلِ خودِ کارت رو بپوشونه، نه کلِ صفحه رو.
+  // منو با createPortal به document.body می‌ره — چون DashCard (والدِ این
+  // ردیف) با backdrop-blur یه containing-block/stacking-context جدید می‌سازه،
+  // یعنی z-index داخلِ خودِ همون کارت محدود می‌مونه و نمی‌تونه بالاترِ
+  // کارت‌های خواهرِ بعدی (که دیرتر توی DOM میان و بدونِ این پورتال روشون
+  // می‌افتاد) بیاد. با پورتال به body، این مشکلِ stacking-context کلاً حل می‌شه.
+  function openMenu() {
+    const rect = btnWrapRef.current?.getBoundingClientRect();
+    if (rect) setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    setMenuOpen(true);
+  }
+
   useEffect(() => {
     if (!menuOpen) return;
     function onDocClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      const t = e.target as Node;
+      if (btnWrapRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setMenuOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -52,17 +64,21 @@ export function DashTaskRow({
     <motion.div
       className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
     >
-      <div className="relative shrink-0" ref={menuRef}>
+      <div className="relative shrink-0" ref={btnWrapRef}>
         <button
           type="button"
           aria-label="گزینه‌های برنامه"
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
           className="text-dash-muted transition hover:text-dash-text"
         >
           <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
         </button>
-        {menuOpen && (
-          <div className="dash-context-menu absolute right-0 top-[calc(100%+6px)] z-30 min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]">
+        {menuOpen && menuPos && createPortal(
+          <div
+            ref={menuRef}
+            style={{ top: menuPos.top, right: menuPos.right }}
+            className="dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
+          >
             <div
               onClick={() => { setMenuOpen(false); onEdit(task.id); }}
               className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
@@ -96,31 +112,35 @@ export function DashTaskRow({
               <Trash2 size={13} className="shrink-0" />
               حذف کامل برنامه
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onOpen(task.name)}
-        className="flex min-w-0 flex-1 items-center gap-2 text-right sm:gap-3"
-      >
-        <div className="min-w-0 flex-1 truncate text-[13px] font-medium text-dash-text sm:text-[15px]">{task.name}</div>
-
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2 text-right sm:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onOpen(task.name)}
+            className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
+          >
+            {task.name}
+          </button>
           {task.tag && (
             <span className="w-[48px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-1.5 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
               {task.tag}
             </span>
           )}
+        </div>
 
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <DashImportanceBadge importance={task.importance} />
 
           <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
             {toEnDigits(task.time)}
           </span>
         </div>
-      </button>
+      </div>
 
       <motion.button
         type="button"
