@@ -9,6 +9,7 @@ import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark, GoogleSignInButton } from "@/components/AuthChrome";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
+import { setAuthHintCookie } from "@/lib/preload";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -77,6 +78,8 @@ export default function LoginPage() {
     // می‌خونده)؛ بدونِ این پاک‌سازی، چون این‌جا ناوبریِ کلاینتیه (نه ریلودِ
     // کامل)، صفحه‌ی بعدی همچنان داده‌ی مهمان رو نشون می‌داد.
     invalidateStorageCache();
+    // تا لودِ بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
+    setAuthHintCookie();
     router.push("/weekly");
   }
 
