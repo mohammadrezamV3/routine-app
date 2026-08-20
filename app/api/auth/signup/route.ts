@@ -45,6 +45,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "تاریخ تولد معتبر نیست" }, { status: 400 });
   }
 
+  // شماره موبایل باید قبلاً با کدِ پیامکی تایید شده باشه (app/api/auth/signup/otp) —
+  // فقط سمتِ کلاینت چک‌کردن کافی نیست، چون کلاینت قابل دور زدنه. تاییدیه‌ی
+  // مصرف‌نشده‌ای که هنوز منقضی نشده لازمه (پنجره‌ی ۱۰ دقیقه‌ای همون OTP).
+  const verifiedOtp = await prisma.signupOtp.findFirst({
+    where: { phone, verifiedAt: { not: null }, usedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!verifiedOtp) {
+    return NextResponse.json({ error: "شماره موبایل هنوز تایید نشده — دوباره از اول امتحان کن" }, { status: 400 });
+  }
+
   const existing = await prisma.user.findFirst({
     where: { OR: [{ phone }, { username }] },
   });
@@ -53,6 +64,8 @@ export async function POST(req: NextRequest) {
     // مهاجم نتونه با امتحان‌کردن شماره‌های مختلف بفهمه کدوم شماره ثبت‌نام شده.
     return NextResponse.json({ error: "امکان ثبت‌نام با این اطلاعات وجود ندارد" }, { status: 409 });
   }
+
+  await prisma.signupOtp.update({ where: { id: verifiedOtp.id }, data: { usedAt: new Date() } });
 
   const passwordHash = await bcrypt.hash(password, 12);
 
