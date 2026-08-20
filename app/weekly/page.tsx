@@ -14,7 +14,7 @@ import {
   toEnDigits,
   DayStats,
 } from "@/lib/schedule";
-import { dayFillFraction, positionTimedTasks, timelineTrackMinWidth } from "@/lib/weeklyTimeline";
+import { dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
 import {
   getCustomOccurrences,
   getRemovedOccurrences,
@@ -355,7 +355,7 @@ export default function WeeklyPage() {
               />
             )}
 
-            {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} onOpenProgram={setCardName} />}
+            {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
 
             <DashSidebar statsRefreshKey={statsRefreshKey} />
           </div>
@@ -409,7 +409,7 @@ export default function WeeklyPage() {
                       >
                         {items.length ? (
                           <div className="week-timeline">
-                            <div className="week-timeline-track" style={{ minWidth: timelineTrackMinWidth(timedItems.length) }}>
+                            <div className="week-timeline-track">
                               <div className="wt-fill-track">
                                 <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }} />
                               </div>
