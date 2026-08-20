@@ -11,6 +11,8 @@ import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { invalidateStorageCache } from "@/lib/storage";
+import { getAccount, activeModulesOf, invalidateAccountCache } from "@/lib/accountCache";
 import { HeaderStreakClock } from "./HeaderStreakClock";
 import { AgentAvatar } from "./AgentAvatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -242,18 +244,10 @@ export function NavDrawer() {
     if (status === "unauthenticated") { setActiveModules(new Set()); return; }
     if (status !== "authenticated") return;
     let cancelled = false;
-    fetch("/api/account")
-      .then((r) => (r.ok ? r.json() : null))
+    getAccount()
       .then((data) => {
         if (cancelled) return;
-        const now = Date.now();
-        const active = new Set<string>(
-          (data?.user?.moduleAccess || [])
-            .filter((m: { module: string; active: boolean; expiresAt: string | null }) =>
-              m.active && (!m.expiresAt || new Date(m.expiresAt).getTime() > now))
-            .map((m: { module: string }) => m.module)
-        );
-        setActiveModules(active);
+        setActiveModules(activeModulesOf(data));
       })
       .catch(() => { if (!cancelled) setActiveModules(new Set()); });
     return () => { cancelled = true; };
@@ -347,7 +341,7 @@ export function NavDrawer() {
                         <div
                           className="notif-panel-item profile-menu-item"
                           style={{ color: "#E05252" }}
-                          onClick={() => { setProfileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); signOut({ callbackUrl: "/" }); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
                           <span>خروج از حساب</span>

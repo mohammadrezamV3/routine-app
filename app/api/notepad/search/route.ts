@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { leavesToPlainText, RichLeaf } from "@/lib/notepad";
+import { clampQuery } from "@/lib/validate";
 
 const MAX_RESULTS = 30;
 
@@ -16,7 +17,9 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
 
-  const q = (new URL(req.url).searchParams.get("q") || "").trim().toLowerCase();
+  // `q` بریده می‌شه — بدونش یه رشته‌ی چندصدکیلوبایتی برای هر بلاکِ صفحه یه
+  // includes()ِ گرون روی سرور اجرا می‌کرد.
+  const q = clampQuery(new URL(req.url).searchParams.get("q"), 100).toLowerCase();
   if (!q) return NextResponse.json({ results: [] });
 
   const pages = await prisma.notepadPage.findMany({

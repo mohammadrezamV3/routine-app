@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { clampQuery } from "@/lib/validate";
 
 // GET /api/friends/search?q=...  → جستجوی زنده‌ی کاربر با یوزرنیم/اسم، برای
 // تایپ‌آهدِ «افزودن دوست». برای هر نتیجه وضعیتِ فعلیِ رابطه رو هم برمی‌گردونه
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
-  const q = (req.nextUrl.searchParams.get("q") || "").trim();
+  const q = clampQuery(req.nextUrl.searchParams.get("q"), 60);
   if (q.length < 2) return NextResponse.json({ users: [] });
 
   const users = await prisma.user.findMany({

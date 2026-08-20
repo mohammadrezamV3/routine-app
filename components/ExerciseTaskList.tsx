@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Dumbbell, Lock, Play, Plus, Repeat2, RotateCw, Square, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
-import { ExerciseDay } from "@/lib/exercisePlans";
+import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
 import { parseExerciseItem } from "@/lib/exerciseSets";
 import { toFaDigits } from "@/lib/schedule";

@@ -4,7 +4,17 @@ import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ListChecks } from "lucide-react";
 import { DashCard } from "./DashCard";
-import { ExerciseCatalogModal } from "./ExerciseCatalogModal";
+import dynamic from "next/dynamic";
+
+// این مودال کلِ EXERCISE_CATALOG (~۸۵KB سورس) رو import می‌کنه، ولی فقط وقتی
+// کاربر روی «مشاهده حرکات» بزنه رندر می‌شه. بدونِ dynamic، اون حجم توی باندلِ
+// خودِ صفحه‌ی /exercise می‌نشست و برای *هر* بازدیدکننده دانلود می‌شد — حتی
+// کسی که هیچ‌وقت این دکمه رو نمی‌زنه. ssr:false چون فقط با کلیک باز می‌شه و
+// هیچ‌وقت بخشی از HTMLِ اولِ سرور نیست.
+const ExerciseCatalogModal = dynamic(
+  () => import("./ExerciseCatalogModal").then((m) => m.ExerciseCatalogModal),
+  { ssr: false }
+);
 
 // «مشاهده حرکات» — ستونِ وسطِ داشبورد (هم‌جای DashReminderCard توی روتین)،
 // فقط یک دکمه‌ی وسط‌چین که کاتالوگِ کاملِ حرکات رو باز می‌کنه — بدون

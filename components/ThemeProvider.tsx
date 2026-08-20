@@ -24,10 +24,28 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
   const mounted = useRef(false);
+  // آخرین مقداری که *واقعاً* ذخیره شده (چه از سرور خونده شده، چه خودمون
+  // نوشتیمش). افکتِ پایین فقط وقتی می‌نویسه که تمِ فعلی با این فرق داشته
+  // باشه — بدونِ این، بعد از خوندنِ تمِ ذخیره‌شده همون مقدار دوباره نوشته
+  // می‌شد، یعنی یک نوشتنِ دیتابیس اضافه به‌ازای *هر* بازدیدِ *هر* صفحه.
+  //
+  // این‌جا عمداً یه فلگِ یک‌بارمصرف («تازه لود شد») استفاده نشده: اگه مقدارِ
+  // ذخیره‌شده با stateِ فعلی یکی باشه، setTheme اصلاً رندرِ جدیدی نمی‌سازه،
+  // پس افکت اجرا نمی‌شه و اون فلگ گیر می‌کنه — و *تغییرِ بعدیِ خودِ کاربر*
+  // رو بی‌صدا می‌بلعه (تمِ عوض‌شده بعد از ریلود برمی‌گشت به قبلی).
+  const persisted = useRef<Theme | null>(null);
+  // اگه کاربر قبل از رسیدنِ مقدارِ ذخیره‌شده خودش تم رو عوض کرده باشه، اون
+  // مقدارِ ذخیره‌شده دیگه نباید انتخابش رو پس بزنه.
+  const userChose = useRef(false);
 
   useEffect(() => {
     getThemeSetting().then((saved) => {
-      if (saved === "light" || saved === "dark") setTheme(saved);
+      if (saved !== "light" && saved !== "dark") return;
+      persisted.current = saved;
+      // اگه کاربر قبل از رسیدنِ این مقدار خودش تم رو عوض کرده، انتخابش
+      // نباید پس زده بشه (ولی persisted بالا بازم درست ست شده، تا انتخابِ
+      // کاربر در افکتِ بعدی واقعاً نوشته بشه).
+      if (!userChose.current) setTheme(saved);
     });
   }, []);
 
@@ -38,7 +56,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // برای یه لحظه (تا resolve شدنِ افکتِ بالا) بازنویسی می‌کنه.
     if (!mounted.current) { mounted.current = true; return; }
     document.body.setAttribute("data-theme", theme);
-    setThemeSetting(theme);
+    // فقط وقتی می‌نویسیم که با چیزی که واقعاً ذخیره‌ست فرق داشته باشه
+    if (persisted.current !== theme) {
+      persisted.current = theme;
+      setThemeSetting(theme);
+    }
     // نوارِ وضعیت/ناچِ سافاری هم باید رنگِ تمِ فعلی رو بگیره، وگرنه بعد از
     // toggle، بدنه‌ی صفحه عوض می‌شه ولی اون نوار همچنان رنگِ تمِ قبلی می‌مونه.
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -47,7 +69,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider
-      value={{ theme, toggle: () => setTheme((t) => (t === "light" ? "dark" : "light")) }}
+      value={{
+        theme,
+        toggle: () => {
+          userChose.current = true;
+          setTheme((t) => (t === "light" ? "dark" : "light"));
+        },
+      }}
     >
       {children}
     </ThemeContext.Provider>

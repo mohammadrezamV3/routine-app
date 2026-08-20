@@ -1,3 +1,4 @@
+import { SETTING_KEYS } from "./userSettingKeys";
 // قد/وزن/سن یک منبعِ مشترکِ واحد داره (نه یک فرمِ جدا برای هر ماژول) — یک‌بار
 // توی هر فرمی (کالری یا بدنسازی) وارد بشه، همون مقدار توی بقیه‌ی فرم‌ها هم
 // از قبل پر می‌شه. روی همون UserSetting عمومیِ کلید/مقدار ذخیره می‌شه (بدون
@@ -5,7 +6,8 @@
 
 export type BodyMetrics = { heightCm?: number; weightKg?: number; ageYears?: number };
 
-const KEY = "bodyMetrics";
+// نامِ کلید از allowlist میاد تا این دوتا نتونن از هم واگرا بشن
+const KEY = SETTING_KEYS.bodyMetrics;
 const WEIGHT_REMINDER_DAYS = 14;
 
 export async function getBodyMetrics(): Promise<{ data: BodyMetrics | null; updatedAt: string | null }> {

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "@/lib/jalali";
-import { ExerciseDay } from "@/lib/exercisePlans";
+import type { ExerciseDay } from "@/lib/exercisePlans";
 import { cn } from "@/lib/utils";
 
 // «برنامه هفتگی» بدنسازی — یک باکسِ واحد، با پدینگِ دورش تا خطِ جداکننده‌ی

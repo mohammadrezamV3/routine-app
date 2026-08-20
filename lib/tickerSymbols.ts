@@ -1,3 +1,4 @@
+import { SETTING_KEYS } from "./userSettingKeys";
 // کاتالوگ نمادهای قابل‌دنبال‌کردن توی نوار قیمت بازار — کاربر از همین لیست
 // انتخاب می‌کنه (حداکثر MAX_TICKER_SYMBOLS تا). نمادها به سبک Yahoo Finance‌ان
 // چون API قیمت هم از همون‌جا می‌خونه.
@@ -259,7 +260,7 @@ export const DEFAULT_TICKER_SYMBOLS_INTERNATIONAL = ["SPY", "QQQ", "^VIX", "DIA"
 
 export const MAX_TICKER_SYMBOLS = 20;
 export const MIN_TICKER_SYMBOLS = 1;
-export const TICKER_SETTING_KEY = "tradeTickerSymbols";
+export const TICKER_SETTING_KEY = SETTING_KEYS.tradeTickerSymbols;
 
 export function tickerLabelFor(symbol: string): string {
   return TICKER_CATALOG.find((s) => s.symbol === symbol)?.label ?? symbol;

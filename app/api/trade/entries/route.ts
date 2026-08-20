@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
+import { parseDateRange } from "@/lib/validate";
 
 // عکس روی همین رکورد به‌صورت data URL ذخیره می‌شه (بدون استوریج فایل جدا)؛
 // این سقف طول رشته رو محدود می‌کنه — کلاینت از قبل عکس رو فشرده می‌کنه
@@ -62,13 +63,17 @@ export async function GET(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const from = req.nextUrl.searchParams.get("from");
-  const to = req.nextUrl.searchParams.get("to");
-  if (!from || !to) return NextResponse.json({ error: "from/to الزامی است" }, { status: 400 });
+  const range = parseDateRange(req.nextUrl.searchParams.get("from"), req.nextUrl.searchParams.get("to"));
+  if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
+
+  // `openedAt` یه timestampه نه فقط روز، پس تا آخرِ روزِ پایانی باز می‌شه —
+  // وگرنه معامله‌های خودِ روزِ `to` (بعد از نیم‌شب) از قلم می‌افتادن.
+  const toEndOfDay = new Date(range.to.getTime() + 86_400_000 - 1);
 
   const entries = await prisma.tradeEntry.findMany({
-    where: { userId, openedAt: { gte: new Date(from), lte: new Date(to) } },
+    where: { userId, openedAt: { gte: range.from, lte: toEndOfDay } },
     orderBy: { openedAt: "asc" },
+    take: 5000,
   });
   return NextResponse.json({ entries });
 }

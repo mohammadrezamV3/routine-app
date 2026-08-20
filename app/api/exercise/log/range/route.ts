@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { isoLocal } from "@/lib/jalali";
+import { parseDateRange } from "@/lib/validate";
 
 // GET /api/exercise/log/range?planId=...&start=2026-07-01&end=2026-07-31
 // برای محاسبه‌ی سمتِ کلاینتِ «تعداد جلسات این هفته»، «میزان پیشرفت هفتگی»
@@ -13,14 +14,13 @@ export async function GET(req: NextRequest) {
   const userId = guard.userId;
 
   const planId = req.nextUrl.searchParams.get("planId");
-  const start = req.nextUrl.searchParams.get("start");
-  const end = req.nextUrl.searchParams.get("end");
-  if (!planId || !start || !end) {
-    return NextResponse.json({ error: "planId, start and end required" }, { status: 400 });
-  }
+  if (!planId) return NextResponse.json({ error: "planId الزامی است" }, { status: 400 });
+
+  const range = parseDateRange(req.nextUrl.searchParams.get("start"), req.nextUrl.searchParams.get("end"));
+  if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
 
   const logs = await prisma.exerciseLog.findMany({
-    where: { userId, planId, date: { gte: new Date(start), lte: new Date(end) } },
+    where: { userId, planId, date: { gte: range.from, lte: range.to } },
   });
 
   const byDate: Record<string, { completed: boolean; completedItems: string[] }> = {};
