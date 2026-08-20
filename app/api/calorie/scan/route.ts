@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
-import { analyzeFoodPhoto } from "@/lib/anthropic";
+import { analyzeFoodPhoto } from "@/lib/aiClient";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const ALLOWED_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "فرمت عکس پشتیبانی نمی‌شه" }, { status: 400 });
   }
 
-  // هر درخواست یک فراخوانیِ واقعی و پولیِ چندوجهی به Claude API ـه — سقفِ
+  // هر درخواست یک فراخوانیِ واقعی و پولیِ چندوجهی به گیت‌وی AI ـه — سقفِ
   // محافظه‌کارانه‌تر از تولیدِ رودمپِ متنی، چون هزینه‌ش بالاتره.
   // سوپریوزر از این سقف مستثناست (هم‌راستا با دسترسیِ نامحدودش به ماژول‌ها).
   if (!guard.isSuperAdmin && !checkRateLimit(`calorie-scan:${userId}`, 15, 60 * 60 * 1000)) {

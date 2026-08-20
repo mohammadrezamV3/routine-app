@@ -1,6 +1,57 @@
-// فراخوانی Claude API برای تولید رودمپ ساختاریافته از روی یک موضوع دلخواه.
-// خروجی باید فقط JSON خام باشه (بدون توضیح اضافه)، طبق الگوی مشخص‌شده در
-// system prompt، تا مستقیم قابل ذخیره در مدل Roadmap باشه.
+// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود (GPT-4o-mini) برای همه‌ی جاهایی که
+// این اپ از AI استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل
+// بودن، الان همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API
+// سازگارِ OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه.
+// خروجی همیشه باید فقط JSON خام باشه (بدون توضیح اضافه) — هم با
+// response_format:{type:"json_object"} در سطحِ خودِ فراخوانی اجباری شده، هم
+// توی هر system prompt صریح تکرار شده، تا مستقیم قابلِ ذخیره/نمایش باشه.
+
+type ChatContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
+// baseUrl از env میاد و شاملِ خودِ تکنِ دسترسی توی مسیرشه (طبق طراحیِ
+// گیت‌وی آروان‌کلود) — یعنی هیچ‌وقت نباید هاردکد یا کامیت بشه؛ فقط توی
+// .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیره.
+async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<string> {
+  const baseUrl = process.env.ARVAN_AI_BASE_URL;
+  if (!baseUrl) {
+    throw new Error("ARVAN_AI_BASE_URL تنظیم نشده — این فیچر بدون آدرسِ گیت‌وی کار نمی‌کند");
+  }
+
+  const response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      max_tokens: maxTokens,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: userContent },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`خطا در فراخوانی گیت‌وی AI: ${response.status} ${text}`);
+  }
+
+  const data = await response.json();
+  const text: string = data?.choices?.[0]?.message?.content ?? "";
+  if (!text) throw new Error("پاسخ مدل خالی بود");
+  return text;
+}
+
+function parseJsonResponse(text: string): any {
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
+  }
+}
 
 const SYSTEM_PROMPT = `تو یک طراح مسیر یادگیری (roadmap) هستی. کاربر یک موضوع می‌ده و تو باید یک
 مسیر یادگیری ساختاریافته و واقع‌بینانه براش بسازی، به زبان فارسی.
@@ -68,46 +119,9 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
   };
 }
 
-async function callClaudeOnce(topic: string): Promise<GeneratedRoadmap> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY تنظیم نشده — این فیچر بدون کلید API کار نمی‌کند");
-  }
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 2000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: `موضوع: ${topic}` }],
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`خطا در فراخوانی Claude API: ${response.status} ${text}`);
-  }
-
-  const data = await response.json();
-  const text: string = (data.content || [])
-    .map((block: any) => (block.type === "text" ? block.text : ""))
-    .join("");
-
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  let parsed: any;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
-  }
-
-  return normalizeRoadmap(parsed);
+async function callRoadmapOnce(topic: string): Promise<GeneratedRoadmap> {
+  const text = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
+  return normalizeRoadmap(parseJsonResponse(text));
 }
 
 /**
@@ -119,7 +133,7 @@ export async function generateRoadmap(topic: string): Promise<GeneratedRoadmap> 
   let lastError: any;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await callClaudeOnce(topic);
+      return await callRoadmapOnce(topic);
     } catch (err) {
       lastError = err;
     }
@@ -130,7 +144,7 @@ export async function generateRoadmap(topic: string): Promise<GeneratedRoadmap> 
 // ============================================================================
 // برنامه‌ی هوشمند ورزش — همون الگوی generateRoadmap (system prompt ثابت،
 // پروفایل توی پیام کاربر، پارس/اعتبارسنجی سخت‌گیرانه چون UI مستقیم روی
-// خروجی .map می‌زنه). اگه کلید API نبود یا تماس شکست خورد، فراخوان (route)
+// خروجی .map می‌زنه). اگه آدرسِ گیت‌وی نبود یا تماس شکست خورد، فراخوان (route)
 // باید به قالب ایستای lib/exercisePlans.ts برگرده — این فایل فقط پرتاب خطا می‌کنه.
 // ============================================================================
 
@@ -197,11 +211,6 @@ function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerci
 }
 
 async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<ExercisePlanResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY تنظیم نشده — این فیچر بدون کلید API کار نمی‌کند");
-  }
-
   const profileText = [
     `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
     `هدف: ${profile.goalLabel}`,
@@ -212,38 +221,8 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<Exerc
     profile.description ? `توضیحِ کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
   ].filter(Boolean).join("\n");
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 2000,
-      system: EXERCISE_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: profileText }],
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`خطا در فراخوانی Claude API: ${response.status} ${text}`);
-  }
-
-  const data = await response.json();
-  const text: string = (data.content || [])
-    .map((block: any) => (block.type === "text" ? block.text : ""))
-    .join("");
-
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  let parsed: any;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
-  }
+  const text = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 2000);
+  const parsed = parseJsonResponse(text);
 
   if (parsed?.feasible === false) {
     const message = typeof parsed?.message === "string" && parsed.message.trim()
@@ -280,43 +259,8 @@ const SUBSTITUTE_SYSTEM_PROMPT = `تو یک مربی بدنسازی هستی. ک
 فقط این JSON خام رو برگردون، بدون هیچ توضیح اضافه: { "substitute": "نام حرکت جدید تعداد‌ست×تکرار" }`;
 
 export async function suggestExerciseSubstitute(exerciseItem: string): Promise<string> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY تنظیم نشده — این فیچر بدون کلید API کار نمی‌کند");
-  }
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 200,
-      system: SUBSTITUTE_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: `حرکت: ${exerciseItem}` }],
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`خطا در فراخوانی Claude API: ${response.status} ${text}`);
-  }
-
-  const data = await response.json();
-  const text: string = (data.content || [])
-    .map((block: any) => (block.type === "text" ? block.text : ""))
-    .join("");
-
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  let parsed: any;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
-  }
+  const text = await callAiChat(SUBSTITUTE_SYSTEM_PROMPT, `حرکت: ${exerciseItem}`, 200);
+  const parsed = parseJsonResponse(text);
 
   const substitute = typeof parsed?.substitute === "string" ? parsed.substitute.trim() : "";
   if (!substitute) {
@@ -364,51 +308,15 @@ function asPositiveNumber(v: unknown): number | null {
 }
 
 export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpeg" | "image/png" | "image/webp"): Promise<FoodScanResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY تنظیم نشده — این فیچر بدون کلید API کار نمی‌کند");
-  }
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 500,
-      system: FOOD_SCAN_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
-            { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
-          ],
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`خطا در فراخوانی Claude API: ${response.status} ${text}`);
-  }
-
-  const data = await response.json();
-  const text: string = (data.content || [])
-    .map((block: any) => (block.type === "text" ? block.text : ""))
-    .join("");
-
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  let parsed: any;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
-  }
+  const text = await callAiChat(
+    FOOD_SCAN_SYSTEM_PROMPT,
+    [
+      { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
+      { type: "image_url", image_url: { url: `data:${mediaType};base64,${base64Data}` } },
+    ],
+    500
+  );
+  const parsed = parseJsonResponse(text);
 
   if (parsed?.recognized === false) {
     const message = typeof parsed?.message === "string" && parsed.message.trim()
