@@ -1,5 +1,13 @@
 node_modules
 .next
+dist
+build
 .env
 .env.local
 *.log
+
+# کشِ incrementalِ خودِ TypeScript — یه فایلِ ~۱۵۰KBِ ماشین‌ساخت که با *هر*
+# بیلد عوض می‌شه. تا حالا ترک‌شده بود و عملاً توی هر کامیت تغییر می‌کرد، پس
+# روی هر مرج یه تداخلِ بی‌معنی می‌ساخت. CLAUDE.md هم از اول گفته بود باید
+# ignore بشه.
+tsconfig.tsbuildinfo
