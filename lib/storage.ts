@@ -4,6 +4,7 @@
 // داده از کجا میاد — همون قراردادی که از اول قرار بود برقرار بمونه.
 
 import { getSession } from "next-auth/react";
+import { takePreloaded, takePreloadedRange } from "./preload";
 
 const PREFIX = "panelMohammad:";
 
@@ -51,23 +52,50 @@ const GET_TTL_MS = 15_000;
 let sessionCache: { loggedIn: boolean; at: number } | null = null;
 let inFlightSession: Promise<boolean> | null = null;
 
-// getSession() هر بار که صدا زده بشه یه فچِ تازه به /api/auth/session می‌زنه
-// (برخلافِ هوکِ useSession که از contextِ مشترکِ SessionProvider می‌خونه).
-// چون هر تکِ get/set از این لایه رد می‌شه، بدونِ کش هر خواندنِ داده عملاً
-// دو رفت‌وبرگشتِ شبکه‌ی *سریالی* می‌شد (اول session، بعد خودِ داده).
+// وقتی SessionProvider وضعیت رو حل کرد، همین‌جا اعلامش می‌کنه (SessionBridge).
+// هر خواندنی که در این فاصله منتظر مونده با همون بیدار می‌شه.
+let sessionResolvers: ((loggedIn: boolean) => void)[] = [];
+
+/**
+ * پلِ بینِ SessionProvider و این لایه.
+ *
+ * چرا لازم بود: `getSession()` از next-auth/react هر بار یه فچِ *تازه* به
+ * `/api/auth/session` می‌زنه و از contextِ SessionProvider نمی‌خونه. یعنی
+ * هر لودِ صفحه دو بار همون اندپوینت رو می‌گرفت (یکی SessionProvider، یکی
+ * این‌جا) و — مهم‌تر از تعداد — خواندنِ داده‌ها پشتِ فچِ *دومی* منتظر می‌موند:
+ * دو رفت‌وبرگشتِ سریالی قبل از این‌که اولین بایتِ داده‌ی واقعی درخواست بشه.
+ * روی یه اتصالِ ۳۰۰ms این یعنی بیش از نیم ثانیه معطلیِ خالص.
+ *
+ * حالا SessionBridge (که داخلِ SessionProvider نشسته) نتیجه‌ی همون فچِ اولیه
+ * رو این‌جا می‌ذاره، و هیچ فچِ دومی لازم نیست.
+ */
+export function publishSessionState(loggedIn: boolean) {
+  sessionCache = { loggedIn, at: Date.now() };
+  const waiting = sessionResolvers;
+  sessionResolvers = [];
+  for (const r of waiting) r(loggedIn);
+}
+
+// getSession() فقط به‌عنوان تورِ ایمنی می‌مونه: اگه به هر دلیلی SessionBridge
+// مونت نشده باشه (مثلاً یه مسیرِ رندرِ متفاوت)، این لایه نباید برای همیشه
+// معطل بمونه.
+const SESSION_BRIDGE_TIMEOUT_MS = 3000;
+
 async function isLoggedIn(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   const cached = sessionCache;
   if (cached && Date.now() - cached.at < SESSION_TTL_MS) return cached.loggedIn;
   if (!inFlightSession) {
-    inFlightSession = getSession()
-      .then((session) => {
-        const loggedIn = !!(session?.user as any)?.id;
-        sessionCache = { loggedIn, at: Date.now() };
-        return loggedIn;
-      })
-      .catch(() => false)
-      .finally(() => { inFlightSession = null; });
+    inFlightSession = new Promise<boolean>((resolve) => {
+      sessionResolvers.push(resolve);
+      setTimeout(() => {
+        // هنوز خبری از پل نشده — خودمون می‌پرسیم
+        if (sessionCache && Date.now() - sessionCache.at < SESSION_TTL_MS) return;
+        getSession()
+          .then((session) => publishSessionState(!!(session?.user as any)?.id))
+          .catch(() => publishSessionState(false));
+      }, SESSION_BRIDGE_TIMEOUT_MS);
+    }).finally(() => { inFlightSession = null; });
   }
   return inFlightSession;
 }
@@ -86,9 +114,12 @@ async function cachedGet<T>(url: string, pick: (json: any) => T, fallback: T): P
 
   let pending = inFlightGets.get(url);
   if (!pending) {
-    pending = fetch(url)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
+    // اگه اسکریپتِ inlineِ layout این URL رو از قبل درخواست کرده، همون رو
+    // برمی‌داریم — یعنی داده تقریباً یک رفت‌وبرگشتِ کامل زودتر آماده‌ست.
+    const preloaded = takePreloaded(url);
+    pending = (preloaded ?? fetch(url)
+      .then((res) => (res.ok ? res.json() : null)))
+      .then((json: any) => {
         if (json !== null) getCache.set(url, { at: Date.now(), data: json });
         return json;
       })
@@ -122,6 +153,7 @@ function dropCache(predicate: (url: string) => boolean) {
 export function invalidateStorageCache() {
   sessionCache = null;
   inFlightSession = null;
+  sessionResolvers = [];
   getCache.clear();
   inFlightGets.clear();
   clearRangeCache();
@@ -147,7 +179,22 @@ type RangeEntry = { from: string; to: string; at: number; data: Promise<Record<s
 
 let rangeEntries: RangeEntry[] = [];
 
+// بازه‌ی پهنی که اسکریپتِ inline از قبل گرفته، همون اولین باری که کسی
+// سراغِ DailyEntry میاد وارد کشِ پوشش‌محور می‌شه — بعدش هر زیربازه‌ای (و هر
+// روزِ تکی) از همون بریده می‌شه، بدونِ هیچ درخواستِ تازه‌ای.
+let preloadedRangeAdopted = false;
+function adoptPreloadedRange() {
+  if (preloadedRangeAdopted) return;
+  preloadedRangeAdopted = true;
+  const pre = takePreloadedRange();
+  if (!pre) return;
+  const entry: RangeEntry = { from: pre.from, to: pre.to, at: Date.now(), data: pre.data as Promise<Record<string, DailyRecord> | null> };
+  entry.data.then((d) => { if (d === null) rangeEntries = rangeEntries.filter((e) => e !== entry); });
+  rangeEntries.push(entry);
+}
+
 function findCoveringRange(from: string, to: string): RangeEntry | null {
+  adoptPreloadedRange();
   const now = Date.now();
   for (const e of rangeEntries) {
     if (e.from <= from && e.to >= to && now - e.at < GET_TTL_MS) return e;

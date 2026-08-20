@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ExercisePanel } from "@/components/ExercisePanel";
 import { CaloriePanel } from "@/components/CaloriePanel";
 import { ModuleGate } from "@/components/ModuleGate";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 
 // انتخابِ برنامه‌ی تمرینی/غذایی دیگه تبِ روی صفحه نداره — طبقِ درخواستِ
 // صریحِ کاربر فقط از منوی «بدنسازی» ← «برنامه تمرینی»/«برنامه غذایی» ممکنه؛
@@ -31,7 +32,7 @@ function BodybuildingTabContent() {
 export default function BodybuildingPage() {
   return (
     <section className="bodybuilding-glass exercise-dash-breakout">
-      <Suspense fallback={null}>
+      <Suspense fallback={<PanelSkeleton />}>
         <BodybuildingTabContent />
       </Suspense>
     </section>

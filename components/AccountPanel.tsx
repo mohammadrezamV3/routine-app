@@ -22,6 +22,7 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { clearAuthHintCookie } from "@/lib/preload";
 
 // EXERCISE و CALORIE هر دو زیر یک قابلیت واحد («بدنسازی») نمایش داده می‌شن —
 // عمداً هم‌نام تا توی لیست به‌جای دو ردیف جدا، یکی merge بشه (پایین‌تر با seenLabels)
@@ -546,7 +547,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-        <button onClick={() => { invalidateStorageCache(); signOut({ callbackUrl: "/" }); }} style={{ borderColor: "#E05252", color: "#E05252" }}>
+        <button onClick={() => { invalidateStorageCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }} style={{ borderColor: "#E05252", color: "#E05252" }}>
           خروج از حساب
         </button>
       </div>

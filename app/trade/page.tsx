@@ -8,6 +8,7 @@ import { TradeChecklist } from "@/components/TradeChecklist";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { MarketTicker } from "@/components/MarketTicker";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 
 // انتخابِ ژورنال/چک‌لیست دیگه تبِ روی صفحه نداره — فقط از منوی «ترید» ←
 // «ژورنال»/«چک‌لیست» ممکنه؛ هم‌قاعده‌ی app/exercise/page.tsx، از
@@ -33,7 +34,7 @@ export default function TradePage() {
       <MarketTicker />
       <h1>ترید</h1>
       <div style={{ marginTop: 14 }}>
-        <Suspense fallback={null}>
+        <Suspense fallback={<PanelSkeleton />}>
           <TradeTabContent />
         </Suspense>
       </div>

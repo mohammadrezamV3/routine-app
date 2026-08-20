@@ -7,6 +7,8 @@
 // می‌زد. این ماژول همون الگویی رو داره که lib/storage.ts استفاده می‌کنه:
 // دیدوپِ درخواستِ در حالِ اجرا + کشِ کوتاه‌مدت.
 
+import { takePreloaded } from "./preload";
+
 export type AccountModuleAccess = { module: string; active: boolean; expiresAt: string | null };
 export type AccountData = { user?: { moduleAccess?: AccountModuleAccess[] } & Record<string, any> } | null;
 
@@ -18,8 +20,9 @@ let inFlight: Promise<AccountData> | null = null;
 export async function getAccount(): Promise<AccountData> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.data;
   if (!inFlight) {
-    inFlight = fetch("/api/account")
-      .then((r) => (r.ok ? r.json() : null))
+    // اگه اسکریپتِ inlineِ layout این رو از قبل گرفته، همون رو برمی‌داریم
+    const preloaded = takePreloaded("/api/account");
+    inFlight = (preloaded ?? fetch("/api/account").then((r) => (r.ok ? r.json() : null)))
       .then((data: AccountData) => {
         // پاسخِ ناموفق کش نمی‌شه — یه قطعیِ لحظه‌ای نباید تا کلِ TTL
         // کاربر رو «بدونِ دسترسی» نشون بده.

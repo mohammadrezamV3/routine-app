@@ -1,10 +1,50 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+import { useEffect } from "react";
+import { SessionProvider, useSession } from "next-auth/react";
+import { publishSessionState } from "@/lib/storage";
+import { setAuthHintCookie, clearAuthHintCookie } from "@/lib/preload";
 
 // refetchOnWindowFocus خاموشه — این اپ نیازی به رفرشِ سشن با هر بار برگشتن
 // به تب نداره، و این رفتار فقط یه فچِ اضافه‌ی بی‌فایده به /api/auth/session
 // روی هر فوکوس اضافه می‌کرد.
+
+/**
+ * نتیجه‌ی همون فچِ سشنی که SessionProvider خودش می‌زنه رو به لایه‌ی داده
+ * (lib/storage.ts) می‌رسونه.
+ *
+ * بدونِ این، `lib/storage.ts` مجبور بود خودش `getSession()` صدا بزنه که یه
+ * فچِ *مستقلِ دوم* به `/api/auth/session` می‌زنه (این تابع از contextِ
+ * SessionProvider نمی‌خونه). نتیجه‌اش دو تا بود: یه درخواستِ تکراری در هر
+ * لودِ صفحه، و — گران‌ترش — خواندنِ داده‌ها پشتِ اون فچِ دوم صف می‌کشید،
+ * یعنی دو رفت‌وبرگشتِ سریالی قبل از این‌که اولین درخواستِ داده‌ی واقعی بره.
+ *
+ * چیزی رندر نمی‌کنه.
+ */
+function SessionBridge() {
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "loading") return;
+    const authed = status === "authenticated";
+    publishSessionState(authed);
+    // کوکیِ راهنمای پیش‌درخواست رو با وضعیتِ واقعیِ سشن هم‌گام نگه می‌داره.
+    // این‌جا (نه فقط توی دکمه‌های ورود/خروج) انجام می‌شه تا دو حالتِ لبه هم
+    // پوشش داده بشن: کاربری که از قبل لاگین بوده و هیچ‌وقت کوکی رو نگرفته،
+    // و سشنی که سمتِ سرور منقضی شده ولی کوکیِ راهنما جا مونده (که باعث
+    // می‌شد هر لود چند تا ۴۰۱ِ الکی بفرسته).
+    if (authed) setAuthHintCookie();
+    else clearAuthHintCookie();
+  }, [status]);
+
+  return null;
+}
+
 export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
-  return <SessionProvider refetchOnWindowFocus={false}>{children}</SessionProvider>;
+  return (
+    <SessionProvider refetchOnWindowFocus={false}>
+      <SessionBridge />
+      {children}
+    </SessionProvider>
+  );
 }

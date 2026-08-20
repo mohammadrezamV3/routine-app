@@ -8,6 +8,7 @@ import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
 import { avatarColorFor } from "@/lib/avatarColor";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { useSession } from "next-auth/react";
 
 type Friend = { friendshipId: string; id: string; name: string; username: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -34,6 +35,7 @@ const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
 // ارسالِ جدا) برای افزودنِ دوستِ جدید؛ درخواست‌های واردشده دیگه این‌جا
 // قبول/رد نمی‌شن — از بخشِ اطلاعیه‌ها (زنگوله‌ی هدر) مدیریت می‌شن.
 export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
+  const { status } = useSession();
   const [friends, setFriends] = useState<Friend[] | null>(null);
   const [requestCount, setRequestCount] = useState(0);
   const [authRequired, setAuthRequired] = useState(false);
@@ -59,7 +61,16 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
     if (res.ok) setRequestCount((await res.json()).requests.length);
   }
 
-  useEffect(() => { loadFriends(); loadRequestCount(); }, []);
+  // برای مهمون اصلاً درخواست نمی‌ره: هردو روت ۴۰۱ می‌دادن و کارت هم
+  // همون حالتِ authRequired رو نشون می‌ده — پس دو درخواستِ الکی در هر
+  // لودِ صفحه بود. status از useSession میاد که خودش از contextِ
+  // SessionProvider می‌خونه (نه یه فچِ جدا).
+  useEffect(() => {
+    if (status === "loading") return;
+    if (status !== "authenticated") { setAuthRequired(true); return; }
+    loadFriends();
+    loadRequestCount();
+  }, [status]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
