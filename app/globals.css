@@ -3821,3 +3821,60 @@ body[data-theme="light"] .notepad-workspace{
   .notepad-home-card{ flex-basis:140px; width:140px; }
   .notepad-home-card-cover{ height:74px; }
 }
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   بهینه‌سازیِ شیشه‌ها روی دستگاه‌های لمسی
+   ─────────────────────────────────────────────────────────────────────────
+   این فایل ۳۹ عنصرِ مجزا داره که backdrop-filter:blur(20–32px) دارن. روی
+   دسکتاپ مشکلی نیست، ولی backdrop-filter گرون‌ترین افکتِ گرافیکیِ وبه: مرورگر
+   باید برای *هر فریم* هرچی پشتِ عنصره رو دوباره بلور کنه، و هزینه‌اش تقریباً
+   خطی با شعاعِ بلوره. روی GPUِ موبایل (مخصوصاً سافاریِ iOS) وقتی چندتا از این
+   عنصرها هم‌زمان روی صفحه‌ان و کاربر اسکرول می‌کنه، همین باعثِ افت فریم و
+   حس «هنگ‌کردن» می‌شه.
+   این‌جا شعاعِ بلور روی دستگاه‌های لمسی تقریباً نصف می‌شه (~۵۵٪ کاهشِ هزینه)
+   ولی saturate و رنگ/بوردر/سایه دست‌نخورده می‌مونن — یعنی همون جنسِ شیشه‌ای
+   حفظ می‌شه، فقط عمقِ بلور کمتره که توی ابعادِ صفحه‌ی موبایل عملاً دیده نمی‌شه.
+   دسکتاپ (pointer:fine) هیچ تغییری نمی‌کنه.
+   اگه خواستی برگرده به حالت قبل، کافیه کلِ همین بلاک @media رو حذف کنی. */
+@media (pointer: coarse){
+  .app-topbar{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .notif-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .nav-drawer-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .modal-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .rm-box{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .sub-plan-card{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .tm-station{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .weekly-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .checklist-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .tc-manage-btn{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .tc-edit-wrap{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .glass-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .pcard-face{ backdrop-filter:blur(14px) saturate(180%); -webkit-backdrop-filter:blur(14px) saturate(180%); }
+  .wsearch-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .wsearch-box{ backdrop-filter:blur(8px) saturate(150%); -webkit-backdrop-filter:blur(8px) saturate(150%); }
+  .jdate-btn.trade-date-btn{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .bodybuilding-glass .wsearch-newform-name{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .add-program-glass .wsearch-newform-name{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .add-program-glass .jdate-btn{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .add-program-glass .wsearch-add-time{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .dash-context-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .wsearch-newform-overlay.strong-blur.open{ backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%); }
+  .wsearch-newform{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .wsearch-newform:has(.add-program-glass){ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .calorie-glass-field{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .wsearch-newform-name.trade-glass-field{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .trade-pnl-readout{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .conflict-alert{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .auth-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .auth-tabs{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .manual-exercise-picker-search{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .manual-timer-unit-picker .day-pill{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
+  .manual-meal-row-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .exercise-catalog-popup-panel{ backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%); }
+  .exercise-catalog-detail-card{ backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%); }
+  .exercise-locked-box{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+}
