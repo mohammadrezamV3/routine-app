@@ -266,7 +266,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
           {avatarUrl ? (
             <img src={avatarUrl} alt="عکس پروفایل" className="account-avatar-img" />
           ) : (
-            <AgentAvatar name={data.name || data.username || "؟"} size={76} className="account-avatar-fallback" />
+            <AgentAvatar seed={data.name || data.username || data.email || "؟"} size={76} className="account-avatar-fallback" />
           )}
           <button
             type="button"
