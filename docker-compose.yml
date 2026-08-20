@@ -19,7 +19,14 @@ services:
     #   - "127.0.0.1:5432:5432"
 
   app:
-    build: .
+    build:
+      context: .
+      # این دوتا NEXT_PUBLIC_* هستن — کدِ سمتِ کلاینت همین لحظه‌ی build ازشون
+      # پر می‌شه، نه در runtime؛ چون .env توی .dockerignoreست، باید صریح از
+      # همین‌جا (که docker compose خودش .env رو برای ${...} می‌خونه) رد بشن.
+      args:
+        NEXT_PUBLIC_MARKET: ${NEXT_PUBLIC_MARKET:-IRAN}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
     restart: unless-stopped
     depends_on:
       db:

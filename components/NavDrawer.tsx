@@ -15,6 +15,7 @@ import { HeaderStreakClock } from "./HeaderStreakClock";
 import { AgentAvatar } from "./AgentAvatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
+import { subscribeToPush } from "@/lib/pushClient";
 
 // این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
 // ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -211,7 +212,13 @@ export function NavDrawer() {
   }, [profileMenuOpen]);
 
   useEffect(() => {
-    setNotifPermission(getNotificationPermission());
+    const p = getNotificationPermission();
+    setNotifPermission(p);
+    // اگه از قبل (مثلاً یه نسخه‌ی قدیمی‌تر) اجازه‌ی نوتیف داده شده بود ولی
+    // این دستگاه هنوز به Web Push سابسکرایب نشده، همین‌جا (بی‌صدا، بدون
+    // نیاز به باز کردنِ دوباره‌ی پنل) انجامش می‌ده — subscribeToPush خودش
+    // idempotent ـه (سابسکریپشنِ موجود رو دوباره می‌فرسته، نه یکی جدید).
+    if (p === "granted") subscribeToPush();
   }, []);
 
   useEffect(() => {
@@ -270,6 +277,9 @@ export function NavDrawer() {
     if (!notificationsSupported() || notifPermission === "granted") return;
     const p = await requestNotificationPermission();
     setNotifPermission(p);
+    // اجازه‌ی نوتیفِ مرورگر جدا از سابسکرایب‌شدن به Web Pushه — این یکی
+    // برای یادآوری‌های واقعی حتی وقتی تب/اپ بسته‌ست لازمه (lib/pushClient.ts).
+    if (p === "granted") subscribeToPush();
   }
 
   return (
