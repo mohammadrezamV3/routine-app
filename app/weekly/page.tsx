@@ -136,8 +136,10 @@ export default function WeeklyPage() {
   }
 
   useEffect(() => {
+    // getTodayStats این‌جا صدا زده نمی‌شه — خودِ refresh() بالاتر صداش می‌زنه.
+    // فراخوانیِ دوم فقط همون سه درخواستِ شبکه (removed/custom/daily) رو دوباره
+    // می‌زد و هیچ داده‌ی تازه‌تری نمی‌آورد.
     refresh();
-    getTodayStats().then(setTodayStats);
     getWakeSleepTimes().then((v) => {
       if (v) setWakeSleep(v);
       else setNeedsOnboarding(true);

@@ -24,10 +24,22 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
   const mounted = useRef(false);
+  // تمی که همین الان از سرور/حافظه *خونده* شد — نه چیزی که کاربر انتخاب کرده.
+  // بدونِ این، افکتِ پایین بینِ «کاربر تم رو عوض کرد» و «مقدارِ ذخیره‌شده تازه
+  // رسید» فرقی نمی‌ذاشت و هر بار همون مقداری که تازه خونده بود رو دوباره
+  // می‌نوشت — یعنی یک POST/نوشتنِ دیتابیس اضافه به‌ازای *هر* لودِ *هر* صفحه.
+  const justLoaded = useRef(false);
+  // اگه کاربر قبل از رسیدنِ مقدارِ ذخیره‌شده خودش تم رو عوض کرده باشه، اون
+  // مقدارِ ذخیره‌شده دیگه نباید انتخابش رو پس بزنه.
+  const userChose = useRef(false);
 
   useEffect(() => {
     getThemeSetting().then((saved) => {
-      if (saved === "light" || saved === "dark") setTheme(saved);
+      if (userChose.current) return;
+      if (saved === "light" || saved === "dark") {
+        justLoaded.current = true;
+        setTheme(saved);
+      }
     });
   }, []);
 
@@ -38,7 +50,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // برای یه لحظه (تا resolve شدنِ افکتِ بالا) بازنویسی می‌کنه.
     if (!mounted.current) { mounted.current = true; return; }
     document.body.setAttribute("data-theme", theme);
-    setThemeSetting(theme);
+    // فقط انتخابِ واقعیِ کاربر ذخیره می‌شه، نه بازتابِ همون مقداری که تازه
+    // از منبعِ ذخیره‌سازی خونده شد.
+    if (justLoaded.current) justLoaded.current = false;
+    else setThemeSetting(theme);
     // نوارِ وضعیت/ناچِ سافاری هم باید رنگِ تمِ فعلی رو بگیره، وگرنه بعد از
     // toggle، بدنه‌ی صفحه عوض می‌شه ولی اون نوار همچنان رنگِ تمِ قبلی می‌مونه.
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -47,7 +62,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider
-      value={{ theme, toggle: () => setTheme((t) => (t === "light" ? "dark" : "light")) }}
+      value={{
+        theme,
+        toggle: () => {
+          userChose.current = true;
+          setTheme((t) => (t === "light" ? "dark" : "light"));
+        },
+      }}
     >
       {children}
     </ThemeContext.Provider>

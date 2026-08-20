@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { getAccount, activeModulesOf } from "@/lib/accountCache";
 
 type GateModule = "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
 
@@ -22,16 +23,12 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
   useEffect(() => {
     if (status !== "authenticated") return;
     let cancelled = false;
-    fetch("/api/account")
-      .then((r) => (r.ok ? r.json() : null))
+    // از کشِ مشترک می‌خونه — NavDrawer دقیقاً همین پاسخ رو لازم داره و
+    // قبلاً هردو مستقلاً فچ می‌زدن (دو بار /api/account در هر لودِ صفحه).
+    getAccount()
       .then((data) => {
         if (cancelled) return;
-        const now = Date.now();
-        const has = !!data?.user && (data.user.moduleAccess || []).some(
-          (m: { module: string; active: boolean; expiresAt: string | null }) =>
-            m.module === module && m.active && (!m.expiresAt || new Date(m.expiresAt).getTime() > now)
-        );
-        setAllowed(has);
+        setAllowed(!!data?.user && activeModulesOf(data).has(module));
       })
       .catch(() => { if (!cancelled) setAllowed(false); });
     return () => { cancelled = true; };

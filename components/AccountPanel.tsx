@@ -10,7 +10,7 @@ import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { TradeStatsPicker } from "@/components/TradeStatsPicker";
-import { getSetting, setSetting } from "@/lib/storage";
+import { getSetting, setSetting, invalidateStorageCache } from "@/lib/storage";
 import { getSiteMarket } from "@/lib/market";
 import { DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, TICKER_SETTING_KEY } from "@/lib/tickerSymbols";
 import {
@@ -546,7 +546,7 @@ export function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-        <button onClick={() => signOut({ callbackUrl: "/" })} style={{ borderColor: "#E05252", color: "#E05252" }}>
+        <button onClick={() => { invalidateStorageCache(); signOut({ callbackUrl: "/" }); }} style={{ borderColor: "#E05252", color: "#E05252" }}>
           خروج از حساب
         </button>
       </div>
