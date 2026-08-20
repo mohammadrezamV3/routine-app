@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Vazirmatn, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -32,6 +32,19 @@ export const metadata: Metadata = {
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
 };
 
+// viewport-fit:cover لازمه تا سافاری صفحه رو زیرِ ناچ/نوارِ وضعیت هم بکشه؛
+// بدونش، سافاری اون نواحی رو با یه نوارِ سیستمیِ توپر (معمولاً سیاه) پر
+// می‌کنه، نه رنگِ پس‌زمینه‌ی خودِ اپ. themeColor پیش‌فرض همون رنگِ تمِ تاریکه
+// (همون چیزی که body همیشه سمتِ سرور باهاش رندر می‌شه)؛ سوییچِ لحظه‌ایش به
+// رنگِ تمِ روشن با تغییرِ data-theme، هم توی اسکریپتِ inlineِ زیر و هم توی
+// ThemeProvider انجام می‌شه (مستقیم روی خودِ <meta name="theme-color">).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0E1011",
+};
+
 // اسکریپتِ inline و مسدودکننده — قبل از هر پینتی روی body اجرا می‌شه (چون
 // اولین فرزندِ body ئه و مرورگر اسکریپت‌های غیر async/defer رو همون لحظه‌ای
 // که به‌شون می‌رسه سینکرون اجرا می‌کنه) و data-theme رو از روی کوکی درست
@@ -39,7 +52,7 @@ export const metadata: Metadata = {
 // انجام شده: cookies() کل اپ رو از static به dynamic تبدیل می‌کرد (رندر
 // سمت سرور به‌ازای هر ریکوئست) که دقیقاً برخلافِ بهینه‌سازیِ سرعتِ لود بود؛
 // این‌جوری هم فلاش از بین می‌ره هم static rendering دست‌نخورده می‌مونه.
-const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )theme=(dark|light)/);if(m)document.body.setAttribute("data-theme",m[1]);}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )theme=(dark|light)/);if(m){document.body.setAttribute("data-theme",m[1]);if(m[1]==="light"){var t=document.querySelector('meta[name="theme-color"]');if(t)t.setAttribute("content","#F4E3C9");}}}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

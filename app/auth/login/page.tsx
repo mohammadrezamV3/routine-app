@@ -89,7 +89,7 @@ export default function LoginPage() {
               id="identifier"
               type="text"
               className="wsearch-newform-name"
-              placeholder="0912xxxxxxx"
+              placeholder="09123456789"
               value={identifier}
               onChange={(e) => { setIdentifier(e.target.value); if (e.target.value.trim()) clearError("identifier"); }}
             />

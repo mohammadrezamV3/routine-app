@@ -14,6 +14,14 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# متغیرهای NEXT_PUBLIC_* توی کدِ سمتِ کلاینت همین لحظه‌ی build جایگزین می‌شن
+# (نه در runtime) — ولی .env توی .dockerignoreست (عمداً، چون رمزهای دیتابیس
+# هم توشه) پس هیچ‌وقت وارد این stage نمی‌شه. باید صریح از docker-compose (که
+# خودش .env رو برای همین ${...}ها می‌خونه) به‌عنوان build arg بیاد.
+ARG NEXT_PUBLIC_MARKET
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
+ENV NEXT_PUBLIC_MARKET=$NEXT_PUBLIC_MARKET
+ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 # Prisma Client باید قبل از build ساخته بشه وگرنه import هاش fail می‌شن
 RUN npx prisma generate
 RUN npm run build

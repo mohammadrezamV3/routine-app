@@ -146,6 +146,7 @@ model User {
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
   sharedLinks       SharedProgressLink[]
+  pushSubscriptions PushSubscription[]
 
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
   friendRequestsSent     Friendship[] @relation("FriendRequestsSent")
@@ -870,6 +871,27 @@ model NotepadDatabaseRecord {
 // USER SETTINGS (key-value ساده برای بلاب‌های کوچک JSON — تم، occurrenceهای
 // حذف/اضافه‌شده‌ی برنامه هفتگی و مواردی از این دست که مدل اختصاصی نمی‌خوان)
 // ============================================================================
+
+// ============================================================================
+// PUSH SUBSCRIPTION — یک ردیف به‌ازای هر مرورگر/دستگاهی که کاربر نوتیف
+// واقعی (Web Push، حتی وقتی تب/اپ کاملاً بسته‌ست) رو فعال کرده. یک کاربر
+// می‌تونه چند دستگاه/مرورگر ثبت‌شده داشته باشه، پس یک-به-چند با User ـه —
+// نه یک فیلد تکی روش.
+// ============================================================================
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
 
 model UserSetting {
   id        String   @id @default(cuid())

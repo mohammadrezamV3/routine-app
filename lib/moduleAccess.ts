@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 //   وگرنه → باید یک ردیفِ moduleAccess فعال و منقضی‌نشده برای همون ماژول باشه.
 
 export type ModuleGuardResult =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; isSuperAdmin: boolean }
   | { ok: false; response: NextResponse };
 
 /**
@@ -29,8 +29,9 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
   }
 
   // سوپریوزر به همه‌چیز دسترسی نامحدود دارد (هم‌راستا با /api/account)
-  if ((session!.user as any).isSuperAdmin) {
-    return { ok: true, userId };
+  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  if (isSuperAdmin) {
+    return { ok: true, userId, isSuperAdmin: true };
   }
 
   const access = await prisma.moduleAccess.findUnique({
@@ -47,5 +48,5 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
     };
   }
 
-  return { ok: true, userId };
+  return { ok: true, userId, isSuperAdmin: false };
 }

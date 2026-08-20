@@ -1,0 +1,52 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rateLimit";
+
+// POST /api/push/subscribe { endpoint, keys: { p256dh, auth } } — ثبت/به‌روزرسانیِ
+// سابسکریپشنِ Web Push این دستگاه برای کاربرِ واردشده. endpoint یکتاست (هر
+// دستگاه/مرورگر یه endpoint متفاوت از سرورِ Pushِ خودش می‌گیره)، پس upsert
+// روی همون می‌زنیم — اگه قبلاً برای یه کاربرِ دیگه ثبت شده بود (مثلاً همون
+// مرورگر قبلاً با اکانتِ دیگه‌ای لاگین بوده) مالکیتش به کاربرِ فعلی منتقل می‌شه.
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`push-subscribe:${userId}`, 20, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const endpoint = body?.endpoint;
+  const p256dh = body?.keys?.p256dh;
+  const auth = body?.keys?.auth;
+  if (typeof endpoint !== "string" || typeof p256dh !== "string" || typeof auth !== "string") {
+    return NextResponse.json({ error: "اطلاعاتِ سابسکریپشن ناقص است" }, { status: 400 });
+  }
+
+  await prisma.pushSubscription.upsert({
+    where: { endpoint },
+    create: { userId, endpoint, p256dh, auth },
+    update: { userId, p256dh, auth },
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
+// DELETE /api/push/subscribe { endpoint } — غیرفعال‌کردنِ نوتیف روی این دستگاه.
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => null);
+  const endpoint = body?.endpoint;
+  if (typeof endpoint !== "string") {
+    return NextResponse.json({ error: "endpoint الزامی است" }, { status: 400 });
+  }
+
+  await prisma.pushSubscription.deleteMany({ where: { endpoint, userId } });
+  return NextResponse.json({ ok: true });
+}

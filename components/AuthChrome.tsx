@@ -6,15 +6,15 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 
 /** فلش بازگشت به صفحه اصلی — داخل خودِ باکس (بدون بک‌گراند، فقط آیکون).
- * پیش‌فرض بالا-چپه چون توی ویزارد ثبت‌نام، دکمه‌ی «گام قبل» بالا-راستِ
- * همون باکسه و تداخل پیدا می‌کنه؛ فقط لاگین صریحاً راست رو می‌خواد. */
-export function AuthBackButton({ side = "left" }: { side?: "left" | "right" }) {
+ * پیش‌فرض راسته (هر سه صفحه‌ی auth یکسان)؛ توی ویزاردِ ثبت‌نام، دکمه‌ی
+ * «گام قبل» برای جلوگیری از تداخل رفته بالا-چپ (نگاه کن به auth-step-back-btn). */
+export function AuthBackButton({ side = "right" }: { side?: "left" | "right" }) {
   return (
     <Link href="/" className={`auth-home-btn${side === "right" ? " auth-home-btn-right" : ""}`} aria-label="بازگشت به صفحه اصلی">
       {side === "right" ? (
-        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       ) : (
-        <svg viewBox="0 0 24 24" fill="none"><path d="M21 12H3M3 12l7-6M3 12l7 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M21 12H3M3 12l7-6M3 12l7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       )}
     </Link>
   );

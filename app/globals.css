@@ -351,7 +351,7 @@
   /* هدر شیشه‌ای — علاوه بر لبه‌ی نازکِ liquidGlassFilter دورش، خودِ بدنه هم
      یک پرِ لیکوئید گلسِ واقعی داره (بلور + شفافیتِ کم)، نه فقط بک‌گراندِ خالی */
   .app-topbar{
-    position:fixed; top:14px; right:14px; left:14px; z-index:40; height:58px;
+    position:fixed; top:calc(14px + env(safe-area-inset-top)); right:14px; left:14px; z-index:40; height:58px;
     display:flex; align-items:center;
     border-radius:999px;
     background:rgba(255,255,255,.04);
@@ -2196,17 +2196,17 @@ body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-t
    خودِ باکس؛ استفاده دوباره از همون keyframe */
 .auth-step{ animation:authBoxIn .32s ease both; }
 
-/* دکمه «گام قبل» داخل باکس، بالا-راست، فلشش سمت راسته — برعکسِ فلش
-   بازگشت‌به‌خانه‌ی بالای صفحه که سمت چپه، چون این یکی یعنی «یک قدم عقب توی
-   همین جریان RTL»، نه خروج از کل صفحه */
+/* دکمه «گام قبل» داخل باکس، بالا-چپ (فلشش هم سمت چپ، هم‌جهت با لبه‌ای که
+   روشه) — چون دکمه‌ی بازگشت‌به‌خانه حالا بالا-راستِ همون باکسه، این یکی
+   جابه‌جا شد این‌ور تا تداخل نداشته باشن */
 .auth-step-back-btn{
-  position:absolute; top:16px; right:16px; z-index:2;
+  position:absolute; top:16px; left:16px; z-index:2;
   display:flex; align-items:center; justify-content:center;
   width:32px; height:32px; border-radius:999px;
   background:none; border:none; color:var(--muted);
   cursor:pointer; transition:color .2s ease, transform .15s ease;
 }
-.auth-step-back-btn:hover{ color:var(--accent); transform:translateX(3px); }
+.auth-step-back-btn:hover{ color:var(--accent); transform:translateX(-3px); }
 .auth-step-back-btn svg{ width:16px; height:16px; flex-shrink:0; }
 
 /* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی؛
@@ -2371,6 +2371,11 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
    repaint/recomposite نمی‌شن. */
 @media (pointer:coarse){
   .aurora-blob{ animation:none; }
+  /* هزینه‌ی rasterizeِ blur تقریباً با مجذورِ شعاعش رشد می‌کنه — نصف‌کردنِ
+     شعاع روی موبایل (حتی برای لایه‌ی ثابت) فشارِ GPU رو محسوس کم می‌کنه،
+     خصوصاً روی فایرفاکس/کرومِ اندروید که backdrop-filter/filter:blur رو
+     ضعیف‌تر از سافاری شتاب‌دهی می‌کنن. */
+  .aurora-blob{ filter:blur(60px); }
 }
 
 .nav-link-icon:hover .nav-link-icon-svg{ color:var(--accent); }
@@ -2423,10 +2428,18 @@ body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) 
   overflow:hidden;
   -webkit-mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
   mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  /* باگِ شناخته‌شده‌ی سافاری/وب‌کیت: عنصرِ maskدار که بچه‌ش دائم انیمیشنِ
+     transform داره، بعد از یه repaintِ اجباری (مثلاً بعد از اسکرولِ سریع
+     یا جمع‌شدنِ نوارِ آدرس) گاهی کاملاً بدونِ محتوا رندر می‌شه تا یه
+     تعاملِ بعدی دوباره مجبورش کنه ریپینت بشه — همون خانواده‌ی باگِ
+     هدرِ ثابت. راه‌حل یکسانه: با translateZ(0) این عنصر رو روی لایه‌ی
+     ترکیبِ خودش نگه می‌داریم تا وب‌کیت backing storeِ ماسک‌شده رو گم نکنه. */
+  -webkit-transform:translateZ(0); transform:translateZ(0);
 }
 .whyus-track{
   display:flex; width:max-content; gap:10px;
   animation:whyusMarquee 38s linear infinite;
+  -webkit-transform:translateZ(0); will-change:transform;
 }
 .whyus-card{ width:130px; flex:0 0 auto; }
 @media (min-width:640px){

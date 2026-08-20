@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!checkRateLimit(`notepad-page-create:${userId}`, 100, 60 * 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-page-create:${userId}`, 100, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "تعداد صفحاتِ ساخته‌شده در این ساعت زیاده — کمی صبر کن" }, { status: 429 });
   }
 

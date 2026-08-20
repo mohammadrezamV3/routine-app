@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
 
   // هر درخواست یک فراخوانیِ واقعی و پولیِ چندوجهی به Claude API ـه — سقفِ
   // محافظه‌کارانه‌تر از تولیدِ رودمپِ متنی، چون هزینه‌ش بالاتره.
-  if (!checkRateLimit(`calorie-scan:${userId}`, 15, 60 * 60 * 1000)) {
+  // سوپریوزر از این سقف مستثناست (هم‌راستا با دسترسیِ نامحدودش به ماژول‌ها).
+  if (!guard.isSuperAdmin && !checkRateLimit(`calorie-scan:${userId}`, 15, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "سقف اسکن غذا در این ساعت پر شده — بعداً امتحان کن" }, { status: 429 });
   }
 

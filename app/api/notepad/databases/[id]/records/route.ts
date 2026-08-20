@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!checkRateLimit(`notepad-record-create:${userId}`, 600, 60 * 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-record-create:${userId}`, 600, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی صبر کن" }, { status: 429 });
   }
 
