@@ -55,3 +55,19 @@ export const MAX_SETTING_VALUE_BYTES = 64 * 1024;
 export function isUserSettingKey(key: string): boolean {
   return USER_WRITABLE_SETTING_KEYS.has(key) && !SERVER_MANAGED_SETTING_KEYS.has(key);
 }
+
+/**
+ * کلیدهایی که `/api/bootstrap` در همون یک درخواست برمی‌گردونه — همون‌هایی که
+ * لایه‌ی چیدمان/داده روی *هر* صفحه لازم داره. لیستِ عمدی و کوچیک نگه داشته
+ * می‌شه: هرچی این‌جا اضافه بشه به بارِ هر لودِ صفحه اضافه می‌شه.
+ * (زیرمجموعه‌ی USER_WRITABLE_SETTING_KEYS — تستِ پایینِ فایل تضمینش می‌کنه.)
+ */
+export const BOOTSTRAP_SETTING_KEYS = [
+  SETTING_KEYS.customOccurrences,
+  SETTING_KEYS.removedOccurrences,
+  SETTING_KEYS.wakeSleepTimes,
+  SETTING_KEYS.theme,
+  SETTING_KEYS.dashboardPrefs,
+  SETTING_KEYS.notifPrefs,
+  SETTING_KEYS.dismissedStaticNotifs,
+] as const;

@@ -18,7 +18,7 @@ import { AgentAvatar } from "./AgentAvatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 import { subscribeToPush } from "@/lib/pushClient";
-import { clearAuthHintCookie, takePreloaded } from "@/lib/preload";
+import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
 
 // این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
 // ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -236,8 +236,13 @@ export function NavDrawer() {
   useEffect(() => {
     if (status !== "authenticated") return;
     function loadAvatar() {
-      const preloaded = takePreloaded("/api/account/avatar");
-      (preloaded ?? fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null))).then((res: any) => {
+      // آواتار توی پاسخِ bootstrap هست (ستونی از خودِ User) — درخواستِ جدا
+      // فقط وقتی لازمه که bootstrap نرفته باشه.
+      const boot = getPreloadedBootstrap();
+      const source = boot
+        ? boot.data.then((b: any) => (b ? { avatarUrl: b.avatarUrl } : null))
+        : fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null));
+      source.then((res: any) => {
         cachedAvatarUrl = res?.avatarUrl ?? null;
         setAvatarUrl(cachedAvatarUrl);
       });

@@ -1,4 +1,6 @@
 // تنظیماتِ دقیق‌ترِ اطلاعیه‌ها — کاربر می‌تونه هر دسته رو جدا خاموش/روشن
+import { getSetting, setSetting } from "./storage";
+import { SETTING_KEYS } from "./userSettingKeys";
 // کنه، نه فقط یک سوییچِ کلیِ «اجازه‌ی نوتیف مرورگر». روی همون UserSetting
 // عمومیِ کلید/مقدار ذخیره می‌شه، کلیدش "notifPrefs".
 
@@ -15,14 +17,12 @@ export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
 };
 
 export async function getNotifPrefs(): Promise<NotifPrefs> {
-  try {
-    const res = await fetch("/api/settings/notifPrefs");
-    if (!res.ok) return DEFAULT_NOTIF_PREFS;
-    const json = await res.json();
-    return { ...DEFAULT_NOTIF_PREFS, ...(json.value || {}) };
-  } catch {
-    return DEFAULT_NOTIF_PREFS;
-  }
+  // از getSetting رد می‌شه نه fetchِ خام — این‌طوری هم از کش/دیدوپِ مشترک
+  // استفاده می‌کنه، هم مقدارش رو از پاسخِ /api/bootstrap برمی‌داره (این کلید
+  // اون‌جا هست) به‌جای یه رفت‌وبرگشتِ جدا. برای مهمون هم مثلِ بقیه‌ی تنظیمات
+  // خودکار می‌ره سراغِ localStorage.
+  const value = await getSetting<Partial<NotifPrefs> | null>(SETTING_KEYS.notifPrefs, null);
+  return { ...DEFAULT_NOTIF_PREFS, ...(value || {}) };
 }
 
 export async function saveNotifPrefs(prefs: NotifPrefs): Promise<void> {
