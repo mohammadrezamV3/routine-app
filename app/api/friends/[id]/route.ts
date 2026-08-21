@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendPushToUser } from "@/lib/webPush";
 
 // PATCH /api/friends/:id → قبول‌کردنِ یک درخواست دوستیِ در انتظار (فقط addressee)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -18,6 +19,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   await prisma.friendship.update({ where: { id: params.id }, data: { status: "ACCEPTED" } });
+
+  // به کسی که اول درخواست داده بود اطلاع بده که قبول شد — حتی وقتی اپش
+  // بسته‌ست (best-effort، هیچ‌وقت نباید خودِ قبول‌کردن رو fail کنه).
+  const accepterName = session!.user!.name || "یک کاربر";
+  sendPushToUser(friendship.requesterId, {
+    title: "درخواست دوستی قبول شد",
+    body: `${accepterName} درخواست دوستیت رو قبول کرد.`,
+  }).catch(() => {});
+
   return NextResponse.json({ ok: true });
 }
 

@@ -139,6 +139,7 @@ export function NavDrawer() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
   useLockBodyScroll(open || profileMenuOpen);
   // موقعیتِ لنگرِ پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
   // پورتال می‌شن (نه دیگه فرزندِ app-topbar)، باید مختصاتشون رو خودمون از
@@ -240,6 +241,20 @@ export function NavDrawer() {
     return () => window.removeEventListener("avatar-updated", loadAvatar);
   }, [status]);
 
+  // پیش‌بارگذاریِ اطلاعیه‌ها موقعِ لودِ صفحه — هم برای نشونِ تعدادِ نخونده‌ها
+  // روی زنگوله، هم اینکه وقتی کاربر واقعاً زنگوله رو بزنه، پنل از کشِ آماده
+  // باز شه (نه از صفر، که «بارگذاری خیلی طول می‌کشه» حس می‌داد).
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    import("./NotificationPanel").then(({ preloadNotifications }) =>
+      preloadNotifications().then((items) => {
+        if (!cancelled) setNotifCount(items.length);
+      })
+    );
+    return () => { cancelled = true; };
+  }, [status]);
+
   // برای نشونِ قفلِ آیتم‌های پولیِ منو — همون /api/account که ModuleGate هم
   // استفاده می‌کنه (سوپریوزر توش خودش همه‌ی ماژول‌ها رو active برمی‌گردونه).
   useEffect(() => {
@@ -267,6 +282,7 @@ export function NavDrawer() {
       if (next) {
         setOpen(false);
         setProfileMenuOpen(false);
+        setNotifCount(0);
         const r = bellBtnRef.current?.getBoundingClientRect();
         if (r) setBellAnchor({ top: r.bottom + 12, right: window.innerWidth - r.right });
       }
@@ -356,7 +372,11 @@ export function NavDrawer() {
                 <div className="bell-btn-wrap">
                   <button ref={bellBtnRef} className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
-                    {notifPermission !== "granted" && <span className="bell-dot" />}
+                    {notifCount > 0 ? (
+                      <span className="bell-count">{notifCount > 9 ? "9+" : notifCount}</span>
+                    ) : (
+                      notifPermission !== "granted" && <span className="bell-dot" />
+                    )}
                   </button>
                   {notifPanelOpen && bellAnchor && createPortal(
                     <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} />,
