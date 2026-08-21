@@ -13,7 +13,7 @@ import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcce
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox } from "@/lib/jalali";
 
-type FieldErrors = { phone?: string; name?: string; username?: string; birthDate?: string; password?: string; agreed?: string };
+type FieldErrors = { phone?: string; name?: string; lastName?: string; username?: string; birthDate?: string; password?: string; agreed?: string };
 
 export default function SignupPage() {
   const router = useRouter();
@@ -22,6 +22,7 @@ export default function SignupPage() {
 
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [birthDate, setBirthDate] = useState<JalaliDate | null>(null);
   const [dobOpen, setDobOpen] = useState(false);
@@ -40,6 +41,7 @@ export default function SignupPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const phoneRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
+  const lastNameRef = useRef<HTMLDivElement>(null);
   const usernameRef = useRef<HTMLDivElement>(null);
   const birthDateRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
@@ -51,9 +53,9 @@ export default function SignupPage() {
   useEffect(() => {
     if (!password) { setTier(null); return; }
     let cancelled = false;
-    passwordTier(password, [username, name, phone]).then((t) => { if (!cancelled) setTier(t); });
+    passwordTier(password, [username, name, lastName, phone]).then((t) => { if (!cancelled) setTier(t); });
     return () => { cancelled = true; };
-  }, [password, username, name, phone]);
+  }, [password, username, name, lastName, phone]);
 
   function clearError(key: keyof FieldErrors) {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
@@ -130,13 +132,14 @@ export default function SignupPage() {
 
   async function validateStep2(): Promise<boolean> {
     const errs: FieldErrors = {};
-    if (!name.trim()) errs.name = "نام و نام خانوادگی را وارد کن";
+    if (!name.trim()) errs.name = "نام را وارد کن";
+    if (!lastName.trim()) errs.lastName = "نام خانوادگی را وارد کن";
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
     else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
     if (!birthDate) errs.birthDate = "تاریخ تولد را انتخاب کن";
     if (!password) errs.password = "رمز عبور را وارد کن";
     else {
-      const pwErr = await validatePassword(password, [username, name, phone]);
+      const pwErr = await validatePassword(password, [username, name, lastName, phone]);
       if (pwErr) errs.password = pwErr;
     }
     if (!agreed) errs.agreed = "برای ادامه باید قوانین سایت را بپذیری";
@@ -145,6 +148,7 @@ export default function SignupPage() {
     if (Object.keys(errs).length) {
       shakeFields([
         errs.name ? nameRef.current : null,
+        errs.lastName ? lastNameRef.current : null,
         errs.username ? usernameRef.current : null,
         errs.birthDate ? birthDateRef.current : null,
         errs.password ? passwordRef.current : null,
@@ -168,7 +172,7 @@ export default function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, phone, username, password,
+          name, lastName, phone, username, password,
           birthDate: jalaliToGregorianApprox(birthDate![0], birthDate![1], birthDate![2]).toISOString(),
         }),
       });
@@ -224,10 +228,7 @@ export default function SignupPage() {
           </div>
         ) : step === 2 ? (
           <form onSubmit={verifyOtp} className="auth-box">
-            <AuthBackButton />
-            <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => { setStep(1); setOtpError(null); }}>
-              <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
+            <AuthBackButton onClick={() => { setStep(1); setOtpError(null); }} />
             <AuthBrandMark subtitle="به آریون خوش اومدی!" />
             <div className="auth-step" key="step2">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
@@ -255,19 +256,24 @@ export default function SignupPage() {
           </form>
         ) : (
           <form ref={formRef} onSubmit={submit} className="auth-box">
-            <AuthBackButton />
-            <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => setStep(2)}>
-              <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
+            <AuthBackButton onClick={() => setStep(2)} />
             <AuthBrandMark subtitle="به آریون خوش اومدی!" />
 
             <div className="auth-step" key="step3">
-              <AuthField id="name" label="نام و نام خانوادگی" error={fieldErrors.name} ref={nameRef}>
-                <input
-                  id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی محمدی"
-                  onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
-                />
-              </AuthField>
+              <div className="auth-field-grid">
+                <AuthField id="name" label="نام" error={fieldErrors.name} ref={nameRef}>
+                  <input
+                    id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی"
+                    onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
+                  />
+                </AuthField>
+                <AuthField id="lastName" label="نام خانوادگی" error={fieldErrors.lastName} ref={lastNameRef}>
+                  <input
+                    id="lastName" type="text" className="wsearch-newform-name" value={lastName} placeholder="محمدی"
+                    onChange={(e) => { setLastName(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
+                  />
+                </AuthField>
+              </div>
 
               <div style={{ marginTop: 14 }}>
                 <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} ref={usernameRef}>

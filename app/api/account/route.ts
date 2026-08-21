@@ -16,6 +16,7 @@ export async function GET() {
       username: true,
       phone: true,
       name: true,
+      lastName: true,
       market: true,
       createdAt: true,
       isSuperAdmin: true,
@@ -37,5 +38,7 @@ export async function GET() {
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
     : user.moduleAccess;
 
-  return NextResponse.json({ user: { ...user, moduleAccess } });
+  const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
+
+  return NextResponse.json({ user: { ...user, name: fullName, moduleAccess } });
 }

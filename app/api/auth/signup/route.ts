@@ -18,16 +18,17 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { phone, username, password, name, birthDate } = body as {
+  const { phone, username, password, name, lastName, birthDate } = body as {
     phone: string;
     username: string;
     password: string;
     name: string;
+    lastName: string;
     birthDate?: string;
   };
 
-  if (!phone || !username || !password || !name || !birthDate) {
-    return NextResponse.json({ error: "نام، شماره موبایل، یوزرنیم، تاریخ تولد و رمز عبور الزامی است" }, { status: 400 });
+  if (!phone || !username || !password || !name || !lastName || !birthDate) {
+    return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم، تاریخ تولد و رمز عبور الزامی است" }, { status: 400 });
   }
   if (!isValidIranPhone(phone)) {
     return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
   if (!isValidUsername(username)) {
     return NextResponse.json({ error: "یوزرنیم باید ۳ تا ۲۰ کاراکتر و فقط شامل حروف انگلیسی/عدد/آندرلاین باشه" }, { status: 400 });
   }
-  const passwordError = await validatePassword(password, [username, name, phone]);
+  const passwordError = await validatePassword(password, [username, name, lastName, phone]);
   if (passwordError) {
     return NextResponse.json({ error: passwordError }, { status: 400 });
   }
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
       phone,
       username,
       name: clampText(name.trim(), 80),
+      lastName: clampText(lastName.trim(), 80),
       birthDate: dob,
       passwordHash,
       market: siteMarket === "INTERNATIONAL" ? Market.INTERNATIONAL : Market.IRAN,

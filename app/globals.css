@@ -918,37 +918,61 @@
   .rm-box-add svg path{transition:stroke .18s ease;}
   .rm-box-add:hover svg path{stroke:var(--accent);}
 
-  /* صفحه‌ی «اشتراک» — لیستِ پلن‌ها + جزئیات، هم‌قاعده‌ی شیشه‌ایِ rm-box */
+  /* صفحه‌ی «اشتراک» — کارت‌ها/جدولِ مقایسه از PlansSection میان (هم‌قاعده‌ی
+     صفحه‌ی لندینگ)، اینجا فقط عرضِ ماکزیممِ محتوا و نوارِ وضعیت لازمه */
   .subscription-page{ max-width:900px; }
-  .sub-interval-toggle{ margin-top:16px; max-width:260px; }
-  .sub-plans-grid{
-    display:grid; grid-template-columns:1fr; gap:14px; margin-top:20px;
+
+  /* بنرِ وضعیتِ چک‌اوت (موفق/ناموفق) — بالای صفحه‌ی اشتراک، بعدِ برگشت از درگاه */
+  .checkout-status-banner{
+    display:flex; align-items:center; gap:10px; margin-top:14px; padding:14px 16px;
+    border-radius:14px; font-size:12.5px; font-weight:700;
   }
-  @media (min-width:640px){ .sub-plans-grid{ grid-template-columns:repeat(2, 1fr); } }
-  @media (min-width:1100px){ .sub-plans-grid{ grid-template-columns:repeat(4, 1fr); } }
-  .sub-plan-card{
-    position:relative; display:flex; flex-direction:column; gap:12px;
-    border:1px solid var(--line); border-radius:16px; padding:20px 18px;
+  .checkout-status-banner.success{ background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent); }
+  .checkout-status-banner.failed{ background:rgba(224,82,82,.1); color:#E05252; border:1px solid rgba(224,82,82,.4); }
+
+  /* صفحه‌ی چک‌اوت — خلاصه‌ی سفارش + کدِ تخفیف + قوانین + دکمه‌ی پرداخت.
+     دکمه‌ی بازگشت طبقِ قاعده‌ی ثابتِ سایت: همیشه بالا-راست، بدونِ بک‌گراند. */
+  .checkout-page{ max-width:480px; position:relative; }
+  /* بالا-راست، ولی زیرِ نوارِ بالای سایت (.app-topbar که خودش top:14px تا
+     ~72px رو اشغال می‌کنه و همبرگر/زنگوله/پروفایل توش z-index:40 دارن) —
+     هم‌ارتفاع بودن باعث می‌شد کلیک روی این دکمه به‌جای خودش به همبرگر برسه. */
+  .checkout-back-btn{
+    position:fixed; top:88px; right:18px; z-index:30;
+    display:flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:999px;
+    background:none; border:none; color:var(--muted);
+    cursor:pointer; transition:color .2s ease, transform .15s ease;
+  }
+  .checkout-back-btn:hover{ color:var(--accent); transform:translateX(3px); }
+  .checkout-back-btn svg{ width:21px; height:21px; }
+  .checkout-back-link{ display:inline-block; margin-top:14px; color:var(--accent); font-weight:700; font-size:12.5px; }
+
+  .checkout-summary{
+    display:flex; align-items:center; gap:10px; margin-top:18px; padding:16px;
+    border:1px solid var(--line); border-radius:16px;
     background:rgba(var(--bg-rgb), .13);
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-    transition:border-color .18s ease;
+    backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
   }
-  .sub-plan-card.current{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-  .sub-plan-badge{
-    position:absolute; top:-11px; right:16px; padding:3px 12px; border-radius:999px;
-    background:var(--accent); color:var(--bg); font-size:10.5px; font-weight:700;
+  .checkout-summary-icon{ background:var(--accent-dim); color:var(--accent); }
+  .checkout-summary-body{ flex:1; min-width:0; }
+  .checkout-summary-name{ font-size:14.5px; font-weight:800; color:var(--text); }
+  .checkout-summary-duration{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .checkout-summary-price{ font-size:15px; font-weight:800; color:var(--accent); white-space:nowrap; }
+
+  .checkout-box{ margin-top:14px; }
+  .checkout-field-label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; }
+  .checkout-discount-input{ width:100%; box-sizing:border-box; }
+
+  .checkout-gateway-row{ display:flex; gap:8px; }
+  .checkout-gateway-pill{
+    display:flex; align-items:center; gap:7px; padding:10px 16px; border-radius:999px;
+    border:1px solid var(--line); font-size:12.5px; font-weight:700; color:var(--muted);
+    background:rgba(255,255,255,.03);
   }
-  .sub-plan-name{ font-size:16px; font-weight:800; color:var(--text); }
-  .sub-plan-price{ font-size:20px; font-weight:800; color:var(--accent); }
-  .sub-plan-price-unit{ font-size:11px; font-weight:600; color:var(--muted); margin-right:4px; }
-  .sub-plan-modules{ display:flex; flex-direction:column; gap:7px; list-style:none; flex:1; }
-  .sub-plan-modules li{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted); }
-  .sub-plan-modules li svg{ color:var(--accent); flex-shrink:0; }
-  .sub-plan-cta{
-    border-radius:12px; border:1px solid var(--line); padding:10px; font-size:12.5px; font-weight:700;
-    color:var(--muted); cursor:not-allowed; background:none;
-  }
-  .sub-plan-card.current .sub-plan-cta{ border-color:var(--accent); color:var(--accent); }
+  .checkout-gateway-pill.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+  .checkout-terms-row{ margin-top:16px; border-bottom:none; padding:10px 0; }
+  .checkout-pay-btn{ margin-top:18px; }
 
   /* treasure map */
   .tm-head-row{display:flex; align-items:center; justify-content:flex-start; gap:12px; margin-bottom:6px;}
@@ -1036,11 +1060,12 @@
     box-shadow:0 20px 50px rgba(0,0,0,.20);
     padding:18px 20px; margin-top:14px;
   }
-  /* برخلافِ بقیه‌ی باکس‌های شیشه‌ایِ سایت (که همیشه یه override جدا برای تمِ
-     روشن دارن)، این یکی نداشت — با rgba(var(--bg-rgb),.042) روی پس‌زمینه‌ی
-     خودِ همون رنگ، توی تمِ روشن تقریباً هیچ رنگی نمی‌موند، فقط blur+saturate
-     یه حسِ کدر/شیری بهش می‌داد. حالا دقیقاً هم‌فرمولِ .notif-panel/.app-topbarه. */
-  body[data-theme="light"] .weekly-glass{ background:rgba(255,255,255,.05); }
+  /* توی تمِ روشن، تینتِ سفید (مثلِ .notif-panel) این باکس رو "شیری" نشون
+     می‌داد — چون رنگِ خودِ پس‌زمینه‌ی تمِ روشن (F4E3C9) کرمیه، تینتِ سفید
+     داشت رنگ رو می‌شست به سمتِ سفیدِ محو. اینجا به‌جاش از خودِ رنگِ زمینه
+     (--bg-rgb، که کرمیه) با opacityِ بالاتر استفاده می‌شه تا باکس واقعاً
+     کرمی/توپر دیده بشه، نه شیشه‌ایِ سفید. */
+  body[data-theme="light"] .weekly-glass{ background:rgba(var(--bg-rgb),.55); }
   .weekly-glass table{margin:0;}
   .weekly-glass-content{position:relative; z-index:1;}
 
@@ -2214,8 +2239,12 @@ body[data-theme="light"] .auth-box .jdate-btn{
 /* توی فرم‌هایی مثل AddProgramForm، قاعده‌ی عمومیِ «.wsearch-newform label{
    display:block }» (برای لیبل‌های معمولیِ فیلدها) اسپسیفیسیتیِ بالاتری از
    همین .auth-remember-label داره (کلاس+المنت > تکْ‌کلاس) و flexِ ردیفِ
-   چک‌باکس رو خنثی می‌کرد — همون دلیلِ ردیف‌نبودنِ چک‌باکس با متنش. */
-.wsearch-newform .auth-remember-label{ display:inline-flex; }
+   چک‌باکس رو خنثی می‌کرد — همون دلیلِ ردیف‌نبودنِ چک‌باکس با متنش. اینجا
+   عمداً flex (نه inline-flex) گذاشته شده: inline-flex یه باکسِ inline-level
+   می‌سازه که می‌تونه سرِ همون خطِ دکمه‌ی «افزودنِ روزِ دیگر»یِ قبل از خودش
+   جا بگیره (چون اون دکمه هم inline-flex-ه) — همون دلیلِ باگِ «چک‌باکس
+   وسطِ فرم معلق می‌مونه»؛ flex باکسِ سطحِ بلاک می‌سازه و خطِ خودش رو می‌گیره. */
+.wsearch-newform .auth-remember-label{ display:flex; }
 /* چک‌باکس دست‌ساز — appearance:none روی input خام، تیک با یه SVG محو-بزرگ‌شونده.
    کمی از سایزِ استانداردِ ۱۹px بزرگ‌تر شد تا لمسِ راحت‌تری روی موبایل داشته باشه. */
 .auth-checkbox{
@@ -2283,19 +2312,6 @@ body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-t
 /* گام‌های ثبت‌نام چندمرحله‌ای — هر گام موقع ورود محو-بالا میاد، دقیقاً مثل
    خودِ باکس؛ استفاده دوباره از همون keyframe */
 .auth-step{ animation:authBoxIn .32s ease both; }
-
-/* دکمه «گام قبل» داخل باکس، بالا-چپ (فلشش هم سمت چپ، هم‌جهت با لبه‌ای که
-   روشه) — چون دکمه‌ی بازگشت‌به‌خانه حالا بالا-راستِ همون باکسه، این یکی
-   جابه‌جا شد این‌ور تا تداخل نداشته باشن */
-.auth-step-back-btn{
-  position:absolute; top:16px; left:16px; z-index:2;
-  display:flex; align-items:center; justify-content:center;
-  width:32px; height:32px; border-radius:999px;
-  background:none; border:none; color:var(--muted);
-  cursor:pointer; transition:color .2s ease, transform .15s ease;
-}
-.auth-step-back-btn:hover{ color:var(--accent); transform:translateX(-3px); }
-.auth-step-back-btn svg{ width:16px; height:16px; flex-shrink:0; }
 
 /* دکمه‌ی تمام‌عرضِ زیر فیلد — الگوی «شماره → ادامه»ی رایج اپ‌های ایرانی؛
    مشترکه بین لاگین/ثبت‌نام/فراموشی‌رمز، پس گردتر و انیمیشن‌دار شدنش
@@ -2378,9 +2394,10 @@ body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-
 .pw-strength-strong .pw-strength-bar.filled{ background:var(--accent); }
 .pw-strength-strong .pw-strength-label{ color:var(--accent); }
 
-/* فلش بازگشت به صفحه اصلی — حالا داخل خودِ باکس، بالا-چپ، بدون هیچ بک‌گراند/
-   بردر/بلوری، فقط آیکون خام (تا با دکمه‌ی «گام قبل» ویزارد ثبت‌نام که بالا-
-   راستِ همون باکسه تداخل نداشته باشه) */
+/* فلش بازگشت — داخل خودِ باکس، همیشه بالا-راست (کلاسِ -right)، بدون هیچ
+   بک‌گراند/بردر/بلوری، فقط آیکون خام. توی ویزاردِ ثبت‌نام همین یک دکمه با
+   onClickِ سفارشی «گام قبل» رو انجام می‌ده — قبلاً یه دکمه‌ی دومِ بالا-چپ
+   هم بود که تکراری/گیج‌کننده بود، حذف شد. */
 .auth-home-btn{
   position:absolute; top:16px; left:16px; z-index:2;
   display:flex; align-items:center; justify-content:center;
@@ -3905,7 +3922,6 @@ body[data-theme="light"] .notepad-workspace{
   .modal-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
   .rm-box{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
-  .sub-plan-card{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .tm-station{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .weekly-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .checklist-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }

@@ -5,17 +5,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 
-/** فلش بازگشت به صفحه اصلی — داخل خودِ باکس (بدون بک‌گراند، فقط آیکون).
- * پیش‌فرض راسته (هر سه صفحه‌ی auth یکسان)؛ توی ویزاردِ ثبت‌نام، دکمه‌ی
- * «گام قبل» برای جلوگیری از تداخل رفته بالا-چپ (نگاه کن به auth-step-back-btn). */
-export function AuthBackButton({ side = "right" }: { side?: "left" | "right" }) {
+/** فلش بازگشت — داخل خودِ باکس، همیشه بالا-راست، بدون بک‌گراند، فقط آیکون.
+ * پیش‌فرض به صفحه‌ی اصلی می‌ره؛ اگه onClick بدی (مثلِ ویزاردِ ثبت‌نام)
+ * به‌جاش همون کار سفارشی (مثلاً برگشت یه گام) رو انجام می‌ده — یه دکمه‌ی
+ * بازگشتِ واحد، نه دو تا دکمه‌ی هم‌پوشان. */
+export function AuthBackButton({ onClick }: { onClick?: () => void }) {
+  const icon = (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  );
+  if (onClick) {
+    return (
+      <button type="button" className="auth-home-btn auth-home-btn-right" aria-label="گام قبل" onClick={onClick}>
+        {icon}
+      </button>
+    );
+  }
   return (
-    <Link href="/" className={`auth-home-btn${side === "right" ? " auth-home-btn-right" : ""}`} aria-label="بازگشت به صفحه اصلی">
-      {side === "right" ? (
-        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      ) : (
-        <svg viewBox="0 0 24 24" fill="none"><path d="M21 12H3M3 12l7-6M3 12l7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      )}
+    <Link href="/" className="auth-home-btn auth-home-btn-right" aria-label="بازگشت به صفحه اصلی">
+      {icon}
     </Link>
   );
 }
