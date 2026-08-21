@@ -179,6 +179,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
           list.map((f) => (
             <div key={f.friendshipId} className="flex items-center justify-between gap-3">
               <div className="flex flex-1 items-center justify-start gap-2.5">
+                <span className="sm:hidden"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} /></span>
+                <span className="hidden sm:inline-flex"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={36} /></span>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <div className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
@@ -188,8 +190,6 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                     {f.completed} از {f.total} {unitLabel}
                   </div>
                 </div>
-                <span className="sm:hidden"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} /></span>
-                <span className="hidden sm:inline-flex"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={36} /></span>
               </div>
               <span className="sm:hidden"><DashProgressCircle value={f.pct} size={34} strokeWidth={3.5} /></span>
               <span className="hidden sm:inline-block"><DashProgressCircle value={f.pct} size={40} strokeWidth={4} /></span>
@@ -253,8 +253,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                                   {u.status === "none" ? "افزودن" : STATUS_LABEL[u.status]}
                                 </span>
                                 <div className="flex items-center gap-2.5">
-                                  <div className="text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
                                   <Avatar name={u.name} avatarUrl={u.avatarUrl} size={32} />
+                                  <div className="text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
                                 </div>
                               </div>
                             );
@@ -272,8 +272,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                       {requests.map((r) => (
                         <div key={r.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
                           <div className="flex items-center gap-2.5">
-                            <div className="text-right text-[13px] font-semibold text-dash-text">{r.name}</div>
                             <Avatar name={r.name} avatarUrl={r.avatarUrl} size={32} />
+                            <div className="text-right text-[13px] font-semibold text-dash-text">{r.name}</div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -317,8 +317,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                         {list.map((f) => (
                           <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
                             <div className="flex items-center gap-2.5">
-                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
                               <Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} />
+                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
                             </div>
                             <div className="flex items-center gap-2.5">
                               <button

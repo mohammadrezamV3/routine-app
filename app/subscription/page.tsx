@@ -2,43 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Check } from "lucide-react";
-import type { ModuleKey } from "@prisma/client";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { SegmentedTabs } from "@/components/SegmentedTabs";
-import { MODULE_LABELS_FA } from "@/lib/modules";
+import { getSiteMarket } from "@/lib/market";
+import { PlansSection } from "@/components/PlanShowcase";
 
-type Plan = { id: string; key: string; nameFa: string; currency: "IRR" | "USD"; priceMonthly: number; priceYearly: number | null; modules: ModuleKey[] };
-type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { nameFa: string } } | null;
-type Interval = "monthly" | "yearly";
+type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
 
-function formatPrice(amount: number, currency: "IRR" | "USD"): string {
-  if (currency === "USD") return `$${(amount / 100).toLocaleString("en-US")}`;
-  // priceMonthly/priceYearly برای IRR به ریال ذخیره شده — نمایش به تومان
-  return `${Math.round(amount / 10).toLocaleString("fa-IR")} تومان`;
-}
-
-// صفحه‌ی مستقلِ «اشتراک» — قبلاً کلیک روی این دکمه فقط پنلِ کاربری رو باز
-// می‌کرد که یک خطِ متنیِ وضعیتِ اشتراک داشت؛ طبقِ درخواستِ صریحِ کاربر الان
-// یک صفحه‌ی کاملِ مقایسه‌ی پلن‌هاست. درگاهِ پرداخت هنوز وصل نشده (روی
-// روادمپِ امنیت/دیپلویِ پروژه هنوز مونده)، پس دکمه‌ی هر پلن به‌جای خرید
-// واقعی، وضعیتِ «به‌زودی» رو صادقانه نشون می‌ده — به‌جز پلنِ فعلیِ کاربر.
+// صفحه‌ی مستقلِ «اشتراک» — همون کارت‌ها/جدولِ مقایسه‌ی صفحه‌ی لندینگ رو
+// اینجا هم نشون می‌ده (از طریقِ PlansSection مشترک)، فقط دکمه‌ی هر پلن
+// به‌جای بردن به ثبت‌نام، می‌بره به چک‌اوتِ واقعی — پلنِ فعلیِ کاربر هم
+// به‌جای دکمه‌ی خرید یه نشانِ «پلنِ فعلیِ تو» می‌گیره.
 export default function SubscriptionPage() {
   const { status } = useSession();
-  const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [checkoutResult, setCheckoutResult] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [interval, setInterval_] = useState<Interval>("monthly");
+  const [loaded, setLoaded] = useState(false);
+  const isIntl = getSiteMarket() === "INTERNATIONAL";
+
+  // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
+  // نباشه (قاعده‌ی معمولِ پروژه — نگاه کن به app/auth/login/page.tsx).
+  useEffect(() => {
+    setCheckoutResult(new URLSearchParams(window.location.search).get("checkout"));
+  }, []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/plans")
       .then((r) => r.json())
       .then((data) => {
-        const sorted = [...(data.plans || [])].sort((a: Plan, b: Plan) => a.priceMonthly - b.priceMonthly);
-        setPlans(sorted);
         setSubscription(data.subscription || null);
         setIsSuperAdmin(!!data.isSuperAdmin);
+        setLoaded(true);
       });
   }, [status]);
 
@@ -51,11 +47,21 @@ export default function SubscriptionPage() {
     );
   }
 
-  const hasYearly = (plans || []).some((p) => p.priceYearly != null);
-
   return (
     <section className="subscription-page">
       <h1>اشتراک</h1>
+
+      {checkoutResult === "success" && (
+        <div className="checkout-status-banner success">
+          <CheckCircle2 size={18} /> پرداخت با موفقیت انجام شد — پلنِ جدید فعال شد.
+        </div>
+      )}
+      {checkoutResult === "failed" && (
+        <div className="checkout-status-banner failed">
+          <XCircle size={18} /> پرداخت ناموفق بود یا لغو شد — چیزی از حسابت کم نشده.
+        </div>
+      )}
+
       <div className="section-note">
         {isSuperAdmin
           ? "دسترسیِ نامحدود داری — نیازی به اشتراک نداری"
@@ -64,49 +70,11 @@ export default function SubscriptionPage() {
           : "هنوز پلن پولی فعالی نداری — فقط ماژول‌های دوره آزمایشی در دسترسته"}
       </div>
 
-      {hasYearly && !isSuperAdmin && (
-        <div className="sub-interval-toggle">
-          <SegmentedTabs
-            active={interval}
-            onChange={setInterval_}
-            options={[
-              { value: "monthly" as Interval, label: "ماهانه" },
-              { value: "yearly" as Interval, label: "سالانه" },
-            ]}
-          />
-        </div>
-      )}
-
-      {plans === null ? (
+      {!loaded ? (
         <div className="item-line" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
       ) : (
-        <div className="sub-plans-grid">
-          {plans.map((p) => {
-            const isCurrent = subscription?.planId === p.id;
-            const price = interval === "yearly" && p.priceYearly ? p.priceYearly : p.priceMonthly;
-            return (
-              <div key={p.id} className={`sub-plan-card${isCurrent ? " current" : ""}`}>
-                {isCurrent && <div className="sub-plan-badge">پلنِ فعلیِ تو</div>}
-                <div className="sub-plan-name">{p.nameFa}</div>
-                <div className="sub-plan-price">
-                  {formatPrice(price, p.currency)}
-                  <span className="sub-plan-price-unit">/ {interval === "yearly" ? "سال" : "ماه"}</span>
-                </div>
-                <ul className="sub-plan-modules">
-                  {p.modules.map((m) => (
-                    <li key={m}>
-                      <Check size={14} />
-                      {MODULE_LABELS_FA[m]}
-                    </li>
-                  ))}
-                </ul>
-                <button type="button" className="sub-plan-cta" disabled>
-                  {isCurrent ? "پلنِ فعلیِ تو" : "به‌زودی فعال می‌شه"}
-                </button>
-              </div>
-            );
-          })}
-          {!plans.length && <div className="item-line empty">فعلاً پلنی برای بازارِ تو تعریف نشده.</div>}
+        <div style={{ marginTop: 8 }}>
+          <PlansSection isIntl={isIntl} mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" />
         </div>
       )}
     </section>

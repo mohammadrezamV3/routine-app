@@ -26,7 +26,7 @@ export async function GET() {
     prisma.subscription.findFirst({
       where: { userId, status: { in: ["ACTIVE", "TRIAL"] } },
       orderBy: { createdAt: "desc" },
-      select: { planId: true, status: true, currentPeriodEnd: true, plan: { select: { nameFa: true } } },
+      select: { planId: true, status: true, currentPeriodEnd: true, plan: { select: { key: true, nameFa: true } } },
     }),
   ]);
 
