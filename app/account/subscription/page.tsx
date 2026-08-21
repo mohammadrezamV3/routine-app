@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { getAccount, AccountData } from "@/lib/accountCache";
 
 type SubUser = {
@@ -39,34 +40,34 @@ export default function AccountSubscriptionPage() {
       <h1>اشتراک</h1>
       <div className="account-content-hint">وضعیتِ فعلیِ اشتراکِ حسابت</div>
 
-      {data.isSuperAdmin ? (
-        <div className="about-list">
-          <div className="about-row">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="account-card" style={{ padding: 16 }}>
+        {data.isSuperAdmin ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span className="about-label">وضعیت</span>
             <span style={{ color: "var(--accent)", fontWeight: 700 }}>سوپریوزر — دسترسی نامحدود</span>
           </div>
-        </div>
-      ) : (
-        <div className="about-list">
-          <div className="about-row">
-            <span className="about-label">پلنِ فعلی</span>
-            <span style={{ fontWeight: 700 }}>{currentSub ? currentSub.plan.nameFa : "بدون اشتراک فعال"}</span>
-          </div>
-          <div className="about-row">
-            <span className="about-label">وضعیت</span>
-            <span>{currentSub ? SUB_STATUS_FA[currentSub.status] || currentSub.status : "—"}</span>
-          </div>
-          {currentSub?.currentPeriodEnd && (
-            <div className="about-row">
-              <span className="about-label">تاریخ پایان</span>
-              <span className="mono" dir="ltr">{new Date(currentSub.currentPeriodEnd).toLocaleDateString("fa-IR")}</span>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span className="about-label">پلنِ فعلی</span>
+              <span style={{ fontWeight: 700, color: "var(--text)" }}>{currentSub ? currentSub.plan.nameFa : "بدون اشتراک فعال"}</span>
             </div>
-          )}
-        </div>
-      )}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span className="about-label">وضعیت</span>
+              <span style={{ color: "var(--text)" }}>{currentSub ? SUB_STATUS_FA[currentSub.status] || currentSub.status : "—"}</span>
+            </div>
+            {currentSub?.currentPeriodEnd && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span className="about-label">تاریخ پایان</span>
+                <span className="mono" dir="ltr" style={{ color: "var(--text)" }}>{new Date(currentSub.currentPeriodEnd).toLocaleDateString("fa-IR")}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </motion.div>
 
       {!data.isSuperAdmin && (
-        <div style={{ display: "flex", gap: 8, marginTop: 18, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
           <Link href="/subscription" className="account-sub-cta-btn">مدیریت اشتراک</Link>
           <Link href="/subscription" className="account-sub-cta-btn account-sub-cta-btn-outline">ارتقا به پلن بالاتر</Link>
         </div>

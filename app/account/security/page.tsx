@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { KeyRound, ShieldCheck, MonitorSmartphone, History } from "lucide-react";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
+import { AccountSectionCard } from "@/components/AccountSectionCard";
 
 type LoginEvent = { id: string; provider: string; ip: string | null; userAgent: string | null; createdAt: string };
 
@@ -61,17 +63,13 @@ export default function SecurityPage() {
       <h1>امنیت</h1>
       <div className="account-content-hint">مدیریتِ رمز عبور و سابقه‌ی ورودهای حساب</div>
 
-      <div className="tm-extra" style={{ marginTop: 0 }}>
-        <div className="domain-sub" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <KeyRound size={13} />
-          تغییر رمز عبور
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={0}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="تکرار رمز عبور جدید" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
-          {pwSuccess && <div className="account-save-toast">رمز عبور با موفقیت تغییر کرد.</div>}
+          {pwSuccess && <div className="account-save-toast" style={{ marginTop: 0 }}>رمز عبور با موفقیت تغییر کرد.</div>}
           <button
             onClick={changePassword}
             disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
@@ -80,30 +78,22 @@ export default function SecurityPage() {
             {pwSaving ? "در حال ذخیره…" : "ذخیره رمز جدید"}
           </button>
         </div>
-      </div>
+      </AccountSectionCard>
 
-      <div className="tm-extra">
-        <div className="domain-sub" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <MonitorSmartphone size={13} />
-          دستگاه‌های فعال
-        </div>
+      <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={1}>
         <div className="item-line">همین دستگاهی که الان باهاش وارد شدی — فعلاً امکانِ دیدن/خروج از دستگاه‌های دیگه از راه دور در دسترس نیست.</div>
-      </div>
+      </AccountSectionCard>
 
-      <div className="tm-extra">
-        <div className="domain-sub" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <History size={13} />
-          ورودهای اخیر
-        </div>
+      <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={2}>
         {!events ? (
           <div className="item-line">در حال بارگذاری…</div>
         ) : events.length === 0 ? (
           <div className="item-line empty">هنوز ورودی ثبت نشده.</div>
         ) : (
-          <div className="about-list" style={{ marginTop: 4 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {events.map((ev) => (
-              <div key={ev.id} className="about-row">
-                <span className="about-label">{PROVIDER_FA[ev.provider] || ev.provider} · {guessDevice(ev.userAgent)}</span>
+              <div key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <span style={{ fontSize: 12, color: "var(--text)" }}>{PROVIDER_FA[ev.provider] || ev.provider} · {guessDevice(ev.userAgent)}</span>
                 <span className="mono" dir="ltr" style={{ color: "var(--muted2)", fontSize: 11 }}>
                   {new Date(ev.createdAt).toLocaleString("fa-IR")}
                 </span>
@@ -111,21 +101,19 @@ export default function SecurityPage() {
             ))}
           </div>
         )}
-      </div>
+      </AccountSectionCard>
 
-      <div className="tm-extra">
-        <div className="domain-sub" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <ShieldCheck size={13} />
-          ورود دومرحله‌ای
-        </div>
-        <div className="task" style={{ opacity: .55 }}>
-          <div className="check" />
+      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={3}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, opacity: .6 }}>
           <div>
-            <div className="task-name">فعال‌سازیِ ورودِ دومرحله‌ای</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>فعال‌سازیِ ورودِ دومرحله‌ای</div>
             <div className="item-line" style={{ marginTop: 2 }}>به‌زودی</div>
           </div>
+          <span style={{ pointerEvents: "none" }}>
+            <ToggleSwitch checked={false} onChange={() => {}} label="ورود دومرحله‌ای" />
+          </span>
         </div>
-      </div>
+      </AccountSectionCard>
     </section>
   );
 }

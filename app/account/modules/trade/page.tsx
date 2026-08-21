@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LineChart, CalendarDays, Target, BarChart2 } from "lucide-react";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { TradeStatsPicker } from "@/components/TradeStatsPicker";
+import { AccountSectionCard } from "@/components/AccountSectionCard";
 import { getSetting, setSetting } from "@/lib/storage";
 import { getSiteMarket } from "@/lib/market";
 import { DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, TICKER_SETTING_KEY } from "@/lib/tickerSymbols";
@@ -69,27 +71,24 @@ export default function TradeModuleSettingsPage() {
       <h1>ترید</h1>
       <div className="account-content-hint">تنظیمات مربوط به بخش ترید</div>
 
-      <div className="tm-extra" style={{ marginTop: 0 }}>
-        <div className="domain-sub">بازارهای دنبال‌شده</div>
+      <AccountSectionCard icon={<LineChart size={16} />} title="بازارهای دنبال‌شده" index={0}>
         <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمتِ بالای صفحه‌ی ترید انتخاب شده</div>
-        <button onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 8, borderColor: "var(--accent)", color: "var(--accent)" }}>
+        <button onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>
           تغییر بازارها
         </button>
-      </div>
+      </AccountSectionCard>
 
-      <div className="tm-extra">
-        <div className="domain-sub">تقویم ژورنال ترید</div>
-        <div className="item-line" style={{ marginBottom: 8 }}>تاریخ‌های ژورنال ترید به چه تقویمی نمایش داده بشه</div>
+      <AccountSectionCard icon={<CalendarDays size={16} />} title="تقویم ژورنال ترید" index={1}>
+        <div className="item-line" style={{ marginBottom: 10 }}>تاریخ‌های ژورنال ترید به چه تقویمی نمایش داده بشه</div>
         <SegmentedTabs
           options={[{ value: "jalali", label: "شمسی" }, { value: "gregorian", label: "میلادی" }]}
           active={calSystem}
           onChange={changeCalSystem}
         />
-      </div>
+      </AccountSectionCard>
 
-      <div className="tm-extra">
-        <div className="domain-sub">هدف سود ماهانه ترید</div>
-        <div className="item-line" style={{ marginBottom: 8 }}>
+      <AccountSectionCard icon={<Target size={16} />} title="هدف سود ماهانه ترید" index={2}>
+        <div className="item-line" style={{ marginBottom: 10 }}>
           {monthlyGoal > 0
             ? <>هدف فعلی: <b className="mono" style={{ color: "var(--accent)" }}>{monthlyGoal}</b> — به‌صورت آمار دایره‌ای توی صفحه ترید نشون داده می‌شه</>
             : "هنوز هدفی تنظیم نکردی — با تعیین هدف، پیشرفتت توی صفحه ترید به‌صورت دایره نشون داده می‌شه"}
@@ -103,15 +102,14 @@ export default function TradeModuleSettingsPage() {
             {goalSaved ? "ذخیره شد ✓" : "ذخیره هدف"}
           </button>
         </div>
-      </div>
+      </AccountSectionCard>
 
-      <div className="tm-extra">
-        <div className="domain-sub">آمارهای صفحه ترید</div>
-        <div className="item-line" style={{ marginBottom: 8 }}>{visibleStats.length} از ۱۰ آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
+      <AccountSectionCard icon={<BarChart2 size={16} />} title="آمارهای صفحه ترید" index={3}>
+        <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از ۱۰ آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
         <button onClick={() => setStatsPickerOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
           تغییر
         </button>
-      </div>
+      </AccountSectionCard>
 
       {marketPickerOpen && (
         <MarketPicker

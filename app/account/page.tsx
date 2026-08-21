@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, Trash2, Pencil } from "lucide-react";
+import { motion } from "framer-motion";
+import { Camera, Trash2, Pencil, Mail, Phone, Cake, VenetianMask } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
@@ -139,7 +140,7 @@ export default function AccountProfilePage() {
       <h1>پروفایل</h1>
       <div className="account-content-hint">اطلاعاتِ حساب و مشخصاتِ شخصی‌ت</div>
 
-      <div className="account-profile-head">
+      <motion.div className="account-profile-head" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
         <div className="account-avatar-row">
           <div className="account-avatar-wrap">
             {avatarUrl ? (
@@ -172,11 +173,10 @@ export default function AccountProfilePage() {
           ویرایش اطلاعات
         </button>
         {saved && <div className="account-save-toast">اطلاعات با موفقیت ذخیره شد.</div>}
-      </div>
+      </motion.div>
 
       {editing ? (
-        <div className="tm-extra">
-          <div className="domain-sub">ویرایشِ اطلاعات</div>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }} className="account-card" style={{ padding: 16 }}>
           <div className="auth-field-grid">
             <AuthField id="pf-name" label="نام">
               <input id="pf-name" type="text" className="wsearch-newform-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -206,26 +206,38 @@ export default function AccountProfilePage() {
             </button>
             <button type="button" onClick={() => setEditing(false)} disabled={saving}>انصراف</button>
           </div>
-        </div>
+        </motion.div>
       ) : (
-        <div className="about-list">
-          <div className="about-row">
-            <span className="about-label">ایمیل</span>
-            {data.email ? <span className="mono" dir="ltr">{data.email}</span> : <span className="item-line empty">ثبت نشده</span>}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="account-card">
+          <div className="account-row2">
+            <span className="account-row2-icon"><Mail size={16} /></span>
+            <span className="account-row2-body">
+              <span className="account-row2-label">ایمیل</span>
+              <span className="account-row2-desc mono" dir="ltr">{data.email || "ثبت نشده"}</span>
+            </span>
           </div>
-          <div className="about-row">
-            <span className="about-label">شماره موبایل</span>
-            {data.phone ? <span className="mono" dir="ltr">{data.phone}</span> : <span className="item-line empty">ثبت نشده</span>}
+          <div className="account-row2">
+            <span className="account-row2-icon"><Phone size={16} /></span>
+            <span className="account-row2-body">
+              <span className="account-row2-label">شماره موبایل</span>
+              <span className="account-row2-desc mono" dir="ltr">{data.phone || "ثبت نشده"}</span>
+            </span>
           </div>
-          <div className="about-row">
-            <span className="about-label">تاریخ تولد</span>
-            <span>{data.birthDate ? formatJalali(toJalaliFromIso(data.birthDate)) : "ثبت نشده"}</span>
+          <div className="account-row2">
+            <span className="account-row2-icon"><Cake size={16} /></span>
+            <span className="account-row2-body">
+              <span className="account-row2-label">تاریخ تولد</span>
+              <span className="account-row2-desc">{data.birthDate ? formatJalali(toJalaliFromIso(data.birthDate)) : "ثبت نشده"}</span>
+            </span>
           </div>
-          <div className="about-row">
-            <span className="about-label">جنسیت</span>
-            <span>{data.gender === "male" ? "مرد" : data.gender === "female" ? "زن" : "ثبت نشده"}</span>
+          <div className="account-row2">
+            <span className="account-row2-icon"><VenetianMask size={16} /></span>
+            <span className="account-row2-body">
+              <span className="account-row2-label">جنسیت</span>
+              <span className="account-row2-desc">{data.gender === "male" ? "مرد" : data.gender === "female" ? "زن" : "ثبت نشده"}</span>
+            </span>
           </div>
-        </div>
+        </motion.div>
       )}
       <div className="section-note" style={{ marginTop: 10 }}>
         تغییرِ ایمیل/شماره موبایل فعلاً از همین‌جا ممکن نیست — از بخشِ «پشتیبانی» با ما در تماس باش.
