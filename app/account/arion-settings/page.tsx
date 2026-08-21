@@ -1,30 +1,65 @@
-import Link from "next/link";
-import { Palette, Globe, Bell, Lock, ChevronLeft } from "lucide-react";
+"use client";
 
-const ROWS = [
-  { href: "/account/arion-settings/appearance", label: "ظاهر و تم", desc: "حالت روشن / تاریک", icon: <Palette size={17} /> },
-  { href: "/account/arion-settings/language", label: "زبان", desc: "زبانِ رابط کاربری", icon: <Globe size={17} /> },
-  { href: "/account/notifications", label: "اعلان‌ها", desc: "مدیریتِ کاملِ اعلان‌ها", icon: <Bell size={17} /> },
-  { href: "/account/arion-settings/privacy", label: "حریم خصوصی", desc: "دیده‌شدن توسطِ دیگران", icon: <Lock size={17} /> },
-];
+import { useEffect, useState } from "react";
+import { Globe, Lock } from "lucide-react";
+import { AccountToggleRow } from "@/components/AccountRow";
+import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 
+// تمِ نمایش عمداً این‌جا نیست — دقیقاً همون سوییچِ بالای منوی همبرگری
+// (NavDrawer) هست؛ تکرارِ همون قابلیت توی یه صفحه‌ی دیگه فقط سردرگم‌کننده‌ست.
 export default function ArionSettingsPage() {
+  const [discoverable, setDiscoverable] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    getAccount().then((res: AccountData) => {
+      const u = res?.user as { discoverable?: boolean } | undefined;
+      setDiscoverable(u?.discoverable ?? true);
+    });
+  }, []);
+
+  async function toggleDiscoverable(next: boolean) {
+    if (saving) return;
+    setSaving(true);
+    setDiscoverable(next);
+    try {
+      const res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discoverable: next }),
+      });
+      if (!res.ok) setDiscoverable(!next);
+      else invalidateAccountCache();
+    } catch {
+      setDiscoverable(!next);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section>
       <h1>تنظیمات آریون</h1>
-      <div className="account-content-hint">تنظیماتِ کلیِ اپلیکیشن</div>
+      <div className="account-content-hint">تنظیمات کلیِ اپلیکیشن</div>
 
-      <div className="account-row-list">
-        {ROWS.map((r) => (
-          <Link key={r.href} href={r.href} className="account-row">
-            <span className="account-row-icon">{r.icon}</span>
-            <span className="account-row-body">
-              <span className="account-row-label">{r.label}</span>
-              <span className="account-row-desc">{r.desc}</span>
-            </span>
-            <ChevronLeft size={16} className="account-row-chevron" />
-          </Link>
-        ))}
+      <div className="account-card">
+        <div className="account-row2">
+          <span className="account-row2-icon"><Globe size={17} /></span>
+          <span className="account-row2-body">
+            <span className="account-row2-label">زبان</span>
+            <span className="account-row2-desc">فعلاً فقط فارسی — زبان‌های دیگه به‌زودی اضافه می‌شن</span>
+          </span>
+        </div>
+        {discoverable !== null && (
+          <AccountToggleRow
+            index={1}
+            icon={<Lock size={16} />}
+            label="قابل‌جست‌وجو بودن با یوزرنیم"
+            desc="خاموش‌کردنش یعنی توی جست‌وجوی دوستان دیده نمی‌شی"
+            checked={discoverable}
+            onChange={toggleDiscoverable}
+          />
+        )}
       </div>
     </section>
   );

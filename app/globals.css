@@ -947,61 +947,96 @@
      چیدمانِ عریضِ داشبوردی.
      ============================================================ */
   .account-shell{ position:relative; }
-  .account-body{ display:flex; flex-direction:row-reverse; gap:18px; align-items:flex-start; }
+  .account-body{ display:flex; flex-direction:row-reverse; gap:22px; align-items:flex-start; }
+
   .account-sidebar{
-    width:150px; flex-shrink:0; position:sticky; top:calc(88px + env(safe-area-inset-top));
-    display:flex; flex-direction:column; gap:2px;
+    width:164px; flex-shrink:0; position:sticky; top:calc(88px + env(safe-area-inset-top));
+    display:flex; flex-direction:column; gap:18px;
   }
-  .account-sidebar-title{ font-size:11px; font-weight:700; color:var(--muted2); margin:0 4px 8px; }
-  .account-sidebar-links{ display:flex; flex-direction:column; gap:2px; }
+  .account-sidebar-title{ font-size:11px; font-weight:700; color:var(--muted2); margin:0 6px; letter-spacing:.02em; }
+  .account-sidebar-links{ display:flex; flex-direction:column; gap:1px; }
   .account-sidebar-link{
-    display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:11px;
+    position:relative; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:13px;
     color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-    cursor:pointer; transition:background .15s ease, color .15s ease; text-align:right; width:100%;
+    cursor:pointer; transition:color .18s ease; text-align:right; width:100%;
   }
-  .account-sidebar-link:hover{ background:rgba(255,255,255,.05); color:var(--text); box-shadow:none; }
-  .account-sidebar-link.active{ background:var(--accent-dim); color:var(--accent); }
-  .account-sidebar-link-icon{ display:flex; flex-shrink:0; }
-  .account-sidebar-logout{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); border-radius:0 0 11px 11px; color:#E05252; }
-  .account-sidebar-logout:hover{ background:rgba(224,82,82,.08); color:#E05252; }
-  .account-content{ flex:1; min-width:0; }
-  .account-content > h1{ margin-bottom:4px; }
-  .account-content-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:18px; }
+  .account-sidebar-link:hover{ color:var(--text); background:none; box-shadow:none; }
+  .account-sidebar-link.active{ color:var(--accent); }
+  .account-sidebar-link > *:not(.account-sidebar-active-pill){ position:relative; z-index:1; }
+  .account-sidebar-active-pill{
+    position:absolute; inset:0; border-radius:13px; background:var(--accent-dim); z-index:0;
+  }
+  .account-sidebar-link-icon{
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:26px; height:26px; border-radius:9px; background:rgba(255,255,255,.04); color:inherit;
+    transition:background .18s ease;
+  }
+  .account-sidebar-link.active .account-sidebar-link-icon{ background:rgba(var(--accent-rgb),.14); }
+  .account-sidebar-logout{
+    display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:13px;
+    color:#E05252; background:none; border:none; box-shadow:none;
+    font-size:12.5px; font-weight:600; text-align:right; width:100%; cursor:pointer;
+    transition:background .18s ease;
+  }
+  .account-sidebar-logout:hover{ background:rgba(224,82,82,.08); box-shadow:none; }
+  .account-sidebar-logout .account-sidebar-link-icon{ background:rgba(224,82,82,.1); }
 
-  .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:6px; }
-  .account-profile-name{ font-size:16px; font-weight:800; color:var(--text); margin-top:6px; }
+  .account-content{ flex:1; min-width:0; }
+  .account-content > h1{ margin-bottom:3px; font-size:20px; letter-spacing:-.01em; }
+  .account-content-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:20px; }
+
+  /* پروفایل — بالای صفحه */
+  .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
+  .account-profile-name{ font-size:16.5px; font-weight:800; color:var(--text); margin-top:12px; letter-spacing:-.01em; }
   .account-profile-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
   .account-edit-btn{
-    display:flex; align-items:center; gap:6px; margin-top:12px;
+    display:flex; align-items:center; gap:6px; margin-top:14px;
     font-size:11.5px; border-color:var(--accent); color:var(--accent);
   }
   .account-save-toast{ margin-top:10px; font-size:11.5px; color:var(--accent); font-weight:600; }
 
   .account-sub-mini-card{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(var(--bg-rgb), .13);
+    padding:15px 16px; border:1px solid var(--line); border-radius:18px;
+    background:rgba(255,255,255,.025); backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   }
+  body[data-theme="light"] .account-sub-mini-card{ background:rgba(255,255,255,.5); }
   .account-sub-mini-name{ font-size:13.5px; font-weight:700; color:var(--text); margin-bottom:3px; }
   .account-sub-mini-link{ font-size:11.5px; font-weight:700; color:var(--accent); text-decoration:none; flex-shrink:0; }
 
-  .account-row-list{ display:flex; flex-direction:column; margin-top:6px; }
-  .account-row{
-    display:flex; align-items:center; gap:12px; padding:14px 2px; text-decoration:none;
-    border-bottom:1px solid var(--line); color:inherit;
+  /* ردیفِ نسلِ جدید — کارتی، آیکون در دایره‌ی نرم، هاور ظریف */
+  .account-card{
+    border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    background:rgba(255,255,255,.02);
   }
-  .account-row:last-child{ border-bottom:none; }
-  .account-row-icon{ display:flex; flex-shrink:0; color:var(--accent); }
-  .account-row-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-  .account-row-label{ font-size:13.5px; font-weight:700; color:var(--text); }
-  .account-row-desc{ font-size:11.5px; color:var(--muted); }
-  .account-row-chevron{ color:var(--muted2); flex-shrink:0; }
+  body[data-theme="light"] .account-card{ background:rgba(255,255,255,.4); }
+  .account-row2{
+    position:relative; display:flex; align-items:center; gap:12px; padding:14px 15px;
+    text-decoration:none; color:inherit; border-bottom:1px solid var(--line);
+    transition:background .15s ease;
+  }
+  .account-card .account-row2:last-child{ border-bottom:none; }
+  a.account-row2:hover{ background:rgba(255,255,255,.03); }
+  a.account-row2:hover .account-row2-chevron{ transform:translateX(-2px); color:var(--accent); }
+  .account-row2-icon{
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:38px; height:38px; border-radius:12px;
+    background:rgba(var(--accent-rgb),.1); color:var(--accent);
+  }
+  .account-row2-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .account-row2-label{ font-size:13.5px; font-weight:700; color:var(--text); }
+  .account-row2-desc{ font-size:11.5px; color:var(--muted); line-height:1.5; }
+  .account-row2-chevron{ color:var(--muted2); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
 
   .account-sub-cta-btn{
     display:inline-flex; align-items:center; justify-content:center;
-    padding:9px 18px; border-radius:11px; font-size:12.5px; font-weight:700; text-decoration:none;
+    padding:10px 20px; border-radius:13px; font-size:12.5px; font-weight:700; text-decoration:none;
     background:var(--accent); color:var(--bg); border:1px solid var(--accent);
+    transition:transform .15s ease, filter .15s ease;
   }
+  .account-sub-cta-btn:hover{ filter:brightness(1.06); }
+  .account-sub-cta-btn:active{ transform:scale(.97); }
   .account-sub-cta-btn-outline{ background:none; color:var(--accent); }
 
   .account-mobile-tabs{ display:none; }
@@ -1010,17 +1045,20 @@
     .account-body{ flex-direction:column; }
     .account-sidebar{ display:none; }
     .account-mobile-tabs{
-      display:flex; gap:6px; overflow-x:auto; padding:2px 2px 10px; margin:0 -2px 14px;
+      display:flex; gap:6px; overflow-x:auto; padding:2px 2px 4px; margin:0 -2px 16px;
       -webkit-overflow-scrolling:touch; scrollbar-width:none;
     }
     .account-mobile-tabs::-webkit-scrollbar{ display:none; }
     .account-mobile-tab{
-      display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0;
-      padding:9px 13px; border-radius:14px; text-decoration:none; white-space:nowrap;
-      color:var(--muted); font-size:10.5px; font-weight:600;
+      position:relative; display:flex; align-items:center; gap:6px; flex-shrink:0;
+      padding:8px 14px; border-radius:999px; text-decoration:none; white-space:nowrap;
+      color:var(--muted); font-size:11.5px; font-weight:600;
       background:rgba(255,255,255,.03); border:1px solid var(--line);
+      transition:color .18s ease, border-color .18s ease;
     }
-    .account-mobile-tab.active{ background:var(--accent-dim); color:var(--accent); border-color:transparent; }
+    .account-mobile-tab.active{ color:var(--accent); border-color:transparent; }
+    .account-mobile-tab > *:not(.account-mobile-tab-pill){ position:relative; z-index:1; }
+    .account-mobile-tab-pill{ position:absolute; inset:0; border-radius:999px; background:var(--accent-dim); z-index:0; }
     .account-mobile-tab-danger{ color:#E05252; background:none; border:none; cursor:pointer; font-family:var(--font-vazir), sans-serif; }
   }
 

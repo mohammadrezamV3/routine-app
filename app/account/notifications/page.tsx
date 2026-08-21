@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Sparkles, CalendarCheck2, Dumbbell, Flame, LineChart, Map, UserPlus, BellRing } from "lucide-react";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
+import { AccountToggleRow } from "@/components/AccountRow";
 
-const ROWS: [keyof NotifPrefs, string][] = [
-  ["arionGeneral", "اعلان‌های آریون"],
-  ["taskReminders", "اعلان‌های روتین"],
-  ["exerciseReminders", "اعلان‌های بدنسازی"],
-  ["calorieReminders", "اعلان‌های کالری"],
-  ["tradeReminders", "اعلان‌های ترید"],
-  ["roadmapReminders", "اعلان‌های یادگیری / Skill"],
-  ["friendRequests", "درخواستِ دوستی"],
+const ROWS: [keyof NotifPrefs, string, React.ReactNode][] = [
+  ["arionGeneral", "اعلان‌های آریون", <Sparkles size={16} key="a" />],
+  ["taskReminders", "اعلان‌های روتین", <CalendarCheck2 size={16} key="r" />],
+  ["exerciseReminders", "اعلان‌های بدنسازی", <Dumbbell size={16} key="e" />],
+  ["calorieReminders", "اعلان‌های کالری", <Flame size={16} key="c" />],
+  ["tradeReminders", "اعلان‌های ترید", <LineChart size={16} key="t" />],
+  ["roadmapReminders", "اعلان‌های یادگیری / Skill", <Map size={16} key="m" />],
+  ["friendRequests", "درخواستِ دوستی", <UserPlus size={16} key="f" />],
 ];
 
 export default function NotificationsPage() {
@@ -28,11 +31,11 @@ export default function NotificationsPage() {
     setNotifPermission(perm);
   }
 
-  function toggle(key: keyof NotifPrefs) {
+  function toggle(key: keyof NotifPrefs, next: boolean) {
     setPrefs((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      saveNotifPrefs(next);
-      return next;
+      const updated = { ...prev, [key]: next };
+      saveNotifPrefs(updated);
+      return updated;
     });
   }
 
@@ -41,37 +44,39 @@ export default function NotificationsPage() {
       <h1>اعلان‌ها</h1>
       <div className="account-content-hint">مدیریتِ اعلان‌های Arion</div>
 
-      <div className="tm-extra" style={{ marginTop: 0 }}>
-        {notifPermission === "unsupported" ? (
-          <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
-        ) : notifPermission === "granted" ? (
-          <div className="item-line">فعاله — وقتی این صفحه بازه، سر وقتِ برنامه یادآوری می‌گیری.</div>
-        ) : notifPermission === "denied" ? (
-          <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایت توی مرورگرت می‌تونی بازش کنی.</div>
-        ) : (
-          <>
-            <div className="section-note" style={{ marginBottom: 8 }}>
-              وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری — فقط تا وقتی این صفحه توی مرورگرت بازه.
-            </div>
-            <button onClick={enableNotifications} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-              فعال‌کردن یادآوری‌ها
-            </button>
-          </>
-        )}
-      </div>
-
-      <div className="tm-extra">
-        <div className="domain-sub">کدوم دسته‌ها یادآوری بگیرن</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {ROWS.map(([key, label]) => (
-            <div key={key} className="task" style={{ cursor: "pointer", padding: "4px 0" }} onClick={() => toggle(key)}>
-              <div className={`check${prefs[key] ? " on" : ""}`}>
-                <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      {notifPermission !== "granted" && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="account-card"
+          style={{ padding: "15px 16px", marginBottom: 16 }}
+        >
+          {notifPermission === "unsupported" ? (
+            <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
+          ) : notifPermission === "denied" ? (
+            <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایت توی مرورگرت می‌تونی بازش کنی.</div>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <span className="account-row2-icon" style={{ width: 34, height: 34 }}><BellRing size={16} /></span>
+                <span className="section-note" style={{ margin: 0 }}>
+                  وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.
+                </span>
               </div>
-              <div className="task-name">{label}</div>
-            </div>
-          ))}
-        </div>
+              <button onClick={enableNotifications} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+                فعال‌کردن یادآوری‌ها
+              </button>
+            </>
+          )}
+        </motion.div>
+      )}
+
+      <div className="domain-sub" style={{ marginTop: 0 }}>کدوم دسته‌ها یادآوری بگیرن</div>
+      <div className="account-card" style={{ marginTop: 6 }}>
+        {ROWS.map(([key, label, icon], i) => (
+          <AccountToggleRow key={key} index={i} icon={icon} label={label} checked={prefs[key]} onChange={(v) => toggle(key, v)} />
+        ))}
       </div>
     </section>
   );
