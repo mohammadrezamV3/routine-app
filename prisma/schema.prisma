@@ -97,6 +97,12 @@ model User {
   lastName      String?
   avatarUrl     String?
   birthDate     DateTime?
+  gender        String?  // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
+
+  // پنل کاربری › حریم خصوصی: خاموش‌کردنش یعنی توی جست‌وجوی دوستان (/api/friends/search) دیده نشه
+  discoverable  Boolean  @default(true)
+  // ساختارِ آماده برای ۲مرحله‌ای — فعلاً فقط پرچمه، فلوی فعال‌سازی/کدِ OTP هنوز پیاده نشده
+  twoFactorEnabled Boolean @default(false)
 
   // سوپریوزر/ادمین — دسترسی نامحدود به همه ماژول‌ها بدون نیاز به اشتراک
   isSuperAdmin  Boolean  @default(false)
@@ -115,6 +121,7 @@ model User {
   // روابط احراز هویت
   accounts      OAuthAccount[]
   sessions      Session[]
+  loginEvents   LoginEvent[]
   passwordResetOtps PasswordResetOtp[]
   tradeChecklistItems TradeChecklistItem[]
 
@@ -177,6 +184,22 @@ model Session {
   createdAt    DateTime @default(now())
 
   @@index([userId])
+}
+
+// لاگِ append-only هر ورودِ موفق — پنل کاربری › امنیت › «ورودهای اخیر».
+// این پروژه از session استراتژیِ JWT استفاده می‌کنه (بدونِ ردیفِ سرورِ فعال به‌ازای
+// هر توکن)، پس این جدول یک «سابقه‌ی ورود» واقعیه، نه یک لیستِ session قابل‌ابطال —
+// چیزی که مدل Session بالا برای‌ش ساخته شده ولی الان استفاده نمی‌شه.
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider  String   // "credentials" | "google"
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 // چک‌لیست شخصی پیش از معامله — کاملاً دست‌ساز کاربره (نه قالب ثابت)، حداکثر

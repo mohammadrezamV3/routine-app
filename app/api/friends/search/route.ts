@@ -26,6 +26,10 @@ export async function GET(req: NextRequest) {
     where: {
       id: { not: userId },
       username: { contains: q, mode: "insensitive" },
+      // پنل کاربری › تنظیمات آریون › حریم خصوصی — کسی که discoverable رو
+      // خاموش کرده توی جست‌وجوی دوستان دیده نمی‌شه (دوستیِ از‌قبل‌موجود یا
+      // درخواستِ درحال‌انتظار همچنان جای دیگه‌ای نمایش داده می‌شه، فقط جست‌وجوی جدید مسدوده)
+      discoverable: true,
     },
     select: { id: true, name: true, username: true, avatarUrl: true },
     take: 12,

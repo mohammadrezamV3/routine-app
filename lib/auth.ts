@@ -112,6 +112,13 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // پنل کاربری › امنیت › «ورودهای اخیر» — فقط یک لاگِ append-only،
+        // نه چیزی که خودِ فلوی ورود بهش وابسته باشه؛ اگه شکست بخوره نباید
+        // جلوی ورودِ واقعی رو بگیره.
+        prisma.loginEvent
+          .create({ data: { userId: user.id, provider: "credentials", ip, userAgent: (req?.headers as any)?.["user-agent"] || null } })
+          .catch(() => {});
+
         return {
           id: user.id,
           email: user.email,
@@ -161,6 +168,8 @@ export const authOptions: NextAuthOptions = {
           });
           await provisionNewUser(dbUser.id);
         }
+
+        prisma.loginEvent.create({ data: { userId: dbUser.id, provider: "google" } }).catch(() => {});
 
         token.userId = dbUser.id;
         token.name = dbUser.name;
