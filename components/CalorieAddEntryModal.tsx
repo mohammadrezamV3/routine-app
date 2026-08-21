@@ -149,7 +149,7 @@ export function CalorieAddEntryModal({
             <div className="mt-2.5 flex gap-2">
               <input
                 type="number"
-                className="wsearch-newform-name calorie-glass-field flex-1 text-center"
+                className="wsearch-newform-name calorie-glass-field calorie-unit-btn-wrap shrink-0 text-center"
                 placeholder="مقدار"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
@@ -211,15 +211,30 @@ export function CalorieAddEntryModal({
               <span className="h-px flex-1" style={{ background: "var(--line)" }} />
             </div>
 
-            <button
-              type="button"
-              onClick={onOpenAiScan}
-              className="flex w-full items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[12px] font-bold sm:text-[13.5px]"
-              style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-            >
-              <Sparkles size={15} />
-              اسکن غذا با هوش مصنوعی
-            </button>
+            {/* فعلاً غیرفعال — طبقِ همون الگوی ردیف‌های «به‌زودی» توی جدولِ
+                مقایسه‌ی پلن‌ها (PlanShowcase): خودِ محتوا با بلور پیش‌نمایش
+                می‌شه (نه یه متنِ جایگزینِ کم‌کنتراست)، یه نشانِ صریح روش می‌شینه. */}
+            <div className="relative">
+              <button
+                type="button"
+                disabled
+                aria-hidden="true"
+                tabIndex={-1}
+                className="pointer-events-none flex w-full select-none items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[12px] font-bold blur-[3px] sm:text-[13.5px]"
+                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+              >
+                <Sparkles size={15} />
+                اسکن غذا با هوش مصنوعی
+              </button>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span
+                  className="rounded-full px-3.5 py-1 text-[11px] font-extrabold text-white"
+                  style={{ background: "var(--accent)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                >
+                  به‌زودی
+                </span>
+              </div>
+            </div>
           </motion.div>
 
           <AnimatePresence>

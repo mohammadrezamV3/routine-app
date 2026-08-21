@@ -895,7 +895,8 @@
      پنلِ ساده‌ی اطلاعاتِ حساب) — این‌جا مستقلاً جمع‌وجورترش می‌کنیم بدونِ
      دست‌زدن به بقیه‌ی مودال‌های سایت که از همون کلاسِ پایه استفاده می‌کنن. */
   @media (max-width:480px){
-    .account-modal-panel{ width:82%; max-width:320px; max-height:68vh; max-height:68dvh; padding:16px; }
+    .account-modal-panel{ width:78%; max-width:290px; max-height:58vh; max-height:58dvh; padding:14px; }
+    .account-modal-panel .account-avatar-wrap{ width:60px; height:60px; }
   }
   .modal-panel.open{
     opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);
@@ -951,14 +952,22 @@
   /* بالا-راست، ولی زیرِ نوارِ بالای سایت (.app-topbar که خودش top:14px تا
      ~72px رو اشغال می‌کنه و همبرگر/زنگوله/پروفایل توش z-index:40 دارن) —
      هم‌ارتفاع بودن باعث می‌شد کلیک روی این دکمه به‌جای خودش به همبرگر برسه. */
+  /* این صفحه (بخلافِ مودال‌های dash-scope) ریستِ سراسریِ button رو نداره،
+     پس قانونِ عمومیِ button{} (پدینگ/بوردر/بک‌گراند/بلور/باکس‌شدو) خودش رو
+     تحمیل می‌کرد — همون دلیلِ «بکگراند و اندازه‌ی عجیب»: box-shadowِ
+     inset+outsetِ اون قانون یه هایلایتِ شیشه‌ای می‌ساخت که رنگِ background:none
+     رو خنثی نمی‌کرد. اینجا صریح همه‌چیز خاموش می‌شه. */
   .checkout-back-btn{
     position:fixed; top:88px; right:18px; z-index:30;
     display:flex; align-items:center; justify-content:center;
-    width:34px; height:34px; border-radius:999px;
-    background:none; border:none; color:var(--muted);
-    cursor:pointer; transition:color .2s ease, transform .15s ease;
+    width:34px; height:34px; padding:0; border-radius:999px;
+    background:none; border:none; box-shadow:none;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    color:var(--muted); cursor:pointer;
+    transition:color .2s ease, transform .15s ease;
   }
-  .checkout-back-btn:hover{ color:var(--accent); transform:translateX(3px); }
+  .checkout-back-btn:hover{ color:var(--accent); background:none; box-shadow:none; transform:translateX(3px); }
+  .checkout-back-btn:active{ transform:scale(.86); }
   .checkout-back-btn svg{ width:21px; height:21px; }
   .checkout-back-link{ display:inline-block; margin-top:14px; color:var(--accent); font-weight:700; font-size:12.5px; }
 
@@ -1070,17 +1079,16 @@
      (.weekly-glass-content) وگرنه بلاب‌ها روی متن می‌افتن. */
   .weekly-glass{
     position:relative; overflow:hidden;
-    background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:22px;
+    background:rgba(255,255,255,.02); border:1px solid var(--line); border-radius:22px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:0 20px 50px rgba(0,0,0,.20);
     padding:18px 20px; margin-top:14px;
   }
-  /* توی تمِ روشن، تینتِ سفید (مثلِ .notif-panel) این باکس رو "شیری" نشون
-     می‌داد — چون رنگِ خودِ پس‌زمینه‌ی تمِ روشن (F4E3C9) کرمیه، تینتِ سفید
-     داشت رنگ رو می‌شست به سمتِ سفیدِ محو. اینجا به‌جاش از خودِ رنگِ زمینه
-     (--bg-rgb، که کرمیه) با opacityِ بالاتر استفاده می‌شه تا باکس واقعاً
-     کرمی/توپر دیده بشه، نه شیشه‌ایِ سفید. */
-  body[data-theme="light"] .weekly-glass{ background:rgba(var(--bg-rgb),.55); }
+  /* رنگش عمداً دقیقاً همونِ bg-dash-card‌ه (کارتِ عمومیِ بقیه‌ی باکس‌های
+     «روتین من» — برنامه‌های امروز/دوستان/آمار هفتگی) تا یکدست بمونه، نه یه
+     تینتِ کرمیِ جداگونه؛ globals.css:781 همون override رو برای bg-dash-card
+     هم داره. */
+  body[data-theme="light"] .weekly-glass{ background:rgba(255,255,255,.16); }
   .weekly-glass table{margin:0;}
   .weekly-glass-content{position:relative; z-index:1;}
 
@@ -1089,11 +1097,15 @@
      توی موبایل (بیرون از dash-breakout) اثری نداره چون عرضِ پدر همون‌قدره. */
   .weekly-align-end{max-width:660px; margin-inline:auto;}
 
+  /* رنگش عمداً دقیقاً همونِ bg-dash-card‌ه (کارتِ عمومیِ بقیه‌ی باکس‌های
+     «روتین من») — نه یه تینتِ جداگونه — تا با weekly-glass و بقیه‌ی
+     کارت‌های داشبورد یکدست بمونه. */
   .checklist-glass{
-    background:rgba(var(--bg-rgb), .13); border:1px solid var(--line); border-radius:22px;
+    background:rgba(255,255,255,.02); border:1px solid var(--line); border-radius:22px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     padding:6px 20px; margin-top:8px;
   }
+  body[data-theme="light"] .checklist-glass{ background:rgba(255,255,255,.16); }
   .checklist-glass .task:last-of-type{border-bottom:none;}
 
   /* چک‌لیست دست‌ساز ترید — حالت «استفاده» ساده و تمیزه (فقط تیک)، دکمه‌ی
