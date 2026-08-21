@@ -145,12 +145,23 @@
      دیده می‌شد و با toggle کردنِ تم هم عوض نمی‌شد (چون هیچ‌وقت اصلاً به تم
      گوش نمی‌داد، نه این‌که «گیر» کرده باشه). */
   html:has(body[data-theme="light"]){ background:#F4E3C9; }
+  /* همون قاعده، ولی بدونِ وابستگی به :has() — حالا خودِ data-theme روی <html>
+     هم هست (lib/themeColor.ts). این نسخه علاوه بر پشتیبانیِ گسترده‌تر، یه
+     مزیتِ دیگه هم داره: از همون *اولین بایتِ HTML* درست کار می‌کنه، چون
+     اسکریپتِ inline اتریبیوت رو قبل از هر پینتی روی html می‌ذاره. */
+  html[data-theme="light"]{ background:#F4E3C9; }
+  /* ناحیه‌ی امنِ iOS: با viewport-fit=cover صفحه زیرِ ناچ و نوارِ خانه کشیده
+     می‌شه، ولی محتوای body با پدینگِ ثابت اون نواحی رو حساب نمی‌کرد — نتیجه
+     این‌که پایین/بالای صفحه «بریده» به‌نظر می‌رسید. پدینگ حالا اینست‌های
+     واقعیِ دستگاه رو هم اضافه می‌کنه (روی دستگاهِ بدونِ ناچ صفره، پس چیزی
+     عوض نمی‌شه). خودِ رنگِ پس‌زمینه از html/body میاد که هردو تم‌آگاه‌ن. */
   body{
     background:var(--bg); color:var(--text);
     font-family:var(--font-vazir), sans-serif;
     font-weight:400;
     line-height:1.6;
-    padding:118px 20px 90px;
+    padding:calc(118px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+            calc(90px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
     position:relative;
     min-height:100vh; min-height:100dvh;
     transition:background .3s ease, color .3s ease;

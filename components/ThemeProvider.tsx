@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getThemeSetting, setThemeSetting } from "@/lib/storage";
+import { applyThemeAttribute, syncThemeColorMeta, readThemeFromDom } from "@/lib/themeColor";
 
 type Theme = "dark" | "light";
 
@@ -54,17 +55,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // درستو روی body گذاشته؛ اگه این‌جا بی‌قیدوشرط با stateِ اولیه‌ی "dark"
     // بنویسیم، دقیقاً همون چیزی که اسکریپت درست کرده بود (مثلاً "light") رو
     // برای یه لحظه (تا resolve شدنِ افکتِ بالا) بازنویسی می‌کنه.
-    if (!mounted.current) { mounted.current = true; return; }
-    document.body.setAttribute("data-theme", theme);
+    // اجرای اول یه حالتِ خاصه: stateِ ری‌اکت هنوز مقدارِ اولیه‌ی "dark"ـه
+    // (که عمداً با چیزی که سرور رندر کرده یکیه)، ولی اسکریپتِ inline از قبل
+    // تمِ *واقعی* رو از روی کوکی روی DOM گذاشته. پس این‌جا نباید stateِ ری‌اکت
+    // رو روی DOM بنویسیم — برعکس، باید همون چیزی که روی DOMه رو مرجع بگیریم.
+    // (نسخه‌ی اولِ این فیکس همین رو رعایت نکرد و تمِ روشن رو موقعِ لود به
+    // تاریک برمی‌گردوند.)
+    if (!mounted.current) {
+      mounted.current = true;
+      // متا حتی در اجرای اول هم هم‌گام می‌شه — اگه چیزی بعدِ هیدریت یه متای
+      // دومِ بیات تزریق کرده باشه، syncThemeColorMeta همین‌جا پاکش می‌کنه.
+      syncThemeColorMeta(readThemeFromDom());
+      return;
+    }
+
+    applyThemeAttribute(theme);
+    syncThemeColorMeta(theme);
     // فقط وقتی می‌نویسیم که با چیزی که واقعاً ذخیره‌ست فرق داشته باشه
     if (persisted.current !== theme) {
       persisted.current = theme;
       setThemeSetting(theme);
     }
-    // نوارِ وضعیت/ناچِ سافاری هم باید رنگِ تمِ فعلی رو بگیره، وگرنه بعد از
-    // toggle، بدنه‌ی صفحه عوض می‌شه ولی اون نوار همچنان رنگِ تمِ قبلی می‌مونه.
-    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeColorMeta) themeColorMeta.setAttribute("content", theme === "light" ? "#F4E3C9" : "#0E1011");
   }, [theme]);
 
   return (
