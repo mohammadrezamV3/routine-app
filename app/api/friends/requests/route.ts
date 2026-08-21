@@ -11,7 +11,7 @@ export async function GET() {
 
   const rows = await prisma.friendship.findMany({
     where: { addresseeId: userId, status: "PENDING" },
-    include: { requester: { select: { id: true, name: true, username: true } } },
+    include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -21,6 +21,7 @@ export async function GET() {
       id: r.requester.id,
       name: r.requester.name || r.requester.username || "کاربر",
       username: r.requester.username,
+      avatarUrl: r.requester.avatarUrl,
     })),
   });
 }

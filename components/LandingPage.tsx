@@ -9,7 +9,6 @@ import {
   Smartphone, BarChart3, Zap, Users, Sparkles, ShoppingCart,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
-import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
 import { ICONS } from "@/components/NavDrawer";
 import { getSiteMarket } from "@/lib/market";
 import { useTheme } from "@/components/ThemeProvider";
@@ -94,7 +93,7 @@ const TODAY_ITEMS_INTL = [
 ];
 
 const WHY_US = [
-  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعات تو ۱۰۰٪ محفوظ می‌مونه" },
+  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعات تو 100٪ محفوظ می‌مونه" },
   { icon: TrendingUp, color: "#A855F7", title: "برنامه‌های شخصی", body: "متناسب با هدف‌ها و سبک زندگی تو" },
   { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "ما کنار توایم، هر زمان که نیاز داری" },
   { icon: Lightbulb, color: "#F59E0B", title: "ابزارهای کاربردی", body: "همه‌چیز برای رشد در یک اپلیکیشن" },
@@ -118,7 +117,7 @@ const WHY_US_INTL = [
 
 type Duration = "1" | "3" | "6" | "12";
 const DURATIONS: Duration[] = ["1", "3", "6", "12"];
-const DURATION_LABELS: Record<Duration, string> = { "1": "۱ ماهه", "3": "۳ ماهه", "6": "۶ ماهه", "12": "۱۲ ماهه" };
+const DURATION_LABELS: Record<Duration, string> = { "1": "1 ماهه", "3": "3 ماهه", "6": "6 ماهه", "12": "12 ماهه" };
 const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3": "3 mo", "6": "6 mo", "12": "12 mo" };
 
 type PlanCard = {
@@ -140,18 +139,18 @@ const PLANS_IRAN: PlanCard[] = [
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
-    prices: { "1": "۹۹,۰۰۰ تومان", "3": "۲۶۰,۰۰۰ تومان", "6": "۵۲۰,۰۰۰ تومان", "12": "۱,۰۳۹,۵۰۰ تومان" },
-    originalPrices: { "3": "۲۹۷,۰۰۰ تومان", "6": "۵۹۴,۰۰۰ تومان", "12": "۱,۱۸۸,۰۰۰ تومان" },
+    prices: { "1": "99,000 تومان", "3": "260,000 تومان", "6": "520,000 تومان", "12": "1,039,500 تومان" },
+    originalPrices: { "3": "297,000 تومان", "6": "594,000 تومان", "12": "1,188,000 تومان" },
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
-    prices: { "1": "۱۲۹,۰۰۰ تومان", "3": "۳۳۹,۰۰۰ تومان", "6": "۶۷۷,۰۰۰ تومان", "12": "۱,۳۵۴,۵۰۰ تومان" },
-    originalPrices: { "3": "۳۸۷,۰۰۰ تومان", "6": "۷۷۴,۰۰۰ تومان", "12": "۱,۵۴۸,۰۰۰ تومان" },
+    prices: { "1": "129,000 تومان", "3": "339,000 تومان", "6": "677,000 تومان", "12": "1,354,500 تومان" },
+    originalPrices: { "3": "387,000 تومان", "6": "774,000 تومان", "12": "1,548,000 تومان" },
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
-    prices: { "1": "۱۹۹,۰۰۰ تومان", "3": "۵۲۲,۰۰۰ تومان", "6": "۱,۰۴۵,۰۰۰ تومان", "12": "۲,۰۸۹,۵۰۰ تومان" },
-    originalPrices: { "3": "۵۹۷,۰۰۰ تومان", "6": "۱,۱۹۴,۰۰۰ تومان", "12": "۲,۳۸۸,۰۰۰ تومان" },
+    prices: { "1": "199,000 تومان", "3": "522,000 تومان", "6": "1,045,000 تومان", "12": "2,089,500 تومان" },
+    originalPrices: { "3": "597,000 تومان", "6": "1,194,000 تومان", "12": "2,388,000 تومان" },
   },
 ];
 
@@ -520,37 +519,30 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
   );
 }
 
+// عمداً ثابته، بدون هیچ اسکرول/چرخشی — نسخه‌ی قبلی یه مارکیِ بی‌پایان بود
+// (useSeamlessMarquee)؛ کاربر خواسته بود این بخش «یه‌جا ثابت وایسه»، پس
+// کارت‌ها با یه گریدِ ساده‌ی چندستونه (بدونِ تکرار/duplicate برای چرخش)
+// نشون داده می‌شن.
 function WhyUsSection({ isIntl }: { isIntl: boolean }) {
   const t = useThemeTokens();
   const items = isIntl ? WHY_US_INTL : WHY_US;
-  // پایه تا حداقل ۱۶ آیتم تکرار می‌شه (حتی روی مانیتورهای خیلی عریض هیچ
-  // فاصله‌ی خالی‌ای وسطِ چرخه دیده نشه)، بعد همون پایه یک‌بار دیگه برای
-  // چرخشِ ۵۰٪ی duplicate می‌شه — لحظه‌ی چرخش کاملاً نامرئیه.
-  // pxPerSecond از ۲۲ به ۶۰ رفت — با سرعتِ قبلی، یک دورِ کاملِ چرخه ~۱۳۷ ثانیه
-  // طول می‌کشید؛ توی بازه‌ی معمولِ نگاه‌کردنِ کاربر به لندینگ (چندثانیه)
-  // عملاً حس می‌شد «چهارتا رد شد و ایستاد»، چون حرکت آنقدر کند بود که تا
-  // چرخیدنِ کامل هیچ‌وقت دیده نمی‌شد. سرعتِ بیشتر یعنی هر کارت ظرفِ چند
-  // ثانیه رد می‌شه و تداومِ بی‌پایانش زودتر حس می‌شه.
-  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 16, pxPerSecond: 34 });
 
   return (
     <div>
       <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{isIntl ? "Why us?" : "چرا ما؟"}</h2>
-      <div className="whyus-viewport mt-4">
-        <div className="whyus-track" ref={trackRef} style={{ animationDuration: `${durationSec}s` }}>
-          {track.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <div key={`${item.title}-${i}`} className={`whyus-card flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
-                <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
-                  <Icon size={18} />
-                </span>
-                <div className={`text-[11px] font-extrabold leading-4 sm:text-[12.5px] ${t.heading}`}>{item.title}</div>
-                <div className={`mt-1 text-[9.5px] leading-[14px] sm:text-[11px] sm:leading-[17px] ${t.muted}`}>{item.body}</div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="whyus-grid mt-4">
+        {items.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <div key={`${item.title}-${i}`} className={`whyus-card flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
+              <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
+                <Icon size={18} />
+              </span>
+              <div className={`text-[11px] font-extrabold leading-4 sm:text-[12.5px] ${t.heading}`}>{item.title}</div>
+              <div className={`mt-1 text-[9.5px] leading-[14px] sm:text-[11px] sm:leading-[17px] ${t.muted}`}>{item.body}</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

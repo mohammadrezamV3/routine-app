@@ -157,7 +157,7 @@
      عوض نمی‌شه). خودِ رنگِ پس‌زمینه از html/body میاد که هردو تم‌آگاه‌ن. */
   body{
     background:var(--bg); color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif;
+    font-family:var(--font-vazir), sans-serif;
     font-weight:400;
     line-height:1.6;
     padding:calc(118px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
@@ -258,7 +258,7 @@
      رو inline به سبز ست می‌کنن (سراسر اپ) به‌طور خودکار پس‌زمینه شیشه‌ای هم
      می‌گیرن، بدون این‌که لازم باشه تک‌تک‌شون رو دستی عوض کنیم. */
   button{
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
+    font-family:var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
     color:var(--text); padding:8px 16px; border-radius:11px;
     border:1px solid rgba(255,255,255,.14);
     background:rgba(255,255,255,.05);
@@ -431,6 +431,14 @@
   .bell-dot{
     position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
+  }
+  /* تعدادِ اطلاعیه‌های نخونده — همون سبکِ بجِ تعدادِ درخواستِ دوستی توی
+     کارتِ دوستان، فقط اینجا روی خودِ زنگوله */
+  .bell-count{
+    position:absolute; top:-4px; right:-4px; min-width:15px; height:15px; padding:0 3px;
+    display:flex; align-items:center; justify-content:center; border-radius:999px;
+    background:var(--accent); color:var(--bg); font-size:9.5px; font-weight:800;
+    box-shadow:0 0 0 2px var(--bg);
   }
 
   /* پنل کوچیکِ اطلاعیه‌ها/پروفایل — زیرِ دکمه‌ی خودش باز می‌شه. قبلاً با
@@ -2178,6 +2186,21 @@ body[data-theme="light"] .auth-box .wsearch-newform-name{
   background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
 }
 
+/* دکمه‌ی تاریخ تولد (jdate-btn) قبلاً از همین override جا مونده بود — هنوز
+   گوشه‌ی کم‌گردِ ۸px و بک‌گراندِ تقریباً توپرِ خودش رو داشت، درحالی‌که همه‌ی
+   فیلدهای دیگه‌ی همین فرم (اسم/یوزرنیم/رمز) پیل‌شکل و شیشه‌ای شدن. */
+.auth-box .jdate-btn{
+  border-radius:999px; padding:9px 18px;
+  backdrop-filter:blur(12px) saturate(160%); -webkit-backdrop-filter:blur(12px) saturate(160%);
+  transition:border-color .2s ease, background .2s ease;
+}
+body:not([data-theme="light"]) .auth-box .jdate-btn{
+  background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+}
+body[data-theme="light"] .auth-box .jdate-btn{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+
 .auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
 
 .auth-remember-row{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:12px; }
@@ -2293,6 +2316,18 @@ body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-fu
 .auth-full-btn:hover{ filter:brightness(1.08); }
 .auth-full-btn:active{ transform:scale(.97); }
 .auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
+
+/* دکمه‌ی «ارسال مجدد کد» — عمداً بدون بک‌گراند/بردر (اکشنِ ثانویه، نه اصلی) */
+.auth-resend-btn{
+  display:block; width:100%; margin-top:12px; padding:4px 0; text-align:center;
+  background:none; border:none; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer;
+  transition:color .15s ease;
+}
+body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-resend-btn{
+  background:none; border:none;
+}
+.auth-resend-btn:hover:not(:disabled){ color:var(--accent); }
+.auth-resend-btn:disabled{ cursor:default; opacity:.6; }
 
 /* جداکننده‌ی «یا» بین ورود معمولی و ورود با گوگل */
 .auth-or-divider{
@@ -2480,40 +2515,24 @@ body[data-theme="light"] .module-gate-cta, body:not([data-theme="light"]) .modul
 body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
   background:var(--accent);
 }
+/* عمداً فقط box-shadow پالس می‌زنه، نه transform:scale — یه اسکیلِ پیوسته
+   روی دکمه‌ی اصلیِ خرید اشتراک باعث می‌شد hit-boxِ واقعیش هر فریم جابه‌جا
+   بشه و روی موبایل تپ‌کردنش نامطمئن/بی‌واکنش به‌نظر برسه. */
 @keyframes mgPulse{
-  0%, 100%{ box-shadow:0 0 0 0 rgba(var(--accent-rgb),.45); transform:scale(1); }
-  50%{ box-shadow:0 0 0 9px rgba(var(--accent-rgb),0); transform:scale(1.035); }
+  0%, 100%{ box-shadow:0 0 0 0 rgba(var(--accent-rgb),.45); }
+  50%{ box-shadow:0 0 0 9px rgba(var(--accent-rgb),0); }
 }
 
 /* بخش «چرا ما؟» — نوارِ بی‌درزِ درحال‌عبور: لیست دوبار پشت‌سرهم چیده شده و
    دقیقاً نصفِ عرضِ ترک translate می‌شه، پس لحظه‌ی چرخش کاملاً نامرئیه.
    عمداً هاور/فوکوس رو نادیده می‌گیره — کاربر نباید هیچ کنترلی روی توقف/تندی
    انیمیشن داشته باشه، همیشه با سرعت ثابت خودش می‌چرخه. */
-.whyus-viewport{
-  overflow:hidden;
-  -webkit-mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-  mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-  /* باگِ شناخته‌شده‌ی سافاری/وب‌کیت: عنصرِ maskدار که بچه‌ش دائم انیمیشنِ
-     transform داره، بعد از یه repaintِ اجباری (مثلاً بعد از اسکرولِ سریع
-     یا جمع‌شدنِ نوارِ آدرس) گاهی کاملاً بدونِ محتوا رندر می‌شه تا یه
-     تعاملِ بعدی دوباره مجبورش کنه ریپینت بشه — همون خانواده‌ی باگِ
-     هدرِ ثابت. راه‌حل یکسانه: با translateZ(0) این عنصر رو روی لایه‌ی
-     ترکیبِ خودش نگه می‌داریم تا وب‌کیت backing storeِ ماسک‌شده رو گم نکنه. */
-  -webkit-transform:translateZ(0); transform:translateZ(0);
-}
-.whyus-track{
-  display:flex; width:max-content; gap:10px;
-  animation:whyusMarquee 38s linear infinite;
-  -webkit-transform:translateZ(0); will-change:transform;
-}
-.whyus-card{ width:130px; flex:0 0 auto; }
+/* عمداً بدونِ اسکرول/چرخش — کاربر خواسته بود این بخش ثابت بمونه، یه گریدِ
+   ساده‌ی دوستونه (سه‌ستونه از sm به بالا) به‌جای مارکیِ قبلی. */
+.whyus-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+.whyus-card{ width:auto; }
 @media (min-width:640px){
-  .whyus-track{ gap:12px; }
-  .whyus-card{ width:158px; }
-}
-@keyframes whyusMarquee{
-  from{ transform:translateX(0); }
-  to{ transform:translateX(-50%); }
+  .whyus-grid{ grid-template-columns:repeat(3, 1fr); gap:12px; }
 }
 
 /* لینکِ «جزئیات» توی کارت پلن‌ها — button ساده‌ای که فقط باید مثل یک متنِ
@@ -2849,6 +2868,10 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:rgba(255,255,255,.03); border-color:var(--line); }
 .manual-timer-unit-picker .day-pill.on{ background:var(--accent-dim); border-color:var(--accent); }
+/* glowِ ::after رادیوسِ پایه (۱۰px) رو داشت، نه ۱۴pxِ خودِ این pill — گوشه‌های
+   شدو از زیرِ گوشه‌ی گردترِ پیل بیرون می‌زد، شبیهِ یه شدوِ چهارگوش پشتِ یه
+   دکمه‌ی گردتر. */
+.manual-timer-unit-picker .day-pill.on::after{ border-radius:14px; }
 
 /* آواتارِ پیش‌فرضِ پروفایل — کامپوننتِ agent-avatar از smoothui (پورتِ
    عینیِ منبع، AgentAvatar.tsx رو ببین): یه <canvas> که خودش گریدِ پیکسلیِ

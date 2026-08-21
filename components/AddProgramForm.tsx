@@ -50,7 +50,7 @@ export function AddProgramForm({
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
   const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
-  const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
+  const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
@@ -59,7 +59,7 @@ export function AddProgramForm({
   const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
-    setRows((r) => [...r, { id: newRowId(), jsDays: [WEEK_ORDER[0].jsDay], start: "", end: "" }]);
+    setRows((r) => [...r, { id: newRowId(), jsDays: [], start: "", end: "" }]);
   }
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));

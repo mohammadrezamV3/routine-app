@@ -7,6 +7,7 @@ import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isValidUsername } from "@/lib/validate";
 import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
 import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
+import { sendPushToUser } from "@/lib/webPush";
 
 // آمارِ روتینِ *همه‌ی* دوست‌ها با تعدادِ ثابتی کوئری.
 //
@@ -168,8 +169,8 @@ export async function GET(req: NextRequest) {
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
     include: {
-      requester: { select: { id: true, name: true, username: true } },
-      addressee: { select: { id: true, name: true, username: true } },
+      requester: { select: { id: true, name: true, username: true, avatarUrl: true } },
+      addressee: { select: { id: true, name: true, username: true, avatarUrl: true } },
     },
   });
 
@@ -195,6 +196,7 @@ export async function GET(req: NextRequest) {
         id: other.id,
         name: other.name || other.username || "کاربر",
         username: other.username,
+        avatarUrl: other.avatarUrl,
         favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
         ...stats,
       };
@@ -251,6 +253,15 @@ export async function POST(req: NextRequest) {
   const friendship = await prisma.friendship.create({
     data: { requesterId: userId, addresseeId: target.id, status: "PENDING" },
   });
+
+  // پوش حتی وقتی اپِ addressee کاملاً بسته‌ست هم می‌رسه — best-effort، اگه
+  // VAPID تنظیم نشده باشه یا سابسکریپشنی نباشه، درخواستِ دوستی خودش هیچ‌وقت
+  // نباید fail کنه.
+  const requesterName = session!.user!.name || "یک کاربر";
+  sendPushToUser(target.id, {
+    title: "درخواست دوستی جدید",
+    body: `${requesterName} می‌خواد باهات دوست بشه.`,
+  }).catch(() => {});
 
   return NextResponse.json({ ok: true, friendshipId: friendship.id });
 }

@@ -17,7 +17,8 @@ type FieldErrors = { phone?: string; name?: string; username?: string; birthDate
 
 export default function SignupPage() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  // ۱: شماره موبایل · ۲: کد تاییدِ پیامکی · ۳: بقیه‌ی اطلاعات + رمز
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
@@ -26,6 +27,11 @@ export default function SignupPage() {
   const [dobOpen, setDobOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
+
+  const [otpCode, setOtpCode] = useState("");
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +59,39 @@ export default function SignupPage() {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
   }
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  async function requestOtp() {
+    setLoading(true);
+    setOtpError(null);
+    try {
+      const res = await fetch("/api/auth/signup/otp/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) {
+        setFieldErrors({ phone: data.error || "خطایی پیش آمد" });
+        shakeFields([phoneRef.current]);
+        return false;
+      }
+      setOtpCode("");
+      setResendCooldown(60);
+      setStep(2);
+      return true;
+    } catch {
+      setLoading(false);
+      setFieldErrors({ phone: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+      return false;
+    }
+  }
+
   function goNext() {
     if (!phone.trim()) {
       setFieldErrors({ phone: "شماره همراه را وارد کن" });
@@ -65,7 +104,28 @@ export default function SignupPage() {
       return;
     }
     setFieldErrors({});
-    setStep(2);
+    requestOtp();
+  }
+
+  async function verifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!otpCode.trim()) { setOtpError("کد ارسال‌شده را وارد کن"); return; }
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const res = await fetch("/api/auth/signup/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim(), code: otpCode.trim() }),
+      });
+      const data = await res.json();
+      setOtpLoading(false);
+      if (!res.ok) { setOtpError(data.error || "خطایی پیش آمد"); return; }
+      setStep(3);
+    } catch {
+      setOtpLoading(false);
+      setOtpError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+    }
   }
 
   async function validateStep2(): Promise<boolean> {
@@ -157,18 +217,51 @@ export default function SignupPage() {
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); goNext(); } }}
                 />
               </AuthField>
-              <button type="button" className="auth-full-btn" onClick={goNext}>ادامه</button>
+              <button type="button" className="auth-full-btn" onClick={goNext} disabled={loading}>
+                {loading ? "در حال ارسال کد…" : "ادامه"}
+              </button>
             </div>
           </div>
+        ) : step === 2 ? (
+          <form onSubmit={verifyOtp} className="auth-box">
+            <AuthBackButton />
+            <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => { setStep(1); setOtpError(null); }}>
+              <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <AuthBrandMark subtitle="به آریون خوش اومدی!" />
+            <div className="auth-step" key="step2">
+              <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
+                کدی که به {phone.trim()} پیامک شد رو وارد کن.
+              </div>
+              <AuthField id="signupOtp" label="کد ۵ رقمی">
+                <input
+                  id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr"
+                  onChange={(e) => { setOtpCode(e.target.value); if (e.target.value.trim()) setOtpError(null); }}
+                />
+              </AuthField>
+              {otpError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{otpError}</div>}
+              <button type="submit" className="auth-full-btn" disabled={otpLoading}>
+                {otpLoading ? "در حال بررسی…" : "تایید کد"}
+              </button>
+              <button
+                type="button"
+                className="auth-resend-btn"
+                disabled={resendCooldown > 0 || loading}
+                onClick={requestOtp}
+              >
+                {resendCooldown > 0 ? `ارسال مجدد کد (${resendCooldown})` : "ارسال مجدد کد"}
+              </button>
+            </div>
+          </form>
         ) : (
           <form ref={formRef} onSubmit={submit} className="auth-box">
             <AuthBackButton />
-            <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => setStep(1)}>
+            <button type="button" className="auth-step-back-btn" aria-label="گام قبل" onClick={() => setStep(2)}>
               <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
             <AuthBrandMark subtitle="به آریون خوش اومدی!" />
 
-            <div className="auth-step" key="step2">
+            <div className="auth-step" key="step3">
               <AuthField id="name" label="نام و نام خانوادگی" error={fieldErrors.name} ref={nameRef}>
                 <input
                   id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی محمدی"
