@@ -135,13 +135,8 @@ export function NavDrawer() {
   // برای نشونِ قفلِ آیتم‌های پولیِ منو — null یعنی «هنوز معلوم نیست»
   // (چیزی رندر نمی‌کنیم تا از فلشِ اشتباه جلوگیری بشه).
   const [activeModules, setActiveModules] = useState<Set<string> | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  // پاپ‌آپِ پروفایل دیگه مستقیم «خروج از حساب» رو نشون نمی‌ده — اول یوزرنیم
-  // میاد، فقط با کلیکِ دوم (روی همون ردیف) گزینه‌ی خروج ظاهر می‌شه؛ این‌جوری
-  // یه تپِ اشتباه نمی‌تونه کسی رو ناخواسته خارج کنه.
-  const [logoutRevealed, setLogoutRevealed] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
@@ -185,7 +180,6 @@ export function NavDrawer() {
       if (next) {
         setOpen(false);
         setNotifPanelOpen(false);
-        setLogoutRevealed(false);
         const r = profileBtnRef.current?.getBoundingClientRect();
         if (r) setProfileAnchor({ top: r.bottom + 12, right: window.innerWidth - r.right });
       }
@@ -276,7 +270,6 @@ export function NavDrawer() {
       .then((data) => {
         if (cancelled) return;
         setActiveModules(activeModulesOf(data));
-        setUsername(data?.user?.username ?? null);
       })
       .catch(() => { if (!cancelled) setActiveModules(new Set()); });
     return () => { cancelled = true; };
@@ -368,24 +361,14 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.subscription}</span>
                           <span>اشتراک</span>
                         </div>
-                        {!logoutRevealed ? (
-                          <div
-                            className="notif-panel-item profile-menu-item"
-                            onClick={() => setLogoutRevealed(true)}
-                          >
-                            <span className="nav-link-icon-svg">{ICONS.account}</span>
-                            <span dir="ltr" className="mono">{username ? `@${username}` : "کاربر"}</span>
-                          </div>
-                        ) : (
-                          <div
-                            className="notif-panel-item profile-menu-item"
-                            style={{ color: "#E05252" }}
-                            onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }}
-                          >
-                            <span className="nav-link-icon-svg">{ICONS.logout}</span>
-                            <span>خروج از حساب</span>
-                          </div>
-                        )}
+                        <div
+                          className="notif-panel-item profile-menu-item"
+                          style={{ color: "#E05252" }}
+                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }}
+                        >
+                          <span className="nav-link-icon-svg">{ICONS.logout}</span>
+                          <span>خروج از حساب</span>
+                        </div>
                       </div>
                     </div>,
                     document.body

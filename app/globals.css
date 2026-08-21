@@ -891,14 +891,6 @@
     from{ opacity:0; transform:translate(-50%, calc(-50% + 26px)) scale(.96); }
     to{ opacity:1; transform:translate(-50%,-50%) scale(1); }
   }
-  /* پنلِ کاربری روی موبایل خیلی بزرگ بود (همون ۸۸٪/۷۸dvhِ عمومیِ
-     .modal-panel که برای مودال‌های محتوادار مثل ویزاردها مناسبه، نه یه
-     پنلِ ساده‌ی اطلاعاتِ حساب) — این‌جا مستقلاً جمع‌وجورترش می‌کنیم بدونِ
-     دست‌زدن به بقیه‌ی مودال‌های سایت که از همون کلاسِ پایه استفاده می‌کنن. */
-  @media (max-width:480px){
-    .account-modal-panel{ width:68%; max-width:250px; max-height:48vh; max-height:48dvh; padding:12px; }
-    .account-modal-panel .account-avatar-wrap{ width:52px; height:52px; }
-  }
   .modal-panel.open{
     opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);
     animation:modalPopIn .38s cubic-bezier(.22,1,.36,1) both;
