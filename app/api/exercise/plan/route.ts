@@ -76,9 +76,12 @@ export async function POST(req: NextRequest) {
     }
     planData = result.days;
     generatedByAi = true;
-  } catch {
+  } catch (err) {
     // بدون کلید API یا خطای موقت سرویس — به قالب ایستای از‌پیش‌طراحی‌شده برمی‌گردیم،
-    // نه اینکه کل onboarding رو خراب کنیم
+    // نه اینکه کل onboarding رو خراب کنیم. ولی خطای واقعی رو لاگ می‌کنیم چون
+    // قبلاً اینجا کاملاً بی‌صدا قورت داده می‌شد — روی سرورِ واقعی هیچ‌جوره
+    // نمی‌شد فهمید مشکل env نتنظیم‌شده‌ست یا خطای شبکه یا چیزِ دیگه.
+    console.error("[exercise/plan] AI generation failed, falling back to static template:", err);
     planData = getExercisePlan(GOAL_FALLBACK_MAP[goal], level, !!hasPhysicalLimitation, uniqueDays);
   }
 
