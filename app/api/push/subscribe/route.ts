@@ -26,11 +26,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "اطلاعاتِ سابسکریپشن ناقص است" }, { status: 400 });
   }
 
-  await prisma.pushSubscription.upsert({
-    where: { endpoint },
-    create: { userId, endpoint, p256dh, auth },
-    update: { userId, p256dh, auth },
-  });
+  // این روت در production ۵۰۰ می‌داد و چون خطا هندل نمی‌شد، هیچ سرنخی هم
+  // از خودش به جا نمی‌ذاشت. دو تا کارِ جدا این‌جا انجام می‌شه:
+  //
+  //  ۱) upsertِ Prisma اتمیک نیست: بینِ SELECT و INSERTش یه پنجره هست. اگه
+  //     دو تب/دستگاه هم‌زمان همون endpoint رو بفرستن (subscribeToPush از دو
+  //     جای NavDrawer صدا زده می‌شه)، یکی INSERT می‌کنه و اون یکی به یونیک
+  //     می‌خوره → P2002. اون حالت اصلاً خطا نیست: یعنی رکورد همین الان
+  //     ساخته شد، پس فقط آپدیتش می‌کنیم.
+  //  ۲) هر خطای دیگه‌ای با علتِ واقعی لاگ می‌شه و به‌جای ۵۰۰ِ مبهم، ۵۰۳ با
+  //     پیامِ روشن برمی‌گرده — تا دفعه‌ی بعد قابلِ تشخیص باشه.
+  try {
+    await prisma.pushSubscription.upsert({
+      where: { endpoint },
+      create: { userId, endpoint, p256dh, auth },
+      update: { userId, p256dh, auth },
+    });
+  } catch (err: any) {
+    if (err?.code === "P2002") {
+      try {
+        await prisma.pushSubscription.update({ where: { endpoint }, data: { userId, p256dh, auth } });
+        return NextResponse.json({ ok: true });
+      } catch (retryErr: any) {
+        console.error(`[push/subscribe] retry after P2002 failed: ${retryErr?.code || ""} ${retryErr?.message || retryErr}`);
+        return NextResponse.json({ error: "ثبتِ نوتیفیکیشن ناموفق بود" }, { status: 503 });
+      }
+    }
+    console.error(`[push/subscribe] ${err?.code || ""} ${err?.message || err}`);
+    return NextResponse.json({ error: "ثبتِ نوتیفیکیشن ناموفق بود" }, { status: 503 });
+  }
 
   return NextResponse.json({ ok: true });
 }

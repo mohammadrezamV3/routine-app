@@ -4,7 +4,8 @@
 // داده از کجا میاد — همون قراردادی که از اول قرار بود برقرار بمونه.
 
 import { getSession } from "next-auth/react";
-import { takePreloaded, takePreloadedRange } from "./preload";
+import { takePreloaded, getPreloadedBootstrap, clearPreloadedBootstrap } from "./preload";
+import { BOOTSTRAP_SETTING_KEYS } from "./userSettingKeys";
 
 const PREFIX = "panelMohammad:";
 
@@ -157,6 +158,7 @@ export function invalidateStorageCache() {
   getCache.clear();
   inFlightGets.clear();
   clearRangeCache();
+  clearPreloadedBootstrap();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -186,9 +188,14 @@ let preloadedRangeAdopted = false;
 function adoptPreloadedRange() {
   if (preloadedRangeAdopted) return;
   preloadedRangeAdopted = true;
-  const pre = takePreloadedRange();
+  const pre = getPreloadedBootstrap();
   if (!pre) return;
-  const entry: RangeEntry = { from: pre.from, to: pre.to, at: Date.now(), data: pre.data as Promise<Record<string, DailyRecord> | null> };
+  const entry: RangeEntry = {
+    from: pre.from,
+    to: pre.to,
+    at: Date.now(),
+    data: pre.data.then((b) => (b?.dailyRange ? (b.dailyRange.entries as Record<string, DailyRecord>) : null)),
+  };
   entry.data.then((d) => { if (d === null) rangeEntries = rangeEntries.filter((e) => e !== entry); });
   rangeEntries.push(entry);
 }
@@ -228,6 +235,13 @@ function fetchRange(from: string, to: string): RangeEntry {
 
 function clearRangeCache() {
   rangeEntries = [];
+}
+
+/** یک کلید رو از پاسخِ bootstrap حذف می‌کنه تا دیگه از اون‌جا خونده نشه */
+function forgetBootstrapSetting(key: string) {
+  const boot = getPreloadedBootstrap();
+  if (!boot) return;
+  boot.data.then((payload) => { if (payload) delete payload.settings[key]; }).catch(() => {});
 }
 
 function settingsUrl(key: string) {
@@ -334,6 +348,19 @@ export async function getDailyRange(fromIso: string, toIso: string): Promise<Rec
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   if (await isLoggedIn()) {
+    // اگه bootstrap این کلید رو آورده، همون کافیه — یه درخواستِ جدا برای
+    // کلیدی که از قبل در پاسخِ واحد اومده فقط یه رفت‌وبرگشتِ اضافه‌ست.
+    // bootstrap یه لیستِ *مشخص* از کلیدها رو می‌خونه، پس برای همون‌ها پاسخش
+    // مرجعِ کامله: نبودنِ کلید یعنی «مقداری ذخیره نشده»، نه «پرسیده نشده».
+    // (اولش با hasOwnProperty چک می‌شد و همین باعث می‌شد کلیدی که کاربر
+    // هیچ‌وقت مقداری براش ذخیره نکرده، بی‌خود یه درخواستِ جدا بزنه.)
+    if ((BOOTSTRAP_SETTING_KEYS as readonly string[]).includes(key)) {
+      const boot = getPreloadedBootstrap();
+      if (boot) {
+        const payload = await boot.data;
+        if (payload) return ((payload.settings[key] ?? fallback) as T);
+      }
+    }
     return cachedGet<T>(settingsUrl(key), (json) => (json?.value ?? fallback) as T, fallback);
   }
   if (typeof window === "undefined" || !hasLocalStorage()) return fallback;
@@ -354,6 +381,9 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
         body: JSON.stringify({ value }),
       });
       primeCache(settingsUrl(key), { value });
+      // پاسخِ bootstrap مقدارِ قدیمیِ همین کلید رو داره؛ بعدِ نوشتن دیگه
+      // نباید مرجع باشه، وگرنه خواندنِ بعدی مقدارِ بیات می‌گیره.
+      forgetBootstrapSetting(key);
     } catch {}
     return;
   }

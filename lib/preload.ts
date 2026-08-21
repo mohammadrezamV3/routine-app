@@ -22,15 +22,6 @@
 
 export const AUTH_HINT_COOKIE = "arion-auth";
 
-/** کلیدهایی که هر صفحه‌ی داخلِ اپ تقریباً همیشه لازمشون داره */
-const PRELOAD_SETTING_KEYS = [
-  "customOccurrences",
-  "removedOccurrences",
-  "wakeSleepTimes",
-  "theme",
-  "dashboardPrefs",
-];
-
 // `/api/account` و `/api/account/avatar` هردو از NavDrawer صدا زده می‌شن که
 // توی layoutه — یعنی روی *هر* صفحه لازم‌ن، پس پیش‌درخواستشون هیچ‌وقت هدر
 // نمی‌ره. (`/api/friends*` عمداً این‌جا نیست: فقط داشبوردهای روتین/ورزش/کالری
@@ -44,7 +35,7 @@ const PRELOAD_SETTING_KEYS = [
 const PRELOAD_RANGE_BACK_DAYS = 90;
 const PRELOAD_RANGE_FWD_DAYS = 7;
 
-export const PRELOAD_RANGE_KEY = "__dailyRange";
+export const PRELOAD_BOOTSTRAP_KEY = "__bootstrap";
 
 // درخواست‌هایی که فقط روی یک مسیرِ خاص لازم‌ن. اسکریپت با location.pathname
 // تصمیم می‌گیره، پس روی بقیه‌ی صفحه‌ها هیچ درخواستِ الکی‌ای نمی‌ره.
@@ -77,14 +68,12 @@ export const PRELOAD_SCRIPT = `(function(){try{
 if(document.cookie.indexOf("${AUTH_HINT_COOKIE}=1")===-1)return;
 var p=window.__arionPreload={};
 var g=function(u){return fetch(u,{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).catch(function(){return null})};
-${JSON.stringify(PRELOAD_SETTING_KEYS)}.forEach(function(k){var u="/api/settings/"+k;p[u]=g(u)});
-p["/api/account"]=g("/api/account");
-p["/api/account/avatar"]=g("/api/account/avatar");
 var iso=function(d){var m=d.getMonth()+1,y=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(y<10?"0":"")+y};
 var n=new Date(),a=new Date(n),b=new Date(n);
 a.setDate(a.getDate()-${PRELOAD_RANGE_BACK_DAYS});b.setDate(b.getDate()+${PRELOAD_RANGE_FWD_DAYS});
 var from=iso(a),to=iso(b);
-p["${PRELOAD_RANGE_KEY}"]={from:from,to:to,data:g("/api/tasks/daily/range?from="+from+"&to="+to).then(function(j){return j?(j.entries||{}):null})};
+var boot=g("/api/bootstrap?from="+from+"&to="+to);
+p["${PRELOAD_BOOTSTRAP_KEY}"]={from:from,to:to,data:boot};
 var path=location.pathname;
 ${JSON.stringify(ROUTE_PRELOADS)}.forEach(function(r){
 if(path.indexOf(r.prefix)===0)r.urls.forEach(function(u){p[u]=g(u)});
@@ -106,15 +95,30 @@ export function takePreloaded(url: string): Promise<any> | null {
   return hit;
 }
 
-/** بازه‌ی پهنِ پیش‌درخواست‌شده — یک‌بارمصرف، مثلِ بالا */
-export function takePreloadedRange(): { from: string; to: string; data: Promise<Record<string, any> | null> } | null {
+export type BootstrapPayload = {
+  settings: Record<string, unknown>;
+  account: { user: Record<string, any> } | null;
+  avatarUrl: string | null;
+  dailyRange: { from: string; to: string; entries: Record<string, any> } | null;
+};
+
+/**
+ * پاسخِ bootstrap — برخلافِ takePreloaded یک‌بارمصرف *نیست*: چند مصرف‌کننده‌ی
+ * مستقل (تنظیمات، حساب، آواتار، بازه‌ی روزانه) همگی از همین یک پاسخ تغذیه
+ * می‌شن، پس promise باید برای همه‌شون بمونه.
+ */
+export function getPreloadedBootstrap(): { from: string; to: string; data: Promise<BootstrapPayload | null> } | null {
   if (typeof window === "undefined") return null;
   const store = (window as any).__arionPreload as Record<string, any> | undefined;
-  if (!store) return null;
-  const hit = store[PRELOAD_RANGE_KEY];
-  if (!hit || typeof hit.from !== "string") return null;
-  delete store[PRELOAD_RANGE_KEY];
-  return hit;
+  const hit = store?.[PRELOAD_BOOTSTRAP_KEY];
+  return hit && typeof hit.from === "string" ? hit : null;
+}
+
+/** بعد از ورود/خروج، پاسخِ bootstrapِ کاربرِ قبلی نباید باقی بمونه */
+export function clearPreloadedBootstrap() {
+  if (typeof window === "undefined") return;
+  const store = (window as any).__arionPreload as Record<string, any> | undefined;
+  if (store) delete store[PRELOAD_BOOTSTRAP_KEY];
 }
 
 /** بعد از ورود صدا زده می‌شه تا لودِ بعدی بتونه پیش‌درخواست بزنه */

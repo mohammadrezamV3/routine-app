@@ -19,23 +19,37 @@ import { sendPushToUser } from "@/lib/webPush";
 type RoutineStats = { completed: number; total: number; pct: number; streak: number };
 
 const STREAK_LOOKBACK_DAYS = 90;
+// پنجره‌ی اولِ استریک. استریک به محضِ اولین روزِ ناقص می‌شکنه، پس تقریباً
+// همیشه فقط چند روزِ آخر خونده می‌شه — ولی کدِ قبلی بی‌قیدوشرط هر ۹۰ روزِ
+// *همه‌ی* دوست‌ها رو از قبل می‌کشید.
+//
+// اندازه‌گیری‌شده: یک درخواستِ /api/friends با ۱۰ دوست، ۹۰۰ ردیفِ DailyEntry
+// (با کلِ JSONِ completedItems) می‌خوند تا یه پاسخِ ۲ کیلوبایتی بسازه — و
+// همین باعث شده بود این روت ۹ برابر کندتر از بقیه باشه (۵۸ در برابر ۵۱۷
+// req/s). حالا اول ۲۱ روز خونده می‌شه؛ فقط برای دوستی که استریکش به لبه‌ی
+// همون پنجره رسید (یعنی واقعاً استریکِ بلندی داره) بقیه‌اش هم گرفته می‌شه.
+const STREAK_FIRST_WINDOW_DAYS = 21;
 
 async function routineStatsForUsers(userIds: string[]): Promise<Map<string, RoutineStats>> {
   const out = new Map<string, RoutineStats>();
   if (!userIds.length) return out;
 
   const now = new Date();
-  const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() - 1);
-  const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - STREAK_LOOKBACK_DAYS);
   const todayIso = isoLocal(now);
+  const dayStart = (backDays: number) => {
+    const d = new Date(now); d.setDate(d.getDate() - backDays); return new Date(isoLocal(d));
+  };
 
   const [settingRows, dailyRows] = await Promise.all([
     prisma.userSetting.findMany({
       where: { userId: { in: userIds }, key: { in: ["customOccurrences", "removedOccurrences", "wakeSleepTimes"] } },
+      select: { userId: true, key: true, value: true },
     }),
-    // هم ۹۰ روزِ استریک هم رکوردِ امروز از همین یک کوئری در میان
+    // فقط پنجره‌ی اول — و فقط ستون‌هایی که واقعاً لازمن (id و createdAt و…
+    // هیچ‌وقت استفاده نمی‌شدن ولی از دیتابیس میومدن و سریالایز می‌شدن)
     prisma.dailyEntry.findMany({
-      where: { userId: { in: userIds }, date: { gte: new Date(isoLocal(rangeStart)), lte: new Date(todayIso) } },
+      where: { userId: { in: userIds }, date: { gte: dayStart(STREAK_FIRST_WINDOW_DAYS), lte: new Date(todayIso) } },
+      select: { userId: true, date: true, completedItems: true, wakeUpAt: true },
     }),
   ]);
 
@@ -45,7 +59,8 @@ async function routineStatsForUsers(userIds: string[]): Promise<Map<string, Rout
     settingsByUser.get(r.userId)!.set(r.key, r.value);
   }
 
-  const dailyByUser = new Map<string, Record<string, { tasks: Record<string, boolean>; wake: string | null }>>();
+  const needDeeper: { userId: string; opts: ScheduleOpts; wakeMinutes: number }[] = [];
+  const dailyByUser = new Map<string, DailyMap>();
   for (const r of dailyRows) {
     if (!dailyByUser.has(r.userId)) dailyByUser.set(r.userId, {});
     dailyByUser.get(r.userId)![isoLocal(r.date)] = {
@@ -68,24 +83,67 @@ async function routineStatsForUsers(userIds: string[]): Promise<Map<string, Rout
     const wakeVal = settings.get("wakeSleepTimes") as { wake?: string } | undefined;
     const wakeMinutes = timeToMinutes(wakeVal?.wake || DEFAULT_WAKE);
 
-    let streak = 0;
-    const cursor = new Date(now);
-    cursor.setDate(cursor.getDate() - 1);
-    for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
-      const key = isoLocal(cursor);
-      const expected = tasksForDate(new Date(cursor), opts);
-      if (expected.length === 0) { cursor.setDate(cursor.getDate() - 1); continue; }
-      const rec = entries[key];
-      if (!rec) break;
-      const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-      const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
-      if (doneCount === expected.length && wakeOK) { streak++; cursor.setDate(cursor.getDate() - 1); } else break;
-    }
-
+    const { streak, hitEdge } = countStreak(entries, opts, wakeMinutes, STREAK_FIRST_WINDOW_DAYS);
     out.set(userId, { ...dayStats, streak });
+    // استریکش تا ته پنجره ادامه داشت؟ پس باید عمیق‌تر نگاه کنیم.
+    if (hitEdge) needDeeper.push({ userId, opts, wakeMinutes });
+  }
+
+  // مرحله‌ی دوم — در عمل تقریباً همیشه خالیه، چون استریکِ ۲۱ روزِ کامل نادره.
+  if (needDeeper.length) {
+    const deepRows = await prisma.dailyEntry.findMany({
+      where: {
+        userId: { in: needDeeper.map((d) => d.userId) },
+        date: { gte: dayStart(STREAK_LOOKBACK_DAYS), lte: new Date(todayIso) },
+      },
+      select: { userId: true, date: true, completedItems: true, wakeUpAt: true },
+    });
+    const deepByUser = new Map<string, DailyMap>();
+    for (const r of deepRows) {
+      if (!deepByUser.has(r.userId)) deepByUser.set(r.userId, {});
+      deepByUser.get(r.userId)![isoLocal(r.date)] = {
+        tasks: (r.completedItems as Record<string, boolean>) ?? {},
+        wake: r.wakeUpAt ? r.wakeUpAt.toISOString() : null,
+      };
+    }
+    for (const d of needDeeper) {
+      const { streak } = countStreak(deepByUser.get(d.userId) ?? {}, d.opts, d.wakeMinutes, STREAK_LOOKBACK_DAYS);
+      const prev = out.get(d.userId);
+      if (prev) out.set(d.userId, { ...prev, streak });
+    }
   }
 
   return out;
+}
+
+type DailyMap = Record<string, { tasks: Record<string, boolean>; wake: string | null }>;
+
+/**
+ * روزهای کاملِ پشتِ‌سرهم از دیروز به عقب. `hitEdge` یعنی شمارش تا انتهای
+ * پنجره ادامه داشت — یعنی ممکنه استریکِ واقعی از این هم بلندتر باشه و باید
+ * با پنجره‌ی بزرگ‌تر دوباره حساب بشه.
+ */
+function countStreak(
+  entries: DailyMap,
+  opts: ScheduleOpts,
+  wakeMinutes: number,
+  windowDays: number
+): { streak: number; hitEdge: boolean } {
+  let streak = 0;
+  const cursor = new Date();
+  cursor.setDate(cursor.getDate() - 1);
+  for (let i = 0; i < windowDays; i++) {
+    const key = isoLocal(cursor);
+    const expected = tasksForDate(new Date(cursor), opts);
+    if (expected.length === 0) { cursor.setDate(cursor.getDate() - 1); continue; }
+    const rec = entries[key];
+    if (!rec) return { streak, hitEdge: false };
+    const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
+    const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
+    if (doneCount === expected.length && wakeOK) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    else return { streak, hitEdge: false };
+  }
+  return { streak, hitEdge: true };
 }
 
 // پیشرفتِ «بدنسازی»ِ یک دوست — بر خلافِ statsForUser (که روزانه‌ست، چون
