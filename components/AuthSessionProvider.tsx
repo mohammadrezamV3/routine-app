@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import { publishSessionState } from "@/lib/storage";
 import { setAuthHintCookie, clearAuthHintCookie } from "@/lib/preload";
 
@@ -40,9 +41,19 @@ function SessionBridge() {
   return null;
 }
 
-export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
+// `session` از سرور می‌آید (layout با getServerSession می‌خواندش). وقتی
+// SessionProvider سشن را از قبل داشته باشد دیگر `/api/auth/session` را صدا
+// نمی‌زند — یک رفت‌وبرگشتِ کاملِ شبکه در هر لودِ صفحه کمتر. اگر داده نشود
+// (مهمان، یا خطای سرور) رفتار قبلی برقرار است و خودش می‌رود می‌گیرد.
+export function AuthSessionProvider({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session?: Session | null;
+}) {
   return (
-    <SessionProvider refetchOnWindowFocus={false}>
+    <SessionProvider session={session ?? undefined} refetchOnWindowFocus={false}>
       <SessionBridge />
       {children}
     </SessionProvider>
