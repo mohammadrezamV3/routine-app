@@ -25,12 +25,9 @@ export async function GET(req: NextRequest) {
   const users = await prisma.user.findMany({
     where: {
       id: { not: userId },
-      OR: [
-        { username: { contains: q, mode: "insensitive" } },
-        { name: { contains: q, mode: "insensitive" } },
-      ],
+      username: { contains: q, mode: "insensitive" },
     },
-    select: { id: true, name: true, username: true },
+    select: { id: true, name: true, username: true, avatarUrl: true },
     take: 12,
   });
   if (!users.length) return NextResponse.json({ users: [] });

@@ -2,27 +2,34 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, Plus, Star, Trash2 } from "lucide-react";
+import { Check, ChevronRight, Plus, Star, Trash2, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
-import { avatarColorFor } from "@/lib/avatarColor";
+import { AgentAvatar } from "./AgentAvatar";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { useSession } from "next-auth/react";
 
-type Friend = { friendshipId: string; id: string; name: string; username: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
+type Friend = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
-type SearchUser = { id: string; name: string; username: string | null; status: SearchStatus };
+type SearchUser = { id: string; name: string; username: string | null; avatarUrl: string | null; status: SearchStatus };
+type FriendRequest = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null };
 
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  return (
-    <span
-      className="flex shrink-0 items-center justify-center rounded-full font-bold text-white"
-      style={{ backgroundColor: avatarColorFor(name), width: size, height: size, fontSize: size * 0.34 }}
-    >
-      {name.trim().charAt(0) || "؟"}
-    </span>
-  );
+// اگه دوست عکسِ پروفایلِ واقعی انتخاب نکرده باشه، دقیقاً همون آواتارِ
+// پیکسلیِ پیش‌فرضِ خودِ کاربر (AgentAvatar) نشون داده می‌شه — نه یه چیزِ
+// دیگه مثلِ حرفِ اول با رنگِ تصادفی — تا با بقیه‌ی اپ یکدست بمونه.
+function Avatar({ name, avatarUrl, size = 40 }: { name: string; avatarUrl: string | null; size?: number }) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt=""
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return <AgentAvatar seed={name || "؟"} size={size} className="shrink-0" />;
 }
 
 const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
@@ -32,12 +39,13 @@ const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
 };
 
 // کارتِ «دوستان» — واقعاً به /api/friends وصله. جستجوی زنده (بدون دکمه‌ی
-// ارسالِ جدا) برای افزودنِ دوستِ جدید؛ درخواست‌های واردشده دیگه این‌جا
-// قبول/رد نمی‌شن — از بخشِ اطلاعیه‌ها (زنگوله‌ی هدر) مدیریت می‌شن.
+// ارسالِ جدا) برای افزودنِ دوستِ جدید؛ درخواست‌های واردشده هم دیگه توی
+// اطلاعیه‌ها/یادآوری‌ها نیستن، همین‌جا (پاپ‌آپِ دوستان) قابلِ قبول/ردن.
 export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
   const { status } = useSession();
   const [friends, setFriends] = useState<Friend[] | null>(null);
-  const [requestCount, setRequestCount] = useState(0);
+  const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [addMode, setAddMode] = useState(false);
@@ -55,10 +63,18 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
     if (res.ok) setFriends((await res.json()).friends);
     else setFriends([]);
   }
-  async function loadRequestCount() {
+  async function loadRequests() {
     const res = await fetch("/api/friends/requests");
     if (res.status === 401) return;
-    if (res.ok) setRequestCount((await res.json()).requests.length);
+    if (res.ok) setRequests((await res.json()).requests);
+  }
+
+  async function respondRequest(friendshipId: string, accept: boolean) {
+    setRespondingTo(friendshipId);
+    await fetch(`/api/friends/${friendshipId}`, { method: accept ? "PATCH" : "DELETE" });
+    setRequests((prev) => prev.filter((r) => r.friendshipId !== friendshipId));
+    setRespondingTo(null);
+    if (accept) loadFriends();
   }
 
   // برای مهمون اصلاً درخواست نمی‌ره: هردو روت ۴۰۱ می‌دادن و کارت هم
@@ -69,7 +85,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
     if (status === "loading") return;
     if (status !== "authenticated") { setAuthRequired(true); return; }
     loadFriends();
-    loadRequestCount();
+    loadRequests();
   }, [status]);
 
   useEffect(() => {
@@ -130,9 +146,9 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
       <div className="flex items-center justify-between">
         <h2 className="flex items-center text-[13px] font-bold text-dash-text sm:text-[15px]">
           دوستان
-          {requestCount > 0 && (
+          {requests.length > 0 && (
             <span className="mr-1.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-dash-green px-1 text-[9px] font-bold text-dash-bg sm:h-4 sm:min-w-4 sm:text-[10px]">
-              {requestCount}
+              {requests.length}
             </span>
           )}
         </h2>
@@ -162,9 +178,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         ) : (
           list.map((f) => (
             <div key={f.friendshipId} className="flex items-center justify-between gap-3">
-              <span className="sm:hidden"><DashProgressCircle value={f.pct} size={34} strokeWidth={3.5} /></span>
-              <span className="hidden sm:inline-block"><DashProgressCircle value={f.pct} size={40} strokeWidth={4} /></span>
-              <div className="flex flex-1 items-center justify-end gap-2.5">
+              <div className="flex flex-1 items-center justify-start gap-2.5">
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <div className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
@@ -174,9 +188,11 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                     {f.completed} از {f.total} {unitLabel}
                   </div>
                 </div>
-                <span className="sm:hidden"><Avatar name={f.name} size={32} /></span>
-                <span className="hidden sm:inline-flex"><Avatar name={f.name} size={36} /></span>
+                <span className="sm:hidden"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} /></span>
+                <span className="hidden sm:inline-flex"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={36} /></span>
               </div>
+              <span className="sm:hidden"><DashProgressCircle value={f.pct} size={34} strokeWidth={3.5} /></span>
+              <span className="hidden sm:inline-block"><DashProgressCircle value={f.pct} size={40} strokeWidth={4} /></span>
             </div>
           ))
         )}
@@ -211,7 +227,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                       type="text"
                       dir="rtl"
                       className="wsearch-newform-name trade-glass-field pill-glass-field"
-                      placeholder="جستجو با یوزرنیم یا اسم…"
+                      placeholder="جستجو با یوزرنیم…"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       style={{ textAlign: "right" }}
@@ -238,7 +254,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                                 </span>
                                 <div className="flex items-center gap-2.5">
                                   <div className="text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
-                                  <Avatar name={u.name} size={32} />
+                                  <Avatar name={u.name} avatarUrl={u.avatarUrl} size={32} />
                                 </div>
                               </div>
                             );
@@ -246,6 +262,42 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {!authRequired && !addMode && requests.length > 0 && (
+                  <div className="tm-extra" style={{ marginBottom: 14 }}>
+                    <div className="domain-sub" style={{ color: "var(--accent)" }}>درخواست‌های دوستی</div>
+                    <div className="flex flex-col gap-2" style={{ marginTop: 8 }}>
+                      {requests.map((r) => (
+                        <div key={r.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="text-right text-[13px] font-semibold text-dash-text">{r.name}</div>
+                            <Avatar name={r.name} avatarUrl={r.avatarUrl} size={32} />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => respondRequest(r.friendshipId, false)}
+                              disabled={respondingTo === r.friendshipId}
+                              aria-label="رد کردن"
+                              className="flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-[#E05252] transition hover:brightness-110 disabled:opacity-40"
+                            >
+                              <X size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => respondRequest(r.friendshipId, true)}
+                              disabled={respondingTo === r.friendshipId}
+                              aria-label="قبول کردن"
+                              className="flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-dash-green transition hover:brightness-110 disabled:opacity-40"
+                            >
+                              <Check size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -265,6 +317,10 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                         {list.map((f) => (
                           <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
                             <div className="flex items-center gap-2.5">
+                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
+                              <Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} />
+                            </div>
+                            <div className="flex items-center gap-2.5">
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteFriend(f)}
@@ -283,10 +339,6 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                               </button>
                               <span className="mono text-[12px] text-dash-muted">{f.pct}٪</span>
                               <StreakFlame streak={f.streak} className="text-[11px]" />
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
-                              <Avatar name={f.name} size={32} />
                             </div>
                           </div>
                         ))}

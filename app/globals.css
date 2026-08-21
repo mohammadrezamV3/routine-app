@@ -147,7 +147,7 @@
   html:has(body[data-theme="light"]){ background:#F4E3C9; }
   body{
     background:var(--bg); color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif;
+    font-family:var(--font-vazir), sans-serif;
     font-weight:400;
     line-height:1.6;
     padding:118px 20px 90px;
@@ -247,7 +247,7 @@
      رو inline به سبز ست می‌کنن (سراسر اپ) به‌طور خودکار پس‌زمینه شیشه‌ای هم
      می‌گیرن، بدون این‌که لازم باشه تک‌تک‌شون رو دستی عوض کنیم. */
   button{
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
+    font-family:var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
     color:var(--text); padding:8px 16px; border-radius:11px;
     border:1px solid rgba(255,255,255,.14);
     background:rgba(255,255,255,.05);
@@ -420,6 +420,14 @@
   .bell-dot{
     position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
+  }
+  /* تعدادِ اطلاعیه‌های نخونده — همون سبکِ بجِ تعدادِ درخواستِ دوستی توی
+     کارتِ دوستان، فقط اینجا روی خودِ زنگوله */
+  .bell-count{
+    position:absolute; top:-4px; right:-4px; min-width:15px; height:15px; padding:0 3px;
+    display:flex; align-items:center; justify-content:center; border-radius:999px;
+    background:var(--accent); color:var(--bg); font-size:9.5px; font-weight:800;
+    box-shadow:0 0 0 2px var(--bg);
   }
 
   /* پنل کوچیکِ اطلاعیه‌ها/پروفایل — زیرِ دکمه‌ی خودش باز می‌شه. قبلاً با
@@ -2167,6 +2175,21 @@ body[data-theme="light"] .auth-box .wsearch-newform-name{
   background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
 }
 
+/* دکمه‌ی تاریخ تولد (jdate-btn) قبلاً از همین override جا مونده بود — هنوز
+   گوشه‌ی کم‌گردِ ۸px و بک‌گراندِ تقریباً توپرِ خودش رو داشت، درحالی‌که همه‌ی
+   فیلدهای دیگه‌ی همین فرم (اسم/یوزرنیم/رمز) پیل‌شکل و شیشه‌ای شدن. */
+.auth-box .jdate-btn{
+  border-radius:999px; padding:9px 18px;
+  backdrop-filter:blur(12px) saturate(160%); -webkit-backdrop-filter:blur(12px) saturate(160%);
+  transition:border-color .2s ease, background .2s ease;
+}
+body:not([data-theme="light"]) .auth-box .jdate-btn{
+  background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+}
+body[data-theme="light"] .auth-box .jdate-btn{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+
 .auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
 
 .auth-remember-row{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:12px; }
@@ -2834,6 +2857,10 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:rgba(255,255,255,.03); border-color:var(--line); }
 .manual-timer-unit-picker .day-pill.on{ background:var(--accent-dim); border-color:var(--accent); }
+/* glowِ ::after رادیوسِ پایه (۱۰px) رو داشت، نه ۱۴pxِ خودِ این pill — گوشه‌های
+   شدو از زیرِ گوشه‌ی گردترِ پیل بیرون می‌زد، شبیهِ یه شدوِ چهارگوش پشتِ یه
+   دکمه‌ی گردتر. */
+.manual-timer-unit-picker .day-pill.on::after{ border-radius:14px; }
 
 /* آواتارِ پیش‌فرضِ پروفایل — کامپوننتِ agent-avatar از smoothui (پورتِ
    عینیِ منبع، AgentAvatar.tsx رو ببین): یه <canvas> که خودش گریدِ پیکسلیِ
