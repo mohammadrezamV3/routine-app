@@ -105,7 +105,7 @@ export default function CheckoutPage() {
           type="text"
           dir="ltr"
           className="wsearch-newform-name checkout-discount-input"
-          placeholder="مثلاً کدِ دوستت"
+          placeholder="کد تخفیف"
           value={discountCode}
           onChange={(e) => setDiscountCode(e.target.value)}
         />

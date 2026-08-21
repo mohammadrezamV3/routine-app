@@ -38,7 +38,7 @@ export function SegmentedTabs<T extends string>({
       mounted.current = true;
       return;
     }
-    animate(indicator, { left, width: target.offsetWidth, duration: 380, ease: "inOutQuad" });
+    animate(indicator, { left, width: target.offsetWidth, duration: 220, ease: "outQuad" });
   }, [active]);
 
   return (
