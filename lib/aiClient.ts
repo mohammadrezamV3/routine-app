@@ -192,6 +192,7 @@ export type ExercisePlanProfile = {
   heightCm?: number | null;
   weightKg?: number | null;
   hasPhysicalLimitation: boolean;
+  limitationDetails?: string | null;
   description?: string | null;
 };
 
@@ -227,6 +228,7 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<Exerc
     profile.heightCm ? `قد: ${profile.heightCm} سانتی‌متر` : null,
     profile.weightKg ? `وزن: ${profile.weightKg} کیلوگرم` : null,
     profile.hasPhysicalLimitation ? "محدودیت جسمی داره — از حرکات پرفشار/پرضربه پرهیز کن" : null,
+    profile.hasPhysicalLimitation && profile.limitationDetails ? `توضیحِ محدودیتِ جسمی: ${profile.limitationDetails}` : null,
     profile.description ? `توضیحِ کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
   ].filter(Boolean).join("\n");
 
@@ -256,26 +258,6 @@ export async function generateExercisePlan(profile: ExercisePlanProfile): Promis
     }
   }
   throw lastError;
-}
-
-// جایگزینیِ یک حرکت — وقتی باشگاه کاربر تجهیزاتش رو نداره. عمداً یک تماس کوچک
-// و جدا از ساخت کل برنامه‌ست، چون این یک ابزار سبک روزمره‌ست نه «برنامه جدید»
-// (رو سقف دوهفته‌ای حساب نمی‌شه، فقط با rate-limit جدا محدود می‌شه).
-const SUBSTITUTE_SYSTEM_PROMPT = `تو یک مربی بدنسازی هستی. کاربر یک حرکت تمرینی داره که تجهیزاتش رو توی
-باشگاهش نداره. یک حرکت جایگزین با تجهیزات متفاوت (یا وزن بدن) پیشنهاد بده که همون گروه عضلانی/هدف رو
-پوشش بده، با همون فرمت «نام حرکت تعداد‌ست×تکرار» (یا مدت‌زمان برای کاردیو).
-
-فقط این JSON خام رو برگردون، بدون هیچ توضیح اضافه: { "substitute": "نام حرکت جدید تعداد‌ست×تکرار" }`;
-
-export async function suggestExerciseSubstitute(exerciseItem: string): Promise<string> {
-  const text = await callAiChat(SUBSTITUTE_SYSTEM_PROMPT, `حرکت: ${exerciseItem}`, 200);
-  const parsed = parseJsonResponse(text);
-
-  const substitute = typeof parsed?.substitute === "string" ? parsed.substitute.trim() : "";
-  if (!substitute) {
-    throw new Error("مدل جایگزین معتبری برنگردوند");
-  }
-  return substitute;
 }
 
 // ============================================================================

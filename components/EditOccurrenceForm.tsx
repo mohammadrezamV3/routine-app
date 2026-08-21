@@ -8,6 +8,7 @@ import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
+import { isoLocal } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -138,6 +139,7 @@ export function EditOccurrenceForm({
         name,
         jsDay: r.jsDay,
         time: r.end ? `${r.start} – ${r.end}` : r.start,
+        startDate: isoLocal(now),
         importance,
         ...(trimmedTag ? { tag: trimmedTag } : {}),
       }));

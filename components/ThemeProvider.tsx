@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getThemeSetting, setThemeSetting } from "@/lib/storage";
 import { applyThemeAttribute, syncThemeColorMeta, readThemeFromDom } from "@/lib/themeColor";
 
@@ -38,6 +38,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // اگه کاربر قبل از رسیدنِ مقدارِ ذخیره‌شده خودش تم رو عوض کرده باشه، اون
   // مقدارِ ذخیره‌شده دیگه نباید انتخابش رو پس بزنه.
   const userChose = useRef(false);
+
+  // stateِ ری‌اکت (theme) رو خیلی از جاهای دیگه (useThemeTokens توی
+  // PlanShowcase/LandingPage) مستقیم برای رنگِ دکمه‌ها/آیکون‌ها می‌خونن — نه
+  // از data-theme روی DOM. یعنی تا وقتی همون getThemeSetting async پایین
+  // resolve بشه، این کامپوننت‌ها با stateِ اولیه‌ی هاردکدِ "dark" رندر
+  // می‌شن (دکمه‌ی سبز به‌جای نارنجی توی تمِ روشن) — حتی با اینکه
+  // data-theme روی خودِ body از قبل درست بوده. useLayoutEffect (برخلافِ
+  // useEffect) قبل از پینتِ مرورگر اجرا می‌شه، پس همینجا فوراً از روی
+  // همون DOMِ از‌قبل‌درستِ اسکریپتِ inline می‌خونیم — بدونِ فلشِ دیدنی و
+  // بدونِ میسمچِ هیدریت (چون هیدریت با stateِ اولیه‌ی "dark" همون چیزیه
+  // که سرور هم رندر کرده؛ این افکت فقط *بعدِ* mount شدن اصلاح می‌کنه).
+  useLayoutEffect(() => {
+    const domTheme = readThemeFromDom();
+    if (domTheme === "light" || domTheme === "dark") setTheme(domTheme);
+  }, []);
 
   useEffect(() => {
     getThemeSetting().then((saved) => {

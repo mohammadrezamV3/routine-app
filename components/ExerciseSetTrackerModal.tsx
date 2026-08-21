@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Pause, PartyPopper, Play } from "lucide-react";
 import { parseExerciseItem } from "@/lib/exerciseSets";
-import { toFaDigits } from "@/lib/schedule";
 import { fireTimerDone } from "@/lib/notifications";
 import {
   clearExerciseTimer, loadExerciseTimer, saveExerciseTimer, PersistedExerciseTimer,
@@ -25,7 +24,7 @@ function formatDuration(sec: number): string {
 function formatClock(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
-  return `${toFaDigits(m)}:${toFaDigits(s)}`;
+  return `${m}:${s}`;
 }
 
 function freshState(): PersistedExerciseTimer {
@@ -104,7 +103,7 @@ export function ExerciseSetTrackerModal({
       setFinishedTotalSec(total);
       persist({ completedSets: next, phase: null, endAt: null, pausedRemainingMs: null });
     } else {
-      fireTimerDone(baseName, `ست ${toFaDigits(String(next))} تموم شد — وقتِ استراحته`);
+      fireTimerDone(baseName, `ست ${next} تموم شد — وقتِ استراحته`);
       persist({ completedSets: next, phase: "resting", endAt: Date.now() + REST_SECONDS * 1000, pausedRemainingMs: null });
     }
   }

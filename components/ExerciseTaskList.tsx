@@ -8,7 +8,6 @@ import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
 import { parseExerciseItem } from "@/lib/exerciseSets";
-import { toFaDigits } from "@/lib/schedule";
 import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
 import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
 
@@ -18,12 +17,12 @@ function formatElapsed(sec: number): string {
   return `${m}:${s}`;
 }
 
-/** ثانیه‌ها رو به یه لیبلِ کوتاه برای جدولِ مشخصات تبدیل می‌کنه — «۳۰ ثانیه» یا «۲۵ دقیقه» */
+/** ثانیه‌ها رو به یه لیبلِ کوتاه برای جدولِ مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
 function formatSpecDuration(seconds: number | null): string {
   if (!seconds) return "—";
-  if (seconds % 60 === 0) return `${toFaDigits(String(seconds / 60))} دقیقه`;
-  if (seconds < 60) return `${toFaDigits(String(seconds))} ثانیه`;
-  return `${toFaDigits(String(Math.floor(seconds / 60)))}:${toFaDigits((seconds % 60).toString().padStart(2, "0"))}`;
+  if (seconds % 60 === 0) return `${seconds / 60} دقیقه`;
+  if (seconds < 60) return `${seconds} ثانیه`;
+  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 
 // «برنامه تمرینی امروز» — ستونِ بزرگِ سمتِ راستِ داشبوردِ بدنسازی، هم‌نقشِ
@@ -183,7 +182,7 @@ export function ExerciseTaskList({
                     <tr key={item}>
                       <td className="epc-idx mono">{idx + 1}-</td>
                       <td className="epc-name">{spec.baseName}</td>
-                      {active && <td className="epc-num mono">{spec.sets > 1 ? toFaDigits(String(spec.sets)) : "—"}</td>}
+                      {active && <td className="epc-num mono">{spec.sets > 1 ? spec.sets : "—"}</td>}
                       {active && (
                         <td className="epc-num mono">
                           {spec.isTimed ? formatSpecDuration(spec.seconds) : spec.reps ?? "—"}

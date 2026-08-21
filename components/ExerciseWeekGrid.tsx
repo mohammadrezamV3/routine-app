@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
+import { toEnDigits } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 
 // «برنامه هفتگی» بدنسازی — یک باکسِ واحد، با پدینگِ دورش تا خطِ جداکننده‌ی
@@ -60,9 +61,9 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
                     </div>
                     <ol className="mt-2 flex flex-1 flex-col gap-1">
                       {d.items.map((it, i) => (
-                        <li key={it} className="flex items-start gap-1.5 text-[10px] leading-tight text-dash-text sm:text-[11px]" title={it}>
+                        <li key={it} className="flex items-start gap-1.5 text-[10px] leading-tight text-dash-text sm:text-[11px]" title={toEnDigits(it)}>
                           <span className="mono shrink-0 text-dash-muted">{i + 1}-</span>
-                          <span className="truncate">{it}</span>
+                          <span className="truncate">{toEnDigits(it)}</span>
                         </li>
                       ))}
                     </ol>

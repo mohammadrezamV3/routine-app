@@ -414,6 +414,7 @@ export type CustomOccurrence = {
   name: string;
   jsDay: number;
   time: string;
+  startDate?: string; // ISO (YYYY-MM-DD) — روزی که برنامه ثبت شده؛ نبودش (آیتم‌های قدیمی) یعنی همیشه اعمال بشه
   endDate?: string;
   importance?: Importance;
   tag?: string;

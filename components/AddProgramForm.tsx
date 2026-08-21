@@ -10,7 +10,7 @@ import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
-import { formatJalali, JalaliDate } from "@/lib/jalali";
+import { formatJalali, isoLocal, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
@@ -162,6 +162,10 @@ export function AddProgramForm({
         name,
         jsDay: r.jsDay,
         time: r.end ? `${r.start} – ${r.end}` : r.start,
+        // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلاً اگه امروز
+        // چهارشنبه‌ست و برنامه رو برای چهارشنبه ثبت می‌کنی، چهارشنبه‌های
+        // گذشته نباید یهو این برنامه رو داشته باشن.
+        startDate: isoLocal(now),
         importance,
         ...(trimmedTag ? { tag: trimmedTag } : {}),
       }));

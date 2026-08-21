@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { toEnDigits } from "@/lib/schedule";
 
 // وقتی «این تجهیزات رو ندارم» می‌زنی، به‌جای سوییچِ خودکار به یک حرکتِ
 // تصادفی، سه حرکتِ جایگزینِ آماده (از کاتالوگ، هم‌الگو/هم‌عضله با حرکتِ
@@ -25,7 +26,7 @@ export function ExerciseSubstitutePicker({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel liquid-glass-panel dash-scope open exercise-set-tracker-panel">
         <div className="modal-head">
-          <div className="modal-title">جایگزینِ «{oldItem}»</div>
+          <div className="modal-title">جایگزینِ «{toEnDigits(oldItem)}»</div>
           <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
         </div>
 
@@ -46,7 +47,7 @@ export function ExerciseSubstitutePicker({
                 onClick={() => onPick(c)}
                 className="exercise-substitute-option"
               >
-                {c}
+                {toEnDigits(c)}
               </motion.button>
             ))}
           </div>

@@ -40,6 +40,13 @@ const SWIPE_VELOCITY = 400;
 export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
   useLockBodyScroll();
   const [step, setStep] = useState(0);
+  // جهتِ آخرین حرکت (+۱ جلو / -۱ عقب) — برای انیمیشنِ جهت‌دار زیر لازمه؛
+  // با mode="wait"ِ قبلی هر گذری (چه جلو چه عقب) دقیقاً یک شکل بود (محوشدنِ
+  // ثابت، با یه مکثِ خالی بینِ خروج/ورود) که هم جهتِ واقعیِ سوایپ رو نشون
+  // نمی‌داد هم به‌خاطرِ اون مکث «بد»/کند به‌نظر می‌رسید. حالا با popLayout
+  // ورود/خروج هم‌زمانن (بدونِ مکث) و جهتِ اسلاید واقعاً با جهتِ حرکت یکیه —
+  // دقیقاً همون الگویی که FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
+  const [dir, setDir] = useState(1);
   const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
   const isLast = step === STEPS.length - 1;
   const Icon = STEPS[step].icon;
@@ -50,15 +57,23 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
   }
 
   function goNext() {
-    if (isLast) finish();
-    else setStep((s) => s + 1);
+    if (isLast) { finish(); return; }
+    setDir(1);
+    setStep((s) => s + 1);
+  }
+  function goBack() {
+    setDir(-1);
+    setStep((s) => s - 1);
   }
 
+  // راست‌به‌چپ: کشیدنِ انگشت به سمتِ راست (offset.x مثبت) باید جلو ببره
+  // (اسلایدِ بعدی)، به چپ (منفی) باید عقب ببره — دقیقاً همون قراردادی که
+  // FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   function handleDragEnd(_: unknown, info: PanInfo) {
-    const swipedForward = info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY;
-    const swipedBack = info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY;
+    const swipedForward = info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY;
+    const swipedBack = info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY;
     if (swipedForward) goNext();
-    else if (swipedBack && step > 0) setStep((s) => s - 1);
+    else if (swipedBack && step > 0) goBack();
   }
 
   return (
@@ -71,13 +86,14 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
         </div>
 
         <div className="modal-body">
-          <AnimatePresence mode="wait">
+          <AnimatePresence initial={false} custom={dir} mode="popLayout">
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: -16 }}
+              custom={dir}
+              initial={{ opacity: 0, x: dir * 28 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
+              exit={{ opacity: 0, x: dir * -28 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               drag={isMobile ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.6}
@@ -121,7 +137,7 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
                 </button>
               ) : (
                 <div className="exercise-tutorial-swipe-hint">
-                  برای ادامه، به چپ بکش
+                  برای ادامه، به راست بکش
                   <ChevronRight size={13} />
                 </div>
               )}
@@ -129,7 +145,7 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
           ) : (
             <div className="mt-4 flex items-center justify-between gap-2">
               {step > 0 ? (
-                <button type="button" onClick={() => setStep((s) => s - 1)} className="small">
+                <button type="button" onClick={goBack} className="small">
                   قبلی
                 </button>
               ) : (
