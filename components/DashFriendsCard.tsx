@@ -9,6 +9,7 @@ import { StreakFlame } from "./StreakFlame";
 import { AgentAvatar } from "./AgentAvatar";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { useSession } from "next-auth/react";
+import { getPreloadedBootstrap } from "@/lib/preload";
 
 type Friend = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -58,12 +59,27 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   async function loadFriends() {
+    // داشبوردِ روتین (بدونِ module) داده‌اش از قبل داخلِ HTML آمده — همان
+    // چیزی که InlineBootstrap گذاشته. تب‌های ورزش/کالری آمارِ متفاوتی
+    // می‌خواهند، پس آن‌ها همچنان از شبکه می‌گیرند.
+    if (!module) {
+      const boot = getPreloadedBootstrap();
+      if (boot) {
+        const payload: any = await boot.data;
+        if (payload?.friends) { setFriends(payload.friends); return; }
+      }
+    }
     const res = await fetch(module ? `/api/friends?module=${module}` : "/api/friends");
     if (res.status === 401) { setAuthRequired(true); setFriends([]); return; }
     if (res.ok) setFriends((await res.json()).friends);
     else setFriends([]);
   }
   async function loadRequests() {
+    const boot = getPreloadedBootstrap();
+    if (boot) {
+      const payload: any = await boot.data;
+      if (payload?.friendRequests) { setRequests(payload.friendRequests); return; }
+    }
     const res = await fetch("/api/friends/requests");
     if (res.status === 401) return;
     if (res.ok) setRequests((await res.json()).requests);

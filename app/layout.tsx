@@ -7,9 +7,12 @@ import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
 import { ConflictAlert } from "@/components/ConflictAlert";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
+import { InlineBootstrap } from "@/components/InlineBootstrap";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
@@ -79,7 +82,12 @@ export const viewport: Viewport = {
   // می‌کرد و صفحه با دو متای theme-color (یکی بیات) می‌موند.
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// layout از قبل dynamic است (InlineBootstrap کوکی می‌خواند)، پس خواندنِ سشن
+// این‌جا رندرِ تازه‌ای تحمیل نمی‌کند — ولی یک رفت‌وبرگشتِ کاملِ شبکه از هر
+// لودِ صفحه کم می‌کند، چون SessionProvider دیگر خودش `/api/auth/session` را
+// صدا نمی‌زند.
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خودِ <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیرِ ناچ / بالای نوارِ خانه) و موقعِ اورراسکرول
@@ -97,13 +105,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}
       <body data-theme="dark" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
+            می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
+        <InlineBootstrap />
         {/* پیش‌درخواستِ داده‌های بحرانی — دلیلش کاملاً توی lib/preload.ts نوشته شده.
             باید همین‌جا (اولِ body، سینکرون) بمونه تا قبل از دانلودِ باندلِ JS اجرا بشه. */}
         <script dangerouslySetInnerHTML={{ __html: PRELOAD_SCRIPT }} />
         <SvgFilters />
         <BackgroundCanvasLoader />
         <ConflictAlert />
-        <AuthSessionProvider>
+        <AuthSessionProvider session={session}>
           <ThemeProvider>
             <NavDrawer />
             <NotificationEngine />

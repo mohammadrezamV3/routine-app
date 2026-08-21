@@ -37,6 +37,9 @@ const PRELOAD_RANGE_FWD_DAYS = 7;
 
 export const PRELOAD_BOOTSTRAP_KEY = "__bootstrap";
 
+/** idِ تگی که InlineBootstrap دادهٔ لودِ اولیه را داخلش می‌گذارد */
+export const INLINE_BOOTSTRAP_ID = "__arion_bootstrap";
+
 // درخواست‌هایی که فقط روی یک مسیرِ خاص لازم‌ن. اسکریپت با location.pathname
 // تصمیم می‌گیره، پس روی بقیه‌ی صفحه‌ها هیچ درخواستِ الکی‌ای نمی‌ره.
 //
@@ -72,7 +75,9 @@ var iso=function(d){var m=d.getMonth()+1,y=d.getDate();return d.getFullYear()+"-
 var n=new Date(),a=new Date(n),b=new Date(n);
 a.setDate(a.getDate()-${PRELOAD_RANGE_BACK_DAYS});b.setDate(b.getDate()+${PRELOAD_RANGE_FWD_DAYS});
 var from=iso(a),to=iso(b);
-var boot=g("/api/bootstrap?from="+from+"&to="+to);
+// اگر سرور دادهٔ لودِ اولیه را داخلِ HTML گذاشته، هیچ درخواستی لازم نیست.
+var el=document.getElementById("${INLINE_BOOTSTRAP_ID}");
+var boot=el?Promise.resolve(JSON.parse(el.textContent)):g("/api/bootstrap?from="+from+"&to="+to);
 p["${PRELOAD_BOOTSTRAP_KEY}"]={from:from,to:to,data:boot};
 var path=location.pathname;
 ${JSON.stringify(ROUTE_PRELOADS)}.forEach(function(r){
