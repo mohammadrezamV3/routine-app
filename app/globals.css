@@ -106,18 +106,18 @@
   .week-timeline::-webkit-scrollbar{ display:none; width:0; height:0; }
 
   /* اسکرول‌بارِ کلیِ صفحه (html) — پیش‌فرضِ مرورگر روشن بود و توی دارک‌مود
-     چشم‌آزار می‌شد؛ با scrollbar-color/-webkit-scrollbar تیره‌ش می‌کنیم. رنگِ
-     تم با :has(body[data-theme="light"]) تشخیص داده می‌شه چون data-theme
-     روی body ست می‌شه نه html، و متغیرهای CSS از فرزند به والد سرایت نمی‌کنن. */
+     چشم‌آزار می‌شد؛ با scrollbar-color/-webkit-scrollbar تیره‌ش می‌کنیم.
+     تم مستقیم از data-theme روی خودِ html خونده می‌شه (lib/themeColor.ts) —
+     دلیلِ کنار گذاشتنِ :has() پایین‌تر، کنارِ قاعده‌ی background، توضیح داده شده. */
   html{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) #000000; }
   html::-webkit-scrollbar{ width:10px; }
   html::-webkit-scrollbar-track{ background:#000000; }
   html::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); border-radius:10px; }
   html::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.32); }
-  html:has(body[data-theme="light"]){ scrollbar-color:rgba(0,0,0,.22) #F3E9D8; }
-  html:has(body[data-theme="light"])::-webkit-scrollbar-track{ background:#F3E9D8; }
-  html:has(body[data-theme="light"])::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.22); }
-  html:has(body[data-theme="light"])::-webkit-scrollbar-thumb:hover{ background:rgba(0,0,0,.32); }
+  html[data-theme="light"]{ scrollbar-color:rgba(0,0,0,.22) #F3E9D8; }
+  html[data-theme="light"]::-webkit-scrollbar-track{ background:#F3E9D8; }
+  html[data-theme="light"]::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.22); }
+  html[data-theme="light"]::-webkit-scrollbar-thumb:hover{ background:rgba(0,0,0,.32); }
   *{
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
     -webkit-touch-callout:none;
@@ -138,17 +138,32 @@
     background:rgba(var(--accent-rgb), .35);
   }
   html{background:var(--bg);}
-  /* همون قاعده‌ی بالا (اسکرول‌بار): --bg از فرزند (body) به والد (html) سرایت
-     نمی‌کنه، پس بدونِ این خط، بک‌گراندِ خودِ html همیشه مقدارِ پیش‌فرضِ :root
-     (تاریک) می‌موند — حتی توی تمِ روشن. این دقیقاً همون نواری بود که توی
-     سافاریِ موبایل موقعِ اورراسکرول (بالا/پایینِ صفحه) با رنگِ تمِ اشتباه
-     دیده می‌شد و با toggle کردنِ تم هم عوض نمی‌شد (چون هیچ‌وقت اصلاً به تم
-     گوش نمی‌داد، نه این‌که «گیر» کرده باشه). */
-  html:has(body[data-theme="light"]){ background:#F4E3C9; }
-  /* همون قاعده، ولی بدونِ وابستگی به :has() — حالا خودِ data-theme روی <html>
-     هم هست (lib/themeColor.ts). این نسخه علاوه بر پشتیبانیِ گسترده‌تر، یه
-     مزیتِ دیگه هم داره: از همون *اولین بایتِ HTML* درست کار می‌کنه، چون
-     اسکریپتِ inline اتریبیوت رو قبل از هر پینتی روی html می‌ذاره. */
+  /* color-scheme به مرورگر می‌گه اسکیمِ واقعیِ صفحه چیه. هر ناحیه‌ای که *خودِ
+     مرورگر* رنگ می‌زنه — اورراسکرولِ لاستیکی، پشتِ ناچ قبل از اولین پینت،
+     کنترل‌های فرم، نوارِ سیستمی — از همین تصمیم می‌گیره، نه از background ما.
+     بدونش سافاری پیش‌فرضِ light رو فرض می‌کنه و توی تمِ تاریک اون نوارها با
+     رنگِ روشنِ سیستمی پر می‌شن؛ همون حسِ «فول‌اسکرین نیست، بالا و پایین یه
+     نوارِ غریبه هست». */
+  html{ color-scheme:dark; }
+  html[data-theme="light"]{ color-scheme:light; }
+  /* پس‌زمینه‌ی خودِ <html> همونیه که سافاری توی ناحیه‌ی امن (زیرِ ناچ / بالای
+     نوارِ خانه) و موقعِ اورراسکرول نشون می‌ده. --bg از فرزند (body) به والد
+     (html) سرایت نمی‌کنه، پس html به یه قاعده‌ی جدا نیاز داره.
+     ────────────────────────────────────────────────────────────────────
+     مهم: این‌جا عمداً از :has() استفاده *نمی‌شه*.
+     نسخه‌ی قبلی `html:has(body[data-theme="light"])` بود و دقیقاً همون باگی
+     رو می‌ساخت که کاربر گزارش کرد: «بعد از یک دور سوییچِ تم، رنگِ بالای صفحه
+     گیر می‌کنه و نمی‌ره». سافاری در بازمحاسبه‌ی :has() بعد از تغییرِ اتریبیوتِ
+     یک *فرزند* باگ داره — وقتی body از light به dark برمی‌گشت، اون :has()
+     بیات می‌موند و html با رنگِ کرمی جا می‌موند.
+     بدتر این‌که اختصاصیتش هم بالاتره — :has() اختصاصیتِ آرگومانش رو می‌گیره:
+         html:has(body[data-theme="light"])  →  (0,1,2)
+         html[data-theme="light"]            →  (0,1,1)
+     پس صرفاً *اضافه‌کردنِ* قاعده‌ی سالم کافی نبود؛ قاعده‌ی معیوب همچنان برنده
+     می‌شد. باید حذف می‌شد، نه کنارش نوشته می‌شد.
+     حالا data-theme مستقیم روی خودِ html ست می‌شه (lib/themeColor.ts)، پس
+     یه سلکتورِ ساده کافیه — هم بدونِ باگِ invalidation، هم از همون اولین
+     بایتِ HTML درست، چون اسکریپتِ inline اتریبیوت رو قبل از هر پینتی می‌ذاره. */
   html[data-theme="light"]{ background:#F4E3C9; }
   /* ناحیه‌ی امنِ iOS: با viewport-fit=cover صفحه زیرِ ناچ و نوارِ خانه کشیده
      می‌شه، ولی محتوای body با پدینگِ ثابت اون نواحی رو حساب نمی‌کرد — نتیجه
