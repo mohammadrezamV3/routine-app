@@ -20,12 +20,10 @@ import { getNotificationPermission, requestNotificationPermission, notifications
 import { subscribeToPush } from "@/lib/pushClient";
 import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
 
-// این دوتا فقط با کلیک باز می‌شن (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازم‌ان)،
-// ولی NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
-// import بشن، باندلِ اصلیِ هر صفحه سنگین‌تر می‌شه (مخصوصاً AccountPanel که
-// حالا کاتالوگ ~۳۶۰تاییِ بازارها رو هم می‌کِشه). با dynamic+ssr:false جدا از
-// باندل اصلی لود می‌شن، دقیقاً مثل BackgroundCanvas.
-const AccountPanel = dynamic(() => import("./AccountPanel").then((m) => m.AccountPanel), { ssr: false });
+// این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
+// NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
+// import بشه، باندلِ اصلیِ هر صفحه سنگین‌تر می‌شه. با dynamic+ssr:false جدا از
+// باندل اصلی لود می‌شه، دقیقاً مثل BackgroundCanvas.
 const NotificationPanel = dynamic(() => import("./NotificationPanel").then((m) => m.NotificationPanel), { ssr: false });
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
@@ -135,7 +133,6 @@ export function NavDrawer() {
   // برای نشونِ قفلِ آیتم‌های پولیِ منو — null یعنی «هنوز معلوم نیست»
   // (چیزی رندر نمی‌کنیم تا از فلشِ اشتباه جلوگیری بشه).
   const [activeModules, setActiveModules] = useState<Set<string> | null>(null);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
@@ -349,7 +346,7 @@ export function NavDrawer() {
                       <div className="notif-panel-list">
                         <div
                           className="notif-panel-item profile-menu-item"
-                          onClick={() => { setProfileMenuOpen(false); setAccountOpen(true); }}
+                          onClick={() => { setProfileMenuOpen(false); router.push("/account"); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
@@ -498,8 +495,6 @@ export function NavDrawer() {
           )}
         </div>
       </nav>
-
-      {accountOpen && <AccountPanel onClose={() => setAccountOpen(false)} />}
     </>
   );
 }

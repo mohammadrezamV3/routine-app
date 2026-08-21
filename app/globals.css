@@ -939,6 +939,91 @@
   .checkout-status-banner.success{ background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent); }
   .checkout-status-banner.failed{ background:rgba(224,82,82,.1); color:#E05252; border:1px solid rgba(224,82,82,.4); }
 
+  /* ============================================================
+     پنل کاربری (/account/*) — سایدبارِ باریک سمتِ راست + محتوا. عمداً از
+     همون maxWidthِ سراسریِ .wrap (۶۲۰px) خارج نمی‌شه — طبقِ درخواستِ صریح
+     («عرض محتوا محدود و خوانا باشد»/«این صفحه Dashboard نیست»)، یک ریلِ
+     باریک کنارِ محتوا دقیقاً همون حسِ «تنظیمات ساده» رو می‌ده، نه یه
+     چیدمانِ عریضِ داشبوردی.
+     ============================================================ */
+  .account-shell{ position:relative; }
+  .account-body{ display:flex; flex-direction:row-reverse; gap:18px; align-items:flex-start; }
+  .account-sidebar{
+    width:150px; flex-shrink:0; position:sticky; top:calc(88px + env(safe-area-inset-top));
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .account-sidebar-title{ font-size:11px; font-weight:700; color:var(--muted2); margin:0 4px 8px; }
+  .account-sidebar-links{ display:flex; flex-direction:column; gap:2px; }
+  .account-sidebar-link{
+    display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:11px;
+    color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
+    background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    cursor:pointer; transition:background .15s ease, color .15s ease; text-align:right; width:100%;
+  }
+  .account-sidebar-link:hover{ background:rgba(255,255,255,.05); color:var(--text); box-shadow:none; }
+  .account-sidebar-link.active{ background:var(--accent-dim); color:var(--accent); }
+  .account-sidebar-link-icon{ display:flex; flex-shrink:0; }
+  .account-sidebar-logout{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); border-radius:0 0 11px 11px; color:#E05252; }
+  .account-sidebar-logout:hover{ background:rgba(224,82,82,.08); color:#E05252; }
+  .account-content{ flex:1; min-width:0; }
+  .account-content > h1{ margin-bottom:4px; }
+  .account-content-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:18px; }
+
+  .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:6px; }
+  .account-profile-name{ font-size:16px; font-weight:800; color:var(--text); margin-top:6px; }
+  .account-profile-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+  .account-edit-btn{
+    display:flex; align-items:center; gap:6px; margin-top:12px;
+    font-size:11.5px; border-color:var(--accent); color:var(--accent);
+  }
+  .account-save-toast{ margin-top:10px; font-size:11.5px; color:var(--accent); font-weight:600; }
+
+  .account-sub-mini-card{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(var(--bg-rgb), .13);
+  }
+  .account-sub-mini-name{ font-size:13.5px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .account-sub-mini-link{ font-size:11.5px; font-weight:700; color:var(--accent); text-decoration:none; flex-shrink:0; }
+
+  .account-row-list{ display:flex; flex-direction:column; margin-top:6px; }
+  .account-row{
+    display:flex; align-items:center; gap:12px; padding:14px 2px; text-decoration:none;
+    border-bottom:1px solid var(--line); color:inherit;
+  }
+  .account-row:last-child{ border-bottom:none; }
+  .account-row-icon{ display:flex; flex-shrink:0; color:var(--accent); }
+  .account-row-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .account-row-label{ font-size:13.5px; font-weight:700; color:var(--text); }
+  .account-row-desc{ font-size:11.5px; color:var(--muted); }
+  .account-row-chevron{ color:var(--muted2); flex-shrink:0; }
+
+  .account-sub-cta-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:9px 18px; border-radius:11px; font-size:12.5px; font-weight:700; text-decoration:none;
+    background:var(--accent); color:var(--bg); border:1px solid var(--accent);
+  }
+  .account-sub-cta-btn-outline{ background:none; color:var(--accent); }
+
+  .account-mobile-tabs{ display:none; }
+
+  @media (max-width:700px){
+    .account-body{ flex-direction:column; }
+    .account-sidebar{ display:none; }
+    .account-mobile-tabs{
+      display:flex; gap:6px; overflow-x:auto; padding:2px 2px 10px; margin:0 -2px 14px;
+      -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    }
+    .account-mobile-tabs::-webkit-scrollbar{ display:none; }
+    .account-mobile-tab{
+      display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0;
+      padding:9px 13px; border-radius:14px; text-decoration:none; white-space:nowrap;
+      color:var(--muted); font-size:10.5px; font-weight:600;
+      background:rgba(255,255,255,.03); border:1px solid var(--line);
+    }
+    .account-mobile-tab.active{ background:var(--accent-dim); color:var(--accent); border-color:transparent; }
+    .account-mobile-tab-danger{ color:#E05252; background:none; border:none; cursor:pointer; font-family:var(--font-vazir), sans-serif; }
+  }
+
   /* صفحه‌ی چک‌اوت — خلاصه‌ی سفارش + کدِ تخفیف + قوانین + دکمه‌ی پرداخت.
      دکمه‌ی بازگشت طبقِ قاعده‌ی ثابتِ سایت: همیشه بالا-راست، بدونِ بک‌گراند. */
   .checkout-page{ max-width:480px; position:relative; }
