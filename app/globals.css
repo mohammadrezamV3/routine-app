@@ -447,15 +447,6 @@
     position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%;
     background:#E5484D; box-shadow:0 0 0 2px var(--bg);
   }
-  /* تعدادِ اطلاعیه‌های نخونده — همون سبکِ بجِ تعدادِ درخواستِ دوستی توی
-     کارتِ دوستان، فقط اینجا روی خودِ زنگوله */
-  .bell-count{
-    position:absolute; top:-4px; right:-4px; min-width:15px; height:15px; padding:0 3px;
-    display:flex; align-items:center; justify-content:center; border-radius:999px;
-    background:var(--accent); color:var(--bg); font-size:9.5px; font-weight:800;
-    box-shadow:0 0 0 2px var(--bg);
-  }
-
   /* پنل کوچیکِ اطلاعیه‌ها/پروفایل — زیرِ دکمه‌ی خودش باز می‌شه. قبلاً با
      left:50%+translateX(-50%) وسط‌چینِ دکمه می‌شد؛ چون هم زنگوله هم چیپِ
      پروفایل خیلی نزدیکِ لبه‌ی راستِ صفحه‌ان (topbar-actions با right:18px
@@ -465,7 +456,7 @@
      صفحه بمونن، نه یه پنلِ جدا با تیرگیِ متفاوت. */
   .notif-panel{
     position:absolute; top:calc(100% + 12px); right:0; left:auto;
-    width:min(240px, calc(100vw - 40px)); max-height:280px; overflow-y:auto;
+    width:min(208px, calc(100vw - 56px)); max-height:240px; overflow-y:auto;
     background:rgba(255,255,255,.03);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     border:1px solid var(--line); border-radius:20px;
@@ -588,8 +579,18 @@
     position:fixed; top:14px; right:26px; width:74%; max-width:280px; z-index:50;
     transform:translateX(130%) scale(.94); opacity:0;
     transition:transform .32s cubic-bezier(.22,1,.36,1), opacity .28s ease;
+    /* بدونِ این، لایه‌ی کامپوزیتِ این المنت («پدر») دقیقاً همون لحظه‌ای که
+       کلاسِ open اضافه می‌شه ساخته می‌شه — یعنی هم‌زمان با شروعِ ترنزیشنِ
+       transform/opacity، مرورگر باید لایه‌ی جدیدِ backdrop-filterِ فرزند
+       (.nav-drawer-glass) رو هم اولین‌بار پروموت/بسازه؛ ساختِ لایه‌ی
+       backdrop-filter (نمونه‌برداری+بلورِ همه‌چیزِ پشتش) گرون‌تر از ترسیمِ
+       متن/آیکون‌هاست، پس چند فریمِ اول محتوا (که ارزون‌تره) دیده می‌شه ولی
+       بک‌گراند/بلور هنوز نرسیده — دقیقاً همون باگِ گزارش‌شده. با پروموتِ
+       زودهنگامِ خودِ پدر (قبل از این‌که ترنزیشن اصلاً شروع بشه)، لایه‌ی
+       فرزند هم زودتر آماده می‌شه و باز شدن فقط یه جابه‌جاییِ ارزونِ GPUـیه. */
+    will-change:transform, opacity; transform:translateZ(0) translateX(130%) scale(.94);
   }
-  .nav-drawer.open{transform:translateX(0) scale(1); opacity:1;}
+  .nav-drawer.open{transform:translateZ(0) translateX(0) scale(1); opacity:1;}
   .nav-drawer-glass{
     position:relative;
     background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:22px;
@@ -895,8 +896,8 @@
      پنلِ ساده‌ی اطلاعاتِ حساب) — این‌جا مستقلاً جمع‌وجورترش می‌کنیم بدونِ
      دست‌زدن به بقیه‌ی مودال‌های سایت که از همون کلاسِ پایه استفاده می‌کنن. */
   @media (max-width:480px){
-    .account-modal-panel{ width:78%; max-width:290px; max-height:58vh; max-height:58dvh; padding:14px; }
-    .account-modal-panel .account-avatar-wrap{ width:60px; height:60px; }
+    .account-modal-panel{ width:68%; max-width:250px; max-height:48vh; max-height:48dvh; padding:12px; }
+    .account-modal-panel .account-avatar-wrap{ width:52px; height:52px; }
   }
   .modal-panel.open{
     opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);
@@ -2236,6 +2237,25 @@ body:not([data-theme="light"]) .auth-box .wsearch-newform-name{
 }
 body[data-theme="light"] .auth-box .wsearch-newform-name{
   background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+/* مرورگر (کروم/سافاری) وقتی فیلد رو با یوزرنیم/رمزِ ذخیره‌شده تطبیق می‌ده،
+   خودش یه بک‌گراندِ زردِ کرمیِ داخلی روی input می‌ذاره (پسودوکلاسِ
+   -webkit-autofill) که هیچ‌جوره با background معمولی override نمی‌شه —
+   فقط با box-shadowِ insetِ به‌همون‌اندازه‌ی خودِ فیلد قابلِ خنثی‌کردنه.
+   transition با تاخیرِ خیلی زیاد (به‌جای !important روی background-color)
+   ترفندِ شناخته‌شده‌ست چون خودِ مرورگر مستقیم روی background-color ست
+   می‌کنه، نه از راهِ CSSِ ما. */
+.auth-box .wsearch-newform-name:-webkit-autofill,
+.auth-box .wsearch-newform-name:-webkit-autofill:hover,
+.auth-box .wsearch-newform-name:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--text);
+  transition:background-color 5000s ease-in-out 0s;
+}
+body:not([data-theme="light"]) .auth-box .wsearch-newform-name:-webkit-autofill{
+  box-shadow:0 0 0 1000px rgba(255,255,255,.05) inset, 0 0 0 1px rgba(255,255,255,.1) inset;
+}
+body[data-theme="light"] .auth-box .wsearch-newform-name:-webkit-autofill{
+  box-shadow:0 0 0 1000px rgba(255,255,255,.35) inset, 0 0 0 1px rgba(0,0,0,.08) inset;
 }
 
 /* دکمه‌ی تاریخ تولد (jdate-btn) قبلاً از همین override جا مونده بود — هنوز

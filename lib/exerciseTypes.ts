@@ -20,6 +20,7 @@ export type ExercisePlanFormValue = {
   weightKg: string;
   goal: ExerciseGoalOption | null;
   hasLimitation: boolean;
+  limitationDetails: string;
   gymDays: string[];
   description: string;
 };
@@ -30,6 +31,7 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   weightKg: "",
   goal: null,
   hasLimitation: false,
+  limitationDetails: "",
   gymDays: [],
   description: "",
 };

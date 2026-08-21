@@ -54,6 +54,15 @@ const latin = Inter({
 export const metadata: Metadata = {
   title: "Arion",
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+  // سافاریِ آیفون display:"standalone"ِ manifest.ts رو نمی‌خونه — «افزودن به
+  // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپِ واقعیِ standalone می‌سازه (بدونِ
+  // نوارِ آدرس/دکمه‌های سافاری)؛ بدونش، حتی با مانیفستِ درست، توی iOS بازم
+  // مثلِ یه تبِ معمولیِ سافاری بالا می‌اومد.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Arion",
+  },
 };
 
 // viewport-fit:cover لازمه تا سافاری صفحه رو زیرِ ناچ/نوارِ وضعیت هم بکشه؛

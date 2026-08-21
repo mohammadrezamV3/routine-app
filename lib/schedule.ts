@@ -4,6 +4,8 @@
 // RoutineItem (schema.prisma) هم بخونه تا برنامه‌های تکرارشونده واقعاً در
 // دیتابیس ذخیره بشن، نه فقط localStorage/UserSetting.
 
+import { isoLocal } from "./jalali";
+
 export type ScheduleTask = {
   id: string;
   name: string;
@@ -71,14 +73,20 @@ export function sortTasksByTime(list: ScheduleTask[]): ScheduleTask[] {
  */
 export function tasksForDate(
   d: Date,
-  opts?: { removedOccurrences?: Set<string>; customOccurrences?: { id: string; name: string; jsDay: number; time: string }[] }
+  opts?: { removedOccurrences?: Set<string>; customOccurrences?: { id: string; name: string; jsDay: number; time: string; startDate?: string }[] }
 ): ScheduleTask[] {
   const day = d.getDay();
   let filtered: ScheduleTask[] = [];
 
   if (opts?.customOccurrences) {
+    // مقایسه‌ی رشته‌ایِ ISOِ «YYYY-MM-DD» درسته چون هردو طرف همون فرمتِ
+    // قابلِ‌مرتب‌سازیِ لغوی‌ان — نبودِ startDate (آیتم‌های ثبت‌شده قبل از این
+    // فیلد) یعنی همیشه اعمال بشه، نه اینکه رد بشه.
+    const dIso = isoLocal(d);
     opts.customOccurrences.forEach((c) => {
-      if (c.jsDay === day) filtered.push({ id: c.id, name: c.name, time: c.time, custom: true });
+      if (c.jsDay === day && (!c.startDate || dIso >= c.startDate)) {
+        filtered.push({ id: c.id, name: c.name, time: c.time, custom: true });
+      }
     });
   }
   if (opts?.removedOccurrences) {

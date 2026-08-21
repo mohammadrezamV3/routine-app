@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
 import {
@@ -75,6 +76,7 @@ export function AiExercisePlanWizard({
         weightKg: form.weightKg ? +form.weightKg : undefined,
         goal: form.goal,
         hasPhysicalLimitation: form.hasLimitation,
+        limitationDetails: form.hasLimitation ? form.limitationDetails.trim() || undefined : undefined,
         gymDays: form.gymDays,
         description: form.description.trim() || undefined,
         rulesAccepted: true,
@@ -234,8 +236,30 @@ export function AiExercisePlanWizard({
             <div className={`check${form.hasLimitation ? " on" : ""}`}>
               <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
-            <div className="task-name">محدودیت جسمی دارم (بدون جزئیات، فقط برای احتیاط بیشتر)</div>
+            <div className="task-name">محدودیت جسمی دارم</div>
           </div>
+
+          <AnimatePresence initial={false}>
+            {form.hasLimitation && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ height: { duration: 0.24, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.18 } }}
+                style={{ overflow: "hidden" }}
+              >
+                <textarea
+                  dir="rtl"
+                  className="exercise-desc-textarea"
+                  style={{ marginTop: 10 }}
+                  rows={3}
+                  placeholder="محدودیتت رو توضیح بده — مثلاً کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقعِ انتخابِ حرکت باید بدونه"
+                  value={form.limitationDetails}
+                  onChange={(e) => patch({ limitationDetails: e.target.value })}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {rejection && (
             <div className="exercise-feasibility-reject">

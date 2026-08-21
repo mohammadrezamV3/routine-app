@@ -214,22 +214,3 @@ export function getExercisePlan(
   return applyLimitation(days, hasPhysicalLimitation);
 }
 
-// جایگزینی حرکت وقتی «این تجهیزات رو ندارم» — fallback بدون هوش مصنوعی (وقتی کلید
-// API نیست یا تماس شکست خورد)؛ فقط یک عوضِ کلیدواژه‌ایِ تقریبیه، نه معادل تخصصی دقیق.
-const EQUIPMENT_KEYWORD_SWAP: [RegExp, string][] = [
-  [/دستگاه اسمیت/, "اسکوات با دمبل"],
-  [/دستگاه پرس سینه/, "پرس سینه با دمبل"],
-  [/دستگاه پرس پا/, "اسکوات وزن بدن"],
-  [/دستگاه زیربغل|لت زیربغل/, "زیربغل با کش تمرینی"],
-  [/سیم‌کش|سیمکش/, "کش تمرینی"],
-  [/هالتر/, "دمبل"],
-  [/دمبل/, "کش تمرینی یا وزن بدن"],
-  [/بارفیکس/, "کول‌آپ کمکی یا کش تمرینی"],
-];
-
-export function getFallbackSubstitute(item: string): string | null {
-  for (const [pattern, replacement] of EQUIPMENT_KEYWORD_SWAP) {
-    if (pattern.test(item)) return item.replace(pattern, replacement);
-  }
-  return null;
-}

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { suggestExerciseSubstitute } from "@/lib/aiClient";
-import { getFallbackSubstitute } from "@/lib/exercisePlans";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { getCatalogSubstitutes } from "@/lib/exerciseCatalogUtils";
 import { stripSetSuffix } from "@/lib/exerciseSets";
@@ -41,16 +39,6 @@ export async function PATCH(req: NextRequest) {
   if (!newItem) {
     const otherItemNames = dayEntry.items.filter((it) => it !== oldItem).map((it) => stripSetSuffix(it));
     const candidates = getCatalogSubstitutes(oldItem, 3, otherItemNames);
-    if (candidates.length < 3) {
-      let extra: string | null = null;
-      try {
-        extra = await suggestExerciseSubstitute(oldItem);
-      } catch {
-        extra = getFallbackSubstitute(oldItem);
-      }
-      const extraBase = extra ? stripSetSuffix(extra) : null;
-      if (extra && extraBase && !otherItemNames.includes(extraBase) && !candidates.includes(extra)) candidates.push(extra);
-    }
     if (candidates.length === 0) {
       return NextResponse.json({ error: "معادل مشخصی برای این حرکت پیدا نکردیم — با مربی باشگاه هماهنگ کن" }, { status: 422 });
     }

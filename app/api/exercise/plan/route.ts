@@ -28,12 +28,13 @@ export async function POST(req: NextRequest) {
   const userId = guard.userId;
 
   const body = await req.json();
-  const { level, heightCm, weightKg, goal, hasPhysicalLimitation, gymDays, description, rulesAccepted } = body as {
+  const { level, heightCm, weightKg, goal, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted } = body as {
     level: ExerciseLevel;
     heightCm?: number;
     weightKg?: number;
     goal: ExerciseGoalOption;
     hasPhysicalLimitation: boolean;
+    limitationDetails?: string;
     gymDays: string[];
     description?: string;
     rulesAccepted: boolean;
@@ -57,19 +58,23 @@ export async function POST(req: NextRequest) {
   if (description !== undefined && (typeof description !== "string" || description.length > MAX_DESCRIPTION_LEN)) {
     return NextResponse.json({ error: "توضیحات خیلی طولانی است" }, { status: 400 });
   }
+  if (limitationDetails !== undefined && (typeof limitationDetails !== "string" || limitationDetails.length > MAX_DESCRIPTION_LEN)) {
+    return NextResponse.json({ error: "توضیحِ محدودیت خیلی طولانی است" }, { status: 400 });
+  }
   if (!rulesAccepted) {
     return NextResponse.json({ error: "قبول‌کردن قوانین الزامی است" }, { status: 400 });
   }
 
   const uniqueDays = [...new Set(gymDays)];
   const cleanDescription = description?.trim() || null;
+  const cleanLimitationDetails = hasPhysicalLimitation ? limitationDetails?.trim() || null : null;
   let planData: unknown;
   let generatedByAi = false;
   try {
     const result = await generateExercisePlan({
       level, goalLabel: GOAL_OPTION_LABELS[goal], gymDays: uniqueDays,
       heightCm: heightCm || null, weightKg: weightKg || null,
-      hasPhysicalLimitation: !!hasPhysicalLimitation, description: cleanDescription,
+      hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
     });
     if (!result.feasible) {
       return NextResponse.json({ ok: false, feasible: false, message: result.message });

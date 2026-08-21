@@ -7,7 +7,7 @@ import { findScheduleConflict } from "@/lib/conflict";
 import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
-import { formatJalali, jalaliToGregorianApprox, toJalali, JalaliDate } from "@/lib/jalali";
+import { formatJalali, isoLocal, jalaliToGregorianApprox, toJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -102,6 +102,7 @@ export function MoveOccurrenceModal({
         name,
         jsDay: targetJsDay,
         time: endFa ? `${startFa} – ${endFa}` : startFa,
+        startDate: isoLocal(now),
         ...(occ.importance ? { importance: occ.importance } : {}),
         ...(occ.tag ? { tag: occ.tag } : {}),
       };

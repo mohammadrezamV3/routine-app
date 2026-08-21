@@ -142,7 +142,13 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
   // صفحه هیچ‌وقت بسته‌ش نمی‌کرد.
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
+      const target = e.target as HTMLElement;
+      if (panelRef.current?.contains(target)) return;
+      // دکمه‌ی زنگوله عمداً از «بیرون» مستثناست — وگرنه mousedown اول
+      // پنل رو می‌بست، و بلافاصله click همون کلیک روی زنگوله دوباره
+      // toggle می‌کرد و بازش می‌کرد (پنل هیچ‌وقت واقعاً بسته نمی‌شد).
+      if (target.closest?.(".bell-btn")) return;
+      onClose();
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
