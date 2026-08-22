@@ -13,7 +13,8 @@
     "check:sql": "node scripts/check-sql-safety.js",
     "check:settings": "node scripts/check-setting-keys.js",
     "check": "npm run check:sql && npm run check:settings && tsc --noEmit",
-    "optimize:images": "node scripts/optimize-images.js"
+    "optimize:images": "node scripts/optimize-images.js",
+    "test": "vitest run"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -28,6 +29,7 @@
     "lucide-react": "^1.27.0",
     "next": "^14.2.35",
     "next-auth": "^4.24.7",
+    "nodemailer": "^7.0.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.35.3",
@@ -38,6 +40,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.2",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/web-push": "^3.6.4",
@@ -46,6 +49,7 @@
     "prisma": "^5.20.0",
     "tailwindcss": "^3.4.4",
     "tsx": "^4.16.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "vitest": "^4.1.11"
   }
 }

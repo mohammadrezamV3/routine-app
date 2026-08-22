@@ -265,6 +265,26 @@ model SignupOtp {
   @@index([phone])
 }
 
+// ورودِ بدونِ رمز با کدِ ایمیل — دقیقاً همون الگوی SignupOtp (کلید رشته‌ی
+// خام email، نه userId، چون در لحظه‌ی درخواست نباید فاش بشه که این ایمیل
+// حسابِ کاربری داره یا نه — همون قرارداد ضدِenumeration بقیه‌ی سایت).
+// verifiedAt = کدِ درست وارد شده (مرحله‌ی پیش‌بررسیِ فرانت)؛ usedAt = واقعاً
+// برای صدورِ نشست مصرف شده (توسطِ authorize()ی provider «email-otp» توی
+// lib/auth.ts). این جداسازی یعنی هیچ پیام سفارشی‌ای لازم نیست از دلِ
+// authorize()ِ NextAuth (که پیام‌های سفارشی رو نگه نمی‌داره) رد بشه.
+model EmailLoginOtp {
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  verifiedAt DateTime?
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email])
+}
+
 // ============================================================================
 // PLANS, PRICING & SUBSCRIPTIONS
 // ============================================================================

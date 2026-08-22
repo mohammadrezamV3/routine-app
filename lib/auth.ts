@@ -9,6 +9,8 @@ import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
+import { isValidEmail } from "@/lib/validate";
+import { verifyAndConsumeEmailOtp } from "@/lib/emailOtp";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقاً همون تدارکِ ثبت‌نام معمولی
 // (دوره آزمایشی ماژول‌های پایه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
@@ -132,6 +134,71 @@ export const authOptions: NextAuthOptions = {
           market: user.market,
           isSuperAdmin: user.isSuperAdmin,
           remember: credentials.remember !== "0",
+        } as any;
+      },
+    }),
+    // ورود بدون رمز با کدِ ایمیل — پیش‌بررسیِ درستیِ کد قبلاً توی
+    // /api/auth/email-otp/verify انجام شده (برای پیام‌های خطای دقیق، چون
+    // authorize() اینجا هر شکستی رو یکسان/عمومی به فرانت برمی‌گردونه، دقیقاً
+    // مثلِ providerِ «credentials» بالا)؛ این‌جا authorize() از صفر دوباره
+    // خودش هم اعتبارسنجی می‌کنه (idempotent، هیچ‌وقت به‌تنهایی به یک
+    // پیش‌بررسیِ فرانتی که می‌شه دور زد متکی نیست) و تنها جایی‌ست که واقعاً
+    // OTP رو مصرف (usedAt) و نشست رو صادر می‌کنه.
+    CredentialsProvider({
+      id: "email-otp",
+      name: "email-otp",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        code: { label: "Code", type: "text" },
+      },
+      async authorize(credentials, req) {
+        if (!credentials?.email || !credentials.code) return null;
+        const email = credentials.email.trim().toLowerCase();
+        const code = credentials.code.trim();
+        if (!isValidEmail(email)) return null;
+
+        const ip = getClientIp((req?.headers as any) || {});
+        if (!checkRateLimit(`email-otp-authorize-ip:${ip}`, 20, 10 * 60 * 1000) || !checkRateLimit(`email-otp-authorize-email:${email}`, 10, 10 * 60 * 1000)) {
+          console.warn(`[auth] rate-limited email-otp attempt for "${email}"`);
+          return null;
+        }
+
+        let consumeResult;
+        try {
+          // مصرفِ نهاییِ کد (usedAt) — از این لحظه دیگه هیچ authorize()ِ
+          // دیگه‌ای نمی‌تونه دوباره ازش استفاده کنه
+          consumeResult = await verifyAndConsumeEmailOtp(email, code);
+        } catch (err: any) {
+          console.error(`[auth] DATABASE ERROR during email-otp login: ${err?.message || err}`);
+          logError("database", `اتصال به دیتابیس حینِ ورود با کدِ ایمیل شکست خورد: ${err?.message || err}`, { severity: "CRITICAL" as any });
+          return null;
+        }
+        if (!consumeResult.ok) {
+          console.warn(`[auth] email-otp rejected for "${email}": ${consumeResult.reason}`);
+          return null;
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+          console.warn(`[auth] email-otp verified but no account for "${email}"`);
+          return null;
+        }
+        if (user.isBlocked) {
+          console.warn(`[auth] blocked user tried email-otp login: "${email}"`);
+          return null;
+        }
+
+        prisma.loginEvent
+          .create({ data: { userId: user.id, provider: "email-otp", ip, userAgent: (req?.headers as any)?.["user-agent"] || null } })
+          .catch(() => {});
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          market: user.market,
+          isSuperAdmin: user.isSuperAdmin,
+          remember: true,
         } as any;
       },
     }),
