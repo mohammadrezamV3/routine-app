@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // رودمپ و نوت‌پد فعلاً کاملاً غیرفعالن برای همه به‌جز سوپریوزر — نه یه
 // ماژولِ خریدنی مثل بقیه (requireModule)، بلکه یه قفلِ کاملِ سطحِ کد که به
@@ -18,6 +19,10 @@ export async function requireSuperAdmin(): Promise<SuperAdminGuardResult> {
   }
   if (!(session!.user as any).isSuperAdmin) {
     return { ok: false, response: NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 }) };
+  }
+  const blockedCheck = await prisma.user.findUnique({ where: { id: userId }, select: { isBlocked: true } });
+  if (blockedCheck?.isBlocked) {
+    return { ok: false, response: NextResponse.json({ error: "حساب کاربری مسدود شده است" }, { status: 403 }) };
   }
   return { ok: true, userId };
 }

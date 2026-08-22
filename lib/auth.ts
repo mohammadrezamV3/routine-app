@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { logError } from "@/lib/errorLog";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقاً همون تدارکِ ثبت‌نام معمولی
 // (دوره آزمایشی ماژول‌های پایه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
@@ -99,10 +100,15 @@ export const authOptions: NextAuthOptions = {
           // Postgres خاموش، migration اجرا نشده) گیر می‌افتیم — به‌جای اینکه
           // بذاریم NextAuth یه 401 مبهم بده، خطای واقعی رو لاگ می‌کنیم.
           console.error(`[auth] DATABASE ERROR during login — is Postgres running and DATABASE_URL correct? ${err?.message || err}`);
+          logError("database", `اتصال به دیتابیس حینِ ورود شکست خورد: ${err?.message || err}`, { severity: "CRITICAL" as any });
           return null;
         }
         if (!user || !user.passwordHash) {
           console.warn(`[auth] no user found for identifier "${id}"`);
+          return null;
+        }
+        if (user.isBlocked) {
+          console.warn(`[auth] blocked user tried to log in: "${id}"`);
           return null;
         }
 
@@ -131,6 +137,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    // برای ورودِ گوگل هم باید مسدودبودن چک بشه — authorize() فقط مسیرِ
+    // credentials رو می‌بینه. false برگردوندن یعنی NextAuth ورود رو رد می‌کنه.
+    async signIn({ account }) {
+      if (account?.provider === "google") {
+        const link = await prisma.oAuthAccount.findUnique({
+          where: { provider_providerAccountId: { provider: "google", providerAccountId: account.providerAccountId } },
+          include: { user: true },
+        });
+        if (link?.user?.isBlocked) return false;
+      }
+      return true;
+    },
     // «منو به‌یاد داشته باش» تیک نخورده → توکن رو کوتاه‌مدت می‌کنیم (۱ روز)
     // به‌جای پیش‌فرض ۳۰ روزه‌ی next-auth؛ چون کوکی خودش همیشه با maxAge
     // استاتیک ست می‌شه (نه به‌ازای هر لاگین)، این‌جوری واقعاً session رو کوتاه

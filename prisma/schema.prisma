@@ -81,6 +81,16 @@ enum AiFeatureKey {
   DAILY_BRIEFING
   WEEKLY_COACH_REPORT
   CORRELATION_INSIGHT
+  ROADMAP_GENERATION
+  EXERCISE_PLAN_GENERATION
+  FOOD_SCAN
+}
+
+// سطح شدت یک رخداد خطای واقعی (نه ساختگی) که سیستم ثبت کرده
+enum ErrorSeverity {
+  WARNING
+  ERROR
+  CRITICAL
 }
 
 // ============================================================================
@@ -106,6 +116,11 @@ model User {
 
   // سوپریوزر/ادمین — دسترسی نامحدود به همه ماژول‌ها بدون نیاز به اشتراک
   isSuperAdmin  Boolean  @default(false)
+
+  // پنل Owner › کاربران › مسدودکردن — کاربرِ مسدودشده نمی‌تونه لاگین کنه
+  // (چک در authorize())؛ soft-delete نیست، فقط جلوی ورود رو می‌گیره
+  isBlocked     Boolean  @default(false)
+  blockedAt     DateTime?
 
   market        Market   // بازار کاربر — تعیین‌کننده ارز/پلن/مدل AI/زبان پیش‌فرض
   locale        String   @default("fa") // fa | en
@@ -427,11 +442,18 @@ model AiUsageRecord {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   feature      AiFeatureKey
-  model        AiModel      // Haiku (ایران) یا Sonnet (بین‌الملل)، بر اساس market کاربر ست می‌شود
+  // نامِ واقعیِ مدلِ فراخوانی‌شده (مثلاً "gpt-4o-mini") — enum قدیمیِ
+  // AiModel (Haiku/Sonnet) مالِ زمانی بود که مستقیم به Anthropic وصل
+  // بودیم؛ از وقتی همه از گیت‌وی آروان‌کلود با یک مدلِ ثابت رد می‌شن،
+  // یک رشته‌ی خام دقیق‌تر و صادقانه‌تره تا یک enum که دیگه با واقعیت نمی‌خونه.
+  model        String
 
   inputTokens  Int          @default(0)
   outputTokens Int          @default(0)
-  costUsdMicros Int         @default(0) // هزینه واقعی به میکرو-دلار برای دقت محاسبات
+  costUsdMicros Int         @default(0) // هزینه‌ی تخمینی به میکرو-دلار (بر اساس نرخِ قابل‌تنظیمِ AppSetting)
+
+  success      Boolean      @default(true) // false یعنی فراخوانی/تولید شکست خورد (برای نرخ خطا در پنل Owner)
+  durationMs   Int?         // زمانِ واقعیِ پاسخ‌گیریِ گیت‌وی — برای بخشِ وضعیتِ سیستم
 
   // خروجی همیشه باید صراحتاً "پیشنهاد" باشد؛ این پرچم برای ممیزی محتوای تولیدشده
   // (مثلاً بررسی دستی نمونه‌ای که آیا زبان دستوری/توصیه پزشکی درش نشت کرده) نگه داشته می‌شود
@@ -440,6 +462,7 @@ model AiUsageRecord {
   createdAt    DateTime     @default(now())
 
   @@index([userId, feature, createdAt])
+  @@index([feature, createdAt])
 }
 
 // سقف مصرف ماهانه هر کاربر برای هر فیچر AI — جلوگیری از هزینه کنترل‌نشده
@@ -976,4 +999,64 @@ model SharedProgressLink {
   createdAt  DateTime @default(now())
 
   @@index([userId])
+}
+
+// ============================================================================
+// OWNER PANEL — Audit Log / Error Log / Analytics Events / App Settings
+// ============================================================================
+// این بخش صرفاً برای پنل Owner است. بدون رابطه‌ی مستقیم به User برای
+// targetUserId (تا حذف یک کاربر لاگِ اقدامات روش رو پاک نکنه — تاریخچه‌ی
+// مدیریتی باید حتی بعد از حذف کاربر باقی بمونه)، پس فقط رشته‌ی id خام ذخیره
+// می‌شه، نه FK.
+
+// هر اقدام مدیریتیِ Owner روی داده‌ی واقعی — نه یک لاگِ عمومیِ اپلیکیشن.
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String   // owner ای که اقدام رو انجام داده
+  action       String   // مثلاً "user.block" | "user.plan_change" | "setting.ai_cost_rate"
+  targetType   String?  // مثلاً "User" | "Subscription" | "AppSetting"
+  targetId     String?
+  meta         Json?    // جزئیاتِ قبل/بعدِ تغییر — هیچ‌وقت رمز/توکن/کلید داخلش ذخیره نشه
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+// رخدادهای خطای واقعیِ سیستم (نه Fake) — از جاهایی که واقعاً catch می‌شن
+// نوشته می‌شه: گیت‌وی AI، اتصال دیتابیس، و مسیرهای بحرانیِ auth.
+model ErrorLog {
+  id         String        @id @default(cuid())
+  service    String        // مثلاً "ai-gateway" | "auth" | "database" | "payment"
+  severity   ErrorSeverity @default(ERROR)
+  message    String
+  // هیچ‌وقت secret/token/password/apiKey داخلِ context ذخیره نشه — فقط
+  // اطلاعاتِ تشخیصیِ بی‌خطر (مثلاً feature/model/statusCode)
+  context    Json?
+  createdAt  DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([severity, createdAt])
+}
+
+// رویدادهای سبک برای تحلیل Funnel — فقط دو مرحله‌ای که جای دیگه‌ای قابل
+// استخراج نیستن (بقیه‌ی مراحلِ Funnel از جداول موجود مثل User/Subscription/
+// Payment مشتق می‌شن، نیازی به رویداد جداگانه ندارن)
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?  // ممکنه مهمون باشه (هنوز ثبت‌نام نکرده)
+  type      String   // "view_subscription_page" | "checkout_start"
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([userId, type])
+}
+
+// تنظیمات سراسریِ اپ (نه به‌ازای کاربر) — فقط برای مواردی که Owner باید
+// بتونه بدونِ دیپلوی تغییرشون بده. الگوی key/value مثلِ UserSetting.
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
 }

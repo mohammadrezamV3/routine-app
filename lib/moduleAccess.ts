@@ -28,6 +28,15 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
     return { ok: false, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
   }
 
+  // چون session با JWT ذخیره می‌شه (نه یک ردیفِ قابل‌ابطال سمتِ سرور)، اگه
+  // Owner یک کاربر رو بعد از صدورِ توکن مسدود کنه، خودِ توکن هنوز «معتبر»
+  // به‌نظر می‌رسه — پس این‌جا صریحاً از دیتابیس چک می‌کنیم تا مسدودشدن واقعاً
+  // همون لحظه اثر کنه، نه فقط با انقضای توکن (تا ۳۰ روز بعد).
+  const blockedCheck = await prisma.user.findUnique({ where: { id: userId }, select: { isBlocked: true } });
+  if (blockedCheck?.isBlocked) {
+    return { ok: false, response: NextResponse.json({ error: "حساب کاربری مسدود شده است" }, { status: 403 }) };
+  }
+
   // سوپریوزر به همه‌چیز دسترسی نامحدود دارد (هم‌راستا با /api/account)
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
   if (isSuperAdmin) {

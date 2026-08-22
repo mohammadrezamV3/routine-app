@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       level, goalLabel: GOAL_OPTION_LABELS[goal], gymDays: uniqueDays,
       heightCm: heightCm || null, weightKg: weightKg || null,
       hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
-    });
+    }, userId);
     if (!result.feasible) {
       return NextResponse.json({ ok: false, feasible: false, message: result.message });
     }

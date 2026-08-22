@@ -27,6 +27,17 @@ export default function SubscriptionPage() {
     setCheckoutResult(new URLSearchParams(window.location.search).get("checkout"));
   }, []);
 
+  // پنل Owner › Funnel — یک بار به‌ازای هر بازدیدِ واقعیِ این صفحه، بی‌صدا و
+  // بدون تأثیر روی تجربه‌ی کاربر (fire-and-forget)
+  useEffect(() => {
+    if (status === "loading") return;
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "view_subscription_page" }),
+    }).catch(() => {});
+  }, [status]);
+
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/plans")

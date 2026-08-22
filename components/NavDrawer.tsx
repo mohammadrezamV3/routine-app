@@ -156,7 +156,9 @@ export function NavDrawer() {
   const bellBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
-  const hideTopbar = pathname?.startsWith("/auth");
+  // پنل Owner (/admin) کاملاً محیطِ جدایی‌ست — نه هدر/منوی سایتِ اصلی، نه
+  // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
+  const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
 
   function go(href: string) {
     setOpen(false);

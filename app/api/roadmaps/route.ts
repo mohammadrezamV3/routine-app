@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   let generated;
   try {
-    generated = await generateRoadmap(cleanTopic);
+    generated = await generateRoadmap(cleanTopic, userId);
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "خطا در ساخت رودمپ" }, { status: 500 });
   }

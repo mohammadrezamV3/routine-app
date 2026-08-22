@@ -78,6 +78,9 @@ export async function POST(req: NextRequest) {
       callbackUrl,
       mobile: user.phone || undefined,
     });
+    // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعاً درخواستِ
+    // پرداخت به درگاه با موفقیت ساخته شده باشه (نه هر کلیکِ فرانت)
+    prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration } } }).catch(() => {});
     return NextResponse.json({ paymentUrl, discountApplied });
   } catch (e: any) {
     // اگه ZARINPAL_MERCHANT_ID هنوز ست نشده (این محیط/قبل از دیپلوی نهایی)
