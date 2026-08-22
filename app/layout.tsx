@@ -55,9 +55,7 @@ const latin = Inter({
 });
 
 export const metadata: Metadata = {
-  // موقتاً برای تایید مالکیت دامنه (روش «تغییر عنوان صفحه» پنل اینماد) —
-  // بعد از تایید توی پنل باید فوراً به "Arion" برگرده.
-  title: "17682803",
+  title: "Arion",
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
   // سافاریِ آیفون display:"standalone"ِ manifest.ts رو نمی‌خونه — «افزودن به
   // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپِ واقعیِ standalone می‌سازه (بدونِ
@@ -67,11 +65,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Arion",
-  },
-  // تأیید مالکیت دامنه برای اینماد (نماد اعتماد الکترونیکی) — کد اختصاصی
-  // arionapp.ir، از پنل احراز دسترسی فنی enamad.ir گرفته شده.
-  other: {
-    enamad: "17682803",
   },
 };
 
