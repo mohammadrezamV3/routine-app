@@ -6,16 +6,57 @@
 // response_format:{type:"json_object"} در سطحِ خودِ فراخوانی اجباری شده، هم
 // توی هر system prompt صریح تکرار شده، تا مستقیم قابلِ ذخیره/نمایش باشه.
 
+import { AiFeatureKey } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { logError } from "@/lib/errorLog";
+import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
+
+const AI_MODEL_NAME = "gpt-4o-mini";
+
 type ChatContentPart =
   | { type: "text"; text: string }
   | { type: "image_url"; image_url: { url: string } };
+
+type ChatUsage = { inputTokens: number; outputTokens: number };
+type ChatResult = { text: string; usage: ChatUsage; durationMs: number };
+
+// پنل Owner › مصرف AI — یک ردیفِ واقعی به‌ازای هر فراخوانیِ واقعیِ گیت‌وی.
+// success:true یعنی گیت‌وی واقعاً پاسخ داد و توکن مصرف شد (حتی اگه بعداً
+// اعتبارسنجیِ ساختارِ خروجی شکست بخوره — هزینه‌ش واقعاً اتفاق افتاده)؛
+// success:false یعنی خودِ فراخوانی (شبکه/HTTP) شکست خورده، پس توکنی مصرف نشده.
+async function recordAiUsage(
+  userId: string,
+  feature: AiFeatureKey,
+  usage: ChatUsage,
+  durationMs: number,
+  success: boolean
+) {
+  try {
+    const rate = await getAiCostRate();
+    await prisma.aiUsageRecord.create({
+      data: {
+        userId,
+        feature,
+        model: AI_MODEL_NAME,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        costUsdMicros: estimateAiCostUsdMicros(usage.inputTokens, usage.outputTokens, rate),
+        durationMs,
+        success,
+      },
+    });
+  } catch (err: any) {
+    // ثبتِ آمار نباید جلوی مسیرِ اصلیِ فیچر رو بگیره
+    logError("ai-gateway", `ثبتِ AiUsageRecord شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature } });
+  }
+}
 
 // baseUrl و apiKey هر دو از env میان — هیچ‌وقت نباید هاردکد یا کامیت بشن؛
 // فقط توی .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
 // نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
 // توکنِ احرازهویت نیست — احرازهویتِ واقعی با یه Access Key جداست که از
 // پنلِ آروان‌کلود، بخشِ «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
-async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<string> {
+async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<ChatResult> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
   const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
@@ -25,6 +66,7 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
     throw new Error("ARVAN_AI_API_KEY تنظیم نشده — این فیچر بدون کلید دسترسی کار نمی‌کند");
   }
 
+  const startedAt = Date.now();
   const response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
     method: "POST",
     headers: {
@@ -32,7 +74,7 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: AI_MODEL_NAME,
       max_tokens: maxTokens,
       response_format: { type: "json_object" },
       messages: [
@@ -41,6 +83,7 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
       ],
     }),
   });
+  const durationMs = Date.now() - startedAt;
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
@@ -49,8 +92,12 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
 
   const data = await response.json();
   const text: string = data?.choices?.[0]?.message?.content ?? "";
+  const usage: ChatUsage = {
+    inputTokens: Number(data?.usage?.prompt_tokens) || 0,
+    outputTokens: Number(data?.usage?.completion_tokens) || 0,
+  };
   if (!text) throw new Error("پاسخ مدل خالی بود");
-  return text;
+  return { text, usage, durationMs };
 }
 
 function parseJsonResponse(text: string): any {
@@ -128,8 +175,11 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
   };
 }
 
-async function callRoadmapOnce(topic: string): Promise<GeneratedRoadmap> {
-  const text = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
+async function callRoadmapOnce(topic: string, userId: string): Promise<GeneratedRoadmap> {
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
+  // گیت‌وی واقعاً پاسخ داد و توکن مصرف شد — صرفِ‌نظر از اینکه اعتبارسنجیِ
+  // ساختارِ خروجی پایین‌تر موفق بشه یا نه
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
   return normalizeRoadmap(parseJsonResponse(text));
 }
 
@@ -138,15 +188,19 @@ async function callRoadmapOnce(topic: string): Promise<GeneratedRoadmap> {
  * تصادفی)، نه یک خطای ساختاری همیشگی. اگه هر دو بار شکست خورد، همون خطای
  * تلاش آخر رو برمی‌گردونه.
  */
-export async function generateRoadmap(topic: string): Promise<GeneratedRoadmap> {
+export async function generateRoadmap(topic: string, userId: string): Promise<GeneratedRoadmap> {
   let lastError: any;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await callRoadmapOnce(topic);
+      return await callRoadmapOnce(topic, userId);
     } catch (err) {
       lastError = err;
     }
   }
+  // هر دو تلاش شکست خورد. اگه یه attempt واقعاً از گیت‌وی جواب گرفته بود، همون
+  // داخلِ callRoadmapOnce با success:true ثبت شده (چون هزینه‌ش واقعاً افتاده)؛
+  // این‌جا فقط شکستِ نهایی رو برای بخشِ «خطاها» ثبت می‌کنیم.
+  logError("ai-gateway", `ساختِ رودمپ شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "ROADMAP_GENERATION" } });
   throw lastError;
 }
 
@@ -220,7 +274,7 @@ function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerci
   return days;
 }
 
-async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<ExercisePlanResult> {
+async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
   const profileText = [
     `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
     `هدف: ${profile.goalLabel}`,
@@ -232,7 +286,8 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<Exerc
     profile.description ? `توضیحِ کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
   ].filter(Boolean).join("\n");
 
-  const text = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 2000);
+  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 2000);
+  recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, usage, durationMs, true);
   const parsed = parseJsonResponse(text);
 
   if (parsed?.feasible === false) {
@@ -245,11 +300,11 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile): Promise<Exerc
   return { feasible: true, days: normalizeExercisePlan(parsed?.days, profile.gymDays) };
 }
 
-export async function generateExercisePlan(profile: ExercisePlanProfile): Promise<ExercisePlanResult> {
+export async function generateExercisePlan(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
   let lastError: any;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const result = await callExercisePlanOnce(profile);
+      const result = await callExercisePlanOnce(profile, userId);
       // «feasible: false» یک پاسخِ معتبرِ مدلِه، نه خطای موقتِ شبکه/پارس —
       // نباید دوباره تلاش کنیم، همون رد رو مستقیم برگردونیم.
       return result;
@@ -257,6 +312,7 @@ export async function generateExercisePlan(profile: ExercisePlanProfile): Promis
       lastError = err;
     }
   }
+  logError("ai-gateway", `ساختِ برنامه‌ی تمرینی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
   throw lastError;
 }
 
@@ -298,15 +354,23 @@ function asPositiveNumber(v: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpeg" | "image/png" | "image/webp"): Promise<FoodScanResult> {
-  const text = await callAiChat(
-    FOOD_SCAN_SYSTEM_PROMPT,
-    [
-      { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
-      { type: "image_url", image_url: { url: `data:${mediaType};base64,${base64Data}` } },
-    ],
-    500
-  );
+export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpeg" | "image/png" | "image/webp", userId: string): Promise<FoodScanResult> {
+  let chatResult: { text: string; usage: { inputTokens: number; outputTokens: number }; durationMs: number };
+  try {
+    chatResult = await callAiChat(
+      FOOD_SCAN_SYSTEM_PROMPT,
+      [
+        { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
+        { type: "image_url", image_url: { url: `data:${mediaType};base64,${base64Data}` } },
+      ],
+      500
+    );
+  } catch (err: any) {
+    logError("ai-gateway", `اسکنِ عکسِ غذا شکست خورد: ${err?.message || err}`, { context: { feature: "FOOD_SCAN" } });
+    throw err;
+  }
+  const { text, usage, durationMs } = chatResult;
+  recordAiUsage(userId, AiFeatureKey.FOOD_SCAN, usage, durationMs, true);
   const parsed = parseJsonResponse(text);
 
   if (parsed?.recognized === false) {

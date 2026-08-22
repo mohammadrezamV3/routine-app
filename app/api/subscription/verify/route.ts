@@ -7,6 +7,14 @@ import type { Duration } from "@/lib/planPricing";
 
 const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
 
+// پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداختِ ناموفق/رهاشده واقعاً
+// جایی ثبت می‌شه؛ جدولِ Payment فقط پرداختِ verify-شده‌ی موفق رو داره
+// (هیچ ردیفی برای تلاشِ ناموفق ساخته نمی‌شه)، پس بدونِ این رویداد، «تراکنشِ
+// ناموفق» یه حالتِ کاملاً نامرئی توی دیتابیس بود.
+function logCheckoutFailed(userId: string | undefined, reason: string) {
+  prisma.analyticsEvent.create({ data: { userId: userId || null, type: "checkout_failed", meta: { reason } } }).catch(() => {});
+}
+
 // GET /api/subscription/verify → مرورگرِ کاربر بعدِ پرداخت از زرین‌پال
 // اینجا برمی‌گرده (Authority/Status توی query). مبلغ رو مستقیم از همون
 // query که خودمون موقعِ ساختِ callback_url ساختیم می‌خونیم — امنیتش با
@@ -19,6 +27,7 @@ export async function GET(req: NextRequest) {
   const redirectBase = new URL("/subscription", req.nextUrl.origin);
 
   if (!userId) {
+    logCheckoutFailed(undefined, "no_session");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }
@@ -32,6 +41,7 @@ export async function GET(req: NextRequest) {
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
 
   if (status !== "OK" || !authority || !planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
+    logCheckoutFailed(userId, status === "OK" ? "invalid_params" : "gateway_canceled_or_error");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }
@@ -40,10 +50,12 @@ export async function GET(req: NextRequest) {
   try {
     verified = await zarinpalVerifyPayment({ amountRial: amount, authority });
   } catch {
+    logCheckoutFailed(userId, "verify_request_error");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }
   if (!verified.ok) {
+    logCheckoutFailed(userId, "verify_rejected");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }
@@ -53,6 +65,7 @@ export async function GET(req: NextRequest) {
     include: { modules: true },
   });
   if (!plan) {
+    logCheckoutFailed(userId, "plan_not_found");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }

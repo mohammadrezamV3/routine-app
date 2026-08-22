@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 // عمداً بدونِ ssr:false — چون خروجیِ بصریِ این کامپوننت (بلاب‌های aurora)
 // کاملاً استاتیک/CSSـه (useEffectش فقط لیسنرِ پارالاکسِ ماوس رو اضافه
@@ -14,5 +15,8 @@ const BackgroundCanvas = dynamic(
 );
 
 export function BackgroundCanvasLoader() {
+  const pathname = usePathname();
+  // پنل Owner یک محیطِ تحلیلیِ کاملاً جداست — بدونِ پس‌زمینه‌ی marketing
+  if (pathname?.startsWith("/admin")) return null;
   return <BackgroundCanvas />;
 }

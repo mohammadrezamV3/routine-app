@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await analyzeFoodPhoto(imageBase64, mediaType as "image/jpeg" | "image/png" | "image/webp");
+    const result = await analyzeFoodPhoto(imageBase64, mediaType as "image/jpeg" | "image/png" | "image/webp", userId);
     return NextResponse.json({ ok: true, result });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "خطا در تحلیل عکس" }, { status: 500 });
