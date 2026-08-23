@@ -1,18 +1,22 @@
-// ارسال پیامک OTP از طریق ملی‌پیامک (متد SendOtp). این متد متنِ پیامک رو
-// خودش با یک قالب ثابت و از‌پیش‌تاییدشده می‌فرسته («کد تایید شما Code: xxxxx»)
-// پس فقط کد رو می‌گیریم، نه متن دلخواه.
-// مستندات: https://www.melipayamak.com/api/sendotp/
+// ارسال پیامک OTP از طریق ملی‌پیامک با متد «ارسال با الگو» (BaseNumber)،
+// نه متد SendOtp. دلیلِ سوییچ: متد SendOtp با این‌که RetStatus:1 (موفق)
+// برمی‌گردوند، پیامک روی خطوطی که «مسدودیِ پیامک‌های تبلیغاتی» فعال دارن
+// توسط اپراتور silently drop می‌شد و هیچ‌وقت به گوشی نمی‌رسید — چون از یه
+// خطِ خدماتیِ عمومی/بدون الگوی تاییدشده می‌اومد. الگوی ثابتِ تاییدشده
+// (BodyId) از این فیلتر رد می‌شه چون از قبل توسط اپراتور/ملی‌پیامک به‌عنوان
+// پیامکِ خدماتیِ واقعی احراز شده.
+// مستندات: https://www.melipayamak.com/api/sendbybasenumber/
 //
-// اگه اطلاعات پنل (یوزرنیم/رمز/شماره فرستنده) تنظیم نشده باشه، به‌جای شکست
+// اگه اطلاعات پنل (یوزرنیم/رمز/کد الگو) تنظیم نشده باشه، به‌جای شکست
 // خوردن یا وانمود کردن ارسال موفق، کد رو توی لاگ سرور می‌نویسه — تا جریان
 // OTP قابل تست باشه بدون این‌که رفتارش دروغ باشه.
 const MELIPAYAMAK_USERNAME = process.env.MELIPAYAMAK_USERNAME;
 const MELIPAYAMAK_PASSWORD = process.env.MELIPAYAMAK_PASSWORD;
-const MELIPAYAMAK_FROM = process.env.MELIPAYAMAK_FROM;
+const MELIPAYAMAK_PATTERN_ID = process.env.MELIPAYAMAK_PATTERN_ID;
 
 export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boolean; simulated: boolean }> {
-  if (!MELIPAYAMAK_USERNAME || !MELIPAYAMAK_PASSWORD || !MELIPAYAMAK_FROM) {
-    console.warn(`[sms] اطلاعات ملی‌پیامک (MELIPAYAMAK_USERNAME/MELIPAYAMAK_PASSWORD/MELIPAYAMAK_FROM) تنظیم نشده — کد OTP برای ${phone} فقط توی لاگ سرور نوشته می‌شه: ${code}`);
+  if (!MELIPAYAMAK_USERNAME || !MELIPAYAMAK_PASSWORD || !MELIPAYAMAK_PATTERN_ID) {
+    console.warn(`[sms] اطلاعات ملی‌پیامک (MELIPAYAMAK_USERNAME/MELIPAYAMAK_PASSWORD/MELIPAYAMAK_PATTERN_ID) تنظیم نشده — کد OTP برای ${phone} فقط توی لاگ سرور نوشته می‌شه: ${code}`);
     return { ok: true, simulated: true };
   }
 
@@ -20,11 +24,11 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
     const body = new URLSearchParams({
       username: MELIPAYAMAK_USERNAME,
       password: MELIPAYAMAK_PASSWORD,
+      text: code,
       to: phone,
-      from: MELIPAYAMAK_FROM,
-      code,
+      bodyId: MELIPAYAMAK_PATTERN_ID,
     });
-    const res = await fetch("https://rest.payamak-panel.com/api/SendSMS/SendOtp", {
+    const res = await fetch("https://rest.payamak-panel.com/api/SendSMS/BaseNumber", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
