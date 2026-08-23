@@ -66,11 +66,6 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Arion",
   },
-  // تأیید مالکیت دامنه برای اینماد (نماد اعتماد الکترونیکی) — کد اختصاصی
-  // arionapp.ir، از پنل احراز دسترسی فنی enamad.ir گرفته شده.
-  other: {
-    enamad: "17682803",
-  },
 };
 
 // viewport-fit:cover لازمه تا سافاری صفحه رو زیرِ ناچ/نوارِ وضعیت هم بکشه؛
