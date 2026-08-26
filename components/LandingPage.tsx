@@ -461,6 +461,17 @@ export function LandingPage() {
       <section id="sec-landing-plans" style={{ paddingTop: 32 }}>
         <PlansSection isIntl={isIntl} mode="landing" />
       </section>
+
+      {/* بدونِ این فوتر، /about و /faq و /terms هیچ لینکِ HTMLای از صفحه‌ی
+          اصلی نداشتن — یعنی برای کراولرها عملاً صفحاتِ ایزوله بودن (فقط با
+          دونستنِ آدرسِ دقیق پیدا می‌شدن، نه با دنبال‌کردنِ لینک). */}
+      <footer className={`mt-10 border-t ${t.line} px-4 py-6 text-center text-[11.5px] ${t.muted}`}>
+        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <Link href="/about" className="hover:underline">درباره ما</Link>
+          <Link href="/faq" className="hover:underline">سوالات متداول</Link>
+          <Link href="/terms" className="hover:underline">قوانین و مقررات</Link>
+        </nav>
+      </footer>
     </>
   );
 }
