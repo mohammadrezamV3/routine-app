@@ -33,17 +33,53 @@ const securityHeaders = [
   },
 ];
 
+// این مسیرها یا داده‌ی خصوصیِ کاربر/ادمینن یا صرفاً ابزاری‌ان (فرم‌های
+// auth، چک‌اوت) — هیچ‌کدوم نباید توی نتایج جست‌وجو ظاهر بشن. با
+// X-Robots-Tag (نه فقط با متاتگِ HTML) این تضمین می‌شه چون این هدر حتی
+// روی صفحاتِ کلاینت‌ساید‌رندرشده (که نمی‌تونن metadata سرور صادر کنن) هم
+// اثر می‌کنه، و مستقل از robots.txt عمل می‌کنه (اگه یه لینکِ بیرونی هم به
+// این مسیرها اشاره کنه، بازم ایندکس نمی‌شن). لیست باید با disallow توی
+// app/robots.ts هماهنگ بمونه.
+const NOINDEX_PATH_PREFIXES = [
+  "/api/:path*",
+  "/auth/:path*",
+  "/weekly",
+  "/weekly/:path*",
+  "/exercise",
+  "/exercise/:path*",
+  "/trade",
+  "/trade/:path*",
+  "/roadmaps",
+  "/roadmaps/:path*",
+  "/account",
+  "/account/:path*",
+  "/admin",
+  "/admin/:path*",
+  "/notepad",
+  "/notepad/:path*",
+  // خودِ /subscription (نه فقط چک‌اوت) پشتِ AuthGate‌ـه — کاربرِ مهمان/کراولر
+  // فقط پیامِ «وارد شو» می‌بینه؛ جدولِ واقعیِ پلن‌های عمومی از قبل توی صفحه‌ی
+  // اصلی (PlansSection mode="landing") هست.
+  "/subscription",
+  "/subscription/:path*",
+];
+
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {
-    if (!isProd) return []; // روی dev هیچ هدر امنیتی سخت‌گیرانه‌ای اعمال نمی‌شه
+    const noindexHeaders = NOINDEX_PATH_PREFIXES.map((source) => ({
+      source,
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    }));
+    if (!isProd) return noindexHeaders; // روی dev هیچ هدر امنیتی سخت‌گیرانه‌ای اعمال نمی‌شه، ولی noindex بی‌ضرره
     return [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
+      ...noindexHeaders,
     ];
   },
 };

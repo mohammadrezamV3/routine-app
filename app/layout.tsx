@@ -54,9 +54,41 @@ const latin = Inter({
   variable: "--font-latin",
 });
 
+// آدرس پایه‌ی production — برای resolve کردنِ URLهای نسبی توی OG/canonical
+// (metadataBase) و برای ساختنِ لینک‌های مطلق توی robots.ts/sitemap.ts.
+// از env می‌خونیم چون دامنه هاردکد نباید بشه؛ fallback فقط برای وقتیه که
+// env ست نشده (dev/build محلی).
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
+
 export const metadata: Metadata = {
-  title: "Arion",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Arion — روتین، ورزش، تغذیه و ترید در یک اپ",
+    // صفحاتِ داخلی با metadata خودشون این default رو override می‌کنن؛
+    // اگه صفحه‌ای عمداً metadata نده (صفحاتِ خصوصی که noindex هستن)، همین
+    // fallback عمومی نشون داده می‌شه — قابل قبوله چون این صفحات ایندکس
+    // نمی‌شن، فقط برای عنوانِ تبِ مرورگر لازمه.
+    template: "%s | Arion",
+  },
   description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+  applicationName: "Arion",
+  // پیش‌فرضِ سراسری «ایندکس بشو» — صفحاتِ خصوصی از طریق X-Robots-Tag توی
+  // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننتِ
+  // کلاینتی‌ان و نمی‌تونن این metadata رو override کنن.
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    locale: "fa_IR",
+    url: SITE_URL,
+    siteName: "Arion",
+    title: "Arion — روتین، ورزش، تغذیه و ترید در یک اپ",
+    description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+  },
+  twitter: {
+    card: "summary",
+    title: "Arion — روتین، ورزش، تغذیه و ترید در یک اپ",
+    description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+  },
   // سافاریِ آیفون display:"standalone"ِ manifest.ts رو نمی‌خونه — «افزودن به
   // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپِ واقعیِ standalone می‌سازه (بدونِ
   // نوارِ آدرس/دکمه‌های سافاری)؛ بدونش، حتی با مانیفستِ درست، توی iOS بازم
@@ -66,6 +98,26 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Arion",
   },
+};
+
+// Organization + WebSite — دو schema پایه‌ای که واقعاً روی این پروژه صدق
+// می‌کنن (یه اپ واقعی با برند مشخص)، بدونِ هیچ داده‌ی ساختگی (نه rating نه
+// review نه قیمتِ اینجا). عمداً توی root layout (نه یه صفحه‌ی خاص) چون
+// توصیفِ خودِ سایته، نه محتوای یک صفحه.
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Arion",
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon.png`,
+};
+
+const WEBSITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Arion",
+  url: SITE_URL,
+  inLanguage: "fa-IR",
 };
 
 // viewport-fit:cover لازمه تا سافاری صفحه رو زیرِ ناچ/نوارِ وضعیت هم بکشه؛
@@ -104,6 +156,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}
       <body data-theme="dark" suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
+        />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}

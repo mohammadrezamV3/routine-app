@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { AdminShell } from "@/components/AdminShell";
+
+// این پنل دیتای خصوصیِ کسب‌وکار (کاربران، تراکنش‌ها) رو نشون می‌ده — علاوه
+// بر X-Robots-Tag توی next.config.js و notFound() پایین (که اصلاً محتوایی
+// به غیرِ سوپرادمین نمی‌ده)، این هم یه لایه‌ی اضافه‌ست.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 // گیتِ سمتِ سرورِ کاملِ پنلِ Owner — این یک Server Component است (نه
 // "use client")، پس این چک روی *هر* درخواست به /admin/* قبل از رندرِ هر

@@ -12,6 +12,7 @@ import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
 import { getSiteMarket } from "@/lib/market";
 import { useThemeTokens, PlansSection } from "@/components/PlanShowcase";
+import { EnamadBadge } from "@/components/EnamadBadge";
 
 const SLEEP_ICON = (
   <svg viewBox="0 0 24 24" fill="none"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -461,6 +462,20 @@ export function LandingPage() {
       <section id="sec-landing-plans" style={{ paddingTop: 32 }}>
         <PlansSection isIntl={isIntl} mode="landing" />
       </section>
+
+      {/* بدونِ این فوتر، /about و /faq و /terms هیچ لینکِ HTMLای از صفحه‌ی
+          اصلی نداشتن — یعنی برای کراولرها عملاً صفحاتِ ایزوله بودن (فقط با
+          دونستنِ آدرسِ دقیق پیدا می‌شدن، نه با دنبال‌کردنِ لینک). */}
+      <footer className={`mt-10 border-t ${t.line} px-4 py-6 text-center text-[11.5px] ${t.muted}`}>
+        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <Link href="/about" className="hover:underline">درباره ما</Link>
+          <Link href="/faq" className="hover:underline">سوالات متداول</Link>
+          <Link href="/terms" className="hover:underline">قوانین و مقررات</Link>
+        </nav>
+        <div className="mt-4 flex justify-center">
+          <EnamadBadge />
+        </div>
+      </footer>
     </>
   );
 }
