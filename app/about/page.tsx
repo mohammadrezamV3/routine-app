@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "درباره آریون",
+  description: "درباره‌ی تیم سازنده‌ی آریون و راه‌های تماس.",
+  alternates: { canonical: "/about" },
+  openGraph: { url: "/about", title: "درباره آریون" },
+};
+
 export default function AboutPage() {
   const rows = [
     { label: "سازنده", value: "Arion Group" },
