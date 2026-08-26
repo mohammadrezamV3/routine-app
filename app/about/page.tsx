@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EnamadBadge } from "@/components/EnamadBadge";
 
 export const metadata: Metadata = {
   title: "درباره آریون",
@@ -29,6 +30,9 @@ export default function AboutPage() {
             )}
           </div>
         ))}
+      </div>
+      <div style={{ marginTop: 24 }}>
+        <EnamadBadge />
       </div>
     </section>
   );
