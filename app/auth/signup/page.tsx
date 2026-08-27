@@ -13,14 +13,21 @@ import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcce
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox } from "@/lib/jalali";
 
-type FieldErrors = { phone?: string; name?: string; lastName?: string; username?: string; birthDate?: string; password?: string; agreed?: string };
+type FieldErrors = {
+  phone?: string; name?: string; lastName?: string; username?: string;
+  birthDate?: string; password?: string; agreed?: string; otp?: string;
+};
 
+const RESEND_COOLDOWN_SECONDS = 120;
+
+// فرم دیگه ویزارد چند-استپ نیست: اول اطلاعات اصلی (اسم/یوزرنیم/تاریخ‌تولد/
+// رمز)، بعد شماره‌همراه — همه توی یک صفحه. دکمه‌ی «ارسال کد» داخلِ خودِ
+// فیلدِ شماره‌ست؛ با زدنش کد پیامک می‌شه و بلافاصله زیرِ همون فیلد، فیلدِ
+// کد ظاهر می‌شه (بدون رفتن به یه صفحه/استپِ جدا). خودِ تاییدِ کد هم موقعِ
+// «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا چک می‌شه.
 export default function SignupPage() {
   const router = useRouter();
-  // ۱: شماره موبایل · ۲: کد تاییدِ پیامکی · ۳: بقیه‌ی اطلاعات + رمز
-  const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -29,9 +36,10 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
 
+  const [phone, setPhone] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [otpLoading, setOtpLoading] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -39,15 +47,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
-  const phoneRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
   const lastNameRef = useRef<HTMLDivElement>(null);
   const usernameRef = useRef<HTMLDivElement>(null);
   const birthDateRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
+  const otpRef = useRef<HTMLDivElement>(null);
   const agreedRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { staggerFieldsIn(formRef.current); }, [step]);
+  useEffect(() => { staggerFieldsIn(formRef.current); }, []);
 
   const [tier, setTier] = useState<Awaited<ReturnType<typeof passwordTier>> | null>(null);
   useEffect(() => {
@@ -68,69 +77,53 @@ export default function SignupPage() {
   }, [resendCooldown]);
 
   async function requestOtp() {
-    setLoading(true);
-    setOtpError(null);
+    const trimmed = phone.trim();
+    if (!trimmed) {
+      setFieldErrors((f) => ({ ...f, phone: "شماره همراه را وارد کن" }));
+      shakeFields([phoneRef.current]);
+      return;
+    }
+    if (!isValidIranPhone(trimmed)) {
+      setFieldErrors((f) => ({ ...f, phone: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)" }));
+      shakeFields([phoneRef.current]);
+      return;
+    }
+    clearError("phone");
+    setSendingCode(true);
     try {
       const res = await fetch("/api/auth/signup/otp/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim() }),
+        body: JSON.stringify({ phone: trimmed }),
       });
-      const data = await res.json();
-      setLoading(false);
+      const data = await res.json().catch(() => ({}));
+      setSendingCode(false);
       if (!res.ok) {
-        setFieldErrors({ phone: data.error || "خطایی پیش آمد" });
+        setFieldErrors((f) => ({ ...f, phone: data.error || "خطایی پیش آمد" }));
         shakeFields([phoneRef.current]);
-        return false;
+        return;
       }
       setOtpCode("");
-      setResendCooldown(60);
-      setStep(2);
-      return true;
+      setFieldErrors((f) => ({ ...f, otp: undefined }));
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      setOtpSent(true);
     } catch {
-      setLoading(false);
-      setFieldErrors({ phone: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
-      return false;
+      setSendingCode(false);
+      setFieldErrors((f) => ({ ...f, phone: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" }));
     }
   }
 
-  function goNext() {
-    if (!phone.trim()) {
-      setFieldErrors({ phone: "شماره همراه را وارد کن" });
-      shakeFields([phoneRef.current]);
-      return;
-    }
-    if (!isValidIranPhone(phone.trim())) {
-      setFieldErrors({ phone: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)" });
-      shakeFields([phoneRef.current]);
-      return;
-    }
-    setFieldErrors({});
-    requestOtp();
+  function changePhone() {
+    setOtpSent(false);
+    setOtpCode("");
+    setResendCooldown(0);
+    setFieldErrors((f) => ({ ...f, otp: undefined }));
   }
 
-  async function verifyOtp(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!otpCode.trim()) { setOtpError("کد ارسال‌شده را وارد کن"); return; }
-    setOtpLoading(true);
-    setOtpError(null);
-    try {
-      const res = await fetch("/api/auth/signup/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), code: otpCode.trim() }),
-      });
-      const data = await res.json();
-      setOtpLoading(false);
-      if (!res.ok) { setOtpError(data.error || "خطایی پیش آمد"); return; }
-      setStep(3);
-    } catch {
-      setOtpLoading(false);
-      setOtpError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
-    }
-  }
+    setError(null);
 
-  async function validateStep2(): Promise<boolean> {
     const errs: FieldErrors = {};
     if (!name.trim()) errs.name = "نام را وارد کن";
     if (!lastName.trim()) errs.lastName = "نام خانوادگی را وارد کن";
@@ -142,6 +135,10 @@ export default function SignupPage() {
       const pwErr = await validatePassword(password, [username, name, lastName, phone]);
       if (pwErr) errs.password = pwErr;
     }
+    if (!phone.trim()) errs.phone = "شماره همراه را وارد کن";
+    else if (!isValidIranPhone(phone.trim())) errs.phone = "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)";
+    else if (!otpSent) errs.phone = "اول باید کد تایید رو ارسال کنی";
+    if (otpSent && !otpCode.trim()) errs.otp = "کد ارسال‌شده را وارد کن";
     if (!agreed) errs.agreed = "برای ادامه باید قوانین سایت را بپذیری";
 
     setFieldErrors(errs);
@@ -152,19 +149,36 @@ export default function SignupPage() {
         errs.username ? usernameRef.current : null,
         errs.birthDate ? birthDateRef.current : null,
         errs.password ? passwordRef.current : null,
+        errs.phone ? phoneRef.current : null,
+        errs.otp ? otpRef.current : null,
         errs.agreed ? agreedRef.current : null,
       ]);
-      return false;
+      return;
     }
-    return true;
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!(await validateStep2())) return;
 
     setLoading(true);
+
+    let verifyRes: Response;
+    let verifyData: { error?: string };
+    try {
+      verifyRes = await fetch("/api/auth/signup/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim(), code: otpCode.trim() }),
+      });
+      verifyData = await verifyRes.json().catch(() => ({}));
+    } catch {
+      setLoading(false);
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      return;
+    }
+    if (!verifyRes.ok) {
+      setLoading(false);
+      setFieldErrors((f) => ({ ...f, otp: verifyData.error || "کد وارد شده اشتباه است" }));
+      shakeFields([otpRef.current]);
+      return;
+    }
+
     let res: Response;
     let data: { error?: string; userId?: string };
     try {
@@ -209,144 +223,136 @@ export default function SignupPage() {
       <div className="auth-shell">
         <AuthTabs active="signup" />
 
-        {step === 1 ? (
-          <div className="auth-box">
-            <AuthBackButton />
-            <AuthBrandMark subtitle="به آریون خوش اومدی!" />
-            <div className="auth-step" key="step1">
-              <AuthField id="phone" label="شماره همراه" error={fieldErrors.phone} ref={phoneRef}>
-                <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" placeholder="09123456789"
-                  onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) clearError("phone"); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); goNext(); } }}
-                />
-              </AuthField>
-              <button type="button" className="auth-full-btn" onClick={goNext} disabled={loading}>
-                {loading ? "در حال ارسال کد…" : "ادامه"}
-              </button>
-            </div>
+        <form ref={formRef} onSubmit={submit} className="auth-box">
+          <AuthBackButton />
+          <AuthBrandMark subtitle="به آریون خوش اومدی!" />
+
+          <div className="auth-field-grid">
+            <AuthField id="name" label="نام" error={fieldErrors.name} ref={nameRef}>
+              <input
+                id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی"
+                onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
+              />
+            </AuthField>
+            <AuthField id="lastName" label="نام خانوادگی" error={fieldErrors.lastName} ref={lastNameRef}>
+              <input
+                id="lastName" type="text" className="wsearch-newform-name" value={lastName} placeholder="محمدی"
+                onChange={(e) => { setLastName(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
+              />
+            </AuthField>
           </div>
-        ) : step === 2 ? (
-          <form onSubmit={verifyOtp} className="auth-box">
-            <AuthBackButton onClick={() => { setStep(1); setOtpError(null); }} />
-            <AuthBrandMark subtitle="به آریون خوش اومدی!" />
-            <div className="auth-step" key="step2">
-              <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                کدی که به {phone.trim()} پیامک شد رو وارد کن.
+
+          <div style={{ marginTop: 14 }}>
+            <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} ref={usernameRef}>
+              <input
+                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" placeholder="ali_2024"
+                onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
+              />
+            </AuthField>
+          </div>
+
+          <div style={{ marginTop: 14 }} ref={birthDateRef} data-anim-field>
+            <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>تاریخ تولد</label>
+            <button
+              type="button"
+              className={`jdate-btn${birthDate ? "" : " placeholder"}`}
+              onClick={() => setDobOpen(true)}
+            >
+              {birthDate ? formatJalali(birthDate) : "انتخاب تاریخ تولد"}
+            </button>
+            {fieldErrors.birthDate && <div className="field-error-msg" style={{ display: "block" }}>{fieldErrors.birthDate}</div>}
+          </div>
+
+          <div style={{ marginTop: 14 }}>
+            <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
+              <input
+                id="password" type="password" className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
+                onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
+              />
+            </AuthField>
+            {tier && (
+              <div className={`pw-strength pw-strength-${tier}`}>
+                <div className="pw-strength-bars">
+                  {PASSWORD_TIER_ORDER.map((t, i) => (
+                    <div key={t} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
+                  ))}
+                </div>
+                <div className="pw-strength-label">
+                  قدرت رمز: {PASSWORD_TIER_LABELS[tier]}
+                  {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
+                </div>
               </div>
-              <AuthField id="signupOtp" label="کد ۵ رقمی">
+            )}
+          </div>
+
+          <div style={{ marginTop: 14 }} ref={phoneRef}>
+            <AuthField id="phone" label="شماره همراه" error={fieldErrors.phone}>
+              <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
+                <input
+                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr"
+                  placeholder="09123456789" readOnly={otpSent}
+                  onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) clearError("phone"); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !otpSent) { e.preventDefault(); requestOtp(); } }}
+                />
+                <button
+                  type="button"
+                  className="auth-phone-send-btn"
+                  disabled={sendingCode || (otpSent && resendCooldown > 0)}
+                  onClick={otpSent ? changePhone : requestOtp}
+                >
+                  {sendingCode ? "در حال ارسال…" : otpSent ? "تغییر شماره" : "ارسال کد"}
+                </button>
+              </div>
+            </AuthField>
+          </div>
+
+          {otpSent && (
+            <div className="auth-otp-reveal" ref={otpRef}>
+              <div className="auth-otp-hint">کدی که به {phone.trim()} پیامک شد رو وارد کن.</div>
+              <AuthField id="signupOtp" label="کد ۵ رقمی" error={fieldErrors.otp}>
                 <input
                   id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr"
-                  onChange={(e) => { setOtpCode(e.target.value); if (e.target.value.trim()) setOtpError(null); }}
+                  onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "")); if (e.target.value.trim()) clearError("otp"); }}
                 />
               </AuthField>
-              {otpError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{otpError}</div>}
-              <button type="submit" className="auth-full-btn" disabled={otpLoading}>
-                {otpLoading ? "در حال بررسی…" : "تایید کد"}
-              </button>
               <button
                 type="button"
                 className="auth-resend-btn"
-                disabled={resendCooldown > 0 || loading}
+                disabled={resendCooldown > 0 || sendingCode}
                 onClick={requestOtp}
               >
                 {resendCooldown > 0 ? `ارسال مجدد کد (${resendCooldown})` : "ارسال مجدد کد"}
               </button>
             </div>
-          </form>
-        ) : (
-          <form ref={formRef} onSubmit={submit} className="auth-box">
-            <AuthBackButton onClick={() => setStep(2)} />
-            <AuthBrandMark subtitle="به آریون خوش اومدی!" />
+          )}
 
-            <div className="auth-step" key="step3">
-              <div className="auth-field-grid">
-                <AuthField id="name" label="نام" error={fieldErrors.name} ref={nameRef}>
-                  <input
-                    id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی"
-                    onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
-                  />
-                </AuthField>
-                <AuthField id="lastName" label="نام خانوادگی" error={fieldErrors.lastName} ref={lastNameRef}>
-                  <input
-                    id="lastName" type="text" className="wsearch-newform-name" value={lastName} placeholder="محمدی"
-                    onChange={(e) => { setLastName(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
-                  />
-                </AuthField>
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} ref={usernameRef}>
-                  <input
-                    id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" placeholder="ali_2024"
-                    onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
-                  />
-                </AuthField>
-              </div>
-
-              <div style={{ marginTop: 14 }} ref={birthDateRef} data-anim-field>
-                <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>تاریخ تولد</label>
-                <button
-                  type="button"
-                  className={`jdate-btn${birthDate ? "" : " placeholder"}`}
-                  onClick={() => setDobOpen(true)}
-                >
-                  {birthDate ? formatJalali(birthDate) : "انتخاب تاریخ تولد"}
-                </button>
-                {fieldErrors.birthDate && <div className="field-error-msg" style={{ display: "block" }}>{fieldErrors.birthDate}</div>}
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
-                  <input
-                    id="password" type="password" className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
-                    onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
-                  />
-                </AuthField>
-                {tier && (
-                  <div className={`pw-strength pw-strength-${tier}`}>
-                    <div className="pw-strength-bars">
-                      {PASSWORD_TIER_ORDER.map((t, i) => (
-                        <div key={t} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
-                      ))}
-                    </div>
-                    <div className="pw-strength-label">
-                      قدرت رمز: {PASSWORD_TIER_LABELS[tier]}
-                      {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="task auth-terms-row"
-                style={{ marginTop: 16 }}
-                ref={agreedRef}
-                data-anim-field
-                onClick={() => { setAgreed((v) => !v); clearError("agreed"); }}
-              >
-                <div className={`check${agreed ? " on" : ""}`}>
-                  <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                    <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div className="task-name">
-                  <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-                    قوانین و مقررات سایت
-                  </Link>
-                  {" "}را می‌پذیرم
-                </div>
-              </div>
-              {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}
-
-              {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
-
-              <button type="submit" className="auth-full-btn" disabled={loading}>
-                {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
-              </button>
+          <div
+            className="task auth-terms-row"
+            style={{ marginTop: 16 }}
+            ref={agreedRef}
+            data-anim-field
+            onClick={() => { setAgreed((v) => !v); clearError("agreed"); }}
+          >
+            <div className={`check${agreed ? " on" : ""}`}>
+              <svg className="c-check" viewBox="0 0 24 24" fill="none">
+                <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
-          </form>
-        )}
+            <div className="task-name">
+              <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
+                قوانین و مقررات سایت
+              </Link>
+              {" "}را می‌پذیرم
+            </div>
+          </div>
+          {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}
+
+          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+
+          <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field style={{ marginTop: 16 }}>
+            {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
+          </button>
+        </form>
       </div>
 
       {dobOpen && (

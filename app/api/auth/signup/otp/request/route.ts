@@ -25,16 +25,26 @@ export async function POST(req: NextRequest) {
   if (!checkRateLimit(`signup-otp-req-ip:${ip}`, 8, 10 * 60 * 1000) || !checkRateLimit(`signup-otp-req-phone:${phone}`, 3, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
+  // کولداونِ ثابتِ ۲ دقیقه‌ای بینِ هر درخواست برای همین شماره — جدا از سقفِ
+  // بالا (که فقط تعداد رو محدود می‌کنه)، این مطمئن می‌شه صدازدنِ مستقیمِ API
+  // (دور زدنِ تایمرِ کلاینت) هم نمی‌تونه زودتر از ۲ دقیقه کدِ بعدی رو بگیره.
+  if (!checkRateLimit(`signup-otp-cooldown:${phone}`, 1, 2 * 60 * 1000)) {
+    return NextResponse.json({ error: "لطفاً ۲ دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
+  }
 
   const code = String(Math.floor(10000 + Math.random() * 90000)); // ۵ رقمی
-  await prisma.signupOtp.create({
-    data: {
-      phone,
-      codeHash: hashCode(code),
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    },
-  });
-  await sendOtpSms(phone, code);
+  // ذخیره‌ی کد و ارسالِ پیامک هم‌زمان — تاخیرِ نوشتنِ دیتابیس دیگه به
+  // تاخیرِ رسیدنِ پیامک اضافه نمی‌شه.
+  await Promise.all([
+    prisma.signupOtp.create({
+      data: {
+        phone,
+        codeHash: hashCode(code),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    }),
+    sendOtpSms(phone, code),
+  ]);
 
   return NextResponse.json({ ok: true });
 }

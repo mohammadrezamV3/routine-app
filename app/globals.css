@@ -170,6 +170,16 @@
      این‌که پایین/بالای صفحه «بریده» به‌نظر می‌رسید. پدینگ حالا اینست‌های
      واقعیِ دستگاه رو هم اضافه می‌کنه (روی دستگاهِ بدونِ ناچ صفره، پس چیزی
      عوض نمی‌شه). خودِ رنگِ پس‌زمینه از html/body میاد که هردو تم‌آگاه‌ن. */
+  /* موبایل (خصوصاً کروم/سافاری اندروید) هر تگ قابل‌کلیک رو موقع لمس با یه
+     هایلایتِ خاکستریِ نیم‌شفافِ پیش‌فرض می‌پوشونه — چون خیلی از دکمه‌های سایت
+     (بازگشت، آیکون‌ها، دکمه‌های ثانویه) عمداً بی‌بک‌گراندن، این هایلایت دقیقاً
+     مثلِ ظاهرشدنِ ناخواسته‌ی یه بک‌گراند به‌نظر می‌رسه. */
+  *{ -webkit-tap-highlight-color:transparent; }
+  /* عنصرِ SVGِ <text> برخلافِ HTML معمولی، font-family رو از body ارث نمی‌بره —
+     بدونِ این خط به فونتِ خامِ سیستم/مرورگر سقوط می‌کنه (دقیقاً همون باگِ
+     «توی چارت‌ها یه فونتِ دیگه دیده می‌شه»، مخصوصاً روی چارت‌های دسکتاپِ ادمین/
+     کالری که برچسب‌هاشون با <text> خامِ SVG رسم می‌شن، نه یه عنصرِ HTML). */
+  svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
   body{
     background:var(--bg); color:var(--text);
     font-family:var(--font-vazir), sans-serif;
@@ -2495,10 +2505,11 @@ body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-fu
 .auth-full-btn:active{ transform:scale(.97); }
 .auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
 
-/* دکمه‌ی «ارسال مجدد کد» — عمداً بدون بک‌گراند/بردر (اکشنِ ثانویه، نه اصلی) */
+/* دکمه‌ی «ارسال مجدد کد» — زیرِ فیلدِ کد، چسبیده به سمتِ راست (نه وسط‌چین
+   زیرِ کل فرم)، عمداً بدون بک‌گراند/بردر (اکشنِ ثانویه، نه اصلی) */
 .auth-resend-btn{
-  display:block; width:100%; margin-top:12px; padding:4px 0; text-align:center;
-  background:none; border:none; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer;
+  display:block; width:auto; margin:8px 0 0 auto; padding:4px 2px; text-align:right;
+  background:none; border:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer;
   transition:color .15s ease;
 }
 body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-resend-btn{
@@ -2506,6 +2517,30 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 }
 .auth-resend-btn:hover:not(:disabled){ color:var(--accent); }
 .auth-resend-btn:disabled{ cursor:default; opacity:.6; }
+
+/* فیلدِ شماره‌همراه توی ثبت‌نام — دکمه‌ی «ارسال کد» داخلِ خودِ فیلده (سمتِ
+   چپ)، نه یه دکمه‌ی جدا زیرش. پدینگِ چپِ اینپوت به‌اندازه‌ی عرضِ دکمه باز
+   می‌شه که متن زیرِ دکمه نره. بعدِ ارسالِ موفق، فیلد قفل می‌شه (readOnly) و
+   دکمه به یه لینکِ «تغییر شماره» تبدیل می‌شه. */
+.auth-phone-wrap{ position:relative; }
+.auth-phone-wrap .wsearch-newform-name{ padding-left:86px; }
+.auth-phone-send-btn{
+  position:absolute; left:6px; top:50%; transform:translateY(-50%);
+  display:flex; align-items:center; justify-content:center;
+  padding:7px 14px; border-radius:999px; border:none;
+  background:var(--accent); color:var(--bg); font-size:11.5px; font-weight:700;
+  cursor:pointer; transition:filter .15s ease, opacity .15s ease;
+  white-space:nowrap;
+}
+.auth-phone-send-btn:hover:not(:disabled){ filter:brightness(1.08); }
+.auth-phone-send-btn:disabled{ opacity:.55; cursor:default; filter:none; }
+.auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
+
+/* فیلدِ کدِ تایید که زیرِ فیلدِ شماره ظاهر می‌شه — همون ورودِ ملایمِ بقیه‌ی
+   فیلدهای فرم (staggerFieldsIn از data-anim-field استفاده می‌کنه)، بدونِ
+   نیاز به یه استپِ کاملاً جدا/صفحه‌ی جدا. */
+.auth-otp-reveal{ margin-top:14px; animation:authBoxIn .28s ease both; }
+.auth-otp-hint{ font-size:11.5px; color:var(--muted); margin-bottom:6px; }
 
 /* جداکننده‌ی «یا» بین ورود معمولی و ورود با گوگل */
 .auth-or-divider{
@@ -4287,7 +4322,12 @@ body:has(.admin-root){ background:var(--adm-bg); }
 /* --- Simple SVG line/bar chart primitives --- */
 .admin-svg-chart{ width:100%; height:auto; overflow:visible; }
 .admin-svg-chart .grid-line{ stroke:var(--adm-border); stroke-width:1; }
-.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), sans-serif; }
+/* قبلاً فقط var(--font-latin) بود، بدونِ فال‌بکِ var(--font-vazir) — یعنی
+   اگه لیبلی حرفِ فارسی داشت (نه فقط عدد/تاریخِ لاتین)، به فونتِ سیستمیِ
+   خامِ مرورگر سقوط می‌کرد، نه فونتِ اصلیِ سایت. همون استکِ دوفونتیِ استانداردِ
+   بقیه‌ی سایت (لاتین اول برای اعداد، وضیرمتن به‌عنوانِ فال‌بک) اینجا هم باید
+   باشه — این باگِ «توی چارت‌های دسکتاپ/ادمین یه فونتِ دیگه دیده می‌شه» بود. */
+.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .admin-svg-chart .line-path{ fill:none; stroke:var(--adm-accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .admin-svg-chart .area-fill{ fill:url(#admChartGradient); opacity:.5; }
 .admin-svg-chart .bar-rect{ fill:var(--adm-accent); opacity:.85; rx:3; }

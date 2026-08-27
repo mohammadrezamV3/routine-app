@@ -7,6 +7,8 @@ import { AuthField } from "@/components/AuthField";
 import { isValidIranPhone } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
+const RESEND_COOLDOWN_SECONDS = 120;
+
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -15,6 +17,13 @@ export default function ForgotPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   const [tier, setTier] = useState<Awaited<ReturnType<typeof passwordTier>> | null>(null);
   useEffect(() => {
@@ -23,6 +32,16 @@ export default function ForgotPasswordPage() {
     passwordTier(newPassword, [phone]).then((t) => { if (!cancelled) setTier(t); });
     return () => { cancelled = true; };
   }, [newPassword, phone]);
+
+  async function sendResetCode(phoneNumber: string): Promise<{ ok: boolean; error?: string }> {
+    const res = await fetch("/api/auth/forgot-password/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: phoneNumber }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true } : { ok: false, error: data.error };
+  }
 
   async function requestCode(e: React.FormEvent) {
     e.preventDefault();
@@ -33,15 +52,26 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim() }),
-      });
-      const data = await res.json();
+      const result = await sendResetCode(phone.trim());
       setLoading(false);
-      if (!res.ok) { setError(data.error || "خطایی پیش آمد"); return; }
+      if (!result.ok) { setError(result.error || "خطایی پیش آمد"); return; }
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setStep(2);
+    } catch {
+      setLoading(false);
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+    }
+  }
+
+  async function resendCode() {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await sendResetCode(phone.trim());
+      setLoading(false);
+      if (!result.ok) { setError(result.error || "خطایی پیش آمد"); return; }
+      setCode("");
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch {
       setLoading(false);
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
@@ -75,7 +105,7 @@ export default function ForgotPasswordPage() {
     <section className="auth-page">
       <div className="auth-shell">
         <div className="auth-box">
-          <AuthBackButton />
+          <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
           <AuthBrandMark />
           <div style={{ textAlign: "center", marginBottom: 4 }}>
             <div style={{ fontSize: 15, fontWeight: 700 }}>فراموشی رمز عبور</div>
@@ -110,6 +140,14 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setCode(e.target.value)}
                 />
               </AuthField>
+              <button
+                type="button"
+                className="auth-resend-btn"
+                disabled={resendCooldown > 0 || loading}
+                onClick={resendCode}
+              >
+                {resendCooldown > 0 ? `ارسال مجدد کد (${resendCooldown})` : "ارسال مجدد کد"}
+              </button>
               <div style={{ marginTop: 14 }}>
                 <AuthField id="newPassword" label="رمز عبور جدید">
                   <input
