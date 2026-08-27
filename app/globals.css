@@ -175,6 +175,11 @@
      (بازگشت، آیکون‌ها، دکمه‌های ثانویه) عمداً بی‌بک‌گراندن، این هایلایت دقیقاً
      مثلِ ظاهرشدنِ ناخواسته‌ی یه بک‌گراند به‌نظر می‌رسه. */
   *{ -webkit-tap-highlight-color:transparent; }
+  /* عنصرِ SVGِ <text> برخلافِ HTML معمولی، font-family رو از body ارث نمی‌بره —
+     بدونِ این خط به فونتِ خامِ سیستم/مرورگر سقوط می‌کنه (دقیقاً همون باگِ
+     «توی چارت‌ها یه فونتِ دیگه دیده می‌شه»، مخصوصاً روی چارت‌های دسکتاپِ ادمین/
+     کالری که برچسب‌هاشون با <text> خامِ SVG رسم می‌شن، نه یه عنصرِ HTML). */
+  svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
   body{
     background:var(--bg); color:var(--text);
     font-family:var(--font-vazir), sans-serif;
@@ -4317,7 +4322,12 @@ body:has(.admin-root){ background:var(--adm-bg); }
 /* --- Simple SVG line/bar chart primitives --- */
 .admin-svg-chart{ width:100%; height:auto; overflow:visible; }
 .admin-svg-chart .grid-line{ stroke:var(--adm-border); stroke-width:1; }
-.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), sans-serif; }
+/* قبلاً فقط var(--font-latin) بود، بدونِ فال‌بکِ var(--font-vazir) — یعنی
+   اگه لیبلی حرفِ فارسی داشت (نه فقط عدد/تاریخِ لاتین)، به فونتِ سیستمیِ
+   خامِ مرورگر سقوط می‌کرد، نه فونتِ اصلیِ سایت. همون استکِ دوفونتیِ استانداردِ
+   بقیه‌ی سایت (لاتین اول برای اعداد، وضیرمتن به‌عنوانِ فال‌بک) اینجا هم باید
+   باشه — این باگِ «توی چارت‌های دسکتاپ/ادمین یه فونتِ دیگه دیده می‌شه» بود. */
+.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .admin-svg-chart .line-path{ fill:none; stroke:var(--adm-accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .admin-svg-chart .area-fill{ fill:url(#admChartGradient); opacity:.5; }
 .admin-svg-chart .bar-rect{ fill:var(--adm-accent); opacity:.85; rx:3; }
