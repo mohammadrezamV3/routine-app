@@ -29,72 +29,79 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 
-  const body = await req.json();
-  const { planKey, duration, discountCode, gateway: rawGateway } = body as {
-    planKey: string; duration: Duration; discountCode?: string; gateway?: string;
-  };
-  const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zarinpal";
+  // همه‌ی این تابع (از پارس بادی تا صداکردنِ درگاه) داخلِ یه try/catقِ واحده.
+  // قبلاً فقط بخشِ درخواستِ پرداخت پوشش داشت — یعنی مثلاً اگه جدولِ
+  // DiscountCode روی این دیپلوی هنوز migrate نشده باشه (یا هر خطای
+  // پیش‌بینی‌نشده‌ی دیگه‌ای قبل از رسیدن به درگاه رخ بده)، Next.js یه
+  // صفحه‌ی خطای خامِ HTML برمی‌گردوند، نه JSON؛ فرانت‌اند هم چون
+  // res.json() روی HTML fail می‌شه، فقط پیامِ عمومیِ «مشکلی در اتصال به
+  // سرور» رو نشون می‌داد — بدونِ هیچ سرنخی از دلیلِ واقعی.
+  try {
+    const body = await req.json();
+    const { planKey, duration, discountCode, gateway: rawGateway } = body as {
+      planKey: string; duration: Duration; discountCode?: string; gateway?: string;
+    };
+    const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zarinpal";
 
-  if (!planKey || !DURATIONS.includes(duration)) {
-    return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
-  }
+    if (!planKey || !DURATIONS.includes(duration)) {
+      return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
+    }
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true, phone: true } });
-  if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (user.market !== "IRAN") {
-    return NextResponse.json({ error: "درگاهِ پرداختِ بین‌المللی هنوز فعال نشده — به‌زودی" }, { status: 503 });
-  }
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true, phone: true } });
+    if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
+    if (user.market !== "IRAN") {
+      return NextResponse.json({ error: "درگاهِ پرداختِ بین‌المللی هنوز فعال نشده — به‌زودی" }, { status: 503 });
+    }
 
-  const pricing = findPlanPricing(planKey, false);
-  if (!pricing || pricing.free || !pricing.amounts) {
-    return NextResponse.json({ error: "این پلن قابل خرید نیست" }, { status: 400 });
-  }
+    const pricing = findPlanPricing(planKey, false);
+    if (!pricing || pricing.free || !pricing.amounts) {
+      return NextResponse.json({ error: "این پلن قابل خرید نیست" }, { status: 400 });
+    }
 
-  const plan = await prisma.plan.findUnique({ where: { key_market: { key: planKey, market: "IRAN" } } });
-  if (!plan || !plan.isActive) {
-    return NextResponse.json({ error: "این پلن فعلاً در دسترس نیست" }, { status: 400 });
-  }
+    const plan = await prisma.plan.findUnique({ where: { key_market: { key: planKey, market: "IRAN" } } });
+    if (!plan || !plan.isActive) {
+      return NextResponse.json({ error: "این پلن فعلاً در دسترس نیست" }, { status: 400 });
+    }
 
-  let discountPercent = 0;
-  let referralUsageId: string | undefined;
-  let discountApplied = false;
-  if (discountCode?.trim()) {
-    const normalizedCode = discountCode.trim().toUpperCase();
+    let discountPercent = 0;
+    let referralUsageId: string | undefined;
+    let discountApplied = false;
+    if (discountCode?.trim()) {
+      const normalizedCode = discountCode.trim().toUpperCase();
 
-    // اول کدهای تخفیفِ عمومیِ ادمین (DiscountCode) چک می‌شن — فقط اگه فعال،
-    // منقضی‌نشده، و (اگه planKey داشت) دقیقاً برای همین پلن ساخته شده باشه.
-    const promo = await prisma.discountCode.findUnique({ where: { code: normalizedCode } });
-    const promoValid = promo && promo.active && (!promo.expiresAt || promo.expiresAt > new Date())
-      && (!promo.planKey || promo.planKey === planKey);
+      // اول کدهای تخفیفِ عمومیِ ادمین (DiscountCode) چک می‌شن — فقط اگه فعال،
+      // منقضی‌نشده، و (اگه planKey داشت) دقیقاً برای همین پلن ساخته شده باشه.
+      const promo = await prisma.discountCode.findUnique({ where: { code: normalizedCode } });
+      const promoValid = promo && promo.active && (!promo.expiresAt || promo.expiresAt > new Date())
+        && (!promo.planKey || promo.planKey === planKey);
 
-    if (promoValid) {
-      discountPercent = promo!.percentOff;
-      discountApplied = true;
-    } else {
-      // فال‌بک به کدِ رفرالِ شخصی — همون رفتارِ قبلی
-      const referral = await prisma.referralCode.findUnique({ where: { code: normalizedCode } });
-      if (referral && referral.userId !== userId) {
-        discountPercent = REFERRAL_DISCOUNT_PERCENT;
+      if (promoValid) {
+        discountPercent = promo!.percentOff;
         discountApplied = true;
-        const usage = await prisma.referralUsage.create({
-          data: { referralCodeId: referral.id, inviteeUserId: userId },
-        });
-        referralUsageId = usage.id;
       } else {
-        // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
-        // نادیده‌گرفتنِ بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
-        return NextResponse.json({ error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" }, { status: 400 });
+        // فال‌بک به کدِ رفرالِ شخصی — همون رفتارِ قبلی
+        const referral = await prisma.referralCode.findUnique({ where: { code: normalizedCode } });
+        if (referral && referral.userId !== userId) {
+          discountPercent = REFERRAL_DISCOUNT_PERCENT;
+          discountApplied = true;
+          const usage = await prisma.referralUsage.create({
+            data: { referralCodeId: referral.id, inviteeUserId: userId },
+          });
+          referralUsageId = usage.id;
+        } else {
+          // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
+          // نادیده‌گرفتنِ بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
+          return NextResponse.json({ error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" }, { status: 400 });
+        }
       }
     }
-  }
 
-  const baseAmount = pricing.amounts[duration];
-  const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
+    const baseAmount = pricing.amounts[duration];
+    const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
-  const origin = req.nextUrl.origin;
-  const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
+    const origin = req.nextUrl.origin;
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
 
-  try {
     const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
     const { paymentUrl } = gateway === "zibal"
       ? await zibalRequest(finalAmount, callbackUrl, description)
@@ -109,11 +116,14 @@ export async function POST(req: NextRequest) {
     prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration, gateway } } }).catch(() => {});
     return NextResponse.json({ paymentUrl, discountApplied });
   } catch (e: any) {
-    // اگه مرچنت‌آیدیِ درگاهِ انتخاب‌شده هنوز ست نشده (این محیط/قبل از دیپلوی
-    // نهایی) پیام صادقانه بده، نه یه خطای خام ۵۰۰.
-    const msg = e?.message?.includes("MERCHANT_ID") || e?.message?.includes("MERCHANT_KEY")
-      ? "درگاهِ پرداختِ انتخاب‌شده هنوز روی این سرور راه‌اندازی نشده — به‌زودی"
-      : e?.message || "خطا در اتصال به درگاه پرداخت";
-    return NextResponse.json({ error: msg }, { status: 502 });
+    if (e?.message?.includes("MERCHANT_ID") || e?.message?.includes("MERCHANT_KEY")) {
+      return NextResponse.json({ error: "درگاهِ پرداختِ انتخاب‌شده هنوز روی این سرور راه‌اندازی نشده — به‌زودی" }, { status: 502 });
+    }
+    // خطاهای دیتابیس (مثلاً P2021: جدول وجود نداره چون migration اجرا نشده)
+    // کدِ مشخصی دارن که برای کاربر معنی نداره — پیامِ عمومی‌تر ولی هنوز JSON.
+    if (e?.code?.startsWith?.("P")) {
+      return NextResponse.json({ error: "خطای داخلی سرور — لطفاً بعداً دوباره امتحان کن" }, { status: 500 });
+    }
+    return NextResponse.json({ error: e?.message || "خطا در اتصال به درگاه پرداخت" }, { status: 502 });
   }
 }
