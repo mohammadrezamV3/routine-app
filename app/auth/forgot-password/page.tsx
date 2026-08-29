@@ -2,19 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { AuthField } from "@/components/AuthField";
-import { isValidIranPhone } from "@/lib/validate";
+import { isValidIranPhone, isValidEmail } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 const RESEND_COOLDOWN_SECONDS = 120;
 
+// شناسه یک باکسِ واحده — هم شماره‌همراه هم ایمیل (اگه کاربر ثبت کرده باشه)
+// قبول می‌کنه؛ تشخیصِ نوعش سمتِ سرور هم دوباره انجام می‌شه (lib/validate).
+function isValidIdentifier(v: string): boolean {
+  return isValidIranPhone(v) || isValidEmail(v);
+}
+
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -29,15 +37,15 @@ export default function ForgotPasswordPage() {
   useEffect(() => {
     if (!newPassword) { setTier(null); return; }
     let cancelled = false;
-    passwordTier(newPassword, [phone]).then((t) => { if (!cancelled) setTier(t); });
+    passwordTier(newPassword, [identifier]).then((t) => { if (!cancelled) setTier(t); });
     return () => { cancelled = true; };
-  }, [newPassword, phone]);
+  }, [newPassword, identifier]);
 
-  async function sendResetCode(phoneNumber: string): Promise<{ ok: boolean; error?: string }> {
+  async function sendResetCode(value: string): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch("/api/auth/forgot-password/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: phoneNumber }),
+      body: JSON.stringify({ identifier: value }),
     });
     const data = await res.json().catch(() => ({}));
     return res.ok ? { ok: true } : { ok: false, error: data.error };
@@ -46,13 +54,13 @@ export default function ForgotPasswordPage() {
   async function requestCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!phone.trim() || !isValidIranPhone(phone.trim())) {
-      setError("فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)");
+    if (!identifier.trim() || !isValidIdentifier(identifier.trim())) {
+      setError("شماره همراه یا ایمیل معتبر نیست");
       return;
     }
     setLoading(true);
     try {
-      const result = await sendResetCode(phone.trim());
+      const result = await sendResetCode(identifier.trim());
       setLoading(false);
       if (!result.ok) { setError(result.error || "خطایی پیش آمد"); return; }
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
@@ -67,7 +75,7 @@ export default function ForgotPasswordPage() {
     setError(null);
     setLoading(true);
     try {
-      const result = await sendResetCode(phone.trim());
+      const result = await sendResetCode(identifier.trim());
       setLoading(false);
       if (!result.ok) { setError(result.error || "خطایی پیش آمد"); return; }
       setCode("");
@@ -89,7 +97,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch("/api/auth/forgot-password/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), code: code.trim(), newPassword }),
+        body: JSON.stringify({ identifier: identifier.trim(), code: code.trim(), newPassword }),
       });
       const data = await res.json();
       setLoading(false);
@@ -106,20 +114,17 @@ export default function ForgotPasswordPage() {
       <div className="auth-shell">
         <div className="auth-box">
           <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
-          <AuthBrandMark />
-          <div style={{ textAlign: "center", marginBottom: 4 }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>فراموشی رمز عبور</div>
-          </div>
+          <AuthBrandMark subtitle="فراموشی رمز عبور" />
 
           {step === 1 && (
             <form onSubmit={requestCode} className="auth-step" key="step1">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                شماره همراهی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات پیامک می‌شه.
+                شماره‌همراه یا ایمیلی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه.
               </div>
-              <AuthField id="phone" label="شماره همراه">
+              <AuthField id="identifier" label="شماره همراه یا ایمیل" icon={<User size={15} />}>
                 <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" placeholder="09123456789"
-                  onChange={(e) => setPhone(e.target.value)}
+                  id="identifier" type="text" className="wsearch-newform-name" value={identifier} dir="ltr" placeholder="09123456789"
+                  onChange={(e) => setIdentifier(e.target.value)}
                 />
               </AuthField>
               {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
@@ -132,7 +137,7 @@ export default function ForgotPasswordPage() {
           {step === 2 && (
             <form onSubmit={verifyAndReset} className="auth-step" key="step2">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                کدی که به {phone} پیامک شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.
+                کدی که به {identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.
               </div>
               <AuthField id="code" label="کد ۵ رقمی">
                 <input
@@ -149,9 +154,23 @@ export default function ForgotPasswordPage() {
                 {resendCooldown > 0 ? `ارسال مجدد کد (${resendCooldown})` : "ارسال مجدد کد"}
               </button>
               <div style={{ marginTop: 14 }}>
-                <AuthField id="newPassword" label="رمز عبور جدید">
+                <AuthField
+                  id="newPassword" label="رمز عبور جدید"
+                  icon={<Lock size={15} />}
+                  endAction={
+                    <button
+                      type="button"
+                      className="field-toggle-visibility-btn"
+                      tabIndex={-1}
+                      aria-label={passwordVisible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
+                      onClick={() => setPasswordVisible((v) => !v)}
+                    >
+                      {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  }
+                >
                   <input
-                    id="newPassword" type="password" className="wsearch-newform-name" value={newPassword}
+                    id="newPassword" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </AuthField>

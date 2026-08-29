@@ -54,7 +54,9 @@ export function GoogleSignInButton() {
   );
 }
 
-/** نشان برند، داخل باکس — subtitle اختیاریه (فقط لاگین ازش استفاده می‌کنه) */
+/** نشان برند، داخل باکس — subtitle اختیاریه؛ هر سه صفحه‌ی auth (ورود/
+ * ثبت‌نام/فراموشی رمز) ازش برای تایتلِ زیرِ لوگو استفاده می‌کنن تا محلِ
+ * تایتل بینشون یکسان بمونه. */
 export function AuthBrandMark({ subtitle }: { subtitle?: string }) {
   return (
     <div className="auth-brand-mark-wrap">
