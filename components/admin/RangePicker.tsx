@@ -57,9 +57,9 @@ export function RangePicker() {
       </button>
       {customOpen && (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <input type="date" className="admin-input" value={from} onChange={(e) => setFrom(e.target.value)} style={{ colorScheme: "dark" }} />
+          <input type="date" className="admin-input" value={from} onChange={(e) => setFrom(e.target.value)} />
           <span style={{ color: "var(--adm-muted-2)", fontSize: 11 }}>تا</span>
-          <input type="date" className="admin-input" value={to} onChange={(e) => setTo(e.target.value)} style={{ colorScheme: "dark" }} />
+          <input type="date" className="admin-input" value={to} onChange={(e) => setTo(e.target.value)} />
           <button type="button" className="admin-btn primary" onClick={applyCustom} disabled={!from || !to} style={{ padding: "7px 12px" }}>
             اعمال
           </button>

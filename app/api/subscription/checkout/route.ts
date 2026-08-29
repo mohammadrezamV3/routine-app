@@ -6,14 +6,10 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
 import { zarinpalRequestPayment } from "@/lib/zarinpal";
 import { zibalRequest } from "@/lib/zibal";
+import { resolveDiscountCode } from "@/lib/discountValidation";
 
 const GATEWAYS = ["zarinpal", "zibal"] as const;
 type Gateway = (typeof GATEWAYS)[number];
-
-// درصدِ تخفیفِ کدِ رفرال در چک‌اوت — پاداشِ «یک ماه رایگان برای هردو طرف»یِ
-// خودِ سیستم رفرال (بعد از اولین پرداختِ موفق دعوت‌شونده) جدا و هنوز سمتِ
-// این چک‌اوت پیاده نشده؛ اینجا فقط همون تخفیفِ لحظه‌ی خریدِ دعوت‌شونده‌ست.
-const REFERRAL_DISCOUNT_PERCENT = 10;
 
 // POST /api/subscription/checkout → پلن+مدت+کدِتخفیفِ اختیاری رو می‌گیره،
 // مبلغ رو از جدولِ قیمتِ سمتِ سرور (نه از ورودیِ کلاینت) حساب می‌کنه، و
@@ -67,32 +63,19 @@ export async function POST(req: NextRequest) {
     let referralUsageId: string | undefined;
     let discountApplied = false;
     if (discountCode?.trim()) {
-      const normalizedCode = discountCode.trim().toUpperCase();
-
-      // اول کدهای تخفیفِ عمومیِ ادمین (DiscountCode) چک می‌شن — فقط اگه فعال،
-      // منقضی‌نشده، و (اگه planKey داشت) دقیقاً برای همین پلن ساخته شده باشه.
-      const promo = await prisma.discountCode.findUnique({ where: { code: normalizedCode } });
-      const promoValid = promo && promo.active && (!promo.expiresAt || promo.expiresAt > new Date())
-        && (!promo.planKey || promo.planKey === planKey);
-
-      if (promoValid) {
-        discountPercent = promo!.percentOff;
-        discountApplied = true;
-      } else {
-        // فال‌بک به کدِ رفرالِ شخصی — همون رفتارِ قبلی
-        const referral = await prisma.referralCode.findUnique({ where: { code: normalizedCode } });
-        if (referral && referral.userId !== userId) {
-          discountPercent = REFERRAL_DISCOUNT_PERCENT;
-          discountApplied = true;
-          const usage = await prisma.referralUsage.create({
-            data: { referralCodeId: referral.id, inviteeUserId: userId },
-          });
-          referralUsageId = usage.id;
-        } else {
-          // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
-          // نادیده‌گرفتنِ بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
-          return NextResponse.json({ error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" }, { status: 400 });
-        }
+      const resolution = await resolveDiscountCode(discountCode, userId, planKey);
+      if (!resolution.ok) {
+        // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
+        // نادیده‌گرفتنِ بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
+        return NextResponse.json({ error: resolution.error }, { status: 400 });
+      }
+      discountPercent = resolution.percent;
+      discountApplied = true;
+      if (resolution.source === "referral") {
+        const usage = await prisma.referralUsage.create({
+          data: { referralCodeId: resolution.referralCodeId, inviteeUserId: userId },
+        });
+        referralUsageId = usage.id;
       }
     }
 

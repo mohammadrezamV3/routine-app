@@ -24,11 +24,14 @@ export async function POST(req: NextRequest) {
     password: string;
     name: string;
     lastName: string;
+    // دیگه توی فرمِ ثبت‌نام پرسیده نمی‌شه — کاربر بعداً از /account خودش وارد
+    // می‌کنه؛ ولی فیلد رو کاملاً حذف نمی‌کنیم تا اگه کلاینتِ دیگه‌ای (یا
+    // نسخه‌ی قدیمی) فرستادش، هنوز معتبرسنجی و ذخیره بشه.
     birthDate?: string;
   };
 
-  if (!phone || !username || !password || !name || !lastName || !birthDate) {
-    return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم، تاریخ تولد و رمز عبور الزامی است" }, { status: 400 });
+  if (!phone || !username || !password || !name || !lastName) {
+    return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم و رمز عبور الزامی است" }, { status: 400 });
   }
   if (!isValidIranPhone(phone)) {
     return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });
@@ -40,10 +43,13 @@ export async function POST(req: NextRequest) {
   if (passwordError) {
     return NextResponse.json({ error: passwordError }, { status: 400 });
   }
-  const dob = new Date(birthDate);
-  const ageYears = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-  if (isNaN(dob.getTime()) || ageYears < 10 || ageYears > 100) {
-    return NextResponse.json({ error: "تاریخ تولد معتبر نیست" }, { status: 400 });
+  let dob: Date | null = null;
+  if (birthDate) {
+    dob = new Date(birthDate);
+    const ageYears = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+    if (isNaN(dob.getTime()) || ageYears < 10 || ageYears > 100) {
+      return NextResponse.json({ error: "تاریخ تولد معتبر نیست" }, { status: 400 });
+    }
   }
 
   // شماره موبایل باید قبلاً با کدِ پیامکی تایید شده باشه (app/api/auth/signup/otp) —

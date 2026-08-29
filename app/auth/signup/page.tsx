@@ -10,29 +10,27 @@ import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
-import { JalaliDatePicker } from "@/components/JalaliDatePicker";
-import { JalaliDate, formatJalali, jalaliToGregorianApprox } from "@/lib/jalali";
 
 type FieldErrors = {
   phone?: string; name?: string; lastName?: string; username?: string;
-  birthDate?: string; password?: string; agreed?: string; otp?: string;
+  password?: string; agreed?: string; otp?: string;
 };
 
 const RESEND_COOLDOWN_SECONDS = 120;
 
-// فرم دیگه ویزارد چند-استپ نیست: اول اطلاعات اصلی (اسم/یوزرنیم/تاریخ‌تولد/
-// رمز)، بعد شماره‌همراه — همه توی یک صفحه. دکمه‌ی «ارسال کد» داخلِ خودِ
-// فیلدِ شماره‌ست؛ با زدنش کد پیامک می‌شه و بلافاصله زیرِ همون فیلد، فیلدِ
-// کد ظاهر می‌شه (بدون رفتن به یه صفحه/استپِ جدا). خودِ تاییدِ کد هم موقعِ
-// «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا چک می‌شه.
+// فرم دیگه ویزارد چند-استپ نیست: اول اطلاعات اصلی (اسم/یوزرنیم/رمز)، بعد
+// شماره‌همراه — همه توی یک صفحه. تاریخ تولد عمداً این‌جا نیست — بعداً از
+// پنل کاربری (/account) خودِ کاربر وارد می‌کنه، نه موقعِ ثبت‌نام. دکمه‌ی
+// «ارسال کد» داخلِ خودِ فیلدِ شماره‌ست؛ با زدنش کد پیامک می‌شه و بلافاصله
+// زیرِ همون فیلد، فیلدِ کد ظاهر می‌شه (بدون رفتن به یه صفحه/استپِ جدا).
+// خودِ تاییدِ کد هم موقعِ «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا
+// چک می‌شه.
 export default function SignupPage() {
   const router = useRouter();
 
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
-  const [birthDate, setBirthDate] = useState<JalaliDate | null>(null);
-  const [dobOpen, setDobOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
 
@@ -50,7 +48,6 @@ export default function SignupPage() {
   const nameRef = useRef<HTMLDivElement>(null);
   const lastNameRef = useRef<HTMLDivElement>(null);
   const usernameRef = useRef<HTMLDivElement>(null);
-  const birthDateRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
   const phoneRef = useRef<HTMLDivElement>(null);
   const otpRef = useRef<HTMLDivElement>(null);
@@ -129,7 +126,6 @@ export default function SignupPage() {
     if (!lastName.trim()) errs.lastName = "نام خانوادگی را وارد کن";
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
     else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
-    if (!birthDate) errs.birthDate = "تاریخ تولد را انتخاب کن";
     if (!password) errs.password = "رمز عبور را وارد کن";
     else {
       const pwErr = await validatePassword(password, [username, name, lastName, phone]);
@@ -147,7 +143,6 @@ export default function SignupPage() {
         errs.name ? nameRef.current : null,
         errs.lastName ? lastNameRef.current : null,
         errs.username ? usernameRef.current : null,
-        errs.birthDate ? birthDateRef.current : null,
         errs.password ? passwordRef.current : null,
         errs.phone ? phoneRef.current : null,
         errs.otp ? otpRef.current : null,
@@ -185,10 +180,7 @@ export default function SignupPage() {
       res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name, lastName, phone, username, password,
-          birthDate: jalaliToGregorianApprox(birthDate![0], birthDate![1], birthDate![2]).toISOString(),
-        }),
+        body: JSON.stringify({ name, lastName, phone, username, password }),
       });
       data = await res.json();
     } catch {
@@ -249,18 +241,6 @@ export default function SignupPage() {
                 onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
               />
             </AuthField>
-          </div>
-
-          <div style={{ marginTop: 14 }} ref={birthDateRef} data-anim-field>
-            <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>تاریخ تولد</label>
-            <button
-              type="button"
-              className={`jdate-btn${birthDate ? "" : " placeholder"}`}
-              onClick={() => setDobOpen(true)}
-            >
-              {birthDate ? formatJalali(birthDate) : "انتخاب تاریخ تولد"}
-            </button>
-            {fieldErrors.birthDate && <div className="field-error-msg" style={{ display: "block" }}>{fieldErrors.birthDate}</div>}
           </div>
 
           <div style={{ marginTop: 14 }}>
@@ -354,14 +334,6 @@ export default function SignupPage() {
           </button>
         </form>
       </div>
-
-      {dobOpen && (
-        <JalaliDatePicker
-          initial={birthDate}
-          onPick={(d) => { setBirthDate(d); clearError("birthDate"); setDobOpen(false); }}
-          onClose={() => setDobOpen(false)}
-        />
-      )}
     </section>
   );
 }

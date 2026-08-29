@@ -1124,7 +1124,31 @@
 
   .checkout-box{ margin-top:14px; }
   .checkout-field-label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; }
-  .checkout-discount-input{ width:100%; box-sizing:border-box; }
+
+  /* فیلدِ کدِ تخفیف — لیبل و فیلد توی یه ردیف (نه لیبلِ بالا/فیلدِ زیر مثلِ
+     بقیه‌ی فیلدها)، خودِ فیلد کاملاً گرد (999px، نه رادیوسِ معمولیِ ۸px)، و
+     دکمه‌ی «اعمال» داخلِ خودِ فیلد (سمتِ چپ) — دقیقاً الگویِ auth-phone-send-btn
+     (شماره‌همراهِ ثبت‌نام)، با این تفاوت که این‌جا کدِ تخفیف رو در لحظه
+     (بدونِ رفتنِ به درگاه) از /api/subscription/discount-preview چک می‌کنه. */
+  .checkout-discount-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .checkout-discount-row .checkout-field-label{ margin-bottom:0; flex-shrink:0; white-space:nowrap; }
+  .checkout-discount-field-wrap{ position:relative; flex:1; min-width:150px; }
+  .checkout-discount-input{
+    width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-left:92px;
+  }
+  .checkout-discount-field-wrap.applied .checkout-discount-input{ color:var(--accent); border-color:var(--accent); opacity:.85; }
+  .checkout-discount-apply-btn{
+    position:absolute; left:5px; top:50%; transform:translateY(-50%);
+    display:flex; align-items:center; justify-content:center;
+    padding:7px 14px; border-radius:999px; border:none;
+    background:var(--accent); color:var(--bg); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;
+    transition:filter .15s ease, opacity .15s ease, background .15s ease, color .15s ease;
+  }
+  .checkout-discount-apply-btn:hover:not(:disabled){ filter:brightness(1.08); }
+  .checkout-discount-apply-btn:disabled{ opacity:.5; cursor:default; }
+  .checkout-discount-apply-btn.remove{ background:rgba(224,82,82,.14); color:#E05252; }
+  .checkout-discount-success{ margin-top:7px; font-size:11.5px; color:var(--accent); font-weight:600; }
 
   .checkout-gateway-row{ display:flex; gap:8px; }
   /* حالا <button>ه (قبلاً یه <div> ثابت بود، چون فقط یه درگاه بود) — قانونِ
@@ -4172,36 +4196,44 @@ body[data-theme="light"] .notepad-workspace{
 }
 
 /* ============================================================================
-   OWNER PANEL (/admin) — محیطِ کاملاً جدا از سایتِ اصلی: مشکی/سبزِ آریون،
-   حرفه‌ای، مینیمال، مناسبِ تحلیلِ داده. عمداً رنگ‌های خودش رو hardcode می‌کنه
-   (نه var(--bg)/var(--text) سایت) تا صرف‌نظر از تمِ روز/شبِ کاربر همیشه دارک
-   بمونه — طبقِ درخواستِ صریح که این پنل نباید شبیهِ پنلِ کاربر عادی باشه.
-   ============================================================================ */
+   OWNER PANEL (/admin) — دیگه محیطِ بصریِ جدا با رنگ‌های هاردکد نیست؛ دقیقاً
+   از همون توکن‌های تمِ سایت (var(--bg)/--text/--muted/--accent/--line/...)
+   تغذیه می‌شه تا هم‌خونِ بقیه‌ی بخش‌ها باشه و با تمِ روز/شبِ کاربر عوض بشه —
+   طبقِ درخواستِ صریحِ جدید که این پنل باید «مثل بقیه‌ی بخش‌ها» طراحی بشه، نه
+   یه داشبوردِ سبز/مشکیِ همیشه‌دارکِ جدا (تصمیمِ قدیمی‌تری که این نسخه جایگزینش
+   می‌کنه). اسمِ متغیرهای --adm-* عمداً نگه داشته شده — کامپوننت‌های چارت/KPI
+   (components/admin/*) مستقیم بهشون رفرنس می‌دن — فقط مقدارشون به توکن‌های
+   واقعیِ سایت وصل شده؛ یعنی خودِ همین چند خط، کل پنل رو هم‌تم می‌کنه بدون
+   نیاز به دست‌زدن به تک‌تکِ صفحه‌ها. */
 
 :root{
-  --adm-bg:#06090c;
-  --adm-panel:#0c1116;
-  --adm-panel-2:#10161c;
-  --adm-border:rgba(255,255,255,.08);
-  --adm-border-strong:rgba(255,255,255,.16);
-  --adm-text:#eef2f0;
-  --adm-muted:#8b9791;
-  --adm-muted-2:#5b6660;
-  --adm-accent:#00A86B;
-  --adm-accent-rgb:0,168,107;
-  --adm-accent-dim:rgba(0,168,107,.14);
-  --adm-red:#e5484d;
-  --adm-red-dim:rgba(229,72,77,.14);
+  --adm-bg:var(--bg);
+  --adm-panel:rgba(255,255,255,.02);
+  --adm-panel-2:rgba(255,255,255,.045);
+  --adm-border:var(--line);
+  --adm-border-strong:rgba(255,255,255,.14);
+  --adm-text:var(--text);
+  --adm-muted:var(--muted);
+  --adm-muted-2:var(--muted2);
+  --adm-accent:var(--accent);
+  --adm-accent-rgb:var(--accent-rgb);
+  --adm-accent-dim:var(--accent-dim);
+  --adm-red:#E05252;
+  --adm-red-dim:rgba(224,82,82,.14);
   --adm-amber:#e0a636;
   --adm-amber-dim:rgba(224,166,54,.14);
-  --adm-radius:16px;
+  --adm-radius:18px;
+}
+body[data-theme="light"]{
+  --adm-panel:rgba(255,255,255,.42);
+  --adm-panel-2:rgba(255,255,255,.6);
+  --adm-border-strong:rgba(58,42,24,.14);
 }
 
 /* .wrap سایت روی همه‌ی صفحات max-width/padding داره — پنل Owner باید تمامِ
    عرضِ صفحه رو بگیره، نه محدود به همون قالبِ سایتِ کاربری. :has() پشتیبانیِ
    خوبی توی مرورگرهای مدرن داره، این پروژه هم جای دیگه‌ای نگرانِ legacy نیست. */
 body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; }
-body:has(.admin-root){ background:var(--adm-bg); }
 
 .admin-root{
   display:flex; flex-direction:row-reverse; min-height:100vh; background:var(--adm-bg); color:var(--adm-text);
@@ -4213,43 +4245,51 @@ body:has(.admin-root){ background:var(--adm-bg); }
 .admin-brand-text{ font-size:15px; font-weight:700; color:var(--adm-text); letter-spacing:.2px; }
 .admin-brand-sub{ font-size:11px; font-weight:600; color:var(--adm-muted); margin-right:4px; }
 
-/* --- Sidebar (desktop) --- */
+/* --- Sidebar (desktop) — همون الگوی account-sidebar (لینکِ ارواح‌گونه با
+   آیکون توی یه چیپِ گردِ نرم)، فقط چون این‌جا سلسله‌مراتبِ دوسطحی هم داره
+   (بخش‌های قابلِ بازشدن) --- */
 .admin-sidebar-desktop{
   width:250px; flex-shrink:0; background:var(--adm-panel); border-left:1px solid var(--adm-border);
+  backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto;
 }
 .admin-nav{ display:flex; flex-direction:column; gap:2px; padding:8px 10px 18px; }
 .admin-nav-section{ display:flex; flex-direction:column; }
 .admin-nav-head{
-  display:flex; align-items:center; gap:10px; width:100%; padding:9px 10px; border-radius:10px;
-  background:none; border:none; color:var(--adm-muted); font-size:13px; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; gap:10px; width:100%; padding:9px 10px; border-radius:12px;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--adm-muted); font-size:13px; font-weight:600; cursor:pointer;
   text-align:right; text-decoration:none; transition:background .15s ease, color .15s ease;
 }
-.admin-nav-head:hover{ background:rgba(255,255,255,.035); color:var(--adm-text); }
+.admin-nav-head:hover{ background:rgba(255,255,255,.035); color:var(--adm-text); box-shadow:none; }
 .admin-nav-head.active{ background:var(--adm-accent-dim); color:var(--adm-accent); }
-.admin-nav-icon{ display:flex; align-items:center; justify-content:center; flex-shrink:0; width:22px; height:22px; }
+.admin-nav-icon{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; width:26px; height:26px;
+  border-radius:9px; background:rgba(255,255,255,.045); transition:background .18s ease;
+}
+.admin-nav-head.active .admin-nav-icon{ background:rgba(var(--adm-accent-rgb),.16); }
 .admin-nav-label{ flex:1; }
 .admin-nav-chevron{ display:flex; align-items:center; color:var(--adm-muted-2); flex-shrink:0; }
 .admin-nav-children{ display:flex; flex-direction:column; gap:1px; padding:2px 10px 6px 0; margin-right:32px; border-right:1px solid var(--adm-border); }
 .admin-nav-leaf{
-  padding:7px 12px; font-size:12.5px; color:var(--adm-muted); text-decoration:none; border-radius:8px;
+  display:block; padding:7px 12px; font-size:12.5px; color:var(--adm-muted); text-decoration:none; border-radius:9px;
   transition:background .15s ease, color .15s ease;
 }
 .admin-nav-leaf:hover{ background:rgba(255,255,255,.035); color:var(--adm-text); }
 .admin-nav-leaf.active{ color:var(--adm-accent); font-weight:700; }
 .admin-nav-logout{ margin-top:10px; color:var(--adm-red); }
-.admin-nav-logout:hover{ background:var(--adm-red-dim); color:var(--adm-red); }
+.admin-nav-logout:hover{ background:var(--adm-red-dim); color:var(--adm-red); box-shadow:none; }
 
 /* --- Main --- */
 .admin-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
 .admin-topbar{
   display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid var(--adm-border);
-  position:sticky; top:0; z-index:5; background:rgba(6,9,12,.85); backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
+  position:sticky; top:0; z-index:5; background:rgba(var(--bg-rgb),.78); backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
 }
 .admin-page-title{ font-size:15.5px; font-weight:700; color:var(--adm-text); margin:0; }
 .admin-mobile-toggle, .admin-mobile-close{
-  display:none; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px;
-  background:rgba(255,255,255,.04); border:1px solid var(--adm-border); color:var(--adm-text); cursor:pointer;
+  display:none; align-items:center; justify-content:center; width:34px; height:34px; border-radius:12px;
+  background:rgba(255,255,255,.045); border:1px solid var(--adm-border); color:var(--adm-text); cursor:pointer;
 }
 .admin-content{ flex:1; padding:22px; max-width:1400px; width:100%; margin:0 auto; }
 
@@ -4257,6 +4297,7 @@ body:has(.admin-root){ background:var(--adm-bg); }
 .admin-mobile-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; }
 .admin-mobile-drawer{
   position:fixed; top:0; bottom:0; right:0; width:min(78vw, 300px); background:var(--adm-panel);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   border-left:1px solid var(--adm-border); z-index:41; overflow-y:auto;
 }
 
@@ -4266,11 +4307,13 @@ body:has(.admin-root){ background:var(--adm-bg); }
 
 .admin-card{
   background:var(--adm-panel); border:1px solid var(--adm-border); border-radius:var(--adm-radius); padding:18px;
+  backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
 }
 
 .admin-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px; align-items:start; }
 .admin-kpi-tile{
-  background:var(--adm-panel); border:1px solid var(--adm-border); border-radius:14px; padding:16px;
+  background:var(--adm-panel); border:1px solid var(--adm-border); border-radius:16px; padding:16px;
+  backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   display:flex; flex-direction:column; gap:6px;
 }
 .admin-kpi-label{ font-size:12px; color:var(--adm-muted); font-weight:600; }
@@ -4280,7 +4323,7 @@ body:has(.admin-root){ background:var(--adm-bg); }
 .admin-kpi-delta.down{ color:var(--adm-red); }
 .admin-kpi-delta.flat{ color:var(--adm-muted-2); }
 
-.admin-chart-card{ background:var(--adm-panel); border:1px solid var(--adm-border); border-radius:var(--adm-radius); padding:18px; margin-bottom:16px; }
+.admin-chart-card{ background:var(--adm-panel); border:1px solid var(--adm-border); border-radius:var(--adm-radius); padding:18px; margin-bottom:16px; backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%); }
 .admin-chart-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
 .admin-chart-title{ font-size:13px; font-weight:700; color:var(--adm-text); }
 
@@ -4295,7 +4338,7 @@ body:has(.admin-root){ background:var(--adm-bg); }
 .admin-table td{ padding:11px 14px; border-bottom:1px solid var(--adm-border); color:var(--adm-text); white-space:nowrap; }
 .admin-table tbody tr:last-child td{ border-bottom:none; }
 .admin-table tbody tr{ transition:background .12s ease; }
-.admin-table tbody tr:hover{ background:rgba(255,255,255,.02); }
+.admin-table tbody tr:hover{ background:rgba(var(--accent-rgb),.05); }
 
 .admin-badge{ display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700; }
 .admin-badge.green{ background:var(--adm-accent-dim); color:var(--adm-accent); }
@@ -4304,18 +4347,19 @@ body:has(.admin-root){ background:var(--adm-bg); }
 .admin-badge.gray{ background:rgba(255,255,255,.06); color:var(--adm-muted); }
 
 .admin-btn{
-  display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; font-size:12.5px; font-weight:700;
-  border:1px solid var(--adm-border-strong); background:rgba(255,255,255,.03); color:var(--adm-text); cursor:pointer;
-  transition:background .15s ease, border-color .15s ease;
+  display:inline-flex; align-items:center; gap:6px; padding:9px 15px; border-radius:12px; font-size:12.5px; font-weight:700;
+  border:1px solid var(--adm-border-strong); background:rgba(255,255,255,.035); color:var(--adm-text); cursor:pointer;
+  transition:background .15s ease, border-color .15s ease, color .15s ease;
 }
-.admin-btn:hover{ background:rgba(255,255,255,.06); }
-.admin-btn.primary{ background:var(--adm-accent); border-color:var(--adm-accent); color:#04140c; }
-.admin-btn.primary:hover{ filter:brightness(1.08); }
-.admin-btn.danger{ background:var(--adm-red-dim); border-color:rgba(229,72,77,.35); color:var(--adm-red); }
+.admin-btn:hover{ background:rgba(var(--adm-accent-rgb),.1); border-color:var(--adm-accent); color:var(--adm-accent); }
+.admin-btn.primary{ background:var(--adm-accent); border-color:var(--adm-accent); color:var(--bg); }
+.admin-btn.primary:hover{ filter:brightness(1.08); background:var(--adm-accent); color:var(--bg); }
+.admin-btn.danger{ background:var(--adm-red-dim); border-color:rgba(224,82,82,.35); color:var(--adm-red); }
+.admin-btn.danger:hover{ background:rgba(224,82,82,.2); border-color:var(--adm-red); color:var(--adm-red); }
 .admin-btn:disabled{ opacity:.5; cursor:not-allowed; }
 
 .admin-input{
-  background:rgba(255,255,255,.03); border:1px solid var(--adm-border-strong); border-radius:10px; padding:9px 12px;
+  background:rgba(255,255,255,.035); border:1px solid var(--adm-border-strong); border-radius:12px; padding:9px 12px;
   color:var(--adm-text); font-size:12.5px; outline:none; transition:border-color .15s ease;
 }
 .admin-input:focus{ border-color:var(--adm-accent); }
@@ -4323,8 +4367,8 @@ body:has(.admin-root){ background:var(--adm-bg); }
 /* --- Range picker --- */
 .admin-range-picker{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .admin-range-btn{
-  padding:7px 12px; border-radius:9px; font-size:12px; font-weight:700; border:1px solid var(--adm-border-strong);
-  background:rgba(255,255,255,.03); color:var(--adm-muted); cursor:pointer; transition:all .15s ease;
+  padding:7px 13px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid var(--adm-border-strong);
+  background:rgba(255,255,255,.035); color:var(--adm-muted); cursor:pointer; transition:all .15s ease;
 }
 .admin-range-btn:hover{ color:var(--adm-text); }
 .admin-range-btn.active{ background:var(--adm-accent-dim); border-color:rgba(var(--adm-accent-rgb),.4); color:var(--adm-accent); }
@@ -4332,20 +4376,18 @@ body:has(.admin-root){ background:var(--adm-bg); }
 /* --- Filter tabs (users/subscriptions/transactions) --- */
 .admin-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
 .admin-tab{
-  padding:7px 13px; border-radius:9px; font-size:12.5px; font-weight:700; border:1px solid var(--adm-border);
+  padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; border:1px solid var(--adm-border);
   background:transparent; color:var(--adm-muted); cursor:pointer; transition:all .15s ease; text-decoration:none;
 }
 .admin-tab:hover{ color:var(--adm-text); }
-.admin-tab.active{ background:var(--adm-panel-2); border-color:var(--adm-border-strong); color:var(--adm-text); }
+.admin-tab.active{ background:var(--adm-accent-dim); border-color:rgba(var(--adm-accent-rgb),.4); color:var(--adm-accent); }
 
 /* --- Simple SVG line/bar chart primitives --- */
 .admin-svg-chart{ width:100%; height:auto; overflow:visible; }
 .admin-svg-chart .grid-line{ stroke:var(--adm-border); stroke-width:1; }
-/* قبلاً فقط var(--font-latin) بود، بدونِ فال‌بکِ var(--font-vazir) — یعنی
-   اگه لیبلی حرفِ فارسی داشت (نه فقط عدد/تاریخِ لاتین)، به فونتِ سیستمیِ
-   خامِ مرورگر سقوط می‌کرد، نه فونتِ اصلیِ سایت. همون استکِ دوفونتیِ استانداردِ
-   بقیه‌ی سایت (لاتین اول برای اعداد، وضیرمتن به‌عنوانِ فال‌بک) اینجا هم باید
-   باشه — این باگِ «توی چارت‌های دسکتاپ/ادمین یه فونتِ دیگه دیده می‌شه» بود. */
+/* استکِ دوفونتیِ استانداردِ بقیه‌ی سایت (لاتین اول برای اعداد، وضیرمتن به‌عنوانِ
+   فال‌بک) — اگه لیبلی حرفِ فارسی داشت (نه فقط عدد/تاریخِ لاتین)، نباید به
+   فونتِ سیستمیِ خامِ مرورگر سقوط کنه. */
 .admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .admin-svg-chart .line-path{ fill:none; stroke:var(--adm-accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .admin-svg-chart .area-fill{ fill:url(#admChartGradient); opacity:.5; }
@@ -4360,7 +4402,7 @@ body:has(.admin-root){ background:var(--adm-bg); }
 
 .admin-user-detail-head{ display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
 .admin-avatar-fallback{
-  width:44px; height:44px; border-radius:12px; background:var(--adm-accent-dim); color:var(--adm-accent);
+  width:44px; height:44px; border-radius:14px; background:var(--adm-accent-dim); color:var(--adm-accent);
   display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;
 }
 

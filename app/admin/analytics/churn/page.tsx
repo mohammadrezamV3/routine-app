@@ -38,7 +38,7 @@ function ChurnInner() {
 
           <div className="admin-chart-card">
             <div className="admin-chart-head"><span className="admin-chart-title">روند لغو اشتراک</span></div>
-            <BarChart data={data.churn.series.map((p) => ({ bucket: p.bucket, value: p.canceled }))} color="#e5484d" />
+            <BarChart data={data.churn.series.map((p) => ({ bucket: p.bucket, value: p.canceled }))} color="var(--adm-red)" />
           </div>
         </>
       )}
