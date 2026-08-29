@@ -1090,7 +1090,6 @@
   }
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
-  .account-sub-cta-btn-outline{ background:none; color:var(--accent); }
 
   .account-mobile-menu{ display:none; }
 

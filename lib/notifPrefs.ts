@@ -4,28 +4,19 @@ import { SETTING_KEYS } from "./userSettingKeys";
 // کنه، نه فقط یک سوییچِ کلیِ «اجازه‌ی نوتیف مرورگر». روی همون UserSetting
 // عمومیِ کلید/مقدار ذخیره می‌شه، کلیدش "notifPrefs".
 
+// فقط دسته‌هایی که واقعاً سمتِ سرور (app/api/push/send-reminders و
+// NotificationPanel) بهشون رسیدگی می‌شه — قبلاً چند کلیدِ دیگه هم بود
+// (آریونِ عمومی/کالری/ترید/رودمپ/درخواستِ دوستی) که فقط ذخیره می‌شدن و
+// هیچ‌جا خونده نمی‌شدن؛ سوییچی که بی‌اثره حذف شد، نه نگه‌داشته‌شده برای
+// «بعداً».
 export type NotifPrefs = {
   taskReminders: boolean;
   exerciseReminders: boolean;
-  friendRequests: boolean;
-  // پنل کاربری › اعلان‌ها — دسته‌های بیشتر (کالری/ترید/رودمپ هنوز سمتِ سرور
-  // یادآوریِ خودکار نمی‌فرستن، taskReminders/exerciseReminders هستن که واقعاً
-  // wire شدن؛ این‌ها هم مثلِ friendRequests از قبل، ذخیره می‌شن تا وقتی
-  // پیاده‌سازیِ ارسالِ هرکدوم اضافه بشه، فوراً قابلِ استفاده باشن)
-  arionGeneral: boolean;
-  calorieReminders: boolean;
-  tradeReminders: boolean;
-  roadmapReminders: boolean;
 };
 
 export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   taskReminders: true,
   exerciseReminders: true,
-  friendRequests: true,
-  arionGeneral: true,
-  calorieReminders: true,
-  tradeReminders: true,
-  roadmapReminders: true,
 };
 
 export async function getNotifPrefs(): Promise<NotifPrefs> {

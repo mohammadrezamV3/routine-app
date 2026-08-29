@@ -93,7 +93,7 @@ export default function TradeModuleSettingsPage() {
             ? <>هدف فعلی: <b className="mono" style={{ color: "var(--accent)" }}>{monthlyGoal}</b> — به‌صورت آمار دایره‌ای توی صفحه ترید نشون داده می‌شه</>
             : "هنوز هدفی تنظیم نکردی — با تعیین هدف، پیشرفتت توی صفحه ترید به‌صورت دایره نشون داده می‌شه"}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="number" min={0} value={goalDraft} onChange={(e) => setGoalDraft(e.target.value)}
             placeholder="مثلاً 500" style={{ maxWidth: 140 }}
