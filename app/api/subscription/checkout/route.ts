@@ -59,16 +59,32 @@ export async function POST(req: NextRequest) {
   let referralUsageId: string | undefined;
   let discountApplied = false;
   if (discountCode?.trim()) {
-    const code = await prisma.referralCode.findUnique({
-      where: { code: discountCode.trim().toUpperCase() },
-    });
-    if (code && code.userId !== userId) {
-      discountPercent = REFERRAL_DISCOUNT_PERCENT;
+    const normalizedCode = discountCode.trim().toUpperCase();
+
+    // اول کدهای تخفیفِ عمومیِ ادمین (DiscountCode) چک می‌شن — فقط اگه فعال،
+    // منقضی‌نشده، و (اگه planKey داشت) دقیقاً برای همین پلن ساخته شده باشه.
+    const promo = await prisma.discountCode.findUnique({ where: { code: normalizedCode } });
+    const promoValid = promo && promo.active && (!promo.expiresAt || promo.expiresAt > new Date())
+      && (!promo.planKey || promo.planKey === planKey);
+
+    if (promoValid) {
+      discountPercent = promo!.percentOff;
       discountApplied = true;
-      const usage = await prisma.referralUsage.create({
-        data: { referralCodeId: code.id, inviteeUserId: userId },
-      });
-      referralUsageId = usage.id;
+    } else {
+      // فال‌بک به کدِ رفرالِ شخصی — همون رفتارِ قبلی
+      const referral = await prisma.referralCode.findUnique({ where: { code: normalizedCode } });
+      if (referral && referral.userId !== userId) {
+        discountPercent = REFERRAL_DISCOUNT_PERCENT;
+        discountApplied = true;
+        const usage = await prisma.referralUsage.create({
+          data: { referralCodeId: referral.id, inviteeUserId: userId },
+        });
+        referralUsageId = usage.id;
+      } else {
+        // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
+        // نادیده‌گرفتنِ بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
+        return NextResponse.json({ error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" }, { status: 400 });
+      }
     }
   }
 
