@@ -9,9 +9,11 @@ import { AuthGate } from "@/components/AuthGate";
 import { getSiteMarket } from "@/lib/market";
 import { findPlanCard, DURATION_LABELS, DURATION_LABELS_INTL, Duration } from "@/components/PlanShowcase";
 
+type Gateway = "zarinpal" | "zibal";
+
 // چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
 // باز می‌شه. کدِ تخفیف (رفرالِ یک نفرِ دیگه)، پذیرشِ قوانین، انتخابِ درگاه
-// (فعلاً فقط زرین‌پال) و دکمه‌ی پرداخت — دقیقاً همون چیزی که کاربر خواسته.
+// (زرین‌پال یا زیبال) و دکمه‌ی پرداخت.
 export default function CheckoutPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -30,6 +32,7 @@ export default function CheckoutPage() {
   const plan = query ? findPlanCard(planKey, isIntl) : undefined;
 
   const [discountCode, setDiscountCode] = useState("");
+  const [gateway, setGateway] = useState<Gateway>("zarinpal");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +69,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/subscription/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined }),
+        body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined, gateway }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -114,10 +117,22 @@ export default function CheckoutPage() {
       <div className="checkout-box">
         <div className="checkout-field-label">درگاه پرداخت</div>
         <div className="checkout-gateway-row">
-          <div className="checkout-gateway-pill on">
+          <button
+            type="button"
+            className={`checkout-gateway-pill${gateway === "zarinpal" ? " on" : ""}`}
+            onClick={() => setGateway("zarinpal")}
+          >
             <ShieldCheck size={16} />
             زرین‌پال
-          </div>
+          </button>
+          <button
+            type="button"
+            className={`checkout-gateway-pill${gateway === "zibal" ? " on" : ""}`}
+            onClick={() => setGateway("zibal")}
+          >
+            <ShieldCheck size={16} />
+            زیبال
+          </button>
         </div>
       </div>
 

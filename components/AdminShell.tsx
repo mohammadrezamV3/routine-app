@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, Users, CreditCard, Coins, Boxes, Sparkles, LineChart,
-  ServerCog, Settings, LogOut, ChevronDown, Menu, X,
+  ServerCog, Settings, LogOut, ChevronDown, Menu, X, Tag,
 } from "lucide-react";
 
 type Leaf = { label: string; href: string };
@@ -36,6 +36,7 @@ const SECTIONS: NavSection[] = [
       { label: "لغو اشتراک", href: "/admin/subscriptions?tab=canceled" },
     ],
   },
+  { label: "کدهای تخفیف", icon: <Tag size={17} />, href: "/admin/discount-codes" },
   {
     label: "درآمد", icon: <Coins size={17} />, href: "/admin/revenue",
     children: [

@@ -430,6 +430,25 @@ model ReferralUsage {
   @@index([referralCodeId])
 }
 
+// کدهای تخفیفِ عمومی که سوپرادمین از پنل ادمین می‌سازه — جدا از ReferralCode
+// (که شخصیه، هرکاربر یکی داره، برای دعوت دوستانه). این‌ها با دست ساخته
+// می‌شن، می‌تونن منقضی بشن، و می‌تونن فقط روی یک پلنِ خاص اعمال بشن.
+model DiscountCode {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  percentOff Int
+  // null یعنی روی همه‌ی پلن‌ها اعمال می‌شه؛ در غیر این صورت فقط همون کلیدِ پلن
+  // (مثلاً "exercise") — همون Plan.key، نه یه رابطه‌ی FK، چون یک کلید توی هر
+  // دو بازار (Market) به‌طور بالقوه پلنِ جدا داره و این کد فعلاً فقط بازارِ
+  // ایران رو پوشش می‌ده (همون محدودیتِ چک‌اوتِ فعلی).
+  planKey    String?
+  expiresAt  DateTime?
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+
+  @@index([code])
+}
+
 // باشگاه یا هر شریک تجاری دیگر
 model Partner {
   id                String      @id @default(cuid())
