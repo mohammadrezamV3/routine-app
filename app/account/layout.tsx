@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  User, SlidersHorizontal, LayoutGrid, CreditCard, ShieldCheck, Bell, Headset, LogOut,
+  User, SlidersHorizontal, LayoutGrid, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -43,17 +43,11 @@ const pageTransition = {
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/account";
   const { status } = useSession();
-  const mobileTabsRef = useRef<HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // تبِ فعالِ نوارِ موبایل همیشه به دیدرس اسکرول می‌آد — راهِ قابل‌اتکا برای
-  // «راست‌چین/درست‌جادیده‌شدنِ» تب‌ها، چون رفتارِ پیش‌فرضِ scrollLeft توی
-  // overflow-x:auto با dir="rtl" بینِ مرورگرها ناسازگاره (کروم/فایرفاکس/سافاری
-  // علامت و مبدأش فرق می‌کنه) — به‌جای اتکا به اون، هر بار خودمون صریح
-  // اسکرول می‌کنیم، مستقل از هر مبداءِ RTLِ مرورگر.
-  useEffect(() => {
-    const active = mobileTabsRef.current?.querySelector<HTMLElement>(".account-mobile-tab.active");
-    active?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }, [pathname]);
+  // با هر تغییرِ مسیر (چه با کلیک روی یه تایتل، چه از هرجای دیگه) منوی
+  // همبرگریِ موبایل باید بسته بشه — وگرنه باز می‌مونه رو صفحه‌ی جدید.
+  useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
 
   if (status === "loading") return null;
 
@@ -75,22 +69,47 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className="account-shell" dir="rtl">
-      <nav className="account-mobile-tabs" ref={mobileTabsRef}>
-        {SECTIONS.map((s) => {
-          const active = s.match(pathname);
-          return (
-            <Link key={s.href} href={s.href} className={`account-mobile-tab${active ? " active" : ""}`}>
-              {active && <motion.span layoutId="account-mobile-active-pill" className="account-mobile-tab-pill" transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} />}
-              {s.icon}
-              <span>{s.label}</span>
-            </Link>
-          );
-        })}
-        <button type="button" className="account-mobile-tab account-mobile-tab-danger" onClick={doLogout}>
-          <LogOut size={15} />
-          <span>خروج</span>
+      <div className="account-mobile-menu">
+        <button
+          type="button"
+          className="account-mobile-menu-btn"
+          onClick={() => setMobileMenuOpen((v) => !v)}
+          aria-expanded={mobileMenuOpen}
+        >
+          <span className="account-mobile-menu-btn-icon"><Menu size={16} /></span>
+          <span className="account-mobile-menu-btn-label">
+            {SECTIONS.find((s) => s.match(pathname))?.label || "بخش‌ها"}
+          </span>
+          <ChevronDown size={15} className={`account-mobile-menu-btn-chevron${mobileMenuOpen ? " open" : ""}`} />
         </button>
-      </nav>
+        <AnimatePresence initial={false}>
+          {mobileMenuOpen && (
+            <motion.nav
+              className="account-mobile-menu-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="account-mobile-menu-panel-inner">
+                {SECTIONS.map((s) => {
+                  const active = s.match(pathname);
+                  return (
+                    <Link key={s.href} href={s.href} className={`account-mobile-menu-item${active ? " active" : ""}`}>
+                      {s.icon}
+                      <span>{s.label}</span>
+                    </Link>
+                  );
+                })}
+                <button type="button" className="account-mobile-menu-item account-mobile-menu-item-danger" onClick={doLogout}>
+                  <LogOut size={15} />
+                  <span>خروج</span>
+                </button>
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="account-body">
         <aside className="account-sidebar">
