@@ -64,7 +64,7 @@ export default function NotificationsPage() {
                   وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.
                 </span>
               </div>
-              <button onClick={enableNotifications} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+              <button className="account-outline-btn" onClick={enableNotifications}>
                 فعال‌کردن یادآوری‌ها
               </button>
             </>

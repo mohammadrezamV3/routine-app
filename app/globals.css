@@ -1025,8 +1025,31 @@
   .account-edit-btn{
     display:flex; align-items:center; gap:6px; margin-top:14px;
     font-size:11.5px; border-color:var(--accent); color:var(--accent);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   }
+  body[data-theme="light"] .account-edit-btn, body:not([data-theme="light"]) .account-edit-btn{
+    background:none; box-shadow:none;
+  }
+  .account-edit-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
   .account-save-toast{ margin-top:10px; font-size:11.5px; color:var(--accent); font-weight:600; }
+
+  /* دکمه‌های اکشنِ پنل کاربری (ذخیره/انصراف/فعال‌کردن/...) — قبلاً دکمه‌ی
+     خامِ HTML بدون کلاس بودن، پس قانونِ سراسریِ button{} (لیکوئید-گلس با
+     یه هایلایتِ inset) روشون می‌موند و حسِ «برجسته/سه‌بعدی» می‌داد،
+     برخلافِ باقیِ پنل کاربری (account-row2/account-sidebar-link و...) که
+     تخت‌ان. این کلاس همون افکت رو صریح خاموش می‌کنه. */
+  .account-outline-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border-color:var(--accent); color:var(--accent);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .account-outline-btn, body:not([data-theme="light"]) .account-outline-btn{
+    background:none; box-shadow:none;
+  }
+  .account-outline-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
+  .account-outline-btn:disabled{ opacity:.5; cursor:default; }
+  .account-outline-btn.muted{ border-color:var(--line); color:var(--muted); }
+  .account-outline-btn.muted:hover{ background:rgba(255,255,255,.05); color:var(--text); border-color:var(--line); }
 
   .account-sub-mini-card{
     display:flex; align-items:center; justify-content:space-between; gap:10px;

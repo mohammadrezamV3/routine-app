@@ -71,9 +71,10 @@ export default function SecurityPage() {
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
           {pwSuccess && <div className="account-save-toast" style={{ marginTop: 0 }}>رمز عبور با موفقیت تغییر کرد.</div>}
           <button
+            className="account-outline-btn"
             onClick={changePassword}
             disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
-            style={{ alignSelf: "flex-start", borderColor: "var(--accent)", color: "var(--accent)" }}
+            style={{ alignSelf: "flex-start" }}
           >
             {pwSaving ? "در حال ذخیره…" : "ذخیره رمز جدید"}
           </button>
