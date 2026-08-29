@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, AtSign, Lock } from "lucide-react";
+import { User, AtSign, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
@@ -33,6 +33,7 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
   const [phone, setPhone] = useState("");
@@ -245,9 +246,23 @@ export default function SignupPage() {
           </div>
 
           <div style={{ marginTop: 14 }}>
-            <AuthField id="password" label="رمز عبور" error={fieldErrors.password} icon={<Lock size={15} />} ref={passwordRef}>
+            <AuthField
+              id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
+              icon={<Lock size={15} />}
+              endAction={
+                <button
+                  type="button"
+                  className="field-toggle-visibility-btn"
+                  tabIndex={-1}
+                  aria-label={passwordVisible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
+                  onClick={() => setPasswordVisible((v) => !v)}
+                >
+                  {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              }
+            >
               <input
-                id="password" type="password" className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
+                id="password" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
             </AuthField>

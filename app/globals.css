@@ -2107,6 +2107,17 @@
   }
   .field-error .field-icon{display:none;}
   .field-error-wrap.has-icon input{padding-left:34px;}
+  /* دکمه‌ی نمایش/مخفی‌کردنِ رمز — کنارِ field-icon (سمتِ چپِ فیلد)، همون
+     الگویِ چشمِ فرمِ ورود؛ تویِ صفحه‌های auth ریستِ سراسریِ button وجود نداره
+     پس باید همه‌چیز صریح خاموش بشه (نگاه کن به توضیحِ checkout-gateway-pill). */
+  .field-toggle-visibility-btn{
+    position:absolute; left:32px; top:50%; transform:translateY(-50%); width:16px; height:16px; padding:0;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    color:var(--muted2); cursor:pointer; transition:color .15s ease;
+  }
+  .field-toggle-visibility-btn:hover{ color:var(--accent); background:none; box-shadow:none; }
+  .field-error-wrap.has-icon.has-end-action input{padding-left:56px;}
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-plexmono), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}

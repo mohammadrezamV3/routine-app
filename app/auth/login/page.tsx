@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark, GoogleSignInButton } from "@/components/AuthChrome";
@@ -21,6 +22,7 @@ export default function LoginPage() {
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [remember, setRemember] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +104,7 @@ export default function LoginPage() {
           <AuthBackButton />
           <AuthBrandMark subtitle="ورود به پنل کاربری" />
 
-          <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} ref={identifierRef}>
+          <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
             <input
               id="identifier"
               type="text"
@@ -114,10 +116,24 @@ export default function LoginPage() {
           </AuthField>
 
           <div style={{ marginTop: 14 }}>
-            <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
+            <AuthField
+              id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
+              icon={<Lock size={15} />}
+              endAction={
+                <button
+                  type="button"
+                  className="field-toggle-visibility-btn"
+                  tabIndex={-1}
+                  aria-label={passwordVisible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
+                  onClick={() => setPasswordVisible((v) => !v)}
+                >
+                  {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              }
+            >
               <input
                 id="password"
-                type="password"
+                type={passwordVisible ? "text" : "password"}
                 className="wsearch-newform-name"
                 placeholder="رمز عبورت رو وارد کن"
                 value={password}
