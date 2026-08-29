@@ -4262,8 +4262,12 @@ body[data-theme="light"]{
    خوبی توی مرورگرهای مدرن داره، این پروژه هم جای دیگه‌ای نگرانِ legacy نیست. */
 body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; }
 
+/* row (نه row-reverse) — توی dir="rtl"، فرزندِ اولِ DOM (سایدبار) خودش
+   سمتِ راست می‌شینه؛ row-reverse این رو برعکس می‌کرد (سایدبار می‌رفت چپ) —
+   همون باگی که قبلاً برای account-body کشف/فیکس شده بود (نگاه کن به
+   توضیحِ .account-body پایین‌تر همین فایل). */
 .admin-root{
-  display:flex; flex-direction:row-reverse; min-height:100vh; background:var(--adm-bg); color:var(--adm-text);
+  display:flex; flex-direction:row; min-height:100vh; background:var(--adm-bg); color:var(--adm-text);
   font-feature-settings:"tnum" 1; direction:rtl;
 }
 
@@ -4435,12 +4439,17 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 
 .admin-pagination{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; }
 
+.admin-form-row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+
 @media (max-width:900px){
   .admin-sidebar-desktop{ display:none; }
   .admin-mobile-toggle{ display:flex; }
+  .admin-mobile-close{ display:flex; }
   .admin-content{ padding:16px; }
   .admin-topbar{ padding:14px 16px; }
   .admin-kpi-grid{ grid-template-columns:repeat(2, 1fr); }
+  .admin-form-field, .admin-form-field input, .admin-form-field select{ width:100% !important; }
+  .admin-form-row{ align-items:stretch; }
 }
 @media (min-width:901px){
   .admin-mobile-close{ display:none; }

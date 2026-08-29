@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useState } from "react";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { AdminPagination } from "@/components/admin/Pagination";
+import { AdminTabBar } from "@/components/admin/TabBar";
 import { formatDateTime } from "@/lib/adminFormat";
 
 type ErrorRow = { id: string; service: string; severity: string; message: string; context: any; createdAt: string };
@@ -35,11 +37,7 @@ export default function AdminSystemErrorsPage() {
 
   return (
     <section>
-      <div className="admin-tabs">
-        {SEVERITIES.map((s) => (
-          <button key={s.key} type="button" className={`admin-tab${severity === s.key ? " active" : ""}`} onClick={() => { setSeverity(s.key); setPage(1); }}>{s.label}</button>
-        ))}
-      </div>
+      <AdminTabBar items={SEVERITIES} active={severity} onChange={(v) => { setSeverity(v); setPage(1); }} />
 
       {!data ? (
         <div className="admin-empty">در حال بارگذاری…</div>
@@ -75,13 +73,7 @@ export default function AdminSystemErrorsPage() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="admin-pagination">
-              <button type="button" className="admin-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>قبلی</button>
-              <span style={{ fontSize: 12, color: "var(--adm-muted)" }}>{page} از {totalPages}</span>
-              <button type="button" className="admin-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>بعدی</button>
-            </div>
-          )}
+          <AdminPagination page={page} totalPages={totalPages} onChange={setPage} />
 
           <div className="admin-section-hint">
             «تعداد تکرار» چون این جدول از یک لاگِ append-ony (نه گروه‌بندی‌شده) میاد نمایش داده نمی‌شه — هر ردیف یک رخدادِ واقعیِ مجزاست. اطلاعاتِ حساس (رمز/توکن/کلیدِ API) هیچ‌وقت داخلِ این پیام‌ها ذخیره نمی‌شه.

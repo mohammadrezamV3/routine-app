@@ -63,29 +63,29 @@ export default function AdminDiscountCodesPage() {
     <section>
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">ساخت کد تخفیف جدید</span></div>
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
-          <div>
+        <div className="admin-form-row">
+          <div className="admin-form-field">
             <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>کد</label>
             <input
               className="admin-input mono" dir="ltr" style={{ width: 150, textTransform: "uppercase" }}
               value={code} onChange={(e) => setCode(e.target.value)} placeholder="SUMMER40"
             />
           </div>
-          <div>
+          <div className="admin-form-field">
             <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>درصد تخفیف</label>
             <input
               className="admin-input" type="number" min={1} max={100} style={{ width: 100 }}
               value={percentOff} onChange={(e) => setPercentOff(e.target.value)}
             />
           </div>
-          <div>
+          <div className="admin-form-field">
             <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>پکیج</label>
             <select className="admin-input" style={{ width: 170 }} value={planKey} onChange={(e) => setPlanKey(e.target.value)}>
               <option value="">همه‌ی پکیج‌ها</option>
               {plans.map((p) => <option key={p.key} value={p.key}>{p.nameFa}</option>)}
             </select>
           </div>
-          <div>
+          <div className="admin-form-field">
             <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>انقضا (اختیاری)</label>
             <input
               className="admin-input" type="datetime-local" style={{ width: 190 }}
