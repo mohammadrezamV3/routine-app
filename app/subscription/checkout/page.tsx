@@ -32,6 +32,8 @@ export default function CheckoutPage() {
   const plan = query ? findPlanCard(planKey, isIntl) : undefined;
 
   const [discountCode, setDiscountCode] = useState("");
+  const [discountResult, setDiscountResult] = useState<{ ok: true; percentOff: number } | { ok: false; error: string } | null>(null);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [gateway, setGateway] = useState<Gateway>("zarinpal");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -61,8 +63,39 @@ export default function CheckoutPage() {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const price = plan.prices[duration];
 
+  async function applyDiscount() {
+    if (discountResult?.ok) {
+      // فیلد قفل بود («تغییر») — دوباره باز می‌شه برای وارد‌کردنِ کدِ جدید.
+      setDiscountResult(null);
+      return;
+    }
+    if (!discountCode.trim() || applyingDiscount) return;
+    setApplyingDiscount(true);
+    try {
+      const res = await fetch("/api/subscription/discount-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: discountCode.trim(), planKey }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDiscountResult({ ok: false, error: data.error || "خطایی پیش آمد — دوباره امتحان کن" });
+      } else {
+        setDiscountResult({ ok: true, percentOff: data.percentOff });
+      }
+    } catch {
+      setDiscountResult({ ok: false, error: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+    } finally {
+      setApplyingDiscount(false);
+    }
+  }
+
   async function pay() {
-    if (!agreed || loading) return;
+    if (loading) return;
+    if (!agreed) {
+      setError("برای ادامه‌ی پرداخت، لطفاً قوانین و مقررات سایت را بپذیر");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -102,16 +135,32 @@ export default function CheckoutPage() {
       </div>
 
       <div className="checkout-box">
-        <label className="checkout-field-label" htmlFor="discountCode">کد تخفیف (اختیاری)</label>
-        <input
-          id="discountCode"
-          type="text"
-          dir="ltr"
-          className="wsearch-newform-name checkout-discount-input"
-          placeholder="کد تخفیف"
-          value={discountCode}
-          onChange={(e) => setDiscountCode(e.target.value)}
-        />
+        <div className="checkout-discount-row">
+          <label className="checkout-field-label" htmlFor="discountCode">کد تخفیف</label>
+          <div className={`checkout-discount-field-wrap${discountResult?.ok ? " applied" : ""}`}>
+            <input
+              id="discountCode"
+              type="text"
+              dir="ltr"
+              className="wsearch-newform-name checkout-discount-input"
+              placeholder="کد تخفیف (اختیاری)"
+              value={discountCode}
+              readOnly={discountResult?.ok}
+              onChange={(e) => { setDiscountCode(e.target.value); setDiscountResult(null); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyDiscount(); } }}
+            />
+            <button
+              type="button"
+              className={`checkout-discount-apply-btn${discountResult?.ok ? " remove" : ""}`}
+              disabled={applyingDiscount || (!discountResult?.ok && !discountCode.trim())}
+              onClick={applyDiscount}
+            >
+              {applyingDiscount ? "..." : discountResult?.ok ? "تغییر" : "اعمال"}
+            </button>
+          </div>
+        </div>
+        {discountResult?.ok && <div className="checkout-discount-success">{discountResult.percentOff}٪ تخفیف اعمال شد</div>}
+        {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 
       <div className="checkout-box">
@@ -136,7 +185,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="task checkout-terms-row" onClick={() => setAgreed((v) => !v)}>
+      <div className="task checkout-terms-row" onClick={() => { setAgreed((v) => !v); setError(null); }}>
         <div className={`check${agreed ? " on" : ""}`}>
           <svg className="c-check" viewBox="0 0 24 24" fill="none">
             <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -152,7 +201,7 @@ export default function CheckoutPage() {
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-      <button type="button" className="auth-full-btn checkout-pay-btn" disabled={!agreed || loading} onClick={pay}>
+      <button type="button" className="auth-full-btn checkout-pay-btn" disabled={loading} onClick={pay}>
         {loading ? "در حال اتصال به درگاه…" : `پرداخت ${price}`}
       </button>
     </section>
