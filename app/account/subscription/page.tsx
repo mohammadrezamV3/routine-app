@@ -68,8 +68,7 @@ export default function AccountSubscriptionPage() {
 
       {!data.isSuperAdmin && (
         <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-          <Link href="/subscription" className="account-sub-cta-btn">مدیریت اشتراک</Link>
-          <Link href="/subscription" className="account-sub-cta-btn account-sub-cta-btn-outline">ارتقا به پلن بالاتر</Link>
+          <Link href="/subscription" className="account-sub-cta-btn">مشاهده و مدیریت پلن‌ها</Link>
         </div>
       )}
     </section>

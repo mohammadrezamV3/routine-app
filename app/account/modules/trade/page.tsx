@@ -73,7 +73,7 @@ export default function TradeModuleSettingsPage() {
 
       <AccountSectionCard icon={<LineChart size={16} />} title="بازارهای دنبال‌شده" index={0}>
         <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمتِ بالای صفحه‌ی ترید انتخاب شده</div>
-        <button onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10, borderColor: "var(--accent)", color: "var(--accent)" }}>
+        <button className="account-outline-btn" onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10 }}>
           تغییر بازارها
         </button>
       </AccountSectionCard>
@@ -93,12 +93,12 @@ export default function TradeModuleSettingsPage() {
             ? <>هدف فعلی: <b className="mono" style={{ color: "var(--accent)" }}>{monthlyGoal}</b> — به‌صورت آمار دایره‌ای توی صفحه ترید نشون داده می‌شه</>
             : "هنوز هدفی تنظیم نکردی — با تعیین هدف، پیشرفتت توی صفحه ترید به‌صورت دایره نشون داده می‌شه"}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input
             type="number" min={0} value={goalDraft} onChange={(e) => setGoalDraft(e.target.value)}
             placeholder="مثلاً 500" style={{ maxWidth: 140 }}
           />
-          <button onClick={saveMonthlyGoal} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+          <button className="account-outline-btn" onClick={saveMonthlyGoal}>
             {goalSaved ? "ذخیره شد ✓" : "ذخیره هدف"}
           </button>
         </div>
@@ -106,7 +106,7 @@ export default function TradeModuleSettingsPage() {
 
       <AccountSectionCard icon={<BarChart2 size={16} />} title="آمارهای صفحه ترید" index={3}>
         <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از ۱۰ آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
-        <button onClick={() => setStatsPickerOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+        <button className="account-outline-btn" onClick={() => setStatsPickerOpen(true)}>
           تغییر
         </button>
       </AccountSectionCard>

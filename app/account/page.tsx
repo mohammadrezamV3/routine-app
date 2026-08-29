@@ -201,10 +201,10 @@ export default function AccountProfilePage() {
           {saveError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{saveError}</div>}
 
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-            <button type="button" onClick={saveProfile} disabled={saving} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+            <button type="button" className="account-outline-btn" onClick={saveProfile} disabled={saving}>
               {saving ? "در حال ذخیره…" : "ذخیره"}
             </button>
-            <button type="button" onClick={() => setEditing(false)} disabled={saving}>انصراف</button>
+            <button type="button" className="account-outline-btn muted" onClick={() => setEditing(false)} disabled={saving}>انصراف</button>
           </div>
         </motion.div>
       ) : (

@@ -16,6 +16,10 @@
   :root{
     --bg:#0E1011;
     --bg-rgb:14,16,17;
+    /* رنگِ سطحِ کارت‌های شیشه‌ای (cal-cell/rm-box/modal-panel/...) — تویِ
+       تمِ شب همون --bg-rgbه (بدون تغییر رفتار قبلی)، ولی تویِ تمِ روز جدا
+       تعریف می‌شه، پایین‌تر. */
+    --surface-rgb:var(--bg-rgb);
     --text:#EDEFEE;
     --muted:#8A9099;
     --muted2:#4A5054;
@@ -43,6 +47,12 @@
   body[data-theme="light"]{
     --bg:#F8E9D2;
     --bg-rgb:248,233,210;
+    /* باکس‌ها/کارت‌های شیشه‌ای (که رنگشون از همین rgb با opacity کم ساخته
+       می‌شه) اگه از bg-rgبِ نارنجی‌ترشده بیان، بیش‌ازحد کرمی/نارنجی می‌شن —
+       درخواستِ صریح: «باکس‌هارو خیلی کرمی نکن، کرمی-سفید کن». برای همین
+       کارت‌ها یه رنگِ جدا و نزدیک‌به‌سفیدِ خودشون رو دارن، مستقل از
+       نارنجی‌ترشدنِ خودِ بک‌گراندِ صفحه. */
+    --surface-rgb:253,246,233;
     --text:#6B4F3D;
     --muted:#9C7A5A;
     --muted2:#BFA07C;
@@ -607,10 +617,8 @@
   .nav-drawer.open{transform:translateZ(0) translateX(0) scale(1); opacity:1;}
   .nav-drawer-glass{
     position:relative;
-    /* قبلاً background:.03 بود — خیلی شفاف/محو به‌نظر می‌رسید (درخواستِ صریح
-       که پشتش زیادی معلومه)؛ هم بک‌گراند هم بلور غلیظ‌تر شدن. */
-    background:rgba(255,255,255,.08); border:1px solid var(--line); border-radius:22px;
-    backdrop-filter:blur(34px) saturate(180%); -webkit-backdrop-filter:blur(34px) saturate(180%);
+    background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:22px;
+    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
     padding:14px 12px; display:flex; flex-direction:column; gap:2px;
     max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); overflow-y:auto; overflow-x:hidden;
@@ -620,7 +628,7 @@
     will-change:backdrop-filter, transform; transform:translateZ(0);
   }
   body[data-theme="light"] .nav-drawer-glass{
-    background:rgba(255,255,255,.32);
+    background:rgba(255,255,255,.05);
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
   }
   /* یک لکه سبز خیلی کم‌رنگ پشت منو — فقط یه ذره عمق بصری، نه یک افکت پررنگ */
@@ -830,7 +838,7 @@
   .cal-cell{
     aspect-ratio:1; border:1px solid var(--line); border-radius:13px; display:flex; align-items:center; justify-content:center;
     cursor:pointer; transition:transform .15s ease, border-color .15s ease, background .2s ease; position:relative;
-    background:rgba(var(--bg-rgb), .05);
+    background:rgba(var(--surface-rgb), .05);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   }
@@ -883,7 +891,7 @@
        حساب می‌شه؛ مرورگرهای قدیمی‌تر که dvh رو نمی‌شناسن همون خطِ vh بالا رو
        نگه می‌دارن (progressive enhancement). */
     max-height:78vh; max-height:78dvh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
-    background:rgba(var(--bg-rgb), .16); border:1px solid var(--line); border-radius:26px;
+    background:rgba(var(--surface-rgb), .16); border:1px solid var(--line); border-radius:26px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     /* فایرفاکس/سافاری همیشه backdrop-filter رو دقیقاً به border-radius کلیپ
        نمی‌کنن (گوشه‌های گردِ پنل، بلورِ پس‌زمینه رو مربعی نشون می‌دن) —
@@ -933,7 +941,7 @@
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     border:1px solid var(--line); border-radius:12px; padding:18px 18px; text-decoration:none; color:var(--text);
-    background:rgba(var(--bg-rgb), .13);
+    background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     transition:.18s; min-height:26px; box-sizing:border-box;
   }
@@ -1015,8 +1023,31 @@
   .account-edit-btn{
     display:flex; align-items:center; gap:6px; margin-top:14px;
     font-size:11.5px; border-color:var(--accent); color:var(--accent);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   }
+  body[data-theme="light"] .account-edit-btn, body:not([data-theme="light"]) .account-edit-btn{
+    background:none; box-shadow:none;
+  }
+  .account-edit-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
   .account-save-toast{ margin-top:10px; font-size:11.5px; color:var(--accent); font-weight:600; }
+
+  /* دکمه‌های اکشنِ پنل کاربری (ذخیره/انصراف/فعال‌کردن/...) — قبلاً دکمه‌ی
+     خامِ HTML بدون کلاس بودن، پس قانونِ سراسریِ button{} (لیکوئید-گلس با
+     یه هایلایتِ inset) روشون می‌موند و حسِ «برجسته/سه‌بعدی» می‌داد،
+     برخلافِ باقیِ پنل کاربری (account-row2/account-sidebar-link و...) که
+     تخت‌ان. این کلاس همون افکت رو صریح خاموش می‌کنه. */
+  .account-outline-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border-color:var(--accent); color:var(--accent);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .account-outline-btn, body:not([data-theme="light"]) .account-outline-btn{
+    background:none; box-shadow:none;
+  }
+  .account-outline-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
+  .account-outline-btn:disabled{ opacity:.5; cursor:default; }
+  .account-outline-btn.muted{ border-color:var(--line); color:var(--muted); }
+  .account-outline-btn.muted:hover{ background:rgba(255,255,255,.05); color:var(--text); border-color:var(--line); }
 
   .account-sub-mini-card{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -1059,7 +1090,6 @@
   }
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
-  .account-sub-cta-btn-outline{ background:none; color:var(--accent); }
 
   .account-mobile-menu{ display:none; }
 
@@ -1122,7 +1152,7 @@
   .checkout-summary{
     display:flex; align-items:center; gap:10px; margin-top:18px; padding:16px;
     border:1px solid var(--line); border-radius:16px;
-    background:rgba(var(--bg-rgb), .13);
+    background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
   }
   .checkout-summary-icon{ background:var(--accent-dim); color:var(--accent); }
@@ -1204,7 +1234,7 @@
   .tm-rail-fill{ position:absolute; right:0; top:0; width:100%; background:var(--accent); border-radius:2px; transition:height .5s ease; box-shadow:0 0 10px rgba(var(--accent-rgb),.5); }
   .tm-station{
     position:relative; margin-bottom:16px; padding:14px 16px 14px 14px; border-radius:16px;
-    border:1px solid var(--line); background:rgba(var(--bg-rgb), .13);
+    border:1px solid var(--line); background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
     transition:border-color .2s ease, background .2s ease;
   }
@@ -1294,7 +1324,7 @@
   .tc-manage-btn{
     display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
     margin-top:10px; padding:11px 0; border-radius:14px;
-    border:1px solid var(--line); background:rgba(var(--bg-rgb),.05); color:var(--text);
+    border:1px solid var(--line); background:rgba(var(--surface-rgb),.05); color:var(--text);
     font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:600; cursor:pointer;
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05); transition:border-color .2s ease, transform .15s ease;
@@ -1303,7 +1333,7 @@
   .tc-manage-btn svg{ width:16px; height:16px; }
 
   .tc-edit-wrap{
-    border-radius:22px; border:1px solid var(--line); background:rgba(var(--bg-rgb),.13);
+    border-radius:22px; border:1px solid var(--line); background:rgba(var(--surface-rgb),.13);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     padding:6px 16px 14px;
   }
@@ -1349,7 +1379,7 @@
   .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; padding:4px 4px 2px; }
   /* یک باکس شیشه‌ای عمومی و ساده — برای جعبه‌های کوچیک مثل وضعیت لودینگ رودمپ‌ساز */
   .glass-box{
-    background:rgba(var(--bg-rgb), .13); border:1px solid var(--line); border-radius:16px;
+    background:rgba(var(--surface-rgb), .13); border:1px solid var(--line); border-radius:16px;
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   }
 
@@ -1454,7 +1484,7 @@
   .pcard-stage.open .pcard-inner.flipped{transform:rotateY(180deg);}
   .pcard-face{
     position:absolute; inset:0; -webkit-backface-visibility:hidden; backface-visibility:hidden;
-    border-radius:20px; border:1px solid var(--line); background:rgba(var(--bg-rgb), .5);
+    border-radius:20px; border:1px solid var(--line); background:rgba(var(--surface-rgb), .5);
     backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%);
     box-shadow:0 24px 60px rgba(0,0,0,.35);
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
@@ -1536,7 +1566,7 @@
   .wsearch-panel{
     position:fixed; left:50%; top:50%; transform:translate(-50%,-46%); width:92%; max-width:660px;
     max-height:82vh; max-height:82dvh; display:flex; flex-direction:column;
-    background:rgba(var(--bg-rgb), .09); border:1px solid var(--line); border-radius:22px;
+    background:rgba(var(--surface-rgb), .09); border:1px solid var(--line); border-radius:22px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:0 20px 50px rgba(0,0,0,.35);
     z-index:56; padding:22px; opacity:0; pointer-events:none; transition:.2s;
@@ -1566,7 +1596,7 @@
   }
   .wsearch-box{
     aspect-ratio:1; padding:10px; border-radius:14px; text-align:center; line-height:1.35;
-    border:1px solid var(--line); background:rgba(var(--bg-rgb), .68); color:#fff;
+    border:1px solid var(--line); background:rgba(var(--surface-rgb), .68); color:#fff;
     font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; overflow:hidden;
     backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
@@ -1977,7 +2007,7 @@
   .wsearch-newform{
     position:fixed; left:50%; top:50%; transform:translate(-50%,-46%) scale(.96); width:90%; max-width:420px;
     max-height:min(78vh,520px); overflow-x:hidden; overflow-y:auto; z-index:58;
-    background:rgba(var(--bg-rgb), .09); border:1px solid var(--line); border-radius:26px;
+    background:rgba(var(--surface-rgb), .09); border:1px solid var(--line); border-radius:26px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:0 20px 50px rgba(0,0,0,.35);
     padding:22px; opacity:0; pointer-events:none;
@@ -2062,7 +2092,7 @@
      می‌شینه) و محتوای داخلش دوباره dir=rtl می‌گیره تا متن‌ها درست بمونن. */
   .calorie-unit-dropdown{
     border-radius:18px; overflow:hidden;
-    background:rgba(var(--bg-rgb), .97);
+    background:rgba(var(--surface-rgb), .97);
     backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
     border-color:var(--line);
   }
@@ -2100,33 +2130,34 @@
   body[data-theme="light"] .trade-pnl-readout{ background:rgba(255,255,255,.35); }
 
   .field-error-wrap{position:relative;}
-  .field-error .field-error-wrap input, .field-error input{padding-left:32px;}
-  .name-field-wrap.field-error input{padding-left:32px;}
+  .field-error .field-error-wrap input, .field-error input{padding-right:32px;}
+  .name-field-wrap.field-error input{padding-right:32px;}
   .field-error-icon{
-    position:absolute; left:10px; top:50%; transform:translateY(-50%); width:15px; height:15px;
+    position:absolute; right:10px; top:50%; transform:translateY(-50%); width:15px; height:15px;
     display:none; align-items:center; justify-content:center; pointer-events:none;
   }
   .field-error .field-error-icon{display:flex;}
-  /* آیکونِ داخلِ فیلد (مثلاً فرمِ ثبت‌نام) — همیشه سمتِ چپِ فیلده، همون‌جایی
+  /* آیکونِ داخلِ فیلد (مثلاً فرمِ ثبت‌نام) — همیشه سمتِ راستِ فیلده، همون‌جایی
      که field-error-icon موقعِ خطا می‌شینه؛ وقتی خطا هم هست خودش مخفی می‌شه
      تا با آیکونِ خطا روی هم نیفته. */
   .field-icon{
-    position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px;
+    position:absolute; right:11px; top:50%; transform:translateY(-50%); width:15px; height:15px;
     display:flex; align-items:center; justify-content:center; pointer-events:none; color:var(--muted2);
   }
   .field-error .field-icon{display:none;}
-  .field-error-wrap.has-icon input{padding-left:34px;}
-  /* دکمه‌ی نمایش/مخفی‌کردنِ رمز — کنارِ field-icon (سمتِ چپِ فیلد)، همون
-     الگویِ چشمِ فرمِ ورود؛ تویِ صفحه‌های auth ریستِ سراسریِ button وجود نداره
-     پس باید همه‌چیز صریح خاموش بشه (نگاه کن به توضیحِ checkout-gateway-pill). */
+  .field-error-wrap.has-icon input{padding-right:34px;}
+  /* دکمه‌ی نمایش/مخفی‌کردنِ رمز — عمداً سمتِ چپِ فیلد می‌مونه (برخلافِ
+     field-icon که سمتِ راسته)، مستقل و بدونِ نیاز به فاصله از اون؛ تویِ
+     صفحه‌های auth ریستِ سراسریِ button وجود نداره پس باید همه‌چیز صریح
+     خاموش بشه (نگاه کن به توضیحِ checkout-gateway-pill). */
   .field-toggle-visibility-btn{
-    position:absolute; left:32px; top:50%; transform:translateY(-50%); width:16px; height:16px; padding:0;
+    position:absolute; left:9px; top:50%; transform:translateY(-50%); width:20px; height:20px; padding:0;
     display:flex; align-items:center; justify-content:center;
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-    color:var(--muted2); cursor:pointer; transition:color .15s ease;
+    color:var(--accent); cursor:pointer; transition:filter .15s ease;
   }
-  .field-toggle-visibility-btn:hover{ color:var(--accent); background:none; box-shadow:none; }
-  .field-error-wrap.has-icon.has-end-action input{padding-left:56px;}
+  .field-toggle-visibility-btn:hover{ filter:brightness(1.15); background:none; box-shadow:none; }
+  .field-error-wrap.has-icon.has-end-action input{padding-right:34px; padding-left:38px;}
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-plexmono), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
@@ -2217,7 +2248,7 @@
   /* conflict alert box: pinned near the top, detached from the edge, no backdrop blur */
   .conflict-alert{
     position:fixed; left:50%; top:14px; z-index:60; width:88%; max-width:420px;
-    background:rgba(var(--bg-rgb), .09); border:1px solid var(--line); border-radius:16px;
+    background:rgba(var(--surface-rgb), .09); border:1px solid var(--line); border-radius:16px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(224,82,82,.35), 0 0 22px rgba(224,82,82,.35);
     padding:14px 18px 12px; display:flex; flex-direction:column; gap:8px;
@@ -2600,11 +2631,12 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
   position:absolute; left:6px; top:50%; transform:translateY(-50%);
   display:flex; align-items:center; justify-content:center;
   padding:7px 14px; border-radius:999px; border:none;
-  background:var(--accent); color:var(--bg); font-size:11.5px; font-weight:700;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--accent); font-size:11.5px; font-weight:700;
   cursor:pointer; transition:filter .15s ease, opacity .15s ease;
   white-space:nowrap;
 }
-.auth-phone-send-btn:hover:not(:disabled){ filter:brightness(1.08); }
+.auth-phone-send-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }
 .auth-phone-send-btn:disabled{ opacity:.55; cursor:default; filter:none; }
 .auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
 
@@ -2613,41 +2645,6 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    نیاز به یه استپِ کاملاً جدا/صفحه‌ی جدا. */
 .auth-otp-reveal{ margin-top:14px; animation:authBoxIn .28s ease both; }
 .auth-otp-hint{ font-size:11.5px; color:var(--muted); margin-bottom:6px; }
-
-/* جداکننده‌ی «یا» بین ورود معمولی و ورود با گوگل */
-.auth-or-divider{
-  display:flex; align-items:center; gap:10px; margin:16px 0;
-  color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:700;
-}
-.auth-or-divider::before, .auth-or-divider::after{
-  content:""; flex:1 1 0; height:1px; background:var(--line);
-}
-
-/* دکمه‌ی ورود با گوگل — برخلاف auth-full-btn تک‌رنگ نیست، چون لوگوی G
-   گوگل خودش چندرنگه؛ بک‌گراند خنثی (شیشه‌ای هم‌رنگ صفحه) نگه داشته می‌شه.
-   نشانِ G به‌شکل badge سفیدِ گردگوشه‌ست؛ توی جریان عادیِ فلکس (نه absolute)
-   می‌مونه و چسبیده به متن، جلوترش قرار می‌گیره — چون توی DOM قبل از متنه و
-   جهت raw کانتینر rtl هست، اولین فرزند سمت راست/جلوی جمله می‌شینه. */
-.auth-google-btn{
-  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
-  margin-top:0; border-radius:999px; padding:11px 0; border:1px solid var(--line);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; font-weight:600; cursor:pointer;
-  box-shadow:none; transition:border-color .2s ease, filter .15s ease, transform .12s ease;
-}
-body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-google-btn{
-  background:rgba(var(--bg-rgb),.6); border-color:var(--line); color:var(--text);
-}
-.auth-google-btn:hover{ border-color:var(--accent); filter:brightness(1.05); }
-.auth-google-btn:active{ transform:scale(.97); }
-.auth-google-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
-.auth-google-badge{
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:22px; height:22px; border-radius:6px; background:#fff;
-}
-.auth-google-badge svg{ width:15px; height:15px; }
-/* «فاصله بین حرف‌ها» — letter-spacing منفیِ ملایم، متنِ چندکلمه‌ایِ دکمه رو
-   جمع‌وجورتر می‌کنه، بدون به‌هم‌ریختن چسبیدگی حروف فارسی داخل هر کلمه */
-.auth-google-label{ letter-spacing:-.3px; }
 
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
 .pw-strength{ margin-top:8px; }
@@ -3135,7 +3132,7 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 .manual-submit-row{
   position:sticky; bottom:-22px; z-index:5;
   display:flex; justify-content:flex-end; margin:18px -22px -22px; padding:14px 22px;
-  background:rgba(var(--bg-rgb), .92); backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
+  background:rgba(var(--surface-rgb), .92); backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   border-top:1px solid var(--line); border-radius:0 0 26px 26px;
 }
 .manual-plan-submit-btn{
@@ -3192,7 +3189,7 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
 .manual-meal-row-menu{
   position:absolute; top:calc(100% + 4px); right:0; z-index:20; min-width:96px;
   border-radius:14px; padding:4px; border:1px solid var(--line);
-  background:rgba(var(--bg-rgb), .97);
+  background:rgba(var(--surface-rgb), .97);
   backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
   box-shadow:0 12px 30px rgba(0,0,0,.35);
   display:flex; flex-direction:column;
@@ -4187,7 +4184,7 @@ body[data-theme="light"] .notepad-workspace{
 @media (pointer: coarse){
   .app-topbar{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
   .notif-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
-  .nav-drawer-glass{ backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); }
+  .nav-drawer-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
@@ -4265,8 +4262,12 @@ body[data-theme="light"]{
    خوبی توی مرورگرهای مدرن داره، این پروژه هم جای دیگه‌ای نگرانِ legacy نیست. */
 body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; }
 
+/* row (نه row-reverse) — توی dir="rtl"، فرزندِ اولِ DOM (سایدبار) خودش
+   سمتِ راست می‌شینه؛ row-reverse این رو برعکس می‌کرد (سایدبار می‌رفت چپ) —
+   همون باگی که قبلاً برای account-body کشف/فیکس شده بود (نگاه کن به
+   توضیحِ .account-body پایین‌تر همین فایل). */
 .admin-root{
-  display:flex; flex-direction:row-reverse; min-height:100vh; background:var(--adm-bg); color:var(--adm-text);
+  display:flex; flex-direction:row; min-height:100vh; background:var(--adm-bg); color:var(--adm-text);
   font-feature-settings:"tnum" 1; direction:rtl;
 }
 
@@ -4314,7 +4315,7 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 .admin-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
 .admin-topbar{
   display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid var(--adm-border);
-  position:sticky; top:0; z-index:5; background:rgba(var(--bg-rgb),.78); backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  position:sticky; top:0; z-index:5; background:rgba(var(--surface-rgb),.78); backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
 }
 .admin-page-title{ font-size:15.5px; font-weight:700; color:var(--adm-text); margin:0; }
 .admin-mobile-toggle, .admin-mobile-close{
@@ -4438,12 +4439,17 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 
 .admin-pagination{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; }
 
+.admin-form-row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+
 @media (max-width:900px){
   .admin-sidebar-desktop{ display:none; }
   .admin-mobile-toggle{ display:flex; }
+  .admin-mobile-close{ display:flex; }
   .admin-content{ padding:16px; }
   .admin-topbar{ padding:14px 16px; }
   .admin-kpi-grid{ grid-template-columns:repeat(2, 1fr); }
+  .admin-form-field, .admin-form-field input, .admin-form-field select{ width:100% !important; }
+  .admin-form-row{ align-items:stretch; }
 }
 @media (min-width:901px){
   .admin-mobile-close{ display:none; }

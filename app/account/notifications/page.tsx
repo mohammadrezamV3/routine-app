@@ -2,19 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, CalendarCheck2, Dumbbell, Flame, LineChart, Map, UserPlus, BellRing } from "lucide-react";
+import { CalendarCheck2, Dumbbell, BellRing } from "lucide-react";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { AccountToggleRow } from "@/components/AccountRow";
 
+// فقط دسته‌هایی که واقعاً سمتِ سرور (app/api/push/send-reminders) و پنلِ
+// اعلانِ زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
+// (آریونِ عمومی/کالری/ترید/رودمپ/درخواستِ دوستی) قبلاً این‌جا سوییچ
+// داشتن ولی هیچ‌جا خونده نمی‌شدن — سوییچی که هیچ اثری نداره بدتر از
+// نبودنشه، پس حذف شدن؛ وقتی واقعاً پیاده بشن برمی‌گردن.
 const ROWS: [keyof NotifPrefs, string, React.ReactNode][] = [
-  ["arionGeneral", "اعلان‌های آریون", <Sparkles size={16} key="a" />],
   ["taskReminders", "اعلان‌های روتین", <CalendarCheck2 size={16} key="r" />],
   ["exerciseReminders", "اعلان‌های بدنسازی", <Dumbbell size={16} key="e" />],
-  ["calorieReminders", "اعلان‌های کالری", <Flame size={16} key="c" />],
-  ["tradeReminders", "اعلان‌های ترید", <LineChart size={16} key="t" />],
-  ["roadmapReminders", "اعلان‌های یادگیری / Skill", <Map size={16} key="m" />],
-  ["friendRequests", "درخواستِ دوستی", <UserPlus size={16} key="f" />],
 ];
 
 export default function NotificationsPage() {
@@ -64,7 +64,7 @@ export default function NotificationsPage() {
                   وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.
                 </span>
               </div>
-              <button onClick={enableNotifications} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+              <button className="account-outline-btn" onClick={enableNotifications}>
                 فعال‌کردن یادآوری‌ها
               </button>
             </>

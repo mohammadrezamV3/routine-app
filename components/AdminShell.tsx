@@ -61,7 +61,6 @@ const SECTIONS: NavSection[] = [
   {
     label: "تحلیل", icon: <LineChart size={17} />,
     children: [
-      { label: "رشد کاربران", href: "/admin/analytics/growth" },
       { label: "Retention", href: "/admin/analytics/retention" },
       { label: "Funnel / Conversion", href: "/admin/analytics/funnel" },
       { label: "Churn", href: "/admin/analytics/churn" },

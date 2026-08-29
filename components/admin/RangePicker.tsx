@@ -56,7 +56,7 @@ export function RangePicker() {
         بازه دلخواه
       </button>
       {customOpen && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           <input type="date" className="admin-input" value={from} onChange={(e) => setFrom(e.target.value)} />
           <span style={{ color: "var(--adm-muted-2)", fontSize: 11 }}>تا</span>
           <input type="date" className="admin-input" value={to} onChange={(e) => setTo(e.target.value)} />

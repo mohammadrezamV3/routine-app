@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { AdminPagination } from "@/components/admin/Pagination";
+import { AdminTabBar } from "@/components/admin/TabBar";
 import { formatDateShort } from "@/lib/adminFormat";
 
 type UserRow = {
@@ -28,6 +30,11 @@ function UsersInner() {
   const searchParams = useSearchParams();
   const filter = searchParams.get("filter") || "all";
   const page = Number(searchParams.get("page")) || 1;
+  function setPage(next: number) {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set("page", String(next));
+    router.push(`${pathname}?${sp.toString()}`);
+  }
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -73,13 +80,7 @@ function UsersInner() {
 
   return (
     <section>
-      <div className="admin-tabs">
-        {FILTERS.map((f) => (
-          <button key={f.key} type="button" className={`admin-tab${filter === f.key ? " active" : ""}`} onClick={() => setFilter(f.key)}>
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <AdminTabBar items={FILTERS} active={filter} onChange={setFilter} />
 
       <input
         className="admin-input"
@@ -127,13 +128,7 @@ function UsersInner() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="admin-pagination">
-              <button type="button" className="admin-btn" disabled={page <= 1} onClick={() => { const sp = new URLSearchParams(searchParams.toString()); sp.set("page", String(page - 1)); router.push(`${pathname}?${sp.toString()}`); }}>قبلی</button>
-              <span style={{ fontSize: 12, color: "var(--adm-muted)" }}>{page} از {totalPages}</span>
-              <button type="button" className="admin-btn" disabled={page >= totalPages} onClick={() => { const sp = new URLSearchParams(searchParams.toString()); sp.set("page", String(page + 1)); router.push(`${pathname}?${sp.toString()}`); }}>بعدی</button>
-            </div>
-          )}
+          <AdminPagination page={page} totalPages={totalPages} onChange={setPage} />
         </>
       )}
     </section>

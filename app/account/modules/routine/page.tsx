@@ -26,7 +26,7 @@ export default function RoutineModuleSettingsPage() {
           بیداری <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.wake || DEFAULT_WAKE}</b>
           {" — "}خواب <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.sleep || DEFAULT_SLEEP}</b>
         </div>
-        <button onClick={() => setEditing(true)} style={{ marginTop: 12, borderColor: "var(--accent)", color: "var(--accent)" }}>
+        <button className="account-outline-btn" onClick={() => setEditing(true)} style={{ marginTop: 12 }}>
           تغییر ساعت‌ها
         </button>
       </motion.div>

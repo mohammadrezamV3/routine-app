@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { AdminPagination } from "@/components/admin/Pagination";
+import { AdminTabBar } from "@/components/admin/TabBar";
 import { formatCurrencyAmount, formatDateShort } from "@/lib/adminFormat";
 
 type Tx = {
@@ -24,6 +26,11 @@ function TransactionsInner() {
   const searchParams = useSearchParams();
   const filter = searchParams.get("filter") || "all";
   const page = Number(searchParams.get("page")) || 1;
+  function setPage(next: number) {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set("page", String(next));
+    router.push(`${pathname}?${sp.toString()}`);
+  }
   const [data, setData] = useState<{ transactions: Tx[]; total: number; pageSize: number } | null>(null);
 
   useEffect(() => {
@@ -42,9 +49,7 @@ function TransactionsInner() {
 
   return (
     <section>
-      <div className="admin-tabs">
-        {FILTERS.map((f) => <button key={f.key} type="button" className={`admin-tab${filter === f.key ? " active" : ""}`} onClick={() => setFilter(f.key)}>{f.label}</button>)}
-      </div>
+      <AdminTabBar items={FILTERS} active={filter} onChange={setFilter} />
 
       {!data ? (
         <div className="admin-empty">در حال بارگذاری…</div>
@@ -70,13 +75,7 @@ function TransactionsInner() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="admin-pagination">
-              <button type="button" className="admin-btn" disabled={page <= 1} onClick={() => { const sp = new URLSearchParams(searchParams.toString()); sp.set("page", String(page - 1)); router.push(`${pathname}?${sp.toString()}`); }}>قبلی</button>
-              <span style={{ fontSize: 12, color: "var(--adm-muted)" }}>{page} از {totalPages}</span>
-              <button type="button" className="admin-btn" disabled={page >= totalPages} onClick={() => { const sp = new URLSearchParams(searchParams.toString()); sp.set("page", String(page + 1)); router.push(`${pathname}?${sp.toString()}`); }}>بعدی</button>
-            </div>
-          )}
+          <AdminPagination page={page} totalPages={totalPages} onChange={setPage} />
 
           <div className="admin-section-hint">
             «ناموفق»/«در انتظار» توی این جدول نمایش داده نمی‌شن چون درگاهِ فعلی فقط برای پرداخت‌های تأییدشده ردیف Payment می‌سازه — تلاش‌های ناموفق را در بخشِ «خطاها» می‌بینید.

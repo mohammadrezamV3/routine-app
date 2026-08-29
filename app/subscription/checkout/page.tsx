@@ -211,9 +211,9 @@ export default function CheckoutPage() {
         </div>
         <div className="task-name">
           <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-            قوانین و مقررات سایت
+            قوانین و مقررات
           </Link>
-          {" "}را می‌پذیرم
+          {" "}سایت را می‌پذیرم
         </div>
       </div>
 

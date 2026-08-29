@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, MonitorSmartphone, History } from "lucide-react";
+import { AtSign, KeyRound, ShieldCheck, MonitorSmartphone, History } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { AccountSectionCard } from "@/components/AccountSectionCard";
+import { getAccount, invalidateAccountCache } from "@/lib/accountCache";
+import { isValidUsername } from "@/lib/validate";
 
 type LoginEvent = { id: string; provider: string; ip: string | null; userAgent: string | null; createdAt: string };
 
@@ -23,6 +25,13 @@ function guessDevice(ua: string | null): string {
 }
 
 export default function SecurityPage() {
+  const [username, setUsername] = useState<string | null>(null);
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [usernameEditing, setUsernameEditing] = useState(false);
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameSuccess, setUsernameSuccess] = useState(false);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,7 +43,42 @@ export default function SecurityPage() {
 
   useEffect(() => {
     fetch("/api/account/login-events").then((r) => (r.ok ? r.json() : { events: [] })).then((res) => setEvents(res.events || []));
+    getAccount().then((res) => setUsername((res?.user as any)?.username ?? null));
   }, []);
+
+  function startEditUsername() {
+    setUsernameDraft(username || "");
+    setUsernameError(null);
+    setUsernameEditing(true);
+  }
+
+  async function saveUsername() {
+    const trimmed = usernameDraft.trim();
+    if (!isValidUsername(trimmed)) {
+      setUsernameError("یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد");
+      return;
+    }
+    setUsernameSaving(true);
+    setUsernameError(null);
+    try {
+      const res = await fetch("/api/account/username", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setUsernameError(data.error || "خطایی پیش اومد"); return; }
+      setUsername(trimmed);
+      invalidateAccountCache();
+      setUsernameEditing(false);
+      setUsernameSuccess(true);
+      setTimeout(() => setUsernameSuccess(false), 2500);
+    } catch {
+      setUsernameError("مشکلی در اتصال به سرور پیش اومد");
+    } finally {
+      setUsernameSaving(false);
+    }
+  }
 
   async function changePassword() {
     setPwError(null);
@@ -61,9 +105,36 @@ export default function SecurityPage() {
   return (
     <section>
       <h1>امنیت</h1>
-      <div className="account-content-hint">مدیریتِ رمز عبور و سابقه‌ی ورودهای حساب</div>
+      <div className="account-content-hint">مدیریتِ یوزرنیم، رمز عبور و سابقه‌ی ورودهای حساب</div>
 
-      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={0}>
+      <AccountSectionCard icon={<AtSign size={16} />} title="یوزرنیم" index={0}>
+        {usernameEditing ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <input
+              type="text" className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }}
+              value={usernameDraft} onChange={(e) => setUsernameDraft(e.target.value)}
+              placeholder="یوزرنیم خود را وارد کنید"
+            />
+            {usernameError && <div className="field-error-msg" style={{ display: "block" }}>{usernameError}</div>}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="account-outline-btn" onClick={saveUsername} disabled={usernameSaving}>
+                {usernameSaving ? "در حال ذخیره…" : "ذخیره"}
+              </button>
+              <button className="account-outline-btn muted" onClick={() => setUsernameEditing(false)} disabled={usernameSaving}>انصراف</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <div>
+              <div className="item-line">{username ? <span className="mono" dir="ltr">@{username}</span> : "هنوز یوزرنیمی تنظیم نکردی"}</div>
+              {usernameSuccess && <div className="account-save-toast" style={{ marginTop: 4 }}>یوزرنیم با موفقیت تغییر کرد.</div>}
+            </div>
+            <button className="account-outline-btn" onClick={startEditUsername}>{username ? "تغییر" : "تنظیم یوزرنیم"}</button>
+          </div>
+        )}
+      </AccountSectionCard>
+
+      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={1}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
@@ -71,20 +142,21 @@ export default function SecurityPage() {
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
           {pwSuccess && <div className="account-save-toast" style={{ marginTop: 0 }}>رمز عبور با موفقیت تغییر کرد.</div>}
           <button
+            className="account-outline-btn"
             onClick={changePassword}
             disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
-            style={{ alignSelf: "flex-start", borderColor: "var(--accent)", color: "var(--accent)" }}
+            style={{ alignSelf: "flex-start" }}
           >
             {pwSaving ? "در حال ذخیره…" : "ذخیره رمز جدید"}
           </button>
         </div>
       </AccountSectionCard>
 
-      <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={1}>
+      <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={2}>
         <div className="item-line">همین دستگاهی که الان باهاش وارد شدی — فعلاً امکانِ دیدن/خروج از دستگاه‌های دیگه از راه دور در دسترس نیست.</div>
       </AccountSectionCard>
 
-      <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={2}>
+      <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={3}>
         {!events ? (
           <div className="item-line">در حال بارگذاری…</div>
         ) : events.length === 0 ? (
@@ -103,7 +175,7 @@ export default function SecurityPage() {
         )}
       </AccountSectionCard>
 
-      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={3}>
+      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={4}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, opacity: .6 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>فعال‌سازیِ ورودِ دومرحله‌ای</div>
