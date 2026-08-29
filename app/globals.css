@@ -617,10 +617,8 @@
   .nav-drawer.open{transform:translateZ(0) translateX(0) scale(1); opacity:1;}
   .nav-drawer-glass{
     position:relative;
-    /* قبلاً background:.03 بود — خیلی شفاف/محو به‌نظر می‌رسید (درخواستِ صریح
-       که پشتش زیادی معلومه)؛ هم بک‌گراند هم بلور چند بار غلیظ‌تر شدن. */
-    background:rgba(255,255,255,.14); border:1px solid var(--line); border-radius:22px;
-    backdrop-filter:blur(48px) saturate(180%); -webkit-backdrop-filter:blur(48px) saturate(180%);
+    background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:22px;
+    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
     padding:14px 12px; display:flex; flex-direction:column; gap:2px;
     max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); overflow-y:auto; overflow-x:hidden;
@@ -630,7 +628,7 @@
     will-change:backdrop-filter, transform; transform:translateZ(0);
   }
   body[data-theme="light"] .nav-drawer-glass{
-    background:rgba(255,255,255,.45);
+    background:rgba(255,255,255,.05);
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
   }
   /* یک لکه سبز خیلی کم‌رنگ پشت منو — فقط یه ذره عمق بصری، نه یک افکت پررنگ */
@@ -4187,7 +4185,7 @@ body[data-theme="light"] .notepad-workspace{
 @media (pointer: coarse){
   .app-topbar{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
   .notif-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
-  .nav-drawer-glass{ backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); }
+  .nav-drawer-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
