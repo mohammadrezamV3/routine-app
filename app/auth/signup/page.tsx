@@ -14,9 +14,17 @@ import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/valid
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 type FieldErrors = {
-  phone?: string; name?: string; lastName?: string; username?: string;
+  phone?: string; name?: string; username?: string;
   password?: string; agreed?: string; otp?: string;
 };
+
+// یک باکسِ واحدِ «نام و نام‌خانوادگی» — سرور همچنان name/lastName جدا
+// می‌خواد، پس این‌جا از روی فاصله‌ی بین کلمات جدا می‌شن: اولین کلمه نام،
+// بقیه نام‌خانوادگی.
+function splitFullName(v: string): { name: string; lastName: string } {
+  const parts = v.trim().split(/\s+/).filter(Boolean);
+  return { name: parts[0] || "", lastName: parts.slice(1).join(" ") };
+}
 
 const RESEND_COOLDOWN_SECONDS = 120;
 
@@ -30,8 +38,7 @@ const RESEND_COOLDOWN_SECONDS = 120;
 export default function SignupPage() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -49,7 +56,6 @@ export default function SignupPage() {
 
   const formRef = useRef<HTMLFormElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
-  const lastNameRef = useRef<HTMLDivElement>(null);
   const usernameRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
   const phoneRef = useRef<HTMLDivElement>(null);
@@ -62,9 +68,9 @@ export default function SignupPage() {
   useEffect(() => {
     if (!password) { setTier(null); return; }
     let cancelled = false;
-    passwordTier(password, [username, name, lastName, phone]).then((t) => { if (!cancelled) setTier(t); });
+    passwordTier(password, [username, fullName, phone]).then((t) => { if (!cancelled) setTier(t); });
     return () => { cancelled = true; };
-  }, [password, username, name, lastName, phone]);
+  }, [password, username, fullName, phone]);
 
   function clearError(key: keyof FieldErrors) {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
@@ -125,13 +131,14 @@ export default function SignupPage() {
     setError(null);
 
     const errs: FieldErrors = {};
-    if (!name.trim()) errs.name = "نام را وارد کن";
-    if (!lastName.trim()) errs.lastName = "نام خانوادگی را وارد کن";
+    const { name, lastName } = splitFullName(fullName);
+    if (!name) errs.name = "نام و نام‌خانوادگی را وارد کن";
+    else if (!lastName) errs.name = "نام و نام‌خانوادگی را کامل وارد کن";
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
     else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
     if (!password) errs.password = "رمز عبور را وارد کن";
     else {
-      const pwErr = await validatePassword(password, [username, name, lastName, phone]);
+      const pwErr = await validatePassword(password, [username, fullName, phone]);
       if (pwErr) errs.password = pwErr;
     }
     if (!phone.trim()) errs.phone = "شماره همراه را وارد کن";
@@ -144,7 +151,6 @@ export default function SignupPage() {
     if (Object.keys(errs).length) {
       shakeFields([
         errs.name ? nameRef.current : null,
-        errs.lastName ? lastNameRef.current : null,
         errs.username ? usernameRef.current : null,
         errs.password ? passwordRef.current : null,
         errs.phone ? phoneRef.current : null,
@@ -222,25 +228,17 @@ export default function SignupPage() {
           <AuthBackButton />
           <AuthBrandMark subtitle="به آریون خوش اومدی!" />
 
-          <div className="auth-field-grid">
-            <AuthField id="name" label="نام" error={fieldErrors.name} icon={<User size={15} />} ref={nameRef}>
-              <input
-                id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی"
-                onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
-              />
-            </AuthField>
-            <AuthField id="lastName" label="نام خانوادگی" error={fieldErrors.lastName} icon={<User size={15} />} ref={lastNameRef}>
-              <input
-                id="lastName" type="text" className="wsearch-newform-name" value={lastName} placeholder="محمدی"
-                onChange={(e) => { setLastName(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
-              />
-            </AuthField>
-          </div>
+          <AuthField id="fullName" label="نام و نام‌خانوادگی" error={fieldErrors.name} icon={<User size={15} />} ref={nameRef}>
+            <input
+              id="fullName" type="text" className="wsearch-newform-name" value={fullName} placeholder="نام و نام‌خانوادگی خود را وارد کنید"
+              onChange={(e) => { setFullName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
+            />
+          </AuthField>
 
           <div style={{ marginTop: 14 }}>
             <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
               <input
-                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder="ali_2024"
+                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder="یوزرنیم خود را وارد کنید"
                 onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
               />
             </AuthField>
@@ -327,9 +325,9 @@ export default function SignupPage() {
             </div>
             <div className="task-name">
               <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-                قوانین و مقررات سایت
+                قوانین و مقررات
               </Link>
-              {" "}را می‌پذیرم
+              {" "}سایت را می‌پذیرم
             </div>
           </div>
           {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}

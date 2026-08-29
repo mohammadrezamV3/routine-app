@@ -24,7 +24,7 @@ export function PasswordVisibilityToggle({ visible, onToggle }: { visible: boole
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           style={{ display: "flex" }}
         >
-          {visible ? <EyeOff size={15} /> : <Eye size={15} />}
+          {visible ? <EyeOff size={19} /> : <Eye size={19} />}
         </motion.span>
       </AnimatePresence>
     </button>

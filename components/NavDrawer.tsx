@@ -140,6 +140,10 @@ export function NavDrawer() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
+  // هر بار منو بسته می‌شه (از هر مسیری: کلیک بیرون، دکمه‌ی ضربدر، رفتن به
+  // یه لینک)، گروهِ بازشده هم باید ریست بشه — وگرنه دفعه‌ی بعد که منو باز
+  // می‌شه، همون گروه هنوز «انتخاب‌شده»/بازشده می‌موند.
+  useEffect(() => { if (!open) setExpandedGroup(null); }, [open]);
   useLockBodyScroll(open || profileMenuOpen);
   // موقعیتِ لنگرِ پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
   // پورتال می‌شن (نه دیگه فرزندِ app-topbar)، باید مختصاتشون رو خودمون از
