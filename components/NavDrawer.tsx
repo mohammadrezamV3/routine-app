@@ -69,6 +69,9 @@ export const ICONS: Record<string, JSX.Element> = {
   subscription: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17" stroke="currentColor" strokeWidth="1.7"/><path d="M7 14h5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
+  admin: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 5 6.3v5.4c0 4.4 3 8.3 7 9.3 4-1 7-4.9 7-9.3V6.3l-7-2.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M9 12.2 11.2 14.4 15.3 10" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   logout: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M15 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 12h10m0 0-3-3m3 3-3 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
@@ -353,6 +356,15 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
                         </div>
+                        {(session?.user as any)?.isSuperAdmin && (
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); router.push("/admin"); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.admin}</span>
+                            <span>پنل ادمین</span>
+                          </div>
+                        )}
                         <div
                           className="notif-panel-item profile-menu-item"
                           onClick={() => { setProfileMenuOpen(false); router.push("/subscription"); }}

@@ -957,7 +957,10 @@
      چیدمانِ عریضِ داشبوردی.
      ============================================================ */
   .account-shell{ position:relative; }
-  .account-body{ display:flex; flex-direction:row-reverse; gap:22px; align-items:flex-start; }
+  /* row (نه row-reverse) — توی dir="rtl" فرزندِ اولِ DOM (سایدبار/تایتل‌ها)
+     خودش سمتِ راست می‌شینه؛ row-reverse قبلاً این رو برعکس می‌کرد و محتوا
+     (که خودِ عکس/آواتارِ پروفایل بالاشه) رو می‌بردِ سمتِ راست. */
+  .account-body{ display:flex; flex-direction:row; gap:22px; align-items:flex-start; }
 
   .account-sidebar{
     width:164px; flex-shrink:0; position:sticky; top:calc(88px + env(safe-area-inset-top));
@@ -1049,27 +1052,37 @@
   .account-sub-cta-btn:active{ transform:scale(.97); }
   .account-sub-cta-btn-outline{ background:none; color:var(--accent); }
 
-  .account-mobile-tabs{ display:none; }
+  .account-mobile-menu{ display:none; }
 
   @media (max-width:700px){
     .account-body{ flex-direction:column; }
     .account-sidebar{ display:none; }
-    .account-mobile-tabs{
-      display:flex; gap:6px; overflow-x:auto; padding:2px 2px 4px; margin:0 -2px 16px;
-      -webkit-overflow-scrolling:touch; scrollbar-width:none;
+
+    /* دکمه‌ی همبرگریِ محلیِ پنل کاربری — با زدنش لیستِ تایتل‌ها (همون‌هایی که
+       دسکتاپ توی سایدبار می‌بینه) به‌صورت آکاردئون زیرش باز می‌شه، به‌جای اینکه
+       همیشه یه نوارِ افقیِ اسکرول‌شونده جا بگیره. */
+    .account-mobile-menu{ display:block; margin-bottom:16px; }
+    .account-mobile-menu-btn{
+      display:flex; align-items:center; gap:9px; width:100%; padding:11px 14px;
+      border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.03);
+      color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
+      font-family:var(--font-vazir), sans-serif;
     }
-    .account-mobile-tabs::-webkit-scrollbar{ display:none; }
-    .account-mobile-tab{
-      position:relative; display:flex; align-items:center; gap:6px; flex-shrink:0;
-      padding:8px 14px; border-radius:999px; text-decoration:none; white-space:nowrap;
-      color:var(--muted); font-size:11.5px; font-weight:600;
-      background:rgba(255,255,255,.03); border:1px solid var(--line);
-      transition:color .18s ease, border-color .18s ease;
+    body[data-theme="light"] .account-mobile-menu-btn{ background:rgba(255,255,255,.4); }
+    .account-mobile-menu-btn-icon{ display:flex; color:var(--accent); flex-shrink:0; }
+    .account-mobile-menu-btn-label{ flex:1; text-align:right; }
+    .account-mobile-menu-btn-chevron{ color:var(--muted2); transition:transform .2s ease; flex-shrink:0; }
+    .account-mobile-menu-btn-chevron.open{ transform:rotate(180deg); }
+
+    .account-mobile-menu-panel{ overflow:hidden; }
+    .account-mobile-menu-panel-inner{ display:flex; flex-direction:column; gap:2px; padding-top:8px; }
+    .account-mobile-menu-item{
+      display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
+      color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
+      background:none; border:none; text-align:right; width:100%; cursor:pointer;
     }
-    .account-mobile-tab.active{ color:var(--accent); border-color:transparent; }
-    .account-mobile-tab > *:not(.account-mobile-tab-pill){ position:relative; z-index:1; }
-    .account-mobile-tab-pill{ position:absolute; inset:0; border-radius:999px; background:var(--accent-dim); z-index:0; }
-    .account-mobile-tab-danger{ color:#E05252; background:none; border:none; cursor:pointer; font-family:var(--font-vazir), sans-serif; }
+    .account-mobile-menu-item.active{ color:var(--accent); background:var(--accent-dim); }
+    .account-mobile-menu-item-danger{ color:#E05252; }
   }
 
   /* صفحه‌ی چک‌اوت — خلاصه‌ی سفارش + کدِ تخفیف + قوانین + دکمه‌ی پرداخت.
