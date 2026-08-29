@@ -114,10 +114,7 @@ export default function ForgotPasswordPage() {
       <div className="auth-shell">
         <div className="auth-box">
           <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
-          <AuthBrandMark />
-          <div style={{ textAlign: "center", marginBottom: 4 }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>فراموشی رمز عبور</div>
-          </div>
+          <AuthBrandMark subtitle="فراموشی رمز عبور" />
 
           {step === 1 && (
             <form onSubmit={requestCode} className="auth-step" key="step1">
