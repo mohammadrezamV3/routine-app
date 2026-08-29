@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { User, AtSign, Lock } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
@@ -220,13 +221,13 @@ export default function SignupPage() {
           <AuthBrandMark subtitle="به آریون خوش اومدی!" />
 
           <div className="auth-field-grid">
-            <AuthField id="name" label="نام" error={fieldErrors.name} ref={nameRef}>
+            <AuthField id="name" label="نام" error={fieldErrors.name} icon={<User size={15} />} ref={nameRef}>
               <input
                 id="name" type="text" className="wsearch-newform-name" value={name} placeholder="علی"
                 onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
               />
             </AuthField>
-            <AuthField id="lastName" label="نام خانوادگی" error={fieldErrors.lastName} ref={lastNameRef}>
+            <AuthField id="lastName" label="نام خانوادگی" error={fieldErrors.lastName} icon={<User size={15} />} ref={lastNameRef}>
               <input
                 id="lastName" type="text" className="wsearch-newform-name" value={lastName} placeholder="محمدی"
                 onChange={(e) => { setLastName(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
@@ -235,7 +236,7 @@ export default function SignupPage() {
           </div>
 
           <div style={{ marginTop: 14 }}>
-            <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} ref={usernameRef}>
+            <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
               <input
                 id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" placeholder="ali_2024"
                 onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
@@ -244,7 +245,7 @@ export default function SignupPage() {
           </div>
 
           <div style={{ marginTop: 14 }}>
-            <AuthField id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}>
+            <AuthField id="password" label="رمز عبور" error={fieldErrors.password} icon={<Lock size={15} />} ref={passwordRef}>
               <input
                 id="password" type="password" className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}

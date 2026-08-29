@@ -2098,6 +2098,15 @@
     display:none; align-items:center; justify-content:center; pointer-events:none;
   }
   .field-error .field-error-icon{display:flex;}
+  /* آیکونِ داخلِ فیلد (مثلاً فرمِ ثبت‌نام) — همیشه سمتِ چپِ فیلده، همون‌جایی
+     که field-error-icon موقعِ خطا می‌شینه؛ وقتی خطا هم هست خودش مخفی می‌شه
+     تا با آیکونِ خطا روی هم نیفته. */
+  .field-icon{
+    position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px;
+    display:flex; align-items:center; justify-content:center; pointer-events:none; color:var(--muted2);
+  }
+  .field-error .field-icon{display:none;}
+  .field-error-wrap.has-icon input{padding-left:34px;}
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-plexmono), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
