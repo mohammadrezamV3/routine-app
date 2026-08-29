@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { OG_BASE } from "@/lib/brand";
+import { OG_BASE, SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
+import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
 export const metadata: Metadata = {
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   const rows = [
     { label: "سازنده", value: "Arion Group" },
-    { label: "ایمیل", value: "smm881517@gmail.com", href: "mailto:smm881517@gmail.com" },
+    { label: "ایمیل", value: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },
+    { label: "تلگرام", value: SOCIAL.telegram.handle, href: SOCIAL.telegram.url, icon: <TelegramIcon size={14} /> },
+    { label: "اینستاگرام", value: SOCIAL.instagram.handle, href: SOCIAL.instagram.url, icon: <InstagramIcon size={14} /> },
   ];
 
   return (
@@ -23,7 +26,16 @@ export default function AboutPage() {
           <div key={r.label} className="about-row">
             <span className="about-label">{r.label}</span>
             {r.href ? (
-              <a href={r.href} className="mono" style={{ color: "var(--accent)", textDecoration: "none" }} dir="ltr">
+              <a
+                href={r.href}
+                className="mono"
+                style={{ color: "var(--accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                dir="ltr"
+                {...(r.href.startsWith("http")
+                  ? { target: "_blank", rel: "me noopener noreferrer" }
+                  : {})}
+              >
+                {r.icon}
                 {r.value}
               </a>
             ) : (

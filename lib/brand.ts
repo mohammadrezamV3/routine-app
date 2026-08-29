@@ -40,3 +40,18 @@ export const OG_BASE = {
   siteName: BRAND_BOTH,
   images: [OG_IMAGE],
 };
+
+// شبکه‌های اجتماعی — در سه جا استفاده می‌شوند (صفحه‌ی «درباره ما»، صفحه‌ی
+// پشتیبانیِ پنل، و `sameAs` در JSON-LD)، پس مثل بقیه‌ی نامِ برند یک منبعِ
+// واحد دارند.
+export const SOCIAL = {
+  telegram: { handle: "@Arionapp", url: "https://t.me/Arionapp" },
+  instagram: { handle: "@Arionapp", url: "https://instagram.com/Arionapp" },
+} as const;
+
+export const SUPPORT_EMAIL = "smm881517@gmail.com";
+
+// sameAs همان چیزی است که گوگل برای وصل‌کردنِ یک موجودیت به پروفایل‌های
+// رسمی‌اش استفاده می‌کند. برای دامنه‌ای که هیچ بک‌لینکی ندارد این یکی از
+// معدود سیگنال‌هایی است که می‌شود از داخلِ خودِ سایت داد.
+export const BRAND_SAME_AS = [SOCIAL.telegram.url, SOCIAL.instagram.url];

@@ -12,7 +12,7 @@ import { authOptions } from "@/lib/auth";
 import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
-import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, OG_BASE } from "@/lib/brand";
+import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
@@ -118,6 +118,10 @@ const ORGANIZATION_JSON_LD = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
   description: BRAND_DESC,
+  // پروفایل‌های رسمی. برای دامنه‌ای که هنوز بک‌لینکی ندارد، این یکی از معدود
+  // راه‌هایی است که می‌شود از داخلِ خودِ سایت به گوگل گفت این حساب‌ها مالِ
+  // همین برندند — مکمّلِ `rel="me"` روی خودِ لینک‌ها در صفحه‌ی «درباره ما».
+  sameAs: BRAND_SAME_AS,
 };
 
 const WEBSITE_JSON_LD = {

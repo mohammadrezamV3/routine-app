@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Mail, MessageCircleWarning } from "lucide-react";
+import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
+import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 
 const FAQ = [
   { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخشِ «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
@@ -10,7 +12,7 @@ const FAQ = [
 ];
 
 export default function SupportPage() {
-  const mailto = "mailto:smm881517@gmail.com?subject=" + encodeURIComponent("گزارش مشکل — Arion");
+  const mailto = `mailto:${SUPPORT_EMAIL}?subject=` + encodeURIComponent("گزارش مشکل — Arion");
 
   return (
     <section>
@@ -18,11 +20,11 @@ export default function SupportPage() {
       <div className="account-content-hint">اگه سوالی داری یا با مشکلی روبه‌رو شدی</div>
 
       <div className="account-card">
-        <a href="mailto:smm881517@gmail.com" className="account-row2">
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="account-row2">
           <span className="account-row2-icon"><Mail size={16} /></span>
           <span className="account-row2-body">
             <span className="account-row2-label">تماس با پشتیبانی</span>
-            <span className="account-row2-desc mono" dir="ltr">smm881517@gmail.com</span>
+            <span className="account-row2-desc mono" dir="ltr">{SUPPORT_EMAIL}</span>
           </span>
         </a>
         <a href={mailto} className="account-row2">
@@ -30,6 +32,20 @@ export default function SupportPage() {
           <span className="account-row2-body">
             <span className="account-row2-label">گزارش مشکل</span>
             <span className="account-row2-desc">ارسالِ ایمیل برای گزارشِ باگ یا مشکل</span>
+          </span>
+        </a>
+        <a href={SOCIAL.telegram.url} target="_blank" rel="me noopener noreferrer" className="account-row2">
+          <span className="account-row2-icon"><TelegramIcon size={16} /></span>
+          <span className="account-row2-body">
+            <span className="account-row2-label">پشتیبانی در تلگرام</span>
+            <span className="account-row2-desc mono" dir="ltr">{SOCIAL.telegram.handle}</span>
+          </span>
+        </a>
+        <a href={SOCIAL.instagram.url} target="_blank" rel="me noopener noreferrer" className="account-row2">
+          <span className="account-row2-icon"><InstagramIcon size={16} /></span>
+          <span className="account-row2-body">
+            <span className="account-row2-label">اینستاگرام</span>
+            <span className="account-row2-desc mono" dir="ltr">{SOCIAL.instagram.handle}</span>
           </span>
         </a>
       </div>
