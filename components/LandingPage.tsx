@@ -416,12 +416,20 @@ export function LandingPage() {
     <>
       <section id="sec-landing-hero" style={{ paddingTop: 18 }}>
         <div ref={heroRef} className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 text-right ${t.shadow} backdrop-blur-xl sm:p-9`}>
+          {/* نامِ فارسیِ برند عمداً در خودِ h1 است، نه فقط در متادیتا: تطابقِ
+              متنیِ گوگل روی محتوای واقعیِ صفحه انجام می‌شه. قبل از این،
+              «آریون» صفر بار در کلِ متنِ صفحه بود و جست‌وجوی فارسیِ برند
+              هیچ تطابقی پیدا نمی‌کرد. ظاهر تغییری نمی‌کنه — «آریون» با همون
+              رنگِ اکسنت کنارِ لوگوتایپِ لاتین می‌شینه. */}
           <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
-            همه‌ی نظم زندگی‌ات، توی <span className={t.accentText}>Arion</span>
+            همه‌ی نظم زندگی‌ات، توی{" "}
+            <span className={t.accentText}>آریون</span>{" "}
+            <span className={t.accentText}>(Arion)</span>
           </h1>
           <p className={`mt-4 text-right text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
-            روتین روزانه، خواب، بدنسازی، ژورنال ترید و مسیر یادگیری —
-            هرکدوم دقیق، ساده و بدون شلوغی. همه‌چیز یک‌جا، همه‌چیز به‌موقع.
+            آریون (Arion) یک اپ فارسیه برای روتین روزانه، خواب، بدنسازی،
+            ژورنال ترید و مسیر یادگیری — هرکدوم دقیق، ساده و بدون شلوغی.
+            همه‌چیز یک‌جا، همه‌چیز به‌موقع.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-2.5" data-anim-field>
             <Link

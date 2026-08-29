@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { OG_BASE } from "@/lib/brand";
 import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "سوالات متداول درباره آریون",
   description: "جواب سوالات رایج درباره‌ی آریون — چیه، چیکار می‌کنه، رایگانه یا نه، و امنیتِ اطلاعاتت چطوره.",
   alternates: { canonical: "/faq" },
-  openGraph: { url: "/faq", title: "سوالات متداول درباره آریون" },
+  openGraph: { ...OG_BASE, url: "/faq", title: "سوالات متداول درباره آریون" },
 };
 
 // محتوای این صفحه عمداً واقعی و دقیقاً منطبق بر چیزیه که آریون الان واقعاً
