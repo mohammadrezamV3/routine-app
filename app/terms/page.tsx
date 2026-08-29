@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { OG_BASE } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "قوانین و مقررات",
   description: "قوانین و مقررات استفاده از آریون — ماهیت سرویس، حساب کاربری، و حریم داده‌های شما.",
   alternates: { canonical: "/terms" },
-  openGraph: { url: "/terms", title: "قوانین و مقررات | Arion" },
+  openGraph: { ...OG_BASE, url: "/terms", title: "قوانین و مقررات" },
 };
 
 const SECTIONS = [

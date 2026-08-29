@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { OG_BASE } from "@/lib/brand";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
 export const metadata: Metadata = {
   title: "درباره آریون",
   description: "درباره‌ی تیم سازنده‌ی آریون و راه‌های تماس.",
   alternates: { canonical: "/about" },
-  openGraph: { url: "/about", title: "درباره آریون" },
+  openGraph: { ...OG_BASE, url: "/about", title: "درباره آریون" },
 };
 
 export default function AboutPage() {

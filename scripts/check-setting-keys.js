@@ -13,6 +13,12 @@ const path = require("path");
 const ROOTS = ["app", "lib", "components"];
 const ALLOWLIST_FILE = "lib/userSettingKeys.ts";
 
+// lib/appSettings.ts تنظیماتِ *سراسریِ اپ* (مدلِ AppSetting) رو مدیریت می‌کنه،
+// نه تنظیماتِ کاربر — کلیدهاش هیچ‌وقت از `/api/settings/[key]` رد نمی‌شن، پس
+// allowlistِ این‌جا اصلاً بهشون ربطی نداره. فقط چون تابعِ داخلیِ خودش هم
+// اتفاقی getSetting نام داره توی الگو گیر می‌افتاد.
+const SKIP_FILES = new Set(["lib/appSettings.ts"]);
+
 const allowSrc = fs.readFileSync(ALLOWLIST_FILE, "utf8");
 const allowed = new Set([...allowSrc.matchAll(/^\s*(\w+):\s*"([^"]+)"/gm)].map((m) => m[2]));
 const serverManaged = new Set(
@@ -35,7 +41,7 @@ function walk(dir) {
     if (e.isDirectory()) {
       if (e.name === "node_modules" || e.name === ".next") continue;
       walk(p);
-    } else if (/\.(ts|tsx)$/.test(e.name) && p !== ALLOWLIST_FILE) {
+    } else if (/\.(ts|tsx)$/.test(e.name) && p !== ALLOWLIST_FILE && !SKIP_FILES.has(p.split(path.sep).join("/"))) {
       const src = fs.readFileSync(p, "utf8");
       for (const re of PATTERNS) {
         for (const m of src.matchAll(re)) {
