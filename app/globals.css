@@ -36,28 +36,32 @@
     --secondary-rgb:62,123,250;
     --secondary-dim:rgba(62,123,250,.18);
   }
+  /* پالتِ رسمیِ تمِ روز (طبقِ درخواستِ صریح) — رنگِ اصلی/کارت‌ها/متن‌ها/خطوط
+     دقیقاً از پالتِ ارسالی؛ --bg عمداً کمی نارنجی‌تر از مقدارِ خامِ پالت
+     (#FDF6E9) انتخاب شده، چون خودِ پالت روی صفحه بیش‌ازحد محو/سفید دیده
+     می‌شد — درخواستِ جداگانه‌ی «بک‌گراند رو نارنجی‌تر کن». */
   body[data-theme="light"]{
-    --bg:#F4E3C9;
-    --bg-rgb:244,227,201;
-    --text:#3A2A18;
-    --muted:#8A7355;
-    --muted2:#A68A6E;
-    --accent:#B85C1F;
-    --accent-rgb:184,92,31;
-    --accent-dim:rgba(184,92,31,.14);
-    --accent-soft:#C97A3D;
-    --accent-deep:#6B3F17;
-    --card-bg:#F6E6CC;
-    --input-bg:#F1DFC0;
-    --line:#E4D6B8;
+    --bg:#F8E9D2;
+    --bg-rgb:248,233,210;
+    --text:#6B4F3D;
+    --muted:#9C7A5A;
+    --muted2:#BFA07C;
+    --accent:#B36B2F;
+    --accent-rgb:179,107,47;
+    --accent-dim:rgba(179,107,47,.14);
+    --accent-soft:#C48949;
+    --accent-deep:#664E27;
+    --card-bg:#F5E6D3;
+    --input-bg:#F2E2C8;
+    --line:#E7D7C1;
     --sun:#FFC94A;
     --moon:#7B4FE0;
     /* قهوه‌ای تیره — رنگ دومِ روز، برای همون لحظه‌های «ویژه»؛ قبلاً طلایی بود،
        ولی توی تم روشن هیچ فونتی نباید کرمی/طلایی باشه — عناوین نارنجی، متن‌ها
        قهوه‌ای/سیاه */
-    --secondary:#6B3F17;
-    --secondary-rgb:107,63,23;
-    --secondary-dim:rgba(107,63,23,.16);
+    --secondary:#5A4024;
+    --secondary-rgb:90,64,36;
+    --secondary-dim:rgba(90,64,36,.16);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
 
@@ -603,16 +607,20 @@
   .nav-drawer.open{transform:translateZ(0) translateX(0) scale(1); opacity:1;}
   .nav-drawer-glass{
     position:relative;
-    background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:22px;
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+    /* قبلاً background:.03 بود — خیلی شفاف/محو به‌نظر می‌رسید (درخواستِ صریح
+       که پشتش زیادی معلومه)؛ هم بک‌گراند هم بلور غلیظ‌تر شدن. */
+    background:rgba(255,255,255,.08); border:1px solid var(--line); border-radius:22px;
+    backdrop-filter:blur(34px) saturate(180%); -webkit-backdrop-filter:blur(34px) saturate(180%);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
     padding:14px 12px; display:flex; flex-direction:column; gap:2px;
     max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); overflow-y:auto; overflow-x:hidden;
-    isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
+    isolation:isolate;
+    -webkit-mask-image:-webkit-radial-gradient(white, black);
+    mask-image:radial-gradient(white, black);
     will-change:backdrop-filter, transform; transform:translateZ(0);
   }
   body[data-theme="light"] .nav-drawer-glass{
-    background:rgba(255,255,255,.05);
+    background:rgba(255,255,255,.32);
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
   }
   /* یک لکه سبز خیلی کم‌رنگ پشت منو — فقط یه ذره عمق بصری، نه یک افکت پررنگ */
@@ -884,6 +892,7 @@
        بلور به گوشه‌های گرد رو فورس می‌کنه (بدون تغییرِ ظاهریِ قابل‌دیدن). */
     isolation:isolate;
     -webkit-mask-image:-webkit-radial-gradient(white, black);
+    mask-image:radial-gradient(white, black);
     z-index:56; padding:22px; opacity:0; pointer-events:none;
     transition:transform .28s cubic-bezier(.22,1,.36,1), opacity .22s ease;
   }
@@ -3300,7 +3309,7 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
      صریحِ کاربر که پاپ‌آپ خیلی شفاف بود و پشتش زیادی معلوم بود */
   background:rgba(255,255,255,.08);
   backdrop-filter:blur(32px) saturate(170%); -webkit-backdrop-filter:blur(32px) saturate(170%);
-  isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black);
+  isolation:isolate; -webkit-mask-image:-webkit-radial-gradient(white, black); mask-image:radial-gradient(white, black);
 }
 body[data-theme="light"] .exercise-catalog-popup-panel{ background:rgba(255,255,255,.4); }
 .exercise-catalog-popup-panel .modal-head{ flex-shrink:0; }
@@ -4042,7 +4051,8 @@ body[data-theme="light"] .notepad-workspace{
 }
 .notepad-cover:hover .notepad-cover-actions{ opacity:1; }
 .notepad-cover-actions button{
-  padding:6px 10px; border-radius:var(--np-radius-sm); background:rgba(0,0,0,.55); backdrop-filter:blur(6px);
+  padding:6px 10px; border-radius:var(--np-radius-sm); background:rgba(0,0,0,.55);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   border:1px solid rgba(255,255,255,.16); color:#fff; font-size:11px; font-weight:600; cursor:pointer;
 }
 .notepad-icon-btn.overlap{ margin-top:-30px; background:var(--np-surface); border:3px solid var(--np-surface); box-shadow:var(--np-shadow); }
@@ -4177,7 +4187,7 @@ body[data-theme="light"] .notepad-workspace{
 @media (pointer: coarse){
   .app-topbar{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
   .notif-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
-  .nav-drawer-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .nav-drawer-glass{ backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); }
   .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
