@@ -5,10 +5,11 @@ import { signIn } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark, GoogleSignInButton } from "@/components/AuthChrome";
+import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
 
@@ -119,17 +120,7 @@ export default function LoginPage() {
             <AuthField
               id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
               icon={<Lock size={15} />}
-              endAction={
-                <button
-                  type="button"
-                  className="field-toggle-visibility-btn"
-                  tabIndex={-1}
-                  aria-label={passwordVisible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
-                  onClick={() => setPasswordVisible((v) => !v)}
-                >
-                  {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              }
+              endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
             >
               <input
                 id="password"

@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, AtSign, Lock, Eye, EyeOff } from "lucide-react";
+import { User, AtSign, Lock } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
+import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
@@ -239,7 +240,7 @@ export default function SignupPage() {
           <div style={{ marginTop: 14 }}>
             <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
               <input
-                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" placeholder="ali_2024"
+                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder="ali_2024"
                 onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
               />
             </AuthField>
@@ -249,17 +250,7 @@ export default function SignupPage() {
             <AuthField
               id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
               icon={<Lock size={15} />}
-              endAction={
-                <button
-                  type="button"
-                  className="field-toggle-visibility-btn"
-                  tabIndex={-1}
-                  aria-label={passwordVisible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
-                  onClick={() => setPasswordVisible((v) => !v)}
-                >
-                  {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              }
+              endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
             >
               <input
                 id="password" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
@@ -285,7 +276,7 @@ export default function SignupPage() {
             <AuthField id="phone" label="شماره همراه" error={fieldErrors.phone}>
               <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
                 <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr"
+                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" style={{ textAlign: "right" }}
                   placeholder="09123456789" readOnly={otpSent}
                   onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) clearError("phone"); }}
                   onKeyDown={(e) => { if (e.key === "Enter" && !otpSent) { e.preventDefault(); requestOtp(); } }}
@@ -307,7 +298,7 @@ export default function SignupPage() {
               <div className="auth-otp-hint">کدی که به {phone.trim()} پیامک شد رو وارد کن.</div>
               <AuthField id="signupOtp" label="کد ۵ رقمی" error={fieldErrors.otp}>
                 <input
-                  id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr"
+                  id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
                   onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "")); if (e.target.value.trim()) clearError("otp"); }}
                 />
               </AuthField>

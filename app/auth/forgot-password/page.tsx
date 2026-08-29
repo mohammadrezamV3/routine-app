@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock } from "lucide-react";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { AuthField } from "@/components/AuthField";
+import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidEmail } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
@@ -123,7 +124,7 @@ export default function ForgotPasswordPage() {
               </div>
               <AuthField id="identifier" label="شماره همراه یا ایمیل" icon={<User size={15} />}>
                 <input
-                  id="identifier" type="text" className="wsearch-newform-name" value={identifier} dir="ltr" placeholder="09123456789"
+                  id="identifier" type="text" className="wsearch-newform-name" value={identifier} dir="ltr" style={{ textAlign: "right" }} placeholder="09123456789"
                   onChange={(e) => setIdentifier(e.target.value)}
                 />
               </AuthField>
@@ -141,7 +142,7 @@ export default function ForgotPasswordPage() {
               </div>
               <AuthField id="code" label="کد ۵ رقمی">
                 <input
-                  id="code" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={code} dir="ltr"
+                  id="code" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
                   onChange={(e) => setCode(e.target.value)}
                 />
               </AuthField>
@@ -157,17 +158,7 @@ export default function ForgotPasswordPage() {
                 <AuthField
                   id="newPassword" label="رمز عبور جدید"
                   icon={<Lock size={15} />}
-                  endAction={
-                    <button
-                      type="button"
-                      className="field-toggle-visibility-btn"
-                      tabIndex={-1}
-                      aria-label={passwordVisible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
-                      onClick={() => setPasswordVisible((v) => !v)}
-                    >
-                      {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  }
+                  endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
                 >
                   <input
                     id="newPassword" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={newPassword}
