@@ -2615,41 +2615,6 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 .auth-otp-reveal{ margin-top:14px; animation:authBoxIn .28s ease both; }
 .auth-otp-hint{ font-size:11.5px; color:var(--muted); margin-bottom:6px; }
 
-/* جداکننده‌ی «یا» بین ورود معمولی و ورود با گوگل */
-.auth-or-divider{
-  display:flex; align-items:center; gap:10px; margin:16px 0;
-  color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:700;
-}
-.auth-or-divider::before, .auth-or-divider::after{
-  content:""; flex:1 1 0; height:1px; background:var(--line);
-}
-
-/* دکمه‌ی ورود با گوگل — برخلاف auth-full-btn تک‌رنگ نیست، چون لوگوی G
-   گوگل خودش چندرنگه؛ بک‌گراند خنثی (شیشه‌ای هم‌رنگ صفحه) نگه داشته می‌شه.
-   نشانِ G به‌شکل badge سفیدِ گردگوشه‌ست؛ توی جریان عادیِ فلکس (نه absolute)
-   می‌مونه و چسبیده به متن، جلوترش قرار می‌گیره — چون توی DOM قبل از متنه و
-   جهت raw کانتینر rtl هست، اولین فرزند سمت راست/جلوی جمله می‌شینه. */
-.auth-google-btn{
-  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
-  margin-top:0; border-radius:999px; padding:11px 0; border:1px solid var(--line);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; font-weight:600; cursor:pointer;
-  box-shadow:none; transition:border-color .2s ease, filter .15s ease, transform .12s ease;
-}
-body[data-theme="light"] .auth-google-btn, body:not([data-theme="light"]) .auth-google-btn{
-  background:rgba(var(--bg-rgb),.6); border-color:var(--line); color:var(--text);
-}
-.auth-google-btn:hover{ border-color:var(--accent); filter:brightness(1.05); }
-.auth-google-btn:active{ transform:scale(.97); }
-.auth-google-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
-.auth-google-badge{
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:22px; height:22px; border-radius:6px; background:#fff;
-}
-.auth-google-badge svg{ width:15px; height:15px; }
-/* «فاصله بین حرف‌ها» — letter-spacing منفیِ ملایم، متنِ چندکلمه‌ایِ دکمه رو
-   جمع‌وجورتر می‌کنه، بدون به‌هم‌ریختن چسبیدگی حروف فارسی داخل هر کلمه */
-.auth-google-label{ letter-spacing:-.3px; }
-
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
 .pw-strength{ margin-top:8px; }
 .pw-strength-bars{ display:flex; gap:4px; }

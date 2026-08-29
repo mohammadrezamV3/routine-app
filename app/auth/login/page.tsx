@@ -8,7 +8,7 @@ import Link from "next/link";
 import { User, Lock } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
-import { AuthBackButton, AuthBrandMark, GoogleSignInButton } from "@/components/AuthChrome";
+import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
@@ -34,15 +34,6 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { staggerFieldsIn(formRef.current); }, []);
-
-  // اگه next-auth بعد از تلاش ورود با گوگل (مثلاً به‌خاطر رد کردن دسترسی یا
-  // نبودن GOOGLE_CLIENT_ID/SECRET روی این دیپلوی) با ?error=... برگردونه،
-  // به‌جای رها کردن کاربر توی فرم خالی، خطا رو نشونش می‌دیم. از
-  // window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense نباشه.
-  useEffect(() => {
-    const err = new URLSearchParams(window.location.search).get("error");
-    if (err) setError("ورود با گوگل ناموفق بود — دوباره امتحان کن یا از روش دیگه‌ای وارد شو");
-  }, []);
 
   function clearError(key: "identifier" | "password") {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
@@ -151,9 +142,6 @@ export default function LoginPage() {
           <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field>
             {loading ? "در حال ورود…" : "ورود"}
           </button>
-
-          <div className="auth-or-divider" data-anim-field>یا</div>
-          <GoogleSignInButton />
         </form>
       </div>
     </section>
