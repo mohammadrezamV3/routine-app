@@ -16,23 +16,24 @@ type Gateway = (typeof GATEWAYS)[number];
 // درخواستِ پرداخت رو به زرین‌پال می‌فرسته. فقط بازارِ ایران/ریال پشتیبانی
 // می‌شه — درگاهِ بین‌المللی هنوز وصل نشده.
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`sub-checkout:${userId}:${ip}`, 8, 10 * 60 * 1000)) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
-  }
-
-  // همه‌ی این تابع (از پارس بادی تا صداکردنِ درگاه) داخلِ یه try/catقِ واحده.
-  // قبلاً فقط بخشِ درخواستِ پرداخت پوشش داشت — یعنی مثلاً اگه جدولِ
-  // DiscountCode روی این دیپلوی هنوز migrate نشده باشه (یا هر خطای
-  // پیش‌بینی‌نشده‌ی دیگه‌ای قبل از رسیدن به درگاه رخ بده)، Next.js یه
-  // صفحه‌ی خطای خامِ HTML برمی‌گردوند، نه JSON؛ فرانت‌اند هم چون
-  // res.json() روی HTML fail می‌شه، فقط پیامِ عمومیِ «مشکلی در اتصال به
-  // سرور» رو نشون می‌داد — بدونِ هیچ سرنخی از دلیلِ واقعی.
+  // **کلِ** تابع داخلِ یک try واحد است — شاملِ خواندنِ سشن و ریت‌لیمیت، که
+  // قبلاً بیرون بودند.
+  //
+  // چرا مهم است: هر خطایی که بیرونِ try رخ دهد (مثلاً `getServerSession` با
+  // NEXTAUTH_SECRETِ غلط، یا خطای دیتابیس در کال‌بکِ سشن، یا جدولی که هنوز
+  // migrate نشده) باعث می‌شود نکست یک صفحه‌ی **HTML** با کدِ ۵۰۰ برگرداند نه
+  // JSON. کلاینت هم روی `res.json()` خطا می‌خورد و فقط پیامِ عمومیِ «مشکلی در
+  // اتصال به سرور» را نشان می‌دهد — بدونِ هیچ سرنخی از دلیلِ واقعی.
   try {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id;
+    if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const ip = getClientIp(req.headers);
+    if (!checkRateLimit(`sub-checkout:${userId}:${ip}`, 8, 10 * 60 * 1000)) {
+      return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    }
+
     const body = await req.json();
     const { planKey, duration, discountCode, gateway: rawGateway } = body as {
       planKey: string; duration: Duration; discountCode?: string; gateway?: string;

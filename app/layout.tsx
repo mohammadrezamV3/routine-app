@@ -7,12 +7,14 @@ import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
 import { ConflictAlert } from "@/components/ConflictAlert";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
+import { MotionTuner } from "@/components/MotionTuner";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
-import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, OG_BASE } from "@/lib/brand";
+import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
+import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
@@ -118,6 +120,10 @@ const ORGANIZATION_JSON_LD = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
   description: BRAND_DESC,
+  // پروفایل‌های رسمی. برای دامنه‌ای که هنوز بک‌لینکی ندارد، این یکی از معدود
+  // راه‌هایی است که می‌شود از داخلِ خودِ سایت به گوگل گفت این حساب‌ها مالِ
+  // همین برندند — مکمّلِ `rel="me"` روی خودِ لینک‌ها در صفحه‌ی «درباره ما».
+  sameAs: BRAND_SAME_AS,
 };
 
 const WEBSITE_JSON_LD = {
@@ -170,6 +176,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* تشخیصِ دستگاهِ ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
+            همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
+        <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
         <InlineBootstrap />
@@ -181,9 +190,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ConflictAlert />
         <AuthSessionProvider session={session}>
           <ThemeProvider>
-            <NavDrawer />
-            <NotificationEngine />
-            <div className="wrap">{children}</div>
+            <MotionTuner>
+              <NavDrawer />
+              <NotificationEngine />
+              <div className="wrap">{children}</div>
+            </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
       </body>
