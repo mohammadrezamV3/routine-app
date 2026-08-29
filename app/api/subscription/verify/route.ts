@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { zarinpalVerifyPayment } from "@/lib/zarinpal";
+import { zibalVerify } from "@/lib/zibal";
 import type { Duration } from "@/lib/planPricing";
 
 const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
@@ -32,23 +33,48 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(redirectBase);
   }
 
-  const status = searchParams.get("Status");
-  const authority = searchParams.get("Authority");
+  // درگاه از همون callbackUrlی که خودمون موقعِ ساختِ درخواست ساختیم میاد —
+  // نه چیزی که کاربر/درگاه بتونه دستکاری کنه به‌نفعِ خودش، چون verify هنوزم
+  // مستقیم از همون درگاهِ انتخاب‌شده با merchant/amountِ سمتِ سرور چک می‌شه.
+  const gateway = searchParams.get("gateway") === "zibal" ? "zibal" : "zarinpal";
   const planKey = searchParams.get("planKey");
   const duration = searchParams.get("duration") as Duration | null;
   const amount = Number(searchParams.get("amount"));
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
 
-  if (status !== "OK" || !authority || !planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
-    logCheckoutFailed(userId, status === "OK" ? "invalid_params" : "gateway_canceled_or_error");
+  if (!planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
+    logCheckoutFailed(userId, "invalid_params");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }
 
   let verified: { ok: boolean; refId?: string };
   try {
-    verified = await zarinpalVerifyPayment({ amountRial: amount, authority });
+    if (gateway === "zibal") {
+      const trackId = searchParams.get("trackId");
+      const success = searchParams.get("success");
+      if (!trackId || success !== "1") {
+        logCheckoutFailed(userId, "gateway_canceled_or_error");
+        redirectBase.searchParams.set("checkout", "failed");
+        return NextResponse.redirect(redirectBase);
+      }
+      const result = await zibalVerify(Number(trackId));
+      // زیبال برخلاف زرین‌پال مبلغ رو به verify نمی‌گیره، فقط توی جواب برمی‌گردونه —
+      // پس تطبیقِ مبلغ رو خودمون اینجا چک می‌کنیم (همون تضمینِ امنیتیِ زرین‌پال).
+      verified = result.ok && result.amount === amount
+        ? { ok: true, refId: String(result.refNumber ?? trackId) }
+        : { ok: false };
+    } else {
+      const status = searchParams.get("Status");
+      const authority = searchParams.get("Authority");
+      if (status !== "OK" || !authority) {
+        logCheckoutFailed(userId, "gateway_canceled_or_error");
+        redirectBase.searchParams.set("checkout", "failed");
+        return NextResponse.redirect(redirectBase);
+      }
+      verified = await zarinpalVerifyPayment({ amountRial: amount, authority });
+    }
   } catch {
     logCheckoutFailed(userId, "verify_request_error");
     redirectBase.searchParams.set("checkout", "failed");
@@ -87,7 +113,7 @@ export async function GET(req: NextRequest) {
         create: {
           amount,
           currency: "IRR",
-          provider: "zarinpal",
+          provider: gateway,
           providerRef: verified.refId,
           paidAt: new Date(),
         },

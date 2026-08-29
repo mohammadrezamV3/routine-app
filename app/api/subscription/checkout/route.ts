@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
 import { zarinpalRequestPayment } from "@/lib/zarinpal";
+import { zibalRequest } from "@/lib/zibal";
+
+const GATEWAYS = ["zarinpal", "zibal"] as const;
+type Gateway = (typeof GATEWAYS)[number];
 
 // درصدِ تخفیفِ کدِ رفرال در چک‌اوت — پاداشِ «یک ماه رایگان برای هردو طرف»یِ
 // خودِ سیستم رفرال (بعد از اولین پرداختِ موفق دعوت‌شونده) جدا و هنوز سمتِ
@@ -26,7 +30,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { planKey, duration, discountCode } = body as { planKey: string; duration: Duration; discountCode?: string };
+  const { planKey, duration, discountCode, gateway: rawGateway } = body as {
+    planKey: string; duration: Duration; discountCode?: string; gateway?: string;
+  };
+  const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zarinpal";
 
   if (!planKey || !DURATIONS.includes(duration)) {
     return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
@@ -69,24 +76,27 @@ export async function POST(req: NextRequest) {
   const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
   const origin = req.nextUrl.origin;
-  const callbackUrl = `${origin}/api/subscription/verify?planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
+  const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
 
   try {
-    const { paymentUrl } = await zarinpalRequestPayment({
-      amountRial: finalAmount,
-      description: `خرید ${pricing.nameFa} — ${duration} ماهه`,
-      callbackUrl,
-      mobile: user.phone || undefined,
-    });
+    const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
+    const { paymentUrl } = gateway === "zibal"
+      ? await zibalRequest(finalAmount, callbackUrl, description)
+      : await zarinpalRequestPayment({
+          amountRial: finalAmount,
+          description,
+          callbackUrl,
+          mobile: user.phone || undefined,
+        });
     // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعاً درخواستِ
     // پرداخت به درگاه با موفقیت ساخته شده باشه (نه هر کلیکِ فرانت)
-    prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration } } }).catch(() => {});
+    prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration, gateway } } }).catch(() => {});
     return NextResponse.json({ paymentUrl, discountApplied });
   } catch (e: any) {
-    // اگه ZARINPAL_MERCHANT_ID هنوز ست نشده (این محیط/قبل از دیپلوی نهایی)
-    // پیام صادقانه بده، نه یه خطای خام ۵۰۰.
-    const msg = e?.message?.includes("ZARINPAL_MERCHANT_ID")
-      ? "درگاهِ پرداخت هنوز روی این سرور راه‌اندازی نشده — به‌زودی"
+    // اگه مرچنت‌آیدیِ درگاهِ انتخاب‌شده هنوز ست نشده (این محیط/قبل از دیپلوی
+    // نهایی) پیام صادقانه بده، نه یه خطای خام ۵۰۰.
+    const msg = e?.message?.includes("MERCHANT_ID") || e?.message?.includes("MERCHANT_KEY")
+      ? "درگاهِ پرداختِ انتخاب‌شده هنوز روی این سرور راه‌اندازی نشده — به‌زودی"
       : e?.message || "خطا در اتصال به درگاه پرداخت";
     return NextResponse.json({ error: msg }, { status: 502 });
   }

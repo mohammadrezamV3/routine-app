@@ -1127,12 +1127,18 @@
   .checkout-discount-input{ width:100%; box-sizing:border-box; }
 
   .checkout-gateway-row{ display:flex; gap:8px; }
+  /* حالا <button>ه (قبلاً یه <div> ثابت بود، چون فقط یه درگاه بود) — قانونِ
+     سراسریِ button{} یه بک‌گراندِ شیشه‌ای/سایه‌ی inset می‌ذاره که اینجا اصلاً
+     نمی‌خوایمش؛ چون فقط property‌هایی که این کلاس صراحتاً ست می‌کنه رو
+     override می‌کنه، باید box-shadow/backdrop-filter رو هم صریح خاموش کنیم. */
   .checkout-gateway-pill{
     display:flex; align-items:center; gap:7px; padding:10px 16px; border-radius:999px;
     border:1px solid var(--line); font-size:12.5px; font-weight:700; color:var(--muted);
-    background:rgba(255,255,255,.03);
+    background:rgba(255,255,255,.03); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
-  .checkout-gateway-pill.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  .checkout-gateway-pill:hover{ box-shadow:none; }
+  .checkout-gateway-pill.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); box-shadow:none; }
 
   .checkout-terms-row{ margin-top:16px; border-bottom:none; padding:10px 0; }
   .checkout-pay-btn{ margin-top:18px; }
