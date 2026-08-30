@@ -41,6 +41,10 @@ export const ICONS: Record<string, JSX.Element> = {
   exercise: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 8v8M17.5 8v8M3 10v4M21 10v4M6.5 12h11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  // آیکونِ اختصاصیِ «گزارش هفتگی» — سه میله‌ی صعودی، تا از آیکونِ خطیِ trade جدا باشه
+  weeklyReport: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M5 20V13M12 20V8M19 20v-6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   trade: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9.5 11l3.5 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6.5h4.5V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
@@ -121,6 +125,7 @@ const LINKS: NavItem[] = [
       { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist", module: "TRADE" },
     ],
   },
+  { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT" },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 

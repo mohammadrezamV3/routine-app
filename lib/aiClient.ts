@@ -393,3 +393,88 @@ export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpe
 
   return { recognized: true, name, estimatedGrams, calories, proteinG, carbsG, fatG };
 }
+
+// ============================================================================
+// خلاصه‌ی هوشمندِ گزارشِ هفتگی — برخلافِ بقیه‌ی فراخوان‌های این فایل که یک
+// چیز از صفر می‌سازن (رودمپ/برنامه‌ی تمرین/تخمینِ غذا)، این‌جا AI فقط روی
+// اعدادِ از‌قبل‌محاسبه‌شده‌ی lib/weeklyReport/* (Deterministic Analytics)
+// تفسیر می‌نویسه — هیچ عدد/دستاوردِ جدیدی حق نداره بسازه (محافظتِ در برابرِ
+// Hallucination، بخشِ ۳۱ اسپکِ گزارشِ هفتگی). ورودی فقط همون خلاصه‌ست، نه
+// دیتابیسِ خام کاربر.
+// ============================================================================
+
+const WEEKLY_AI_PROMPT_V1 = `تو دستیارِ تحلیلِ هفتگیِ Arion هستی. یک خلاصه‌ی آماریِ از‌قبل‌محاسبه‌شده از عملکردِ
+هفتگیِ کاربر می‌گیری و باید یک تفسیرِ کوتاهِ فارسی و ۲ تا ۳ پیشنهادِ عملی بنویسی.
+
+قوانینِ حیاتی:
+- فقط از اعدادی که توی ورودی داده شده استفاده کن. هیچ عدد، درصد، یا دستاوردِ جدیدی که توی ورودی نیست نساز.
+- اگه داده‌ی کافی برای یک جمع‌بندیِ خاص نداری، چیزی درباره‌ش نگو — حدس نزن.
+- هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده — فقط بازخوردِ رفتاری/عملکردی بر اساسِ همین اعداد.
+- لحن: مستقیم، محترمانه، مثلِ یک مربیِ شخصی — نه ژنریک، نه اغراق‌آمیز.
+- خلاصه (summary) حداکثر ۵ جمله.
+- حداکثر ۳ پیشنهاد (recommendations)، هرکدوم با یک توضیحِ کوتاه و دلیلِ مبتنی‌بر همون اعداد.
+
+فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متنِ اضافه):
+{
+  "summary": "خلاصه‌ی ۳ تا ۵ جمله‌ای",
+  "recommendations": [
+    { "title": "عنوانِ کوتاه", "description": "توضیحِ کوتاه با دلیلِ مبتنی‌بر داده", "priority": "high" | "medium" | "low" }
+  ]
+}`;
+
+export type WeeklyReportAiDomainInput = { key: string; label: string; score: number | null; previousWeek: number | null; active: boolean };
+export type WeeklyReportAiInput = {
+  weekLabel: string;
+  overallScore: number | null;
+  previousOverallScore: number | null;
+  domains: WeeklyReportAiDomainInput[];
+  wins: string[];
+  problems: string[];
+};
+export type WeeklyReportAiResult = {
+  summary: string;
+  recommendations: { title: string; description: string; priority: "high" | "medium" | "low" }[];
+};
+
+function normalizeWeeklyAiResult(raw: any): WeeklyReportAiResult {
+  const summary = typeof raw?.summary === "string" ? raw.summary.trim() : "";
+  if (!summary) throw new Error("مدل خلاصه‌ای برنگردوند");
+
+  const recsRaw = Array.isArray(raw?.recommendations) ? raw.recommendations : [];
+  const priorities = new Set(["high", "medium", "low"]);
+  const recommendations = recsRaw
+    .map((r: any) => ({
+      title: typeof r?.title === "string" ? r.title.trim() : "",
+      description: typeof r?.description === "string" ? r.description.trim() : "",
+      priority: priorities.has(r?.priority) ? r.priority : "medium",
+    }))
+    .filter((r: any) => r.title && r.description)
+    .slice(0, 3);
+
+  return { summary, recommendations };
+}
+
+async function callWeeklyAiOnce(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
+  const userContent = JSON.stringify(input);
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V1, userContent, 1200);
+  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true);
+  return normalizeWeeklyAiResult(parseJsonResponse(text));
+}
+
+/**
+ * تا ۲ بار امتحان می‌کنه (هم‌الگوی generateRoadmap). اگه هردو شکست خورد،
+ * caller (lib/weeklyReport/snapshot.ts) باید بدونِ AI هم گزارش رو کامل
+ * نشون بده — این تابع صرفاً throw می‌کنه، تصمیمِ fallback مالِ اونجاست.
+ */
+export async function generateWeeklyReportSummary(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
+  let lastError: any;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await callWeeklyAiOnce(input, userId);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  logError("ai-gateway", `خلاصه‌ی هوشمندِ گزارشِ هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+  throw lastError;
+}

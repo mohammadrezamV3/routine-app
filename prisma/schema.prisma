@@ -168,6 +168,7 @@ model User {
   tradeEntries      TradeEntry[]
   roadmaps          Roadmap[]
   notepadPages      NotepadPage[]
+  weeklyReportSnapshots WeeklyReportSnapshot[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -858,6 +859,47 @@ model Roadmap {
   updatedAt  DateTime @updatedAt
 
   @@index([userId])
+}
+
+// ============================================================================
+// MODULE: WEEKLY REPORT (گزارش هفتگی — ماژول AI_INSIGHT) — یک ردیف
+// snapshot به‌ازای هر (کاربر، شروعِ هفته، algorithmVersion). چون snapshotه
+// و نه Event خام، تولیدش idempotent با @@unique زیره: اگه دوباره درخواست
+// بشه، همون ردیف برمی‌گرده (نه ردیفِ تکراری). algorithmVersion بالا رفتنش
+// یعنی فرمولِ Score عوض شده — گزارش‌های قدیمی نباید ناگهان با فرمولِ جدید
+// بازتفسیر بشن.
+// ============================================================================
+
+model WeeklyReportSnapshot {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart        DateTime @db.Date // شنبه، به‌وقتِ محلیِ کاربر
+  weekEnd          DateTime @db.Date // جمعه
+
+  status           String   // COLLECTING | READY | PARTIAL | FAILED
+  algorithmVersion Int      @default(1)
+
+  overallScore     Int?
+  // { routine?: DomainScore, fitness?: DomainScore, trading?: DomainScore,
+  //   learning?: DomainScore, nutrition?: DomainScore } — فقط دامنه‌های
+  // فعالِ کاربر (ماژولی که ندارد اصلاً کلید ندارد، نه صفر)
+  domainScores     Json
+  dailyBreakdown   Json     // [{ date, domains: { [domain]: number|null } }] × ۷ روز
+  wins             Json     // string[]
+  problems         Json     // string[]
+  comparison       Json     // { [domain]: { current, previousWeek, avg4Week } }
+
+  // AI اختیاریه — aiModel=null یعنی یا ARVAN_AI_* ست نشده یا فراخوانی شکست
+  // خورده؛ UI باید بدونِ این فیلدها هم کامل قابل‌استفاده بمونه (بخش ۶۶).
+  aiModel           String?
+  aiSummary         String?
+  aiRecommendations Json?
+
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, weekStart, algorithmVersion])
+  @@index([userId, weekStart])
 }
 
 // ============================================================================
