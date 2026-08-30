@@ -121,8 +121,9 @@ const LINKS: NavItem[] = [
   {
     label: "ترید", icon: "trade",
     children: [
-      { href: "/trade?tab=journal", label: "ژورنال", icon: "journal", module: "TRADE" },
-      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist", module: "TRADE" },
+      { href: "/trade", label: "همه‌ی بخش‌ها", icon: "trade", module: "TRADE" },
+      { href: "/trade/journal", label: "ژورنال", icon: "journal", module: "TRADE" },
+      { href: "/trade/checklists", label: "چک‌لیست", icon: "checklist", module: "TRADE" },
     ],
   },
   { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT" },

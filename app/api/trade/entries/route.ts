@@ -1,185 +1,160 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey } from "@prisma/client";
-import { clampText } from "@/lib/validate";
+import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer";
 import { parseDateRange } from "@/lib/validate";
 
-// عکس روی همین رکورد به‌صورت data URL ذخیره می‌شه (بدون استوریج فایل جدا)؛
-// این سقف طول رشته رو محدود می‌کنه — کلاینت از قبل عکس رو فشرده می‌کنه
-// (lib/image.ts)، این فقط یک شبکه‌ی ایمنی سمت سرور در برابر پیلود بزرگه.
-const MAX_SCREENSHOT_DATA_URL_LEN = 2_500_000;
+// معاملاتِ یک حساب. برخلافِ نسخه‌ی قبلی که همه‌ی معاملاتِ کاربر را یکجا
+// می‌داد، این‌جا accountId اجباری است — چون کلِ UI حساب‌محور است و آمارِ دو
+// حسابِ متفاوت هیچ‌وقت نباید با هم جمع شود.
 
-type SharedFields = {
-  direction?: "long" | "short";
-  entryPrice?: number | null;
-  lotSize?: number | null;
-  volume?: number | null;
-  stopLoss?: number | null;
-  takeProfit?: number | null;
-  riskPercent?: number | null;
-  screenshotUrl?: string | null;
-};
-
-// اعتبارسنجی مشترک بین ثبت (POST) و ویرایش (PATCH) — تا دوباره‌نویسی نشه
-function validateSharedFields(f: SharedFields): string | null {
-  if (f.direction !== undefined && f.direction !== "long" && f.direction !== "short") {
-    return "جهت معامله نامعتبر است";
-  }
-  if (f.entryPrice !== undefined && f.entryPrice !== null && (typeof f.entryPrice !== "number" || f.entryPrice <= 0)) {
-    return "قیمت ورود باید عدد مثبت باشد";
-  }
-  if (f.lotSize !== undefined && f.lotSize !== null && (typeof f.lotSize !== "number" || f.lotSize <= 0)) {
-    return "لات باید عدد مثبت باشد";
-  }
-  for (const [label, v] of [["حد ضرر", f.stopLoss], ["حد سود", f.takeProfit], ["درصد ریسک", f.riskPercent], ["حجم معامله", f.volume]] as const) {
-    if (v !== undefined && v !== null && (typeof v !== "number" || isNaN(v) || v < 0)) {
-      return `${label} نامعتبر است`;
-    }
-  }
-  if (f.screenshotUrl) {
-    if (typeof f.screenshotUrl !== "string" || !f.screenshotUrl.startsWith("data:image/")) {
-      return "فرمت عکس نامعتبر است";
-    }
-    if (f.screenshotUrl.length > MAX_SCREENSHOT_DATA_URL_LEN) {
-      return "حجم عکس زیاد است";
-    }
-  }
-  return null;
+/** حسابی که به کاربر تعلق دارد — هر روتِ معامله اول از این رد می‌شود */
+async function ownedAccount(userId: string, accountId: string) {
+  if (!accountId) return null;
+  return prisma.tradeAccount.findFirst({ where: { id: accountId, userId }, select: { id: true } });
 }
 
-// روزهای بعد از امروز مجاز نیستن (گذشته آزاده) — مقایسه در سطح روز، نه لحظه‌ی دقیق
-function isFutureDay(d: Date): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const day = new Date(d);
-  day.setHours(0, 0, 0, 0);
-  return day.getTime() > today.getTime();
+/**
+ * اسنپ‌شاتِ چک‌لیست در لحظه‌ی ثبت.
+ * متنِ آیتم‌ها کپی می‌شود نه ارجاع داده — اگر کاربر فردا یک آیتم را عوض یا
+ * حذف کند، آمارِ معاملاتِ دیروز نباید بی‌صدا معنی دیگری پیدا کند.
+ */
+async function buildChecklistSnapshot(userId: string, checklistId: string | null, state: Record<string, boolean>) {
+  if (!checklistId) {
+    return { checklistId: null, checklistName: null, checklistDone: null, checklistTotal: null, checklistSnapshot: Prisma.DbNull };
+  }
+  const checklist = await prisma.tradeChecklist.findFirst({
+    where: { id: checklistId, userId },
+    select: { id: true, name: true, items: { select: { id: true, text: true }, orderBy: { order: "asc" } } },
+  });
+  if (!checklist) {
+    return { checklistId: null, checklistName: null, checklistDone: null, checklistTotal: null, checklistSnapshot: Prisma.DbNull };
+  }
+  const snapshot = checklist.items.map((i) => ({ text: i.text, checked: !!state[i.id] }));
+  return {
+    checklistId: checklist.id,
+    checklistName: checklist.name,
+    checklistDone: snapshot.filter((i) => i.checked).length,
+    checklistTotal: snapshot.length,
+    checklistSnapshot: snapshot as unknown as Prisma.InputJsonValue,
+  };
 }
 
-// GET /api/trade/entries?from=2026-07-01&to=2026-07-31
+// GET /api/trade/entries?accountId=...&from=YYYY-MM-DD&to=YYYY-MM-DD
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const range = parseDateRange(req.nextUrl.searchParams.get("from"), req.nextUrl.searchParams.get("to"));
-  if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
+  const accountId = req.nextUrl.searchParams.get("accountId") || "";
+  if (!(await ownedAccount(userId, accountId))) {
+    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+  }
 
-  // `openedAt` یه timestampه نه فقط روز، پس تا آخرِ روزِ پایانی باز می‌شه —
-  // وگرنه معامله‌های خودِ روزِ `to` (بعد از نیم‌شب) از قلم می‌افتادن.
-  const toEndOfDay = new Date(range.to.getTime() + 86_400_000 - 1);
+  const fromRaw = req.nextUrl.searchParams.get("from");
+  const toRaw = req.nextUrl.searchParams.get("to");
+  let dateFilter: Prisma.TradeEntryWhereInput = {};
+  if (fromRaw || toRaw) {
+    const range = parseDateRange(fromRaw, toRaw);
+    if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
+    // openedAt یک timestamp است نه فقط روز، پس تا آخرِ روزِ پایانی باز می‌شود
+    dateFilter = { openedAt: { gte: range.from, lte: new Date(range.to.getTime() + 86_400_000 - 1) } };
+  }
 
   const entries = await prisma.tradeEntry.findMany({
-    where: { userId, openedAt: { gte: range.from, lte: toEndOfDay } },
-    orderBy: { openedAt: "asc" },
-    take: 5000,
+    where: { userId, accountId, ...dateFilter },
+    orderBy: { openedAt: "desc" },
+    take: 2000,
+    select: ENTRY_SELECT,
   });
-  return NextResponse.json({ entries });
+
+  return NextResponse.json({ entries: entries.map(serializeEntry) });
 }
 
-// POST /api/trade/entries  { pair, direction, entryPrice, exitPrice, lotSize, pnl, openedAt, closedAt, notes, ... }
+// POST /api/trade/entries
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
-  const {
-    pair, direction, entryPrice, exitPrice, lotSize, volume, pnl, openedAt, closedAt, notes,
-    stopLoss, takeProfit, riskPercent, strategy, screenshotUrl,
-  } = body as {
-    pair: string; direction: "long" | "short"; entryPrice: number; exitPrice?: number;
-    lotSize: number; volume?: number; pnl?: number; openedAt: string; closedAt?: string; notes?: string;
-    stopLoss?: number; takeProfit?: number; riskPercent?: number; strategy?: string; screenshotUrl?: string;
-  };
+  const body = await req.json().catch(() => null);
+  const parsed = parseTradeInput(body);
+  if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
-  if (!pair || !direction || !entryPrice || !lotSize || !openedAt) {
-    return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
+  if (!(await ownedAccount(userId, parsed.data.accountId))) {
+    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
   }
-  const openedAtDate = new Date(openedAt);
-  if (isNaN(openedAtDate.getTime())) {
-    return NextResponse.json({ error: "تاریخ نامعتبر است" }, { status: 400 });
-  }
-  if (isFutureDay(openedAtDate)) {
-    return NextResponse.json({ error: "نمی‌توانی برای تاریخ آینده معامله ثبت کنی" }, { status: 400 });
-  }
-  const sharedError = validateSharedFields({ direction, entryPrice, lotSize, volume, stopLoss, takeProfit, riskPercent, screenshotUrl });
-  if (sharedError) return NextResponse.json({ error: sharedError }, { status: 400 });
+
+  const checklist = await buildChecklistSnapshot(userId, body?.checklistId ?? null, parsed.checklistState);
+  const ownedTags = parsed.tagIds.length
+    ? await prisma.tradeTag.findMany({ where: { id: { in: parsed.tagIds }, userId }, select: { id: true } })
+    : [];
 
   const entry = await prisma.tradeEntry.create({
     data: {
-      userId, pair: clampText(pair, 20), direction, entryPrice, lotSize,
-      exitPrice: exitPrice ?? null,
-      volume: volume ?? null,
-      pnl: pnl ?? null,
-      openedAt: openedAtDate,
-      closedAt: closedAt ? new Date(closedAt) : null,
-      notes: notes ? clampText(notes, 500) : null,
-      stopLoss: stopLoss ?? null,
-      takeProfit: takeProfit ?? null,
-      riskPercent: riskPercent ?? null,
-      strategy: strategy ? clampText(strategy, 40) : null,
-      screenshotUrl: screenshotUrl || null,
+      ...parsed.data,
+      ...checklist,
+      userId,
+      tags: { connect: ownedTags.map((t) => ({ id: t.id })) },
+      images: { create: parsed.images.map((img, i) => ({ dataUrl: img.dataUrl, caption: img.caption, order: i })) },
     },
+    select: ENTRY_SELECT,
   });
-  return NextResponse.json({ ok: true, entry });
+
+  return NextResponse.json({ ok: true, entry: serializeEntry(entry) });
 }
 
-// PATCH /api/trade/entries  { id, pair, direction, entryPrice, exitPrice, lotSize, pnl, ... }
-// ویرایش یک معامله‌ی موجود — عمداً تاریخ (openedAt) رو عوض نمی‌کنه، فقط بقیه‌ی
-// فیلدها؛ فرم همیشه کل مقادیر رو می‌فرسته پس این جایگزینی کامله، نه patch جزئی.
+// PATCH /api/trade/entries  { id, ...همه‌ی فیلدها }
+// فرم همیشه کلِ رکورد را می‌فرستد، پس این جایگزینیِ کامل است نه patchِ جزئی.
 export async function PATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
-  const {
-    id, pair, direction, entryPrice, exitPrice, lotSize, volume, pnl, notes,
-    stopLoss, takeProfit, riskPercent, strategy, screenshotUrl,
-  } = body as {
-    id: string; pair: string; direction: "long" | "short"; entryPrice: number | null; exitPrice?: number | null;
-    lotSize: number | null; volume?: number | null; pnl?: number | null; notes?: string | null;
-    stopLoss?: number | null; takeProfit?: number | null; riskPercent?: number | null; strategy?: string | null; screenshotUrl?: string | null;
-  };
+  const body = await req.json().catch(() => null);
+  const id = String(body?.id || "");
+  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
 
-  if (!id || !pair || !direction || !entryPrice || !lotSize) {
-    return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
-  }
-  const sharedError = validateSharedFields({ direction, entryPrice, lotSize, volume, stopLoss, takeProfit, riskPercent, screenshotUrl });
-  if (sharedError) return NextResponse.json({ error: sharedError }, { status: 400 });
+  const parsed = parseTradeInput(body);
+  if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
-  const existing = await prisma.tradeEntry.findFirst({ where: { id, userId } });
+  const existing = await prisma.tradeEntry.findFirst({ where: { id, userId }, select: { id: true } });
   if (!existing) return NextResponse.json({ error: "معامله پیدا نشد" }, { status: 404 });
+  if (!(await ownedAccount(userId, parsed.data.accountId))) {
+    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+  }
 
-  const entry = await prisma.tradeEntry.update({
-    where: { id },
-    data: {
-      pair: clampText(pair, 20), direction, entryPrice, lotSize,
-      exitPrice: exitPrice ?? null,
-      volume: volume ?? null,
-      pnl: pnl ?? null,
-      notes: notes ? clampText(notes, 500) : null,
-      stopLoss: stopLoss ?? null,
-      takeProfit: takeProfit ?? null,
-      riskPercent: riskPercent ?? null,
-      strategy: strategy ? clampText(strategy, 40) : null,
-      screenshotUrl: screenshotUrl || null,
-    },
-  });
-  return NextResponse.json({ ok: true, entry });
+  const checklist = await buildChecklistSnapshot(userId, body?.checklistId ?? null, parsed.checklistState);
+  const ownedTags = parsed.tagIds.length
+    ? await prisma.tradeTag.findMany({ where: { id: { in: parsed.tagIds }, userId }, select: { id: true } })
+    : [];
+
+  // عکس‌ها یکجا جایگزین می‌شوند (نه تفاضلی) — فرم همیشه لیستِ نهایی را
+  // می‌فرستد و تشخیصِ «کدام عکس همان عکسِ قبلی است» روی data URL شکننده است.
+  const [, entry] = await prisma.$transaction([
+    prisma.tradeImage.deleteMany({ where: { entryId: id } }),
+    prisma.tradeEntry.update({
+      where: { id },
+      data: {
+        ...parsed.data,
+        ...checklist,
+        tags: { set: ownedTags.map((t) => ({ id: t.id })) },
+        images: { create: parsed.images.map((img, i) => ({ dataUrl: img.dataUrl, caption: img.caption, order: i })) },
+      },
+      select: ENTRY_SELECT,
+    }),
+  ]);
+
+  return NextResponse.json({ ok: true, entry: serializeEntry(entry) });
 }
 
 // DELETE /api/trade/entries?id=...
 export async function DELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
-  const userId = guard.userId;
-
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
-
-  await prisma.tradeEntry.deleteMany({ where: { id, userId } });
+  await prisma.tradeEntry.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }

@@ -1,43 +1,61 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { TradeJournal } from "@/components/TradeJournal";
-import { TradeChecklist } from "@/components/TradeChecklist";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { MarketTicker } from "@/components/MarketTicker";
-import { PanelSkeleton } from "@/components/PanelSkeleton";
 
-// انتخابِ ژورنال/چک‌لیست دیگه تبِ روی صفحه نداره — فقط از منوی «ترید» ←
-// «ژورنال»/«چک‌لیست» ممکنه؛ هم‌قاعده‌ی app/exercise/page.tsx، از
-// useSearchParams واقعی (نه خوندنِ یک‌بارِ window.location) استفاده شده تا
-// کلیکِ نو-لینکِ منو وقتی از قبل توی همین صفحه‌ای هم زنده اثر کنه.
-function TradeTabContent() {
-  const { status } = useSession();
-  const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") === "checklist" ? "checklist" : "journal";
+// هابِ بخشِ ترید. تا پیش از این، /trade مستقیماً ژورنال را نشان می‌داد و
+// فقط با ?tab=checklist عوض می‌شد؛ حالا شش زیربخشِ اسپکِ محصول هرکدام مسیرِ
+// خودشان را دارند و این صفحه فقط دروازه‌ی ورود است.
 
-  return status === "authenticated" ? (
-    <ModuleGate module="TRADE">
-      {tab === "checklist" ? <TradeChecklist /> : <TradeJournal />}
-    </ModuleGate>
-  ) : (
-    <AuthGate message="برای استفاده از این سرویس وارد شوید" />
-  );
-}
+type HubItem = { href: string; title: string; desc: string; soon?: boolean };
+
+const ITEMS: HubItem[] = [
+  { href: "/trade/journal", title: "ژورنال‌نویسی", desc: "حساب‌های معاملاتی، ثبت معامله و آمار عملکرد" },
+  { href: "/trade/checklists", title: "چک‌لیست", desc: "چک‌لیست‌های پیش از ورود و اتصالشان به معامله" },
+  { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار", soon: true },
+  { href: "/trade/clock", title: "ساعت فارکس", desc: "وضعیت جلسه‌های معاملاتی", soon: true },
+  { href: "/trade/notes", title: "یادداشت‌ها", desc: "تحلیل‌ها و تجربه‌های شخصی", soon: true },
+  { href: "/trade/metatrader", title: "اتصال متاتریدر", desc: "دریافت خودکار معاملات", soon: true },
+];
 
 export default function TradePage() {
+  const { status } = useSession();
+
   return (
     <section className="trade-desktop">
       <MarketTicker />
       <h1>ترید</h1>
-      <div style={{ marginTop: 14 }}>
-        <Suspense fallback={<PanelSkeleton />}>
-          <TradeTabContent />
-        </Suspense>
-      </div>
+      <div className="section-note">از چک‌لیست تا ثبت معامله و تحلیل عملکرد — همه در یک جا</div>
+
+      {status === "authenticated" ? (
+        <ModuleGate module="TRADE">
+          <div className="rm-grid">
+            {ITEMS.map((it) =>
+              it.soon ? (
+                <div key={it.href} className="rm-box trade-hub-soon" aria-disabled="true">
+                  <div>
+                    <div className="rm-box-title">{it.title}</div>
+                    <div className="rm-box-desc">{it.desc}</div>
+                  </div>
+                  <span className="trade-hub-soon-badge">به‌زودی</span>
+                </div>
+              ) : (
+                <Link key={it.href} href={it.href} className="rm-box">
+                  <div>
+                    <div className="rm-box-title">{it.title}</div>
+                    <div className="rm-box-desc">{it.desc}</div>
+                  </div>
+                </Link>
+              )
+            )}
+          </div>
+        </ModuleGate>
+      ) : (
+        <AuthGate message="برای استفاده از این سرویس وارد شوید" />
+      )}
     </section>
   );
 }

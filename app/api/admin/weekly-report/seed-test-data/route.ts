@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isoLocal } from "@/lib/jalali";
 import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
@@ -84,7 +85,15 @@ export async function POST() {
   if (exerciseData.length) await prisma.exerciseLog.createMany({ data: exerciseData });
 
   // --- ترید: ۱ تا ۳ معامله‌ی تصادفی در هفته، نرخِ بردِ ~۶۰٪ ---
-  const tradeData: { userId: string; pair: string; direction: string; entryPrice: number; exitPrice: number; lotSize: number; pnl: number; openedAt: Date; closedAt: Date }[] = [];
+  // ماژولِ ترید حالا حساب‌محور است — پس داده‌ی تست هم اول یک حسابِ تستی
+  // لازم دارد تا معامله جایی برای نشستن داشته باشد.
+  let tradeAccount = await prisma.tradeAccount.findFirst({ where: { userId }, orderBy: { createdAt: "asc" } });
+  if (!tradeAccount) {
+    tradeAccount = await prisma.tradeAccount.create({
+      data: { userId, name: "حساب تستِ گزارشِ هفتگی", type: "DEMO", currency: "USD", initialBalance: 10_000 },
+    });
+  }
+  const tradeData: Prisma.TradeEntryCreateManyInput[] = [];
   for (let w = 0; w < WEEKS; w++) {
     const tradesThisWeek = randInt(1, 3);
     for (let t = 0; t < tradesThisWeek; t++) {
@@ -94,9 +103,14 @@ export async function POST() {
       const win = Math.random() < 0.6;
       const exitPrice = win ? entryPrice * rand(1.005, 1.02) : entryPrice * rand(0.98, 0.995);
       const lotSize = rand(0.1, 1);
+      const pnl = Math.round((exitPrice - entryPrice) * lotSize * 1000 * 100) / 100;
       tradeData.push({
-        userId, pair: pick(["EURUSD", "XAUUSD", "GBPUSD"]), direction: pick(["long", "short"]),
-        entryPrice, exitPrice, lotSize, pnl: (exitPrice - entryPrice) * lotSize * 1000,
+        userId, accountId: tradeAccount.id,
+        symbol: pick(["EURUSD", "XAUUSD", "GBPUSD"]),
+        direction: pick(["BUY", "SELL"]) as "BUY" | "SELL",
+        entryPrice, exitPrice, volume: lotSize, volumeUnit: "LOT",
+        result: pnl > 0 ? "PROFIT" : pnl < 0 ? "LOSS" : "BREAKEVEN",
+        status: "CLOSED", pnl,
         openedAt: day, closedAt: day,
       });
     }

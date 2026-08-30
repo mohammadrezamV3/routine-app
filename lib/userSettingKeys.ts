@@ -33,7 +33,6 @@ export const SETTING_KEYS = {
   bodyMetrics: "bodyMetrics",
   tradeTickerSymbols: "tradeTickerSymbols",
   tradeCalendarSystem: "tradeCalendarSystem",
-  tradeMonthlyGoal: "tradeMonthlyGoal",
   tradeVisibleStats: "tradeVisibleStats",
   tradeMarketsOnboarded: "tradeMarketsOnboarded",
 } as const;
