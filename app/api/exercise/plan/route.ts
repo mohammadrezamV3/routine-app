@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey } from "@prisma/client";
+import { ModuleKey, AiFeatureKey } from "@prisma/client";
 import { getExercisePlan, GOAL_FALLBACK_MAP, GOAL_OPTION_LABELS, ExerciseGoalOption, ExerciseLevel } from "@/lib/exercisePlans";
 import { generateExercisePlan } from "@/lib/aiClient";
+import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { FA_WEEKDAY } from "@/lib/jalali";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
@@ -77,6 +78,12 @@ export async function POST(req: NextRequest) {
   const uniqueDays = [...new Set(gymDays)];
   const cleanDescription = description?.trim() || null;
   const cleanLimitationDetails = hasPhysicalLimitation ? limitationDetails?.trim() || null : null;
+
+  const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.EXERCISE_PLAN_GENERATION);
+  if (!quota.ok) {
+    return NextResponse.json({ error: quota.error }, { status: 429 });
+  }
+
   let planData: unknown;
   let generatedByAi = false;
   try {

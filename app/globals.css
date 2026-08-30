@@ -1233,9 +1233,13 @@
     font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;
     transition:filter .15s ease, opacity .15s ease, background .15s ease, color .15s ease;
   }
-  .checkout-discount-apply-btn:hover:not(:disabled){ filter:brightness(1.15); }
+  /* بدونِ این override، قانونِ سراسریِ button:hover (globals — اسپسیفیسیتی‌ش
+     از یه کلاسِ تکی بیشتره) یه بک‌گراندِ سبزِ ناخواسته روی هاور/تاچ چشمک
+     می‌زد — همون باگِ همیشگی، این‌جا تا الان فیکس نشده بود. */
+  .checkout-discount-apply-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }
   .checkout-discount-apply-btn:disabled{ opacity:.5; cursor:default; }
   .checkout-discount-apply-btn.remove{ background:none; color:#E05252; }
+  .checkout-discount-apply-btn.remove:hover:not(:disabled){ background:none; box-shadow:none; }
   .checkout-discount-success{ margin-top:7px; font-size:11.5px; color:var(--accent); font-weight:600; }
 
   .checkout-gateway-row{ display:flex; gap:8px; }
@@ -4627,11 +4631,17 @@ html[data-perf="low"] .task-check-missed{ animation:none; }
    lib/useLockBodyScroll.ts روی NavDrawer) — یعنی هزینه‌شون یه بارِ باز شدنه،
    نه هزینه‌ی هر فریمِ اسکرول؛ پس برگردوندنِ بلور این‌ها لگِ اسکرولِ موبایل
    (که این بلاکِ data-perf=low برایِ حلش ساخته شد) رو دوباره برنمی‌گردونه. */
-html[data-perf="low"] .nav-overlay{ backdrop-filter:blur(0px) !important; -webkit-backdrop-filter:blur(0px) !important; }
+html[data-perf="low"] .nav-overlay{ backdrop-filter:blur(0px) !important; -webkit-backdrop-filter:blur(0px) !important; will-change:backdrop-filter !important; }
 html[data-perf="low"] .nav-overlay.open{ backdrop-filter:blur(3px) !important; -webkit-backdrop-filter:blur(3px) !important; }
-html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
+html[data-perf="low"] .nav-drawer{ will-change:transform, opacity !important; }
+html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; will-change:backdrop-filter, transform !important; }
 html[data-perf="low"] .notif-panel{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
 html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
+/* بلاکِ بالا (خطِ ۴۵۵۱) will-change رو هم سراسری صفر می‌کرد — دقیقاً همون
+   باگِ قدیمیِ کامنتِ nav-drawer (خط ۶۰۶ به بالا): بدونِ will-change، لایه‌ی
+   backdrop-filterِ فرزند زودتر پروموت نمی‌شه، پس چند فریمِ اولِ بازشدنِ منو
+   محتوا بی‌بلور دیده می‌شه و بلور با تاخیر «می‌رسه». برگردوندنِ خودِ
+   will-change همون فیکسِ قبلی رو دوباره فعال می‌کنه. */
 
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }

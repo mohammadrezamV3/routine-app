@@ -41,6 +41,10 @@ export type PlanCard = {
   // با همین نرخ اعمال شده، نه فقط سالانه. قیمتِ واقعیِ تخفیف‌خورده توی
   // prices جایگزین شده؛ اینجا فقط عددِ اصلیِ (پیش‌ازتخفیفِ) خط‌خورده‌ست.
   originalPrices?: Partial<Record<Duration, string>>;
+  // فهرستِ کوتاهِ امکاناتِ همین پلن، شاملِ سقفِ استفاده‌ی ماهانه‌ی فیچرهایی
+  // که واقعاً سقف دارن (lib/aiQuota.ts) — عددها فقط جایی نوشته می‌شن که یک
+  // مکانیزمِ واقعیِ enforcement پشتشونه، نه یک ادعای تبلیغاتیِ بدونِ پشتوانه.
+  features?: string[];
 };
 
 // ترتیب پلن‌ها: Base Plan (رایگان) اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
@@ -50,21 +54,24 @@ export const PLANS_IRAN: PlanCard[] = [
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
-    prices: { "1": "99,000 تومان", "3": "260,000 تومان", "6": "520,000 تومان", "12": "1,039,500 تومان" },
-    originalPrices: { "3": "297,000 تومان", "6": "594,000 تومان", "12": "1,188,000 تومان" },
-    amounts: { "1": 990000, "3": 2600000, "6": 5200000, "12": 10395000 },
+    prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
+    originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
+    amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۳ بار در ماه", "شمارش و ردیابیِ کالری", "روتینِ روزانه + خواب"],
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
-    prices: { "1": "129,000 تومان", "3": "339,000 تومان", "6": "677,000 تومان", "12": "1,354,500 تومان" },
-    originalPrices: { "3": "387,000 تومان", "6": "774,000 تومان", "12": "1,548,000 تومان" },
-    amounts: { "1": 1290000, "3": 3390000, "6": 6770000, "12": 13545000 },
+    prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
+    originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
+    amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
+    features: ["ژورنال و چک‌لیستِ ترید", "روتینِ روزانه + خواب"],
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
-    prices: { "1": "199,000 تومان", "3": "522,000 تومان", "6": "1,045,000 تومان", "12": "2,089,500 تومان" },
-    originalPrices: { "3": "597,000 تومان", "6": "1,194,000 تومان", "12": "2,388,000 تومان" },
-    amounts: { "1": 1990000, "3": 5220000, "6": 10450000, "12": 20895000 },
+    prices: { "1": "250,000 تومان", "3": "656,000 تومان", "6": "1,313,000 تومان", "12": "2,625,000 تومان" },
+    originalPrices: { "3": "750,000 تومان", "6": "1,500,000 تومان", "12": "3,000,000 تومان" },
+    amounts: { "1": 2500000, "3": 6560000, "6": 13130000, "12": 26250000 },
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابیِ کالری", "ژورنال و چک‌لیستِ ترید", "تحلیلِ هوشمندِ هفتگی (AI Insight)", "روتینِ روزانه + خواب"],
   },
 ];
 
@@ -174,6 +181,7 @@ export function useThemeTokens() {
 function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
+  const [renewOpen, setRenewOpen] = useState(false);
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const isCurrent = mode === "account" && currentPlanKey === p.key;
   // پیشنهادِ «ارتقا به مکس» فقط روی خودِ کارتِ مکس نشون داده می‌شه — فقط
@@ -211,7 +219,18 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
         </button>
       </div>
 
-      <div className="flex-1" />
+      {p.features && p.features.length > 0 ? (
+        <ul className={`mt-3 flex flex-1 flex-col gap-1.5 text-[11px] leading-relaxed ${t.muted}`}>
+          {p.features.map((f) => (
+            <li key={f} className="flex items-start gap-1.5">
+              <Check size={13} className={`mt-0.5 shrink-0 ${t.accentText}`} />
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="flex-1" />
+      )}
 
       {p.free ? (
         mode === "landing" ? (
@@ -229,6 +248,60 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
             </div>
           </>
         )
+      ) : isCurrent ? (
+        <>
+          {/* پلنِ فعلیِ کاربر: به‌جای پیل‌های انتخابِ مدت (که برای تصمیمِ خرید
+              معنا دارن، نه پلنی که از قبل خریداری شده)، یه تیکِ بزرگِ وسطِ
+              کارت — بعدش یه باکسِ جدا برای تمدید که با کلیک، مدتِ تمدید رو
+              می‌پرسه (طبقِ درخواستِ صریحِ کاربر). */}
+          <div className="mt-3 flex flex-col items-center gap-1.5 py-1.5">
+            <span className={`flex h-11 w-11 items-center justify-center rounded-full text-white ${t.accentBg}`}>
+              <Check size={22} strokeWidth={3} />
+            </span>
+            <span className={`text-[12px] font-bold ${t.heading}`}>پلنِ فعلیِ تو</span>
+          </div>
+
+          {renewOpen ? (
+            <div className="mt-1.5 flex flex-col gap-2">
+              <div className="grid grid-cols-4 gap-1.5">
+                {DURATIONS.map((d) => {
+                  const selected = d === duration;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDuration(d)}
+                      className={`plan-duration-btn whitespace-nowrap rounded-full py-2 text-[10px] font-bold transition ${selected ? "" : t.muted}`}
+                      style={selected
+                        ? { background: t.accentColorRaw, color: "#fff" }
+                        : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" }}
+                    >
+                      {labels[d]}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className={`text-center text-[13.5px] font-extrabold ${t.heading}`}>{p.prices![duration]}</div>
+              <Link
+                href={buyHref}
+                className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}
+              >
+                <ShoppingCart size={14} /> پرداخت و تمدید
+              </Link>
+              <button type="button" onClick={() => setRenewOpen(false)} className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-semibold shadow-none [backdrop-filter:none] ${t.muted}`}>
+                انصراف
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRenewOpen(true)}
+              className={`mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-xl border ${t.line} ${t.secondaryBtnBg} py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${t.heading} ${t.accentHoverBorder}`}
+            >
+              تمدیدِ اشتراک
+            </button>
+          )}
+        </>
       ) : (
         <>
           {/* دکمه‌های انتخابِ مدت — پیلِ تخت، انتخاب‌شده پرِ رنگِ اصلی، بدونِ
@@ -270,18 +343,12 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
             </div>
           )}
 
-          {isCurrent ? (
-            <div className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border ${t.accentBorder} py-2.5 text-center text-[12.5px] font-bold ${t.accentText}`}>
-              <Check size={14} /> پلنِ فعلیِ تو
-            </div>
-          ) : (
-            <Link
-              href={buyHref}
-              className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
-            >
-              <ShoppingCart size={14} /> {mode === "landing" ? "خرید اشتراک" : "خرید این پلن"}
-            </Link>
-          )}
+          <Link
+            href={buyHref}
+            className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
+          >
+            <ShoppingCart size={14} /> خرید این پلن
+          </Link>
         </>
       )}
     </div>
