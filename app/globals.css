@@ -4618,6 +4618,21 @@ html[data-perf="low"] .streak-flame-tier3,
 html[data-perf="low"] .streak-flame-tier4{ animation-duration:3s; }
 html[data-perf="low"] .task-check-missed{ animation:none; }
 
+/* استثنا: منوهای شناور (نه هدر/نوار پایین/کارت‌های همیشه‌مرئی). بک‌گراندِ
+   این‌ها عمداً تقریباً شفافه (rgba(255,255,255,.03) و مشابه) چون خودِ
+   بلور، خوانا نگه‌شون می‌داره — بدونِ بلور، محتوای پشتشون کامل دیده می‌شه
+   (باگِ گزارش‌شده). برخلافِ هدر/نوارِ پایین که *دائماً* روی صفحه‌ن و با
+   هر فریمِ اسکرول دوباره rasterize می‌شن، این‌ها فقط toggle-باز/به‌درخواستِ
+   کاربر روی صفحه می‌آن (اکثراً با body-scroll قفل‌شده، مثلِ
+   lib/useLockBodyScroll.ts روی NavDrawer) — یعنی هزینه‌شون یه بارِ باز شدنه،
+   نه هزینه‌ی هر فریمِ اسکرول؛ پس برگردوندنِ بلور این‌ها لگِ اسکرولِ موبایل
+   (که این بلاکِ data-perf=low برایِ حلش ساخته شد) رو دوباره برنمی‌گردونه. */
+html[data-perf="low"] .nav-overlay{ backdrop-filter:blur(0px) !important; -webkit-backdrop-filter:blur(0px) !important; }
+html[data-perf="low"] .nav-overlay.open{ backdrop-filter:blur(3px) !important; -webkit-backdrop-filter:blur(3px) !important; }
+html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
+html[data-perf="low"] .notif-panel{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
+html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
+
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }
 
