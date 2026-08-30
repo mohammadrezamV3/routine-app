@@ -10,6 +10,7 @@ export type DomainScoreRowData = {
   hasData: boolean;
   score: number | null;
   previousWeek: number | null;
+  baseline: number | null;
 };
 
 function TrendBadge({ current, previous }: { current: number; previous: number | null }) {
@@ -25,7 +26,14 @@ export function DomainScoreRow({ data, href }: { data: DomainScoreRowData; href:
   if (!data.active) return null;
   return (
     <Link href={href} className="wr-domain-row">
-      <span className="wr-domain-label">{DOMAIN_LABELS_FA[data.domain]}</span>
+      <span className="wr-domain-info">
+        <span className="wr-domain-label">{DOMAIN_LABELS_FA[data.domain]}</span>
+        {data.hasData && data.score != null && data.baseline != null && (
+          <span className="wr-domain-baseline">
+            {data.score === data.baseline ? "برابرِ میانگینِ شخصی‌ات" : data.score > data.baseline ? `${data.score - data.baseline}٪ بالاترِ میانگینِ شخصی‌ات` : `${data.baseline - data.score}٪ پایین‌ترِ میانگینِ شخصی‌ات`}
+          </span>
+        )}
+      </span>
       <span className="wr-domain-end">
         {data.hasData && data.score != null ? (
           <>
