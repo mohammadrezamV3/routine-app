@@ -9,7 +9,7 @@ import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
+import { staggerFieldsIn } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
@@ -86,12 +86,10 @@ export default function SignupPage() {
     const trimmed = phone.trim();
     if (!trimmed) {
       setFieldErrors((f) => ({ ...f, phone: "شماره همراه را وارد کن" }));
-      shakeFields([phoneRef.current]);
       return;
     }
     if (!isValidIranPhone(trimmed)) {
       setFieldErrors((f) => ({ ...f, phone: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)" }));
-      shakeFields([phoneRef.current]);
       return;
     }
     clearError("phone");
@@ -106,7 +104,6 @@ export default function SignupPage() {
       setSendingCode(false);
       if (!res.ok) {
         setFieldErrors((f) => ({ ...f, phone: data.error || "خطایی پیش آمد" }));
-        shakeFields([phoneRef.current]);
         return;
       }
       setOtpCode("");
@@ -149,14 +146,6 @@ export default function SignupPage() {
 
     setFieldErrors(errs);
     if (Object.keys(errs).length) {
-      shakeFields([
-        errs.name ? nameRef.current : null,
-        errs.username ? usernameRef.current : null,
-        errs.password ? passwordRef.current : null,
-        errs.phone ? phoneRef.current : null,
-        errs.otp ? otpRef.current : null,
-        errs.agreed ? agreedRef.current : null,
-      ]);
       return;
     }
 
@@ -179,7 +168,6 @@ export default function SignupPage() {
     if (!verifyRes.ok) {
       setLoading(false);
       setFieldErrors((f) => ({ ...f, otp: verifyData.error || "کد وارد شده اشتباه است" }));
-      shakeFields([otpRef.current]);
       return;
     }
 

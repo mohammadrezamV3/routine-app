@@ -31,7 +31,7 @@ const PLANS: {
     nameEn: "Plan Gym",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 990_000, // ۹۹,۰۰۰ تومان
+    priceMonthly: 1_500_000, // ۱۵۰,۰۰۰ تومان
     // بدنسازی = برنامه ورزشی + شمارش کالری، هر دو با هم؛ ai mapping هم توی همه‌ی پلن‌های پولی هست، نه فقط مکس
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.ROADMAP],
   },
@@ -41,7 +41,7 @@ const PLANS: {
     nameEn: "Plan Trader",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 1_290_000, // ۱۲۹,۰۰۰ تومان
+    priceMonthly: 1_500_000, // ۱۵۰,۰۰۰ تومان
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE, ModuleKey.ROADMAP],
   },
   {
@@ -50,7 +50,7 @@ const PLANS: {
     nameEn: "Plan Max",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 1_990_000, // ۱۹۹,۰۰۰ تومان
+    priceMonthly: 2_500_000, // ۲۵۰,۰۰۰ تومان
     modules: [
       ModuleKey.ROUTINE,
       ModuleKey.SLEEP,
