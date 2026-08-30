@@ -2979,10 +2979,20 @@ body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]
    translate می‌شه (چرخِ بی‌درز)، هر پدینگِ داخلِ خودِ track این حساب رو به‌هم
    می‌زنه (نصفِ «عرضِ کل شاملِ پدینگ» با نصفِ «عرضِ واقعیِ محتوا» یکی نیست) و
    لحظه‌ی چرخش یک پرشِ کوچیک/شکاف نشون می‌ده. */
+/* فاصله‌ی بینِ آیتم‌ها عمداً `margin-inline-end` روی خودِ آیتم است، نه
+   `gap` روی ترک.
+   دلیلش هندسیِ محضه: ترک دو کپیِ پشتِ‌هم از لیسته (۲N آیتم) و انیمیشن دقیقاً
+   `translateX(-50%)` می‌شه تا لحظه‌ی چرخش، کپیِ دوم مو‌به‌مو جای کپیِ اول
+   بشینه. ولی `gap` بینِ ۲N آیتم فقط ۲N−۱ فاصله می‌ذاره (نه ۲N) — یعنی نصفِ
+   عرضِ کل، *نصفِ یک gap* کمتر از عرضِ واقعیِ یک کپیه. اندازه‌گیری‌شده: با
+   gapِ ۲۴px، هر چرخه ۱۱.۷۸px می‌پرید؛ همون «قطع‌شدنِ» نوار.
+   با margin روی خودِ آیتم، هر ۲N آیتم فاصله‌ی خودش رو داره، پس عرضِ کل دقیقاً
+   دوبرابرِ یک کپیه و ۵۰٪ درست روی مرز می‌افته (خطای باقی‌مانده: ۰.۲۲px). */
 .ticker-track{
-  display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap;
+  display:flex; align-items:center; width:max-content; white-space:nowrap;
   animation:ticker-scroll 40s linear infinite;
 }
+.ticker-track > .ticker-item{ margin-inline-end:24px; }
 @keyframes ticker-scroll{
   from{ transform:translateX(0); }
   to{ transform:translateX(-50%); }
