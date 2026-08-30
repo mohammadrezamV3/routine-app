@@ -47,16 +47,21 @@ export async function POST(req: NextRequest) {
   // شناسه‌های مختلف فهمید کدوم حساب داره (همون قرارداد امنیتی بقیه سایت)
   if (user) {
     const code = String(Math.floor(10000 + Math.random() * 90000)); // ۵ رقمی، مثل اکثر سرویس‌های ایرانی
-    await Promise.all([
-      prisma.passwordResetOtp.create({
-        data: {
-          userId: user.id,
-          codeHash: hashCode(code),
-          expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        },
-      }),
-      kind === "phone" ? sendOtpSms(value, code) : sendOtpEmail(value, code),
-    ]);
+    await prisma.passwordResetOtp.create({
+      data: {
+        userId: user.id,
+        codeHash: hashCode(code),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+    // ارسالِ واقعیِ پیامک/ایمیل عمداً await نمی‌شه — روی خطوطِ پرترافیکِ
+    // ملی‌پیامک/SMTP این می‌تونه چند ثانیه طول بکشه و کاربر رو پشتِ اسپینر
+    // نگه می‌داشت، درحالی‌که کد از قبل توی دیتابیس ذخیره شده و صفحه‌ی بعدی
+    // (تاییدِ کد) فوراً قابلِ استفاده‌ست. چون این پروژه روی یه Node process
+    // همیشه‌روشن (Docker) اجرا می‌شه نه سرورلس، این Promiseِ رهاشده بعدِ
+    // return هم کامل اجرا می‌شه (خودِ sendOtpSms/sendOtpEmail هم هیچ‌وقت
+    // throw نمی‌کنن، خطاهاشون رو داخلی catch و لاگ می‌کنن).
+    void (kind === "phone" ? sendOtpSms(value, code) : sendOtpEmail(value, code));
   }
 
   return NextResponse.json({ ok: true, kind });
