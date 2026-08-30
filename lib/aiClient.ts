@@ -62,6 +62,18 @@ async function recordAiUsage(
   }
 }
 
+// سقفِ انتظار برای پاسخِ گیت‌وی.
+//
+// همان دلیلِ lib/zibal.ts و lib/zarinpal.ts: `fetch` در Node تایم‌اوتِ
+// پیش‌فرض ندارد، ولی nginx دارد. بدون این، یک گیت‌ویِ کند باعث می‌شد nginx
+// اتصال را ببندد و یک صفحه‌ی HTML با کدِ ۵۰۴ بدهد؛ کلاینت روی `r.json()`
+// خطا می‌خورد و کاربر پیامِ گمراه‌کننده‌ی «مشکلی در اتصال به سرور» را
+// می‌دید — دقیقاً همان چیزی که روی صفحه‌ی گزارش هفتگی گزارش شد.
+//
+// عددش از درگاه‌های پرداخت بیشتر است چون تولیدِ متن ذاتاً کند است؛ در عوض
+// روت‌های AI باید در nginx مهلتِ بیشتری بگیرند (deploy/nginx.conf.example).
+const AI_TIMEOUT_MS = 45_000;
+
 // baseUrl و apiKey هر دو از env میان — هیچ‌وقت نباید هاردکد یا کامیت بشن؛
 // فقط توی .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
 // نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
@@ -78,22 +90,31 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
   }
 
   const startedAt = Date.now();
-  const response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userContent },
-      ],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userContent },
+        ],
+      }),
+      signal: AbortSignal.timeout(AI_TIMEOUT_MS),
+    });
+  } catch (e: any) {
+    if (e?.name === "TimeoutError" || e?.name === "AbortError") {
+      throw new Error(`گیت‌وی هوش مصنوعی در ${AI_TIMEOUT_MS / 1000} ثانیه پاسخ نداد`);
+    }
+    throw new Error("اتصال به گیت‌وی هوش مصنوعی برقرار نشد");
+  }
   const durationMs = Date.now() - startedAt;
 
   if (!response.ok) {

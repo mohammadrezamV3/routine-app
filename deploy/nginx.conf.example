@@ -82,6 +82,25 @@ server {
     # خودِ اپ تایم‌اوتِ ۱۲ ثانیه‌ای روی فراخوانیِ درگاه دارد (lib/zibal.ts و
     # lib/zarinpal.ts)، پس این عدد فقط باید از آن *بیشتر* باشد تا همیشه اپ
     # زودتر تصمیم بگیرد و یک خطای JSONِ فارسیِ دقیق برگرداند.
+    # روت‌های هوش مصنوعی (گزارش هفتگی، رودمپ‌ساز) ذاتاً کندند — تولیدِ متن
+    # چند ده ثانیه طول می‌کشد. با ۱۵ ثانیه‌ی `location /` این‌ها همیشه از
+    # سمتِ nginx کشته می‌شدند و یک ۵۰۴ـِ HTML می‌دادند، که کلاینت نمی‌توانست
+    # پارسش کند و کاربر «مشکلی در اتصال به سرور» می‌دید.
+    # خودِ اپ تایم‌اوتِ ۴۵ ثانیه‌ای دارد (lib/aiClient.ts)، پس این باید از آن
+    # بیشتر باشد تا همیشه اپ زودتر تصمیم بگیرد و خطای فارسیِ JSON برگرداند.
+    location ~ ^/api/(reports|roadmaps)/ {
+        proxy_pass http://nextjs_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
     location ~ ^/api/(subscription|payment)/ {
         proxy_pass http://nextjs_upstream;
         proxy_http_version 1.1;
