@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { requireModule } from "@/lib/moduleAccess";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { prisma } from "@/lib/prisma";
 import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
 
@@ -9,6 +10,13 @@ import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
+  // این روت واقعاً AI صدا می‌زند — یعنی هر فراخوان هم هزینه‌ی پول دارد هم یک
+  // اتصالِ سرور را چند ده ثانیه اشغال می‌کند. بدونِ سقف، چند کلیکِ پشت‌سرهم
+  // (یا یک اسکریپت) هم صورتحساب را بالا می‌برد هم سرور را می‌خواباند.
+  if (!guard.isSuperAdmin && !checkRateLimit(`weekly-report-get:${guard.userId}`, 40, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "درخواست‌های گزارش بیش از حد مجاز بود — چند دقیقه دیگر دوباره امتحان کن" }, { status: 429 });
+  }
+
 
   const rawOffset = Number(req.nextUrl.searchParams.get("offset") || "0");
   const offset = Number.isInteger(rawOffset) ? rawOffset : 0;

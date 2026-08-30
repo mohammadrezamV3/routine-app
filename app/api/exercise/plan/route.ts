@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { getExercisePlan, GOAL_FALLBACK_MAP, GOAL_OPTION_LABELS, ExerciseGoalOption, ExerciseLevel } from "@/lib/exercisePlans";
@@ -14,6 +15,14 @@ export async function GET() {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
+
+  // ساختِ برنامه واقعاً AI صدا می‌زند — هزینه‌ی پول دارد و یک اتصالِ سرور را
+  // چند ده ثانیه اشغال می‌کند. گیتِ ماژول فقط می‌گوید «مشترک است»، نه
+  // «نمی‌تواند صد بار پشت‌سرهم بزند». سقفِ روزانه همان کاری را می‌کند که
+  // برای refreshِ گزارش هفتگی هم کردیم.
+  if (!guard.isSuperAdmin && !checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "تعداد ساختِ برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
+  }
 
   const plan = await prisma.exercisePlan.findFirst({
     where: { userId, isActive: true },
