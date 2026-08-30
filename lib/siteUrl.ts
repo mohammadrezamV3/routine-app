@@ -16,13 +16,37 @@
 //     وگرنه خودِ ورود به حساب کار نمی‌کرد. مطمئن‌ترین منبع.
 //  ۲. NEXT_PUBLIC_SITE_URL — اگر جدا ست شده باشد.
 //  ۳. originِ درخواست — فقط به‌عنوان آخرین چاره.
+// آدرس‌هایی که هرگز نباید به کاربر داده شوند: اپ داخلِ کانتینر روی
+// 0.0.0.0:3000 گوش می‌دهد، پس `req.nextUrl.origin` معمولاً همین است. اگر
+// همین را به مرورگرِ کاربر بدهیم، روی گوشیِ خودش به هیچ‌جا می‌رود —
+// **صفحه‌ی سفیدِ گزارش‌شده با `0.0.0.0:3000`** دقیقاً همین بود.
+function isPublicHost(u: string): boolean {
+  try {
+    const h = new URL(u).hostname;
+    if (h === "localhost" || h === "0.0.0.0" || h === "::1") return false;
+    if (/^127\./.test(h)) return false;
+    // شبکه‌های خصوصی (کانتینر/شبکه‌ی داخلیِ داکر)
+    if (/^10\./.test(h) || /^192\.168\./.test(h)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const FALLBACK_SITE_URL = "https://arionapp.ir";
+
 export function getSiteUrl(fallbackOrigin?: string): string {
-  const raw =
-    process.env.NEXTAUTH_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    fallbackOrigin ||
-    "https://arionapp.ir";
-  // بدونِ اسلشِ آخر، و همیشه https (درگاه‌ها آدرسِ http را رد می‌کنند، و
-  // ترافیکِ عمومیِ سایت هرحال روی https است).
-  return raw.replace(/\/+$/, "").replace(/^http:\/\//, "https://");
+  // اولین گزینه‌ای که هم مقدار دارد هم **آدرسِ عمومیِ واقعی** است.
+  //
+  // چرا فیلترِ isPublicHost لازم است: قبلاً اگر NEXTAUTH_URL ست نبود، این
+  // تابع به originِ درخواست برمی‌گشت — یعنی همان `0.0.0.0:3000` — و فیکس
+  // عملاً بی‌اثر می‌شد. حالا حتی روی سروری که هیچ‌کدام از این env‌ها ست
+  // نشده‌اند، آدرسِ دامنه‌ی واقعی برگردانده می‌شود.
+  for (const candidate of [process.env.NEXTAUTH_URL, process.env.NEXT_PUBLIC_SITE_URL, fallbackOrigin]) {
+    if (!candidate) continue;
+    const normalized = candidate.replace(/\/+$/, "").replace(/^http:\/\//, "https://");
+    if (isPublicHost(normalized)) return normalized;
+  }
+  return FALLBACK_SITE_URL;
 }
