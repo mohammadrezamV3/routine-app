@@ -1,27 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { getSiteMarket } from "@/lib/market";
-import { findPlanCard, DURATION_LABELS, DURATION_LABELS_INTL, Duration } from "@/components/PlanShowcase";
+import { formatPriceAmount } from "@/lib/formatPrice";
+import { findPlanCard, formatJalaliLong, DURATION_LABELS, DURATION_LABELS_INTL, Duration, UpgradeOffer } from "@/components/PlanShowcase";
 
 type Gateway = "zarinpal" | "zibal";
+
+// نشان‌های خودِ درگاه‌ها — آیکونِ عمومیِ ShieldCheck که قبلاً هر دو دکمه
+// مشترک بودن، جای دو نشانِ متمایز رو (رنگ/شکلِ مخصوصِ خودِ زرین‌پال/زیبال)
+// نمی‌گرفت. طراحیِ ساده و غیرِ عینِ لوگوی رسمی، فقط برای تمایزِ بصری.
+function ZarinpalMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="1" width="22" height="22" rx="7" fill="#FFB800" />
+      <path d="M12 6.2 L17 16.4 H7 Z" fill="#241C08" />
+    </svg>
+  );
+}
+function ZibalMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="1" width="22" height="22" rx="7" fill="#00C2A8" />
+      <circle cx="12" cy="12" r="5.2" fill="#04302A" />
+    </svg>
+  );
+}
 
 // چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
 // باز می‌شه. کدِ تخفیف (رفرالِ یک نفرِ دیگه)، پذیرشِ قوانین، انتخابِ درگاه
 // (زرین‌پال یا زیبال) و دکمه‌ی پرداخت.
-// عددِ خام را به همان شکلی درمی‌آورد که رشته‌های `prices` نوشته شده‌اند:
-// برای ایران مبلغ به ریال است و تومان نمایش داده می‌شود (تقسیم بر ۱۰)،
-// برای بین‌المللی به سنت است و دلار نمایش داده می‌شود.
-function formatAmount(amount: number, isIntl: boolean): string {
-  if (isIntl) return `$${(amount / 100).toFixed(2)}`;
-  return `${Math.round(amount / 10).toLocaleString("en-US")} تومان`;
-}
-
 export default function CheckoutPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -42,10 +54,26 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [discountResult, setDiscountResult] = useState<{ ok: true; percentOff: number } | { ok: false; error: string } | null>(null);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
+  // applyingDiscount (state) async/batch-ست و جلوی دابل‌کلیکِ سریع رو کامل
+  // نمی‌گیره؛ applyingRef سنکرونه. requestGenRef هم جلوی رِیس‌کاندیشن رو
+  // می‌گیره: اگه یه درخواستِ قدیمی‌تر دیرتر از یه درخواستِ جدیدتر برگرده،
+  // نتیجه‌ی قدیمی نباید نتیجه‌ی جدید رو رونویسی کنه (همون باگِ «یه بار
+  // اعمال می‌کنه یه بار نه»).
+  const applyingRef = useRef(false);
+  const requestGenRef = useRef(0);
   const [gateway, setGateway] = useState<Gateway>("zarinpal");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // اعتبارِ ارتقا به مکس (اگه کاربر از قبل ورزش/ترید فعال داره) — پیش‌نمایشه؛
+  // مبلغِ واقعی همیشه سمتِ سرور، مستقل از این fetch، توی
+  // api/subscription/checkout دوباره محاسبه می‌شه.
+  const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
+  }, [status]);
 
   if (!query) return null;
 
@@ -69,26 +97,18 @@ export default function CheckoutPage() {
   }
 
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
-  const basePrice = plan.prices[duration];
-
-  // مبلغِ نمایشی بعد از تخفیف.
-  //
-  // باگی که این حل می‌کند: قبلاً همیشه `plan.prices[duration]` — یعنی
-  // رشته‌ی *بدونِ تخفیف* — نمایش داده می‌شد. با کدِ ۹۰٪ تخفیف، بالای صفحه
-  // «۹۰٪ تخفیف اعمال شد» می‌آمد ولی دکمه همچنان «پرداخت ۹۹,۰۰۰ تومان»
-  // می‌گفت. سرور مبلغِ درست را حساب می‌کرد (پس پولِ درست کم می‌شد)، ولی
-  // کاربر عددِ غلط می‌دید — که هم گیج‌کننده است هم اعتمادسوز.
-  //
-  // از `amounts` (عددِ خام، به ریال برای ایران و سنت برای بین‌المللی) حساب
-  // می‌شود، نه از پارس‌کردنِ رشته‌ی نمایشی، و **با همان فرمولِ سمتِ سرور**
-  // (`Math.round(base * (100 - percent) / 100)`) تا عددِ روی دکمه دقیقاً
-  // همانی باشد که از کارت کم می‌شود.
-  const percentOff = discountResult?.ok ? discountResult.percentOff : 0;
-  const rawAmount = plan.amounts?.[duration];
-  const price =
-    percentOff > 0 && typeof rawAmount === "number"
-      ? formatAmount(Math.round((rawAmount * (100 - percentOff)) / 100), isIntl)
-      : basePrice;
+  const price = plan.prices[duration];
+  const upgradeInfo = planKey === "max" ? upgradeOffer?.perDuration[duration] : undefined;
+  // اعتبارِ ارتقا (اگه باشه) اول اعمال می‌شه، بعد اگه کدِ تخفیفی هم اعمال
+  // شده باشه، درصدش روی همون قیمتِ اعتبارخورده حساب می‌شه — نه رویِ قیمتِ
+  // خامِ اولیه.
+  const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : plan.amounts?.[duration];
+  const discountedAmount = discountResult?.ok && creditedBaseAmount != null
+    ? Math.round((creditedBaseAmount * (100 - discountResult.percentOff)) / 100)
+    : upgradeInfo
+    ? upgradeInfo.amount
+    : null;
+  const finalPriceLabel = discountedAmount != null ? formatPriceAmount(discountedAmount, isIntl) : price;
 
   async function applyDiscount() {
     if (discountResult?.ok) {
@@ -96,8 +116,10 @@ export default function CheckoutPage() {
       setDiscountResult(null);
       return;
     }
-    if (!discountCode.trim() || applyingDiscount) return;
+    if (!discountCode.trim() || applyingRef.current) return;
+    applyingRef.current = true;
     setApplyingDiscount(true);
+    const myGen = ++requestGenRef.current;
     try {
       const res = await fetch("/api/subscription/discount-preview", {
         method: "POST",
@@ -105,14 +127,18 @@ export default function CheckoutPage() {
         body: JSON.stringify({ code: discountCode.trim(), planKey }),
       });
       const data = await res.json().catch(() => ({}));
+      if (myGen !== requestGenRef.current) return; // درخواستِ جدیدتری در راهه/رسیده — این جواب دیگه معتبر نیست
       if (!res.ok) {
         setDiscountResult({ ok: false, error: data.error || "خطایی پیش آمد — دوباره امتحان کن" });
       } else {
         setDiscountResult({ ok: true, percentOff: data.percentOff });
       }
     } catch {
-      setDiscountResult({ ok: false, error: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+      if (myGen === requestGenRef.current) {
+        setDiscountResult({ ok: false, error: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+      }
     } finally {
+      applyingRef.current = false;
       setApplyingDiscount(false);
     }
   }
@@ -177,14 +203,23 @@ export default function CheckoutPage() {
           <div className="checkout-summary-duration">{labels[duration]}</div>
         </div>
         <div className="checkout-summary-price">
-          {percentOff > 0 && (
+          {discountedAmount != null && (
             <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.82em", marginInlineEnd: 6 }}>
-              {basePrice}
+              {price}
             </span>
           )}
-          {price}
+          {finalPriceLabel}
         </div>
       </div>
+
+      {upgradeInfo && (
+        <div className="checkout-upgrade-note">
+          با اعتبارِ پلنِ فعلیت ارتقا می‌گیری —{" "}
+          {upgradeInfo.capped
+            ? `این پلن تا ${formatJalaliLong(upgradeInfo.capEndIso)} فعال می‌مونه (هم‌زمان با پایانِ پلنِ فعلیت).`
+            : "به‌مدتِ کامل خریداری‌شده فعال می‌مونه."}
+        </div>
+      )}
 
       <div className="checkout-box">
         <div className="checkout-discount-row">
@@ -195,6 +230,7 @@ export default function CheckoutPage() {
               type="text"
               dir="ltr"
               className="wsearch-newform-name checkout-discount-input"
+              style={{ textAlign: "right" }}
               placeholder="کد تخفیف (اختیاری)"
               value={discountCode}
               readOnly={discountResult?.ok}
@@ -211,7 +247,7 @@ export default function CheckoutPage() {
             </button>
           </div>
         </div>
-        {discountResult?.ok && <div className="checkout-discount-success">{discountResult.percentOff}٪ تخفیف اعمال شد</div>}
+        {discountResult?.ok && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 
@@ -223,7 +259,7 @@ export default function CheckoutPage() {
             className={`checkout-gateway-pill${gateway === "zarinpal" ? " on" : ""}`}
             onClick={() => setGateway("zarinpal")}
           >
-            <ShieldCheck size={16} />
+            <ZarinpalMark />
             زرین‌پال
           </button>
           <button
@@ -231,7 +267,7 @@ export default function CheckoutPage() {
             className={`checkout-gateway-pill${gateway === "zibal" ? " on" : ""}`}
             onClick={() => setGateway("zibal")}
           >
-            <ShieldCheck size={16} />
+            <ZibalMark />
             زیبال
           </button>
         </div>
@@ -254,7 +290,14 @@ export default function CheckoutPage() {
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
       <button type="button" className="auth-full-btn checkout-pay-btn" disabled={loading} onClick={pay}>
-        {loading ? "در حال اتصال به درگاه…" : `پرداخت ${price}`}
+        {loading ? (
+          "در حال اتصال به درگاه…"
+        ) : (
+          <span className="checkout-pay-btn-inner">
+            {discountedAmount != null && <span className="checkout-pay-old-price">{price}</span>}
+            <span>{`پرداخت ${finalPriceLabel}`}</span>
+          </span>
+        )}
       </button>
     </section>
   );

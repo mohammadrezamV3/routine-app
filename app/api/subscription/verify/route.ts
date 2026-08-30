@@ -42,6 +42,8 @@ export async function GET(req: NextRequest) {
   const amount = Number(searchParams.get("amount"));
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
+  const discountCodeId = searchParams.get("discountCodeId") || undefined;
+  const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
 
   if (!planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
     logCheckoutFailed(userId, "invalid_params");
@@ -100,6 +102,17 @@ export async function GET(req: NextRequest) {
   const currentPeriodEnd = new Date();
   currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + months);
 
+  // ارتقا به مکس: سقفِ انقضا مستقلاً از دیتابیس (نه از رویِ query که کاربر
+  // می‌تونه توی URLِ بازگشت از درگاه دستکاری‌اش کنه) خونده می‌شه — where
+  // شاملِ userId هم هست تا حتی با دستکاریِ id، کاربر فقط بتونه یکی از
+  // اشتراک‌های خودش رو مبنا بگیره، نه یه اشتراکِ کاربرِ دیگه.
+  if (upgradeFromSubId) {
+    const sourceSub = await prisma.subscription.findFirst({ where: { id: upgradeFromSubId, userId }, select: { currentPeriodEnd: true } });
+    if (sourceSub && sourceSub.currentPeriodEnd.getTime() < currentPeriodEnd.getTime()) {
+      currentPeriodEnd.setTime(sourceSub.currentPeriodEnd.getTime());
+    }
+  }
+
   const subscription = await prisma.subscription.create({
     data: {
       userId,
@@ -136,6 +149,13 @@ export async function GET(req: NextRequest) {
       where: { id: referralUsageId },
       data: { status: "REWARDED", rewardedAt: new Date() },
     }).catch(() => {});
+  }
+
+  // مصرفِ کدِ تخفیفِ عمومی (DiscountCode) فقط اینجا، بعدِ verify شدنِ واقعیِ
+  // پرداخت، ثبت می‌شه — نه موقعِ پیش‌نمایش/اعمال توی چک‌اوت — تا سقفِ
+  // maxUsesPerUser واقعاً روی خریدهای موفق حساب بشه، نه تلاش‌های ناتمام.
+  if (discountCodeId) {
+    await prisma.discountCodeUsage.create({ data: { discountCodeId, userId } }).catch(() => {});
   }
 
   redirectBase.searchParams.set("checkout", "success");
