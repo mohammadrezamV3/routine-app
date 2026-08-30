@@ -7,6 +7,9 @@ import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
 import { zarinpalRequestPayment } from "@/lib/zarinpal";
 import { zibalRequest } from "@/lib/zibal";
 import { resolveDiscountCode } from "@/lib/discountValidation";
+import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
+
+const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
 
 const GATEWAYS = ["zarinpal", "zibal"] as const;
 type Gateway = (typeof GATEWAYS)[number];
@@ -83,11 +86,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const baseAmount = pricing.amounts[duration];
+    // ارتقا به مکس: اگه کاربر از قبل ورزش/ترید فعال داره، قیمتِ پایه‌ی مکس
+    // با اعتبارِ همون پلن کم می‌شه — قبل از اینکه درصدِ کدِ تخفیف (اگه بود)
+    // روی همین قیمتِ کاهش‌یافته اعمال بشه. upgradeFromSubId هم به verify
+    // منتقل می‌شه تا اونجا خودش مستقلاً (نه از رویِ همین درخواست) تاریخِ
+    // واقعیِ انقضای پلنِ فعلی رو از دیتابیس بخونه و سقفِ مدت رو حساب کنه —
+    // امنیتش این‌جوری تضمین می‌شه، نه با اعتماد به یه تاریخِ توی query.
+    let upgradeFromSubId: string | undefined;
+    let baseAmount = pricing.amounts[duration];
+    if (planKey === UPGRADE_TARGET_PLAN_KEY) {
+      const upgradeSource = await findUpgradeSource(userId);
+      if (upgradeSource) {
+        const months = DURATION_MONTHS[duration];
+        const { amount } = computeUpgradePricing(baseAmount, upgradeSource, months);
+        baseAmount = amount;
+        upgradeFromSubId = upgradeSource.subscriptionId;
+      }
+    }
     const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
     const origin = req.nextUrl.origin;
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}`;
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}`;
 
     const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
     const { paymentUrl } = gateway === "zibal"

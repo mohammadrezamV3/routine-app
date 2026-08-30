@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { getSiteMarket } from "@/lib/market";
-import { PlansSection } from "@/components/PlanShowcase";
+import { PlansSection, UpgradeOffer } from "@/components/PlanShowcase";
+import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration";
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
 
@@ -17,14 +18,18 @@ export default function SubscriptionPage() {
   const { status } = useSession();
   const [checkoutResult, setCheckoutResult] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo>(null);
+  const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const isIntl = getSiteMarket() === "INTERNATIONAL";
 
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
   // نباشه (قاعده‌ی معمولِ پروژه — نگاه کن به app/auth/login/page.tsx).
   useEffect(() => {
-    setCheckoutResult(new URLSearchParams(window.location.search).get("checkout"));
+    const result = new URLSearchParams(window.location.search).get("checkout");
+    setCheckoutResult(result);
+    if (result === "success") setShowCelebration(true);
   }, []);
 
   // پنل Owner › Funnel — یک بار به‌ازای هر بازدیدِ واقعیِ این صفحه، بی‌صدا و
@@ -44,6 +49,7 @@ export default function SubscriptionPage() {
       .then((r) => r.json())
       .then((data) => {
         setSubscription(data.subscription || null);
+        setUpgradeOffer(data.upgradeOffer || null);
         setIsSuperAdmin(!!data.isSuperAdmin);
         setLoaded(true);
       });
@@ -85,9 +91,11 @@ export default function SubscriptionPage() {
         <div className="item-line" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
       ) : (
         <div style={{ marginTop: 8 }}>
-          <PlansSection isIntl={isIntl} mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" />
+          <PlansSection isIntl={isIntl} mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" upgradeOffer={upgradeOffer} />
         </div>
       )}
+
+      {showCelebration && <PremiumUnlockCelebration onClose={() => setShowCelebration(false)} />}
     </section>
   );
 }

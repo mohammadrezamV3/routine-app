@@ -1156,10 +1156,20 @@
     backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
   }
   .checkout-summary-icon{ background:var(--accent-dim); color:var(--accent); }
+  /* آیکون‌های خامِ ICONS.* (بدون width/height روی خودِ svg) بدونِ یه قانونِ
+     صریح این‌جا با سایزِ پیش‌فرضِ مرورگر رندر می‌شن (خیلی بزرگ‌تر از باکسِ
+     ۳۶پیکسلی) و توسطِ overflow:hidden گردیِ چرخه‌ی خلاصه کاملاً قطع/نامرئی
+     می‌شدن — همون الگویی که جاهای دیگه‌ی اپ (مثلاً .module-gate-icon svg) هم دارن. */
+  .checkout-summary-icon svg{ width:18px; height:18px; display:block; }
   .checkout-summary-body{ flex:1; min-width:0; }
   .checkout-summary-name{ font-size:14.5px; font-weight:800; color:var(--text); }
   .checkout-summary-duration{ font-size:11.5px; color:var(--muted); margin-top:2px; }
   .checkout-summary-price{ font-size:15px; font-weight:800; color:var(--accent); white-space:nowrap; }
+
+  .checkout-upgrade-note{
+    margin-top:12px; padding:10px 14px; border-radius:12px; border:1px solid var(--accent);
+    background:var(--accent-dim); color:var(--accent); font-size:11.5px; font-weight:600; line-height:1.8;
+  }
 
   .checkout-box{ margin-top:14px; }
   .checkout-field-label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; }
@@ -1182,10 +1192,10 @@
      برای غلبه روی اون قانون (body:not([data-theme="light"]) .wsearch-newform-name)
      باید هم‌سطح یا اسپسیفیک‌تر باشه — با کلاسِ ولد هم‌رده می‌کنیم. */
   body:not([data-theme="light"]) .checkout-discount-field-wrap .checkout-discount-input{
-    background:rgba(var(--surface-rgb), .13);
+    background:rgba(var(--surface-rgb), .3);
   }
   body[data-theme="light"] .checkout-discount-field-wrap .checkout-discount-input{
-    background:rgba(var(--surface-rgb), .18);
+    background:rgba(var(--surface-rgb), .55);
   }
   .checkout-discount-field-wrap.applied .checkout-discount-input{ color:var(--accent); border-color:var(--accent); opacity:.85; }
   .checkout-discount-apply-btn{
@@ -4519,3 +4529,35 @@ html[data-perf="low"] .app-topbar,
 html[data-perf="low"] .app-bottombar{
   box-shadow:none;
 }
+
+/* انیمیشنِ «کاربر پریمیوم شد» — نگاه کن به components/PremiumUnlockCelebration.tsx */
+.premium-celebration-backdrop{
+  position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); padding:20px;
+}
+.premium-celebration-card{
+  position:relative; max-width:340px; width:100%; background:var(--card-bg); border:1px solid var(--line);
+  border-radius:24px; padding:30px 22px 22px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.premium-celebration-icon-wrap{ position:relative; width:64px; height:64px; margin:0 auto 14px; }
+.premium-celebration-icon{
+  position:relative; z-index:1; width:64px; height:64px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center; background:var(--accent-dim); color:var(--accent);
+}
+.premium-celebration-particle{
+  position:absolute; top:50%; left:50%; width:6px; height:6px; margin:-3px 0 0 -3px;
+  border-radius:999px; background:var(--accent); pointer-events:none;
+}
+.premium-celebration-title{ font-size:16px; font-weight:800; color:var(--text); }
+.premium-celebration-sub{ margin-top:8px; font-size:12.5px; color:var(--muted); line-height:1.8; }
+.premium-celebration-close{
+  margin-top:18px; width:100%; padding:11px 0; border-radius:999px; border:1px solid var(--accent);
+  background:var(--accent); color:var(--bg); font-weight:700; font-size:13px; cursor:pointer;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; transition:filter .15s ease;
+}
+.premium-celebration-close:hover{ filter:brightness(1.08); }
+
+/* آیکون‌های خامِ ICONS.* (بدون width/height روی خودِ svg) داخلِ کارتِ پلن —
+   همون دلیلِ .checkout-summary-icon svg بالاتر؛ Sparkles (پلن مکس) خودش
+   size=16 داره، این‌جا فقط برای آیکون‌های خامِ بقیه‌ی پلن‌ها لازمه. */
+.plan-icon-badge svg{ width:16px; height:16px; display:block; }

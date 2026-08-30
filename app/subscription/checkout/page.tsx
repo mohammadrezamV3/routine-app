@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGate } from "@/components/AuthGate";
 import { getSiteMarket } from "@/lib/market";
-import { findPlanCard, DURATION_LABELS, DURATION_LABELS_INTL, Duration } from "@/components/PlanShowcase";
+import { formatPriceAmount } from "@/lib/formatPrice";
+import { findPlanCard, formatJalaliLong, DURATION_LABELS, DURATION_LABELS_INTL, Duration, UpgradeOffer } from "@/components/PlanShowcase";
 
 type Gateway = "zarinpal" | "zibal";
 
@@ -28,11 +29,6 @@ function ZibalMark() {
       <circle cx="12" cy="12" r="5.2" fill="#04302A" />
     </svg>
   );
-}
-
-function formatDiscountedPrice(amountRaw: number, isIntl: boolean): string {
-  if (isIntl) return `$${(amountRaw / 100).toFixed(2)}`;
-  return `${Math.round(amountRaw / 10).toLocaleString("en-US")} تومان`;
 }
 
 // چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
@@ -70,6 +66,15 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // اعتبارِ ارتقا به مکس (اگه کاربر از قبل ورزش/ترید فعال داره) — پیش‌نمایشه؛
+  // مبلغِ واقعی همیشه سمتِ سرور، مستقل از این fetch، توی
+  // api/subscription/checkout دوباره محاسبه می‌شه.
+  const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
+  }, [status]);
+
   if (!query) return null;
 
   if (status !== "authenticated") {
@@ -93,11 +98,17 @@ export default function CheckoutPage() {
 
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const price = plan.prices[duration];
-  const baseAmount = plan.amounts?.[duration];
-  const discountedAmount = discountResult?.ok && baseAmount != null
-    ? Math.round((baseAmount * (100 - discountResult.percentOff)) / 100)
+  const upgradeInfo = planKey === "max" ? upgradeOffer?.perDuration[duration] : undefined;
+  // اعتبارِ ارتقا (اگه باشه) اول اعمال می‌شه، بعد اگه کدِ تخفیفی هم اعمال
+  // شده باشه، درصدش روی همون قیمتِ اعتبارخورده حساب می‌شه — نه رویِ قیمتِ
+  // خامِ اولیه.
+  const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : plan.amounts?.[duration];
+  const discountedAmount = discountResult?.ok && creditedBaseAmount != null
+    ? Math.round((creditedBaseAmount * (100 - discountResult.percentOff)) / 100)
+    : upgradeInfo
+    ? upgradeInfo.amount
     : null;
-  const finalPriceLabel = discountedAmount != null ? formatDiscountedPrice(discountedAmount, isIntl) : price;
+  const finalPriceLabel = discountedAmount != null ? formatPriceAmount(discountedAmount, isIntl) : price;
 
   async function applyDiscount() {
     if (discountResult?.ok) {
@@ -193,6 +204,15 @@ export default function CheckoutPage() {
         </div>
         <div className="checkout-summary-price">{price}</div>
       </div>
+
+      {upgradeInfo && (
+        <div className="checkout-upgrade-note">
+          با اعتبارِ پلنِ فعلیت ارتقا می‌گیری —{" "}
+          {upgradeInfo.capped
+            ? `این پلن تا ${formatJalaliLong(upgradeInfo.capEndIso)} فعال می‌مونه (هم‌زمان با پایانِ پلنِ فعلیت).`
+            : "به‌مدتِ کامل خریداری‌شده فعال می‌مونه."}
+        </div>
+      )}
 
       <div className="checkout-box">
         <div className="checkout-discount-row">

@@ -5,6 +5,22 @@ import Link from "next/link";
 import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
 import { ICONS } from "@/components/NavDrawer";
 import { useTheme } from "@/components/ThemeProvider";
+import { toJalali, J_MONTHS } from "@/lib/jalali";
+
+// دقیقاً هم‌شکلِ خروجیِ upgradeOffer توی app/api/plans — پیش‌نمایشِ قیمتِ
+// «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغِ واقعی همیشه
+// سمتِ سرورِ چک‌اوت دوباره محاسبه می‌شه؛ این‌جا فقط برای نمایشه.
+export type UpgradeOffer = {
+  fromPlanKey: string;
+  toPlanKey: string;
+  perDuration: Record<string, { amount: number; priceLabel: string; capEndIso: string; capped: boolean }>;
+};
+
+export function formatJalaliLong(iso: string): string {
+  const d = new Date(iso);
+  const [jy, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  return `${jd} ${J_MONTHS[jm - 1]} ${jy}`;
+}
 
 export type Duration = "1" | "3" | "6" | "12";
 export const DURATIONS: Duration[] = ["1", "3", "6", "12"];
@@ -155,12 +171,15 @@ export function useThemeTokens() {
 // mode="landing": دکمه‌ی هر پلن می‌بره به ثبت‌نام (کاربر هنوز حسابی نداره).
 // mode="account": کاربر از قبل واردشده — دکمه می‌بره به چک‌اوتِ واقعی، و
 // پلنِ فعلیش (currentPlanKey) به‌جای دکمه‌ی خرید یه نشانِ «پلنِ فعلیِ تو» می‌گیره.
-function PlanCardView({ p, isIntl, mode, currentPlanKey }: { p: PlanCard; isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null }) {
+function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
-  const originalPrice = p.originalPrices?.[duration];
   const isCurrent = mode === "account" && currentPlanKey === p.key;
+  // پیشنهادِ «ارتقا به مکس» فقط روی خودِ کارتِ مکس نشون داده می‌شه — فقط
+  // وقتی کاربر از قبل پلنِ ورزش/ترید فعال داره (upgradeOffer از سرور اومده).
+  const offer = mode === "account" && upgradeOffer?.toPlanKey === p.key ? upgradeOffer.perDuration[duration] : undefined;
+  const originalPrice = offer ? p.prices?.[duration] : p.originalPrices?.[duration];
 
   const cardClass = p.highlight
     ? `relative flex flex-col rounded-[22px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-4 backdrop-blur-xl ${t.secondaryCardShadow}`
@@ -180,7 +199,7 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey }: { p: PlanCard; isIntl
         </span>
       )}
       <div className="flex items-center gap-2">
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{p.icon}</span>
+        <span className={`plan-icon-badge flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{p.icon}</span>
         <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
         <div className="flex-1" />
         <button
@@ -238,11 +257,18 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey }: { p: PlanCard; isIntl
           </div>
 
           <div className="mt-3 flex items-baseline gap-2">
-            <span className={`text-[15px] font-extrabold ${t.heading}`}>{p.prices![duration]}</span>
+            <span className={`text-[15px] font-extrabold ${t.heading}`}>{offer ? offer.priceLabel : p.prices![duration]}</span>
             {originalPrice && (
               <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{originalPrice}</span>
             )}
           </div>
+
+          {offer && (
+            <div className={`mt-1.5 text-[10.5px] font-semibold leading-relaxed ${t.muted}`}>
+              {upgradeFromNameFa ? `با اعتبارِ پلنِ ${upgradeFromNameFa}‌ی فعلیت — ` : ""}
+              {offer.capped ? `این پلن تا ${formatJalaliLong(offer.capEndIso)} فعال می‌مونه` : "به‌مدتِ کامل خریداری‌شده فعال می‌مونه"}
+            </div>
+          )}
 
           {isCurrent ? (
             <div className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border ${t.accentBorder} py-2.5 text-center text-[12.5px] font-bold ${t.accentText}`}>
@@ -264,12 +290,13 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey }: { p: PlanCard; isIntl
 
 // گریدِ پلن‌ها + جدولِ مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراکِ داخلِ
 // حساب هردو استفاده می‌شه، فقط رفتارِ دکمه‌ها (mode) فرق می‌کنه.
-export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌ها" }: { isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; title?: string }) {
+export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
   const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
   const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
   const mainRows = compareRows.filter((r) => !r.upcoming);
   const upcomingRows = compareRows.filter((r) => r.upcoming);
+  const upgradeFromNameFa = upgradeOffer ? plans.find((pp) => pp.key === upgradeOffer.fromPlanKey)?.nameFa : undefined;
 
   return (
     <>
@@ -280,7 +307,9 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
       )}
 
       <div className={`grid gap-6 pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
-        {plans.map((p) => <PlanCardView key={p.key} p={p} isIntl={isIntl} mode={mode} currentPlanKey={currentPlanKey} />)}
+        {plans.map((p) => (
+          <PlanCardView key={p.key} p={p} isIntl={isIntl} mode={mode} currentPlanKey={currentPlanKey} upgradeOffer={upgradeOffer} upgradeFromNameFa={upgradeFromNameFa} />
+        ))}
       </div>
 
       {/* جدول HTML واقعی؛ بدون sticky/بک‌گراندِ مخصوصِ ستونِ لیبل و بدون
