@@ -14,6 +14,14 @@ type Gateway = "zarinpal" | "zibal";
 // چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
 // باز می‌شه. کدِ تخفیف (رفرالِ یک نفرِ دیگه)، پذیرشِ قوانین، انتخابِ درگاه
 // (زرین‌پال یا زیبال) و دکمه‌ی پرداخت.
+// عددِ خام را به همان شکلی درمی‌آورد که رشته‌های `prices` نوشته شده‌اند:
+// برای ایران مبلغ به ریال است و تومان نمایش داده می‌شود (تقسیم بر ۱۰)،
+// برای بین‌المللی به سنت است و دلار نمایش داده می‌شود.
+function formatAmount(amount: number, isIntl: boolean): string {
+  if (isIntl) return `$${(amount / 100).toFixed(2)}`;
+  return `${Math.round(amount / 10).toLocaleString("en-US")} تومان`;
+}
+
 export default function CheckoutPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -61,7 +69,26 @@ export default function CheckoutPage() {
   }
 
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
-  const price = plan.prices[duration];
+  const basePrice = plan.prices[duration];
+
+  // مبلغِ نمایشی بعد از تخفیف.
+  //
+  // باگی که این حل می‌کند: قبلاً همیشه `plan.prices[duration]` — یعنی
+  // رشته‌ی *بدونِ تخفیف* — نمایش داده می‌شد. با کدِ ۹۰٪ تخفیف، بالای صفحه
+  // «۹۰٪ تخفیف اعمال شد» می‌آمد ولی دکمه همچنان «پرداخت ۹۹,۰۰۰ تومان»
+  // می‌گفت. سرور مبلغِ درست را حساب می‌کرد (پس پولِ درست کم می‌شد)، ولی
+  // کاربر عددِ غلط می‌دید — که هم گیج‌کننده است هم اعتمادسوز.
+  //
+  // از `amounts` (عددِ خام، به ریال برای ایران و سنت برای بین‌المللی) حساب
+  // می‌شود، نه از پارس‌کردنِ رشته‌ی نمایشی، و **با همان فرمولِ سمتِ سرور**
+  // (`Math.round(base * (100 - percent) / 100)`) تا عددِ روی دکمه دقیقاً
+  // همانی باشد که از کارت کم می‌شود.
+  const percentOff = discountResult?.ok ? discountResult.percentOff : 0;
+  const rawAmount = plan.amounts?.[duration];
+  const price =
+    percentOff > 0 && typeof rawAmount === "number"
+      ? formatAmount(Math.round((rawAmount * (100 - percentOff)) / 100), isIntl)
+      : basePrice;
 
   async function applyDiscount() {
     if (discountResult?.ok) {
@@ -149,7 +176,14 @@ export default function CheckoutPage() {
           <div className="checkout-summary-name">{plan.nameFa}</div>
           <div className="checkout-summary-duration">{labels[duration]}</div>
         </div>
-        <div className="checkout-summary-price">{price}</div>
+        <div className="checkout-summary-price">
+          {percentOff > 0 && (
+            <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.82em", marginInlineEnd: 6 }}>
+              {basePrice}
+            </span>
+          )}
+          {price}
+        </div>
       </div>
 
       <div className="checkout-box">
