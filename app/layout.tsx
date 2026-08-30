@@ -7,11 +7,14 @@ import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
 import { ConflictAlert } from "@/components/ConflictAlert";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
+import { MotionTuner } from "@/components/MotionTuner";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
+import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
+import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
@@ -63,31 +66,33 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Arion — روتین، ورزش، تغذیه و ترید در یک اپ",
+    default: BRAND_TITLE,
     // صفحاتِ داخلی با metadata خودشون این default رو override می‌کنن؛
     // اگه صفحه‌ای عمداً metadata نده (صفحاتِ خصوصی که noindex هستن)، همین
     // fallback عمومی نشون داده می‌شه — قابل قبوله چون این صفحات ایندکس
     // نمی‌شن، فقط برای عنوانِ تبِ مرورگر لازمه.
-    template: "%s | Arion",
+    template: `%s | ${BRAND_EN} ${BRAND_FA}`,
   },
-  description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
-  applicationName: "Arion",
+  description: BRAND_DESC,
+  applicationName: BRAND_EN,
   // پیش‌فرضِ سراسری «ایندکس بشو» — صفحاتِ خصوصی از طریق X-Robots-Tag توی
   // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننتِ
   // کلاینتی‌ان و نمی‌تونن این metadata رو override کنن.
   robots: { index: true, follow: true },
+  // کلمه‌کلیدیِ صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
+  // می‌گیره)، ولی این‌ها سیگنالِ برند رو تقویت می‌کنن.
+  keywords: [BRAND_FA, BRAND_EN, `${BRAND_FA} اپ`, "اپ روتین", "برنامه‌ریزی روزانه", "ژورنال ترید", "برنامه ورزشی"],
   openGraph: {
-    type: "website",
-    locale: "fa_IR",
+    ...OG_BASE,
     url: SITE_URL,
-    siteName: "Arion",
-    title: "Arion — روتین، ورزش، تغذیه و ترید در یک اپ",
-    description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+    title: BRAND_TITLE,
+    description: BRAND_DESC,
   },
   twitter: {
-    card: "summary",
-    title: "Arion — روتین، ورزش، تغذیه و ترید در یک اپ",
-    description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+    card: "summary_large_image",
+    title: BRAND_TITLE,
+    description: BRAND_DESC,
+    images: ["/og.png"],
   },
   // سافاریِ آیفون display:"standalone"ِ manifest.ts رو نمی‌خونه — «افزودن به
   // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپِ واقعیِ standalone می‌سازه (بدونِ
@@ -96,7 +101,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Arion",
+    title: BRAND_EN,
   },
 };
 
@@ -107,15 +112,25 @@ export const metadata: Metadata = {
 const ORGANIZATION_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Arion",
+  name: BRAND_EN,
+  // alternateName همون چیزیه که گوگل برای وصل‌کردنِ یک برند به املاهای
+  // دیگه‌اش استفاده می‌کنه. بدونش، «آریون» و «Arion» از نظرِ گوگل دو چیزِ
+  // بی‌ربطن و جست‌وجوی فارسیِ برند به این سایت نمی‌رسه.
+  alternateName: BRAND_ALT_NAMES,
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
+  description: BRAND_DESC,
+  // پروفایل‌های رسمی. برای دامنه‌ای که هنوز بک‌لینکی ندارد، این یکی از معدود
+  // راه‌هایی است که می‌شود از داخلِ خودِ سایت به گوگل گفت این حساب‌ها مالِ
+  // همین برندند — مکمّلِ `rel="me"` روی خودِ لینک‌ها در صفحه‌ی «درباره ما».
+  sameAs: BRAND_SAME_AS,
 };
 
 const WEBSITE_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Arion",
+  name: BRAND_BOTH,
+  alternateName: BRAND_ALT_NAMES,
   url: SITE_URL,
   inLanguage: "fa-IR",
 };
@@ -161,6 +176,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* تشخیصِ دستگاهِ ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
+            همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
+        <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
         <InlineBootstrap />
@@ -172,9 +190,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ConflictAlert />
         <AuthSessionProvider session={session}>
           <ThemeProvider>
-            <NavDrawer />
-            <NotificationEngine />
-            <div className="wrap">{children}</div>
+            <MotionTuner>
+              <NavDrawer />
+              <NotificationEngine />
+              <div className="wrap">{children}</div>
+            </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

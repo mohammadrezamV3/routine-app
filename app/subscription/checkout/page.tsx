@@ -132,6 +132,17 @@ export default function CheckoutPage() {
     }
   }
 
+  // پاسخِ بدونِ JSON یعنی خطا از خودِ اپ نیامده بلکه از لایه‌ی جلوترش
+  // (nginx / پراکسی / کانتینرِ خاموش). این پیام‌ها کاربر را به سمتِ کارِ درست
+  // می‌برند به‌جای این‌که فکر کند اینترنتش مشکل دارد.
+  function httpErrorMessage(status: number): string {
+    if (status === 504 || status === 408) return "درگاهِ پرداخت دیر جواب داد — چند لحظه دیگر دوباره امتحان کن";
+    if (status === 502 || status === 503) return "سرورِ پرداخت موقتاً در دسترس نیست — چند دقیقه دیگر دوباره امتحان کن";
+    if (status === 401) return "برای پرداخت باید دوباره وارد حسابت بشی";
+    if (status === 429) return "تعداد تلاش‌ها زیاد بود — چند دقیقه صبر کن";
+    return `خطای غیرمنتظره از سرور (کدِ ${status}) — اگر تکرار شد به پشتیبانی اطلاع بده`;
+  }
+
   async function pay() {
     if (loading) return;
     if (!agreed) {
@@ -146,15 +157,22 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined, gateway }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "خطایی پیش آمد — دوباره امتحان کن");
+      // عمداً `res.json()` مستقیم صدا زده نمی‌شود: اگر پاسخ JSON نباشد (مثلاً
+      // ۵۰۴ـِ HTML از nginx وقتی درگاه کند است، یا ۵۰۲ وقتی کانتینر بالا
+      // نیامده) آن فراخوانی throw می‌کرد و می‌افتاد توی catch — و کاربر پیامِ
+      // «مشکلی در اتصال به سرور» را می‌دید، انگار اینترنتش قطع است. حالا کدِ
+      // واقعیِ HTTP به کاربر گفته می‌شود تا مشکل قابلِ تشخیص باشد.
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data) {
+        setError(data?.error || httpErrorMessage(res.status));
         setLoading(false);
         return;
       }
       window.location.href = data.paymentUrl;
     } catch {
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      // این‌جا فقط خطای واقعیِ شبکه می‌رسد (اینترنتِ کاربر قطع شده)، نه پاسخِ
+      // نامعتبرِ سرور — پس این پیام حالا واقعاً درست است.
+      setError("اتصال به اینترنت برقرار نیست — اتصالت رو چک کن و دوباره امتحان کن");
       setLoading(false);
     }
   }
