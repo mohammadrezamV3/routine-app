@@ -1,7 +1,10 @@
-// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود (GPT-4o-mini) برای همه‌ی جاهایی که
-// این اپ از AI استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل
-// بودن، الان همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API
-// سازگارِ OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه.
+// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود برای همه‌ی جاهایی که این اپ از AI
+// استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل بودن، الان
+// همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API سازگارِ
+// OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه. مدلِ
+// پیش‌فرض GPT-4o-mini است (AI_MODEL_NAME)، ولی هر فراخوانی می‌تونه مدلِ
+// خودش رو صریح بده — گزارشِ هفتگی مثلاً از WEEKLY_REPORT_AI_MODEL استفاده
+// می‌کنه، چون کارش تحلیل/استدلاله نه تولیدِ قالبی.
 // خروجی همیشه باید فقط JSON خام باشه (بدون توضیح اضافه) — هم با
 // response_format:{type:"json_object"} در سطحِ خودِ فراخوانی اجباری شده، هم
 // توی هر system prompt صریح تکرار شده، تا مستقیم قابلِ ذخیره/نمایش باشه.
@@ -12,6 +15,13 @@ import { logError } from "@/lib/errorLog";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
 
 const AI_MODEL_NAME = "gpt-4o-mini";
+
+// گزارشِ هفتگی عمداً از یک مدلِ جداگانه استفاده می‌کنه (نه mini مثلِ بقیه‌ی
+// فیچرها) — چون کارش تحلیل/تفسیرِ الگوهاست (نه تولیدِ قالبیِ ساده مثلِ
+// رودمپ)، به استدلالِ قوی‌تری نیاز داره. اسمِ دقیقِ مدل روی گیت‌وی هنوز
+// تایید نشده، برای همین از env قابلِ‌عوض‌کردنه — اگه رویِ گیت‌وی واقعی این
+// اسم جواب نداد، بدونِ نیاز به تغییرِ کد فقط ARVAN_AI_WEEKLY_MODEL رو ست کن.
+export const WEEKLY_REPORT_AI_MODEL = process.env.ARVAN_AI_WEEKLY_MODEL || "gpt-5.4-mini";
 
 type ChatContentPart =
   | { type: "text"; text: string }
@@ -29,7 +39,8 @@ async function recordAiUsage(
   feature: AiFeatureKey,
   usage: ChatUsage,
   durationMs: number,
-  success: boolean
+  success: boolean,
+  model: string = AI_MODEL_NAME
 ) {
   try {
     const rate = await getAiCostRate();
@@ -37,7 +48,7 @@ async function recordAiUsage(
       data: {
         userId,
         feature,
-        model: AI_MODEL_NAME,
+        model,
         inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
         costUsdMicros: estimateAiCostUsdMicros(usage.inputTokens, usage.outputTokens, rate),
@@ -56,7 +67,7 @@ async function recordAiUsage(
 // نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
 // توکنِ احرازهویت نیست — احرازهویتِ واقعی با یه Access Key جداست که از
 // پنلِ آروان‌کلود، بخشِ «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
-async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<ChatResult> {
+async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number, model: string = AI_MODEL_NAME): Promise<ChatResult> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
   const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
@@ -74,7 +85,7 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: AI_MODEL_NAME,
+      model,
       max_tokens: maxTokens,
       response_format: { type: "json_object" },
       messages: [
@@ -392,4 +403,205 @@ export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpe
   }
 
   return { recognized: true, name, estimatedGrams, calories, proteinG, carbsG, fatG };
+}
+
+// ============================================================================
+// خلاصه‌ی هوشمندِ گزارشِ هفتگی — برخلافِ بقیه‌ی فراخوان‌های این فایل که یک
+// چیز از صفر می‌سازن (رودمپ/برنامه‌ی تمرین/تخمینِ غذا)، این‌جا AI فقط روی
+// اعدادِ از‌قبل‌محاسبه‌شده‌ی lib/weeklyReport/* (Deterministic Analytics)
+// تفسیر می‌نویسه — هیچ عدد/دستاوردِ جدیدی حق نداره بسازه (محافظتِ در برابرِ
+// Hallucination، بخشِ ۳۱ اسپکِ گزارشِ هفتگی). ورودی فقط همون خلاصه‌ست، نه
+// دیتابیسِ خام کاربر.
+// ============================================================================
+
+const WEEKLY_AI_PROMPT_V1 = `تو دستیارِ تحلیلِ هفتگیِ Arion هستی. یک خلاصه‌ی آماریِ از‌قبل‌محاسبه‌شده از عملکردِ
+هفتگیِ کاربر می‌گیری و باید یک تفسیرِ کوتاهِ فارسی و ۲ تا ۳ پیشنهادِ عملی بنویسی.
+
+قوانینِ حیاتی:
+- فقط از اعدادی که توی ورودی داده شده استفاده کن. هیچ عدد، درصد، یا دستاوردِ جدیدی که توی ورودی نیست نساز.
+- اگه داده‌ی کافی برای یک جمع‌بندیِ خاص نداری، چیزی درباره‌ش نگو — حدس نزن.
+- هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده — فقط بازخوردِ رفتاری/عملکردی بر اساسِ همین اعداد.
+- لحن: مستقیم، محترمانه، مثلِ یک مربیِ شخصی — نه ژنریک، نه اغراق‌آمیز.
+- خلاصه (summary) حداکثر ۵ جمله.
+- حداکثر ۳ پیشنهاد (recommendations)، هرکدوم با یک توضیحِ کوتاه و دلیلِ مبتنی‌بر همون اعداد.
+
+فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متنِ اضافه):
+{
+  "summary": "خلاصه‌ی ۳ تا ۵ جمله‌ای",
+  "recommendations": [
+    { "title": "عنوانِ کوتاه", "description": "توضیحِ کوتاه با دلیلِ مبتنی‌بر داده", "priority": "high" | "medium" | "low", "domain": "یکی از keyهای domains ورودی، یا null اگه مربوط به یک دامنه‌ی خاص نیست" }
+  ]
+}`;
+
+export type WeeklyReportAiDomainInput = { key: string; label: string; score: number | null; previousWeek: number | null; active: boolean };
+export type WeeklyReportAiInput = {
+  weekLabel: string;
+  overallScore: number | null;
+  previousOverallScore: number | null;
+  domains: WeeklyReportAiDomainInput[];
+  wins: string[];
+  problems: string[];
+};
+export type WeeklyRecommendation = { title: string; description: string; priority: "high" | "medium" | "low"; domain: string | null };
+export type WeeklyReportAiResult = {
+  summary: string;
+  recommendations: WeeklyRecommendation[];
+};
+
+function normalizeWeeklyAiResult(raw: any): WeeklyReportAiResult {
+  const summary = typeof raw?.summary === "string" ? raw.summary.trim() : "";
+  if (!summary) throw new Error("مدل خلاصه‌ای برنگردوند");
+
+  const recsRaw = Array.isArray(raw?.recommendations) ? raw.recommendations : [];
+  const priorities = new Set(["high", "medium", "low"]);
+  const recommendations: WeeklyRecommendation[] = recsRaw
+    .map((r: any) => ({
+      title: typeof r?.title === "string" ? r.title.trim() : "",
+      description: typeof r?.description === "string" ? r.description.trim() : "",
+      priority: priorities.has(r?.priority) ? r.priority : "medium",
+      domain: typeof r?.domain === "string" && r.domain.trim() ? r.domain.trim() : null,
+    }))
+    .filter((r: any) => r.title && r.description)
+    .slice(0, 3);
+
+  return { summary, recommendations };
+}
+
+async function callWeeklyAiOnce(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
+  const userContent = JSON.stringify(input);
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V1, userContent, 1200, WEEKLY_REPORT_AI_MODEL);
+  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
+  return normalizeWeeklyAiResult(parseJsonResponse(text));
+}
+
+/**
+ * تا ۲ بار امتحان می‌کنه (هم‌الگوی generateRoadmap). اگه هردو شکست خورد،
+ * caller (lib/weeklyReport/snapshot.ts) باید بدونِ AI هم گزارش رو کامل
+ * نشون بده — این تابع صرفاً throw می‌کنه، تصمیمِ fallback مالِ اونجاست.
+ */
+export async function generateWeeklyReportSummary(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
+  let lastError: any;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await callWeeklyAiOnce(input, userId);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  logError("ai-gateway", `خلاصه‌ی هوشمندِ گزارشِ هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+  throw lastError;
+}
+
+// ============================================================================
+// نسخه‌ی V2 — عمداً کنارِ V1 (WEEKLY_AI_PROMPT_V1/generateWeeklyReportSummary)
+// نگه داشته شده، نه جایگزینش (بندِ ۸۷: پرامپت‌ها versioned‌ان، rollback
+// باید ممکن بمونه). تفاوتِ اصلی: ورودی حالا شاملِ خروجیِ قطعیِ
+// lib/weeklyReport/patterns.ts هم می‌شه (Trend/Streak/Outlier/Correlation)
+// و خروجی یک آرایه‌ی insights هم داره — هرکدوم evidence-based، دقیقاً
+// هم‌قاعده‌ی V1.
+// ============================================================================
+
+const WEEKLY_AI_PROMPT_V2 = `تو دستیارِ تحلیلِ هفتگیِ Arion هستی. یک خلاصه‌ی آماریِ از‌قبل‌محاسبه‌شده — شاملِ
+امتیازها و همچنین الگوهای از‌قبل‌کشف‌شده (روند، استریک، ناهنجاری، همبستگی) — می‌گیری و باید تفسیرِ فارسی بنویسی.
+
+قوانینِ حیاتی:
+- فقط از اعداد/الگوهایی که توی ورودی داده شده استفاده کن. هیچ عدد، الگو، یا دستاوردِ جدیدی که توی ورودی نیست نساز.
+- اگه داده‌ی کافی برای یک جمع‌بندیِ خاص نداری، چیزی درباره‌ش نگو.
+- «correlations» فقط همبستگی‌ان، نه رابطه‌ی علت‌ومعلولی — هیچ‌وقت نگو «X باعثِ Y شد»، بگو «بینِ X و Y همبستگی دیده شد».
+- هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده.
+- لحن: مستقیم، محترمانه، مثلِ یک مربیِ شخصی.
+- خلاصه (summary) حداکثر ۵ جمله. حداکثر ۳ پیشنهاد. حداکثر ۳ insight.
+
+فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متنِ اضافه):
+{
+  "summary": "خلاصه‌ی ۳ تا ۵ جمله‌ای",
+  "recommendations": [ { "title": "...", "description": "...", "priority": "high"|"medium"|"low", "domain": "یکی از keyهای domains ورودی، یا null" } ],
+  "insights": [ { "title": "عنوانِ کوتاه", "description": "توضیحِ کوتاه", "evidence": "دلیلِ مبتنی‌بر اعدادِ ورودی", "confidence": "low"|"medium"|"high" } ]
+}`;
+
+export type WeeklyReportAiInputV2 = WeeklyReportAiInput & {
+  patterns: {
+    trends: { domain: string; direction: string }[];
+    streaks: { domain: string; days: number }[];
+    outliers: { domain: string; weekday: string; value: number; typicalRange: [number, number] }[];
+    correlations: { domainA: string; domainB: string; withActiveAvg: number; withoutActiveAvg: number }[];
+  };
+};
+export type WeeklyReportAiInsight = { title: string; description: string; evidence: string; confidence: "low" | "medium" | "high" };
+export type WeeklyReportAiResultV2 = WeeklyReportAiResult & { insights: WeeklyReportAiInsight[] };
+
+function normalizeWeeklyAiResultV2(raw: any): WeeklyReportAiResultV2 {
+  const base = normalizeWeeklyAiResult(raw);
+  const confidences = new Set(["low", "medium", "high"]);
+  const insightsRaw = Array.isArray(raw?.insights) ? raw.insights : [];
+  const insights: WeeklyReportAiInsight[] = insightsRaw
+    .map((i: any) => ({
+      title: typeof i?.title === "string" ? i.title.trim() : "",
+      description: typeof i?.description === "string" ? i.description.trim() : "",
+      evidence: typeof i?.evidence === "string" ? i.evidence.trim() : "",
+      confidence: confidences.has(i?.confidence) ? i.confidence : "medium",
+    }))
+    .filter((i: any) => i.title && i.description && i.evidence)
+    .slice(0, 3);
+  return { ...base, insights };
+}
+
+async function callWeeklyAiV2Once(input: WeeklyReportAiInputV2, userId: string): Promise<WeeklyReportAiResultV2> {
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V2, JSON.stringify(input), 1600, WEEKLY_REPORT_AI_MODEL);
+  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
+  return normalizeWeeklyAiResultV2(parseJsonResponse(text));
+}
+
+export async function generateWeeklyReportSummaryV2(input: WeeklyReportAiInputV2, userId: string): Promise<WeeklyReportAiResultV2> {
+  let lastError: any;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await callWeeklyAiV2Once(input, userId);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  logError("ai-gateway", `خلاصه‌ی هوشمندِ V2 گزارشِ هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+  throw lastError;
+}
+
+// ============================================================================
+// Ask Arion — سوال‌وجوابِ محدود به Contextِ همون گزارشِ هفتگی (نه یک
+// چت‌بات عمومی). Contextِ ورودی همیشه از همون Snapshotِ cache‌شده میاد،
+// نه دیتابیسِ خام (بندِ ۳۴). از AiFeatureKey.CORRELATION_INSIGHT استفاده
+// می‌کنه — enumِ دومِ ازقبل‌موجودِ بلااستفاده، برای جداکردنِ آمارِ هزینه‌ی
+// این مسیر از خلاصه‌ی خودکارِ WEEKLY_COACH_REPORT.
+// ============================================================================
+
+const ASK_ARION_SYSTEM_PROMPT = `تو Arion هستی، دستیارِ شخصیِ تحلیلِ هفتگی. کاربر دربارهٔ گزارشِ هفتگیِ خودش سوال می‌پرسه.
+فقط از دیتایی که توی Context داده شده جواب بده — اگه جواب توی Context نیست، صادقانه بگو نمی‌دونی، حدس نزن.
+هیچ توصیه‌ی پزشکی یا مالیِ قطعی نده. جواب کوتاه باشه (حداکثر ۴-۵ جمله)، فارسی، مستقیم و محترمانه.
+
+فقط و فقط این JSON خام رو برگردون: { "answer": "جوابِ کوتاه" }`;
+
+export type AskArionContext = {
+  weekLabel: string;
+  overallScore: number | null;
+  domains: WeeklyReportAiDomainInput[];
+  wins: string[];
+  problems: string[];
+  insights: WeeklyReportAiInsight[];
+};
+
+function normalizeAskArionAnswer(raw: any): string {
+  const answer = typeof raw?.answer === "string" ? raw.answer.trim() : "";
+  if (!answer) throw new Error("مدل جوابی برنگردوند");
+  return answer;
+}
+
+export async function answerWeeklyReportQuestion(question: string, context: AskArionContext, userId: string): Promise<string> {
+  const userContent = JSON.stringify({ question, context });
+  try {
+    const { text, usage, durationMs } = await callAiChat(ASK_ARION_SYSTEM_PROMPT, userContent, 700, WEEKLY_REPORT_AI_MODEL);
+    recordAiUsage(userId, AiFeatureKey.CORRELATION_INSIGHT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
+    return normalizeAskArionAnswer(parseJsonResponse(text));
+  } catch (err: any) {
+    logError("ai-gateway", `Ask Arion شکست خورد: ${err?.message || err}`, { context: { feature: "CORRELATION_INSIGHT" } });
+    throw err;
+  }
 }
