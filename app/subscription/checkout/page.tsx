@@ -202,7 +202,14 @@ export default function CheckoutPage() {
           <div className="checkout-summary-name">{plan.nameFa}</div>
           <div className="checkout-summary-duration">{labels[duration]}</div>
         </div>
-        <div className="checkout-summary-price">{price}</div>
+        <div className="checkout-summary-price">
+          {discountedAmount != null && (
+            <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.82em", marginInlineEnd: 6 }}>
+              {price}
+            </span>
+          )}
+          {finalPriceLabel}
+        </div>
       </div>
 
       {upgradeInfo && (

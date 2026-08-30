@@ -4561,3 +4561,22 @@ html[data-perf="low"] .app-bottombar{
    همون دلیلِ .checkout-summary-icon svg بالاتر؛ Sparkles (پلن مکس) خودش
    size=16 داره، این‌جا فقط برای آیکون‌های خامِ بقیه‌ی پلن‌ها لازمه. */
 .plan-icon-badge svg{ width:16px; height:16px; display:block; }
+
+/* .wbox-liquid یک blur(9px) روی کانتینری است که بچه‌هایش (.wbox-blob) مدام
+   transform می‌شوند — یعنی مرورگر باید آن لایه‌ی بلورشده را در *هر فریم*
+   دوباره rasterize کند، و این جعبه‌ها روی صفحه‌ی هفتگی چندتایی‌اند. روی
+   موبایل همین یکی به‌تنهایی باعثِ کندشدنِ تدریجی بعد از چند ثانیه کار
+   می‌شود. بلاب‌ها می‌مانند، فقط دیگر بلور و حرکت ندارند. */
+html[data-perf="low"] .wbox-liquid{ filter:none; }
+html[data-perf="low"] .wbox-blob,
+html[data-perf="low"] .wbox-glowblob{ animation:none; }
+
+/* انیمیشن‌های تزئینیِ همیشه-درحال-اجرا. هرکدام به‌تنهایی ارزان‌اند، ولی با
+   هم مرورگر را از حالتِ بی‌کاری خارج نگه می‌دارند و روی موبایل باتری و
+   فریم‌ریت را می‌خورند. شعله‌ی استریک عمداً *نمی‌ماند* چون بخشِ معناداری از
+   بازخوردِ کاربر است — فقط کندتر می‌شود. */
+html[data-perf="low"] .streak-flame-tier1,
+html[data-perf="low"] .streak-flame-tier2,
+html[data-perf="low"] .streak-flame-tier3,
+html[data-perf="low"] .streak-flame-tier4{ animation-duration:3s; }
+html[data-perf="low"] .task-check-missed{ animation:none; }
