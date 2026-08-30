@@ -61,7 +61,11 @@ export default function CheckoutPage() {
   // اعمال می‌کنه یه بار نه»).
   const applyingRef = useRef(false);
   const requestGenRef = useRef(0);
-  const [gateway, setGateway] = useState<Gateway>("zarinpal");
+  const [gateway, setGateway] = useState<Gateway>("zibal");
+  // کدام درگاه‌ها روی این سرور واقعاً تنظیم شده‌اند. تا وقتی جواب نیامده،
+  // null است و هر دو نشان داده می‌شوند (رفتارِ قبلی) — این‌طور اگر این
+  // درخواست شکست بخورد، صفحه بدترنمی‌شود.
+  const [availableGateways, setAvailableGateways] = useState<Gateway[] | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +78,20 @@ export default function CheckoutPage() {
     if (status !== "authenticated") return;
     fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
   }, [status]);
+
+  useEffect(() => {
+    fetch("/api/subscription/gateways")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const list: Gateway[] = Array.isArray(d?.available) ? d.available : [];
+        if (!list.length) return;
+        setAvailableGateways(list);
+        // اگر درگاهِ انتخاب‌شده روی این سرور تنظیم نشده، برو سراغِ اولین
+        // درگاهِ سالم — وگرنه کاربر روی گزینه‌ای می‌ماند که حتماً خطا می‌دهد.
+        setGateway((g) => (list.includes(g) ? g : list[0]));
+      })
+      .catch(() => {});
+  }, []);
 
   if (!query) return null;
 
@@ -254,6 +272,7 @@ export default function CheckoutPage() {
       <div className="checkout-box">
         <div className="checkout-field-label">درگاه پرداخت</div>
         <div className="checkout-gateway-row">
+          {(!availableGateways || availableGateways.includes("zarinpal")) && (
           <button
             type="button"
             className={`checkout-gateway-pill${gateway === "zarinpal" ? " on" : ""}`}
@@ -262,6 +281,8 @@ export default function CheckoutPage() {
             <ZarinpalMark />
             زرین‌پال
           </button>
+          )}
+          {(!availableGateways || availableGateways.includes("zibal")) && (
           <button
             type="button"
             className={`checkout-gateway-pill${gateway === "zibal" ? " on" : ""}`}
@@ -270,6 +291,7 @@ export default function CheckoutPage() {
             <ZibalMark />
             زیبال
           </button>
+          )}
         </div>
       </div>
 

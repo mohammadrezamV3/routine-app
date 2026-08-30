@@ -6,6 +6,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
 import { zarinpalRequestPayment } from "@/lib/zarinpal";
 import { zibalRequest } from "@/lib/zibal";
+import { getSiteUrl } from "@/lib/siteUrl";
 import { resolveDiscountCode } from "@/lib/discountValidation";
 import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
 
@@ -105,7 +106,10 @@ export async function POST(req: NextRequest) {
     }
     const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
-    const origin = req.nextUrl.origin;
+    // از NEXTAUTH_URL ساخته می‌شود، نه از originِ درخواست — دلیلِ کامل در
+    // lib/siteUrl.ts. خلاصه‌اش: پشتِ nginx، origin می‌تواند http یا
+    // localhost دربیاید و زیبال آدرسِ بازگشتِ نامعتبر را با کدِ ۱۰۶ رد می‌کند.
+    const origin = getSiteUrl(req.nextUrl.origin);
     const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}`;
 
     const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
