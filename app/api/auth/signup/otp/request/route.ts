@@ -33,18 +33,20 @@ export async function POST(req: NextRequest) {
   }
 
   const code = String(Math.floor(10000 + Math.random() * 90000)); // ۵ رقمی
-  // ذخیره‌ی کد و ارسالِ پیامک هم‌زمان — تاخیرِ نوشتنِ دیتابیس دیگه به
-  // تاخیرِ رسیدنِ پیامک اضافه نمی‌شه.
-  await Promise.all([
-    prisma.signupOtp.create({
-      data: {
-        phone,
-        codeHash: hashCode(code),
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-      },
-    }),
-    sendOtpSms(phone, code),
-  ]);
+  await prisma.signupOtp.create({
+    data: {
+      phone,
+      codeHash: hashCode(code),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    },
+  });
+  // ارسالِ واقعیِ پیامک عمداً await نمی‌شه — کد از قبل توی دیتابیس ذخیره
+  // شده، پس صفحه‌ی بعدی (واردکردنِ کد) فوراً قابلِ استفاده‌ست و کاربر لازم
+  // نیست پشتِ اسپینر منتظرِ رسیدنِ درخواست به ملی‌پیامک بمونه. چون این
+  // پروژه روی یه Node process همیشه‌روشن (Docker) اجرا می‌شه نه سرورلس،
+  // این Promiseِ رهاشده بعدِ return هم کامل اجرا می‌شه (sendOtpSms هم
+  // هیچ‌وقت throw نمی‌کنه، خطاش رو داخلی catch و لاگ می‌کنه).
+  void sendOtpSms(phone, code);
 
   return NextResponse.json({ ok: true });
 }
