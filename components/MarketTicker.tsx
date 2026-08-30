@@ -53,8 +53,24 @@ export function MarketTicker() {
       }
     }
     load();
-    const timer = setInterval(load, POLL_MS);
-    return () => { cancelled = true; clearInterval(timer); };
+    // فقط وقتی تب دیده می‌شود پول می‌زند.
+    //
+    // مرورگرها تایمرِ تبِ مخفی را کُند می‌کنند ولی **متوقف نمی‌کنند** — پس یک
+    // تبِ فراموش‌شده در پس‌زمینه با فاصله‌ی ۳۰ ثانیه‌ای روزی حدودِ ۲۹۰۰
+    // درخواستِ بی‌فایده به سرور می‌زد. با چند ده کاربری که تب را باز
+    // می‌گذارند، همین به‌تنهایی بارِ پایه‌ی سرور را می‌ساخت.
+    //
+    // لحظه‌ی برگشتِ کاربر یک‌بار فوراً اجرا می‌شود، پس داده‌ی بیات نمی‌بیند —
+    // یعنی هم بار کم می‌شود هم تجربه بهتر، نه بدتر.
+    const visible = () => !document.hidden;
+    const timer = setInterval(() => { if (visible()) load(); }, POLL_MS);
+    const onVis = () => { if (visible()) load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [symbols]);
 
   function toggleSymbol(symbol: string) {

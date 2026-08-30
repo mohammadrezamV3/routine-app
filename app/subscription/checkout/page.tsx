@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import { XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGate } from "@/components/AuthGate";
@@ -42,9 +43,14 @@ export default function CheckoutPage() {
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
   // نباشه (قاعده‌ی معمولِ پروژه — نگاه کن به app/auth/login/page.tsx).
   const [query, setQuery] = useState<{ planKey: string; duration: Duration } | null>(null);
+  // وقتی پرداخت نگرفته، درگاه کاربر را به همین صفحه برمی‌گرداند (نه فهرستِ
+  // اشتراک‌ها) تا بتواند بدونِ از سر گرفتنِ انتخابِ پلن، همان‌جا دوباره —
+  // یا با درگاهِ دیگر — امتحان کند. این پرچم فقط پیام را نشان می‌دهد.
+  const [failedReturn, setFailedReturn] = useState(false);
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     setQuery({ planKey: sp.get("plan") || "", duration: (sp.get("duration") || "1") as Duration });
+    if (sp.get("checkout") === "failed") setFailedReturn(true);
   }, []);
 
   const planKey = query?.planKey || "";
@@ -213,6 +219,12 @@ export default function CheckoutPage() {
       </button>
 
       <h1>تکمیل خرید</h1>
+
+      {failedReturn && (
+        <div className="checkout-status-banner failed">
+          <XCircle size={18} /> پرداخت ناموفق بود یا لغو شد — چیزی از حسابت کم نشده. می‌تونی دوباره امتحان کنی.
+        </div>
+      )}
 
       <div className="checkout-summary">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full checkout-summary-icon">{plan.icon}</span>

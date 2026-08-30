@@ -76,8 +76,18 @@ export function NotificationEngine() {
     }
 
     tick();
-    const id = setInterval(tick, CHECK_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(id); };
+    // در پس‌زمینه هیچ چکی نمی‌رود. مرورگر تایمرِ تبِ مخفی را کُند می‌کند ولی
+    // متوقف نمی‌کند، پس بدونِ این شرط یک تبِ باز شبانه‌روز درخواست می‌فرستاد.
+    // لحظه‌ی برگشتِ کاربر یک‌بار فوراً اجرا می‌شود تا یادآوری‌ای جا نیفتد.
+    const visible = () => !document.hidden;
+    const id = setInterval(() => { if (visible()) tick(); }, CHECK_INTERVAL_MS);
+    const onVis = () => { if (visible()) tick(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [status]);
 
   return null;

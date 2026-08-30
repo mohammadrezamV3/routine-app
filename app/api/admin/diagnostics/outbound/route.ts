@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 /**
  * تست اتصالِ خروجیِ سرور به سرویس‌های بیرونی.
@@ -106,6 +107,14 @@ export async function GET() {
       ARVAN_AI_API_KEY: !!process.env.ARVAN_AI_API_KEY,
       NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || null,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || null,
+    },
+    // آدرسی که واقعاً برای ساختِ لینک‌های بازگشتِ درگاه استفاده می‌شود.
+    // اگر این چیزی جز دامنه‌ی واقعی باشد، کاربر بعد از پرداخت به صفحه‌ی
+    // سفید می‌رود — همان باگی که با `0.0.0.0:3000` گزارش شد.
+    resolvedSiteUrl: {
+      value: getSiteUrl(),
+      note: "لینک‌های بازگشت از این ساخته می‌شوند — باید دامنه‌ی واقعی باشد",
     },
     outbound: results,
   });
