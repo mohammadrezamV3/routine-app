@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { zarinpalVerifyPayment } from "@/lib/zarinpal";
 import { zibalVerify } from "@/lib/zibal";
+import { getSiteUrl } from "@/lib/siteUrl";
 import type { Duration } from "@/lib/planPricing";
 
 const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
@@ -25,12 +26,38 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   const { searchParams } = req.nextUrl;
-  const redirectBase = new URL("/subscription", req.nextUrl.origin);
+
+  // آدرسِ پایه از NEXTAUTH_URL می‌آید، نه از originِ درخواست.
+  //
+  // باگی که این حل می‌کند: کاربر بعد از پرداخت **صفحه‌ی سفید** می‌دید. اپ
+  // پشتِ nginx است، پس `req.nextUrl.origin` می‌توانست `http://127.0.0.1:3000`
+  // دربیاید — و مرورگرِ کاربر به آن آدرس ریدایرکت می‌شد، که روی دستگاهِ خودش
+  // هیچ چیزی نیست. همان ریشه‌ای که آدرسِ بازگشتِ درگاه را هم شکسته بود
+  // (lib/siteUrl.ts).
+  const siteUrl = getSiteUrl(req.nextUrl.origin);
+
+  /**
+   * برگشتِ ناموفق **به صفحه‌ی انتخابِ درگاه**، نه به فهرستِ اشتراک‌ها.
+   *
+   * چرا: کاربری که پرداختش نگرفته معمولاً می‌خواهد همان لحظه دوباره امتحان
+   * کند (شاید با درگاهِ دیگر). فرستادنش به `/subscription` یعنی باید کلِ
+   * مسیرِ انتخابِ پلن و مدت و کدِ تخفیف را از اول برود. با نگه‌داشتنِ
+   * plan/duration، دقیقاً همان‌جایی برمی‌گردد که بود.
+   *
+   * اگر پلن/مدت معلوم نباشد (مثلاً سشن منقضی شده)، فهرستِ اشتراک تنها جای
+   * معنادار است.
+   */
+  function failRedirect(reason: string, uid?: string, plan?: string | null, dur?: string | null) {
+    logCheckoutFailed(uid, reason);
+    const url = plan && dur
+      ? new URL(`/subscription/checkout?plan=${encodeURIComponent(plan)}&duration=${encodeURIComponent(dur)}`, siteUrl)
+      : new URL("/subscription", siteUrl);
+    url.searchParams.set("checkout", "failed");
+    return NextResponse.redirect(url);
+  }
 
   if (!userId) {
-    logCheckoutFailed(undefined, "no_session");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("no_session", undefined);
   }
 
   // درگاه از همون callbackUrlی که خودمون موقعِ ساختِ درخواست ساختیم میاد —
@@ -46,9 +73,7 @@ export async function GET(req: NextRequest) {
   const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
 
   if (!planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
-    logCheckoutFailed(userId, "invalid_params");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("invalid_params", userId, planKey, duration);
   }
 
   let verified: { ok: boolean; refId?: string };
@@ -57,9 +82,7 @@ export async function GET(req: NextRequest) {
       const trackId = searchParams.get("trackId");
       const success = searchParams.get("success");
       if (!trackId || success !== "1") {
-        logCheckoutFailed(userId, "gateway_canceled_or_error");
-        redirectBase.searchParams.set("checkout", "failed");
-        return NextResponse.redirect(redirectBase);
+        return failRedirect("gateway_canceled_or_error", userId, planKey, duration);
       }
       const result = await zibalVerify(Number(trackId));
       // زیبال برخلاف زرین‌پال مبلغ رو به verify نمی‌گیره، فقط توی جواب برمی‌گردونه —
@@ -71,21 +94,15 @@ export async function GET(req: NextRequest) {
       const status = searchParams.get("Status");
       const authority = searchParams.get("Authority");
       if (status !== "OK" || !authority) {
-        logCheckoutFailed(userId, "gateway_canceled_or_error");
-        redirectBase.searchParams.set("checkout", "failed");
-        return NextResponse.redirect(redirectBase);
+        return failRedirect("gateway_canceled_or_error", userId, planKey, duration);
       }
       verified = await zarinpalVerifyPayment({ amountRial: amount, authority });
     }
   } catch {
-    logCheckoutFailed(userId, "verify_request_error");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("verify_request_error", userId, planKey, duration);
   }
   if (!verified.ok) {
-    logCheckoutFailed(userId, "verify_rejected");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("verify_rejected", userId, planKey, duration);
   }
 
   const plan = await prisma.plan.findUnique({
@@ -93,9 +110,7 @@ export async function GET(req: NextRequest) {
     include: { modules: true },
   });
   if (!plan) {
-    logCheckoutFailed(userId, "plan_not_found");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("plan_not_found", userId, planKey, duration);
   }
 
   const months = DURATION_MONTHS[duration];
@@ -158,7 +173,8 @@ export async function GET(req: NextRequest) {
     await prisma.discountCodeUsage.create({ data: { discountCodeId, userId } }).catch(() => {});
   }
 
-  redirectBase.searchParams.set("checkout", "success");
-  redirectBase.searchParams.set("sub", subscription.id);
-  return NextResponse.redirect(redirectBase);
+  const okUrl = new URL("/subscription", siteUrl);
+  okUrl.searchParams.set("checkout", "success");
+  okUrl.searchParams.set("sub", subscription.id);
+  return NextResponse.redirect(okUrl);
 }
