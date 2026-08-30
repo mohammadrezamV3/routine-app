@@ -7,8 +7,8 @@ import { prisma } from "@/lib/prisma";
 // رفرال (ساختِ ReferralUsage) عمداً این‌جا نیست — فقط موقعِ خریدِ واقعی باید
 // ثبت بشه، نه صرفاً موقعِ پیش‌نمایش/اعمال.
 export type DiscountResolution =
-  | { ok: true; percent: number; source: "promo"; referralCodeId?: undefined }
-  | { ok: true; percent: number; source: "referral"; referralCodeId: string }
+  | { ok: true; percent: number; source: "promo"; discountCodeId: string; referralCodeId?: undefined }
+  | { ok: true; percent: number; source: "referral"; referralCodeId: string; discountCodeId?: undefined }
   | { ok: false; error: string };
 
 export async function resolveDiscountCode(rawCode: string, userId: string, planKey: string): Promise<DiscountResolution> {
@@ -19,7 +19,13 @@ export async function resolveDiscountCode(rawCode: string, userId: string, planK
   const promoValid = promo && promo.active && (!promo.expiresAt || promo.expiresAt > new Date())
     && (!promo.planKey || promo.planKey === planKey);
   if (promoValid) {
-    return { ok: true, percent: promo!.percentOff, source: "promo" };
+    if (promo!.maxUsesPerUser != null) {
+      const usedCount = await prisma.discountCodeUsage.count({ where: { discountCodeId: promo!.id, userId } });
+      if (usedCount >= promo!.maxUsesPerUser) {
+        return { ok: false, error: "این کد تخفیف قبلاً توسط شما به حداکثر تعداد مجاز استفاده شده" };
+      }
+    }
+    return { ok: true, percent: promo!.percentOff, source: "promo", discountCodeId: promo!.id };
   }
 
   const referral = await prisma.referralCode.findUnique({ where: { code: normalizedCode } });

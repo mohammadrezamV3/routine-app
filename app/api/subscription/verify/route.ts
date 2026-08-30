@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
   const amount = Number(searchParams.get("amount"));
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
+  const discountCodeId = searchParams.get("discountCodeId") || undefined;
 
   if (!planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
     logCheckoutFailed(userId, "invalid_params");
@@ -136,6 +137,13 @@ export async function GET(req: NextRequest) {
       where: { id: referralUsageId },
       data: { status: "REWARDED", rewardedAt: new Date() },
     }).catch(() => {});
+  }
+
+  // مصرفِ کدِ تخفیفِ عمومی (DiscountCode) فقط اینجا، بعدِ verify شدنِ واقعیِ
+  // پرداخت، ثبت می‌شه — نه موقعِ پیش‌نمایش/اعمال توی چک‌اوت — تا سقفِ
+  // maxUsesPerUser واقعاً روی خریدهای موفق حساب بشه، نه تلاش‌های ناتمام.
+  if (discountCodeId) {
+    await prisma.discountCodeUsage.create({ data: { discountCodeId, userId } }).catch(() => {});
   }
 
   redirectBase.searchParams.set("checkout", "success");

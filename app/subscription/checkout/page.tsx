@@ -1,15 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { getSiteMarket } from "@/lib/market";
 import { findPlanCard, DURATION_LABELS, DURATION_LABELS_INTL, Duration } from "@/components/PlanShowcase";
 
 type Gateway = "zarinpal" | "zibal";
+
+// نشان‌های خودِ درگاه‌ها — آیکونِ عمومیِ ShieldCheck که قبلاً هر دو دکمه
+// مشترک بودن، جای دو نشانِ متمایز رو (رنگ/شکلِ مخصوصِ خودِ زرین‌پال/زیبال)
+// نمی‌گرفت. طراحیِ ساده و غیرِ عینِ لوگوی رسمی، فقط برای تمایزِ بصری.
+function ZarinpalMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="1" width="22" height="22" rx="7" fill="#FFB800" />
+      <path d="M12 6.2 L17 16.4 H7 Z" fill="#241C08" />
+    </svg>
+  );
+}
+function ZibalMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="1" width="22" height="22" rx="7" fill="#00C2A8" />
+      <circle cx="12" cy="12" r="5.2" fill="#04302A" />
+    </svg>
+  );
+}
+
+function formatDiscountedPrice(amountRaw: number, isIntl: boolean): string {
+  if (isIntl) return `$${(amountRaw / 100).toFixed(2)}`;
+  return `${Math.round(amountRaw / 10).toLocaleString("en-US")} تومان`;
+}
 
 // چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
 // باز می‌شه. کدِ تخفیف (رفرالِ یک نفرِ دیگه)، پذیرشِ قوانین، انتخابِ درگاه
@@ -34,6 +58,13 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [discountResult, setDiscountResult] = useState<{ ok: true; percentOff: number } | { ok: false; error: string } | null>(null);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
+  // applyingDiscount (state) async/batch-ست و جلوی دابل‌کلیکِ سریع رو کامل
+  // نمی‌گیره؛ applyingRef سنکرونه. requestGenRef هم جلوی رِیس‌کاندیشن رو
+  // می‌گیره: اگه یه درخواستِ قدیمی‌تر دیرتر از یه درخواستِ جدیدتر برگرده،
+  // نتیجه‌ی قدیمی نباید نتیجه‌ی جدید رو رونویسی کنه (همون باگِ «یه بار
+  // اعمال می‌کنه یه بار نه»).
+  const applyingRef = useRef(false);
+  const requestGenRef = useRef(0);
   const [gateway, setGateway] = useState<Gateway>("zarinpal");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,6 +93,11 @@ export default function CheckoutPage() {
 
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const price = plan.prices[duration];
+  const baseAmount = plan.amounts?.[duration];
+  const discountedAmount = discountResult?.ok && baseAmount != null
+    ? Math.round((baseAmount * (100 - discountResult.percentOff)) / 100)
+    : null;
+  const finalPriceLabel = discountedAmount != null ? formatDiscountedPrice(discountedAmount, isIntl) : price;
 
   async function applyDiscount() {
     if (discountResult?.ok) {
@@ -69,8 +105,10 @@ export default function CheckoutPage() {
       setDiscountResult(null);
       return;
     }
-    if (!discountCode.trim() || applyingDiscount) return;
+    if (!discountCode.trim() || applyingRef.current) return;
+    applyingRef.current = true;
     setApplyingDiscount(true);
+    const myGen = ++requestGenRef.current;
     try {
       const res = await fetch("/api/subscription/discount-preview", {
         method: "POST",
@@ -78,14 +116,18 @@ export default function CheckoutPage() {
         body: JSON.stringify({ code: discountCode.trim(), planKey }),
       });
       const data = await res.json().catch(() => ({}));
+      if (myGen !== requestGenRef.current) return; // درخواستِ جدیدتری در راهه/رسیده — این جواب دیگه معتبر نیست
       if (!res.ok) {
         setDiscountResult({ ok: false, error: data.error || "خطایی پیش آمد — دوباره امتحان کن" });
       } else {
         setDiscountResult({ ok: true, percentOff: data.percentOff });
       }
     } catch {
-      setDiscountResult({ ok: false, error: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+      if (myGen === requestGenRef.current) {
+        setDiscountResult({ ok: false, error: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+      }
     } finally {
+      applyingRef.current = false;
       setApplyingDiscount(false);
     }
   }
@@ -143,6 +185,7 @@ export default function CheckoutPage() {
               type="text"
               dir="ltr"
               className="wsearch-newform-name checkout-discount-input"
+              style={{ textAlign: "right" }}
               placeholder="کد تخفیف (اختیاری)"
               value={discountCode}
               readOnly={discountResult?.ok}
@@ -159,7 +202,7 @@ export default function CheckoutPage() {
             </button>
           </div>
         </div>
-        {discountResult?.ok && <div className="checkout-discount-success">{discountResult.percentOff}٪ تخفیف اعمال شد</div>}
+        {discountResult?.ok && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 
@@ -171,7 +214,7 @@ export default function CheckoutPage() {
             className={`checkout-gateway-pill${gateway === "zarinpal" ? " on" : ""}`}
             onClick={() => setGateway("zarinpal")}
           >
-            <ShieldCheck size={16} />
+            <ZarinpalMark />
             زرین‌پال
           </button>
           <button
@@ -179,7 +222,7 @@ export default function CheckoutPage() {
             className={`checkout-gateway-pill${gateway === "zibal" ? " on" : ""}`}
             onClick={() => setGateway("zibal")}
           >
-            <ShieldCheck size={16} />
+            <ZibalMark />
             زیبال
           </button>
         </div>
@@ -202,7 +245,14 @@ export default function CheckoutPage() {
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
       <button type="button" className="auth-full-btn checkout-pay-btn" disabled={loading} onClick={pay}>
-        {loading ? "در حال اتصال به درگاه…" : `پرداخت ${price}`}
+        {loading ? (
+          "در حال اتصال به درگاه…"
+        ) : (
+          <span className="checkout-pay-btn-inner">
+            {discountedAmount != null && <span className="checkout-pay-old-price">{price}</span>}
+            <span>{`پرداخت ${finalPriceLabel}`}</span>
+          </span>
+        )}
       </button>
     </section>
   );

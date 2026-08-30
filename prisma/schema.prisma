@@ -444,9 +444,28 @@ model DiscountCode {
   planKey    String?
   expiresAt  DateTime?
   active     Boolean   @default(true)
+  // null یعنی هر کاربر بدونِ محدودیت می‌تونه این کد رو مصرف کنه؛ عددِ مشخص
+  // یعنی سقفِ تعدادِ دفعاتِ مصرفِ این کد برای هر کاربر (رکوردش توی
+  // DiscountCodeUsage، یکی به‌ازای هر خریدِ موفقِ verify-شده).
+  maxUsesPerUser Int?
   createdAt  DateTime  @default(now())
+  usages     DiscountCodeUsage[]
 
   @@index([code])
+}
+
+// یک ردیف به‌ازای هر مصرفِ موفقِ یک DiscountCode توسط یک کاربر — فقط موقعِ
+// verify شدنِ واقعیِ پرداخت ثبت می‌شه (app/api/subscription/verify)، نه
+// موقعِ پیش‌نمایش/اعمال توی چک‌اوت. شمارشِ همین ردیف‌ها برای هر
+// (discountCodeId, userId) در برابرِ maxUsesPerUser چک می‌شه.
+model DiscountCodeUsage {
+  id             String       @id @default(cuid())
+  discountCodeId String
+  discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id])
+  userId         String
+  usedAt         DateTime     @default(now())
+
+  @@index([discountCodeId, userId])
 }
 
 // باشگاه یا هر شریک تجاری دیگر

@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const body = await req.json();
-  const { code, percentOff, planKey, expiresAt } = body as {
-    code?: string; percentOff?: number; planKey?: string | null; expiresAt?: string | null;
+  const { code, percentOff, planKey, expiresAt, maxUsesPerUser } = body as {
+    code?: string; percentOff?: number; planKey?: string | null; expiresAt?: string | null; maxUsesPerUser?: number | null;
   };
 
   const trimmedCode = code?.trim().toUpperCase();
@@ -41,6 +41,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "تاریخ انقضا معتبر نیست" }, { status: 400 });
     }
   }
+  let maxUses: number | null = null;
+  if (maxUsesPerUser !== null && maxUsesPerUser !== undefined && String(maxUsesPerUser) !== "") {
+    maxUses = Number(maxUsesPerUser);
+    if (!Number.isInteger(maxUses) || maxUses < 1) {
+      return NextResponse.json({ error: "حداکثر دفعاتِ مصرف باید عددِ صحیحِ حداقل ۱ باشد" }, { status: 400 });
+    }
+  }
 
   const existing = await prisma.discountCode.findUnique({ where: { code: trimmedCode } });
   if (existing) {
@@ -53,6 +60,7 @@ export async function POST(req: NextRequest) {
       percentOff: percent,
       planKey: planKey?.trim() || null,
       expiresAt: expiresAtDate,
+      maxUsesPerUser: maxUses,
     },
   });
   return NextResponse.json({ code: created });

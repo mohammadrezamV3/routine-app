@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/adminFormat";
 
 type DiscountCodeRow = {
   id: string; code: string; percentOff: number; planKey: string | null;
-  expiresAt: string | null; active: boolean; createdAt: string;
+  expiresAt: string | null; active: boolean; createdAt: string; maxUsesPerUser: number | null;
 };
 type PlanOption = { key: string; nameFa: string };
 type Resp = { codes: DiscountCodeRow[]; plans: PlanOption[] };
@@ -18,6 +18,7 @@ export default function AdminDiscountCodesPage() {
   const [percentOff, setPercentOff] = useState("10");
   const [planKey, setPlanKey] = useState(""); // "" = همه‌ی پکیج‌ها
   const [expiresAt, setExpiresAt] = useState("");
+  const [maxUsesPerUser, setMaxUsesPerUser] = useState(""); // "" = بدونِ محدودیت
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +38,7 @@ export default function AdminDiscountCodesPage() {
         percentOff: Number(percentOff),
         planKey: planKey || null,
         expiresAt: expiresAt || null,
+        maxUsesPerUser: maxUsesPerUser ? Number(maxUsesPerUser) : null,
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -49,6 +51,7 @@ export default function AdminDiscountCodesPage() {
     setPercentOff("10");
     setPlanKey("");
     setExpiresAt("");
+    setMaxUsesPerUser("");
     load();
   }
 
@@ -92,6 +95,13 @@ export default function AdminDiscountCodesPage() {
               value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)}
             />
           </div>
+          <div className="admin-form-field">
+            <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>حداکثر مصرف برای هر کاربر (اختیاری)</label>
+            <input
+              className="admin-input" type="number" min={1} style={{ width: 150 }}
+              value={maxUsesPerUser} onChange={(e) => setMaxUsesPerUser(e.target.value)} placeholder="بدون محدودیت"
+            />
+          </div>
           <button type="button" className="admin-btn primary" onClick={create} disabled={creating || !code.trim()}>
             {creating ? "در حال ساخت…" : "ساخت کد"}
           </button>
@@ -108,7 +118,7 @@ export default function AdminDiscountCodesPage() {
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>کد</th><th>درصد</th><th>پکیج</th><th>انقضا</th><th>وضعیت</th><th>ساخته‌شده</th><th></th></tr></thead>
+              <thead><tr><th>کد</th><th>درصد</th><th>پکیج</th><th>انقضا</th><th>حداکثر/کاربر</th><th>وضعیت</th><th>ساخته‌شده</th><th></th></tr></thead>
               <tbody>
                 {data.codes.map((c) => {
                   const expired = c.expiresAt ? new Date(c.expiresAt).getTime() < Date.now() : false;
@@ -118,6 +128,7 @@ export default function AdminDiscountCodesPage() {
                       <td>{c.percentOff}٪</td>
                       <td>{c.planKey ? (plans.find((p) => p.key === c.planKey)?.nameFa || c.planKey) : "همه‌ی پکیج‌ها"}</td>
                       <td style={{ direction: "ltr", textAlign: "right" }}>{c.expiresAt ? formatDateTime(c.expiresAt) : "بدون انقضا"}</td>
+                      <td>{c.maxUsesPerUser ?? "بدون محدودیت"}</td>
                       <td>{!c.active ? "غیرفعال" : expired ? "منقضی‌شده" : "فعال"}</td>
                       <td style={{ direction: "ltr", textAlign: "right" }}>{formatDateTime(c.createdAt)}</td>
                       <td>

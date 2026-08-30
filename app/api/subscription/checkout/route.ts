@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
 
     let discountPercent = 0;
     let referralUsageId: string | undefined;
+    let discountCodeId: string | undefined;
     let discountApplied = false;
     if (discountCode?.trim()) {
       const resolution = await resolveDiscountCode(discountCode, userId, planKey);
@@ -76,6 +77,8 @@ export async function POST(req: NextRequest) {
           data: { referralCodeId: resolution.referralCodeId, inviteeUserId: userId },
         });
         referralUsageId = usage.id;
+      } else {
+        discountCodeId = resolution.discountCodeId;
       }
     }
 
@@ -83,7 +86,7 @@ export async function POST(req: NextRequest) {
     const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
     const origin = req.nextUrl.origin;
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}`;
 
     const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
     const { paymentUrl } = gateway === "zibal"
