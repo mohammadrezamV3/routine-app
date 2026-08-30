@@ -23,6 +23,8 @@ export async function GET() {
       lastName: true,
       birthDate: true,
       gender: true,
+      heightCm: true,
+      weightKg: true,
       discoverable: true,
       market: true,
       createdAt: true,
@@ -95,6 +97,28 @@ export async function PATCH(req: NextRequest) {
   }
   if (body.discoverable !== undefined) {
     data.discoverable = !!body.discoverable;
+  }
+  if (body.heightCm !== undefined) {
+    if (body.heightCm === null) {
+      data.heightCm = null;
+    } else {
+      const v = Number(body.heightCm);
+      if (!Number.isFinite(v) || v < 100 || v > 250) {
+        return NextResponse.json({ error: "قد نامعتبر است" }, { status: 400 });
+      }
+      data.heightCm = Math.round(v);
+    }
+  }
+  if (body.weightKg !== undefined) {
+    if (body.weightKg === null) {
+      data.weightKg = null;
+    } else {
+      const v = Number(body.weightKg);
+      if (!Number.isFinite(v) || v < 20 || v > 300) {
+        return NextResponse.json({ error: "وزن نامعتبر است" }, { status: 400 });
+      }
+      data.weightKg = Math.round(v * 10) / 10;
+    }
   }
 
   if (Object.keys(data).length === 0) {

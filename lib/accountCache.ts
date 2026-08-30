@@ -7,7 +7,7 @@
 // می‌زد. این ماژول همون الگویی رو داره که lib/storage.ts استفاده می‌کنه:
 // دیدوپِ درخواستِ در حالِ اجرا + کشِ کوتاه‌مدت.
 
-import { getPreloadedBootstrap } from "./preload";
+import { getPreloadedBootstrap, clearPreloadedBootstrap } from "./preload";
 
 export type AccountModuleAccess = { module: string; active: boolean; expiresAt: string | null };
 export type AccountData = { user?: { moduleAccess?: AccountModuleAccess[] } & Record<string, any> } | null;
@@ -42,6 +42,12 @@ export async function getAccount(): Promise<AccountData> {
 export function invalidateAccountCache() {
   cache = null;
   inFlight = null;
+  // بدونِ این، getAccount() و NavDrawer دوباره از رویِ همون promiseِ
+  // bootstrapِ لحظه‌ی لودِ صفحه می‌خوندن (که چند مصرف‌کننده‌ی مستقل دارد و
+  // هیچ‌وقت خودش تازه نمی‌شه) — یعنی بعدِ هر تغییرِ واقعی (مثلاً عکسِ
+  // پروفایل)، بقیه‌ی اپ همچنان دیتای کهنه‌ی لحظه‌ی لود رو نشون می‌داد تا
+  // ریلودِ کامل. همین باگِ نامرئی‌بودنِ تغییرِ عکسِ پروفایل بود.
+  clearPreloadedBootstrap();
 }
 
 /** ماژول‌های فعال و منقضی‌نشده — منطقِ مشترکِ NavDrawer و ModuleGate */
