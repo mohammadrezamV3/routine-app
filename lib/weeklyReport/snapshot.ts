@@ -1,6 +1,6 @@
 import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { generateWeeklyReportSummaryV2, WeeklyReportAiInputV2, WeeklyReportAiInsight, WeeklyRecommendation } from "@/lib/aiClient";
+import { generateWeeklyReportSummaryV2, WeeklyReportAiInputV2, WeeklyReportAiInsight, WeeklyRecommendation, WEEKLY_REPORT_AI_MODEL } from "@/lib/aiClient";
 import { getUserWeekRange } from "./weekRange";
 import { Domain, DomainMetric, DOMAINS, DOMAIN_LABELS_FA, computeAllDomainMetrics, resolveActiveModules } from "./metrics";
 import { computeOverallScore, confidenceFromDaysWithData, Confidence } from "./score";
@@ -178,7 +178,7 @@ export async function getOrGenerateWeeklyReport(
         patterns: patternsSummaryForAi(trends, streaks, outliers, correlations),
       };
       const result = await generateWeeklyReportSummaryV2(aiInput, userId);
-      aiModel = "gpt-4o-mini";
+      aiModel = WEEKLY_REPORT_AI_MODEL;
       aiSummary = result.summary;
       aiRecommendations = result.recommendations;
       aiInsights = result.insights;

@@ -1,7 +1,10 @@
-// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود (GPT-4o-mini) برای همه‌ی جاهایی که
-// این اپ از AI استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل
-// بودن، الان همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API
-// سازگارِ OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه.
+// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود برای همه‌ی جاهایی که این اپ از AI
+// استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل بودن، الان
+// همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API سازگارِ
+// OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه. مدلِ
+// پیش‌فرض GPT-4o-mini است (AI_MODEL_NAME)، ولی هر فراخوانی می‌تونه مدلِ
+// خودش رو صریح بده — گزارشِ هفتگی مثلاً از WEEKLY_REPORT_AI_MODEL استفاده
+// می‌کنه، چون کارش تحلیل/استدلاله نه تولیدِ قالبی.
 // خروجی همیشه باید فقط JSON خام باشه (بدون توضیح اضافه) — هم با
 // response_format:{type:"json_object"} در سطحِ خودِ فراخوانی اجباری شده، هم
 // توی هر system prompt صریح تکرار شده، تا مستقیم قابلِ ذخیره/نمایش باشه.
@@ -12,6 +15,13 @@ import { logError } from "@/lib/errorLog";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
 
 const AI_MODEL_NAME = "gpt-4o-mini";
+
+// گزارشِ هفتگی عمداً از یک مدلِ جداگانه استفاده می‌کنه (نه mini مثلِ بقیه‌ی
+// فیچرها) — چون کارش تحلیل/تفسیرِ الگوهاست (نه تولیدِ قالبیِ ساده مثلِ
+// رودمپ)، به استدلالِ قوی‌تری نیاز داره. اسمِ دقیقِ مدل روی گیت‌وی هنوز
+// تایید نشده، برای همین از env قابلِ‌عوض‌کردنه — اگه رویِ گیت‌وی واقعی این
+// اسم جواب نداد، بدونِ نیاز به تغییرِ کد فقط ARVAN_AI_WEEKLY_MODEL رو ست کن.
+export const WEEKLY_REPORT_AI_MODEL = process.env.ARVAN_AI_WEEKLY_MODEL || "gpt-5.4-mini";
 
 type ChatContentPart =
   | { type: "text"; text: string }
@@ -29,7 +39,8 @@ async function recordAiUsage(
   feature: AiFeatureKey,
   usage: ChatUsage,
   durationMs: number,
-  success: boolean
+  success: boolean,
+  model: string = AI_MODEL_NAME
 ) {
   try {
     const rate = await getAiCostRate();
@@ -37,7 +48,7 @@ async function recordAiUsage(
       data: {
         userId,
         feature,
-        model: AI_MODEL_NAME,
+        model,
         inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
         costUsdMicros: estimateAiCostUsdMicros(usage.inputTokens, usage.outputTokens, rate),
@@ -56,7 +67,7 @@ async function recordAiUsage(
 // نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
 // توکنِ احرازهویت نیست — احرازهویتِ واقعی با یه Access Key جداست که از
 // پنلِ آروان‌کلود، بخشِ «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
-async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<ChatResult> {
+async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number, model: string = AI_MODEL_NAME): Promise<ChatResult> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
   const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
@@ -74,7 +85,7 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: AI_MODEL_NAME,
+      model,
       max_tokens: maxTokens,
       response_format: { type: "json_object" },
       messages: [
@@ -458,8 +469,8 @@ function normalizeWeeklyAiResult(raw: any): WeeklyReportAiResult {
 
 async function callWeeklyAiOnce(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
   const userContent = JSON.stringify(input);
-  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V1, userContent, 1200);
-  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true);
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V1, userContent, 1200, WEEKLY_REPORT_AI_MODEL);
+  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
   return normalizeWeeklyAiResult(parseJsonResponse(text));
 }
 
@@ -536,8 +547,8 @@ function normalizeWeeklyAiResultV2(raw: any): WeeklyReportAiResultV2 {
 }
 
 async function callWeeklyAiV2Once(input: WeeklyReportAiInputV2, userId: string): Promise<WeeklyReportAiResultV2> {
-  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V2, JSON.stringify(input), 1600);
-  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true);
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V2, JSON.stringify(input), 1600, WEEKLY_REPORT_AI_MODEL);
+  recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
   return normalizeWeeklyAiResultV2(parseJsonResponse(text));
 }
 
@@ -586,8 +597,8 @@ function normalizeAskArionAnswer(raw: any): string {
 export async function answerWeeklyReportQuestion(question: string, context: AskArionContext, userId: string): Promise<string> {
   const userContent = JSON.stringify({ question, context });
   try {
-    const { text, usage, durationMs } = await callAiChat(ASK_ARION_SYSTEM_PROMPT, userContent, 700);
-    recordAiUsage(userId, AiFeatureKey.CORRELATION_INSIGHT, usage, durationMs, true);
+    const { text, usage, durationMs } = await callAiChat(ASK_ARION_SYSTEM_PROMPT, userContent, 700, WEEKLY_REPORT_AI_MODEL);
+    recordAiUsage(userId, AiFeatureKey.CORRELATION_INSIGHT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
     return normalizeAskArionAnswer(parseJsonResponse(text));
   } catch (err: any) {
     logError("ai-gateway", `Ask Arion شکست خورد: ${err?.message || err}`, { context: { feature: "CORRELATION_INSIGHT" } });
