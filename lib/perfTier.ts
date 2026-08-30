@@ -15,22 +15,22 @@
 // وگرنه دستگاهِ ضعیف اول نسخه‌ی سنگین را رندر می‌کند (همان هزینه‌ای که
 // می‌خواستیم حذف کنیم) و بعد پرش می‌کند به نسخه‌ی سبک.
 //
-// معیارها عمداً محافظه‌کارانه‌اند:
-//   • فقط دستگاهِ لمسی (pointer:coarse) — هیچ دسکتاپی هرگز افت نمی‌کند.
-//   • deviceMemory ≤ ۴ گیگ یا hardwareConcurrency ≤ ۴ هسته.
-// سافاری/فایرفاکس `deviceMemory` را اصلاً پیاده نکرده‌اند (undefined
-// می‌شود)، پس آیفون‌ها با این معیار علامت نمی‌خورند — که درست است، چون
-// backdrop-filter روی آن‌ها شتاب‌دهیِ سخت‌افزاری کامل دارد.
+// معیار: **هر دستگاهِ لمسی**.
+//
+// نسخه‌ی اول این فایل سخت‌گیرتر بود (فقط deviceMemory ≤ ۴ یا ≤ ۴ هسته) و
+// در عمل روی گوشی‌های واقعی فعال نمی‌شد — یک گوشیِ ۸ گیگی هم گزارش لگ
+// می‌داد چون مسئله رم نیست، **GPU** است. حتی پرچم‌دارها هم یک GPUِ موبایل
+// با پهنای‌باندِ حافظه‌ی محدود دارند، و بلورِ ۲۸ پیکسلی پشتِ یک هدرِ ثابت
+// در هر فریمِ اسکرول دوباره محاسبه می‌شود.
+//
+// دسکتاپ (pointer:fine) هیچ‌وقت علامت نمی‌خورد و افکتِ شیشه‌ای کاملش را
+// نگه می‌دارد.
 export const PERF_TIER_ATTR = "data-perf";
 
 export const PERF_INIT_SCRIPT = `(function(){try{
-var n=navigator;
 var coarse=window.matchMedia&&window.matchMedia("(pointer:coarse)").matches;
 if(!coarse)return;
-var mem=n.deviceMemory, cores=n.hardwareConcurrency;
-var lowMem=typeof mem==="number"&&mem<=4;
-var lowCpu=typeof cores==="number"&&cores<=4;
-if(lowMem||lowCpu)document.documentElement.setAttribute("${PERF_TIER_ATTR}","low");
+document.documentElement.setAttribute("${PERF_TIER_ATTR}","low");
 }catch(e){}})();`;
 
 /** روی کلاینت: آیا این دستگاه ردهٔ پایین علامت خورده؟ */
