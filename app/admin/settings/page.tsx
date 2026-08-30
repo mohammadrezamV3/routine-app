@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatDateTime } from "@/lib/adminFormat";
 
@@ -14,6 +15,9 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [audit, setAudit] = useState<AuditRow[] | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
+  const [seedError, setSeedError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/settings").then((r) => r.json()).then((d: SettingsResp) => {
@@ -40,8 +44,41 @@ export default function AdminSettingsPage() {
     }
   }
 
+  async function seedWeeklyReportTestData() {
+    if (seeding) return;
+    setSeeding(true);
+    setSeedResult(null);
+    setSeedError(null);
+    try {
+      const res = await fetch("/api/admin/weekly-report/seed-test-data", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setSeedError(data.error || "خطایی پیش اومد"); return; }
+      setSeedResult(`${data.weeksSeeded} هفته داده‌ی نمونه برای هر ۵ بخش ساخته شد.`);
+    } catch {
+      setSeedError("مشکلی در اتصال به سرور پیش اومد");
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   return (
     <section>
+      <div className="admin-chart-card">
+        <div className="admin-chart-head"><span className="admin-chart-title">تستِ گزارشِ هفتگی</span></div>
+        <div className="admin-section-hint" style={{ marginTop: 0 }}>
+          داده‌ی مصنوعیِ ۱۰هفته‌ای (روتین/بدنسازی/ترید/یادگیری/تغذیه) روی همین حسابِ سوپریوزر می‌سازه تا Trend/Streak/Correlation واقعاً چیزی برای نمایش داشته باشن.
+          ⚠️ داده‌های واقعیِ همین حساب در همین بازه‌ی ۱۰هفته‌ای پاک و با داده‌ی نمونه جایگزین می‌شن.
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <button type="button" className="admin-btn primary" onClick={seedWeeklyReportTestData} disabled={seeding}>
+            {seeding ? "در حال ساختِ داده…" : "ساختِ داده‌ی تست"}
+          </button>
+          <Link href="/report/weekly" className="admin-btn" style={{ textDecoration: "none", display: "inline-flex" }}>دیدنِ گزارشِ هفتگی</Link>
+        </div>
+        {seedResult && <div className="admin-section-hint" style={{ color: "#3FAE6B", marginTop: 10 }}>{seedResult}</div>}
+        {seedError && <div className="admin-section-hint" style={{ color: "#E05252", marginTop: 10 }}>{seedError}</div>}
+      </div>
+
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">نرخ تخمین هزینه AI</span></div>
         <div className="admin-section-hint" style={{ marginTop: 0 }}>

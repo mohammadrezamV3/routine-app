@@ -29,8 +29,18 @@ type WeeklyReportResponse = {
   prediction: { domain: Domain; message: string; confidence: string; evidence: string } | null;
 };
 
+// اگه از یه لینکِ مشخص باز شده باشه (مثلاً نوتیفِ «گزارشِ هفتگی‌ات آماده‌ست»
+// که به هفته‌ی -۱ لینک می‌ده)، همون هفته رو باز کن — نه همیشه هفته‌ی جاری.
+// از window.location مستقیم می‌خونیم (نه useSearchParams) تا نیازی به
+// Suspense نباشه، هم‌الگوی بقیه‌ی صفحه‌های این پروژه.
+function initialOffsetFromUrl(): number {
+  if (typeof window === "undefined") return 0;
+  const v = Number(new URLSearchParams(window.location.search).get("offset"));
+  return Number.isInteger(v) && v <= 0 ? v : 0;
+}
+
 function WeeklyReportContent() {
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset] = useState(initialOffsetFromUrl);
   const [report, setReport] = useState<WeeklyReportResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { DEFAULT_NOTIF_PREFS, NotifPrefs } from "@/lib/notifPrefs";
+import { isValidCronRequest } from "@/lib/cronAuth";
 
 // POST /api/push/send-reminders — نه یه چیزیه که خودِ کاربر/کلاینت صداش بزنه،
 // یه cronِ بیرونی (مثلاً crontabِ خودِ VPS، طبقِ راهنمای دیپلوی) هر چند
@@ -23,27 +23,8 @@ function todayKey(d: Date): string {
   return isoLocal(d);
 }
 
-/**
- * مقایسه‌ی رمزِ کران در زمانِ ثابت — `!==` معمولی به‌محضِ اولین بایتِ متفاوت
- * برمی‌گرده، پس زمانِ پاسخ اطلاعاتی درباره‌ی طولِ پیشوندِ درست می‌ده.
- */
-function timingSafeEqualStr(a: string | null | undefined, b: string): boolean {
-  if (typeof a !== "string") return false;
-  const ab = Buffer.from(a);
-  const bb = Buffer.from(b);
-  // طول‌های نابرابر رو هم باید در زمانِ ثابت رد کرد؛ timingSafeEqual خودش
-  // روی طولِ نابرابر throw می‌کنه، پس اول روی یه بافرِ هم‌طول مقایسه می‌کنیم.
-  if (ab.length !== bb.length) {
-    timingSafeEqual(bb, bb);
-    return false;
-  }
-  return timingSafeEqual(ab, bb);
-}
-
 export async function POST(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  const provided = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || req.nextUrl.searchParams.get("secret");
-  if (!secret || !timingSafeEqualStr(provided, secret)) {
+  if (!isValidCronRequest(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

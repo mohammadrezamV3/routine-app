@@ -1,0 +1,22 @@
+# Cronهای بیرونیِ Arion — روی خودِ VPS (نه داخلِ اپ) اجرا می‌شن، هرکدوم
+# فقط یه curl به یه روتِ محافظت‌شده با CRON_SECRET می‌زنن.
+#
+# قبل از استفاده:
+#   1) یه رمزِ تصادفیِ قوی بساز و توی .env سرور به‌عنوانِ CRON_SECRET بذار
+#      (مثلاً: openssl rand -hex 32)
+#   2) همون رمز رو زیر جایِ <CRON_SECRET> بذار
+#   3) دامنه‌ی واقعیِ سایت رو جایِ <YOUR_DOMAIN> بذار
+#   4) این خط‌ها رو با `crontab -e` به crontabِ خودِ سرور اضافه کن
+#
+# نکته‌ی Timezone: اگه TZِ خودِ سرور Asia/Tehran باشه، "۰ ۹ * * ۶" یعنی
+# دقیقاً شنبه ساعت ۹ِ صبحِ تهران. اگه سرور UTC اجرا می‌شه (رایج‌تره)،
+# تهران بدونِ تغییرِ فصلی UTC+3:30 ثابته، پس معادلش ۵:۳۰ صبحِ UTC همون
+# روزه — خطِ دوم (کامنت‌شده) رو به‌جاش استفاده کن.
+
+# یادآوریِ برنامه/تمرین — هر ۵ دقیقه (نگاه کن به app/api/push/send-reminders)
+*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/push/send-reminders >/dev/null 2>&1
+
+# گزارشِ هفتگی — هر شنبه ساعت ۹ِ صبحِ تهران (نگاه کن به app/api/cron/weekly-report)
+0 9 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1
+# اگه TZِ سرور UTC است، به‌جای خطِ بالا از این استفاده کن (۵:۳۰ صبحِ UTC = ۹ِ صبحِ تهران):
+# 30 5 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1
