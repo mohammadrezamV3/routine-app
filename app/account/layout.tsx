@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  User, SlidersHorizontal, LayoutGrid, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown,
+  User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -14,24 +14,26 @@ import { invalidateAccountCache } from "@/lib/accountCache";
 import { clearAuthHintCookie } from "@/lib/preload";
 
 // پنل کاربریِ Arion — صفحه‌ی مستقلِ /account (نه مودال، نه داشبورد). مسیرها:
-//   /account                    → پروفایل (پیش‌فرض)
+//   /account                    → منوی بخش‌ها (فقط لیستِ زبانه‌ها، بدونِ محتوا)
+//   /account/profile            → پروفایل
+//   /account/general            → تنظیماتِ آریون + تنظیماتِ بخش‌ها، یک‌جا
+//                                  (تمِ نمایش عمداً این‌جا نیست — همون سوییچِ
+//                                  بالای منوی همبرگری کفایت می‌کنه)
+//   /account/modules/*          → تنظیماتِ اختصاصیِ هر بخش (روتین/بدنسازی/کالری/ترید/رودمپ)
+//                                  — لینکش از داخلِ /account/general میاد
 //   /account/subscription       → اشتراک
-//   /account/arion-settings     → تنظیمات آریون (زبان/حریم‌خصوصی — تمِ نمایش
-//                                  عمداً این‌جا نیست، همون سوییچِ بالای منوی
-//                                  همبرگری کفایت می‌کنه، تکرارش نمی‌کنیم)
-//   /account/modules/*          → تنظیمات بخش‌ها (روتین/بدنسازی/کالری/ترید/رودمپ)
 //   /account/security           → امنیت
 //   /account/notifications      → اعلان‌ها
 //   /account/support            → پشتیبانی
-const SECTIONS: { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
-  { href: "/account", label: "پروفایل", icon: <User size={15} />, match: (p) => p === "/account" },
-  { href: "/account/arion-settings", label: "تنظیمات آریون", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/arion-settings") },
-  { href: "/account/modules", label: "تنظیمات بخش‌ها", icon: <LayoutGrid size={15} />, match: (p) => p.startsWith("/account/modules") },
+export const ACCOUNT_SECTIONS: { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
+  { href: "/account/profile", label: "پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
+  { href: "/account/general", label: "عمومی", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") || p.startsWith("/account/modules") },
   { href: "/account/subscription", label: "اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
   { href: "/account/security", label: "امنیت", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },
   { href: "/account/notifications", label: "اعلان‌ها", icon: <Bell size={15} />, match: (p) => p.startsWith("/account/notifications") },
   { href: "/account/support", label: "پشتیبانی", icon: <Headset size={15} />, match: (p) => p.startsWith("/account/support") },
 ];
+const SECTIONS = ACCOUNT_SECTIONS;
 
 const pageTransition = {
   initial: { opacity: 0, y: 8 },

@@ -1,13 +1,24 @@
-// قالبِ ایمیلِ کدِ ورود — HTML با استایلِ inline (کلاینت‌های ایمیل عمدتاً
+// قالبِ ایمیلِ کدِ تک‌بارمصرف — HTML با استایلِ inline (کلاینت‌های ایمیل عمدتاً
 // CSS خارجی/تگ <style> رو یا نادیده می‌گیرن یا حذف می‌کنن، پس همه‌جا inline).
 // خودِ کد همیشه دینامیک از پارامترِ ورودی میاد، هیچ‌جا هاردکد نیست.
+//
+// purpose="login" (پیش‌فرض) برای ورودِ بدونِ‌رمز؛ "change-email" برای تاییدِ
+// مالکیتِ ایمیلِ جدید موقعِ تغییرِ ایمیلِ حساب از پنل کاربری — متنش عمداً
+// جداست چون «کد ورود» توی این کانتکست گمراه‌کننده/نگران‌کننده بود (کاربر
+// فکر می‌کرد یعنی کسی داره وارد حسابش می‌شه، نه اینکه خودش داره ایمیل عوض می‌کنه).
+export type OtpEmailPurpose = "login" | "change-email";
 
-export function renderOtpEmail(code: string): { subject: string; html: string; text: string } {
-  const subject = "کد ورود به Arion";
+const COPY: Record<OtpEmailPurpose, { subject: string; heading: string }> = {
+  login: { subject: "کد ورود به Arion", heading: "کد ورود شما" },
+  "change-email": { subject: "کد تاییدِ تغییرِ ایمیل در Arion", heading: "کد تاییدِ ایمیلِ جدید" },
+};
+
+export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login"): { subject: string; html: string; text: string } {
+  const { subject, heading } = COPY[purpose];
 
   const text = [
     "Arion",
-    "کد ورود شما",
+    heading,
     "",
     code,
     "",
@@ -34,7 +45,7 @@ export function renderOtpEmail(code: string): { subject: string; html: string; t
             </tr>
             <tr>
               <td style="padding:32px 28px 8px; text-align:center;">
-                <p style="margin:0 0 6px; font-size:14px; color:#5b6660; direction:rtl;">کد ورود شما</p>
+                <p style="margin:0 0 6px; font-size:14px; color:#5b6660; direction:rtl;">${heading}</p>
               </td>
             </tr>
             <tr>

@@ -108,6 +108,10 @@ model User {
   avatarUrl     String?
   birthDate     DateTime?
   gender        String?  // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
+  // پروفایل — مستقل از اسنپ‌شاتِ heightCm/weightKgِ خودِ ExercisePlan/CalorieTarget
+  // (که لحظه‌ی محاسبه رو ثبت می‌کنن)؛ این‌جا مقدارِ فعلیِ کاربره که از پروفایل ویرایش می‌شه.
+  heightCm      Int?
+  weightKg      Float?
 
   // پنل کاربری › حریم خصوصی: خاموش‌کردنش یعنی توی جست‌وجوی دوستان (/api/friends/search) دیده نشه
   discoverable  Boolean  @default(true)
@@ -283,6 +287,23 @@ model EmailLoginOtp {
   createdAt  DateTime  @default(now())
 
   @@index([email])
+}
+
+// تغییرِ ایمیل از پنل کاربری — برخلافِ EmailLoginOtp (که به یک ایمیلِ خام
+// وصله و برای ورودِ بدونِ‌رمزه)، این‌جا به یک userIdِ لاگین‌شده وصله؛ کد به
+// newEmail (ایمیلِ جدید، نه فعلی) فرستاده می‌شه تا مالکیتِ ایمیلِ جدید
+// اثبات بشه — دقیقاً همون دلیلی که تغییرِ مستقیمِ بدونِ تایید امن نبود.
+model EmailChangeOtp {
+  id         String    @id @default(cuid())
+  userId     String
+  newEmail   String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // ============================================================================

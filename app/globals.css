@@ -1016,6 +1016,29 @@
   .account-content > h1{ margin-bottom:3px; font-size:20px; letter-spacing:-.01em; }
   .account-content-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:20px; }
 
+  /* کارتِ سرصفحه‌ی /account — نگاه کن به components/AccountHeroCard.tsx.
+     dir="rtl" + flex-direction:row یعنی اولین فرزند (آواتار) سمتِ راست
+     می‌شینه، بعدش بج، بعدش نام — دقیقاً همون قاعده‌ی RTLِ بقیه‌ی سایت. */
+  .account-hero{
+    display:flex; flex-direction:row; align-items:center; gap:14px;
+    padding:18px; border-radius:22px; border:1px solid rgba(var(--accent-rgb),.28);
+    background:rgba(var(--accent-rgb),.1);
+    backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
+    margin-bottom:18px;
+  }
+  .account-hero-avatar-wrap{ flex-shrink:0; width:58px; height:58px; }
+  .account-hero-avatar-img{ width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
+  .account-hero-avatar-fallback{ width:58px; height:58px; }
+  .account-hero-badge{
+    display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
+    padding:6px 11px; border-radius:999px; border:1px solid var(--line);
+    background:rgba(255,255,255,.04); color:var(--muted); font-size:11px; font-weight:700; white-space:nowrap;
+  }
+  .account-hero-badge.premium{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  .account-hero-info{ flex:1; min-width:0; }
+  .account-hero-name{ font-size:15.5px; font-weight:800; color:var(--text); }
+  .account-hero-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+
   /* پروفایل — بالای صفحه */
   .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
   .account-profile-name{ font-size:16.5px; font-weight:800; color:var(--text); margin-top:12px; letter-spacing:-.01em; }
@@ -1081,6 +1104,10 @@
   .account-row2-label{ font-size:13.5px; font-weight:700; color:var(--text); }
   .account-row2-desc{ font-size:11.5px; color:var(--muted); line-height:1.5; }
   .account-row2-chevron{ color:var(--muted2); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
+  /* مثلِ account-row2 (آیکون+برچسب+توضیح) ولی بدونِ پدینگ/بردرِ خودش —
+     برای وقتی که از قبل داخلِ یه account-card با پدینگِ خودش قرار داره
+     (مثلاً ردیفِ ایمیل توی پروفایل که یه دکمه‌ی «تغییر» هم کنارش داره). */
+  .account-field-label-row{ display:flex; align-items:center; gap:12px; }
 
   .account-sub-cta-btn{
     display:inline-flex; align-items:center; justify-content:center;
