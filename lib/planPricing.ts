@@ -17,9 +17,9 @@ export type PlanPricing = {
 
 export const PLAN_PRICING_IRAN: PlanPricing[] = [
   { key: "basic", nameFa: "پلن پایه", free: true },
-  { key: "exercise", nameFa: "پلن بدنسازی", amounts: { "1": 990000, "3": 2600000, "6": 5200000, "12": 10395000 } },
-  { key: "trade", nameFa: "پلن ترید", amounts: { "1": 1290000, "3": 3390000, "6": 6770000, "12": 13545000 } },
-  { key: "max", nameFa: "پلن مکس", amounts: { "1": 1990000, "3": 5220000, "6": 10450000, "12": 20895000 } },
+  { key: "exercise", nameFa: "پلن بدنسازی", amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 } },
+  { key: "trade", nameFa: "پلن ترید", amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 } },
+  { key: "max", nameFa: "پلن مکس", amounts: { "1": 2500000, "3": 6560000, "6": 13130000, "12": 26250000 } },
 ];
 
 export const PLAN_PRICING_INTL: PlanPricing[] = [

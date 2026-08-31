@@ -10,7 +10,7 @@ import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { staggerFieldsIn, shakeFields } from "@/lib/uiAnim";
+import { staggerFieldsIn } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
 
 // ورود فقط با یوزرنیم/شماره + رمز عبوره — روشِ کدِ ایمیل از اینجا حذف شد
@@ -58,7 +58,6 @@ export default function LoginPage() {
     if (!password) errs.password = "رمز عبور را وارد کن";
     if (Object.keys(errs).length) {
       setFieldErrors(errs);
-      shakeFields([errs.identifier ? identifierRef.current : null, errs.password ? passwordRef.current : null]);
       return;
     }
 
@@ -77,7 +76,6 @@ export default function LoginPage() {
       // پیام عمداً کلیه (نه «یوزرنیم اشتباهه» / «رمز اشتباهه» جدا) تا کسی که
       // فقط رمز رو حدس می‌زنه نتونه بفهمه شناسه‌ی درست رو پیدا کرده یا نه.
       setError("یوزرنیم/شماره موبایل یا رمز عبور اشتباه است");
-      shakeFields([identifierRef.current, passwordRef.current]);
       return;
     }
     if (!res?.ok) {
