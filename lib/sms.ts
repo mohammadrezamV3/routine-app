@@ -42,10 +42,20 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
       to: phone,
       bodyId: MELIPAYAMAK_PATTERN_ID,
     });
-    const res = await fetch("https://rest.payamak-panel.com/api/SendSMS/BaseNumber", {
+    // مسیرِ درستِ «ارسال با الگو» در REST APIِ ملی‌پیامک BaseServiceNumber
+    // است، نه BaseNumber. نسخه‌ی قبلی BaseNumber می‌فرستاد و سرور با
+    // HTTP 404 جواب می‌داد — چون ارسال fire-and-forget است، این شکست هیچ‌جا
+    // دیده نمی‌شد و از بیرون فقط «پیامک نمی‌آید» به‌نظر می‌رسید.
+    // مرجع: SDK رسمیِ خودِ ملی‌پیامک (melipayamak-python/sms/rest.py) که
+    // send_by_base_number را روی همین مسیر می‌زند.
+    const res = await fetch("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
+      // تنها فراخوانیِ خروجیِ اپ که سقفِ زمان نداشت. چون ارسال
+      // fire-and-forget است، یک ملی‌پیامکِ بی‌جواب یعنی یک Promiseِ معلق که
+      // تا تایم‌اوتِ TCPِ سیستم‌عامل (چند دقیقه) حافظه و سوکت نگه می‌دارد.
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
       console.error(`[sms] خطا در ارسال پیامک به ${phone}: HTTP ${res.status}`);
