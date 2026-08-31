@@ -4831,7 +4831,6 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 .wr-ask-send-btn:hover:not(:disabled){ filter:brightness(1.1); }
 .wr-ask-send-btn:disabled{ opacity:.5; cursor:default; }
 
-
 /* ============================================================
    ماژول ترید
    ------------------------------------------------------------
@@ -5412,3 +5411,39 @@ button.trade-pair-suggest-item:last-child{ border-bottom:none; }
 button.trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; }
 body[data-theme="light"] button.trade-pair-suggest-item,
 body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; }
+
+/* ===================== چارتِ محورِ‌زمانِ سشن‌های فارکس (Trade/Clock) =====================
+   مکملِ .forex-* بالا (کارت‌های تکی/شهر) — این یکی همه‌ی سشن‌ها رو رویِ یک
+   محورِ مشترکِ «وقتِ ایران» کنارِ هم می‌ذاره. کارتِ بیرونی از خودِ
+   .trade-surface میاد (بوردر/بک‌گراند/بلور)، این‌جا فقط padding/فاصله. */
+.forex-timeline-card{ padding:14px 14px 12px; margin-bottom:16px; }
+
+.forex-timeline-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.forex-timeline-title{ font-size:12.5px; font-weight:800; color:var(--text); }
+.forex-timeline-now{
+  font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:11.5px; font-weight:700;
+  color:var(--accent); white-space:nowrap;
+}
+
+/* از این‌جا به بعد عمداً LTR — محورِ زمانی (چپ=زودتر، راست=دیرتر) قراردادِ
+   جهانیِ خوانا برای هر چارتِ زمانیه، حتی توی صفحه‌ی RTL؛ mirror-کردنش
+   گیج‌کننده می‌شد. */
+.forex-timeline-chart{ position:relative; }
+.forex-timeline-axis{ position:relative; height:16px; margin-bottom:4px; }
+.forex-timeline-tick{
+  position:absolute; top:0; transform:translateX(-50%);
+  font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:10px; color:var(--muted2);
+}
+.forex-timeline-body{ position:relative; display:flex; flex-direction:column; gap:6px; }
+.forex-timeline-row{ display:flex; align-items:center; gap:8px; }
+.forex-timeline-row-label{ width:56px; flex-shrink:0; font-size:11px; font-weight:700; text-align:left; }
+.forex-timeline-track{ position:relative; flex:1; height:20px; border-radius:6px; background:rgba(255,255,255,.04); overflow:hidden; }
+body[data-theme="light"] .forex-timeline-track{ background:rgba(0,0,0,.04); }
+.forex-timeline-bar{ position:absolute; top:0; bottom:0; opacity:.8; border-radius:6px; }
+.forex-timeline-nowline{
+  position:absolute; top:16px; bottom:0; width:2px; background:var(--accent);
+  box-shadow:0 0 6px rgba(var(--accent-rgb),.7); pointer-events:none;
+}
+@media (max-width:480px){
+  .forex-timeline-row-label{ width:44px; font-size:10px; }
+}
