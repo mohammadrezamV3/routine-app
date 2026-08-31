@@ -5392,3 +5392,17 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
   .trade-form-body, .trade-optional-body, .trade-drawer, .trade-lightbox,
   .trade-cal-filters, .trade-mt-code-box, .trade-inline-confirm{ animation:none; }
 }
+
+/* آیتم‌های لیستِ پیشنهادِ نماد حالا <button>اند (تا انتخاب با یک تپ و پیش از
+   blur ثبت شود). ریستِ سراسریِ `button{}` به آن‌ها بک‌گراندِ شیشه‌ای و بردر
+   می‌دهد — این‌جا صریح خنثی می‌شود تا ظاهرشان دقیقاً همان ردیفِ ساده‌ی قبل
+   بماند. */
+button.trade-pair-suggest-item{
+  width:100%; text-align:right; border:none; border-bottom:1px solid var(--line);
+  border-radius:0; color:var(--text); font-weight:500;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+button.trade-pair-suggest-item:last-child{ border-bottom:none; }
+button.trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; }
+body[data-theme="light"] button.trade-pair-suggest-item,
+body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; }
