@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { prisma } from "@/lib/prisma";
 
 /**
  * تست اتصالِ خروجیِ سرور به سرویس‌های بیرونی.
@@ -136,6 +137,34 @@ async function runProbe(p: Probe) {
   }
 }
 
+/**
+ * تأخیرِ رفت‌وبرگشتِ دیتابیس. اگر این عدد بالا باشد، «کُندیِ سایت» از سمتِ
+ * Postgres یا استخرِ اتصالِ Prisma است، نه از سرویس‌های بیرونی.
+ */
+async function dbLatency() {
+  const started = Date.now();
+  try {
+    // عمداً raw SQL نیست (قانونِ پروژه): یک findFirstِ محدود به یک ستون و
+    // یک ردیف، که فقط روی کلیدِ اصلی می‌رود — عملاً هم‌هزینه‌ی ping است.
+    await prisma.appSetting.findFirst({ select: { key: true } });
+    return { ok: true, ms: Date.now() - started };
+  } catch (e: any) {
+    return { ok: false, ms: Date.now() - started, reason: e?.message?.slice(0, 160) || "خطای ناشناخته" };
+  }
+}
+
+/**
+ * لگِ حلقه‌ی رویداد: چقدر طول کشید تا یک تایمرِ صفرثانیه‌ای واقعاً اجرا شود.
+ * عددِ بالا (ده‌ها یا صدها میلی‌ثانیه) یعنی پروسه مشغول/تحتِ فشارِ GC است —
+ * همان چیزی که از بیرون «سایت دیر جواب می‌دهد» دیده می‌شود.
+ */
+function eventLoopLag(): Promise<number> {
+  return new Promise((resolve) => {
+    const started = process.hrtime.bigint();
+    setTimeout(() => resolve(Number(process.hrtime.bigint() - started) / 1e6), 0);
+  });
+}
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -143,10 +172,19 @@ export async function GET() {
   if (!guard.ok) return guard.response;
 
   const started = Date.now();
-  const results = await Promise.all(probes().map(runProbe));
+  const [results, db, lagMs] = await Promise.all([
+    Promise.all(probes().map(runProbe)),
+    dbLatency(),
+    eventLoopLag(),
+  ]);
 
   return NextResponse.json({
     totalMs: Date.now() - started,
+    // اگر db.ms بالا باشد → مشکل سمتِ دیتابیس/استخرِ اتصال.
+    // اگر eventLoopLagMs بالا باشد → پروسه تحتِ فشارِ CPU/حافظه است.
+    // اگر هر دو پایین ولی outbound کُند باشد → مشکل شبکه‌ی خروجیِ سرور است.
+    db,
+    eventLoopLagMs: Math.round(lagMs),
     process: {
       uptimeSec: Math.round(process.uptime()),
       rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
