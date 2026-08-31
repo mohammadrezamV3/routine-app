@@ -94,6 +94,21 @@ export function TradeFormModal({
   const checklistIncomplete = !!activeChecklist && checkedCount < activeChecklist.items.length;
 
   const symbolSuggestions = symbolSuggestOpen ? searchSymbols(form.symbol) : [];
+  const symbolWrapRef = useRef<HTMLDivElement>(null);
+
+  // لیستِ پیشنهادِ نماد با زدن بیرونِ آن بسته می‌شود، نه با blurِ خودِ فیلد.
+  // روی صفحه‌های لمسی، blur پیش از کلیک می‌آید و آیتم را قبل از ثبتِ انتخاب
+  // برمی‌داشت؛ نتیجه این بود که کاربر باید دو بار می‌زد.
+  useEffect(() => {
+    if (!symbolSuggestOpen) return;
+    function onDocPointerDown(e: PointerEvent) {
+      if (symbolWrapRef.current && !symbolWrapRef.current.contains(e.target as Node)) {
+        setSymbolSuggestOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", onDocPointerDown);
+    return () => document.removeEventListener("pointerdown", onDocPointerDown);
+  }, [symbolSuggestOpen]);
 
   const pnlSuggestion = useMemo(
     () =>
@@ -216,23 +231,38 @@ export function TradeFormModal({
         {tab === "core" && (
           <div className="trade-form-body">
             <div className="trade-field-row">
-              <div style={{ position: "relative" }}>
+              <div style={{ position: "relative" }} ref={symbolWrapRef}>
                 <label className="exercise-form-label">نماد معاملاتی</label>
                 <input className="wsearch-newform-name trade-glass-field"
                   value={form.symbol}
                   onChange={(e) => { patch({ symbol: e.target.value.toUpperCase() }); setSymbolSuggestOpen(true); }}
                   onFocus={() => setSymbolSuggestOpen(true)}
-                  onBlur={() => setTimeout(() => setSymbolSuggestOpen(false), 150)}
+                  // بستنِ لیست به onBlur گره نخورده: روی لمس، blur قبل از
+                  // رسیدنِ کلیک اتفاق می‌افتد و آیتم از بین می‌رود — همان
+                  // چیزی که انتخابِ نماد را روی موبایل «دوتپی» کرده بود.
+                  // بستن حالا با pointerdownِ بیرونِ فیلد انجام می‌شود.
                   placeholder="مثلاً EURUSD"
                   maxLength={20}
                 />
                 {!!symbolSuggestions.length && (
                   <div className="trade-pair-suggest">
                     {symbolSuggestions.map((p) => (
-                      <div key={p.code} className="trade-pair-suggest-item" onMouseDown={() => { patch({ symbol: p.code }); setSymbolSuggestOpen(false); }}>
+                      <button
+                        key={p.code}
+                        type="button"
+                        className="trade-pair-suggest-item"
+                        // onPointerDown (نه onMouseDown/onClick): هم روی ماوس
+                        // هم روی لمس *قبل* از blur اجرا می‌شود، پس انتخاب با
+                        // همان اولین تپ ثبت می‌شود.
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          patch({ symbol: p.code });
+                          setSymbolSuggestOpen(false);
+                        }}
+                      >
                         <span className="mono">{p.code}</span>
                         <span className="trade-pair-suggest-label">{p.label}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}

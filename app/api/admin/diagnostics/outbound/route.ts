@@ -21,7 +21,11 @@ import { getSiteUrl } from "@/lib/siteUrl";
 // هر تست سقفِ خودش را دارد تا یک سرویسِ مرده کلِ پاسخ را نگه ندارد.
 const PROBE_TIMEOUT_MS = 8_000;
 
-type Probe = { name: string; url: string; method?: "GET" | "POST"; body?: unknown; note: string };
+type Probe = {
+  name: string; url: string; method?: "GET" | "POST"; body?: unknown; note: string;
+  /** بدنه‌ی form-urlencoded — بعضی سرویس‌ها (ملی‌پیامک) JSON قبول نمی‌کنند */
+  form?: Record<string, string>;
+};
 
 function probes(): Probe[] {
   const list: Probe[] = [
@@ -43,6 +47,26 @@ function probes(): Probe[] {
     },
   ];
 
+  // ملی‌پیامک — رایج‌ترین شکایتِ «کد پیامکی نمی‌آید» یا از نبودِ env می‌آید،
+  // یا از بسته‌شدنِ مسیرِ خروجی، یا از ردکردنِ خودِ پنل (اعتبار/الگو).
+  // ارسال عمداً fire-and-forget است، پس هیچ‌کدام در UI دیده نمی‌شود و
+  // تنها راهِ سریعِ تفکیکشان همین پروب است. این درخواست پیامکی نمی‌فرستد:
+  // اندپوینتِ اعتبار است، نه ارسال.
+  list.push(
+    process.env.MELIPAYAMAK_USERNAME && process.env.MELIPAYAMAK_PASSWORD
+      ? {
+          name: "melipayamak",
+          url: `https://rest.payamak-panel.com/api/SendSMS/GetCredit`,
+          method: "POST",
+          form: {
+            username: process.env.MELIPAYAMAK_USERNAME,
+            password: process.env.MELIPAYAMAK_PASSWORD,
+          },
+          note: "سرویس پیامک (کد ورود/ثبت‌نام) — اعتبار پنل",
+        }
+      : { name: "melipayamak", url: "", note: "MELIPAYAMAK_USERNAME/PASSWORD تنظیم نشده — هیچ پیامکی ارسال نمی‌شود" }
+  );
+
   const aiBase = process.env.ARVAN_AI_BASE_URL;
   list.push(
     aiBase
@@ -60,11 +84,41 @@ async function runProbe(p: Probe) {
   try {
     const res = await fetch(p.url, {
       method: p.method ?? "GET",
-      headers: p.body ? { "Content-Type": "application/json" } : undefined,
-      body: p.body ? JSON.stringify(p.body) : undefined,
+      headers: p.form
+        ? { "Content-Type": "application/x-www-form-urlencoded" }
+        : p.body
+          ? { "Content-Type": "application/json" }
+          : undefined,
+      body: p.form
+        ? new URLSearchParams(p.form).toString()
+        : p.body
+          ? JSON.stringify(p.body)
+          : undefined,
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     });
     const ms = Date.now() - started;
+
+    // برای ملی‌پیامک خودِ بدنه هم معنی دارد: مسیرِ شبکه ممکن است باز باشد
+    // ولی پنل به‌خاطرِ نام‌کاربری/رمزِ غلط یا اتمامِ اعتبار ارسال نکند —
+    // که از بیرون دقیقاً شبیهِ «پیامک نمی‌آید» دیده می‌شود.
+    if (p.name === "melipayamak") {
+      const raw = await res.text().catch(() => "");
+      let credit: number | null = null;
+      let rejected: string | null = null;
+      try {
+        const j = JSON.parse(raw);
+        if (j?.RetStatus === 1) credit = Number(j?.Value ?? j?.StrRetStatus) || 0;
+        else rejected = j?.StrRetStatus || `کد ${j?.RetStatus}`;
+      } catch {
+        rejected = raw.slice(0, 120) || null;
+      }
+      return {
+        name: p.name, note: p.note, ok: !rejected, status: res.status, ms,
+        ...(credit !== null ? { credit } : {}),
+        ...(rejected ? { reason: `پنل پاسخ داد: ${rejected}` } : {}),
+      };
+    }
+
     // هر پاسخِ HTTP — حتی ۴۰۱/۴۰۳/۵۰۰ — یعنی مسیرِ شبکه باز است. فقط
     // نرسیدن (DNS/فایروال/تایم‌اوت) شکستِ واقعیِ این تست است.
     return { name: p.name, note: p.note, ok: true, status: res.status, ms };
@@ -101,6 +155,9 @@ export async function GET() {
     },
     env: {
       // فقط «هست/نیست» — هیچ مقداری برنمی‌گردد.
+      MELIPAYAMAK_USERNAME: !!process.env.MELIPAYAMAK_USERNAME,
+      MELIPAYAMAK_PASSWORD: !!process.env.MELIPAYAMAK_PASSWORD,
+      MELIPAYAMAK_PATTERN_ID: !!process.env.MELIPAYAMAK_PATTERN_ID,
       ZIBAL_MERCHANT_KEY: !!process.env.ZIBAL_MERCHANT_KEY,
       ZARINPAL_MERCHANT_ID: !!process.env.ZARINPAL_MERCHANT_ID,
       ARVAN_AI_BASE_URL: !!process.env.ARVAN_AI_BASE_URL,
