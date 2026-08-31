@@ -13,7 +13,7 @@ export const MODULE_LABELS_FA: Record<ModuleKey, string> = {
   SLEEP: "خواب",
   TASKS: "کارهای روزمره",
   EXERCISE: "برنامه تمرینی",
-  CALORIE: "برنامه غذایی",
+  CALORIE: "کالری‌شمار",
   TRADE: "ژورنال ترید",
   ROADMAP: "رودمپ آموزشی هوشمند",
   AI_INSIGHT: "تحلیل هوشمند (AI Insight)",

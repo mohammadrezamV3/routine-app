@@ -3,7 +3,6 @@
 // اجازه نمی‌دهد یک فایلِ `route.ts` چیزی جز هندلرهای HTTP export کند.
 import { prisma } from "@/lib/prisma";
 import { computeDayStats, tasksForDate, ScheduleOpts } from "@/lib/schedule";
-import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isoLocal } from "@/lib/jalali";
 
 // آمارِ روتینِ *همه‌ی* دوست‌ها با تعدادِ ثابتی کوئری.
@@ -39,14 +38,14 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
 
   const [settingRows, dailyRows] = await Promise.all([
     prisma.userSetting.findMany({
-      where: { userId: { in: userIds }, key: { in: ["customOccurrences", "removedOccurrences", "wakeSleepTimes"] } },
+      where: { userId: { in: userIds }, key: { in: ["customOccurrences", "removedOccurrences"] } },
       select: { userId: true, key: true, value: true },
     }),
     // فقط پنجره‌ی اول — و فقط ستون‌هایی که واقعاً لازمن (id و createdAt و…
     // هیچ‌وقت استفاده نمی‌شدن ولی از دیتابیس میومدن و سریالایز می‌شدن)
     prisma.dailyEntry.findMany({
       where: { userId: { in: userIds }, date: { gte: dayStart(STREAK_FIRST_WINDOW_DAYS), lte: new Date(todayIso) } },
-      select: { userId: true, date: true, completedItems: true, wakeUpAt: true },
+      select: { userId: true, date: true, completedItems: true },
     }),
   ]);
 
@@ -56,14 +55,11 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
     settingsByUser.get(r.userId)!.set(r.key, r.value);
   }
 
-  const needDeeper: { userId: string; opts: ScheduleOpts; wakeMinutes: number }[] = [];
+  const needDeeper: { userId: string; opts: ScheduleOpts }[] = [];
   const dailyByUser = new Map<string, DailyMap>();
   for (const r of dailyRows) {
     if (!dailyByUser.has(r.userId)) dailyByUser.set(r.userId, {});
-    dailyByUser.get(r.userId)![isoLocal(r.date)] = {
-      tasks: (r.completedItems as Record<string, boolean>) ?? {},
-      wake: r.wakeUpAt ? r.wakeUpAt.toISOString() : null,
-    };
+    dailyByUser.get(r.userId)![isoLocal(r.date)] = { tasks: (r.completedItems as Record<string, boolean>) ?? {} };
   }
 
   for (const userId of userIds) {
@@ -77,13 +73,10 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
     const today = entries[todayIso];
     const dayStats = computeDayStats(new Date(), opts, today ? { tasks: today.tasks } : undefined);
 
-    const wakeVal = settings.get("wakeSleepTimes") as { wake?: string } | undefined;
-    const wakeMinutes = timeToMinutes(wakeVal?.wake || DEFAULT_WAKE);
-
-    const { streak, hitEdge } = countStreak(entries, opts, wakeMinutes, STREAK_FIRST_WINDOW_DAYS);
+    const { streak, hitEdge } = countStreak(entries, opts, STREAK_FIRST_WINDOW_DAYS);
     out.set(userId, { ...dayStats, streak });
     // استریکش تا ته پنجره ادامه داشت؟ پس باید عمیق‌تر نگاه کنیم.
-    if (hitEdge) needDeeper.push({ userId, opts, wakeMinutes });
+    if (hitEdge) needDeeper.push({ userId, opts });
   }
 
   // مرحله‌ی دوم — در عمل تقریباً همیشه خالیه، چون استریکِ ۲۱ روزِ کامل نادره.
@@ -93,18 +86,15 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
         userId: { in: needDeeper.map((d) => d.userId) },
         date: { gte: dayStart(STREAK_LOOKBACK_DAYS), lte: new Date(todayIso) },
       },
-      select: { userId: true, date: true, completedItems: true, wakeUpAt: true },
+      select: { userId: true, date: true, completedItems: true },
     });
     const deepByUser = new Map<string, DailyMap>();
     for (const r of deepRows) {
       if (!deepByUser.has(r.userId)) deepByUser.set(r.userId, {});
-      deepByUser.get(r.userId)![isoLocal(r.date)] = {
-        tasks: (r.completedItems as Record<string, boolean>) ?? {},
-        wake: r.wakeUpAt ? r.wakeUpAt.toISOString() : null,
-      };
+      deepByUser.get(r.userId)![isoLocal(r.date)] = { tasks: (r.completedItems as Record<string, boolean>) ?? {} };
     }
     for (const d of needDeeper) {
-      const { streak } = countStreak(deepByUser.get(d.userId) ?? {}, d.opts, d.wakeMinutes, STREAK_LOOKBACK_DAYS);
+      const { streak } = countStreak(deepByUser.get(d.userId) ?? {}, d.opts, STREAK_LOOKBACK_DAYS);
       const prev = out.get(d.userId);
       if (prev) out.set(d.userId, { ...prev, streak });
     }
@@ -113,19 +103,20 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
   return out;
 }
 
-type DailyMap = Record<string, { tasks: Record<string, boolean>; wake: string | null }>;
+type DailyMap = Record<string, { tasks: Record<string, boolean> }>;
 
 /**
  * روزهای کاملِ پشتِ‌سرهم از دیروز به عقب. `hitEdge` یعنی شمارش تا انتهای
  * پنجره ادامه داشت — یعنی ممکنه استریکِ واقعی از این هم بلندتر باشه و باید
  * با پنجره‌ی بزرگ‌تر دوباره حساب بشه.
+ *
+ * قبلاً شرطِ روزِ کامل، AND با «بیدارشدنِ سرِوقت» بود — یعنی هر روزی که
+ * کاربر این فیچرِ جدا/اختیاری رو دنبال نمی‌کرد (اکثراً)، با اینکه ۱۰۰٪
+ * برنامه‌ش رو انجام داده بود، کلِ استریک صفر می‌شد (باگِ گزارش‌شده — استریک
+ * عملاً برایِ همه همیشه صفر می‌موند). حالا استریک فقط یعنی «همه‌ی
+ * برنامه‌های اون روز انجام شده».
  */
-function countStreak(
-  entries: DailyMap,
-  opts: ScheduleOpts,
-  wakeMinutes: number,
-  windowDays: number
-): { streak: number; hitEdge: boolean } {
+function countStreak(entries: DailyMap, opts: ScheduleOpts, windowDays: number): { streak: number; hitEdge: boolean } {
   let streak = 0;
   const cursor = new Date();
   cursor.setDate(cursor.getDate() - 1);
@@ -136,8 +127,7 @@ function countStreak(
     const rec = entries[key];
     if (!rec) return { streak, hitEdge: false };
     const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-    const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
-    if (doneCount === expected.length && wakeOK) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    if (doneCount === expected.length) { streak++; cursor.setDate(cursor.getDate() - 1); }
     else return { streak, hitEdge: false };
   }
   return { streak, hitEdge: true };

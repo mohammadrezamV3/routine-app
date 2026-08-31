@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { LineChart } from "lucide-react";
 import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
+import { cn } from "@/lib/utils";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashCard } from "./DashCard";
 
@@ -90,6 +91,7 @@ export function CalorieChartCard({
 
   const n = rawPoints.length;
   const maxVal = Math.max(targetKcal * 1.15, ...rawPoints.map((p) => p.value), 1);
+  const weeklyMaxPct = Math.max(1, ...rawPoints.map((p) => (targetKcal > 0 ? Math.round((p.value / targetKcal) * 100) : 0)));
 
   const points = rawPoints.map((p, i) => ({
     x: isDaily
@@ -138,6 +140,36 @@ export function CalorieChartCard({
           <div className="text-[12px] font-bold text-dash-text sm:text-[13px]">نمودار هنوز آماده نیست</div>
           <div className="max-w-[260px] text-[10.5px] leading-relaxed text-dash-muted sm:text-[11.5px]">
             برای نمایشِ نمودار حداقل به ۳ روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روزِ دیگه مونده.
+          </div>
+        </div>
+      ) : range === "weekly" ? (
+        // دیزاینِ این حالت عمداً همون دیزاینِ DashWeeklyChartCard (بخشِ
+        // «روتین من») ه — میله‌های سادهِ گردِ افقی به‌جایِ SVGِ خط‌دار، تا
+        // نمودارهای هفتگیِ اپ همه یک زبانِ بصری یکسان داشته باشن.
+        <div className="mt-5 flex items-end gap-3">
+          <div className="flex flex-1 items-end justify-between gap-1.5 sm:gap-2">
+            {rawPoints.map((p, i) => {
+              const pct = targetKcal > 0 ? Math.round((p.value / targetKcal) * 100) : 0;
+              const peak = pct > 0 && pct === weeklyMaxPct;
+              return (
+                <div key={i} className="flex flex-1 flex-col items-center gap-1 sm:gap-1.5">
+                  <span className={cn("text-[9px] font-semibold sm:text-[10px]", peak ? "text-dash-green" : "text-dash-muted")}>{faNum(pct)}٪</span>
+                  <div className="flex h-24 w-full items-end justify-center sm:h-28">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max(pct > 0 ? 4 : 1, Math.min(pct, 100))}%` }}
+                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 + i * 0.05 }}
+                      className="w-2 rounded-full sm:w-2.5"
+                      style={{
+                        background: peak ? "var(--accent)" : "rgba(var(--accent-rgb),.45)",
+                        boxShadow: peak ? "0 0 12px rgba(var(--accent-rgb),.6)" : "none",
+                      }}
+                    />
+                  </div>
+                  <span className="text-[9.5px] text-dash-muted sm:text-[11.5px]">{"label" in p ? p.label : ""}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : (

@@ -194,6 +194,10 @@
      «توی چارت‌ها یه فونتِ دیگه دیده می‌شه»، مخصوصاً روی چارت‌های دسکتاپِ ادمین/
      کالری که برچسب‌هاشون با <text> خامِ SVG رسم می‌شن، نه یه عنصرِ HTML). */
   svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  /* اسکرول‌بارِ سراسریِ صفحه هیچ‌وقت نباید دیده بشه — طبقِ درخواستِ صریحِ
+     کاربر، نه فقط داخلِ پاپ‌آپ‌ها (که .no-scrollbar از قبل روشون بود). */
+  html{ scrollbar-width:none; -ms-overflow-style:none; }
+  html::-webkit-scrollbar{ display:none; width:0; height:0; }
   body{
     background:var(--bg); color:var(--text);
     font-family:var(--font-vazir), sans-serif;
@@ -205,7 +209,7 @@
     min-height:100vh; min-height:100dvh;
     transition:background .3s ease, color .3s ease;
   }
-  .mono{font-family:var(--font-latin), var(--font-plexmono), monospace;}
+  .mono{font-family:var(--font-latin), var(--font-vazir), monospace;}
   .wrap{max-width:620px; margin:0 auto; position:relative; z-index:1;}
 
   #bgCanvas{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
@@ -214,19 +218,19 @@
   section:first-child{border-top:none; padding-top:0;}
 
   .eyebrow{
-    font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:11px; letter-spacing:.12em;
+    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:11px; letter-spacing:.12em;
     color:var(--accent); text-transform:uppercase; margin-bottom:10px; font-weight:600;
   }
   h1{font-size:23px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px;}
   .landing-section-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0;}
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
-  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-latin), var(--font-plexmono), monospace; display:inline-flex; align-items:center; gap:5px;}
+  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-latin), var(--font-vazir), monospace; display:inline-flex; align-items:center; gap:5px;}
   .home-stats b{color:var(--secondary); font-weight:600;}
   .streak-flame{width:13px; height:13px; color:var(--secondary); flex-shrink:0;}
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
-  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-latin), var(--font-plexmono), monospace; margin-bottom:18px;}
+  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:18px;}
   /* تم روشن: هیچ فونتی نباید کرمی/طلایی باشه — عنوان‌ها نارنجی (accent)،
      متن‌های توضیحی قهوه‌ای (muted) به‌جای accent-soft که رنگش لایت-نارنجی/طلایی‌مانند بود */
   body[data-theme="light"] h1,
@@ -255,7 +259,7 @@
   .check.on .c-check{opacity:1; transform:scale(1) rotate(0deg);}
   .task-name{font-size:14.5px;}
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
-  .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; margin-top:3px;}
+  .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-top:3px;}
 
   /* سوییچ لیکوئید گلسِ سبکِ iOS — ترکِ شیشه‌ای تار با یه دسته‌ی گرد که
      بین راست (خاموش) و چپ (روشن) اسلاید می‌شه، دقیقاً مثل تاگل کنترل‌سنترِ آیفون */
@@ -290,7 +294,7 @@
 
   .wake{display:flex; align-items:center; justify-content:space-between; padding-top:16px; margin-top:6px; gap:12px; flex-wrap:wrap;}
   .wake-text{font-size:13px; color:var(--muted);}
-  .wake-text b{color:var(--text); font-family:var(--font-latin), var(--font-plexmono), monospace; font-weight:600;}
+  .wake-text b{color:var(--text); font-family:var(--font-latin), var(--font-vazir), monospace; font-weight:600;}
 
   /* دکمه‌ها به‌سبک Liquid Glass اپل — شیشه‌ای/تار به‌جای پرشدن تخت سبز.
      چون این قانون پایه روی همه‌ی <button>هاست، دکمه‌هایی که فقط رنگ لبه/متن
@@ -345,7 +349,7 @@
   .outing-box:active{transform:scale(.96);}
   .outing-box.on{background:var(--accent); border-color:var(--accent);}
   .outing-box .ob-num{
-    font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:16px; font-weight:700; color:var(--muted);
+    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:16px; font-weight:700; color:var(--muted);
     transition:opacity .15s ease, transform .15s ease;
   }
   .outing-box.on .ob-num{opacity:0; transform:scale(.6);}
@@ -403,7 +407,7 @@
   .about-label{font-size:13px; color:var(--muted);}
 
   dl.notes{display:flex; flex-direction:column; gap:16px;}
-  .footer{color:var(--muted2); font-size:11px; font-family:var(--font-latin), var(--font-plexmono), monospace; text-align:left; padding-top:30px;}
+  .footer{color:var(--muted2); font-size:11px; font-family:var(--font-latin), var(--font-vazir), monospace; text-align:left; padding-top:30px;}
 
   /* هدر شیشه‌ای — علاوه بر لبه‌ی نازکِ liquidGlassFilter دورش، خودِ بدنه هم
      یک پرِ لیکوئید گلسِ واقعی داره (بلور + شفافیتِ کم)، نه فقط بک‌گراندِ خالی */
@@ -639,7 +643,7 @@
     background:rgba(var(--accent-rgb),.14);
   }
   .nav-title{
-    font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:11px; letter-spacing:.1em; color:var(--muted2);
+    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:11px; letter-spacing:.1em; color:var(--muted2);
     text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;
   }
   .nav-close{
@@ -698,7 +702,7 @@
   /* tips / extra lists */
   .tm-extra{margin-top:22px;}
   .domain-sub{
-    font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:10.5px; letter-spacing:.08em; color:var(--muted2);
+    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:10.5px; letter-spacing:.08em; color:var(--muted2);
     text-transform:uppercase; margin:14px 0 8px;
   }
   .domain-sub:first-child{margin-top:0;}
@@ -821,7 +825,7 @@
      باکس‌ها از پسِ زمینه قابلِ تشخیص نبودن. اینجا یه مقدارِ میانه (۱۶٪) که
      هم شیشه‌ای/ترنسپرنت بمونه (نه سفیدِ تخت مثلِ قبل) هم واقعاً به‌چشم بیاد. */
   body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.16); }
-  .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
+  .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
 
@@ -834,7 +838,7 @@
     .cal-label{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); min-width:0;}
   }
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
-  .cal-weekday{font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
+  .cal-weekday{font-family:var(--font-latin), var(--font-vazir), monospace; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
   .cal-cell{
     aspect-ratio:1; border:1px solid var(--line); border-radius:13px; display:flex; align-items:center; justify-content:center;
     cursor:pointer; transition:transform .15s ease, border-color .15s ease, background .2s ease; position:relative;
@@ -853,7 +857,7 @@
     border-color:var(--accent);
   }
   .cal-cell.done .cal-daynum{color:var(--accent); font-weight:700;}
-  .cal-daynum{font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:12.5px; color:var(--text); transition:color .15s ease;}
+  .cal-daynum{font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; color:var(--text); transition:color .15s ease;}
   .cal-check{
     position:absolute; top:4px; left:4px; width:16px; height:16px; min-width:16px; border-radius:50%;
     background:var(--accent); display:flex; align-items:center; justify-content:center;
@@ -933,7 +937,7 @@
     background:rgba(255,255,255,.28);
   }
   .modal-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;}
-  .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace;}
+  .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace;}
   .modal-title{font-size:16px; font-weight:700; margin-top:3px;}
 
   /* roadmaps hub */
@@ -1431,7 +1435,7 @@
     padding:0; border:1px solid var(--accent); color:var(--accent); background:none;
   }
   .tc-add-btn:disabled{ opacity:.4; }
-  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; padding:4px 4px 2px; }
+  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; padding:4px 4px 2px; }
   /* یک باکس شیشه‌ای عمومی و ساده — برای جعبه‌های کوچیک مثل وضعیت لودینگ رودمپ‌ساز */
   .glass-box{
     background:rgba(var(--surface-rgb), .13); border:1px solid var(--line); border-radius:16px;
@@ -1475,7 +1479,7 @@
     content:''; position:absolute; top:34px; width:1px; height:12px; background:var(--muted2);
   }
   .wt-marker-col{display:flex; flex-direction:column; align-items:center; height:33px; justify-content:flex-end; position:relative;}
-  .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-latin), var(--font-plexmono), monospace;}
+  .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-latin), var(--font-vazir), monospace;}
   /* هر برنامه یه ضربدر رو خط تایم‌لاینه — تا نگذشته رنگ اصلی‌شو داره،
      بعد از گذشتنش (انجام‌شده) دایره‌ش سبز پر می‌شه و ضربدر رنگ پس‌زمینه می‌گیره */
   .wt-dot{
@@ -1488,7 +1492,7 @@
   .wt-dot-done{background:var(--accent); color:#fff; box-shadow:0 0 8px rgba(var(--accent-rgb),.85), 0 0 16px rgba(var(--accent-rgb),.4);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
-  .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; margin-bottom:3px; white-space:nowrap;}
+  .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:3px; white-space:nowrap;}
   .wt-name{font-size:11px; color:var(--text); line-height:1.3; word-break:break-word;}
   .wt-item.wt-endpoint .wt-name{color:var(--accent); font-weight:700; text-shadow:0 0 8px rgba(var(--accent-rgb),.5);}
   .wt-untimed-row{direction:rtl; display:flex; flex-direction:row-reverse; flex-wrap:wrap; gap:18px; padding:2px 4px 14px; margin-top:8px; padding-top:12px;}
@@ -1500,7 +1504,7 @@
   .wt-item.wt-endpoint .wt-marker-col{height:42px;}
   .wt-item.wt-endpoint .wt-time-above{margin-bottom:20px;}
   .wt-untimed-item{min-width:0;}
-  .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; margin-bottom:3px;}
+  .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:3px;}
   .wt-untimed-item .wt-name{font-size:12.5px; color:var(--text); line-height:1.4;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
 
@@ -1561,9 +1565,9 @@
   }
   .pcard-back-eyebrow{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; letter-spacing:0; color:var(--accent); font-weight:600; margin-bottom:14px;}
   .pcard-back-lesson{font-size:22px; font-weight:800; line-height:1.4;}
-  .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace;}
+  .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace;}
   .pcard-combined-stat{
-    font-size:13px; font-weight:700; font-family:var(--font-latin), var(--font-plexmono), monospace; color:var(--accent);
+    font-size:13px; font-weight:700; font-family:var(--font-latin), var(--font-vazir), monospace; color:var(--accent);
     margin-top:26px; margin-bottom:12px; flex-shrink:0;
   }
   .pcard-times-list{
@@ -1587,7 +1591,7 @@
   .pcard-icon-btn svg{width:13px; height:13px; display:block;}
   .pcard-trash-btn:hover{border-color:#E05252; color:#E05252; background:rgba(224,82,82,.12);}
   .pcard-edit-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-dim);}
-  .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; flex-shrink:0;}
+  .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; flex-shrink:0;}
 
   /* هم دسکتاپ هم موبایل: تایم‌لاینِ افقیِ یکسان (بیداری راست، خواب چپ، نقطه‌ها
      روی یه خطِ افقی) — موبایل فقط یه‌پله کوچیک‌تر می‌شه، ساختارش عوض نمی‌شه.
@@ -1720,7 +1724,7 @@
   .wsearch-date-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
   .jdate-btn{
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
+    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
     direction:ltr;
   }
   body:not([data-theme="light"]) .jdate-btn{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
@@ -1767,7 +1771,7 @@
   .jdate-mini-btn{
     display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:10px;
     background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent);
-    font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; font-weight:700; cursor:pointer;
     transition:opacity .15s ease;
   }
   .jdate-mini-btn:hover{ opacity:.82; }
@@ -1782,7 +1786,7 @@
     background:rgba(255,255,255,.98); border-color:var(--line); box-shadow:0 12px 30px rgba(0,0,0,.15);
   }
   .jdate-mini-item{
-    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-latin), var(--font-plexmono), monospace;
+    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-latin), var(--font-vazir), monospace;
     text-align:center; cursor:pointer; color:var(--text); transition:background .12s ease;
   }
   .jdate-mini-item:hover{ background:rgba(var(--bg-rgb),.4); }
@@ -1794,11 +1798,11 @@
     background:none;
   }
   .jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
-  .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-latin), var(--font-plexmono), monospace;}
+  .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-latin), var(--font-vazir), monospace;}
   .jdate-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .jdate-cell{
     aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px;
-    font-family:var(--font-latin), var(--font-plexmono), monospace; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
+    font-family:var(--font-latin), var(--font-vazir), monospace; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
   }
   .jdate-cell:hover{border-color:var(--accent);}
   .jdate-cell.empty{cursor:default; visibility:hidden;}
@@ -2111,8 +2115,8 @@
   .wsearch-newform-title{font-size:13px; font-weight:700;}
   .wsearch-newform-title.accent{color:var(--accent);}
   .time-field{position:relative; flex:1 1 calc(50% - 4px); min-width:0; display:flex; flex-direction:column; gap:3px;}
-  .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; text-align:right; padding-right:2px;}
-  .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-plexmono), monospace;}
+  .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; text-align:right; padding-right:2px;}
+  .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), monospace;}
   .wsearch-newform-name{
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
     font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; padding:9px 11px; outline:none;
@@ -2213,7 +2217,7 @@
   }
   .field-toggle-visibility-btn:hover{ filter:brightness(1.15); background:none; box-shadow:none; }
   .field-error-wrap.has-icon.has-end-action input{padding-right:34px; padding-left:38px;}
-  .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-plexmono), monospace; margin-top:3px; display:none;}
+  .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
   .name-field-wrap label{
@@ -2949,7 +2953,7 @@ body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]
 .trade-day-card:last-child{ margin-bottom:0; }
 .trade-day-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .trade-day-pnl-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
-.trade-day-pnl-label{ font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; text-transform:uppercase; letter-spacing:.05em; }
+.trade-day-pnl-label{ font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; text-transform:uppercase; letter-spacing:.05em; }
 .trade-day-pnl{ font-size:14px; font-weight:800; }
 
 /* عکس معامله پشت یک دکمه‌ست — با کلیک توی لایت‌باکس بزرگ باز می‌شه */
@@ -3338,6 +3342,14 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
 .exercise-choice-divider{ width:1px; align-self:stretch; margin:6px 0; background:var(--line); opacity:.5; }
 .ai-sparkle-icon{ transition:filter .2s ease; }
 .exercise-choice-btn:hover .ai-sparkle-icon{ filter:drop-shadow(0 0 10px rgba(255,196,60,.9)) !important; }
+.ai-sparkle-twinkle{
+  transform-box:fill-box; transform-origin:center;
+  animation:aiSparkleTwinkle 1.8s ease-in-out infinite;
+}
+@keyframes aiSparkleTwinkle{
+  0%,100%{ opacity:.5; transform:scale(.8); }
+  50%{ opacity:1; transform:scale(1.15); }
+}
 
 /* اسکرول‌بارِ کاملاً مخفی — لمس/درگ و اسکرولِ ماوس همچنان کار می‌کنه، فقط
    میله‌ی بصری دیده نمی‌شه (کاتالوگِ حرکات، لیستِ افزودنِ دستی، ...) */
@@ -3624,7 +3636,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-sidebar-head{ display:none; align-items:center; justify-content:space-between; padding:2px 6px 8px; }
 .notepad-sidebar-title{
   font-weight:700; font-size:12px; color:var(--np-muted);
-  font-family:var(--font-latin), var(--font-plexmono), monospace; letter-spacing:.04em; text-transform:uppercase;
+  font-family:var(--font-latin), var(--font-vazir), monospace; letter-spacing:.04em; text-transform:uppercase;
 }
 .notepad-sidebar-close{ background:none; border:none; color:var(--np-muted); padding:4px; cursor:pointer; }
 .notepad-sidebar-search-btn, .notepad-sidebar-new-btn{
@@ -3635,7 +3647,7 @@ body[data-theme="light"] .notepad-workspace{
 }
 .notepad-sidebar-search-btn:hover, .notepad-sidebar-new-btn:hover{ color:var(--np-text); background:var(--np-surface-hover); }
 .notepad-sidebar-search-kbd{
-  margin-right:auto; font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:9px; color:var(--np-muted2);
+  margin-right:auto; font-family:var(--font-latin), var(--font-vazir), monospace; font-size:9px; color:var(--np-muted2);
   border:1px solid var(--np-border); border-radius:4px; padding:1px 5px;
 }
 .notepad-sidebar-new-btn{ color:var(--np-accent); font-weight:700; }
@@ -3644,7 +3656,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-sidebar-section-title{
   display:flex; align-items:center; gap:5px; padding:4px 9px; margin-bottom:2px;
   font-size:10px; font-weight:700; color:var(--np-muted2); text-transform:uppercase; letter-spacing:.06em;
-  font-family:var(--font-latin), var(--font-plexmono), monospace;
+  font-family:var(--font-latin), var(--font-vazir), monospace;
 }
 .notepad-sidebar-empty{ padding:6px 10px; font-size:11px; color:var(--np-muted2); }
 
@@ -3727,7 +3739,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-breadcrumb-item button:hover{ color:var(--np-text); background:var(--np-surface-hover); }
 
 .notepad-editor-head{ display:flex; align-items:center; justify-content:space-between; min-height:22px; }
-.notepad-save-status{ font-size:10px; color:var(--np-muted2); font-family:var(--font-latin), var(--font-plexmono), monospace; letter-spacing:.02em; }
+.notepad-save-status{ font-size:10px; color:var(--np-muted2); font-family:var(--font-latin), var(--font-vazir), monospace; letter-spacing:.02em; }
 .notepad-editor-head-actions{ display:flex; align-items:center; gap:2px; }
 .notepad-fav-btn{
   background:none; border:none; color:var(--np-muted2); padding:5px; border-radius:var(--np-radius-sm); cursor:pointer;
@@ -3805,7 +3817,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-block-text:empty:before{ content:attr(data-placeholder); color:var(--np-muted2); pointer-events:none; }
 .notepad-block-text code{
   background:var(--np-accent-soft); color:var(--np-accent); border-radius:4px; padding:1px 5px;
-  font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:12.5px;
+  font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px;
 }
 .notepad-block-text a{ color:var(--np-accent); text-decoration:underline; text-underline-offset:2px; }
 
@@ -3820,7 +3832,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-bullet-dot{
   flex-shrink:0; width:4px; height:4px; border-radius:50%; background:var(--np-muted); margin-top:13px;
 }
-.notepad-number-marker{ flex-shrink:0; margin-top:4px; font-size:13px; color:var(--np-muted); font-family:var(--font-latin), var(--font-plexmono), monospace; min-width:16px; }
+.notepad-number-marker{ flex-shrink:0; margin-top:4px; font-size:13px; color:var(--np-muted); font-family:var(--font-latin), var(--font-vazir), monospace; min-width:16px; }
 
 .notepad-todo-check{
   flex-shrink:0; margin-top:5px; width:16px; height:16px; border-radius:4px; border:1.6px solid var(--np-muted2);
@@ -4141,7 +4153,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-font-swatch.active{ border-color:var(--np-accent); color:var(--np-accent); }
 .notepad-font-swatch-sample{ font-size:16px; font-weight:700; }
 .notepad-font-swatch.notepad-font-serif .notepad-font-swatch-sample{ font-family:Georgia, "Times New Roman", serif; }
-.notepad-font-swatch.notepad-font-mono .notepad-font-swatch-sample{ font-family:var(--font-latin), var(--font-plexmono), monospace; }
+.notepad-font-swatch.notepad-font-mono .notepad-font-swatch-sample{ font-family:var(--font-latin), var(--font-vazir), monospace; }
 .notepad-font-swatch-label{ font-size:9.5px; }
 .notepad-page-menu-divider{ height:1px; background:var(--np-border-soft); margin:4px 2px; }
 .notepad-page-menu .stat-toggle-row{ padding:6px 8px; border-bottom:none; }
@@ -4149,7 +4161,7 @@ body[data-theme="light"] .notepad-workspace{
 
 /* --- انواعِ فونت/عرض/اندازه‌ی متنِ سفارشی‌شده روی خودِ ادیتور --- */
 .notepad-font-serif{ font-family:Georgia, "Times New Roman", serif; }
-.notepad-font-mono{ font-family:var(--font-latin), var(--font-plexmono), monospace; }
+.notepad-font-mono{ font-family:var(--font-latin), var(--font-vazir), monospace; }
 .notepad-editor-wide{ max-width:none; }
 .notepad-editor-small-text .notepad-block-text{ font-size:12.5px; }
 .notepad-editor-small-text .notepad-title-input{ font-size:21px; }
@@ -4173,11 +4185,11 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-code-head{ display:flex; justify-content:flex-end; padding:5px 6px; background:var(--np-surface); border-bottom:1px solid var(--np-border-soft); }
 .notepad-code-lang-select{
   background:transparent; border:none; color:var(--np-muted); font-size:11px; font-weight:600; cursor:pointer; outline:none;
-  font-family:var(--font-latin), var(--font-plexmono), monospace;
+  font-family:var(--font-latin), var(--font-vazir), monospace;
 }
 .notepad-code-body{ position:relative; background:var(--np-canvas); }
 .notepad-code-highlight, .notepad-code-textarea{
-  margin:0; padding:12px 14px; font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:12.5px; line-height:1.6;
+  margin:0; padding:12px 14px; font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; line-height:1.6;
   white-space:pre-wrap; word-break:break-word; direction:ltr; text-align:left;
 }
 .notepad-code-highlight{ color:var(--np-text); pointer-events:none; min-height:1.6em; }
@@ -4198,7 +4210,7 @@ body[data-theme="light"] .notepad-workspace{
 .notepad-home-section{ display:flex; flex-direction:column; gap:10px; }
 .notepad-home-section-title{
   display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--np-muted2);
-  text-transform:uppercase; letter-spacing:.05em; font-family:var(--font-latin), var(--font-plexmono), monospace;
+  text-transform:uppercase; letter-spacing:.05em; font-family:var(--font-latin), var(--font-vazir), monospace;
 }
 .notepad-home-cards{ display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; }
 .notepad-home-card{
@@ -4642,6 +4654,29 @@ html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(18
    backdrop-filterِ فرزند زودتر پروموت نمی‌شه، پس چند فریمِ اولِ بازشدنِ منو
    محتوا بی‌بلور دیده می‌شه و بلور با تاخیر «می‌رسه». برگردوندنِ خودِ
    will-change همون فیکسِ قبلی رو دوباره فعال می‌کنه. */
+
+/* استثنای دوم: به‌جایِ برگردوندنِ بلور (که rasterizeِ هر فریم می‌خواد)،
+   یه بک‌گراندِ تقریباً توپر می‌دیم — هزینه‌ی هر فریم صفره چون دیگه چیزی
+   پشتش سمپل نمی‌شه، ولی دیگه پشتش هم دیده نمی‌شه. این برایِ خودِ هدر
+   (که *دائماً* روی صفحه‌ست و رنگِ نیمه‌شفافِ چهاردرصدی‌ش بدونِ بلور کاملاً
+   بی‌رنگ می‌شد) و برایِ پاپ‌آپ‌هایی که محتوای داخلی‌شون سنگینه (مثلاً
+   لیستِ درازِ «مشاهده حرکات») امن‌تر از برگردوندنِ بلور روی خودشونه —
+   دقیقاً همون ترفندی که .dash-context-menu از قبل استفاده می‌کرد. */
+html[data-perf="low"] .app-topbar{ background:rgba(10,10,11,.94) !important; }
+html[data-perf="low"] body[data-theme="light"] .app-topbar{ background:rgba(250,240,225,.94) !important; }
+
+html[data-perf="low"] .modal-panel.liquid-glass-panel{ background:rgba(10,10,11,.97) !important; }
+html[data-perf="low"] body[data-theme="light"] .modal-panel.liquid-glass-panel{ background:rgba(255,255,255,.97) !important; }
+
+html[data-perf="low"] .exercise-catalog-popup-panel,
+html[data-perf="low"] .exercise-catalog-detail-card{ background:rgba(10,10,11,.97) !important; }
+html[data-perf="low"] body[data-theme="light"] .exercise-catalog-popup-panel,
+html[data-perf="low"] body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.97) !important; }
+
+/* .wsearch-newform (افزودن/ویرایشِ برنامه و مشابه‌هاش) توی تمِ تاریک از قبل
+   یه fallbackِ توپر داشت (خطِ ۲۰۷۱)؛ توی تمِ روشن اصلاً نداشت — رویِ
+   data-perf=low بدونِ بلور فقط ۹٪ سفید می‌موند، تقریباً کاملاً شفاف. */
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
 
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }
@@ -5421,7 +5456,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .forex-timeline-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
 .forex-timeline-title{ font-size:12.5px; font-weight:800; color:var(--text); }
 .forex-timeline-now{
-  font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:11.5px; font-weight:700;
+  font-family:var(--font-latin), var(--font-vazir), monospace; font-size:11.5px; font-weight:700;
   color:var(--accent); white-space:nowrap;
 }
 
@@ -5432,7 +5467,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .forex-timeline-axis{ position:relative; height:16px; margin-bottom:4px; }
 .forex-timeline-tick{
   position:absolute; top:0; transform:translateX(-50%);
-  font-family:var(--font-latin), var(--font-plexmono), monospace; font-size:10px; color:var(--muted2);
+  font-family:var(--font-latin), var(--font-vazir), monospace; font-size:10px; color:var(--muted2);
 }
 .forex-timeline-body{ position:relative; display:flex; flex-direction:column; gap:6px; }
 .forex-timeline-row{ display:flex; align-items:center; gap:8px; }

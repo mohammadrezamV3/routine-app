@@ -120,20 +120,13 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
             {visible.length === 0 ? (
               <div className="item-line empty">حرکتی پیدا نشد.</div>
             ) : (
-              visible.map((e, i) => (
-                <motion.div
-                  key={e.name}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(i, 12) * 0.02, duration: 0.2 }}
-                  onClick={() => setSelected(e)}
-                  className="exercise-catalog-row"
-                >
+              visible.map((e) => (
+                <div key={e.name} onClick={() => setSelected(e)} className="exercise-catalog-row">
                   <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
                     {e.name}
                   </div>
                   <DifficultyStars level={getExerciseDifficulty(e)} className="exercise-catalog-row-stars" />
-                </motion.div>
+                </div>
               ))
             )}
           </div>
