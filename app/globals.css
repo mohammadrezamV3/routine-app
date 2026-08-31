@@ -3338,6 +3338,14 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
 .exercise-choice-divider{ width:1px; align-self:stretch; margin:6px 0; background:var(--line); opacity:.5; }
 .ai-sparkle-icon{ transition:filter .2s ease; }
 .exercise-choice-btn:hover .ai-sparkle-icon{ filter:drop-shadow(0 0 10px rgba(255,196,60,.9)) !important; }
+.ai-sparkle-twinkle{
+  transform-box:fill-box; transform-origin:center;
+  animation:aiSparkleTwinkle 1.8s ease-in-out infinite;
+}
+@keyframes aiSparkleTwinkle{
+  0%,100%{ opacity:.5; transform:scale(.8); }
+  50%{ opacity:1; transform:scale(1.15); }
+}
 
 /* اسکرول‌بارِ کاملاً مخفی — لمس/درگ و اسکرولِ ماوس همچنان کار می‌کنه، فقط
    میله‌ی بصری دیده نمی‌شه (کاتالوگِ حرکات، لیستِ افزودنِ دستی، ...) */
@@ -4642,6 +4650,29 @@ html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(18
    backdrop-filterِ فرزند زودتر پروموت نمی‌شه، پس چند فریمِ اولِ بازشدنِ منو
    محتوا بی‌بلور دیده می‌شه و بلور با تاخیر «می‌رسه». برگردوندنِ خودِ
    will-change همون فیکسِ قبلی رو دوباره فعال می‌کنه. */
+
+/* استثنای دوم: به‌جایِ برگردوندنِ بلور (که rasterizeِ هر فریم می‌خواد)،
+   یه بک‌گراندِ تقریباً توپر می‌دیم — هزینه‌ی هر فریم صفره چون دیگه چیزی
+   پشتش سمپل نمی‌شه، ولی دیگه پشتش هم دیده نمی‌شه. این برایِ خودِ هدر
+   (که *دائماً* روی صفحه‌ست و رنگِ نیمه‌شفافِ چهاردرصدی‌ش بدونِ بلور کاملاً
+   بی‌رنگ می‌شد) و برایِ پاپ‌آپ‌هایی که محتوای داخلی‌شون سنگینه (مثلاً
+   لیستِ درازِ «مشاهده حرکات») امن‌تر از برگردوندنِ بلور روی خودشونه —
+   دقیقاً همون ترفندی که .dash-context-menu از قبل استفاده می‌کرد. */
+html[data-perf="low"] .app-topbar{ background:rgba(10,10,11,.94) !important; }
+html[data-perf="low"] body[data-theme="light"] .app-topbar{ background:rgba(250,240,225,.94) !important; }
+
+html[data-perf="low"] .modal-panel.liquid-glass-panel{ background:rgba(10,10,11,.97) !important; }
+html[data-perf="low"] body[data-theme="light"] .modal-panel.liquid-glass-panel{ background:rgba(255,255,255,.97) !important; }
+
+html[data-perf="low"] .exercise-catalog-popup-panel,
+html[data-perf="low"] .exercise-catalog-detail-card{ background:rgba(10,10,11,.97) !important; }
+html[data-perf="low"] body[data-theme="light"] .exercise-catalog-popup-panel,
+html[data-perf="low"] body[data-theme="light"] .exercise-catalog-detail-card{ background:rgba(255,255,255,.97) !important; }
+
+/* .wsearch-newform (افزودن/ویرایشِ برنامه و مشابه‌هاش) توی تمِ تاریک از قبل
+   یه fallbackِ توپر داشت (خطِ ۲۰۷۱)؛ توی تمِ روشن اصلاً نداشت — رویِ
+   data-perf=low بدونِ بلور فقط ۹٪ سفید می‌موند، تقریباً کاملاً شفاف. */
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
 
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }

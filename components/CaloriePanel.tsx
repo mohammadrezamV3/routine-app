@@ -166,8 +166,9 @@ export function CaloriePanel() {
   }, [status, selectedIso]);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
     if (target && !editingGoal && !hasSeenCalorieTutorial()) setShowTutorial(true);
-  }, [target, editingGoal]);
+  }, [status, target, editingGoal]);
 
   async function saveGoal() {
     if (!goal) { setGoalError("انتخاب هدف لازمه"); return; }

@@ -9,7 +9,7 @@ export default function CalorieModuleSettingsPage() {
       <div className="section-note" style={{ marginBottom: 12 }}>
         هدفِ کالری و درشت‌مغذی‌ها از داخلِ خودِ صفحه‌ی کالری مدیریت می‌شن.
       </div>
-      <Link href="/exercise?tab=calorie" className="account-sub-cta-btn">رفتن به برنامه غذایی</Link>
+      <Link href="/exercise?tab=calorie" className="account-sub-cta-btn">رفتن به کالری‌شمار</Link>
     </section>
   );
 }

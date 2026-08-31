@@ -115,7 +115,7 @@ const LINKS: NavItem[] = [
     label: "بدنسازی", icon: "exercise",
     children: [
       { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE" },
-      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food", module: "CALORIE" },
+      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE" },
     ],
   },
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هابِ خودش، و انتخابِ

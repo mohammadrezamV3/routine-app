@@ -78,7 +78,7 @@ export function CalorieFoodPlanCard({
       <div className="mt-4 flex shrink-0 items-center justify-between sm:mt-5">
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <UtensilsCrossed className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          برنامه غذایی
+          کالری‌شمار
         </h2>
         {isToday && (
           <button
