@@ -179,9 +179,10 @@ model User {
   pushSubscriptions PushSubscription[]
 
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
-  friendRequestsSent     Friendship[] @relation("FriendRequestsSent")
-  friendRequestsReceived Friendship[] @relation("FriendRequestsReceived")
+  friendRequestsSent     Friendship[]  @relation("FriendRequestsSent")
+  friendRequestsReceived Friendship[]  @relation("FriendRequestsReceived")
   tradeNotes             TradeNote[]
+  tradeMtLinks           TradeMtLink[]
 
   @@index([market])
   @@index([gymPartnerId])
@@ -924,6 +925,7 @@ model TradeAccount {
   entries TradeEntry[]
   notes   TradeNote[]
   tags    TradeTag[]   @relation("TradeAccountTags")
+  mtLink  TradeMtLink?
 
   @@index([userId, archived])
 }
@@ -1051,9 +1053,17 @@ model TradeEntry {
 
   notes TradeNote[]
 
+  // معامله‌ای که از متاتریدر همگام شده. externalId همان شناسه‌ی یکتای خودِ
+  // ترمینال است (در MT4 شماره‌ی تیکت، در MT5 شناسه‌ی پوزیشن)، و کلیدِ یکتای
+  // (accountId, externalId) تضمین می‌کند اجرای دوباره‌ی sync — که در EA
+  // کاملاً عادی است — هیچ‌وقت معامله‌ی تکراری نسازد.
+  externalId     String?
+  externalSource String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([accountId, externalId])
   @@index([userId, openedAt])
   @@index([accountId, openedAt])
   @@index([checklistId])
@@ -1073,6 +1083,65 @@ model TradeImage {
   createdAt DateTime   @default(now())
 
   @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — اتصال متاتریدر
+//
+// اتصال عمداً روی **خودِ حساب** می‌نشیند نه روی کاربر: هر کاربر ده‌ها حسابِ
+// معاملاتی دارد و هرکدام ترمینال/لاگینِ خودش را دارد؛ یک اتصالِ سراسری
+// معنی نداشت.
+//
+// قواعدِ امنیتی که این مدل بر اساسشان ساخته شده و نباید شکسته شوند:
+//   • رمزِ حسابِ معاملاتی هیچ‌جا ذخیره نمی‌شود و اصلاً از کاربر خواسته
+//     نمی‌شود. EA فقط داده می‌فرستد؛ ارتباط یک‌طرفه و خواندنی است.
+//   • نه کدِ اتصال و نه توکنِ دائمی به‌صورت خام ذخیره نمی‌شوند — فقط
+//     SHA-256شان. چون هر دو رشته‌ی تصادفیِ پرآنتروپی‌اند (نه رمزِ انتخابیِ
+//     انسان)، هشِ سریع درست است و برخلافِ bcrypt اجازه‌ی جست‌وجوی مستقیم
+//     با ایندکس را هم می‌دهد.
+//   • کدِ اتصال یک‌بارمصرف و کوتاه‌عمر است؛ توکن هر لحظه قابلِ ابطال.
+// ============================================================================
+
+enum MtPlatform {
+  MT4
+  MT5
+}
+
+model TradeMtLink {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // یک اتصالِ فعال به‌ازای هر حساب
+  accountId String       @unique
+  account   TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  platform MtPlatform
+
+  // کدِ اتصالِ یک‌بارمصرف (فقط هش)
+  pairingHash      String?   @unique
+  pairingExpiresAt DateTime?
+
+  // توکنِ دائمیِ EA (فقط هش). پیشوند صرفاً برای نمایشِ «کدام توکن» در UI است.
+  tokenHash   String? @unique
+  tokenPrefix String?
+
+  // چیزی که خودِ EA گزارش می‌کند
+  brokerName   String?
+  serverName   String?
+  accountLogin String?
+  balance      Float?
+  equity       Float?
+  currency     String?
+
+  connectedAt DateTime?
+  lastSyncAt  DateTime?
+  revokedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ============================================================================

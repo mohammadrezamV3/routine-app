@@ -5231,3 +5231,34 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
   margin-top:11px; font-size:10px; color:var(--muted2);
 }
 .trade-note-foot .trade-tag-chip{ font-size:9.5px; padding:2px 7px; }
+
+/* ── اتصال متاتریدر ────────────────────────────────────────── */
+.trade-mt-panel{
+  margin-top:22px; padding-top:18px; border-top:1px solid var(--line);
+}
+.trade-mt-status{
+  display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--muted);
+  border:1px solid var(--line); border-radius:999px; padding:6px 13px;
+}
+.trade-mt-status.connected{ color:var(--accent); border-color:var(--accent); }
+.trade-mt-steps{
+  margin:16px 18px 0 0; padding:0; display:flex; flex-direction:column; gap:11px;
+  font-size:12.5px; color:var(--muted); line-height:1.9;
+}
+.trade-mt-steps li{ padding-right:4px; }
+.trade-mt-steps b{ color:var(--text); }
+.trade-mt-download{
+  display:inline-flex; align-items:center; gap:6px; margin-top:7px;
+  font-size:12px; color:var(--accent); text-decoration:none;
+  border:1px solid var(--accent); border-radius:10px; padding:7px 12px;
+}
+.trade-mt-note{
+  display:block; margin-top:6px; font-size:11px; color:var(--muted2); line-height:1.8;
+}
+.trade-mt-code-box{
+  margin-top:16px; padding:16px; border:1px solid var(--accent); border-radius:16px;
+}
+.trade-mt-code{
+  font-size:22px; font-weight:800; letter-spacing:.12em; margin:8px 0 4px; direction:ltr; text-align:center;
+}
+.trade-mt-row{ text-decoration:none; color:var(--text); display:block; }

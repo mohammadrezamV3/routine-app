@@ -18,7 +18,7 @@ const ITEMS: HubItem[] = [
   { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار، با هشدار قبل از انتشار" },
   { href: "/trade/clock", title: "ساعت فارکس", desc: "وضعیت لحظه‌ای جلسه‌های معاملاتی" },
   { href: "/trade/notes", title: "یادداشت‌ها", desc: "تحلیل‌ها و تجربه‌های شخصی" },
-  { href: "/trade/metatrader", title: "اتصال متاتریدر", desc: "دریافت خودکار معاملات", soon: true },
+  { href: "/trade/metatrader", title: "اتصال متاتریدر", desc: "دریافت خودکار معاملات، برای هر حساب جداگانه" },
 ];
 
 export default function TradePage() {

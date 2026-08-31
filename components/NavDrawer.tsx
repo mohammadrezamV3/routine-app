@@ -127,6 +127,7 @@ const LINKS: NavItem[] = [
       { href: "/trade/calendar", label: "تقویم اقتصادی", icon: "weekly", module: "TRADE" },
       { href: "/trade/clock", label: "ساعت فارکس", icon: "trade", module: "TRADE" },
       { href: "/trade/notes", label: "یادداشت‌ها", icon: "journal", module: "TRADE" },
+      { href: "/trade/metatrader", label: "اتصال متاتریدر", icon: "trade", module: "TRADE" },
     ],
   },
   { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT" },

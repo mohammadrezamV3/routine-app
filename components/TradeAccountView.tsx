@@ -15,6 +15,7 @@ import {
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
+import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 
 type StatusFilter = "ALL" | TradeStatus;
@@ -233,6 +234,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           </button>
         ))}
       </div>
+
+      <TradeMtLinkPanel accountId={account.id} calSystem={calSystem} />
 
       {editingAccount && (
         <TradeAccountModal
