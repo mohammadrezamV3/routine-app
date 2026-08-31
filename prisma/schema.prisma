@@ -33,18 +33,18 @@ enum Currency {
 }
 
 enum AiModel {
-  HAIKU  // بازار ایران — ارزون‌تر
+  HAIKU // بازار ایران — ارزون‌تر
   SONNET // بازار بین‌المللی
 }
 
 enum ModuleKey {
-  ROUTINE   // روتین/چک‌لیست روزانه — همیشه در پلن پایه
-  SLEEP     // خواب — همیشه در پلن پایه
-  TASKS     // کارهای روزمره — همیشه در پلن پایه
-  EXERCISE  // ورزش
-  CALORIE   // کالری
-  TRADE     // ژورنال ترید
-  ROADMAP   // رودمپ آموزشی — همراه با پلن مکس یا جدا، به‌صورت پیکربندی‌شده
+  ROUTINE // روتین/چک‌لیست روزانه — همیشه در پلن پایه
+  SLEEP // خواب — همیشه در پلن پایه
+  TASKS // کارهای روزمره — همیشه در پلن پایه
+  EXERCISE // ورزش
+  CALORIE // کالری
+  TRADE // ژورنال ترید
+  ROADMAP // رودمپ آموزشی — همراه با پلن مکس یا جدا، به‌صورت پیکربندی‌شده
   AI_INSIGHT // Correlation Insight — فقط پلن مکس
 }
 
@@ -62,9 +62,9 @@ enum BillingInterval {
 }
 
 enum ReferralUsageStatus {
-  PENDING    // ثبت شده ولی هنوز شرط تکمیل (مثلاً اولین پرداخت) برقرار نشده
-  REWARDED   // پاداش (ماه رایگان / سهم باشگاه) اعمال شده
-  REVOKED    // به هر دلیل باطل شده (مثلاً استرداد وجه)
+  PENDING // ثبت شده ولی هنوز شرط تکمیل (مثلاً اولین پرداخت) برقرار نشده
+  REWARDED // پاداش (ماه رایگان / سهم باشگاه) اعمال شده
+  REVOKED // به هر دلیل باطل شده (مثلاً استرداد وجه)
 }
 
 enum PartnerType {
@@ -98,76 +98,78 @@ enum ErrorSeverity {
 // ============================================================================
 
 model User {
-  id            String   @id @default(cuid())
-  email         String?  @unique
-  phone         String?  @unique
-  username      String?  @unique
-  passwordHash  String?
-  name          String?
-  lastName      String?
-  avatarUrl     String?
-  birthDate     DateTime?
-  gender        String?  // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  phone        String?   @unique
+  username     String?   @unique
+  passwordHash String?
+  name         String?
+  lastName     String?
+  avatarUrl    String?
+  birthDate    DateTime?
+  gender       String? // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
   // پروفایل — مستقل از اسنپ‌شاتِ heightCm/weightKgِ خودِ ExercisePlan/CalorieTarget
   // (که لحظه‌ی محاسبه رو ثبت می‌کنن)؛ این‌جا مقدارِ فعلیِ کاربره که از پروفایل ویرایش می‌شه.
-  heightCm      Int?
-  weightKg      Float?
+  heightCm     Int?
+  weightKg     Float?
 
   // پنل کاربری › حریم خصوصی: خاموش‌کردنش یعنی توی جست‌وجوی دوستان (/api/friends/search) دیده نشه
-  discoverable  Boolean  @default(true)
+  discoverable     Boolean @default(true)
   // ساختارِ آماده برای ۲مرحله‌ای — فعلاً فقط پرچمه، فلوی فعال‌سازی/کدِ OTP هنوز پیاده نشده
   twoFactorEnabled Boolean @default(false)
 
   // سوپریوزر/ادمین — دسترسی نامحدود به همه ماژول‌ها بدون نیاز به اشتراک
-  isSuperAdmin  Boolean  @default(false)
+  isSuperAdmin Boolean @default(false)
 
   // پنل Owner › کاربران › مسدودکردن — کاربرِ مسدودشده نمی‌تونه لاگین کنه
   // (چک در authorize())؛ soft-delete نیست، فقط جلوی ورود رو می‌گیره
-  isBlocked     Boolean  @default(false)
-  blockedAt     DateTime?
+  isBlocked Boolean   @default(false)
+  blockedAt DateTime?
 
-  market        Market   // بازار کاربر — تعیین‌کننده ارز/پلن/مدل AI/زبان پیش‌فرض
-  locale        String   @default("fa") // fa | en
-  timezone      String   @default("Asia/Tehran")
+  market   Market // بازار کاربر — تعیین‌کننده ارز/پلن/مدل AI/زبان پیش‌فرض
+  locale   String @default("fa") // fa | en
+  timezone String @default("Asia/Tehran")
 
   emailVerifiedAt DateTime?
   phoneVerifiedAt DateTime?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  deletedAt     DateTime? // soft delete برای نگهداری تاریخچه مالی/رفرال
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // soft delete برای نگهداری تاریخچه مالی/رفرال
 
   // روابط احراز هویت
-  accounts      OAuthAccount[]
-  sessions      Session[]
-  loginEvents   LoginEvent[]
+  accounts          OAuthAccount[]
+  sessions          Session[]
+  loginEvents       LoginEvent[]
   passwordResetOtps PasswordResetOtp[]
-  tradeChecklistItems TradeChecklistItem[]
 
   // روابط تجاری
-  subscriptions       Subscription[]
-  moduleAccess         ModuleAccess[]
-  aiUsage              AiUsageRecord[]
+  subscriptions Subscription[]
+  moduleAccess  ModuleAccess[]
+  aiUsage       AiUsageRecord[]
 
   // رفرال — کد خودِ کاربر برای دعوت دیگران
-  referralCode         ReferralCode?
-  referralUsagesAsInvitee  ReferralUsage[] @relation("InviteeUsages")
+  referralCode            ReferralCode?
+  referralUsagesAsInvitee ReferralUsage[] @relation("InviteeUsages")
 
   // اگر کاربر از طریق باشگاه اومده
-  gymPartnerId         String?
-  gymPartner           Partner? @relation("GymUsers", fields: [gymPartnerId], references: [id])
+  gymPartnerId String?
+  gymPartner   Partner? @relation("GymUsers", fields: [gymPartnerId], references: [id])
 
   // داده‌های ماژول‌ها
-  dailyEntries      DailyEntry[]
-  sleepEntries      SleepEntry[]
-  tasks             Task[]
-  exercisePlans     ExercisePlan[]
-  exerciseLogs      ExerciseLog[]
-  foodLogs          FoodLogEntry[]
-  calorieTargets    CalorieTarget[]
-  tradeEntries      TradeEntry[]
-  roadmaps          Roadmap[]
-  notepadPages      NotepadPage[]
+  dailyEntries          DailyEntry[]
+  sleepEntries          SleepEntry[]
+  tasks                 Task[]
+  exercisePlans         ExercisePlan[]
+  exerciseLogs          ExerciseLog[]
+  foodLogs              FoodLogEntry[]
+  calorieTargets        CalorieTarget[]
+  tradeEntries          TradeEntry[]
+  tradeAccounts         TradeAccount[]
+  tradeTags             TradeTag[]
+  tradeChecklists       TradeChecklist[]
+  roadmaps              Roadmap[]
+  notepadPages          NotepadPage[]
   weeklyReportSnapshots WeeklyReportSnapshot[]
   weeklyGoals           WeeklyGoal[]
 
@@ -177,8 +179,10 @@ model User {
   pushSubscriptions PushSubscription[]
 
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
-  friendRequestsSent     Friendship[] @relation("FriendRequestsSent")
-  friendRequestsReceived Friendship[] @relation("FriendRequestsReceived")
+  friendRequestsSent     Friendship[]  @relation("FriendRequestsSent")
+  friendRequestsReceived Friendship[]  @relation("FriendRequestsReceived")
+  tradeNotes             TradeNote[]
+  tradeMtLinks           TradeMtLink[]
 
   @@index([market])
   @@index([gymPartnerId])
@@ -188,7 +192,7 @@ model OAuthAccount {
   id                String   @id @default(cuid())
   userId            String
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider          String   // google | apple | ...
+  provider          String // google | apple | ...
   providerAccountId String
   createdAt         DateTime @default(now())
 
@@ -215,26 +219,12 @@ model LoginEvent {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider  String   // "credentials" | "google"
+  provider  String // "credentials" | "google"
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
-}
-
-// چک‌لیست شخصی پیش از معامله — کاملاً دست‌ساز کاربره (نه قالب ثابت)، حداکثر
-// ۴۰ آیتم، ترتیبش با «order» مشخص می‌شه و از پنل ترید قابل ویرایش/جابه‌جایی‌ست
-model TradeChecklistItem {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  text      String
-  order     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
 }
 
 // کد یک‌بارمصرف فراموشی رمز — پیامکی به شماره کاربر می‌ره. کد به‌صورت هش‌شده
@@ -296,14 +286,14 @@ model EmailLoginOtp {
 // newEmail (ایمیلِ جدید، نه فعلی) فرستاده می‌شه تا مالکیتِ ایمیلِ جدید
 // اثبات بشه — دقیقاً همون دلیلی که تغییرِ مستقیمِ بدونِ تایید امن نبود.
 model EmailChangeOtp {
-  id         String    @id @default(cuid())
-  userId     String
-  newEmail   String
-  codeHash   String
-  expiresAt  DateTime
-  attempts   Int       @default(0)
-  usedAt     DateTime?
-  createdAt  DateTime  @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  newEmail  String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
 }
@@ -316,22 +306,22 @@ model EmailChangeOtp {
 // در PlanModule تعریف می‌شود، نه هاردکد در کد — همین باعث می‌شود اگر بعداً
 // پلن‌بندی عوض شد (مثلاً ماژول جدید یا تغییر ترکیب)، فقط داده تغییر کند.
 model Plan {
-  id            String   @id @default(cuid())
-  key           String   // "basic" | "exercise" | "trade" | "max"
-  nameFa        String
-  nameEn        String
+  id     String @id @default(cuid())
+  key    String // "basic" | "exercise" | "trade" | "max"
+  nameFa String
+  nameEn String
 
-  market        Market   // هر پلن مخصوص یک بازار تعریف می‌شود (قیمت‌گذاری جدا)
-  currency      Currency
+  market   Market // هر پلن مخصوص یک بازار تعریف می‌شود (قیمت‌گذاری جدا)
+  currency Currency
 
-  priceMonthly  Int      // به کوچک‌ترین واحد ارز (ریال برای IRR، سنت برای USD) تا خطای اعشار نداشته باشیم
-  priceYearly   Int?
+  priceMonthly Int // به کوچک‌ترین واحد ارز (ریال برای IRR، سنت برای USD) تا خطای اعشار نداشته باشیم
+  priceYearly  Int?
 
-  isActive      Boolean  @default(true)
-  sortOrder     Int      @default(0)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   modules       PlanModule[]
   subscriptions Subscription[]
@@ -341,59 +331,59 @@ model Plan {
 }
 
 model PlanModule {
-  id       String    @id @default(cuid())
-  planId   String
-  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
-  module   ModuleKey
+  id     String    @id @default(cuid())
+  planId String
+  plan   Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  module ModuleKey
 
   @@unique([planId, module])
 }
 
 model Subscription {
-  id              String              @id @default(cuid())
-  userId          String
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planId          String
-  plan            Plan                @relation(fields: [planId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
 
-  status          SubscriptionStatus  @default(TRIAL)
-  interval        BillingInterval     @default(MONTHLY)
+  status   SubscriptionStatus @default(TRIAL)
+  interval BillingInterval    @default(MONTHLY)
 
-  startDate       DateTime            @default(now())
+  startDate        DateTime  @default(now())
   currentPeriodEnd DateTime
-  canceledAt      DateTime?
-  trialEndsAt     DateTime?
+  canceledAt       DateTime?
+  trialEndsAt      DateTime?
 
   // درصد تخفیف اعمال‌شده از قرارداد باشگاه یا کد تخفیف (مثلاً ۱۰٪ = 10)
-  discountPercent Int                 @default(0)
+  discountPercent        Int            @default(0)
   appliedReferralUsageId String?
   appliedReferralUsage   ReferralUsage? @relation(fields: [appliedReferralUsageId], references: [id])
 
-  payments        Payment[]
+  payments Payment[]
 
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
 }
 
 model Payment {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   subscriptionId String
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
-  amount         Int      // واحد کوچک ارز، بعد از اعمال تخفیف
-  currency       Currency
-  provider       String   // zarinpal | stripe | ...
-  providerRef    String?  // شناسه تراکنش سمت درگاه
+  amount      Int // واحد کوچک ارز، بعد از اعمال تخفیف
+  currency    Currency
+  provider    String // zarinpal | stripe | ...
+  providerRef String? // شناسه تراکنش سمت درگاه
 
   // برای محاسبه سهم باشگاه از سود واقعی، نه از قیمت لیست
   gymRevenueShareAmount Int? // مبلغی که باید به باشگاه پرداخت شود (۱۵٪ سهم)
 
-  paidAt         DateTime?
-  refundedAt     DateTime?
-  createdAt      DateTime @default(now())
+  paidAt     DateTime?
+  refundedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([subscriptionId])
 }
@@ -409,7 +399,7 @@ model ModuleAccess {
   active    Boolean   @default(false)
   expiresAt DateTime? // برای دسترسی موقت trial یا گریس‌پیریود بعد از لغو
 
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, module])
   @@index([userId])
@@ -426,28 +416,28 @@ model ReferralCode {
   code      String   @unique
   createdAt DateTime @default(now())
 
-  usages    ReferralUsage[] @relation("CodeUsages")
+  usages ReferralUsage[] @relation("CodeUsages")
 }
 
 model ReferralUsage {
-  id              String               @id @default(cuid())
-  referralCodeId  String
-  referralCode    ReferralCode         @relation("CodeUsages", fields: [referralCodeId], references: [id])
+  id             String       @id @default(cuid())
+  referralCodeId String
+  referralCode   ReferralCode @relation("CodeUsages", fields: [referralCodeId], references: [id])
 
-  inviteeUserId   String
-  inviteeUser     User                 @relation("InviteeUsages", fields: [inviteeUserId], references: [id])
+  inviteeUserId String
+  inviteeUser   User   @relation("InviteeUsages", fields: [inviteeUserId], references: [id])
 
-  status          ReferralUsageStatus  @default(PENDING)
+  status ReferralUsageStatus @default(PENDING)
 
   // پاداش هر دو طرف: یک ماه رایگان — این مقدار وقتی status=REWARDED می‌شود اعمال می‌گردد
-  inviterRewardApplied  Boolean @default(false)
-  inviteeRewardApplied  Boolean @default(false)
+  inviterRewardApplied Boolean @default(false)
+  inviteeRewardApplied Boolean @default(false)
 
-  subscriptions   Subscription[] // اشتراک‌هایی که این کد تخفیف را گرفتند
+  subscriptions Subscription[] // اشتراک‌هایی که این کد تخفیف را گرفتند
 
-  createdAt       DateTime             @default(now())
-  rewardedAt      DateTime?
-  revokedAt       DateTime?
+  createdAt  DateTime  @default(now())
+  rewardedAt DateTime?
+  revokedAt  DateTime?
 
   @@index([inviteeUserId])
   @@index([referralCodeId])
@@ -457,22 +447,22 @@ model ReferralUsage {
 // (که شخصیه، هرکاربر یکی داره، برای دعوت دوستانه). این‌ها با دست ساخته
 // می‌شن، می‌تونن منقضی بشن، و می‌تونن فقط روی یک پلنِ خاص اعمال بشن.
 model DiscountCode {
-  id         String    @id @default(cuid())
-  code       String    @unique
-  percentOff Int
+  id             String              @id @default(cuid())
+  code           String              @unique
+  percentOff     Int
   // null یعنی روی همه‌ی پلن‌ها اعمال می‌شه؛ در غیر این صورت فقط همون کلیدِ پلن
   // (مثلاً "exercise") — همون Plan.key، نه یه رابطه‌ی FK، چون یک کلید توی هر
   // دو بازار (Market) به‌طور بالقوه پلنِ جدا داره و این کد فعلاً فقط بازارِ
   // ایران رو پوشش می‌ده (همون محدودیتِ چک‌اوتِ فعلی).
-  planKey    String?
-  expiresAt  DateTime?
-  active     Boolean   @default(true)
+  planKey        String?
+  expiresAt      DateTime?
+  active         Boolean             @default(true)
   // null یعنی هر کاربر بدونِ محدودیت می‌تونه این کد رو مصرف کنه؛ عددِ مشخص
   // یعنی سقفِ تعدادِ دفعاتِ مصرفِ این کد برای هر کاربر (رکوردش توی
   // DiscountCodeUsage، یکی به‌ازای هر خریدِ موفقِ verify-شده).
   maxUsesPerUser Int?
-  createdAt  DateTime  @default(now())
-  usages     DiscountCodeUsage[]
+  createdAt      DateTime            @default(now())
+  usages         DiscountCodeUsage[]
 
   @@index([code])
 }
@@ -493,22 +483,22 @@ model DiscountCodeUsage {
 
 // باشگاه یا هر شریک تجاری دیگر
 model Partner {
-  id                String      @id @default(cuid())
-  type              PartnerType @default(GYM)
-  name              String
-  contactPhone      String?
-  contactEmail      String?
+  id           String      @id @default(cuid())
+  type         PartnerType @default(GYM)
+  name         String
+  contactPhone String?
+  contactEmail String?
 
-  market            Market
+  market Market
 
-  revenueSharePercent Int       @default(15) // سهم باشگاه از سود واقعی
-  userDiscountPercent Int       @default(10) // تخفیف به کاربرانی که از این باشگاه می‌آیند
+  revenueSharePercent Int @default(15) // سهم باشگاه از سود واقعی
+  userDiscountPercent Int @default(10) // تخفیف به کاربرانی که از این باشگاه می‌آیند
 
-  isActive          Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  users             User[]      @relation("GymUsers")
+  users User[] @relation("GymUsers")
 
   @@index([market])
 }
@@ -518,29 +508,29 @@ model Partner {
 // ============================================================================
 
 model AiUsageRecord {
-  id           String       @id @default(cuid())
-  userId       String
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  feature      AiFeatureKey
+  feature AiFeatureKey
   // نامِ واقعیِ مدلِ فراخوانی‌شده (مثلاً "gpt-4o-mini") — enum قدیمیِ
   // AiModel (Haiku/Sonnet) مالِ زمانی بود که مستقیم به Anthropic وصل
   // بودیم؛ از وقتی همه از گیت‌وی آروان‌کلود با یک مدلِ ثابت رد می‌شن،
   // یک رشته‌ی خام دقیق‌تر و صادقانه‌تره تا یک enum که دیگه با واقعیت نمی‌خونه.
-  model        String
+  model   String
 
-  inputTokens  Int          @default(0)
-  outputTokens Int          @default(0)
-  costUsdMicros Int         @default(0) // هزینه‌ی تخمینی به میکرو-دلار (بر اساس نرخِ قابل‌تنظیمِ AppSetting)
+  inputTokens   Int @default(0)
+  outputTokens  Int @default(0)
+  costUsdMicros Int @default(0) // هزینه‌ی تخمینی به میکرو-دلار (بر اساس نرخِ قابل‌تنظیمِ AppSetting)
 
-  success      Boolean      @default(true) // false یعنی فراخوانی/تولید شکست خورد (برای نرخ خطا در پنل Owner)
-  durationMs   Int?         // زمانِ واقعیِ پاسخ‌گیریِ گیت‌وی — برای بخشِ وضعیتِ سیستم
+  success    Boolean @default(true) // false یعنی فراخوانی/تولید شکست خورد (برای نرخ خطا در پنل Owner)
+  durationMs Int? // زمانِ واقعیِ پاسخ‌گیریِ گیت‌وی — برای بخشِ وضعیتِ سیستم
 
   // خروجی همیشه باید صراحتاً "پیشنهاد" باشد؛ این پرچم برای ممیزی محتوای تولیدشده
   // (مثلاً بررسی دستی نمونه‌ای که آیا زبان دستوری/توصیه پزشکی درش نشت کرده) نگه داشته می‌شود
-  flaggedForReview Boolean   @default(false)
+  flaggedForReview Boolean @default(false)
 
-  createdAt    DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, feature, createdAt])
   @@index([feature, createdAt])
@@ -551,9 +541,9 @@ model AiMonthlyQuota {
   id         String       @id @default(cuid())
   userId     String
   feature    AiFeatureKey
-  yearMonth  String       // فرمت "2026-08" برای شمارش ساده بدون کوئری تاریخ پیچیده
+  yearMonth  String // فرمت "2026-08" برای شمارش ساده بدون کوئری تاریخ پیچیده
   usedCount  Int          @default(0)
-  limitCount Int          // بر اساس پلن کاربر ست می‌شود
+  limitCount Int // بر اساس پلن کاربر ست می‌شود
 
   @@unique([userId, feature, yearMonth])
 }
@@ -563,34 +553,34 @@ model AiMonthlyQuota {
 // ============================================================================
 
 model RoutineItem {
-  id         String   @id @default(cuid())
-  userId     String
+  id        String    @id @default(cuid())
+  userId    String
   // آیتم‌های تعریف‌شده توسط کاربر یا سیستم (مثل ترید/فرانسه/OWASP در نسخه فعلی)
-  name       String
+  name      String
   // زمان‌بندی هفتگی به‌صورت JSON: [{jsDay, startMin, endMin}], تا از منطق سخت‌کدشده HTML جدا شود
-  schedule   Json
-  startDate  DateTime?
-  endDate    DateTime?
-  isActive   Boolean  @default(true)
+  schedule  Json
+  startDate DateTime?
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model DailyEntry {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date       DateTime @db.Date // یک رکورد به‌ازای هر کاربر/روز
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime @db.Date // یک رکورد به‌ازای هر کاربر/روز
 
   // وضعیت تیک هر RoutineItem در آن روز: { [routineItemId]: boolean }
-  completedItems Json  @default("{}")
-  wakeUpAt   DateTime?
+  completedItems Json      @default("{}")
+  wakeUpAt       DateTime?
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
   @@index([userId])
@@ -617,8 +607,8 @@ model Friendship {
   favoritedByRequester Boolean @default(false)
   favoritedByAddressee Boolean @default(false)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([requesterId, addresseeId])
   @@index([requesterId])
@@ -630,17 +620,17 @@ model Friendship {
 // ============================================================================
 
 model SleepEntry {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date      DateTime @db.Date
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime @db.Date
 
-  sleptAt   DateTime?
-  wokeAt    DateTime?
+  sleptAt       DateTime?
+  wokeAt        DateTime?
   targetSleptAt DateTime? // هدف تعیین‌شده کاربر
   targetWokeAt  DateTime?
 
-  quality   Int?     // ۱ تا ۵، اختیاری، خودارزیابی کاربر
+  quality Int? // ۱ تا ۵، اختیاری، خودارزیابی کاربر
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -654,14 +644,14 @@ model SleepEntry {
 // ============================================================================
 
 model Task {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title     String
-  notes     String?
-  dueDate   DateTime?
-  priority  Int      @default(0)
+  title       String
+  notes       String?
+  dueDate     DateTime?
+  priority    Int       @default(0)
   completedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -675,48 +665,48 @@ model Task {
 // ============================================================================
 
 model ExercisePlan {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  level     String   // beginner | intermediate | advanced
-  heightCm  Int?
-  weightKg  Float?
-  goal      String?  // مثلاً "کاهش وزن" | "افزایش قدرت"
-  hasPhysicalLimitation Boolean @default(false) // چک‌باکس کلی، بدون جزئیات پزشکی
+  level                 String // beginner | intermediate | advanced
+  heightCm              Int?
+  weightKg              Float?
+  goal                  String? // مثلاً "کاهش وزن" | "افزایش قدرت"
+  hasPhysicalLimitation Boolean   @default(false) // چک‌باکس کلی، بدون جزئیات پزشکی
   disclaimerAcceptedAt  DateTime? // تیک تایید اجباری قبل از فعال‌سازی ماژول
 
-  gymDays       Json?    // آرایه‌ای از نام فارسی روزهای هفته که کاربر باشگاه می‌ره، مثلاً ["شنبه","دوشنبه","چهارشنبه"]
-  trainingPhase String?  // bulk | cut | maintenance | none
-  generatedByAi Boolean  @default(false) // false یعنی از قالب ایستای lib/exercisePlans.ts ساخته شده (fallback بدون کلید API)
+  gymDays       Json? // آرایه‌ای از نام فارسی روزهای هفته که کاربر باشگاه می‌ره، مثلاً ["شنبه","دوشنبه","چهارشنبه"]
+  trainingPhase String? // bulk | cut | maintenance | none
+  generatedByAi Boolean @default(false) // false یعنی از قالب ایستای lib/exercisePlans.ts ساخته شده (fallback بدون کلید API)
 
   startDate DateTime @default(now())
   isActive  Boolean  @default(true)
 
   // ساختار برنامه هفتگی/ماهانه به‌صورت JSON — یا از هوش مصنوعی، یا (fallback) از قالب ایستای از‌پیش‌طراحی‌شده
-  planData  Json
+  planData Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  logs      ExerciseLog[]
+  logs ExerciseLog[]
 
   @@index([userId])
 }
 
 model ExerciseLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planId    String?
-  plan      ExercisePlan? @relation(fields: [planId], references: [id])
+  id     String        @id @default(cuid())
+  userId String
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId String?
+  plan   ExercisePlan? @relation(fields: [planId], references: [id])
 
-  date      DateTime @db.Date
-  completed Boolean  @default(false)
+  date           DateTime @db.Date
+  completed      Boolean  @default(false)
   // اسمِ حرکت‌هایی که حینِ همین جلسه تیک خوردن — برای نمایشِ ضربدرِ حرکاتِ
   // تیک‌نخورده بعدِ «پایان تمرین» و محاسبه‌ی درصدِ پیشرفتِ امروز.
   completedItems Json?
-  notes     String?
+  notes          String?
 
   createdAt DateTime @default(now())
 
@@ -729,108 +719,511 @@ model ExerciseLog {
 // ============================================================================
 
 model FoodItem {
-  id          String   @id @default(cuid())
-  nameFa      String
-  nameEn      String?
+  id              String  @id @default(cuid())
+  nameFa          String
+  nameEn          String?
   caloriesPer100g Float
   proteinPer100g  Float?
   carbsPer100g    Float?
   fatPer100g      Float?
 
   // منبع داده (برای رفع اختلاف/آپدیت بعدی)
-  source      String?  // "internal" | "usda" | "user-submitted"
-  verifiedAt  DateTime?
+  source     String? // "internal" | "usda" | "user-submitted"
+  verifiedAt DateTime?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  logs        FoodLogEntry[]
+  logs FoodLogEntry[]
 
   @@index([nameFa])
 }
 
 model FoodLogEntry {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   foodItemId String?
   foodItem   FoodItem? @relation(fields: [foodItemId], references: [id])
 
   // برای غذاهای سفارشی/دستی که در دیتابیس نیستند
-  customName String?
+  customName     String?
   customCalories Float?
 
-  date       DateTime @db.Date
-  grams      Float
-  mealType   String?  // breakfast | lunch | dinner | snack
+  date     DateTime @db.Date
+  grams    Float
+  mealType String? // breakfast | lunch | dinner | snack
 
   // درشت‌مغذی‌ها — فقط برای ثبت‌هایی که با اسکنِ عکسِ غذا با هوش مصنوعی
   // اومدن پر می‌شن (چون تخمینِ دقیقِ پروتئین/کربوهیدرات/چربی از روی عکس
   // نیاز به مدلِ AI داره، نه یه فرمولِ ساده)؛ برای ثبت‌های دستی/کاتالوگ
   // همیشه null می‌مونن. aiScanned مشخص می‌کنه کدوم ثبت از این مسیر اومده،
   // تا کارتِ خلاصه‌ی درشت‌مغذی‌ها بدونه کِی داده‌ی واقعی برای نمایش داره.
-  proteinG   Float?
-  carbsG     Float?
-  fatG       Float?
-  aiScanned  Boolean  @default(false)
+  proteinG  Float?
+  carbsG    Float?
+  fatG      Float?
+  aiScanned Boolean @default(false)
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, date])
 }
 
 model CalorieTarget {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   dailyTargetKcal Int
-  goal            String?  // lose | maintain | gain
+  goal            String? // lose | maintain | gain
   mealsPerDay     Int?
-  mealBreakdown   Json?    // [{ key, label, kcal }] — جمعش باید با dailyTargetKcal برابر باشه
-  sex             String?  // male | female — فقط برای محاسبه BMR، جای دیگه‌ای ذخیره نمی‌شه
-  ageYears        Int?     // اگه User.birthDate نبود، همینجا مستقیم پرسیده و ذخیره می‌شه
-  heightCm        Int?     // اسنپ‌شات قد/وزن لحظه‌ی محاسبه (مثل ExercisePlan)، برای محاسبه BMR
+  mealBreakdown   Json? // [{ key, label, kcal }] — جمعش باید با dailyTargetKcal برابر باشه
+  sex             String? // male | female — فقط برای محاسبه BMR، جای دیگه‌ای ذخیره نمی‌شه
+  ageYears        Int? // اگه User.birthDate نبود، همینجا مستقیم پرسیده و ذخیره می‌شه
+  heightCm        Int? // اسنپ‌شات قد/وزن لحظه‌ی محاسبه (مثل ExercisePlan)، برای محاسبه BMR
   weightKg        Float?
 
-  effectiveFrom   DateTime @default(now())
-  effectiveTo     DateTime?
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime?
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
 }
 
 // ============================================================================
-// MODULE: TRADE JOURNAL (فقط آمار خام — بدون تفسیر یا پیشنهاد سیستمی)
+// MODULE: TRADE (حساب معاملاتی › معامله › چک‌لیست/دلایل/احساسات › آمار)
+//
+// طراحیِ این بخش عمداً «حساب-محور»ه نه «کاربر-محور»: یک کاربر ده‌ها حسابِ
+// معاملاتی داره (ریل/دمو/پراپ/بک‌تست) و هر آمار و هر معامله زیرِ یکی از
+// اون‌هاست. سه قانونی که موقعِ خوندنِ این مدل‌ها باید در ذهن باشه:
+//
+//   ۱) هیچ داده‌ای پاک نمی‌شه که تاریخچه رو خراب کنه — حذفِ حساب یعنی
+//      archived=true (معاملاتش سرِ جاشون می‌مونن و فقط از آمارِ کلی خارج می‌شن).
+//   ۲) هرچیزی که بعداً ممکنه عوض بشه ولی آمارِ گذشته بهش تکیه داره
+//      (متنِ آیتم‌های چک‌لیست)، در لحظه‌ی ثبتِ معامله snapshot می‌شه، نه
+//      فقط ارجاعِ ID — وگرنه ویرایشِ یک چک‌لیست، آمارِ صدتا معامله‌ی قبلی رو
+//      بی‌صدا عوض می‌کنه.
+//   ۳) زمان‌ها همیشه UTCن. ساعتِ محلیِ کاربر (User.timezone) فقط لایه‌ی
+//      نمایشه. جلسه‌ی معاملاتی (لندن/نیویورک/…) سمتِ سرور از روی همین
+//      زمانِ UTC با DSTِ واقعیِ هر شهر حساب می‌شه، نه با عددِ ثابت.
 // ============================================================================
 
+enum TradeAccountType {
+  REAL // حساب واقعی
+  DEMO // دمو
+  PROP // پراپ‌فرم
+  BACKTEST // بک‌تست
+}
+
+// هدفِ سودِ حساب می‌تونه مبلغ باشه یا درصدی از بالانسِ اولیه
+enum TradeGoalType {
+  AMOUNT
+  PERCENT
+}
+
+enum TradeDirection {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  OPEN // هنوز باز — قیمت/زمانِ خروج نداره
+  CLOSED // بسته‌شده
+  CANCELED // ستاپ باطل شد و اصلاً وارد نشدیم (برای آمارِ «چندبار پلن رو نشکستم»)
+}
+
+enum TradeResult {
+  PROFIT
+  LOSS
+  BREAKEVEN
+}
+
+// جلسه‌ی معاملاتی — آرایه‌ست نه تک‌مقدار، چون بازه‌های همپوشان واقعی‌ان
+// (۱۳:۰۰–۱۶:۳۰ UTC هم لندنه هم نیویورک) و آمارِ «عملکردم در لندن» باید
+// معاملاتِ همپوشان رو هم بشمره.
+enum TradeSession {
+  SYDNEY
+  TOKYO
+  LONDON
+  NEWYORK
+}
+
+// انگیزه‌ی ورود — چندانتخابی. ارزشِ واقعیِ این فیلد در آماره: مقایسه‌ی
+// نرخِ بردِ «طبق استراتژی» با «FOMO»/«انتقام از بازار» دقیقاً همون چیزیه که
+// اسپکِ محصول ازش با «چطور معامله می‌کنی؟» یاد می‌کنه.
+enum TradeEntryReason {
+  STRATEGY // طبق استراتژی
+  TECHNICAL_SIGNAL // سیگنال تکنیکال
+  FUNDAMENTAL_SIGNAL // سیگنال فاندامنتال
+  NEWS // اخبار
+  INTUITION // شهود
+  OTHERS_ADVICE // توصیه دیگران
+  FOMO
+  REVENGE // انتقام از بازار
+  OTHER
+}
+
+enum TradeExitReason {
+  TAKE_PROFIT
+  STOP_LOSS
+  MANUAL // خروج دستی
+  TRAILING_STOP
+  MARKET_CHANGE // تغییر شرایط بازار
+  EMOTIONAL // خروج احساسی
+  TIME_BASED // خروج زمانی (پایان سشن/قبل خبر)
+  OTHER
+}
+
+enum TradeEmotionBefore {
+  CALM // آرام
+  NEUTRAL // معمولی
+  EXCITED // هیجان‌زده
+  ANXIOUS // مضطرب
+  ANGRY // عصبانی
+  OVERCONFIDENT // بیش‌ازحد مطمئن
+}
+
+enum TradeEmotionAfter {
+  SATISFIED // راضی
+  RELIEVED // آسوده
+  INDIFFERENT // بی‌تفاوت
+  ANXIOUS // مضطرب
+  REGRET // پشیمان
+  ANGRY // عصبانی
+}
+
+// یک حسابِ معاملاتی. اتصالِ متاتریدر (فاز بعد) هم عمداً همین‌جا — روی خودِ
+// حساب — می‌شینه نه روی کاربر، چون هر کاربر ده‌ها حساب داره و هر حساب
+// اتصالِ مستقلِ خودش رو داره.
+model TradeAccount {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name           String
+  broker         String?
+  type           TradeAccountType @default(REAL)
+  currency       String           @default("USD") // ارزِ حساب — همه‌ی مبالغِ معاملاتش به همینه
+  initialBalance Float            @default(0)
+  leverage       Int?
+  color          String           @default("#00A86B")
+  note           String?
+
+  // هدفِ سودِ ماهانه‌ی همین حساب (قبلاً یک عددِ کلیِ بی‌واحد در تنظیماتِ کاربر بود)
+  goalType  TradeGoalType @default(AMOUNT)
+  goalValue Float         @default(0)
+
+  // «حذف» در UI یعنی این — تاریخچه دست‌نخورده می‌مونه ولی از آمارِ کلی خارج می‌شه
+  archived   Boolean   @default(false)
+  archivedAt DateTime?
+
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries TradeEntry[]
+  notes   TradeNote[]
+  tags    TradeTag[]   @relation("TradeAccountTags")
+  mtLink  TradeMtLink?
+
+  @@index([userId, archived])
+}
+
+// برچسبِ رنگیِ کاربرساخته — هم روی حساب استفاده می‌شه هم روی معامله، چون
+// از نظرِ کاربر «برچسب» یک مفهومه و دو تا لیستِ جدا گیج‌کننده‌ست.
+model TradeTag {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String   @default("#3E7BFA")
+  createdAt DateTime @default(now())
+
+  accounts TradeAccount[] @relation("TradeAccountTags")
+  entries  TradeEntry[]   @relation("TradeEntryTags")
+  notes    TradeNote[]    @relation("TradeNoteTags")
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// چک‌لیستِ پیش از معامله. برخلافِ نسخه‌ی قبلی (یک لیستِ تختِ واحد برای هر
+// کاربر)، حالا کاربر چند چک‌لیستِ نام‌دار داره — «London Breakout»، «اسکالپ
+// طلا» و… — و هر معامله به یکی‌شون وصل می‌شه.
+model TradeChecklist {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  color     String   @default("#3E7BFA")
+  // «الزام تکمیل چک‌لیست» — فقط هشدار می‌ده و معامله رو «خارج از پلن» علامت
+  // می‌زنه؛ هیچ‌وقت جلوی ثبتِ معامله رو نمی‌گیره (اصلِ صریحِ محصول: Arion
+  // نباید مانعِ ثبتِ واقعیتِ یک معامله بشه).
+  required  Boolean  @default(false)
+  archived  Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items   TradeChecklistItem[]
+  entries TradeEntry[]
+
+  @@index([userId, archived])
+}
+
+model TradeChecklistItem {
+  id          String         @id @default(cuid())
+  checklistId String
+  checklist   TradeChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  text        String
+  order       Int
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([checklistId])
+}
+
 model TradeEntry {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId String
+  account   TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  pair        String   // "EURUSD"
-  direction   String   // long | short
-  entryPrice  Float
-  exitPrice   Float?
-  lotSize     Float
-  volume      Float?   // حجم معامله — جدا از لات، ورودی آزاد کاربر
-  pnl         Float?   // سود/زیان — از قیمت ورود/خروج/لات/جهت معامله محاسبه می‌شه، ورودی دستی نیست
-  riskPercent Float?
-  stopLoss    Float?
-  takeProfit  Float?
-  strategy    String?  // تگ آزاد استراتژی/ستاپ معامله، مثلاً "بریک‌اوت"
-  screenshotUrl String? // عکس چارت معامله به‌صورت data URL (بدون استوریج جدا)
+  // ── اطلاعات ضروری ──────────────────────────────────────────────────────
+  symbol     String // "EURUSD" — نامش از pair عوض شد چون سهام/کریپتو هم هست
+  direction  TradeDirection
+  timeframe  String? // "1h"، "15m"، … — از لیستِ ثابتِ lib/tradeSymbols
+  openedAt   DateTime // زمانِ ورود، UTC — پایه‌ی آمارِ جلسه/روز/ساعت
+  volume     Float // حجم
+  volumeUnit String         @default("LOT") // LOT | USD — «(lot or usd)»ی فرم
+  result     TradeResult
+  // سود/زیانِ **خالص و علامت‌دار** به ارزِ حساب. کاربر عددِ مثبت وارد می‌کنه و
+  // علامت از result میاد. عمداً یک ستونه (نه ناخالص+خالصِ جدا) تا هیچ‌وقت دو
+  // منبعِ حقیقت برای «سود» وجود نداشته باشه؛ کمیسیون/سواپ فقط اطلاعاتی‌ان و
+  // در *پیشنهادِ* محاسبه‌شده لحاظ می‌شن، نه اینکه دوباره از این کم بشن.
+  pnl        Float          @default(0)
+  riskFree   Boolean        @default(false) // معامله ریسک‌فری/بریک‌ایون شد؟
+  status     TradeStatus    @default(CLOSED)
 
-  openedAt    DateTime
-  closedAt    DateTime?
-  notes       String?
+  // ── اطلاعات اختیاری ────────────────────────────────────────────────────
+  entryPrice Float?
+  exitPrice  Float?
+  stopLoss   Float?
+  takeProfit Float?
+  closedAt   DateTime?
+  commission Float?
+  swap       Float?
+  // ریسکِ اولیه به ارزِ حساب — مخرجِ R. یا کاربر مستقیم وارد می‌کنه، یا از
+  // فاصله‌ی ورود تا حدضرر و اندازه‌ی قراردادِ نماد پیشنهاد می‌شه.
+  riskAmount Float?
+  // R = pnl ÷ riskAmount — ذخیره می‌شه (نه فقط محاسبه‌ی لحظه‌ای) چون آمارِ
+  // «میانگین R» باید سمتِ دیتابیس aggregate بشه، نه با کشیدنِ همه‌ی ردیف‌ها.
+  rMultiple  Float?
+  sessions   TradeSession[]
+  setup      String? // ستاپ/استراتژی — همون strategyِ قبلی
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // ── دلایل و یادداشت ────────────────────────────────────────────────────
+  entryReasons    TradeEntryReason[]
+  exitReasons     TradeExitReason[]
+  entryReasonNote String?
+  exitReasonNote  String?
+  note            String? // «نکات معامله»
 
+  // ── احساسات ────────────────────────────────────────────────────────────
+  emotionBefore TradeEmotionBefore?
+  emotionAfter  TradeEmotionAfter?
+  confidence    Int? // ۱ تا ۱۰
+  followedPlan  Boolean? // طبقِ پلن عمل کردم؟
+
+  // ── چک‌لیست (ارجاع + snapshotِ لحظه‌ی ثبت) ─────────────────────────────
+  // checklistId فقط برای فیلترِ «معاملاتِ این چک‌لیست»ه و با حذفِ چک‌لیست
+  // null می‌شه؛ چیزی که آمار واقعاً بهش تکیه می‌کنه اسنپ‌شاتِ زیرشه.
+  checklistId       String?
+  checklist         TradeChecklist? @relation(fields: [checklistId], references: [id], onDelete: SetNull)
+  checklistName     String?
+  checklistDone     Int?
+  checklistTotal    Int?
+  checklistSnapshot Json? // [{ text, checked }] — متنِ همون لحظه، نه متنِ امروز
+
+  images TradeImage[]
+  tags   TradeTag[]   @relation("TradeEntryTags")
+
+  notes TradeNote[]
+
+  // معامله‌ای که از متاتریدر همگام شده. externalId همان شناسه‌ی یکتای خودِ
+  // ترمینال است (در MT4 شماره‌ی تیکت، در MT5 شناسه‌ی پوزیشن)، و کلیدِ یکتای
+  // (accountId, externalId) تضمین می‌کند اجرای دوباره‌ی sync — که در EA
+  // کاملاً عادی است — هیچ‌وقت معامله‌ی تکراری نسازد.
+  externalId     String?
+  externalSource String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([accountId, externalId])
   @@index([userId, openedAt])
+  @@index([accountId, openedAt])
+  @@index([checklistId])
+}
+
+// عکسِ چارت — عمداً جدولِ جدا، نه ستونی روی خودِ TradeEntry. دلیلِ فنی:
+// عکس به‌صورت data URL ذخیره می‌شه (استوریجِ فایلِ جدا نداریم) و اگه روی
+// همون ردیف بود، هر کوئریِ لیستِ معاملات چند مگابایت عکس رو هم می‌کشید.
+// این‌طوری ردیفِ معامله سبک می‌مونه و عکس فقط موقعِ بازکردنِ جزئیات لود می‌شه.
+model TradeImage {
+  id        String     @id @default(cuid())
+  entryId   String
+  entry     TradeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  dataUrl   String
+  caption   String?
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+
+  @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — اتصال متاتریدر
+//
+// اتصال عمداً روی **خودِ حساب** می‌نشیند نه روی کاربر: هر کاربر ده‌ها حسابِ
+// معاملاتی دارد و هرکدام ترمینال/لاگینِ خودش را دارد؛ یک اتصالِ سراسری
+// معنی نداشت.
+//
+// قواعدِ امنیتی که این مدل بر اساسشان ساخته شده و نباید شکسته شوند:
+//   • رمزِ حسابِ معاملاتی هیچ‌جا ذخیره نمی‌شود و اصلاً از کاربر خواسته
+//     نمی‌شود. EA فقط داده می‌فرستد؛ ارتباط یک‌طرفه و خواندنی است.
+//   • نه کدِ اتصال و نه توکنِ دائمی به‌صورت خام ذخیره نمی‌شوند — فقط
+//     SHA-256شان. چون هر دو رشته‌ی تصادفیِ پرآنتروپی‌اند (نه رمزِ انتخابیِ
+//     انسان)، هشِ سریع درست است و برخلافِ bcrypt اجازه‌ی جست‌وجوی مستقیم
+//     با ایندکس را هم می‌دهد.
+//   • کدِ اتصال یک‌بارمصرف و کوتاه‌عمر است؛ توکن هر لحظه قابلِ ابطال.
+// ============================================================================
+
+enum MtPlatform {
+  MT4
+  MT5
+}
+
+model TradeMtLink {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // یک اتصالِ فعال به‌ازای هر حساب
+  accountId String       @unique
+  account   TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  platform MtPlatform
+
+  // کدِ اتصالِ یک‌بارمصرف (فقط هش)
+  pairingHash      String?   @unique
+  pairingExpiresAt DateTime?
+
+  // توکنِ دائمیِ EA (فقط هش). پیشوند صرفاً برای نمایشِ «کدام توکن» در UI است.
+  tokenHash   String? @unique
+  tokenPrefix String?
+
+  // چیزی که خودِ EA گزارش می‌کند
+  brokerName   String?
+  serverName   String?
+  accountLogin String?
+  balance      Float?
+  equity       Float?
+  currency     String?
+
+  connectedAt DateTime?
+  lastSyncAt  DateTime?
+  revokedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ============================================================================
+// MODULE: TRADE — یادداشت‌ها
+//
+// عمداً یک مدلِ سبکِ مستقل، نه استفاده از NotepadPage/NotepadBlock: نیازِ
+// این‌جا «یادداشتِ کوتاه با برچسب و رنگ و جست‌وجو»ست، نه ویرایشگرِ بلاکیِ
+// تودرتو. یادداشت می‌تواند اختیاراً به یک حساب یا یک معامله وصل شود تا
+// «تحلیلی که آن روز نوشتم» کنارِ همان معامله پیدا شود.
+// ============================================================================
+
+model TradeNote {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  content String  @default("")
+  color   String  @default("#3E7BFA")
+  pinned  Boolean @default(false)
+
+  // اتصالِ اختیاری — با حذفِ حساب/معامله فقط این ارجاع null می‌شود، خودِ
+  // یادداشت می‌ماند (متنش مستقل از آن‌ها ارزش دارد).
+  accountId String?
+  account   TradeAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  entryId   String?
+  entry     TradeEntry?   @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  tags TradeTag[] @relation("TradeNoteTags")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+  @@index([accountId])
+  @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — تقویم اقتصادی
+//
+// رویدادهای اقتصادی همیشه از جدولِ خودمان خوانده می‌شوند، نه مستقیم از یک
+// سرویسِ بیرونی. دو دلیلِ عملی:
+//   ۱) CSPِ اپ اجازه‌ی تماسِ مستقیمِ مرورگر با هاستِ خارجی را نمی‌دهد، پس
+//      هر منبعی هم که بیاید باید از سمتِ سرور کش شود.
+//   ۲) این ماژول نباید به در دسترس بودنِ یک سرویسِ خارجی گره بخورد — با
+//      ورودِ دستیِ ادمین هم کاملاً کار می‌کند (`source = MANUAL`).
+// وقتی یک فیدِ واقعی تنظیم شود، همان ردیف‌ها با `source` و `externalId`
+// پر می‌شوند و کلیدِ یکتا جلوی تکراری‌شدن را می‌گیرد.
+// ============================================================================
+
+enum EconomicImpact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model EconomicEvent {
+  id String @id @default(cuid())
+
+  // منبع و شناسه‌ی همان منبع — برای sync بدونِ ساختنِ رکوردِ تکراری
+  source     String  @default("MANUAL")
+  externalId String?
+
+  title    String
+  country  String // کدِ دوحرفیِ کشور، مثلاً "US"
+  currency String // "USD"
+  impact   EconomicImpact
+  occursAt DateTime // UTC — نمایش به وقتِ محلیِ کاربر انجام می‌شود
+
+  // این سه عمداً رشته‌اند نه عدد: مقادیرِ واقعیِ تقویم واحد دارند
+  // ("3.2%"، "215K"، "-1.4M") و تبدیلشان به عدد یعنی از دست دادنِ واحد.
+  actual   String?
+  forecast String?
+  previous String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([occursAt])
+  @@index([currency, occursAt])
 }
 
 // ============================================================================
@@ -838,26 +1231,26 @@ model TradeEntry {
 // ============================================================================
 
 model Roadmap {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  topic      String   // مثلاً "لایت‌روم" یا "مدیریت مالی"
-  title      String
-  note       String?
+  topic String // مثلاً "لایت‌روم" یا "مدیریت مالی"
+  title String
+  note  String?
 
   // ساختار ایستگاه‌ها دقیقاً مطابق همان مدل treasure-map در HTML فعلی:
   // [{ title, items: [string], done: boolean }]
-  stations   Json
+  stations Json
 
-  tips       Json?    // string[]
-  proTips    Json?    // string[]
-  books      Json?    // string[]
+  tips    Json? // string[]
+  proTips Json? // string[]
+  books   Json? // string[]
 
   generatedByAi Boolean @default(false)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -872,24 +1265,24 @@ model Roadmap {
 // ============================================================================
 
 model WeeklyReportSnapshot {
-  id               String   @id @default(cuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weekStart        DateTime @db.Date // شنبه، به‌وقتِ محلیِ کاربر
-  weekEnd          DateTime @db.Date // جمعه
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date // شنبه، به‌وقتِ محلیِ کاربر
+  weekEnd   DateTime @db.Date // جمعه
 
-  status           String   // COLLECTING | READY | PARTIAL | FAILED
-  algorithmVersion Int      @default(1)
+  status           String // COLLECTING | READY | PARTIAL | FAILED
+  algorithmVersion Int    @default(1)
 
-  overallScore     Int?
+  overallScore   Int?
   // { routine?: DomainScore, fitness?: DomainScore, trading?: DomainScore,
   //   learning?: DomainScore, nutrition?: DomainScore } — فقط دامنه‌های
   // فعالِ کاربر (ماژولی که ندارد اصلاً کلید ندارد، نه صفر)
-  domainScores     Json
-  dailyBreakdown   Json     // [{ date, domains: { [domain]: number|null } }] × ۷ روز
-  wins             Json     // string[]
-  problems         Json     // string[]
-  comparison       Json     // { [domain]: { current, previousWeek, avg4Week } }
+  domainScores   Json
+  dailyBreakdown Json // [{ date, domains: { [domain]: number|null } }] × ۷ روز
+  wins           Json // string[]
+  problems       Json // string[]
+  comparison     Json // { [domain]: { current, previousWeek, avg4Week } }
 
   // AI اختیاریه — aiModel=null یعنی یا ARVAN_AI_* ست نشده یا فراخوانی شکست
   // خورده؛ UI باید بدونِ این فیلدها هم کامل قابل‌استفاده بمونه (بخش ۶۶).
@@ -900,14 +1293,14 @@ model WeeklyReportSnapshot {
   // V2 — عمداً nullable و مستقل از algorithmVersion: فرمولِ Score عوض
   // نشده، فقط بینشِ اضافه شده؛ Snapshotِ قدیمیِ V1 هنوز معتبره، فقط این
   // فیلدها تا اولین regenerate خالی می‌مونن.
-  patterns          Json?    // { trends, streaks, outliers, correlations } — خروجیِ lib/weeklyReport/patterns.ts
-  aiInsights        Json?    // { title, description, evidence, confidence }[]
+  patterns   Json? // { trends, streaks, outliers, correlations } — خروجیِ lib/weeklyReport/patterns.ts
+  aiInsights Json? // { title, description, evidence, confidence }[]
 
   // V3 — پیش‌بینیِ نرم، فقط برایِ هفته‌ی جاری معنا داره؛ برایِ هفته‌های
   // گذشته همیشه null می‌مونه.
-  prediction        Json?    // { domain, message, confidence, evidence } | null
+  prediction Json? // { domain, message, confidence, evidence } | null
 
-  createdAt        DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, weekStart, algorithmVersion])
   @@index([userId, weekStart])
@@ -927,7 +1320,7 @@ model WeeklyGoal {
   title               String
   description         String
   wasEdited           Boolean   @default(false)
-  status              String    // ACCEPTED | COMPLETED | MISSED
+  status              String // ACCEPTED | COMPLETED | MISSED
   followUpWeekStart   DateTime  @db.Date
   followUpScoreBefore Int?
   followUpScoreAfter  Int?
@@ -952,32 +1345,32 @@ model WeeklyGoal {
 // ============================================================================
 
 model NotepadPage {
-  id           String        @id @default(cuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // صفحاتِ تودرتو — یک صفحه می‌تونه زیرمجموعه‌ی صفحه‌ی دیگه‌ای باشه
-  parentId     String?
-  parent       NotepadPage?  @relation("NotepadPageChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children     NotepadPage[] @relation("NotepadPageChildren")
+  parentId String?
+  parent   NotepadPage?  @relation("NotepadPageChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children NotepadPage[] @relation("NotepadPageChildren")
 
-  title        String        @default("")
-  icon         String?       // ایموجی
-  coverUrl     String?       // data-URL فشرده، مثلِ الگوی آواتار — بدونِ storage ابری
+  title    String  @default("")
+  icon     String? // ایموجی
+  coverUrl String? // data-URL فشرده، مثلِ الگوی آواتار — بدونِ storage ابری
 
   // موقعیتِ بین خواهر/برادرها — عددِ اعشاری تا افزودن/جابه‌جاییِ یک آیتم بینِ
   // دوتای دیگه بدونِ renumber کردنِ بقیه ممکن باشه
-  position     Float         @default(0)
-  isFavorite   Boolean       @default(false)
-  isArchived   Boolean       @default(false) // یعنی توی Trash
-  isLocked     Boolean       @default(false) // ادیت غیرفعاله تا وقتی از منوی Actions باز بشه
+  position     Float     @default(0)
+  isFavorite   Boolean   @default(false)
+  isArchived   Boolean   @default(false) // یعنی توی Trash
+  isLocked     Boolean   @default(false) // ادیت غیرفعاله تا وقتی از منوی Actions باز بشه
   archivedAt   DateTime?
   lastOpenedAt DateTime?
 
-  blocks       NotepadBlock[]
+  blocks NotepadBlock[]
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([userId, parentId])
@@ -987,33 +1380,33 @@ model NotepadPage {
 }
 
 model NotepadBlock {
-  id            String        @id @default(cuid())
-  pageId        String
-  page          NotepadPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  id     String      @id @default(cuid())
+  pageId String
+  page   NotepadPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   // فقط برای بلاکِ Toggle معنی داره — بچه‌های تودرتوی همون بلاک. بدونِ FK
   // مستقیم به User (برای جلوگیری از خطای «چند مسیرِ cascade» توی پستگرس؛
   // مالکیت از طریقِ pageId.userId چک می‌شه، دقیقاً مثلِ بقیه‌ی روت‌های اپ)
   parentBlockId String?
-  parent        NotepadBlock? @relation("NotepadBlockChildren", fields: [parentBlockId], references: [id], onDelete: Cascade)
+  parent        NotepadBlock?  @relation("NotepadBlockChildren", fields: [parentBlockId], references: [id], onDelete: Cascade)
   children      NotepadBlock[] @relation("NotepadBlockChildren")
 
-  type          String        // "paragraph" | "heading1" | "heading2" | "heading3" |
-                               // "bulleted_list" | "numbered_list" | "todo" | "toggle" |
-                               // "quote" | "divider" | "image" | "database" | "code"
+  type      String // "paragraph" | "heading1" | "heading2" | "heading3" |
+  // "bulleted_list" | "numbered_list" | "todo" | "toggle" |
+  // "quote" | "divider" | "image" | "database" | "code"
   // آرایه‌ی RichLeaf — [{ text, bold?, italic?, underline?, strike?, code?, link? }]
-  content       Json          @default("[]")
-  checked       Boolean       @default(false) // فقط برای todo
-  collapsed     Boolean       @default(false) // فقط برای toggle
-  imageUrl      String?       // فقط برای image — data-URL فشرده یا لینکِ خارجی
-  language      String?       // فقط برای code — اسمِ زبان برای رنگ‌بندیِ نحوی
+  content   Json    @default("[]")
+  checked   Boolean @default(false) // فقط برای todo
+  collapsed Boolean @default(false) // فقط برای toggle
+  imageUrl  String? // فقط برای image — data-URL فشرده یا لینکِ خارجی
+  language  String? // فقط برای code — اسمِ زبان برای رنگ‌بندیِ نحوی
 
-  position      Float         @default(0)
+  position Float @default(0)
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  database      NotepadDatabase?
+  database NotepadDatabase?
 
   @@index([pageId])
   @@index([pageId, parentBlockId])
@@ -1028,21 +1421,21 @@ model NotepadBlock {
 // ============================================================================
 
 model NotepadDatabase {
-  id        String   @id @default(cuid())
-  blockId   String   @unique
-  block     NotepadBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  id      String       @id @default(cuid())
+  blockId String       @unique
+  block   NotepadBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
 
-  name      String   @default("دیتابیس")
-  activeView String  @default("table") // "table" | "board" | "calendar" | "gallery" | "list"
+  name       String @default("دیتابیس")
+  activeView String @default("table") // "table" | "board" | "calendar" | "gallery" | "list"
 
   // فیلتر/سورت/گروه‌بندی — مشترک بینِ همه‌ی ویوها (نه جدا برای هرکدوم، برای
   // سادگی)؛ Board/Calendar علاوه‌بر این، یه propertyِ اختصاصی برای
   // ستون‌بندی/تاریخ‌گذاری دارن
-  filters   Json     @default("[]") // [{ propertyId, op, value }]
-  sorts     Json     @default("[]") // [{ propertyId, dir: "asc"|"desc" }]
-  hiddenPropertyIds Json @default("[]") // string[]
-  boardGroupPropertyId    String?
-  calendarDatePropertyId  String?
+  filters                Json    @default("[]") // [{ propertyId, op, value }]
+  sorts                  Json    @default("[]") // [{ propertyId, dir: "asc"|"desc" }]
+  hiddenPropertyIds      Json    @default("[]") // string[]
+  boardGroupPropertyId   String?
+  calendarDatePropertyId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1054,36 +1447,36 @@ model NotepadDatabase {
 }
 
 model NotepadDatabaseProperty {
-  id         String   @id @default(cuid())
+  id         String          @id @default(cuid())
   databaseId String
   database   NotepadDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
 
-  name       String
-  type       String   // "text" | "number" | "select" | "multi_select" | "checkbox" |
-                       // "date" | "url" | "email" | "relation" | "formula"
+  name     String
+  type     String // "text" | "number" | "select" | "multi_select" | "checkbox" |
+  // "date" | "url" | "email" | "relation" | "formula"
   // select/multi_select: [{id,label,color}] — relation: {targetDatabaseId} —
   // formula: {expression}
-  options    Json?
-  position   Float    @default(0)
+  options  Json?
+  position Float  @default(0)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([databaseId])
 }
 
 model NotepadDatabaseRecord {
-  id         String   @id @default(cuid())
+  id         String          @id @default(cuid())
   databaseId String
   database   NotepadDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
 
   // مقدارِ همه‌ی propertyها یک‌جا: { [propertyId]: value } — نوعِ value بسته
   // به نوعِ property فرق می‌کنه (string/number/boolean/string[]/ISO date)
-  values     Json     @default("{}")
-  position   Float    @default(0)
+  values   Json  @default("{}")
+  position Float @default(0)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([databaseId])
 }
@@ -1101,13 +1494,13 @@ model NotepadDatabaseRecord {
 // ============================================================================
 
 model PushSubscription {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
+  endpoint String @unique
+  p256dh   String
+  auth     String
 
   createdAt DateTime @default(now())
 
@@ -1115,11 +1508,11 @@ model PushSubscription {
 }
 
 model UserSetting {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  key       String   // مثلاً "theme" | "removedOccurrences" | "customOccurrences"
-  value     Json
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key    String // مثلاً "theme" | "removedOccurrences" | "customOccurrences"
+  value  Json
 
   updatedAt DateTime @updatedAt
 
@@ -1128,32 +1521,32 @@ model UserSetting {
 }
 
 model ExportRequest {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  format    String   // pdf | csv
-  module    ModuleKey?
-  fileUrl   String?
-  status    String   @default("pending") // pending | ready | failed
+  format  String // pdf | csv
+  module  ModuleKey?
+  fileUrl String?
+  status  String     @default("pending") // pending | ready | failed
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
 
   @@index([userId])
 }
 
 model SharedProgressLink {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  token      String   @unique // برای URL عمومی read-only
-  module     ModuleKey?
-  isActive   Boolean  @default(true)
-  expiresAt  DateTime?
+  token     String     @unique // برای URL عمومی read-only
+  module    ModuleKey?
+  isActive  Boolean    @default(true)
+  expiresAt DateTime?
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
 }
@@ -1168,13 +1561,13 @@ model SharedProgressLink {
 
 // هر اقدام مدیریتیِ Owner روی داده‌ی واقعی — نه یک لاگِ عمومیِ اپلیکیشن.
 model AuditLog {
-  id           String   @id @default(cuid())
-  actorUserId  String   // owner ای که اقدام رو انجام داده
-  action       String   // مثلاً "user.block" | "user.plan_change" | "setting.ai_cost_rate"
-  targetType   String?  // مثلاً "User" | "Subscription" | "AppSetting"
-  targetId     String?
-  meta         Json?    // جزئیاتِ قبل/بعدِ تغییر — هیچ‌وقت رمز/توکن/کلید داخلش ذخیره نشه
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  actorUserId String // owner ای که اقدام رو انجام داده
+  action      String // مثلاً "user.block" | "user.plan_change" | "setting.ai_cost_rate"
+  targetType  String? // مثلاً "User" | "Subscription" | "AppSetting"
+  targetId    String?
+  meta        Json? // جزئیاتِ قبل/بعدِ تغییر — هیچ‌وقت رمز/توکن/کلید داخلش ذخیره نشه
+  createdAt   DateTime @default(now())
 
   @@index([createdAt])
   @@index([actorUserId, createdAt])
@@ -1183,14 +1576,14 @@ model AuditLog {
 // رخدادهای خطای واقعیِ سیستم (نه Fake) — از جاهایی که واقعاً catch می‌شن
 // نوشته می‌شه: گیت‌وی AI، اتصال دیتابیس، و مسیرهای بحرانیِ auth.
 model ErrorLog {
-  id         String        @id @default(cuid())
-  service    String        // مثلاً "ai-gateway" | "auth" | "database" | "payment"
-  severity   ErrorSeverity @default(ERROR)
-  message    String
+  id        String        @id @default(cuid())
+  service   String // مثلاً "ai-gateway" | "auth" | "database" | "payment"
+  severity  ErrorSeverity @default(ERROR)
+  message   String
   // هیچ‌وقت secret/token/password/apiKey داخلِ context ذخیره نشه — فقط
   // اطلاعاتِ تشخیصیِ بی‌خطر (مثلاً feature/model/statusCode)
-  context    Json?
-  createdAt  DateTime      @default(now())
+  context   Json?
+  createdAt DateTime      @default(now())
 
   @@index([createdAt])
   @@index([severity, createdAt])
@@ -1201,8 +1594,8 @@ model ErrorLog {
 // Payment مشتق می‌شن، نیازی به رویداد جداگانه ندارن)
 model AnalyticsEvent {
   id        String   @id @default(cuid())
-  userId    String?  // ممکنه مهمون باشه (هنوز ثبت‌نام نکرده)
-  type      String   // "view_subscription_page" | "checkout_start"
+  userId    String? // ممکنه مهمون باشه (هنوز ثبت‌نام نکرده)
+  type      String // "view_subscription_page" | "checkout_start"
   meta      Json?
   createdAt DateTime @default(now())
 

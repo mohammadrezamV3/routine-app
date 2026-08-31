@@ -1,43 +1,64 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { TradeJournal } from "@/components/TradeJournal";
-import { TradeChecklist } from "@/components/TradeChecklist";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
-import { MarketTicker } from "@/components/MarketTicker";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
+import { MarketTicker } from "@/components/MarketTicker";
+import { ICONS } from "@/components/NavDrawer";
 
-// انتخابِ ژورنال/چک‌لیست دیگه تبِ روی صفحه نداره — فقط از منوی «ترید» ←
-// «ژورنال»/«چک‌لیست» ممکنه؛ هم‌قاعده‌ی app/exercise/page.tsx، از
-// useSearchParams واقعی (نه خوندنِ یک‌بارِ window.location) استفاده شده تا
-// کلیکِ نو-لینکِ منو وقتی از قبل توی همین صفحه‌ای هم زنده اثر کنه.
-function TradeTabContent() {
-  const { status } = useSession();
-  const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") === "checklist" ? "checklist" : "journal";
+// هابِ بخشِ ترید — تنها ورودیِ ماژول. منو دیگر زیرمجموعه ندارد؛ با زدنِ
+// «ترید» مستقیم همین صفحه بالا می‌آید و انتخابِ بخش این‌جا انجام می‌شود.
+// چیدمان و حرکتِ کارت‌ها عیناً همان الگوی ردیف‌های پنل کاربری است
+// (آیکون در دایره‌ی نرم + عنوان + توضیح + شِوران)، نه یک الگوی تازه.
 
-  return status === "authenticated" ? (
-    <ModuleGate module="TRADE">
-      {tab === "checklist" ? <TradeChecklist /> : <TradeJournal />}
-    </ModuleGate>
-  ) : (
-    <AuthGate message="برای استفاده از این سرویس وارد شوید" />
-  );
-}
+const ITEMS: { href: string; title: string; desc: string; icon: keyof typeof ICONS }[] = [
+  { href: "/trade/journal", title: "ژورنال‌نویسی", desc: "حساب‌های معاملاتی، ثبت معامله و آمار عملکرد", icon: "journal" },
+  { href: "/trade/checklists", title: "چک‌لیست", desc: "شرط‌های ورود و اتصالشان به معامله", icon: "checklist" },
+  { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار، با هشدار قبل از انتشار", icon: "weekly" },
+  { href: "/trade/clock", title: "ساعت فارکس", desc: "وضعیت لحظه‌ای جلسه‌های معاملاتی", icon: "trade" },
+  { href: "/trade/notes", title: "یادداشت‌ها", desc: "تحلیل‌ها و تجربه‌های شخصی", icon: "journal" },
+  { href: "/trade/metatrader", title: "اتصال متاتریدر", desc: "دریافت خودکار معاملات، برای هر حساب جداگانه", icon: "trade" },
+];
 
 export default function TradePage() {
+  const { status } = useSession();
+
   return (
     <section className="trade-desktop">
       <MarketTicker />
       <h1>ترید</h1>
-      <div style={{ marginTop: 14 }}>
-        <Suspense fallback={<PanelSkeleton />}>
-          <TradeTabContent />
-        </Suspense>
-      </div>
+      <div className="section-note">از چک‌لیست تا ثبت معامله و تحلیل عملکرد — همه در یک جا</div>
+
+      {status === "loading" && <PanelSkeleton />}
+      {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}
+
+      {status === "authenticated" && (
+        <ModuleGate module="TRADE">
+          <div className="trade-hub-grid">
+            {ITEMS.map((it, i) => (
+              <motion.div
+                key={it.href}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.34, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Link href={it.href} prefetch className="trade-surface trade-hub-box">
+                  <span className="trade-hub-icon">{ICONS[it.icon]}</span>
+                  <span className="trade-hub-body">
+                    <span className="trade-hub-title">{it.title}</span>
+                    <span className="trade-hub-desc">{it.desc}</span>
+                  </span>
+                  <ChevronLeft size={17} className="trade-hub-chevron" />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </ModuleGate>
+      )}
     </section>
   );
 }

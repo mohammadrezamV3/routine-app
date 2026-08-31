@@ -114,7 +114,7 @@ async function computeFitnessMetric(userId: string, week: WeekRange, active: boo
 async function computeTradingMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const trades = await prisma.tradeEntry.findMany({
     where: { userId, openedAt: { gte: week.weekStart, lt: new Date(week.weekEnd.getTime() + 86400000) } },
-    select: { openedAt: true, closedAt: true, pnl: true },
+    select: { openedAt: true, status: true, pnl: true },
   });
 
   const byDate = new Map<string, { total: number; closed: number; wins: number }>();
@@ -124,7 +124,10 @@ async function computeTradingMetric(userId: string, week: WeekRange, active: boo
     const bucket = byDate.get(key);
     if (!bucket) continue;
     bucket.total++;
-    if (t.closedAt && t.pnl != null) {
+    // «بسته‌شده» حالا با خودِ وضعیتِ معامله تعیین می‌شود، نه با پرنبودنِ
+    // سود/زیان — چون pnl دیگر nullable نیست و صفر یک نتیجه‌ی واقعی است
+    // (معامله‌ی سربه‌سر)، نه «هنوز بسته نشده».
+    if (t.status === "CLOSED") {
       bucket.closed++;
       if (t.pnl > 0) bucket.wins++;
     }

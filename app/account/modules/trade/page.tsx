@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LineChart, CalendarDays, Target, BarChart2 } from "lucide-react";
+import { LineChart, CalendarDays, BarChart2, BellRing } from "lucide-react";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { TradeStatsPicker } from "@/components/TradeStatsPicker";
@@ -10,26 +10,31 @@ import { getSetting, setSetting } from "@/lib/storage";
 import { getSiteMarket } from "@/lib/market";
 import { DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, TICKER_SETTING_KEY } from "@/lib/tickerSymbols";
 import {
-  CAL_SYSTEM_KEY, MONTHLY_GOAL_KEY, CalSystem,
-  TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STATS_VISIBILITY_KEY,
+  CALENDAR_CURRENCIES, IMPACT_LABELS, IMPACT_ORDER, EconomicImpact,
+} from "@/lib/economicCalendar";
+import {
+  DEFAULT_NEWS_ALERT_PREFS, MINUTES_BEFORE_OPTIONS, NEWS_ALERT_KEY,
+  NewsAlertPrefs, normalizeNewsAlertPrefs,
+} from "@/lib/tradeNewsAlerts";
+import {
+  CAL_SYSTEM_KEY, CalSystem,
+  TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STAT_ORDER, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
 
 export default function TradeModuleSettingsPage() {
   const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
   const [marketPickerOpen, setMarketPickerOpen] = useState(false);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
-  const [monthlyGoal, setMonthlyGoal] = useState(0);
-  const [goalDraft, setGoalDraft] = useState("");
-  const [goalSaved, setGoalSaved] = useState(false);
   const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
   const [statsPickerOpen, setStatsPickerOpen] = useState(false);
+  const [alerts, setAlerts] = useState<NewsAlertPrefs>(DEFAULT_NEWS_ALERT_PREFS);
 
   useEffect(() => {
     const defaultSymbols = getSiteMarket() === "INTERNATIONAL" ? DEFAULT_TICKER_SYMBOLS_INTERNATIONAL : DEFAULT_TICKER_SYMBOLS_IRAN;
     getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => setTickerSymbols(saved?.length ? saved : defaultSymbols));
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
-    getSetting<number>(MONTHLY_GOAL_KEY, 0).then((v) => { setMonthlyGoal(v); setGoalDraft(v ? String(v) : ""); });
     getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS).then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
+    getSetting<unknown>(NEWS_ALERT_KEY, DEFAULT_NEWS_ALERT_PREFS).then((v) => setAlerts(normalizeNewsAlertPrefs(v)));
   }, []);
 
   function toggleTickerSymbol(symbol: string) {
@@ -48,12 +53,14 @@ export default function TradeModuleSettingsPage() {
     setSetting(CAL_SYSTEM_KEY, v);
   }
 
-  function saveMonthlyGoal() {
-    const v = Math.max(0, +goalDraft || 0);
-    setMonthlyGoal(v);
-    setSetting(MONTHLY_GOAL_KEY, v);
-    setGoalSaved(true);
-    setTimeout(() => setGoalSaved(false), 1800);
+  // هر تغییرِ تنظیماتِ هشدار بلافاصله ذخیره می‌شود (بدون دکمه‌ی «ذخیره») —
+  // هم‌قاعده‌ی بقیه‌ی تنظیماتِ همین صفحه.
+  function patchAlerts(p: Partial<NewsAlertPrefs>) {
+    setAlerts((prev) => {
+      const next = normalizeNewsAlertPrefs({ ...prev, ...p });
+      setSetting(NEWS_ALERT_KEY, next);
+      return next;
+    });
   }
 
   function toggleVisibleStat(key: TradeStatKey) {
@@ -87,28 +94,76 @@ export default function TradeModuleSettingsPage() {
         />
       </AccountSectionCard>
 
-      <AccountSectionCard icon={<Target size={16} />} title="هدف سود ماهانه ترید" index={2}>
-        <div className="item-line" style={{ marginBottom: 10 }}>
-          {monthlyGoal > 0
-            ? <>هدف فعلی: <b className="mono" style={{ color: "var(--accent)" }}>{monthlyGoal}</b> — به‌صورت آمار دایره‌ای توی صفحه ترید نشون داده می‌شه</>
-            : "هنوز هدفی تنظیم نکردی — با تعیین هدف، پیشرفتت توی صفحه ترید به‌صورت دایره نشون داده می‌شه"}
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <input
-            type="number" min={0} value={goalDraft} onChange={(e) => setGoalDraft(e.target.value)}
-            placeholder="مثلاً 500" style={{ maxWidth: 140 }}
-          />
-          <button className="account-outline-btn" onClick={saveMonthlyGoal}>
-            {goalSaved ? "ذخیره شد ✓" : "ذخیره هدف"}
-          </button>
-        </div>
-      </AccountSectionCard>
-
-      <AccountSectionCard icon={<BarChart2 size={16} />} title="آمارهای صفحه ترید" index={3}>
-        <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از ۱۰ آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
+      <AccountSectionCard icon={<BarChart2 size={16} />} title="آمارهای صفحه ترید" index={2}>
+        <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از {TRADE_STAT_ORDER.length} آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
         <button className="account-outline-btn" onClick={() => setStatsPickerOpen(true)}>
           تغییر
         </button>
+      </AccountSectionCard>
+
+      <AccountSectionCard icon={<BellRing size={16} />} title="هشدار قبل از اخبار مهم" index={3}>
+        <div className="item-line" style={{ marginBottom: 10 }}>
+          قبل از انتشار رویدادهای تقویم اقتصادی، نوتیفیکیشن بگیر. برای رسیدن نوتیف باید
+          اجازه‌ی نوتیفیکیشن مرورگر را هم داده باشی.
+        </div>
+
+        <button
+          type="button"
+          className={`trade-toggle${alerts.enabled ? " on" : ""}`}
+          onClick={() => patchAlerts({ enabled: !alerts.enabled })}
+        >
+          <span className="trade-toggle-knob" />
+          <span className="trade-toggle-label">{alerts.enabled ? "روشن" : "خاموش"}</span>
+        </button>
+
+        {alerts.enabled && (
+          <>
+            <label className="exercise-form-label">چند دقیقه قبل</label>
+            <SegmentedTabs
+              active={String(alerts.minutesBefore)}
+              onChange={(v) => patchAlerts({ minutesBefore: Number(v) })}
+              options={MINUTES_BEFORE_OPTIONS.map((m) => ({ value: String(m), label: `${m} دقیقه` }))}
+            />
+
+            <label className="exercise-form-label">برای کدام سطح تأثیر</label>
+            <div className="trade-choice-grid">
+              {IMPACT_ORDER.map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`trade-choice${alerts.impacts.includes(i) ? " active" : ""}`}
+                  onClick={() => patchAlerts({
+                    impacts: alerts.impacts.includes(i)
+                      ? alerts.impacts.filter((x) => x !== i)
+                      : [...alerts.impacts, i as EconomicImpact],
+                  })}
+                >
+                  {IMPACT_LABELS[i]}
+                </button>
+              ))}
+            </div>
+
+            <label className="exercise-form-label">
+              ارزها {alerts.currencies.length ? "" : "(خالی یعنی همه)"}
+            </label>
+            <div className="trade-choice-grid">
+              {CALENDAR_CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  className={`trade-choice${alerts.currencies.includes(c.code) ? " active" : ""}`}
+                  onClick={() => patchAlerts({
+                    currencies: alerts.currencies.includes(c.code)
+                      ? alerts.currencies.filter((x) => x !== c.code)
+                      : [...alerts.currencies, c.code],
+                  })}
+                >
+                  {c.flag} {c.code}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </AccountSectionCard>
 
       {marketPickerOpen && (

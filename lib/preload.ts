@@ -49,16 +49,17 @@ export const INLINE_BOOTSTRAP_ID = "__arion_bootstrap";
 // با پیش‌درخواست، هردو موازیِ بقیه از همون ~۵۰۰ms شروع می‌شن.
 const ROUTE_PRELOADS: { prefix: string; urls: string[] }[] = [
   { prefix: "/exercise", urls: ["/api/exercise/plan", "/api/settings/bodyMetrics"] },
-  // پنج کلیدِ تنظیماتِ ترید همگی توی همون موجِ بعدِ هیدریت می‌رفتن (۸۲۲ms).
+  // کلیدهای تنظیماتِ ترید همگی توی همون موجِ بعدِ هیدریت می‌رفتن (۸۲۲ms).
   // URLشون کاملاً ثابته پس امنه. `/api/trade/entries` عمداً این‌جا نیست:
-  // بازه‌اش ماهِ *جلالیِ* جاریه و تکرارِ اون حسابِ تاریخ داخلِ اسکریپتِ inline
-  // شکننده می‌بود — یه اختلافِ یک‌روزه یعنی هم پیش‌درخواست هدر می‌ره هم
-  // درخواستِ اصلی بازم می‌ره.
+  // بدونِ دانستنِ accountId (که توی خودِ مسیره) URLش ثابت نیست.
+  // نکته: URL باید *دقیقاً* همانی باشد که کامپوننت فچ می‌کند، چون کشِ
+  // پیش‌درخواست با رشته‌ی کاملِ URL کلید می‌خورد.
   {
     prefix: "/trade",
     urls: [
-      "/api/trade/checklist",
-      "/api/settings/tradeMonthlyGoal",
+      "/api/trade/accounts?archived=0",
+      "/api/trade/tags",
+      "/api/trade/checklists",
       "/api/settings/tradeVisibleStats",
       "/api/settings/tradeCalendarSystem",
       "/api/settings/tradeTickerSymbols",

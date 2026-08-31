@@ -118,13 +118,9 @@ const LINKS: NavItem[] = [
       { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food", module: "CALORIE" },
     ],
   },
-  {
-    label: "ترید", icon: "trade",
-    children: [
-      { href: "/trade?tab=journal", label: "ژورنال", icon: "journal", module: "TRADE" },
-      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist", module: "TRADE" },
-    ],
-  },
+  // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هابِ خودش، و انتخابِ
+  // بخش (ژورنال/چک‌لیست/تقویم/…) داخلِ همان صفحه انجام می‌شود.
+  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
   { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT" },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
