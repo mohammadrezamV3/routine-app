@@ -46,6 +46,10 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
+      // تنها فراخوانیِ خروجیِ اپ که سقفِ زمان نداشت. چون ارسال
+      // fire-and-forget است، یک ملی‌پیامکِ بی‌جواب یعنی یک Promiseِ معلق که
+      // تا تایم‌اوتِ TCPِ سیستم‌عامل (چند دقیقه) حافظه و سوکت نگه می‌دارد.
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
       console.error(`[sms] خطا در ارسال پیامک به ${phone}: HTTP ${res.status}`);
