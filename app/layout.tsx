@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Vazirmatn, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
+import { Vazirmatn, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
@@ -25,32 +25,13 @@ const vazir = Vazirmatn({
   variable: "--font-vazir",
 });
 
-// جایگزین IBM Plex Mono شد چون آن فونت گلیف فارسی/اعداد فارسی نداشت و برای
-// اعداد فارسی (faNum) و تاریخ‌های فارسی داخل عناصر .mono، بی‌صدا به فونت
-// mono پیش‌فرض سیستم سقوط می‌کرد؛ این فونت همون حس تکنیکال خانواده Plex رو
-// حفظ می‌کنه ولی فارسی/عربی رو هم درست پوشش می‌ده.
-// preload:false عمدیه. next/font به‌صورت پیش‌فرض برای *هر* وزن و *هر* subset
-// یک <link rel="preload"> با بالاترین اولویت می‌ذاره — این فونت با ۳ وزن و ۲
-// subset تنهایی ۶ تا از ۹ پری‌لودِ صفحه (و بیشترِ ~۲۵۰KB فونت) رو می‌گرفت و
-// با خودِ CSS/JSِ بحرانی سرِ پهنای‌باند رقابت می‌کرد. در حالی که این فونت توی
-// همه‌ی استک‌های globals.css جایگاهِ *دوم* داره (var(--font-latin) اول میاد)،
-// یعنی فقط برای گلیف‌های فارسی/عربیِ عناصرِ .mono لازم می‌شه — نه چیزی که
-// باید قبل از اولین پینت دانلود شده باشه. با این تنظیم فونت همچنان دقیقاً
-// همون‌جاها استفاده می‌شه، فقط با اولویتِ عادی و بدونِ کند کردنِ رندرِ اول.
-const plexMono = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plexmono",
-  display: "swap",
-  preload: false,
-});
-
-// وضیرمتن/پلکس هرچند subset لاتین هم دارن، ولی گلیف‌های لاتینِ خودشون
-// (طراحی‌شده برای هم‌وزنی با فارسی) به‌اندازه‌ی یه فونتِ لاتینِ اختصاصی
-// خوش‌فرم نیستن — برای متن/اعدادِ انگلیسی زشت به‌نظر می‌رسیدن. چون این فونت
-// (برخلافِ دوتای بالا) فقط subsetِ لاتین رو داره، در استکِ فونت هر جا قبل از
-// وضیرمتن/پلکس بیاد، فقط برای کاراکترهای لاتین/اعدادِ لاتین انتخاب می‌شه —
-// فارسی/عربی همچنان بدونِ تغییر به وضیرمتن/پلکس سقوط می‌کنه.
+// وضیرمتن هرچند subset لاتین هم داره، ولی گلیف‌های لاتینِ خودش (طراحی‌شده
+// برای هم‌وزنی با فارسی) به‌اندازه‌ی یه فونتِ لاتینِ اختصاصی خوش‌فرم نیست —
+// برای متن/اعدادِ انگلیسی زشت به‌نظر می‌رسید. چون این فونت فقط subsetِ لاتین
+// رو داره، در استکِ فونت هر جا قبل از وضیرمتن بیاد، فقط برای کاراکترهای
+// لاتین/اعدادِ لاتین انتخاب می‌شه — فارسی/عربی همچنان بدونِ تغییر به وضیرمتن
+// سقوط می‌کنه (طبقِ درخواستِ صریحِ کاربر: هیچ فونتِ فارسیِ دیگه‌ای — از جمله
+// فونتِ قبلیِ IBM Plex Sans Arabic با گوشه‌های تیزتر — نباید استفاده بشه).
 const latin = Inter({
   subsets: ["latin"],
   weight: "variable",
@@ -165,7 +146,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       dir="rtl"
       data-theme="dark"
       suppressHydrationWarning
-      className={`${vazir.variable} ${plexMono.variable} ${latin.variable}`}
+      className={`${vazir.variable} ${latin.variable}`}
     >
       {/* suppressHydrationWarning لازمه چون اسکریپتِ بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch

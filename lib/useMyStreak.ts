@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { isoLocal } from "./jalali";
 import { tasksForDate } from "./schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences } from "./storage";
-import { getWakeSleepTimes, isWakeOnTime, timeToMinutes, DEFAULT_WAKE } from "./wakeSleep";
 
 // استریکِ روزهای پشت‌سرهمِ کامل — از HeaderStreakClock استخراج شده تا هم توی
 // هدر هم توی کارتِ دوستان قابلِ استفاده باشه، بدون تکرارِ منطقِ محاسبه.
@@ -12,12 +11,10 @@ export function useMyStreak(): number | null {
   const [streak, setStreak] = useState<number | null>(null);
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
-  const [wakeMinutes, setWakeMinutes] = useState(timeToMinutes(DEFAULT_WAKE));
 
   useEffect(() => {
     getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
     getCustomOccurrences().then(setCustomOcc);
-    getWakeSleepTimes().then((v) => { if (v) setWakeMinutes(timeToMinutes(v.wake)); });
   }, []);
 
   const opts = useMemo(
@@ -45,8 +42,13 @@ export function useMyStreak(): number | null {
         const rec = entries[key];
         if (!rec) break;
         const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
-        const fullDay = doneCount === expected.length && wakeOK;
+        // ثبتِ زمانِ بیداری یه فیچرِ جدا و اختیاریه — قبلاً شرطِ AND با
+        // تکمیلِ برنامه بود، یعنی هر روزی که کاربر دقیقاً موقعِ هدفش بیدار
+        // نمی‌شد (که اکثرِ کاربرها اصلاً این قابلیت رو فعال/دنبال نمی‌کنن)
+        // کلِ استریک صفر می‌شد، با اینکه ۱۰۰٪ برنامه‌ش رو انجام داده بود —
+        // یعنی استریک عملاً همیشه صفر می‌موند (باگِ گزارش‌شده). حالا استریک
+        // فقط یعنی «همه‌ی برنامه‌های اون روز انجام شده»، مستقل از وضعیتِ بیداری.
+        const fullDay = doneCount === expected.length;
         if (fullDay) {
           s++;
           cursor.setDate(cursor.getDate() - 1);
@@ -55,7 +57,7 @@ export function useMyStreak(): number | null {
       setStreak(s);
     }
     computeStreak();
-  }, [opts, wakeMinutes]);
+  }, [opts]);
 
   return streak;
 }

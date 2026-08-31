@@ -7,7 +7,7 @@ import {
 } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences, getOutingDates } from "@/lib/storage";
-import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime, timeToMinutes } from "@/lib/wakeSleep";
+import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { DayModal } from "@/components/DayModal";
 
 const now = new Date();
@@ -28,7 +28,6 @@ export function HistoryCalendar({
    * می‌زنه — برای حالتِ «انتخابِ تاریخِ گذشته» (دکمه‌ی تاریخچه‌ی داشبورد). */
   onPick?: (iso: string) => void;
 }) {
-  const wakeMinutes = timeToMinutes(wake);
   const [calYear, setCalYear] = useState(jToday[0]);
   const [calMonth, setCalMonth] = useState(jToday[1]);
   const [monthCompletion, setMonthCompletion] = useState<Record<string, boolean>>({});
@@ -63,8 +62,9 @@ export function HistoryCalendar({
       if (rec) {
         const expected = tasksForDate(gd, opts);
         const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        const wakeOK = rec.wake ? isWakeOnTime(rec.wake, wakeMinutes) : false;
-        result[iso] = expected.length > 0 && doneCount === expected.length && wakeOK;
+        // بیدارشدنِ سرِوقت دیگه شرطِ AND برای «روزِ کامل» نیست — همون فیکسِ
+        // lib/friendStats.ts و lib/useMyStreak.ts، هم‌قاعده‌ی این‌جا هم شد.
+        result[iso] = expected.length > 0 && doneCount === expected.length;
       } else {
         result[iso] = false;
       }
@@ -75,7 +75,7 @@ export function HistoryCalendar({
   useEffect(() => {
     loadMonth(calYear, calMonth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calYear, calMonth, removedOcc, customOcc, wakeMinutes]);
+  }, [calYear, calMonth, removedOcc, customOcc]);
 
   const monthLen = jalaliMonthLength(calMonth);
   const firstG = jalaliToGregorianApprox(calYear, calMonth, 1);
