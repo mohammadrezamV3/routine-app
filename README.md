@@ -1,5 +1,47 @@
 # Arion — نسخه Next.js
 
+## نسخه: v1.112.0 (رفعِ علتِ واقعیِ نرسیدنِ پیامک + تشخیصِ migrationِ اجرانشده)
+
+از لاگِ سرورِ production دو مشکلِ کاملاً جدا بیرون آمد.
+
+### ۱. آدرسِ اندپوینتِ ملی‌پیامک اشتباه بود
+
+```
+[sms] خطا در ارسال پیامک به 090*****548: HTTP 404
+```
+
+`lib/sms.ts` به `/api/SendSMS/BaseNumber` درخواست می‌داد، ولی مسیرِ درستِ
+«ارسال با الگو» در REST APIِ ملی‌پیامک **`BaseServiceNumber`** است. سرور
+با ۴۰۴ جواب می‌داد و چون ارسال fire-and-forget است، این شکست هیچ‌جا دیده
+نمی‌شد — از بیرون فقط «پیامک نمی‌آید» به‌نظر می‌رسید.
+
+مسیر با SDKِ رسمیِ خودِ ملی‌پیامک تطبیق داده شد
+(`melipayamak-python/melipayamak/sms/rest.py`، متدِ `send_by_base_number`).
+پروبِ عیب‌یابی هم از همان مرجع `GetCredit` را می‌زند.
+
+### ۲. migration روی production اجرا نشده بود
+
+لاگ پر بود از `The table public.TradeAccount does not exist`. علتش این است
+که سرویسِ `migrate` در `docker-compose.yml` پروفایلِ `tools` دارد و با
+`docker compose up` معمولی اجرا **نمی‌شود** — و `healthcheck` هم سبز
+می‌ماند چون `/api/health` عمداً به دیتابیس دست نمی‌زند. یعنی اپ با کلاینتِ
+تازه بالا می‌آید و دیتابیس اسکیمای قدیمی دارد، بدونِ هیچ نشانه‌ی بیرونی.
+
+`/api/admin/diagnostics/outbound` حالا این را صریح گزارش می‌کند:
+
+```json
+"schema": {
+  "ok": false,
+  "note": "migration اجرا نشده — دیتابیس از کد عقب است",
+  "fix": "docker compose --profile tools run --rm migrate npx prisma migrate deploy",
+  "missingTable": "public.TradeAccount"
+}
+```
+
+**تست‌شده روی دو دیتابیسِ واقعی:** یکی که عمداً migrationهای جدید را ندارد
+(شبیه‌سازیِ دقیقِ وضعیتِ سرور) → همان خروجیِ بالا با دستورِ رفع؛ و بعد از
+اجرای migration روی همان دیتابیس → `schema.ok: true`.
+
 ## نسخه: v1.111.1 (سقفِ زمان برای پیامک + سنجه‌های تشخیصِ کندی)
 
 گزارشِ «سایت دیر جواب می‌دهد و گاهی اصلاً برنمی‌گرداند» بررسی شد. مسیرهای

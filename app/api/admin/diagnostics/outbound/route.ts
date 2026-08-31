@@ -165,6 +165,35 @@ function eventLoopLag(): Promise<number> {
   });
 }
 
+/**
+ * آیا migrationها روی این دیتابیس اجرا شده‌اند؟
+ *
+ * چرا لازم شد: سرویسِ `migrate` در docker-compose پروفایلِ `tools` دارد و با
+ * `docker compose up` معمولی اجرا **نمی‌شود**. بعد از یک دیپلوی که مدلِ
+ * جدید آورده بود، اپ با کلاینتِ تازه بالا آمد ولی دیتابیس اسکیمای قدیمی
+ * داشت؛ نتیجه صدها خطای «The table ... does not exist» در لاگ بود، در حالی
+ * که healthcheck سبز می‌ماند (چون /api/health عمداً به دیتابیس دست نمی‌زند).
+ *
+ * این چک با یک کوئریِ ارزان روی تازه‌ترین جدول همان وضعیت را یک‌جا می‌گوید.
+ * P2021 یعنی جدول وجود ندارد → migration اجرا نشده.
+ */
+async function schemaState() {
+  try {
+    await prisma.tradeAccount.count();
+    return { ok: true, note: "اسکیمای دیتابیس با کد هماهنگ است" };
+  } catch (e: any) {
+    if (e?.code === "P2021") {
+      return {
+        ok: false,
+        note: "migration اجرا نشده — دیتابیس از کد عقب است",
+        fix: "docker compose --profile tools run --rm migrate npx prisma migrate deploy",
+        missingTable: e?.meta?.table ?? null,
+      };
+    }
+    return { ok: false, note: e?.message?.slice(0, 160) || "خطای ناشناخته" };
+  }
+}
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -172,10 +201,11 @@ export async function GET() {
   if (!guard.ok) return guard.response;
 
   const started = Date.now();
-  const [results, db, lagMs] = await Promise.all([
+  const [results, db, lagMs, schema] = await Promise.all([
     Promise.all(probes().map(runProbe)),
     dbLatency(),
     eventLoopLag(),
+    schemaState(),
   ]);
 
   return NextResponse.json({
@@ -184,6 +214,8 @@ export async function GET() {
     // اگر eventLoopLagMs بالا باشد → پروسه تحتِ فشارِ CPU/حافظه است.
     // اگر هر دو پایین ولی outbound کُند باشد → مشکل شبکه‌ی خروجیِ سرور است.
     db,
+    // اگر ok:false بود، دستورِ رفعش داخلِ همین خروجی آمده است.
+    schema,
     eventLoopLagMs: Math.round(lagMs),
     process: {
       uptimeSec: Math.round(process.uptime()),
