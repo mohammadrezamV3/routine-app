@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "./ThemeProvider";
 
 /** فلش بازگشت — داخل خودِ باکس، همیشه بالا-راست، بدون بک‌گراند، فقط آیکون.
  * پیش‌فرض به صفحه‌ی اصلی می‌ره؛ اگه onClick بدی (مثلِ ویزاردِ ثبت‌نام)
@@ -29,10 +30,12 @@ export function AuthBackButton({ onClick }: { onClick?: () => void }) {
  * ثبت‌نام/فراموشی رمز) ازش برای تایتلِ زیرِ لوگو استفاده می‌کنن تا محلِ
  * تایتل بینشون یکسان بمونه. */
 export function AuthBrandMark({ subtitle }: { subtitle?: string }) {
+  const { theme } = useTheme();
+  const iconSrc = theme === "light" ? "/images/logo-icon-light-theme.png" : "/images/logo-icon-dark-theme.png";
   return (
     <div className="auth-brand-mark-wrap">
       <div className="auth-brand-mark" aria-hidden="true">
-        <Image src="/images/logo-icon.png" alt="" fill sizes="38px" className="object-contain" />
+        <Image src={iconSrc} alt="" fill sizes="38px" className="object-contain" />
       </div>
       {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
     </div>
