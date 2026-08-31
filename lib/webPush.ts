@@ -18,6 +18,15 @@ function ensureVapid() {
   vapidConfigured = true;
 }
 
+/**
+ * آیا کلیدهای VAPID روی این محیط ست شده‌اند؟
+ * کران‌ها با این *قبل* از حلقه‌زدن روی کاربرها چک می‌کنند — وگرنه به‌ازای هر
+ * کاربر یک استثنای یکسان پرتاب می‌شود و کلِ اجرا می‌افتد.
+ */
+export function isPushConfigured(): boolean {
+  return !!(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT);
+}
+
 export type PushPayload = { title: string; body: string; url?: string };
 
 /**

@@ -20,3 +20,15 @@
 0 9 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1
 # اگه TZِ سرور UTC است، به‌جای خطِ بالا از این استفاده کن (۵:۳۰ صبحِ UTC = ۹ِ صبحِ تهران):
 # 30 5 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1
+
+# هشدارِ قبل از اخبارِ مهمِ اقتصادی — هر ۵ دقیقه.
+# خودِ روت تصمیم می‌گیره برای هر کاربر با فاصله‌ی دلخواهِ خودش (۱۵/۳۰/۶۰
+# دقیقه) هشدار بفرسته یا نه، و هر رویداد فقط یک‌بار هشدار می‌گیره.
+# (نگاه کن به app/api/cron/economic-alerts)
+*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-alerts >/dev/null 2>&1
+
+# همگام‌سازیِ تقویم اقتصادی از منبعِ بیرونی — روزی یک‌بار، ساعتِ ۳ بامداد.
+# فقط وقتی کار می‌کنه که ECONOMIC_CALENDAR_URL توی .env ست شده باشه؛ وگرنه
+# بی‌صدا رد می‌شه و تقویم از ورودِ دستیِ پنلِ ادمین پر می‌شه.
+# (نگاه کن به app/api/cron/economic-calendar)
+0 3 * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-calendar >/dev/null 2>&1

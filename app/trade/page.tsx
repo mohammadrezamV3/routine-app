@@ -15,9 +15,9 @@ type HubItem = { href: string; title: string; desc: string; soon?: boolean };
 const ITEMS: HubItem[] = [
   { href: "/trade/journal", title: "ژورنال‌نویسی", desc: "حساب‌های معاملاتی، ثبت معامله و آمار عملکرد" },
   { href: "/trade/checklists", title: "چک‌لیست", desc: "چک‌لیست‌های پیش از ورود و اتصالشان به معامله" },
-  { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار", soon: true },
-  { href: "/trade/clock", title: "ساعت فارکس", desc: "وضعیت جلسه‌های معاملاتی", soon: true },
-  { href: "/trade/notes", title: "یادداشت‌ها", desc: "تحلیل‌ها و تجربه‌های شخصی", soon: true },
+  { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار، با هشدار قبل از انتشار" },
+  { href: "/trade/clock", title: "ساعت فارکس", desc: "وضعیت لحظه‌ای جلسه‌های معاملاتی" },
+  { href: "/trade/notes", title: "یادداشت‌ها", desc: "تحلیل‌ها و تجربه‌های شخصی" },
   { href: "/trade/metatrader", title: "اتصال متاتریدر", desc: "دریافت خودکار معاملات", soon: true },
 ];
 

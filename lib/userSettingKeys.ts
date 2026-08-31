@@ -35,6 +35,7 @@ export const SETTING_KEYS = {
   tradeCalendarSystem: "tradeCalendarSystem",
   tradeVisibleStats: "tradeVisibleStats",
   tradeMarketsOnboarded: "tradeMarketsOnboarded",
+  tradeNewsAlerts: "tradeNewsAlerts",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -45,6 +46,9 @@ export const USER_WRITABLE_SETTING_KEYS = new Set<string>(Object.values(SETTING_
 /** حالتِ داخلیِ سرور — هیچ‌وقت از راهِ API نه خونده می‌شه نه نوشته */
 export const SERVER_MANAGED_SETTING_KEYS = new Set<string>([
   "pushSentLog",
+  // ردِ هشدارهای خبریِ فرستاده‌شده — اگر کاربر می‌توانست بنویسدش، می‌شد با
+  // پرکردنش هشدارها را برای همیشه خاموش کرد (همان اشکالی که pushSentLog داشت).
+  "tradeNewsAlertLog",
 ]);
 
 // سقفِ حجمِ هر مقدار. حتی بزرگ‌ترین کلیدِ واقعی (`customOccurrences` با

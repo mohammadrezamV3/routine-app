@@ -181,6 +181,7 @@ model User {
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
   friendRequestsSent     Friendship[] @relation("FriendRequestsSent")
   friendRequestsReceived Friendship[] @relation("FriendRequestsReceived")
+  tradeNotes             TradeNote[]
 
   @@index([market])
   @@index([gymPartnerId])
@@ -921,6 +922,7 @@ model TradeAccount {
   updatedAt DateTime @updatedAt
 
   entries TradeEntry[]
+  notes   TradeNote[]
   tags    TradeTag[]   @relation("TradeAccountTags")
 
   @@index([userId, archived])
@@ -938,6 +940,7 @@ model TradeTag {
 
   accounts TradeAccount[] @relation("TradeAccountTags")
   entries  TradeEntry[]   @relation("TradeEntryTags")
+  notes    TradeNote[]    @relation("TradeNoteTags")
 
   @@unique([userId, name])
   @@index([userId])
@@ -1046,6 +1049,8 @@ model TradeEntry {
   images TradeImage[]
   tags   TradeTag[]   @relation("TradeEntryTags")
 
+  notes TradeNote[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1068,6 +1073,88 @@ model TradeImage {
   createdAt DateTime   @default(now())
 
   @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — یادداشت‌ها
+//
+// عمداً یک مدلِ سبکِ مستقل، نه استفاده از NotepadPage/NotepadBlock: نیازِ
+// این‌جا «یادداشتِ کوتاه با برچسب و رنگ و جست‌وجو»ست، نه ویرایشگرِ بلاکیِ
+// تودرتو. یادداشت می‌تواند اختیاراً به یک حساب یا یک معامله وصل شود تا
+// «تحلیلی که آن روز نوشتم» کنارِ همان معامله پیدا شود.
+// ============================================================================
+
+model TradeNote {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  content String  @default("")
+  color   String  @default("#3E7BFA")
+  pinned  Boolean @default(false)
+
+  // اتصالِ اختیاری — با حذفِ حساب/معامله فقط این ارجاع null می‌شود، خودِ
+  // یادداشت می‌ماند (متنش مستقل از آن‌ها ارزش دارد).
+  accountId String?
+  account   TradeAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  entryId   String?
+  entry     TradeEntry?   @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  tags TradeTag[] @relation("TradeNoteTags")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+  @@index([accountId])
+  @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — تقویم اقتصادی
+//
+// رویدادهای اقتصادی همیشه از جدولِ خودمان خوانده می‌شوند، نه مستقیم از یک
+// سرویسِ بیرونی. دو دلیلِ عملی:
+//   ۱) CSPِ اپ اجازه‌ی تماسِ مستقیمِ مرورگر با هاستِ خارجی را نمی‌دهد، پس
+//      هر منبعی هم که بیاید باید از سمتِ سرور کش شود.
+//   ۲) این ماژول نباید به در دسترس بودنِ یک سرویسِ خارجی گره بخورد — با
+//      ورودِ دستیِ ادمین هم کاملاً کار می‌کند (`source = MANUAL`).
+// وقتی یک فیدِ واقعی تنظیم شود، همان ردیف‌ها با `source` و `externalId`
+// پر می‌شوند و کلیدِ یکتا جلوی تکراری‌شدن را می‌گیرد.
+// ============================================================================
+
+enum EconomicImpact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model EconomicEvent {
+  id String @id @default(cuid())
+
+  // منبع و شناسه‌ی همان منبع — برای sync بدونِ ساختنِ رکوردِ تکراری
+  source     String  @default("MANUAL")
+  externalId String?
+
+  title    String
+  country  String // کدِ دوحرفیِ کشور، مثلاً "US"
+  currency String // "USD"
+  impact   EconomicImpact
+  occursAt DateTime // UTC — نمایش به وقتِ محلیِ کاربر انجام می‌شود
+
+  // این سه عمداً رشته‌اند نه عدد: مقادیرِ واقعیِ تقویم واحد دارند
+  // ("3.2%"، "215K"، "-1.4M") و تبدیلشان به عدد یعنی از دست دادنِ واحد.
+  actual   String?
+  forecast String?
+  previous String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([occursAt])
+  @@index([currency, occursAt])
 }
 
 // ============================================================================

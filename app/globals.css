@@ -5158,3 +5158,76 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
   margin-top:18px; padding:14px; border:1px solid #E05252; border-radius:14px;
   font-size:12.5px; color:var(--muted);
 }
+
+/* ── تقویم اقتصادی ─────────────────────────────────────────── */
+.trade-cal-filter-bar{ display:flex; align-items:center; gap:10px; margin:10px 0 4px; }
+.trade-cal-filters{
+  border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:6px;
+}
+.trade-cal-day{ margin-top:18px; }
+.trade-cal-day-title{
+  font-size:11px; color:var(--muted2); font-weight:700; margin-bottom:8px;
+  padding-bottom:7px; border-bottom:1px solid var(--line);
+}
+.trade-cal-event{
+  display:flex; align-items:flex-start; gap:10px; padding:11px 2px;
+  border-bottom:1px solid var(--line);
+}
+.trade-cal-event:last-child{ border-bottom:none; }
+.trade-cal-time{ font-size:12.5px; font-weight:700; min-width:44px; }
+.trade-cal-impact{ width:4px; align-self:stretch; border-radius:999px; flex-shrink:0; }
+.trade-cal-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
+.trade-cal-title{ font-size:12.5px; line-height:1.7; }
+.trade-cal-values{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:10.5px; color:var(--muted2); }
+.trade-cal-values b{ color:var(--text); font-weight:700; }
+.trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
+
+/* ── ساعت فارکس ────────────────────────────────────────────── */
+.forex-market-state{
+  display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--muted);
+  border:1px solid var(--line); border-radius:999px; padding:6px 13px; margin:4px 0 16px;
+}
+.forex-market-state.open{ color:var(--accent); border-color:var(--accent); }
+.forex-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; display:inline-block; }
+
+.forex-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+@media (min-width:620px){ .forex-grid{ grid-template-columns:repeat(4,1fr); } }
+.forex-card{
+  border:1px solid var(--line); border-radius:16px; padding:16px 14px; text-align:center;
+}
+.forex-card.open{ border-color:var(--accent); }
+.forex-card-head{ display:flex; align-items:center; justify-content:center; gap:6px; }
+.forex-flag{ font-size:16px; }
+.forex-city{ font-size:12.5px; font-weight:700; }
+.forex-time{ font-size:24px; font-weight:800; margin:9px 0 6px; letter-spacing:.02em; }
+.forex-status{
+  display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted);
+}
+.forex-card.open .forex-status{ color:var(--accent); }
+
+.forex-overlap{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.forex-overlap-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border:1px solid #E0A452; border-radius:14px; padding:12px 15px;
+}
+.forex-overlap-title{ font-size:13px; font-weight:700; color:#E0A452; }
+.forex-overlap-badge{ font-size:10.5px; color:#E0A452; }
+
+/* ── یادداشت‌ها ────────────────────────────────────────────── */
+.trade-note-grid{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+@media (min-width:700px){ .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
+.trade-note-card{
+  position:relative; border:1px solid var(--line); border-radius:16px;
+  padding:15px 17px 15px 15px; overflow:hidden; cursor:pointer;
+}
+.trade-note-card:hover{ border-color:var(--accent); }
+.trade-note-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.trade-note-title{ font-size:14px; font-weight:700; }
+.trade-note-body{
+  font-size:12px; color:var(--muted); line-height:1.9; margin-top:7px; white-space:pre-wrap;
+}
+.trade-note-foot{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  margin-top:11px; font-size:10px; color:var(--muted2);
+}
+.trade-note-foot .trade-tag-chip{ font-size:9.5px; padding:2px 7px; }
