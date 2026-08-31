@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Reorder, motion } from "framer-motion";
-import { Copy, GripVertical, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Copy, GripVertical, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { takePreloaded } from "@/lib/preload";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeFormModal } from "./TradeFormModal";
 import {
@@ -32,9 +33,11 @@ export function TradeChecklistsPanel() {
   const [creating, setCreating] = useState(false);
   const [tradeFor, setTradeFor] = useState<{ checklistId: string; account: TradeAccount } | null>(null);
   const [pickAccountFor, setPickAccountFor] = useState<string | null>(null);
+  const { pendingKey, error: actionError, run } = useAsyncAction();
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // silent = تازه‌سازی بدونِ نشان‌دادنِ اسکلت (بعد از کپی/حذف)
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [cRes, aRes, tRes] = await Promise.all([
         takePreloaded("/api/trade/checklists") ?? fetch("/api/trade/checklists").then((r) => (r.ok ? r.json() : null)),
@@ -45,25 +48,30 @@ export function TradeChecklistsPanel() {
       setAccounts(aRes?.accounts || []);
       setTags(tRes?.tags || []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, [load]);
 
   async function duplicate(c: Checklist) {
-    await fetch("/api/trade/checklists", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ duplicateOf: c.id }),
-    });
-    load();
+    const ok = await run(`dup:${c.id}`, () =>
+      fetch("/api/trade/checklists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duplicateOf: c.id }),
+      })
+    );
+    if (ok) load(true);
   }
 
   async function remove(id: string) {
+    // حذف خوش‌بینانه است (فوراً از لیست می‌رود)، ولی اگر سرور رد کند لیست
+    // برمی‌گردد و پیام دیده می‌شود — نه اینکه بی‌صدا دوباره ظاهر شود.
     setChecklists((prev) => prev.filter((c) => c.id !== id));
-    await fetch(`/api/trade/checklists?id=${id}`, { method: "DELETE" });
-    load();
+    const ok = await run(`del:${id}`, () => fetch(`/api/trade/checklists?id=${id}`, { method: "DELETE" }));
+    load(true);
+    if (!ok) return;
   }
 
   function startTrade(checklistId: string) {
@@ -78,6 +86,8 @@ export function TradeChecklistsPanel() {
 
   return (
     <div>
+      {actionError && <div className="trade-form-error">{actionError}</div>}
+
       {!checklists.length && <div className="item-line empty">هنوز چک‌لیستی نساختی</div>}
 
       <div className="trade-checklist-grid">
@@ -100,7 +110,15 @@ export function TradeChecklistsPanel() {
                 </div>
                 <div className="trade-account-actions">
                   <button type="button" className="trade-icon-btn" onClick={() => setEditing(c)} aria-label="ویرایش"><Pencil size={15} /></button>
-                  <button type="button" className="trade-icon-btn" onClick={() => duplicate(c)} aria-label="کپی"><Copy size={15} /></button>
+                  <button
+                    type="button"
+                    className="trade-icon-btn"
+                    onClick={() => duplicate(c)}
+                    disabled={pendingKey === `dup:${c.id}`}
+                    aria-label="کپی"
+                  >
+                    {pendingKey === `dup:${c.id}` ? <Loader2 size={15} className="trade-spin" /> : <Copy size={15} />}
+                  </button>
                   <button type="button" className="trade-icon-btn danger" onClick={() => remove(c.id)} aria-label="حذف"><Trash2 size={15} /></button>
                 </div>
               </div>

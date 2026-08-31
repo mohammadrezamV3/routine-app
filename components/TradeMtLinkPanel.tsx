@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Download, Link2Off, RefreshCw } from "lucide-react";
+import { Check, Copy, Download, Link2Off, Loader2, RefreshCw } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -24,6 +24,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
   const [codeExpires, setCodeExpires] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -53,11 +54,27 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
   }
 
   async function revoke() {
+    if (busy) return;
     setBusy(true);
-    await fetch(`/api/trade/metatrader?accountId=${accountId}`, { method: "DELETE" });
-    setBusy(false);
-    setCode(null);
-    load();
+    setError(null);
+    try {
+      const res = await fetch(`/api/trade/metatrader?accountId=${accountId}`, { method: "DELETE" });
+      if (!res.ok) { setError("قطع اتصال انجام نشد — دوباره تلاش کن"); return; }
+      setCode(null);
+      await load();
+    } catch {
+      setError("ارتباط با سرور برقرار نشد");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // «بررسی اتصال» یک درخواستِ شبکه است؛ بدونِ این حالت دکمه هیچ نشانه‌ای
+  // نمی‌داد و کاربر فکر می‌کرد کلیکش نگرفته.
+  async function refresh() {
+    if (refreshing) return;
+    setRefreshing(true);
+    try { await load(); } finally { setRefreshing(false); }
   }
 
   function copyCode() {
@@ -92,8 +109,8 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
           </div>
 
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn" onClick={load}>
-              <RefreshCw size={14} /> بررسی اتصال
+            <button type="button" className="account-outline-btn" onClick={refresh} disabled={refreshing}>
+              <RefreshCw size={14} className={refreshing ? "trade-spin" : undefined} /> بررسی اتصال
             </button>
             <button type="button" className="trade-danger-btn" onClick={revoke} disabled={busy}>
               <Link2Off size={14} /> قطع اتصال
@@ -146,7 +163,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
             </div>
           ) : (
             <button type="button" className="trade-primary-btn" onClick={requestCode} disabled={busy} style={{ marginTop: 14 }}>
-              {busy ? "..." : "ساخت کد اتصال"}
+              {busy ? <><Loader2 size={14} className="trade-spin" /> در حال ساخت…</> : "ساخت کد اتصال"}
             </button>
           )}
 

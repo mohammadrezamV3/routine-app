@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, X } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
 
@@ -80,15 +80,20 @@ export function TradeTagCreateModal({
     if (!trimmed || saving) return;
     setSaving(true);
     setError(null);
-    const res = await fetch("/api/trade/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: trimmed, color }),
-    });
-    const data = await res.json().catch(() => null);
-    setSaving(false);
-    if (!res.ok) { setError(data?.error || "خطا در ساخت برچسب"); return; }
-    onCreated(data.tag);
+    try {
+      const res = await fetch("/api/trade/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, color }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) { setError(data?.error || "خطا در ساخت برچسب"); return; }
+      onCreated(data.tag);
+    } catch {
+      setError("ارتباط با سرور برقرار نشد — دوباره تلاش کن");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (typeof document === "undefined") return null;
@@ -132,7 +137,7 @@ export function TradeTagCreateModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? "..." : "ایجاد"}
+            {saving ? <><Loader2 size={15} className="trade-spin" /> در حال ذخیره…</> : "ایجاد"}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Camera, ChevronDown, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
+import { AlertTriangle, Camera, ChevronDown, Info, Loader2, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -187,15 +187,20 @@ export function TradeFormModal({
     body.closedAt = form.closedAt ? localInputToIso(form.closedAt) : null;
     if (entry) body.id = entry.id;
 
-    const res = await fetch("/api/trade/entries", {
-      method: entry ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => null);
-    setSaving(false);
-    if (!res.ok) { setError(data?.error || "خطا در ثبت معامله"); return; }
-    onSaved();
+    try {
+      const res = await fetch("/api/trade/entries", {
+        method: entry ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) { setError(data?.error || "خطا در ثبت معامله"); return; }
+      onSaved();
+    } catch {
+      setError("ارتباط با سرور برقرار نشد — دوباره تلاش کن");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (typeof document === "undefined") return null;
@@ -613,7 +618,7 @@ export function TradeFormModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-            {saving ? "..." : entry ? "ذخیره تغییرات" : "ثبت معامله"}
+            {saving ? <><Loader2 size={15} className="trade-spin" /> در حال ذخیره…</> : entry ? "ذخیره تغییرات" : "ثبت معامله"}
           </button>
         </div>
       </div>
