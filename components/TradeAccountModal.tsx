@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -60,15 +60,20 @@ export function TradeAccountModal({
       goalValue: num(goalValue),
       tagIds,
     };
-    const res = await fetch("/api/trade/accounts", {
-      method: account ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => null);
-    setSaving(false);
-    if (!res.ok) { setError(data?.error || "خطا در ذخیره حساب"); return; }
-    onSaved();
+    try {
+      const res = await fetch("/api/trade/accounts", {
+        method: account ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) { setError(data?.error || "خطا در ذخیره حساب"); return; }
+      onSaved();
+    } catch {
+      setError("ارتباط با سرور برقرار نشد — دوباره تلاش کن");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (typeof document === "undefined") return null;
@@ -144,7 +149,7 @@ export function TradeAccountModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? "..." : account ? "ذخیره" : "ایجاد حساب"}
+            {saving ? <><Loader2 size={15} className="trade-spin" /> در حال ذخیره…</> : account ? "ذخیره" : "ایجاد حساب"}
           </button>
         </div>
       </div>

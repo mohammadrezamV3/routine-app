@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { TradeAccountModal } from "./TradeAccountModal";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { ACCOUNT_TYPE_LABELS, MAX_ACCOUNTS, TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { takePreloaded } from "@/lib/preload";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها. با انتخابِ هر حساب می‌رویم داخلِ
 // آمار و معاملاتِ همان حساب.
@@ -20,9 +21,13 @@ export function TradeAccountsPanel() {
   const [editing, setEditing] = useState<TradeAccount | null>(null);
   const [creating, setCreating] = useState(false);
   const [confirmPurge, setConfirmPurge] = useState<TradeAccount | null>(null);
+  const { pendingKey, error: actionError, run } = useAsyncAction();
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // `silent` یعنی «داده را تازه کن ولی اسکلت نشان نده». بدونِ این، هر
+  // آرشیو/حذف کلِ لیست را برای یک لحظه با اسکلت عوض می‌کرد — همان پرشی که
+  // از بیرون شبیهِ باگ دیده می‌شد.
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       // اگر اسکریپتِ inlineِ preload از قبل همین URL را درخواست کرده،
       // همان promise استفاده می‌شود تا درخواست دوباره نرود.
@@ -34,21 +39,24 @@ export function TradeAccountsPanel() {
       setAccounts(aData?.accounts || []);
       setTags(tData?.tags || []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [showArchived]);
 
   useEffect(() => { load(); }, [load]);
 
   async function toggleArchive(a: TradeAccount) {
-    await fetch(`/api/trade/accounts?id=${a.id}&mode=archive`, { method: "DELETE" });
-    load();
+    const ok = await run(`archive:${a.id}`, () =>
+      fetch(`/api/trade/accounts?id=${a.id}&mode=archive`, { method: "DELETE" })
+    );
+    if (ok) load(true);
   }
 
   async function purge(a: TradeAccount) {
-    await fetch(`/api/trade/accounts?id=${a.id}&mode=purge`, { method: "DELETE" });
-    setConfirmPurge(null);
-    load();
+    const ok = await run(`purge:${a.id}`, () =>
+      fetch(`/api/trade/accounts?id=${a.id}&mode=purge`, { method: "DELETE" })
+    );
+    if (ok) { setConfirmPurge(null); load(true); }
   }
 
   const activeCount = accounts.filter((a) => !a.archived).length;
@@ -63,6 +71,8 @@ export function TradeAccountsPanel() {
           {showArchived ? "پنهان‌کردن آرشیو" : "نمایش آرشیو"}
         </button>
       </div>
+
+      {actionError && <div className="trade-form-error">{actionError}</div>}
 
       {!accounts.length && (
         <div className="item-line empty" style={{ marginTop: 12 }}>
@@ -133,8 +143,16 @@ export function TradeAccountsPanel() {
 
             <div className="trade-account-actions">
               <button type="button" className="trade-icon-btn" onClick={() => setEditing(a)} aria-label="ویرایش"><Pencil size={15} /></button>
-              <button type="button" className="trade-icon-btn" onClick={() => toggleArchive(a)} aria-label={a.archived ? "بازگردانی" : "آرشیو"}>
-                {a.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
+              <button
+                type="button"
+                className="trade-icon-btn"
+                onClick={() => toggleArchive(a)}
+                disabled={pendingKey === `archive:${a.id}`}
+                aria-label={a.archived ? "بازگردانی" : "آرشیو"}
+              >
+                {pendingKey === `archive:${a.id}`
+                  ? <Loader2 size={15} className="trade-spin" />
+                  : a.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
               </button>
               {a.archived && (
                 <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmPurge(a)} aria-label="حذف کامل"><Trash2 size={15} /></button>
@@ -161,7 +179,12 @@ export function TradeAccountsPanel() {
       )}
 
       {confirmPurge && (
-        <PurgeConfirm account={confirmPurge} onCancel={() => setConfirmPurge(null)} onConfirm={() => purge(confirmPurge)} />
+        <PurgeConfirm
+          account={confirmPurge}
+          onCancel={() => setConfirmPurge(null)}
+          onConfirm={() => purge(confirmPurge)}
+          busy={pendingKey === `purge:${confirmPurge.id}`}
+        />
       )}
     </div>
   );
@@ -169,7 +192,7 @@ export function TradeAccountsPanel() {
 
 // حذفِ کاملِ حساب برگشت‌ناپذیر است و کلِ تاریخچه‌ی معاملاتش را می‌برد — پس
 // پشتِ تایپِ دقیقِ نامِ حساب قفل شده، نه یک «آیا مطمئنی؟»ی ساده.
-function PurgeConfirm({ account, onCancel, onConfirm }: { account: TradeAccount; onCancel: () => void; onConfirm: () => void }) {
+function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAccount; onCancel: () => void; onConfirm: () => void; busy: boolean }) {
   const [typed, setTyped] = useState("");
   return (
     <>
@@ -183,8 +206,8 @@ function PurgeConfirm({ account, onCancel, onConfirm }: { account: TradeAccount;
         <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
-          <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name} onClick={onConfirm}>
-            حذف کامل
+          <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name || busy} onClick={onConfirm}>
+            {busy ? "..." : "حذف کامل"}
           </button>
         </div>
       </div>

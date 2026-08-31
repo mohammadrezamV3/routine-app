@@ -33,6 +33,10 @@ export function EconomicCalendarPanel() {
   const [range, setRange] = useState<RangeKey>("today");
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
   const [loading, setLoading] = useState(true);
+  // فقط بارِ اول اسکلت نشان می‌دهیم؛ با هر تغییرِ فیلتر، لیستِ قبلی سرِ جایش
+  // می‌ماند و کمی کم‌رنگ می‌شود. قبلاً هر کلیک روی یک فیلتر کلِ لیست را با
+  // اسکلت جایگزین می‌کرد و همان پرش، حسِ کُندی و ناپایداری می‌داد.
+  const [firstLoad, setFirstLoad] = useState(true);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [currencies, setCurrencies] = useState<string[]>([]);
@@ -51,6 +55,7 @@ export function EconomicCalendarPanel() {
       setEvents(res.ok ? (await res.json()).events || [] : []);
     } finally {
       setLoading(false);
+      setFirstLoad(false);
     }
   }, [range, currencies, impacts]);
 
@@ -124,16 +129,18 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
-      {loading && <PanelSkeleton />}
+      {loading && firstLoad && <PanelSkeleton />}
 
-      {!loading && !events.length && (
+      {!firstLoad && !loading && !events.length && (
         <div className="item-line empty" style={{ marginTop: 16 }}>
           <CalendarClock size={15} style={{ verticalAlign: "-2px", marginLeft: 6 }} />
           رویدادی برای این بازه ثبت نشده است.
         </div>
       )}
 
-      {!loading && groups.map(([day, list]) => (
+      {!firstLoad && (
+      <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
+      {groups.map(([day, list]) => (
         <div key={day} className="trade-cal-day">
           <div className="trade-cal-day-title">{formatTradeDateTime(list[0].occursAt, calSystem, false)}</div>
           {list.map((e) => {
@@ -157,6 +164,8 @@ export function EconomicCalendarPanel() {
           })}
         </div>
       ))}
+      </div>
+      )}
     </div>
   );
 }

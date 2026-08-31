@@ -17,6 +17,7 @@ import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
 import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 type StatusFilter = "ALL" | TradeStatus;
 
@@ -39,6 +40,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TradeEntryDetail | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const { error: actionError, run } = useAsyncAction();
 
   useEffect(() => {
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
@@ -46,8 +48,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       .then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
   }, []);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [aRes, eRes, tRes] = await Promise.all([
         fetch("/api/trade/accounts?archived=1"),
@@ -61,7 +63,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       setEntries(eRes.ok ? (await eRes.json()).entries || [] : []);
       setTags(tRes.ok ? (await tRes.json()).tags || [] : []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [accountId]);
 
@@ -78,22 +80,20 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
     });
   }, [entries, statusFilter, query]);
 
-  async function openDetail(id: string) { setDetailId(id); }
-
-  async function editEntry(id: string) {
-    const res = await fetch(`/api/trade/entries/${id}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    setEditingEntry(data.entry);
+  function editEntry(entry: TradeEntryDetail) {
+    setEditingEntry(entry);
     setDetailId(null);
     setFormOpen(true);
   }
 
   async function deleteEntry(id: string) {
+    const snapshot = entries;
     setEntries((prev) => prev.filter((e) => e.id !== id));
     setDetailId(null);
-    await fetch(`/api/trade/entries?id=${id}`, { method: "DELETE" });
-    load();
+    const ok = await run("delete", () => fetch(`/api/trade/entries?id=${id}`, { method: "DELETE" }));
+    // اگر حذف روی سرور نگرفت، ردیف را برگردان تا کاربر فکر نکند پاک شده
+    if (!ok) { setEntries(snapshot); return; }
+    load(true);
   }
 
   if (loading && !account) return <PanelSkeleton />;
@@ -128,6 +128,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           </button>
         </div>
       </div>
+
+      {actionError && <div className="trade-form-error">{actionError}</div>}
 
       {visibleStats.includes("goalRing") && goal !== null && (
         <div className="trade-goal-ring-row">
@@ -193,7 +195,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
       <div className="trade-list">
         {filtered.map((e) => (
-          <button key={e.id} type="button" className="trade-row" onClick={() => openDetail(e.id)}>
+          <button key={e.id} type="button" className="trade-row" onClick={() => setDetailId(e.id)}>
             <span className={`trade-row-dir ${e.direction === "BUY" ? "buy" : "sell"}`}>
               {e.direction === "BUY" ? "خرید" : "فروش"}
             </span>
@@ -243,7 +245,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           tags={tags}
           onTagCreated={(t) => setTags((p) => [...p, t])}
           onClose={() => setEditingAccount(false)}
-          onSaved={() => { setEditingAccount(false); load(); }}
+          onSaved={() => { setEditingAccount(false); load(true); }}
         />
       )}
 
@@ -255,7 +257,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           calSystem={calSystem}
           onTagCreated={(t) => setTags((p) => [...p, t])}
           onClose={() => { setFormOpen(false); setEditingEntry(null); }}
-          onSaved={() => { setFormOpen(false); setEditingEntry(null); load(); }}
+          onSaved={() => { setFormOpen(false); setEditingEntry(null); load(true); }}
         />
       )}
 
@@ -265,7 +267,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           calSystem={calSystem}
           currency={account.currency}
           onClose={() => setDetailId(null)}
-          onEdit={() => editEntry(detailId)}
+          onEdit={editEntry}
           onDelete={() => deleteEntry(detailId)}
         />
       )}

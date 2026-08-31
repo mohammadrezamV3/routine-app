@@ -28,7 +28,7 @@ export function TradeDetailDrawer({
   calSystem: CalSystem;
   currency: string;
   onClose: () => void;
-  onEdit: () => void;
+  onEdit: (entry: TradeEntryDetail) => void;
   onDelete: () => void;
 }) {
   const [entry, setEntry] = useState<TradeEntryDetail | null>(null);
@@ -92,7 +92,8 @@ export function TradeDetailDrawer({
             </div>
           </div>
           <div className="trade-drawer-actions">
-            <button type="button" className="trade-icon-btn" onClick={onEdit} aria-label="ویرایش"><Pencil size={16} /></button>
+            <button type="button" className="trade-icon-btn" disabled={!entry}
+              onClick={() => entry && onEdit(entry)} aria-label="ویرایش"><Pencil size={16} /></button>
             <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmDelete(true)} aria-label="حذف"><Trash2 size={16} /></button>
             <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
           </div>
