@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pin, PinOff, Plus, Search, Trash2, X } from "lucide-react";
+import { Loader2, Pin, PinOff, Plus, Search, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeTagField } from "./TradeTagField";
 import { CAL_SYSTEM_KEY, CalSystem, TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
@@ -29,11 +30,12 @@ export function TradeNotesPanel() {
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [editing, setEditing] = useState<Note | null>(null);
   const [creating, setCreating] = useState(false);
+  const { pendingKey, error: actionError, run } = useAsyncAction();
 
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const qs = new URLSearchParams();
       if (query.trim()) qs.set("q", query.trim());
@@ -45,7 +47,7 @@ export function TradeNotesPanel() {
       setNotes(nRes.ok ? (await nRes.json()).notes || [] : []);
       setTags(tRes.ok ? (await tRes.json()).tags || [] : []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [query, filterTags]);
 
@@ -57,17 +59,21 @@ export function TradeNotesPanel() {
 
   async function togglePin(n: Note) {
     setNotes((prev) => prev.map((x) => (x.id === n.id ? { ...x, pinned: !x.pinned } : x)));
-    await fetch("/api/trade/notes", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...n, pinned: !n.pinned, tagIds: n.tags.map((t) => t.id) }),
-    });
-    load();
+    const ok = await run(`pin:${n.id}`, () =>
+      fetch("/api/trade/notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...n, pinned: !n.pinned, tagIds: n.tags.map((t) => t.id) }),
+      })
+    );
+    load(true);
+    if (!ok) return;
   }
 
   async function remove(id: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id));
-    await fetch(`/api/trade/notes?id=${id}`, { method: "DELETE" });
+    const ok = await run(`del:${id}`, () => fetch(`/api/trade/notes?id=${id}`, { method: "DELETE" }));
+    if (!ok) load(true); // برگرداندنِ یادداشتی که حذفش نشد
   }
 
   return (
@@ -99,6 +105,8 @@ export function TradeNotesPanel() {
         </div>
       )}
 
+      {actionError && <div className="trade-form-error">{actionError}</div>}
+
       {loading && <PanelSkeleton />}
       {!loading && !notes.length && (
         <div className="item-line empty" style={{ marginTop: 16 }}>
@@ -120,8 +128,16 @@ export function TradeNotesPanel() {
             <div className="trade-note-head">
               <span className="trade-note-title">{n.title}</span>
               <div className="trade-account-actions" style={{ margin: 0 }} onClick={(e) => e.stopPropagation()}>
-                <button type="button" className="trade-icon-btn" onClick={() => togglePin(n)} aria-label={n.pinned ? "برداشتن سنجاق" : "سنجاق"}>
-                  {n.pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                <button
+                  type="button"
+                  className="trade-icon-btn"
+                  onClick={() => togglePin(n)}
+                  disabled={pendingKey === `pin:${n.id}`}
+                  aria-label={n.pinned ? "برداشتن سنجاق" : "سنجاق"}
+                >
+                  {pendingKey === `pin:${n.id}`
+                    ? <Loader2 size={14} className="trade-spin" />
+                    : n.pinned ? <PinOff size={14} /> : <Pin size={14} />}
                 </button>
                 <button type="button" className="trade-icon-btn danger" onClick={() => remove(n.id)} aria-label="حذف"><Trash2 size={14} /></button>
               </div>
