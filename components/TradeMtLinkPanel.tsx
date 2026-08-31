@@ -69,7 +69,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
   }
 
   return (
-    <div className="trade-mt-panel">
+    <div className="trade-surface trade-mt-panel">
       <div className="domain-sub" style={{ margin: "0 0 10px" }}>اتصال متاتریدر</div>
 
       {link?.connected ? (

@@ -40,7 +40,7 @@ export function ForexClockPanel() {
         {FOREX_SESSIONS.map((s) => {
           const open = isSessionOpen(s.key, now);
           return (
-            <div key={s.key} className={`forex-card${open ? " open" : ""}`}>
+            <div key={s.key} className={`trade-surface forex-card${open ? " open" : ""}`}>
               <div className="forex-card-head">
                 <span className="forex-flag">{s.flag}</span>
                 <span className="forex-city">{s.label}</span>

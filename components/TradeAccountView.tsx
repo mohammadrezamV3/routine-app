@@ -106,7 +106,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
     <div>
       <Link href="/trade/journal" className="trade-back-link"><ChevronRight size={15} /> حساب‌ها</Link>
 
-      <div className="trade-account-header">
+      <div className="trade-surface trade-account-header">
         <span className="trade-account-stripe" style={{ background: account.color }} />
         <div className="trade-account-header-main">
           <div className="trade-account-title-row">
@@ -178,9 +178,9 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         <div className="trade-list-filters">
           <div className="trade-search">
             <Search size={14} />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="نماد یا ستاپ" />
+            <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="نماد یا ستاپ" />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
+          <select className="wsearch-newform-name trade-glass-field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
             <option value="ALL">همه</option>
             <option value="CLOSED">بسته</option>
             <option value="OPEN">باز</option>

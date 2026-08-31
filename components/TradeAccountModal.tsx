@@ -84,7 +84,7 @@ export function TradeAccountModal({
         </div>
 
         <label className="exercise-form-label">نام حساب</label>
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلاً حساب اصلی" />
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلاً حساب اصلی" />
 
         <label className="exercise-form-label">نوع حساب</label>
         <SegmentedTabs
@@ -96,22 +96,22 @@ export function TradeAccountModal({
         <div className="trade-field-row">
           <div>
             <label className="exercise-form-label">بروکر</label>
-            <input value={broker} onChange={(e) => setBroker(e.target.value)} maxLength={60} placeholder="اختیاری" />
+            <input className="wsearch-newform-name trade-glass-field" value={broker} onChange={(e) => setBroker(e.target.value)} maxLength={60} placeholder="اختیاری" />
           </div>
           <div>
             <label className="exercise-form-label">ارز حساب</label>
-            <input value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={8} placeholder="USD" />
+            <input className="wsearch-newform-name trade-glass-field" value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={8} placeholder="USD" />
           </div>
         </div>
 
         <div className="trade-field-row">
           <div>
             <label className="exercise-form-label">بالانس اولیه</label>
-            <input type="number" inputMode="decimal" value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} placeholder="0" />
+            <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} placeholder="0" />
           </div>
           <div>
             <label className="exercise-form-label">اهرم</label>
-            <input type="number" inputMode="numeric" value={leverage} onChange={(e) => setLeverage(e.target.value)} placeholder="اختیاری" />
+            <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="numeric" value={leverage} onChange={(e) => setLeverage(e.target.value)} placeholder="اختیاری" />
           </div>
         </div>
 
@@ -121,7 +121,7 @@ export function TradeAccountModal({
           onChange={setGoalType}
           options={[{ value: "AMOUNT" as const, label: "مبلغ" }, { value: "PERCENT" as const, label: "درصد بالانس" }]}
         />
-        <input
+        <input className="wsearch-newform-name trade-glass-field"
           type="number" inputMode="decimal" value={goalValue} onChange={(e) => setGoalValue(e.target.value)}
           placeholder={goalType === "PERCENT" ? "مثلاً 5 (یعنی ۵٪)" : "مثلاً 500"} style={{ marginTop: 8 }}
         />
@@ -137,7 +137,7 @@ export function TradeAccountModal({
         <TradeTagField tags={tags} value={tagIds} onChange={setTagIds} onCreated={onTagCreated} />
 
         <label className="exercise-form-label">توضیح</label>
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} rows={2} placeholder="اختیاری" />
+        <textarea className="wsearch-newform-name trade-glass-field" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} rows={2} placeholder="اختیاری" />
 
         {error && <div className="trade-form-error">{error}</div>}
 

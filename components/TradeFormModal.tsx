@@ -8,6 +8,7 @@ import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
 import { TradeDateTimeField } from "./TradeDateTimeField";
 import { compressImageToDataUrl } from "@/lib/image";
+import { takePreloaded } from "@/lib/preload";
 import { faNum } from "@/lib/jalali";
 import { searchSymbols, suggestPnl, suggestRiskAmount, TIMEFRAMES } from "@/lib/tradeSymbols";
 import {
@@ -77,9 +78,9 @@ export function TradeFormModal({
   function patch(p: Partial<TradeFormState>) { setForm((f) => ({ ...f, ...p })); }
 
   useEffect(() => {
-    fetch("/api/trade/checklists")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
+    // اگر اسکریپتِ inlineِ preload از قبل همین URL را گرفته، دوباره فچ نمی‌شود
+    (takePreloaded("/api/trade/checklists") ?? fetch("/api/trade/checklists").then((r) => (r.ok ? r.json() : null)))
+      .then((d: any) => {
         const list: Checklist[] = d?.checklists || [];
         setChecklists(list);
         if (presetChecklistId && !entry) patch({ checklistId: presetChecklistId });
@@ -217,7 +218,7 @@ export function TradeFormModal({
             <div className="trade-field-row">
               <div style={{ position: "relative" }}>
                 <label className="exercise-form-label">نماد معاملاتی</label>
-                <input
+                <input className="wsearch-newform-name trade-glass-field"
                   value={form.symbol}
                   onChange={(e) => { patch({ symbol: e.target.value.toUpperCase() }); setSymbolSuggestOpen(true); }}
                   onFocus={() => setSymbolSuggestOpen(true)}
@@ -249,7 +250,7 @@ export function TradeFormModal({
             <div className="trade-field-row">
               <div>
                 <label className="exercise-form-label">تایم فریم</label>
-                <select value={form.timeframe} onChange={(e) => patch({ timeframe: e.target.value })}>
+                <select className="wsearch-newform-name trade-glass-field" value={form.timeframe} onChange={(e) => patch({ timeframe: e.target.value })}>
                   <option value="">—</option>
                   {TIMEFRAMES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -264,7 +265,7 @@ export function TradeFormModal({
               <div>
                 <label className="exercise-form-label">حجم معامله</label>
                 <div className="trade-volume-row">
-                  <input type="number" inputMode="decimal" value={form.volume} onChange={(e) => patch({ volume: e.target.value })} placeholder="0.00" />
+                  <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.volume} onChange={(e) => patch({ volume: e.target.value })} placeholder="0.00" />
                   <SegmentedTabs
                     active={form.volumeUnit}
                     onChange={(v) => patch({ volumeUnit: v })}
@@ -289,7 +290,7 @@ export function TradeFormModal({
             <div className="trade-field-row">
               <div>
                 <label className="exercise-form-label">مقدار {form.result === "LOSS" ? "ضرر" : "سود"} ({account.currency})</label>
-                <input
+                <input className="wsearch-newform-name trade-glass-field"
                   type="number" inputMode="decimal" value={form.pnlAmount}
                   onChange={(e) => patch({ pnlAmount: e.target.value })}
                   placeholder="0.00" disabled={form.result === "BREAKEVEN"}
@@ -330,38 +331,38 @@ export function TradeFormModal({
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">قیمت ورود</label>
-                    <input type="number" inputMode="decimal" value={form.entryPrice} onChange={(e) => patch({ entryPrice: e.target.value })} />
+                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.entryPrice} onChange={(e) => patch({ entryPrice: e.target.value })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">قیمت خروج</label>
-                    <input type="number" inputMode="decimal" value={form.exitPrice} onChange={(e) => patch({ exitPrice: e.target.value })} />
+                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.exitPrice} onChange={(e) => patch({ exitPrice: e.target.value })} />
                   </div>
                 </div>
 
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">حد ضرر</label>
-                    <input type="number" inputMode="decimal" value={form.stopLoss} onChange={(e) => patch({ stopLoss: e.target.value })} />
+                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.stopLoss} onChange={(e) => patch({ stopLoss: e.target.value })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">حد سود</label>
-                    <input type="number" inputMode="decimal" value={form.takeProfit} onChange={(e) => patch({ takeProfit: e.target.value })} />
+                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.takeProfit} onChange={(e) => patch({ takeProfit: e.target.value })} />
                   </div>
                 </div>
 
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">کمیسیون</label>
-                    <input type="number" inputMode="decimal" value={form.commission} onChange={(e) => patch({ commission: e.target.value })} />
+                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.commission} onChange={(e) => patch({ commission: e.target.value })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">سواپ</label>
-                    <input type="number" inputMode="decimal" value={form.swap} onChange={(e) => patch({ swap: e.target.value })} />
+                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.swap} onChange={(e) => patch({ swap: e.target.value })} />
                   </div>
                 </div>
 
                 <label className="exercise-form-label">مقدار ریسک ({account.currency}) — مبنای محاسبه‌ی R</label>
-                <input type="number" inputMode="decimal" value={form.riskAmount} onChange={(e) => patch({ riskAmount: e.target.value })} placeholder="اختیاری" />
+                <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.riskAmount} onChange={(e) => patch({ riskAmount: e.target.value })} placeholder="اختیاری" />
                 {riskSuggestion !== null && (
                   <button type="button" className="trade-suggest-btn" onClick={() => patch({ riskAmount: String(riskSuggestion) })}>
                     <Wand2 size={12} /> پیشنهاد از فاصله‌ی حد ضرر: {faNum(riskSuggestion.toFixed(2))}
@@ -369,7 +370,7 @@ export function TradeFormModal({
                 )}
 
                 <label className="exercise-form-label">ستاپ / استراتژی</label>
-                <input value={form.setup} onChange={(e) => patch({ setup: e.target.value })} maxLength={60} placeholder="مثلاً London Breakout" />
+                <input className="wsearch-newform-name trade-glass-field" value={form.setup} onChange={(e) => patch({ setup: e.target.value })} maxLength={60} placeholder="مثلاً London Breakout" />
 
                 <label className="exercise-form-label">تاریخ و ساعت خروج</label>
                 <TradeDateTimeField value={form.closedAt} onChange={(v) => patch({ closedAt: v })} calSystem={calSystem} allowClear placeholder="ثبت نشده" />
@@ -399,7 +400,7 @@ export function TradeFormModal({
             </div>
 
             <label className="exercise-form-label">یادداشت دلایل ورود</label>
-            <textarea rows={2} value={form.entryReasonNote} onChange={(e) => patch({ entryReasonNote: e.target.value })} maxLength={1000} />
+            <textarea className="wsearch-newform-name trade-glass-field" rows={2} value={form.entryReasonNote} onChange={(e) => patch({ entryReasonNote: e.target.value })} maxLength={1000} />
 
             <label className="exercise-form-label">دلایل خروج</label>
             <div className="trade-choice-grid">
@@ -420,17 +421,17 @@ export function TradeFormModal({
             </div>
 
             <label className="exercise-form-label">یادداشت دلایل خروج</label>
-            <textarea rows={2} value={form.exitReasonNote} onChange={(e) => patch({ exitReasonNote: e.target.value })} maxLength={1000} />
+            <textarea className="wsearch-newform-name trade-glass-field" rows={2} value={form.exitReasonNote} onChange={(e) => patch({ exitReasonNote: e.target.value })} maxLength={1000} />
 
             <label className="exercise-form-label">نکات معامله</label>
-            <textarea rows={3} value={form.note} onChange={(e) => patch({ note: e.target.value })} maxLength={2000} placeholder="هر نکته‌ای که بعداً به دردت می‌خورد" />
+            <textarea className="wsearch-newform-name trade-glass-field" rows={3} value={form.note} onChange={(e) => patch({ note: e.target.value })} maxLength={2000} placeholder="هر نکته‌ای که بعداً به دردت می‌خورد" />
           </div>
         )}
 
         {tab === "checklist" && (
           <div className="trade-form-body">
             <label className="exercise-form-label">چک‌لیست این معامله</label>
-            <select value={form.checklistId || ""} onChange={(e) => patch({ checklistId: e.target.value || null, checklistState: {} })}>
+            <select className="wsearch-newform-name trade-glass-field" value={form.checklistId || ""} onChange={(e) => patch({ checklistId: e.target.value || null, checklistState: {} })}>
               <option value="">بدون چک‌لیست</option>
               {checklists.filter((c) => !c.archived).map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -500,7 +501,7 @@ export function TradeFormModal({
                 <Camera size={22} />
                 <span>{compressing ? "در حال پردازش..." : "افزودن تصویر"}</span>
                 <span className="trade-image-hint">{faNum(MAX_IMAGES_PER_TRADE - form.images.length)} باقی‌مانده — یا با Ctrl+V بچسبان</span>
-                <input
+                <input className="wsearch-newform-name trade-glass-field"
                   type="file" accept="image/*" multiple hidden
                   onChange={(e) => { if (e.target.files) addImages(e.target.files); e.target.value = ""; }}
                 />

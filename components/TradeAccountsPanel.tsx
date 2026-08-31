@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { TradeAccountModal } from "./TradeAccountModal";
@@ -70,8 +71,14 @@ export function TradeAccountsPanel() {
       )}
 
       <div className="trade-account-grid">
-        {accounts.map((a) => (
-          <div key={a.id} className={`trade-account-card${a.archived ? " archived" : ""}`}>
+        {accounts.map((a, i) => (
+          <motion.div
+            key={a.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+            className={`trade-surface trade-account-card${a.archived ? " archived" : ""}`}
+          >
             <span className="trade-account-stripe" style={{ background: a.color }} />
 
             <Link href={`/trade/accounts/${a.id}`} className="trade-account-main">
@@ -133,7 +140,7 @@ export function TradeAccountsPanel() {
                 <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmPurge(a)} aria-label="حذف کامل"><Trash2 size={15} /></button>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -173,7 +180,7 @@ function PurgeConfirm({ account, onCancel, onConfirm }: { account: TradeAccount;
           با این کار تمام معاملات، عکس‌ها و آمارِ «{account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.
         </div>
         <label className="exercise-form-label">برای تأیید، نام حساب را تایپ کن</label>
-        <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />
+        <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
           <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name} onClick={onConfirm}>

@@ -92,7 +92,7 @@ export function EconomicCalendarPanel() {
       </div>
 
       {filtersOpen && (
-        <div className="trade-cal-filters">
+        <div className="trade-surface trade-cal-filters">
           <label className="exercise-form-label">سطح تأثیر</label>
           <div className="trade-choice-grid">
             {IMPACT_ORDER.map((i) => (

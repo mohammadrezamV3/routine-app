@@ -2,75 +2,74 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { ModuleGate } from "@/components/ModuleGate";
-import { AuthGate } from "@/components/AuthGate";
+import { motion } from "framer-motion";
+
+import { TradePageShell } from "@/components/TradePageShell";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { ACCOUNT_TYPE_LABELS, TradeAccount } from "@/lib/tradeTypes";
 
-// اتصالِ متاتریدر روی **هر حساب جداگانه** انجام می‌شود (هر حساب ترمینال و
-// لاگینِ خودش را دارد)، پس این صفحه فقط فهرستِ حساب‌ها و وضعیتِ اتصالشان را
-// نشان می‌دهد و برای اتصال می‌فرستد داخلِ خودِ حساب.
-type Row = TradeAccount & { connected?: boolean; lastSyncAt?: string | null };
+// اتصالِ متاتریدر روی هر حساب جداگانه انجام می‌شود (هر حساب ترمینال و
+// لاگینِ خودش را دارد)، پس این صفحه فقط فهرستِ حساب‌ها و وضعیتشان را نشان
+// می‌دهد. وضعیتِ اتصال از خودِ همان یک درخواستِ حساب‌ها می‌آید — قبلاً به‌ازای
+// هر حساب یک درخواستِ جدا می‌رفت و باز شدنِ صفحه را کُند می‌کرد.
+type Row = TradeAccount & { mtConnected?: boolean };
 
 function AccountsForMt() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/trade/accounts");
-        const accounts: TradeAccount[] = res.ok ? (await res.json()).accounts || [] : [];
-        const withLinks = await Promise.all(
-          accounts.map(async (a) => {
-            const r = await fetch(`/api/trade/metatrader?accountId=${a.id}`);
-            const link = r.ok ? (await r.json()).link : null;
-            return { ...a, connected: !!link?.connected, lastSyncAt: link?.lastSyncAt ?? null };
-          })
-        );
-        setRows(withLinks);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    let cancelled = false;
+    fetch("/api/trade/accounts?archived=0")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled) setRows(d?.accounts || []); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <PanelSkeleton />;
-  if (!rows.length) return <div className="item-line empty">اول باید یک حساب معاملاتی بسازی</div>;
+  if (!rows.length) {
+    return (
+      <div className="item-line empty" style={{ marginTop: 16 }}>
+        اول باید یک حساب معاملاتی بسازی —{" "}
+        <Link href="/trade/journal" style={{ color: "var(--accent)" }}>رفتن به حساب‌ها</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="trade-account-grid">
-      {rows.map((a) => (
-        <Link key={a.id} href={`/trade/accounts/${a.id}`} className="trade-account-card trade-mt-row">
-          <span className="trade-account-stripe" style={{ background: a.color }} />
-          <div className="trade-account-title-row">
-            <span className="trade-account-name">{a.name}</span>
-            <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[a.type]}</span>
-          </div>
-          <div className={`trade-mt-status${a.connected ? " connected" : ""}`} style={{ marginTop: 8 }}>
-            <span className="forex-dot" />
-            {a.connected ? "متصل" : "متصل نیست"}
-          </div>
-        </Link>
+      {rows.map((a, i) => (
+        <motion.div
+          key={a.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Link href={`/trade/accounts/${a.id}`} prefetch className="trade-surface trade-mt-row">
+            <span className="trade-account-stripe" style={{ background: a.color }} />
+            <div className="trade-account-title-row">
+              <span className="trade-account-name">{a.name}</span>
+              <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[a.type]}</span>
+            </div>
+            <div className={`trade-mt-status${a.mtConnected ? " connected" : ""}`} style={{ marginTop: 10 }}>
+              <span className="forex-dot" />
+              {a.mtConnected ? "متصل" : "متصل نیست"}
+            </div>
+          </Link>
+        </motion.div>
       ))}
     </div>
   );
 }
 
 export default function TradeMetaTraderPage() {
-  const { status } = useSession();
   return (
-    <section className="trade-desktop">
-      <Link href="/trade" className="trade-back-link"><ChevronRight size={15} /> ترید</Link>
-      <h1>اتصال متاتریدر</h1>
-      <div className="section-note">اتصال برای هر حساب جداگانه انجام می‌شود — حسابت را انتخاب کن</div>
-      {status === "authenticated" ? (
-        <ModuleGate module="TRADE"><AccountsForMt /></ModuleGate>
-      ) : (
-        <AuthGate message="برای استفاده از این سرویس وارد شوید" />
-      )}
-    </section>
+    <TradePageShell
+      title="اتصال متاتریدر"
+      note="اتصال برای هر حساب جداگانه انجام می‌شود — حسابت را انتخاب کن"
+    >
+      <AccountsForMt />
+    </TradePageShell>
   );
 }

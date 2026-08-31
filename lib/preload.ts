@@ -59,6 +59,7 @@ const ROUTE_PRELOADS: { prefix: string; urls: string[] }[] = [
     urls: [
       "/api/trade/accounts?archived=0",
       "/api/trade/tags",
+      "/api/trade/checklists",
       "/api/settings/tradeVisibleStats",
       "/api/settings/tradeCalendarSystem",
       "/api/settings/tradeTickerSymbols",

@@ -104,7 +104,7 @@ export function TradeTagCreateModal({
         </div>
 
         <label className="exercise-form-label">نام برچسب</label>
-        <input
+        <input className="wsearch-newform-name trade-glass-field"
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}

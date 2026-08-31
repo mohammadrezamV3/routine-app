@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Pin, PinOff, Plus, Search, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
@@ -74,7 +75,7 @@ export function TradeNotesPanel() {
       <div className="trade-list-head" style={{ marginTop: 6 }}>
         <div className="trade-search" style={{ flex: 1 }}>
           <Search size={14} />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
+          <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
         </div>
       </div>
 
@@ -106,8 +107,15 @@ export function TradeNotesPanel() {
       )}
 
       <div className="trade-note-grid">
-        {notes.map((n) => (
-          <div key={n.id} className="trade-note-card" onClick={() => setEditing(n)}>
+        {notes.map((n, i) => (
+          <motion.div
+            key={n.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.04, ease: [0.22, 1, 0.36, 1] }}
+            className="trade-surface trade-note-card"
+            onClick={() => setEditing(n)}
+          >
             <span className="trade-account-stripe" style={{ background: n.color }} />
             <div className="trade-note-head">
               <span className="trade-note-title">{n.title}</span>
@@ -129,7 +137,7 @@ export function TradeNotesPanel() {
                 </span>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -195,10 +203,10 @@ function NoteEditor({
         </div>
 
         <label className="exercise-form-label">عنوان</label>
-        <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
 
         <label className="exercise-form-label">متن</label>
-        <textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} maxLength={20000} />
+        <textarea className="wsearch-newform-name trade-glass-field" rows={8} value={content} onChange={(e) => setContent(e.target.value)} maxLength={20000} />
 
         <label className="exercise-form-label">رنگ</label>
         <div className="trade-color-row">

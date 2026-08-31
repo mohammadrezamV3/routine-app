@@ -131,6 +131,9 @@ export type TradeAccount = {
   tags: TradeTag[];
   /** خلاصه‌ی محاسبه‌شده سمتِ سرور — برای کارتِ لیستِ حساب‌ها */
   summary?: TradeAccountSummary;
+  /** وضعیتِ اتصالِ متاتریدرِ همین حساب — در همان درخواستِ حساب‌ها می‌آید */
+  mtConnected?: boolean;
+  mtLastSyncAt?: string | null;
 };
 
 export type TradeAccountSummary = {

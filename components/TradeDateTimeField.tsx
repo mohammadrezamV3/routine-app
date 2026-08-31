@@ -51,7 +51,7 @@ export function TradeDateTimeField({
           <span>{label()}</span>
         </button>
         <input
-          className="trade-time-input mono"
+          className="wsearch-newform-name trade-glass-field trade-time-input mono"
           value={faNum(time)}
           onChange={(e) => onChange(joinLocalInput(date || isoLocal(new Date()), formatTimeDigits(e.target.value)))}
           placeholder="00:00"

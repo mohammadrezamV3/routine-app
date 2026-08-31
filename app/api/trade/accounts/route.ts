@@ -14,6 +14,10 @@ const ACCOUNT_SELECT = {
   initialBalance: true, leverage: true, color: true, note: true,
   goalType: true, goalValue: true, archived: true, order: true,
   tags: { select: { id: true, name: true, color: true } },
+  // وضعیتِ اتصالِ متاتریدر همین‌جا می‌آید تا صفحه‌ی «اتصال متاتریدر» مجبور
+  // نباشد به‌ازای هر حساب یک درخواستِ جدا بزند (با ۱۰ حساب می‌شد ۱۱ درخواستِ
+  // سریالی — همان چیزی که باز شدنِ صفحه را کُند نشان می‌داد).
+  mtLink: { select: { tokenHash: true, revokedAt: true, lastSyncAt: true, platform: true } },
 } as const;
 
 // GET /api/trade/accounts?archived=1
@@ -45,13 +49,17 @@ export async function GET(req: NextRequest) {
     byAccount.get(s.accountId)!.push(s);
   }
 
-  const withSummary = accounts.map((a) => {
+  const withSummary = accounts.map((account) => {
+    const { mtLink, ...a } = account;
     const list = (byAccount.get(a.id) || []).map((e) => ({
       status: e.status, pnl: e.pnl, rMultiple: e.rMultiple, openedAt: e.openedAt.toISOString(),
     }));
     const s = computeTradeStats(list, a);
     return {
       ...a,
+      // هشِ توکن عمداً بیرون داده نمی‌شود — فقط «متصل هست یا نه»
+      mtConnected: !!mtLink?.tokenHash && !mtLink.revokedAt,
+      mtLastSyncAt: mtLink?.lastSyncAt ? mtLink.lastSyncAt.toISOString() : null,
       summary: {
         tradeCount: s.total,
         closedCount: s.closedCount,
@@ -86,7 +94,7 @@ export async function POST(req: NextRequest) {
     ? await prisma.tradeTag.findMany({ where: { id: { in: tagIds }, userId }, select: { id: true } })
     : [];
 
-  const account = await prisma.tradeAccount.create({
+  const created = await prisma.tradeAccount.create({
     data: {
       ...parsed,
       userId,
@@ -95,6 +103,7 @@ export async function POST(req: NextRequest) {
     },
     select: ACCOUNT_SELECT,
   });
+  const { mtLink: _created, ...account } = created;
   return NextResponse.json({ ok: true, account });
 }
 
@@ -120,11 +129,12 @@ export async function PATCH(req: NextRequest) {
     ? await prisma.tradeTag.findMany({ where: { id: { in: tagIds }, userId }, select: { id: true } })
     : [];
 
-  const account = await prisma.tradeAccount.update({
+  const updated = await prisma.tradeAccount.update({
     where: { id },
     data: { ...parsed, tags: { set: ownedTags.map((t) => ({ id: t.id })) } },
     select: ACCOUNT_SELECT,
   });
+  const { mtLink: _updated, ...account } = updated;
   return NextResponse.json({ ok: true, account });
 }
 

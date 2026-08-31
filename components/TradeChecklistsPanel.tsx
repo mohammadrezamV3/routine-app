@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Reorder } from "framer-motion";
+import { Reorder, motion } from "framer-motion";
 import { Copy, GripVertical, Pencil, Plus, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { takePreloaded } from "@/lib/preload";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeFormModal } from "./TradeFormModal";
 import {
@@ -36,13 +37,13 @@ export function TradeChecklistsPanel() {
     setLoading(true);
     try {
       const [cRes, aRes, tRes] = await Promise.all([
-        fetch("/api/trade/checklists"),
-        fetch("/api/trade/accounts"),
-        fetch("/api/trade/tags"),
+        takePreloaded("/api/trade/checklists") ?? fetch("/api/trade/checklists").then((r) => (r.ok ? r.json() : null)),
+        takePreloaded("/api/trade/accounts?archived=0") ?? fetch("/api/trade/accounts?archived=0").then((r) => (r.ok ? r.json() : null)),
+        takePreloaded("/api/trade/tags") ?? fetch("/api/trade/tags").then((r) => (r.ok ? r.json() : null)),
       ]);
-      setChecklists(cRes.ok ? (await cRes.json()).checklists || [] : []);
-      setAccounts(aRes.ok ? (await aRes.json()).accounts || [] : []);
-      setTags(tRes.ok ? (await tRes.json()).tags || [] : []);
+      setChecklists(cRes?.checklists || []);
+      setAccounts(aRes?.accounts || []);
+      setTags(tRes?.tags || []);
     } finally {
       setLoading(false);
     }
@@ -80,10 +81,16 @@ export function TradeChecklistsPanel() {
       {!checklists.length && <div className="item-line empty">هنوز چک‌لیستی نساختی</div>}
 
       <div className="trade-checklist-grid">
-        {checklists.map((c) => {
+        {checklists.map((c, idx) => {
           const done = c.items.filter((i) => checkedState[i.id]).length;
           return (
-            <div key={c.id} className="trade-checklist-card">
+            <motion.div
+              key={c.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, delay: idx * 0.045, ease: [0.22, 1, 0.36, 1] }}
+              className="trade-surface trade-checklist-card"
+            >
               <span className="trade-account-stripe" style={{ background: c.color }} />
 
               <div className="trade-checklist-card-head">
@@ -119,7 +126,7 @@ export function TradeChecklistsPanel() {
                   معامله
                 </button>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -238,7 +245,7 @@ function ChecklistEditor({
         </div>
 
         <label className="exercise-form-label">نام چک‌لیست</label>
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلاً London Breakout" />
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلاً London Breakout" />
 
         <label className="exercise-form-label">رنگ</label>
         <div className="trade-color-row">
@@ -260,7 +267,7 @@ function ChecklistEditor({
           {items.map((it) => (
             <Reorder.Item key={it.key} value={it} className="trade-checklist-edit-row">
               <GripVertical size={15} className="trade-grip" />
-              <input
+              <input className="wsearch-newform-name trade-glass-field"
                 value={it.text}
                 onChange={(e) => setItems((prev) => prev.map((p) => (p.key === it.key ? { ...p, text: e.target.value } : p)))}
                 maxLength={200}
@@ -274,7 +281,7 @@ function ChecklistEditor({
 
         {items.length < MAX_CHECKLIST_ITEMS && (
           <div className="trade-checklist-add-row">
-            <input
+            <input className="wsearch-newform-name trade-glass-field"
               value={newText}
               onChange={(e) => setNewText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
