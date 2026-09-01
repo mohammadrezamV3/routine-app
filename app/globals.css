@@ -563,8 +563,14 @@
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
      می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
-  .topbar-logo-lockup{ height:22px; width:auto; }
+  .topbar-logo-lockup-wrap{ position:relative; display:inline-block; height:22px; }
+  @media (min-width:701px){ .topbar-logo-lockup-wrap{ height:30px; } }
+  /* هر دو نسخه‌ی روز/شب هم‌زمان توی DOMان (fetch/preload هردو از همون اول)،
+     فقط یکی‌شون با opacity دیده می‌شه — سوییچِ تم دیگه منتظرِ دانلودِ
+     تصویرِ جدید نمی‌مونه. */
+  .topbar-logo-lockup{ position:absolute; inset:0; height:22px; width:auto; transition:opacity .15s ease; }
   @media (min-width:701px){ .topbar-logo-lockup{ height:30px; } }
+  .topbar-logo-lockup-hidden{ opacity:0; pointer-events:none; }
 
   /* animated hamburger: bars morph into an X while the whole icon spins open */
   .hamburger{
