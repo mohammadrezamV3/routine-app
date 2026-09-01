@@ -86,7 +86,7 @@ export function TradeAccountsPanel() {
             key={a.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.32, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
             className={`trade-surface trade-account-card${a.archived ? " archived" : ""}`}
           >
             <span className="trade-account-stripe" style={{ background: a.color }} />

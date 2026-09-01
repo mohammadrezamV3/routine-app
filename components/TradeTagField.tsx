@@ -45,7 +45,7 @@ export function TradeTagField({
           );
         })}
         <button type="button" className="trade-tag-chip trade-tag-add" onClick={() => setCreating(true)}>
-          <Plus size={13} /> برچسب جدید
+          <Plus size={13} /> افزودن برچسب
         </button>
       </div>
 
