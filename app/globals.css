@@ -5560,3 +5560,80 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-chart-side-symbol{ margin-top:10px; font-size:11.5px; color:var(--muted); }
 .trade-chart-side-symbol b{ color:var(--text); }
 
+/* ── ساعت ۲۴ساعته‌ی جلسه‌های فارکس ─────────────────────────────────────
+   خطوطِ نازک، رنگِ خویشتن‌دار، درخششِ کم. «باز بودن» با پررنگی و درخشش
+   نشان داده می‌شود نه با عوض‌کردنِ فام — وگرنه دیگر معلوم نبود کدام حلقه
+   مالِ کدام جلسه است. */
+.fx-dial-wrap{ position:relative; width:100%; max-width:440px; margin:6px auto 0; aspect-ratio:1; }
+.fx-dial{ width:100%; height:100%; display:block; }
+
+.fx-face{ fill:none; stroke:rgba(var(--surface-rgb),.14); stroke-width:1; }
+.fx-face-inner{ fill:none; stroke:rgba(var(--surface-rgb),.10); stroke-width:1; }
+
+.fx-tick{ stroke:var(--muted2); stroke-width:1; }
+.fx-tick.major{ stroke:var(--muted); stroke-width:1.5; }
+.fx-hour-num{
+  fill:var(--muted); font-size:11.5px; font-weight:600;
+  font-variant-numeric:tabular-nums; letter-spacing:.03em;
+}
+
+.fx-ring-track{ fill:none; stroke:rgba(var(--surface-rgb),.13); }
+
+.fx-arc{ fill:none; stroke-linecap:round; opacity:.22; transition:opacity .5s ease; }
+.fx-arc.open{ opacity:1; }
+
+/* همپوشانی: گوه‌ای محو پشتِ حلقه‌ها. وقتی همین حالا فعال است روشن‌تر
+   می‌شود — همان چیزی که «الان پرنقدینگی است» را فوری می‌گوید. */
+.fx-overlap{ fill:rgba(var(--accent-rgb),.05); stroke:none; transition:fill .5s ease; }
+.fx-overlap.live{ fill:rgba(var(--accent-rgb),.16); }
+
+/* نشانگرِ «الان» — فقط نوارِ حلقه‌ها را قطع می‌کند، نه کلِ صفحه */
+.fx-now-halo{ stroke:rgb(var(--bg-rgb)); stroke-width:5; stroke-linecap:round; opacity:.9; }
+.fx-now{ stroke:var(--text); stroke-width:1.7; stroke-linecap:round; }
+.fx-now-dot{ fill:var(--text); }
+
+.fx-hand{ stroke:var(--text); stroke-width:2.4; stroke-linecap:round; opacity:.55; }
+.fx-hub{ fill:var(--text); }
+.fx-hub-dot{ fill:rgb(var(--bg-rgb)); }
+
+.fx-center{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  pointer-events:none; text-align:center; padding:0 26%;
+}
+.fx-center-time{
+  display:flex; align-items:baseline; justify-content:center; gap:6px;
+  direction:ltr;
+  font-size:33px; font-weight:800; color:var(--text);
+  letter-spacing:.01em; line-height:1; font-variant-numeric:tabular-nums;
+}
+.fx-center-sec{ font-size:14px; color:var(--muted2); font-weight:600; }
+.fx-center-state{
+  font-size:12.5px; font-weight:700; color:var(--muted); margin-top:9px; line-height:1.6;
+}
+.fx-center-state.live{ color:var(--accent); }
+.fx-center-next{ font-size:10px; color:var(--muted2); margin-top:4px; line-height:1.7; }
+
+/* ردیف‌های زیرِ ساعت */
+.fx-legend{ display:grid; grid-template-columns:1fr; gap:0 26px; margin-top:26px; }
+@media (min-width:640px){ .fx-legend{ grid-template-columns:1fr 1fr; } }
+.fx-legend-row{
+  display:flex; align-items:center; gap:12px;
+  padding:12px 4px; border-bottom:1px solid rgba(var(--surface-rgb),.12);
+}
+.fx-legend-key{ width:3px; height:28px; border-radius:2px; flex-shrink:0; opacity:.32; }
+.fx-legend-row.open .fx-legend-key{ opacity:1; }
+.fx-legend-main{ flex:1; min-width:0; }
+.fx-legend-name{ font-size:13px; font-weight:700; color:var(--text); }
+.fx-legend-hours{
+  display:block; font-size:10.5px; color:var(--muted2); margin-top:3px;
+  font-variant-numeric:tabular-nums;
+}
+.fx-legend-state{ flex-shrink:0; text-align:start; }
+.fx-legend-badge{ display:block; font-size:9.5px; color:var(--muted2); }
+.fx-legend-row.open .fx-legend-badge{ color:var(--accent); }
+.fx-legend-count{
+  font-size:13px; font-weight:700; color:var(--muted); margin-top:2px;
+  font-variant-numeric:tabular-nums;
+}
+.fx-legend-row.open .fx-legend-count{ color:var(--text); }

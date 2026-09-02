@@ -101,3 +101,109 @@ export function cityTime(date: Date, tz: string): string {
   const m = minutes % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
+
+// ── دایره‌ی ۲۴ساعته ──────────────────────────────────────────────────────
+//
+// برای رسمِ کمانِ هر جلسه روی ساعتِ ۲۴ساعته باید ساعتِ باز/بستِ **محلیِ آن
+// شهر** را به یک لحظه‌ی واقعی تبدیل کنیم و بعد به وقتِ محلیِ خودِ کاربر
+// ببریم. دو تبدیل جدا لازم است چون هر دو سر DST دارند: ممکن است لندن
+// ساعتش را جابه‌جا کرده باشد ولی تهران نه.
+
+/**
+ * لحظه‌ای که ساعتِ محلیِ `tz` برابرِ `targetLocalMinutes` است، نزدیک‌ترین
+ * رخداد به `ref`.
+ *
+ * یک پاسِ اصلاح دارد چون در روزهای تغییرِ ساعت، افستِ لحظه‌ی مرجع با افستِ
+ * لحظه‌ی هدف یکی نیست و تخمینِ اول تا یک ساعت خطا می‌کند.
+ */
+export function localMinutesToInstant(ref: Date, tz: string, targetLocalMinutes: number): Date {
+  const wrap = (d: number) => (d > 720 ? d - 1440 : d < -720 ? d + 1440 : d);
+  const first = wrap(targetLocalMinutes - wallClockIn(ref, tz).minutes);
+  let candidate = new Date(ref.getTime() + first * 60_000);
+  const correction = wrap(targetLocalMinutes - wallClockIn(candidate, tz).minutes);
+  if (correction !== 0) candidate = new Date(candidate.getTime() + correction * 60_000);
+  return candidate;
+}
+
+/** دقیقه از نیم‌شب، به وقتِ محلیِ خودِ کاربر */
+export function viewerMinutes(d: Date): number {
+  return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+}
+
+export type SessionArc = {
+  key: SessionKey;
+  label: string;
+  flag: string;
+  /** شروع و طولِ کمان، بر حسبِ دقیقه در شبانه‌روزِ محلیِ کاربر */
+  startMin: number;
+  durationMin: number;
+  open: boolean;
+  /** لحظه‌های واقعیِ باز و بست — برای شمارشِ معکوس */
+  openAt: Date;
+  closeAt: Date;
+  /** ساعتِ باز/بست به وقتِ محلیِ کاربر، برای نمایشِ متنی */
+  openLabel: string;
+  closeLabel: string;
+};
+
+const hhmm = (d: Date) =>
+  `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+/** کمانِ هر چهار جلسه برای شبانه‌روزِ جاری، به وقتِ محلیِ کاربر */
+export function sessionArcs(now: Date = new Date()): SessionArc[] {
+  return FOREX_SESSIONS.map((s) => {
+    const open = localMinutesToInstant(now, s.tz, s.openMin);
+    const close = localMinutesToInstant(open, s.tz, s.closeMin);
+    // اگر بستن قبل از بازشدن افتاد یعنی به روزِ بعد می‌رود
+    const durationMin = Math.round(
+      (close.getTime() - open.getTime()) / 60_000 + (close <= open ? 1440 : 0)
+    );
+    const closeAt = new Date(open.getTime() + durationMin * 60_000);
+    return {
+      key: s.key,
+      label: s.label,
+      flag: s.flag,
+      startMin: viewerMinutes(open),
+      durationMin,
+      open: isSessionOpen(s.key, now),
+      openAt: open,
+      closeAt,
+      openLabel: hhmm(open),
+      closeLabel: hhmm(closeAt),
+    };
+  });
+}
+
+/**
+ * بازشدنِ بعدیِ یک جلسه — تعطیلیِ آخرِ هفته را رد می‌کند.
+ * تا ۸ روز جلو می‌رود؛ اگر چیزی پیدا نشد null می‌دهد (نباید پیش بیاید).
+ */
+export function nextSessionOpen(
+  key: SessionKey,
+  now: Date = new Date()
+): Date | null {
+  const def = FOREX_SESSIONS.find((s) => s.key === key);
+  if (!def) return null;
+  for (let day = 0; day <= 8; day++) {
+    const ref = new Date(now.getTime() + day * 86_400_000);
+    const candidate = localMinutesToInstant(ref, def.tz, def.openMin);
+    if (candidate.getTime() <= now.getTime()) continue;
+    // فقط اگر بازار و خودِ آن شهر آن لحظه واقعاً کاری‌اند
+    const { weekday } = wallClockIn(candidate, def.tz);
+    if (weekday === 0 || weekday === 6) continue;
+    if (!isForexOpen(candidate)) continue;
+    return candidate;
+  }
+  return null;
+}
+
+/** نزدیک‌ترین جلسه‌ای که بعداً باز می‌شود */
+export function upcomingSession(now: Date = new Date()): { key: SessionKey; at: Date } | null {
+  let best: { key: SessionKey; at: Date } | null = null;
+  for (const s of FOREX_SESSIONS) {
+    if (isSessionOpen(s.key, now)) continue;
+    const at = nextSessionOpen(s.key, now);
+    if (at && (!best || at < best.at)) best = { key: s.key, at };
+  }
+  return best;
+}
