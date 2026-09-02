@@ -51,6 +51,9 @@ export type PlanCard = {
 export const PLANS_IRAN: PlanCard[] = [
   {
     key: "basic", nameFa: "پلن پایه", free: true, icon: ICONS.weekly,
+    // قابلیت‌های نسخه‌ی رایگان هم مثلِ بقیه‌ی پلن‌ها روی خودِ کارت نوشته می‌شن
+    // (قبلاً کارتِ رایگان هیچ لیستی نداشت و کاربر نمی‌فهمید اصلاً چی می‌گیره).
+    features: ["برنامه‌ی هفتگی و روتینِ روزانه", "یادآوریِ برنامه‌ها و دارو", "ثبت و ردیابیِ خواب", "تقویم و تاریخچه‌ی روزها", "آمار و استریکِ پیشرفت"],
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
@@ -78,6 +81,7 @@ export const PLANS_IRAN: PlanCard[] = [
 export const PLANS_INTL: PlanCard[] = [
   {
     key: "basic", nameFa: "Basic", free: true, icon: ICONS.weekly,
+    features: ["Weekly plan & daily routine", "Program & medication reminders", "Sleep tracking", "Calendar & day history", "Progress stats & streak"],
   },
   {
     key: "exercise", nameFa: "Plan Gym", icon: ICONS.exercise,
@@ -261,8 +265,11 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
             <span className={`text-[12px] font-bold ${t.heading}`}>پلنِ فعلیِ تو</span>
           </div>
 
+          {/* «تمدید اشتراک فعلی» — تیترِ راست‌چینِ بالای باکسِ تمدید */}
+          <div className={`mt-2 text-right text-[11.5px] font-bold ${t.muted}`}>تمدید اشتراک فعلی</div>
+
           {renewOpen ? (
-            <div className="mt-1.5 flex flex-col gap-2">
+            <div className={`mt-1.5 flex flex-col gap-2 rounded-xl border ${t.line} p-2.5`}>
               <div className="grid grid-cols-4 gap-1.5">
                 {DURATIONS.map((d) => {
                   const selected = d === duration;
@@ -296,9 +303,12 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
-              className={`mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-xl border ${t.line} ${t.secondaryBtnBg} py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${t.heading} ${t.accentHoverBorder}`}
+              className={`mt-1.5 flex w-full items-center justify-between gap-1.5 rounded-xl border ${t.line} ${t.secondaryBtnBg} px-3 py-3 text-right text-[12.5px] font-bold transition active:scale-[0.98] ${t.heading} ${t.accentHoverBorder}`}
             >
-              تمدیدِ اشتراک
+              <span>تمدید اشتراک</span>
+              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${t.accentBg}`}>
+                <Check size={13} strokeWidth={3} className="text-white" />
+              </span>
             </button>
           )}
         </>

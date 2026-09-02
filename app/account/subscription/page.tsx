@@ -4,11 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getAccount, AccountData } from "@/lib/accountCache";
+import { toJalali, J_MONTHS } from "@/lib/jalali";
+import { AccountBackButton } from "@/components/AccountBackButton";
 
 type SubUser = {
   isSuperAdmin: boolean;
   subscriptions: { status: string; currentPeriodEnd: string; plan: { nameFa: string; key: string } }[];
 };
+
+// تاریخ با ارقامِ انگلیسی — `toLocaleDateString("fa-IR")` ارقامِ فارسی می‌داد
+function formatJalaliDate(iso: string): string {
+  const d = new Date(iso);
+  const [jy, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  return `${jd} ${J_MONTHS[jm - 1]} ${jy}`;
+}
 
 const SUB_STATUS_FA: Record<string, string> = {
   TRIAL: "دوره آزمایشی",
@@ -37,6 +46,7 @@ export default function AccountSubscriptionPage() {
 
   return (
     <section>
+      <AccountBackButton />
       <h1>اشتراک</h1>
       <div className="account-content-hint">وضعیتِ فعلیِ اشتراکِ حسابت</div>
 
@@ -59,7 +69,7 @@ export default function AccountSubscriptionPage() {
             {currentSub?.currentPeriodEnd && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span className="about-label">تاریخ پایان</span>
-                <span className="mono" dir="ltr" style={{ color: "var(--text)" }}>{new Date(currentSub.currentPeriodEnd).toLocaleDateString("fa-IR")}</span>
+                <span className="mono" dir="ltr" style={{ color: "var(--text)" }}>{formatJalaliDate(currentSub.currentPeriodEnd)}</span>
               </div>
             )}
           </div>

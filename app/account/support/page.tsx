@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Mail, MessageCircleWarning } from "lucide-react";
 import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
+import { AccountBackButton } from "@/components/AccountBackButton";
 
 const FAQ = [
   { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخشِ «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
@@ -16,6 +17,7 @@ export default function SupportPage() {
 
   return (
     <section>
+      <AccountBackButton />
       <h1>پشتیبانی</h1>
       <div className="account-content-hint">اگه سوالی داری یا با مشکلی روبه‌رو شدی</div>
 

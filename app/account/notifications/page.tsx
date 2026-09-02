@@ -6,6 +6,7 @@ import { CalendarCheck2, Dumbbell, BellRing } from "lucide-react";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { AccountToggleRow } from "@/components/AccountRow";
+import { AccountBackButton } from "@/components/AccountBackButton";
 
 // فقط دسته‌هایی که واقعاً سمتِ سرور (app/api/push/send-reminders) و پنلِ
 // اعلانِ زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
@@ -41,6 +42,7 @@ export default function NotificationsPage() {
 
   return (
     <section>
+      <AccountBackButton />
       <h1>اعلان‌ها</h1>
       <div className="account-content-hint">مدیریتِ اعلان‌های Arion</div>
 

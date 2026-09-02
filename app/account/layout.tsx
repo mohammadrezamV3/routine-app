@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown,
 } from "lucide-react";
@@ -16,18 +16,17 @@ import { clearAuthHintCookie } from "@/lib/preload";
 // پنل کاربریِ Arion — صفحه‌ی مستقلِ /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → منوی بخش‌ها (فقط لیستِ زبانه‌ها، بدونِ محتوا)
 //   /account/profile            → پروفایل
-//   /account/general            → تنظیماتِ آریون + تنظیماتِ بخش‌ها، یک‌جا
+//   /account/general            → «تنظیمات» — تنظیماتِ آریون + تنظیماتِ روتین و
+//                                  ترید، همه یک‌جا و بدونِ ناوبریِ تودرتو
 //                                  (تمِ نمایش عمداً این‌جا نیست — همون سوییچِ
 //                                  بالای منوی همبرگری کفایت می‌کنه)
-//   /account/modules/*          → تنظیماتِ اختصاصیِ هر بخش (روتین/بدنسازی/کالری/ترید/رودمپ)
-//                                  — لینکش از داخلِ /account/general میاد
 //   /account/subscription       → اشتراک
 //   /account/security           → امنیت
 //   /account/notifications      → اعلان‌ها
 //   /account/support            → پشتیبانی
 export const ACCOUNT_SECTIONS: { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
   { href: "/account/profile", label: "پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
-  { href: "/account/general", label: "عمومی", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") || p.startsWith("/account/modules") },
+  { href: "/account/general", label: "تنظیمات", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") },
   { href: "/account/subscription", label: "اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
   { href: "/account/security", label: "امنیت", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },
   { href: "/account/notifications", label: "اعلان‌ها", icon: <Bell size={15} />, match: (p) => p.startsWith("/account/notifications") },
@@ -35,11 +34,14 @@ export const ACCOUNT_SECTIONS: { href: string; label: string; icon: React.ReactN
 ];
 const SECTIONS = ACCOUNT_SECTIONS;
 
+// انیمیشنِ ورودِ صفحه‌های پنل. عمداً بدونِ فازِ exit و بدونِ `mode="wait"`:
+// با اون‌ها هر کلیک اول باید ۰.۲۲ ثانیه صبر می‌کرد تا صفحه‌ی قبلی محو بشه و
+// تازه بعدش صفحه‌ی جدید می‌اومد — همون «کندی/گیرکردن»ی که گزارش شد. حالا
+// صفحه‌ی جدید بلافاصله میاد و فقط یک fadeِ کوتاه می‌خوره.
 const pageTransition = {
-  initial: { opacity: 0, y: 8 },
+  initial: { opacity: 0, y: 6 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -6 },
-  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const },
+  transition: { duration: 0.16, ease: [0.22, 1, 0.36, 1] as const },
 };
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -69,9 +71,13 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     signOut({ callbackUrl: "/" });
   }
 
+  // توی صفحه‌ی اولِ پنل (/account) خودِ فهرستِ بخش‌ها به‌صورت کارت پایینِ
+  // صفحه هست، پس منوی همبرگریِ بالای صفحه فقط یک تکرارِ بی‌فایده بود.
+  const isIndex = pathname === "/account" || pathname === "/account/";
+
   return (
     <div className="account-shell" dir="rtl">
-      <div className="account-mobile-menu">
+      <div className="account-mobile-menu" hidden={isIndex}>
         <button
           type="button"
           className="account-mobile-menu-btn"
@@ -84,15 +90,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           </span>
           <ChevronDown size={15} className={`account-mobile-menu-btn-chevron${mobileMenuOpen ? " open" : ""}`} />
         </button>
-        <AnimatePresence initial={false}>
-          {mobileMenuOpen && (
-            <motion.nav
-              className="account-mobile-menu-panel"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            >
+        {mobileMenuOpen && (
+            <nav className="account-mobile-menu-panel">
               <div className="account-mobile-menu-panel-inner">
                 {SECTIONS.map((s) => {
                   const active = s.match(pathname);
@@ -108,9 +107,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                   <span>خروج</span>
                 </button>
               </div>
-            </motion.nav>
+            </nav>
           )}
-        </AnimatePresence>
       </div>
 
       <div className="account-body">
@@ -135,17 +133,14 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </aside>
 
         <main className="account-content">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={pathname}
-              initial={pageTransition.initial}
-              animate={pageTransition.animate}
-              exit={pageTransition.exit}
-              transition={pageTransition.transition}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={pathname}
+            initial={pageTransition.initial}
+            animate={pageTransition.animate}
+            transition={pageTransition.transition}
+          >
+            {children}
+          </motion.div>
         </main>
       </div>
     </div>

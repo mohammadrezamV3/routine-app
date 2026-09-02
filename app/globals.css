@@ -314,10 +314,17 @@
     background:rgba(255,255,255,.55);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
   }
-  button:hover{
-    border-color:var(--accent); color:var(--accent);
-    background:rgba(var(--accent-rgb),.10);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(var(--accent-rgb),.28), 0 6px 20px rgba(var(--accent-rgb),.16);
+  /* فقط دستگاه‌هایی که واقعاً ماوس دارن. روی صفحه‌ی لمسی، :hover بعدِ تپ
+     «چسبیده» می‌مونه تا یه تپِ دیگه جای دیگه — یعنی دکمه‌ای که کاربر زده،
+     رنگی/برجسته می‌موند و به‌نظر می‌رسید «گیر کرده» و به حالتِ قبلش
+     برنگشته. همون قاعده‌ای که از قبل برای .day-pill رعایت شده بود، حالا
+     برای پایه‌ی همه‌ی دکمه‌های سایت. */
+  @media (hover:hover) and (pointer:fine){
+    button:hover{
+      border-color:var(--accent); color:var(--accent);
+      background:rgba(var(--accent-rgb),.10);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(var(--accent-rgb),.28), 0 6px 20px rgba(var(--accent-rgb),.16);
+    }
   }
   button:active{transform:scale(.96);}
   button:disabled{opacity:.4; cursor:default;}
@@ -977,7 +984,19 @@
      باریک کنارِ محتوا دقیقاً همون حسِ «تنظیمات ساده» رو می‌ده، نه یه
      چیدمانِ عریضِ داشبوردی.
      ============================================================ */
+  /* پنل کاربری هم مثلِ داشبوردها از ستونِ باریکِ ۶۲۰پیکسلیِ سایت بیرون میاد.
+     بدونِ این، روی دسکتاپ سایدبارِ ۱۶۴پیکسلی از همون ۶۲۰ سهم می‌بُرد و
+     محتوا توی یک ستونِ باریک می‌موند — همون «کامل صفحه رو نگرفتن، سمتِ چپ
+     خالی»ی که گزارش شد. سقفِ عرض عمداً از داشبوردها کمتره (۱۰۸۰) چون این
+     صفحه‌ها متنی‌ان، نه گریدِ چندستونه. */
   .account-shell{ position:relative; }
+  @media (min-width:1024px){
+    .account-shell{
+      --acc-w: min(1080px, calc(100vw - 64px));
+      width: var(--acc-w);
+      margin-inline: calc((620px - var(--acc-w)) / 2);
+    }
+  }
   /* row (نه row-reverse) — توی dir="rtl" فرزندِ اولِ DOM (سایدبار/تایتل‌ها)
      خودش سمتِ راست می‌شینه؛ row-reverse قبلاً این رو برعکس می‌کرد و محتوا
      (که خودِ عکس/آواتارِ پروفایل بالاشه) رو می‌بردِ سمتِ راست. */
@@ -995,7 +1014,9 @@
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     cursor:pointer; transition:color .18s ease; text-align:right; width:100%;
   }
-  .account-sidebar-link:hover{ color:var(--text); background:none; box-shadow:none; }
+  @media (hover:hover) and (pointer:fine){
+    .account-sidebar-link:hover{ color:var(--text); background:none; box-shadow:none; }
+  }
   .account-sidebar-link.active{ color:var(--accent); }
   .account-sidebar-link > *:not(.account-sidebar-active-pill){ position:relative; z-index:1; }
   .account-sidebar-active-pill{
@@ -1030,18 +1051,30 @@
     backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
     margin-bottom:18px;
   }
-  .account-hero-avatar-wrap{ flex-shrink:0; width:58px; height:58px; }
-  .account-hero-avatar-img{ width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
-  .account-hero-avatar-fallback{ width:58px; height:58px; }
+  /* آواتار کوچیک‌تر از قبل (۵۸ → ۴۴)، طبقِ درخواستِ صریحِ کاربر */
+  .account-hero-avatar-wrap{ flex-shrink:0; width:44px; height:44px; }
+  .account-hero-avatar-img{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
+  .account-hero-avatar-fallback{ width:44px; height:44px; }
   .account-hero-badge{
     display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
     padding:6px 11px; border-radius:999px; border:1px solid var(--line);
     background:rgba(255,255,255,.04); color:var(--muted); font-size:11px; font-weight:700; white-space:nowrap;
   }
   .account-hero-badge.premium{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  /* نشانِ اشتراک باید بچسبه به لبه‌ی چپ، پس این بلوک فاصله‌ی وسط رو پر می‌کنه */
   .account-hero-info{ flex:1; min-width:0; }
-  .account-hero-name{ font-size:15.5px; font-weight:800; color:var(--text); }
+  /* اسمِ کامل نوشته می‌شه — نه truncate با «…» */
+  .account-hero-name{ font-size:15px; font-weight:800; color:var(--text); line-height:1.45; overflow-wrap:anywhere; }
   .account-hero-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+
+  /* دکمه‌ی بازگشتِ بالای هر زیرصفحه‌ی پنل کاربری — هم‌سبکِ دکمه‌ی بازگشتِ ترید */
+  .account-back-btn{
+    display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);
+    text-decoration:none; margin-bottom:10px; transition:color .18s ease;
+  }
+  .account-back-btn:hover{ color:var(--accent); }
+  .account-back-btn svg{ transition:transform .18s ease; }
+  .account-back-btn:hover svg{ transform:translateX(2px); }
 
   /* پروفایل — بالای صفحه */
   .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
@@ -1071,7 +1104,9 @@
   body[data-theme="light"] .account-outline-btn, body:not([data-theme="light"]) .account-outline-btn{
     background:none; box-shadow:none;
   }
-  .account-outline-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
+  @media (hover:hover) and (pointer:fine){
+    .account-outline-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
+  }
   .account-outline-btn:disabled{ opacity:.5; cursor:default; }
   .account-outline-btn.muted{ border-color:var(--line); color:var(--muted); }
   .account-outline-btn.muted:hover{ background:rgba(255,255,255,.05); color:var(--text); border-color:var(--line); }
@@ -1097,8 +1132,10 @@
     transition:background .15s ease;
   }
   .account-card .account-row2:last-child{ border-bottom:none; }
-  a.account-row2:hover{ background:rgba(255,255,255,.03); }
-  a.account-row2:hover .account-row2-chevron{ transform:translateX(-2px); color:var(--accent); }
+  @media (hover:hover) and (pointer:fine){
+    a.account-row2:hover{ background:rgba(255,255,255,.03); }
+    a.account-row2:hover .account-row2-chevron{ transform:translateX(-2px); color:var(--accent); }
+  }
   .account-row2-icon{
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
     width:38px; height:38px; border-radius:12px;
