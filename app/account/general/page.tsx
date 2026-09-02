@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe, Bell, Users, BarChart3 } from "lucide-react";
+import { Globe, Bell, Users, BarChart3, Pill } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountBackButton } from "@/components/AccountBackButton";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
-const PREF_ICONS = [<Bell size={16} key="b" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
+const PREF_ICONS = [<Bell size={16} key="b" />, <Pill size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
 
-const DASHBOARD_PREFS: [keyof DashboardPrefs, string][] = [
+const DASHBOARD_PREFS: [keyof DashboardPrefs, string, string?][] = [
   ["showReminders", "کارتِ «یادآوری‌ها»"],
+  ["showMedications", "کارتِ «یادآوری دارو»", "خاموش‌کردنش هم کارت رو مخفی می‌کنه هم اعلانِ نوبت‌های دارو رو قطع می‌کنه"],
   ["showFriends", "کارتِ «دوستان»"],
   ["showChart", "نمودارها"],
 ];
@@ -59,12 +60,13 @@ export default function AccountSettingsPage() {
       <div className="tm-extra">
         <div className="domain-sub">نمایشِ کارت‌ها در داشبوردها</div>
         <div className="account-card" style={{ marginTop: 6 }}>
-          {DASHBOARD_PREFS.map(([key, label], i) => (
+          {DASHBOARD_PREFS.map(([key, label, desc], i) => (
             <AccountToggleRow
               key={key}
               index={i}
               icon={PREF_ICONS[i]}
               label={label}
+              desc={desc}
               checked={prefs[key]}
               onChange={(v) => toggleDashboardPref(key, v)}
             />
