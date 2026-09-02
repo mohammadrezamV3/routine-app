@@ -991,7 +991,19 @@
      باریک کنارِ محتوا دقیقاً همون حسِ «تنظیمات ساده» رو می‌ده، نه یه
      چیدمانِ عریضِ داشبوردی.
      ============================================================ */
+  /* پنل کاربری هم مثلِ داشبوردها از ستونِ باریکِ ۶۲۰پیکسلیِ سایت بیرون میاد.
+     بدونِ این، روی دسکتاپ سایدبارِ ۱۶۴پیکسلی از همون ۶۲۰ سهم می‌بُرد و
+     محتوا توی یک ستونِ باریک می‌موند — همون «کامل صفحه رو نگرفتن، سمتِ چپ
+     خالی»ی که گزارش شد. سقفِ عرض عمداً از داشبوردها کمتره (۱۰۸۰) چون این
+     صفحه‌ها متنی‌ان، نه گریدِ چندستونه. */
   .account-shell{ position:relative; }
+  @media (min-width:1024px){
+    .account-shell{
+      --acc-w: min(1080px, calc(100vw - 64px));
+      width: var(--acc-w);
+      margin-inline: calc((620px - var(--acc-w)) / 2);
+    }
+  }
   /* row (نه row-reverse) — توی dir="rtl" فرزندِ اولِ DOM (سایدبار/تایتل‌ها)
      خودش سمتِ راست می‌شینه؛ row-reverse قبلاً این رو برعکس می‌کرد و محتوا
      (که خودِ عکس/آواتارِ پروفایل بالاشه) رو می‌بردِ سمتِ راست. */
@@ -1009,7 +1021,9 @@
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     cursor:pointer; transition:color .18s ease; text-align:right; width:100%;
   }
-  .account-sidebar-link:hover{ color:var(--text); background:none; box-shadow:none; }
+  @media (hover:hover) and (pointer:fine){
+    .account-sidebar-link:hover{ color:var(--text); background:none; box-shadow:none; }
+  }
   .account-sidebar-link.active{ color:var(--accent); }
   .account-sidebar-link > *:not(.account-sidebar-active-pill){ position:relative; z-index:1; }
   .account-sidebar-active-pill{
@@ -1044,18 +1058,40 @@
     backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
     margin-bottom:18px;
   }
-  .account-hero-avatar-wrap{ flex-shrink:0; width:58px; height:58px; }
-  .account-hero-avatar-img{ width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
-  .account-hero-avatar-fallback{ width:58px; height:58px; }
+  /* آواتار کوچیک‌تر از قبل (۵۸ → ۴۴)، طبقِ درخواستِ صریحِ کاربر */
+  .account-hero-avatar-wrap{ flex-shrink:0; width:44px; height:44px; }
+  .account-hero-avatar-img{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
+  .account-hero-avatar-fallback{ width:44px; height:44px; }
   .account-hero-badge{
     display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
     padding:6px 11px; border-radius:999px; border:1px solid var(--line);
     background:rgba(255,255,255,.04); color:var(--muted); font-size:11px; font-weight:700; white-space:nowrap;
   }
   .account-hero-badge.premium{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  /* نشانِ اشتراک باید بچسبه به لبه‌ی چپ، پس این بلوک فاصله‌ی وسط رو پر می‌کنه */
   .account-hero-info{ flex:1; min-width:0; }
-  .account-hero-name{ font-size:15.5px; font-weight:800; color:var(--text); }
+  /* اسمِ کامل نوشته می‌شه — نه truncate با «…» */
+  .account-hero-name{ font-size:15px; font-weight:800; color:var(--text); line-height:1.45; overflow-wrap:anywhere; }
   .account-hero-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+
+  /* پیش‌نمایشِ ساعتِ نوبت‌های دارو، پایینِ فرمِ افزودن/ویرایشِ دارو — کاربر
+     همون‌جا می‌بینه «۴ بار در روز» با شروعِ ۰۸:۰۰ دقیقاً یعنی چه ساعت‌هایی. */
+  .med-preview{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    margin-top:16px; padding:11px 14px; border-radius:14px;
+    background:rgba(var(--accent-rgb),.09);
+  }
+  .med-preview-label{ font-size:11.5px; font-weight:700; color:var(--accent); }
+  .med-preview-times{ font-size:11.5px; font-weight:700; color:var(--text); }
+
+  /* دکمه‌ی بازگشتِ بالای هر زیرصفحه‌ی پنل کاربری — هم‌سبکِ دکمه‌ی بازگشتِ ترید */
+  .account-back-btn{
+    display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);
+    text-decoration:none; margin-bottom:10px; transition:color .18s ease;
+  }
+  .account-back-btn:hover{ color:var(--accent); }
+  .account-back-btn svg{ transition:transform .18s ease; }
+  .account-back-btn:hover svg{ transform:translateX(2px); }
 
   /* پروفایل — بالای صفحه */
   .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
@@ -1085,7 +1121,9 @@
   body[data-theme="light"] .account-outline-btn, body:not([data-theme="light"]) .account-outline-btn{
     background:none; box-shadow:none;
   }
-  .account-outline-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
+  @media (hover:hover) and (pointer:fine){
+    .account-outline-btn:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; border-color:var(--accent); color:var(--accent); }
+  }
   .account-outline-btn:disabled{ opacity:.5; cursor:default; }
   .account-outline-btn.muted{ border-color:var(--line); color:var(--muted); }
   .account-outline-btn.muted:hover{ background:rgba(255,255,255,.05); color:var(--text); border-color:var(--line); }
@@ -1111,8 +1149,10 @@
     transition:background .15s ease;
   }
   .account-card .account-row2:last-child{ border-bottom:none; }
-  a.account-row2:hover{ background:rgba(255,255,255,.03); }
-  a.account-row2:hover .account-row2-chevron{ transform:translateX(-2px); color:var(--accent); }
+  @media (hover:hover) and (pointer:fine){
+    a.account-row2:hover{ background:rgba(255,255,255,.03); }
+    a.account-row2:hover .account-row2-chevron{ transform:translateX(-2px); color:var(--accent); }
+  }
   .account-row2-icon{
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
     width:38px; height:38px; border-radius:12px;
@@ -1521,6 +1561,19 @@
   .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:3px;}
   .wt-untimed-item .wt-name{font-size:12.5px; color:var(--text); line-height:1.4;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
+
+  /* بدنه‌ی روزِ باز — قبلاً با framer-motion از height:0 به height:auto
+     انیمیت می‌شد؛ یعنی هر فریمِ باز/بسته‌شدن یک reflowِ کاملِ خطِ زمانِ روز
+     (با ده‌ها آیتمِ absolute) رو مجبور می‌کرد. همون «سنگینیِ» گزارش‌شده.
+     حالا محتوا فقط وقتی باز است رندر می‌شه و ورودش یک fade/slideِ خالصِ
+     compositor-only ه: نه اندازه‌گیری، نه reflow. */
+  @keyframes weekDayBodyIn{
+    from{ opacity:0; transform:translateY(-6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .week-day-body{ animation:weekDayBodyIn .2s ease-out both; }
+  html[data-perf="low"] .week-day-body{ animation:none; }
+  @media (prefers-reduced-motion: reduce){ .week-day-body{ animation:none; } }
 
   /* «برنامه هفتگی»ِ بدنسازی — همون آکاردئونِ week-day، ولی به‌جای نوارِ
      زمانی یک لیستِ ساده‌ی حرکاتِ همون روز (حرکات ساعتِ مشخص ندارن) */
@@ -2169,12 +2222,19 @@
     backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
     border-color:var(--line);
   }
-  .calorie-unit-dropdown-inner{ max-height:172px; overflow-y:auto; padding:2px; }
-  .calorie-unit-dropdown-inner::-webkit-scrollbar{ width:5px; }
-  .calorie-unit-dropdown-inner::-webkit-scrollbar-track{ background:transparent; }
-  .calorie-unit-dropdown-inner::-webkit-scrollbar-button{ display:none; width:0; height:0; }
-  .calorie-unit-dropdown-inner::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.14); border-radius:10px; }
-  body[data-theme="light"] .calorie-unit-dropdown-inner::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.16); }
+  /* برچسبِ بالای فیلدهای فرمِ افزودنِ غذا (نام غذا / مقدار / واحد اندازه‌گیری / …) */
+  .calorie-field-label{
+    display:block; margin-bottom:5px;
+    font-size:10.5px; font-weight:700; color:var(--muted);
+  }
+  @media (min-width:640px){ .calorie-field-label{ font-size:11.5px; } }
+  /* «مقدار» و «واحد اندازه‌گیری» باید مو‌به‌مو هم‌ارتفاع باشن — یکی input
+     است و یکی button، پس پدینگ/فونت/ارتفاعشون این‌جا یکسان تعریف می‌شه. */
+  .calorie-qty-field{
+    height:40px; padding:0 14px; font-size:12.5px; font-weight:600;
+    display:flex; align-items:center;
+  }
+  input.calorie-qty-field{ display:block; }
 
   /* فیلدهای ژورنال ترید — لیکوئید گلس واقعی به‌جای بک‌گراند تخت، فقط همین‌جا */
   .wsearch-newform-name.trade-glass-field{
@@ -2273,6 +2333,37 @@
   /* توی rtl، flex-end یعنی چپ — دکمه‌ی ثبتِ پاپ‌آپِ انتقال چپِ ردیف بمونه،
      هماهنگ با دکمه‌ی ثبتِ افزودن/ویرایش که با space-between چپ‌چین شده. */
   .wsearch-newform-actions{display:flex; justify-content:flex-end; margin-top:14px;}
+
+  /* دکمه‌ی «ثبت»ِ متن‌دارِ فرمِ افزودن/ویرایشِ برنامه — جایگزینِ دکمه‌ی
+     دایره‌ایِ تیک. تمام‌عرض، با اسپینرِ داخلی حین ثبت. */
+  .wsearch-newform-actions:has(.wsearch-submit-btn){ display:block; }
+  .wsearch-submit-btn{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:13px 0; border-radius:16px; border:1px solid var(--accent);
+    background:var(--accent); color:var(--bg);
+    font-size:14px; font-weight:800; cursor:pointer;
+    box-shadow:0 8px 22px rgba(var(--accent-rgb),.3);
+    transition:opacity .2s ease, background .2s ease, border-color .2s ease, transform .12s ease;
+  }
+  body[data-theme="light"] .wsearch-submit-btn, body:not([data-theme="light"]) .wsearch-submit-btn{
+    background:var(--accent); color:var(--bg);
+  }
+  .wsearch-submit-btn:active{ transform:scale(.98); }
+  .wsearch-submit-btn:disabled{ cursor:default; }
+  .wsearch-submit-btn.loading{ opacity:.75; }
+  .wsearch-submit-btn.error, body[data-theme="light"] .wsearch-submit-btn.error{
+    background:#E05252; border-color:#E05252; color:#fff; box-shadow:none;
+    animation:wnsShake .4s ease;
+  }
+  .wsearch-submit-spinner{
+    width:15px; height:15px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(0,0,0,.25); border-top-color:currentColor;
+    animation:wnsSpinPlain .7s linear infinite;
+  }
+  @keyframes wnsSpinPlain{ to{ transform:rotate(360deg); } }
+  /* همون دکمه ولی داخلِ ردیفِ «افزودن روز دیگر» (فرمِ ویرایش) — اونجا
+     تمام‌عرض نمی‌شه، فقط اندازه‌ی محتواش. */
+  .wsearch-submit-btn-inline{ width:auto; padding:10px 26px; font-size:13px; }
   .wsearch-newform-submit{
     width:38px; height:38px; min-width:38px; border-radius:50%; padding:0; position:relative;
     display:flex; align-items:center; justify-content:center;
@@ -2653,7 +2744,13 @@ body[data-theme="light"] .auth-tab, body:not([data-theme="light"]) .auth-tab{
   position:absolute; top:4px; bottom:4px; z-index:0;
   background:var(--accent); border-radius:999px;
   box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
+  transition:left .22s cubic-bezier(.22,1,.36,1), width .22s cubic-bezier(.22,1,.36,1);
 }
+/* اولین جای‌گیریِ نشانگر (mount) نباید انیمیشن بخوره */
+.auth-tab-indicator.no-anim{ transition:none; }
+/* دستگاهِ ردهٔ پایین: نشانگر بی‌انیمیشن می‌پره سرِ جاش — یک reflowِ کمترِ
+   کامل به‌ازای هر تپ، که همون لگِ گزارش‌شده‌ی سوییچِ تب‌هاست. */
+html[data-perf="low"] .auth-tab-indicator{ transition:none; }
 
 /* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلاً
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */
@@ -3216,11 +3313,12 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
    مارجینِ منفی، پدینگِ خودشو پدینگِ ۲۲پیکسلیِ wsearch-newform رو خنثی
    می‌کنه تا واقعاً لبه‌به‌لبه بشینه، بکگراندِ خودش هم مات/غیرشفافه تا محتوای
    پشتش موقعِ اسکرول از زیرش رد نشه. */
+/* خطِ جداکننده‌ی بالای دکمه‌ی «ثبت برنامه» طبقِ درخواستِ کاربر برداشته شد */
 .manual-submit-row{
   position:sticky; bottom:-22px; z-index:5;
   display:flex; justify-content:flex-end; margin:18px -22px -22px; padding:14px 22px;
   background:rgba(var(--surface-rgb), .92); backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
-  border-top:1px solid var(--line); border-radius:0 0 26px 26px;
+  border-radius:0 0 26px 26px;
 }
 .manual-plan-submit-btn{
   border-radius:9999px !important; border:none !important; padding:11px 28px !important;
@@ -3266,18 +3364,22 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
 
 /* جمعِ کالریِ روزانه — بزرگ‌تر و متمایزتر از یه خطِ متنِ ساده */
 .manual-meal-total{
-  display:flex; align-items:baseline; justify-content:space-between; margin-top:2px;
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-top:2px;
   border-radius:16px; padding:12px 16px; background:rgba(var(--accent-rgb),.09);
 }
-.manual-meal-total-num{ font-size:21px; font-weight:800; color:var(--accent); }
+/* عدد نباید از باکس بیرون بزنه یا روی متنِ کنارش بیفته */
+.manual-meal-total-num{ font-size:21px; font-weight:800; color:var(--accent); flex-shrink:0; white-space:nowrap; }
+.manual-meal-total-unit{ font-size:11px; font-weight:700; margin-right:5px; opacity:.75; }
 
 /* منویِ سه‌نقطه‌ی هر ردیفِ وعده (ویرایش/حذف) — پاپ‌آپِ کوچیکِ شناور، هم‌سبکِ
    بقیه‌ی دراپ‌داون‌های اپ */
+/* پورتال‌شده به body (top/right از جاوااسکریپت میان) تا هیچ‌وقت زیرِ
+   ردیف‌های بعدی یا لبه‌ی اسکرولِ .modal-body گیر نکنه. بک‌گراند هم عمداً
+   از توکنِ سطحِ تمِ فعلی میاد، نه یه سیاهِ ثابت. */
 .manual-meal-row-menu{
-  position:absolute; top:calc(100% + 4px); right:0; z-index:20; min-width:96px;
+  position:fixed; z-index:80; min-width:110px;
   border-radius:14px; padding:4px; border:1px solid var(--line);
-  background:rgba(var(--surface-rgb), .97);
-  backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  background:rgb(var(--surface-rgb));
   box-shadow:0 12px 30px rgba(0,0,0,.35);
   display:flex; flex-direction:column;
 }
@@ -3317,6 +3419,7 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
   border-radius:9999px !important; border:none !important;
   background:var(--accent) !important; color:var(--bg) !important;
   padding:7px 20px !important; font-size:11.5px !important; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
 }
 .exercise-wizard-next-btn:hover{ filter:brightness(1.05); }
 .exercise-wizard-next-btn:disabled{ opacity:.6 !important; }
@@ -3342,6 +3445,32 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
    دست‌نخورده می‌مونه) + فاصله‌ی بیشتر از بالا و از ردیفِ انتخاب زیرش */
 .exercise-add-glass .wsearch-newform-head{ margin-top:6px; margin-bottom:20px; }
 .exercise-add-glass .wsearch-newform-title{ font-size:17px; }
+
+/* همه‌ی قوانین داخلِ یک باکسِ واحد (درخواستِ صریحِ کاربر) با تایتلِ سبز */
+.exercise-rules-box{
+  margin-top:14px; padding:14px 16px; border-radius:18px;
+  border:1px solid var(--line); background:rgba(var(--surface-rgb), .06);
+  backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+}
+body[data-theme="light"] .exercise-rules-box{ background:rgba(255,255,255,.06); }
+.exercise-rules-box-title{ font-size:13.5px; font-weight:800; color:var(--accent); }
+
+/* دکمه‌ی «قبول دارم، برنامه رو بساز» — بک‌گراندِ توپر (درخواستِ صریحِ کاربر)
+   و چپ‌چین (توی RTL یعنی flex-end). تا شمارشِ ۳۰ثانیه‌ای تموم نشه غیرفعاله. */
+.exercise-rules-actions{ display:flex; justify-content:flex-end; margin-top:16px; }
+.exercise-rules-accept-btn{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:13px 26px; border-radius:16px; border:1px solid var(--accent);
+  background:var(--accent); color:var(--bg);
+  font-size:13.5px; font-weight:800; cursor:pointer;
+  box-shadow:0 8px 22px rgba(var(--accent-rgb),.3);
+  transition:opacity .2s ease, transform .12s ease;
+}
+body[data-theme="light"] .exercise-rules-accept-btn, body:not([data-theme="light"]) .exercise-rules-accept-btn{
+  background:var(--accent); color:var(--bg);
+}
+.exercise-rules-accept-btn:active{ transform:scale(.98); }
+.exercise-rules-accept-btn:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
 
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
@@ -3497,6 +3626,25 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
   display:flex; align-items:center; justify-content:center;
   width:44px; height:44px; border-radius:9999px; border:2px solid; transition:.2s;
   font-size:15px; font-weight:700;
+}
+
+
+/* ستِ فعلی «زنده»ست: یک موجِ پیوسته‌ی سبز از دورش بیرون می‌زنه تا کاربر
+   بدونه همین دایره‌ست که باید بزنه. فقط transform/opacityـه (روی یک
+   ::after ی جدا)، پس compositor-only و بی‌هزینه‌ست. */
+.exercise-set-circle-live{ position:relative; }
+.exercise-set-circle-live::after{
+  content:''; position:absolute; inset:-2px; border-radius:50%;
+  border:2px solid var(--accent); pointer-events:none;
+  animation:exerciseSetRipple 1.6s cubic-bezier(.22,1,.36,1) infinite;
+}
+@keyframes exerciseSetRipple{
+  0%{ transform:scale(1); opacity:.7; }
+  70%{ transform:scale(1.55); opacity:0; }
+  100%{ transform:scale(1.55); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .exercise-set-circle-live::after{ animation:none; opacity:.5; }
 }
 .exercise-set-circle:disabled{ cursor:not-allowed; }
 .exercise-rest-bar{ width:180px; height:5px; border-radius:9999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }

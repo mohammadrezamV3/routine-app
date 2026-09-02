@@ -6,9 +6,14 @@ import { getCustomOccurrences, getRemovedOccurrences, getDaily } from "@/lib/sto
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { getNotificationPermission, fireReminder } from "@/lib/notifications";
+import { getMedications, doseMinutesOfDay, isMedicationActiveOn, minutesToDoseTime } from "@/lib/medications";
+import { getDashboardPrefs } from "@/lib/dashboardPrefs";
 
 const CHECK_INTERVAL_MS = 120_000; // یک یادآوری چند دقیقه دیرتر مشکلی نداره؛ این فاصله ترافیک پس‌زمینه رو نصف می‌کنه
 const EXERCISE_REMINDER_HOUR = 17; // اگه تا این ساعت تمرین امروز ثبت نشده بود، یک‌بار یادآوری کن
+// نوبتِ دارو تا این مدت بعد از ساعتش هنوز «الان»ه — اگه کاربر تبش رو دیرتر
+// باز کنه، نوبتی که تازه گذشته رو هنوز می‌گیره، ولی نوبتِ صبحِ چند ساعت پیش نه.
+const MED_DOSE_WINDOW_MIN = 90;
 
 // بی‌صداست (چیزی رندر نمی‌کنه) — فقط هر یک دقیقه چک می‌کنه که آیا زمان یکی
 // از آیتم‌های برنامه‌ی امروز رسیده یا تمرین امروز هنوز ثبت نشده، و اگه اجازه
@@ -70,9 +75,39 @@ export function NotificationEngine() {
       } catch {}
     }
 
+    // یادآوریِ نوبت‌های دارو. هر نوبت کلیدِ خودش رو داره (`med:<id>:<minute>`)
+    // تا چند نوبتِ یک روز هرکدوم جدا فایر بشن — برخلافِ یادآوری‌های دیگه که
+    // ذاتاً روزی یک‌بارن.
+    async function checkMedications() {
+      if (getNotificationPermission() !== "granted") return;
+      // خاموش‌کردنِ کارتِ دارو از تنظیمات، اعلان‌هاش رو هم قطع می‌کنه
+      const prefs = await getDashboardPrefs();
+      if (cancelled || !prefs.showMedications) return;
+
+      const meds = await getMedications();
+      if (cancelled || !meds.length) return;
+
+      const today = isoLocal(new Date());
+      const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+      for (const med of meds) {
+        if (med.notify === false) continue;
+        if (!isMedicationActiveOn(med, today)) continue;
+        for (const doseMin of doseMinutesOfDay(med)) {
+          if (nowMinutes < doseMin || nowMinutes >= doseMin + MED_DOSE_WINDOW_MIN) continue;
+          fireReminder(
+            `med:${med.id}:${doseMin}`,
+            "یادآوری دارو",
+            `وقتِ «${med.name}» رسیده — نوبتِ ساعت ${minutesToDoseTime(doseMin)}.${med.note ? " " + med.note : ""}`
+          );
+        }
+      }
+    }
+
     function tick() {
       checkRoutine();
       checkExercise();
+      checkMedications();
     }
 
     tick();

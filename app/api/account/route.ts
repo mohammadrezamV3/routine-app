@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ModuleKey } from "@prisma/client";
+import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
@@ -26,13 +26,19 @@ export async function GET() {
       heightCm: true,
       weightKg: true,
       discoverable: true,
+      twoFactorEnabled: true,
+      phoneVerifiedAt: true,
       market: true,
       createdAt: true,
       isSuperAdmin: true,
       referralCode: { select: { code: true } },
       moduleAccess: { select: { module: true, active: true, expiresAt: true } },
+      // فقط اشتراکِ واقعاً فعال — نه صرفاً «آخرین ردیفِ ساخته‌شده». قبلاً
+      // با `orderBy: createdAt desc, take: 1` یک اشتراکِ منقضی/لغوشده هم
+      // برمی‌گشت و کارتِ بالای پنل کاربری همون رو «پلنِ فعلی» نشون می‌داد.
       subscriptions: {
-        orderBy: { createdAt: "desc" },
+        where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
+        orderBy: { currentPeriodEnd: "desc" },
         take: 1,
         select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
       },

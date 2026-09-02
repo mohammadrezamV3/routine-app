@@ -19,6 +19,7 @@ import {
   emptyTradeForm, formStateToBody, tradeToFormState,
 } from "@/lib/tradeTypes";
 import { localInputToIso, toLocalInputValue } from "@/lib/tradeDateTime";
+import { NumberInput } from "./NumberInput";
 
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };
@@ -300,7 +301,7 @@ export function TradeFormModal({
               <div>
                 <label className="exercise-form-label">حجم معامله</label>
                 <div className="trade-volume-row">
-                  <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.volume} onChange={(e) => patch({ volume: e.target.value })} placeholder="0.00" />
+                  <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.volume} onChange={(v) => patch({ volume: v })} placeholder="0.00" />
                   <SegmentedTabs
                     active={form.volumeUnit}
                     onChange={(v) => patch({ volumeUnit: v })}
@@ -325,9 +326,8 @@ export function TradeFormModal({
             <div className="trade-field-row">
               <div>
                 <label className="exercise-form-label">مقدار {form.result === "LOSS" ? "ضرر" : "سود"} ({account.currency})</label>
-                <input className="wsearch-newform-name trade-glass-field"
-                  type="number" inputMode="decimal" value={form.pnlAmount}
-                  onChange={(e) => patch({ pnlAmount: e.target.value })}
+                <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.pnlAmount}
+                  onChange={(v) => patch({ pnlAmount: v })}
                   placeholder="0.00" disabled={form.result === "BREAKEVEN"}
                 />
                 {pnlSuggestion !== null && (
@@ -366,38 +366,38 @@ export function TradeFormModal({
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">قیمت ورود</label>
-                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.entryPrice} onChange={(e) => patch({ entryPrice: e.target.value })} />
+                    <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.entryPrice} onChange={(v) => patch({ entryPrice: v })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">قیمت خروج</label>
-                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.exitPrice} onChange={(e) => patch({ exitPrice: e.target.value })} />
+                    <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.exitPrice} onChange={(v) => patch({ exitPrice: v })} />
                   </div>
                 </div>
 
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">حد ضرر</label>
-                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.stopLoss} onChange={(e) => patch({ stopLoss: e.target.value })} />
+                    <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.stopLoss} onChange={(v) => patch({ stopLoss: v })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">حد سود</label>
-                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.takeProfit} onChange={(e) => patch({ takeProfit: e.target.value })} />
+                    <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.takeProfit} onChange={(v) => patch({ takeProfit: v })} />
                   </div>
                 </div>
 
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">کمیسیون</label>
-                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.commission} onChange={(e) => patch({ commission: e.target.value })} />
+                    <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.commission} onChange={(v) => patch({ commission: v })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">سواپ</label>
-                    <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.swap} onChange={(e) => patch({ swap: e.target.value })} />
+                    <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.swap} onChange={(v) => patch({ swap: v })} />
                   </div>
                 </div>
 
                 <label className="exercise-form-label">مقدار ریسک ({account.currency}) — مبنای محاسبه‌ی R</label>
-                <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={form.riskAmount} onChange={(e) => patch({ riskAmount: e.target.value })} placeholder="اختیاری" />
+                <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={form.riskAmount} onChange={(v) => patch({ riskAmount: v })} placeholder="اختیاری" />
                 {riskSuggestion !== null && (
                   <button type="button" className="trade-suggest-btn" onClick={() => patch({ riskAmount: String(riskSuggestion) })}>
                     <Wand2 size={12} /> پیشنهاد از فاصله‌ی حد ضرر: {faNum(riskSuggestion.toFixed(2))}

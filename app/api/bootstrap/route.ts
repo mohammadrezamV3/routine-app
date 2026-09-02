@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ModuleKey } from "@prisma/client";
+import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
 
@@ -57,8 +57,12 @@ export async function GET(req: NextRequest) {
         createdAt: true, isSuperAdmin: true, avatarUrl: true,
         referralCode: { select: { code: true } },
         moduleAccess: { select: { module: true, active: true, expiresAt: true } },
+        // فقط اشتراکِ واقعاً فعال — عیناً همون شرطِ /api/account. (قبلاً
+        // «آخرین ردیفِ ساخته‌شده» می‌اومد و یه اشتراکِ منقضی هم به‌عنوانِ
+        // پلنِ فعلی نشون داده می‌شد.)
         subscriptions: {
-          orderBy: { createdAt: "desc" },
+          where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
+          orderBy: { currentPeriodEnd: "desc" },
           take: 1,
           select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
         },

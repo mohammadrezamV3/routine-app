@@ -7,6 +7,7 @@ import { FoodSeedItem } from "@/lib/foodSeed";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { NumberInput } from "./NumberInput";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -110,7 +111,9 @@ export function CalorieAddEntryModal({
         <div className="modal-body" style={{ position: "relative" }}>
           <motion.div animate={{ filter: submitted ? "blur(6px)" : "blur(0px)", opacity: submitted ? 0.35 : 1 }} transition={{ duration: 0.3 }}>
             <div className="relative">
+              <label className="calorie-field-label" htmlFor="calorie-food-name">نام غذا</label>
               <input
+                id="calorie-food-name"
                 type="text"
                 className="wsearch-newform-name calorie-glass-field w-full"
                 placeholder="جستجوی غذا…"
@@ -126,58 +129,66 @@ export function CalorieAddEntryModal({
                       className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-dash-border bg-white/[0.02] px-3 py-2 transition hover:border-dash-green/40"
                     >
                       <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">{f.name}</span>
-                      <span className="mono text-[10.5px] text-dash-muted sm:text-[11.5px]">{f.caloriesPer100g} kcal/۱۰۰g</span>
+                      <span className="mono text-[10.5px] text-dash-muted sm:text-[11.5px]" dir="ltr">{f.caloriesPer100g} kcal/100g</span>
                     </div>
                   ))}
                 </div>
               )}
               {isManual && (
                 <div className="mt-2 flex flex-col gap-2">
-                  <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">غذا در لیست پیدا نشد — کالری هر ۱۰۰ گرمش رو دستی وارد کن</div>
-                  <input
-                    type="number"
+                  <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">غذا در لیست پیدا نشد — کالری هر 100 گرمش رو دستی وارد کن</div>
+                  <NumberInput
                     className="wsearch-newform-name calorie-glass-field w-full"
-                    placeholder="کالری به‌ازای هر ۱۰۰ گرم"
+                    placeholder="کالری به‌ازای هر 100 گرم"
                     value={customPer100}
-                    onChange={(e) => setCustomPer100(e.target.value)}
+                    onChange={(v) => setCustomPer100(v)}
                   />
                 </div>
               )}
 
             </div>
 
-            <div className="mt-2.5 flex gap-2">
-              <input
-                type="number"
-                className="wsearch-newform-name calorie-glass-field calorie-unit-btn-wrap shrink-0 text-center"
-                placeholder="مقدار"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-              />
-              <div className="calorie-unit-btn-wrap relative shrink-0">
+            {/* «مقدار» و «واحد اندازه‌گیری» دو ستونِ دقیقاً هم‌عرض و هم‌ارتفاعن
+                (هر دو flex-1 با همون کلاسِ فیلد) — قبلاً یکی <input> با پدینگِ
+                خودش بود و اون‌یکی <button> با پدینگِ دیگه، برای همین نه عرضشون
+                یکی درمی‌اومد نه ارتفاعشون. */}
+            <div className="mt-2.5 flex items-end gap-2">
+              <div className="min-w-0 flex-1">
+                <label className="calorie-field-label" htmlFor="calorie-qty">مقدار</label>
+                <NumberInput
+                  id="calorie-qty"
+                  decimal
+                  className="wsearch-newform-name calorie-glass-field calorie-qty-field w-full text-center"
+                  placeholder="مقدار"
+                  value={qty}
+                  onChange={(v) => setQty(v)}
+                />
+              </div>
+              <div className="relative min-w-0 flex-1">
+                <label className="calorie-field-label">واحد اندازه‌گیری</label>
                 <button
                   type="button"
                   onClick={() => setUnitPickerOpen((v) => !v)}
-                  className="calorie-glass-field flex w-full items-center justify-between gap-1.5 border px-3 py-2 text-[11px] font-semibold text-dash-text sm:text-[12px]"
+                  className="wsearch-newform-name calorie-glass-field calorie-qty-field flex w-full items-center justify-between gap-1.5"
                 >
-                  <span>{UNIT_LABELS[unit]}</span>
-                  <ChevronDown className={`h-3.5 w-3.5 text-dash-muted transition-transform ${unitPickerOpen ? "rotate-180" : ""}`} />
+                  <span className="truncate">{UNIT_LABELS[unit]}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-dash-muted transition-transform ${unitPickerOpen ? "rotate-180" : ""}`} />
                 </button>
                 {unitPickerOpen && (
                   <>
                     <div className="fixed inset-0 z-[19]" onClick={() => setUnitPickerOpen(false)} />
-                    <div className="calorie-unit-dropdown absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-[172px] border p-1 shadow-lg" dir="ltr">
-                      <div className="calorie-unit-dropdown-inner thin-scroll" dir="rtl">
-                        {(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => (
-                          <div
-                            key={u}
-                            onClick={() => changeUnit(u)}
-                            className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] transition ${u === unit ? "font-bold text-dash-green" : "text-dash-muted hover:text-dash-text"}`}
-                          >
-                            {UNIT_LABELS[u]}
-                          </div>
-                        ))}
-                      </div>
+                    {/* لیست کوتاهه و همه‌ی واحدها جا می‌شن، پس اسکرول‌بار
+                        (که کاربر گفت دیده نشه) کاملاً حذف شده. */}
+                    <div className="calorie-unit-dropdown absolute inset-x-0 top-[calc(100%+4px)] z-20 border p-1 shadow-lg">
+                      {(Object.keys(UNIT_LABELS) as FoodUnit[]).map((u) => (
+                        <div
+                          key={u}
+                          onClick={() => changeUnit(u)}
+                          className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] transition ${u === unit ? "font-bold text-dash-green" : "text-dash-muted hover:text-dash-text"}`}
+                        >
+                          {UNIT_LABELS[u]}
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}
@@ -185,14 +196,15 @@ export function CalorieAddEntryModal({
             </div>
 
             <div className="mt-2.5">
+              <label className="calorie-field-label">وعده</label>
               <SegmentedTabs active={mealType} onChange={setMealType} options={mealTypes.map((m) => ({ value: m.key, label: m.label }))} />
             </div>
 
-            <div className="mt-2.5 text-[10.5px] text-dash-muted sm:text-[11.5px]">درشت‌مغذی‌ها</div>
+            <label className="calorie-field-label mt-2.5">درشت‌مغذی‌ها (اختیاری)</label>
             <div className="mt-1.5 flex gap-2">
-              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(e) => setProteinG(e.target.value)} />
-              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(e) => setCarbsG(e.target.value)} />
-              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(e) => setFatG(e.target.value)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(v) => setProteinG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(v) => setCarbsG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(v) => setFatG(v)} />
             </div>
 
             <button
@@ -202,7 +214,8 @@ export function CalorieAddEntryModal({
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 sm:text-[15px]"
               style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
             >
-              {saving ? "در حال ثبت…" : "افزودن"}
+              {saving && <span className="wsearch-submit-spinner" />}
+              {saving ? "در حال ثبت" : "افزودن"}
             </button>
 
             <div className="my-3.5 flex items-center gap-2.5 text-[10.5px] text-dash-muted">

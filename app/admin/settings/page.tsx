@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatDateTime } from "@/lib/adminFormat";
+import { NumberInput } from "@/components/NumberInput";
 
 type SettingsResp = { aiCostRate: { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number }; defaultAiCostRate: { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number } };
 type AuditRow = { id: string; action: string; targetType: string | null; targetId: string | null; createdAt: string; actor: { name: string | null; lastName: string | null; username: string | null } | null };
@@ -90,11 +91,11 @@ export default function AdminSettingsPage() {
           <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
             <div>
               <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>نرخ ورودی (میکرو-دلار/۱۰۰۰ توکن)</label>
-              <input className="admin-input" type="number" min={0} value={inputRate} onChange={(e) => setInputRate(e.target.value)} style={{ width: 180 }} />
+              <NumberInput className="admin-input" min={0} value={inputRate} onChange={(v) => setInputRate(v)} style={{ width: 180 }} />
             </div>
             <div>
               <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>نرخ خروجی (میکرو-دلار/۱۰۰۰ توکن)</label>
-              <input className="admin-input" type="number" min={0} value={outputRate} onChange={(e) => setOutputRate(e.target.value)} style={{ width: 180 }} />
+              <NumberInput className="admin-input" min={0} value={outputRate} onChange={(v) => setOutputRate(v)} style={{ width: 180 }} />
             </div>
             <button type="button" className="admin-btn primary" onClick={save} disabled={saving}>
               {saving ? "در حال ذخیره…" : saved ? "ذخیره شد ✓" : "ذخیره"}

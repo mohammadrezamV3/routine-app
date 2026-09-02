@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
 import { Calendar, Filter, History } from "lucide-react";
@@ -41,6 +40,7 @@ import { DashFilterModal } from "@/components/DashFilterModal";
 import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
 import { DashReminderCard } from "@/components/DashReminderCard";
+import { DashMedicationCard } from "@/components/DashMedicationCard";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
@@ -114,6 +114,8 @@ export default function WeeklyPage() {
   // وضعیتِ تیک‌خوردنِ واقعیِ روزهای همین هفته — برای دایره‌های تایم‌لاینِ
   // «برنامه هفتگی» (که خودِ isPast زمان‌محوره، نه انجام‌شده‌بودنِ واقعی).
   const [weekDaily, setWeekDaily] = useState<Record<string, DailyRecord>>({});
+
+  const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -338,7 +340,15 @@ export default function WeeklyPage() {
           {/* دسکتاپ: سه ستون کنارِ هم — راست (پهن‌تر) برنامه‌های امروز از بالا
               تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیرِ هم. موبایل/تبلت
               همچنان یک ستونِ عمودی (flex-col) می‌مونه. */}
-          <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6">
+          {/* وقتی هر دو کارتِ ستونِ وسط از تنظیمات خاموش باشن، گرید باید
+              دوستونه بشه — وگرنه یک ستونِ خالیِ ۰.۸fr وسطِ صفحه باز می‌موند. */}
+          <div
+            className={
+              hasMiddleColumn
+                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
+                : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+            }
+          >
             {status === "unauthenticated" ? (
               <AuthGate message="برای مدیریت برنامه‌های امروز وارد شوید" />
             ) : (
@@ -355,7 +365,14 @@ export default function WeeklyPage() {
               />
             )}
 
-            {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
+            {/* ستونِ وسط: یادآوری‌های برنامه و یادآوری دارو، زیرِ هم. هر دو
+                از «تنظیمات» جدا‌جدا قابلِ خاموش‌شدن‌ن. */}
+            {hasMiddleColumn && (
+              <div className="flex flex-col gap-4 sm:gap-6">
+                {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
+                {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
+              </div>
+            )}
 
             <DashSidebar statsRefreshKey={statsRefreshKey} />
           </div>
@@ -397,16 +414,8 @@ export default function WeeklyPage() {
                     <span className={`week-day-name${isToday ? " today" : ""}`}>{o.name}</span>
                     <span className="week-day-chevron" />
                   </div>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        key="body"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ height: { duration: 0.32, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.22 } }}
-                        style={{ overflow: "hidden" }}
-                      >
+                  {isOpen && (
+                      <div className="week-day-body">
                         {items.length ? (
                           <div className="week-timeline">
                             <div className="week-timeline-track">
@@ -467,9 +476,8 @@ export default function WeeklyPage() {
                         ) : (
                           <div className="week-day-empty">برنامه‌ای برای این روز ثبت نشده</div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
               );
             })}

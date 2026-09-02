@@ -38,7 +38,9 @@ function markFiredToday(key: string) {
   } catch {}
 }
 
-/** یک‌بار در روز برای هر key؛ لحن آروم و مستقیم، نه صمیمی/رفیق‌وار */
+/** یک‌بار در روز برای هر key؛ لحن آروم و مستقیم، نه صمیمی/رفیق‌وار.
+ * برای یادآوری‌هایی که یک روز چند نوبت دارن (مثلِ دارو)، خودِ نوبت باید توی
+ * کلید بیاد — مثلاً `med:<id>:480` — تا هر نوبت جدا شمرده بشه. */
 export function fireReminder(key: string, title: string, body: string) {
   if (getNotificationPermission() !== "granted") return;
   if (alreadyFiredToday(key)) return;

@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
 
   const activePlan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true } });
   const activeGymDays = activePlan?.gymDays && Array.isArray(activePlan.gymDays) ? (activePlan.gymDays as string[]) : null;
-  const gymDaysPerWeek = activeGymDays ? activeGymDays.length : 3; // فرض محافظه‌کارانه اگه برنامه ورزشی فعالی نبود
+  // اگه برنامه‌ی ورزشیِ فعالی نبود، «۳ روز باشگاه» فرض نکن — این ضریبِ ۱.۵۵
+  // (فعالیتِ متوسط) رو می‌داد و هدف رو برای کسی که اصلاً تمرین نمی‌کنه چند صد
+  // کالری بیش‌برآورد می‌کرد. فرضِ واقعاً محافظه‌کارانه «کم‌تحرکِ سبک» (۱.۳۷۵)ه.
+  const gymDaysPerWeek = activeGymDays ? activeGymDays.length : 1;
 
   const dailyTargetKcal = calcDailyTargetKcal({
     sex, weightKg, heightCm, age, gymDaysPerWeek, goal, trainingPhase: activePlan?.trainingPhase,
@@ -96,7 +99,27 @@ export async function PATCH(req: NextRequest) {
   const userId = guard.userId;
 
   const body = await req.json();
-  const { mealBreakdown } = body as { mealBreakdown: { key: string; label: string; kcal: number }[] };
+  const { mealBreakdown, proteinTargetG, carbsTargetG, fatTargetG } = body as {
+    mealBreakdown: { key: string; label: string; kcal: number }[];
+    proteinTargetG?: number | null;
+    carbsTargetG?: number | null;
+    fatTargetG?: number | null;
+  };
+
+  // هدفِ درشت‌مغذی اختیاریه؛ هر کدوم که خالی بمونه null ذخیره می‌شه.
+  // سقفِ ۲۰۰۰ گرم صرفاً یک نگهبانِ بی‌معنی‌نبودنه، نه توصیه‌ی تغذیه‌ای.
+  function macro(v: unknown): number | null | "invalid" {
+    if (v === undefined || v === null || v === "") return null;
+    const n = Number(v);
+    if (!isFinite(n) || n < 0 || n > 2000) return "invalid";
+    return Math.round(n);
+  }
+  const protein = macro(proteinTargetG);
+  const carbs = macro(carbsTargetG);
+  const fat = macro(fatTargetG);
+  if (protein === "invalid" || carbs === "invalid" || fat === "invalid") {
+    return NextResponse.json({ error: "هدفِ درشت‌مغذی نامعتبر است" }, { status: 400 });
+  }
 
   if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {
     return NextResponse.json({ error: "بین ۱ تا ۸ وعده مجاز است" }, { status: 400 });
@@ -122,7 +145,10 @@ export async function PATCH(req: NextRequest) {
 
   const target = await prisma.calorieTarget.update({
     where: { id: existing.id },
-    data: { mealBreakdown: cleaned as any, dailyTargetKcal, mealsPerDay: cleaned.length },
+    data: {
+      mealBreakdown: cleaned as any, dailyTargetKcal, mealsPerDay: cleaned.length,
+      proteinTargetG: protein, carbsTargetG: carbs, fatTargetG: fat,
+    },
   });
 
   return NextResponse.json({ ok: true, target });

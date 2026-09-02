@@ -9,12 +9,14 @@ export type DashboardPrefs = {
   showReminders: boolean; // کارتِ «یادآوری‌ها»ی داشبوردِ روتین
   showFriends: boolean; // کارتِ «دوستان» — هرجا (روتین/بدنسازی/کالری)
   showChart: boolean; // نمودارها — هم DashWeeklyChartCard هم CalorieChartCard
+  showMedications: boolean; // کارتِ «یادآوری دارو»ی داشبوردِ روتین
 };
 
 export const DEFAULT_DASHBOARD_PREFS: DashboardPrefs = {
   showReminders: true,
   showFriends: true,
   showChart: true,
+  showMedications: true,
 };
 
 export async function getDashboardPrefs(): Promise<DashboardPrefs> {

@@ -11,6 +11,8 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { isValidEmail } from "@/lib/validate";
 import { verifyAndConsumeEmailOtp } from "@/lib/emailOtp";
+import { verifyAndConsumeTwoFactorOtp } from "@/lib/twoFactor";
+import { createDeviceSession, isSessionLive, newSessionId } from "@/lib/deviceSessions";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقاً همون تدارکِ ثبت‌نام معمولی
 // (دوره آزمایشی ماژول‌های پایه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
@@ -120,6 +122,15 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // ورودِ دومرحله‌ای روشنه → این مسیر به‌تنهایی نباید نشست صادر کنه.
+        // فرانت اول /api/auth/2fa/start رو می‌زنه و بعد با providerِ «sms-2fa»
+        // (با کدِ پیامکی) وارد می‌شه. این‌جا صریحاً رد می‌کنیم تا حتی اگه
+        // کسی مستقیم این provider رو صدا بزنه، دومرحله‌ای دور زده نشه.
+        if (user.twoFactorEnabled) {
+          console.warn(`[auth] credentials login blocked — 2FA required for "${id}"`);
+          return null;
+        }
+
         // پنل کاربری › امنیت › «ورودهای اخیر» — فقط یک لاگِ append-only،
         // نه چیزی که خودِ فلوی ورود بهش وابسته باشه؛ اگه شکست بخوره نباید
         // جلوی ورودِ واقعی رو بگیره.
@@ -134,6 +145,10 @@ export const authOptions: NextAuthOptions = {
           market: user.market,
           isSuperAdmin: user.isSuperAdmin,
           remember: credentials.remember !== "0",
+          // به callback ِ jwt می‌رسن تا ردیفِ «دستگاهِ فعال» با مشخصاتِ درست ساخته بشه
+          loginIp: ip,
+          loginUserAgent: (req?.headers as any)?.["user-agent"] || null,
+          loginProvider: "credentials",
         } as any;
       },
     }),
@@ -199,6 +214,73 @@ export const authOptions: NextAuthOptions = {
           market: user.market,
           isSuperAdmin: user.isSuperAdmin,
           remember: true,
+          loginIp: ip,
+          loginUserAgent: (req?.headers as any)?.["user-agent"] || null,
+          loginProvider: "email-otp",
+        } as any;
+      },
+    }),
+    // ورودِ دومرحله‌ای با پیامک — مرحله‌ی دومِ ورودِ معمولی. رمز قبلاً توی
+    // /api/auth/2fa/start بررسی شده و کد فرستاده شده؛ این‌جا فقط کد دوباره
+    // از صفر اعتبارسنجی و مصرف می‌شه (idempotent، هیچ‌وقت به پیش‌بررسیِ
+    // فرانت متکی نیست) و تنها جاییه که نشست صادر می‌شه.
+    CredentialsProvider({
+      id: "sms-2fa",
+      name: "sms-2fa",
+      credentials: {
+        identifier: { label: "Email / Phone / Username", type: "text" },
+        code: { label: "Code", type: "text" },
+        remember: { label: "Remember me", type: "text" },
+      },
+      async authorize(credentials, req) {
+        if (!credentials?.identifier || !credentials.code) return null;
+        const id = credentials.identifier.trim();
+        const code = credentials.code.trim();
+
+        const ip = getClientIp((req?.headers as any) || {});
+        if (!checkRateLimit(`sms-2fa-ip:${ip}`, 20, 10 * 60 * 1000) || !checkRateLimit(`sms-2fa-id:${id}`, 10, 10 * 60 * 1000)) {
+          console.warn(`[auth] rate-limited sms-2fa attempt for "${id}"`);
+          return null;
+        }
+
+        let user;
+        try {
+          user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: { equals: id, mode: "insensitive" } },
+                { phone: id },
+                { username: { equals: id, mode: "insensitive" } },
+              ],
+            },
+          });
+        } catch (err: any) {
+          console.error(`[auth] DATABASE ERROR during sms-2fa login: ${err?.message || err}`);
+          logError("database", `اتصال به دیتابیس حینِ ورودِ دومرحله‌ای شکست خورد: ${err?.message || err}`, { severity: "CRITICAL" as any });
+          return null;
+        }
+        if (!user || user.isBlocked || !user.twoFactorEnabled) return null;
+
+        const consumed = await verifyAndConsumeTwoFactorOtp(user.id, code);
+        if (!consumed.ok) {
+          console.warn(`[auth] sms-2fa rejected for "${id}": ${consumed.reason}`);
+          return null;
+        }
+
+        prisma.loginEvent
+          .create({ data: { userId: user.id, provider: "sms-2fa", ip, userAgent: (req?.headers as any)?.["user-agent"] || null } })
+          .catch(() => {});
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          market: user.market,
+          isSuperAdmin: user.isSuperAdmin,
+          remember: credentials.remember !== "0",
+          loginIp: ip,
+          loginUserAgent: (req?.headers as any)?.["user-agent"] || null,
+          loginProvider: "sms-2fa",
         } as any;
       },
     }),
@@ -262,6 +344,13 @@ export const authOptions: NextAuthOptions = {
         token.isSuperAdmin = dbUser.isSuperAdmin;
         // گوگل چک‌باکس «به‌یاد داشته باش» نداره — پیش‌فرض همون ۳۰ روزِ حالت تیک‌خورده
         token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30;
+        token.sid = newSessionId();
+        // ورودِ گوگل از داخلِ این callback هدرِ درخواست رو نداره، پس
+        // دستگاه «نامشخص» ثبت می‌شه؛ خودِ ابطالِ نشست کامل کار می‌کنه.
+        await createDeviceSession({
+          userId: dbUser.id, sid: token.sid as string, provider: "google",
+          expiresAt: new Date((token.exp as number) * 1000),
+        }).catch(() => {});
         return token;
       }
 
@@ -273,6 +362,24 @@ export const authOptions: NextAuthOptions = {
         const remember = (user as any).remember !== false;
         const maxAgeSeconds = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
         token.exp = Math.floor(Date.now() / 1000) + maxAgeSeconds;
+        token.sid = newSessionId();
+        await createDeviceSession({
+          userId: (user as any).id,
+          sid: token.sid as string,
+          provider: (user as any).loginProvider || "credentials",
+          ip: (user as any).loginIp,
+          userAgent: (user as any).loginUserAgent,
+          expiresAt: new Date((token.exp as number) * 1000),
+        }).catch(() => {});
+        return token;
+      }
+
+      // هر درخواستِ بعدی: اگه این نشست از یه دستگاهِ دیگه ابطال شده باشه،
+      // توکن باید همین‌جا بمیره. (بررسی با کشِ ۶۰ثانیه‌ای، نه یک کوئری به‌ازای
+      // هر درخواست — نگاه کن به lib/deviceSessions.ts.)
+      if (token.sid) {
+        const live = await isSessionLive(token.sid as string).catch(() => true);
+        if (!live) return {} as any;
       }
       return token;
     },

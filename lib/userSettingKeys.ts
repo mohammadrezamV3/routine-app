@@ -25,6 +25,7 @@ export const SETTING_KEYS = {
   theme: "theme",
   removedOccurrences: "removedOccurrences",
   customOccurrences: "customOccurrences",
+  medications: "medications",
   wakeSleepTimes: "wakeSleepTimes",
   outingDates: "outingDates",
   dashboardPrefs: "dashboardPrefs",

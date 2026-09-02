@@ -10,6 +10,7 @@ import {
   ACCOUNT_TYPE_LABELS, TAG_COLORS, TradeAccount, TradeAccountType,
   TradeGoalType, TradeTag,
 } from "@/lib/tradeTypes";
+import { NumberInput } from "./NumberInput";
 
 // ساخت/ویرایشِ حسابِ معاملاتی. همان یک فرم برای هر دو حالت است — تفاوتشان
 // فقط در متدِ درخواست (POST یا PATCH) و عنوانِ پاپ‌آپ است.
@@ -112,11 +113,11 @@ export function TradeAccountModal({
         <div className="trade-field-row">
           <div>
             <label className="exercise-form-label">بالانس اولیه</label>
-            <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="decimal" value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} placeholder="0" />
+            <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={initialBalance} onChange={(v) => setInitialBalance(v)} placeholder="0" />
           </div>
           <div>
             <label className="exercise-form-label">اهرم</label>
-            <input className="wsearch-newform-name trade-glass-field" type="number" inputMode="numeric" value={leverage} onChange={(e) => setLeverage(e.target.value)} placeholder="اختیاری" />
+            <NumberInput className="wsearch-newform-name trade-glass-field" value={leverage} onChange={(v) => setLeverage(v)} placeholder="اختیاری" />
           </div>
         </div>
 
@@ -126,8 +127,7 @@ export function TradeAccountModal({
           onChange={setGoalType}
           options={[{ value: "AMOUNT" as const, label: "مبلغ" }, { value: "PERCENT" as const, label: "درصد بالانس" }]}
         />
-        <input className="wsearch-newform-name trade-glass-field"
-          type="number" inputMode="decimal" value={goalValue} onChange={(e) => setGoalValue(e.target.value)}
+        <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={goalValue} onChange={(v) => setGoalValue(v)}
           placeholder={goalType === "PERCENT" ? "مثلاً 5 (یعنی ۵٪)" : "مثلاً 500"} style={{ marginTop: 8 }}
         />
 

@@ -1,19 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AtSign, KeyRound, ShieldCheck, MonitorSmartphone, History } from "lucide-react";
+import { KeyRound, ShieldCheck, MonitorSmartphone, History, Lock } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { AccountSectionCard } from "@/components/AccountSectionCard";
-import { getAccount, invalidateAccountCache } from "@/lib/accountCache";
-import { isValidUsername } from "@/lib/validate";
+import { AccountBackButton } from "@/components/AccountBackButton";
+import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
+import { toJalali, J_MONTHS } from "@/lib/jalali";
 
 type LoginEvent = { id: string; provider: string; ip: string | null; userAgent: string | null; createdAt: string };
+type DeviceSession = {
+  id: string; provider: string | null; ip: string | null; userAgent: string | null;
+  createdAt: string; lastSeenAt: string; current: boolean;
+};
 
-const PROVIDER_FA: Record<string, string> = { credentials: "ورود با رمز عبور", google: "ورود با گوگل" };
+const PROVIDER_FA: Record<string, string> = {
+  credentials: "ورود با رمز عبور",
+  google: "ورود با گوگل",
+  "email-otp": "ورود با کد ایمیل",
+  "sms-2fa": "ورود دومرحله‌ای",
+};
 
 // یه حدسِ خیلی سبک از روی User-Agent — فقط برای نمایشِ خوانا، نه parsing دقیق
 function guessDevice(ua: string | null): string {
-  if (!ua) return "نامشخص";
+  if (!ua) return "دستگاه نامشخص";
   const isMobile = /Android|iPhone|iPad/i.test(ua);
   let browser = "مرورگر";
   if (/Edg\//i.test(ua)) browser = "Edge";
@@ -24,14 +34,18 @@ function guessDevice(ua: string | null): string {
   return `${browser}${os ? " · " + os : ""}${isMobile ? " · موبایل" : ""}`;
 }
 
-export default function SecurityPage() {
-  const [username, setUsername] = useState<string | null>(null);
-  const [usernameDraft, setUsernameDraft] = useState("");
-  const [usernameEditing, setUsernameEditing] = useState(false);
-  const [usernameSaving, setUsernameSaving] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [usernameSuccess, setUsernameSuccess] = useState(false);
+// تاریخ/ساعت با ارقامِ **انگلیسی** — `toLocaleString("fa-IR")` ارقامِ فارسی
+// می‌داد که کاربر صریحاً نخواسته. ماهِ جلالی به حروف نوشته می‌شه تا با بقیه‌ی
+// تاریخ‌های اپ هم‌شکل بمونه.
+function formatDateTimeEn(iso: string): string {
+  const d = new Date(iso);
+  const [, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${jd} ${J_MONTHS[jm - 1]} · ${hh}:${mm}`;
+}
 
+export default function SecurityPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,43 +54,97 @@ export default function SecurityPage() {
   const [pwSuccess, setPwSuccess] = useState(false);
 
   const [events, setEvents] = useState<LoginEvent[] | null>(null);
+  const [sessions, setSessions] = useState<DeviceSession[] | null>(null);
+  const [sessionBusy, setSessionBusy] = useState<string | null>(null);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
+  const [twoFactor, setTwoFactor] = useState<boolean | null>(null);
+  const [twoFactorSaving, setTwoFactorSaving] = useState(false);
+  const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
+
+  // «قابل‌جست‌وجو بودن با یوزرنیم» — از تنظیمات به این‌جا منتقل شد؛ یک
+  // تنظیمِ حریمِ خصوصیه، نه یک تنظیمِ عمومیِ نمایش.
+  const [discoverable, setDiscoverable] = useState<boolean | null>(null);
+  const [discoverableSaving, setDiscoverableSaving] = useState(false);
 
   useEffect(() => {
     fetch("/api/account/login-events").then((r) => (r.ok ? r.json() : { events: [] })).then((res) => setEvents(res.events || []));
-    getAccount().then((res) => setUsername((res?.user as any)?.username ?? null));
+    loadSessions();
+    getAccount().then((res: AccountData) => {
+      const u = res?.user as { discoverable?: boolean; twoFactorEnabled?: boolean } | undefined;
+      setDiscoverable(u?.discoverable ?? true);
+      setTwoFactor(u?.twoFactorEnabled ?? false);
+    });
   }, []);
 
-  function startEditUsername() {
-    setUsernameDraft(username || "");
-    setUsernameError(null);
-    setUsernameEditing(true);
+  function loadSessions() {
+    fetch("/api/account/sessions")
+      .then((r) => (r.ok ? r.json() : { sessions: [] }))
+      .then((res) => setSessions(res.sessions || []))
+      .catch(() => setSessions([]));
   }
 
-  async function saveUsername() {
-    const trimmed = usernameDraft.trim();
-    if (!isValidUsername(trimmed)) {
-      setUsernameError("یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد");
-      return;
-    }
-    setUsernameSaving(true);
-    setUsernameError(null);
+  async function revokeSession(id: string) {
+    setSessionBusy(id);
+    setSessionError(null);
     try {
-      const res = await fetch("/api/account/username", {
+      const res = await fetch(`/api/account/sessions?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) { setSessionError("بیرون‌انداختنِ این دستگاه ناموفق بود"); return; }
+      setSessions((prev) => prev && prev.filter((s) => s.id !== id));
+    } finally {
+      setSessionBusy(null);
+    }
+  }
+
+  async function revokeOthers() {
+    setSessionBusy("others");
+    setSessionError(null);
+    try {
+      const res = await fetch("/api/account/sessions?others=1", { method: "DELETE" });
+      if (!res.ok) { setSessionError("بیرون‌انداختنِ دستگاه‌های دیگر ناموفق بود"); return; }
+      setSessions((prev) => prev && prev.filter((s) => s.current));
+    } finally {
+      setSessionBusy(null);
+    }
+  }
+
+  async function toggleTwoFactor(next: boolean) {
+    if (twoFactorSaving) return;
+    setTwoFactorSaving(true);
+    setTwoFactorError(null);
+    try {
+      const res = await fetch("/api/account/two-factor", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: trimmed }),
+        body: JSON.stringify({ enabled: next }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setUsernameError(data.error || "خطایی پیش اومد"); return; }
-      setUsername(trimmed);
+      if (!res.ok) { setTwoFactorError(data.error || "خطایی پیش اومد"); return; }
+      setTwoFactor(next);
       invalidateAccountCache();
-      setUsernameEditing(false);
-      setUsernameSuccess(true);
-      setTimeout(() => setUsernameSuccess(false), 2500);
     } catch {
-      setUsernameError("مشکلی در اتصال به سرور پیش اومد");
+      setTwoFactorError("مشکلی در اتصال به سرور پیش اومد");
     } finally {
-      setUsernameSaving(false);
+      setTwoFactorSaving(false);
+    }
+  }
+
+  async function toggleDiscoverable(next: boolean) {
+    if (discoverableSaving) return;
+    setDiscoverableSaving(true);
+    setDiscoverable(next);
+    try {
+      const res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discoverable: next }),
+      });
+      if (!res.ok) setDiscoverable(!next);
+      else invalidateAccountCache();
+    } catch {
+      setDiscoverable(!next);
+    } finally {
+      setDiscoverableSaving(false);
     }
   }
 
@@ -102,39 +170,16 @@ export default function SecurityPage() {
     }
   }
 
+  const otherSessionCount = sessions ? sessions.filter((s) => !s.current).length : 0;
+
   return (
     <section>
+      <AccountBackButton />
       <h1>امنیت</h1>
-      <div className="account-content-hint">مدیریتِ یوزرنیم، رمز عبور و سابقه‌ی ورودهای حساب</div>
+      {/* تغییرِ یوزرنیم طبقِ درخواستِ کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
+      <div className="account-content-hint">رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی</div>
 
-      <AccountSectionCard icon={<AtSign size={16} />} title="یوزرنیم" index={0}>
-        {usernameEditing ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <input
-              type="text" className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }}
-              value={usernameDraft} onChange={(e) => setUsernameDraft(e.target.value)}
-              placeholder="یوزرنیم خود را وارد کنید"
-            />
-            {usernameError && <div className="field-error-msg" style={{ display: "block" }}>{usernameError}</div>}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button className="account-outline-btn" onClick={saveUsername} disabled={usernameSaving}>
-                {usernameSaving ? "در حال ذخیره…" : "ذخیره"}
-              </button>
-              <button className="account-outline-btn muted" onClick={() => setUsernameEditing(false)} disabled={usernameSaving}>انصراف</button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-            <div>
-              <div className="item-line">{username ? <span className="mono" dir="ltr">@{username}</span> : "هنوز یوزرنیمی تنظیم نکردی"}</div>
-              {usernameSuccess && <div className="account-save-toast" style={{ marginTop: 4 }}>یوزرنیم با موفقیت تغییر کرد.</div>}
-            </div>
-            <button className="account-outline-btn" onClick={startEditUsername}>{username ? "تغییر" : "تنظیم یوزرنیم"}</button>
-          </div>
-        )}
-      </AccountSectionCard>
-
-      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={1}>
+      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={0}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
@@ -152,8 +197,55 @@ export default function SecurityPage() {
         </div>
       </AccountSectionCard>
 
+      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={1}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تاییدِ ورود با پیامک</div>
+            <div className="item-line" style={{ marginTop: 2 }}>
+              با روشن‌بودنش، هر بار بعد از رمزِ درست یک کد به شماره‌ی حسابت پیامک می‌شه و بدونِ اون کد ورود انجام نمی‌شه.
+            </div>
+          </div>
+          {twoFactor !== null && (
+            <ToggleSwitch checked={twoFactor} onChange={toggleTwoFactor} label="ورود دومرحله‌ای" />
+          )}
+        </div>
+        {twoFactorError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{twoFactorError}</div>}
+      </AccountSectionCard>
+
       <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={2}>
-        <div className="item-line">همین دستگاهی که الان باهاش وارد شدی — فعلاً امکانِ دیدن/خروج از دستگاه‌های دیگه از راه دور در دسترس نیست.</div>
+        {!sessions ? (
+          <div className="item-line">در حال بارگذاری…</div>
+        ) : sessions.length === 0 ? (
+          <div className="item-line empty">نشستِ فعالی پیدا نشد.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {sessions.map((s) => (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
+                    {guessDevice(s.userAgent)}
+                    {s.current && <span style={{ color: "var(--accent)", fontWeight: 700 }}> · همین دستگاه</span>}
+                  </div>
+                  <div className="item-line" style={{ marginTop: 2 }}>
+                    {PROVIDER_FA[s.provider || ""] || "ورود"} · آخرین فعالیت{" "}
+                    <span className="mono" dir="ltr">{formatDateTimeEn(s.lastSeenAt)}</span>
+                  </div>
+                </div>
+                {!s.current && (
+                  <button className="account-outline-btn muted" onClick={() => revokeSession(s.id)} disabled={sessionBusy === s.id}>
+                    {sessionBusy === s.id ? "…" : "بیرون انداختن"}
+                  </button>
+                )}
+              </div>
+            ))}
+            {otherSessionCount > 0 && (
+              <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ alignSelf: "flex-start" }}>
+                {sessionBusy === "others" ? "در حال انجام…" : `خروج از همه‌ی دستگاه‌های دیگر (${otherSessionCount})`}
+              </button>
+            )}
+          </div>
+        )}
+        {sessionError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{sessionError}</div>}
       </AccountSectionCard>
 
       <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={3}>
@@ -167,7 +259,7 @@ export default function SecurityPage() {
               <div key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <span style={{ fontSize: 12, color: "var(--text)" }}>{PROVIDER_FA[ev.provider] || ev.provider} · {guessDevice(ev.userAgent)}</span>
                 <span className="mono" dir="ltr" style={{ color: "var(--muted2)", fontSize: 11 }}>
-                  {new Date(ev.createdAt).toLocaleString("fa-IR")}
+                  {formatDateTimeEn(ev.createdAt)}
                 </span>
               </div>
             ))}
@@ -175,15 +267,15 @@ export default function SecurityPage() {
         )}
       </AccountSectionCard>
 
-      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={4}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, opacity: .6 }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>فعال‌سازیِ ورودِ دومرحله‌ای</div>
-            <div className="item-line" style={{ marginTop: 2 }}>به‌زودی</div>
+      <AccountSectionCard icon={<Lock size={16} />} title="حریم خصوصی" index={4}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>قابل‌جست‌وجو بودن با یوزرنیم</div>
+            <div className="item-line" style={{ marginTop: 2 }}>خاموش‌کردنش یعنی توی جست‌وجوی دوستان دیده نمی‌شی</div>
           </div>
-          <span style={{ pointerEvents: "none" }}>
-            <ToggleSwitch checked={false} onChange={() => {}} label="ورود دومرحله‌ای" />
-          </span>
+          {discoverable !== null && (
+            <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label="قابل‌جست‌وجو بودن" />
+          )}
         </div>
       </AccountSectionCard>
     </section>

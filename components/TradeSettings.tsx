@@ -21,7 +21,8 @@ import {
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STAT_ORDER, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
 
-export default function TradeModuleSettingsPage() {
+// تنظیماتِ بخشِ «ترید» — مثلِ RoutineSettings، مستقیم داخلِ صفحه‌ی تنظیمات.
+export function TradeSettings() {
   const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
   const [marketPickerOpen, setMarketPickerOpen] = useState(false);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
@@ -74,9 +75,7 @@ export default function TradeModuleSettingsPage() {
   }
 
   return (
-    <section>
-      <h1>ترید</h1>
-      <div className="account-content-hint">تنظیمات مربوط به بخش ترید</div>
+    <>
 
       <AccountSectionCard icon={<LineChart size={16} />} title="بازارهای دنبال‌شده" index={0}>
         <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمتِ بالای صفحه‌ی ترید انتخاب شده</div>
@@ -182,6 +181,6 @@ export default function TradeModuleSettingsPage() {
           onClose={() => setStatsPickerOpen(false)}
         />
       )}
-    </section>
+    </>
   );
 }

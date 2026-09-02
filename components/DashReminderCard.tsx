@@ -107,9 +107,12 @@ export function DashReminderCard({ delay }: { delay?: number }) {
                     onClick={(e) => handleBellClick(e, r)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",
+                      // زنگوله‌ی خاموش هیچ بک‌گراندی نداره — فقط خودِ آیکون.
+                      // بک‌گراند علامتِ «روشن بودنِ یادآوری»ه، پس وقتی خاموشه
+                      // نباید یه قرصِ خاکستری پشتش دیده بشه.
                       r.notify
                         ? r.importance === "veryHigh" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
-                        : "bg-white/5 text-dash-muted"
+                        : "bg-transparent text-dash-muted"
                     )}
                   >
                     <Bell className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" fill={r.notify ? "currentColor" : "none"} />

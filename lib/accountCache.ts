@@ -38,10 +38,33 @@ export async function getAccount(): Promise<AccountData> {
   return inFlight;
 }
 
+// عکسِ پروفایل. پاسخِ bootstrapِ لحظه‌ی لود از قبل داردش، پس روی مسیرِ
+// معمول اصلاً درخواستی زده نمی‌شه؛ صفحه‌ی /account و /account/profile هم که
+// هردو نشونش می‌دن، به‌جای دو فچِ جدا از همین یک منبع می‌خونن.
+let avatarCache: { at: number; url: string | null } | null = null;
+let avatarInFlight: Promise<string | null> | null = null;
+
+export async function getAvatarUrl(): Promise<string | null> {
+  if (avatarCache && Date.now() - avatarCache.at < TTL_MS) return avatarCache.url;
+  if (!avatarInFlight) {
+    const boot = getPreloadedBootstrap();
+    const source = boot
+      ? boot.data.then((b) => b?.avatarUrl ?? null)
+      : fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null)).then((d: any) => d?.avatarUrl ?? null);
+    avatarInFlight = source
+      .then((url: string | null) => { avatarCache = { at: Date.now(), url }; return url; })
+      .catch(() => null)
+      .finally(() => { avatarInFlight = null; });
+  }
+  return avatarInFlight;
+}
+
 /** بعد از هر تغییری که پاسخِ /api/account رو کهنه می‌کنه (خرید اشتراک، خروج، …) */
 export function invalidateAccountCache() {
   cache = null;
   inFlight = null;
+  avatarCache = null;
+  avatarInFlight = null;
   // بدونِ این، getAccount() و NavDrawer دوباره از رویِ همون promiseِ
   // bootstrapِ لحظه‌ی لودِ صفحه می‌خوندن (که چند مصرف‌کننده‌ی مستقل دارد و
   // هیچ‌وقت خودش تازه نمی‌شه) — یعنی بعدِ هر تغییرِ واقعی (مثلاً عکسِ

@@ -3,15 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Camera, Trash2, Mail, Phone, Cake, VenetianMask, Ruler, Weight, User as UserIcon } from "lucide-react";
+import { Camera, Trash2, Mail, Phone, Cake, VenetianMask, Ruler, Weight, AtSign, User as UserIcon } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
 import { resizeImageToDataUrl } from "@/lib/avatarUpload";
-import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
-import { isValidEmail } from "@/lib/validate";
+import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
+import { isValidEmail, isValidUsername } from "@/lib/validate";
+import { NumberInput } from "@/components/NumberInput";
+import { AccountBackButton } from "@/components/AccountBackButton";
 
 type ProfileUser = {
   email: string | null;
@@ -68,20 +70,63 @@ export default function AccountProfilePage() {
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
+  // یوزرنیم — تنها جای تغییرش همین صفحه‌ست (از بخشِ «امنیت» برداشته شد)
+  const [username, setUsername] = useState<string | null>(null);
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [usernameEditing, setUsernameEditing] = useState(false);
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameSuccess, setUsernameSuccess] = useState(false);
+
   useEffect(() => {
     getAccount().then((res: AccountData) => {
       const u = res?.user as ProfileUser | undefined;
       if (u) applyUser(u);
     });
-    fetch("/api/account/avatar").then((r) => (r.ok ? r.json() : null)).then((res) => { if (res?.avatarUrl) setAvatarUrl(res.avatarUrl); });
+    getAvatarUrl().then(setAvatarUrl);
   }, []);
 
   function applyUser(u: ProfileUser) {
     setData(u);
+    setUsername(u.username ?? null);
     setGender(u.gender === "male" || u.gender === "female" ? u.gender : "unset");
     setBirthDate(u.birthDate ? (() => { const d = new Date(u.birthDate as string); return toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate()); })() : null);
     setHeightCm(u.heightCm != null ? String(u.heightCm) : "");
     setWeightKg(u.weightKg != null ? String(u.weightKg) : "");
+  }
+
+  function startEditUsername() {
+    setUsernameDraft(username || "");
+    setUsernameError(null);
+    setUsernameEditing(true);
+  }
+
+  async function saveUsername() {
+    const trimmed = usernameDraft.trim();
+    if (!isValidUsername(trimmed)) {
+      setUsernameError("یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد");
+      return;
+    }
+    setUsernameSaving(true);
+    setUsernameError(null);
+    try {
+      const res = await fetch("/api/account/username", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: trimmed }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) { setUsernameError(resData.error || "خطایی پیش اومد"); return; }
+      setUsername(trimmed);
+      invalidateAccountCache();
+      setUsernameEditing(false);
+      setUsernameSuccess(true);
+      setTimeout(() => setUsernameSuccess(false), 2500);
+    } catch {
+      setUsernameError("مشکلی در اتصال به سرور پیش اومد");
+    } finally {
+      setUsernameSaving(false);
+    }
   }
 
   async function uploadAvatar(file: File) {
@@ -212,8 +257,9 @@ export default function AccountProfilePage() {
 
   return (
     <section>
+      <AccountBackButton />
       <h1>پروفایل</h1>
-      <div className="account-content-hint">اطلاعاتِ حساب و مشخصاتِ شخصی‌ت</div>
+      <div className="account-content-hint">اطلاعاتِ حساب و مشخصاتِ شخصیت</div>
 
       <motion.div className="account-profile-head" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
         <div className="account-avatar-row">
@@ -221,7 +267,7 @@ export default function AccountProfilePage() {
             {avatarUrl ? (
               <img src={avatarUrl} alt="عکس پروفایل" className="account-avatar-img" />
             ) : (
-              <AgentAvatar seed={fullName || data.username || data.email || "؟"} size={76} className="account-avatar-fallback" />
+              <AgentAvatar seed={fullName || username || data.email || "؟"} size={76} className="account-avatar-fallback" />
             )}
             <button type="button" className="account-avatar-edit-btn" onClick={() => avatarInputRef.current?.click()} aria-label="تغییر عکس پروفایل" disabled={avatarSaving}>
               <Camera size={13} />
@@ -241,7 +287,7 @@ export default function AccountProfilePage() {
         {avatarError && <div className="field-error-msg" style={{ display: "block", marginBottom: 10 }}>{avatarError}</div>}
 
         <div className="account-profile-name">{fullName}</div>
-        {data.username && <div className="account-profile-username mono" dir="ltr">@{data.username}</div>}
+        {username && <div className="account-profile-username mono" dir="ltr">@{username}</div>}
         {saved && <div className="account-save-toast">اطلاعات با موفقیت ذخیره شد.</div>}
       </motion.div>
 
@@ -261,6 +307,41 @@ export default function AccountProfilePage() {
             <span className="account-row2-desc mono" dir="ltr">{data.phone || "ثبت نشده"}</span>
           </span>
         </div>
+      </div>
+
+      {/* یوزرنیم — طبقِ درخواستِ صریحِ کاربر تنها جای تغییرش همین‌جاست
+          (قبلاً توی بخشِ «امنیت» بود و از اون‌جا برداشته شد). */}
+      <div className="account-card" style={{ padding: 16 }}>
+        <div className="account-field-label-row">
+          <span className="account-row2-icon"><AtSign size={16} /></span>
+          <span className="account-row2-body">
+            <span className="account-row2-label">یوزرنیم</span>
+            <span className="account-row2-desc mono" dir="ltr">{username ? `@${username}` : "ثبت نشده"}</span>
+          </span>
+          {!usernameEditing && (
+            <button type="button" className="account-outline-btn muted" style={{ flexShrink: 0 }} onClick={startEditUsername}>
+              {username ? "تغییر" : "تنظیم"}
+            </button>
+          )}
+        </div>
+
+        {usernameEditing && (
+          <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+            <input
+              type="text" className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }}
+              value={usernameDraft} onChange={(e) => { setUsernameDraft(e.target.value); setUsernameError(null); }}
+              placeholder="یوزرنیم خود را وارد کنید"
+            />
+            {usernameError && <div className="field-error-msg" style={{ display: "block" }}>{usernameError}</div>}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="account-outline-btn" onClick={saveUsername} disabled={usernameSaving}>
+                {usernameSaving ? "در حال ذخیره…" : "ذخیره"}
+              </button>
+              <button className="account-outline-btn muted" onClick={() => { setUsernameEditing(false); setUsernameError(null); }} disabled={usernameSaving}>انصراف</button>
+            </div>
+          </div>
+        )}
+        {usernameSuccess && <div className="account-save-toast" style={{ marginTop: 10 }}>یوزرنیم با موفقیت تغییر کرد.</div>}
       </div>
 
       {/* ایمیل — قفل نیست، ولی تغییرش فقط با تاییدِ کدِ ارسال‌شده به ایمیلِ جدید */}
@@ -332,10 +413,10 @@ export default function AccountProfilePage() {
 
         <div className="auth-field-grid">
           <AuthField id="pf-height" label="قد (سانتی‌متر)" icon={<Ruler size={16} />}>
-            <input id="pf-height" type="number" inputMode="numeric" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
+            <NumberInput id="pf-height" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={heightCm} onChange={(v) => setHeightCm(v)} />
           </AuthField>
           <AuthField id="pf-weight" label="وزن (کیلوگرم)" icon={<Weight size={16} />}>
-            <input id="pf-weight" type="number" inputMode="decimal" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
+            <NumberInput decimal id="pf-weight" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={weightKg} onChange={(v) => setWeightKg(v)} />
           </AuthField>
         </div>
 
