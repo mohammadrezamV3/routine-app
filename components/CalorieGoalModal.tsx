@@ -10,6 +10,7 @@ import { SegmentedTabs } from "./SegmentedTabs";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import type { Target } from "./CaloriePanel";
+import { NumberInput } from "./NumberInput";
 
 type Mode = "choice" | "smart" | "manual";
 type SmartStep = "goal" | "meals" | "specs";
@@ -254,16 +255,16 @@ export function CalorieGoalModal({
               <div className="mt-3.5 flex gap-2.5">
                 <div className="flex-1">
                   <label className="block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">قد (سانتی‌متر)</label>
-                  <input type="number" className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={goalHeight} onChange={(e) => setGoalHeight(e.target.value)} />
+                  <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
                 </div>
                 <div className="flex-1">
                   <label className="block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">وزن (کیلوگرم)</label>
-                  <input type="number" className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={goalWeight} onChange={(e) => setGoalWeight(e.target.value)} />
+                  <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
                 </div>
                 {needsAge && (
                   <div className="flex-1">
                     <label className="block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">سن</label>
-                    <input type="number" className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={age} onChange={(e) => setAge(e.target.value)} />
+                    <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={age} onChange={(v) => setAge(v)} />
                   </div>
                 )}
               </div>
@@ -324,12 +325,11 @@ export function CalorieGoalModal({
                             >
                               <Check size={15} strokeWidth={3} />
                             </button>
-                            <input
-                              type="number"
+                            <NumberInput
                               className="manual-meal-row-input manual-meal-kcal-input mono"
                               placeholder="۰"
                               value={row.kcal}
-                              onChange={(e) => updateMealDraftRow(row.key, { kcal: e.target.value })}
+                              onChange={(v) => updateMealDraftRow(row.key, { kcal: v })}
                             />
                             <span className="manual-meal-row-divider" />
                             <input

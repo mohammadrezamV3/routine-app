@@ -13,6 +13,7 @@ import { normalizeFa } from "@/lib/utils";
 import { toFaDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { NumberInput } from "./NumberInput";
 
 // نوعِ ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکتِ خودِ حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
@@ -55,18 +56,18 @@ function ManualQuantityPrompt({
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تعداد ست</label>
-            <input type="number" className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(e) => setSets(e.target.value)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(v) => setSets(v)} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تکرار در هر ست</label>
-            <input type="number" className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(e) => setReps(e.target.value)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(v) => setReps(v)} />
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">مدت زمان</label>
-            <input type="number" className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(v) => setAmount(v)} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">واحد</label>

@@ -12,6 +12,7 @@ import { ExercisePlanFormValue, EMPTY_EXERCISE_FORM, ExercisePlan } from "@/lib/
 import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
+import { NumberInput } from "./NumberInput";
 
 type Step = "hw" | "goal" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, days: 2, description: 3, rules: 3 };
@@ -149,7 +150,7 @@ export function AiExercisePlanWizard({
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">قد (سانتی‌متر)</label>
-              <input type="number" className="wsearch-newform-name" value={form.heightCm} onChange={(e) => patch({ heightCm: e.target.value })} />
+              <NumberInput className="wsearch-newform-name" value={form.heightCm} onChange={(v) => patch({ heightCm: v })} />
               {fieldErrors.heightCm && (
                 <div className="field-error-msg field-error-msg-inline">
                   <AlertCircle size={12} />
@@ -159,7 +160,7 @@ export function AiExercisePlanWizard({
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">وزن (کیلوگرم)</label>
-              <input type="number" className="wsearch-newform-name" value={form.weightKg} onChange={(e) => patch({ weightKg: e.target.value })} />
+              <NumberInput className="wsearch-newform-name" value={form.weightKg} onChange={(v) => patch({ weightKg: v })} />
               {fieldErrors.weightKg && (
                 <div className="field-error-msg field-error-msg-inline">
                   <AlertCircle size={12} />

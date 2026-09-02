@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
 import { Calendar, Filter, History } from "lucide-react";
@@ -397,16 +396,8 @@ export default function WeeklyPage() {
                     <span className={`week-day-name${isToday ? " today" : ""}`}>{o.name}</span>
                     <span className="week-day-chevron" />
                   </div>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        key="body"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ height: { duration: 0.32, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.22 } }}
-                        style={{ overflow: "hidden" }}
-                      >
+                  {isOpen && (
+                      <div className="week-day-body">
                         {items.length ? (
                           <div className="week-timeline">
                             <div className="week-timeline-track">
@@ -467,9 +458,8 @@ export default function WeeklyPage() {
                         ) : (
                           <div className="week-day-empty">برنامه‌ای برای این روز ثبت نشده</div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
               );
             })}

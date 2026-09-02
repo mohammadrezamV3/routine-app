@@ -14,7 +14,8 @@ export function gregorianMonthLength(year: number, month: number): number {
   return new Date(year, month, 0).getDate();
 }
 
-// نمایش روز/ماه/سال، هم‌فرمت با formatJalali
+// هم‌فرمت با formatJalali — سال/ماه/روز نوشته می‌شود تا خواندن از راست
+// (در چیدمانِ RTL) روز، ماه، سال باشد. توضیحِ کاملِ دلیل کنارِ formatJalali.
 export function formatGregorian(y: number, m: number, d: number): string {
-  return `${pad(d)}/${pad(m)}/${y}`;
+  return `${y}/${pad(m)}/${pad(d)}`;
 }

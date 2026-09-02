@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Plus, X } from "lucide-react";
+import { NumberInput } from "./NumberInput";
 import {
   DatabaseProperty, DatabaseRecord, RecordValue, SelectOption,
   evaluateFormula, makeSelectOption,
@@ -65,12 +66,12 @@ export function NotepadDbCell({
 
     case "number":
       return (
-        <input
-          type="number"
+        <NumberInput
+          decimal
           className="notepad-db-cell-input mono"
           value={localText}
           placeholder="—"
-          onChange={(e) => setLocalText(e.target.value)}
+          onChange={setLocalText}
           onBlur={() => {
             const n = localText.trim() === "" ? null : Number(localText);
             if (n !== value) onChange(Number.isFinite(n) ? n : null);

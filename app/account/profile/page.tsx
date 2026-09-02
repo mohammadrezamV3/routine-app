@@ -12,6 +12,7 @@ import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal }
 import { resizeImageToDataUrl } from "@/lib/avatarUpload";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { isValidEmail } from "@/lib/validate";
+import { NumberInput } from "@/components/NumberInput";
 
 type ProfileUser = {
   email: string | null;
@@ -332,10 +333,10 @@ export default function AccountProfilePage() {
 
         <div className="auth-field-grid">
           <AuthField id="pf-height" label="قد (سانتی‌متر)" icon={<Ruler size={16} />}>
-            <input id="pf-height" type="number" inputMode="numeric" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
+            <NumberInput id="pf-height" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={heightCm} onChange={(v) => setHeightCm(v)} />
           </AuthField>
           <AuthField id="pf-weight" label="وزن (کیلوگرم)" icon={<Weight size={16} />}>
-            <input id="pf-weight" type="number" inputMode="decimal" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
+            <NumberInput decimal id="pf-weight" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={weightKg} onChange={(v) => setWeightKg(v)} />
           </AuthField>
         </div>
 

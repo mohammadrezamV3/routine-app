@@ -1508,6 +1508,19 @@
   .wt-untimed-item .wt-name{font-size:12.5px; color:var(--text); line-height:1.4;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
 
+  /* بدنه‌ی روزِ باز — قبلاً با framer-motion از height:0 به height:auto
+     انیمیت می‌شد؛ یعنی هر فریمِ باز/بسته‌شدن یک reflowِ کاملِ خطِ زمانِ روز
+     (با ده‌ها آیتمِ absolute) رو مجبور می‌کرد. همون «سنگینیِ» گزارش‌شده.
+     حالا محتوا فقط وقتی باز است رندر می‌شه و ورودش یک fade/slideِ خالصِ
+     compositor-only ه: نه اندازه‌گیری، نه reflow. */
+  @keyframes weekDayBodyIn{
+    from{ opacity:0; transform:translateY(-6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .week-day-body{ animation:weekDayBodyIn .2s ease-out both; }
+  html[data-perf="low"] .week-day-body{ animation:none; }
+  @media (prefers-reduced-motion: reduce){ .week-day-body{ animation:none; } }
+
   /* «برنامه هفتگی»ِ بدنسازی — همون آکاردئونِ week-day، ولی به‌جای نوارِ
      زمانی یک لیستِ ساده‌ی حرکاتِ همون روز (حرکات ساعتِ مشخص ندارن) */
   .exercise-week-day-list{padding:2px 0 14px;}
@@ -2259,6 +2272,37 @@
   /* توی rtl، flex-end یعنی چپ — دکمه‌ی ثبتِ پاپ‌آپِ انتقال چپِ ردیف بمونه،
      هماهنگ با دکمه‌ی ثبتِ افزودن/ویرایش که با space-between چپ‌چین شده. */
   .wsearch-newform-actions{display:flex; justify-content:flex-end; margin-top:14px;}
+
+  /* دکمه‌ی «ثبت»ِ متن‌دارِ فرمِ افزودن/ویرایشِ برنامه — جایگزینِ دکمه‌ی
+     دایره‌ایِ تیک. تمام‌عرض، با اسپینرِ داخلی حین ثبت. */
+  .wsearch-newform-actions:has(.wsearch-submit-btn){ display:block; }
+  .wsearch-submit-btn{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:13px 0; border-radius:16px; border:1px solid var(--accent);
+    background:var(--accent); color:var(--bg);
+    font-size:14px; font-weight:800; cursor:pointer;
+    box-shadow:0 8px 22px rgba(var(--accent-rgb),.3);
+    transition:opacity .2s ease, background .2s ease, border-color .2s ease, transform .12s ease;
+  }
+  body[data-theme="light"] .wsearch-submit-btn, body:not([data-theme="light"]) .wsearch-submit-btn{
+    background:var(--accent); color:var(--bg);
+  }
+  .wsearch-submit-btn:active{ transform:scale(.98); }
+  .wsearch-submit-btn:disabled{ cursor:default; }
+  .wsearch-submit-btn.loading{ opacity:.75; }
+  .wsearch-submit-btn.error, body[data-theme="light"] .wsearch-submit-btn.error{
+    background:#E05252; border-color:#E05252; color:#fff; box-shadow:none;
+    animation:wnsShake .4s ease;
+  }
+  .wsearch-submit-spinner{
+    width:15px; height:15px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(0,0,0,.25); border-top-color:currentColor;
+    animation:wnsSpinPlain .7s linear infinite;
+  }
+  @keyframes wnsSpinPlain{ to{ transform:rotate(360deg); } }
+  /* همون دکمه ولی داخلِ ردیفِ «افزودن روز دیگر» (فرمِ ویرایش) — اونجا
+     تمام‌عرض نمی‌شه، فقط اندازه‌ی محتواش. */
+  .wsearch-submit-btn-inline{ width:auto; padding:10px 26px; font-size:13px; }
   .wsearch-newform-submit{
     width:38px; height:38px; min-width:38px; border-radius:50%; padding:0; position:relative;
     display:flex; align-items:center; justify-content:center;
@@ -2635,7 +2679,13 @@ body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-t
   position:absolute; top:4px; bottom:4px; z-index:0;
   background:var(--accent); border-radius:999px;
   box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
+  transition:left .22s cubic-bezier(.22,1,.36,1), width .22s cubic-bezier(.22,1,.36,1);
 }
+/* اولین جای‌گیریِ نشانگر (mount) نباید انیمیشن بخوره */
+.auth-tab-indicator.no-anim{ transition:none; }
+/* دستگاهِ ردهٔ پایین: نشانگر بی‌انیمیشن می‌پره سرِ جاش — یک reflowِ کمترِ
+   کامل به‌ازای هر تپ، که همون لگِ گزارش‌شده‌ی سوییچِ تب‌هاست. */
+html[data-perf="low"] .auth-tab-indicator{ transition:none; }
 
 /* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلاً
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعاً اعمال نمی‌شد */

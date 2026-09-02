@@ -7,6 +7,7 @@ import { FoodSeedItem } from "@/lib/foodSeed";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { NumberInput } from "./NumberInput";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -134,12 +135,11 @@ export function CalorieAddEntryModal({
               {isManual && (
                 <div className="mt-2 flex flex-col gap-2">
                   <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">غذا در لیست پیدا نشد — کالری هر ۱۰۰ گرمش رو دستی وارد کن</div>
-                  <input
-                    type="number"
+                  <NumberInput
                     className="wsearch-newform-name calorie-glass-field w-full"
                     placeholder="کالری به‌ازای هر ۱۰۰ گرم"
                     value={customPer100}
-                    onChange={(e) => setCustomPer100(e.target.value)}
+                    onChange={(v) => setCustomPer100(v)}
                   />
                 </div>
               )}
@@ -147,12 +147,11 @@ export function CalorieAddEntryModal({
             </div>
 
             <div className="mt-2.5 flex gap-2">
-              <input
-                type="number"
+              <NumberInput
                 className="wsearch-newform-name calorie-glass-field calorie-unit-btn-wrap shrink-0 text-center"
                 placeholder="مقدار"
                 value={qty}
-                onChange={(e) => setQty(e.target.value)}
+                onChange={(v) => setQty(v)}
               />
               <div className="calorie-unit-btn-wrap relative shrink-0">
                 <button
@@ -190,9 +189,9 @@ export function CalorieAddEntryModal({
 
             <div className="mt-2.5 text-[10.5px] text-dash-muted sm:text-[11.5px]">درشت‌مغذی‌ها</div>
             <div className="mt-1.5 flex gap-2">
-              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(e) => setProteinG(e.target.value)} />
-              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(e) => setCarbsG(e.target.value)} />
-              <input type="number" className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(e) => setFatG(e.target.value)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(v) => setProteinG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(v) => setCarbsG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(v) => setFatG(v)} />
             </div>
 
             <button

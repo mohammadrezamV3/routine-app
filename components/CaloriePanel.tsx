@@ -23,6 +23,7 @@ import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
+import { NumberInput } from "./NumberInput";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -258,16 +259,16 @@ export function CaloriePanel() {
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">قد (سانتی‌متر)</label>
-              <input type="number" className="wsearch-newform-name" value={goalHeight} onChange={(e) => setGoalHeight(e.target.value)} />
+              <NumberInput className="wsearch-newform-name" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">وزن (کیلوگرم)</label>
-              <input type="number" className="wsearch-newform-name" value={goalWeight} onChange={(e) => setGoalWeight(e.target.value)} />
+              <NumberInput className="wsearch-newform-name" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
             </div>
             {needsAge && (
               <div style={{ flex: 1 }}>
                 <label className="exercise-form-label">سن</label>
-                <input type="number" className="wsearch-newform-name" value={age} onChange={(e) => setAge(e.target.value)} />
+                <NumberInput className="wsearch-newform-name" value={age} onChange={(v) => setAge(v)} />
               </div>
             )}
           </div>

@@ -64,12 +64,16 @@ export function DashTaskRow({
     <motion.div
       className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
     >
-      <div className="relative shrink-0" ref={btnWrapRef}>
+      {/* دکمه‌ی سه‌نقطه باید دقیقاً هم‌ردیفِ خطِ متنِ اسمِ برنامه بشینه. قبلاً
+          یه <button>ِ inline بود که ارتفاعش از line-heightِ خودش می‌اومد و
+          مرکزِ آیکون چند پیکسل بالاتر از مرکزِ متن می‌افتاد. حالا خودش یه
+          فلکسِ مربعیِ هم‌ارتفاعِ ردیفه، پس مرکزش دقیقاً روی مرکزِ ردیفه. */}
+      <div className="flex shrink-0 items-center" ref={btnWrapRef}>
         <button
           type="button"
           aria-label="گزینه‌های برنامه"
           onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
-          className="text-dash-muted transition hover:text-dash-text"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent p-0 text-dash-muted transition hover:text-dash-text"
         >
           <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
         </button>
