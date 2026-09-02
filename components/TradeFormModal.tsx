@@ -27,7 +27,7 @@ type Checklist = { id: string; name: string; color: string; required: boolean; a
 type TabKey = "core" | "reasons" | "checklist" | "images" | "tags" | "emotions";
 
 const TABS: { key: TabKey; label: string; icon: JSX.Element }[] = [
-  { key: "core", label: "اطلاعات ضروری", icon: <Info size={14} /> },
+  { key: "core", label: "اطلاعات", icon: <Info size={14} /> },
   { key: "reasons", label: "دلایل ورود و خروج", icon: <Wand2 size={14} /> },
   { key: "checklist", label: "چک‌لیست", icon: <AlertTriangle size={14} /> },
   { key: "images", label: "عکس‌ها", icon: <Camera size={14} /> },
