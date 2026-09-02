@@ -5412,3 +5412,151 @@ button.trade-pair-suggest-item:last-child{ border-bottom:none; }
 button.trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; }
 body[data-theme="light"] button.trade-pair-suggest-item,
 body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; }
+
+/* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
+   همان زبانِ بصریِ بقیه‌ی ترید: سطحِ شیشه‌ای `.trade-surface`، شعاعِ ۱۸،
+   و رنگ‌ها همه از توکن‌ها. هیچ بک‌گراندِ تازه‌ای به دکمه‌ها داده نشده. */
+.trade-chart-page{ display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
+@media (min-width:1080px){
+  /* پنلِ کناری در RTL سمتِ راست می‌نشیند، مثل ماکاپ */
+  .trade-chart-page{ grid-template-columns:300px minmax(0,1fr); }
+  .trade-chart-aside{ order:-1; position:sticky; top:14px; }
+}
+.trade-chart-main{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+
+.trade-chart-card{ padding:12px; }
+.trade-chart-toolbar{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  justify-content:space-between; margin-bottom:11px;
+}
+
+.trade-chart-symbol-wrap{ position:relative; display:inline-flex; align-items:center; }
+.trade-chart-symbol-select{
+  appearance:none; -webkit-appearance:none;
+  padding:8px 32px 8px 12px; border-radius:12px; font-size:12.5px; font-weight:600;
+  color:var(--text); background:rgba(var(--surface-rgb),.13);
+  border:1px solid rgba(var(--surface-rgb),.22); cursor:pointer;
+  backdrop-filter:blur(14px) saturate(180%); -webkit-backdrop-filter:blur(14px) saturate(180%);
+  transition:border-color .18s ease;
+}
+.trade-chart-symbol-select:hover{ border-color:var(--accent); }
+.trade-chart-symbol-caret{ position:absolute; left:10px; color:var(--muted); pointer-events:none; }
+
+.trade-chart-intervals{ display:flex; gap:4px; flex-wrap:wrap; }
+.trade-chart-interval{
+  padding:6px 11px; border-radius:9px; font-size:11.5px; font-weight:600;
+  color:var(--muted); background:none; border:1px solid transparent; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, background .18s ease, border-color .18s ease;
+}
+.trade-chart-interval:hover{ color:var(--text); background:rgba(var(--accent-rgb),.07); }
+.trade-chart-interval.active{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.trade-chart-frame{ position:relative; width:100%; border-radius:14px; overflow:hidden; }
+.trade-chart-frame iframe{
+  width:100%; height:100%; border:0; display:block;
+  transition:opacity .25s ease;
+}
+.trade-chart-loading{
+  position:absolute; inset:0; z-index:2;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  font-size:12px; color:var(--muted); background:rgba(var(--surface-rgb),.08);
+}
+.trade-chart-failed{ flex-direction:column; gap:12px; text-align:center; padding:18px; }
+.trade-chart-failed p{ margin:0; font-size:12.5px; line-height:1.9; color:var(--muted); max-width:340px; }
+.trade-chart-failed-actions{ display:flex; gap:9px; flex-wrap:wrap; justify-content:center; }
+.trade-chart-failed-actions a{ text-decoration:none; }
+.trade-chart-loading-dot{
+  width:8px; height:8px; border-radius:50%; background:var(--accent);
+  animation:tradeChartPulse 1.1s ease-in-out infinite;
+}
+@keyframes tradeChartPulse{ 0%,100%{ opacity:.35; transform:scale(.8); } 50%{ opacity:1; transform:scale(1.15); } }
+
+/* ── کارت‌های پایین: تقویم و گفت‌وگو ─────────────────────────────────── */
+.trade-chart-bottom{ display:grid; grid-template-columns:1fr; gap:14px; }
+@media (min-width:900px){ .trade-chart-bottom{ grid-template-columns:1fr 1fr; } }
+
+.trade-panel-head{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;
+}
+.trade-panel-title{
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:13px; font-weight:700; color:var(--text);
+}
+.trade-chat-room{ font-size:11px; color:var(--muted); }
+
+.trade-cal-card, .trade-chat-panel{ padding:14px; display:flex; flex-direction:column; min-height:300px; }
+.trade-cal-card-actions{ display:flex; align-items:center; gap:4px; }
+.trade-ghost-btn.active{ color:var(--accent); background:var(--accent-dim); }
+
+.trade-cal-card-list{ display:flex; flex-direction:column; gap:9px; overflow-y:auto; max-height:320px; padding-left:4px; }
+.trade-cal-card-row{ display:flex; align-items:flex-start; gap:9px; }
+.trade-cal-card-when{ display:flex; flex-direction:column; gap:2px; min-width:62px; font-size:10.5px; color:var(--muted); }
+.trade-cal-card-when b{ font-size:12px; color:var(--text); }
+.trade-cal-card-main{ display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+.trade-cal-card-title{ font-size:12px; color:var(--text); line-height:1.7; }
+
+/* چت */
+.trade-chat-list{
+  flex:1; display:flex; flex-direction:column; gap:11px;
+  overflow-y:auto; max-height:300px; padding:2px 4px 2px 0;
+}
+.trade-chat-empty{ font-size:12px; color:var(--muted); text-align:center; padding:22px 8px; line-height:1.9; }
+.trade-chat-row{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; max-width:86%; }
+.trade-chat-row.mine{ align-self:flex-end; align-items:flex-end; }
+.trade-chat-meta{ display:flex; align-items:center; gap:7px; font-size:10.5px; color:var(--muted); }
+.trade-chat-author{ font-weight:600; color:var(--secondary); }
+.trade-chat-bubble{
+  position:relative; padding:9px 12px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.16); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.trade-chat-row.mine .trade-chat-bubble{ background:var(--accent-dim); border-color:rgba(var(--accent-rgb),.28); }
+.trade-chat-body{ margin:0; font-size:12.5px; line-height:1.9; color:var(--text); white-space:pre-wrap; overflow-wrap:anywhere; }
+.trade-chat-actions{ display:flex; gap:6px; margin-top:5px; }
+.trade-chat-action{
+  display:inline-flex; align-items:center; gap:4px; padding:2px 4px;
+  font-size:10px; color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .18s ease;
+}
+.trade-chat-action:hover:not(:disabled){ color:#E05252; background:none; }
+.trade-chat-action:disabled{ opacity:.6; cursor:default; }
+.trade-chat-reported{ font-size:9.5px; }
+
+.trade-chat-composer{ display:flex; gap:8px; align-items:center; margin-top:11px; }
+.trade-chat-composer input{ flex:1; min-width:0; margin:0; }
+.trade-chat-send{
+  flex-shrink:0; width:38px; height:38px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#fff; background:var(--accent); border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:filter .18s ease, transform .12s ease;
+}
+.trade-chat-send:hover:not(:disabled){ filter:brightness(1.08); background:var(--accent); }
+.trade-chat-send:active:not(:disabled){ transform:scale(.94); }
+.trade-chat-send:disabled{ opacity:.45; cursor:default; }
+
+.trade-chat-report-sheet{
+  margin-top:12px; padding:13px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.22);
+  animation:tradeFadeIn .24s ease both;
+}
+.trade-chat-report-quote{
+  font-size:11.5px; color:var(--muted); line-height:1.9; margin-bottom:10px;
+  padding:8px 10px; border-radius:10px; background:rgba(var(--surface-rgb),.12);
+  max-height:76px; overflow:auto; overflow-wrap:anywhere;
+}
+
+/* ── پنلِ کناری: چک‌لیست + ثبت معامله ────────────────────────────────── */
+.trade-chart-side{ padding:14px; }
+.trade-chart-checklist{ display:flex; flex-direction:column; gap:2px; }
+.trade-chart-check-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:8px 2px; font-size:12.5px; color:var(--text); cursor:pointer;
+}
+.trade-chart-check-row input{ width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+.trade-chart-side-divider{
+  height:1px; margin:14px 0; background:rgba(var(--surface-rgb),.22);
+}
+.trade-chart-side-symbol{ margin-top:10px; font-size:11.5px; color:var(--muted); }
+.trade-chart-side-symbol b{ color:var(--text); }
+

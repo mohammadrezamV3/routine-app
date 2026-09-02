@@ -16,6 +16,7 @@ import { ICONS } from "@/components/NavDrawer";
 // (آیکون در دایره‌ی نرم + عنوان + توضیح + شِوران)، نه یک الگوی تازه.
 
 const ITEMS: { href: string; title: string; desc: string; icon: keyof typeof ICONS }[] = [
+  { href: "/trade/chart", title: "چارت", desc: "چارت تریدینگ‌ویو، تقویم اقتصادی و گفت‌وگوی هر نماد", icon: "trade" },
   { href: "/trade/journal", title: "ژورنال‌نویسی", desc: "حساب‌های معاملاتی، ثبت معامله و آمار عملکرد", icon: "journal" },
   { href: "/trade/checklists", title: "چک‌لیست", desc: "شرط‌های ورود و اتصالشان به معامله", icon: "checklist" },
   { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار، با هشدار قبل از انتشار", icon: "weekly" },

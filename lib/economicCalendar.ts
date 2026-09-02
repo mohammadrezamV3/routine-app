@@ -73,11 +73,22 @@ export type NormalizedEvent = {
   previous: string | null;
 };
 
+/**
+ * انتخابِ منبع. دو حالت:
+ *   • `ECONOMIC_CALENDAR_PROVIDER=forexfactory` → فیدِ هفتگیِ فارکس‌فکتوری
+ *   • `ECONOMIC_CALENDAR_URL=...` → هر فیدِ JSONِ دیگری (نرمال‌سازیِ عمومی)
+ * هیچ‌کدام ست نباشد یعنی تقویم فقط از ورودِ دستیِ ادمین پر می‌شود.
+ */
+export function forexFactorySelected(): boolean {
+  return (process.env.ECONOMIC_CALENDAR_PROVIDER || "").toLowerCase() === "forexfactory";
+}
+
 export function externalProviderConfigured(): boolean {
-  return !!process.env.ECONOMIC_CALENDAR_URL;
+  return forexFactorySelected() || !!process.env.ECONOMIC_CALENDAR_URL;
 }
 
 export function externalProviderName(): string {
+  if (forexFactorySelected()) return "FOREXFACTORY";
   return process.env.ECONOMIC_CALENDAR_SOURCE || "EXTERNAL";
 }
 
@@ -146,6 +157,11 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 
 /** فراخوانیِ منبعِ بیرونی — فقط از سمتِ سرور (کران) صدا زده می‌شود */
 export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
+  if (forexFactorySelected()) {
+    // importِ پویا تا وقتی این منبع انتخاب نشده، اصلاً بار نشود
+    const { fetchForexFactoryEvents } = await import("./forexFactory");
+    return fetchForexFactoryEvents();
+  }
   const url = process.env.ECONOMIC_CALENDAR_URL;
   if (!url) return [];
   const key = process.env.ECONOMIC_CALENDAR_API_KEY;

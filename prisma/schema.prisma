@@ -179,10 +179,12 @@ model User {
   pushSubscriptions PushSubscription[]
 
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
-  friendRequestsSent     Friendship[]  @relation("FriendRequestsSent")
-  friendRequestsReceived Friendship[]  @relation("FriendRequestsReceived")
+  friendRequestsSent     Friendship[]       @relation("FriendRequestsSent")
+  friendRequestsReceived Friendship[]       @relation("FriendRequestsReceived")
   tradeNotes             TradeNote[]
   tradeMtLinks           TradeMtLink[]
+  tradeChatMessages      TradeChatMessage[]
+  tradeChatReports       TradeChatReport[]  @relation("ChatReporter")
 
   @@index([market])
   @@index([gymPartnerId])
@@ -1609,4 +1611,75 @@ model AppSetting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// ── چتِ گروهیِ هر نماد ───────────────────────────────────────────────────
+//
+// یک اتاقِ عمومی به‌ازای هر نماد (EURUSD، XAUUSD، …) که همه‌ی کاربرانِ
+// دارای ماژولِ TRADE می‌بینند. عمداً «اتاق» یک جدولِ جدا نیست: اتاق‌ها از
+// روی خودِ نماد ساخته می‌شوند و هیچ حالتی برای مدیریت ندارند، پس یک ستونِ
+// نرمال‌شده کافی است و یک جدولِ خالیِ اضافه نمی‌خواهد.
+//
+// نکته‌ی مهم: پیام‌ها هیچ‌وقت واقعاً حذف نمی‌شوند (`deletedAt`) — چون یک
+// پیامِ گزارش‌شده باید بعد از حذف هم برای بررسیِ ادمین قابلِ خواندن بماند،
+// وگرنه صفِ گزارش‌ها به ردیف‌های تهی تبدیل می‌شود.
+model TradeChatMessage {
+  id     String @id @default(cuid())
+  symbol String // نمادِ اتاق، همیشه نرمال‌شده و بزرگ‌حرف: "EURUSD"
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  body String // متنِ خام؛ رندرِ سمتِ کلاینت همیشه متنی است، نه HTML
+
+  // حذفِ نرم — توسطِ نویسنده یا ادمین. متن باقی می‌ماند ولی به کاربر
+  // نشان داده نمی‌شود.
+  deletedAt DateTime?
+  deletedBy String? // شناسه‌ی کسی که حذف کرده (خودِ نویسنده یا ادمین)
+
+  createdAt DateTime @default(now())
+
+  reports TradeChatReport[]
+
+  // کوئریِ اصلیِ صفحه: آخرین پیام‌های یک اتاق
+  @@index([symbol, createdAt])
+  @@index([userId])
+}
+
+enum TradeChatReportReason {
+  SPAM // تبلیغ / اسپم
+  ABUSE // توهین یا بی‌ادبی
+  SCAM // کلاهبرداری یا سیگنال‌فروشی
+  OFFTOPIC // بی‌ربط به این نماد
+  OTHER
+}
+
+enum TradeChatReportStatus {
+  OPEN // هنوز بررسی نشده
+  ACTIONED // بررسی شد و پیام حذف شد
+  DISMISSED // بررسی شد و مشکلی نداشت
+}
+
+model TradeChatReport {
+  id String @id @default(cuid())
+
+  messageId String
+  message   TradeChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  reporterId String
+  reporter   User   @relation("ChatReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  reason TradeChatReportReason
+  note   String? // توضیحِ اختیاریِ گزارش‌دهنده
+
+  status     TradeChatReportStatus @default(OPEN)
+  reviewedAt DateTime?
+  reviewedBy String?
+
+  createdAt DateTime @default(now())
+
+  // هر کاربر هر پیام را فقط یک بار می‌تواند گزارش کند — وگرنه یک نفر
+  // می‌تواند با تکرارِ گزارش، صف را پر و اولویت را جعل کند.
+  @@unique([messageId, reporterId])
+  @@index([status, createdAt])
 }
