@@ -158,18 +158,3 @@ export function digitsOnly(v: string): string {
   return toEnglishDigits(v).replace(/\D/g, "");
 }
 
-/**
- * نامِ فارسی را برای **مقایسه** یکدست می‌کند (نه برای ذخیره).
- * فاصله‌های اضافه، نیم‌فاصله، و شکل‌های عربیِ «ی/ک» که کاربر تشخیص
- * نمی‌دهد ولی برای دیتابیس دو رشته‌ی متفاوتند.
- */
-export function normalizePersonName(v: string): string {
-  return v
-    .trim()
-    .replace(/\u200c/g, " ")   // نیم‌فاصله → فاصله
-    .replace(/[\u064A\u0649]/g, "\u06CC") // ي/ى عربی → ی فارسی
-    .replace(/\u0643/g, "\u06A9")          // ك عربی → ک فارسی
-    .replace(/[\u064B-\u0652]/g, "")       // اعراب
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-}

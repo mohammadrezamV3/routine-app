@@ -105,13 +105,6 @@ model User {
   passwordHash String?
   name         String?
   lastName     String?
-  // شکلِ نرمال‌شده‌ی «نام + نام‌خانوادگی» برای بررسیِ تکراری‌نبودن.
-  // چرا ستونِ جدا و نه مقایسه‌ی در لحظه: بدونِ آن، هر ثبت‌نام باید کلِ
-  // جدولِ کاربران را می‌خواند تا نامِ نرمال‌شده را مقایسه کند.
-  // ایندکس عمداً یکتا **نیست**: ممکن است داده‌ی موجود از قبل نامِ تکراری
-  // داشته باشد و ایندکسِ یکتا migration را می‌شکست. یکتایی در روتِ
-  // ثبت‌نام اعمال می‌شود.
-  nameKey      String?
   avatarUrl    String?
   birthDate    DateTime?
   gender       String? // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
@@ -198,7 +191,6 @@ model User {
 
   @@index([market])
   @@index([gymPartnerId])
-  @@index([nameKey])
 }
 
 model OAuthAccount {

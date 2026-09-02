@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  digitsOnly, isValidPersianName, normalizePersonName, toEnglishDigits,
+  digitsOnly, isValidPersianName, toEnglishDigits,
 } from "@/lib/validate";
 
 describe("toEnglishDigits / digitsOnly", () => {
@@ -53,28 +53,6 @@ describe("isValidPersianName", () => {
   });
 });
 
-describe("normalizePersonName", () => {
-  it("شکل‌های عربیِ ی و ک را یکدست می‌کند", () => {
-    // «ي» عربی و «ی» فارسی برای کاربر یکی به‌نظر می‌رسند
-    expect(normalizePersonName("محمدي")).toBe(normalizePersonName("محمدی"));
-    expect(normalizePersonName("كریمی")).toBe(normalizePersonName("کریمی"));
-  });
-
-  it("نیم‌فاصله و فاصله‌ی اضافه را یکدست می‌کند", () => {
-    expect(normalizePersonName("علی‌رضا  محمدی")).toBe("علی رضا محمدی");
-    expect(normalizePersonName("  زهرا   احمدی  ")).toBe("زهرا احمدی");
-  });
-
-  it("اعراب را حذف می‌کند", () => {
-    expect(normalizePersonName("محمّد رضایی")).toBe(normalizePersonName("محمد رضایی"));
-  });
-
-  it("دو نامِ واقعاً متفاوت را یکی نمی‌کند", () => {
-    expect(normalizePersonName("محمد رضایی")).not.toBe(normalizePersonName("محمد رضوانی"));
-    expect(normalizePersonName("علی محمدی")).not.toBe(normalizePersonName("علیرضا محمدی"));
-  });
-});
-
 describe("اعراب در نام", () => {
   it("تشدید و فتحه نوشتارِ درستِ فارسی‌اند و نباید رد شوند", () => {
     for (const n of ["محمّد", "مُحَمَّد", "رضایي", "مَهدی"]) {
@@ -82,7 +60,4 @@ describe("اعراب در نام", () => {
     }
   });
 
-  it("ولی نامِ بااعراب با نامِ بی‌اعراب یکی حساب می‌شود (برای تکراری‌بودن)", () => {
-    expect(normalizePersonName("محمّد رضایي")).toBe(normalizePersonName("محمد رضایی"));
-  });
 });
