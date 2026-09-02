@@ -10,7 +10,6 @@ export default function TradeChecklistsPage() {
   return (
     <TradePageShell
       title="چک‌لیست"
-      note="قبل از ورود، شرط‌های خودت را مرور کن — ناقص بودنش جلوی ثبت معامله را نمی‌گیرد"
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
           + افزودن چک‌لیست

@@ -238,7 +238,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
       {/* جزئیات کامل اتصال (مراحل نصب، کد اتصال، ...) جاش صفحه‌ی
           اختصاصی /trade/metatrader/[id]ه — این‌جا فقط یک خط وضعیته. */}
-      <Link href={`/trade/metatrader/${account.id}`} className="trade-surface trade-mt-line">
+      <Link href={`/trade/metatrader/${account.id}?from=account`} className="trade-surface trade-mt-line">
         <span>اتصال متاتریدر</span>
         <span className={`trade-mt-status${account.mtConnected ? " connected" : ""}`}>
           <span className="forex-dot" />

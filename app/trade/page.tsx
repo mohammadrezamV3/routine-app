@@ -29,7 +29,6 @@ export default function TradePage() {
   return (
     <section className="trade-desktop">
       <h1>ترید</h1>
-      <div className="section-note">از چک‌لیست تا ثبت معامله و تحلیل عملکرد — همه در یک جا</div>
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}

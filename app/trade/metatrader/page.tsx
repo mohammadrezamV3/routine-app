@@ -67,7 +67,6 @@ export default function TradeMetaTraderPage() {
   return (
     <TradePageShell
       title="اتصال متاتریدر"
-      note="اتصال برای هر حساب جداگانه انجام می‌شود — حسابت را انتخاب کن"
     >
       <AccountsForMt />
     </TradePageShell>

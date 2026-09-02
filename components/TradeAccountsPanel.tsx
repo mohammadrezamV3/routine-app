@@ -4,13 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { Archive, ArchiveRestore, Loader2, MoreVertical, Pencil, Trash2, Wallet } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Loader2, Pencil, Trash2, Wallet, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { TradeAccountModal } from "./TradeAccountModal";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { takePreloaded } from "@/lib/preload";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { TradeKebabMenu } from "./TradeKebabMenu";
+import { LockBodyScroll } from "./LockBodyScroll";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
 // برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
@@ -26,7 +28,10 @@ export function TradeAccountsPanel({
   const [accounts, setAccounts] = useState<TradeAccount[]>([]);
   const [tags, setTags] = useState<TradeTag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showArchived, setShowArchived] = useState(false);
+  // آرشیو دیگر کل فهرست را عوض نمی‌کند؛ توی یک پاپ‌آپ جدا نشان داده می‌شود
+  // (درخواست صریح کاربر) — پس این صفحه همیشه فقط حساب‌های فعال را دارد.
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archived, setArchived] = useState<TradeAccount[] | null>(null);
   const [editing, setEditing] = useState<TradeAccount | null>(null);
   const [confirmPurge, setConfirmPurge] = useState<TradeAccount | null>(null);
   const { pendingKey, error: actionError, run } = useAsyncAction();
@@ -39,21 +44,24 @@ export function TradeAccountsPanel({
     try {
       // اگر اسکریپت inline preload از قبل همین URL را درخواست کرده،
       // همان promise استفاده می‌شود تا درخواست دوباره نرود.
-      const accountsUrl = `/api/trade/accounts?archived=${showArchived ? 1 : 0}`;
+      const accountsUrl = "/api/trade/accounts?archived=0";
       const [aData, tData] = await Promise.all([
         takePreloaded(accountsUrl) ?? fetch(accountsUrl).then((r) => (r.ok ? r.json() : null)),
         takePreloaded("/api/trade/tags") ?? fetch("/api/trade/tags").then((r) => (r.ok ? r.json() : null)),
       ]);
-      // archived=1 یعنی «همه» (فعال+آرشیو) از سرور می‌آید، چون همون پاسخ برای
-      // بعدا برگشتن به حالت عادی کش می‌مونه — این‌جا برای «نمایش آرشیو» فقط
-      // خود آرشیوی‌ها نگه داشته می‌شن، نه فعال‌ها هم کنارشون.
-      const list: TradeAccount[] = aData?.accounts || [];
-      setAccounts(showArchived ? list.filter((a) => a.archived) : list);
+      setAccounts(aData?.accounts || []);
       setTags(tData?.tags || []);
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [showArchived]);
+  }, []);
+
+  // فهرست آرشیو فقط وقتی پاپ‌آپش باز می‌شود گرفته می‌شود، نه در لود صفحه
+  const loadArchived = useCallback(async () => {
+    const res = await fetch("/api/trade/accounts?archived=1").then((r) => (r.ok ? r.json() : null));
+    const list: TradeAccount[] = res?.accounts || [];
+    setArchived(list.filter((a) => a.archived));
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
@@ -77,8 +85,8 @@ export function TradeAccountsPanel({
     <div>
       <div className="trade-accounts-head">
         <div className="trade-section-title">حساب‌های معاملاتی</div>
-        <button type="button" className="trade-ghost-btn" onClick={() => setShowArchived((v) => !v)}>
-          {showArchived ? "پنهان‌کردن آرشیو" : "نمایش آرشیو"}
+        <button type="button" className="trade-ghost-btn" onClick={() => { setArchiveOpen(true); setArchived(null); loadArchived(); }}>
+          نمایش آرشیو
         </button>
       </div>
 
@@ -87,7 +95,7 @@ export function TradeAccountsPanel({
       {!accounts.length && (
         <div className="trade-empty-state">
           <Wallet size={32} />
-          <p>{showArchived ? "هیچ حسابی توی آرشیو نیست" : "هنوز حسابی ایجاد نکردی"}</p>
+          <p>هنوز حسابی ایجاد نکردی</p>
         </div>
       )}
 
@@ -114,6 +122,55 @@ export function TradeAccountsPanel({
         />
       )}
 
+      {archiveOpen && (
+        <>
+          <LockBodyScroll />
+          <div className="modal-overlay open" onClick={() => setArchiveOpen(false)} />
+          <div className="modal-panel open" role="dialog" aria-modal="true">
+            <div className="modal-head">
+              <div className="modal-title">حساب‌های آرشیوشده</div>
+              <button type="button" className="trade-icon-btn" onClick={() => setArchiveOpen(false)} aria-label="بستن"><X size={16} /></button>
+            </div>
+            {archived === null ? (
+              <PanelSkeleton />
+            ) : !archived.length ? (
+              <div className="trade-empty-state"><Archive size={28} /><p>هیچ حسابی توی آرشیو نیست</p></div>
+            ) : (
+              <div className="trade-account-grid" style={{ marginTop: 4 }}>
+                {archived.map((a) => (
+                  <div key={a.id} className="trade-surface trade-account-card archived">
+                    <span className="trade-account-stripe" style={{ background: a.color }} />
+                    <div className="trade-account-top-row">
+                      <div className="trade-account-kebab-inline">
+                        <TradeKebabMenu
+                          label="گزینه‌های حساب"
+                          actions={[
+                            {
+                              label: "بازگردانی از آرشیو",
+                              icon: <ArchiveRestore size={14} />,
+                              onClick: async () => { await toggleArchive(a); loadArchived(); },
+                            },
+                            {
+                              label: "حذف کامل",
+                              icon: <Trash2 size={14} />,
+                              danger: true,
+                              onClick: () => { setArchiveOpen(false); setConfirmPurge(a); },
+                            },
+                          ]}
+                        />
+                      </div>
+                      <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link">
+                        <span className="trade-account-name">{a.name}</span>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {confirmPurge && (
         <PurgeConfirm
           account={confirmPurge}
@@ -138,30 +195,11 @@ function AccountRow({
   onToggleArchive: () => void;
   onPurge: () => void;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
-  const btnWrapRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  function openMenu() {
-    const rect = btnWrapRef.current?.getBoundingClientRect();
-    if (rect) setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
-    setMenuOpen(true);
-  }
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onDocClick(e: MouseEvent) {
-      const t = e.target as Node;
-      if (btnWrapRef.current?.contains(t)) return;
-      if (menuRef.current?.contains(t)) return;
-      setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, [menuOpen]);
-
+  // منطق باز/بسته و موقعیت منو حالا داخل خود TradeKebabMenu است (مشترک با
+  // چک‌لیست‌ها و یادداشت‌ها) — این‌جا فقط کارهایش تعریف می‌شود.
   const netPnl = a.summary?.netPnl ?? 0;
+  // درصد نسبت به بالانس اولیه — بدون بالانس اولیه معنایی ندارد، پس نشان داده نمی‌شود
+  const pnlPct = a.initialBalance > 0 ? Math.round((netPnl / a.initialBalance) * 1000) / 10 : null;
 
   return (
     <motion.div
@@ -172,39 +210,37 @@ function AccountRow({
     >
       <span className="trade-account-stripe" style={{ background: a.color }} />
 
-      <div className="trade-account-kebab" ref={btnWrapRef}>
-        <button type="button" className="trade-icon-btn" onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())} aria-label="گزینه‌های حساب">
-          <MoreVertical size={16} />
-        </button>
-        {menuOpen && menuPos && createPortal(
-          <div ref={menuRef} style={{ top: menuPos.top, right: menuPos.right }} className="dash-context-menu trade-account-menu">
-            <div className="wsearch-fab-option" onClick={() => { setMenuOpen(false); onEdit(); }}>
-              <Pencil size={14} /> ویرایش حساب
-            </div>
-            <div className="wsearch-fab-option" onClick={() => { setMenuOpen(false); onToggleArchive(); }}>
-              {a.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-              {a.archived ? "بازگردانی از آرشیو" : "آرشیو کردن"}
-            </div>
-            {a.archived && (
-              <div className="wsearch-fab-option danger" onClick={() => { setMenuOpen(false); onPurge(); }}>
-                <Trash2 size={14} /> حذف کامل
-              </div>
-            )}
-          </div>,
-          document.body
-        )}
+      {/* ردیف بالا: سه‌نقطه کنار نام حساب (توی RTL یعنی سمت راست، اولین
+          فرزند DOM)، و سود/زیان چپ‌چین انتهای همان ردیف — «1000$ 10% ↑». */}
+      <div className="trade-account-top-row">
+        <div className="trade-account-kebab-inline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <TradeKebabMenu
+            label="گزینه‌های حساب"
+            actions={[
+              { label: "ویرایش حساب", icon: <Pencil size={14} />, onClick: onEdit },
+              {
+                label: a.archived ? "بازگردانی از آرشیو" : "آرشیو کردن",
+                icon: a.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />,
+                onClick: onToggleArchive,
+              },
+              ...(a.archived ? [{ label: "حذف کامل", icon: <Trash2 size={14} />, onClick: onPurge, danger: true }] : []),
+            ]}
+          />
+        </div>
+
+        <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link">
+          <span className="trade-account-name">{a.name}</span>
+          {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
+        </Link>
+
+        <span className="trade-account-pnl-inline mono" dir="ltr" style={{ color: netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
+          {formatMoney(netPnl, a.currency)}
+          {pnlPct !== null && <span className="trade-account-pnl-pct">{pnlPct}%</span>}
+          {netPnl >= 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+        </span>
       </div>
 
       <Link href={`/trade/accounts/${a.id}`} className="trade-account-main">
-        <div className="trade-account-title-row">
-          <span className="trade-account-name">{a.name}</span>
-          {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
-        </div>
-
-        <div className="trade-account-pnl mono" style={{ color: netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
-          {faNum(netPnl.toFixed(2))} {a.currency}
-        </div>
-
         {!!a.tags.length && (
           <div className="trade-tag-row" style={{ marginTop: 10 }}>
             {a.tags.map((t) => (
@@ -218,6 +254,15 @@ function AccountRow({
       </Link>
     </motion.div>
   );
+}
+
+// «1000$» — نماد ارزهای رایج چسبیده به عدد؛ بقیه با فاصله بعد از عدد.
+const CURRENCY_SYMBOL: Record<string, string> = { USD: "$", EUR: "\u20AC", GBP: "\u00A3" };
+function formatMoney(value: number, currency: string): string {
+  const n = Math.round(Math.abs(value) * 100) / 100;
+  const sign = value < 0 ? "-" : "";
+  const sym = CURRENCY_SYMBOL[currency];
+  return sym ? `${sign}${n}${sym}` : `${sign}${n} ${currency}`;
 }
 
 // حذف کامل حساب برگشت‌ناپذیر است و کل تاریخچه‌ی معاملاتش را می‌برد — پس

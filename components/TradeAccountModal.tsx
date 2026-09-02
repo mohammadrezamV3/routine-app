@@ -128,7 +128,7 @@ export function TradeAccountModal({
           options={[{ value: "AMOUNT" as const, label: "مبلغ" }, { value: "PERCENT" as const, label: "درصد بالانس" }]}
         />
         <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={goalValue} onChange={(v) => setGoalValue(v)}
-          placeholder={goalType === "PERCENT" ? "مثلا 5 (یعنی ۵٪)" : "مثلا 500"} style={{ marginTop: 8 }}
+          placeholder={goalType === "PERCENT" ? "مثلا 5 (یعنی 5%)" : "مثلا 500"} style={{ marginTop: 8 }}
         />
 
         <label className="exercise-form-label">رنگ حساب</label>

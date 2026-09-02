@@ -5,7 +5,7 @@ import { Market } from "@prisma/client";
 import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { isValidIranPhone, isValidUsername, validatePassword, clampText } from "@/lib/validate";
+import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText } from "@/lib/validate";
 
 // ثبت‌نام با نام + شماره موبایل + یوزرنیم + رمز انجام می‌شه — این چهارتا
 // الزامی‌ان. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.
@@ -32,6 +32,10 @@ export async function POST(req: NextRequest) {
 
   if (!phone || !username || !password || !name || !lastName) {
     return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم و رمز عبور الزامی است" }, { status: 400 });
+  }
+  // نام/نام‌خانوادگی فقط فارسی — بررسی سمت کلاینت قابل دور زدن است
+  if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
+    return NextResponse.json({ error: "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
   }
   if (!isValidIranPhone(phone)) {
     return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });

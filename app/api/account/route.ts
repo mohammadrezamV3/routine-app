@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
-import { clampText, parseIsoDate } from "@/lib/validate";
+import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const GENDER_VALUES = new Set(["male", "female"]);
@@ -77,12 +77,20 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const data: Record<string, unknown> = {};
 
+  // نام/نام خانوادگی فقط فارسی — چک سمت کلاینت قابل دور زدن است، پس این‌جا
+  // هم بررسی می‌شود (همان قاعده‌ی بقیه‌ی ورودی‌های این اپ).
   if (body.name !== undefined) {
     const v = clampText(String(body.name || "").trim(), 60);
+    if (v && !isValidPersianName(v)) {
+      return NextResponse.json({ error: "نام باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    }
     data.name = v || null;
   }
   if (body.lastName !== undefined) {
     const v = clampText(String(body.lastName || "").trim(), 60);
+    if (v && !isValidPersianName(v)) {
+      return NextResponse.json({ error: "نام خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    }
     data.lastName = v || null;
   }
   if (body.gender !== undefined) {

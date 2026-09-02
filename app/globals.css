@@ -5162,7 +5162,8 @@ select.wsearch-newform-name{ cursor:pointer; }
 
 .trade-tag-row{ display:flex; flex-wrap:wrap; gap:7px; }
 .trade-tag-chip{
-  display:inline-flex; align-items:center; gap:5px; font-size:11.5px; padding:6px 11px;
+  display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:3px 8px;
+  max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   border-radius:999px; border:1px solid var(--line); color:var(--muted);
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease, color .18s ease, background .18s ease, transform .15s ease;
@@ -5170,7 +5171,7 @@ select.wsearch-newform-name{ cursor:pointer; }
 @media (hover:hover){ .trade-tag-chip:hover{ background:rgba(var(--accent-rgb),.06); } }
 .trade-tag-chip:active{ transform:scale(.96); }
 .trade-tag-chip.active{ font-weight:700; }
-.trade-tag-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; }
+.trade-tag-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
 .trade-tag-add{ border-style:dashed; }
 
 /* ── فرم تب‌دار معامله ────────────────────────────────────── */
@@ -5353,9 +5354,24 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-accounts-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
 /* «حساب‌های معاملاتی» دیگه یک لیبل کوچیک خنثیه نیست — عملا تایتل همین
    بخشه (تایتل صفحه «ژورنال‌نویسی»ی)، پس فونت تایتل‌مانند + سبز می‌گیره. */
-.trade-section-title{ font-size:15px; font-weight:800; color:#00A86B; }
+.trade-section-title{ font-size:15px; font-weight:800; color:var(--text); }
 .trade-account-grid{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-.trade-account-card{ position:relative; overflow:hidden; padding:16px 20px 16px 44px; }
+.trade-account-card{ position:relative; overflow:hidden; padding:14px 16px 14px 16px; }
+/* سه‌نقطه دیگر گوشه‌ی چپ مطلق نیست؛ اول ردیف (توی RTL یعنی سمت راست)
+   کنار نام حساب می‌نشیند و سود/زیان انتهای همان ردیف (چپ) می‌رود. */
+.trade-account-top-row{ display:flex; align-items:center; gap:8px; }
+.trade-account-kebab-inline{ flex-shrink:0; margin-right:-6px; }
+.trade-account-title-link{
+  display:flex; align-items:center; gap:8px; min-width:0; flex:1;
+  text-decoration:none; color:var(--text);
+}
+.trade-account-title-link .trade-account-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-account-pnl-inline{
+  display:inline-flex; align-items:center; gap:6px; flex-shrink:0;
+  font-size:14.5px; font-weight:800;
+}
+.trade-account-pnl-inline svg{ flex-shrink:0; }
+.trade-account-pnl-pct{ font-size:12px; font-weight:700; opacity:.8; }
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
 .trade-account-stripe{ position:absolute; top:0; right:0; bottom:0; width:3px; }
@@ -5429,9 +5445,16 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
    داخل فیلد یه رنگ دیگه از بقیه‌ی کپسول نشون می‌داد. حالا با
    `input.trade-glass-field` (۰۲۱) قطعی برنده می‌شه و فقط یک لایه‌ی شیشه‌ای
    (خود .trade-search) باقی می‌مونه. */
-.trade-search input.trade-glass-field{
-  border:none; background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  padding:11px 0; width:130px; outline:none;
+/* اسپسیفیسیتی عمدا با body شروع می‌شود: قانون تم‌دار
+   `body:not([data-theme="light"]) .wsearch-newform-name.trade-glass-field`
+   (۰,۳,۰) از انتخابگر قبلی (۰,۲,۱) قوی‌تر بود و بک‌گراند/بردر خودش را روی
+   ورودی می‌گذاشت — نتیجه‌اش یک کپسول داخل کپسول بود، همان «نوار جست‌وجو
+   دو بخشه» که گزارش شد. */
+body .trade-search input.trade-glass-field,
+body[data-theme="light"] .trade-search input.trade-glass-field{
+  border:none; background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  padding:11px 0; flex:1; min-width:0; width:auto; outline:none;
   color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:13px;
 }
 @media (max-width:640px){ .trade-search input.trade-glass-field{ font-size:16px; } }
@@ -5598,11 +5621,15 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
   display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
   margin-top:12px; font-size:10px; color:var(--muted2);
 }
-.trade-note-foot .trade-tag-chip{ font-size:9.5px; padding:3px 8px; }
+.trade-note-foot .trade-tag-chip{ font-size:9px; padding:2px 7px; }
 
 /* ── اتصال متاتریدر ────────────────────────────────────────── */
 .trade-mt-panel{ margin-top:24px; padding:18px 20px; }
 .trade-mt-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+/* تایتل داخل پنل متاتریدر — .domain-sub سبز و ریز بود؛ درخواست صریح:
+   بزرگ‌تر و سفید (رنگ متن اصلی). */
+.trade-mt-panel-head .domain-sub{ font-size:17px; font-weight:800; color:var(--text); }
+body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
 
 /* نشان فعال/غیرفعال کوچک، کنار خود تایتل — دات با موج پالسی، سبز وقتی
    وصله، قرمز وقتی نیست؛ جایگزین بنر جداگانه‌ی قبلی. */
@@ -5730,3 +5757,30 @@ body[data-theme="light"] .forex-timeline-track{ background:rgba(0,0,0,.04); }
 @media (max-width:480px){
   .forex-timeline-row-label{ width:44px; font-size:10px; }
 }
+
+/* ── فهرست چک‌لیست‌ها: همه داخل یک باکس واحد ──────────────────
+   قبلا هر چک‌لیست یک کارت جدا روی بک‌گراند اصلی بود؛ درخواست صریح کاربر
+   این بود که «توی باکس باشن نه توی بک‌گراند اصلی». */
+.trade-checklist-box{ margin-top:14px; padding:6px 4px; }
+.trade-checklist-row{
+  position:relative; display:flex; align-items:center; gap:8px;
+  padding:12px 14px 12px 10px;
+}
+.trade-checklist-row + .trade-checklist-row{ border-top:1px solid var(--surface-line); }
+.trade-checklist-row-stripe{
+  position:absolute; top:10px; bottom:10px; right:0; width:3px; border-radius:2px;
+}
+.trade-checklist-row-kebab{ flex-shrink:0; margin-right:-4px; }
+.trade-checklist-row-main{
+  display:flex; align-items:center; gap:8px; flex:1; min-width:0;
+  text-decoration:none; color:var(--text);
+}
+.trade-checklist-row-main .trade-account-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-checklist-row-count{ margin-right:auto; flex-shrink:0; font-size:11.5px; color:var(--muted); }
+@media (hover:hover){ .trade-checklist-row-main:hover .trade-account-name{ color:var(--accent); } }
+
+/* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
+.trade-note-kebab{ flex-shrink:0; margin-right:-6px; }
+.trade-note-head{ align-items:center; }
+.trade-note-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }

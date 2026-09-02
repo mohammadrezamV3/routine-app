@@ -47,6 +47,10 @@ export const USER_WRITABLE_SETTING_KEYS = new Set<string>(Object.values(SETTING_
 /** حالت داخلی سرور — هیچ‌وقت از راه API نه خونده می‌شه نه نوشته */
 export const SERVER_MANAGED_SETTING_KEYS = new Set<string>([
   "pushSentLog",
+  // نشانه‌ی اینکه چک‌لیست پیش‌فرض یک‌بار برای این کاربر ساخته شده. بدون این،
+  // GET هر بار که لیست خالی بود دوباره سیدش می‌کرد — یعنی حذف آخرین
+  // چک‌لیست بی‌اثر می‌شد و همون چک‌لیست برمی‌گشت.
+  "tradeChecklistSeeded",
   // رد هشدارهای خبری فرستاده‌شده — اگر کاربر می‌توانست بنویسدش، می‌شد با
   // پرکردنش هشدارها را برای همیشه خاموش کرد (همان اشکالی که pushSentLog داشت).
   "tradeNewsAlertLog",

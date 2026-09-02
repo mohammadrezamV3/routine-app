@@ -10,7 +10,7 @@ import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
-import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/validate";
+import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 type FieldErrors = {
@@ -131,6 +131,10 @@ export default function SignupPage() {
     const { name, lastName } = splitFullName(fullName);
     if (!name) errs.name = "نام و نام‌خانوادگی را وارد کن";
     else if (!lastName) errs.name = "نام و نام‌خانوادگی را کامل وارد کن";
+    // فقط فارسی — همین بررسی سمت سرور هم تکرار می‌شود (قابل دور زدن است)
+    else if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
+      errs.name = "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود";
+    }
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
     else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
     if (!password) errs.password = "رمز عبور را وارد کن";

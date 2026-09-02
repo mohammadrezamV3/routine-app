@@ -18,6 +18,16 @@ export function isValidUsername(v: string): boolean {
   return /^[a-zA-Z0-9_]{3,20}$/.test(v);
 }
 
+// نام و نام خانوادگی فقط فارسی (درخواست صریح محصول). حروف فارسی + نیم‌فاصله
+// و فاصله‌ی معمولی مجازند؛ رقم/لاتین/نشانه نه. رشته‌ی خالی «تنظیم‌نشده»
+// حساب می‌شود و اعتبارسنجی نمی‌خورد — جای بررسی‌اش نبودِ مقدار است، نه این‌جا.
+const PERSIAN_NAME_RE = /^[\u0621-\u063A\u0641-\u064A\u067E\u0686\u0698\u06A9\u06AF\u06CC\u0622\u0623\u0624\u0626\u0629\u200c ]+$/;
+
+export function isValidPersianName(v: string): boolean {
+  const t = v.trim();
+  return t.length > 0 && t.length <= 60 && PERSIAN_NAME_RE.test(t);
+}
+
 /**
  * سیاست رمز عبور: حداقل ۸ کاراکتر، و از نظر zxcvbn (سنجش واقعی قدرت رمز، نه
  * فقط شمارش نوع کاراکتر) حداقل در سطح «خوب» باشه.
