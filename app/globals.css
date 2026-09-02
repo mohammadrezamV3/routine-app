@@ -5217,14 +5217,26 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 
 /* ── حساب‌ها ──────────────────────────────────────────────── */
 .trade-accounts-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
+/* «حساب‌های معاملاتی» دیگه یک لیبلِ کوچیکِ خنثیه نیست — عملاً تایتلِ همین
+   بخشه (تایتلِ صفحه «ژورنال‌نویسی»یِ)، پس فونتِ تایتل‌مانند + سبز می‌گیره. */
+.trade-section-title{ font-size:15px; font-weight:800; color:#00A86B; }
 .trade-account-grid{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-.trade-account-card{ position:relative; overflow:hidden; padding:17px 20px 17px 17px; }
+.trade-account-card{ position:relative; overflow:hidden; padding:16px 20px 16px 44px; }
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
 .trade-account-stripe{ position:absolute; top:0; right:0; bottom:0; width:3px; }
 .trade-account-main{ display:block; text-decoration:none; color:var(--text); }
 .trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .trade-account-name{ font-size:14.5px; font-weight:700; }
+.trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
+/* منویِ سه‌نقطه — کنارِ اسم، سمتِ مخالفِ نوارِ رنگی. با createPortal به
+   body می‌ره (هم‌الگویِ DashTaskRow) چون بلورِ .trade-surface یک
+   stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه. */
+.trade-account-kebab{ position:absolute; top:12px; left:10px; z-index:2; }
+.trade-account-menu{
+  position:fixed; z-index:70; min-width:170px; padding:6px; border-radius:16px;
+  border:1px solid var(--line); box-shadow:0 16px 40px rgba(0,0,0,.4); overflow:hidden;
+}
 .trade-account-type, .trade-account-archived-badge{
   font-size:10px; color:var(--muted2); border:1px solid var(--line); border-radius:999px; padding:3px 9px;
 }
@@ -5519,6 +5531,15 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 }
 .trade-mt-row{ text-decoration:none; color:var(--text); display:block; padding:16px 19px 16px 16px; }
 @media (hover:hover){ .trade-mt-row:hover{ border-color:var(--accent); } }
+
+/* خطِ وضعیتِ متاتریدر روی صفحه‌ی خودِ حساب — جزئیاتِ کامل جاش صفحه‌ی
+   اختصاصیِ /trade/metatrader/[id]ه، این‌جا فقط یک ردیف. */
+.trade-mt-line{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:22px; padding:14px 18px; text-decoration:none; color:var(--text);
+  font-size:12.5px; font-weight:600;
+}
+@media (hover:hover){ .trade-mt-line:hover{ border-color:var(--accent); } }
 
 /* حرکت‌ها را برای کسی که کاهشِ حرکت خواسته خاموش کن — هم‌قاعده‌ی بقیه‌ی اپ */
 @media (prefers-reduced-motion: reduce){
