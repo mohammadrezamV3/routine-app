@@ -51,6 +51,7 @@ export function TradeFormModal({
   tags,
   calSystem,
   presetChecklistId,
+  presetSymbol,
   onTagCreated,
   onClose,
   onSaved,
@@ -60,13 +61,20 @@ export function TradeFormModal({
   tags: TradeTag[];
   calSystem: CalSystem;
   presetChecklistId?: string | null;
+  /** نمادِ از پیش پرشده — وقتی فرم از صفحه‌ی چارت باز می‌شود */
+  presetSymbol?: string | null;
   onTagCreated: (t: TradeTag) => void;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [tab, setTab] = useState<TabKey>("core");
   const [form, setForm] = useState<TradeFormState>(() =>
-    entry ? tradeToFormState(entry, toLocalInputValue) : emptyTradeForm(account.id, toLocalInputValue(new Date()))
+    entry
+      ? tradeToFormState(entry, toLocalInputValue)
+      : {
+          ...emptyTradeForm(account.id, toLocalInputValue(new Date())),
+          ...(presetSymbol ? { symbol: presetSymbol } : {}),
+        }
   );
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [optionalOpen, setOptionalOpen] = useState(false);

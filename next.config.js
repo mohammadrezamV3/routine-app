@@ -26,6 +26,12 @@ const securityHeaders = [
       "font-src 'self' data: https://fonts.gstatic.com",
       "img-src 'self' data: https:",
       "connect-src 'self' https://api.anthropic.com",
+      // چارتِ تریدینگ‌ویو. عمداً فقط `frame-src` باز شده و نه `script-src`:
+      // ویجت را به‌شکلِ iframe جاسازی می‌کنیم، نه با اسکریپتِ رسمیِ `tv.js`.
+      // تفاوت مهم است — `tv.js` باید داخلِ originِ خودمان اجرا شود و به
+      // DOM و کوکی‌ها دسترسی دارد، ولی iframe در originِ تریدینگ‌ویو جدا
+      // می‌ماند. یعنی برای همان قابلیت، سطحِ حمله‌ی بسیار کمتری باز می‌کنیم.
+      "frame-src https://s.tradingview.com https://www.tradingview.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "object-src 'none'",
