@@ -50,12 +50,12 @@ export async function POST(req: NextRequest) {
   if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
     return NextResponse.json({ error: "نوع وعده نامعتبر است" }, { status: 400 });
   }
-  // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عددِ نامنفی باشن —
-  // یا هر سه ثبت می‌شن (نتیجه‌ی اسکنِ AI) یا هیچ‌کدوم (ثبتِ دستی/کاتالوگ معمولی).
+  // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عدد نامنفی باشن —
+  // یا هر سه ثبت می‌شن (نتیجه‌ی اسکن AI) یا هیچ‌کدوم (ثبت دستی/کاتالوگ معمولی).
   const hasMacros = proteinG !== undefined || carbsG !== undefined || fatG !== undefined;
   const macrosValid = [proteinG, carbsG, fatG].every((v) => typeof v === "number" && v >= 0 && v <= 2000);
   if (hasMacros && !macrosValid) {
-    return NextResponse.json({ error: "مقادیرِ درشت‌مغذی نامعتبره" }, { status: 400 });
+    return NextResponse.json({ error: "مقادیر درشت‌مغذی نامعتبره" }, { status: 400 });
   }
 
   const entry = await prisma.foodLogEntry.create({

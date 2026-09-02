@@ -28,7 +28,7 @@ export function computeComparison(
   return result;
 }
 
-// میانگینِ همه‌ی دامنه‌های دارای‌داده در یک روزِ خاص — برای «بهترین/بدترین روز».
+// میانگین همه‌ی دامنه‌های دارای‌داده در یک روز خاص — برای «بهترین/بدترین روز».
 function overallDailyScores(domains: Record<Domain, DomainMetric>): (number | null)[] {
   const out: (number | null)[] = [];
   for (let i = 0; i < 7; i++) {
@@ -39,15 +39,15 @@ function overallDailyScores(domains: Record<Domain, DomainMetric>): (number | nu
 }
 
 function weekdayName(index: number): string {
-  // dailyScores/daysOfWeek هردو با ترتیبِ شنبه..جمعه‌ن (weekRange.daysOfWeek)
+  // dailyScores/daysOfWeek هردو با ترتیب شنبه..جمعه‌ن (weekRange.daysOfWeek)
   return WEEK_ORDER[index]?.name || "";
 }
 
-/** حداکثر ۵ مورد، هرکدوم evidence-based — بدونِ داده‌ی کافی چیزی تولید نمی‌شه. */
+/** حداکثر ۵ مورد، هرکدوم evidence-based — بدون داده‌ی کافی چیزی تولید نمی‌شه. */
 export function computeWins(current: Record<Domain, DomainMetric>, comparison: Comparison): string[] {
   const wins: string[] = [];
 
-  // بزرگ‌ترین پیشرفتِ یک دامنه نسبت به هفته‌ی قبل
+  // بزرگ‌ترین پیشرفت یک دامنه نسبت به هفته‌ی قبل
   let bestImprovement: { domain: Domain; delta: number } | null = null;
   for (const d of DOMAINS) {
     const c = comparison[d];
@@ -59,29 +59,29 @@ export function computeWins(current: Record<Domain, DomainMetric>, comparison: C
     wins.push(`${DOMAIN_LABELS_FA[bestImprovement.domain]} ${bestImprovement.delta}٪ نسبت به هفته‌ی قبل بهتر شد`);
   }
 
-  // استریکِ روتینِ کامل (۳ روزِ متوالیِ ۱۰۰٪)
+  // استریک روتین کامل (۳ روز متوالی ۱۰۰٪)
   const routineDaily = current.routine.dailyScores;
   let streak = 0, maxStreak = 0;
   for (const v of routineDaily) { streak = v === 100 ? streak + 1 : 0; maxStreak = Math.max(maxStreak, streak); }
   if (maxStreak >= 3) wins.push(`${maxStreak} روز متوالی روتین کامل انجام شد`);
 
-  // حضورِ کاملِ تمرین
+  // حضور کامل تمرین
   const fitnessRaw = current.fitness.raw as { completedSessions?: number; expectedSessions?: number | null };
   if (current.fitness.hasData && fitnessRaw.expectedSessions && fitnessRaw.completedSessions === fitnessRaw.expectedSessions) {
-    wins.push(`همه‌ی ${fitnessRaw.expectedSessions} جلسه‌ی تمرینِ این هفته کامل انجام شد`);
+    wins.push(`همه‌ی ${fitnessRaw.expectedSessions} جلسه‌ی تمرین این هفته کامل انجام شد`);
   }
 
-  // نرخِ بردِ بالای ترید
+  // نرخ برد بالای ترید
   if (current.trading.score != null && current.trading.score >= 70) {
     const raw = current.trading.raw as { totalWins: number; totalClosed: number };
-    wins.push(`${current.trading.score}٪ معاملاتِ بسته‌شده‌ی این هفته (${raw.totalWins} از ${raw.totalClosed}) با نتیجه‌ی مثبت بسته شدن`);
+    wins.push(`${current.trading.score}٪ معاملات بسته‌شده‌ی این هفته (${raw.totalWins} از ${raw.totalClosed}) با نتیجه‌ی مثبت بسته شدن`);
   }
 
-  // بهترین روزِ هفته
+  // بهترین روز هفته
   const overallDaily = overallDailyScores(current);
   const bestIdx = overallDaily.reduce((best, v, i) => (v != null && (best == null || v > overallDaily[best]!) ? i : best), null as number | null);
   if (bestIdx != null && overallDaily[bestIdx]! >= 90) {
-    wins.push(`بهترین روزِ هفته، ${weekdayName(bestIdx)} با میانگینِ ${overallDaily[bestIdx]}٪ بود`);
+    wins.push(`بهترین روز هفته، ${weekdayName(bestIdx)} با میانگین ${overallDaily[bestIdx]}٪ بود`);
   }
 
   return wins.slice(0, 5);
@@ -109,13 +109,13 @@ export function computeProblems(current: Record<Domain, DomainMetric>, compariso
     if (m.score < 40 && (!lowest || m.score < lowest.score)) lowest = { domain: d, score: m.score };
   }
   if (lowest && lowest.domain !== worstDrop?.domain) {
-    problems.push(`کمترین امتیازِ این هفته مربوط به ${DOMAIN_LABELS_FA[lowest.domain]} با ${lowest.score}٪ بود`);
+    problems.push(`کمترین امتیاز این هفته مربوط به ${DOMAIN_LABELS_FA[lowest.domain]} با ${lowest.score}٪ بود`);
   }
 
   const overallDaily = overallDailyScores(current);
   const worstIdx = overallDaily.reduce((worst, v, i) => (v != null && (worst == null || v < overallDaily[worst]!) ? i : worst), null as number | null);
   if (worstIdx != null && overallDaily[worstIdx]! < 40) {
-    problems.push(`ضعیف‌ترین روزِ هفته، ${weekdayName(worstIdx)} با میانگینِ ${overallDaily[worstIdx]}٪ بود`);
+    problems.push(`ضعیف‌ترین روز هفته، ${weekdayName(worstIdx)} با میانگین ${overallDaily[worstIdx]}٪ بود`);
   }
 
   return problems.slice(0, 3);

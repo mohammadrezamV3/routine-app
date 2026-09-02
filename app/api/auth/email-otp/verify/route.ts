@@ -5,14 +5,14 @@ import { isValidEmail } from "@/lib/validate";
 import { hashEmailOtp, hashesMatch, EMAIL_OTP_MAX_ATTEMPTS } from "@/lib/emailOtp";
 
 // POST /api/auth/email-otp/verify  { email, code }
-// فقط یک پیش‌بررسی‌ست — درستیِ کد رو تایید می‌کنه و verifiedAt رو ست می‌کنه،
-// ولی OTP رو usedAt نمی‌کنه (مصرفِ واقعی/صدورِ نشست توسطِ providerِ
-// «email-otp» توی lib/auth.ts انجام می‌شه، دقیقاً جایی که NextAuth کوکیِ
-// نشست رو می‌سازه). این جداسازی چون authorize()ِ NextAuth پیامِ خطای
-// سفارشی رو حفظ نمی‌کنه (نگاه کن به کامنتِ همون provider) — پس تشخیصِ
-// «کدِ اشتباه» در برابرِ «این ایمیل حساب نداره» باید همین‌جا اتفاق بیفته.
+// فقط یک پیش‌بررسی‌ست — درستی کد رو تایید می‌کنه و verifiedAt رو ست می‌کنه،
+// ولی OTP رو usedAt نمی‌کنه (مصرف واقعی/صدور نشست توسط provider
+// «email-otp» توی lib/auth.ts انجام می‌شه، دقیقا جایی که NextAuth کوکی
+// نشست رو می‌سازه). این جداسازی چون authorize() NextAuth پیام خطای
+// سفارشی رو حفظ نمی‌کنه (نگاه کن به کامنت همون provider) — پس تشخیص
+// «کد اشتباه» در برابر «این ایمیل حساب نداره» باید همین‌جا اتفاق بیفته.
 //
-// hasAccount فقط *بعدِ* واردکردنِ کدِ درست فاش می‌شه — یعنی کسی که کد رو
+// hasAccount فقط *بعد* واردکردن کد درست فاش می‌شه — یعنی کسی که کد رو
 // نمی‌دونه (به ایمیل دسترسی نداره) هیچ‌وقت از این مسیر نمی‌فهمه اون ایمیل
 // حساب داره یا نه.
 export async function POST(req: NextRequest) {

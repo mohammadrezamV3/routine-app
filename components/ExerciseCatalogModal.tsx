@@ -45,8 +45,8 @@ export function DifficultyStars({ level, className }: { level: number; className
 
 // «مشاهده حرکات» — یک پاپ‌آپ (نه صفحه‌ی تمام‌عرض)، پورتال‌شده به body چون
 // DashCard والدش یه transform ثابت داره که position:fixed رو محدود می‌کنه.
-// لیستِ اسم‌ها با جستجو/فیلترِ گروهِ عضلانی؛ زدن روی هرکدوم یه کارتِ جزئیات
-// از پایین بالا میاد با جای عکس، دستورالعمل، میزانِ سختی (ستاره) و مزایا.
+// لیست اسم‌ها با جستجو/فیلتر گروه عضلانی؛ زدن روی هرکدوم یه کارت جزئیات
+// از پایین بالا میاد با جای عکس، دستورالعمل، میزان سختی (ستاره) و مزایا.
 export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   useLockBodyScroll();
   const [query, setQuery] = useState("");
@@ -188,7 +188,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub exercise-detail-label">عضلاتِ درگیر</div>
+                  <div className="domain-sub exercise-detail-label">عضلات درگیر</div>
                   <div className="item-line">{selected.muscleGroup}</div>
                   <div style={{ marginTop: 10 }}>
                     <MuscleDiagram keys={selected.muscleKeys} />

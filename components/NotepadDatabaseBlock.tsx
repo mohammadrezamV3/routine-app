@@ -27,10 +27,10 @@ const VIEW_TABS: { key: ViewType; label: string; icon: JSX.Element }[] = [
   { key: "list", label: "لیست", icon: <ListIcon size={13} /> },
 ];
 
-// بلاکِ Database — پوسته‌ی مشترکِ همه‌ی ویوها: هدر (اسم + تب‌های ویو +
-// فیلتر/سورت + افزودنِ property)، و بدنه که بسته‌به activeView یکی از پنج
-// کامپوننتِ ویو رو رندر می‌کنه. خودش state رو نگه می‌داره و مستقیم به API
-// دیتابیس وصله (جدا از autosaveِ بلاک‌های متنی).
+// بلاک Database — پوسته‌ی مشترک همه‌ی ویوها: هدر (اسم + تب‌های ویو +
+// فیلتر/سورت + افزودن property)، و بدنه که بسته‌به activeView یکی از پنج
+// کامپوننت ویو رو رندر می‌کنه. خودش state رو نگه می‌داره و مستقیم به API
+// دیتابیس وصله (جدا از autosave بلاک‌های متنی).
 export function NotepadDatabaseBlock({
   blockId,
   databaseId,
@@ -50,11 +50,11 @@ export function NotepadDatabaseBlock({
     let cancelled = false;
     async function init() {
       if (!databaseId) {
-        // creatingRef (نه cancelled) این شاخه رو سریالایز می‌کنه — چون تحتِ
-        // StrictMode/دو-باراجراییِ افکت در dev، افکتِ اول mount/cleanup/remount
-        // می‌شه و cancelledِ خودش true می‌مونه، ولی promise همون افکتِ اول
-        // هنوز در پروازه؛ اگه نتیجه‌ش رو به‌خاطرِ cancelled دور بریزیم، دیتابیسِ
-        // واقعاً ساخته‌شده روی سرور هیچ‌وقت به state نمی‌رسه و لودینگ گیر می‌کنه
+        // creatingRef (نه cancelled) این شاخه رو سریالایز می‌کنه — چون تحت
+        // StrictMode/دو-باراجرایی افکت در dev، افکت اول mount/cleanup/remount
+        // می‌شه و cancelled خودش true می‌مونه، ولی promise همون افکت اول
+        // هنوز در پروازه؛ اگه نتیجه‌ش رو به‌خاطر cancelled دور بریزیم، دیتابیس
+        // واقعا ساخته‌شده روی سرور هیچ‌وقت به state نمی‌رسه و لودینگ گیر می‌کنه
         if (creatingRef.current) return;
         creatingRef.current = true;
         const created = await createDatabaseForBlock(blockId);
@@ -75,7 +75,7 @@ export function NotepadDatabaseBlock({
   }, [blockId, databaseId]);
 
   if (loading || !db) {
-    return <div className="notepad-db-loading">در حال آماده‌سازیِ دیتابیس…</div>;
+    return <div className="notepad-db-loading">در حال آماده‌سازی دیتابیس…</div>;
   }
 
   const database = db;
@@ -144,7 +144,7 @@ export function NotepadDatabaseBlock({
           className="notepad-db-name-input"
           value={db.name}
           onChange={(e) => patchMeta({ name: e.target.value })}
-          placeholder="اسمِ دیتابیس"
+          placeholder="اسم دیتابیس"
         />
         <div className="notepad-db-header-actions">
           <button type="button" className="notepad-db-header-btn" onClick={() => setFilterMenuOpen(true)}>

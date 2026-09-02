@@ -1,11 +1,11 @@
 "use client";
 
-// /api/account یک پاسخِ نسبتاً سنگینه (کاربر + moduleAccess + اشتراک) و
-// هم‌زمان از دو جای مستقل خونده می‌شد: NavDrawer (برای قفلِ آیتم‌های منو) و
-// ModuleGate (برای گیتِ خودِ صفحه). چون هردو در همون لحظه‌ی mount اجرا می‌شن،
-// هیچ‌کدوم کشِ اون یکی رو نمی‌دید و هر بارگذاریِ صفحه دو بار همون کوئری رو
+// /api/account یک پاسخ نسبتا سنگینه (کاربر + moduleAccess + اشتراک) و
+// هم‌زمان از دو جای مستقل خونده می‌شد: NavDrawer (برای قفل آیتم‌های منو) و
+// ModuleGate (برای گیت خود صفحه). چون هردو در همون لحظه‌ی mount اجرا می‌شن،
+// هیچ‌کدوم کش اون یکی رو نمی‌دید و هر بارگذاری صفحه دو بار همون کوئری رو
 // می‌زد. این ماژول همون الگویی رو داره که lib/storage.ts استفاده می‌کنه:
-// دیدوپِ درخواستِ در حالِ اجرا + کشِ کوتاه‌مدت.
+// دیدوپ درخواست در حال اجرا + کش کوتاه‌مدت.
 
 import { getPreloadedBootstrap, clearPreloadedBootstrap } from "./preload";
 
@@ -20,15 +20,15 @@ let inFlight: Promise<AccountData> | null = null;
 export async function getAccount(): Promise<AccountData> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.data;
   if (!inFlight) {
-    // پاسخِ bootstrap (اگه بود) همین داده رو از قبل داره
+    // پاسخ bootstrap (اگه بود) همین داده رو از قبل داره
     const boot = getPreloadedBootstrap();
     const source = boot
       ? boot.data.then((b) => (b?.account ?? null))
       : fetch("/api/account").then((r) => (r.ok ? r.json() : null));
     inFlight = source
       .then((data: AccountData) => {
-        // پاسخِ ناموفق کش نمی‌شه — یه قطعیِ لحظه‌ای نباید تا کلِ TTL
-        // کاربر رو «بدونِ دسترسی» نشون بده.
+        // پاسخ ناموفق کش نمی‌شه — یه قطعی لحظه‌ای نباید تا کل TTL
+        // کاربر رو «بدون دسترسی» نشون بده.
         if (data) cache = { at: Date.now(), data };
         return data;
       })
@@ -38,9 +38,9 @@ export async function getAccount(): Promise<AccountData> {
   return inFlight;
 }
 
-// عکسِ پروفایل. پاسخِ bootstrapِ لحظه‌ی لود از قبل داردش، پس روی مسیرِ
-// معمول اصلاً درخواستی زده نمی‌شه؛ صفحه‌ی /account و /account/profile هم که
-// هردو نشونش می‌دن، به‌جای دو فچِ جدا از همین یک منبع می‌خونن.
+// عکس پروفایل. پاسخ bootstrap لحظه‌ی لود از قبل داردش، پس روی مسیر
+// معمول اصلا درخواستی زده نمی‌شه؛ صفحه‌ی /account و /account/profile هم که
+// هردو نشونش می‌دن، به‌جای دو فچ جدا از همین یک منبع می‌خونن.
 let avatarCache: { at: number; url: string | null } | null = null;
 let avatarInFlight: Promise<string | null> | null = null;
 
@@ -59,21 +59,21 @@ export async function getAvatarUrl(): Promise<string | null> {
   return avatarInFlight;
 }
 
-/** بعد از هر تغییری که پاسخِ /api/account رو کهنه می‌کنه (خرید اشتراک، خروج، …) */
+/** بعد از هر تغییری که پاسخ /api/account رو کهنه می‌کنه (خرید اشتراک، خروج، …) */
 export function invalidateAccountCache() {
   cache = null;
   inFlight = null;
   avatarCache = null;
   avatarInFlight = null;
-  // بدونِ این، getAccount() و NavDrawer دوباره از رویِ همون promiseِ
-  // bootstrapِ لحظه‌ی لودِ صفحه می‌خوندن (که چند مصرف‌کننده‌ی مستقل دارد و
-  // هیچ‌وقت خودش تازه نمی‌شه) — یعنی بعدِ هر تغییرِ واقعی (مثلاً عکسِ
+  // بدون این، getAccount() و NavDrawer دوباره از روی همون promise
+  // bootstrap لحظه‌ی لود صفحه می‌خوندن (که چند مصرف‌کننده‌ی مستقل دارد و
+  // هیچ‌وقت خودش تازه نمی‌شه) — یعنی بعد هر تغییر واقعی (مثلا عکس
   // پروفایل)، بقیه‌ی اپ همچنان دیتای کهنه‌ی لحظه‌ی لود رو نشون می‌داد تا
-  // ریلودِ کامل. همین باگِ نامرئی‌بودنِ تغییرِ عکسِ پروفایل بود.
+  // ریلود کامل. همین باگ نامرئی‌بودن تغییر عکس پروفایل بود.
   clearPreloadedBootstrap();
 }
 
-/** ماژول‌های فعال و منقضی‌نشده — منطقِ مشترکِ NavDrawer و ModuleGate */
+/** ماژول‌های فعال و منقضی‌نشده — منطق مشترک NavDrawer و ModuleGate */
 export function activeModulesOf(data: AccountData): Set<string> {
   const now = Date.now();
   return new Set<string>(

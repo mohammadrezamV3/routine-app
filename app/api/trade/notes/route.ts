@@ -5,9 +5,9 @@ import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 
-// یادداشت‌های ترید. جست‌وجو عمداً روی عنوان و متن با `contains` انجام
-// می‌شود (نه full-text index): حجمِ یادداشت‌های یک کاربر کوچک است و
-// ایندکسِ متنی برای این اندازه پیچیدگیِ بی‌فایده‌ای است.
+// یادداشت‌های ترید. جست‌وجو عمدا روی عنوان و متن با `contains` انجام
+// می‌شود (نه full-text index): حجم یادداشت‌های یک کاربر کوچک است و
+// ایندکس متنی برای این اندازه پیچیدگی بی‌فایده‌ای است.
 
 const MAX_NOTES = 300;
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
   const count = await prisma.tradeNote.count({ where: { userId } });
   if (count >= MAX_NOTES) return NextResponse.json({ error: `حداکثر ${MAX_NOTES} یادداشت مجاز است` }, { status: 400 });
 
-  // ارجاع‌های اختیاری فقط وقتی ثبت می‌شوند که واقعاً مالِ همین کاربر باشند
+  // ارجاع‌های اختیاری فقط وقتی ثبت می‌شوند که واقعا مال همین کاربر باشند
   const accountId = body?.accountId
     ? (await prisma.tradeAccount.findFirst({ where: { id: String(body.accountId), userId }, select: { id: true } }))?.id ?? null
     : null;

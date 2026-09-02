@@ -58,7 +58,7 @@ export type Target = {
   sex: Sex | null;
   heightCm: number | null;
   weightKg: number | null;
-  // هدفِ درشت‌مغذی‌ها (گرم در روز) — اختیاری، فقط از «وارد کردن دستی»
+  // هدف درشت‌مغذی‌ها (گرم در روز) — اختیاری، فقط از «وارد کردن دستی»
   proteinTargetG?: number | null;
   carbsTargetG?: number | null;
   fatTargetG?: number | null;
@@ -70,9 +70,9 @@ export function CaloriePanel() {
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
   const [needsAge, setNeedsAge] = useState(false);
 
-  // انتخابِ روز — طبقِ طرحِ کاربر، بالای صفحه یه نوارِ روزهای هفته‌ست که
-  // مشخص می‌کنه داری کدوم روز رو می‌بینی/واردش می‌کنی؛ دقیقاً هم‌الگوی
-  // انتخابِ روزِ داشبوردِ بدنسازی (DashDateSelector + weekOffset/dayWindow).
+  // انتخاب روز — طبق طرح کاربر، بالای صفحه یه نوار روزهای هفته‌ست که
+  // مشخص می‌کنه داری کدوم روز رو می‌بینی/واردش می‌کنی؛ دقیقا هم‌الگوی
+  // انتخاب روز داشبورد بدنسازی (DashDateSelector + weekOffset/dayWindow).
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(todayIso);
   const [dayWindow, setDayWindow] = useState(5);
@@ -93,9 +93,9 @@ export function CaloriePanel() {
 
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
 
-  // انتخابِ یه تاریخِ دلخواه از تقویم — پنجره‌ی نوارِ روزها هم باید دورِ همون
-  // تاریخ وسط‌چین بشه، نه اینکه روزِ انتخاب‌شده بیرونِ پنجره‌ی فعلی بمونه
-  // (دقیقاً هم‌منطقِ pickDate توی داشبوردِ بدنسازی).
+  // انتخاب یه تاریخ دلخواه از تقویم — پنجره‌ی نوار روزها هم باید دور همون
+  // تاریخ وسط‌چین بشه، نه اینکه روز انتخاب‌شده بیرون پنجره‌ی فعلی بمونه
+  // (دقیقا هم‌منطق pickDate توی داشبورد بدنسازی).
   function pickDate(iso: string) {
     setSelectedIso(iso);
     const [y, m, d] = iso.split("-").map(Number);
@@ -118,15 +118,15 @@ export function CaloriePanel() {
   const [savingGoal, setSavingGoal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(false);
 
-  // تاریخچه — ۳۰ روزِ واقعیِ اخیر از «امروز»، مستقل از روزی که کاربر داره
-  // می‌بینه؛ چون نمودارِ هفتگی/ماهانه و روندِ موفقیت به تاریخِ واقعی نیاز دارن
+  // تاریخچه — ۳۰ روز واقعی اخیر از «امروز»، مستقل از روزی که کاربر داره
+  // می‌بینه؛ چون نمودار هفتگی/ماهانه و روند موفقیت به تاریخ واقعی نیاز دارن
   const [historyEntries, setHistoryEntries] = useState<Entry[]>([]);
 
-  // راهنمای اولین‌بار — دقیقاً وقتی صفحه با یه هدفِ کالریِ ازقبل‌ساخته‌شده
-  // باز می‌شه (نه توی فرمِ ساختِ هدف) نشون داده می‌شه، یه بار برای همیشه
+  // راهنمای اولین‌بار — دقیقا وقتی صفحه با یه هدف کالری ازقبل‌ساخته‌شده
+  // باز می‌شه (نه توی فرم ساخت هدف) نشون داده می‌شه، یه بار برای همیشه
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // یادآوریِ به‌روزکردنِ وزن — هر دو هفته یک‌بار
+  // یادآوری به‌روزکردن وزن — هر دو هفته یک‌بار
   const [weightReminder, setWeightReminder] = useState(false);
 
   useEffect(() => {
@@ -205,8 +205,8 @@ export function CaloriePanel() {
     await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" });
   }
 
-  // بعدِ افزودن/حذف/اسکن، هم لیستِ روزِ انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
-  // به‌روز بشن — چون نمودار/روندِ موفقیت/ریزِ درشت‌مغذی‌ها به هردو وابسته‌ن
+  // بعد افزودن/حذف/اسکن، هم لیست روز انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
+  // به‌روز بشن — چون نمودار/روند موفقیت/ریز درشت‌مغذی‌ها به هردو وابسته‌ن
   function refreshAfterChange() {
     loadEntries();
     loadHistory();
@@ -222,10 +222,10 @@ export function CaloriePanel() {
 
   const mealTypes = target?.mealBreakdown?.length ? target.mealBreakdown.map((m) => ({ key: m.key, label: m.label })) : DEFAULT_MEAL_TYPES;
   const totalToday = entries.reduce((s, e) => s + e.customCalories, 0);
-  // عمداً اینجا سقف ۱۰۰٪ زده نمی‌شه — کارتِ کالری امروز خودش برای طولِ نوار
-  // سقف می‌زنه ولی برای تشخیصِ «رد شدن از هدف» (رنگِ قرمز) به همون درصدِ
+  // عمدا اینجا سقف ۱۰۰٪ زده نمی‌شه — کارت کالری امروز خودش برای طول نوار
+  // سقف می‌زنه ولی برای تشخیص «رد شدن از هدف» (رنگ قرمز) به همون درصد
   // واقعی نیاز داره؛ سقف‌زدن اینجا باعث می‌شد pct هیچ‌وقت از ۱۰۰ رد نشه و
-  // رنگِ قرمز هیچ‌وقت فعال نشه، حتی وقتی کاربر چند برابرِ هدفش خورده بود.
+  // رنگ قرمز هیچ‌وقت فعال نشه، حتی وقتی کاربر چند برابر هدفش خورده بود.
   const pct = target ? Math.round((totalToday / target.dailyTargetKcal) * 100) : 0;
 
   return (
@@ -316,23 +316,23 @@ export function CaloriePanel() {
             {weightReminder && (
               <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-3.5 py-2.5" style={{ borderColor: "rgba(var(--accent-rgb),.35)", background: "rgba(var(--accent-rgb),.08)" }}>
                 <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">
-                  دو هفته از آخرین ثبتِ وزنت گذشته — برای دقیق‌موندنِ محاسبه‌ها به‌روزش کن
+                  دو هفته از آخرین ثبت وزنت گذشته — برای دقیق‌موندن محاسبه‌ها به‌روزش کن
                 </span>
                 <button
                   type="button"
                   onClick={() => setEditingGoal(true)}
                   className="text-[11px] font-bold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
                 >
-                  به‌روزرسانیِ وزن
+                  به‌روزرسانی وزن
                 </button>
               </div>
             )}
 
-            {/* موبایل: یه ستونِ ساده به ترتیبِ DOM. دسکتاپ: گریدِ نام‌دار
-                (.calorie-dash-grid توی globals.css) که مستقلِ از این ترتیب،
-                برنامه‌ی غذایی رو ستونِ اصلیِ راست می‌کنه و بقیه رو توی دو
-                ردیفِ سمتِ چپ می‌چینه — نمودار/استریک/دوستان بالا،
-                ریزِ درشت‌مغذی‌ها/کالری هر وعده پایین. */}
+            {/* موبایل: یه ستون ساده به ترتیب DOM. دسکتاپ: گرید نام‌دار
+                (.calorie-dash-grid توی globals.css) که مستقل از این ترتیب،
+                برنامه‌ی غذایی رو ستون اصلی راست می‌کنه و بقیه رو توی دو
+                ردیف سمت چپ می‌چینه — نمودار/استریک/دوستان بالا،
+                ریز درشت‌مغذی‌ها/کالری هر وعده پایین. */}
             <div className="calorie-dash-grid">
               <div className="calorie-col-food">
                 <CalorieFoodPlanCard

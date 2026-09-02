@@ -6,13 +6,13 @@ import {
   generateEaToken, hashSecret, normalizePairingCode, tokenPrefixOf,
 } from "@/lib/metatrader";
 
-// POST /api/mt/pair — تنها اندپوینتی که خودِ EA بدونِ توکن صدا می‌زند.
+// POST /api/mt/pair — تنها اندپوینتی که خود EA بدون توکن صدا می‌زند.
 // { code, platform, accountLogin, server, broker } → { token }
 //
-// این‌جا سشنِ کاربر وجود ندارد (EA مرورگر نیست و کوکی ندارد)؛ احراز هویت
-// فقط با کدِ اتصالِ یک‌بارمصرفی است که کاربر خودش از پنل گرفته و در EA
-// گذاشته. پس ریت‌لیمیتِ سخت‌گیرانه روی IP لازم است تا کسی نتواند کدها را
-// حدس بزند — هرچند ۶۰ بیت آنتروپی عملاً غیرقابلِ حدس است.
+// این‌جا سشن کاربر وجود ندارد (EA مرورگر نیست و کوکی ندارد)؛ احراز هویت
+// فقط با کد اتصال یک‌بارمصرفی است که کاربر خودش از پنل گرفته و در EA
+// گذاشته. پس ریت‌لیمیت سخت‌گیرانه روی IP لازم است تا کسی نتواند کدها را
+// حدس بزند — هرچند ۶۰ بیت آنتروپی عملا غیرقابل حدس است.
 const PAIR_LIMIT = 10;
 const PAIR_WINDOW_MS = 10 * 60_000;
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     where: { pairingHash: hashSecret(code) },
     select: { id: true, pairingExpiresAt: true },
   });
-  // پیامِ خطا عمداً برای «کدِ اشتباه» و «کدِ منقضی» یکی است — تفکیکشان فقط
+  // پیام خطا عمدا برای «کد اشتباه» و «کد منقضی» یکی است — تفکیکشان فقط
   // به حدس‌زننده اطلاعات می‌دهد.
   if (!link || !link.pairingExpiresAt || link.pairingExpiresAt.getTime() < Date.now()) {
     return NextResponse.json({ error: "invalid or expired code" }, { status: 401 });
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   const token = generateEaToken();
 
-  // کد بلافاصله بعد از مصرف باطل می‌شود — یک‌بارمصرفِ واقعی
+  // کد بلافاصله بعد از مصرف باطل می‌شود — یک‌بارمصرف واقعی
   await prisma.tradeMtLink.update({
     where: { id: link.id },
     data: {

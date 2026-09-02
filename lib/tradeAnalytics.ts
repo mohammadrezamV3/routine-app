@@ -1,17 +1,17 @@
-// محاسبه‌ی آمارِ یک حساب از روی لیستِ معاملاتش.
+// محاسبه‌ی آمار یک حساب از روی لیست معاملاتش.
 //
-// عمداً یک تابعِ خالصِ مشترک است، نه SQL: هم صفحه‌ی حساب (کلاینت) و هم
-// خلاصه‌ی کارتِ لیستِ حساب‌ها (سرور) از همین استفاده می‌کنند، پس هیچ‌وقت
-// دو تعریفِ متفاوت از «نرخِ برد» در دو جای برنامه وجود ندارد.
+// عمدا یک تابع خالص مشترک است، نه SQL: هم صفحه‌ی حساب (کلاینت) و هم
+// خلاصه‌ی کارت لیست حساب‌ها (سرور) از همین استفاده می‌کنند، پس هیچ‌وقت
+// دو تعریف متفاوت از «نرخ برد» در دو جای برنامه وجود ندارد.
 //
 // تعریف‌ها (چون هرکدام چند برداشت دارند، این‌جا تثبیت می‌شوند):
-//   • فقط معاملاتِ CLOSED در آمارِ عملکرد می‌آیند؛ OPEN هنوز نتیجه ندارد و
-//     CANCELED اصلاً واردِ بازار نشده.
-//   • نرخِ برد = تعدادِ معاملاتِ سودده ÷ کلِ معاملاتِ بسته (سربه‌سرها در
+//   • فقط معاملات CLOSED در آمار عملکرد می‌آیند؛ OPEN هنوز نتیجه ندارد و
+//     CANCELED اصلا وارد بازار نشده.
+//   • نرخ برد = تعداد معاملات سودده ÷ کل معاملات بسته (سربه‌سرها در
 //     مخرج می‌مانند — پنهان‌کردنشان نرخ را مصنوعی بالا می‌برد).
-//   • فاکتورِ سود = مجموعِ سودها ÷ قدرمطلقِ مجموعِ ضررها؛ اگر ضرری نبوده
+//   • فاکتور سود = مجموع سودها ÷ قدرمطلق مجموع ضررها؛ اگر ضرری نبوده
 //     null است نه بی‌نهایت.
-//   • افتِ سرمایه از منحنیِ تجمعیِ سود/زیان به ترتیبِ زمانِ ورود حساب می‌شود.
+//   • افت سرمایه از منحنی تجمعی سود/زیان به ترتیب زمان ورود حساب می‌شود.
 
 import type { TradeEntry, TradeAccount, TradeSession, TradeStatKey } from "./tradeTypes";
 
@@ -39,8 +39,8 @@ export type TradeStats = {
   goalTarget: number | null;
 };
 
-/** حداقلِ فیلدهایی که آمار به آن نیاز دارد — تا صداکننده مجبور نباشد کلِ
- *  ردیفِ معامله (با همه‌ی متن‌ها و دلایل) را از دیتابیس بکشد. */
+/** حداقل فیلدهایی که آمار به آن نیاز دارد — تا صداکننده مجبور نباشد کل
+ *  ردیف معامله (با همه‌ی متن‌ها و دلایل) را از دیتابیس بکشد. */
 export type StatEntry = Pick<TradeEntry, "status" | "pnl" | "rMultiple" | "openedAt">;
 
 function byOpenedAt(a: StatEntry, b: StatEntry) {
@@ -108,7 +108,7 @@ export function computeTradeStats(entries: StatEntry[], account?: Pick<TradeAcco
   };
 }
 
-/** تجزیه‌ی عملکرد بر اساس یک کلیدِ دسته‌ای — پایه‌ی همه‌ی گزارش‌های «کدام الگو بهتر جواب داده» */
+/** تجزیه‌ی عملکرد بر اساس یک کلید دسته‌ای — پایه‌ی همه‌ی گزارش‌های «کدام الگو بهتر جواب داده» */
 export type Breakdown = { key: string; label: string; count: number; netPnl: number; winRate: number | null; avgR: number | null };
 
 export function breakdownBy(
@@ -138,7 +138,7 @@ export function sessionBreakdown(entries: TradeEntry[], labels: Record<TradeSess
   return breakdownBy(entries, (e) => e.sessions, (k) => labels[k as TradeSession] ?? k);
 }
 
-/** سود/زیانِ هر روز — برای رنگ‌کردنِ خانه‌های تقویمِ ژورنال */
+/** سود/زیان هر روز — برای رنگ‌کردن خانه‌های تقویم ژورنال */
 export function dailyPnl(entries: TradeEntry[], isoOf: (d: Date) => string): Record<string, number> {
   const map: Record<string, number> = {};
   for (const e of entries) {
@@ -153,7 +153,7 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** مقدارِ نمایشیِ هر کارتِ آماری — تا صفحه‌ی حساب یک switch بلند نداشته باشد */
+/** مقدار نمایشی هر کارت آماری — تا صفحه‌ی حساب یک switch بلند نداشته باشد */
 export function statValue(key: TradeStatKey, s: TradeStats): { value: string; positive?: boolean } | null {
   switch (key) {
     case "balance": return { value: s.balance.toFixed(2), positive: s.balance >= 0 };

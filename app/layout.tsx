@@ -25,21 +25,21 @@ const vazir = Vazirmatn({
   variable: "--font-vazir",
 });
 
-// وضیرمتن هرچند subset لاتین هم داره، ولی گلیف‌های لاتینِ خودش (طراحی‌شده
-// برای هم‌وزنی با فارسی) به‌اندازه‌ی یه فونتِ لاتینِ اختصاصی خوش‌فرم نیست —
-// برای متن/اعدادِ انگلیسی زشت به‌نظر می‌رسید. چون این فونت فقط subsetِ لاتین
-// رو داره، در استکِ فونت هر جا قبل از وضیرمتن بیاد، فقط برای کاراکترهای
-// لاتین/اعدادِ لاتین انتخاب می‌شه — فارسی/عربی همچنان بدونِ تغییر به وضیرمتن
-// سقوط می‌کنه (طبقِ درخواستِ صریحِ کاربر: هیچ فونتِ فارسیِ دیگه‌ای — از جمله
-// فونتِ قبلیِ IBM Plex Sans Arabic با گوشه‌های تیزتر — نباید استفاده بشه).
+// وضیرمتن هرچند subset لاتین هم داره، ولی گلیف‌های لاتین خودش (طراحی‌شده
+// برای هم‌وزنی با فارسی) به‌اندازه‌ی یه فونت لاتین اختصاصی خوش‌فرم نیست —
+// برای متن/اعداد انگلیسی زشت به‌نظر می‌رسید. چون این فونت فقط subset لاتین
+// رو داره، در استک فونت هر جا قبل از وضیرمتن بیاد، فقط برای کاراکترهای
+// لاتین/اعداد لاتین انتخاب می‌شه — فارسی/عربی همچنان بدون تغییر به وضیرمتن
+// سقوط می‌کنه (طبق درخواست صریح کاربر: هیچ فونت فارسی دیگه‌ای — از جمله
+// فونت قبلی IBM Plex Sans Arabic با گوشه‌های تیزتر — نباید استفاده بشه).
 const latin = Inter({
   subsets: ["latin"],
   weight: "variable",
   variable: "--font-latin",
 });
 
-// آدرس پایه‌ی production — برای resolve کردنِ URLهای نسبی توی OG/canonical
-// (metadataBase) و برای ساختنِ لینک‌های مطلق توی robots.ts/sitemap.ts.
+// آدرس پایه‌ی production — برای resolve کردن URLهای نسبی توی OG/canonical
+// (metadataBase) و برای ساختن لینک‌های مطلق توی robots.ts/sitemap.ts.
 // از env می‌خونیم چون دامنه هاردکد نباید بشه؛ fallback فقط برای وقتیه که
 // env ست نشده (dev/build محلی).
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
@@ -48,20 +48,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: BRAND_TITLE,
-    // صفحاتِ داخلی با metadata خودشون این default رو override می‌کنن؛
-    // اگه صفحه‌ای عمداً metadata نده (صفحاتِ خصوصی که noindex هستن)، همین
+    // صفحات داخلی با metadata خودشون این default رو override می‌کنن؛
+    // اگه صفحه‌ای عمدا metadata نده (صفحات خصوصی که noindex هستن)، همین
     // fallback عمومی نشون داده می‌شه — قابل قبوله چون این صفحات ایندکس
-    // نمی‌شن، فقط برای عنوانِ تبِ مرورگر لازمه.
+    // نمی‌شن، فقط برای عنوان تب مرورگر لازمه.
     template: `%s | ${BRAND_EN} ${BRAND_FA}`,
   },
   description: BRAND_DESC,
   applicationName: BRAND_EN,
-  // پیش‌فرضِ سراسری «ایندکس بشو» — صفحاتِ خصوصی از طریق X-Robots-Tag توی
-  // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننتِ
+  // پیش‌فرض سراسری «ایندکس بشو» — صفحات خصوصی از طریق X-Robots-Tag توی
+  // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننت
   // کلاینتی‌ان و نمی‌تونن این metadata رو override کنن.
   robots: { index: true, follow: true },
-  // کلمه‌کلیدیِ صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
-  // می‌گیره)، ولی این‌ها سیگنالِ برند رو تقویت می‌کنن.
+  // کلمه‌کلیدی صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
+  // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن.
   keywords: [BRAND_FA, BRAND_EN, `${BRAND_FA} اپ`, "اپ روتین", "برنامه‌ریزی روزانه", "ژورنال ترید", "برنامه ورزشی"],
   openGraph: {
     ...OG_BASE,
@@ -75,10 +75,10 @@ export const metadata: Metadata = {
     description: BRAND_DESC,
     images: ["/og.png"],
   },
-  // سافاریِ آیفون display:"standalone"ِ manifest.ts رو نمی‌خونه — «افزودن به
-  // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپِ واقعیِ standalone می‌سازه (بدونِ
-  // نوارِ آدرس/دکمه‌های سافاری)؛ بدونش، حتی با مانیفستِ درست، توی iOS بازم
-  // مثلِ یه تبِ معمولیِ سافاری بالا می‌اومد.
+  // سافاری آیفون display:"standalone" manifest.ts رو نمی‌خونه — «افزودن به
+  // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپ واقعی standalone می‌سازه (بدون
+  // نوار آدرس/دکمه‌های سافاری)؛ بدونش، حتی با مانیفست درست، توی iOS بازم
+  // مثل یه تب معمولی سافاری بالا می‌اومد.
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -86,24 +86,24 @@ export const metadata: Metadata = {
   },
 };
 
-// Organization + WebSite — دو schema پایه‌ای که واقعاً روی این پروژه صدق
-// می‌کنن (یه اپ واقعی با برند مشخص)، بدونِ هیچ داده‌ی ساختگی (نه rating نه
-// review نه قیمتِ اینجا). عمداً توی root layout (نه یه صفحه‌ی خاص) چون
-// توصیفِ خودِ سایته، نه محتوای یک صفحه.
+// Organization + WebSite — دو schema پایه‌ای که واقعا روی این پروژه صدق
+// می‌کنن (یه اپ واقعی با برند مشخص)، بدون هیچ داده‌ی ساختگی (نه rating نه
+// review نه قیمت اینجا). عمدا توی root layout (نه یه صفحه‌ی خاص) چون
+// توصیف خود سایته، نه محتوای یک صفحه.
 const ORGANIZATION_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: BRAND_EN,
-  // alternateName همون چیزیه که گوگل برای وصل‌کردنِ یک برند به املاهای
-  // دیگه‌اش استفاده می‌کنه. بدونش، «آریون» و «Arion» از نظرِ گوگل دو چیزِ
-  // بی‌ربطن و جست‌وجوی فارسیِ برند به این سایت نمی‌رسه.
+  // alternateName همون چیزیه که گوگل برای وصل‌کردن یک برند به املاهای
+  // دیگه‌اش استفاده می‌کنه. بدونش، «آریون» و «Arion» از نظر گوگل دو چیز
+  // بی‌ربطن و جست‌وجوی فارسی برند به این سایت نمی‌رسه.
   alternateName: BRAND_ALT_NAMES,
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
   description: BRAND_DESC,
   // پروفایل‌های رسمی. برای دامنه‌ای که هنوز بک‌لینکی ندارد، این یکی از معدود
-  // راه‌هایی است که می‌شود از داخلِ خودِ سایت به گوگل گفت این حساب‌ها مالِ
-  // همین برندند — مکمّلِ `rel="me"` روی خودِ لینک‌ها در صفحه‌ی «درباره ما».
+  // راه‌هایی است که می‌شود از داخل خود سایت به گوگل گفت این حساب‌ها مال
+  // همین برندند — مکمل `rel="me"` روی خود لینک‌ها در صفحه‌ی «درباره ما».
   sameAs: BRAND_SAME_AS,
 };
 
@@ -116,30 +116,30 @@ const WEBSITE_JSON_LD = {
   inLanguage: "fa-IR",
 };
 
-// viewport-fit:cover لازمه تا سافاری صفحه رو زیرِ ناچ/نوارِ وضعیت هم بکشه؛
-// بدونش، سافاری اون نواحی رو با یه نوارِ سیستمیِ توپر (معمولاً سیاه) پر
-// می‌کنه، نه رنگِ پس‌زمینه‌ی خودِ اپ.
+// viewport-fit:cover لازمه تا سافاری صفحه رو زیر ناچ/نوار وضعیت هم بکشه؛
+// بدونش، سافاری اون نواحی رو با یه نوار سیستمی توپر (معمولا سیاه) پر
+// می‌کنه، نه رنگ پس‌زمینه‌ی خود اپ.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  // themeColor عمداً این‌جا نیست — کاملاً توی lib/themeColor.ts توضیح داده
-  // شده: وقتی نکست مالکِ این تگ بود، بعدِ هیدریت نسخه‌ی خودش رو دوباره تزریق
+  // themeColor عمدا این‌جا نیست — کاملا توی lib/themeColor.ts توضیح داده
+  // شده: وقتی نکست مالک این تگ بود، بعد هیدریت نسخه‌ی خودش رو دوباره تزریق
   // می‌کرد و صفحه با دو متای theme-color (یکی بیات) می‌موند.
 };
 
-// layout از قبل dynamic است (InlineBootstrap کوکی می‌خواند)، پس خواندنِ سشن
-// این‌جا رندرِ تازه‌ای تحمیل نمی‌کند — ولی یک رفت‌وبرگشتِ کاملِ شبکه از هر
-// لودِ صفحه کم می‌کند، چون SessionProvider دیگر خودش `/api/auth/session` را
+// layout از قبل dynamic است (InlineBootstrap کوکی می‌خواند)، پس خواندن سشن
+// این‌جا رندر تازه‌ای تحمیل نمی‌کند — ولی یک رفت‌وبرگشت کامل شبکه از هر
+// لود صفحه کم می‌کند، چون SessionProvider دیگر خودش `/api/auth/session` را
 // صدا نمی‌زند.
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   return (
-    // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خودِ <html> همونیه
-    // که سافاری توی ناحیه‌ی امن (زیرِ ناچ / بالای نوارِ خانه) و موقعِ اورراسکرول
-    // نشون می‌ده. suppressHydrationWarning روی هردو لازمه چون اسکریپتِ inline
+    // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
+    // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
+    // نشون می‌ده. suppressHydrationWarning روی هردو لازمه چون اسکریپت inline
     // ممکنه قبل از هیدریت عوضشون کرده باشه.
     <html
       lang="fa"
@@ -148,7 +148,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >
-      {/* suppressHydrationWarning لازمه چون اسکریپتِ بالا ممکنه data-theme رو
+      {/* suppressHydrationWarning لازمه چون اسکریپت بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}
       <body data-theme="dark" suppressHydrationWarning>
@@ -157,14 +157,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        {/* تشخیصِ دستگاهِ ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
+        {/* تشخیص دستگاه ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
             همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
         <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
         <InlineBootstrap />
-        {/* پیش‌درخواستِ داده‌های بحرانی — دلیلش کاملاً توی lib/preload.ts نوشته شده.
-            باید همین‌جا (اولِ body، سینکرون) بمونه تا قبل از دانلودِ باندلِ JS اجرا بشه. */}
+        {/* پیش‌درخواست داده‌های بحرانی — دلیلش کاملا توی lib/preload.ts نوشته شده.
+            باید همین‌جا (اول body، سینکرون) بمونه تا قبل از دانلود باندل JS اجرا بشه. */}
         <script dangerouslySetInnerHTML={{ __html: PRELOAD_SCRIPT }} />
         <SvgFilters />
         <BackgroundCanvasLoader />

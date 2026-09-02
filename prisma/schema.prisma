@@ -1002,6 +1002,9 @@ model TradeChecklist {
   required  Boolean  @default(false)
   archived  Boolean  @default(false)
   order     Int      @default(0)
+  // نکات آزاد همین چک‌لیست — چیزهایی که مورد تیک‌خور نیستن ولی موقع اجرای
+  // ستاپ باید جلوی چشم باشن (شرایط بازار، ساعت مجاز، ...).
+  note      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

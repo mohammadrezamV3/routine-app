@@ -9,9 +9,9 @@ import { G_MONTHS } from "@/lib/gregorian";
 import { joinLocalInput, splitLocalInput } from "@/lib/tradeDateTime";
 import type { CalSystem } from "@/lib/tradeTypes";
 
-// فیلدِ «تاریخ و ساعت». عمداً تاریخ و ساعت با هم‌اند و ساعت اختیاری نیست:
-// آمارِ جلسه‌ی معاملاتی (لندن/نیویورک/…) بدونِ ساعتِ واقعی اصلاً معنی ندارد،
-// و نسخه‌ی قبلیِ ژورنال دقیقاً به همین دلیل همه‌ی معاملات را ساعتِ ۱۲:۰۰
+// فیلد «تاریخ و ساعت». عمدا تاریخ و ساعت با هم‌اند و ساعت اختیاری نیست:
+// آمار جلسه‌ی معاملاتی (لندن/نیویورک/…) بدون ساعت واقعی اصلا معنی ندارد،
+// و نسخه‌ی قبلی ژورنال دقیقا به همین دلیل همه‌ی معاملات را ساعت ۱۲:۰۰
 // ثبت می‌کرد.
 export function TradeDateTimeField({
   value,
@@ -69,7 +69,7 @@ export function TradeDateTimeField({
           title="تاریخ معامله"
           disableFuture
           onPick={(j) => {
-            // JalaliDatePicker همیشه تاریخِ شمسی می‌دهد (حتی وقتی نمایشِ
+            // JalaliDatePicker همیشه تاریخ شمسی می‌دهد (حتی وقتی نمایش
             // بقیه‌ی صفحه میلادی است)، پس تبدیل همیشه از شمسی انجام می‌شود.
             const g = jalaliToGregorianApprox(j[0], j[1], j[2]);
             onChange(joinLocalInput(isoLocal(g), time || "00:00"));

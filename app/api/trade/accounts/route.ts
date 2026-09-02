@@ -6,17 +6,17 @@ import { parseAccountInput } from "@/lib/tradeServer";
 import { computeTradeStats } from "@/lib/tradeAnalytics";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
 
-// حساب‌های معاملاتیِ کاربر. ورودیِ صفحه‌ی «ژورنال‌نویسی» همین است: اول
-// حساب‌ها، بعد با انتخابِ حساب می‌رویم داخلِ آمار و معاملاتش.
+// حساب‌های معاملاتی کاربر. ورودی صفحه‌ی «ژورنال‌نویسی» همین است: اول
+// حساب‌ها، بعد با انتخاب حساب می‌رویم داخل آمار و معاملاتش.
 
 const ACCOUNT_SELECT = {
   id: true, name: true, broker: true, type: true, currency: true,
   initialBalance: true, leverage: true, color: true, note: true,
   goalType: true, goalValue: true, archived: true, order: true,
   tags: { select: { id: true, name: true, color: true } },
-  // وضعیتِ اتصالِ متاتریدر همین‌جا می‌آید تا صفحه‌ی «اتصال متاتریدر» مجبور
-  // نباشد به‌ازای هر حساب یک درخواستِ جدا بزند (با ۱۰ حساب می‌شد ۱۱ درخواستِ
-  // سریالی — همان چیزی که باز شدنِ صفحه را کُند نشان می‌داد).
+  // وضعیت اتصال متاتریدر همین‌جا می‌آید تا صفحه‌ی «اتصال متاتریدر» مجبور
+  // نباشد به‌ازای هر حساب یک درخواست جدا بزند (با ۱۰ حساب می‌شد ۱۱ درخواست
+  // سریالی — همان چیزی که باز شدن صفحه را کند نشان می‌داد).
   mtLink: { select: { tokenHash: true, revokedAt: true, lastSyncAt: true, platform: true } },
 } as const;
 
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
   // خلاصه‌ی هر کارت در یک کوئری برای همه‌ی حساب‌ها، نه یکی به‌ازای هر حساب
   // (کاربر می‌تواند ده حساب داشته باشد؛ ده کوئری برای یک صفحه زیاد است).
-  // فقط ستون‌های موردنیازِ آمار انتخاب می‌شوند تا متن/عکس کشیده نشود.
+  // فقط ستون‌های موردنیاز آمار انتخاب می‌شوند تا متن/عکس کشیده نشود.
   const stats = await prisma.tradeEntry.findMany({
     where: { userId, accountId: { in: accounts.map((a) => a.id) } },
     select: { accountId: true, status: true, pnl: true, rMultiple: true, openedAt: true },
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     const s = computeTradeStats(list, a);
     return {
       ...a,
-      // هشِ توکن عمداً بیرون داده نمی‌شود — فقط «متصل هست یا نه»
+      // هش توکن عمدا بیرون داده نمی‌شود — فقط «متصل هست یا نه»
       mtConnected: !!mtLink?.tokenHash && !mtLink.revokedAt,
       mtLastSyncAt: mtLink?.lastSyncAt ? mtLink.lastSyncAt.toISOString() : null,
       summary: {
@@ -141,8 +141,8 @@ export async function PATCH(req: NextRequest) {
 // DELETE /api/trade/accounts?id=...&mode=archive|purge
 //
 // پیش‌فرض «آرشیو» است، نه حذف: تاریخچه‌ی معاملات ارزشمندترین دارایی این
-// ماژول است و پاک‌کردنش با یک کلیک برگشت‌ناپذیر خواهد بود. حذفِ کامل فقط
-// وقتی انجام می‌شود که کلاینت صریحاً mode=purge بفرستد (پشتِ تأییدِ تایپی).
+// ماژول است و پاک‌کردنش با یک کلیک برگشت‌ناپذیر خواهد بود. حذف کامل فقط
+// وقتی انجام می‌شود که کلاینت صریحا mode=purge بفرستد (پشت تأیید تایپی).
 export async function DELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;

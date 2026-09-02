@@ -6,19 +6,20 @@ import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
 
-// چک‌لیست‌های نام‌دارِ کاربر. جایگزینِ /api/trade/checklist (تکی) شده — آن
-// نسخه یک لیستِ تختِ واحد برای هر کاربر بود و امکانِ «هر معامله با چک‌لیستِ
+// چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
+// نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
 // خودش» را نمی‌داد.
 
 const MAX_ITEMS = MAX_CHECKLIST_ITEMS;
 
 const CHECKLIST_SELECT = {
-  id: true, name: true, color: true, required: true, archived: true, order: true,
+  id: true, name: true, color: true, required: true, archived: true, order: true, note: true,
   items: { select: { id: true, text: true, order: true }, orderBy: { order: "asc" } },
 } as const;
 
-// چک‌لیستِ پیش‌فرضِ اولین ورود — نقطه‌ی شروع، کاملاً قابلِ ویرایش/حذف
+// چک‌لیست پیش‌فرض اولین ورود — نقطه‌ی شروع، کاملا قابل ویرایش/حذف
 const SEED_NAME = "چک‌لیست من";
+const SEED_FLAG_KEY = "tradeChecklistSeeded";
 const SEED_ITEMS = [
   "سطح H1 با برخورد قبلی معتبره؟",
   "گره معاملاتی در M5 شکل گرفته؟",
@@ -49,16 +50,33 @@ export async function GET() {
     select: CHECKLIST_SELECT,
   });
 
+  // چک‌لیست پیش‌فرض فقط *یک‌بار* برای هر کاربر ساخته می‌شود.
+  //
+  // قبلا شرط فقط «لیست خالی است» بود، یعنی وقتی کاربر آخرین چک‌لیستش را پاک
+  // می‌کرد، همین GET بعدی دوباره می‌ساختش — از بیرون دقیقا شبیه این بود که
+  // حذف کار نمی‌کند و چک‌لیست برمی‌گردد. حالا یک نشانه‌ی سرور-مدیریت
+  // (UserSetting: tradeChecklistSeeded) می‌گوید سید قبلا انجام شده یا نه.
   if (checklists.length === 0) {
-    await prisma.tradeChecklist.create({
-      data: {
-        userId, name: SEED_NAME, order: 0,
-        items: { create: SEED_ITEMS.map((text, i) => ({ text, order: i })) },
-      },
+    const seeded = await prisma.userSetting.findUnique({
+      where: { userId_key: { userId, key: SEED_FLAG_KEY } },
+      select: { value: true },
     });
-    checklists = await prisma.tradeChecklist.findMany({
-      where: { userId }, orderBy: { order: "asc" }, select: CHECKLIST_SELECT,
-    });
+    if (!seeded) {
+      await prisma.tradeChecklist.create({
+        data: {
+          userId, name: SEED_NAME, order: 0,
+          items: { create: SEED_ITEMS.map((text, i) => ({ text, order: i })) },
+        },
+      });
+      await prisma.userSetting.upsert({
+        where: { userId_key: { userId, key: SEED_FLAG_KEY } },
+        create: { userId, key: SEED_FLAG_KEY, value: true },
+        update: { value: true },
+      });
+      checklists = await prisma.tradeChecklist.findMany({
+        where: { userId }, orderBy: { order: "asc" }, select: CHECKLIST_SELECT,
+      });
+    }
   }
 
   return NextResponse.json({ checklists });
@@ -79,24 +97,26 @@ export async function POST(req: NextRequest) {
   let items = parseItems(body?.items);
   let name = clampText(String(body?.name || "").trim(), 60);
   let color = isHexColor(body?.color) ? body.color : "#3E7BFA";
+  let note = typeof body?.note === "string" && body.note.trim() ? clampText(body.note.trim(), 2000) : null;
 
-  // «Duplicate» — کپیِ کاملِ یک چک‌لیستِ موجود با نامِ جدید
+  // «Duplicate» — کپی کامل یک چک‌لیست موجود با نام جدید
   if (body?.duplicateOf) {
     const src = await prisma.tradeChecklist.findFirst({
       where: { id: String(body.duplicateOf), userId },
-      select: { name: true, color: true, items: { select: { text: true }, orderBy: { order: "asc" } } },
+      select: { name: true, color: true, note: true, items: { select: { text: true }, orderBy: { order: "asc" } } },
     });
     if (!src) return NextResponse.json({ error: "چک‌لیست پیدا نشد" }, { status: 404 });
     items = src.items.map((i) => i.text);
     name = name || clampText(`${src.name} (کپی)`, 60);
     color = src.color;
+    note = src.note;
   }
 
   if (!name) return NextResponse.json({ error: "نام چک‌لیست الزامی است" }, { status: 400 });
 
   const checklist = await prisma.tradeChecklist.create({
     data: {
-      userId, name, color,
+      userId, name, color, note,
       required: !!body?.required,
       order: count,
       items: { create: items.map((text, i) => ({ text, order: i })) },
@@ -108,9 +128,9 @@ export async function POST(req: NextRequest) {
 
 // PATCH { id, name?, color?, required?, archived?, items?: string[] }
 //
-// آیتم‌ها یکجا جایگزین می‌شوند: ویرایشگر همیشه لیستِ نهایی را می‌فرستد و
-// این کار هم ترتیب و هم افزودن/حذف را در یک درخواست حل می‌کند. اسنپ‌شاتِ
-// معاملاتِ قبلی از این تغییر اثر نمی‌گیرد (متنشان جداگانه ذخیره شده).
+// آیتم‌ها یکجا جایگزین می‌شوند: ویرایشگر همیشه لیست نهایی را می‌فرستد و
+// این کار هم ترتیب و هم افزودن/حذف را در یک درخواست حل می‌کند. اسنپ‌شات
+// معاملات قبلی از این تغییر اثر نمی‌گیرد (متنشان جداگانه ذخیره شده).
 export async function PATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -128,6 +148,7 @@ export async function PATCH(req: NextRequest) {
   if (isHexColor(body.color)) data.color = body.color;
   if (typeof body.required === "boolean") data.required = body.required;
   if (typeof body.archived === "boolean") data.archived = body.archived;
+  if (typeof body.note === "string") data.note = body.note.trim() ? clampText(body.note.trim(), 2000) : null;
 
   const hasItems = Array.isArray(body.items);
   const items = hasItems ? parseItems(body.items) : [];
@@ -153,8 +174,8 @@ export async function DELETE(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
-  // معاملاتِ متصل پاک نمی‌شوند — checklistId شان null می‌شود (SetNull) ولی
-  // اسنپ‌شاتِ متنِ چک‌لیست روی خودِ معامله باقی می‌ماند.
+  // معاملات متصل پاک نمی‌شوند — checklistId شان null می‌شود (SetNull) ولی
+  // اسنپ‌شات متن چک‌لیست روی خود معامله باقی می‌ماند.
   await prisma.tradeChecklist.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }

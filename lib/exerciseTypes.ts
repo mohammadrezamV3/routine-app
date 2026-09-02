@@ -2,8 +2,8 @@ import type { ExerciseDay, ExerciseGoalOption, ExerciseLevel } from "./exerciseP
 
 export type ExercisePlan = {
   id: string;
-  // پلن‌های دستی (بدونِ هوش‌مصنوعی/پرسش‌نامه) "custom" ذخیره می‌شن — سه‌تای
-  // اصلی فقط برای پلن‌های ساخته‌شده با فرمِ سطح/هدف (AI یا fallback) صدق می‌کنه.
+  // پلن‌های دستی (بدون هوش‌مصنوعی/پرسش‌نامه) "custom" ذخیره می‌شن — سه‌تای
+  // اصلی فقط برای پلن‌های ساخته‌شده با فرم سطح/هدف (AI یا fallback) صدق می‌کنه.
   level: ExerciseLevel | "custom";
   heightCm: number | null;
   weightKg: number | null;

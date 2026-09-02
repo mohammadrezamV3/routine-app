@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, MoreVertical, Pencil, Pill, Plus, Trash2 } from "lucide-react";
+import { Bell, MoreVertical, Pencil, Tablets, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { MedicationForm } from "./MedicationForm";
@@ -20,10 +20,10 @@ function intervalLabel(med: Medication): string {
   return `هر ${h % 1 === 0 ? h : h.toFixed(1)} ساعت`;
 }
 
-// «یادآوری دارو» — کارتِ داشبوردِ روتین. کاربر اسمِ دارو، تعدادِ دفعات در روز
-// و طولِ دوره رو می‌ده و از همون‌جا برای هر نوبت اعلان می‌گیره
-// (خودِ اعلان توسطِ NotificationEngine فرستاده می‌شه). منوی سه‌نقطه‌ی کنارِ
-// اسمِ هر دارو، ویرایش/حذف رو می‌ده. کلِ این کارت از «تنظیمات» قابلِ
+// «یادآوری دارو» — کارت داشبورد روتین. کاربر اسم دارو، تعداد دفعات در روز
+// و طول دوره رو می‌ده و از همون‌جا برای هر نوبت اعلان می‌گیره
+// (خود اعلان توسط NotificationEngine فرستاده می‌شه). منوی سه‌نقطه‌ی کنار
+// اسم هر دارو، ویرایش/حذف رو می‌ده. کل این کارت از «تنظیمات» قابل
 // خاموش‌شدنه (dashboardPrefs.showMedications).
 export function DashMedicationCard({ delay }: { delay?: number }) {
   const [meds, setMeds] = useState<Medication[] | null>(null);
@@ -54,7 +54,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
     const current = meds ?? [];
     const exists = current.some((m) => m.id === med.id);
     await persist(exists ? current.map((m) => (m.id === med.id ? med : m)) : [...current, med]);
-    // بدونِ اجازه‌ی نوتیفِ مرورگر، این یادآوری‌ها هیچ‌وقت دیده نمی‌شن
+    // بدون اجازه‌ی نوتیف مرورگر، این یادآوری‌ها هیچ‌وقت دیده نمی‌شن
     if (getNotificationPermission() !== "granted") await requestNotificationPermission();
   }
 
@@ -84,7 +84,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
       <DashCard delay={delay}>
         <div className="flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
-            <Pill className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+            <Tablets className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
             یادآوری دارو
           </h2>
           {canAdd && (
@@ -104,7 +104,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
             <div className="text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
           ) : list.length === 0 ? (
             <div className="text-[11px] leading-relaxed text-dash-muted sm:text-[12px]">
-              دارویی ثبت نشده. با «افزودن»، اسمِ دارو و تعدادِ دفعاتش در روز رو بده تا سرِ هر نوبت بهت اطلاع بدیم.
+              دارویی ثبت نشده. با «افزودن»، اسم دارو و تعداد دفعاتش در روز رو بده تا سر هر نوبت بهت اطلاع بدیم.
             </div>
           ) : (
             list.map((m) => {
@@ -116,11 +116,11 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                 <div
                   key={m.id}
                   className={cn(
-                    "flex items-center gap-2 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right sm:gap-2.5 sm:px-3.5 sm:py-3",
+                    "med-row flex items-center gap-2 rounded-2xl border border-dash-border px-3 py-2.5 text-right sm:gap-2.5 sm:px-3.5 sm:py-3",
                     finished && "opacity-55"
                   )}
                 >
-                  {/* سه‌نقطه سمتِ راستِ اسمِ دارو (اولین فرزندِ DOM توی RTL) */}
+                  {/* سه‌نقطه سمت راست اسم دارو (اولین فرزند DOM توی RTL) */}
                   <div className="flex shrink-0 items-center">
                     <button
                       type="button"
@@ -147,11 +147,11 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
 
                   <span
                     role="button"
-                    aria-label={notifyOn ? `خاموش‌کردنِ یادآوریِ ${m.name}` : `روشن‌کردنِ یادآوریِ ${m.name}`}
+                    aria-label={notifyOn ? `خاموش‌کردن یادآوری ${m.name}` : `روشن‌کردن یادآوری ${m.name}`}
                     onClick={() => toggleNotify(m)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",
-                      // زنگوله‌ی خاموش بک‌گراند نداره — همون قاعده‌ی کارتِ یادآوری‌ها
+                      // زنگوله‌ی خاموش بک‌گراند نداره — همون قاعده‌ی کارت یادآوری‌ها
                       notifyOn ? "bg-dash-green/15 text-dash-green" : "bg-transparent text-dash-muted"
                     )}
                   >

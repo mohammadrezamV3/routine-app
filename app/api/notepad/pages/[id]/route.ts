@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { clampText } from "@/lib/validate";
 import { NOTEPAD_TITLE_MAX } from "@/lib/notepad";
 
-// همه‌ی id هایِ زیرمجموعه‌ی یک صفحه (بازگشتی) — برای cascade کردنِ Trash روی
-// کلِ زیردرخت، چون UPDATE (بر خلافِ DELETE) خودکار cascade نمی‌شه
+// همه‌ی id های زیرمجموعه‌ی یک صفحه (بازگشتی) — برای cascade کردن Trash روی
+// کل زیردرخت، چون UPDATE (بر خلاف DELETE) خودکار cascade نمی‌شه
 async function collectDescendantIds(userId: string, rootId: string): Promise<string[]> {
   const all: string[] = [];
   let frontier = [rootId];
@@ -23,13 +23,13 @@ async function collectDescendantIds(userId: string, rootId: string): Promise<str
   return all;
 }
 
-// GET /api/notepad/pages/:id — صفحه + بلاک‌هاش (مرتب‌شده). یه side-effectِ
-// عمدی داره: lastOpenedAt رو آپدیت می‌کنه تا بخشِ «اخیر»ِ سایدبار درست باشه.
+// GET /api/notepad/pages/:id — صفحه + بلاک‌هاش (مرتب‌شده). یه side-effect
+// عمدی داره: lastOpenedAt رو آپدیت می‌کنه تا بخش «اخیر» سایدبار درست باشه.
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const page = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!page) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });
@@ -47,13 +47,13 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ page: { ...page, lastOpenedAt: new Date(), blocks } });
 }
 
-// PATCH /api/notepad/pages/:id — ویرایشِ جزئی: عنوان/آیکون/کاور/جابه‌جایی
+// PATCH /api/notepad/pages/:id — ویرایش جزئی: عنوان/آیکون/کاور/جابه‌جایی
 // (parentId+position)/سنجاق/آرشیو(Trash)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const existing = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!existing) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });
@@ -69,25 +69,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (body.lastOpenedAt !== undefined) data.lastOpenedAt = new Date();
   if (body.position !== undefined && typeof body.position === "number") data.position = body.position;
 
-  // جابه‌جاییِ صفحه زیرِ یه والدِ جدید — نباید بشه زیرِ خودش یا زیرِ یکی از
+  // جابه‌جایی صفحه زیر یه والد جدید — نباید بشه زیر خودش یا زیر یکی از
   // فرزندهای خودش (چرخه می‌سازه)
   if (body.parentId !== undefined) {
     const newParentId = body.parentId === null ? null : String(body.parentId);
     if (newParentId === params.id) {
-      return NextResponse.json({ error: "صفحه نمی‌تونه زیرِ خودش باشه" }, { status: 400 });
+      return NextResponse.json({ error: "صفحه نمی‌تونه زیر خودش باشه" }, { status: 400 });
     }
     if (newParentId) {
       const parent = await prisma.notepadPage.findFirst({ where: { id: newParentId, userId } });
       if (!parent) return NextResponse.json({ error: "صفحه‌ی والد پیدا نشد" }, { status: 404 });
       const descendants = await collectDescendantIds(userId, params.id);
       if (descendants.includes(newParentId)) {
-        return NextResponse.json({ error: "نمی‌شه صفحه رو زیرِ یکی از زیرمجموعه‌های خودش برد" }, { status: 400 });
+        return NextResponse.json({ error: "نمی‌شه صفحه رو زیر یکی از زیرمجموعه‌های خودش برد" }, { status: 400 });
       }
     }
     data.parentId = newParentId;
   }
 
-  // آرشیو/بازگردانی — روی کلِ زیردرخت هم اعمال می‌شه، وگرنه یه صفحه‌ی
+  // آرشیو/بازگردانی — روی کل زیردرخت هم اعمال می‌شه، وگرنه یه صفحه‌ی
   // آرشیوشده می‌تونست فرزندهای هنوز-فعال داشته باشه
   if (body.isArchived !== undefined) {
     const isArchived = !!body.isArchived;
@@ -107,13 +107,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // DELETE /api/notepad/pages/:id — پیش‌فرض: انتقال به Trash (isArchived=true,
-// روی کلِ زیردرخت). با ?permanent=1: حذفِ واقعی و همیشگی (cascade خودکارِ
+// روی کل زیردرخت). با ?permanent=1: حذف واقعی و همیشگی (cascade خودکار
 // دیتابیس هم بلاک‌ها هم زیرصفحه‌ها رو پاک می‌کنه)
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const existing = await prisma.notepadPage.findFirst({ where: { id: params.id, userId } });
   if (!existing) return NextResponse.json({ error: "صفحه پیدا نشد" }, { status: 404 });

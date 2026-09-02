@@ -16,12 +16,12 @@ const STEPS = [
   {
     icon: Flame,
     title: "حلقه‌ی «کالری امروز»",
-    text: "همیشه بالای صفحه می‌بینیش — نشون می‌ده چقدر از هدفِ روزانه‌ات رو تا الان خوردی.",
+    text: "همیشه بالای صفحه می‌بینیش — نشون می‌ده چقدر از هدف روزانه‌ات رو تا الان خوردی.",
   },
   {
     icon: LineChart,
     title: "نمودار روند کالری",
-    text: "روند امروز، هفته یا ماهت رو با خطِ زمانی می‌بینی؛ خطِ چین‌دار زردرنگ هم هدفِ روزانه‌ته.",
+    text: "روند امروز، هفته یا ماهت رو با خط زمانی می‌بینی؛ خط چین‌دار زردرنگ هم هدف روزانه‌ته.",
   },
   {
     icon: Trophy,
@@ -30,26 +30,26 @@ const STEPS = [
   },
   {
     icon: PlusCircle,
-    title: "افزودنِ غذا",
-    text: "از بخشِ «افزودن غذا» جستجو کن، مقدار و وعده رو انتخاب کن و ثبتش کن — همه‌ی حلقه‌ها و نمودارها خودکار آپدیت می‌شن.",
+    title: "افزودن غذا",
+    text: "از بخش «افزودن غذا» جستجو کن، مقدار و وعده رو انتخاب کن و ثبتش کن — همه‌ی حلقه‌ها و نمودارها خودکار آپدیت می‌شن.",
   },
 ];
 
 const SWIPE_DISTANCE = 60;
 const SWIPE_VELOCITY = 400;
 
-// دقیقاً هم‌ساختارِ ExerciseSetTutorial (چهار مرحله، دات‌های پیشرفت، کشیدن
-// روی موبایل / دکمه‌ی قبلی-بعدی روی دسکتاپ) ولی خودکار موقعِ اولین بازِ
-// شدنِ صفحه‌ی کالری (بعد از اینکه هدف/برنامه‌ی کالری ساخته شده) باز می‌شه،
-// نه پشتِ یه کلیکِ خاص — چون درخواست دقیقاً همینه: «اولین بار که صفحه باز
+// دقیقا هم‌ساختار ExerciseSetTutorial (چهار مرحله، دات‌های پیشرفت، کشیدن
+// روی موبایل / دکمه‌ی قبلی-بعدی روی دسکتاپ) ولی خودکار موقع اولین باز
+// شدن صفحه‌ی کالری (بعد از اینکه هدف/برنامه‌ی کالری ساخته شده) باز می‌شه،
+// نه پشت یه کلیک خاص — چون درخواست دقیقا همینه: «اولین بار که صفحه باز
 // میشه راهنمایی هم بکن».
 export function CalorieTutorial({ onDone }: { onDone: () => void }) {
   useLockBodyScroll();
   const [step, setStep] = useState(0);
-  // جهتِ آخرین حرکت (+۱ جلو / -۱ عقب) — برای انیمیشنِ جهت‌دار زیر لازمه؛
-  // با mode="wait"ِ قبلی هر گذری (چه جلو چه عقب) دقیقاً یک شکل بود (محوشدنِ
-  // ثابت، با یه مکثِ خالی بینِ خروج/ورود). حالا با popLayout ورود/خروج
-  // هم‌زمانن و جهتِ اسلاید واقعاً با جهتِ حرکت یکیه — دقیقاً همون الگویی که
+  // جهت آخرین حرکت (+۱ جلو / -۱ عقب) — برای انیمیشن جهت‌دار زیر لازمه؛
+  // با mode="wait" قبلی هر گذری (چه جلو چه عقب) دقیقا یک شکل بود (محوشدن
+  // ثابت، با یه مکث خالی بین خروج/ورود). حالا با popLayout ورود/خروج
+  // هم‌زمانن و جهت اسلاید واقعا با جهت حرکت یکیه — دقیقا همون الگویی که
   // FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   const [dir, setDir] = useState(1);
   const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
@@ -71,8 +71,8 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
     setStep((s) => s - 1);
   }
 
-  // راست‌به‌چپ: کشیدنِ انگشت به سمتِ راست (offset.x مثبت) باید جلو ببره
-  // (اسلایدِ بعدی)، به چپ (منفی) باید عقب ببره — دقیقاً همون قراردادی که
+  // راست‌به‌چپ: کشیدن انگشت به سمت راست (offset.x مثبت) باید جلو ببره
+  // (اسلاید بعدی)، به چپ (منفی) باید عقب ببره — دقیقا همون قراردادی که
   // FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   function handleDragEnd(_: unknown, info: PanInfo) {
     const swipedForward = info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY;
@@ -86,7 +86,7 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
       <div className="modal-overlay open" onClick={finish} />
       <div className="modal-panel liquid-glass-panel dash-scope open exercise-set-tracker-panel">
         <div className="modal-head">
-          <div className="modal-title">راهنمای بخشِ کالری</div>
+          <div className="modal-title">راهنمای بخش کالری</div>
           <button className="nav-close" onClick={finish} aria-label="بستن">×</button>
         </div>
 

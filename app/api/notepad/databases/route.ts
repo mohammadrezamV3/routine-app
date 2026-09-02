@@ -4,15 +4,15 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-// POST /api/notepad/databases — ساختِ دیتابیس برای یه بلاکِ type="database"
+// POST /api/notepad/databases — ساخت دیتابیس برای یه بلاک type="database"
 // که تازه ساخته شده (هر بلاک حداکثر یک دیتابیس داره — blockId یکتاست). سه
-// propertyِ پیش‌فرض (اسم/وضعیت/تاریخ) + یک رکوردِ خالی، تا کاربر بلافاصله
-// یه جدولِ قابل‌استفاده ببینه، نه یه جدولِ کاملاً خالی.
+// property پیش‌فرض (اسم/وضعیت/تاریخ) + یک رکورد خالی، تا کاربر بلافاصله
+// یه جدول قابل‌استفاده ببینه، نه یه جدول کاملا خالی.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-db-create:${userId}`, 60, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی صبر کن" }, { status: 429 });
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
             name: "وضعیت", type: "select", position: 2000,
             options: { choices: [
               { id: "todo", label: "شروع‌نشده", color: "#B0B3BB" },
-              { id: "doing", label: "درحالِ‌انجام", color: "#E0A339" },
+              { id: "doing", label: "درحال‌انجام", color: "#E0A339" },
               { id: "done", label: "انجام‌شده", color: "#3FB37F" },
             ] },
           },

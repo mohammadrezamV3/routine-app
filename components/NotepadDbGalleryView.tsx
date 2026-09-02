@@ -4,7 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { DatabaseProperty, DatabaseRecord, RecordValue } from "@/lib/notepadDb";
 import { NotepadDbCell } from "./NotepadDbCell";
 
-// گالری — گریدِ کارت‌های واکنش‌گرا، هر کارت عنوان (اولین property) +
+// گالری — گرید کارت‌های واکنش‌گرا، هر کارت عنوان (اولین property) +
 // چندتا از propertyهای بعدی (حداکثر ۴ تا) رو نشون می‌ده
 export function NotepadDbGalleryView({
   properties,
@@ -46,7 +46,7 @@ export function NotepadDbGalleryView({
             ) : (
               <span className="notepad-db-cell-empty">بدون‌عنوان</span>
             )}
-            <button type="button" onClick={() => onDeleteRecord(rec.id)} aria-label="حذفِ رکورد"><Trash2 size={12} /></button>
+            <button type="button" onClick={() => onDeleteRecord(rec.id)} aria-label="حذف رکورد"><Trash2 size={12} /></button>
           </div>
           {restProps.length > 0 && (
             <div className="notepad-db-gallery-card-fields">
@@ -69,7 +69,7 @@ export function NotepadDbGalleryView({
         </div>
       ))}
       <button type="button" className="notepad-db-gallery-add-card" onClick={onCreateRecord}>
-        <Plus size={16} /> کارتِ جدید
+        <Plus size={16} /> کارت جدید
       </button>
     </div>
   );

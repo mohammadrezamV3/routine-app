@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
+import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
@@ -18,9 +19,9 @@ type Note = {
   createdAt: string; updatedAt: string; tags: TradeTag[];
 };
 
-// یادداشت‌های آزادِ تریدر: جست‌وجو، فیلترِ برچسب، رنگ و سنجاق‌کردن.
-// برچسب‌ها همان برچسب‌های ماژولِ ترید هستند (مشترک با حساب و معامله)، نه یک
-// لیستِ جدا — تا کاربر مجبور نباشد «Psychology» را دو بار بسازد.
+// یادداشت‌های آزاد تریدر: جست‌وجو، فیلتر برچسب، رنگ و سنجاق‌کردن.
+// برچسب‌ها همان برچسب‌های ماژول ترید هستند (مشترک با حساب و معامله)، نه یک
+// لیست جدا — تا کاربر مجبور نباشد «Psychology» را دو بار بسازد.
 export function TradeNotesPanel({
   creating,
   onCreatingChange,
@@ -78,7 +79,7 @@ export function TradeNotesPanel({
   async function remove(id: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id));
     const ok = await run(`del:${id}`, () => fetch(`/api/trade/notes?id=${id}`, { method: "DELETE" }));
-    if (!ok) load(true); // برگرداندنِ یادداشتی که حذفش نشد
+    if (!ok) load(true); // برگرداندن یادداشتی که حذفش نشد
   }
 
   return (
@@ -131,24 +132,27 @@ export function TradeNotesPanel({
             onClick={() => setEditing(n)}
           >
             <span className="trade-account-stripe" style={{ background: n.color }} />
+            {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
+                (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راستِ
+                عنوان است و حذف/سنجاق را می‌دهد. */}
             <div className="trade-note-head">
-              <span className="trade-note-title">{n.title}</span>
-              <div className="trade-account-actions" style={{ margin: 0 }} onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="trade-icon-btn"
-                  onClick={() => togglePin(n)}
-                  disabled={pendingKey === `pin:${n.id}`}
-                  aria-label={n.pinned ? "برداشتن سنجاق" : "سنجاق"}
-                >
-                  {pendingKey === `pin:${n.id}`
-                    ? <Loader2 size={14} className="trade-spin" />
-                    : n.pinned ? <PinOff size={14} /> : <Pin size={14} />}
-                </button>
-                <button type="button" className="trade-icon-btn danger" onClick={() => remove(n.id)} aria-label="حذف"><Trash2 size={14} /></button>
+              <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
+                <TradeKebabMenu
+                  label={`گزینه‌های ${n.title}`}
+                  actions={[
+                    {
+                      label: n.pinned ? "برداشتن سنجاق" : "سنجاق کردن",
+                      icon: n.pinned ? <PinOff size={14} /> : <Pin size={14} />,
+                      onClick: () => togglePin(n),
+                      disabled: pendingKey === `pin:${n.id}`,
+                    },
+                    { label: "حذف یادداشت", icon: <Trash2 size={14} />, onClick: () => remove(n.id), danger: true },
+                  ]}
+                />
               </div>
+              <span className="trade-note-title">{n.title}</span>
+              {n.pinned && <Pin size={12} className="trade-note-pinned-mark" />}
             </div>
-            {n.content && <p className="trade-note-body">{n.content.slice(0, 220)}{n.content.length > 220 ? "…" : ""}</p>}
             <div className="trade-note-foot">
               <span>{formatTradeDateTime(n.updatedAt, calSystem)}</span>
               {!!n.tags.length && (

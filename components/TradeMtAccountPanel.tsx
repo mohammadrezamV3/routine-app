@@ -6,9 +6,9 @@ import { ACCOUNT_TYPE_LABELS, CAL_SYSTEM_KEY, CalSystem, TradeAccount } from "@/
 import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 
-// از صفحه‌ی فهرستِ متاتریدر، انتخابِ یک حساب فقط باکسِ اتصال رو نشون
-// می‌ده — نه کلِ صفحه‌ی حساب (آمار/لیستِ معاملات که به این بخش ربطی
-// نداره). به‌جای TradeAccountView کاملاً جدا، همین کامپوننتِ سبک.
+// از صفحه‌ی فهرست متاتریدر، انتخاب یک حساب فقط باکس اتصال رو نشون
+// می‌ده — نه کل صفحه‌ی حساب (آمار/لیست معاملات که به این بخش ربطی
+// نداره). به‌جای TradeAccountView کاملا جدا، همین کامپوننت سبک.
 export function TradeMtAccountPanel({ accountId }: { accountId: string }) {
   const [account, setAccount] = useState<TradeAccount | null>(null);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");

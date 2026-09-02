@@ -134,7 +134,7 @@ const CRYPTO: TickerSymbol[] = [
   { symbol: "FLOW-USD", label: "فلو", category: "crypto" },
   { symbol: "CHZ-USD", label: "چیلیز", category: "crypto" },
   { symbol: "KCS-USD", label: "کوکوین توکن", category: "crypto" },
-  { symbol: "CRV-USD", label: "کِرو", category: "crypto" },
+  { symbol: "CRV-USD", label: "کرو", category: "crypto" },
   { symbol: "RUNE-USD", label: "تورچین", category: "crypto" },
   { symbol: "SNX-USD", label: "سینتتیکس", category: "crypto" },
   { symbol: "KAVA-USD", label: "کاوا", category: "crypto" },
@@ -150,7 +150,7 @@ const CRYPTO: TickerSymbol[] = [
   { symbol: "SUI-USD", label: "سویی", category: "crypto" },
 ];
 
-// شرکت‌های آمریکایی بزرگ — بر اساس sector تقسیم شده فقط برای خوانایی خودِ فایل
+// شرکت‌های آمریکایی بزرگ — بر اساس sector تقسیم شده فقط برای خوانایی خود فایل
 const US_TECH = [
   ["AAPL", "اپل"], ["MSFT", "مایکروسافت"], ["GOOGL", "گوگل (Alphabet A)"], ["GOOG", "گوگل (Alphabet C)"],
   ["AMZN", "آمازون"], ["META", "متا"], ["NVDA", "انویدیا"], ["TSLA", "تسلا"], ["AVGO", "بروادکام"],
@@ -199,7 +199,7 @@ const US_INDUSTRIAL_ENERGY = [
   ["HON", "هانی‌ول"], ["UPS", "یو‌پی‌اس"], ["RTX", "آر‌تی‌ایکس"], ["LMT", "لاکهید مارتین"],
   ["DE", "جان دیر"], ["UNP", "یونیون پسیفیک"], ["ETN", "ایتون"], ["ADP", "ای‌دی‌پی"],
   ["NOC", "نورثروپ گرومن"], ["GD", "جنرال داینامیکس"], ["MMM", "تری‌ام"], ["FDX", "فدکس"],
-  ["EMR", "امرسون"], ["ITW", "آی‌تی‌دبلیو"], ["WM", "وست منجمنت"], ["NEE", "نکست‌اِرا انرژی"],
+  ["EMR", "امرسون"], ["ITW", "آی‌تی‌دبلیو"], ["WM", "وست منجمنت"], ["NEE", "نکست‌ارا انرژی"],
   ["DUK", "دیوک انرژی"], ["SO", "سادرن کمپانی"], ["AEP", "امریکن الکتریک پاور"],
 ] as const;
 
@@ -254,7 +254,7 @@ export const CATEGORY_LABELS: Record<TickerSymbol["category"], string> = {
   stock: "سهام",
 };
 
-// بازار ایران عمدتاً فارکس/طلا/کریپتو دنبال می‌کنه؛ بازار بین‌المللی به شاخص‌های آمریکایی نزدیک‌تره
+// بازار ایران عمدتا فارکس/طلا/کریپتو دنبال می‌کنه؛ بازار بین‌المللی به شاخص‌های آمریکایی نزدیک‌تره
 export const DEFAULT_TICKER_SYMBOLS_IRAN = ["GC=F", "EURUSD=X", "GBPUSD=X", "BTC-USD", "ETH-USD"];
 export const DEFAULT_TICKER_SYMBOLS_INTERNATIONAL = ["SPY", "QQQ", "^VIX", "DIA", "BTC-USD"];
 

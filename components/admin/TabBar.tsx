@@ -1,6 +1,6 @@
 "use client";
 
-// نوارِ تبِ فیلترِ مشترکِ پنل Owner — قبلاً همین چند خط توی users/
+// نوار تب فیلتر مشترک پنل Owner — قبلا همین چند خط توی users/
 // transactions/system-errors جدا کپی شده بود.
 export function AdminTabBar<T extends string>({
   items, active, onChange,

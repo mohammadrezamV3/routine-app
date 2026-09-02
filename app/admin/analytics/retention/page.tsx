@@ -47,7 +47,7 @@ export default function AdminRetentionPage() {
             <KpiTile label="حجم کوهورت (۶ ماه اخیر)" value={String(data.retention.cohortSize)} index={3} />
           </KpiGrid>
           <div className="admin-section-hint">
-            «Retained» یعنی کاربر حداقل یک‌بار بعد از روزِ N دوباره وارد شده — بر اساسِ لاگِ ورودهای واقعی، محدود به کاربرانی که ثبت‌نامشون ظرفِ ۶ ماه اخیر بوده.
+            «Retained» یعنی کاربر حداقل یک‌بار بعد از روز N دوباره وارد شده — بر اساس لاگ ورودهای واقعی، محدود به کاربرانی که ثبت‌نامشون ظرف ۶ ماه اخیر بوده.
           </div>
         </>
       )}

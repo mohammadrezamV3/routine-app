@@ -6,8 +6,8 @@ import { Moon } from "lucide-react";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 
-// تنظیماتِ بخشِ «روتین» — قبلاً یک صفحه‌ی جدا پشتِ یک لینک بود؛ حالا
-// مستقیم داخلِ صفحه‌ی تنظیمات رندر می‌شه، فقط با یک تیتر که می‌گه مالِ کدوم بخشه.
+// تنظیمات بخش «روتین» — قبلا یک صفحه‌ی جدا پشت یک لینک بود؛ حالا
+// مستقیم داخل صفحه‌ی تنظیمات رندر می‌شه، فقط با یک تیتر که می‌گه مال کدوم بخشه.
 export function RoutineSettings() {
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editing, setEditing] = useState(false);
@@ -32,7 +32,7 @@ export function RoutineSettings() {
       </motion.div>
 
       <div className="section-note" style={{ marginTop: 16 }}>
-        یادآوریِ برنامه‌های روزانه از بخشِ «اعلان‌ها» قابل تنظیمه.
+        یادآوری برنامه‌های روزانه از بخش «اعلان‌ها» قابل تنظیمه.
       </div>
 
       {editing && (

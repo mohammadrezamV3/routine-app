@@ -1,6 +1,6 @@
-// منطقِ مشترکِ سمتِ سرورِ ماژولِ ترید: اعتبارسنجیِ ورودی و شکل‌دادنِ خروجی.
+// منطق مشترک سمت سرور ماژول ترید: اعتبارسنجی ورودی و شکل‌دادن خروجی.
 // جدا نگه داشته شده تا روت‌های accounts/entries/checklists هرکدام دوباره
-// همین قواعد را ننویسند و به‌مرورِ زمان از هم دریفت نکنند.
+// همین قواعد را ننویسند و به‌مرور زمان از هم دریفت نکنند.
 
 import { Prisma } from "@prisma/client";
 import { clampText } from "./validate";
@@ -8,8 +8,8 @@ import { sessionsAt } from "./forexSessions";
 import { computeR } from "./tradeSymbols";
 import { MAX_IMAGES_PER_TRADE } from "./tradeTypes";
 
-/** سقفِ طولِ data URLِ هر عکس. کلاینت از قبل فشرده می‌کند (lib/image.ts)؛
- *  این فقط تورِ ایمنیِ سرور در برابرِ پیلودِ بزرگ است. */
+/** سقف طول data URL هر عکس. کلاینت از قبل فشرده می‌کند (lib/image.ts)؛
+ *  این فقط تور ایمنی سرور در برابر پیلود بزرگ است. */
 export const MAX_IMAGE_DATA_URL_LEN = 900_000;
 
 const RESULTS = ["PROFIT", "LOSS", "BREAKEVEN"] as const;
@@ -38,7 +38,7 @@ function subsetOf<T extends readonly string[]>(list: T, v: unknown): T[number][]
   return out as T[number][];
 }
 
-/** عددِ اختیاری: undefined/null/'' یعنی «ندارد»، غیرِ آن باید عددِ متناهی باشد */
+/** عدد اختیاری: undefined/null/'' یعنی «ندارد»، غیر آن باید عدد متناهی باشد */
 function optNumber(v: unknown, label: string, opts: { min?: number; max?: number } = {}): number | null | string {
   if (v === undefined || v === null || v === "") return null;
   if (typeof v !== "number" || !Number.isFinite(v)) return `${label} نامعتبر است`;
@@ -53,7 +53,7 @@ function parseDateTime(v: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// نمادِ معاملاتی: حروف/عدد و چند نشانه‌ی رایجِ بروکرها (XAUUSD.m، US30-CFD)
+// نماد معاملاتی: حروف/عدد و چند نشانه‌ی رایج بروکرها (XAUUSD.m، US30-CFD)
 const SYMBOL_RE = /^[A-Z0-9][A-Z0-9._#-]{0,19}$/;
 
 export type ParsedTradeInput = {
@@ -64,8 +64,8 @@ export type ParsedTradeInput = {
 };
 
 /**
- * اعتبارسنجیِ کاملِ بدنه‌ی ثبت/ویرایشِ معامله.
- * برمی‌گرداند: رشته = پیامِ خطا برای کاربر، وگرنه دادهٔ آماده‌ی پریزما.
+ * اعتبارسنجی کامل بدنه‌ی ثبت/ویرایش معامله.
+ * برمی‌گرداند: رشته = پیام خطا برای کاربر، وگرنه داده آماده‌ی پریزما.
  */
 export function parseTradeInput(body: any): string | ParsedTradeInput {
   if (!body || typeof body !== "object") return "بدنه‌ی درخواست نامعتبر است";
@@ -80,7 +80,7 @@ export function parseTradeInput(body: any): string | ParsedTradeInput {
 
   const openedAt = parseDateTime(body.openedAt);
   if (!openedAt) return "تاریخ و ساعت ورود نامعتبر است";
-  // ۵ دقیقه ارفاق برای اختلافِ ساعتِ دستگاهِ کاربر با سرور
+  // ۵ دقیقه ارفاق برای اختلاف ساعت دستگاه کاربر با سرور
   if (openedAt.getTime() > Date.now() + 5 * 60_000) return "نمی‌توانی برای زمان آینده معامله ثبت کنی";
 
   const closedAt = body.closedAt ? parseDateTime(body.closedAt) : null;
@@ -94,7 +94,7 @@ export function parseTradeInput(body: any): string | ParsedTradeInput {
   const pnlRaw = optNumber(body.pnl, "سود/زیان", { min: -1e12, max: 1e12 });
   if (typeof pnlRaw === "string") return pnlRaw;
   const pnl = pnlRaw ?? 0;
-  // ناسازگاریِ «نتیجه» با «علامتِ عدد» یعنی کلاینت خراب است، نه ورودیِ کاربر
+  // ناسازگاری «نتیجه» با «علامت عدد» یعنی کلاینت خراب است، نه ورودی کاربر
   if (body.result === "PROFIT" && pnl < 0) return "برای نتیجه‌ی سود، مقدار نمی‌تواند منفی باشد";
   if (body.result === "LOSS" && pnl > 0) return "برای نتیجه‌ی ضرر، مقدار نمی‌تواند مثبت باشد";
 
@@ -135,8 +135,8 @@ export function parseTradeInput(body: any): string | ParsedTradeInput {
       ? (body.checklistState as Record<string, boolean>)
       : {};
 
-  // R و جلسه‌ها هر دو سمتِ سرور محاسبه می‌شوند، نه از ورودیِ کلاینت — چون
-  // مبنای آمارند و کلاینت قابلِ دور زدن است.
+  // R و جلسه‌ها هر دو سمت سرور محاسبه می‌شوند، نه از ورودی کلاینت — چون
+  // مبنای آمارند و کلاینت قابل دور زدن است.
   const rMultiple = computeR(pnl, nums.riskAmount);
   const sessions = sessionsAt(openedAt);
 
@@ -194,7 +194,7 @@ export function parseImages(raw: unknown): { dataUrl: string; caption: string | 
   return out;
 }
 
-// ── اعتبارسنجیِ حساب ──────────────────────────────────────────────────────
+// ── اعتبارسنجی حساب ──────────────────────────────────────────────────────
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 export function parseAccountInput(body: any): string | Omit<Prisma.TradeAccountUncheckedCreateInput, "userId" | "id"> {
@@ -231,9 +231,9 @@ export function isHexColor(v: unknown): boolean {
 }
 
 
-// ── شکلِ خروجیِ لیستِ معاملات ─────────────────────────────────────────────
-// عمداً بدونِ dataUrlِ عکس‌ها: لیست فقط تعدادشان را لازم دارد و کشیدنِ
-// چند مگابایت data URL برای هر ردیف، همان اشتباهی است که ساختارِ قبلی داشت.
+// ── شکل خروجی لیست معاملات ─────────────────────────────────────────────
+// عمدا بدون dataUrl عکس‌ها: لیست فقط تعدادشان را لازم دارد و کشیدن
+// چند مگابایت data URL برای هر ردیف، همان اشتباهی است که ساختار قبلی داشت.
 export const ENTRY_SELECT = {
   id: true, accountId: true, symbol: true, direction: true, timeframe: true,
   openedAt: true, closedAt: true, volume: true, volumeUnit: true, result: true,

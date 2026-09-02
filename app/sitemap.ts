@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
 
-// فقط URLهای عمومی و کانونیکال — نه صفحاتِ خصوصی/داشبورد (اون‌ها توی
+// فقط URLهای عمومی و کانونیکال — نه صفحات خصوصی/داشبورد (اون‌ها توی
 // robots.ts هم disallow شدن)، نه چک‌اوت (صفحه‌ی تراکنشی، نه محتوایی)، نه
-// /subscription (پشتِ AuthGate‌ـه؛ جدولِ پلن‌های عمومی همینجا، توی خودِ
-// صفحه‌ی اصلیه)، نه هیچ مسیرِ تکراری/موقتی.
+// /subscription (پشت AuthGate‌ـه؛ جدول پلن‌های عمومی همینجا، توی خود
+// صفحه‌ی اصلیه)، نه هیچ مسیر تکراری/موقتی.
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [

@@ -8,7 +8,7 @@ type Point = { bucket: string; values: Record<string, number> };
 
 const W = 640, H = 200, PAD_L = 34, PAD_R = 8, PAD_T = 10, PAD_B = 24;
 
-// نمودارِ خطیِ چندسری‌ی خامِ SVG — بدونِ کتابخونه (پروژه هیچ chart library
+// نمودار خطی چندسری‌ی خام SVG — بدون کتابخونه (پروژه هیچ chart library
 // نداره)، Responsive با viewBox، با Tooltip ساده روی hover.
 export function MultiLineChart({ data, series }: { data: Point[]; series: Series[] }) {
   const gradId = useId();

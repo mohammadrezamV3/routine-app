@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
-import { clampText, parseIsoDate } from "@/lib/validate";
+import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const GENDER_VALUES = new Set(["male", "female"]);
@@ -33,9 +33,9 @@ export async function GET() {
       isSuperAdmin: true,
       referralCode: { select: { code: true } },
       moduleAccess: { select: { module: true, active: true, expiresAt: true } },
-      // فقط اشتراکِ واقعاً فعال — نه صرفاً «آخرین ردیفِ ساخته‌شده». قبلاً
-      // با `orderBy: createdAt desc, take: 1` یک اشتراکِ منقضی/لغوشده هم
-      // برمی‌گشت و کارتِ بالای پنل کاربری همون رو «پلنِ فعلی» نشون می‌داد.
+      // فقط اشتراک واقعا فعال — نه صرفا «آخرین ردیف ساخته‌شده». قبلا
+      // با `orderBy: createdAt desc, take: 1` یک اشتراک منقضی/لغوشده هم
+      // برمی‌گشت و کارت بالای پنل کاربری همون رو «پلن فعلی» نشون می‌داد.
       subscriptions: {
         where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
         orderBy: { currentPeriodEnd: "desc" },
@@ -48,7 +48,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   // سوپریوزر همیشه به همه ماژول‌ها دسترسی نامحدود داره — صرف‌نظر از این‌که
-  // جدول ModuleAccess چی می‌گه (که معمولاً seed هم شده، ولی این تضمین اضافه‌ست)
+  // جدول ModuleAccess چی می‌گه (که معمولا seed هم شده، ولی این تضمین اضافه‌ست)
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
     : user.moduleAccess;
@@ -59,10 +59,10 @@ export async function GET() {
 }
 
 // PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable? }
-// فقط فیلدهای «امن»ِ پروفایل از همین‌جا قابل تغییرن — ایمیل/شماره موبایل عمداً
-// این‌جا نیستن (نیاز به فلوی تاییدِ جدا دارن، مثلِ signup/forgot-password؛
-// بدونِ اون تاییدیه، اجازه‌ی تغییرِ مستقیم یعنی هرکسی با یه سشنِ سرقتی می‌تونه
-// شماره‌ی بازیابیِ حساب رو عوض کنه). یوزرنیم هم روتِ اختصاصیِ خودش رو داره.
+// فقط فیلدهای «امن» پروفایل از همین‌جا قابل تغییرن — ایمیل/شماره موبایل عمدا
+// این‌جا نیستن (نیاز به فلوی تایید جدا دارن، مثل signup/forgot-password؛
+// بدون اون تاییدیه، اجازه‌ی تغییر مستقیم یعنی هرکسی با یه سشن سرقتی می‌تونه
+// شماره‌ی بازیابی حساب رو عوض کنه). یوزرنیم هم روت اختصاصی خودش رو داره.
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -77,12 +77,20 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const data: Record<string, unknown> = {};
 
+  // نام/نام خانوادگی فقط فارسی — چک سمت کلاینت قابل دور زدن است، پس این‌جا
+  // هم بررسی می‌شود (همان قاعده‌ی بقیه‌ی ورودی‌های این اپ).
   if (body.name !== undefined) {
     const v = clampText(String(body.name || "").trim(), 60);
+    if (v && !isValidPersianName(v)) {
+      return NextResponse.json({ error: "نام باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    }
     data.name = v || null;
   }
   if (body.lastName !== undefined) {
     const v = clampText(String(body.lastName || "").trim(), 60);
+    if (v && !isValidPersianName(v)) {
+      return NextResponse.json({ error: "نام خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    }
     data.lastName = v || null;
   }
   if (body.gender !== undefined) {

@@ -17,12 +17,12 @@ import { NumberInput } from "./NumberInput";
 type Step = "hw" | "goal" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, days: 2, description: 3, rules: 3 };
 
-// فرمِ «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
-// توضیح آزاد) به‌جای یک فرمِ تک‌صفحه‌ای. حداقلِ روزهای لازم برای هر هدف فقط
+// فرم «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
+// توضیح آزاد) به‌جای یک فرم تک‌صفحه‌ای. حداقل روزهای لازم برای هر هدف فقط
 // توی مرحله‌ی «روزها» چک می‌شه چون تازه اونجاست که هم هدف (از مرحله‌ی قبل) و
-// هم سطح (همین مرحله) هر دو مشخصن. توضیحِ آزاد به سرور فرستاده می‌شه و اول از
-// همه AI بررسی می‌کنه این خواسته واقع‌بینانه‌ست یا نه — اگه نه، پیامِ ردِ AI
-// مثلِ یه چت‌بات همینجا (زیرِ همون مرحله‌ی توضیح) نشون داده می‌شه.
+// هم سطح (همین مرحله) هر دو مشخصن. توضیح آزاد به سرور فرستاده می‌شه و اول از
+// همه AI بررسی می‌کنه این خواسته واقع‌بینانه‌ست یا نه — اگه نه، پیام رد AI
+// مثل یه چت‌بات همینجا (زیر همون مرحله‌ی توضیح) نشون داده می‌شه.
 export function AiExercisePlanWizard({
   onCreated,
   onCancel,
@@ -44,7 +44,7 @@ export function AiExercisePlanWizard({
     setForm((f) => ({ ...f, ...p }));
   }
 
-  // مثلِ پاپ‌آپِ «تغییر برنامه»ی کالری — اگه قد/وزن قبلاً یه‌جای دیگه ثبت
+  // مثل پاپ‌آپ «تغییر برنامه»ی کالری — اگه قد/وزن قبلا یه‌جای دیگه ثبت
   // شده، همینجا هم از قبل پر می‌شه
   useEffect(() => {
     getBodyMetrics().then(({ data }) => {
@@ -228,7 +228,7 @@ export function AiExercisePlanWizard({
             dir="rtl"
             className="exercise-desc-textarea"
             rows={4}
-            placeholder="مثلاً می‌خوام بیشتر روی بالاتنه کار کنم، یا فقط با وزن بدن، یا حرکاتی که صدا کمتری دارن…"
+            placeholder="مثلا می‌خوام بیشتر روی بالاتنه کار کنم، یا فقط با وزن بدن، یا حرکاتی که صدا کمتری دارن…"
             value={form.description}
             onChange={(e) => patch({ description: e.target.value })}
           />
@@ -254,7 +254,7 @@ export function AiExercisePlanWizard({
                   className="exercise-desc-textarea"
                   style={{ marginTop: 10 }}
                   rows={3}
-                  placeholder="محدودیتت رو توضیح بده — مثلاً کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقعِ انتخابِ حرکت باید بدونه"
+                  placeholder="محدودیتت رو توضیح بده — مثلا کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقع انتخاب حرکت باید بدونه"
                   value={form.limitationDetails}
                   onChange={(e) => patch({ limitationDetails: e.target.value })}
                 />

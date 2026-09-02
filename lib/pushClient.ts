@@ -1,7 +1,7 @@
-// ثبتِ سابسکریپشنِ Web Push سمتِ کلاینت — بعد از این‌که کاربر اجازه‌ی نوتیف
+// ثبت سابسکریپشن Web Push سمت کلاینت — بعد از این‌که کاربر اجازه‌ی نوتیف
 // (Notification.requestPermission) رو داد صدا زده می‌شه؛ سرویس‌ورکر رو
 // رجیستر می‌کنه، از مرورگر یه PushSubscription می‌گیره، و به سرور می‌فرسته
-// تا بتونه بعداً حتی وقتی تب/اپ بسته‌ست واقعاً پوش بفرسته.
+// تا بتونه بعدا حتی وقتی تب/اپ بسته‌ست واقعا پوش بفرسته.
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -39,8 +39,8 @@ export async function subscribeToPush(): Promise<boolean> {
     });
     return true;
   } catch {
-    // مثلاً کاربر بعداً دسترسی رو رد کرد، یا سرویس‌ورکر توی این مرورگر
-    // پشتیبانی نمی‌شه — نوتیفِ تب‌بازِ معمولی (lib/notifications.ts) همچنان کار می‌کنه.
+    // مثلا کاربر بعدا دسترسی رو رد کرد، یا سرویس‌ورکر توی این مرورگر
+    // پشتیبانی نمی‌شه — نوتیف تب‌باز معمولی (lib/notifications.ts) همچنان کار می‌کنه.
     return false;
   }
 }

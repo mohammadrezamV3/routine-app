@@ -5,9 +5,9 @@ import { Plus, Trash2 } from "lucide-react";
 import { DatabaseProperty, DatabaseRecord, RecordValue } from "@/lib/notepadDb";
 import { NotepadDbCell } from "./NotepadDbCell";
 
-// بورد — گروه‌بندی‌شده بر اساسِ یه propertyِ انتخابی. جابه‌جاییِ کارت‌ها هم
-// با درگ‌ودراپِ بومیِ HTML5 (بدونِ کتابخانه‌ی جدید) هم با کلیک روی سلولِ
-// گروه‌بندیِ خودِ کارت (همون NotepadDbCell — منطقِ انتخاب رایگان میاد)
+// بورد — گروه‌بندی‌شده بر اساس یه property انتخابی. جابه‌جایی کارت‌ها هم
+// با درگ‌ودراپ بومی HTML5 (بدون کتابخانه‌ی جدید) هم با کلیک روی سلول
+// گروه‌بندی خود کارت (همون NotepadDbCell — منطق انتخاب رایگان میاد)
 export function NotepadDbBoardView({
   properties,
   records,
@@ -41,7 +41,7 @@ export function NotepadDbBoardView({
   if (!groupProp) {
     return (
       <div className="notepad-db-board-empty">
-        بورد به یه property از نوع «انتخابی» نیاز داره — اول از تبِ جدول یکی بساز.
+        بورد به یه property از نوع «انتخابی» نیاز داره — اول از تب جدول یکی بساز.
       </div>
     );
   }
@@ -91,7 +91,7 @@ export function NotepadDbBoardView({
               </div>
             ))}
             <button type="button" className="notepad-db-board-add-btn" onClick={onCreateRecord}>
-              <Plus size={12} /> کارتِ جدید
+              <Plus size={12} /> کارت جدید
             </button>
           </div>
         </div>

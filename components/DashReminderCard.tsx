@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell } from "lucide-react";
+import { Bell, BellRing } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getImportantUpcoming, ImportantOccurrence } from "@/lib/routineStats";
@@ -11,21 +11,21 @@ import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 
-// برنامه‌های «خیلی زیاد»/«زیاد»ِ همین هفته — واقعاً از customOccurrences
-// (با تگِ اهمیتی که موقع افزودن/ویرایش برنامه انتخاب می‌شه) فیلتر می‌شه،
-// دیگه یادآوریِ mock نیست. عمداً هیچ‌جای این کارت کلیک‌پذیر برای بازکردنِ
-// ProgramCard نیست — تنها تعاملِ ممکن روی هر ردیف، زنگوله‌ست: «این برنامه
+// برنامه‌های «خیلی زیاد»/«زیاد» همین هفته — واقعا از customOccurrences
+// (با تگ اهمیتی که موقع افزودن/ویرایش برنامه انتخاب می‌شه) فیلتر می‌شه،
+// دیگه یادآوری mock نیست. عمدا هیچ‌جای این کارت کلیک‌پذیر برای بازکردن
+// ProgramCard نیست — تنها تعامل ممکن روی هر ردیف، زنگوله‌ست: «این برنامه
 // ۳۰ دقیقه قبل شروعش بهم اطلاع بده» — اگه اجازه‌ی نوتیف مرورگر هنوز گرفته
-// نشده باشه همینجا درخواستش می‌ره (خودِ یادآوری واقعی توسط NotificationEngine
+// نشده باشه همینجا درخواستش می‌ره (خود یادآوری واقعی توسط NotificationEngine
 // و ۳۰ دقیقه مونده به شروع فرستاده می‌شه).
 export function DashReminderCard({ delay }: { delay?: number }) {
   const [items, setItems] = useState<ImportantOccurrence[] | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  // `typeof document !== "undefined"` جواب می‌ده true حتی توی همون رندرِ اولِ
-  // کلاینت که برای هیدریشن استفاده می‌شه (چون document موقعِ اجرای جاوااسکریپتِ
-  // مرورگر از قبل وجود داره) — درحالی‌که سمتِ سرور همیشه false بوده؛ همین
-  // اختلاف باعثِ ارورِ هیدریشن می‌شد. با یه state که فقط توی useEffect (بعدِ
-  // هیدریشن) true می‌شه، رندرِ اولِ سرور و کلاینت هر دو false می‌مونن.
+  // `typeof document !== "undefined"` جواب می‌ده true حتی توی همون رندر اول
+  // کلاینت که برای هیدریشن استفاده می‌شه (چون document موقع اجرای جاوااسکریپت
+  // مرورگر از قبل وجود داره) — درحالی‌که سمت سرور همیشه false بوده؛ همین
+  // اختلاف باعث ارور هیدریشن می‌شد. با یه state که فقط توی useEffect (بعد
+  // هیدریشن) true می‌شه، رندر اول سرور و کلاینت هر دو false می‌مونن.
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { getImportantUpcoming().then(setItems); }, []);
@@ -48,7 +48,7 @@ export function DashReminderCard({ delay }: { delay?: number }) {
 
     setToast(
       nextNotify
-        ? `نیم‌ساعت قبل از شروعِ «${occ.name}» بهت اطلاع داده می‌شه.`
+        ? `نیم‌ساعت قبل از شروع «${occ.name}» بهت اطلاع داده می‌شه.`
         : `دیگه برای «${occ.name}» یادآوری نمی‌شه.`
     );
   }
@@ -77,7 +77,10 @@ export function DashReminderCard({ delay }: { delay?: number }) {
       )}
 
       <DashCard delay={delay}>
-        <h2 className="text-[13px] font-bold text-dash-text sm:text-[15px]">یادآوری‌ها</h2>
+        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+          <BellRing className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+          یادآوری‌ها
+        </h2>
 
         <div className="no-scrollbar mt-3 flex max-h-[300px] flex-col gap-2 overflow-y-auto sm:mt-4 sm:max-h-[360px] sm:gap-2.5">
           {items === null ? (
@@ -103,13 +106,13 @@ export function DashReminderCard({ delay }: { delay?: number }) {
                   </div>
                   <span
                     role="button"
-                    aria-label={r.notify ? `خاموش‌کردنِ یادآوریِ ${r.name}` : `روشن‌کردنِ یادآوریِ ${r.name}`}
+                    aria-label={r.notify ? `خاموش‌کردن یادآوری ${r.name}` : `روشن‌کردن یادآوری ${r.name}`}
                     onClick={(e) => handleBellClick(e, r)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",
-                      // زنگوله‌ی خاموش هیچ بک‌گراندی نداره — فقط خودِ آیکون.
-                      // بک‌گراند علامتِ «روشن بودنِ یادآوری»ه، پس وقتی خاموشه
-                      // نباید یه قرصِ خاکستری پشتش دیده بشه.
+                      // زنگوله‌ی خاموش هیچ بک‌گراندی نداره — فقط خود آیکون.
+                      // بک‌گراند علامت «روشن بودن یادآوری»ه، پس وقتی خاموشه
+                      // نباید یه قرص خاکستری پشتش دیده بشه.
                       r.notify
                         ? r.importance === "veryHigh" ? "bg-dash-green/25 text-dash-green" : "bg-dash-green/15 text-dash-green"
                         : "bg-transparent text-dash-muted"

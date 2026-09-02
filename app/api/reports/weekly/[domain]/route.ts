@@ -6,7 +6,7 @@ import { getUserWeekRange } from "@/lib/weeklyReport/weekRange";
 import { Domain, DOMAINS, DOMAIN_MODULE, computeSingleDomainMetric, resolveActiveModules } from "@/lib/weeklyReport/metrics";
 import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
 
-// GET /api/reports/weekly/:domain?offset=0 — جزئیاتِ خامِ یک دامنه (برای
+// GET /api/reports/weekly/:domain?offset=0 — جزئیات خام یک دامنه (برای
 // صفحه‌ی جزئیات)، به‌همراه مقایسه‌ی از‌قبل‌محاسبه‌شده‌ی همون هفته از Snapshot.
 export async function GET(req: NextRequest, { params }: { params: { domain: string } }) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);

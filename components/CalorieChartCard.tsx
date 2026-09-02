@@ -17,13 +17,13 @@ function formatKcal(n: number): string {
   return faNum(Math.round(n).toLocaleString("en-US"));
 }
 
-// نمودارِ روندِ کالری.
+// نمودار روند کالری.
 //
-// حالتِ «روزانه» (نمودارِ خطیِ SVG از روی ساعتِ ثبتِ هر وعده) طبقِ درخواستِ
-// صریحِ کاربر حذف شد؛ فقط هفتگی و ماهانه موند. هر دو حالا **یک** دیزاین
-// دارن — همون میله‌های گردِ عمودیِ نمودارِ هفتگیِ «روتین من» — نه یکی
-// میله‌ای و یکی SVGِ خط‌دار با رنگ‌بندیِ متفاوت. هر میله کلیک‌پذیره و با
-// انتخاب، هم رنگش کاملاً عوض می‌شه (پررنگ + هاله) هم عددِ کالریِ همون روز
+// حالت «روزانه» (نمودار خطی SVG از روی ساعت ثبت هر وعده) طبق درخواست
+// صریح کاربر حذف شد؛ فقط هفتگی و ماهانه موند. هر دو حالا **یک** دیزاین
+// دارن — همون میله‌های گرد عمودی نمودار هفتگی «روتین من» — نه یکی
+// میله‌ای و یکی SVG خط‌دار با رنگ‌بندی متفاوت. هر میله کلیک‌پذیره و با
+// انتخاب، هم رنگش کاملا عوض می‌شه (پررنگ + هاله) هم عدد کالری همون روز
 // بالای نمودار نشون داده می‌شه.
 export function CalorieChartCard({
   rangeEntries,
@@ -60,7 +60,7 @@ export function CalorieChartCard({
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
       const key = isoLocal(d);
-      // ماهانه ۳۰ برچسب کنارِ هم جا نمی‌شه — هر پنج روز یکی
+      // ماهانه ۳۰ برچسب کنار هم جا نمی‌شه — هر پنج روز یکی
       const showLabel = !isMonthly || i % 5 === 0;
       out.push({
         key,
@@ -76,8 +76,8 @@ export function CalorieChartCard({
 
   return (
     <DashCard delay={delay} className="flex h-full flex-col p-3 sm:p-4">
-      {/* دکمه‌ی سوییچ هم‌ردیفِ تایتل و چپ‌چین (توی RTL یعنی انتهای ردیف) —
-          دیگه روی موبایل هم به خطِ بعد نمی‌ره. */}
+      {/* دکمه‌ی سوییچ هم‌ردیف تایتل و چپ‌چین (توی RTL یعنی انتهای ردیف) —
+          دیگه روی موبایل هم به خط بعد نمی‌ره. */}
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h2 className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
@@ -102,13 +102,13 @@ export function CalorieChartCard({
           <LineChart className="h-6 w-6 text-dash-muted" />
           <div className="text-[12px] font-bold text-dash-text sm:text-[13px]">نمودار هنوز آماده نیست</div>
           <div className="max-w-[260px] text-[10.5px] leading-relaxed text-dash-muted sm:text-[11.5px]">
-            برای نمایشِ نمودار حداقل به ۳ روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روزِ دیگه مونده.
+            برای نمایش نمودار حداقل به ۳ روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روز دیگه مونده.
           </div>
         </div>
       ) : (
         <>
-          {/* عددِ روزِ انتخاب‌شده — جای ثابتی بالای نمودار داره تا با
-              انتخاب/لغوِ انتخاب، ارتفاعِ کارت نپره. */}
+          {/* عدد روز انتخاب‌شده — جای ثابتی بالای نمودار داره تا با
+              انتخاب/لغو انتخاب، ارتفاع کارت نپره. */}
           <div className="mt-3 flex h-6 shrink-0 items-center justify-end">
             {sel && (
               <span
@@ -146,7 +146,7 @@ export function CalorieChartCard({
                       transition={{ duration: 0.5, ease: "easeOut", delay: Math.min(0.1 + i * 0.02, 0.5) }}
                       className={cn("rounded-full", isMonthly ? "w-1.5 sm:w-2" : "w-2 sm:w-2.5")}
                       style={{
-                        // رنگِ انتخاب‌شده عمداً خیلی متفاوته (توپر + هاله‌ی
+                        // رنگ انتخاب‌شده عمدا خیلی متفاوته (توپر + هاله‌ی
                         // پررنگ) تا کاربر بی‌شک بفهمه کدوم میله رو زده.
                         background: isActive ? "var(--accent)" : peak ? "var(--accent)" : "rgba(var(--accent-rgb),.45)",
                         boxShadow: isActive
@@ -157,8 +157,8 @@ export function CalorieChartCard({
                       }}
                     />
                   </div>
-                  {/* برچسبِ زیرِ میله سفید (رنگِ متنِ اصلی) و توی ماهانه
-                      بزرگ‌تر — قبلاً خاکستریِ کم‌رنگ و ریز بود و دیده نمی‌شد. */}
+                  {/* برچسب زیر میله سفید (رنگ متن اصلی) و توی ماهانه
+                      بزرگ‌تر — قبلا خاکستری کم‌رنگ و ریز بود و دیده نمی‌شد. */}
                   <span
                     className={cn(
                       "whitespace-nowrap font-semibold",
@@ -174,7 +174,7 @@ export function CalorieChartCard({
           </div>
 
           <div className="mt-3 shrink-0 text-[10px] text-dash-muted sm:text-[11px]">
-            هر ستون درصدِ کالریِ اون روز نسبت به هدفِ {formatKcal(targetKcal)} کالریه — برای دیدنِ عدد، روی ستون بزن.
+            هر ستون درصد کالری اون روز نسبت به هدف {formatKcal(targetKcal)} کالریه — برای دیدن عدد، روی ستون بزن.
           </div>
         </>
       )}

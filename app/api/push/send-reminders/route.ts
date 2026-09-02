@@ -6,16 +6,16 @@ import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { DEFAULT_NOTIF_PREFS, NotifPrefs } from "@/lib/notifPrefs";
 import { isValidCronRequest } from "@/lib/cronAuth";
 
-// POST /api/push/send-reminders — نه یه چیزیه که خودِ کاربر/کلاینت صداش بزنه،
-// یه cronِ بیرونی (مثلاً crontabِ خودِ VPS، طبقِ راهنمای دیپلوی) هر چند
-// دقیقه یک‌بار این‌جا رو می‌زنه. همون منطقِ «یادآوریِ برنامه/تمرین» که
-// NotificationPanel.tsx سمتِ کلاینت (فقط وقتی تب بازه) حساب می‌کرد، این‌جا
-// سمتِ سرور برای هر کاربرِ سابسکرایب‌شده تکرار می‌شه و به‌جای نمایشِ توی پنل،
-// با Web Push واقعاً فرستاده می‌شه (حتی وقتی اپ بسته‌ست).
+// POST /api/push/send-reminders — نه یه چیزیه که خود کاربر/کلاینت صداش بزنه،
+// یه cron بیرونی (مثلا crontab خود VPS، طبق راهنمای دیپلوی) هر چند
+// دقیقه یک‌بار این‌جا رو می‌زنه. همون منطق «یادآوری برنامه/تمرین» که
+// NotificationPanel.tsx سمت کلاینت (فقط وقتی تب بازه) حساب می‌کرد، این‌جا
+// سمت سرور برای هر کاربر سابسکرایب‌شده تکرار می‌شه و به‌جای نمایش توی پنل،
+// با Web Push واقعا فرستاده می‌شه (حتی وقتی اپ بسته‌ست).
 //
-// جلوگیری از ارسالِ تکراری: چون این روت هر چند دقیقه صدا زده می‌شه ولی هر
-// یادآوری فقط باید یک‌بار در روز فرستاده بشه، یک ردِ کوچیک روی همون
-// UserSetting (کلیدِ "pushSentLog") نگه می‌داریم: { [key]: "YYYY-MM-DD" }.
+// جلوگیری از ارسال تکراری: چون این روت هر چند دقیقه صدا زده می‌شه ولی هر
+// یادآوری فقط باید یک‌بار در روز فرستاده بشه، یک رد کوچیک روی همون
+// UserSetting (کلید "pushSentLog") نگه می‌داریم: { [key]: "YYYY-MM-DD" }.
 
 const EXERCISE_REMINDER_HOUR = 17;
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const today = todayKey(now);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  // فقط کاربرهایی که حداقل یک دستگاهِ سابسکرایب‌شده دارن — بقیه رو حتی
+  // فقط کاربرهایی که حداقل یک دستگاه سابسکرایب‌شده دارن — بقیه رو حتی
   // بررسی هم نمی‌کنیم، هزینه‌ای نداره.
   const userIds = await prisma.pushSubscription.findMany({ distinct: ["userId"], select: { userId: true } });
 
@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
 
   for (const { userId } of userIds) {
     checked++;
-    // همه‌ی تنظیماتِ لازمِ این کاربر با یک کوئری خونده می‌شن. قبلاً هر کلید
+    // همه‌ی تنظیمات لازم این کاربر با یک کوئری خونده می‌شن. قبلا هر کلید
     // یک findUnique جدا بود (notifPrefs + removedOccurrences +
-    // customOccurrences + pushSentLog…) یعنی به‌ازای هر کاربرِ سابسکرایب‌شده
+    // customOccurrences + pushSentLog…) یعنی به‌ازای هر کاربر سابسکرایب‌شده
     // ۴ تا ۶ رفت‌وبرگشت به دیتابیس — با چند هزار کاربر، هر اجرای کران
     // ده‌ها هزار کوئری می‌شد.
     const settingRows = await prisma.userSetting.findMany({
@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
     });
     const settings = new Map(settingRows.map((r) => [r.key, r.value]));
     const prefs: NotifPrefs = { ...DEFAULT_NOTIF_PREFS, ...((settings.get("notifPrefs") as Partial<NotifPrefs>) || {}) };
-    // ردِ «امروز فرستاده شد» یک‌بار خونده و در حافظه نگه داشته می‌شه، و فقط
-    // اگه واقعاً چیزی فرستاده شد یک‌بار در انتها نوشته می‌شه.
+    // رد «امروز فرستاده شد» یک‌بار خونده و در حافظه نگه داشته می‌شه، و فقط
+    // اگه واقعا چیزی فرستاده شد یک‌بار در انتها نوشته می‌شه.
     const sentLog: Record<string, string> = { ...((settings.get("pushSentLog") as Record<string, string>) || {}) };
     let sentLogDirty = false;
     const wasSent = (key: string) => sentLog[key] === today;
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     }
 
     // یک نوشتن به‌ازای هر کاربر (فقط اگه چیزی فرستاده شده)، نه یکی به‌ازای هر
-    // یادآوری. کلیدهای مالِ روزهای قبل هم همین‌جا دور ریخته می‌شن.
+    // یادآوری. کلیدهای مال روزهای قبل هم همین‌جا دور ریخته می‌شن.
     if (sentLogDirty) {
       const cleaned: Record<string, string> = {};
       for (const [k, v] of Object.entries(sentLog)) if (v === today) cleaned[k] = v;

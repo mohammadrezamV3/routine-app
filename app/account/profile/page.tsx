@@ -49,7 +49,7 @@ export default function AccountProfilePage() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // فیلدهای «باز» — همیشه قابل‌ویرایش‌ن (نه پشتِ یه حالتِ ویرایشِ جدا)، فقط
+  // فیلدهای «باز» — همیشه قابل‌ویرایش‌ن (نه پشت یه حالت ویرایش جدا)، فقط
   // با یه دکمه‌ی «ذخیره»ی مشترک ثبت می‌شن. نام/نام‌خانوادگی/شماره موبایل
   // این‌جا نیستن — همیشه قفل/فقط‌نمایشی‌ن.
   const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
@@ -61,8 +61,8 @@ export default function AccountProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // فلوی تغییرِ ایمیل — کد به ایمیلِ جدید فرستاده می‌شه، تا وارد‌نکردنِ کدِ
-  // درست، ایمیلِ حساب عوض نمی‌شه (جلوگیری از قبضه‌کردنِ حساب با یه سشنِ سرقتی).
+  // فلوی تغییر ایمیل — کد به ایمیل جدید فرستاده می‌شه، تا وارد‌نکردن کد
+  // درست، ایمیل حساب عوض نمی‌شه (جلوگیری از قبضه‌کردن حساب با یه سشن سرقتی).
   const [emailChanging, setEmailChanging] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailCodeSent, setEmailCodeSent] = useState(false);
@@ -70,7 +70,7 @@ export default function AccountProfilePage() {
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // یوزرنیم — تنها جای تغییرش همین صفحه‌ست (از بخشِ «امنیت» برداشته شد)
+  // یوزرنیم — تنها جای تغییرش همین صفحه‌ست (از بخش «امنیت» برداشته شد)
   const [username, setUsername] = useState<string | null>(null);
   const [usernameDraft, setUsernameDraft] = useState("");
   const [usernameEditing, setUsernameEditing] = useState(false);
@@ -142,9 +142,9 @@ export default function AccountProfilePage() {
       const resData = await res.json().catch(() => ({}));
       if (!res.ok) { setAvatarError(resData.error || "خطایی پیش اومد"); return; }
       setAvatarUrl(resData.avatarUrl);
-      // بدونِ این خط، بقیه‌ی اپ (مثلاً آواتارِ منوی همبرگری) همچنان
-      // عکسِ کهنه رو نشون می‌داد — چون /lib/preload.ts یه اسنپ‌شاتِ
-      // bootstrapی که موقعِ لودِ صفحه گرفته شده رو کش می‌کنه و avatar-updated
+      // بدون این خط، بقیه‌ی اپ (مثلا آواتار منوی همبرگری) همچنان
+      // عکس کهنه رو نشون می‌داد — چون /lib/preload.ts یه اسنپ‌شات
+      // bootstrapی که موقع لود صفحه گرفته شده رو کش می‌کنه و avatar-updated
       // به‌تنهایی این کش رو باطل نمی‌کنه.
       invalidateAccountCache();
       window.dispatchEvent(new Event("avatar-updated"));
@@ -259,7 +259,7 @@ export default function AccountProfilePage() {
     <section>
       <AccountBackButton />
       <h1>پروفایل</h1>
-      <div className="account-content-hint">اطلاعاتِ حساب و مشخصاتِ شخصیت</div>
+      <div className="account-content-hint">اطلاعات حساب و مشخصات شخصیت</div>
 
       <motion.div className="account-profile-head" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
         <div className="account-avatar-row">
@@ -309,8 +309,8 @@ export default function AccountProfilePage() {
         </div>
       </div>
 
-      {/* یوزرنیم — طبقِ درخواستِ صریحِ کاربر تنها جای تغییرش همین‌جاست
-          (قبلاً توی بخشِ «امنیت» بود و از اون‌جا برداشته شد). */}
+      {/* یوزرنیم — طبق درخواست صریح کاربر تنها جای تغییرش همین‌جاست
+          (قبلا توی بخش «امنیت» بود و از اون‌جا برداشته شد). */}
       <div className="account-card" style={{ padding: 16 }}>
         <div className="account-field-label-row">
           <span className="account-row2-icon"><AtSign size={16} /></span>
@@ -344,7 +344,7 @@ export default function AccountProfilePage() {
         {usernameSuccess && <div className="account-save-toast" style={{ marginTop: 10 }}>یوزرنیم با موفقیت تغییر کرد.</div>}
       </div>
 
-      {/* ایمیل — قفل نیست، ولی تغییرش فقط با تاییدِ کدِ ارسال‌شده به ایمیلِ جدید */}
+      {/* ایمیل — قفل نیست، ولی تغییرش فقط با تایید کد ارسال‌شده به ایمیل جدید */}
       <div className="account-card" style={{ padding: 16 }}>
         <div className="account-field-label-row">
           <span className="account-row2-icon"><Mail size={16} /></span>

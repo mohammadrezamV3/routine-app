@@ -18,7 +18,7 @@ function barColorClass(v: number | null): string {
   return "low";
 }
 
-// تایم‌لاینِ ۷روزه‌ی هفته — هر روز قابل‌کلیکه و جزئیاتِ همون روز رو زیرش باز می‌کنه.
+// تایم‌لاین ۷روزه‌ی هفته — هر روز قابل‌کلیکه و جزئیات همون روز رو زیرش باز می‌کنه.
 export function DailyPerformanceStrip({ days }: { days: DailyBreakdownDay[] }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const selected = openIdx != null ? days[openIdx] : null;

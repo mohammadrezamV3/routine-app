@@ -5,16 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { isoLocal } from "@/lib/jalali";
 import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
 
-// POST /api/admin/weekly-report/seed-test-data — فقط سوپریوزر، فقط رویِ
-// حسابِ خودِ همون سوپریوزر (هیچ‌وقت روی یه کاربرِ واقعیِ دیگه). چون
-// Trend/Baseline/Correlation به چند هفته داده نیاز دارن و روی یه حسابِ
-// تازه‌ساز چیزی برای تست نیست، این روت ۱۰ هفته داده‌ی مصنوعی (با نوسانِ
-// عمدی — نه یک عددِ ثابت — تا Streak/Outlier/Correlation واقعاً چیزی برای
+// POST /api/admin/weekly-report/seed-test-data — فقط سوپریوزر، فقط روی
+// حساب خود همون سوپریوزر (هیچ‌وقت روی یه کاربر واقعی دیگه). چون
+// Trend/Baseline/Correlation به چند هفته داده نیاز دارن و روی یه حساب
+// تازه‌ساز چیزی برای تست نیست، این روت ۱۰ هفته داده‌ی مصنوعی (با نوسان
+// عمدی — نه یک عدد ثابت — تا Streak/Outlier/Correlation واقعا چیزی برای
 // پیداکردن داشته باشن) برای پنج دامنه می‌سازه.
 //
-// ایمن برای اجرای مکرر: قبل از ساختن، فقط همون بازه‌ی ۱۰هفته‌ایِ خودِ
+// ایمن برای اجرای مکرر: قبل از ساختن، فقط همون بازه‌ی ۱۰هفته‌ای خود
 // این ردیف‌ها (Daily/Exercise/FoodLog/Trade) پاک و دوباره ساخته می‌شن —
-// نه کلِ تاریخچه‌ی حسابِ ادمین.
+// نه کل تاریخچه‌ی حساب ادمین.
 
 const WEEKS = 10;
 const DAYS = WEEKS * 7;
@@ -44,7 +44,7 @@ export async function POST() {
   const days: Date[] = [];
   for (let d = new Date(since); d <= yesterday; d.setDate(d.getDate() + 1)) days.push(new Date(d));
 
-  // --- پاک‌سازیِ بازه (فقط همین کاربر، فقط همین بازه) ---
+  // --- پاک‌سازی بازه (فقط همین کاربر، فقط همین بازه) ---
   await Promise.all([
     prisma.dailyEntry.deleteMany({ where: { userId, date: { gte: since, lte: yesterday } } }),
     prisma.exerciseLog.deleteMany({ where: { userId, date: { gte: since, lte: yesterday } } }),
@@ -52,8 +52,8 @@ export async function POST() {
     prisma.tradeEntry.deleteMany({ where: { userId, openedAt: { gte: since, lte: yesterday } } }),
   ]);
 
-  // --- روتین: هرروز ۵ تا ۸ آیتمِ الکی، با نرخِ تکمیلِ نوسان‌دار +
-  // یه استریکِ عمدیِ ۴روزه‌ی ۱۰۰٪ نزدیکِ انتها تا Win واقعی دربیاد ---
+  // --- روتین: هرروز ۵ تا ۸ آیتم الکی، با نرخ تکمیل نوسان‌دار +
+  // یه استریک عمدی ۴روزه‌ی ۱۰۰٪ نزدیک انتها تا Win واقعی دربیاد ---
   const routineData = days.map((date, i) => {
     const itemCount = randInt(5, 8);
     const isStreakWindow = i >= days.length - 6 && i < days.length - 2;
@@ -64,14 +64,14 @@ export async function POST() {
   });
   await prisma.dailyEntry.createMany({ data: routineData });
 
-  // --- بدنسازی: یه پلنِ فعال با ۳ روزِ باشگاه در هفته ---
+  // --- بدنسازی: یه پلن فعال با ۳ روز باشگاه در هفته ---
   let plan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { startDate: "desc" } });
   const gymDayNames = ["شنبه", "دوشنبه", "چهارشنبه"];
   if (!plan) {
     plan = await prisma.exercisePlan.create({
       data: {
-        userId, level: "intermediate", goal: "داده‌ی تستِ گزارشِ هفتگی", gymDays: gymDayNames,
-        trainingPhase: "maintenance", isActive: true, planData: gymDayNames.map((d) => ({ day: d, focus: "تست", items: ["حرکتِ نمونه ۳×۱۰"] })),
+        userId, level: "intermediate", goal: "داده‌ی تست گزارش هفتگی", gymDays: gymDayNames,
+        trainingPhase: "maintenance", isActive: true, planData: gymDayNames.map((d) => ({ day: d, focus: "تست", items: ["حرکت نمونه ۳×۱۰"] })),
       },
     });
   } else if (!Array.isArray(plan.gymDays) || (plan.gymDays as string[]).length === 0) {
@@ -84,13 +84,13 @@ export async function POST() {
     .map((date) => ({ userId, planId: plan!.id, date, completed: Math.random() < 0.75 }));
   if (exerciseData.length) await prisma.exerciseLog.createMany({ data: exerciseData });
 
-  // --- ترید: ۱ تا ۳ معامله‌ی تصادفی در هفته، نرخِ بردِ ~۶۰٪ ---
-  // ماژولِ ترید حالا حساب‌محور است — پس داده‌ی تست هم اول یک حسابِ تستی
+  // --- ترید: ۱ تا ۳ معامله‌ی تصادفی در هفته، نرخ برد ~۶۰٪ ---
+  // ماژول ترید حالا حساب‌محور است — پس داده‌ی تست هم اول یک حساب تستی
   // لازم دارد تا معامله جایی برای نشستن داشته باشد.
   let tradeAccount = await prisma.tradeAccount.findFirst({ where: { userId }, orderBy: { createdAt: "asc" } });
   if (!tradeAccount) {
     tradeAccount = await prisma.tradeAccount.create({
-      data: { userId, name: "حساب تستِ گزارشِ هفتگی", type: "DEMO", currency: "USD", initialBalance: 10_000 },
+      data: { userId, name: "حساب تست گزارش هفتگی", type: "DEMO", currency: "USD", initialBalance: 10_000 },
     });
   }
   const tradeData: Prisma.TradeEntryCreateManyInput[] = [];
@@ -117,16 +117,16 @@ export async function POST() {
   }
   if (tradeData.length) await prisma.tradeEntry.createMany({ data: tradeData });
 
-  // --- یادگیری: یه رودمپِ نمونه با ۸ ایستگاه، ۵تاش انجام‌شده ---
+  // --- یادگیری: یه رودمپ نمونه با ۸ ایستگاه، ۵تاش انجام‌شده ---
   let roadmap = await prisma.roadmap.findFirst({ where: { userId } });
   const stations = Array.from({ length: 8 }, (_, i) => ({ title: `مرحله‌ی ${i + 1}`, items: ["نکته‌ی نمونه"], done: i < 5 }));
   if (!roadmap) {
-    roadmap = await prisma.roadmap.create({ data: { userId, topic: "داده‌ی تست", title: "رودمپِ تستِ گزارشِ هفتگی", stations } });
+    roadmap = await prisma.roadmap.create({ data: { userId, topic: "داده‌ی تست", title: "رودمپ تست گزارش هفتگی", stations } });
   } else {
     await prisma.roadmap.update({ where: { id: roadmap.id }, data: { stations, updatedAt: new Date() } });
   }
 
-  // --- تغذیه: هدفِ روزانه + ۲ تا ۴ وعده در روز با نوسانِ حولِ هدف ---
+  // --- تغذیه: هدف روزانه + ۲ تا ۴ وعده در روز با نوسان حول هدف ---
   const dailyTargetKcal = 2200;
   const existingTarget = await prisma.calorieTarget.findFirst({ where: { userId }, orderBy: { effectiveFrom: "desc" } });
   if (!existingTarget) {
@@ -134,7 +134,7 @@ export async function POST() {
   }
   const foodData: { userId: string; customName: string; customCalories: number; grams: number; date: Date; mealType: string }[] = [];
   for (const date of days) {
-    if (Math.random() < 0.15) continue; // چند روز عمداً بدونِ ثبت، برایِ تستِ Missing-vs-Zero
+    if (Math.random() < 0.15) continue; // چند روز عمدا بدون ثبت، برای تست Missing-vs-Zero
     const meals = randInt(2, 4);
     const perMealAvg = (dailyTargetKcal * rand(0.85, 1.2)) / meals;
     for (let m = 0; m < meals; m++) {
@@ -146,14 +146,14 @@ export async function POST() {
   }
   if (foodData.length) await prisma.foodLogEntry.createMany({ data: foodData });
 
-  // --- ریجنریتِ فوریِ چندهفته‌ی اخیر تا وقتِ باز‌کردنِ صفحه بلافاصله کامل باشه ---
+  // --- ریجنریت فوری چندهفته‌ی اخیر تا وقت باز‌کردن صفحه بلافاصله کامل باشه ---
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } });
   const timezone = user?.timezone || "Asia/Tehran";
   for (const offset of [-1, -2, -3]) {
     try {
       await getOrGenerateWeeklyReport(userId, timezone, true, offset, true);
     } catch {
-      // اگه AI در دسترس نبود هم مهم نیست — بخشِ آماریِ Deterministic هنوز درسته
+      // اگه AI در دسترس نبود هم مهم نیست — بخش آماری Deterministic هنوز درسته
     }
   }
 

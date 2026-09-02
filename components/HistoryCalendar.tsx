@@ -14,7 +14,7 @@ const now = new Date();
 const todayKey = isoLocal(now);
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
-// تاریخچه‌ی ماهانه — دقیقاً همون تقویمی که قبلاً توی صفحه اصلی بود (حالا با
+// تاریخچه‌ی ماهانه — دقیقا همون تقویمی که قبلا توی صفحه اصلی بود (حالا با
 // ظاهر تازه‌تر)، منتقل‌شده زیر برنامه هفتگی: هر روز رفته/نرفته‌ش رو نشون
 // می‌ده و با کلیک روی هر روز جزئیاتش (DayModal) باز می‌شه.
 export function HistoryCalendar({
@@ -24,8 +24,8 @@ export function HistoryCalendar({
 }: {
   wake?: string;
   sleep?: string;
-  /** اگه پاس داده بشه، کلیک روی هر روز به‌جای بازکردنِ DayModal همین رو صدا
-   * می‌زنه — برای حالتِ «انتخابِ تاریخِ گذشته» (دکمه‌ی تاریخچه‌ی داشبورد). */
+  /** اگه پاس داده بشه، کلیک روی هر روز به‌جای بازکردن DayModal همین رو صدا
+   * می‌زنه — برای حالت «انتخاب تاریخ گذشته» (دکمه‌ی تاریخچه‌ی داشبورد). */
   onPick?: (iso: string) => void;
 }) {
   const [calYear, setCalYear] = useState(jToday[0]);
@@ -62,7 +62,7 @@ export function HistoryCalendar({
       if (rec) {
         const expected = tasksForDate(gd, opts);
         const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        // بیدارشدنِ سرِوقت دیگه شرطِ AND برای «روزِ کامل» نیست — همون فیکسِ
+        // بیدارشدن سروقت دیگه شرط AND برای «روز کامل» نیست — همون فیکس
         // lib/friendStats.ts و lib/useMyStreak.ts، هم‌قاعده‌ی این‌جا هم شد.
         result[iso] = expected.length > 0 && doneCount === expected.length;
       } else {

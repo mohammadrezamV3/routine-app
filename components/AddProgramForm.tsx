@@ -18,19 +18,19 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 const now = new Date();
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-// یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعتِ واحد برای همه‌شون) —
-// موقعِ ثبت، یک occurrence جدا برای هر روزِ انتخاب‌شده ساخته می‌شه. idِ
-// ثابت (نه indexِ آرایه) لازمه تا React موقعِ افزودن/حذفِ یک ردیف، بقیه‌ی
-// ردیف‌ها رو دوباره از صفر نسازه و مقدارِ فیلدهاشون جابه‌جا نشه.
+// یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعت واحد برای همه‌شون) —
+// موقع ثبت، یک occurrence جدا برای هر روز انتخاب‌شده ساخته می‌شه. id
+// ثابت (نه index آرایه) لازمه تا React موقع افزودن/حذف یک ردیف، بقیه‌ی
+// ردیف‌ها رو دوباره از صفر نسازه و مقدار فیلدهاشون جابه‌جا نشه.
 type NewRow = { id: string; jsDays: number[]; start: string; end: string };
 function newRowId(): string {
   return "row-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 type Step = "info" | "details";
 
-// فرمِ مستقلِ «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
+// فرم مستقل «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
 // بعدش میزان اهمیت و تگ. اعتبارسنجی هر مرحله جدا انجام می‌شه؛ دکمه‌ی «بعدی»
-// اگه چیزی ناقصه یه لرزشِ خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
+// اگه چیزی ناقصه یه لرزش خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
 export function AddProgramForm({
   scheduleOpts,
   onClose,
@@ -63,8 +63,8 @@ export function AddProgramForm({
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));
   }
-  // خطای یک ردیف به‌محضِ اینکه کاربر دوباره دستش رو روی همون ردیف می‌ذاره
-  // پاک می‌شه — نه اینکه تا زدنِ دوباره‌ی «بعدی» قرمز بمونه.
+  // خطای یک ردیف به‌محض اینکه کاربر دوباره دستش رو روی همون ردیف می‌ذاره
+  // پاک می‌شه — نه اینکه تا زدن دوباره‌ی «بعدی» قرمز بمونه.
   function clearRowError(i: number) {
     setRowErrors((prev) => {
       if (!prev[i]) return prev;
@@ -81,9 +81,9 @@ export function AddProgramForm({
       r.map((row, idx) => {
         if (idx !== i) return row;
         const has = row.jsDays.includes(jsDay);
-        // همیشه باید حداقل یک روز انتخاب‌شده بمونه — دی‌سلکت‌کردنِ آخرین
-        // روزِ باقی‌مونده نادیده گرفته می‌شه، وگرنه یه ردیفِ بدونِ هیچ روزی
-        // می‌شد که هیچ occurrence‌ای ازش قابلِ ساختن نیست.
+        // همیشه باید حداقل یک روز انتخاب‌شده بمونه — دی‌سلکت‌کردن آخرین
+        // روز باقی‌مونده نادیده گرفته می‌شه، وگرنه یه ردیف بدون هیچ روزی
+        // می‌شد که هیچ occurrence‌ای ازش قابل ساختن نیست.
         if (has && row.jsDays.length === 1) return row;
         const next = has ? row.jsDays.filter((d) => d !== jsDay) : [...row.jsDays, jsDay];
         return { ...row, jsDays: next };
@@ -103,9 +103,9 @@ export function AddProgramForm({
       if (!r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
-      // ساعتِ پایان نمی‌تونه زودتر (یا برابرِ) ساعتِ شروع باشه — بازه‌ی
+      // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه — بازه‌ی
       // معکوس/صفر یعنی برنامه‌ای که هیچ‌وقت اتفاق نمی‌افته و همه‌ی
-      // محاسبه‌های خطِ زمان/تداخل رو هم بهم می‌ریزه.
+      // محاسبه‌های خط زمان/تداخل رو هم بهم می‌ریزه.
       if (!e.start && !e.end) {
         const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
         const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
@@ -179,7 +179,7 @@ export function AddProgramForm({
         name,
         jsDay: r.jsDay,
         time: r.end ? `${r.start} – ${r.end}` : r.start,
-        // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلاً اگه امروز
+        // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلا اگه امروز
         // چهارشنبه‌ست و برنامه رو برای چهارشنبه ثبت می‌کنی، چهارشنبه‌های
         // گذشته نباید یهو این برنامه رو داشته باشن.
         startDate: isoLocal(now),
@@ -350,8 +350,8 @@ export function AddProgramForm({
                 onChange={(e) => setTag(e.target.value)}
               />
 
-              {/* دکمه‌ی ثبت طبقِ درخواستِ کاربر دیگه یه آیکونِ تیکِ دایره‌ای
-                  نیست — یک دکمه‌ی تمام‌عرضِ متن‌دار با حالتِ لودینگ/موفقیت/خطا
+              {/* دکمه‌ی ثبت طبق درخواست کاربر دیگه یه آیکون تیک دایره‌ای
+                  نیست — یک دکمه‌ی تمام‌عرض متن‌دار با حالت لودینگ/موفقیت/خطا
                   روی خودش، تا مشخص باشه داره ثبت می‌شه. */}
               <div className="wsearch-newform-actions">
                 <button

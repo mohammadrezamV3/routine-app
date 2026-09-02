@@ -27,7 +27,7 @@ function FunnelInner() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">Funnel تبدیل کاربر (بر اساس کاربرانِ ثبت‌نام‌کرده در این بازه)</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">Funnel تبدیل کاربر (بر اساس کاربران ثبت‌نام‌کرده در این بازه)</span></div>
         {!steps ? (
           <div className="admin-empty">در حال بارگذاری…</div>
         ) : steps[0].count === 0 ? (
@@ -57,7 +57,7 @@ function FunnelInner() {
       </div>
 
       <div className="admin-section-hint">
-        «مشاهده پلن» و «شروع خرید» فقط از تاریخِ فعال‌سازیِ ردیابیِ این دو رویداد قابل‌ثبت هستن — بازه‌های قدیمی‌تر برای این دو مرحله صفر نشون می‌دن.
+        «مشاهده پلن» و «شروع خرید» فقط از تاریخ فعال‌سازی ردیابی این دو رویداد قابل‌ثبت هستن — بازه‌های قدیمی‌تر برای این دو مرحله صفر نشون می‌دن.
       </div>
     </section>
   );

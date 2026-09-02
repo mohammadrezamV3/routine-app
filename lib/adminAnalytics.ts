@@ -1,12 +1,12 @@
-// لایه‌ی تجمیعِ کوئری‌های پنلِ Owner — همه‌جا Prisma پارامتری‌شده (بدون raw
-// SQL، طبقِ قاعده‌ی امنیتیِ ثابتِ پروژه)، و برای جلوگیری از سنگین‌شدنِ هر
-// بارگذاریِ صفحه، نتیجه‌ی هر تابع با یک کشِ کوتاه‌مدتِ در-حافظه (تک-instance،
+// لایه‌ی تجمیع کوئری‌های پنل Owner — همه‌جا Prisma پارامتری‌شده (بدون raw
+// SQL، طبق قاعده‌ی امنیتی ثابت پروژه)، و برای جلوگیری از سنگین‌شدن هر
+// بارگذاری صفحه، نتیجه‌ی هر تابع با یک کش کوتاه‌مدت در-حافظه (تک-instance،
 // هم‌الگوی lib/rateLimit.ts/lib/appSettings.ts) نگه داشته می‌شه.
 //
-// هیچ عددی این‌جا Fake نیست — هر مقدار مستقیم از یک کوئریِ واقعی میاد. جایی
-// که داده‌ی کافی نیست یا زیرساختِ لازم (مثلاً event tracking) هنوز از قبل از
+// هیچ عددی این‌جا Fake نیست — هر مقدار مستقیم از یک کوئری واقعی میاد. جایی
+// که داده‌ی کافی نیست یا زیرساخت لازم (مثلا event tracking) هنوز از قبل از
 // این تاریخ وجود نداشته، مقدار «null»/آرایه‌ی خالی برمی‌گرده و صفحه باید
-// «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عددِ ساختگی.
+// «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عدد ساختگی.
 
 import { prisma } from "@/lib/prisma";
 import { ModuleKey } from "@prisma/client";
@@ -76,7 +76,7 @@ function pctChange(cur: number, prev: number): number | null {
 }
 
 // ============================================================================
-// سطل‌بندیِ زمانی برای نمودارها (بدونِ raw SQL — همه‌ی سطل‌بندی سمتِ JS)
+// سطل‌بندی زمانی برای نمودارها (بدون raw SQL — همه‌ی سطل‌بندی سمت JS)
 // ============================================================================
 
 type BucketUnit = "day" | "week" | "month";
@@ -91,7 +91,7 @@ function pickBucketUnit(range: Range): BucketUnit {
 function startOfWeek(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
-  const day = (x.getDay() + 1) % 7; // شنبه=۰ برای همخوانی با هفته‌ی فارسی نیست، فقط یک سطل‌بندیِ پایدار می‌خوایم
+  const day = (x.getDay() + 1) % 7; // شنبه=۰ برای همخوانی با هفته‌ی فارسی نیست، فقط یک سطل‌بندی پایدار می‌خوایم
   x.setDate(x.getDate() - day);
   return x;
 }
@@ -288,10 +288,10 @@ export async function getPlanBreakdown(range: Range): Promise<PlanBreakdownRow[]
 
 export type RenewalsUpgrades = { renewalsInRange: number; upgradesInRange: number; downgradesInRange: number };
 
-// «تمدید» و «ارتقا» فیلدِ مستقلی توی دیتابیس ندارن — هر خرید یک ردیفِ تازه‌ی
-// Subscription می‌سازه (نه آپدیتِ ردیفِ قبلی)، پس این‌ها از روی توالیِ
-// Subscriptionهای هر کاربر استنتاج می‌شن: همون پلن دوباره = تمدید؛ پلنِ
-// گران‌تر = ارتقا؛ پلنِ ارزون‌تر = تنزل.
+// «تمدید» و «ارتقا» فیلد مستقلی توی دیتابیس ندارن — هر خرید یک ردیف تازه‌ی
+// Subscription می‌سازه (نه آپدیت ردیف قبلی)، پس این‌ها از روی توالی
+// Subscriptionهای هر کاربر استنتاج می‌شن: همون پلن دوباره = تمدید؛ پلن
+// گران‌تر = ارتقا؛ پلن ارزون‌تر = تنزل.
 export async function getRenewalsAndUpgrades(range: Range): Promise<RenewalsUpgrades> {
   return withCache(rangeCacheKey("renewals-upgrades", range), 60_000, async () => {
     const subs = await prisma.subscription.findMany({
@@ -705,7 +705,7 @@ export type ChurnAnalytics = {
   canceledInRange: number;
   expiredInRange: number;
   churnRatePercent: number | null;
-  atRiskCount: number; // اشتراکِ فعالی که ظرفِ ۷ روزِ آینده منقضی می‌شه
+  atRiskCount: number; // اشتراک فعالی که ظرف ۷ روز آینده منقضی می‌شه
   series: { bucket: string; canceled: number }[];
 };
 
@@ -862,7 +862,7 @@ export async function getErrorLogs(params: ErrorLogParams) {
 }
 
 // ============================================================================
-// لاگِ اقدامات Owner
+// لاگ اقدامات Owner
 // ============================================================================
 
 export async function getAuditLog(params: { page?: number; pageSize?: number }) {
@@ -891,8 +891,8 @@ export async function writeAuditLog(actorUserId: string, action: string, targetT
 }
 
 // ============================================================================
-// وضعیت سیستم — فقط داده‌ی واقعی؛ هیچ متریکی که واقعاً قابل‌اندازه‌گیری
-// نیست (CPU/RAM/Disk سرورِ واقعیِ production وقتی این کد داخلِ یک محیطِ
+// وضعیت سیستم — فقط داده‌ی واقعی؛ هیچ متریکی که واقعا قابل‌اندازه‌گیری
+// نیست (CPU/RAM/Disk سرور واقعی production وقتی این کد داخل یک محیط
 // دیگه اجرا می‌شه) نمایش داده نمی‌شه.
 // ============================================================================
 

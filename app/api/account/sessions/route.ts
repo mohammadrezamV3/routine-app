@@ -4,10 +4,10 @@ import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/lib/auth";
 import { listDeviceSessions, revokeDeviceSession, revokeOtherDeviceSessions } from "@/lib/deviceSessions";
 
-// دستگاه‌های فعالِ حساب (پنل کاربری › امنیت).
+// دستگاه‌های فعال حساب (پنل کاربری › امنیت).
 //
-// `sid` عمداً هیچ‌وقت به کلاینت برنمی‌گرده — فقط یک پرچمِ `current` که نشون
-// می‌ده کدوم ردیف همین دستگاهه. خودِ sid از JWT (که httpOnly است) سمتِ سرور
+// `sid` عمدا هیچ‌وقت به کلاینت برنمی‌گرده — فقط یک پرچم `current` که نشون
+// می‌ده کدوم ردیف همین دستگاهه. خود sid از JWT (که httpOnly است) سمت سرور
 // خونده می‌شه.
 async function requireUser(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -35,15 +35,15 @@ export async function GET(req: NextRequest) {
   });
 }
 
-// DELETE /api/account/sessions?id=<sessionId>  → ابطالِ یک دستگاه
-// DELETE /api/account/sessions?others=1        → ابطالِ همه‌ی دستگاه‌های دیگر
+// DELETE /api/account/sessions?id=<sessionId>  → ابطال یک دستگاه
+// DELETE /api/account/sessions?others=1        → ابطال همه‌ی دستگاه‌های دیگر
 export async function DELETE(req: NextRequest) {
   const auth = await requireUser(req);
   if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   if (searchParams.get("others") === "1") {
-    if (!auth.sid) return NextResponse.json({ error: "نشستِ فعلی شناسایی نشد" }, { status: 400 });
+    if (!auth.sid) return NextResponse.json({ error: "نشست فعلی شناسایی نشد" }, { status: 400 });
     const count = await revokeOtherDeviceSessions(auth.userId, auth.sid);
     return NextResponse.json({ ok: true, revoked: count });
   }

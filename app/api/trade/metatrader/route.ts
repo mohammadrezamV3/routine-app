@@ -6,8 +6,8 @@ import {
   MtPlatform, PAIRING_TTL_MS, generatePairingCode, hashSecret,
 } from "@/lib/metatrader";
 
-// مدیریتِ اتصالِ متاتریدرِ یک حساب، از سمتِ کاربرِ لاگین‌کرده.
-// (اندپوینت‌هایی که خودِ EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
+// مدیریت اتصال متاتریدر یک حساب، از سمت کاربر لاگین‌کرده.
+// (اندپوینت‌هایی که خود EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
 
 const LINK_SELECT = {
   id: true, platform: true, brokerName: true, serverName: true, accountLogin: true,
@@ -52,8 +52,8 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/trade/metatrader  { accountId, platform }
-// یک کدِ اتصالِ تازه می‌سازد. کد فقط همین یک‌بار برگردانده می‌شود؛ در
-// دیتابیس فقط هشش می‌ماند، پس اگر کاربر گمش کرد باید کدِ جدید بگیرد.
+// یک کد اتصال تازه می‌سازد. کد فقط همین یک‌بار برگردانده می‌شود؛ در
+// دیتابیس فقط هشش می‌ماند، پس اگر کاربر گمش کرد باید کد جدید بگیرد.
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
   const link = await prisma.tradeMtLink.upsert({
     where: { accountId },
     create: { userId, accountId, platform, pairingHash, pairingExpiresAt },
-    // کدِ جدید، اتصالِ قبلی را باطل می‌کند — وگرنه یک EAی قدیمی روی همان
-    // حساب می‌ماند بدونِ اینکه کاربر بداند.
+    // کد جدید، اتصال قبلی را باطل می‌کند — وگرنه یک EAی قدیمی روی همان
+    // حساب می‌ماند بدون اینکه کاربر بداند.
     update: { platform, pairingHash, pairingExpiresAt, tokenHash: null, tokenPrefix: null, revokedAt: null, connectedAt: null },
     select: LINK_SELECT,
   });
@@ -82,8 +82,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, code, expiresAt: pairingExpiresAt.toISOString(), link: serialize(link, false) });
 }
 
-// DELETE /api/trade/metatrader?accountId=... — ابطالِ اتصال
-// معاملاتِ همگام‌شده دست‌نخورده می‌مانند؛ فقط EA دیگر اجازه‌ی ارسال ندارد.
+// DELETE /api/trade/metatrader?accountId=... — ابطال اتصال
+// معاملات همگام‌شده دست‌نخورده می‌مانند؛ فقط EA دیگر اجازه‌ی ارسال ندارد.
 export async function DELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;

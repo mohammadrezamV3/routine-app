@@ -11,9 +11,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json(detail);
 }
 
-// PATCH { blocked: boolean } — فعلاً تنها اقدامِ واقعیِ «تغییر وضعیت» که این
-// اپ بک‌اندِ لازم رو براش داره. اقدامات دیگه (تغییر پلن دستی و…) از قبل از
-// طریقِ سیستمِ اشتراک/پرداختِ موجود انجام می‌شن، نه از این‌جا.
+// PATCH { blocked: boolean } — فعلا تنها اقدام واقعی «تغییر وضعیت» که این
+// اپ بک‌اند لازم رو براش داره. اقدامات دیگه (تغییر پلن دستی و…) از قبل از
+// طریق سیستم اشتراک/پرداخت موجود انجام می‌شن، نه از این‌جا.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;

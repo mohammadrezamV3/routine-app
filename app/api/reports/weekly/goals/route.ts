@@ -7,7 +7,7 @@ import { clampText, parseIsoDate } from "@/lib/validate";
 import { getUserWeekRange } from "@/lib/weeklyReport/weekRange";
 import { Domain, DOMAINS, computeSingleDomainMetric, resolveActiveModules } from "@/lib/weeklyReport/metrics";
 
-// GET /api/reports/weekly/goals — آخرین اهدافِ کاربر (پذیرفته‌شده/محقق‌شده/ناکام)
+// GET /api/reports/weekly/goals — آخرین اهداف کاربر (پذیرفته‌شده/محقق‌شده/ناکام)
 export async function GET() {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
@@ -21,15 +21,15 @@ export async function GET() {
 }
 
 // POST /api/reports/weekly/goals  { weekStart, domain?, title, description, wasEdited? }
-// فقط با Accept/Edit صدا زده می‌شه — AI مستقیم هدف نمی‌سازه (بندِ ۳۶).
-// followUpScoreBefore از امتیازِ *همون هفته‌ای که پیشنهاد ازش اومده* گرفته
-// می‌شه — مبنایِ مقایسه‌ی هفته‌ی بعد در snapshot.ts (Feedback Loop، بندِ ۳۷).
+// فقط با Accept/Edit صدا زده می‌شه — AI مستقیم هدف نمی‌سازه (بند ۳۶).
+// followUpScoreBefore از امتیاز *همون هفته‌ای که پیشنهاد ازش اومده* گرفته
+// می‌شه — مبنای مقایسه‌ی هفته‌ی بعد در snapshot.ts (Feedback Loop، بند ۳۷).
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
 
   if (!guard.isSuperAdmin && !checkRateLimit(`weekly-goal-accept:${guard.userId}`, 20, 24 * 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — بعداً دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — بعدا دوباره امتحان کن" }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));

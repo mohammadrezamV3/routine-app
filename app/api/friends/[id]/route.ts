@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
 
-// PATCH /api/friends/:id → قبول‌کردنِ یک درخواست دوستیِ در انتظار (فقط addressee)
+// PATCH /api/friends/:id → قبول‌کردن یک درخواست دوستی در انتظار (فقط addressee)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -15,13 +15,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
   if (friendship.status !== "PENDING") {
-    return NextResponse.json({ error: "این درخواست قبلاً پاسخ داده شده" }, { status: 409 });
+    return NextResponse.json({ error: "این درخواست قبلا پاسخ داده شده" }, { status: 409 });
   }
 
   await prisma.friendship.update({ where: { id: params.id }, data: { status: "ACCEPTED" } });
 
   // به کسی که اول درخواست داده بود اطلاع بده که قبول شد — حتی وقتی اپش
-  // بسته‌ست (best-effort، هیچ‌وقت نباید خودِ قبول‌کردن رو fail کنه).
+  // بسته‌ست (best-effort، هیچ‌وقت نباید خود قبول‌کردن رو fail کنه).
   const accepterName = session!.user!.name || "یک کاربر";
   sendPushToUser(friendship.requesterId, {
     title: "درخواست دوستی قبول شد",
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/friends/:id → رد‌کردنِ درخواست، لغوِ درخواستِ ارسالی، یا حذفِ یک دوستیِ تأییدشده
+// DELETE /api/friends/:id → رد‌کردن درخواست، لغو درخواست ارسالی، یا حذف یک دوستی تأییدشده
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;

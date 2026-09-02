@@ -5,9 +5,9 @@ import { DailyBreakdownDay } from "./analysis";
 import { TrailingWeek } from "./trailing";
 
 // ============================================================================
-// V2 — لایه‌ی الگوی قطعی (Deterministic)، قبل از AI. خروجیِ این فایل عیناً
-// به‌عنوانِ ورودیِ AI Interpretation می‌ره (نه دیتابیسِ خام) — پس هر عددی
-// این‌جا واقعیه، AI فقط تفسیرِ زبانیِ همین اعداد رو می‌نویسه.
+// V2 — لایه‌ی الگوی قطعی (Deterministic)، قبل از AI. خروجی این فایل عینا
+// به‌عنوان ورودی AI Interpretation می‌ره (نه دیتابیس خام) — پس هر عددی
+// این‌جا واقعیه، AI فقط تفسیر زبانی همین اعداد رو می‌نویسه.
 // ============================================================================
 
 function avg(nums: number[]): number {
@@ -75,17 +75,17 @@ export async function detectStreaks(userId: string, activeDomains: Domain[]): Pr
   const results: StreakInfo[] = [];
   if (activeDomains.includes("routine")) results.push({ domain: "routine", currentStreakDays: await routineStreak(userId) });
   if (activeDomains.includes("fitness")) results.push({ domain: "fitness", currentStreakDays: await fitnessStreak(userId) });
-  return results.filter((s) => s.currentStreakDays >= 2); // استریکِ ۰-۱ روزه چیزی برای گفتن نداره
+  return results.filter((s) => s.currentStreakDays >= 2); // استریک ۰-۱ روزه چیزی برای گفتن نداره
 }
 
 // -------------------------------------------------------------- Outlier ----
 export type Outlier = { domain: Domain; date: string; weekday: string; value: number; typicalRange: [number, number] };
 
 /**
- * روزی که امتیازش نسبت به میانگینِ همون دامنه در هفته‌های اخیر خیلی فاصله
- * داره (بیش از ۴۰ امتیاز اختلاف) — چون داده‌ی خامِ واحدهای فیزیکی (دقیقه‌ی
- * تمرین، حجمِ معامله) در schema نیست، این‌جا رویِ امتیازِ نرمال‌شده‌ی ۰-۱۰۰
- * کار می‌کنه، نه واحدِ خام (محدودیتِ داده، نه انتخاب).
+ * روزی که امتیازش نسبت به میانگین همون دامنه در هفته‌های اخیر خیلی فاصله
+ * داره (بیش از ۴۰ امتیاز اختلاف) — چون داده‌ی خام واحدهای فیزیکی (دقیقه‌ی
+ * تمرین، حجم معامله) در schema نیست، این‌جا روی امتیاز نرمال‌شده‌ی ۰-۱۰۰
+ * کار می‌کنه، نه واحد خام (محدودیت داده، نه انتخاب).
  */
 export function detectOutliers(currentDaily: DailyBreakdownDay[], trailingWeeks: TrailingWeek[]): Outlier[] {
   const outliers: Outlier[] = [];
@@ -109,9 +109,9 @@ export type Correlation = { domainA: Domain; domainB: Domain; withActiveAvg: num
 const MIN_CORRELATION_SAMPLE = 4;
 
 /**
- * برای هر جفتِ دامنه‌ی فعال: روزهایی که A داده داشته در برابرِ روزهایی که
- * نداشته، میانگینِ B رو مقایسه می‌کنه. حداقلِ نمونه اجباریه؛ خروجی همیشه
- * «همبستگی»، هیچ‌وقت «علت» (بندِ ۱۹/۲۶).
+ * برای هر جفت دامنه‌ی فعال: روزهایی که A داده داشته در برابر روزهایی که
+ * نداشته، میانگین B رو مقایسه می‌کنه. حداقل نمونه اجباریه؛ خروجی همیشه
+ * «همبستگی»، هیچ‌وقت «علت» (بند ۱۹/۲۶).
  */
 export function detectCorrelations(activeDomains: Domain[], allDays: DailyBreakdownDay[]): Correlation[] {
   const correlations: Correlation[] = [];
@@ -130,7 +130,7 @@ export function detectCorrelations(activeDomains: Domain[], allDays: DailyBreakd
       if (withA.length < MIN_CORRELATION_SAMPLE || withoutA.length < MIN_CORRELATION_SAMPLE) continue;
       const withAvg = Math.round(avg(withA));
       const withoutAvg = Math.round(avg(withoutA));
-      if (Math.abs(withAvg - withoutAvg) < 10) continue; // اختلافِ کوچیک ارزشِ گزارش‌شدن نداره
+      if (Math.abs(withAvg - withoutAvg) < 10) continue; // اختلاف کوچیک ارزش گزارش‌شدن نداره
       correlations.push({ domainA: a, domainB: b, withActiveAvg: withAvg, withoutActiveAvg: withoutAvg, sampleWith: withA.length, sampleWithout: withoutA.length });
     }
   }

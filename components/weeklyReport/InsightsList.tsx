@@ -6,9 +6,9 @@ import { Lightbulb, ChevronDown } from "lucide-react";
 
 type Insight = { title: string; description: string; evidence: string; confidence: string };
 
-const CONFIDENCE_LABEL: Record<string, string> = { low: "دقتِ کم", medium: "دقتِ متوسط", high: "دقتِ بالا" };
+const CONFIDENCE_LABEL: Record<string, string> = { low: "دقت کم", medium: "دقت متوسط", high: "دقت بالا" };
 
-// هر Insight قابل‌بازشدنه — کلیک روی «چرا این را گفتی؟» مبنای عددیش رو نشون می‌ده (بندِ ۳۲).
+// هر Insight قابل‌بازشدنه — کلیک روی «چرا این را گفتی؟» مبنای عددیش رو نشون می‌ده (بند ۳۲).
 export function InsightsList({ items }: { items: Insight[] | null }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   if (!items || items.length === 0) return null;

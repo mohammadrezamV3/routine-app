@@ -8,17 +8,17 @@ import {
   NEWS_ALERT_KEY, NEWS_ALERT_LOG_KEY, normalizeNewsAlertPrefs,
 } from "@/lib/tradeNewsAlerts";
 
-// POST /api/cron/economic-alerts — هشدارِ پیش از اخبارِ مهم.
-// مثلِ بقیه‌ی کران‌ها پشتِ CRON_SECRET است و یک crontabِ بیرونی صدایش
+// POST /api/cron/economic-alerts — هشدار پیش از اخبار مهم.
+// مثل بقیه‌ی کران‌ها پشت CRON_SECRET است و یک crontab بیرونی صدایش
 // می‌زند (پیشنهاد: هر ۵ دقیقه — نگاه کن به deploy/cron.example).
 //
-// منطق: رویدادهایی که در بازه‌ی [الان، الان + بیشترین minutesBeforeِ ممکن]
-// رخ می‌دهند یک‌بار خوانده می‌شوند، بعد برای هر کاربرِ سابسکرایب‌شده فیلترِ
-// خودش (سطحِ تأثیر، ارز، فاصله‌ی زمانی) اعمال می‌شود.
+// منطق: رویدادهایی که در بازه‌ی [الان، الان + بیشترین minutesBefore ممکن]
+// رخ می‌دهند یک‌بار خوانده می‌شوند، بعد برای هر کاربر سابسکرایب‌شده فیلتر
+// خودش (سطح تأثیر، ارز، فاصله‌ی زمانی) اعمال می‌شود.
 //
-// جلوگیری از ارسالِ تکراری: چون این روت هر چند دقیقه اجرا می‌شود ولی هر
+// جلوگیری از ارسال تکراری: چون این روت هر چند دقیقه اجرا می‌شود ولی هر
 // رویداد فقط یک‌بار باید هشدار بدهد، شناسه‌ی رویدادهای هشدارداده‌شده روی
-// همان UserSetting (کلیدِ سرور-مدیریتِ tradeNewsAlertLog) نگه داشته می‌شود.
+// همان UserSetting (کلید سرور-مدیریت tradeNewsAlertLog) نگه داشته می‌شود.
 
 const MAX_LOOKAHEAD_MINUTES = 60; // بزرگ‌ترین گزینه‌ی minutesBefore
 /** ردهای قدیمی‌تر از این مدت پاک می‌شوند تا لاگ بی‌نهایت بزرگ نشود */
@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
   });
   if (!events.length) return NextResponse.json({ ok: true, events: 0, pushed: 0 });
 
-  // فقط کاربرهایی که هم دستگاهِ سابسکرایب‌شده دارند هم دسترسیِ ماژولِ ترید —
-  // بقیه اصلاً بررسی نمی‌شوند.
+  // فقط کاربرهایی که هم دستگاه سابسکرایب‌شده دارند هم دسترسی ماژول ترید —
+  // بقیه اصلا بررسی نمی‌شوند.
   const subscribed = await prisma.pushSubscription.findMany({ distinct: ["userId"], select: { userId: true } });
   const userIds = subscribed.map((s) => s.userId);
   if (!userIds.length) return NextResponse.json({ ok: true, events: events.length, pushed: 0 });
@@ -97,10 +97,10 @@ export async function POST(req: NextRequest) {
           url: "/trade/calendar",
         });
       } catch {
-        // شکستِ ارسال برای یک کاربر نباید بقیه‌ی کاربرها را از اجرا بیندازد،
-        // و عمداً در لاگ ثبت *نمی‌شود* — وگرنه رویداد «فرستاده‌شده» حساب
-        // می‌شد و کاربر هیچ‌وقت هشدارش را نمی‌گرفت. اجرای بعدیِ کران (تا
-        // وقتی هنوز داخلِ بازه‌ی زمانی باشد) دوباره تلاش می‌کند.
+        // شکست ارسال برای یک کاربر نباید بقیه‌ی کاربرها را از اجرا بیندازد،
+        // و عمدا در لاگ ثبت *نمی‌شود* — وگرنه رویداد «فرستاده‌شده» حساب
+        // می‌شد و کاربر هیچ‌وقت هشدارش را نمی‌گرفت. اجرای بعدی کران (تا
+        // وقتی هنوز داخل بازه‌ی زمانی باشد) دوباره تلاش می‌کند.
         failed++;
         continue;
       }
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     if (!changed) continue;
 
-    // هرس کردنِ ردهای قدیمی در همان نوشتنی که لازم بود
+    // هرس کردن ردهای قدیمی در همان نوشتنی که لازم بود
     for (const [id, at] of Object.entries(log)) {
       if (now.getTime() - new Date(at).getTime() > LOG_RETENTION_MS) delete log[id];
     }

@@ -14,7 +14,7 @@ describe("checkRateLimit", () => {
   it("enforces 'at most 1 request per 60s' for the email-otp request pattern", () => {
     const key = `email-otp-req-email:test-${Math.random()}@example.com`;
     expect(checkRateLimit(key, 1, 60_000)).toBe(true);
-    // درخواستِ دوم توی همون بازه باید رد بشه
+    // درخواست دوم توی همون بازه باید رد بشه
     expect(checkRateLimit(key, 1, 60_000)).toBe(false);
     expect(checkRateLimit(key, 1, 60_000)).toBe(false);
   });
@@ -23,7 +23,7 @@ describe("checkRateLimit", () => {
     const keyA = `test:a:${Math.random()}`;
     const keyB = `test:b:${Math.random()}`;
     expect(checkRateLimit(keyA, 1, 60_000)).toBe(true);
-    // سقفِ keyA پر شد، ولی keyB باید کاملاً مستقل باشه
+    // سقف keyA پر شد، ولی keyB باید کاملا مستقل باشه
     expect(checkRateLimit(keyB, 1, 60_000)).toBe(true);
     expect(checkRateLimit(keyA, 1, 60_000)).toBe(false);
   });

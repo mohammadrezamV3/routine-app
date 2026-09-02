@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// PATCH /api/friends/:id/favorite  { favorite: boolean }  → فیوریت‌کردنِ یک
-// دوستیِ تأییدشده، فقط برای سمتِ خودِ کاربر (شخصیه، نه دوطرفه — دوستِ مقابل
-// می‌تونه بدونِ اطلاع از این، خودش هم جدا فیوریتش کنه یا نکنه).
+// PATCH /api/friends/:id/favorite  { favorite: boolean }  → فیوریت‌کردن یک
+// دوستی تأییدشده، فقط برای سمت خود کاربر (شخصیه، نه دوطرفه — دوست مقابل
+// می‌تونه بدون اطلاع از این، خودش هم جدا فیوریتش کنه یا نکنه).
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;

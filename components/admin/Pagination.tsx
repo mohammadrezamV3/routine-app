@@ -1,9 +1,9 @@
 "use client";
 
-// صفحه‌بندیِ مشترکِ پنل Owner — قبلاً همین سه‌خط (دکمه‌ی قبلی/شماره‌صفحه/
+// صفحه‌بندی مشترک پنل Owner — قبلا همین سه‌خط (دکمه‌ی قبلی/شماره‌صفحه/
 // دکمه‌ی بعدی) توی users/transactions/system-errors جدا کپی شده بود.
-// خودِ onChange تصمیم می‌گیره چطور صفحه عوض بشه (query string یا state
-// محلی)، این کامپوننت فقط UI/شرطِ نمایشه.
+// خود onChange تصمیم می‌گیره چطور صفحه عوض بشه (query string یا state
+// محلی)، این کامپوننت فقط UI/شرط نمایشه.
 export function AdminPagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (page: number) => void }) {
   if (totalPages <= 1) return null;
   return (

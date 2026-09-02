@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 
-// کارتِ استانداردِ بخش‌های تنظیماتِ پنل کاربری — آیکون در دایره‌ی نرم + عنوان،
-// با ورودِ مرحله‌ایِ ملایم وقتی چند کارت زیرِ هم‌ان.
+// کارت استاندارد بخش‌های تنظیمات پنل کاربری — آیکون در دایره‌ی نرم + عنوان،
+// با ورود مرحله‌ای ملایم وقتی چند کارت زیر هم‌ان.
 export function AccountSectionCard({
   icon, title, children, index = 0,
 }: { icon: React.ReactNode; title: string; children: React.ReactNode; index?: number }) {

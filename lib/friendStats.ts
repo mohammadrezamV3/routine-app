@@ -1,29 +1,29 @@
-// آمارِ روتینِ دوست‌ها. این‌جا زندگی می‌کند نه داخلِ `app/api/friends/route.ts`
+// آمار روتین دوست‌ها. این‌جا زندگی می‌کند نه داخل `app/api/friends/route.ts`
 // چون هم آن روت استفاده‌اش می‌کند هم `components/InlineBootstrap.tsx` — و Next
-// اجازه نمی‌دهد یک فایلِ `route.ts` چیزی جز هندلرهای HTTP export کند.
+// اجازه نمی‌دهد یک فایل `route.ts` چیزی جز هندلرهای HTTP export کند.
 import { prisma } from "@/lib/prisma";
 import { computeDayStats, tasksForDate, ScheduleOpts } from "@/lib/schedule";
 import { isoLocal } from "@/lib/jalali";
 
-// آمارِ روتینِ *همه‌ی* دوست‌ها با تعدادِ ثابتی کوئری.
+// آمار روتین *همه‌ی* دوست‌ها با تعداد ثابتی کوئری.
 //
 // نسخه‌ی قبلی به‌ازای هر دوست جدا صدا زده می‌شد و هرکدوم ۵ کوئری می‌زد
-// (customOccurrences + removedOccurrences + dailyEntryِ امروز + wakeSleepTimes
-// + ۹۰ روز DailyEntry). با ۲۰ دوست یعنی ~۱۰۰ کوئری برای یک بار باز کردنِ
-// داشبورد. حالا سه کوئریِ دسته‌ای می‌زنیم (`in:` روی کلِ لیستِ دوست‌ها) و
+// (customOccurrences + removedOccurrences + dailyEntry امروز + wakeSleepTimes
+// + ۹۰ روز DailyEntry). با ۲۰ دوست یعنی ~۱۰۰ کوئری برای یک بار باز کردن
+// داشبورد. حالا سه کوئری دسته‌ای می‌زنیم (`in:` روی کل لیست دوست‌ها) و
 // بقیه‌ی محاسبه در حافظه انجام می‌شه — منطق مو‌به‌مو همونه.
 export type RoutineStats = { completed: number; total: number; pct: number; streak: number };
 
 const STREAK_LOOKBACK_DAYS = 90;
-// پنجره‌ی اولِ استریک. استریک به محضِ اولین روزِ ناقص می‌شکنه، پس تقریباً
-// همیشه فقط چند روزِ آخر خونده می‌شه — ولی کدِ قبلی بی‌قیدوشرط هر ۹۰ روزِ
+// پنجره‌ی اول استریک. استریک به محض اولین روز ناقص می‌شکنه، پس تقریبا
+// همیشه فقط چند روز آخر خونده می‌شه — ولی کد قبلی بی‌قیدوشرط هر ۹۰ روز
 // *همه‌ی* دوست‌ها رو از قبل می‌کشید.
 //
-// اندازه‌گیری‌شده: یک درخواستِ /api/friends با ۱۰ دوست، ۹۰۰ ردیفِ DailyEntry
-// (با کلِ JSONِ completedItems) می‌خوند تا یه پاسخِ ۲ کیلوبایتی بسازه — و
+// اندازه‌گیری‌شده: یک درخواست /api/friends با ۱۰ دوست، ۹۰۰ ردیف DailyEntry
+// (با کل JSON completedItems) می‌خوند تا یه پاسخ ۲ کیلوبایتی بسازه — و
 // همین باعث شده بود این روت ۹ برابر کندتر از بقیه باشه (۵۸ در برابر ۵۱۷
 // req/s). حالا اول ۲۱ روز خونده می‌شه؛ فقط برای دوستی که استریکش به لبه‌ی
-// همون پنجره رسید (یعنی واقعاً استریکِ بلندی داره) بقیه‌اش هم گرفته می‌شه.
+// همون پنجره رسید (یعنی واقعا استریک بلندی داره) بقیه‌اش هم گرفته می‌شه.
 const STREAK_FIRST_WINDOW_DAYS = 21;
 
 export async function routineStatsForUsers(userIds: string[]): Promise<Map<string, RoutineStats>> {
@@ -41,7 +41,7 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
       where: { userId: { in: userIds }, key: { in: ["customOccurrences", "removedOccurrences"] } },
       select: { userId: true, key: true, value: true },
     }),
-    // فقط پنجره‌ی اول — و فقط ستون‌هایی که واقعاً لازمن (id و createdAt و…
+    // فقط پنجره‌ی اول — و فقط ستون‌هایی که واقعا لازمن (id و createdAt و…
     // هیچ‌وقت استفاده نمی‌شدن ولی از دیتابیس میومدن و سریالایز می‌شدن)
     prisma.dailyEntry.findMany({
       where: { userId: { in: userIds }, date: { gte: dayStart(STREAK_FIRST_WINDOW_DAYS), lte: new Date(todayIso) } },
@@ -79,7 +79,7 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
     if (hitEdge) needDeeper.push({ userId, opts });
   }
 
-  // مرحله‌ی دوم — در عمل تقریباً همیشه خالیه، چون استریکِ ۲۱ روزِ کامل نادره.
+  // مرحله‌ی دوم — در عمل تقریبا همیشه خالیه، چون استریک ۲۱ روز کامل نادره.
   if (needDeeper.length) {
     const deepRows = await prisma.dailyEntry.findMany({
       where: {
@@ -106,14 +106,14 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
 type DailyMap = Record<string, { tasks: Record<string, boolean> }>;
 
 /**
- * روزهای کاملِ پشتِ‌سرهم از دیروز به عقب. `hitEdge` یعنی شمارش تا انتهای
- * پنجره ادامه داشت — یعنی ممکنه استریکِ واقعی از این هم بلندتر باشه و باید
+ * روزهای کامل پشت‌سرهم از دیروز به عقب. `hitEdge` یعنی شمارش تا انتهای
+ * پنجره ادامه داشت — یعنی ممکنه استریک واقعی از این هم بلندتر باشه و باید
  * با پنجره‌ی بزرگ‌تر دوباره حساب بشه.
  *
- * قبلاً شرطِ روزِ کامل، AND با «بیدارشدنِ سرِوقت» بود — یعنی هر روزی که
- * کاربر این فیچرِ جدا/اختیاری رو دنبال نمی‌کرد (اکثراً)، با اینکه ۱۰۰٪
- * برنامه‌ش رو انجام داده بود، کلِ استریک صفر می‌شد (باگِ گزارش‌شده — استریک
- * عملاً برایِ همه همیشه صفر می‌موند). حالا استریک فقط یعنی «همه‌ی
+ * قبلا شرط روز کامل، AND با «بیدارشدن سروقت» بود — یعنی هر روزی که
+ * کاربر این فیچر جدا/اختیاری رو دنبال نمی‌کرد (اکثرا)، با اینکه ۱۰۰٪
+ * برنامه‌ش رو انجام داده بود، کل استریک صفر می‌شد (باگ گزارش‌شده — استریک
+ * عملا برای همه همیشه صفر می‌موند). حالا استریک فقط یعنی «همه‌ی
  * برنامه‌های اون روز انجام شده».
  */
 function countStreak(entries: DailyMap, opts: ScheduleOpts, windowDays: number): { streak: number; hitEdge: boolean } {

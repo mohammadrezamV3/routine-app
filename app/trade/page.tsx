@@ -9,10 +9,10 @@ import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { ICONS } from "@/components/NavDrawer";
 
-// هابِ بخشِ ترید — تنها ورودیِ ماژول. منو دیگر زیرمجموعه ندارد؛ با زدنِ
-// «ترید» مستقیم همین صفحه بالا می‌آید و انتخابِ بخش این‌جا انجام می‌شود.
-// چیدمان و حرکتِ کارت‌ها عیناً همان الگوی ردیف‌های پنل کاربری است
-// (آیکون در دایره‌ی نرم + عنوان + توضیح + شِوران)، نه یک الگوی تازه.
+// هاب بخش ترید — تنها ورودی ماژول. منو دیگر زیرمجموعه ندارد؛ با زدن
+// «ترید» مستقیم همین صفحه بالا می‌آید و انتخاب بخش این‌جا انجام می‌شود.
+// چیدمان و حرکت کارت‌ها عینا همان الگوی ردیف‌های پنل کاربری است
+// (آیکون در دایره‌ی نرم + عنوان + توضیح + شوران)، نه یک الگوی تازه.
 
 const ITEMS: { href: string; title: string; desc: string; icon: keyof typeof ICONS }[] = [
   { href: "/trade/journal", title: "ژورنال‌نویسی", desc: "حساب‌های معاملاتی، ثبت معامله و آمار عملکرد", icon: "journal" },
@@ -29,7 +29,6 @@ export default function TradePage() {
   return (
     <section className="trade-desktop">
       <h1>ترید</h1>
-      <div className="section-note">از چک‌لیست تا ثبت معامله و تحلیل عملکرد — همه در یک جا</div>
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}

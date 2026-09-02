@@ -6,17 +6,17 @@ import { ChevronRight } from "lucide-react";
 export const EXERCISE_RULES_TEXT = [
   "این برنامه توسط سیستم (به‌کمک هوش مصنوعی) پیشنهاد داده می‌شه و جایگزین نظر پزشک یا مربی حضوری نیست.",
   "اگه بیماری قلبی، مشکل مفصلی/ستون‌فقرات، بارداری، یا هر شرایط پزشکی خاصی داری، قبل از شروع با پزشک مشورت کن.",
-  "اگه حین تمرین درد غیرعادی، سرگیجه یا تنگی‌نفس احساس کردی، فوراً متوقف کن.",
+  "اگه حین تمرین درد غیرعادی، سرگیجه یا تنگی‌نفس احساس کردی، فورا متوقف کن.",
   "تکنیک درست حرکات مهم‌تر از وزنه‌ی سنگین‌تره — در صورت نیاز از مربی باشگاهت کمک بگیر.",
   "مسئولیت اجرای این برنامه و هر آسیب احتمالی بر عهده‌ی خودته.",
 ];
 
 const EXERCISE_RULES_SEEN_KEY = "exercise-program-rules-seen";
 
-/** ثانیه‌هایی که کاربر باید صرفِ خواندنِ قوانین کند، قبل از فعال‌شدنِ دکمه‌ی ثبت. */
+/** ثانیه‌هایی که کاربر باید صرف خواندن قوانین کند، قبل از فعال‌شدن دکمه‌ی ثبت. */
 const READ_SECONDS = 30;
 
-/** فقط بارِ اولی که کاربر با AI برنامه‌ای می‌سازه این مرحله نشون داده می‌شه. */
+/** فقط بار اولی که کاربر با AI برنامه‌ای می‌سازه این مرحله نشون داده می‌شه. */
 export function hasSeenExerciseRules(): boolean {
   if (typeof window === "undefined") return false;
   return window.localStorage.getItem(EXERCISE_RULES_SEEN_KEY) === "1";
@@ -39,8 +39,8 @@ export function ExerciseRulesStep({
   onClose?: () => void;
 }) {
   const [checked, setChecked] = useState(false);
-  // شمارشِ معکوسِ ۳۰ثانیه‌ای — تا تموم نشه دکمه‌ی ثبت فعال نمی‌شه، تا کاربر
-  // واقعاً فرصتِ یک‌دور خوندنِ قوانین رو داشته باشه (نه فقط تیکِ سریع).
+  // شمارش معکوس ۳۰ثانیه‌ای — تا تموم نشه دکمه‌ی ثبت فعال نمی‌شه، تا کاربر
+  // واقعا فرصت یک‌دور خوندن قوانین رو داشته باشه (نه فقط تیک سریع).
   const [remaining, setRemaining] = useState(READ_SECONDS);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function ExerciseRulesStep({
         {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
       </div>
 
-      {/* همه‌ی قوانین داخلِ یک باکسِ واحد، با تایتلِ سبز */}
+      {/* همه‌ی قوانین داخل یک باکس واحد، با تایتل سبز */}
       <div className="exercise-rules-box">
         <div className="exercise-rules-box-title">قبل از شروع، این چند مورد رو بخون</div>
         <ul className="exercise-rules-list">

@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import { FOREX_SESSIONS, wallClockIn } from "@/lib/forexSessions";
 import { toFaDigits } from "@/lib/schedule";
 
-// چارتِ خطی (Gantt-مانند) سشن‌های فارکس رویِ محورِ ۲۴ساعته‌ی واحدِ «وقتِ
-// ایران» — مکملِ ForexClockPanel که ساعتِ محلیِ خودِ هر شهر رو جدا جدا نشون
-// می‌ده؛ این‌جا هدف مقایسه‌ی هم‌زمانِ چهار سشن رو یه محورِ مشترکه (دقیقاً
-// طبقِ عکسِ مرجعِ کاربر)، با یه خطِ عمودیِ زنده برایِ موقعیتِ همین‌الان.
+// چارت خطی (Gantt-مانند) سشن‌های فارکس روی محور ۲۴ساعته‌ی واحد «وقت
+// ایران» — مکمل ForexClockPanel که ساعت محلی خود هر شهر رو جدا جدا نشون
+// می‌ده؛ این‌جا هدف مقایسه‌ی هم‌زمان چهار سشن رو یه محور مشترکه (دقیقا
+// طبق عکس مرجع کاربر)، با یه خط عمودی زنده برای موقعیت همین‌الان.
 //
-// بازه‌ی باز/بسته‌ی هر سشن از همون lib/forexSessions.ts (منبعِ واحدِ حقیقتِ
-// DST، هم‌قاعده‌ی ForexClockPanel و برچسبِ جلسه‌ی ژورنال) میاد — فقط اینجا
-// معکوسِ wallClockIn لازمه: «امروز، فلان دقیقه به‌وقتِ شهرِ X دقیقاً کدوم
-// لحظه‌ی واقعیه؟» تا بشه همون لحظه رو به وقتِ ایران خوند.
+// بازه‌ی باز/بسته‌ی هر سشن از همون lib/forexSessions.ts (منبع واحد حقیقت
+// DST، هم‌قاعده‌ی ForexClockPanel و برچسب جلسه‌ی ژورنال) میاد — فقط اینجا
+// معکوس wallClockIn لازمه: «امروز، فلان دقیقه به‌وقت شهر X دقیقا کدوم
+// لحظه‌ی واقعیه؟» تا بشه همون لحظه رو به وقت ایران خوند.
 
 function ymdInTz(date: Date, tz: string): { y: number; m: number; d: number } {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" })
@@ -30,7 +30,7 @@ function tzOffsetMsAt(date: Date, tz: string): number {
   return asUTC - date.getTime();
 }
 
-/** «امروز، دقیقه‌ی minuteOfDay به‌وقتِ محلیِ tz» به یه Date واقعی (UTC) تبدیل می‌شه. */
+/** «امروز، دقیقه‌ی minuteOfDay به‌وقت محلی tz» به یه Date واقعی (UTC) تبدیل می‌شه. */
 function zonedTodayMinuteToUtc(baseDate: Date, tz: string, minuteOfDay: number): Date {
   const { y, m, d } = ymdInTz(baseDate, tz);
   const guess = new Date(Date.UTC(y, m - 1, d, Math.floor(minuteOfDay / 60), minuteOfDay % 60, 0));
@@ -75,7 +75,7 @@ export function ForexSessionsTimeline() {
   return (
     <div className="trade-surface forex-timeline-card">
       <div className="forex-timeline-head">
-        <span className="forex-timeline-title">مقایسه‌ی سشن‌ها روی محورِ زمانِ ایران</span>
+        <span className="forex-timeline-title">مقایسه‌ی سشن‌ها روی محور زمان ایران</span>
         <span className="forex-timeline-now">الان: {fmtHM(nowMin)}</span>
       </div>
 

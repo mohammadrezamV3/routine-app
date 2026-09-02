@@ -10,7 +10,6 @@ export default function TradeNotesPage() {
   return (
     <TradePageShell
       title="یادداشت‌ها"
-      note="تحلیل‌ها، اشتباه‌ها و ایده‌هایت را همین‌جا نگه دار"
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
           + افزودن یادداشت

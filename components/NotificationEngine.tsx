@@ -11,8 +11,8 @@ import { getDashboardPrefs } from "@/lib/dashboardPrefs";
 
 const CHECK_INTERVAL_MS = 120_000; // یک یادآوری چند دقیقه دیرتر مشکلی نداره؛ این فاصله ترافیک پس‌زمینه رو نصف می‌کنه
 const EXERCISE_REMINDER_HOUR = 17; // اگه تا این ساعت تمرین امروز ثبت نشده بود، یک‌بار یادآوری کن
-// نوبتِ دارو تا این مدت بعد از ساعتش هنوز «الان»ه — اگه کاربر تبش رو دیرتر
-// باز کنه، نوبتی که تازه گذشته رو هنوز می‌گیره، ولی نوبتِ صبحِ چند ساعت پیش نه.
+// نوبت دارو تا این مدت بعد از ساعتش هنوز «الان»ه — اگه کاربر تبش رو دیرتر
+// باز کنه، نوبتی که تازه گذشته رو هنوز می‌گیره، ولی نوبت صبح چند ساعت پیش نه.
 const MED_DOSE_WINDOW_MIN = 90;
 
 // بی‌صداست (چیزی رندر نمی‌کنه) — فقط هر یک دقیقه چک می‌کنه که آیا زمان یکی
@@ -38,11 +38,11 @@ export function NotificationEngine() {
       for (const t of tasks) {
         const startMinutes = timeStartMinutes(t.time);
         if (startMinutes === null) continue;
-        if (daily.tasks[t.id]) continue; // قبلاً انجام‌شده علامت خورده
+        if (daily.tasks[t.id]) continue; // قبلا انجام‌شده علامت خورده
         const occ = customArr.find((c) => c.id === t.id);
-        if (occ?.notify === false) continue; // کاربر یادآوریِ این برنامه رو خاموش کرده
+        if (occ?.notify === false) continue; // کاربر یادآوری این برنامه رو خاموش کرده
 
-        // نیم ساعت مونده به شروع — یک‌بار در روز، جدا از یادآوریِ لحظه‌ی شروع
+        // نیم ساعت مونده به شروع — یک‌بار در روز، جدا از یادآوری لحظه‌ی شروع
         if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
           fireReminder(`routine-soon:${t.id}`, "یادآوری برنامه", `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.`);
           continue;
@@ -75,12 +75,12 @@ export function NotificationEngine() {
       } catch {}
     }
 
-    // یادآوریِ نوبت‌های دارو. هر نوبت کلیدِ خودش رو داره (`med:<id>:<minute>`)
-    // تا چند نوبتِ یک روز هرکدوم جدا فایر بشن — برخلافِ یادآوری‌های دیگه که
-    // ذاتاً روزی یک‌بارن.
+    // یادآوری نوبت‌های دارو. هر نوبت کلید خودش رو داره (`med:<id>:<minute>`)
+    // تا چند نوبت یک روز هرکدوم جدا فایر بشن — برخلاف یادآوری‌های دیگه که
+    // ذاتا روزی یک‌بارن.
     async function checkMedications() {
       if (getNotificationPermission() !== "granted") return;
-      // خاموش‌کردنِ کارتِ دارو از تنظیمات، اعلان‌هاش رو هم قطع می‌کنه
+      // خاموش‌کردن کارت دارو از تنظیمات، اعلان‌هاش رو هم قطع می‌کنه
       const prefs = await getDashboardPrefs();
       if (cancelled || !prefs.showMedications) return;
 
@@ -98,7 +98,7 @@ export function NotificationEngine() {
           fireReminder(
             `med:${med.id}:${doseMin}`,
             "یادآوری دارو",
-            `وقتِ «${med.name}» رسیده — نوبتِ ساعت ${minutesToDoseTime(doseMin)}.${med.note ? " " + med.note : ""}`
+            `وقت «${med.name}» رسیده — نوبت ساعت ${minutesToDoseTime(doseMin)}.${med.note ? " " + med.note : ""}`
           );
         }
       }
@@ -111,9 +111,9 @@ export function NotificationEngine() {
     }
 
     tick();
-    // در پس‌زمینه هیچ چکی نمی‌رود. مرورگر تایمرِ تبِ مخفی را کُند می‌کند ولی
-    // متوقف نمی‌کند، پس بدونِ این شرط یک تبِ باز شبانه‌روز درخواست می‌فرستاد.
-    // لحظه‌ی برگشتِ کاربر یک‌بار فوراً اجرا می‌شود تا یادآوری‌ای جا نیفتد.
+    // در پس‌زمینه هیچ چکی نمی‌رود. مرورگر تایمر تب مخفی را کند می‌کند ولی
+    // متوقف نمی‌کند، پس بدون این شرط یک تب باز شبانه‌روز درخواست می‌فرستاد.
+    // لحظه‌ی برگشت کاربر یک‌بار فورا اجرا می‌شود تا یادآوری‌ای جا نیفتد.
     const visible = () => !document.hidden;
     const id = setInterval(() => { if (visible()) tick(); }, CHECK_INTERVAL_MS);
     const onVis = () => { if (visible()) tick(); };

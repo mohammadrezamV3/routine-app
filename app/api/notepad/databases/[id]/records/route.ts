@@ -4,12 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-// POST /api/notepad/databases/:id/records — افزودنِ رکوردِ خالیِ جدید
+// POST /api/notepad/databases/:id/records — افزودن رکورد خالی جدید
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-record-create:${userId}`, 600, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی صبر کن" }, { status: 429 });

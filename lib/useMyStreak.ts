@@ -5,8 +5,8 @@ import { isoLocal } from "./jalali";
 import { tasksForDate } from "./schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences } from "./storage";
 
-// استریکِ روزهای پشت‌سرهمِ کامل — از HeaderStreakClock استخراج شده تا هم توی
-// هدر هم توی کارتِ دوستان قابلِ استفاده باشه، بدون تکرارِ منطقِ محاسبه.
+// استریک روزهای پشت‌سرهم کامل — از HeaderStreakClock استخراج شده تا هم توی
+// هدر هم توی کارت دوستان قابل استفاده باشه، بدون تکرار منطق محاسبه.
 export function useMyStreak(): number | null {
   const [streak, setStreak] = useState<number | null>(null);
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
@@ -42,12 +42,12 @@ export function useMyStreak(): number | null {
         const rec = entries[key];
         if (!rec) break;
         const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        // ثبتِ زمانِ بیداری یه فیچرِ جدا و اختیاریه — قبلاً شرطِ AND با
-        // تکمیلِ برنامه بود، یعنی هر روزی که کاربر دقیقاً موقعِ هدفش بیدار
-        // نمی‌شد (که اکثرِ کاربرها اصلاً این قابلیت رو فعال/دنبال نمی‌کنن)
-        // کلِ استریک صفر می‌شد، با اینکه ۱۰۰٪ برنامه‌ش رو انجام داده بود —
-        // یعنی استریک عملاً همیشه صفر می‌موند (باگِ گزارش‌شده). حالا استریک
-        // فقط یعنی «همه‌ی برنامه‌های اون روز انجام شده»، مستقل از وضعیتِ بیداری.
+        // ثبت زمان بیداری یه فیچر جدا و اختیاریه — قبلا شرط AND با
+        // تکمیل برنامه بود، یعنی هر روزی که کاربر دقیقا موقع هدفش بیدار
+        // نمی‌شد (که اکثر کاربرها اصلا این قابلیت رو فعال/دنبال نمی‌کنن)
+        // کل استریک صفر می‌شد، با اینکه ۱۰۰٪ برنامه‌ش رو انجام داده بود —
+        // یعنی استریک عملا همیشه صفر می‌موند (باگ گزارش‌شده). حالا استریک
+        // فقط یعنی «همه‌ی برنامه‌های اون روز انجام شده»، مستقل از وضعیت بیداری.
         const fullDay = doneCount === expected.length;
         if (fullDay) {
           s++;

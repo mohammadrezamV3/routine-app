@@ -8,10 +8,10 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 
 // PATCH /api/exercise/plan/substitute { planId, day, oldItem, newItem? }
-// جایگزینیِ یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
+// جایگزینی یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
 // حساب نمی‌شه (سقف دوهفته‌ای رو دست نمی‌زنه)، فقط یک ابزار سبک با rate-limit جدا.
-// دو حالت: بدونِ newItem → فقط سه‌تا پیشنهاد برمی‌گردونه (بدونِ نوشتن توی
-// دیتابیس)؛ با newItem → همون گزینه‌ی انتخاب‌شده رو واقعاً جایگزین می‌کنه.
+// دو حالت: بدون newItem → فقط سه‌تا پیشنهاد برمی‌گردونه (بدون نوشتن توی
+// دیتابیس)؛ با newItem → همون گزینه‌ی انتخاب‌شده رو واقعا جایگزین می‌کنه.
 export async function PATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (!guard.isSuperAdmin && !checkRateLimit(`exercise-sub:${userId}`, 20, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "سقف درخواست جایگزینی در این ساعت پر شده — بعداً امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: "سقف درخواست جایگزینی در این ساعت پر شده — بعدا امتحان کن" }, { status: 429 });
   }
 
   const plan = await prisma.exercisePlan.findFirst({ where: { id: planId, userId } });

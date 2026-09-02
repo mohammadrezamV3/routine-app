@@ -20,8 +20,8 @@ export const DOMAIN_LABELS_FA: Record<Domain, string> = {
   nutrition: "تغذیه",
 };
 
-// فرق «داده نداریم» و «صفر» (بند ۵۵ اسپک) — active یعنی کاربر اصلاً این
-// ماژول رو داره، hasData یعنی این‌هفته واقعاً چیزی ثبت کرده. score فقط
+// فرق «داده نداریم» و «صفر» (بند ۵۵ اسپک) — active یعنی کاربر اصلا این
+// ماژول رو داره، hasData یعنی این‌هفته واقعا چیزی ثبت کرده. score فقط
 // وقتی عدد داره که hasData باشه.
 export type DomainMetric = {
   active: boolean;
@@ -37,9 +37,9 @@ function round(n: number): number {
 }
 
 // ------------------------------------------------------------------
-// Routine — از DailyEntry.completedItems (که خودش کلِ چک‌لیستِ همون روز
+// Routine — از DailyEntry.completedItems (که خودش کل چک‌لیست همون روز
 // رو با true/false نگه می‌داره، نه فقط موارد انجام‌شده) — نیازی به
-// بازسازیِ کامل موتورِ schedule/occurrence سمتِ سرور نیست.
+// بازسازی کامل موتور schedule/occurrence سمت سرور نیست.
 // ------------------------------------------------------------------
 async function computeRoutineMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const entries = await prisma.dailyEntry.findMany({
@@ -71,8 +71,8 @@ async function computeRoutineMetric(userId: string, week: WeekRange, active: boo
 }
 
 // ------------------------------------------------------------------
-// Fitness — ExerciseLog.completed در برابرِ gymDays.length پلنِ فعال
-// (اگه پلنی نبود، فقط تعدادِ جلساتِ تکمیل‌شده رو نشون می‌ده، بدونِ ٪).
+// Fitness — ExerciseLog.completed در برابر gymDays.length پلن فعال
+// (اگه پلنی نبود، فقط تعداد جلسات تکمیل‌شده رو نشون می‌ده، بدون ٪).
 // ------------------------------------------------------------------
 async function computeFitnessMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const [logs, plan] = await Promise.all([
@@ -108,7 +108,7 @@ async function computeFitnessMetric(userId: string, week: WeekRange, active: boo
 }
 
 // ------------------------------------------------------------------
-// Trading — نرخِ بردِ معاملاتِ بسته‌شده‌ی این هفته. بدونِ معامله‌ی بسته‌شده
+// Trading — نرخ برد معاملات بسته‌شده‌ی این هفته. بدون معامله‌ی بسته‌شده
 // نمی‌شه عملکرد رو قضاوت کرد (نه صفر، نه امتیاز).
 // ------------------------------------------------------------------
 async function computeTradingMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
@@ -124,7 +124,7 @@ async function computeTradingMetric(userId: string, week: WeekRange, active: boo
     const bucket = byDate.get(key);
     if (!bucket) continue;
     bucket.total++;
-    // «بسته‌شده» حالا با خودِ وضعیتِ معامله تعیین می‌شود، نه با پرنبودنِ
+    // «بسته‌شده» حالا با خود وضعیت معامله تعیین می‌شود، نه با پرنبودن
     // سود/زیان — چون pnl دیگر nullable نیست و صفر یک نتیجه‌ی واقعی است
     // (معامله‌ی سربه‌سر)، نه «هنوز بسته نشده».
     if (t.status === "CLOSED") {
@@ -154,9 +154,9 @@ async function computeTradingMetric(userId: string, week: WeekRange, active: boo
 }
 
 // ------------------------------------------------------------------
-// Learning — چون Roadmap.stations تاریخِ تکمیلِ هر آیتم رو ذخیره نمی‌کنه
-// (فقط done:boolean فعلی)، این عدد «پیشرفتِ کلیِ رودمپ‌ها»ست، نه «کارِ
-// دقیقاً همین هفته» — همین‌جا صادقانه با raw.weeklyActivity مشخص می‌شه.
+// Learning — چون Roadmap.stations تاریخ تکمیل هر آیتم رو ذخیره نمی‌کنه
+// (فقط done:boolean فعلی)، این عدد «پیشرفت کلی رودمپ‌ها»ست، نه «کار
+// دقیقا همین هفته» — همین‌جا صادقانه با raw.weeklyActivity مشخص می‌شه.
 // ------------------------------------------------------------------
 async function computeLearningMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const roadmaps = await prisma.roadmap.findMany({
@@ -188,9 +188,9 @@ async function computeLearningMetric(userId: string, week: WeekRange, active: bo
 }
 
 // ------------------------------------------------------------------
-// Nutrition — از FoodLogEntry.customCalories (همیشه کالریِ کلِ همون
+// Nutrition — از FoodLogEntry.customCalories (همیشه کالری کل همون
 // ثبت رو نگه می‌داره، چه از AI چه دستی — نگاه کن به app/api/calorie/log).
-// امتیاز = نیمی ثباتِ ثبت (چند روز از ۷ روز) + نیمی نزدیکی به هدفِ روزانه.
+// امتیاز = نیمی ثبات ثبت (چند روز از ۷ روز) + نیمی نزدیکی به هدف روزانه.
 // ------------------------------------------------------------------
 async function computeNutritionMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const [logs, target] = await Promise.all([
@@ -255,7 +255,7 @@ const COMPUTE_FN: Record<Domain, typeof computeRoutineMetric> = {
   nutrition: computeNutritionMetric,
 };
 
-/** ماژول‌های فعالِ کاربر — سوپریوزر همه‌چیز، وگرنه از ModuleAccess (منطق آینه‌ی app/api/account). */
+/** ماژول‌های فعال کاربر — سوپریوزر همه‌چیز، وگرنه از ModuleAccess (منطق آینه‌ی app/api/account). */
 export function resolveActiveModules(
   isSuperAdmin: boolean,
   moduleAccess: { module: ModuleKey; active: boolean; expiresAt: Date | null }[]
@@ -276,7 +276,7 @@ export async function computeAllDomainMetrics(
   return Object.fromEntries(DOMAINS.map((d, i) => [d, results[i]])) as Record<Domain, DomainMetric>;
 }
 
-/** برای صفحه‌ی جزئیاتِ یک دامنه — بدونِ محاسبه‌ی چهار دامنه‌ی دیگه. */
+/** برای صفحه‌ی جزئیات یک دامنه — بدون محاسبه‌ی چهار دامنه‌ی دیگه. */
 export async function computeSingleDomainMetric(
   domain: Domain, userId: string, week: WeekRange, activeModules: Set<ModuleKey>
 ): Promise<DomainMetric> {

@@ -6,7 +6,7 @@ import { faNum, isoLocal } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { formatTradeDateTime, formatTradeTime } from "@/lib/tradeDateTime";
-// توجه: SegmentedTabsِ امروز/فردا/این‌هفته دیگه لازم نیست — لیست حالا
+// توجه: SegmentedTabs امروز/فردا/این‌هفته دیگه لازم نیست — لیست حالا
 // پیوسته‌ست، مثل ForexFactory.
 import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
 import {
@@ -17,8 +17,8 @@ import {
 const DAYS_PAGE = 14;
 const MAX_DAYS_AHEAD = 60;
 
-// دیگه سه‌تب امروز/فردا/این‌هفته نداریم — درست مثلِ ForexFactory، یک لیستِ
-// پیوسته‌ی ردیفی از روزهای پیشِ‌رو (با دکمه‌ی «روزهای بیشتر» برای ادامه‌ش).
+// دیگه سه‌تب امروز/فردا/این‌هفته نداریم — درست مثل ForexFactory، یک لیست
+// پیوسته‌ی ردیفی از روزهای پیش‌رو (با دکمه‌ی «روزهای بیشتر» برای ادامه‌ش).
 function rangeFromToday(daysAhead: number): { from: string; to: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -29,9 +29,9 @@ export function EconomicCalendarPanel() {
   const [daysAhead, setDaysAhead] = useState(DAYS_PAGE);
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
   const [loading, setLoading] = useState(true);
-  // فقط بارِ اول اسکلت نشان می‌دهیم؛ با هر تغییرِ فیلتر/بازه، لیستِ قبلی سرِ
-  // جایش می‌ماند و کمی کم‌رنگ می‌شود. قبلاً هر کلیک روی یک فیلتر کلِ لیست را
-  // با اسکلت جایگزین می‌کرد و همان پرش، حسِ کُندی و ناپایداری می‌داد.
+  // فقط بار اول اسکلت نشان می‌دهیم؛ با هر تغییر فیلتر/بازه، لیست قبلی سر
+  // جایش می‌ماند و کمی کم‌رنگ می‌شود. قبلا هر کلیک روی یک فیلتر کل لیست را
+  // با اسکلت جایگزین می‌کرد و همان پرش، حس کندی و ناپایداری می‌داد.
   const [firstLoad, setFirstLoad] = useState(true);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -59,7 +59,7 @@ export function EconomicCalendarPanel() {
 
   useEffect(() => { load(); }, [load]);
 
-  // گروه‌بندی بر اساسِ روزِ محلی
+  // گروه‌بندی بر اساس روز محلی
   const groups = useMemo(() => {
     const map = new Map<string, EconomicEventDto[]>();
     for (const e of events) {

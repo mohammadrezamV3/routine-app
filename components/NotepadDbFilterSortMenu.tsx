@@ -4,9 +4,9 @@ import { Plus, Trash2, X } from "lucide-react";
 import { DatabaseProperty, FilterOp, FilterRule, SortRule } from "@/lib/notepadDb";
 
 const OP_LABELS: Record<FilterOp, string> = {
-  eq: "برابرِ",
-  neq: "نابرابرِ",
-  contains: "شاملِ",
+  eq: "برابر",
+  neq: "نابرابر",
+  contains: "شامل",
   is_empty: "خالیه",
   is_not_empty: "خالی نیست",
   gt: "بیشتر از",
@@ -21,8 +21,8 @@ function opsForType(type: DatabaseProperty["type"]): FilterOp[] {
   return ["eq", "neq", "contains", "is_empty", "is_not_empty"];
 }
 
-// پاپ‌آپِ مدیریتِ فیلتر/سورت/مخفی‌کردنِ propertyها — یه پیکربندیِ مشترک برای
-// کلِ دیتابیس (نه جدا برای هر ویو)
+// پاپ‌آپ مدیریت فیلتر/سورت/مخفی‌کردن propertyها — یه پیکربندی مشترک برای
+// کل دیتابیس (نه جدا برای هر ویو)
 export function NotepadDbFilterSortMenu({
   properties,
   filters,
@@ -84,7 +84,7 @@ export function NotepadDbFilterSortMenu({
               </div>
             );
           })}
-          <button type="button" className="notepad-db-filter-add-btn" onClick={addFilter}><Plus size={12} /> فیلترِ جدید</button>
+          <button type="button" className="notepad-db-filter-add-btn" onClick={addFilter}><Plus size={12} /> فیلتر جدید</button>
         </div>
 
         <div className="notepad-db-filter-section">
@@ -101,11 +101,11 @@ export function NotepadDbFilterSortMenu({
               <button type="button" onClick={() => onChange({ sorts: sorts.filter((_, idx) => idx !== i) })}><Trash2 size={12} /></button>
             </div>
           ))}
-          <button type="button" className="notepad-db-filter-add-btn" onClick={addSort}><Plus size={12} /> سورتِ جدید</button>
+          <button type="button" className="notepad-db-filter-add-btn" onClick={addSort}><Plus size={12} /> سورت جدید</button>
         </div>
 
         <div className="notepad-db-filter-section">
-          <div className="notepad-db-filter-section-title">نمایشِ ستون‌ها</div>
+          <div className="notepad-db-filter-section-title">نمایش ستون‌ها</div>
           {properties.map((p) => {
             const hidden = hiddenPropertyIds.includes(p.id);
             return (

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { prisma } from "@/lib/prisma";
 
-// GET → لیستِ همه‌ی کدهای تخفیف + لیستِ پلن‌های ایران (برای پرکردنِ سلکتِ
+// GET → لیست همه‌ی کدهای تخفیف + لیست پلن‌های ایران (برای پرکردن سلکت
 // «کدوم پکیج») یک‌جا برمی‌گرده تا صفحه‌ی ادمین با یک درخواست کامل رندر بشه.
 export async function GET() {
   const guard = await requireSuperAdmin();
@@ -15,8 +15,8 @@ export async function GET() {
   return NextResponse.json({ codes, plans });
 }
 
-// POST → ساختِ کدِ تخفیفِ جدید. عمداً هیچ‌جا انقضا/پلن رو اجباری نمی‌کنه —
-// expiresAt خالی یعنی بدونِ انقضا، planKey خالی یعنی روی همه‌ی پکیج‌ها.
+// POST → ساخت کد تخفیف جدید. عمدا هیچ‌جا انقضا/پلن رو اجباری نمی‌کنه —
+// expiresAt خالی یعنی بدون انقضا، planKey خالی یعنی روی همه‌ی پکیج‌ها.
 export async function POST(req: NextRequest) {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
@@ -45,13 +45,13 @@ export async function POST(req: NextRequest) {
   if (maxUsesPerUser !== null && maxUsesPerUser !== undefined && String(maxUsesPerUser) !== "") {
     maxUses = Number(maxUsesPerUser);
     if (!Number.isInteger(maxUses) || maxUses < 1) {
-      return NextResponse.json({ error: "حداکثر دفعاتِ مصرف باید عددِ صحیحِ حداقل ۱ باشد" }, { status: 400 });
+      return NextResponse.json({ error: "حداکثر دفعات مصرف باید عدد صحیح حداقل ۱ باشد" }, { status: 400 });
     }
   }
 
   const existing = await prisma.discountCode.findUnique({ where: { code: trimmedCode } });
   if (existing) {
-    return NextResponse.json({ error: "این کد قبلاً ساخته شده" }, { status: 409 });
+    return NextResponse.json({ error: "این کد قبلا ساخته شده" }, { status: 409 });
   }
 
   const created = await prisma.discountCode.create({
