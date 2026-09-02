@@ -6148,3 +6148,152 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
   direction:ltr; font-variant-numeric:tabular-nums; letter-spacing:.01em;
 }
 .fx-card-value.open{ color:var(--accent); }
+
+/* ── رودمپ ────────────────────────────────────────────────────────────
+   مسیر به‌صورتِ یک ستونِ مرحله‌به‌مرحله با خطِ عمودیِ وصل‌کننده — هر مرحله
+   هدف، کارهای عملی، تمرین و معیارِ اتمامِ خودش را دارد. */
+.rm-page{ padding-bottom:40px; }
+
+.rm-hero{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:20px;
+  padding:20px; margin-bottom:20px;
+}
+html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
+.rm-hero-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.rm-hero-top h1{ margin:0; font-size:21px; font-weight:800; color:var(--text); line-height:1.6; }
+.rm-hero-note{ margin:9px 0 0; font-size:12.5px; line-height:2; color:var(--muted); }
+.rm-meta{ display:flex; flex-wrap:wrap; gap:7px; margin-top:13px; }
+.rm-chip{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 11px; border-radius:999px; font-size:10.5px; font-weight:600;
+  color:var(--accent); background:var(--accent-dim); border:1px solid rgba(var(--accent-rgb),.28);
+}
+.rm-progress{ margin-top:16px; }
+.rm-progress-bar{ height:6px; border-radius:999px; background:rgba(var(--surface-rgb),.2); overflow:hidden; }
+.rm-progress-bar span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s cubic-bezier(.22,1,.36,1); }
+.rm-progress-text{ margin-top:7px; font-size:11px; color:var(--muted); }
+
+.rm-confirm{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  padding:14px 16px; border-radius:14px; margin-bottom:18px; font-size:12.5px; color:var(--text);
+  background:rgba(224,82,82,.08); border:1px solid rgba(224,82,82,.34);
+}
+.rm-confirm-actions{ display:flex; gap:9px; }
+
+/* مرحله‌ها */
+.rm-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
+.rm-step{ position:relative; display:flex; gap:14px; padding-bottom:22px; }
+/* خطِ عمودیِ وصل‌کننده بینِ شماره‌ها */
+.rm-step::before{
+  content:""; position:absolute; top:34px; bottom:0; inset-inline-start:16px;
+  width:2px; background:rgba(var(--surface-rgb),.24);
+}
+.rm-step:last-child::before{ display:none; }
+.rm-step.done::before{ background:rgba(var(--accent-rgb),.42); }
+
+.rm-step-num{
+  position:relative; z-index:1; flex-shrink:0;
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800;
+  color:var(--muted); background:var(--surface-2);
+  border:1.5px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .2s ease, border-color .2s ease, background .2s ease;
+}
+.rm-step-num:hover{ border-color:var(--accent); color:var(--accent); background:var(--surface-2); box-shadow:none; }
+.rm-step.done .rm-step-num{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+.rm-step-body{ flex:1; min-width:0; padding-top:3px; }
+.rm-step-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.rm-step-head h2{ margin:0; font-size:15px; font-weight:800; color:var(--text); line-height:1.7; }
+.rm-step.done .rm-step-head h2{ color:var(--muted); }
+.rm-step-weeks{ flex-shrink:0; font-size:10.5px; color:var(--muted2); }
+
+.rm-goal{
+  display:flex; align-items:flex-start; gap:7px; margin-top:9px;
+  font-size:12px; line-height:1.9; color:var(--accent-soft);
+}
+.rm-goal svg{ flex-shrink:0; margin-top:4px; }
+
+.rm-items{ margin:11px 0 0; padding-inline-start:17px; display:flex; flex-direction:column; gap:7px; }
+.rm-items li{ font-size:12.5px; line-height:1.9; color:var(--text); }
+.rm-items li::marker{ color:var(--accent); }
+.rm-items a{
+  color:inherit; text-decoration:none;
+  display:inline-flex; align-items:baseline; gap:5px;
+  transition:color .16s ease;
+}
+.rm-items a:hover{ color:var(--accent); }
+.rm-items a svg{ opacity:.45; flex-shrink:0; }
+
+.rm-box{
+  display:flex; flex-direction:column; gap:4px; margin-top:11px;
+  padding:11px 13px; border-radius:12px; font-size:12px; line-height:1.9;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.rm-box b{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.rm-box span{ color:var(--text); }
+.rm-practice{ border-inline-start:2px solid var(--accent); }
+.rm-checkpoint{ border-inline-start:2px solid var(--secondary); }
+
+/* افزودن مرحله به برنامه‌های هفتگی */
+.rm-toprogram{ margin-top:12px; }
+.rm-add-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:700;
+  color:var(--accent); background:none; border:1px solid rgba(var(--accent-rgb),.4);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:background .18s ease;
+}
+.rm-add-btn:hover{ background:var(--accent-dim); box-shadow:none; }
+.rm-add-panel{
+  margin-top:4px; padding:14px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.22);
+}
+.rm-add-title{ font-size:12px; font-weight:700; color:var(--text); margin-bottom:10px; }
+.rm-day-row{ display:flex; flex-wrap:wrap; gap:6px; }
+.rm-day{
+  padding:6px 11px; border-radius:999px; font-size:11px; font-weight:600;
+  color:var(--muted); background:none; border:1px solid rgba(var(--surface-rgb),.26);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .16s ease, border-color .16s ease, background .16s ease;
+}
+.rm-day:hover{ color:var(--text); background:none; box-shadow:none; }
+.rm-day.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+.rm-time-row{ display:flex; gap:11px; margin-top:12px; }
+.rm-time-row label{ flex:1; display:flex; flex-direction:column; gap:5px; }
+.rm-time-row span{ font-size:10.5px; color:var(--muted); }
+.rm-time-row input{
+  width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px;
+  font-size:12.5px; color:var(--text); direction:ltr; text-align:center;
+  background:rgba(var(--surface-rgb),.16); border:1px solid rgba(var(--surface-rgb),.26); outline:none;
+}
+.rm-time-row input:focus{ border-color:var(--accent); }
+.rm-add-actions{ display:flex; gap:9px; margin-top:14px; }
+.rm-add-actions button{ flex:1; }
+.rm-added{
+  display:inline-flex; align-items:center; gap:6px; margin-top:12px;
+  font-size:11.5px; font-weight:700; color:var(--accent);
+}
+
+/* بخش‌های پایانی */
+.rm-section{
+  margin-top:16px; padding:16px 18px; border-radius:16px;
+  background:rgba(var(--surface-rgb),.1); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.rm-section.warn{ background:rgba(224,164,82,.07); border-color:rgba(224,164,82,.3); }
+.rm-section-title{
+  display:flex; align-items:center; gap:8px; margin-bottom:11px;
+  font-size:13px; font-weight:800; color:var(--text);
+}
+.rm-section.warn .rm-section-title{ color:#E0A452; }
+.rm-section-list{ margin:0; padding-inline-start:17px; display:flex; flex-direction:column; gap:8px; }
+.rm-section-list li{ font-size:12.5px; line-height:1.95; color:var(--muted); }
+.rm-section-list li::marker{ color:var(--accent); }
+.rm-section.warn .rm-section-list li::marker{ color:#E0A452; }
+.rm-section-list a{ color:inherit; text-decoration:none; display:inline-flex; align-items:baseline; gap:5px; }
+.rm-section-list a:hover{ color:var(--accent); }
+.rm-section-list a svg{ opacity:.45; flex-shrink:0; }

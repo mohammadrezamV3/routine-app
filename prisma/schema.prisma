@@ -1286,9 +1286,22 @@ model Roadmap {
   // [{ title, items: [string], done: boolean }]
   stations Json
 
-  tips    Json? // string[]
-  proTips Json? // string[]
-  books   Json? // string[]
+  tips     Json? // string[]
+  proTips  Json? // string[]
+  books    Json? // string[]
+  mistakes Json? // string[] — اشتباه‌های رایجی که تازه‌کارها وقتشان را رویش تلف می‌کنند
+
+  // «از صفر» / «متوسط» و برآوردِ کلِ زمانِ مسیر — هر دو اختیاری چون
+  // رودمپ‌های ساخته‌شده پیش از این نسخه ندارندشان.
+  level      String?
+  totalWeeks Int?
+
+  // پیشرفتِ کاربر: { "0": true, "2": true } — کدام مرحله‌ها تمام شده‌اند.
+  // قبلاً در UserSetting با کلیدِ پویا (`roadmapDone:custom-<id>`) ذخیره
+  // می‌شد که اصلاً در allowlistِ کلیدها نبود، پس برای کاربرِ واردشده با
+  // ۴۰۰ برمی‌گشت و پیشرفت هیچ‌وقت ذخیره نمی‌شد. جایش همین‌جاست، کنارِ
+  // خودِ رودمپ.
+  progress Json?
 
   generatedByAi Boolean @default(false)
 

@@ -141,30 +141,72 @@ function parseJsonResponse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `تو یک طراح مسیر یادگیری (roadmap) هستی. کاربر یک موضوع می‌ده و تو باید یک
-مسیر یادگیری ساختاریافته و واقع‌بینانه براش بسازی، به زبان فارسی.
+// پرامپتِ ساختِ رودمپ.
+//
+// نسخه‌ی قبلی فقط می‌گفت «۴ تا ۶ مرحله، هرکدام ۳ تا ۵ آیتم، واقع‌بین باش»
+// و خروجی‌اش فهرستی از سرفصل‌ها بود — چیزی که کاربر بعد از خواندنش هنوز
+// نمی‌دانست *دقیقاً فردا صبح چه کار کند*. این نسخه عمداً سخت‌گیر است:
+// هر مرحله باید هدفِ قابل‌سنجش، کارهای عملیِ مشخص، تمرین، معیارِ اتمام و
+// زمانِ تقریبی داشته باشد.
+const SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ آموزش هستی که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده‌ای.
+کاربر یک موضوع می‌دهد و تو یک مسیرِ یادگیریِ کامل، مرحله‌به‌مرحله و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
 
-فقط و فقط یک JSON خام برگردون، بدون هیچ متن اضافه قبل یا بعدش، بدون Markdown fences.
-دقیقا با این شکل:
+قواعدِ سخت‌گیرانه:
+
+۱. مسیر باید از **صفرِ مطلق** شروع شود و به **توانِ انجامِ کارِ واقعی** برسد. فرض کن مخاطب هیچ پیش‌زمینه‌ای ندارد.
+۲. هر مرحله باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه اینکه «چه چیزی یاد بگیرد».
+   بد: «مبانی رنگ را یاد بگیر». خوب: «۱۰ عکس از آرشیوت بردار و فقط با تنظیمِ White Balance و Exposure اصلاحشان کن».
+۳. هر مرحله یک **تمرینِ عملیِ مشخص** دارد که خروجیِ قابلِ دیدن تولید کند.
+۴. هر مرحله یک **معیارِ اتمام** دارد: کاربر از کجا بفهمد این مرحله تمام شده و می‌تواند برود بعدی.
+۵. زمانِ هر مرحله واقع‌بینانه باشد (بر حسبِ هفته، با فرضِ روزی یک تا دو ساعت).
+۶. منابع باید **مشخص و واقعی** باشند (نامِ کتاب/دوره/کانالِ واقعی)، نه «یک دوره‌ی خوب پیدا کن».
+۷. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارها وقتشان را رویش تلف می‌کنند.
+۸. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
+
+فقط و فقط یک JSONِ خام برگردان، بدونِ هیچ متنِ اضافه قبل یا بعدش، بدونِ Markdown fences.
+دقیقاً با این شکل:
 
 {
-  "title": "عنوان کوتاه مسیر",
-  "note": "یک جمله توضیح کلی درباره این مسیر",
+  "title": "عنوانِ کوتاه و مشخصِ مسیر",
+  "note": "یک تا دو جمله: بعد از تمام‌کردنِ این مسیر دقیقاً چه کاری می‌توانی انجام دهی",
+  "level": "از صفر",
+  "totalWeeks": 12,
   "stations": [
-    { "t": "عنوان مرحله", "items": ["نکته ۱", "نکته ۲", "نکته ۳", "نکته ۴"] }
+    {
+      "t": "عنوانِ مرحله",
+      "goal": "بعد از این مرحله دقیقاً چه کاری می‌توانی بکنی (یک جمله، قابلِ سنجش)",
+      "weeks": 2,
+      "items": ["کارِ عملیِ ۱ (فعل‌محور و مشخص)", "کارِ عملیِ ۲", "کارِ عملیِ ۳", "کارِ عملیِ ۴"],
+      "practice": "تمرینِ عملیِ این مرحله با خروجیِ مشخص",
+      "checkpoint": "از کجا بفهمی این مرحله تمام شده"
+    }
   ],
-  "tips": ["نکته کلیدی ۱", "نکته کلیدی ۲", "نکته کلیدی ۳"],
-  "pro": ["توصیه برای حرفه‌ای‌شدن ۱", "توصیه برای حرفه‌ای‌شدن ۲"],
-  "books": ["نام کتاب یا منبع ۱", "نام کتاب یا منبع ۲"]
+  "tips": ["نکته‌ی کاربردی ۱", "نکته‌ی کاربردی ۲", "نکته‌ی کاربردی ۳"],
+  "mistakes": ["اشتباهِ رایجِ ۱ و چرا وقت‌تلف‌کن است", "اشتباهِ رایجِ ۲"],
+  "pro": ["برای رسیدن به سطحِ حرفه‌ای ۱", "برای رسیدن به سطحِ حرفه‌ای ۲"],
+  "books": ["نامِ دقیقِ کتاب/دوره/منبعِ واقعی ۱", "نامِ دقیقِ منبعِ ۲"]
 }
 
-بین ۴ تا ۶ مرحله (station) بساز، هر کدوم با ۳ تا ۵ آیتم. واقع‌بین باش، نه ژنریک.`;
+بینِ ۵ تا ۸ مرحله بساز، هرکدام با ۳ تا ۶ کارِ عملی. مراحل باید به هم وصل باشند: هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود.`;
+
+export type GeneratedStation = {
+  t: string;
+  items: string[];
+  /** فیلدهای تازه — رودمپ‌های قدیمی ندارندشان، پس همه اختیاری‌اند */
+  goal?: string;
+  weeks?: number;
+  practice?: string;
+  checkpoint?: string;
+};
 
 export type GeneratedRoadmap = {
   title: string;
   note: string;
-  stations: { t: string; items: string[] }[];
+  level?: string;
+  totalWeeks?: number;
+  stations: GeneratedStation[];
   tips: string[];
+  mistakes: string[];
   pro: string[];
   books: string[];
 };
@@ -186,29 +228,44 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
   }
 
   const stationsRaw = Array.isArray(raw.stations) ? raw.stations : [];
-  const stations = stationsRaw
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const stations: GeneratedStation[] = stationsRaw
     .map((s: any) => ({
       t: typeof s?.t === "string" && s.t.trim() ? s.t.trim() : "مرحله بدون عنوان",
       items: asStringArray(s?.items),
+      goal: str(s?.goal),
+      // مدل گاهی هفته را رشته می‌دهد ("۲ هفته") — فقط عددِ معتبر را می‌پذیریم
+      weeks: Number.isFinite(Number(s?.weeks)) && Number(s.weeks) > 0
+        ? Math.min(Math.round(Number(s.weeks)), 52)
+        : undefined,
+      practice: str(s?.practice),
+      checkpoint: str(s?.checkpoint),
     }))
-    .filter((s: any) => s.items.length > 0);
+    .filter((s: GeneratedStation) => s.items.length > 0);
 
   if (stations.length === 0) {
     throw new Error("مدل هیچ مرحله‌ی قابل‌استفاده‌ای برنگردوند");
   }
 
+  const totalWeeks = Number.isFinite(Number(raw.totalWeeks)) && Number(raw.totalWeeks) > 0
+    ? Math.min(Math.round(Number(raw.totalWeeks)), 260)
+    : stations.reduce((sum, st) => sum + (st.weeks || 0), 0) || undefined;
+
   return {
     title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "مسیر یادگیری",
     note: typeof raw.note === "string" ? raw.note.trim() : "",
+    level: typeof raw.level === "string" && raw.level.trim() ? raw.level.trim() : undefined,
+    totalWeeks,
     stations,
     tips: asStringArray(raw.tips),
+    mistakes: asStringArray(raw.mistakes),
     pro: asStringArray(raw.pro),
     books: asStringArray(raw.books),
   };
 }
 
 async function callRoadmapOnce(topic: string, userId: string): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 4000);
   // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
   // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);

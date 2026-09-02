@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
       tips: generated.tips as any,
       proTips: generated.pro as any,
       books: generated.books as any,
+      mistakes: generated.mistakes as any,
+      level: generated.level ?? null,
+      totalWeeks: generated.totalWeeks ?? null,
       generatedByAi: true,
     },
   });
