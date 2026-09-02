@@ -44,9 +44,9 @@ function AccountsForMt() {
           key={a.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
         >
-          <Link href={`/trade/accounts/${a.id}`} prefetch className="trade-surface trade-mt-row">
+          <Link href={`/trade/metatrader/${a.id}`} prefetch className="trade-surface trade-mt-row">
             <span className="trade-account-stripe" style={{ background: a.color }} />
             <div className="trade-account-title-row">
               <span className="trade-account-name">{a.name}</span>
@@ -54,7 +54,7 @@ function AccountsForMt() {
             </div>
             <div className={`trade-mt-status${a.mtConnected ? " connected" : ""}`} style={{ marginTop: 10 }}>
               <span className="forex-dot" />
-              {a.mtConnected ? "متصل" : "متصل نیست"}
+              {a.mtConnected ? "فعال" : "غیرفعال"}
             </div>
           </Link>
         </motion.div>

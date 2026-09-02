@@ -314,28 +314,27 @@
     background:rgba(255,255,255,.55);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
   }
-  /* فقط دستگاه‌هایی که واقعاً ماوس دارن. روی صفحه‌ی لمسی، :hover بعدِ تپ
-     «چسبیده» می‌مونه تا یه تپِ دیگه جای دیگه — یعنی دکمه‌ای که کاربر زده،
-     رنگی/برجسته می‌موند و به‌نظر می‌رسید «گیر کرده» و به حالتِ قبلش
-     برنگشته. همون قاعده‌ای که از قبل برای .day-pill رعایت شده بود، حالا
-     برای پایه‌ی همه‌ی دکمه‌های سایت. */
-  @media (hover:hover) and (pointer:fine){
+  /* :hover فقط برایِ دستگاه‌هایی که واقعاً هاورِ ماوس دارن — بدونِ این،
+     موبایل/تاچ بعد از هر تپ توی همون حالتِ :hover (رنگِ اکسنت/بک‌گراند)
+     گیر می‌کرد و تا یه تپِ دیگه‌ی جای‌دیگه برنمی‌گشت؛ دقیقاً همون باگِ
+     «رنگِ دکمه بعد از کلیک برنمی‌گرده». */
+  @media (hover:hover){
     button:hover{
       border-color:var(--accent); color:var(--accent);
       background:rgba(var(--accent-rgb),.10);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(var(--accent-rgb),.28), 0 6px 20px rgba(var(--accent-rgb),.16);
     }
+    button:disabled:hover{
+      border-color:rgba(255,255,255,.14); color:var(--text); background:rgba(255,255,255,.05);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.22);
+    }
+    body[data-theme="light"] button:disabled:hover{
+      border-color:rgba(0,0,0,.10); background:rgba(255,255,255,.55);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
+    }
   }
   button:active{transform:scale(.96);}
   button:disabled{opacity:.4; cursor:default;}
-  button:disabled:hover{
-    border-color:rgba(255,255,255,.14); color:var(--text); background:rgba(255,255,255,.05);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.22);
-  }
-  body[data-theme="light"] button:disabled:hover{
-    border-color:rgba(0,0,0,.10); background:rgba(255,255,255,.55);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
-  }
   button.small{padding:4px 9px; font-size:12px;}
 
   table{width:100%; border-collapse:collapse; font-size:12.5px;}
@@ -570,8 +569,14 @@
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
      می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
-  .topbar-logo-lockup{ height:22px; width:auto; }
+  .topbar-logo-lockup-wrap{ position:relative; display:inline-block; height:22px; }
+  @media (min-width:701px){ .topbar-logo-lockup-wrap{ height:30px; } }
+  /* هر دو نسخه‌ی روز/شب هم‌زمان توی DOMان (fetch/preload هردو از همون اول)،
+     فقط یکی‌شون با opacity دیده می‌شه — سوییچِ تم دیگه منتظرِ دانلودِ
+     تصویرِ جدید نمی‌مونه. */
+  .topbar-logo-lockup{ position:absolute; inset:0; height:22px; width:auto; transition:opacity .15s ease; }
   @media (min-width:701px){ .topbar-logo-lockup{ height:30px; } }
+  .topbar-logo-lockup-hidden{ opacity:0; pointer-events:none; }
 
   /* animated hamburger: bars morph into an X while the whole icon spins open */
   .hamburger{
@@ -902,6 +907,7 @@
        حساب می‌شه؛ مرورگرهای قدیمی‌تر که dvh رو نمی‌شناسن همون خطِ vh بالا رو
        نگه می‌دارن (progressive enhancement). */
     max-height:78vh; max-height:78dvh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; -ms-overflow-style:none;
     background:rgba(var(--surface-rgb), .16); border:1px solid var(--line); border-radius:26px;
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     /* فایرفاکس/سافاری همیشه backdrop-filter رو دقیقاً به border-radius کلیپ
@@ -933,6 +939,7 @@
     opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);
     animation:modalPopIn .38s cubic-bezier(.22,1,.36,1) both;
   }
+  .modal-panel::-webkit-scrollbar{ display:none; width:0; height:0; }
   /* نسخه‌ی لیکوئید گلسِ پاپ‌آپ (فقط دوستان) — عیناً همون بک‌گراند/بلورِ
      .app-topbar (هدرِ سایت)، نه گرادیانِ تقریباً توپرِ قبلی. */
   .modal-panel.liquid-glass-panel{
@@ -2724,9 +2731,13 @@ body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
 body[data-theme="light"] .auth-tab, body:not([data-theme="light"]) .auth-tab{
   background:none; box-shadow:none;
 }
-.auth-tab:hover{ background:none; box-shadow:none; border:none; color:var(--text); }
-body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-tab:hover{
-  background:none; box-shadow:none;
+/* روی موبایل بدونِ این media، تپ‌کردنِ یه تب رنگش رو تا تپِ بعدی جای دیگه
+   نگه می‌داشت — دقیقاً همون حسِ «گیرکردنِ تاگل» که گزارش شده بود. */
+@media (hover:hover){
+  .auth-tab:hover{ background:none; box-shadow:none; border:none; color:var(--text); }
+  body[data-theme="light"] .auth-tab:hover, body:not([data-theme="light"]) .auth-tab:hover{
+    background:none; box-shadow:none;
+  }
 }
 .auth-tab.active, .auth-tab.active:hover{color:var(--bg);}
 .auth-tab-indicator{
@@ -4823,6 +4834,11 @@ html[data-perf="low"] body[data-theme="light"] .app-topbar{ background:rgba(250,
 html[data-perf="low"] .modal-panel.liquid-glass-panel{ background:rgba(10,10,11,.97) !important; }
 html[data-perf="low"] body[data-theme="light"] .modal-panel.liquid-glass-panel{ background:rgba(255,255,255,.97) !important; }
 
+/* پاپ‌آپِ پایه (بدونِ liquid-glass-panel — یادداشت/برچسب/چک‌لیست و مشابه)
+   همین باگ رو داشت و از قلم افتاده بود: بدونِ بلور فقط ۱۶٪ شفاف می‌موند. */
+html[data-perf="low"] .modal-panel:not(.liquid-glass-panel){ background:rgba(10,10,11,.97) !important; }
+html[data-perf="low"] body[data-theme="light"] .modal-panel:not(.liquid-glass-panel){ background:rgba(255,255,255,.97) !important; }
+
 html[data-perf="low"] .exercise-catalog-popup-panel,
 html[data-perf="low"] .exercise-catalog-detail-card{ background:rgba(10,10,11,.97) !important; }
 html[data-perf="low"] body[data-theme="light"] .exercise-catalog-popup-panel,
@@ -5018,7 +5034,7 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
   border-radius:999px; border:none; background:var(--accent); color:var(--bg);
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; cursor:pointer; transition:filter .15s ease, opacity .15s ease;
 }
-.wr-ask-send-btn:hover:not(:disabled){ filter:brightness(1.1); }
+@media (hover:hover){ .wr-ask-send-btn:hover:not(:disabled){ filter:brightness(1.1); } }
 .wr-ask-send-btn:disabled{ opacity:.5; cursor:default; }
 
 /* ============================================================
@@ -5051,12 +5067,12 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 body[data-theme="light"] .trade-surface{ background:rgba(255,255,255,.42); }
 
 .trade-back-link{
-  display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);
-  text-decoration:none; margin-bottom:12px; transition:color .18s ease;
+  display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--muted);
+  text-decoration:none; margin-bottom:14px; padding:4px 2px; transition:color .18s ease;
 }
-.trade-back-link:hover{ color:var(--accent); }
-.trade-back-link svg{ transition:transform .18s ease; }
-.trade-back-link:hover svg{ transform:translateX(2px); }
+@media (hover:hover){ .trade-back-link:hover{ color:var(--accent); } }
+.trade-back-link svg{ width:18px; height:18px; transition:transform .18s ease; }
+@media (hover:hover){ .trade-back-link:hover svg{ transform:translateX(2px); } }
 
 /* ── هابِ ترید ─────────────────────────────────────────────── */
 .trade-hub-grid{ display:flex; flex-direction:column; gap:12px; margin-top:18px; }
@@ -5065,7 +5081,7 @@ body[data-theme="light"] .trade-surface{ background:rgba(255,255,255,.42); }
   display:flex; align-items:center; gap:13px; padding:16px 17px;
   text-decoration:none; color:var(--text);
 }
-.trade-hub-box:hover{ border-color:var(--accent); background:var(--accent-dim); }
+@media (hover:hover){ .trade-hub-box:hover{ border-color:var(--accent); background:var(--accent-dim); } }
 .trade-hub-box:active{ transform:scale(.985); }
 .trade-hub-icon{
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -5075,15 +5091,15 @@ body[data-theme="light"] .trade-surface{ background:rgba(255,255,255,.42); }
 }
 /* آیکون‌های مشترکِ منو (ICONS) ابعادِ ذاتی ندارند و باید این‌جا اندازه بگیرند */
 .trade-hub-icon svg{ width:19px; height:19px; display:block; }
-.trade-hub-box:hover .trade-hub-icon{ background:rgba(var(--accent-rgb),.18); }
+@media (hover:hover){ .trade-hub-box:hover .trade-hub-icon{ background:rgba(var(--accent-rgb),.18); } }
 /* عنوان و توضیح هردو <span>اند (داخلِ <a>)، پس باید صریح بلاک شوند —
    وگرنه کنارِ هم روی یک خط می‌چسبند. */
 .trade-hub-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
 .trade-hub-title{ display:block; font-size:13.5px; font-weight:700; }
 .trade-hub-desc{ display:block; font-size:11.5px; color:var(--muted); line-height:1.6; }
-.trade-hub-box:hover .trade-hub-desc{ color:var(--accent); }
+@media (hover:hover){ .trade-hub-box:hover .trade-hub-desc{ color:var(--accent); } }
 .trade-hub-chevron{ color:var(--muted2); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
-.trade-hub-box:hover .trade-hub-chevron{ transform:translateX(-3px); color:var(--accent); }
+@media (hover:hover){ .trade-hub-box:hover .trade-hub-chevron{ transform:translateX(-3px); color:var(--accent); } }
 
 /* ── دکمه‌ها ───────────────────────────────────────────────── */
 /* پُر — همان الگوی .account-sub-cta-btn */
@@ -5094,7 +5110,7 @@ body[data-theme="light"] .trade-surface{ background:rgba(255,255,255,.42); }
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:transform .15s ease, filter .15s ease, opacity .15s ease;
 }
-.trade-primary-btn:hover:not(:disabled){ filter:brightness(1.06); background:var(--accent); }
+@media (hover:hover){ .trade-primary-btn:hover:not(:disabled){ filter:brightness(1.06); background:var(--accent); } }
 .trade-primary-btn:active:not(:disabled){ transform:scale(.97); }
 .trade-primary-btn:disabled{ opacity:.5; cursor:default; }
 
@@ -5104,7 +5120,7 @@ body[data-theme="light"] .trade-surface{ background:rgba(255,255,255,.42); }
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:transform .15s ease, background .18s ease;
 }
-.trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; }
+@media (hover:hover){ .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; } }
 .trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
 .trade-danger-btn:disabled{ opacity:.45; cursor:default; }
 
@@ -5115,9 +5131,9 @@ body[data-theme="light"] .trade-surface{ background:rgba(255,255,255,.42); }
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:color .18s ease, background .18s ease, transform .15s ease;
 }
-.trade-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; }
+@media (hover:hover){ .trade-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
 .trade-icon-btn:active{ transform:scale(.92); }
-.trade-icon-btn.danger:hover{ color:#E05252; background:rgba(224,82,82,.09); }
+@media (hover:hover){ .trade-icon-btn.danger:hover{ color:#E05252; background:rgba(224,82,82,.09); } }
 body[data-theme="light"] .trade-icon-btn, body:not([data-theme="light"]) .trade-icon-btn{ box-shadow:none; }
 
 .trade-ghost-btn{
@@ -5126,7 +5142,7 @@ body[data-theme="light"] .trade-icon-btn, body:not([data-theme="light"]) .trade-
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:color .18s ease, background .18s ease;
 }
-.trade-ghost-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; }
+@media (hover:hover){ .trade-ghost-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
 body[data-theme="light"] .trade-ghost-btn, body:not([data-theme="light"]) .trade-ghost-btn{ box-shadow:none; }
 
 .trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
@@ -5137,7 +5153,7 @@ body[data-theme="light"] .trade-ghost-btn, body:not([data-theme="light"]) .trade
 .trade-spin{ animation:tradeSpin .75s linear infinite; }
 @keyframes tradeSpin{ to{ transform:rotate(360deg); } }
 .trade-icon-btn:disabled, .trade-ghost-btn:disabled{ opacity:.5; cursor:default; }
-.trade-icon-btn:disabled:hover, .trade-ghost-btn:disabled:hover{ background:none; color:inherit; }
+@media (hover:hover){ .trade-icon-btn:disabled:hover, .trade-ghost-btn:disabled:hover{ background:none; color:inherit; } }
 
 .trade-field-row{ display:grid; grid-template-columns:1fr; gap:16px 11px; }
 @media (min-width:520px){ .trade-field-row{ grid-template-columns:1fr 1fr; } }
@@ -5155,7 +5171,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:transform .15s ease, border-color .18s ease;
 }
-.trade-color-dot:hover{ transform:scale(1.1); }
+@media (hover:hover){ .trade-color-dot:hover{ transform:scale(1.1); } }
 .trade-color-dot.active{ border-color:var(--text); transform:scale(1.08); }
 
 .trade-tag-row{ display:flex; flex-wrap:wrap; gap:7px; }
@@ -5165,7 +5181,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease, color .18s ease, background .18s ease, transform .15s ease;
 }
-.trade-tag-chip:hover{ background:rgba(var(--accent-rgb),.06); }
+@media (hover:hover){ .trade-tag-chip:hover{ background:rgba(var(--accent-rgb),.06); } }
 .trade-tag-chip:active{ transform:scale(.96); }
 .trade-tag-chip.active{ font-weight:700; }
 .trade-tag-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; }
@@ -5186,7 +5202,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:color .18s ease, border-color .18s ease, background .18s ease;
 }
-.trade-form-tab:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); }
+@media (hover:hover){ .trade-form-tab:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
 .trade-form-tab.active{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
 .trade-tab-warn{ width:6px; height:6px; border-radius:50%; background:#E0A452; display:inline-block; }
 .trade-form-body{ animation:tradeFadeIn .26s ease both; }
@@ -5202,7 +5218,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   color:var(--secondary); background:none; border:none; box-shadow:none; padding:3px 0;
   backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .18s ease;
 }
-.trade-suggest-btn:hover{ color:var(--accent); background:none; }
+@media (hover:hover){ .trade-suggest-btn:hover{ color:var(--accent); background:none; } }
 
 /* تاگل — همان حسِ ToggleSwitchِ بقیه‌ی اپ */
 .trade-toggle{
@@ -5211,7 +5227,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease;
 }
-.trade-toggle:hover{ border-color:var(--accent); background:none; }
+@media (hover:hover){ .trade-toggle:hover{ border-color:var(--accent); background:none; } }
 .trade-toggle-knob{
   width:38px; height:21px; border-radius:999px; background:var(--line);
   position:relative; flex-shrink:0; transition:background .22s ease;
@@ -5230,7 +5246,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   background:none; box-shadow:none; color:var(--muted); font-size:12.5px;
   backdrop-filter:none; -webkit-backdrop-filter:none; transition:border-color .18s ease, color .18s ease;
 }
-.trade-optional-head:hover{ border-color:var(--accent); color:var(--accent); background:none; }
+@media (hover:hover){ .trade-optional-head:hover{ border-color:var(--accent); color:var(--accent); background:none; } }
 .trade-optional-body{ margin-top:4px; animation:tradeFadeIn .26s ease both; }
 
 .trade-choice-grid{ display:flex; flex-wrap:wrap; gap:7px; }
@@ -5240,7 +5256,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease, color .18s ease, background .18s ease, transform .15s ease;
 }
-.trade-choice:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); }
+@media (hover:hover){ .trade-choice:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
 .trade-choice:active{ transform:scale(.96); }
 .trade-choice.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); font-weight:700; }
 .trade-choice-grid.readonly .trade-choice{ cursor:default; }
@@ -5263,12 +5279,12 @@ select.wsearch-newform-name{ cursor:pointer; }
   transition:color .18s ease;
 }
 .trade-check-row:last-child{ border-bottom:none; }
-.trade-check-row:hover{ background:none; color:var(--text); }
+@media (hover:hover){ .trade-check-row:hover{ background:none; color:var(--text); } }
 .trade-check-box{
   width:17px; height:17px; min-width:17px; border-radius:6px; border:1.5px solid var(--line);
   position:relative; transition:border-color .18s ease, background .18s ease, transform .15s ease;
 }
-.trade-check-row:hover .trade-check-box{ border-color:var(--accent); }
+@media (hover:hover){ .trade-check-row:hover .trade-check-box{ border-color:var(--accent); } }
 .trade-check-row.done .trade-check-box{ background:var(--accent); border-color:var(--accent); }
 .trade-check-row.done .trade-check-box::after{
   content:""; position:absolute; inset:0; margin:auto; width:4px; height:8px;
@@ -5307,13 +5323,13 @@ select.wsearch-newform-name{ cursor:pointer; }
   transition:border-color .18s ease, transform .18s ease;
 }
 .trade-image-thumb{ cursor:zoom-in; }
-.trade-image-thumb:hover{ border-color:var(--accent); transform:scale(1.03); }
+@media (hover:hover){ .trade-image-thumb:hover{ border-color:var(--accent); transform:scale(1.03); } }
 .trade-image-remove{
   position:absolute; top:5px; left:5px; padding:5px; border-radius:9px;
   background:rgba(0,0,0,.6); border:none; box-shadow:none; color:#fff;
   transition:background .18s ease, transform .15s ease;
 }
-.trade-image-remove:hover{ background:rgba(224,82,82,.85); }
+@media (hover:hover){ .trade-image-remove:hover{ background:rgba(224,82,82,.85); } }
 .trade-image-remove:active{ transform:scale(.9); }
 .trade-image-drop{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
@@ -5321,7 +5337,7 @@ select.wsearch-newform-name{ cursor:pointer; }
   color:var(--secondary); font-size:12.5px; font-weight:600; cursor:pointer;
   transition:border-color .18s ease, color .18s ease, background .18s ease;
 }
-.trade-image-drop:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.05); }
+@media (hover:hover){ .trade-image-drop:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.05); } }
 .trade-image-hint{ font-size:10.5px; color:var(--muted2); font-weight:400; }
 
 .trade-lightbox{
@@ -5343,20 +5359,32 @@ select.wsearch-newform-name{ cursor:pointer; }
   box-shadow:none; transition:border-color .18s ease;
 }
 body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08); }
-.trade-datetime-btn:hover{ border-color:var(--accent); }
+@media (hover:hover){ .trade-datetime-btn:hover{ border-color:var(--accent); } }
 .trade-datetime-btn svg{ color:var(--muted2); flex-shrink:0; }
 .trade-time-input{ width:80px; flex-shrink:0; text-align:center; }
 
 /* ── حساب‌ها ──────────────────────────────────────────────── */
 .trade-accounts-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
+/* «حساب‌های معاملاتی» دیگه یک لیبلِ کوچیکِ خنثیه نیست — عملاً تایتلِ همین
+   بخشه (تایتلِ صفحه «ژورنال‌نویسی»یِ)، پس فونتِ تایتل‌مانند + سبز می‌گیره. */
+.trade-section-title{ font-size:15px; font-weight:800; color:#00A86B; }
 .trade-account-grid{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-.trade-account-card{ position:relative; overflow:hidden; padding:17px 20px 17px 17px; }
-.trade-account-card:hover{ border-color:var(--accent); }
+.trade-account-card{ position:relative; overflow:hidden; padding:16px 20px 16px 44px; }
+@media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
 .trade-account-stripe{ position:absolute; top:0; right:0; bottom:0; width:3px; }
 .trade-account-main{ display:block; text-decoration:none; color:var(--text); }
 .trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .trade-account-name{ font-size:14.5px; font-weight:700; }
+.trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
+/* منویِ سه‌نقطه — کنارِ اسم، سمتِ مخالفِ نوارِ رنگی. با createPortal به
+   body می‌ره (هم‌الگویِ DashTaskRow) چون بلورِ .trade-surface یک
+   stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه. */
+.trade-account-kebab{ position:absolute; top:12px; left:10px; z-index:2; }
+.trade-account-menu{
+  position:fixed; z-index:70; min-width:170px; padding:6px; border-radius:16px;
+  border:1px solid var(--line); box-shadow:0 16px 40px rgba(0,0,0,.4); overflow:hidden;
+}
 .trade-account-type, .trade-account-archived-badge{
   font-size:10px; color:var(--muted2); border:1px solid var(--line); border-radius:999px; padding:3px 9px;
 }
@@ -5379,7 +5407,7 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
   backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease, background .18s ease, transform .15s ease;
 }
-.trade-add-account-btn:hover{ border-color:var(--accent); background:rgba(var(--accent-rgb),.06); }
+@media (hover:hover){ .trade-add-account-btn:hover{ border-color:var(--accent); background:rgba(var(--accent-rgb),.06); } }
 .trade-add-account-btn:active{ transform:scale(.99); }
 
 .trade-account-header{
@@ -5410,12 +5438,46 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 }
 body[data-theme="light"] .trade-search{ background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08); }
 .trade-search:focus-within{ border-color:var(--accent); }
-.trade-search input{
-  border:none; background:none; padding:11px 0; width:130px; outline:none;
+/* .wsearch-newform-name.trade-glass-field (دو کلاس، اسپسیفیسیتیِ ۰۲۰) خودش
+   بک‌گراند/بردر/بلور جدا داره و روی ریستِ زیر (که قبلاً فقط ۰۱۱ بود) غالب
+   می‌شد — نتیجه‌ش دو لایه‌ی شیشه‌ای روی هم با شعاعِ بلورِ متفاوت بود، یعنی
+   داخلِ فیلد یه رنگِ دیگه از بقیه‌ی کپسول نشون می‌داد. حالا با
+   `input.trade-glass-field` (۰۲۱) قطعی برنده می‌شه و فقط یک لایه‌ی شیشه‌ای
+   (خودِ .trade-search) باقی می‌مونه. */
+.trade-search input.trade-glass-field{
+  border:none; background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  padding:11px 0; width:130px; outline:none;
   color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:13px;
 }
-@media (max-width:640px){ .trade-search input{ font-size:16px; } }
+@media (max-width:640px){ .trade-search input.trade-glass-field{ font-size:16px; } }
 .trade-search input::placeholder{ color:var(--muted2); }
+.trade-search-btn{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  padding:4px; color:inherit;
+}
+
+/* حالتِ خالیِ بخش‌های ترید (یادداشت‌ها/چک‌لیست‌ها) — آیکون وسط‌چین به‌جایِ
+   یک خطِ متنِ تنها. */
+.trade-empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding:52px 20px; text-align:center; color:var(--muted2);
+}
+.trade-empty-state svg{ opacity:.45; }
+.trade-empty-state p{ font-size:12.5px; color:var(--muted); margin:0; line-height:1.8; }
+
+/* ردیفِ تایتل + دکمه‌ی «افزودن» هم‌ردیف، چپ‌چین (ادامه‌ی همون الگویِ
+   .tm-head-row/.weekly-head-row). */
+.trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.trade-head-row h1{ margin-bottom:0; }
+.trade-title-add-btn{
+  display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
+  font-size:12.5px; font-weight:700; color:var(--accent);
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  padding:6px 2px;
+}
+@media (hover:hover){ .trade-title-add-btn:hover{ opacity:.78; } }
+.trade-title-add-btn:active{ transform:scale(.97); }
 
 .trade-list{ display:flex; flex-direction:column; margin-top:12px; }
 .trade-row{
@@ -5425,8 +5487,8 @@ body[data-theme="light"] .trade-search{ background:rgba(255,255,255,.35); border
   transition:background .18s ease;
 }
 .trade-row:last-child{ border-bottom:none; }
-.trade-row:hover{ background:rgba(var(--accent-rgb),.05); }
-.trade-row:hover .trade-row-symbol{ color:var(--accent); }
+@media (hover:hover){ .trade-row:hover{ background:rgba(var(--accent-rgb),.05); } }
+@media (hover:hover){ .trade-row:hover .trade-row-symbol{ color:var(--accent); } }
 .trade-row-dir{
   font-size:10px; font-weight:700; padding:5px 9px; border-radius:999px; white-space:nowrap;
   border:1px solid var(--line); color:var(--muted); flex-shrink:0;
@@ -5490,7 +5552,7 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-cal-filters{ padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both; }
 .trade-cal-day{ margin-top:20px; }
 .trade-cal-day-title{
-  font-size:11px; color:var(--muted2); font-weight:700; margin-bottom:9px;
+  font-size:11px; color:#00A86B; font-weight:700; margin-bottom:9px;
   padding-bottom:8px; border-bottom:1px solid var(--line);
 }
 .trade-cal-event{
@@ -5504,6 +5566,10 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-cal-title{ font-size:12.5px; line-height:1.8; }
 .trade-cal-values{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:10.5px; color:var(--muted2); }
 .trade-cal-values b{ color:var(--text); font-weight:700; }
+
+/* اخبارِ زیرِ صفحه‌ی یک چک‌لیست — عیناً همون ردیفِ .trade-cal-event،
+   فقط بدونِ گروه‌بندیِ روزانه (اینجا شمارش‌معکوسه، نه گروهِ تاریخ). */
+.trade-checklist-news-list{ display:flex; flex-direction:column; }
 .trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
 
 /* ── ساعت فارکس ────────────────────────────────────────────── */
@@ -5538,7 +5604,7 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-note-grid{ display:flex; flex-direction:column; gap:11px; margin-top:16px; }
 @media (min-width:700px){ .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
 .trade-note-card{ position:relative; padding:16px 19px 16px 16px; overflow:hidden; cursor:pointer; }
-.trade-note-card:hover{ border-color:var(--accent); }
+@media (hover:hover){ .trade-note-card:hover{ border-color:var(--accent); } }
 .trade-note-card:active{ transform:scale(.99); }
 .trade-note-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
 .trade-note-title{ font-size:14px; font-weight:700; }
@@ -5551,24 +5617,56 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 
 /* ── اتصال متاتریدر ────────────────────────────────────────── */
 .trade-mt-panel{ margin-top:24px; padding:18px 20px; }
+.trade-mt-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+
+/* نشانِ فعال/غیرفعالِ کوچک، کنارِ خودِ تایتل — دات با موجِ پالسی، سبز وقتی
+   وصله، قرمز وقتی نیست؛ جایگزینِ بنرِ جداگانه‌ی قبلی. */
+.trade-mt-live{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#E05252; }
+.trade-mt-live.connected{ color:var(--accent); }
+.trade-mt-live-dot{ position:relative; width:8px; height:8px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.trade-mt-live-dot::after{
+  content:""; position:absolute; inset:-4px; border-radius:50%; background:currentColor; opacity:.55;
+  animation:mtLivePulse 1.8s ease-out infinite;
+}
+@keyframes mtLivePulse{ 0%{ transform:scale(.6); opacity:.55; } 100%{ transform:scale(2.4); opacity:0; } }
+
+/* همون وضعیت روی ردیفِ فهرستِ حساب‌ها (صفحه‌ی اصلیِ متاتریدر) */
 .trade-mt-status{
-  display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
-  border:1px solid var(--line); border-radius:999px; padding:7px 14px;
+  display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#E05252;
+  border:1px solid rgba(224,82,82,.35); border-radius:999px; padding:7px 14px; background:rgba(224,82,82,.08);
 }
 .trade-mt-status.connected{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+.trade-mt-status .forex-dot{ position:relative; }
+.trade-mt-status .forex-dot::after{
+  content:""; position:absolute; inset:-4px; border-radius:50%; background:currentColor; opacity:.55;
+  animation:mtLivePulse 1.8s ease-out infinite;
+}
+
+/* مراحلِ نصب — شماره‌گذاریِ دایره‌ای به‌جایِ مارکرِ خامِ مرورگر (که توی
+   RTL هم‌ردیفِ عددهای فارسیِ بقیه‌ی سایت نبود)، و هر تکه‌ی انگلیسی
+   (نامِ منو/فایل/کلید) با .ltr-inline ایزوله می‌شه — وگرنه توی یک پاراگرافِ
+   RTL، الگوریتمِ bidi ترتیبِ کلمات/فلش‌های انگلیسی رو بهم می‌ریخت. */
 .trade-mt-steps{
-  margin:18px 18px 0 0; padding:0; display:flex; flex-direction:column; gap:12px;
+  counter-reset:mtstep; list-style:none;
+  margin:18px 0 0; padding:0; display:flex; flex-direction:column; gap:14px;
   font-size:12.5px; color:var(--muted); line-height:1.95;
 }
-.trade-mt-steps li{ padding-right:5px; }
+.trade-mt-steps li{ counter-increment:mtstep; position:relative; padding-right:32px; }
+.trade-mt-steps li::before{
+  content:counter(mtstep); position:absolute; right:0; top:-1px;
+  width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; color:var(--accent); border:1px solid var(--accent); background:var(--accent-dim);
+  font-family:var(--font-latin), var(--font-vazir), monospace;
+}
 .trade-mt-steps b{ color:var(--text); }
+.ltr-inline{ unicode-bidi:isolate; direction:ltr; }
 .trade-mt-download{
   display:inline-flex; align-items:center; gap:7px; margin-top:8px;
   font-size:12px; color:var(--accent); text-decoration:none; font-weight:700;
   border:1px solid var(--accent); border-radius:13px; padding:9px 14px;
   transition:background .18s ease, transform .15s ease;
 }
-.trade-mt-download:hover{ background:rgba(var(--accent-rgb),.08); }
+@media (hover:hover){ .trade-mt-download:hover{ background:rgba(var(--accent-rgb),.08); } }
 .trade-mt-download:active{ transform:scale(.97); }
 .trade-mt-note{ display:block; margin-top:7px; font-size:11px; color:var(--muted2); line-height:1.9; }
 .trade-mt-code-box{
@@ -5580,12 +5678,22 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
   direction:ltr; text-align:center; color:var(--accent);
 }
 .trade-mt-row{ text-decoration:none; color:var(--text); display:block; padding:16px 19px 16px 16px; }
-.trade-mt-row:hover{ border-color:var(--accent); }
+@media (hover:hover){ .trade-mt-row:hover{ border-color:var(--accent); } }
+
+/* خطِ وضعیتِ متاتریدر روی صفحه‌ی خودِ حساب — جزئیاتِ کامل جاش صفحه‌ی
+   اختصاصیِ /trade/metatrader/[id]ه، این‌جا فقط یک ردیف. */
+.trade-mt-line{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:22px; padding:14px 18px; text-decoration:none; color:var(--text);
+  font-size:12.5px; font-weight:600;
+}
+@media (hover:hover){ .trade-mt-line:hover{ border-color:var(--accent); } }
 
 /* حرکت‌ها را برای کسی که کاهشِ حرکت خواسته خاموش کن — هم‌قاعده‌ی بقیه‌ی اپ */
 @media (prefers-reduced-motion: reduce){
   .trade-form-body, .trade-optional-body, .trade-drawer, .trade-lightbox,
   .trade-cal-filters, .trade-mt-code-box, .trade-inline-confirm{ animation:none; }
+  .trade-mt-live-dot::after, .trade-mt-status .forex-dot::after{ animation:none; opacity:.55; }
 }
 
 /* آیتم‌های لیستِ پیشنهادِ نماد حالا <button>اند (تا انتخاب با یک تپ و پیش از
@@ -5598,7 +5706,7 @@ button.trade-pair-suggest-item{
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 button.trade-pair-suggest-item:last-child{ border-bottom:none; }
-button.trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; }
+@media (hover:hover){ button.trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
 body[data-theme="light"] button.trade-pair-suggest-item,
 body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; }
 

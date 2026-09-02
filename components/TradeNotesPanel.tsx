@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Pin, PinOff, Plus, Search, Trash2, X } from "lucide-react";
+import { Loader2, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
@@ -21,7 +21,13 @@ type Note = {
 // یادداشت‌های آزادِ تریدر: جست‌وجو، فیلترِ برچسب، رنگ و سنجاق‌کردن.
 // برچسب‌ها همان برچسب‌های ماژولِ ترید هستند (مشترک با حساب و معامله)، نه یک
 // لیستِ جدا — تا کاربر مجبور نباشد «Psychology» را دو بار بسازد.
-export function TradeNotesPanel() {
+export function TradeNotesPanel({
+  creating,
+  onCreatingChange,
+}: {
+  creating: boolean;
+  onCreatingChange: (v: boolean) => void;
+}) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [tags, setTags] = useState<TradeTag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +35,6 @@ export function TradeNotesPanel() {
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [editing, setEditing] = useState<Note | null>(null);
-  const [creating, setCreating] = useState(false);
   const { pendingKey, error: actionError, run } = useAsyncAction();
 
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
@@ -80,8 +85,8 @@ export function TradeNotesPanel() {
     <div>
       <div className="trade-list-head" style={{ marginTop: 6 }}>
         <div className="trade-search" style={{ flex: 1 }}>
-          <Search size={14} />
           <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
+          <button type="button" className="trade-search-btn" onClick={() => load()} aria-label="جست‌وجو"><Search size={14} /></button>
         </div>
       </div>
 
@@ -109,8 +114,9 @@ export function TradeNotesPanel() {
 
       {loading && <PanelSkeleton />}
       {!loading && !notes.length && (
-        <div className="item-line empty" style={{ marginTop: 16 }}>
-          {query || filterTags.length ? "یادداشتی با این فیلتر پیدا نشد" : "هنوز یادداشتی ننوشتی"}
+        <div className="trade-empty-state">
+          <StickyNote size={32} />
+          <p>{query || filterTags.length ? "یادداشتی با این فیلتر پیدا نشد" : "هنوز یادداشتی اضافه نشده"}</p>
         </div>
       )}
 
@@ -157,17 +163,13 @@ export function TradeNotesPanel() {
         ))}
       </div>
 
-      <button type="button" className="trade-add-account-btn" onClick={() => setCreating(true)}>
-        <Plus size={18} /> یادداشت جدید
-      </button>
-
       {(creating || editing) && (
         <NoteEditor
           note={editing}
           tags={tags}
           onTagCreated={(t) => setTags((p) => [...p, t])}
-          onClose={() => { setCreating(false); setEditing(null); }}
-          onSaved={() => { setCreating(false); setEditing(null); load(); }}
+          onClose={() => { onCreatingChange(false); setEditing(null); }}
+          onSaved={() => { onCreatingChange(false); setEditing(null); load(); }}
         />
       )}
     </div>
@@ -191,7 +193,8 @@ function NoteEditor({
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
-    if (!title.trim() || saving) return;
+    if (saving) return;
+    if (!title.trim()) { setError("عنوان یادداشت را وارد کن"); return; }
     setSaving(true);
     setError(null);
     const res = await fetch("/api/trade/notes", {
@@ -238,8 +241,8 @@ function NoteEditor({
 
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
-          <button type="button" className="trade-primary-btn" onClick={save} disabled={!title.trim() || saving}>
-            {saving ? "..." : "ذخیره"}
+          <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
+            {saving ? <Loader2 size={15} className="trade-spin" /> : "ذخیره"}
           </button>
         </div>
       </div>

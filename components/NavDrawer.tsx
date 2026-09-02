@@ -313,13 +313,25 @@ export function NavDrawer() {
       {!hideTopbar && (
         <header className="app-topbar">
           <div className="topbar-actions-left">
-            <Link href="/" aria-label="رفتن به صفحه اصلی">
+            {/* هر دو نسخه (روز/شب) هم‌زمان با اولین رندر لود می‌شن (هردو priority)،
+                فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقعِ
+                تعویضِ تم، تصویرِ تمِ جدید (که تا اون لحظه fetch نشده) یه تاخیرِ
+                دیدنی داشت تا دانلود بشه. */}
+            <Link href="/" aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
               <Image
-                src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
+                src="/images/logo-lockup-dark-theme.png"
                 alt="Arion"
                 width={138}
                 height={34}
-                className="topbar-logo-lockup"
+                className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
+                priority
+              />
+              <Image
+                src="/images/logo-lockup-light-theme.webp"
+                alt="Arion"
+                width={138}
+                height={34}
+                className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
                 priority
               />
             </Link>
