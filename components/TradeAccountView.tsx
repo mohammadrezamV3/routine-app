@@ -15,7 +15,6 @@ import {
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
-import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
@@ -237,7 +236,15 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         ))}
       </div>
 
-      <TradeMtLinkPanel accountId={account.id} calSystem={calSystem} />
+      {/* جزئیاتِ کاملِ اتصال (مراحلِ نصب، کدِ اتصال، ...) جاش صفحه‌ی
+          اختصاصیِ /trade/metatrader/[id]ه — این‌جا فقط یک خطِ وضعیته. */}
+      <Link href={`/trade/metatrader/${account.id}`} className="trade-surface trade-mt-line">
+        <span>اتصال متاتریدر</span>
+        <span className={`trade-mt-status${account.mtConnected ? " connected" : ""}`}>
+          <span className="forex-dot" />
+          {account.mtConnected ? "فعال" : "غیرفعال"}
+        </span>
+      </Link>
 
       {editingAccount && (
         <TradeAccountModal

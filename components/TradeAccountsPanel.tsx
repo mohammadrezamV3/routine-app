@@ -1,25 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { Archive, ArchiveRestore, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Loader2, MoreVertical, Pencil, Trash2, Wallet } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { TradeAccountModal } from "./TradeAccountModal";
 import { PanelSkeleton } from "./PanelSkeleton";
-import { ACCOUNT_TYPE_LABELS, MAX_ACCOUNTS, TradeAccount, TradeTag } from "@/lib/tradeTypes";
+import { TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { takePreloaded } from "@/lib/preload";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
-// صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها. با انتخابِ هر حساب می‌رویم داخلِ
-// آمار و معاملاتِ همان حساب.
-export function TradeAccountsPanel() {
+// صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکلِ فشرده (اسم + سود/زیان +
+// برچسب) — جزئیاتِ کامل (بالانس/تعدادِ معاملات/نرخِ برد/هدف) جاش صفحه‌ی
+// خودِ حسابه، نه این فهرست. با انتخابِ هر حساب می‌رویم داخلِ آمار و
+// معاملاتِ همان حساب.
+export function TradeAccountsPanel({
+  creating,
+  onCreatingChange,
+}: {
+  creating: boolean;
+  onCreatingChange: (v: boolean) => void;
+}) {
   const [accounts, setAccounts] = useState<TradeAccount[]>([]);
   const [tags, setTags] = useState<TradeTag[]>([]);
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<TradeAccount | null>(null);
-  const [creating, setCreating] = useState(false);
   const [confirmPurge, setConfirmPurge] = useState<TradeAccount | null>(null);
   const { pendingKey, error: actionError, run } = useAsyncAction();
 
@@ -36,7 +44,11 @@ export function TradeAccountsPanel() {
         takePreloaded(accountsUrl) ?? fetch(accountsUrl).then((r) => (r.ok ? r.json() : null)),
         takePreloaded("/api/trade/tags") ?? fetch("/api/trade/tags").then((r) => (r.ok ? r.json() : null)),
       ]);
-      setAccounts(aData?.accounts || []);
+      // archived=1 یعنی «همه» (فعال+آرشیو) از سرور می‌آید، چون همون پاسخ برای
+      // بعداً برگشتن به حالتِ عادی کش می‌مونه — این‌جا برای «نمایشِ آرشیو» فقط
+      // خودِ آرشیوی‌ها نگه داشته می‌شن، نه فعال‌ها هم کنارشون.
+      const list: TradeAccount[] = aData?.accounts || [];
+      setAccounts(showArchived ? list.filter((a) => a.archived) : list);
       setTags(tData?.tags || []);
     } finally {
       if (!silent) setLoading(false);
@@ -59,14 +71,12 @@ export function TradeAccountsPanel() {
     if (ok) { setConfirmPurge(null); load(true); }
   }
 
-  const activeCount = accounts.filter((a) => !a.archived).length;
-
   if (loading) return <PanelSkeleton />;
 
   return (
     <div>
       <div className="trade-accounts-head">
-        <div className="domain-sub" style={{ margin: 0 }}>حساب‌های معاملاتی</div>
+        <div className="trade-section-title">حساب‌های معاملاتی</div>
         <button type="button" className="trade-ghost-btn" onClick={() => setShowArchived((v) => !v)}>
           {showArchived ? "پنهان‌کردن آرشیو" : "نمایش آرشیو"}
         </button>
@@ -75,106 +85,32 @@ export function TradeAccountsPanel() {
       {actionError && <div className="trade-form-error">{actionError}</div>}
 
       {!accounts.length && (
-        <div className="item-line empty" style={{ marginTop: 12 }}>
-          هنوز حسابی نساختی — با ساختن اولین حساب، ثبت معامله و آمارش شروع می‌شود.
+        <div className="trade-empty-state">
+          <Wallet size={32} />
+          <p>{showArchived ? "هیچ حسابی توی آرشیو نیست" : "هنوز حسابی ایجاد نکردی"}</p>
         </div>
       )}
 
       <div className="trade-account-grid">
         {accounts.map((a, i) => (
-          <motion.div
+          <AccountRow
             key={a.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.32, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
-            className={`trade-surface trade-account-card${a.archived ? " archived" : ""}`}
-          >
-            <span className="trade-account-stripe" style={{ background: a.color }} />
-
-            <Link href={`/trade/accounts/${a.id}`} className="trade-account-main">
-              <div className="trade-account-title-row">
-                <span className="trade-account-name">{a.name}</span>
-                <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[a.type]}</span>
-                {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
-              </div>
-              {a.broker && <div className="trade-account-broker">{a.broker}</div>}
-
-              <div className="trade-account-stats">
-                <div className="trade-account-stat">
-                  <span>بالانس</span>
-                  <b className="mono">{faNum((a.summary?.balance ?? 0).toFixed(2))} {a.currency}</b>
-                </div>
-                <div className="trade-account-stat">
-                  <span>سود/زیان</span>
-                  <b className="mono" style={{ color: (a.summary?.netPnl ?? 0) >= 0 ? "var(--accent)" : "#E05252" }}>
-                    {faNum((a.summary?.netPnl ?? 0).toFixed(2))}
-                  </b>
-                </div>
-                <div className="trade-account-stat">
-                  <span>معاملات</span>
-                  <b className="mono">{faNum(a.summary?.tradeCount ?? 0)}</b>
-                </div>
-                <div className="trade-account-stat">
-                  <span>نرخ برد</span>
-                  <b className="mono">{a.summary?.winRate === null || a.summary?.winRate === undefined ? "—" : `${faNum(a.summary.winRate)}٪`}</b>
-                </div>
-              </div>
-
-              {a.summary?.goalProgress !== null && a.summary?.goalProgress !== undefined && (
-                <div className="trade-account-goal">
-                  <div className="trade-account-goal-bar">
-                    <span style={{ width: `${Math.round(a.summary.goalProgress * 100)}%`, background: a.color }} />
-                  </div>
-                  <span className="mono">{faNum(Math.round(a.summary.goalProgress * 100))}٪ هدف</span>
-                </div>
-              )}
-
-              {!!a.tags.length && (
-                <div className="trade-tag-row" style={{ marginTop: 10 }}>
-                  {a.tags.map((t) => (
-                    <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>
-                      <span className="trade-tag-dot" style={{ background: t.color }} />
-                      {t.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </Link>
-
-            <div className="trade-account-actions">
-              <button type="button" className="trade-icon-btn" onClick={() => setEditing(a)} aria-label="ویرایش"><Pencil size={15} /></button>
-              <button
-                type="button"
-                className="trade-icon-btn"
-                onClick={() => toggleArchive(a)}
-                disabled={pendingKey === `archive:${a.id}`}
-                aria-label={a.archived ? "بازگردانی" : "آرشیو"}
-              >
-                {pendingKey === `archive:${a.id}`
-                  ? <Loader2 size={15} className="trade-spin" />
-                  : a.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
-              </button>
-              {a.archived && (
-                <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmPurge(a)} aria-label="حذف کامل"><Trash2 size={15} /></button>
-              )}
-            </div>
-          </motion.div>
+            account={a}
+            index={i}
+            onEdit={() => setEditing(a)}
+            onToggleArchive={() => toggleArchive(a)}
+            onPurge={() => setConfirmPurge(a)}
+          />
         ))}
       </div>
-
-      {activeCount < MAX_ACCOUNTS && (
-        <button type="button" className="trade-add-account-btn" onClick={() => setCreating(true)}>
-          <Plus size={18} /> افزودن حساب
-        </button>
-      )}
 
       {(creating || editing) && (
         <TradeAccountModal
           account={editing}
           tags={tags}
           onTagCreated={(t) => setTags((prev) => [...prev, t])}
-          onClose={() => { setCreating(false); setEditing(null); }}
-          onSaved={() => { setCreating(false); setEditing(null); load(); }}
+          onClose={() => { onCreatingChange(false); setEditing(null); }}
+          onSaved={() => { onCreatingChange(false); setEditing(null); load(); }}
         />
       )}
 
@@ -187,6 +123,100 @@ export function TradeAccountsPanel() {
         />
       )}
     </div>
+  );
+}
+
+// ردیفِ فشرده‌ی یک حساب — اسم + سود/زیان + برچسب، به‌علاوه‌ی منویِ
+// سه‌نقطه‌ی کنارِ اسم (ویرایش/آرشیو). جزئیاتِ کاملِ حساب فقط با بازکردنِ
+// خودِ صفحه‌ی حساب دیده می‌شود.
+function AccountRow({
+  account: a, index, onEdit, onToggleArchive, onPurge,
+}: {
+  account: TradeAccount;
+  index: number;
+  onEdit: () => void;
+  onToggleArchive: () => void;
+  onPurge: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const btnWrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  function openMenu() {
+    const rect = btnWrapRef.current?.getBoundingClientRect();
+    if (rect) setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    setMenuOpen(true);
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as Node;
+      if (btnWrapRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [menuOpen]);
+
+  const netPnl = a.summary?.netPnl ?? 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, delay: Math.min(index, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
+      className={`trade-surface trade-account-card${a.archived ? " archived" : ""}`}
+    >
+      <span className="trade-account-stripe" style={{ background: a.color }} />
+
+      <div className="trade-account-kebab" ref={btnWrapRef}>
+        <button type="button" className="trade-icon-btn" onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())} aria-label="گزینه‌های حساب">
+          <MoreVertical size={16} />
+        </button>
+        {menuOpen && menuPos && createPortal(
+          <div ref={menuRef} style={{ top: menuPos.top, right: menuPos.right }} className="dash-context-menu trade-account-menu">
+            <div className="wsearch-fab-option" onClick={() => { setMenuOpen(false); onEdit(); }}>
+              <Pencil size={14} /> ویرایش حساب
+            </div>
+            <div className="wsearch-fab-option" onClick={() => { setMenuOpen(false); onToggleArchive(); }}>
+              {a.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+              {a.archived ? "بازگردانی از آرشیو" : "آرشیو کردن"}
+            </div>
+            {a.archived && (
+              <div className="wsearch-fab-option danger" onClick={() => { setMenuOpen(false); onPurge(); }}>
+                <Trash2 size={14} /> حذف کامل
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
+      </div>
+
+      <Link href={`/trade/accounts/${a.id}`} className="trade-account-main">
+        <div className="trade-account-title-row">
+          <span className="trade-account-name">{a.name}</span>
+          {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
+        </div>
+
+        <div className="trade-account-pnl mono" style={{ color: netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
+          {faNum(netPnl.toFixed(2))} {a.currency}
+        </div>
+
+        {!!a.tags.length && (
+          <div className="trade-tag-row" style={{ marginTop: 10 }}>
+            {a.tags.map((t) => (
+              <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>
+                <span className="trade-tag-dot" style={{ background: t.color }} />
+                {t.name}
+              </span>
+            ))}
+          </div>
+        )}
+      </Link>
+    </motion.div>
   );
 }
 
@@ -207,7 +237,7 @@ function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAc
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
           <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name || busy} onClick={onConfirm}>
-            {busy ? "..." : "حذف کامل"}
+            {busy ? <Loader2 size={15} className="trade-spin" /> : "حذف کامل"}
           </button>
         </div>
       </div>

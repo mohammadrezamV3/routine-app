@@ -31,11 +31,21 @@ export function AuthBackButton({ onClick }: { onClick?: () => void }) {
  * تایتل بینشون یکسان بمونه. */
 export function AuthBrandMark({ subtitle }: { subtitle?: string }) {
   const { theme } = useTheme();
-  const iconSrc = theme === "light" ? "/images/logo-icon-light-theme.png" : "/images/logo-icon-dark-theme.png";
   return (
     <div className="auth-brand-mark-wrap">
+      {/* هر دو نسخه هم‌زمان لود می‌شن (priority) و فقط با opacity جابه‌جا
+         می‌شن — سوییچِ تم منتظرِ دانلودِ تصویرِ جدید نمی‌مونه. */}
       <div className="auth-brand-mark" aria-hidden="true">
-        <Image src={iconSrc} alt="" fill sizes="38px" className="object-contain" />
+        <Image
+          src="/images/logo-icon-dark-theme.png"
+          alt="" fill sizes="38px" priority
+          className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-0" : " opacity-100"}`}
+        />
+        <Image
+          src="/images/logo-icon-light-theme.webp"
+          alt="" fill sizes="38px" priority
+          className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-100" : " opacity-0"}`}
+        />
       </div>
       {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
     </div>

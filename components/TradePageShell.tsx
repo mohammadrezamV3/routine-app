@@ -23,11 +23,13 @@ export function TradePageShell({
   title,
   note,
   back = { href: "/trade", label: "ترید" },
+  titleAction,
   children,
 }: {
   title: string;
   note?: string;
   back?: { href: string; label: string } | null;
+  titleAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const { status } = useSession();
@@ -39,7 +41,10 @@ export function TradePageShell({
           <ChevronRight size={15} /> {back.label}
         </Link>
       )}
-      <h1>{title}</h1>
+      <div className={titleAction ? "trade-head-row" : undefined}>
+        <h1>{title}</h1>
+        {titleAction}
+      </div>
       {note && <div className="section-note">{note}</div>}
 
       {status === "loading" && <PanelSkeleton />}
