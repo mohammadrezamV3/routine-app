@@ -207,3 +207,45 @@ export function upcomingSession(now: Date = new Date()): { key: SessionKey; at: 
   }
   return best;
 }
+
+/**
+ * کمانِ یک جلسه از روی تعریفِ خامش — برای صفحه‌ی ساعت که یک جلسه‌ی
+ * نمایشیِ اضافه (فرانکفورت) هم دارد و در `FOREX_SESSIONS` نیست.
+ */
+export function arcForDef(
+  def: { tz: string; openMin: number; closeMin: number },
+  now: Date = new Date()
+): { startMin: number; durationMin: number; openAt: Date; closeAt: Date; openLabel: string; closeLabel: string; open: boolean } {
+  const openAt = localMinutesToInstant(now, def.tz, def.openMin);
+  const rawClose = localMinutesToInstant(openAt, def.tz, def.closeMin);
+  const durationMin = Math.round(
+    (rawClose.getTime() - openAt.getTime()) / 60_000 + (rawClose <= openAt ? 1440 : 0)
+  );
+  const closeAt = new Date(openAt.getTime() + durationMin * 60_000);
+
+  // باز بودن با همان قاعده‌ی جلسه‌های ژورنال: هم بازارِ فارکس باز باشد، هم
+  // خودِ آن شهر روزِ کاری باشد، هم داخلِ بازه‌ی ساعتش باشیم.
+  const { weekday, minutes } = wallClockIn(now, def.tz);
+  const inHours = minutes >= def.openMin && minutes < def.closeMin;
+  const open = isForexOpen(now) && weekday !== 0 && weekday !== 6 && inHours;
+
+  return { startMin: viewerMinutes(openAt), durationMin, openAt, closeAt, open,
+           openLabel: hhmm(openAt), closeLabel: hhmm(closeAt) };
+}
+
+/** بازشدنِ بعدیِ یک تعریفِ جلسه — تعطیلیِ آخرِ هفته را رد می‌کند */
+export function nextOpenForDef(
+  def: { tz: string; openMin: number },
+  now: Date = new Date()
+): Date | null {
+  for (let day = 0; day <= 8; day++) {
+    const ref = new Date(now.getTime() + day * 86_400_000);
+    const candidate = localMinutesToInstant(ref, def.tz, def.openMin);
+    if (candidate.getTime() <= now.getTime()) continue;
+    const { weekday } = wallClockIn(candidate, def.tz);
+    if (weekday === 0 || weekday === 6) continue;
+    if (!isForexOpen(candidate)) continue;
+    return candidate;
+  }
+  return null;
+}

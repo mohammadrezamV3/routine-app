@@ -5560,80 +5560,105 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-chart-side-symbol{ margin-top:10px; font-size:11.5px; color:var(--muted); }
 .trade-chart-side-symbol b{ color:var(--text); }
 
-/* ── ساعت ۲۴ساعته‌ی جلسه‌های فارکس ─────────────────────────────────────
-   خطوطِ نازک، رنگِ خویشتن‌دار، درخششِ کم. «باز بودن» با پررنگی و درخشش
-   نشان داده می‌شود نه با عوض‌کردنِ فام — وگرنه دیگر معلوم نبود کدام حلقه
-   مالِ کدام جلسه است. */
-.fx-dial-wrap{ position:relative; width:100%; max-width:440px; margin:6px auto 0; aspect-ratio:1; }
+/* ── ساعت بازار فارکس ────────────────────────────────────────────────
+   بازسازیِ چیدمانِ مرجع: حلقه‌ی سرمه‌ای با اعدادِ ۱–۲۴، صفحه‌ی روشن،
+   مقیاسِ دقیقه، پره‌های شعاعی، نوارِ جلسه‌ها با نامِ منحنی، و سه عقربه.
+   خودِ صفحه آینه نمی‌شود — راست‌چینی به متن و کارت‌ها مربوط است، نه به
+   جهتِ چرخشِ ساعت. */
+.fx-clock{ direction:rtl; }
+
+.fx-dial-wrap{ position:relative; width:100%; max-width:460px; margin:0 auto; aspect-ratio:1; }
 .fx-dial{ width:100%; height:100%; display:block; }
 
-.fx-face{ fill:none; stroke:rgba(var(--surface-rgb),.14); stroke-width:1; }
-.fx-face-inner{ fill:none; stroke:rgba(var(--surface-rgb),.10); stroke-width:1; }
+.fx-bezel{ fill:none; stroke:#1E2A38; }
+.fx-bezel-tick{ stroke:rgba(255,255,255,.34); stroke-width:1.4; }
 
-.fx-tick{ stroke:var(--muted2); stroke-width:1; }
-.fx-tick.major{ stroke:var(--muted); stroke-width:1.5; }
-.fx-hour-num{
-  fill:var(--muted); font-size:11.5px; font-weight:600;
-  font-variant-numeric:tabular-nums; letter-spacing:.03em;
+/* صفحه‌ی داخلی با تمِ اپ هماهنگ می‌شود. در تمِ روشن سفید است مثلِ مرجع؛
+   در تمِ تیره یک اسلیتِ خیلی تیره، وگرنه یک دیسکِ سفید وسطِ اپِ تاریک
+   می‌افتاد و با بقیه‌ی صفحه‌ها ناجور می‌شد. */
+.fx-face{ fill:#FFFFFF; stroke:rgba(30,42,56,.10); stroke-width:1; }
+body:not([data-theme="light"]) .fx-face{ fill:#101820; stroke:rgba(255,255,255,.07); }
+
+.fx-hour-num{ fill:#FFFFFF; font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; }
+.fx-min-num{ fill:#9AA3AC; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+body:not([data-theme="light"]) .fx-min-num{ fill:#6C767F; }
+
+.fx-spoke{ stroke:rgba(30,42,56,.07); stroke-width:1; }
+.fx-spoke.major{ stroke:rgba(30,42,56,.12); }
+body:not([data-theme="light"]) .fx-spoke{ stroke:rgba(255,255,255,.05); }
+body:not([data-theme="light"]) .fx-spoke.major{ stroke:rgba(255,255,255,.09); }
+
+/* نوارِ جلسه: خاکستری وقتی بسته، سبز وقتی باز — مثلِ مرجع.
+   هر دو تم در یک سطحِ specificity نوشته می‌شوند، وگرنه قاعده‌ی تم
+   رنگِ «باز» را می‌خورد و هیچ جلسه‌ای سبز نمی‌شد. */
+.fx-band{ fill:none; stroke:#BFC5CB; stroke-linecap:round; transition:stroke .45s ease; }
+body[data-theme="light"] .fx-band{ stroke:#BFC5CB; }
+body:not([data-theme="light"]) .fx-band{ stroke:#39424B; }
+body[data-theme="light"] .fx-band.open,
+body:not([data-theme="light"]) .fx-band.open{ stroke:var(--accent); }
+
+.fx-band-label{
+  fill:rgba(255,255,255,.92); font-size:13px; font-weight:700;
+  letter-spacing:.2em; text-transform:uppercase; paint-order:stroke;
 }
 
-.fx-ring-track{ fill:none; stroke:rgba(var(--surface-rgb),.13); }
+.fx-hand-hour{ stroke:#1E2A38; stroke-width:6; stroke-linecap:round; }
+.fx-hand-min{ stroke:#1E2A38; stroke-width:4; stroke-linecap:round; }
+.fx-hand-sec{ stroke:#E03B3B; stroke-width:2; stroke-linecap:round; }
+.fx-hub{ fill:#1E2A38; }
+.fx-hub-dot{ fill:#FFFFFF; }
+body:not([data-theme="light"]) .fx-hand-hour,
+body:not([data-theme="light"]) .fx-hand-min{ stroke:#E8ECEF; }
+body:not([data-theme="light"]) .fx-hub{ fill:#E8ECEF; }
+body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
 
-.fx-arc{ fill:none; stroke-linecap:round; opacity:.22; transition:opacity .5s ease; }
-.fx-arc.open{ opacity:1; }
-
-/* همپوشانی: گوه‌ای محو پشتِ حلقه‌ها. وقتی همین حالا فعال است روشن‌تر
-   می‌شود — همان چیزی که «الان پرنقدینگی است» را فوری می‌گوید. */
-.fx-overlap{ fill:rgba(var(--accent-rgb),.05); stroke:none; transition:fill .5s ease; }
-.fx-overlap.live{ fill:rgba(var(--accent-rgb),.16); }
-
-/* نشانگرِ «الان» — فقط نوارِ حلقه‌ها را قطع می‌کند، نه کلِ صفحه */
-.fx-now-halo{ stroke:rgb(var(--bg-rgb)); stroke-width:5; stroke-linecap:round; opacity:.9; }
-.fx-now{ stroke:var(--text); stroke-width:1.7; stroke-linecap:round; }
-.fx-now-dot{ fill:var(--text); }
-
-.fx-hand{ stroke:var(--text); stroke-width:2.4; stroke-linecap:round; opacity:.55; }
-.fx-hub{ fill:var(--text); }
-.fx-hub-dot{ fill:rgb(var(--bg-rgb)); }
-
-.fx-center{
-  position:absolute; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  pointer-events:none; text-align:center; padding:0 26%;
+/* ردیفِ تاریخ و ساعت — راست‌چین، پس تاریخ راست و ساعت چپ */
+.fx-meta{
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin:22px 4px 14px; gap:12px;
 }
-.fx-center-time{
-  display:flex; align-items:baseline; justify-content:center; gap:6px;
-  direction:ltr;
-  font-size:33px; font-weight:800; color:var(--text);
-  letter-spacing:.01em; line-height:1; font-variant-numeric:tabular-nums;
+.fx-meta-date{ font-size:13px; font-weight:700; color:var(--muted); letter-spacing:.02em; }
+.fx-meta-time{
+  font-size:19px; font-weight:800; color:var(--text);
+  direction:ltr; font-variant-numeric:tabular-nums;
 }
-.fx-center-sec{ font-size:14px; color:var(--muted2); font-weight:600; }
-.fx-center-state{
-  font-size:12.5px; font-weight:700; color:var(--muted); margin-top:9px; line-height:1.6;
-}
-.fx-center-state.live{ color:var(--accent); }
-.fx-center-next{ font-size:10px; color:var(--muted2); margin-top:4px; line-height:1.7; }
 
-/* ردیف‌های زیرِ ساعت */
-.fx-legend{ display:grid; grid-template-columns:1fr; gap:0 26px; margin-top:26px; }
-@media (min-width:640px){ .fx-legend{ grid-template-columns:1fr 1fr; } }
-.fx-legend-row{
-  display:flex; align-items:center; gap:12px;
-  padding:12px 4px; border-bottom:1px solid rgba(var(--surface-rgb),.12);
+.fx-market-closed{
+  margin:0 4px 12px; padding:10px 14px; border-radius:12px;
+  font-size:12px; color:var(--muted);
+  background:rgba(var(--surface-rgb),.13); border:1px solid rgba(var(--surface-rgb),.2);
 }
-.fx-legend-key{ width:3px; height:28px; border-radius:2px; flex-shrink:0; opacity:.32; }
-.fx-legend-row.open .fx-legend-key{ opacity:1; }
-.fx-legend-main{ flex:1; min-width:0; }
-.fx-legend-name{ font-size:13px; font-weight:700; color:var(--text); }
-.fx-legend-hours{
-  display:block; font-size:10.5px; color:var(--muted2); margin-top:3px;
+
+/* کارتِ هر جلسه */
+.fx-cards{ display:flex; flex-direction:column; gap:11px; }
+.fx-card{
+  display:flex; align-items:center; gap:14px; padding:15px 16px;
+  border-radius:16px; background:rgba(var(--surface-rgb),.13);
+  border:1px solid rgba(var(--surface-rgb),.2);
+  backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);
+  transition:border-color .3s ease;
+}
+.fx-card.open{ border-color:rgba(var(--accent-rgb),.42); }
+.fx-card-flag{
+  width:46px; height:46px; flex-shrink:0; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:23px; line-height:1;
+  border:2px solid rgba(var(--surface-rgb),.28);
+  background:rgba(var(--surface-rgb),.1);
+}
+.fx-card.open .fx-card-flag{ border-color:var(--accent); }
+.fx-card-main{ flex:1; min-width:0; }
+.fx-card-city{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:800; color:var(--text); }
+.fx-card-note{
+  font-size:9px; font-weight:600; color:var(--muted2);
+  padding:2px 6px; border-radius:999px; border:1px solid rgba(var(--surface-rgb),.24);
+}
+.fx-card-hours{
+  display:block; margin-top:4px; font-size:12px; color:var(--muted);
   font-variant-numeric:tabular-nums;
 }
-.fx-legend-state{ flex-shrink:0; text-align:start; }
-.fx-legend-badge{ display:block; font-size:9.5px; color:var(--muted2); }
-.fx-legend-row.open .fx-legend-badge{ color:var(--accent); }
-.fx-legend-count{
-  font-size:13px; font-weight:700; color:var(--muted); margin-top:2px;
-  font-variant-numeric:tabular-nums;
-}
-.fx-legend-row.open .fx-legend-count{ color:var(--text); }
+.fx-card-hours bdi{ direction:ltr; unicode-bidi:isolate; }
+.fx-card-state{ flex-shrink:0; text-align:start; }
+.fx-card-label{ display:block; font-size:11px; color:var(--muted); }
+.fx-card-value{ display:block; margin-top:3px; font-size:14px; font-weight:800; color:var(--muted); }
+.fx-card-value.open{ color:var(--accent); }

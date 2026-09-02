@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  FOREX_SESSIONS, isForexOpen, localMinutesToInstant, nextSessionOpen,
-  sessionArcs, upcomingSession, wallClockIn,
+  FOREX_SESSIONS, arcForDef, isForexOpen, isSessionOpen, localMinutesToInstant,
+  nextOpenForDef, nextSessionOpen, sessionArcs, upcomingSession, wallClockIn,
 } from "@/lib/forexSessions";
+import { CLOCK_SESSIONS } from "@/lib/forexClockSessions";
 
 // این تست‌ها اهمیتشان این است که خطاشان **دیده نمی‌شود**: یک کمانِ یک‌ساعت
 // جابه‌جا روی ساعت کاملاً طبیعی به‌نظر می‌رسد و فقط دو بار در سال غلط است.
@@ -110,5 +111,52 @@ describe("nextSessionOpen / upcomingSession", () => {
   it("در آخرِ هفته هم چیزی برمی‌گرداند و null نمی‌شود", () => {
     const saturday = new Date("2026-06-20T12:00:00Z");
     expect(nextSessionOpen("LONDON", saturday)).not.toBeNull();
+  });
+});
+
+describe("arcForDef / CLOCK_SESSIONS", () => {
+  it("هر پنج جلسه‌ی صفحه‌ی ساعت را می‌دهد، با فرانکفورتِ نمایشی", () => {
+    expect(CLOCK_SESSIONS.map((s) => s.key)).toEqual([
+      "SYDNEY", "TOKYO", "FRANKFURT", "LONDON", "NEWYORK",
+    ]);
+    expect(CLOCK_SESSIONS.filter((s) => s.displayOnly).map((s) => s.key)).toEqual(["FRANKFURT"]);
+  });
+
+  it("ساعتِ جلسه‌های مشترک با همان منبعِ ژورنال یکی است — از هم درنمی‌روند", () => {
+    for (const s of CLOCK_SESSIONS) {
+      if (s.displayOnly) continue;
+      const src = FOREX_SESSIONS.find((d) => d.key === s.key)!;
+      expect(s.openMin, s.key).toBe(src.openMin);
+      expect(s.closeMin, s.key).toBe(src.closeMin);
+      expect(s.tz, s.key).toBe(src.tz);
+    }
+  });
+
+  it("arcForDef با isSessionOpen ژورنال هم‌نظر است", () => {
+    for (const iso of ["2026-06-15T02:00:00Z", "2026-06-15T09:00:00Z",
+                       "2026-06-15T15:00:00Z", "2026-06-20T12:00:00Z"]) {
+      const now = new Date(iso);
+      for (const s of CLOCK_SESSIONS) {
+        if (s.displayOnly) continue;
+        expect(arcForDef(s, now).open, `${s.key} @ ${iso}`)
+          .toBe(isSessionOpen(s.key as any, now));
+      }
+    }
+  });
+
+  it("فرانکفورت طولِ درست دارد و در آخرِ هفته بسته است", () => {
+    const fr = CLOCK_SESSIONS.find((s) => s.key === "FRANKFURT")!;
+    expect(arcForDef(fr, new Date("2026-06-15T12:00:00Z")).durationMin).toBe(9 * 60);
+    expect(arcForDef(fr, new Date("2026-06-20T12:00:00Z")).open).toBe(false);
+  });
+
+  it("nextOpenForDef همیشه آینده و روزِ کاری می‌دهد", () => {
+    const friday = new Date("2026-06-19T22:00:00Z");
+    for (const s of CLOCK_SESSIONS) {
+      const at = nextOpenForDef(s, friday)!;
+      expect(at.getTime(), s.key).toBeGreaterThan(friday.getTime());
+      const wd = wallClockIn(at, s.tz).weekday;
+      expect([0, 6], `${s.key} → ${at.toISOString()}`).not.toContain(wd);
+    }
   });
 });
