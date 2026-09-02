@@ -5,7 +5,7 @@ import { Market } from "@prisma/client";
 import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText } from "@/lib/validate";
+import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText, normalizePersonName } from "@/lib/validate";
 
 // ثبت‌نام با نام + شماره موبایل + یوزرنیم + رمز انجام می‌شه — این چهارتا
 // الزامی‌ان. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.
@@ -67,8 +67,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "شماره موبایل هنوز تایید نشده — دوباره از اول امتحان کن" }, { status: 400 });
   }
 
+  // نامِ تکراری هم مثلِ شماره و یوزرنیم رد می‌شود (خواسته‌ی صریحِ محصول).
+  // مقایسه روی `nameKey` (شکلِ نرمال‌شده و ایندکس‌شده) انجام می‌شود، وگرنه
+  // «محمد رضایی» و «محمّد  رضائی» دو نفرِ متفاوت حساب می‌شدند.
+  //
+  // محدودیت: یکتایی این‌جا اعمال می‌شود نه با ایندکسِ یکتای دیتابیس، چون
+  // داده‌ی موجود ممکن است از قبل نامِ تکراری داشته باشد و ایندکسِ یکتا
+  // migration را می‌شکست. یعنی دو ثبت‌نامِ دقیقاً هم‌زمان با یک نام از این
+  // چک رد می‌شوند — قابل قبول است چون این قاعده امنیتی نیست.
+  const nameKey = normalizePersonName(`${name} ${lastName}`);
+
   const existing = await prisma.user.findFirst({
-    where: { OR: [{ phone }, { username }] },
+    where: { OR: [{ phone }, { username }, { nameKey }] },
   });
   if (existing) {
     // پیام عمدا کلیه (نه «شماره موبایل تکراریه» / «یوزرنیم تکراریه» جدا) تا
@@ -90,6 +100,7 @@ export async function POST(req: NextRequest) {
       username,
       name: clampText(name.trim(), 80),
       lastName: clampText(lastName.trim(), 80),
+      nameKey,
       birthDate: dob,
       passwordHash,
       market: siteMarket === "INTERNATIONAL" ? Market.INTERNATIONAL : Market.IRAN,

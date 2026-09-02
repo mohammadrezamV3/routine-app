@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
-import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
+import { clampText, isValidPersianName, parseIsoDate, normalizePersonName } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const GENDER_VALUES = new Set(["male", "female"]);
@@ -137,6 +137,33 @@ export async function PATCH(req: NextRequest) {
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "هیچ فیلدی برای ذخیره ارسال نشده" }, { status: 400 });
+  }
+
+  // اگر نام عوض شد، `nameKey` هم باید همگام بماند — وگرنه ستونی که
+  // ثبت‌نام برای «نامِ تکراری» به آن تکیه می‌کند بی‌صدا کهنه می‌شود و
+  // کاربر می‌توانست با تغییرِ نام به نامِ یک نفرِ دیگر برسد.
+  if (data.name !== undefined || data.lastName !== undefined) {
+    const current = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, lastName: true },
+    });
+    const nextName = (data.name !== undefined ? data.name : current?.name) ?? "";
+    const nextLast = (data.lastName !== undefined ? data.lastName : current?.lastName) ?? "";
+    const nextKey = nextName && nextLast ? normalizePersonName(`${nextName} ${nextLast}`) : null;
+
+    if (nextKey) {
+      const clash = await prisma.user.findFirst({
+        where: { nameKey: nextKey, id: { not: userId } },
+        select: { id: true },
+      });
+      if (clash) {
+        return NextResponse.json(
+          { error: "این نام و نام خانوادگی قبلاً ثبت شده است" },
+          { status: 409 }
+        );
+      }
+    }
+    data.nameKey = nextKey;
   }
 
   await prisma.user.update({ where: { id: userId }, data });

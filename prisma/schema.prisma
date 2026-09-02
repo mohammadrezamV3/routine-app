@@ -105,6 +105,13 @@ model User {
   passwordHash String?
   name         String?
   lastName     String?
+  // شکلِ نرمال‌شده‌ی «نام + نام‌خانوادگی» برای بررسیِ تکراری‌نبودن.
+  // چرا ستونِ جدا و نه مقایسه‌ی در لحظه: بدونِ آن، هر ثبت‌نام باید کلِ
+  // جدولِ کاربران را می‌خواند تا نامِ نرمال‌شده را مقایسه کند.
+  // ایندکس عمداً یکتا **نیست**: ممکن است داده‌ی موجود از قبل نامِ تکراری
+  // داشته باشد و ایندکسِ یکتا migration را می‌شکست. یکتایی در روتِ
+  // ثبت‌نام اعمال می‌شود.
+  nameKey      String?
   avatarUrl    String?
   birthDate    DateTime?
   gender       String? // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
@@ -191,6 +198,7 @@ model User {
 
   @@index([market])
   @@index([gymPartnerId])
+  @@index([nameKey])
 }
 
 model OAuthAccount {
@@ -815,13 +823,13 @@ model CalorieTarget {
   // هدفِ درشت‌مغذی‌ها (گرم در روز) — اختیاری، فقط از مسیرِ «وارد کردن دستی»
   // پر می‌شه. نال یعنی کاربر هدفی تعیین نکرده و کارتِ درشت‌مغذی‌ها فقط
   // مصرفِ خام رو نشون می‌ده (رفتارِ قبلی).
-  proteinTargetG  Int?
-  carbsTargetG    Int?
-  fatTargetG      Int?
-  sex             String? // male | female — فقط برای محاسبه BMR، جای دیگه‌ای ذخیره نمی‌شه
-  ageYears        Int? // اگه User.birthDate نبود، همینجا مستقیم پرسیده و ذخیره می‌شه
-  heightCm        Int? // اسنپ‌شات قد/وزن لحظه‌ی محاسبه (مثل ExercisePlan)، برای محاسبه BMR
-  weightKg        Float?
+  proteinTargetG Int?
+  carbsTargetG   Int?
+  fatTargetG     Int?
+  sex            String? // male | female — فقط برای محاسبه BMR، جای دیگه‌ای ذخیره نمی‌شه
+  ageYears       Int? // اگه User.birthDate نبود، همینجا مستقیم پرسیده و ذخیره می‌شه
+  heightCm       Int? // اسنپ‌شات قد/وزن لحظه‌ی محاسبه (مثل ExercisePlan)، برای محاسبه BMR
+  weightKg       Float?
 
   effectiveFrom DateTime  @default(now())
   effectiveTo   DateTime?
