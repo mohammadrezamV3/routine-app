@@ -8,7 +8,10 @@ import { StreakFlame } from "./StreakFlame";
 
 type Entry = { customCalories: number; date?: string };
 
-const WINDOW_DAYS = 6;
+// هفت روزِ کاملِ هفته (درخواستِ صریحِ کاربر) — نه شش روز. اولین فرزندِ DOM
+// «امروز»ه، که توی چیدمانِ RTL یعنی سمتِ راست؛ پس هفته از راست شروع می‌شه و
+// روزهای قدیمی‌تر به چپ می‌رن.
+const WINDOW_DAYS = 7;
 
 function dailyTotals(entries: Entry[]): Record<string, number> {
   const byDate: Record<string, number> = {};

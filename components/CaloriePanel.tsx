@@ -58,6 +58,10 @@ export type Target = {
   sex: Sex | null;
   heightCm: number | null;
   weightKg: number | null;
+  // هدفِ درشت‌مغذی‌ها (گرم در روز) — اختیاری، فقط از «وارد کردن دستی»
+  proteinTargetG?: number | null;
+  carbsTargetG?: number | null;
+  fatTargetG?: number | null;
 };
 
 export function CaloriePanel() {
@@ -348,13 +352,13 @@ export function CaloriePanel() {
 
               <div className="calorie-col-mid">
                 <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
-                <CalorieMacrosCard entries={entries} delay={0.19} />
+                <CalorieMacrosCard entries={entries} target={target} delay={0.19} />
               </div>
 
               <div className="calorie-col-side">
                 {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />}
                 <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
-                {dashboardPrefs.showChart && <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
+                {dashboardPrefs.showChart && <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
               </div>
             </div>
           </div>

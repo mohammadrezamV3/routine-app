@@ -1,10 +1,13 @@
 // آیکونِ «ساخت با هوش مصنوعی» — دو ستاره‌ی چهارپَره‌ی توخالی (بدونِ پرشدن)
 // شبیهِ لوگوی جمنای: یکی بزرگ (اصلی، پایین‌راست) و یکی کوچیک (بالا‌راست)،
-// طلایی‌رنگ با گرادیانت. ستاره‌ی کوچیک یه انیمیشنِ درخشیدنِ ملایمِ پیوسته
-// داره (نه فقط واکنش به هاور/فشارِ دکمه‌ی والد).
+// طلایی‌رنگ با گرادیانت. ستاره‌ی کوچیک به‌طور پیش‌فرض یه انیمیشنِ درخشیدنِ
+// ملایمِ پیوسته داره (نه فقط واکنش به هاور/فشارِ دکمه‌ی والد) — با prop ِ
+// `still` می‌شه خاموشش کرد.
 const STAR_PATH = "M12 0C12 6.6 6.6 12 0 12C6.6 12 12 17.4 12 24C12 17.4 17.4 12 24 12C17.4 12 12 6.6 12 0Z";
 
-export function AiSparkleIcon({ size = 22 }: { size?: number }) {
+// `still`: ستاره‌ی کوچیک بی‌حرکت می‌مونه. توی «محاسبه‌ی هوشمندِ» کالری
+// طبقِ درخواستِ صریحِ کاربر باید یک‌جا وایسته، نه اینکه دائم چشمک بزنه.
+export function AiSparkleIcon({ size = 22, still = false }: { size?: number; still?: boolean }) {
   const gradId = "ai-sparkle-grad";
   return (
     <svg
@@ -26,7 +29,7 @@ export function AiSparkleIcon({ size = 22 }: { size?: number }) {
       {/* قبلاً translate(22,-1) بود — با اسکیلِ ۰.۴۵۸۳ (~۱۱ واحد)، از x=۳۳ و
           y=-۱ رد می‌شد، یعنی از لبه‌ی viewBoxِ ۳۲×۳۲ (بالا و راست) بیرون
           می‌زد و کلیپ می‌شد؛ نصفه‌ونیمه دیده می‌شد. حالا کاملاً داخلِ محدوده‌ست. */}
-      <g className="ai-sparkle-twinkle">
+      <g className={still ? undefined : "ai-sparkle-twinkle"}>
         <path d={STAR_PATH} transform="translate(19,1) scale(0.4583)" fill="none" stroke={`url(#${gradId})`} strokeWidth="1.7" strokeLinejoin="round" />
       </g>
     </svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronRight, MoreVertical, PenLine, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
@@ -76,6 +77,11 @@ export function CalorieGoalModal({
   // ردیفِ تازه‌اضافه‌شده هم مستقیم با همین حالت شروع می‌شه چون بدونِ نام/کالری معنی نداره
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [menuOpenKey, setMenuOpenKey] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  // هدفِ درشت‌مغذی‌ها — فقط توی همین مسیرِ دستی قابلِ تنظیمه و اختیاریه
+  const [proteinTarget, setProteinTarget] = useState(target.proteinTargetG ? String(target.proteinTargetG) : "");
+  const [carbsTarget, setCarbsTarget] = useState(target.carbsTargetG ? String(target.carbsTargetG) : "");
+  const [fatTarget, setFatTarget] = useState(target.fatTargetG ? String(target.fatTargetG) : "");
 
   function addMealDraftRow() {
     if (mealDraft.length >= 8) return;
@@ -137,7 +143,12 @@ export function CalorieGoalModal({
     const res = await fetch("/api/calorie/target", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mealBreakdown: mealDraft.map((r) => ({ key: r.key, label: r.label.trim(), kcal: +r.kcal })) }),
+      body: JSON.stringify({
+        mealBreakdown: mealDraft.map((r) => ({ key: r.key, label: r.label.trim(), kcal: +r.kcal })),
+        proteinTargetG: proteinTarget.trim() ? +proteinTarget : null,
+        carbsTargetG: carbsTarget.trim() ? +carbsTarget : null,
+        fatTargetG: fatTarget.trim() ? +fatTarget : null,
+      }),
     });
     const data = await res.json();
     setManualSaving(false);
@@ -180,7 +191,7 @@ export function CalorieGoalModal({
                 whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
-                <AiSparkleIcon size={26} />
+                <AiSparkleIcon size={26} still />
                 <span>محاسبه‌ی هوشمند</span>
               </motion.button>
               <div className="exercise-choice-divider" />
@@ -210,7 +221,12 @@ export function CalorieGoalModal({
                   options={(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => ({ value: g, label: CALORIE_GOAL_LABELS[g] }))}
                 />
               </div>
-              <button type="button" onClick={() => setSmartStep("meals")} className="exercise-wizard-next-btn" style={{ marginTop: 18, width: "100%", padding: "12px 0", fontSize: 13 }}>
+              <button
+                type="button"
+                onClick={() => setSmartStep("meals")}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold"
+                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+              >
                 بعدی
               </button>
             </>
@@ -228,7 +244,12 @@ export function CalorieGoalModal({
                   options={[2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: faNum(n) }))}
                 />
               </div>
-              <button type="button" onClick={() => setSmartStep("specs")} className="exercise-wizard-next-btn" style={{ marginTop: 18, width: "100%", padding: "12px 0", fontSize: 13 }}>
+              <button
+                type="button"
+                onClick={() => setSmartStep("specs")}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold"
+                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+              >
                 بعدی
               </button>
             </>
@@ -278,7 +299,8 @@ export function CalorieGoalModal({
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
-                {saving ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
+                {saving && <span className="wsearch-submit-spinner" />}
+                {saving ? "در حال محاسبه" : "محاسبه‌ی برنامه کالری"}
               </button>
             </>
           )}
@@ -301,20 +323,14 @@ export function CalorieGoalModal({
                 )}
               </div>
 
+              {/* بدونِ `layout`/AnimatePresence: هر افزودن/حذف/ویرایشِ یک ردیف
+                  کلِ لیست رو دوباره اندازه می‌گرفت و انیمیت می‌کرد — همون
+                  لگِ گزارش‌شده‌ی «افزودن وعده‌ی دستی». */}
               <div className="mt-3 flex flex-col gap-2.5">
-                <AnimatePresence initial={false}>
-                  {mealDraft.map((row) => {
+                {mealDraft.map((row) => {
                     const isEditing = editingKey === row.key;
                     return (
-                      <motion.div
-                        key={row.key}
-                        layout
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                        style={{ overflow: "hidden" }}
-                      >
+                      <div key={row.key}>
                         {isEditing ? (
                           <div className="calorie-glass-field manual-meal-row border">
                             <button
@@ -325,13 +341,6 @@ export function CalorieGoalModal({
                             >
                               <Check size={15} strokeWidth={3} />
                             </button>
-                            <NumberInput
-                              className="manual-meal-row-input manual-meal-kcal-input mono"
-                              placeholder="۰"
-                              value={row.kcal}
-                              onChange={(v) => updateMealDraftRow(row.key, { kcal: v })}
-                            />
-                            <span className="manual-meal-row-divider" />
                             <input
                               className="manual-meal-row-input flex-1"
                               placeholder="اسم وعده"
@@ -339,22 +348,38 @@ export function CalorieGoalModal({
                               value={row.label}
                               onChange={(e) => updateMealDraftRow(row.key, { label: e.target.value })}
                             />
+                            <span className="manual-meal-row-divider" />
+                            <NumberInput
+                              className="manual-meal-row-input manual-meal-kcal-input mono"
+                              placeholder="۰"
+                              value={row.kcal}
+                              onChange={(v) => updateMealDraftRow(row.key, { kcal: v })}
+                            />
                           </div>
                         ) : (
                           <div className="calorie-glass-field manual-meal-row manual-meal-row-view border">
                             <div className="relative shrink-0">
                               <button
                                 type="button"
-                                onClick={() => setMenuOpenKey(menuOpenKey === row.key ? null : row.key)}
+                                onClick={(e) => {
+                                  if (menuOpenKey === row.key) { setMenuOpenKey(null); return; }
+                                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                  setMenuPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+                                  setMenuOpenKey(row.key);
+                                }}
                                 aria-label="گزینه‌های وعده"
                                 className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent text-dash-muted transition hover:text-dash-text"
                               >
                                 <MoreVertical size={15} />
                               </button>
-                              {menuOpenKey === row.key && (
+                              {/* منو با پورتال به body می‌ره: داخلِ .modal-body
+                                  (که خودش اسکرول‌شونده و بلوردار و یه
+                                  stacking-context جداست) زیرِ ردیف‌های بعدی
+                                  می‌افتاد و دیده نمی‌شد. */}
+                              {menuOpenKey === row.key && menuPos && createPortal(
                                 <>
-                                  <div className="fixed inset-0 z-[19]" onClick={() => setMenuOpenKey(null)} />
-                                  <div className="manual-meal-row-menu">
+                                  <div className="fixed inset-0 z-[79]" onClick={() => setMenuOpenKey(null)} />
+                                  <div className="manual-meal-row-menu" style={{ top: menuPos.top, right: menuPos.right }}>
                                     <button type="button" onClick={() => { setEditingKey(row.key); setMenuOpenKey(null); }}>
                                       ویرایش
                                     </button>
@@ -362,27 +387,40 @@ export function CalorieGoalModal({
                                       حذف
                                     </button>
                                   </div>
-                                </>
+                                </>,
+                                document.body
                               )}
                             </div>
+                            <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-dash-text">
+                              {row.label || "بدون اسم"}
+                            </span>
+                            <span className="manual-meal-row-divider" />
                             <span className="mono shrink-0 text-[12.5px] font-bold text-dash-text">
                               {row.kcal ? faNum(row.kcal) : "۰"} <span className="text-[10px] font-semibold text-dash-muted">کالری</span>
                             </span>
-                            <span className="manual-meal-row-divider" />
-                            <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-dash-text">
-                              {row.label || "بدونِ‌اسم"}
-                            </span>
                           </div>
                         )}
-                      </motion.div>
+                      </div>
                     );
                   })}
-                </AnimatePresence>
 
+                {/* «جمع کالری روزانه» بدونِ اعرابِ اضافه، و با چیدمانی که
+                    عدد از متن سرریز نمی‌کنه (قبلاً روی عددهای بلند بیرون می‌زد). */}
                 <div className="manual-meal-total">
-                  <span className="text-[11.5px] font-semibold text-dash-muted sm:text-[12.5px]">جمعِ کالریِ روزانه</span>
-                  <span className="mono manual-meal-total-num">{faNum(mealDraftSum)}</span>
+                  <span className="text-[11.5px] font-semibold text-dash-muted sm:text-[12.5px]">جمع کالری روزانه</span>
+                  <span className="mono manual-meal-total-num">
+                    {faNum(mealDraftSum)}<span className="manual-meal-total-unit">کالری</span>
+                  </span>
                 </div>
+              </div>
+
+              {/* هدفِ درشت‌مغذی‌ها — اختیاری. هر کدوم خالی بمونه یعنی هدفی
+                  براش تعیین نشده و کارتِ درشت‌مغذی‌ها فقط مصرف رو نشون می‌ده. */}
+              <label className="calorie-field-label" style={{ marginTop: 16 }}>هدفِ درشت‌مغذی‌ها (اختیاری — گرم در روز)</label>
+              <div className="flex gap-2">
+                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین" value={proteinTarget} onChange={setProteinTarget} />
+                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات" value={carbsTarget} onChange={setCarbsTarget} />
+                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی" value={fatTarget} onChange={setFatTarget} />
               </div>
 
               {manualError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{manualError}</div>}
@@ -394,7 +432,8 @@ export function CalorieGoalModal({
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
-                {manualSaving ? "در حال ثبت…" : "ثبت برنامه کالری"}
+                {manualSaving && <span className="wsearch-submit-spinner" />}
+                {manualSaving ? "در حال ثبت" : "ثبت برنامه کالری"}
               </button>
             </motion.div>
           )}
