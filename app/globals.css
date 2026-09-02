@@ -1264,7 +1264,7 @@
   .checkout-discount-row .checkout-field-label{ margin-bottom:0; flex-shrink:0; white-space:nowrap; }
   .checkout-discount-field-wrap{ position:relative; flex:1; min-width:150px; }
   .checkout-discount-input{
-    width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-left:92px;
+    width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-left:104px;
     backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   }
   /* بک‌گراند پایه‌ی wsearch-newform-name توی تم تیره یه مشکی تخت
@@ -1292,6 +1292,9 @@
      می‌زد — همون باگ همیشگی، این‌جا تا الان فیکس نشده بود. */
   .checkout-discount-apply-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }
   .checkout-discount-apply-btn:disabled{ opacity:.5; cursor:default; }
+  /* عرضِ ثابت به همان دلیلِ auth-phone-send-btn — «اعمال» / «در حال
+     بررسی…» / «حذف» پهنای متفاوت دارند. */
+  .checkout-discount-apply-btn{ width:92px; padding-left:0; padding-right:0; }
   .checkout-discount-apply-btn.remove{ background:none; color:#E05252; }
   .checkout-discount-apply-btn.remove:hover:not(:disabled){ background:none; box-shadow:none; }
   .checkout-discount-success{ margin-top:7px; font-size:11.5px; color:var(--accent); font-weight:600; }
@@ -2288,13 +2291,44 @@
      field-icon که سمت راسته)، مستقل و بدون نیاز به فاصله از اون؛ توی
      صفحه‌های auth ریست سراسری button وجود نداره پس باید همه‌چیز صریح
      خاموش بشه (نگاه کن به توضیح checkout-gateway-pill). */
+  /* اندازه‌ی دکمه ثابت است و محتوایش هیچ‌وقت مونت/آنمونت نمی‌شود، پس
+     زدنش چیدمان را تکان نمی‌دهد. بک‌گراند صراحتاً خاموش است چون ریستِ
+     سراسریِ button{} یک سطحِ شیشه‌ای و سایه‌ی inset می‌دهد. */
   .field-toggle-visibility-btn{
-    position:absolute; left:9px; top:50%; transform:translateY(-50%); width:20px; height:20px; padding:0;
+    position:absolute; left:8px; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; padding:0; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     color:var(--accent); cursor:pointer; transition:filter .15s ease;
   }
-  .field-toggle-visibility-btn:hover{ filter:brightness(1.15); background:none; box-shadow:none; }
+  .field-toggle-visibility-btn:hover,
+  .field-toggle-visibility-btn:active,
+  .field-toggle-visibility-btn:focus-visible{ background:none; box-shadow:none; }
+  .field-toggle-visibility-btn:hover{ filter:brightness(1.15); }
+  body[data-theme="light"] .field-toggle-visibility-btn,
+  body:not([data-theme="light"]) .field-toggle-visibility-btn{ background:none; box-shadow:none; }
+
+  .fx-eye{ width:23px; height:23px; display:block; overflow:visible; }
+  /* حالتِ پیش‌فرض = چشمِ بسته (رمز مخفی است) */
+  .fx-eye-upper, .fx-eye-lower, .fx-eye-pupil, .fx-eye-lashes{
+    transition:d .26s cubic-bezier(.22,1,.36,1), opacity .2s ease, transform .26s cubic-bezier(.22,1,.36,1);
+  }
+  /* بسته: پلکِ بالا روی پلکِ پایین می‌خوابد */
+  .fx-eye-upper{ d:path("M2.6 12c2.6 2.4 5.8 3.6 9.4 3.6s6.8-1.2 9.4-3.6"); }
+  .fx-eye-lower{ opacity:0; }
+  .fx-eye-pupil{ opacity:0; transform:scale(.4); transform-origin:12px 12px; }
+  .fx-eye-lashes{ opacity:1; }
+  /* باز: پلک بالا می‌رود، مردمک ظاهر می‌شود، مژه‌ها جمع می‌شوند */
+  .is-open .fx-eye-upper{ d:path("M2.6 12c2.6-3.9 5.8-5.9 9.4-5.9s6.8 2 9.4 5.9"); }
+  .is-open .fx-eye-lower{ opacity:1; }
+  .is-open .fx-eye-pupil{ opacity:1; transform:scale(1); }
+  .is-open .fx-eye-lashes{ opacity:0; }
+
+  /* مرورگرهایی که انیمیشنِ `d` را ندارند (سافاری) — چشم همچنان درست
+     باز/بسته دیده می‌شود، فقط بدونِ حرکتِ نرم. */
+  @supports not (d: path("M0 0")){
+    .fx-eye-upper{ transition:opacity .2s ease; }
+  }
   .field-error-wrap.has-icon.has-end-action input{padding-right:34px; padding-left:38px;}
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), monospace; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
@@ -2792,12 +2826,16 @@ body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-fu
 .auth-resend-btn{
   display:block; width:auto; margin:8px 0 0 auto; padding:4px 2px; text-align:right;
   background:none; border:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:color .15s ease;
 }
 body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-resend-btn{
-  background:none; border:none;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
-.auth-resend-btn:hover:not(:disabled){ color:var(--accent); }
+.auth-resend-btn:hover:not(:disabled){ color:var(--accent); background:none; box-shadow:none; }
+.auth-resend-btn:hover, .auth-resend-btn:active, .auth-resend-btn:focus-visible{
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
 .auth-resend-btn:disabled{ cursor:default; opacity:.6; }
 
 /* فیلد شماره‌همراه توی ثبت‌نام — دکمه‌ی «ارسال کد» داخل خود فیلده (سمت
@@ -2805,7 +2843,7 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    می‌شه که متن زیر دکمه نره. بعد ارسال موفق، فیلد قفل می‌شه (readOnly) و
    دکمه به یه لینک «تغییر شماره» تبدیل می‌شه. */
 .auth-phone-wrap{ position:relative; }
-.auth-phone-wrap .wsearch-newform-name{ padding-left:86px; }
+.auth-phone-wrap .wsearch-newform-name{ padding-left:112px; }
 .auth-phone-send-btn{
   position:absolute; left:6px; top:50%; transform:translateY(-50%);
   display:flex; align-items:center; justify-content:center;
@@ -2817,6 +2855,11 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 }
 .auth-phone-send-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }
 .auth-phone-send-btn:disabled{ opacity:.55; cursor:default; filter:none; }
+/* عرضِ ثابت (نه min-width): متنِ این دکمه سه حالت دارد — «ارسال کد»،
+   «در حال ارسال…»، «تغییر شماره». با min-width لبه‌ی چپ ثابت می‌ماند ولی
+   پهنا عوض می‌شود و لبه‌ی راست تکان می‌خورد. عرضِ ثابت هر سه را در یک
+   جعبه‌ی یکسان می‌نشاند. */
+.auth-phone-send-btn{ width:100px; padding-left:0; padding-right:0; }
 .auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
 
 /* فیلد کد تایید که زیر فیلد شماره ظاهر می‌شه — همون ورود ملایم بقیه‌ی

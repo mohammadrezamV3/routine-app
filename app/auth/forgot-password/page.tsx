@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { faNum } from "@/lib/jalali";
 import { useRouter } from "next/navigation";
 import { User, Lock } from "lucide-react";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { AuthField } from "@/components/AuthField";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { isValidIranPhone, isValidEmail } from "@/lib/validate";
+import { isValidIranPhone, isValidEmail, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 const RESEND_COOLDOWN_SECONDS = 120;
@@ -143,7 +144,7 @@ export default function ForgotPasswordPage() {
               <AuthField id="code" label="کد ۵ رقمی">
                 <input
                   id="code" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
-                  onChange={(e) => setCode(e.target.value)}
+                  onChange={(e) => setCode(digitsOnly(e.target.value))}
                 />
               </AuthField>
               <button
@@ -152,7 +153,7 @@ export default function ForgotPasswordPage() {
                 disabled={resendCooldown > 0 || loading}
                 onClick={resendCode}
               >
-                {resendCooldown > 0 ? `ارسال مجدد کد (${resendCooldown})` : "ارسال مجدد کد"}
+                {resendCooldown > 0 ? `ارسال مجدد کد ${faNum(resendCooldown)}` : "ارسال مجدد کد"}
               </button>
               <div style={{ marginTop: 14 }}>
                 <AuthField
