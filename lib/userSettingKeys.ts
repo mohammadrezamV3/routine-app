@@ -39,6 +39,7 @@ export const SETTING_KEYS = {
   tradeNewsAlerts: "tradeNewsAlerts",
   tradeChartSymbol: "tradeChartSymbol",
   tradeChartInterval: "tradeChartInterval",
+  tradeChatRulesAccepted: "tradeChatRulesAccepted",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];

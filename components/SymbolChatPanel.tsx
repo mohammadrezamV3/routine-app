@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Flag, Loader2, MessagesSquare, Send, Trash2 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import {
-  CHAT_REPORT_REASONS, ChatMessageDto, ChatReportReason, MAX_CHAT_BODY,
+  CHAT_REPORT_REASONS, CHAT_RULES, ChatMessageDto, ChatReportReason, MAX_CHAT_BODY,
 } from "@/lib/tradeChat";
+import { getSetting, setSetting } from "@/lib/storage";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { pairLabel } from "@/lib/tradingView";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
@@ -29,7 +31,17 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [reporting, setReporting] = useState<ChatMessageDto | null>(null);
+  // تا قوانین پذیرفته نشده، به‌جای فیلدِ نوشتن، خودِ قوانین دیده می‌شود.
+  // `null` یعنی هنوز از سرور نخوانده‌ایم — در آن حالت هیچ‌کدام را نشان
+  // نمی‌دهیم تا فرمِ نوشتن یک لحظه بپرد و بعد جایش قوانین بیاید.
+  const [rulesAccepted, setRulesAccepted] = useState<boolean | null>(null);
   const { pendingKey, error: actionError, run } = useAsyncAction();
+
+  useEffect(() => {
+    getSetting<boolean>(SETTING_KEYS.tradeChatRulesAccepted, false)
+      .then((v) => setRulesAccepted(!!v))
+      .catch(() => setRulesAccepted(false));
+  }, []);
 
   const listRef = useRef<HTMLDivElement | null>(null);
   // آخرین زمانی که داریم — پولینگ فقط جدیدترها را می‌خواهد
@@ -200,6 +212,23 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
 
       {actionError && <div className="trade-form-error">{actionError}</div>}
 
+      {rulesAccepted === false && (
+        <div className="chat-rules">
+          <div className="chat-rules-title">پیش از شرکت در گفت‌وگو</div>
+          <ul className="chat-rules-list">
+            {CHAT_RULES.map((r) => <li key={r}>{r}</li>)}
+          </ul>
+          <button
+            type="button"
+            className="trade-primary-btn chat-rules-accept"
+            onClick={() => { setRulesAccepted(true); setSetting(SETTING_KEYS.tradeChatRulesAccepted, true); }}
+          >
+            قوانین را می‌پذیرم
+          </button>
+        </div>
+      )}
+
+      {rulesAccepted === true && (
       <form
         className="trade-chat-composer"
         onSubmit={(e) => { e.preventDefault(); send(); }}
@@ -219,6 +248,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
           {pendingKey === "send" ? <Loader2 size={16} className="trade-spin" /> : <Send size={16} />}
         </button>
       </form>
+      )}
 
       {reporting && (
         <ReportDialog

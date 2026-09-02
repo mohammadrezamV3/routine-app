@@ -107,7 +107,7 @@ export const TAG_COLORS = [
 // ── سقف‌ها ────────────────────────────────────────────────────────────────
 export const MAX_ACCOUNTS = 10;
 export const MAX_TAGS = 40;
-export const MAX_IMAGES_PER_TRADE = 4;
+export const MAX_IMAGES_PER_TRADE = 2;
 export const MAX_CHECKLISTS = 20;
 export const MAX_CHECKLIST_ITEMS = 40;
 
