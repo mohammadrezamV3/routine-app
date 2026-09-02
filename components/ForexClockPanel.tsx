@@ -5,6 +5,7 @@ import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
 import { arcForDef, isForexOpen, nextOpenForDef } from "@/lib/forexSessions";
 import { CLOCK_SESSIONS } from "@/lib/forexClockSessions";
 import { ForexSessionsDial } from "./ForexSessionsDial";
+import { FlagCircle } from "./FlagCircle";
 
 // ساعتِ بازارِ فارکس. کلِ منطقِ ساعت/DST از همان `lib/forexSessions.ts`
 // می‌آید که برچسبِ جلسه‌ی هر معامله در ژورنال هم از آن ساخته می‌شود — پس
@@ -15,7 +16,9 @@ function durationLabel(target: Date, now: Date): string {
   const mins = Math.max(0, Math.round((target.getTime() - now.getTime()) / 60_000));
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return h ? `${faNum(h)} ساعت و ${faNum(m)} دقیقه` : `${faNum(m)} دقیقه`;
+  // همیشه ساعت:دقیقه — حتی وقتی کمتر از یک ساعت است («۰:۳۰»)، وگرنه
+  // ردیف‌ها با هم هم‌شکل نمی‌مانند.
+  return `${faNum(h)}:${faNum(String(m).padStart(2, "0"))}`;
 }
 
 function jalaliLabel(d: Date): string {
@@ -47,6 +50,9 @@ export function ForexClockPanel() {
   const rows = CLOCK_SESSIONS.map((s) => {
     const arc = arcForDef(s, now);
     const open = arc.open && marketOpen;
+    // چه وسطِ هفته و چه آخرِ هفته، همیشه یک زمانِ واقعی نشان می‌دهیم:
+    // `nextOpenForDef` خودش شنبه/یکشنبه و بسته‌بودنِ بازار را رد می‌کند،
+    // پس در تعطیلات هم عددِ درست (مثلاً ۵۰:۱۵ تا دوشنبه) درمی‌آید.
     const target = open ? arc.closeAt : nextOpenForDef(s, now);
     return { s, arc, open, target };
   }).sort((a, b) => {
@@ -70,7 +76,7 @@ export function ForexClockPanel() {
       <div className="fx-cards">
         {rows.map(({ s, arc, open, target }) => (
           <div key={s.key} className={`fx-card${open ? " open" : ""}`}>
-            <span className="fx-card-flag">{s.flag}</span>
+            <span className="fx-card-flag"><FlagCircle code={s.flagCode} /></span>
 
             <span className="fx-card-main">
               <span className="fx-card-city">
@@ -83,11 +89,9 @@ export function ForexClockPanel() {
             </span>
 
             <span className="fx-card-state">
-              <span className="fx-card-label">
-                {!marketOpen ? "تعطیل" : open ? "بسته می‌شود تا" : "باز می‌شود تا"}
-              </span>
+              <span className="fx-card-label">{open ? "تا بسته شدن" : "تا باز شدن"}</span>
               <span className={`fx-card-value${open ? " open" : ""}`}>
-                {!marketOpen ? "—" : target ? durationLabel(target, now) : "—"}
+                {target ? durationLabel(target, now) : "—"}
               </span>
             </span>
           </div>

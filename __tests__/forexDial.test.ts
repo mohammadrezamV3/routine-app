@@ -160,3 +160,47 @@ describe("arcForDef / CLOCK_SESSIONS", () => {
     }
   });
 });
+
+describe("بازگشاییِ بعد از تعطیلیِ آخرِ هفته", () => {
+  // شنبه ۱۵:۳۰ به وقتِ تهران. بازار یکشنبه ۱۷:۰۰ نیویورک باز می‌شود، پس
+  // هر جلسه باید اولین بازشدنِ کاریِ خودش را بدهد — نه «—» و نه شنبه/یکشنبه.
+  const saturday = new Date("2026-06-20T12:00:00Z");
+
+  it("برای هر پنج جلسه یک زمانِ واقعیِ آینده می‌دهد", () => {
+    for (const s of CLOCK_SESSIONS) {
+      const at = nextOpenForDef(s, saturday);
+      expect(at, s.key).not.toBeNull();
+      expect(at!.getTime(), s.key).toBeGreaterThan(saturday.getTime());
+    }
+  });
+
+  it("همه به دوشنبه می‌افتند و ترتیبشان درست است", () => {
+    // سیدنی زودتر از توکیو، توکیو زودتر از فرانکفورت/لندن، و نیویورک آخر
+    const at = Object.fromEntries(
+      CLOCK_SESSIONS.map((s) => [s.key, nextOpenForDef(s, saturday)!.getTime()])
+    );
+    expect(at.SYDNEY).toBeLessThan(at.TOKYO);
+    expect(at.TOKYO).toBeLessThan(at.FRANKFURT);
+    expect(at.FRANKFURT).toBeLessThan(at.LONDON);
+    expect(at.LONDON).toBeLessThan(at.NEWYORK);
+  });
+
+  it("لحظه‌های بازگشایی دقیقاً همان چیزی‌اند که دستی حساب شد", () => {
+    // بازار یکشنبه ۱۷:۰۰ نیویورک (=۲۱:۰۰ UTC) باز می‌شود؛ سیدنی همان
+    // لحظه دوشنبه ۰۷:۰۰ به وقتِ خودش است.
+    expect(nextOpenForDef(CLOCK_SESSIONS[0], saturday)!.toISOString()).toBe("2026-06-21T21:00:00.000Z");
+    const byKey = Object.fromEntries(CLOCK_SESSIONS.map((s) => [s.key, s]));
+    expect(nextOpenForDef(byKey.TOKYO, saturday)!.toISOString()).toBe("2026-06-22T00:00:00.000Z");
+    expect(nextOpenForDef(byKey.FRANKFURT, saturday)!.toISOString()).toBe("2026-06-22T06:00:00.000Z");
+    expect(nextOpenForDef(byKey.LONDON, saturday)!.toISOString()).toBe("2026-06-22T07:00:00.000Z");
+    expect(nextOpenForDef(byKey.NEWYORK, saturday)!.toISOString()).toBe("2026-06-22T12:00:00.000Z");
+  });
+
+  it("در خودِ آخرِ هفته هیچ جلسه‌ای باز نیست", () => {
+    for (const iso of ["2026-06-20T02:00:00Z", "2026-06-20T12:00:00Z", "2026-06-21T15:00:00Z"]) {
+      for (const s of CLOCK_SESSIONS) {
+        expect(arcForDef(s, new Date(iso)).open, `${s.key} @ ${iso}`).toBe(false);
+      }
+    }
+  });
+});

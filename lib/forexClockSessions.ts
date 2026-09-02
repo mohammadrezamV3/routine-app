@@ -20,7 +20,8 @@ export type ClockSession = {
   tz: string;
   openMin: number;
   closeMin: number;
-  flag: string;
+  /** کدِ پرچمِ SVG — ایموجی روی ویندوز رندر نمی‌شود */
+  flagCode: "AU" | "JP" | "DE" | "GB" | "US";
   /** فقط نمایشی؟ (در ژورنال برچسب نمی‌خورد) */
   displayOnly?: boolean;
 };
@@ -32,8 +33,12 @@ const FRANKFURT: ClockSession = {
   tz: "Europe/Berlin",
   openMin: 8 * 60,
   closeMin: 17 * 60,
-  flag: "🇩🇪",
+  flagCode: "DE",
   displayOnly: true,
+};
+
+const FLAG: Record<string, ClockSession["flagCode"]> = {
+  SYDNEY: "AU", TOKYO: "JP", LONDON: "GB", NEWYORK: "US",
 };
 
 const LATIN: Record<string, string> = {
@@ -47,11 +52,11 @@ const LATIN: Record<string, string> = {
 export const CLOCK_SESSIONS: ClockSession[] = [
   ...FOREX_SESSIONS.filter((s) => s.key === "SYDNEY" || s.key === "TOKYO").map((s) => ({
     key: s.key as ClockSessionKey, label: s.label, latin: LATIN[s.key],
-    tz: s.tz, openMin: s.openMin, closeMin: s.closeMin, flag: s.flag,
+    tz: s.tz, openMin: s.openMin, closeMin: s.closeMin, flagCode: FLAG[s.key],
   })),
   FRANKFURT,
   ...FOREX_SESSIONS.filter((s) => s.key === "LONDON" || s.key === "NEWYORK").map((s) => ({
     key: s.key as ClockSessionKey, label: s.label, latin: LATIN[s.key],
-    tz: s.tz, openMin: s.openMin, closeMin: s.closeMin, flag: s.flag,
+    tz: s.tz, openMin: s.openMin, closeMin: s.closeMin, flagCode: FLAG[s.key],
   })),
 ];

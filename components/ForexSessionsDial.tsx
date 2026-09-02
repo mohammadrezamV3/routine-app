@@ -139,10 +139,7 @@ export function ForexSessionsDial({ now }: { now: Date }) {
         <defs>
           {rings.map(({ session, arc }) => (
             <path key={session.key} id={`fx-lbl-${session.key}`}
-                  d={labelPath(
-                    arc.startMin + arc.durationMin / 2 + (session.key === "FRANKFURT" ? -150 : 0),
-                    RING_R[session.key]
-                  )} />
+                  d={labelPath(arc.startMin + arc.durationMin / 2, RING_R[session.key])} />
           ))}
         </defs>
 
@@ -153,7 +150,7 @@ export function ForexSessionsDial({ now }: { now: Date }) {
               className={`fx-band${arc.open && marketOpen ? " open" : ""}`}
               strokeWidth={RING_W}
             />
-            <text className="fx-band-label" dy="0.5">
+            <text className="fx-band-label" dominantBaseline="central">
               <textPath href={`#fx-lbl-${session.key}`} startOffset="50%" textAnchor="middle">
                 {session.latin}
               </textPath>
