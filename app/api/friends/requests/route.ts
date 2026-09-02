@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/friends/requests → درخواست‌های دوستیِ دریافت‌شده و هنوز تأییدنشده
+// GET /api/friends/requests → درخواست‌های دوستی دریافت‌شده و هنوز تأییدنشده
 export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;

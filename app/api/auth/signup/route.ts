@@ -5,7 +5,7 @@ import { Market } from "@prisma/client";
 import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { isValidIranPhone, isValidUsername, validatePassword, clampText } from "@/lib/validate";
+import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText } from "@/lib/validate";
 
 // ثبت‌نام با نام + شماره موبایل + یوزرنیم + رمز انجام می‌شه — این چهارتا
 // الزامی‌ان. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.
@@ -24,14 +24,18 @@ export async function POST(req: NextRequest) {
     password: string;
     name: string;
     lastName: string;
-    // دیگه توی فرمِ ثبت‌نام پرسیده نمی‌شه — کاربر بعداً از /account خودش وارد
-    // می‌کنه؛ ولی فیلد رو کاملاً حذف نمی‌کنیم تا اگه کلاینتِ دیگه‌ای (یا
+    // دیگه توی فرم ثبت‌نام پرسیده نمی‌شه — کاربر بعدا از /account خودش وارد
+    // می‌کنه؛ ولی فیلد رو کاملا حذف نمی‌کنیم تا اگه کلاینت دیگه‌ای (یا
     // نسخه‌ی قدیمی) فرستادش، هنوز معتبرسنجی و ذخیره بشه.
     birthDate?: string;
   };
 
   if (!phone || !username || !password || !name || !lastName) {
     return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم و رمز عبور الزامی است" }, { status: 400 });
+  }
+  // نام/نام‌خانوادگی فقط فارسی — بررسی سمت کلاینت قابل دور زدن است
+  if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
+    return NextResponse.json({ error: "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
   }
   if (!isValidIranPhone(phone)) {
     return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });
@@ -52,8 +56,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // شماره موبایل باید قبلاً با کدِ پیامکی تایید شده باشه (app/api/auth/signup/otp) —
-  // فقط سمتِ کلاینت چک‌کردن کافی نیست، چون کلاینت قابل دور زدنه. تاییدیه‌ی
+  // شماره موبایل باید قبلا با کد پیامکی تایید شده باشه (app/api/auth/signup/otp) —
+  // فقط سمت کلاینت چک‌کردن کافی نیست، چون کلاینت قابل دور زدنه. تاییدیه‌ی
   // مصرف‌نشده‌ای که هنوز منقضی نشده لازمه (پنجره‌ی ۱۰ دقیقه‌ای همون OTP).
   const verifiedOtp = await prisma.signupOtp.findFirst({
     where: { phone, verifiedAt: { not: null }, usedAt: null, expiresAt: { gt: new Date() } },
@@ -67,7 +71,7 @@ export async function POST(req: NextRequest) {
     where: { OR: [{ phone }, { username }] },
   });
   if (existing) {
-    // پیام عمداً کلیه (نه «شماره موبایل تکراریه» / «یوزرنیم تکراریه» جدا) تا
+    // پیام عمدا کلیه (نه «شماره موبایل تکراریه» / «یوزرنیم تکراریه» جدا) تا
     // مهاجم نتونه با امتحان‌کردن شماره‌های مختلف بفهمه کدوم شماره ثبت‌نام شده.
     return NextResponse.json({ error: "امکان ثبت‌نام با این اطلاعات وجود ندارد" }, { status: 409 });
   }

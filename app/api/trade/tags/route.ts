@@ -6,9 +6,9 @@ import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_TAGS } from "@/lib/tradeTypes";
 
-// برچسب‌های کاربر — یک لیستِ واحد که هم روی حساب استفاده می‌شود هم روی
-// معامله. نامِ برچسب برای هر کاربر یکتاست (ایندکسِ userId+name)، پس تکراری
-// ساخته نمی‌شود؛ خطای یکتاییِ پریزما این‌جا به پیامِ فارسی تبدیل می‌شود.
+// برچسب‌های کاربر — یک لیست واحد که هم روی حساب استفاده می‌شود هم روی
+// معامله. نام برچسب برای هر کاربر یکتاست (ایندکس userId+name)، پس تکراری
+// ساخته نمی‌شود؛ خطای یکتایی پریزما این‌جا به پیام فارسی تبدیل می‌شود.
 
 const TAG_SELECT = { id: true, name: true, color: true } as const;
 
@@ -68,8 +68,8 @@ export async function DELETE(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
-  // اتصالِ برچسب به حساب/معامله با حذفِ خودِ برچسب برداشته می‌شود (cascade
-  // روی جدولِ واسط) — خودِ معامله دست‌نخورده می‌ماند.
+  // اتصال برچسب به حساب/معامله با حذف خود برچسب برداشته می‌شود (cascade
+  // روی جدول واسط) — خود معامله دست‌نخورده می‌ماند.
   await prisma.tradeTag.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }

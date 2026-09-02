@@ -13,8 +13,8 @@ const MONTH_NAMES = [
 function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function sameDay(a: Date, b: Date) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
 
-// تقویم — گرید ماهانه‌ی میلادیِ ساده (نه جلالی)، رکوردها بر اساسِ یه
-// propertyِ از نوعِ تاریخِ انتخابی زیرِ روزِ متناظرشون قرار می‌گیرن
+// تقویم — گرید ماهانه‌ی میلادی ساده (نه جلالی)، رکوردها بر اساس یه
+// property از نوع تاریخ انتخابی زیر روز متناظرشون قرار می‌گیرن
 export function NotepadDbCalendarView({
   properties,
   records,
@@ -58,7 +58,7 @@ export function NotepadDbCalendarView({
   if (!dateProp) {
     return (
       <div className="notepad-db-board-empty">
-        تقویم به یه property از نوع «تاریخ» نیاز داره — اول از تبِ جدول یکی بساز.
+        تقویم به یه property از نوع «تاریخ» نیاز داره — اول از تب جدول یکی بساز.
       </div>
     );
   }
@@ -74,19 +74,19 @@ export function NotepadDbCalendarView({
 
   async function createOnDay(day: Date) {
     onCreateRecord();
-    // مقدارِ تاریخ بعد از ساخته‌شدنِ رکورد دستی توسطِ خودِ کاربر ست می‌شه؛
-    // اینجا فقط رکوردِ خالی می‌سازیم چون id رکوردِ تازه در دسترس نیست
+    // مقدار تاریخ بعد از ساخته‌شدن رکورد دستی توسط خود کاربر ست می‌شه؛
+    // اینجا فقط رکورد خالی می‌سازیم چون id رکورد تازه در دسترس نیست
     void day;
   }
 
   return (
     <div className="notepad-db-calendar">
       <div className="notepad-db-calendar-head">
-        <button type="button" className="notepad-icon-btn" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} aria-label="ماهِ قبل">
+        <button type="button" className="notepad-icon-btn" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} aria-label="ماه قبل">
           <ChevronRight size={14} />
         </button>
         <span className="notepad-db-calendar-title">{MONTH_NAMES[cursor.getMonth()]} {cursor.getFullYear()}</span>
-        <button type="button" className="notepad-icon-btn" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} aria-label="ماهِ بعد">
+        <button type="button" className="notepad-icon-btn" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} aria-label="ماه بعد">
           <ChevronLeft size={14} />
         </button>
       </div>
@@ -108,7 +108,7 @@ export function NotepadDbCalendarView({
                       type="button"
                       className="notepad-db-calendar-item"
                       onClick={() => {
-                        const next = prompt("تاریخِ جدید (YYYY-MM-DD)، خالی بذار برای حذفِ تاریخ:", String(rec.values[dateProp.id] ?? "").slice(0, 10));
+                        const next = prompt("تاریخ جدید (YYYY-MM-DD)، خالی بذار برای حذف تاریخ:", String(rec.values[dateProp.id] ?? "").slice(0, 10));
                         if (next === null) return;
                         onChangeValue(rec.id, dateProp.id, next ? new Date(next).toISOString() : null);
                       }}
@@ -116,7 +116,7 @@ export function NotepadDbCalendarView({
                       {titleProp ? String(rec.values[titleProp.id] ?? "بدون‌عنوان") : "بدون‌عنوان"}
                     </button>
                   ))}
-                  <button type="button" className="notepad-db-calendar-add" onClick={() => createOnDay(day)} aria-label="افزودنِ رکورد">
+                  <button type="button" className="notepad-db-calendar-add" onClick={() => createOnDay(day)} aria-label="افزودن رکورد">
                     <Plus size={11} />
                   </button>
                 </div>

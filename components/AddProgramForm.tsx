@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Minus } from "lucide-react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
@@ -19,19 +18,19 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 const now = new Date();
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-// یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعتِ واحد برای همه‌شون) —
-// موقعِ ثبت، یک occurrence جدا برای هر روزِ انتخاب‌شده ساخته می‌شه. idِ
-// ثابت (نه indexِ آرایه) لازمه چون AnimatePresence برای تشخیصِ درست‌ِ
-// ورود/خروجِ هر ردیف (موقعِ افزودن/حذفِ ردیف) به یه کلیدِ پایدار نیاز داره.
+// یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعت واحد برای همه‌شون) —
+// موقع ثبت، یک occurrence جدا برای هر روز انتخاب‌شده ساخته می‌شه. id
+// ثابت (نه index آرایه) لازمه تا React موقع افزودن/حذف یک ردیف، بقیه‌ی
+// ردیف‌ها رو دوباره از صفر نسازه و مقدار فیلدهاشون جابه‌جا نشه.
 type NewRow = { id: string; jsDays: number[]; start: string; end: string };
 function newRowId(): string {
   return "row-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 type Step = "info" | "details";
 
-// فرمِ مستقلِ «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
+// فرم مستقل «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
 // بعدش میزان اهمیت و تگ. اعتبارسنجی هر مرحله جدا انجام می‌شه؛ دکمه‌ی «بعدی»
-// اگه چیزی ناقصه یه لرزشِ خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
+// اگه چیزی ناقصه یه لرزش خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
 export function AddProgramForm({
   scheduleOpts,
   onClose,
@@ -53,7 +52,7 @@ export function AddProgramForm({
   const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [nameError, setNameError] = useState(false);
-  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
+  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
   const [periodError, setPeriodError] = useState(false);
   const [shakeNext, setShakeNext] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
@@ -64,6 +63,16 @@ export function AddProgramForm({
   function removeRow(i: number) {
     setRows((r) => r.filter((_, idx) => idx !== i));
   }
+  // خطای یک ردیف به‌محض اینکه کاربر دوباره دستش رو روی همون ردیف می‌ذاره
+  // پاک می‌شه — نه اینکه تا زدن دوباره‌ی «بعدی» قرمز بمونه.
+  function clearRowError(i: number) {
+    setRowErrors((prev) => {
+      if (!prev[i]) return prev;
+      const next = { ...prev };
+      delete next[i];
+      return next;
+    });
+  }
   function updateRow(i: number, patch: Partial<NewRow>) {
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
   }
@@ -72,9 +81,9 @@ export function AddProgramForm({
       r.map((row, idx) => {
         if (idx !== i) return row;
         const has = row.jsDays.includes(jsDay);
-        // همیشه باید حداقل یک روز انتخاب‌شده بمونه — دی‌سلکت‌کردنِ آخرین
-        // روزِ باقی‌مونده نادیده گرفته می‌شه، وگرنه یه ردیفِ بدونِ هیچ روزی
-        // می‌شد که هیچ occurrence‌ای ازش قابلِ ساختن نیست.
+        // همیشه باید حداقل یک روز انتخاب‌شده بمونه — دی‌سلکت‌کردن آخرین
+        // روز باقی‌مونده نادیده گرفته می‌شه، وگرنه یه ردیف بدون هیچ روزی
+        // می‌شد که هیچ occurrence‌ای ازش قابل ساختن نیست.
         if (has && row.jsDays.length === 1) return row;
         const next = has ? row.jsDays.filter((d) => d !== jsDay) : [...row.jsDays, jsDay];
         return { ...row, jsDays: next };
@@ -90,11 +99,19 @@ export function AddProgramForm({
 
     const rErrs: typeof rowErrors = {};
     rows.forEach((r, i) => {
-      const e: { start?: boolean; end?: boolean; days?: boolean } = {};
+      const e: { start?: boolean; end?: boolean; days?: boolean; order?: boolean } = {};
       if (!r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
-      if (e.start || e.end || e.days) rErrs[i] = e;
+      // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه — بازه‌ی
+      // معکوس/صفر یعنی برنامه‌ای که هیچ‌وقت اتفاق نمی‌افته و همه‌ی
+      // محاسبه‌های خط زمان/تداخل رو هم بهم می‌ریزه.
+      if (!e.start && !e.end) {
+        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
+        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
+        if (sMin !== null && eMin !== null && eMin <= sMin) { e.order = true; hasError = true; }
+      }
+      if (e.start || e.end || e.days || e.order) rErrs[i] = e;
     });
     setRowErrors(rErrs);
 
@@ -162,7 +179,7 @@ export function AddProgramForm({
         name,
         jsDay: r.jsDay,
         time: r.end ? `${r.start} – ${r.end}` : r.start,
-        // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلاً اگه امروز
+        // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلا اگه امروز
         // چهارشنبه‌ست و برنامه رو برای چهارشنبه ثبت می‌کنی، چهارشنبه‌های
         // گذشته نباید یهو این برنامه رو داشته باشن.
         startDate: isoLocal(now),
@@ -212,23 +229,16 @@ export function AddProgramForm({
               </div>
               {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>اسم برنامه رو وارد کن</div>}
 
-              <AnimatePresence initial={false}>
+              <div className="wsearch-newrow-list">
                 {rows.map((r, ri) => {
                   const err = rowErrors[ri];
                   const rowErrMsgs: string[] = [];
                   if (err?.days) rowErrMsgs.push("حداقل یک روز رو انتخاب کن");
                   if (err?.start) rowErrMsgs.push("ساعت شروع رو وارد کن");
                   if (err?.end) rowErrMsgs.push("ساعت پایان رو وارد کن");
+                  if (err?.order) rowErrMsgs.push("ساعت پایان باید بعد از ساعت شروع باشه");
                   return (
-                    <motion.div
-                      key={r.id}
-                      className="wsearch-newrow-anim"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ height: { duration: 0.26, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.2 } }}
-                      style={{ overflow: "hidden" }}
-                    >
+                    <div key={r.id} className="wsearch-newrow-anim">
                       <div className="wsearch-newrow">
                         <div className="wsearch-newrow-daywrap">
                           <div className={`day-picker${err?.days ? " field-error" : ""}`}>
@@ -243,16 +253,16 @@ export function AddProgramForm({
                             ))}
                           </div>
                         </div>
-                        <div className={`time-field${err?.start ? " field-error" : ""}`}>
+                        <div className={`time-field${err?.start || err?.order ? " field-error" : ""}`}>
                           <span className="time-field-label">ساعت شروع</span>
                           <div className="field-error-wrap">
-                            <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
+                            <TimeInput value={r.start} onChange={(v) => { updateRow(ri, { start: v }); clearRowError(ri); }} />
                           </div>
                         </div>
-                        <div className={`time-field${err?.end ? " field-error" : ""}`}>
+                        <div className={`time-field${err?.end || err?.order ? " field-error" : ""}`}>
                           <span className="time-field-label">ساعت پایان</span>
                           <div className="field-error-wrap">
-                            <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
+                            <TimeInput value={r.end} onChange={(v) => { updateRow(ri, { end: v }); clearRowError(ri); }} />
                           </div>
                         </div>
                         {rows.length > 1 && (
@@ -267,10 +277,10 @@ export function AddProgramForm({
                           {rowErrMsgs.join(" — ")}
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   );
                 })}
-              </AnimatePresence>
+              </div>
 
               <button type="button" className="wsearch-add-btn" onClick={addRow}>
                 افزودن روز دیگر
@@ -326,6 +336,9 @@ export function AddProgramForm({
                 onChange={setImportance}
                 options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
               />
+              <div className="section-note" style={{ marginTop: 8 }}>
+                نکته: فقط برنامه‌هایی که میزان اهمیت آن‌ها زیاد یا خیلی زیاد باشد توسط اعلان به شما اطلاع داده خواهد شد.
+              </div>
 
               <label htmlFor="addProgramTag" style={{ marginTop: 14, display: "block" }}>تگ (اختیاری)</label>
               <input
@@ -337,20 +350,18 @@ export function AddProgramForm({
                 onChange={(e) => setTag(e.target.value)}
               />
 
+              {/* دکمه‌ی ثبت طبق درخواست کاربر دیگه یه آیکون تیک دایره‌ای
+                  نیست — یک دکمه‌ی تمام‌عرض متن‌دار با حالت لودینگ/موفقیت/خطا
+                  روی خودش، تا مشخص باشه داره ثبت می‌شه. */}
               <div className="wsearch-newform-actions">
                 <button
                   type="button"
-                  className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
+                  className={`wsearch-submit-btn${status !== "idle" ? " " + status : ""}`}
                   onClick={submitNew}
-                  aria-label="ثبت"
+                  disabled={status !== "idle"}
                 >
-                  <span className="wns-spinner" />
-                  <svg className="wns-check" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <svg className="wns-x" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  {status === "loading" && <span className="wsearch-submit-spinner" />}
+                  {status === "loading" ? "در حال ثبت…" : status === "success" ? "ثبت شد" : status === "error" ? "ثبت نشد" : "ثبت"}
                 </button>
               </div>
             </>

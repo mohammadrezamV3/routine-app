@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatDateTime } from "@/lib/adminFormat";
+import { NumberInput } from "@/components/NumberInput";
 
 type DiscountCodeRow = {
   id: string; code: string; percentOff: number; planKey: string | null;
@@ -18,7 +19,7 @@ export default function AdminDiscountCodesPage() {
   const [percentOff, setPercentOff] = useState("10");
   const [planKey, setPlanKey] = useState(""); // "" = همه‌ی پکیج‌ها
   const [expiresAt, setExpiresAt] = useState("");
-  const [maxUsesPerUser, setMaxUsesPerUser] = useState(""); // "" = بدونِ محدودیت
+  const [maxUsesPerUser, setMaxUsesPerUser] = useState(""); // "" = بدون محدودیت
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,9 +77,9 @@ export default function AdminDiscountCodesPage() {
           </div>
           <div className="admin-form-field">
             <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>درصد تخفیف</label>
-            <input
-              className="admin-input" type="number" min={1} max={100} style={{ width: 100 }}
-              value={percentOff} onChange={(e) => setPercentOff(e.target.value)}
+            <NumberInput
+              className="admin-input" min={1} max={100} style={{ width: 100 }}
+              value={percentOff} onChange={(v) => setPercentOff(v)}
             />
           </div>
           <div className="admin-form-field">
@@ -97,9 +98,9 @@ export default function AdminDiscountCodesPage() {
           </div>
           <div className="admin-form-field">
             <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>حداکثر مصرف برای هر کاربر (اختیاری)</label>
-            <input
-              className="admin-input" type="number" min={1} style={{ width: 150 }}
-              value={maxUsesPerUser} onChange={(e) => setMaxUsesPerUser(e.target.value)} placeholder="بدون محدودیت"
+            <NumberInput
+              className="admin-input" min={1} style={{ width: 150 }}
+              value={maxUsesPerUser} onChange={(v) => setMaxUsesPerUser(v)} placeholder="بدون محدودیت"
             />
           </div>
           <button type="button" className="admin-btn primary" onClick={create} disabled={creating || !code.trim()}>

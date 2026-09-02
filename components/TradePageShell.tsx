@@ -9,25 +9,27 @@ import { AuthGate } from "./AuthGate";
 import { PanelSkeleton } from "./PanelSkeleton";
 
 /**
- * پوسته‌ی مشترکِ همه‌ی زیرصفحه‌های ترید — عنوان، لینکِ بازگشت، گیت‌ها و
- * ورودِ نرم، همه یک‌جا.
+ * پوسته‌ی مشترک همه‌ی زیرصفحه‌های ترید — عنوان، لینک بازگشت، گیت‌ها و
+ * ورود نرم، همه یک‌جا.
  *
- * چرا یک کامپوننتِ مشترک: هر شش زیرصفحه عیناً همین ساختار را داشتند و یک
- * باگِ یکسان: تا وقتی `useSession()` هنوز `loading` بود، شرطِ
- * `status === "authenticated" ? ... : <AuthGate/>` باعث می‌شد کاربرِ
- * لاگین‌کرده یک لحظه پیامِ «وارد شوید» ببیند و بعد صفحه عوض شود. همان
- * پرشِ کوتاه بخشِ بزرگی از حسِ «سخت و ناگهانی» بودنِ باز شدنِ صفحه بود.
- * حالا در حالتِ loading اسکلتِ همیشگیِ اپ دیده می‌شود، نه پیامِ اشتباه.
+ * چرا یک کامپوننت مشترک: هر شش زیرصفحه عینا همین ساختار را داشتند و یک
+ * باگ یکسان: تا وقتی `useSession()` هنوز `loading` بود، شرط
+ * `status === "authenticated" ? ... : <AuthGate/>` باعث می‌شد کاربر
+ * لاگین‌کرده یک لحظه پیام «وارد شوید» ببیند و بعد صفحه عوض شود. همان
+ * پرش کوتاه بخش بزرگی از حس «سخت و ناگهانی» بودن باز شدن صفحه بود.
+ * حالا در حالت loading اسکلت همیشگی اپ دیده می‌شود، نه پیام اشتباه.
  */
 export function TradePageShell({
   title,
   note,
   back = { href: "/trade", label: "ترید" },
+  titleAction,
   children,
 }: {
   title: string;
   note?: string;
   back?: { href: string; label: string } | null;
+  titleAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const { status } = useSession();
@@ -39,7 +41,10 @@ export function TradePageShell({
           <ChevronRight size={15} /> {back.label}
         </Link>
       )}
-      <h1>{title}</h1>
+      <div className={titleAction ? "trade-head-row" : undefined}>
+        <h1>{title}</h1>
+        {titleAction}
+      </div>
       {note && <div className="section-note">{note}</div>}
 
       {status === "loading" && <PanelSkeleton />}

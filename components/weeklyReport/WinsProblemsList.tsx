@@ -18,7 +18,7 @@ export function ProblemsList({ items }: { items: string[] }) {
   if (items.length === 0) return null;
   return (
     <div className="wr-block">
-      <div className="wr-block-title"><AlertTriangle size={15} /> نقاطِ قابل‌بهبود</div>
+      <div className="wr-block-title"><AlertTriangle size={15} /> نقاط قابل‌بهبود</div>
       <ul className="wr-list problems">
         {items.map((p, i) => <li key={i}>{p}</li>)}
       </ul>

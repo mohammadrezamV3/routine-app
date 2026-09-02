@@ -5,7 +5,7 @@ import { EconomicCalendarPanel } from "@/components/EconomicCalendarPanel";
 
 export default function TradeCalendarPage() {
   return (
-    <TradePageShell title="تقویم اقتصادی" note="همه‌ی ساعت‌ها به وقت محلی خودت">
+    <TradePageShell title="تقویم اقتصادی">
       <EconomicCalendarPanel />
     </TradePageShell>
   );

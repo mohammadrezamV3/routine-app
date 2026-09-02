@@ -4,7 +4,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 
-// سقفِ سطرِ برگشتی — بدونش یه بازه‌ی پرداده می‌تونست کلِ تاریخچه رو یکجا بکشه
+// سقف سطر برگشتی — بدونش یه بازه‌ی پرداده می‌تونست کل تاریخچه رو یکجا بکشه
 const MAX_ROWS = 2000;
 
 // GET /api/calorie/log/range?from=2026-07-01&to=2026-07-29 — تاریخچه‌ی غذایی

@@ -19,13 +19,13 @@ function sanitizeValues(raw: unknown, validPropertyIds: Set<string>): Record<str
   return out;
 }
 
-// PATCH /api/notepad/databases/:id/records/:recordId — تغییرِ values و/یا
+// PATCH /api/notepad/databases/:id/records/:recordId — تغییر values و/یا
 // موقعیت (drag reorder)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; recordId: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const record = await prisma.notepadDatabaseRecord.findFirst({
     where: { id: params.recordId, databaseId: params.id, database: { block: { page: { userId } } } },
@@ -51,7 +51,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const record = await prisma.notepadDatabaseRecord.findFirst({
     where: { id: params.recordId, databaseId: params.id, database: { block: { page: { userId } } } },

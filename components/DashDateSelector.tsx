@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 export type DashDay = { iso: string; weekday: string; dateLabel: string };
 
-// بلورِ لبه، لایه‌لایه — هرچی به لبه نزدیک‌تر، هم بلورِ بیشتر هم عرضِ کمتر،
-// تا حسِ «رفته‌رفته تارتر شدن» بده، نه یک بلورِ یک‌دستِ ماسک‌شده.
+// بلور لبه، لایه‌لایه — هرچی به لبه نزدیک‌تر، هم بلور بیشتر هم عرض کمتر،
+// تا حس «رفته‌رفته تارتر شدن» بده، نه یک بلور یک‌دست ماسک‌شده.
 const EDGE_BLUR_LAYERS = [
   { width: "34%", blur: 2 },
   { width: "22%", blur: 5 },
@@ -41,12 +41,12 @@ function EdgeBlur({ side, show }: { side: "left" | "right"; show: boolean }) {
   );
 }
 
-// نوار انتخاب تاریخ — راست‌چین طبیعیِ صفحه (چون days از قبل به ترتیبِ
-// تاریخیِ صعودی ساخته می‌شه و چیدمانِ RTL خودش این ترتیب رو می‌ده). دیگه یک
-// هفته‌ی کامل نیست — یه پنجره‌ی داینامیکِ چندروزه که همیشه روی «امروز»
+// نوار انتخاب تاریخ — راست‌چین طبیعی صفحه (چون days از قبل به ترتیب
+// تاریخی صعودی ساخته می‌شه و چیدمان RTL خودش این ترتیب رو می‌ده). دیگه یک
+// هفته‌ی کامل نیست — یه پنجره‌ی داینامیک چندروزه که همیشه روی «امروز»
 // وسط‌چینه. فلش‌های قبلی/بعدی همون پنجره رو جابه‌جا می‌کنن، رو به بیرون (نه
 // سمت لیست)، و فقط توی دسکتاپ دیده می‌شن — توی موبایل با انگشت اسکرول
-// می‌شه (اسکرول‌بارِ خودِ مرورگر هم مخفیه، no-scrollbar).
+// می‌شه (اسکرول‌بار خود مرورگر هم مخفیه، no-scrollbar).
 export function DashDateSelector({
   days,
   activeIso,
@@ -66,14 +66,14 @@ export function DashDateSelector({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLButtonElement>(null);
-  // بلورِ لبه فقط وقتی نشون داده بشه که واقعاً روزی رفته زیرِ لبه (اسکرولِ
-  // واقعی داره)، نه همیشه — وگرنه حتی روزِ کاملاً دیده‌شده‌ی کنارِ دکمه‌ی
-  // قبلی/بعدی هم دائم تار به‌نظر می‌رسید. راست/چپِ RTL بر اساسِ مدلِ
-  // استانداردِ scrollLeft منفی (۰ تا -(max)) که مرورگرهای امروزی استفاده می‌کنن.
+  // بلور لبه فقط وقتی نشون داده بشه که واقعا روزی رفته زیر لبه (اسکرول
+  // واقعی داره)، نه همیشه — وگرنه حتی روز کاملا دیده‌شده‌ی کنار دکمه‌ی
+  // قبلی/بعدی هم دائم تار به‌نظر می‌رسید. راست/چپ RTL بر اساس مدل
+  // استاندارد scrollLeft منفی (۰ تا -(max)) که مرورگرهای امروزی استفاده می‌کنن.
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
 
-  // روزِ فعال همیشه وسطِ نوار بمونه — هم موقعِ لود اولیه، هم هر بار که با
+  // روز فعال همیشه وسط نوار بمونه — هم موقع لود اولیه، هم هر بار که با
   // فلش/کلیک عوض می‌شه (از جمله موقعی که هفته با فلش عوض می‌شه ولی همون
   // ایزوی فعال توی هفته‌ی جدید نیست، پس این افکت روی activeIso و days هردو گوش می‌ده).
   useEffect(() => {
@@ -103,19 +103,31 @@ export function DashDateSelector({
     };
   }, [days]);
 
-  // به‌جای یک عددِ ثابت، هرچقدر عرضِ واقعیِ نوار جا داره روز نشون می‌ده —
-  // اندازه‌ی پیل (۷۲ موبایل / ۹۲ دسکتاپ) + gap رو با عرضِ واقعیِ کانتینر
-  // می‌سنجه. همیشه فرد نگه می‌داره تا روزِ فعال دقیقاً وسط بیفته.
+  // به‌جای یک عدد ثابت، هرچقدر عرض واقعی نوار جا داره روز نشون می‌ده.
+  //
+  // نسخه‌ی قبلی عرض هر پیل رو ثابت ۶۲px (موبایل) فرض می‌کرد، ولی پیل‌ها
+  // `shrink-0`ـن و عرضشون از محتواشون میاد — «چهارشنبه» + «۳۰ شهریور» روی
+  // یه گوشی ۳۹۰ پیکسلی حدود ۷۵px می‌شه، نه ۶۲. نتیجه این بود که تخمین
+  // بیشتر از واقعیت درمی‌اومد، پیل‌ها سرریز می‌کردن و عملا فقط سه روز
+  // دیده می‌شد (بقیه زیر لبه‌ی اسکرول). حالا عرض واقعی رندرشده‌ی
+  // پهن‌ترین پیل اندازه گرفته می‌شه. چون خود پیل‌ها با تغییر تعداد
+  // عرضشون عوض نمی‌شه، این حلقه در یک قدم همگرا می‌شه.
   useEffect(() => {
     if (!onVisibleCountChange) return;
     const el = scrollRef.current;
     if (!el) return;
     const compute = () => {
       const w = el.clientWidth;
+      if (w <= 0) return;
       const isSm = window.innerWidth >= 640;
-      const pillWidth = isSm ? 92 : 62;
+      let pillWidth = isSm ? 92 : 62;
+      el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
+        pillWidth = Math.max(pillWidth, Math.ceil(pill.getBoundingClientRect().width));
+      });
       const gap = 6;
-      const n = Math.floor((w + gap) / (pillWidth + gap));
+      // پدینگ افقی خود نوار (px-3) داخل clientWidth حساب شده، پس ازش کم می‌شه
+      const usable = w - 24;
+      const n = Math.floor((usable + gap) / (pillWidth + gap));
       const odd = n % 2 === 0 ? n - 1 : n;
       onVisibleCountChange(Math.max(3, odd));
     };
@@ -124,7 +136,28 @@ export function DashDateSelector({
     ro.observe(el);
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [days.length]);
+
+  // سوایپ با انگشت: کشیدن به راست → روزهای گذشته، به چپ → روزهای آینده
+  // (هم‌جهت با فلش‌های دسکتاپ که توی RTL «قبلی» سمت راسته). فقط وقتی
+  // حرکت افقی واضحا از عمودی بیشتره عمل می‌کنه تا اسکرول عمودی صفحه
+  // رو نشکنه.
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  function onTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx > 0) onPrevWeek();
+    else onNextWeek();
+  }
 
   return (
     <div
@@ -141,17 +174,23 @@ export function DashDateSelector({
       </button>
 
       <div className="relative min-w-0 flex-1">
-        <div ref={scrollRef} className="no-scrollbar flex items-center justify-between gap-1.5 overflow-x-auto px-3 py-2.5">
+        <div
+          ref={scrollRef}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          className="no-scrollbar flex items-center justify-between gap-1.5 overflow-x-auto px-3 py-2.5"
+        >
           {days.map((d) => {
             const active = d.iso === activeIso;
             return (
               <button
                 key={d.iso}
                 ref={active ? activeRef : undefined}
+                data-day-pill
                 type="button"
                 onClick={() => onSelect(d.iso)}
                 className={cn(
-                  "flex min-w-[62px] shrink-0 flex-col items-center gap-0.5 rounded-2xl px-1.5 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
+                  "flex min-w-[54px] shrink-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
                   active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
                 )}
                 style={
@@ -160,10 +199,10 @@ export function DashDateSelector({
                     : undefined
                 }
               >
-                <span className={cn("text-[10.5px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
+                <span className={cn("whitespace-nowrap text-[10px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
                   {d.weekday}
                 </span>
-                <span className={cn("text-[9.5px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
+                <span className={cn("whitespace-nowrap text-[9px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
               </button>
             );
           })}

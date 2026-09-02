@@ -1,10 +1,10 @@
-// نگهبانِ allowlistِ تنظیمات — با `node scripts/check-setting-keys.js`.
+// نگهبان allowlist تنظیمات — با `node scripts/check-setting-keys.js`.
 //
-// `/api/settings/[key]` فقط کلیدهای داخلِ `lib/userSettingKeys.ts` رو قبول
-// می‌کنه. اگه یه فیچرِ جدید کلیدی بسازه و یادش بره اون‌جا ثبتش کنه، همون فیچر
-// در production با ۴۰۰ می‌شکنه — بی‌سروصدا، چون فقط یه fetchِ ناموفقه.
-// (دقیقاً همین اتفاق افتاد: شش کلیدِ trade/bodyMetrics جا افتاده بودن و فقط
-// تستِ مرورگری گرفتشون.) این اسکریپت همون بررسی رو ارزون و بدونِ مرورگر
+// `/api/settings/[key]` فقط کلیدهای داخل `lib/userSettingKeys.ts` رو قبول
+// می‌کنه. اگه یه فیچر جدید کلیدی بسازه و یادش بره اون‌جا ثبتش کنه، همون فیچر
+// در production با ۴۰۰ می‌شکنه — بی‌سروصدا، چون فقط یه fetch ناموفقه.
+// (دقیقا همین اتفاق افتاد: شش کلید trade/bodyMetrics جا افتاده بودن و فقط
+// تست مرورگری گرفتشون.) این اسکریپت همون بررسی رو ارزون و بدون مرورگر
 // انجام می‌ده.
 
 const fs = require("fs");
@@ -13,9 +13,9 @@ const path = require("path");
 const ROOTS = ["app", "lib", "components"];
 const ALLOWLIST_FILE = "lib/userSettingKeys.ts";
 
-// lib/appSettings.ts تنظیماتِ *سراسریِ اپ* (مدلِ AppSetting) رو مدیریت می‌کنه،
-// نه تنظیماتِ کاربر — کلیدهاش هیچ‌وقت از `/api/settings/[key]` رد نمی‌شن، پس
-// allowlistِ این‌جا اصلاً بهشون ربطی نداره. فقط چون تابعِ داخلیِ خودش هم
+// lib/appSettings.ts تنظیمات *سراسری اپ* (مدل AppSetting) رو مدیریت می‌کنه،
+// نه تنظیمات کاربر — کلیدهاش هیچ‌وقت از `/api/settings/[key]` رد نمی‌شن، پس
+// allowlist این‌جا اصلا بهشون ربطی نداره. فقط چون تابع داخلی خودش هم
 // اتفاقی getSetting نام داره توی الگو گیر می‌افتاد.
 const SKIP_FILES = new Set(["lib/appSettings.ts"]);
 
@@ -26,7 +26,7 @@ const serverManaged = new Set(
 );
 
 // کلیدها از دو راه به این API می‌رسن: wrapperهای getSetting/setSetting، و
-// fetchِ مستقیمِ /api/settings/<key>.
+// fetch مستقیم /api/settings/<key>.
 const PATTERNS = [
   /(?:getSetting|setSetting)\s*(?:<[^(]*?>)?\s*\(\s*"([^"]+)"/g,
   /["'`]\/api\/settings\/([a-zA-Z][a-zA-Z0-9_]*)/g,
@@ -64,4 +64,4 @@ if (missing.length) {
   process.exit(1);
 }
 
-console.log(`✔ هر ${found.size} کلیدِ تنظیماتِ استفاده‌شده در allowlist ثبت شده.`);
+console.log(`✔ هر ${found.size} کلید تنظیمات استفاده‌شده در allowlist ثبت شده.`);

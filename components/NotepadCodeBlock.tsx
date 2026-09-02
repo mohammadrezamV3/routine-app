@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { CODE_LANGUAGES, NotepadBlock, leavesToPlainText, plainTextToLeaves, tokenizeCode } from "@/lib/notepad";
 
-// بلاکِ کد — یه textarea شفاف روی یه <pre> رنگ‌شده (همون تکنیکِ کلاسیکِ
-// «overlay editor» بدونِ نیاز به هیچ کتابخانه‌ی سنگینی مثلِ CodeMirror/
-// Monaco)، با یه tokenizerِ سبکِ خودمون (lib/notepad.ts → tokenizeCode).
-// جدا از BlockContentEditable نگه داشته شده چون منطقِ rich-text/اسلش‌کامندِ
-// اونجا اصلاً اینجا معنی نداره — Enter توی کد باید خط جدید بسازه نه بلاکِ جدید.
+// بلاک کد — یه textarea شفاف روی یه <pre> رنگ‌شده (همون تکنیک کلاسیک
+// «overlay editor» بدون نیاز به هیچ کتابخانه‌ی سنگینی مثل CodeMirror/
+// Monaco)، با یه tokenizer سبک خودمون (lib/notepad.ts → tokenizeCode).
+// جدا از BlockContentEditable نگه داشته شده چون منطق rich-text/اسلش‌کامند
+// اونجا اصلا اینجا معنی نداره — Enter توی کد باید خط جدید بسازه نه بلاک جدید.
 export function NotepadCodeBlock({
   block,
   locked,

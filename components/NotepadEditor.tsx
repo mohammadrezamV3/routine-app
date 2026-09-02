@@ -71,7 +71,7 @@ export function NotepadEditor({
     setTimeout(() => setToast((t) => (t === text ? null : t)), 2200);
   }
 
-  // ناوبری به یه صفحه‌ی دیگه — کلِ استیتِ محلی از سرور reseed می‌شه
+  // ناوبری به یه صفحه‌ی دیگه — کل استیت محلی از سرور reseed می‌شه
   useEffect(() => {
     setTitle(page.title);
     setIcon(page.icon);
@@ -92,11 +92,11 @@ export function NotepadEditor({
     });
   }
 
-  // اتوسیوِ بلاک‌ها — دیبانس‌شده، بعدِ هر تغییرِ واقعیِ blocks (نه seed اولیه).
-  // یه قفلِ ساده هم داره (isSavingRef/saveAgainRef) تا دو درخواستِ PUT هیچ‌وقت
-  // هم‌زمان در پرواز نباشن — اگه تایپِ بعدی درست وسطِ یه ذخیره‌ی درحال‌انجام
-  // برسه، به‌جای فایرکردنِ فوریِ یه درخواستِ دیگه، فقط علامت می‌زنه که بعدِ
-  // اتمامِ درخواستِ فعلی یه بار دیگه (با آخرین blocks) ذخیره کنه.
+  // اتوسیو بلاک‌ها — دیبانس‌شده، بعد هر تغییر واقعی blocks (نه seed اولیه).
+  // یه قفل ساده هم داره (isSavingRef/saveAgainRef) تا دو درخواست PUT هیچ‌وقت
+  // هم‌زمان در پرواز نباشن — اگه تایپ بعدی درست وسط یه ذخیره‌ی درحال‌انجام
+  // برسه، به‌جای فایرکردن فوری یه درخواست دیگه، فقط علامت می‌زنه که بعد
+  // اتمام درخواست فعلی یه بار دیگه (با آخرین blocks) ذخیره کنه.
   const isSavingRef = useRef(false);
   const saveAgainRef = useRef(false);
   const latestBlocksRef = useRef(blocks);
@@ -123,7 +123,7 @@ export function NotepadEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocks]);
 
-  // اتوسیوِ عنوان/آیکون — جدا از بلاک‌ها، چون روتِ متفاوتی داره
+  // اتوسیو عنوان/آیکون — جدا از بلاک‌ها، چون روت متفاوتی داره
   const titleSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   function scheduleMetaSave(patch: { title?: string; icon?: string | null }) {
     if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
@@ -182,13 +182,13 @@ export function NotepadEditor({
   }
 
   function viewBreadcrumbPath() {
-    if (!breadcrumb.length) { showToast("این صفحه زیرِ هیچ صفحه‌ای نیست"); return; }
-    showToast(breadcrumb.map((p) => p.title || "بدونِ عنوان").join(" / "));
+    if (!breadcrumb.length) { showToast("این صفحه زیر هیچ صفحه‌ای نیست"); return; }
+    showToast(breadcrumb.map((p) => p.title || "بدون عنوان").join(" / "));
   }
 
   // synchronous (قبل از پینت) نه requestAnimationFrame — چون یه keydown بعدی
-  // (مثلاً وقتی کاربر/اسکریپت خیلی سریع پشتِ‌سرِهم تایپ می‌کنه) ممکنه زودتر از
-  // یه فوکوسِ deferred برسه و حرف رو توی بلاکِ قبلی/غلط بندازه
+  // (مثلا وقتی کاربر/اسکریپت خیلی سریع پشت‌سرهم تایپ می‌کنه) ممکنه زودتر از
+  // یه فوکوس deferred برسه و حرف رو توی بلاک قبلی/غلط بندازه
   useLayoutEffect(() => {
     if (!pendingFocus.current) return;
     const { id, offset } = pendingFocus.current;
@@ -203,7 +203,7 @@ export function NotepadEditor({
   const topLevel = useMemo(() => sortByPosition(blocks.filter((b) => !b.parentBlockId)), [blocks]);
   const childrenOf = useCallback((parentId: string) => sortByPosition(blocks.filter((b) => b.parentBlockId === parentId)), [blocks]);
 
-  // ترتیبِ نمایشیِ واقعی (برای Arrow Up/Down) — بلاک‌های تاپ‌لول به‌همراهِ
+  // ترتیب نمایشی واقعی (برای Arrow Up/Down) — بلاک‌های تاپ‌لول به‌همراه
   // بچه‌های تاگل‌های بازشده، به همون ترتیبی که روی صفحه دیده می‌شن
   const renderOrder = useMemo(() => {
     const order: string[] = [];
@@ -243,9 +243,9 @@ export function NotepadEditor({
     onCodeChange: (id, text, language) => setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content: plainTextToLeaves(text), language } : b))),
     onConvertType: (id, type) => {
       setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, type, content: [], checked: false } : b)));
-      // بعدِ خالی‌کردنِ محتوا، innerHTML ریست می‌شه و caret نامعتبر می‌مونه —
-      // بدونِ این، تایپِ بلافاصله‌ی بعدی (مثلاً وقتی اسکریپت/کاربر تندتند
-      // می‌نویسه) به‌جایی نمی‌رسه چون selection هنوز به نودِ حذف‌شده اشاره داره
+      // بعد خالی‌کردن محتوا، innerHTML ریست می‌شه و caret نامعتبر می‌مونه —
+      // بدون این، تایپ بلافاصله‌ی بعدی (مثلا وقتی اسکریپت/کاربر تندتند
+      // می‌نویسه) به‌جایی نمی‌رسه چون selection هنوز به نود حذف‌شده اشاره داره
       pendingFocus.current = { id, offset: 0 };
     },
 
@@ -274,7 +274,7 @@ export function NotepadEditor({
       }
       const newType: BlockType = isListLike ? block.type : "paragraph";
       setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content: plainTextToLeaves(beforeText) } : b)));
-      // برای تاگل، بلاکِ جدید بعدِ آخرین بچه (یا خودِ تاگل اگه بچه‌ای نداره) اضافه می‌شه، نه وسطِ بچه‌ها
+      // برای تاگل، بلاک جدید بعد آخرین بچه (یا خود تاگل اگه بچه‌ای نداره) اضافه می‌شه، نه وسط بچه‌ها
       if (block.type === "toggle" && !block.collapsed) {
         const kids = childrenOf(block.id);
         const afterId = kids.length ? kids[kids.length - 1].id : block.id;
@@ -293,10 +293,10 @@ export function NotepadEditor({
         pendingFocus.current = { id, offset: 0 };
         return;
       }
-      if (hasChildren) return; // برای جلوگیری از یتیم‌شدنِ بچه‌ها، فعلاً حذف/ادغام نمی‌کنیم
+      if (hasChildren) return; // برای جلوگیری از یتیم‌شدن بچه‌ها، فعلا حذف/ادغام نمی‌کنیم
       const level = sortByPosition(blocks.filter((b) => b.parentBlockId === block.parentBlockId));
       const idx = level.findIndex((b) => b.id === id);
-      if (idx <= 0) return; // اولین بلاکِ این سطح — کاری نمی‌کنیم
+      if (idx <= 0) return; // اولین بلاک این سطح — کاری نمی‌کنیم
       const prevBlock = level[idx - 1];
       if (prevBlock.type === "divider" || prevBlock.type === "image") return;
       const mergeOffset = leavesToPlainText(prevBlock.content).length;
@@ -376,7 +376,7 @@ export function NotepadEditor({
           <img src={coverUrl} alt="" />
           {!isLocked && (
             <div className="notepad-cover-actions">
-              <button type="button" onClick={() => coverFileRef.current?.click()}>تغییرِ کاور</button>
+              <button type="button" onClick={() => coverFileRef.current?.click()}>تغییر کاور</button>
               <button type="button" onClick={() => setCover(null)}>حذف</button>
             </div>
           )}
@@ -394,7 +394,7 @@ export function NotepadEditor({
         <div className="notepad-breadcrumb">
           {breadcrumb.map((p, i) => (
             <span key={p.id} className="notepad-breadcrumb-item">
-              <button type="button" onClick={() => onNavigate(p.id)}>{p.icon ? `${p.icon} ` : ""}{p.title || "بدونِ عنوان"}</button>
+              <button type="button" onClick={() => onNavigate(p.id)}>{p.icon ? `${p.icon} ` : ""}{p.title || "بدون عنوان"}</button>
               {i < breadcrumb.length - 1 && <ChevronLeft size={12} />}
             </span>
           ))}
@@ -432,41 +432,41 @@ export function NotepadEditor({
                     ))}
                   </div>
                   <div className="notepad-page-menu-divider" />
-                  <button type="button" onClick={() => { setPageMenuOpen(false); copyLink(); }}>کپیِ لینک</button>
-                  <button type="button" onClick={() => { setPageMenuOpen(false); copyContents(); }}>کپیِ محتوای صفحه</button>
+                  <button type="button" onClick={() => { setPageMenuOpen(false); copyLink(); }}>کپی لینک</button>
+                  <button type="button" onClick={() => { setPageMenuOpen(false); copyContents(); }}>کپی محتوای صفحه</button>
                   <button type="button" onClick={() => { setPageMenuOpen(false); onRequestDuplicate(); }}>کپی از این صفحه</button>
                   <button type="button" onClick={() => { setPageMenuOpen(false); onRequestMove(); }}>جابه‌جاکردن…</button>
                   <div className="notepad-page-menu-divider" />
                   {coverUrl ? (
                     <>
-                      <button type="button" onClick={() => { setPageMenuOpen(false); coverFileRef.current?.click(); }}>تغییرِ کاور</button>
-                      <button type="button" onClick={() => { setPageMenuOpen(false); setCover(null); }}>حذفِ کاور</button>
+                      <button type="button" onClick={() => { setPageMenuOpen(false); coverFileRef.current?.click(); }}>تغییر کاور</button>
+                      <button type="button" onClick={() => { setPageMenuOpen(false); setCover(null); }}>حذف کاور</button>
                     </>
                   ) : (
-                    <button type="button" onClick={() => { setPageMenuOpen(false); coverFileRef.current?.click(); }}>افزودنِ کاور</button>
+                    <button type="button" onClick={() => { setPageMenuOpen(false); coverFileRef.current?.click(); }}>افزودن کاور</button>
                   )}
-                  <button type="button" onClick={() => { setPageMenuOpen(false); viewBreadcrumbPath(); }}>دیدنِ مسیر</button>
+                  <button type="button" onClick={() => { setPageMenuOpen(false); viewBreadcrumbPath(); }}>دیدن مسیر</button>
                   <div className="notepad-page-menu-divider" />
                   <div className="stat-toggle-row">
-                    <span className="notepad-page-menu-toggle-label">عرضِ کامل</span>
+                    <span className="notepad-page-menu-toggle-label">عرض کامل</span>
                     <button type="button" className={`ios-toggle${layout.wide ? " on" : ""}`} onClick={() => patchLayout({ wide: !layout.wide })}>
                       <span className="ios-toggle-knob" />
                     </button>
                   </div>
                   <div className="stat-toggle-row">
-                    <span className="notepad-page-menu-toggle-label">متنِ کوچک</span>
+                    <span className="notepad-page-menu-toggle-label">متن کوچک</span>
                     <button type="button" className={`ios-toggle${layout.smallText ? " on" : ""}`} onClick={() => patchLayout({ smallText: !layout.smallText })}>
                       <span className="ios-toggle-knob" />
                     </button>
                   </div>
                   <div className="stat-toggle-row">
-                    <span className="notepad-page-menu-toggle-label">قفلِ صفحه</span>
+                    <span className="notepad-page-menu-toggle-label">قفل صفحه</span>
                     <button type="button" className={`ios-toggle${isLocked ? " on" : ""}`} onClick={toggleLock}>
                       <span className="ios-toggle-knob" />
                     </button>
                   </div>
                   <div className="notepad-page-menu-divider" />
-                  <button type="button" className="notepad-page-menu-danger" onClick={() => { setPageMenuOpen(false); onRequestDelete(); }}>انتقال به سطلِ زباله</button>
+                  <button type="button" className="notepad-page-menu-danger" onClick={() => { setPageMenuOpen(false); onRequestDelete(); }}>انتقال به سطل زباله</button>
                 </div>
               </>
             )}
@@ -491,7 +491,7 @@ export function NotepadEditor({
         <input
           type="text"
           className="notepad-title-input"
-          placeholder="بدونِ عنوان"
+          placeholder="بدون عنوان"
           maxLength={NOTEPAD_TITLE_MAX}
           value={title}
           readOnly={isLocked}
@@ -507,7 +507,7 @@ export function NotepadEditor({
       </div>
       {!coverUrl && !isLocked && (
         <button type="button" className="notepad-add-cover-btn" onClick={() => coverFileRef.current?.click()}>
-          <ImagePlus size={12} /> افزودنِ کاور
+          <ImagePlus size={12} /> افزودن کاور
         </button>
       )}
 
@@ -533,7 +533,7 @@ export function NotepadEditor({
                   ))}
                   {!isLocked && (
                     <button type="button" className="notepad-toggle-add-child" onClick={() => insertBlockAfter(null, "paragraph", [], block.id)}>
-                      <Plus size={12} /> افزودن به داخلِ تاگل
+                      <Plus size={12} /> افزودن به داخل تاگل
                     </button>
                   )}
                 </Reorder.Group>

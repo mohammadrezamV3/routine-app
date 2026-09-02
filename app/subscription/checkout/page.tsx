@@ -12,9 +12,9 @@ import { findPlanCard, formatJalaliLong, DURATION_LABELS, DURATION_LABELS_INTL, 
 
 type Gateway = "zarinpal" | "zibal";
 
-// نشان‌های خودِ درگاه‌ها — آیکونِ عمومیِ ShieldCheck که قبلاً هر دو دکمه
-// مشترک بودن، جای دو نشانِ متمایز رو (رنگ/شکلِ مخصوصِ خودِ زرین‌پال/زیبال)
-// نمی‌گرفت. طراحیِ ساده و غیرِ عینِ لوگوی رسمی، فقط برای تمایزِ بصری.
+// نشان‌های خود درگاه‌ها — آیکون عمومی ShieldCheck که قبلا هر دو دکمه
+// مشترک بودن، جای دو نشان متمایز رو (رنگ/شکل مخصوص خود زرین‌پال/زیبال)
+// نمی‌گرفت. طراحی ساده و غیر عین لوگوی رسمی، فقط برای تمایز بصری.
 function ZarinpalMark() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -32,8 +32,8 @@ function ZibalMark() {
   );
 }
 
-// چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
-// باز می‌شه. کدِ تخفیف (رفرالِ یک نفرِ دیگه)، پذیرشِ قوانین، انتخابِ درگاه
+// چک‌اوت واقعی خرید پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
+// باز می‌شه. کد تخفیف (رفرال یک نفر دیگه)، پذیرش قوانین، انتخاب درگاه
 // (زرین‌پال یا زیبال) و دکمه‌ی پرداخت.
 export default function CheckoutPage() {
   const { status } = useSession();
@@ -41,11 +41,11 @@ export default function CheckoutPage() {
   const isIntl = getSiteMarket() === "INTERNATIONAL";
 
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
-  // نباشه (قاعده‌ی معمولِ پروژه — نگاه کن به app/auth/login/page.tsx).
+  // نباشه (قاعده‌ی معمول پروژه — نگاه کن به app/auth/login/page.tsx).
   const [query, setQuery] = useState<{ planKey: string; duration: Duration } | null>(null);
-  // وقتی پرداخت نگرفته، درگاه کاربر را به همین صفحه برمی‌گرداند (نه فهرستِ
-  // اشتراک‌ها) تا بتواند بدونِ از سر گرفتنِ انتخابِ پلن، همان‌جا دوباره —
-  // یا با درگاهِ دیگر — امتحان کند. این پرچم فقط پیام را نشان می‌دهد.
+  // وقتی پرداخت نگرفته، درگاه کاربر را به همین صفحه برمی‌گرداند (نه فهرست
+  // اشتراک‌ها) تا بتواند بدون از سر گرفتن انتخاب پلن، همان‌جا دوباره —
+  // یا با درگاه دیگر — امتحان کند. این پرچم فقط پیام را نشان می‌دهد.
   const [failedReturn, setFailedReturn] = useState(false);
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -60,24 +60,24 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [discountResult, setDiscountResult] = useState<{ ok: true; percentOff: number } | { ok: false; error: string } | null>(null);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
-  // applyingDiscount (state) async/batch-ست و جلوی دابل‌کلیکِ سریع رو کامل
-  // نمی‌گیره؛ applyingRef سنکرونه. requestGenRef هم جلوی رِیس‌کاندیشن رو
-  // می‌گیره: اگه یه درخواستِ قدیمی‌تر دیرتر از یه درخواستِ جدیدتر برگرده،
-  // نتیجه‌ی قدیمی نباید نتیجه‌ی جدید رو رونویسی کنه (همون باگِ «یه بار
+  // applyingDiscount (state) async/batch-ست و جلوی دابل‌کلیک سریع رو کامل
+  // نمی‌گیره؛ applyingRef سنکرونه. requestGenRef هم جلوی ریس‌کاندیشن رو
+  // می‌گیره: اگه یه درخواست قدیمی‌تر دیرتر از یه درخواست جدیدتر برگرده،
+  // نتیجه‌ی قدیمی نباید نتیجه‌ی جدید رو رونویسی کنه (همون باگ «یه بار
   // اعمال می‌کنه یه بار نه»).
   const applyingRef = useRef(false);
   const requestGenRef = useRef(0);
   const [gateway, setGateway] = useState<Gateway>("zibal");
-  // کدام درگاه‌ها روی این سرور واقعاً تنظیم شده‌اند. تا وقتی جواب نیامده،
-  // null است و هر دو نشان داده می‌شوند (رفتارِ قبلی) — این‌طور اگر این
+  // کدام درگاه‌ها روی این سرور واقعا تنظیم شده‌اند. تا وقتی جواب نیامده،
+  // null است و هر دو نشان داده می‌شوند (رفتار قبلی) — این‌طور اگر این
   // درخواست شکست بخورد، صفحه بدترنمی‌شود.
   const [availableGateways, setAvailableGateways] = useState<Gateway[] | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // اعتبارِ ارتقا به مکس (اگه کاربر از قبل ورزش/ترید فعال داره) — پیش‌نمایشه؛
-  // مبلغِ واقعی همیشه سمتِ سرور، مستقل از این fetch، توی
+  // اعتبار ارتقا به مکس (اگه کاربر از قبل ورزش/ترید فعال داره) — پیش‌نمایشه؛
+  // مبلغ واقعی همیشه سمت سرور، مستقل از این fetch، توی
   // api/subscription/checkout دوباره محاسبه می‌شه.
   const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
   useEffect(() => {
@@ -92,8 +92,8 @@ export default function CheckoutPage() {
         const list: Gateway[] = Array.isArray(d?.available) ? d.available : [];
         if (!list.length) return;
         setAvailableGateways(list);
-        // اگر درگاهِ انتخاب‌شده روی این سرور تنظیم نشده، برو سراغِ اولین
-        // درگاهِ سالم — وگرنه کاربر روی گزینه‌ای می‌ماند که حتماً خطا می‌دهد.
+        // اگر درگاه انتخاب‌شده روی این سرور تنظیم نشده، برو سراغ اولین
+        // درگاه سالم — وگرنه کاربر روی گزینه‌ای می‌ماند که حتما خطا می‌دهد.
         setGateway((g) => (list.includes(g) ? g : list[0]));
       })
       .catch(() => {});
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
     return (
       <section className="checkout-page">
         <h1>پرداخت</h1>
-        <div className="section-note">پلنِ انتخاب‌شده معتبر نیست.</div>
+        <div className="section-note">پلن انتخاب‌شده معتبر نیست.</div>
         <Link href="/subscription" className="checkout-back-link">بازگشت به صفحه‌ی اشتراک</Link>
       </section>
     );
@@ -123,9 +123,9 @@ export default function CheckoutPage() {
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const price = plan.prices[duration];
   const upgradeInfo = planKey === "max" ? upgradeOffer?.perDuration[duration] : undefined;
-  // اعتبارِ ارتقا (اگه باشه) اول اعمال می‌شه، بعد اگه کدِ تخفیفی هم اعمال
-  // شده باشه، درصدش روی همون قیمتِ اعتبارخورده حساب می‌شه — نه رویِ قیمتِ
-  // خامِ اولیه.
+  // اعتبار ارتقا (اگه باشه) اول اعمال می‌شه، بعد اگه کد تخفیفی هم اعمال
+  // شده باشه، درصدش روی همون قیمت اعتبارخورده حساب می‌شه — نه روی قیمت
+  // خام اولیه.
   const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : plan.amounts?.[duration];
   const discountedAmount = discountResult?.ok && creditedBaseAmount != null
     ? Math.round((creditedBaseAmount * (100 - discountResult.percentOff)) / 100)
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
 
   async function applyDiscount() {
     if (discountResult?.ok) {
-      // فیلد قفل بود («تغییر») — دوباره باز می‌شه برای وارد‌کردنِ کدِ جدید.
+      // فیلد قفل بود («تغییر») — دوباره باز می‌شه برای وارد‌کردن کد جدید.
       setDiscountResult(null);
       return;
     }
@@ -151,7 +151,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({ code: discountCode.trim(), planKey }),
       });
       const data = await res.json().catch(() => ({}));
-      if (myGen !== requestGenRef.current) return; // درخواستِ جدیدتری در راهه/رسیده — این جواب دیگه معتبر نیست
+      if (myGen !== requestGenRef.current) return; // درخواست جدیدتری در راهه/رسیده — این جواب دیگه معتبر نیست
       if (!res.ok) {
         setDiscountResult({ ok: false, error: data.error || "خطایی پیش آمد — دوباره امتحان کن" });
       } else {
@@ -167,21 +167,21 @@ export default function CheckoutPage() {
     }
   }
 
-  // پاسخِ بدونِ JSON یعنی خطا از خودِ اپ نیامده بلکه از لایه‌ی جلوترش
-  // (nginx / پراکسی / کانتینرِ خاموش). این پیام‌ها کاربر را به سمتِ کارِ درست
+  // پاسخ بدون JSON یعنی خطا از خود اپ نیامده بلکه از لایه‌ی جلوترش
+  // (nginx / پراکسی / کانتینر خاموش). این پیام‌ها کاربر را به سمت کار درست
   // می‌برند به‌جای این‌که فکر کند اینترنتش مشکل دارد.
   function httpErrorMessage(status: number): string {
-    if (status === 504 || status === 408) return "درگاهِ پرداخت دیر جواب داد — چند لحظه دیگر دوباره امتحان کن";
-    if (status === 502 || status === 503) return "سرورِ پرداخت موقتاً در دسترس نیست — چند دقیقه دیگر دوباره امتحان کن";
+    if (status === 504 || status === 408) return "درگاه پرداخت دیر جواب داد — چند لحظه دیگر دوباره امتحان کن";
+    if (status === 502 || status === 503) return "سرور پرداخت موقتا در دسترس نیست — چند دقیقه دیگر دوباره امتحان کن";
     if (status === 401) return "برای پرداخت باید دوباره وارد حسابت بشی";
     if (status === 429) return "تعداد تلاش‌ها زیاد بود — چند دقیقه صبر کن";
-    return `خطای غیرمنتظره از سرور (کدِ ${status}) — اگر تکرار شد به پشتیبانی اطلاع بده`;
+    return `خطای غیرمنتظره از سرور (کد ${status}) — اگر تکرار شد به پشتیبانی اطلاع بده`;
   }
 
   async function pay() {
     if (loading) return;
     if (!agreed) {
-      setError("برای ادامه‌ی پرداخت، لطفاً قوانین و مقررات سایت را بپذیر");
+      setError("برای ادامه‌ی پرداخت، لطفا قوانین و مقررات سایت را بپذیر");
       return;
     }
     setLoading(true);
@@ -192,11 +192,11 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined, gateway }),
       });
-      // عمداً `res.json()` مستقیم صدا زده نمی‌شود: اگر پاسخ JSON نباشد (مثلاً
-      // ۵۰۴ـِ HTML از nginx وقتی درگاه کند است، یا ۵۰۲ وقتی کانتینر بالا
-      // نیامده) آن فراخوانی throw می‌کرد و می‌افتاد توی catch — و کاربر پیامِ
-      // «مشکلی در اتصال به سرور» را می‌دید، انگار اینترنتش قطع است. حالا کدِ
-      // واقعیِ HTTP به کاربر گفته می‌شود تا مشکل قابلِ تشخیص باشد.
+      // عمدا `res.json()` مستقیم صدا زده نمی‌شود: اگر پاسخ JSON نباشد (مثلا
+      // ۵۰۴ـ HTML از nginx وقتی درگاه کند است، یا ۵۰۲ وقتی کانتینر بالا
+      // نیامده) آن فراخوانی throw می‌کرد و می‌افتاد توی catch — و کاربر پیام
+      // «مشکلی در اتصال به سرور» را می‌دید، انگار اینترنتش قطع است. حالا کد
+      // واقعی HTTP به کاربر گفته می‌شود تا مشکل قابل تشخیص باشد.
       const data = await res.json().catch(() => null);
       if (!res.ok || !data) {
         setError(data?.error || httpErrorMessage(res.status));
@@ -205,8 +205,8 @@ export default function CheckoutPage() {
       }
       window.location.href = data.paymentUrl;
     } catch {
-      // این‌جا فقط خطای واقعیِ شبکه می‌رسد (اینترنتِ کاربر قطع شده)، نه پاسخِ
-      // نامعتبرِ سرور — پس این پیام حالا واقعاً درست است.
+      // این‌جا فقط خطای واقعی شبکه می‌رسد (اینترنت کاربر قطع شده)، نه پاسخ
+      // نامعتبر سرور — پس این پیام حالا واقعا درست است.
       setError("اتصال به اینترنت برقرار نیست — اتصالت رو چک کن و دوباره امتحان کن");
       setLoading(false);
     }
@@ -244,10 +244,10 @@ export default function CheckoutPage() {
 
       {upgradeInfo && (
         <div className="checkout-upgrade-note">
-          با اعتبارِ پلنِ فعلیت ارتقا می‌گیری —{" "}
+          با اعتبار پلن فعلیت ارتقا می‌گیری —{" "}
           {upgradeInfo.capped
-            ? `این پلن تا ${formatJalaliLong(upgradeInfo.capEndIso)} فعال می‌مونه (هم‌زمان با پایانِ پلنِ فعلیت).`
-            : "به‌مدتِ کامل خریداری‌شده فعال می‌مونه."}
+            ? `این پلن تا ${formatJalaliLong(upgradeInfo.capEndIso)} فعال می‌مونه (هم‌زمان با پایان پلن فعلیت).`
+            : "به‌مدت کامل خریداری‌شده فعال می‌مونه."}
         </div>
       )}
 

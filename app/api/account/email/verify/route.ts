@@ -7,8 +7,8 @@ import { isValidEmail } from "@/lib/validate";
 import { hashEmailOtp, hashesMatch, EMAIL_OTP_MAX_ATTEMPTS } from "@/lib/emailOtp";
 
 // POST /api/account/email/verify  { newEmail, code }
-// کدِ درست بود → ایمیلِ حساب واقعاً عوض می‌شه (emailVerifiedAt هم ست می‌شه،
-// چون همین لحظه با ارسالِ کد به همون آدرس اثبات شد).
+// کد درست بود → ایمیل حساب واقعا عوض می‌شه (emailVerifiedAt هم ست می‌شه،
+// چون همین لحظه با ارسال کد به همون آدرس اثبات شد).
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -41,11 +41,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: remaining > 0 ? "کد وارد شده اشتباه است" : "کد نامعتبر یا منقضی‌شده است" }, { status: 400 });
   }
 
-  // بینِ ارسالِ کد و همین لحظه ممکنه یکیِ دیگه همین ایمیل رو گرفته باشه —
+  // بین ارسال کد و همین لحظه ممکنه یکی دیگه همین ایمیل رو گرفته باشه —
   // دوباره چک می‌کنیم قبل از commit.
   const existing = await prisma.user.findUnique({ where: { email: newEmail }, select: { id: true } });
   if (existing && existing.id !== userId) {
-    return NextResponse.json({ error: "این ایمیل قبلاً برای حساب دیگری ثبت شده" }, { status: 409 });
+    return NextResponse.json({ error: "این ایمیل قبلا برای حساب دیگری ثبت شده" }, { status: 409 });
   }
 
   await prisma.$transaction([

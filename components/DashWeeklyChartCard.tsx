@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getWeekStats, WeekDayStat } from "@/lib/routineStats";
+import { BarChart3 } from "lucide-react";
 
-// نمودار میله‌ای آمار هفتگی — درصدِ واقعیِ هرروز (از DailyEntry.completedItems
-// نسبت به تعداد برنامه‌های همون روز)، راست‌چینِ طبیعی: شنبه راست، جمعه چپ.
+// نمودار میله‌ای آمار هفتگی — درصد واقعی هرروز (از DailyEntry.completedItems
+// نسبت به تعداد برنامه‌های همون روز)، راست‌چین طبیعی: شنبه راست، جمعه چپ.
 export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; refreshKey?: number }) {
   const [stats, setStats] = useState<WeekDayStat[] | null>(null);
 
@@ -18,7 +19,10 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
 
   return (
     <DashCard delay={delay}>
-      <h2 className="text-right text-[14px] font-bold text-dash-text sm:text-[15px]">آمار هفتگی</h2>
+      <h2 className="flex items-center gap-1.5 text-right text-[14px] font-bold text-dash-text sm:text-[15px]">
+        <BarChart3 className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
+        آمار هفتگی
+      </h2>
 
       {stats === null ? (
         <div className="mt-4 text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>

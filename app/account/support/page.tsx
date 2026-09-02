@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import { Mail, MessageCircleWarning } from "lucide-react";
 import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
+import { AccountBackButton } from "@/components/AccountBackButton";
 
 const FAQ = [
-  { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخشِ «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
-  { q: "چطور رمز عبورم رو عوض کنم؟", a: "از بخشِ «امنیت» توی همین پنل، رمزِ فعلی و رمزِ جدید رو وارد کن." },
-  { q: "اگه با گوگل ثبت‌نام کردم چطور دوستام پیدام کنن؟", a: "از بخشِ «پروفایل» یه یوزرنیم برای خودت تنظیم کن." },
+  { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخش «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
+  { q: "چطور رمز عبورم رو عوض کنم؟", a: "از بخش «امنیت» توی همین پنل، رمز فعلی و رمز جدید رو وارد کن." },
+  { q: "اگه با گوگل ثبت‌نام کردم چطور دوستام پیدام کنن؟", a: "از بخش «پروفایل» یه یوزرنیم برای خودت تنظیم کن." },
 ];
 
 export default function SupportPage() {
@@ -16,6 +17,7 @@ export default function SupportPage() {
 
   return (
     <section>
+      <AccountBackButton />
       <h1>پشتیبانی</h1>
       <div className="account-content-hint">اگه سوالی داری یا با مشکلی روبه‌رو شدی</div>
 
@@ -31,7 +33,7 @@ export default function SupportPage() {
           <span className="account-row2-icon"><MessageCircleWarning size={16} /></span>
           <span className="account-row2-body">
             <span className="account-row2-label">گزارش مشکل</span>
-            <span className="account-row2-desc">ارسالِ ایمیل برای گزارشِ باگ یا مشکل</span>
+            <span className="account-row2-desc">ارسال ایمیل برای گزارش باگ یا مشکل</span>
           </span>
         </a>
         <a href={SOCIAL.telegram.url} target="_blank" rel="me noopener noreferrer" className="account-row2">

@@ -1,13 +1,13 @@
-// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود برای همه‌ی جاهایی که این اپ از AI
-// استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل بودن، الان
-// همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API سازگارِ
-// OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه. مدلِ
-// پیش‌فرض GPT-4o-mini است (AI_MODEL_NAME)، ولی هر فراخوانی می‌تونه مدلِ
-// خودش رو صریح بده — گزارشِ هفتگی مثلاً از WEEKLY_REPORT_AI_MODEL استفاده
-// می‌کنه، چون کارش تحلیل/استدلاله نه تولیدِ قالبی.
+// فراخوانی گیت‌وی هوش‌مصنوعی آروان‌کلود برای همه‌ی جاهایی که این اپ از AI
+// استفاده می‌کنه — قبلا مستقیم به Anthropic Messages API وصل بودن، الان
+// همه از همین یک تابع مشترک (callAiChat) رد می‌شن که با API سازگار
+// OpenAI همین گیت‌وی (endpoint‌ chat/completions) حرف می‌زنه. مدل
+// پیش‌فرض GPT-4o-mini است (AI_MODEL_NAME)، ولی هر فراخوانی می‌تونه مدل
+// خودش رو صریح بده — گزارش هفتگی مثلا از WEEKLY_REPORT_AI_MODEL استفاده
+// می‌کنه، چون کارش تحلیل/استدلاله نه تولید قالبی.
 // خروجی همیشه باید فقط JSON خام باشه (بدون توضیح اضافه) — هم با
-// response_format:{type:"json_object"} در سطحِ خودِ فراخوانی اجباری شده، هم
-// توی هر system prompt صریح تکرار شده، تا مستقیم قابلِ ذخیره/نمایش باشه.
+// response_format:{type:"json_object"} در سطح خود فراخوانی اجباری شده، هم
+// توی هر system prompt صریح تکرار شده، تا مستقیم قابل ذخیره/نمایش باشه.
 
 import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -16,11 +16,11 @@ import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
 
 const AI_MODEL_NAME = "gpt-4o-mini";
 
-// گزارشِ هفتگی عمداً از یک مدلِ جداگانه استفاده می‌کنه (نه mini مثلِ بقیه‌ی
-// فیچرها) — چون کارش تحلیل/تفسیرِ الگوهاست (نه تولیدِ قالبیِ ساده مثلِ
-// رودمپ)، به استدلالِ قوی‌تری نیاز داره. اسمِ دقیقِ مدل روی گیت‌وی هنوز
-// تایید نشده، برای همین از env قابلِ‌عوض‌کردنه — اگه رویِ گیت‌وی واقعی این
-// اسم جواب نداد، بدونِ نیاز به تغییرِ کد فقط ARVAN_AI_WEEKLY_MODEL رو ست کن.
+// گزارش هفتگی عمدا از یک مدل جداگانه استفاده می‌کنه (نه mini مثل بقیه‌ی
+// فیچرها) — چون کارش تحلیل/تفسیر الگوهاست (نه تولید قالبی ساده مثل
+// رودمپ)، به استدلال قوی‌تری نیاز داره. اسم دقیق مدل روی گیت‌وی هنوز
+// تایید نشده، برای همین از env قابل‌عوض‌کردنه — اگه روی گیت‌وی واقعی این
+// اسم جواب نداد، بدون نیاز به تغییر کد فقط ARVAN_AI_WEEKLY_MODEL رو ست کن.
 export const WEEKLY_REPORT_AI_MODEL = process.env.ARVAN_AI_WEEKLY_MODEL || "gpt-5.4-mini";
 
 type ChatContentPart =
@@ -30,10 +30,10 @@ type ChatContentPart =
 type ChatUsage = { inputTokens: number; outputTokens: number };
 type ChatResult = { text: string; usage: ChatUsage; durationMs: number };
 
-// پنل Owner › مصرف AI — یک ردیفِ واقعی به‌ازای هر فراخوانیِ واقعیِ گیت‌وی.
-// success:true یعنی گیت‌وی واقعاً پاسخ داد و توکن مصرف شد (حتی اگه بعداً
-// اعتبارسنجیِ ساختارِ خروجی شکست بخوره — هزینه‌ش واقعاً اتفاق افتاده)؛
-// success:false یعنی خودِ فراخوانی (شبکه/HTTP) شکست خورده، پس توکنی مصرف نشده.
+// پنل Owner › مصرف AI — یک ردیف واقعی به‌ازای هر فراخوانی واقعی گیت‌وی.
+// success:true یعنی گیت‌وی واقعا پاسخ داد و توکن مصرف شد (حتی اگه بعدا
+// اعتبارسنجی ساختار خروجی شکست بخوره — هزینه‌ش واقعا اتفاق افتاده)؛
+// success:false یعنی خود فراخوانی (شبکه/HTTP) شکست خورده، پس توکنی مصرف نشده.
 async function recordAiUsage(
   userId: string,
   feature: AiFeatureKey,
@@ -57,33 +57,33 @@ async function recordAiUsage(
       },
     });
   } catch (err: any) {
-    // ثبتِ آمار نباید جلوی مسیرِ اصلیِ فیچر رو بگیره
-    logError("ai-gateway", `ثبتِ AiUsageRecord شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature } });
+    // ثبت آمار نباید جلوی مسیر اصلی فیچر رو بگیره
+    logError("ai-gateway", `ثبت AiUsageRecord شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature } });
   }
 }
 
-// سقفِ انتظار برای پاسخِ گیت‌وی.
+// سقف انتظار برای پاسخ گیت‌وی.
 //
-// همان دلیلِ lib/zibal.ts و lib/zarinpal.ts: `fetch` در Node تایم‌اوتِ
-// پیش‌فرض ندارد، ولی nginx دارد. بدون این، یک گیت‌ویِ کند باعث می‌شد nginx
-// اتصال را ببندد و یک صفحه‌ی HTML با کدِ ۵۰۴ بدهد؛ کلاینت روی `r.json()`
-// خطا می‌خورد و کاربر پیامِ گمراه‌کننده‌ی «مشکلی در اتصال به سرور» را
-// می‌دید — دقیقاً همان چیزی که روی صفحه‌ی گزارش هفتگی گزارش شد.
+// همان دلیل lib/zibal.ts و lib/zarinpal.ts: `fetch` در Node تایم‌اوت
+// پیش‌فرض ندارد، ولی nginx دارد. بدون این، یک گیت‌وی کند باعث می‌شد nginx
+// اتصال را ببندد و یک صفحه‌ی HTML با کد ۵۰۴ بدهد؛ کلاینت روی `r.json()`
+// خطا می‌خورد و کاربر پیام گمراه‌کننده‌ی «مشکلی در اتصال به سرور» را
+// می‌دید — دقیقا همان چیزی که روی صفحه‌ی گزارش هفتگی گزارش شد.
 //
-// عددش از درگاه‌های پرداخت بیشتر است چون تولیدِ متن ذاتاً کند است؛ در عوض
-// روت‌های AI باید در nginx مهلتِ بیشتری بگیرند (deploy/nginx.conf.example).
+// عددش از درگاه‌های پرداخت بیشتر است چون تولید متن ذاتا کند است؛ در عوض
+// روت‌های AI باید در nginx مهلت بیشتری بگیرند (deploy/nginx.conf.example).
 const AI_TIMEOUT_MS = 45_000;
 
 // baseUrl و apiKey هر دو از env میان — هیچ‌وقت نباید هاردکد یا کامیت بشن؛
-// فقط توی .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
-// نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
-// توکنِ احرازهویت نیست — احرازهویتِ واقعی با یه Access Key جداست که از
-// پنلِ آروان‌کلود، بخشِ «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
+// فقط توی .env سمت سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
+// نکته‌ی مهم: خود baseUrl فقط آدرس روتینگ گیت‌وی به این مدل خاصه، شامل
+// توکن احرازهویت نیست — احرازهویت واقعی با یه Access Key جداست که از
+// پنل آروان‌کلود، بخش «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
 async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number, model: string = AI_MODEL_NAME): Promise<ChatResult> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
   const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
-    throw new Error("ARVAN_AI_BASE_URL تنظیم نشده — این فیچر بدون آدرسِ گیت‌وی کار نمی‌کند");
+    throw new Error("ARVAN_AI_BASE_URL تنظیم نشده — این فیچر بدون آدرس گیت‌وی کار نمی‌کند");
   }
   if (!apiKey) {
     throw new Error("ARVAN_AI_API_KEY تنظیم نشده — این فیچر بدون کلید دسترسی کار نمی‌کند");
@@ -145,7 +145,7 @@ const SYSTEM_PROMPT = `تو یک طراح مسیر یادگیری (roadmap) هس
 مسیر یادگیری ساختاریافته و واقع‌بینانه براش بسازی، به زبان فارسی.
 
 فقط و فقط یک JSON خام برگردون، بدون هیچ متن اضافه قبل یا بعدش، بدون Markdown fences.
-دقیقاً با این شکل:
+دقیقا با این شکل:
 
 {
   "title": "عنوان کوتاه مسیر",
@@ -175,7 +175,7 @@ function asStringArray(v: unknown): string[] {
 }
 
 /**
- * مدل زبانی گاهی خروجی رو دقیقاً طبق شکل خواسته‌شده برنمی‌گردونه (فیلد
+ * مدل زبانی گاهی خروجی رو دقیقا طبق شکل خواسته‌شده برنمی‌گردونه (فیلد
  * جاافتاده، station بدون items، و ...). این تابع خروجی رو اعتبارسنجی و
  * نرمال می‌کنه تا هیچ‌وقت داده ناقص/بدشکل به دیتابیس یا UI نرسه — چون
  * صفحه جزئیات رودمپ مستقیم روی این فیلدها .map می‌زنه و با undefined کرش می‌کنه.
@@ -209,8 +209,8 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
 
 async function callRoadmapOnce(topic: string, userId: string): Promise<GeneratedRoadmap> {
   const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
-  // گیت‌وی واقعاً پاسخ داد و توکن مصرف شد — صرفِ‌نظر از اینکه اعتبارسنجیِ
-  // ساختارِ خروجی پایین‌تر موفق بشه یا نه
+  // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
+  // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
   return normalizeRoadmap(parseJsonResponse(text));
 }
@@ -229,51 +229,85 @@ export async function generateRoadmap(topic: string, userId: string): Promise<Ge
       lastError = err;
     }
   }
-  // هر دو تلاش شکست خورد. اگه یه attempt واقعاً از گیت‌وی جواب گرفته بود، همون
-  // داخلِ callRoadmapOnce با success:true ثبت شده (چون هزینه‌ش واقعاً افتاده)؛
-  // این‌جا فقط شکستِ نهایی رو برای بخشِ «خطاها» ثبت می‌کنیم.
-  logError("ai-gateway", `ساختِ رودمپ شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "ROADMAP_GENERATION" } });
+  // هر دو تلاش شکست خورد. اگه یه attempt واقعا از گیت‌وی جواب گرفته بود، همون
+  // داخل callRoadmapOnce با success:true ثبت شده (چون هزینه‌ش واقعا افتاده)؛
+  // این‌جا فقط شکست نهایی رو برای بخش «خطاها» ثبت می‌کنیم.
+  logError("ai-gateway", `ساخت رودمپ شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "ROADMAP_GENERATION" } });
   throw lastError;
 }
 
 // ============================================================================
 // برنامه‌ی هوشمند ورزش — همون الگوی generateRoadmap (system prompt ثابت،
 // پروفایل توی پیام کاربر، پارس/اعتبارسنجی سخت‌گیرانه چون UI مستقیم روی
-// خروجی .map می‌زنه). اگه آدرسِ گیت‌وی نبود یا تماس شکست خورد، فراخوان (route)
+// خروجی .map می‌زنه). اگه آدرس گیت‌وی نبود یا تماس شکست خورد، فراخوان (route)
 // باید به قالب ایستای lib/exercisePlans.ts برگرده — این فایل فقط پرتاب خطا می‌کنه.
 // ============================================================================
 
-const EXERCISE_SYSTEM_PROMPT = `تو یک مربی بدنسازی/تناسب‌اندام حرفه‌ای هستی که طبق اصول شناخته‌شده‌ی
-تمرین مقاومتی و هوازی (NSCA/ACSM) برای کاربر یک برنامه‌ی هفتگی واقعی و اجراپذیر می‌سازی — نه یک قالب ژنریک.
+const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنسازی و برنامه‌ریزی تمرینی هستی. برای هر کاربر یک برنامه شخصی‌سازی‌شده،
+اصولی و قابل اجرا طراحی کن.
 
-اول، با توجه به مشخصات کاربر و توضیحی که خودش نوشته (اگه نوشته باشه)، بررسی کن این درخواست از نظر
-بدنی/تمرینی واقع‌بینانه، بی‌خطر و قابل‌اجراست یا نه (مثلاً تناقض آشکار بین هدف/توضیح و روزهای موجود،
-خواسته‌ی غیرممکن یا خطرناک، یا توضیحی که با محدودیت جسمی‌ای که گفته در تضاده).
+ابتدا بر اساس اطلاعات کاربر، هدف، سطح، تعداد روزهای تمرین، تقسیم هفتگی، فرکانس تمرین عضلات، حجم تمرین،
+شدت، تکرار، استراحت و ریکاوری را تعیین کن.
 
-اگه واقع‌بینانه نبود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن دیگه):
-{ "feasible": false, "message": "یک پیام کوتاه و دوستانه به فارسی، مثل یک چت‌بات که مستقیم با کاربر حرف می‌زنه، که توضیح بده چرا این ممکن نیست و چه پیشنهاد جایگزینی داری" }
+اهداف شامل عضله‌سازی، کاهش چربی، قدرت، پاورلیفتینگ/لیفتینگ، تناسب اندام، استقامت و اهداف ترکیبی هستند.
 
-اگه واقع‌بینانه و قابل‌اجرا بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن دیگه) —
-یک آیتم به‌ازای هر روزی که کاربر گفته باشگاه می‌ره (نه کمتر نه بیشتر، و day‌ها باید دقیقاً همون روزهایی
-باشن که کاربر داده):
+قوانین اصلی:
+- برای هر هدف از اصول مناسب همان هدف استفاده کن.
+- ابتدا ساختار هفتگی و تقسیم عضلات را مشخص کن، سپس هر جلسه را طراحی کن.
+- تعداد حرکات را هرگز ثابت یا از پیش تعیین نکن. تعداد حرکات باید نتیجه حجم تمرینی موردنیاز، عضلات هدف،
+  سطح کاربر، هدف، زمان جلسه و ریکاوری باشد.
+- اگر یک عضله به حرکات بیشتری نیاز دارد، حرکات کافی اضافه کن؛ اگر حرکت اضافه باعث حجم غیرضروری می‌شود، اضافه نکن.
+- هیچ جلسه‌ای را صرفا برای کوتاه کردن خروجی به چند حرکت محدود نکن.
+- تمام عضلات و الگوهای حرکتی موردنیاز را پوشش بده.
+- حرکات اصلی، چندمفصلی، کمکی و تک‌مفصلی را با ترتیب منطقی استفاده کن.
+- از حرکات تکراری و حجم غیرضروری جلوگیری کن.
+- حجم هفتگی هر عضله و ریکاوری بین جلسات را در نظر بگیر.
+- حجم و شدت را متناسب با سطح کاربر تنظیم کن.
+- در برنامه‌های قدرتی و لیفتینگ، حرکات اصلی و پیشرفت قدرت اولویت دارند.
+- در عضله‌سازی، حجم مؤثر، انتخاب حرکات و تحریک مناسب عضله اولویت دارند.
+- در کاهش چربی، تمرین مقاومتی و حفظ عضله را در اولویت قرار بده و حجم تمرین را بی‌دلیل افزایش نده.
+- در استقامت، تکرار، استراحت و ساختار تمرین را متناسب با هدف تنظیم کن.
+- تجهیزات، محدودیت‌ها، درد یا آسیب و ترجیحات کاربر را رعایت کن.
+- قبل از خروجی، برنامه را از نظر حجم، تعادل عضلانی، شدت، ریکاوری و تناسب با هدف بررسی کن.
+- برنامه باید امکان پیشرفت تدریجی داشته باشد.
+- هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.
+
+پیش از طراحی، بررسی کن که درخواست کاربر (با توجه به توضیحی که خودش نوشته، محدودیت جسمی‌اش و روزهایی که
+در اختیار داره) از نظر بدنی/تمرینی واقع‌بینانه، بی‌خطر و قابل‌اجراست یا نه.
+
+اگر واقع‌بینانه نبود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر):
+{ "feasible": false, "message": "یک پیام کوتاه و دوستانه به فارسی، مثل یک مربی که مستقیم با کاربر حرف می‌زند، که توضیح دهد چرا این ممکن نیست و چه پیشنهاد جایگزینی داری" }
+
+اگر واقع‌بینانه بود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر) — دقیقا یک
+آیتم به‌ازای هر روزی که کاربر گفته باشگاه می‌رود (نه کمتر، نه بیشتر)، و مقدار day باید دقیقا یکی از
+همان روزهایی باشد که کاربر داده:
 {
   "feasible": true,
   "days": [
-    { "day": "شنبه", "focus": "پایین‌تنه — اسکوات", "items": ["اسکوات هالتر ۴×۸", "لانج دمبل ۳×۱۰ هر پا", "پلانک ۳×۳۰ ثانیه"] }
+    {
+      "day": "شنبه",
+      "focus": "پایین‌تنه — اسکوات",
+      "exercises": [
+        { "name": "اسکوات هالتر", "muscle": "چهارسر ران", "sets": 4, "reps": "6-8", "rest": "۳ دقیقه", "note": "زانو هم‌راستای پنجه" }
+      ]
+    }
   ]
 }
 
-قوانین (وقتی feasible=true):
-- day دقیقاً یکی از نام‌های فارسی روزهای هفته (شنبه/یکشنبه/دوشنبه/سه‌شنبه/چهارشنبه/پنجشنبه/جمعه).
-- هر آیتم: «نام حرکت تعداد‌ست×تکرار» یا برای کاردیو «نام حرکت + مدت‌زمان»، به سبک استاندارد فارسی بدنسازی.
-- اگه کاربر توضیحی نوشته، برنامه رو با توجه به همون توضیح (نوع تمرین، تجهیزات، ترجیحات) بساز، نه یک قالب ژنریک.
-- اگه کاربر محدودیت جسمی داره، از حرکات پرفشار/پرضربه (پرش، برپی، دویدن سرعتی) پرهیز کن و معادل ملایم‌تر بذار.
-- بین ۲ تا ۵ حرکت برای هر روز؛ بین روزهایی که یک گروه عضلانی مشترک دارن فاصله‌ی ریکاوری منطقی بذار.
-- قد/وزن فقط برای کالیبره‌کردن شدت/حجمه؛ هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.`;
+قواعد فیلدها:
+- day: دقیقا یکی از نام‌های فارسی روزهای هفته (شنبه/یکشنبه/دوشنبه/سه‌شنبه/چهارشنبه/پنجشنبه/جمعه).
+- name: نام فارسی رایج حرکت در بدنسازی ایران.
+- muscle: عضله‌ی هدف اصلی همان حرکت.
+- sets: عدد.
+- reps: تعداد تکرار (رشته؛ می‌تواند بازه باشد مثل "8-12")، یا برای حرکات زمان‌محور مدت‌زمان مثل "۳۰ ثانیه".
+- rest: زمان استراحت بین ست‌ها.
+- note: یک نکته‌ی کوتاه و کاربردی درباره‌ی اجرای همان حرکت (یا رشته‌ی خالی).
+
+خروجی فقط JSON معتبر باشد.`;
 
 export type ExercisePlanProfile = {
   level: "beginner" | "intermediate" | "advanced";
-  goalLabel: string; // برچسبِ فارسیِ هدف، از قبل توسط caller حل‌شده (چون گزینه‌های هدف سمتِ UI بیشتر از این تایپِ محدودن)
+  goalLabel: string; // برچسب فارسی هدف، از قبل توسط caller حل‌شده (چون گزینه‌های هدف سمت UI بیشتر از این تایپ محدودن)
   gymDays: string[]; // نام فارسی روزهای هفته
   heightCm?: number | null;
   weightKg?: number | null;
@@ -290,14 +324,45 @@ export type ExercisePlanResult =
 const VALID_FA_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 const LEVEL_LABELS_FA: Record<ExercisePlanProfile["level"], string> = { beginner: "مبتدی", intermediate: "متوسط", advanced: "پیشرفته" };
 
+// مدل حالا هر حرکت را به‌صورت یک شیء (name/muscle/sets/reps/rest/note) برمی‌گرداند
+// تا بتواند واقعا مثل یک مربی برنامه بنویسد. ولی کل اپ (جدول برنامه‌ی روز،
+// ردیاب ست‌به‌ست، فرم دستی، برنامه‌ی هفتگی) روی `items: string[]` با فرمت
+// «نام حرکت ۴×۸» بنا شده؛ پس همین‌جا به همان رشته تخت می‌شود، به‌جای اینکه
+// شکل داده‌ی کل اپ عوض شود. خروجی قدیمی (items به‌صورت رشته) هم هنوز
+// پذیرفته می‌شود تا پاسخ‌های در-راه مدل ناگهان بی‌اعتبار نشوند.
+function flattenExercise(ex: any): string | null {
+  if (typeof ex === "string") return ex.trim() || null;
+  if (!ex || typeof ex !== "object") return null;
+  const name = typeof ex.name === "string" ? ex.name.trim() : "";
+  if (!name) return null;
+  const reps = ex.reps === undefined || ex.reps === null ? "" : String(ex.reps).trim();
+  const sets = Number(ex.sets);
+  // «۳۰ ثانیه»/«۲ دقیقه» → حرکت زمان‌محور؛ عدد خالی/بازه → ست×تکرار
+  const isTimed = /ثانیه|دقیقه/.test(reps);
+  if (isTimed) return Number.isFinite(sets) && sets > 1 ? `${name} ${toFaDigitsAi(String(sets))}×${toFaDigitsAi(reps)}` : `${name} ${toFaDigitsAi(reps)}`;
+  if (!Number.isFinite(sets) || sets < 1 || !reps) return name;
+  return `${name} ${toFaDigitsAi(String(sets))}×${toFaDigitsAi(reps)}`;
+}
+
+const AI_FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+function toFaDigitsAi(s: string): string {
+  return s.replace(/[0-9]/g, (c) => AI_FA_DIGITS[+c]);
+}
+
 function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerciseDay[] {
   if (!Array.isArray(raw)) throw new Error("خروجی مدل ساختار معتبری نداشت");
   const days: GeneratedExerciseDay[] = raw
-    .map((d: any) => ({
-      day: typeof d?.day === "string" ? d.day.trim() : "",
-      focus: typeof d?.focus === "string" && d.focus.trim() ? d.focus.trim() : "تمرین",
-      items: asStringArray(d?.items),
-    }))
+    .map((d: any) => {
+      const source = Array.isArray(d?.exercises) ? d.exercises : d?.items;
+      const items = Array.isArray(source)
+        ? source.map(flattenExercise).filter((x: string | null): x is string => !!x)
+        : asStringArray(source);
+      return {
+        day: typeof d?.day === "string" ? d.day.trim() : "",
+        focus: typeof d?.focus === "string" && d.focus.trim() ? d.focus.trim() : "تمرین",
+        items,
+      };
+    })
     .filter((d: GeneratedExerciseDay) => VALID_FA_DAYS.includes(d.day) && allowedDays.includes(d.day) && d.items.length > 0);
 
   if (days.length === 0) {
@@ -314,11 +379,11 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string
     profile.heightCm ? `قد: ${profile.heightCm} سانتی‌متر` : null,
     profile.weightKg ? `وزن: ${profile.weightKg} کیلوگرم` : null,
     profile.hasPhysicalLimitation ? "محدودیت جسمی داره — از حرکات پرفشار/پرضربه پرهیز کن" : null,
-    profile.hasPhysicalLimitation && profile.limitationDetails ? `توضیحِ محدودیتِ جسمی: ${profile.limitationDetails}` : null,
-    profile.description ? `توضیحِ کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
+    profile.hasPhysicalLimitation && profile.limitationDetails ? `توضیح محدودیت جسمی: ${profile.limitationDetails}` : null,
+    profile.description ? `توضیح کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
   ].filter(Boolean).join("\n");
 
-  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 2000);
+  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 4000);
   recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, usage, durationMs, true);
   const parsed = parseJsonResponse(text);
 
@@ -337,35 +402,35 @@ export async function generateExercisePlan(profile: ExercisePlanProfile, userId:
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const result = await callExercisePlanOnce(profile, userId);
-      // «feasible: false» یک پاسخِ معتبرِ مدلِه، نه خطای موقتِ شبکه/پارس —
+      // «feasible: false» یک پاسخ معتبر مدله، نه خطای موقت شبکه/پارس —
       // نباید دوباره تلاش کنیم، همون رد رو مستقیم برگردونیم.
       return result;
     } catch (err) {
       lastError = err;
     }
   }
-  logError("ai-gateway", `ساختِ برنامه‌ی تمرینی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
+  logError("ai-gateway", `ساخت برنامه‌ی تمرینی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
   throw lastError;
 }
 
 // ============================================================================
-// اسکنِ عکسِ غذا با هوش مصنوعی — تنها فراخوانیِ چندوجهی (multimodal) این فایل؛
-// بقیه‌ی فراخوان‌ها فقط متنی‌ان. خروجی شاملِ کالری + درشت‌مغذی‌هاست، چون
-// این تنها راهِ عملیِ این اپه که بدونِ کاتالوگِ دستیِ درشت‌مغذی برای هزاران
-// غذا، بخشِ «ریزِ درشت‌مغذی‌ها» عدد داشته باشه.
+// اسکن عکس غذا با هوش مصنوعی — تنها فراخوانی چندوجهی (multimodal) این فایل؛
+// بقیه‌ی فراخوان‌ها فقط متنی‌ان. خروجی شامل کالری + درشت‌مغذی‌هاست، چون
+// این تنها راه عملی این اپه که بدون کاتالوگ دستی درشت‌مغذی برای هزاران
+// غذا، بخش «ریز درشت‌مغذی‌ها» عدد داشته باشه.
 // ============================================================================
 
-const FOOD_SCAN_SYSTEM_PROMPT = `تو یک متخصص تغذیه هستی که با نگاه‌کردن به عکسِ یک وعده غذا، مقدارِ کالری و
-درشت‌مغذی‌هاش رو تخمین می‌زنی. این یک تخمینِ بصریه، نه اندازه‌گیریِ آزمایشگاهی — بر اساسِ نوع و حجمِ ظاهریِ
-غذا در عکس بهترین حدسِ واقع‌بینانه رو بزن.
+const FOOD_SCAN_SYSTEM_PROMPT = `تو یک متخصص تغذیه هستی که با نگاه‌کردن به عکس یک وعده غذا، مقدار کالری و
+درشت‌مغذی‌هاش رو تخمین می‌زنی. این یک تخمین بصریه، نه اندازه‌گیری آزمایشگاهی — بر اساس نوع و حجم ظاهری
+غذا در عکس بهترین حدس واقع‌بینانه رو بزن.
 
-اگه عکس اصلاً غذا/نوشیدنیِ قابل‌تشخیصی نشون نمی‌ده، فقط همین JSON خام رو برگردون:
+اگه عکس اصلا غذا/نوشیدنی قابل‌تشخیصی نشون نمی‌ده، فقط همین JSON خام رو برگردون:
 { "recognized": false, "message": "یک جمله‌ی کوتاه و دوستانه به فارسی که بگه غذایی توی عکس تشخیص داده نشد" }
 
-اگه غذا قابل‌تشخیص بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متنِ اضافه):
+اگه غذا قابل‌تشخیص بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن اضافه):
 {
   "recognized": true,
-  "name": "نامِ فارسیِ کوتاهِ غذا",
+  "name": "نام فارسی کوتاه غذا",
   "estimatedGrams": 250,
   "calories": 480,
   "proteinG": 22,
@@ -373,9 +438,9 @@ const FOOD_SCAN_SYSTEM_PROMPT = `تو یک متخصص تغذیه هستی که �
   "fatG": 18
 }
 
-قوانین: همه‌ی اعدادِ بالا باید عددِ مثبت باشن (نه رشته)؛ calories باید با estimatedGrams/proteinG/carbsG/fatG
-هم‌خوانیِ تقریبی داشته باشه (پروتئین×۴ + کربوهیدرات×۴ + چربی×۹ ≈ calories)؛ هیچ توصیه‌ی پزشکی یا تشخیصی نده،
-فقط تخمینِ عددی.`;
+قوانین: همه‌ی اعداد بالا باید عدد مثبت باشن (نه رشته)؛ calories باید با estimatedGrams/proteinG/carbsG/fatG
+هم‌خوانی تقریبی داشته باشه (پروتئین×۴ + کربوهیدرات×۴ + چربی×۹ ≈ calories)؛ هیچ توصیه‌ی پزشکی یا تشخیصی نده،
+فقط تخمین عددی.`;
 
 export type FoodScanResult =
   | { recognized: true; name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number }
@@ -392,13 +457,13 @@ export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpe
     chatResult = await callAiChat(
       FOOD_SCAN_SYSTEM_PROMPT,
       [
-        { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
+        { type: "text", text: "این عکس غذا رو تحلیل کن." },
         { type: "image_url", image_url: { url: `data:${mediaType};base64,${base64Data}` } },
       ],
       500
     );
   } catch (err: any) {
-    logError("ai-gateway", `اسکنِ عکسِ غذا شکست خورد: ${err?.message || err}`, { context: { feature: "FOOD_SCAN" } });
+    logError("ai-gateway", `اسکن عکس غذا شکست خورد: ${err?.message || err}`, { context: { feature: "FOOD_SCAN" } });
     throw err;
   }
   const { text, usage, durationMs } = chatResult;
@@ -427,30 +492,30 @@ export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpe
 }
 
 // ============================================================================
-// خلاصه‌ی هوشمندِ گزارشِ هفتگی — برخلافِ بقیه‌ی فراخوان‌های این فایل که یک
-// چیز از صفر می‌سازن (رودمپ/برنامه‌ی تمرین/تخمینِ غذا)، این‌جا AI فقط روی
-// اعدادِ از‌قبل‌محاسبه‌شده‌ی lib/weeklyReport/* (Deterministic Analytics)
-// تفسیر می‌نویسه — هیچ عدد/دستاوردِ جدیدی حق نداره بسازه (محافظتِ در برابرِ
-// Hallucination، بخشِ ۳۱ اسپکِ گزارشِ هفتگی). ورودی فقط همون خلاصه‌ست، نه
-// دیتابیسِ خام کاربر.
+// خلاصه‌ی هوشمند گزارش هفتگی — برخلاف بقیه‌ی فراخوان‌های این فایل که یک
+// چیز از صفر می‌سازن (رودمپ/برنامه‌ی تمرین/تخمین غذا)، این‌جا AI فقط روی
+// اعداد از‌قبل‌محاسبه‌شده‌ی lib/weeklyReport/* (Deterministic Analytics)
+// تفسیر می‌نویسه — هیچ عدد/دستاورد جدیدی حق نداره بسازه (محافظت در برابر
+// Hallucination، بخش ۳۱ اسپک گزارش هفتگی). ورودی فقط همون خلاصه‌ست، نه
+// دیتابیس خام کاربر.
 // ============================================================================
 
-const WEEKLY_AI_PROMPT_V1 = `تو دستیارِ تحلیلِ هفتگیِ Arion هستی. یک خلاصه‌ی آماریِ از‌قبل‌محاسبه‌شده از عملکردِ
-هفتگیِ کاربر می‌گیری و باید یک تفسیرِ کوتاهِ فارسی و ۲ تا ۳ پیشنهادِ عملی بنویسی.
+const WEEKLY_AI_PROMPT_V1 = `تو دستیار تحلیل هفتگی Arion هستی. یک خلاصه‌ی آماری از‌قبل‌محاسبه‌شده از عملکرد
+هفتگی کاربر می‌گیری و باید یک تفسیر کوتاه فارسی و ۲ تا ۳ پیشنهاد عملی بنویسی.
 
-قوانینِ حیاتی:
-- فقط از اعدادی که توی ورودی داده شده استفاده کن. هیچ عدد، درصد، یا دستاوردِ جدیدی که توی ورودی نیست نساز.
-- اگه داده‌ی کافی برای یک جمع‌بندیِ خاص نداری، چیزی درباره‌ش نگو — حدس نزن.
-- هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده — فقط بازخوردِ رفتاری/عملکردی بر اساسِ همین اعداد.
-- لحن: مستقیم، محترمانه، مثلِ یک مربیِ شخصی — نه ژنریک، نه اغراق‌آمیز.
+قوانین حیاتی:
+- فقط از اعدادی که توی ورودی داده شده استفاده کن. هیچ عدد، درصد، یا دستاورد جدیدی که توی ورودی نیست نساز.
+- اگه داده‌ی کافی برای یک جمع‌بندی خاص نداری، چیزی درباره‌ش نگو — حدس نزن.
+- هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده — فقط بازخورد رفتاری/عملکردی بر اساس همین اعداد.
+- لحن: مستقیم، محترمانه، مثل یک مربی شخصی — نه ژنریک، نه اغراق‌آمیز.
 - خلاصه (summary) حداکثر ۵ جمله.
-- حداکثر ۳ پیشنهاد (recommendations)، هرکدوم با یک توضیحِ کوتاه و دلیلِ مبتنی‌بر همون اعداد.
+- حداکثر ۳ پیشنهاد (recommendations)، هرکدوم با یک توضیح کوتاه و دلیل مبتنی‌بر همون اعداد.
 
-فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متنِ اضافه):
+فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متن اضافه):
 {
   "summary": "خلاصه‌ی ۳ تا ۵ جمله‌ای",
   "recommendations": [
-    { "title": "عنوانِ کوتاه", "description": "توضیحِ کوتاه با دلیلِ مبتنی‌بر داده", "priority": "high" | "medium" | "low", "domain": "یکی از keyهای domains ورودی، یا null اگه مربوط به یک دامنه‌ی خاص نیست" }
+    { "title": "عنوان کوتاه", "description": "توضیح کوتاه با دلیل مبتنی‌بر داده", "priority": "high" | "medium" | "low", "domain": "یکی از keyهای domains ورودی، یا null اگه مربوط به یک دامنه‌ی خاص نیست" }
   ]
 }`;
 
@@ -497,8 +562,8 @@ async function callWeeklyAiOnce(input: WeeklyReportAiInput, userId: string): Pro
 
 /**
  * تا ۲ بار امتحان می‌کنه (هم‌الگوی generateRoadmap). اگه هردو شکست خورد،
- * caller (lib/weeklyReport/snapshot.ts) باید بدونِ AI هم گزارش رو کامل
- * نشون بده — این تابع صرفاً throw می‌کنه، تصمیمِ fallback مالِ اونجاست.
+ * caller (lib/weeklyReport/snapshot.ts) باید بدون AI هم گزارش رو کامل
+ * نشون بده — این تابع صرفا throw می‌کنه، تصمیم fallback مال اونجاست.
  */
 export async function generateWeeklyReportSummary(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
   let lastError: any;
@@ -509,35 +574,35 @@ export async function generateWeeklyReportSummary(input: WeeklyReportAiInput, us
       lastError = err;
     }
   }
-  logError("ai-gateway", `خلاصه‌ی هوشمندِ گزارشِ هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+  logError("ai-gateway", `خلاصه‌ی هوشمند گزارش هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
   throw lastError;
 }
 
 // ============================================================================
-// نسخه‌ی V2 — عمداً کنارِ V1 (WEEKLY_AI_PROMPT_V1/generateWeeklyReportSummary)
-// نگه داشته شده، نه جایگزینش (بندِ ۸۷: پرامپت‌ها versioned‌ان، rollback
-// باید ممکن بمونه). تفاوتِ اصلی: ورودی حالا شاملِ خروجیِ قطعیِ
+// نسخه‌ی V2 — عمدا کنار V1 (WEEKLY_AI_PROMPT_V1/generateWeeklyReportSummary)
+// نگه داشته شده، نه جایگزینش (بند ۸۷: پرامپت‌ها versioned‌ان، rollback
+// باید ممکن بمونه). تفاوت اصلی: ورودی حالا شامل خروجی قطعی
 // lib/weeklyReport/patterns.ts هم می‌شه (Trend/Streak/Outlier/Correlation)
-// و خروجی یک آرایه‌ی insights هم داره — هرکدوم evidence-based، دقیقاً
+// و خروجی یک آرایه‌ی insights هم داره — هرکدوم evidence-based، دقیقا
 // هم‌قاعده‌ی V1.
 // ============================================================================
 
-const WEEKLY_AI_PROMPT_V2 = `تو دستیارِ تحلیلِ هفتگیِ Arion هستی. یک خلاصه‌ی آماریِ از‌قبل‌محاسبه‌شده — شاملِ
-امتیازها و همچنین الگوهای از‌قبل‌کشف‌شده (روند، استریک، ناهنجاری، همبستگی) — می‌گیری و باید تفسیرِ فارسی بنویسی.
+const WEEKLY_AI_PROMPT_V2 = `تو دستیار تحلیل هفتگی Arion هستی. یک خلاصه‌ی آماری از‌قبل‌محاسبه‌شده — شامل
+امتیازها و همچنین الگوهای از‌قبل‌کشف‌شده (روند، استریک، ناهنجاری، همبستگی) — می‌گیری و باید تفسیر فارسی بنویسی.
 
-قوانینِ حیاتی:
-- فقط از اعداد/الگوهایی که توی ورودی داده شده استفاده کن. هیچ عدد، الگو، یا دستاوردِ جدیدی که توی ورودی نیست نساز.
-- اگه داده‌ی کافی برای یک جمع‌بندیِ خاص نداری، چیزی درباره‌ش نگو.
-- «correlations» فقط همبستگی‌ان، نه رابطه‌ی علت‌ومعلولی — هیچ‌وقت نگو «X باعثِ Y شد»، بگو «بینِ X و Y همبستگی دیده شد».
+قوانین حیاتی:
+- فقط از اعداد/الگوهایی که توی ورودی داده شده استفاده کن. هیچ عدد، الگو، یا دستاورد جدیدی که توی ورودی نیست نساز.
+- اگه داده‌ی کافی برای یک جمع‌بندی خاص نداری، چیزی درباره‌ش نگو.
+- «correlations» فقط همبستگی‌ان، نه رابطه‌ی علت‌ومعلولی — هیچ‌وقت نگو «X باعث Y شد»، بگو «بین X و Y همبستگی دیده شد».
 - هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده.
-- لحن: مستقیم، محترمانه، مثلِ یک مربیِ شخصی.
+- لحن: مستقیم، محترمانه، مثل یک مربی شخصی.
 - خلاصه (summary) حداکثر ۵ جمله. حداکثر ۳ پیشنهاد. حداکثر ۳ insight.
 
-فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متنِ اضافه):
+فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متن اضافه):
 {
   "summary": "خلاصه‌ی ۳ تا ۵ جمله‌ای",
   "recommendations": [ { "title": "...", "description": "...", "priority": "high"|"medium"|"low", "domain": "یکی از keyهای domains ورودی، یا null" } ],
-  "insights": [ { "title": "عنوانِ کوتاه", "description": "توضیحِ کوتاه", "evidence": "دلیلِ مبتنی‌بر اعدادِ ورودی", "confidence": "low"|"medium"|"high" } ]
+  "insights": [ { "title": "عنوان کوتاه", "description": "توضیح کوتاه", "evidence": "دلیل مبتنی‌بر اعداد ورودی", "confidence": "low"|"medium"|"high" } ]
 }`;
 
 export type WeeklyReportAiInputV2 = WeeklyReportAiInput & {
@@ -582,23 +647,23 @@ export async function generateWeeklyReportSummaryV2(input: WeeklyReportAiInputV2
       lastError = err;
     }
   }
-  logError("ai-gateway", `خلاصه‌ی هوشمندِ V2 گزارشِ هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+  logError("ai-gateway", `خلاصه‌ی هوشمند V2 گزارش هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
   throw lastError;
 }
 
 // ============================================================================
-// Ask Arion — سوال‌وجوابِ محدود به Contextِ همون گزارشِ هفتگی (نه یک
-// چت‌بات عمومی). Contextِ ورودی همیشه از همون Snapshotِ cache‌شده میاد،
-// نه دیتابیسِ خام (بندِ ۳۴). از AiFeatureKey.CORRELATION_INSIGHT استفاده
-// می‌کنه — enumِ دومِ ازقبل‌موجودِ بلااستفاده، برای جداکردنِ آمارِ هزینه‌ی
-// این مسیر از خلاصه‌ی خودکارِ WEEKLY_COACH_REPORT.
+// Ask Arion — سوال‌وجواب محدود به Context همون گزارش هفتگی (نه یک
+// چت‌بات عمومی). Context ورودی همیشه از همون Snapshot cache‌شده میاد،
+// نه دیتابیس خام (بند ۳۴). از AiFeatureKey.CORRELATION_INSIGHT استفاده
+// می‌کنه — enum دوم ازقبل‌موجود بلااستفاده، برای جداکردن آمار هزینه‌ی
+// این مسیر از خلاصه‌ی خودکار WEEKLY_COACH_REPORT.
 // ============================================================================
 
-const ASK_ARION_SYSTEM_PROMPT = `تو Arion هستی، دستیارِ شخصیِ تحلیلِ هفتگی. کاربر دربارهٔ گزارشِ هفتگیِ خودش سوال می‌پرسه.
+const ASK_ARION_SYSTEM_PROMPT = `تو Arion هستی، دستیار شخصی تحلیل هفتگی. کاربر درباره گزارش هفتگی خودش سوال می‌پرسه.
 فقط از دیتایی که توی Context داده شده جواب بده — اگه جواب توی Context نیست، صادقانه بگو نمی‌دونی، حدس نزن.
-هیچ توصیه‌ی پزشکی یا مالیِ قطعی نده. جواب کوتاه باشه (حداکثر ۴-۵ جمله)، فارسی، مستقیم و محترمانه.
+هیچ توصیه‌ی پزشکی یا مالی قطعی نده. جواب کوتاه باشه (حداکثر ۴-۵ جمله)، فارسی، مستقیم و محترمانه.
 
-فقط و فقط این JSON خام رو برگردون: { "answer": "جوابِ کوتاه" }`;
+فقط و فقط این JSON خام رو برگردون: { "answer": "جواب کوتاه" }`;
 
 export type AskArionContext = {
   weekLabel: string;

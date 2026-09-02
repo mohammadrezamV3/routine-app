@@ -1,6 +1,6 @@
-// ذخیره‌ی وضعیتِ تایمرِ پاپ‌آپِ ردیابیِ یک حرکت (ExerciseSetTrackerModal) توی
-// localStorage — با یک epoch (endAt) به‌جای شمارشِ صرفِ عدد، تا هم رفرشِ
-// صفحه هم بستن/بازکردنِ دوباره‌ی پاپ‌آپ پیشرفت رو از دست ندن (پاز هم دقیقاً
+// ذخیره‌ی وضعیت تایمر پاپ‌آپ ردیابی یک حرکت (ExerciseSetTrackerModal) توی
+// localStorage — با یک epoch (endAt) به‌جای شمارش صرف عدد، تا هم رفرش
+// صفحه هم بستن/بازکردن دوباره‌ی پاپ‌آپ پیشرفت رو از دست ندن (پاز هم دقیقا
 // همینه: به‌جای endAt، باقی‌مونده‌ی زمان یخ‌زده ذخیره می‌شه).
 
 export type ExerciseTimerPhase = "timing" | "resting";
@@ -8,11 +8,11 @@ export type ExerciseTimerPhase = "timing" | "resting";
 export type PersistedExerciseTimer = {
   completedSets: number;
   phase: ExerciseTimerPhase | null;
-  /** epoch میلی‌ثانیه‌ای که این فاز طبیعی تموم می‌شه — فقط وقتی در حالِ اجراست */
+  /** epoch میلی‌ثانیه‌ای که این فاز طبیعی تموم می‌شه — فقط وقتی در حال اجراست */
   endAt: number | null;
   /** باقی‌مونده‌ی یخ‌زده‌ی میلی‌ثانیه‌ای — فقط وقتی پازه */
   pausedRemainingMs: number | null;
-  /** برای محاسبه‌ی «کل زمانِ صرف‌شده» در پایان، حتی بعدِ رفرش */
+  /** برای محاسبه‌ی «کل زمان صرف‌شده» در پایان، حتی بعد رفرش */
   startedAt: number;
 };
 

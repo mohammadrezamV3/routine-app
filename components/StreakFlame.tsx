@@ -1,8 +1,8 @@
 import { faNum } from "@/lib/jalali";
 import { cn } from "@/lib/utils";
 
-// نمایشِ شعله + عددِ استریک برای یک عددِ داده‌شده — presentational محض، بدون
-// خودش fetch کردن. هم برای استریکِ خودمون (StreakBadge) هم برای استریکِ
+// نمایش شعله + عدد استریک برای یک عدد داده‌شده — presentational محض، بدون
+// خودش fetch کردن. هم برای استریک خودمون (StreakBadge) هم برای استریک
 // هر دوست (توی DashFriendsCard) استفاده می‌شه.
 export function StreakFlame({ streak, className }: { streak: number | null; className?: string }) {
   const tier = streak === null ? 0 : streak >= 100 ? 4 : streak >= 30 ? 3 : streak >= 7 ? 2 : streak >= 1 ? 1 : 0;

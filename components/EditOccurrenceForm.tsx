@@ -15,16 +15,16 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-// دقیقاً همون ساختارِ ردیف‌هایِ AddProgramForm — هر ردیف می‌تونه چند روزِ
-// هم‌زمان داشته باشه (فیکسِ باگِ «توی ویرایش نمی‌شه چند روز انتخاب کرد»).
+// دقیقا همون ساختار ردیف‌های AddProgramForm — هر ردیف می‌تونه چند روز
+// هم‌زمان داشته باشه (فیکس باگ «توی ویرایش نمی‌شه چند روز انتخاب کرد»).
 type EditRow = { jsDays: number[]; start: string; end: string };
 
 const now = new Date();
 
-// این فرم دقیقاً همون دیزاینِ AddProgramForm رو داره (همون کلاس‌های
-// liquid-glass-form / add-program-glass، همون بلاب‌های ثابت، همون منطقِ
-// چندردیفی/چندروزه) — چون خودِ محصول باید حسِ یکسان بده، فقط برای
-// ویرایشِ یک برنامه‌ی موجود به‌جای افزودنِ یک برنامه‌ی تازه.
+// این فرم دقیقا همون دیزاین AddProgramForm رو داره (همون کلاس‌های
+// liquid-glass-form / add-program-glass، همون بلاب‌های ثابت، همون منطق
+// چندردیفی/چندروزه) — چون خود محصول باید حس یکسان بده، فقط برای
+// ویرایش یک برنامه‌ی موجود به‌جای افزودن یک برنامه‌ی تازه.
 export function EditOccurrenceForm({
   name,
   occ,
@@ -46,7 +46,7 @@ export function EditOccurrenceForm({
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [tag, setTag] = useState(occ.tag ?? "");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
+  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
@@ -74,14 +74,23 @@ export function EditOccurrenceForm({
     let hasError = false;
     const rErrs: typeof rowErrors = {};
     rows.forEach((r, i) => {
-      const e: { start?: boolean; end?: boolean; days?: boolean } = {};
+      const e: { start?: boolean; end?: boolean; days?: boolean; order?: boolean } = {};
       if (!r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
-      if (e.start || e.end || e.days) rErrs[i] = e;
+      // ساعت پایان هیچ‌وقت نباید زودتر (یا برابر) ساعت شروع باشه
+      if (!e.start && !e.end) {
+        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
+        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
+        if (sMin !== null && eMin !== null && eMin <= sMin) { e.order = true; hasError = true; }
+      }
+      if (e.start || e.end || e.days || e.order) rErrs[i] = e;
     });
     setRowErrors(rErrs);
-    if (hasError) return;
+    if (hasError) {
+      if (Object.values(rErrs).some((e) => e.order)) showConflictAlert("ساعت پایان باید بعد از ساعت شروع باشه");
+      return;
+    }
 
     const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
     let conflictMsg: string | null = null;
@@ -96,7 +105,7 @@ export function EditOccurrenceForm({
           conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
           break outer;
         }
-        // occ.id excluded تا خودِ همون occurrence‌ای که داریم ویرایشش می‌کنیم
+        // occ.id excluded تا خود همون occurrence‌ای که داریم ویرایشش می‌کنیم
         // با خودش تداخل حساب نشه.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
         if (!conflict) {
@@ -194,13 +203,13 @@ export function EditOccurrenceForm({
                   ))}
                 </div>
               </div>
-              <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
+              <div className={`time-field${rowErrors[ri]?.start || rowErrors[ri]?.order ? " field-error" : ""}`}>
                 <span className="time-field-label">ساعت شروع</span>
                 <div className="field-error-wrap">
                   <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
                 </div>
               </div>
-              <div className={`time-field${rowErrors[ri]?.end ? " field-error" : ""}`}>
+              <div className={`time-field${rowErrors[ri]?.end || rowErrors[ri]?.order ? " field-error" : ""}`}>
                 <span className="time-field-label">ساعت پایان</span>
                 <div className="field-error-wrap">
                   <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
@@ -221,17 +230,12 @@ export function EditOccurrenceForm({
             </button>
             <button
               type="button"
-              className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
+              className={`wsearch-submit-btn wsearch-submit-btn-inline${status !== "idle" ? " " + status : ""}`}
               onClick={submit}
-              aria-label="ذخیره"
+              disabled={status !== "idle"}
             >
-              <span className="wns-spinner" />
-              <svg className="wns-check" viewBox="0 0 24 24" fill="none">
-                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <svg className="wns-x" viewBox="0 0 24 24" fill="none">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              {status === "loading" && <span className="wsearch-submit-spinner" />}
+              {status === "loading" ? "در حال ذخیره…" : status === "success" ? "ذخیره شد" : status === "error" ? "ذخیره نشد" : "ذخیره"}
             </button>
           </div>
         </div>

@@ -77,7 +77,7 @@ function BlockContentEditable({
     commit();
     const { text, cursor } = getPlainTextAndCursor(elRef.current);
 
-    // اسلش‌کامند: تشخیصِ "/" و بقیه‌ی متن بعدش تا اولین فاصله/انتهای متن
+    // اسلش‌کامند: تشخیص "/" و بقیه‌ی متن بعدش تا اولین فاصله/انتهای متن
     const slashIdx = text.lastIndexOf("/", cursor - 1);
     if (slashIdx !== -1 && !text.slice(slashIdx, cursor).includes(" ") && !text.slice(slashIdx, cursor).includes("\n")) {
       const query = text.slice(slashIdx + 1, cursor);
@@ -94,7 +94,7 @@ function BlockContentEditable({
       handlers.onSlashClose();
     }
 
-    // میان‌برِ مارک‌داونِ درون‌خطی — **بولد**، *ایتالیک*، ~~خط‌خورده~~، `کد`
+    // میان‌بر مارک‌داون درون‌خطی — **بولد**، *ایتالیک*، ~~خط‌خورده~~، `کد`
     const inline = findInlineMarkdownShortcut(text, cursor);
     if (inline) {
       const range = rangeFromOffsets(elRef.current, inline.innerStart, inline.innerEnd);
@@ -328,7 +328,7 @@ export function NotepadBlockRow({
       )}
       <div className="notepad-block-content">{inner}</div>
       {!locked && (
-        <button type="button" className="notepad-block-delete-btn" onClick={() => handlers.onDelete(block.id)} aria-label="حذفِ بلاک">
+        <button type="button" className="notepad-block-delete-btn" onClick={() => handlers.onDelete(block.id)} aria-label="حذف بلاک">
           <Trash2 size={13} />
         </button>
       )}
@@ -364,24 +364,24 @@ function NotepadImageBlock({ block, onImageSet, locked }: { block: NotepadBlock;
         <img src={block.imageUrl} alt="" />
         {!locked && (
           <>
-            <button type="button" className="notepad-image-change-btn" onClick={() => fileRef.current?.click()}>تغییرِ عکس</button>
+            <button type="button" className="notepad-image-change-btn" onClick={() => fileRef.current?.click()}>تغییر عکس</button>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
           </>
         )}
       </div>
     );
   }
-  if (locked) return <div className="notepad-image-empty notepad-image-empty-locked">بدونِ تصویر</div>;
+  if (locked) return <div className="notepad-image-empty notepad-image-empty-locked">بدون تصویر</div>;
   return (
     <div className="notepad-image-empty">
       <button type="button" onClick={() => fileRef.current?.click()}>
         <ImagePlus size={16} />
-        افزودنِ تصویر
+        افزودن تصویر
       </button>
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
       <input
         type="text"
-        placeholder="یا لینکِ عکس رو اینجا بچسبون…"
+        placeholder="یا لینک عکس رو اینجا بچسبون…"
         className="notepad-image-url-input"
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ListChecks, Plus } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashTaskRow, DashTaskItem } from "./DashTaskRow";
 
@@ -30,7 +30,10 @@ export function DashTaskList({
   return (
     <DashCard delay={delay} className={className}>
       <div className="flex items-center justify-between">
-        <h2 className="text-[16px] font-bold text-dash-text sm:text-[22px]">برنامه‌های امروز</h2>
+        <h2 className="flex items-center gap-1.5 text-[16px] font-bold text-dash-text sm:gap-2 sm:text-[22px]">
+          <ListChecks className="h-[18px] w-[18px] text-dash-green sm:h-[22px] sm:w-[22px]" />
+          برنامه‌های امروز
+        </h2>
         <button
           type="button"
           onClick={onAddProgram}

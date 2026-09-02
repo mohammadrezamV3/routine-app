@@ -76,7 +76,7 @@ export default function AdminSystemErrorsPage() {
           <AdminPagination page={page} totalPages={totalPages} onChange={setPage} />
 
           <div className="admin-section-hint">
-            «تعداد تکرار» چون این جدول از یک لاگِ append-ony (نه گروه‌بندی‌شده) میاد نمایش داده نمی‌شه — هر ردیف یک رخدادِ واقعیِ مجزاست. اطلاعاتِ حساس (رمز/توکن/کلیدِ API) هیچ‌وقت داخلِ این پیام‌ها ذخیره نمی‌شه.
+            «تعداد تکرار» چون این جدول از یک لاگ append-ony (نه گروه‌بندی‌شده) میاد نمایش داده نمی‌شه — هر ردیف یک رخداد واقعی مجزاست. اطلاعات حساس (رمز/توکن/کلید API) هیچ‌وقت داخل این پیام‌ها ذخیره نمی‌شه.
           </div>
         </>
       )}

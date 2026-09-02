@@ -1,15 +1,15 @@
-// هشدارِ پیش از اخبارِ مهم اقتصادی.
+// هشدار پیش از اخبار مهم اقتصادی.
 //
-// تنظیماتش سمتِ کاربر ذخیره می‌شود (کلیدِ tradeNewsAlerts) و خودِ ارسال با
-// کرانِ سرور انجام می‌شود، نه مرورگر — وگرنه فقط وقتی تبِ اپ باز بود کار
-// می‌کرد، که دقیقاً همان لحظه‌ای است که کاربر کمترین نیاز را به یادآوری دارد.
+// تنظیماتش سمت کاربر ذخیره می‌شود (کلید tradeNewsAlerts) و خود ارسال با
+// کران سرور انجام می‌شود، نه مرورگر — وگرنه فقط وقتی تب اپ باز بود کار
+// می‌کرد، که دقیقا همان لحظه‌ای است که کاربر کمترین نیاز را به یادآوری دارد.
 
 import { SETTING_KEYS } from "./userSettingKeys";
 import type { EconomicImpact } from "./economicCalendar";
 
 export const NEWS_ALERT_KEY = SETTING_KEYS.tradeNewsAlerts;
 
-/** ردِ رویدادهایی که برایشان قبلاً هشدار رفته — حالتِ داخلیِ سرور، نه ترجیحِ کاربر */
+/** رد رویدادهایی که برایشان قبلا هشدار رفته — حالت داخلی سرور، نه ترجیح کاربر */
 export const NEWS_ALERT_LOG_KEY = "tradeNewsAlertLog";
 
 export type NewsAlertPrefs = {
@@ -30,7 +30,7 @@ export const DEFAULT_NEWS_ALERT_PREFS: NewsAlertPrefs = {
 
 export const MINUTES_BEFORE_OPTIONS = [15, 30, 60] as const;
 
-/** ورودیِ ذخیره‌شده ممکن است قدیمی یا دستکاری‌شده باشد — همیشه نرمال می‌شود */
+/** ورودی ذخیره‌شده ممکن است قدیمی یا دستکاری‌شده باشد — همیشه نرمال می‌شود */
 export function normalizeNewsAlertPrefs(raw: unknown): NewsAlertPrefs {
   const v = (raw && typeof raw === "object" ? raw : {}) as Partial<NewsAlertPrefs>;
   const impacts = Array.isArray(v.impacts)

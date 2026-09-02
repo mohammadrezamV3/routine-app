@@ -7,8 +7,8 @@ import { AiSparkleIcon } from "./AiSparkleIcon";
 import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import dynamic from "next/dynamic";
 
-// همون دلیلِ ExerciseCatalogCard: این فرم هم کلِ کاتالوگِ حرکات رو می‌کِشه و
-// فقط توی حالتِ «ساختِ دستی» (mode === "manual") رندر می‌شه.
+// همون دلیل ExerciseCatalogCard: این فرم هم کل کاتالوگ حرکات رو می‌کشه و
+// فقط توی حالت «ساخت دستی» (mode === "manual") رندر می‌شه.
 const ManualExercisePlanForm = dynamic(
   () => import("./ManualExercisePlanForm").then((m) => m.ManualExercisePlanForm),
   { ssr: false }
@@ -20,9 +20,12 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Mode = "choice" | "ai" | "manual";
 
-// «افزودن برنامه‌ی ورزشی جدید» — دو مسیر: ساختِ خودکار با هوش‌مصنوعی یا
-// وارد‌کردنِ دستیِ برنامه‌ی شخصیِ کاربر. هر دو مسیر (ai/manual) خودشون
-// هدرِ بازگشت/بستنِ خودشون رو رندر می‌کنن، پس هدرِ ثابتِ این کامپوننت فقط
+// «تغییر برنامه‌ی ورزشی» — این فرم فقط از داشبورد باز می‌شه، یعنی کاربر
+// از قبل یک برنامه‌ی فعال داره و داره جایگزینش می‌کنه؛ پس تایتلش «تغییر
+// برنامه»ست نه «افزودن برنامه» (اولین برنامه از onboarding ExercisePanel
+// ساخته می‌شه، نه اینجا). دو مسیر: ساخت خودکار با هوش‌مصنوعی یا
+// وارد‌کردن دستی برنامه‌ی شخصی کاربر. هر دو مسیر (ai/manual) خودشون
+// هدر بازگشت/بستن خودشون رو رندر می‌کنن، پس هدر ثابت این کامپوننت فقط
 // توی صفحه‌ی انتخاب (choice) دیده می‌شه.
 export function AddExerciseProgramForm({
   onClose,
@@ -57,7 +60,7 @@ export function AddExerciseProgramForm({
         <div className="relative z-[1] add-program-glass exercise-add-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           {mode === "choice" && (
             <div className="wsearch-newform-head">
-              <div className="wsearch-newform-title accent">افزودن برنامه</div>
+              <div className="wsearch-newform-title accent">تغییر برنامه</div>
               <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
             </div>
           )}

@@ -1,17 +1,18 @@
-// تقویم اقتصادی — لایه‌ی مشترکِ داده و منبع.
+// تقویم اقتصادی — لایه‌ی مشترک داده و منبع.
 //
-// تصمیمِ معماریِ مهم: اپ همیشه از جدولِ خودمان می‌خواند، هیچ‌وقت مستقیم از
-// یک سرویسِ بیرونی. دلیل‌ها:
-//   • CSPِ production فقط `connect-src 'self'` (به‌علاوه‌ی گیت‌ویِ AI) را
-//     می‌دهد، پس تماسِ مرورگر با هاستِ خارجی اصلاً ممکن نیست.
-//   • این ماژول نباید به در دسترس بودنِ یک سرویسِ خارجی گره بخورد. با
-//     ورودِ دستیِ ادمین از همین حالا کامل کار می‌کند.
-//   • هیچ فیدِ رایگانی برای استفاده‌ی تجاری مجوزِ روشن ندارد و هاردکد‌کردنِ
-//     یک منبع، هم حقوقی و هم عملیاتی شکننده است.
+// تصمیم معماری مهم: اپ همیشه از جدول خودمان می‌خواند، هیچ‌وقت مستقیم از
+// یک سرویس بیرونی. دلیل‌ها:
+//   • CSP production فقط `connect-src 'self'` (به‌علاوه‌ی گیت‌وی AI) را
+//     می‌دهد، پس تماس مرورگر با هاست خارجی اصلا ممکن نیست.
+//   • این ماژول نباید به در دسترس بودن یک سرویس خارجی گره بخورد. با
+//     ورود دستی ادمین از همین حالا کامل کار می‌کند.
 //
-// وقتی یک فیدِ واقعی خریداری/تنظیم شد، فقط `ECONOMIC_CALENDAR_URL` (و در
-// صورت نیاز `ECONOMIC_CALENDAR_API_KEY`) ست می‌شود و کرانِ روزانه همان را
-// نرمال‌سازی و در همین جدول ذخیره می‌کند. هیچ‌جای دیگرِ اپ عوض نمی‌شود.
+// منبع پیش‌فرض حالا فید هفتگی عمومی فارکس‌فکتوری است (پایین‌تر،
+// DEFAULT_CALENDAR_URL) و عنوان‌های پرتکرارش به فارسی ترجمه می‌شوند. کران
+// روزانه آن را می‌گیرد و در همین جدول upsert می‌کند؛ ورود دستی ادمین هم سر
+// جایش می‌ماند. با ست‌کردن `ECONOMIC_CALENDAR_URL` (و در صورت نیاز
+// `ECONOMIC_CALENDAR_API_KEY`) می‌شود منبع را با یک فید تجاری عوض کرد،
+// بدون اینکه هیچ‌جای دیگر اپ تغییر کند.
 
 export type EconomicImpact = "LOW" | "MEDIUM" | "HIGH";
 
@@ -29,7 +30,7 @@ export const IMPACT_COLORS: Record<EconomicImpact, string> = {
 
 export const IMPACT_ORDER: EconomicImpact[] = ["HIGH", "MEDIUM", "LOW"];
 
-/** ارزهایی که تریدرِ فارکس واقعاً دنبال می‌کند — با پرچمِ کشورِ متناظر */
+/** ارزهایی که تریدر فارکس واقعا دنبال می‌کند — با پرچم کشور متناظر */
 export const CALENDAR_CURRENCIES: { code: string; country: string; flag: string; label: string }[] = [
   { code: "USD", country: "US", flag: "🇺🇸", label: "دلار آمریکا" },
   { code: "EUR", country: "EU", flag: "🇪🇺", label: "یورو" },
@@ -46,6 +47,82 @@ export function currencyMeta(code: string) {
   return CALENDAR_CURRENCIES.find((c) => c.code === code.toUpperCase());
 }
 
+/**
+ * منبع پیش‌فرض: فید هفتگی عمومی فارکس‌فکتوری.
+ *
+ * ست‌کردن `ECONOMIC_CALENDAR_URL` همچنان این را کنار می‌زند (برای وقتی فید
+ * تجاری خریداری شد)، ولی بدون هیچ تنظیمی هم تقویم از همین پر می‌شود به‌جای
+ * اینکه خالی بماند و منتظر ورود دستی ادمین باشد.
+ *
+ * توجه: در فید فارکس‌فکتوری فیلد `country` در واقع *کد ارز* است
+ * («USD»/«EUR»)، نه کد کشور — نرمال‌ساز پایین همین را در نظر می‌گیرد.
+ */
+export const DEFAULT_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
+
+/**
+ * ترجمه‌ی عنوان رویدادهای پرتکرار به فارسی. عنوانی که این‌جا نباشد دست‌نخورده
+ * (انگلیسی) می‌ماند — بهتر از حدس‌زدن ترجمه یا خالی گذاشتنش.
+ *
+ * کلیدها با حروف کوچک و بدون فاصله‌ی اضافه مقایسه می‌شوند تا تفاوت‌های جزئی
+ * نگارشی فید، ترجمه را از دست ندهد.
+ */
+const EVENT_TITLE_FA: Record<string, string> = {
+  "non-farm employment change": "تغییر اشتغال غیرکشاورزی",
+  "unemployment rate": "نرخ بیکاری",
+  "average hourly earnings m/m": "میانگین دستمزد ساعتی (ماهانه)",
+  "cpi m/m": "شاخص قیمت مصرف‌کننده (ماهانه)",
+  "cpi y/y": "شاخص قیمت مصرف‌کننده (سالانه)",
+  "core cpi m/m": "شاخص قیمت مصرف‌کننده هسته (ماهانه)",
+  "ppi m/m": "شاخص قیمت تولیدکننده (ماهانه)",
+  "core ppi m/m": "شاخص قیمت تولیدکننده هسته (ماهانه)",
+  "retail sales m/m": "خرده‌فروشی (ماهانه)",
+  "core retail sales m/m": "خرده‌فروشی هسته (ماهانه)",
+  "gdp m/m": "تولید ناخالص داخلی (ماهانه)",
+  "gdp q/q": "تولید ناخالص داخلی (فصلی)",
+  "advance gdp q/q": "برآورد اولیه تولید ناخالص داخلی (فصلی)",
+  "ism manufacturing pmi": "شاخص مدیران خرید تولیدی ISM",
+  "ism services pmi": "شاخص مدیران خرید خدمات ISM",
+  "flash manufacturing pmi": "شاخص اولیه مدیران خرید تولیدی",
+  "flash services pmi": "شاخص اولیه مدیران خرید خدمات",
+  "manufacturing pmi": "شاخص مدیران خرید تولیدی",
+  "services pmi": "شاخص مدیران خرید خدمات",
+  "unemployment claims": "مدعیان بیکاری",
+  "federal funds rate": "نرخ بهره فدرال رزرو",
+  "fomc statement": "بیانیه فدرال رزرو",
+  "fomc press conference": "کنفرانس خبری فدرال رزرو",
+  "fomc meeting minutes": "صورت‌جلسه فدرال رزرو",
+  "fomc economic projections": "چشم‌انداز اقتصادی فدرال رزرو",
+  "main refinancing rate": "نرخ بهره بانک مرکزی اروپا",
+  "ecb press conference": "کنفرانس خبری بانک مرکزی اروپا",
+  "monetary policy statement": "بیانیه سیاست پولی",
+  "official bank rate": "نرخ بهره بانک مرکزی انگلیس",
+  "official cash rate": "نرخ بهره رسمی",
+  "cash rate": "نرخ بهره",
+  "boj policy rate": "نرخ بهره بانک مرکزی ژاپن",
+  "overnight rate": "نرخ بهره شبانه",
+  "crude oil inventories": "ذخایر نفت خام",
+  "natural gas storage": "ذخایر گاز طبیعی",
+  "consumer confidence": "اعتماد مصرف‌کننده",
+  "consumer sentiment": "احساسات مصرف‌کننده",
+  "prelim uom consumer sentiment": "برآورد اولیه احساسات مصرف‌کننده میشیگان",
+  "building permits": "مجوزهای ساخت‌وساز",
+  "housing starts": "شروع ساخت مسکن",
+  "existing home sales": "فروش خانه‌های موجود",
+  "new home sales": "فروش خانه‌های نو",
+  "durable goods orders m/m": "سفارش کالاهای بادوام (ماهانه)",
+  "trade balance": "تراز تجاری",
+  "industrial production m/m": "تولید صنعتی (ماهانه)",
+  "employment change": "تغییر اشتغال",
+  "jolts job openings": "فرصت‌های شغلی JOLTS",
+  "adp non-farm employment change": "تغییر اشتغال غیرکشاورزی ADP",
+  "bank holiday": "تعطیلی بانکی",
+};
+
+/** عنوان انگلیسی فید را به فارسی برمی‌گرداند؛ اگر ترجمه نداشت، خودش را. */
+export function translateEventTitle(title: string): string {
+  return EVENT_TITLE_FA[title.trim().toLowerCase()] || title;
+}
+
 export type EconomicEventDto = {
   id: string;
   title: string;
@@ -59,7 +136,7 @@ export type EconomicEventDto = {
   source: string;
 };
 
-// ── منبعِ بیرونی (اختیاری) ───────────────────────────────────────────────
+// ── منبع بیرونی (اختیاری) ───────────────────────────────────────────────
 
 export type NormalizedEvent = {
   externalId: string;
@@ -73,23 +150,16 @@ export type NormalizedEvent = {
   previous: string | null;
 };
 
-/**
- * انتخابِ منبع. دو حالت:
- *   • `ECONOMIC_CALENDAR_PROVIDER=forexfactory` → فیدِ هفتگیِ فارکس‌فکتوری
- *   • `ECONOMIC_CALENDAR_URL=...` → هر فیدِ JSONِ دیگری (نرمال‌سازیِ عمومی)
- * هیچ‌کدام ست نباشد یعنی تقویم فقط از ورودِ دستیِ ادمین پر می‌شود.
- */
-export function forexFactorySelected(): boolean {
-  return (process.env.ECONOMIC_CALENDAR_PROVIDER || "").toLowerCase() === "forexfactory";
-}
-
+// حالا همیشه یک منبع هست (فارکس‌فکتوری به‌عنوان پیش‌فرض)، پس این دیگر
+// «آیا env ست شده» نیست — همیشه true است. نگه داشته شد چون پنل ادمین و
+// روت تشخیصی ازش استفاده می‌کنند.
 export function externalProviderConfigured(): boolean {
-  return forexFactorySelected() || !!process.env.ECONOMIC_CALENDAR_URL;
+  return true;
 }
 
 export function externalProviderName(): string {
-  if (forexFactorySelected()) return "FOREXFACTORY";
-  return process.env.ECONOMIC_CALENDAR_SOURCE || "EXTERNAL";
+  if (process.env.ECONOMIC_CALENDAR_SOURCE) return process.env.ECONOMIC_CALENDAR_SOURCE;
+  return process.env.ECONOMIC_CALENDAR_URL ? "EXTERNAL" : "FOREXFACTORY";
 }
 
 function pickString(row: Record<string, unknown>, keys: string[]): string | null {
@@ -109,12 +179,12 @@ function normalizeImpact(raw: string | null): EconomicImpact {
 }
 
 /**
- * پاسخِ خامِ منبع را به شکلِ داخلی تبدیل می‌کند.
+ * پاسخ خام منبع را به شکل داخلی تبدیل می‌کند.
  *
- * عمداً «تحمل‌کننده» نوشته شده و چند نامِ رایجِ فیلد را می‌پذیرد، چون
- * تقویم‌های مختلف اسم‌های متفاوتی دارند و نمی‌خواهیم برای عوض‌کردنِ منبع
- * مجبور به تغییرِ کد باشیم. هر ردیفی که تاریخ یا عنوانِ معتبر نداشته باشد
- * بی‌صدا کنار گذاشته می‌شود — یک ردیفِ بدشکل نباید کلِ sync را بشکند.
+ * عمدا «تحمل‌کننده» نوشته شده و چند نام رایج فیلد را می‌پذیرد، چون
+ * تقویم‌های مختلف اسم‌های متفاوتی دارند و نمی‌خواهیم برای عوض‌کردن منبع
+ * مجبور به تغییر کد باشیم. هر ردیفی که تاریخ یا عنوان معتبر نداشته باشد
+ * بی‌صدا کنار گذاشته می‌شود — یک ردیف بدشکل نباید کل sync را بشکند.
  */
 export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
   const rows: unknown[] = Array.isArray(raw)
@@ -137,13 +207,20 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
     const occursAt = new Date(dateRaw);
     if (isNaN(occursAt.getTime())) continue;
 
-    const currency = (pickString(row, ["currency", "Currency", "code"]) || "").toUpperCase();
+    // فارکس‌فکتوری کد ارز را توی فیلد `country` می‌گذارد (نه کد کشور)، پس
+    // وقتی فیلد currency نبود و country یک کد ارز شناخته‌شده بود، همان را
+    // به‌عنوان ارز می‌پذیریم.
+    const rawCountry = (pickString(row, ["country", "Country"]) || "").toUpperCase();
+    const currency = (
+      pickString(row, ["currency", "Currency", "code"]) ||
+      (currencyMeta(rawCountry) ? rawCountry : "")
+    ).toUpperCase();
     if (!currency) continue;
 
     out.push({
       externalId: pickString(row, ["id", "eventId", "calendarId"]) || `${currency}-${title}-${occursAt.toISOString()}`,
-      title: title.slice(0, 160),
-      country: (pickString(row, ["country", "Country"]) || currencyMeta(currency)?.country || currency.slice(0, 2)).toUpperCase().slice(0, 2),
+      title: translateEventTitle(title).slice(0, 160),
+      country: (currencyMeta(currency)?.country || rawCountry || currency).toUpperCase().slice(0, 2),
       currency: currency.slice(0, 8),
       impact: normalizeImpact(pickString(row, ["impact", "importance", "Impact"])),
       occursAt,
@@ -155,15 +232,9 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
   return out;
 }
 
-/** فراخوانیِ منبعِ بیرونی — فقط از سمتِ سرور (کران) صدا زده می‌شود */
+/** فراخوانی منبع بیرونی — فقط از سمت سرور (کران) صدا زده می‌شود */
 export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
-  if (forexFactorySelected()) {
-    // importِ پویا تا وقتی این منبع انتخاب نشده، اصلاً بار نشود
-    const { fetchForexFactoryEvents } = await import("./forexFactory");
-    return fetchForexFactoryEvents();
-  }
-  const url = process.env.ECONOMIC_CALENDAR_URL;
-  if (!url) return [];
+  const url = process.env.ECONOMIC_CALENDAR_URL || DEFAULT_CALENDAR_URL;
   const key = process.env.ECONOMIC_CALENDAR_API_KEY;
   const res = await fetch(url, {
     headers: key ? { Authorization: `Bearer ${key}` } : undefined,

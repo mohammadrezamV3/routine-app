@@ -14,13 +14,13 @@ export function ExercisePanel() {
 
   useEffect(() => {
     // status اولش "loading"ه (نه "authenticated" نه "unauthenticated") تا
-    // خودِ NextAuth سشن رو واقعاً چک کنه — قبلاً این حالت هم مثلِ
+    // خود NextAuth سشن رو واقعا چک کنه — قبلا این حالت هم مثل
     // unauthenticated رفتار می‌کرد و plan رو null می‌ذاشت، یعنی هر بار
-    // ریلودِ صفحه یه لحظه فرمِ onboarding (به‌جای داشبوردِ واقعی) چشمک می‌زد،
-    // تا سشن واقعاً authenticated بشه و پلنِ واقعی فچ بشه.
+    // ریلود صفحه یه لحظه فرم onboarding (به‌جای داشبورد واقعی) چشمک می‌زد،
+    // تا سشن واقعا authenticated بشه و پلن واقعی فچ بشه.
     if (status === "loading") return;
     if (status !== "authenticated") { setPlan(null); return; }
-    // promiseِ پیش‌درخواست‌شده‌ی lib/preload.ts (اگه بود) — وگرنه فچِ عادی
+    // promise پیش‌درخواست‌شده‌ی lib/preload.ts (اگه بود) — وگرنه فچ عادی
     const pre = takePreloaded("/api/exercise/plan");
     (pre ?? fetch("/api/exercise/plan").then((r) => (r.ok ? r.json() : null)))
       .then((res: any) => setPlan(res?.plan || null));
@@ -48,9 +48,9 @@ export function ExercisePanel() {
   }
 
   // ------------- دارای برنامه فعال -------------
-  // dash-scope دقیقاً مثلِ داشبوردِ روتین (app/weekly/page.tsx) لازمه — این
-  // کلاسه که بک‌گراندِ پیش‌فرضِ لیکوئیدگلسِ سراسریِ <button> رو برای دکمه‌های
-  // سبک‌ِ Tailwindِ داشبورد (شروع/پایان تمرین، افزودن برنامه، ...) خنثی می‌کنه.
+  // dash-scope دقیقا مثل داشبورد روتین (app/weekly/page.tsx) لازمه — این
+  // کلاسه که بک‌گراند پیش‌فرض لیکوئیدگلس سراسری <button> رو برای دکمه‌های
+  // سبک‌ Tailwind داشبورد (شروع/پایان تمرین، افزودن برنامه، ...) خنثی می‌کنه.
   return (
     <div>
       <div className="dash-scope">

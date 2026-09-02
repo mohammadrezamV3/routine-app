@@ -5,7 +5,7 @@ import { ToggleSwitch } from "./ToggleSwitch";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // صفحه‌ی انتخاب آمارهای قابل‌نمایش توی صفحه‌ی ترید — از پنل کاربری با دکمه‌ی
-// «تغییر» باز می‌شه؛ هر ردیف یک تاگل لیکوئید گلسِ سبک iOS داره.
+// «تغییر» باز می‌شه؛ هر ردیف یک تاگل لیکوئید گلس سبک iOS داره.
 export function TradeStatsPicker({
   visible,
   onToggle,

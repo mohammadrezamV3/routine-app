@@ -9,12 +9,12 @@ type GateModule = "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
 
 /**
  * برای صفحاتی که به یک ماژول خاص از پلن نیاز دارن. اگه کاربر دسترسی نداشته
- * باشه، محتوای واقعی اصلاً لود/فچ نمی‌شه — به‌جاش یک پیش‌نمایش تار (اسکلت
+ * باشه، محتوای واقعی اصلا لود/فچ نمی‌شه — به‌جاش یک پیش‌نمایش تار (اسکلت
  * تزئینی، نه دیتای واقعی) + پیام + دکمه‌ی خرید اشتراک نشون داده می‌شه.
  *
  * برای کاربر مهمون (لاگین‌نکرده) این گیت هیچ کاری نمی‌کنه و children رو
  * همون‌طور رد می‌کنه — «اشتراک نداری» با «هنوز حساب نداری» فرق داره؛
- * پیام لاگین رو خودِ صفحه/کامپوننتِ فرزند (که از قبل status رو چک می‌کنه) نشون می‌ده.
+ * پیام لاگین رو خود صفحه/کامپوننت فرزند (که از قبل status رو چک می‌کنه) نشون می‌ده.
  */
 export function ModuleGate({ module, children }: { module: GateModule; children: React.ReactNode }) {
   const { status } = useSession();
@@ -23,8 +23,8 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
   useEffect(() => {
     if (status !== "authenticated") return;
     let cancelled = false;
-    // از کشِ مشترک می‌خونه — NavDrawer دقیقاً همین پاسخ رو لازم داره و
-    // قبلاً هردو مستقلاً فچ می‌زدن (دو بار /api/account در هر لودِ صفحه).
+    // از کش مشترک می‌خونه — NavDrawer دقیقا همین پاسخ رو لازم داره و
+    // قبلا هردو مستقلا فچ می‌زدن (دو بار /api/account در هر لود صفحه).
     getAccount()
       .then((data) => {
         if (cancelled) return;
@@ -36,14 +36,14 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
 
   if (allowed === false) return <GateDenied />;
 
-  // چه سشن هنوز لودینگ/مهمونه، چه دسترسی تاییدشده، چه هنوز در حالِ چکه —
-  // children رو بلافاصله مونت می‌کنیم (نه بعد از رسیدنِ جوابِ /api/account).
-  // قبلاً تا وقتی allowed مشخص نمی‌شد یه پیامِ «در حال بررسی دسترسی…» جدا
-  // نشون داده می‌شد و children کلاً un‌mount بود — یعنی فچِ داخلیِ خودِ
-  // children (مثلاً /api/exercise/plan) فقط بعدِ این چک شروع می‌شد، نه
-  // موازیش. enforcement واقعی همیشه سمتِ سرور (requireModule) انجام می‌شه،
-  // پس مونت‌کردنِ زودترِ children مشکلی نداره — فقط اگه واقعاً دسترسی نبود
-  // (allowed===false)، به‌جاش پیش‌نمایشِ تار+پیامِ خرید نشون داده می‌شه.
+  // چه سشن هنوز لودینگ/مهمونه، چه دسترسی تاییدشده، چه هنوز در حال چکه —
+  // children رو بلافاصله مونت می‌کنیم (نه بعد از رسیدن جواب /api/account).
+  // قبلا تا وقتی allowed مشخص نمی‌شد یه پیام «در حال بررسی دسترسی…» جدا
+  // نشون داده می‌شد و children کلا un‌mount بود — یعنی فچ داخلی خود
+  // children (مثلا /api/exercise/plan) فقط بعد این چک شروع می‌شد، نه
+  // موازیش. enforcement واقعی همیشه سمت سرور (requireModule) انجام می‌شه،
+  // پس مونت‌کردن زودتر children مشکلی نداره — فقط اگه واقعا دسترسی نبود
+  // (allowed===false)، به‌جاش پیش‌نمایش تار+پیام خرید نشون داده می‌شه.
   return <>{children}</>;
 }
 
@@ -71,7 +71,7 @@ function GateDenied() {
           className="module-gate-cta"
           onClick={() => router.push("/subscription")}
         >
-          خرید اشتراک
+          خرید این پلن
         </button>
       </div>
     </div>

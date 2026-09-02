@@ -7,9 +7,9 @@ import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { TradeAccountView } from "@/components/TradeAccountView";
 
-// این صفحه عنوانِ خودش را از دادهٔ حساب می‌سازد، پس برخلافِ بقیه‌ی
-// زیرصفحه‌ها از TradePageShell استفاده نمی‌کند — ولی همان سه‌حالتیِ
-// loading/مهمان/مجاز را عیناً تکرار می‌کند تا پرشِ «وارد شوید» این‌جا هم نباشد.
+// این صفحه عنوان خودش را از داده حساب می‌سازد، پس برخلاف بقیه‌ی
+// زیرصفحه‌ها از TradePageShell استفاده نمی‌کند — ولی همان سه‌حالتی
+// loading/مهمان/مجاز را عینا تکرار می‌کند تا پرش «وارد شوید» این‌جا هم نباشد.
 export default function TradeAccountPage({ params }: { params: { id: string } }) {
   const { status } = useSession();
 

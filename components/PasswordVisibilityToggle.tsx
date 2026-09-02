@@ -3,9 +3,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
-/** دکمه‌ی نمایش/مخفی‌کردنِ رمز — سمتِ چپِ فیلد (endAction توی AuthField)،
- * مستقل از آیکونِ خودِ فیلد که سمتِ راسته. کراس‌فیدِ چرخشیِ ملایم بینِ
- * چشمِ باز/بسته، نه پرشِ خامِ آیکون. */
+/** دکمه‌ی نمایش/مخفی‌کردن رمز — سمت چپ فیلد (endAction توی AuthField)،
+ * مستقل از آیکون خود فیلد که سمت راسته. کراس‌فید چرخشی ملایم بین
+ * چشم باز/بسته، نه پرش خام آیکون. */
 export function PasswordVisibilityToggle({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
   return (
     <button

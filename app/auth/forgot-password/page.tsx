@@ -11,8 +11,8 @@ import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcce
 
 const RESEND_COOLDOWN_SECONDS = 120;
 
-// شناسه یک باکسِ واحده — هم شماره‌همراه هم ایمیل (اگه کاربر ثبت کرده باشه)
-// قبول می‌کنه؛ تشخیصِ نوعش سمتِ سرور هم دوباره انجام می‌شه (lib/validate).
+// شناسه یک باکس واحده — هم شماره‌همراه هم ایمیل (اگه کاربر ثبت کرده باشه)
+// قبول می‌کنه؛ تشخیص نوعش سمت سرور هم دوباره انجام می‌شه (lib/validate).
 function isValidIdentifier(v: string): boolean {
   return isValidIranPhone(v) || isValidEmail(v);
 }

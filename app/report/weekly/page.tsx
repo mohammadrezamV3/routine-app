@@ -29,7 +29,7 @@ type WeeklyReportResponse = {
   prediction: { domain: Domain; message: string; confidence: string; evidence: string } | null;
 };
 
-// اگه از یه لینکِ مشخص باز شده باشه (مثلاً نوتیفِ «گزارشِ هفتگی‌ات آماده‌ست»
+// اگه از یه لینک مشخص باز شده باشه (مثلا نوتیف «گزارش هفتگی‌ات آماده‌ست»
 // که به هفته‌ی -۱ لینک می‌ده)، همون هفته رو باز کن — نه همیشه هفته‌ی جاری.
 // از window.location مستقیم می‌خونیم (نه useSearchParams) تا نیازی به
 // Suspense نباشه، هم‌الگوی بقیه‌ی صفحه‌های این پروژه.
@@ -88,7 +88,7 @@ function WeeklyReportContent() {
   return (
     <section className="wr-page">
       <h1>گزارش هفتگی</h1>
-      <div className="account-content-hint">عملکردِ این هفته‌ات، مقایسه با هفته‌ی قبل، و پیشنهاد برای هفته‌ی بعد</div>
+      <div className="account-content-hint">عملکرد این هفته‌ات، مقایسه با هفته‌ی قبل، و پیشنهاد برای هفته‌ی بعد</div>
 
       {report && (
         <WeekSelector weekStartIso={report.weekStart} weekEndIso={report.weekEnd} offset={offset} onChange={setOffset} />
@@ -134,7 +134,7 @@ function WeeklyReportContent() {
           )}
 
           <div className="wr-block">
-            <div className="wr-block-title">عملکرد بر اساسِ بخش</div>
+            <div className="wr-block-title">عملکرد بر اساس بخش</div>
             <div className="account-card">
               {DOMAINS.map((d) => (
                 <DomainScoreRow
@@ -154,7 +154,7 @@ function WeeklyReportContent() {
           </div>
 
           <div className="wr-block">
-            <div className="wr-block-title">عملکردِ روزانه</div>
+            <div className="wr-block-title">عملکرد روزانه</div>
             <DailyPerformanceStrip days={report.dailyBreakdown} />
           </div>
 
@@ -166,7 +166,7 @@ function WeeklyReportContent() {
 
           <button type="button" className="wr-refresh-btn" onClick={refresh} disabled={refreshing}>
             <RefreshCw size={14} className={refreshing ? "wr-spin" : ""} />
-            {refreshing ? "در حال تولیدِ دوباره…" : "تولیدِ دوباره‌ی تحلیلِ هوشمند"}
+            {refreshing ? "در حال تولید دوباره…" : "تولید دوباره‌ی تحلیل هوشمند"}
           </button>
         </>
       ) : null}
@@ -183,7 +183,7 @@ export default function WeeklyReportPage() {
   ) : (
     <section className="wr-page">
       <h1>گزارش هفتگی</h1>
-      <AuthGate message="برای دیدنِ گزارشِ هفتگی وارد شوید" />
+      <AuthGate message="برای دیدن گزارش هفتگی وارد شوید" />
     </section>
   );
 }

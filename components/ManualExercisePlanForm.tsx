@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
+import { Reorder, useDragControls } from "framer-motion";
 import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
@@ -13,16 +13,17 @@ import { normalizeFa } from "@/lib/utils";
 import { toFaDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { NumberInput } from "./NumberInput";
 
-// نوعِ ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکتِ خودِ حرکت تعیین
+// نوع ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکت خود حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
 function isTimedExercise(entry: ExerciseCatalogEntry): boolean {
   return entry.pattern === "cardio" || entry.pattern === "flexibility";
 }
 
-// کارتِ تعیینِ مشخصاتِ یک حرکت — فقط یک ضربدرِ بی‌بک‌گراند بالا داره (نه
-// دکمه‌ی بازگشتِ جدا)؛ زدنِ ضربدر یعنی برگشت به لیستِ جستجو، نه بستنِ کاملِ
-// پاپ‌آپِ افزودن.
+// کارت تعیین مشخصات یک حرکت — فقط یک ضربدر بی‌بک‌گراند بالا داره (نه
+// دکمه‌ی بازگشت جدا)؛ زدن ضربدر یعنی برگشت به لیست جستجو، نه بستن کامل
+// پاپ‌آپ افزودن.
 function ManualQuantityPrompt({
   entry,
   onConfirm,
@@ -55,18 +56,18 @@ function ManualQuantityPrompt({
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تعداد ست</label>
-            <input type="number" className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(e) => setSets(e.target.value)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(v) => setSets(v)} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">تکرار در هر ست</label>
-            <input type="number" className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(e) => setReps(e.target.value)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(v) => setReps(v)} />
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">مدت زمان</label>
-            <input type="number" className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(v) => setAmount(v)} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">واحد</label>
@@ -79,24 +80,17 @@ function ManualQuantityPrompt({
       )}
 
       <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 16 }}>
-        <motion.button
-          type="button"
-          className="manual-plan-submit-btn"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          onClick={confirm}
-        >
+        <button type="button" className="manual-plan-submit-btn" onClick={confirm}>
           افزودن به برنامه
-        </motion.button>
+        </button>
       </div>
     </div>
   );
 }
 
-// پاپ‌آپِ مستقلِ «افزودنِ حرکت» — قبلاً این جستجو/لیست همون‌جا توی نمای روز
-// اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثلِ ExerciseCatalogModal یه
-// پاپ‌آپِ پورتال‌شده‌ست، مستقل از باکسِ «حرکات این روز» زیرش.
+// پاپ‌آپ مستقل «افزودن حرکت» — قبلا این جستجو/لیست همون‌جا توی نمای روز
+// اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثل ExerciseCatalogModal یه
+// پاپ‌آپ پورتال‌شده‌ست، مستقل از باکس «حرکات این روز» زیرش.
 function ManualExerciseAddPopup({
   onAdd,
   onClose,
@@ -116,22 +110,8 @@ function ManualExerciseAddPopup({
   );
 
   return createPortal(
-    <motion.div
-      className="exercise-catalog-popup-wrap manual-exercise-popup-wrap"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <motion.div
-        className="exercise-catalog-popup-panel dash-scope"
-        onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.96 }}
-        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-      >
+    <div className="exercise-catalog-popup-wrap manual-exercise-popup-wrap" onClick={onClose}>
+      <div className="exercise-catalog-popup-panel dash-scope" onClick={(e) => e.stopPropagation()}>
         {adding ? (
           <ManualQuantityPrompt
             entry={adding}
@@ -174,14 +154,14 @@ function ManualExerciseAddPopup({
             </div>
           </>
         )}
-      </motion.div>
-    </motion.div>,
+      </div>
+    </div>,
     document.body
   );
 }
 
-// ردیفِ یک حرکتِ اضافه‌شده — توی حالتِ ویرایش، به‌جای دو دکمه‌ی بالا/پایین،
-// یه دسته‌ی درگ («⠿») می‌گیره که با framer-motion's Reorder واقعاً کشیدنی‌ه.
+// ردیف یک حرکت اضافه‌شده — توی حالت ویرایش، به‌جای دو دکمه‌ی بالا/پایین،
+// یه دسته‌ی درگ («⠿») می‌گیره که با framer-motion's Reorder واقعا کشیدنی‌ه.
 function ManualExerciseRow({
   item,
   isEditing,
@@ -204,7 +184,7 @@ function ManualExerciseRow({
           type="button"
           className="manual-reorder-handle"
           onPointerDown={(e) => controls.start(e)}
-          aria-label="جابه‌جاییِ این حرکت"
+          aria-label="جابه‌جایی این حرکت"
         >
           <GripVertical size={15} />
         </button>
@@ -219,12 +199,12 @@ function ManualExerciseRow({
   );
 }
 
-// برنامه‌ی دستی/شخصیِ کاربر — دقیقاً هم‌قاعده‌ی نمای «برنامه هفتگی»: یه
-// آکاردئونِ عمودیِ روزهای هفته، با کلیک روی هر روز باز می‌شه و برنامه‌ی
-// همون روز رو نشون می‌ده. هر روزِ بازشده یه دکمه‌ی «افزودن» داره (پاپ‌آپِ
-// مستقلِ انتخابِ حرکت) و — وقتی حداقل یک حرکت داره — یه دکمه‌ی «ویرایش» که
-// حالتِ جابه‌جایی/حذفِ حرکات رو باز/بسته می‌کنه. روزی که هیچ حرکتی نداره
-// یعنی روزِ استراحته؛ نیازی به یه مرحله‌ی جداگانه‌ی «انتخابِ روزهای باشگاه»
+// برنامه‌ی دستی/شخصی کاربر — دقیقا هم‌قاعده‌ی نمای «برنامه هفتگی»: یه
+// آکاردئون عمودی روزهای هفته، با کلیک روی هر روز باز می‌شه و برنامه‌ی
+// همون روز رو نشون می‌ده. هر روز بازشده یه دکمه‌ی «افزودن» داره (پاپ‌آپ
+// مستقل انتخاب حرکت) و — وقتی حداقل یک حرکت داره — یه دکمه‌ی «ویرایش» که
+// حالت جابه‌جایی/حذف حرکات رو باز/بسته می‌کنه. روزی که هیچ حرکتی نداره
+// یعنی روز استراحته؛ نیازی به یه مرحله‌ی جداگانه‌ی «انتخاب روزهای باشگاه»
 // نیست — همون روزهایی که حرکت دارن، روزهای باشگاهن.
 export function ManualExercisePlanForm({
   onSubmit,
@@ -284,7 +264,7 @@ export function ManualExercisePlanForm({
         </div>
       )}
 
-      <label className="exercise-wizard-title">برنامه‌ی تمرینی‌ت رو بساز</label>
+      <label className="exercise-wizard-title">برنامه تمرینیت رو بساز</label>
 
       <div className="manual-week-accordion">
         {CAL_WEEK_ORDER.map((i) => {
@@ -299,16 +279,11 @@ export function ManualExercisePlanForm({
                 {items.length > 0 && <span className="manual-day-count-badge">{items.length} حرکت</span>}
                 <span className="week-day-chevron" />
               </div>
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    key="body"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ height: { duration: 0.32, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.22 } }}
-                    style={{ overflow: "hidden" }}
-                  >
+              {/* بدون انیمیشن height:auto — همون دلیل آکاردئون «برنامه هفتگی»:
+                  اندازه‌گیری هر فریم روی لیستی که خودش Reorder.Group داره،
+                  روی موبایل کاملا لگ می‌داد. */}
+              {isOpen && (
+                  <div className="week-day-body">
                     <div className="manual-day-panel">
                       <div className="manual-day-panel-head">
                         <div className="manual-day-panel-headinfo">
@@ -318,10 +293,10 @@ export function ManualExercisePlanForm({
                               type="button"
                               className="manual-day-edit-btn"
                               onClick={() => setEditDay(isEditing ? null : day)}
-                              aria-label={isEditing ? "پایانِ ویرایش" : `ویرایشِ روزِ ${day}`}
+                              aria-label={isEditing ? "پایان ویرایش" : `ویرایش روز ${day}`}
                             >
                               <Pencil size={13} />
-                              {isEditing ? "پایانِ ویرایش" : "ویرایش"}
+                              {isEditing ? "پایان ویرایش" : "ویرایش"}
                             </button>
                           )}
                         </div>
@@ -346,19 +321,16 @@ export function ManualExercisePlanForm({
                         </Reorder.Group>
                       )}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
 
-              <AnimatePresence>
-                {pickerOpenFor === day && (
-                  <ManualExerciseAddPopup
-                    onAdd={(formatted) => addItem(day, formatted)}
-                    onClose={() => setPickerOpenFor(null)}
-                    excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
-                  />
-                )}
-              </AnimatePresence>
+              {pickerOpenFor === day && (
+                <ManualExerciseAddPopup
+                  onAdd={(formatted) => addItem(day, formatted)}
+                  onClose={() => setPickerOpenFor(null)}
+                  excludeNames={new Set(items.map((it) => stripSetSuffix(it)))}
+                />
+              )}
             </div>
           );
         })}
@@ -367,17 +339,9 @@ export function ManualExercisePlanForm({
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
 
       <div className="manual-submit-row">
-        <motion.button
-          type="button"
-          onClick={submit}
-          disabled={submitting || !hasAnyItems}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          className="manual-plan-submit-btn"
-        >
+        <button type="button" onClick={submit} disabled={submitting || !hasAnyItems} className="manual-plan-submit-btn">
           {submitting ? "در حال ثبت…" : "ثبت برنامه"}
-        </motion.button>
+        </button>
       </div>
     </div>
   );

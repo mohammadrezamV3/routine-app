@@ -4,13 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { clampText } from "@/lib/validate";
 
-// PATCH /api/notepad/databases/:id/properties/:propertyId — تغییرِ نام/
+// PATCH /api/notepad/databases/:id/properties/:propertyId — تغییر نام/
 // گزینه‌ها (select choices، فرمول، relation target)/موقعیت
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; propertyId: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const property = await prisma.notepadDatabaseProperty.findFirst({
     where: { id: params.propertyId, databaseId: params.id, database: { block: { page: { userId } } } },
@@ -27,14 +27,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ property: updated });
 }
 
-// DELETE /api/notepad/databases/:id/properties/:propertyId — حذفِ property
-// + پاک‌کردنِ ارجاع‌هاش از رکوردها (values JSON) و از filters/sorts/
-// boardGroupPropertyId/calendarDatePropertyId خودِ دیتابیس
+// DELETE /api/notepad/databases/:id/properties/:propertyId — حذف property
+// + پاک‌کردن ارجاع‌هاش از رکوردها (values JSON) و از filters/sorts/
+// boardGroupPropertyId/calendarDatePropertyId خود دیتابیس
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string; propertyId: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const property = await prisma.notepadDatabaseProperty.findFirst({
     where: { id: params.propertyId, databaseId: params.id, database: { block: { page: { userId } } } },

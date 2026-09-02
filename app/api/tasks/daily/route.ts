@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 
-// سقفِ تعدادِ کلیدِ «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
+// سقف تعداد کلید «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
 const MAX_DAILY_TASK_KEYS = 500;
 
 // GET /api/tasks/daily?date=2026-07-24
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // `new Date(userInput)` مستقیم استفاده نمی‌شه: یه ورودیِ بدشکل یه
+  // `new Date(userInput)` مستقیم استفاده نمی‌شه: یه ورودی بدشکل یه
   // Invalid Date می‌داد که Prisma باهاش throw می‌کرد و روت ۵۰۰ می‌شد.
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
   if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
@@ -42,12 +42,12 @@ export async function POST(req: NextRequest) {
   if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
 
   // `wake` یه timestamp کامله (نه فقط روز)؛ اگه بدشکل بود باید null بشه نه
-  // Invalid Date — وگرنه همون ۵۰۰ِ قبلی از مسیرِ دیگه‌ای برمی‌گرده.
+  // Invalid Date — وگرنه همون ۵۰۰ قبلی از مسیر دیگه‌ای برمی‌گرده.
   const wakeAt = wake ? new Date(wake) : null;
   const wakeUpAt = wakeAt && !Number.isNaN(wakeAt.getTime()) ? wakeAt : null;
 
-  // فقط کلیدهای booleanِ واقعی ذخیره می‌شن، با سقفِ تعداد — این ستون Jsonه و
-  // بدونِ سقف هر چیزی که فرستاده بشه عیناً می‌نشست توی دیتابیس.
+  // فقط کلیدهای boolean واقعی ذخیره می‌شن، با سقف تعداد — این ستون Jsonه و
+  // بدون سقف هر چیزی که فرستاده بشه عینا می‌نشست توی دیتابیس.
   const completedItems: Record<string, boolean> = {};
   for (const [k, v] of Object.entries(tasks ?? {}).slice(0, MAX_DAILY_TASK_KEYS)) {
     if (typeof k === "string" && k.length <= 200) completedItems[k.slice(0, 200)] = !!v;

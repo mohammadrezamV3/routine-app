@@ -11,9 +11,9 @@ export async function GET() {
   return NextResponse.json({ aiCostRate, defaultAiCostRate: DEFAULT_AI_COST_RATE });
 }
 
-// PATCH { inputPer1kUsdMicros, outputPer1kUsdMicros } — تنها اهرمِ واقعیِ
-// قابل‌تنظیمِ این بخش (نرخِ تخمینِ هزینه‌ی AI)؛ بقیه‌ی «تنظیمات Owner» چیزی
-// نیست که این اپ الان یک لیورِ واقعی براش داشته باشه.
+// PATCH { inputPer1kUsdMicros, outputPer1kUsdMicros } — تنها اهرم واقعی
+// قابل‌تنظیم این بخش (نرخ تخمین هزینه‌ی AI)؛ بقیه‌ی «تنظیمات Owner» چیزی
+// نیست که این اپ الان یک لیور واقعی براش داشته باشه.
 export async function PATCH(req: NextRequest) {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;

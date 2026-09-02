@@ -10,10 +10,10 @@ import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration"
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
 
-// صفحه‌ی مستقلِ «اشتراک» — همون کارت‌ها/جدولِ مقایسه‌ی صفحه‌ی لندینگ رو
-// اینجا هم نشون می‌ده (از طریقِ PlansSection مشترک)، فقط دکمه‌ی هر پلن
-// به‌جای بردن به ثبت‌نام، می‌بره به چک‌اوتِ واقعی — پلنِ فعلیِ کاربر هم
-// به‌جای دکمه‌ی خرید یه نشانِ «پلنِ فعلیِ تو» می‌گیره.
+// صفحه‌ی مستقل «اشتراک» — همون کارت‌ها/جدول مقایسه‌ی صفحه‌ی لندینگ رو
+// اینجا هم نشون می‌ده (از طریق PlansSection مشترک)، فقط دکمه‌ی هر پلن
+// به‌جای بردن به ثبت‌نام، می‌بره به چک‌اوت واقعی — پلن فعلی کاربر هم
+// به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 export default function SubscriptionPage() {
   const { status } = useSession();
   const [checkoutResult, setCheckoutResult] = useState<string | null>(null);
@@ -25,14 +25,14 @@ export default function SubscriptionPage() {
   const isIntl = getSiteMarket() === "INTERNATIONAL";
 
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
-  // نباشه (قاعده‌ی معمولِ پروژه — نگاه کن به app/auth/login/page.tsx).
+  // نباشه (قاعده‌ی معمول پروژه — نگاه کن به app/auth/login/page.tsx).
   useEffect(() => {
     const result = new URLSearchParams(window.location.search).get("checkout");
     setCheckoutResult(result);
     if (result === "success") setShowCelebration(true);
   }, []);
 
-  // پنل Owner › Funnel — یک بار به‌ازای هر بازدیدِ واقعیِ این صفحه، بی‌صدا و
+  // پنل Owner › Funnel — یک بار به‌ازای هر بازدید واقعی این صفحه، بی‌صدا و
   // بدون تأثیر روی تجربه‌ی کاربر (fire-and-forget)
   useEffect(() => {
     if (status === "loading") return;
@@ -70,7 +70,7 @@ export default function SubscriptionPage() {
 
       {checkoutResult === "success" && (
         <div className="checkout-status-banner success">
-          <CheckCircle2 size={18} /> پرداخت با موفقیت انجام شد — پلنِ جدید فعال شد.
+          <CheckCircle2 size={18} /> پرداخت با موفقیت انجام شد — پلن جدید فعال شد.
         </div>
       )}
       {checkoutResult === "failed" && (
@@ -81,9 +81,9 @@ export default function SubscriptionPage() {
 
       <div className="section-note">
         {isSuperAdmin
-          ? "دسترسیِ نامحدود داری — نیازی به اشتراک نداری"
+          ? "دسترسی نامحدود داری — نیازی به اشتراک نداری"
           : subscription
-          ? `پلنِ فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`
+          ? `پلن فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`
           : "هنوز پلن پولی فعالی نداری — فقط ماژول‌های دوره آزمایشی در دسترسته"}
       </div>
 

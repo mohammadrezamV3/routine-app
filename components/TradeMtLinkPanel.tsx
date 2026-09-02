@@ -15,8 +15,8 @@ type MtLink = {
   connectedAt: string | null; lastSyncAt: string | null; revokedAt: string | null;
 };
 
-// اتصالِ متاتریدرِ **همین حساب**. عمداً داخلِ صفحه‌ی حساب است نه یک صفحه‌ی
-// سراسری: هر کاربر ده‌ها حساب دارد و هرکدام ترمینال و لاگینِ خودش را دارد.
+// اتصال متاتریدر **همین حساب**. عمدا داخل صفحه‌ی حساب است نه یک صفحه‌ی
+// سراسری: هر کاربر ده‌ها حساب دارد و هرکدام ترمینال و لاگین خودش را دارد.
 export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; calSystem: CalSystem }) {
   const [link, setLink] = useState<MtLink | null>(null);
   const [platform, setPlatform] = useState<"MT4" | "MT5">("MT4");
@@ -69,7 +69,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
     }
   }
 
-  // «بررسی اتصال» یک درخواستِ شبکه است؛ بدونِ این حالت دکمه هیچ نشانه‌ای
+  // «بررسی اتصال» یک درخواست شبکه است؛ بدون این حالت دکمه هیچ نشانه‌ای
   // نمی‌داد و کاربر فکر می‌کرد کلیکش نگرفته.
   async function refresh() {
     if (refreshing) return;
@@ -87,14 +87,16 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
 
   return (
     <div className="trade-surface trade-mt-panel">
-      <div className="domain-sub" style={{ margin: "0 0 10px" }}>اتصال متاتریدر</div>
+      <div className="trade-mt-panel-head">
+        <div className="domain-sub" style={{ margin: 0 }}>اتصال متاتریدر</div>
+        <span className={`trade-mt-live${link?.connected ? " connected" : ""}`}>
+          <span className="trade-mt-live-dot" />
+          {link?.connected ? "فعال" : "غیرفعال"}
+        </span>
+      </div>
 
       {link?.connected ? (
         <>
-          <div className="trade-mt-status connected">
-            <span className="forex-dot" />
-            متاتریدر متصل است
-          </div>
           <div className="trade-detail-grid" style={{ marginTop: 12 }}>
             <div className="trade-detail-cell"><span>نسخه</span><b>{link.platform}</b></div>
             {link.brokerName && <div className="trade-detail-cell"><span>بروکر</span><b>{link.brokerName}</b></div>}
@@ -119,11 +121,6 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
         </>
       ) : (
         <>
-          <div className="trade-mt-status">
-            <span className="forex-dot" />
-            {link?.revokedAt ? "اتصال قطع شده" : "هنوز متصل نیست"}
-          </div>
-
           <label className="exercise-form-label">کدام نسخه‌ی متاتریدر؟</label>
           <SegmentedTabs
             active={platform}
@@ -133,19 +130,33 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
 
           <ol className="trade-mt-steps">
             <li>
-              فایل اکسپرت را دانلود کن
+              <span>فایل اکسپرت را دانلود کنید</span>
               <a className="trade-mt-download" href={platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
                 <Download size={14} /> {platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
               </a>
             </li>
-            <li>فایل را در پوشه‌ی <b className="mono">{platform === "MT4" ? "MQL4/Experts" : "MQL5/Experts"}</b> ترمینال بگذار</li>
-            <li>در MetaEditor بازش کن و <b className="mono">F7</b> بزن تا کامپایل شود</li>
             <li>
-              در متاتریدر: <b>Tools → Options → Expert Advisors</b> →
-              گزینه‌ی <b className="mono">Allow WebRequest for listed URL</b> را تیک بزن و آدرس سایت را اضافه کن.
-              <span className="trade-mt-note">بدون این اجازه، متاتریدر هیچ درخواستی به بیرون نمی‌فرستد — این مرحله اجباری است.</span>
+              <span>
+                از منوی <b className="mono ltr-inline">File</b> در متاتریدر گزینه‌ی{" "}
+                <b className="mono ltr-inline">Open Data Folder</b> را بزن؛ در پوشه‌ای که باز می‌شود مسیر{" "}
+                <b className="mono ltr-inline">{platform === "MT4" ? "MQL4/Experts" : "MQL5/Experts"}</b> را باز کن
+                و فایل دانلودشده را همان‌جا کپی کن.
+              </span>
             </li>
-            <li>اکسپرت را روی یک چارت بینداز و کد زیر را در فیلد <b className="mono">PairingCode</b> بگذار</li>
+            <li>
+              <span>
+                در <b className="mono ltr-inline">MetaEditor</b> بازش کن و <b className="mono ltr-inline">F7</b> بزن تا کامپایل شود
+              </span>
+            </li>
+            <li>
+              <span>
+                در متاتریدر: <b className="mono ltr-inline">Tools → Options → Expert Advisors</b> — گزینه‌ی{" "}
+                <b className="mono ltr-inline">Allow WebRequest for listed URL</b> را تیک بزن و آدرس سایت را اضافه کن.
+              </span>
+            </li>
+            <li>
+              <span>اکسپرت را روی یک چارت بینداز و کد زیر را در فیلد <b className="mono ltr-inline">PairingCode</b> بگذار</span>
+            </li>
           </ol>
 
           {code ? (

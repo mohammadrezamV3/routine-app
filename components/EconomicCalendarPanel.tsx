@@ -1,45 +1,42 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarClock, Filter } from "lucide-react";
+import { CalendarClock, Filter, Loader2 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
-import { SegmentedTabs } from "./SegmentedTabs";
 import { formatTradeDateTime, formatTradeTime } from "@/lib/tradeDateTime";
+// توجه: SegmentedTabs امروز/فردا/این‌هفته دیگه لازم نیست — لیست حالا
+// پیوسته‌ست، مثل ForexFactory.
 import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
   IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, currencyMeta,
 } from "@/lib/economicCalendar";
 
-type RangeKey = "today" | "tomorrow" | "week";
+const DAYS_PAGE = 14;
+const MAX_DAYS_AHEAD = 60;
 
-// همه‌ی ساعت‌ها به وقتِ محلیِ خودِ مرورگرِ کاربر نشان داده می‌شوند (رویدادها
-// در دیتابیس UTCاند). گروه‌بندی هم بر اساس همان روزِ محلی است، نه روزِ UTC —
-// وگرنه برای کاربرِ ایران، رویدادِ ۰۳:۳۰ بامداد در گروهِ «دیروز» می‌افتاد.
-function rangeOf(key: RangeKey): { from: string; to: string } {
+// دیگه سه‌تب امروز/فردا/این‌هفته نداریم — درست مثل ForexFactory، یک لیست
+// پیوسته‌ی ردیفی از روزهای پیش‌رو (با دکمه‌ی «روزهای بیشتر» برای ادامه‌ش).
+function rangeFromToday(daysAhead: number): { from: string; to: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (key === "today") return { from: isoLocal(start), to: isoLocal(start) };
-  if (key === "tomorrow") {
-    const t = new Date(start.getTime() + 86_400_000);
-    return { from: isoLocal(t), to: isoLocal(t) };
-  }
-  return { from: isoLocal(start), to: isoLocal(new Date(start.getTime() + 6 * 86_400_000)) };
+  return { from: isoLocal(start), to: isoLocal(new Date(start.getTime() + daysAhead * 86_400_000)) };
 }
 
 export function EconomicCalendarPanel() {
-  const [range, setRange] = useState<RangeKey>("today");
+  const [daysAhead, setDaysAhead] = useState(DAYS_PAGE);
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
   const [loading, setLoading] = useState(true);
-  // فقط بارِ اول اسکلت نشان می‌دهیم؛ با هر تغییرِ فیلتر، لیستِ قبلی سرِ جایش
-  // می‌ماند و کمی کم‌رنگ می‌شود. قبلاً هر کلیک روی یک فیلتر کلِ لیست را با
-  // اسکلت جایگزین می‌کرد و همان پرش، حسِ کُندی و ناپایداری می‌داد.
+  // فقط بار اول اسکلت نشان می‌دهیم؛ با هر تغییر فیلتر/بازه، لیست قبلی سر
+  // جایش می‌ماند و کمی کم‌رنگ می‌شود. قبلا هر کلیک روی یک فیلتر کل لیست را
+  // با اسکلت جایگزین می‌کرد و همان پرش، حس کندی و ناپایداری می‌داد.
   const [firstLoad, setFirstLoad] = useState(true);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [currencies, setCurrencies] = useState<string[]>([]);
+  const [otherCurrencies, setOtherCurrencies] = useState(false);
   const [impacts, setImpacts] = useState<EconomicImpact[]>([]);
 
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
@@ -47,9 +44,10 @@ export function EconomicCalendarPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { from, to } = rangeOf(range);
+      const { from, to } = rangeFromToday(daysAhead);
       const qs = new URLSearchParams({ from, to });
       if (currencies.length) qs.set("currencies", currencies.join(","));
+      if (otherCurrencies) qs.set("other", "1");
       if (impacts.length) qs.set("impacts", impacts.join(","));
       const res = await fetch(`/api/trade/economic-calendar?${qs}`);
       setEvents(res.ok ? (await res.json()).events || [] : []);
@@ -57,11 +55,11 @@ export function EconomicCalendarPanel() {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [range, currencies, impacts]);
+  }, [daysAhead, currencies, otherCurrencies, impacts]);
 
   useEffect(() => { load(); }, [load]);
 
-  // گروه‌بندی بر اساسِ روزِ محلی
+  // گروه‌بندی بر اساس روز محلی
   const groups = useMemo(() => {
     const map = new Map<string, EconomicEventDto[]>();
     for (const e of events) {
@@ -74,23 +72,13 @@ export function EconomicCalendarPanel() {
 
   return (
     <div>
-      <SegmentedTabs
-        active={range}
-        onChange={setRange}
-        options={[
-          { value: "today" as const, label: "امروز" },
-          { value: "tomorrow" as const, label: "فردا" },
-          { value: "week" as const, label: "این هفته" },
-        ]}
-      />
-
       <div className="trade-cal-filter-bar">
         <button type="button" className="trade-ghost-btn" onClick={() => setFiltersOpen((v) => !v)}>
           <Filter size={13} /> فیلتر
-          {(currencies.length || impacts.length) ? ` (${faNum(currencies.length + impacts.length)})` : ""}
+          {(currencies.length || impacts.length || otherCurrencies) ? ` (${faNum(currencies.length + impacts.length + (otherCurrencies ? 1 : 0))})` : ""}
         </button>
-        {(currencies.length > 0 || impacts.length > 0) && (
-          <button type="button" className="trade-ghost-btn" onClick={() => { setCurrencies([]); setImpacts([]); }}>
+        {(currencies.length > 0 || impacts.length > 0 || otherCurrencies) && (
+          <button type="button" className="trade-ghost-btn" onClick={() => { setCurrencies([]); setImpacts([]); setOtherCurrencies(false); }}>
             پاک‌کردن فیلترها
           </button>
         )}
@@ -125,6 +113,13 @@ export function EconomicCalendarPanel() {
                 {c.flag} {c.code}
               </button>
             ))}
+            <button
+              type="button"
+              className={`trade-choice${otherCurrencies ? " active" : ""}`}
+              onClick={() => setOtherCurrencies((v) => !v)}
+            >
+              سایر ارزها
+            </button>
           </div>
         </div>
       )}
@@ -165,6 +160,18 @@ export function EconomicCalendarPanel() {
         </div>
       ))}
       </div>
+      )}
+
+      {!firstLoad && !!events.length && daysAhead < MAX_DAYS_AHEAD && (
+        <button
+          type="button"
+          className="trade-ghost-btn"
+          style={{ width: "100%", justifyContent: "center", marginTop: 14 }}
+          onClick={() => setDaysAhead((d) => Math.min(d + DAYS_PAGE, MAX_DAYS_AHEAD))}
+          disabled={loading}
+        >
+          {loading ? <Loader2 size={14} className="trade-spin" /> : "روزهای بیشتر"}
+        </button>
       )}
     </div>
   );

@@ -4,14 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-// POST /api/notepad/pages/:id/duplicate — کپیِ صفحه (عنوان+آیکون+بلاک‌ها) به
-// عنوانِ یه خواهر/برادرِ جدید، بلافاصله بعدِ خودِ صفحه. زیرصفحه‌ها کپی نمی‌شن
-// (دامنه‌ی Phase 1، مثلِ خیلی از پیاده‌سازی‌های ساده‌ترِ duplicate)
+// POST /api/notepad/pages/:id/duplicate — کپی صفحه (عنوان+آیکون+بلاک‌ها) به
+// عنوان یه خواهر/برادر جدید، بلافاصله بعد خود صفحه. زیرصفحه‌ها کپی نمی‌شن
+// (دامنه‌ی Phase 1، مثل خیلی از پیاده‌سازی‌های ساده‌تر duplicate)
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`notepad-page-duplicate:${userId}`, 60, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی صبر کن" }, { status: 429 });
@@ -42,7 +42,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       },
     });
     if (blocks.length) {
-      // نگاشتِ id قدیمی -> جدید، تا parentBlockId (بچه‌های Toggle) هم درست بمونه
+      // نگاشت id قدیمی -> جدید، تا parentBlockId (بچه‌های Toggle) هم درست بمونه
       const idMap = new Map<string, string>();
       blocks.forEach((b) => idMap.set(b.id, `nb_${created.id}_${b.id}`));
       await tx.notepadBlock.createMany({

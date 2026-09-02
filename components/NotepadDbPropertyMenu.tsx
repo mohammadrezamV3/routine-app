@@ -7,9 +7,9 @@ import {
   SelectOption, makeSelectOption,
 } from "@/lib/notepadDb";
 
-// پاپ‌آپِ افزودن/ویرایشِ یک property — اسم، نوع (فقط موقعِ افزودن قابل‌تغییره،
-// عوض‌کردنِ نوعِ یه propertyِ موجود دامنه‌ی این فاز نیست)، و ادیتورِ
-// گزینه‌های اختصاصیِ همون نوع (select/multi_select choices یا فرمول)
+// پاپ‌آپ افزودن/ویرایش یک property — اسم، نوع (فقط موقع افزودن قابل‌تغییره،
+// عوض‌کردن نوع یه property موجود دامنه‌ی این فاز نیست)، و ادیتور
+// گزینه‌های اختصاصی همون نوع (select/multi_select choices یا فرمول)
 export function NotepadDbPropertyMenu({
   property,
   onCreate,
@@ -56,7 +56,7 @@ export function NotepadDbPropertyMenu({
             autoFocus
             type="text"
             className="notepad-db-property-name-input"
-            placeholder="اسمِ property"
+            placeholder="اسم property"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -110,11 +110,11 @@ export function NotepadDbPropertyMenu({
 
         {type === "formula" && (
           <div className="notepad-db-choices-editor">
-            <label className="notepad-db-formula-label">فرمول (اسمِ propertyهای عددی + عملگرهای + - × ÷)</label>
+            <label className="notepad-db-formula-label">فرمول (اسم propertyهای عددی + عملگرهای + - × ÷)</label>
             <input
               type="text"
               className="notepad-db-property-name-input"
-              placeholder="مثلاً: قیمت * تعداد"
+              placeholder="مثلا: قیمت * تعداد"
               value={expression}
               onChange={(e) => setExpression(e.target.value)}
               dir="ltr"
@@ -125,7 +125,7 @@ export function NotepadDbPropertyMenu({
         <div className="notepad-db-property-menu-actions">
           {isEdit && onDelete && (
             <button type="button" className="notepad-db-property-delete-btn" onClick={() => { onDelete(); onClose(); }}>
-              <Trash2 size={12} /> حذفِ property
+              <Trash2 size={12} /> حذف property
             </button>
           )}
           <button type="button" className="notepad-db-property-save-btn" onClick={save}>ثبت</button>

@@ -7,9 +7,9 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Command = { id: string; label: string; icon: JSX.Element; run: () => void };
 
-// Command Palette — با Ctrl/Cmd+K باز می‌شه؛ یه اینپوتِ واحد هم دستورهای
-// پایه (صفحه‌ی جدید، toggle سایدبار) هم جستجوی سراسریِ عنوان/متنِ بلاک‌ها رو
-// پوشش می‌ده — دقیقاً مثلِ الگویی که توی بخشِ «شروعِ کار» خواسته شده
+// Command Palette — با Ctrl/Cmd+K باز می‌شه؛ یه اینپوت واحد هم دستورهای
+// پایه (صفحه‌ی جدید، toggle سایدبار) هم جستجوی سراسری عنوان/متن بلاک‌ها رو
+// پوشش می‌ده — دقیقا مثل الگویی که توی بخش «شروع کار» خواسته شده
 export function NotepadCommandPalette({
   onClose,
   onNavigate,
@@ -28,7 +28,7 @@ export function NotepadCommandPalette({
 
   const commands: Command[] = [
     { id: "new-page", label: "صفحه‌ی جدید", icon: <Plus size={14} />, run: onCreatePage },
-    { id: "toggle-sidebar", label: "نمایش/پنهانِ سایدبار", icon: <SidebarIcon size={14} />, run: onToggleSidebar },
+    { id: "toggle-sidebar", label: "نمایش/پنهان سایدبار", icon: <SidebarIcon size={14} />, run: onToggleSidebar },
   ];
 
   useEffect(() => {

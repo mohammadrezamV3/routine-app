@@ -6,12 +6,13 @@ import { CalendarCheck2, Dumbbell, BellRing } from "lucide-react";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { AccountToggleRow } from "@/components/AccountRow";
+import { AccountBackButton } from "@/components/AccountBackButton";
 
-// فقط دسته‌هایی که واقعاً سمتِ سرور (app/api/push/send-reminders) و پنلِ
-// اعلانِ زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
-// (آریونِ عمومی/کالری/ترید/رودمپ/درخواستِ دوستی) قبلاً این‌جا سوییچ
+// فقط دسته‌هایی که واقعا سمت سرور (app/api/push/send-reminders) و پنل
+// اعلان زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
+// (آریون عمومی/کالری/ترید/رودمپ/درخواست دوستی) قبلا این‌جا سوییچ
 // داشتن ولی هیچ‌جا خونده نمی‌شدن — سوییچی که هیچ اثری نداره بدتر از
-// نبودنشه، پس حذف شدن؛ وقتی واقعاً پیاده بشن برمی‌گردن.
+// نبودنشه، پس حذف شدن؛ وقتی واقعا پیاده بشن برمی‌گردن.
 const ROWS: [keyof NotifPrefs, string, React.ReactNode][] = [
   ["taskReminders", "اعلان‌های روتین", <CalendarCheck2 size={16} key="r" />],
   ["exerciseReminders", "اعلان‌های بدنسازی", <Dumbbell size={16} key="e" />],
@@ -41,8 +42,9 @@ export default function NotificationsPage() {
 
   return (
     <section>
+      <AccountBackButton />
       <h1>اعلان‌ها</h1>
-      <div className="account-content-hint">مدیریتِ اعلان‌های Arion</div>
+      <div className="account-content-hint">مدیریت اعلان‌های Arion</div>
 
       {notifPermission !== "granted" && (
         <motion.div

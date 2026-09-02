@@ -6,16 +6,16 @@ import { Moon } from "lucide-react";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 
-export default function RoutineModuleSettingsPage() {
+// تنظیمات بخش «روتین» — قبلا یک صفحه‌ی جدا پشت یک لینک بود؛ حالا
+// مستقیم داخل صفحه‌ی تنظیمات رندر می‌شه، فقط با یک تیتر که می‌گه مال کدوم بخشه.
+export function RoutineSettings() {
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editing, setEditing] = useState(false);
 
   useEffect(() => { getWakeSleepTimes().then(setWakeSleep); }, []);
 
   return (
-    <section>
-      <h1>روتین</h1>
-      <div className="account-content-hint">تنظیمات مربوط به برنامه‌ها و یادآوری‌های روتین</div>
+    <>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="account-card" style={{ padding: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -32,7 +32,7 @@ export default function RoutineModuleSettingsPage() {
       </motion.div>
 
       <div className="section-note" style={{ marginTop: 16 }}>
-        یادآوریِ برنامه‌های روزانه از بخشِ «اعلان‌ها» قابل تنظیمه.
+        یادآوری برنامه‌های روزانه از بخش «اعلان‌ها» قابل تنظیمه.
       </div>
 
       {editing && (
@@ -42,6 +42,6 @@ export default function RoutineModuleSettingsPage() {
           onDone={(v) => { setWakeSleep(v); setEditing(false); }}
         />
       )}
-    </section>
+    </>
   );
 }

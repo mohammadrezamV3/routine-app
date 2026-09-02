@@ -15,15 +15,14 @@ import {
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
-import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
 type StatusFilter = "ALL" | TradeStatus;
 
-// صفحه‌ی یک حساب: مشخصات + آمار + لیستِ معاملات. طبقِ اصلِ «بدون شلوغیِ
-// غیرضروری»ی اسپک، این‌جا فقط همین سه بخش است و هر چیزِ عمیق‌تر (جزئیاتِ
-// معامله، تصاویر، چک‌لیست) یک لایه پایین‌تر، در کشویِ جزئیات، باز می‌شود.
+// صفحه‌ی یک حساب: مشخصات + آمار + لیست معاملات. طبق اصل «بدون شلوغی
+// غیرضروری»ی اسپک، این‌جا فقط همین سه بخش است و هر چیز عمیق‌تر (جزئیات
+// معامله، تصاویر، چک‌لیست) یک لایه پایین‌تر، در کشوی جزئیات، باز می‌شود.
 export function TradeAccountView({ accountId }: { accountId: string }) {
   const [account, setAccount] = useState<TradeAccount | null>(null);
   const [entries, setEntries] = useState<TradeEntry[]>([]);
@@ -237,7 +236,15 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         ))}
       </div>
 
-      <TradeMtLinkPanel accountId={account.id} calSystem={calSystem} />
+      {/* جزئیات کامل اتصال (مراحل نصب، کد اتصال، ...) جاش صفحه‌ی
+          اختصاصی /trade/metatrader/[id]ه — این‌جا فقط یک خط وضعیته. */}
+      <Link href={`/trade/metatrader/${account.id}?from=account`} className="trade-surface trade-mt-line">
+        <span>اتصال متاتریدر</span>
+        <span className={`trade-mt-status${account.mtConnected ? " connected" : ""}`}>
+          <span className="forex-dot" />
+          {account.mtConnected ? "فعال" : "غیرفعال"}
+        </span>
+      </Link>
 
       {editingAccount && (
         <TradeAccountModal

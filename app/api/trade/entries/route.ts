@@ -5,20 +5,20 @@ import { requireModule } from "@/lib/moduleAccess";
 import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer";
 import { parseDateRange } from "@/lib/validate";
 
-// معاملاتِ یک حساب. برخلافِ نسخه‌ی قبلی که همه‌ی معاملاتِ کاربر را یکجا
-// می‌داد، این‌جا accountId اجباری است — چون کلِ UI حساب‌محور است و آمارِ دو
-// حسابِ متفاوت هیچ‌وقت نباید با هم جمع شود.
+// معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
+// می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
+// حساب متفاوت هیچ‌وقت نباید با هم جمع شود.
 
-/** حسابی که به کاربر تعلق دارد — هر روتِ معامله اول از این رد می‌شود */
+/** حسابی که به کاربر تعلق دارد — هر روت معامله اول از این رد می‌شود */
 async function ownedAccount(userId: string, accountId: string) {
   if (!accountId) return null;
   return prisma.tradeAccount.findFirst({ where: { id: accountId, userId }, select: { id: true } });
 }
 
 /**
- * اسنپ‌شاتِ چک‌لیست در لحظه‌ی ثبت.
- * متنِ آیتم‌ها کپی می‌شود نه ارجاع داده — اگر کاربر فردا یک آیتم را عوض یا
- * حذف کند، آمارِ معاملاتِ دیروز نباید بی‌صدا معنی دیگری پیدا کند.
+ * اسنپ‌شات چک‌لیست در لحظه‌ی ثبت.
+ * متن آیتم‌ها کپی می‌شود نه ارجاع داده — اگر کاربر فردا یک آیتم را عوض یا
+ * حذف کند، آمار معاملات دیروز نباید بی‌صدا معنی دیگری پیدا کند.
  */
 async function buildChecklistSnapshot(userId: string, checklistId: string | null, state: Record<string, boolean>) {
   if (!checklistId) {
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
   if (fromRaw || toRaw) {
     const range = parseDateRange(fromRaw, toRaw);
     if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
-    // openedAt یک timestamp است نه فقط روز، پس تا آخرِ روزِ پایانی باز می‌شود
+    // openedAt یک timestamp است نه فقط روز، پس تا آخر روز پایانی باز می‌شود
     dateFilter = { openedAt: { gte: range.from, lte: new Date(range.to.getTime() + 86_400_000 - 1) } };
   }
 
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 }
 
 // PATCH /api/trade/entries  { id, ...همه‌ی فیلدها }
-// فرم همیشه کلِ رکورد را می‌فرستد، پس این جایگزینیِ کامل است نه patchِ جزئی.
+// فرم همیشه کل رکورد را می‌فرستد، پس این جایگزینی کامل است نه patch جزئی.
 export async function PATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -130,8 +130,8 @@ export async function PATCH(req: NextRequest) {
     ? await prisma.tradeTag.findMany({ where: { id: { in: parsed.tagIds }, userId }, select: { id: true } })
     : [];
 
-  // عکس‌ها یکجا جایگزین می‌شوند (نه تفاضلی) — فرم همیشه لیستِ نهایی را
-  // می‌فرستد و تشخیصِ «کدام عکس همان عکسِ قبلی است» روی data URL شکننده است.
+  // عکس‌ها یکجا جایگزین می‌شوند (نه تفاضلی) — فرم همیشه لیست نهایی را
+  // می‌فرستد و تشخیص «کدام عکس همان عکس قبلی است» روی data URL شکننده است.
   const [, entry] = await prisma.$transaction([
     prisma.tradeImage.deleteMany({ where: { entryId: id } }),
     prisma.tradeEntry.update({

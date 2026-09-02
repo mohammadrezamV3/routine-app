@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Pause, PartyPopper, Play } from "lucide-react";
+import { Check, PartyPopper, Play, SkipForward } from "lucide-react";
 import { parseExerciseItem } from "@/lib/exerciseSets";
 import { fireTimerDone } from "@/lib/notifications";
 import {
@@ -31,11 +31,11 @@ function freshState(): PersistedExerciseTimer {
   return { completedSets: 0, phase: null, endAt: null, pausedRemainingMs: null, startedAt: Date.now() };
 }
 
-// «روشِ اول» — پاپ‌آپِ ردیابیِ ست‌به‌ستِ یک حرکت. دو حالت داره: (۱) تکرارمحور
-// (مثلاً «۵×۵») → دایره‌ی چک‌باکس با تیکِ دستی، (۲) زمان‌محور (پلانک/کاردیو)
-// → یک شمارش‌معکوسِ زنده و قابلِ‌پاز. وضعیتِ تایمر (فازِ فعلی، ستِ فعلی،
-// پازبودن) توی localStorage با یک epoch ذخیره می‌شه — نه رفرشِ صفحه نه
-// بستن/بازکردنِ دوباره‌ی پاپ‌آپ پیشرفت رو از دست نمی‌ده.
+// «روش اول» — پاپ‌آپ ردیابی ست‌به‌ست یک حرکت. دو حالت داره: (۱) تکرارمحور
+// (مثلا «۵×۵») → دایره‌ی چک‌باکس با تیک دستی، (۲) زمان‌محور (پلانک/کاردیو)
+// → یک شمارش‌معکوس زنده با امکان ردکردن. وضعیت تایمر (فاز فعلی و ست
+// فعلی) توی localStorage با یک epoch ذخیره می‌شه — نه رفرش صفحه نه
+// بستن/بازکردن دوباره‌ی پاپ‌آپ پیشرفت رو از دست نمی‌ده.
 export function ExerciseSetTrackerModal({
   planId,
   dateIso,
@@ -103,7 +103,7 @@ export function ExerciseSetTrackerModal({
       setFinishedTotalSec(total);
       persist({ completedSets: next, phase: null, endAt: null, pausedRemainingMs: null });
     } else {
-      fireTimerDone(baseName, `ست ${next} تموم شد — وقتِ استراحته`);
+      fireTimerDone(baseName, `ست ${next} تموم شد — وقت استراحته`);
       persist({ completedSets: next, phase: "resting", endAt: Date.now() + REST_SECONDS * 1000, pausedRemainingMs: null });
     }
   }
@@ -127,38 +127,41 @@ export function ExerciseSetTrackerModal({
     persist({ phase: "timing", endAt: Date.now() + (seconds ?? 0) * 1000, pausedRemainingMs: null });
   }
 
-  function togglePause() {
+  // «رد کردن» — دکمه‌ی توقف موقت طبق درخواست صریح کاربر حذف شد (توی عمل
+  // به‌درد نمی‌خورد) و جاش همین دکمه نشست: شمارش فعلی رو تموم‌شده حساب می‌کنه.
+  // برای استراحت یعنی «آماده‌م، برو ست بعدی»، برای یک حرکت زمان‌محور یعنی
+  // «همینجا تمومش کن».
+  function skipPhase() {
     if (state.phase === null) return;
-    if (paused) {
-      persist({ endAt: Date.now() + (state.pausedRemainingMs ?? 0), pausedRemainingMs: null });
-    } else if (state.endAt !== null) {
-      persist({ endAt: null, pausedRemainingMs: Math.max(0, state.endAt - Date.now()) });
-    }
+    handlePhaseComplete();
   }
 
   const restPct = state.phase === "resting" && remainingSec !== null ? Math.round(((REST_SECONDS - remainingSec) / REST_SECONDS) * 100) : 0;
   const timePct = state.phase === "timing" && seconds && remainingSec !== null ? Math.round(((seconds - remainingSec) / seconds) * 100) : 0;
 
-  const pauseResumeBtn = (
+  // دقیقا هم‌شکل دکمه‌ی توقف قبلی (همون کلاس exercise-pause-btn)
+  const skipRestBtn = (
     <motion.button
       type="button"
       whileTap={{ scale: 0.88 }}
-      onClick={togglePause}
-      aria-label={paused ? "ادامه" : "توقفِ موقت"}
+      onClick={skipPhase}
+      aria-label="رد کردن استراحت"
       className="exercise-pause-btn"
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {paused ? (
-          <motion.span key="play" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }}>
-            <Play size={13} fill="currentColor" />
-          </motion.span>
-        ) : (
-          <motion.span key="pause" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }}>
-            <Pause size={13} fill="currentColor" />
-          </motion.span>
-        )}
-      </AnimatePresence>
-      {paused ? "ادامه" : "توقف"}
+      <SkipForward size={13} />
+      رد کردن استراحت
+    </motion.button>
+  );
+  const skipTimingBtn = (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.88 }}
+      onClick={skipPhase}
+      aria-label="رد کردن این شمارش"
+      className="exercise-pause-btn"
+    >
+      <SkipForward size={13} />
+      رد کردن
     </motion.button>
   );
 
@@ -190,12 +193,16 @@ export function ExerciseSetTrackerModal({
                     onClick={() => (isTimed ? startTiming(i) : tickSet(i))}
                     whileTap={isCurrent && state.phase === null ? { scale: 0.85 } : undefined}
                     aria-label={`ست ${i + 1}`}
-                    className="exercise-set-circle"
+                    // دایره‌ی ست فعلی (همونی که کاربر باید بزنه) یه موج
+                    // پیوسته می‌ده تا معلوم باشه «الان نوبت اینه» — نه یه
+                    // هاله‌ی ثابت بی‌حرکت. موج فقط وقتی واقعا منتظر تپ‌ـه
+                    // (نه وسط استراحت/شمارش) اجرا می‌شه.
+                    className={`exercise-set-circle${isCurrent && state.phase === null ? " exercise-set-circle-live" : ""}`}
                     style={{
                       background: done ? "var(--accent)" : "transparent",
                       borderColor: done ? "var(--accent)" : isCurrent ? "var(--accent)" : "var(--muted)",
                       opacity: locked ? 0.35 : 1,
-                      boxShadow: done ? "0 0 12px rgba(var(--accent-rgb),.6)" : isCurrent ? "0 0 0 3px rgba(var(--accent-rgb),.18)" : "none",
+                      boxShadow: done ? "0 0 12px rgba(var(--accent-rgb),.6)" : "none",
                     }}
                   >
                     <AnimatePresence mode="wait">
@@ -258,35 +265,35 @@ export function ExerciseSetTrackerModal({
                 </motion.div>
               ) : state.phase === "resting" ? (
                 <motion.div key="resting" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2.5">
-                  <div className="text-[11.5px] text-dash-muted">{paused ? "استراحت — موقتاً متوقف شده" : "استراحت تا ستِ بعدی"}</div>
+                  <div className="text-[11.5px] text-dash-muted">استراحت تا ست بعدی</div>
                   <ProgressRing pct={restPct / 100} size={92} strokeWidth={7} color="var(--accent)">
                     <span className="mono text-[24px] font-bold text-dash-green" dir="ltr">{remainingSec}</span>
                   </ProgressRing>
-                  {pauseResumeBtn}
+                  {skipRestBtn}
                 </motion.div>
               ) : !soloTimer && state.phase === "timing" ? (
                 <motion.div key="set-timing" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2">
-                  <div className="text-[11.5px] text-dash-muted">{paused ? "متوقف شده — هروقت آماده بودی ادامه بده" : "نگه دار تا شمارش‌معکوس تموم بشه"}</div>
+                  <div className="text-[11.5px] text-dash-muted">نگه دار تا شمارش‌معکوس تموم بشه</div>
                   <div className="mono text-[26px] font-bold text-dash-green" dir="ltr">{remainingSec}</div>
                   <div className="exercise-rest-bar">
                     <div className="exercise-rest-bar-fill" style={{ width: `${timePct}%` }} />
                   </div>
-                  {pauseResumeBtn}
+                  {skipTimingBtn}
                 </motion.div>
               ) : soloTimer ? (
                 state.phase === "timing" ? (
                   <motion.div key="solo-timing" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2">
-                    <div className="text-[11.5px] text-dash-muted">{paused ? "موقتاً متوقف شده" : "در حالِ اجرا — تا آخر ادامه بده"}</div>
+                    <div className="text-[11.5px] text-dash-muted">در حال اجرا — تا آخر ادامه بده</div>
                     <div className="mono text-[34px] font-bold text-dash-green" dir="ltr">{remainingSec !== null ? formatClock(remainingSec) : ""}</div>
                     <div className="exercise-rest-bar" style={{ width: 220 }}>
                       <div className="exercise-rest-bar-fill" style={{ width: `${timePct}%` }} />
                     </div>
-                    {pauseResumeBtn}
+                    {skipTimingBtn}
                   </motion.div>
                 ) : (
                   <motion.div key="solo-idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3">
                     <div className="text-[11.5px] text-dash-muted">
-                      وقتی آماده بودی، تایمر رو بزن و تا آخرِ {formatDuration(seconds || 0)} ادامه بده
+                      وقتی آماده بودی، تایمر رو بزن و تا آخر {formatDuration(seconds || 0)} ادامه بده
                     </div>
                     <motion.button
                       type="button"
@@ -310,11 +317,11 @@ export function ExerciseSetTrackerModal({
                 <motion.div key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[11.5px] text-dash-muted">
                   {isTimed
                     ? state.completedSets === 0
-                      ? "برای شروعِ ستِ اول، دایره رو بزن تا شمارش‌معکوس شروع بشه"
-                      : "استراحت تموم شد — ستِ بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"
+                      ? "برای شروع ست اول، دایره رو بزن تا شمارش‌معکوس شروع بشه"
+                      : "استراحت تموم شد — ست بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"
                     : state.completedSets === 0
                     ? "وقتی این ست رو زدی، روی دایره‌ی اول بزن"
-                    : "استراحت تموم شد — ستِ بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"}
+                    : "استراحت تموم شد — ست بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"}
                 </motion.div>
               )}
             </AnimatePresence>

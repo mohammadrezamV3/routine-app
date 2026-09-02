@@ -1,6 +1,6 @@
 // لایه داده — برای مهمان‌ها (لاگین‌نکرده) روی localStorage کار می‌کند، و برای
 // کاربرهای لاگین‌کرده به API واقعی (Prisma/Postgres) وصل می‌شود. هر تابع
-// اول وضعیت session رو چک می‌کنه؛ بقیه کد اپ (کامپوننت‌ها) اصلاً نمی‌دونن
+// اول وضعیت session رو چک می‌کنه؛ بقیه کد اپ (کامپوننت‌ها) اصلا نمی‌دونن
 // داده از کجا میاد — همون قراردادی که از اول قرار بود برقرار بمونه.
 
 import { getSession } from "next-auth/react";
@@ -21,33 +21,33 @@ function hasLocalStorage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// کش/دیدوپِ درخواست‌ها — دلیلِ اصلیِ کندیِ لودِ سایت همین‌جا بود.
+// کش/دیدوپ درخواست‌ها — دلیل اصلی کندی لود سایت همین‌جا بود.
 //
-// اندازه‌گیریِ واقعی (لودِ /weekly، کاربرِ لاگین‌کرده) قبل از این تغییر:
-//   ۳۵ درخواستِ API برای یک بار باز کردنِ صفحه —
+// اندازه‌گیری واقعی (لود /weekly، کاربر لاگین‌کرده) قبل از این تغییر:
+//   ۳۵ درخواست API برای یک بار باز کردن صفحه —
 //   /api/auth/session ×۶ · settings/removedOccurrences ×۶ ·
 //   settings/customOccurrences ×۶ · tasks/daily/range ×۵ (یکیشون
-//   دقیقاً یک بازه‌ی تکراری، سه بار) · tasks/daily ×۳ · …
+//   دقیقا یک بازه‌ی تکراری، سه بار) · tasks/daily ×۳ · …
 // چون خیلی از کامپوننت‌ها (NotificationEngine، useMyStreak، DashReminderCard،
-// HistoryCalendar، getTodayStats و…) هرکدوم مستقلاً همون چند تا کلیدِ ثابت رو
-// می‌خونن. روی مرورگرِ واقعی که هر هاست حداکثر ~۶ کانکشنِ همزمان داره، این
-// یعنی صفحه چند «موج» پشت‌سرهم منتظرِ شبکه می‌مونه — دقیقاً همون «دیر لود
+// HistoryCalendar، getTodayStats و…) هرکدوم مستقلا همون چند تا کلید ثابت رو
+// می‌خونن. روی مرورگر واقعی که هر هاست حداکثر ~۶ کانکشن همزمان داره، این
+// یعنی صفحه چند «موج» پشت‌سرهم منتظر شبکه می‌مونه — دقیقا همون «دیر لود
 // می‌شه / ناقص لود می‌شه».
 //
 // دو کش این‌جا اضافه شده:
-//   ۱) وضعیتِ لاگین  ۲) پاسخِ GETهای خواندنی (settings / daily / range)
-// هردو با TTLِ کوتاه + دیدوپِ درخواستِ در حالِ اجرا. نوشتن‌ها (setSetting/
+//   ۱) وضعیت لاگین  ۲) پاسخ GETهای خواندنی (settings / daily / range)
+// هردو با TTL کوتاه + دیدوپ درخواست در حال اجرا. نوشتن‌ها (setSetting/
 // setDaily) کش رو write-through آپدیت می‌کنن، پس هیچ‌وقت داده‌ی بیات دیده
 // نمی‌شه.
 // ─────────────────────────────────────────────────────────────────────────
 
-// TTLِ وضعیتِ لاگین — فقط باید انفجارِ فراخوانی‌های هم‌زمانِ لحظه‌ی mount رو
-// جمع کنه. لاگین/لاگ‌اوت خودشون صریحاً invalidateStorageCache() صدا می‌زنن،
-// پس این عدد سقفِ «بیات موندن» نیست، فقط تورِ ایمنیه.
+// TTL وضعیت لاگین — فقط باید انفجار فراخوانی‌های هم‌زمان لحظه‌ی mount رو
+// جمع کنه. لاگین/لاگ‌اوت خودشون صریحا invalidateStorageCache() صدا می‌زنن،
+// پس این عدد سقف «بیات موندن» نیست، فقط تور ایمنیه.
 const SESSION_TTL_MS = 60_000;
-// TTLِ پاسخ‌های خواندنی — به‌اندازه‌ای که کلِ موجِ mountِ یک صفحه (و پیمایشِ
-// کلاینتیِ بلافاصله بعدش) داخلش جا بشه، و به‌اندازه‌ای کوتاه که داده‌ی
-// عوض‌شده از یه تبِ دیگه خیلی زود دیده بشه.
+// TTL پاسخ‌های خواندنی — به‌اندازه‌ای که کل موج mount یک صفحه (و پیمایش
+// کلاینتی بلافاصله بعدش) داخلش جا بشه، و به‌اندازه‌ای کوتاه که داده‌ی
+// عوض‌شده از یه تب دیگه خیلی زود دیده بشه.
 const GET_TTL_MS = 15_000;
 
 let sessionCache: { loggedIn: boolean; at: number } | null = null;
@@ -58,17 +58,17 @@ let inFlightSession: Promise<boolean> | null = null;
 let sessionResolvers: ((loggedIn: boolean) => void)[] = [];
 
 /**
- * پلِ بینِ SessionProvider و این لایه.
+ * پل بین SessionProvider و این لایه.
  *
- * چرا لازم بود: `getSession()` از next-auth/react هر بار یه فچِ *تازه* به
- * `/api/auth/session` می‌زنه و از contextِ SessionProvider نمی‌خونه. یعنی
- * هر لودِ صفحه دو بار همون اندپوینت رو می‌گرفت (یکی SessionProvider، یکی
- * این‌جا) و — مهم‌تر از تعداد — خواندنِ داده‌ها پشتِ فچِ *دومی* منتظر می‌موند:
- * دو رفت‌وبرگشتِ سریالی قبل از این‌که اولین بایتِ داده‌ی واقعی درخواست بشه.
- * روی یه اتصالِ ۳۰۰ms این یعنی بیش از نیم ثانیه معطلیِ خالص.
+ * چرا لازم بود: `getSession()` از next-auth/react هر بار یه فچ *تازه* به
+ * `/api/auth/session` می‌زنه و از context SessionProvider نمی‌خونه. یعنی
+ * هر لود صفحه دو بار همون اندپوینت رو می‌گرفت (یکی SessionProvider، یکی
+ * این‌جا) و — مهم‌تر از تعداد — خواندن داده‌ها پشت فچ *دومی* منتظر می‌موند:
+ * دو رفت‌وبرگشت سریالی قبل از این‌که اولین بایت داده‌ی واقعی درخواست بشه.
+ * روی یه اتصال ۳۰۰ms این یعنی بیش از نیم ثانیه معطلی خالص.
  *
- * حالا SessionBridge (که داخلِ SessionProvider نشسته) نتیجه‌ی همون فچِ اولیه
- * رو این‌جا می‌ذاره، و هیچ فچِ دومی لازم نیست.
+ * حالا SessionBridge (که داخل SessionProvider نشسته) نتیجه‌ی همون فچ اولیه
+ * رو این‌جا می‌ذاره، و هیچ فچ دومی لازم نیست.
  */
 export function publishSessionState(loggedIn: boolean) {
   sessionCache = { loggedIn, at: Date.now() };
@@ -77,8 +77,8 @@ export function publishSessionState(loggedIn: boolean) {
   for (const r of waiting) r(loggedIn);
 }
 
-// getSession() فقط به‌عنوان تورِ ایمنی می‌مونه: اگه به هر دلیلی SessionBridge
-// مونت نشده باشه (مثلاً یه مسیرِ رندرِ متفاوت)، این لایه نباید برای همیشه
+// getSession() فقط به‌عنوان تور ایمنی می‌مونه: اگه به هر دلیلی SessionBridge
+// مونت نشده باشه (مثلا یه مسیر رندر متفاوت)، این لایه نباید برای همیشه
 // معطل بمونه.
 const SESSION_BRIDGE_TIMEOUT_MS = 3000;
 
@@ -105,9 +105,9 @@ const getCache = new Map<string, { at: number; data: any }>();
 const inFlightGets = new Map<string, Promise<any>>();
 
 /**
- * GETِ کش‌شده و دیدوپ‌شده. همه‌ی صداهای هم‌زمان روی یک URL یک درخواستِ واحد
+ * GET کش‌شده و دیدوپ‌شده. همه‌ی صداهای هم‌زمان روی یک URL یک درخواست واحد
  * رو به اشتراک می‌ذارن، و تا GET_TTL_MS بعدش از کش جواب می‌گیرن.
- * خطا/پاسخِ ناموفق کش نمی‌شه (تا یه قطعیِ لحظه‌ای، داده رو برای کلِ TTL خراب نکنه).
+ * خطا/پاسخ ناموفق کش نمی‌شه (تا یه قطعی لحظه‌ای، داده رو برای کل TTL خراب نکنه).
  */
 async function cachedGet<T>(url: string, pick: (json: any) => T, fallback: T): Promise<T> {
   const hit = getCache.get(url);
@@ -115,8 +115,8 @@ async function cachedGet<T>(url: string, pick: (json: any) => T, fallback: T): P
 
   let pending = inFlightGets.get(url);
   if (!pending) {
-    // اگه اسکریپتِ inlineِ layout این URL رو از قبل درخواست کرده، همون رو
-    // برمی‌داریم — یعنی داده تقریباً یک رفت‌وبرگشتِ کامل زودتر آماده‌ست.
+    // اگه اسکریپت inline layout این URL رو از قبل درخواست کرده، همون رو
+    // برمی‌داریم — یعنی داده تقریبا یک رفت‌وبرگشت کامل زودتر آماده‌ست.
     const preloaded = takePreloaded(url);
     pending = (preloaded ?? fetch(url)
       .then((res) => (res.ok ? res.json() : null)))
@@ -133,12 +133,12 @@ async function cachedGet<T>(url: string, pick: (json: any) => T, fallback: T): P
   return json === null ? fallback : pick(json);
 }
 
-/** بعد از یک نوشتنِ موفق، پاسخِ تازه رو مستقیم توی کش می‌ذاره (بدونِ رفتِ دوباره به سرور) */
+/** بعد از یک نوشتن موفق، پاسخ تازه رو مستقیم توی کش می‌ذاره (بدون رفت دوباره به سرور) */
 function primeCache(url: string, data: any) {
   getCache.set(url, { at: Date.now(), data });
 }
 
-/** ورودی‌های کشِ خواندنی که با یک الگو جور در میان رو دور می‌ریزه */
+/** ورودی‌های کش خواندنی که با یک الگو جور در میان رو دور می‌ریزه */
 function dropCache(predicate: (url: string) => boolean) {
   for (const key of Array.from(getCache.keys())) {
     if (predicate(key)) getCache.delete(key);
@@ -146,10 +146,10 @@ function dropCache(predicate: (url: string) => boolean) {
 }
 
 /**
- * هر جا هویتِ کاربر عوض می‌شه (ورود/خروج) باید صدا زده بشه — وگرنه لایه‌ی
- * داده تا انقضای TTL فکر می‌کنه هنوز همون کاربرِ قبلی (یا مهمان) پشتِ خطه و
- * از منبعِ اشتباه (localStorage به‌جای API، یا داده‌ی کاربرِ قبلی) می‌خونه.
- * صفحه‌ی ورود بعد از signIn موفق، و منو/پنلِ کاربری قبل از signOut، صداش می‌زنن.
+ * هر جا هویت کاربر عوض می‌شه (ورود/خروج) باید صدا زده بشه — وگرنه لایه‌ی
+ * داده تا انقضای TTL فکر می‌کنه هنوز همون کاربر قبلی (یا مهمان) پشت خطه و
+ * از منبع اشتباه (localStorage به‌جای API، یا داده‌ی کاربر قبلی) می‌خونه.
+ * صفحه‌ی ورود بعد از signIn موفق، و منو/پنل کاربری قبل از signOut، صداش می‌زنن.
  */
 export function invalidateStorageCache() {
   sessionCache = null;
@@ -162,28 +162,28 @@ export function invalidateStorageCache() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// کشِ بازه‌آگاه برای DailyEntry
+// کش بازه‌آگاه برای DailyEntry
 //
-// کشِ بالا کلیدش URLه، پس دو بازه‌ی *متفاوت* هیچ‌وقت به‌هم نمی‌رسن — حتی اگه
-// یکی کاملاً داخلِ اون یکی باشه. اندازه‌گیری روی `/weekly` نشون داد چهار
-// درخواستِ هم‌پوشان از یک جدول می‌رفت:
-//     range 2026-08-13..2026-08-27   (تایم‌لاینِ خودِ صفحه، ±۷ روز)
+// کش بالا کلیدش URLه، پس دو بازه‌ی *متفاوت* هیچ‌وقت به‌هم نمی‌رسن — حتی اگه
+// یکی کاملا داخل اون یکی باشه. اندازه‌گیری روی `/weekly` نشون داد چهار
+// درخواست هم‌پوشان از یک جدول می‌رفت:
+//     range 2026-08-13..2026-08-27   (تایم‌لاین خود صفحه، ±۷ روز)
 //     range 2026-05-22..2026-08-19   (useMyStreak، ۹۰ روز)
-//     range 2026-08-15..2026-08-21   (آمارِ همین هفته)
-//     daily 2026-08-20               (امروز — که *داخلِ* بازه‌ی اوله)
+//     range 2026-08-15..2026-08-21   (آمار همین هفته)
+//     daily 2026-08-20               (امروز — که *داخل* بازه‌ی اوله)
 //
 // این لایه بازه‌های درخواست‌شده رو نگه می‌داره و اگه بازه‌ی تازه زیرمجموعه‌ی
 // یکی از اون‌ها باشه (چه رسیده باشه چه هنوز در راه)، از همون بریده می‌شه.
-// تاریخ‌های `YYYY-MM-DD` از نظر رشته‌ای هم‌ترتیبِ زمانی‌ان، پس مقایسه‌ی ساده کافیه.
+// تاریخ‌های `YYYY-MM-DD` از نظر رشته‌ای هم‌ترتیب زمانی‌ان، پس مقایسه‌ی ساده کافیه.
 // ─────────────────────────────────────────────────────────────────────────
 
 type RangeEntry = { from: string; to: string; at: number; data: Promise<Record<string, DailyRecord> | null> };
 
 let rangeEntries: RangeEntry[] = [];
 
-// بازه‌ی پهنی که اسکریپتِ inline از قبل گرفته، همون اولین باری که کسی
-// سراغِ DailyEntry میاد وارد کشِ پوشش‌محور می‌شه — بعدش هر زیربازه‌ای (و هر
-// روزِ تکی) از همون بریده می‌شه، بدونِ هیچ درخواستِ تازه‌ای.
+// بازه‌ی پهنی که اسکریپت inline از قبل گرفته، همون اولین باری که کسی
+// سراغ DailyEntry میاد وارد کش پوشش‌محور می‌شه — بعدش هر زیربازه‌ای (و هر
+// روز تکی) از همون بریده می‌شه، بدون هیچ درخواست تازه‌ای.
 let preloadedRangeAdopted = false;
 function adoptPreloadedRange() {
   if (preloadedRangeAdopted) return;
@@ -227,7 +227,7 @@ function fetchRange(from: string, to: string): RangeEntry {
       .then((json) => (json ? ((json.entries || {}) as Record<string, DailyRecord>) : null))
       .catch(() => null),
   };
-  // بازه‌ای که ناموفق بود نباید تا آخرِ TTL بقیه رو هم گمراه کنه
+  // بازه‌ای که ناموفق بود نباید تا آخر TTL بقیه رو هم گمراه کنه
   entry.data.then((d) => { if (d === null) rangeEntries = rangeEntries.filter((e) => e !== entry); });
   rangeEntries.push(entry);
   return entry;
@@ -237,7 +237,7 @@ function clearRangeCache() {
   rangeEntries = [];
 }
 
-/** یک کلید رو از پاسخِ bootstrap حذف می‌کنه تا دیگه از اون‌جا خونده نشه */
+/** یک کلید رو از پاسخ bootstrap حذف می‌کنه تا دیگه از اون‌جا خونده نشه */
 function forgetBootstrapSetting(key: string) {
   const boot = getPreloadedBootstrap();
   if (!boot) return;
@@ -256,7 +256,7 @@ export type DailyRecord = {
 export async function getDaily(dateKey: string): Promise<DailyRecord> {
   if (await isLoggedIn()) {
     // اگه بازه‌ای که همین روز رو در بر می‌گیره از قبل درخواست شده، همون کافیه
-    // — یه درخواستِ جدا برای یک روزِ داخلِ اون بازه فقط یه کانکشنِ اضافه‌ست.
+    // — یه درخواست جدا برای یک روز داخل اون بازه فقط یه کانکشن اضافه‌ست.
     const covering = findCoveringRange(dateKey, dateKey);
     if (covering) {
       const data = await covering.data;
@@ -281,8 +281,8 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: dateKey, tasks: data.tasks, wake: data.wake }),
       });
-      // خودِ همون روز رو write-through می‌کنیم، و هر بازه‌ای که ممکنه شاملش
-      // باشه رو دور می‌ریزیم (بازه‌ها کلیدِ دقیق ندارن که بشه نقطه‌ای آپدیتشون کرد).
+      // خود همون روز رو write-through می‌کنیم، و هر بازه‌ای که ممکنه شاملش
+      // باشه رو دور می‌ریزیم (بازه‌ها کلید دقیق ندارن که بشه نقطه‌ای آپدیتشون کرد).
       primeCache(`/api/tasks/daily?date=${encodeURIComponent(dateKey)}`, { tasks: data.tasks, wake: data.wake });
       dropCache((url) => url.startsWith("/api/tasks/daily/range") || url === "/api/tasks/daily/keys");
       clearRangeCache();
@@ -348,12 +348,12 @@ export async function getDailyRange(fromIso: string, toIso: string): Promise<Rec
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   if (await isLoggedIn()) {
-    // اگه bootstrap این کلید رو آورده، همون کافیه — یه درخواستِ جدا برای
-    // کلیدی که از قبل در پاسخِ واحد اومده فقط یه رفت‌وبرگشتِ اضافه‌ست.
-    // bootstrap یه لیستِ *مشخص* از کلیدها رو می‌خونه، پس برای همون‌ها پاسخش
-    // مرجعِ کامله: نبودنِ کلید یعنی «مقداری ذخیره نشده»، نه «پرسیده نشده».
+    // اگه bootstrap این کلید رو آورده، همون کافیه — یه درخواست جدا برای
+    // کلیدی که از قبل در پاسخ واحد اومده فقط یه رفت‌وبرگشت اضافه‌ست.
+    // bootstrap یه لیست *مشخص* از کلیدها رو می‌خونه، پس برای همون‌ها پاسخش
+    // مرجع کامله: نبودن کلید یعنی «مقداری ذخیره نشده»، نه «پرسیده نشده».
     // (اولش با hasOwnProperty چک می‌شد و همین باعث می‌شد کلیدی که کاربر
-    // هیچ‌وقت مقداری براش ذخیره نکرده، بی‌خود یه درخواستِ جدا بزنه.)
+    // هیچ‌وقت مقداری براش ذخیره نکرده، بی‌خود یه درخواست جدا بزنه.)
     if ((BOOTSTRAP_SETTING_KEYS as readonly string[]).includes(key)) {
       const boot = getPreloadedBootstrap();
       if (boot) {
@@ -381,8 +381,8 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
         body: JSON.stringify({ value }),
       });
       primeCache(settingsUrl(key), { value });
-      // پاسخِ bootstrap مقدارِ قدیمیِ همین کلید رو داره؛ بعدِ نوشتن دیگه
-      // نباید مرجع باشه، وگرنه خواندنِ بعدی مقدارِ بیات می‌گیره.
+      // پاسخ bootstrap مقدار قدیمی همین کلید رو داره؛ بعد نوشتن دیگه
+      // نباید مرجع باشه، وگرنه خواندن بعدی مقدار بیات می‌گیره.
       forgetBootstrapSetting(key);
     } catch {}
     return;
@@ -398,7 +398,7 @@ export async function setRemovedOccurrences(arr: string[]): Promise<void> {
   return setSetting("removedOccurrences", arr);
 }
 
-// میزان حساسیت/اهمیتِ هر برنامه — چهار سطح، پیش‌فرض «کم» (رکوردهای قدیمی که
+// میزان حساسیت/اهمیت هر برنامه — چهار سطح، پیش‌فرض «کم» (رکوردهای قدیمی که
 // این فیلد رو ندارن هم همینطور رفتار می‌کنن). فقط موارد «زیاد»/«خیلی زیاد»
 // توی بخش «یادآوری‌ها»ی داشبورد نشون داده می‌شن.
 export type Importance = "low" | "medium" | "high" | "veryHigh";
@@ -418,7 +418,7 @@ export type CustomOccurrence = {
   endDate?: string;
   importance?: Importance;
   tag?: string;
-  notify?: boolean; // false یعنی صریحاً خاموش‌شده؛ نبودش (undefined) یعنی روشن
+  notify?: boolean; // false یعنی صریحا خاموش‌شده؛ نبودش (undefined) یعنی روشن
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {
@@ -433,9 +433,9 @@ export async function getThemeSetting(): Promise<"dark" | "light" | null> {
 }
 export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
   // یک کوکی هم می‌نویسیم (علاوه بر localStorage/DB) — چون کوکی، برخلاف اون دوتا،
-  // سمتِ سرور توی layout.tsx هم قابل‌خوندنه؛ همین باعث می‌شه data-theme از همون
-  // اولین HTML سرور درست باشه، نه این‌که با یه تاخیر (بعد از resolve شدنِ
-  // getThemeSetting سمتِ کلاینت) یهو از تاریک به روشن (یا برعکس) عوض بشه.
+  // سمت سرور توی layout.tsx هم قابل‌خوندنه؛ همین باعث می‌شه data-theme از همون
+  // اولین HTML سرور درست باشه، نه این‌که با یه تاخیر (بعد از resolve شدن
+  // getThemeSetting سمت کلاینت) یهو از تاریک به روشن (یا برعکس) عوض بشه.
   if (typeof document !== "undefined") {
     document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax`;
   }

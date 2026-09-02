@@ -13,12 +13,12 @@ const now = new Date();
 const todayIso = isoLocal(now);
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
-// تقویمِ ماهانه‌ی مخصوصِ کالری — هم‌ساختارِ HistoryCalendar (تقویمِ روتین)
-// ولی به‌جای تکمیل‌شدنِ تسک‌های روزانه، هر روز رو بر اساسِ برخورد با هدفِ
-// کالری رنگ می‌کنه (سبز = ثبت‌شده و زیرِ هدف، قرمز = ثبت‌شده و بالای هدف،
-// خاکستری = چیزی ثبت نشده). عمداً کامپوننتِ HistoryCalendar استفاده نشده،
+// تقویم ماهانه‌ی مخصوص کالری — هم‌ساختار HistoryCalendar (تقویم روتین)
+// ولی به‌جای تکمیل‌شدن تسک‌های روزانه، هر روز رو بر اساس برخورد با هدف
+// کالری رنگ می‌کنه (سبز = ثبت‌شده و زیر هدف، قرمز = ثبت‌شده و بالای هدف،
+// خاکستری = چیزی ثبت نشده). عمدا کامپوننت HistoryCalendar استفاده نشده،
 // چون اون به دیتای روتین/تسک وصله و این‌جا معنی نداشت؛ اینجا هم استایلش
-// Tailwind/dash-scope ـه، هم‌راستا با بقیه‌ی بخشِ کالری.
+// Tailwind/dash-scope ـه، هم‌راستا با بقیه‌ی بخش کالری.
 export function CalorieHistoryCalendar({
   targetKcal,
   onPick,
@@ -122,11 +122,11 @@ export function CalorieHistoryCalendar({
       <div className="mt-4 flex items-center justify-center gap-4 text-[10.5px] text-dash-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: "var(--accent)" }} />
-          زیرِ هدف
+          زیر هدف
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: "#E05252" }} />
-          بالایِ هدف
+          بالای هدف
         </span>
       </div>
     </div>

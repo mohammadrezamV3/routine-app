@@ -1,6 +1,6 @@
-// «چند درصد از برنامه‌ی امروز/این‌هفته انجام شده» — wrapperهای سمتِ کلاینتِ
+// «چند درصد از برنامه‌ی امروز/این‌هفته انجام شده» — wrapperهای سمت کلاینت
 // computeDayStats (که خودش توی lib/schedule.ts تعریف شده، بدون وابستگی به
-// next-auth/react، تا API routeهای سمتِ سرور هم بتونن مستقیم صداش بزنن).
+// next-auth/react، تا API routeهای سمت سرور هم بتونن مستقیم صداش بزنن).
 import { tasksForDate, WEEK_ORDER, computeDayStats, startOfWeek, ScheduleOpts, DayStats } from "./schedule";
 import { isoLocal } from "./jalali";
 import { getCustomOccurrences, getRemovedOccurrences, getDaily, getDailyRange } from "./storage";
@@ -38,8 +38,8 @@ export async function getWeekStats(): Promise<WeekDayStat[]> {
 }
 
 // آیتم‌های «خیلی زیاد»/«زیاد» که توی «امروز» و «فردا» حداقل یک بار زمان‌بندی
-// شدن — برای بخش «یادآوری‌ها». قبلاً کلِ هفته (شنبه تا جمعه) رو می‌گشت که
-// خیلی دوره‌ی بلندی بود؛ یادآوری واقعاً فقط برای چیزیه که قراره زودی برسه.
+// شدن — برای بخش «یادآوری‌ها». قبلا کل هفته (شنبه تا جمعه) رو می‌گشت که
+// خیلی دوره‌ی بلندی بود؛ یادآوری واقعا فقط برای چیزیه که قراره زودی برسه.
 export type ImportantOccurrence = { id: string; name: string; jsDay: number; time: string; importance: "veryHigh" | "high"; notify: boolean };
 
 export async function getImportantUpcoming(days = 2): Promise<ImportantOccurrence[]> {

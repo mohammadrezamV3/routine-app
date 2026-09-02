@@ -123,8 +123,8 @@ void Sync()
      }
 
    // معاملات بسته‌ی ۳۰ روز اخیر — در MT5 هر پوزیشن از چند «deal» ساخته
-   // می‌شود؛ deal با ENTRY_OUT همان بسته‌شدنِ پوزیشن است و شناسه‌ی پوزیشن
-   // را دارد، پس دقیقاً همان externalId سمت سرور می‌شود.
+   // می‌شود؛ deal با ENTRY_OUT همان بسته‌شدن پوزیشن است و شناسه‌ی پوزیشن
+   // را دارد، پس دقیقا همان externalId سمت سرور می‌شود.
    datetime from = TimeCurrent() - 30 * 24 * 60 * 60;
    HistorySelect(from, TimeCurrent());
    int deals = HistoryDealsTotal();
@@ -144,7 +144,7 @@ void Sync()
          "\"openTime\":%I64d,\"closeTime\":%I64d,\"closed\":true}",
          HistoryDealGetInteger(deal, DEAL_POSITION_ID),
          HistoryDealGetString(deal, DEAL_SYMBOL),
-         // deal بستن، جهتِ مخالفِ خودِ پوزیشن است — پس برعکسش می‌کنیم
+         // deal بستن، جهت مخالف خود پوزیشن است — پس برعکسش می‌کنیم
          (dealType == DEAL_TYPE_SELL ? "BUY" : "SELL"),
          HistoryDealGetDouble(deal, DEAL_VOLUME),
          HistoryDealGetDouble(deal, DEAL_PRICE),

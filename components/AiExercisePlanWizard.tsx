@@ -12,16 +12,17 @@ import { ExercisePlanFormValue, EMPTY_EXERCISE_FORM, ExercisePlan } from "@/lib/
 import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
+import { NumberInput } from "./NumberInput";
 
 type Step = "hw" | "goal" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, days: 2, description: 3, rules: 3 };
 
-// فرمِ «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
-// توضیح آزاد) به‌جای یک فرمِ تک‌صفحه‌ای. حداقلِ روزهای لازم برای هر هدف فقط
+// فرم «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
+// توضیح آزاد) به‌جای یک فرم تک‌صفحه‌ای. حداقل روزهای لازم برای هر هدف فقط
 // توی مرحله‌ی «روزها» چک می‌شه چون تازه اونجاست که هم هدف (از مرحله‌ی قبل) و
-// هم سطح (همین مرحله) هر دو مشخصن. توضیحِ آزاد به سرور فرستاده می‌شه و اول از
-// همه AI بررسی می‌کنه این خواسته واقع‌بینانه‌ست یا نه — اگه نه، پیامِ ردِ AI
-// مثلِ یه چت‌بات همینجا (زیرِ همون مرحله‌ی توضیح) نشون داده می‌شه.
+// هم سطح (همین مرحله) هر دو مشخصن. توضیح آزاد به سرور فرستاده می‌شه و اول از
+// همه AI بررسی می‌کنه این خواسته واقع‌بینانه‌ست یا نه — اگه نه، پیام رد AI
+// مثل یه چت‌بات همینجا (زیر همون مرحله‌ی توضیح) نشون داده می‌شه.
 export function AiExercisePlanWizard({
   onCreated,
   onCancel,
@@ -43,7 +44,7 @@ export function AiExercisePlanWizard({
     setForm((f) => ({ ...f, ...p }));
   }
 
-  // مثلِ پاپ‌آپِ «تغییر برنامه»ی کالری — اگه قد/وزن قبلاً یه‌جای دیگه ثبت
+  // مثل پاپ‌آپ «تغییر برنامه»ی کالری — اگه قد/وزن قبلا یه‌جای دیگه ثبت
   // شده، همینجا هم از قبل پر می‌شه
   useEffect(() => {
     getBodyMetrics().then(({ data }) => {
@@ -149,7 +150,7 @@ export function AiExercisePlanWizard({
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">قد (سانتی‌متر)</label>
-              <input type="number" className="wsearch-newform-name" value={form.heightCm} onChange={(e) => patch({ heightCm: e.target.value })} />
+              <NumberInput className="wsearch-newform-name" value={form.heightCm} onChange={(v) => patch({ heightCm: v })} />
               {fieldErrors.heightCm && (
                 <div className="field-error-msg field-error-msg-inline">
                   <AlertCircle size={12} />
@@ -159,7 +160,7 @@ export function AiExercisePlanWizard({
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">وزن (کیلوگرم)</label>
-              <input type="number" className="wsearch-newform-name" value={form.weightKg} onChange={(e) => patch({ weightKg: e.target.value })} />
+              <NumberInput className="wsearch-newform-name" value={form.weightKg} onChange={(v) => patch({ weightKg: v })} />
               {fieldErrors.weightKg && (
                 <div className="field-error-msg field-error-msg-inline">
                   <AlertCircle size={12} />
@@ -222,12 +223,12 @@ export function AiExercisePlanWizard({
 
       {step === "description" && (
         <>
-          <label className="exercise-wizard-title">دوست داری برنامه‌ت چطوری باشه؟ (اختیاری)</label>
+          <label className="exercise-wizard-title">دوست داری برنامه‌ات چطوری باشه؟ (اختیاری)</label>
           <textarea
             dir="rtl"
             className="exercise-desc-textarea"
             rows={4}
-            placeholder="مثلاً می‌خوام بیشتر روی بالاتنه کار کنم، یا فقط با وزن بدن، یا حرکاتی که صدا کمتری دارن…"
+            placeholder="مثلا می‌خوام بیشتر روی بالاتنه کار کنم، یا فقط با وزن بدن، یا حرکاتی که صدا کمتری دارن…"
             value={form.description}
             onChange={(e) => patch({ description: e.target.value })}
           />
@@ -253,7 +254,7 @@ export function AiExercisePlanWizard({
                   className="exercise-desc-textarea"
                   style={{ marginTop: 10 }}
                   rows={3}
-                  placeholder="محدودیتت رو توضیح بده — مثلاً کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقعِ انتخابِ حرکت باید بدونه"
+                  placeholder="محدودیتت رو توضیح بده — مثلا کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقع انتخاب حرکت باید بدونه"
                   value={form.limitationDetails}
                   onChange={(e) => patch({ limitationDetails: e.target.value })}
                 />
@@ -285,7 +286,16 @@ export function AiExercisePlanWizard({
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button type="button" onClick={goNext} disabled={submitting} className="exercise-wizard-next-btn">
-          {step === "description" ? (submitting ? "در حال ساخت برنامه…" : rejection ? "ویرایش و امتحان دوباره" : "مرحله بعد") : "مرحله بعد"}
+          {submitting ? (
+            <>
+              <span className="wsearch-submit-spinner" />
+              در حال ساخت برنامه
+            </>
+          ) : step === "description" && rejection ? (
+            "ویرایش و امتحان دوباره"
+          ) : (
+            "مرحله بعد"
+          )}
         </button>
       </div>
     </div>

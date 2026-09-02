@@ -59,14 +59,14 @@ export function NotepadDbTableView({
                 </td>
               ))}
               <td className="notepad-db-row-actions">
-                <button type="button" onClick={() => onDeleteRecord(rec.id)} aria-label="حذفِ رکورد"><Trash2 size={12} /></button>
+                <button type="button" onClick={() => onDeleteRecord(rec.id)} aria-label="حذف رکورد"><Trash2 size={12} /></button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
       <button type="button" className="notepad-db-add-row-btn" onClick={onCreateRecord}>
-        <Plus size={13} /> ردیفِ جدید
+        <Plus size={13} /> ردیف جدید
       </button>
     </div>
   );

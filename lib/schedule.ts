@@ -1,7 +1,7 @@
 // منطق زمان‌بندی روزانه. برنامه از خالی شروع می‌شه — کاربر خودش درس/برنامه
 // اضافه می‌کنه (از دکمه + توی برنامه هفتگی)؛ اینجا فقط customOccurrences و
 // removedOccurrences رو پردازش می‌کنیم. در آینده این تابع باید از مدل
-// RoutineItem (schema.prisma) هم بخونه تا برنامه‌های تکرارشونده واقعاً در
+// RoutineItem (schema.prisma) هم بخونه تا برنامه‌های تکرارشونده واقعا در
 // دیتابیس ذخیره بشن، نه فقط localStorage/UserSetting.
 
 import { isoLocal } from "./jalali";
@@ -9,18 +9,23 @@ import { isoLocal } from "./jalali";
 export type ScheduleTask = {
   id: string;
   name: string;
-  time: string; // نمایش فارسی، مثلاً "۱۰:۳۰ – ۱۹:۳۰"
+  time: string; // نمایش فارسی، مثلا "۱۰:۳۰ – ۱۹:۳۰"
   custom?: boolean;
 };
 
 const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+// هم ارقام فارسی (۰-۹) و هم ارقام عربی-هندی (٠-٩) — صفحه‌کلیدهای عربی
+// اندروید/iOS دسته‌ی دوم رو تایپ می‌کنن، نه دسته‌ی اول؛ بدون این‌ها ورودی
+// کاربر بی‌صدا نامعتبر می‌شد.
 const faDigitMap: Record<string, string> = {
   "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4",
   "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
+  "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
+  "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
 };
 
 export function toEnDigits(s: string): string {
-  return String(s).replace(/[۰-۹]/g, (ch) => faDigitMap[ch] ?? ch);
+  return String(s).replace(/[۰-۹٠-٩]/g, (ch) => faDigitMap[ch] ?? ch);
 }
 
 export function toFaDigits(s: string): string {
@@ -79,8 +84,8 @@ export function tasksForDate(
   let filtered: ScheduleTask[] = [];
 
   if (opts?.customOccurrences) {
-    // مقایسه‌ی رشته‌ایِ ISOِ «YYYY-MM-DD» درسته چون هردو طرف همون فرمتِ
-    // قابلِ‌مرتب‌سازیِ لغوی‌ان — نبودِ startDate (آیتم‌های ثبت‌شده قبل از این
+    // مقایسه‌ی رشته‌ای ISO «YYYY-MM-DD» درسته چون هردو طرف همون فرمت
+    // قابل‌مرتب‌سازی لغوی‌ان — نبود startDate (آیتم‌های ثبت‌شده قبل از این
     // فیلد) یعنی همیشه اعمال بشه، نه اینکه رد بشه.
     const dIso = isoLocal(d);
     opts.customOccurrences.forEach((c) => {
@@ -95,10 +100,10 @@ export function tasksForDate(
   return sortTasksByTime(filtered);
 }
 
-// تابعِ خالصِ محاسبه‌ی «چند درصد انجام شده» — عمداً همین‌جاست (نه
+// تابع خالص محاسبه‌ی «چند درصد انجام شده» — عمدا همین‌جاست (نه
 // lib/routineStats.ts) چون این فایل هیچ وابستگی‌ای به next-auth/react نداره؛
-// API routeهای سمتِ سرور (مثلاً محاسبه‌ی درصدِ یک دوست) باید بتونن این تابع
-// رو بدون کشیدنِ کل زنجیره‌ی import سمتِ کلاینتِ storage.ts صدا بزنن.
+// API routeهای سمت سرور (مثلا محاسبه‌ی درصد یک دوست) باید بتونن این تابع
+// رو بدون کشیدن کل زنجیره‌ی import سمت کلاینت storage.ts صدا بزنن.
 export type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: { id: string; name: string; jsDay: number; time: string }[] };
 export type DayStats = { completed: number; total: number; pct: number };
 
@@ -114,8 +119,8 @@ export function computeDayStats(
   return { completed, total, pct };
 }
 
-// شروعِ هفته‌ی حاوی `now` — شنبه (jsDay=6). offset با گام‌های ۷روزه هفته
-// رو عقب/جلو می‌بره (برای فلش‌های قبلی/بعدیِ نوار انتخاب تاریخ).
+// شروع هفته‌ی حاوی `now` — شنبه (jsDay=6). offset با گام‌های ۷روزه هفته
+// رو عقب/جلو می‌بره (برای فلش‌های قبلی/بعدی نوار انتخاب تاریخ).
 export function startOfWeek(now: Date, weekOffset = 0): Date {
   const diffToSat = (now.getDay() + 1) % 7;
   const d = new Date(now);

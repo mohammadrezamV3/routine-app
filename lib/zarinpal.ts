@@ -1,17 +1,17 @@
 // اتصال به درگاه زرین‌پال — رست ساده (بدون SDK جدا). دو تا endpoint لازمه:
 // PaymentRequest (ساخت تراکنش + گرفتن لینک پرداخت) و PaymentVerification
-// (بعد از برگشتِ کاربر، تاییدِ واقعیِ پرداخت). مبلغ همیشه به ریال (نه تومان)
-// طبق مستنداتِ زرین‌پال. اگه ZARINPAL_MERCHANT_ID ست نشه، درخواست‌ها با خطای
+// (بعد از برگشت کاربر، تایید واقعی پرداخت). مبلغ همیشه به ریال (نه تومان)
+// طبق مستندات زرین‌پال. اگه ZARINPAL_MERCHANT_ID ست نشه، درخواست‌ها با خطای
 // روشن fail می‌شن (نه silent) — چک‌اوت واقعی بدون مرچنت‌آیدی معنی نداره.
 
 const ZARINPAL_REQUEST_URL = "https://api.zarinpal.com/pg/v4/payment/request.json";
 const ZARINPAL_VERIFY_URL = "https://api.zarinpal.com/pg/v4/payment/verify.json";
 const ZARINPAL_GATEWAY_URL = "https://www.zarinpal.com/pg/StartPay/";
 
-// همان دلیلِ lib/zibal.ts: `fetch` در Node تایم‌اوتِ پیش‌فرض ندارد، ولی nginx
-// دارد — پس بدون این، یک درگاهِ کند به‌جای خطای روشن، یک ۵۰۴ـِ HTML از nginx
-// می‌شد که کلاینت نمی‌توانست پارسش کند و کاربر پیامِ گمراه‌کننده‌ی «مشکلی در
-// اتصال به سرور» را می‌دید. عمداً کمتر از proxy_read_timeout است.
+// همان دلیل lib/zibal.ts: `fetch` در Node تایم‌اوت پیش‌فرض ندارد، ولی nginx
+// دارد — پس بدون این، یک درگاه کند به‌جای خطای روشن، یک ۵۰۴ـ HTML از nginx
+// می‌شد که کلاینت نمی‌توانست پارسش کند و کاربر پیام گمراه‌کننده‌ی «مشکلی در
+// اتصال به سرور» را می‌دید. عمدا کمتر از proxy_read_timeout است.
 const GATEWAY_TIMEOUT_MS = 12_000;
 
 async function postJson(url: string, payload: unknown): Promise<any> {
@@ -25,15 +25,15 @@ async function postJson(url: string, payload: unknown): Promise<any> {
     });
   } catch (e: any) {
     if (e?.name === "TimeoutError" || e?.name === "AbortError") {
-      throw new Error("درگاهِ زرین‌پال در زمانِ مقرر پاسخ نداد — چند لحظه دیگر دوباره امتحان کن");
+      throw new Error("درگاه زرین‌پال در زمان مقرر پاسخ نداد — چند لحظه دیگر دوباره امتحان کن");
     }
-    throw new Error("اتصال به درگاهِ زرین‌پال برقرار نشد — چند لحظه دیگر دوباره امتحان کن");
+    throw new Error("اتصال به درگاه زرین‌پال برقرار نشد — چند لحظه دیگر دوباره امتحان کن");
   }
   const text = await res.text();
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`پاسخِ نامعتبر از درگاهِ زرین‌پال (کدِ ${res.status})`);
+    throw new Error(`پاسخ نامعتبر از درگاه زرین‌پال (کد ${res.status})`);
   }
 }
 
@@ -73,7 +73,7 @@ export async function zarinpalVerifyPayment(opts: {
     amount: opts.amountRial,
     authority: opts.authority,
   });
-  // کد ۱۰۰ = تاییدِ موفق، ۱۰۱ = قبلاً تایید شده (idempotent، بازم موفق حساب می‌شه)
+  // کد ۱۰۰ = تایید موفق، ۱۰۱ = قبلا تایید شده (idempotent، بازم موفق حساب می‌شه)
   const code = data?.data?.code;
   if (code === 100 || code === 101) {
     return { ok: true, refId: String(data?.data?.ref_id ?? "") };

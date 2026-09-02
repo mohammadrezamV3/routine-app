@@ -22,8 +22,8 @@ import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib
 
 // این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
 // NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
-// import بشه، باندلِ اصلیِ هر صفحه سنگین‌تر می‌شه. با dynamic+ssr:false جدا از
-// باندل اصلی لود می‌شه، دقیقاً مثل BackgroundCanvas.
+// import بشه، باندل اصلی هر صفحه سنگین‌تر می‌شه. با dynamic+ssr:false جدا از
+// باندل اصلی لود می‌شه، دقیقا مثل BackgroundCanvas.
 const NotificationPanel = dynamic(() => import("./NotificationPanel").then((m) => m.NotificationPanel), { ssr: false });
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
@@ -41,23 +41,23 @@ export const ICONS: Record<string, JSX.Element> = {
   exercise: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 8v8M17.5 8v8M3 10v4M21 10v4M6.5 12h11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «گزارش هفتگی» — سه میله‌ی صعودی، تا از آیکونِ خطیِ trade جدا باشه
+  // آیکون اختصاصی «گزارش هفتگی» — سه میله‌ی صعودی، تا از آیکون خطی trade جدا باشه
   weeklyReport: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M5 20V13M12 20V8M19 20v-6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
   trade: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9.5 11l3.5 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6.5h4.5V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «برنامه غذایی» (زیرمجموعه‌ی بدنسازی) — سیب، تا از
-  // آیکونِ دمبلِ «برنامه تمرینی» واضح جدا باشه
+  // آیکون اختصاصی «برنامه غذایی» (زیرمجموعه‌ی بدنسازی) — سیب، تا از
+  // آیکون دمبل «برنامه تمرینی» واضح جدا باشه
   food: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M12 8.3c-2.7-2.5-6.4-1.5-7.7 1.1-1.7 3.3-.4 8.3 2.5 10.4 1.3 1 2.7 1 3.9.3.6-.3 1.1-.3 1.7 0 1.2.7 2.6.7 3.9-.3 2.9-2.1 4.2-7.1 2.5-10.4-1.3-2.6-5-3.6-7.7-1.1Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 8.3c0-1.9.8-3.4 2.2-4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «ژورنال» (زیرمجموعه‌ی ترید) — دفترچه
+  // آیکون اختصاصی «ژورنال» (زیرمجموعه‌ی ترید) — دفترچه
   journal: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M9 8h6M9 12h6M9 16h3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «چک‌لیست» (زیرمجموعه‌ی ترید) — چک‌باکس‌های ردیفی
+  // آیکون اختصاصی «چک‌لیست» (زیرمجموعه‌ی ترید) — چک‌باکس‌های ردیفی
   checklist: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 6.5 5.2 7.4 6.8 5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><rect x="3.5" y="14" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 16 5.2 16.9 6.8 15.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 6.5h9.5M11 16h9.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -87,18 +87,18 @@ export const ICONS: Record<string, JSX.Element> = {
   ),
 };
 
-// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربرِ لاگین‌کرده مستقیم به
-// برنامه هفتگی می‌ره، پس همون این‌جا لیبل «روتین» رو می‌گیره؛ خودِ صفحه‌ی
+// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربر لاگین‌کرده مستقیم به
+// برنامه هفتگی می‌ره، پس همون این‌جا لیبل «روتین» رو می‌گیره؛ خود صفحه‌ی
 // هیرو (/) دست‌نخورده می‌مونه، فقط دیگه لینک جدایی توی منو نداره.
 //
-// «بدنسازی» و «ترید» دیگه لینکِ مستقیم نیستن — با کلیک زیرمجموعه‌هاشون باز
+// «بدنسازی» و «ترید» دیگه لینک مستقیم نیستن — با کلیک زیرمجموعه‌هاشون باز
 // می‌شن (برنامه‌ی تمرینی/برنامه‌ی غذایی، چک‌لیست/ژورنال) تا کاربر مستقیم از
-// منو به تبِ موردنظر بره، نه اینکه اول صفحه باز شه و بعد از توی خودش تب بزنه.
-// module: اگه ست بشه، یعنی این آیتم پولیه — اگه کاربر دسترسیِ فعال به این
+// منو به تب موردنظر بره، نه اینکه اول صفحه باز شه و بعد از توی خودش تب بزنه.
+// module: اگه ست بشه، یعنی این آیتم پولیه — اگه کاربر دسترسی فعال به این
 // ماژول رو نداشته باشه، کنار لیبلش یه آیکون قفل نشون داده می‌شه (فقط
-// نشانه‌ست، enforcement واقعی همچنان سمتِ سرور/ModuleGate انجام می‌شه).
-// superAdminOnly: کلاً برای همه به‌جز سوپریوزر غیرفعاله (نه یه ماژولِ
-// خریدنی مثلِ بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
+// نشانه‌ست، enforcement واقعی همچنان سمت سرور/ModuleGate انجام می‌شه).
+// superAdminOnly: کلا برای همه به‌جز سوپریوزر غیرفعاله (نه یه ماژول
+// خریدنی مثل بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
 type NavLink = { href: string; label: string; icon: string; module?: string; superAdminOnly?: boolean };
 type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string };
 type NavItem = NavLink | NavGroup;
@@ -115,43 +115,43 @@ const LINKS: NavItem[] = [
     label: "بدنسازی", icon: "exercise",
     children: [
       { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE" },
-      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food", module: "CALORIE" },
+      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE" },
     ],
   },
-  // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هابِ خودش، و انتخابِ
-  // بخش (ژورنال/چک‌لیست/تقویم/…) داخلِ همان صفحه انجام می‌شود.
+  // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
+  // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
   { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT" },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
-// کش‌شده بیرونِ کامپوننت — مثلِ الگوی NotificationPanel/AccountPanel، تا
+// کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
 // هدر (که توی همه‌ی صفحه‌ها mount می‌شه) هر بار عکس رو دوباره فچ نکنه.
 let cachedAvatarUrl: string | null = null;
 
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
-  // گروهِ بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
+  // گروه بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
   // همیشه با همه‌چیز بسته شروع می‌شه، هیچ‌وقت خودکار باز نمی‌شه.
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  // برای نشونِ قفلِ آیتم‌های پولیِ منو — null یعنی «هنوز معلوم نیست»
-  // (چیزی رندر نمی‌کنیم تا از فلشِ اشتباه جلوگیری بشه).
+  // برای نشون قفل آیتم‌های پولی منو — null یعنی «هنوز معلوم نیست»
+  // (چیزی رندر نمی‌کنیم تا از فلش اشتباه جلوگیری بشه).
   const [activeModules, setActiveModules] = useState<Set<string> | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   // هر بار منو بسته می‌شه (از هر مسیری: کلیک بیرون، دکمه‌ی ضربدر، رفتن به
-  // یه لینک)، گروهِ بازشده هم باید ریست بشه — وگرنه دفعه‌ی بعد که منو باز
+  // یه لینک)، گروه بازشده هم باید ریست بشه — وگرنه دفعه‌ی بعد که منو باز
   // می‌شه، همون گروه هنوز «انتخاب‌شده»/بازشده می‌موند.
   useEffect(() => { if (!open) setExpandedGroup(null); }, [open]);
   useLockBodyScroll(open || profileMenuOpen);
-  // موقعیتِ لنگرِ پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
-  // پورتال می‌شن (نه دیگه فرزندِ app-topbar)، باید مختصاتشون رو خودمون از
-  // روی دکمه‌ی محرک حساب کنیم. علتِ پورتال‌کردن: app-topbar خودش
-  // backdrop-filter داره، و یه پنلِ توی فرزندانش که خودش هم backdrop-filter
-  // داره فقط لایه‌ی از‌قبل‌بلورشده‌ی تقریباً خالیِ همون stacking context رو
-  // می‌بینه، نه محتوای واقعیِ پشتِ صفحه — پس هیچ‌وقت واقعاً مات نمی‌شد.
+  // موقعیت لنگر پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
+  // پورتال می‌شن (نه دیگه فرزند app-topbar)، باید مختصاتشون رو خودمون از
+  // روی دکمه‌ی محرک حساب کنیم. علت پورتال‌کردن: app-topbar خودش
+  // backdrop-filter داره، و یه پنل توی فرزندانش که خودش هم backdrop-filter
+  // داره فقط لایه‌ی از‌قبل‌بلورشده‌ی تقریبا خالی همون stacking context رو
+  // می‌بینه، نه محتوای واقعی پشت صفحه — پس هیچ‌وقت واقعا مات نمی‌شد.
   const [profileAnchor, setProfileAnchor] = useState<{ top: number; right: number } | null>(null);
   const [bellAnchor, setBellAnchor] = useState<{ top: number; right: number } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedAvatarUrl);
@@ -164,7 +164,7 @@ export function NavDrawer() {
   const bellBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
-  // پنل Owner (/admin) کاملاً محیطِ جدایی‌ست — نه هدر/منوی سایتِ اصلی، نه
+  // پنل Owner (/admin) کاملا محیط جدایی‌ست — نه هدر/منوی سایت اصلی، نه
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
   const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
 
@@ -173,9 +173,9 @@ export function NavDrawer() {
     router.push(href);
   }
 
-  // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابلِ بازشدن
+  // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابل بازشدن
   // بودن (سه تا state جدا، بدون هماهنگی) — کاربر می‌تونست چندتاشونو با هم
-  // باز کنه. الان باز کردنِ هرکدوم اون دوتای دیگه رو می‌بنده.
+  // باز کنه. الان باز کردن هرکدوم اون دوتای دیگه رو می‌بنده.
   function openHamburgerDrawer() {
     setOpen(true);
     setProfileMenuOpen(false);
@@ -204,13 +204,13 @@ export function NavDrawer() {
     });
   }, [status]);
 
-  // یه لیسنرِ سطحِ document به‌جای لایه‌ی overlayِ fixed — چون app-topbar
-  // (والدِ چیپِ پروفایل) backdrop-filter داره و برای فرزندهای position:fixed
-  // یه containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخلِ کادرِ خودِ
-  // هدر پوشش می‌داد، نه کلِ صفحه، پس کلیک روی بقیه‌ی صفحه بسته‌ش نمی‌کرد.
-  // خودِ پنل حالا به بادی پورتال می‌شه (دیگه فرزندِ authSlotRef نیست)، پس
-  // یه ref جدا برای خودِ پنلِ پورتال‌شده هم لازمه — وگرنه کلیک روی خودِ
-  // آیتم‌های پنل هم «بیرون» حساب می‌شد و فوراً می‌بستش.
+  // یه لیسنر سطح document به‌جای لایه‌ی overlay fixed — چون app-topbar
+  // (والد چیپ پروفایل) backdrop-filter داره و برای فرزندهای position:fixed
+  // یه containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخل کادر خود
+  // هدر پوشش می‌داد، نه کل صفحه، پس کلیک روی بقیه‌ی صفحه بسته‌ش نمی‌کرد.
+  // خود پنل حالا به بادی پورتال می‌شه (دیگه فرزند authSlotRef نیست)، پس
+  // یه ref جدا برای خود پنل پورتال‌شده هم لازمه — وگرنه کلیک روی خود
+  // آیتم‌های پنل هم «بیرون» حساب می‌شد و فورا می‌بستش.
   const profilePanelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!profileMenuOpen) return;
@@ -227,17 +227,17 @@ export function NavDrawer() {
   useEffect(() => {
     const p = getNotificationPermission();
     setNotifPermission(p);
-    // اگه از قبل (مثلاً یه نسخه‌ی قدیمی‌تر) اجازه‌ی نوتیف داده شده بود ولی
+    // اگه از قبل (مثلا یه نسخه‌ی قدیمی‌تر) اجازه‌ی نوتیف داده شده بود ولی
     // این دستگاه هنوز به Web Push سابسکرایب نشده، همین‌جا (بی‌صدا، بدون
-    // نیاز به باز کردنِ دوباره‌ی پنل) انجامش می‌ده — subscribeToPush خودش
-    // idempotent ـه (سابسکریپشنِ موجود رو دوباره می‌فرسته، نه یکی جدید).
+    // نیاز به باز کردن دوباره‌ی پنل) انجامش می‌ده — subscribeToPush خودش
+    // idempotent ـه (سابسکریپشن موجود رو دوباره می‌فرسته، نه یکی جدید).
     if (p === "granted") subscribeToPush();
   }, []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
     function loadAvatar() {
-      // آواتار توی پاسخِ bootstrap هست (ستونی از خودِ User) — درخواستِ جدا
+      // آواتار توی پاسخ bootstrap هست (ستونی از خود User) — درخواست جدا
       // فقط وقتی لازمه که bootstrap نرفته باشه.
       const boot = getPreloadedBootstrap();
       const source = boot
@@ -253,8 +253,8 @@ export function NavDrawer() {
     return () => window.removeEventListener("avatar-updated", loadAvatar);
   }, [status]);
 
-  // پیش‌بارگذاریِ اطلاعیه‌ها موقعِ لودِ صفحه — هم برای نشونِ تعدادِ نخونده‌ها
-  // روی زنگوله، هم اینکه وقتی کاربر واقعاً زنگوله رو بزنه، پنل از کشِ آماده
+  // پیش‌بارگذاری اطلاعیه‌ها موقع لود صفحه — هم برای نشون تعداد نخونده‌ها
+  // روی زنگوله، هم اینکه وقتی کاربر واقعا زنگوله رو بزنه، پنل از کش آماده
   // باز شه (نه از صفر، که «بارگذاری خیلی طول می‌کشه» حس می‌داد).
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -267,7 +267,7 @@ export function NavDrawer() {
     return () => { cancelled = true; };
   }, [status]);
 
-  // برای نشونِ قفلِ آیتم‌های پولیِ منو — همون /api/account که ModuleGate هم
+  // برای نشون قفل آیتم‌های پولی منو — همون /api/account که ModuleGate هم
   // استفاده می‌کنه (سوپریوزر توش خودش همه‌ی ماژول‌ها رو active برمی‌گردونه).
   useEffect(() => {
     if (status === "unauthenticated") { setActiveModules(new Set()); return; }
@@ -282,8 +282,8 @@ export function NavDrawer() {
     return () => { cancelled = true; };
   }, [status]);
 
-  // طبقِ درخواستِ صریح، منو هیچ‌وقت خودکار یه گروه رو باز/سلکت‌شده نشون نده —
-  // حتی وقتی توی زیرصفحه‌ی یه گروهی (مثلاً /exercise)، منو همیشه با همه‌چیز
+  // طبق درخواست صریح، منو هیچ‌وقت خودکار یه گروه رو باز/سلکت‌شده نشون نده —
+  // حتی وقتی توی زیرصفحه‌ی یه گروهی (مثلا /exercise)، منو همیشه با همه‌چیز
   // بسته باز می‌شه؛ کاربر خودش هرکدوم رو خواست دستی باز می‌کنه.
 
   // کلیک روی زنگوله همیشه پنل اطلاعیه‌ها رو باز/بسته می‌کنه؛ اگه هنوز اجازه‌ی
@@ -303,7 +303,7 @@ export function NavDrawer() {
     if (!notificationsSupported() || notifPermission === "granted") return;
     const p = await requestNotificationPermission();
     setNotifPermission(p);
-    // اجازه‌ی نوتیفِ مرورگر جدا از سابسکرایب‌شدن به Web Pushه — این یکی
+    // اجازه‌ی نوتیف مرورگر جدا از سابسکرایب‌شدن به Web Pushه — این یکی
     // برای یادآوری‌های واقعی حتی وقتی تب/اپ بسته‌ست لازمه (lib/pushClient.ts).
     if (p === "granted") subscribeToPush();
   }
@@ -313,13 +313,25 @@ export function NavDrawer() {
       {!hideTopbar && (
         <header className="app-topbar">
           <div className="topbar-actions-left">
-            <Link href="/" aria-label="رفتن به صفحه اصلی">
+            {/* هر دو نسخه (روز/شب) هم‌زمان با اولین رندر لود می‌شن (هردو priority)،
+                فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
+                تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
+                دیدنی داشت تا دانلود بشه. */}
+            <Link href="/" aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
               <Image
-                src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
+                src="/images/logo-lockup-dark-theme.png"
                 alt="Arion"
                 width={138}
                 height={34}
-                className="topbar-logo-lockup"
+                className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
+                priority
+              />
+              <Image
+                src="/images/logo-lockup-light-theme.webp"
+                alt="Arion"
+                width={138}
+                height={34}
+                className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
                 priority
               />
             </Link>

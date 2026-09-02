@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // بازه اعتبارسنجی و سقف‌گذاری می‌شه — قبلاً `from=0001-01-01&to=9999-12-31`
-  // با ۲۰۰ جواب می‌گرفت و عملاً کلِ جدولِ کاربر رو می‌خوند.
+  // بازه اعتبارسنجی و سقف‌گذاری می‌شه — قبلا `from=0001-01-01&to=9999-12-31`
+  // با ۲۰۰ جواب می‌گرفت و عملا کل جدول کاربر رو می‌خوند.
   const range = parseDateRange(req.nextUrl.searchParams.get("from"), req.nextUrl.searchParams.get("to"));
   if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
 

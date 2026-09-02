@@ -6,9 +6,9 @@ import { Loader2, Plus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
 
-// انتخابِ برچسب + ساختِ برچسبِ جدید در همان لحظه.
-// برچسب‌ها بینِ حساب و معامله مشترک‌اند، پس این کامپوننت هر دو جا استفاده
-// می‌شود و لیستِ برچسب‌ها را از والد می‌گیرد (نه اینکه خودش دوباره فچ کند).
+// انتخاب برچسب + ساخت برچسب جدید در همان لحظه.
+// برچسب‌ها بین حساب و معامله مشترک‌اند، پس این کامپوننت هر دو جا استفاده
+// می‌شود و لیست برچسب‌ها را از والد می‌گیرد (نه اینکه خودش دوباره فچ کند).
 export function TradeTagField({
   tags,
   value,
@@ -45,7 +45,7 @@ export function TradeTagField({
           );
         })}
         <button type="button" className="trade-tag-chip trade-tag-add" onClick={() => setCreating(true)}>
-          <Plus size={13} /> برچسب جدید
+          <Plus size={13} /> افزودن برچسب
         </button>
       </div>
 
@@ -115,7 +115,7 @@ export function TradeTagCreateModal({
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && save()}
           maxLength={30}
-          placeholder="مثلاً بریک‌اوت"
+          placeholder="مثلا بریک‌اوت"
         />
 
         <label className="exercise-form-label">رنگ برچسب</label>

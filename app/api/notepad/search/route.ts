@@ -7,18 +7,18 @@ import { clampQuery } from "@/lib/validate";
 
 const MAX_RESULTS = 30;
 
-// GET /api/notepad/search?q=... — جستجو توی عنوانِ صفحات + متنِ بلاک‌ها.
-// بدونِ raw SQL/full-text index (طبقِ قاعده‌ی پروژه)؛ برای مقیاسِ فعلی (دیتای
-// یک کاربر) کافیه — اگه تعدادِ صفحات خیلی زیاد شد، Phase بعدی باید ایندکسِ
-// جستجوی واقعی (مثلاً Postgres tsvector) اضافه کنه.
+// GET /api/notepad/search?q=... — جستجو توی عنوان صفحات + متن بلاک‌ها.
+// بدون raw SQL/full-text index (طبق قاعده‌ی پروژه)؛ برای مقیاس فعلی (دیتای
+// یک کاربر) کافیه — اگه تعداد صفحات خیلی زیاد شد، Phase بعدی باید ایندکس
+// جستجوی واقعی (مثلا Postgres tsvector) اضافه کنه.
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
-  // `q` بریده می‌شه — بدونش یه رشته‌ی چندصدکیلوبایتی برای هر بلاکِ صفحه یه
-  // includes()ِ گرون روی سرور اجرا می‌کرد.
+  // `q` بریده می‌شه — بدونش یه رشته‌ی چندصدکیلوبایتی برای هر بلاک صفحه یه
+  // includes() گرون روی سرور اجرا می‌کرد.
   const q = clampQuery(new URL(req.url).searchParams.get("q"), 100).toLowerCase();
   if (!q) return NextResponse.json({ results: [] });
 
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
   for (const page of pages) {
     if (page.title.toLowerCase().includes(q)) {
-      results.push({ pageId: page.id, title: page.title || "بدونِ عنوان", icon: page.icon, matchType: "title", snippet: "" });
+      results.push({ pageId: page.id, title: page.title || "بدون عنوان", icon: page.icon, matchType: "title", snippet: "" });
       if (results.length >= MAX_RESULTS) break;
     }
   }
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       if (!page) continue;
       const start = Math.max(0, idx - 24);
       const snippet = (start > 0 ? "…" : "") + text.slice(start, idx + q.length + 24) + (idx + q.length + 24 < text.length ? "…" : "");
-      results.push({ pageId: block.pageId, title: page.title || "بدونِ عنوان", icon: page.icon, matchType: "block", snippet });
+      results.push({ pageId: block.pageId, title: page.title || "بدون عنوان", icon: page.icon, matchType: "block", snippet });
       alreadyMatched.add(block.pageId);
       if (results.length >= MAX_RESULTS) break;
     }

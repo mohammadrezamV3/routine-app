@@ -10,7 +10,7 @@ import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
-import { isValidIranPhone, isValidUsername, validatePassword } from "@/lib/validate";
+import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 type FieldErrors = {
@@ -18,7 +18,7 @@ type FieldErrors = {
   password?: string; agreed?: string; otp?: string;
 };
 
-// یک باکسِ واحدِ «نام و نام‌خانوادگی» — سرور همچنان name/lastName جدا
+// یک باکس واحد «نام و نام‌خانوادگی» — سرور همچنان name/lastName جدا
 // می‌خواد، پس این‌جا از روی فاصله‌ی بین کلمات جدا می‌شن: اولین کلمه نام،
 // بقیه نام‌خانوادگی.
 function splitFullName(v: string): { name: string; lastName: string } {
@@ -29,11 +29,11 @@ function splitFullName(v: string): { name: string; lastName: string } {
 const RESEND_COOLDOWN_SECONDS = 120;
 
 // فرم دیگه ویزارد چند-استپ نیست: اول اطلاعات اصلی (اسم/یوزرنیم/رمز)، بعد
-// شماره‌همراه — همه توی یک صفحه. تاریخ تولد عمداً این‌جا نیست — بعداً از
-// پنل کاربری (/account) خودِ کاربر وارد می‌کنه، نه موقعِ ثبت‌نام. دکمه‌ی
-// «ارسال کد» داخلِ خودِ فیلدِ شماره‌ست؛ با زدنش کد پیامک می‌شه و بلافاصله
-// زیرِ همون فیلد، فیلدِ کد ظاهر می‌شه (بدون رفتن به یه صفحه/استپِ جدا).
-// خودِ تاییدِ کد هم موقعِ «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا
+// شماره‌همراه — همه توی یک صفحه. تاریخ تولد عمدا این‌جا نیست — بعدا از
+// پنل کاربری (/account) خود کاربر وارد می‌کنه، نه موقع ثبت‌نام. دکمه‌ی
+// «ارسال کد» داخل خود فیلد شماره‌ست؛ با زدنش کد پیامک می‌شه و بلافاصله
+// زیر همون فیلد، فیلد کد ظاهر می‌شه (بدون رفتن به یه صفحه/استپ جدا).
+// خود تایید کد هم موقع «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا
 // چک می‌شه.
 export default function SignupPage() {
   const router = useRouter();
@@ -131,6 +131,10 @@ export default function SignupPage() {
     const { name, lastName } = splitFullName(fullName);
     if (!name) errs.name = "نام و نام‌خانوادگی را وارد کن";
     else if (!lastName) errs.name = "نام و نام‌خانوادگی را کامل وارد کن";
+    // فقط فارسی — همین بررسی سمت سرور هم تکرار می‌شود (قابل دور زدن است)
+    else if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
+      errs.name = "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود";
+    }
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
     else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
     if (!password) errs.password = "رمز عبور را وارد کن";

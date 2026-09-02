@@ -1,6 +1,6 @@
-// Notepad — Workspace بلاک‌محورِ Arion (الهام‌گرفته از معماریِ اطلاعاتیِ
-// Notion، نه ظاهرش). این فایل مدل‌های داده‌ای/کمکی‌ای که هم سمتِ کلاینت هم
-// سمتِ API روت‌ها استفاده می‌شن رو نگه می‌داره — تا هیچ‌جا duplicate تعریف نشن.
+// Notepad — Workspace بلاک‌محور Arion (الهام‌گرفته از معماری اطلاعاتی
+// Notion، نه ظاهرش). این فایل مدل‌های داده‌ای/کمکی‌ای که هم سمت کلاینت هم
+// سمت API روت‌ها استفاده می‌شن رو نگه می‌داره — تا هیچ‌جا duplicate تعریف نشن.
 
 export type BlockType =
   | "paragraph"
@@ -37,10 +37,10 @@ export type NotepadBlock = {
   collapsed: boolean;
   imageUrl: string | null;
   position: number;
-  // فقط برای type==="database" — اگه هنوز دیتابیسِ پشتِ این بلاک ساخته نشده
-  // باشه null‌ه (بلافاصله بعدِ تبدیلِ نوع، قبل از فراخوانیِ createDatabaseForBlock)
+  // فقط برای type==="database" — اگه هنوز دیتابیس پشت این بلاک ساخته نشده
+  // باشه null‌ه (بلافاصله بعد تبدیل نوع، قبل از فراخوانی createDatabaseForBlock)
   databaseId?: string | null;
-  // فقط برای type==="code" — اسمِ زبان برای رنگ‌بندیِ نحوی (یکی از CODE_LANGUAGES)
+  // فقط برای type==="code" — اسم زبان برای رنگ‌بندی نحوی (یکی از CODE_LANGUAGES)
   language?: string | null;
 };
 
@@ -67,21 +67,21 @@ export const NOTEPAD_BLOCK_TEXT_MAX = 8000;
 export const NOTEPAD_MAX_BLOCKS_PER_SAVE = 2000;
 export const NOTEPAD_MAX_IMAGE_DATA_URL = 900_000;
 
-// دسته‌بندی/برچسبِ هر نوعِ بلاک — برای Slash Command Menu
+// دسته‌بندی/برچسب هر نوع بلاک — برای Slash Command Menu
 export const BLOCK_TYPE_META: Record<BlockType, { label: string; hint: string; group: "basic" | "media" }> = {
-  paragraph: { label: "متن", hint: "یک پاراگرافِ ساده", group: "basic" },
-  heading1: { label: "عنوان ۱", hint: "تیترِ بزرگ", group: "basic" },
-  heading2: { label: "عنوان ۲", hint: "تیترِ متوسط", group: "basic" },
-  heading3: { label: "عنوان ۳", hint: "تیترِ کوچیک", group: "basic" },
-  bulleted_list: { label: "لیستِ نقطه‌ای", hint: "یک آیتمِ لیستِ ساده", group: "basic" },
-  numbered_list: { label: "لیستِ شماره‌دار", hint: "یک آیتمِ لیستِ شماره‌دار", group: "basic" },
-  todo: { label: "چک‌لیست", hint: "یک آیتمِ قابلِ تیک‌زدن", group: "basic" },
+  paragraph: { label: "متن", hint: "یک پاراگراف ساده", group: "basic" },
+  heading1: { label: "عنوان ۱", hint: "تیتر بزرگ", group: "basic" },
+  heading2: { label: "عنوان ۲", hint: "تیتر متوسط", group: "basic" },
+  heading3: { label: "عنوان ۳", hint: "تیتر کوچیک", group: "basic" },
+  bulleted_list: { label: "لیست نقطه‌ای", hint: "یک آیتم لیست ساده", group: "basic" },
+  numbered_list: { label: "لیست شماره‌دار", hint: "یک آیتم لیست شماره‌دار", group: "basic" },
+  todo: { label: "چک‌لیست", hint: "یک آیتم قابل تیک‌زدن", group: "basic" },
   toggle: { label: "تاگل", hint: "بخشی که باز/بسته می‌شه", group: "basic" },
-  quote: { label: "نقل‌قول", hint: "یک تکه متنِ نقل‌شده", group: "basic" },
-  divider: { label: "خط جدا کننده", hint: "یک خطِ افقی", group: "basic" },
+  quote: { label: "نقل‌قول", hint: "یک تکه متن نقل‌شده", group: "basic" },
+  divider: { label: "خط جدا کننده", hint: "یک خط افقی", group: "basic" },
   image: { label: "تصویر", hint: "یک عکس (لینک یا آپلود)", group: "media" },
   database: { label: "دیتابیس", hint: "جدول/بورد/تقویم با پراپرتی‌های دلخواه", group: "media" },
-  code: { label: "کد", hint: "قطعه‌کد با انتخابِ زبان و رنگ‌بندیِ نحوی", group: "media" },
+  code: { label: "کد", hint: "قطعه‌کد با انتخاب زبان و رنگ‌بندی نحوی", group: "media" },
 };
 export const SLASH_MENU_ORDER: BlockType[] = [
   "paragraph", "heading1", "heading2", "heading3",
@@ -94,8 +94,8 @@ export function isValidBlockType(t: unknown): t is BlockType {
   return typeof t === "string" && VALID_BLOCK_TYPES.has(t as BlockType);
 }
 
-// پاک‌سازیِ آرایه‌ی RichLeaf ورودی از کلاینت قبل از ذخیره — هم سمتِ سرور
-// استفاده می‌شه (اعتبارسنجیِ امن) هم می‌شه سمتِ کلاینت صداش زد
+// پاک‌سازی آرایه‌ی RichLeaf ورودی از کلاینت قبل از ذخیره — هم سمت سرور
+// استفاده می‌شه (اعتبارسنجی امن) هم می‌شه سمت کلاینت صداش زد
 export function sanitizeLeaves(input: unknown): RichLeaf[] {
   if (!Array.isArray(input)) return [];
   const out: RichLeaf[] = [];
@@ -125,8 +125,8 @@ export function plainTextToLeaves(text: string): RichLeaf[] {
   return text ? [{ text }] : [];
 }
 
-// موقعیتِ بینِ دو خواهر/برادر — عددِ اعشاری تا افزودن/جابه‌جاییِ یک آیتم بینِ
-// دوتای دیگه بدونِ renumber کردنِ بقیه ممکن باشه (مثلِ fractional indexing)
+// موقعیت بین دو خواهر/برادر — عدد اعشاری تا افزودن/جابه‌جایی یک آیتم بین
+// دوتای دیگه بدون renumber کردن بقیه ممکن باشه (مثل fractional indexing)
 export function midPosition(prev: number | null, next: number | null): number {
   if (prev === null && next === null) return 1000;
   if (prev === null) return (next as number) - 1000;
@@ -137,9 +137,9 @@ export function midPosition(prev: number | null, next: number | null): number {
 function newLocalId(): string {
   return "b_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
 }
-// میان‌برِ مارک‌داونِ سطحِ بلاک — وقتی کاربر بعدِ این متن‌ها یه Space یا Enter
-// می‌زنه، بلاک به نوعِ متناظر تبدیل می‌شه (مثلِ Notion). فقط وقتی کل متنِ
-// فعلیِ بلاک (قبل از اسپیس) دقیقاً یکی از این الگوهاست فعال می‌شه.
+// میان‌بر مارک‌داون سطح بلاک — وقتی کاربر بعد این متن‌ها یه Space یا Enter
+// می‌زنه، بلاک به نوع متناظر تبدیل می‌شه (مثل Notion). فقط وقتی کل متن
+// فعلی بلاک (قبل از اسپیس) دقیقا یکی از این الگوهاست فعال می‌شه.
 export function matchBlockShortcut(text: string): BlockType | null {
   if (text === "#") return "heading1";
   if (text === "##") return "heading2";
@@ -155,14 +155,14 @@ export function isDividerShortcut(text: string): boolean {
 }
 
 export type InlineShortcutMatch = {
-  fullStart: number; fullEnd: number; // بازه‌ی کل شاملِ نشونه‌های مارک‌داون
-  innerStart: number; innerEnd: number; // بازه‌ی فقط متنِ داخل (بدونِ نشونه‌ها)
+  fullStart: number; fullEnd: number; // بازه‌ی کل شامل نشونه‌های مارک‌داون
+  innerStart: number; innerEnd: number; // بازه‌ی فقط متن داخل (بدون نشونه‌ها)
   mark: "bold" | "italic" | "strike" | "code";
 };
 
-// اسکن کردنِ متنِ خامِ یک بلاک درست جلوی مکان‌نما — اگه یه الگوی مارک‌داونِ
-// درون‌خطیِ تازه‌بسته‌شده (**بولد**، *ایتالیک*، ~~خط‌خورده~~، `کد`) پیدا شه،
-// بازه‌ش رو برمی‌گردونه تا کامپوننت بتونه با Range واقعیِ DOM جایگزینش کنه
+// اسکن کردن متن خام یک بلاک درست جلوی مکان‌نما — اگه یه الگوی مارک‌داون
+// درون‌خطی تازه‌بسته‌شده (**بولد**، *ایتالیک*، ~~خط‌خورده~~، `کد`) پیدا شه،
+// بازه‌ش رو برمی‌گردونه تا کامپوننت بتونه با Range واقعی DOM جایگزینش کنه
 export function findInlineMarkdownShortcut(text: string, cursor: number): InlineShortcutMatch | null {
   const before = text.slice(0, cursor);
   let m = /\*\*([^*\n]+)\*\*$/.exec(before);
@@ -195,13 +195,13 @@ export function makeBlock(pageId: string, type: BlockType, position: number, par
 }
 
 // ============================================================================
-// بلاکِ کد — لیستِ زبان‌های پشتیبانی‌شده + یه tokenizerِ سبکِ رجکسی برای
-// رنگ‌بندیِ نحوی (بدونِ هیچ کتابخانه‌ی خارجی‌ای مثلِ Prism/highlight.js —
-// عمداً محدود نگه داشته شده، دقیقاً همون فلسفه‌ی ارزیاب‌گرِ فرمولِ Database)
+// بلاک کد — لیست زبان‌های پشتیبانی‌شده + یه tokenizer سبک رجکسی برای
+// رنگ‌بندی نحوی (بدون هیچ کتابخانه‌ی خارجی‌ای مثل Prism/highlight.js —
+// عمدا محدود نگه داشته شده، دقیقا همون فلسفه‌ی ارزیاب‌گر فرمول Database)
 // ============================================================================
 
 export const CODE_LANGUAGES: { id: string; label: string }[] = [
-  { id: "plaintext", label: "متنِ ساده" },
+  { id: "plaintext", label: "متن ساده" },
   { id: "javascript", label: "JavaScript" },
   { id: "typescript", label: "TypeScript" },
   { id: "python", label: "Python" },
@@ -258,7 +258,7 @@ export function tokenizeCode(code: string, language: string): { text: string; cl
 }
 
 // ============================================================================
-// خروجیِ متنِ ساده از کلِ بلاک‌های یه صفحه — برای «کپیِ محتوای صفحه»
+// خروجی متن ساده از کل بلاک‌های یه صفحه — برای «کپی محتوای صفحه»
 // ============================================================================
 export function blocksToPlainText(blocks: NotepadBlock[]): string {
   const sorted = [...blocks].sort((a, b) => a.position - b.position);
@@ -342,7 +342,7 @@ function walkDomToLeaves(node: Node, marks: Marks, out: RichLeaf[]) {
   });
 }
 
-// merge کردنِ leafهای پشت‌سرهم که دقیقاً همون مارک‌ها رو دارن — خروجی تمیزتر
+// merge کردن leafهای پشت‌سرهم که دقیقا همون مارک‌ها رو دارن — خروجی تمیزتر
 function mergeLeaves(leaves: RichLeaf[]): RichLeaf[] {
   const out: RichLeaf[] = [];
   for (const leaf of leaves) {
@@ -367,8 +367,8 @@ export function domToLeaves(container: HTMLElement): RichLeaf[] {
 }
 
 // ============================================================================
-// کمک‌تابع‌های caret/Range — برای میان‌برهای مارک‌داونِ درون‌خطی (تبدیلِ
-// آفستِ متنِ خام به یه Range واقعیِ DOM و برعکس)
+// کمک‌تابع‌های caret/Range — برای میان‌برهای مارک‌داون درون‌خطی (تبدیل
+// آفست متن خام به یه Range واقعی DOM و برعکس)
 // ============================================================================
 
 export function getPlainTextAndCursor(el: HTMLElement): { text: string; cursor: number } {

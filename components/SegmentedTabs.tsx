@@ -1,11 +1,17 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { animate } from "animejs";
 
-// کنترل دوتکه‌ی شیشه‌ای با نشانگرِ لغزنده — همون کامپوننتی که زیر تب
-// ورود/ثبت‌نام صفحه‌ی لاگینه، فقط عمومی‌شده تا هرجای دیگه‌ی اپ (مثلاً
-// چک‌لیست/ژورنال توی ترید) هم عیناً همون ظاهر و انیمیشن رو داشته باشه.
+// کنترل دوتکه‌ی شیشه‌ای با نشانگر لغزنده — همون کامپوننتی که زیر تب
+// ورود/ثبت‌نام صفحه‌ی لاگینه، فقط عمومی‌شده تا هرجای دیگه‌ی اپ (مثلا
+// چک‌لیست/ژورنال توی ترید) هم عینا همون ظاهر و انیمیشن رو داشته باشه.
+//
+// نشانگر قبلا با animejs (یعنی یک لوپ جاوااسکریپتی که هر فریم `left` و
+// `width` رو دستی می‌نوشت) حرکت می‌کرد. هر دوی این‌ها propهای layout ـن، پس
+// هر فریم یک reflow کامل می‌داد — روی موبایل همین باعث همون لگی می‌شد که
+// موقع سوییچ‌کردن هر تب اپ (میزان اهمیت، هفتگی/ماهانه‌ی کالری، وعده‌ها، …)
+// گزارش شد. حالا فقط یک بار مقدار نهایی نوشته می‌شه و خود مرورگر با یک
+// transition CSS می‌بردش — بدون هیچ کار جاوااسکریپتی حین انیمیشن.
 export function SegmentedTabs<T extends string>({
   options,
   active,
@@ -24,22 +30,31 @@ export function SegmentedTabs<T extends string>({
     const target = btnRefs.current.get(active);
     const indicator = indicatorRef.current;
     if (!target || !indicator) return;
-    // عمداً به‌جای getBoundingClientRect از offsetLeft/offsetWidth استفاده
-    // می‌شه — این پاپ‌آپِ میزبان (.modal-panel) موقعِ باز شدن یک انیمیشنِ
+    // عمدا به‌جای getBoundingClientRect از offsetLeft/offsetWidth استفاده
+    // می‌شه — این پاپ‌آپ میزبان (.modal-panel) موقع باز شدن یک انیمیشن
     // CSS با transform:scale داره؛ getBoundingClientRect همون لحظه‌ی
-    // رندرِ اول رو که هنوز مقیاس کوچیک‌تره اندازه می‌گیره و نشانگر رو جای
-    // اشتباه می‌ذاره. offsetLeft/offsetWidth مقادیرِ layoutِ واقعی‌ان و از
-    // transform روی والد اصلاً اثر نمی‌گیرن.
+    // رندر اول رو که هنوز مقیاس کوچیک‌تره اندازه می‌گیره و نشانگر رو جای
+    // اشتباه می‌ذاره. offsetLeft/offsetWidth مقادیر layout واقعی‌ان و از
+    // transform روی والد اصلا اثر نمی‌گیرن.
     const left = target.offsetLeft;
+    const width = target.offsetWidth;
 
+    // اولین جای‌گیری نباید انیمیشن بخوره (وگرنه نشانگر از گوشه‌ی صفر پرواز
+    // می‌کنه سر جاش) — کلاس no-anim transition رو برای همون یک فریم می‌بنده.
     if (!mounted.current) {
+      indicator.classList.add("no-anim");
       indicator.style.left = `${left}px`;
-      indicator.style.width = `${target.offsetWidth}px`;
+      indicator.style.width = `${width}px`;
+      // خواندن offsetWidth یک reflow اجباری می‌سازد تا مرورگر مقدار بالا
+      // را «قدیمی» حساب نکند و با برداشتن کلاس، انیمیشن از صفر شروع نشود.
+      void indicator.offsetWidth;
+      indicator.classList.remove("no-anim");
       mounted.current = true;
       return;
     }
-    animate(indicator, { left, width: target.offsetWidth, duration: 220, ease: "outQuad" });
-  }, [active]);
+    indicator.style.left = `${left}px`;
+    indicator.style.width = `${width}px`;
+  }, [active, options.length]);
 
   return (
     <div className="auth-tabs" ref={containerRef}>

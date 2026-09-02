@@ -8,10 +8,10 @@ import { TradePageShell } from "@/components/TradePageShell";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { ACCOUNT_TYPE_LABELS, TradeAccount } from "@/lib/tradeTypes";
 
-// اتصالِ متاتریدر روی هر حساب جداگانه انجام می‌شود (هر حساب ترمینال و
-// لاگینِ خودش را دارد)، پس این صفحه فقط فهرستِ حساب‌ها و وضعیتشان را نشان
-// می‌دهد. وضعیتِ اتصال از خودِ همان یک درخواستِ حساب‌ها می‌آید — قبلاً به‌ازای
-// هر حساب یک درخواستِ جدا می‌رفت و باز شدنِ صفحه را کُند می‌کرد.
+// اتصال متاتریدر روی هر حساب جداگانه انجام می‌شود (هر حساب ترمینال و
+// لاگین خودش را دارد)، پس این صفحه فقط فهرست حساب‌ها و وضعیتشان را نشان
+// می‌دهد. وضعیت اتصال از خود همان یک درخواست حساب‌ها می‌آید — قبلا به‌ازای
+// هر حساب یک درخواست جدا می‌رفت و باز شدن صفحه را کند می‌کرد.
 type Row = TradeAccount & { mtConnected?: boolean };
 
 function AccountsForMt() {
@@ -44,9 +44,9 @@ function AccountsForMt() {
           key={a.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, delay: i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
         >
-          <Link href={`/trade/accounts/${a.id}`} prefetch className="trade-surface trade-mt-row">
+          <Link href={`/trade/metatrader/${a.id}`} prefetch className="trade-surface trade-mt-row">
             <span className="trade-account-stripe" style={{ background: a.color }} />
             <div className="trade-account-title-row">
               <span className="trade-account-name">{a.name}</span>
@@ -54,7 +54,7 @@ function AccountsForMt() {
             </div>
             <div className={`trade-mt-status${a.mtConnected ? " connected" : ""}`} style={{ marginTop: 10 }}>
               <span className="forex-dot" />
-              {a.mtConnected ? "متصل" : "متصل نیست"}
+              {a.mtConnected ? "فعال" : "غیرفعال"}
             </div>
           </Link>
         </motion.div>
@@ -67,7 +67,6 @@ export default function TradeMetaTraderPage() {
   return (
     <TradePageShell
       title="اتصال متاتریدر"
-      note="اتصال برای هر حساب جداگانه انجام می‌شود — حسابت را انتخاب کن"
     >
       <AccountsForMt />
     </TradePageShell>

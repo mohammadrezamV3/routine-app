@@ -8,9 +8,9 @@ function hashCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-// تاییدِ کدِ پیامک‌شده — فقط verifiedAt رو ست می‌کنه (مصرفِ واقعی/usedAt
-// موقعِ ثبت‌نامِ نهایی توی route.ts خودِ signup انجام می‌شه، تا اگه کاربر
-// بینِ این مرحله و مرحله‌ی بعد رها کرد، تاییدیه هدر نره).
+// تایید کد پیامک‌شده — فقط verifiedAt رو ست می‌کنه (مصرف واقعی/usedAt
+// موقع ثبت‌نام نهایی توی route.ts خود signup انجام می‌شه، تا اگه کاربر
+// بین این مرحله و مرحله‌ی بعد رها کرد، تاییدیه هدر نره).
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const body = await req.json();

@@ -7,13 +7,12 @@ import { useSession } from "next-auth/react";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { MarketTicker } from "@/components/MarketTicker";
 import { ICONS } from "@/components/NavDrawer";
 
-// هابِ بخشِ ترید — تنها ورودیِ ماژول. منو دیگر زیرمجموعه ندارد؛ با زدنِ
-// «ترید» مستقیم همین صفحه بالا می‌آید و انتخابِ بخش این‌جا انجام می‌شود.
-// چیدمان و حرکتِ کارت‌ها عیناً همان الگوی ردیف‌های پنل کاربری است
-// (آیکون در دایره‌ی نرم + عنوان + توضیح + شِوران)، نه یک الگوی تازه.
+// هاب بخش ترید — تنها ورودی ماژول. منو دیگر زیرمجموعه ندارد؛ با زدن
+// «ترید» مستقیم همین صفحه بالا می‌آید و انتخاب بخش این‌جا انجام می‌شود.
+// چیدمان و حرکت کارت‌ها عینا همان الگوی ردیف‌های پنل کاربری است
+// (آیکون در دایره‌ی نرم + عنوان + توضیح + شوران)، نه یک الگوی تازه.
 
 const ITEMS: { href: string; title: string; desc: string; icon: keyof typeof ICONS }[] = [
   { href: "/trade/chart", title: "چارت", desc: "چارت تریدینگ‌ویو، تقویم اقتصادی و گفت‌وگوی هر نماد", icon: "trade" },
@@ -30,9 +29,7 @@ export default function TradePage() {
 
   return (
     <section className="trade-desktop">
-      <MarketTicker />
       <h1>ترید</h1>
-      <div className="section-note">از چک‌لیست تا ثبت معامله و تحلیل عملکرد — همه در یک جا</div>
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}

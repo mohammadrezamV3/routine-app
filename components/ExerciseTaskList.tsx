@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Dumbbell, Lock, Play, Plus, Repeat2, RotateCw, Square, Timer, X } from "lucide-react";
+import { Check, Dumbbell, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
@@ -17,7 +17,7 @@ function formatElapsed(sec: number): string {
   return `${m}:${s}`;
 }
 
-/** ثانیه‌ها رو به یه لیبلِ کوتاه برای جدولِ مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
+/** ثانیه‌ها رو به یه لیبل کوتاه برای جدول مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
 function formatSpecDuration(seconds: number | null): string {
   if (!seconds) return "—";
   if (seconds % 60 === 0) return `${seconds / 60} دقیقه`;
@@ -25,11 +25,11 @@ function formatSpecDuration(seconds: number | null): string {
   return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 
-// «برنامه تمرینی امروز» — ستونِ بزرگِ سمتِ راستِ داشبوردِ بدنسازی، هم‌نقشِ
+// «برنامه تمرینی امروز» — ستون بزرگ سمت راست داشبورد بدنسازی، هم‌نقش
 // DashTaskList توی روتین. «شروع تمرین» یک تایمر می‌ندازه و به هر حرکت دکمه‌ی
-// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده
-// ضربدرِ قرمز می‌زنه. تنها راهِ تکمیلِ یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپِ
-// ردیابیِ ست‌به‌ست با استراحتِ زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
+// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکت تیک‌نخورده
+// ضربدر قرمز می‌زنه. تنها راه تکمیل یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپ
+// ردیابی ست‌به‌ست با استراحت زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
 export function ExerciseTaskList({
   planId,
   dayPlan,
@@ -72,14 +72,22 @@ export function ExerciseTaskList({
   const [ending, setEnding] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [setTrackerItem, setSetTrackerItem] = useState<string | null>(null);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // `initialCompletedItems` از والد به‌صورت `res.completedItems ?? []` میاد،
+  // یعنی وقتی لاگی وجود نداره هر رندر یک آرایه‌ی *جدید* ساخته می‌شه. با گذاشتن
+  // خود آرایه توی وابستگی‌ها، این افکت هر رندر اجرا می‌شد و
+  // `setChecked(new Set(...))` هم هر بار یک Set جدید (پس state جدید) می‌ساخت
+  // → رندر بعدی → افکت دوباره → یک حلقه‌ی رندر بی‌پایان که CPU رو اشغال
+  // می‌کرد و گوشی رو داغ. حالا وابستگی یک کلید رشته‌ای پایدار از محتواست.
+  const completedKey = initialCompletedItems.join("|");
   useEffect(() => {
     setEnded(initialCompleted);
-    setChecked(new Set(initialCompletedItems));
-    setActive(!initialCompleted && initialCompletedItems.length > 0);
+    setChecked(new Set(completedKey ? completedKey.split("|") : []));
+    setActive(!initialCompleted && completedKey.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayPlan?.day, initialCompleted, initialCompletedItems]);
+  }, [todayPlan?.day, initialCompleted, completedKey]);
 
   useEffect(() => {
     if (!active) { if (timerRef.current) clearInterval(timerRef.current); return; }
@@ -121,7 +129,17 @@ export function ExerciseTaskList({
     });
   }
 
+  const remainingCount = (todayPlan?.items ?? []).filter((it) => !checked.has(it)).length;
+
+  // زدن «پایان تمرین» وقتی هنوز حرکتی مونده، به‌جای ثبت بی‌برگشت، اول
+  // می‌پرسه — چون بعد ثبت، اون حرکت‌ها ضربدر قرمز «انجام‌نشده» می‌گیرن.
+  function requestEndWorkout() {
+    if (remainingCount > 0) { setConfirmEnd(true); return; }
+    endWorkout();
+  }
+
   async function endWorkout() {
+    setConfirmEnd(false);
     setEnding(true);
     await persist(checked, true);
     setEnding(false);
@@ -145,8 +163,8 @@ export function ExerciseTaskList({
             onClick={onAddProgram}
             className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
           >
-            <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-            افزودن برنامه
+            <Pencil className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
+            تغییر برنامه
           </button>
         )}
       </div>
@@ -286,11 +304,10 @@ export function ExerciseTaskList({
                   <button
                     type="button"
                     disabled={ending}
-                    onClick={endWorkout}
+                    onClick={requestEndWorkout}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
                     style={{ borderColor: "#E05252", color: "#E05252" }}
                   >
-                    <Square size={14} />
                     {ending ? "در حال ثبت…" : "پایان تمرین"}
                   </button>
                 )}
@@ -304,6 +321,44 @@ export function ExerciseTaskList({
         <ExerciseSetTutorial
           onDone={() => { setShowTutorial(false); startWorkout(); }}
         />,
+        document.body
+      )}
+
+      {confirmEnd && createPortal(
+        <>
+          <div className="modal-overlay open" onClick={() => setConfirmEnd(false)} />
+          <div className="modal-panel liquid-glass-panel dash-scope open">
+            <div className="modal-head">
+              <div className="modal-title">هنوز تمرین مونده</div>
+              <button className="nav-close" onClick={() => setConfirmEnd(false)} aria-label="بستن">×</button>
+            </div>
+            <div className="modal-body">
+              <div className="text-[12.5px] leading-relaxed text-dash-text sm:text-[13.5px]">
+                {remainingCount} حرکت از برنامه‌ی امروزت هنوز انجام نشده. اگه الان تمرین رو ببندی،
+                همون‌ها «انجام‌نشده» ثبت می‌شن.
+              </div>
+              <div className="mt-4 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setConfirmEnd(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[14px]"
+                  style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                >
+                  ادامه تمرین
+                </button>
+                <button
+                  type="button"
+                  disabled={ending}
+                  onClick={endWorkout}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border bg-transparent py-3 text-[13px] font-bold sm:text-[14px]"
+                  style={{ borderColor: "#E05252", color: "#E05252" }}
+                >
+                  {ending ? "در حال ثبت…" : "پایان تمرین"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
         document.body
       )}
 

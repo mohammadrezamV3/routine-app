@@ -1,13 +1,13 @@
 import { SETTING_KEYS } from "./userSettingKeys";
 import { takePreloaded } from "./preload";
-// قد/وزن/سن یک منبعِ مشترکِ واحد داره (نه یک فرمِ جدا برای هر ماژول) — یک‌بار
+// قد/وزن/سن یک منبع مشترک واحد داره (نه یک فرم جدا برای هر ماژول) — یک‌بار
 // توی هر فرمی (کالری یا بدنسازی) وارد بشه، همون مقدار توی بقیه‌ی فرم‌ها هم
-// از قبل پر می‌شه. روی همون UserSetting عمومیِ کلید/مقدار ذخیره می‌شه (بدون
+// از قبل پر می‌شه. روی همون UserSetting عمومی کلید/مقدار ذخیره می‌شه (بدون
 // نیاز به migration جدید)، کلیدش "bodyMetrics".
 
 export type BodyMetrics = { heightCm?: number; weightKg?: number; ageYears?: number };
 
-// نامِ کلید از allowlist میاد تا این دوتا نتونن از هم واگرا بشن
+// نام کلید از allowlist میاد تا این دوتا نتونن از هم واگرا بشن
 const KEY = SETTING_KEYS.bodyMetrics;
 const WEIGHT_REMINDER_DAYS = 14;
 
@@ -25,7 +25,7 @@ export async function getBodyMetrics(): Promise<{ data: BodyMetrics | null; upda
   }
 }
 
-// فقط فیلدهای داده‌شده رو روی مقدارِ قبلی merge می‌کنه — مثلاً فرمِ بدنسازی
+// فقط فیلدهای داده‌شده رو روی مقدار قبلی merge می‌کنه — مثلا فرم بدنسازی
 // فقط قد/وزن می‌فرسته، سن رو دست‌نخورده نگه می‌داره.
 export async function saveBodyMetrics(patch: BodyMetrics): Promise<void> {
   const { data } = await getBodyMetrics();
@@ -38,7 +38,7 @@ export async function saveBodyMetrics(patch: BodyMetrics): Promise<void> {
 }
 
 // هر دو هفته یک‌بار کاربر باید وزنش رو به‌روز کنه — اگه هیچ‌وقت ثبت نشده،
-// یادآوری لازم نیست (چیزی برای «به‌روزکردن» وجود نداره، فرمِ اولیه خودش می‌پرسه)
+// یادآوری لازم نیست (چیزی برای «به‌روزکردن» وجود نداره، فرم اولیه خودش می‌پرسه)
 export function isWeightStale(updatedAt: string | null): boolean {
   if (!updatedAt) return false;
   const ageMs = Date.now() - new Date(updatedAt).getTime();

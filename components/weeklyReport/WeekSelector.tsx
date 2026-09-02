@@ -13,7 +13,7 @@ function jalaliRangeLabel(weekStartIso: string, weekEndIso: string): string {
   return `${sd} ${J_MONTHS[sm - 1]} ${sy} تا ${ed} ${J_MONTHS[em - 1]} ${ey}`;
 }
 
-// ناوبریِ بینِ هفته‌ها — دکمه‌ی «هفته‌ی بعد» فقط تا offset=0 (هفته‌ی جاری)
+// ناوبری بین هفته‌ها — دکمه‌ی «هفته‌ی بعد» فقط تا offset=0 (هفته‌ی جاری)
 // فعاله، هفته‌ی آینده قابل‌انتخاب نیست (طبق اسپک).
 export function WeekSelector({
   weekStartIso, weekEndIso, offset, onChange,
