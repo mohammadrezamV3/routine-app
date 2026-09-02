@@ -223,7 +223,7 @@ export function AiExercisePlanWizard({
 
       {step === "description" && (
         <>
-          <label className="exercise-wizard-title">دوست داری برنامه‌ت چطوری باشه؟ (اختیاری)</label>
+          <label className="exercise-wizard-title">دوست داری برنامه‌ات چطوری باشه؟ (اختیاری)</label>
           <textarea
             dir="rtl"
             className="exercise-desc-textarea"
@@ -286,7 +286,16 @@ export function AiExercisePlanWizard({
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button type="button" onClick={goNext} disabled={submitting} className="exercise-wizard-next-btn">
-          {step === "description" ? (submitting ? "در حال ساخت برنامه…" : rejection ? "ویرایش و امتحان دوباره" : "مرحله بعد") : "مرحله بعد"}
+          {submitting ? (
+            <>
+              <span className="wsearch-submit-spinner" />
+              در حال ساخت برنامه
+            </>
+          ) : step === "description" && rejection ? (
+            "ویرایش و امتحان دوباره"
+          ) : (
+            "مرحله بعد"
+          )}
         </button>
       </div>
     </div>

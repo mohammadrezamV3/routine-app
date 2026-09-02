@@ -3248,11 +3248,12 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
    مارجینِ منفی، پدینگِ خودشو پدینگِ ۲۲پیکسلیِ wsearch-newform رو خنثی
    می‌کنه تا واقعاً لبه‌به‌لبه بشینه، بکگراندِ خودش هم مات/غیرشفافه تا محتوای
    پشتش موقعِ اسکرول از زیرش رد نشه. */
+/* خطِ جداکننده‌ی بالای دکمه‌ی «ثبت برنامه» طبقِ درخواستِ کاربر برداشته شد */
 .manual-submit-row{
   position:sticky; bottom:-22px; z-index:5;
   display:flex; justify-content:flex-end; margin:18px -22px -22px; padding:14px 22px;
   background:rgba(var(--surface-rgb), .92); backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
-  border-top:1px solid var(--line); border-radius:0 0 26px 26px;
+  border-radius:0 0 26px 26px;
 }
 .manual-plan-submit-btn{
   border-radius:9999px !important; border:none !important; padding:11px 28px !important;
@@ -3349,6 +3350,7 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
   border-radius:9999px !important; border:none !important;
   background:var(--accent) !important; color:var(--bg) !important;
   padding:7px 20px !important; font-size:11.5px !important; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
 }
 .exercise-wizard-next-btn:hover{ filter:brightness(1.05); }
 .exercise-wizard-next-btn:disabled{ opacity:.6 !important; }
@@ -3374,6 +3376,32 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
    دست‌نخورده می‌مونه) + فاصله‌ی بیشتر از بالا و از ردیفِ انتخاب زیرش */
 .exercise-add-glass .wsearch-newform-head{ margin-top:6px; margin-bottom:20px; }
 .exercise-add-glass .wsearch-newform-title{ font-size:17px; }
+
+/* همه‌ی قوانین داخلِ یک باکسِ واحد (درخواستِ صریحِ کاربر) با تایتلِ سبز */
+.exercise-rules-box{
+  margin-top:14px; padding:14px 16px; border-radius:18px;
+  border:1px solid var(--line); background:rgba(var(--surface-rgb), .06);
+  backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+}
+body[data-theme="light"] .exercise-rules-box{ background:rgba(255,255,255,.06); }
+.exercise-rules-box-title{ font-size:13.5px; font-weight:800; color:var(--accent); }
+
+/* دکمه‌ی «قبول دارم، برنامه رو بساز» — بک‌گراندِ توپر (درخواستِ صریحِ کاربر)
+   و چپ‌چین (توی RTL یعنی flex-end). تا شمارشِ ۳۰ثانیه‌ای تموم نشه غیرفعاله. */
+.exercise-rules-actions{ display:flex; justify-content:flex-end; margin-top:16px; }
+.exercise-rules-accept-btn{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:13px 26px; border-radius:16px; border:1px solid var(--accent);
+  background:var(--accent); color:var(--bg);
+  font-size:13.5px; font-weight:800; cursor:pointer;
+  box-shadow:0 8px 22px rgba(var(--accent-rgb),.3);
+  transition:opacity .2s ease, transform .12s ease;
+}
+body[data-theme="light"] .exercise-rules-accept-btn, body:not([data-theme="light"]) .exercise-rules-accept-btn{
+  background:var(--accent); color:var(--bg);
+}
+.exercise-rules-accept-btn:active{ transform:scale(.98); }
+.exercise-rules-accept-btn:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
 
 .exercise-rules-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin-top:10px; }
 .exercise-rules-list li{
@@ -3529,6 +3557,25 @@ body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28);
   display:flex; align-items:center; justify-content:center;
   width:44px; height:44px; border-radius:9999px; border:2px solid; transition:.2s;
   font-size:15px; font-weight:700;
+}
+
+
+/* ستِ فعلی «زنده»ست: یک موجِ پیوسته‌ی سبز از دورش بیرون می‌زنه تا کاربر
+   بدونه همین دایره‌ست که باید بزنه. فقط transform/opacityـه (روی یک
+   ::after ی جدا)، پس compositor-only و بی‌هزینه‌ست. */
+.exercise-set-circle-live{ position:relative; }
+.exercise-set-circle-live::after{
+  content:''; position:absolute; inset:-2px; border-radius:50%;
+  border:2px solid var(--accent); pointer-events:none;
+  animation:exerciseSetRipple 1.6s cubic-bezier(.22,1,.36,1) infinite;
+}
+@keyframes exerciseSetRipple{
+  0%{ transform:scale(1); opacity:.7; }
+  70%{ transform:scale(1.55); opacity:0; }
+  100%{ transform:scale(1.55); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .exercise-set-circle-live::after{ animation:none; opacity:.5; }
 }
 .exercise-set-circle:disabled{ cursor:not-allowed; }
 .exercise-rest-bar{ width:180px; height:5px; border-radius:9999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }
