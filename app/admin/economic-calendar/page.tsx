@@ -12,8 +12,8 @@ type EventRow = {
 };
 type Resp = { events: EventRow[]; externalConfigured: boolean };
 
-// ورودِ دستیِ رویدادهای تقویم اقتصادی. تا وقتی هیچ فیدِ خارجی تنظیم نشده
-// (ECONOMIC_CALENDAR_URL)، تقویمِ سمتِ کاربر از همین‌جا پر می‌شود.
+// ورود دستی رویدادهای تقویم اقتصادی. تا وقتی هیچ فید خارجی تنظیم نشده
+// (ECONOMIC_CALENDAR_URL)، تقویم سمت کاربر از همین‌جا پر می‌شود.
 export default function AdminEconomicCalendarPage() {
   const [data, setData] = useState<Resp | null>(null);
   const [title, setTitle] = useState("");
@@ -41,7 +41,7 @@ export default function AdminEconomicCalendarPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: title.trim(), currency, country, impact,
-        // فیلدِ datetime-local وقتِ محلیِ ادمین را می‌دهد؛ اینجا به ISO/UTC
+        // فیلد datetime-local وقت محلی ادمین را می‌دهد؛ اینجا به ISO/UTC
         // تبدیل می‌شود تا با بقیه‌ی داده‌ی اپ هم‌قرارداد بماند.
         occursAt: new Date(occursAt).toISOString(),
         forecast: forecast.trim() || null,
@@ -66,8 +66,8 @@ export default function AdminEconomicCalendarPage() {
       <h1>تقویم اقتصادی</h1>
       <div className="account-content-hint">
         {data?.externalConfigured
-          ? "یک منبع بیرونی تنظیم شده — کرانِ روزانه رویدادها را خودش به‌روز می‌کند. رویدادهایی که این‌جا دستی می‌سازی از همگام‌سازی دست‌نخورده می‌مانند."
-          : "هیچ منبع بیرونی‌ای تنظیم نشده (ECONOMIC_CALENDAR_URL). تقویمِ کاربران از همین رویدادهای دستی پر می‌شود."}
+          ? "یک منبع بیرونی تنظیم شده — کران روزانه رویدادها را خودش به‌روز می‌کند. رویدادهایی که این‌جا دستی می‌سازی از همگام‌سازی دست‌نخورده می‌مانند."
+          : "هیچ منبع بیرونی‌ای تنظیم نشده (ECONOMIC_CALENDAR_URL). تقویم کاربران از همین رویدادهای دستی پر می‌شود."}
       </div>
 
       <div className="admin-chart-card">
@@ -75,7 +75,7 @@ export default function AdminEconomicCalendarPage() {
         <div className="admin-form-row">
           <div className="admin-form-field">
             <label>عنوان</label>
-            <input className="admin-input" style={{ width: 220 }} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثلاً CPI" maxLength={160} />
+            <input className="admin-input" style={{ width: 220 }} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثلا CPI" maxLength={160} />
           </div>
           <div className="admin-form-field">
             <label>ارز</label>

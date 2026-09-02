@@ -6,13 +6,13 @@ import type { ExerciseDay } from "@/lib/exercisePlans";
 import { toEnDigits } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 
-// «برنامه هفتگی» بدنسازی — یک باکسِ واحد، با پدینگِ دورش تا خطِ جداکننده‌ی
-// بینِ روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیرِ هم)، بدونِ تغییرِ
-// چیدمان؛ دسکتاپ (lg+): تایتل راست‌چین، روزِ استراحت وسط‌چین، بدونِ باکسِ
-// تودرتو برای امروز (فقط رنگِ متن سبز می‌شه)، و خط‌های جداکننده — روی
-// سمتِ راستِ هر سلول (بینِ همون سلول و همسایه‌ی راستش، نه چپش، چون
-// تویِ RTL اولین بچه‌ی DOM سمتِ راستِ گرید می‌شینه) — به‌جای کشیدنِ
-// تمام‌ارتفاع، از بالا/پایین فاصله دارن (گرادیانِ محو به‌جای بوردرِ خام).
+// «برنامه هفتگی» بدنسازی — یک باکس واحد، با پدینگ دورش تا خط جداکننده‌ی
+// بین روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیر هم)، بدون تغییر
+// چیدمان؛ دسکتاپ (lg+): تایتل راست‌چین، روز استراحت وسط‌چین، بدون باکس
+// تودرتو برای امروز (فقط رنگ متن سبز می‌شه)، و خط‌های جداکننده — روی
+// سمت راست هر سلول (بین همون سلول و همسایه‌ی راستش، نه چپش، چون
+// توی RTL اولین بچه‌ی DOM سمت راست گرید می‌شینه) — به‌جای کشیدن
+// تمام‌ارتفاع، از بالا/پایین فاصله دارن (گرادیان محو به‌جای بوردر خام).
 export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDay[]; todayName: string }) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
@@ -53,7 +53,7 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
                 </div>
 
                 {!d ? (
-                  <div className="flex flex-1 items-center py-1.5 text-[10.5px] text-dash-muted lg:justify-center lg:text-center">روزِ استراحت</div>
+                  <div className="flex flex-1 items-center py-1.5 text-[10.5px] text-dash-muted lg:justify-center lg:text-center">روز استراحت</div>
                 ) : (
                   <>
                     <div className="mt-1 truncate text-[10px] font-semibold text-dash-green sm:text-[11px]" title={d.focus}>

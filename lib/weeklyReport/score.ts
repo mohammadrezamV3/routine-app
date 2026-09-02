@@ -1,6 +1,6 @@
 import { Domain, DomainMetric, DOMAINS } from "./metrics";
 
-// وزنِ پایه‌ی هر دامنه (بند ۹ اسپک) — Configurable در یک جا، نه پراکنده.
+// وزن پایه‌ی هر دامنه (بند ۹ اسپک) — Configurable در یک جا، نه پراکنده.
 export const DOMAIN_WEIGHTS: Record<Domain, number> = {
   routine: 0.25,
   fitness: 0.2,
@@ -18,10 +18,10 @@ export function confidenceFromDaysWithData(daysWithData: number): Confidence {
 }
 
 /**
- * امتیازِ کلیِ هفته — فقط روی دامنه‌هایی حساب می‌شه که هم فعال‌ن هم
+ * امتیاز کلی هفته — فقط روی دامنه‌هایی حساب می‌شه که هم فعال‌ن هم
  * این‌هفته داده دارن (score != null)؛ وزن‌های بقیه‌ی دامنه‌ها Dynamic
- * Normalized روی همین زیرمجموعه توزیع می‌شه — نبودِ یک ماژول یا نبودنِ
- * داده‌ی این‌هفته نباید امتیاز رو مصنوعاً پایین بیاره.
+ * Normalized روی همین زیرمجموعه توزیع می‌شه — نبود یک ماژول یا نبودن
+ * داده‌ی این‌هفته نباید امتیاز رو مصنوعا پایین بیاره.
  */
 export function computeOverallScore(domains: Record<Domain, DomainMetric>): { score: number | null; confidence: Confidence } {
   const scored = DOMAINS.filter((d) => domains[d].active && domains[d].score != null);

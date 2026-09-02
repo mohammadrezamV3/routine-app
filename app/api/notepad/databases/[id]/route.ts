@@ -7,13 +7,13 @@ import { clampText } from "@/lib/validate";
 const VALID_VIEWS = new Set(["table", "board", "calendar", "gallery", "list"]);
 
 // GET /api/notepad/databases/:id — دیتابیس کامل (پراپرتی‌ها + همه‌ی
-// رکوردها، خام و بدون فیلتر/سورت — کلاینت با توابعِ lib/notepadDb خودش
+// رکوردها، خام و بدون فیلتر/سورت — کلاینت با توابع lib/notepadDb خودش
 // فیلتر/سورت می‌کنه چون filters/sorts هم توی همین پاسخ برمی‌گردن)
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const database = await prisma.notepadDatabase.findFirst({
     where: { id: params.id, block: { page: { userId } } },
@@ -26,13 +26,13 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ database });
 }
 
-// PATCH /api/notepad/databases/:id — تغییرِ متادیتا: اسم/ویوِ فعال/
-// فیلتر/سورت/propertyهای مخفی/propertyِ گروه‌بندیِ بورد/propertyِ تاریخِ تقویم
+// PATCH /api/notepad/databases/:id — تغییر متادیتا: اسم/ویو فعال/
+// فیلتر/سورت/propertyهای مخفی/property گروه‌بندی بورد/property تاریخ تقویم
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 });
+  if (!(session!.user as any).isSuperAdmin) return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 
   const database = await prisma.notepadDatabase.findFirst({ where: { id: params.id, block: { page: { userId } } } });
   if (!database) return NextResponse.json({ error: "دیتابیس پیدا نشد" }, { status: 404 });

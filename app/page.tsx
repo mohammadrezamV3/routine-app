@@ -4,14 +4,14 @@ import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAME
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
 
-// این فایل عمداً Server Component شده (نه "use client" مثل قبل) — فقط
+// این فایل عمدا Server Component شده (نه "use client" مثل قبل) — فقط
 // برای اینکه بتونه metadata/JSON-LD صادر کنه؛ کل منطق/UI واقعی توی
 // components/HomeClient.tsx بدون هیچ تغییری زندگی می‌کنه.
 // صفحه‌ی اصلی جاییه که جست‌وجوی برند («آریون»، «آریون اپ») باید بهش برسه،
-// پس عنوانش باید خودِ نامِ فارسی رو داشته باشه — نه فقط املای لاتین.
+// پس عنوانش باید خود نام فارسی رو داشته باشه — نه فقط املای لاتین.
 export const metadata: Metadata = {
   title: {
-    // absolute یعنی الگوی «%s | Arion آریون» به این عنوان اضافه نشه؛ اسمِ
+    // absolute یعنی الگوی «%s | Arion آریون» به این عنوان اضافه نشه؛ اسم
     // برند از قبل داخلش هست و تکرارش فقط عنوان رو بلند و بریده می‌کنه.
     absolute: BRAND_TITLE,
   },

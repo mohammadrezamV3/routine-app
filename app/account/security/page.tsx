@@ -21,7 +21,7 @@ const PROVIDER_FA: Record<string, string> = {
   "sms-2fa": "ورود دومرحله‌ای",
 };
 
-// یه حدسِ خیلی سبک از روی User-Agent — فقط برای نمایشِ خوانا، نه parsing دقیق
+// یه حدس خیلی سبک از روی User-Agent — فقط برای نمایش خوانا، نه parsing دقیق
 function guessDevice(ua: string | null): string {
   if (!ua) return "دستگاه نامشخص";
   const isMobile = /Android|iPhone|iPad/i.test(ua);
@@ -34,8 +34,8 @@ function guessDevice(ua: string | null): string {
   return `${browser}${os ? " · " + os : ""}${isMobile ? " · موبایل" : ""}`;
 }
 
-// تاریخ/ساعت با ارقامِ **انگلیسی** — `toLocaleString("fa-IR")` ارقامِ فارسی
-// می‌داد که کاربر صریحاً نخواسته. ماهِ جلالی به حروف نوشته می‌شه تا با بقیه‌ی
+// تاریخ/ساعت با ارقام **انگلیسی** — `toLocaleString("fa-IR")` ارقام فارسی
+// می‌داد که کاربر صریحا نخواسته. ماه جلالی به حروف نوشته می‌شه تا با بقیه‌ی
 // تاریخ‌های اپ هم‌شکل بمونه.
 function formatDateTimeEn(iso: string): string {
   const d = new Date(iso);
@@ -63,7 +63,7 @@ export default function SecurityPage() {
   const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
 
   // «قابل‌جست‌وجو بودن با یوزرنیم» — از تنظیمات به این‌جا منتقل شد؛ یک
-  // تنظیمِ حریمِ خصوصیه، نه یک تنظیمِ عمومیِ نمایش.
+  // تنظیم حریم خصوصیه، نه یک تنظیم عمومی نمایش.
   const [discoverable, setDiscoverable] = useState<boolean | null>(null);
   const [discoverableSaving, setDiscoverableSaving] = useState(false);
 
@@ -89,7 +89,7 @@ export default function SecurityPage() {
     setSessionError(null);
     try {
       const res = await fetch(`/api/account/sessions?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (!res.ok) { setSessionError("بیرون‌انداختنِ این دستگاه ناموفق بود"); return; }
+      if (!res.ok) { setSessionError("بیرون‌انداختن این دستگاه ناموفق بود"); return; }
       setSessions((prev) => prev && prev.filter((s) => s.id !== id));
     } finally {
       setSessionBusy(null);
@@ -101,7 +101,7 @@ export default function SecurityPage() {
     setSessionError(null);
     try {
       const res = await fetch("/api/account/sessions?others=1", { method: "DELETE" });
-      if (!res.ok) { setSessionError("بیرون‌انداختنِ دستگاه‌های دیگر ناموفق بود"); return; }
+      if (!res.ok) { setSessionError("بیرون‌انداختن دستگاه‌های دیگر ناموفق بود"); return; }
       setSessions((prev) => prev && prev.filter((s) => s.current));
     } finally {
       setSessionBusy(null);
@@ -150,7 +150,7 @@ export default function SecurityPage() {
 
   async function changePassword() {
     setPwError(null);
-    if (newPassword !== confirmPassword) { setPwError("رمزِ جدید با تکرارش یکی نیست"); return; }
+    if (newPassword !== confirmPassword) { setPwError("رمز جدید با تکرارش یکی نیست"); return; }
     setPwSaving(true);
     try {
       const res = await fetch("/api/account/password", {
@@ -176,7 +176,7 @@ export default function SecurityPage() {
     <section>
       <AccountBackButton />
       <h1>امنیت</h1>
-      {/* تغییرِ یوزرنیم طبقِ درخواستِ کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
+      {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
       <div className="account-content-hint">رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی</div>
 
       <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={0}>
@@ -200,9 +200,9 @@ export default function SecurityPage() {
       <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={1}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تاییدِ ورود با پیامک</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تایید ورود با پیامک</div>
             <div className="item-line" style={{ marginTop: 2 }}>
-              با روشن‌بودنش، هر بار بعد از رمزِ درست یک کد به شماره‌ی حسابت پیامک می‌شه و بدونِ اون کد ورود انجام نمی‌شه.
+              با روشن‌بودنش، هر بار بعد از رمز درست یک کد به شماره‌ی حسابت پیامک می‌شه و بدون اون کد ورود انجام نمی‌شه.
             </div>
           </div>
           {twoFactor !== null && (
@@ -216,7 +216,7 @@ export default function SecurityPage() {
         {!sessions ? (
           <div className="item-line">در حال بارگذاری…</div>
         ) : sessions.length === 0 ? (
-          <div className="item-line empty">نشستِ فعالی پیدا نشد.</div>
+          <div className="item-line empty">نشست فعالی پیدا نشد.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {sessions.map((s) => (

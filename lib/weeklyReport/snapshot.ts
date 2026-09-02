@@ -69,16 +69,16 @@ function mapSnapshotRow(row: any, baselines: Baseline[]): WeeklyReportData {
   };
 }
 
-/** حداقلِ داده برای اینکه صدا زدنِ AI اصلاً ارزش داشته باشه (بندِ ۸۹). */
+/** حداقل داده برای اینکه صدا زدن AI اصلا ارزش داشته باشه (بند ۸۹). */
 function hasEnoughDataForAi(domains: Record<Domain, DomainMetric>): boolean {
   const totalDays = DOMAINS.reduce((sum, d) => sum + (domains[d].active ? domains[d].daysWithData : 0), 0);
   return totalDays >= 2;
 }
 
 /**
- * Feedback Loop (بندِ ۳۷) — گلِ‌های پذیرفته‌شده‌ای که followUpWeekStart‌شون
- * برابرِ همین هفته‌ست رو بر اساسِ امتیازِ فعلیِ همون دامنه COMPLETED/MISSED
- * می‌کنه. تصمیم ساده و شفافه: اگه امتیازِ فعلی از امتیازِ لحظه‌ی Accept
+ * Feedback Loop (بند ۳۷) — گل‌های پذیرفته‌شده‌ای که followUpWeekStart‌شون
+ * برابر همین هفته‌ست رو بر اساس امتیاز فعلی همون دامنه COMPLETED/MISSED
+ * می‌کنه. تصمیم ساده و شفافه: اگه امتیاز فعلی از امتیاز لحظه‌ی Accept
  * بهتر یا مساوی بود، COMPLETED؛ وگرنه MISSED.
  */
 async function resolvePendingGoals(userId: string, weekStartIso: string, weekStart: Date, currentMetrics: Record<Domain, DomainMetric>) {
@@ -93,11 +93,11 @@ async function resolvePendingGoals(userId: string, weekStartIso: string, weekSta
 }
 
 /**
- * تنها نقطه‌ی ورودیِ تولید/خواندنِ گزارشِ هفتگی — idempotent: اگه ردیفی
+ * تنها نقطه‌ی ورودی تولید/خواندن گزارش هفتگی — idempotent: اگه ردیفی
  * برای همین (userId, weekStart, algorithmVersion) از قبل هست، همون
  * برگردونده می‌شه (مگه forceRegenerate). برای هفته‌ی جاری (weekOffset=0)
- * بدونِ ردیفِ موجود، محاسبه زنده انجام می‌شه ولی ذخیره/AI صدا زده نمی‌شه —
- * فقط refresh صریح (forceRegenerate) گزارشِ هفته‌ی جاری رو snapshot می‌کنه.
+ * بدون ردیف موجود، محاسبه زنده انجام می‌شه ولی ذخیره/AI صدا زده نمی‌شه —
+ * فقط refresh صریح (forceRegenerate) گزارش هفته‌ی جاری رو snapshot می‌کنه.
  */
 export async function getOrGenerateWeeklyReport(
   userId: string, timezone: string, isSuperAdmin: boolean, weekOffset: number, forceRegenerate = false
@@ -110,8 +110,8 @@ export async function getOrGenerateWeeklyReport(
       where: { userId_weekStart_algorithmVersion: { userId, weekStart: week.weekStart, algorithmVersion: ALGORITHM_VERSION } },
     });
     if (existing) {
-      // Baselineها cache نمی‌شن (سبک‌ان، و می‌تونن بینِ ریجنریت‌ها به‌روزتر باشن) —
-      // فقط برای این‌جوریِ نمایش دوباره محاسبه می‌شن، AI/Snapshot دست نمی‌خوره.
+      // Baselineها cache نمی‌شن (سبک‌ان، و می‌تونن بین ریجنریت‌ها به‌روزتر باشن) —
+      // فقط برای این‌جوری نمایش دوباره محاسبه می‌شن، AI/Snapshot دست نمی‌خوره.
       const trailing8 = await computeTrailingWeeks(userId, timezone, weekOffset - 1, 8, activeModules);
       return mapSnapshotRow(existing, computeBaselines(trailing8));
     }
@@ -144,9 +144,9 @@ export async function getOrGenerateWeeklyReport(
   const isCurrentWeek = weekOffset === 0;
   const status: ReportStatus = isCurrentWeek ? "COLLECTING" : "READY";
 
-  // برای هفته‌ی جاریِ بدونِ درخواستِ صریحِ refresh، نه AI صدا زده می‌شه نه
-  // چیزی ذخیره — فقط محاسبه‌ی زنده (شاملِ patterns/baseline/prediction، چون
-  // اون‌ها هزینه‌ی AI ندارن) برمی‌گرده (کنترلِ هزینه، بند ۸۹-۹۰).
+  // برای هفته‌ی جاری بدون درخواست صریح refresh، نه AI صدا زده می‌شه نه
+  // چیزی ذخیره — فقط محاسبه‌ی زنده (شامل patterns/baseline/prediction، چون
+  // اون‌ها هزینه‌ی AI ندارن) برمی‌گرده (کنترل هزینه، بند ۸۹-۹۰).
   if (isCurrentWeek && !forceRegenerate) {
     return {
       weekStart: week.weekStartIso, weekEnd: week.weekEndIso, status, algorithmVersion: ALGORITHM_VERSION,
@@ -183,7 +183,7 @@ export async function getOrGenerateWeeklyReport(
       aiRecommendations = result.recommendations;
       aiInsights = result.insights;
     } catch {
-      // بندِ ۶۶ — شکستِ AI نباید کلِ گزارش رو خراب کنه؛ فقط بخشِ AI خالی می‌مونه.
+      // بند ۶۶ — شکست AI نباید کل گزارش رو خراب کنه؛ فقط بخش AI خالی می‌مونه.
     }
   }
 

@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
 
   const activePlan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true } });
   const activeGymDays = activePlan?.gymDays && Array.isArray(activePlan.gymDays) ? (activePlan.gymDays as string[]) : null;
-  // اگه برنامه‌ی ورزشیِ فعالی نبود، «۳ روز باشگاه» فرض نکن — این ضریبِ ۱.۵۵
-  // (فعالیتِ متوسط) رو می‌داد و هدف رو برای کسی که اصلاً تمرین نمی‌کنه چند صد
-  // کالری بیش‌برآورد می‌کرد. فرضِ واقعاً محافظه‌کارانه «کم‌تحرکِ سبک» (۱.۳۷۵)ه.
+  // اگه برنامه‌ی ورزشی فعالی نبود، «۳ روز باشگاه» فرض نکن — این ضریب ۱.۵۵
+  // (فعالیت متوسط) رو می‌داد و هدف رو برای کسی که اصلا تمرین نمی‌کنه چند صد
+  // کالری بیش‌برآورد می‌کرد. فرض واقعا محافظه‌کارانه «کم‌تحرک سبک» (۱.۳۷۵)ه.
   const gymDaysPerWeek = activeGymDays ? activeGymDays.length : 1;
 
   const dailyTargetKcal = calcDailyTargetKcal({
@@ -106,8 +106,8 @@ export async function PATCH(req: NextRequest) {
     fatTargetG?: number | null;
   };
 
-  // هدفِ درشت‌مغذی اختیاریه؛ هر کدوم که خالی بمونه null ذخیره می‌شه.
-  // سقفِ ۲۰۰۰ گرم صرفاً یک نگهبانِ بی‌معنی‌نبودنه، نه توصیه‌ی تغذیه‌ای.
+  // هدف درشت‌مغذی اختیاریه؛ هر کدوم که خالی بمونه null ذخیره می‌شه.
+  // سقف ۲۰۰۰ گرم صرفا یک نگهبان بی‌معنی‌نبودنه، نه توصیه‌ی تغذیه‌ای.
   function macro(v: unknown): number | null | "invalid" {
     if (v === undefined || v === null || v === "") return null;
     const n = Number(v);
@@ -118,7 +118,7 @@ export async function PATCH(req: NextRequest) {
   const carbs = macro(carbsTargetG);
   const fat = macro(fatTargetG);
   if (protein === "invalid" || carbs === "invalid" || fat === "invalid") {
-    return NextResponse.json({ error: "هدفِ درشت‌مغذی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: "هدف درشت‌مغذی نامعتبر است" }, { status: 400 });
   }
 
   if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {

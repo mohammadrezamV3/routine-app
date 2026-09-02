@@ -36,14 +36,14 @@ const TABS: { key: TabKey; label: string; icon: JSX.Element }[] = [
 ];
 
 /**
- * فرمِ ثبت/ویرایشِ معامله.
+ * فرم ثبت/ویرایش معامله.
  *
- * دو قانونِ محصولی که در کدِ این فرم رعایت شده و نباید شکسته شود:
- *   ۱) ناقص‌بودنِ چک‌لیست هیچ‌وقت جلوی ثبتِ معامله را نمی‌گیرد — حتی وقتی
+ * دو قانون محصولی که در کد این فرم رعایت شده و نباید شکسته شود:
+ *   ۱) ناقص‌بودن چک‌لیست هیچ‌وقت جلوی ثبت معامله را نمی‌گیرد — حتی وقتی
  *      چک‌لیست «الزامی» علامت خورده باشد. در آن حالت فقط هشدار می‌بینی و
- *      معامله با برچسبِ «خارج از پلن» ثبت می‌شود.
- *   ۲) وضعیتِ تیک‌های چک‌لیست در همان لحظه‌ی ثبت اسنپ‌شات می‌شود (سمتِ سرور)،
- *      نه اینکه بعداً از خودِ چک‌لیست خوانده شود.
+ *      معامله با برچسب «خارج از پلن» ثبت می‌شود.
+ *   ۲) وضعیت تیک‌های چک‌لیست در همان لحظه‌ی ثبت اسنپ‌شات می‌شود (سمت سرور)،
+ *      نه اینکه بعدا از خود چک‌لیست خوانده شود.
  */
 export function TradeFormModal({
   account,
@@ -79,7 +79,7 @@ export function TradeFormModal({
   function patch(p: Partial<TradeFormState>) { setForm((f) => ({ ...f, ...p })); }
 
   useEffect(() => {
-    // اگر اسکریپتِ inlineِ preload از قبل همین URL را گرفته، دوباره فچ نمی‌شود
+    // اگر اسکریپت inline preload از قبل همین URL را گرفته، دوباره فچ نمی‌شود
     (takePreloaded("/api/trade/checklists") ?? fetch("/api/trade/checklists").then((r) => (r.ok ? r.json() : null)))
       .then((d: any) => {
         const list: Checklist[] = d?.checklists || [];
@@ -97,8 +97,8 @@ export function TradeFormModal({
   const symbolSuggestions = symbolSuggestOpen ? searchSymbols(form.symbol) : [];
   const symbolWrapRef = useRef<HTMLDivElement>(null);
 
-  // لیستِ پیشنهادِ نماد با زدن بیرونِ آن بسته می‌شود، نه با blurِ خودِ فیلد.
-  // روی صفحه‌های لمسی، blur پیش از کلیک می‌آید و آیتم را قبل از ثبتِ انتخاب
+  // لیست پیشنهاد نماد با زدن بیرون آن بسته می‌شود، نه با blur خود فیلد.
+  // روی صفحه‌های لمسی، blur پیش از کلیک می‌آید و آیتم را قبل از ثبت انتخاب
   // برمی‌داشت؛ نتیجه این بود که کاربر باید دو بار می‌زد.
   useEffect(() => {
     if (!symbolSuggestOpen) return;
@@ -163,8 +163,8 @@ export function TradeFormModal({
     if (added.length) setForm((f) => ({ ...f, images: [...f.images, ...added] }));
   }
 
-  // چسباندنِ مستقیمِ اسکرین‌شات با Ctrl+V — رایج‌ترین کاری که تریدر بعد از
-  // گرفتنِ عکس از چارت انجام می‌دهد
+  // چسباندن مستقیم اسکرین‌شات با Ctrl+V — رایج‌ترین کاری که تریدر بعد از
+  // گرفتن عکس از چارت انجام می‌دهد
   const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function onPaste(e: ClipboardEvent) {
@@ -243,11 +243,11 @@ export function TradeFormModal({
                   value={form.symbol}
                   onChange={(e) => { patch({ symbol: e.target.value.toUpperCase() }); setSymbolSuggestOpen(true); }}
                   onFocus={() => setSymbolSuggestOpen(true)}
-                  // بستنِ لیست به onBlur گره نخورده: روی لمس، blur قبل از
-                  // رسیدنِ کلیک اتفاق می‌افتد و آیتم از بین می‌رود — همان
-                  // چیزی که انتخابِ نماد را روی موبایل «دوتپی» کرده بود.
-                  // بستن حالا با pointerdownِ بیرونِ فیلد انجام می‌شود.
-                  placeholder="مثلاً EURUSD"
+                  // بستن لیست به onBlur گره نخورده: روی لمس، blur قبل از
+                  // رسیدن کلیک اتفاق می‌افتد و آیتم از بین می‌رود — همان
+                  // چیزی که انتخاب نماد را روی موبایل «دوتپی» کرده بود.
+                  // بستن حالا با pointerdown بیرون فیلد انجام می‌شود.
+                  placeholder="مثلا EURUSD"
                   maxLength={20}
                 />
                 {!!symbolSuggestions.length && (
@@ -405,7 +405,7 @@ export function TradeFormModal({
                 )}
 
                 <label className="exercise-form-label">ستاپ / استراتژی</label>
-                <input className="wsearch-newform-name trade-glass-field" value={form.setup} onChange={(e) => patch({ setup: e.target.value })} maxLength={60} placeholder="مثلاً London Breakout" />
+                <input className="wsearch-newform-name trade-glass-field" value={form.setup} onChange={(e) => patch({ setup: e.target.value })} maxLength={60} placeholder="مثلا London Breakout" />
 
                 <label className="exercise-form-label">تاریخ و ساعت خروج</label>
                 <TradeDateTimeField value={form.closedAt} onChange={(v) => patch({ closedAt: v })} calSystem={calSystem} allowClear placeholder="ثبت نشده" />
@@ -459,7 +459,7 @@ export function TradeFormModal({
             <textarea className="wsearch-newform-name trade-glass-field" rows={2} value={form.exitReasonNote} onChange={(e) => patch({ exitReasonNote: e.target.value })} maxLength={1000} />
 
             <label className="exercise-form-label">نکات معامله</label>
-            <textarea className="wsearch-newform-name trade-glass-field" rows={3} value={form.note} onChange={(e) => patch({ note: e.target.value })} maxLength={2000} placeholder="هر نکته‌ای که بعداً به دردت می‌خورد" />
+            <textarea className="wsearch-newform-name trade-glass-field" rows={3} value={form.note} onChange={(e) => patch({ note: e.target.value })} maxLength={2000} placeholder="هر نکته‌ای که بعدا به دردت می‌خورد" />
           </div>
         )}
 

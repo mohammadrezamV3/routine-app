@@ -21,7 +21,7 @@ import {
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STAT_ORDER, TRADE_STATS_VISIBILITY_KEY,
 } from "@/lib/tradeTypes";
 
-// تنظیماتِ بخشِ «ترید» — مثلِ RoutineSettings، مستقیم داخلِ صفحه‌ی تنظیمات.
+// تنظیمات بخش «ترید» — مثل RoutineSettings، مستقیم داخل صفحه‌ی تنظیمات.
 export function TradeSettings() {
   const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
   const [marketPickerOpen, setMarketPickerOpen] = useState(false);
@@ -54,8 +54,8 @@ export function TradeSettings() {
     setSetting(CAL_SYSTEM_KEY, v);
   }
 
-  // هر تغییرِ تنظیماتِ هشدار بلافاصله ذخیره می‌شود (بدون دکمه‌ی «ذخیره») —
-  // هم‌قاعده‌ی بقیه‌ی تنظیماتِ همین صفحه.
+  // هر تغییر تنظیمات هشدار بلافاصله ذخیره می‌شود (بدون دکمه‌ی «ذخیره») —
+  // هم‌قاعده‌ی بقیه‌ی تنظیمات همین صفحه.
   function patchAlerts(p: Partial<NewsAlertPrefs>) {
     setAlerts((prev) => {
       const next = normalizeNewsAlertPrefs({ ...prev, ...p });
@@ -78,7 +78,7 @@ export function TradeSettings() {
     <>
 
       <AccountSectionCard icon={<LineChart size={16} />} title="بازارهای دنبال‌شده" index={0}>
-        <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمتِ بالای صفحه‌ی ترید انتخاب شده</div>
+        <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمت بالای صفحه‌ی ترید انتخاب شده</div>
         <button className="account-outline-btn" onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10 }}>
           تغییر بازارها
         </button>

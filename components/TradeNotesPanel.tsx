@@ -18,9 +18,9 @@ type Note = {
   createdAt: string; updatedAt: string; tags: TradeTag[];
 };
 
-// یادداشت‌های آزادِ تریدر: جست‌وجو، فیلترِ برچسب، رنگ و سنجاق‌کردن.
-// برچسب‌ها همان برچسب‌های ماژولِ ترید هستند (مشترک با حساب و معامله)، نه یک
-// لیستِ جدا — تا کاربر مجبور نباشد «Psychology» را دو بار بسازد.
+// یادداشت‌های آزاد تریدر: جست‌وجو، فیلتر برچسب، رنگ و سنجاق‌کردن.
+// برچسب‌ها همان برچسب‌های ماژول ترید هستند (مشترک با حساب و معامله)، نه یک
+// لیست جدا — تا کاربر مجبور نباشد «Psychology» را دو بار بسازد.
 export function TradeNotesPanel({
   creating,
   onCreatingChange,
@@ -78,7 +78,7 @@ export function TradeNotesPanel({
   async function remove(id: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id));
     const ok = await run(`del:${id}`, () => fetch(`/api/trade/notes?id=${id}`, { method: "DELETE" }));
-    if (!ok) load(true); // برگرداندنِ یادداشتی که حذفش نشد
+    if (!ok) load(true); // برگرداندن یادداشتی که حذفش نشد
   }
 
   return (

@@ -3,9 +3,9 @@
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 
-// سه‌تیکه‌ی بالای داشبوردِ بدنسازی: تعداد جلساتِ این‌هفته (چقدر رفته/چقدر
-// مونده)، درصدِ پیشرفتِ امروز و درصدِ پیشرفتِ هفتگی — دقیقاً هم‌ساختار با
-// کارت‌های دیگرِ داشبورد (DashCard + DashProgressCircle).
+// سه‌تیکه‌ی بالای داشبورد بدنسازی: تعداد جلسات این‌هفته (چقدر رفته/چقدر
+// مونده)، درصد پیشرفت امروز و درصد پیشرفت هفتگی — دقیقا هم‌ساختار با
+// کارت‌های دیگر داشبورد (DashCard + DashProgressCircle).
 export function ExerciseStatsCard({
   sessionsDone,
   sessionsTotal,

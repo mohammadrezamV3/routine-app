@@ -35,7 +35,7 @@ export default function NewRoadmapPage() {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // پیام لودینگ هر چند ثانیه عوض می‌شه تا انتظار (که واقعاً چند ثانیه طول
+  // پیام لودینگ هر چند ثانیه عوض می‌شه تا انتظار (که واقعا چند ثانیه طول
   // می‌کشه چون یک فراخوانی واقعی به گیت‌وی AIـه) بی‌هدف به‌نظر نرسه.
   useEffect(() => {
     if (!loading) { setStepIdx(0); return; }
@@ -89,7 +89,7 @@ export default function NewRoadmapPage() {
           ref={inputRef}
           type="text"
           className="wsearch-newform-name"
-          placeholder="مثلاً: طراحی UI/UX، زبان اسپانیایی، گیتار..."
+          placeholder="مثلا: طراحی UI/UX، زبان اسپانیایی، گیتار..."
           value={topic}
           maxLength={MAX_LEN}
           disabled={loading}
@@ -148,7 +148,7 @@ export default function NewRoadmapPage() {
             <span className="item-line" style={{ padding: 0 }}>{LOADING_STEPS[stepIdx]}</span>
           </div>
           <div className="mono" style={{ fontSize: 10.5, color: "var(--muted2)", marginTop: 8 }}>
-            معمولاً ۱۰ تا ۲۰ ثانیه طول می‌کشه
+            معمولا ۱۰ تا ۲۰ ثانیه طول می‌کشه
           </div>
         </div>
       )}

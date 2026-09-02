@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { isValidUsername } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
-// PATCH /api/account/username  { username }  → تنظیم/تغییرِ یوزرنیمِ خودِ کاربر.
-// اصلی‌ترین کاربردش: کاربرهایی که با گوگل ثبت‌نام کردن اصلاً یوزرنیم ندارن
+// PATCH /api/account/username  { username }  → تنظیم/تغییر یوزرنیم خود کاربر.
+// اصلی‌ترین کاربردش: کاربرهایی که با گوگل ثبت‌نام کردن اصلا یوزرنیم ندارن
 // (فرم ثبت‌نام معمولی می‌گیره، ورود با گوگل نه) — بدون یوزرنیم، هیچ‌وقت با
-// فیچر دوستان پیدا نمی‌شن. تطبیق بدون حساسیت به بزرگ/کوچکیِ حروف، هم‌راستا
+// فیچر دوستان پیدا نمی‌شن. تطبیق بدون حساسیت به بزرگ/کوچکی حروف، هم‌راستا
 // با همون قاعده‌ای که موقع ورود (lib/auth.ts) و جستجوی دوست (api/friends) هست.
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -32,13 +32,13 @@ export async function PATCH(req: NextRequest) {
     select: { id: true },
   });
   if (existing) {
-    return NextResponse.json({ error: "این یوزرنیم قبلاً گرفته شده" }, { status: 409 });
+    return NextResponse.json({ error: "این یوزرنیم قبلا گرفته شده" }, { status: 409 });
   }
 
   try {
     await prisma.user.update({ where: { id: userId }, data: { username } });
   } catch {
-    return NextResponse.json({ error: "این یوزرنیم قبلاً گرفته شده" }, { status: 409 });
+    return NextResponse.json({ error: "این یوزرنیم قبلا گرفته شده" }, { status: 409 });
   }
 
   return NextResponse.json({ ok: true, username });

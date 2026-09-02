@@ -17,13 +17,13 @@ type Mode = "choice" | "smart" | "manual";
 type SmartStep = "goal" | "meals" | "specs";
 type MealDraftRow = { key: string; label: string; kcal: string };
 
-// پاپ‌آپِ «تغییر برنامه» — قبلاً کلیک روش کلِ صفحه‌ی کالری رو با فرم عوض
-// می‌کرد (حسِ رفتن به یه صفحه‌ی جدید می‌داد)؛ الان یه پاپ‌آپِ واقعیه که روی
-// همون داشبورد باز می‌شه و با بستنش دقیقاً برمی‌گردی به همون‌جا. صفحه‌ی
-// انتخابِ اولش دقیقاً هم‌قاعده‌ی «افزودن برنامه»ی بدنسازیه (دو دکمه‌ی
-// بزرگ کنارِ هم، طبقِ درخواستِ صریحِ کاربر): «هوشمند» (فرمولِ
-// Mifflin-St Jeor روی هدف/جنسیت/قد/وزن، حالا سه‌مرحله‌ای: هدف → تعدادِ
-// وعده → جنسیت‌ومشخصات) یا «دستی» (خودِ کاربر مستقیماً کالریِ هرِ وعده رو
+// پاپ‌آپ «تغییر برنامه» — قبلا کلیک روش کل صفحه‌ی کالری رو با فرم عوض
+// می‌کرد (حس رفتن به یه صفحه‌ی جدید می‌داد)؛ الان یه پاپ‌آپ واقعیه که روی
+// همون داشبورد باز می‌شه و با بستنش دقیقا برمی‌گردی به همون‌جا. صفحه‌ی
+// انتخاب اولش دقیقا هم‌قاعده‌ی «افزودن برنامه»ی بدنسازیه (دو دکمه‌ی
+// بزرگ کنار هم، طبق درخواست صریح کاربر): «هوشمند» (فرمول
+// Mifflin-St Jeor روی هدف/جنسیت/قد/وزن، حالا سه‌مرحله‌ای: هدف → تعداد
+// وعده → جنسیت‌ومشخصات) یا «دستی» (خود کاربر مستقیما کالری هر وعده رو
 // تعیین می‌کنه).
 export function CalorieGoalModal({
   target,
@@ -49,9 +49,9 @@ export function CalorieGoalModal({
   const [goalError, setGoalError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // اگه کاربر قبلاً یه‌جای دیگه (مثلاً فرمِ بدنسازی) قد/وزن/سنش رو وارد کرده،
-  // همینجا هم از قبل پر می‌شه — فقط وقتی که خودِ این پاپ‌آپ مقدارِ قبلی نداره
-  // (یعنی هدفِ کالری هنوز هیچ‌وقت محاسبه نشده)، تا داده‌ی قبلاً محاسبه‌شده رو بی‌جهت عوض نکنه.
+  // اگه کاربر قبلا یه‌جای دیگه (مثلا فرم بدنسازی) قد/وزن/سنش رو وارد کرده،
+  // همینجا هم از قبل پر می‌شه — فقط وقتی که خود این پاپ‌آپ مقدار قبلی نداره
+  // (یعنی هدف کالری هنوز هیچ‌وقت محاسبه نشده)، تا داده‌ی قبلا محاسبه‌شده رو بی‌جهت عوض نکنه.
   useEffect(() => {
     if (goalHeight && goalWeight) return;
     getBodyMetrics().then(({ data }) => {
@@ -73,12 +73,12 @@ export function CalorieGoalModal({
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSaving, setManualSaving] = useState(false);
   const [manualSubmitted, setManualSubmitted] = useState(false);
-  // ردیفی که الان توی حالتِ ویرایشه (فقط یکی می‌تونه هم‌زمان باز باشه) — یه
-  // ردیفِ تازه‌اضافه‌شده هم مستقیم با همین حالت شروع می‌شه چون بدونِ نام/کالری معنی نداره
+  // ردیفی که الان توی حالت ویرایشه (فقط یکی می‌تونه هم‌زمان باز باشه) — یه
+  // ردیف تازه‌اضافه‌شده هم مستقیم با همین حالت شروع می‌شه چون بدون نام/کالری معنی نداره
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [menuOpenKey, setMenuOpenKey] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
-  // هدفِ درشت‌مغذی‌ها — فقط توی همین مسیرِ دستی قابلِ تنظیمه و اختیاریه
+  // هدف درشت‌مغذی‌ها — فقط توی همین مسیر دستی قابل تنظیمه و اختیاریه
   const [proteinTarget, setProteinTarget] = useState(target.proteinTargetG ? String(target.proteinTargetG) : "");
   const [carbsTarget, setCarbsTarget] = useState(target.carbsTargetG ? String(target.carbsTargetG) : "");
   const [fatTarget, setFatTarget] = useState(target.fatTargetG ? String(target.fatTargetG) : "");
@@ -235,7 +235,7 @@ export function CalorieGoalModal({
           {mode === "smart" && smartStep === "meals" && (
             <>
               <div className="mt-1 text-[11px] text-dash-muted sm:text-[12px]">
-                کالریِ روزانه‌ات رو بینِ چند وعده تقسیم کنیم؟
+                کالری روزانه‌ات رو بین چند وعده تقسیم کنیم؟
               </div>
               <div className="mt-3">
                 <SegmentedTabs
@@ -309,7 +309,7 @@ export function CalorieGoalModal({
             <motion.div animate={{ filter: manualSubmitted ? "blur(6px)" : "blur(0px)", opacity: manualSubmitted ? 0.35 : 1 }} transition={{ duration: 0.3 }}>
               <div className="mt-1 flex items-center justify-between gap-2">
                 <span className="text-[11px] text-dash-muted sm:text-[12px]">
-                  کالریِ هر وعده رو خودت مشخص کن
+                  کالری هر وعده رو خودت مشخص کن
                 </span>
                 {mealDraft.length < 8 && (
                   <button
@@ -323,9 +323,9 @@ export function CalorieGoalModal({
                 )}
               </div>
 
-              {/* بدونِ `layout`/AnimatePresence: هر افزودن/حذف/ویرایشِ یک ردیف
-                  کلِ لیست رو دوباره اندازه می‌گرفت و انیمیت می‌کرد — همون
-                  لگِ گزارش‌شده‌ی «افزودن وعده‌ی دستی». */}
+              {/* بدون `layout`/AnimatePresence: هر افزودن/حذف/ویرایش یک ردیف
+                  کل لیست رو دوباره اندازه می‌گرفت و انیمیت می‌کرد — همون
+                  لگ گزارش‌شده‌ی «افزودن وعده‌ی دستی». */}
               <div className="mt-3 flex flex-col gap-2.5">
                 {mealDraft.map((row) => {
                     const isEditing = editingKey === row.key;
@@ -372,9 +372,9 @@ export function CalorieGoalModal({
                               >
                                 <MoreVertical size={15} />
                               </button>
-                              {/* منو با پورتال به body می‌ره: داخلِ .modal-body
+                              {/* منو با پورتال به body می‌ره: داخل .modal-body
                                   (که خودش اسکرول‌شونده و بلوردار و یه
-                                  stacking-context جداست) زیرِ ردیف‌های بعدی
+                                  stacking-context جداست) زیر ردیف‌های بعدی
                                   می‌افتاد و دیده نمی‌شد. */}
                               {menuOpenKey === row.key && menuPos && createPortal(
                                 <>
@@ -404,8 +404,8 @@ export function CalorieGoalModal({
                     );
                   })}
 
-                {/* «جمع کالری روزانه» بدونِ اعرابِ اضافه، و با چیدمانی که
-                    عدد از متن سرریز نمی‌کنه (قبلاً روی عددهای بلند بیرون می‌زد). */}
+                {/* «جمع کالری روزانه» بدون اعراب اضافه، و با چیدمانی که
+                    عدد از متن سرریز نمی‌کنه (قبلا روی عددهای بلند بیرون می‌زد). */}
                 <div className="manual-meal-total">
                   <span className="text-[11.5px] font-semibold text-dash-muted sm:text-[12.5px]">جمع کالری روزانه</span>
                   <span className="mono manual-meal-total-num">
@@ -414,9 +414,9 @@ export function CalorieGoalModal({
                 </div>
               </div>
 
-              {/* هدفِ درشت‌مغذی‌ها — اختیاری. هر کدوم خالی بمونه یعنی هدفی
-                  براش تعیین نشده و کارتِ درشت‌مغذی‌ها فقط مصرف رو نشون می‌ده. */}
-              <label className="calorie-field-label" style={{ marginTop: 16 }}>هدفِ درشت‌مغذی‌ها (اختیاری — گرم در روز)</label>
+              {/* هدف درشت‌مغذی‌ها — اختیاری. هر کدوم خالی بمونه یعنی هدفی
+                  براش تعیین نشده و کارت درشت‌مغذی‌ها فقط مصرف رو نشون می‌ده. */}
+              <label className="calorie-field-label" style={{ marginTop: 16 }}>هدف درشت‌مغذی‌ها (اختیاری — گرم در روز)</label>
               <div className="flex gap-2">
                 <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین" value={proteinTarget} onChange={setProteinTarget} />
                 <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات" value={carbsTarget} onChange={setCarbsTarget} />

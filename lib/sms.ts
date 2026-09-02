@@ -1,10 +1,10 @@
 // ارسال پیامک OTP از طریق ملی‌پیامک با متد «ارسال با الگو» (BaseNumber)،
-// نه متد SendOtp. دلیلِ سوییچ: متد SendOtp با این‌که RetStatus:1 (موفق)
-// برمی‌گردوند، پیامک روی خطوطی که «مسدودیِ پیامک‌های تبلیغاتی» فعال دارن
+// نه متد SendOtp. دلیل سوییچ: متد SendOtp با این‌که RetStatus:1 (موفق)
+// برمی‌گردوند، پیامک روی خطوطی که «مسدودی پیامک‌های تبلیغاتی» فعال دارن
 // توسط اپراتور silently drop می‌شد و هیچ‌وقت به گوشی نمی‌رسید — چون از یه
-// خطِ خدماتیِ عمومی/بدون الگوی تاییدشده می‌اومد. الگوی ثابتِ تاییدشده
+// خط خدماتی عمومی/بدون الگوی تاییدشده می‌اومد. الگوی ثابت تاییدشده
 // (BodyId) از این فیلتر رد می‌شه چون از قبل توسط اپراتور/ملی‌پیامک به‌عنوان
-// پیامکِ خدماتیِ واقعی احراز شده.
+// پیامک خدماتی واقعی احراز شده.
 // مستندات: https://www.melipayamak.com/api/sendbybasenumber/
 //
 // اگه اطلاعات پنل (یوزرنیم/رمز/کد الگو) تنظیم نشده باشه، به‌جای شکست
@@ -12,7 +12,7 @@
 // OTP قابل تست باشه بدون این‌که رفتارش دروغ باشه.
 import { logError } from "./errorLog";
 
-/** شماره را برای لاگ ماسک می‌کند — نباید شماره‌ی کاملِ کاربر در جدولِ خطا بنشیند */
+/** شماره را برای لاگ ماسک می‌کند — نباید شماره‌ی کامل کاربر در جدول خطا بنشیند */
 function maskPhone(phone: string): string {
   return phone.length >= 7 ? `${phone.slice(0, 4)}***${phone.slice(-3)}` : "***";
 }
@@ -25,8 +25,8 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
   if (!MELIPAYAMAK_USERNAME || !MELIPAYAMAK_PASSWORD || !MELIPAYAMAK_PATTERN_ID) {
     console.warn(`[sms] اطلاعات ملی‌پیامک (MELIPAYAMAK_USERNAME/MELIPAYAMAK_PASSWORD/MELIPAYAMAK_PATTERN_ID) تنظیم نشده — کد OTP برای ${phone} فقط توی لاگ سرور نوشته می‌شه: ${code}`);
     // این حالت روی production یعنی «هیچ پیامکی ارسال نمی‌شود» ولی کاربر
-    // پیامِ موفقیت می‌بیند — دقیقاً همان حالتی که تشخیصش سخت است. پس
-    // صریح در جدولِ خطا ثبت می‌شود تا در پنل ادمین دیده شود.
+    // پیام موفقیت می‌بیند — دقیقا همان حالتی که تشخیصش سخت است. پس
+    // صریح در جدول خطا ثبت می‌شود تا در پنل ادمین دیده شود.
     logError("sms", "اطلاعات ملی‌پیامک تنظیم نشده — هیچ پیامکی ارسال نمی‌شود", {
       severity: "CRITICAL",
       context: { phone: maskPhone(phone) },
@@ -42,19 +42,19 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
       to: phone,
       bodyId: MELIPAYAMAK_PATTERN_ID,
     });
-    // مسیرِ درستِ «ارسال با الگو» در REST APIِ ملی‌پیامک BaseServiceNumber
+    // مسیر درست «ارسال با الگو» در REST API ملی‌پیامک BaseServiceNumber
     // است، نه BaseNumber. نسخه‌ی قبلی BaseNumber می‌فرستاد و سرور با
     // HTTP 404 جواب می‌داد — چون ارسال fire-and-forget است، این شکست هیچ‌جا
     // دیده نمی‌شد و از بیرون فقط «پیامک نمی‌آید» به‌نظر می‌رسید.
-    // مرجع: SDK رسمیِ خودِ ملی‌پیامک (melipayamak-python/sms/rest.py) که
+    // مرجع: SDK رسمی خود ملی‌پیامک (melipayamak-python/sms/rest.py) که
     // send_by_base_number را روی همین مسیر می‌زند.
     const res = await fetch("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
-      // تنها فراخوانیِ خروجیِ اپ که سقفِ زمان نداشت. چون ارسال
-      // fire-and-forget است، یک ملی‌پیامکِ بی‌جواب یعنی یک Promiseِ معلق که
-      // تا تایم‌اوتِ TCPِ سیستم‌عامل (چند دقیقه) حافظه و سوکت نگه می‌دارد.
+      // تنها فراخوانی خروجی اپ که سقف زمان نداشت. چون ارسال
+      // fire-and-forget است، یک ملی‌پیامک بی‌جواب یعنی یک Promise معلق که
+      // تا تایم‌اوت TCP سیستم‌عامل (چند دقیقه) حافظه و سوکت نگه می‌دارد.
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
@@ -67,8 +67,8 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
     const data = await res.json();
     if (data?.RetStatus !== 1) {
       console.error(`[sms] ملی‌پیامک ارسال رو رد کرد برای ${phone}: ${data?.StrRetStatus} (کد ${data?.RetStatus})`);
-      // رایج‌ترین دلیل‌ها: اتمامِ اعتبار، غیرفعال‌شدنِ الگو، یا مسدودشدنِ IP
-      // سرور. متنِ خودِ ملی‌پیامک نگه داشته می‌شود چون همان تفاوت را می‌گوید.
+      // رایج‌ترین دلیل‌ها: اتمام اعتبار، غیرفعال‌شدن الگو، یا مسدودشدن IP
+      // سرور. متن خود ملی‌پیامک نگه داشته می‌شود چون همان تفاوت را می‌گوید.
       logError("sms", `ملی‌پیامک ارسال را رد کرد: ${data?.StrRetStatus ?? "بدون توضیح"} (کد ${data?.RetStatus})`, {
         context: { phone: maskPhone(phone), retStatus: data?.RetStatus, strRetStatus: data?.StrRetStatus },
       });

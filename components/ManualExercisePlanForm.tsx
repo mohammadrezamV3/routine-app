@@ -15,15 +15,15 @@ import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
 
-// نوعِ ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکتِ خودِ حرکت تعیین
+// نوع ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکت خود حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
 function isTimedExercise(entry: ExerciseCatalogEntry): boolean {
   return entry.pattern === "cardio" || entry.pattern === "flexibility";
 }
 
-// کارتِ تعیینِ مشخصاتِ یک حرکت — فقط یک ضربدرِ بی‌بک‌گراند بالا داره (نه
-// دکمه‌ی بازگشتِ جدا)؛ زدنِ ضربدر یعنی برگشت به لیستِ جستجو، نه بستنِ کاملِ
-// پاپ‌آپِ افزودن.
+// کارت تعیین مشخصات یک حرکت — فقط یک ضربدر بی‌بک‌گراند بالا داره (نه
+// دکمه‌ی بازگشت جدا)؛ زدن ضربدر یعنی برگشت به لیست جستجو، نه بستن کامل
+// پاپ‌آپ افزودن.
 function ManualQuantityPrompt({
   entry,
   onConfirm,
@@ -88,9 +88,9 @@ function ManualQuantityPrompt({
   );
 }
 
-// پاپ‌آپِ مستقلِ «افزودنِ حرکت» — قبلاً این جستجو/لیست همون‌جا توی نمای روز
-// اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثلِ ExerciseCatalogModal یه
-// پاپ‌آپِ پورتال‌شده‌ست، مستقل از باکسِ «حرکات این روز» زیرش.
+// پاپ‌آپ مستقل «افزودن حرکت» — قبلا این جستجو/لیست همون‌جا توی نمای روز
+// اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثل ExerciseCatalogModal یه
+// پاپ‌آپ پورتال‌شده‌ست، مستقل از باکس «حرکات این روز» زیرش.
 function ManualExerciseAddPopup({
   onAdd,
   onClose,
@@ -160,8 +160,8 @@ function ManualExerciseAddPopup({
   );
 }
 
-// ردیفِ یک حرکتِ اضافه‌شده — توی حالتِ ویرایش، به‌جای دو دکمه‌ی بالا/پایین،
-// یه دسته‌ی درگ («⠿») می‌گیره که با framer-motion's Reorder واقعاً کشیدنی‌ه.
+// ردیف یک حرکت اضافه‌شده — توی حالت ویرایش، به‌جای دو دکمه‌ی بالا/پایین،
+// یه دسته‌ی درگ («⠿») می‌گیره که با framer-motion's Reorder واقعا کشیدنی‌ه.
 function ManualExerciseRow({
   item,
   isEditing,
@@ -184,7 +184,7 @@ function ManualExerciseRow({
           type="button"
           className="manual-reorder-handle"
           onPointerDown={(e) => controls.start(e)}
-          aria-label="جابه‌جاییِ این حرکت"
+          aria-label="جابه‌جایی این حرکت"
         >
           <GripVertical size={15} />
         </button>
@@ -199,12 +199,12 @@ function ManualExerciseRow({
   );
 }
 
-// برنامه‌ی دستی/شخصیِ کاربر — دقیقاً هم‌قاعده‌ی نمای «برنامه هفتگی»: یه
-// آکاردئونِ عمودیِ روزهای هفته، با کلیک روی هر روز باز می‌شه و برنامه‌ی
-// همون روز رو نشون می‌ده. هر روزِ بازشده یه دکمه‌ی «افزودن» داره (پاپ‌آپِ
-// مستقلِ انتخابِ حرکت) و — وقتی حداقل یک حرکت داره — یه دکمه‌ی «ویرایش» که
-// حالتِ جابه‌جایی/حذفِ حرکات رو باز/بسته می‌کنه. روزی که هیچ حرکتی نداره
-// یعنی روزِ استراحته؛ نیازی به یه مرحله‌ی جداگانه‌ی «انتخابِ روزهای باشگاه»
+// برنامه‌ی دستی/شخصی کاربر — دقیقا هم‌قاعده‌ی نمای «برنامه هفتگی»: یه
+// آکاردئون عمودی روزهای هفته، با کلیک روی هر روز باز می‌شه و برنامه‌ی
+// همون روز رو نشون می‌ده. هر روز بازشده یه دکمه‌ی «افزودن» داره (پاپ‌آپ
+// مستقل انتخاب حرکت) و — وقتی حداقل یک حرکت داره — یه دکمه‌ی «ویرایش» که
+// حالت جابه‌جایی/حذف حرکات رو باز/بسته می‌کنه. روزی که هیچ حرکتی نداره
+// یعنی روز استراحته؛ نیازی به یه مرحله‌ی جداگانه‌ی «انتخاب روزهای باشگاه»
 // نیست — همون روزهایی که حرکت دارن، روزهای باشگاهن.
 export function ManualExercisePlanForm({
   onSubmit,
@@ -279,9 +279,9 @@ export function ManualExercisePlanForm({
                 {items.length > 0 && <span className="manual-day-count-badge">{items.length} حرکت</span>}
                 <span className="week-day-chevron" />
               </div>
-              {/* بدونِ انیمیشنِ height:auto — همون دلیلِ آکاردئونِ «برنامه هفتگی»:
-                  اندازه‌گیریِ هر فریم روی لیستی که خودش Reorder.Group داره،
-                  روی موبایل کاملاً لگ می‌داد. */}
+              {/* بدون انیمیشن height:auto — همون دلیل آکاردئون «برنامه هفتگی»:
+                  اندازه‌گیری هر فریم روی لیستی که خودش Reorder.Group داره،
+                  روی موبایل کاملا لگ می‌داد. */}
               {isOpen && (
                   <div className="week-day-body">
                     <div className="manual-day-panel">
@@ -293,10 +293,10 @@ export function ManualExercisePlanForm({
                               type="button"
                               className="manual-day-edit-btn"
                               onClick={() => setEditDay(isEditing ? null : day)}
-                              aria-label={isEditing ? "پایانِ ویرایش" : `ویرایشِ روزِ ${day}`}
+                              aria-label={isEditing ? "پایان ویرایش" : `ویرایش روز ${day}`}
                             >
                               <Pencil size={13} />
-                              {isEditing ? "پایانِ ویرایش" : "ویرایش"}
+                              {isEditing ? "پایان ویرایش" : "ویرایش"}
                             </button>
                           )}
                         </div>

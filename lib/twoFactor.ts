@@ -2,10 +2,10 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { hashesMatch } from "@/lib/emailOtp";
 
-// منطقِ مشترکِ کدِ ورودِ دومرحله‌ایِ پیامکی — بینِ روتِ start (که کد رو
-// می‌سازه و می‌فرسته) و authorize()ِ providerِ «sms-2fa» توی lib/auth.ts
-// (که واقعاً مصرفش می‌کنه) به اشتراک گذاشته می‌شه. عیناً هم‌الگوی
-// lib/emailOtp.ts، فقط روی userId به‌جای ایمیلِ خام.
+// منطق مشترک کد ورود دومرحله‌ای پیامکی — بین روت start (که کد رو
+// می‌سازه و می‌فرسته) و authorize() provider «sms-2fa» توی lib/auth.ts
+// (که واقعا مصرفش می‌کنه) به اشتراک گذاشته می‌شه. عینا هم‌الگوی
+// lib/emailOtp.ts، فقط روی userId به‌جای ایمیل خام.
 
 export const TWO_FACTOR_OTP_LENGTH = 5;
 export const TWO_FACTOR_OTP_TTL_MS = 5 * 60 * 1000; // ۵ دقیقه
@@ -19,7 +19,7 @@ export function hashTwoFactorOtp(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-/** ساختِ یک کدِ تازه برای این کاربر و باطل‌کردنِ کدهای قبلیِ مصرف‌نشده. */
+/** ساخت یک کد تازه برای این کاربر و باطل‌کردن کدهای قبلی مصرف‌نشده. */
 export async function issueTwoFactorOtp(userId: string): Promise<string> {
   const code = generateTwoFactorOtp();
   await prisma.twoFactorOtp.updateMany({
@@ -41,8 +41,8 @@ export type ConsumeTwoFactorResult =
   | { ok: false; reason: "not_found" | "too_many_attempts" | "wrong_code" };
 
 /**
- * بررسی + مصرفِ نهاییِ کد. `attempts` فقط روی «کدِ غلط» زیاد می‌شه، نه روی
- * نبودن/منقضی‌بودنِ ردیف — همون قرارداد ضدِ enumeration بقیه‌ی OTPهای اپ.
+ * بررسی + مصرف نهایی کد. `attempts` فقط روی «کد غلط» زیاد می‌شه، نه روی
+ * نبودن/منقضی‌بودن ردیف — همون قرارداد ضد enumeration بقیه‌ی OTPهای اپ.
  */
 export async function verifyAndConsumeTwoFactorOtp(userId: string, code: string): Promise<ConsumeTwoFactorResult> {
   const otp = await prisma.twoFactorOtp.findFirst({

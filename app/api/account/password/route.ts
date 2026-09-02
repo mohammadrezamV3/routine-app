@@ -7,10 +7,10 @@ import { validatePassword } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 // POST /api/account/password  { currentPassword, newPassword }
-// تغییرِ رمزِ عبورِ خودِ کاربر از داخلِ پنل — برخلافِ فراموشیِ رمز (که با OTP
-// پیامکی هویت رو تایید می‌کنه)، این‌جا چون کاربر از قبل لاگین‌ه، رمزِ *فعلی*
-// همون تاییدیه‌ست؛ جلوی این رو می‌گیره که یه سشنِ سرقتی/بازمونده‌ی بازِ یه
-// دستگاهِ مشترک بتونه بدونِ دونستنِ رمزِ واقعی، رمز رو عوض کنه و صاحبِ اصلی رو بندازه بیرون.
+// تغییر رمز عبور خود کاربر از داخل پنل — برخلاف فراموشی رمز (که با OTP
+// پیامکی هویت رو تایید می‌کنه)، این‌جا چون کاربر از قبل لاگین‌ه، رمز *فعلی*
+// همون تاییدیه‌ست؛ جلوی این رو می‌گیره که یه سشن سرقتی/بازمونده‌ی باز یه
+// دستگاه مشترک بتونه بدون دونستن رمز واقعی، رمز رو عوض کنه و صاحب اصلی رو بندازه بیرون.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;

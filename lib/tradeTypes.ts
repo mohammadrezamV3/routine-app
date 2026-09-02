@@ -1,13 +1,13 @@
-// قراردادِ داده‌ی ماژولِ ترید بینِ کلاینت و API.
+// قرارداد داده‌ی ماژول ترید بین کلاینت و API.
 //
-// عمداً به `@prisma/client` وابسته نیست: این فایل از کامپوننت‌های کلاینتی
-// import می‌شود و کشیدنِ پریزما به باندلِ مرورگر هم بی‌فایده است هم سنگین.
-// پس enumها این‌جا به‌صورت union از رشته تعریف شده‌اند — رشته‌ها باید دقیقاً
+// عمدا به `@prisma/client` وابسته نیست: این فایل از کامپوننت‌های کلاینتی
+// import می‌شود و کشیدن پریزما به باندل مرورگر هم بی‌فایده است هم سنگین.
+// پس enumها این‌جا به‌صورت union از رشته تعریف شده‌اند — رشته‌ها باید دقیقا
 // با enumهای schema.prisma یکی بمانند.
 
 import { SETTING_KEYS } from "./userSettingKeys";
 
-// ── تنظیماتِ مشترک با پنل کاربری ─────────────────────────────────────────
+// ── تنظیمات مشترک با پنل کاربری ─────────────────────────────────────────
 export type CalSystem = "jalali" | "gregorian";
 export const CAL_SYSTEM_KEY = SETTING_KEYS.tradeCalendarSystem;
 
@@ -98,7 +98,7 @@ export const EMOTION_AFTER_ORDER: TradeEmotionAfter[] = [
   "SATISFIED", "RELIEVED", "INDIFFERENT", "ANXIOUS", "REGRET", "ANGRY",
 ];
 
-// پالتِ برچسب — همان ده رنگِ ثابت، تا برچسب‌ها با هم هماهنگ بمانند
+// پالت برچسب — همان ده رنگ ثابت، تا برچسب‌ها با هم هماهنگ بمانند
 export const TAG_COLORS = [
   "#8A9099", "#F08A24", "#16C79A", "#5B6BF5", "#EC4899",
   "#A855F7", "#F5B841", "#22C55E", "#EF4444", "#3E7BFA",
@@ -111,7 +111,7 @@ export const MAX_IMAGES_PER_TRADE = 4;
 export const MAX_CHECKLISTS = 20;
 export const MAX_CHECKLIST_ITEMS = 40;
 
-// ── شکلِ داده ─────────────────────────────────────────────────────────────
+// ── شکل داده ─────────────────────────────────────────────────────────────
 export type TradeTag = { id: string; name: string; color: string };
 
 export type TradeAccount = {
@@ -129,9 +129,9 @@ export type TradeAccount = {
   archived: boolean;
   order: number;
   tags: TradeTag[];
-  /** خلاصه‌ی محاسبه‌شده سمتِ سرور — برای کارتِ لیستِ حساب‌ها */
+  /** خلاصه‌ی محاسبه‌شده سمت سرور — برای کارت لیست حساب‌ها */
   summary?: TradeAccountSummary;
-  /** وضعیتِ اتصالِ متاتریدرِ همین حساب — در همان درخواستِ حساب‌ها می‌آید */
+  /** وضعیت اتصال متاتریدر همین حساب — در همان درخواست حساب‌ها می‌آید */
   mtConnected?: boolean;
   mtLastSyncAt?: string | null;
 };
@@ -195,9 +195,9 @@ export type TradeEntryDetail = TradeEntry & {
   checklistSnapshot: TradeChecklistSnapshotItem[] | null;
 };
 
-// ── فرمِ ثبت/ویرایشِ معامله ───────────────────────────────────────────────
+// ── فرم ثبت/ویرایش معامله ───────────────────────────────────────────────
 // همه‌چیز رشته است تا مستقیم به inputها بایند شود؛ تبدیل به عدد فقط در
-// لحظه‌ی ساختِ بدنه‌ی درخواست انجام می‌شود.
+// لحظه‌ی ساخت بدنه‌ی درخواست انجام می‌شود.
 export type TradeFormState = {
   accountId: string;
   symbol: string;
@@ -274,7 +274,7 @@ export function emptyTradeForm(accountId: string, nowLocal: string): TradeFormSt
 
 const num = (v: string): number | null => (v.trim() === "" ? null : Number(v));
 
-/** سود/زیانِ علامت‌دار از «نتیجه + مقدار» — تنها جایی که این علامت ساخته می‌شود */
+/** سود/زیان علامت‌دار از «نتیجه + مقدار» — تنها جایی که این علامت ساخته می‌شود */
 export function signedPnl(result: TradeResult, amount: number | null): number {
   const v = Math.abs(amount || 0);
   if (result === "PROFIT") return v;
@@ -359,7 +359,7 @@ export function tradeToFormState(e: TradeEntryDetail, toLocalInput: (iso: string
   };
 }
 
-// ── کارت‌های آماریِ صفحه‌ی حساب (قابل انتخاب از پنل کاربری) ───────────────
+// ── کارت‌های آماری صفحه‌ی حساب (قابل انتخاب از پنل کاربری) ───────────────
 export type TradeStatKey =
   | "goalRing" | "monthTotal" | "total" | "winRate" | "avgWin" | "avgLoss"
   | "largestGain" | "largestLoss" | "maxWinStreak" | "maxLossStreak"

@@ -8,9 +8,9 @@ import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } fro
 
 const DURATION_MONTHS: Record<string, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
 
-// GET /api/plans → پلن‌های فعالِ بازارِ خودِ کاربر + وضعیتِ اشتراکِ فعلیش،
+// GET /api/plans → پلن‌های فعال بازار خود کاربر + وضعیت اشتراک فعلیش،
 // برای صفحه‌ی «اشتراک». قیمت‌گذاری بازاری‌ست (هر پلن مخصوص یک Market)، پس
-// همیشه فقط پلن‌های هم‌بازارِ خودِ کاربر برمی‌گرده.
+// همیشه فقط پلن‌های هم‌بازار خود کاربر برمی‌گرده.
 export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -35,10 +35,10 @@ export async function GET() {
     }),
   ]);
 
-  // پیش‌نمایشِ «قیمتِ ارتقا به مکس» — فقط بازارِ ایران (تنها بازاری که چک‌اوتِ
-  // واقعی پشتیبانی می‌کنه). فرمولِ واقعی (اعتبار + سقفِ مدت) دقیقاً همونیه که
-  // موقعِ خریدِ واقعی توی api/subscription/checkout و verify اجرا می‌شه —
-  // این‌جا فقط برای نمایشه، مبلغِ واقعی همیشه سمتِ سرورِ همون درخواست حساب می‌شه.
+  // پیش‌نمایش «قیمت ارتقا به مکس» — فقط بازار ایران (تنها بازاری که چک‌اوت
+  // واقعی پشتیبانی می‌کنه). فرمول واقعی (اعتبار + سقف مدت) دقیقا همونیه که
+  // موقع خرید واقعی توی api/subscription/checkout و verify اجرا می‌شه —
+  // این‌جا فقط برای نمایشه، مبلغ واقعی همیشه سمت سرور همون درخواست حساب می‌شه.
   type UpgradeOfferDuration = { amount: number; priceLabel: string; capEndIso: string; capped: boolean };
   let upgradeOffer: { fromPlanKey: string; toPlanKey: string; perDuration: Record<string, UpgradeOfferDuration> } | null = null;
   if (user.market === "IRAN") {

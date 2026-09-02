@@ -21,8 +21,8 @@ function isoToJalali(iso: string): JalaliDate {
   return toJalali(y, m, d);
 }
 
-// فرمِ افزودن/ویرایشِ یک دارو. همون فرمه برای هر دو حالت — با `initial` پر
-// می‌شه و تیترش عوض می‌شه، چون فیلدهاشون دقیقاً یکی‌ان.
+// فرم افزودن/ویرایش یک دارو. همون فرمه برای هر دو حالت — با `initial` پر
+// می‌شه و تیترش عوض می‌شه، چون فیلدهاشون دقیقا یکی‌ان.
 export function MedicationForm({
   initial,
   onClose,
@@ -47,8 +47,8 @@ export function MedicationForm({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
 
-  // پیش‌نمایشِ زنده‌ی ساعتِ نوبت‌ها — کاربر همون‌جا می‌بینه «۴ بار در روز» با
-  // شروعِ ۰۸:۰۰ دقیقاً یعنی چه ساعت‌هایی، به‌جای اینکه بعدِ ثبت غافلگیر بشه.
+  // پیش‌نمایش زنده‌ی ساعت نوبت‌ها — کاربر همون‌جا می‌بینه «۴ بار در روز» با
+  // شروع ۰۸:۰۰ دقیقا یعنی چه ساعت‌هایی، به‌جای اینکه بعد ثبت غافلگیر بشه.
   const previewMed: Medication = {
     id: "preview",
     name,
@@ -112,7 +112,7 @@ export function MedicationForm({
             id="medName"
             type="text"
             className="wsearch-newform-name"
-            placeholder="مثلاً آموکسی‌سیلین"
+            placeholder="مثلا آموکسی‌سیلین"
             value={name}
             onChange={(e) => { setName(e.target.value); setError(null); }}
           />

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronRight, Plus, Star, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, Plus, Star, Trash2, Users, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
@@ -16,9 +16,9 @@ type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
 type SearchUser = { id: string; name: string; username: string | null; avatarUrl: string | null; status: SearchStatus };
 type FriendRequest = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null };
 
-// اگه دوست عکسِ پروفایلِ واقعی انتخاب نکرده باشه، دقیقاً همون آواتارِ
-// پیکسلیِ پیش‌فرضِ خودِ کاربر (AgentAvatar) نشون داده می‌شه — نه یه چیزِ
-// دیگه مثلِ حرفِ اول با رنگِ تصادفی — تا با بقیه‌ی اپ یکدست بمونه.
+// اگه دوست عکس پروفایل واقعی انتخاب نکرده باشه، دقیقا همون آواتار
+// پیکسلی پیش‌فرض خود کاربر (AgentAvatar) نشون داده می‌شه — نه یه چیز
+// دیگه مثل حرف اول با رنگ تصادفی — تا با بقیه‌ی اپ یکدست بمونه.
 function Avatar({ name, avatarUrl, size = 40 }: { name: string; avatarUrl: string | null; size?: number }) {
   if (avatarUrl) {
     return (
@@ -34,14 +34,14 @@ function Avatar({ name, avatarUrl, size = 40 }: { name: string; avatarUrl: strin
 }
 
 const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
-  friends: "قبلاً دوستید",
+  friends: "قبلا دوستید",
   pending_sent: "درخواست دادن",
-  pending_received: "منتظرِ پاسخِ توئه",
+  pending_received: "منتظر پاسخ توئه",
 };
 
-// کارتِ «دوستان» — واقعاً به /api/friends وصله. جستجوی زنده (بدون دکمه‌ی
-// ارسالِ جدا) برای افزودنِ دوستِ جدید؛ درخواست‌های واردشده هم دیگه توی
-// اطلاعیه‌ها/یادآوری‌ها نیستن، همین‌جا (پاپ‌آپِ دوستان) قابلِ قبول/ردن.
+// کارت «دوستان» — واقعا به /api/friends وصله. جستجوی زنده (بدون دکمه‌ی
+// ارسال جدا) برای افزودن دوست جدید؛ درخواست‌های واردشده هم دیگه توی
+// اطلاعیه‌ها/یادآوری‌ها نیستن، همین‌جا (پاپ‌آپ دوستان) قابل قبول/ردن.
 export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
   const { status } = useSession();
   const [friends, setFriends] = useState<Friend[] | null>(null);
@@ -59,8 +59,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   async function loadFriends() {
-    // داشبوردِ روتین (بدونِ module) داده‌اش از قبل داخلِ HTML آمده — همان
-    // چیزی که InlineBootstrap گذاشته. تب‌های ورزش/کالری آمارِ متفاوتی
+    // داشبورد روتین (بدون module) داده‌اش از قبل داخل HTML آمده — همان
+    // چیزی که InlineBootstrap گذاشته. تب‌های ورزش/کالری آمار متفاوتی
     // می‌خواهند، پس آن‌ها همچنان از شبکه می‌گیرند.
     if (!module) {
       const boot = getPreloadedBootstrap();
@@ -93,10 +93,10 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
     if (accept) loadFriends();
   }
 
-  // برای مهمون اصلاً درخواست نمی‌ره: هردو روت ۴۰۱ می‌دادن و کارت هم
-  // همون حالتِ authRequired رو نشون می‌ده — پس دو درخواستِ الکی در هر
-  // لودِ صفحه بود. status از useSession میاد که خودش از contextِ
-  // SessionProvider می‌خونه (نه یه فچِ جدا).
+  // برای مهمون اصلا درخواست نمی‌ره: هردو روت ۴۰۱ می‌دادن و کارت هم
+  // همون حالت authRequired رو نشون می‌ده — پس دو درخواست الکی در هر
+  // لود صفحه بود. status از useSession میاد که خودش از context
+  // SessionProvider می‌خونه (نه یه فچ جدا).
   useEffect(() => {
     if (status === "loading") return;
     if (status !== "authenticated") { setAuthRequired(true); return; }
@@ -125,7 +125,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
       body: JSON.stringify({ userId: u.id }),
     });
     if (!res.ok) {
-      // اگه واقعاً شکست خورد، وضعیتِ نمایشی رو برگردون
+      // اگه واقعا شکست خورد، وضعیت نمایشی رو برگردون
       setSearchResults((prev) => prev && prev.map((x) => (x.id === u.id ? { ...x, status: "none" } : x)));
     }
   }
@@ -160,7 +160,8 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   return (
     <DashCard delay={delay}>
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center text-[13px] font-bold text-dash-text sm:text-[15px]">
+        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+          <Users className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
           دوستان
           {requests.length > 0 && (
             <span className="mr-1.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-dash-green px-1 text-[9px] font-bold text-dash-bg sm:h-4 sm:min-w-4 sm:text-[10px]">
@@ -376,7 +377,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
           <div className="modal-panel liquid-glass-panel dash-scope open" style={{ zIndex: 81, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 22, textAlign: "center" }}>
               <div className="text-[13px] font-bold text-dash-text sm:text-[14.5px]">
-                واقعاً می‌خوای «{confirmDeleteFriend.name}» رو از دوستات حذف کنی؟
+                واقعا می‌خوای «{confirmDeleteFriend.name}» رو از دوستات حذف کنی؟
               </div>
               <div className="mt-5 flex gap-2.5">
                 <button

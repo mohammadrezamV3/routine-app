@@ -6,8 +6,8 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampQuery } from "@/lib/validate";
 
 // GET /api/friends/search?q=...  → جستجوی زنده‌ی کاربر با یوزرنیم/اسم، برای
-// تایپ‌آهدِ «افزودن دوست». برای هر نتیجه وضعیتِ فعلیِ رابطه رو هم برمی‌گردونه
-// تا سمتِ کلاینت بشه به‌جای دکمه‌ی ارسال، وضعیتِ «قبلاً دوستید»/«در انتظار» رو نشون داد.
+// تایپ‌آهد «افزودن دوست». برای هر نتیجه وضعیت فعلی رابطه رو هم برمی‌گردونه
+// تا سمت کلاینت بشه به‌جای دکمه‌ی ارسال، وضعیت «قبلا دوستید»/«در انتظار» رو نشون داد.
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -27,8 +27,8 @@ export async function GET(req: NextRequest) {
       id: { not: userId },
       username: { contains: q, mode: "insensitive" },
       // پنل کاربری › تنظیمات آریون › حریم خصوصی — کسی که discoverable رو
-      // خاموش کرده توی جست‌وجوی دوستان دیده نمی‌شه (دوستیِ از‌قبل‌موجود یا
-      // درخواستِ درحال‌انتظار همچنان جای دیگه‌ای نمایش داده می‌شه، فقط جست‌وجوی جدید مسدوده)
+      // خاموش کرده توی جست‌وجوی دوستان دیده نمی‌شه (دوستی از‌قبل‌موجود یا
+      // درخواست درحال‌انتظار همچنان جای دیگه‌ای نمایش داده می‌شه، فقط جست‌وجوی جدید مسدوده)
       discoverable: true,
     },
     select: { id: true, name: true, username: true, avatarUrl: true },

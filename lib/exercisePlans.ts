@@ -1,9 +1,9 @@
-// نکته‌ی مهمِ حجمِ باندل: این ماژول عمداً **هیچ importی از
+// نکته‌ی مهم حجم باندل: این ماژول عمدا **هیچ importی از
 // `lib/exerciseCatalog.ts` نداره**. اون فایل ~۸۵KB دیتای خامه، و چون چندتا
-// کامپوننتِ کلاینتی فقط برای typeِ `ExerciseDay` این ماژول رو import می‌کنن،
-// هر وابستگی‌ای این‌جا مستقیم به باندلِ صفحه‌ی /exercise سرریز می‌شد. توابعی
-// که واقعاً به کاتالوگ نیاز دارن (computeDayFocus، getCatalogSubstitutes)
-// رفتن به `lib/exerciseCatalogUtils.ts` — همون‌جا از هرکی واقعاً لازمشون
+// کامپوننت کلاینتی فقط برای type `ExerciseDay` این ماژول رو import می‌کنن،
+// هر وابستگی‌ای این‌جا مستقیم به باندل صفحه‌ی /exercise سرریز می‌شد. توابعی
+// که واقعا به کاتالوگ نیاز دارن (computeDayFocus، getCatalogSubstitutes)
+// رفتن به `lib/exerciseCatalogUtils.ts` — همون‌جا از هرکی واقعا لازمشون
 // داره import می‌شن.
 
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "./jalali";
@@ -26,10 +26,10 @@ export const GOAL_LABELS: Record<ExerciseGoal, string> = {
   endurance: "استقامت",
 };
 
-// گزینه‌های هدفِ نمایش‌داده‌شده به کاربر توی فرمِ ساخت با AI — بیشتر از
-// چهارتای اصلیِ بالا (که فقط برای قالبِ ایستای fallback لازمه). هر گزینه
-// به یکی از همون چهارتا برای fallback/محاسبه‌ی حداقلِ روزها نگاشت می‌شه؛
-// وقتی AI در دسترسه، از خودِ برچسبِ فارسی برای پرامپت استفاده می‌شه، نه از
+// گزینه‌های هدف نمایش‌داده‌شده به کاربر توی فرم ساخت با AI — بیشتر از
+// چهارتای اصلی بالا (که فقط برای قالب ایستای fallback لازمه). هر گزینه
+// به یکی از همون چهارتا برای fallback/محاسبه‌ی حداقل روزها نگاشت می‌شه؛
+// وقتی AI در دسترسه، از خود برچسب فارسی برای پرامپت استفاده می‌شه، نه از
 // این نگاشت.
 export type ExerciseGoalOption =
   | ExerciseGoal
@@ -66,7 +66,7 @@ export const GOAL_FALLBACK_MAP: Record<ExerciseGoalOption, ExerciseGoal> = {
 // می‌آد (NSCA/ACSM 2026): قدرت ۳-۶ تکرار با بار سنگین، حجم ۸-۱۲ تکرار با
 // حجم هفتگی بالاتر (~۱۰ ست به‌ازای هر گروه عضلانی) و فرکانس ~۲ بار در هفته
 // برای هر گروه عضلانی، کات = مقاومتی متوسط‌تکرار برای حفظ عضله + کاردیو
-// اضافه برای کسری کالری، استقامت = عمدتاً هوازی پیوسته + تناوبی محدود.
+// اضافه برای کسری کالری، استقامت = عمدتا هوازی پیوسته + تناوبی محدود.
 // ============================================================
 
 const LIMITATION_SWAP: Record<string, string> = {
@@ -186,7 +186,7 @@ const PLAN_MATRIX: Record<ExerciseGoal, Record<ExerciseLevel, ExerciseDay[]>> = 
   endurance: ENDURANCE,
 };
 
-/** تعدادِ حداقلِ روزهایی که این ترکیبِ هدف/سطح برای اجرا لازم داره (طولِ قالبش) */
+/** تعداد حداقل روزهایی که این ترکیب هدف/سطح برای اجرا لازم داره (طول قالبش) */
 export function getRequiredDaysCount(goal: ExerciseGoal, level: ExerciseLevel): number {
   return (PLAN_MATRIX[goal]?.[level] || PLAN_MATRIX.hypertrophy.beginner).length;
 }
@@ -204,10 +204,10 @@ export function getExercisePlan(
   gymDays?: string[]
 ): ExerciseDay[] {
   const template = PLAN_MATRIX[goal]?.[level] || PLAN_MATRIX.hypertrophy.beginner;
-  // قالب‌ها روزهای هاردکد شده دارن (مثلاً «شنبه، دوشنبه، چهارشنبه») که به
-  // انتخابِ واقعیِ کاربر توی فرم هیچ ربطی نداشت — این باعث می‌شد مثلاً انتخابِ
-  // «جمعه» توی فرم، هیچ اثری روی روزهای برنامه‌ی نهایی نذاره. حالا اسمِ روزِ
-  // هر اسلاتِ قالب با روزِ واقعیِ انتخاب‌شده‌ی کاربر (به‌ترتیبِ هفته) جایگزین می‌شه.
+  // قالب‌ها روزهای هاردکد شده دارن (مثلا «شنبه، دوشنبه، چهارشنبه») که به
+  // انتخاب واقعی کاربر توی فرم هیچ ربطی نداشت — این باعث می‌شد مثلا انتخاب
+  // «جمعه» توی فرم، هیچ اثری روی روزهای برنامه‌ی نهایی نذاره. حالا اسم روز
+  // هر اسلات قالب با روز واقعی انتخاب‌شده‌ی کاربر (به‌ترتیب هفته) جایگزین می‌شه.
   if (!gymDays || gymDays.length === 0) return applyLimitation(template, hasPhysicalLimitation);
   const sortedGymDays = sortDaysCalendarOrder(gymDays);
   const days = template.map((d, i) => ({ ...d, day: sortedGymDays[i] ?? d.day }));

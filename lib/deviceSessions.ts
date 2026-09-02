@@ -2,18 +2,18 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 
 /**
- * نشستِ هر دستگاه.
+ * نشست هر دستگاه.
  *
- * استراتژیِ next-auth توی این پروژه JWTه (بدونِ ردیفِ سرور به‌ازای هر توکن)،
+ * استراتژی next-auth توی این پروژه JWTه (بدون ردیف سرور به‌ازای هر توکن)،
  * پس تا حالا هیچ راهی نبود که کاربر ببینه با چه دستگاه‌هایی وارده یا یکیشون
- * رو بیرون بندازه. حالا هر توکنِ صادرشده یک `sid` یکتا داخلش داره که به یک
- * ردیفِ `Session` اشاره می‌کنه؛ پرشدنِ `revokedAt` یعنی همون توکن از اولین
- * درخواستِ بعدی نامعتبره.
+ * رو بیرون بندازه. حالا هر توکن صادرشده یک `sid` یکتا داخلش داره که به یک
+ * ردیف `Session` اشاره می‌کنه؛ پرشدن `revokedAt` یعنی همون توکن از اولین
+ * درخواست بعدی نامعتبره.
  *
- * چرا کشِ در-حافظه: بدونِ اون، *هر* درخواستی که سشن رو می‌خونه یک کوئریِ
- * اضافه به دیتابیس می‌زد. با یک پنجره‌ی کوتاه (۶۰ ثانیه) هزینه‌ی حالتِ عادی
- * تقریباً صفر می‌شه، و چون خودِ ابطال همین کش رو فوراً پاک می‌کنه، ابطال از
- * داخلِ همین اینستنس بلافاصله اثر می‌کنه. (مثلِ `lib/rateLimit.ts` این هم
+ * چرا کش در-حافظه: بدون اون، *هر* درخواستی که سشن رو می‌خونه یک کوئری
+ * اضافه به دیتابیس می‌زد. با یک پنجره‌ی کوتاه (۶۰ ثانیه) هزینه‌ی حالت عادی
+ * تقریبا صفر می‌شه، و چون خود ابطال همین کش رو فورا پاک می‌کنه، ابطال از
+ * داخل همین اینستنس بلافاصله اثر می‌کنه. (مثل `lib/rateLimit.ts` این هم
  * تک-اینستنسه؛ اگه چند سرور شدیم باید با Redis عوض بشه.)
  */
 const CHECK_TTL_MS = 60 * 1000;
@@ -44,7 +44,7 @@ export async function createDeviceSession(input: {
   validCache.set(input.sid, Date.now() + CHECK_TTL_MS);
 }
 
-/** آیا این توکن هنوز معتبره؟ نشستِ ابطال‌شده/پاک‌شده → false. */
+/** آیا این توکن هنوز معتبره؟ نشست ابطال‌شده/پاک‌شده → false. */
 export async function isSessionLive(sid: string): Promise<boolean> {
   const until = validCache.get(sid);
   if (until && until > Date.now()) return true;
@@ -56,7 +56,7 @@ export async function isSessionLive(sid: string): Promise<boolean> {
   const live = !!row && !row.revokedAt && row.expiresAt.getTime() > Date.now();
   if (live) {
     validCache.set(sid, Date.now() + CHECK_TTL_MS);
-    // «آخرین بازدید» فقط هم‌زمان با همین بررسیِ هر-۶۰-ثانیه به‌روز می‌شه، نه
+    // «آخرین بازدید» فقط هم‌زمان با همین بررسی هر-۶۰-ثانیه به‌روز می‌شه، نه
     // هر درخواست — وگرنه یک write به‌ازای هر request می‌شد.
     prisma.session.update({ where: { sessionToken: sid }, data: { lastSeenAt: new Date() } }).catch(() => {});
   } else {
@@ -65,7 +65,7 @@ export async function isSessionLive(sid: string): Promise<boolean> {
   return live;
 }
 
-/** ابطالِ یک نشستِ مشخص (فقط اگه مالِ همین کاربر باشه — جلوگیری از IDOR). */
+/** ابطال یک نشست مشخص (فقط اگه مال همین کاربر باشه — جلوگیری از IDOR). */
 export async function revokeDeviceSession(userId: string, sessionId: string): Promise<boolean> {
   const row = await prisma.session.findFirst({ where: { id: sessionId, userId }, select: { sessionToken: true } });
   if (!row) return false;
@@ -74,7 +74,7 @@ export async function revokeDeviceSession(userId: string, sessionId: string): Pr
   return true;
 }
 
-/** ابطالِ همه‌ی نشست‌ها به‌جز نشستِ فعلی. */
+/** ابطال همه‌ی نشست‌ها به‌جز نشست فعلی. */
 export async function revokeOtherDeviceSessions(userId: string, currentSid: string): Promise<number> {
   const others = await prisma.session.findMany({
     where: { userId, revokedAt: null, sessionToken: { not: currentSid } },

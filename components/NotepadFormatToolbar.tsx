@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { Bold, Code, Italic, Link as LinkIcon, Strikethrough, Underline } from "lucide-react";
 
-// تولبارِ شناور — وقتی داخلِ یکی از بلاک‌های ادیتور یه انتخابِ متنیِ غیرخالی
-// وجود داشته باشه ظاهر می‌شه، بالای همون انتخاب. فرمت‌دهیِ بولد/ایتالیک/
-// آندرلاین با execCommandِ بومیِ مرورگر (که خودش partial-selection رو درست
-// مدیریت می‌کنه)، کد/لینک با wrap کردنِ دستیِ Range.
+// تولبار شناور — وقتی داخل یکی از بلاک‌های ادیتور یه انتخاب متنی غیرخالی
+// وجود داشته باشه ظاهر می‌شه، بالای همون انتخاب. فرمت‌دهی بولد/ایتالیک/
+// آندرلاین با execCommand بومی مرورگر (که خودش partial-selection رو درست
+// مدیریت می‌کنه)، کد/لینک با wrap کردن دستی Range.
 export function NotepadFormatToolbar({ containerRef }: { containerRef: React.RefObject<HTMLElement> }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -45,7 +45,7 @@ export function NotepadFormatToolbar({ containerRef }: { containerRef: React.Ref
     after.collapse(true);
     sel.removeAllRanges();
     sel.addRange(after);
-    // یه eventِ input شبیه‌سازی‌شده بفرست تا بلاک‌ریو تغییرات رو serialize کنه
+    // یه event input شبیه‌سازی‌شده بفرست تا بلاک‌ریو تغییرات رو serialize کنه
     el.closest("[contenteditable]")?.dispatchEvent(new Event("input", { bubbles: true }));
   }
 

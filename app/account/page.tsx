@@ -12,9 +12,9 @@ type IndexUser = {
   subscriptions: { status: string; plan: { key: string; nameFa: string } }[];
 };
 
-// صفحه‌ی اولِ پنل کاربری — فقط سرصفحه (آواتار/نام/وضعیتِ پریمیوم) + فهرستِ
+// صفحه‌ی اول پنل کاربری — فقط سرصفحه (آواتار/نام/وضعیت پریمیوم) + فهرست
 // زبانه‌ها با آیکون؛ محتوای هر بخش (پروفایل، تنظیمات و...) توی صفحه‌ی
-// اختصاصیِ خودش با کلیک روی همین ردیف‌ها باز می‌شه.
+// اختصاصی خودش با کلیک روی همین ردیف‌ها باز می‌شه.
 export default function AccountIndexPage() {
   const [data, setData] = useState<IndexUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -28,9 +28,9 @@ export default function AccountIndexPage() {
   }, []);
 
   const fullName = data ? [data.name, data.lastName].filter(Boolean).join(" ") || "کاربر آریون" : "";
-  // /api/account فقط اشتراکِ واقعاً فعال (ACTIVE/TRIALِ منقضی‌نشده) رو برمی‌گردونه،
-  // پس این‌جا دیگه لازم نیست وضعیت دوباره چک بشه — قبلاً «آخرین ردیفِ ساخته‌شده»
-  // می‌اومد و یه اشتراکِ منقضی هم «پریمیوم» نشون داده می‌شد.
+  // /api/account فقط اشتراک واقعا فعال (ACTIVE/TRIAL منقضی‌نشده) رو برمی‌گردونه،
+  // پس این‌جا دیگه لازم نیست وضعیت دوباره چک بشه — قبلا «آخرین ردیف ساخته‌شده»
+  // می‌اومد و یه اشتراک منقضی هم «پریمیوم» نشون داده می‌شد.
   const sub = data?.subscriptions?.[0];
   const isPremium = !!sub && sub.plan.key !== "basic";
 

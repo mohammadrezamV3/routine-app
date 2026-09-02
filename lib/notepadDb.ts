@@ -1,5 +1,5 @@
 // Notepad Database — Phase 2 (Table/Board/Calendar/Gallery/List). همون
-// اصلِ Phase 1 اینجا هم برقراره: فقط مدل‌های داده‌ای/کمکیِ مشترکِ کلاینت+سرور.
+// اصل Phase 1 اینجا هم برقراره: فقط مدل‌های داده‌ای/کمکی مشترک کلاینت+سرور.
 
 export type PropertyType =
   | "text"
@@ -24,7 +24,7 @@ export type DatabaseProperty = {
   position: number;
 };
 
-// مقدارِ هر سلول بسته به نوعِ property: text/url/email -> string,
+// مقدار هر سلول بسته به نوع property: text/url/email -> string,
 // number -> number, checkbox -> boolean, select -> string (id گزینه),
 // multi_select/relation -> string[], date -> ISO string, formula -> readonly (محاسبه‌شده)
 export type RecordValue = string | number | boolean | string[] | null;
@@ -70,7 +70,7 @@ export const PROPERTY_TYPE_META: Record<PropertyType, { label: string }> = {
   date: { label: "تاریخ" },
   url: { label: "لینک" },
   email: { label: "ایمیل" },
-  relation: { label: "ارتباط با دیتابیسِ دیگر" },
+  relation: { label: "ارتباط با دیتابیس دیگر" },
   formula: { label: "فرمول" },
 };
 export const PROPERTY_TYPE_ORDER: PropertyType[] = [
@@ -101,9 +101,9 @@ export function defaultValueForType(type: PropertyType): RecordValue {
 }
 
 // ============================================================================
-// فرمول — یه ارزیاب‌گرِ خیلی سبک (بدونِ eval)، فقط عملگرهای ریاضیِ پایه روی
-// مقدارِ propertyهای عددیِ همون رکورد. عمداً محدود نگه داشته شده — یه موتورِ
-// فرمولِ کاملِ Notion-مانند دامنه‌ی این فاز نیست.
+// فرمول — یه ارزیاب‌گر خیلی سبک (بدون eval)، فقط عملگرهای ریاضی پایه روی
+// مقدار propertyهای عددی همون رکورد. عمدا محدود نگه داشته شده — یه موتور
+// فرمول کامل Notion-مانند دامنه‌ی این فاز نیست.
 // ============================================================================
 
 type Token = { type: "num" | "ident" | "op" | "lparen" | "rparen"; value: string };
@@ -131,7 +131,7 @@ function tokenizeFormula(expr: string): Token[] {
     if ("+-*/".includes(ch)) { tokens.push({ type: "op", value: ch }); i++; continue; }
     if (ch === "(") { tokens.push({ type: "lparen", value: ch }); i++; continue; }
     if (ch === ")") { tokens.push({ type: "rparen", value: ch }); i++; continue; }
-    i++; // کاراکترِ ناشناخته رو نادیده بگیر
+    i++; // کاراکتر ناشناخته رو نادیده بگیر
   }
   return tokens;
 }
@@ -171,8 +171,8 @@ function parseFormula(tokens: Token[], vars: Record<string, number>): number {
   return expr();
 }
 
-// نگاشتِ اسمِ property به مقدارِ عددیِ همون رکورد، برای استفاده به‌عنوانِ
-// متغیر توی فرمول (کاربر با اسمِ خودِ propertyها می‌نویسه، نه idشون)
+// نگاشت اسم property به مقدار عددی همون رکورد، برای استفاده به‌عنوان
+// متغیر توی فرمول (کاربر با اسم خود propertyها می‌نویسه، نه idشون)
 export function evaluateFormula(expression: string, record: DatabaseRecord, properties: DatabaseProperty[]): number {
   if (!expression?.trim()) return 0;
   const vars: Record<string, number> = {};
@@ -188,8 +188,8 @@ export function evaluateFormula(expression: string, record: DatabaseRecord, prop
 }
 
 // ============================================================================
-// فیلتر/سورت — روی آرایه‌ی رکوردهای درحافظه (مقیاسِ این فاز کوچیکه، نیازی
-// به کوئریِ JSON پیچیده‌ی دیتابیس نیست)
+// فیلتر/سورت — روی آرایه‌ی رکوردهای درحافظه (مقیاس این فاز کوچیکه، نیازی
+// به کوئری JSON پیچیده‌ی دیتابیس نیست)
 // ============================================================================
 
 function recordMatchesFilter(rec: DatabaseRecord, rule: FilterRule): boolean {
@@ -239,10 +239,10 @@ export function midPositionDb(prev: number | null, next: number | null): number 
 // Fetch helpers (client)
 // ============================================================================
 
-// وقتی یه بلاکِ تازه‌ساخته‌شده فوراً به نوعِ "database" تبدیل بشه، ممکنه
-// اتوسیوِ دیبانس‌شده‌ی خودِ بلاک (۷۰۰ms) هنوز روی سرور ننشسته باشه — این
+// وقتی یه بلاک تازه‌ساخته‌شده فورا به نوع "database" تبدیل بشه، ممکنه
+// اتوسیو دیبانس‌شده‌ی خود بلاک (۷۰۰ms) هنوز روی سرور ننشسته باشه — این
 // درخواست تا چندبار با فاصله‌ی کوتاه retry می‌کنه تا اون race رد بشه، به‌جای
-// اینکه ساختِ دیتابیس با یه 404ِ زودهنگام شکست بخوره
+// اینکه ساخت دیتابیس با یه 404 زودهنگام شکست بخوره
 export async function createDatabaseForBlock(blockId: string): Promise<NotepadDatabaseFull | null> {
   for (let attempt = 0; attempt < 6; attempt++) {
     const res = await fetch(`/api/notepad/databases`, {

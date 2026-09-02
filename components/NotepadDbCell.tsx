@@ -20,7 +20,7 @@ function SelectPill({ option, small }: { option: SelectOption; small?: boolean }
   );
 }
 
-// یه سلولِ واحد از دیتابیس — رندر/ویرایشِ مقدار بسته به نوعِ property. توی
+// یه سلول واحد از دیتابیس — رندر/ویرایش مقدار بسته به نوع property. توی
 // Table/Board/Gallery/Calendar/List همه از همین یه کامپوننت استفاده می‌شه،
 // فقط با compact=true فشرده‌تر رندر می‌شه (کارت‌های بورد/گالری)
 export function NotepadDbCell({
@@ -136,7 +136,7 @@ export function NotepadDbCell({
                     type="button"
                     className="notepad-db-select-menu-item"
                     onClick={() => {
-                      const label = prompt("اسمِ گزینه‌ی جدید؟");
+                      const label = prompt("اسم گزینه‌ی جدید؟");
                       if (!label?.trim()) return;
                       const next = [...choices, makeSelectOption(label.trim())];
                       onUpdateOptions({ ...(property.options as any), choices: next });
@@ -195,7 +195,7 @@ export function NotepadDbCell({
                     type="button"
                     className="notepad-db-select-menu-item"
                     onClick={() => {
-                      const label = prompt("اسمِ گزینه‌ی جدید؟");
+                      const label = prompt("اسم گزینه‌ی جدید؟");
                       if (!label?.trim()) return;
                       const next = [...choices, makeSelectOption(label.trim())];
                       onUpdateOptions({ ...(property.options as any), choices: next });
@@ -212,7 +212,7 @@ export function NotepadDbCell({
               <div className="fixed inset-0 z-[19]" onClick={() => setOpen(false)} />
               <div className="notepad-db-select-menu">
                 <div className="notepad-db-cell-empty" style={{ padding: 8 }}>
-                  {(property.options as any)?.targetDatabaseId ? "هنوز موردی برای ارتباط تعریف نشده" : "اول از تنظیماتِ این property، دیتابیسِ مقصد رو انتخاب کن"}
+                  {(property.options as any)?.targetDatabaseId ? "هنوز موردی برای ارتباط تعریف نشده" : "اول از تنظیمات این property، دیتابیس مقصد رو انتخاب کن"}
                 </div>
               </div>
             </>

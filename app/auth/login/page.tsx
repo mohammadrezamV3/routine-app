@@ -14,11 +14,11 @@ import { staggerFieldsIn } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
 import { toEnDigits } from "@/lib/schedule";
 
-// ورود فقط با یوزرنیم/شماره + رمز عبوره — روشِ کدِ ایمیل از اینجا حذف شد
-// (تصمیمِ صریحِ کاربر: «ورود به پنل فقط با رمز عبور باشه نه کد ایمیل»).
-// روتِ /api/auth/email-otp/* و پرووایدرِ next-auth دست‌نخورده باقی موندن —
-// فقط دیگه از این صفحه صدا زده نمی‌شن — چون قبلاً کاملاً ساخته و تست شدن
-// و ممکنه بعداً لازم بشن؛ حذفِ کامل‌شون یه تصمیمِ جدا و بزرگ‌تره.
+// ورود فقط با یوزرنیم/شماره + رمز عبوره — روش کد ایمیل از اینجا حذف شد
+// (تصمیم صریح کاربر: «ورود به پنل فقط با رمز عبور باشه نه کد ایمیل»).
+// روت /api/auth/email-otp/* و پرووایدر next-auth دست‌نخورده باقی موندن —
+// فقط دیگه از این صفحه صدا زده نمی‌شن — چون قبلا کاملا ساخته و تست شدن
+// و ممکنه بعدا لازم بشن؛ حذف کامل‌شون یه تصمیم جدا و بزرگ‌تره.
 export default function LoginPage() {
   const router = useRouter();
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // مرحله‌ی دومِ ورود (فقط وقتی کاربر ورودِ دومرحله‌ایِ پیامکی رو روشن کرده)
+  // مرحله‌ی دوم ورود (فقط وقتی کاربر ورود دومرحله‌ای پیامکی رو روشن کرده)
   const [twoFactor, setTwoFactor] = useState<{ phoneHint: string } | null>(null);
   const [otpCode, setOtpCode] = useState("");
 
@@ -44,11 +44,11 @@ export default function LoginPage() {
   }
 
   async function finalizeLogin() {
-    // لایه‌ی داده تا اینجا وضعیتِ «مهمان» رو کش کرده (و از localStorage
-    // می‌خونده)؛ بدونِ این پاک‌سازی، چون این‌جا ناوبریِ کلاینتیه (نه ریلودِ
+    // لایه‌ی داده تا اینجا وضعیت «مهمان» رو کش کرده (و از localStorage
+    // می‌خونده)؛ بدون این پاک‌سازی، چون این‌جا ناوبری کلاینتیه (نه ریلود
     // کامل)، صفحه‌ی بعدی همچنان داده‌ی مهمان رو نشون می‌داد.
     invalidateStorageCache();
-    // تا لودِ بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
+    // تا لود بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
     setAuthHintCookie();
     router.push("/weekly");
   }
@@ -67,8 +67,8 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // اگه این حساب ورودِ دومرحله‌ای داره، رمز همون‌جا بررسی و کد پیامک می‌شه؛
-    // مسیرِ عادیِ «credentials» برای این حساب‌ها سمتِ سرور بسته‌ست.
+    // اگه این حساب ورود دومرحله‌ای داره، رمز همون‌جا بررسی و کد پیامک می‌شه؛
+    // مسیر عادی «credentials» برای این حساب‌ها سمت سرور بسته‌ست.
     try {
       const pre = await fetch("/api/auth/2fa/start", {
         method: "POST",
@@ -83,7 +83,7 @@ export default function LoginPage() {
         return;
       }
     } catch {
-      // خطای این پیش‌بررسی نباید جلوی مسیرِ عادیِ ورود رو بگیره
+      // خطای این پیش‌بررسی نباید جلوی مسیر عادی ورود رو بگیره
     }
 
     let res;
@@ -97,7 +97,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.error) {
-      // پیام عمداً کلیه (نه «یوزرنیم اشتباهه» / «رمز اشتباهه» جدا) تا کسی که
+      // پیام عمدا کلیه (نه «یوزرنیم اشتباهه» / «رمز اشتباهه» جدا) تا کسی که
       // فقط رمز رو حدس می‌زنه نتونه بفهمه شناسه‌ی درست رو پیدا کرده یا نه.
       setError("یوزرنیم/شماره موبایل یا رمز عبور اشتباه است");
       return;
@@ -112,7 +112,7 @@ export default function LoginPage() {
   async function submitOtp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (otpCode.trim().length < 4) { setError("کدِ پیامک‌شده رو کامل وارد کن"); return; }
+    if (otpCode.trim().length < 4) { setError("کد پیامک‌شده رو کامل وارد کن"); return; }
 
     setLoading(true);
     let res;

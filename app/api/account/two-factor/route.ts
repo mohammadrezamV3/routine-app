@@ -3,10 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// روشن/خاموش‌کردنِ ورودِ دومرحله‌ایِ پیامکی.
+// روشن/خاموش‌کردن ورود دومرحله‌ای پیامکی.
 //
-// شرطِ روشن‌کردن: شماره‌ی موبایلِ تأییدشده روی حساب. بدونش، روشن‌کردنِ ۲FA
-// یعنی قفل‌شدنِ کاربر بیرونِ حسابِ خودش — چون هیچ‌جا نمی‌شه کد فرستاد.
+// شرط روشن‌کردن: شماره‌ی موبایل تأییدشده روی حساب. بدونش، روشن‌کردن ۲FA
+// یعنی قفل‌شدن کاربر بیرون حساب خودش — چون هیچ‌جا نمی‌شه کد فرستاد.
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id as string | undefined;

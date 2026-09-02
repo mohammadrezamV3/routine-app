@@ -3,10 +3,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
-// انیمیشنِ «کاربر پریمیوم شد» — بعدِ پرداختِ موفقِ اشتراک، یک‌بار روی
+// انیمیشن «کاربر پریمیوم شد» — بعد پرداخت موفق اشتراک، یک‌بار روی
 // صفحه‌ی اشتراک نشون داده می‌شه (نگاه کن به app/subscription/page.tsx).
-// ذره‌های اطرافِ آیکون از رویِ ۸ زاویه‌ی مساوی (۴۵ درجه از هم) محاسبه
-// می‌شن تا یه انفجارِ شعاعیِ متقارن بسازن.
+// ذره‌های اطراف آیکون از روی ۸ زاویه‌ی مساوی (۴۵ درجه از هم) محاسبه
+// می‌شن تا یه انفجار شعاعی متقارن بسازن.
 const PARTICLE_COUNT = 8;
 const PARTICLES = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
   const angle = (i / PARTICLE_COUNT) * Math.PI * 2;

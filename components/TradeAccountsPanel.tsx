@@ -12,10 +12,10 @@ import { TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { takePreloaded } from "@/lib/preload";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
-// صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکلِ فشرده (اسم + سود/زیان +
-// برچسب) — جزئیاتِ کامل (بالانس/تعدادِ معاملات/نرخِ برد/هدف) جاش صفحه‌ی
-// خودِ حسابه، نه این فهرست. با انتخابِ هر حساب می‌رویم داخلِ آمار و
-// معاملاتِ همان حساب.
+// صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
+// برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
+// خود حسابه، نه این فهرست. با انتخاب هر حساب می‌رویم داخل آمار و
+// معاملات همان حساب.
 export function TradeAccountsPanel({
   creating,
   onCreatingChange,
@@ -31,13 +31,13 @@ export function TradeAccountsPanel({
   const [confirmPurge, setConfirmPurge] = useState<TradeAccount | null>(null);
   const { pendingKey, error: actionError, run } = useAsyncAction();
 
-  // `silent` یعنی «داده را تازه کن ولی اسکلت نشان نده». بدونِ این، هر
-  // آرشیو/حذف کلِ لیست را برای یک لحظه با اسکلت عوض می‌کرد — همان پرشی که
-  // از بیرون شبیهِ باگ دیده می‌شد.
+  // `silent` یعنی «داده را تازه کن ولی اسکلت نشان نده». بدون این، هر
+  // آرشیو/حذف کل لیست را برای یک لحظه با اسکلت عوض می‌کرد — همان پرشی که
+  // از بیرون شبیه باگ دیده می‌شد.
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      // اگر اسکریپتِ inlineِ preload از قبل همین URL را درخواست کرده،
+      // اگر اسکریپت inline preload از قبل همین URL را درخواست کرده،
       // همان promise استفاده می‌شود تا درخواست دوباره نرود.
       const accountsUrl = `/api/trade/accounts?archived=${showArchived ? 1 : 0}`;
       const [aData, tData] = await Promise.all([
@@ -45,8 +45,8 @@ export function TradeAccountsPanel({
         takePreloaded("/api/trade/tags") ?? fetch("/api/trade/tags").then((r) => (r.ok ? r.json() : null)),
       ]);
       // archived=1 یعنی «همه» (فعال+آرشیو) از سرور می‌آید، چون همون پاسخ برای
-      // بعداً برگشتن به حالتِ عادی کش می‌مونه — این‌جا برای «نمایشِ آرشیو» فقط
-      // خودِ آرشیوی‌ها نگه داشته می‌شن، نه فعال‌ها هم کنارشون.
+      // بعدا برگشتن به حالت عادی کش می‌مونه — این‌جا برای «نمایش آرشیو» فقط
+      // خود آرشیوی‌ها نگه داشته می‌شن، نه فعال‌ها هم کنارشون.
       const list: TradeAccount[] = aData?.accounts || [];
       setAccounts(showArchived ? list.filter((a) => a.archived) : list);
       setTags(tData?.tags || []);
@@ -126,9 +126,9 @@ export function TradeAccountsPanel({
   );
 }
 
-// ردیفِ فشرده‌ی یک حساب — اسم + سود/زیان + برچسب، به‌علاوه‌ی منویِ
-// سه‌نقطه‌ی کنارِ اسم (ویرایش/آرشیو). جزئیاتِ کاملِ حساب فقط با بازکردنِ
-// خودِ صفحه‌ی حساب دیده می‌شود.
+// ردیف فشرده‌ی یک حساب — اسم + سود/زیان + برچسب، به‌علاوه‌ی منوی
+// سه‌نقطه‌ی کنار اسم (ویرایش/آرشیو). جزئیات کامل حساب فقط با بازکردن
+// خود صفحه‌ی حساب دیده می‌شود.
 function AccountRow({
   account: a, index, onEdit, onToggleArchive, onPurge,
 }: {
@@ -220,8 +220,8 @@ function AccountRow({
   );
 }
 
-// حذفِ کاملِ حساب برگشت‌ناپذیر است و کلِ تاریخچه‌ی معاملاتش را می‌برد — پس
-// پشتِ تایپِ دقیقِ نامِ حساب قفل شده، نه یک «آیا مطمئنی؟»ی ساده.
+// حذف کامل حساب برگشت‌ناپذیر است و کل تاریخچه‌ی معاملاتش را می‌برد — پس
+// پشت تایپ دقیق نام حساب قفل شده، نه یک «آیا مطمئنی؟»ی ساده.
 function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAccount; onCancel: () => void; onConfirm: () => void; busy: boolean }) {
   const [typed, setTyped] = useState("");
   return (
@@ -230,7 +230,7 @@ function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAc
       <div className="modal-panel open" role="dialog" aria-modal="true">
         <div className="modal-head"><div className="modal-title">حذف کامل حساب</div></div>
         <div className="item-line">
-          با این کار تمام معاملات، عکس‌ها و آمارِ «{account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.
+          با این کار تمام معاملات، عکس‌ها و آمار «{account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.
         </div>
         <label className="exercise-form-label">برای تأیید، نام حساب را تایپ کن</label>
         <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />

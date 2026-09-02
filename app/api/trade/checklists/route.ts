@@ -6,8 +6,8 @@ import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
 
-// چک‌لیست‌های نام‌دارِ کاربر. جایگزینِ /api/trade/checklist (تکی) شده — آن
-// نسخه یک لیستِ تختِ واحد برای هر کاربر بود و امکانِ «هر معامله با چک‌لیستِ
+// چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
+// نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
 // خودش» را نمی‌داد.
 
 const MAX_ITEMS = MAX_CHECKLIST_ITEMS;
@@ -17,7 +17,7 @@ const CHECKLIST_SELECT = {
   items: { select: { id: true, text: true, order: true }, orderBy: { order: "asc" } },
 } as const;
 
-// چک‌لیستِ پیش‌فرضِ اولین ورود — نقطه‌ی شروع، کاملاً قابلِ ویرایش/حذف
+// چک‌لیست پیش‌فرض اولین ورود — نقطه‌ی شروع، کاملا قابل ویرایش/حذف
 const SEED_NAME = "چک‌لیست من";
 const SEED_ITEMS = [
   "سطح H1 با برخورد قبلی معتبره؟",
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   let name = clampText(String(body?.name || "").trim(), 60);
   let color = isHexColor(body?.color) ? body.color : "#3E7BFA";
 
-  // «Duplicate» — کپیِ کاملِ یک چک‌لیستِ موجود با نامِ جدید
+  // «Duplicate» — کپی کامل یک چک‌لیست موجود با نام جدید
   if (body?.duplicateOf) {
     const src = await prisma.tradeChecklist.findFirst({
       where: { id: String(body.duplicateOf), userId },
@@ -108,9 +108,9 @@ export async function POST(req: NextRequest) {
 
 // PATCH { id, name?, color?, required?, archived?, items?: string[] }
 //
-// آیتم‌ها یکجا جایگزین می‌شوند: ویرایشگر همیشه لیستِ نهایی را می‌فرستد و
-// این کار هم ترتیب و هم افزودن/حذف را در یک درخواست حل می‌کند. اسنپ‌شاتِ
-// معاملاتِ قبلی از این تغییر اثر نمی‌گیرد (متنشان جداگانه ذخیره شده).
+// آیتم‌ها یکجا جایگزین می‌شوند: ویرایشگر همیشه لیست نهایی را می‌فرستد و
+// این کار هم ترتیب و هم افزودن/حذف را در یک درخواست حل می‌کند. اسنپ‌شات
+// معاملات قبلی از این تغییر اثر نمی‌گیرد (متنشان جداگانه ذخیره شده).
 export async function PATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -153,8 +153,8 @@ export async function DELETE(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
-  // معاملاتِ متصل پاک نمی‌شوند — checklistId شان null می‌شود (SetNull) ولی
-  // اسنپ‌شاتِ متنِ چک‌لیست روی خودِ معامله باقی می‌ماند.
+  // معاملات متصل پاک نمی‌شوند — checklistId شان null می‌شود (SetNull) ولی
+  // اسنپ‌شات متن چک‌لیست روی خود معامله باقی می‌ماند.
   await prisma.tradeChecklist.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }

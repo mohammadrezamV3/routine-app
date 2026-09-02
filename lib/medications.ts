@@ -2,27 +2,27 @@ import { getSetting, setSetting } from "./storage";
 import { isoLocal } from "./jalali";
 import { SETTING_KEYS } from "./userSettingKeys";
 
-// یادآوریِ دارو.
+// یادآوری دارو.
 //
-// عمداً مدلِ Prismaِ جدا نگرفت و مثلِ `customOccurrences` روی همون
-// UserSettingِ کلید/مقدار می‌شینه (`lib/storage.ts`) — یعنی قراردادِ
-// persistenceِ پروژه بدونِ هیچ کارِ اضافه رعایت می‌شه: مهمان → localStorage،
-// کاربرِ لاگین‌کرده → دیتابیس، و هیچ کامپوننتی نمی‌دونه داده از کجا میاد.
+// عمدا مدل Prisma جدا نگرفت و مثل `customOccurrences` روی همون
+// UserSetting کلید/مقدار می‌شینه (`lib/storage.ts`) — یعنی قرارداد
+// persistence پروژه بدون هیچ کار اضافه رعایت می‌شه: مهمان → localStorage،
+// کاربر لاگین‌کرده → دیتابیس، و هیچ کامپوننتی نمی‌دونه داده از کجا میاد.
 
 export type Medication = {
   id: string;
   name: string;
-  /** چند بار در روز — فاصله‌ی بینِ نوبت‌ها از همین حساب می‌شه (۴ بار = هر ۶ ساعت) */
+  /** چند بار در روز — فاصله‌ی بین نوبت‌ها از همین حساب می‌شه (۴ بار = هر ۶ ساعت) */
   timesPerDay: number;
-  /** ساعتِ اولین نوبتِ هر روز، «HH:MM» با ارقامِ لاتین */
+  /** ساعت اولین نوبت هر روز، «HH:MM» با ارقام لاتین */
   firstDoseTime: string;
-  /** ISO (YYYY-MM-DD) — روزِ شروعِ دوره */
+  /** ISO (YYYY-MM-DD) — روز شروع دوره */
   startDate: string;
-  /** طولِ دوره به روز */
+  /** طول دوره به روز */
   durationDays: number;
-  /** false یعنی یادآوریِ همین دارو خاموشه (خودِ دارو در لیست می‌مونه) */
+  /** false یعنی یادآوری همین دارو خاموشه (خود دارو در لیست می‌مونه) */
   notify?: boolean;
-  /** یادداشتِ اختیاری (مثلاً «بعد از غذا») */
+  /** یادداشت اختیاری (مثلا «بعد از غذا») */
   note?: string;
 };
 
@@ -46,7 +46,7 @@ export function newMedicationId(): string {
   return "med-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/** «HH:MM» → دقیقه از نیمه‌شب. ورودیِ نامعتبر → ۸:۰۰ صبح. */
+/** «HH:MM» → دقیقه از نیمه‌شب. ورودی نامعتبر → ۸:۰۰ صبح. */
 export function doseTimeToMinutes(hhmm: string): number {
   const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
   if (!m) return 8 * 60;
@@ -63,11 +63,11 @@ export function minutesToDoseTime(minutes: number): string {
 }
 
 /**
- * ساعت‌های نوبتِ یک روز، به دقیقه از نیمه‌شب.
+ * ساعت‌های نوبت یک روز، به دقیقه از نیمه‌شب.
  *
- * «۴ بار در روز» دقیقاً یعنی «هر ۶ ساعت» (درخواستِ صریحِ کاربر): بازه‌ی
- * ۲۴ساعته بر تعدادِ نوبت‌ها تقسیم می‌شه و نوبتِ اول سرِ `firstDoseTime`ه.
- * پس ۴ بار با شروعِ ۰۸:۰۰ می‌شه ۰۸:۰۰ / ۱۴:۰۰ / ۲۰:۰۰ / ۰۲:۰۰.
+ * «۴ بار در روز» دقیقا یعنی «هر ۶ ساعت» (درخواست صریح کاربر): بازه‌ی
+ * ۲۴ساعته بر تعداد نوبت‌ها تقسیم می‌شه و نوبت اول سر `firstDoseTime`ه.
+ * پس ۴ بار با شروع ۰۸:۰۰ می‌شه ۰۸:۰۰ / ۱۴:۰۰ / ۲۰:۰۰ / ۰۲:۰۰.
  */
 export function doseMinutesOfDay(med: Medication): number[] {
   const times = Math.min(MAX_TIMES_PER_DAY, Math.max(MIN_TIMES_PER_DAY, Math.round(med.timesPerDay)));
@@ -76,13 +76,13 @@ export function doseMinutesOfDay(med: Medication): number[] {
   return Array.from({ length: times }, (_, i) => Math.round(start + i * step) % 1440).sort((a, b) => a - b);
 }
 
-/** فاصله‌ی بینِ نوبت‌ها به ساعت — برای متنِ «هر ۶ ساعت» */
+/** فاصله‌ی بین نوبت‌ها به ساعت — برای متن «هر ۶ ساعت» */
 export function doseIntervalHours(med: Medication): number {
   const times = Math.min(MAX_TIMES_PER_DAY, Math.max(MIN_TIMES_PER_DAY, Math.round(med.timesPerDay)));
   return 24 / times;
 }
 
-/** آخرین روزِ دوره (شاملِ خودش)، ISO */
+/** آخرین روز دوره (شامل خودش)، ISO */
 export function medicationEndDate(med: Medication): string {
   const [y, m, d] = med.startDate.split("-").map(Number);
   const end = new Date(y, m - 1, d);
@@ -90,12 +90,12 @@ export function medicationEndDate(med: Medication): string {
   return isoLocal(end);
 }
 
-/** آیا این تاریخ داخلِ دوره‌ی دارو هست؟ */
+/** آیا این تاریخ داخل دوره‌ی دارو هست؟ */
 export function isMedicationActiveOn(med: Medication, iso: string): boolean {
   return iso >= med.startDate && iso <= medicationEndDate(med);
 }
 
-/** چند روز از دوره مونده (شاملِ امروز)؛ صفر یعنی دوره تموم شده */
+/** چند روز از دوره مونده (شامل امروز)؛ صفر یعنی دوره تموم شده */
 export function medicationDaysLeft(med: Medication, todayIso: string): number {
   const end = medicationEndDate(med);
   if (todayIso > end) return 0;

@@ -16,8 +16,8 @@ import {
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; items: Item[] };
 
-// مثلِ حساب‌ها: فهرستِ فشرده‌ی چک‌لیست‌ها، نه کارت‌های بازِ همیشه‌گسترده.
-// انتخابِ یک چک‌لیست به صفحه‌ی اختصاصی‌اش می‌رود (/trade/checklists/[id]) —
+// مثل حساب‌ها: فهرست فشرده‌ی چک‌لیست‌ها، نه کارت‌های باز همیشه‌گسترده.
+// انتخاب یک چک‌لیست به صفحه‌ی اختصاصی‌اش می‌رود (/trade/checklists/[id]) —
 // آنجاست که آیتم‌ها تیک می‌خورند و معامله شروع می‌شود، نه این‌جا.
 export function TradeChecklistsPanel({
   creating,
@@ -120,8 +120,8 @@ export function TradeChecklistsPanel({
   );
 }
 
-// ویرایشگرِ چک‌لیست — آیتم‌ها با درگِ واقعی جابه‌جا می‌شوند (نه دکمه‌ی
-// بالا/پایین) و کلِ لیست یکجا ذخیره می‌شود.
+// ویرایشگر چک‌لیست — آیتم‌ها با درگ واقعی جابه‌جا می‌شوند (نه دکمه‌ی
+// بالا/پایین) و کل لیست یکجا ذخیره می‌شود.
 function ChecklistEditor({
   checklist,
   onClose,
@@ -182,7 +182,7 @@ function ChecklistEditor({
         </div>
 
         <label className="exercise-form-label">نام چک‌لیست</label>
-        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلاً London Breakout" />
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلا London Breakout" />
 
         <label className="exercise-form-label">رنگ</label>
         <div className="trade-color-row">

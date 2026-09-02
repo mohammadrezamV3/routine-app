@@ -45,7 +45,7 @@ function NotepadPageTreeItem({
         </button>
         <button type="button" className="notepad-tree-label" onClick={() => onNavigate(page.id)}>
           <span className="notepad-tree-icon">{page.icon || "📄"}</span>
-          <span className="notepad-tree-title">{page.title || "بدونِ عنوان"}</span>
+          <span className="notepad-tree-title">{page.title || "بدون عنوان"}</span>
         </button>
         <button type="button" className="notepad-tree-add" onClick={(e) => { e.stopPropagation(); onCreateChild(page.id); }} aria-label="زیرصفحه‌ی جدید">
           <Plus size={12} />
@@ -151,7 +151,7 @@ export function NotepadSidebar({
                 {favorites.map((p) => (
                   <button key={p.id} type="button" className={`notepad-tree-row notepad-flat-row${activePageId === p.id ? " active" : ""}`} onClick={() => onNavigate(p.id)}>
                     <span className="notepad-tree-icon">{p.icon || "📄"}</span>
-                    <span className="notepad-tree-title">{p.title || "بدونِ عنوان"}</span>
+                    <span className="notepad-tree-title">{p.title || "بدون عنوان"}</span>
                   </button>
                 ))}
               </div>
@@ -163,7 +163,7 @@ export function NotepadSidebar({
                 {recent.map((p) => (
                   <button key={p.id} type="button" className={`notepad-tree-row notepad-flat-row${activePageId === p.id ? " active" : ""}`} onClick={() => onNavigate(p.id)}>
                     <span className="notepad-tree-icon">{p.icon || "📄"}</span>
-                    <span className="notepad-tree-title">{p.title || "بدونِ عنوان"}</span>
+                    <span className="notepad-tree-title">{p.title || "بدون عنوان"}</span>
                   </button>
                 ))}
               </div>
@@ -194,14 +194,14 @@ export function NotepadSidebar({
           <div className="notepad-sidebar-scroll thin-scroll">
             <div className="notepad-sidebar-section">
               {archived.length === 0 ? (
-                <div className="notepad-sidebar-empty">سطلِ زباله خالیه</div>
+                <div className="notepad-sidebar-empty">سطل زباله خالیه</div>
               ) : (
                 archived.map((p) => (
                   <div key={p.id} className="notepad-trash-row">
                     <span className="notepad-tree-icon">{p.icon || "📄"}</span>
-                    <span className="notepad-tree-title">{p.title || "بدونِ عنوان"}</span>
+                    <span className="notepad-tree-title">{p.title || "بدون عنوان"}</span>
                     <button type="button" onClick={() => onRestore(p.id)} title="بازگردانی">↺</button>
-                    <button type="button" className="notepad-trash-danger" onClick={() => onPermanentDelete(p.id)} title="حذفِ همیشگی"><Trash2 size={12} /></button>
+                    <button type="button" className="notepad-trash-danger" onClick={() => onPermanentDelete(p.id)} title="حذف همیشگی"><Trash2 size={12} /></button>
                   </div>
                 ))
               )}
@@ -211,7 +211,7 @@ export function NotepadSidebar({
 
         <button type="button" className="notepad-sidebar-trash-btn" onClick={() => setView(view === "trash" ? "tree" : "trash")}>
           <Trash2 size={13} />
-          {view === "trash" ? "بازگشت" : `سطلِ زباله${archived.length ? ` (${faNum(archived.length)})` : ""}`}
+          {view === "trash" ? "بازگشت" : `سطل زباله${archived.length ? ` (${faNum(archived.length)})` : ""}`}
         </button>
       </aside>
     </>

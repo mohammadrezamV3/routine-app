@@ -8,9 +8,9 @@ import { sendOtpEmail } from "@/lib/email";
 import { generateEmailOtp, hashEmailOtp, EMAIL_OTP_TTL_MS } from "@/lib/emailOtp";
 
 // POST /api/account/email/request  { newEmail }
-// قدمِ اولِ تغییرِ ایمیلِ حساب — کد به newEmail (نه ایمیلِ فعلی) فرستاده
-// می‌شه تا مالکیتِ ایمیلِ جدید ثابت بشه؛ بدونِ این، هرکسی با یه سشنِ
-// سرقتی می‌تونست ایمیلِ بازیابیِ حساب رو مستقیم عوض کنه.
+// قدم اول تغییر ایمیل حساب — کد به newEmail (نه ایمیل فعلی) فرستاده
+// می‌شه تا مالکیت ایمیل جدید ثابت بشه؛ بدون این، هرکسی با یه سشن
+// سرقتی می‌تونست ایمیل بازیابی حساب رو مستقیم عوض کنه.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const existing = await prisma.user.findUnique({ where: { email: newEmail }, select: { id: true } });
   if (existing && existing.id !== userId) {
-    return NextResponse.json({ error: "این ایمیل قبلاً برای حساب دیگری ثبت شده" }, { status: 409 });
+    return NextResponse.json({ error: "این ایمیل قبلا برای حساب دیگری ثبت شده" }, { status: 409 });
   }
 
   const code = generateEmailOtp();
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   const result = await sendOtpEmail(newEmail, code, "change-email");
   if (!result.ok) {
-    return NextResponse.json({ error: "ارسال ایمیل با مشکل مواجه شد — بعداً دوباره امتحان کن" }, { status: 502 });
+    return NextResponse.json({ error: "ارسال ایمیل با مشکل مواجه شد — بعدا دوباره امتحان کن" }, { status: 502 });
   }
 
   return NextResponse.json({ ok: true });

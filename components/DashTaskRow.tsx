@@ -11,8 +11,8 @@ import { toEnDigits } from "@/lib/schedule";
 
 export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean; dayPast?: boolean; notStarted?: boolean };
 
-// بج اهمیت همیشه کنارِ اسمِ برنامه‌ست (نه زیرش). فقط کلیک روی خودِ متنِ اسمِ
-// برنامه (نه کل ردیف) کارتِ واقعیِ برنامه (ProgramCard، فقط‌نمایشی) رو باز
+// بج اهمیت همیشه کنار اسم برنامه‌ست (نه زیرش). فقط کلیک روی خود متن اسم
+// برنامه (نه کل ردیف) کارت واقعی برنامه (ProgramCard، فقط‌نمایشی) رو باز
 // می‌کنه؛ سه‌نقطه یک منوی کوچیک (ویرایش/حذف) باز می‌کنه. چک‌باکس فقط برای
 // «امروز» فعاله.
 export function DashTaskRow({
@@ -37,11 +37,11 @@ export function DashTaskRow({
   const btnWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // منو با createPortal به document.body می‌ره — چون DashCard (والدِ این
+  // منو با createPortal به document.body می‌ره — چون DashCard (والد این
   // ردیف) با backdrop-blur یه containing-block/stacking-context جدید می‌سازه،
-  // یعنی z-index داخلِ خودِ همون کارت محدود می‌مونه و نمی‌تونه بالاترِ
-  // کارت‌های خواهرِ بعدی (که دیرتر توی DOM میان و بدونِ این پورتال روشون
-  // می‌افتاد) بیاد. با پورتال به body، این مشکلِ stacking-context کلاً حل می‌شه.
+  // یعنی z-index داخل خود همون کارت محدود می‌مونه و نمی‌تونه بالاتر
+  // کارت‌های خواهر بعدی (که دیرتر توی DOM میان و بدون این پورتال روشون
+  // می‌افتاد) بیاد. با پورتال به body، این مشکل stacking-context کلا حل می‌شه.
   function openMenu() {
     const rect = btnWrapRef.current?.getBoundingClientRect();
     if (rect) setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
@@ -64,10 +64,10 @@ export function DashTaskRow({
     <motion.div
       className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
     >
-      {/* دکمه‌ی سه‌نقطه باید دقیقاً هم‌ردیفِ خطِ متنِ اسمِ برنامه بشینه. قبلاً
-          یه <button>ِ inline بود که ارتفاعش از line-heightِ خودش می‌اومد و
-          مرکزِ آیکون چند پیکسل بالاتر از مرکزِ متن می‌افتاد. حالا خودش یه
-          فلکسِ مربعیِ هم‌ارتفاعِ ردیفه، پس مرکزش دقیقاً روی مرکزِ ردیفه. */}
+      {/* دکمه‌ی سه‌نقطه باید دقیقا هم‌ردیف خط متن اسم برنامه بشینه. قبلا
+          یه <button> inline بود که ارتفاعش از line-height خودش می‌اومد و
+          مرکز آیکون چند پیکسل بالاتر از مرکز متن می‌افتاد. حالا خودش یه
+          فلکس مربعی هم‌ارتفاع ردیفه، پس مرکزش دقیقا روی مرکز ردیفه. */}
       <div className="flex shrink-0 items-center" ref={btnWrapRef}>
         <button
           type="button"
@@ -93,7 +93,7 @@ export function DashTaskRow({
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onMove(task.id); }}
               aria-disabled={task.isPast}
-              title={task.isPast ? "زمانِ این برنامه گذشته — قابلِ انتقال نیست" : undefined}
+              title={task.isPast ? "زمان این برنامه گذشته — قابل انتقال نیست" : undefined}
               className={cn(
                 "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
                 task.isPast
@@ -107,7 +107,7 @@ export function DashTaskRow({
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onDelete(task.id); }}
               aria-disabled={task.isPast}
-              title={task.isPast ? "زمانِ این برنامه گذشته — قابلِ حذف نیست" : undefined}
+              title={task.isPast ? "زمان این برنامه گذشته — قابل حذف نیست" : undefined}
               className={cn(
                 "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
                 task.isPast ? "cursor-not-allowed text-dash-muted opacity-45" : "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"

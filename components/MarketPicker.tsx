@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { TICKER_CATALOG, CATEGORY_LABELS, MAX_TICKER_SYMBOLS, TickerSymbol } from "@/lib/tickerSymbols";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
-// انتخاب‌گر بازارها — هم توی پنل کاربری (مدیریت همیشگی) و هم توی خودِ
+// انتخاب‌گر بازارها — هم توی پنل کاربری (مدیریت همیشگی) و هم توی خود
 // صفحه‌ی ترید (فقط دفعه‌ی اول، برای onboarding) استفاده می‌شه. کاتالوگ حدود
 // ۳۶۰ نماده، پس یک جستجو + گروه‌بندی بر اساس دسته لازم بود، نه یک لیست تخت.
 export function MarketPicker({
@@ -71,9 +71,9 @@ export function MarketPicker({
                     </div>
                     <div className={`task-name${on ? " done" : ""}`}>
                       {s.label}
-                      {/* برای فارکس، label و symbol (مثلاً EUR/USD و EURUSD=X) عملاً همون
-                          حروف رو تکرار می‌کنن — فقط برای بقیه‌ی دسته‌ها که واقعاً اطلاعات
-                          اضافه می‌ده (مثلاً «بیت‌کوین» در برابر BTC-USD) نماد رو هم نشون بده */}
+                      {/* برای فارکس، label و symbol (مثلا EUR/USD و EURUSD=X) عملا همون
+                          حروف رو تکرار می‌کنن — فقط برای بقیه‌ی دسته‌ها که واقعا اطلاعات
+                          اضافه می‌ده (مثلا «بیت‌کوین» در برابر BTC-USD) نماد رو هم نشون بده */}
                       {s.category !== "forex" && (
                         <span className="mono" style={{ color: "var(--muted2)", fontSize: 11 }}> {s.symbol}</span>
                       )}

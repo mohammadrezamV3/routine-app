@@ -15,16 +15,16 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-// دقیقاً همون ساختارِ ردیف‌هایِ AddProgramForm — هر ردیف می‌تونه چند روزِ
-// هم‌زمان داشته باشه (فیکسِ باگِ «توی ویرایش نمی‌شه چند روز انتخاب کرد»).
+// دقیقا همون ساختار ردیف‌های AddProgramForm — هر ردیف می‌تونه چند روز
+// هم‌زمان داشته باشه (فیکس باگ «توی ویرایش نمی‌شه چند روز انتخاب کرد»).
 type EditRow = { jsDays: number[]; start: string; end: string };
 
 const now = new Date();
 
-// این فرم دقیقاً همون دیزاینِ AddProgramForm رو داره (همون کلاس‌های
-// liquid-glass-form / add-program-glass، همون بلاب‌های ثابت، همون منطقِ
-// چندردیفی/چندروزه) — چون خودِ محصول باید حسِ یکسان بده، فقط برای
-// ویرایشِ یک برنامه‌ی موجود به‌جای افزودنِ یک برنامه‌ی تازه.
+// این فرم دقیقا همون دیزاین AddProgramForm رو داره (همون کلاس‌های
+// liquid-glass-form / add-program-glass، همون بلاب‌های ثابت، همون منطق
+// چندردیفی/چندروزه) — چون خود محصول باید حس یکسان بده، فقط برای
+// ویرایش یک برنامه‌ی موجود به‌جای افزودن یک برنامه‌ی تازه.
 export function EditOccurrenceForm({
   name,
   occ,
@@ -78,7 +78,7 @@ export function EditOccurrenceForm({
       if (!r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
-      // ساعتِ پایان هیچ‌وقت نباید زودتر (یا برابرِ) ساعتِ شروع باشه
+      // ساعت پایان هیچ‌وقت نباید زودتر (یا برابر) ساعت شروع باشه
       if (!e.start && !e.end) {
         const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
         const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
@@ -105,7 +105,7 @@ export function EditOccurrenceForm({
           conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
           break outer;
         }
-        // occ.id excluded تا خودِ همون occurrence‌ای که داریم ویرایشش می‌کنیم
+        // occ.id excluded تا خود همون occurrence‌ای که داریم ویرایشش می‌کنیم
         // با خودش تداخل حساب نشه.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
         if (!conflict) {

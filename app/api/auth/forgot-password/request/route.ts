@@ -10,8 +10,8 @@ function hashCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-// شناسه می‌تونه شماره‌همراه یا ایمیل باشه — یک باکسِ واحد، تشخیصِ نوعش با
-// همون regexهای مشترکِ lib/validate. اگه هیچ‌کدوم نبود، شناسه نامعتبره.
+// شناسه می‌تونه شماره‌همراه یا ایمیل باشه — یک باکس واحد، تشخیص نوعش با
+// همون regexهای مشترک lib/validate. اگه هیچ‌کدوم نبود، شناسه نامعتبره.
 function resolveIdentifier(raw: string): { kind: "phone" | "email"; value: string } | null {
   const trimmed = raw.trim();
   if (isValidIranPhone(trimmed)) return { kind: "phone", value: trimmed };
@@ -30,16 +30,16 @@ export async function POST(req: NextRequest) {
   }
   const { kind, value } = identifier;
 
-  // محدودیت روی IP و روی خودِ شناسه — جلوگیری از پیامک/ایمیل‌بمبارون
+  // محدودیت روی IP و روی خود شناسه — جلوگیری از پیامک/ایمیل‌بمبارون
   if (!checkRateLimit(`fp-req-ip:${ip}`, 8, 10 * 60 * 1000) || !checkRateLimit(`fp-req-id:${value}`, 3, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
-  // کولداونِ ثابتِ ۲ دقیقه‌ای — چک می‌شه حتی اگه شناسه حساب نداشته باشه، وگرنه
-  // خودِ کدِ ۴۲۹ (که فقط موقعِ عبور از این کولداون برمی‌گرده) لو می‌داد که
-  // شناسه‌ی موردنظر قبلاً یه درخواستِ موفق داشته یا نه.
+  // کولداون ثابت ۲ دقیقه‌ای — چک می‌شه حتی اگه شناسه حساب نداشته باشه، وگرنه
+  // خود کد ۴۲۹ (که فقط موقع عبور از این کولداون برمی‌گرده) لو می‌داد که
+  // شناسه‌ی موردنظر قبلا یه درخواست موفق داشته یا نه.
   const cooldownOk = checkRateLimit(`fp-req-cooldown:${value}`, 1, 2 * 60 * 1000);
   if (!cooldownOk) {
-    return NextResponse.json({ error: "لطفاً ۲ دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: "لطفا ۲ دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
   }
 
   const user = await prisma.user.findFirst({ where: kind === "phone" ? { phone: value } : { email: value } });
@@ -54,12 +54,12 @@ export async function POST(req: NextRequest) {
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       },
     });
-    // ارسالِ واقعیِ پیامک/ایمیل عمداً await نمی‌شه — روی خطوطِ پرترافیکِ
-    // ملی‌پیامک/SMTP این می‌تونه چند ثانیه طول بکشه و کاربر رو پشتِ اسپینر
+    // ارسال واقعی پیامک/ایمیل عمدا await نمی‌شه — روی خطوط پرترافیک
+    // ملی‌پیامک/SMTP این می‌تونه چند ثانیه طول بکشه و کاربر رو پشت اسپینر
     // نگه می‌داشت، درحالی‌که کد از قبل توی دیتابیس ذخیره شده و صفحه‌ی بعدی
-    // (تاییدِ کد) فوراً قابلِ استفاده‌ست. چون این پروژه روی یه Node process
-    // همیشه‌روشن (Docker) اجرا می‌شه نه سرورلس، این Promiseِ رهاشده بعدِ
-    // return هم کامل اجرا می‌شه (خودِ sendOtpSms/sendOtpEmail هم هیچ‌وقت
+    // (تایید کد) فورا قابل استفاده‌ست. چون این پروژه روی یه Node process
+    // همیشه‌روشن (Docker) اجرا می‌شه نه سرورلس، این Promise رهاشده بعد
+    // return هم کامل اجرا می‌شه (خود sendOtpSms/sendOtpEmail هم هیچ‌وقت
     // throw نمی‌کنن، خطاهاشون رو داخلی catch و لاگ می‌کنن).
     void (kind === "phone" ? sendOtpSms(value, code) : sendOtpEmail(value, code));
   }

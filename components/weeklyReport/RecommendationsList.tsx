@@ -5,7 +5,7 @@ import { Target, Check, X, Pencil } from "lucide-react";
 
 type Recommendation = { title: string; description: string; priority: string; domain: string | null };
 
-const PRIORITY_LABEL: Record<string, string> = { high: "اولویتِ بالا", medium: "اولویتِ متوسط", low: "اولویتِ کم" };
+const PRIORITY_LABEL: Record<string, string> = { high: "اولویت بالا", medium: "اولویت متوسط", low: "اولویت کم" };
 
 function RecCard({
   rec, weekStart, onAccepted,
@@ -41,7 +41,7 @@ function RecCard({
   return (
     <div className="wr-rec-card">
       <div className="wr-rec-head">
-        <span className="wr-rec-title">{state === "editing" ? "ویرایشِ هدف" : title}</span>
+        <span className="wr-rec-title">{state === "editing" ? "ویرایش هدف" : title}</span>
         <span className={`wr-rec-priority ${rec.priority}`}>{PRIORITY_LABEL[rec.priority] || rec.priority}</span>
       </div>
 
@@ -57,12 +57,12 @@ function RecCard({
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>{error}</div>}
 
       {state === "accepted" ? (
-        <div className="wr-rec-accepted"><Check size={13} /> به‌عنوانِ هدفِ این هفته ثبت شد</div>
+        <div className="wr-rec-accepted"><Check size={13} /> به‌عنوان هدف این هفته ثبت شد</div>
       ) : (
         <div className="wr-rec-actions">
           {state === "editing" ? (
             <button type="button" className="wr-rec-action-btn primary" onClick={() => accept(true)} disabled={saving || !title.trim() || !description.trim()}>
-              {saving ? "در حال ثبت…" : "ثبتِ نسخه‌ی ویرایش‌شده"}
+              {saving ? "در حال ثبت…" : "ثبت نسخه‌ی ویرایش‌شده"}
             </button>
           ) : (
             <>
@@ -77,13 +77,13 @@ function RecCard({
   );
 }
 
-// پیشنهادهایِ AI برای هفته‌ی بعد — فقط با کلیکِ قبول/ویرایش هدف ثبت می‌شه
-// (بندِ ۳۶: AI مستقیم هدف فعال نمی‌کنه).
+// پیشنهادهای AI برای هفته‌ی بعد — فقط با کلیک قبول/ویرایش هدف ثبت می‌شه
+// (بند ۳۶: AI مستقیم هدف فعال نمی‌کنه).
 export function RecommendationsList({ items, weekStart }: { items: Recommendation[] | null; weekStart: string }) {
   if (!items || items.length === 0) return null;
   return (
     <div className="wr-block">
-      <div className="wr-block-title"><Target size={15} /> تمرکزِ هفته‌ی آینده</div>
+      <div className="wr-block-title"><Target size={15} /> تمرکز هفته‌ی آینده</div>
       <div className="wr-rec-list">
         {items.map((r, i) => <RecCard key={i} rec={r} weekStart={weekStart} onAccepted={() => {}} />)}
       </div>

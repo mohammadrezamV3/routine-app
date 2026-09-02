@@ -14,7 +14,7 @@ import {
   duplicateNotepadPage, fetchNotepadPage, fetchNotepadPages, updateNotepadPage,
 } from "@/lib/notepad";
 
-// کارتِ Recentsِ صفحه‌ی Home — کاورِ عکس اگه باشه، وگرنه یه کاشیِ سادهِ آیکونی
+// کارت Recents صفحه‌ی Home — کاور عکس اگه باشه، وگرنه یه کاشی ساده آیکونی
 function NotepadHomeCard({ page, onNavigate }: { page: NotepadPage; onNavigate: (id: string) => void }) {
   return (
     <button type="button" className="notepad-home-card" onClick={() => onNavigate(page.id)}>
@@ -23,7 +23,7 @@ function NotepadHomeCard({ page, onNavigate }: { page: NotepadPage; onNavigate: 
       </div>
       <div className="notepad-home-card-foot">
         <span className="notepad-home-card-icon">{page.icon || "📄"}</span>
-        <span className="notepad-home-card-title">{page.title || "بدونِ عنوان"}</span>
+        <span className="notepad-home-card-title">{page.title || "بدون عنوان"}</span>
       </div>
     </button>
   );
@@ -60,7 +60,7 @@ function NotepadHome({ pages, onNavigate, onCreatePage }: { pages: NotepadPage[]
             roots.map((p) => (
               <button key={p.id} type="button" className="notepad-home-list-row" onClick={() => onNavigate(p.id)}>
                 <span className="notepad-tree-icon">{p.icon || "📄"}</span>
-                <span className="notepad-tree-title">{p.title || "بدونِ عنوان"}</span>
+                <span className="notepad-tree-title">{p.title || "بدون عنوان"}</span>
               </button>
             ))
           )}

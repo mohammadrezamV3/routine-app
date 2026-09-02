@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const planId = req.nextUrl.searchParams.get("planId");
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
-  if (!planId || !date) return NextResponse.json({ error: "planId و تاریخِ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
+  if (!planId || !date) return NextResponse.json({ error: "planId و تاریخ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
 
   const log = await prisma.exerciseLog.findUnique({
     where: { userId_planId_date: { userId, planId, date } },
@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
 
   const date = parseIsoDate(parsed.body?.date);
   if (!planId || typeof planId !== "string" || !date) {
-    return NextResponse.json({ error: "planId و تاریخِ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
+    return NextResponse.json({ error: "planId و تاریخ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
   }
 
-  // سقفِ تعداد/طول — این ستون Jsonه و بدونِ سقف هر آرایه‌ای عیناً ذخیره می‌شد
+  // سقف تعداد/طول — این ستون Jsonه و بدون سقف هر آرایه‌ای عینا ذخیره می‌شد
   const items = Array.isArray(completedItems)
     ? completedItems.filter((x) => typeof x === "string").slice(0, 500).map((x: string) => x.slice(0, 200))
     : undefined;

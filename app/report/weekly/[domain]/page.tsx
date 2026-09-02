@@ -21,10 +21,10 @@ type DomainDetailResponse = {
 
 const RAW_LABELS: Record<Domain, Record<string, string>> = {
   routine: { daysWithData: "روزهای دارای داده" },
-  fitness: { completedSessions: "جلساتِ انجام‌شده", expectedSessions: "جلساتِ برنامه‌ریزی‌شده" },
-  trading: { totalTrades: "تعدادِ معاملات", totalClosed: "معاملاتِ بسته‌شده", totalWins: "معاملاتِ سودده" },
-  learning: { totalStations: "کلِ مراحلِ رودمپ‌ها", doneStations: "مراحلِ انجام‌شده" },
-  nutrition: { avgKcal: "میانگینِ کالریِ روزانه", targetKcal: "هدفِ روزانه", loggingDays: "روزهای ثبت‌شده" },
+  fitness: { completedSessions: "جلسات انجام‌شده", expectedSessions: "جلسات برنامه‌ریزی‌شده" },
+  trading: { totalTrades: "تعداد معاملات", totalClosed: "معاملات بسته‌شده", totalWins: "معاملات سودده" },
+  learning: { totalStations: "کل مراحل رودمپ‌ها", doneStations: "مراحل انجام‌شده" },
+  nutrition: { avgKcal: "میانگین کالری روزانه", targetKcal: "هدف روزانه", loggingDays: "روزهای ثبت‌شده" },
 };
 
 function GateModuleContent() {
@@ -53,8 +53,8 @@ function GateModuleContent() {
 
   return (
     <section className="wr-page">
-      <Link href="/report/weekly" className="wr-back-link"><ChevronRight size={16} /> بازگشت به گزارشِ هفتگی</Link>
-      <h1>گزارشِ {DOMAIN_LABELS_FA[domain]}</h1>
+      <Link href="/report/weekly" className="wr-back-link"><ChevronRight size={16} /> بازگشت به گزارش هفتگی</Link>
+      <h1>گزارش {DOMAIN_LABELS_FA[domain]}</h1>
 
       {error && <div className="wr-error-box">{error}</div>}
 
@@ -77,7 +77,7 @@ function GateModuleContent() {
             </div>
             <div className="wr-domain-compare-row">
               <span>هفته‌ی قبل: {data.comparison.previousWeek ?? "—"}</span>
-              <span>میانگینِ ۴هفته: {data.comparison.avg4Week ?? "—"}</span>
+              <span>میانگین ۴هفته: {data.comparison.avg4Week ?? "—"}</span>
             </div>
           </div>
 
@@ -113,7 +113,7 @@ export default function WeeklyDomainDetailPage() {
   ) : (
     <section className="wr-page">
       <h1>گزارش هفتگی</h1>
-      <AuthGate message="برای دیدنِ گزارشِ هفتگی وارد شوید" />
+      <AuthGate message="برای دیدن گزارش هفتگی وارد شوید" />
     </section>
   );
 }

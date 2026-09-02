@@ -4,10 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { resolveDiscountCode } from "@/lib/discountValidation";
 
-// POST /api/subscription/discount-preview → دکمه‌ی «اعمال»ِ فیلدِ کدِ تخفیفِ
-// چک‌اوت این‌جا رو صدا می‌زنه تا قبل از رفتن به درگاه، درصدِ تخفیف رو
-// پیش‌نمایش بده. هیچ عارضه‌ی جانبی‌ای (مثل مصرفِ کدِ رفرال) نداره — فقط
-// اعتبارسنجی، نه اعمالِ نهایی؛ اعمالِ واقعی موقعِ خودِ پرداخت
+// POST /api/subscription/discount-preview → دکمه‌ی «اعمال» فیلد کد تخفیف
+// چک‌اوت این‌جا رو صدا می‌زنه تا قبل از رفتن به درگاه، درصد تخفیف رو
+// پیش‌نمایش بده. هیچ عارضه‌ی جانبی‌ای (مثل مصرف کد رفرال) نداره — فقط
+// اعتبارسنجی، نه اعمال نهایی؛ اعمال واقعی موقع خود پرداخت
 // (app/api/subscription/checkout) اتفاق می‌افته.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ percentOff: resolution.percent });
   } catch (e: any) {
     if (e?.code?.startsWith?.("P")) {
-      return NextResponse.json({ error: "خطای داخلی سرور — لطفاً بعداً دوباره امتحان کن" }, { status: 500 });
+      return NextResponse.json({ error: "خطای داخلی سرور — لطفا بعدا دوباره امتحان کن" }, { status: 500 });
     }
     return NextResponse.json({ error: "خطایی پیش آمد — دوباره امتحان کن" }, { status: 502 });
   }

@@ -25,9 +25,9 @@ function countdownText(occursAt: string, now: number): string {
   return `${faNum(days)} روز دیگر`;
 }
 
-// صفحه‌ی اختصاصیِ یک چک‌لیست — دقیقاً هم‌الگویِ صفحه‌ی یک حساب: انتخاب از
-// فهرست، نه پاپ‌آپ. این‌جا آیتم‌ها واقعاً تیک می‌خورند، معامله شروع می‌شود، و
-// زیرش اخبارِ اقتصادیِ منطبق با ترجیحِ سطحِ تأثیرِ کاربر (تنظیماتِ ترید) با
+// صفحه‌ی اختصاصی یک چک‌لیست — دقیقا هم‌الگوی صفحه‌ی یک حساب: انتخاب از
+// فهرست، نه پاپ‌آپ. این‌جا آیتم‌ها واقعا تیک می‌خورند، معامله شروع می‌شود، و
+// زیرش اخبار اقتصادی منطبق با ترجیح سطح تأثیر کاربر (تنظیمات ترید) با
 // شمارش‌معکوس نشان داده می‌شود.
 export function TradeChecklistDetailView({ checklistId }: { checklistId: string }) {
   const [checklist, setChecklist] = useState<Checklist | null>(null);
@@ -69,8 +69,8 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
 
   useEffect(() => { load(); }, [load]);
 
-  // شمارش‌معکوس هر دقیقه به‌روز می‌شود — دقتِ ثانیه‌ای برای یک رویدادِ
-  // اقتصادی که معمولاً ساعت‌ها/روزها فاصله دارد لازم نیست.
+  // شمارش‌معکوس هر دقیقه به‌روز می‌شود — دقت ثانیه‌ای برای یک رویداد
+  // اقتصادی که معمولا ساعت‌ها/روزها فاصله دارد لازم نیست.
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(t);
@@ -136,12 +136,12 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
         </button>
       </div>
 
-      <div className="domain-sub" style={{ margin: "26px 0 10px" }}>اخبار پیشِ‌رو</div>
+      <div className="domain-sub" style={{ margin: "26px 0 10px" }}>اخبار پیش‌رو</div>
       {newsLoading && <PanelSkeleton />}
       {!newsLoading && !news.length && (
         <div className="item-line empty">
           <CalendarClock size={15} style={{ verticalAlign: "-2px", marginLeft: 6 }} />
-          خبرِ منطبق با سطحِ تأثیرِ انتخابی‌ات در روزهای پیشِ‌رو نیست.
+          خبر منطبق با سطح تأثیر انتخابی‌ات در روزهای پیش‌رو نیست.
         </div>
       )}
       {!newsLoading && !!news.length && (

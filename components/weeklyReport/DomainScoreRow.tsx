@@ -20,8 +20,8 @@ function TrendBadge({ current, previous }: { current: number; previous: number |
   return <span className={`wr-trend ${delta > 0 ? "up" : "down"}`}>{delta > 0 ? "▲" : "▼"} {Math.abs(delta)}٪</span>;
 }
 
-// ردیفِ امتیازِ یک دامنه — کلیک‌پذیر به صفحه‌ی جزئیاتش. اگه ماژول برای
-// کاربر فعال نیست، اصلاً نمایش داده نمی‌شه (نه صفر، نه خاکستری).
+// ردیف امتیاز یک دامنه — کلیک‌پذیر به صفحه‌ی جزئیاتش. اگه ماژول برای
+// کاربر فعال نیست، اصلا نمایش داده نمی‌شه (نه صفر، نه خاکستری).
 export function DomainScoreRow({ data, href }: { data: DomainScoreRowData; href: string }) {
   if (!data.active) return null;
   return (
@@ -30,7 +30,7 @@ export function DomainScoreRow({ data, href }: { data: DomainScoreRowData; href:
         <span className="wr-domain-label">{DOMAIN_LABELS_FA[data.domain]}</span>
         {data.hasData && data.score != null && data.baseline != null && (
           <span className="wr-domain-baseline">
-            {data.score === data.baseline ? "برابرِ میانگینِ شخصی‌ات" : data.score > data.baseline ? `${data.score - data.baseline}٪ بالاترِ میانگینِ شخصی‌ات` : `${data.baseline - data.score}٪ پایین‌ترِ میانگینِ شخصی‌ات`}
+            {data.score === data.baseline ? "برابر میانگین شخصی‌ات" : data.score > data.baseline ? `${data.score - data.baseline}٪ بالاتر میانگین شخصی‌ات` : `${data.baseline - data.score}٪ پایین‌تر میانگین شخصی‌ات`}
           </span>
         )}
       </span>

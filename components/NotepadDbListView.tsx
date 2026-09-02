@@ -4,8 +4,8 @@ import { Plus, Trash2 } from "lucide-react";
 import { DatabaseProperty, DatabaseRecord, RecordValue } from "@/lib/notepadDb";
 import { NotepadDbCell } from "./NotepadDbCell";
 
-// لیست — یه ردیفِ ساده به‌ازای هر رکورد: عنوان (اولین property) + یه
-// propertyِ دومِ کوچیک در سمتِ دیگه (اگه وجود داشته باشه)
+// لیست — یه ردیف ساده به‌ازای هر رکورد: عنوان (اولین property) + یه
+// property دوم کوچیک در سمت دیگه (اگه وجود داشته باشه)
 export function NotepadDbListView({
   properties,
   hiddenPropertyIds,
@@ -60,11 +60,11 @@ export function NotepadDbListView({
               />
             </div>
           )}
-          <button type="button" className="notepad-db-list-row-del" onClick={() => onDeleteRecord(rec.id)} aria-label="حذفِ رکورد"><Trash2 size={12} /></button>
+          <button type="button" className="notepad-db-list-row-del" onClick={() => onDeleteRecord(rec.id)} aria-label="حذف رکورد"><Trash2 size={12} /></button>
         </div>
       ))}
       <button type="button" className="notepad-db-add-row-btn" onClick={onCreateRecord}>
-        <Plus size={13} /> ردیفِ جدید
+        <Plus size={13} /> ردیف جدید
       </button>
     </div>
   );

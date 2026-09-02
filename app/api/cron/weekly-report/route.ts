@@ -6,17 +6,17 @@ import { sendPushToUser } from "@/lib/webPush";
 import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
 import { logError } from "@/lib/errorLog";
 
-// POST /api/cron/weekly-report — نه چیزی که خودِ کاربر/کلاینت صداش بزنه،
-// یه crontabِ بیرونی (هر شنبه ساعت ۹، طبقِ راهنمای دیپلوی — نگاه کن به
-// deploy/cron.example) این‌جا رو می‌زنه. دقیقاً هم‌الگوی
-// app/api/push/send-reminders/route.ts: پشتِ CRON_SECRET قفله.
+// POST /api/cron/weekly-report — نه چیزی که خود کاربر/کلاینت صداش بزنه،
+// یه crontab بیرونی (هر شنبه ساعت ۹، طبق راهنمای دیپلوی — نگاه کن به
+// deploy/cron.example) این‌جا رو می‌زنه. دقیقا هم‌الگوی
+// app/api/push/send-reminders/route.ts: پشت CRON_SECRET قفله.
 //
 // weekOffset=-1 یعنی هفته‌ای که همین الان تموم شده (اگه امروز شنبه‌ست،
 // هفته‌ی جاری تازه از امروز شروع شده — هفته‌ی قبل، شنبه‌تا‌جمعه‌ی گذشته،
 // همونیه که باید نهایی و تحویل داده بشه).
 //
-// همه‌ی کاربرها با یه فراخوانِ AI (اگه داده‌ی کافی داشته باشن) generate
-// می‌شن — برای جلوگیری از هجومِ هم‌زمان به گیت‌ویِ AI، با concurrency
+// همه‌ی کاربرها با یه فراخوان AI (اگه داده‌ی کافی داشته باشن) generate
+// می‌شن — برای جلوگیری از هجوم هم‌زمان به گیت‌وی AI، با concurrency
 // محدود (نه Promise.all بی‌سقف) پردازش می‌شن.
 const CONCURRENCY = 3;
 
@@ -51,16 +51,16 @@ export async function POST(req: NextRequest) {
       succeeded++;
       try {
         await sendPushToUser(user.id, {
-          title: "گزارشِ هفتگی‌ات آماده‌ست",
-          body: report.overallScore != null ? `امتیازِ هفته‌ی گذشته‌ات: ${report.overallScore} از ۱۰۰` : "گزارشِ هفته‌ی گذشته‌ات آماده‌ست.",
+          title: "گزارش هفتگی‌ات آماده‌ست",
+          body: report.overallScore != null ? `امتیاز هفته‌ی گذشته‌ات: ${report.overallScore} از ۱۰۰` : "گزارش هفته‌ی گذشته‌ات آماده‌ست.",
           url: "/report/weekly?offset=-1",
         });
       } catch {
-        // Web Push اختیاریه (مثلاً VAPID تنظیم نشده) — نباید کلِ generate رو fail حساب کنه
+        // Web Push اختیاریه (مثلا VAPID تنظیم نشده) — نباید کل generate رو fail حساب کنه
       }
     } catch (err: any) {
       failed++;
-      logError("cron-weekly-report", `تولیدِ گزارشِ هفتگیِ کاربر شکست خورد: ${err?.message || err}`, { context: { userId: user.id } });
+      logError("cron-weekly-report", `تولید گزارش هفتگی کاربر شکست خورد: ${err?.message || err}`, { context: { userId: user.id } });
     }
   });
 

@@ -17,12 +17,12 @@ export async function GET() {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  // ساختِ برنامه واقعاً AI صدا می‌زند — هزینه‌ی پول دارد و یک اتصالِ سرور را
-  // چند ده ثانیه اشغال می‌کند. گیتِ ماژول فقط می‌گوید «مشترک است»، نه
-  // «نمی‌تواند صد بار پشت‌سرهم بزند». سقفِ روزانه همان کاری را می‌کند که
-  // برای refreshِ گزارش هفتگی هم کردیم.
+  // ساخت برنامه واقعا AI صدا می‌زند — هزینه‌ی پول دارد و یک اتصال سرور را
+  // چند ده ثانیه اشغال می‌کند. گیت ماژول فقط می‌گوید «مشترک است»، نه
+  // «نمی‌تواند صد بار پشت‌سرهم بزند». سقف روزانه همان کاری را می‌کند که
+  // برای refresh گزارش هفتگی هم کردیم.
   if (!guard.isSuperAdmin && !checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "تعداد ساختِ برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: "تعداد ساخت برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
   }
 
   const plan = await prisma.exercisePlan.findFirst({
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "توضیحات خیلی طولانی است" }, { status: 400 });
   }
   if (limitationDetails !== undefined && (typeof limitationDetails !== "string" || limitationDetails.length > MAX_DESCRIPTION_LEN)) {
-    return NextResponse.json({ error: "توضیحِ محدودیت خیلی طولانی است" }, { status: 400 });
+    return NextResponse.json({ error: "توضیح محدودیت خیلی طولانی است" }, { status: 400 });
   }
   if (!rulesAccepted) {
     return NextResponse.json({ error: "قبول‌کردن قوانین الزامی است" }, { status: 400 });
@@ -100,8 +100,8 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     // بدون کلید API یا خطای موقت سرویس — به قالب ایستای از‌پیش‌طراحی‌شده برمی‌گردیم،
     // نه اینکه کل onboarding رو خراب کنیم. ولی خطای واقعی رو لاگ می‌کنیم چون
-    // قبلاً اینجا کاملاً بی‌صدا قورت داده می‌شد — روی سرورِ واقعی هیچ‌جوره
-    // نمی‌شد فهمید مشکل env نتنظیم‌شده‌ست یا خطای شبکه یا چیزِ دیگه.
+    // قبلا اینجا کاملا بی‌صدا قورت داده می‌شد — روی سرور واقعی هیچ‌جوره
+    // نمی‌شد فهمید مشکل env نتنظیم‌شده‌ست یا خطای شبکه یا چیز دیگه.
     console.error("[exercise/plan] AI generation failed, falling back to static template:", err);
     planData = getExercisePlan(GOAL_FALLBACK_MAP[goal], level, !!hasPhysicalLimitation, uniqueDays);
   }

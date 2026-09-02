@@ -13,12 +13,12 @@ import { invalidateStorageCache } from "@/lib/storage";
 import { invalidateAccountCache } from "@/lib/accountCache";
 import { clearAuthHintCookie } from "@/lib/preload";
 
-// پنل کاربریِ Arion — صفحه‌ی مستقلِ /account (نه مودال، نه داشبورد). مسیرها:
-//   /account                    → منوی بخش‌ها (فقط لیستِ زبانه‌ها، بدونِ محتوا)
+// پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
+//   /account                    → منوی بخش‌ها (فقط لیست زبانه‌ها، بدون محتوا)
 //   /account/profile            → پروفایل
-//   /account/general            → «تنظیمات» — تنظیماتِ آریون + تنظیماتِ روتین و
-//                                  ترید، همه یک‌جا و بدونِ ناوبریِ تودرتو
-//                                  (تمِ نمایش عمداً این‌جا نیست — همون سوییچِ
+//   /account/general            → «تنظیمات» — تنظیمات آریون + تنظیمات روتین و
+//                                  ترید، همه یک‌جا و بدون ناوبری تودرتو
+//                                  (تم نمایش عمدا این‌جا نیست — همون سوییچ
 //                                  بالای منوی همبرگری کفایت می‌کنه)
 //   /account/subscription       → اشتراک
 //   /account/security           → امنیت
@@ -34,10 +34,10 @@ export const ACCOUNT_SECTIONS: { href: string; label: string; icon: React.ReactN
 ];
 const SECTIONS = ACCOUNT_SECTIONS;
 
-// انیمیشنِ ورودِ صفحه‌های پنل. عمداً بدونِ فازِ exit و بدونِ `mode="wait"`:
+// انیمیشن ورود صفحه‌های پنل. عمدا بدون فاز exit و بدون `mode="wait"`:
 // با اون‌ها هر کلیک اول باید ۰.۲۲ ثانیه صبر می‌کرد تا صفحه‌ی قبلی محو بشه و
 // تازه بعدش صفحه‌ی جدید می‌اومد — همون «کندی/گیرکردن»ی که گزارش شد. حالا
-// صفحه‌ی جدید بلافاصله میاد و فقط یک fadeِ کوتاه می‌خوره.
+// صفحه‌ی جدید بلافاصله میاد و فقط یک fade کوتاه می‌خوره.
 const pageTransition = {
   initial: { opacity: 0, y: 6 },
   animate: { opacity: 1, y: 0 },
@@ -49,8 +49,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const { status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // با هر تغییرِ مسیر (چه با کلیک روی یه تایتل، چه از هرجای دیگه) منوی
-  // همبرگریِ موبایل باید بسته بشه — وگرنه باز می‌مونه رو صفحه‌ی جدید.
+  // با هر تغییر مسیر (چه با کلیک روی یه تایتل، چه از هرجای دیگه) منوی
+  // همبرگری موبایل باید بسته بشه — وگرنه باز می‌مونه رو صفحه‌ی جدید.
   useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
 
   if (status === "loading") return null;
@@ -71,8 +71,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     signOut({ callbackUrl: "/" });
   }
 
-  // توی صفحه‌ی اولِ پنل (/account) خودِ فهرستِ بخش‌ها به‌صورت کارت پایینِ
-  // صفحه هست، پس منوی همبرگریِ بالای صفحه فقط یک تکرارِ بی‌فایده بود.
+  // توی صفحه‌ی اول پنل (/account) خود فهرست بخش‌ها به‌صورت کارت پایین
+  // صفحه هست، پس منوی همبرگری بالای صفحه فقط یک تکرار بی‌فایده بود.
   const isIndex = pathname === "/account" || pathname === "/account/";
 
   return (

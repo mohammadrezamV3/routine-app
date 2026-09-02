@@ -7,9 +7,9 @@ import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { AccountBackButton } from "@/components/AccountBackButton";
 
 const FAQ = [
-  { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخشِ «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
-  { q: "چطور رمز عبورم رو عوض کنم؟", a: "از بخشِ «امنیت» توی همین پنل، رمزِ فعلی و رمزِ جدید رو وارد کن." },
-  { q: "اگه با گوگل ثبت‌نام کردم چطور دوستام پیدام کنن؟", a: "از بخشِ «پروفایل» یه یوزرنیم برای خودت تنظیم کن." },
+  { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخش «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
+  { q: "چطور رمز عبورم رو عوض کنم؟", a: "از بخش «امنیت» توی همین پنل، رمز فعلی و رمز جدید رو وارد کن." },
+  { q: "اگه با گوگل ثبت‌نام کردم چطور دوستام پیدام کنن؟", a: "از بخش «پروفایل» یه یوزرنیم برای خودت تنظیم کن." },
 ];
 
 export default function SupportPage() {
@@ -33,7 +33,7 @@ export default function SupportPage() {
           <span className="account-row2-icon"><MessageCircleWarning size={16} /></span>
           <span className="account-row2-body">
             <span className="account-row2-label">گزارش مشکل</span>
-            <span className="account-row2-desc">ارسالِ ایمیل برای گزارشِ باگ یا مشکل</span>
+            <span className="account-row2-desc">ارسال ایمیل برای گزارش باگ یا مشکل</span>
           </span>
         </a>
         <a href={SOCIAL.telegram.url} target="_blank" rel="me noopener noreferrer" className="account-row2">

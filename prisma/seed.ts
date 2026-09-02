@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-// جدول قیمت‌گذاری دقیقاً همان چیزی‌ست که در طراحی مدل کسب‌وکار توافق شد.
+// جدول قیمت‌گذاری دقیقا همان چیزی‌ست که در طراحی مدل کسب‌وکار توافق شد.
 // واحدها: ایران به ریال (تومان × ۱۰)، بین‌المللی به سنت (دلار × ۱۰۰) —
 // تا محاسبات همیشه با عدد صحیح انجام شود و خطای اعشار نداشته باشیم.
 const PLANS: {
@@ -143,17 +143,17 @@ async function main() {
   // دسترسی نامحدود به همه ماژول‌ها، بدون نیاز به اشتراک یا انقضا.
   //
   // امنیت: نام‌کاربری و رمز از env خونده می‌شن، نه هاردکد داخل سورس — چون
-  // این فایل توی گیت (و روی گیت‌هاب) هست و هر رمزِ نوشته‌شده اینجا یعنی
-  // هر کسی که سورس رو ببینه، رمزِ ادمینِ پروداکشن رو داره. اگه این دو تا
-  // env ست نشده باشن، ساختِ ادمین رو کامل رد می‌کنیم (fail-safe) به‌جای
-  // این‌که به یه رمزِ پیش‌فرضِ ضعیف برگردیم.
+  // این فایل توی گیت (و روی گیت‌هاب) هست و هر رمز نوشته‌شده اینجا یعنی
+  // هر کسی که سورس رو ببینه، رمز ادمین پروداکشن رو داره. اگه این دو تا
+  // env ست نشده باشن، ساخت ادمین رو کامل رد می‌کنیم (fail-safe) به‌جای
+  // این‌که به یه رمز پیش‌فرض ضعیف برگردیم.
   const adminUsername = process.env.SUPERADMIN_USERNAME;
   const adminPassword = process.env.SUPERADMIN_PASSWORD;
 
   if (!adminUsername || !adminPassword) {
     console.warn(
-      "[seed] SUPERADMIN_USERNAME/SUPERADMIN_PASSWORD تنظیم نشده — ساختِ ادمین رد شد. " +
-      "برای ساختِ سوپریوزر، این دو env رو ست کن و دوباره seed بزن."
+      "[seed] SUPERADMIN_USERNAME/SUPERADMIN_PASSWORD تنظیم نشده — ساخت ادمین رد شد. " +
+      "برای ساخت سوپریوزر، این دو env رو ست کن و دوباره seed بزن."
     );
     console.log(`Seeded ${PLANS.length} plans across both markets. (no super-admin created)`);
     return;
@@ -170,8 +170,8 @@ async function main() {
       market: Market.IRAN,
       isSuperAdmin: true,
     },
-    // عمداً passwordHash رو توی update نمی‌ذاریم: اگه ادمین از قبل ساخته شده و
-    // رمزشو عوض کرده، یه seedِ دوباره نباید رمزشو به مقدار env برگردونه/ریست کنه.
+    // عمدا passwordHash رو توی update نمی‌ذاریم: اگه ادمین از قبل ساخته شده و
+    // رمزشو عوض کرده، یه seed دوباره نباید رمزشو به مقدار env برگردونه/ریست کنه.
     update: {
       isSuperAdmin: true,
     },

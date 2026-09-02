@@ -12,11 +12,11 @@ import { hashSecret, normalizeMtTrades } from "@/lib/metatrader";
 //   { balance, equity, currency, trades: [...] }
 //
 // احراز هویت فقط با توکن است (نه سشن). چون هر درخواست مستقیم روی دیتابیس
-// چک می‌شود، ابطالِ توکن از پنل بلافاصله اثر می‌کند — برخلافِ یک JWTِ
+// چک می‌شود، ابطال توکن از پنل بلافاصله اثر می‌کند — برخلاف یک JWT
 // امضاشده که تا انقضایش معتبر می‌ماند.
 //
-// معاملات با کلیدِ یکتای (accountId, externalId) upsert می‌شوند، پس اجرای
-// دوباره‌ی sync (که در EA کاملاً عادی است) هیچ‌وقت معامله‌ی تکراری نمی‌سازد.
+// معاملات با کلید یکتای (accountId, externalId) upsert می‌شوند، پس اجرای
+// دوباره‌ی sync (که در EA کاملا عادی است) هیچ‌وقت معامله‌ی تکراری نمی‌سازد.
 
 const SYNC_LIMIT = 30;
 const SYNC_WINDOW_MS = 60_000;
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   let updated = 0;
 
   for (const t of trades) {
-    // سود/زیانِ خالص همان چیزی است که خودِ ترمینال گزارش می‌کند؛ کمیسیون و
+    // سود/زیان خالص همان چیزی است که خود ترمینال گزارش می‌کند؛ کمیسیون و
     // سواپ جدا نگه داشته می‌شوند تا در UI دیده شوند، ولی دوباره از سود کم
     // نمی‌شوند (وگرنه دوبار حساب می‌شد).
     const pnl = Math.round(t.profit * 100) / 100;
@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
       externalSource: link.platform,
     };
 
-    // فیلدهای دستیِ کاربر (احساسات، چک‌لیست، برچسب، دلایل، عکس، یادداشت)
-    // عمداً در آپدیت دست زده نمی‌شوند — کاربر ممکن است روی یک معامله‌ی
+    // فیلدهای دستی کاربر (احساسات، چک‌لیست، برچسب، دلایل، عکس، یادداشت)
+    // عمدا در آپدیت دست زده نمی‌شوند — کاربر ممکن است روی یک معامله‌ی
     // همگام‌شده تحلیل نوشته باشد و sync بعدی نباید پاکش کند.
     const existing = await prisma.tradeEntry.findUnique({
       where: { accountId_externalId: { accountId: link.accountId, externalId: t.externalId } },

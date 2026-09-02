@@ -7,9 +7,9 @@ import { ICONS } from "@/components/NavDrawer";
 import { useTheme } from "@/components/ThemeProvider";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
 
-// دقیقاً هم‌شکلِ خروجیِ upgradeOffer توی app/api/plans — پیش‌نمایشِ قیمتِ
-// «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغِ واقعی همیشه
-// سمتِ سرورِ چک‌اوت دوباره محاسبه می‌شه؛ این‌جا فقط برای نمایشه.
+// دقیقا هم‌شکل خروجی upgradeOffer توی app/api/plans — پیش‌نمایش قیمت
+// «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغ واقعی همیشه
+// سمت سرور چک‌اوت دوباره محاسبه می‌شه؛ این‌جا فقط برای نمایشه.
 export type UpgradeOffer = {
   fromPlanKey: string;
   toPlanKey: string;
@@ -30,20 +30,20 @@ export const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3"
 export type PlanCard = {
   key: string; nameFa: string; highlight?: boolean; icon: JSX.Element;
   free?: boolean; prices?: Record<Duration, string>;
-  // مبلغِ خامِ هر مدت به کوچک‌ترین واحدِ ارز (ریال برای ایران، سنت برای
-  // بین‌المللی) — دقیقاً هم‌ارزِ همون رشته‌ی نمایشیِ prices، ولی برای
-  // پرداختِ واقعی (چک‌اوت) لازمه، چون parseِ رشته‌ی فرمت‌شده شکننده‌ست.
+  // مبلغ خام هر مدت به کوچک‌ترین واحد ارز (ریال برای ایران، سنت برای
+  // بین‌المللی) — دقیقا هم‌ارز همون رشته‌ی نمایشی prices، ولی برای
+  // پرداخت واقعی (چک‌اوت) لازمه، چون parse رشته‌ی فرمت‌شده شکننده‌ست.
   amounts?: Record<Duration, number>;
-  // قیمتِ اصلیِ (قبل‌ازتخفیفِ) پلنِ یک‌ماهه — فقط اگه ست بشه، به‌صورت خط‌خورده
-  // کنارِ قیمتِ واقعی نشون داده می‌شه.
+  // قیمت اصلی (قبل‌ازتخفیف) پلن یک‌ماهه — فقط اگه ست بشه، به‌صورت خط‌خورده
+  // کنار قیمت واقعی نشون داده می‌شه.
   originalPrice1mo?: string;
-  // تخفیفِ ۱۲.۵٪ (هم‌ارزِ «۴۵ روز رایگان به‌ازای هر سال») — روی ۳/۶/۱۲ ماهه هم
-  // با همین نرخ اعمال شده، نه فقط سالانه. قیمتِ واقعیِ تخفیف‌خورده توی
-  // prices جایگزین شده؛ اینجا فقط عددِ اصلیِ (پیش‌ازتخفیفِ) خط‌خورده‌ست.
+  // تخفیف ۱۲.۵٪ (هم‌ارز «۴۵ روز رایگان به‌ازای هر سال») — روی ۳/۶/۱۲ ماهه هم
+  // با همین نرخ اعمال شده، نه فقط سالانه. قیمت واقعی تخفیف‌خورده توی
+  // prices جایگزین شده؛ اینجا فقط عدد اصلی (پیش‌ازتخفیف) خط‌خورده‌ست.
   originalPrices?: Partial<Record<Duration, string>>;
-  // فهرستِ کوتاهِ امکاناتِ همین پلن، شاملِ سقفِ استفاده‌ی ماهانه‌ی فیچرهایی
-  // که واقعاً سقف دارن (lib/aiQuota.ts) — عددها فقط جایی نوشته می‌شن که یک
-  // مکانیزمِ واقعیِ enforcement پشتشونه، نه یک ادعای تبلیغاتیِ بدونِ پشتوانه.
+  // فهرست کوتاه امکانات همین پلن، شامل سقف استفاده‌ی ماهانه‌ی فیچرهایی
+  // که واقعا سقف دارن (lib/aiQuota.ts) — عددها فقط جایی نوشته می‌شن که یک
+  // مکانیزم واقعی enforcement پشتشونه، نه یک ادعای تبلیغاتی بدون پشتوانه.
   features?: string[];
 };
 
@@ -51,30 +51,30 @@ export type PlanCard = {
 export const PLANS_IRAN: PlanCard[] = [
   {
     key: "basic", nameFa: "پلن پایه", free: true, icon: ICONS.weekly,
-    // قابلیت‌های نسخه‌ی رایگان هم مثلِ بقیه‌ی پلن‌ها روی خودِ کارت نوشته می‌شن
-    // (قبلاً کارتِ رایگان هیچ لیستی نداشت و کاربر نمی‌فهمید اصلاً چی می‌گیره).
-    features: ["برنامه‌ی هفتگی و روتینِ روزانه", "یادآوریِ برنامه‌ها و دارو", "ثبت و ردیابیِ خواب", "تقویم و تاریخچه‌ی روزها", "آمار و استریکِ پیشرفت"],
+    // قابلیت‌های نسخه‌ی رایگان هم مثل بقیه‌ی پلن‌ها روی خود کارت نوشته می‌شن
+    // (قبلا کارت رایگان هیچ لیستی نداشت و کاربر نمی‌فهمید اصلا چی می‌گیره).
+    features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو", "ثبت و ردیابی خواب", "تقویم و تاریخچه‌ی روزها", "آمار و استریک پیشرفت"],
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
     prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
     originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
     amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۳ بار در ماه", "شمارش و ردیابیِ کالری", "روتینِ روزانه + خواب"],
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۳ بار در ماه", "شمارش و ردیابی کالری", "روتین روزانه + خواب"],
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
     prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
     originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
     amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
-    features: ["ژورنال و چک‌لیستِ ترید", "روتینِ روزانه + خواب"],
+    features: ["ژورنال و چک‌لیست ترید", "روتین روزانه + خواب"],
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
     prices: { "1": "250,000 تومان", "3": "656,000 تومان", "6": "1,313,000 تومان", "12": "2,625,000 تومان" },
     originalPrices: { "3": "750,000 تومان", "6": "1,500,000 تومان", "12": "3,000,000 تومان" },
     amounts: { "1": 2500000, "3": 6560000, "6": 13130000, "12": 26250000 },
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابیِ کالری", "ژورنال و چک‌لیستِ ترید", "تحلیلِ هوشمندِ هفتگی (AI Insight)", "روتینِ روزانه + خواب"],
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "تحلیل هوشمند هفتگی (AI Insight)", "روتین روزانه + خواب"],
   },
 ];
 
@@ -135,8 +135,8 @@ export const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
 
-// زیر md عمداً بدون کف‌عرضِ پیکسلی‌ست (نه minmax با کفِ px) — تا هیچ‌کدوم از
-// عرضِ صفحه بیرون نزنه و نیازی به اسکرولِ افقی نباشه، حتی روی باریک‌ترین موبایل؛
+// زیر md عمدا بدون کف‌عرض پیکسلی‌ست (نه minmax با کف px) — تا هیچ‌کدوم از
+// عرض صفحه بیرون نزنه و نیازی به اسکرول افقی نباشه، حتی روی باریک‌ترین موبایل؛
 // sm یک برش میانی (تبلت) هم داره تا موبایل/دسکتاپ صرف نباشه.
 export const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
@@ -145,7 +145,7 @@ export const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
 // مقدار از (عرض ستون ۶۲۰px - عرض هدف ۱۲۴۰px)/۲ به دست اومده.
 export const BREAKOUT = "md:w-screen md:max-w-[1240px] md:mr-[-310px]";
 
-// روز = نارنجی (طبق طرح جدید)، شب = همون هویت رنگی قبلیِ سایت (سبز اصلی +
+// روز = نارنجی (طبق طرح جدید)، شب = همون هویت رنگی قبلی سایت (سبز اصلی +
 // آبی برای تراز ویژه‌ی پلن مکس) — یکی‌شدن دو تم فقط قالب/چیدمانه، نه رنگ.
 export function useThemeTokens() {
   const { theme } = useTheme();
@@ -180,16 +180,16 @@ export function useThemeTokens() {
 }
 
 // mode="landing": دکمه‌ی هر پلن می‌بره به ثبت‌نام (کاربر هنوز حسابی نداره).
-// mode="account": کاربر از قبل واردشده — دکمه می‌بره به چک‌اوتِ واقعی، و
-// پلنِ فعلیش (currentPlanKey) به‌جای دکمه‌ی خرید یه نشانِ «پلنِ فعلیِ تو» می‌گیره.
+// mode="account": کاربر از قبل واردشده — دکمه می‌بره به چک‌اوت واقعی، و
+// پلن فعلیش (currentPlanKey) به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
   const [renewOpen, setRenewOpen] = useState(false);
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const isCurrent = mode === "account" && currentPlanKey === p.key;
-  // پیشنهادِ «ارتقا به مکس» فقط روی خودِ کارتِ مکس نشون داده می‌شه — فقط
-  // وقتی کاربر از قبل پلنِ ورزش/ترید فعال داره (upgradeOffer از سرور اومده).
+  // پیشنهاد «ارتقا به مکس» فقط روی خود کارت مکس نشون داده می‌شه — فقط
+  // وقتی کاربر از قبل پلن ورزش/ترید فعال داره (upgradeOffer از سرور اومده).
   const offer = mode === "account" && upgradeOffer?.toPlanKey === p.key ? upgradeOffer.perDuration[duration] : undefined;
   const originalPrice = offer ? p.prices?.[duration] : p.originalPrices?.[duration];
 
@@ -248,24 +248,24 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
           <>
             <div className={`mt-3 text-[15px] font-extrabold ${t.heading}`}>رایگان</div>
             <div className={`mt-2.5 flex w-full items-center justify-center rounded-xl py-2.5 text-center text-[12.5px] font-bold ${t.muted}`}>
-              همیشه همراهِ حساب توئه
+              همیشه همراه حساب توئه
             </div>
           </>
         )
       ) : isCurrent ? (
         <>
-          {/* پلنِ فعلیِ کاربر: به‌جای پیل‌های انتخابِ مدت (که برای تصمیمِ خرید
-              معنا دارن، نه پلنی که از قبل خریداری شده)، یه تیکِ بزرگِ وسطِ
-              کارت — بعدش یه باکسِ جدا برای تمدید که با کلیک، مدتِ تمدید رو
-              می‌پرسه (طبقِ درخواستِ صریحِ کاربر). */}
+          {/* پلن فعلی کاربر: به‌جای پیل‌های انتخاب مدت (که برای تصمیم خرید
+              معنا دارن، نه پلنی که از قبل خریداری شده)، یه تیک بزرگ وسط
+              کارت — بعدش یه باکس جدا برای تمدید که با کلیک، مدت تمدید رو
+              می‌پرسه (طبق درخواست صریح کاربر). */}
           <div className="mt-3 flex flex-col items-center gap-1.5 py-1.5">
             <span className={`flex h-11 w-11 items-center justify-center rounded-full text-white ${t.accentBg}`}>
               <Check size={22} strokeWidth={3} />
             </span>
-            <span className={`text-[12px] font-bold ${t.heading}`}>پلنِ فعلیِ تو</span>
+            <span className={`text-[12px] font-bold ${t.heading}`}>پلن فعلی تو</span>
           </div>
 
-          {/* «تمدید اشتراک فعلی» — تیترِ راست‌چینِ بالای باکسِ تمدید */}
+          {/* «تمدید اشتراک فعلی» — تیتر راست‌چین بالای باکس تمدید */}
           <div className={`mt-2 text-right text-[11.5px] font-bold ${t.muted}`}>تمدید اشتراک فعلی</div>
 
           {renewOpen ? (
@@ -314,12 +314,12 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
         </>
       ) : (
         <>
-          {/* دکمه‌های انتخابِ مدت — پیلِ تخت، انتخاب‌شده پرِ رنگِ اصلی، بدونِ
-              نشانِ چک‌مارک. از راست: ۱ ماهه، ۳ ماهه، ۶ ماهه، ۱۲ ماهه.
-              رنگِ پس‌زمینه/متن عمداً inline style‌ه، نه کلاسِ Tailwind — چون
-              قانونِ سراسریِ `button:hover` (globals.css) اسپسیفیسیتی‌ش از یه
-              کلاسِ Tailwindِ تکی بیشتره و روی هاور/لمس، رنگِ انتخاب‌شده رو با
-              یه تینتِ کم‌رنگ جایگزین می‌کرد؛ inline style همیشه برنده‌ست. */}
+          {/* دکمه‌های انتخاب مدت — پیل تخت، انتخاب‌شده پر رنگ اصلی، بدون
+              نشان چک‌مارک. از راست: ۱ ماهه، ۳ ماهه، ۶ ماهه، ۱۲ ماهه.
+              رنگ پس‌زمینه/متن عمدا inline style‌ه، نه کلاس Tailwind — چون
+              قانون سراسری `button:hover` (globals.css) اسپسیفیسیتی‌ش از یه
+              کلاس Tailwind تکی بیشتره و روی هاور/لمس، رنگ انتخاب‌شده رو با
+              یه تینت کم‌رنگ جایگزین می‌کرد؛ inline style همیشه برنده‌ست. */}
           <div className="mt-3 grid grid-cols-4 gap-1.5">
             {DURATIONS.map((d) => {
               const selected = d === duration;
@@ -348,8 +348,8 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
 
           {offer && (
             <div className={`mt-1.5 text-[10.5px] font-semibold leading-relaxed ${t.muted}`}>
-              {upgradeFromNameFa ? `با اعتبارِ پلنِ ${upgradeFromNameFa}‌ی فعلیت — ` : ""}
-              {offer.capped ? `این پلن تا ${formatJalaliLong(offer.capEndIso)} فعال می‌مونه` : "به‌مدتِ کامل خریداری‌شده فعال می‌مونه"}
+              {upgradeFromNameFa ? `با اعتبار پلن ${upgradeFromNameFa}‌ی فعلیت — ` : ""}
+              {offer.capped ? `این پلن تا ${formatJalaliLong(offer.capEndIso)} فعال می‌مونه` : "به‌مدت کامل خریداری‌شده فعال می‌مونه"}
             </div>
           )}
 
@@ -365,8 +365,8 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
   );
 }
 
-// گریدِ پلن‌ها + جدولِ مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراکِ داخلِ
-// حساب هردو استفاده می‌شه، فقط رفتارِ دکمه‌ها (mode) فرق می‌کنه.
+// گرید پلن‌ها + جدول مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراک داخل
+// حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
 export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
   const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
@@ -389,13 +389,13 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
         ))}
       </div>
 
-      {/* جدول HTML واقعی؛ بدون sticky/بک‌گراندِ مخصوصِ ستونِ لیبل و بدون
+      {/* جدول HTML واقعی؛ بدون sticky/بک‌گراند مخصوص ستون لیبل و بدون
           minWidth/overflow-x — با tableLayout:fixed و عرض‌های درصدی، خودش
           با اندازه‌ی هر صفحه (حتی موبایل باریک) جمع می‌شه، بدون نیاز به اسکرول.
           ردیف‌های «به‌زودی» توی یک tbody جدا، ولی همون یک باکس/جدول‌ان —
-          به‌جای متنِ ساده‌ی «به‌زودی…» (که کم‌کنتراست و عملاً نامرئی بود)،
-          محتوای واقعیِ ردیف‌ها با بلورِ کمِ تمام‌کنتراست پیش‌نمایش می‌شه و یک
-          نشانِ صریحِ «به‌زودی» روش می‌شینه — حس شیشه‌ی مات، نه خالی. */}
+          به‌جای متن ساده‌ی «به‌زودی…» (که کم‌کنتراست و عملا نامرئی بود)،
+          محتوای واقعی ردیف‌ها با بلور کم تمام‌کنتراست پیش‌نمایش می‌شه و یک
+          نشان صریح «به‌زودی» روش می‌شینه — حس شیشه‌ی مات، نه خالی. */}
       <div id="plans-compare-table" className={`mt-6 scroll-mt-[96px] rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
         <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
           <colgroup>

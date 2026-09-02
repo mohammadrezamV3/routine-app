@@ -48,10 +48,10 @@ import { AuthGate } from "@/components/AuthGate";
 const now = new Date();
 const todayKey = isoLocal(now);
 
-// یه برنامه‌ای که زمانش گذشته (روزِ قبل، یا امروز ولی ساعتِ پایانش رد شده)
-// دیگه نباید قابلِ «انتقال به یک روز دیگر» یا «حذف» باشه — چون در واقع
+// یه برنامه‌ای که زمانش گذشته (روز قبل، یا امروز ولی ساعت پایانش رد شده)
+// دیگه نباید قابل «انتقال به یک روز دیگر» یا «حذف» باشه — چون در واقع
 // اتفاق افتاده، جابه‌جایی/حذفش یعنی وانمود کردن به این‌که هنوز نیفتاده.
-// ویرایش (مثلاً تصحیحِ ساعت/تگ) همچنان مجازه، فقط انتقال و حذف بلاک می‌شن.
+// ویرایش (مثلا تصحیح ساعت/تگ) همچنان مجازه، فقط انتقال و حذف بلاک می‌شن.
 function isTaskPast(iso: string, time: string): boolean {
   if (iso < todayKey) return true;
   if (iso > todayKey) return false;
@@ -63,16 +63,16 @@ function isTaskPast(iso: string, time: string): boolean {
   return nowMin >= checkMin;
 }
 
-// برخلافِ isTaskPast (که برای غیرفعال‌کردنِ انتقال/حذف، ساعتِ دقیقِ امروز رو
-// هم حساب می‌کنه)، ضربدرِ قرمزِ «انجام‌نشده» فقط باید برای روزهای واقعاً
-// گذشته (نه امروز، حتی اگه ساعتِ برنامه رد شده باشه) نشون داده بشه — کاربر
-// تا آخرِ همون روز فرصت داره تیکش بزنه، نباید زودتر از موعد «ازدست‌رفته» جلوه کنه.
+// برخلاف isTaskPast (که برای غیرفعال‌کردن انتقال/حذف، ساعت دقیق امروز رو
+// هم حساب می‌کنه)، ضربدر قرمز «انجام‌نشده» فقط باید برای روزهای واقعا
+// گذشته (نه امروز، حتی اگه ساعت برنامه رد شده باشه) نشون داده بشه — کاربر
+// تا آخر همون روز فرصت داره تیکش بزنه، نباید زودتر از موعد «ازدست‌رفته» جلوه کنه.
 function isDayPast(iso: string): boolean {
   return iso < todayKey;
 }
 
-// برنامه‌ی امروزی که ساعتِ شروعش هنوز نرسیده — نباید بشه زودتر از موعد
-// تیکش زد (وانمود به انجام‌شدنِ کاری که هنوز شروع نشده).
+// برنامه‌ی امروزی که ساعت شروعش هنوز نرسیده — نباید بشه زودتر از موعد
+// تیکش زد (وانمود به انجام‌شدن کاری که هنوز شروع نشده).
 function isTaskNotStarted(iso: string, time: string): boolean {
   if (iso !== todayKey) return false;
   const startMin = timeStartMinutes(time);
@@ -99,20 +99,20 @@ export default function WeeklyPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // بخش داشبورد (ادغام‌شده با صفحه اصلی) — انتخاب تاریخ/هفته، برنامه‌های
-  // همون روز، و فیلترها. جدا از openIdx بالا که برای تایم‌لاینِ «کلی برنامه
+  // همون روز، و فیلترها. جدا از openIdx بالا که برای تایم‌لاین «کلی برنامه
   // هفته» (کارت‌های شنبه..جمعه که پایین‌تر نمایش داده می‌شن) استفاده می‌شه.
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(() => isoLocal(now));
   const [selectedDaily, setSelectedDaily] = useState<DailyRecord | null>(null);
   const [todayStats, setTodayStats] = useState<DayStats>({ completed: 0, total: 0, pct: 0 });
   const [importanceFilter, setImportanceFilter] = useState<"all" | Importance>("all");
-  // null = فیلترِ برنامه فعال نیست (همه نشون داده می‌شن)
+  // null = فیلتر برنامه فعال نیست (همه نشون داده می‌شن)
   const [programFilter, setProgramFilter] = useState<Set<string> | null>(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
-  // وضعیتِ تیک‌خوردنِ واقعیِ روزهای همین هفته — برای دایره‌های تایم‌لاینِ
-  // «برنامه هفتگی» (که خودِ isPast زمان‌محوره، نه انجام‌شده‌بودنِ واقعی).
+  // وضعیت تیک‌خوردن واقعی روزهای همین هفته — برای دایره‌های تایم‌لاین
+  // «برنامه هفتگی» (که خود isPast زمان‌محوره، نه انجام‌شده‌بودن واقعی).
   const [weekDaily, setWeekDaily] = useState<Record<string, DailyRecord>>({});
 
   const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
@@ -120,13 +120,13 @@ export default function WeeklyPage() {
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
   const awakeStartMin = timeToMinutes(wake);
-  // ساعتِ خواب همیشه بعدِ نیمه‌شب نیست — کاربرهایی که مثلاً ۲۳:۳۰ می‌خوابن هم
-  // هستن. قبلاً همیشه ۲۴ساعت به ساعتِ خواب اضافه می‌شد (فرضِ «خواب همیشه بعدِ
-  // نیمه‌شبه»)، که برای این کاربرها بازه‌ی «بیداری» رو به‌جای ~۱۶ ساعتِ واقعی،
-  // غلط ~۴۰ ساعت حساب می‌کرد — همین باعث می‌شد برنامه‌های نزدیکِ ساعتِ خوابِ
-  // واقعی، خیلی دورتر از انتهای خط زمان (نزدیکِ وسط) جا بگیرن. الان فقط وقتی
-  // ساعتِ خواب از نظرِ عددی زودتر یا مساویِ ساعتِ بیداریه (یعنی واقعاً بعدِ
-  // نیمه‌شبِ روزِ بعده) ۲۴ ساعت اضافه می‌شه.
+  // ساعت خواب همیشه بعد نیمه‌شب نیست — کاربرهایی که مثلا ۲۳:۳۰ می‌خوابن هم
+  // هستن. قبلا همیشه ۲۴ساعت به ساعت خواب اضافه می‌شد (فرض «خواب همیشه بعد
+  // نیمه‌شبه»)، که برای این کاربرها بازه‌ی «بیداری» رو به‌جای ~۱۶ ساعت واقعی،
+  // غلط ~۴۰ ساعت حساب می‌کرد — همین باعث می‌شد برنامه‌های نزدیک ساعت خواب
+  // واقعی، خیلی دورتر از انتهای خط زمان (نزدیک وسط) جا بگیرن. الان فقط وقتی
+  // ساعت خواب از نظر عددی زودتر یا مساوی ساعت بیداریه (یعنی واقعا بعد
+  // نیمه‌شب روز بعده) ۲۴ ساعت اضافه می‌شه.
   const rawSleepMin = timeToMinutes(sleep);
   const awakeEndMin = rawSleepMin > awakeStartMin ? rawSleepMin : rawSleepMin + 24 * 60;
 
@@ -138,8 +138,8 @@ export default function WeeklyPage() {
   }
 
   useEffect(() => {
-    // getTodayStats این‌جا صدا زده نمی‌شه — خودِ refresh() بالاتر صداش می‌زنه.
-    // فراخوانیِ دوم فقط همون سه درخواستِ شبکه (removed/custom/daily) رو دوباره
+    // getTodayStats این‌جا صدا زده نمی‌شه — خود refresh() بالاتر صداش می‌زنه.
+    // فراخوانی دوم فقط همون سه درخواست شبکه (removed/custom/daily) رو دوباره
     // می‌زد و هیچ داده‌ی تازه‌تری نمی‌آورد.
     refresh();
     getWakeSleepTimes().then((v) => {
@@ -168,8 +168,8 @@ export default function WeeklyPage() {
   }, [selectedIso]);
 
   // به‌جای یک هفته‌ی کامل شنبه-جمعه، یه پنجره‌ی روزهایی نشون می‌ده که
-  // همیشه روی «امروز» (یا مرکزِ پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
-  // تعدادش هم ثابت نیست، خودِ DashDateSelector بسته‌به عرضِ واقعیِ نوار
+  // همیشه روی «امروز» (یا مرکز پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
+  // تعدادش هم ثابت نیست، خود DashDateSelector بسته‌به عرض واقعی نوار
   // اندازه‌گیری می‌کنه و با onVisibleCountChange گزارش می‌ده.
   const [dayWindow, setDayWindow] = useState(5);
   const dashDays = useMemo(() => {
@@ -190,8 +190,8 @@ export default function WeeklyPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, "fa"));
   }, [customOcc]);
 
-  // اسمِ برنامه → تگ‌هایی که بهش اضافه شده، تا توی پاپ‌آپِ فیلتر بشه با تگ
-  // هم جستجو کرد (نه فقط با اسمِ برنامه).
+  // اسم برنامه → تگ‌هایی که بهش اضافه شده، تا توی پاپ‌آپ فیلتر بشه با تگ
+  // هم جستجو کرد (نه فقط با اسم برنامه).
   const programTags = useMemo(() => {
     const map: Record<string, Set<string>> = {};
     for (const c of customOcc) {
@@ -203,7 +203,7 @@ export default function WeeklyPage() {
     return out;
   }, [customOcc]);
 
-  // اسمِ برنامه → سطوحِ اهمیتی که براش ثبت شده — تا توی پاپ‌آپِ فیلتر، لیستِ
+  // اسم برنامه → سطوح اهمیتی که براش ثبت شده — تا توی پاپ‌آپ فیلتر، لیست
   // برنامه‌ها بشه با «میزان اهمیت» انتخاب‌شده هم فیلتر کرد (نه فقط جست‌وجوی متنی).
   const programImportance = useMemo(() => {
     const map: Record<string, Set<Importance>> = {};
@@ -235,10 +235,10 @@ export default function WeeklyPage() {
       .filter((t) => programFilter === null || programFilter.has(t.name));
   }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter]);
 
-  // انتخابِ یه روزِ دلخواه (مثلاً از تقویمِ تاریخچه) — برخلافِ کلیک روی
-  // خودِ نوارِ روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
-  // می‌تونه کاملاً بیرونِ پنجره‌ی فعلی باشه؛ پس weekOffset رو هم طوری
-  // حساب می‌کنیم که پنجره‌ی نوار دورِ همین روز وسط‌چین بشه.
+  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — برخلاف کلیک روی
+  // خود نوار روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
+  // می‌تونه کاملا بیرون پنجره‌ی فعلی باشه؛ پس weekOffset رو هم طوری
+  // حساب می‌کنیم که پنجره‌ی نوار دور همین روز وسط‌چین بشه.
   function pickDate(iso: string) {
     setSelectedIso(iso);
     const [y, m, d] = iso.split("-").map(Number);
@@ -271,7 +271,7 @@ export default function WeeklyPage() {
   }
 
   // ویرایش/حذف از منوی سه‌نقطه‌ی «برنامه‌های امروز» — روی همون occurrence ی
-  // که برای selectedIso نمایش داده شده، نه لزوماً «امروزِ واقعی».
+  // که برای selectedIso نمایش داده شده، نه لزوما «امروز واقعی».
   function editTaskFromDash(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (!task) return;
@@ -337,11 +337,11 @@ export default function WeeklyPage() {
             </div>
           </div>
 
-          {/* دسکتاپ: سه ستون کنارِ هم — راست (پهن‌تر) برنامه‌های امروز از بالا
-              تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیرِ هم. موبایل/تبلت
-              همچنان یک ستونِ عمودی (flex-col) می‌مونه. */}
-          {/* وقتی هر دو کارتِ ستونِ وسط از تنظیمات خاموش باشن، گرید باید
-              دوستونه بشه — وگرنه یک ستونِ خالیِ ۰.۸fr وسطِ صفحه باز می‌موند. */}
+          {/* دسکتاپ: سه ستون کنار هم — راست (پهن‌تر) برنامه‌های امروز از بالا
+              تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیر هم. موبایل/تبلت
+              همچنان یک ستون عمودی (flex-col) می‌مونه. */}
+          {/* وقتی هر دو کارت ستون وسط از تنظیمات خاموش باشن، گرید باید
+              دوستونه بشه — وگرنه یک ستون خالی ۰.۸fr وسط صفحه باز می‌موند. */}
           <div
             className={
               hasMiddleColumn
@@ -365,8 +365,8 @@ export default function WeeklyPage() {
               />
             )}
 
-            {/* ستونِ وسط: یادآوری‌های برنامه و یادآوری دارو، زیرِ هم. هر دو
-                از «تنظیمات» جدا‌جدا قابلِ خاموش‌شدن‌ن. */}
+            {/* ستون وسط: یادآوری‌های برنامه و یادآوری دارو، زیر هم. هر دو
+                از «تنظیمات» جدا‌جدا قابل خاموش‌شدن‌ن. */}
             {hasMiddleColumn && (
               <div className="flex flex-col gap-4 sm:gap-6">
                 {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}

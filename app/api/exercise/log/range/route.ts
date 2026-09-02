@@ -6,8 +6,8 @@ import { isoLocal } from "@/lib/jalali";
 import { parseDateRange } from "@/lib/validate";
 
 // GET /api/exercise/log/range?planId=...&start=2026-07-01&end=2026-07-31
-// برای محاسبه‌ی سمتِ کلاینتِ «تعداد جلسات این هفته»، «میزان پیشرفت هفتگی»
-// و استریک — یک درخواست به‌جای N تا (مثلِ getDailyRange در lib/storage.ts).
+// برای محاسبه‌ی سمت کلاینت «تعداد جلسات این هفته»، «میزان پیشرفت هفتگی»
+// و استریک — یک درخواست به‌جای N تا (مثل getDailyRange در lib/storage.ts).
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;

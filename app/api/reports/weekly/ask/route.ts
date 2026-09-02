@@ -9,8 +9,8 @@ import { getOrGenerateWeeklyReport } from "@/lib/weeklyReport/snapshot";
 import { DOMAINS, DOMAIN_LABELS_FA } from "@/lib/weeklyReport/metrics";
 
 // POST /api/reports/weekly/ask  { question, offset }
-// Contextِ AI فقط از همون Snapshotِ cache‌شده‌ی همین هفته میاد (نه دیتابیسِ
-// خام) — بندِ ۳۴. بدونِ حافظه‌ی مکالمه‌ای در V2 (stateless، هر سوال مستقل).
+// Context AI فقط از همون Snapshot cache‌شده‌ی همین هفته میاد (نه دیتابیس
+// خام) — بند ۳۴. بدون حافظه‌ی مکالمه‌ای در V2 (stateless، هر سوال مستقل).
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
@@ -47,6 +47,6 @@ export async function POST(req: NextRequest) {
     const answer = await answerWeeklyReportQuestion(question, context, guard.userId);
     return NextResponse.json({ answer });
   } catch {
-    return NextResponse.json({ error: "پاسخ‌دادن الان ممکن نیست — بعداً دوباره امتحان کن" }, { status: 502 });
+    return NextResponse.json({ error: "پاسخ‌دادن الان ممکن نیست — بعدا دوباره امتحان کن" }, { status: 502 });
   }
 }

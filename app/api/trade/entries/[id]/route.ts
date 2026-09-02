@@ -3,8 +3,8 @@ import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 
-// جزئیاتِ کاملِ یک معامله — تنها جایی که عکس‌ها و اسنپ‌شاتِ چک‌لیست هم
-// برگردانده می‌شوند. لیستِ معاملات عمداً این‌ها را ندارد تا سبک بماند.
+// جزئیات کامل یک معامله — تنها جایی که عکس‌ها و اسنپ‌شات چک‌لیست هم
+// برگردانده می‌شوند. لیست معاملات عمدا این‌ها را ندارد تا سبک بماند.
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;

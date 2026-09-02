@@ -17,7 +17,7 @@ function formatElapsed(sec: number): string {
   return `${m}:${s}`;
 }
 
-/** ثانیه‌ها رو به یه لیبلِ کوتاه برای جدولِ مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
+/** ثانیه‌ها رو به یه لیبل کوتاه برای جدول مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
 function formatSpecDuration(seconds: number | null): string {
   if (!seconds) return "—";
   if (seconds % 60 === 0) return `${seconds / 60} دقیقه`;
@@ -25,11 +25,11 @@ function formatSpecDuration(seconds: number | null): string {
   return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 
-// «برنامه تمرینی امروز» — ستونِ بزرگِ سمتِ راستِ داشبوردِ بدنسازی، هم‌نقشِ
+// «برنامه تمرینی امروز» — ستون بزرگ سمت راست داشبورد بدنسازی، هم‌نقش
 // DashTaskList توی روتین. «شروع تمرین» یک تایمر می‌ندازه و به هر حرکت دکمه‌ی
-// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده
-// ضربدرِ قرمز می‌زنه. تنها راهِ تکمیلِ یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپِ
-// ردیابیِ ست‌به‌ست با استراحتِ زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
+// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکت تیک‌نخورده
+// ضربدر قرمز می‌زنه. تنها راه تکمیل یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپ
+// ردیابی ست‌به‌ست با استراحت زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
 export function ExerciseTaskList({
   planId,
   dayPlan,
@@ -75,12 +75,12 @@ export function ExerciseTaskList({
   const [confirmEnd, setConfirmEnd] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // `initialCompletedItems` از والد به‌صورتِ `res.completedItems ?? []` میاد،
-  // یعنی وقتی لاگی وجود نداره هر رندر یک آرایه‌ی *جدید* ساخته می‌شه. با گذاشتنِ
-  // خودِ آرایه توی وابستگی‌ها، این افکت هر رندر اجرا می‌شد و
-  // `setChecked(new Set(...))` هم هر بار یک Setِ جدید (پس stateِ جدید) می‌ساخت
-  // → رندرِ بعدی → افکت دوباره → یک حلقه‌ی رندرِ بی‌پایان که CPU رو اشغال
-  // می‌کرد و گوشی رو داغ. حالا وابستگی یک کلیدِ رشته‌ایِ پایدار از محتواست.
+  // `initialCompletedItems` از والد به‌صورت `res.completedItems ?? []` میاد،
+  // یعنی وقتی لاگی وجود نداره هر رندر یک آرایه‌ی *جدید* ساخته می‌شه. با گذاشتن
+  // خود آرایه توی وابستگی‌ها، این افکت هر رندر اجرا می‌شد و
+  // `setChecked(new Set(...))` هم هر بار یک Set جدید (پس state جدید) می‌ساخت
+  // → رندر بعدی → افکت دوباره → یک حلقه‌ی رندر بی‌پایان که CPU رو اشغال
+  // می‌کرد و گوشی رو داغ. حالا وابستگی یک کلید رشته‌ای پایدار از محتواست.
   const completedKey = initialCompletedItems.join("|");
   useEffect(() => {
     setEnded(initialCompleted);
@@ -131,8 +131,8 @@ export function ExerciseTaskList({
 
   const remainingCount = (todayPlan?.items ?? []).filter((it) => !checked.has(it)).length;
 
-  // زدنِ «پایان تمرین» وقتی هنوز حرکتی مونده، به‌جای ثبتِ بی‌برگشت، اول
-  // می‌پرسه — چون بعدِ ثبت، اون حرکت‌ها ضربدرِ قرمزِ «انجام‌نشده» می‌گیرن.
+  // زدن «پایان تمرین» وقتی هنوز حرکتی مونده، به‌جای ثبت بی‌برگشت، اول
+  // می‌پرسه — چون بعد ثبت، اون حرکت‌ها ضربدر قرمز «انجام‌نشده» می‌گیرن.
   function requestEndWorkout() {
     if (remainingCount > 0) { setConfirmEnd(true); return; }
     endWorkout();

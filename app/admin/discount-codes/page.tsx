@@ -19,7 +19,7 @@ export default function AdminDiscountCodesPage() {
   const [percentOff, setPercentOff] = useState("10");
   const [planKey, setPlanKey] = useState(""); // "" = همه‌ی پکیج‌ها
   const [expiresAt, setExpiresAt] = useState("");
-  const [maxUsesPerUser, setMaxUsesPerUser] = useState(""); // "" = بدونِ محدودیت
+  const [maxUsesPerUser, setMaxUsesPerUser] = useState(""); // "" = بدون محدودیت
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

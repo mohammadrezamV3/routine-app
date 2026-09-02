@@ -15,8 +15,8 @@ type MtLink = {
   connectedAt: string | null; lastSyncAt: string | null; revokedAt: string | null;
 };
 
-// اتصالِ متاتریدرِ **همین حساب**. عمداً داخلِ صفحه‌ی حساب است نه یک صفحه‌ی
-// سراسری: هر کاربر ده‌ها حساب دارد و هرکدام ترمینال و لاگینِ خودش را دارد.
+// اتصال متاتریدر **همین حساب**. عمدا داخل صفحه‌ی حساب است نه یک صفحه‌ی
+// سراسری: هر کاربر ده‌ها حساب دارد و هرکدام ترمینال و لاگین خودش را دارد.
 export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; calSystem: CalSystem }) {
   const [link, setLink] = useState<MtLink | null>(null);
   const [platform, setPlatform] = useState<"MT4" | "MT5">("MT4");
@@ -69,7 +69,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
     }
   }
 
-  // «بررسی اتصال» یک درخواستِ شبکه است؛ بدونِ این حالت دکمه هیچ نشانه‌ای
+  // «بررسی اتصال» یک درخواست شبکه است؛ بدون این حالت دکمه هیچ نشانه‌ای
   // نمی‌داد و کاربر فکر می‌کرد کلیکش نگرفته.
   async function refresh() {
     if (refreshing) return;
@@ -138,9 +138,9 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
             <li>
               <span>
                 از منوی <b className="mono ltr-inline">File</b> در متاتریدر گزینه‌ی{" "}
-                <b className="mono ltr-inline">Open Data Folder</b> را بزن؛ در پوشه‌ای که باز می‌شود مسیرِ{" "}
+                <b className="mono ltr-inline">Open Data Folder</b> را بزن؛ در پوشه‌ای که باز می‌شود مسیر{" "}
                 <b className="mono ltr-inline">{platform === "MT4" ? "MQL4/Experts" : "MQL5/Experts"}</b> را باز کن
-                و فایلِ دانلودشده را همان‌جا کپی کن.
+                و فایل دانلودشده را همان‌جا کپی کن.
               </span>
             </li>
             <li>
