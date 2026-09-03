@@ -23,7 +23,7 @@ const SYNC_WINDOW_MS = 60_000;
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`mt-sync:${ip}`, SYNC_LIMIT, SYNC_WINDOW_MS)) {
+  if (!(await checkRateLimit(`mt-sync:${ip}`, SYNC_LIMIT, SYNC_WINDOW_MS))) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 

@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 
   // سقفِ نرخ روی کاربر است نه IP: کاربر شناخته‌شده است و بستنِ IP در
   // شبکه‌های اشتراکی بی‌گناه‌ها را هم می‌گیرد.
-  if (!checkRateLimit(`chat:${guard.userId}`, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS)) {
+  if (!(await checkRateLimit(`chat:${guard.userId}`, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS))) {
     return NextResponse.json(
       { error: "کمی آرام‌تر — چند لحظه صبر کن و دوباره بفرست" },
       { status: 429 }

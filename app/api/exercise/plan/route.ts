@@ -21,7 +21,7 @@ export async function GET() {
   // چند ده ثانیه اشغال می‌کند. گیت ماژول فقط می‌گوید «مشترک است»، نه
   // «نمی‌تواند صد بار پشت‌سرهم بزند». سقف روزانه همان کاری را می‌کند که
   // برای refresh گزارش هفتگی هم کردیم.
-  if (!guard.isSuperAdmin && !checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000)) {
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد ساخت برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
   }
 

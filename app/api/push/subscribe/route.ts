@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`push-subscribe:${userId}`, 20, 60 * 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !(await checkRateLimit(`push-subscribe:${userId}`, 20, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
 
-  if (!guard.isSuperAdmin && !checkRateLimit(`weekly-ask-arion:${guard.userId}`, 20, 24 * 60 * 60 * 1000)) {
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`weekly-ask-arion:${guard.userId}`, 20, 24 * 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد سوال‌های امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
   }
 
