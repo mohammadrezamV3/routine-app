@@ -54,11 +54,52 @@ if (cluster.isPrimary) {
   for (let i = 0; i < numWorkers; i++) forkWorker();
 
   // اگه یک worker به هر دلیلی کرش کرد، سایتِ همه‌ی کاربرا نباید بخوابه — یک
-  // worker جدید فوری جای اون فورک می‌شه.
+  // worker جدید فوری جای اون فورک می‌شه. موقعِ خاموشیِ عمدی (شاتدان زیر)
+  // این رفتار خاموشه، وگرنه هر workerِ خاموش‌شده بلافاصله دوباره فورک می‌شه.
+  let shuttingDown = false;
   cluster.on("exit", (worker, code, signal) => {
+    if (shuttingDown) return;
     console.error(`[cluster] worker ${worker.process.pid} خارج شد (code=${code} signal=${signal}) — فورکِ مجدد`);
     forkWorker();
   });
+
+  // داکر روی `docker stop`/ری‌دیپلوی فقط SIGTERM رو به PID۱ (همین primary)
+  // می‌فرسته، نه به workerهای فورک‌شده. بدونِ این هندلر، primary بی‌سروصدا
+  // می‌مرد و کانتینر کلِ workerها رو هم با خودش می‌کشت — درخواست‌های در حالِ
+  // پردازش وسط راه قطع می‌شدن. خودِ server.js داخلِ هر worker (از
+  // next/dist/server/lib/start-server.js) SIGTERM رو می‌گیره و HTTP server
+  // رو تمیز می‌بنده؛ اینجا فقط باید سیگنال رو بهشون برسونیم و صبر کنیم.
+  function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    const workers = Object.values(cluster.workers || {}).filter(Boolean);
+    console.log(`[cluster] primary دریافتِ ${signal} — درحالِ خاموشیِ تمیزِ ${workers.length} worker`);
+    if (workers.length === 0) {
+      process.exit(0);
+      return;
+    }
+    let remaining = workers.length;
+    // اگه یک worker به‌موقع (مثلا به‌خاطر یک درخواستِ گیرکرده) بسته نشد،
+    // نباید کلِ خاموشی رو نامحدود معطل نگه داریم.
+    const forceTimer = setTimeout(() => {
+      console.error("[cluster] بعضی workerها به‌موقع خاموش نشدن — force kill");
+      for (const w of workers) w.process.kill("SIGKILL");
+      process.exit(1);
+    }, 10_000);
+    forceTimer.unref();
+    for (const w of workers) {
+      w.once("exit", () => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearTimeout(forceTimer);
+          process.exit(0);
+        }
+      });
+      w.process.kill(signal);
+    }
+  }
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 } else {
   // هر worker همون سرورِ standalone نکست رو مستقیم اجرا می‌کنه؛ رفتارش با
   // حالتِ تک-پروسه‌ای قبلی یکسانه، فقط چند نسخه‌ش همزمان بالاست.
