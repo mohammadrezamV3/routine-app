@@ -3,12 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarClock, Filter, Loader2 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
-import { getSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
-import { formatTradeDateTime, formatTradeTime } from "@/lib/tradeDateTime";
 // توجه: SegmentedTabs امروز/فردا/این‌هفته دیگه لازم نیست — لیست حالا
 // پیوسته‌ست، مثل ForexFactory.
-import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
   IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, currencyMeta,
@@ -25,6 +22,15 @@ function rangeFromToday(daysAhead: number): { from: string; to: string } {
   return { from: isoLocal(start), to: isoLocal(new Date(start.getTime() + daysAhead * 86_400_000)) };
 }
 
+// طبقِ درخواستِ صریح: این جدول باید دقیقاً مثلِ خودِ فارکس‌فکتوری انگلیسی
+// بمونه — هم متنِ رویدادها (که از منبع همین‌جوری میان، دیگه به فارسی
+// ترجمه نمی‌شن — نگاه کن به lib/economicCalendar.ts) هم اعداد (رقمِ
+// لاتین، نه faNum). برای همین اینجا از calSystem/formatTradeTime/
+// formatTradeDateتِ سراسریِ اپ (که رقم‌ها رو فارسی می‌کنن) استفاده نمی‌کنیم؛
+// یک فرمتِ محلیِ انگلیسیِ مستقل داریم، فقط برای همین بخش.
+const enTimeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+const enDayFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
+
 export function EconomicCalendarPanel() {
   const [daysAhead, setDaysAhead] = useState(DAYS_PAGE);
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
@@ -33,13 +39,10 @@ export function EconomicCalendarPanel() {
   // جایش می‌ماند و کمی کم‌رنگ می‌شود. قبلا هر کلیک روی یک فیلتر کل لیست را
   // با اسکلت جایگزین می‌کرد و همان پرش، حس کندی و ناپایداری می‌داد.
   const [firstLoad, setFirstLoad] = useState(true);
-  const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [currencies, setCurrencies] = useState<string[]>([]);
   const [otherCurrencies, setOtherCurrencies] = useState(false);
   const [impacts, setImpacts] = useState<EconomicImpact[]>([]);
-
-  useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -137,33 +140,34 @@ export function EconomicCalendarPanel() {
       <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
       {groups.map(([day, list]) => (
         <div key={day} className="trade-cal-day">
-          <div className="trade-cal-day-title">{formatTradeDateTime(list[0].occursAt, calSystem, false)}</div>
+          <div className="trade-cal-day-title ltr-inline">{enDayFmt.format(new Date(list[0].occursAt))}</div>
           {/* جدولِ ردیفی مثل ForexFactory — ستون‌های زمان/ارز/رویداد/واقعی/
               پیش‌بینی/قبلی هم‌ردیف، نه زیرِ هم؛ روی صفحه‌ی خیلی باریک با
-              اسکرولِ افقیِ همین باکس (نه کلِ صفحه) جا می‌شه. */}
+              اسکرولِ افقیِ همین باکس (نه کلِ صفحه) جا می‌شه. طبقِ درخواستِ
+              صریح، انگلیسی‌ست — دقیقاً مثلِ خودِ فارکس‌فکتوری. */}
           <div className="trade-cal-table-scroll">
-            <div className="trade-cal-table">
+            <div className="trade-cal-table ltr-inline">
               <div className="trade-cal-thead">
-                <span className="tc-col-time">زمان</span>
-                <span className="tc-col-cur">ارز</span>
-                <span className="tc-col-event">رویداد</span>
-                <span className="tc-col-num">واقعی</span>
-                <span className="tc-col-num">پیش‌بینی</span>
-                <span className="tc-col-num">قبلی</span>
+                <span className="tc-col-time">Time</span>
+                <span className="tc-col-cur">Currency</span>
+                <span className="tc-col-event">Event</span>
+                <span className="tc-col-num">Actual</span>
+                <span className="tc-col-num">Forecast</span>
+                <span className="tc-col-num">Previous</span>
               </div>
               {list.map((e) => {
                 const meta = currencyMeta(e.currency);
                 return (
                   <div key={e.id} className="trade-cal-tr">
-                    <span className="tc-col-time mono">{formatTradeTime(e.occursAt)}</span>
+                    <span className="tc-col-time mono">{enTimeFmt.format(new Date(e.occursAt))}</span>
                     <span className="tc-col-cur">
                       <span className="trade-cal-impact-dot" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
                       {meta?.flag} <b className="mono">{e.currency}</b>
                     </span>
                     <span className="tc-col-event" title={e.title}>{e.title}</span>
-                    <span className={`tc-col-num mono${e.actual ? "" : " muted"}`}>{e.actual ? faNum(e.actual) : "—"}</span>
-                    <span className="tc-col-num mono">{e.forecast ? faNum(e.forecast) : "—"}</span>
-                    <span className="tc-col-num mono">{e.previous ? faNum(e.previous) : "—"}</span>
+                    <span className={`tc-col-num mono${e.actual ? "" : " muted"}`}>{e.actual || "—"}</span>
+                    <span className="tc-col-num mono">{e.forecast || "—"}</span>
+                    <span className="tc-col-num mono">{e.previous || "—"}</span>
                   </div>
                 );
               })}
