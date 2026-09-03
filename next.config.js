@@ -25,7 +25,12 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://api.anthropic.com",
+      // s.tradingview.com فقط برای یک پروبِ `no-cors` است که می‌سنجد آیا
+      // میزبانِ ویجت اصلاً در دسترس هست یا نه (نگاه کن به
+      // components/TradingViewChart.tsx). پاسخ خوانده نمی‌شود — همان
+      // میزبانی است که از قبل در `frame-src` مجاز بود، پس سطحِ دسترسیِ
+      // تازه‌ای باز نمی‌شود.
+      "connect-src 'self' https://s.tradingview.com https://api.anthropic.com",
       // چارتِ تریدینگ‌ویو. عمداً فقط `frame-src` باز شده و نه `script-src`:
       // ویجت را به‌شکلِ iframe جاسازی می‌کنیم، نه با اسکریپتِ رسمیِ `tv.js`.
       // تفاوت مهم است — `tv.js` باید داخلِ originِ خودمان اجرا شود و به

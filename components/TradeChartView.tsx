@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getSetting, setSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { CAL_SYSTEM_KEY, CalSystem, TradeAccount, TradeTag } from "@/lib/tradeTypes";
@@ -17,8 +17,20 @@ const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
 /**
  * صفحه‌ی چارت.
  *
- * چیدمان (راست‌به‌چپ): ستونِ راست پهن است — چارت، بعد گفت‌وگوی همان نماد،
- * بعد تقویم اقتصادی. ستونِ چپ باریک است — چک‌لیست و ثبتِ معامله.
+ * چیدمانِ دسکتاپ (راست‌به‌چپ) — یک گریدِ دوردیفه که کلِ ارتفاعِ پنجره را
+ * می‌گیرد و **اسکرول نمی‌شود**؛ هر خانه خودش داخلش اسکرول دارد:
+ *
+ *     ┌──────────────────────────┬──────────┐
+ *     │          چارت            │ چک‌لیست  │
+ *     ├─────────────┬────────────┤──────────┤
+ *     │  گفت‌وگو     │ اخبار      │ ثبت معامله│
+ *     └─────────────┴────────────┴──────────┘
+ *
+ * موبایل: تک‌ستونه، به ترتیبِ چارت → گفت‌وگو → چک‌لیست → ثبتِ معامله →
+ * اخبارِ اقتصادی، و صفحه مثل قبل اسکرول می‌شود.
+ *
+ * هر پنج خانه مستقیماً بچه‌ی همین گریدند (نه داخلِ یک ستونِ واسط) — وگرنه
+ * خانه‌ها نمی‌توانستند در دو محور جدا از هم جا بگیرند.
  *
  * نماد یک انتخابِ سراسریِ صفحه است: هر سه بخش (چارت، ثبتِ معامله، اتاقِ
  * گفت‌وگو) از همان یک نماد پیروی می‌کنند.
@@ -56,6 +68,34 @@ export function TradeChartView() {
 
   useEffect(() => { load(); }, [load]);
 
+  // ارتفاعِ گرید را دقیقاً «از بالای خودش تا کفِ پنجره» می‌گیریم تا صفحه
+  // اسکرول نخورد. با CSS تنها نمی‌شد: ارتفاعِ سرصفحه‌ی این صفحه (لینکِ
+  // بازگشت + عنوان + توضیح) ثابت نیست و با شکستنِ خطوط عوض می‌شود، پس هر
+  // عددِ ثابتی یا فضا هدر می‌داد یا کمی اسکرول می‌ساخت.
+  const pageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (loading) return;
+    const el = pageRef.current;
+    if (!el) return;
+    const apply = () => {
+      if (window.innerWidth < 1024) { el.style.removeProperty("--tv-h"); return; }
+      const top = el.getBoundingClientRect().top;
+      // پدینگِ پایینِ body باید حساب شود، وگرنه دقیقاً به همان اندازه صفحه
+      // اسکرول می‌خورد — همان چیزی که قرار بود نباشد. ولی روی دسکتاپ هیچ
+      // نوارِ ثابتی کفِ صفحه نیست و آن ۹۰ پیکسل فقط فضای تنفس است، پس
+      // بیش از ۲۴ پیکسلش را به چارت می‌دهیم.
+      const bodyPad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+      const h = window.innerHeight - top - Math.min(bodyPad, 24) - 12;
+      el.style.setProperty("--tv-h", `${Math.max(520, Math.round(h))}px`);
+    };
+    apply();
+    // ورودِ صفحه یک انیمیشنِ ۳۶۰ms دارد که تا تمام نشود `top` واقعی نیست —
+    // پس بعد از پایانش یک‌بار دیگر اندازه می‌گیریم.
+    const t = setTimeout(apply, 460);
+    window.addEventListener("resize", apply);
+    return () => { clearTimeout(t); window.removeEventListener("resize", apply); };
+  }, [loading]);
+
   function changeSymbol(next: string) {
     setSymbol(next);
     setSetting(SYMBOL_KEY, next);
@@ -64,29 +104,24 @@ export function TradeChartView() {
   if (loading) return <PanelSkeleton />;
 
   return (
-    <div className="tv-page">
-      {/* ستونِ راست (پهن) */}
-      <div className="tv-main">
-        <div className="tv-chart-card">
-          <SymbolSearchField symbol={symbol} onChange={changeSymbol} />
-          <TradingViewChart symbol={symbol} />
-        </div>
-
-        <SymbolChatPanel symbol={symbol} />
-        <ChartCalendarPanel />
+    <div className="tv-page" ref={pageRef}>
+      <div className="tv-chart-card">
+        <SymbolSearchField symbol={symbol} onChange={changeSymbol} />
+        <TradingViewChart symbol={symbol} />
       </div>
 
-      {/* ستونِ چپ (باریک) */}
-      <aside className="tv-aside">
-        <ChartTradePanel
-          symbol={symbol}
-          accounts={accounts}
-          tags={tags}
-          calSystem={calSystem}
-          onTagCreated={(t) => setTags((prev) => [...prev, t])}
-          onSaved={() => load(true)}
-        />
-      </aside>
+      <SymbolChatPanel symbol={symbol} />
+      <ChartCalendarPanel />
+
+      {/* دو کارتِ جدا برمی‌گرداند: چک‌لیست و ثبتِ معامله */}
+      <ChartTradePanel
+        symbol={symbol}
+        accounts={accounts}
+        tags={tags}
+        calSystem={calSystem}
+        onTagCreated={(t) => setTags((prev) => [...prev, t])}
+        onSaved={() => load(true)}
+      />
     </div>
   );
 }
