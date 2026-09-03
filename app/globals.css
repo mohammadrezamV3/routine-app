@@ -6120,10 +6120,6 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
 .fx-flag-svg{ display:block; border-radius:50%; }
 .fx-card-main{ flex:1; min-width:0; }
 .fx-card-city{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:800; color:var(--text); }
-.fx-card-note{
-  font-size:9px; font-weight:600; color:var(--muted2);
-  padding:2px 6px; border-radius:999px; border:1px solid rgba(var(--surface-rgb),.24);
-}
 .fx-card-hours{
   display:block; margin-top:4px; font-size:12px; color:var(--muted);
   font-variant-numeric:tabular-nums;

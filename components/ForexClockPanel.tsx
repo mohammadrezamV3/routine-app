@@ -79,10 +79,7 @@ export function ForexClockPanel() {
             <span className="fx-card-flag"><FlagCircle code={s.flagCode} /></span>
 
             <span className="fx-card-main">
-              <span className="fx-card-city">
-                {s.label}
-                {s.displayOnly && <span className="fx-card-note">نمایشی</span>}
-              </span>
+              <span className="fx-card-city">{s.label}</span>
               <span className="fx-card-hours mono">
                 <bdi>{faNum(arc.openLabel)}</bdi> تا <bdi>{faNum(arc.closeLabel)}</bdi>
               </span>
