@@ -148,7 +148,7 @@ export default function NewRoadmapPage() {
             <span className="item-line" style={{ padding: 0 }}>{LOADING_STEPS[stepIdx]}</span>
           </div>
           <div className="mono" style={{ fontSize: 10.5, color: "var(--muted2)", marginTop: 8 }}>
-            معمولا ۱۰ تا ۲۰ ثانیه طول می‌کشه
+            معمولاً ۱۰ تا ۲۰ ثانیه طول می‌کشه — گاهی (اگه بارِ اول جواب درست نگیره و دوباره تلاش کنه) تا یک دقیقه
           </div>
         </div>
       )}

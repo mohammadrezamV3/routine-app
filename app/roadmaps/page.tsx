@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Map } from "lucide-react";
 import { SuperAdminGate } from "@/components/SuperAdminGate";
 import { AuthGate } from "@/components/AuthGate";
 
@@ -24,31 +25,33 @@ export default function RoadmapsHub() {
 
   return (
     <section className="roadmaps-desktop">
-      <h1>رودمپ‌ها</h1>
+      <div className="trade-head-row">
+        <h1>رودمپ‌ها</h1>
+        <button type="button" className="trade-title-add-btn" onClick={() => router.push("/roadmaps/new")}>
+          + افزودن رودمپ
+        </button>
+      </div>
       <div className="section-note">بگو چی می‌خوای یاد بگیری، یه مسیر کامل باهات می‌سازیم</div>
 
       {status === "authenticated" ? (
         <SuperAdminGate>
-          <div className="rm-grid">
-            {customRoadmaps.map((r) => (
-              <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
-                <div>
-                  <div className="rm-box-title">{r.title}</div>
-                  <div className="rm-box-desc">{r.note}</div>
-                </div>
-              </div>
-            ))}
-
-            {loaded && !customRoadmaps.length && (
-              <div className="item-line empty">هنوز رودمپی نساختی</div>
-            )}
-
-            <div className="rm-box rm-box-add" onClick={() => router.push("/roadmaps/new")} style={{ cursor: "pointer" }}>
-              <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
-                <path d="M12 5v14M5 12h14" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
-              </svg>
+          {loaded && !customRoadmaps.length ? (
+            <div className="trade-surface trade-empty-state" style={{ marginTop: 16 }}>
+              <Map size={32} />
+              <p>هنوز رودمپی نساختی</p>
             </div>
-          </div>
+          ) : (
+            <div className="rm-grid">
+              {customRoadmaps.map((r) => (
+                <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
+                  <div>
+                    <div className="rm-box-title">{r.title}</div>
+                    <div className="rm-box-desc">{r.note}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </SuperAdminGate>
       ) : (
         <AuthGate message="برای استفاده از این سرویس وارد شوید" />

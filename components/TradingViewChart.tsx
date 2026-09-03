@@ -101,6 +101,31 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
     return () => clearTimeout(t);
   }, [ready, exhausted, attempt, retry]);
 
+  // قبلاً وقتی هر ۶ تلاش شکست می‌خورد (مثلاً چون s.tradingview.com از
+  // اینترنتِ کاربر در دسترس نیست)، `exhausted` ست می‌شد ولی هیچ‌جا رندر
+  // نمی‌شد — کاربر تا ابد فقط «در حال بارگذاری…» می‌دید، انگار چارت
+  // اصلاً بالا نمی‌آید، بدونِ هیچ توضیحی. حالا یک پیامِ روشن + دکمه‌ی
+  // تلاشِ دوباره نشون داده می‌شه.
+  if (exhausted) {
+    return (
+      <div className="tv-chart-frame">
+        <div className="tv-chart-loading">
+          <span style={{ maxWidth: 320, textAlign: "center", lineHeight: 1.9 }}>
+            چارت لود نشد — ممکنه دسترسی به سرویسِ تریدینگ‌ویو از اینترنتِ فعلی مسدود یا کند باشه.
+          </span>
+          <button
+            type="button"
+            className="trade-ghost-btn"
+            style={{ marginTop: 10 }}
+            onClick={() => { attemptRef.current = 0; setAttempt(0); setLoaded(false); setExhausted(false); }}
+          >
+            تلاش دوباره
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tv-chart-frame">
       {!ready && (
