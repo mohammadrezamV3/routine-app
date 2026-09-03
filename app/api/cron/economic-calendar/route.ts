@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidCronRequest } from "@/lib/cronAuth";
 import { logError } from "@/lib/errorLog";
-import { externalProviderConfigured, externalProviderName, fetchExternalEvents } from "@/lib/economicCalendar";
+import { externalProviderConfigured, externalProviderName, syncEconomicCalendar } from "@/lib/economicCalendar";
 
 // POST /api/cron/economic-calendar — همگام‌سازی روزانه‌ی تقویم اقتصادی از
 // منبع بیرونی (اگر تنظیم شده باشد). مثل بقیه‌ی کران‌ها پشت CRON_SECRET
@@ -20,27 +20,8 @@ export async function POST(req: NextRequest) {
 
   const source = externalProviderName();
   try {
-    const events = await fetchExternalEvents();
-    let created = 0;
-    let updated = 0;
-
-    // upsert روی (source, externalId) — پس اجرای دوباره‌ی کران هیچ‌وقت
-    // رویداد تکراری نمی‌سازد و مقادیر actual که بعدا منتشر می‌شوند
-    // روی همان ردیف به‌روز می‌شوند. رویدادهای دستی (MANUAL) دست‌نخورده
-    // می‌مانند چون کلید یکتا شامل source است.
-    for (const e of events) {
-      const { externalId, ...data } = e;
-      const result = await prisma.economicEvent.upsert({
-        where: { source_externalId: { source, externalId } },
-        create: { ...data, source, externalId },
-        update: data,
-        select: { createdAt: true, updatedAt: true },
-      });
-      if (result.createdAt.getTime() === result.updatedAt.getTime()) created++;
-      else updated++;
-    }
-
-    return NextResponse.json({ ok: true, source, fetched: events.length, created, updated });
+    const result = await syncEconomicCalendar(prisma);
+    return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     logError(
       "cron-economic-calendar",
