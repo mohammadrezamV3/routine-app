@@ -243,3 +243,34 @@ export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
   if (!res.ok) throw new Error(`منبع تقویم اقتصادی پاسخ ${res.status} داد`);
   return normalizeExternalEvents(await res.json());
 }
+
+/**
+ * منطقِ واقعیِ همگام‌سازی — هم از کرانِ روزانه (`/api/cron/economic-calendar`)
+ * صدا زده می‌شه، هم از دکمه‌ی «همگام‌سازی الان» پنلِ ادمین
+ * (`/api/admin/economic-events/sync`)، تا یک منطق دوبار نوشته نشه.
+ *
+ * upsert روی (source, externalId) — اجرای دوباره هیچ‌وقت رویداد تکراری
+ * نمی‌سازه و مقادیر actual که بعدا منتشر می‌شن روی همون ردیف به‌روز می‌شن.
+ * رویدادهای دستی (source=MANUAL) دست‌نخورده می‌مونن چون کلید یکتا شاملِ
+ * source هم هست.
+ */
+export async function syncEconomicCalendar(prisma: {
+  economicEvent: { upsert: (args: any) => Promise<{ createdAt: Date; updatedAt: Date }> };
+}): Promise<{ source: string; fetched: number; created: number; updated: number }> {
+  const source = externalProviderName();
+  const events = await fetchExternalEvents();
+  let created = 0;
+  let updated = 0;
+  for (const e of events) {
+    const { externalId, ...data } = e;
+    const result = await prisma.economicEvent.upsert({
+      where: { source_externalId: { source, externalId } },
+      create: { ...data, source, externalId },
+      update: data,
+      select: { createdAt: true, updatedAt: true },
+    });
+    if (result.createdAt.getTime() === result.updatedAt.getTime()) created++;
+    else updated++;
+  }
+  return { source, fetched: events.length, created, updated };
+}
