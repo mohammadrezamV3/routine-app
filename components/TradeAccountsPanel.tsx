@@ -1,18 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Loader2, Pencil, Trash2, Wallet, X } from "lucide-react";
-import { faNum } from "@/lib/jalali";
 import { TradeAccountModal } from "./TradeAccountModal";
-import { PanelSkeleton } from "./PanelSkeleton";
 import { TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { takePreloaded } from "@/lib/preload";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { PanelSkeleton } from "./PanelSkeleton";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
 // برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
@@ -79,7 +77,22 @@ export function TradeAccountsPanel({
     if (ok) { setConfirmPurge(null); load(true); }
   }
 
-  if (loading) return <PanelSkeleton />;
+  // اسکلتِ عمومیِ PanelSkeleton شکلش (چند خط + ردیفِ سه‌کارتیِ افقی) با
+  // کارتِ فشرده‌ی تک‌ستونیِ اینجا فرق داشت — همون فرقِ شکل، سوییچِ
+  // اسکلت→دیتای واقعی رو یه «پرشِ بزرگ به کوچیک» نشون می‌داد. حالا
+  // اسکلت خودش هم‌شکل و هم‌اندازه‌ی کارتِ واقعیه.
+  if (loading) {
+    return (
+      <div>
+        <div className="trade-accounts-head">
+          <div className="trade-section-title">حساب‌های معاملاتی</div>
+        </div>
+        <div className="trade-account-grid">
+          {[0, 1, 2].map((i) => <div key={i} className="trade-surface trade-account-card trade-account-skel" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
