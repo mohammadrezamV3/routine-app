@@ -29,6 +29,11 @@ export function DashProgressCircle({
           stroke="rgba(var(--accent-rgb),.16)"
           strokeWidth={strokeWidth}
         />
+        {/* گلوی drop-shadow قبلاً روی خودِ دایره‌ی در-حالِ-انیمیشن بود — یعنی
+            هر فریمِ تغییرِ strokeDashoffset، مرورگر مجبور بود کلِ فیلتر رو
+            دوباره rasterize کنه (دقیقاً همون لگی که گزارش شد، چون drop-shadow
+            روی یه شکلِ در حالِ تغییر از ارزون‌ترین افکت‌ها نیست). حذف شد؛
+            حلقه‌ی رنگی خودش بدونِ گلو هم واضحه. */}
         <motion.circle
           cx={center}
           cy={center}
@@ -41,7 +46,6 @@ export function DashProgressCircle({
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c * (1 - clamped / 100) }}
           transition={{ duration: 1, ease: "easeOut" }}
-          style={{ filter: "drop-shadow(0 0 6px rgba(var(--accent-rgb),.55))" }}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
