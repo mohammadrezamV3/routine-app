@@ -5,8 +5,8 @@ import { useTheme } from "./ThemeProvider";
 import { tradingViewSymbol } from "@/lib/tradingView";
 
 // اگر تا این مدت iframe سیگنالِ لود ندهد، خودمان دوباره تلاش می‌کنیم.
-const ATTEMPT_TIMEOUT_MS = 6_000;
-const MAX_ATTEMPTS = 6;
+const ATTEMPT_TIMEOUT_MS = 7_000;
+const MAX_ATTEMPTS = 4;
 
 /**
  * چارتِ تریدینگ‌ویو.
@@ -17,37 +17,31 @@ const MAX_ATTEMPTS = 6;
  * ما دسترسی دارد)، ولی iframe در originِ خودش جدا می‌ماند و فقط
  * `frame-src` باز می‌شود.
  *
- * بارِ اول چرا بالا نمی‌آمد: `loading="lazy"` بود و کنارِ آن یک لایه‌ی
- * خطا که با مهلتِ زمانی ظاهر می‌شد. حالا:
- *   • `loading="eager"` — بلافاصله شروع می‌کند.
- *   • اگر تا مهلت لود نشد، **خودش دوباره تلاش می‌کند** (تا شش بار) به‌جای
- *     اینکه پیامِ خطا نشان دهد. تا وقتی تلاش‌ها تمام نشده، کاربر فقط
- *     حالتِ بارگذاری را می‌بیند و نه چیزِ دیگری.
+ * چرا چارت بالا نمی‌آمد (باگِ قبلی): نمایشِ چارت به پروبی گره خورده بود
+ * که **میزبانِ دیگری** را چک می‌کرد — یک تصویر از `s3.tradingview.com`،
+ * درحالی‌که چیزی که واقعاً جاسازی می‌شود روی `s.tradingview.com` است. اگر
+ * آن یکی زیردامنه در دسترس نبود (یا آن مسیر اصلاً تصویری برنمی‌گرداند، یا
+ * یک افزونه‌ی مسدودکننده جلویش را می‌گرفت)، `reachable` غلط می‌شد و
+ * **چارتِ کاملاً سالم هم مخفی می‌ماند**.
+ *
+ * حالا پروب دقیقاً همان چیزی را می‌زند که جاسازی می‌شود: یک
+ * `fetch(..., {mode:"no-cors"})` به همان URLِ ویجت. پاسخِ opaque یعنی
+ * «به سرور رسیدیم» (حتی اگر ۴۰۴ باشد) و rejectشدن یعنی «شبکه نرسید» —
+ * یعنی دقیقاً همان چیزی که می‌خواهیم بدانیم، بدونِ حدس‌زدنِ میزبان.
+ * برای همین `connect-src` در `next.config.js` به این میزبان باز شده است.
+ *
+ * و قاعده‌ی نمایش برعکسِ قبل شد: چارت **پیش‌فرض دیده می‌شود** و فقط وقتی
+ * پنهان می‌ماند که مطمئن باشیم دسترسی برقرار نیست. حالتِ «هنوز نمی‌دانم»
+ * دیگر چارت را مخفی نمی‌کند.
  */
 export function TradingViewChart({ symbol }: { symbol: string }) {
   const { theme } = useTheme();
   const [loaded, setLoaded] = useState(false);
-  const [reachable, setReachable] = useState<boolean | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [exhausted, setExhausted] = useState(false);
+  // null = هنوز نمی‌دانیم. فقط مقدارِ صریحِ false چارت را کنار می‌زند.
+  const [reachable, setReachable] = useState<boolean | null>(null);
   const attemptRef = useRef(0);
-
-  // وقتی درخواستِ iframe شکست می‌خورد، مرورگر باز هم `onLoad` را صدا
-  // می‌زند (روی صفحه‌ی خطای خودش) — یعنی فقط با `onLoad` نمی‌شود فهمید
-  // چارت واقعاً آمده یا یک صفحه‌ی خطای سفید نشسته آن‌جا. این پروبِ سبک
-  // (یک تصویرِ کوچک از خودِ تریدینگ‌ویو، که با `img-src https:`ِ موجود
-  // کار می‌کند) تفاوت را مشخص می‌کند و تلاشِ دوباره را راه می‌اندازد.
-  useEffect(() => {
-    let done = false;
-    setReachable(null);
-    const img = new Image();
-    const finish = (ok: boolean) => { if (!done) { done = true; setReachable(ok); } };
-    const t = setTimeout(() => finish(false), 5_000);
-    img.onload = () => { clearTimeout(t); finish(true); };
-    img.onerror = () => { clearTimeout(t); finish(false); };
-    img.src = `https://s3.tradingview.com/favicon.ico?p=${attempt}-${Date.now()}`;
-    return () => { done = true; clearTimeout(t); img.onload = null; img.onerror = null; };
-  }, [attempt]);
 
   const tvSymbol = tradingViewSymbol(symbol);
 
@@ -81,44 +75,53 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
     setAttempt(attemptRef.current);
   }, []);
 
-  // با هر عوض‌شدنِ نماد/تم از نو شروع کن
-  useEffect(() => {
+  const restart = useCallback(() => {
     attemptRef.current = 0;
     setAttempt(0);
     setLoaded(false);
     setExhausted(false);
-  }, [tvSymbol, theme]);
+  }, []);
 
+  // با هر عوض‌شدنِ نماد/تم از نو شروع کن
+  useEffect(() => { restart(); }, [tvSymbol, theme, restart]);
 
-  // «آماده» یعنی هم iframe لود شده، هم دامنه واقعاً در دسترس است
-  const ready = loaded && reachable === true;
-
-  // تا وقتی آماده نشده، خودش دوباره تلاش می‌کند — کاربر فقط حالتِ
-  // بارگذاری را می‌بیند و نه هیچ پیام یا دکمه‌ی دیگری.
+  // تا وقتی iframe لود نشده، خودش دوباره تلاش می‌کند.
   useEffect(() => {
-    if (ready || exhausted) return;
+    if (loaded || exhausted) return;
     const t = setTimeout(retry, ATTEMPT_TIMEOUT_MS);
     return () => clearTimeout(t);
-  }, [ready, exhausted, attempt, retry]);
+  }, [loaded, exhausted, attempt, retry]);
 
-  // قبلاً وقتی هر ۶ تلاش شکست می‌خورد (مثلاً چون s.tradingview.com از
-  // اینترنتِ کاربر در دسترس نیست)، `exhausted` ست می‌شد ولی هیچ‌جا رندر
-  // نمی‌شد — کاربر تا ابد فقط «در حال بارگذاری…» می‌دید، انگار چارت
-  // اصلاً بالا نمی‌آید، بدونِ هیچ توضیحی. حالا یک پیامِ روشن + دکمه‌ی
-  // تلاشِ دوباره نشون داده می‌شه.
-  if (exhausted) {
+  // آیا اصلاً به میزبانِ خودِ ویجت می‌رسیم؟ `no-cors` یعنی پاسخ را
+  // نمی‌خوانیم (و لازم هم نداریم) — فقط resolve/reject برایمان مهم است:
+  // resolve = شبکه رسید، reject = مسدود/در دسترس نیست.
+  useEffect(() => {
+    let alive = true;
+    setReachable(null);
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8_000);
+    fetch(src, { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
+      .then(() => { if (alive) setReachable(true); })
+      .catch(() => { if (alive) setReachable(false); })
+      .finally(() => clearTimeout(t));
+    return () => { alive = false; clearTimeout(t); ctrl.abort(); };
+  }, [src]);
+
+  // وقتی مطمئنیم دسترسی نیست، همان لحظه پیام می‌دهیم — نه بعد از چهار
+  // تلاشِ بی‌فایده و نه با یک کادرِ سفیدِ بی‌توضیح (که همان صفحه‌ی خطای
+  // خودِ مرورگر داخلِ iframe است).
+  const blocked = reachable === false;
+
+  if (exhausted || blocked) {
     return (
       <div className="tv-chart-frame">
         <div className="tv-chart-loading">
-          <span style={{ maxWidth: 320, textAlign: "center", lineHeight: 1.9 }}>
-            چارت لود نشد — ممکنه دسترسی به سرویسِ تریدینگ‌ویو از اینترنتِ فعلی مسدود یا کند باشه.
+          <span style={{ maxWidth: 340, textAlign: "center", lineHeight: 1.9 }}>
+            {blocked
+              ? "دسترسی به سرورهای تریدینگ‌ویو از این اینترنت برقرار نشد — معمولاً یعنی دامنه‌شان مسدود است."
+              : "چارت در چند تلاش بالا نیامد — ممکن است سرویس کند باشد."}
           </span>
-          <button
-            type="button"
-            className="trade-ghost-btn"
-            style={{ marginTop: 10 }}
-            onClick={() => { attemptRef.current = 0; setAttempt(0); setLoaded(false); setExhausted(false); }}
-          >
+          <button type="button" className="trade-ghost-btn" style={{ marginTop: 10 }} onClick={restart}>
             تلاش دوباره
           </button>
         </div>
@@ -128,7 +131,7 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
 
   return (
     <div className="tv-chart-frame">
-      {!ready && (
+      {!loaded && (
         <div className="tv-chart-loading">
           <span className="tv-chart-spinner" aria-hidden="true" />
           <span>در حال بارگذاری چارت…</span>
@@ -141,11 +144,16 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
         onLoad={() => setLoaded(true)}
         loading="eager"
         referrerPolicy="origin"
-        // بدونِ allow-same-origin خودِ تریدینگ‌ویو به استوریجِ خودش دسترسی
-        // ندارد و چارت اصلاً بالا نمی‌آید. این‌جا به originِ **تریدینگ‌ویو**
-        // برمی‌گردد نه ما، پس دسترسی‌ای به صفحه‌ی ما نمی‌دهد.
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
-        style={{ opacity: ready ? 1 : 0 }}
+        // sandbox عمداً نگه داشته شده ولی فقط برای یک چیز: جلوگیری از
+        // `allow-top-navigation` — یعنی این iframe نمی‌تواند کلِ صفحه‌ی ما
+        // را به جای دیگری ببرد. بقیه‌ی مجوزها باز شده‌اند چون هرکدامشان یک
+        // راهِ دیگر برای «چارت بی‌صدا بالا نیامد» بودند: بدونِ
+        // allow-same-origin به استوریجِ خودش دسترسی ندارد، و بدونِ
+        // storage-access روی مرورگرهایی که کوکیِ شخصِ ثالث را می‌بندند
+        // نیمه‌کاره می‌ماند. این‌ها همه به originِ **تریدینگ‌ویو** برمی‌گردند،
+        // نه ما.
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-downloads allow-modals allow-storage-access-by-user-activation"
+        style={{ opacity: loaded ? 1 : 0 }}
       />
     </div>
   );

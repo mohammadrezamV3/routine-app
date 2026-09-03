@@ -24,27 +24,49 @@ export function TradePageShell({
   note,
   back = { href: "/trade", label: "ترید" },
   titleAction,
+  fullBleed = false,
   children,
 }: {
   title: string;
   note?: string;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;
+  /**
+   * دیوار-تا-دیوار روی دسکتاپ: عرضِ ثابتِ ۱۱۰۰پیکسلیِ `.trade-desktop` را
+   * برمی‌دارد تا محتوا خودش بتواند تا لبه‌های پنجره باز شود (صفحه‌ی چارت).
+   */
+  fullBleed?: boolean;
   children: React.ReactNode;
 }) {
   const { status } = useSession();
 
   return (
-    <section className="trade-desktop">
-      {back && (
-        <Link href={back.href} prefetch className="trade-back-link">
-          <ChevronRight size={15} /> {back.label}
-        </Link>
+    <section className={fullBleed ? "trade-desktop trade-desktop-full" : "trade-desktop"}>
+      {/* در حالتِ تمام‌صفحه، لینکِ بازگشت و عنوان یک ردیف‌اند — هر ردیفِ
+          جدا در این صفحه یعنی همان‌قدر ارتفاعِ کمتر برای چارت. */}
+      {fullBleed ? (
+        <div className="trade-head-inline">
+          {back && (
+            <Link href={back.href} prefetch className="trade-back-link">
+              <ChevronRight size={15} /> {back.label}
+            </Link>
+          )}
+          <h1>{title}</h1>
+          {titleAction}
+        </div>
+      ) : (
+        <>
+          {back && (
+            <Link href={back.href} prefetch className="trade-back-link">
+              <ChevronRight size={15} /> {back.label}
+            </Link>
+          )}
+          <div className={titleAction ? "trade-head-row" : undefined}>
+            <h1>{title}</h1>
+            {titleAction}
+          </div>
+        </>
       )}
-      <div className={titleAction ? "trade-head-row" : undefined}>
-        <h1>{title}</h1>
-        {titleAction}
-      </div>
       {note && <div className="section-note">{note}</div>}
 
       {status === "loading" && <PanelSkeleton />}
