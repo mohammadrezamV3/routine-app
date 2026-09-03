@@ -72,6 +72,10 @@ const NOINDEX_PATH_PREFIXES = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // instrumentation.ts رو فعال می‌کنه — اون‌جا کانکشن‌پولِ دیتابیس موقعِ بالا
+  // آمدنِ سرور گرم می‌شه تا اولین بازدیدکننده‌ی بعد از هر ری‌استارت هزینه‌ی
+  // ساختِ کانکشن رو ندهد. (در Next 15 پیش‌فرض شده؛ در 14 هنوز فلگ می‌خواد.)
+  experimental: { instrumentationHook: true },
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {

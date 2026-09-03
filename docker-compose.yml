@@ -8,6 +8,15 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-routine}
     volumes:
       - db_data:/var/lib/postgresql/data
+    # چرخشِ لاگ. پیش‌فرضِ داکر (json-file بدونِ سقف) لاگ رو بی‌نهایت نگه
+    # می‌داره؛ روی یه VPSِ کوچیک بعد از چند ماه دیسک پُر می‌شه و اون‌وقت هم
+    # Postgres نمی‌تونه بنویسه هم Next نمی‌تونه کش بسازه — از بیرون دقیقاً
+    # شبیهِ «سایت بالا نمیاد» دیده می‌شه.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-routine}"]
       interval: 5s
@@ -45,13 +54,23 @@ services:
       NODE_OPTIONS: "--max-old-space-size=${NODE_HEAP_MB:-512}"
       # تعدادِ workerِ کلاستر (پیش‌فرض: حداقلِ ۲ یا تعدادِ هسته‌های سرور).
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      # فقط وقتی معنا داره که سرویسِ autoheal پایین فعال شده باشه.
+      autoheal: "true"
     # با این، وضعیتِ واقعیِ اپ توی `docker compose ps` دیده می‌شه (healthy /
     # unhealthy) به‌جای اینکه یه پروسه‌ی گیرکرده «در حال اجرا» گزارش بشه.
     # توجه: خودِ docker compose کانتینرِ unhealthy رو *خودکار ری‌استارت
     # نمی‌کنه* (اون قابلیتِ Swarmه) — `restart: unless-stopped` فقط وقتی
     # پروسه واقعاً exit کنه عمل می‌کنه. برای ری‌استارتِ خودکار روی unhealthy
-    # باید یه sidecar مثل willfarrell/autoheal اضافه بشه.
-    # /api/health عمداً به دیتابیس دست نمی‌زنه.
+    # باید سرویسِ autohealِ پایین رو با پروفایلش روشن کنی:
+    #   docker compose --profile autoheal up -d
+    # /api/health عمداً به دیتابیس دست نمی‌زنه — برای چکِ واقعیِ دیتابیس
+    # /api/ready هست (نگاه کن به app/api/ready/route.ts).
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
@@ -77,6 +96,33 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # ری‌استارتِ خودکارِ کانتینرِ *هنگ‌کرده* — مکملِ `restart: unless-stopped`
+  # که فقط وقتی پروسه واقعاً exit کنه عمل می‌کنه. اگه Node زنده بمونه ولی
+  # جواب نده، healthcheck ردیف بالا unhealthy می‌شه و این sidecar ری‌استارتش
+  # می‌کنه (خودِ docker compose این کار رو نمی‌کنه؛ اون قابلیتِ Swarmه).
+  #
+  # ⚠️ عمداً پشتِ پروفایل گذاشته شده و پیش‌فرض *اجرا نمی‌شه*: این سرویس به
+  # داکرسوکتِ هاست دسترسی می‌خواد، که عملاً یعنی دسترسیِ هم‌سطحِ root روی
+  # سرور برای یه ایمیجِ شخصِ ثالث. اگه این معامله رو قبول داری:
+  #   docker compose --profile autoheal up -d
+  autoheal:
+    image: willfarrell/autoheal:1.2.0
+    profiles: ["autoheal"]
+    restart: unless-stopped
+    environment:
+      # فقط کانتینرهایی که لیبلِ autoheal=true دارن (یعنی app)، نه هرچیزی
+      # که روی این هاست unhealthy بشه.
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_INTERVAL: 10
+      AUTOHEAL_START_PERIOD: 60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 volumes:
   db_data:
