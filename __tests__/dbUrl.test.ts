@@ -2,13 +2,24 @@ import { describe, it, expect } from "vitest";
 import { tuneDatabaseUrl } from "@/lib/dbUrl";
 
 const EMPTY = {} as Record<string, string | undefined>;
+// تکِ-worker (بدونِ cluster.js) — یعنی همون بودجه‌ی کلِ قدیمی، بدونِ تقسیم؛
+// چون پیش‌فرض بدونِ WEB_CONCURRENCY به os.cpus() که بینِ ماشین‌ها فرق می‌کنه
+// وابسته‌ست، این عدد رو صریح می‌دیم تا تست‌ها همه‌جا یکسان نتیجه بدن.
+const ONE_WORKER = { WEB_CONCURRENCY: "1" } as Record<string, string | undefined>;
 
 describe("tuneDatabaseUrl", () => {
   it("پارامترهای پول را به URL بدون query اضافه می‌کند", () => {
-    const out = tuneDatabaseUrl("postgresql://u:p@db:5432/routine", EMPTY)!;
+    const out = tuneDatabaseUrl("postgresql://u:p@db:5432/routine", ONE_WORKER)!;
     expect(out).toContain("?connection_limit=10");
     expect(out).toContain("&pool_timeout=20");
     expect(out).toContain("&connect_timeout=10");
+  });
+
+  it("پیش‌فرضِ connection_limit را بینِ workerهای cluster.js تقسیم می‌کند", () => {
+    const out2 = tuneDatabaseUrl("postgresql://u:p@db:5432/routine", { WEB_CONCURRENCY: "2" })!;
+    expect(out2).toContain("connection_limit=5");
+    const out4 = tuneDatabaseUrl("postgresql://u:p@db:5432/routine", { WEB_CONCURRENCY: "4" })!;
+    expect(out4).toContain("connection_limit=3"); // Math.max(3, floor(10/4)=2) → حداقلِ ۳
   });
 
   it("وقتی URL از قبل query دارد با & ادامه می‌دهد (نه ?)", () => {
