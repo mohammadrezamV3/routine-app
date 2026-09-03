@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
 
   // ۱ درخواست در ۶۰ ثانیه به‌ازای همین ایمیل (طبق الزام صریح)، به‌علاوه یک
   // سقف سست‌تر IP تا کسی با چرخوندن ایمیل‌های مختلف از سقف per-email فرار نکنه
-  if (!checkRateLimit(`email-otp-req-email:${email}`, 1, 60 * 1000)) {
+  if (!(await checkRateLimit(`email-otp-req-email:${email}`, 1, 60 * 1000))) {
     return NextResponse.json({ error: "چند لحظه صبر کن و دوباره امتحان کن" }, { status: 429 });
   }
-  if (!checkRateLimit(`email-otp-req-ip:${ip}`, 10, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`email-otp-req-ip:${ip}`, 10, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

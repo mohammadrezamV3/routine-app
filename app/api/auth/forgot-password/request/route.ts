@@ -31,13 +31,13 @@ export async function POST(req: NextRequest) {
   const { kind, value } = identifier;
 
   // محدودیت روی IP و روی خود شناسه — جلوگیری از پیامک/ایمیل‌بمبارون
-  if (!checkRateLimit(`fp-req-ip:${ip}`, 8, 10 * 60 * 1000) || !checkRateLimit(`fp-req-id:${value}`, 3, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`fp-req-ip:${ip}`, 8, 10 * 60 * 1000)) || !(await checkRateLimit(`fp-req-id:${value}`, 3, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
   // کولداون ثابت ۲ دقیقه‌ای — چک می‌شه حتی اگه شناسه حساب نداشته باشه، وگرنه
   // خود کد ۴۲۹ (که فقط موقع عبور از این کولداون برمی‌گرده) لو می‌داد که
   // شناسه‌ی موردنظر قبلا یه درخواست موفق داشته یا نه.
-  const cooldownOk = checkRateLimit(`fp-req-cooldown:${value}`, 1, 2 * 60 * 1000);
+  const cooldownOk = await checkRateLimit(`fp-req-cooldown:${value}`, 1, 2 * 60 * 1000);
   if (!cooldownOk) {
     return NextResponse.json({ error: "لطفا ۲ دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
   }

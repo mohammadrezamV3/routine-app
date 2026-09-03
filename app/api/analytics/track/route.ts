@@ -14,7 +14,7 @@ const ALLOWED_EVENT_TYPES = new Set(["view_subscription_page"]);
 // شروع می‌شه.
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`analytics-track:${ip}`, 60, 60 * 1000)) {
+  if (!(await checkRateLimit(`analytics-track:${ip}`, 60, 60 * 1000))) {
     return NextResponse.json({ ok: false }, { status: 429 });
   }
 

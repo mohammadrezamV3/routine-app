@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!(session!.user as any).isSuperAdmin && !checkRateLimit(`market-prices:${userId}`, 60, 60 * 1000)) {
+  if (!(session!.user as any).isSuperAdmin && !(await checkRateLimit(`market-prices:${userId}`, 60, 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
