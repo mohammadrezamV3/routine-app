@@ -1,5 +1,18 @@
 # Arion — نسخه Next.js
 
+## نسخه: v1.125.0 (حذفِ کاملِ ماژولِ نوت‌پد)
+
+ماژولِ نوت‌پد (Workspace بلاک‌محور — صفحات/بلاک/دیتابیسِ inline) طبقِ
+درخواستِ صریحِ کاربر کاملاً از ریپو حذف شد:
+
+- صفحات: `app/notepad/`، تمامِ روت‌های `app/api/notepad/*`
+- کامپوننت‌ها: همه‌ی `components/Notepad*.tsx` (۱۸ فایل) + `SlashCommandMenu.tsx`
+- `lib/notepad.ts`، `lib/notepadDb.ts`
+- مدل‌های پریزما: `NotepadPage`, `NotepadBlock`, `NotepadDatabase`,
+  `NotepadDatabaseProperty`, `NotepadDatabaseRecord` + رابطه‌ی `User.notepadPages`
+  (migration جدید: `DROP TABLE`)
+- لینکِ نوار کناری، ورودی‌های `robots.ts`، بخشِ کاملِ CSS مربوطه در `globals.css`
+
 ## نسخه: v1.124.0 (چند فیکسِ دورِ دوم: ژورنال/ساعتِ فارکس/بدنسازی/رودمپ)
 
 - **ژورنال‌نویسی**: عددِ کنارِ سود/زیانِ کارتِ فشرده حالا درصدِ نسبت‌به‌حجمِ

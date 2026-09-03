@@ -172,7 +172,6 @@ model User {
   tradeTags             TradeTag[]
   tradeChecklists       TradeChecklist[]
   roadmaps              Roadmap[]
-  notepadPages          NotepadPage[]
   weeklyReportSnapshots WeeklyReportSnapshot[]
   weeklyGoals           WeeklyGoal[]
 
@@ -1190,9 +1189,9 @@ model TradeMtLink {
 // ============================================================================
 // MODULE: TRADE — یادداشت‌ها
 //
-// عمداً یک مدلِ سبکِ مستقل، نه استفاده از NotepadPage/NotepadBlock: نیازِ
-// این‌جا «یادداشتِ کوتاه با برچسب و رنگ و جست‌وجو»ست، نه ویرایشگرِ بلاکیِ
-// تودرتو. یادداشت می‌تواند اختیاراً به یک حساب یا یک معامله وصل شود تا
+// عمداً یک مدلِ سبکِ مستقل، نه یک ویرایشگرِ بلاکیِ تودرتو: نیازِ این‌جا
+// «یادداشتِ کوتاه با برچسب و رنگ و جست‌وجو»ست. یادداشت می‌تواند اختیاراً
+// به یک حساب یا یک معامله وصل شود تا
 // «تحلیلی که آن روز نوشتم» کنارِ همان معامله پیدا شود.
 // ============================================================================
 
@@ -1385,156 +1384,6 @@ model WeeklyGoal {
 
   @@index([userId, weekStart])
   @@index([userId, followUpWeekStart])
-}
-
-// ============================================================================
-// SUPPORTING FEATURES (اعتمادسازی و اشتراک‌گذاری)
-// ============================================================================
-
-// ============================================================================
-// MODULE: NOTEPAD (Workspace بلاک‌محورِ کامل — تنها بخشِ یادداشت/دانشِ اپ؛
-// جایگزینِ کاملِ MODULE NOTESِ قدیمی که حذف شد. جزوِ پلنِ پایه‌ست (بدونِ
-// ModuleGate). Phase 1: صفحاتِ تودرتو + ادیتورِ بلاکی. این یکی برای
-// Workspaceِ واقعی/تودرتوئه. هر Page و هر Block شناسه‌ی مستقلِ خودشو داره
-// (طبق درخواستِ صریح)، تا در آینده Sharing/Collaboration/Backlink/Relation
-// با ماژول‌های دیگه‌ی Arion بشه بهش اضافه کرد بدونِ تغییرِ ساختار.
-// ============================================================================
-
-model NotepadPage {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // صفحاتِ تودرتو — یک صفحه می‌تونه زیرمجموعه‌ی صفحه‌ی دیگه‌ای باشه
-  parentId String?
-  parent   NotepadPage?  @relation("NotepadPageChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children NotepadPage[] @relation("NotepadPageChildren")
-
-  title    String  @default("")
-  icon     String? // ایموجی
-  coverUrl String? // data-URL فشرده، مثلِ الگوی آواتار — بدونِ storage ابری
-
-  // موقعیتِ بین خواهر/برادرها — عددِ اعشاری تا افزودن/جابه‌جاییِ یک آیتم بینِ
-  // دوتای دیگه بدونِ renumber کردنِ بقیه ممکن باشه
-  position     Float     @default(0)
-  isFavorite   Boolean   @default(false)
-  isArchived   Boolean   @default(false) // یعنی توی Trash
-  isLocked     Boolean   @default(false) // ادیت غیرفعاله تا وقتی از منوی Actions باز بشه
-  archivedAt   DateTime?
-  lastOpenedAt DateTime?
-
-  blocks NotepadBlock[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([userId, parentId])
-  @@index([userId, isFavorite])
-  @@index([userId, isArchived])
-  @@index([userId, lastOpenedAt])
-}
-
-model NotepadBlock {
-  id     String      @id @default(cuid())
-  pageId String
-  page   NotepadPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
-
-  // فقط برای بلاکِ Toggle معنی داره — بچه‌های تودرتوی همون بلاک. بدونِ FK
-  // مستقیم به User (برای جلوگیری از خطای «چند مسیرِ cascade» توی پستگرس؛
-  // مالکیت از طریقِ pageId.userId چک می‌شه، دقیقاً مثلِ بقیه‌ی روت‌های اپ)
-  parentBlockId String?
-  parent        NotepadBlock?  @relation("NotepadBlockChildren", fields: [parentBlockId], references: [id], onDelete: Cascade)
-  children      NotepadBlock[] @relation("NotepadBlockChildren")
-
-  type      String // "paragraph" | "heading1" | "heading2" | "heading3" |
-  // "bulleted_list" | "numbered_list" | "todo" | "toggle" |
-  // "quote" | "divider" | "image" | "database" | "code"
-  // آرایه‌ی RichLeaf — [{ text, bold?, italic?, underline?, strike?, code?, link? }]
-  content   Json    @default("[]")
-  checked   Boolean @default(false) // فقط برای todo
-  collapsed Boolean @default(false) // فقط برای toggle
-  imageUrl  String? // فقط برای image — data-URL فشرده یا لینکِ خارجی
-  language  String? // فقط برای code — اسمِ زبان برای رنگ‌بندیِ نحوی
-
-  position Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  database NotepadDatabase?
-
-  @@index([pageId])
-  @@index([pageId, parentBlockId])
-}
-
-// ============================================================================
-// NOTEPAD — Phase 2: Database (Table/Board/Calendar/Gallery/List). یک
-// دیتابیس همیشه به یه بلاکِ type="database" وصله (نه مستقیم به Page) — یعنی
-// هر صفحه می‌تونه چند دیتابیسِ inline داشته باشه، دقیقاً مثلِ Notion. مالکیت
-// همه‌جا از طریقِ block.page.userId چک می‌شه (بدونِ FK مستقیم به User، طبقِ
-// همون قاعده‌ی جلوگیری از چند-مسیر-cascade که بالا هم رعایت شده).
-// ============================================================================
-
-model NotepadDatabase {
-  id      String       @id @default(cuid())
-  blockId String       @unique
-  block   NotepadBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
-
-  name       String @default("دیتابیس")
-  activeView String @default("table") // "table" | "board" | "calendar" | "gallery" | "list"
-
-  // فیلتر/سورت/گروه‌بندی — مشترک بینِ همه‌ی ویوها (نه جدا برای هرکدوم، برای
-  // سادگی)؛ Board/Calendar علاوه‌بر این، یه propertyِ اختصاصی برای
-  // ستون‌بندی/تاریخ‌گذاری دارن
-  filters                Json    @default("[]") // [{ propertyId, op, value }]
-  sorts                  Json    @default("[]") // [{ propertyId, dir: "asc"|"desc" }]
-  hiddenPropertyIds      Json    @default("[]") // string[]
-  boardGroupPropertyId   String?
-  calendarDatePropertyId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  properties NotepadDatabaseProperty[]
-  records    NotepadDatabaseRecord[]
-
-  @@index([blockId])
-}
-
-model NotepadDatabaseProperty {
-  id         String          @id @default(cuid())
-  databaseId String
-  database   NotepadDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
-
-  name     String
-  type     String // "text" | "number" | "select" | "multi_select" | "checkbox" |
-  // "date" | "url" | "email" | "relation" | "formula"
-  // select/multi_select: [{id,label,color}] — relation: {targetDatabaseId} —
-  // formula: {expression}
-  options  Json?
-  position Float  @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([databaseId])
-}
-
-model NotepadDatabaseRecord {
-  id         String          @id @default(cuid())
-  databaseId String
-  database   NotepadDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
-
-  // مقدارِ همه‌ی propertyها یک‌جا: { [propertyId]: value } — نوعِ value بسته
-  // به نوعِ property فرق می‌کنه (string/number/boolean/string[]/ISO date)
-  values   Json  @default("{}")
-  position Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([databaseId])
 }
 
 // ============================================================================

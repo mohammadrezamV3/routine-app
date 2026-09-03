@@ -27,8 +27,6 @@ export default function robots(): MetadataRoute.Robots {
         "/account/",
         "/admin",
         "/admin/",
-        "/notepad",
-        "/notepad/",
         // خود /subscription پشت AuthGate ـه (کاربر مهمان فقط پیام «وارد
         // شو» می‌بینه، نه جدول پلن‌ها) — جدول واقعی پلن‌ها که عمومیه از
         // قبل توی صفحه‌ی اصلی (PlansSection mode="landing") هست، پس این
