@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   // سقفِ نرخ تا کسی نتواند با گزارشِ انبوه صف را غرق کند
-  if (!checkRateLimit(`chat-report:${guard.userId}`, 20, 60 * 60_000)) {
+  if (!(await checkRateLimit(`chat-report:${guard.userId}`, 20, 60 * 60_000))) {
     return NextResponse.json({ error: "تعداد گزارش‌هایت زیاد شده — بعداً دوباره تلاش کن" }, { status: 429 });
   }
 

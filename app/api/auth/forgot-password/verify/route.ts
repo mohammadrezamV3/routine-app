@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   const { kind, value } = identifier;
 
   // محدودیت تلاش برای حدس‌زدن کد ۵رقمی — هم روی IP هم روی شناسه
-  if (!checkRateLimit(`fp-verify-ip:${ip}`, 15, 10 * 60 * 1000) || !checkRateLimit(`fp-verify-id:${value}`, 6, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`fp-verify-ip:${ip}`, 15, 10 * 60 * 1000)) || !(await checkRateLimit(`fp-verify-id:${value}`, 6, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

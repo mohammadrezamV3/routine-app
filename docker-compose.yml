@@ -47,7 +47,13 @@ services:
       # سقفِ heapِ V8. بدونِ این، Node روی یه VPSِ کوچیک سعی می‌کنه تا نزدیکِ
       # کلِ RAMِ ماشین heap بگیره و در نهایت کلِ سیستم (از جمله Postgres)
       # به swap/OOM می‌خوره — که از بیرون شبیهِ «سایت هنگ کرده» دیده می‌شه.
+      # توجه: ورودیِ کانتینر حالا cluster.js ـه که چند workerِ node.js فورک
+      # می‌کنه؛ این سقف روی *هرکدوم* از workerها جدا اعمال می‌شه (نه یه سقفِ
+      # مشترک) — یعنی مصرفِ کلِ heapِ اپ حدودِ WEB_CONCURRENCY×NODE_HEAP_MB
+      # می‌شه. پیش‌فرض‌های فعلی (۲ worker × ۵۱۲مگ) روی VPSِ ۲هسته/۶گیگ جا داره.
       NODE_OPTIONS: "--max-old-space-size=${NODE_HEAP_MB:-512}"
+      # تعدادِ workerِ کلاستر (پیش‌فرض: حداقلِ ۲ یا تعدادِ هسته‌های سرور).
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
     logging:
       driver: json-file
       options:

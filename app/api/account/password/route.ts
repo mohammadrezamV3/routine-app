@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`password-change:${userId}`, 5, 60 * 60 * 1000) || !checkRateLimit(`password-change-ip:${ip}`, 15, 60 * 60 * 1000)) {
+  if (!(await checkRateLimit(`password-change:${userId}`, 5, 60 * 60 * 1000)) || !(await checkRateLimit(`password-change-ip:${ip}`, 15, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

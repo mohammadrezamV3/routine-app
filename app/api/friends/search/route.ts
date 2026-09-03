@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
-  if (!isSuperAdmin && (!checkRateLimit(`friends-search:${userId}`, 30, 60 * 1000) || !checkRateLimit(`friends-search-ip:${ip}`, 60, 60 * 1000))) {
+  if (!isSuperAdmin && (!(await checkRateLimit(`friends-search:${userId}`, 30, 60 * 1000)) || !(await checkRateLimit(`friends-search-ip:${ip}`, 60, 60 * 1000)))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

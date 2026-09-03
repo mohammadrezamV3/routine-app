@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const newEmail = rawEmail.trim().toLowerCase();
   const cleanCode = code.trim();
 
-  if (!checkRateLimit(`email-change-verify-user:${userId}`, 8, 10 * 60 * 1000) || !checkRateLimit(`email-change-verify-ip:${ip}`, 20, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`email-change-verify-user:${userId}`, 8, 10 * 60 * 1000)) || !(await checkRateLimit(`email-change-verify-ip:${ip}`, 20, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

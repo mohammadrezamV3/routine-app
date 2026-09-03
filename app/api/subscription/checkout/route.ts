@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
     const ip = getClientIp(req.headers);
-    if (!checkRateLimit(`sub-checkout:${userId}:${ip}`, 8, 10 * 60 * 1000)) {
+    if (!(await checkRateLimit(`sub-checkout:${userId}:${ip}`, 8, 10 * 60 * 1000))) {
       return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
     }
 

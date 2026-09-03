@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { clampText } from "@/lib/validate";
+import { externalProviderName } from "@/lib/economicCalendar";
 
 // مدیریت دستی رویدادهای اقتصادی. تا وقتی هیچ فید خارجی تنظیم نشده،
 // همین مسیر تنها راه پرکردن تقویم است — و حتی بعد از تنظیم فید هم برای
@@ -38,7 +39,11 @@ export async function GET(req: NextRequest) {
   });
   return NextResponse.json({
     events: events.map((e) => ({ ...e, occursAt: e.occursAt.toISOString(), createdAt: e.createdAt.toISOString(), updatedAt: e.updatedAt.toISOString() })),
-    externalConfigured: !!process.env.ECONOMIC_CALENDAR_URL,
+    // همیشه یک منبعِ بیرونی هست (فارکس‌فکتوری پیش‌فرض، مگر با
+    // ECONOMIC_CALENDAR_URL چیزِ دیگه‌ای ست شده باشه) — externalConfigured
+    // قبلا مستقیم process.env.ECONOMIC_CALENDAR_URL رو چک می‌کرد که با این
+    // تصمیمِ معماری (lib/economicCalendar.ts) هماهنگ نبود.
+    externalSource: externalProviderName(),
   });
 }
 

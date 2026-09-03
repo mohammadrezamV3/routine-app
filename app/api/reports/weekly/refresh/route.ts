@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
 
-  if (!guard.isSuperAdmin && !checkRateLimit(`weekly-report-refresh:${guard.userId}`, 5, 24 * 60 * 60 * 1000)) {
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`weekly-report-refresh:${guard.userId}`, 5, 24 * 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌های تولید دوباره‌ی گزارش امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
   }
 
