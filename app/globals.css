@@ -5003,6 +5003,30 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-checklist-news-list{ display:flex; flex-direction:column; }
 .trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
 
+/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar) — ستون‌های
+   زمان/ارز/رویداد/واقعی/پیش‌بینی/قبلی هم‌ردیف، مثلِ لیستِ ForexFactory؛
+   نه دو خطِ زیرِهمِ قبلی. عرضِ ستون‌ها با grid ثابته تا همه‌ی ردیف‌های یک
+   روز دقیقاً زیرِ هم بشینن؛ اگه صفحه خیلی باریک بود، خودِ باکس (نه کلِ
+   صفحه) اسکرولِ افقیِ نازک می‌گیره — دقیقاً رفتارِ خودِ جدولِ ForexFactory. */
+.trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
+.trade-cal-table{ min-width:320px; }
+.trade-cal-thead{
+  display:grid; grid-template-columns:34px 54px minmax(90px,1fr) 38px 38px 38px; gap:6px;
+  align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
+  font-size:9.5px; font-weight:700; color:var(--muted2);
+}
+.trade-cal-tr{
+  display:grid; grid-template-columns:34px 54px minmax(90px,1fr) 38px 38px 38px; gap:6px;
+  align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:11.5px;
+}
+.trade-cal-tr:last-child{ border-bottom:none; }
+.tc-col-time{ font-weight:700; }
+.tc-col-cur{ display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; white-space:nowrap; }
+.tc-col-event{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tc-col-num{ text-align:center; color:var(--text); }
+.tc-col-num.muted{ color:var(--muted2); }
+.trade-cal-impact-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
 /* ── ساعت فارکس ────────────────────────────────────────────── */
 .forex-market-state{
   display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);

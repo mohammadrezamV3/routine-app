@@ -138,25 +138,37 @@ export function EconomicCalendarPanel() {
       {groups.map(([day, list]) => (
         <div key={day} className="trade-cal-day">
           <div className="trade-cal-day-title">{formatTradeDateTime(list[0].occursAt, calSystem, false)}</div>
-          {list.map((e) => {
-            const meta = currencyMeta(e.currency);
-            return (
-              <div key={e.id} className="trade-cal-event">
-                <span className="trade-cal-time mono">{formatTradeTime(e.occursAt)}</span>
-                <span className="trade-cal-impact" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
-                <span className="trade-cal-main">
-                  <span className="trade-cal-title">
-                    {meta?.flag} <b className="mono">{e.currency}</b> — {e.title}
-                  </span>
-                  <span className="trade-cal-values">
-                    <span>واقعی: <b className={e.actual ? "mono" : "mono muted"}>{e.actual ? faNum(e.actual) : "—"}</b></span>
-                    <span>پیش‌بینی: <b className="mono">{e.forecast ? faNum(e.forecast) : "—"}</b></span>
-                    <span>قبلی: <b className="mono">{e.previous ? faNum(e.previous) : "—"}</b></span>
-                  </span>
-                </span>
+          {/* جدولِ ردیفی مثل ForexFactory — ستون‌های زمان/ارز/رویداد/واقعی/
+              پیش‌بینی/قبلی هم‌ردیف، نه زیرِ هم؛ روی صفحه‌ی خیلی باریک با
+              اسکرولِ افقیِ همین باکس (نه کلِ صفحه) جا می‌شه. */}
+          <div className="trade-cal-table-scroll">
+            <div className="trade-cal-table">
+              <div className="trade-cal-thead">
+                <span className="tc-col-time">زمان</span>
+                <span className="tc-col-cur">ارز</span>
+                <span className="tc-col-event">رویداد</span>
+                <span className="tc-col-num">واقعی</span>
+                <span className="tc-col-num">پیش‌بینی</span>
+                <span className="tc-col-num">قبلی</span>
               </div>
-            );
-          })}
+              {list.map((e) => {
+                const meta = currencyMeta(e.currency);
+                return (
+                  <div key={e.id} className="trade-cal-tr">
+                    <span className="tc-col-time mono">{formatTradeTime(e.occursAt)}</span>
+                    <span className="tc-col-cur">
+                      <span className="trade-cal-impact-dot" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
+                      {meta?.flag} <b className="mono">{e.currency}</b>
+                    </span>
+                    <span className="tc-col-event" title={e.title}>{e.title}</span>
+                    <span className={`tc-col-num mono${e.actual ? "" : " muted"}`}>{e.actual ? faNum(e.actual) : "—"}</span>
+                    <span className="tc-col-num mono">{e.forecast ? faNum(e.forecast) : "—"}</span>
+                    <span className="tc-col-num mono">{e.previous ? faNum(e.previous) : "—"}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       ))}
       </div>
