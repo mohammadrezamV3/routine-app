@@ -64,9 +64,6 @@ export const ICONS: Record<string, JSX.Element> = {
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
-  notepad: (
-    <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5c-1.6-1.2-3.7-1.7-6-1.7v13c2.3 0 4.4.5 6 1.7 1.6-1.2 3.7-1.7 6-1.7v-13c-2.3 0-4.4.5-6 1.7Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 6.5v13" stroke="currentColor" strokeWidth="1.6"/></svg>
-  ),
   account: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M5 19.5c1.3-3.3 4-5 7-5s5.7 1.7 7 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -109,7 +106,6 @@ function isGroup(item: NavItem): item is NavGroup {
 
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
-  { href: "/notepad", label: "Notepad", icon: "notepad", superAdminOnly: true },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", superAdminOnly: true },
   {
     label: "بدنسازی", icon: "exercise",
