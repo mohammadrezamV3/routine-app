@@ -4900,6 +4900,11 @@ body[data-theme="light"] .trade-search input.trade-glass-field{
 /* ردیف تایتل + دکمه‌ی «افزودن» هم‌ردیف، چپ‌چین (ادامه‌ی همون الگوی
    .tm-head-row/.weekly-head-row). */
 .trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+/* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنارِ هم، نه زیرِ هم. هر ردیفِ جدا
+   در صفحه‌ی چارت یعنی همان‌قدر ارتفاعِ کمتر برای خودِ چارت. */
+.trade-head-inline{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.trade-head-inline .trade-back-link{ margin-bottom:0; }
+.trade-head-inline h1{ margin-bottom:0; }
 .trade-head-row h1{ margin-bottom:0; }
 .trade-title-add-btn{
   display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
@@ -5212,16 +5217,21 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
      `:has()` نداشته باشد، بدترین حالتش یک اسکرولِ کوتاه است. */
   body:has(.trade-desktop-full){ padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
 
-  .trade-desktop-full{ width:auto; max-width:none; margin-right:0; padding-bottom:0; }
+  /* breakout روی خودِ سکشن است، نه فقط روی گرید — این‌طوری سرصفحه
+     («‹ ترید  چارت») هم با لبه‌ی همان گرید هم‌راستا می‌شود، وگرنه عنوان
+     وسطِ صفحه شناور می‌ماند و انگار به چیدمانِ زیرش ربطی ندارد. */
+  .trade-desktop-full{
+    width:100vw; max-width:none; position:relative; left:50%; right:50%;
+    margin-left:-50vw; margin-right:-50vw;
+    padding:0 12px; box-sizing:border-box;
+  }
   /* این یک خط توضیح روی دسکتاپ فقط ارتفاع می‌خورد؛ در ازایش چارت بزرگ‌تر
      می‌شود — که خواسته‌ی صریحِ همین صفحه است. روی موبایل سرِ جایش می‌ماند. */
   .trade-desktop-full .section-note{ display:none; }
+  .trade-desktop-full .trade-head-inline{ margin-bottom:12px; }
 
   .tv-page{
-    width:100vw; position:relative; left:50%; right:50%;
-    margin-left:-50vw; margin-right:-50vw;
-    padding:0 12px; box-sizing:border-box;
-    height:var(--tv-h, calc(100vh - 230px));
+    height:var(--tv-h, calc(100vh - 200px));
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) 330px;
     grid-template-rows:minmax(0,2fr) minmax(0,1fr);
     grid-template-areas:

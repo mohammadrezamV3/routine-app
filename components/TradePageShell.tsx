@@ -42,15 +42,31 @@ export function TradePageShell({
 
   return (
     <section className={fullBleed ? "trade-desktop trade-desktop-full" : "trade-desktop"}>
-      {back && (
-        <Link href={back.href} prefetch className="trade-back-link">
-          <ChevronRight size={15} /> {back.label}
-        </Link>
+      {/* در حالتِ تمام‌صفحه، لینکِ بازگشت و عنوان یک ردیف‌اند — هر ردیفِ
+          جدا در این صفحه یعنی همان‌قدر ارتفاعِ کمتر برای چارت. */}
+      {fullBleed ? (
+        <div className="trade-head-inline">
+          {back && (
+            <Link href={back.href} prefetch className="trade-back-link">
+              <ChevronRight size={15} /> {back.label}
+            </Link>
+          )}
+          <h1>{title}</h1>
+          {titleAction}
+        </div>
+      ) : (
+        <>
+          {back && (
+            <Link href={back.href} prefetch className="trade-back-link">
+              <ChevronRight size={15} /> {back.label}
+            </Link>
+          )}
+          <div className={titleAction ? "trade-head-row" : undefined}>
+            <h1>{title}</h1>
+            {titleAction}
+          </div>
+        </>
       )}
-      <div className={titleAction ? "trade-head-row" : undefined}>
-        <h1>{title}</h1>
-        {titleAction}
-      </div>
       {note && <div className="section-note">{note}</div>}
 
       {status === "loading" && <PanelSkeleton />}
