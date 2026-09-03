@@ -24,18 +24,24 @@ export function TradePageShell({
   note,
   back = { href: "/trade", label: "ترید" },
   titleAction,
+  fullBleed = false,
   children,
 }: {
   title: string;
   note?: string;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;
+  /**
+   * دیوار-تا-دیوار روی دسکتاپ: عرضِ ثابتِ ۱۱۰۰پیکسلیِ `.trade-desktop` را
+   * برمی‌دارد تا محتوا خودش بتواند تا لبه‌های پنجره باز شود (صفحه‌ی چارت).
+   */
+  fullBleed?: boolean;
   children: React.ReactNode;
 }) {
   const { status } = useSession();
 
   return (
-    <section className="trade-desktop">
+    <section className={fullBleed ? "trade-desktop trade-desktop-full" : "trade-desktop"}>
       {back && (
         <Link href={back.href} prefetch className="trade-back-link">
           <ChevronRight size={15} /> {back.label}

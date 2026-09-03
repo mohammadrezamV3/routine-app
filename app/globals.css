@@ -5173,26 +5173,79 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }
 
 /* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
-   راست‌به‌چپ: ستونِ اولِ گرید سمتِ **راست** می‌نشیند. پس ستونِ پهن (چارت،
-   گفت‌وگو، تقویم) اول می‌آید و ستونِ باریک (چک‌لیست و ثبتِ معامله) دوم. */
+   موبایل: تک‌ستونه و اسکرول‌شونده، به ترتیبِ
+   چارت → گفت‌وگو → چک‌لیست → ثبتِ معامله → اخبارِ اقتصادی.
+   دسکتاپ: پایین‌تر، یک گریدِ دیوار-تا-دیوار که اسکرول نمی‌شود. */
 .tv-page{ display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
-.tv-main{ display:flex; flex-direction:column; gap:14px; min-width:0; }
-.tv-aside{ min-width:0; }
 
 @media (max-width:1023px){
-  /* تک‌ستونه: چارت → گفت‌وگو → چک‌لیست و ثبت معامله → تقویم اقتصادی.
-     `display:contents` باعث می‌شود بچه‌های .tv-main مستقیم بچه‌ی همین
-     گرید شوند، وگرنه پنلِ کناری نمی‌توانست بینشان بنشیند. */
-  .tv-main{ display:contents; }
   .tv-chart-card{ order:1; }
-  .tv-page > .tv-main > .trade-chat-panel{ order:2; }
-  .tv-aside{ order:3; }
-  .tv-page > .tv-main > .trade-cal-card{ order:4; }
+  .tv-page > .trade-chat-panel{ order:2; }
+  .tv-page > .tv-cell-check{ order:3; }
+  .tv-page > .tv-cell-entry{ order:4; }
+  .tv-page > .trade-cal-card{ order:5; }
 }
 
+/* ── دسکتاپ: کلِ پنجره، بدونِ اسکرول ─────────────────────────────────────
+   دو خواسته‌ی صریحِ کاربر این‌جا اجرا می‌شود:
+
+   ۱) «کل صفحه رو بگیره، نه اینکه از هر ور فاصله داشته باشه» — این صفحه
+      داخلِ ستونِ ۶۲۰پیکسلیِ `.wrap` است. با همان ترفندِ breakoutِ
+      `.ticker-bar` (100vw + مارجینِ منفیِ نصفِ ویوپورت در هر دو جهت، که
+      هم در LTR هم RTL کار می‌کند) از آن ستون بیرون می‌زند. برای اینکه این
+      حساب درست دربیاید، عرضِ ثابتِ ۱۱۰۰پیکسلیِ `.trade-desktop` هم روی
+      همین صفحه برداشته می‌شود (کلاسِ `.trade-desktop-full`) — وگرنه
+      breakout نسبت‌به یک ستونِ جابه‌جاشده مرکز می‌گرفت و کج می‌افتاد.
+
+   ۲) «همش به صفحه باشه، اسکرول نشه» — ارتفاعِ گرید `--tv-h` است که
+      TradeChartView دقیقاً «از بالای گرید تا کفِ پنجره» اندازه می‌گیرد.
+      هر خانه `min-height:0` دارد (بدونش آیتمِ گرید از محتوایش کوچک‌تر
+      نمی‌شود و کلِ صفحه دوباره اسکرول می‌خورد) و خودش داخلش اسکرول دارد.
+
+   چیدمان طبقِ اسکچ (راست‌به‌چپ؛ ستونِ اولِ رشته‌ی area سمتِ راست است):
+       chart chart check
+       chat  cal   entry                                              */
 @media (min-width:1024px){
-  .tv-page{ grid-template-columns:minmax(0,1fr) 316px; }
-  .tv-aside{ position:sticky; top:88px; }
+  /* پدینگِ پایینِ body برای نوارِ پایینِ موبایل است؛ روی دسکتاپ هیچ نوارِ
+     ثابتی آن‌جا نیست و آن ۹۰ پیکسل فقط باعث می‌شد صفحه دقیقاً به همان
+     اندازه اسکرول بخورد. فقط برای همین صفحه کمش می‌کنیم. اگر مرورگری
+     `:has()` نداشته باشد، بدترین حالتش یک اسکرولِ کوتاه است. */
+  body:has(.trade-desktop-full){ padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+
+  .trade-desktop-full{ width:auto; max-width:none; margin-right:0; padding-bottom:0; }
+  /* این یک خط توضیح روی دسکتاپ فقط ارتفاع می‌خورد؛ در ازایش چارت بزرگ‌تر
+     می‌شود — که خواسته‌ی صریحِ همین صفحه است. روی موبایل سرِ جایش می‌ماند. */
+  .trade-desktop-full .section-note{ display:none; }
+
+  .tv-page{
+    width:100vw; position:relative; left:50%; right:50%;
+    margin-left:-50vw; margin-right:-50vw;
+    padding:0 12px; box-sizing:border-box;
+    height:var(--tv-h, calc(100vh - 230px));
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 330px;
+    grid-template-rows:minmax(0,2fr) minmax(0,1fr);
+    grid-template-areas:
+      "chart chart check"
+      "chat  cal   entry";
+    gap:12px; align-items:stretch;
+  }
+  .tv-page > .tv-chart-card{ grid-area:chart; }
+  .tv-page > .trade-chat-panel{ grid-area:chat; }
+  .tv-page > .trade-cal-card{ grid-area:cal; }
+  .tv-page > .tv-cell-check{ grid-area:check; }
+  .tv-page > .tv-cell-entry{ grid-area:entry; }
+
+  /* هر خانه دقیقاً به‌اندازه‌ی سهمِ خودش از گرید — نه بزرگ‌تر. */
+  .tv-page > *{ min-height:0; min-width:0; height:100%; box-sizing:border-box; overflow:hidden; }
+  .tv-page > .trade-chat-panel,
+  .tv-page > .trade-cal-card,
+  .tv-page > .trade-chart-side{ display:flex; flex-direction:column; min-height:0; }
+
+  /* لیست‌های داخلی: سقفِ ثابتِ قبلی برداشته می‌شود تا فضای واقعیِ خانه را
+     پر کنند و اسکرولِ خودشان را داشته باشند. */
+  .tv-page .trade-chat-list,
+  .tv-page .trade-cal-card-list,
+  .tv-page .tv-cell-scroll{ flex:1; min-height:0; max-height:none; overflow-y:auto; }
 }
 
 .tv-chart-card{
@@ -5202,16 +5255,15 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   padding:11px; display:flex; flex-direction:column; gap:11px;
 }
 
-/* چارت عمداً بلند است تا تقریباً تا زیرِ هدر بالا بیاید — روی صفحه‌ی
-   کوچک هم زیرِ ۴۲۰ نمی‌رود که کندل‌ها له نشوند. */
+/* موبایل: ارتفاعِ ثابتِ سخاوتمندانه. دسکتاپ (پایین‌تر): هرچه از خانه‌ی
+   گرید مانده، یعنی چارت خودش تا کفِ صفحه کش می‌آید. */
 .tv-chart-frame{
   position:relative; width:100%; border-radius:13px; overflow:hidden;
-  height:clamp(460px, calc(100vh - 210px), 1100px);
+  height:clamp(440px, calc(100vh - 190px), 820px);
   background:rgba(var(--surface-rgb),.06);
 }
-@media (max-width:1023px){
-  /* موبایل: چارت باید واقعاً بزرگ باشد، نه یک نوارِ کوتاه */
-  .tv-chart-frame{ height:clamp(440px, calc(100vh - 190px), 820px); }
+@media (min-width:1024px){
+  .tv-chart-frame{ flex:1; height:auto; min-height:0; }
 }
 .tv-chart-frame iframe{ width:100%; height:100%; border:0; display:block; transition:opacity .3s ease; }
 .tv-chart-loading{
