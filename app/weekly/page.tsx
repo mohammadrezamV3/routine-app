@@ -248,9 +248,9 @@ export default function WeeklyPage() {
   }
 
   async function toggleDashTask(id: string) {
-    if (!isSelectedToday) return;
-    const task = dashTasks.find((t) => t.id === id);
-    if (task?.notStarted) return;
+    // عمداً هیچ قفلِ روز/ساعتی نیست: کاربر باید بتواند برنامه‌های *هر* روز را
+    // تیک بزند — روزِ گذشته برای جبرانِ عقب‌افتاده، و برنامه‌ای که هنوز
+    // ساعتش نرسیده هم اگر زودتر انجامش داده. درخواستِ صریحِ کاربر.
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
@@ -354,7 +354,7 @@ export default function WeeklyPage() {
             ) : (
               <DashTaskList
                 tasks={dashTasks}
-                editable={isSelectedToday}
+                editable
                 onToggle={toggleDashTask}
                 onAddProgram={() => setAddProgramOpen(true)}
                 onOpenProgram={setCardName}

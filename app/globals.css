@@ -2176,16 +2176,22 @@
      تقریبا توپر تیره داشتن که با بقیه‌ی اپ (هدر، پنل پروفایل/اعلان‌ها)
      هم‌حس نبود؛ اسپسیفیسیتی این سلکتور (با :has) از قانون پایه‌ی
      body:not([light]) .wsearch-newform بالاتره، پس درست override می‌شه. */
+  /* «دودستگی» بک‌گراند این پاپ‌آپ‌ها از همین‌جا می‌آمد: بک‌گراندِ ۴٪ فقط
+     وقتی یکدست دیده می‌شد که backdrop-filter کار می‌کرد. روی دستگاه‌های
+     لمسی (html[data-perf="low"]) بلور عمداً برداشته می‌شود، و آن‌وقت پاپ‌آپ
+     عملاً شفاف می‌ماند و کارت‌ها/متن‌های پشتش از توش می‌زدند بیرون — دقیقاً
+     همان دورنگیِ گزارش‌شده. حالا خودِ سطح به‌قدر کافی کدر است
+     (--surface-glass، ۷۲٪) که مستقل از بلور یکدست بماند. */
   .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.04);
+    background:var(--surface-glass);
     backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   }
   body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.04);
+    background:var(--surface-glass);
     border:1px solid rgba(255,255,255,.07);
   }
   body[data-theme="light"] .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.28);
+    background:var(--surface-glass);
   }
   @keyframes newformPopIn{
     from{ opacity:0; transform:translate(-50%, calc(-50% + 26px)) scale(.96); }
@@ -2456,20 +2462,15 @@
   }
   .task-check-missed{ animation:taskMissedPulse 1.8s ease-in-out infinite; }
 
-  /* conflict alert box: pinned near the top, detached from the edge, no backdrop blur */
-  .conflict-alert{
-    position:fixed; left:50%; top:14px; z-index:60; width:88%; max-width:420px;
-    background:rgba(var(--surface-rgb), .09); border:1px solid var(--line); border-radius:16px;
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-    box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(224,82,82,.35), 0 0 22px rgba(224,82,82,.35);
-    padding:14px 18px 12px; display:flex; flex-direction:column; gap:8px;
-    transform:translate(-50%,-30px); opacity:0; pointer-events:none;
-    transition:transform .28s cubic-bezier(.22,1,.36,1), opacity .22s ease;
+  /* بنرِ خطای بالای صفحه حذف شد — درخواستِ صریحِ کاربر: «تمام ارورهای بالای
+     صفحه رو حذف کن». به‌جایش هر فرم/پاپ‌آپ خطایش را داخلِ خودش نشان می‌دهد،
+     یعنی دقیقاً همان‌جایی که کاربر دارد نگاه می‌کند. */
+  .form-inline-error{
+    margin-top:10px; padding:9px 12px; border-radius:12px;
+    font-size:12px; font-weight:600; line-height:1.8; text-align:center;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
   }
-  .conflict-alert.show{transform:translate(-50%,0); opacity:1; pointer-events:auto;}
-  .conflict-alert-text{font-size:13px; color:var(--text); font-weight:600; text-align:center; line-height:1.7;}
-  .conflict-alert-bar{height:3px; width:100%; background:var(--line); border-radius:2px; overflow:hidden;}
-  .conflict-alert-bar-fill{height:100%; width:100%; background:#E05252; border-radius:2px; transform-origin:right; transition:transform linear;}
+
 
 /* ---------- انیمیشن ساده‌شده بلوب‌های مایع (نسخه CSS-only) ----------
    نسخه اصلی HTML این بلوب‌ها را با فیزیک JS (random-walk + برخورد زوجی)
@@ -3850,7 +3851,6 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .wsearch-newform-name.trade-glass-field{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .trade-pnl-readout{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
-  .conflict-alert{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .auth-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .auth-tabs{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .manual-exercise-picker-search{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
@@ -4244,6 +4244,15 @@ html[data-perf="low"] .trade-account-menu{ backdrop-filter:blur(24px) saturate(1
    یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
    data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
 html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدونِ بلور هیچ درصدِ شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملاً کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانونِ پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعاً غالب شود.) */
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
 
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }
@@ -4949,7 +4958,7 @@ body[data-theme="light"] .trade-search input.trade-glass-field{
 .trade-drawer{
   position:fixed; z-index:56; right:0; left:0; bottom:0; max-height:88vh; max-height:88dvh;
   overflow-y:auto; -webkit-overflow-scrolling:touch;
-  background:rgba(var(--surface-rgb), .16); border:1px solid var(--line);
+  background:var(--surface-glass); border:1px solid var(--line);
   border-radius:26px 26px 0 0; padding:22px;
   backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
   isolation:isolate;
