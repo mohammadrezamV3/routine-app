@@ -100,6 +100,60 @@ if (cluster.isPrimary) {
   }
   process.on("SIGTERM", () => shutdown("SIGTERM"));
   process.on("SIGINT", () => shutdown("SIGINT"));
+
+  // ── همگام‌سازیِ خودکارِ روزانه‌ی تقویم اقتصادی ──────────────────────
+  // قبلا این کار فقط با یک crontab بیرونی روی خودِ سرور ممکن بود
+  // (deploy/cron.example) — یعنی بدونِ ست‌کردنِ دستیِ اپراتور، جدول خالی
+  // می‌موند. چون primary فارغ از تعدادِ worker همیشه دقیقاً یکیه (دقیقاً
+  // همون استدلالِ rate-limit بالا)، خودش زمان‌بندیِ این کار رو هم برعهده
+  // می‌گیره — بدونِ این، هر worker باید جدا زمان‌بندی می‌کرد و همون
+  // sync چند بار در روز تکرار می‌شد. به‌جای وارد کردنِ مستقیمِ
+  // lib/economicCalendar.ts (که TypeScript/Prisma می‌خواد و اینجا primary
+  // هیچ‌کدومش رو لود نکرده)، primary همون روتِ HTTP کرانِ موجود
+  // (app/api/cron/economic-calendar) رو روی خودِ localhost صدا می‌زنه —
+  // دقیقاً همون‌کاری که crontabِ بیرونی می‌کرد، فقط از داخلِ خودِ کانتینر.
+  const CRON_SECRET = process.env.CRON_SECRET;
+  if (!CRON_SECRET) {
+    console.warn("[cluster] CRON_SECRET ست نشده — همگام‌سازیِ خودکارِ تقویم اقتصادی غیرفعاله");
+  } else {
+    const port = process.env.PORT || 3000;
+    async function syncEconomicCalendarNow() {
+      try {
+        const res = await fetch(`http://127.0.0.1:${port}/api/cron/economic-calendar`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${CRON_SECRET}` },
+        });
+        const body = await res.json().catch(() => null);
+        if (!res.ok) {
+          console.error(`[cluster] همگام‌سازیِ تقویم اقتصادی با خطا مواجه شد: ${res.status} ${JSON.stringify(body)}`);
+          return;
+        }
+        console.log(`[cluster] تقویمِ اقتصادی همگام‌سازی شد: ${JSON.stringify(body)}`);
+      } catch (err) {
+        // اگه workerها هنوز کاملاً بالا نیومده باشن (مثلاً درست بعدِ استارتِ
+        // کانتینر)، این fail می‌شه — بی‌خطر: زمان‌بندیِ روزانه‌ی بعدی جبران
+        // می‌کنه، و ادمین همیشه می‌تونه از پنل «همگام‌سازی الان» بزنه.
+        console.error(`[cluster] همگام‌سازیِ تقویم اقتصادی شکست خورد: ${err && err.message}`);
+      }
+    }
+
+    // ساعتِ ۳ بامداد (هم‌زمانِ ساعتِ deploy/cron.example) — کمترین ترافیکِ
+    // کاربر، و قبل از شروعِ روزِ معاملاتیِ اکثرِ کاربرها.
+    function msUntilNext3am() {
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0, 0);
+      if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
+      return next.getTime() - now.getTime();
+    }
+
+    // یک بار کمی بعدِ بالا آمدنِ سرور (که یه دیپلویِ تازه بدونِ داده نمونه)،
+    // و بعدش هر ۲۴ ساعت.
+    setTimeout(syncEconomicCalendarNow, 30_000).unref();
+    setTimeout(function scheduleDaily() {
+      syncEconomicCalendarNow();
+      setInterval(syncEconomicCalendarNow, 24 * 60 * 60 * 1000).unref();
+    }, msUntilNext3am()).unref();
+  }
 } else {
   // هر worker همون سرورِ standalone نکست رو مستقیم اجرا می‌کنه؛ رفتارش با
   // حالتِ تک-پروسه‌ای قبلی یکسانه، فقط چند نسخه‌ش همزمان بالاست.

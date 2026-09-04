@@ -8,11 +8,14 @@
 //     ورود دستی ادمین از همین حالا کامل کار می‌کند.
 //
 // منبع پیش‌فرض حالا فید هفتگی عمومی فارکس‌فکتوری است (پایین‌تر،
-// DEFAULT_CALENDAR_URL) و عنوان‌های پرتکرارش به فارسی ترجمه می‌شوند. کران
-// روزانه آن را می‌گیرد و در همین جدول upsert می‌کند؛ ورود دستی ادمین هم سر
-// جایش می‌ماند. با ست‌کردن `ECONOMIC_CALENDAR_URL` (و در صورت نیاز
-// `ECONOMIC_CALENDAR_API_KEY`) می‌شود منبع را با یک فید تجاری عوض کرد،
-// بدون اینکه هیچ‌جای دیگر اپ تغییر کند.
+// DEFAULT_CALENDAR_URL). کران روزانه آن را می‌گیرد و در همین جدول upsert
+// می‌کند؛ ورود دستی ادمین هم سر جایش می‌ماند. با ست‌کردن
+// `ECONOMIC_CALENDAR_URL` (و در صورت نیاز `ECONOMIC_CALENDAR_API_KEY`)
+// می‌شود منبع را با یک فید تجاری عوض کرد، بدون اینکه هیچ‌جای دیگر اپ
+// تغییر کند.
+//
+// طبقِ درخواستِ صریح، عنوانِ رویدادها دیگر به فارسی ترجمه نمی‌شود — دقیقاً
+// همان متنِ انگلیسیِ منبع (مثلِ خودِ فارکس‌فکتوری) ذخیره/نمایش داده می‌شود.
 
 export type EconomicImpact = "LOW" | "MEDIUM" | "HIGH";
 
@@ -58,70 +61,6 @@ export function currencyMeta(code: string) {
  * («USD»/«EUR»)، نه کد کشور — نرمال‌ساز پایین همین را در نظر می‌گیرد.
  */
 export const DEFAULT_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
-
-/**
- * ترجمه‌ی عنوان رویدادهای پرتکرار به فارسی. عنوانی که این‌جا نباشد دست‌نخورده
- * (انگلیسی) می‌ماند — بهتر از حدس‌زدن ترجمه یا خالی گذاشتنش.
- *
- * کلیدها با حروف کوچک و بدون فاصله‌ی اضافه مقایسه می‌شوند تا تفاوت‌های جزئی
- * نگارشی فید، ترجمه را از دست ندهد.
- */
-const EVENT_TITLE_FA: Record<string, string> = {
-  "non-farm employment change": "تغییر اشتغال غیرکشاورزی",
-  "unemployment rate": "نرخ بیکاری",
-  "average hourly earnings m/m": "میانگین دستمزد ساعتی (ماهانه)",
-  "cpi m/m": "شاخص قیمت مصرف‌کننده (ماهانه)",
-  "cpi y/y": "شاخص قیمت مصرف‌کننده (سالانه)",
-  "core cpi m/m": "شاخص قیمت مصرف‌کننده هسته (ماهانه)",
-  "ppi m/m": "شاخص قیمت تولیدکننده (ماهانه)",
-  "core ppi m/m": "شاخص قیمت تولیدکننده هسته (ماهانه)",
-  "retail sales m/m": "خرده‌فروشی (ماهانه)",
-  "core retail sales m/m": "خرده‌فروشی هسته (ماهانه)",
-  "gdp m/m": "تولید ناخالص داخلی (ماهانه)",
-  "gdp q/q": "تولید ناخالص داخلی (فصلی)",
-  "advance gdp q/q": "برآورد اولیه تولید ناخالص داخلی (فصلی)",
-  "ism manufacturing pmi": "شاخص مدیران خرید تولیدی ISM",
-  "ism services pmi": "شاخص مدیران خرید خدمات ISM",
-  "flash manufacturing pmi": "شاخص اولیه مدیران خرید تولیدی",
-  "flash services pmi": "شاخص اولیه مدیران خرید خدمات",
-  "manufacturing pmi": "شاخص مدیران خرید تولیدی",
-  "services pmi": "شاخص مدیران خرید خدمات",
-  "unemployment claims": "مدعیان بیکاری",
-  "federal funds rate": "نرخ بهره فدرال رزرو",
-  "fomc statement": "بیانیه فدرال رزرو",
-  "fomc press conference": "کنفرانس خبری فدرال رزرو",
-  "fomc meeting minutes": "صورت‌جلسه فدرال رزرو",
-  "fomc economic projections": "چشم‌انداز اقتصادی فدرال رزرو",
-  "main refinancing rate": "نرخ بهره بانک مرکزی اروپا",
-  "ecb press conference": "کنفرانس خبری بانک مرکزی اروپا",
-  "monetary policy statement": "بیانیه سیاست پولی",
-  "official bank rate": "نرخ بهره بانک مرکزی انگلیس",
-  "official cash rate": "نرخ بهره رسمی",
-  "cash rate": "نرخ بهره",
-  "boj policy rate": "نرخ بهره بانک مرکزی ژاپن",
-  "overnight rate": "نرخ بهره شبانه",
-  "crude oil inventories": "ذخایر نفت خام",
-  "natural gas storage": "ذخایر گاز طبیعی",
-  "consumer confidence": "اعتماد مصرف‌کننده",
-  "consumer sentiment": "احساسات مصرف‌کننده",
-  "prelim uom consumer sentiment": "برآورد اولیه احساسات مصرف‌کننده میشیگان",
-  "building permits": "مجوزهای ساخت‌وساز",
-  "housing starts": "شروع ساخت مسکن",
-  "existing home sales": "فروش خانه‌های موجود",
-  "new home sales": "فروش خانه‌های نو",
-  "durable goods orders m/m": "سفارش کالاهای بادوام (ماهانه)",
-  "trade balance": "تراز تجاری",
-  "industrial production m/m": "تولید صنعتی (ماهانه)",
-  "employment change": "تغییر اشتغال",
-  "jolts job openings": "فرصت‌های شغلی JOLTS",
-  "adp non-farm employment change": "تغییر اشتغال غیرکشاورزی ADP",
-  "bank holiday": "تعطیلی بانکی",
-};
-
-/** عنوان انگلیسی فید را به فارسی برمی‌گرداند؛ اگر ترجمه نداشت، خودش را. */
-export function translateEventTitle(title: string): string {
-  return EVENT_TITLE_FA[title.trim().toLowerCase()] || title;
-}
 
 export type EconomicEventDto = {
   id: string;
@@ -219,7 +158,7 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 
     out.push({
       externalId: pickString(row, ["id", "eventId", "calendarId"]) || `${currency}-${title}-${occursAt.toISOString()}`,
-      title: translateEventTitle(title).slice(0, 160),
+      title: title.slice(0, 160),
       country: (currencyMeta(currency)?.country || rawCountry || currency).toUpperCase().slice(0, 2),
       currency: currency.slice(0, 8),
       impact: normalizeImpact(pickString(row, ["impact", "importance", "Impact"])),
