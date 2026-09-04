@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
-import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, isoLocal, jalaliToGregorianApprox, toJalali, JalaliDate } from "@/lib/jalali";
@@ -16,7 +15,6 @@ type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 const now = new Date();
-const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
 // پاپ‌آپ «انتقال به یک روز دیگر» — از منوی سه‌نقطه‌ی یک برنامه باز می‌شه.
 // دیزاینش دقیقا مثل افزودن/ویرایش برنامه‌ست. روز مقصد با یک تقویم واقعی
@@ -45,6 +43,8 @@ export function MoveOccurrenceModal({
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  // پیامِ خطا داخلِ همین پاپ‌آپ، نه بنرِ بالای صفحه (درخواستِ صریحِ کاربر).
+  const [formError, setFormError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -64,23 +64,15 @@ export function MoveOccurrenceModal({
     const startMin = timeStartMinutes(startFa);
     const endMin = timeStartMinutes(endFa);
 
-    let pastMsg: string | null = null;
-    const isPickedToday = targetJalali![0] === jNow[0] && targetJalali![1] === jNow[1] && targetJalali![2] === jNow[2];
-    if (isPickedToday) {
-      const checkMin = endMin ?? startMin;
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      if (checkMin !== null && nowMin >= checkMin) {
-        pastMsg = "این ساعت برای امروز گذشته — نمی‌شه منتقلش کرد";
-      }
-    }
+    // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواستِ صریحِ کاربر.
+    const conflict = findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
 
-    const conflict = pastMsg ? null : findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
-
+    setFormError(null);
     setStatus("loading");
     setTimeout(async () => {
-      if (pastMsg || conflict) {
+      if (conflict) {
         setStatus("error");
-        showConflictAlert(pastMsg || `تداخل زمانی با «${conflict!.name}» — منتقل نشد`);
+        setFormError(`تداخل زمانی با «${conflict.name}» — منتقل نشد`);
         setTimeout(() => setStatus("idle"), 900);
         return;
       }
@@ -148,6 +140,8 @@ export function MoveOccurrenceModal({
               </div>
             </div>
           </div>
+
+          {formError && <div className="form-inline-error">{formError}</div>}
 
           <div className="wsearch-newform-actions">
             <button

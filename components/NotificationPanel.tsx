@@ -170,7 +170,7 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
       >
         <div className="notif-panel-head">اطلاعیه‌ها</div>
         {items === null ? (
-          <div className="item-line" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
+          <div className="item-line is-loading" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
         ) : items.length === 0 ? (
           <div className="item-line empty" style={{ padding: "10px 4px" }}>چیزی برای نمایش نیست</div>
         ) : (

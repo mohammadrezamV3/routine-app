@@ -4,8 +4,7 @@ import { useRef, useState } from "react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
-import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict";
-import { showConflictAlert } from "@/lib/conflictAlertBus";
+import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { isoLocal } from "@/lib/jalali";
@@ -46,6 +45,8 @@ export function EditOccurrenceForm({
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [tag, setTag] = useState(occ.tag ?? "");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  // پیامِ خطا داخلِ همین فرم، نه بنرِ بالای صفحه (درخواستِ صریحِ کاربر).
+  const [formError, setFormError] = useState<string | null>(null);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +89,7 @@ export function EditOccurrenceForm({
     });
     setRowErrors(rErrs);
     if (hasError) {
-      if (Object.values(rErrs).some((e) => e.order)) showConflictAlert("ساعت پایان باید بعد از ساعت شروع باشه");
+      setFormError(Object.values(rErrs).some((e) => e.order) ? "ساعت پایان باید بعد از ساعت شروع باشه" : null);
       return;
     }
 
@@ -101,10 +102,7 @@ export function EditOccurrenceForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of r.jsDays) {
-        if (isPastToday(jsDay, startMin, endMin, now)) {
-          conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
-          break outer;
-        }
+        // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواستِ صریحِ کاربر.
         // occ.id excluded تا خود همون occurrence‌ای که داریم ویرایشش می‌کنیم
         // با خودش تداخل حساب نشه.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
@@ -121,11 +119,12 @@ export function EditOccurrenceForm({
       }
     }
 
+    setFormError(null);
     setStatus("loading");
     setTimeout(async () => {
       if (conflictMsg) {
         setStatus("error");
-        showConflictAlert(conflictMsg!);
+        setFormError(conflictMsg!);
         setTimeout(() => setStatus("idle"), 900);
         return;
       }
@@ -222,6 +221,8 @@ export function EditOccurrenceForm({
               )}
             </div>
           ))}
+
+          {formError && <div className="form-inline-error">{formError}</div>}
 
           <div className="wsearch-newform-addrow">
             <button type="button" className="wsearch-add-btn" onClick={addRow}>

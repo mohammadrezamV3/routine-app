@@ -182,7 +182,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         {authRequired ? (
           <div className="text-[11px] text-dash-muted sm:text-[12px]">برای استفاده از بخش دوستان اول وارد حساب بشو.</div>
         ) : friends === null ? (
-          <div className="text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
+          <div className="text-[11px] text-dash-muted sm:text-[12px] is-loading">در حال بارگذاری…</div>
         ) : list.length === 0 ? (
           <button
             type="button"

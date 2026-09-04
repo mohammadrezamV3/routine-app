@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Map } from "lucide-react";
 import { SuperAdminGate } from "@/components/SuperAdminGate";
 import { AuthGate } from "@/components/AuthGate";
+import { RoadmapWizard } from "@/components/RoadmapWizard";
+import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
+import { LoadingBlock } from "@/components/Spinner";
 
 type CustomRoadmapSummary = { id: string; topic: string; title: string; note: string };
 
@@ -14,8 +17,9 @@ export default function RoadmapsHub() {
   const { status } = useSession();
   const [customRoadmaps, setCustomRoadmaps] = useState<CustomRoadmapSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (status !== "authenticated") { setLoaded(true); return; }
     fetch("/api/roadmaps")
       .then((r) => r.json())
@@ -23,11 +27,13 @@ export default function RoadmapsHub() {
       .finally(() => setLoaded(true));
   }, [status]);
 
+  useEffect(() => { load(); }, [load]);
+
   return (
     <section className="roadmaps-desktop">
       <div className="trade-head-row">
         <h1>رودمپ‌ها</h1>
-        <button type="button" className="trade-title-add-btn" onClick={() => router.push("/roadmaps/new")}>
+        <button type="button" className="trade-title-add-btn" onClick={() => setWizardOpen(true)}>
           + افزودن رودمپ
         </button>
       </div>
@@ -35,7 +41,9 @@ export default function RoadmapsHub() {
 
       {status === "authenticated" ? (
         <SuperAdminGate>
-          {loaded && !customRoadmaps.length ? (
+          {!loaded ? (
+            <LoadingBlock text="در حال آوردن مسیرها…" />
+          ) : !customRoadmaps.length ? (
             <div className="trade-surface trade-empty-state" style={{ marginTop: 16 }}>
               <Map size={32} />
               <p>هنوز رودمپی نساختی</p>
@@ -52,9 +60,14 @@ export default function RoadmapsHub() {
               ))}
             </div>
           )}
+          <RoadmapDisclaimer />
         </SuperAdminGate>
       ) : (
         <AuthGate message="برای استفاده از این سرویس وارد شوید" />
+      )}
+
+      {wizardOpen && (
+        <RoadmapWizard onClose={() => setWizardOpen(false)} onCreated={load} />
       )}
     </section>
   );

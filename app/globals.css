@@ -957,10 +957,12 @@
   .modal-title{font-size:16px; font-weight:700; margin-top:3px;}
 
   /* roadmaps hub */
-  .rm-grid{display:flex; flex-direction:column; gap:12px; margin-top:18px;}
+  /* عرضِ کارت‌ها به اندازه‌ی صفحه‌ی موبایل و یک‌ذره کوچک‌تر (درخواستِ صریحِ
+     کاربر) — تا فوترِ هشدارِ AI هم جا شود و کارت‌ها تا لبه نچسبند. */
+  .rm-grid{display:flex; flex-direction:column; gap:10px; margin-top:16px; max-width:400px; margin-inline:auto;}
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border:1px solid var(--line); border-radius:12px; padding:18px 18px; text-decoration:none; color:var(--text);
+    border:1px solid var(--line); border-radius:12px; padding:14px 15px; text-decoration:none; color:var(--text);
     background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     transition:.18s; min-height:26px; box-sizing:border-box;
@@ -2176,16 +2178,22 @@
      تقریبا توپر تیره داشتن که با بقیه‌ی اپ (هدر، پنل پروفایل/اعلان‌ها)
      هم‌حس نبود؛ اسپسیفیسیتی این سلکتور (با :has) از قانون پایه‌ی
      body:not([light]) .wsearch-newform بالاتره، پس درست override می‌شه. */
+  /* «دودستگی» بک‌گراند این پاپ‌آپ‌ها از همین‌جا می‌آمد: بک‌گراندِ ۴٪ فقط
+     وقتی یکدست دیده می‌شد که backdrop-filter کار می‌کرد. روی دستگاه‌های
+     لمسی (html[data-perf="low"]) بلور عمداً برداشته می‌شود، و آن‌وقت پاپ‌آپ
+     عملاً شفاف می‌ماند و کارت‌ها/متن‌های پشتش از توش می‌زدند بیرون — دقیقاً
+     همان دورنگیِ گزارش‌شده. حالا خودِ سطح به‌قدر کافی کدر است
+     (--surface-glass، ۷۲٪) که مستقل از بلور یکدست بماند. */
   .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.04);
+    background:var(--surface-glass);
     backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   }
   body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.04);
+    background:var(--surface-glass);
     border:1px solid rgba(255,255,255,.07);
   }
   body[data-theme="light"] .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.28);
+    background:var(--surface-glass);
   }
   @keyframes newformPopIn{
     from{ opacity:0; transform:translate(-50%, calc(-50% + 26px)) scale(.96); }
@@ -2456,20 +2464,15 @@
   }
   .task-check-missed{ animation:taskMissedPulse 1.8s ease-in-out infinite; }
 
-  /* conflict alert box: pinned near the top, detached from the edge, no backdrop blur */
-  .conflict-alert{
-    position:fixed; left:50%; top:14px; z-index:60; width:88%; max-width:420px;
-    background:rgba(var(--surface-rgb), .09); border:1px solid var(--line); border-radius:16px;
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-    box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(224,82,82,.35), 0 0 22px rgba(224,82,82,.35);
-    padding:14px 18px 12px; display:flex; flex-direction:column; gap:8px;
-    transform:translate(-50%,-30px); opacity:0; pointer-events:none;
-    transition:transform .28s cubic-bezier(.22,1,.36,1), opacity .22s ease;
+  /* بنرِ خطای بالای صفحه حذف شد — درخواستِ صریحِ کاربر: «تمام ارورهای بالای
+     صفحه رو حذف کن». به‌جایش هر فرم/پاپ‌آپ خطایش را داخلِ خودش نشان می‌دهد،
+     یعنی دقیقاً همان‌جایی که کاربر دارد نگاه می‌کند. */
+  .form-inline-error{
+    margin-top:10px; padding:9px 12px; border-radius:12px;
+    font-size:12px; font-weight:600; line-height:1.8; text-align:center;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
   }
-  .conflict-alert.show{transform:translate(-50%,0); opacity:1; pointer-events:auto;}
-  .conflict-alert-text{font-size:13px; color:var(--text); font-weight:600; text-align:center; line-height:1.7;}
-  .conflict-alert-bar{height:3px; width:100%; background:var(--line); border-radius:2px; overflow:hidden;}
-  .conflict-alert-bar-fill{height:100%; width:100%; background:#E05252; border-radius:2px; transform-origin:right; transition:transform linear;}
+
 
 /* ---------- انیمیشن ساده‌شده بلوب‌های مایع (نسخه CSS-only) ----------
    نسخه اصلی HTML این بلوب‌ها را با فیزیک JS (random-walk + برخورد زوجی)
@@ -3850,7 +3853,6 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .wsearch-newform-name.trade-glass-field{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .trade-pnl-readout{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
-  .conflict-alert{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .auth-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .auth-tabs{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .manual-exercise-picker-search{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
@@ -4244,6 +4246,15 @@ html[data-perf="low"] .trade-account-menu{ backdrop-filter:blur(24px) saturate(1
    یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
    data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
 html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدونِ بلور هیچ درصدِ شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملاً کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانونِ پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعاً غالب شود.) */
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
 
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }
@@ -4949,7 +4960,7 @@ body[data-theme="light"] .trade-search input.trade-glass-field{
 .trade-drawer{
   position:fixed; z-index:56; right:0; left:0; bottom:0; max-height:88vh; max-height:88dvh;
   overflow-y:auto; -webkit-overflow-scrolling:touch;
-  background:rgba(var(--surface-rgb), .16); border:1px solid var(--line);
+  background:var(--surface-glass); border:1px solid var(--line);
   border-radius:26px 26px 0 0; padding:22px;
   backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
   isolation:isolate;
@@ -5704,3 +5715,118 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 .rm-section-list a{ color:inherit; text-decoration:none; display:inline-flex; align-items:baseline; gap:5px; }
 .rm-section-list a:hover{ color:var(--accent); }
 .rm-section-list a svg{ opacity:.45; flex-shrink:0; }
+
+/* ===================== لودینگِ مشترک ===================== */
+/* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد» — درخواستِ صریحِ کاربر.
+   یک کلاسِ واحد تا همه‌جای اپ یک شکل باشد. */
+@keyframes appSpin{ to{ transform:rotate(360deg); } }
+.app-spinner{
+  display:inline-block; flex-shrink:0; border-radius:50%;
+  border-style:solid; border-color:rgba(var(--accent-rgb),.25);
+  border-top-color:var(--accent);
+  animation:appSpin .8s linear infinite;
+}
+html[data-perf="low"] .app-spinner{ animation-duration:1s; }
+.app-loading-block{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px;
+  padding:30px 12px; font-size:12.5px; color:var(--muted); text-align:center;
+}
+
+/* ===================== ویزارد ساختِ رودمپ ===================== */
+.rm-wizard-chips,
+.rm-wizard-days{ display:flex; flex-wrap:wrap; gap:7px; }
+.rm-wizard-chips .day-pill,
+.rm-wizard-days .day-pill{
+  flex:0 0 auto; width:auto; min-width:0; padding:8px 14px;
+  font-size:12px; line-height:1.4; white-space:nowrap;
+}
+.rm-wizard-hint{ margin-top:10px; font-size:11.5px; line-height:2; color:var(--muted); }
+.rm-wizard-hint b{ color:var(--text); }
+/* اسپسیفیسیتیِ بالاتر لازم است چون قانونِ پایه
+   `.wsearch-newform-actions:has(.wsearch-submit-btn){display:block}` وگرنه
+   دکمه‌ها را زیرِ هم می‌چیند. */
+.wsearch-newform-actions.rm-wizard-actions{ display:flex; align-items:center; gap:12px; }
+.rm-wizard-actions .wsearch-submit-btn{ flex:1; width:auto; }
+.rm-wizard-actions .wsearch-add-btn{
+  flex:0 0 auto; width:auto; height:auto; border:none; background:none;
+  padding:4px 2px; font-size:12.5px; font-weight:700; color:var(--muted);
+}
+.rm-wizard-actions .wsearch-add-btn:hover{ color:var(--accent); }
+.rm-wizard-loading{
+  display:flex; align-items:center; gap:10px; margin-top:16px;
+  font-size:12.5px; color:var(--muted); line-height:2;
+}
+
+/* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
+/* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
+   یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
+.rm-disclaimer{
+  display:flex; align-items:flex-start; gap:8px;
+  max-width:400px; margin:26px auto 0; padding:11px 13px;
+  border:1px dashed var(--line); border-radius:14px;
+  font-size:11.5px; line-height:2; color:var(--muted2); text-align:right;
+}
+.rm-disclaimer svg{ flex-shrink:0; margin-top:4px; color:var(--muted); }
+
+/* ===================== جلسه‌های یک مرحله ===================== */
+.rm-schedule{
+  display:flex; align-items:center; gap:7px; margin-top:12px;
+  font-size:12px; color:var(--muted);
+}
+.rm-schedule svg{ color:var(--accent); flex-shrink:0; }
+
+.rm-sessions{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.rm-session{
+  border:1px solid var(--line); border-radius:16px; padding:13px 14px;
+  transition:border-color .18s ease, opacity .18s ease;
+}
+.rm-session.done{ opacity:.6; border-color:rgba(var(--accent-rgb),.35); }
+.rm-session-head{ display:flex; align-items:center; gap:9px; }
+.rm-session-num{
+  flex-shrink:0; width:24px; height:24px; border-radius:50%;
+  border:1.5px solid var(--line); color:var(--muted);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; cursor:pointer; padding:0;
+  background:none; box-shadow:none; backdrop-filter:none;
+  transition:border-color .18s ease, color .18s ease;
+}
+.rm-session-num:hover{ border-color:var(--accent); color:var(--accent); }
+.rm-session.done .rm-session-num{ border-color:var(--accent); color:var(--accent); }
+.rm-session-title{ font-size:12.5px; font-weight:600; color:var(--text); line-height:1.9; }
+.rm-session-title b{ color:var(--accent); font-weight:700; }
+.rm-session-goal{ margin-top:8px; font-size:12px; line-height:2; color:var(--muted); }
+.rm-session-label{
+  margin-top:11px; font-size:10px; font-weight:700; letter-spacing:.02em;
+  color:var(--accent); text-transform:none;
+}
+.rm-session-steps{ margin:6px 0 0; padding-inline-start:18px; }
+.rm-session-steps li{ font-size:12px; line-height:2.1; color:var(--text); }
+.rm-session-text{ margin-top:5px; font-size:12px; line-height:2.1; color:var(--muted); }
+.rm-session-refs{ margin:5px 0 0; padding-inline-start:18px; }
+.rm-session-refs li{ font-size:12px; line-height:2.1; }
+.rm-session-refs a{
+  color:var(--muted); text-decoration:none;
+  display:inline-flex; align-items:center; gap:5px;
+}
+.rm-session-refs a:hover{ color:var(--accent); }
+.rm-session-check{
+  margin-top:11px; padding:8px 11px; border-radius:11px;
+  border:1px solid rgba(var(--accent-rgb),.22);
+  font-size:11.5px; line-height:2; color:var(--muted);
+}
+.rm-session-check b{ color:var(--text); }
+
+/* هر عنصری که کلاسِ is-loading بگیرد، یک دایره‌ی چرخانِ کوچک قبل از متنش
+   می‌گیرد. عمداً با ::before و نه یک کامپوننت: این حالت‌ها در ده‌ها فایل
+   پراکنده بودند و هدف این بود که «هر جا لودینگ رفت دایره بیاید»، بدونِ
+   اینکه ساختارِ هر کدام دست بخورد. */
+.is-loading{
+  display:flex; align-items:center; justify-content:center; gap:9px;
+}
+.is-loading::before{
+  content:""; display:inline-block; flex-shrink:0;
+  width:15px; height:15px; border-radius:50%;
+  border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent);
+  animation:appSpin .8s linear infinite;
+}
+html[data-perf="low"] .is-loading::before{ animation-duration:1s; }

@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Arion",
     short_name: "Arion",
-    description: "روتین، خواب، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
+    description: "روتین، ترید، ورزش و رودمپ‌های شخصی — همه‌جا یکجا",
     start_url: "/",
     display: "standalone",
     background_color: "#0a0f0d",

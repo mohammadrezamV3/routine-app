@@ -5,8 +5,7 @@ import { ChevronRight, Minus } from "lucide-react";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
-import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict";
-import { showConflictAlert } from "@/lib/conflictAlertBus";
+import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, isoLocal, JalaliDate } from "@/lib/jalali";
@@ -51,6 +50,10 @@ export function AddProgramForm({
   const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
   const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  // پیامِ خطا عمداً *داخلِ همین فرم* نشان داده می‌شود، نه با بنرِ بالای صفحه:
+  // درخواستِ صریحِ کاربر بود که آن بنرها حذف شوند. جایی که کاربر دارد نگاه
+  // می‌کند همین‌جاست، پس پیام هم باید همین‌جا باشد.
+  const [formError, setFormError] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
   const [periodError, setPeriodError] = useState(false);
@@ -144,10 +147,8 @@ export function AddProgramForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of r.jsDays) {
-        if (isPastToday(jsDay, startMin, endMin, now)) {
-          conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
-          break outer;
-        }
+        // عمداً هیچ قفلی روی «این ساعت امروز گذشته» نیست: کاربر باید بتواند
+        // برنامه‌ی همین امروز را هم ثبت کند، حتی اگر ساعتش رد شده باشد.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts);
         if (!conflict) {
           for (const other of normalizedRows) {
@@ -162,11 +163,12 @@ export function AddProgramForm({
       }
     }
 
+    setFormError(null);
     setStatus("loading");
     setTimeout(async () => {
       if (conflictMsg) {
         setStatus("error");
-        showConflictAlert(conflictMsg!);
+        setFormError(conflictMsg!);
         setTimeout(() => setStatus("idle"), 900);
         return;
       }
@@ -353,6 +355,8 @@ export function AddProgramForm({
               {/* دکمه‌ی ثبت طبق درخواست کاربر دیگه یه آیکون تیک دایره‌ای
                   نیست — یک دکمه‌ی تمام‌عرض متن‌دار با حالت لودینگ/موفقیت/خطا
                   روی خودش، تا مشخص باشه داره ثبت می‌شه. */}
+              {formError && <div className="form-inline-error">{formError}</div>}
+
               <div className="wsearch-newform-actions">
                 <button
                   type="button"

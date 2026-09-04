@@ -217,7 +217,7 @@ export function CaloriePanel() {
   }
 
   if (target === undefined) {
-    return <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
+    return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
   }
 
   const mealTypes = target?.mealBreakdown?.length ? target.mealBreakdown.map((m) => ({ key: m.key, label: m.label })) : DEFAULT_MEAL_TYPES;
