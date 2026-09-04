@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { faNum } from "@/lib/jalali";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, AtSign, Lock } from "lucide-react";
@@ -204,12 +204,16 @@ export default function SignupPage() {
       router.push("/auth/login");
       return;
     }
-    setLoading(false);
     if (loginRes?.error) {
+      setLoading(false);
       router.push("/auth/login");
       return;
     }
-    router.push("/weekly");
+    // به خروجیِ signIn تنها اکتفا نکن — نشستِ واقعی را از سرور تأیید کن.
+    // (چرا: همان بازنویسیِ پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
+    const session = await getSession();
+    setLoading(false);
+    router.push((session?.user as any)?.id ? "/weekly" : "/auth/login");
   }
 
   return (
