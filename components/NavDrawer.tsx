@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -465,34 +464,30 @@ export function NavDrawer() {
                     <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                     <span style={{ flex: 1 }}>{item.label}</span>
                     {groupLocked && <Lock size={13} className="nav-link-lock" />}
-                    <motion.span
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ display: "flex" }}
-                    >
+                    <span className={`nav-group-chevron${isExpanded ? " open" : ""}`}>
                       <ChevronDown size={16} />
-                    </motion.span>
+                    </span>
                   </a>
-                  <AnimatePresence initial={false}>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: "easeInOut" }}
-                        style={{ overflow: "hidden" }}
-                      >
-                        <div className="nav-group-children">
-                          {item.children.map((c) => (
-                            <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
-                              <span style={{ flex: 1 }}>{c.label}</span>
-                              {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
-                            </a>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* باز/بسته‌شدنِ زیرمنو عمداً CSSیِ خالص است، نه انیمیشنِ
+                      ارتفاعِ framer-motion. دلیلش لگی بود که کاربر گزارش کرد:
+                      این کشو یک لایه‌ی backdrop-filterِ سنگین است، و
+                      انیمیشنِ height توسط JS یعنی هر فریم یک نوشتنِ استایل +
+                      layout + رسترِ دوباره‌ی همان بلور. با ترفندِ
+                      grid-template-rows: 0fr→1fr هیچ کارِ جاوااسکریپتی در
+                      هر فریم نیست، و `contain` هم نمی‌گذارد این تغییر کلِ
+                      کشو را باطل کند. */}
+                  <div className={`nav-group-sub${isExpanded ? " open" : ""}`}>
+                    <div className="nav-group-sub-inner">
+                      <div className="nav-group-children">
+                        {item.children.map((c) => (
+                          <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
+                            <span style={{ flex: 1 }}>{c.label}</span>
+                            {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             }

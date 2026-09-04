@@ -381,7 +381,7 @@ export default function WeeklyPage() {
             {/* ستون وسط: یادآوری‌های برنامه و یادآوری دارو، زیر هم. هر دو
                 از «تنظیمات» جدا‌جدا قابل خاموش‌شدن‌ن. */}
             {hasMiddleColumn && (
-              <div className="flex flex-col gap-4 sm:gap-6">
+              <div className="dash-middle-col flex flex-col gap-4 sm:gap-6">
                 {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
                 {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
               </div>
