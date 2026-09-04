@@ -109,8 +109,13 @@ export function DashTaskRow({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center gap-2 text-right sm:gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      {/* تگ باید بچسبد به *نامِ برنامه*، نه به ساعت‌ها. قبلاً کانتینرِ نام
+          `flex-1` بود، پس نام تمامِ فضای خالی را می‌گرفت و تگ را هل می‌داد
+          تا کنارِ ساعت — روی نامِ بلند این خیلی واضح بود. حالا نام و تگ
+          به‌اندازه‌ی محتوایشان کنارِ هم می‌مانند و فضای خالی با
+          justify-between بینشان و ساعت می‌افتد. */}
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-right sm:gap-3">
+        <div className="flex min-w-0 items-center gap-1.5">
           <button
             type="button"
             onClick={() => onOpen(task.name)}
@@ -119,15 +124,16 @@ export function DashTaskRow({
             {task.name}
           </button>
           {task.tag && (
-            <span className="w-[48px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-1.5 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:w-[68px] sm:px-2.5 sm:py-1 sm:text-[11px]">
+            <span className="max-w-[64px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:max-w-[92px] sm:px-2.5 sm:py-1 sm:text-[11px]">
               {task.tag}
             </span>
           )}
+          {/* نشانِ اهمیت هم همین‌جا کنارِ نام می‌نشیند، نه چسبیده به ساعت.
+              سمتِ چپِ ردیف فقط ساعت می‌ماند. */}
+          <DashImportanceBadge importance={task.importance} />
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <DashImportanceBadge importance={task.importance} />
-
           <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
             {toEnDigits(task.time)}
           </span>

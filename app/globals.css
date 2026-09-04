@@ -655,7 +655,10 @@
     isolation:isolate;
     -webkit-mask-image:-webkit-radial-gradient(white, black);
     mask-image:radial-gradient(white, black);
-    will-change:backdrop-filter, transform; transform:translateZ(0);
+    /* عمداً فقط transform. `will-change:backdrop-filter` مرورگر را وادار
+       می‌کند بلور را در یک لایه‌ی جدا نگه دارد و مدام بازارزیابی کند —
+       روی همین کشو یکی از منابعِ همان لگ بود. */
+    will-change:transform; transform:translateZ(0);
   }
   /* یک لکه سبز خیلی کم‌رنگ پشت منو — فقط یه ذره عمق بصری، نه یک افکت پررنگ */
   .nav-drawer-glass::before{
@@ -2534,6 +2537,27 @@ body[data-theme="light"] .nav-link-icon:hover{
 }
 body[data-theme="light"] .nav-group-expanded{ background:rgba(0,0,0,.02); }
 .nav-group-children{ display:flex; flex-direction:column; gap:2px; padding:2px; }
+
+/* باز/بسته‌شدنِ زیرمنوی «بدنسازی»/«ترید» — با ترفندِ grid-template-rows
+   به‌جای انیمیشنِ ارتفاعِ جاوااسکریپتی.
+   چرا: این کشو یک لایه‌ی backdrop-filterِ سنگین است؛ انیمیشنِ height با JS
+   یعنی هر فریم style-write + layout + رسترِ دوباره‌ی همان بلور — همان لگی
+   که گزارش شد. این نسخه هیچ کارِ JSیی در هر فریم ندارد و `contain` هم
+   محدودش می‌کند تا کلِ کشو باطل نشود. */
+.nav-group-sub{
+  display:grid; grid-template-rows:0fr;
+  contain:layout paint;
+  transition:grid-template-rows .24s cubic-bezier(.22,1,.36,1);
+}
+.nav-group-sub.open{ grid-template-rows:1fr; }
+.nav-group-sub-inner{ overflow:hidden; min-height:0; opacity:0; transition:opacity .18s ease; }
+.nav-group-sub.open .nav-group-sub-inner{ opacity:1; transition-delay:.06s; }
+/* فقط transform انیمیت می‌شود — نه layout */
+.nav-group-chevron{ display:flex; transition:transform .2s ease; }
+.nav-group-chevron.open{ transform:rotate(180deg); }
+@media (prefers-reduced-motion: reduce){
+  .nav-group-sub, .nav-group-sub-inner, .nav-group-chevron{ transition:none; }
+}
 .nav-link-sub-item{
   display:flex; align-items:center;
   border-radius:12px; padding:10px 14px; font-size:12.5px; color:var(--muted);
@@ -4219,7 +4243,7 @@ html[data-perf="low"] .task-check-missed{ animation:none; }
 html[data-perf="low"] .nav-overlay{ backdrop-filter:blur(0px) !important; -webkit-backdrop-filter:blur(0px) !important; will-change:backdrop-filter !important; }
 html[data-perf="low"] .nav-overlay.open{ backdrop-filter:blur(3px) !important; -webkit-backdrop-filter:blur(3px) !important; }
 html[data-perf="low"] .nav-drawer{ will-change:transform, opacity !important; }
-html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; will-change:backdrop-filter, transform !important; }
+html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; will-change:transform !important; }
 html[data-perf="low"] .notif-panel{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
 html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
 html[data-perf="low"] .trade-account-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
@@ -5830,3 +5854,14 @@ html[data-perf="low"] .app-spinner{ animation-duration:1s; }
   animation:appSpin .8s linear infinite;
 }
 html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
+
+/* ستونِ وسطِ داشبوردِ روتین (یادآوری‌ها + یادآوری دارو).
+   گرید `items-stretch` است، پس خودِ ستون تمامِ ارتفاع را می‌گیرد — ولی
+   کارت‌های داخلش ارتفاعِ طبیعی داشتند و ته ستون خالی می‌ماند؛ نتیجه این
+   بود که کفِ این ستون با کفِ دو ستونِ دیگر هم‌تراز نبود (اندازه‌گیری‌شده:
+   ۶۳۰ در برابر ۷۳۲). کارتِ آخر فضای باقی‌مانده را می‌گیرد تا هر سه ستون
+   روی یک خط تمام شوند. */
+@media (min-width:1024px){
+  .dash-middle-col{ min-height:0; }
+  .dash-middle-col > :last-child{ flex:1 1 auto; display:flex; flex-direction:column; }
+}
