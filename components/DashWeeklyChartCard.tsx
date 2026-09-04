@@ -25,7 +25,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
       </h2>
 
       {stats === null ? (
-        <div className="mt-4 text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
+        <div className="mt-4 text-[11px] text-dash-muted sm:text-[12px] is-loading">در حال بارگذاری…</div>
       ) : (
         <div className="mt-5 flex items-end gap-3">
           <div className="flex flex-1 items-end justify-between gap-1.5 sm:gap-2">

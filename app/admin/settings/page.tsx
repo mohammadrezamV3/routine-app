@@ -86,7 +86,7 @@ export default function AdminSettingsPage() {
           به میکرو-دلار به‌ازای هر ۱۰۰۰ توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini ({settings ? settings.defaultAiCostRate.inputPer1kUsdMicros : "…"}/{settings ? settings.defaultAiCostRate.outputPer1kUsdMicros : "…"}).
         </div>
         {!settings ? (
-          <div className="admin-empty">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
         ) : (
           <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
             <div>
@@ -107,7 +107,7 @@ export default function AdminSettingsPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">فعالیت اخیر Owner</span></div>
         {!audit ? (
-          <div className="admin-empty">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
         ) : audit.length === 0 ? (
           <EmptyState />
         ) : (

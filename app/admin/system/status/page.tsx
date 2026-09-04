@@ -29,7 +29,7 @@ export default function AdminSystemStatusPage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!status) return <div className="admin-empty">در حال بارگذاری…</div>;
+  if (!status) return <div className="admin-empty is-loading">در حال بارگذاری…</div>;
 
   return (
     <section>

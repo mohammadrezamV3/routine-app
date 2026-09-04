@@ -91,7 +91,7 @@ function UsersInner() {
       />
 
       {!data ? (
-        <div className="admin-empty">{loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}</div>
+        <div className={loading ? "admin-empty is-loading" : "admin-empty"}>{loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}</div>
       ) : data.users.length === 0 ? (
         <EmptyState />
       ) : (
@@ -137,7 +137,7 @@ function UsersInner() {
 
 export default function AdminUsersPage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <UsersInner />
     </Suspense>
   );

@@ -42,7 +42,7 @@ function OverviewInner() {
       </div>
 
       {!data ? (
-        <div className="admin-empty">{loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}</div>
+        <div className={loading ? "admin-empty is-loading" : "admin-empty"}>{loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}</div>
       ) : (
         <>
           <KpiGrid>
@@ -112,7 +112,7 @@ function OverviewInner() {
 
 export default function AdminOverviewPage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <OverviewInner />
     </Suspense>
   );

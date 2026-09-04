@@ -29,7 +29,7 @@ function FunnelInner() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">Funnel تبدیل کاربر (بر اساس کاربران ثبت‌نام‌کرده در این بازه)</span></div>
         {!steps ? (
-          <div className="admin-empty">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
         ) : steps[0].count === 0 ? (
           <EmptyState message="در این بازه ثبت‌نام جدیدی نبوده" />
         ) : (
@@ -65,7 +65,7 @@ function FunnelInner() {
 
 export default function AdminFunnelPage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <FunnelInner />
     </Suspense>
   );

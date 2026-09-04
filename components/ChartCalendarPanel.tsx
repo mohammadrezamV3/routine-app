@@ -76,7 +76,7 @@ export function ChartCalendarPanel() {
         </div>
       </div>
 
-      {firstLoad && <div className="trade-chat-empty">در حال بارگذاری…</div>}
+      {firstLoad && <div className="trade-chat-empty is-loading">در حال بارگذاری…</div>}
 
       {!firstLoad && !events.length && (
         <div className="trade-chat-empty">

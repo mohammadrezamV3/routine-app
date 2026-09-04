@@ -419,6 +419,12 @@ export type CustomOccurrence = {
   importance?: Importance;
   tag?: string;
   notify?: boolean; // false یعنی صریحا خاموش‌شده؛ نبودش (undefined) یعنی روشن
+  /**
+   * اگر این برنامه از یک رودمپ ساخته شده باشد، شناسه‌ی همان رودمپ. با همین
+   * فیلد، کلیک روی برنامه در «روتین من» به‌جای کارتِ معمولی، مستقیم صفحه‌ی
+   * جلسه‌های همان مسیر را باز می‌کند.
+   */
+  roadmapId?: string;
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {

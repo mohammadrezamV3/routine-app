@@ -99,7 +99,7 @@ export function TradeDetailDrawer({
           </div>
         </div>
 
-        {loading && <div className="item-line">در حال بارگذاری...</div>}
+        {loading && <div className="item-line is-loading">در حال بارگذاری...</div>}
         {!loading && !entry && <div className="item-line empty">معامله پیدا نشد</div>}
 
         {entry && (

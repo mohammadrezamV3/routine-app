@@ -166,7 +166,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
           stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
         }}
       >
-        {loading && <div className="trade-chat-empty">در حال بارگذاری…</div>}
+        {loading && <div className="trade-chat-empty is-loading">در حال بارگذاری…</div>}
         {!loading && !messages.length && (
           <div className="trade-chat-empty">
             هنوز پیامی در این اتاق نیست — تحلیلت را اولین نفر بنویس.

@@ -113,7 +113,7 @@ export default function AdminDiscountCodesPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">کدهای تخفیف</span></div>
         {!data ? (
-          <div className="admin-empty">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
         ) : data.codes.length === 0 ? (
           <EmptyState />
         ) : (

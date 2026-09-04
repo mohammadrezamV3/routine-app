@@ -957,10 +957,12 @@
   .modal-title{font-size:16px; font-weight:700; margin-top:3px;}
 
   /* roadmaps hub */
-  .rm-grid{display:flex; flex-direction:column; gap:12px; margin-top:18px;}
+  /* عرضِ کارت‌ها به اندازه‌ی صفحه‌ی موبایل و یک‌ذره کوچک‌تر (درخواستِ صریحِ
+     کاربر) — تا فوترِ هشدارِ AI هم جا شود و کارت‌ها تا لبه نچسبند. */
+  .rm-grid{display:flex; flex-direction:column; gap:10px; margin-top:16px; max-width:400px; margin-inline:auto;}
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border:1px solid var(--line); border-radius:12px; padding:18px 18px; text-decoration:none; color:var(--text);
+    border:1px solid var(--line); border-radius:12px; padding:14px 15px; text-decoration:none; color:var(--text);
     background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     transition:.18s; min-height:26px; box-sizing:border-box;
@@ -5689,3 +5691,118 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 .rm-section-list a{ color:inherit; text-decoration:none; display:inline-flex; align-items:baseline; gap:5px; }
 .rm-section-list a:hover{ color:var(--accent); }
 .rm-section-list a svg{ opacity:.45; flex-shrink:0; }
+
+/* ===================== لودینگِ مشترک ===================== */
+/* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد» — درخواستِ صریحِ کاربر.
+   یک کلاسِ واحد تا همه‌جای اپ یک شکل باشد. */
+@keyframes appSpin{ to{ transform:rotate(360deg); } }
+.app-spinner{
+  display:inline-block; flex-shrink:0; border-radius:50%;
+  border-style:solid; border-color:rgba(var(--accent-rgb),.25);
+  border-top-color:var(--accent);
+  animation:appSpin .8s linear infinite;
+}
+html[data-perf="low"] .app-spinner{ animation-duration:1s; }
+.app-loading-block{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px;
+  padding:30px 12px; font-size:12.5px; color:var(--muted); text-align:center;
+}
+
+/* ===================== ویزارد ساختِ رودمپ ===================== */
+.rm-wizard-chips,
+.rm-wizard-days{ display:flex; flex-wrap:wrap; gap:7px; }
+.rm-wizard-chips .day-pill,
+.rm-wizard-days .day-pill{
+  flex:0 0 auto; width:auto; min-width:0; padding:8px 14px;
+  font-size:12px; line-height:1.4; white-space:nowrap;
+}
+.rm-wizard-hint{ margin-top:10px; font-size:11.5px; line-height:2; color:var(--muted); }
+.rm-wizard-hint b{ color:var(--text); }
+/* اسپسیفیسیتیِ بالاتر لازم است چون قانونِ پایه
+   `.wsearch-newform-actions:has(.wsearch-submit-btn){display:block}` وگرنه
+   دکمه‌ها را زیرِ هم می‌چیند. */
+.wsearch-newform-actions.rm-wizard-actions{ display:flex; align-items:center; gap:12px; }
+.rm-wizard-actions .wsearch-submit-btn{ flex:1; width:auto; }
+.rm-wizard-actions .wsearch-add-btn{
+  flex:0 0 auto; width:auto; height:auto; border:none; background:none;
+  padding:4px 2px; font-size:12.5px; font-weight:700; color:var(--muted);
+}
+.rm-wizard-actions .wsearch-add-btn:hover{ color:var(--accent); }
+.rm-wizard-loading{
+  display:flex; align-items:center; gap:10px; margin-top:16px;
+  font-size:12.5px; color:var(--muted); line-height:2;
+}
+
+/* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
+/* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
+   یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
+.rm-disclaimer{
+  display:flex; align-items:flex-start; gap:8px;
+  max-width:400px; margin:26px auto 0; padding:11px 13px;
+  border:1px dashed var(--line); border-radius:14px;
+  font-size:11.5px; line-height:2; color:var(--muted2); text-align:right;
+}
+.rm-disclaimer svg{ flex-shrink:0; margin-top:4px; color:var(--muted); }
+
+/* ===================== جلسه‌های یک مرحله ===================== */
+.rm-schedule{
+  display:flex; align-items:center; gap:7px; margin-top:12px;
+  font-size:12px; color:var(--muted);
+}
+.rm-schedule svg{ color:var(--accent); flex-shrink:0; }
+
+.rm-sessions{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.rm-session{
+  border:1px solid var(--line); border-radius:16px; padding:13px 14px;
+  transition:border-color .18s ease, opacity .18s ease;
+}
+.rm-session.done{ opacity:.6; border-color:rgba(var(--accent-rgb),.35); }
+.rm-session-head{ display:flex; align-items:center; gap:9px; }
+.rm-session-num{
+  flex-shrink:0; width:24px; height:24px; border-radius:50%;
+  border:1.5px solid var(--line); color:var(--muted);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; cursor:pointer; padding:0;
+  background:none; box-shadow:none; backdrop-filter:none;
+  transition:border-color .18s ease, color .18s ease;
+}
+.rm-session-num:hover{ border-color:var(--accent); color:var(--accent); }
+.rm-session.done .rm-session-num{ border-color:var(--accent); color:var(--accent); }
+.rm-session-title{ font-size:12.5px; font-weight:600; color:var(--text); line-height:1.9; }
+.rm-session-title b{ color:var(--accent); font-weight:700; }
+.rm-session-goal{ margin-top:8px; font-size:12px; line-height:2; color:var(--muted); }
+.rm-session-label{
+  margin-top:11px; font-size:10px; font-weight:700; letter-spacing:.02em;
+  color:var(--accent); text-transform:none;
+}
+.rm-session-steps{ margin:6px 0 0; padding-inline-start:18px; }
+.rm-session-steps li{ font-size:12px; line-height:2.1; color:var(--text); }
+.rm-session-text{ margin-top:5px; font-size:12px; line-height:2.1; color:var(--muted); }
+.rm-session-refs{ margin:5px 0 0; padding-inline-start:18px; }
+.rm-session-refs li{ font-size:12px; line-height:2.1; }
+.rm-session-refs a{
+  color:var(--muted); text-decoration:none;
+  display:inline-flex; align-items:center; gap:5px;
+}
+.rm-session-refs a:hover{ color:var(--accent); }
+.rm-session-check{
+  margin-top:11px; padding:8px 11px; border-radius:11px;
+  border:1px solid rgba(var(--accent-rgb),.22);
+  font-size:11.5px; line-height:2; color:var(--muted);
+}
+.rm-session-check b{ color:var(--text); }
+
+/* هر عنصری که کلاسِ is-loading بگیرد، یک دایره‌ی چرخانِ کوچک قبل از متنش
+   می‌گیرد. عمداً با ::before و نه یک کامپوننت: این حالت‌ها در ده‌ها فایل
+   پراکنده بودند و هدف این بود که «هر جا لودینگ رفت دایره بیاید»، بدونِ
+   اینکه ساختارِ هر کدام دست بخورد. */
+.is-loading{
+  display:flex; align-items:center; justify-content:center; gap:9px;
+}
+.is-loading::before{
+  content:""; display:inline-block; flex-shrink:0;
+  width:15px; height:15px; border-radius:50%;
+  border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent);
+  animation:appSpin .8s linear infinite;
+}
+html[data-perf="low"] .is-loading::before{ animation-duration:1s; }

@@ -1302,6 +1302,12 @@ model Roadmap {
   // خودِ رودمپ.
   progress Json?
 
+  // برنامه‌ی زمانیِ کاربر برای این مسیر — همان چیزی که موقعِ ساخت پرسیده
+  // می‌شود و هم به مدل داده می‌شود (تا جلسه‌ها دقیقاً به اندازه‌ی همین وقت
+  // بریده شوند) و هم برای نشاندنِ جلسه‌ها در «روتین من» استفاده می‌شود.
+  // شکل: { jsDays: number[], minutesPerDay: number, startTime: "HH:MM" }
+  schedule Json?
+
   generatedByAi Boolean @default(false)
 
   createdAt DateTime @default(now())

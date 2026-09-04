@@ -44,7 +44,7 @@ export default function AdminUserDetailPage() {
   }
 
   if (notFound) return <EmptyState message="کاربر پیدا نشد" />;
-  if (!data) return <div className="admin-empty">در حال بارگذاری…</div>;
+  if (!data) return <div className="admin-empty is-loading">در حال بارگذاری…</div>;
 
   const u = data.user;
   const initials = (u.name?.[0] || u.username?.[0] || "?").toUpperCase();

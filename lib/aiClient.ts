@@ -149,19 +149,27 @@ function parseJsonResponse(text: string): any {
 // هر مرحله باید هدفِ قابل‌سنجش، کارهای عملیِ مشخص، تمرین، معیارِ اتمام و
 // زمانِ تقریبی داشته باشد.
 const SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ آموزش هستی که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده‌ای.
-کاربر یک موضوع می‌دهد و تو یک مسیرِ یادگیریِ کامل، مرحله‌به‌مرحله و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
+کاربر یک موضوع می‌دهد به‌همراهِ **زمانی که واقعاً می‌تواند بگذارد**، و تو یک مسیرِ یادگیریِ کامل،
+**جلسه‌به‌جلسه** و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
 
 قواعدِ سخت‌گیرانه:
 
-۱. مسیر باید از **صفرِ مطلق** شروع شود و به **توانِ انجامِ کارِ واقعی** برسد. فرض کن مخاطب هیچ پیش‌زمینه‌ای ندارد.
-۲. هر مرحله باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه اینکه «چه چیزی یاد بگیرد».
+۱. مسیر از **صفرِ مطلق** شروع شود و به **توانِ انجامِ کارِ واقعی** برسد. فرض کن مخاطب هیچ پیش‌زمینه‌ای ندارد.
+۲. هر چیزی که می‌نویسی باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه اینکه «چه چیزی یاد بگیرد».
    بد: «مبانی رنگ را یاد بگیر». خوب: «۱۰ عکس از آرشیوت بردار و فقط با تنظیمِ White Balance و Exposure اصلاحشان کن».
-۳. هر مرحله یک **تمرینِ عملیِ مشخص** دارد که خروجیِ قابلِ دیدن تولید کند.
-۴. هر مرحله یک **معیارِ اتمام** دارد: کاربر از کجا بفهمد این مرحله تمام شده و می‌تواند برود بعدی.
-۵. زمانِ هر مرحله واقع‌بینانه باشد (بر حسبِ هفته، با فرضِ روزی یک تا دو ساعت).
-۶. منابع باید **مشخص و واقعی** باشند (نامِ کتاب/دوره/کانالِ واقعی)، نه «یک دوره‌ی خوب پیدا کن».
-۷. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارها وقتشان را رویش تلف می‌کنند.
-۸. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
+۳. **مهم‌ترین قاعده — جلسه‌ها:** کاربر می‌گوید هفته‌ای چند روز و هر بار چند دقیقه وقت دارد.
+   مسیر را دقیقاً به همان اندازه جلسه ببُر. هر جلسه باید در همان دقیقه‌های اعلام‌شده **واقعاً تمام شود** —
+   نه بیشتر، نه یک سرفصلِ چندهفته‌ای که اسمش را گذاشته‌ای «جلسه».
+۴. هر جلسه این‌ها را دارد:
+   • هدفِ همان یک جلسه (یک جمله، قابلِ سنجش)
+   • قدم‌های اجرایی به‌ترتیب، با زمانِ تقریبیِ هر قدم — جوری که کاربر بنشیند و مو‌به‌مو انجامش دهد
+   • «چطور یاد بگیر»: روشِ یادگیریِ همان جلسه (تمرینِ فعال، تکرارِ فاصله‌دار، ساختِ نمونه، …)
+   • منابعِ **مشخص و واقعی** برای همان جلسه: نامِ دقیقِ کتاب و فصل، نامِ دوره و شماره‌ی درس، نامِ کانال/مستندات.
+     هرگز ننویس «یک ویدیوی خوب پیدا کن».
+   • معیارِ اتمامِ همان جلسه: از کجا بفهمد این جلسه را واقعاً بلد شده.
+۵. جلسه‌ها زیرِ مرحله‌ها گروه‌بندی می‌شوند. هر مرحله هدف، تمرینِ عملی و معیارِ اتمامِ خودش را دارد.
+۶. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارها وقتشان را رویش تلف می‌کنند.
+۷. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
 
 فقط و فقط یک JSONِ خام برگردان، بدونِ هیچ متنِ اضافه قبل یا بعدش، بدونِ Markdown fences.
 دقیقاً با این شکل:
@@ -176,9 +184,19 @@ const SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ آموزش هست�
       "t": "عنوانِ مرحله",
       "goal": "بعد از این مرحله دقیقاً چه کاری می‌توانی بکنی (یک جمله، قابلِ سنجش)",
       "weeks": 2,
-      "items": ["کارِ عملیِ ۱ (فعل‌محور و مشخص)", "کارِ عملیِ ۲", "کارِ عملیِ ۳", "کارِ عملیِ ۴"],
+      "items": ["کارِ عملیِ ۱ (فعل‌محور و مشخص)", "کارِ عملیِ ۲", "کارِ عملیِ ۳"],
       "practice": "تمرینِ عملیِ این مرحله با خروجیِ مشخص",
-      "checkpoint": "از کجا بفهمی این مرحله تمام شده"
+      "checkpoint": "از کجا بفهمی این مرحله تمام شده",
+      "sessions": [
+        {
+          "title": "عنوانِ جلسه",
+          "goal": "هدفِ همین یک جلسه، در یک جمله",
+          "steps": ["۰-۱۰ دقیقه: کارِ مشخص", "۱۰-۳۵ دقیقه: کارِ مشخص", "۳۵-۴۵ دقیقه: کارِ مشخص"],
+          "howTo": "روشِ یادگیریِ این جلسه — چطور تمرین کن که واقعاً بماند",
+          "refs": ["نامِ دقیقِ منبع + فصل/درسِ مشخص", "منبعِ دومِ مشخص"],
+          "checkpoint": "از کجا بفهمی این جلسه را بلد شده‌ای"
+        }
+      ]
     }
   ],
   "tips": ["نکته‌ی کاربردی ۱", "نکته‌ی کاربردی ۲", "نکته‌ی کاربردی ۳"],
@@ -187,7 +205,18 @@ const SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ آموزش هست�
   "books": ["نامِ دقیقِ کتاب/دوره/منبعِ واقعی ۱", "نامِ دقیقِ منبعِ ۲"]
 }
 
-بینِ ۵ تا ۸ مرحله بساز، هرکدام با ۳ تا ۶ کارِ عملی. مراحل باید به هم وصل باشند: هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود.`;
+بینِ ۴ تا ۷ مرحله بساز. مراحل باید به هم وصل باشند: هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود.
+مجموعِ جلسه‌ها را از ۱۲ بیشتر و از ۴۰ کمتر نگه دار.`;
+
+/** یک نشستِ واقعی به اندازه‌ی همان دقیقه‌هایی که کاربر اعلام کرده. */
+export type GeneratedSession = {
+  title: string;
+  goal?: string;
+  steps: string[];
+  howTo?: string;
+  refs?: string[];
+  checkpoint?: string;
+};
 
 export type GeneratedStation = {
   t: string;
@@ -197,6 +226,16 @@ export type GeneratedStation = {
   weeks?: number;
   practice?: string;
   checkpoint?: string;
+  sessions?: GeneratedSession[];
+};
+
+/** آنچه کاربر در گامِ دومِ ویزارد انتخاب می‌کند. */
+export type RoadmapSchedule = {
+  /** روزهای هفته به سبکِ Date.getDay() — ۰ یکشنبه … ۶ شنبه */
+  jsDays: number[];
+  minutesPerDay: number;
+  /** "HH:MM" ۲۴ساعته */
+  startTime: string;
 };
 
 export type GeneratedRoadmap = {
@@ -229,6 +268,22 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
 
   const stationsRaw = Array.isArray(raw.stations) ? raw.stations : [];
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const normSessions = (v: unknown): GeneratedSession[] | undefined => {
+    if (!Array.isArray(v)) return undefined;
+    const out = v
+      .map((x: any) => ({
+        title: typeof x?.title === "string" && x.title.trim() ? x.title.trim() : "",
+        goal: str(x?.goal),
+        steps: asStringArray(x?.steps),
+        howTo: str(x?.howTo),
+        refs: asStringArray(x?.refs),
+        checkpoint: str(x?.checkpoint),
+      }))
+      // یک جلسه بدونِ عنوان یا بدونِ قدمِ اجرایی چیزی به کاربر نمی‌دهد
+      .filter((x: GeneratedSession) => x.title && x.steps.length > 0);
+    return out.length ? out : undefined;
+  };
+
   const stations: GeneratedStation[] = stationsRaw
     .map((s: any) => ({
       t: typeof s?.t === "string" && s.t.trim() ? s.t.trim() : "مرحله بدون عنوان",
@@ -240,8 +295,10 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
         : undefined,
       practice: str(s?.practice),
       checkpoint: str(s?.checkpoint),
+      sessions: normSessions(s?.sessions),
     }))
-    .filter((s: GeneratedStation) => s.items.length > 0);
+    // مرحله‌ای که نه کارِ عملی دارد نه جلسه، چیزی برای نشان‌دادن ندارد
+    .filter((s: GeneratedStation) => s.items.length > 0 || (s.sessions?.length ?? 0) > 0);
 
   if (stations.length === 0) {
     throw new Error("مدل هیچ مرحله‌ی قابل‌استفاده‌ای برنگردوند");
@@ -264,8 +321,26 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
   };
 }
 
-async function callRoadmapOnce(topic: string, userId: string): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 4000);
+const FA_DAY_NAMES = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
+
+/** پیامِ کاربر: موضوع + وقتی که واقعاً دارد. مدل بدونِ این نمی‌تواند
+ *  جلسه‌ها را به اندازه‌ی درست ببُرد. */
+function roadmapUserMessage(topic: string, schedule?: RoadmapSchedule): string {
+  if (!schedule || !schedule.jsDays.length) return `موضوع: ${topic}`;
+  const days = schedule.jsDays.map((d) => FA_DAY_NAMES[d] ?? "").filter(Boolean).join("، ");
+  const perWeek = schedule.jsDays.length * schedule.minutesPerDay;
+  return [
+    `موضوع: ${topic}`,
+    `روزهای تمرین: ${days} (هفته‌ای ${schedule.jsDays.length} جلسه)`,
+    `مدتِ هر جلسه: ${schedule.minutesPerDay} دقیقه`,
+    `ساعتِ شروع: ${schedule.startTime}`,
+    `مجموعِ وقتِ هفتگی: ${perWeek} دقیقه`,
+    `هر جلسه باید دقیقاً در ${schedule.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`,
+  ].join("\n");
+}
+
+async function callRoadmapOnce(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule), 6000);
   // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
   // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
@@ -277,11 +352,11 @@ async function callRoadmapOnce(topic: string, userId: string): Promise<Generated
  * تصادفی)، نه یک خطای ساختاری همیشگی. اگه هر دو بار شکست خورد، همون خطای
  * تلاش آخر رو برمی‌گردونه.
  */
-export async function generateRoadmap(topic: string, userId: string): Promise<GeneratedRoadmap> {
+export async function generateRoadmap(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
   let lastError: any;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await callRoadmapOnce(topic, userId);
+      return await callRoadmapOnce(topic, userId, schedule);
     } catch (err) {
       lastError = err;
     }

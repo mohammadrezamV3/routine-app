@@ -214,7 +214,7 @@ export default function SecurityPage() {
 
       <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={2}>
         {!sessions ? (
-          <div className="item-line">در حال بارگذاری…</div>
+          <div className="item-line is-loading">در حال بارگذاری…</div>
         ) : sessions.length === 0 ? (
           <div className="item-line empty">نشست فعالی پیدا نشد.</div>
         ) : (
@@ -250,7 +250,7 @@ export default function SecurityPage() {
 
       <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={3}>
         {!events ? (
-          <div className="item-line">در حال بارگذاری…</div>
+          <div className="item-line is-loading">در حال بارگذاری…</div>
         ) : events.length === 0 ? (
           <div className="item-line empty">هنوز ورودی ثبت نشده.</div>
         ) : (

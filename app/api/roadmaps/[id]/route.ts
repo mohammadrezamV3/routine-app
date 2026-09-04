@@ -38,11 +38,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "progress نامعتبر است" }, { status: 400 });
   }
 
-  // فقط کلیدهای عددی و مقدارِ بولی — تا کاربر نتواند هر چیزی در ستونِ
-  // Json بریزد.
+  // فقط دو شکلِ کلیدِ شناخته‌شده و مقدارِ بولی — تا کاربر نتواند هر چیزی
+  // در ستونِ Json بریزد:
+  //   "3"     → مرحله‌ی چهارم
+  //   "s2-5"  → جلسه‌ی ششمِ مرحله‌ی سوم
   const progress: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(raw).slice(0, 100)) {
-    if (/^\d{1,3}$/.test(k) && typeof v === "boolean") progress[k] = v;
+  for (const [k, v] of Object.entries(raw).slice(0, 600)) {
+    if (/^(\d{1,3}|s\d{1,3}-\d{1,3})$/.test(k) && typeof v === "boolean") progress[k] = v;
   }
 
   const updated = await prisma.roadmap.updateMany({
