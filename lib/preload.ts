@@ -131,7 +131,10 @@ export function clearPreloadedBootstrap() {
 export function setAuthHintCookie() {
   if (typeof document === "undefined") return;
   // ۳۰ روز، هم‌اندازه‌ی بلندترین عمر سشن. SameSite=Lax مثل خود کوکی سشن.
-  document.cookie = `${AUTH_HINT_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+  // روی https فلگِ Secure هم می‌گیرد — این کوکی تصمیمِ امنیتی نمی‌گیرد
+  // (فقط راهنمای پیش‌درخواست است) ولی دلیلی هم ندارد cleartext برود.
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${AUTH_HINT_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`;
 }
 
 /** بعد از خروج — وگرنه لود بعدی یه مهمون چند تا ۴۰۱ می‌فرسته */

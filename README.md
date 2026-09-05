@@ -1,5 +1,26 @@
 # Arion — نسخه Next.js
 
+## نسخه: v1.135.0 (سخت‌سازیِ کوکی‌ها — Secure مستقل از پروتکلِ NEXTAUTH_URL)
+
+ممیزیِ کاملِ کوکی‌ها. اپ سه دسته کوکی دارد:
+
+- **کوکی‌های NextAuth** (`session-token`, `csrf-token`, `callback-url`): با
+  NEXTAUTH_URLِ https کاملاً درست‌اند — `__Secure-`/`__Host-` + `HttpOnly` +
+  `Secure` + `SameSite=Lax` (تست‌شده). مشکل: این امنیت **بی‌صدا به https
+  بودنِ NEXTAUTH_URL وابسته بود**. چون اپ پشتِ Cloudflare/nginx است و ممکن
+  است اپراتور NEXTAUTH_URL را http بگذارد (همان حالتِ Cloudflare Flexible که
+  lib/siteUrl.ts توضیحش می‌دهد)، آن‌وقت کوکیِ نشست بدونِ `Secure` ست می‌شد.
+  رفع: در production همیشه `useSecureCookies` روشن است (پشتِ https درست کار
+  می‌کند)، با درِ فرارِ `AUTH_COOKIE_SECURE=0` برای دیپلویِ واقعاً plain-http.
+- **`arion-auth`** (راهنمای پیش‌درخواست، غیرحساس): حالا روی https فلگِ
+  `Secure` هم می‌گیرد.
+- **`theme`**: همین‌طور.
+
+راستی‌آزمایی: با `NEXTAUTH_URL=http` + `NODE_ENV=production` کوکیِ نشست حالا
+`__Secure-…; HttpOnly; Secure; SameSite=Lax` می‌شود (قبلاً بدونِ Secure)؛ با
+`AUTH_COOKIE_SECURE=0` فلگ برداشته می‌شود و ورودِ مرورگری روی plain-http سالم
+کار می‌کند. ۷۶ تست سبز، check و بیلد پاک.
+
 ## نسخه: v1.134.0 (رفعِ ورودِ ظاهریِ بدونِ رمز — بازنویسیِ پاسخ با پروکسی)
 
 گزارشِ کاربر: با Burp پاسخِ درخواستِ ورود را عوض می‌کردند و «بدونِ رمز وارد

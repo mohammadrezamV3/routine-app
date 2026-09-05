@@ -443,7 +443,10 @@ export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
   // اولین HTML سرور درست باشه، نه این‌که با یه تاخیر (بعد از resolve شدن
   // getThemeSetting سمت کلاینت) یهو از تاریک به روشن (یا برعکس) عوض بشه.
   if (typeof document !== "undefined") {
-    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax`;
+    // روی https فلگِ Secure هم می‌گیرد تا روی یک درخواستِ اتفاقیِ http لو
+    // نرود — این کوکی حساس نیست، ولی بی‌دلیل هم نباید cleartext برود.
+    const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax${secure}`;
   }
   return setSetting("theme", value);
 }
