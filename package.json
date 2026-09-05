@@ -10,6 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
     "check:sql": "node scripts/check-sql-safety.js",
     "check:settings": "node scripts/check-setting-keys.js",
     "check": "npm run check:sql && npm run check:settings && tsc --noEmit",

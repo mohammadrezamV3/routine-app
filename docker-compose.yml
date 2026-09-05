@@ -64,6 +64,16 @@ services:
       context: .
       target: builder
     profiles: ["tools"]
+    # بدونِ این خط، `docker compose --profile tools up migrate` کانتینر را با
+    # CMDِ پیش‌فرضِ node:20-alpine (یعنی خودِ `node`) بالا می‌آورد: بدونِ TTY
+    # فورا با کدِ ۰ خارج می‌شود و هیچ خروجی‌ای نمی‌دهد — از بیرون دقیقا شبیهِ
+    # «دستور را زدم ولی چیزی نشد و دیتابیس آپدیت نشد».
+    #
+    # هشدارِ مهم: `run`/`up` ایمیجِ ساخته‌شده‌ی قبلی را دوباره build نمی‌کند.
+    # بعد از `git pull`، پوشه‌ی prisma/migrations داخلِ ایمیجِ قدیمی هنوز
+    # قدیمی است، پس migrate deploy می‌گوید «No pending migrations» و دیتابیس
+    # عقب می‌ماند. همیشه `--build` بده (یا از deploy/update.sh استفاده کن).
+    command: npx prisma migrate deploy
     env_file:
       - .env
     environment:

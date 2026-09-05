@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { prisma } from "@/lib/prisma";
+import { migrationState } from "@/lib/migrationState";
 
 /**
  * تست اتصال خروجی سرور به سرویس‌های بیرونی.
@@ -174,25 +175,12 @@ function eventLoopLag(): Promise<number> {
  * داشت؛ نتیجه صدها خطای «The table ... does not exist» در لاگ بود، در حالی
  * که healthcheck سبز می‌ماند (چون /api/health عمدا به دیتابیس دست نمی‌زند).
  *
- * این چک با یک کوئری ارزان روی تازه‌ترین جدول همان وضعیت را یک‌جا می‌گوید.
- * P2021 یعنی جدول وجود ندارد → migration اجرا نشده.
+ * نسخه‌ی قبلیِ این چک فقط وجودِ یک جدول را می‌پرسید، پس حالتِ خیلی شایع‌ترِ
+ * «جدول‌ها هستند ولی ستون‌های جدید نیستند» را سبز گزارش می‌کرد. حالا
+ * `lib/migrationState.ts` پوشه‌ی مایگریشن‌های همین بیلد را با جدولِ
+ * `_prisma_migrations` مقایسه می‌کند و دقیقا نامِ مایگریشن‌های اجرانشده را
+ * برمی‌گرداند.
  */
-async function schemaState() {
-  try {
-    await prisma.tradeAccount.count();
-    return { ok: true, note: "اسکیمای دیتابیس با کد هماهنگ است" };
-  } catch (e: any) {
-    if (e?.code === "P2021") {
-      return {
-        ok: false,
-        note: "migration اجرا نشده — دیتابیس از کد عقب است",
-        fix: "docker compose --profile tools run --rm migrate npx prisma migrate deploy",
-        missingTable: e?.meta?.table ?? null,
-      };
-    }
-    return { ok: false, note: e?.message?.slice(0, 160) || "خطای ناشناخته" };
-  }
-}
 
 export const dynamic = "force-dynamic";
 
@@ -205,7 +193,7 @@ export async function GET() {
     Promise.all(probes().map(runProbe)),
     dbLatency(),
     eventLoopLag(),
-    schemaState(),
+    migrationState(),
   ]);
 
   return NextResponse.json({
