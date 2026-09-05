@@ -43,6 +43,19 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
   const [reachable, setReachable] = useState<boolean | null>(null);
   const attemptRef = useRef(0);
 
+  // نوارِ کناریِ ابزارهای رسم (خط روند، فیبوناچی، …) خودِ تریدینگ‌ویو
+  // ریسپانسیو نیست — روی موبایل به‌جای جمع‌شدن، همون عرضِ ثابتش رو از فضای
+  // چارت می‌گیره و کلِ ویجت رو «زیادی عریض/فشرده» نشون می‌ده. برای همین فقط
+  // روی دسکتاپ (هم‌مرزِ ۱۰۲۴px با بقیه‌ی اپ) بازش می‌کنیم.
+  const [isDesktop, setIsDesktop] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const apply = () => setIsDesktop(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   const tvSymbol = tradingViewSymbol(symbol);
 
   const src = useMemo(() => {
@@ -53,8 +66,7 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       style: "1", // کندل‌استیک
       locale: "fa_IR",
       timezone: "Asia/Tehran",
-      // ابزارهای رسم (خط روند، فیبوناچی، …) — نوارِ کناری باید باز باشد
-      hide_side_toolbar: "0",
+      hide_side_toolbar: isDesktop ? "0" : "1",
       // نوارِ بالاییِ خودِ تریدینگ‌ویو تایم‌فریم را دارد، پس ما جدا نمی‌سازیم
       hide_top_toolbar: "0",
       withdateranges: "1",
@@ -67,7 +79,7 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       _t: String(attempt),
     });
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
-  }, [tvSymbol, theme, attempt]);
+  }, [tvSymbol, theme, attempt, isDesktop]);
 
   const retry = useCallback(() => {
     if (attemptRef.current >= MAX_ATTEMPTS) { setExhausted(true); return; }
