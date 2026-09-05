@@ -25,7 +25,18 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://api.anthropic.com",
+      // s.tradingview.com فقط برای یک پروبِ `no-cors` است که می‌سنجد آیا
+      // میزبانِ ویجت اصلاً در دسترس هست یا نه (نگاه کن به
+      // components/TradingViewChart.tsx). پاسخ خوانده نمی‌شود — همان
+      // میزبانی است که از قبل در `frame-src` مجاز بود، پس سطحِ دسترسیِ
+      // تازه‌ای باز نمی‌شود.
+      "connect-src 'self' https://s.tradingview.com https://api.anthropic.com",
+      // چارتِ تریدینگ‌ویو. عمداً فقط `frame-src` باز شده و نه `script-src`:
+      // ویجت را به‌شکلِ iframe جاسازی می‌کنیم، نه با اسکریپتِ رسمیِ `tv.js`.
+      // تفاوت مهم است — `tv.js` باید داخلِ originِ خودمان اجرا شود و به
+      // DOM و کوکی‌ها دسترسی دارد، ولی iframe در originِ تریدینگ‌ویو جدا
+      // می‌ماند. یعنی برای همان قابلیت، سطحِ حمله‌ی بسیار کمتری باز می‌کنیم.
+      "frame-src https://s.tradingview.com https://www.tradingview.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "object-src 'none'",
@@ -66,6 +77,10 @@ const NOINDEX_PATH_PREFIXES = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // instrumentation.ts رو فعال می‌کنه — اون‌جا کانکشن‌پولِ دیتابیس موقعِ بالا
+  // آمدنِ سرور گرم می‌شه تا اولین بازدیدکننده‌ی بعد از هر ری‌استارت هزینه‌ی
+  // ساختِ کانکشن رو ندهد. (در Next 15 پیش‌فرض شده؛ در 14 هنوز فلگ می‌خواد.)
+  experimental: { instrumentationHook: true },
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {

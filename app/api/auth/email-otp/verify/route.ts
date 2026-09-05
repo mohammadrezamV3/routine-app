@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const email = rawEmail.trim().toLowerCase();
   const cleanCode = code.trim();
 
-  if (!checkRateLimit(`email-otp-verify-ip:${ip}`, 20, 10 * 60 * 1000) || !checkRateLimit(`email-otp-verify-email:${email}`, 8, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`email-otp-verify-ip:${ip}`, 20, 10 * 60 * 1000)) || !(await checkRateLimit(`email-otp-verify-email:${email}`, 8, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

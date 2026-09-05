@@ -17,7 +17,7 @@ import { sendOtpSms } from "@/lib/sms";
 // تا فرانت مسیر عادی ورود رو ادامه بده و همون‌جا خطای عمومی بگیره.
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers as any);
-  if (!checkRateLimit(`2fa-start-ip:${ip}`, 10, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`2fa-start-ip:${ip}`, 10, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const password = typeof body.password === "string" ? body.password : "";
   if (!identifier || !password) return NextResponse.json({ required: false });
 
-  if (!checkRateLimit(`2fa-start-id:${identifier}`, 8, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`2fa-start-id:${identifier}`, 8, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

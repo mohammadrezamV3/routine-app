@@ -1,51 +1,64 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarClock, Filter, Loader2 } from "lucide-react";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
-import { getSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
-import { formatTradeDateTime, formatTradeTime } from "@/lib/tradeDateTime";
-// توجه: SegmentedTabs امروز/فردا/این‌هفته دیگه لازم نیست — لیست حالا
-// پیوسته‌ست، مثل ForexFactory.
-import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
-  IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, currencyMeta,
+  IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER,
 } from "@/lib/economicCalendar";
 
-const DAYS_PAGE = 14;
-const MAX_DAYS_AHEAD = 60;
+type HistoryRow = { id: string; occursAt: string; actual: string | null; forecast: string | null; previous: string | null };
 
-// دیگه سه‌تب امروز/فردا/این‌هفته نداریم — درست مثل ForexFactory، یک لیست
-// پیوسته‌ی ردیفی از روزهای پیش‌رو (با دکمه‌ی «روزهای بیشتر» برای ادامه‌ش).
-function rangeFromToday(daysAhead: number): { from: string; to: string } {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return { from: isoLocal(start), to: isoLocal(new Date(start.getTime() + daysAhead * 86_400_000)) };
+// طبقِ درخواستِ صریح: این جدول باید دقیقاً مثلِ خودِ فارکس‌فکتوری انگلیسی
+// بمونه — هم متنِ رویدادها (که از منبع همین‌جوری میان، دیگه به فارسی
+// ترجمه نمی‌شن — نگاه کن به lib/economicCalendar.ts) هم اعداد (رقمِ
+// لاتین، نه faNum). برای همین اینجا از calSystem/formatTradeTime/
+// formatTradeDateتِ سراسریِ اپ (که رقم‌ها رو فارسی می‌کنن) استفاده نمی‌کنیم؛
+// یک فرمتِ محلیِ انگلیسیِ مستقل داریم، فقط برای همین بخش.
+const enTimeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+const enDayFmt = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" });
+const enShortDateFmt = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
+function addDays(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+}
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+/** شنبه‌ی همان هفته‌ای که d توش است — دقیقاً همان تعریفِ هفته‌ی «برنامه‌ی
+ * هفتگی»ِ روتین من (WEEK_ORDER، lib/schedule.ts)، نه یک هفته‌ی دلخواهِ تازه. */
+function weekStartOf(d: Date): Date {
+  const jsDay = d.getDay();
+  const diffFromSat = (jsDay - 6 + 7) % 7;
+  return addDays(startOfLocalDay(d), -diffFromSat);
+}
+const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 
 export function EconomicCalendarPanel() {
-  const [daysAhead, setDaysAhead] = useState(DAYS_PAGE);
+  // مثلِ خودِ ForexFactory: یک روز در یک لحظه، با فلشِ قبلی/بعدی — نه
+  // «روزهای بیشتر»ی که همه‌چیز رو یک‌جا پشتِ هم می‌ریخت.
+  const [date, setDate] = useState(() => startOfLocalDay(new Date()));
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
   const [loading, setLoading] = useState(true);
-  // فقط بار اول اسکلت نشان می‌دهیم؛ با هر تغییر فیلتر/بازه، لیست قبلی سر
-  // جایش می‌ماند و کمی کم‌رنگ می‌شود. قبلا هر کلیک روی یک فیلتر کل لیست را
-  // با اسکلت جایگزین می‌کرد و همان پرش، حس کندی و ناپایداری می‌داد.
   const [firstLoad, setFirstLoad] = useState(true);
-  const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [currencies, setCurrencies] = useState<string[]>([]);
   const [otherCurrencies, setOtherCurrencies] = useState(false);
   const [impacts, setImpacts] = useState<EconomicImpact[]>([]);
 
-  useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [historyById, setHistoryById] = useState<Record<string, HistoryRow[] | "loading" | "error">>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { from, to } = rangeFromToday(daysAhead);
-      const qs = new URLSearchParams({ from, to });
+      const iso = isoLocal(date);
+      const qs = new URLSearchParams({ from: iso, to: iso });
       if (currencies.length) qs.set("currencies", currencies.join(","));
       if (otherCurrencies) qs.set("other", "1");
       if (impacts.length) qs.set("impacts", impacts.join(","));
@@ -55,20 +68,29 @@ export function EconomicCalendarPanel() {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [daysAhead, currencies, otherCurrencies, impacts]);
+  }, [date, currencies, otherCurrencies, impacts]);
 
   useEffect(() => { load(); }, [load]);
+  // عوض‌شدنِ روز یعنی هیچ ردیفی نباید بازمونده باز باشه (متعلق به روزِ قبله)
+  useEffect(() => { setExpandedId(null); }, [date]);
 
-  // گروه‌بندی بر اساس روز محلی
-  const groups = useMemo(() => {
-    const map = new Map<string, EconomicEventDto[]>();
-    for (const e of events) {
-      const key = isoLocal(new Date(e.occursAt));
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(e);
+  const today = startOfLocalDay(new Date());
+
+  async function toggleExpand(e: EconomicEventDto) {
+    if (expandedId === e.id) { setExpandedId(null); return; }
+    setExpandedId(e.id);
+    if (historyById[e.id] && historyById[e.id] !== "error") return;
+    setHistoryById((prev) => ({ ...prev, [e.id]: "loading" }));
+    try {
+      const qs = new URLSearchParams({ title: e.title, currency: e.currency, before: e.occursAt });
+      const res = await fetch(`/api/trade/economic-calendar/history?${qs}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setHistoryById((prev) => ({ ...prev, [e.id]: data.events || [] }));
+    } catch {
+      setHistoryById((prev) => ({ ...prev, [e.id]: "error" }));
     }
-    return Array.from(map.entries());
-  }, [events]);
+  }
 
   return (
     <div>
@@ -110,7 +132,7 @@ export function EconomicCalendarPanel() {
                 className={`trade-choice${currencies.includes(c.code) ? " active" : ""}`}
                 onClick={() => setCurrencies((p) => (p.includes(c.code) ? p.filter((x) => x !== c.code) : [...p, c.code]))}
               >
-                {c.flag} {c.code}
+                {c.code}
               </button>
             ))}
             <button
@@ -124,55 +146,121 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
+      {/* طبقِ درخواستِ صریح: این بخش هم داخلِ یک باکسِ صفحه‌بزرگ — هم‌الگویِ
+          چک‌لیست‌ها/یادداشت‌ها — نه یک ناحیه‌ی کوچیکِ شناور روی بک‌گراند. */}
+      <div className="trade-surface trade-page-box trade-cal-box">
+      {/* ناوبری — به‌جای «روزهای بیشتر»ی که همه‌چیز رو یک‌جا پشتِ هم
+          می‌ریخت، حالا مثلِ هفته‌ی «برنامه‌ی هفتگی»ِ روتین من (همان تعریفِ
+          هفته‌ی شنبه‌تا‌جمعه): یک ردیفِ ثابتِ ۷ روزِ کلیک‌پذیر، به‌جای فقط
+          یک فلشِ قبلی/بعدی که هیچ‌وقت نمی‌گفت «چند روزِ دیگه چی هست». */}
+      <div className="trade-cal-daynav">
+        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, -7))} aria-label="هفته‌ی قبل">
+          <ChevronRight size={16} />
+        </button>
+        <div className="trade-cal-week-strip">
+          {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
+            <button
+              key={isoLocal(d)}
+              type="button"
+              className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
+              onClick={() => setDate(d)}
+            >
+              <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
+              <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
+            </button>
+          ))}
+        </div>
+        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, 7))} aria-label="هفته‌ی بعد">
+          <ChevronLeft size={16} />
+        </button>
+      </div>
+      <div className="trade-cal-daynav-sub">
+        <span className="ltr-inline">{isSameDay(date, today) ? "Today: " : ""}{enDayFmt.format(date)}</span>
+        {!isSameDay(date, today) && (
+          <button type="button" className="trade-ghost-btn" onClick={() => setDate(today)}>
+            امروز
+          </button>
+        )}
+      </div>
+
       {loading && firstLoad && <PanelSkeleton />}
 
       {!firstLoad && !loading && !events.length && (
         <div className="item-line empty" style={{ marginTop: 16 }}>
-          <CalendarClock size={15} style={{ verticalAlign: "-2px", marginLeft: 6 }} />
-          رویدادی برای این بازه ثبت نشده است.
+          رویدادی برای این روز ثبت نشده است.
         </div>
       )}
 
-      {!firstLoad && (
-      <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
-      {groups.map(([day, list]) => (
-        <div key={day} className="trade-cal-day">
-          <div className="trade-cal-day-title">{formatTradeDateTime(list[0].occursAt, calSystem, false)}</div>
-          {list.map((e) => {
-            const meta = currencyMeta(e.currency);
-            return (
-              <div key={e.id} className="trade-cal-event">
-                <span className="trade-cal-time mono">{formatTradeTime(e.occursAt)}</span>
-                <span className="trade-cal-impact" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
-                <span className="trade-cal-main">
-                  <span className="trade-cal-title">
-                    {meta?.flag} <b className="mono">{e.currency}</b> — {e.title}
-                  </span>
-                  <span className="trade-cal-values">
-                    <span>واقعی: <b className={e.actual ? "mono" : "mono muted"}>{e.actual ? faNum(e.actual) : "—"}</b></span>
-                    <span>پیش‌بینی: <b className="mono">{e.forecast ? faNum(e.forecast) : "—"}</b></span>
-                    <span>قبلی: <b className="mono">{e.previous ? faNum(e.previous) : "—"}</b></span>
-                  </span>
-                </span>
+      {!firstLoad && !!events.length && (
+        <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
+          <div className="trade-cal-table-scroll">
+            <div className="trade-cal-table ltr-inline">
+              <div className="trade-cal-thead">
+                <span className="tc-col-time">Time</span>
+                <span className="tc-col-cur">Currency</span>
+                <span className="tc-col-event">Event</span>
+                <span className="tc-col-num">Actual</span>
+                <span className="tc-col-num">Forecast</span>
+                <span className="tc-col-num">Previous</span>
               </div>
-            );
-          })}
-        </div>
-      ))}
-      </div>
-      )}
+              {events.map((e) => {
+                const hist = historyById[e.id];
+                const expanded = expandedId === e.id;
+                return (
+                  <Fragment key={e.id}>
+                    <div
+                      className={`trade-cal-tr${expanded ? " expanded" : ""}`}
+                      onClick={() => toggleExpand(e)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <span className="tc-col-time mono">{enTimeFmt.format(new Date(e.occursAt))}</span>
+                      <span className="tc-col-cur">
+                        <span className="trade-cal-impact-dot" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
+                        <b className="mono">{e.currency}</b>
+                      </span>
+                      <span className="tc-col-event" title={e.title}>{e.title}</span>
+                      <span className={`tc-col-num mono${e.actual ? "" : " muted"}`}>{e.actual || "—"}</span>
+                      <span className="tc-col-num mono">{e.forecast || "—"}</span>
+                      <span className="tc-col-num mono">{e.previous || "—"}</span>
+                    </div>
 
-      {!firstLoad && !!events.length && daysAhead < MAX_DAYS_AHEAD && (
-        <button
-          type="button"
-          className="trade-ghost-btn"
-          style={{ width: "100%", justifyContent: "center", marginTop: 14 }}
-          onClick={() => setDaysAhead((d) => Math.min(d + DAYS_PAGE, MAX_DAYS_AHEAD))}
-          disabled={loading}
-        >
-          {loading ? <Loader2 size={14} className="trade-spin" /> : "روزهای بیشتر"}
-        </button>
+                    {expanded && (
+                      <div className="trade-cal-history">
+                        {hist === "loading" && (
+                          <div className="trade-cal-history-status"><Loader2 size={14} className="trade-spin" /> در حال بارگذاری تاریخچه…</div>
+                        )}
+                        {hist === "error" && (
+                          <div className="trade-cal-history-status">تاریخچه در دسترس نیست</div>
+                        )}
+                        {Array.isArray(hist) && !hist.length && (
+                          <div className="trade-cal-history-status">انتشارِ قبلی‌ای برای این رویداد ثبت نشده</div>
+                        )}
+                        {Array.isArray(hist) && !!hist.length && (
+                          <div className="trade-cal-history-table ltr-inline">
+                            <div className="trade-cal-history-head">
+                              <span>Date</span><span>Actual</span><span>Forecast</span><span>Previous</span>
+                            </div>
+                            {hist.map((h) => (
+                              <div key={h.id} className="trade-cal-history-row">
+                                <span>{enShortDateFmt.format(new Date(h.occursAt))}</span>
+                                <span className="mono">{h.actual || "—"}</span>
+                                <span className="mono">{h.forecast || "—"}</span>
+                                <span className="mono">{h.previous || "—"}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
+      </div>
     </div>
   );
 }

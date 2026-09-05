@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, Users, CreditCard, Coins, Boxes, Sparkles, LineChart,
-  ServerCog, Settings, LogOut, ChevronDown, Menu, X, Tag, CalendarClock,
+  ServerCog, Settings, LogOut, ChevronDown, Menu, X, Tag, CalendarClock, Flag,
 } from "lucide-react";
 
 type Leaf = { label: string; href: string };
@@ -38,6 +38,7 @@ const SECTIONS: NavSection[] = [
   },
   { label: "کدهای تخفیف", icon: <Tag size={17} />, href: "/admin/discount-codes" },
   { label: "تقویم اقتصادی", icon: <CalendarClock size={17} />, href: "/admin/economic-calendar" },
+  { label: "گزارش‌های چت", icon: <Flag size={17} />, href: "/admin/chat-reports" },
   {
     label: "درآمد", icon: <Coins size={17} />, href: "/admin/revenue",
     children: [

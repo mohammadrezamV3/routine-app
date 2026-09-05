@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -64,9 +63,6 @@ export const ICONS: Record<string, JSX.Element> = {
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
-  notepad: (
-    <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5c-1.6-1.2-3.7-1.7-6-1.7v13c2.3 0 4.4.5 6 1.7 1.6-1.2 3.7-1.7 6-1.7v-13c-2.3 0-4.4.5-6 1.7Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 6.5v13" stroke="currentColor" strokeWidth="1.6"/></svg>
-  ),
   account: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M5 19.5c1.3-3.3 4-5 7-5s5.7 1.7 7 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -109,7 +105,6 @@ function isGroup(item: NavItem): item is NavGroup {
 
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
-  { href: "/notepad", label: "Notepad", icon: "notepad", superAdminOnly: true },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", superAdminOnly: true },
   {
     label: "بدنسازی", icon: "exercise",
@@ -469,34 +464,30 @@ export function NavDrawer() {
                     <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                     <span style={{ flex: 1 }}>{item.label}</span>
                     {groupLocked && <Lock size={13} className="nav-link-lock" />}
-                    <motion.span
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ display: "flex" }}
-                    >
+                    <span className={`nav-group-chevron${isExpanded ? " open" : ""}`}>
                       <ChevronDown size={16} />
-                    </motion.span>
+                    </span>
                   </a>
-                  <AnimatePresence initial={false}>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: "easeInOut" }}
-                        style={{ overflow: "hidden" }}
-                      >
-                        <div className="nav-group-children">
-                          {item.children.map((c) => (
-                            <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
-                              <span style={{ flex: 1 }}>{c.label}</span>
-                              {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
-                            </a>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* باز/بسته‌شدنِ زیرمنو عمداً CSSیِ خالص است، نه انیمیشنِ
+                      ارتفاعِ framer-motion. دلیلش لگی بود که کاربر گزارش کرد:
+                      این کشو یک لایه‌ی backdrop-filterِ سنگین است، و
+                      انیمیشنِ height توسط JS یعنی هر فریم یک نوشتنِ استایل +
+                      layout + رسترِ دوباره‌ی همان بلور. با ترفندِ
+                      grid-template-rows: 0fr→1fr هیچ کارِ جاوااسکریپتی در
+                      هر فریم نیست، و `contain` هم نمی‌گذارد این تغییر کلِ
+                      کشو را باطل کند. */}
+                  <div className={`nav-group-sub${isExpanded ? " open" : ""}`}>
+                    <div className="nav-group-sub-inner">
+                      <div className="nav-group-children">
+                        {item.children.map((c) => (
+                          <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
+                            <span style={{ flex: 1 }}>{c.label}</span>
+                            {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             }

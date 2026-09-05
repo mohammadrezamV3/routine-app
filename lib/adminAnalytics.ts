@@ -421,6 +421,7 @@ export async function getUserDetail(userId: string) {
       id: true, name: true, lastName: true, email: true, phone: true, username: true,
       market: true, locale: true, isSuperAdmin: true, isBlocked: true, blockedAt: true,
       createdAt: true, gender: true, birthDate: true,
+      chatBanUntil: true, chatDisabled: true, chatWarnAt: true, chatWarnNote: true, chatWarnSeenAt: true,
       subscriptions: { orderBy: { createdAt: "desc" }, include: { plan: true, payments: { orderBy: { createdAt: "desc" } } } },
       moduleAccess: true,
       loginEvents: { orderBy: { createdAt: "desc" }, take: 20 },
@@ -428,13 +429,17 @@ export async function getUserDetail(userId: string) {
   });
   if (!user) return null;
 
-  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage] = await Promise.all([
+  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory] = await Promise.all([
     prisma.dailyEntry.count({ where: { userId } }),
     prisma.exerciseLog.count({ where: { userId } }),
     prisma.foodLogEntry.count({ where: { userId } }),
     prisma.tradeEntry.count({ where: { userId } }),
     prisma.roadmap.count({ where: { userId } }),
     prisma.aiUsageRecord.aggregate({ where: { userId }, _count: { _all: true }, _sum: { inputTokens: true, outputTokens: true, costUsdMicros: true } }),
+    prisma.auditLog.findMany({
+      where: { targetType: "User", targetId: userId, action: { startsWith: "chat." } },
+      orderBy: { createdAt: "desc" }, take: 20,
+    }),
   ]);
 
   return {
@@ -446,7 +451,42 @@ export async function getUserDetail(userId: string) {
       outputTokens: aiUsage._sum.outputTokens || 0,
       costUsdMicros: aiUsage._sum.costUsdMicros || 0,
     },
+    chatModerationHistory,
   };
+}
+
+// اعمالِ یکی از سه سطحِ تعدیلِ چت (+ رفعِ محدودیت) — نگاه کن به توضیحِ
+// enum CHAT_MODERATION_ACTIONS در lib/tradeChat.ts. هیچ escalationِ
+// خودکاری نیست؛ ادمین خودش هر بار انتخاب می‌کند.
+export async function applyChatModeration(
+  actorUserId: string,
+  targetUserId: string,
+  action: "WARNING" | "BAN_72H" | "DISABLE_CHAT" | "ENABLE_CHAT",
+  note: string | null
+) {
+  const now = new Date();
+  const data =
+    action === "WARNING" ? { chatWarnAt: now, chatWarnNote: note, chatWarnSeenAt: null }
+    : action === "BAN_72H" ? { chatBanUntil: new Date(now.getTime() + 72 * 3600_000) }
+    : action === "DISABLE_CHAT" ? { chatDisabled: true }
+    : { chatDisabled: false, chatBanUntil: null }; // ENABLE_CHAT
+
+  const updated = await prisma.user.update({
+    where: { id: targetUserId },
+    data,
+    select: { id: true, chatBanUntil: true, chatDisabled: true, chatWarnAt: true, chatWarnNote: true },
+  });
+  await prisma.auditLog.create({
+    data: {
+      actorUserId,
+      action: `chat.${action.toLowerCase()}`,
+      targetType: "User",
+      targetId: targetUserId,
+      meta: note ? { note } : undefined,
+    },
+  });
+  invalidateAdminAnalyticsCache();
+  return updated;
 }
 
 export async function setUserBlocked(actorUserId: string, targetUserId: string, blocked: boolean) {

@@ -10,10 +10,12 @@ type EventRow = {
   id: string; title: string; country: string; currency: string; impact: EconomicImpact;
   occursAt: string; actual: string | null; forecast: string | null; previous: string | null; source: string;
 };
-type Resp = { events: EventRow[]; externalConfigured: boolean };
+type Resp = { events: EventRow[]; externalSource: string };
 
-// ورود دستی رویدادهای تقویم اقتصادی. تا وقتی هیچ فید خارجی تنظیم نشده
-// (ECONOMIC_CALENDAR_URL)، تقویم سمت کاربر از همین‌جا پر می‌شود.
+// ورود دستی رویدادهای تقویم اقتصادی + همگام‌سازیِ دستی از منبعِ بیرونی
+// (پیش‌فرض فارکس‌فکتوری، یا ECONOMIC_CALENDAR_URL اگه ست شده باشه). همگام‌سازیِ
+// خودکار با یک crontab بیرونی روی /api/cron/economic-calendar انجام می‌شه —
+// این صفحه راهِ دستی/فوریِ همون کار رو هم می‌ده.
 export default function AdminEconomicCalendarPage() {
   const [data, setData] = useState<Resp | null>(null);
   const [title, setTitle] = useState("");
@@ -25,11 +27,29 @@ export default function AdminEconomicCalendarPage() {
   const [actual, setActual] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   function load() {
     fetch("/api/admin/economic-events").then((r) => r.json()).then(setData);
   }
   useEffect(load, []);
+
+  // برای وقتی crontabِ سرور (deploy/cron.example) هنوز ست نشده یا ادمین
+  // نمی‌خواد تا اجرای بعدیِ کرانِ روزانه صبر کنه — همون منطقِ کران رو دستی
+  // و فوری صدا می‌زنه.
+  async function syncNow() {
+    if (syncing) return;
+    setSyncing(true);
+    setSyncMsg(null);
+    setError(null);
+    const res = await fetch("/api/admin/economic-events/sync", { method: "POST" });
+    const body = await res.json().catch(() => null);
+    setSyncing(false);
+    if (!res.ok) { setError(body?.error || "همگام‌سازی ناموفق بود"); return; }
+    setSyncMsg(`${body.fetched} رویداد از ${body.source} گرفته شد (${body.created} جدید، ${body.updated} به‌روزشده)`);
+    load();
+  }
 
   async function create() {
     if (!title.trim() || !occursAt || saving) return;
@@ -65,9 +85,17 @@ export default function AdminEconomicCalendarPage() {
     <section>
       <h1>تقویم اقتصادی</h1>
       <div className="account-content-hint">
-        {data?.externalConfigured
-          ? "یک منبع بیرونی تنظیم شده — کران روزانه رویدادها را خودش به‌روز می‌کند. رویدادهایی که این‌جا دستی می‌سازی از همگام‌سازی دست‌نخورده می‌مانند."
-          : "هیچ منبع بیرونی‌ای تنظیم نشده (ECONOMIC_CALENDAR_URL). تقویم کاربران از همین رویدادهای دستی پر می‌شود."}
+        منبعِ فعلی: <b>{data?.externalSource || "…"}</b> — یک crontab بیرونی روی سرور باید روزی یک‌بار
+        <code style={{ margin: "0 4px" }}>/api/cron/economic-calendar</code>
+        رو صدا بزنه (نگاه کن به <code>deploy/cron.example</code>)؛ اگه هنوز ست نشده یا می‌خوای همین الان
+        به‌روز بشه، دکمه‌ی «همگام‌سازی الان» رو بزن. رویدادهایی که این‌جا دستی می‌سازی از همگام‌سازی
+        دست‌نخورده می‌مانند.
+      </div>
+      <div style={{ margin: "8px 0 16px" }}>
+        <button className="account-outline-btn" onClick={syncNow} disabled={syncing}>
+          {syncing ? "در حال همگام‌سازی..." : "همگام‌سازی الان"}
+        </button>
+        {syncMsg && <span className="account-content-hint" style={{ marginRight: 10 }}>{syncMsg}</span>}
       </div>
 
       <div className="admin-chart-card">

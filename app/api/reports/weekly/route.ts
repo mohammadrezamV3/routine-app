@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   // این روت واقعا AI صدا می‌زند — یعنی هر فراخوان هم هزینه‌ی پول دارد هم یک
   // اتصال سرور را چند ده ثانیه اشغال می‌کند. بدون سقف، چند کلیک پشت‌سرهم
   // (یا یک اسکریپت) هم صورتحساب را بالا می‌برد هم سرور را می‌خواباند.
-  if (!guard.isSuperAdmin && !checkRateLimit(`weekly-report-get:${guard.userId}`, 40, 60 * 60 * 1000)) {
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`weekly-report-get:${guard.userId}`, 40, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های گزارش بیش از حد مجاز بود — چند دقیقه دیگر دوباره امتحان کن" }, { status: 429 });
   }
 

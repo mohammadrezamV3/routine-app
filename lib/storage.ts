@@ -419,6 +419,12 @@ export type CustomOccurrence = {
   importance?: Importance;
   tag?: string;
   notify?: boolean; // false یعنی صریحا خاموش‌شده؛ نبودش (undefined) یعنی روشن
+  /**
+   * اگر این برنامه از یک رودمپ ساخته شده باشد، شناسه‌ی همان رودمپ. با همین
+   * فیلد، کلیک روی برنامه در «روتین من» به‌جای کارتِ معمولی، مستقیم صفحه‌ی
+   * جلسه‌های همان مسیر را باز می‌کند.
+   */
+  roadmapId?: string;
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {
@@ -437,7 +443,10 @@ export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
   // اولین HTML سرور درست باشه، نه این‌که با یه تاخیر (بعد از resolve شدن
   // getThemeSetting سمت کلاینت) یهو از تاریک به روشن (یا برعکس) عوض بشه.
   if (typeof document !== "undefined") {
-    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax`;
+    // روی https فلگِ Secure هم می‌گیرد تا روی یک درخواستِ اتفاقیِ http لو
+    // نرود — این کوکی حساس نیست، ولی بی‌دلیل هم نباید cleartext برود.
+    const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax${secure}`;
   }
   return setSetting("theme", value);
 }

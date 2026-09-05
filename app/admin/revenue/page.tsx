@@ -39,7 +39,7 @@ function RevenueInner() {
       </div>
 
       {!data ? (
-        <div className="admin-empty">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : currencies.length === 0 ? (
         <EmptyState message="در این بازه هیچ درآمدی ثبت نشده" />
       ) : (
@@ -72,7 +72,7 @@ function RevenueInner() {
 
 export default function AdminRevenuePage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <RevenueInner />
     </Suspense>
   );

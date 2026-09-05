@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
 import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
-import { ConflictAlert } from "@/components/ConflictAlert";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { MotionTuner } from "@/components/MotionTuner";
 import { getServerSession } from "next-auth";
@@ -168,7 +167,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: PRELOAD_SCRIPT }} />
         <SvgFilters />
         <BackgroundCanvasLoader />
-        <ConflictAlert />
         <AuthSessionProvider session={session}>
           <ThemeProvider>
             <MotionTuner>

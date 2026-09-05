@@ -31,7 +31,7 @@ export function ExercisePanel() {
   }
 
   if (plan === undefined) {
-    return <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
+    return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
   }
 
   // ------------- بدون برنامه فعال: onboarding -------------

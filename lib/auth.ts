@@ -36,6 +36,22 @@ async function provisionNewUser(userId: string) {
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
+  // امنیتِ کوکیِ نشست نباید بی‌صدا به پروتکلِ NEXTAUTH_URL وابسته باشد.
+  //
+  // پیش‌فرضِ next-auth این است: `useSecureCookies = NEXTAUTH_URL شروع‌شونده با
+  // https`. مشکلش اینجاست که این اپ پشتِ Cloudflare/nginx اجرا می‌شود و
+  // مرورگرِ کاربر همیشه https می‌بیند، ولی خودِ Node ممکن است http سرو کند
+  // و اپراتور NEXTAUTH_URL را http بگذارد (lib/siteUrl.ts دقیقاً همین حالتِ
+  // Cloudflare Flexible را توضیح می‌دهد). آن‌وقت کوکیِ نشست **بدونِ فلگِ
+  // Secure و بدونِ پیشوندِ `__Secure-`** ست می‌شد — یعنی روی یک درخواستِ
+  // اتفاقیِ http در معرضِ شنود قرار می‌گرفت.
+  //
+  // پس در production همیشه Secure می‌کنیم (پشتِ https کاملاً درست کار می‌کند)،
+  // با یک درِ فرار برای دیپلویِ واقعاً plain-http:  AUTH_COOKIE_SECURE=0.
+  useSecureCookies:
+    process.env.AUTH_COOKIE_SECURE != null
+      ? process.env.AUTH_COOKIE_SECURE === "1"
+      : process.env.NODE_ENV === "production",
   jwt: {
     // encode پیش‌فرض next-auth فقط از پارامتر maxAge استفاده می‌کنه و اصلا
     // token.exp رو نمی‌خونه؛ برای اینکه «به‌یاد داشته باش» تیک‌نخورده واقعا
@@ -78,8 +94,8 @@ export const authOptions: NextAuthOptions = {
         // حداکثر ۸ تلاش ناموفق در ۱۰ دقیقه، هم به‌ازای IP هم به‌ازای همون
         // شناسه ورود — جلوگیری از brute-force روی رمز عبور.
         const ip = getClientIp((req?.headers as any) || {});
-        const ipOk = checkRateLimit(`login-ip:${ip}`, 8, 10 * 60 * 1000);
-        const idOk = checkRateLimit(`login-id:${id}`, 8, 10 * 60 * 1000);
+        const ipOk = await checkRateLimit(`login-ip:${ip}`, 8, 10 * 60 * 1000);
+        const idOk = await checkRateLimit(`login-id:${id}`, 8, 10 * 60 * 1000);
         if (!ipOk || !idOk) {
           console.warn(`[auth] rate-limited login attempt for "${id}"`);
           return null;
@@ -173,7 +189,7 @@ export const authOptions: NextAuthOptions = {
         if (!isValidEmail(email)) return null;
 
         const ip = getClientIp((req?.headers as any) || {});
-        if (!checkRateLimit(`email-otp-authorize-ip:${ip}`, 20, 10 * 60 * 1000) || !checkRateLimit(`email-otp-authorize-email:${email}`, 10, 10 * 60 * 1000)) {
+        if (!(await checkRateLimit(`email-otp-authorize-ip:${ip}`, 20, 10 * 60 * 1000)) || !(await checkRateLimit(`email-otp-authorize-email:${email}`, 10, 10 * 60 * 1000))) {
           console.warn(`[auth] rate-limited email-otp attempt for "${email}"`);
           return null;
         }
@@ -238,7 +254,7 @@ export const authOptions: NextAuthOptions = {
         const code = credentials.code.trim();
 
         const ip = getClientIp((req?.headers as any) || {});
-        if (!checkRateLimit(`sms-2fa-ip:${ip}`, 20, 10 * 60 * 1000) || !checkRateLimit(`sms-2fa-id:${id}`, 10, 10 * 60 * 1000)) {
+        if (!(await checkRateLimit(`sms-2fa-ip:${ip}`, 20, 10 * 60 * 1000)) || !(await checkRateLimit(`sms-2fa-id:${id}`, 10, 10 * 60 * 1000))) {
           console.warn(`[auth] rate-limited sms-2fa attempt for "${id}"`);
           return null;
         }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
+import { ICONS } from "@/components/NavDrawer";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -90,8 +92,20 @@ export default function WeeklyPage() {
     WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
   );
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; importance?: Importance; tag?: string }[]>([]);
+  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; importance?: Importance; tag?: string; roadmapId?: string }[]>([]);
+  const router = useRouter();
   const [cardName, setCardName] = useState<string | null>(null);
+
+  /**
+   * برنامه‌هایی که از یک رودمپ ساخته شده‌اند به‌جای کارتِ معمولی، مستقیم
+   * صفحه‌ی همان مسیر را باز می‌کنند — آن‌جاست که جلسه‌ها، قدم‌ها و منابع
+   * هستند. برای بقیه‌ی برنامه‌ها رفتار مثل قبل است.
+   */
+  function openProgram(name: string) {
+    const fromRoadmap = customOcc.find((c) => c.name === name && c.roadmapId);
+    if (fromRoadmap?.roadmapId) { router.push(`/roadmaps/custom/${fromRoadmap.roadmapId}`); return; }
+    setCardName(name);
+  }
   const [addProgramOpen, setAddProgramOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ name: string; occ: Occ } | null>(null);
   const [moveTarget, setMoveTarget] = useState<{ name: string; occ: Occ } | null>(null);
@@ -248,9 +262,9 @@ export default function WeeklyPage() {
   }
 
   async function toggleDashTask(id: string) {
-    if (!isSelectedToday) return;
-    const task = dashTasks.find((t) => t.id === id);
-    if (task?.notStarted) return;
+    // عمداً هیچ قفلِ روز/ساعتی نیست: کاربر باید بتواند برنامه‌های *هر* روز را
+    // تیک بزند — روزِ گذشته برای جبرانِ عقب‌افتاده، و برنامه‌ای که هنوز
+    // ساعتش نرسیده هم اگر زودتر انجامش داده. درخواستِ صریحِ کاربر.
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
@@ -354,10 +368,10 @@ export default function WeeklyPage() {
             ) : (
               <DashTaskList
                 tasks={dashTasks}
-                editable={isSelectedToday}
+                editable
                 onToggle={toggleDashTask}
                 onAddProgram={() => setAddProgramOpen(true)}
-                onOpenProgram={setCardName}
+                onOpenProgram={openProgram}
                 onEditTask={editTaskFromDash}
                 onDeleteTask={deleteTaskCompletely}
                 onMoveTask={moveTaskFromDash}
@@ -368,7 +382,7 @@ export default function WeeklyPage() {
             {/* ستون وسط: یادآوری‌های برنامه و یادآوری دارو، زیر هم. هر دو
                 از «تنظیمات» جدا‌جدا قابل خاموش‌شدن‌ن. */}
             {hasMiddleColumn && (
-              <div className="flex flex-col gap-4 sm:gap-6">
+              <div className="dash-middle-col flex flex-col gap-4 sm:gap-6">
                 {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
                 {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
               </div>
@@ -382,6 +396,7 @@ export default function WeeklyPage() {
       <section className="dash-breakout">
         <div className="weekly-align-end">
           <div className="weekly-head-row">
+            <span className="page-title-icon">{ICONS.weekly}</span>
             <h1>برنامه هفتگی</h1>
           </div>
 
@@ -436,7 +451,7 @@ export default function WeeklyPage() {
                                     key={p.id}
                                     className="wt-item wt-level-0"
                                     style={{ ["--pos" as any]: `calc(20px + (100% - 40px) * ${p.pct})` }}
-                                    onClick={(e) => { e.stopPropagation(); setCardName(p.name); }}
+                                    onClick={(e) => { e.stopPropagation(); openProgram(p.name); }}
                                   >
                                     <div className="wt-marker-col">
                                       <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
@@ -465,7 +480,7 @@ export default function WeeklyPage() {
                             {!!untimedItems.length && (
                               <div className="wt-untimed-row">
                                 {untimedItems.map((t) => (
-                                  <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); setCardName(t.name); }}>
+                                  <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
                                     <div className="wt-range">{toEnDigits(t.time)}</div>
                                     <div className="wt-name">{t.name}</div>
                                   </div>

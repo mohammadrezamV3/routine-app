@@ -28,8 +28,6 @@
     --accent-dim:rgba(var(--accent-rgb),.20);
     --accent-soft:#5FBE93;
     --accent-deep:#00623D;
-    /* Notepad (و هرچیز بعدی که بهشون تکیه کنه) به وجود این دو نیاز داره —
-       نزدیک به مشکی خالص --bg نگه داشته شدن تا با پالت قدیمی هم‌خون بمونن */
     --card-bg:#0A0A0A;
     --input-bg:#0B0C0D;
     --line:#262A2C;
@@ -51,6 +49,8 @@
        برای چیزهایی‌ست که *روی* صفحه می‌شینن (پاپ‌آپ، منو، دراپ‌داون). */
     --surface-1:#171A1C;
     --surface-2:#1F2326;
+    /* همان --surface-2 ولی نیمه‌شفاف، برای سطح‌هایی که باید شیشه باشند */
+    --surface-glass:rgba(31,35,38,.72);
     /* بردر سطح‌ها هم باید با رنگ جدید هماهنگ باشه، نه --line قدیمی */
     --surface-line:#2A2F33;
   }
@@ -80,6 +80,7 @@
     --line:#E7D7C1;
     --surface-1:#FDF6EA;
     --surface-2:#FFFCF5;
+    --surface-glass:rgba(255,252,245,.72);
     --surface-line:#EADCC6;
     --sun:#FFC94A;
     --moon:#7B4FE0;
@@ -210,7 +211,7 @@
      بدون این خط به فونت خام سیستم/مرورگر سقوط می‌کنه (دقیقا همون باگ
      «توی چارت‌ها یه فونت دیگه دیده می‌شه»، مخصوصا روی چارت‌های دسکتاپ ادمین/
      کالری که برچسب‌هاشون با <text> خام SVG رسم می‌شن، نه یه عنصر HTML). */
-  svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  svg text{ font-family:var(--font-vazir), var(--font-latin), sans-serif; }
   /* اسکرول‌بار سراسری صفحه هیچ‌وقت نباید دیده بشه — طبق درخواست صریح
      کاربر، نه فقط داخل پاپ‌آپ‌ها (که .no-scrollbar از قبل روشون بود). */
   html{ scrollbar-width:none; -ms-overflow-style:none; }
@@ -235,19 +236,27 @@
   section:first-child{border-top:none; padding-top:0;}
 
   .eyebrow{
-    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:11px; letter-spacing:.12em;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11px; letter-spacing:.12em;
     color:var(--accent); text-transform:uppercase; margin-bottom:10px; font-weight:600;
   }
   h1{font-size:23px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px;}
+  /* آیکونِ کنارِ تایتلِ صفحه (بدنسازی/برنامه‌ی هفتگی/ترید) — بدونِ باکسِ
+     بک‌گراند، فقط خودِ خط‌ها هم‌رنگِ accent؛ svgِ آیکون‌های ICONS ابعادِ
+     ذاتی ندارند، این‌جا اندازه می‌گیرند. */
+  .page-title-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    flex-shrink:0; width:22px; height:22px; color:var(--accent);
+  }
+  .page-title-icon svg{ width:100%; height:100%; display:block; }
   .landing-section-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0;}
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
-  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-latin), var(--font-vazir), monospace; display:inline-flex; align-items:center; gap:5px;}
+  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-vazir), var(--font-latin), sans-serif; display:inline-flex; align-items:center; gap:5px;}
   .home-stats b{color:var(--secondary); font-weight:600;}
   .streak-flame{width:13px; height:13px; color:var(--secondary); flex-shrink:0;}
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
-  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:18px;}
+  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:18px;}
   /* تم روشن: هیچ فونتی نباید کرمی/طلایی باشه — عنوان‌ها نارنجی (accent)،
      متن‌های توضیحی قهوه‌ای (muted) به‌جای accent-soft که رنگش لایت-نارنجی/طلایی‌مانند بود */
   body[data-theme="light"] h1,
@@ -276,7 +285,7 @@
   .check.on .c-check{opacity:1; transform:scale(1) rotate(0deg);}
   .task-name{font-size:14.5px;}
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
-  .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-top:3px;}
+  .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px;}
 
   /* سوییچ لیکوئید گلس سبک iOS — ترک شیشه‌ای تار با یه دسته‌ی گرد که
      بین راست (خاموش) و چپ (روشن) اسلاید می‌شه، دقیقا مثل تاگل کنترل‌سنتر آیفون */
@@ -311,7 +320,7 @@
 
   .wake{display:flex; align-items:center; justify-content:space-between; padding-top:16px; margin-top:6px; gap:12px; flex-wrap:wrap;}
   .wake-text{font-size:13px; color:var(--muted);}
-  .wake-text b{color:var(--text); font-family:var(--font-latin), var(--font-vazir), monospace; font-weight:600;}
+  .wake-text b{color:var(--text); font-family:var(--font-vazir), var(--font-latin), sans-serif; font-weight:600;}
 
   /* دکمه‌ها به‌سبک Liquid Glass اپل — شیشه‌ای/تار به‌جای پرشدن تخت سبز.
      چون این قانون پایه روی همه‌ی <button>هاست، دکمه‌هایی که فقط رنگ لبه/متن
@@ -372,7 +381,7 @@
   .outing-box:active{transform:scale(.96);}
   .outing-box.on{background:var(--accent); border-color:var(--accent);}
   .outing-box .ob-num{
-    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:16px; font-weight:700; color:var(--muted);
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:16px; font-weight:700; color:var(--muted);
     transition:opacity .15s ease, transform .15s ease;
   }
   .outing-box.on .ob-num{opacity:0; transform:scale(.6);}
@@ -430,7 +439,7 @@
   .about-label{font-size:13px; color:var(--muted);}
 
   dl.notes{display:flex; flex-direction:column; gap:16px;}
-  .footer{color:var(--muted2); font-size:11px; font-family:var(--font-latin), var(--font-vazir), monospace; text-align:left; padding-top:30px;}
+  .footer{color:var(--muted2); font-size:11px; font-family:var(--font-vazir), var(--font-latin), sans-serif; text-align:left; padding-top:30px;}
 
   /* هدر شیشه‌ای — علاوه بر لبه‌ی نازک liquidGlassFilter دورش، خود بدنه هم
      یک پر لیکوئید گلس واقعی داره (بلور + شفافیت کم)، نه فقط بک‌گراند خالی */
@@ -442,7 +451,8 @@
        بود که فقط با بلور دیده می‌شد، و روی موبایل یه اورراید جدا اون رو به
        یه قرص نزدیک‌به‌سیاه تبدیل می‌کرد — یعنی ظاهر هدر بین دسکتاپ و
        موبایل دو چیز متفاوت بود («یه بار اینه یه بار اصلی»). */
-    background:var(--surface-2);
+    background:var(--surface-glass);
+    backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
     border:1px solid var(--surface-line);
     /* سافاری موبایل حین انیمیشن جمع‌شدن نوار آدرس (اسکرول) گاهی
        عنصر position:fixed رو از بقیه‌ی صفحه جدا رندر می‌کنه (یه فریم
@@ -576,13 +586,18 @@
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
      می‌داریم تا با چیپ پروفایل/همبرگر سمت راست تداخل نکنه */
-  .topbar-logo-lockup-wrap{ position:relative; display:inline-block; height:22px; }
+  .topbar-logo-lockup-wrap{
+    position:relative; display:block; height:22px; aspect-ratio:256/63; flex-shrink:0;
+  }
   @media (min-width:701px){ .topbar-logo-lockup-wrap{ height:30px; } }
   /* هر دو نسخه‌ی روز/شب هم‌زمان توی DOMان (fetch/preload هردو از همون اول)،
      فقط یکی‌شون با opacity دیده می‌شه — سوییچ تم دیگه منتظر دانلود
      تصویر جدید نمی‌مونه. */
-  .topbar-logo-lockup{ position:absolute; inset:0; height:22px; width:auto; transition:opacity .15s ease; }
-  @media (min-width:701px){ .topbar-logo-lockup{ height:30px; } }
+  .topbar-logo-lockup{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:contain; object-position:left center;
+    transition:opacity .15s ease;
+  }
   .topbar-logo-lockup-hidden{ opacity:0; pointer-events:none; }
 
   /* animated hamburger: bars morph into an X while the whole icon spins open */
@@ -648,7 +663,10 @@
     isolation:isolate;
     -webkit-mask-image:-webkit-radial-gradient(white, black);
     mask-image:radial-gradient(white, black);
-    will-change:backdrop-filter, transform; transform:translateZ(0);
+    /* عمداً فقط transform. `will-change:backdrop-filter` مرورگر را وادار
+       می‌کند بلور را در یک لایه‌ی جدا نگه دارد و مدام بازارزیابی کند —
+       روی همین کشو یکی از منابعِ همان لگ بود. */
+    will-change:transform; transform:translateZ(0);
   }
   /* یک لکه سبز خیلی کم‌رنگ پشت منو — فقط یه ذره عمق بصری، نه یک افکت پررنگ */
   .nav-drawer-glass::before{
@@ -658,7 +676,7 @@
     background:rgba(var(--accent-rgb),.14);
   }
   .nav-title{
-    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:11px; letter-spacing:.1em; color:var(--muted2);
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11px; letter-spacing:.1em; color:var(--muted2);
     text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;
   }
   .nav-close{
@@ -717,7 +735,7 @@
   /* tips / extra lists */
   .tm-extra{margin-top:22px;}
   .domain-sub{
-    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:10.5px; letter-spacing:.08em; color:var(--muted2);
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:10.5px; letter-spacing:.08em; color:var(--muted2);
     text-transform:uppercase; margin:14px 0 8px;
   }
   .domain-sub:first-child{margin-top:0;}
@@ -840,7 +858,7 @@
      باکس‌ها از پس زمینه قابل تشخیص نبودن. اینجا یه مقدار میانه (۱۶٪) که
      هم شیشه‌ای/ترنسپرنت بمونه (نه سفید تخت مثل قبل) هم واقعا به‌چشم بیاد. */
   body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.16); }
-  .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; text-transform:uppercase; letter-spacing:.05em; }
+  .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-transform:uppercase; letter-spacing:.05em; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
 
@@ -853,7 +871,7 @@
     .cal-label{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); min-width:0;}
   }
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
-  .cal-weekday{font-family:var(--font-latin), var(--font-vazir), monospace; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
+  .cal-weekday{font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
   .cal-cell{
     aspect-ratio:1; border:1px solid var(--line); border-radius:13px; display:flex; align-items:center; justify-content:center;
     cursor:pointer; transition:transform .15s ease, border-color .15s ease, background .2s ease; position:relative;
@@ -872,7 +890,7 @@
     border-color:var(--accent);
   }
   .cal-cell.done .cal-daynum{color:var(--accent); font-weight:700;}
-  .cal-daynum{font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; color:var(--text); transition:color .15s ease;}
+  .cal-daynum{font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; color:var(--text); transition:color .15s ease;}
   .cal-check{
     position:absolute; top:4px; left:4px; width:16px; height:16px; min-width:16px; border-radius:50%;
     background:var(--accent); display:flex; align-items:center; justify-content:center;
@@ -942,18 +960,35 @@
     animation:modalPopIn .38s cubic-bezier(.22,1,.36,1) both;
   }
   .modal-panel::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+  /* باگِ جابه‌جاییِ چک‌لیست: تنها مودالی که واقعاً داخلش drag/reorder
+     (framer-motion Reorder.Group، در TradeChecklistsPanel.tsx) هست همین
+     مودالِ ویرایشِ چک‌لیست است. centeringِ استانداردِ بالا با
+     transform:translate(-50%,-50%) روی خودِ .modal-panel یعنی هر
+     Reorder.Item زیرش یک جدِ transformـدار دارد — و درگ فریمر-موشن که
+     دلتای اشاره‌گر را با transformِ خودِ آیتم می‌سنجد، زیرِ یک جدِ
+     transformـدار درست حساب نمی‌شود (گلیچ می‌زند، آیتم واقعاً جا نمی‌خورد).
+     این نسخه با inset+margin:auto (بدونِ هیچ transform) سنتر می‌شود —
+     همان نتیجه‌ی بصری، بدونِ اینکه زیرِ Reorder چیزی transform‌دار بماند. */
+  @keyframes modalFadeInPlain{ from{ opacity:0; } to{ opacity:1; } }
+  .modal-panel.modal-panel-notransform{
+    inset:0; margin:auto; transform:none;
+    animation:modalFadeInPlain .22s ease both;
+  }
   /* نسخه‌ی لیکوئید گلس پاپ‌آپ (فقط دوستان) — عینا همون بک‌گراند/بلور
      .app-topbar (هدر سایت)، نه گرادیان تقریبا توپر قبلی. */
   .modal-panel.liquid-glass-panel{ overflow-x:hidden; background:var(--surface-2); }
   .modal-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;}
-  .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace;}
+  .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   .modal-title{font-size:16px; font-weight:700; margin-top:3px;}
 
   /* roadmaps hub */
-  .rm-grid{display:flex; flex-direction:column; gap:12px; margin-top:18px;}
+  /* عرضِ کارت‌ها به اندازه‌ی صفحه‌ی موبایل و یک‌ذره کوچک‌تر (درخواستِ صریحِ
+     کاربر) — تا فوترِ هشدارِ AI هم جا شود و کارت‌ها تا لبه نچسبند. */
+  .rm-grid{display:flex; flex-direction:column; gap:10px; margin-top:16px; max-width:400px; margin-inline:auto;}
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border:1px solid var(--line); border-radius:12px; padding:18px 18px; text-decoration:none; color:var(--text);
+    border:1px solid var(--line); border-radius:12px; padding:14px 15px; text-decoration:none; color:var(--text);
     background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
     transition:.18s; min-height:26px; box-sizing:border-box;
@@ -1264,7 +1299,7 @@
   .checkout-discount-row .checkout-field-label{ margin-bottom:0; flex-shrink:0; white-space:nowrap; }
   .checkout-discount-field-wrap{ position:relative; flex:1; min-width:150px; }
   .checkout-discount-input{
-    width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-left:92px;
+    width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-left:104px;
     backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   }
   /* بک‌گراند پایه‌ی wsearch-newform-name توی تم تیره یه مشکی تخت
@@ -1292,6 +1327,9 @@
      می‌زد — همون باگ همیشگی، این‌جا تا الان فیکس نشده بود. */
   .checkout-discount-apply-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }
   .checkout-discount-apply-btn:disabled{ opacity:.5; cursor:default; }
+  /* عرضِ ثابت به همان دلیلِ auth-phone-send-btn — «اعمال» / «در حال
+     بررسی…» / «حذف» پهنای متفاوت دارند. */
+  .checkout-discount-apply-btn{ width:92px; padding-left:0; padding-right:0; }
   .checkout-discount-apply-btn.remove{ background:none; color:#E05252; }
   .checkout-discount-apply-btn.remove:hover:not(:disabled){ background:none; box-shadow:none; }
   .checkout-discount-success{ margin-top:7px; font-size:11.5px; color:var(--accent); font-weight:600; }
@@ -1434,7 +1472,7 @@
     display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
     margin-top:10px; padding:11px 0; border-radius:14px;
     border:1px solid var(--line); background:rgba(var(--surface-rgb),.05); color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; font-weight:600; cursor:pointer;
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05); transition:border-color .2s ease, transform .15s ease;
   }
@@ -1468,7 +1506,7 @@
   .tc-drag-handle svg{ width:16px; height:16px; }
   .tc-edit-input{
     flex:1; min-width:0; background:none; border:none; color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; padding:6px 0; outline:none;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:14px; padding:6px 0; outline:none;
   }
   .tc-delete-btn{
     flex-shrink:0; width:26px; height:26px; padding:0; border-radius:8px; border:none;
@@ -1485,7 +1523,7 @@
     padding:0; border:1px solid var(--accent); color:var(--accent); background:none;
   }
   .tc-add-btn:disabled{ opacity:.4; }
-  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; padding:4px 4px 2px; }
+  .trade-checklist-count{ text-align:left; font-size:11px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; padding:4px 4px 2px; }
   /* یک باکس شیشه‌ای عمومی و ساده — برای جعبه‌های کوچیک مثل وضعیت لودینگ رودمپ‌ساز */
   .glass-box{
     background:rgba(var(--surface-rgb), .13); border:1px solid var(--line); border-radius:16px;
@@ -1529,7 +1567,7 @@
     content:''; position:absolute; top:34px; width:1px; height:12px; background:var(--muted2);
   }
   .wt-marker-col{display:flex; flex-direction:column; align-items:center; height:33px; justify-content:flex-end; position:relative;}
-  .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-latin), var(--font-vazir), monospace;}
+  .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   /* هر برنامه یه ضربدر رو خط تایم‌لاینه — تا نگذشته رنگ اصلی‌شو داره،
      بعد از گذشتنش (انجام‌شده) دایره‌ش سبز پر می‌شه و ضربدر رنگ پس‌زمینه می‌گیره */
   .wt-dot{
@@ -1542,7 +1580,7 @@
   .wt-dot-done{background:var(--accent); color:#fff; box-shadow:0 0 8px rgba(var(--accent-rgb),.85), 0 0 16px rgba(var(--accent-rgb),.4);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
-  .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:3px; white-space:nowrap;}
+  .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:3px; white-space:nowrap;}
   .wt-name{font-size:11px; color:var(--text); line-height:1.3; word-break:break-word;}
   .wt-item.wt-endpoint .wt-name{color:var(--accent); font-weight:700; text-shadow:0 0 8px rgba(var(--accent-rgb),.5);}
   .wt-untimed-row{direction:rtl; display:flex; flex-direction:row-reverse; flex-wrap:wrap; gap:18px; padding:2px 4px 14px; margin-top:8px; padding-top:12px;}
@@ -1554,7 +1592,7 @@
   .wt-item.wt-endpoint .wt-marker-col{height:42px;}
   .wt-item.wt-endpoint .wt-time-above{margin-bottom:20px;}
   .wt-untimed-item{min-width:0;}
-  .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; margin-bottom:3px;}
+  .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:3px;}
   .wt-untimed-item .wt-name{font-size:12.5px; color:var(--text); line-height:1.4;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
 
@@ -1644,11 +1682,11 @@
   body[data-theme="light"] .pcard-close:hover, body:not([data-theme="light"]) .pcard-close:hover{
     background:none;
   }
-  .pcard-back-eyebrow{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; letter-spacing:0; color:var(--accent); font-weight:600; margin-bottom:14px;}
+  .pcard-back-eyebrow{font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; letter-spacing:0; color:var(--accent); font-weight:600; margin-bottom:14px;}
   .pcard-back-lesson{font-size:22px; font-weight:800; line-height:1.4;}
-  .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace;}
+  .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   .pcard-combined-stat{
-    font-size:13px; font-weight:700; font-family:var(--font-latin), var(--font-vazir), monospace; color:var(--accent);
+    font-size:13px; font-weight:700; font-family:var(--font-vazir), var(--font-latin), sans-serif; color:var(--accent);
     margin-top:26px; margin-bottom:12px; flex-shrink:0;
   }
   .pcard-times-list{
@@ -1672,7 +1710,7 @@
   .pcard-icon-btn svg{width:13px; height:13px; display:block;}
   .pcard-trash-btn:hover{border-color:#E05252; color:#E05252; background:rgba(224,82,82,.12);}
   .pcard-edit-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-dim);}
-  .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; flex-shrink:0;}
+  .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; flex-shrink:0;}
 
   /* هم دسکتاپ هم موبایل: تایم‌لاین افقی یکسان (بیداری راست، خواب چپ، نقطه‌ها
      روی یه خط افقی) — موبایل فقط یه‌پله کوچیک‌تر می‌شه، ساختارش عوض نمی‌شه.
@@ -1721,7 +1759,7 @@
   .wsearch-input-icon{position:absolute; top:50%; right:13px; transform:translateY(-50%); width:15px; height:15px; pointer-events:none;}
   .wsearch-input{
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:10px;
-    padding:10px 38px 10px 14px; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
+    padding:10px 38px 10px 14px; font-family:var(--font-vazir), var(--font-latin), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
     outline:none; transition:border-color .15s ease, background .15s ease;
   }
   body:not([data-theme="light"]) .wsearch-input{
@@ -1737,7 +1775,7 @@
   .wsearch-box{
     aspect-ratio:1; padding:10px; border-radius:14px; text-align:center; line-height:1.35;
     border:1px solid var(--line); background:rgba(var(--surface-rgb), .68); color:#fff;
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; overflow:hidden;
     backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
     position:relative; z-index:1;
@@ -1796,7 +1834,7 @@
   .wsearch-add-row{display:flex; flex-wrap:wrap; gap:8px; padding-top:10px;}
   .wsearch-add-time{
     background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; padding:8px 10px; outline:none;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:8px 10px; outline:none;
   }
   body:not([data-theme="light"]) .wsearch-add-time{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-add-row > .wsearch-add-time{flex:1 1 calc(50% - 4px); min-width:0;}
@@ -1805,12 +1843,12 @@
   .wsearch-date-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
   .jdate-btn{
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
     direction:ltr;
   }
   body:not([data-theme="light"]) .jdate-btn{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .jdate-btn:hover, .jdate-btn:focus{border-color:var(--accent);}
-  .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; direction:rtl;}
+  .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; direction:rtl;}
 
   /* دکمه‌ی تاریخ «ثبت معامله جدید» توی ژورنال ترید — کوچیک‌تر، گرد کامل،
      لیکوئید گلس؛ فقط همین‌جا (نه بقیه‌ی جاهایی که از jdate-btn استفاده می‌کنن) */
@@ -1852,7 +1890,7 @@
   .jdate-mini-btn{
     display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:10px;
     background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent);
-    font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     transition:opacity .15s ease;
   }
   .jdate-mini-btn:hover{ opacity:.82; }
@@ -1867,7 +1905,7 @@
     background:rgba(255,255,255,.98); border-color:var(--line); box-shadow:0 12px 30px rgba(0,0,0,.15);
   }
   .jdate-mini-item{
-    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-latin), var(--font-vazir), monospace;
+    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-vazir), var(--font-latin), sans-serif;
     text-align:center; cursor:pointer; color:var(--text); transition:background .12s ease;
   }
   .jdate-mini-item:hover{ background:rgba(var(--bg-rgb),.4); }
@@ -1879,11 +1917,11 @@
     background:none;
   }
   .jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
-  .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-latin), var(--font-vazir), monospace;}
+  .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   .jdate-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .jdate-cell{
     aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px;
-    font-family:var(--font-latin), var(--font-vazir), monospace; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
   }
   .jdate-cell:hover{border-color:var(--accent);}
   .jdate-cell.empty{cursor:default; visibility:hidden;}
@@ -1904,7 +1942,7 @@
   .day-pill{
     flex:1 1 0; min-width:0; text-align:center; padding:9px 0; border-radius:10px;
     border:1px solid var(--line); background:rgba(var(--bg-rgb), .5); color:var(--muted);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     position:relative; z-index:1;
     transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
   }
@@ -2003,7 +2041,7 @@
   .add-program-glass .wsearch-add-btn{
     width:auto; height:auto; border-radius:999px; border:none; background:none;
     display:inline-flex; align-items:center; gap:6px; padding:4px 2px;
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; color:var(--accent);
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; color:var(--accent);
   }
   .add-program-glass .wsearch-add-btn:hover{ color:var(--accent); opacity:.8; }
   .add-program-glass .wsearch-add-btn-icon{
@@ -2073,15 +2111,21 @@
      پشتش تقریبا شفاف دیده می‌شد. یه بک‌گراند تقریبا توپر مثل بقیه‌ی
      منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
   .dash-context-menu{ background:var(--surface-2); border-color:var(--surface-line); }
+  /* دقیقاً هم‌اندازه‌ی آیتم‌های منویِ سه‌نقطه‌ی «روتین من» (DashTaskRow/
+     DashMedicationCard: rounded-xl px-3 py-2 gap-2 text-[12-13px]، بدونِ
+     font-weight اضافه) — قبلاً فقط پوسته‌ی بیرونی (.dash-context-menu)
+     مشترک بود، خودِ دکمه‌ها رادیوس/پدینگ/سایزِ آیکونِ متفاوتی داشتند. */
   .wsearch-fab-option{
-    display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:9px; cursor:pointer;
-    font-size:12.5px; font-weight:600; color:var(--text); transition:background .12s ease;
+    display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; cursor:pointer;
+    font-size:13px; font-weight:400; color:var(--text); transition:background .12s ease;
   }
   .wsearch-fab-option:hover{background:rgba(var(--bg-rgb),.4);}
-  body:not([data-theme="light"]) .wsearch-fab-option:hover{background:rgba(255,255,255,.06);}
-  .wsearch-fab-option svg{width:16px; height:16px; flex-shrink:0;}
-  .wsearch-fab-option.danger svg{color:#E05252;}
-  .wsearch-fab-option.danger:hover{background:rgba(224,82,82,.12);}
+  body:not([data-theme="light"]) .wsearch-fab-option:hover{background:rgba(255,255,255,.05);}
+  .wsearch-fab-option svg{width:13px; height:13px; flex-shrink:0;}
+  /* روی گزینه‌ی خطرناک (حذف)، خودِ روتین من متن را هم قرمز می‌کند، نه
+     فقط آیکون — این‌جا هم همان‌طور. */
+  .wsearch-fab-option.danger{ color:#E05252; }
+  .wsearch-fab-option.danger:hover{background:rgba(224,82,82,.1);}
 
   /* delete mode: existing boxes jiggle (iOS-style off-center wobble), tap to remove entirely.
      Only .wsearch-box elements animate — nothing else on the page is touched. */
@@ -2166,16 +2210,22 @@
      تقریبا توپر تیره داشتن که با بقیه‌ی اپ (هدر، پنل پروفایل/اعلان‌ها)
      هم‌حس نبود؛ اسپسیفیسیتی این سلکتور (با :has) از قانون پایه‌ی
      body:not([light]) .wsearch-newform بالاتره، پس درست override می‌شه. */
+  /* «دودستگی» بک‌گراند این پاپ‌آپ‌ها از همین‌جا می‌آمد: بک‌گراندِ ۴٪ فقط
+     وقتی یکدست دیده می‌شد که backdrop-filter کار می‌کرد. روی دستگاه‌های
+     لمسی (html[data-perf="low"]) بلور عمداً برداشته می‌شود، و آن‌وقت پاپ‌آپ
+     عملاً شفاف می‌ماند و کارت‌ها/متن‌های پشتش از توش می‌زدند بیرون — دقیقاً
+     همان دورنگیِ گزارش‌شده. حالا خودِ سطح به‌قدر کافی کدر است
+     (--surface-glass، ۷۲٪) که مستقل از بلور یکدست بماند. */
   .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.04);
+    background:var(--surface-glass);
     backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
   }
   body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.04);
+    background:var(--surface-glass);
     border:1px solid rgba(255,255,255,.07);
   }
   body[data-theme="light"] .wsearch-newform:has(.add-program-glass){
-    background:rgba(255,255,255,.28);
+    background:var(--surface-glass);
   }
   @keyframes newformPopIn{
     from{ opacity:0; transform:translate(-50%, calc(-50% + 26px)) scale(.96); }
@@ -2189,11 +2239,11 @@
   .wsearch-newform-title{font-size:13px; font-weight:700;}
   .wsearch-newform-title.accent{color:var(--accent);}
   .time-field{position:relative; flex:1 1 calc(50% - 4px); min-width:0; display:flex; flex-direction:column; gap:3px;}
-  .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; text-align:right; padding-right:2px;}
-  .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), monospace;}
+  .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-align:right; padding-right:2px;}
+  .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   .wsearch-newform-name{
     width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; padding:9px 11px; outline:none;
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:9px 11px; outline:none;
   }
   /* زیر ۱۶px، سافاری موبایل موقع فوکوس‌شدن فیلد خودکار زوم می‌کنه —
      این رفتار مستقل از userScalable:false توی viewport meta‌ست، فقط با
@@ -2288,15 +2338,47 @@
      field-icon که سمت راسته)، مستقل و بدون نیاز به فاصله از اون؛ توی
      صفحه‌های auth ریست سراسری button وجود نداره پس باید همه‌چیز صریح
      خاموش بشه (نگاه کن به توضیح checkout-gateway-pill). */
+  /* اندازه‌ی دکمه ثابت است و محتوایش هیچ‌وقت مونت/آنمونت نمی‌شود، پس
+     زدنش چیدمان را تکان نمی‌دهد. بک‌گراند صراحتاً خاموش است چون ریستِ
+     سراسریِ button{} یک سطحِ شیشه‌ای و سایه‌ی inset می‌دهد. */
   .field-toggle-visibility-btn{
-    position:absolute; left:9px; top:50%; transform:translateY(-50%); width:20px; height:20px; padding:0;
+    position:absolute; left:8px; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; padding:0; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     color:var(--accent); cursor:pointer; transition:filter .15s ease;
   }
-  .field-toggle-visibility-btn:hover{ filter:brightness(1.15); background:none; box-shadow:none; }
+  .field-toggle-visibility-btn:hover,
+  .field-toggle-visibility-btn:active,
+  .field-toggle-visibility-btn:focus-visible{ background:none; box-shadow:none; }
+  .field-toggle-visibility-btn:hover{ filter:brightness(1.15); }
+  body[data-theme="light"] .field-toggle-visibility-btn,
+  body:not([data-theme="light"]) .field-toggle-visibility-btn{ background:none; box-shadow:none; }
+
+  .fx-eye{ width:23px; height:23px; display:block; overflow:visible; }
+  /* حالتِ پیش‌فرض = چشمِ بسته (رمز مخفی است) */
+  .fx-eye-upper, .fx-eye-lower, .fx-eye-pupil, .fx-eye-lashes{
+    transition:d .26s cubic-bezier(.22,1,.36,1), opacity .2s ease, transform .26s cubic-bezier(.22,1,.36,1);
+  }
+  /* بسته: پلکِ بالا مثلِ پلکِ واقعی روی چشم می‌افتد — کمانِ رو به پایین،
+     نه یک خطِ صافِ بی‌حالت */
+  .fx-eye-upper{ d:path("M3.2 10.6c2.6 3.4 5.6 5.1 8.8 5.1s6.2-1.7 8.8-5.1"); }
+  .fx-eye-lower{ opacity:0; }
+  .fx-eye-pupil{ opacity:0; transform:scale(.4); transform-origin:12px 12px; }
+  .fx-eye-lashes{ opacity:1; }
+  /* باز: پلک بالا می‌رود، مردمک ظاهر می‌شود، مژه‌ها جمع می‌شوند */
+  .is-open .fx-eye-upper{ d:path("M2.6 12c2.6-3.9 5.8-5.9 9.4-5.9s6.8 2 9.4 5.9"); }
+  .is-open .fx-eye-lower{ opacity:1; }
+  .is-open .fx-eye-pupil{ opacity:1; transform:scale(1); }
+  .is-open .fx-eye-lashes{ opacity:0; }
+
+  /* مرورگرهایی که انیمیشنِ `d` را ندارند (سافاری) — چشم همچنان درست
+     باز/بسته دیده می‌شود، فقط بدونِ حرکتِ نرم. */
+  @supports not (d: path("M0 0")){
+    .fx-eye-upper{ transition:opacity .2s ease; }
+  }
   .field-error-wrap.has-icon.has-end-action input{padding-right:34px; padding-left:38px;}
-  .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), monospace; margin-top:3px; display:none;}
+  .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
   .name-field-wrap label{
@@ -2326,7 +2408,7 @@
   .wsearch-newrow-remove-text{
     order:3; flex:1 1 100%; display:flex; justify-content:flex-start; align-items:center; gap:4px;
     background:none; border:none; padding:6px 2px 0; margin-top:2px; cursor:pointer;
-    color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700;
+    color:#E05252; font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11.5px; font-weight:700;
     transition:opacity .15s ease;
   }
   .wsearch-newrow-remove-text svg{ flex-shrink:0; }
@@ -2414,20 +2496,15 @@
   }
   .task-check-missed{ animation:taskMissedPulse 1.8s ease-in-out infinite; }
 
-  /* conflict alert box: pinned near the top, detached from the edge, no backdrop blur */
-  .conflict-alert{
-    position:fixed; left:50%; top:14px; z-index:60; width:88%; max-width:420px;
-    background:rgba(var(--surface-rgb), .09); border:1px solid var(--line); border-radius:16px;
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-    box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(224,82,82,.35), 0 0 22px rgba(224,82,82,.35);
-    padding:14px 18px 12px; display:flex; flex-direction:column; gap:8px;
-    transform:translate(-50%,-30px); opacity:0; pointer-events:none;
-    transition:transform .28s cubic-bezier(.22,1,.36,1), opacity .22s ease;
+  /* بنرِ خطای بالای صفحه حذف شد — درخواستِ صریحِ کاربر: «تمام ارورهای بالای
+     صفحه رو حذف کن». به‌جایش هر فرم/پاپ‌آپ خطایش را داخلِ خودش نشان می‌دهد،
+     یعنی دقیقاً همان‌جایی که کاربر دارد نگاه می‌کند. */
+  .form-inline-error{
+    margin-top:10px; padding:9px 12px; border-radius:12px;
+    font-size:12px; font-weight:600; line-height:1.8; text-align:center;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
   }
-  .conflict-alert.show{transform:translate(-50%,0); opacity:1; pointer-events:auto;}
-  .conflict-alert-text{font-size:13px; color:var(--text); font-weight:600; text-align:center; line-height:1.7;}
-  .conflict-alert-bar{height:3px; width:100%; background:var(--line); border-radius:2px; overflow:hidden;}
-  .conflict-alert-bar-fill{height:100%; width:100%; background:#E05252; border-radius:2px; transform-origin:right; transition:transform linear;}
+
 
 /* ---------- انیمیشن ساده‌شده بلوب‌های مایع (نسخه CSS-only) ----------
    نسخه اصلی HTML این بلوب‌ها را با فیزیک JS (random-walk + برخورد زوجی)
@@ -2456,7 +2533,7 @@
 }
 .nav-link-icon-svg{
   width:18px; height:18px; min-width:18px; display:flex; align-items:center; justify-content:center;
-  color:var(--muted2); transition:color .18s ease;
+  color:var(--accent); transition:color .18s ease;
 }
 /* آیکون قفل آیتم‌های پولی نخریده — فقط یه نشونه‌ست، کم‌رنگ و کوچیک تا
    شلوغ نکنه، نه یه هشدار قرمز */
@@ -2465,7 +2542,7 @@
 /* توی تم روشن، muted2 (تن/طلایی خیلی کم‌رنگ) روی بک‌گراند کرمی تقریبا
    دیده نمی‌شه — یه قهوه‌ای واضح‌تر و مجزا از accent (نارنجی‌سوخته) و از
    طلایی‌بودن */
-body[data-theme="light"] .nav-link-icon-svg{ color:#9C6B3E; }
+body[data-theme="light"] .nav-link-icon-svg{ color:var(--accent); }
 .nav-link-icon:hover{
   background:rgba(255,255,255,.03);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
@@ -2489,6 +2566,27 @@ body[data-theme="light"] .nav-link-icon:hover{
 }
 body[data-theme="light"] .nav-group-expanded{ background:rgba(0,0,0,.02); }
 .nav-group-children{ display:flex; flex-direction:column; gap:2px; padding:2px; }
+
+/* باز/بسته‌شدنِ زیرمنوی «بدنسازی»/«ترید» — با ترفندِ grid-template-rows
+   به‌جای انیمیشنِ ارتفاعِ جاوااسکریپتی.
+   چرا: این کشو یک لایه‌ی backdrop-filterِ سنگین است؛ انیمیشنِ height با JS
+   یعنی هر فریم style-write + layout + رسترِ دوباره‌ی همان بلور — همان لگی
+   که گزارش شد. این نسخه هیچ کارِ JSیی در هر فریم ندارد و `contain` هم
+   محدودش می‌کند تا کلِ کشو باطل نشود. */
+.nav-group-sub{
+  display:grid; grid-template-rows:0fr;
+  contain:layout paint;
+  transition:grid-template-rows .24s cubic-bezier(.22,1,.36,1);
+}
+.nav-group-sub.open{ grid-template-rows:1fr; }
+.nav-group-sub-inner{ overflow:hidden; min-height:0; opacity:0; transition:opacity .18s ease; }
+.nav-group-sub.open .nav-group-sub-inner{ opacity:1; transition-delay:.06s; }
+/* فقط transform انیمیت می‌شود — نه layout */
+.nav-group-chevron{ display:flex; transition:transform .2s ease; }
+.nav-group-chevron.open{ transform:rotate(180deg); }
+@media (prefers-reduced-motion: reduce){
+  .nav-group-sub, .nav-group-sub-inner, .nav-group-chevron{ transition:none; }
+}
 .nav-link-sub-item{
   display:flex; align-items:center;
   border-radius:12px; padding:10px 14px; font-size:12.5px; color:var(--muted);
@@ -2544,7 +2642,7 @@ body[data-theme="light"] .nav-link-sub-item:hover{ color:#5C3D22; }
   background:rgba(var(--accent-rgb),.09);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(var(--accent-rgb),.12);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700;
   cursor:pointer; white-space:nowrap;
   transition:background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
 }
@@ -2726,7 +2824,7 @@ body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
   position:relative; z-index:1; flex:1 1 0; min-width:0; text-align:center; padding:10px 0;
   border:none; background:none; border-radius:999px; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
+  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
   cursor:pointer; transition:color .25s ease;
 }
 /* body[data-theme="light"] button سراسری با اسپسیفیسیتی بالاتر (body+button)
@@ -2773,7 +2871,7 @@ html[data-perf="low"] .auth-tab-indicator{ transition:none; }
 .auth-full-btn{
   width:100%; margin-top:18px; border-radius:999px; padding:12px 0;
   border:1px solid var(--accent); color:var(--bg); background:var(--accent);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:filter .15s ease, transform .12s ease;
 }
@@ -2792,12 +2890,16 @@ body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-fu
 .auth-resend-btn{
   display:block; width:auto; margin:8px 0 0 auto; padding:4px 2px; text-align:right;
   background:none; border:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:color .15s ease;
 }
 body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-resend-btn{
-  background:none; border:none;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
-.auth-resend-btn:hover:not(:disabled){ color:var(--accent); }
+.auth-resend-btn:hover:not(:disabled){ color:var(--accent); background:none; box-shadow:none; }
+.auth-resend-btn:hover, .auth-resend-btn:active, .auth-resend-btn:focus-visible{
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
 .auth-resend-btn:disabled{ cursor:default; opacity:.6; }
 
 /* فیلد شماره‌همراه توی ثبت‌نام — دکمه‌ی «ارسال کد» داخل خود فیلده (سمت
@@ -2805,7 +2907,7 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    می‌شه که متن زیر دکمه نره. بعد ارسال موفق، فیلد قفل می‌شه (readOnly) و
    دکمه به یه لینک «تغییر شماره» تبدیل می‌شه. */
 .auth-phone-wrap{ position:relative; }
-.auth-phone-wrap .wsearch-newform-name{ padding-left:86px; }
+.auth-phone-wrap .wsearch-newform-name{ padding-left:112px; }
 .auth-phone-send-btn{
   position:absolute; left:6px; top:50%; transform:translateY(-50%);
   display:flex; align-items:center; justify-content:center;
@@ -2817,6 +2919,11 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 }
 .auth-phone-send-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }
 .auth-phone-send-btn:disabled{ opacity:.55; cursor:default; filter:none; }
+/* عرضِ ثابت (نه min-width): متنِ این دکمه سه حالت دارد — «ارسال کد»،
+   «در حال ارسال…»، «تغییر شماره». با min-width لبه‌ی چپ ثابت می‌ماند ولی
+   پهنا عوض می‌شود و لبه‌ی راست تکان می‌خورد. عرضِ ثابت هر سه را در یک
+   جعبه‌ی یکسان می‌نشاند. */
+.auth-phone-send-btn{ width:100px; padding-left:0; padding-right:0; }
 .auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
 
 /* فیلد کد تایید که زیر فیلد شماره ظاهر می‌شه — همون ورود ملایم بقیه‌ی
@@ -2969,7 +3076,7 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 .module-gate-msg{ font-size:13.5px; font-weight:700; color:var(--text); }
 .module-gate-cta{
   margin-top:6px; padding:11px 26px; border-radius:999px; border:none; cursor:pointer;
-  background:var(--accent); color:var(--bg); font-family:var(--font-latin), var(--font-vazir), sans-serif;
+  background:var(--accent); color:var(--bg); font-family:var(--font-vazir), var(--font-latin), sans-serif;
   font-size:13px; font-weight:700;
   animation:mgPulse 2.2s ease-in-out infinite;
 }
@@ -3051,7 +3158,7 @@ body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]
   display:flex; align-items:center; justify-content:center; gap:8px;
   padding:10px 16px; border-radius:12px; border:1px dashed var(--line);
   background:rgba(var(--bg-rgb),.05); color:var(--muted);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
   transition:border-color .15s ease, color .15s ease;
 }
 .trade-shot-btn:hover{ border-color:var(--accent); color:var(--accent); }
@@ -3073,7 +3180,7 @@ body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]
 .trade-day-card:last-child{ margin-bottom:0; }
 .trade-day-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .trade-day-pnl-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
-.trade-day-pnl-label{ font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), monospace; text-transform:uppercase; letter-spacing:.05em; }
+.trade-day-pnl-label{ font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-transform:uppercase; letter-spacing:.05em; }
 .trade-day-pnl{ font-size:14px; font-weight:800; }
 
 /* عکس معامله پشت یک دکمه‌ست — با کلیک توی لایت‌باکس بزرگ باز می‌شه */
@@ -3202,7 +3309,7 @@ body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]
    برای یه Textarea چندخطی)؛ بدون دستگیره‌ی ریسایز، راست‌چین. */
 .exercise-desc-textarea{
   width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:12px; color:var(--text);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; padding:12px 14px; outline:none;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:12px 14px; outline:none;
   min-height:96px; line-height:1.7; resize:none; text-align:right;
 }
 body:not([data-theme="light"]) .exercise-desc-textarea{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
@@ -3227,7 +3334,7 @@ body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,2
 .manual-exercise-picker-search{
   display:block; width:100%; margin:2px 0 12px; border:none; outline:none;
   border-radius:9999px; padding:11px 18px; text-align:right;
-  color:var(--text); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px;
+  color:var(--text); font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px;
   background:rgba(255,255,255,.04);
   backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
 }
@@ -3361,7 +3468,7 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
 }
 .manual-meal-row-input{
   background:transparent; border:none; outline:none; color:var(--text); min-width:0;
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; padding:0; text-align:right;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:0; text-align:right;
 }
 .manual-meal-row-input::placeholder{ color:var(--muted2); }
 .manual-meal-kcal-input{ width:38px; flex-shrink:0; text-align:center; font-weight:800; font-size:13.5px; }
@@ -3552,6 +3659,11 @@ body[data-theme="light"] .exercise-rules-accept-btn, body:not([data-theme="light
   border-radius:26px; border:1px solid var(--surface-line);
   box-shadow:0 20px 60px rgba(0,0,0,.45); padding:18px 18px 0;
   max-width:640px; margin:0 auto;
+  /* این کارت با اسپرینگِ framer-motion روی transform:translateY باز/بسته
+     می‌شه، هم‌زمان با backdrop-filterِ سنگین — بدونِ will-change، مرورگر
+     لایه‌ی جدا رو دیر پروموت می‌کنه و چند فریمِ اولِ باز شدن لگ می‌زنه
+     (دقیقاً همون ترفندی که .nav-drawer برای همین مشکل استفاده می‌کنه). */
+  will-change:transform;
 }
 .exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:24px; }
 /* هدر کارت جزئیات دیگه تایتل نداره (اسم حرکت رفته زیر عکس) — فقط
@@ -3750,667 +3862,6 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
 .no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
 .no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
 
-
-/* ============================================================================
-   NOTEPAD — Workspace بلاک‌محور. روی توکن‌های سراسری آریون (--bg/--text/
-   --accent/--card-bg/--input-bg/--line/...) سوار شده، از طریق یه لایه‌ی
-   alias به‌اسم --np-* که فقط زیر .notepad-workspace تعریف می‌شه — یعنی با
-   تغییر تم روشن/تاریک کل اپ خودکار آپدیت می‌شه، پالت مستقل قدیمی
-   (بنفش/ایندیگو) دیگه وجود نداره.
-   ============================================================================ */
-
-.notepad-workspace{
-  --np-surface:var(--card-bg);
-  --np-canvas:var(--input-bg);
-  --np-surface-hover:rgba(255,255,255,.05);
-  --np-border:var(--line);
-  --np-border-soft:var(--line);
-  --np-text:var(--text);
-  --np-muted:var(--muted);
-  --np-muted2:var(--muted2);
-  --np-accent:var(--accent);
-  --np-accent-rgb:var(--accent-rgb);
-  --np-accent-soft:var(--accent-dim);
-  --np-accent-ink:var(--bg);
-  --np-danger:#E05252;
-  --np-warn:#E0A339;
-  --np-shadow:0 8px 28px rgba(0,0,0,.28);
-  --np-radius-sm:8px;
-  --np-radius-md:12px;
-  --np-radius-lg:16px;
-
-  display:flex; align-items:flex-start; gap:0;
-  min-height:calc(100vh - 120px); min-height:calc(100dvh - 120px);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-body[data-theme="light"] .notepad-workspace{
-  --np-surface-hover:rgba(0,0,0,.035);
-}
-.notepad-workspace *{ box-sizing:border-box; }
-
-/* --- سایدبار --- */
-.notepad-sidebar-overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:45;
-  opacity:0; pointer-events:none; transition:opacity .2s ease;
-}
-.notepad-sidebar-overlay.open{ opacity:1; pointer-events:auto; }
-.notepad-sidebar{
-  width:224px; flex-shrink:0;
-  background:transparent; border-left:1px solid var(--np-border);
-  padding:16px 8px; display:flex; flex-direction:column; gap:6px;
-  position:sticky; top:0; align-self:stretch;
-}
-.notepad-sidebar-head{ display:none; align-items:center; justify-content:space-between; padding:2px 6px 8px; }
-.notepad-sidebar-title{
-  font-weight:700; font-size:12px; color:var(--np-muted);
-  font-family:var(--font-latin), var(--font-vazir), monospace; letter-spacing:.04em; text-transform:uppercase;
-}
-.notepad-sidebar-close{ background:none; border:none; color:var(--np-muted); padding:4px; cursor:pointer; }
-.notepad-sidebar-search-btn, .notepad-sidebar-new-btn{
-  display:flex; align-items:center; gap:8px; width:100%; padding:7px 9px; border-radius:var(--np-radius-md);
-  background:transparent; border:none; color:var(--np-muted);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
-  transition:background .12s ease, color .12s ease;
-}
-.notepad-sidebar-search-btn:hover, .notepad-sidebar-new-btn:hover{ color:var(--np-text); background:var(--np-surface-hover); }
-.notepad-sidebar-search-kbd{
-  margin-right:auto; font-family:var(--font-latin), var(--font-vazir), monospace; font-size:9px; color:var(--np-muted2);
-  border:1px solid var(--np-border); border-radius:4px; padding:1px 5px;
-}
-.notepad-sidebar-new-btn{ color:var(--np-accent); font-weight:700; }
-.notepad-sidebar-scroll{ overflow-y:auto; overflow-x:hidden; flex:1; min-height:0; scrollbar-gutter:stable; }
-.notepad-sidebar-section{ margin-top:14px; display:flex; flex-direction:column; gap:0; }
-.notepad-sidebar-section-title{
-  display:flex; align-items:center; gap:5px; padding:4px 9px; margin-bottom:2px;
-  font-size:10px; font-weight:700; color:var(--np-muted2); text-transform:uppercase; letter-spacing:.06em;
-  font-family:var(--font-latin), var(--font-vazir), monospace;
-}
-.notepad-sidebar-empty{ padding:6px 10px; font-size:11px; color:var(--np-muted2); }
-
-.notepad-tree-row{
-  display:flex; align-items:center; gap:2px; border-radius:var(--np-radius-md); padding:5px 4px;
-  cursor:pointer; transition:background .1s ease;
-}
-.notepad-tree-row:hover{ background:var(--np-surface-hover); }
-.notepad-tree-row.active{ background:var(--np-surface-hover); }
-.notepad-tree-row.active .notepad-tree-title{ color:var(--np-accent); font-weight:700; }
-.notepad-flat-row{ width:100%; border:none; background:none; text-align:right; font-family:inherit; padding-right:8px; }
-.notepad-tree-caret{
-  background:none; border:none; padding:2px; color:var(--np-muted2); display:flex; align-items:center; justify-content:center;
-  cursor:pointer; flex-shrink:0;
-}
-.notepad-tree-caret.invisible{ visibility:hidden; }
-.notepad-tree-label{
-  flex:1; min-width:0; display:flex; align-items:center; gap:6px; background:none; border:none;
-  padding:2px 2px; cursor:pointer; text-align:right; font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-tree-icon{ flex-shrink:0; font-size:13px; line-height:1; }
-.notepad-tree-title{
-  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:12.5px; color:var(--np-text); font-weight:500;
-}
-.notepad-tree-add{
-  flex-shrink:0; background:none; border:none; color:var(--np-muted2); padding:3px; border-radius:var(--np-radius-sm);
-  cursor:pointer; opacity:0; transition:opacity .1s ease, color .1s ease;
-}
-.notepad-tree-row:hover .notepad-tree-add{ opacity:1; }
-.notepad-tree-add:hover{ color:var(--np-accent); }
-
-.notepad-trash-row{
-  display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:var(--np-radius-md); font-size:12px;
-}
-.notepad-trash-row .notepad-tree-title{ opacity:.65; }
-.notepad-trash-row button{
-  background:none; border:none; color:var(--np-muted); cursor:pointer; padding:3px; flex-shrink:0;
-  font-size:13px; line-height:1;
-}
-.notepad-trash-row button:hover{ color:var(--np-accent); }
-.notepad-trash-row .notepad-trash-danger:hover{ color:var(--np-danger); }
-.notepad-sidebar-trash-btn{
-  display:flex; align-items:center; gap:7px; padding:7px 9px; border-radius:var(--np-radius-md); margin-top:6px;
-  background:none; border:1px solid var(--np-border); color:var(--np-muted); font-size:11px; font-weight:600;
-  cursor:pointer; transition:color .12s ease, border-color .12s ease;
-}
-.notepad-sidebar-trash-btn:hover{ color:var(--np-text); border-color:var(--np-muted2); }
-
-/* --- ناحیه‌ی اصلی/ادیتور --- */
-.notepad-main{ flex:1; min-width:0; padding:28px clamp(16px, 4vw, 64px) 80px; }
-.notepad-mobile-menu-btn{
-  display:none; align-items:center; justify-content:center; width:32px; height:32px; border-radius:var(--np-radius-md);
-  background:var(--np-surface); border:1px solid var(--np-border); color:var(--np-text); margin-bottom:14px; cursor:pointer;
-}
-.notepad-landing{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-  padding:90px 20px; text-align:center; max-width:760px; margin:0 auto;
-}
-.notepad-landing-title{
-  font-size:18px; font-weight:800; color:var(--np-text); margin-top:8px;
-  letter-spacing:-.01em;
-}
-.notepad-landing-sub{ font-size:12.5px; color:var(--np-muted); max-width:340px; }
-.notepad-add-btn{
-  display:flex; align-items:center; gap:6px; margin-top:10px; padding:9px 20px; border-radius:var(--np-radius-md); border:none;
-  background:var(--np-accent); color:var(--np-accent-ink); font-weight:700; font-size:12.5px; cursor:pointer;
-  transition:filter .12s ease;
-}
-.notepad-add-btn:hover{ filter:brightness(1.08); }
-
-.notepad-editor{ max-width:820px; margin:0 auto; }
-
-.notepad-breadcrumb{ display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-bottom:14px; }
-.notepad-breadcrumb-item{ display:flex; align-items:center; gap:4px; color:var(--np-muted2); }
-.notepad-breadcrumb-item button{
-  background:none; border:none; color:var(--np-muted); font-size:11.5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;
-  cursor:pointer; padding:2px 5px; border-radius:var(--np-radius-sm);
-}
-.notepad-breadcrumb-item button:hover{ color:var(--np-text); background:var(--np-surface-hover); }
-
-.notepad-editor-head{ display:flex; align-items:center; justify-content:space-between; min-height:22px; }
-.notepad-save-status{ font-size:10px; color:var(--np-muted2); font-family:var(--font-latin), var(--font-vazir), monospace; letter-spacing:.02em; }
-.notepad-editor-head-actions{ display:flex; align-items:center; gap:2px; }
-.notepad-fav-btn{
-  background:none; border:none; color:var(--np-muted2); padding:5px; border-radius:var(--np-radius-sm); cursor:pointer;
-  display:flex; align-items:center; transition:color .12s ease;
-}
-.notepad-fav-btn:hover{ color:var(--np-text); }
-.notepad-fav-btn.on{ color:var(--np-warn); }
-.notepad-page-menu-btn{
-  background:none; border:none; color:var(--np-muted2); padding:5px; border-radius:var(--np-radius-sm); cursor:pointer;
-  display:flex; align-items:center;
-}
-.notepad-page-menu-btn:hover{ color:var(--np-text); }
-.notepad-page-menu{
-  position:absolute; left:0; top:calc(100% + 6px); z-index:20; min-width:172px;
-  background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); padding:5px;
-  display:flex; flex-direction:column; gap:1px; box-shadow:var(--np-shadow);
-}
-.notepad-page-menu button{
-  text-align:right; background:none; border:none; padding:7px 9px; border-radius:var(--np-radius-sm);
-  font-size:12px; font-weight:600; color:var(--np-text); cursor:pointer; font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-page-menu button:hover{ background:var(--np-surface-hover); }
-.notepad-page-menu-danger{ color:var(--np-danger) !important; }
-
-.notepad-title-row{ display:flex; align-items:center; gap:10px; margin:14px 0 22px; }
-.notepad-icon-btn{
-  flex-shrink:0; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
-  font-size:26px; background:none; border:none; border-radius:var(--np-radius-md); cursor:pointer; transition:background .12s ease;
-}
-.notepad-icon-btn:hover{ background:var(--np-surface-hover); }
-.notepad-title-input{
-  flex:1; min-width:0; background:none; border:none; outline:none; color:var(--np-text);
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:26px; font-weight:800; letter-spacing:-.01em;
-}
-.notepad-title-input::placeholder{ color:var(--np-muted2); }
-
-.notepad-icon-picker{
-  position:absolute; z-index:25; top:54px; right:0; width:236px;
-  background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); padding:10px;
-  box-shadow:var(--np-shadow);
-}
-.notepad-icon-picker-grid{ display:grid; grid-template-columns:repeat(6, 1fr); gap:2px; }
-.notepad-icon-picker-grid button{
-  background:none; border:none; font-size:18px; padding:6px 0; border-radius:var(--np-radius-sm); cursor:pointer;
-}
-.notepad-icon-picker-grid button:hover{ background:var(--np-surface-hover); }
-.notepad-icon-picker-input{
-  width:100%; margin-top:8px; padding:7px 9px; border-radius:var(--np-radius-sm); font-size:11px;
-  background:var(--np-canvas); border:1px solid var(--np-border); color:var(--np-text); outline:none;
-}
-
-/* --- بلاک‌ها --- */
-.notepad-blocks-list{ display:flex; flex-direction:column; }
-.notepad-block-row{
-  display:flex; align-items:flex-start; gap:4px; border-radius:var(--np-radius-sm); padding:1px 4px;
-  position:relative;
-}
-.notepad-block-drag-handle{
-  flex-shrink:0; margin-top:6px; background:none; border:none; color:var(--np-muted2); padding:2px;
-  cursor:grab; opacity:0; transition:opacity .1s ease; touch-action:none;
-}
-.notepad-block-row:hover .notepad-block-drag-handle{ opacity:1; }
-.notepad-block-content{ flex:1; min-width:0; }
-.notepad-block-delete-btn{
-  flex-shrink:0; margin-top:6px; background:none; border:none; color:var(--np-muted2); padding:3px;
-  border-radius:var(--np-radius-sm); cursor:pointer; opacity:0; transition:opacity .1s ease, color .1s ease;
-}
-.notepad-block-row:hover .notepad-block-delete-btn{ opacity:1; }
-.notepad-block-delete-btn:hover{ color:var(--np-danger); }
-
-.notepad-block-text{
-  min-height:1.6em; outline:none; font-size:14.5px; line-height:1.7; color:var(--np-text);
-  padding:3px 2px; word-break:break-word; white-space:pre-wrap;
-}
-.notepad-block-text:empty:before{ content:attr(data-placeholder); color:var(--np-muted2); pointer-events:none; }
-.notepad-block-text code{
-  background:var(--np-accent-soft); color:var(--np-accent); border-radius:4px; padding:1px 5px;
-  font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px;
-}
-.notepad-block-text a{ color:var(--np-accent); text-decoration:underline; text-underline-offset:2px; }
-
-.np-h1{ font-size:24px; font-weight:800; padding-top:18px; letter-spacing:-.01em; }
-.np-h2{ font-size:19px; font-weight:800; padding-top:14px; letter-spacing:-.005em; }
-.np-h3{ font-size:16px; font-weight:700; padding-top:8px; }
-
-.notepad-quote-wrap{ border-right:2.5px solid var(--np-accent); padding-right:14px; margin:4px 0; }
-.np-quote{ font-style:normal; color:var(--np-muted); }
-
-.notepad-list-row{ display:flex; align-items:flex-start; gap:8px; width:100%; }
-.notepad-bullet-dot{
-  flex-shrink:0; width:4px; height:4px; border-radius:50%; background:var(--np-muted); margin-top:13px;
-}
-.notepad-number-marker{ flex-shrink:0; margin-top:4px; font-size:13px; color:var(--np-muted); font-family:var(--font-latin), var(--font-vazir), monospace; min-width:16px; }
-
-.notepad-todo-check{
-  flex-shrink:0; margin-top:5px; width:16px; height:16px; border-radius:4px; border:1.6px solid var(--np-muted2);
-  background:none; display:flex; align-items:center; justify-content:center; color:var(--np-accent-ink);
-  cursor:pointer; transition:background .12s ease, border-color .12s ease;
-}
-.notepad-todo-check.done{ background:var(--np-accent); border-color:var(--np-accent); }
-.notepad-todo-done{ color:var(--np-muted2); text-decoration:line-through; }
-
-.notepad-toggle-arrow{
-  flex-shrink:0; margin-top:4px; background:none; border:none; color:var(--np-muted); padding:2px;
-  cursor:pointer; display:flex; transition:transform .12s ease;
-}
-.notepad-toggle-arrow.open{ transform:rotate(90deg); }
-.notepad-toggle-title{ font-weight:700; }
-.notepad-toggle-children{ margin-right:22px; border-right:1px solid var(--np-border); padding-right:12px; }
-.notepad-toggle-add-child{
-  display:flex; align-items:center; gap:5px; background:none; border:none; color:var(--np-muted2);
-  font-size:11px; padding:5px 6px; cursor:pointer; font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-toggle-add-child:hover{ color:var(--np-accent); }
-
-.notepad-divider-row{ padding:14px 2px; outline:none; }
-.notepad-divider-hr{ border:none; border-top:1px solid var(--np-border); margin:0; }
-
-.notepad-image-block{ padding:4px 2px; }
-.notepad-image-block img{ max-width:100%; border-radius:var(--np-radius-md); display:block; }
-.notepad-image-change-btn{
-  margin-top:6px; background:none; border:none; color:var(--np-muted); font-size:11px; cursor:pointer;
-  font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-image-change-btn:hover{ color:var(--np-accent); }
-.notepad-image-empty{
-  display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:14px; border-radius:var(--np-radius-md);
-  border:1px dashed var(--np-border);
-}
-.notepad-image-empty button{
-  display:flex; align-items:center; gap:6px; background:var(--np-surface); border:1px solid var(--np-border);
-  color:var(--np-text); font-size:12px; font-weight:600; padding:7px 12px; border-radius:var(--np-radius-sm); cursor:pointer;
-}
-.notepad-image-url-input{
-  flex:1; min-width:160px; background:none; border:none; border-bottom:1px solid var(--np-border);
-  color:var(--np-text); font-size:12px; padding:6px 2px; outline:none;
-}
-
-.notepad-editor-bottom-space{ min-height:120px; cursor:text; }
-
-/* --- اسلش‌کامند --- */
-.notepad-slash-menu{
-  z-index:30; width:240px; max-height:290px; overflow-y:auto;
-  background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); padding:5px;
-  box-shadow:var(--np-shadow);
-}
-.notepad-slash-item{
-  display:flex; align-items:center; gap:9px; width:100%; text-align:right; padding:7px 8px; border-radius:var(--np-radius-sm);
-  background:none; border:none; cursor:pointer;
-}
-.notepad-slash-item.active{ background:var(--np-surface-hover); }
-.notepad-slash-item-icon{ flex-shrink:0; color:var(--np-accent); display:flex; }
-.notepad-slash-item-text{ display:flex; flex-direction:column; min-width:0; }
-.notepad-slash-item-label{ font-size:12.5px; font-weight:700; color:var(--np-text); }
-.notepad-slash-item-hint{ font-size:10px; color:var(--np-muted2); }
-
-/* --- تولبار شناور فرمت‌دهی --- */
-.notepad-format-toolbar{
-  z-index:30; display:flex; align-items:center; gap:2px; padding:4px; border-radius:var(--np-radius-md);
-  background:#0f0f12; border:1px solid rgba(255,255,255,.1);
-  box-shadow:var(--np-shadow);
-}
-.notepad-format-toolbar button{
-  background:none; border:none; color:#f0f0f2; padding:6px; border-radius:var(--np-radius-sm); cursor:pointer; display:flex;
-}
-.notepad-format-toolbar button:hover{ background:rgba(255,255,255,.14); }
-.notepad-format-link-row{ display:flex; align-items:center; gap:4px; padding:2px; }
-.notepad-format-link-row input{
-  background:rgba(255,255,255,.08); border:none; border-radius:var(--np-radius-sm); padding:5px 8px; font-size:11.5px;
-  color:#fff; outline:none; width:150px;
-}
-.notepad-format-link-row button{
-  background:var(--np-accent); color:var(--np-accent-ink); font-size:11px; font-weight:700; padding:5px 10px; border-radius:var(--np-radius-sm);
-}
-
-/* --- Command Palette / Move Picker --- */
-.notepad-palette{
-  position:fixed; left:50%; top:14%; transform:translateX(-50%) scale(.98); width:92%; max-width:480px; z-index:70;
-  background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); overflow:hidden;
-  box-shadow:0 24px 60px rgba(0,0,0,.45);
-  opacity:0; animation:notepadPaletteIn .16s ease forwards;
-}
-@keyframes notepadPaletteIn{ from{opacity:0; transform:translateX(-50%) scale(.98) translateY(-6px);} to{opacity:1; transform:translateX(-50%) scale(1) translateY(0);} }
-.notepad-palette-input-row{
-  display:flex; align-items:center; gap:9px; padding:14px 16px; border-bottom:1px solid var(--np-border); color:var(--np-muted);
-}
-.notepad-palette-input-row input{
-  flex:1; background:none; border:none; outline:none; color:var(--np-text); font-size:14px;
-  font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-palette-list{ max-height:340px; overflow-y:auto; padding:6px; display:flex; flex-direction:column; gap:1px; }
-.notepad-palette-item{
-  display:flex; align-items:center; gap:10px; width:100%; text-align:right; padding:9px 10px; border-radius:var(--np-radius-md);
-  background:none; border:none; color:var(--np-text); font-size:12.5px; font-weight:600; cursor:pointer;
-  font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-palette-item:hover{ background:var(--np-surface-hover); }
-.notepad-palette-item svg{ flex-shrink:0; color:var(--np-muted); }
-.notepad-palette-snippet{ font-size:10.5px; color:var(--np-muted2); font-weight:400; }
-.notepad-palette-empty{ padding:14px; text-align:center; font-size:12px; color:var(--np-muted2); }
-
-/* --- ریسپانسیو: زیر ۹۶۰px سایدبار می‌شه Drawer --- */
-@media (max-width:960px){
-  .notepad-sidebar{
-    position:fixed; top:0; right:0; bottom:0; z-index:50; width:78%; max-width:280px;
-    background:var(--np-surface);
-    transform:translateX(100%); opacity:0; border-left:none; border-radius:0;
-    min-height:100vh; min-height:100dvh;
-    transition:transform .26s cubic-bezier(.22,1,.36,1), opacity .2s ease;
-    box-shadow:-8px 0 30px rgba(0,0,0,.3);
-  }
-  .notepad-sidebar.open{ transform:translateX(0); opacity:1; }
-  .notepad-sidebar-head{ display:flex; }
-  .notepad-mobile-menu-btn{ display:flex; }
-  .notepad-main{ padding:16px 16px 60px; }
-  .np-h1{ font-size:20px; }
-  .notepad-title-input{ font-size:21px; }
-}
-
-/* ============================================================================
-   بلاک Database — تمام کلاس‌های notepad-db-* (پوسته + پنج ویو: جدول/بورد/
-   تقویم/گالری/لیست). از همون توکن‌های --np-* استفاده می‌کنه، بدون گلس/بلور،
-   هم‌راستا با هویت بصری جدید نوت‌پد.
-   ============================================================================ */
-
-.notepad-db-block{ display:flex; flex-direction:column; gap:10px; width:100%; margin:6px 0 10px; }
-.notepad-db-loading{ padding:24px; text-align:center; color:var(--np-muted); font-size:12.5px; }
-
-.notepad-db-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.notepad-db-name-input{ flex:1; min-width:0; background:transparent; border:none; outline:none; font-size:16px; font-weight:800; color:var(--np-text); padding:4px 2px; }
-.notepad-db-name-input::placeholder{ color:var(--np-muted2); }
-.notepad-db-header-actions{ display:flex; align-items:center; gap:6px; position:relative; }
-.notepad-db-header-btn{ display:flex; align-items:center; gap:5px; padding:6px 10px; border-radius:var(--np-radius-sm); background:var(--np-surface); border:1px solid var(--np-border); color:var(--np-muted); font-size:11.5px; font-weight:600; cursor:pointer; }
-.notepad-db-header-btn:hover{ background:var(--np-surface-hover); color:var(--np-text); }
-
-.notepad-db-view-tabs{ display:flex; align-items:center; gap:2px; border-bottom:1px solid var(--np-border-soft); overflow-x:auto; }
-.notepad-db-view-tab{ display:flex; align-items:center; gap:5px; padding:7px 11px; font-size:12px; font-weight:600; color:var(--np-muted); background:transparent; border:none; border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; }
-.notepad-db-view-tab:hover{ color:var(--np-text); }
-.notepad-db-view-tab.active{ color:var(--np-accent); border-bottom-color:var(--np-accent); }
-
-.notepad-db-body{ width:100%; }
-
-/* --- جدول --- */
-.notepad-db-table-scroll{ overflow-x:auto; border:1px solid var(--np-border); border-radius:var(--np-radius-md); }
-.notepad-db-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
-.notepad-db-table thead tr{ background:var(--np-surface); }
-.notepad-db-table th, .notepad-db-table td{ border-bottom:1px solid var(--np-border-soft); border-inline-end:1px solid var(--np-border-soft); padding:0; text-align:right; }
-.notepad-db-table th:last-child, .notepad-db-table td:last-child{ border-inline-end:none; }
-.notepad-db-th-btn{ width:100%; text-align:right; padding:9px 10px; background:transparent; border:none; color:var(--np-muted); font-size:11.5px; font-weight:700; cursor:pointer; }
-.notepad-db-th-btn:hover{ color:var(--np-text); }
-.notepad-db-th-add{ width:36px; }
-.notepad-db-row:hover{ background:var(--np-surface); }
-.notepad-db-row td{ padding:2px 4px; vertical-align:middle; }
-.notepad-db-row-actions{ width:36px; text-align:center; }
-.notepad-db-row-actions button{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; opacity:0; transition:opacity .12s; }
-.notepad-db-row:hover .notepad-db-row-actions button{ opacity:1; }
-.notepad-db-row-actions button:hover{ color:var(--np-danger); background:var(--np-surface-hover); }
-.notepad-db-add-row-btn{ display:flex; align-items:center; gap:6px; width:100%; padding:9px 10px; background:transparent; border:none; border-top:1px solid var(--np-border-soft); color:var(--np-muted); font-size:12px; font-weight:600; cursor:pointer; }
-.notepad-db-add-row-btn:hover{ color:var(--np-accent); background:var(--np-surface); }
-
-/* --- سلول مشترک (Table/Board/Gallery/Calendar/List) --- */
-.notepad-db-cell-input{ width:100%; min-width:90px; background:transparent; border:none; outline:none; padding:8px 10px; font-size:12.5px; color:var(--np-text); }
-.notepad-db-cell-input.mono{ font-variant-numeric:tabular-nums; direction:ltr; text-align:right; }
-.notepad-db-cell-input::placeholder{ color:var(--np-muted2); }
-.notepad-db-cell-empty{ display:inline-block; color:var(--np-muted2); font-size:12px; padding:8px 10px; }
-.notepad-db-checkbox{ display:flex; align-items:center; justify-content:center; width:18px; height:18px; margin:8px 10px; border-radius:5px; border:1.5px solid var(--np-border); background:transparent; color:#fff; cursor:pointer; }
-.notepad-db-checkbox.on{ background:var(--np-accent); border-color:var(--np-accent); }
-.notepad-db-formula-value{ display:inline-block; padding:8px 10px; color:var(--np-muted); }
-
-.notepad-db-select-trigger{ display:flex; align-items:center; width:100%; min-height:34px; padding:6px 8px; background:transparent; border:none; cursor:pointer; text-align:right; }
-.notepad-db-pill{ display:inline-flex; align-items:center; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; white-space:nowrap; }
-.notepad-db-pill.small{ padding:2px 7px; font-size:10px; }
-.notepad-db-pill-row{ display:flex; flex-wrap:wrap; gap:4px; }
-.notepad-db-color-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.notepad-db-select-menu{ position:absolute; z-index:20; top:calc(100% + 4px); right:0; min-width:170px; max-width:240px; background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-md); box-shadow:var(--np-shadow); padding:5px; display:flex; flex-direction:column; gap:1px; max-height:260px; overflow-y:auto; }
-.notepad-db-select-menu-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 8px; border-radius:6px; background:transparent; border:none; color:var(--np-text); font-size:12px; cursor:pointer; text-align:right; }
-.notepad-db-select-menu-item:hover{ background:var(--np-surface-hover); }
-.notepad-db-select-clear{ color:var(--np-danger); }
-
-/* --- پاپ‌آپ فیلتر/سورت/نمایش --- */
-.notepad-db-filter-menu{ position:absolute; z-index:20; top:calc(100% + 6px); left:0; width:320px; max-width:min(320px, calc(100vw - 32px)); background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); box-shadow:var(--np-shadow); padding:12px; display:flex; flex-direction:column; gap:12px; max-height:70vh; overflow-y:auto; }
-.notepad-db-filter-menu-head{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--np-text); }
-.notepad-db-filter-section{ display:flex; flex-direction:column; gap:6px; }
-.notepad-db-filter-section-title{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--np-muted2); }
-.notepad-db-filter-row{ display:flex; align-items:center; gap:5px; }
-.notepad-db-filter-row select, .notepad-db-filter-row input{ flex:1; min-width:0; background:var(--np-canvas); border:1px solid var(--np-border); border-radius:6px; padding:6px 7px; font-size:11.5px; color:var(--np-text); }
-.notepad-db-filter-row button{ flex-shrink:0; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; }
-.notepad-db-filter-row button:hover{ color:var(--np-danger); background:var(--np-surface-hover); }
-.notepad-db-filter-add-btn{ display:flex; align-items:center; gap:5px; align-self:flex-start; padding:5px 9px; border-radius:6px; background:transparent; border:1px dashed var(--np-border); color:var(--np-muted); font-size:11.5px; cursor:pointer; }
-.notepad-db-filter-add-btn:hover{ color:var(--np-accent); border-color:var(--np-accent); }
-.notepad-db-hide-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--np-text); padding:4px 2px; cursor:pointer; }
-
-/* --- پاپ‌آپ افزودن/ویرایش property --- */
-.notepad-db-property-menu{ position:absolute; z-index:20; top:calc(100% + 6px); left:0; width:260px; background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-lg); box-shadow:var(--np-shadow); padding:10px; display:flex; flex-direction:column; gap:10px; }
-.notepad-db-property-menu-head{ display:flex; align-items:center; gap:6px; }
-.notepad-db-property-name-input{ flex:1; min-width:0; background:var(--np-canvas); border:1px solid var(--np-border); border-radius:6px; padding:7px 9px; font-size:12.5px; color:var(--np-text); outline:none; }
-.notepad-db-type-grid{ display:grid; grid-template-columns:1fr 1fr; gap:4px; }
-.notepad-db-type-item{ padding:7px 8px; border-radius:6px; background:var(--np-canvas); border:1px solid var(--np-border); color:var(--np-muted); font-size:11.5px; font-weight:600; cursor:pointer; text-align:right; }
-.notepad-db-type-item:hover{ color:var(--np-text); }
-.notepad-db-type-item.active{ color:var(--np-accent-ink); background:var(--np-accent); border-color:var(--np-accent); }
-.notepad-db-choices-editor{ display:flex; flex-direction:column; gap:5px; }
-.notepad-db-choice-row{ display:flex; align-items:center; gap:6px; }
-.notepad-db-choice-row input{ flex:1; min-width:0; background:var(--np-canvas); border:1px solid var(--np-border); border-radius:6px; padding:6px 8px; font-size:12px; color:var(--np-text); }
-.notepad-db-choice-row button{ flex-shrink:0; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; }
-.notepad-db-choice-row button:hover{ color:var(--np-accent); background:var(--np-surface-hover); }
-.notepad-db-formula-label{ font-size:11px; color:var(--np-muted); }
-.notepad-db-property-menu-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:4px; border-top:1px solid var(--np-border-soft); }
-.notepad-db-property-delete-btn{ display:flex; align-items:center; gap:5px; background:transparent; border:none; color:var(--np-danger); font-size:11.5px; font-weight:600; cursor:pointer; }
-.notepad-db-property-save-btn{ padding:7px 16px; border-radius:7px; background:var(--np-accent); border:none; color:var(--np-accent-ink); font-size:12px; font-weight:700; cursor:pointer; }
-.notepad-db-property-save-btn:hover{ filter:brightness(1.08); }
-
-/* --- بورد --- */
-.notepad-db-board{ display:flex; align-items:flex-start; gap:12px; overflow-x:auto; padding-bottom:8px; }
-.notepad-db-board-empty{ padding:24px; text-align:center; color:var(--np-muted); font-size:12.5px; border:1px dashed var(--np-border); border-radius:var(--np-radius-md); }
-.notepad-db-board-col{ flex:0 0 260px; width:260px; display:flex; flex-direction:column; gap:8px; background:var(--np-canvas); border:1px solid var(--np-border-soft); border-radius:var(--np-radius-md); padding:8px; }
-.notepad-db-board-col-head{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--np-text); padding:2px 4px; }
-.notepad-db-board-col-count{ margin-inline-start:auto; font-size:10.5px; font-weight:600; color:var(--np-muted2); }
-.notepad-db-board-col-cards{ display:flex; flex-direction:column; gap:6px; min-height:20px; }
-.notepad-db-board-card{ background:var(--np-surface); border:1px solid var(--np-border); border-radius:var(--np-radius-sm); padding:8px; cursor:grab; display:flex; flex-direction:column; gap:4px; }
-.notepad-db-board-card:active{ cursor:grabbing; }
-.notepad-db-board-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:6px; }
-.notepad-db-board-card-title{ font-size:12px; font-weight:600; color:var(--np-text); word-break:break-word; }
-.notepad-db-board-card-head button{ flex-shrink:0; display:flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:5px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; }
-.notepad-db-board-card-head button:hover{ color:var(--np-danger); background:var(--np-surface-hover); }
-.notepad-db-board-add-btn{ display:flex; align-items:center; gap:5px; padding:7px 8px; border-radius:6px; background:transparent; border:1px dashed var(--np-border); color:var(--np-muted); font-size:11.5px; cursor:pointer; }
-.notepad-db-board-add-btn:hover{ color:var(--np-accent); border-color:var(--np-accent); }
-
-/* --- تقویم --- */
-.notepad-db-calendar{ display:flex; flex-direction:column; gap:8px; }
-.notepad-db-calendar-head{ display:flex; align-items:center; justify-content:center; gap:14px; padding:4px 0; }
-.notepad-db-calendar-title{ font-size:13px; font-weight:700; color:var(--np-text); min-width:120px; text-align:center; }
-.notepad-db-calendar-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; font-size:10.5px; font-weight:700; color:var(--np-muted2); text-align:center; padding:0 2px; }
-.notepad-db-calendar-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-.notepad-db-calendar-cell{ min-height:78px; border:1px solid var(--np-border-soft); border-radius:8px; padding:5px; display:flex; flex-direction:column; gap:3px; background:var(--np-canvas); }
-.notepad-db-calendar-cell.empty{ border-color:transparent; background:transparent; }
-.notepad-db-calendar-cell.today{ border-color:var(--np-accent); }
-.notepad-db-calendar-daynum{ font-size:10.5px; font-weight:700; color:var(--np-muted); }
-.notepad-db-calendar-items{ display:flex; flex-direction:column; gap:2px; }
-.notepad-db-calendar-item{ width:100%; text-align:right; padding:3px 5px; border-radius:5px; background:var(--np-accent-soft); color:var(--np-accent); border:none; font-size:10px; font-weight:600; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.notepad-db-calendar-add{ align-self:flex-start; display:flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:5px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; }
-.notepad-db-calendar-add:hover{ color:var(--np-accent); background:var(--np-surface-hover); }
-
-/* --- گالری --- */
-.notepad-db-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
-.notepad-db-gallery-card{ display:flex; flex-direction:column; gap:8px; background:var(--np-canvas); border:1px solid var(--np-border); border-radius:var(--np-radius-md); padding:10px; }
-.notepad-db-gallery-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:6px; font-size:13px; font-weight:700; color:var(--np-text); }
-.notepad-db-gallery-card-head button{ flex-shrink:0; display:flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:5px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; }
-.notepad-db-gallery-card-head button:hover{ color:var(--np-danger); background:var(--np-surface-hover); }
-.notepad-db-gallery-card-fields{ display:flex; flex-direction:column; gap:4px; padding-top:6px; border-top:1px solid var(--np-border-soft); }
-.notepad-db-gallery-field{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; }
-.notepad-db-gallery-field-label{ color:var(--np-muted2); font-weight:600; flex-shrink:0; }
-.notepad-db-gallery-add-card{ display:flex; align-items:center; justify-content:center; gap:6px; min-height:70px; border-radius:var(--np-radius-md); border:1px dashed var(--np-border); background:transparent; color:var(--np-muted); font-size:12px; font-weight:600; cursor:pointer; }
-.notepad-db-gallery-add-card:hover{ color:var(--np-accent); border-color:var(--np-accent); }
-
-/* --- لیست --- */
-.notepad-db-list{ display:flex; flex-direction:column; border:1px solid var(--np-border); border-radius:var(--np-radius-md); overflow:hidden; }
-.notepad-db-list-row{ display:flex; align-items:center; gap:8px; padding:2px 6px; border-bottom:1px solid var(--np-border-soft); }
-.notepad-db-list-row:last-child{ border-bottom:none; }
-.notepad-db-list-row:hover{ background:var(--np-surface); }
-.notepad-db-list-row-main{ flex:1; min-width:0; font-size:12.5px; color:var(--np-text); }
-.notepad-db-list-row-secondary{ flex-shrink:0; }
-.notepad-db-list-row-del{ flex-shrink:0; display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:transparent; border:none; color:var(--np-muted2); cursor:pointer; opacity:0; transition:opacity .12s; }
-.notepad-db-list-row:hover .notepad-db-list-row-del{ opacity:1; }
-.notepad-db-list-row-del:hover{ color:var(--np-danger); background:var(--np-surface-hover); }
-
-@media (max-width:640px){
-  .notepad-db-board-col{ flex-basis:220px; width:220px; }
-  .notepad-db-calendar-cell{ min-height:56px; }
-  .notepad-db-calendar-item{ font-size:9px; }
-}
-
-/* ============================================================================
-   کاور صفحه، منوی Actions (فونت/کپی/قفل/سفارشی‌سازی)، بلاک کد، و صفحه‌ی
-   Home با کارت‌های Recents — همه با همون توکن‌های --np-* (که به توکن‌های
-   سراسری Arion وصل‌ان)، بدون کتابخانه‌ی جدید.
-   ============================================================================ */
-
-/* --- کاور --- */
-.notepad-cover{ position:relative; width:100%; height:180px; margin-bottom:8px; overflow:hidden; border-radius:var(--np-radius-lg); }
-.notepad-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
-.notepad-cover-actions{
-  position:absolute; top:10px; left:10px; display:flex; gap:6px; opacity:0; transition:opacity .12s ease;
-}
-.notepad-cover:hover .notepad-cover-actions{ opacity:1; }
-.notepad-cover-actions button{
-  padding:6px 10px; border-radius:var(--np-radius-sm); background:rgba(0,0,0,.55);
-  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.16); color:#fff; font-size:11px; font-weight:600; cursor:pointer;
-}
-.notepad-icon-btn.overlap{ margin-top:-30px; background:var(--np-surface); border:3px solid var(--np-surface); box-shadow:var(--np-shadow); }
-.notepad-add-cover-btn{
-  display:flex; align-items:center; gap:5px; margin:-14px 0 14px; padding:5px 9px; border-radius:var(--np-radius-sm);
-  background:transparent; border:none; color:var(--np-muted2); font-size:11px; font-weight:600; cursor:pointer;
-}
-.notepad-add-cover-btn:hover{ color:var(--np-text); background:var(--np-surface-hover); }
-
-/* --- نشان قفل --- */
-.notepad-locked-badge{
-  display:inline-flex; align-items:center; gap:3px; margin-right:8px; padding:2px 7px; border-radius:999px;
-  background:var(--np-surface); color:var(--np-muted); font-size:9.5px; font-weight:700;
-}
-
-/* --- منوی Actions: فونت/جداکننده/تاگل‌ها --- */
-.notepad-page-menu{ min-width:230px; max-height:80vh; overflow-y:auto; }
-.notepad-page-menu-fonts{ display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; padding:2px; }
-.notepad-font-swatch{
-  display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 4px; border-radius:var(--np-radius-sm);
-  background:var(--np-canvas); border:1px solid var(--np-border); color:var(--np-muted); cursor:pointer;
-}
-.notepad-font-swatch:hover{ color:var(--np-text); }
-.notepad-font-swatch.active{ border-color:var(--np-accent); color:var(--np-accent); }
-.notepad-font-swatch-sample{ font-size:16px; font-weight:700; }
-.notepad-font-swatch.notepad-font-serif .notepad-font-swatch-sample{ font-family:Georgia, "Times New Roman", serif; }
-.notepad-font-swatch.notepad-font-mono .notepad-font-swatch-sample{ font-family:var(--font-latin), var(--font-vazir), monospace; }
-.notepad-font-swatch-label{ font-size:9.5px; }
-.notepad-page-menu-divider{ height:1px; background:var(--np-border-soft); margin:4px 2px; }
-.notepad-page-menu .stat-toggle-row{ padding:6px 8px; border-bottom:none; }
-.notepad-page-menu-toggle-label{ font-size:12px; font-weight:600; color:var(--np-text); }
-
-/* --- انواع فونت/عرض/اندازه‌ی متن سفارشی‌شده روی خود ادیتور --- */
-.notepad-font-serif{ font-family:Georgia, "Times New Roman", serif; }
-.notepad-font-mono{ font-family:var(--font-latin), var(--font-vazir), monospace; }
-.notepad-editor-wide{ max-width:none; }
-.notepad-editor-small-text .notepad-block-text{ font-size:12.5px; }
-.notepad-editor-small-text .notepad-title-input{ font-size:21px; }
-.notepad-editor-small-text .np-h1{ font-size:20px; }
-.notepad-editor-small-text .np-h2{ font-size:16px; }
-.notepad-editor-small-text .np-h3{ font-size:14px; }
-
-/* --- توست کوچیک (بازخورد کپی/مسیر) --- */
-.notepad-toast{
-  position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:80;
-  background:var(--np-surface); border:1px solid var(--np-border); color:var(--np-text);
-  padding:9px 16px; border-radius:999px; font-size:12px; font-weight:600; box-shadow:var(--np-shadow);
-  animation:notepadToastIn .18s ease;
-}
-@keyframes notepadToastIn{ from{ opacity:0; transform:translateX(-50%) translateY(6px); } to{ opacity:1; transform:translateX(-50%) translateY(0); } }
-
-.notepad-image-empty-locked{ color:var(--np-muted2); font-size:12px; justify-content:center; }
-
-/* --- بلاک کد --- */
-.notepad-code-block{ border:1px solid var(--np-border); border-radius:var(--np-radius-md); overflow:hidden; margin:4px 0; }
-.notepad-code-head{ display:flex; justify-content:flex-end; padding:5px 6px; background:var(--np-surface); border-bottom:1px solid var(--np-border-soft); }
-.notepad-code-lang-select{
-  background:transparent; border:none; color:var(--np-muted); font-size:11px; font-weight:600; cursor:pointer; outline:none;
-  font-family:var(--font-latin), var(--font-vazir), monospace;
-}
-.notepad-code-body{ position:relative; background:var(--np-canvas); }
-.notepad-code-highlight, .notepad-code-textarea{
-  margin:0; padding:12px 14px; font-family:var(--font-latin), var(--font-vazir), monospace; font-size:12.5px; line-height:1.6;
-  white-space:pre-wrap; word-break:break-word; direction:ltr; text-align:left;
-}
-.notepad-code-highlight{ color:var(--np-text); pointer-events:none; min-height:1.6em; }
-.notepad-code-textarea{
-  position:absolute; inset:0; width:100%; height:100%; resize:none; border:none; outline:none; background:transparent;
-  color:transparent; caret-color:var(--np-text); overflow:hidden;
-}
-.notepad-code-textarea::placeholder{ color:var(--np-muted2); }
-.nc-kw{ color:var(--np-accent); font-weight:700; }
-.nc-str{ color:#E0A339; }
-.nc-num{ color:#4EA1E8; }
-.nc-cm{ color:var(--np-muted2); font-style:italic; }
-.nc-id{ color:var(--np-text); }
-.nc-op{ color:var(--np-muted); }
-
-/* --- صفحه‌ی Home (وقتی هیچ صفحه‌ای باز نیست ولی صفحاتی وجود دارن) --- */
-.notepad-home{ display:flex; flex-direction:column; gap:26px; max-width:820px; margin:0 auto; padding-top:8px; }
-.notepad-home-section{ display:flex; flex-direction:column; gap:10px; }
-.notepad-home-section-title{
-  display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--np-muted2);
-  text-transform:uppercase; letter-spacing:.05em; font-family:var(--font-latin), var(--font-vazir), monospace;
-}
-.notepad-home-cards{ display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; }
-.notepad-home-card{
-  flex:0 0 168px; width:168px; display:flex; flex-direction:column; border-radius:var(--np-radius-lg);
-  border:1px solid var(--np-border); background:var(--np-surface); overflow:hidden; cursor:pointer; text-align:right;
-  transition:border-color .12s ease, transform .12s ease;
-}
-.notepad-home-card:hover{ border-color:var(--np-accent); transform:translateY(-2px); }
-.notepad-home-card-cover{
-  height:92px; display:flex; align-items:center; justify-content:center; font-size:30px; background:var(--np-canvas); overflow:hidden;
-}
-.notepad-home-card-cover img{ width:100%; height:100%; object-fit:cover; }
-.notepad-home-card-foot{ display:flex; align-items:center; gap:6px; padding:9px 10px; }
-.notepad-home-card-icon{ flex-shrink:0; font-size:14px; }
-.notepad-home-card-title{
-  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; color:var(--np-text);
-}
-.notepad-home-list{ display:flex; flex-direction:column; border:1px solid var(--np-border); border-radius:var(--np-radius-md); overflow:hidden; }
-.notepad-home-list-row{
-  display:flex; align-items:center; gap:8px; width:100%; padding:10px 12px; background:transparent; border:none;
-  border-bottom:1px solid var(--np-border-soft); text-align:right; cursor:pointer; font-family:var(--font-latin), var(--font-vazir), sans-serif;
-}
-.notepad-home-list-row:last-child{ border-bottom:none; }
-.notepad-home-list-row:hover{ background:var(--np-surface-hover); }
-.notepad-home-list-add{ color:var(--np-accent); font-weight:700; font-size:12.5px; }
-
-@media (max-width:640px){
-  .notepad-cover{ height:120px; }
-  .notepad-home-card{ flex-basis:140px; width:140px; }
-  .notepad-home-card-cover{ height:74px; }
-}
-
-
 /* ─────────────────────────────────────────────────────────────────────────
    بهینه‌سازی شیشه‌ها روی دستگاه‌های لمسی
    ─────────────────────────────────────────────────────────────────────────
@@ -4455,7 +3906,6 @@ body[data-theme="light"] .notepad-workspace{
   .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .wsearch-newform-name.trade-glass-field{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .trade-pnl-readout{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
-  .conflict-alert{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .auth-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .auth-tabs{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .manual-exercise-picker-search{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
@@ -4663,7 +4113,7 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 /* استک دوفونتی استاندارد بقیه‌ی سایت (لاتین اول برای اعداد، وضیرمتن به‌عنوان
    فال‌بک) — اگه لیبلی حرف فارسی داشت (نه فقط عدد/تاریخ لاتین)، نباید به
    فونت سیستمی خام مرورگر سقوط کنه. */
-.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-vazir), var(--font-latin), sans-serif; }
 .admin-svg-chart .line-path{ fill:none; stroke:var(--adm-accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .admin-svg-chart .area-fill{ fill:url(#admChartGradient); opacity:.5; }
 .admin-svg-chart .bar-rect{ fill:var(--adm-accent); opacity:.85; rx:3; }
@@ -4726,6 +4176,15 @@ html[data-perf="low"] *::before,
 html[data-perf="low"] *::after{
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
+}
+
+html[data-perf="low"] .app-topbar,
+html[data-perf="low"] .tv-chart-card,
+html[data-perf="low"] .trade-chart-side,
+html[data-perf="low"] .trade-chat-panel,
+html[data-perf="low"] .trade-cal-card,
+html[data-perf="low"] .tv-surface{
+  background:var(--surface-2);
 }
 
 /* will-change به مرورگر می‌گوید «برای این عنصر یک لایه‌ی جدا روی GPU
@@ -4813,11 +4272,15 @@ html[data-perf="low"] .task-check-missed{ animation:none; }
 html[data-perf="low"] .nav-overlay{ backdrop-filter:blur(0px) !important; -webkit-backdrop-filter:blur(0px) !important; will-change:backdrop-filter !important; }
 html[data-perf="low"] .nav-overlay.open{ backdrop-filter:blur(3px) !important; -webkit-backdrop-filter:blur(3px) !important; }
 html[data-perf="low"] .nav-drawer{ will-change:transform, opacity !important; }
-/* بلاک بالا (خط ۴۵۵۱) will-change رو هم سراسری صفر می‌کرد — دقیقا همون
-   باگ قدیمی کامنت nav-drawer (خط ۶۰۶ به بالا): بدون will-change، لایه‌ی
-   backdrop-filter فرزند زودتر پروموت نمی‌شه، پس چند فریم اول بازشدن منو
-   محتوا بی‌بلور دیده می‌شه و بلور با تاخیر «می‌رسه». برگردوندن خود
-   will-change همون فیکس قبلی رو دوباره فعال می‌کنه. */
+html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; will-change:transform !important; }
+html[data-perf="low"] .notif-panel{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
+html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
+html[data-perf="low"] .trade-account-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
+/* بلاکِ بالا (خطِ ۴۵۵۱) will-change رو هم سراسری صفر می‌کرد — دقیقاً همون
+   باگِ قدیمیِ کامنتِ nav-drawer (خط ۶۰۶ به بالا): بدونِ will-change، لایه‌ی
+   backdrop-filterِ فرزند زودتر پروموت نمی‌شه، پس چند فریمِ اولِ بازشدنِ منو
+   محتوا بی‌بلور دیده می‌شه و بلور با تاخیر «می‌رسه». برگردوندنِ خودِ
+   will-change همون فیکسِ قبلی رو دوباره فعال می‌کنه. */
 
 /* استثنای دوم: به‌جای برگردوندن بلور (که rasterize هر فریم می‌خواد)،
    یه بک‌گراند تقریبا توپر می‌دیم — هزینه‌ی هر فریم صفره چون دیگه چیزی
@@ -4836,6 +4299,15 @@ html[data-perf="low"] .nav-drawer{ will-change:transform, opacity !important; }
    یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
    data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
 html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدونِ بلور هیچ درصدِ شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملاً کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانونِ پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعاً غالب شود.) */
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
 
 /* ===================== گزارش هفتگی (Weekly Report) ===================== */
 .wr-page{ max-width:640px; margin:0 auto; }
@@ -5001,29 +4473,6 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 .wr-rec-action-btn.muted{ border-color:var(--line); color:var(--muted); }
 .wr-rec-action-btn:hover:not(:disabled){ filter:brightness(1.1); }
 .wr-rec-action-btn:disabled{ opacity:.55; cursor:default; }
-
-.wr-ask-panel{ padding:14px; border-radius:16px; border:1px solid var(--line); background:rgba(var(--surface-rgb), .09); }
-.wr-ask-suggestions{ display:flex; flex-direction:column; gap:6px; }
-.wr-ask-suggestion-btn{
-  text-align:right; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:none; color:var(--muted);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; font-size:12px; cursor:pointer;
-  transition:border-color .15s ease, color .15s ease;
-}
-.wr-ask-suggestion-btn:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); }
-.wr-ask-messages{ display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; }
-.wr-ask-msg{ max-width:85%; padding:9px 13px; border-radius:14px; font-size:12.5px; line-height:1.8; }
-.wr-ask-msg.user{ align-self:flex-end; background:var(--accent-dim); color:var(--accent); }
-.wr-ask-msg.arion{ align-self:flex-start; background:rgba(255,255,255,.04); color:var(--text); }
-.wr-ask-msg.typing{ opacity:.6; }
-.wr-ask-input-row{ display:flex; gap:8px; margin-top:12px; }
-.wr-ask-input-row .wsearch-newform-name{ flex:1; }
-.wr-ask-send-btn{
-  display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0;
-  border-radius:999px; border:none; background:var(--accent); color:var(--bg);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; cursor:pointer; transition:filter .15s ease, opacity .15s ease;
-}
-@media (hover:hover){ .wr-ask-send-btn:hover:not(:disabled){ filter:brightness(1.1); } }
-.wr-ask-send-btn:disabled{ opacity:.5; cursor:default; }
 
 /* ============================================================
    ماژول ترید
@@ -5355,8 +4804,23 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 /* «حساب‌های معاملاتی» دیگه یک لیبل کوچیک خنثیه نیست — عملا تایتل همین
    بخشه (تایتل صفحه «ژورنال‌نویسی»ی)، پس فونت تایتل‌مانند + سبز می‌گیره. */
 .trade-section-title{ font-size:15px; font-weight:800; color:var(--text); }
-.trade-account-grid{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-.trade-account-card{ position:relative; overflow:hidden; padding:14px 16px 14px 16px; }
+/* طبقِ درخواستِ صریح: به‌جای هرکدام یک کارتِ جداگانه‌ی شناور (که هم خیلی
+   بزرگ بود هم صفحه را «فقط یه‌ذره از صفحه» به‌نظر می‌رساند)، همه‌ی
+   ردیف‌ها داخلِ یک باکسِ واحدِ صفحه‌بزرگ می‌نشینند — دقیقاً هم‌الگویِ
+   .trade-checklist-box. .trade-account-card/.trade-mt-row (که هردو خودشان
+   کلاسِ .trade-surface را هم دارند) این‌جا آن پوسته را خلع می‌کنند و به
+   یک ردیفِ فشرده با جداکننده‌ی خط تبدیل می‌شوند. */
+.trade-account-grid{
+  display:flex; flex-direction:column; gap:0; margin-top:14px; padding:6px 4px;
+  min-height:min(calc(100vh - 340px), 560px);
+}
+.trade-account-card, .trade-mt-row{
+  position:relative; overflow:hidden; padding:11px 14px;
+  background:none; border:none; border-radius:0; box-shadow:none;
+}
+/* هرکدام از ردیف‌ها داخلِ motion.divِ خودشان‌اند (برای انیمیشنِ ورود)،
+   پس جداکننده روی همان wrapper است، نه مستقیم روی .trade-account-card. */
+.trade-account-grid > * + *{ border-top:1px solid var(--surface-line); }
 /* سه‌نقطه دیگر گوشه‌ی چپ مطلق نیست؛ اول ردیف (توی RTL یعنی سمت راست)
    کنار نام حساب می‌نشیند و سود/زیان انتهای همان ردیف (چپ) می‌رود. */
 .trade-account-top-row{ display:flex; align-items:center; gap:8px; }
@@ -5376,18 +4840,47 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-card.archived{ opacity:.6; }
 .trade-account-stripe{ position:absolute; top:0; right:0; bottom:0; width:3px; }
 .trade-account-main{ display:block; text-decoration:none; color:var(--text); }
-.trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.trade-account-name{ font-size:14.5px; font-weight:700; }
+/* باگِ برچسبِ بیرون‌زده: این ردیف min-width:0 نداشت و .trade-account-name
+   (بدون overflow/ellipsis) هیچ‌وقت زیرِ عرضِ متنِ خودش تنگ نمی‌شد؛ روی
+   نام‌های بلند، ردیف از عرضِ کارتِ والد (که overflow:hidden دارد، مثل
+   .trade-account-header) بیرون می‌زد و برچسبِ کناری (.trade-account-type)
+   یا کلاً بریده می‌شد یا به‌نظر «بیرون‌زده» می‌رسید. فیکسِ قبلی فقط دو
+   selectorِ دیگر را پوشش می‌داد (.trade-account-title-link،
+   .trade-checklist-row-main) که هیچ‌کدام همین ردیف نیستند — نه در صفحاتِ
+   متاتریدر (TradeMtAccountPanel, app/trade/metatrader/page.tsx) نه در
+   TradeAccountView، که همه دقیقاً از همین کلاس استفاده می‌کنند. */
+.trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+.trade-account-name{ font-size:14.5px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-account-title-row .trade-account-type,
+.trade-account-title-row .trade-account-archived-badge{ flex-shrink:0; }
 .trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
-/* منوی سه‌نقطه — کنار اسم، سمت مخالف نوار رنگی. با createPortal به
-   body می‌ره (هم‌الگوی DashTaskRow) چون بلور .trade-surface یک
+/* .trade-account-card دیگه بک‌گراندِ خودش رو از .trade-surface نمی‌گیره
+   (چون حالا ردیفِ داخلِ یک باکسِ بیرونیه، نه کارتِ جدا) — پس اسکلتون باید
+   بک‌گراندِ pulseِ خودش رو مستقیم داشته باشه، وگرنه نامرئی می‌شه. */
+.trade-account-skel{ height:88px; background:rgba(var(--surface-rgb),.35); border-radius:12px; margin:4px 0; }
+/* منویِ سه‌نقطه — کنارِ اسم، سمتِ مخالفِ نوارِ رنگی. با createPortal به
+   body می‌ره (هم‌الگویِ DashTaskRow) چون بلورِ .trade-surface یک
    stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه. */
 .trade-account-kebab{ position:absolute; top:12px; left:10px; z-index:2; }
+/* شیشه‌ی همون خانواده‌ی .trade-surface (نه بک‌گراندِ تقریباً توپرِ
+   dash-context-menu که مالِ داشبوردِ روتینه) — تا با بقیه‌ی پاپ‌آپ/کارتِ
+   بخشِ ترید یکی به‌نظر برسه، نه یه المانِ وامی از یه بخشِ دیگه‌ی سایت. */
 .trade-account-menu{
-  position:fixed; z-index:70; min-width:170px; padding:6px; border-radius:16px;
-  background:var(--surface-2);
-  border:1px solid var(--surface-line); box-shadow:0 16px 40px rgba(0,0,0,.4); overflow:hidden;
+  position:fixed; z-index:70; min-width:170px; padding:6px; border-radius:18px; overflow:hidden;
+  border:1px solid var(--line);
+  background:rgba(var(--surface-rgb), .92);
+  backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:0 16px 40px rgba(0,0,0,.4);
 }
+body[data-theme="light"] .trade-account-menu{ background:rgba(255,255,255,.92); }
+.trade-menu-option{
+  display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:12px; cursor:pointer;
+  font-size:12.5px; font-weight:600; color:var(--text); transition:background .15s ease, color .15s ease;
+}
+@media (hover:hover){ .trade-menu-option:hover{ background:rgba(var(--accent-rgb),.08); color:var(--accent); } }
+.trade-menu-option svg{ flex-shrink:0; }
+.trade-menu-option.danger{ color:#E05252; }
+@media (hover:hover){ .trade-menu-option.danger:hover{ background:rgba(224,82,82,.09); color:#E05252; } }
 .trade-account-type, .trade-account-archived-badge{
   font-size:10px; color:var(--muted2); border:1px solid var(--line); border-radius:999px; padding:3px 9px;
 }
@@ -5439,19 +4932,19 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
   transition:border-color .18s ease;
 }
 .trade-search:focus-within{ border-color:var(--accent); }
-/* .wsearch-newform-name.trade-glass-field (دو کلاس، اسپسیفیسیتی ۰۲۰) خودش
-   بک‌گراند/بردر/بلور جدا داره و روی ریست زیر (که قبلا فقط ۰۱۱ بود) غالب
-   می‌شد — نتیجه‌ش دو لایه‌ی شیشه‌ای روی هم با شعاع بلور متفاوت بود، یعنی
-   داخل فیلد یه رنگ دیگه از بقیه‌ی کپسول نشون می‌داد. حالا با
-   `input.trade-glass-field` (۰۲۱) قطعی برنده می‌شه و فقط یک لایه‌ی شیشه‌ای
-   (خود .trade-search) باقی می‌مونه. */
-/* اسپسیفیسیتی عمدا با body شروع می‌شود: قانون تم‌دار
-   `body:not([data-theme="light"]) .wsearch-newform-name.trade-glass-field`
-   (۰,۳,۰) از انتخابگر قبلی (۰,۲,۱) قوی‌تر بود و بک‌گراند/بردر خودش را روی
-   ورودی می‌گذاشت — نتیجه‌اش یک کپسول داخل کپسول بود، همان «نوار جست‌وجو
-   دو بخشه» که گزارش شد. */
-body .trade-search input.trade-glass-field,
-body[data-theme="light"] .trade-search input.trade-glass-field{
+/* باگِ «نوار جست‌وجوی دورنگی» (چندبار گزارش شد، چندبار هم «فیکس» شد ولی
+   برنمی‌گشت) — ریشه‌ش یه خطای محاسبه‌ی اسپسیفیسیتی توی خودِ فیکسِ قبلی بود:
+   قانونِ تم‌دارِ `body:not([data-theme="light"]) .wsearch-newform-name.trade-glass-field`
+   سه کلاس داره (:not() اسپسیفیسیتیِ آرگومانش، یعنی [data-theme]، رو به
+   ارث می‌بره) = (۰,۳,۱). فیکسِ قبلی (`body .trade-search input.trade-glass-field`)
+   فقط دو کلاس داشت = (۰,۲,۲) — که توی مقایسه‌ی اسپسیفیسیتی، تعدادِ کلاس‌ها
+   اول مقایسه می‌شه، پس ۲<۳ یعنی قانونِ قدیمی هنوز می‌بُرد و بک‌گراند/بردرِ
+   خودش (رزین یه لایه‌ی شیشه‌ای جدا) رو روی اینپوت می‌ذاشت — همون کپسولِ
+   توی کپسول. اینجا با اضافه‌کردنِ `.wsearch-newform-name` به همون سه کلاس،
+   اسپسیفیسیتی به (۰,۳,۲) می‌رسه که واقعاً برنده می‌شه (تستِ getComputedStyle
+   قبل/بعدِ این فیکس تأیید کرد). */
+body .trade-search input.wsearch-newform-name.trade-glass-field,
+body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-field{
   border:none; background:none; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
   padding:11px 0; flex:1; min-width:0; width:auto; outline:none;
@@ -5477,6 +4970,11 @@ body[data-theme="light"] .trade-search input.trade-glass-field{
 /* ردیف تایتل + دکمه‌ی «افزودن» هم‌ردیف، چپ‌چین (ادامه‌ی همون الگوی
    .tm-head-row/.weekly-head-row). */
 .trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+/* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنارِ هم، نه زیرِ هم. هر ردیفِ جدا
+   در صفحه‌ی چارت یعنی همان‌قدر ارتفاعِ کمتر برای خودِ چارت. */
+.trade-head-inline{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.trade-head-inline .trade-back-link{ margin-bottom:0; }
+.trade-head-inline h1{ margin-bottom:0; }
 .trade-head-row h1{ margin-bottom:0; }
 .trade-title-add-btn{
   display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
@@ -5521,7 +5019,7 @@ body[data-theme="light"] .trade-search input.trade-glass-field{
 .trade-drawer{
   position:fixed; z-index:56; right:0; left:0; bottom:0; max-height:88vh; max-height:88dvh;
   overflow-y:auto; -webkit-overflow-scrolling:touch;
-  background:rgba(var(--surface-rgb), .16); border:1px solid var(--line);
+  background:var(--surface-glass); border:1px solid var(--line);
   border-radius:26px 26px 0 0; padding:22px;
   backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
   isolation:isolate;
@@ -5558,11 +5056,6 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 /* ── تقویم اقتصادی ─────────────────────────────────────────── */
 .trade-cal-filter-bar{ display:flex; align-items:center; gap:10px; margin:12px 0 4px; }
 .trade-cal-filters{ padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both; }
-.trade-cal-day{ margin-top:20px; }
-.trade-cal-day-title{
-  font-size:11px; color:#00A86B; font-weight:700; margin-bottom:9px;
-  padding-bottom:8px; border-bottom:1px solid var(--line);
-}
 .trade-cal-event{
   display:flex; align-items:flex-start; gap:11px; padding:12px 4px;
   border-bottom:1px solid var(--line);
@@ -5579,6 +5072,73 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
    فقط بدون گروه‌بندی روزانه (اینجا شمارش‌معکوسه، نه گروه تاریخ). */
 .trade-checklist-news-list{ display:flex; flex-direction:column; }
 .trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
+
+/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar) — ستون‌های
+   زمان/ارز/رویداد/واقعی/پیش‌بینی/قبلی هم‌ردیف، مثلِ لیستِ ForexFactory؛
+   نه دو خطِ زیرِهمِ قبلی. عرضِ ستون‌ها با grid ثابته تا همه‌ی ردیف‌های یک
+   روز دقیقاً زیرِ هم بشینن؛ اگه صفحه خیلی باریک بود، خودِ باکس (نه کلِ
+   صفحه) اسکرولِ افقیِ نازک می‌گیره — دقیقاً رفتارِ خودِ جدولِ ForexFactory. */
+.trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
+.trade-cal-table{ min-width:320px; }
+.trade-cal-thead{
+  display:grid; grid-template-columns:34px 54px minmax(90px,1fr) 38px 38px 38px; gap:6px;
+  align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
+  font-size:9.5px; font-weight:700; color:var(--muted2);
+}
+.trade-cal-tr{
+  display:grid; grid-template-columns:34px 54px minmax(90px,1fr) 38px 38px 38px; gap:6px;
+  align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:11.5px;
+}
+.trade-cal-tr:last-child{ border-bottom:none; }
+.tc-col-time{ font-weight:700; }
+.tc-col-cur{ display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; white-space:nowrap; }
+.tc-col-event{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tc-col-num{ text-align:center; color:var(--text); }
+.tc-col-num.muted{ color:var(--muted2); }
+.trade-cal-impact-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.trade-cal-tr{ cursor:pointer; transition:background .15s ease; }
+@media (hover:hover){ .trade-cal-tr:hover{ background:rgba(var(--accent-rgb),.05); } }
+.trade-cal-tr.expanded{ background:rgba(var(--accent-rgb),.07); border-bottom-color:transparent; }
+
+/* ناوبریِ روز-به-روز — مثلِ خودِ ForexFactory («‹ Today: Sep 3 ›») به‌جای
+   دکمه‌ی «روزهای بیشتر» که همه‌ی روزها رو یک‌جا زیرِ هم می‌ریخت. */
+.trade-cal-box{ margin-top:14px; padding:14px; }
+.trade-cal-daynav{ display:flex; align-items:center; gap:4px; margin:0 0 4px; }
+/* هفتِ‌روزیِ کلیک‌پذیر — هم‌مدلِ WEEK_ORDERِ «برنامه‌ی هفتگی»ِ روتین من
+   (هفته‌ی شنبه‌تا‌جمعه)، به‌جای فقط یک لیبلِ متنیِ ثابت. */
+.trade-cal-week-strip{ flex:1; display:flex; justify-content:space-between; gap:4px; min-width:0; }
+.trade-cal-day-pill{
+  flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:6px 2px; border-radius:11px; color:var(--muted);
+  border:1px solid transparent; background:none; box-shadow:none;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.trade-cal-day-pill-wd{ font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; }
+.trade-cal-day-pill-num{ font-size:13px; font-weight:700; }
+.trade-cal-day-pill.today{ color:var(--accent); }
+.trade-cal-day-pill.active{ background:rgba(var(--accent-rgb),.12); border-color:var(--accent); color:var(--accent); }
+@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(var(--surface-rgb),.5); color:var(--text); } }
+
+.trade-cal-daynav-sub{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; font-size:11.5px; color:var(--muted2); }
+
+/* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
+   شاخص رو نشون می‌ده؛ چون واقعاً از رکوردهای قبلیِ همین جدول میاد (نه
+   فبریکیت‌شده)، تعدادش می‌تونه کمتر از حداکثر باشه یا حتی خالی. */
+.trade-cal-history{
+  padding:10px 8px 14px; margin-bottom:2px; border-bottom:1px solid var(--line);
+  animation:tradeFadeIn .18s ease both;
+}
+.trade-cal-history-status{
+  display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted2); padding:6px 4px;
+}
+.trade-cal-history-table{ font-size:11px; }
+.trade-cal-history-head, .trade-cal-history-row{
+  display:grid; grid-template-columns:1fr 60px 60px 60px; gap:6px; padding:5px 6px;
+}
+.trade-cal-history-head{ color:var(--muted2); font-weight:700; font-size:9.5px; }
+.trade-cal-history-row{ color:var(--text); border-top:1px solid var(--line); }
+.trade-cal-history-row span:not(.mono){ color:var(--muted); }
+.trade-cal-history-head span:not(:first-child), .trade-cal-history-row span:not(:first-child){ text-align:center; }
 
 /* ── ساعت فارکس ────────────────────────────────────────────── */
 .forex-market-state{
@@ -5609,19 +5169,46 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .forex-overlap-badge{ font-size:10.5px; color:#E0A452; }
 
 /* ── یادداشت‌ها ────────────────────────────────────────────── */
-.trade-note-grid{ display:flex; flex-direction:column; gap:11px; margin-top:16px; }
+.trade-note-box{ margin-top:16px; padding:14px; }
+.trade-note-grid{ display:flex; flex-direction:column; gap:11px; align-content:start; }
 @media (min-width:700px){ .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
-.trade-note-card{ position:relative; padding:16px 19px 16px 16px; overflow:hidden; cursor:pointer; }
+/* کارتِ یادداشت — قبلاً چون هیچ‌وقت پیش‌نمایشِ متن نداشت، فاصله‌ی عنوان تا
+   فوتر با flex معمولی خیلی زیاد/نامتوازن به‌نظر می‌رسید (خصوصاً یادداشتِ
+   کوتاه بدونِ تگ) و ردیفِ پایینی (تاریخ+تگ) با flex-wrap معمولی به‌جای
+   شکستنِ تمیز، نصفه می‌شکست. حالا فلکس-کالمن با گپِ ثابت (نه
+   justify-content:space-between که فاصله رو به بازوهای انتهایی می‌داد) و
+   خودِ فوتر همیشه یک ستونه (نه ردیفِ wrap-پذیر) — نتیجه‌ش یک کارتِ فشرده و
+   قابل‌پیش‌بینیه، صرف‌نظر از این‌که چقدر محتوا/تگ داره. */
+.trade-note-card{
+  position:relative; padding:15px 18px 14px 16px; overflow:hidden; cursor:pointer;
+  display:flex; flex-direction:column; gap:10px;
+}
 @media (hover:hover){ .trade-note-card:hover{ border-color:var(--accent); } }
 .trade-note-card:active{ transform:scale(.99); }
 .trade-note-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
 .trade-note-title{ font-size:14px; font-weight:700; }
-.trade-note-body{ font-size:12px; color:var(--muted); line-height:1.95; margin-top:8px; white-space:pre-wrap; }
+.trade-note-body{ font-size:12px; color:var(--muted); line-height:1.95; white-space:pre-wrap; }
 .trade-note-foot{
-  display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
-  margin-top:12px; font-size:10px; color:var(--muted2);
+  display:flex; flex-direction:column; align-items:flex-start; gap:6px;
+  font-size:10px; color:var(--muted2);
 }
+.trade-note-foot .trade-tag-row{ margin:0; }
 .trade-note-foot .trade-tag-chip{ font-size:9px; padding:2px 7px; }
+
+/* پاپ‌آپِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند.
+   طبقِ درخواستِ صریح: «آخرین ویرایش» حذف شد، و متنِ اصلی + دکمه‌ی بستن
+   حالا هردو داخلِ یک باکسِ واحدند (نه متن شناور و دکمه‌ی جدا زیرش). */
+.trade-note-view-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-left:8px; vertical-align:middle; }
+.trade-note-view-box{
+  margin-top:12px; padding:14px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.22);
+  display:flex; flex-direction:column; gap:14px;
+}
+.trade-note-view-body{
+  font-size:13px; line-height:2; color:var(--text);
+  white-space:pre-wrap; word-break:break-word; max-height:46vh; overflow-y:auto;
+}
+.trade-note-view-empty{ color:var(--muted2); font-style:italic; }
 
 /* ── اتصال متاتریدر ────────────────────────────────────────── */
 .trade-mt-panel{ margin-top:24px; padding:18px 20px; }
@@ -5668,7 +5255,7 @@ body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
   content:counter(mtstep); position:absolute; right:0; top:-1px;
   width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:800; color:var(--accent); border:1px solid var(--accent); background:var(--accent-dim);
-  font-family:var(--font-latin), var(--font-vazir), monospace;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif;
 }
 .trade-mt-steps b{ color:var(--text); }
 .ltr-inline{ unicode-bidi:isolate; direction:ltr; }
@@ -5689,8 +5276,8 @@ body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
   font-size:22px; font-weight:800; letter-spacing:.14em; margin:9px 0 5px;
   direction:ltr; text-align:center; color:var(--accent);
 }
-.trade-mt-row{ text-decoration:none; color:var(--text); display:block; padding:16px 19px 16px 16px; }
-@media (hover:hover){ .trade-mt-row:hover{ border-color:var(--accent); } }
+.trade-mt-row{ text-decoration:none; color:var(--text); display:block; }
+@media (hover:hover){ .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.4); } }
 
 /* خط وضعیت متاتریدر روی صفحه‌ی خود حساب — جزئیات کامل جاش صفحه‌ی
    اختصاصی /trade/metatrader/[id]ه، این‌جا فقط یک ردیف. */
@@ -5722,45 +5309,13 @@ button.trade-pair-suggest-item:last-child{ border-bottom:none; }
 body[data-theme="light"] button.trade-pair-suggest-item,
 body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; }
 
-/* ===================== چارت محور‌زمان سشن‌های فارکس (Trade/Clock) =====================
-   مکمل .forex-* بالا (کارت‌های تکی/شهر) — این یکی همه‌ی سشن‌ها رو روی یک
-   محور مشترک «وقت ایران» کنار هم می‌ذاره. کارت بیرونی از خود
-   .trade-surface میاد (بوردر/بک‌گراند/بلور)، این‌جا فقط padding/فاصله. */
-.forex-timeline-card{ padding:14px 14px 12px; margin-bottom:16px; }
-
-.forex-timeline-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-.forex-timeline-title{ font-size:12.5px; font-weight:800; color:var(--text); }
-.forex-timeline-now{
-  font-family:var(--font-latin), var(--font-vazir), monospace; font-size:11.5px; font-weight:700;
-  color:var(--accent); white-space:nowrap;
-}
-
-/* از این‌جا به بعد عمدا LTR — محور زمانی (چپ=زودتر، راست=دیرتر) قرارداد
-   جهانی خوانا برای هر چارت زمانیه، حتی توی صفحه‌ی RTL؛ mirror-کردنش
-   گیج‌کننده می‌شد. */
-.forex-timeline-chart{ position:relative; }
-.forex-timeline-axis{ position:relative; height:16px; margin-bottom:4px; }
-.forex-timeline-tick{
-  position:absolute; top:0; transform:translateX(-50%);
-  font-family:var(--font-latin), var(--font-vazir), monospace; font-size:10px; color:var(--muted2);
-}
-.forex-timeline-body{ position:relative; display:flex; flex-direction:column; gap:6px; }
-.forex-timeline-row{ display:flex; align-items:center; gap:8px; }
-.forex-timeline-row-label{ width:56px; flex-shrink:0; font-size:11px; font-weight:700; text-align:left; }
-.forex-timeline-track{ position:relative; flex:1; height:20px; border-radius:6px; background:rgba(255,255,255,.04); overflow:hidden; }
-body[data-theme="light"] .forex-timeline-track{ background:rgba(0,0,0,.04); }
-.forex-timeline-bar{ position:absolute; top:0; bottom:0; opacity:.8; border-radius:6px; }
-.forex-timeline-nowline{
-  position:absolute; top:16px; bottom:0; width:2px; background:var(--accent);
-  box-shadow:0 0 6px rgba(var(--accent-rgb),.7); pointer-events:none;
-}
-@media (max-width:480px){
-  .forex-timeline-row-label{ width:44px; font-size:10px; }
-}
-
 /* ── فهرست چک‌لیست‌ها: همه داخل یک باکس واحد ──────────────────
    قبلا هر چک‌لیست یک کارت جدا روی بک‌گراند اصلی بود؛ درخواست صریح کاربر
    این بود که «توی باکس باشن نه توی بک‌گراند اصلی». */
+/* باکسِ عمومیِ صفحه — طبقِ درخواستِ صریح، همین باکسِ چک‌لیست باید اندازه‌ی
+   کل صفحه باشه، نه یه‌ذره‌ی کوچیک؛ همین کلاس روی یادداشت‌ها/متاتریدر/
+   ژورنال‌نویسی/تقویمِ اقتصادی هم گذاشته می‌شه. */
+.trade-page-box{ min-height:min(calc(100vh - 340px), 560px); }
 .trade-checklist-box{ margin-top:14px; padding:6px 4px; }
 .trade-checklist-row{
   position:relative; display:flex; align-items:center; gap:8px;
@@ -5779,8 +5334,706 @@ body[data-theme="light"] .forex-timeline-track{ background:rgba(0,0,0,.04); }
 .trade-checklist-row-count{ margin-right:auto; flex-shrink:0; font-size:11.5px; color:var(--muted); }
 @media (hover:hover){ .trade-checklist-row-main:hover .trade-account-name{ color:var(--accent); } }
 
+/* دکمه‌ی محرکِ منوی سه‌نقطه — طبقِ درخواستِ صریح، دقیقاً هم‌شکلِ دکمه‌ی
+   سه‌نقطه‌ی «روتین من» (DashTaskRow): دایره‌ی کامل و ثابت (نه مربعِ گردِ
+   .trade-icon-btn که خودش رادیوسِ ۱۰px داره و برایِ خیلی دکمه‌های دیگه‌ی
+   ترید هم استفاده می‌شه، پس عمداً دست‌نخورده موند). خودِ منوی بازشونده
+   (.dash-context-menu/.wsearch-fab-option) از قبل بینِ ترید و روتین
+   مشترکه — فقط دکمه‌ی محرک فرق داشت. */
+.trade-kebab-trigger{
+  width:24px; height:24px; padding:0; border-radius:999px;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+
 /* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
 .trade-note-kebab{ flex-shrink:0; margin-right:-6px; }
 .trade-note-head{ align-items:center; }
 .trade-note-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }
+
+/* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
+   موبایل: تک‌ستونه و اسکرول‌شونده، به ترتیبِ
+   چارت → گفت‌وگو → چک‌لیست → ثبتِ معامله → اخبارِ اقتصادی.
+   دسکتاپ: پایین‌تر، یک گریدِ دیوار-تا-دیوار که اسکرول نمی‌شود. */
+.tv-page{ display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
+
+@media (max-width:1023px){
+  .tv-chart-card{ order:1; }
+  .tv-page > .trade-chat-panel{ order:2; }
+  .tv-page > .tv-cell-check{ order:3; }
+  .tv-page > .tv-cell-entry{ order:4; }
+  .tv-page > .trade-cal-card{ order:5; }
+}
+
+/* ── دسکتاپ: کلِ پنجره، بدونِ اسکرول ─────────────────────────────────────
+   دو خواسته‌ی صریحِ کاربر این‌جا اجرا می‌شود:
+
+   ۱) «کل صفحه رو بگیره، نه اینکه از هر ور فاصله داشته باشه» — این صفحه
+      داخلِ ستونِ ۶۲۰پیکسلیِ `.wrap` است. با همان ترفندِ breakoutِ
+      `.ticker-bar` (100vw + مارجینِ منفیِ نصفِ ویوپورت در هر دو جهت، که
+      هم در LTR هم RTL کار می‌کند) از آن ستون بیرون می‌زند. برای اینکه این
+      حساب درست دربیاید، عرضِ ثابتِ ۱۱۰۰پیکسلیِ `.trade-desktop` هم روی
+      همین صفحه برداشته می‌شود (کلاسِ `.trade-desktop-full`) — وگرنه
+      breakout نسبت‌به یک ستونِ جابه‌جاشده مرکز می‌گرفت و کج می‌افتاد.
+
+   ۲) «همش به صفحه باشه، اسکرول نشه» — ارتفاعِ گرید `--tv-h` است که
+      TradeChartView دقیقاً «از بالای گرید تا کفِ پنجره» اندازه می‌گیرد.
+      هر خانه `min-height:0` دارد (بدونش آیتمِ گرید از محتوایش کوچک‌تر
+      نمی‌شود و کلِ صفحه دوباره اسکرول می‌خورد) و خودش داخلش اسکرول دارد.
+
+   چیدمان طبقِ اسکچ (راست‌به‌چپ؛ ستونِ اولِ رشته‌ی area سمتِ راست است):
+       chart chart check
+       chat  cal   entry                                              */
+@media (min-width:1024px){
+  /* پدینگِ پایینِ body برای نوارِ پایینِ موبایل است؛ روی دسکتاپ هیچ نوارِ
+     ثابتی آن‌جا نیست و آن ۹۰ پیکسل فقط باعث می‌شد صفحه دقیقاً به همان
+     اندازه اسکرول بخورد. فقط برای همین صفحه کمش می‌کنیم. اگر مرورگری
+     `:has()` نداشته باشد، بدترین حالتش یک اسکرولِ کوتاه است. */
+  body:has(.trade-desktop-full){ padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+
+  /* breakout روی خودِ سکشن است، نه فقط روی گرید — این‌طوری سرصفحه
+     («‹ ترید  چارت») هم با لبه‌ی همان گرید هم‌راستا می‌شود، وگرنه عنوان
+     وسطِ صفحه شناور می‌ماند و انگار به چیدمانِ زیرش ربطی ندارد. */
+  .trade-desktop-full{
+    width:100vw; max-width:none; position:relative; left:50%; right:50%;
+    margin-left:-50vw; margin-right:-50vw;
+    padding:0 12px; box-sizing:border-box;
+  }
+  /* این یک خط توضیح روی دسکتاپ فقط ارتفاع می‌خورد؛ در ازایش چارت بزرگ‌تر
+     می‌شود — که خواسته‌ی صریحِ همین صفحه است. روی موبایل سرِ جایش می‌ماند. */
+  .trade-desktop-full .section-note{ display:none; }
+  .trade-desktop-full .trade-head-inline{ margin-bottom:12px; }
+
+  .tv-page{
+    height:var(--tv-h, calc(100vh - 200px));
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 330px;
+    grid-template-rows:minmax(0,2fr) minmax(0,1fr);
+    grid-template-areas:
+      "chart chart check"
+      "chat  cal   entry";
+    gap:12px; align-items:stretch;
+  }
+  .tv-page > .tv-chart-card{ grid-area:chart; }
+  .tv-page > .trade-chat-panel{ grid-area:chat; }
+  .tv-page > .trade-cal-card{ grid-area:cal; }
+  .tv-page > .tv-cell-check{ grid-area:check; }
+  .tv-page > .tv-cell-entry{ grid-area:entry; }
+
+  /* هر خانه دقیقاً به‌اندازه‌ی سهمِ خودش از گرید — نه بزرگ‌تر. */
+  .tv-page > *{ min-height:0; min-width:0; height:100%; box-sizing:border-box; overflow:hidden; }
+  .tv-page > .trade-chat-panel,
+  .tv-page > .trade-cal-card,
+  .tv-page > .trade-chart-side{ display:flex; flex-direction:column; min-height:0; }
+
+  /* لیست‌های داخلی: سقفِ ثابتِ قبلی برداشته می‌شود تا فضای واقعیِ خانه را
+     پر کنند و اسکرولِ خودشان را داشته باشند. */
+  .tv-page .trade-chat-list,
+  .tv-page .trade-cal-card-list,
+  .tv-page .tv-cell-scroll{ flex:1; min-height:0; max-height:none; overflow-y:auto; }
+}
+
+.tv-chart-card{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+  padding:11px; display:flex; flex-direction:column; gap:11px;
+}
+
+/* موبایل: ارتفاعِ ثابتِ سخاوتمندانه (نه بیشتر — طبقِ اصلاحِ صریحِ کاربر،
+   خواسته «عریض‌تر» بود نه «درازتر»؛ عرض با breakoutِ زیر حل می‌شود، نه
+   این ارتفاع). دسکتاپ (پایین‌تر): هرچه از خانه‌ی گرید مانده، یعنی چارت
+   خودش تا کفِ صفحه کش می‌آید. */
+.tv-chart-frame{
+  position:relative; width:100%; border-radius:13px; overflow:hidden;
+  height:clamp(440px, calc(100vh - 190px), 820px);
+  background:rgba(var(--surface-rgb),.06);
+}
+@media (min-width:1024px){
+  .tv-chart-frame{ flex:1; height:auto; min-height:0; }
+}
+
+/* موبایل: عریض‌تر — طبقِ درخواستِ صریح. کارتِ چارت (فقط همین یکی، نه
+   بقیه‌ی خانه‌های `.tv-page`) با همان ترفندِ breakoutِ `.ticker-bar`
+   (100vw + مارجینِ منفیِ نصفِ ویوپورت، هم‌جهت در LTR/RTL) از پدینگِ
+   ۲۰پیکسلیِ `body` و سقفِ ۶۲۰پیکسلیِ `.wrap` بیرون می‌زند و تا لبه‌های
+   واقعیِ صفحه می‌رود؛ فقط یک گوشه‌ی کوچک برای این‌که به لبه نچسبد. */
+@media (max-width:1023px){
+  .tv-chart-card{
+    width:100vw; max-width:none; position:relative; left:50%; right:50%;
+    margin-left:-50vw; margin-right:-50vw;
+    padding:11px calc(11px + env(safe-area-inset-right)) 11px calc(11px + env(safe-area-inset-left));
+    border-radius:0; border-left:none; border-right:none;
+    box-sizing:border-box;
+  }
+}
+
+/* فول‌اسکرینِ چارت — روی خودِ `.tv-chart-card` صدا زده می‌شود (نه فقط
+   iframe) تا نوارِ جست‌وجوی نماد هم داخلِ فول‌اسکرین بماند. سه پیشوند برای
+   پوششِ مرورگرهای قدیمی‌تر؛ بدونِ webkit/moz روی بعضی موبایل‌ها اصلاً وارد
+   فول‌اسکرین نمی‌شود. */
+.tv-chart-card:fullscreen,
+.tv-chart-card:-webkit-full-screen,
+.tv-chart-card:-moz-full-screen{
+  width:100vw; height:100vh; max-width:none; border-radius:0; padding:10px;
+  background:var(--bg);
+}
+.tv-chart-card:fullscreen .tv-chart-frame,
+.tv-chart-card:-webkit-full-screen .tv-chart-frame,
+.tv-chart-card:-moz-full-screen .tv-chart-frame{
+  height:auto; flex:1; min-height:0;
+}
+.tv-chart-toolbar{ display:flex; align-items:center; gap:8px; }
+.tv-chart-toolbar > .tv-symbol-search{ flex:1; min-width:0; }
+/* اندازه‌اش با بقیه‌ی `.trade-icon-btn`های هم‌قدش یکی نیست چون این‌جا
+   کنارِ فیلدِ جست‌وجوی بلندتری می‌نشیند؛ بک‌گراند/بوردر را خودِ
+   `.trade-icon-btn` می‌دهد، این‌جا فقط اندازه است. */
+.tv-chart-fullscreen-btn{ flex-shrink:0; width:38px; height:38px; }
+.tv-chart-frame iframe{ width:100%; height:100%; border:0; display:block; transition:opacity .3s ease; }
+.tv-chart-loading{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  font-size:12.5px; color:var(--muted);
+}
+.tv-chart-spinner{
+  width:26px; height:26px; border-radius:50%;
+  border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent);
+  animation:tvSpin .8s linear infinite;
+}
+@keyframes tvSpin{ to{ transform:rotate(360deg); } }
+
+/* جست‌وجوی نماد */
+.tv-symbol-search{ position:relative; }
+.tv-symbol-search-icon{ position:absolute; right:13px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+.tv-symbol-input{
+  width:100%; box-sizing:border-box; padding:11px 38px 11px 38px;
+  border-radius:12px; font-size:13px; font-weight:600; color:var(--text);
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.24);
+  outline:none; transition:border-color .18s ease;
+}
+.tv-symbol-input:focus{ border-color:var(--accent); }
+.tv-symbol-input::placeholder{ color:var(--muted2); font-weight:500; }
+.tv-symbol-clear{
+  position:absolute; left:9px; top:50%; transform:translateY(-50%);
+  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+.tv-symbol-clear:hover{ color:var(--text); background:none; box-shadow:none; }
+
+/* لیستِ نتایج — حداکثر هشت‌تا، پس اسکرول‌بار لازم نیست */
+.tv-symbol-results{
+  position:absolute; z-index:30; inset-inline:0; top:calc(100% + 6px);
+  padding:5px; border-radius:14px;
+  background:var(--surface-2); border:1px solid var(--surface-line);
+  box-shadow:0 14px 40px rgba(0,0,0,.34);
+  animation:tvResultsIn .16s ease both;
+}
+@keyframes tvResultsIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+.tv-symbol-option{
+  display:flex; width:100%; align-items:center; gap:10px;
+  padding:9px 11px; border-radius:10px; text-align:start;
+  background:none; border:none; box-shadow:none; color:var(--text);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:background .14s ease;
+}
+.tv-symbol-option.active{ background:rgba(var(--accent-rgb),.13); }
+.tv-symbol-option:hover{ background:rgba(var(--accent-rgb),.13); box-shadow:none; }
+.tv-symbol-option.current .tv-symbol-code{ color:var(--accent); }
+.tv-symbol-code{ font-size:12.5px; font-weight:800; min-width:76px; }
+.tv-symbol-label{ font-size:11.5px; color:var(--muted); }
+.tv-symbol-empty{ padding:12px; font-size:12px; color:var(--muted); text-align:center; }
+
+/* ── پنل‌های صفحه‌ی چارت: چک‌لیست/ثبت معامله، گفت‌وگو، تقویم ─────────── */
+.trade-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.trade-panel-title{ display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:700; color:var(--text); }
+.trade-chat-room{ font-size:11px; color:var(--muted); }
+
+.tv-surface{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+}
+.trade-chart-side, .trade-chat-panel, .trade-cal-card{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+  padding:15px;
+}
+.trade-chat-panel, .trade-cal-card{ display:flex; flex-direction:column; min-height:300px; }
+
+/* پنلِ کناری: چک‌لیست + ثبت معامله */
+.trade-chart-checklist{ display:flex; flex-direction:column; gap:2px; }
+.trade-chart-check-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 2px; font-size:12.5px; line-height:1.7; color:var(--text); cursor:pointer;
+  border-bottom:1px solid rgba(var(--surface-rgb),.1);
+}
+.trade-chart-check-row:last-child{ border-bottom:none; }
+.trade-chart-check-row input{ width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+.trade-chart-side-divider{ height:1px; margin:15px 0; background:rgba(var(--surface-rgb),.2); }
+.trade-chart-side-symbol{ margin-top:10px; font-size:11.5px; color:var(--muted); }
+.trade-chart-side-symbol b{ color:var(--text); }
+
+/* تقویم */
+.trade-cal-card-actions{ display:flex; align-items:center; gap:4px; }
+.trade-ghost-btn.active{ color:var(--accent); background:var(--accent-dim); }
+.trade-cal-card-list{ display:flex; flex-direction:column; gap:9px; overflow-y:auto; max-height:320px; padding-left:4px; }
+.trade-cal-card-row{ display:flex; align-items:flex-start; gap:9px; }
+.trade-cal-card-when{ display:flex; flex-direction:column; gap:2px; min-width:62px; font-size:10.5px; color:var(--muted); }
+.trade-cal-card-when b{ font-size:12px; color:var(--text); }
+.trade-cal-card-main{ display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+.trade-cal-card-title{ font-size:12px; color:var(--text); line-height:1.7; }
+
+/* گفت‌وگو */
+.trade-chat-list{ flex:1; display:flex; flex-direction:column; gap:11px; overflow-y:auto; max-height:300px; padding:2px 4px 2px 0; }
+.trade-chat-empty{ font-size:12px; color:var(--muted); text-align:center; padding:22px 8px; line-height:1.9; }
+.trade-chat-row{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; max-width:86%; }
+.trade-chat-row.mine{ align-self:flex-end; align-items:flex-end; }
+.trade-chat-meta{ display:flex; align-items:center; gap:7px; font-size:10.5px; color:var(--muted); }
+.trade-chat-author{ font-weight:600; color:var(--secondary); }
+.trade-chat-bubble{
+  position:relative; padding:9px 12px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.16); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.trade-chat-row.mine .trade-chat-bubble{ background:var(--accent-dim); border-color:rgba(var(--accent-rgb),.28); }
+.trade-chat-body{ margin:0; font-size:12.5px; line-height:1.9; color:var(--text); white-space:pre-wrap; overflow-wrap:anywhere; }
+.trade-chat-actions{ display:flex; gap:6px; margin-top:5px; }
+.trade-chat-action{
+  display:inline-flex; align-items:center; gap:4px; padding:2px 4px;
+  font-size:10px; color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .18s ease;
+}
+.trade-chat-action:hover:not(:disabled){ color:#E05252; background:none; box-shadow:none; }
+.trade-chat-action:disabled{ opacity:.6; cursor:default; }
+.trade-chat-reported{ font-size:9.5px; }
+
+/* قوانینِ گفت‌وگو — داخلِ خودِ باکس، درست جای فیلدِ نوشتن. قانونی که
+   برای خواندنش باید صفحه عوض کنی، خوانده نمی‌شود. */
+.chat-rules{
+  margin-top:11px; padding:13px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.22);
+}
+.chat-rules-title{ font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:8px; }
+.chat-rules-list{ margin:0 0 12px; padding-inline-start:16px; display:flex; flex-direction:column; gap:6px; }
+.chat-rules-list li{ font-size:11.5px; line-height:1.85; color:var(--muted); }
+.chat-rules-list li::marker{ color:var(--accent); }
+.chat-rules-accept{ width:100%; }
+
+.trade-chat-warning{
+  display:flex; align-items:center; gap:8px; margin-top:11px; padding:10px 12px;
+  border-radius:12px; background:rgba(229,168,60,.12); border:1px solid rgba(229,168,60,.3);
+  color:#E5A83C; font-size:11.5px; line-height:1.8;
+}
+.trade-chat-warning span{ flex:1; }
+.trade-chat-warning-dismiss{
+  flex-shrink:0; width:22px; height:22px; border-radius:999px; padding:0;
+  display:inline-flex; align-items:center; justify-content:center; color:inherit; background:transparent;
+}
+.trade-chat-warning-dismiss:hover{ background:rgba(229,168,60,.18); }
+
+.trade-chat-restricted{
+  margin-top:11px; padding:12px; border-radius:12px; text-align:center;
+  background:rgba(224,82,82,.1); border:1px solid rgba(224,82,82,.25);
+  color:#E05252; font-size:12px; line-height:1.9;
+}
+
+.trade-chat-composer{ display:flex; gap:8px; align-items:center; margin-top:11px; }
+.trade-chat-composer input{ flex:1; min-width:0; margin:0; }
+.trade-chat-send{
+  flex-shrink:0; width:38px; height:38px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#fff; background:var(--accent); border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:filter .18s ease, transform .12s ease;
+}
+.trade-chat-send:hover:not(:disabled){ filter:brightness(1.08); background:var(--accent); box-shadow:none; }
+.trade-chat-send:active:not(:disabled){ transform:scale(.94); }
+.trade-chat-send:disabled{ opacity:.45; cursor:default; }
+
+.trade-chat-report-sheet{
+  margin-top:12px; padding:13px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.22);
+}
+.trade-chat-report-quote{
+  font-size:11.5px; color:var(--muted); line-height:1.9; margin-bottom:10px;
+  padding:8px 10px; border-radius:10px; background:rgba(var(--surface-rgb),.12);
+  max-height:76px; overflow:auto; overflow-wrap:anywhere;
+}
+
+/* ── ساعت بازار فارکس ────────────────────────────────────────────────
+   بازسازیِ چیدمانِ مرجع: حلقه‌ی سرمه‌ای با اعدادِ ۱–۲۴، صفحه‌ی روشن،
+   مقیاسِ دقیقه، پره‌های شعاعی، نوارِ جلسه‌ها با نامِ منحنی، و سه عقربه.
+   خودِ صفحه آینه نمی‌شود — راست‌چینی به متن و کارت‌ها مربوط است، نه به
+   جهتِ چرخشِ ساعت. */
+.fx-clock{ direction:rtl; }
+
+.fx-dial-wrap{ position:relative; width:100%; max-width:460px; margin:0 auto; aspect-ratio:1; }
+.fx-dial{ width:100%; height:100%; display:block; }
+
+.fx-bezel{ fill:none; stroke:#1E2A38; }
+.fx-bezel-tick{ stroke:rgba(255,255,255,.34); stroke-width:1.4; }
+
+/* صفحه‌ی داخلی با تمِ اپ هماهنگ می‌شود. در تمِ روشن سفید است مثلِ مرجع؛
+   در تمِ تیره یک اسلیتِ خیلی تیره، وگرنه یک دیسکِ سفید وسطِ اپِ تاریک
+   می‌افتاد و با بقیه‌ی صفحه‌ها ناجور می‌شد. */
+.fx-face{ fill:#FFFFFF; stroke:rgba(30,42,56,.10); stroke-width:1; }
+body:not([data-theme="light"]) .fx-face{ fill:#101820; stroke:rgba(255,255,255,.07); }
+
+.fx-hour-num{ fill:#FFFFFF; font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; }
+.fx-min-num{ fill:#9AA3AC; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+body:not([data-theme="light"]) .fx-min-num{ fill:#6C767F; }
+
+.fx-spoke{ stroke:rgba(30,42,56,.07); stroke-width:1; }
+.fx-spoke.major{ stroke:rgba(30,42,56,.12); }
+body:not([data-theme="light"]) .fx-spoke{ stroke:rgba(255,255,255,.05); }
+body:not([data-theme="light"]) .fx-spoke.major{ stroke:rgba(255,255,255,.09); }
+
+/* نوارِ جلسه: خاکستری وقتی بسته، سبز وقتی باز — مثلِ مرجع.
+   هر دو تم در یک سطحِ specificity نوشته می‌شوند، وگرنه قاعده‌ی تم
+   رنگِ «باز» را می‌خورد و هیچ جلسه‌ای سبز نمی‌شد. */
+.fx-band{ fill:none; stroke:#BFC5CB; stroke-linecap:round; transition:stroke .45s ease; }
+body[data-theme="light"] .fx-band{ stroke:#BFC5CB; }
+body:not([data-theme="light"]) .fx-band{ stroke:#39424B; }
+body[data-theme="light"] .fx-band.open,
+body:not([data-theme="light"]) .fx-band.open{ stroke:var(--accent); }
+
+.fx-band-label{
+  fill:rgba(255,255,255,.94); font-size:13px; font-weight:700;
+  letter-spacing:.2em; text-transform:uppercase;
+}
+
+.fx-hand-hour{ stroke:#1E2A38; stroke-width:6; stroke-linecap:round; }
+.fx-hand-min{ stroke:#1E2A38; stroke-width:4; stroke-linecap:round; }
+.fx-hand-sec{ stroke:#E03B3B; stroke-width:2; stroke-linecap:round; }
+.fx-hub{ fill:#1E2A38; }
+.fx-hub-dot{ fill:#FFFFFF; }
+body:not([data-theme="light"]) .fx-hand-hour,
+body:not([data-theme="light"]) .fx-hand-min{ stroke:#E8ECEF; }
+body:not([data-theme="light"]) .fx-hub{ fill:#E8ECEF; }
+body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
+
+/* ردیفِ تاریخ و ساعت — راست‌چین، پس تاریخ راست و ساعت چپ */
+.fx-meta{
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin:22px 4px 14px; gap:12px;
+}
+.fx-meta-date{ font-size:13px; font-weight:700; color:var(--muted); letter-spacing:.02em; }
+.fx-meta-time{
+  font-size:19px; font-weight:800; color:var(--text);
+  direction:ltr; font-variant-numeric:tabular-nums;
+}
+
+.fx-market-closed{
+  margin:0 4px 12px; padding:10px 14px; border-radius:12px;
+  font-size:12px; color:var(--muted);
+  background:rgba(var(--surface-rgb),.13); border:1px solid rgba(var(--surface-rgb),.2);
+}
+
+/* کارتِ هر جلسه */
+.fx-cards{ display:flex; flex-direction:column; gap:11px; }
+.fx-card{
+  display:flex; align-items:center; gap:14px; padding:15px 16px;
+  border-radius:16px; background:rgba(var(--surface-rgb),.13);
+  border:1px solid rgba(var(--surface-rgb),.2);
+  backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);
+  transition:border-color .3s ease;
+}
+.fx-card.open{ border-color:rgba(var(--accent-rgb),.42); }
+.fx-card-flag{
+  width:46px; height:46px; flex-shrink:0; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  /* حلقه بیرون از خودِ پرچم کشیده می‌شود تا لبه‌ی پرچم بریده نشود */
+  box-shadow:0 0 0 2px rgba(var(--surface-rgb),.3);
+  transition:box-shadow .3s ease;
+}
+.fx-card.open .fx-card-flag{ box-shadow:0 0 0 2px var(--accent); }
+.fx-flag-svg{ display:block; border-radius:50%; }
+.fx-card-main{ flex:1; min-width:0; }
+.fx-card-city{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:800; color:var(--text); }
+.fx-card-hours{
+  display:block; margin-top:4px; font-size:12px; color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.fx-card-hours bdi{ direction:ltr; unicode-bidi:isolate; }
+.fx-card-state{ flex-shrink:0; text-align:start; }
+.fx-card-label{ display:block; font-size:11px; color:var(--muted); }
+.fx-card-value{
+  display:block; margin-top:3px; font-size:15px; font-weight:800; color:var(--muted);
+  direction:ltr; font-variant-numeric:tabular-nums; letter-spacing:.01em;
+}
+.fx-card-value.open{ color:var(--accent); }
+
+/* ── رودمپ ────────────────────────────────────────────────────────────
+   مسیر به‌صورتِ یک ستونِ مرحله‌به‌مرحله با خطِ عمودیِ وصل‌کننده — هر مرحله
+   هدف، کارهای عملی، تمرین و معیارِ اتمامِ خودش را دارد. */
+.rm-page{ padding-bottom:40px; }
+
+.rm-hero{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:20px;
+  padding:20px; margin-bottom:20px;
+}
+html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
+.rm-hero-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.rm-hero-top h1{ margin:0; font-size:21px; font-weight:800; color:var(--text); line-height:1.6; }
+.rm-hero-note{ margin:9px 0 0; font-size:12.5px; line-height:2; color:var(--muted); }
+.rm-meta{ display:flex; flex-wrap:wrap; gap:7px; margin-top:13px; }
+.rm-chip{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 11px; border-radius:999px; font-size:10.5px; font-weight:600;
+  color:var(--accent); background:var(--accent-dim); border:1px solid rgba(var(--accent-rgb),.28);
+}
+.rm-progress{ margin-top:16px; }
+.rm-progress-bar{ height:6px; border-radius:999px; background:rgba(var(--surface-rgb),.2); overflow:hidden; }
+.rm-progress-bar span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s cubic-bezier(.22,1,.36,1); }
+.rm-progress-text{ margin-top:7px; font-size:11px; color:var(--muted); }
+
+.rm-confirm{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  padding:14px 16px; border-radius:14px; margin-bottom:18px; font-size:12.5px; color:var(--text);
+  background:rgba(224,82,82,.08); border:1px solid rgba(224,82,82,.34);
+}
+.rm-confirm-actions{ display:flex; gap:9px; }
+
+/* مرحله‌ها */
+.rm-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
+.rm-step{ position:relative; display:flex; gap:14px; padding-bottom:22px; }
+/* خطِ عمودیِ وصل‌کننده بینِ شماره‌ها */
+.rm-step::before{
+  content:""; position:absolute; top:34px; bottom:0; inset-inline-start:16px;
+  width:2px; background:rgba(var(--surface-rgb),.24);
+}
+.rm-step:last-child::before{ display:none; }
+.rm-step.done::before{ background:rgba(var(--accent-rgb),.42); }
+
+.rm-step-num{
+  position:relative; z-index:1; flex-shrink:0;
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800;
+  color:var(--muted); background:var(--surface-2);
+  border:1.5px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .2s ease, border-color .2s ease, background .2s ease;
+}
+.rm-step-num:hover{ border-color:var(--accent); color:var(--accent); background:var(--surface-2); box-shadow:none; }
+.rm-step.done .rm-step-num{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+.rm-step-body{ flex:1; min-width:0; padding-top:3px; }
+.rm-step-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.rm-step-head h2{ margin:0; font-size:15px; font-weight:800; color:var(--text); line-height:1.7; }
+.rm-step.done .rm-step-head h2{ color:var(--muted); }
+.rm-step-weeks{ flex-shrink:0; font-size:10.5px; color:var(--muted2); }
+
+.rm-goal{
+  display:flex; align-items:flex-start; gap:7px; margin-top:9px;
+  font-size:12px; line-height:1.9; color:var(--accent-soft);
+}
+.rm-goal svg{ flex-shrink:0; margin-top:4px; }
+
+.rm-items{ margin:11px 0 0; padding-inline-start:17px; display:flex; flex-direction:column; gap:7px; }
+.rm-items li{ font-size:12.5px; line-height:1.9; color:var(--text); }
+.rm-items li::marker{ color:var(--accent); }
+.rm-items a{
+  color:inherit; text-decoration:none;
+  display:inline-flex; align-items:baseline; gap:5px;
+  transition:color .16s ease;
+}
+.rm-items a:hover{ color:var(--accent); }
+.rm-items a svg{ opacity:.45; flex-shrink:0; }
+
+.rm-box{
+  display:flex; flex-direction:column; gap:4px; margin-top:11px;
+  padding:11px 13px; border-radius:12px; font-size:12px; line-height:1.9;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.rm-box b{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.rm-box span{ color:var(--text); }
+.rm-practice{ border-inline-start:2px solid var(--accent); }
+.rm-checkpoint{ border-inline-start:2px solid var(--secondary); }
+
+/* افزودن مرحله به برنامه‌های هفتگی */
+.rm-toprogram{ margin-top:12px; }
+.rm-add-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:700;
+  color:var(--accent); background:none; border:1px solid rgba(var(--accent-rgb),.4);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:background .18s ease;
+}
+.rm-add-btn:hover{ background:var(--accent-dim); box-shadow:none; }
+.rm-add-panel{
+  margin-top:4px; padding:14px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.22);
+}
+.rm-add-title{ font-size:12px; font-weight:700; color:var(--text); margin-bottom:10px; }
+.rm-day-row{ display:flex; flex-wrap:wrap; gap:6px; }
+.rm-day{
+  padding:6px 11px; border-radius:999px; font-size:11px; font-weight:600;
+  color:var(--muted); background:none; border:1px solid rgba(var(--surface-rgb),.26);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .16s ease, border-color .16s ease, background .16s ease;
+}
+.rm-day:hover{ color:var(--text); background:none; box-shadow:none; }
+.rm-day.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+.rm-time-row{ display:flex; gap:11px; margin-top:12px; }
+.rm-time-row label{ flex:1; display:flex; flex-direction:column; gap:5px; }
+.rm-time-row span{ font-size:10.5px; color:var(--muted); }
+.rm-time-row input{
+  width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px;
+  font-size:12.5px; color:var(--text); direction:ltr; text-align:center;
+  background:rgba(var(--surface-rgb),.16); border:1px solid rgba(var(--surface-rgb),.26); outline:none;
+}
+.rm-time-row input:focus{ border-color:var(--accent); }
+.rm-add-actions{ display:flex; gap:9px; margin-top:14px; }
+.rm-add-actions button{ flex:1; }
+.rm-added{
+  display:inline-flex; align-items:center; gap:6px; margin-top:12px;
+  font-size:11.5px; font-weight:700; color:var(--accent);
+}
+
+/* بخش‌های پایانی */
+.rm-section{
+  margin-top:16px; padding:16px 18px; border-radius:16px;
+  background:rgba(var(--surface-rgb),.1); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.rm-section.warn{ background:rgba(224,164,82,.07); border-color:rgba(224,164,82,.3); }
+.rm-section-title{
+  display:flex; align-items:center; gap:8px; margin-bottom:11px;
+  font-size:13px; font-weight:800; color:var(--text);
+}
+.rm-section.warn .rm-section-title{ color:#E0A452; }
+.rm-section-list{ margin:0; padding-inline-start:17px; display:flex; flex-direction:column; gap:8px; }
+.rm-section-list li{ font-size:12.5px; line-height:1.95; color:var(--muted); }
+.rm-section-list li::marker{ color:var(--accent); }
+.rm-section.warn .rm-section-list li::marker{ color:#E0A452; }
+.rm-section-list a{ color:inherit; text-decoration:none; display:inline-flex; align-items:baseline; gap:5px; }
+.rm-section-list a:hover{ color:var(--accent); }
+.rm-section-list a svg{ opacity:.45; flex-shrink:0; }
+
+/* ===================== لودینگِ مشترک ===================== */
+/* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد» — درخواستِ صریحِ کاربر.
+   یک کلاسِ واحد تا همه‌جای اپ یک شکل باشد. */
+@keyframes appSpin{ to{ transform:rotate(360deg); } }
+.app-spinner{
+  display:inline-block; flex-shrink:0; border-radius:50%;
+  border-style:solid; border-color:rgba(var(--accent-rgb),.25);
+  border-top-color:var(--accent);
+  animation:appSpin .8s linear infinite;
+}
+html[data-perf="low"] .app-spinner{ animation-duration:1s; }
+.app-loading-block{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px;
+  padding:30px 12px; font-size:12.5px; color:var(--muted); text-align:center;
+}
+
+/* ===================== ویزارد ساختِ رودمپ ===================== */
+.rm-wizard-chips,
+.rm-wizard-days{ display:flex; flex-wrap:wrap; gap:7px; }
+.rm-wizard-chips .day-pill,
+.rm-wizard-days .day-pill{
+  flex:0 0 auto; width:auto; min-width:0; padding:8px 14px;
+  font-size:12px; line-height:1.4; white-space:nowrap;
+}
+.rm-wizard-hint{ margin-top:10px; font-size:11.5px; line-height:2; color:var(--muted); }
+.rm-wizard-hint b{ color:var(--text); }
+/* اسپسیفیسیتیِ بالاتر لازم است چون قانونِ پایه
+   `.wsearch-newform-actions:has(.wsearch-submit-btn){display:block}` وگرنه
+   دکمه‌ها را زیرِ هم می‌چیند. */
+.wsearch-newform-actions.rm-wizard-actions{ display:flex; align-items:center; gap:12px; }
+.rm-wizard-actions .wsearch-submit-btn{ flex:1; width:auto; }
+.rm-wizard-actions .wsearch-add-btn{
+  flex:0 0 auto; width:auto; height:auto; border:none; background:none;
+  padding:4px 2px; font-size:12.5px; font-weight:700; color:var(--muted);
+}
+.rm-wizard-actions .wsearch-add-btn:hover{ color:var(--accent); }
+.rm-wizard-loading{
+  display:flex; align-items:center; gap:10px; margin-top:16px;
+  font-size:12.5px; color:var(--muted); line-height:2;
+}
+
+/* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
+/* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
+   یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
+.rm-disclaimer{
+  display:flex; align-items:flex-start; gap:8px;
+  max-width:400px; margin:26px auto 0; padding:11px 13px;
+  border:1px dashed var(--line); border-radius:14px;
+  font-size:11.5px; line-height:2; color:var(--muted2); text-align:right;
+}
+.rm-disclaimer svg{ flex-shrink:0; margin-top:4px; color:var(--muted); }
+
+/* ===================== جلسه‌های یک مرحله ===================== */
+.rm-schedule{
+  display:flex; align-items:center; gap:7px; margin-top:12px;
+  font-size:12px; color:var(--muted);
+}
+.rm-schedule svg{ color:var(--accent); flex-shrink:0; }
+
+.rm-sessions{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.rm-session{
+  border:1px solid var(--line); border-radius:16px; padding:13px 14px;
+  transition:border-color .18s ease, opacity .18s ease;
+}
+.rm-session.done{ opacity:.6; border-color:rgba(var(--accent-rgb),.35); }
+.rm-session-head{ display:flex; align-items:center; gap:9px; }
+.rm-session-num{
+  flex-shrink:0; width:24px; height:24px; border-radius:50%;
+  border:1.5px solid var(--line); color:var(--muted);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; cursor:pointer; padding:0;
+  background:none; box-shadow:none; backdrop-filter:none;
+  transition:border-color .18s ease, color .18s ease;
+}
+.rm-session-num:hover{ border-color:var(--accent); color:var(--accent); }
+.rm-session.done .rm-session-num{ border-color:var(--accent); color:var(--accent); }
+.rm-session-title{ font-size:12.5px; font-weight:600; color:var(--text); line-height:1.9; }
+.rm-session-title b{ color:var(--accent); font-weight:700; }
+.rm-session-goal{ margin-top:8px; font-size:12px; line-height:2; color:var(--muted); }
+.rm-session-label{
+  margin-top:11px; font-size:10px; font-weight:700; letter-spacing:.02em;
+  color:var(--accent); text-transform:none;
+}
+.rm-session-steps{ margin:6px 0 0; padding-inline-start:18px; }
+.rm-session-steps li{ font-size:12px; line-height:2.1; color:var(--text); }
+.rm-session-text{ margin-top:5px; font-size:12px; line-height:2.1; color:var(--muted); }
+.rm-session-refs{ margin:5px 0 0; padding-inline-start:18px; }
+.rm-session-refs li{ font-size:12px; line-height:2.1; }
+.rm-session-refs a{
+  color:var(--muted); text-decoration:none;
+  display:inline-flex; align-items:center; gap:5px;
+}
+.rm-session-refs a:hover{ color:var(--accent); }
+.rm-session-check{
+  margin-top:11px; padding:8px 11px; border-radius:11px;
+  border:1px solid rgba(var(--accent-rgb),.22);
+  font-size:11.5px; line-height:2; color:var(--muted);
+}
+.rm-session-check b{ color:var(--text); }
+
+/* هر عنصری که کلاسِ is-loading بگیرد، یک دایره‌ی چرخانِ کوچک قبل از متنش
+   می‌گیرد. عمداً با ::before و نه یک کامپوننت: این حالت‌ها در ده‌ها فایل
+   پراکنده بودند و هدف این بود که «هر جا لودینگ رفت دایره بیاید»، بدونِ
+   اینکه ساختارِ هر کدام دست بخورد. */
+.is-loading{
+  display:flex; align-items:center; justify-content:center; gap:9px;
+}
+.is-loading::before{
+  content:""; display:inline-block; flex-shrink:0;
+  width:15px; height:15px; border-radius:50%;
+  border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent);
+  animation:appSpin .8s linear infinite;
+}
+html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
+
+/* ستونِ وسطِ داشبوردِ روتین (یادآوری‌ها + یادآوری دارو).
+   گرید `items-stretch` است، پس خودِ ستون تمامِ ارتفاع را می‌گیرد — ولی
+   کارت‌های داخلش ارتفاعِ طبیعی داشتند و ته ستون خالی می‌ماند؛ نتیجه این
+   بود که کفِ این ستون با کفِ دو ستونِ دیگر هم‌تراز نبود (اندازه‌گیری‌شده:
+   ۶۳۰ در برابر ۷۳۲). کارتِ آخر فضای باقی‌مانده را می‌گیرد تا هر سه ستون
+   روی یک خط تمام شوند. */
+@media (min-width:1024px){
+  .dash-middle-col{ min-height:0; }
+  .dash-middle-col > :last-child{ flex:1 1 auto; display:flex; flex-direction:column; }
+}

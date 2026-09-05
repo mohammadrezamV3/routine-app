@@ -141,30 +141,111 @@ function parseJsonResponse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `تو یک طراح مسیر یادگیری (roadmap) هستی. کاربر یک موضوع می‌ده و تو باید یک
-مسیر یادگیری ساختاریافته و واقع‌بینانه براش بسازی، به زبان فارسی.
+// پرامپتِ ساختِ رودمپ.
+//
+// نسخه‌ی قبلی فقط می‌گفت «۴ تا ۶ مرحله، هرکدام ۳ تا ۵ آیتم، واقع‌بین باش»
+// و خروجی‌اش فهرستی از سرفصل‌ها بود — چیزی که کاربر بعد از خواندنش هنوز
+// نمی‌دانست *دقیقاً فردا صبح چه کار کند*. این نسخه عمداً سخت‌گیر است:
+// هر مرحله باید هدفِ قابل‌سنجش، کارهای عملیِ مشخص، تمرین، معیارِ اتمام و
+// زمانِ تقریبی داشته باشد.
+const SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ آموزش هستی که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده‌ای.
+کاربر یک موضوع می‌دهد به‌همراهِ **زمانی که واقعاً می‌تواند بگذارد**، و تو یک مسیرِ یادگیریِ کامل،
+**جلسه‌به‌جلسه** و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
 
-فقط و فقط یک JSON خام برگردون، بدون هیچ متن اضافه قبل یا بعدش، بدون Markdown fences.
-دقیقا با این شکل:
+قواعدِ سخت‌گیرانه:
+
+۱. مسیر از **صفرِ مطلق** شروع شود و به **توانِ انجامِ کارِ واقعی** برسد. فرض کن مخاطب هیچ پیش‌زمینه‌ای ندارد.
+۲. هر چیزی که می‌نویسی باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه اینکه «چه چیزی یاد بگیرد».
+   بد: «مبانی رنگ را یاد بگیر». خوب: «۱۰ عکس از آرشیوت بردار و فقط با تنظیمِ White Balance و Exposure اصلاحشان کن».
+۳. **مهم‌ترین قاعده — جلسه‌ها:** کاربر می‌گوید هفته‌ای چند روز و هر بار چند دقیقه وقت دارد.
+   مسیر را دقیقاً به همان اندازه جلسه ببُر. هر جلسه باید در همان دقیقه‌های اعلام‌شده **واقعاً تمام شود** —
+   نه بیشتر، نه یک سرفصلِ چندهفته‌ای که اسمش را گذاشته‌ای «جلسه».
+۴. هر جلسه این‌ها را دارد:
+   • هدفِ همان یک جلسه (یک جمله، قابلِ سنجش)
+   • قدم‌های اجرایی به‌ترتیب، با زمانِ تقریبیِ هر قدم — جوری که کاربر بنشیند و مو‌به‌مو انجامش دهد
+   • «چطور یاد بگیر»: روشِ یادگیریِ همان جلسه (تمرینِ فعال، تکرارِ فاصله‌دار، ساختِ نمونه، …)
+   • منابعِ **مشخص و واقعی** برای همان جلسه: نامِ دقیقِ کتاب و فصل، نامِ دوره و شماره‌ی درس، نامِ کانال/مستندات.
+     هرگز ننویس «یک ویدیوی خوب پیدا کن».
+   • معیارِ اتمامِ همان جلسه: از کجا بفهمد این جلسه را واقعاً بلد شده.
+۵. جلسه‌ها زیرِ مرحله‌ها گروه‌بندی می‌شوند. هر مرحله هدف، تمرینِ عملی و معیارِ اتمامِ خودش را دارد.
+۶. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارها وقتشان را رویش تلف می‌کنند.
+۷. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
+
+فقط و فقط یک JSONِ خام برگردان، بدونِ هیچ متنِ اضافه قبل یا بعدش، بدونِ Markdown fences.
+دقیقاً با این شکل:
 
 {
-  "title": "عنوان کوتاه مسیر",
-  "note": "یک جمله توضیح کلی درباره این مسیر",
+  "title": "عنوانِ کوتاه و مشخصِ مسیر",
+  "note": "یک تا دو جمله: بعد از تمام‌کردنِ این مسیر دقیقاً چه کاری می‌توانی انجام دهی",
+  "level": "از صفر",
+  "totalWeeks": 12,
   "stations": [
-    { "t": "عنوان مرحله", "items": ["نکته ۱", "نکته ۲", "نکته ۳", "نکته ۴"] }
+    {
+      "t": "عنوانِ مرحله",
+      "goal": "بعد از این مرحله دقیقاً چه کاری می‌توانی بکنی (یک جمله، قابلِ سنجش)",
+      "weeks": 2,
+      "items": ["کارِ عملیِ ۱ (فعل‌محور و مشخص)", "کارِ عملیِ ۲", "کارِ عملیِ ۳"],
+      "practice": "تمرینِ عملیِ این مرحله با خروجیِ مشخص",
+      "checkpoint": "از کجا بفهمی این مرحله تمام شده",
+      "sessions": [
+        {
+          "title": "عنوانِ جلسه",
+          "goal": "هدفِ همین یک جلسه، در یک جمله",
+          "steps": ["۰-۱۰ دقیقه: کارِ مشخص", "۱۰-۳۵ دقیقه: کارِ مشخص", "۳۵-۴۵ دقیقه: کارِ مشخص"],
+          "howTo": "روشِ یادگیریِ این جلسه — چطور تمرین کن که واقعاً بماند",
+          "refs": ["نامِ دقیقِ منبع + فصل/درسِ مشخص", "منبعِ دومِ مشخص"],
+          "checkpoint": "از کجا بفهمی این جلسه را بلد شده‌ای"
+        }
+      ]
+    }
   ],
-  "tips": ["نکته کلیدی ۱", "نکته کلیدی ۲", "نکته کلیدی ۳"],
-  "pro": ["توصیه برای حرفه‌ای‌شدن ۱", "توصیه برای حرفه‌ای‌شدن ۲"],
-  "books": ["نام کتاب یا منبع ۱", "نام کتاب یا منبع ۲"]
+  "tips": ["نکته‌ی کاربردی ۱", "نکته‌ی کاربردی ۲", "نکته‌ی کاربردی ۳"],
+  "mistakes": ["اشتباهِ رایجِ ۱ و چرا وقت‌تلف‌کن است", "اشتباهِ رایجِ ۲"],
+  "pro": ["برای رسیدن به سطحِ حرفه‌ای ۱", "برای رسیدن به سطحِ حرفه‌ای ۲"],
+  "books": ["نامِ دقیقِ کتاب/دوره/منبعِ واقعی ۱", "نامِ دقیقِ منبعِ ۲"]
 }
 
-بین ۴ تا ۶ مرحله (station) بساز، هر کدوم با ۳ تا ۵ آیتم. واقع‌بین باش، نه ژنریک.`;
+بینِ ۴ تا ۷ مرحله بساز. مراحل باید به هم وصل باشند: هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود.
+مجموعِ جلسه‌ها را از ۱۲ بیشتر و از ۴۰ کمتر نگه دار.`;
+
+/** یک نشستِ واقعی به اندازه‌ی همان دقیقه‌هایی که کاربر اعلام کرده. */
+export type GeneratedSession = {
+  title: string;
+  goal?: string;
+  steps: string[];
+  howTo?: string;
+  refs?: string[];
+  checkpoint?: string;
+};
+
+export type GeneratedStation = {
+  t: string;
+  items: string[];
+  /** فیلدهای تازه — رودمپ‌های قدیمی ندارندشان، پس همه اختیاری‌اند */
+  goal?: string;
+  weeks?: number;
+  practice?: string;
+  checkpoint?: string;
+  sessions?: GeneratedSession[];
+};
+
+/** آنچه کاربر در گامِ دومِ ویزارد انتخاب می‌کند. */
+export type RoadmapSchedule = {
+  /** روزهای هفته به سبکِ Date.getDay() — ۰ یکشنبه … ۶ شنبه */
+  jsDays: number[];
+  minutesPerDay: number;
+  /** "HH:MM" ۲۴ساعته */
+  startTime: string;
+};
 
 export type GeneratedRoadmap = {
   title: string;
   note: string;
-  stations: { t: string; items: string[] }[];
+  level?: string;
+  totalWeeks?: number;
+  stations: GeneratedStation[];
   tips: string[];
+  mistakes: string[];
   pro: string[];
   books: string[];
 };
@@ -186,29 +267,80 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
   }
 
   const stationsRaw = Array.isArray(raw.stations) ? raw.stations : [];
-  const stations = stationsRaw
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const normSessions = (v: unknown): GeneratedSession[] | undefined => {
+    if (!Array.isArray(v)) return undefined;
+    const out = v
+      .map((x: any) => ({
+        title: typeof x?.title === "string" && x.title.trim() ? x.title.trim() : "",
+        goal: str(x?.goal),
+        steps: asStringArray(x?.steps),
+        howTo: str(x?.howTo),
+        refs: asStringArray(x?.refs),
+        checkpoint: str(x?.checkpoint),
+      }))
+      // یک جلسه بدونِ عنوان یا بدونِ قدمِ اجرایی چیزی به کاربر نمی‌دهد
+      .filter((x: GeneratedSession) => x.title && x.steps.length > 0);
+    return out.length ? out : undefined;
+  };
+
+  const stations: GeneratedStation[] = stationsRaw
     .map((s: any) => ({
       t: typeof s?.t === "string" && s.t.trim() ? s.t.trim() : "مرحله بدون عنوان",
       items: asStringArray(s?.items),
+      goal: str(s?.goal),
+      // مدل گاهی هفته را رشته می‌دهد ("۲ هفته") — فقط عددِ معتبر را می‌پذیریم
+      weeks: Number.isFinite(Number(s?.weeks)) && Number(s.weeks) > 0
+        ? Math.min(Math.round(Number(s.weeks)), 52)
+        : undefined,
+      practice: str(s?.practice),
+      checkpoint: str(s?.checkpoint),
+      sessions: normSessions(s?.sessions),
     }))
-    .filter((s: any) => s.items.length > 0);
+    // مرحله‌ای که نه کارِ عملی دارد نه جلسه، چیزی برای نشان‌دادن ندارد
+    .filter((s: GeneratedStation) => s.items.length > 0 || (s.sessions?.length ?? 0) > 0);
 
   if (stations.length === 0) {
     throw new Error("مدل هیچ مرحله‌ی قابل‌استفاده‌ای برنگردوند");
   }
 
+  const totalWeeks = Number.isFinite(Number(raw.totalWeeks)) && Number(raw.totalWeeks) > 0
+    ? Math.min(Math.round(Number(raw.totalWeeks)), 260)
+    : stations.reduce((sum, st) => sum + (st.weeks || 0), 0) || undefined;
+
   return {
     title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "مسیر یادگیری",
     note: typeof raw.note === "string" ? raw.note.trim() : "",
+    level: typeof raw.level === "string" && raw.level.trim() ? raw.level.trim() : undefined,
+    totalWeeks,
     stations,
     tips: asStringArray(raw.tips),
+    mistakes: asStringArray(raw.mistakes),
     pro: asStringArray(raw.pro),
     books: asStringArray(raw.books),
   };
 }
 
-async function callRoadmapOnce(topic: string, userId: string): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
+const FA_DAY_NAMES = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
+
+/** پیامِ کاربر: موضوع + وقتی که واقعاً دارد. مدل بدونِ این نمی‌تواند
+ *  جلسه‌ها را به اندازه‌ی درست ببُرد. */
+function roadmapUserMessage(topic: string, schedule?: RoadmapSchedule): string {
+  if (!schedule || !schedule.jsDays.length) return `موضوع: ${topic}`;
+  const days = schedule.jsDays.map((d) => FA_DAY_NAMES[d] ?? "").filter(Boolean).join("، ");
+  const perWeek = schedule.jsDays.length * schedule.minutesPerDay;
+  return [
+    `موضوع: ${topic}`,
+    `روزهای تمرین: ${days} (هفته‌ای ${schedule.jsDays.length} جلسه)`,
+    `مدتِ هر جلسه: ${schedule.minutesPerDay} دقیقه`,
+    `ساعتِ شروع: ${schedule.startTime}`,
+    `مجموعِ وقتِ هفتگی: ${perWeek} دقیقه`,
+    `هر جلسه باید دقیقاً در ${schedule.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`,
+  ].join("\n");
+}
+
+async function callRoadmapOnce(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule), 6000);
   // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
   // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
@@ -220,11 +352,11 @@ async function callRoadmapOnce(topic: string, userId: string): Promise<Generated
  * تصادفی)، نه یک خطای ساختاری همیشگی. اگه هر دو بار شکست خورد، همون خطای
  * تلاش آخر رو برمی‌گردونه.
  */
-export async function generateRoadmap(topic: string, userId: string): Promise<GeneratedRoadmap> {
+export async function generateRoadmap(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
   let lastError: any;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await callRoadmapOnce(topic, userId);
+      return await callRoadmapOnce(topic, userId, schedule);
     } catch (err) {
       lastError = err;
     }
@@ -596,7 +728,9 @@ const WEEKLY_AI_PROMPT_V2 = `تو دستیار تحلیل هفتگی Arion هس�
 - «correlations» فقط همبستگی‌ان، نه رابطه‌ی علت‌ومعلولی — هیچ‌وقت نگو «X باعث Y شد»، بگو «بین X و Y همبستگی دیده شد».
 - هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده.
 - لحن: مستقیم، محترمانه، مثل یک مربی شخصی.
-- خلاصه (summary) حداکثر ۵ جمله. حداکثر ۳ پیشنهاد. حداکثر ۳ insight.
+- خلاصه (summary) حداکثر ۵ جمله؛ باید صریحاً نقطه‌ی قوت و نقطه‌ی ضعفِ اصلیِ همین هفته را نام ببرد (نه فقط توصیفِ کلی).
+- هر پیشنهاد (recommendation) باید بگوید کاربر هفته‌ی بعد دقیقاً روی چه‌چیزی تمرکز کند، با دلیلِ مبتنی‌بر همان اعداد.
+- حداکثر ۳ پیشنهاد. حداکثر ۳ insight.
 
 فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متن اضافه):
 {
@@ -651,43 +785,3 @@ export async function generateWeeklyReportSummaryV2(input: WeeklyReportAiInputV2
   throw lastError;
 }
 
-// ============================================================================
-// Ask Arion — سوال‌وجواب محدود به Context همون گزارش هفتگی (نه یک
-// چت‌بات عمومی). Context ورودی همیشه از همون Snapshot cache‌شده میاد،
-// نه دیتابیس خام (بند ۳۴). از AiFeatureKey.CORRELATION_INSIGHT استفاده
-// می‌کنه — enum دوم ازقبل‌موجود بلااستفاده، برای جداکردن آمار هزینه‌ی
-// این مسیر از خلاصه‌ی خودکار WEEKLY_COACH_REPORT.
-// ============================================================================
-
-const ASK_ARION_SYSTEM_PROMPT = `تو Arion هستی، دستیار شخصی تحلیل هفتگی. کاربر درباره گزارش هفتگی خودش سوال می‌پرسه.
-فقط از دیتایی که توی Context داده شده جواب بده — اگه جواب توی Context نیست، صادقانه بگو نمی‌دونی، حدس نزن.
-هیچ توصیه‌ی پزشکی یا مالی قطعی نده. جواب کوتاه باشه (حداکثر ۴-۵ جمله)، فارسی، مستقیم و محترمانه.
-
-فقط و فقط این JSON خام رو برگردون: { "answer": "جواب کوتاه" }`;
-
-export type AskArionContext = {
-  weekLabel: string;
-  overallScore: number | null;
-  domains: WeeklyReportAiDomainInput[];
-  wins: string[];
-  problems: string[];
-  insights: WeeklyReportAiInsight[];
-};
-
-function normalizeAskArionAnswer(raw: any): string {
-  const answer = typeof raw?.answer === "string" ? raw.answer.trim() : "";
-  if (!answer) throw new Error("مدل جوابی برنگردوند");
-  return answer;
-}
-
-export async function answerWeeklyReportQuestion(question: string, context: AskArionContext, userId: string): Promise<string> {
-  const userContent = JSON.stringify({ question, context });
-  try {
-    const { text, usage, durationMs } = await callAiChat(ASK_ARION_SYSTEM_PROMPT, userContent, 700, WEEKLY_REPORT_AI_MODEL);
-    recordAiUsage(userId, AiFeatureKey.CORRELATION_INSIGHT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
-    return normalizeAskArionAnswer(parseJsonResponse(text));
-  } catch (err: any) {
-    logError("ai-gateway", `Ask Arion شکست خورد: ${err?.message || err}`, { context: { feature: "CORRELATION_INSIGHT" } });
-    throw err;
-  }
-}

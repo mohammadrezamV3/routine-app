@@ -42,10 +42,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# ورودیِ کلاستر (فورکِ چند worker از همین server.js) — جزوِ خروجیِ standalone
+# نکست نیست چون هیچ فایلی importش نمی‌کنه، پس جدا کپی می‌شه.
+COPY --from=builder /app/cluster.js ./cluster.js
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["node", "cluster.js"]

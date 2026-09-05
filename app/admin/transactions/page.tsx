@@ -52,7 +52,7 @@ function TransactionsInner() {
       <AdminTabBar items={FILTERS} active={filter} onChange={setFilter} />
 
       {!data ? (
-        <div className="admin-empty">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : data.transactions.length === 0 ? (
         <EmptyState />
       ) : (
@@ -88,7 +88,7 @@ function TransactionsInner() {
 
 export default function AdminTransactionsPage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <TransactionsInner />
     </Suspense>
   );

@@ -88,7 +88,7 @@ export default function SubscriptionPage() {
       </div>
 
       {!loaded ? (
-        <div className="item-line" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
+        <div className="item-line is-loading" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
       ) : (
         <div style={{ marginTop: 8 }}>
           <PlansSection isIntl={isIntl} mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" upgradeOffer={upgradeOffer} />

@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest) {
 
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
-  if (!isSuperAdmin && (!checkRateLimit(`username-change:${userId}`, 5, 60 * 60 * 1000) || !checkRateLimit(`username-change-ip:${ip}`, 10, 60 * 60 * 1000))) {
+  if (!isSuperAdmin && (!(await checkRateLimit(`username-change:${userId}`, 5, 60 * 60 * 1000)) || !(await checkRateLimit(`username-change-ip:${ip}`, 10, 60 * 60 * 1000)))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

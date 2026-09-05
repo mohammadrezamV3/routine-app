@@ -35,7 +35,7 @@ export default function AdminRetentionPage() {
       </div>
 
       {!data ? (
-        <div className="admin-empty">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : data.retention.cohortSize === 0 ? (
         <div className="admin-empty">داده‌ای برای نمایش وجود ندارد</div>
       ) : (

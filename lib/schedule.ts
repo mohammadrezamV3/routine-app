@@ -5,6 +5,7 @@
 // دیتابیس ذخیره بشن، نه فقط localStorage/UserSetting.
 
 import { isoLocal } from "./jalali";
+import { toEnglishDigits } from "./validate";
 
 export type ScheduleTask = {
   id: string;
@@ -14,18 +15,11 @@ export type ScheduleTask = {
 };
 
 const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-// هم ارقام فارسی (۰-۹) و هم ارقام عربی-هندی (٠-٩) — صفحه‌کلیدهای عربی
-// اندروید/iOS دسته‌ی دوم رو تایپ می‌کنن، نه دسته‌ی اول؛ بدون این‌ها ورودی
-// کاربر بی‌صدا نامعتبر می‌شد.
-const faDigitMap: Record<string, string> = {
-  "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4",
-  "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
-  "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
-  "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
-};
 
+/** نامِ قدیمی که جاهای زیادی از آن import می‌کنند — پیاده‌سازی در
+ *  `lib/validate.ts` است تا دو نسخه‌ی جدا از هم درنروند. */
 export function toEnDigits(s: string): string {
-  return String(s).replace(/[۰-۹٠-٩]/g, (ch) => faDigitMap[ch] ?? ch);
+  return toEnglishDigits(s);
 }
 
 export function toFaDigits(s: string): string {

@@ -13,7 +13,6 @@ import { DailyPerformanceStrip } from "@/components/weeklyReport/DailyPerformanc
 import { WinsList, ProblemsList } from "@/components/weeklyReport/WinsProblemsList";
 import { InsightsList } from "@/components/weeklyReport/InsightsList";
 import { RecommendationsList } from "@/components/weeklyReport/RecommendationsList";
-import { AskArionPanel } from "@/components/weeklyReport/AskArionPanel";
 
 type WeeklyReportResponse = {
   weekStart: string; weekEnd: string; status: string;
@@ -162,7 +161,6 @@ function WeeklyReportContent() {
           <ProblemsList items={report.problems} />
           <InsightsList items={report.aiInsights} />
           <RecommendationsList items={report.aiRecommendations} weekStart={report.weekStart} />
-          <AskArionPanel offset={offset} />
 
           <button type="button" className="wr-refresh-btn" onClick={refresh} disabled={refreshing}>
             <RefreshCw size={14} className={refreshing ? "wr-spin" : ""} />

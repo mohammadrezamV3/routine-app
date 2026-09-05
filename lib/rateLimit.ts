@@ -1,7 +1,17 @@
-// محدودکننده نرخ درخواست، ساده و در-حافظه — برای جلوگیری از حمله brute-force
-// روی لاگین/ثبت‌نام. محدودیت مهم: این پیاده‌سازی فقط در سطح یک instance کار
-// می‌کنه؛ اگه اپ روی چند سرور/serverless پخش بشه، باید با یک store مشترک
-// (مثل Redis) جایگزین بشه. برای MVP و یک سرور تنها، همین سطح کافیه.
+// محدودکننده نرخ درخواست — برای جلوگیری از حمله brute-force روی لاگین/ثبت‌نام.
+//
+// اپ حالا با cluster.js چند worker (به تعدادِ هسته‌های سرور) اجرا می‌شه. چون
+// هر worker حافظه‌ی جدای خودشو داره، اگه هر کدوم Mapِ خودشو نگه داره محدودیتِ
+// نرخ عملاً به تعدادِ workerها شل می‌شه. راه‌حل: primary (که فارغ از تعدادِ
+// worker همیشه دقیقاً یکیه) میزبانِ Mapِ مشترکه؛ اینجا اگه داخلِ یک worker
+// باشیم، از طریقِ IPCِ داخلیِ نود (هم‌ماشین، زیرِ میلی‌ثانیه) از primary
+// می‌پرسیم — بدونِ نیاز به Redis/جدولِ جدید در دیتابیس.
+//
+// اگه اصلاً زیرِ cluster.js اجرا نشده باشیم (مثلاً next dev، یا اجرای مستقیمِ
+// server.js) به همون رفتارِ قبلی (Map محلی) برمی‌گردیم — این فایل با هر دو
+// حالت درست کار می‌کنه.
+
+import cluster from "node:cluster";
 
 type Bucket = { count: number; resetAt: number };
 
@@ -18,13 +28,7 @@ function sweep() {
   }
 }
 
-/**
- * @param key شناسه یکتا برای این محدودیت، مثلا "signup:1.2.3.4" یا "login:1.2.3.4"
- * @param limit حداکثر تعداد مجاز درخواست در بازه
- * @param windowMs طول بازه به میلی‌ثانیه
- * @returns true اگه اجازه ادامه داره، false اگه از سقف رد شده
- */
-export function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
+function checkRateLimitLocal(key: string, limit: number, windowMs: number): boolean {
   sweep();
   const now = Date.now();
   const existing = buckets.get(key);
@@ -35,6 +39,49 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
   if (existing.count >= limit) return false;
   existing.count++;
   return true;
+}
+
+// یعنی داخلِ یک workerِ فورک‌شده توسطِ cluster.js هستیم (نه next dev، نه اجرای
+// مستقیمِ server.js) — فقط اونجا IPC معنا داره.
+const isClusterWorker = cluster.isWorker && typeof process.send === "function";
+
+let nextRequestId = 0;
+const pending = new Map<number, (ok: boolean) => void>();
+
+if (isClusterWorker) {
+  process.on("message", (msg: any) => {
+    if (!msg || msg.type !== "rateLimit:result") return;
+    const resolve = pending.get(msg.id);
+    if (!resolve) return;
+    pending.delete(msg.id);
+    resolve(msg.ok);
+  });
+}
+
+/**
+ * @param key شناسه یکتا برای این محدودیت، مثلا "signup:1.2.3.4" یا "login:1.2.3.4"
+ * @param limit حداکثر تعداد مجاز درخواست در بازه
+ * @param windowMs طول بازه به میلی‌ثانیه
+ * @returns true اگه اجازه ادامه داره، false اگه از سقف رد شده
+ */
+export function checkRateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+  if (!isClusterWorker) {
+    return Promise.resolve(checkRateLimitLocal(key, limit, windowMs));
+  }
+
+  const id = nextRequestId++;
+  return new Promise<boolean>((resolve) => {
+    pending.set(id, resolve);
+    process.send!({ type: "rateLimit:check", id, key, limit, windowMs });
+    // اگه primary به هر دلیلی (بار زیاد، باگ) تا ۲ ثانیه جواب نداد، fail-open:
+    // اجازه می‌دیم درخواست ادامه پیدا کنه، نه اینکه کل سایت روی این چک قفل کنه
+    // — نبودِ موقتِ rate limit بهتر از خرابیِ کاملِ سایته.
+    setTimeout(() => {
+      if (!pending.has(id)) return;
+      pending.delete(id);
+      resolve(true);
+    }, 2000);
+  });
 }
 
 /**

@@ -84,7 +84,7 @@ export function DashReminderCard({ delay }: { delay?: number }) {
 
         <div className="no-scrollbar mt-3 flex max-h-[300px] flex-col gap-2 overflow-y-auto sm:mt-4 sm:max-h-[360px] sm:gap-2.5">
           {items === null ? (
-            <div className="text-[11px] text-dash-muted sm:text-[12px]">در حال بارگذاری…</div>
+            <div className="text-[11px] text-dash-muted sm:text-[12px] is-loading">در حال بارگذاری…</div>
           ) : list.length === 0 ? (
             <div className="text-[11px] text-dash-muted sm:text-[12px]">
               برنامه‌ای با تگ «خیلی زیاد» یا «زیاد» توی این هفته ثبت نشده.

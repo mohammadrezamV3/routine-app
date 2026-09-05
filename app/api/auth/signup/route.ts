@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   // حداکثر ۵ تلاش ثبت‌نام در ۱۰ دقیقه به‌ازای هر IP — جلوگیری از ساخت
   // انبوه حساب یا سوءاستفاده خودکار از این فرم.
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`signup:${ip}`, 5, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`signup:${ip}`, 5, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

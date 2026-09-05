@@ -40,7 +40,7 @@ export default function AdminSystemErrorsPage() {
       <AdminTabBar items={SEVERITIES} active={severity} onChange={(v) => { setSeverity(v); setPage(1); }} />
 
       {!data ? (
-        <div className="admin-empty">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : data.errors.length === 0 ? (
         <EmptyState />
       ) : (

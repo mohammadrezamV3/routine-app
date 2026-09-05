@@ -18,7 +18,7 @@ const PAIR_WINDOW_MS = 10 * 60_000;
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
-  if (!checkRateLimit(`mt-pair:${ip}`, PAIR_LIMIT, PAIR_WINDOW_MS)) {
+  if (!(await checkRateLimit(`mt-pair:${ip}`, PAIR_LIMIT, PAIR_WINDOW_MS))) {
     return NextResponse.json({ error: "too many attempts" }, { status: 429 });
   }
 

@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.AI_INSIGHT);
   if (!guard.ok) return guard.response;
 
-  if (!guard.isSuperAdmin && !checkRateLimit(`weekly-goal-accept:${guard.userId}`, 20, 24 * 60 * 60 * 1000)) {
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`weekly-goal-accept:${guard.userId}`, 20, 24 * 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — بعدا دوباره امتحان کن" }, { status: 429 });
   }
 

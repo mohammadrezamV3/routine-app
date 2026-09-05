@@ -26,7 +26,7 @@ function ChurnInner() {
       </div>
 
       {!data ? (
-        <div className="admin-empty">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : (
         <>
           <KpiGrid>
@@ -48,7 +48,7 @@ function ChurnInner() {
 
 export default function AdminChurnPage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <ChurnInner />
     </Suspense>
   );

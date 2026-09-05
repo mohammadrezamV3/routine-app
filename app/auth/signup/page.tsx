@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { signIn } from "next-auth/react";
+import { faNum } from "@/lib/jalali";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, AtSign, Lock } from "lucide-react";
@@ -10,7 +11,7 @@ import { AuthField } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
-import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName } from "@/lib/validate";
+import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 type FieldErrors = {
@@ -203,12 +204,16 @@ export default function SignupPage() {
       router.push("/auth/login");
       return;
     }
-    setLoading(false);
     if (loginRes?.error) {
+      setLoading(false);
       router.push("/auth/login");
       return;
     }
-    router.push("/weekly");
+    // به خروجیِ signIn تنها اکتفا نکن — نشستِ واقعی را از سرور تأیید کن.
+    // (چرا: همان بازنویسیِ پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
+    const session = await getSession();
+    setLoading(false);
+    router.push((session?.user as any)?.id ? "/weekly" : "/auth/login");
   }
 
   return (
@@ -268,7 +273,7 @@ export default function SignupPage() {
                 <input
                   id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" style={{ textAlign: "right" }}
                   placeholder="09123456789" readOnly={otpSent}
-                  onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) clearError("phone"); }}
+                  onChange={(e) => { const v = digitsOnly(e.target.value); setPhone(v); if (v) clearError("phone"); }}
                   onKeyDown={(e) => { if (e.key === "Enter" && !otpSent) { e.preventDefault(); requestOtp(); } }}
                 />
                 <button
@@ -289,7 +294,7 @@ export default function SignupPage() {
               <AuthField id="signupOtp" label="کد ۵ رقمی" error={fieldErrors.otp}>
                 <input
                   id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
-                  onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "")); if (e.target.value.trim()) clearError("otp"); }}
+                  onChange={(e) => { const v = digitsOnly(e.target.value); setOtpCode(v); if (v) clearError("otp"); }}
                 />
               </AuthField>
               <button
@@ -298,7 +303,7 @@ export default function SignupPage() {
                 disabled={resendCooldown > 0 || sendingCode}
                 onClick={requestOtp}
               >
-                {resendCooldown > 0 ? `ارسال مجدد کد (${resendCooldown})` : "ارسال مجدد کد"}
+                {resendCooldown > 0 ? `ارسال مجدد کد ${faNum(resendCooldown)}` : "ارسال مجدد کد"}
               </button>
             </div>
           )}

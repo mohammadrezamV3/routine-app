@@ -14,22 +14,12 @@ import { getSiteMarket } from "@/lib/market";
 import { useThemeTokens, PlansSection } from "@/components/PlanShowcase";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
-const SLEEP_ICON = (
-  <svg viewBox="0 0 24 24" fill="none"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-);
-
 const FEATURES = [
   {
     icon: ICONS.weekly,
     title: "روتین هفتگی",
     hook: "هیچ‌چیزی از قلم نمی‌افته",
     body: "برنامه‌ی هفتگی‌ات رو بچین، هر روز رو تیک بزن، استریکت رو حفظ کن.",
-  },
-  {
-    icon: SLEEP_ICON,
-    title: "خواب",
-    hook: "به موقع بیدار شو",
-    body: "ساعت بیدارشدنت بخشی از هر روز کامله — نظم خواب یعنی نظم همه‌چیز.",
   },
   {
     icon: ICONS.exercise,
@@ -427,7 +417,7 @@ export function LandingPage() {
             <span className={t.accentText}>(Arion)</span>
           </h1>
           <p className={`mt-4 text-right text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
-            آریون (Arion) یک اپ فارسیه برای روتین روزانه، خواب، بدنسازی،
+            آریون (Arion) یک اپ فارسیه برای روتین روزانه، بدنسازی،
             ژورنال ترید و مسیر یادگیری — هرکدوم دقیق، ساده و بدون شلوغی.
             همه‌چیز یک‌جا، همه‌چیز به‌موقع.
           </p>

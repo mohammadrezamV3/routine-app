@@ -43,7 +43,8 @@ export function DayModal({
 
   const isFuture = iso > todayKey;
   const isPast = iso < todayKey;
-  const isLocked = isFuture || isPast;
+  // تیک‌زدنِ کارها روی *هر* روزی باز است (درخواستِ صریحِ کاربر). فقط ثبتِ
+  // «ساعت بیداری» برای روزِ آینده معنا ندارد و بسته می‌ماند.
   const jd = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
   async function toggleTask(id: string) {
@@ -92,8 +93,8 @@ export function DayModal({
               return (
                 <div
                   key={t.id}
-                  onClick={() => !isLocked && toggleTask(t.id)}
-                  className={`task${isLocked ? " disabled" : ""}`}
+                  onClick={() => toggleTask(t.id)}
+                  className="task"
                 >
                   <div className={`check${checked ? " on" : ""}`}>
                     <svg className="c-check" viewBox="0 0 24 24" fill="none">
@@ -111,10 +112,7 @@ export function DayModal({
             <div className="item-line empty">برای این روز کاری تعریف نشده</div>
           )}
 
-          <div
-            className={`task${isLocked ? " disabled" : ""}`}
-            onClick={() => !isLocked && toggleOuting()}
-          >
+          <div className="task" onClick={() => toggleOuting()}>
             <div className={`check${isOuting ? " on" : ""}`}>
               <svg className="c-check" viewBox="0 0 24 24" fill="none">
                 <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />

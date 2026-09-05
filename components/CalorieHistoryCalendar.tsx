@@ -117,7 +117,7 @@ export function CalorieHistoryCalendar({
         })}
       </div>
 
-      {loading && <div className="mt-3 text-center text-[11px] text-dash-muted">در حال بارگذاری…</div>}
+      {loading && <div className="mt-3 text-center text-[11px] text-dash-muted is-loading">در حال بارگذاری…</div>}
 
       <div className="mt-4 flex items-center justify-center gap-4 text-[10.5px] text-dash-muted">
         <span className="flex items-center gap-1.5">

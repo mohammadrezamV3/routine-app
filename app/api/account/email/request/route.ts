@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
   const newEmail = rawEmail.trim().toLowerCase();
 
-  if (!checkRateLimit(`email-change-req-user:${userId}`, 3, 60 * 60 * 1000) || !checkRateLimit(`email-change-req-ip:${ip}`, 10, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`email-change-req-user:${userId}`, 3, 60 * 60 * 1000)) || !(await checkRateLimit(`email-change-req-ip:${ip}`, 10, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

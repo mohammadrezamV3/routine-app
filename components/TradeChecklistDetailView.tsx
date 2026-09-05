@@ -10,7 +10,7 @@ import { DEFAULT_NEWS_ALERT_PREFS, NEWS_ALERT_KEY, normalizeNewsAlertPrefs } fro
 import { IMPACT_COLORS, IMPACT_LABELS, currencyMeta, EconomicEventDto } from "@/lib/economicCalendar";
 import { CAL_SYSTEM_KEY, CalSystem, TradeAccount, TradeTag } from "@/lib/tradeTypes";
 
-type Item = { id: string; text: string; order: number };
+type Item = { id: string; text: string; order: number; checked: boolean };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; items: Item[] };
 
 function countdownText(occursAt: string, now: number): string {
@@ -60,6 +60,9 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
       const found = (cRes?.checklists || []).find((c: Checklist) => c.id === checklistId) || null;
       if (!found) { setNotFound(true); return; }
       setChecklist(found);
+      // تیک‌ها از سرور می‌آیند (persist شده‌اند)، نه از صفر — این دقیقاً
+      // همان چیزی است که قبلاً نبود («چک‌لیستم ذخیره نمیشه»).
+      setCheckedState(Object.fromEntries(found.items.map((i: Item) => [i.id, i.checked])));
       setAccounts(aRes?.accounts || []);
       setTags(tRes?.tags || []);
     } finally {
@@ -92,9 +95,32 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
 
   const activeAccounts = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
 
+  function toggleItem(itemId: string) {
+    const next = !checkedState[itemId];
+    setCheckedState((s) => ({ ...s, [itemId]: next }));
+    fetch(`/api/trade/checklists/${checklistId}/items`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId, checked: next }),
+    }).catch(() => {});
+  }
+
   function startTrade() {
     if (activeAccounts.length === 1) { setTradeFor(activeAccounts[0]); return; }
     setPickAccountOpen(true);
+  }
+
+  // بعدِ ثبتِ واقعیِ معامله، وضعیتِ چک‌لیست snapshot شده (سمتِ سرور، روی
+  // خودِ TradeEntry) — پس تیک‌های همین اجرا دیگر لازم نیستند و برای اجرای
+  // بعدی از صفر شروع می‌شود.
+  function afterTradeSaved() {
+    setTradeFor(null);
+    setCheckedState({});
+    fetch(`/api/trade/checklists/${checklistId}/items`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resetAll: true }),
+    }).catch(() => {});
   }
 
   if (loading) return <PanelSkeleton />;
@@ -120,7 +146,7 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
             key={i.id}
             type="button"
             className={`trade-check-row${checkedState[i.id] ? " done" : ""}`}
-            onClick={() => setCheckedState((s) => ({ ...s, [i.id]: !s[i.id] }))}
+            onClick={() => toggleItem(i.id)}
           >
             <span className="trade-check-box" />
             <span>{i.text}</span>
@@ -195,9 +221,10 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
           tags={tags}
           calSystem={calSystem}
           presetChecklistId={checklist.id}
+          presetCheckedState={checkedState}
           onTagCreated={(t) => setTags((p) => [...p, t])}
           onClose={() => setTradeFor(null)}
-          onSaved={() => setTradeFor(null)}
+          onSaved={afterTradeSaved}
         />
       )}
     </div>

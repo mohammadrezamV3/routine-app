@@ -23,7 +23,7 @@ export default function AdminCohortPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">Cohort — کاربران بر اساس ماه ثبت‌نام</span></div>
         {!rows ? (
-          <div className="admin-empty">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
         ) : rows.every((r) => r.size === 0) ? (
           <EmptyState />
         ) : (

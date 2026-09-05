@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
   }
 
-  if (!guard.isSuperAdmin && !checkRateLimit(`exercise-sub:${userId}`, 20, 60 * 60 * 1000)) {
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`exercise-sub:${userId}`, 20, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "سقف درخواست جایگزینی در این ساعت پر شده — بعدا امتحان کن" }, { status: 429 });
   }
 

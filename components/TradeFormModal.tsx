@@ -27,7 +27,7 @@ type Checklist = { id: string; name: string; color: string; required: boolean; a
 type TabKey = "core" | "reasons" | "checklist" | "images" | "tags" | "emotions";
 
 const TABS: { key: TabKey; label: string; icon: JSX.Element }[] = [
-  { key: "core", label: "اطلاعات ضروری", icon: <Info size={14} /> },
+  { key: "core", label: "اطلاعات", icon: <Info size={14} /> },
   { key: "reasons", label: "دلایل ورود و خروج", icon: <Wand2 size={14} /> },
   { key: "checklist", label: "چک‌لیست", icon: <AlertTriangle size={14} /> },
   { key: "images", label: "عکس‌ها", icon: <Camera size={14} /> },
@@ -51,6 +51,8 @@ export function TradeFormModal({
   tags,
   calSystem,
   presetChecklistId,
+  presetCheckedState,
+  presetSymbol,
   onTagCreated,
   onClose,
   onSaved,
@@ -60,13 +62,23 @@ export function TradeFormModal({
   tags: TradeTag[];
   calSystem: CalSystem;
   presetChecklistId?: string | null;
+  /** تیک‌های از پیش‌زده‌شده — وقتی فرم از صفحه‌ی اختصاصیِ یک چک‌لیست باز
+   * می‌شود (کاربر قبلاً روی همان صفحه تیک زده)، نه از صفر. */
+  presetCheckedState?: Record<string, boolean>;
+  /** نمادِ از پیش پرشده — وقتی فرم از صفحه‌ی چارت باز می‌شود */
+  presetSymbol?: string | null;
   onTagCreated: (t: TradeTag) => void;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [tab, setTab] = useState<TabKey>("core");
   const [form, setForm] = useState<TradeFormState>(() =>
-    entry ? tradeToFormState(entry, toLocalInputValue) : emptyTradeForm(account.id, toLocalInputValue(new Date()))
+    entry
+      ? tradeToFormState(entry, toLocalInputValue)
+      : {
+          ...emptyTradeForm(account.id, toLocalInputValue(new Date())),
+          ...(presetSymbol ? { symbol: presetSymbol } : {}),
+        }
   );
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [optionalOpen, setOptionalOpen] = useState(false);
@@ -84,7 +96,9 @@ export function TradeFormModal({
       .then((d: any) => {
         const list: Checklist[] = d?.checklists || [];
         setChecklists(list);
-        if (presetChecklistId && !entry) patch({ checklistId: presetChecklistId });
+        if (presetChecklistId && !entry) {
+          patch({ checklistId: presetChecklistId, checklistState: presetCheckedState ?? {} });
+        }
       })
       .catch(() => setChecklists([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,57 +1,97 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import Link from "next/link";
+import {
+  AlertTriangle, BookOpen, Check, ChevronRight, Clock, ExternalLink, Flag,
+  Lightbulb, ListChecks, Sparkles, Target, Trash2,
+} from "lucide-react";
 import { faNum } from "@/lib/jalali";
-import { getSetting, setSetting } from "@/lib/storage";
+import { RoadmapStepToProgram } from "@/components/RoadmapStepToProgram";
+import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
+import { LoadingBlock } from "@/components/Spinner";
+import { ROADMAP_DAYS, addMinutes } from "@/lib/roadmapSchedule";
 
-// لینک‌کردن منابع/کارهای رودمپ به یه جست‌وجوی واقعی — نه یه URL ساختگی
-// (که معلوم نیست واقعا درست باشه)، بلکه یه جست‌وجوی گوگل برای همون عنوان،
-// همراه با موضوع رودمپ برای دقیق‌تر بودن نتیجه؛ این یعنی هر آیتم واقعا
-// «قابل‌اجرا»ست، نه فقط یه متن ایستا.
+// لینک‌کردن منابع به یک جست‌وجوی واقعی — نه یک URLِ ساختگی که معلوم نیست
+// درست باشد، بلکه جست‌وجوی همان عنوان به‌همراهِ موضوعِ رودمپ.
 function searchUrl(query: string, topic: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(`${query} ${topic}`)}`;
 }
+
+type Session = {
+  title: string;
+  goal?: string;
+  steps: string[];
+  howTo?: string;
+  refs?: string[];
+  checkpoint?: string;
+};
+
+type Station = {
+  t: string;
+  items: string[];
+  goal?: string;
+  weeks?: number;
+  practice?: string;
+  checkpoint?: string;
+  sessions?: Session[];
+};
+
+type Schedule = { jsDays: number[]; minutesPerDay: number; startTime: string };
 
 type Roadmap = {
   id: string;
   title: string;
   topic: string;
   note: string;
-  stations: { t: string; items: string[] }[];
+  level?: string | null;
+  totalWeeks?: number | null;
+  stations: Station[];
   tips: string[];
   proTips: string[];
   books: string[];
+  mistakes?: string[] | null;
+  progress?: Record<string, boolean> | null;
+  schedule?: Schedule | null;
 };
-
-const TM_BACK_SVG = (
-  <svg viewBox="0 0 24 24" fill="none">
-    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 export default function CustomRoadmapDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [data, setData] = useState<Roadmap | null | undefined>(undefined);
-  const [done, setDone] = useState<Record<number, boolean>>({});
-  const [squashIdx, setSquashIdx] = useState<number | null>(null);
-
-  const settingKey = `roadmapDone:custom-${params.id}`;
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/roadmaps/${params.id}`).then((r) => r.json()).then((res) => setData(res.roadmap || null));
-    getSetting<Record<number, boolean>>(settingKey, {}).then(setDone);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetch(`/api/roadmaps/${params.id}`)
+      .then((r) => r.json())
+      .then((res) => {
+        const rm: Roadmap | null = res.roadmap || null;
+        setData(rm);
+        setDone((rm?.progress as Record<string, boolean>) || {});
+      })
+      .catch(() => setData(null));
+  }, [params.id]);
+
+  // پیشرفت روی خودِ رودمپ ذخیره می‌شود، نه در UserSetting — کلیدِ پویای
+  // قبلی در allowlist نبود و برای کاربرِ واردشده ۴۰۰ می‌گرفت.
+  const persist = useCallback(async (next: Record<string, boolean>) => {
+    await fetch(`/api/roadmaps/${params.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ progress: next }),
+    }).catch(() => {});
   }, [params.id]);
 
   function toggle(idx: number) {
-    const next = { ...done, [idx]: !done[idx] };
+    toggleKey(String(idx));
+  }
+
+  function toggleKey(key: string) {
+    const next = { ...done, [key]: !done[key] };
     setDone(next);
-    setSetting(settingKey, next);
-    setSquashIdx(idx);
-    setTimeout(() => setSquashIdx(null), 450);
+    persist(next);
   }
 
   async function removeRoadmap() {
@@ -59,113 +99,215 @@ export default function CustomRoadmapDetailPage() {
     router.push("/roadmaps");
   }
 
-  if (data === undefined) {
-    return (
-      <section style={{ borderTop: "none" }}>
-        <div className="tm-head-row">
-          <button className="tm-back-btn" onClick={() => router.push("/roadmaps")}>{TM_BACK_SVG}</button>
-          <h1>در حال بارگذاری…</h1>
-        </div>
-      </section>
-    );
-  }
+  if (data === undefined) return <section className="trade-desktop"><LoadingBlock text="در حال آوردن مسیر…" /></section>;
+  if (data === null) return <section className="trade-desktop"><div className="item-line empty">این مسیر پیدا نشد.</div></section>;
 
-  if (!data) {
-    return (
-      <section style={{ borderTop: "none" }}>
-        <div className="tm-head-row">
-          <button className="tm-back-btn" onClick={() => router.push("/roadmaps")}>{TM_BACK_SVG}</button>
-          <h1>رودمپ پیدا نشد</h1>
-        </div>
-      </section>
-    );
-  }
+  const total = data.stations.length;
+  const doneCount = data.stations.filter((_, i) => done[String(i)]).length;
+  const pct = total ? Math.round((doneCount / total) * 100) : 0;
+  const sessionCount = data.stations.reduce((n, st) => n + (st.sessions?.length ?? 0), 0);
 
-  const stations = data.stations || [];
-  const doneCount = stations.reduce((s, _st, i) => s + (done[i] ? 1 : 0), 0);
-  const pct = stations.length ? Math.round((doneCount / stations.length) * 100) : 0;
-  const railPct = stations.length > 1 ? (doneCount / (stations.length - 1)) * 100 : doneCount ? 100 : 0;
+  const sc = data.schedule;
+  const scheduleText = sc && sc.jsDays?.length
+    ? `${sc.jsDays.map((d) => ROADMAP_DAYS.find((x) => x.jsDay === d)?.label).filter(Boolean).join("، ")} — ${sc.startTime} تا ${addMinutes(sc.startTime, sc.minutesPerDay)}`
+    : null;
+
+  // شماره‌ی جلسه‌ها سراسری است (جلسه‌ی ۷ از ۲۴)، نه از هر مرحله از نو —
+  // کاربر «امروز جلسه‌ی چندم است» را می‌پرسد، نه «جلسه‌ی چندمِ مرحله‌ی سه».
+  let sessionCursor = 0;
 
   return (
-    <section style={{ borderTop: "none" }}>
-      <div className="tm-head-row" style={{ justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button className="tm-back-btn" onClick={() => router.push("/roadmaps")}>{TM_BACK_SVG}</button>
+    <section className="trade-desktop rm-page">
+      <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> مسیرها</Link>
+
+      {/* سربرگ: عنوان، هدفِ نهایی، و نوارِ پیشرفت */}
+      <div className="rm-hero">
+        <div className="rm-hero-top">
           <h1>{data.title}</h1>
+          <button type="button" className="trade-icon-btn danger" aria-label="حذف مسیر"
+                  onClick={() => setConfirmDelete(true)}><Trash2 size={16} /></button>
         </div>
-        <button onClick={removeRoadmap} style={{ borderColor: "#E05252", color: "#E05252" }}>حذف</button>
-      </div>
-      <div className="section-note">{data.note}</div>
+        {data.note && <p className="rm-hero-note">{data.note}</p>}
 
-      {!!stations.length && (
-        <div className="tm-progress-summary">
-          <div className="mono">
-            {faNum(doneCount)}<span className="mx-1">/</span>{faNum(stations.length)}<span> ایستگاه تکمیل‌شده</span>
-          </div>
-          <div className="mono" style={{ color: "var(--muted)", fontSize: 12 }}>{faNum(pct)}٪</div>
+        <div className="rm-meta">
+          {data.level && <span className="rm-chip"><Flag size={12} /> {data.level}</span>}
+          {data.totalWeeks ? <span className="rm-chip">{faNum(data.totalWeeks)} هفته</span> : null}
+          <span className="rm-chip">{faNum(total)} مرحله</span>
+          {sessionCount > 0 && <span className="rm-chip"><ListChecks size={12} /> {faNum(sessionCount)} جلسه</span>}
         </div>
-      )}
-      {!!stations.length && (
-        <div className="tm-progress-bar"><div className="tm-progress-bar-fill" style={{ width: `${pct}%` }} /></div>
-      )}
 
-      <div className="treasure-map">
-        {!!stations.length && (
-          <div className="tm-rail"><div className="tm-rail-fill" style={{ height: `${railPct}%` }} /></div>
+        {scheduleText && (
+          <div className="rm-schedule"><Clock size={13} /> <span>{scheduleText}</span></div>
         )}
-        {stations.map((s, i) => {
-          const isDone = !!done[i];
+
+        <div className="rm-progress">
+          <div className="rm-progress-bar"><span style={{ width: `${pct}%` }} /></div>
+          <div className="rm-progress-text">
+            {faNum(doneCount)} از {faNum(total)} مرحله — {faNum(pct)}٪
+          </div>
+        </div>
+      </div>
+
+      {confirmDelete && (
+        <div className="rm-confirm">
+          <span>این مسیر و پیشرفتش حذف شود؟</span>
+          <div className="rm-confirm-actions">
+            <button type="button" className="account-outline-btn" onClick={() => setConfirmDelete(false)}>لغو</button>
+            <button type="button" className="trade-danger-btn" onClick={removeRoadmap}>حذف</button>
+          </div>
+        </div>
+      )}
+
+      {/* مرحله‌ها */}
+      <ol className="rm-steps">
+        {data.stations.map((st, i) => {
+          const isDone = !!done[String(i)];
           return (
-            <div key={i} className={`tm-station clickable ${isDone ? "past" : ""}`}>
-              <div className={`tm-marker mono${squashIdx === i ? " squash" : ""}`} onClick={() => toggle(i)}>
-                <span className="tmm-num">{faNum(i + 1)}</span>
-                <svg className="tmm-check" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12.5l4.5 4.5L19 7.5" stroke="var(--bg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="tm-title">{s.t}</div>
-              {!!s.items?.length && (
-                <ul className="tm-item-list">
-                  {s.items.map((it, ii) => (
-                    <li key={ii}>
+            <li key={i} className={`rm-step${isDone ? " done" : ""}`}>
+              <button type="button" className="rm-step-num" onClick={() => toggle(i)}
+                      aria-label={isDone ? "برگرداندن به انجام‌نشده" : "تمام شد"}>
+                {isDone ? <Check size={15} /> : faNum(i + 1)}
+              </button>
+
+              <div className="rm-step-body">
+                <div className="rm-step-head">
+                  <h2>{st.t}</h2>
+                  {st.weeks ? <span className="rm-step-weeks">{faNum(st.weeks)} هفته</span> : null}
+                </div>
+
+                {st.goal && (
+                  <div className="rm-goal"><Target size={13} /> <span>{st.goal}</span></div>
+                )}
+
+                <ul className="rm-items">
+                  {st.items.map((it, j) => (
+                    <li key={j}>
                       <a href={searchUrl(it, data.topic)} target="_blank" rel="noopener noreferrer">
-                        {it}
-                        <ExternalLink size={11} />
+                        {it}<ExternalLink size={11} />
                       </a>
                     </li>
                   ))}
                 </ul>
-              )}
-            </div>
+
+                {st.practice && (
+                  <div className="rm-box rm-practice">
+                    <b>تمرین</b>
+                    <span>{st.practice}</span>
+                  </div>
+                )}
+                {st.checkpoint && (
+                  <div className="rm-box rm-checkpoint">
+                    <b>کی تمام است؟</b>
+                    <span>{st.checkpoint}</span>
+                  </div>
+                )}
+
+                {!!st.sessions?.length && (
+                  <div className="rm-sessions">
+                    {st.sessions.map((ses, j) => {
+                      sessionCursor += 1;
+                      const n = sessionCursor;
+                      const key = `s${i}-${j}`;
+                      const sesDone = !!done[key];
+                      return (
+                        <div key={j} className={`rm-session${sesDone ? " done" : ""}`}>
+                          <div className="rm-session-head">
+                            <button
+                              type="button"
+                              className="rm-session-num"
+                              onClick={() => toggleKey(key)}
+                              aria-label={sesDone ? "برگرداندن به انجام‌نشده" : "این جلسه انجام شد"}
+                            >
+                              {sesDone ? <Check size={13} /> : faNum(n)}
+                            </button>
+                            <div className="rm-session-title">
+                              <b>جلسه‌ی {faNum(n)}</b> — {ses.title}
+                            </div>
+                          </div>
+
+                          {ses.goal && <div className="rm-session-goal">{ses.goal}</div>}
+
+                          <div className="rm-session-label">توی این جلسه چیکار کن</div>
+                          <ol className="rm-session-steps">
+                            {ses.steps.map((stp, k) => <li key={k}>{stp}</li>)}
+                          </ol>
+
+                          {ses.howTo && (
+                            <>
+                              <div className="rm-session-label">چطور یاد بگیر</div>
+                              <div className="rm-session-text">{ses.howTo}</div>
+                            </>
+                          )}
+
+                          {!!ses.refs?.length && (
+                            <>
+                              <div className="rm-session-label">منابع این جلسه</div>
+                              <ul className="rm-session-refs">
+                                {ses.refs.map((r, k) => (
+                                  <li key={k}>
+                                    <a href={searchUrl(r, data.topic)} target="_blank" rel="noopener noreferrer">
+                                      {r}<ExternalLink size={11} />
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+
+                          {ses.checkpoint && (
+                            <div className="rm-session-check">
+                              <b>کی این جلسه تمام است؟</b> {ses.checkpoint}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <RoadmapStepToProgram title={st.t} topic={data.topic} />
+              </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
 
-      <div className="tm-extra">
-        <div className="domain-sub">نکات کلیدی</div>
-        <ul>{(data.tips || []).map((t, i) => <li key={i}>{t}</li>)}</ul>
-      </div>
+      {/* بخش‌های پایانی */}
+      {!!data.mistakes?.length && (
+        <RoadmapList icon={<AlertTriangle size={15} />} title="اشتباه‌های رایج" items={data.mistakes} tone="warn" />
+      )}
+      {!!data.tips?.length && (
+        <RoadmapList icon={<Lightbulb size={15} />} title="نکته‌های کاربردی" items={data.tips} />
+      )}
       {!!data.proTips?.length && (
-        <div className="tm-extra">
-          <div className="domain-sub">مسیر حرفه‌ای‌شدن</div>
-          <ul>{data.proTips.map((t, i) => <li key={i}>{t}</li>)}</ul>
-        </div>
+        <RoadmapList icon={<Sparkles size={15} />} title="برای حرفه‌ای شدن" items={data.proTips} />
       )}
       {!!data.books?.length && (
-        <div className="tm-extra">
-          <div className="domain-sub">منابع پیشنهادی</div>
-          <ul>
-            {data.books.map((t, i) => (
-              <li key={i}>
-                <a href={searchUrl(t, data.topic)} target="_blank" rel="noopener noreferrer">
-                  {t}
-                  <ExternalLink size={11} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <RoadmapList icon={<BookOpen size={15} />} title="منابع" items={data.books} topic={data.topic} />
       )}
+
+      <RoadmapDisclaimer />
     </section>
+  );
+}
+
+function RoadmapList({
+  icon, title, items, topic, tone,
+}: { icon: React.ReactNode; title: string; items: string[]; topic?: string; tone?: "warn" }) {
+  return (
+    <div className={`rm-section${tone === "warn" ? " warn" : ""}`}>
+      <div className="rm-section-title">{icon} {title}</div>
+      <ul className="rm-section-list">
+        {items.map((x, i) => (
+          <li key={i}>
+            {topic ? (
+              <a href={searchUrl(x, topic)} target="_blank" rel="noopener noreferrer">
+                {x}<ExternalLink size={11} />
+              </a>
+            ) : x}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

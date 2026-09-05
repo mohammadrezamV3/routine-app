@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest) {
 
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
-  if (!isSuperAdmin && (!checkRateLimit(`profile-edit:${userId}`, 20, 60 * 60 * 1000) || !checkRateLimit(`profile-edit-ip:${ip}`, 40, 60 * 60 * 1000))) {
+  if (!isSuperAdmin && (!(await checkRateLimit(`profile-edit:${userId}`, 20, 60 * 60 * 1000)) || !(await checkRateLimit(`profile-edit-ip:${ip}`, 40, 60 * 60 * 1000)))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
