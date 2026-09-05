@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
@@ -35,6 +35,9 @@ export function TradeNotesPanel({
   const [query, setQuery] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
+  // کلیک روی کارت فقط نمایشِ متن می‌ده (viewing) — ویرایشِ واقعی
+  // (editing) فقط از زیرِ منوی سه‌نقطه باز می‌شه، طبقِ درخواستِ صریح.
+  const [viewing, setViewing] = useState<Note | null>(null);
   const [editing, setEditing] = useState<Note | null>(null);
   const { pendingKey, error: actionError, run } = useAsyncAction();
 
@@ -129,7 +132,7 @@ export function TradeNotesPanel({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.04, ease: [0.22, 1, 0.36, 1] }}
             className="trade-surface trade-note-card"
-            onClick={() => setEditing(n)}
+            onClick={() => setViewing(n)}
           >
             <span className="trade-account-stripe" style={{ background: n.color }} />
             {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
@@ -140,6 +143,7 @@ export function TradeNotesPanel({
                 <TradeKebabMenu
                   label={`گزینه‌های ${n.title}`}
                   actions={[
+                    { label: "ویرایش", icon: <Pencil size={14} />, onClick: () => setEditing(n) },
                     {
                       label: n.pinned ? "برداشتن سنجاق" : "سنجاق کردن",
                       icon: n.pinned ? <PinOff size={14} /> : <Pin size={14} />,
@@ -167,6 +171,10 @@ export function TradeNotesPanel({
         ))}
       </div>
 
+      {viewing && !editing && (
+        <NoteViewer note={viewing} calSystem={calSystem} onClose={() => setViewing(null)} />
+      )}
+
       {(creating || editing) && (
         <NoteEditor
           note={editing}
@@ -177,6 +185,52 @@ export function TradeNotesPanel({
         />
       )}
     </div>
+  );
+}
+
+// نمایشِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند، نه ویرایش
+// را (درخواستِ صریح). ویرایشِ واقعی فقط از زیرِ منوی سه‌نقطه در دسترس است.
+function NoteViewer({
+  note, calSystem, onClose,
+}: {
+  note: Note;
+  calSystem: CalSystem;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <LockBodyScroll />
+      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-panel open" role="dialog" aria-modal="true">
+        <div className="modal-head">
+          <div className="modal-title">
+            <span className="trade-note-view-dot" style={{ background: note.color }} />
+            {note.title}
+          </div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+        </div>
+
+        {!!note.tags.length && (
+          <div className="trade-tag-row" style={{ marginBottom: 4 }}>
+            {note.tags.map((t) => (
+              <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>{t.name}</span>
+            ))}
+          </div>
+        )}
+
+        <div className="trade-note-view-body">
+          {note.content ? note.content : <span className="trade-note-view-empty">متنی نوشته نشده</span>}
+        </div>
+
+        <div className="trade-note-view-foot">
+          آخرین ویرایش: {formatTradeDateTime(note.updatedAt, calSystem)}
+        </div>
+
+        <div className="trade-modal-actions">
+          <button type="button" className="account-outline-btn" onClick={onClose}>بستن</button>
+        </div>
+      </div>
+    </>
   );
 }
 

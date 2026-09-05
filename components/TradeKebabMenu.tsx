@@ -49,7 +49,7 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
       <button
         ref={btnRef}
         type="button"
-        className="trade-icon-btn"
+        className="trade-icon-btn trade-kebab-trigger"
         aria-label={label}
         onClick={(e) => {
           e.preventDefault();
