@@ -6,11 +6,6 @@ import { ROADMAP_DAYS, RoadmapSchedule, addMinutes, addRoadmapToRoutine } from "
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "@/components/Spinner";
 
-const SUGGESTIONS = [
-  "طراحی UI/UX", "گیتار", "زبان اسپانیایی", "مدیریت زمان",
-  "عکاسی", "برنامه‌نویسی پایتون", "سرمایه‌گذاری در بورس", "نویسندگی خلاق",
-];
-
 const LOADING_STEPS = [
   "در حال تحلیل موضوع…",
   "در حال بریدنِ مسیر به جلسه‌های هم‌اندازه‌ی وقتت…",
@@ -121,19 +116,6 @@ export function RoadmapWizard({ onClose, onCreated }: { onClose: () => void; onC
                 onChange={(e) => { setTopic(e.target.value); setError(null); }}
                 onKeyDown={(e) => { if (e.key === "Enter") goSchedule(); }}
               />
-
-              <label>یا یکی از این‌ها</label>
-              <div className="rm-wizard-chips">
-                {SUGGESTIONS.map((sug) => (
-                  <span
-                    key={sug}
-                    className={`day-pill${topic === sug ? " on" : ""}`}
-                    onClick={() => { setTopic(sug); setError(null); }}
-                  >
-                    {sug}
-                  </span>
-                ))}
-              </div>
 
               {error && <div className="form-inline-error">{error}</div>}
 
