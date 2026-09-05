@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       message: {
         select: {
           id: true, symbol: true, body: true, createdAt: true, deletedAt: true,
-          user: { select: { username: true, name: true } },
+          user: { select: { id: true, username: true, name: true } },
         },
       },
     },
@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
         createdAt: r.message.createdAt.toISOString(),
         deleted: !!r.message.deletedAt,
         author: r.message.user.name?.trim() || r.message.user.username || "کاربر",
+        authorId: r.message.user.id,
       },
     })),
   });

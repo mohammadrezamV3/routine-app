@@ -2,21 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircleWarning } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatCurrencyAmount, formatDateShort, formatDateTime, formatNumber, formatUsdMicros } from "@/lib/adminFormat";
+import { CHAT_MODERATION_ACTIONS, ChatModerationAction } from "@/lib/tradeChat";
 
 type Detail = {
   user: {
     id: string; name: string | null; lastName: string | null; email: string | null; phone: string | null; username: string | null;
     market: string; locale: string; isSuperAdmin: boolean; isBlocked: boolean; blockedAt: string | null; createdAt: string;
     gender: string | null; birthDate: string | null;
+    chatBanUntil: string | null; chatDisabled: boolean; chatWarnAt: string | null; chatWarnNote: string | null; chatWarnSeenAt: string | null;
     subscriptions: { id: string; status: string; interval: string; startDate: string; currentPeriodEnd: string; canceledAt: string | null; plan: { nameFa: string; currency: string; priceMonthly: number }; payments: { id: string; amount: number; currency: string; paidAt: string | null; refundedAt: string | null; provider: string }[] }[];
     moduleAccess: { module: string; active: boolean; expiresAt: string | null }[];
     loginEvents: { id: string; provider: string; ip: string | null; createdAt: string }[];
   };
   activity: { dailyEntries: number; exerciseLogs: number; foodLogs: number; tradeEntries: number; roadmaps: number };
   aiUsage: { requests: number; inputTokens: number; outputTokens: number; costUsdMicros: number };
+  chatModerationHistory: { id: string; action: string; meta: any; createdAt: string }[];
 };
 
 export default function AdminUserDetailPage() {
@@ -41,6 +44,32 @@ export default function AdminUserDetailPage() {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ blocked: next }),
     });
     if (res.ok) setData({ ...data, user: { ...data.user, isBlocked: next } });
+  }
+
+  const [modPending, setModPending] = useState<ChatModerationAction | null>(null);
+
+  async function applyModeration(action: ChatModerationAction) {
+    if (!data) return;
+    const label = CHAT_MODERATION_ACTIONS.find((a) => a.value === action)?.label || action;
+    if (action !== "ENABLE_CHAT" && !confirm(`«${label}» برای این کاربر اعمال بشه؟`)) return;
+    const note = action === "WARNING" ? (prompt("متنِ اخطار (اختیاری):") || "").trim() : "";
+    setModPending(action);
+    try {
+      const res = await fetch("/api/admin/chat-moderation", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: id, action, note: note || undefined }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setData({
+          ...data,
+          user: { ...data.user, chatBanUntil: d.user.chatBanUntil, chatDisabled: d.user.chatDisabled, chatWarnAt: d.user.chatWarnAt, chatWarnNote: d.user.chatWarnNote },
+          chatModerationHistory: [{ id: `local-${Date.now()}`, action: `chat.${action.toLowerCase()}`, meta: note ? { note } : null, createdAt: new Date().toISOString() }, ...data.chatModerationHistory],
+        });
+      }
+    } finally {
+      setModPending(null);
+    }
   }
 
   if (notFound) return <EmptyState message="کاربر پیدا نشد" />;
@@ -77,6 +106,65 @@ export default function AdminUserDetailPage() {
         <div className="admin-kpi-tile"><span className="admin-kpi-label">تاریخ ثبت‌نام</span><span className="admin-kpi-value" style={{ fontSize: 14 }}>{formatDateShort(u.createdAt)}</span></div>
         <div className="admin-kpi-tile"><span className="admin-kpi-label">وضعیت</span><span className="admin-kpi-value" style={{ fontSize: 14 }}>{u.isBlocked ? "مسدود" : "فعال"}</span></div>
         <div className="admin-kpi-tile"><span className="admin-kpi-label">درخواست‌های AI</span><span className="admin-kpi-value" style={{ fontSize: 14 }}>{formatNumber(data.aiUsage.requests)}</span></div>
+      </div>
+
+      <div className="admin-chart-card">
+        <div className="admin-chart-head">
+          <span className="admin-chart-title"><MessageCircleWarning size={15} style={{ verticalAlign: "-2px", marginLeft: 6 }} />چتِ ترید</span>
+        </div>
+
+        <div className="admin-section-hint" style={{ marginTop: 0, marginBottom: 12 }}>
+          {u.chatDisabled ? (
+            <span className="admin-badge red">چت برای این کاربر غیرفعال شده</span>
+          ) : u.chatBanUntil && new Date(u.chatBanUntil).getTime() > Date.now() ? (
+            <span className="admin-badge amber">بن تا {formatDateTime(u.chatBanUntil)}</span>
+          ) : (
+            <span className="admin-badge green">آزاد برای چت</span>
+          )}
+          {u.chatWarnAt && (!u.chatWarnSeenAt || u.chatWarnSeenAt < u.chatWarnAt) && (
+            <span className="admin-badge amber" style={{ marginRight: 6 }}>اخطارِ دیده‌نشده</span>
+          )}
+        </div>
+
+        {!u.isSuperAdmin && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {CHAT_MODERATION_ACTIONS.filter((a) => a.value !== "ENABLE_CHAT").map((a) => (
+              <button
+                key={a.value} type="button" className="admin-btn danger"
+                disabled={!!modPending}
+                onClick={() => applyModeration(a.value)}
+              >
+                {modPending === a.value ? "در حال اعمال…" : a.label}
+              </button>
+            ))}
+            {(u.chatBanUntil || u.chatDisabled) && (
+              <button
+                type="button" className="admin-btn"
+                disabled={!!modPending}
+                onClick={() => applyModeration("ENABLE_CHAT")}
+              >
+                {modPending === "ENABLE_CHAT" ? "در حال اعمال…" : "رفعِ محدودیت"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {data.chatModerationHistory.length > 0 && (
+          <div className="admin-table-wrap" style={{ marginTop: 14 }}>
+            <table className="admin-table">
+              <thead><tr><th>اقدام</th><th>یادداشت</th><th>زمان</th></tr></thead>
+              <tbody>
+                {data.chatModerationHistory.map((h) => (
+                  <tr key={h.id}>
+                    <td>{CHAT_MODERATION_ACTIONS.find((a) => `chat.${a.value.toLowerCase()}` === h.action)?.label || h.action}</td>
+                    <td>{h.meta?.note || "—"}</td>
+                    <td style={{ direction: "ltr", textAlign: "right" }}>{formatDateTime(h.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="admin-chart-card">

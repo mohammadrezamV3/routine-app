@@ -5378,8 +5378,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   padding:11px; display:flex; flex-direction:column; gap:11px;
 }
 
-/* موبایل: ارتفاعِ ثابتِ سخاوتمندانه. دسکتاپ (پایین‌تر): هرچه از خانه‌ی
-   گرید مانده، یعنی چارت خودش تا کفِ صفحه کش می‌آید. */
+/* موبایل: ارتفاعِ ثابتِ سخاوتمندانه (نه بیشتر — طبقِ اصلاحِ صریحِ کاربر،
+   خواسته «عریض‌تر» بود نه «درازتر»؛ عرض با breakoutِ زیر حل می‌شود، نه
+   این ارتفاع). دسکتاپ (پایین‌تر): هرچه از خانه‌ی گرید مانده، یعنی چارت
+   خودش تا کفِ صفحه کش می‌آید. */
 .tv-chart-frame{
   position:relative; width:100%; border-radius:13px; overflow:hidden;
   height:clamp(440px, calc(100vh - 190px), 820px);
@@ -5388,6 +5390,43 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 @media (min-width:1024px){
   .tv-chart-frame{ flex:1; height:auto; min-height:0; }
 }
+
+/* موبایل: عریض‌تر — طبقِ درخواستِ صریح. کارتِ چارت (فقط همین یکی، نه
+   بقیه‌ی خانه‌های `.tv-page`) با همان ترفندِ breakoutِ `.ticker-bar`
+   (100vw + مارجینِ منفیِ نصفِ ویوپورت، هم‌جهت در LTR/RTL) از پدینگِ
+   ۲۰پیکسلیِ `body` و سقفِ ۶۲۰پیکسلیِ `.wrap` بیرون می‌زند و تا لبه‌های
+   واقعیِ صفحه می‌رود؛ فقط یک گوشه‌ی کوچک برای این‌که به لبه نچسبد. */
+@media (max-width:1023px){
+  .tv-chart-card{
+    width:100vw; max-width:none; position:relative; left:50%; right:50%;
+    margin-left:-50vw; margin-right:-50vw;
+    padding:11px calc(11px + env(safe-area-inset-right)) 11px calc(11px + env(safe-area-inset-left));
+    border-radius:0; border-left:none; border-right:none;
+    box-sizing:border-box;
+  }
+}
+
+/* فول‌اسکرینِ چارت — روی خودِ `.tv-chart-card` صدا زده می‌شود (نه فقط
+   iframe) تا نوارِ جست‌وجوی نماد هم داخلِ فول‌اسکرین بماند. سه پیشوند برای
+   پوششِ مرورگرهای قدیمی‌تر؛ بدونِ webkit/moz روی بعضی موبایل‌ها اصلاً وارد
+   فول‌اسکرین نمی‌شود. */
+.tv-chart-card:fullscreen,
+.tv-chart-card:-webkit-full-screen,
+.tv-chart-card:-moz-full-screen{
+  width:100vw; height:100vh; max-width:none; border-radius:0; padding:10px;
+  background:var(--bg);
+}
+.tv-chart-card:fullscreen .tv-chart-frame,
+.tv-chart-card:-webkit-full-screen .tv-chart-frame,
+.tv-chart-card:-moz-full-screen .tv-chart-frame{
+  height:auto; flex:1; min-height:0;
+}
+.tv-chart-toolbar{ display:flex; align-items:center; gap:8px; }
+.tv-chart-toolbar > .tv-symbol-search{ flex:1; min-width:0; }
+/* اندازه‌اش با بقیه‌ی `.trade-icon-btn`های هم‌قدش یکی نیست چون این‌جا
+   کنارِ فیلدِ جست‌وجوی بلندتری می‌نشیند؛ بک‌گراند/بوردر را خودِ
+   `.trade-icon-btn` می‌دهد، این‌جا فقط اندازه است. */
+.tv-chart-fullscreen-btn{ flex-shrink:0; width:38px; height:38px; }
 .tv-chart-frame iframe{ width:100%; height:100%; border:0; display:block; transition:opacity .3s ease; }
 .tv-chart-loading{
   position:absolute; inset:0; z-index:2;
@@ -5518,6 +5557,24 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .chat-rules-list li{ font-size:11.5px; line-height:1.85; color:var(--muted); }
 .chat-rules-list li::marker{ color:var(--accent); }
 .chat-rules-accept{ width:100%; }
+
+.trade-chat-warning{
+  display:flex; align-items:center; gap:8px; margin-top:11px; padding:10px 12px;
+  border-radius:12px; background:rgba(229,168,60,.12); border:1px solid rgba(229,168,60,.3);
+  color:#E5A83C; font-size:11.5px; line-height:1.8;
+}
+.trade-chat-warning span{ flex:1; }
+.trade-chat-warning-dismiss{
+  flex-shrink:0; width:22px; height:22px; border-radius:999px; padding:0;
+  display:inline-flex; align-items:center; justify-content:center; color:inherit; background:transparent;
+}
+.trade-chat-warning-dismiss:hover{ background:rgba(229,168,60,.18); }
+
+.trade-chat-restricted{
+  margin-top:11px; padding:12px; border-radius:12px; text-align:center;
+  background:rgba(224,82,82,.1); border:1px solid rgba(224,82,82,.25);
+  color:#E05252; font-size:12px; line-height:1.9;
+}
 
 .trade-chat-composer{ display:flex; gap:8px; align-items:center; margin-top:11px; }
 .trade-chat-composer input{ flex:1; min-width:0; margin:0; }

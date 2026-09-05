@@ -8,7 +8,12 @@
 import { TRADE_PAIRS } from "./tradePairs";
 
 export const MAX_CHAT_BODY = 500;
-export const CHAT_PAGE_SIZE = 60;
+// طبقِ درخواستِ صریح: فقط ۲۰۰ پیامِ آخرِ هر اتاق نشان داده می‌شود و همان
+// تعداد هم نگه‌داری می‌شود — بعد از هر پیامِ تازه، قدیمی‌ترها فراتر از ۲۰۰تا
+// از دیتابیس هم حذف می‌شوند (نه فقط از نمایش). نگاه کن به POST در
+// app/api/trade/chat/route.ts.
+export const CHAT_PAGE_SIZE = 200;
+export const CHAT_RETENTION_LIMIT = 200;
 
 /** سقفِ ارسال: بیش از این در بازه‌ی زیر، یعنی اسپم */
 export const CHAT_RATE_LIMIT = 10;
@@ -61,6 +66,33 @@ export type ChatMessageDto = {
   mine: boolean;
   /** آیا همین کاربر قبلاً گزارشش کرده — تا دکمه دوباره فعال نباشد */
   reported: boolean;
+};
+
+/**
+ * سه سطحِ تعدیلِ چت — ادمین از پنلِ کاربر (`/admin/users/[id]`) هرکدام را
+ * که خودش صلاح بداند به کاربر می‌دهد؛ هیچ escalationِ خودکاری بینِ این سه
+ * سطح نیست. اخطار فقط اطلاع‌رسانی است، دو تای دیگر جلوی *فرستادنِ* پیامِ
+ * جدید را می‌گیرند (نه خواندنِ اتاق).
+ */
+export const CHAT_MODERATION_ACTIONS = [
+  { value: "WARNING", label: "اخطار" },
+  { value: "BAN_72H", label: "بن ۷۲ ساعته از چت" },
+  { value: "DISABLE_CHAT", label: "غیرفعال‌سازیِ دائمیِ چت" },
+  { value: "ENABLE_CHAT", label: "رفعِ محدودیت (بن/غیرفعال‌سازی)" },
+] as const;
+
+export type ChatModerationAction = (typeof CHAT_MODERATION_ACTIONS)[number]["value"];
+
+export function isChatModerationAction(v: unknown): v is ChatModerationAction {
+  return typeof v === "string" && CHAT_MODERATION_ACTIONS.some((a) => a.value === v);
+}
+
+/** وضعیتِ تعدیلِ چتِ خودِ کاربرِ درخواست‌دهنده — در پاسخِ GET برمی‌گردد. */
+export type ChatViewerModeration = {
+  canSend: boolean;
+  bannedUntil: string | null; // اگر بن ۷۲ساعته هنوز فعال باشد
+  disabled: boolean;
+  warning: { note: string | null; at: string } | null; // اخطارِ دیده‌نشده
 };
 
 /**

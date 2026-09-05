@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { getSetting, setSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { CAL_SYSTEM_KEY, CalSystem, TradeAccount, TradeTag } from "@/lib/tradeTypes";
@@ -101,12 +102,37 @@ export function TradeChartView() {
     setSetting(SYMBOL_KEY, next);
   }
 
+  // فول‌اسکرینِ چارت — روی خودِ کارتِ `.tv-chart-card` (نه فقط iframe) تا
+  // نوارِ جست‌وجوی نماد هم همراهش بماند.
+  const chartCardRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === chartCardRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  function toggleFullscreen() {
+    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+    chartCardRef.current?.requestFullscreen?.().catch(() => {});
+  }
+
   if (loading) return <PanelSkeleton />;
 
   return (
     <div className="tv-page" ref={pageRef}>
-      <div className="tv-chart-card">
-        <SymbolSearchField symbol={symbol} onChange={changeSymbol} />
+      <div className="tv-chart-card" ref={chartCardRef}>
+        <div className="tv-chart-toolbar">
+          <SymbolSearchField symbol={symbol} onChange={changeSymbol} />
+          <button
+            type="button"
+            className="trade-icon-btn tv-chart-fullscreen-btn"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? "خروج از حالت تمام‌صفحه" : "تمام‌صفحه"}
+            title={isFullscreen ? "خروج از حالت تمام‌صفحه" : "تمام‌صفحه"}
+          >
+            {isFullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+          </button>
+        </div>
         <TradingViewChart symbol={symbol} />
       </div>
 

@@ -5,8 +5,8 @@ import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import {
-  CHAT_PAGE_SIZE, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS, ChatMessageDto,
-  MAX_CHAT_BODY, normalizeRoomSymbol,
+  CHAT_PAGE_SIZE, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS, CHAT_RETENTION_LIMIT, ChatMessageDto,
+  ChatViewerModeration, MAX_CHAT_BODY, normalizeRoomSymbol,
 } from "@/lib/tradeChat";
 
 // اتاقِ گفت‌وگوی هر نماد. برخلافِ بقیه‌ی روت‌های ترید که داده‌ی خصوصیِ یک
@@ -22,6 +22,25 @@ const MESSAGE_SELECT = {
 } as const;
 
 type MessageRow = Prisma.TradeChatMessageGetPayload<{ select: typeof MESSAGE_SELECT }>;
+
+const MODERATION_SELECT = {
+  chatBanUntil: true, chatDisabled: true, chatWarnAt: true, chatWarnNote: true, chatWarnSeenAt: true,
+} as const;
+
+function moderationState(
+  u: Prisma.UserGetPayload<{ select: typeof MODERATION_SELECT }> | null,
+  isSuperAdmin: boolean
+): ChatViewerModeration {
+  if (!u || isSuperAdmin) return { canSend: true, bannedUntil: null, disabled: false, warning: null };
+
+  const bannedUntil = u.chatBanUntil && u.chatBanUntil.getTime() > Date.now() ? u.chatBanUntil.toISOString() : null;
+  const disabled = u.chatDisabled;
+  const warning = u.chatWarnAt && (!u.chatWarnSeenAt || u.chatWarnSeenAt < u.chatWarnAt)
+    ? { note: u.chatWarnNote, at: u.chatWarnAt.toISOString() }
+    : null;
+
+  return { canSend: !bannedUntil && !disabled, bannedUntil, disabled, warning };
+}
 
 function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): ChatMessageDto {
   return {
@@ -74,9 +93,12 @@ export async function GET(req: NextRequest) {
     : [];
   const reportedIds = new Set(reported.map((r) => r.messageId));
 
+  const viewer = await prisma.user.findUnique({ where: { id: guard.userId }, select: MODERATION_SELECT });
+
   return NextResponse.json({
     symbol,
     messages: rows.map((m) => serialize(m, guard.userId, reportedIds)),
+    moderation: moderationState(viewer, guard.isSuperAdmin),
   });
 }
 
@@ -92,6 +114,18 @@ export async function POST(req: NextRequest) {
   const body = clampText(String(payload?.body ?? "").trim(), MAX_CHAT_BODY);
   if (!body) return NextResponse.json({ error: "متن پیام خالی است" }, { status: 400 });
 
+  if (!guard.isSuperAdmin) {
+    const viewer = await prisma.user.findUnique({ where: { id: guard.userId }, select: MODERATION_SELECT });
+    const state = moderationState(viewer, false);
+    if (state.disabled) {
+      return NextResponse.json({ error: "دسترسیِ تو به این گفت‌وگو توسط مدیریت غیرفعال شده است" }, { status: 403 });
+    }
+    if (state.bannedUntil) {
+      const until = new Date(state.bannedUntil).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" });
+      return NextResponse.json({ error: `به‌دلیل تخلف تا ${until} از ارسال پیام محروم شده‌ای` }, { status: 403 });
+    }
+  }
+
   // سقفِ نرخ روی کاربر است نه IP: کاربر شناخته‌شده است و بستنِ IP در
   // شبکه‌های اشتراکی بی‌گناه‌ها را هم می‌گیرد.
   if (!(await checkRateLimit(`chat:${guard.userId}`, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS))) {
@@ -105,6 +139,21 @@ export async function POST(req: NextRequest) {
     data: { symbol, userId: guard.userId, body },
     select: MESSAGE_SELECT,
   });
+
+  // نگه‌داری فقط ۲۰۰ پیامِ آخرِ همین اتاق — طبقِ درخواستِ صریح، قدیمی‌ترها
+  // نه فقط از نمایش بلکه از دیتابیس هم واقعاً پاک می‌شوند (سیو نمی‌شوند).
+  // این کوئری روی هر پیامِ تازه اجرا می‌شود؛ برای حجمِ چتِ یک اتاق (چندتا
+  // پیام در دقیقه) این هزینه ناچیز است، پس صف/کرانِ جداگانه لازم نیست.
+  const surplus = await prisma.tradeChatMessage.findMany({
+    where: { symbol },
+    orderBy: { createdAt: "desc" },
+    skip: CHAT_RETENTION_LIMIT,
+    take: 50,
+    select: { id: true },
+  });
+  if (surplus.length) {
+    await prisma.tradeChatMessage.deleteMany({ where: { id: { in: surplus.map((m) => m.id) } } });
+  }
 
   return NextResponse.json({ message: serialize(created, guard.userId, new Set()) }, { status: 201 });
 }

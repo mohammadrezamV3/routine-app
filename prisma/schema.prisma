@@ -128,6 +128,16 @@ model User {
   isBlocked Boolean   @default(false)
   blockedAt DateTime?
 
+  // پنل Owner › تعدیلِ چتِ ترید — سه سطحِ مستقل که خودِ ادمین انتخاب می‌کنه
+  // (نه escalation خودکار): اخطار (فقط نمایشی، پیامِ کاربر را نمی‌بندد)،
+  // بن موقتِ ۷۲ساعته (chatBanUntil)، و غیرفعال‌سازیِ دائمیِ چت (chatDisabled).
+  // هر سه فقط جلوی *فرستادنِ* پیامِ جدید را می‌گیرند، نه خواندنِ اتاق.
+  chatBanUntil   DateTime?
+  chatDisabled   Boolean   @default(false)
+  chatWarnAt     DateTime? // آخرین اخطاری که ادمین صادر کرده
+  chatWarnNote   String? // متنِ همان اخطار
+  chatWarnSeenAt DateTime? // کاربر کِی دیدتش — null یا قدیمی‌تر از chatWarnAt یعنی هنوز ندیده
+
   market   Market // بازار کاربر — تعیین‌کننده ارز/پلن/مدل AI/زبان پیش‌فرض
   locale   String @default("fa") // fa | en
   timezone String @default("Asia/Tehran")
