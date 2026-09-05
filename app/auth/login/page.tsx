@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -43,7 +43,24 @@ export default function LoginPage() {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
   }
 
-  async function finalizeLogin() {
+  async function finalizeLogin(): Promise<boolean> {
+    // هیچ‌وقت فقط به خروجیِ signIn اعتماد نکن — یک بار نشستِ واقعی را از
+    // سرور بپرس و فقط اگر کاربرِ واقعی برگشت، ناوبری کن.
+    //
+    // چرا: خروجیِ signIn از روی *بدنه‌ی پاسخِ* /api/auth/callback ساخته
+    // می‌شود، و مهاجم با یک پروکسی (مثل Burp) می‌تواند آن بدنه را به شکلِ
+    // «موفق» بازنویسی کند حتی وقتی رمز غلط بوده و سرور هیچ کوکیِ نشستی
+    // نساخته. آن‌وقت router.push کاربر را به /weekly می‌بُرد و *ظاهرِ*
+    // ورود ساخته می‌شد (هرچند سرور همچنان همه‌چیز را ۴۰۱ می‌کرد و هیچ
+    // داده‌ی واقعی‌ای در دسترس نبود). getSession یک رفت‌وبرگشتِ تازه به
+    // سرور می‌زند که کوکیِ *واقعی* را می‌خواند، پس بازنویسیِ بدنه بی‌اثر
+    // می‌شود: نشستِ جعلی هیچ‌وقت کاربر ندارد.
+    const session = await getSession();
+    if (!(session?.user as any)?.id) {
+      setError("ورود ناموفق بود — دوباره امتحان کن");
+      return false;
+    }
+
     // لایه‌ی داده تا اینجا وضعیت «مهمان» رو کش کرده (و از localStorage
     // می‌خونده)؛ بدون این پاک‌سازی، چون این‌جا ناوبری کلاینتیه (نه ریلود
     // کامل)، صفحه‌ی بعدی همچنان داده‌ی مهمان رو نشون می‌داد.
@@ -51,6 +68,7 @@ export default function LoginPage() {
     // تا لود بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
     setAuthHintCookie();
     router.push("/weekly");
+    return true;
   }
 
   async function submitPassword(e: React.FormEvent) {
@@ -106,7 +124,9 @@ export default function LoginPage() {
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
       return;
     }
-    finalizeLogin();
+    setLoading(true);
+    const ok = await finalizeLogin();
+    if (!ok) setLoading(false);
   }
 
   async function submitOtp(e: React.FormEvent) {
@@ -123,9 +143,9 @@ export default function LoginPage() {
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
       return;
     }
-    setLoading(false);
-    if (res?.error || !res?.ok) { setError("کد وارد‌شده درست نیست یا منقضی شده"); return; }
-    finalizeLogin();
+    if (res?.error || !res?.ok) { setLoading(false); setError("کد وارد‌شده درست نیست یا منقضی شده"); return; }
+    const ok = await finalizeLogin();
+    if (!ok) setLoading(false);
   }
 
   if (twoFactor) {

@@ -36,6 +36,22 @@ async function provisionNewUser(userId: string) {
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
+  // امنیتِ کوکیِ نشست نباید بی‌صدا به پروتکلِ NEXTAUTH_URL وابسته باشد.
+  //
+  // پیش‌فرضِ next-auth این است: `useSecureCookies = NEXTAUTH_URL شروع‌شونده با
+  // https`. مشکلش اینجاست که این اپ پشتِ Cloudflare/nginx اجرا می‌شود و
+  // مرورگرِ کاربر همیشه https می‌بیند، ولی خودِ Node ممکن است http سرو کند
+  // و اپراتور NEXTAUTH_URL را http بگذارد (lib/siteUrl.ts دقیقاً همین حالتِ
+  // Cloudflare Flexible را توضیح می‌دهد). آن‌وقت کوکیِ نشست **بدونِ فلگِ
+  // Secure و بدونِ پیشوندِ `__Secure-`** ست می‌شد — یعنی روی یک درخواستِ
+  // اتفاقیِ http در معرضِ شنود قرار می‌گرفت.
+  //
+  // پس در production همیشه Secure می‌کنیم (پشتِ https کاملاً درست کار می‌کند)،
+  // با یک درِ فرار برای دیپلویِ واقعاً plain-http:  AUTH_COOKIE_SECURE=0.
+  useSecureCookies:
+    process.env.AUTH_COOKIE_SECURE != null
+      ? process.env.AUTH_COOKIE_SECURE === "1"
+      : process.env.NODE_ENV === "production",
   jwt: {
     // encode پیش‌فرض next-auth فقط از پارامتر maxAge استفاده می‌کنه و اصلا
     // token.exp رو نمی‌خونه؛ برای اینکه «به‌یاد داشته باش» تیک‌نخورده واقعا
