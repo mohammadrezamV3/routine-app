@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, Plus } from "lucide-react";
+import { ClipboardCheck, NotebookPen } from "lucide-react";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
 import { TradeFormModal } from "./TradeFormModal";
@@ -108,7 +108,7 @@ export function ChartTradePanel({
       <div className="trade-surface trade-chart-side tv-cell-entry">
         <div className="trade-panel-head">
           <span className="trade-panel-title">
-            <Plus size={16} /> ثبت معامله
+            <NotebookPen size={16} /> ثبت معامله
           </span>
         </div>
 
@@ -141,7 +141,7 @@ export function ChartTradePanel({
                 onClick={() => setFormOpen(true)}
                 disabled={!selectedAccount}
               >
-                <Plus size={15} /> ثبت معامله
+                <NotebookPen size={15} /> ثبت معامله
               </button>
             </>
           )}

@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Flag, Loader2, MessagesSquare, Send, Trash2 } from "lucide-react";
+import { Flag, Loader2, MessagesSquare, Send, ShieldAlert, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import {
-  CHAT_REPORT_REASONS, CHAT_RULES, ChatMessageDto, ChatReportReason, MAX_CHAT_BODY,
+  CHAT_REPORT_REASONS, CHAT_RULES, ChatMessageDto, ChatReportReason, ChatViewerModeration, MAX_CHAT_BODY,
 } from "@/lib/tradeChat";
 import { getSetting, setSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -35,6 +35,9 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   // `null` یعنی هنوز از سرور نخوانده‌ایم — در آن حالت هیچ‌کدام را نشان
   // نمی‌دهیم تا فرمِ نوشتن یک لحظه بپرد و بعد جایش قوانین بیاید.
   const [rulesAccepted, setRulesAccepted] = useState<boolean | null>(null);
+  const [moderation, setModeration] = useState<ChatViewerModeration | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [warningDismissing, setWarningDismissing] = useState(false);
   const { pendingKey, error: actionError, run } = useAsyncAction();
 
   useEffect(() => {
@@ -60,11 +63,16 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
     if (incremental && sinceRef.current) qs.set("since", sinceRef.current);
     const res = await fetch(`/api/trade/chat?${qs}`);
     if (!res.ok) {
-      if (!incremental) setLoading(false);
+      // پولینگِ پس‌زمینه خطا نشان نمی‌دهد (یک شکستِ موقت نباید هر ۸ثانیه
+      // پیامِ خطا چشمک بزند) ولی بارگذاریِ اول باید — وگرنه اتاق «خالی» به
+      // نظر می‌رسد درحالی‌که واقعاً درخواست شکست خورده.
+      if (!incremental) { setLoading(false); setLoadError("اتاق بارگذاری نشد — اتصال یا دسترسی را چک کن"); }
       return;
     }
+    if (!incremental) setLoadError(null);
     const data = await res.json();
     const incoming: ChatMessageDto[] = data.messages || [];
+    if (data.moderation) setModeration(data.moderation);
 
     setMessages((prev) => {
       if (!incremental) return incoming;
@@ -80,6 +88,17 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
     if (last) sinceRef.current = last.createdAt;
     if (!incremental) setLoading(false);
   }, [symbol]);
+
+  async function dismissWarning() {
+    if (warningDismissing) return;
+    setWarningDismissing(true);
+    try {
+      await fetch("/api/trade/chat/ack-warning", { method: "POST" });
+      setModeration((prev) => (prev ? { ...prev, warning: null } : prev));
+    } finally {
+      setWarningDismissing(false);
+    }
+  }
 
   // عوض‌شدنِ نماد یعنی اتاقِ دیگری — همه‌چیز از نو
   useEffect(() => {
@@ -167,7 +186,8 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
         }}
       >
         {loading && <div className="trade-chat-empty is-loading">در حال بارگذاری…</div>}
-        {!loading && !messages.length && (
+        {!loading && loadError && <div className="trade-chat-empty">{loadError}</div>}
+        {!loading && !loadError && !messages.length && (
           <div className="trade-chat-empty">
             هنوز پیامی در این اتاق نیست — تحلیلت را اولین نفر بنویس.
           </div>
@@ -212,42 +232,64 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
 
       {actionError && <div className="trade-form-error">{actionError}</div>}
 
-      {rulesAccepted === false && (
-        <div className="chat-rules">
-          <div className="chat-rules-title">پیش از شرکت در گفت‌وگو</div>
-          <ul className="chat-rules-list">
-            {CHAT_RULES.map((r) => <li key={r}>{r}</li>)}
-          </ul>
-          <button
-            type="button"
-            className="trade-primary-btn chat-rules-accept"
-            onClick={() => { setRulesAccepted(true); setSetting(SETTING_KEYS.tradeChatRulesAccepted, true); }}
-          >
-            قوانین را می‌پذیرم
+      {moderation?.warning && (
+        <div className="trade-chat-warning">
+          <ShieldAlert size={15} />
+          <span>
+            اخطار از سمتِ مدیریت{moderation.warning.note ? `: ${moderation.warning.note}` : "."}
+          </span>
+          <button type="button" className="trade-chat-warning-dismiss" onClick={dismissWarning} disabled={warningDismissing} aria-label="متوجه شدم">
+            <X size={13} />
           </button>
         </div>
       )}
 
-      {rulesAccepted === true && (
-      <form
-        className="trade-chat-composer"
-        onSubmit={(e) => { e.preventDefault(); send(); }}
-      >
-        <input
-          className="wsearch-newform-name trade-glass-field"
-          value={draft}
-          maxLength={MAX_CHAT_BODY}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="پیام خود را بنویسید…"
-          aria-label="متن پیام"
-        />
-        <button
-          type="submit" className="trade-chat-send"
-          disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
-        >
-          {pendingKey === "send" ? <Loader2 size={16} className="trade-spin" /> : <Send size={16} />}
-        </button>
-      </form>
+      {moderation && (moderation.disabled || moderation.bannedUntil) ? (
+        <div className="trade-chat-restricted">
+          {moderation.disabled
+            ? "دسترسیِ تو به این گفت‌وگو توسط مدیریت غیرفعال شده است."
+            : `تا ${new Date(moderation.bannedUntil!).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" })} از ارسال پیام محروم شده‌ای.`}
+        </div>
+      ) : (
+        <>
+          {rulesAccepted === false && (
+            <div className="chat-rules">
+              <div className="chat-rules-title">پیش از شرکت در گفت‌وگو</div>
+              <ul className="chat-rules-list">
+                {CHAT_RULES.map((r) => <li key={r}>{r}</li>)}
+              </ul>
+              <button
+                type="button"
+                className="trade-primary-btn chat-rules-accept"
+                onClick={() => { setRulesAccepted(true); setSetting(SETTING_KEYS.tradeChatRulesAccepted, true); }}
+              >
+                قوانین را می‌پذیرم
+              </button>
+            </div>
+          )}
+
+          {rulesAccepted === true && (
+          <form
+            className="trade-chat-composer"
+            onSubmit={(e) => { e.preventDefault(); send(); }}
+          >
+            <input
+              className="wsearch-newform-name trade-glass-field"
+              value={draft}
+              maxLength={MAX_CHAT_BODY}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="پیام خود را بنویسید…"
+              aria-label="متن پیام"
+            />
+            <button
+              type="submit" className="trade-chat-send"
+              disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
+            >
+              {pendingKey === "send" ? <Loader2 size={16} className="trade-spin" /> : <Send size={16} />}
+            </button>
+          </form>
+          )}
+        </>
       )}
 
       {reporting && (
