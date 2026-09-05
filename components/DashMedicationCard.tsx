@@ -10,7 +10,7 @@ import { isoLocal } from "@/lib/jalali";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import {
   Medication, MAX_MEDICATIONS, doseIntervalHours, doseMinutesOfDay, getMedications,
-  medicationDaysLeft, minutesToDoseTime, setMedications,
+  medicationDaysLeft, minutesToDoseTime, setMedications, setMedicationsChecked,
 } from "@/lib/medications";
 
 const todayIso = isoLocal(new Date());
@@ -50,10 +50,16 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
     await setMedications(next);
   }
 
+  // طبق درخواست صریح: اگر ذخیره واقعاً شکست بخورد (شبکه/سرور)، فرم باید
+  // بفهمد — قبلاً setMedications هر خطایی را بی‌صدا می‌بلعید و فرم همیشه
+  // «ثبت شد» نشان می‌داد، حتی وقتی چیزی ذخیره نشده بود.
   async function saveMedication(med: Medication) {
     const current = meds ?? [];
     const exists = current.some((m) => m.id === med.id);
-    await persist(exists ? current.map((m) => (m.id === med.id ? med : m)) : [...current, med]);
+    const next = exists ? current.map((m) => (m.id === med.id ? med : m)) : [...current, med];
+    const result = await setMedicationsChecked(next);
+    if (!result.ok) throw new Error(result.error);
+    setMeds(next);
     // بدون اجازه‌ی نوتیف مرورگر، این یادآوری‌ها هیچ‌وقت دیده نمی‌شن
     if (getNotificationPermission() !== "granted") await requestNotificationPermission();
   }

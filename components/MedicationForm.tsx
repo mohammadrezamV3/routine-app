@@ -44,8 +44,18 @@ export function MedicationForm({
     initial ? isoToJalali(initial.startDate) : toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())
   );
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // طبقِ درخواستِ صریح، هر خطا زیرِ همون فیلدش نشان داده می‌شه (نه یک پیامِ
+  // کلیِ مشترک ته فرم) — تا مشخص باشه دقیقاً کدوم مقدار مشکل داره.
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [timesError, setTimesError] = useState<string | null>(null);
+  const [durationError, setDurationError] = useState<string | null>(null);
+  const [timeError, setTimeError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+
+  function clearErrors() {
+    setNameError(null); setTimesError(null); setDurationError(null); setTimeError(null); setSaveError(null);
+  }
 
   // پیش‌نمایش زنده‌ی ساعت نوبت‌ها — کاربر همون‌جا می‌بینه «۴ بار در روز» با
   // شروع ۰۸:۰۰ دقیقا یعنی چه ساعت‌هایی، به‌جای اینکه بعد ثبت غافلگیر بشه.
@@ -62,37 +72,49 @@ export function MedicationForm({
 
   async function submit() {
     if (status !== "idle") return;
+    clearErrors();
+
     const trimmed = name.trim();
-    if (!trimmed) { setError("اسم دارو رو وارد کن"); return; }
+    if (!trimmed) { setNameError("اسم دارو رو وارد کن"); return; }
 
     const times = Number(timesPerDay);
     if (!Number.isFinite(times) || times < MIN_TIMES_PER_DAY || times > MAX_TIMES_PER_DAY) {
-      setError(`تعداد دفعات در روز باید بین ${MIN_TIMES_PER_DAY} تا ${MAX_TIMES_PER_DAY} باشه`);
-      return;
-    }
-    const days = Number(durationDays);
-    if (!Number.isFinite(days) || days < 1 || days > MAX_DURATION_DAYS) {
-      setError(`طول دوره باید بین ۱ تا ${MAX_DURATION_DAYS} روز باشه`);
+      setTimesError(`تعداد دفعات در روز باید بین ${MIN_TIMES_PER_DAY} تا ${MAX_TIMES_PER_DAY} باشه`);
       return;
     }
     const time = toEnDigits(firstDoseTime).trim();
-    if (!/^\d{1,2}:\d{2}$/.test(time)) { setError("ساعت اولین نوبت رو کامل وارد کن"); return; }
+    if (!/^\d{1,2}:\d{2}$/.test(time)) { setTimeError("ساعت اولین نوبت رو کامل وارد کن"); return; }
 
-    setError(null);
+    const days = Number(durationDays);
+    if (!Number.isFinite(days) || days < 1 || days > MAX_DURATION_DAYS) {
+      setDurationError(`طول دوره باید بین ۱ تا ${MAX_DURATION_DAYS} روز باشه`);
+      return;
+    }
+
     setStatus("loading");
     const [gy, gm, gd] = [startJalali[0], startJalali[1], startJalali[2]];
     const startDate = isoLocal(jalaliToGregorianApprox(gy, gm, gd));
 
-    await onSave({
-      id: initial?.id ?? newMedicationId(),
-      name: trimmed,
-      timesPerDay: Math.round(times),
-      firstDoseTime: time,
-      startDate,
-      durationDays: Math.round(days),
-      notify: initial?.notify ?? true,
-      ...(note.trim() ? { note: note.trim() } : {}),
-    });
+    // قبلاً onSave بدون try/catch صدا زده می‌شد: اگر ذخیره واقعاً شکست
+    // می‌خورد (شبکه/سرور)، این تابع throw می‌کرد و setStatus("success")
+    // هیچ‌وقت اجرا نمی‌شد — دکمه برای همیشه روی «در حال ثبت…» قفل می‌ماند،
+    // بدون هیچ پیامی که بگوید مشکل چیست.
+    try {
+      await onSave({
+        id: initial?.id ?? newMedicationId(),
+        name: trimmed,
+        timesPerDay: Math.round(times),
+        firstDoseTime: time,
+        startDate,
+        durationDays: Math.round(days),
+        notify: initial?.notify ?? true,
+        ...(note.trim() ? { note: note.trim() } : {}),
+      });
+    } catch (err) {
+      setStatus("idle");
+      setSaveError(err instanceof Error ? err.message : "ثبت دارو ناموفق بود — دوباره امتحان کن");
+      return;
+    }
     setStatus("success");
     setTimeout(onClose, 350);
   }
@@ -114,29 +136,33 @@ export function MedicationForm({
             className="wsearch-newform-name"
             placeholder="مثلا آموکسی‌سیلین"
             value={name}
-            onChange={(e) => { setName(e.target.value); setError(null); }}
+            onChange={(e) => { setName(e.target.value); setNameError(null); }}
           />
+          {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{nameError}</div>}
 
           <label style={{ marginTop: 14, display: "block" }}>چند بار در روز؟</label>
           <SegmentedTabs
             active={timesPerDay}
-            onChange={(v) => setTimesPerDay(v)}
+            onChange={(v) => { setTimesPerDay(v); setTimesError(null); }}
             options={["1", "2", "3", "4", "6"].map((n) => ({ value: n, label: `${n} بار` }))}
           />
+          {timesError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{timesError}</div>}
 
           <div className="wsearch-date-row" style={{ marginTop: 14 }}>
             <div className="time-field">
               <span className="time-field-label">ساعت اولین نوبت</span>
-              <TimeInput value={firstDoseTime} onChange={setFirstDoseTime} />
+              <TimeInput value={firstDoseTime} onChange={(v) => { setFirstDoseTime(v); setTimeError(null); }} />
+              {timeError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{timeError}</div>}
             </div>
             <div className="time-field">
               <span className="time-field-label">طول دوره (روز)</span>
               <NumberInput
                 className="wsearch-add-time"
                 value={durationDays}
-                onChange={(v) => { setDurationDays(v); setError(null); }}
+                onChange={(v) => { setDurationDays(v); setDurationError(null); }}
                 placeholder="۷"
               />
+              {durationError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{durationError}</div>}
             </div>
           </div>
 
@@ -164,7 +190,7 @@ export function MedicationForm({
             <span className="med-preview-times mono" dir="ltr">{doseTimes.join(" · ")}</span>
           </div>
 
-          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{error}</div>}
+          {saveError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{saveError}</div>}
 
           <div className="wsearch-newform-actions">
             <button type="button" className="wsearch-submit-btn" onClick={submit} disabled={status !== "idle"}>

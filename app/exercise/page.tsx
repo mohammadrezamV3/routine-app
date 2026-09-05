@@ -36,7 +36,7 @@ export default function BodybuildingPage() {
       {/* قبلاً این صفحه هیچ عنوانی نداشت — با اینکه «بدنسازی» عنوانِ
           واقعیِ همین صفحه‌ست (هم در منو، هم در هاب ترید مشابهش). تب
           فعلی (برنامه‌ی تمرینی/کالری‌شمار) روی همین عنوان تأثیری ندارد. */}
-      <div className="trade-head-row">
+      <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
         <span className="page-title-icon">{ICONS.exercise}</span>
         <h1>بدنسازی</h1>
       </div>

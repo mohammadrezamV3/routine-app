@@ -395,7 +395,7 @@ export default function WeeklyPage() {
 
       <section className="dash-breakout">
         <div className="weekly-align-end">
-          <div className="weekly-head-row">
+          <div className="weekly-head-row" style={{ justifyContent: "flex-start" }}>
             <span className="page-title-icon">{ICONS.weekly}</span>
             <h1>برنامه هفتگی</h1>
           </div>

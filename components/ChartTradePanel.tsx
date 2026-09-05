@@ -136,7 +136,7 @@ export function ChartTradePanel({
 
               <button
                 type="button"
-                className="trade-primary-btn"
+                className="account-outline-btn"
                 style={{ width: "100%", marginTop: 12 }}
                 onClick={() => setFormOpen(true)}
                 disabled={!selectedAccount}
