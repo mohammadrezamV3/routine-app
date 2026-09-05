@@ -82,7 +82,7 @@ export function TradeChecklistsPanel({
       {/* همه‌ی چک‌لیست‌ها داخل یک باکس واحدند، نه هرکدام یک کارت شناور روی
           بک‌گراند اصلی (درخواست صریح). */}
       {!!checklists.length && (
-        <div className="trade-surface trade-checklist-box">
+        <div className="trade-surface trade-checklist-box trade-page-box">
           {checklists.map((c, idx) => (
             <motion.div
               key={c.id}
@@ -180,7 +180,7 @@ function ChecklistEditor({
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel open" role="dialog" aria-modal="true">
+      <div className="modal-panel open modal-panel-notransform" role="dialog" aria-modal="true">
         <div className="modal-head">
           <div className="modal-title">{checklist ? "ویرایش چک‌لیست" : "چک‌لیست جدید"}</div>
           <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>

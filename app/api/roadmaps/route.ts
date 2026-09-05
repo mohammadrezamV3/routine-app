@@ -64,23 +64,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message || "خطا در ساخت رودمپ" }, { status: 500 });
   }
 
-  const roadmap = await prisma.roadmap.create({
-    data: {
-      userId,
-      topic: cleanTopic,
-      title: generated.title,
-      note: generated.note,
-      stations: generated.stations as any,
-      tips: generated.tips as any,
-      proTips: generated.pro as any,
-      books: generated.books as any,
-      mistakes: generated.mistakes as any,
-      level: generated.level ?? null,
-      totalWeeks: generated.totalWeeks ?? null,
-      schedule: (cleanSchedule as any) ?? undefined,
-      generatedByAi: true,
-    },
-  });
+  let roadmap;
+  try {
+    roadmap = await prisma.roadmap.create({
+      data: {
+        userId,
+        topic: cleanTopic,
+        title: generated.title,
+        note: generated.note,
+        stations: generated.stations as any,
+        tips: generated.tips as any,
+        proTips: generated.pro as any,
+        books: generated.books as any,
+        mistakes: generated.mistakes as any,
+        level: generated.level ?? null,
+        totalWeeks: generated.totalWeeks ?? null,
+        schedule: (cleanSchedule as any) ?? undefined,
+        generatedByAi: true,
+      },
+    });
+  } catch (err) {
+    // اگه دیتابیس migrationِ ستون‌های جدید (schedule/mistakes/level/
+    // totalWeeks) رو نداشته باشه، این کوئری با خطای «column does not
+    // exist» شکست می‌خوره — نه یه باگِ منطقی. AI قبلاً صدا زده شده (هزینه
+    // متحمل شده)، پس حداقل یه پیامِ روشن بده، نه ۵۰۰یِ خامِ Next.
+    console.error("roadmap.create failed", err);
+    return NextResponse.json(
+      { error: "ذخیره‌ی رودمپ در دیتابیس شکست خورد — احتمالاً دیتابیس migration ندارد (prisma migrate deploy لازمه)" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ ok: true, roadmap });
 }

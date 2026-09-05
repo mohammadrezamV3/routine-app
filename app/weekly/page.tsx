@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
+import { ICONS } from "@/components/NavDrawer";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -395,6 +396,7 @@ export default function WeeklyPage() {
       <section className="dash-breakout">
         <div className="weekly-align-end">
           <div className="weekly-head-row">
+            <span className="page-title-icon">{ICONS.weekly}</span>
             <h1>برنامه هفتگی</h1>
           </div>
 

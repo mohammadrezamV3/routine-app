@@ -137,22 +137,13 @@ if (cluster.isPrimary) {
       }
     }
 
-    // ساعتِ ۳ بامداد (هم‌زمانِ ساعتِ deploy/cron.example) — کمترین ترافیکِ
-    // کاربر، و قبل از شروعِ روزِ معاملاتیِ اکثرِ کاربرها.
-    function msUntilNext3am() {
-      const now = new Date();
-      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0, 0);
-      if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
-      return next.getTime() - now.getTime();
-    }
-
-    // یک بار کمی بعدِ بالا آمدنِ سرور (که یه دیپلویِ تازه بدونِ داده نمونه)،
-    // و بعدش هر ۲۴ ساعت.
+    // طبقِ درخواستِ صریح: هر ۱۰ دقیقه (نه فقط یک‌بار در روز) — چون
+    // actual/forecastِ رویدادها دقیقاً لحظه‌ی انتشارِ خبر پر می‌شود، نه
+    // شبِ قبل؛ با کرانِ روزانه، actual تا ۲۴ساعتِ بعد از خودِ خبر روی
+    // سایت دیده نمی‌شد. یک بار کمی بعدِ بالا آمدنِ سرور (دیپلویِ تازه بدونِ
+    // داده نمونه)، و بعدش هر ۱۰ دقیقه.
     setTimeout(syncEconomicCalendarNow, 30_000).unref();
-    setTimeout(function scheduleDaily() {
-      syncEconomicCalendarNow();
-      setInterval(syncEconomicCalendarNow, 24 * 60 * 60 * 1000).unref();
-    }, msUntilNext3am()).unref();
+    setInterval(syncEconomicCalendarNow, 10 * 60 * 1000).unref();
   }
 } else {
   // هر worker همون سرورِ standalone نکست رو مستقیم اجرا می‌کنه؛ رفتارش با

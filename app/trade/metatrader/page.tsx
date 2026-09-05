@@ -38,7 +38,7 @@ function AccountsForMt() {
   }
 
   return (
-    <div className="trade-account-grid">
+    <div className="trade-surface trade-account-grid">
       {rows.map((a, i) => (
         <motion.div
           key={a.id}

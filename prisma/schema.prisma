@@ -1031,6 +1031,16 @@ model TradeChecklistItem {
   checklist   TradeChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
   text        String
   order       Int
+  // آیا کاربر همین الان روی صفحه‌ی چک‌لیست تیکش زده — طبق درخواستِ صریح
+  // («چک‌لیستم ذخیره نمیشه») این باید واقعاً persist شود، نه فقط یک
+  // useStateِ محلی که با رفرش/خروج از صفحه گم می‌شود. جدا از
+  // TradeEntry.checklistState (که یک اسنپ‌شاتِ ثابتِ لحظه‌ی ثبتِ معامله‌ست،
+  // هیچ‌وقت دستکاری نمی‌شود) — این فیلد وضعیتِ زنده‌ی «اجرای فعلی»ِ همین
+  // چک‌لیست است. ویرایشِ آیتم‌های چک‌لیست (نام/ترتیب) همچنان همه‌ی ردیف‌ها
+  // را حذف/دوباره می‌سازد (app/api/trade/checklists/route.ts PATCH)، پس
+  // این تیک‌ها را هم آن‌موقع پاک می‌کند — که پذیرفتنی است (ویرایشِ تعریفِ
+  // چک‌لیست، طبیعتاً یعنی از نو).
+  checked     Boolean        @default(false)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
