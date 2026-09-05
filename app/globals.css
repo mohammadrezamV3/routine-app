@@ -5378,16 +5378,32 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   padding:11px; display:flex; flex-direction:column; gap:11px;
 }
 
-/* موبایل: طبقِ درخواستِ صریح بلندتر از قبل (قبلاً حداکثر ۸۲۰ با کفِ ۴۴۰
-   بود؛ خیلی از فضای واقعیِ صفحه استفاده نمی‌شد). دسکتاپ (پایین‌تر): هرچه
-   از خانه‌ی گرید مانده، یعنی چارت خودش تا کفِ صفحه کش می‌آید. */
+/* موبایل: ارتفاعِ ثابتِ سخاوتمندانه (نه بیشتر — طبقِ اصلاحِ صریحِ کاربر،
+   خواسته «عریض‌تر» بود نه «درازتر»؛ عرض با breakoutِ زیر حل می‌شود، نه
+   این ارتفاع). دسکتاپ (پایین‌تر): هرچه از خانه‌ی گرید مانده، یعنی چارت
+   خودش تا کفِ صفحه کش می‌آید. */
 .tv-chart-frame{
   position:relative; width:100%; border-radius:13px; overflow:hidden;
-  height:clamp(560px, calc(100vh - 130px), 920px);
+  height:clamp(440px, calc(100vh - 190px), 820px);
   background:rgba(var(--surface-rgb),.06);
 }
 @media (min-width:1024px){
   .tv-chart-frame{ flex:1; height:auto; min-height:0; }
+}
+
+/* موبایل: عریض‌تر — طبقِ درخواستِ صریح. کارتِ چارت (فقط همین یکی، نه
+   بقیه‌ی خانه‌های `.tv-page`) با همان ترفندِ breakoutِ `.ticker-bar`
+   (100vw + مارجینِ منفیِ نصفِ ویوپورت، هم‌جهت در LTR/RTL) از پدینگِ
+   ۲۰پیکسلیِ `body` و سقفِ ۶۲۰پیکسلیِ `.wrap` بیرون می‌زند و تا لبه‌های
+   واقعیِ صفحه می‌رود؛ فقط یک گوشه‌ی کوچک برای این‌که به لبه نچسبد. */
+@media (max-width:1023px){
+  .tv-chart-card{
+    width:100vw; max-width:none; position:relative; left:50%; right:50%;
+    margin-left:-50vw; margin-right:-50vw;
+    padding:11px calc(11px + env(safe-area-inset-right)) 11px calc(11px + env(safe-area-inset-left));
+    border-radius:0; border-left:none; border-right:none;
+    box-sizing:border-box;
+  }
 }
 
 /* فول‌اسکرینِ چارت — روی خودِ `.tv-chart-card` صدا زده می‌شود (نه فقط
