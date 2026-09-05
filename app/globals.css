@@ -4897,19 +4897,19 @@ body[data-theme="light"] .trade-account-menu{ background:rgba(255,255,255,.92); 
   transition:border-color .18s ease;
 }
 .trade-search:focus-within{ border-color:var(--accent); }
-/* .wsearch-newform-name.trade-glass-field (دو کلاس، اسپسیفیسیتی ۰۲۰) خودش
-   بک‌گراند/بردر/بلور جدا داره و روی ریست زیر (که قبلا فقط ۰۱۱ بود) غالب
-   می‌شد — نتیجه‌ش دو لایه‌ی شیشه‌ای روی هم با شعاع بلور متفاوت بود، یعنی
-   داخل فیلد یه رنگ دیگه از بقیه‌ی کپسول نشون می‌داد. حالا با
-   `input.trade-glass-field` (۰۲۱) قطعی برنده می‌شه و فقط یک لایه‌ی شیشه‌ای
-   (خود .trade-search) باقی می‌مونه. */
-/* اسپسیفیسیتی عمدا با body شروع می‌شود: قانون تم‌دار
-   `body:not([data-theme="light"]) .wsearch-newform-name.trade-glass-field`
-   (۰,۳,۰) از انتخابگر قبلی (۰,۲,۱) قوی‌تر بود و بک‌گراند/بردر خودش را روی
-   ورودی می‌گذاشت — نتیجه‌اش یک کپسول داخل کپسول بود، همان «نوار جست‌وجو
-   دو بخشه» که گزارش شد. */
-body .trade-search input.trade-glass-field,
-body[data-theme="light"] .trade-search input.trade-glass-field{
+/* باگِ «نوار جست‌وجوی دورنگی» (چندبار گزارش شد، چندبار هم «فیکس» شد ولی
+   برنمی‌گشت) — ریشه‌ش یه خطای محاسبه‌ی اسپسیفیسیتی توی خودِ فیکسِ قبلی بود:
+   قانونِ تم‌دارِ `body:not([data-theme="light"]) .wsearch-newform-name.trade-glass-field`
+   سه کلاس داره (:not() اسپسیفیسیتیِ آرگومانش، یعنی [data-theme]، رو به
+   ارث می‌بره) = (۰,۳,۱). فیکسِ قبلی (`body .trade-search input.trade-glass-field`)
+   فقط دو کلاس داشت = (۰,۲,۲) — که توی مقایسه‌ی اسپسیفیسیتی، تعدادِ کلاس‌ها
+   اول مقایسه می‌شه، پس ۲<۳ یعنی قانونِ قدیمی هنوز می‌بُرد و بک‌گراند/بردرِ
+   خودش (رزین یه لایه‌ی شیشه‌ای جدا) رو روی اینپوت می‌ذاشت — همون کپسولِ
+   توی کپسول. اینجا با اضافه‌کردنِ `.wsearch-newform-name` به همون سه کلاس،
+   اسپسیفیسیتی به (۰,۳,۲) می‌رسه که واقعاً برنده می‌شه (تستِ getComputedStyle
+   قبل/بعدِ این فیکس تأیید کرد). */
+body .trade-search input.wsearch-newform-name.trade-glass-field,
+body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-field{
   border:none; background:none; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
   padding:11px 0; flex:1; min-width:0; width:auto; outline:none;
@@ -5021,11 +5021,6 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 /* ── تقویم اقتصادی ─────────────────────────────────────────── */
 .trade-cal-filter-bar{ display:flex; align-items:center; gap:10px; margin:12px 0 4px; }
 .trade-cal-filters{ padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both; }
-.trade-cal-day{ margin-top:20px; }
-.trade-cal-day-title{
-  font-size:11px; color:#00A86B; font-weight:700; margin-bottom:9px;
-  padding-bottom:8px; border-bottom:1px solid var(--line);
-}
 .trade-cal-event{
   display:flex; align-items:flex-start; gap:11px; padding:12px 4px;
   border-bottom:1px solid var(--line);
@@ -5066,6 +5061,34 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .tc-col-num{ text-align:center; color:var(--text); }
 .tc-col-num.muted{ color:var(--muted2); }
 .trade-cal-impact-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.trade-cal-tr{ cursor:pointer; transition:background .15s ease; }
+@media (hover:hover){ .trade-cal-tr:hover{ background:rgba(var(--accent-rgb),.05); } }
+.trade-cal-tr.expanded{ background:rgba(var(--accent-rgb),.07); border-bottom-color:transparent; }
+
+/* ناوبریِ روز-به-روز — مثلِ خودِ ForexFactory («‹ Today: Sep 3 ›») به‌جای
+   دکمه‌ی «روزهای بیشتر» که همه‌ی روزها رو یک‌جا زیرِ هم می‌ریخت. */
+.trade-cal-daynav{ display:flex; align-items:center; justify-content:center; gap:6px; margin:14px 0 6px; }
+.trade-cal-daynav-label{ font-size:13px; font-weight:700; color:var(--text); min-width:170px; text-align:center; }
+.trade-cal-daynav-today{ margin-right:8px; }
+
+/* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
+   شاخص رو نشون می‌ده؛ چون واقعاً از رکوردهای قبلیِ همین جدول میاد (نه
+   فبریکیت‌شده)، تعدادش می‌تونه کمتر از حداکثر باشه یا حتی خالی. */
+.trade-cal-history{
+  padding:10px 8px 14px; margin-bottom:2px; border-bottom:1px solid var(--line);
+  animation:tradeFadeIn .18s ease both;
+}
+.trade-cal-history-status{
+  display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted2); padding:6px 4px;
+}
+.trade-cal-history-table{ font-size:11px; }
+.trade-cal-history-head, .trade-cal-history-row{
+  display:grid; grid-template-columns:1fr 60px 60px 60px; gap:6px; padding:5px 6px;
+}
+.trade-cal-history-head{ color:var(--muted2); font-weight:700; font-size:9.5px; }
+.trade-cal-history-row{ color:var(--text); border-top:1px solid var(--line); }
+.trade-cal-history-row span:not(.mono){ color:var(--muted); }
+.trade-cal-history-head span:not(:first-child), .trade-cal-history-row span:not(:first-child){ text-align:center; }
 
 /* ── ساعت فارکس ────────────────────────────────────────────── */
 .forex-market-state{
@@ -5098,17 +5121,37 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 /* ── یادداشت‌ها ────────────────────────────────────────────── */
 .trade-note-grid{ display:flex; flex-direction:column; gap:11px; margin-top:16px; }
 @media (min-width:700px){ .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
-.trade-note-card{ position:relative; padding:16px 19px 16px 16px; overflow:hidden; cursor:pointer; }
+/* کارتِ یادداشت — قبلاً چون هیچ‌وقت پیش‌نمایشِ متن نداشت، فاصله‌ی عنوان تا
+   فوتر با flex معمولی خیلی زیاد/نامتوازن به‌نظر می‌رسید (خصوصاً یادداشتِ
+   کوتاه بدونِ تگ) و ردیفِ پایینی (تاریخ+تگ) با flex-wrap معمولی به‌جای
+   شکستنِ تمیز، نصفه می‌شکست. حالا فلکس-کالمن با گپِ ثابت (نه
+   justify-content:space-between که فاصله رو به بازوهای انتهایی می‌داد) و
+   خودِ فوتر همیشه یک ستونه (نه ردیفِ wrap-پذیر) — نتیجه‌ش یک کارتِ فشرده و
+   قابل‌پیش‌بینیه، صرف‌نظر از این‌که چقدر محتوا/تگ داره. */
+.trade-note-card{
+  position:relative; padding:15px 18px 14px 16px; overflow:hidden; cursor:pointer;
+  display:flex; flex-direction:column; gap:10px;
+}
 @media (hover:hover){ .trade-note-card:hover{ border-color:var(--accent); } }
 .trade-note-card:active{ transform:scale(.99); }
 .trade-note-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
 .trade-note-title{ font-size:14px; font-weight:700; }
-.trade-note-body{ font-size:12px; color:var(--muted); line-height:1.95; margin-top:8px; white-space:pre-wrap; }
+.trade-note-body{ font-size:12px; color:var(--muted); line-height:1.95; white-space:pre-wrap; }
 .trade-note-foot{
-  display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
-  margin-top:12px; font-size:10px; color:var(--muted2);
+  display:flex; flex-direction:column; align-items:flex-start; gap:6px;
+  font-size:10px; color:var(--muted2);
 }
+.trade-note-foot .trade-tag-row{ margin:0; }
 .trade-note-foot .trade-tag-chip{ font-size:9px; padding:2px 7px; }
+
+/* پاپ‌آپِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند */
+.trade-note-view-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-left:8px; vertical-align:middle; }
+.trade-note-view-body{
+  margin-top:10px; font-size:13px; line-height:2; color:var(--text);
+  white-space:pre-wrap; word-break:break-word; max-height:50vh; overflow-y:auto;
+}
+.trade-note-view-empty{ color:var(--muted2); font-style:italic; }
+.trade-note-view-foot{ margin-top:14px; font-size:10.5px; color:var(--muted2); }
 
 /* ── اتصال متاتریدر ────────────────────────────────────────── */
 .trade-mt-panel{ margin-top:24px; padding:18px 20px; }
@@ -5229,6 +5272,17 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-checklist-row-main .trade-account-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-checklist-row-count{ margin-right:auto; flex-shrink:0; font-size:11.5px; color:var(--muted); }
 @media (hover:hover){ .trade-checklist-row-main:hover .trade-account-name{ color:var(--accent); } }
+
+/* دکمه‌ی محرکِ منوی سه‌نقطه — طبقِ درخواستِ صریح، دقیقاً هم‌شکلِ دکمه‌ی
+   سه‌نقطه‌ی «روتین من» (DashTaskRow): دایره‌ی کامل و ثابت (نه مربعِ گردِ
+   .trade-icon-btn که خودش رادیوسِ ۱۰px داره و برایِ خیلی دکمه‌های دیگه‌ی
+   ترید هم استفاده می‌شه، پس عمداً دست‌نخورده موند). خودِ منوی بازشونده
+   (.dash-context-menu/.wsearch-fab-option) از قبل بینِ ترید و روتین
+   مشترکه — فقط دکمه‌ی محرک فرق داشت. */
+.trade-kebab-trigger{
+  width:24px; height:24px; padding:0; border-radius:999px;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
 
 /* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
 .trade-note-kebab{ flex-shrink:0; margin-right:-6px; }
