@@ -140,26 +140,31 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
         </div>
       </div>
 
-      <div className="trade-checklist-items" style={{ marginTop: 16 }}>
-        {checklist.items.map((i) => (
-          <button
-            key={i.id}
-            type="button"
-            className={`trade-check-row${checkedState[i.id] ? " done" : ""}`}
-            onClick={() => toggleItem(i.id)}
-          >
-            <span className="trade-check-box" />
-            <span>{i.text}</span>
-          </button>
-        ))}
-        {!checklist.items.length && <div className="item-line empty">این چک‌لیست هنوز آیتمی ندارد</div>}
-      </div>
+      {/* طبقِ درخواستِ صریح: این صفحه هم داخلِ یک باکسِ صفحه‌بزرگ — هم‌الگویِ
+          یادداشت‌ها/چک‌لیست‌ها/ژورنال — نه آیتم‌های شناور مستقیم روی
+          بک‌گراندِ اصلی. */}
+      <div className="trade-surface trade-page-box trade-checklist-detail-box" style={{ marginTop: 16 }}>
+        <div className="trade-checklist-items">
+          {checklist.items.map((i) => (
+            <button
+              key={i.id}
+              type="button"
+              className={`trade-check-row${checkedState[i.id] ? " done" : ""}`}
+              onClick={() => toggleItem(i.id)}
+            >
+              <span className="trade-check-box" />
+              <span>{i.text}</span>
+            </button>
+          ))}
+          {!checklist.items.length && <div className="item-line empty">این چک‌لیست هنوز آیتمی ندارد</div>}
+        </div>
 
-      <div className="trade-checklist-card-foot" style={{ marginTop: 14 }}>
-        <span className="mono">{faNum(done)} / {faNum(checklist.items.length)}</span>
-        <button type="button" className="trade-primary-btn" onClick={startTrade} disabled={!activeAccounts.length}>
-          معامله
-        </button>
+        <div className="trade-checklist-card-foot" style={{ marginTop: 14 }}>
+          <span className="mono">{faNum(done)} / {faNum(checklist.items.length)}</span>
+          <button type="button" className="account-outline-btn" onClick={startTrade} disabled={!activeAccounts.length}>
+            معامله
+          </button>
+        </div>
       </div>
 
       <div className="domain-sub" style={{ margin: "26px 0 10px" }}>اخبار پیش‌رو</div>

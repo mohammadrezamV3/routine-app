@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Trash2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -107,7 +107,7 @@ export function TradeDetailDrawer({
             {!!entry.tags.length && (
               <div className="trade-tag-row">
                 {entry.tags.map((t) => (
-                  <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>
+                  <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
                     <span className="trade-tag-dot" style={{ background: t.color }} />{t.name}
                   </span>
                 ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { CSSProperties, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Loader2, Pencil, Trash2, Wallet, X } from "lucide-react";
@@ -257,7 +257,7 @@ function AccountRow({
         {!!a.tags.length && (
           <div className="trade-tag-row" style={{ marginTop: 10 }}>
             {a.tags.map((t) => (
-              <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>
+              <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
                 <span className="trade-tag-dot" style={{ background: t.color }} />
                 {t.name}
               </span>

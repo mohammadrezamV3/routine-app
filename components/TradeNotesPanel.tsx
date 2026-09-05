@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { CSSProperties, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Pencil, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
 import { TradeKebabMenu } from "./TradeKebabMenu";
@@ -103,7 +103,7 @@ export function TradeNotesPanel({
                 key={t.id}
                 type="button"
                 className={`trade-tag-chip${active ? " active" : ""}`}
-                style={active ? { borderColor: t.color, color: t.color } : undefined}
+                style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
                 onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
               >
                 <span className="trade-tag-dot" style={{ background: t.color }} />
@@ -166,7 +166,7 @@ export function TradeNotesPanel({
               {!!n.tags.length && (
                 <span className="trade-tag-row">
                   {n.tags.map((t) => (
-                    <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>{t.name}</span>
+                    <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>{t.name}</span>
                   ))}
                 </span>
               )}
@@ -218,7 +218,7 @@ function NoteViewer({
         {!!note.tags.length && (
           <div className="trade-tag-row" style={{ marginBottom: 4 }}>
             {note.tags.map((t) => (
-              <span key={t.id} className="trade-tag-chip active" style={{ borderColor: t.color, color: t.color }}>{t.name}</span>
+              <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>{t.name}</span>
             ))}
           </div>
         )}
@@ -227,7 +227,6 @@ function NoteViewer({
           <div className="trade-note-view-body">
             {note.content ? note.content : <span className="trade-note-view-empty">متنی نوشته نشده</span>}
           </div>
-          <button type="button" className="account-outline-btn" onClick={onClose}>بستن</button>
         </div>
       </div>
     </>

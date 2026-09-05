@@ -10,6 +10,7 @@ export default function TradeChecklistsPage() {
   return (
     <TradePageShell
       title="چک‌لیست"
+      noScroll
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
           + افزودن چک‌لیست

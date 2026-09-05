@@ -68,6 +68,11 @@ export function CaloriePanel() {
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
+  // شبکه‌ی ایمنی: اگه هر دلیلی (فچ گیرکرده، پاسخِ کندِ سرور، ...) بعد از
+  // چند ثانیه هنوز روی «در حال بارگذاری» مانده بودیم، به‌جای اسپینرِ ابدی
+  // (دقیقاً گزارشِ کاربر: «کالری‌شمار بالا نمیاد») یک پیامِ خطا با دکمه‌ی
+  // تلاشِ دوباره نشان بده.
+  const [loadStuck, setLoadStuck] = useState(false);
   const [needsAge, setNeedsAge] = useState(false);
 
   // انتخاب روز — طبق طرح کاربر، بالای صفحه یه نوار روزهای هفته‌ست که
@@ -175,8 +180,11 @@ export function CaloriePanel() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
+    setLoadStuck(false);
     loadTarget();
     loadHistory();
+    const t = setTimeout(() => setLoadStuck(true), 12_000);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -233,6 +241,21 @@ export function CaloriePanel() {
   }
 
   if (target === undefined) {
+    if (loadStuck) {
+      return (
+        <div className="item-line empty" style={{ marginTop: 10 }}>
+          بارگذاری کالری‌شمار خیلی طول کشید — اتصال اینترنت را چک کن.
+          <button
+            type="button"
+            className="account-outline-btn"
+            style={{ marginRight: 10 }}
+            onClick={() => { setLoadStuck(false); loadTarget(); }}
+          >
+            تلاش دوباره
+          </button>
+        </div>
+      );
+    }
     return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
   }
 

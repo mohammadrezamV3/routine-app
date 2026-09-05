@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { CSSProperties, useState } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, Plus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -36,7 +36,7 @@ export function TradeTagField({
               key={t.id}
               type="button"
               className={`trade-tag-chip${active ? " active" : ""}`}
-              style={active ? { borderColor: t.color, color: t.color } : undefined}
+              style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
               onClick={() => toggle(t.id)}
             >
               <span className="trade-tag-dot" style={{ background: t.color }} />

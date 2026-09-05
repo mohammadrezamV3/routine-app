@@ -86,7 +86,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
   }
 
   return (
-    <div className="trade-surface trade-mt-panel">
+    <div className="trade-surface trade-page-box trade-mt-panel">
       <div className="trade-mt-panel-head">
         <div className="domain-sub" style={{ margin: 0 }}>اتصال متاتریدر</div>
         <span className={`trade-mt-live${link?.connected ? " connected" : ""}`}>
@@ -162,15 +162,23 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
           {code ? (
             <div className="trade-mt-code-box">
               <div className="trade-stat-label">کد اتصال</div>
-              <div className="trade-mt-code mono">{code}</div>
+              <div className="trade-mt-code-row">
+                <div className="trade-mt-code mono">{code}</div>
+                <button
+                  type="button"
+                  className="trade-icon-btn trade-mt-copy-btn"
+                  onClick={copyCode}
+                  aria-label="کپی کد"
+                  title="کپی کد"
+                >
+                  {copied ? <Check size={15} /> : <Copy size={15} />}
+                </button>
+              </div>
               <div className="trade-mt-note">
                 این کد فقط یک‌بار مصرف می‌شود و
                 {codeExpires ? ` تا ${formatTradeDateTime(codeExpires, calSystem)} ` : " تا ۱۵ دقیقه "}
                 معتبر است. بعد از بستن این صفحه دیگر نمایش داده نمی‌شود.
               </div>
-              <button type="button" className="account-outline-btn" onClick={copyCode}>
-                {copied ? <><Check size={14} /> کپی شد</> : <><Copy size={14} /> کپی کد</>}
-              </button>
             </div>
           ) : (
             <button type="button" className="trade-primary-btn" onClick={requestCode} disabled={busy} style={{ marginTop: 14 }}>

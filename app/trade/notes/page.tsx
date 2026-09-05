@@ -10,6 +10,7 @@ export default function TradeNotesPage() {
   return (
     <TradePageShell
       title="یادداشت‌ها"
+      noScroll
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
           + افزودن یادداشت
