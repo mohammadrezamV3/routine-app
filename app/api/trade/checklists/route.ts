@@ -14,7 +14,7 @@ const MAX_ITEMS = MAX_CHECKLIST_ITEMS;
 
 const CHECKLIST_SELECT = {
   id: true, name: true, color: true, required: true, archived: true, order: true, note: true,
-  items: { select: { id: true, text: true, order: true }, orderBy: { order: "asc" } },
+  items: { select: { id: true, text: true, order: true, checked: true }, orderBy: { order: "asc" } },
 } as const;
 
 // چک‌لیست پیش‌فرض اولین ورود — نقطه‌ی شروع، کاملا قابل ویرایش/حذف

@@ -30,6 +30,14 @@ function addDays(d: Date, n: number): Date {
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
+/** شنبه‌ی همان هفته‌ای که d توش است — دقیقاً همان تعریفِ هفته‌ی «برنامه‌ی
+ * هفتگی»ِ روتین من (WEEK_ORDER، lib/schedule.ts)، نه یک هفته‌ی دلخواهِ تازه. */
+function weekStartOf(d: Date): Date {
+  const jsDay = d.getDay();
+  const diffFromSat = (jsDay - 6 + 7) % 7;
+  return addDays(startOfLocalDay(d), -diffFromSat);
+}
+const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 
 export function EconomicCalendarPanel() {
   // مثلِ خودِ ForexFactory: یک روز در یک لحظه، با فلشِ قبلی/بعدی — نه
@@ -138,21 +146,38 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
-      {/* ناوبریِ روز-به-روز، دقیقاً مثلِ خودِ ForexFactory — به‌جای دکمه‌ی
-          «روزهای بیشتر»ی که همه‌ی روزها رو زیرِ هم تلنبار می‌کرد. */}
+      {/* طبقِ درخواستِ صریح: این بخش هم داخلِ یک باکسِ صفحه‌بزرگ — هم‌الگویِ
+          چک‌لیست‌ها/یادداشت‌ها — نه یک ناحیه‌ی کوچیکِ شناور روی بک‌گراند. */}
+      <div className="trade-surface trade-page-box trade-cal-box">
+      {/* ناوبری — به‌جای «روزهای بیشتر»ی که همه‌چیز رو یک‌جا پشتِ هم
+          می‌ریخت، حالا مثلِ هفته‌ی «برنامه‌ی هفتگی»ِ روتین من (همان تعریفِ
+          هفته‌ی شنبه‌تا‌جمعه): یک ردیفِ ثابتِ ۷ روزِ کلیک‌پذیر، به‌جای فقط
+          یک فلشِ قبلی/بعدی که هیچ‌وقت نمی‌گفت «چند روزِ دیگه چی هست». */}
       <div className="trade-cal-daynav">
-        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, -1))} aria-label="روزِ قبل">
-          <ChevronRight size={18} />
+        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, -7))} aria-label="هفته‌ی قبل">
+          <ChevronRight size={16} />
         </button>
-        <span className="trade-cal-daynav-label ltr-inline">
-          {isSameDay(date, today) ? "Today: " : ""}
-          {enDayFmt.format(date)}
-        </span>
-        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, 1))} aria-label="روزِ بعد">
-          <ChevronLeft size={18} />
+        <div className="trade-cal-week-strip">
+          {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
+            <button
+              key={isoLocal(d)}
+              type="button"
+              className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
+              onClick={() => setDate(d)}
+            >
+              <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
+              <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
+            </button>
+          ))}
+        </div>
+        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, 7))} aria-label="هفته‌ی بعد">
+          <ChevronLeft size={16} />
         </button>
+      </div>
+      <div className="trade-cal-daynav-sub">
+        <span className="ltr-inline">{isSameDay(date, today) ? "Today: " : ""}{enDayFmt.format(date)}</span>
         {!isSameDay(date, today) && (
-          <button type="button" className="trade-ghost-btn trade-cal-daynav-today" onClick={() => setDate(today)}>
+          <button type="button" className="trade-ghost-btn" onClick={() => setDate(today)}>
             امروز
           </button>
         )}
@@ -235,6 +260,7 @@ export function EconomicCalendarPanel() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

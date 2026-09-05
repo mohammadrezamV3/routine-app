@@ -87,8 +87,8 @@ export function TradeAccountsPanel({
         <div className="trade-accounts-head">
           <div className="trade-section-title">حساب‌های معاملاتی</div>
         </div>
-        <div className="trade-account-grid">
-          {[0, 1, 2].map((i) => <div key={i} className="trade-surface trade-account-card trade-account-skel" />)}
+        <div className="trade-surface trade-account-grid">
+          {[0, 1, 2].map((i) => <div key={i} className="trade-account-card trade-account-skel" />)}
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export function TradeAccountsPanel({
         </div>
       )}
 
-      <div className="trade-account-grid">
+      <div className="trade-surface trade-account-grid">
         {accounts.map((a, i) => (
           <AccountRow
             key={a.id}

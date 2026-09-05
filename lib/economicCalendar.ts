@@ -51,16 +51,30 @@ export function currencyMeta(code: string) {
 }
 
 /**
- * منبع پیش‌فرض: فید هفتگی عمومی فارکس‌فکتوری.
+ * منبع پیش‌فرض: فیدهای هفتگیِ عمومیِ فارکس‌فکتوری.
  *
- * ست‌کردن `ECONOMIC_CALENDAR_URL` همچنان این را کنار می‌زند (برای وقتی فید
- * تجاری خریداری شد)، ولی بدون هیچ تنظیمی هم تقویم از همین پر می‌شود به‌جای
- * اینکه خالی بماند و منتظر ورود دستی ادمین باشد.
+ * چرا سه فایل، نه یکی: نسخه‌ی قبلی فقط `ff_calendar_thisweek.json` را
+ * می‌گرفت — یعنی به‌محضِ رد شدنِ یک هفته، رویدادهای آن (actual/تاریخچه)
+ * دیگر هیچ‌وقت دوباره fetch نمی‌شدند (چون از «this week» بیرون افتاده
+ * بودند) و رویدادهای بیش از یک هفته‌ی جلوتر هم اصلاً وجود نداشتند — دقیقاً
+ * گزارشِ کاربر: «داده‌های قدیمی نشون نمیده، روزهای بعدی رو هم نشون نمیده».
+ * فارکس‌فکتوریِ رایگان («nfs.faireconomy.media») فقط همین سه بازه‌ی ثابت
+ * را دارد (lastweek/thisweek/nextweek) — هیچ فیدِ رایگانِ «یک‌ماهه»ای وجود
+ * ندارد، پس «تا ماهِ آینده» را با صداقت به «حداکثرِ همین سه هفته» محدود
+ * می‌کنیم؛ فبریکیت‌کردنِ داده‌ای که منبع نمی‌دهد خلافِ اصلِ این ماژول است.
+ *
+ * ست‌کردن `ECONOMIC_CALENDAR_URL` همچنان همه‌ی این‌ها را کنار می‌زند (برای
+ * وقتی فیدِ تجاریِ واقعی خریداری شد) و فقط همان یک URL را می‌گیرد.
  *
  * توجه: در فید فارکس‌فکتوری فیلد `country` در واقع *کد ارز* است
  * («USD»/«EUR»)، نه کد کشور — نرمال‌ساز پایین همین را در نظر می‌گیرد.
  */
 export const DEFAULT_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
+export const DEFAULT_CALENDAR_URLS = [
+  "https://nfs.faireconomy.media/ff_calendar_lastweek.json",
+  "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+  "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
+];
 
 export type EconomicEventDto = {
   id: string;
@@ -171,16 +185,38 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
   return out;
 }
 
-/** فراخوانی منبع بیرونی — فقط از سمت سرور (کران) صدا زده می‌شود */
-export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
-  const url = process.env.ECONOMIC_CALENDAR_URL || DEFAULT_CALENDAR_URL;
-  const key = process.env.ECONOMIC_CALENDAR_API_KEY;
+async function fetchOneFeed(url: string, key: string | undefined): Promise<NormalizedEvent[]> {
   const res = await fetch(url, {
     headers: key ? { Authorization: `Bearer ${key}` } : undefined,
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`منبع تقویم اقتصادی پاسخ ${res.status} داد`);
+  if (!res.ok) throw new Error(`منبع تقویم اقتصادی (${url}) پاسخ ${res.status} داد`);
   return normalizeExternalEvents(await res.json());
+}
+
+/**
+ * فراخوانی منبع بیرونی — فقط از سمت سرور (کران) صدا زده می‌شود.
+ *
+ * وقتی `ECONOMIC_CALENDAR_URL` ست نشده (پیش‌فرض)، هر سه فیدِ فارکس‌فکتوری
+ * (هفته‌ی قبل/همین‌هفته/هفته‌ی بعد) گرفته و با هم merge می‌شوند تا هم
+ * تاریخچه‌ی هفته‌ی گذشته هم رویدادهای هفته‌ی پیشِ‌رو در دیتابیس بمانند —
+ * نه فقط «همین هفته». شکستِ یکی از سه فید کل sync را نمی‌شکند (مثلاً اگر
+ * فقط nextweek موقتاً در دسترس نبود، دو فیدِ دیگر همچنان ذخیره می‌شوند).
+ */
+export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
+  const key = process.env.ECONOMIC_CALENDAR_API_KEY;
+  const customUrl = process.env.ECONOMIC_CALENDAR_URL;
+  const urls = customUrl ? [customUrl] : DEFAULT_CALENDAR_URLS;
+
+  const results = await Promise.allSettled(urls.map((u) => fetchOneFeed(u, key)));
+  const events: NormalizedEvent[] = [];
+  const errors: string[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled") events.push(...r.value);
+    else errors.push(r.reason instanceof Error ? r.reason.message : String(r.reason));
+  }
+  if (!events.length && errors.length) throw new Error(errors.join(" | "));
+  return events;
 }
 
 /**

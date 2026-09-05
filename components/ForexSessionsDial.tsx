@@ -150,7 +150,15 @@ export function ForexSessionsDial({ now }: { now: Date }) {
               className={`fx-band${arc.open && marketOpen ? " open" : ""}`}
               strokeWidth={RING_W}
             />
-            <text className="fx-band-label" dominantBaseline="central">
+            {/* dominantBaseline:central روی متنِ ساده (اعدادِ ساعت/دقیقه)
+                درست کار می‌کند، ولی برای متنِ سوارشده روی یک <textPath>
+                نادیده گرفته می‌شود (تأییدشده با اندازه‌گیریِ واقعیِ
+                getBoundingClientRect) — این‌جا لیبل کاملاً بالای خودِ
+                منحنی می‌نشست، نه رویش. dy=".35em" (معادلِ نصفِ x-height،
+                ترفندِ استانداردِ centeringِ عمودیِ متنِ SVG وقتی
+                dominant-baseline در دسترس نیست) واقعاً رویِ خودِ منحنی
+                می‌نشاندش. */}
+            <text className="fx-band-label" dy=".35em">
               <textPath href={`#fx-lbl-${session.key}`} startOffset="50%" textAnchor="middle">
                 {session.latin}
               </textPath>

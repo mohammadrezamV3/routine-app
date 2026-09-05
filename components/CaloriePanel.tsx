@@ -139,22 +139,38 @@ export function CaloriePanel() {
     });
   }, [status]);
 
+  // بدون چکِ res.ok، یک ۵۰۰ که بدنه‌اش JSON نیست باعث می‌شد res.json()
+  // throw کند، هیچ‌جا catch نشود، و target تا ابد روی حالتِ اولیه‌ی
+  // undefined بماند — یعنی از دیدِ کاربر «کالری‌شمار بالا نمی‌آید»
+  // (اسکلتونِ «در حال بارگذاری…» بی‌نهایت). الگوی ExercisePanel.tsx.
   async function loadTarget() {
-    const res = await fetch("/api/calorie/target");
-    const data = await res.json();
-    setTarget(data.target ?? null);
-    setNeedsAge(!!data.needsAge);
+    try {
+      const res = await fetch("/api/calorie/target");
+      const data = res.ok ? await res.json() : null;
+      setTarget(data?.target ?? null);
+      setNeedsAge(!!data?.needsAge);
+    } catch {
+      setTarget(null);
+    }
   }
   async function loadEntries() {
-    const res = await fetch(`/api/calorie/log?date=${selectedIso}`);
-    const data = await res.json();
-    setEntries(data.entries || []);
+    try {
+      const res = await fetch(`/api/calorie/log?date=${selectedIso}`);
+      const data = res.ok ? await res.json() : null;
+      setEntries(data?.entries || []);
+    } catch {
+      setEntries([]);
+    }
   }
   async function loadHistory() {
-    const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
-    const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayIso}`);
-    const data = await res.json();
-    setHistoryEntries(data.entries || []);
+    try {
+      const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
+      const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayIso}`);
+      const data = res.ok ? await res.json() : null;
+      setHistoryEntries(data?.entries || []);
+    } catch {
+      setHistoryEntries([]);
+    }
   }
 
   useEffect(() => {

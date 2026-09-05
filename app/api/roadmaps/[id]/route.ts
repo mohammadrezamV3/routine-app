@@ -7,7 +7,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const roadmap = await prisma.roadmap.findFirst({ where: { id: params.id, userId } });
+  let roadmap;
+  try {
+    roadmap = await prisma.roadmap.findFirst({ where: { id: params.id, userId } });
+  } catch (err) {
+    // همون دلیلِ POST /api/roadmaps: ستونی که در schema.prisma هست ولی
+    // migration نخورده (findFirst بدون select همه‌ی ستون‌ها رو می‌خواد).
+    console.error("roadmap.findFirst failed", err);
+    return NextResponse.json(
+      { error: "خوندن رودمپ از دیتابیس شکست خورد — احتمالاً دیتابیس migration ندارد (prisma migrate deploy لازمه)" },
+      { status: 500 }
+    );
+  }
   if (!roadmap) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ roadmap });
 }

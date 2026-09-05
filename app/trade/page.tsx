@@ -29,7 +29,10 @@ export default function TradePage() {
 
   return (
     <section className="trade-desktop">
-      <h1>ترید</h1>
+      <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
+        <span className="page-title-icon">{ICONS.trade}</span>
+        <h1>ترید</h1>
+      </div>
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}

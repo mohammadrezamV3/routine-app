@@ -240,6 +240,14 @@
     color:var(--accent); text-transform:uppercase; margin-bottom:10px; font-weight:600;
   }
   h1{font-size:23px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px;}
+  /* آیکونِ کنارِ تایتلِ صفحه (بدنسازی/برنامه‌ی هفتگی/ترید) — بدونِ باکسِ
+     بک‌گراند، فقط خودِ خط‌ها هم‌رنگِ accent؛ svgِ آیکون‌های ICONS ابعادِ
+     ذاتی ندارند، این‌جا اندازه می‌گیرند. */
+  .page-title-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    flex-shrink:0; width:22px; height:22px; color:var(--accent);
+  }
+  .page-title-icon svg{ width:100%; height:100%; display:block; }
   .landing-section-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0;}
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
@@ -952,6 +960,21 @@
     animation:modalPopIn .38s cubic-bezier(.22,1,.36,1) both;
   }
   .modal-panel::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+  /* باگِ جابه‌جاییِ چک‌لیست: تنها مودالی که واقعاً داخلش drag/reorder
+     (framer-motion Reorder.Group، در TradeChecklistsPanel.tsx) هست همین
+     مودالِ ویرایشِ چک‌لیست است. centeringِ استانداردِ بالا با
+     transform:translate(-50%,-50%) روی خودِ .modal-panel یعنی هر
+     Reorder.Item زیرش یک جدِ transformـدار دارد — و درگ فریمر-موشن که
+     دلتای اشاره‌گر را با transformِ خودِ آیتم می‌سنجد، زیرِ یک جدِ
+     transformـدار درست حساب نمی‌شود (گلیچ می‌زند، آیتم واقعاً جا نمی‌خورد).
+     این نسخه با inset+margin:auto (بدونِ هیچ transform) سنتر می‌شود —
+     همان نتیجه‌ی بصری، بدونِ اینکه زیرِ Reorder چیزی transform‌دار بماند. */
+  @keyframes modalFadeInPlain{ from{ opacity:0; } to{ opacity:1; } }
+  .modal-panel.modal-panel-notransform{
+    inset:0; margin:auto; transform:none;
+    animation:modalFadeInPlain .22s ease both;
+  }
   /* نسخه‌ی لیکوئید گلس پاپ‌آپ (فقط دوستان) — عینا همون بک‌گراند/بلور
      .app-topbar (هدر سایت)، نه گرادیان تقریبا توپر قبلی. */
   .modal-panel.liquid-glass-panel{ overflow-x:hidden; background:var(--surface-2); }
@@ -2088,15 +2111,21 @@
      پشتش تقریبا شفاف دیده می‌شد. یه بک‌گراند تقریبا توپر مثل بقیه‌ی
      منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
   .dash-context-menu{ background:var(--surface-2); border-color:var(--surface-line); }
+  /* دقیقاً هم‌اندازه‌ی آیتم‌های منویِ سه‌نقطه‌ی «روتین من» (DashTaskRow/
+     DashMedicationCard: rounded-xl px-3 py-2 gap-2 text-[12-13px]، بدونِ
+     font-weight اضافه) — قبلاً فقط پوسته‌ی بیرونی (.dash-context-menu)
+     مشترک بود، خودِ دکمه‌ها رادیوس/پدینگ/سایزِ آیکونِ متفاوتی داشتند. */
   .wsearch-fab-option{
-    display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:9px; cursor:pointer;
-    font-size:12.5px; font-weight:600; color:var(--text); transition:background .12s ease;
+    display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; cursor:pointer;
+    font-size:13px; font-weight:400; color:var(--text); transition:background .12s ease;
   }
   .wsearch-fab-option:hover{background:rgba(var(--bg-rgb),.4);}
-  body:not([data-theme="light"]) .wsearch-fab-option:hover{background:rgba(255,255,255,.06);}
-  .wsearch-fab-option svg{width:16px; height:16px; flex-shrink:0;}
-  .wsearch-fab-option.danger svg{color:#E05252;}
-  .wsearch-fab-option.danger:hover{background:rgba(224,82,82,.12);}
+  body:not([data-theme="light"]) .wsearch-fab-option:hover{background:rgba(255,255,255,.05);}
+  .wsearch-fab-option svg{width:13px; height:13px; flex-shrink:0;}
+  /* روی گزینه‌ی خطرناک (حذف)، خودِ روتین من متن را هم قرمز می‌کند، نه
+     فقط آیکون — این‌جا هم همان‌طور. */
+  .wsearch-fab-option.danger{ color:#E05252; }
+  .wsearch-fab-option.danger:hover{background:rgba(224,82,82,.1);}
 
   /* delete mode: existing boxes jiggle (iOS-style off-center wobble), tap to remove entirely.
      Only .wsearch-box elements animate — nothing else on the page is touched. */
@@ -4445,29 +4474,6 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 .wr-rec-action-btn:hover:not(:disabled){ filter:brightness(1.1); }
 .wr-rec-action-btn:disabled{ opacity:.55; cursor:default; }
 
-.wr-ask-panel{ padding:14px; border-radius:16px; border:1px solid var(--line); background:rgba(var(--surface-rgb), .09); }
-.wr-ask-suggestions{ display:flex; flex-direction:column; gap:6px; }
-.wr-ask-suggestion-btn{
-  text-align:right; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:none; color:var(--muted);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; font-size:12px; cursor:pointer;
-  transition:border-color .15s ease, color .15s ease;
-}
-.wr-ask-suggestion-btn:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); }
-.wr-ask-messages{ display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; }
-.wr-ask-msg{ max-width:85%; padding:9px 13px; border-radius:14px; font-size:12.5px; line-height:1.8; }
-.wr-ask-msg.user{ align-self:flex-end; background:var(--accent-dim); color:var(--accent); }
-.wr-ask-msg.arion{ align-self:flex-start; background:rgba(255,255,255,.04); color:var(--text); }
-.wr-ask-msg.typing{ opacity:.6; }
-.wr-ask-input-row{ display:flex; gap:8px; margin-top:12px; }
-.wr-ask-input-row .wsearch-newform-name{ flex:1; }
-.wr-ask-send-btn{
-  display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0;
-  border-radius:999px; border:none; background:var(--accent); color:var(--bg);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; cursor:pointer; transition:filter .15s ease, opacity .15s ease;
-}
-@media (hover:hover){ .wr-ask-send-btn:hover:not(:disabled){ filter:brightness(1.1); } }
-.wr-ask-send-btn:disabled{ opacity:.5; cursor:default; }
-
 /* ============================================================
    ماژول ترید
    ------------------------------------------------------------
@@ -4798,8 +4804,23 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 /* «حساب‌های معاملاتی» دیگه یک لیبل کوچیک خنثیه نیست — عملا تایتل همین
    بخشه (تایتل صفحه «ژورنال‌نویسی»ی)، پس فونت تایتل‌مانند + سبز می‌گیره. */
 .trade-section-title{ font-size:15px; font-weight:800; color:var(--text); }
-.trade-account-grid{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-.trade-account-card{ position:relative; overflow:hidden; padding:14px 16px 14px 16px; }
+/* طبقِ درخواستِ صریح: به‌جای هرکدام یک کارتِ جداگانه‌ی شناور (که هم خیلی
+   بزرگ بود هم صفحه را «فقط یه‌ذره از صفحه» به‌نظر می‌رساند)، همه‌ی
+   ردیف‌ها داخلِ یک باکسِ واحدِ صفحه‌بزرگ می‌نشینند — دقیقاً هم‌الگویِ
+   .trade-checklist-box. .trade-account-card/.trade-mt-row (که هردو خودشان
+   کلاسِ .trade-surface را هم دارند) این‌جا آن پوسته را خلع می‌کنند و به
+   یک ردیفِ فشرده با جداکننده‌ی خط تبدیل می‌شوند. */
+.trade-account-grid{
+  display:flex; flex-direction:column; gap:0; margin-top:14px; padding:6px 4px;
+  min-height:min(calc(100vh - 340px), 560px);
+}
+.trade-account-card, .trade-mt-row{
+  position:relative; overflow:hidden; padding:11px 14px;
+  background:none; border:none; border-radius:0; box-shadow:none;
+}
+/* هرکدام از ردیف‌ها داخلِ motion.divِ خودشان‌اند (برای انیمیشنِ ورود)،
+   پس جداکننده روی همان wrapper است، نه مستقیم روی .trade-account-card. */
+.trade-account-grid > * + *{ border-top:1px solid var(--surface-line); }
 /* سه‌نقطه دیگر گوشه‌ی چپ مطلق نیست؛ اول ردیف (توی RTL یعنی سمت راست)
    کنار نام حساب می‌نشیند و سود/زیان انتهای همان ردیف (چپ) می‌رود. */
 .trade-account-top-row{ display:flex; align-items:center; gap:8px; }
@@ -4819,10 +4840,24 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-card.archived{ opacity:.6; }
 .trade-account-stripe{ position:absolute; top:0; right:0; bottom:0; width:3px; }
 .trade-account-main{ display:block; text-decoration:none; color:var(--text); }
-.trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.trade-account-name{ font-size:14.5px; font-weight:700; }
+/* باگِ برچسبِ بیرون‌زده: این ردیف min-width:0 نداشت و .trade-account-name
+   (بدون overflow/ellipsis) هیچ‌وقت زیرِ عرضِ متنِ خودش تنگ نمی‌شد؛ روی
+   نام‌های بلند، ردیف از عرضِ کارتِ والد (که overflow:hidden دارد، مثل
+   .trade-account-header) بیرون می‌زد و برچسبِ کناری (.trade-account-type)
+   یا کلاً بریده می‌شد یا به‌نظر «بیرون‌زده» می‌رسید. فیکسِ قبلی فقط دو
+   selectorِ دیگر را پوشش می‌داد (.trade-account-title-link،
+   .trade-checklist-row-main) که هیچ‌کدام همین ردیف نیستند — نه در صفحاتِ
+   متاتریدر (TradeMtAccountPanel, app/trade/metatrader/page.tsx) نه در
+   TradeAccountView، که همه دقیقاً از همین کلاس استفاده می‌کنند. */
+.trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+.trade-account-name{ font-size:14.5px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-account-title-row .trade-account-type,
+.trade-account-title-row .trade-account-archived-badge{ flex-shrink:0; }
 .trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
-.trade-account-skel{ height:88px; }
+/* .trade-account-card دیگه بک‌گراندِ خودش رو از .trade-surface نمی‌گیره
+   (چون حالا ردیفِ داخلِ یک باکسِ بیرونیه، نه کارتِ جدا) — پس اسکلتون باید
+   بک‌گراندِ pulseِ خودش رو مستقیم داشته باشه، وگرنه نامرئی می‌شه. */
+.trade-account-skel{ height:88px; background:rgba(var(--surface-rgb),.35); border-radius:12px; margin:4px 0; }
 /* منویِ سه‌نقطه — کنارِ اسم، سمتِ مخالفِ نوارِ رنگی. با createPortal به
    body می‌ره (هم‌الگویِ DashTaskRow) چون بلورِ .trade-surface یک
    stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه. */
@@ -5067,9 +5102,24 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 
 /* ناوبریِ روز-به-روز — مثلِ خودِ ForexFactory («‹ Today: Sep 3 ›») به‌جای
    دکمه‌ی «روزهای بیشتر» که همه‌ی روزها رو یک‌جا زیرِ هم می‌ریخت. */
-.trade-cal-daynav{ display:flex; align-items:center; justify-content:center; gap:6px; margin:14px 0 6px; }
-.trade-cal-daynav-label{ font-size:13px; font-weight:700; color:var(--text); min-width:170px; text-align:center; }
-.trade-cal-daynav-today{ margin-right:8px; }
+.trade-cal-box{ margin-top:14px; padding:14px; }
+.trade-cal-daynav{ display:flex; align-items:center; gap:4px; margin:0 0 4px; }
+/* هفتِ‌روزیِ کلیک‌پذیر — هم‌مدلِ WEEK_ORDERِ «برنامه‌ی هفتگی»ِ روتین من
+   (هفته‌ی شنبه‌تا‌جمعه)، به‌جای فقط یک لیبلِ متنیِ ثابت. */
+.trade-cal-week-strip{ flex:1; display:flex; justify-content:space-between; gap:4px; min-width:0; }
+.trade-cal-day-pill{
+  flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:6px 2px; border-radius:11px; color:var(--muted);
+  border:1px solid transparent; background:none; box-shadow:none;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.trade-cal-day-pill-wd{ font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; }
+.trade-cal-day-pill-num{ font-size:13px; font-weight:700; }
+.trade-cal-day-pill.today{ color:var(--accent); }
+.trade-cal-day-pill.active{ background:rgba(var(--accent-rgb),.12); border-color:var(--accent); color:var(--accent); }
+@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(var(--surface-rgb),.5); color:var(--text); } }
+
+.trade-cal-daynav-sub{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; font-size:11.5px; color:var(--muted2); }
 
 /* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
    شاخص رو نشون می‌ده؛ چون واقعاً از رکوردهای قبلیِ همین جدول میاد (نه
@@ -5119,7 +5169,8 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .forex-overlap-badge{ font-size:10.5px; color:#E0A452; }
 
 /* ── یادداشت‌ها ────────────────────────────────────────────── */
-.trade-note-grid{ display:flex; flex-direction:column; gap:11px; margin-top:16px; }
+.trade-note-box{ margin-top:16px; padding:14px; }
+.trade-note-grid{ display:flex; flex-direction:column; gap:11px; align-content:start; }
 @media (min-width:700px){ .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
 /* کارتِ یادداشت — قبلاً چون هیچ‌وقت پیش‌نمایشِ متن نداشت، فاصله‌ی عنوان تا
    فوتر با flex معمولی خیلی زیاد/نامتوازن به‌نظر می‌رسید (خصوصاً یادداشتِ
@@ -5144,14 +5195,20 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-note-foot .trade-tag-row{ margin:0; }
 .trade-note-foot .trade-tag-chip{ font-size:9px; padding:2px 7px; }
 
-/* پاپ‌آپِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند */
+/* پاپ‌آپِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند.
+   طبقِ درخواستِ صریح: «آخرین ویرایش» حذف شد، و متنِ اصلی + دکمه‌ی بستن
+   حالا هردو داخلِ یک باکسِ واحدند (نه متن شناور و دکمه‌ی جدا زیرش). */
 .trade-note-view-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-left:8px; vertical-align:middle; }
+.trade-note-view-box{
+  margin-top:12px; padding:14px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.22);
+  display:flex; flex-direction:column; gap:14px;
+}
 .trade-note-view-body{
-  margin-top:10px; font-size:13px; line-height:2; color:var(--text);
-  white-space:pre-wrap; word-break:break-word; max-height:50vh; overflow-y:auto;
+  font-size:13px; line-height:2; color:var(--text);
+  white-space:pre-wrap; word-break:break-word; max-height:46vh; overflow-y:auto;
 }
 .trade-note-view-empty{ color:var(--muted2); font-style:italic; }
-.trade-note-view-foot{ margin-top:14px; font-size:10.5px; color:var(--muted2); }
 
 /* ── اتصال متاتریدر ────────────────────────────────────────── */
 .trade-mt-panel{ margin-top:24px; padding:18px 20px; }
@@ -5219,8 +5276,8 @@ body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
   font-size:22px; font-weight:800; letter-spacing:.14em; margin:9px 0 5px;
   direction:ltr; text-align:center; color:var(--accent);
 }
-.trade-mt-row{ text-decoration:none; color:var(--text); display:block; padding:16px 19px 16px 16px; }
-@media (hover:hover){ .trade-mt-row:hover{ border-color:var(--accent); } }
+.trade-mt-row{ text-decoration:none; color:var(--text); display:block; }
+@media (hover:hover){ .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.4); } }
 
 /* خط وضعیت متاتریدر روی صفحه‌ی خود حساب — جزئیات کامل جاش صفحه‌ی
    اختصاصی /trade/metatrader/[id]ه، این‌جا فقط یک ردیف. */
@@ -5255,6 +5312,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 /* ── فهرست چک‌لیست‌ها: همه داخل یک باکس واحد ──────────────────
    قبلا هر چک‌لیست یک کارت جدا روی بک‌گراند اصلی بود؛ درخواست صریح کاربر
    این بود که «توی باکس باشن نه توی بک‌گراند اصلی». */
+/* باکسِ عمومیِ صفحه — طبقِ درخواستِ صریح، همین باکسِ چک‌لیست باید اندازه‌ی
+   کل صفحه باشه، نه یه‌ذره‌ی کوچیک؛ همین کلاس روی یادداشت‌ها/متاتریدر/
+   ژورنال‌نویسی/تقویمِ اقتصادی هم گذاشته می‌شه. */
+.trade-page-box{ min-height:min(calc(100vh - 340px), 560px); }
 .trade-checklist-box{ margin-top:14px; padding:6px 4px; }
 .trade-checklist-row{
   position:relative; display:flex; align-items:center; gap:8px;

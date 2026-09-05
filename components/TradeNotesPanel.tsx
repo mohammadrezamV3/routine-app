@@ -124,6 +124,10 @@ export function TradeNotesPanel({
         </div>
       )}
 
+      {/* طبقِ درخواستِ صریح: یادداشت‌ها هم داخلِ یک باکسِ صفحه‌بزرگ بنشینند،
+          نه فقط یک گریدِ شناور روی بک‌گراندِ اصلی — هم‌الگویِ چک‌لیست‌ها. */}
+      {!!notes.length && (
+      <div className="trade-surface trade-page-box trade-note-box">
       <div className="trade-note-grid">
         {notes.map((n, i) => (
           <motion.div
@@ -170,9 +174,11 @@ export function TradeNotesPanel({
           </motion.div>
         ))}
       </div>
+      </div>
+      )}
 
       {viewing && !editing && (
-        <NoteViewer note={viewing} calSystem={calSystem} onClose={() => setViewing(null)} />
+        <NoteViewer note={viewing} onClose={() => setViewing(null)} />
       )}
 
       {(creating || editing) && (
@@ -191,10 +197,9 @@ export function TradeNotesPanel({
 // نمایشِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند، نه ویرایش
 // را (درخواستِ صریح). ویرایشِ واقعی فقط از زیرِ منوی سه‌نقطه در دسترس است.
 function NoteViewer({
-  note, calSystem, onClose,
+  note, onClose,
 }: {
   note: Note;
-  calSystem: CalSystem;
   onClose: () => void;
 }) {
   return (
@@ -218,15 +223,10 @@ function NoteViewer({
           </div>
         )}
 
-        <div className="trade-note-view-body">
-          {note.content ? note.content : <span className="trade-note-view-empty">متنی نوشته نشده</span>}
-        </div>
-
-        <div className="trade-note-view-foot">
-          آخرین ویرایش: {formatTradeDateTime(note.updatedAt, calSystem)}
-        </div>
-
-        <div className="trade-modal-actions">
+        <div className="trade-note-view-box">
+          <div className="trade-note-view-body">
+            {note.content ? note.content : <span className="trade-note-view-empty">متنی نوشته نشده</span>}
+          </div>
           <button type="button" className="account-outline-btn" onClick={onClose}>بستن</button>
         </div>
       </div>

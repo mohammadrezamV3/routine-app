@@ -51,6 +51,7 @@ export function TradeFormModal({
   tags,
   calSystem,
   presetChecklistId,
+  presetCheckedState,
   presetSymbol,
   onTagCreated,
   onClose,
@@ -61,6 +62,9 @@ export function TradeFormModal({
   tags: TradeTag[];
   calSystem: CalSystem;
   presetChecklistId?: string | null;
+  /** تیک‌های از پیش‌زده‌شده — وقتی فرم از صفحه‌ی اختصاصیِ یک چک‌لیست باز
+   * می‌شود (کاربر قبلاً روی همان صفحه تیک زده)، نه از صفر. */
+  presetCheckedState?: Record<string, boolean>;
   /** نمادِ از پیش پرشده — وقتی فرم از صفحه‌ی چارت باز می‌شود */
   presetSymbol?: string | null;
   onTagCreated: (t: TradeTag) => void;
@@ -92,7 +96,9 @@ export function TradeFormModal({
       .then((d: any) => {
         const list: Checklist[] = d?.checklists || [];
         setChecklists(list);
-        if (presetChecklistId && !entry) patch({ checklistId: presetChecklistId });
+        if (presetChecklistId && !entry) {
+          patch({ checklistId: presetChecklistId, checklistState: presetCheckedState ?? {} });
+        }
       })
       .catch(() => setChecklists([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps

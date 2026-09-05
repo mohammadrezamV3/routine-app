@@ -27,8 +27,12 @@
 # (نگاه کن به app/api/cron/economic-alerts)
 */5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-alerts >/dev/null 2>&1
 
-# همگام‌سازیِ تقویم اقتصادی از منبعِ بیرونی — روزی یک‌بار، ساعتِ ۳ بامداد.
-# فقط وقتی کار می‌کنه که ECONOMIC_CALENDAR_URL توی .env ست شده باشه؛ وگرنه
-# بی‌صدا رد می‌شه و تقویم از ورودِ دستیِ پنلِ ادمین پر می‌شه.
+# همگام‌سازیِ تقویم اقتصادی — هر ۱۰ دقیقه (نه فقط روزی یک‌بار: actual/
+# forecastِ هر رویداد دقیقاً لحظه‌ی انتشارِ خبر پر می‌شه، نه شبِ قبل).
+# پیش‌فرض بدونِ هیچ تنظیمی هم کار می‌کنه (فیدِ رایگانِ فارکس‌فکتوری،
+# lastweek+thisweek+nextweek)؛ ECONOMIC_CALENDAR_URL فقط برای عوض‌کردنِ
+# منبع به یک فیدِ تجاری لازمه. توجه: اگه cluster.js با CRON_SECRET همین
+# کار رو خودش هر ۱۰دقیقه از داخلِ کانتینر انجام می‌ده (نگاه کن به
+# cluster.js)، این خط را تکراری اضافه نکن — یا این‌جا یا آن‌جا، نه هردو.
 # (نگاه کن به app/api/cron/economic-calendar)
-0 3 * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-calendar >/dev/null 2>&1
+*/10 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-calendar >/dev/null 2>&1

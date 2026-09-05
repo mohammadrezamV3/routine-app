@@ -728,7 +728,9 @@ const WEEKLY_AI_PROMPT_V2 = `تو دستیار تحلیل هفتگی Arion هس�
 - «correlations» فقط همبستگی‌ان، نه رابطه‌ی علت‌ومعلولی — هیچ‌وقت نگو «X باعث Y شد»، بگو «بین X و Y همبستگی دیده شد».
 - هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده.
 - لحن: مستقیم، محترمانه، مثل یک مربی شخصی.
-- خلاصه (summary) حداکثر ۵ جمله. حداکثر ۳ پیشنهاد. حداکثر ۳ insight.
+- خلاصه (summary) حداکثر ۵ جمله؛ باید صریحاً نقطه‌ی قوت و نقطه‌ی ضعفِ اصلیِ همین هفته را نام ببرد (نه فقط توصیفِ کلی).
+- هر پیشنهاد (recommendation) باید بگوید کاربر هفته‌ی بعد دقیقاً روی چه‌چیزی تمرکز کند، با دلیلِ مبتنی‌بر همان اعداد.
+- حداکثر ۳ پیشنهاد. حداکثر ۳ insight.
 
 فقط و فقط این JSON خام رو برگردون (بدون Markdown fence، بدون متن اضافه):
 {
@@ -783,43 +785,3 @@ export async function generateWeeklyReportSummaryV2(input: WeeklyReportAiInputV2
   throw lastError;
 }
 
-// ============================================================================
-// Ask Arion — سوال‌وجواب محدود به Context همون گزارش هفتگی (نه یک
-// چت‌بات عمومی). Context ورودی همیشه از همون Snapshot cache‌شده میاد،
-// نه دیتابیس خام (بند ۳۴). از AiFeatureKey.CORRELATION_INSIGHT استفاده
-// می‌کنه — enum دوم ازقبل‌موجود بلااستفاده، برای جداکردن آمار هزینه‌ی
-// این مسیر از خلاصه‌ی خودکار WEEKLY_COACH_REPORT.
-// ============================================================================
-
-const ASK_ARION_SYSTEM_PROMPT = `تو Arion هستی، دستیار شخصی تحلیل هفتگی. کاربر درباره گزارش هفتگی خودش سوال می‌پرسه.
-فقط از دیتایی که توی Context داده شده جواب بده — اگه جواب توی Context نیست، صادقانه بگو نمی‌دونی، حدس نزن.
-هیچ توصیه‌ی پزشکی یا مالی قطعی نده. جواب کوتاه باشه (حداکثر ۴-۵ جمله)، فارسی، مستقیم و محترمانه.
-
-فقط و فقط این JSON خام رو برگردون: { "answer": "جواب کوتاه" }`;
-
-export type AskArionContext = {
-  weekLabel: string;
-  overallScore: number | null;
-  domains: WeeklyReportAiDomainInput[];
-  wins: string[];
-  problems: string[];
-  insights: WeeklyReportAiInsight[];
-};
-
-function normalizeAskArionAnswer(raw: any): string {
-  const answer = typeof raw?.answer === "string" ? raw.answer.trim() : "";
-  if (!answer) throw new Error("مدل جوابی برنگردوند");
-  return answer;
-}
-
-export async function answerWeeklyReportQuestion(question: string, context: AskArionContext, userId: string): Promise<string> {
-  const userContent = JSON.stringify({ question, context });
-  try {
-    const { text, usage, durationMs } = await callAiChat(ASK_ARION_SYSTEM_PROMPT, userContent, 700, WEEKLY_REPORT_AI_MODEL);
-    recordAiUsage(userId, AiFeatureKey.CORRELATION_INSIGHT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
-    return normalizeAskArionAnswer(parseJsonResponse(text));
-  } catch (err: any) {
-    logError("ai-gateway", `Ask Arion شکست خورد: ${err?.message || err}`, { context: { feature: "CORRELATION_INSIGHT" } });
-    throw err;
-  }
-}
