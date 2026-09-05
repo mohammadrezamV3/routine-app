@@ -26,6 +26,7 @@ export function TradePageShell({
   back = { href: "/trade", label: "ترید" },
   titleAction,
   fullBleed = false,
+  noScroll = false,
   children,
 }: {
   title: string;

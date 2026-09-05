@@ -44,20 +44,24 @@ export default function RoadmapsHub() {
           {!loaded ? (
             <LoadingBlock text="در حال آوردن مسیرها…" />
           ) : !customRoadmaps.length ? (
-            <div className="trade-surface trade-empty-state" style={{ marginTop: 16 }}>
-              <Map size={32} />
-              <p>هنوز رودمپی نساختی</p>
+            <div className="trade-surface trade-page-box rm-page-box">
+              <div className="trade-empty-state">
+                <Map size={32} />
+                <p>هنوز رودمپی نساختی</p>
+              </div>
             </div>
           ) : (
-            <div className="rm-grid">
-              {customRoadmaps.map((r) => (
-                <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
-                  <div>
-                    <div className="rm-box-title">{r.title}</div>
-                    <div className="rm-box-desc">{r.note}</div>
+            <div className="trade-surface trade-page-box rm-page-box">
+              <div className="rm-grid">
+                {customRoadmaps.map((r) => (
+                  <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
+                    <div>
+                      <div className="rm-box-title">{r.title}</div>
+                      <div className="rm-box-desc">{r.note}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
           <RoadmapDisclaimer />

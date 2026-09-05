@@ -985,7 +985,11 @@
   /* roadmaps hub */
   /* عرضِ کارت‌ها به اندازه‌ی صفحه‌ی موبایل و یک‌ذره کوچک‌تر (درخواستِ صریحِ
      کاربر) — تا فوترِ هشدارِ AI هم جا شود و کارت‌ها تا لبه نچسبند. */
-  .rm-grid{display:flex; flex-direction:column; gap:10px; margin-top:16px; max-width:400px; margin-inline:auto;}
+  /* طبقِ درخواستِ صریح: یک باکسِ کلیِ صفحه‌بزرگ دورِ فهرست — هم‌الگویِ
+     چک‌لیست‌ها/یادداشت‌ها؛ خودِ گریدِ داخلی همچنان به ۴۰۰px محدود و
+     وسط‌چین می‌ماند (عرضِ کارت‌ها طبقِ همان درخواستِ قبلی). */
+  .rm-page-box{ margin-top:16px; padding:16px; }
+  .rm-grid{display:flex; flex-direction:column; gap:10px; max-width:400px; margin-inline:auto;}
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     border:1px solid var(--line); border-radius:12px; padding:14px 15px; text-decoration:none; color:var(--text);
@@ -6062,12 +6066,15 @@ html[data-perf="low"] .app-spinner{ animation-duration:1s; }
 /* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
 /* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
    یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
+/* طبقِ درخواستِ صریح، این هشدار حالا قرمز است (نه خاکستریِ خنثیِ قبلی) —
+   هم‌رنگِ بقیه‌ی هشدارهای اپ (#E05252). */
 .rm-disclaimer{
   display:flex; align-items:flex-start; gap:8px;
   max-width:400px; margin:26px auto 0; padding:11px 13px;
-  border:1px dashed var(--line); border-radius:14px;
-  font-size:11.5px; line-height:2; color:var(--muted2); text-align:right;
+  border:1px dashed rgba(224,82,82,.45); border-radius:14px; background:rgba(224,82,82,.06);
+  font-size:11.5px; line-height:2; color:#E05252; text-align:right;
 }
+.rm-disclaimer svg{ flex-shrink:0; color:#E05252; }
 .rm-disclaimer svg{ flex-shrink:0; margin-top:4px; color:var(--muted); }
 
 /* ===================== جلسه‌های یک مرحله ===================== */
@@ -6143,3 +6150,40 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   .dash-middle-col{ min-height:0; }
   .dash-middle-col > :last-child{ flex:1 1 auto; display:flex; flex-direction:column; }
 }
+
+/* ── پاپ‌آپ پروفایل دوست ──────────────────────────────────────
+   طبقِ درخواستِ صریح: وسطِ بالای صفحه (نه وسطِ عمودیِ معمولِ بقیه‌ی
+   پاپ‌آپ‌ها) — position:fixed با یک top ثابت، نه transform:translateY(-50%). */
+.friend-profile-panel{
+  position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:71;
+  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
+  padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
+  background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
+  animation:tradeFadeIn .22s ease both;
+}
+.friend-profile-close{ position:absolute; top:12px; left:12px; }
+.friend-profile-loading{ display:flex; align-items:center; justify-content:center; padding:30px 0; color:var(--muted); }
+.friend-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
+.friend-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:8px; }
+.friend-profile-name{ font-size:17px; font-weight:800; color:var(--text); }
+.friend-profile-username{ font-size:12px; color:var(--muted2); direction:ltr; }
+.friend-profile-plan{
+  margin-top:6px; padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
+  color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);
+}
+.friend-profile-stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; padding-top:16px;
+  border-top:1px solid var(--surface-line);
+}
+.friend-profile-stats.cols-2{ grid-template-columns:repeat(2,1fr); }
+.friend-profile-stat{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:10px; color:var(--muted2); text-align:center;
+}
+.friend-profile-stat .header-streak-clock-streak{ font-size:15px; }
+.friend-profile-stat-icon{ color:var(--accent); }
+.friend-profile-stat b{ font-size:15px; font-weight:800; color:var(--text); }
+.friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
+.friend-profile-actions{ display:flex; gap:8px; margin-top:18px; }
+.friend-profile-actions button{ flex:1; }
+.account-outline-btn.active{ background:rgba(245,197,24,.1); }

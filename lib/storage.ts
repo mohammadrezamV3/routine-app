@@ -372,6 +372,42 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
+/**
+ * نسخه‌ی «موفقیت واقعی» — setSetting معمولی هر خطایی (شبکه، ۴۰۰، ۵۰۰) رو
+ * silently می‌بلعد (طراحی عمدی برایِ تنظیماتِ کم‌اهمیتی مثلِ تم/فیلترها که
+ * شکستِ بی‌صدا بهتر از قطع‌کردنِ کاربره)، ولی برای چیزی مثلِ داروها که
+ * واقعاً داده‌ی کاربره، این بی‌صدایی یعنی «ثبت شد» نشان داده می‌شه درحالی‌که
+ * چیزی ذخیره نشده. این تابع همون مسیر رو می‌ره ولی res.ok و پیامِ خطای
+ * سرور رو واقعاً برمی‌گردونه.
+ */
+export async function setSettingChecked<T>(key: string, value: T): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (await isLoggedIn()) {
+    try {
+      const res = await fetch(settingsUrl(key), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        return { ok: false, error: data?.error || `ذخیره ناموفق بود (کد ${res.status})` };
+      }
+      primeCache(settingsUrl(key), { value });
+      forgetBootstrapSetting(key);
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "ارتباط با سرور برقرار نشد — اتصال اینترنت را چک کن" };
+    }
+  }
+  if (typeof window === "undefined" || !hasLocalStorage()) return { ok: false, error: "ذخیره‌سازی در این مرورگر در دسترس نیست" };
+  try {
+    window.localStorage.setItem(PREFIX + "settings:" + key, JSON.stringify(value));
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "حافظه‌ی مرورگر پر است" };
+  }
+}
+
 export async function setSetting<T>(key: string, value: T): Promise<void> {
   if (await isLoggedIn()) {
     try {

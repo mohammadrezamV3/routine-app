@@ -53,7 +53,9 @@ export const PLANS_IRAN: PlanCard[] = [
     key: "basic", nameFa: "پلن پایه", free: true, icon: ICONS.weekly,
     // قابلیت‌های نسخه‌ی رایگان هم مثل بقیه‌ی پلن‌ها روی خود کارت نوشته می‌شن
     // (قبلا کارت رایگان هیچ لیستی نداشت و کاربر نمی‌فهمید اصلا چی می‌گیره).
-    features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو", "تقویم و تاریخچه‌ی روزها", "آمار و استریک پیشرفت"],
+    // طبق درخواست صریح: «آمار و استریک» و «تقویم و تاریخچه‌ی روزها» دیگر
+    // این‌جا نوشته نمی‌شوند (فیچرهایی که تصمیم بود روی کارت برجسته نشوند).
+    features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو"],
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
@@ -74,14 +76,17 @@ export const PLANS_IRAN: PlanCard[] = [
     prices: { "1": "250,000 تومان", "3": "656,000 تومان", "6": "1,313,000 تومان", "12": "2,625,000 تومان" },
     originalPrices: { "3": "750,000 تومان", "6": "1,500,000 تومان", "12": "3,000,000 تومان" },
     amounts: { "1": 2500000, "3": 6560000, "6": 13130000, "12": 26250000 },
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "تحلیل هوشمند هفتگی (AI Insight)", "روتین روزانه"],
+    // «تحلیل هوشمند» طبق درخواست صریح از فیچرهای پلن حذف شد (هنوز آماده
+    // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، COMPARE_ROWS_IRAN
+    // پایین همین فایل)؛ جایگزینش «Ask AI» است.
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "Ask AI — پرسش‌وپاسخ با هوش مصنوعی", "روتین روزانه"],
   },
 ];
 
 export const PLANS_INTL: PlanCard[] = [
   {
     key: "basic", nameFa: "Basic", free: true, icon: ICONS.weekly,
-    features: ["Weekly plan & daily routine", "Program & medication reminders", "Sleep tracking", "Calendar & day history", "Progress stats & streak"],
+    features: ["Weekly plan & daily routine", "Program & medication reminders", "Sleep tracking"],
   },
   {
     key: "exercise", nameFa: "Plan Gym", icon: ICONS.exercise,
@@ -111,11 +116,14 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "ژورنال ترید", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "چک‌لیست ترید", included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
-  { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "رودمپ", included: { basic: false, exercise: true, trade: true, max: true } },
+  { label: "Ask AI", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "اپلیکیشن موبایل", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "یکپارچه‌سازی با ساعت هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "گزارش هفتگی هوش مصنوعی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
+  // «تحلیل هوشمند» طبق درخواست صریح دیگر فیچر آماده نیست — به همین بخشِ
+  // «به‌زودی» (تارشده در جدول) منتقل شد.
+  { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "اشتراک‌گذاری با مربی یا دوستان", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "ردیابی کدنویسی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
@@ -126,11 +134,12 @@ export const COMPARE_ROWS_INTL: CompareRow[] = [
   { label: "Calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "Trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "Trade checklist", included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: "ai mapping", included: { basic: false, exercise: true, trade: true, max: true } },
-  { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "Roadmap", included: { basic: false, exercise: true, trade: true, max: true } },
+  { label: "Ask AI", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "Mobile app", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "Smartwatch integration", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "AI weekly report", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
+  { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "Share with a coach or friends", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
@@ -197,10 +206,6 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
     ? `relative flex flex-col rounded-[22px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-4 backdrop-blur-xl ${t.secondaryCardShadow}`
     : `relative flex flex-col rounded-[22px] border ${t.cardBorder} ${t.cardBg} p-4 backdrop-blur-xl ${t.shadow}`;
 
-  function scrollToDetails() {
-    document.getElementById("plans-compare-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   const buyHref = mode === "landing" ? `/auth/signup?plan=${p.key}&duration=${duration}` : `/subscription/checkout?plan=${p.key}&duration=${duration}`;
 
   return (
@@ -210,17 +215,11 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
           محبوب‌ترین
         </span>
       )}
+      {/* طبقِ درخواستِ صریح: زیرِ تایتل دیگر متن «جزئیات» نوشته نمی‌شود —
+          خودِ جدولِ مقایسه‌ی پایینِ صفحه برای همین کافی‌ست. */}
       <div className="flex items-center gap-2">
         <span className={`plan-icon-badge flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{p.icon}</span>
         <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
-        <div className="flex-1" />
-        <button
-          type="button"
-          onClick={scrollToDetails}
-          className={`plan-details-btn border-0 bg-transparent p-0 text-[11px] font-bold shadow-none no-underline outline-none transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none focus:no-underline focus-visible:no-underline active:no-underline ${t.accentText}`}
-        >
-          {isIntl ? "Details" : "جزئیات"}
-        </button>
       </div>
 
       {p.features && p.features.length > 0 ? (
@@ -265,9 +264,6 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
             <span className={`text-[12px] font-bold ${t.heading}`}>پلن فعلی تو</span>
           </div>
 
-          {/* «تمدید اشتراک فعلی» — تیتر راست‌چین بالای باکس تمدید */}
-          <div className={`mt-2 text-right text-[11.5px] font-bold ${t.muted}`}>تمدید اشتراک فعلی</div>
-
           {renewOpen ? (
             <div className={`mt-1.5 flex flex-col gap-2 rounded-xl border ${t.line} p-2.5`}>
               <div className="grid grid-cols-4 gap-1.5">
@@ -300,15 +296,14 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
               </button>
             </div>
           ) : (
+            // طبقِ درخواستِ صریح: دیگر یک دکمه‌ی بزرگ نیست — فقط یک متنِ
+            // کوچکِ کلیک‌پذیر پایینِ کارت.
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
-              className={`mt-1.5 flex w-full items-center justify-between gap-1.5 rounded-xl border ${t.line} ${t.secondaryBtnBg} px-3 py-3 text-right text-[12.5px] font-bold transition active:scale-[0.98] ${t.heading} ${t.accentHoverBorder}`}
+              className={`plan-details-btn mt-2 block w-full border-0 bg-transparent p-0 text-center text-[11.5px] font-bold shadow-none no-underline outline-none transition [backdrop-filter:none] hover:bg-transparent hover:shadow-none ${t.accentText}`}
             >
-              <span>تمدید اشتراک</span>
-              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${t.accentBg}`}>
-                <Check size={13} strokeWidth={3} className="text-white" />
-              </span>
+              تمدید اشتراک
             </button>
           )}
         </>

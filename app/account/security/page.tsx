@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, MonitorSmartphone, History, Lock } from "lucide-react";
+import { KeyRound, ShieldCheck, MonitorSmartphone, History, Lock, UserX } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { AccountSectionCard } from "@/components/AccountSectionCard";
 import { AccountBackButton } from "@/components/AccountBackButton";
@@ -9,6 +9,7 @@ import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCa
 import { toJalali, J_MONTHS } from "@/lib/jalali";
 
 type LoginEvent = { id: string; provider: string; ip: string | null; userAgent: string | null; createdAt: string };
+type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null };
 type DeviceSession = {
   id: string; provider: string | null; ip: string | null; userAgent: string | null;
   createdAt: string; lastSeenAt: string; current: boolean;
@@ -67,6 +68,10 @@ export default function SecurityPage() {
   const [discoverable, setDiscoverable] = useState<boolean | null>(null);
   const [discoverableSaving, setDiscoverableSaving] = useState(false);
 
+  // افرادی که بلاک کرده — طبق درخواست صریح، از همین‌جا قابل آنبلاک
+  const [blocked, setBlocked] = useState<BlockedUser[] | null>(null);
+  const [unblocking, setUnblocking] = useState<string | null>(null);
+
   useEffect(() => {
     fetch("/api/account/login-events").then((r) => (r.ok ? r.json() : { events: [] })).then((res) => setEvents(res.events || []));
     loadSessions();
@@ -75,7 +80,19 @@ export default function SecurityPage() {
       setDiscoverable(u?.discoverable ?? true);
       setTwoFactor(u?.twoFactorEnabled ?? false);
     });
+    loadBlocked();
   }, []);
+
+  function loadBlocked() {
+    fetch("/api/users/blocked").then((r) => (r.ok ? r.json() : { users: [] })).then((res) => setBlocked(res.users || []));
+  }
+
+  async function unblock(id: string) {
+    setUnblocking(id);
+    setBlocked((prev) => prev && prev.filter((u) => u.id !== id));
+    await fetch(`/api/users/${id}/block`, { method: "DELETE" }).catch(() => {});
+    setUnblocking(null);
+  }
 
   function loadSessions() {
     fetch("/api/account/sessions")
@@ -275,6 +292,34 @@ export default function SecurityPage() {
           </div>
           {discoverable !== null && (
             <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label="قابل‌جست‌وجو بودن" />
+          )}
+        </div>
+
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
+            <UserX size={15} /> افراد بلاک‌شده
+          </div>
+          {!blocked?.length ? (
+            <div className="item-line" style={{ marginTop: 6 }}>
+              {blocked === null ? "در حال بارگذاری…" : "کسی رو بلاک نکردی"}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+              {blocked.map((u) => (
+                <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ fontSize: 12.5, color: "var(--text)" }}>{u.name || u.username || "کاربر"}</span>
+                  <button
+                    type="button"
+                    className="account-outline-btn"
+                    style={{ padding: "5px 12px", fontSize: 11.5 }}
+                    onClick={() => unblock(u.id)}
+                    disabled={unblocking === u.id}
+                  >
+                    آنبلاک
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </AccountSectionCard>
