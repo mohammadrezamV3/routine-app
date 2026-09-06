@@ -10,6 +10,10 @@ const ALLOWED_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 // جلوی سوءاستفاده/هزینه‌ی غیرمنتظره با پی‌لودهای غول‌پیکر رو می‌گیره.
 const MAX_BASE64_LEN = 8 * 1024 * 1024;
 
+// AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاستِ
+// سرورلس ممکنه زودتر از اون قطعش کنه.
+export const maxDuration = 60;
+
 // POST /api/calorie/scan  { imageBase64, mediaType }
 // فقط تحلیل می‌کنه و تخمین رو برمی‌گردونه — ثبت واقعی توی لاگ روزانه بعد
 // از تأیید/ویرایش کاربر، جداگانه با /api/calorie/log انجام می‌شه (همون

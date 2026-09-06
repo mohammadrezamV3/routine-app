@@ -31,6 +31,7 @@ export function HistoryCalendar({
   const [calYear, setCalYear] = useState(jToday[0]);
   const [calMonth, setCalMonth] = useState(jToday[1]);
   const [monthCompletion, setMonthCompletion] = useState<Record<string, boolean>>({});
+  const [monthDotStatus, setMonthDotStatus] = useState<Record<string, "done" | "missed">>({});
   const [openDate, setOpenDate] = useState<Date | null>(null);
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
@@ -55,21 +56,26 @@ export function HistoryCalendar({
     const entries = await getDailyRange(firstIso, lastIso);
 
     const result: Record<string, boolean> = {};
+    const dots: Record<string, "done" | "missed"> = {};
     for (let d = 1; d <= monthLen; d++) {
       const gd = jalaliToGregorianApprox(jy, jm, d);
       const iso = isoLocal(gd);
       const rec = entries[iso];
-      if (rec) {
-        const expected = tasksForDate(gd, opts);
-        const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        // بیدارشدن سروقت دیگه شرط AND برای «روز کامل» نیست — همون فیکس
-        // lib/friendStats.ts و lib/useMyStreak.ts، هم‌قاعده‌ی این‌جا هم شد.
-        result[iso] = expected.length > 0 && doneCount === expected.length;
-      } else {
-        result[iso] = false;
+      const expected = tasksForDate(gd, opts);
+      const doneCount = rec ? expected.filter((t) => rec.tasks[t.id]).length : 0;
+      // بیدارشدن سروقت دیگه شرط AND برای «روز کامل» نیست — همون فیکس
+      // lib/friendStats.ts و lib/useMyStreak.ts، هم‌قاعده‌ی این‌جا هم شد.
+      const isDone = expected.length > 0 && doneCount === expected.length;
+      result[iso] = isDone;
+      // نقطه‌ی سبز/قرمز فقط برای روزهایی که واقعا گذشته و کاری براشون برنامه‌
+      // ریزی شده بود معنی داره — روز آینده یا روزی که اصلا تسکی نداشته رو
+      // قرمز نشون ندیم، چون چیزی برای «انجام‌ندادن» وجود نداشته.
+      if (expected.length > 0 && iso <= todayKey) {
+        dots[iso] = isDone ? "done" : "missed";
       }
     }
     setMonthCompletion(result);
+    setMonthDotStatus(dots);
   }
 
   useEffect(() => {
@@ -87,16 +93,16 @@ export function HistoryCalendar({
     const gd = jalaliToGregorianApprox(calYear, calMonth, d);
     const iso = isoLocal(gd);
     const isToday = iso === todayKey;
-    const done = !!monthCompletion[iso];
+    const dotStatus = monthDotStatus[iso];
     const hasOuting = outingDates.has(iso);
     cells.push(
-      <div key={iso} onClick={() => (onPick ? onPick(iso) : setOpenDate(gd))} className={`cal-cell ${isToday ? "today " : ""}${done ? "done" : ""}`}>
-        <span className="cal-check">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
+      <div
+        key={iso}
+        onClick={() => (onPick ? onPick(iso) : setOpenDate(gd))}
+        className={`cal-cell ${isToday ? "today " : ""}${dotStatus === "done" ? "done" : dotStatus === "missed" ? "missed" : ""}`}
+      >
         <span className="cal-daynum mono">{faNum(d)}</span>
+        {dotStatus && <span className={`cal-status-dot ${dotStatus === "missed" ? "missed" : ""}`} />}
         {hasOuting && <span className="outing-dot" />}
       </div>
     );

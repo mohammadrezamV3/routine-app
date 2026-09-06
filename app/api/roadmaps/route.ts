@@ -4,6 +4,12 @@ import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { generateRoadmap, RoadmapSchedule } from "@/lib/aiClient";
 import { clampText } from "@/lib/validate";
 
+// تولید رودمپ تا ۵۵ ثانیه طول می‌کشه (AI_TOTAL_BUDGET_MS) — بدون این،
+// روی هاست‌هایی که فانکشن سرورلس رو خودکار قطع می‌کنن (مثل Vercel، سقف
+// پیش‌فرض ۱۰-۱۵ ثانیه‌ست)، دقیقاً وسط تولید قطع می‌شه و کلاینت به‌جای
+// جواب سرور یه قطعیِ خامِ اتصال می‌بینه («ارتباط برقرار نشد»).
+export const maxDuration = 60;
+
 export async function GET() {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;

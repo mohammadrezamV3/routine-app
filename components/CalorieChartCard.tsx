@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { LineChart } from "lucide-react";
-import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
+import { faNum, FA_WEEKDAY_SHORT, isoLocal, J_MONTHS, toJalali } from "@/lib/jalali";
 import { cn } from "@/lib/utils";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashCard } from "./DashCard";
@@ -15,6 +15,14 @@ const MIN_DAYS = 3;
 
 function formatKcal(n: number): string {
   return faNum(Math.round(n).toLocaleString("en-US"));
+}
+
+// «۲۲ شهریور» — تاریخِ خوانا برایِ ستونِ انتخاب‌شده، از رویِ کلیدِ ISOِ
+// همون روز (که خودِ محورِ محلیِ سیستم است، نه UTC).
+function formatJalaliShort(iso: string): string {
+  const [gy, gm, gd] = iso.split("-").map(Number);
+  const [, jm, jd] = toJalali(gy, gm, gd);
+  return `${faNum(jd)} ${J_MONTHS[jm - 1]}`;
 }
 
 // نمودار روند کالری.
@@ -112,10 +120,10 @@ export function CalorieChartCard({
           <div className="mt-3 flex h-6 shrink-0 items-center justify-end">
             {sel && (
               <span
-                className="mono rounded-full px-2.5 py-1 text-[10.5px] font-extrabold sm:text-[11.5px]"
+                className="rounded-full px-2.5 py-1 text-[10.5px] font-extrabold sm:text-[11.5px]"
                 style={{ background: "var(--accent)", color: "var(--bg)" }}
               >
-                {formatKcal(sel.value)} کالری
+                {formatJalaliShort(sel.key)} — <span className="mono">{formatKcal(sel.value)}</span> کالری
               </span>
             )}
           </div>
@@ -131,7 +139,7 @@ export function CalorieChartCard({
                   key={b.key}
                   onClick={() => setSelected(isActive ? null : i)}
                   aria-label={`${b.label || b.key} — ${formatKcal(b.value)} کالری`}
-                  className="flex min-w-0 flex-1 flex-col items-center gap-1 bg-transparent p-0 sm:gap-1.5"
+                  className="calorie-chart-bar-btn flex min-w-0 flex-1 flex-col items-center gap-1 bg-transparent p-0 sm:gap-1.5"
                 >
                   {/* درصد فقط توی هفتگی جا می‌شه؛ ماهانه ۳۰ ستون داره */}
                   {!isMonthly && (
@@ -171,10 +179,6 @@ export function CalorieChartCard({
                 </button>
               );
             })}
-          </div>
-
-          <div className="mt-3 shrink-0 text-[10px] text-dash-muted sm:text-[11px]">
-            هر ستون درصد کالری اون روز نسبت به هدف {formatKcal(targetKcal)} کالریه — برای دیدن عدد، روی ستون بزن.
           </div>
         </>
       )}
