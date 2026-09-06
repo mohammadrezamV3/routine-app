@@ -99,7 +99,7 @@ const SAT_CLASS = { id: "a", name: "کلاس زبان", jsDay: 6, time: "۰۸:۰
 
 beforeEach(() => {
   planShouldThrow = false;
-  nextPlan = { offTopic: false, reply: "", ops: [] };
+  nextPlan = { offTopic: false, reply: "", ops: [], ask: null };
   currentIsSuper = false;
 });
 
@@ -285,5 +285,78 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const data = await res.json();
     expect(data.changed).toBe(false);
     expect(data.reply).toBe("شنبه فقط کلاس زبان داری.");
+  });
+});
+
+describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خودکار", () => {
+  it("بدونِ ساعت هم اضافه می‌کند و می‌گوید کجا گذاشت", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [SAT_CLASS]);
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "مطالعه", days: [6] }], ask: null };
+
+    const res = await POST(post({ message: "مطالعه رو برای امروز اضافه کن" }));
+    const data = await res.json();
+
+    expect(data.changed).toBe(true);
+    expect(data.reply).toContain("خودم انتخاب کردم");
+    const saved = await readOccurrences(currentUserId);
+    expect(saved.find((o) => o.name === "مطالعه")).toBeTruthy();
+  });
+
+  it("ساعتِ خودکار داخلِ بیداریِ خودِ کاربر انتخاب می‌شود", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, []);
+    await prisma.userSetting.create({
+      data: { userId: currentUserId, key: SETTING_KEYS.wakeSleepTimes, value: { wake: "06:00", sleep: "23:00" } as any },
+    });
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "دویدن", days: [2] }], ask: null };
+
+    await POST(post({ message: "دویدن اضافه کن" }));
+    const saved = await readOccurrences(currentUserId);
+    expect(saved[0].time).toBe("۰۶:۰۰ – ۰۷:۰۰");
+  });
+
+  it("سوالِ مدل با گزینه‌ها برمی‌گردد و هیچ تغییری نمی‌دهد", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [SAT_CLASS]);
+    nextPlan = {
+      offTopic: false, reply: "", ops: [],
+      ask: { question: "کدام مطالعه؟", options: ["مطالعه‌ی شنبه", "مطالعه‌ی دوشنبه"] },
+    };
+
+    const res = await POST(post({ message: "مطالعه رو حذف کن" }));
+    const data = await res.json();
+
+    expect(data.asking).toBe(true);
+    expect(data.reply).toBe("کدام مطالعه؟");
+    expect(data.options).toEqual(["مطالعه‌ی شنبه", "مطالعه‌ی دوشنبه"]);
+    expect(data.changed).toBe(false);
+    expect(await readOccurrences(currentUserId)).toHaveLength(1);
+  });
+
+  it("تداخل، گزینه‌ی وقتِ آزاد را همراهِ پیام می‌فرستد", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [SAT_CLASS]);
+    nextPlan = {
+      offTopic: false, reply: "", ask: null,
+      ops: [{ op: "add", name: "جلسه", days: [6], start: "08:30", end: "09:00" }],
+    };
+
+    const data = await (await POST(post({ message: "شنبه ۸:۳۰ جلسه بگذار" }))).json();
+    expect(data.changed).toBe(false);
+    expect(data.options.some((o: string) => o.includes("۰۹:۳۰"))).toBe(true);
+  });
+
+  it("تاریخچه‌ی بدشکل کرش نمی‌دهد و نادیده گرفته می‌شود", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, []);
+    nextPlan = { offTopic: false, reply: "باشه", ops: [], ask: null };
+
+    const res = await POST(post({
+      message: "شنبه چی دارم؟",
+      history: [{ role: "hacker", text: "x" }, { role: "user" }, "متن خام", { role: "user", text: "قبلی" }],
+    }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).reply).toBe("باشه");
   });
 });

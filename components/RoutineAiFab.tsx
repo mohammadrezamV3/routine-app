@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Loader2, Send, Sparkles, X } from "lucide-react";
@@ -9,6 +9,8 @@ import { primeSettingCache } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 
 type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
+/** گزینه‌های آماده‌ی پاسخ — کاربر به‌جای تایپ فقط می‌زند رویشان */
+type Options = { forMsgId: string; items: string[] } | null;
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
 const EXAMPLES = [
@@ -35,6 +37,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [options, setOptions] = useState<Options>(null);
   const [quota, setQuota] = useState<Quota | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -58,23 +61,29 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, sending]);
+  }, [msgs, sending, options]);
 
-  function push(role: Msg["role"], text: string, tone?: Msg["tone"]) {
-    setMsgs((m) => [...m, { id: newId(), role, text, tone }]);
+  function push(role: Msg["role"], text: string, tone?: Msg["tone"]): string {
+    const id = newId();
+    setMsgs((m) => [...m, { id, role, text, tone }]);
+    return id;
   }
 
   async function send(text: string) {
     const body = text.trim();
     if (!body || sending) return;
     setInput("");
+    // گزینه‌های قبلی با اولین پاسخ کنار می‌روند تا کاربر روی سوالِ سوخته نزند
+    setOptions(null);
+    // تاریخچه *قبل* از افزودنِ همین پیام گرفته می‌شود؛ خودِ پیام جدا می‌رود.
+    const history = msgs.slice(-6).map((m) => ({ role: m.role === "user" ? "user" : "assistant", text: m.text }));
     push("user", body);
     setSending(true);
     try {
       const res = await fetch("/api/routine/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: body }),
+        body: JSON.stringify({ message: body, history }),
       });
       const data = await res.json().catch(() => null);
 
@@ -96,7 +105,10 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       const tone: Msg["tone"] = data?.problems?.length
         ? (data?.applied?.length ? "warn" : "error")
         : (data?.changed ? "ok" : undefined);
-      push("bot", data?.reply || "چیزی برای گفتن ندارم.", tone);
+      const botId = push("bot", data?.reply || "چیزی برای گفتن ندارم.", tone);
+      if (Array.isArray(data?.options) && data.options.length) {
+        setOptions({ forMsgId: botId, items: data.options.slice(0, 4) });
+      }
     } catch {
       push("bot", "اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "error");
     } finally {
@@ -155,11 +167,22 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
               )}
 
               {msgs.map((m) => (
-                <div key={m.id} className={`routine-ai-msg ${m.role}${m.tone ? " tone-" + m.tone : ""}`}>
-                  {m.text.split("\n").map((line, i) => (
-                    <p key={i}>{line}</p>
-                  ))}
-                </div>
+                <Fragment key={m.id}>
+                  <div className={`routine-ai-msg ${m.role}${m.tone ? " tone-" + m.tone : ""}`}>
+                    {m.text.split("\n").map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
+                  {options?.forMsgId === m.id && (
+                    <div className="routine-ai-options">
+                      {options.items.map((o) => (
+                        <button key={o} type="button" className="routine-ai-option" disabled={sending} onClick={() => send(o)}>
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </Fragment>
               ))}
 
               {sending && (

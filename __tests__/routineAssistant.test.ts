@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  applyOps, parseClock, findConflict, suggestFreeSlot, describeSchedule,
-  MAX_OPS_PER_MESSAGE, MAX_OCCURRENCES,
+  applyOps, parseClock, findConflict, suggestFreeSlot, describeSchedule, findFreeSlot,
+  MAX_OPS_PER_MESSAGE, MAX_OCCURRENCES, DEFAULT_AWAKE,
 } from "@/lib/routineAssistant";
 
 const TODAY = "2026-09-05";
@@ -196,5 +196,90 @@ describe("describeSchedule", () => {
   });
   it("برنامه‌ی خالی را صریح می‌گوید", () => {
     expect(describeSchedule([])).toContain("ثبت نشده");
+  });
+});
+
+// ── رفتارِ تازه: ساعت اختیاری است و بن‌بست نمی‌دهیم ───────────────────────
+
+describe("افزودن بدونِ ساعت — خودش وقت پیدا می‌کند", () => {
+  it("«فلان رو برای امروز اضافه کن» بدونِ ساعت هم اضافه می‌شود", () => {
+    // اسمِ تازه (نه «مطالعه»ی داخلِ BASE) تا find سراغِ ردیفِ قدیمی نرود
+    const r = applyOps(BASE, [], [{ op: "add", name: "بازبینی", days: [6] }], TODAY);
+    expect(r.problems).toHaveLength(0);
+    expect(r.changed).toBe(true);
+    const added = r.occurrences.find((o) => o.name === "بازبینی")!;
+    expect(added.jsDay).toBe(6);
+    // شنبه ۰۸:۰۰–۰۹:۳۰ کلاس زبان است، پس اولین وقتِ آزادِ یک‌ساعته ۰۹:۳۰ است
+    expect(added.time).toBe("۰۹:۳۰ – ۱۰:۳۰");
+    expect(r.applied[0]).toContain("خودم انتخاب کردم");
+  });
+
+  it("داخلِ ساعت‌های بیداریِ کاربر می‌گردد، نه کلِ شبانه‌روز", () => {
+    const r = applyOps([], [], [{ op: "add", name: "دویدن", days: [2] }], TODAY,
+      { startMin: 6 * 60, endMin: 23 * 60 });
+    expect(r.occurrences[0].time).toBe("۰۶:۰۰ – ۰۷:۰۰");
+  });
+
+  it("اگر آن روز داخلِ بیداری جا نباشد، صریح می‌گوید و گزینه می‌دهد", () => {
+    const full = [occ("f", "پر", 3, "۰۸:۰۰ – ۲۲:۰۰")];
+    const r = applyOps(full, [], [{ op: "add", name: "مطالعه", days: [3] }], TODAY, DEFAULT_AWAKE);
+    expect(r.changed).toBe(false);
+    expect(r.problems[0]).toContain("جای خالی نمانده");
+    expect(r.options.length).toBeGreaterThan(0);
+  });
+
+  it("ساعتِ شروعِ بدشکل هنوز خطاست (فرقِ «نگفتن» با «غلط گفتن»)", () => {
+    const r = applyOps(BASE, [], [{ op: "add", name: "مطالعه", days: [1], start: "بعدازظهر" }], TODAY);
+    expect(r.changed).toBe(false);
+    expect(r.problems[0]).toContain("ساعتِ شروع");
+  });
+
+  it("طولِ خواسته‌شده حفظ می‌شود حتی وقتی جای دیگری می‌نشیند", () => {
+    // ۰۸:۰۰–۱۰:۰۰ خواسته (۲ ساعت) ولی پر است → همان ۲ ساعت جای دیگر
+    const r = applyOps(BASE, [], [{ op: "add", name: "کارگاه", days: [6], start: "08:00", end: "10:00" }], TODAY);
+    expect(r.changed).toBe(false);
+    expect(r.problems[0]).toContain("۰۹:۳۰ – ۱۱:۳۰");
+  });
+});
+
+describe("گزینه‌ها — هیچ بن‌بستی بدونِ راهِ ادامه", () => {
+  it("تداخل، گزینه‌ی ثبت در وقتِ آزاد را پیشنهاد می‌دهد", () => {
+    const r = applyOps(BASE, [], [{ op: "add", name: "جلسه", days: [6], start: "08:30", end: "09:00" }], TODAY);
+    expect(r.options.some((o) => o.includes("۰۹:۳۰"))).toBe(true);
+    expect(r.options.some((o) => o.includes("روزِ دیگر"))).toBe(true);
+  });
+
+  it("نبودِ روز، گزینه‌های امروز/فردا می‌دهد", () => {
+    const r = applyOps(BASE, [], [{ op: "add", name: "مطالعه", days: [], start: "10:00" }], TODAY);
+    expect(r.options.some((o) => o.includes("امروز"))).toBe(true);
+    expect(r.options.some((o) => o.includes("فردا"))).toBe(true);
+  });
+
+  it("ارجاعِ ناموجود، گزینه‌ی دیدنِ فهرست می‌دهد", () => {
+    const r = applyOps(BASE, [], [{ op: "delete", ref: 99 }], TODAY);
+    expect(r.options.some((o) => o.includes("نشانم بده"))).toBe(true);
+  });
+
+  it("بیش از چهار گزینه نمی‌دهد و تکراری هم نه", () => {
+    const r = applyOps(BASE, [], [
+      { op: "add", name: "الف", days: [6], start: "08:30" },
+      { op: "add", name: "ب", days: [6], start: "08:30" },
+      { op: "add", name: "پ", days: [6], start: "08:30" },
+    ], TODAY);
+    expect(r.options.length).toBeLessThanOrEqual(4);
+    expect(new Set(r.options).size).toBe(r.options.length);
+  });
+
+  it("وقتی همه‌چیز درست پیش رفت، گزینه‌ی «اصلاح» می‌دهد نه خطا", () => {
+    const r = applyOps([], [], [{ op: "add", name: "مطالعه", days: [1] }], TODAY);
+    expect(r.problems).toHaveLength(0);
+    expect(r.options).toContain("ساعتش را عوض کن");
+  });
+});
+
+describe("findFreeSlot", () => {
+  it("سقفِ بازه را رعایت می‌کند", () => {
+    expect(findFreeSlot([], 1, 8 * 60, 60, 8 * 60 + 30)).toBeNull();
+    expect(findFreeSlot([], 1, 8 * 60, 60, 9 * 60)!.startMin).toBe(8 * 60);
   });
 });

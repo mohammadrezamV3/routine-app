@@ -4,13 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readJsonBody } from "@/lib/validate";
-import { planRoutineChange } from "@/lib/aiClient";
+import { planRoutineChange, type RoutineChatTurn } from "@/lib/aiClient";
 import { logError } from "@/lib/errorLog";
 import { SETTING_KEYS, ROUTINE_ASSISTANT_USES_KEY } from "@/lib/userSettingKeys";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import {
   applyOps, describeSchedule, sortOccurrences,
-  FREE_ASSISTANT_USES, DAY_NAME_FA,
+  FREE_ASSISTANT_USES, DAY_NAME_FA, DEFAULT_AWAKE, type AwakeWindow,
 } from "@/lib/routineAssistant";
 import type { CustomOccurrence } from "@/lib/storage";
 
@@ -75,6 +75,38 @@ async function readOccurrences(userId: string, key: string): Promise<any> {
   return row?.value ?? null;
 }
 
+/**
+ * ساعت‌های بیداریِ کاربر — وقتی خودمان باید برای یک برنامه وقت پیدا کنیم،
+ * جست‌وجو باید داخلِ همین بازه باشد نه کلِ شبانه‌روز. نبودِ تنظیم یعنی
+ * بازه‌ی پیش‌فرض؛ خوابِ بعد از نیمه‌شب هم به آخرِ روز محدود می‌شود چون
+ * برنامه‌ها روزِ هفته‌ای‌اند و از نیمه‌شب به روزِ بعد سر نمی‌روند.
+ */
+function awakeWindow(raw: unknown): AwakeWindow {
+  const v = raw as { wake?: unknown; sleep?: unknown } | null;
+  const toMin = (t: unknown): number | null => {
+    if (typeof t !== "string") return null;
+    const m = /^(\d{1,2}):(\d{2})$/.exec(t.trim());
+    if (!m) return null;
+    const h = Number(m[1]), mm = Number(m[2]);
+    if (h > 23 || mm > 59) return null;
+    return h * 60 + mm;
+  };
+  const startMin = toMin(v?.wake);
+  const rawEnd = toMin(v?.sleep);
+  if (startMin === null || rawEnd === null) return DEFAULT_AWAKE;
+  const endMin = rawEnd > startMin ? rawEnd : 24 * 60 - 1;
+  return { startMin, endMin };
+}
+
+/** تاریخچه‌ی گفت‌وگو از کلاینت می‌آید، پس مثل هر ورودیِ دیگری پاک‌سازی می‌شود */
+function parseHistory(raw: unknown): RoutineChatTurn[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((t: any) => t && (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
+    .slice(-6)
+    .map((t: any) => ({ role: t.role, text: String(t.text).slice(0, 400) }));
+}
+
 function todayLabelFa(): string {
   const now = new Date();
   const j = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -99,7 +131,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const parsed = await readJsonBody<{ message?: unknown }>(req, 8 * 1024);
+  const parsed = await readJsonBody<{ message?: unknown; history?: unknown }>(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
 
   const message = typeof parsed.body?.message === "string" ? parsed.body.message.trim() : "";
@@ -141,17 +173,19 @@ export async function POST(req: NextRequest) {
   }
 
   // ---------- وضعیتِ فعلیِ برنامه‌ها ----------
+  const history = parseHistory(parsed.body?.history);
   const rawOcc = await readOccurrences(userId, SETTING_KEYS.customOccurrences);
   const occurrences: CustomOccurrence[] = Array.isArray(rawOcc) ? (rawOcc as CustomOccurrence[]) : [];
   const rawRemoved = await readOccurrences(userId, SETTING_KEYS.removedOccurrences);
   const removed: string[] = Array.isArray(rawRemoved) ? (rawRemoved as string[]).filter((x) => typeof x === "string") : [];
+  const awake = awakeWindow(await readOccurrences(userId, SETTING_KEYS.wakeSleepTimes));
 
   const ordered = sortOccurrences(occurrences);
 
   // ---------- فراخوانی مدل ----------
   let plan;
   try {
-    plan = await planRoutineChange(message, describeSchedule(ordered), todayLabelFa(), userId);
+    plan = await planRoutineChange(message, describeSchedule(ordered), todayLabelFa(), userId, history);
   } catch (err: any) {
     await refundQuota();
     logError("ai-gateway", `دستیارِ روتین شکست خورد: ${err?.message || err}`, {
@@ -178,8 +212,22 @@ export async function POST(req: NextRequest) {
       offTopic: true,
       applied: [],
       problems: [],
+      options: ["برنامه‌های امروزم را نشانم بده", "یک برنامه‌ی جدید اضافه کن"],
       changed: false,
       quota: quotaAfter(usesBefore),
+    });
+  }
+
+  // ---------- مدل خودش سوال دارد ----------
+  if (plan.ask) {
+    return NextResponse.json({
+      reply: plan.ask.question,
+      applied: [],
+      problems: [],
+      options: plan.ask.options,
+      asking: true,
+      changed: false,
+      quota: quotaAfter(unlimited ? 0 : usesBefore + 1),
     });
   }
 
@@ -189,13 +237,14 @@ export async function POST(req: NextRequest) {
       reply: plan.reply || "چیزی برای تغییر پیدا نکردم. دقیق‌تر بگو با کدام برنامه چه کار کنم.",
       applied: [],
       problems: [],
+      options: [],
       changed: false,
       quota: quotaAfter(unlimited ? 0 : usesBefore + 1),
     });
   }
 
   // ---------- اعمال ----------
-  const outcome = applyOps(ordered, removed, plan.ops, isoLocal(new Date()));
+  const outcome = applyOps(ordered, removed, plan.ops, isoLocal(new Date()), awake);
 
   if (outcome.changed) {
     const next = sortOccurrences(outcome.occurrences);
@@ -226,6 +275,7 @@ export async function POST(req: NextRequest) {
     reply: lines.join("\n"),
     applied: outcome.applied,
     problems: outcome.problems,
+    options: outcome.options,
     changed: outcome.changed,
     occurrences: outcome.changed ? sortOccurrences(outcome.occurrences) : null,
     quota: quotaAfter(unlimited ? 0 : usesBefore + 1),

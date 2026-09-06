@@ -6287,3 +6287,17 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   padding-top:12px; border-top:1px solid var(--surface-line);
   font-size:12px; color:var(--muted); text-align:center;
 }
+
+/* گزینه‌های آماده‌ی پاسخ زیرِ پیامِ دستیار — کاربر به‌جای تایپ می‌زند رویشان */
+.routine-ai-options{
+  align-self:flex-start; max-width:88%;
+  display:flex; flex-wrap:wrap; gap:6px; margin-top:-2px;
+}
+.routine-ai-option{
+  font-size:11px; line-height:1.8; padding:5px 10px; border-radius:999px;
+  background:rgba(var(--bg-rgb),.35);
+  border:1px solid rgba(var(--accent-rgb),.35);
+  color:var(--text);
+}
+.routine-ai-option:disabled{ opacity:.45; }
+@media (hover:hover){ .routine-ai-option:hover:not(:disabled){ border-color:var(--accent); } }
