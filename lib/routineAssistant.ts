@@ -26,10 +26,12 @@ export const MAX_OPS_PER_MESSAGE = 12;
 export const FREE_ASSISTANT_USES = 3;
 
 /**
- * وقتی کاربر ساعت نمی‌گوید («مطالعه رو برای امروز اضافه کن») خودمان یک
- * بازه‌ی آزاد پیدا می‌کنیم. طولِ پیش‌فرض یک ساعت است و جست‌وجو داخلِ
- * ساعت‌های بیداریِ خودِ کاربر انجام می‌شود، نه کلِ شبانه‌روز — وگرنه ممکن
- * بود برنامه سرِ ۳ بامداد بنشیند.
+ * برنامه لازم نیست ساعت داشته باشد.
+ *
+ * «امروز ورزش دارم» یک برنامه‌ی واقعی است بدونِ هیچ ساعتی؛ اجبار به ساعت
+ * یا حدس‌زدنِ آن، چیزی می‌سازد که کاربر نگفته. برنامه‌ی بی‌ساعت `time` خالی
+ * می‌گیرد و `sortTasksByTime` خودش آن را ته فهرستِ همان روز می‌نشاند.
+ * چون بازه‌ای ندارد، با هیچ‌چیز هم تداخل پیدا نمی‌کند.
  */
 export const DEFAULT_DURATION_MIN = 60;
 export type AwakeWindow = { startMin: number; endMin: number };
@@ -309,25 +311,16 @@ export function applyOps(
         }
         const dayFa = DAY_NAME_FA[jsDay];
 
-        // ── کاربر ساعت نگفته: خودمان اولین بازه‌ی آزادِ داخلِ ساعت‌های
-        //    بیداری را برمی‌داریم و صریح می‌گوییم کجا گذاشتیم.
+        // ── کاربر ساعت نگفته: برنامه *بی‌ساعت* ثبت می‌شود، نه با ساعتی که
+        //    خودمان حدس زده‌ایم. ته فهرستِ همان روز می‌نشیند و چون بازه‌ای
+        //    ندارد با چیزی تداخل هم پیدا نمی‌کند.
         if (!start) {
-          const slot = findFreeSlot(list, jsDay, awake.startMin, autoDuration, awake.endMin);
-          if (!slot) {
-            problems.push(`${dayFa} بینِ ${minutesToFa(awake.startMin)} تا ${minutesToFa(awake.endMin)} جای خالی نمانده.`);
-            offer(`«${name}» را یک روزِ دیگر بگذار`, "برنامه‌های آن روز را نشانم بده");
-            continue;
-          }
-          const sFa = minutesToFa(slot.startMin);
-          const eFa = slot.endMin === null ? null : minutesToFa(slot.endMin);
           list.push({
-            id: newOccId(), name, jsDay, time: timeLabel(sFa, eFa),
+            id: newOccId(), name, jsDay, time: "",
             startDate: todayIso, importance, ...(tag ? { tag } : {}),
           });
-          applied.push(`«${name}» ${dayFa} ساعتِ ${timeLabel(sFa, eFa)} اضافه شد (ساعتش را خودم انتخاب کردم).`);
-          // فقط گزینه‌ی *اصلاح* — یک دکمه‌ی «همین خوبه» یک فراخوانیِ AI و
-          // یک واحد از سهمیه‌ی کاربر را خرجِ کاری می‌کرد که خودبه‌خود انجام شده.
-          offer("ساعتش را عوض کن");
+          applied.push(`«${name}» ${dayFa} بدونِ ساعت اضافه شد.`);
+          offer(`برای «${name}» ساعت هم بگذار`);
           continue;
         }
 
@@ -362,6 +355,18 @@ export function applyOps(
       const target = resolve(raw.ref);
       if ("error" in target) { problems.push(target.error); continue; }
 
+      // `retime` بدونِ ساعت یعنی «ساعتش را بردار» — راهِ برگشت از
+      // برنامه‌ی ساعت‌دار به برنامه‌ی بی‌ساعت.
+      const wantsClear = raw.start === undefined || raw.start === null || raw.start === "";
+      if (wantsClear && !raw.end) {
+        if (!target.time) { problems.push(`«${target.name}» از قبل بی‌ساعت است.`); continue; }
+        const wasTime = target.time;
+        list = list.filter((o) => o.id !== target.id);
+        clearRemovedFor(target.id);
+        list.push({ ...target, id: newOccId(), time: "", startDate: todayIso });
+        applied.push(`ساعتِ «${target.name}» (${wasTime}) برداشته شد.`);
+        continue;
+      }
       const start = parseClock(raw.start);
       if (!start) { problems.push(`ساعتِ جدیدِ «${target.name}» را نفهمیدم.`); continue; }
       const end = raw.end === undefined || raw.end === null || raw.end === "" ? null : parseClock(raw.end);
@@ -405,11 +410,19 @@ export function applyOps(
         continue;
       }
 
-      // ساعت می‌تواند همراهِ جابه‌جایی عوض شود؛ اگر نگفته باشد، همان ساعتِ فعلی
+      // ساعت می‌تواند همراهِ جابه‌جایی عوض شود؛ اگر نگفته باشد، همان ساعتِ فعلی.
+      // برنامه‌ی بی‌ساعت هم بی‌ساعت جابه‌جا می‌شود — نبودِ ساعت خطا نیست.
       const curStart = occStart(target);
       const curEnd = occEnd(target);
       const start = raw.start ? parseClock(raw.start) : (curStart === null ? null : { fa: target.time.split(/[–—-]/)[0].trim(), min: curStart });
-      if (!start) { problems.push(`ساعتِ «${target.name}» قابلِ خواندن نبود.`); continue; }
+      if (!start && raw.start) { problems.push(`ساعتِ «${target.name}» قابلِ خواندن نبود.`); continue; }
+      if (!start) {
+        list = list.filter((o) => o.id !== target.id);
+        clearRemovedFor(target.id);
+        list.push({ ...target, id: newOccId(), jsDay: toDay, time: "", startDate: todayIso });
+        applied.push(`«${target.name}» از ${DAY_NAME_FA[target.jsDay]} به ${DAY_NAME_FA[toDay]} منتقل شد (همچنان بدونِ ساعت).`);
+        continue;
+      }
       const end = raw.end
         ? parseClock(raw.end)
         : (raw.start || curEnd === null ? null : { fa: target.time.split(/[–—-]/)[1]?.trim() || "", min: curEnd });

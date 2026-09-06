@@ -482,7 +482,9 @@ export default function WeeklyPage() {
                               <div className="wt-untimed-row">
                                 {untimedItems.map((t) => (
                                   <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
-                                    <div className="wt-range">{toEnDigits(t.time)}</div>
+                                    {/* `time` می‌تواند کاملا خالی باشد (برنامه‌ی بی‌ساعت)؛
+                                        آن‌وقت این ردیف نباید یک کادرِ خالی نشان دهد. */}
+                                    {!!t.time && <div className="wt-range">{toEnDigits(t.time)}</div>}
                                     <div className="wt-name">{t.name}</div>
                                   </div>
                                 ))}

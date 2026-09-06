@@ -201,31 +201,32 @@ describe("describeSchedule", () => {
 
 // ── رفتارِ تازه: ساعت اختیاری است و بن‌بست نمی‌دهیم ───────────────────────
 
-describe("افزودن بدونِ ساعت — خودش وقت پیدا می‌کند", () => {
-  it("«فلان رو برای امروز اضافه کن» بدونِ ساعت هم اضافه می‌شود", () => {
-    // اسمِ تازه (نه «مطالعه»ی داخلِ BASE) تا find سراغِ ردیفِ قدیمی نرود
-    const r = applyOps(BASE, [], [{ op: "add", name: "بازبینی", days: [6] }], TODAY);
+describe("برنامه‌ی بدونِ ساعت", () => {
+  it("«امروز ورزش دارم» بدونِ ساعت ثبت می‌شود، نه با ساعتِ حدسی", () => {
+    const r = applyOps(BASE, [], [{ op: "add", name: "ورزش", days: [6] }], TODAY);
     expect(r.problems).toHaveLength(0);
     expect(r.changed).toBe(true);
-    const added = r.occurrences.find((o) => o.name === "بازبینی")!;
+    const added = r.occurrences.find((o) => o.name === "ورزش")!;
     expect(added.jsDay).toBe(6);
-    // شنبه ۰۸:۰۰–۰۹:۳۰ کلاس زبان است، پس اولین وقتِ آزادِ یک‌ساعته ۰۹:۳۰ است
-    expect(added.time).toBe("۰۹:۳۰ – ۱۰:۳۰");
-    expect(r.applied[0]).toContain("خودم انتخاب کردم");
+    expect(added.time).toBe("");
+    expect(r.applied[0]).toContain("بدونِ ساعت");
+    expect(r.options).toContain("برای «ورزش» ساعت هم بگذار");
   });
 
-  it("داخلِ ساعت‌های بیداریِ کاربر می‌گردد، نه کلِ شبانه‌روز", () => {
-    const r = applyOps([], [], [{ op: "add", name: "دویدن", days: [2] }], TODAY,
-      { startMin: 6 * 60, endMin: 23 * 60 });
-    expect(r.occurrences[0].time).toBe("۰۶:۰۰ – ۰۷:۰۰");
+  it("برنامه‌ی بی‌ساعت با هیچ‌چیز تداخل ندارد — حتی روزِ کاملا پر", () => {
+    const full = [occ("f", "پر", 3, "۰۰:۰۰ – ۲۳:۵۹")];
+    const r = applyOps(full, [], [{ op: "add", name: "خرید", days: [3] }], TODAY);
+    expect(r.problems).toHaveLength(0);
+    expect(r.occurrences.find((o) => o.name === "خرید")!.time).toBe("");
   });
 
-  it("اگر آن روز داخلِ بیداری جا نباشد، صریح می‌گوید و گزینه می‌دهد", () => {
-    const full = [occ("f", "پر", 3, "۰۸:۰۰ – ۲۲:۰۰")];
-    const r = applyOps(full, [], [{ op: "add", name: "مطالعه", days: [3] }], TODAY, DEFAULT_AWAKE);
-    expect(r.changed).toBe(false);
-    expect(r.problems[0]).toContain("جای خالی نمانده");
-    expect(r.options.length).toBeGreaterThan(0);
+  it("چند برنامه‌ی بی‌ساعت در یک روز کنارِ هم می‌نشینند", () => {
+    const r = applyOps([], [], [
+      { op: "add", name: "ورزش", days: [1] },
+      { op: "add", name: "خرید", days: [1] },
+    ], TODAY);
+    expect(r.applied).toHaveLength(2);
+    expect(r.occurrences.every((o) => o.time === "")).toBe(true);
   });
 
   it("ساعتِ شروعِ بدشکل هنوز خطاست (فرقِ «نگفتن» با «غلط گفتن»)", () => {
@@ -234,11 +235,34 @@ describe("افزودن بدونِ ساعت — خودش وقت پیدا می‌�
     expect(r.problems[0]).toContain("ساعتِ شروع");
   });
 
-  it("طولِ خواسته‌شده حفظ می‌شود حتی وقتی جای دیگری می‌نشیند", () => {
-    // ۰۸:۰۰–۱۰:۰۰ خواسته (۲ ساعت) ولی پر است → همان ۲ ساعت جای دیگر
-    const r = applyOps(BASE, [], [{ op: "add", name: "کارگاه", days: [6], start: "08:00", end: "10:00" }], TODAY);
+  it("جابه‌جاییِ برنامه‌ی بی‌ساعت، بی‌ساعت می‌ماند", () => {
+    const list = [{ id: "u", name: "ورزش", jsDay: 6, time: "", startDate: "2026-01-01" }];
+    const r = applyOps(list, [], [{ op: "move", ref: 1, toDay: 2 }], TODAY);
+    expect(r.problems).toHaveLength(0);
+    expect(r.occurrences[0].jsDay).toBe(2);
+    expect(r.occurrences[0].time).toBe("");
+    expect(r.applied[0]).toContain("بدونِ ساعت");
+  });
+
+  it("retime بدونِ ساعت یعنی «ساعتش را بردار»", () => {
+    const r = applyOps(BASE, [], [{ op: "retime", ref: 1 }], TODAY);
+    expect(r.problems).toHaveLength(0);
+    expect(r.occurrences.find((o) => o.name === "کلاس زبان")!.time).toBe("");
+    expect(r.applied[0]).toContain("برداشته شد");
+  });
+
+  it("برداشتنِ ساعت از برنامه‌ای که از قبل بی‌ساعت است، پیامِ روشن می‌دهد", () => {
+    const list = [{ id: "u", name: "ورزش", jsDay: 6, time: "", startDate: "2026-01-01" }];
+    const r = applyOps(list, [], [{ op: "retime", ref: 1 }], TODAY);
     expect(r.changed).toBe(false);
-    expect(r.problems[0]).toContain("۰۹:۳۰ – ۱۱:۳۰");
+    expect(r.problems[0]).toContain("از قبل بی‌ساعت");
+  });
+
+  it("می‌شود بعدا به برنامه‌ی بی‌ساعت ساعت داد", () => {
+    const list = [{ id: "u", name: "ورزش", jsDay: 1, time: "", startDate: "2026-01-01" }];
+    const r = applyOps(list, [], [{ op: "retime", ref: 1, start: "07:00", end: "08:00" }], TODAY);
+    expect(r.problems).toHaveLength(0);
+    expect(r.occurrences[0].time).toBe("۰۷:۰۰ – ۰۸:۰۰");
   });
 });
 
@@ -273,7 +297,7 @@ describe("گزینه‌ها — هیچ بن‌بستی بدونِ راهِ اد�
   it("وقتی همه‌چیز درست پیش رفت، گزینه‌ی «اصلاح» می‌دهد نه خطا", () => {
     const r = applyOps([], [], [{ op: "add", name: "مطالعه", days: [1] }], TODAY);
     expect(r.problems).toHaveLength(0);
-    expect(r.options).toContain("ساعتش را عوض کن");
+    expect(r.options).toContain("برای «مطالعه» ساعت هم بگذار");
   });
 });
 

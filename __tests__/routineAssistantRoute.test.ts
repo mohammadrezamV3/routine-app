@@ -289,31 +289,28 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
 });
 
 describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خودکار", () => {
-  it("بدونِ ساعت هم اضافه می‌کند و می‌گوید کجا گذاشت", async () => {
+  it("«امروز ورزش دارم» بدونِ ساعت ذخیره می‌شود", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
-    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "مطالعه", days: [6] }], ask: null };
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "ورزش", days: [6] }], ask: null };
 
-    const res = await POST(post({ message: "مطالعه رو برای امروز اضافه کن" }));
+    const res = await POST(post({ message: "امروز ورزش دارم" }));
     const data = await res.json();
 
     expect(data.changed).toBe(true);
-    expect(data.reply).toContain("خودم انتخاب کردم");
+    expect(data.reply).toContain("بدونِ ساعت");
     const saved = await readOccurrences(currentUserId);
-    expect(saved.find((o) => o.name === "مطالعه")).toBeTruthy();
+    expect(saved.find((o) => o.name === "ورزش").time).toBe("");
   });
 
-  it("ساعتِ خودکار داخلِ بیداریِ خودِ کاربر انتخاب می‌شود", async () => {
+  it("برنامه‌ی بی‌ساعت حتی در روزِ کاملا پر هم ثبت می‌شود", async () => {
     currentUserId = await makeUser();
-    await setOccurrences(currentUserId, []);
-    await prisma.userSetting.create({
-      data: { userId: currentUserId, key: SETTING_KEYS.wakeSleepTimes, value: { wake: "06:00", sleep: "23:00" } as any },
-    });
-    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "دویدن", days: [2] }], ask: null };
+    await setOccurrences(currentUserId, [{ id: "f", name: "پر", jsDay: 2, time: "۰۰:۰۰ – ۲۳:۵۹", startDate: "2026-01-01" }]);
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "خرید", days: [2] }], ask: null };
 
-    await POST(post({ message: "دویدن اضافه کن" }));
-    const saved = await readOccurrences(currentUserId);
-    expect(saved[0].time).toBe("۰۶:۰۰ – ۰۷:۰۰");
+    const data = await (await POST(post({ message: "فردا خرید دارم" }))).json();
+    expect(data.problems).toHaveLength(0);
+    expect(data.changed).toBe(true);
   });
 
   it("سوالِ مدل با گزینه‌ها برمی‌گردد و هیچ تغییری نمی‌دهد", async () => {

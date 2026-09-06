@@ -134,9 +134,15 @@ export function DashTaskRow({
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
-            {toEnDigits(task.time)}
-          </span>
+          {/* برنامه می‌تواند بی‌ساعت باشد («امروز ورزش دارم»). به‌جای یک جای
+              خالیِ مبهم، صریح می‌گوییم بی‌ساعت است. */}
+          {task.time ? (
+            <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
+              {toEnDigits(task.time)}
+            </span>
+          ) : (
+            <span className="shrink-0 text-[10.5px] text-dash-muted sm:text-[12px]">بدون ساعت</span>
+          )}
         </div>
       </div>
 

@@ -3,7 +3,14 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Loader2, Send, Sparkles, X } from "lucide-react";
+import { Loader2, Mic, Send, Square, X } from "lucide-react";
+import SiriOrb from "@/components/smoothui/components/siri-orb";
+import {
+  type AIState, useAudioAmplitude, useSimulatedAmplitude,
+} from "@/components/smoothui/components/ai-core";
+import {
+  useVoiceRecorder, VOICE_CONSTRAINTS, VOICE_MAX_BYTES,
+} from "@/components/useVoiceRecorder";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { primeSettingCache } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -38,6 +45,14 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [options, setOptions] = useState<Options>(null);
+  // وضعیتِ گویِ دستیار. یک منبعِ واحد برای هر دو گو (دکمه‌ی شناور و سرِ پنل)
+  // تا هر دو یک چیز بگویند.
+  const [orbState, setOrbState] = useState<AIState>("idle");
+  const { amplitude: micAmplitude, status: micStatus, start: micStart, stop: micStop, stream: micStream } =
+    useAudioAmplitude({ constraints: VOICE_CONSTRAINTS });
+  const simulated = useSimulatedAmplitude(orbState);
+  const recorder = useVoiceRecorder(micStream);
+  const listening = recorder.state === "recording";
   const [quota, setQuota] = useState<Quota | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -56,8 +71,21 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   }, [open, quota, status]);
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 120);
+    if (open) { setTimeout(() => inputRef.current?.focus(), 120); return; }
+    // پنل که بسته شد، میکروفون هم باید آزاد شود — وگرنه چراغِ ضبطِ مرورگر
+    // روشن می‌ماند و کاربر حق دارد فکر کند داریم گوش می‌دهیم.
+    recorder.cancel();
+    micStop();
+    setOrbState("idle");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // «done» و «error» حالتِ لحظه‌ای‌اند؛ گو باید بعدشان به آرامش برگردد.
+  useEffect(() => {
+    if (orbState !== "done" && orbState !== "error") return;
+    const t = setTimeout(() => setOrbState("idle"), 1400);
+    return () => clearTimeout(t);
+  }, [orbState]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -79,6 +107,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     const history = msgs.slice(-6).map((m) => ({ role: m.role === "user" ? "user" : "assistant", text: m.text }));
     push("user", body);
     setSending(true);
+    setOrbState("thinking");
     try {
       const res = await fetch("/api/routine/assistant", {
         method: "POST",
@@ -90,6 +119,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       if (!res.ok) {
         push("bot", data?.error || "یک مشکلِ ناشناخته پیش آمد. دوباره امتحان کن.", "error");
         if (data?.quota) setQuota(data.quota);
+        setOrbState("error");
         return;
       }
 
@@ -109,11 +139,54 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       if (Array.isArray(data?.options) && data.options.length) {
         setOptions({ forMsgId: botId, items: data.options.slice(0, 4) });
       }
+      setOrbState(tone === "error" ? "error" : "done");
     } catch {
       push("bot", "اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "error");
+      setOrbState("error");
     } finally {
       setSending(false);
     }
+  }
+
+  // ── ویس ──────────────────────────────────────────────────────────────
+  // ضبط از همان جریانی می‌آید که گو را تکان می‌دهد، پس فقط *یک بار* اجازه‌ی
+  // میکروفون گرفته می‌شود و کاربر همان صدایی را می‌بیند که دارد ضبط می‌شود.
+  async function toggleVoice() {
+    if (listening) {
+      const blob = await recorder.stop();
+      setOrbState("idle");
+      if (!blob) { push("bot", "چیزی ضبط نشد. دوباره امتحان کن.", "error"); return; }
+      if (blob.size > VOICE_MAX_BYTES) { push("bot", "ویس خیلی طولانی است. کوتاه‌تر بگو.", "error"); return; }
+
+      setSending(true);
+      setOrbState("thinking");
+      try {
+        const fd = new FormData();
+        fd.append("audio", blob, "voice.webm");
+        const res = await fetch("/api/routine/assistant/voice", { method: "POST", body: fd });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.text) {
+          push("bot", data?.error || "تبدیلِ ویس انجام نشد.", "error");
+          setOrbState("error");
+          return;
+        }
+        setSending(false);
+        await send(data.text);
+      } catch {
+        push("bot", "تبدیلِ ویس انجام نشد. اینترنتت را چک کن.", "error");
+        setOrbState("error");
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
+    if (micStatus !== "active") await micStart();
+    // `start` بعد از await خودش جریان را می‌خواند؛ اگر اجازه رد شده باشد
+    // false برمی‌گرداند و پیامِ خودش را می‌گذارد.
+    const ok = recorder.start();
+    if (ok) setOrbState("listening");
+    else push("bot", recorder.error || "به میکروفون دسترسی نداریم.", "error");
   }
 
   const exhausted = !!quota && !quota.unlimited && (quota.remaining ?? 0) <= 0;
@@ -127,7 +200,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         aria-label="مدیر برنامه"
         title="مدیر برنامه"
       >
-        <Sparkles size={20} />
+        <SiriOrb size="48px" state={orbState} amplitude={simulated} />
       </button>
 
       {open && (
@@ -136,7 +209,12 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
           <div className="modal-overlay open" onClick={() => setOpen(false)} />
           <div className="modal-panel routine-ai-panel open" role="dialog" aria-modal="true" aria-label="مدیر برنامه">
             <div className="modal-head">
-              <div className="modal-title">
+              <div className="modal-title routine-ai-title">
+                <SiriOrb
+                  size="26px"
+                  state={orbState}
+                  amplitude={listening ? micAmplitude : simulated}
+                />
                 مدیر برنامه
                 {quota && (
                   <span className="routine-ai-quota">
@@ -185,6 +263,12 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                 </Fragment>
               ))}
 
+              {listening && (
+                <div className="routine-ai-msg bot is-typing">
+                  <span>دارم گوش می‌دهم… وقتی تمام شد دکمه را بزن.</span>
+                </div>
+              )}
+
               {sending && (
                 <div className="routine-ai-msg bot is-typing">
                   <Loader2 size={14} className="trade-spin" />
@@ -229,6 +313,16 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   }}
                   disabled={sending}
                 />
+                <button
+                  type="button"
+                  className={`routine-ai-mic${listening ? " is-recording" : ""}`}
+                  onClick={toggleVoice}
+                  disabled={sending}
+                  aria-label={listening ? "پایان ضبط" : "ضبط صدا"}
+                  title={listening ? "پایان ضبط و ارسال" : "با صدا بگو"}
+                >
+                  {listening ? <Square size={14} /> : <Mic size={15} />}
+                </button>
                 <button type="submit" className="routine-ai-send" disabled={sending || !input.trim()} aria-label="ارسال">
                   {sending ? <Loader2 size={15} className="trade-spin" /> : <Send size={15} />}
                 </button>
