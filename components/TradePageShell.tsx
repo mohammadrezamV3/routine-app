@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useEffect, useRef } from "react";
 import { ModuleGate } from "./ModuleGate";
 import { AuthGate } from "./AuthGate";
 import { PanelSkeleton } from "./PanelSkeleton";
@@ -25,6 +26,7 @@ export function TradePageShell({
   back = { href: "/trade", label: "ترید" },
   titleAction,
   fullBleed = false,
+  noScroll = false,
   children,
 }: {
   title: string;
@@ -36,9 +38,34 @@ export function TradePageShell({
    * برمی‌دارد تا محتوا خودش بتواند تا لبه‌های پنجره باز شود (صفحه‌ی چارت).
    */
   fullBleed?: boolean;
+  /**
+   * صفحه‌هایی که یک لیستِ بلند دارند (یادداشت‌ها/چک‌لیست‌ها/ژورنال): طبقِ
+   * درخواستِ صریح، خودِ صفحه دیگر اسکرول نمی‌خورد — فقط همین ناحیه‌ی
+   * محتوا (زیرِ تایتل/سرصفحه) داخلش اسکرول دارد، هم‌الگویِ همان تکنیکِ
+   * `--tv-h` در صفحه‌ی چارت (ارتفاعِ واقعیِ «از اینجا تا کفِ پنجره»، چون
+   * ارتفاعِ سرصفحه ثابت نیست و با شکستنِ خط عوض می‌شود).
+   */
+  noScroll?: boolean;
   children: React.ReactNode;
 }) {
   const { status } = useSession();
+  const boxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!noScroll) return;
+    const el = boxRef.current;
+    if (!el) return;
+    const apply = () => {
+      if (window.innerWidth < 1024) { el.style.removeProperty("--tp-h"); return; }
+      const top = el.getBoundingClientRect().top;
+      const bodyPad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+      const h = window.innerHeight - top - Math.min(bodyPad, 24) - 12;
+      el.style.setProperty("--tp-h", `${Math.max(360, Math.round(h))}px`);
+    };
+    apply();
+    const t = setTimeout(apply, 460);
+    window.addEventListener("resize", apply);
+    return () => { clearTimeout(t); window.removeEventListener("resize", apply); };
+  }, [noScroll, status]);
 
   return (
     <section className={fullBleed ? "trade-desktop trade-desktop-full" : "trade-desktop"}>
@@ -51,7 +78,7 @@ export function TradePageShell({
               <ChevronRight size={15} /> {back.label}
             </Link>
           )}
-          <h1>{title}</h1>
+          {!!title && <h1>{title}</h1>}
           {titleAction}
         </div>
       ) : (
@@ -76,9 +103,11 @@ export function TradePageShell({
       {status === "authenticated" && (
         <ModuleGate module="TRADE">
           <motion.div
+            ref={noScroll ? boxRef : undefined}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            className={noScroll ? "trade-noscroll-box thin-scroll" : undefined}
           >
             {children}
           </motion.div>

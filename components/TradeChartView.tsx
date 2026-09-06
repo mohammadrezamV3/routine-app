@@ -104,24 +104,58 @@ export function TradeChartView() {
 
   // فول‌اسکرینِ چارت — روی خودِ کارتِ `.tv-chart-card` (نه فقط iframe) تا
   // نوارِ جست‌وجوی نماد هم همراهش بماند.
+  //
+  // چرا دکمه قبلاً «کار نمی‌کرد»: Fullscreen API استاندارد
+  // (`Element.requestFullscreen`) روی سافاری/iOS اصلاً پیاده‌سازی نشده
+  // (فقط `webkitEnterFullscreen` روی خودِ تگ `<video>` کار می‌کند) و روی
+  // بعضی وب‌ویوها هم به‌خاطرِ Permissions-Policy رد می‌شود — نتیجه‌اش یک
+  // `catch(() => {})`ی بی‌صدا بود، یعنی از دیدِ کاربر دکمه هیچ اتفاقی
+  // نمی‌انداخت. حالا اول همان API استاندارد امتحان می‌شود و اگر پشتیبانی
+  // نشد/رد شد، یک حالتِ «شبه‌فول‌اسکرین» با CSS (`position:fixed` روی کلِ
+  // ویوپورت) جایگزین می‌شود که به هیچ APIِ مرورگری وابسته نیست.
   const chartCardRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
-    const onChange = () => setIsFullscreen(document.fullscreenElement === chartCardRef.current);
+    const onChange = () => {
+      if (document.fullscreenElement === chartCardRef.current) setIsFullscreen(true);
+      else if (document.fullscreenElement === null) setIsFullscreen((v) => (chartCardRef.current?.dataset.pseudoFs ? v : false));
+    };
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
-  function toggleFullscreen() {
-    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
-    chartCardRef.current?.requestFullscreen?.().catch(() => {});
+  useEffect(() => {
+    if (!isFullscreen) return;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") exitFullscreen(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullscreen]);
+  function exitFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (chartCardRef.current) delete chartCardRef.current.dataset.pseudoFs;
+    setIsFullscreen(false);
+  }
+  async function toggleFullscreen() {
+    if (isFullscreen) { exitFullscreen(); return; }
+    const el = chartCardRef.current;
+    if (!el) return;
+    try {
+      if (!el.requestFullscreen) throw new Error("unsupported");
+      await el.requestFullscreen();
+      setIsFullscreen(true);
+    } catch {
+      el.dataset.pseudoFs = "1";
+      setIsFullscreen(true);
+    }
   }
 
   if (loading) return <PanelSkeleton />;
 
   return (
     <div className="tv-page" ref={pageRef}>
-      <div className="tv-chart-card" ref={chartCardRef}>
+      <div className={`tv-chart-card${isFullscreen ? " tv-pseudo-fullscreen" : ""}`} ref={chartCardRef}>
         <div className="tv-chart-toolbar">
+          <span className="tv-chart-title">چارت</span>
           <SymbolSearchField symbol={symbol} onChange={changeSymbol} />
           <button
             type="button"

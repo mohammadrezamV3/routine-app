@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { CalendarDays } from "lucide-react";
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { toEnDigits } from "@/lib/schedule";
@@ -18,7 +19,13 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
 
   return (
     <section>
-      <h1 className="mb-4 text-[20px] font-bold text-dash-text sm:mb-5 sm:text-[26px]">برنامه هفتگی</h1>
+      {/* طبقِ درخواستِ صریح: آیکون کنارِ تایتل — و flex با justify-start
+          (نه چیزی که فرزندها را به دو سرِ سطر پرت کند)، وگرنه تایتل
+          چپ‌چین می‌شود. */}
+      <h1 className="mb-4 flex items-center justify-start gap-2 text-[20px] font-bold text-dash-text sm:mb-5 sm:text-[26px]">
+        <CalendarDays className="h-[19px] w-[19px] text-dash-green sm:h-6 sm:w-6" />
+        برنامه هفتگی
+      </h1>
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}

@@ -126,6 +126,13 @@ model User {
   // سوپریوزر/ادمین — دسترسی نامحدود به همه ماژول‌ها بدون نیاز به اشتراک
   isSuperAdmin Boolean @default(false)
 
+  // بیشترین استریکی که این کاربر تا حالا داشته — برخلاف استریکِ فعلی (که
+  // زنده از DailyEntry حساب می‌شود، lib/friendStats.ts)، این عدد باید جایی
+  // ذخیره بماند وگرنه با شکستنِ استریکِ فعلی رکورد گذشته گم می‌شد. هر بار
+  // پروفایلِ کاربر خوانده می‌شود، اگر استریکِ زنده از این عدد بیشتر بود،
+  // همین‌جا lazily آپدیت می‌شود (lib/friendProfile.ts).
+  bestStreak Int @default(0)
+
   // پنل Owner › کاربران › مسدودکردن — کاربرِ مسدودشده نمی‌تونه لاگین کنه
   // (چک در authorize())؛ soft-delete نیست، فقط جلوی ورود رو می‌گیره
   isBlocked Boolean   @default(false)
@@ -196,6 +203,16 @@ model User {
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
   friendRequestsSent     Friendship[]       @relation("FriendRequestsSent")
   friendRequestsReceived Friendship[]       @relation("FriendRequestsReceived")
+  // استارهایی که به دیگران داده/از دیگران گرفته — از favoritedBy* بالا جداست:
+  // آن یکی شخصی و فقط برای پین‌کردن در لیستِ خودِ کاربر بود، این یکی عمومی و
+  // متقابل نیست (هرکسی می‌تواند به هر دوستی استار بدهد، مستقل از این‌که خودِ
+  // آن طرف هم استار داده باشد یا نه) — دقیقاً همان چیزی که پروفایلِ دوست نشان می‌دهد.
+  starsGiven    FriendStar[] @relation("StarsGiven")
+  starsReceived FriendStar[] @relation("StarsReceived")
+  // بلاکِ کاربر-به-کاربر (نه isBlockedِ بالا که فقط ادمین از پنل می‌زند) —
+  // کاربرِ بلاک‌شده دیگر در جست‌وجوی دوستان دیده نمی‌شود.
+  blockedUsers   UserBlock[] @relation("Blocker")
+  blockedByUsers UserBlock[] @relation("Blocked")
   tradeNotes             TradeNote[]
   tradeMtLinks           TradeMtLink[]
   tradeChatMessages      TradeChatMessage[]
@@ -658,6 +675,36 @@ model Friendship {
   @@unique([requesterId, addresseeId])
   @@index([requesterId])
   @@index([addresseeId])
+}
+
+// استار دادن به یک کاربر — یک‌طرفه (نه توگل‌شونده‌ی متقابل مثلِ فیوریت
+// بالا)؛ حذف/ایجادِ همین ردیف یعنی استاردادن/برداشتنِ استار. تعدادِ
+// starsReceived همان چیزی‌ست که پروفایلِ دوست نشان می‌دهد.
+model FriendStar {
+  id         String   @id @default(cuid())
+  giverId    String
+  giver      User     @relation("StarsGiven", fields: [giverId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("StarsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([giverId, receiverId])
+  @@index([receiverId])
+}
+
+// بلاکِ کاربر-به-کاربر — کاربرِ بلاک‌شده دیگر در جست‌وجوی دوستان
+// (/api/friends/search) دیده نمی‌شود. مستقل از دوستیِ Friendship: بلاک
+// می‌تواند قبل یا بعد از دوست‌شدن اتفاق بیفتد.
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 // ============================================================================

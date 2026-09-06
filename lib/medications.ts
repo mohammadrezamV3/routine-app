@@ -1,4 +1,4 @@
-import { getSetting, setSetting } from "./storage";
+import { getSetting, setSetting, setSettingChecked } from "./storage";
 import { isoLocal } from "./jalali";
 import { SETTING_KEYS } from "./userSettingKeys";
 
@@ -40,6 +40,11 @@ export async function getMedications(): Promise<Medication[]> {
 
 export async function setMedications(list: Medication[]): Promise<void> {
   return setSetting(MEDICATIONS_KEY, list.slice(0, MAX_MEDICATIONS));
+}
+
+/** نسخه‌ی موفقیتِ واقعی — برای فرمی که باید بداند ثبت واقعاً انجام شده یا نه. */
+export async function setMedicationsChecked(list: Medication[]): Promise<{ ok: true } | { ok: false; error: string }> {
+  return setSettingChecked(MEDICATIONS_KEY, list.slice(0, MAX_MEDICATIONS));
 }
 
 export function newMedicationId(): string {

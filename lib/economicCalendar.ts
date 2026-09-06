@@ -185,11 +185,24 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
   return out;
 }
 
+// بدونِ سقفِ زمانی، یک فیدِ کندپاسخ یا فیلترشده (این دامنه از داخلِ ایران
+// گاهی با تأخیرِ خیلی زیاد/قطعیِ اتصال مواجه می‌شود) کل sync رو تا مدتِ
+// نامعلومی معلق نگه می‌داشت — از بیرون دقیقاً شبیهِ «دیتا نمیاد» بود، چون
+// نه خطا می‌داد نه جواب. ۱۲ ثانیه برایِ یک فیدِ JSONِ سبک کافی‌ست.
 async function fetchOneFeed(url: string, key: string | undefined): Promise<NormalizedEvent[]> {
-  const res = await fetch(url, {
-    headers: key ? { Authorization: `Bearer ${key}` } : undefined,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: key ? { Authorization: `Bearer ${key}` } : undefined,
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    });
+  } catch (err) {
+    const reason = err instanceof Error && err.name === "TimeoutError"
+      ? "زمان اتصال تمام شد (احتمالاً این دامنه از سرور در دسترس نیست)"
+      : err instanceof Error ? err.message : String(err);
+    throw new Error(`اتصال به منبع تقویم اقتصادی (${url}) ناموفق بود: ${reason}`);
+  }
   if (!res.ok) throw new Error(`منبع تقویم اقتصادی (${url}) پاسخ ${res.status} داد`);
   return normalizeExternalEvents(await res.json());
 }

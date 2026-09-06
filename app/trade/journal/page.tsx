@@ -10,6 +10,7 @@ export default function TradeJournalPage() {
   return (
     <TradePageShell
       title="ژورنال‌نویسی"
+      noScroll
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
           + افزودن حساب

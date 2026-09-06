@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { CalendarDays, ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
 import { PanelSkeleton } from "./PanelSkeleton";
 import {
@@ -38,11 +39,17 @@ function weekStartOf(d: Date): Date {
   return addDays(startOfLocalDay(d), -diffFromSat);
 }
 const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
+const enMonthYearFmt = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
+const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(weekStartOf(new Date()), i)));
 
 export function EconomicCalendarPanel() {
   // مثلِ خودِ ForexFactory: یک روز در یک لحظه، با فلشِ قبلی/بعدی — نه
   // «روزهای بیشتر»ی که همه‌چیز رو یک‌جا پشتِ هم می‌ریخت.
   const [date, setDate] = useState(() => startOfLocalDay(new Date()));
+  // جهتِ آخرین جابه‌جایی — برایِ اینکه اسلایدِ هفته‌ی جدید از سمتِ درستی
+  // بیاد تو (+۱ یعنی هفته‌ی بعد از راست به چپ می‌ره، -۱ برعکس).
+  const [weekDir, setWeekDir] = useState(1);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -75,6 +82,17 @@ export function EconomicCalendarPanel() {
   useEffect(() => { setExpandedId(null); }, [date]);
 
   const today = startOfLocalDay(new Date());
+
+  function goWeek(dir: 1 | -1) {
+    setWeekDir(dir);
+    setDate((d) => addDays(d, dir * 7));
+  }
+
+  function pickDate(d: Date) {
+    setWeekDir(d.getTime() >= date.getTime() ? 1 : -1);
+    setDate(d);
+    setMonthPickerOpen(false);
+  }
 
   async function toggleExpand(e: EconomicEventDto) {
     if (expandedId === e.id) { setExpandedId(null); return; }
@@ -154,34 +172,60 @@ export function EconomicCalendarPanel() {
           هفته‌ی شنبه‌تا‌جمعه): یک ردیفِ ثابتِ ۷ روزِ کلیک‌پذیر، به‌جای فقط
           یک فلشِ قبلی/بعدی که هیچ‌وقت نمی‌گفت «چند روزِ دیگه چی هست». */}
       <div className="trade-cal-daynav">
-        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, -7))} aria-label="هفته‌ی قبل">
+        <button type="button" className="trade-icon-btn" onClick={() => goWeek(-1)} aria-label="هفته‌ی قبل">
           <ChevronRight size={16} />
         </button>
-        <div className="trade-cal-week-strip">
-          {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
-            <button
-              key={isoLocal(d)}
-              type="button"
-              className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
-              onClick={() => setDate(d)}
+        <div className="trade-cal-week-viewport">
+          <AnimatePresence mode="popLayout" initial={false} custom={weekDir}>
+            <motion.div
+              key={isoLocal(weekStartOf(date))}
+              custom={weekDir}
+              initial={{ x: weekDir > 0 ? 56 : -56, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: weekDir > 0 ? -56 : 56, opacity: 0 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.18}
+              onDragEnd={(_e, info) => {
+                if (info.offset.x < -55 || info.velocity.x < -500) goWeek(1);
+                else if (info.offset.x > 55 || info.velocity.x > 500) goWeek(-1);
+              }}
+              className="trade-cal-week-strip"
             >
-              <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
-              <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
-            </button>
-          ))}
+              {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
+                <button
+                  key={isoLocal(d)}
+                  type="button"
+                  className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
+                  onClick={() => pickDate(d)}
+                >
+                  <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
+                  <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
+                </button>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
-        <button type="button" className="trade-icon-btn" onClick={() => setDate((d) => addDays(d, 7))} aria-label="هفته‌ی بعد">
+        <button type="button" className="trade-icon-btn" onClick={() => goWeek(1)} aria-label="هفته‌ی بعد">
           <ChevronLeft size={16} />
         </button>
       </div>
       <div className="trade-cal-daynav-sub">
         <span className="ltr-inline">{isSameDay(date, today) ? "Today: " : ""}{enDayFmt.format(date)}</span>
+        <button type="button" className="trade-ghost-btn trade-cal-month-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
+          <CalendarDays size={13} /> تقویم
+        </button>
         {!isSameDay(date, today) && (
-          <button type="button" className="trade-ghost-btn" onClick={() => setDate(today)}>
+          <button type="button" className="trade-ghost-btn" onClick={() => { setWeekDir(1); setDate(today); }}>
             امروز
           </button>
         )}
       </div>
+
+      {monthPickerOpen && (
+        <EconMonthPicker date={date} onPick={pickDate} onClose={() => setMonthPickerOpen(false)} />
+      )}
 
       {loading && firstLoad && <PanelSkeleton />}
 
@@ -262,5 +306,52 @@ export function EconomicCalendarPanel() {
       )}
       </div>
     </div>
+  );
+}
+
+// دکمه‌ی «تقویم» یک ماه‌شمارِ کامل باز می‌کند — دقیقاً هم‌الگویِ ماه‌شمارِ
+// «روتین من» (cal-grid/cal-cell)، فقط با تاریخِ میلادی چون کلِ این بخش
+// عمداً میلادی مانده (طبقِ همان قاعده‌ی بالای فایل).
+function EconMonthPicker({ date, onPick, onClose }: { date: Date; onPick: (d: Date) => void; onClose: () => void }) {
+  const [viewYear, setViewYear] = useState(date.getFullYear());
+  const [viewMonth, setViewMonth] = useState(date.getMonth());
+  const today = startOfLocalDay(new Date());
+
+  const monthLen = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const startCol = (new Date(viewYear, viewMonth, 1).getDay() + 1) % 7;
+
+  function prevMonth() { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }
+  function nextMonth() { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); }
+
+  const cells: JSX.Element[] = [];
+  for (let i = 0; i < startCol; i++) cells.push(<div key={"e" + i} className="cal-cell empty" />);
+  for (let d = 1; d <= monthLen; d++) {
+    const cellDate = new Date(viewYear, viewMonth, d);
+    cells.push(
+      <div
+        key={d}
+        onClick={() => onPick(cellDate)}
+        className={`cal-cell${isSameDay(cellDate, today) ? " today" : ""}${isSameDay(cellDate, date) ? " selected" : ""}`}
+      >
+        <span className="cal-daynum mono">{d}</span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="trade-econ-monthpicker-backdrop" onClick={onClose} />
+      <div className="trade-surface trade-econ-monthpicker ltr-inline">
+        <div className="cal-controls">
+          <button type="button" className="small mono" onClick={prevMonth}>‹</button>
+          <div className="cal-label">{enMonthYearFmt.format(new Date(viewYear, viewMonth, 1))}</div>
+          <button type="button" className="small mono" onClick={nextMonth}>›</button>
+        </div>
+        <div className="cal-grid">
+          {WEEKDAY_HEADERS.map((w, i) => <div key={i} className="cal-weekday">{w}</div>)}
+          {cells}
+        </div>
+      </div>
+    </>
   );
 }

@@ -985,7 +985,11 @@
   /* roadmaps hub */
   /* عرضِ کارت‌ها به اندازه‌ی صفحه‌ی موبایل و یک‌ذره کوچک‌تر (درخواستِ صریحِ
      کاربر) — تا فوترِ هشدارِ AI هم جا شود و کارت‌ها تا لبه نچسبند. */
-  .rm-grid{display:flex; flex-direction:column; gap:10px; margin-top:16px; max-width:400px; margin-inline:auto;}
+  /* طبقِ درخواستِ صریح: یک باکسِ کلیِ صفحه‌بزرگ دورِ فهرست — هم‌الگویِ
+     چک‌لیست‌ها/یادداشت‌ها؛ خودِ گریدِ داخلی همچنان به ۴۰۰px محدود و
+     وسط‌چین می‌ماند (عرضِ کارت‌ها طبقِ همان درخواستِ قبلی). */
+  .rm-page-box{ margin-top:16px; padding:16px; }
+  .rm-grid{display:flex; flex-direction:column; gap:10px; max-width:400px; margin-inline:auto;}
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     border:1px solid var(--line); border-radius:12px; padding:14px 15px; text-decoration:none; color:var(--text);
@@ -3665,7 +3669,13 @@ body[data-theme="light"] .exercise-rules-accept-btn, body:not([data-theme="light
      (دقیقاً همون ترفندی که .nav-drawer برای همین مشکل استفاده می‌کنه). */
   will-change:transform;
 }
-.exercise-catalog-detail-body{ overflow-y:auto; padding-bottom:24px; }
+/* بدونِ flex:1/min-height:0، این فرزند توی کانتینرِ flex-columnِ کارت فقط
+   به‌اندازه‌ی محتوایش بلند می‌شد (نه اسکرول‌پذیر) — با محتوای بلند
+   (دستورالعمل چندمرحله‌ای + نمودار عضلات + مزایا) از سقفِ ۸۲vhِ کارت
+   بیرون می‌زد و چون خودِ کارت overflow:hidden دارد، بخشِ پایینی (که
+   دقیقاً همان چیزی‌ست که «به لبه‌ی پایین چسبیده/بریده» به‌نظر می‌رسید)
+   اصلاً دیده/اسکرول نمی‌شد. */
+.exercise-catalog-detail-body{ flex:1; min-height:0; overflow-y:auto; padding-bottom:24px; }
 /* هدر کارت جزئیات دیگه تایتل نداره (اسم حرکت رفته زیر عکس) — فقط
    ضربدر بستن سمت چپ می‌مونه، پس هدر بدون مارجین اضافه‌ی زیرش می‌مونه */
 .exercise-detail-head{ margin-bottom:2px; }
@@ -4548,6 +4558,9 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 @media (hover:hover){ .trade-primary-btn:hover:not(:disabled){ filter:brightness(1.06); background:var(--accent); } }
 .trade-primary-btn:active:not(:disabled){ transform:scale(.97); }
 .trade-primary-btn:disabled{ opacity:.5; cursor:default; }
+/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش دکمه‌ی
+   اصلیِ ترید توی تمِ روشن رنگِ شیشه‌ای/سفید می‌گرفت به‌جایِ accent. */
+body[data-theme="light"] .trade-primary-btn, body:not([data-theme="light"]) .trade-primary-btn{ background:var(--accent); box-shadow:none; }
 
 .trade-danger-btn{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
@@ -4558,6 +4571,7 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 @media (hover:hover){ .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; } }
 .trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
 .trade-danger-btn:disabled{ opacity:.45; cursor:default; }
+body[data-theme="light"] .trade-danger-btn, body:not([data-theme="light"]) .trade-danger-btn{ background:none; box-shadow:none; }
 
 /* آیکونی و شبح — باید بی‌بک‌گراند بمانند */
 .trade-icon-btn{
@@ -4569,7 +4583,12 @@ body[data-theme="light"] .wr-skel-block{ background:rgba(0,0,0,.05); }
 @media (hover:hover){ .trade-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
 .trade-icon-btn:active{ transform:scale(.92); }
 @media (hover:hover){ .trade-icon-btn.danger:hover{ color:#E05252; background:rgba(224,82,82,.09); } }
-body[data-theme="light"] .trade-icon-btn, body:not([data-theme="light"]) .trade-icon-btn{ box-shadow:none; }
+/* body[data-theme="light"] button{} (بالای فایل) اسپسیفیسیتیِ بیشتری از
+   یک کلاسِ تنها دارد (attribute+tag+tag در برابرِ یک class) — بدونِ این
+   override صریح، آن قاعده‌ی سراسری بک‌گراندِ شیشه‌ای را در تمِ روشن
+   دوباره برمی‌گرداند، درست همان‌جایی که این دکمه باید بی‌بک‌گراند بماند
+   (سه‌نقطه‌ها، دکمه‌های آیکونی) — دقیقاً باگِ گزارش‌شده. */
+body[data-theme="light"] .trade-icon-btn, body:not([data-theme="light"]) .trade-icon-btn{ background:none; box-shadow:none; }
 
 .trade-ghost-btn{
   display:inline-flex; align-items:center; gap:5px;
@@ -4578,7 +4597,7 @@ body[data-theme="light"] .trade-icon-btn, body:not([data-theme="light"]) .trade-
   transition:color .18s ease, background .18s ease;
 }
 @media (hover:hover){ .trade-ghost-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
-body[data-theme="light"] .trade-ghost-btn, body:not([data-theme="light"]) .trade-ghost-btn{ box-shadow:none; }
+body[data-theme="light"] .trade-ghost-btn, body:not([data-theme="light"]) .trade-ghost-btn{ background:none; box-shadow:none; }
 
 .trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
 .trade-modal-actions button{ flex:1; }
@@ -4610,16 +4629,24 @@ select.wsearch-newform-name{ cursor:pointer; }
 .trade-color-dot.active{ border-color:var(--text); transform:scale(1.08); }
 
 .trade-tag-row{ display:flex; flex-wrap:wrap; gap:7px; }
+/* دیزاینِ تازه‌ی برچسب‌ها — به‌جای چیپِ توخالی (فقط بردر/متنِ رنگی)، حالا
+   یک بج‌ِ «پر»ِ نرم: بک‌گراندِ کم‌رنگِ همون رنگِ برچسب + متنِ خودِ رنگ،
+   بدونِ بردر. رنگِ هر برچسب با متغیرِ CSSِ --tag-c (ست‌شده inline از
+   t.color) میاد، نه با override کردنِ border/color مستقیم — این‌طوری خودِ
+   این قانون تصمیم می‌گیره بک‌گراند/متن چطور از همون رنگ ساخته بشن. */
 .trade-tag-chip{
-  display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:3px 8px;
+  --tag-c: var(--muted);
+  display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:4px 9px;
   max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  border-radius:999px; border:1px solid var(--line); color:var(--muted);
-  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:border-color .18s ease, color .18s ease, background .18s ease, transform .15s ease;
+  border-radius:999px; border:none; color:var(--muted);
+  background:rgba(var(--surface-rgb),.14); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, background .18s ease, transform .15s ease;
 }
+.trade-tag-chip.active{ color:var(--tag-c); background:color-mix(in srgb, var(--tag-c) 16%, transparent); }
+@media (hover:hover){ .trade-tag-chip.active:hover{ background:color-mix(in srgb, var(--tag-c) 24%, transparent); } }
 @media (hover:hover){ .trade-tag-chip:hover{ background:rgba(var(--accent-rgb),.06); } }
 .trade-tag-chip:active{ transform:scale(.96); }
-.trade-tag-chip.active{ font-weight:700; }
+.trade-tag-chip.active{ font-weight:700; --tag-c:var(--accent); }
 .trade-tag-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
 .trade-tag-add{ border-style:dashed; }
 
@@ -4804,23 +4831,21 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 /* «حساب‌های معاملاتی» دیگه یک لیبل کوچیک خنثیه نیست — عملا تایتل همین
    بخشه (تایتل صفحه «ژورنال‌نویسی»ی)، پس فونت تایتل‌مانند + سبز می‌گیره. */
 .trade-section-title{ font-size:15px; font-weight:800; color:var(--text); }
-/* طبقِ درخواستِ صریح: به‌جای هرکدام یک کارتِ جداگانه‌ی شناور (که هم خیلی
-   بزرگ بود هم صفحه را «فقط یه‌ذره از صفحه» به‌نظر می‌رساند)، همه‌ی
-   ردیف‌ها داخلِ یک باکسِ واحدِ صفحه‌بزرگ می‌نشینند — دقیقاً هم‌الگویِ
-   .trade-checklist-box. .trade-account-card/.trade-mt-row (که هردو خودشان
-   کلاسِ .trade-surface را هم دارند) این‌جا آن پوسته را خلع می‌کنند و به
-   یک ردیفِ فشرده با جداکننده‌ی خط تبدیل می‌شوند. */
+/* داخلِ یک باکسِ واحدِ صفحه‌بزرگ می‌نشینند — هم‌الگویِ .trade-checklist-box —
+   ولی طبقِ درخواستِ صریحِ بعدی، خودِ ردیف‌ها («باکس‌های داخلِ هر بخش») باید
+   کاملاً کرو باشند: هرکدام یک کارتِ مجزا با گپ، نه ردیفِ flatِ قبلی که فقط
+   یک خطِ جداکننده داشت. */
 .trade-account-grid{
-  display:flex; flex-direction:column; gap:0; margin-top:14px; padding:6px 4px;
+  display:flex; flex-direction:column; gap:9px; margin-top:14px; padding:12px;
   min-height:min(calc(100vh - 340px), 560px);
 }
 .trade-account-card, .trade-mt-row{
-  position:relative; overflow:hidden; padding:11px 14px;
-  background:none; border:none; border-radius:0; box-shadow:none;
+  position:relative; overflow:hidden; padding:13px 15px;
+  border-radius:16px; background:rgba(var(--surface-rgb),.12); border:none; box-shadow:none;
+  transition:background .18s ease, transform .15s ease;
 }
-/* هرکدام از ردیف‌ها داخلِ motion.divِ خودشان‌اند (برای انیمیشنِ ورود)،
-   پس جداکننده روی همان wrapper است، نه مستقیم روی .trade-account-card. */
-.trade-account-grid > * + *{ border-top:1px solid var(--surface-line); }
+.trade-account-card:active, .trade-mt-row:active{ transform:scale(.99); }
+@media (hover:hover){ .trade-account-card:hover, .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.2); } }
 /* سه‌نقطه دیگر گوشه‌ی چپ مطلق نیست؛ اول ردیف (توی RTL یعنی سمت راست)
    کنار نام حساب می‌نشیند و سود/زیان انتهای همان ردیف (چپ) می‌رود. */
 .trade-account-top-row{ display:flex; align-items:center; gap:8px; }
@@ -4984,6 +5009,10 @@ body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-fi
 }
 @media (hover:hover){ .trade-title-add-btn:hover{ opacity:.78; } }
 .trade-title-add-btn:active{ transform:scale(.97); }
+/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش «افزودن
+   یادداشت/حساب/چک‌لیست/رودمپ» توی تمِ روشن دوباره بک‌گراندِ شیشه‌ای
+   می‌گرفت (باگِ گزارش‌شده). */
+body[data-theme="light"] .trade-title-add-btn, body:not([data-theme="light"]) .trade-title-add-btn{ background:none; box-shadow:none; }
 
 .trade-list{ display:flex; flex-direction:column; margin-top:12px; }
 .trade-row{
@@ -5105,8 +5134,12 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-cal-box{ margin-top:14px; padding:14px; }
 .trade-cal-daynav{ display:flex; align-items:center; gap:4px; margin:0 0 4px; }
 /* هفتِ‌روزیِ کلیک‌پذیر — هم‌مدلِ WEEK_ORDERِ «برنامه‌ی هفتگی»ِ روتین من
-   (هفته‌ی شنبه‌تا‌جمعه)، به‌جای فقط یک لیبلِ متنیِ ثابت. */
-.trade-cal-week-strip{ flex:1; display:flex; justify-content:space-between; gap:4px; min-width:0; }
+   (هفته‌ی شنبه‌تا‌جمعه)، به‌جای فقط یک لیبلِ متنیِ ثابت. ویوپورت overflow
+   را می‌بُرد تا اسلایدِ ورود/خروجِ هفته (framer-motion) از زیرِ دکمه‌های
+   کناری بیرون نزند؛ خودِ استریپ هم drag="x" دارد (کشیدنِ دستی). */
+.trade-cal-week-viewport{ flex:1; min-width:0; overflow:hidden; }
+.trade-cal-week-strip{ display:flex; justify-content:space-between; gap:4px; min-width:0; touch-action:pan-y; cursor:grab; }
+.trade-cal-week-strip:active{ cursor:grabbing; }
 .trade-cal-day-pill{
   flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px;
   padding:6px 2px; border-radius:11px; color:var(--muted);
@@ -5120,6 +5153,16 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 @media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(var(--surface-rgb),.5); color:var(--text); } }
 
 .trade-cal-daynav-sub{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; font-size:11.5px; color:var(--muted2); }
+.trade-cal-month-btn{ display:inline-flex; align-items:center; gap:5px; }
+
+/* دکمه‌ی «تقویم» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ روتین
+   من (cal-grid/cal-cell)؛ روی موبایل زیرِ نوارِ روز، روی دسکتاپ به‌شکلِ
+   یک popover شناور که با کلیک بیرونش (بک‌دراپِ شفاف) بسته می‌شود. */
+.trade-econ-monthpicker-backdrop{ position:fixed; inset:0; z-index:60; }
+.trade-econ-monthpicker{
+  position:relative; z-index:61; margin:8px auto 14px; padding:14px; animation:tradeFadeIn .18s ease both;
+  max-width:320px;
+}
 
 /* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
    شاخص رو نشون می‌ده؛ چون واقعاً از رکوردهای قبلیِ همین جدول میاد (نه
@@ -5180,10 +5223,15 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
    خودِ فوتر همیشه یک ستونه (نه ردیفِ wrap-پذیر) — نتیجه‌ش یک کارتِ فشرده و
    قابل‌پیش‌بینیه، صرف‌نظر از این‌که چقدر محتوا/تگ داره. */
 .trade-note-card{
-  position:relative; padding:15px 18px 14px 16px; overflow:hidden; cursor:pointer;
+  position:relative; padding:16px 19px 15px 17px; overflow:hidden; cursor:pointer;
   display:flex; flex-direction:column; gap:10px;
+  /* «کرو کامل» — طبقِ درخواستِ صریح، بیشتر از رادیوسِ پایه‌ی ۱۸پیکسلیِ
+     .trade-surface؛ سایه‌ی نرمِ اضافه هم کارت را از باکسِ بزرگِ پشتش که
+     خودش هم‌رنگ است بیشتر جدا می‌کند. */
+  border-radius:22px; box-shadow:0 2px 14px rgba(0,0,0,.10);
+  transition:border-color .18s ease, transform .15s ease, box-shadow .18s ease;
 }
-@media (hover:hover){ .trade-note-card:hover{ border-color:var(--accent); } }
+@media (hover:hover){ .trade-note-card:hover{ border-color:var(--accent); box-shadow:0 4px 18px rgba(0,0,0,.14); } }
 .trade-note-card:active{ transform:scale(.99); }
 .trade-note-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
 .trade-note-title{ font-size:14px; font-weight:700; }
@@ -5272,10 +5320,12 @@ body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
   margin-top:18px; padding:18px; border:1px solid var(--accent); border-radius:18px;
   background:var(--accent-dim); animation:tradeFadeIn .3s ease both;
 }
+.trade-mt-code-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin:9px 0 5px; }
 .trade-mt-code{
-  font-size:22px; font-weight:800; letter-spacing:.14em; margin:9px 0 5px;
-  direction:ltr; text-align:center; color:var(--accent);
+  font-size:22px; font-weight:800; letter-spacing:.14em;
+  direction:ltr; color:var(--accent);
 }
+.trade-mt-copy-btn{ flex-shrink:0; color:var(--accent); }
 .trade-mt-row{ text-decoration:none; color:var(--text); display:block; }
 @media (hover:hover){ .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.4); } }
 
@@ -5316,12 +5366,28 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    کل صفحه باشه، نه یه‌ذره‌ی کوچیک؛ همین کلاس روی یادداشت‌ها/متاتریدر/
    ژورنال‌نویسی/تقویمِ اقتصادی هم گذاشته می‌شه. */
 .trade-page-box{ min-height:min(calc(100vh - 340px), 560px); }
-.trade-checklist-box{ margin-top:14px; padding:6px 4px; }
+
+/* صفحه‌ی خودش دیگر اسکرول نمی‌خورد؛ همین ناحیه (زیرِ تایتل) داخلش اسکرول
+   دارد — طبقِ درخواستِ صریح برایِ یادداشت‌ها/چک‌لیست‌ها/ژورنال. فقط
+   دسکتاپ (۱۰۲۴+): روی موبایل ارتفاعِ محدود معنا ندارد و صفحه مثلِ همیشه
+   اسکرول می‌شود (هم‌قاعده‌ی صفحه‌ی چارت). */
+@media (min-width:1024px){
+  .trade-noscroll-box{ height:var(--tp-h, auto); overflow-y:auto; }
+}
+.trade-checklist-box{ margin-top:14px; padding:12px; display:flex; flex-direction:column; gap:9px; }
+.trade-checklist-detail-box{ padding:14px; }
+/* هر ردیفِ چک‌لیست حالا خودش یک کارتِ مجزا با گوشه‌ی کاملاً گرد است (نه
+   ردیفِ flatِ قبلی با فقط یک خطِ جداکننده) — طبقِ درخواستِ صریح: «باکس‌های
+   داخلِ هر بخش» باید کاملاً کرو باشند؛ فقط خودِ باکسِ بزرگِ صفحه
+   (.trade-page-box) دست‌نخورده می‌ماند. */
 .trade-checklist-row{
   position:relative; display:flex; align-items:center; gap:8px;
-  padding:12px 14px 12px 10px;
+  padding:13px 15px 13px 12px; border-radius:16px;
+  background:rgba(var(--surface-rgb),.12);
+  transition:background .18s ease, transform .15s ease;
 }
-.trade-checklist-row + .trade-checklist-row{ border-top:1px solid var(--surface-line); }
+.trade-checklist-row:active{ transform:scale(.99); }
+@media (hover:hover){ .trade-checklist-row:hover{ background:rgba(var(--surface-rgb),.2); } }
 .trade-checklist-row-stripe{
   position:absolute; top:10px; bottom:10px; right:0; width:3px; border-radius:2px;
 }
@@ -5473,16 +5539,27 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    فول‌اسکرین نمی‌شود. */
 .tv-chart-card:fullscreen,
 .tv-chart-card:-webkit-full-screen,
-.tv-chart-card:-moz-full-screen{
+.tv-chart-card:-moz-full-screen,
+.tv-chart-card.tv-pseudo-fullscreen{
   width:100vw; height:100vh; max-width:none; border-radius:0; padding:10px;
   background:var(--bg);
 }
 .tv-chart-card:fullscreen .tv-chart-frame,
 .tv-chart-card:-webkit-full-screen .tv-chart-frame,
-.tv-chart-card:-moz-full-screen .tv-chart-frame{
+.tv-chart-card:-moz-full-screen .tv-chart-frame,
+.tv-chart-card.tv-pseudo-fullscreen .tv-chart-frame{
   height:auto; flex:1; min-height:0;
 }
+/* حالتِ شبه‌فول‌اسکرین (وقتی Fullscreen API مرورگر پشتیبانی نمی‌شود —
+   مثلِ سافاری/iOS) با position:fixed خودش را روی کلِ ویوپورت می‌گذارد؛
+   بدونِ این، همان کارتِ کوچکِ وسطِ صفحه‌ی معمولی می‌ماند. */
+.tv-chart-card.tv-pseudo-fullscreen{
+  position:fixed; inset:0; z-index:200; margin:0 !important; left:0; right:0;
+}
 .tv-chart-toolbar{ display:flex; align-items:center; gap:8px; }
+/* تایتلِ صفحه از بالای صفحه (کنارِ لینکِ بازگشت) به همین‌جا — بالایِ خودِ
+   چارت — منتقل شد؛ طبقِ درخواستِ صریح، بدونِ توضیحاتِ زیرِ آن. */
+.tv-chart-title{ flex-shrink:0; font-size:14px; font-weight:800; color:var(--text); }
 .tv-chart-toolbar > .tv-symbol-search{ flex:1; min-width:0; }
 /* اندازه‌اش با بقیه‌ی `.trade-icon-btn`های هم‌قدش یکی نیست چون این‌جا
    کنارِ فیلدِ جست‌وجوی بلندتری می‌نشیند؛ بک‌گراند/بوردر را خودِ
@@ -5503,9 +5580,12 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 
 /* جست‌وجوی نماد */
 .tv-symbol-search{ position:relative; }
-.tv-symbol-search-icon{ position:absolute; right:13px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+/* طبقِ درخواستِ صریح، آیکونِ جست‌وجو چپ‌چین شد؛ دکمه‌ی پاک‌کردن (X) که
+   قبلاً همان‌جا بود کنارش (کمی سمت راست‌ترِ آیکونِ جست‌وجو) جا گرفت تا
+   روی هم نیفتند — پدینگِ چپِ اینپوت هم برایِ هر دو آیکون بزرگ‌تر شد. */
+.tv-symbol-search-icon{ position:absolute; left:13px; right:auto; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
 .tv-symbol-input{
-  width:100%; box-sizing:border-box; padding:11px 38px 11px 38px;
+  width:100%; box-sizing:border-box; padding:11px 14px 11px 62px;
   border-radius:12px; font-size:13px; font-weight:600; color:var(--text);
   background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.24);
   outline:none; transition:border-color .18s ease;
@@ -5513,7 +5593,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .tv-symbol-input:focus{ border-color:var(--accent); }
 .tv-symbol-input::placeholder{ color:var(--muted2); font-weight:500; }
 .tv-symbol-clear{
-  position:absolute; left:9px; top:50%; transform:translateY(-50%);
+  position:absolute; left:36px; top:50%; transform:translateY(-50%);
   width:24px; height:24px; display:flex; align-items:center; justify-content:center;
   color:var(--muted); background:none; border:none; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
@@ -5637,10 +5717,36 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   color:#E05252; font-size:12px; line-height:1.9;
 }
 
+.trade-chat-composer-wrap{ position:relative; }
 .trade-chat-composer{ display:flex; gap:8px; align-items:center; margin-top:11px; }
 .trade-chat-composer input{ flex:1; min-width:0; margin:0; }
+.trade-chat-emoji-btn{
+  flex-shrink:0; width:38px; height:38px; border-radius:50%; padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, background .18s ease;
+}
+@media (hover:hover){ .trade-chat-emoji-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
+body[data-theme="light"] .trade-chat-emoji-btn, body:not([data-theme="light"]) .trade-chat-emoji-btn{ background:none; box-shadow:none; }
+.trade-chat-emoji-picker{
+  position:absolute; bottom:calc(100% + 8px); right:0; z-index:5;
+  display:grid; grid-template-columns:repeat(6,1fr); gap:2px; padding:8px;
+  border-radius:16px; background:var(--surface-1); border:1px solid var(--surface-line);
+  box-shadow:0 6px 20px rgba(0,0,0,.18); animation:tradeFadeIn .15s ease both;
+}
+.trade-chat-emoji-item{
+  width:34px; height:34px; font-size:19px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:background .15s ease, transform .12s ease;
+}
+@media (hover:hover){ .trade-chat-emoji-item:hover{ background:rgba(var(--accent-rgb),.1); } }
+.trade-chat-emoji-item:active{ transform:scale(.9); }
+/* دکمه‌ی ارسال — طبقِ درخواستِ صریح بزرگ‌تر از قبل (بود ۳۸px با آیکونِ
+   فقط ۱۶، الان آیکون تقریباً نصفِ خودِ دایره است). */
 .trade-chat-send{
-  flex-shrink:0; width:38px; height:38px; border-radius:50%;
+  flex-shrink:0; width:42px; height:42px; border-radius:50%;
   display:inline-flex; align-items:center; justify-content:center;
   color:#fff; background:var(--accent); border:none; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
@@ -5649,6 +5755,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-chat-send:hover:not(:disabled){ filter:brightness(1.08); background:var(--accent); box-shadow:none; }
 .trade-chat-send:active:not(:disabled){ transform:scale(.94); }
 .trade-chat-send:disabled{ opacity:.45; cursor:default; }
+/* طبقِ درخواستِ صریح: توی نسخه‌ی روز (تمِ روشن) این دکمه سفید/کم‌رنگ دیده
+   می‌شد؛ این‌جا صریح و مستقل از هر قاعده‌ی دیگری قهوه‌ای‌اش می‌کنیم —
+   هم‌رنگِ --accentِ خودِ تمِ روشن (#B36B2F). */
+body[data-theme="light"] .trade-chat-send{ background:#B36B2F; color:#fff; }
 
 .trade-chat-report-sheet{
   margin-top:12px; padding:13px; border-radius:14px;
@@ -5956,12 +6066,15 @@ html[data-perf="low"] .app-spinner{ animation-duration:1s; }
 /* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
 /* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
    یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
+/* طبقِ درخواستِ صریح، این هشدار حالا قرمز است (نه خاکستریِ خنثیِ قبلی) —
+   هم‌رنگِ بقیه‌ی هشدارهای اپ (#E05252). */
 .rm-disclaimer{
   display:flex; align-items:flex-start; gap:8px;
   max-width:400px; margin:26px auto 0; padding:11px 13px;
-  border:1px dashed var(--line); border-radius:14px;
-  font-size:11.5px; line-height:2; color:var(--muted2); text-align:right;
+  border:1px dashed rgba(224,82,82,.45); border-radius:14px; background:rgba(224,82,82,.06);
+  font-size:11.5px; line-height:2; color:#E05252; text-align:right;
 }
+.rm-disclaimer svg{ flex-shrink:0; color:#E05252; }
 .rm-disclaimer svg{ flex-shrink:0; margin-top:4px; color:var(--muted); }
 
 /* ===================== جلسه‌های یک مرحله ===================== */
@@ -6037,6 +6150,43 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   .dash-middle-col{ min-height:0; }
   .dash-middle-col > :last-child{ flex:1 1 auto; display:flex; flex-direction:column; }
 }
+
+/* ── پاپ‌آپ پروفایل دوست ──────────────────────────────────────
+   طبقِ درخواستِ صریح: وسطِ بالای صفحه (نه وسطِ عمودیِ معمولِ بقیه‌ی
+   پاپ‌آپ‌ها) — position:fixed با یک top ثابت، نه transform:translateY(-50%). */
+.friend-profile-panel{
+  position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:71;
+  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
+  padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
+  background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
+  animation:tradeFadeIn .22s ease both;
+}
+.friend-profile-close{ position:absolute; top:12px; left:12px; }
+.friend-profile-loading{ display:flex; align-items:center; justify-content:center; padding:30px 0; color:var(--muted); }
+.friend-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
+.friend-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:8px; }
+.friend-profile-name{ font-size:17px; font-weight:800; color:var(--text); }
+.friend-profile-username{ font-size:12px; color:var(--muted2); direction:ltr; }
+.friend-profile-plan{
+  margin-top:6px; padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
+  color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);
+}
+.friend-profile-stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; padding-top:16px;
+  border-top:1px solid var(--surface-line);
+}
+.friend-profile-stats.cols-2{ grid-template-columns:repeat(2,1fr); }
+.friend-profile-stat{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:10px; color:var(--muted2); text-align:center;
+}
+.friend-profile-stat .header-streak-clock-streak{ font-size:15px; }
+.friend-profile-stat-icon{ color:var(--accent); }
+.friend-profile-stat b{ font-size:15px; font-weight:800; color:var(--text); }
+.friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
+.friend-profile-actions{ display:flex; gap:8px; margin-top:18px; }
+.friend-profile-actions button{ flex:1; }
+.account-outline-btn.active{ background:rgba(245,197,24,.1); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    مدیرِ برنامه — دایره‌ی گوشه‌ی چپ‌پایینِ صفحه‌ی روتین + پنلِ گفت‌وگو

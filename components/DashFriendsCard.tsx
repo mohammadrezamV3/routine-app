@@ -8,6 +8,7 @@ import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
 import { AgentAvatar } from "./AgentAvatar";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { FriendProfileModal } from "./FriendProfileModal";
 import { useSession } from "next-auth/react";
 import { getPreloadedBootstrap } from "@/lib/preload";
 
@@ -55,6 +56,10 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const [searching, setSearching] = useState(false);
   const [confirmDeleteFriend, setConfirmDeleteFriend] = useState<Friend | null>(null);
   const [deletingFriend, setDeletingFriend] = useState(false);
+  // پاپ‌آپ پروفایل — با کلیک روی اسمِ هر دوست باز می‌شود. canStar=false برای
+  // نتایجِ جست‌وجو (که هنوز دوست نشده‌اند) — دکمه‌ی استار آن‌جا معنا ندارد
+  // قبل از دوست‌شدن (بلاک همیشه ممکن است، طبقِ خودِ FriendProfileModal).
+  const [viewingProfile, setViewingProfile] = useState<{ id: string; canStar: boolean } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -200,7 +205,13 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                 <span className="hidden sm:inline-flex"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={36} /></span>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <div className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</div>
+                    <button
+                      type="button"
+                      onClick={() => setViewingProfile({ id: f.id, canStar: true })}
+                      className="bg-transparent text-[11.5px] font-semibold text-dash-text hover:text-dash-green sm:text-[13.5px]"
+                    >
+                      {f.name}
+                    </button>
                     <StreakFlame streak={f.streak} className="text-[10px] sm:text-[11px]" />
                   </div>
                   <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]">
@@ -262,17 +273,25 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                             return (
                               <div
                                 key={u.id}
-                                onClick={clickable ? () => sendRequest(u) : undefined}
                                 className="flex items-center justify-between gap-2 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5"
-                                style={{ cursor: clickable ? "pointer" : "default" }}
                               >
-                                <span className="text-[11.5px] font-semibold" style={{ color: clickable ? "var(--accent)" : "var(--muted)" }}>
+                                <button
+                                  type="button"
+                                  onClick={clickable ? () => sendRequest(u) : undefined}
+                                  disabled={!clickable}
+                                  className="bg-transparent text-[11.5px] font-semibold"
+                                  style={{ color: clickable ? "var(--accent)" : "var(--muted)", cursor: clickable ? "pointer" : "default" }}
+                                >
                                   {u.status === "none" ? "افزودن" : STATUS_LABEL[u.status]}
-                                </span>
-                                <div className="flex items-center gap-2.5">
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingProfile({ id: u.id, canStar: u.status === "friends" })}
+                                  className="flex items-center gap-2.5 bg-transparent"
+                                >
                                   <Avatar name={u.name} avatarUrl={u.avatarUrl} size={32} />
                                   <div className="text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
-                                </div>
+                                </button>
                               </div>
                             );
                           })
@@ -333,10 +352,14 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                       <div className="flex flex-col gap-2">
                         {list.map((f) => (
                           <div key={f.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
-                            <div className="flex items-center gap-2.5">
+                            <button
+                              type="button"
+                              onClick={() => setViewingProfile({ id: f.id, canStar: true })}
+                              className="flex items-center gap-2.5 bg-transparent"
+                            >
                               <Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} />
                               <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
-                            </div>
+                            </button>
                             <div className="flex items-center gap-2.5">
                               <button
                                 type="button"
@@ -403,6 +426,14 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
           </div>
         </>,
         document.body
+      )}
+
+      {viewingProfile && (
+        <FriendProfileModal
+          userId={viewingProfile.id}
+          canStar={viewingProfile.canStar}
+          onClose={() => setViewingProfile(null)}
+        />
       )}
     </DashCard>
   );

@@ -30,6 +30,14 @@ export async function GET(req: NextRequest) {
       // خاموش کرده توی جست‌وجوی دوستان دیده نمی‌شه (دوستی از‌قبل‌موجود یا
       // درخواست درحال‌انتظار همچنان جای دیگه‌ای نمایش داده می‌شه، فقط جست‌وجوی جدید مسدوده)
       discoverable: true,
+      // بلاکِ کاربر-به-کاربر دوطرفه است: کسی که بلاک کرده‌ام یا کسی که
+      // من را بلاک کرده، دیگر در جست‌وجوی دوستان دیده نمی‌شود.
+      NOT: {
+        OR: [
+          { blockedByUsers: { some: { blockerId: userId } } },
+          { blockedUsers: { some: { blockedId: userId } } },
+        ],
+      },
     },
     select: { id: true, name: true, username: true, avatarUrl: true },
     take: 12,

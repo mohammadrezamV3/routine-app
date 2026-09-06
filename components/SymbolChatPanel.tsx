@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Flag, Loader2, MessagesSquare, Send, ShieldAlert, Trash2, X } from "lucide-react";
+import { Flag, Loader2, MessagesSquare, Send, ShieldAlert, Smile, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import {
   CHAT_REPORT_REASONS, CHAT_RULES, ChatMessageDto, ChatReportReason, ChatViewerModeration, MAX_CHAT_BODY,
@@ -21,6 +21,10 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 // می‌شود تا در پس‌زمینه بی‌دلیل به سرور نزند.
 const POLL_MS = 8_000;
 
+// ایموجی‌های پرکاربرد در گفت‌وگوی ترید — یک پیکرِ سبک، نه یک کتابخانه‌ی
+// کاملِ ایموجی که برای همین چندتا استفاده سنگین بود.
+const CHAT_EMOJIS = ["📈", "📉", "🚀", "🔥", "💰", "🎯", "😅", "😭", "🤔", "👍", "👎", "🙏"];
+
 function timeLabel(iso: string) {
   const d = new Date(iso);
   return faNum(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
@@ -38,6 +42,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   const [moderation, setModeration] = useState<ChatViewerModeration | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [warningDismissing, setWarningDismissing] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const { pendingKey, error: actionError, run } = useAsyncAction();
 
   useEffect(() => {
@@ -269,25 +274,47 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
           )}
 
           {rulesAccepted === true && (
-          <form
-            className="trade-chat-composer"
-            onSubmit={(e) => { e.preventDefault(); send(); }}
-          >
-            <input
-              className="wsearch-newform-name trade-glass-field"
-              value={draft}
-              maxLength={MAX_CHAT_BODY}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="پیام خود را بنویسید…"
-              aria-label="متن پیام"
-            />
-            <button
-              type="submit" className="trade-chat-send"
-              disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
+          <div className="trade-chat-composer-wrap">
+            {emojiOpen && (
+              <div className="trade-chat-emoji-picker">
+                {CHAT_EMOJIS.map((em) => (
+                  <button
+                    key={em}
+                    type="button"
+                    className="trade-chat-emoji-item"
+                    onClick={() => { setDraft((d) => d + em); setEmojiOpen(false); }}
+                  >
+                    {em}
+                  </button>
+                ))}
+              </div>
+            )}
+            <form
+              className="trade-chat-composer"
+              onSubmit={(e) => { e.preventDefault(); send(); }}
             >
-              {pendingKey === "send" ? <Loader2 size={16} className="trade-spin" /> : <Send size={16} />}
-            </button>
-          </form>
+              <button
+                type="button" className="trade-chat-emoji-btn"
+                onClick={() => setEmojiOpen((v) => !v)} aria-label="افزودن ایموجی"
+              >
+                <Smile size={18} />
+              </button>
+              <input
+                className="wsearch-newform-name trade-glass-field"
+                value={draft}
+                maxLength={MAX_CHAT_BODY}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="پیام خود را بنویسید…"
+                aria-label="متن پیام"
+              />
+              <button
+                type="submit" className="trade-chat-send"
+                disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
+              >
+                {pendingKey === "send" ? <Loader2 size={18} className="trade-spin" /> : <Send size={19} />}
+              </button>
+            </form>
+          </div>
           )}
         </>
       )}
