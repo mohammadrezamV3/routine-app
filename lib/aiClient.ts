@@ -848,17 +848,35 @@ const ROUTINE_ASSISTANT_PROMPT = `تو «مدیرِ برنامه»ی اپلیک�
 مثلِ «شنبه چی دارم؟» یا «این هفته چقدر پرم؟» — با ops خالی جواب بده:
 { "offTopic": false, "reply": "شنبه دو برنامه داری: …", "ops": [] }
 
+### وقتی واقعا نمی‌توانی تصمیم بگیری — سوال بپرس و گزینه بده
+فقط برای ابهامِ واقعی، نه برای چیزی که خودت می‌توانی انتخاب کنی (ساعت را
+همیشه خودت انتخاب کن). نمونه: کاربر دو برنامه با اسمِ مشابه دارد، یا معلوم
+نیست منظورش «همین هفته» است یا «هر هفته».
+
+{ "offTopic": false, "ops": [],
+  "ask": { "question": "کدام «مطالعه» را می‌گویی؟",
+           "options": ["مطالعه‌ی شنبه ۰۸:۰۰", "مطالعه‌ی دوشنبه ۲۰:۰۰"] } }
+
+- options حداکثر چهار تا، هرکدام کوتاه و به‌شکلِ چیزی که کاربر می‌تواند
+  همان را بفرستد (نه «گزینه ۱»).
+- وقتی ask می‌دهی، ops باید خالی باشد.
+
 ### عملیاتِ مجاز
 
 ۱) افزودن:
 { "op": "add", "name": "نامِ برنامه", "days": [6,1], "start": "08:00", "end": "09:30",
   "importance": "medium", "tag": "درس" }
 - days همیشه آرایه است، حتی برای یک روز.
-- end اختیاری است. importance یکی از low/medium/high/veryHigh (پیش‌فرض medium).
-- tag اختیاری است.
+- **start و end هر دو اختیاری‌اند.** خیلی از برنامه‌ها اصلا ساعت ندارند
+  («امروز ورزش دارم»، «فردا خرید دارم»). اگر کاربر ساعت نگفت، start و end
+  را **اصلا ننویس** — برنامه بی‌ساعت ثبت می‌شود و ته برنامه‌های همان روز
+  می‌نشیند. هیچ‌وقت به‌خاطرِ نگفتنِ ساعت سوال نپرس، حدس هم نزن.
+- importance یکی از low/medium/high/veryHigh (پیش‌فرض medium). tag اختیاری.
 
 ۲) تغییرِ ساعت (همان روز می‌ماند):
 { "op": "retime", "ref": 3, "start": "10:00", "end": "11:00" }
+- برای *برداشتنِ* ساعت («ساعتش رو بردار»، «بی‌ساعت باشه») همان retime را
+  بدونِ start و end بده: { "op": "retime", "ref": 3 }
 
 ۳) جابه‌جایی به روزِ دیگر:
 { "op": "move", "ref": 3, "toDay": 4 }
@@ -879,10 +897,11 @@ const ROUTINE_ASSISTANT_PROMPT = `تو «مدیرِ برنامه»ی اپلیک�
 - اگر کاربر یک برنامه‌ی موجود را روی چند روز جابه‌جا می‌کند، برای هر روز یک
   opِ جدا بده.
 - ساعتِ پایان باید بعد از ساعتِ شروع باشد.
-- اگر کاربر ساعت نگفت و لازم است، خودت یک ساعتِ منطقی انتخاب کن و در reply
-  بگو چه ساعتی گذاشتی — سوال نپرس و کار را معلق نگذار.
-- اگر منظورِ کاربر مبهم است (مثلاً دو برنامه با اسمِ مشابه دارد)، opای نساز
-  و در reply بپرس کدام‌یک را می‌گوید.
+- «امروز» و «فردا» را با تاریخِ امروز که بالای پیام آمده حساب کن و به عددِ
+  روز تبدیل کن.
+- اگر کاربر ساعت نگفت، فیلدِ start را ننویس — نه سوال بپرس، نه حدس بزن.
+  برنامه‌ی بی‌ساعت کاملا معتبر است.
+- اگر منظورِ کاربر واقعا مبهم است، از ask استفاده کن (نه reply خالی).
 - در reply هیچ‌وقت ادعا نکن که کاری «انجام شد» — فقط بگو چه قصدی داری.
   گزارشِ نهایی را خودِ برنامه به کاربر می‌دهد.
 - reply همیشه فارسی، کوتاه، و بدونِ اعراب.`;
@@ -891,7 +910,11 @@ export type RoutineAssistantPlan = {
   offTopic: boolean;
   reply: string;
   ops: any[];
+  /** سوالِ مدل وقتی خودش نمی‌تواند تصمیم بگیرد، همراهِ گزینه‌های آماده */
+  ask: { question: string; options: string[] } | null;
 };
+
+export type RoutineChatTurn = { role: "user" | "assistant"; text: string };
 
 /**
  * پیامِ کاربر + وضعیتِ فعلیِ برنامه‌ها را می‌دهد و یک نقشه‌ی تغییر می‌گیرد.
@@ -901,24 +924,46 @@ export async function planRoutineChange(
   message: string,
   scheduleText: string,
   todayLabel: string,
-  userId: string
+  userId: string,
+  history: RoutineChatTurn[] = []
 ): Promise<RoutineAssistantPlan> {
+  // تاریخچه لازم است چون کاربر روی گزینه‌ها کلیک می‌کند و جوابِ کوتاه
+  // می‌دهد («همون»، «۹:۳۰»)؛ بدونِ چند پیامِ قبلی این‌ها بی‌معنی‌اند.
+  const historyText = history.length
+    ? ["گفت‌وگوی قبلی (تازه‌ترین در انتها):",
+       ...history.map((t) => `${t.role === "user" ? "کاربر" : "تو"}: ${t.text}`), ""].join("\n")
+    : "";
+
   const userContent = [
     `امروز: ${todayLabel}`,
     "",
+    historyText,
     "برنامه‌های فعلیِ کاربر:",
     scheduleText,
     "",
     `پیامِ کاربر: ${message}`,
-  ].join("\n");
+  ].filter((x) => x !== "").join("\n");
 
   const { text, usage, durationMs } = await callAiChat(ROUTINE_ASSISTANT_PROMPT, userContent, 1200);
   recordAiUsage(userId, AiFeatureKey.ROUTINE_ASSISTANT, usage, durationMs, true);
   const parsed = parseJsonResponse(text);
 
+  const rawAsk = parsed?.ask;
+  const ask =
+    rawAsk && typeof rawAsk.question === "string" && rawAsk.question.trim()
+      ? {
+          question: rawAsk.question.trim().slice(0, 300),
+          options: (Array.isArray(rawAsk.options) ? rawAsk.options : [])
+            .filter((o: unknown): o is string => typeof o === "string" && !!o.trim())
+            .slice(0, 4)
+            .map((o: string) => o.trim().slice(0, 80)),
+        }
+      : null;
+
   return {
     offTopic: parsed?.offTopic === true,
     reply: typeof parsed?.reply === "string" ? parsed.reply.trim().slice(0, 400) : "",
     ops: Array.isArray(parsed?.ops) ? parsed.ops : [],
+    ask,
   };
 }

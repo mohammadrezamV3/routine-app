@@ -6226,26 +6226,27 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    مدیرِ برنامه — دایره‌ی گوشه‌ی چپ‌پایینِ صفحه‌ی روتین + پنلِ گفت‌وگو
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* خودِ دکمه هیچ بک‌گراند/قابی ندارد — گوی (SiriOrb) تمامِ ظاهر است.
+   گذاشتنِ یک دایره‌ی رنگی زیرِ آن، گو را به یک آیکون روی دکمه تبدیل می‌کرد. */
 .routine-ai-fab{
   position:fixed; bottom:calc(18px + env(safe-area-inset-bottom)); left:18px;
-  width:52px; height:52px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  background:var(--accent); color:var(--bg);
-  border:1px solid var(--accent);
-  box-shadow:0 8px 22px rgba(0,0,0,.28);
+  background:none; border:none; padding:0;
   /* بالاتر از محتوای صفحه ولی پایین‌تر از overlay مودال‌ها (که ۱۰۰+ دارند)،
      تا وقتی یک مودالِ دیگر باز است روی آن نیفتد. */
   z-index:40;
-  transition:transform .16s ease, filter .16s ease;
+  transition:transform .16s ease;
 }
-@media (hover:hover){ .routine-ai-fab:hover{ filter:brightness(1.07); transform:translateY(-2px); } }
+@media (hover:hover){ .routine-ai-fab:hover{ transform:translateY(-2px); } }
 .routine-ai-fab:active{ transform:scale(.94); }
 
-/* روی موبایل نوارِ ناوبریِ پایین هست؛ دایره باید بالاترش بنشیند وگرنه
+/* روی موبایل نوارِ ناوبریِ پایین هست؛ گو باید بالاترش بنشیند وگرنه
    روی دکمه‌های نوار می‌افتد. */
 @media (max-width:1023px){
-  .routine-ai-fab{ bottom:calc(84px + env(safe-area-inset-bottom)); width:48px; height:48px; }
+  .routine-ai-fab{ bottom:calc(84px + env(safe-area-inset-bottom)); }
 }
+
+.routine-ai-title{ display:flex; align-items:center; gap:8px; }
 
 .routine-ai-panel{
   display:flex; flex-direction:column;
@@ -6321,3 +6322,38 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   padding-top:12px; border-top:1px solid var(--surface-line);
   font-size:12px; color:var(--muted); text-align:center;
 }
+
+/* گزینه‌های آماده‌ی پاسخ زیرِ پیامِ دستیار — کاربر به‌جای تایپ می‌زند رویشان */
+.routine-ai-options{
+  align-self:flex-start; max-width:88%;
+  display:flex; flex-wrap:wrap; gap:6px; margin-top:-2px;
+}
+.routine-ai-option{
+  font-size:11px; line-height:1.8; padding:5px 10px; border-radius:999px;
+  background:rgba(var(--bg-rgb),.35);
+  border:1px solid rgba(var(--accent-rgb),.35);
+  color:var(--text);
+}
+.routine-ai-option:disabled{ opacity:.45; }
+@media (hover:hover){ .routine-ai-option:hover:not(:disabled){ border-color:var(--accent); } }
+
+/* دکمه‌ی میکروفون کنارِ ارسال. هم‌اندازه‌ی همان، ولی عمدا بی‌بک‌گراند تا
+   دکمه‌ی اصلیِ ارسال تنها چیزِ پررنگِ نوار بماند؛ فقط هنگامِ ضبط پر می‌شود. */
+.routine-ai-mic{
+  flex:0 0 auto; width:38px; height:38px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  background:none; color:var(--muted);
+  border:1px solid var(--surface-line);
+  transition:color .15s ease, border-color .15s ease;
+}
+@media (hover:hover){ .routine-ai-mic:hover:not(:disabled){ color:var(--text); border-color:var(--accent); } }
+.routine-ai-mic:disabled{ opacity:.45; }
+.routine-ai-mic.is-recording{
+  background:#E05252; border-color:#E05252; color:#fff;
+  animation:routineMicPulse 1.4s ease-in-out infinite;
+}
+@keyframes routineMicPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(224,82,82,.45); }
+  60%{ box-shadow:0 0 0 7px rgba(224,82,82,0); }
+}
+html[data-perf="low"] .routine-ai-mic.is-recording{ animation:none; }

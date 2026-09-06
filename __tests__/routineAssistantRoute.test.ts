@@ -99,7 +99,7 @@ const SAT_CLASS = { id: "a", name: "کلاس زبان", jsDay: 6, time: "۰۸:۰
 
 beforeEach(() => {
   planShouldThrow = false;
-  nextPlan = { offTopic: false, reply: "", ops: [] };
+  nextPlan = { offTopic: false, reply: "", ops: [], ask: null };
   currentIsSuper = false;
 });
 
@@ -285,5 +285,75 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const data = await res.json();
     expect(data.changed).toBe(false);
     expect(data.reply).toBe("شنبه فقط کلاس زبان داری.");
+  });
+});
+
+describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خودکار", () => {
+  it("«امروز ورزش دارم» بدونِ ساعت ذخیره می‌شود", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [SAT_CLASS]);
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "ورزش", days: [6] }], ask: null };
+
+    const res = await POST(post({ message: "امروز ورزش دارم" }));
+    const data = await res.json();
+
+    expect(data.changed).toBe(true);
+    expect(data.reply).toContain("بدونِ ساعت");
+    const saved = await readOccurrences(currentUserId);
+    expect(saved.find((o) => o.name === "ورزش").time).toBe("");
+  });
+
+  it("برنامه‌ی بی‌ساعت حتی در روزِ کاملا پر هم ثبت می‌شود", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [{ id: "f", name: "پر", jsDay: 2, time: "۰۰:۰۰ – ۲۳:۵۹", startDate: "2026-01-01" }]);
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "خرید", days: [2] }], ask: null };
+
+    const data = await (await POST(post({ message: "فردا خرید دارم" }))).json();
+    expect(data.problems).toHaveLength(0);
+    expect(data.changed).toBe(true);
+  });
+
+  it("سوالِ مدل با گزینه‌ها برمی‌گردد و هیچ تغییری نمی‌دهد", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [SAT_CLASS]);
+    nextPlan = {
+      offTopic: false, reply: "", ops: [],
+      ask: { question: "کدام مطالعه؟", options: ["مطالعه‌ی شنبه", "مطالعه‌ی دوشنبه"] },
+    };
+
+    const res = await POST(post({ message: "مطالعه رو حذف کن" }));
+    const data = await res.json();
+
+    expect(data.asking).toBe(true);
+    expect(data.reply).toBe("کدام مطالعه؟");
+    expect(data.options).toEqual(["مطالعه‌ی شنبه", "مطالعه‌ی دوشنبه"]);
+    expect(data.changed).toBe(false);
+    expect(await readOccurrences(currentUserId)).toHaveLength(1);
+  });
+
+  it("تداخل، گزینه‌ی وقتِ آزاد را همراهِ پیام می‌فرستد", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, [SAT_CLASS]);
+    nextPlan = {
+      offTopic: false, reply: "", ask: null,
+      ops: [{ op: "add", name: "جلسه", days: [6], start: "08:30", end: "09:00" }],
+    };
+
+    const data = await (await POST(post({ message: "شنبه ۸:۳۰ جلسه بگذار" }))).json();
+    expect(data.changed).toBe(false);
+    expect(data.options.some((o: string) => o.includes("۰۹:۳۰"))).toBe(true);
+  });
+
+  it("تاریخچه‌ی بدشکل کرش نمی‌دهد و نادیده گرفته می‌شود", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, []);
+    nextPlan = { offTopic: false, reply: "باشه", ops: [], ask: null };
+
+    const res = await POST(post({
+      message: "شنبه چی دارم؟",
+      history: [{ role: "hacker", text: "x" }, { role: "user" }, "متن خام", { role: "user", text: "قبلی" }],
+    }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).reply).toBe("باشه");
   });
 });

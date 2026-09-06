@@ -25,6 +25,18 @@ export const MAX_OPS_PER_MESSAGE = 12;
 /** تعدادِ استفاده‌ی رایگان برای کاربرِ بدونِ اشتراک */
 export const FREE_ASSISTANT_USES = 3;
 
+/**
+ * برنامه لازم نیست ساعت داشته باشد.
+ *
+ * «امروز ورزش دارم» یک برنامه‌ی واقعی است بدونِ هیچ ساعتی؛ اجبار به ساعت
+ * یا حدس‌زدنِ آن، چیزی می‌سازد که کاربر نگفته. برنامه‌ی بی‌ساعت `time` خالی
+ * می‌گیرد و `sortTasksByTime` خودش آن را ته فهرستِ همان روز می‌نشاند.
+ * چون بازه‌ای ندارد، با هیچ‌چیز هم تداخل پیدا نمی‌کند.
+ */
+export const DEFAULT_DURATION_MIN = 60;
+export type AwakeWindow = { startMin: number; endMin: number };
+export const DEFAULT_AWAKE: AwakeWindow = { startMin: 8 * 60, endMin: 22 * 60 };
+
 export const DAY_NAME_FA: Record<number, string> = {
   6: "شنبه", 0: "یکشنبه", 1: "دوشنبه", 2: "سه‌شنبه", 3: "چهارشنبه", 4: "پنجشنبه", 5: "جمعه",
 };
@@ -60,6 +72,11 @@ export type ApplyOutcome = {
   applied: string[];
   /** جمله‌های «نشد، چون…» — هر کدام باید خودش کامل و قابل‌فهم باشد */
   problems: string[];
+  /**
+   * پاسخ‌های آماده‌ای که کاربر می‌تواند فقط رویشان بزند به‌جای تایپ‌کردن.
+   * وقتی کاری نشد، بن‌بست ندهیم: راهِ ادامه را جلوی دستش بگذاریم.
+   */
+  options: string[];
   /** آیا چیزی واقعا تغییر کرد (یعنی باید ذخیره شود) */
   changed: boolean;
 };
@@ -132,6 +149,31 @@ export function findConflict(
 }
 
 /**
+ * اولین بازه‌ی آزادِ `durationMin`دقیقه‌ای از `fromMin` به بعد، حداکثر تا
+ * `untilMin`. پایه‌ی هر دو کاربرد است: پیشنهادِ جایگزین وقتی ساعتِ خواسته‌شده
+ * پر است، و جای‌گذاریِ خودکار وقتی کاربر اصلا ساعتی نگفته.
+ */
+export function findFreeSlot(
+  list: CustomOccurrence[],
+  jsDay: number,
+  fromMin: number,
+  durationMin: number,
+  untilMin: number,
+  excludeId?: string
+): { startMin: number; endMin: number | null } | null {
+  const STEP = 15;
+  for (let s = fromMin; s + durationMin <= untilMin; s += STEP) {
+    const e = durationMin === 0 ? null : s + durationMin;
+    if (!findConflict(list, jsDay, s, e, excludeId)) return { startMin: s, endMin: e };
+  }
+  return null;
+}
+
+export function minutesToFa(min: number): string {
+  return normalizeTimeToFa(`${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`);
+}
+
+/**
  * نزدیک‌ترین بازه‌ی آزادِ هم‌طولِ همان روز — پاسخِ سوالِ «اون ساعت پره، پس کِی؟».
  * از ساعتِ درخواستی به جلو می‌گردد و فقط تا پایانِ همان روز (۲۳:۵۹).
  * null یعنی آن روز واقعا جای خالیِ هم‌اندازه ندارد.
@@ -143,17 +185,13 @@ export function suggestFreeSlot(
   endMin: number | null,
   excludeId?: string
 ): { startFa: string; endFa: string | null } | null {
-  const durationMin = endMin === null ? 0 : endMin - startMin;
-  const STEP = 15;
-  for (let s = startMin; s + durationMin <= 24 * 60 - 1; s += STEP) {
-    const e = durationMin === 0 ? null : s + durationMin;
-    if (!findConflict(list, jsDay, s, e, excludeId)) {
-      const startFa = normalizeTimeToFa(`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`);
-      const endFa = e === null ? null : normalizeTimeToFa(`${Math.floor(e / 60)}:${String(e % 60).padStart(2, "0")}`);
-      return { startFa, endFa };
-    }
-  }
-  return null;
+  const duration = endMin === null ? 0 : endMin - startMin;
+  const slot = findFreeSlot(list, jsDay, startMin, duration, 24 * 60 - 1, excludeId);
+  if (!slot) return null;
+  return {
+    startFa: minutesToFa(slot.startMin),
+    endFa: slot.endMin === null ? null : minutesToFa(slot.endMin),
+  };
 }
 
 const IMPORTANCE_VALUES: Importance[] = ["low", "medium", "high", "veryHigh"];
@@ -194,12 +232,19 @@ export function applyOps(
   input: CustomOccurrence[],
   removedInput: string[],
   ops: RawOp[],
-  todayIso: string
+  todayIso: string,
+  awake: AwakeWindow = DEFAULT_AWAKE
 ): ApplyOutcome {
   let list = [...input];
   let removed = [...removedInput];
   const applied: string[] = [];
   const problems: string[] = [];
+  const options: string[] = [];
+
+  /** گزینه‌ی تکراری اضافه نکن و بیش از چهار تا هم نده — انتخاب باید ساده بماند */
+  function offer(...items: string[]) {
+    for (const it of items) if (it && !options.includes(it) && options.length < 4) options.push(it);
+  }
 
   // نگاشتِ شماره‌ی ردیف → شناسه، *قبل* از هر تغییری گرفته می‌شود.
   // اگر بعد از یک حذف دوباره ایندکس‌گذاری می‌کردیم، `ref` های بعدیِ همان
@@ -209,10 +254,14 @@ export function applyOps(
 
   function resolve(ref: unknown): CustomOccurrence | { error: string } {
     if (typeof ref !== "number" || !Number.isInteger(ref)) {
+      offer("همه‌ی برنامه‌هایم را نشانم بده");
       return { error: "نفهمیدم کدام برنامه را می‌گویی. اسمش را دقیق بنویس." };
     }
     const id = refToId.get(ref);
-    if (!id) return { error: "برنامه‌ای که گفتی در فهرستِ برنامه‌هایت نیست." };
+    if (!id) {
+      offer("همه‌ی برنامه‌هایم را نشانم بده");
+      return { error: "برنامه‌ای که گفتی در فهرستِ برنامه‌هایت نیست." };
+    }
     const found = list.find((o) => o.id === id);
     if (!found) return { error: "آن برنامه در همین پیام حذف شده بود." };
     return found;
@@ -232,16 +281,25 @@ export function applyOps(
       if (!name) { problems.push("برای برنامه‌ی جدید اسمی نگفتی."); continue; }
 
       const days = Array.isArray(raw.days) ? raw.days.filter(isJsDay) : [];
-      if (!days.length) { problems.push(`برای «${name}» روزی مشخص نکردی — کدام روزِ هفته؟`); continue; }
+      if (!days.length) {
+        problems.push(`برای «${name}» روزی مشخص نکردی — کدام روزِ هفته؟`);
+        offer(`«${name}» را برای امروز بگذار`, `«${name}» را برای فردا بگذار`, `«${name}» را هر روز بگذار`);
+        continue;
+      }
 
-      const start = parseClock(raw.start);
-      if (!start) { problems.push(`ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «۸:۳۰» بنویس.`); continue; }
+      // ساعت *اختیاری* است. «مطالعه رو برای امروز اضافه کن» باید کار کند —
+      // نبودِ ساعت دلیلِ رد کردن نیست، دلیلِ انتخاب‌کردن است. فقط اگر کاربر
+      // چیزی نوشته باشد که ساعت نیست، خطا می‌دهیم؛ نبودِ کامل یعنی «خودت بگذار».
+      const hasStart = raw.start !== undefined && raw.start !== null && raw.start !== "";
+      const start = hasStart ? parseClock(raw.start) : null;
+      if (hasStart && !start) { problems.push(`ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «۸:۳۰» بنویس.`); continue; }
       const end = raw.end === undefined || raw.end === null || raw.end === "" ? null : parseClock(raw.end);
       if (raw.end && !end) { problems.push(`ساعتِ پایانِ «${name}» را نفهمیدم.`); continue; }
-      if (end && end.min <= start.min) {
+      if (start && end && end.min <= start.min) {
         problems.push(`ساعتِ پایانِ «${name}» باید بعد از ساعتِ شروع باشد.`);
         continue;
       }
+      const autoDuration = start && end ? end.min - start.min : DEFAULT_DURATION_MIN;
 
       const importance = parseImportance(raw.importance) ?? "medium";
       const tag = typeof raw.tag === "string" && raw.tag.trim() ? raw.tag.trim().slice(0, 30) : null;
@@ -251,15 +309,31 @@ export function applyOps(
           problems.push(`به سقفِ ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
           break;
         }
+        const dayFa = DAY_NAME_FA[jsDay];
+
+        // ── کاربر ساعت نگفته: برنامه *بی‌ساعت* ثبت می‌شود، نه با ساعتی که
+        //    خودمان حدس زده‌ایم. ته فهرستِ همان روز می‌نشیند و چون بازه‌ای
+        //    ندارد با چیزی تداخل هم پیدا نمی‌کند.
+        if (!start) {
+          list.push({
+            id: newOccId(), name, jsDay, time: "",
+            startDate: todayIso, importance, ...(tag ? { tag } : {}),
+          });
+          applied.push(`«${name}» ${dayFa} بدونِ ساعت اضافه شد.`);
+          offer(`برای «${name}» ساعت هم بگذار`);
+          continue;
+        }
+
         const conflict = findConflict(list, jsDay, start.min, end?.min ?? null);
         if (conflict) {
           const slot = suggestFreeSlot(list, jsDay, start.min, end?.min ?? null);
-          const dayFa = DAY_NAME_FA[jsDay];
           problems.push(
             slot
-              ? `${dayFa} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقتِ آزاد ${timeLabel(slot.startFa, slot.endFa)} است — بگو تا همان را ثبت کنم.`
+              ? `${dayFa} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقتِ آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`
               : `${dayFa} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخرِ آن روز هم جای خالیِ هم‌اندازه نمانده.`
           );
+          if (slot) offer(`«${name}» را ${dayFa} ساعتِ ${slot.startFa} بگذار`);
+          offer(`«${name}» را یک روزِ دیگر بگذار`, `«${conflict.name}» را جابه‌جا کن`);
           continue;
         }
         list.push({
@@ -271,7 +345,7 @@ export function applyOps(
           importance,
           ...(tag ? { tag } : {}),
         });
-        applied.push(`«${name}» ${DAY_NAME_FA[jsDay]} ساعتِ ${timeLabel(start.fa, end?.fa)} اضافه شد.`);
+        applied.push(`«${name}» ${dayFa} ساعتِ ${timeLabel(start.fa, end?.fa)} اضافه شد.`);
       }
       continue;
     }
@@ -281,6 +355,18 @@ export function applyOps(
       const target = resolve(raw.ref);
       if ("error" in target) { problems.push(target.error); continue; }
 
+      // `retime` بدونِ ساعت یعنی «ساعتش را بردار» — راهِ برگشت از
+      // برنامه‌ی ساعت‌دار به برنامه‌ی بی‌ساعت.
+      const wantsClear = raw.start === undefined || raw.start === null || raw.start === "";
+      if (wantsClear && !raw.end) {
+        if (!target.time) { problems.push(`«${target.name}» از قبل بی‌ساعت است.`); continue; }
+        const wasTime = target.time;
+        list = list.filter((o) => o.id !== target.id);
+        clearRemovedFor(target.id);
+        list.push({ ...target, id: newOccId(), time: "", startDate: todayIso });
+        applied.push(`ساعتِ «${target.name}» (${wasTime}) برداشته شد.`);
+        continue;
+      }
       const start = parseClock(raw.start);
       if (!start) { problems.push(`ساعتِ جدیدِ «${target.name}» را نفهمیدم.`); continue; }
       const end = raw.end === undefined || raw.end === null || raw.end === "" ? null : parseClock(raw.end);
@@ -298,6 +384,8 @@ export function applyOps(
             ? `${DAY_NAME_FA[target.jsDay]} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقتِ آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`
             : `${DAY_NAME_FA[target.jsDay]} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و جای خالیِ دیگری هم آن روز نمانده.`
         );
+        if (slot) offer(`«${target.name}» را ساعتِ ${slot.startFa} بگذار`);
+        offer(`«${target.name}» را به یک روزِ دیگر ببر`, `«${conflict.name}» را جابه‌جا کن`);
         continue;
       }
 
@@ -322,11 +410,19 @@ export function applyOps(
         continue;
       }
 
-      // ساعت می‌تواند همراهِ جابه‌جایی عوض شود؛ اگر نگفته باشد، همان ساعتِ فعلی
+      // ساعت می‌تواند همراهِ جابه‌جایی عوض شود؛ اگر نگفته باشد، همان ساعتِ فعلی.
+      // برنامه‌ی بی‌ساعت هم بی‌ساعت جابه‌جا می‌شود — نبودِ ساعت خطا نیست.
       const curStart = occStart(target);
       const curEnd = occEnd(target);
       const start = raw.start ? parseClock(raw.start) : (curStart === null ? null : { fa: target.time.split(/[–—-]/)[0].trim(), min: curStart });
-      if (!start) { problems.push(`ساعتِ «${target.name}» قابلِ خواندن نبود.`); continue; }
+      if (!start && raw.start) { problems.push(`ساعتِ «${target.name}» قابلِ خواندن نبود.`); continue; }
+      if (!start) {
+        list = list.filter((o) => o.id !== target.id);
+        clearRemovedFor(target.id);
+        list.push({ ...target, id: newOccId(), jsDay: toDay, time: "", startDate: todayIso });
+        applied.push(`«${target.name}» از ${DAY_NAME_FA[target.jsDay]} به ${DAY_NAME_FA[toDay]} منتقل شد (همچنان بدونِ ساعت).`);
+        continue;
+      }
       const end = raw.end
         ? parseClock(raw.end)
         : (raw.start || curEnd === null ? null : { fa: target.time.split(/[–—-]/)[1]?.trim() || "", min: curEnd });
@@ -343,6 +439,8 @@ export function applyOps(
             ? `${DAY_NAME_FA[toDay]} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقتِ آزادِ آن روز ${timeLabel(slot.startFa, slot.endFa)} است.`
             : `${DAY_NAME_FA[toDay]} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و آن روز جای خالیِ هم‌اندازه ندارد.`
         );
+        if (slot) offer(`«${target.name}» را ${DAY_NAME_FA[toDay]} ساعتِ ${slot.startFa} بگذار`);
+        offer(`«${target.name}» را یک روزِ دیگر ببر`, `«${conflict.name}» را جابه‌جا کن`);
         continue;
       }
 
@@ -370,7 +468,7 @@ export function applyOps(
     problems.push(`در هر پیام حداکثر ${MAX_OPS_PER_MESSAGE} تغییر انجام می‌دهم — بقیه را در پیامِ بعدی بگو.`);
   }
 
-  return { occurrences: list, removed, applied, problems, changed: applied.length > 0 };
+  return { occurrences: list, removed, applied, problems, options, changed: applied.length > 0 };
 }
 
 /** مرتب‌سازیِ نمایشی: روزِ هفته به ترتیبِ شنبه..جمعه، بعد ساعت */
