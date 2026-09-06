@@ -3,36 +3,38 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Loader2, Mic, Send, Square, X } from "lucide-react";
+import { Mic, Send, Square, X } from "lucide-react";
+import { LockBodyScroll } from "./LockBodyScroll";
+import { primeSettingCache } from "@/lib/storage";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
+import AIMessage from "@/components/smoothui/components/ai-message";
+import AILoader from "@/components/smoothui/components/ai-loader";
 import {
   type AIState, useAudioAmplitude, useSimulatedAmplitude,
 } from "@/components/smoothui/components/ai-core";
 import {
   useVoiceRecorder, VOICE_CONSTRAINTS, VOICE_MAX_BYTES,
 } from "@/components/useVoiceRecorder";
-import { LockBodyScroll } from "./LockBodyScroll";
-import { primeSettingCache } from "@/lib/storage";
-import { SETTING_KEYS } from "@/lib/userSettingKeys";
 
 type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
 /** گزینه‌های آماده‌ی پاسخ — کاربر به‌جای تایپ فقط می‌زند رویشان */
 type Options = { forMsgId: string; items: string[] } | null;
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
-const EXAMPLES = [
-  "شنبه‌ها ساعت ۸ تا ۹:۳۰ کلاس زبان اضافه کن",
-  "باشگاه رو ببر پنجشنبه",
-  "مطالعه رو یک ساعت عقب بنداز",
-  "برنامه‌ی جمعه رو حذف کن",
-];
+const GREETING = "سلام! چطور می‌تونم کمکت کنم؟";
 
 function newId() {
   return Math.random().toString(36).slice(2);
 }
 
+function clockNow() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 /**
- * دایره‌ی گوشه‌ی چپ‌پایینِ صفحه‌ی روتین — «مدیرِ برنامه».
+ * گویِ گوشه‌ی چپ‌پایینِ صفحه‌ی روتین — «مدیرِ برنامه».
  *
  * کاربر هیچ گزینه‌ای انتخاب نمی‌کند: فقط با زبانِ خودش می‌گوید چه می‌خواهد و
  * سرور تصمیم می‌گیرد. هر تغییری که واقعا اعمال شود، همان‌جا با `onChanged`
@@ -45,6 +47,10 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [options, setOptions] = useState<Options>(null);
+  const [quota, setQuota] = useState<Quota | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
   // وضعیتِ گویِ دستیار. یک منبعِ واحد برای هر دو گو (دکمه‌ی شناور و سرِ پنل)
   // تا هر دو یک چیز بگویند.
   const [orbState, setOrbState] = useState<AIState>("idle");
@@ -53,13 +59,9 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const simulated = useSimulatedAmplitude(orbState);
   const recorder = useVoiceRecorder(micStream);
   const listening = recorder.state === "recording";
-  const [quota, setQuota] = useState<Quota | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // سهمیه فقط وقتی خوانده می‌شود که پنل باز شود — نه در هر بار لود شدنِ
-  // صفحه‌ی روتین. یک درخواستِ شبکه برای دکمه‌ای که شاید اصلا زده نشود،
-  // هزینه‌ی بی‌دلیلِ لودِ صفحه است.
+  // سهمیه فقط برای *بستنِ* ورودی وقتی تمام شده لازم است — دیگر بالای پنل
+  // نوشته نمی‌شود (درخواستِ صریح: «نامحدود» بالا ننویس).
   useEffect(() => {
     if (!open || quota || status !== "authenticated") return;
     let alive = true;
@@ -69,6 +71,14 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       .catch(() => {});
     return () => { alive = false; };
   }, [open, quota, status]);
+
+  // پیامِ خوش‌آمد یک‌بار، همان لحظه‌ی بازشدن — به‌جای فهرستِ پیشنهادها.
+  useEffect(() => {
+    if (open && msgs.length === 0) {
+      setMsgs([{ id: newId(), role: "bot", text: GREETING }]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (open) { setTimeout(() => inputRef.current?.focus(), 120); return; }
@@ -182,14 +192,13 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     }
 
     if (micStatus !== "active") await micStart();
-    // `start` بعد از await خودش جریان را می‌خواند؛ اگر اجازه رد شده باشد
-    // false برمی‌گرداند و پیامِ خودش را می‌گذارد.
     const ok = recorder.start();
     if (ok) setOrbState("listening");
     else push("bot", recorder.error || "به میکروفون دسترسی نداریم.", "error");
   }
 
   const exhausted = !!quota && !quota.unlimited && (quota.remaining ?? 0) <= 0;
+  const hasText = !!input.trim();
 
   return (
     <>
@@ -200,7 +209,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         aria-label="مدیر برنامه"
         title="مدیر برنامه"
       >
-        <SiriOrb size="48px" state={orbState} amplitude={simulated} />
+        <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>
 
       {open && (
@@ -216,11 +225,6 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   amplitude={listening ? micAmplitude : simulated}
                 />
                 مدیر برنامه
-                {quota && (
-                  <span className="routine-ai-quota">
-                    {quota.unlimited ? "نامحدود" : `${quota.remaining} بار مانده`}
-                  </span>
-                )}
               </div>
               <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label="بستن">
                 <X size={16} />
@@ -228,29 +232,20 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
             </div>
 
             <div className="routine-ai-list thin-scroll" ref={listRef}>
-              {!msgs.length && (
-                <div className="routine-ai-intro">
-                  <p>
-                    بگو با برنامه‌ی هفتگی‌ات چه کار کنم — اضافه‌کردن، تغییرِ ساعت،
-                    بردن به روزِ دیگر، یا حذف. لازم نیست گزینه‌ای انتخاب کنی.
-                  </p>
-                  <div className="routine-ai-examples">
-                    {EXAMPLES.map((e) => (
-                      <button key={e} type="button" className="routine-ai-example" disabled={exhausted || status !== "authenticated"} onClick={() => send(e)}>
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {msgs.map((m) => (
                 <Fragment key={m.id}>
-                  <div className={`routine-ai-msg ${m.role}${m.tone ? " tone-" + m.tone : ""}`}>
+                  <AIMessage
+                    from={m.role === "user" ? "user" : "assistant"}
+                    avatar={m.role === "bot" ? <SiriOrb size="24px" state="idle" /> : undefined}
+                    copyText={m.role === "bot" ? m.text : undefined}
+                    timestamp={undefined}
+                    className={m.tone ? `tone-${m.tone}` : undefined}
+                  >
                     {m.text.split("\n").map((line, i) => (
-                      <p key={i}>{line}</p>
+                      <p key={i} className={i ? "mt-1" : undefined}>{line}</p>
                     ))}
-                  </div>
+                  </AIMessage>
+
                   {options?.forMsgId === m.id && (
                     <div className="routine-ai-options">
                       {options.items.map((o) => (
@@ -264,15 +259,14 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
               ))}
 
               {listening && (
-                <div className="routine-ai-msg bot is-typing">
-                  <span>دارم گوش می‌دهم… وقتی تمام شد دکمه را بزن.</span>
+                <div className="routine-ai-status">
+                  <AILoader label="دارم گوش می‌دهم" variant="dots" />
                 </div>
               )}
 
-              {sending && (
-                <div className="routine-ai-msg bot is-typing">
-                  <Loader2 size={14} className="trade-spin" />
-                  <span>دارم برنامه‌ات را نگاه می‌کنم…</span>
+              {sending && !listening && (
+                <div className="routine-ai-status">
+                  <AILoader variant="dots" />
                 </div>
               )}
             </div>
@@ -280,8 +274,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
             {status !== "authenticated" ? (
               /* صفحه‌ی روتین برای مهمان هم کار می‌کند (روی localStorage)، ولی
                  دستیار بدونِ حساب نه: نه جایی برای شمردنِ سهمیه هست نه
-                 برنامه‌ای روی سرور که بشود عوضش کرد. پس به‌جای دکمه‌ای که
-                 همیشه خطا می‌دهد، همین‌جا صریح می‌گوییم. */
+                 برنامه‌ای روی سرور که بشود عوضش کرد. */
               <div className="routine-ai-exhausted">
                 <p>مدیرِ برنامه فقط با حسابِ کاربری کار می‌کند.</p>
                 <Link href="/auth/login" className="trade-primary-btn" onClick={() => setOpen(false)}>
@@ -306,26 +299,32 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   rows={1}
                   value={input}
                   maxLength={500}
-                  placeholder="مثلا: دوشنبه‌ها ساعت ۱۹ دویدن اضافه کن"
+                  placeholder="پیام…"
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
                   }}
                   disabled={sending}
                 />
-                <button
-                  type="button"
-                  className={`routine-ai-mic${listening ? " is-recording" : ""}`}
-                  onClick={toggleVoice}
-                  disabled={sending}
-                  aria-label={listening ? "پایان ضبط" : "ضبط صدا"}
-                  title={listening ? "پایان ضبط و ارسال" : "با صدا بگو"}
-                >
-                  {listening ? <Square size={14} /> : <Mic size={15} />}
-                </button>
-                <button type="submit" className="routine-ai-send" disabled={sending || !input.trim()} aria-label="ارسال">
-                  {sending ? <Loader2 size={15} className="trade-spin" /> : <Send size={15} />}
-                </button>
+                {/* یک دکمه، دو کار: تا وقتی چیزی ننوشته‌ای میکروفون است و به
+                    محضِ تایپ‌کردن به ارسال تبدیل می‌شود — دو دکمه‌ی کنارِ هم
+                    که همیشه یکی‌شان بی‌مصرف است، فضای نوار را می‌خورد. */}
+                {hasText ? (
+                  <button type="submit" className="routine-ai-action" disabled={sending} aria-label="ارسال">
+                    <Send size={16} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={`routine-ai-action${listening ? " is-recording" : ""}`}
+                    onClick={toggleVoice}
+                    disabled={sending}
+                    aria-label={listening ? "پایان ضبط" : "ضبط صدا"}
+                    title={listening ? "پایان ضبط و ارسال" : "با صدا بگو"}
+                  >
+                    {listening ? <Square size={14} /> : <Mic size={16} />}
+                  </button>
+                )}
               </form>
             )}
           </div>

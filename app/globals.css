@@ -6223,15 +6223,19 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 .account-outline-btn.active{ background:rgba(245,197,24,.1); }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   مدیرِ برنامه — دایره‌ی گوشه‌ی چپ‌پایینِ صفحه‌ی روتین + پنلِ گفت‌وگو
+   مدیرِ برنامه — گویِ گوشه‌ی صفحه‌ی روتین + پنلِ گفت‌وگو
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* خودِ دکمه هیچ بک‌گراند/قابی ندارد — گوی (SiriOrb) تمامِ ظاهر است.
-   گذاشتنِ یک دایره‌ی رنگی زیرِ آن، گو را به یک آیکون روی دکمه تبدیل می‌کرد. */
+/* هشدارِ CLAUDE.md دقیقا این‌جا اتفاق افتاد: قانونِ سراسریِ `button{}` به هر
+   دکمه‌ای بک‌گراندِ شیشه‌ای + `backdrop-filter` + `box-shadow` می‌دهد. تنها
+   `background:none` کافی نبود — بلورِ پس‌زمینه و سایه می‌ماندند و پشتِ گو یک
+   لکه‌ی تیره‌ی مربعی می‌ساختند. هر سه باید صریح خنثی شوند. */
 .routine-ai-fab{
-  position:fixed; bottom:calc(18px + env(safe-area-inset-bottom)); left:18px;
+  position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); left:28px;
   display:flex; align-items:center; justify-content:center;
-  background:none; border:none; padding:0;
+  background:none; border:none; padding:0; border-radius:50%;
+  box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
   /* بالاتر از محتوای صفحه ولی پایین‌تر از overlay مودال‌ها (که ۱۰۰+ دارند)،
      تا وقتی یک مودالِ دیگر باز است روی آن نیفتد. */
   z-index:40;
@@ -6243,112 +6247,96 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 /* روی موبایل نوارِ ناوبریِ پایین هست؛ گو باید بالاترش بنشیند وگرنه
    روی دکمه‌های نوار می‌افتد. */
 @media (max-width:1023px){
-  .routine-ai-fab{ bottom:calc(84px + env(safe-area-inset-bottom)); }
+  .routine-ai-fab{ bottom:calc(70px + env(safe-area-inset-bottom)); left:26px; }
 }
 
 .routine-ai-title{ display:flex; align-items:center; gap:8px; }
 
+/* شیشه‌ی مات مثلِ بقیه‌ی اپ: رنگِ توپرِ `--surface-2` زیر، بلور رویش. رنگِ
+   توپر لازم است چون `data-perf="low"` روی دستگاه‌های لمسی بلور را برمی‌دارد
+   و یک شیشه‌ی صرفا شفاف آن‌جا نامرئی می‌شد (همان باگِ v1.122.0). */
 .routine-ai-panel{
   display:flex; flex-direction:column;
   max-height:min(78vh, 620px);
-}
-.routine-ai-quota{
-  margin-inline-start:8px; font-size:10.5px; font-weight:600;
-  color:var(--muted); background:rgba(var(--bg-rgb),.35);
-  border:1px solid var(--surface-line); border-radius:999px; padding:2px 8px;
+  background:var(--surface-2);
+  backdrop-filter:blur(13px) saturate(180%);
+  -webkit-backdrop-filter:blur(13px) saturate(180%);
 }
 
 .routine-ai-list{
-  flex:1 1 auto; min-height:120px; overflow-y:auto;
-  display:flex; flex-direction:column; gap:8px;
-  padding:4px 2px 10px;
+  flex:1 1 auto; min-height:140px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:12px;
+  padding:4px 2px 12px;
 }
 
-.routine-ai-intro{ color:var(--muted); font-size:12px; line-height:2; }
-.routine-ai-examples{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-.routine-ai-example{
-  text-align:right; font-size:11.5px; line-height:1.9;
-  padding:8px 11px; border-radius:11px;
-  background:rgba(var(--bg-rgb),.35);
+/* حباب‌ها. حبابِ کاربر شیشه‌ی اکسنت می‌گیرد و پاسخ، سطحِ کارت — هر دو توپر،
+   تا روی موبایلِ بدونِ بلور هم دیده شوند. */
+.routine-ai-bubble-user{
+  background:var(--accent-dim);
+  border:1px solid rgba(var(--accent-rgb),.28);
+  color:var(--text);
+}
+.routine-ai-bubble-bot{
+  background:var(--surface-1);
   border:1px solid var(--surface-line);
   color:var(--text);
 }
-.routine-ai-example:disabled{ opacity:.45; }
-@media (hover:hover){ .routine-ai-example:hover:not(:disabled){ border-color:var(--accent); } }
+/* رنگِ لبه فقط یک نشانه‌ی وضعیت است؛ بک‌گراند همان بک‌گراندِ بقیه می‌ماند */
+.routine-ai-list .tone-ok .routine-ai-bubble-bot{ border-color:rgba(0,168,107,.55); }
+.routine-ai-list .tone-warn .routine-ai-bubble-bot{ border-color:rgba(224,168,60,.6); }
+.routine-ai-list .tone-error .routine-ai-bubble-bot{ border-color:rgba(224,82,82,.6); }
 
-.routine-ai-msg{
-  max-width:88%; padding:9px 12px; border-radius:14px;
-  font-size:12px; line-height:2;
-  border:1px solid var(--surface-line);
-  background:var(--surface-1);
-  white-space:pre-wrap; word-break:break-word;
-}
-.routine-ai-msg p + p{ margin-top:4px; }
-/* هم‌جهت با گفت‌وگوی موجودِ اپ (.trade-chat-row.mine): پیامِ خودِ کاربر
-   flex-end می‌گیرد که در RTL یعنی سمتِ چپ، و پاسخ سمتِ راست می‌ماند. */
-.routine-ai-msg.user{
-  align-self:flex-end;
-  background:var(--accent-dim); border-color:rgba(var(--accent-rgb),.28);
-}
-.routine-ai-msg.bot{ align-self:flex-start; }
-/* حاشیه‌ی رنگی فقط یک نشانه‌ی وضعیت است — بک‌گراند همان بک‌گراندِ بقیه می‌ماند */
-.routine-ai-msg.bot.tone-ok{ border-color:rgba(0,168,107,.55); }
-.routine-ai-msg.bot.tone-warn{ border-color:rgba(224,168,60,.6); }
-.routine-ai-msg.bot.tone-error{ border-color:rgba(224,82,82,.6); }
-.routine-ai-msg.is-typing{ display:flex; align-items:center; gap:7px; color:var(--muted); }
-
-.routine-ai-composer{
-  display:flex; align-items:flex-end; gap:8px;
-  padding-top:10px; border-top:1px solid var(--surface-line);
-}
-.routine-ai-input{
-  flex:1 1 auto; min-width:0; resize:none;
-  max-height:96px; padding:10px 12px; border-radius:12px;
-  font-size:12px; line-height:1.9; font-family:inherit;
-  background:rgba(var(--bg-rgb),.35);
-  border:1px solid var(--surface-line);
-  color:var(--text); outline:none;
-}
-.routine-ai-input:focus{ border-color:var(--accent); }
-.routine-ai-send{
-  flex:0 0 auto; width:38px; height:38px; border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  background:var(--accent); color:var(--bg); border:1px solid var(--accent);
-}
-.routine-ai-send:disabled{ opacity:.45; }
-
-.routine-ai-exhausted{
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-  padding-top:12px; border-top:1px solid var(--surface-line);
-  font-size:12px; color:var(--muted); text-align:center;
-}
+.routine-ai-status{ display:flex; align-items:center; padding-inline-start:34px; }
 
 /* گزینه‌های آماده‌ی پاسخ زیرِ پیامِ دستیار — کاربر به‌جای تایپ می‌زند رویشان */
 .routine-ai-options{
   align-self:flex-start; max-width:88%;
-  display:flex; flex-wrap:wrap; gap:6px; margin-top:-2px;
+  display:flex; flex-wrap:wrap; gap:6px;
+  padding-inline-start:34px;
 }
 .routine-ai-option{
   font-size:11px; line-height:1.8; padding:5px 10px; border-radius:999px;
   background:rgba(var(--bg-rgb),.35);
   border:1px solid rgba(var(--accent-rgb),.35);
   color:var(--text);
+  backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
 }
 .routine-ai-option:disabled{ opacity:.45; }
 @media (hover:hover){ .routine-ai-option:hover:not(:disabled){ border-color:var(--accent); } }
 
-/* دکمه‌ی میکروفون کنارِ ارسال. هم‌اندازه‌ی همان، ولی عمدا بی‌بک‌گراند تا
-   دکمه‌ی اصلیِ ارسال تنها چیزِ پررنگِ نوار بماند؛ فقط هنگامِ ضبط پر می‌شود. */
-.routine-ai-mic{
-  flex:0 0 auto; width:38px; height:38px; border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  background:none; color:var(--muted);
-  border:1px solid var(--surface-line);
-  transition:color .15s ease, border-color .15s ease;
+/* نوارِ نوشتن: یک قرصِ شیشه‌ای، با یک دکمه‌ی گردِ کنارش — همان الگوی مرجع. */
+.routine-ai-composer{
+  display:flex; align-items:center; gap:8px;
+  padding-top:10px; border-top:1px solid var(--surface-line);
 }
-@media (hover:hover){ .routine-ai-mic:hover:not(:disabled){ color:var(--text); border-color:var(--accent); } }
-.routine-ai-mic:disabled{ opacity:.45; }
-.routine-ai-mic.is-recording{
+.routine-ai-input{
+  flex:1 1 auto; min-width:0; resize:none;
+  max-height:96px; padding:12px 16px; border-radius:999px;
+  font-size:12.5px; line-height:1.7; font-family:inherit;
+  background:rgba(var(--bg-rgb),.42);
+  backdrop-filter:blur(10px) saturate(160%);
+  -webkit-backdrop-filter:blur(10px) saturate(160%);
+  border:1px solid var(--surface-line);
+  color:var(--text); outline:none;
+}
+.routine-ai-input::placeholder{ color:var(--muted); }
+.routine-ai-input:focus{ border-color:rgba(var(--accent-rgb),.45); }
+
+/* همان دکمه هم میکروفون است هم ارسال — شکلش ثابت می‌ماند، فقط آیکونش
+   عوض می‌شود، تا جابه‌جایی‌اش موقعِ تایپ‌کردن حس نشود. */
+.routine-ai-action{
+  flex:0 0 auto; width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; color:var(--text);
+  background:rgba(var(--bg-rgb),.42);
+  backdrop-filter:blur(10px) saturate(160%);
+  -webkit-backdrop-filter:blur(10px) saturate(160%);
+  border:1px solid var(--surface-line);
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
+}
+@media (hover:hover){ .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); } }
+.routine-ai-action:disabled{ opacity:.45; }
+.routine-ai-action.is-recording{
   background:#E05252; border-color:#E05252; color:#fff;
   animation:routineMicPulse 1.4s ease-in-out infinite;
 }
@@ -6356,4 +6344,187 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   0%,100%{ box-shadow:0 0 0 0 rgba(224,82,82,.45); }
   60%{ box-shadow:0 0 0 7px rgba(224,82,82,0); }
 }
-html[data-perf="low"] .routine-ai-mic.is-recording{ animation:none; }
+html[data-perf="low"] .routine-ai-action.is-recording{ animation:none; }
+
+.routine-ai-exhausted{
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  padding-top:12px; border-top:1px solid var(--surface-line);
+  font-size:12px; color:var(--muted); text-align:center;
+}
+
+/* استایلِ ردیفِ کنش‌های AIMessage.
+   نسخه‌ی اصلی این را داخلِ خودِ کامپوننت با یک <style> تزریق می‌کرد؛ یعنی در
+   یک گفت‌وگوی ده‌پیامی، ده نسخه‌ی یکسان از همین قوانین توی DOM می‌نشست.
+   یک‌بار این‌جا هم همان کار را می‌کند. */
+.ai-message-action{
+  opacity:0;
+  transform:translateX(var(--ai-message-slide)) scale(.9);
+  transition:
+    opacity 200ms cubic-bezier(.23,1,.32,1),
+    transform 200ms cubic-bezier(.23,1,.32,1),
+    color 150ms ease;
+  background:none; border:none; padding:6px; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+.ai-message-action-agent{ --ai-message-slide:-6px; }
+.ai-message-action-user{ --ai-message-slide:6px; }
+.ai-message-root:hover .ai-message-action,
+.ai-message-root:focus-within .ai-message-action{
+  opacity:1; transform:translateX(0) scale(1);
+}
+.ai-message-pop{ animation:ai-message-pop 250ms cubic-bezier(.23,1,.32,1); }
+@keyframes ai-message-pop{
+  0%{ transform:scale(1); }
+  45%{ transform:scale(1.25); }
+  100%{ transform:scale(1); }
+}
+@media (prefers-reduced-motion:reduce){
+  .ai-message-action{ transition-duration:0ms; transition-delay:0ms !important; transform:none; }
+  .ai-message-root:hover .ai-message-action,
+  .ai-message-root:focus-within .ai-message-action{ transform:none; }
+  .ai-message-pop{ animation:none; }
+}
+
+/* استایلِ ثابتِ SiriOrb — از داخلِ کامپوننت به این‌جا منتقل شد (توضیح در
+   خودِ siri-orb.tsx). متغیرهای --c1..--c4 و بقیه همچنان inline ست می‌شوند. */
+
+        @property --angle {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: 0deg;
+        }
+
+        .siri-orb {
+          display: grid;
+          grid-template-areas: "stack";
+          overflow: hidden;
+          border-radius: 50%;
+          position: relative;
+          isolation: isolate;
+        }
+
+        .siri-orb::before,
+        .siri-orb::after,
+        .siri-orb > .siri-orb-layer {
+          content: "";
+          display: block;
+          grid-area: stack;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+        }
+
+        /* Glassy highlight that drifts, so the sheen never sits still enough to
+           read as a printed-on gradient. */
+        .siri-orb-sheen {
+          background:
+            radial-gradient(circle at 30% 24%, hsl(0 0% 100% / 0.32), transparent 34%),
+            radial-gradient(circle at 72% 80%, hsl(0 0% 100% / 0.07), transparent 48%);
+          mix-blend-mode: screen;
+          animation: siri-drift var(--drift-duration) ease-in-out infinite alternate;
+        }
+
+        /* Lit top edge, shaded bottom, thin inner ring. */
+        .siri-orb-rim {
+          box-shadow:
+            inset 0 0 0 1px hsl(0 0% 100% / 0.16),
+            inset 0 calc(var(--rim) * 1) calc(var(--rim) * 2) hsl(0 0% 100% / 0.22),
+            inset 0 calc(var(--rim) * -1.2) calc(var(--rim) * 2.4) hsl(0 0% 0% / 0.4);
+          pointer-events: none;
+        }
+
+        @keyframes siri-drift {
+          0% { transform: translate(-6%, -4%) scale(1.05); }
+          100% { transform: translate(7%, 6%) scale(1.12); }
+        }
+
+        .siri-orb::before {
+          background:
+            conic-gradient(
+              from calc(var(--angle) * 2) at 25% 70%,
+              var(--c3),
+              transparent 20% 80%,
+              var(--c3)
+            ),
+            conic-gradient(
+              from calc(var(--angle) * 2) at 45% 75%,
+              var(--c2),
+              transparent 30% 60%,
+              var(--c2)
+            ),
+            conic-gradient(
+              from calc(var(--angle) * -3) at 80% 20%,
+              var(--c1),
+              transparent 40% 60%,
+              var(--c1)
+            ),
+            conic-gradient(
+              from calc(var(--angle) * 1.5) at 60% 35%,
+              var(--c4),
+              transparent 25% 75%,
+              var(--c4)
+            ),
+            conic-gradient(
+              from calc(var(--angle) * 2) at 15% 5%,
+              var(--c2),
+              transparent 10% 90%,
+              var(--c2)
+            ),
+            conic-gradient(
+              from calc(var(--angle) * 1) at 20% 80%,
+              var(--c1),
+              transparent 10% 90%,
+              var(--c1)
+            ),
+            conic-gradient(
+              from calc(var(--angle) * -2) at 85% 10%,
+              var(--c3),
+              transparent 20% 80%,
+              var(--c3)
+            );
+          box-shadow: inset var(--bg) 0 0 var(--shadow-spread)
+            calc(var(--shadow-spread) * 0.2);
+          /* The saturate() pass is what keeps the colour alive after the blur
+             and the overlaid dot pattern have both eaten into it. */
+          filter: blur(var(--blur-amount)) contrast(var(--contrast-amount))
+            saturate(1.4);
+          animation: rotate var(--animation-duration) linear infinite;
+        }
+
+        .siri-orb::after {
+          background-image: radial-gradient(
+            circle at center,
+            var(--bg) var(--dot-size),
+            transparent var(--dot-size)
+          );
+          background-size: calc(var(--dot-size) * 2) calc(var(--dot-size) * 2);
+          backdrop-filter: blur(calc(var(--blur-amount) * 2))
+            contrast(calc(var(--contrast-amount) * 2));
+          mix-blend-mode: overlay;
+        }
+
+        /* Apply mask only when radius is greater than 0 */
+        .siri-orb[style*="--mask-radius: 0%"]::after {
+          mask-image: none;
+        }
+
+        .siri-orb:not([style*="--mask-radius: 0%"])::after {
+          mask-image: radial-gradient(
+            black var(--mask-radius),
+            transparent 75%
+          );
+        }
+
+        @keyframes rotate {
+          to {
+            --angle: 360deg;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .siri-orb::before,
+          .siri-orb-sheen {
+            animation: none;
+          }
+        }
+      
