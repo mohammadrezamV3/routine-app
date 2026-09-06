@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronRight, Plus, Star, Trash2, Users, X } from "lucide-react";
+import { Check, ChevronRight, Loader2, Plus, Star, Trash2, Users, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
@@ -419,7 +419,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                   className="flex-1 rounded-2xl py-2.5 text-[12px] font-bold disabled:opacity-40"
                   style={{ background: "#E05252", color: "#fff" }}
                 >
-                  {deletingFriend ? "در حال حذف…" : "بله، حذف کن"}
+                  {deletingFriend ? <Loader2 size={15} className="trade-spin" /> : "بله، حذف کن"}
                 </button>
               </div>
             </div>

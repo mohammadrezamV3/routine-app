@@ -272,7 +272,7 @@ export function EconomicCalendarPanel() {
                     {expanded && (
                       <div className="trade-cal-history">
                         {hist === "loading" && (
-                          <div className="trade-cal-history-status"><Loader2 size={14} className="trade-spin" /> در حال بارگذاری تاریخچه…</div>
+                          <div className="trade-cal-history-status"><Loader2 size={14} className="trade-spin" /></div>
                         )}
                         {hist === "error" && (
                           <div className="trade-cal-history-status">تاریخچه در دسترس نیست</div>

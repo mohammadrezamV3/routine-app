@@ -6023,16 +6023,10 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 .rm-section-list a svg{ opacity:.45; flex-shrink:0; }
 
 /* ===================== لودینگِ مشترک ===================== */
-/* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد» — درخواستِ صریحِ کاربر.
-   یک کلاسِ واحد تا همه‌جای اپ یک شکل باشد. */
-@keyframes appSpin{ to{ transform:rotate(360deg); } }
-.app-spinner{
-  display:inline-block; flex-shrink:0; border-radius:50%;
-  border-style:solid; border-color:rgba(var(--accent-rgb),.25);
-  border-top-color:var(--accent);
-  animation:appSpin .8s linear infinite;
-}
-html[data-perf="low"] .app-spinner{ animation-duration:1s; }
+/* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد، بدونِ هیچ متنِ دیگری» —
+   درخواستِ صریحِ کاربر. Spinner (components/Spinner.tsx) حالا از
+   QuarterRing (components/QuarterRing.tsx) ساخته می‌شود؛ کلاسِ قدیمیِ
+   app-spinner دیگر جایی استفاده نمی‌شود. */
 .app-loading-block{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px;
   padding:30px 12px; font-size:12.5px; color:var(--muted); text-align:center;

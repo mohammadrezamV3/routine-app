@@ -99,7 +99,7 @@ export default function CustomRoadmapDetailPage() {
     router.push("/roadmaps");
   }
 
-  if (data === undefined) return <section className="trade-desktop"><LoadingBlock text="در حال آوردن مسیر…" /></section>;
+  if (data === undefined) return <section className="trade-desktop"><LoadingBlock /></section>;
   if (data === null) return <section className="trade-desktop"><div className="item-line empty">این مسیر پیدا نشد.</div></section>;
 
   const total = data.stations.length;

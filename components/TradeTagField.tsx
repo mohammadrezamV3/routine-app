@@ -137,7 +137,7 @@ export function TradeTagCreateModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? <><Loader2 size={15} className="trade-spin" /> در حال ذخیره…</> : "ایجاد"}
+            {saving ? <Loader2 size={15} className="trade-spin" /> : "ایجاد"}
           </button>
         </div>
       </div>

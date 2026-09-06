@@ -79,10 +79,7 @@ export function ExerciseRulesStep({
       <div className="exercise-rules-actions">
         <button type="button" onClick={onAccept} disabled={!canSubmit} className="exercise-rules-accept-btn">
           {submitting ? (
-            <>
-              <span className="wsearch-submit-spinner" />
-              در حال ساخت برنامه
-            </>
+            <span className="wsearch-submit-spinner" />
           ) : !timerDone ? (
             <>
               <span className="mono" dir="ltr">{remaining}</span>

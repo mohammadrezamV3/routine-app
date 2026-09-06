@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Reorder, useDragControls } from "framer-motion";
-import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
+import { ChevronRight, GripVertical, Loader2, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { computeDayFocus } from "@/lib/exerciseCatalogUtils";
@@ -340,7 +340,7 @@ export function ManualExercisePlanForm({
 
       <div className="manual-submit-row">
         <button type="button" onClick={submit} disabled={submitting || !hasAnyItems} className="manual-plan-submit-btn">
-          {submitting ? "در حال ثبت…" : "ثبت برنامه"}
+          {submitting ? <Loader2 size={16} className="trade-spin" /> : "ثبت برنامه"}
         </button>
       </div>
     </div>
