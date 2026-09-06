@@ -19,6 +19,10 @@ export type NewsAlertPrefs = {
   impacts: EconomicImpact[];
   /** خالی یعنی «همه‌ی ارزها» */
   currencies: string[];
+  /** ستونِ «Alert»ِ جدولِ تقویم — کاربر با کلیکِ زنگوله‌ی یک ردیفِ خاص،
+   * صرف‌نظر از enabled/impacts/currenciesِ بالا، برای همون یک رویداد
+   * هشدار می‌خواهد (دقیقاً هم‌رفتارِ ستونِ Alertِ فارکس‌فکتوری). */
+  watchedEventIds: string[];
 };
 
 export const DEFAULT_NEWS_ALERT_PREFS: NewsAlertPrefs = {
@@ -26,9 +30,14 @@ export const DEFAULT_NEWS_ALERT_PREFS: NewsAlertPrefs = {
   minutesBefore: 30,
   impacts: ["HIGH"],
   currencies: [],
+  watchedEventIds: [],
 };
 
 export const MINUTES_BEFORE_OPTIONS = [15, 30, 60] as const;
+
+/** حداکثر تعدادِ رویدادِ تک‌تک‌ستاره‌خورده — جلوی رشدِ بی‌نهایتِ لیست را
+ * می‌گیرد (رویدادهای خیلی قدیمی خودشان از انتهای لیست بیرون می‌روند). */
+const MAX_WATCHED_EVENTS = 60;
 
 /** ورودی ذخیره‌شده ممکن است قدیمی یا دستکاری‌شده باشد — همیشه نرمال می‌شود */
 export function normalizeNewsAlertPrefs(raw: unknown): NewsAlertPrefs {
@@ -45,6 +54,9 @@ export function normalizeNewsAlertPrefs(raw: unknown): NewsAlertPrefs {
     impacts: impacts.length ? impacts : DEFAULT_NEWS_ALERT_PREFS.impacts,
     currencies: Array.isArray(v.currencies)
       ? v.currencies.filter((c): c is string => typeof c === "string").slice(0, 20)
+      : [],
+    watchedEventIds: Array.isArray(v.watchedEventIds)
+      ? v.watchedEventIds.filter((id): id is string => typeof id === "string").slice(-MAX_WATCHED_EVENTS)
       : [],
   };
 }

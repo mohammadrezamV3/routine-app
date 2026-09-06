@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BellRing, ChevronLeft, ChevronRight, Filter, History, Loader2, Search, X } from "lucide-react";
+import { Bell, BellRing, ChevronLeft, ChevronRight, Filter, History, Info, Loader2, Search, X } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
 import { getSetting, setSetting } from "@/lib/storage";
 import { getNotificationPermission } from "@/lib/notifications";
@@ -93,6 +93,17 @@ export function EconomicCalendarPanel() {
   function patchAlerts(p: Partial<NewsAlertPrefs>) {
     setAlerts((prev) => {
       const next = normalizeNewsAlertPrefs({ ...prev, ...p });
+      setSetting(NEWS_ALERT_KEY, next);
+      return next;
+    });
+  }
+  // ستونِ «Alert» جدول — زنگوله‌ی هر ردیف، مستقل از تنظیماتِ کلیِ بالا
+  // (نگاه کن به lib/tradeNewsAlerts.ts و کرانِ economic-alerts).
+  function toggleWatchEvent(id: string) {
+    setAlerts((prev) => {
+      const has = prev.watchedEventIds.includes(id);
+      const watchedEventIds = has ? prev.watchedEventIds.filter((x) => x !== id) : [...prev.watchedEventIds, id];
+      const next = normalizeNewsAlertPrefs({ ...prev, watchedEventIds });
       setSetting(NEWS_ALERT_KEY, next);
       return next;
     });
@@ -389,6 +400,8 @@ export function EconomicCalendarPanel() {
                 <span className="tc-col-time">{searching ? "Date" : "Time"}</span>
                 <span className="tc-col-cur">Currency</span>
                 <span className="tc-col-event">Event</span>
+                <span className="tc-col-icon">Alert</span>
+                <span className="tc-col-icon">Detail</span>
                 <span className="tc-col-num">Actual</span>
                 <span className="tc-col-num">Forecast</span>
                 <span className="tc-col-num">Previous</span>
@@ -399,6 +412,7 @@ export function EconomicCalendarPanel() {
                 const occursAt = new Date(e.occursAt);
                 const isPast = occursAt.getTime() < now.getTime();
                 const cmp = compareActualToForecast(e.actual, e.forecast);
+                const watched = alerts.watchedEventIds.includes(e.id);
                 return (
                   <Fragment key={e.id}>
                     <div
@@ -415,6 +429,28 @@ export function EconomicCalendarPanel() {
                         <b className="mono">{e.currency}</b>
                       </span>
                       <span className="tc-col-event" title={e.title}>{e.title}</span>
+                      <span className="tc-col-icon">
+                        <button
+                          type="button"
+                          className={`trade-cal-icon-btn${watched ? " active" : ""}`}
+                          onClick={(ev) => { ev.stopPropagation(); toggleWatchEvent(e.id); }}
+                          aria-label={watched ? "حذفِ هشدار برای این رویداد" : "هشدار برای این رویداد"}
+                          title={watched ? "هشدار روشن است" : "هشدار بده"}
+                        >
+                          {watched ? <BellRing size={13} /> : <Bell size={13} />}
+                        </button>
+                      </span>
+                      <span className="tc-col-icon">
+                        <button
+                          type="button"
+                          className={`trade-cal-icon-btn${expanded ? " active" : ""}`}
+                          onClick={(ev) => { ev.stopPropagation(); toggleExpand(e); }}
+                          aria-label="دیتیل و تاریخچه"
+                          title="دیتیل و تاریخچه"
+                        >
+                          <Info size={13} />
+                        </button>
+                      </span>
                       <span
                         className={`tc-col-num mono${e.actual ? "" : " muted"}`}
                         style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
