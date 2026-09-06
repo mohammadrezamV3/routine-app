@@ -427,6 +427,19 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
   window.localStorage.setItem(PREFIX + "settings:" + key, JSON.stringify(value));
 }
 
+/**
+ * وقتی *سرور* یک تنظیم را عوض کرده (نه این کلاینت) — مثلا دستیارِ روتین که
+ * برنامه‌ها را سمتِ سرور می‌نویسد — مقدارِ تازه را مستقیم توی کش می‌نشاند.
+ *
+ * بدونِ این، خواندنِ بعدی تا انقضای TTL (یا تا وقتی پاسخِ bootstrap مرجع
+ * است) مقدارِ *قدیمی* را می‌داد و کاربر تغییری که همین الان اعمال شده را
+ * نمی‌دید — یعنی «انجام شد» می‌گفتیم و صفحه هنوز حالتِ قبل را نشان می‌داد.
+ */
+export function primeSettingCache<T>(key: string, value: T): void {
+  primeCache(settingsUrl(key), { value });
+  forgetBootstrapSetting(key);
+}
+
 export async function getRemovedOccurrences(): Promise<string[]> {
   return getSetting<string[]>("removedOccurrences", []);
 }
