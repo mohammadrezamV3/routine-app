@@ -8,7 +8,8 @@ import { CALENDAR_CURRENCIES, EconomicImpact, IMPACT_LABELS, IMPACT_ORDER } from
 
 type EventRow = {
   id: string; title: string; country: string; currency: string; impact: EconomicImpact;
-  occursAt: string; actual: string | null; forecast: string | null; previous: string | null; source: string;
+  occursAt: string; actual: string | null; forecast: string | null; previous: string | null;
+  description: string | null; source: string;
 };
 type Resp = { events: EventRow[]; externalSource: string };
 
@@ -25,6 +26,7 @@ export default function AdminEconomicCalendarPage() {
   const [forecast, setForecast] = useState("");
   const [previous, setPrevious] = useState("");
   const [actual, setActual] = useState("");
+  const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -67,12 +69,13 @@ export default function AdminEconomicCalendarPage() {
         forecast: forecast.trim() || null,
         previous: previous.trim() || null,
         actual: actual.trim() || null,
+        description: description.trim() || null,
       }),
     });
     const body = await res.json().catch(() => null);
     setSaving(false);
     if (!res.ok) { setError(body?.error || "خطا در ثبت رویداد"); return; }
-    setTitle(""); setForecast(""); setPrevious(""); setActual("");
+    setTitle(""); setForecast(""); setPrevious(""); setActual(""); setDescription("");
     load();
   }
 
@@ -132,6 +135,17 @@ export default function AdminEconomicCalendarPage() {
           <div className="admin-form-field">
             <label>واقعی</label>
             <input className="admin-input" style={{ width: 100 }} value={actual} onChange={(e) => setActual(e.target.value)} maxLength={24} />
+          </div>
+          <div className="admin-form-field" style={{ flex: 1, minWidth: 220 }}>
+            <label>توضیحات (بخش دیتیل)</label>
+            <textarea
+              className="admin-input"
+              style={{ width: "100%", minHeight: 44, resize: "vertical" }}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="اختیاری — مثلا منبع، معنی شاخص، اثر معمولش روی ارز…"
+              maxLength={600}
+            />
           </div>
           <div className="admin-form-field">
             <label>&nbsp;</label>
