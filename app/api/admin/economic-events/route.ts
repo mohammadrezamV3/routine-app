@@ -11,7 +11,7 @@ import { externalProviderName } from "@/lib/economicCalendar";
 
 const IMPACTS = ["LOW", "MEDIUM", "HIGH"] as const;
 
-function parseBody(body: any): string | { title: string; country: string; currency: string; impact: (typeof IMPACTS)[number]; occursAt: Date; actual: string | null; forecast: string | null; previous: string | null } {
+function parseBody(body: any): string | { title: string; country: string; currency: string; impact: (typeof IMPACTS)[number]; occursAt: Date; actual: string | null; forecast: string | null; previous: string | null; description: string | null } {
   if (!body || typeof body !== "object") return "بدنه‌ی درخواست نامعتبر است";
   const title = String(body.title || "").trim();
   if (!title) return "عنوان رویداد الزامی است";
@@ -23,9 +23,12 @@ function parseBody(body: any): string | { title: string; country: string; curren
   const country = String(body.country || "").trim().toUpperCase().slice(0, 2) || currency.slice(0, 2);
 
   const opt = (v: unknown) => (typeof v === "string" && v.trim() ? clampText(v.trim(), 24) : null);
+  const description = typeof body.description === "string" && body.description.trim()
+    ? clampText(body.description.trim(), 600)
+    : null;
   return {
     title: clampText(title, 160), country, currency, impact: body.impact, occursAt,
-    actual: opt(body.actual), forecast: opt(body.forecast), previous: opt(body.previous),
+    actual: opt(body.actual), forecast: opt(body.forecast), previous: opt(body.previous), description,
   };
 }
 

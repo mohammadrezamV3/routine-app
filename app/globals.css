@@ -4193,6 +4193,10 @@ html[data-perf="low"] .tv-chart-card,
 html[data-perf="low"] .trade-chart-side,
 html[data-perf="low"] .trade-chat-panel,
 html[data-perf="low"] .trade-cal-card,
+html[data-perf="low"] .trade-cal-box,
+html[data-perf="low"] .trade-cal-filters,
+html[data-perf="low"] .trade-cal-search,
+html[data-perf="low"] .trade-econ-monthpicker,
 html[data-perf="low"] .tv-surface{
   background:var(--surface-2);
 }
@@ -4691,6 +4695,10 @@ select.wsearch-newform-name{ cursor:pointer; }
   transition:border-color .18s ease;
 }
 @media (hover:hover){ .trade-toggle:hover{ border-color:var(--accent); background:none; } }
+/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش این
+   دکمه (که باید فقط بوردر داشته باشه، نه بک‌گراند) توی تمِ روشن دوباره
+   بک‌گراندِ شیشه‌ای می‌گرفت — همون باگِ تکراری. */
+body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-toggle{ background:none; box-shadow:none; }
 .trade-toggle-knob{
   width:38px; height:21px; border-radius:999px; background:var(--line);
   position:relative; flex-shrink:0; transition:background .22s ease;
@@ -5083,8 +5091,36 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 }
 
 /* ── تقویم اقتصادی ─────────────────────────────────────────── */
-.trade-cal-filter-bar{ display:flex; align-items:center; gap:10px; margin:12px 0 4px; }
-.trade-cal-filters{ padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both; }
+/* طبقِ درخواستِ صریح: کلِ این بخش شیشه‌ای — همون رسیپیِ .trade-cal-card
+   (کارتِ فشرده‌ی صفحه‌ی چارت) که از قبل شیشه‌ای بود؛ اینجا فقط اون رسیپی
+   رو به باکسِ صفحه‌ی کاملِ /trade/calendar هم می‌دیم، چون تا الان فقط از
+   .trade-surface (بک‌گراندِ کاملاً توپر) ارث می‌برد. */
+.trade-cal-filter-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0 4px; }
+.trade-cal-search{
+  display:flex; align-items:center; gap:6px; flex:1 1 170px; min-width:0;
+  padding:8px 12px; border-radius:999px; color:var(--muted);
+  background:var(--surface-glass); backdrop-filter:blur(18px) saturate(170%); -webkit-backdrop-filter:blur(18px) saturate(170%);
+  border:1px solid var(--surface-line); transition:border-color .18s ease;
+}
+.trade-cal-search:focus-within{ border-color:var(--accent); color:var(--text); }
+.trade-cal-search input{
+  flex:1; min-width:0; border:none; background:none; outline:none; padding:0;
+  font-size:12.5px; color:var(--text);
+}
+.trade-cal-search input::placeholder{ color:var(--muted2); }
+.trade-cal-search button{ display:flex; color:var(--muted2); border:none; background:none; padding:0; cursor:pointer; flex-shrink:0; }
+@media (hover:hover){ .trade-cal-search button:hover{ color:var(--accent); } }
+/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش دکمه‌ی
+   پاک‌کردنِ جستجو توی تمِ روشن دوباره بک‌گراندِ شیشه‌ای می‌گرفت. */
+body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]) .trade-cal-search button{ background:none; box-shadow:none; }
+@media (max-width:520px){ .trade-cal-search{ flex-basis:100%; order:-1; } }
+.trade-cal-search-banner{ font-size:11.5px; color:var(--muted); margin:0 2px 10px; }
+.trade-cal-filters{
+  padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both;
+  background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+}
+.trade-cal-alerts .trade-toggle{ margin-bottom: 4px; }
 .trade-cal-event{
   display:flex; align-items:flex-start; gap:11px; padding:12px 4px;
   border-bottom:1px solid var(--line);
@@ -5128,11 +5164,26 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-cal-tr{ cursor:pointer; transition:background .15s ease; }
 @media (hover:hover){ .trade-cal-tr:hover{ background:rgba(var(--accent-rgb),.05); } }
 .trade-cal-tr.expanded{ background:rgba(var(--accent-rgb),.07); border-bottom-color:transparent; }
+/* رویدادِ گذشته — طبقِ درخواستِ صریح («مثلِ فارکس‌فکتوری نشون بده گذشته»):
+   فقط زمان/رویداد کم‌رنگ می‌شن، نه اعدادِ actual/forecast/previous که
+   رنگِ سبز/قرمزشون خودش اطلاعاته و نباید کم‌رنگ بشه. */
+.trade-cal-tr.past .tc-col-time, .trade-cal-tr.past .tc-col-event{ opacity:.55; }
+.trade-cal-card-row.past .trade-cal-card-when, .trade-cal-card-row.past .trade-cal-card-title{ opacity:.55; }
 
 /* ناوبریِ روز-به-روز — مثلِ خودِ ForexFactory («‹ Today: Sep 3 ›») به‌جای
    دکمه‌ی «روزهای بیشتر» که همه‌ی روزها رو یک‌جا زیرِ هم می‌ریخت. */
-.trade-cal-box{ margin-top:14px; padding:14px; }
-.trade-cal-daynav{ display:flex; align-items:center; gap:4px; margin:0 0 4px; }
+.trade-cal-box{
+  margin-top:14px; padding:14px;
+  background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+}
+/* استریپِ روزها داخلِ یک قرصِ شیشه‌ایِ جدا — طبقِ درخواستِ صریح، هم‌شکلِ
+   نوارهای انتخابِ تاریخِ بخش‌های دیگرِ اپ (مثلاً DashDateSelector). */
+.trade-cal-daynav{
+  display:flex; align-items:center; gap:4px; margin:0 0 10px; padding:5px;
+  border-radius:999px; background:rgba(var(--surface-rgb),.08);
+  border:1px solid var(--surface-line);
+}
 /* هفتِ‌روزیِ کلیک‌پذیر — هم‌مدلِ WEEK_ORDERِ «برنامه‌ی هفتگی»ِ روتین من
    (هفته‌ی شنبه‌تا‌جمعه)، به‌جای فقط یک لیبلِ متنیِ ثابت. ویوپورت overflow
    را می‌بُرد تا اسلایدِ ورود/خروجِ هفته (framer-motion) از زیرِ دکمه‌های
@@ -5162,6 +5213,8 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-econ-monthpicker{
   position:relative; z-index:61; margin:8px auto 14px; padding:14px; animation:tradeFadeIn .18s ease both;
   max-width:320px;
+  background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
 }
 
 /* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
@@ -5170,6 +5223,13 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 .trade-cal-history{
   padding:10px 8px 14px; margin-bottom:2px; border-bottom:1px solid var(--line);
   animation:tradeFadeIn .18s ease both;
+}
+/* بخشِ دیتیل — توضیحِ کوتاهِ رویداد (ورودِ دستیِ ادمین)؛ خیلی از رویدادها
+   این فیلد رو خالی دارن (فیدِ بیرونی نمی‌دهدش)، پس متنِ جایگزین هم باید
+   خوانا باشه، نه یک خطای مخفی. */
+.trade-cal-detail{
+  font-size:11.5px; line-height:1.9; color:var(--muted); padding:2px 4px 12px;
+  border-bottom:1px solid var(--line); margin-bottom:8px;
 }
 .trade-cal-history-status{
   display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted2); padding:6px 4px;

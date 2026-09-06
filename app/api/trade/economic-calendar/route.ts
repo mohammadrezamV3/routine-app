@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
-import { parseDateRange } from "@/lib/validate";
+import { parseDateRange, clampQuery } from "@/lib/validate";
 import { CALENDAR_CURRENCIES } from "@/lib/economicCalendar";
+
+// جستجو («سرچ یک ایونت خاص») بازه‌ی تاریخِ خیلی وسیع‌تری لازم دارد (چند
+// ماه قبل/بعد، نه فقط یک روز/هفته) — سقفِ معمولیِ ۶۰ روز برایِ حالتِ
+// جستجو کافی نیست.
+const MAX_RANGE_DAYS = 180;
 
 const KNOWN_CURRENCY_CODES = CALENDAR_CURRENCIES.map((c) => c.code);
 
@@ -14,12 +19,15 @@ export async function GET(req: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const params = req.nextUrl.searchParams;
-  const range = parseDateRange(params.get("from"), params.get("to"), 60);
+  const range = parseDateRange(params.get("from"), params.get("to"), MAX_RANGE_DAYS);
   if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
 
   const where: Prisma.EconomicEventWhereInput = {
     occursAt: { gte: range.from, lte: new Date(range.to.getTime() + 86_400_000 - 1) },
   };
+
+  const q = clampQuery(params.get("q"), 120);
+  if (q) where.title = { contains: q, mode: "insensitive" };
 
   const currencies = (params.get("currencies") || "")
     .split(",").map((c) => c.trim().toUpperCase()).filter(Boolean).slice(0, 20);
@@ -46,7 +54,7 @@ export async function GET(req: NextRequest) {
     take: 500,
     select: {
       id: true, title: true, country: true, currency: true, impact: true,
-      occursAt: true, actual: true, forecast: true, previous: true, source: true,
+      occursAt: true, actual: true, forecast: true, previous: true, description: true, source: true,
     },
   });
 

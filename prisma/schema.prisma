@@ -1330,6 +1330,11 @@ model EconomicEvent {
   forecast String?
   previous String?
 
+  // توضیحِ کوتاهِ رویداد («بخشِ دیتیل») — فقط ورودِ دستیِ ادمین؛ فیدِ
+  // بیرونی همچین فیلدی نمی‌دهد، پس همیشه می‌تواند خالی باشد و کلاینت باید
+  // برای این حالت یک متنِ جایگزین نشان بدهد، نه چیزی فبریکیت‌شده.
+  description String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

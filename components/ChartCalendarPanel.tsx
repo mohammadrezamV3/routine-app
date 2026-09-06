@@ -9,7 +9,7 @@ import {
 } from "@/lib/tradeTypes";
 import { getSetting } from "@/lib/storage";
 import {
-  EconomicEventDto, IMPACT_COLORS, IMPACT_LABELS, currencyMeta,
+  EconomicEventDto, IMPACT_COLORS, IMPACT_LABELS, currencyMeta, compareActualToForecast,
 } from "@/lib/economicCalendar";
 
 // کارتِ فشرده‌ی تقویم اقتصادی برای صفحه‌ی چارت — جایگزینِ «اخبار بازار».
@@ -91,8 +91,10 @@ export function ChartCalendarPanel() {
         >
           {events.map((e) => {
             const meta = currencyMeta(e.currency);
+            const isPast = new Date(e.occursAt).getTime() < Date.now();
+            const cmp = compareActualToForecast(e.actual, e.forecast);
             return (
-              <div key={e.id} className="trade-cal-card-row">
+              <div key={e.id} className={`trade-cal-card-row${isPast ? " past" : ""}`}>
                 <span
                   className="trade-cal-impact"
                   style={{ background: IMPACT_COLORS[e.impact] }}
@@ -107,7 +109,14 @@ export function ChartCalendarPanel() {
                     {meta?.flag} <b className="mono">{e.currency}</b> — {e.title}
                   </span>
                   <span className="trade-cal-values">
-                    <span>واقعی: <b className={e.actual ? "mono" : "mono muted"}>{e.actual ? faNum(e.actual) : "—"}</b></span>
+                    <span>
+                      واقعی: <b
+                        className={e.actual ? "mono" : "mono muted"}
+                        style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
+                      >
+                        {e.actual ? faNum(e.actual) : "—"}
+                      </b>
+                    </span>
                     <span>پیش‌بینی: <b className="mono">{e.forecast ? faNum(e.forecast) : "—"}</b></span>
                     <span>قبلی: <b className="mono">{e.previous ? faNum(e.previous) : "—"}</b></span>
                   </span>
