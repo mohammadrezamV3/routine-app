@@ -46,6 +46,7 @@ import { DashMedicationCard } from "@/components/DashMedicationCard";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
+import { RoutineAiFab } from "@/components/RoutineAiFab";
 
 const now = new Date();
 const todayKey = isoLocal(now);
@@ -575,6 +576,10 @@ export default function WeeklyPage() {
             </div>
           </>
         )}
+        {/* دایره‌ی «مدیرِ برنامه» — گوشه‌ی چپ‌پایینِ همین صفحه. عمدا آخرین
+            فرزندِ section است تا روی بقیه بنشیند بدون این‌که به z-index
+            دستی نیاز داشته باشد. */}
+        <RoutineAiFab onChanged={refresh} />
       </section>
     </>
   );

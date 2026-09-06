@@ -42,6 +42,9 @@ export const SETTING_KEYS = {
   tradeChatRulesAccepted: "tradeChatRulesAccepted",
 } as const;
 
+/** شمارنده‌ی سرور-مدیریتِ استفاده از دستیارِ روتین (سهمیه‌ی رایگان) */
+export const ROUTINE_ASSISTANT_USES_KEY = "routineAssistantUses";
+
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 
 /** کلیدهایی که کلاینت مجازه بخونه و بنویسه */
@@ -57,6 +60,9 @@ export const SERVER_MANAGED_SETTING_KEYS = new Set<string>([
   // رد هشدارهای خبری فرستاده‌شده — اگر کاربر می‌توانست بنویسدش، می‌شد با
   // پرکردنش هشدارها را برای همیشه خاموش کرد (همان اشکالی که pushSentLog داشت).
   "tradeNewsAlertLog",
+  // شمارنده‌ی استفاده از «مدیرِ برنامه» برای کاربرِ بدونِ اشتراک. اگر کاربر
+  // می‌توانست بنویسدش، سهمیه‌ی سه‌بارِ رایگان با یک درخواستِ ساده صفر می‌شد.
+  ROUTINE_ASSISTANT_USES_KEY,
 ]);
 
 // سقف حجم هر مقدار. حتی بزرگ‌ترین کلید واقعی (`customOccurrences` با
