@@ -42,7 +42,7 @@ export default function RoadmapsHub() {
       {status === "authenticated" ? (
         <SuperAdminGate>
           {!loaded ? (
-            <LoadingBlock text="در حال آوردن مسیرها…" />
+            <LoadingBlock />
           ) : !customRoadmaps.length ? (
             <div className="trade-surface trade-page-box rm-page-box">
               <div className="trade-empty-state">

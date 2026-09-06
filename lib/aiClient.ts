@@ -74,12 +74,52 @@ async function recordAiUsage(
 // روت‌های AI باید در nginx مهلت بیشتری بگیرند (deploy/nginx.conf.example).
 const AI_TIMEOUT_MS = 45_000;
 
+// بودجه‌ی کلِ همه‌ی تلاش‌ها (نه هر تلاش تنها) — دقیقاً همان باگی که باعث
+// می‌شد «رودمپ توی ساخت گیر کند»: هر تلاش تا AI_TIMEOUT_MS (۴۵s) صبر
+// می‌کرد و تا ۲ تلاش هم می‌شد، یعنی در بدترین حالت ۹۰ ثانیه — درحالی‌که
+// nginx.conf.example برای همین مسیرها فقط ۶۰ ثانیه صبر می‌کند. nginx بعد
+// از ۶۰s کانکشن را با یک ۵۰۴ِ HTML می‌بست و کلاینت روی `res.json()` یا
+// خطا می‌خورد یا (بسته به مرورگر) تا مدت‌ها بی‌جواب می‌ماند — دقیقاً حسِ
+// «گیر کردن». حالا تلاشِ دوم فقط وقتی انجام می‌شود که واقعاً وقتِ کافی
+// (حداقل ۸ ثانیه) قبل از این سقف باقی مانده باشد.
+const AI_TOTAL_BUDGET_MS = 55_000;
+// کف معنادار برای یک تلاش — کمتر از این عملاً وقتی برای گیت‌وی نمی‌ماند
+// که ارزشِ یک HTTP round-trip اضافه را داشته باشد.
+const AI_MIN_ATTEMPT_MS = 8_000;
+
+/**
+ * تا ۲ تلاش، ولی زیرِ یک بودجه‌ی زمانیِ کل (نه هر تلاش جدا) — جایگزینِ
+ * الگوی قبلیِ «۲ بار، هر بار ۴۵ثانیه» که می‌توانست تا ۹۰ ثانیه طول بکشد و
+ * از nginx.conf.example (۶۰s برای همین مسیرها) رد بزند. تلاشِ دوم فقط
+ * وقتی انجام می‌شود که واقعاً وقتِ کافی مانده باشد.
+ */
+async function withAiBudget<T>(attempt: (timeoutMs: number) => Promise<T>): Promise<T> {
+  const startedAt = Date.now();
+  let lastError: any;
+  for (let i = 0; i < 2; i++) {
+    const remaining = AI_TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    if (i > 0 && remaining < AI_MIN_ATTEMPT_MS) break;
+    try {
+      return await attempt(Math.max(AI_MIN_ATTEMPT_MS, Math.min(AI_TIMEOUT_MS, remaining)));
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 // baseUrl و apiKey هر دو از env میان — هیچ‌وقت نباید هاردکد یا کامیت بشن؛
 // فقط توی .env سمت سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
 // نکته‌ی مهم: خود baseUrl فقط آدرس روتینگ گیت‌وی به این مدل خاصه، شامل
 // توکن احرازهویت نیست — احرازهویت واقعی با یه Access Key جداست که از
 // پنل آروان‌کلود، بخش «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
-async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number, model: string = AI_MODEL_NAME): Promise<ChatResult> {
+async function callAiChat(
+  system: string,
+  userContent: string | ChatContentPart[],
+  maxTokens: number,
+  model: string = AI_MODEL_NAME,
+  timeoutMs: number = AI_TIMEOUT_MS
+): Promise<ChatResult> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
   const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
@@ -107,11 +147,11 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
           { role: "user", content: userContent },
         ],
       }),
-      signal: AbortSignal.timeout(AI_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (e: any) {
     if (e?.name === "TimeoutError" || e?.name === "AbortError") {
-      throw new Error(`گیت‌وی هوش مصنوعی در ${AI_TIMEOUT_MS / 1000} ثانیه پاسخ نداد`);
+      throw new Error(`گیت‌وی هوش مصنوعی در ${Math.round(timeoutMs / 1000)} ثانیه پاسخ نداد`);
     }
     throw new Error("اتصال به گیت‌وی هوش مصنوعی برقرار نشد");
   }
@@ -339,8 +379,8 @@ function roadmapUserMessage(topic: string, schedule?: RoadmapSchedule): string {
   ].join("\n");
 }
 
-async function callRoadmapOnce(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule), 6000);
+async function callRoadmapOnce(topic: string, userId: string, schedule: RoadmapSchedule | undefined, timeoutMs: number): Promise<GeneratedRoadmap> {
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule), 6000, AI_MODEL_NAME, timeoutMs);
   // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
   // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
@@ -349,23 +389,18 @@ async function callRoadmapOnce(topic: string, userId: string, schedule?: Roadmap
 
 /**
  * تا ۲ بار امتحان می‌کنه — چون خطای parse/شکل گاهی گذراست (یک تولید بد
- * تصادفی)، نه یک خطای ساختاری همیشگی. اگه هر دو بار شکست خورد، همون خطای
- * تلاش آخر رو برمی‌گردونه.
+ * تصادفی)، نه یک خطای ساختاری همیشگی. زیرِ یک بودجه‌ی زمانیِ کل
+ * (withAiBudget) تا از سقفِ nginx.conf.example رد نزنه — قبلاً همین
+ * حلقه با ۲×۴۵ثانیه می‌تونست تا ۹۰ ثانیه طول بکشه که باعث می‌شد ساختِ
+ * رودمپ «توی ساخت گیر کنه» (nginx بعد از ۶۰s کانکشن رو می‌بست).
  */
 export async function generateRoadmap(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
-  let lastError: any;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      return await callRoadmapOnce(topic, userId, schedule);
-    } catch (err) {
-      lastError = err;
-    }
+  try {
+    return await withAiBudget((timeoutMs) => callRoadmapOnce(topic, userId, schedule, timeoutMs));
+  } catch (err: any) {
+    logError("ai-gateway", `ساخت رودمپ شکست خورد: ${err?.message || err}`, { context: { feature: "ROADMAP_GENERATION" } });
+    throw err;
   }
-  // هر دو تلاش شکست خورد. اگه یه attempt واقعا از گیت‌وی جواب گرفته بود، همون
-  // داخل callRoadmapOnce با success:true ثبت شده (چون هزینه‌ش واقعا افتاده)؛
-  // این‌جا فقط شکست نهایی رو برای بخش «خطاها» ثبت می‌کنیم.
-  logError("ai-gateway", `ساخت رودمپ شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "ROADMAP_GENERATION" } });
-  throw lastError;
 }
 
 // ============================================================================
@@ -503,7 +538,7 @@ function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerci
   return days;
 }
 
-async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
+async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string, timeoutMs: number): Promise<ExercisePlanResult> {
   const profileText = [
     `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
     `هدف: ${profile.goalLabel}`,
@@ -515,7 +550,7 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string
     profile.description ? `توضیح کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
   ].filter(Boolean).join("\n");
 
-  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 4000);
+  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 4000, AI_MODEL_NAME, timeoutMs);
   recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, usage, durationMs, true);
   const parsed = parseJsonResponse(text);
 
@@ -530,19 +565,14 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string
 }
 
 export async function generateExercisePlan(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
-  let lastError: any;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const result = await callExercisePlanOnce(profile, userId);
-      // «feasible: false» یک پاسخ معتبر مدله، نه خطای موقت شبکه/پارس —
-      // نباید دوباره تلاش کنیم، همون رد رو مستقیم برگردونیم.
-      return result;
-    } catch (err) {
-      lastError = err;
-    }
+  try {
+    // «feasible: false» یک پاسخ معتبر مدله (return می‌شه، throw نه) — پس
+    // withAiBudget خودش بدون retry اضافه همون رو برمی‌گردونه.
+    return await withAiBudget((timeoutMs) => callExercisePlanOnce(profile, userId, timeoutMs));
+  } catch (err: any) {
+    logError("ai-gateway", `ساخت برنامه‌ی تمرینی شکست خورد: ${err?.message || err}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    throw err;
   }
-  logError("ai-gateway", `ساخت برنامه‌ی تمرینی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
-  throw lastError;
 }
 
 // ============================================================================
@@ -685,29 +715,26 @@ function normalizeWeeklyAiResult(raw: any): WeeklyReportAiResult {
   return { summary, recommendations };
 }
 
-async function callWeeklyAiOnce(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
+async function callWeeklyAiOnce(input: WeeklyReportAiInput, userId: string, timeoutMs: number): Promise<WeeklyReportAiResult> {
   const userContent = JSON.stringify(input);
-  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V1, userContent, 1200, WEEKLY_REPORT_AI_MODEL);
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V1, userContent, 1200, WEEKLY_REPORT_AI_MODEL, timeoutMs);
   recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
   return normalizeWeeklyAiResult(parseJsonResponse(text));
 }
 
 /**
- * تا ۲ بار امتحان می‌کنه (هم‌الگوی generateRoadmap). اگه هردو شکست خورد،
- * caller (lib/weeklyReport/snapshot.ts) باید بدون AI هم گزارش رو کامل
- * نشون بده — این تابع صرفا throw می‌کنه، تصمیم fallback مال اونجاست.
+ * تا ۲ بار امتحان می‌کنه (هم‌الگوی generateRoadmap)، زیرِ همون بودجه‌ی
+ * زمانیِ کل. اگه هردو شکست خورد، caller (lib/weeklyReport/snapshot.ts)
+ * باید بدون AI هم گزارش رو کامل نشون بده — این تابع صرفا throw می‌کنه،
+ * تصمیم fallback مال اونجاست.
  */
 export async function generateWeeklyReportSummary(input: WeeklyReportAiInput, userId: string): Promise<WeeklyReportAiResult> {
-  let lastError: any;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      return await callWeeklyAiOnce(input, userId);
-    } catch (err) {
-      lastError = err;
-    }
+  try {
+    return await withAiBudget((timeoutMs) => callWeeklyAiOnce(input, userId, timeoutMs));
+  } catch (err: any) {
+    logError("ai-gateway", `خلاصه‌ی هوشمند گزارش هفتگی شکست خورد: ${err?.message || err}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+    throw err;
   }
-  logError("ai-gateway", `خلاصه‌ی هوشمند گزارش هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
-  throw lastError;
 }
 
 // ============================================================================
@@ -766,22 +793,18 @@ function normalizeWeeklyAiResultV2(raw: any): WeeklyReportAiResultV2 {
   return { ...base, insights };
 }
 
-async function callWeeklyAiV2Once(input: WeeklyReportAiInputV2, userId: string): Promise<WeeklyReportAiResultV2> {
-  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V2, JSON.stringify(input), 1600, WEEKLY_REPORT_AI_MODEL);
+async function callWeeklyAiV2Once(input: WeeklyReportAiInputV2, userId: string, timeoutMs: number): Promise<WeeklyReportAiResultV2> {
+  const { text, usage, durationMs } = await callAiChat(WEEKLY_AI_PROMPT_V2, JSON.stringify(input), 1600, WEEKLY_REPORT_AI_MODEL, timeoutMs);
   recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_REPORT_AI_MODEL);
   return normalizeWeeklyAiResultV2(parseJsonResponse(text));
 }
 
 export async function generateWeeklyReportSummaryV2(input: WeeklyReportAiInputV2, userId: string): Promise<WeeklyReportAiResultV2> {
-  let lastError: any;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      return await callWeeklyAiV2Once(input, userId);
-    } catch (err) {
-      lastError = err;
-    }
+  try {
+    return await withAiBudget((timeoutMs) => callWeeklyAiV2Once(input, userId, timeoutMs));
+  } catch (err: any) {
+    logError("ai-gateway", `خلاصه‌ی هوشمند V2 گزارش هفتگی شکست خورد: ${err?.message || err}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
+    throw err;
   }
-  logError("ai-gateway", `خلاصه‌ی هوشمند V2 گزارش هفتگی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
-  throw lastError;
 }
 

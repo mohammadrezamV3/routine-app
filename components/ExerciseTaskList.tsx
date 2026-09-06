@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Dumbbell, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
+import { Check, Dumbbell, Loader2, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
@@ -308,7 +308,7 @@ export function ExerciseTaskList({
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
                     style={{ borderColor: "#E05252", color: "#E05252" }}
                   >
-                    {ending ? "در حال ثبت…" : "پایان تمرین"}
+                    {ending ? <Loader2 size={15} className="trade-spin" /> : "پایان تمرین"}
                   </button>
                 )}
               </div>
@@ -353,7 +353,7 @@ export function ExerciseTaskList({
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border bg-transparent py-3 text-[13px] font-bold sm:text-[14px]"
                   style={{ borderColor: "#E05252", color: "#E05252" }}
                 >
-                  {ending ? "در حال ثبت…" : "پایان تمرین"}
+                  {ending ? <Loader2 size={15} className="trade-spin" /> : "پایان تمرین"}
                 </button>
               </div>
             </div>

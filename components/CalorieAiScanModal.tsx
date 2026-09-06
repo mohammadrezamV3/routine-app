@@ -151,7 +151,6 @@ export function CalorieAiScanModal({
           {analyzing && (
             <div className="mt-3 flex items-center justify-center gap-2 text-[12px] text-dash-muted">
               <Loader2 className="h-4 w-4 animate-spin" />
-              در حال تحلیل عکس…
             </div>
           )}
 
@@ -198,7 +197,7 @@ export function CalorieAiScanModal({
                   className="flex-[2] rounded-2xl border py-2.5 text-[12.5px] font-bold disabled:opacity-40"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                 >
-                  {saving ? "در حال ثبت…" : "ثبت غذا"}
+                  {saving ? <Loader2 size={16} className="trade-spin" /> : "ثبت غذا"}
                 </button>
               </div>
             </div>

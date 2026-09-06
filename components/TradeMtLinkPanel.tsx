@@ -182,7 +182,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
             </div>
           ) : (
             <button type="button" className="trade-primary-btn" onClick={requestCode} disabled={busy} style={{ marginTop: 14 }}>
-              {busy ? <><Loader2 size={14} className="trade-spin" /> در حال ساخت…</> : "ساخت کد اتصال"}
+              {busy ? <Loader2 size={14} className="trade-spin" /> : "ساخت کد اتصال"}
             </button>
           )}
 

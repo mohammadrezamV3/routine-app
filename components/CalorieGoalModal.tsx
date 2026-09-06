@@ -299,8 +299,7 @@ export function CalorieGoalModal({
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
-                {saving && <span className="wsearch-submit-spinner" />}
-                {saving ? "در حال محاسبه" : "محاسبه‌ی برنامه کالری"}
+                {saving ? <span className="wsearch-submit-spinner" /> : "محاسبه‌ی برنامه کالری"}
               </button>
             </>
           )}
@@ -432,8 +431,7 @@ export function CalorieGoalModal({
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
-                {manualSaving && <span className="wsearch-submit-spinner" />}
-                {manualSaving ? "در حال ثبت" : "ثبت برنامه کالری"}
+                {manualSaving ? <span className="wsearch-submit-spinner" /> : "ثبت برنامه کالری"}
               </button>
             </motion.div>
           )}

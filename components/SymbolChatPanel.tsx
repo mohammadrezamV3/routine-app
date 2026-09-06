@@ -372,7 +372,7 @@ function ReportDialog({
           type="button" className="trade-danger-btn"
           onClick={() => onSubmit(reason, note)} disabled={pending}
         >
-          {pending ? <><Loader2 size={14} className="trade-spin" /> در حال ارسال…</> : "ارسال گزارش"}
+          {pending ? <Loader2 size={14} className="trade-spin" /> : "ارسال گزارش"}
         </button>
       </div>
     </div>

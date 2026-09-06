@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, setWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TimeInput } from "./TimeInput";
@@ -89,7 +89,7 @@ export function WakeSleepSetup({
           <TimeInput value={sleep} onChange={setSleep} className="wsearch-newform-name" />
 
           <button className="auth-full-btn" onClick={save} disabled={saving} style={{ marginTop: 20 }}>
-            {saving ? "در حال ذخیره…" : "ثبت و ادامه"}
+            {saving ? <Loader2 size={16} className="trade-spin" /> : "ثبت و ادامه"}
           </button>
         </div>
       </div>

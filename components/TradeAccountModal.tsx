@@ -149,7 +149,7 @@ export function TradeAccountModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? <><Loader2 size={15} className="trade-spin" /> در حال ذخیره…</> : account ? "ذخیره" : "ایجاد حساب"}
+            {saving ? <Loader2 size={15} className="trade-spin" /> : account ? "ذخیره" : "ایجاد حساب"}
           </button>
         </div>
       </div>

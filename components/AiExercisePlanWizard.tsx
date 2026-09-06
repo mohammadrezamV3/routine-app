@@ -287,10 +287,7 @@ export function AiExercisePlanWizard({
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button type="button" onClick={goNext} disabled={submitting} className="exercise-wizard-next-btn">
           {submitting ? (
-            <>
-              <span className="wsearch-submit-spinner" />
-              در حال ساخت برنامه
-            </>
+            <span className="wsearch-submit-spinner" />
           ) : step === "description" && rejection ? (
             "ویرایش و امتحان دوباره"
           ) : (

@@ -235,8 +235,9 @@ export function EditOccurrenceForm({
               onClick={submit}
               disabled={status !== "idle"}
             >
-              {status === "loading" && <span className="wsearch-submit-spinner" />}
-              {status === "loading" ? "در حال ذخیره…" : status === "success" ? "ذخیره شد" : status === "error" ? "ذخیره نشد" : "ذخیره"}
+              {status === "loading" ? (
+                <span className="wsearch-submit-spinner" />
+              ) : status === "success" ? "ذخیره شد" : status === "error" ? "ذخیره نشد" : "ذخیره"}
             </button>
           </div>
         </div>

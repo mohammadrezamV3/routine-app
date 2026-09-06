@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, History } from "lucide-react";
+import { Calendar, History, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { isoLocal, faNum, toJalali, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
@@ -319,7 +319,7 @@ export function CaloriePanel() {
           {goalError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{goalError}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button onClick={saveGoal} disabled={savingGoal} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
-              {savingGoal ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
+              {savingGoal ? <Loader2 size={15} className="trade-spin" /> : "محاسبه‌ی برنامه کالری"}
             </button>
           </div>
         </div>
