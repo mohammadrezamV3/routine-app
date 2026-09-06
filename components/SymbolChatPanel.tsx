@@ -21,10 +21,6 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 // می‌شود تا در پس‌زمینه بی‌دلیل به سرور نزند.
 const POLL_MS = 8_000;
 
-// ایموجی‌های پرکاربرد در گفت‌وگوی ترید — یک پیکرِ سبک، نه یک کتابخانه‌ی
-// کاملِ ایموجی که برای همین چندتا استفاده سنگین بود.
-const CHAT_EMOJIS = ["📈", "📉", "🚀", "🔥", "💰", "🎯", "😅", "😭", "🤔", "👍", "👎", "🙏"];
-
 function timeLabel(iso: string) {
   const d = new Date(iso);
   return faNum(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
@@ -42,8 +38,8 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   const [moderation, setModeration] = useState<ChatViewerModeration | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [warningDismissing, setWarningDismissing] = useState(false);
-  const [emojiOpen, setEmojiOpen] = useState(false);
   const { pendingKey, error: actionError, run } = useAsyncAction();
+  const draftInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getSetting<boolean>(SETTING_KEYS.tradeChatRulesAccepted, false)
@@ -55,12 +51,14 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   // آخرین زمانی که داریم — پولینگ فقط جدیدترها را می‌خواهد
   const sinceRef = useRef<string | null>(null);
   // اگر کاربر بالا رفته و دارد پیام‌های قدیمی را می‌خواند، پیامِ تازه
-  // نباید صفحه را زیر دستش بپراند.
+  // نباید صفحه را زیر دستش بپراند. با column-reverse (پایین‌تر)، «پایین»
+  // همان scrollTopِ نزدیکِ صفر است — مرورگر خودش موقعیتِ اولیه را همان‌جا
+  // می‌گذارد، این‌جا فقط برایِ پیامِ *تازه‌رسیده* لازم است.
   const stickToBottom = useRef(true);
 
   const scrollToBottom = useCallback(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) el.scrollTop = 0;
   }, []);
 
   const load = useCallback(async (incremental: boolean) => {
@@ -186,8 +184,9 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
         className="trade-chat-list thin-scroll"
         ref={listRef}
         onScroll={(e) => {
-          const el = e.currentTarget;
-          stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+          // با column-reverse، «پایین» (جدیدترین) نزدیکِ scrollTop=۰ است؛
+          // بالا رفتن یعنی scrollTop بزرگ‌تر می‌شود (برعکسِ chatِ عادی).
+          stickToBottom.current = e.currentTarget.scrollTop < 60;
         }}
       >
         {loading && <div className="trade-chat-empty is-loading">در حال بارگذاری…</div>}
@@ -198,41 +197,50 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
           </div>
         )}
 
-        {messages.map((m) => (
-          <div key={m.id} className={`trade-chat-row${m.mine ? " mine" : ""}`}>
-            <div className="trade-chat-meta">
-              <span className="trade-chat-author">{m.mine ? "من" : m.authorName}</span>
-              <span className="trade-chat-time mono">{timeLabel(m.createdAt)}</span>
-            </div>
-            <div className="trade-chat-bubble">
-              {/* متنِ خام رندر می‌شود، نه HTML — پیامِ کاربر هیچ‌وقت تفسیر نمی‌شود */}
-              <p className="trade-chat-body">{m.body}</p>
-              <div className="trade-chat-actions">
-                {m.mine ? (
-                  <button
-                    type="button" className="trade-chat-action"
-                    onClick={() => remove(m)} disabled={pendingKey === `del:${m.id}`}
-                    aria-label="حذف پیام"
-                  >
-                    {pendingKey === `del:${m.id}`
-                      ? <Loader2 size={13} className="trade-spin" />
-                      : <Trash2 size={13} />}
-                  </button>
-                ) : (
-                  <button
-                    type="button" className="trade-chat-action"
-                    onClick={() => setReporting(m)} disabled={m.reported}
-                    aria-label={m.reported ? "گزارش شده" : "گزارش پیام"}
-                    title={m.reported ? "این پیام را گزارش کرده‌ای" : "گزارش"}
-                  >
-                    <Flag size={13} />
-                    {m.reported && <span className="trade-chat-reported">گزارش شد</span>}
-                  </button>
-                )}
+        {!loading && !loadError && !!messages.length && (
+          <div className="trade-chat-list-inner">
+            {/* طبقِ درخواستِ صریح، مثلِ تلگرام از پایین شروع می‌شود —
+                column-reverse یعنی اولین فرزندِ DOM پایین‌ترین (جدیدترین)
+                جا می‌گیرد، پس آرایه باید معکوس بشود (جدید→قدیم). */}
+            {[...messages].reverse().map((m) => (
+              <div key={m.id} className={`trade-chat-row${m.mine ? " mine" : ""}`}>
+                <div className="trade-chat-meta">
+                  {/* طبقِ درخواستِ صریح (مثلِ تلگرام): پیامِ خودت اسم نمی‌خواهد،
+                      فقط پیامِ بقیه authorName دارد. */}
+                  {!m.mine && <span className="trade-chat-author">{m.authorName}</span>}
+                  <span className="trade-chat-time mono">{timeLabel(m.createdAt)}</span>
+                </div>
+                <div className="trade-chat-bubble">
+                  {/* متنِ خام رندر می‌شود، نه HTML — پیامِ کاربر هیچ‌وقت تفسیر نمی‌شود */}
+                  <p className="trade-chat-body">{m.body}</p>
+                  <div className="trade-chat-actions">
+                    {m.mine ? (
+                      <button
+                        type="button" className="trade-chat-action"
+                        onClick={() => remove(m)} disabled={pendingKey === `del:${m.id}`}
+                        aria-label="حذف پیام"
+                      >
+                        {pendingKey === `del:${m.id}`
+                          ? <Loader2 size={13} className="trade-spin" />
+                          : <Trash2 size={13} />}
+                      </button>
+                    ) : (
+                      <button
+                        type="button" className="trade-chat-action"
+                        onClick={() => setReporting(m)} disabled={m.reported}
+                        aria-label={m.reported ? "گزارش شده" : "گزارش پیام"}
+                        title={m.reported ? "این پیام را گزارش کرده‌ای" : "گزارش"}
+                      >
+                        <Flag size={13} />
+                        {m.reported && <span className="trade-chat-reported">گزارش شد</span>}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       {actionError && <div className="trade-form-error">{actionError}</div>}
@@ -275,38 +283,30 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
 
           {rulesAccepted === true && (
           <div className="trade-chat-composer-wrap">
-            {emojiOpen && (
-              <div className="trade-chat-emoji-picker">
-                {CHAT_EMOJIS.map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    className="trade-chat-emoji-item"
-                    onClick={() => { setDraft((d) => d + em); setEmojiOpen(false); }}
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
-            )}
             <form
               className="trade-chat-composer"
               onSubmit={(e) => { e.preventDefault(); send(); }}
             >
-              <button
-                type="button" className="trade-chat-emoji-btn"
-                onClick={() => setEmojiOpen((v) => !v)} aria-label="افزودن ایموجی"
-              >
-                <Smile size={18} />
-              </button>
-              <input
-                className="wsearch-newform-name trade-glass-field"
-                value={draft}
-                maxLength={MAX_CHAT_BODY}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="پیام خود را بنویسید…"
-                aria-label="متن پیام"
-              />
+              <div className="trade-chat-input-wrap">
+                <input
+                  ref={draftInputRef}
+                  className="wsearch-newform-name trade-glass-field trade-chat-input"
+                  value={draft}
+                  maxLength={MAX_CHAT_BODY}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="پیام خود را بنویسید…"
+                  aria-label="متن پیام"
+                />
+                {/* طبقِ درخواستِ صریح: دیگر پاپ‌آپِ ایموجیِ سفارشی نیست —
+                    این دکمه فقط فوکوس می‌کند تا کیبوردِ خودِ دستگاه بیاید؛
+                    از همان‌جا کاربر با دکمه‌ی ایموجیِ خودِ کیبورد می‌نویسد. */}
+                <button
+                  type="button" className="trade-chat-emoji-btn"
+                  onClick={() => draftInputRef.current?.focus()} aria-label="ایموجی"
+                >
+                  <Smile size={18} />
+                </button>
+              </div>
               <button
                 type="submit" className="trade-chat-send"
                 disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
@@ -372,7 +372,7 @@ function ReportDialog({
           type="button" className="trade-danger-btn"
           onClick={() => onSubmit(reason, note)} disabled={pending}
         >
-          {pending ? <><Loader2 size={14} className="trade-spin" /> در حال ارسال…</> : "ارسال گزارش"}
+          {pending ? <Loader2 size={14} className="trade-spin" /> : "ارسال گزارش"}
         </button>
       </div>
     </div>

@@ -94,7 +94,7 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
           <div className="rm-add-actions">
             <button type="button" className="account-outline-btn" onClick={() => setOpen(false)}>لغو</button>
             <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-              {saving ? <><Loader2 size={14} className="trade-spin" /> در حال ذخیره…</> : "افزودن"}
+              {saving ? <Loader2 size={14} className="trade-spin" /> : "افزودن"}
             </button>
           </div>
         </div>

@@ -12,6 +12,10 @@ const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const VALID_GOALS = Object.keys(GOAL_OPTION_LABELS) as ExerciseGoalOption[];
 const MAX_DESCRIPTION_LEN = 500;
 
+// AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاستِ
+// سرورلس ممکنه زودتر از اون قطعش کنه.
+export const maxDuration = 60;
+
 export async function GET() {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;

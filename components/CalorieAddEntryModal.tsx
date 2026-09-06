@@ -214,8 +214,7 @@ export function CalorieAddEntryModal({
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 sm:text-[15px]"
               style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
             >
-              {saving && <span className="wsearch-submit-spinner" />}
-              {saving ? "در حال ثبت" : "افزودن"}
+              {saving ? <span className="wsearch-submit-spinner" /> : "افزودن"}
             </button>
 
             <div className="my-3.5 flex items-center gap-2.5 text-[10.5px] text-dash-muted">

@@ -194,8 +194,9 @@ export function MedicationForm({
 
           <div className="wsearch-newform-actions">
             <button type="button" className="wsearch-submit-btn" onClick={submit} disabled={status !== "idle"}>
-              {status === "loading" && <span className="wsearch-submit-spinner" />}
-              {status === "loading" ? "در حال ثبت…" : status === "success" ? "ثبت شد" : initial ? "ذخیره تغییرات" : "ثبت دارو"}
+              {status === "loading" ? (
+                <span className="wsearch-submit-spinner" />
+              ) : status === "success" ? "ثبت شد" : initial ? "ذخیره تغییرات" : "ثبت دارو"}
             </button>
           </div>
         </div>

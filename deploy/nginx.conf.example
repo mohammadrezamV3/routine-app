@@ -90,9 +90,19 @@ server {
     # چند ده ثانیه طول می‌کشد. با ۱۵ ثانیه‌ی `location /` این‌ها همیشه از
     # سمتِ nginx کشته می‌شدند و یک ۵۰۴ـِ HTML می‌دادند، که کلاینت نمی‌توانست
     # پارسش کند و کاربر «مشکلی در اتصال به سرور» می‌دید.
-    # خودِ اپ تایم‌اوتِ ۴۵ ثانیه‌ای دارد (lib/aiClient.ts)، پس این باید از آن
-    # بیشتر باشد تا همیشه اپ زودتر تصمیم بگیرد و خطای فارسیِ JSON برگرداند.
-    location ~ ^/api/(reports|roadmaps)/ {
+    # خودِ اپ تایم‌اوتِ کلِ ۵۵ثانیه‌ای دارد (AI_TOTAL_BUDGET_MSِ lib/aiClient.ts
+    # — بودجه‌ی *کلِ* هر دو تلاش، نه هر تلاش جدا)، پس این باید از آن بیشتر
+    # باشد تا همیشه اپ زودتر تصمیم بگیرد و خطای فارسیِ JSON برگرداند.
+    #
+    # ⚠️ باگِ قبلی همین‌جا: `^/api/(reports|roadmaps)/` یک "/" را بعدِ
+    # اسم مسیر اجباری می‌کرد، یعنی خودِ `POST /api/roadmaps` (درخواستِ
+    # اصلیِ *ساختِ* رودمپ — بدون هیچ‌چیزی بعدش) اصلاً match نمی‌شد و به‌جاش
+    # می‌افتاد روی `location /` با فقط ۱۵ ثانیه — دقیقاً همان چیزی که
+    # باعث می‌شد «رودمپ توی ساخت گیر کند» (nginx بعد از ۱۵s کانکشن را
+    # می‌بست، خیلی قبل از این‌که AI اصلاً فرصتِ جواب‌دادن داشته باشد).
+    # `(/|$)` هم خودِ مسیر را می‌گیرد هم زیرمسیرهایش را. همین‌طور
+    # `exercise/plan` و `calorie/scan` (که آن‌ها هم AI صدا می‌زنند) اضافه شدند.
+    location ~ ^/api/(reports|roadmaps|exercise/plan|calorie/scan)(/|$) {
         proxy_pass http://nextjs_upstream;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
@@ -101,8 +111,8 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_connect_timeout 5s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_send_timeout 70s;
+        proxy_read_timeout 70s;
     }
 
     location ~ ^/api/(subscription|payment)/ {
@@ -131,8 +141,9 @@ server {
 
         # پیش‌فرضِ nginx برای این‌ها ۶۰ ثانیه‌ست؛ یعنی اگه Node یه لحظه گیر
         # کنه، بازدیدکننده یک دقیقه‌ی تمام روی صفحه‌ی سفید می‌مونه. ۱۵ ثانیه
-        # برای این اپ سخاوتمندانه‌ست (کندترین روتِ واقعی، ساختِ رودمپ با AI،
-        # خودش سمتِ کلاینت لودینگ نشون می‌ده).
+        # برای این اپ سخاوتمندانه‌ست — روت‌های واقعاً کندِ AI (رودمپ/گزارش
+        # هفتگی/برنامه‌ی تمرینی/اسکنِ غذا) همگی بالا (locationِ دیگر)
+        # مهلتِ ۷۰ثانیه‌ی خودشان را دارند، این‌جا فقط بقیه‌ی مسیرهای عادی‌اند.
         proxy_connect_timeout 5s;
         proxy_send_timeout 15s;
         proxy_read_timeout 15s;

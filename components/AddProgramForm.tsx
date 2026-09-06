@@ -364,8 +364,9 @@ export function AddProgramForm({
                   onClick={submitNew}
                   disabled={status !== "idle"}
                 >
-                  {status === "loading" && <span className="wsearch-submit-spinner" />}
-                  {status === "loading" ? "در حال ثبت…" : status === "success" ? "ثبت شد" : status === "error" ? "ثبت نشد" : "ثبت"}
+                  {status === "loading" ? (
+                    <span className="wsearch-submit-spinner" />
+                  ) : status === "success" ? "ثبت شد" : status === "error" ? "ثبت نشد" : "ثبت"}
                 </button>
               </div>
             </>

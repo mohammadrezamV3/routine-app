@@ -75,11 +75,14 @@ export function CalorieHistoryCalendar({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <button type="button" onClick={goNext} aria-label="ماه بعد" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
+        {/* طبقِ درخواستِ صریح: جهتِ این دو دکمه برعکس بود — آیکونِ هرکدام
+            درست بود ولی به عملکردِ اشتباه وصل شده بود (هم‌الگویِ
+            HistoryCalendar: راست=ماهِ قبل، چپ=ماهِ بعد). */}
+        <button type="button" onClick={goPrev} aria-label="ماه قبل" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronLeft size={18} />
         </button>
         <div className="text-[13.5px] font-bold text-dash-text sm:text-[15px]">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
-        <button type="button" onClick={goPrev} aria-label="ماه قبل" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
+        <button type="button" onClick={goNext} aria-label="ماه بعد" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronRight size={18} />
         </button>
       </div>

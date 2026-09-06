@@ -86,8 +86,40 @@ export type EconomicEventDto = {
   actual: string | null;
   forecast: string | null;
   previous: string | null;
+  description: string | null;
   source: string;
 };
+
+/**
+ * جهتِ actual نسبت به forecast — برای رنگِ سبز/قرمزِ عددِ واقعی، دقیقاً
+ * مثلِ خودِ فارکس‌فکتوری. هر دو رشته‌اند و واحد دارند («3.2%»، «215K»،
+ * «-1.4M»)؛ اینجا فقط عددِ ابتداییِ رشته (با علامت/اعشار/کاما) استخراج
+ * می‌شود، نه کلِ واحد — تبدیلِ واحدها (K/M/B) لازم نیست چون actual و
+ * forecastِ یک رویداد همیشه با هم‌واحد منتشر می‌شوند.
+ *
+ * جهتِ «خوب/بد» بسته به شاخص فرق می‌کند (مثلاً نرخِ بیکاریِ پایین‌تر خوب
+ * است، ولی تولیدِ ناخالص بالاتر خوب است) و این داده اینجا موجود نیست، پس
+ * فقط «بالاتر/پایین‌تر از پیش‌بینی» را برمی‌گردانیم، نه قضاوتِ خوب/بد —
+ * رنگ صرفاً نشان‌دهنده‌ی همین مقایسه‌ی خام است.
+ */
+export type ActualCompare = "up" | "down" | "flat" | null;
+
+function leadingNumber(v: string): number | null {
+  const m = v.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+  if (!m) return null;
+  const n = Number(m[0]);
+  return Number.isFinite(n) ? n : null;
+}
+
+export function compareActualToForecast(actual: string | null, forecast: string | null): ActualCompare {
+  if (!actual || !forecast) return null;
+  const a = leadingNumber(actual);
+  const f = leadingNumber(forecast);
+  if (a === null || f === null) return null;
+  if (a > f) return "up";
+  if (a < f) return "down";
+  return "flat";
+}
 
 // ── منبع بیرونی (اختیاری) ───────────────────────────────────────────────
 

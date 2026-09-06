@@ -4,14 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROADMAP_DAYS, RoadmapSchedule, addMinutes, addRoadmapToRoutine } from "@/lib/roadmapSchedule";
 import { faNum } from "@/lib/jalali";
-import { Spinner } from "@/components/Spinner";
-
-const LOADING_STEPS = [
-  "در حال تحلیل موضوع…",
-  "در حال بریدنِ مسیر به جلسه‌های هم‌اندازه‌ی وقتت…",
-  "در حال نوشتنِ قدم‌های هر جلسه و منابعش…",
-  "چند لحظه دیگه تمومه…",
-];
+import { QuarterRing } from "@/components/QuarterRing";
 
 const MAX_LEN = 120;
 const MINUTE_CHOICES = [30, 45, 60, 90, 120];
@@ -34,17 +27,10 @@ export function RoadmapWizard({ onClose, onCreated }: { onClose: () => void; onC
   const [minutes, setMinutes] = useState(60);
   const [startTime, setStartTime] = useState("18:00");
   const [loading, setLoading] = useState(false);
-  const [stepIdx, setStepIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
-
-  useEffect(() => {
-    if (!loading) { setStepIdx(0); return; }
-    const id = setInterval(() => setStepIdx((i) => Math.min(i + 1, LOADING_STEPS.length - 1)), 2600);
-    return () => clearInterval(id);
-  }, [loading]);
 
   function toggleDay(d: number) {
     setJsDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
@@ -164,8 +150,7 @@ export function RoadmapWizard({ onClose, onCreated }: { onClose: () => void; onC
 
               {loading ? (
                 <div className="rm-wizard-loading">
-                  <Spinner size={18} />
-                  <span>{LOADING_STEPS[stepIdx]}</span>
+                  <QuarterRing className="h-5 w-5" />
                 </div>
               ) : (
                 <div className="wsearch-newform-actions rm-wizard-actions">

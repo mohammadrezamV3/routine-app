@@ -1,14 +1,21 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays, ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
+import { BellRing, ChevronLeft, ChevronRight, Filter, History, Loader2, Search, X } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
+import { getSetting, setSetting } from "@/lib/storage";
+import { getNotificationPermission } from "@/lib/notifications";
+import { SegmentedTabs } from "./SegmentedTabs";
 import { PanelSkeleton } from "./PanelSkeleton";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
-  IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER,
+  IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, compareActualToForecast,
 } from "@/lib/economicCalendar";
+import {
+  DEFAULT_NEWS_ALERT_PREFS, MINUTES_BEFORE_OPTIONS, NEWS_ALERT_KEY,
+  NewsAlertPrefs, normalizeNewsAlertPrefs,
+} from "@/lib/tradeNewsAlerts";
 
 type HistoryRow = { id: string; occursAt: string; actual: string | null; forecast: string | null; previous: string | null };
 
@@ -58,14 +65,52 @@ export function EconomicCalendarPanel() {
   const [otherCurrencies, setOtherCurrencies] = useState(false);
   const [impacts, setImpacts] = useState<EconomicImpact[]>([]);
 
+  // جستجوی یک رویداد خاص — طبق درخواستِ صریح، مثل فارکس‌فکتوری. وقتی
+  // متنی تایپ شده، دیگر محدود به «یک روز» نیستیم — بازه‌ی خیلی وسیع‌تری
+  // (۹۰ روز قبل تا ۹۰ روز بعد) از سرور خواسته می‌شود تا نتیجه‌ی جستجو به
+  // روز انتخاب‌شده گیر نکند.
+  const [searchInput, setSearchInput] = useState("");
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(searchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+  const searching = query.length > 0;
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [historyById, setHistoryById] = useState<Record<string, HistoryRow[] | "loading" | "error">>({});
+
+  // هشدار پیش از اخبار — تنظیماتش از قبل توسط کران /api/cron/economic-alerts
+  // پیاده‌سازی شده؛ اینجا فقط یک راهِ سریع برای دیدن/عوض‌کردنش، دقیقاً
+  // هم‌قاعده‌ی TradeSettings (همون کلید تنظیمات، همون normalize).
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [alerts, setAlerts] = useState<NewsAlertPrefs>(DEFAULT_NEWS_ALERT_PREFS);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("unsupported");
+  useEffect(() => {
+    getSetting<unknown>(NEWS_ALERT_KEY, DEFAULT_NEWS_ALERT_PREFS).then((v) => setAlerts(normalizeNewsAlertPrefs(v)));
+    setNotifPermission(getNotificationPermission());
+  }, []);
+  function patchAlerts(p: Partial<NewsAlertPrefs>) {
+    setAlerts((prev) => {
+      const next = normalizeNewsAlertPrefs({ ...prev, ...p });
+      setSetting(NEWS_ALERT_KEY, next);
+      return next;
+    });
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const iso = isoLocal(date);
-      const qs = new URLSearchParams({ from: iso, to: iso });
+      const qs = new URLSearchParams();
+      if (searching) {
+        qs.set("from", isoLocal(addDays(date, -90)));
+        qs.set("to", isoLocal(addDays(date, 90)));
+        qs.set("q", query);
+      } else {
+        const iso = isoLocal(date);
+        qs.set("from", iso);
+        qs.set("to", iso);
+      }
       if (currencies.length) qs.set("currencies", currencies.join(","));
       if (otherCurrencies) qs.set("other", "1");
       if (impacts.length) qs.set("impacts", impacts.join(","));
@@ -75,13 +120,14 @@ export function EconomicCalendarPanel() {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [date, currencies, otherCurrencies, impacts]);
+  }, [date, currencies, otherCurrencies, impacts, searching, query]);
 
   useEffect(() => { load(); }, [load]);
   // عوض‌شدنِ روز یعنی هیچ ردیفی نباید بازمونده باز باشه (متعلق به روزِ قبله)
   useEffect(() => { setExpandedId(null); }, [date]);
 
   const today = startOfLocalDay(new Date());
+  const now = new Date();
 
   function goWeek(dir: 1 | -1) {
     setWeekDir(dir);
@@ -113,9 +159,31 @@ export function EconomicCalendarPanel() {
   return (
     <div>
       <div className="trade-cal-filter-bar">
+        <div className="trade-cal-search">
+          <Search size={14} />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="جستجوی یک رویداد خاص…"
+            className="ltr-inline"
+          />
+          {searchInput && (
+            <button type="button" onClick={() => setSearchInput("")} aria-label="پاک‌کردن جستجو">
+              <X size={13} />
+            </button>
+          )}
+        </div>
         <button type="button" className="trade-ghost-btn" onClick={() => setFiltersOpen((v) => !v)}>
           <Filter size={13} /> فیلتر
           {(currencies.length || impacts.length || otherCurrencies) ? ` (${faNum(currencies.length + impacts.length + (otherCurrencies ? 1 : 0))})` : ""}
+        </button>
+        <button
+          type="button"
+          className={`trade-ghost-btn${alerts.enabled ? " active" : ""}`}
+          onClick={() => setAlertsOpen((v) => !v)}
+        >
+          <BellRing size={13} /> هشدار
         </button>
         {(currencies.length > 0 || impacts.length > 0 || otherCurrencies) && (
           <button type="button" className="trade-ghost-btn" onClick={() => { setCurrencies([]); setImpacts([]); setOtherCurrencies(false); }}>
@@ -164,6 +232,76 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
+      {alertsOpen && (
+        <div className="trade-surface trade-cal-filters trade-cal-alerts">
+          <div className="item-line" style={{ marginBottom: 10 }}>
+            قبل از انتشار رویدادها نوتیفیکیشن بگیر — نیاز به اجازه‌ی نوتیفیکیشن مرورگر دارد (زنگوله‌ی بالای صفحه).
+            {notifPermission !== "granted" && (
+              <b style={{ color: "#E0A452", display: "block", marginTop: 4 }}>
+                هنوز اجازه‌ی نوتیفیکیشن مرورگر رو ندادی.
+              </b>
+            )}
+          </div>
+          <button
+            type="button"
+            className={`trade-toggle${alerts.enabled ? " on" : ""}`}
+            onClick={() => patchAlerts({ enabled: !alerts.enabled })}
+          >
+            <span className="trade-toggle-knob" />
+            <span className="trade-toggle-label">{alerts.enabled ? "روشن" : "خاموش"}</span>
+          </button>
+
+          {alerts.enabled && (
+            <>
+              <label className="exercise-form-label">چند دقیقه قبل</label>
+              <SegmentedTabs
+                active={String(alerts.minutesBefore)}
+                onChange={(v) => patchAlerts({ minutesBefore: Number(v) })}
+                options={MINUTES_BEFORE_OPTIONS.map((m) => ({ value: String(m), label: `${m} دقیقه` }))}
+              />
+
+              <label className="exercise-form-label">برای کدام سطح تأثیر</label>
+              <div className="trade-choice-grid">
+                {IMPACT_ORDER.map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`trade-choice${alerts.impacts.includes(i) ? " active" : ""}`}
+                    onClick={() => patchAlerts({
+                      impacts: alerts.impacts.includes(i)
+                        ? alerts.impacts.filter((x) => x !== i)
+                        : [...alerts.impacts, i as EconomicImpact],
+                    })}
+                  >
+                    {IMPACT_LABELS[i]}
+                  </button>
+                ))}
+              </div>
+
+              <label className="exercise-form-label">
+                ارزها {alerts.currencies.length ? "" : "(خالی یعنی همه)"}
+              </label>
+              <div className="trade-choice-grid">
+                {CALENDAR_CURRENCIES.map((c) => (
+                  <button
+                    key={c.code}
+                    type="button"
+                    className={`trade-choice${alerts.currencies.includes(c.code) ? " active" : ""}`}
+                    onClick={() => patchAlerts({
+                      currencies: alerts.currencies.includes(c.code)
+                        ? alerts.currencies.filter((x) => x !== c.code)
+                        : [...alerts.currencies, c.code],
+                    })}
+                  >
+                    {c.flag} {c.code}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* طبقِ درخواستِ صریح: این بخش هم داخلِ یک باکسِ صفحه‌بزرگ — هم‌الگویِ
           چک‌لیست‌ها/یادداشت‌ها — نه یک ناحیه‌ی کوچیکِ شناور روی بک‌گراند. */}
       <div className="trade-surface trade-page-box trade-cal-box">
@@ -171,57 +309,65 @@ export function EconomicCalendarPanel() {
           می‌ریخت، حالا مثلِ هفته‌ی «برنامه‌ی هفتگی»ِ روتین من (همان تعریفِ
           هفته‌ی شنبه‌تا‌جمعه): یک ردیفِ ثابتِ ۷ روزِ کلیک‌پذیر، به‌جای فقط
           یک فلشِ قبلی/بعدی که هیچ‌وقت نمی‌گفت «چند روزِ دیگه چی هست». */}
-      <div className="trade-cal-daynav">
-        <button type="button" className="trade-icon-btn" onClick={() => goWeek(-1)} aria-label="هفته‌ی قبل">
-          <ChevronRight size={16} />
-        </button>
-        <div className="trade-cal-week-viewport">
-          <AnimatePresence mode="popLayout" initial={false} custom={weekDir}>
-            <motion.div
-              key={isoLocal(weekStartOf(date))}
-              custom={weekDir}
-              initial={{ x: weekDir > 0 ? 56 : -56, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: weekDir > 0 ? -56 : 56, opacity: 0 }}
-              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.18}
-              onDragEnd={(_e, info) => {
-                if (info.offset.x < -55 || info.velocity.x < -500) goWeek(1);
-                else if (info.offset.x > 55 || info.velocity.x > 500) goWeek(-1);
-              }}
-              className="trade-cal-week-strip"
-            >
-              {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
-                <button
-                  key={isoLocal(d)}
-                  type="button"
-                  className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
-                  onClick={() => pickDate(d)}
-                >
-                  <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
-                  <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
-                </button>
-              ))}
-            </motion.div>
-          </AnimatePresence>
+      {searching ? (
+        <div className="trade-cal-search-banner">
+          نتیجه‌ی جستجو برای «<b>{query}</b>» — {faNum(events.length)} رویداد
         </div>
-        <button type="button" className="trade-icon-btn" onClick={() => goWeek(1)} aria-label="هفته‌ی بعد">
-          <ChevronLeft size={16} />
-        </button>
-      </div>
-      <div className="trade-cal-daynav-sub">
-        <span className="ltr-inline">{isSameDay(date, today) ? "Today: " : ""}{enDayFmt.format(date)}</span>
-        <button type="button" className="trade-ghost-btn trade-cal-month-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
-          <CalendarDays size={13} /> تقویم
-        </button>
-        {!isSameDay(date, today) && (
-          <button type="button" className="trade-ghost-btn" onClick={() => { setWeekDir(1); setDate(today); }}>
-            امروز
-          </button>
-        )}
-      </div>
+      ) : (
+        <>
+          <div className="trade-cal-daynav">
+            <button type="button" className="trade-icon-btn" onClick={() => goWeek(-1)} aria-label="هفته‌ی قبل">
+              <ChevronRight size={16} />
+            </button>
+            <div className="trade-cal-week-viewport">
+              <AnimatePresence mode="popLayout" initial={false} custom={weekDir}>
+                <motion.div
+                  key={isoLocal(weekStartOf(date))}
+                  custom={weekDir}
+                  initial={{ x: weekDir > 0 ? 56 : -56, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: weekDir > 0 ? -56 : 56, opacity: 0 }}
+                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.18}
+                  onDragEnd={(_e, info) => {
+                    if (info.offset.x < -55 || info.velocity.x < -500) goWeek(1);
+                    else if (info.offset.x > 55 || info.velocity.x > 500) goWeek(-1);
+                  }}
+                  className="trade-cal-week-strip"
+                >
+                  {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
+                    <button
+                      key={isoLocal(d)}
+                      type="button"
+                      className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
+                      onClick={() => pickDate(d)}
+                    >
+                      <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
+                      <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            <button type="button" className="trade-icon-btn" onClick={() => goWeek(1)} aria-label="هفته‌ی بعد">
+              <ChevronLeft size={16} />
+            </button>
+          </div>
+          <div className="trade-cal-daynav-sub">
+            <span className="ltr-inline">{isSameDay(date, today) ? "Today: " : ""}{enDayFmt.format(date)}</span>
+            <button type="button" className="trade-ghost-btn trade-cal-month-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
+              <History size={13} /> تاریخچه
+            </button>
+            {!isSameDay(date, today) && (
+              <button type="button" className="trade-ghost-btn" onClick={() => { setWeekDir(1); setDate(today); }}>
+                امروز
+              </button>
+            )}
+          </div>
+        </>
+      )}
 
       {monthPickerOpen && (
         <EconMonthPicker date={date} onPick={pickDate} onClose={() => setMonthPickerOpen(false)} />
@@ -231,7 +377,7 @@ export function EconomicCalendarPanel() {
 
       {!firstLoad && !loading && !events.length && (
         <div className="item-line empty" style={{ marginTop: 16 }}>
-          رویدادی برای این روز ثبت نشده است.
+          {searching ? "رویدادی با این عنوان پیدا نشد." : "رویدادی برای این روز ثبت نشده است."}
         </div>
       )}
 
@@ -240,7 +386,7 @@ export function EconomicCalendarPanel() {
           <div className="trade-cal-table-scroll">
             <div className="trade-cal-table ltr-inline">
               <div className="trade-cal-thead">
-                <span className="tc-col-time">Time</span>
+                <span className="tc-col-time">{searching ? "Date" : "Time"}</span>
                 <span className="tc-col-cur">Currency</span>
                 <span className="tc-col-event">Event</span>
                 <span className="tc-col-num">Actual</span>
@@ -250,29 +396,42 @@ export function EconomicCalendarPanel() {
               {events.map((e) => {
                 const hist = historyById[e.id];
                 const expanded = expandedId === e.id;
+                const occursAt = new Date(e.occursAt);
+                const isPast = occursAt.getTime() < now.getTime();
+                const cmp = compareActualToForecast(e.actual, e.forecast);
                 return (
                   <Fragment key={e.id}>
                     <div
-                      className={`trade-cal-tr${expanded ? " expanded" : ""}`}
+                      className={`trade-cal-tr${expanded ? " expanded" : ""}${isPast ? " past" : ""}`}
                       onClick={() => toggleExpand(e)}
                       role="button"
                       tabIndex={0}
                     >
-                      <span className="tc-col-time mono">{enTimeFmt.format(new Date(e.occursAt))}</span>
+                      <span className="tc-col-time mono">
+                        {searching ? enShortDateFmt.format(occursAt) : enTimeFmt.format(occursAt)}
+                      </span>
                       <span className="tc-col-cur">
                         <span className="trade-cal-impact-dot" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
                         <b className="mono">{e.currency}</b>
                       </span>
                       <span className="tc-col-event" title={e.title}>{e.title}</span>
-                      <span className={`tc-col-num mono${e.actual ? "" : " muted"}`}>{e.actual || "—"}</span>
+                      <span
+                        className={`tc-col-num mono${e.actual ? "" : " muted"}`}
+                        style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
+                      >
+                        {e.actual || "—"}
+                      </span>
                       <span className="tc-col-num mono">{e.forecast || "—"}</span>
                       <span className="tc-col-num mono">{e.previous || "—"}</span>
                     </div>
 
                     {expanded && (
                       <div className="trade-cal-history">
+                        <div className="trade-cal-detail">
+                          {e.description || "توضیحی برای این رویداد ثبت نشده."}
+                        </div>
                         {hist === "loading" && (
-                          <div className="trade-cal-history-status"><Loader2 size={14} className="trade-spin" /> در حال بارگذاری تاریخچه…</div>
+                          <div className="trade-cal-history-status"><Loader2 size={14} className="trade-spin" /></div>
                         )}
                         {hist === "error" && (
                           <div className="trade-cal-history-status">تاریخچه در دسترس نیست</div>
@@ -285,14 +444,22 @@ export function EconomicCalendarPanel() {
                             <div className="trade-cal-history-head">
                               <span>Date</span><span>Actual</span><span>Forecast</span><span>Previous</span>
                             </div>
-                            {hist.map((h) => (
-                              <div key={h.id} className="trade-cal-history-row">
-                                <span>{enShortDateFmt.format(new Date(h.occursAt))}</span>
-                                <span className="mono">{h.actual || "—"}</span>
-                                <span className="mono">{h.forecast || "—"}</span>
-                                <span className="mono">{h.previous || "—"}</span>
-                              </div>
-                            ))}
+                            {hist.map((h) => {
+                              const hcmp = compareActualToForecast(h.actual, h.forecast);
+                              return (
+                                <div key={h.id} className="trade-cal-history-row">
+                                  <span>{enShortDateFmt.format(new Date(h.occursAt))}</span>
+                                  <span
+                                    className="mono"
+                                    style={hcmp === "up" ? { color: "var(--accent)" } : hcmp === "down" ? { color: "#E05252" } : undefined}
+                                  >
+                                    {h.actual || "—"}
+                                  </span>
+                                  <span className="mono">{h.forecast || "—"}</span>
+                                  <span className="mono">{h.previous || "—"}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
