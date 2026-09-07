@@ -239,7 +239,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                     avatar={m.role === "bot" ? <SiriOrb size="24px" state="idle" /> : undefined}
                     copyText={m.role === "bot" ? m.text : undefined}
                     timestamp={undefined}
-                    className={m.tone ? `tone-${m.tone}` : undefined}
+                    className={`${m.role === "user" ? "routine-ai-row-user" : "routine-ai-row-bot"}${m.tone ? ` tone-${m.tone}` : ""}`}
                   >
                     {m.text.split("\n").map((line, i) => (
                       <p key={i} className={i ? "mt-1" : undefined}>{line}</p>

@@ -6286,13 +6286,23 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 .routine-ai-list .tone-warn .routine-ai-bubble-bot{ border-color:rgba(224,168,60,.6); }
 .routine-ai-list .tone-error .routine-ai-bubble-bot{ border-color:rgba(224,82,82,.6); }
 
-.routine-ai-status{ display:flex; align-items:center; padding-inline-start:34px; }
+/* جهتِ گفت‌وگو: پیامِ کاربر سمت راست، پاسخِ دستیار سمت چپ.
+   کامپوننتِ upstream برای صفحه‌ی LTR نوشته شده (کاربر راست، دستیار چپ)؛ چون
+   این صفحه RTL است، همان چیدمان آینه می‌شد و جای دو طرف عوض. این‌جا صریح
+   برمی‌گردانَد. اسپسیفیسیتی دو کلاسه است تا از کلاس‌های تک‌کلاسه‌ی Tailwind
+   روی خودِ عنصر بالاتر بماند، مستقل از ترتیبِ فایل. */
+.routine-ai-list .routine-ai-row-user{ flex-direction:row; }
+.routine-ai-list .routine-ai-row-user > *:last-child{ align-items:flex-start; }
+.routine-ai-list .routine-ai-row-bot{ flex-direction:row-reverse; }
+.routine-ai-list .routine-ai-row-bot > *:last-child{ align-items:flex-end; }
+
+/* گزینه‌ها زیرِ پیامِ دستیار می‌آیند، پس آن‌ها هم باید سمتِ چپ بنشینند */
+.routine-ai-status{ display:flex; align-items:center; justify-content:flex-end; }
 
 /* گزینه‌های آماده‌ی پاسخ زیرِ پیامِ دستیار — کاربر به‌جای تایپ می‌زند رویشان */
 .routine-ai-options{
-  align-self:flex-start; max-width:88%;
-  display:flex; flex-wrap:wrap; gap:6px;
-  padding-inline-start:34px;
+  align-self:flex-end; max-width:88%;
+  display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px;
 }
 .routine-ai-option{
   font-size:11px; line-height:1.8; padding:5px 10px; border-radius:999px;
