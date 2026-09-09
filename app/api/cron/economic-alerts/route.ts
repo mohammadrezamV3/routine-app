@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
     const byKey = new Map(rows.map((r) => [r.key, r.value]));
 
     const prefs = normalizeNewsAlertPrefs(byKey.get(NEWS_ALERT_KEY));
-    if (!prefs.enabled) continue;
+    // اگه هیچ رویدادی هم تک‌تک ستاره نخورده باشه و کلیدِ کلی هم خاموش
+    // باشه، هیچ چیزی برای این کاربر نباید بره — وگرنه با enabled=false
+    // ولی چند رویدادِ ستاره‌خورده، هردو راه بسته می‌شد.
+    if (!prefs.enabled && !prefs.watchedEventIds.length) continue;
 
     const rawLog = byKey.get(NEWS_ALERT_LOG_KEY);
     const log: Record<string, string> =
@@ -83,8 +86,15 @@ export async function POST(req: NextRequest) {
     let changed = false;
     for (const e of events) {
       if (log[e.id]) continue;
-      if (!prefs.impacts.includes(e.impact)) continue;
-      if (prefs.currencies.length && !prefs.currencies.includes(e.currency)) continue;
+      // ستونِ Alertِ جدول: یک رویدادِ به‌خصوص که کاربر دستی ستاره زده،
+      // مستقل از روشن/خاموش‌بودنِ قاعده‌ی کلی و فیلترهای تأثیر/ارز هشدار
+      // می‌گیرد — دقیقاً هم‌رفتارِ ستونِ Alertِ فارکس‌فکتوری.
+      const watched = prefs.watchedEventIds.includes(e.id);
+      if (!watched) {
+        if (!prefs.enabled) continue;
+        if (!prefs.impacts.includes(e.impact)) continue;
+        if (prefs.currencies.length && !prefs.currencies.includes(e.currency)) continue;
+      }
 
       const minutesAway = Math.round((e.occursAt.getTime() - now.getTime()) / 60_000);
       if (minutesAway > prefs.minutesBefore) continue;
