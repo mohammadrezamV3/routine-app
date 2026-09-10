@@ -6253,6 +6253,10 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 }
 @media (hover:hover){ .routine-ai-fab:hover{ transform:translateY(-2px); } }
 .routine-ai-fab:active{ transform:scale(.94); }
+/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش گو توی
+   تمِ روشن دوباره یک بک‌گراندِ شیشه‌ایِ مربعی زیرش می‌گرفت، دقیقاً همون
+   باگِ تکراری که این دکمه صراحتاً نباید بگیرد (فقط خودِ گو باید دیده شود). */
+body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routine-ai-fab{ background:none; box-shadow:none; }
 
 /* روی موبایل نوارِ ناوبریِ پایین هست؛ گو باید بالاترش بنشیند وگرنه
    روی دکمه‌های نوار می‌افتد. */
