@@ -1,20 +1,19 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, BellRing, ChevronLeft, ChevronRight, Filter, History, Info, Loader2, Search, X } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
 import { getSetting, setSetting } from "@/lib/storage";
-import { getNotificationPermission } from "@/lib/notifications";
-import { SegmentedTabs } from "./SegmentedTabs";
 import { PanelSkeleton } from "./PanelSkeleton";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
   IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, compareActualToForecast,
 } from "@/lib/economicCalendar";
 import {
-  DEFAULT_NEWS_ALERT_PREFS, MINUTES_BEFORE_OPTIONS, NEWS_ALERT_KEY,
-  NewsAlertPrefs, normalizeNewsAlertPrefs,
+  DEFAULT_NEWS_ALERT_PREFS, NEWS_ALERT_KEY,
+  NewsAlertPrefs, newsEventWatchKey, normalizeNewsAlertPrefs,
 } from "@/lib/tradeNewsAlerts";
 
 type HistoryRow = { id: string; occursAt: string; actual: string | null; forecast: string | null; previous: string | null };
@@ -80,30 +79,23 @@ export function EconomicCalendarPanel() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [historyById, setHistoryById] = useState<Record<string, HistoryRow[] | "loading" | "error">>({});
 
-  // هشدار پیش از اخبار — تنظیماتش از قبل توسط کران /api/cron/economic-alerts
-  // پیاده‌سازی شده؛ اینجا فقط یک راهِ سریع برای دیدن/عوض‌کردنش، دقیقاً
-  // هم‌قاعده‌ی TradeSettings (همون کلید تنظیمات، همون normalize).
-  const [alertsOpen, setAlertsOpen] = useState(false);
+  // هشدار پیش از اخبار — طبقِ درخواستِ صریح، دیگر دکمه/پنلِ کلیِ بالای صفحه
+  // ندارد؛ کاربر خودش دونه‌به‌دونه از ستونِ «Alert»ِ همین جدول فعال می‌کند.
+  // تنظیماتِ کلی (enabled/impacts/currencies) هنوز روی سرور/کران موجودند
+  // (سازگاریِ عقب‌رو) ولی از این پنل دیگر قابلِ تغییر نیستند.
   const [alerts, setAlerts] = useState<NewsAlertPrefs>(DEFAULT_NEWS_ALERT_PREFS);
-  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("unsupported");
   useEffect(() => {
     getSetting<unknown>(NEWS_ALERT_KEY, DEFAULT_NEWS_ALERT_PREFS).then((v) => setAlerts(normalizeNewsAlertPrefs(v)));
-    setNotifPermission(getNotificationPermission());
   }, []);
-  function patchAlerts(p: Partial<NewsAlertPrefs>) {
+  // ستونِ «Alert» جدول — زنگوله‌ی هر ردیف. کلید بر اساسِ currency|title
+  // است نه idِ همین یک وقوع، تا وقوعِ بعدیِ همین شاخص هم هشدار بدهد —
+  // نگاه کن به newsEventWatchKey (رفعِ باگِ «هشدار یک‌بارمصرف»).
+  function toggleWatchEvent(e: EconomicEventDto) {
+    const key = newsEventWatchKey(e.currency, e.title);
     setAlerts((prev) => {
-      const next = normalizeNewsAlertPrefs({ ...prev, ...p });
-      setSetting(NEWS_ALERT_KEY, next);
-      return next;
-    });
-  }
-  // ستونِ «Alert» جدول — زنگوله‌ی هر ردیف، مستقل از تنظیماتِ کلیِ بالا
-  // (نگاه کن به lib/tradeNewsAlerts.ts و کرانِ economic-alerts).
-  function toggleWatchEvent(id: string) {
-    setAlerts((prev) => {
-      const has = prev.watchedEventIds.includes(id);
-      const watchedEventIds = has ? prev.watchedEventIds.filter((x) => x !== id) : [...prev.watchedEventIds, id];
-      const next = normalizeNewsAlertPrefs({ ...prev, watchedEventIds });
+      const has = prev.watchedEventKeys.includes(key);
+      const watchedEventKeys = has ? prev.watchedEventKeys.filter((x) => x !== key) : [...prev.watchedEventKeys, key];
+      const next = normalizeNewsAlertPrefs({ ...prev, watchedEventKeys });
       setSetting(NEWS_ALERT_KEY, next);
       return next;
     });
@@ -189,13 +181,6 @@ export function EconomicCalendarPanel() {
           <Filter size={13} /> فیلتر
           {(currencies.length || impacts.length || otherCurrencies) ? ` (${faNum(currencies.length + impacts.length + (otherCurrencies ? 1 : 0))})` : ""}
         </button>
-        <button
-          type="button"
-          className={`trade-ghost-btn${alerts.enabled ? " active" : ""}`}
-          onClick={() => setAlertsOpen((v) => !v)}
-        >
-          <BellRing size={13} /> هشدار
-        </button>
         {(currencies.length > 0 || impacts.length > 0 || otherCurrencies) && (
           <button type="button" className="trade-ghost-btn" onClick={() => { setCurrencies([]); setImpacts([]); setOtherCurrencies(false); }}>
             پاک‌کردن فیلترها
@@ -240,76 +225,6 @@ export function EconomicCalendarPanel() {
               سایر ارزها
             </button>
           </div>
-        </div>
-      )}
-
-      {alertsOpen && (
-        <div className="trade-surface trade-cal-filters trade-cal-alerts">
-          <div className="item-line" style={{ marginBottom: 10 }}>
-            قبل از انتشار رویدادها نوتیفیکیشن بگیر — نیاز به اجازه‌ی نوتیفیکیشن مرورگر دارد (زنگوله‌ی بالای صفحه).
-            {notifPermission !== "granted" && (
-              <b style={{ color: "#E0A452", display: "block", marginTop: 4 }}>
-                هنوز اجازه‌ی نوتیفیکیشن مرورگر رو ندادی.
-              </b>
-            )}
-          </div>
-          <button
-            type="button"
-            className={`trade-toggle${alerts.enabled ? " on" : ""}`}
-            onClick={() => patchAlerts({ enabled: !alerts.enabled })}
-          >
-            <span className="trade-toggle-knob" />
-            <span className="trade-toggle-label">{alerts.enabled ? "روشن" : "خاموش"}</span>
-          </button>
-
-          {alerts.enabled && (
-            <>
-              <label className="exercise-form-label">چند دقیقه قبل</label>
-              <SegmentedTabs
-                active={String(alerts.minutesBefore)}
-                onChange={(v) => patchAlerts({ minutesBefore: Number(v) })}
-                options={MINUTES_BEFORE_OPTIONS.map((m) => ({ value: String(m), label: `${m} دقیقه` }))}
-              />
-
-              <label className="exercise-form-label">برای کدام سطح تأثیر</label>
-              <div className="trade-choice-grid">
-                {IMPACT_ORDER.map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`trade-choice${alerts.impacts.includes(i) ? " active" : ""}`}
-                    onClick={() => patchAlerts({
-                      impacts: alerts.impacts.includes(i)
-                        ? alerts.impacts.filter((x) => x !== i)
-                        : [...alerts.impacts, i as EconomicImpact],
-                    })}
-                  >
-                    {IMPACT_LABELS[i]}
-                  </button>
-                ))}
-              </div>
-
-              <label className="exercise-form-label">
-                ارزها {alerts.currencies.length ? "" : "(خالی یعنی همه)"}
-              </label>
-              <div className="trade-choice-grid">
-                {CALENDAR_CURRENCIES.map((c) => (
-                  <button
-                    key={c.code}
-                    type="button"
-                    className={`trade-choice${alerts.currencies.includes(c.code) ? " active" : ""}`}
-                    onClick={() => patchAlerts({
-                      currencies: alerts.currencies.includes(c.code)
-                        ? alerts.currencies.filter((x) => x !== c.code)
-                        : [...alerts.currencies, c.code],
-                    })}
-                  >
-                    {c.flag} {c.code}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
         </div>
       )}
 
@@ -412,7 +327,7 @@ export function EconomicCalendarPanel() {
                 const occursAt = new Date(e.occursAt);
                 const isPast = occursAt.getTime() < now.getTime();
                 const cmp = compareActualToForecast(e.actual, e.forecast);
-                const watched = alerts.watchedEventIds.includes(e.id);
+                const watched = alerts.watchedEventKeys.includes(newsEventWatchKey(e.currency, e.title));
                 return (
                   <Fragment key={e.id}>
                     <div
@@ -433,7 +348,7 @@ export function EconomicCalendarPanel() {
                         <button
                           type="button"
                           className={`trade-cal-icon-btn${watched ? " active" : ""}`}
-                          onClick={(ev) => { ev.stopPropagation(); toggleWatchEvent(e.id); }}
+                          onClick={(ev) => { ev.stopPropagation(); toggleWatchEvent(e); }}
                           aria-label={watched ? "حذفِ هشدار برای این رویداد" : "هشدار برای این رویداد"}
                           title={watched ? "هشدار روشن است" : "هشدار بده"}
                         >
@@ -541,7 +456,15 @@ function EconMonthPicker({ date, onPick, onClose }: { date: Date; onPick: (d: Da
     );
   }
 
-  return (
+  // طبقِ ریشه‌یابیِ باگِ «تاریخچه کار نمی‌کند»: .trade-cal-box (والدِ این
+  // کامپوننت) خودش backdrop-filter دارد، و طبقِ اسپکِ CSS Filter Effects
+  // هر عنصرِ دارایِ filter/backdrop-filter برای فرزندهایِ position:fixed
+  // یک containing-block جدید می‌سازد — یعنی inset:0 این بک‌دراپ به‌جایِ
+  // کلِ ویوپورت، فقط نسبت‌به همان باکسِ کوچکِ تقویم حساب می‌شد و پاپ‌آپ
+  // یا اصلا دیده نمی‌شد یا جایِ درستی نمی‌نشست. createPortal با بردنِ این
+  // عنصر به body، مستقیم زیرِ containing-blockِ ویوپورت می‌رود — دقیقاً
+  // همان ترفندِ TradeKebabMenu.
+  return createPortal(
     <>
       <div className="trade-econ-monthpicker-backdrop" onClick={onClose} />
       <div className="trade-surface trade-econ-monthpicker ltr-inline">
@@ -555,6 +478,7 @@ function EconMonthPicker({ date, onPick, onClose }: { date: Date; onPick: (d: Da
           {cells}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

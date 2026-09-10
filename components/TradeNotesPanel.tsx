@@ -87,95 +87,95 @@ export function TradeNotesPanel({
 
   return (
     <div>
-      <div className="trade-list-head" style={{ marginTop: 6 }}>
-        <div className="trade-search" style={{ flex: 1 }}>
-          <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
-          <button type="button" className="trade-search-btn" onClick={() => load()} aria-label="جست‌وجو"><Search size={14} /></button>
-        </div>
-      </div>
-
-      {!!tags.length && (
-        <div className="trade-tag-row" style={{ marginTop: 10 }}>
-          {tags.map((t) => {
-            const active = filterTags.includes(t.id);
-            return (
-              <button
-                key={t.id}
-                type="button"
-                className={`trade-tag-chip${active ? " active" : ""}`}
-                style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
-                onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
-              >
-                <span className="trade-tag-dot" style={{ background: t.color }} />
-                {t.name}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {actionError && <div className="trade-form-error">{actionError}</div>}
 
-      {loading && <PanelSkeleton />}
-      {!loading && !notes.length && (
-        <div className="trade-empty-state">
-          <StickyNote size={32} />
-          <p>{query || filterTags.length ? "یادداشتی با این فیلتر پیدا نشد" : "هنوز یادداشتی اضافه نشده"}</p>
-        </div>
-      )}
-
-      {/* طبقِ درخواستِ صریح: یادداشت‌ها هم داخلِ یک باکسِ صفحه‌بزرگ بنشینند،
-          نه فقط یک گریدِ شناور روی بک‌گراندِ اصلی — هم‌الگویِ چک‌لیست‌ها. */}
-      {!!notes.length && (
+      {/* طبقِ درخواستِ صریح: جست‌وجو دیگر باکسِ جدا از لیستِ یادداشت‌ها نیست —
+          هر دو داخلِ یک باکسِ واحد، هم‌الگویِ چک‌لیست. */}
       <div className="trade-surface trade-page-box trade-note-box">
-      <div className="trade-note-grid">
-        {notes.map((n, i) => (
-          <motion.div
-            key={n.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.04, ease: [0.22, 1, 0.36, 1] }}
-            className="trade-surface trade-note-card"
-            onClick={() => setViewing(n)}
-          >
-            <span className="trade-account-stripe" style={{ background: n.color }} />
-            {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
-                (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راستِ
-                عنوان است و حذف/سنجاق را می‌دهد. */}
-            <div className="trade-note-head">
-              <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
-                <TradeKebabMenu
-                  label={`گزینه‌های ${n.title}`}
-                  actions={[
-                    { label: "ویرایش", icon: <Pencil size={14} />, onClick: () => setEditing(n) },
-                    {
-                      label: n.pinned ? "برداشتن سنجاق" : "سنجاق کردن",
-                      icon: n.pinned ? <PinOff size={14} /> : <Pin size={14} />,
-                      onClick: () => togglePin(n),
-                      disabled: pendingKey === `pin:${n.id}`,
-                    },
-                    { label: "حذف یادداشت", icon: <Trash2 size={14} />, onClick: () => remove(n.id), danger: true },
-                  ]}
-                />
+        <div className="trade-note-search-row">
+          <div className="trade-search trade-note-search">
+            <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
+            <button type="button" className="trade-search-btn" onClick={() => load()} aria-label="جست‌وجو"><Search size={14} /></button>
+          </div>
+
+          {!!tags.length && (
+            <div className="trade-tag-row">
+              {tags.map((t) => {
+                const active = filterTags.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`trade-tag-chip${active ? " active" : ""}`}
+                    style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
+                    onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
+                  >
+                    <span className="trade-tag-dot" style={{ background: t.color }} />
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {loading && <PanelSkeleton />}
+        {!loading && !notes.length && (
+          <div className="trade-empty-state">
+            <StickyNote size={32} />
+            <p>{query || filterTags.length ? "یادداشتی با این فیلتر پیدا نشد" : "هنوز یادداشتی اضافه نشده"}</p>
+          </div>
+        )}
+
+        {!!notes.length && (
+        <div className="trade-note-grid">
+          {notes.map((n, i) => (
+            <motion.div
+              key={n.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.04, ease: [0.22, 1, 0.36, 1] }}
+              className="trade-surface trade-note-card"
+              onClick={() => setViewing(n)}
+            >
+              <span className="trade-account-stripe" style={{ background: n.color }} />
+              {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
+                  (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راستِ
+                  عنوان است و حذف/سنجاق را می‌دهد. */}
+              <div className="trade-note-head">
+                <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
+                  <TradeKebabMenu
+                    label={`گزینه‌های ${n.title}`}
+                    actions={[
+                      { label: "ویرایش", icon: <Pencil size={14} />, onClick: () => setEditing(n) },
+                      {
+                        label: n.pinned ? "برداشتن سنجاق" : "سنجاق کردن",
+                        icon: n.pinned ? <PinOff size={14} /> : <Pin size={14} />,
+                        onClick: () => togglePin(n),
+                        disabled: pendingKey === `pin:${n.id}`,
+                      },
+                      { label: "حذف یادداشت", icon: <Trash2 size={14} />, onClick: () => remove(n.id), danger: true },
+                    ]}
+                  />
+                </div>
+                <span className="trade-note-title">{n.title}</span>
+                {n.pinned && <Pin size={12} className="trade-note-pinned-mark" />}
               </div>
-              <span className="trade-note-title">{n.title}</span>
-              {n.pinned && <Pin size={12} className="trade-note-pinned-mark" />}
-            </div>
-            <div className="trade-note-foot">
-              <span>{formatTradeDateTime(n.updatedAt, calSystem)}</span>
-              {!!n.tags.length && (
-                <span className="trade-tag-row">
-                  {n.tags.map((t) => (
-                    <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>{t.name}</span>
-                  ))}
-                </span>
-              )}
-            </div>
-          </motion.div>
-        ))}
+              <div className="trade-note-foot">
+                <span>{formatTradeDateTime(n.updatedAt, calSystem)}</span>
+                {!!n.tags.length && (
+                  <span className="trade-tag-row">
+                    {n.tags.map((t) => (
+                      <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>{t.name}</span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        )}
       </div>
-      </div>
-      )}
 
       {viewing && !editing && (
         <NoteViewer note={viewing} onClose={() => setViewing(null)} />

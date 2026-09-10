@@ -129,6 +129,20 @@ export default function WeeklyPage() {
   // وضعیت تیک‌خوردن واقعی روزهای همین هفته — برای دایره‌های تایم‌لاین
   // «برنامه هفتگی» (که خود isPast زمان‌محوره، نه انجام‌شده‌بودن واقعی).
   const [weekDaily, setWeekDaily] = useState<Record<string, DailyRecord>>({});
+  // روزهایی که کاربر برنامه‌ی تمرینی برایشان دارد (از GET
+  // /api/exercise/schedule) — طبقِ درخواستِ صریح، اگر امروز جزوِ این روزها
+  // باشد، یک ردیفِ «برنامه تمرینی امروز» بدونِ ساعت به «برنامه‌های امروز»
+  // اضافه می‌شود. null یعنی هنوز نمی‌دانیم/پلنی نیست — هیچ ردیفی اضافه نمی‌شود.
+  const [gymDays, setGymDays] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let alive = true;
+    fetch("/api/exercise/schedule")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive) setGymDays(Array.isArray(d?.gymDays) ? d.gymDays : []); })
+      .catch(() => { if (alive) setGymDays([]); });
+    return () => { alive = false; };
+  }, [status]);
 
   const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
 
@@ -230,8 +244,10 @@ export default function WeeklyPage() {
     return out;
   }, [customOcc]);
 
+  const EXERCISE_TASK_ID = "exercise-plan";
+
   const dashTasks: DashTaskItem[] = useMemo(() => {
-    return tasksForDate(selectedDate, opts)
+    const list: DashTaskItem[] = tasksForDate(selectedDate, opts)
       .map((t) => {
         const occ = customOcc.find((c) => c.id === t.id);
         return {
@@ -248,7 +264,44 @@ export default function WeeklyPage() {
       })
       .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
       .filter((t) => programFilter === null || programFilter.has(t.name));
-  }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter]);
+
+    // برنامه‌ی تمرینی — بدونِ ساعتِ مشخص، طبقِ درخواستِ صریح. اسمِ روزِ
+    // انتخاب‌شده باید دقیقاً همان لیبلِ فارسی‌ای باشد که در gymDays ذخیره
+    // شده (هم‌منبع با FA_WEEKDAY/WEEK_ORDER، نه یک رشته‌ی جدا).
+    const dayName = WEEK_ORDER.find((o) => o.jsDay === selectedDate.getDay())?.name;
+    if (dayName && gymDays?.includes(dayName)) {
+      list.push({
+        id: EXERCISE_TASK_ID,
+        name: "برنامه تمرینی امروز",
+        time: "",
+        importance: undefined,
+        tag: undefined,
+        done: !!selectedDaily?.tasks[EXERCISE_TASK_ID],
+        isPast: false,
+        dayPast: isDayPast(selectedIso),
+        notStarted: false,
+        exercise: true,
+      });
+    }
+
+    return list;
+  }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter, gymDays]);
+
+  // شروعِ تمرین: هم همین‌جا (روتین من) تیک می‌خورد هم کاربر به صفحه‌ی
+  // بدنسازی می‌رود تا واقعاً برنامه را ببیند. تپ‌استرایک/دابل‌کلیکِ خودِ
+  // دکمه سمتِ DashTaskRow گارد شده (starting)؛ اینجا هم به‌جای toggle
+  // (که ممکن است دوباره خاموشش کند) صریحاً true می‌نویسیم.
+  async function startExercise(id: string) {
+    const current = selectedDaily ?? { tasks: {}, wake: null };
+    if (current.tasks[id]) { router.push("/exercise?tab=exercise"); return; }
+    const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: true } };
+    setSelectedDaily(next);
+    setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
+    await setDaily(selectedIso, next);
+    getTodayStats().then(setTodayStats);
+    setStatsRefreshKey((k) => k + 1);
+    router.push("/exercise?tab=exercise");
+  }
 
   // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — برخلاف کلیک روی
   // خود نوار روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
@@ -287,12 +340,23 @@ export default function WeeklyPage() {
 
   // ویرایش/حذف از منوی سه‌نقطه‌ی «برنامه‌های امروز» — روی همون occurrence ی
   // که برای selectedIso نمایش داده شده، نه لزوما «امروز واقعی».
+  //
+  // باگِ واقعیِ «انتقال به روز دیگر کار نمی‌کند»: اینجا custom همیشه true
+  // فرستاده می‌شد، صرف‌نظر از اینکه برنامه واقعاً یک occurrence سفارشی
+  // بود یا یکی از برنامه‌های پیش‌فرضِ داخلی. MoveOccurrenceModal دقیقاً
+  // بر همین فیلد تصمیم می‌گیرد که رکوردِ قبلی را از کجا حذف کند (نگاه کن
+  // به occ.custom در lib همان کامپوننت): اگر custom اشتباهاً true باشد
+  // ولی occurrence اصلاً توی customOccurrences نباشد، حذفِ رکوردِ قبلی
+  // هیچ اثری نمی‌کند — نتیجه این بود که برنامه‌ی تازه توی روزِ مقصد
+  // اضافه می‌شد ولی نسخه‌ی قبلی هم سرِ جایش می‌ماند (به چشمِ کاربر یعنی
+  // «کاری نکرد»، چون نتیجه دقیقاً چیزی نبود که انتظار داشت).
   function editTaskFromDash(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (!task) return;
     const jsDay = selectedDate.getDay();
     const dayName = WEEK_ORDER.find((o) => o.jsDay === jsDay)?.name || "";
-    setEditTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance, tag: task.tag } });
+    const isCustom = customOcc.some((c) => c.id === id);
+    setEditTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: isCustom, importance: task.importance, tag: task.tag } });
   }
 
   function moveTaskFromDash(id: string) {
@@ -300,7 +364,8 @@ export default function WeeklyPage() {
     if (!task || task.isPast) return;
     const jsDay = selectedDate.getDay();
     const dayName = WEEK_ORDER.find((o) => o.jsDay === jsDay)?.name || "";
-    setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: true, importance: task.importance, tag: task.tag } });
+    const isCustom = customOcc.some((c) => c.id === id);
+    setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: isCustom, importance: task.importance, tag: task.tag } });
   }
 
   async function deleteTaskCompletely(id: string) {
@@ -376,6 +441,7 @@ export default function WeeklyPage() {
                 onEditTask={editTaskFromDash}
                 onDeleteTask={deleteTaskCompletely}
                 onMoveTask={moveTaskFromDash}
+                onStartExercise={startExercise}
                 delay={0.05}
               />
             )}
