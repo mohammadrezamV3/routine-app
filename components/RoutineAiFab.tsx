@@ -306,25 +306,23 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   }}
                   disabled={sending}
                 />
-                {/* یک دکمه، دو کار: تا وقتی چیزی ننوشته‌ای میکروفون است و به
-                    محضِ تایپ‌کردن به ارسال تبدیل می‌شود — دو دکمه‌ی کنارِ هم
-                    که همیشه یکی‌شان بی‌مصرف است، فضای نوار را می‌خورد. */}
-                {hasText ? (
-                  <button type="submit" className="routine-ai-action" disabled={sending} aria-label="ارسال">
-                    <Send size={16} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className={`routine-ai-action${listening ? " is-recording" : ""}`}
-                    onClick={toggleVoice}
-                    disabled={sending}
-                    aria-label={listening ? "پایان ضبط" : "ضبط صدا"}
-                    title={listening ? "پایان ضبط و ارسال" : "با صدا بگو"}
-                  >
-                    {listening ? <Square size={14} /> : <Mic size={16} />}
-                  </button>
-                )}
+                {/* یک دکمه، سه حالت: میکروفون → ضبط → ارسال.
+                    عمدا *یک* عنصر است و آیکون‌ها داخلش عوض می‌شوند، نه دو
+                    دکمه‌ی جدا که شرطی مانت/آنمانت شوند — فقط با ماندنِ خودِ
+                    عنصر می‌شود بینِ حالت‌ها انیمیشن داد؛ عنصری که آنمانت
+                    می‌شود چیزی برای ترنزیشن ندارد. */}
+                <button
+                  type="button"
+                  className={`routine-ai-action${hasText ? " is-send" : ""}${listening ? " is-recording" : ""}`}
+                  onClick={() => (hasText ? send(input) : toggleVoice())}
+                  disabled={sending}
+                  aria-label={hasText ? "ارسال" : listening ? "پایان ضبط" : "ضبط صدا"}
+                  title={hasText ? "ارسال" : listening ? "پایان ضبط و ارسال" : "با صدا بگو"}
+                >
+                  <span className="routine-ai-action-icon" aria-hidden="true"><Mic size={17} /></span>
+                  <span className="routine-ai-action-icon" aria-hidden="true"><Square size={13} /></span>
+                  <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} /></span>
+                </button>
               </form>
             )}
           </div>
