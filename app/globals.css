@@ -100,7 +100,7 @@
 
   /* minimal scrollbars for scrollable panels — dark theme only, a soft elegant black */
   .nav-drawer-glass, .wsearch-newform, .wsearch-list, .wsearch-panel, .thin-scroll{
-    scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent;
+    scrollbar-width:thin; scrollbar-color:#2B2F33 transparent;
     /* بدون این، وقتی محتوا دقیقا دور ارتفاع maxHeight نوسان می‌کنه (مثلا
        با تغییر نوع یه المنت داخلی یک ردیف)، اسکرول‌بار یه لحظه ظاهر/محو
        می‌شه و کل عرض محتوا رو تکون می‌ده — این فضا رو همیشه رزرو می‌کنیم. */
@@ -108,7 +108,7 @@
   }
   .nav-drawer-glass::-webkit-scrollbar, .wsearch-newform::-webkit-scrollbar,
   .wsearch-list::-webkit-scrollbar, .wsearch-panel::-webkit-scrollbar, .thin-scroll::-webkit-scrollbar{
-    width:5px; height:5px;
+    width:4px; height:4px;
   }
   .thin-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
   .nav-drawer-glass::-webkit-scrollbar-track, .wsearch-newform::-webkit-scrollbar-track,
@@ -117,11 +117,11 @@
   }
   .nav-drawer-glass::-webkit-scrollbar-thumb, .wsearch-newform::-webkit-scrollbar-thumb,
   .wsearch-list::-webkit-scrollbar-thumb, .wsearch-panel::-webkit-scrollbar-thumb, .thin-scroll::-webkit-scrollbar-thumb{
-    background:rgba(255,255,255,.14); border-radius:10px;
+    background:#2B2F33; border-radius:10px;
   }
   .nav-drawer-glass::-webkit-scrollbar-thumb:hover, .wsearch-newform::-webkit-scrollbar-thumb:hover,
   .wsearch-list::-webkit-scrollbar-thumb:hover, .wsearch-panel::-webkit-scrollbar-thumb:hover, .thin-scroll::-webkit-scrollbar-thumb:hover{
-    background:rgba(255,255,255,.24);
+    background:#3A4045;
   }
   body[data-theme="light"] .nav-drawer-glass, body[data-theme="light"] .wsearch-newform,
   body[data-theme="light"] .wsearch-list, body[data-theme="light"] .wsearch-panel, body[data-theme="light"] .thin-scroll{
@@ -141,15 +141,34 @@
      چشم‌آزار می‌شد؛ با scrollbar-color/-webkit-scrollbar تیره‌ش می‌کنیم.
      تم مستقیم از data-theme روی خود html خونده می‌شه (lib/themeColor.ts) —
      دلیل کنار گذاشتن :has() پایین‌تر، کنار قاعده‌ی background، توضیح داده شده. */
-  html{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) #000000; }
-  html::-webkit-scrollbar{ width:10px; }
+  /* اسکرول‌بارِ اصلیِ صفحه.
+     ────────────────────────────────────────────────────────────────────
+     جای اسکرول‌بار: صفحه `dir="rtl"` است و مرورگر در RTL نوارِ عمودی را
+     سمتِ *چپ* می‌گذارد. جهتِ خودِ <html> به ltr برمی‌گردد تا نوار سرِ جای
+     همیشگی‌اش (راست) بنشیند، و <body> دوباره rtl می‌شود تا هیچ‌چیزِ دیگری
+     در چیدمان عوض نشود — تمامِ محتوا داخلِ body است.
+     رنگ: تیغه هم مثل شیارش سیاه است، فقط یک پله روشن‌تر تا دیده شود. */
+  html{ direction:ltr; scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
+  body{ direction:rtl; }
+  html::-webkit-scrollbar{ width:6px; }
   html::-webkit-scrollbar-track{ background:#000000; }
-  html::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); border-radius:10px; }
-  html::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.32); }
+  html::-webkit-scrollbar-thumb{ background:#2B2F33; border-radius:10px; }
+  html::-webkit-scrollbar-thumb:hover{ background:#3A4045; }
   html[data-theme="light"]{ scrollbar-color:rgba(0,0,0,.22) #F3E9D8; }
   html[data-theme="light"]::-webkit-scrollbar-track{ background:#F3E9D8; }
   html[data-theme="light"]::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.22); }
   html[data-theme="light"]::-webkit-scrollbar-thumb:hover{ background:rgba(0,0,0,.32); }
+
+  /* صفحه فقط عمودی حرکت می‌کند.
+     بدونِ این، گرفتن و کشیدنِ صفحه به چپ/راست کلِ لِی‌اوت را جابه‌جا می‌کرد
+     (اورراسکرولِ افقیِ لاستیکی + هر عنصری که یک پیکسل از عرضِ دید بزند).
+     `clip` به‌جای `hidden` چون یک کانتینرِ اسکرولِ تازه نمی‌سازد؛ `hidden`
+     قبلش برای مرورگرهایی است که `clip` را نمی‌فهمند. */
+  html, body{
+    overflow-x:hidden;
+    overflow-x:clip;
+    overscroll-behavior-x:none;
+  }
   *{
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
     -webkit-touch-callout:none;
@@ -6262,16 +6281,25 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 
 .routine-ai-title{ display:flex; align-items:center; gap:8px; }
 
-/* شیشه‌ی مات مثلِ بقیه‌ی اپ: رنگِ توپرِ `--surface-2` زیر، بلور رویش. رنگِ
-   توپر لازم است چون `data-perf="low"` روی دستگاه‌های لمسی بلور را برمی‌دارد
-   و یک شیشه‌ی صرفا شفاف آن‌جا نامرئی می‌شد (همان باگِ v1.122.0). */
+/* دقیقا همان شیشه‌ی «برنامه هفتگی» (`.weekly-glass`): شیشه‌ی ۲٪ روی بلورِ
+   ۲۸ پیکسلی، با همان لبه و همان سایه و گوشه‌ی ۲۲ پیکسلی.
+   ────────────────────────────────────────────────────────────────────
+   ولی با یک تفاوتِ لازم: `data-perf="low"` روی دستگاه‌های لمسی بلور را
+   برمی‌دارد و یک شیشه‌ی ۲٪ آن‌جا عملا نامرئی می‌شود (همان باگِ v1.122.0).
+   برای یک کارتِ معمولی قابلِ تحمل بود؛ برای یک پاپ‌آپ نه. پس فقط در همان
+   حالت رنگِ توپر جایش را می‌گیرد. */
 .routine-ai-panel{
   display:flex; flex-direction:column;
   max-height:min(78vh, 620px);
-  background:var(--surface-2);
-  backdrop-filter:blur(13px) saturate(180%);
-  -webkit-backdrop-filter:blur(13px) saturate(180%);
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--line);
+  border-radius:22px;
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:0 20px 50px rgba(0,0,0,.20);
 }
+body[data-theme="light"] .routine-ai-panel{ background:rgba(255,255,255,.16); }
+html[data-perf="low"] .routine-ai-panel{ background:var(--surface-2); }
 
 .routine-ai-list{
   flex:1 1 auto; min-height:140px; overflow-y:auto;
