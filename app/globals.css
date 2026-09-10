@@ -6260,10 +6260,8 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    `background:none` کافی نبود — بلورِ پس‌زمینه و سایه می‌ماندند و پشتِ گو یک
    لکه‌ی تیره‌ی مربعی می‌ساختند. هر سه باید صریح خنثی شوند. */
 .routine-ai-fab{
-  /* طبقِ درخواستِ صریح: گوشه‌ی پایین-راست، هم‌قاعده‌ی اکثرِ ویجت‌های
-     دستیار/چتِ سایت‌های دیگر (Intercom، ChatGPT، ...) که مستقل از
-     چپ‌چین/راست‌چین بودنِ صفحه همیشه همین گوشه می‌نشینند. */
-  position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); right:28px;
+  /* طبقِ درخواستِ صریح: گوشه‌ی پایین-چپ. */
+  position:fixed; bottom:calc(24px + env(safe-area-inset-bottom)); left:28px;
   display:flex; align-items:center; justify-content:center;
   background:none; border:none; padding:0; border-radius:50%;
   box-shadow:none;
@@ -6283,7 +6281,7 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
 /* روی موبایل نوارِ ناوبریِ پایین هست؛ گو باید بالاترش بنشیند وگرنه
    روی دکمه‌های نوار می‌افتد. */
 @media (max-width:1023px){
-  .routine-ai-fab{ bottom:calc(70px + env(safe-area-inset-bottom)); right:26px; }
+  .routine-ai-fab{ bottom:calc(78px + env(safe-area-inset-bottom)); left:26px; }
 }
 
 .routine-ai-title{ display:flex; align-items:center; gap:8px; }
@@ -6614,6 +6612,17 @@ html[data-perf="low"] .routine-ai-action:not(.is-send):not(.is-recording){
           animation: rotate var(--animation-duration) linear infinite;
         }
 
+        /* عمداً بدونِ backdrop-filter (نسخه‌ی اصلیِ SmoothUI این‌جا
+           `backdrop-filter: blur() contrast()` داشت). آن backdrop-filter
+           دقیقاً همان مکانیزمی‌ست که «پشتِ» این المان را می‌خواند — روی گویی
+           که `position:fixed` است، آن «پشت» صفحه‌ای‌ست که زیرش اسکرول
+           می‌شود، نه خودِ مشِ گو. `isolation:isolate` روی `.siri-orb-clip`
+           قرار بود همین را مهار کند، ولی پشتیبانیِ backdrop-root از
+           isolation بینِ مرورگرها یکسان نیست (دقیقاً هم‌خانواده‌ی باگِ
+           Safari بالا) و نتیجه یک گویِ نیمه‌شفاف بود که صفحه‌ی پشتش
+           دیده می‌شود — نه بدونِ اضافه‌کردنِ بک‌گراند به گو، بلکه با حذفِ
+           این خط گو کاملاً کدر می‌ماند، چون دیگر چیزی از پشتِ خودش
+           نمی‌خواند و فقط رنگ‌های خودش (مشِ ::before) را overlay می‌کند. */
         .siri-orb::after {
           background-image: radial-gradient(
             circle at center,
@@ -6621,8 +6630,6 @@ html[data-perf="low"] .routine-ai-action:not(.is-send):not(.is-recording){
             transparent var(--dot-size)
           );
           background-size: calc(var(--dot-size) * 2) calc(var(--dot-size) * 2);
-          backdrop-filter: blur(calc(var(--blur-amount) * 2))
-            contrast(calc(var(--contrast-amount) * 2));
           mix-blend-mode: overlay;
         }
 
