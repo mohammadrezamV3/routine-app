@@ -6271,7 +6271,7 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
    و یک شیشه‌ی صرفا شفاف آن‌جا نامرئی می‌شد (همان باگِ v1.122.0). */
 .routine-ai-panel{
   display:flex; flex-direction:column;
-  max-height:min(78vh, 620px);
+  max-height:min(88vh, 760px);
   background:var(--surface-2);
   backdrop-filter:blur(13px) saturate(180%);
   -webkit-backdrop-filter:blur(13px) saturate(180%);
@@ -6305,9 +6305,13 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
    این صفحه RTL است، همان چیدمان آینه می‌شد و جای دو طرف عوض. این‌جا صریح
    برمی‌گردانَد. اسپسیفیسیتی دو کلاسه است تا از کلاس‌های تک‌کلاسه‌ی Tailwind
    روی خودِ عنصر بالاتر بماند، مستقل از ترتیبِ فایل. */
-.routine-ai-list .routine-ai-row-user{ flex-direction:row; }
+/* align-items پیش‌فرضِ flex یعنی stretch — چون ردیف شاملِ آواتارِ گو
+   (فقط پیامِ دستیار) کنارِ یک ستونِ متغیرارتفاع (حباب + ردیفِ کپی/تاریخ)
+   است، stretch باعث می‌شد جعبه‌ی آواتار به‌اندازه‌ی کلِ ردیف کش بیاید و گو
+   دیگر دقیقاً کنارِ اولین خطِ حباب ننشیند، انگار جابه‌جا/معلق است. */
+.routine-ai-list .routine-ai-row-user{ flex-direction:row; align-items:flex-start; }
 .routine-ai-list .routine-ai-row-user > *:last-child{ align-items:flex-start; }
-.routine-ai-list .routine-ai-row-bot{ flex-direction:row-reverse; }
+.routine-ai-list .routine-ai-row-bot{ flex-direction:row-reverse; align-items:flex-start; }
 .routine-ai-list .routine-ai-row-bot > *:last-child{ align-items:flex-end; }
 
 /* گزینه‌ها زیرِ پیامِ دستیار می‌آیند، پس آن‌ها هم باید سمتِ چپ بنشینند */
@@ -6351,15 +6355,24 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
 .routine-ai-action{
   flex:0 0 auto; width:42px; height:42px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  padding:0; color:var(--text);
+  padding:0; color:var(--accent);
   background:rgba(var(--bg-rgb),.42);
   backdrop-filter:blur(10px) saturate(160%);
   -webkit-backdrop-filter:blur(10px) saturate(160%);
-  border:1px solid var(--surface-line);
+  border:1px solid rgba(var(--accent-rgb),.35);
   transition:color .15s ease, border-color .15s ease, background .15s ease;
 }
-@media (hover:hover){ .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); } }
+@media (hover:hover){ .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); background:var(--accent-dim); } }
 .routine-ai-action:disabled{ opacity:.45; }
+/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش این
+   دکمه توی تمِ روشن بک‌گراند/بوردرِ عمومیِ شیشه‌ای می‌گرفت به‌جایِ
+   بک‌گراند/بوردرِ اکسنت‌رنگِ خودش. `:not(.is-recording)` تا حالتِ قرمزِ
+   ضبط را دست‌نخورده بگذارد — وگرنه همین override با اسپسیفیسیتیِ بالاتر
+   رنگِ قرمز را هم در تمِ روشن می‌شست. */
+body[data-theme="light"] .routine-ai-action:not(.is-recording),
+body:not([data-theme="light"]) .routine-ai-action:not(.is-recording){
+  background:rgba(var(--bg-rgb),.42); border-color:rgba(var(--accent-rgb),.35); box-shadow:none;
+}
 .routine-ai-action.is-recording{
   background:#E05252; border-color:#E05252; color:#fff;
   animation:routineMicPulse 1.4s ease-in-out infinite;
