@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   applyOps, parseClock, findConflict, suggestFreeSlot, describeSchedule, findFreeSlot,
-  MAX_OPS_PER_MESSAGE, MAX_OCCURRENCES, DEFAULT_AWAKE,
+  MAX_OPS_PER_MESSAGE, MAX_OCCURRENCES, DEFAULT_AWAKE, MAX_REPEATS_PER_OP,
 } from "@/lib/routineAssistant";
 
 const TODAY = "2026-09-05";
@@ -100,6 +100,66 @@ describe("applyOps — افزودن", () => {
     const many = Array.from({ length: MAX_OCCURRENCES }, (_, i) => occ(`m${i}`, `م${i}`, 4, "۰۰:۰۰"));
     const r = applyOps(many, [], [{ op: "add", name: "اضافه", days: [2], start: "۱۰:۰۰" }], TODAY);
     expect(r.problems[0]).toContain("سقف");
+  });
+});
+
+describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () => {
+  it("با فاصله‌ی مشخص چند بار در یک روز اضافه می‌کند، تا آخرِ بیداری", () => {
+    const r = applyOps(BASE, [], [
+      { op: "add", name: "ترید", days: [4], start: "۰۸:۰۰", end: "۰۸:۰۵", repeatEveryMin: 60 },
+    ], TODAY);
+    const created = r.occurrences.filter((o) => o.name === "ترید");
+    expect(created).toHaveLength(15); // ۰۸:۰۰ تا ۲۲:۰۰ هر ساعت (پیش‌فرضِ DEFAULT_AWAKE)
+    expect(created[0].time).toBe("۰۸:۰۰ – ۰۸:۰۵");
+    expect(created[created.length - 1].time).toBe("۲۲:۰۰ – ۲۲:۰۵");
+    expect(r.applied[0]).toContain("۱۵ بار اضافه شد");
+    expect(r.problems).toHaveLength(0);
+  });
+
+  it("بدونِ ساعتِ شروع از اولِ بیداری شروع می‌کند و طولِ پیش‌فرض ۵ دقیقه می‌گیرد", () => {
+    const r = applyOps(BASE, [], [
+      { op: "add", name: "استراحتِ چشم", days: [4], repeatEveryMin: 120 },
+    ], TODAY);
+    const created = r.occurrences.filter((o) => o.name === "استراحتِ چشم");
+    expect(created[0].time).toBe("۰۸:۰۰ – ۰۸:۰۵");
+  });
+
+  it("repeatUntil را به‌عنوانِ آخرین ساعتِ شروع رعایت می‌کند", () => {
+    const r = applyOps(BASE, [], [
+      { op: "add", name: "کشش", days: [4], start: "۰۸:۰۰", end: "۰۸:۱۰", repeatEveryMin: 30, repeatUntil: "۰۹:۰۰" },
+    ], TODAY);
+    const created = r.occurrences.filter((o) => o.name === "کشش");
+    expect(created.map((o) => o.time)).toEqual([
+      "۰۸:۰۰ – ۰۸:۱۰", "۰۸:۳۰ – ۰۸:۴۰", "۰۹:۰۰ – ۰۹:۱۰",
+    ]);
+  });
+
+  it("اسلاتِ تداخل‌دار را رد می‌کند، بقیه را اضافه می‌کند و در پیام می‌گوید", () => {
+    // شنبه ۰۸:۰۰–۰۹:۳۰ کلاس زبان اشغال است؛ ۰۸:۰۰ و ۰۹:۰۰ هردو داخلِ همین
+    // بازه‌اند و رد می‌شوند، فقط ۱۰:۰۰ آزاد است
+    const r = applyOps(BASE, [], [
+      { op: "add", name: "یادآوری", days: [6], start: "۰۸:۰۰", end: "۰۸:۱۰", repeatEveryMin: 60, repeatUntil: "۱۰:۰۰" },
+    ], TODAY);
+    const created = r.occurrences.filter((o) => o.name === "یادآوری");
+    expect(created).toHaveLength(1);
+    expect(created[0].time).toBe("۱۰:۰۰ – ۱۰:۱۰");
+    expect(r.applied[0]).toContain("۲ بار به‌خاطرِ تداخل");
+  });
+
+  it("بازه‌ی تکرارِ خارج از محدوده را رد می‌کند و چیزی اضافه نمی‌کند", () => {
+    const r = applyOps(BASE, [], [
+      { op: "add", name: "غلط", days: [4], start: "۰۸:۰۰", repeatEveryMin: 1 },
+    ], TODAY);
+    expect(r.occurrences.some((o) => o.name === "غلط")).toBe(false);
+    expect(r.problems[0]).toContain("بازه‌ی تکرار");
+  });
+
+  it("به سقفِ MAX_REPEATS_PER_OP احترام می‌گذارد", () => {
+    const r = applyOps([], [], [
+      { op: "add", name: "زیاد", days: [4], start: "۰۰:۰۰", end: "۰۰:۰۵", repeatEveryMin: 5, repeatUntil: "۲۳:۵۵" },
+    ], TODAY, { startMin: 0, endMin: 24 * 60 - 1 });
+    const created = r.occurrences.filter((o) => o.name === "زیاد");
+    expect(created.length).toBeLessThanOrEqual(MAX_REPEATS_PER_OP);
   });
 });
 

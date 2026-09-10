@@ -258,7 +258,14 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
         animate={{ opacity: stateMotion.glow * GLOW_MAX_OPACITY }}
         className="absolute rounded-full"
         style={{
-          background: `radial-gradient(circle at 50% 50%, ${glowColor} 0%, transparent 64%)`,
+          // `circle` بدونِ کلیدواژه‌ی سایز، پیش‌فرضِ CSS یعنی `farthest-corner`
+          // می‌گیرد — روی یک باکسِ مربعی، فاصله‌ی گوشه از قطرِ باکس بیشتر از
+          // نصفِ عرضشه، پس ایستگاهِ ۶۴٪ هنوز به لبه‌های صافِ باکس نرسیده
+          // بود کاملاً شفاف بشه؛ نتیجه یک هاله‌ی مربعیِ محو بود، نه دایره‌ی
+          // تمیز (باگِ گزارش‌شده: «بک‌گراند مربع می‌شه»). `closest-side`
+          // مرجع را نصفِ عرض/ارتفاعِ باکس می‌گیرد، پس ۶۴٪ همیشه قبل از
+          // لبه‌ها کاملاً شفاف می‌شود، روی هر چهار ضلع یکسان.
+          background: `radial-gradient(circle closest-side at 50% 50%, ${glowColor} 0%, transparent 64%)`,
           filter: `blur(calc(var(--orb-size) * ${GLOW_BLUR_RATIO}))`,
           inset: "-12%",
         }}
