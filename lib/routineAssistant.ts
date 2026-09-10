@@ -14,7 +14,7 @@
 // فقط تایپ — `lib/storage.ts` منطقِ سمتِ کلاینت (localStorage/fetch) دارد و
 // نباید داخلِ باندلِ سرور کشیده شود؛ `import type` تضمین می‌کند که نمی‌شود.
 import type { CustomOccurrence, Importance } from "./storage";
-import { timeStartMinutes, toEnDigits, WEEK_ORDER } from "./schedule";
+import { timeStartMinutes, toEnDigits, toFaDigits, WEEK_ORDER } from "./schedule";
 import { normalizeTimeToFa } from "./timeUtils";
 import { rangesOverlap } from "./conflict";
 
@@ -37,6 +37,16 @@ export const DEFAULT_DURATION_MIN = 60;
 export type AwakeWindow = { startMin: number; endMin: number };
 export const DEFAULT_AWAKE: AwakeWindow = { startMin: 8 * 60, endMin: 22 * 60 };
 
+/**
+ * تکرارِ درون‌روزی («هر یک ساعت به مدتِ ۵ دقیقه») — یک add با فاصله‌ی
+ * ثابت چند بار در همان روز تکرار می‌شود، نه یک برنامه‌ی تک.
+ */
+export const MIN_REPEAT_EVERY_MIN = 5;
+export const MAX_REPEAT_EVERY_MIN = 720;
+export const DEFAULT_REPEAT_DURATION_MIN = 5;
+/** سقفِ تعدادِ تکرار در یک op — جلوی یک repeatEveryMin خیلی کوچک را می‌گیرد */
+export const MAX_REPEATS_PER_OP = 48;
+
 export const DAY_NAME_FA: Record<number, string> = {
   6: "شنبه", 0: "یکشنبه", 1: "دوشنبه", 2: "سه‌شنبه", 3: "چهارشنبه", 4: "پنجشنبه", 5: "جمعه",
 };
@@ -55,6 +65,10 @@ export type RawOp = {
   end?: unknown;
   importance?: unknown;
   tag?: unknown;
+  /** برای add — تکرارِ درون‌روزی: هر چند دقیقه یک‌بار («هر یک ساعت») */
+  repeatEveryMin?: unknown;
+  /** برای add — آخرین ساعتِ مجاز برای شروعِ یک تکرار؛ نبودش یعنی تا آخرِ بیداری */
+  repeatUntil?: unknown;
 };
 
 export type AssistantPlan = {
@@ -303,6 +317,69 @@ export function applyOps(
 
       const importance = parseImportance(raw.importance) ?? "medium";
       const tag = typeof raw.tag === "string" && raw.tag.trim() ? raw.tag.trim().slice(0, 30) : null;
+
+      // ── تکرارِ درون‌روزی («هر یک ساعت یک‌بار به مدتِ ۵ دقیقه») ──────────
+      // یک add با فاصله‌ی ثابت چند بار در همان روز تکرار می‌شود. جدا از
+      // شاخه‌ی معمولیِ add نگه داشته شده چون منطقش (تولیدِ چند occurrence،
+      // نه یکی) کاملا فرق دارد.
+      const hasRepeatField = raw.repeatEveryMin !== undefined && raw.repeatEveryMin !== null && raw.repeatEveryMin !== "";
+      if (hasRepeatField) {
+        const everyRaw = Number(raw.repeatEveryMin);
+        if (!Number.isFinite(everyRaw) || !Number.isInteger(everyRaw) || everyRaw < MIN_REPEAT_EVERY_MIN || everyRaw > MAX_REPEAT_EVERY_MIN) {
+          problems.push(`بازه‌ی تکرارِ «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`);
+          continue;
+        }
+        const hasRepeatUntil = raw.repeatUntil !== undefined && raw.repeatUntil !== null && raw.repeatUntil !== "";
+        const repeatUntilParsed = hasRepeatUntil ? parseClock(raw.repeatUntil) : null;
+        if (hasRepeatUntil && !repeatUntilParsed) {
+          problems.push(`ساعتِ پایانِ تکرارِ «${name}» را نفهمیدم.`);
+          continue;
+        }
+        // بدونِ ساعتِ شروع، تکرار معنی ندارد (به چه لنگری بچسبد؟) — برخلافِ
+        // addِ معمولی که بی‌ساعت هم معتبر است، اینجا از اولِ بازه‌ی بیداری
+        // شروع می‌کنیم، نه اینکه سوال بپرسیم.
+        const anchor = start ?? { fa: minutesToFa(awake.startMin), min: awake.startMin };
+        const duration = end ? end.min - anchor.min : DEFAULT_REPEAT_DURATION_MIN;
+        if (duration <= 0) {
+          problems.push(`ساعتِ پایانِ «${name}» باید بعد از ساعتِ شروع باشد.`);
+          continue;
+        }
+        const repeatUntilMin = repeatUntilParsed ? repeatUntilParsed.min : awake.endMin;
+
+        for (const jsDay of days) {
+          const dayFa = DAY_NAME_FA[jsDay];
+          let created = 0;
+          let skipped = 0;
+          let iterations = 0;
+          let capped = false;
+          for (let t = anchor.min; t <= repeatUntilMin && iterations < MAX_REPEATS_PER_OP; t += everyRaw, iterations++) {
+            if (list.length >= MAX_OCCURRENCES) {
+              problems.push(`به سقفِ ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
+              capped = true;
+              break;
+            }
+            const slotEnd = t + duration;
+            if (findConflict(list, jsDay, t, slotEnd)) { skipped++; continue; }
+            list.push({
+              id: newOccId(), name, jsDay,
+              time: timeLabel(minutesToFa(t), minutesToFa(slotEnd)),
+              startDate: todayIso, importance, ...(tag ? { tag } : {}),
+            });
+            created++;
+          }
+          if (created > 0) {
+            const everyLabel = everyRaw % 60 === 0
+              ? `${toFaDigits(String(everyRaw / 60))} ساعت`
+              : `${toFaDigits(String(everyRaw))} دقیقه`;
+            let msg = `«${name}» ${dayFa} هر ${everyLabel} یک‌بار (${toFaDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toFaDigits(String(created))} بار اضافه شد.`;
+            if (skipped > 0) msg += ` (${toFaDigits(String(skipped))} بار به‌خاطرِ تداخل با برنامه‌های دیگر رد شد)`;
+            applied.push(msg);
+          } else if (!capped) {
+            problems.push(`«${name}» ${dayFa} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`);
+          }
+        }
+        continue;
+      }
 
       for (const jsDay of days) {
         if (list.length >= MAX_OCCURRENCES) {
