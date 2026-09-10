@@ -4308,7 +4308,6 @@ html[data-perf="low"] .nav-drawer{ will-change:transform, opacity !important; }
 html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; will-change:transform !important; }
 html[data-perf="low"] .notif-panel{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
 html[data-perf="low"] .dash-context-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
-html[data-perf="low"] .trade-account-menu{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
 /* بلاکِ بالا (خطِ ۴۵۵۱) will-change رو هم سراسری صفر می‌کرد — دقیقاً همون
    باگِ قدیمیِ کامنتِ nav-drawer (خط ۶۰۶ به بالا): بدونِ will-change، لایه‌ی
    backdrop-filterِ فرزند زودتر پروموت نمی‌شه، پس چند فریمِ اولِ بازشدنِ منو
@@ -4866,13 +4865,18 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
   display:flex; flex-direction:column; gap:9px; margin-top:14px; padding:12px;
   min-height:min(calc(100vh - 340px), 560px);
 }
+/* باگِ گزارش‌شده: «رنگِ باکس‌های تودرتو توی هم هستن، هیچی دیده نمیشه» —
+   این کارت نه بوردر داشت نه بک‌گراندش به‌اندازه‌ی کافی از باکسِ بزرگِ
+   بیرونی (.trade-surface) فاصله می‌گرفت؛ روی تمِ تیره تقریباً هم‌رنگ
+   می‌شدند. حالا هم بوردرِ کم‌رنگ (var(--surface-line)) هم بک‌گراندِ
+   پررنگ‌تر (.۱۲ → .۲۲) دارد. */
 .trade-account-card, .trade-mt-row{
   position:relative; overflow:hidden; padding:13px 15px;
-  border-radius:16px; background:rgba(var(--surface-rgb),.12); border:none; box-shadow:none;
-  transition:background .18s ease, transform .15s ease;
+  border-radius:16px; background:rgba(var(--surface-rgb),.22); border:1px solid var(--surface-line); box-shadow:none;
+  transition:background .18s ease, border-color .18s ease, transform .15s ease;
 }
 .trade-account-card:active, .trade-mt-row:active{ transform:scale(.99); }
-@media (hover:hover){ .trade-account-card:hover, .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.2); } }
+@media (hover:hover){ .trade-account-card:hover, .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.3); } }
 /* سه‌نقطه دیگر گوشه‌ی چپ مطلق نیست؛ اول ردیف (توی RTL یعنی سمت راست)
    کنار نام حساب می‌نشیند و سود/زیان انتهای همان ردیف (چپ) می‌رود. */
 .trade-account-top-row{ display:flex; align-items:center; gap:8px; }
@@ -4912,27 +4916,11 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-skel{ height:88px; background:rgba(var(--surface-rgb),.35); border-radius:12px; margin:4px 0; }
 /* منویِ سه‌نقطه — کنارِ اسم، سمتِ مخالفِ نوارِ رنگی. با createPortal به
    body می‌ره (هم‌الگویِ DashTaskRow) چون بلورِ .trade-surface یک
-   stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه. */
+   stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه.
+   خودِ منو دیگه کلاسِ اختصاصیِ .trade-account-menu نداره — طبقِ درخواستِ
+   صریح، دقیقاً هم‌شکلِ .dash-context-menuِ روتین من شد (نگاه کن به
+   TradeKebabMenu.tsx). */
 .trade-account-kebab{ position:absolute; top:12px; left:10px; z-index:2; }
-/* شیشه‌ی همون خانواده‌ی .trade-surface (نه بک‌گراندِ تقریباً توپرِ
-   dash-context-menu که مالِ داشبوردِ روتینه) — تا با بقیه‌ی پاپ‌آپ/کارتِ
-   بخشِ ترید یکی به‌نظر برسه، نه یه المانِ وامی از یه بخشِ دیگه‌ی سایت. */
-.trade-account-menu{
-  position:fixed; z-index:70; min-width:170px; padding:6px; border-radius:18px; overflow:hidden;
-  border:1px solid var(--line);
-  background:rgba(var(--surface-rgb), .92);
-  backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-  box-shadow:0 16px 40px rgba(0,0,0,.4);
-}
-body[data-theme="light"] .trade-account-menu{ background:rgba(255,255,255,.92); }
-.trade-menu-option{
-  display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:12px; cursor:pointer;
-  font-size:12.5px; font-weight:600; color:var(--text); transition:background .15s ease, color .15s ease;
-}
-@media (hover:hover){ .trade-menu-option:hover{ background:rgba(var(--accent-rgb),.08); color:var(--accent); } }
-.trade-menu-option svg{ flex-shrink:0; }
-.trade-menu-option.danger{ color:#E05252; }
-@media (hover:hover){ .trade-menu-option.danger:hover{ background:rgba(224,82,82,.09); color:#E05252; } }
 .trade-account-type, .trade-account-archived-badge{
   font-size:10px; color:var(--muted2); border:1px solid var(--line); border-radius:999px; padding:3px 9px;
 }
@@ -5139,7 +5127,6 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
   border:1px solid var(--surface-line); border-radius:18px;
 }
-.trade-cal-alerts .trade-toggle{ margin-bottom: 4px; }
 .trade-cal-event{
   display:flex; align-items:flex-start; gap:11px; padding:12px 4px;
   border-bottom:1px solid var(--line);
@@ -5235,13 +5222,19 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
 .trade-cal-daynav-sub{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; font-size:11.5px; color:var(--muted2); }
 .trade-cal-month-btn{ display:inline-flex; align-items:center; gap:5px; }
 
-/* دکمه‌ی «تقویم» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ روتین
-   من (cal-grid/cal-cell)؛ روی موبایل زیرِ نوارِ روز، روی دسکتاپ به‌شکلِ
-   یک popover شناور که با کلیک بیرونش (بک‌دراپِ شفاف) بسته می‌شود. */
+/* دکمه‌ی «تاریخچه» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ روتین
+   من (cal-grid/cal-cell). باگِ «کار نمی‌کند»: قبلا این دو با position:fixed
+   *داخلِ* .trade-cal-box (که خودش backdrop-filter دارد) رندر می‌شدند —
+   طبقِ اسپکِ CSS Filter Effects هر جدِ دارایِ filter/backdrop-filter برای
+   فرزندِ fixed یک containing-block تازه می‌سازد، پس inset:0/سنترشدن نسبت‌به
+   همان باکسِ کوچک حساب می‌شد نه ویوپورت. حالا با createPortal (نگاه کن به
+   EconomicCalendarPanel.tsx) مستقیم زیرِ body می‌نشینند، پس اینجا هم باید
+   مثلِ یک مودالِ واقعی روی صفحه سنتر شوند، نه مثلِ قبل بخشی از فلوِ عادی. */
 .trade-econ-monthpicker-backdrop{ position:fixed; inset:0; z-index:60; }
 .trade-econ-monthpicker{
-  position:relative; z-index:61; margin:8px auto 14px; padding:14px; animation:tradeFadeIn .18s ease both;
-  max-width:320px;
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:61; padding:14px; animation:tradeFadeIn .18s ease both;
+  width:88%; max-width:320px;
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
   border:1px solid var(--surface-line); border-radius:18px;
 }
@@ -5302,6 +5295,15 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
 
 /* ── یادداشت‌ها ────────────────────────────────────────────── */
 .trade-note-box{ margin-top:16px; padding:14px; }
+/* جست‌وجو دیگر باکسِ جداگانه‌ی خودش را ندارد — طبقِ درخواستِ صریح («باکسش با
+   باکسِ یادداشت‌ها یکی باشه») همین ردیف داخلِ خودِ .trade-note-box نشسته و
+   با یک خطِ جداکننده از گریدِ کارت‌ها زیرش فاصله می‌گیرد، نه یک کپسولِ
+   شیشه‌ایِ تودرتوی دیگر. */
+.trade-note-search-row{
+  display:flex; flex-direction:column; gap:10px;
+  padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--surface-line);
+}
+.trade-note-search.trade-search{ border:none; background:none; padding:0; }
 .trade-note-grid{ display:flex; flex-direction:column; gap:11px; align-content:start; }
 @media (min-width:700px){ .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
 /* کارتِ یادداشت — قبلاً چون هیچ‌وقت پیش‌نمایشِ متن نداشت، فاصله‌ی عنوان تا
@@ -5465,6 +5467,16 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 .trade-checklist-box{ margin-top:14px; padding:12px; display:flex; flex-direction:column; gap:9px; }
 .trade-checklist-detail-box{ padding:14px; }
+/* هدرِ صفحه‌ی اختصاصیِ چک‌لیست دیگر باکسِ جدا نیست — طبقِ درخواستِ صریح
+   («دوتا باکس جدا نباشه یه باکس باشه») نام + ویرایش همین ردیفِ بالای
+   .trade-checklist-detail-box است، لیست هم زیرش. */
+.trade-checklist-detail-head{
+  position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  flex-wrap:wrap; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--surface-line);
+}
+.trade-checklist-detail-head .trade-account-stripe{ right:-14px; }
+.trade-checklist-detail-title{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1; }
+.trade-checklist-detail-title h1{ font-size:17px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* هر ردیفِ چک‌لیست حالا خودش یک کارتِ مجزا با گوشه‌ی کاملاً گرد است (نه
    ردیفِ flatِ قبلی با فقط یک خطِ جداکننده) — طبقِ درخواستِ صریح: «باکس‌های
    داخلِ هر بخش» باید کاملاً کرو باشند؛ فقط خودِ باکسِ بزرگِ صفحه
@@ -5472,11 +5484,11 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-checklist-row{
   position:relative; display:flex; align-items:center; gap:8px;
   padding:13px 15px 13px 12px; border-radius:16px;
-  background:rgba(var(--surface-rgb),.12);
-  transition:background .18s ease, transform .15s ease;
+  background:rgba(var(--surface-rgb),.22); border:1px solid var(--surface-line);
+  transition:background .18s ease, border-color .18s ease, transform .15s ease;
 }
 .trade-checklist-row:active{ transform:scale(.99); }
-@media (hover:hover){ .trade-checklist-row:hover{ background:rgba(var(--surface-rgb),.2); } }
+@media (hover:hover){ .trade-checklist-row:hover{ background:rgba(var(--surface-rgb),.3); border-color:var(--accent); } }
 .trade-checklist-row-stripe{
   position:absolute; top:10px; bottom:10px; right:0; width:3px; border-radius:2px;
 }
@@ -5562,7 +5574,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   .tv-page{
     height:var(--tv-h, calc(100vh - 200px));
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) 330px;
-    grid-template-rows:minmax(0,2fr) minmax(0,1fr);
+    /* طبقِ درخواستِ صریح: باکسِ «ثبت معامله» بزرگ‌تر شود تا نیاز به اسکرول
+       نباشد — یک‌ذره از سهمِ ردیفِ بالا (چارت+چک‌لیست) به ردیفِ پایین
+       (چت/تقویم/ثبتِ معامله) داده شد. */
+    grid-template-rows:minmax(0,1.6fr) minmax(0,1.4fr);
     grid-template-areas:
       "chart chart check"
       "chat  cal   entry";
@@ -5835,7 +5850,7 @@ body[data-theme="light"] .trade-chat-send{ background:#B36B2F; color:#fff; }
 }
 .trade-chat-report-quote{
   font-size:11.5px; color:var(--muted); line-height:1.9; margin-bottom:10px;
-  padding:8px 10px; border-radius:10px; background:rgba(var(--surface-rgb),.12);
+  padding:8px 10px; border-radius:10px; background:rgba(var(--surface-rgb),.12); border:1px solid var(--surface-line);
   max-height:76px; overflow:auto; overflow-wrap:anywhere;
 }
 
@@ -6295,9 +6310,15 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
    برمی‌دارد و یک شیشه‌ی ۲٪ آن‌جا عملا نامرئی می‌شود (همان باگِ v1.122.0).
    برای یک کارتِ معمولی قابلِ تحمل بود؛ برای یک پاپ‌آپ نه. پس فقط در همان
    حالت رنگِ توپر جایش را می‌گیرد. */
+/* طبقِ درخواستِ صریح: پنلِ قبلی روی همان اندازه‌ی پیش‌فرضِ .modal-panel
+   (max-width:420px) می‌نشست — «خیلی کوچیک وسطِ صفحه». این‌جا هم عریض‌تر
+   (کشیده‌تر) هم بلندترِ حداقلی، تا یک پیامِ خوش‌آمدِ تنها هم پنل را کوچک
+   نشان ندهد. */
 .routine-ai-panel{
   display:flex; flex-direction:column;
+  width:94%; max-width:620px;
   /* ارتفاعِ بلندترش از main می‌آید؛ شیشه‌اش از این شاخه. */
+  min-height:min(70vh, 620px);
   max-height:min(88vh, 760px);
   background:rgba(255,255,255,.02);
   border:1px solid var(--line);
@@ -6306,6 +6327,7 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
   -webkit-backdrop-filter:blur(28px) saturate(180%);
   box-shadow:0 20px 50px rgba(0,0,0,.20);
 }
+@media (min-width:768px){ .routine-ai-panel{ max-width:680px; } }
 body[data-theme="light"] .routine-ai-panel{ background:rgba(255,255,255,.16); }
 
 .routine-ai-list{
@@ -6345,23 +6367,7 @@ body[data-theme="light"] .routine-ai-panel{ background:rgba(255,255,255,.16); }
 .routine-ai-list .routine-ai-row-bot{ flex-direction:row-reverse; align-items:flex-start; }
 .routine-ai-list .routine-ai-row-bot > *:last-child{ align-items:flex-end; }
 
-/* گزینه‌ها زیرِ پیامِ دستیار می‌آیند، پس آن‌ها هم باید سمتِ چپ بنشینند */
 .routine-ai-status{ display:flex; align-items:center; justify-content:flex-end; }
-
-/* گزینه‌های آماده‌ی پاسخ زیرِ پیامِ دستیار — کاربر به‌جای تایپ می‌زند رویشان */
-.routine-ai-options{
-  align-self:flex-end; max-width:88%;
-  display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px;
-}
-.routine-ai-option{
-  font-size:11px; line-height:1.8; padding:5px 10px; border-radius:999px;
-  background:rgba(var(--bg-rgb),.35);
-  border:1px solid rgba(var(--accent-rgb),.35);
-  color:var(--text);
-  backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
-}
-.routine-ai-option:disabled{ opacity:.45; }
-@media (hover:hover){ .routine-ai-option:hover:not(:disabled){ border-color:var(--accent); } }
 
 /* نوارِ نوشتن — چیدمانِ مرجع: قرصِ ورودی، و دکمه‌ی گرد در انتهای سمتِ راست.
    `row-reverse` لازم است چون صفحه RTL است: در RTL محورِ `row` از راست شروع

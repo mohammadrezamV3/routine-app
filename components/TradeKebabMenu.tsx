@@ -63,19 +63,31 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
         <MoreVertical size={16} />
       </button>
 
+      {/* دقیقاً هم‌الگویِ منوی سه‌نقطه‌ی «برنامه‌های امروز»ِ روتین من
+          (DashTaskRow) — همون کلاس‌های Tailwind مستقیم روی هر ردیف، نه
+          کلاسِ قدیمیِ .wsearch-fab-option/.trade-account-menu که ظاهرشون
+          با مرجع فرق داشت و طبقِ گزارشِ کاربر انگار «یه دکمه‌ی بزرگ» بود. */}
       {open && pos && createPortal(
-        <div ref={menuRef} className="dash-context-menu trade-account-menu" style={{ top: pos.top, right: pos.right }}>
+        <div
+          ref={menuRef}
+          style={{ top: pos.top, right: pos.right }}
+          className="dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
+        >
           {actions.map((a) => (
-            <button
+            <div
               key={a.label}
-              type="button"
-              disabled={a.disabled}
-              className={`wsearch-fab-option${a.danger ? " danger" : ""}`}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); a.onClick(); }}
+              onClick={() => { if (a.disabled) return; setOpen(false); a.onClick(); }}
+              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px] ${
+                a.disabled
+                  ? "cursor-default opacity-45"
+                  : a.danger
+                  ? "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"
+                  : "cursor-pointer text-dash-text hover:bg-white/5"
+              }`}
             >
-              {a.icon}
+              <span className="shrink-0">{a.icon}</span>
               {a.label}
-            </button>
+            </div>
           ))}
         </div>,
         document.body

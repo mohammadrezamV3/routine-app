@@ -116,7 +116,7 @@ const LINKS: NavItem[] = [
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
-  { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT" },
+  { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", superAdminOnly: true },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 

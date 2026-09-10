@@ -20,9 +20,16 @@ export type NewsAlertPrefs = {
   /** خالی یعنی «همه‌ی ارزها» */
   currencies: string[];
   /** ستونِ «Alert»ِ جدولِ تقویم — کاربر با کلیکِ زنگوله‌ی یک ردیفِ خاص،
-   * صرف‌نظر از enabled/impacts/currenciesِ بالا، برای همون یک رویداد
-   * هشدار می‌خواهد (دقیقاً هم‌رفتارِ ستونِ Alertِ فارکس‌فکتوری). */
-  watchedEventIds: string[];
+   * صرف‌نظر از enabled/impacts/currenciesِ بالا، برای همون رویداد
+   * هشدار می‌خواهد (دقیقاً هم‌رفتارِ ستونِ Alertِ فارکس‌فکتوری).
+   *
+   * کلیدها دیگر `EconomicEvent.id` خامِ همون یک وقوع نیستند — هر وقوعِ
+   * بعدیِ همون شاخص (مثلاً NFPِ ماهِ بعد) یک ردیفِ کاملاً جدید با idِ
+   * جدید است، پس ذخیره‌ی id یعنی هشدار عملاً یک‌بارمصرف می‌شد (دقیقاً
+   * باگِ گزارش‌شده). حالا کلید ترکیبیِ پایدارِ `currency|title` است —
+   * نگاه کن به newsEventWatchKey — که برای همه‌ی وقوع‌های آتیِ همون
+   * شاخص یکسان می‌ماند. */
+  watchedEventKeys: string[];
 };
 
 export const DEFAULT_NEWS_ALERT_PREFS: NewsAlertPrefs = {
@@ -30,8 +37,14 @@ export const DEFAULT_NEWS_ALERT_PREFS: NewsAlertPrefs = {
   minutesBefore: 30,
   impacts: ["HIGH"],
   currencies: [],
-  watchedEventIds: [],
+  watchedEventKeys: [],
 };
+
+/** کلیدِ پایدارِ یک شاخصِ اقتصادی — مستقل از idِ هر وقوعِ به‌خصوص، تا
+ * ستاره‌زدن روی «Alert» برای وقوع‌های بعدیِ همان شاخص هم اعمال بماند. */
+export function newsEventWatchKey(currency: string, title: string): string {
+  return `${currency}|${title}`;
+}
 
 export const MINUTES_BEFORE_OPTIONS = [15, 30, 60] as const;
 
@@ -55,8 +68,8 @@ export function normalizeNewsAlertPrefs(raw: unknown): NewsAlertPrefs {
     currencies: Array.isArray(v.currencies)
       ? v.currencies.filter((c): c is string => typeof c === "string").slice(0, 20)
       : [],
-    watchedEventIds: Array.isArray(v.watchedEventIds)
-      ? v.watchedEventIds.filter((id): id is string => typeof id === "string").slice(-MAX_WATCHED_EVENTS)
+    watchedEventKeys: Array.isArray(v.watchedEventKeys)
+      ? v.watchedEventKeys.filter((id): id is string => typeof id === "string").slice(-MAX_WATCHED_EVENTS)
       : [],
   };
 }
