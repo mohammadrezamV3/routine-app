@@ -6260,7 +6260,10 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    `background:none` کافی نبود — بلورِ پس‌زمینه و سایه می‌ماندند و پشتِ گو یک
    لکه‌ی تیره‌ی مربعی می‌ساختند. هر سه باید صریح خنثی شوند. */
 .routine-ai-fab{
-  position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); left:28px;
+  /* طبقِ درخواستِ صریح: گوشه‌ی پایین-راست، هم‌قاعده‌ی اکثرِ ویجت‌های
+     دستیار/چتِ سایت‌های دیگر (Intercom، ChatGPT، ...) که مستقل از
+     چپ‌چین/راست‌چین بودنِ صفحه همیشه همین گوشه می‌نشینند. */
+  position:fixed; bottom:calc(16px + env(safe-area-inset-bottom)); right:28px;
   display:flex; align-items:center; justify-content:center;
   background:none; border:none; padding:0; border-radius:50%;
   box-shadow:none;
@@ -6280,7 +6283,7 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
 /* روی موبایل نوارِ ناوبریِ پایین هست؛ گو باید بالاترش بنشیند وگرنه
    روی دکمه‌های نوار می‌افتد. */
 @media (max-width:1023px){
-  .routine-ai-fab{ bottom:calc(70px + env(safe-area-inset-bottom)); left:26px; }
+  .routine-ai-fab{ bottom:calc(70px + env(safe-area-inset-bottom)); right:26px; }
 }
 
 .routine-ai-title{ display:flex; align-items:center; gap:8px; }
@@ -6460,13 +6463,27 @@ html[data-perf="low"] .routine-ai-action.is-recording{ animation:none; }
           initial-value: 0deg;
         }
 
+        /* باگِ شناخته‌شده‌ی Safari/WebKit: وقتی filter و overflow:hidden+
+           border-radius روی *همان یک* المان باشند، سافاری کلیپِ گرد را
+           نادیده می‌گیرد و باکسِ چهارگوشِ خامِ زیرش دیده می‌شود (خودِ
+           .siri-orb هم overflow:hidden داشت هم فیلترِ saturate/hue-rotate
+           را inline می‌گرفت — دقیقاً همین ترکیب). کروم/فایرفاکس مشکلی
+           نداشتند، برای همین فقط توی سافاری «چهارگوش» دیده می‌شد.
+           فیکس: کلیپِ گرد روی یک لایه‌ی جدا (.siri-orb-clip، بدونِ فیلتر)
+           و خودِ فیلتر همچنان روی .siri-orb — این دو دیگر هیچ‌وقت روی یک
+           المان جمع نمی‌شوند. */
+        .siri-orb-clip {
+          position: relative;
+          height: 100%;
+          width: 100%;
+          overflow: hidden;
+          border-radius: 50%;
+          isolation: isolate;
+        }
         .siri-orb {
           display: grid;
           grid-template-areas: "stack";
-          overflow: hidden;
-          border-radius: 50%;
           position: relative;
-          isolation: isolate;
         }
 
         .siri-orb::before,
