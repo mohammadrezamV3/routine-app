@@ -6307,7 +6307,6 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
   box-shadow:0 20px 50px rgba(0,0,0,.20);
 }
 body[data-theme="light"] .routine-ai-panel{ background:rgba(255,255,255,.16); }
-html[data-perf="low"] .routine-ai-panel{ background:var(--surface-2); }
 
 .routine-ai-list{
   flex:1 1 auto; min-height:140px; overflow-y:auto;
@@ -6364,49 +6363,75 @@ html[data-perf="low"] .routine-ai-panel{ background:var(--surface-2); }
 .routine-ai-option:disabled{ opacity:.45; }
 @media (hover:hover){ .routine-ai-option:hover:not(:disabled){ border-color:var(--accent); } }
 
-/* نوارِ نوشتن: یک قرصِ شیشه‌ای، با یک دکمه‌ی گردِ کنارش — همان الگوی مرجع. */
+/* نوارِ نوشتن — چیدمانِ مرجع: قرصِ ورودی، و دکمه‌ی گرد در انتهای سمتِ راست.
+   `row-reverse` لازم است چون صفحه RTL است: در RTL محورِ `row` از راست شروع
+   می‌شود و اولین فرزند (خودِ ورودی) سمتِ راست می‌افتاد، یعنی دکمه سمتِ چپ. */
 .routine-ai-composer{
-  display:flex; align-items:center; gap:8px;
-  padding-top:10px; border-top:1px solid var(--surface-line);
+  display:flex; flex-direction:row-reverse; align-items:center; gap:8px;
+  padding-top:10px; border-top:1px solid var(--line);
 }
+
+/* شیشه‌ی واقعی، نه یک قرصِ توپرِ کم‌رنگ: پرشدگی خیلی کم است و بلور کارِ
+   دیدنی‌شدن را می‌کند، پس هرچه پشتش هست از داخلش پیداست. */
 .routine-ai-input{
   flex:1 1 auto; min-width:0; resize:none;
   max-height:96px; padding:12px 16px; border-radius:999px;
   font-size:12.5px; line-height:1.7; font-family:inherit;
-  background:rgba(var(--bg-rgb),.42);
-  backdrop-filter:blur(10px) saturate(160%);
-  -webkit-backdrop-filter:blur(10px) saturate(160%);
-  border:1px solid var(--surface-line);
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
   color:var(--text); outline:none;
 }
 .routine-ai-input::placeholder{ color:var(--muted); }
 .routine-ai-input:focus{ border-color:rgba(var(--accent-rgb),.45); }
-
-/* همان دکمه هم میکروفون است هم ارسال — شکلش ثابت می‌ماند، فقط آیکونش
-   عوض می‌شود، تا جابه‌جایی‌اش موقعِ تایپ‌کردن حس نشود. */
-.routine-ai-action{
-  flex:0 0 auto; width:42px; height:42px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  padding:0; color:var(--accent);
-  background:rgba(var(--bg-rgb),.42);
-  backdrop-filter:blur(10px) saturate(160%);
-  -webkit-backdrop-filter:blur(10px) saturate(160%);
-  border:1px solid rgba(var(--accent-rgb),.35);
-  transition:color .15s ease, border-color .15s ease, background .15s ease;
+body[data-theme="light"] .routine-ai-input{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
 }
-@media (hover:hover){ .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); background:var(--accent-dim); } }
+
+/* یک دکمه با سه حالت. خودِ عنصر ثابت می‌ماند و فقط آیکونِ داخلش عوض
+   می‌شود — همین چیزی است که اجازه‌ی انیمیشن می‌دهد. */
+.routine-ai-action{
+  position:relative; flex:0 0 auto; width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; color:var(--text);
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  box-shadow:none;
+  transition:background .22s ease, border-color .22s ease, color .22s ease, transform .18s ease;
+}
+body[data-theme="light"] .routine-ai-action{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+@media (hover:hover){ .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); } }
+.routine-ai-action:active:not(:disabled){ transform:scale(.92); }
 .routine-ai-action:disabled{ opacity:.45; }
-/* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش این
-   دکمه توی تمِ روشن بک‌گراند/بوردرِ عمومیِ شیشه‌ای می‌گرفت به‌جایِ
-   بک‌گراند/بوردرِ اکسنت‌رنگِ خودش. `:not(.is-recording)` تا حالتِ قرمزِ
-   ضبط را دست‌نخورده بگذارد — وگرنه همین override با اسپسیفیسیتیِ بالاتر
-   رنگِ قرمز را هم در تمِ روشن می‌شست. */
-body[data-theme="light"] .routine-ai-action:not(.is-recording),
-body:not([data-theme="light"]) .routine-ai-action:not(.is-recording){
-  background:rgba(var(--bg-rgb),.42); border-color:rgba(var(--accent-rgb),.35); box-shadow:none;
+
+.routine-ai-action-icon{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transform:scale(.4) rotate(-40deg);
+  transition:opacity .22s cubic-bezier(.22,1,.36,1), transform .22s cubic-bezier(.22,1,.36,1);
+}
+/* حالتِ پیش‌فرض: میکروفون */
+.routine-ai-action .routine-ai-action-icon:nth-child(1){ opacity:1; transform:none; }
+.routine-ai-action.is-recording .routine-ai-action-icon:nth-child(1),
+.routine-ai-action.is-send .routine-ai-action-icon:nth-child(1){ opacity:0; transform:scale(.4) rotate(40deg); }
+/* در حالِ ضبط: مربعِ توقف */
+.routine-ai-action.is-recording .routine-ai-action-icon:nth-child(2){ opacity:1; transform:none; }
+/* چیزی نوشته شده: ارسال */
+.routine-ai-action.is-send .routine-ai-action-icon:nth-child(3){ opacity:1; transform:none; }
+
+/* دکمه‌ی ارسال پر می‌شود — همان تفاوتِ بصریِ مرجع بینِ «حرف بزن» و «بفرست» */
+.routine-ai-action.is-send{
+  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 .routine-ai-action.is-recording{
   background:#E05252; border-color:#E05252; color:#fff;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
   animation:routineMicPulse 1.4s ease-in-out infinite;
 }
 @keyframes routineMicPulse{
@@ -6414,6 +6439,21 @@ body:not([data-theme="light"]) .routine-ai-action:not(.is-recording){
   60%{ box-shadow:0 0 0 7px rgba(224,82,82,0); }
 }
 html[data-perf="low"] .routine-ai-action.is-recording{ animation:none; }
+
+/* استثنای عمدی روی قانونِ سراسریِ `html[data-perf="low"] *` که بلور را با
+   !important از همه‌جا برمی‌دارد.
+   ────────────────────────────────────────────────────────────────────
+   درخواستِ صریح این بود که این نوار روی موبایل هم همان لیکوئید-گلس بماند.
+   هزینه‌اش این‌جا قابلِ قبول است و دلیلش این است: این‌ها فقط وقتی وجود
+   دارند که پاپ‌آپ باز است، و آن موقع پشتشان چیزی اسکرول نمی‌کند — یعنی آن
+   «بلورِ دوباره در هر فریم» که کلِ آن قانون برایش نوشته شد این‌جا رخ
+   نمی‌دهد. شعاع هم عمدا کمتر از دسکتاپ است. */
+html[data-perf="low"] .routine-ai-panel,
+html[data-perf="low"] .routine-ai-input,
+html[data-perf="low"] .routine-ai-action:not(.is-send):not(.is-recording){
+  backdrop-filter:blur(14px) saturate(170%) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(170%) !important;
+}
 
 .routine-ai-exhausted{
   display:flex; flex-direction:column; align-items:center; gap:10px;
