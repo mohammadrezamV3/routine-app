@@ -272,38 +272,44 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
         transition={shouldReduceMotion ? { duration: 0 } : SPRING_DEFAULT}
       />
 
-      <motion.div
-        className="siri-orb"
-        style={
-          {
-            "--animation-duration": `${loopDuration}s`,
-            "--bg": finalColors.bg,
-            "--blur-amount": reactiveBlur,
-            "--c1": finalColors.c1,
-            "--c2": finalColors.c2,
-            "--c3": finalColors.c3,
-            "--c4": finalColors.c4,
-            "--contrast-amount": finalContrast,
-            "--dot-size": `${dotSize}px`,
-            "--drift-duration": `${driftDuration}s`,
-            "--mask-radius": maskRadius,
-            "--rim": `${rim}px`,
-            "--shadow-spread": `${shadowSpread}px`,
-            // Saturation and hue only affect the gradient disc. Applying them
-            // to the whole component would desaturate the semantic accent too,
-            // and `error` would lose the very red that identifies it.
-            filter: `saturate(${stateMotion.saturation}) hue-rotate(${stateMotion.hueRotate}deg)`,
-            height: "100%",
-            scale: reactiveScale,
-            width: "100%",
-          } as MotionStyle
-        }
-      >
-        {/* Specular sheen and depth rim. The mesh alone reads as a flat blurred
-            disc; a drifting highlight plus a lit top edge and shaded bottom are
-            what make it read as a sphere. */}
-        <span aria-hidden="true" className="siri-orb-layer siri-orb-sheen" />
-        <span aria-hidden="true" className="siri-orb-layer siri-orb-rim" />
+      {/* لایه‌ی کلیپِ گرد از خودِ .siri-orb (که فیلتر می‌گیرد) جدا نگه داشته
+          می‌شود — سافاری وقتی overflow:hidden+border-radius با filter روی
+          یک المانِ مشترک باشند، کلیپِ گرد را نادیده می‌گیرد و باکسِ
+          چهارگوشِ خام دیده می‌شود (باگِ گزارش‌شده، فقط توی سافاری). */}
+      <motion.div className="siri-orb-clip">
+        <motion.div
+          className="siri-orb"
+          style={
+            {
+              "--animation-duration": `${loopDuration}s`,
+              "--bg": finalColors.bg,
+              "--blur-amount": reactiveBlur,
+              "--c1": finalColors.c1,
+              "--c2": finalColors.c2,
+              "--c3": finalColors.c3,
+              "--c4": finalColors.c4,
+              "--contrast-amount": finalContrast,
+              "--dot-size": `${dotSize}px`,
+              "--drift-duration": `${driftDuration}s`,
+              "--mask-radius": maskRadius,
+              "--rim": `${rim}px`,
+              "--shadow-spread": `${shadowSpread}px`,
+              // Saturation and hue only affect the gradient disc. Applying them
+              // to the whole component would desaturate the semantic accent too,
+              // and `error` would lose the very red that identifies it.
+              filter: `saturate(${stateMotion.saturation}) hue-rotate(${stateMotion.hueRotate}deg)`,
+              height: "100%",
+              scale: reactiveScale,
+              width: "100%",
+            } as MotionStyle
+          }
+        >
+          {/* Specular sheen and depth rim. The mesh alone reads as a flat blurred
+              disc; a drifting highlight plus a lit top edge and shaded bottom are
+              what make it read as a sphere. */}
+          <span aria-hidden="true" className="siri-orb-layer siri-orb-sheen" />
+          <span aria-hidden="true" className="siri-orb-layer siri-orb-rim" />
+        </motion.div>
       </motion.div>
     </motion.div>
   );
