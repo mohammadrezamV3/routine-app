@@ -140,8 +140,8 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
         <div className="tv-chart-loading">
           <span style={{ maxWidth: 340, textAlign: "center", lineHeight: 1.9 }}>
             {blocked
-              ? "دسترسی به سرورهای تریدینگ‌ویو از این اینترنت برقرار نشد — معمولاً یعنی دامنه‌شان مسدود است."
-              : "چارت در چند تلاش بالا نیامد — ممکن است سرویس کند باشد."}
+              ? "دسترسی به سرورهای تریدینگ‌ویو از این اینترنت برقرار نشد — معمولاً یعنی دامنه‌شان فیلتر است. یک VPN روشن کن و دوباره تلاش کن."
+              : "چارت در چند تلاش بالا نیامد — یک VPN روشن کن و دوباره تلاش کن."}
           </span>
           <button type="button" className="trade-ghost-btn" style={{ marginTop: 10 }} onClick={restart}>
             تلاش دوباره

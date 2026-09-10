@@ -3,13 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, MoreVertical, Pencil, Trash2, CalendarClock, X } from "lucide-react";
+import { Check, MoreVertical, Pencil, Play, Trash2, CalendarClock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
 
-export type DashTaskItem = { id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean; isPast?: boolean; dayPast?: boolean; notStarted?: boolean };
+export type DashTaskItem = {
+  id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean;
+  isPast?: boolean; dayPast?: boolean; notStarted?: boolean;
+  /** ردیفِ سنتتیکِ «برنامه تمرینی امروز» — بجای چک‌باکس، دکمه‌ی «شروع»
+   * دارد که با کلیک هم تیک می‌خورد هم به صفحه‌ی بدنسازی می‌برد. سه‌نقطه
+   * (ویرایش/انتقال/حذف) برایش نیست چون یک occurrence واقعی نیست. */
+  exercise?: boolean;
+};
 
 // بج اهمیت همیشه کنار اسم برنامه‌ست (نه زیرش). فقط کلیک روی خود متن اسم
 // برنامه (نه کل ردیف) کارت واقعی برنامه (ProgramCard، فقط‌نمایشی) رو باز
@@ -23,6 +30,7 @@ export function DashTaskRow({
   onEdit,
   onDelete,
   onMove,
+  onStart,
 }: {
   task: DashTaskItem;
   editable: boolean;
@@ -31,11 +39,24 @@ export function DashTaskRow({
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onMove: (id: string) => void;
+  onStart?: (id: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const btnWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  // جلوگیری از باگِ تپ‌استرایک: با اولین کلیکِ «شروع» بلافاصله دکمه غیرفعال
+  // می‌شود، وگرنه یک دابل‌تپِ سریع می‌توانست دوبار onStart را صدا بزند
+  // (دوبار ناوبری به صفحه‌ی بدنسازی، یا رِیس روی نوشتنِ وضعیتِ تیک).
+  const [starting, setStarting] = useState(false);
+  // اگه onStart به هر دلیلی (خطای شبکه هنگام ثبتِ تیک) done رو true نکنه،
+  // دکمه نباید برای همیشه قفل بمونه — این یعنی خودِ همون باگی که قرار بود
+  // جلوش گرفته بشه، فقط برعکس (به‌جای دوبار زدن، دیگه اصلاً نمی‌شه زد).
+  useEffect(() => {
+    if (!starting) return;
+    const t = setTimeout(() => setStarting(false), 4000);
+    return () => clearTimeout(t);
+  }, [starting]);
 
   // منو با createPortal به document.body می‌ره — چون DashCard (والد این
   // ردیف) با backdrop-blur یه containing-block/stacking-context جدید می‌سازه،
@@ -68,15 +89,20 @@ export function DashTaskRow({
           یه <button> inline بود که ارتفاعش از line-height خودش می‌اومد و
           مرکز آیکون چند پیکسل بالاتر از مرکز متن می‌افتاد. حالا خودش یه
           فلکس مربعی هم‌ارتفاع ردیفه، پس مرکزش دقیقا روی مرکز ردیفه. */}
-      <div className="flex shrink-0 items-center" ref={btnWrapRef}>
-        <button
-          type="button"
-          aria-label="گزینه‌های برنامه"
-          onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent p-0 text-dash-muted transition hover:text-dash-text"
-        >
-          <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-        </button>
+      <div className="flex h-6 w-6 shrink-0 items-center sm:h-[17px] sm:w-[17px]" ref={btnWrapRef}>
+        {/* ردیفِ سنتتیکِ ورزش یک occurrence واقعی نیست — ویرایش/انتقال/حذف
+            روی آن معنا ندارد، پس سه‌نقطه‌اش اصلاً رندر نمی‌شود (نه فقط
+            غیرفعال) تا هم‌تراز بماند ولی گمراه‌کننده نباشد. */}
+        {!task.exercise && (
+          <button
+            type="button"
+            aria-label="گزینه‌های برنامه"
+            onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent p-0 text-dash-muted transition hover:text-dash-text"
+          >
+            <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
+          </button>
+        )}
         {menuOpen && menuPos && createPortal(
           <div
             ref={menuRef}
@@ -116,13 +142,21 @@ export function DashTaskRow({
           justify-between بینشان و ساعت می‌افتد. */}
       <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-right sm:gap-3">
         <div className="flex min-w-0 items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => onOpen(task.name)}
-            className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
-          >
-            {task.name}
-          </button>
+          {/* ردیفِ ورزش یک ProgramCardِ واقعی برای بازکردن ندارد — نامش فقط
+              متن است، نه دکمه. */}
+          {task.exercise ? (
+            <span className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text sm:text-[15px]">
+              {task.name}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onOpen(task.name)}
+              className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
+            >
+              {task.name}
+            </button>
+          )}
           {task.tag && (
             <span className="max-w-[64px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:max-w-[92px] sm:px-2.5 sm:py-1 sm:text-[11px]">
               {task.tag}
@@ -146,6 +180,26 @@ export function DashTaskRow({
         </div>
       </div>
 
+      {task.exercise && !task.done ? (
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
+          disabled={!editable || starting}
+          onClick={() => {
+            if (starting) return;
+            setStarting(true);
+            onStart?.(task.id);
+          }}
+          className={cn(
+            "flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors sm:text-[12.5px]",
+            (!editable || starting) && "cursor-not-allowed opacity-60"
+          )}
+          style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
+        >
+          <Play className="h-3 w-3 sm:h-[13px] sm:w-[13px]" fill="currentColor" />
+          شروع
+        </motion.button>
+      ) : (
       <motion.button
         type="button"
         whileTap={{ scale: 0.85, transition: { duration: 0.1 } }}
@@ -201,6 +255,7 @@ export function DashTaskRow({
           ) : null}
         </AnimatePresence>
       </motion.button>
+      )}
     </motion.div>
   );
 }

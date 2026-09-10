@@ -18,8 +18,6 @@ import {
 } from "@/components/useVoiceRecorder";
 
 type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
-/** گزینه‌های آماده‌ی پاسخ — کاربر به‌جای تایپ فقط می‌زند رویشان */
-type Options = { forMsgId: string; items: string[] } | null;
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
 const GREETING = "سلام! چطور می‌تونم کمکت کنم؟";
@@ -46,7 +44,6 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [options, setOptions] = useState<Options>(null);
   const [quota, setQuota] = useState<Quota | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -99,7 +96,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, sending, options]);
+  }, [msgs, sending]);
 
   function push(role: Msg["role"], text: string, tone?: Msg["tone"]): string {
     const id = newId();
@@ -111,8 +108,6 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     const body = text.trim();
     if (!body || sending) return;
     setInput("");
-    // گزینه‌های قبلی با اولین پاسخ کنار می‌روند تا کاربر روی سوالِ سوخته نزند
-    setOptions(null);
     // تاریخچه *قبل* از افزودنِ همین پیام گرفته می‌شود؛ خودِ پیام جدا می‌رود.
     const history = msgs.slice(-6).map((m) => ({ role: m.role === "user" ? "user" : "assistant", text: m.text }));
     push("user", body);
@@ -145,10 +140,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       const tone: Msg["tone"] = data?.problems?.length
         ? (data?.applied?.length ? "warn" : "error")
         : (data?.changed ? "ok" : undefined);
-      const botId = push("bot", data?.reply || "چیزی برای گفتن ندارم.", tone);
-      if (Array.isArray(data?.options) && data.options.length) {
-        setOptions({ forMsgId: botId, items: data.options.slice(0, 4) });
-      }
+      // طبق درخواست صریح: بعد از هر پاسخ گزینه‌ی پیشنهادی نشان داده نمی‌شود.
+      push("bot", data?.reply || "چیزی برای گفتن ندارم.", tone);
       setOrbState(tone === "error" ? "error" : "done");
     } catch {
       push("bot", "اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "error");
@@ -246,15 +239,6 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                     ))}
                   </AIMessage>
 
-                  {options?.forMsgId === m.id && (
-                    <div className="routine-ai-options">
-                      {options.items.map((o) => (
-                        <button key={o} type="button" className="routine-ai-option" disabled={sending} onClick={() => send(o)}>
-                          {o}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </Fragment>
               ))}
 

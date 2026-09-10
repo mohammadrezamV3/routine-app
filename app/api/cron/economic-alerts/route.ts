@@ -5,7 +5,7 @@ import { isValidCronRequest } from "@/lib/cronAuth";
 import { isPushConfigured, sendPushToUser } from "@/lib/webPush";
 import { currencyMeta } from "@/lib/economicCalendar";
 import {
-  NEWS_ALERT_KEY, NEWS_ALERT_LOG_KEY, normalizeNewsAlertPrefs,
+  NEWS_ALERT_KEY, NEWS_ALERT_LOG_KEY, newsEventWatchKey, normalizeNewsAlertPrefs,
 } from "@/lib/tradeNewsAlerts";
 
 // POST /api/cron/economic-alerts — هشدار پیش از اخبار مهم.
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     // اگه هیچ رویدادی هم تک‌تک ستاره نخورده باشه و کلیدِ کلی هم خاموش
     // باشه، هیچ چیزی برای این کاربر نباید بره — وگرنه با enabled=false
     // ولی چند رویدادِ ستاره‌خورده، هردو راه بسته می‌شد.
-    if (!prefs.enabled && !prefs.watchedEventIds.length) continue;
+    if (!prefs.enabled && !prefs.watchedEventKeys.length) continue;
 
     const rawLog = byKey.get(NEWS_ALERT_LOG_KEY);
     const log: Record<string, string> =
@@ -88,8 +88,10 @@ export async function POST(req: NextRequest) {
       if (log[e.id]) continue;
       // ستونِ Alertِ جدول: یک رویدادِ به‌خصوص که کاربر دستی ستاره زده،
       // مستقل از روشن/خاموش‌بودنِ قاعده‌ی کلی و فیلترهای تأثیر/ارز هشدار
-      // می‌گیرد — دقیقاً هم‌رفتارِ ستونِ Alertِ فارکس‌فکتوری.
-      const watched = prefs.watchedEventIds.includes(e.id);
+      // می‌گیرد — دقیقاً هم‌رفتارِ ستونِ Alertِ فارکس‌فکتوری. کلید با
+      // currency|title مطابقت می‌گیرد، نه idِ همین یک وقوع، تا وقوعِ بعدیِ
+      // همین شاخص هم هشدار بدهد (نه یک‌بارمصرف).
+      const watched = prefs.watchedEventKeys.includes(newsEventWatchKey(e.currency, e.title));
       if (!watched) {
         if (!prefs.enabled) continue;
         if (!prefs.impacts.includes(e.impact)) continue;
