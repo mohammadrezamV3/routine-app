@@ -12,6 +12,8 @@ import { authOptions } from "@/lib/auth";
 import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
+import { LANGUAGE_INIT_SCRIPT } from "@/lib/language";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
@@ -158,6 +160,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >
+      {/* lang/dir پیش‌فرضِ بالا دقیقا همونیه که سرور رندر می‌کنه («fa»/
+          «rtl») — اسکریپتِ زیر (lib/language.ts) قبل از هر پینتی از روی
+          کوکی اصلاحش می‌کنه؛ suppressHydrationWarning هم برای همینه. */}
       {/* suppressHydrationWarning لازمه چون اسکریپت بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}
@@ -167,6 +172,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: LANGUAGE_INIT_SCRIPT }} />
         {/* تشخیص دستگاه ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
             همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
         <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
@@ -180,11 +186,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <BackgroundCanvasLoader />
         <AuthSessionProvider session={session}>
           <ThemeProvider>
-            <MotionTuner>
-              <NavDrawer />
-              <NotificationEngine />
-              <div className="wrap">{children}</div>
-            </MotionTuner>
+            <LanguageProvider>
+              <MotionTuner>
+                <NavDrawer />
+                <NotificationEngine />
+                <div className="wrap">{children}</div>
+              </MotionTuner>
+            </LanguageProvider>
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

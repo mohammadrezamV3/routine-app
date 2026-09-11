@@ -2397,28 +2397,6 @@
   body[data-theme="light"] .field-toggle-visibility-btn,
   body:not([data-theme="light"]) .field-toggle-visibility-btn{ background:none; box-shadow:none; }
 
-  .fx-eye{ width:23px; height:23px; display:block; overflow:visible; }
-  /* حالتِ پیش‌فرض = چشمِ بسته (رمز مخفی است) */
-  .fx-eye-upper, .fx-eye-lower, .fx-eye-pupil, .fx-eye-lashes{
-    transition:d .26s cubic-bezier(.22,1,.36,1), opacity .2s ease, transform .26s cubic-bezier(.22,1,.36,1);
-  }
-  /* بسته: پلکِ بالا مثلِ پلکِ واقعی روی چشم می‌افتد — کمانِ رو به پایین،
-     نه یک خطِ صافِ بی‌حالت */
-  .fx-eye-upper{ d:path("M3.2 10.6c2.6 3.4 5.6 5.1 8.8 5.1s6.2-1.7 8.8-5.1"); }
-  .fx-eye-lower{ opacity:0; }
-  .fx-eye-pupil{ opacity:0; transform:scale(.4); transform-origin:12px 12px; }
-  .fx-eye-lashes{ opacity:1; }
-  /* باز: پلک بالا می‌رود، مردمک ظاهر می‌شود، مژه‌ها جمع می‌شوند */
-  .is-open .fx-eye-upper{ d:path("M2.6 12c2.6-3.9 5.8-5.9 9.4-5.9s6.8 2 9.4 5.9"); }
-  .is-open .fx-eye-lower{ opacity:1; }
-  .is-open .fx-eye-pupil{ opacity:1; transform:scale(1); }
-  .is-open .fx-eye-lashes{ opacity:0; }
-
-  /* مرورگرهایی که انیمیشنِ `d` را ندارند (سافاری) — چشم همچنان درست
-     باز/بسته دیده می‌شود، فقط بدونِ حرکتِ نرم. */
-  @supports not (d: path("M0 0")){
-    .fx-eye-upper{ transition:opacity .2s ease; }
-  }
   .field-error-wrap.has-icon.has-end-action input{padding-right:34px; padding-left:38px;}
   .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
@@ -2971,7 +2949,10 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 /* فیلد کد تایید که زیر فیلد شماره ظاهر می‌شه — همون ورود ملایم بقیه‌ی
    فیلدهای فرم (staggerFieldsIn از data-anim-field استفاده می‌کنه)، بدون
    نیاز به یه استپ کاملا جدا/صفحه‌ی جدا. */
-.auth-otp-reveal{ margin-top:14px; animation:authBoxIn .28s ease both; }
+/* قبلا animation:authBoxIn (فید+اسلاید) داشت که چون بقیه‌ی فیلدها
+   (قوانین/دکمه‌ی ثبت‌نام) زیرش می‌ایستن، هر بار ظاهرشدنش انگار کل فرم
+   «جابه‌جا» می‌شد — طبقِ درخواستِ صریح حذف شد، الان بی‌انیمیشن سرِجاش میاد. */
+.auth-otp-reveal{ margin-top:14px; }
 .auth-otp-hint{ font-size:11.5px; color:var(--muted); margin-bottom:6px; }
 
 /* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
