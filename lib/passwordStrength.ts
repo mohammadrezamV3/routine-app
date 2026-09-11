@@ -16,13 +16,6 @@ export const PASSWORD_TIER_LABELS: Record<PasswordTier, string> = {
   strong: "قوی",
 };
 
-export const PASSWORD_TIER_LABELS_EN: Record<PasswordTier, string> = {
-  weak: "Weak",
-  medium: "Medium",
-  good: "Good",
-  strong: "Strong",
-};
-
 export const PASSWORD_TIER_ORDER: PasswordTier[] = ["weak", "medium", "good", "strong"];
 
 let zxcvbnPromise: Promise<(password: string, userInputs?: string[]) => { score: number }> | null = null;

@@ -8,8 +8,7 @@ import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { AuthField } from "@/components/AuthField";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidEmail, digitsOnly } from "@/lib/validate";
-import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_LABELS_EN, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
-import { useT } from "@/components/LanguageProvider";
+import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 const RESEND_COOLDOWN_SECONDS = 120;
 
@@ -21,7 +20,6 @@ function isValidIdentifier(v: string): boolean {
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const t = useT();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
@@ -59,19 +57,19 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
     if (!identifier.trim() || !isValidIdentifier(identifier.trim())) {
-      setError(t({ fa: "شماره همراه یا ایمیل معتبر نیست", en: "Invalid phone number or email" }));
+      setError("شماره همراه یا ایمیل معتبر نیست");
       return;
     }
     setLoading(true);
     try {
       const result = await sendResetCode(identifier.trim());
       setLoading(false);
-      if (!result.ok) { setError(result.error || t({ fa: "خطایی پیش آمد", en: "An error occurred" })); return; }
+      if (!result.ok) { setError(result.error || "خطایی پیش آمد"); return; }
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setStep(2);
     } catch {
       setLoading(false);
-      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
     }
   }
 
@@ -81,20 +79,20 @@ export default function ForgotPasswordPage() {
     try {
       const result = await sendResetCode(identifier.trim());
       setLoading(false);
-      if (!result.ok) { setError(result.error || t({ fa: "خطایی پیش آمد", en: "An error occurred" })); return; }
+      if (!result.ok) { setError(result.error || "خطایی پیش آمد"); return; }
       setCode("");
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch {
       setLoading(false);
-      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
     }
   }
 
   async function verifyAndReset(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!code.trim()) { setError(t({ fa: "کد ارسال‌شده را وارد کن", en: "Enter the code you received" })); return; }
-    if (!newPassword) { setError(t({ fa: "رمز جدید را وارد کن", en: "Enter a new password" })); return; }
+    if (!code.trim()) { setError("کد ارسال‌شده را وارد کن"); return; }
+    if (!newPassword) { setError("رمز جدید را وارد کن"); return; }
 
     setLoading(true);
     try {
@@ -105,11 +103,11 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json();
       setLoading(false);
-      if (!res.ok) { setError(data.error || t({ fa: "خطایی پیش آمد", en: "An error occurred" })); return; }
+      if (!res.ok) { setError(data.error || "خطایی پیش آمد"); return; }
       setStep(3);
     } catch {
       setLoading(false);
-      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
+      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
     }
   }
 
@@ -118,17 +116,14 @@ export default function ForgotPasswordPage() {
       <div className="auth-shell">
         <div className="auth-box">
           <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
-          <AuthBrandMark subtitle={t({ fa: "فراموشی رمز عبور", en: "Forgot password" })} />
+          <AuthBrandMark subtitle={"فراموشی رمز عبور"} />
 
           {step === 1 && (
             <form onSubmit={requestCode} className="auth-step" key="step1">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                {t({
-                  fa: "شماره‌همراه یا ایمیلی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه.",
-                  en: "Enter the phone number or email you signed up with — a 5-digit code will be sent to you.",
-                })}
+                {"شماره‌همراه یا ایمیلی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
               </div>
-              <AuthField id="identifier" label={t({ fa: "شماره همراه یا ایمیل", en: "Phone number or email" })} icon={<User size={15} />}>
+              <AuthField id="identifier" label={"شماره همراه یا ایمیل"} icon={<User size={15} />}>
                 <input
                   id="identifier" type="text" className="wsearch-newform-name" value={identifier} dir="ltr" style={{ textAlign: "right" }} placeholder="09123456789"
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -136,7 +131,7 @@ export default function ForgotPasswordPage() {
               </AuthField>
               {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
               <button type="submit" className="auth-full-btn" disabled={loading}>
-                {loading ? t({ fa: "در حال ارسال…", en: "Sending…" }) : t({ fa: "ارسال کد", en: "Send code" })}
+                {loading ? "در حال ارسال…" : "ارسال کد"}
               </button>
             </form>
           )}
@@ -144,12 +139,9 @@ export default function ForgotPasswordPage() {
           {step === 2 && (
             <form onSubmit={verifyAndReset} className="auth-step" key="step2">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                {t({
-                  fa: `کدی که به ${identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.`,
-                  en: `Enter the code that was sent to ${identifier}, then choose your new password.`,
-                })}
+                {`کدی که به ${identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.`}
               </div>
-              <AuthField id="code" label={t({ fa: "کد ۵ رقمی", en: "5-digit code" })}>
+              <AuthField id="code" label={"کد ۵ رقمی"}>
                 <input
                   id="code" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
                   onChange={(e) => setCode(digitsOnly(e.target.value))}
@@ -162,12 +154,12 @@ export default function ForgotPasswordPage() {
                 onClick={resendCode}
               >
                 {resendCooldown > 0
-                  ? t({ fa: `ارسال مجدد کد ${faNum(resendCooldown)}`, en: `Resend code in ${resendCooldown}` })
-                  : t({ fa: "ارسال مجدد کد", en: "Resend code" })}
+                  ? `ارسال مجدد کد ${faNum(resendCooldown)}`
+                  : "ارسال مجدد کد"}
               </button>
               <div style={{ marginTop: 14 }}>
                 <AuthField
-                  id="newPassword" label={t({ fa: "رمز عبور جدید", en: "New password" })}
+                  id="newPassword" label={"رمز عبور جدید"}
                   icon={<Lock size={15} />}
                   endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
                 >
@@ -184,15 +176,15 @@ export default function ForgotPasswordPage() {
                       ))}
                     </div>
                     <div className="pw-strength-label">
-                      {t({ fa: `قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`, en: `Password strength: ${PASSWORD_TIER_LABELS_EN[tier]}` })}
-                      {!isPasswordAcceptable(tier) && t({ fa: " — حداقل باید «خوب» باشه", en: " — must be at least \"Good\"" })}
+                      {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
+                      {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
                     </div>
                   </div>
                 )}
               </div>
               {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
               <button type="submit" className="auth-full-btn" disabled={loading}>
-                {loading ? t({ fa: "در حال ثبت…", en: "Submitting…" }) : t({ fa: "تغییر رمز عبور", en: "Change password" })}
+                {loading ? "در حال ثبت…" : "تغییر رمز عبور"}
               </button>
             </form>
           )}
@@ -200,10 +192,10 @@ export default function ForgotPasswordPage() {
           {step === 3 && (
             <div className="auth-step" key="step3" style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13, color: "var(--text)", marginTop: 10, lineHeight: 1.8 }}>
-                {t({ fa: "رمزت با موفقیت عوض شد. حالا می‌تونی با رمز جدید وارد بشی.", en: "Your password was changed successfully. You can now sign in with your new password." })}
+                {"رمزت با موفقیت عوض شد. حالا می‌تونی با رمز جدید وارد بشی."}
               </div>
               <button type="button" className="auth-full-btn" onClick={() => router.push("/auth/login")}>
-                {t({ fa: "بازگشت به ورود", en: "Back to sign in" })}
+                {"بازگشت به ورود"}
               </button>
             </div>
           )}

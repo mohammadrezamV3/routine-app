@@ -23,7 +23,6 @@
 // فایل افتاد: تست E2E شش کلید trade/bodyMetrics رو گرفت.)
 export const SETTING_KEYS = {
   theme: "theme",
-  language: "language",
   removedOccurrences: "removedOccurrences",
   customOccurrences: "customOccurrences",
   medications: "medications",

@@ -143,20 +143,13 @@
      دلیل کنار گذاشتن :has() پایین‌تر، کنار قاعده‌ی background، توضیح داده شده. */
   /* اسکرول‌بارِ اصلیِ صفحه.
      ────────────────────────────────────────────────────────────────────
-     جای اسکرول‌بار: صفحه‌ی فارسی `dir="rtl"` است و مرورگر در RTL نوارِ
-     عمودی را سمتِ *چپ* می‌گذارد. جهتِ خودِ <html> به ltr برمی‌گردد تا نوار
-     سرِ جای همیشگی‌اش (راست) بنشیند، و <body> دوباره rtl می‌شود تا هیچ‌چیزِ
-     دیگری در چیدمان عوض نشود — تمامِ محتوا داخلِ body است.
-     این ترفند فقط وقتی لازمه که واقعا RTLایم (فارسی): عمدا شرطیِ
-     html[dir="rtl"] شد — با زبانِ انگلیسی (lib/language.ts، dir="ltr" رویِ
-     <html>) اگه این‌جا بی‌قیدوشرط body رو rtl می‌کرد، سوییچِ زبان کاملا
-     بی‌اثر می‌موند: همه‌چیزِ داخلِ body (یعنی کلِ محتوایِ واقعیِ صفحه) با
-     همون CSS-propertyِ direction:rtl رندر می‌شد، مستقل از اتریبیوتِ dir —
-     دقیقا همون باگی که با علامتِ «!» جلوترِ «Welcome» به‌جایِ بعدش دیده شد.
+     جای اسکرول‌بار: صفحه `dir="rtl"` است و مرورگر در RTL نوارِ عمودی را
+     سمتِ *چپ* می‌گذارد. جهتِ خودِ <html> به ltr برمی‌گردد تا نوار سرِ جای
+     همیشگی‌اش (راست) بنشیند، و <body> دوباره rtl می‌شود تا هیچ‌چیزِ دیگری
+     در چیدمان عوض نشود — تمامِ محتوا داخلِ body است.
      رنگ: تیغه هم مثل شیارش سیاه است، فقط یک پله روشن‌تر تا دیده شود. */
-  html{ scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
-  html[dir="rtl"]{ direction:ltr; }
-  html[dir="rtl"] body{ direction:rtl; }
+  html{ direction:ltr; scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
+  body{ direction:rtl; }
   html::-webkit-scrollbar{ width:6px; }
   html::-webkit-scrollbar-track{ background:#000000; }
   html::-webkit-scrollbar-thumb{ background:#2B2F33; border-radius:10px; }
@@ -2989,16 +2982,9 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 }
 .auth-home-btn:hover{ color:var(--accent); transform:translateX(-3px); }
 .auth-home-btn svg{ width:23px; height:23px; }
-/* طبقِ درخواستِ صریح: توی فارسی (RTL، پیش‌فرض) این دکمه حالا بالا-چپ
-   می‌شینه (قبلا بالا-راست بود). موقعیت (inset-inline-end) خودش با dir
-   فلیپ می‌شه — توی حالتِ LTR (انگلیسی) برمی‌گرده بالا-راست (چون
-   inset-inline-end توی LTR یعنی سمتِ راست)، دیگه override جدا لازم
-   نداره. فقط چیزهایی که منطقی(logical) نیستن (خودِ transform، و مسیرِ
-   SVGِ فلش) باید صریح برای LTR برعکس بشن. */
+/* طبقِ درخواستِ صریح: این دکمه حالا بالا-چپ می‌شینه (قبلا بالا-راست بود). */
 .auth-home-btn-right{ inset-inline-start:auto; inset-inline-end:16px; }
 .auth-home-btn-right:hover{ transform:translateX(3px); }
-html[dir="ltr"] .auth-home-btn-right svg{ transform:scaleX(-1); }
-html[dir="ltr"] .auth-home-btn-right:hover{ transform:translateX(-3px); }
 
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
    "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست). عمدا بدون بک‌گراند/
