@@ -52,21 +52,29 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   // app/layout.tsx) فقط روی کروم/اندروید کار می‌کنه — وبکیت با بازشدنِ
   // کیبورد فقط visual viewport رو کوچیک می‌کنه، نه layout viewport، پس
   // top:50%ی مودال (که رویِ layout viewport حساب می‌شه) همون‌جای قبل از
-  // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم و
-  // مرکز/ارتفاعِ پنل رو با inline style بازنویسی می‌کنیم — کروم هم چیزی از
-  // دست نمی‌ده چون وقتی interactive-widget درست کار کنه، visualViewport و
-  // layout viewport یکی می‌شن و این مقدارها با نسخه‌ی CSS یکی درمی‌آد.
-  const [kbViewport, setKbViewport] = useState<{ top: number; maxHeight: number } | null>(null);
+  // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم.
+  //
+  // روی موبایل (طبق درخواست صریح: «باکس اندازه صفحه باشه، نه بیشتر نه
+  // کمتر») پنل دیگه یک کارتِ وسط‌چین نیست، یک شیتِ تمام‌صفحه‌ست — پس به‌جای
+  // maxHeight (که با min-height ثابتِ CSS تداخل می‌کرد و نصفِ بالای پنل رو
+  // از صفحه می‌بُرد)، height دقیقِ ویوپورتِ واقعی ست می‌شه. دسکتاپ/تبلت
+  // همون کارتِ وسط‌چینِ قبلی می‌مونه.
+  const [kbViewport, setKbViewport] = useState<{ top: number; height: number | null; maxHeight: number | null } | null>(null);
   useEffect(() => {
     if (!open) { setKbViewport(null); return; }
     const vv = typeof window !== "undefined" ? window.visualViewport : null;
     if (!vv) return;
     function update() {
       if (!vv) return;
-      setKbViewport({
-        top: vv.offsetTop + vv.height / 2,
-        maxHeight: Math.min(vv.height * 0.88, 760),
-      });
+      if (window.matchMedia("(max-width:640px)").matches) {
+        setKbViewport({ top: vv.offsetTop, height: vv.height, maxHeight: null });
+      } else {
+        setKbViewport({
+          top: vv.offsetTop + vv.height / 2,
+          height: null,
+          maxHeight: Math.min(vv.height * 0.88, 760),
+        });
+      }
     }
     update();
     vv.addEventListener("resize", update);
@@ -240,7 +248,13 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
           <div className="modal-overlay open" onClick={() => setOpen(false)} />
           <div
             className="modal-panel routine-ai-panel open"
-            style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight } : undefined}
+            style={
+              kbViewport
+                ? kbViewport.height !== null
+                  ? { top: kbViewport.top, height: kbViewport.height }
+                  : { top: kbViewport.top, maxHeight: kbViewport.maxHeight ?? undefined }
+                : undefined
+            }
             role="dialog"
             aria-modal="true"
             aria-label="مدیر برنامه"
