@@ -74,6 +74,10 @@ describe("POST /api/routine/assistant/voice", () => {
       const form = init.body as FormData;
       expect(form.get("language")).toBe("fa");
       expect(form.get("file")).toBeInstanceOf(File);
+      // باگِ واقعیِ production: بدونِ این فیلد، گیت‌وی پیش‌فرضِ خودش
+      // (verbose_json) را می‌فرستد و مدل ردش می‌کند — همیشه باید صریح
+      // "json" باشد (نگاه کن به کامنتِ همین فیلد در route.ts).
+      expect(form.get("response_format")).toBe("json");
       return new Response(JSON.stringify({ text: "  امروز ورزش دارم  " }), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);

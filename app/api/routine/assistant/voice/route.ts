@@ -72,6 +72,13 @@ export async function POST(req: NextRequest) {
   // زبان را صریح می‌دهیم: تشخیصِ خودکار روی جمله‌های کوتاهِ فارسی گاهی
   // عربی/اردو حدس می‌زند و خروجی به کلی بی‌ربط می‌شود.
   upstream.append("language", "fa");
+  // باگِ واقعیِ «تبدیلِ ویس انجام نشد» (لاگِ ai-gateway روی پروduction):
+  // بدونِ این فیلد، گیت‌وی خودش پیش‌فرض را روی response_format:"verbose_json"
+  // می‌گذارد و مدلِ انتخاب‌شده همان را رد می‌کند — «The selected model does
+  // not support response_format "verbose_json". Use "json" instead.» پس
+  // صریح باید "json" بفرستیم؛ شکلِ خروجی‌اش هم دقیقاً همان `{ text }` است که
+  // پایین‌تر خوانده می‌شود، نه فیلدهای اضافه‌ی verbose (segments/duration/...).
+  upstream.append("response_format", "json");
 
   let res: Response;
   try {

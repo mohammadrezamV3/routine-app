@@ -1,5 +1,31 @@
 # Arion — نسخه Next.js
 
+## نسخه: v1.156.0 (فیکس: تبدیلِ ویسِ «مدیرِ برنامه» انجام نمی‌شد)
+
+### باگ: «تبدیلِ ویس انجام نشد»
+
+لاگِ سرویسِ `ai-gateway` (پنلِ Owner › خطاها) دقیقاً علت را نشان می‌داد:
+
+```
+سرویسِ تبدیلِ ویس 400 داد: {"error":"transcription failed","status":400,
+"body":{"error":{"code":400,"message":"The selected model does not support
+response_format \"verbose_json\". Use \"json\" instead.
+```
+
+`app/api/routine/assistant/voice/route.ts` هیچ‌وقت `response_format` را صریح
+به گیت‌وی نمی‌فرستاد؛ گیت‌وی خودش پیش‌فرضش را روی `verbose_json` می‌گذاشت و
+مدلِ انتخاب‌شده (`whisper-1`، یا هرچه `ARVAN_AI_STT_MODEL` باشد) همان را رد
+می‌کرد — یعنی **هر** درخواستِ ویس شکست می‌خورد، نه فقط بعضی‌ها.
+
+```ts
+upstream.append("response_format", "json");
+```
+
+شکلِ پاسخِ `json` همان `{ text }` سادهٔ قبلی است (نه فیلدهای اضافه‌ی
+`verbose_json` مثلِ `segments`/`duration`)، پس بقیه‌ی کد دست‌نخورده ماند.
+تستِ `__tests__/routineVoiceRoute.test.ts` هم اسرت شد که این فیلد همیشه
+`"json"` باشد — تا این باگ دوباره بی‌سروصدا برنگردد.
+
 ## نسخه: v1.155.0 (چت دستیار: باز شدن کیبوردِ موبایل شکاف نمی‌ذاره)
 
 ### مشکل
