@@ -306,7 +306,15 @@ export function NavDrawer() {
   return (
     <>
       {!hideTopbar && (
-        <header className="app-topbar">
+        <>
+          {/* طبقِ درخواستِ صریح: بالای صفحه (پشتِ نوار وضعیت/بریدگیِ دوربین
+              روی موبایل) هم باید موقعِ اسکرول بلور بماند، نه بک‌گراندِ خامِ
+              صفحه. .app-topbar خودش از `top:14px + safe-area-inset-top`
+              شروع می‌شود، یعنی از خودِ safe-area تا لبه‌ی بالای صفحه یک
+              نواری می‌ماند که قبلاً هیچ بلوری نداشت. این عنصر مستقل، فقط
+              همان نوار را (به ارتفاعِ safe-area-inset-top) می‌پوشاند. */}
+          <div className="app-topbar-statusbar-blur" aria-hidden="true" />
+          <header className="app-topbar">
           <div className="topbar-actions-left">
             {/* هر دو نسخه (روز/شب) هم‌زمان با اولین رندر لود می‌شن (هردو priority)،
                 فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
@@ -419,6 +427,7 @@ export function NavDrawer() {
             )}
           </div>
         </header>
+        </>
       )}
 
       <div className={`nav-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
