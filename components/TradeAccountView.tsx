@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Pencil, Plus, Search } from "lucide-react";
-import { faNum } from "@/lib/jalali";
+import {
+  Award, Banknote, Building2, ChevronRight, Coins, Flame, Gauge, Hash,
+  Pencil, Percent, Plus, Scale, Search, Sigma, Snowflake, TrendingDown,
+  TrendingUp, Wallet, X, Zap,
+} from "lucide-react";
+import { faNum, isoLocal } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { computeTradeStats, statValue } from "@/lib/tradeAnalytics";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
@@ -15,8 +19,28 @@ import {
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
+import { TradeCalendarPanel } from "./TradeCalendarPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+
+// آیکون هر کارت آماری — فقط یک لمس بصری، بدون تغییر در منطق محاسبه‌ها
+const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
+  goalRing: Award,
+  balance: Wallet,
+  monthTotal: TrendingUp,
+  total: Hash,
+  winRate: Percent,
+  avgWin: TrendingUp,
+  avgLoss: TrendingDown,
+  largestGain: TrendingUp,
+  largestLoss: TrendingDown,
+  maxWinStreak: Flame,
+  maxLossStreak: Snowflake,
+  avgR: Gauge,
+  profitFactor: Scale,
+  maxDrawdown: TrendingDown,
+  expectancy: Sigma,
+};
 
 type StatusFilter = "ALL" | TradeStatus;
 
@@ -34,6 +58,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [query, setQuery] = useState("");
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const [editingAccount, setEditingAccount] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -75,9 +100,10 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
     return entries.filter((e) => {
       if (statusFilter !== "ALL" && e.status !== statusFilter) return false;
       if (q && !e.symbol.includes(q) && !(e.setup || "").toUpperCase().includes(q)) return false;
+      if (selectedDay && isoLocal(new Date(e.openedAt)) !== selectedDay) return false;
       return true;
     });
-  }, [entries, statusFilter, query]);
+  }, [entries, statusFilter, query, selectedDay]);
 
   function editEntry(entry: TradeEntryDetail) {
     setEditingEntry(entry);
@@ -114,10 +140,10 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             {account.archived && <span className="trade-account-archived-badge">آرشیو</span>}
           </div>
           <div className="trade-account-meta">
-            {account.broker && <span>{account.broker}</span>}
-            <span className="mono">{account.currency}</span>
-            {account.leverage ? <span className="mono">1:{faNum(account.leverage)}</span> : null}
-            <span>بالانس اولیه: <b className="mono">{faNum(account.initialBalance.toFixed(2))}</b></span>
+            {account.broker && <span><Building2 size={12} /> {account.broker}</span>}
+            <span className="mono"><Coins size={12} /> {account.currency}</span>
+            {account.leverage ? <span className="mono"><Zap size={12} /> 1:{faNum(account.leverage)}</span> : null}
+            <span><Banknote size={12} /> بالانس اولیه: <b className="mono">{faNum(account.initialBalance.toFixed(2))}</b></span>
           </div>
         </div>
         <div className="trade-account-header-actions">
@@ -160,9 +186,10 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         {TRADE_STAT_ORDER.filter((k) => k !== "goalRing" && visibleStats.includes(k)).map((k) => {
           const v = statValue(k, stats);
           if (!v) return null;
+          const Icon = TRADE_STAT_ICONS[k];
           return (
             <div key={k} className="trade-stat-tile">
-              <div className="trade-stat-label">{TRADE_STAT_LABELS[k]}</div>
+              <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
               <div
                 className="trade-stat-value mono"
                 style={v.positive === undefined ? undefined : { color: v.positive ? "var(--accent)" : "#E05252" }}
@@ -174,9 +201,22 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         })}
       </div>
 
+      <TradeCalendarPanel
+        entries={entries}
+        calSystem={calSystem}
+        selectedDay={selectedDay}
+        onSelectDay={(iso) => setSelectedDay((prev) => (prev === iso ? null : iso))}
+      />
+
       <div className="trade-list-head">
         <div className="domain-sub" style={{ margin: 0 }}>معاملات ({faNum(filtered.length)})</div>
         <div className="trade-list-filters">
+          {selectedDay && (
+            <button type="button" className="trade-day-filter-chip" onClick={() => setSelectedDay(null)}>
+              {formatTradeDateTime(new Date(`${selectedDay}T00:00:00`).toISOString(), calSystem, false)}
+              <X size={12} />
+            </button>
+          )}
           <div className="trade-search">
             <Search size={14} />
             <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="نماد یا ستاپ" />
