@@ -124,6 +124,17 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  // بدونِ این، رفتارِ پیش‌فرضِ کروم/اندروید (resizes-visual) یعنی وقتی
+  // کیبوردِ صفحه‌نمایش باز می‌شه فقط visual viewport کوچیک می‌شه، نه layout
+  // viewport — و چون واحدهای CSS (vh, dvh, و مرجعِ position:fixed) همه رویِ
+  // layout viewport حساب می‌شن، نه visual، مودال‌هایی مثلِ «مدیرِ برنامه»
+  // که وسط‌چین و max-height:...dvh هستن هیچ‌وقت نمی‌فهمن کیبورد بازه —
+  // نتیجه‌ش یه شکافِ خالیِ بزرگ بینِ کادرِ نوشتن و کیبورده (باگِ واقعیِ
+  // گزارش‌شده). resizes-content یعنی layout viewport هم واقعا با کیبورد
+  // کوچیک بشه، پس dvh و وسط‌چینیِ fixed هر دو خودشون رو درست حساب می‌کنن.
+  // مرورگرهایی که این دایرکتیو رو نمی‌شناسن (سافاریِ قدیمی‌تر) بی‌صدا
+  // نادیده‌ش می‌گیرن — بدونِ ریگرسیون.
+  interactiveWidget: "resizes-content",
   // themeColor عمدا این‌جا نیست — کاملا توی lib/themeColor.ts توضیح داده
   // شده: وقتی نکست مالک این تگ بود، بعد هیدریت نسخه‌ی خودش رو دوباره تزریق
   // می‌کرد و صفحه با دو متای theme-color (یکی بیات) می‌موند.
