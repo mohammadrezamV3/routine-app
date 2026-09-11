@@ -110,16 +110,17 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
 
   /**
    * طبق درخواست صریح: گو دیگه پالت ثابت صورتی/آبی/بنفشِ SmoothUI اصلی رو
-   * نداره — رنگش از var(--accent) همون دکمه‌های اصلی اپ (trade-primary-btn
-   * و بقیه) میاد، پس با تم روز/شب سایت (که --accent رو عوض می‌کنه) خودش
-   * خودکار جابه‌جا می‌شه، بدون نیاز به state جدا این‌جا.
+   * نداره — پالتش از --orb-* (تعریف‌شده در globals.css :root و
+   * body[data-theme="light"]) میاد: شب سبز/آبی/سیاه، روز شیری/قهوه‌ای/
+   * نارنجی. با تم روز/شب سایت خودکار جابه‌جا می‌شه، بدون نیاز به state
+   * جدا این‌جا.
    */
   const defaultColors = {
-    bg: "color-mix(in oklab, var(--accent) 10%, var(--bg) 90%)",
-    c1: "color-mix(in oklab, var(--accent) 88%, white 10%)",
-    c2: "var(--accent)",
-    c3: "color-mix(in oklab, var(--accent) 55%, var(--secondary) 45%)",
-    c4: "color-mix(in oklab, var(--accent) 78%, black 10%)",
+    bg: "var(--orb-bg)",
+    c1: "var(--orb-c1)",
+    c2: "var(--orb-c2)",
+    c3: "var(--orb-c3)",
+    c4: "var(--orb-c4)",
   };
 
   const finalColors = { ...defaultColors, ...colors };

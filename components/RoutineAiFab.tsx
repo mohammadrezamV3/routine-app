@@ -52,29 +52,31 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   // app/layout.tsx) فقط روی کروم/اندروید کار می‌کنه — وبکیت با بازشدنِ
   // کیبورد فقط visual viewport رو کوچیک می‌کنه، نه layout viewport، پس
   // top:50%ی مودال (که رویِ layout viewport حساب می‌شه) همون‌جای قبل از
-  // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم.
+  // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم و
+  // مرکز/ارتفاعِ پنل رو با inline style بازنویسی می‌کنیم.
   //
-  // روی موبایل (طبق درخواست صریح: «باکس اندازه صفحه باشه، نه بیشتر نه
-  // کمتر») پنل دیگه یک کارتِ وسط‌چین نیست، یک شیتِ تمام‌صفحه‌ست — پس به‌جای
-  // maxHeight (که با min-height ثابتِ CSS تداخل می‌کرد و نصفِ بالای پنل رو
-  // از صفحه می‌بُرد)، height دقیقِ ویوپورتِ واقعی ست می‌شه. دسکتاپ/تبلت
-  // همون کارتِ وسط‌چینِ قبلی می‌مونه.
-  const [kbViewport, setKbViewport] = useState<{ top: number; height: number | null; maxHeight: number | null } | null>(null);
+  // minHeight هم همین‌جا محاسبه و ست می‌شه — طبق گزارشِ باگ، min-height
+  // ثابتِ CSSِ .routine-ai-panel (برای اینکه یک پیامِ تنها پنل رو کوچیک
+  // نشون نده) با maxHeightِ واقعیِ این‌جا تداخل داشت: وقتی کیبورد باز
+  // می‌شد و ویوپورتِ واقعی کوچیک‌تر از اون min-height ثابت می‌شد، مرورگر
+  // min-height رو برنده می‌کرد و پنل بلندتر از فضای واقعا دیده‌شده
+  // می‌موند — نتیجه‌اش نیمه‌ی بالای پنل (هدر/پیام‌ها) از صفحه بیرون می‌زد.
+  // با ست‌کردنِ minHeight هم از همون maxHeightِ واقعی (نه بیشتر)، پنل
+  // هیچ‌وقت از فضای واقعا در دسترس بزرگ‌تر نمی‌شه — بدونِ هیچ تغییری در
+  // ظاهر/چیدمانِ خودِ کارت (طبق درخواستِ صریح: فقط مقدار، نه دیزاین).
+  const [kbViewport, setKbViewport] = useState<{ top: number; maxHeight: number; minHeight: number } | null>(null);
   useEffect(() => {
     if (!open) { setKbViewport(null); return; }
     const vv = typeof window !== "undefined" ? window.visualViewport : null;
     if (!vv) return;
     function update() {
       if (!vv) return;
-      if (window.matchMedia("(max-width:640px)").matches) {
-        setKbViewport({ top: vv.offsetTop, height: vv.height, maxHeight: null });
-      } else {
-        setKbViewport({
-          top: vv.offsetTop + vv.height / 2,
-          height: null,
-          maxHeight: Math.min(vv.height * 0.88, 760),
-        });
-      }
+      const maxHeight = Math.min(vv.height * 0.88, 760);
+      setKbViewport({
+        top: vv.offsetTop + vv.height / 2,
+        maxHeight,
+        minHeight: Math.min(maxHeight, 620),
+      });
     }
     update();
     vv.addEventListener("resize", update);
@@ -248,13 +250,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
           <div className="modal-overlay open" onClick={() => setOpen(false)} />
           <div
             className="modal-panel routine-ai-panel open"
-            style={
-              kbViewport
-                ? kbViewport.height !== null
-                  ? { top: kbViewport.top, height: kbViewport.height }
-                  : { top: kbViewport.top, maxHeight: kbViewport.maxHeight ?? undefined }
-                : undefined
-            }
+            style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight, minHeight: kbViewport.minHeight } : undefined}
             role="dialog"
             aria-modal="true"
             aria-label="مدیر برنامه"
