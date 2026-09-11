@@ -143,13 +143,20 @@
      دلیل کنار گذاشتن :has() پایین‌تر، کنار قاعده‌ی background، توضیح داده شده. */
   /* اسکرول‌بارِ اصلیِ صفحه.
      ────────────────────────────────────────────────────────────────────
-     جای اسکرول‌بار: صفحه `dir="rtl"` است و مرورگر در RTL نوارِ عمودی را
-     سمتِ *چپ* می‌گذارد. جهتِ خودِ <html> به ltr برمی‌گردد تا نوار سرِ جای
-     همیشگی‌اش (راست) بنشیند، و <body> دوباره rtl می‌شود تا هیچ‌چیزِ دیگری
-     در چیدمان عوض نشود — تمامِ محتوا داخلِ body است.
+     جای اسکرول‌بار: صفحه‌ی فارسی `dir="rtl"` است و مرورگر در RTL نوارِ
+     عمودی را سمتِ *چپ* می‌گذارد. جهتِ خودِ <html> به ltr برمی‌گردد تا نوار
+     سرِ جای همیشگی‌اش (راست) بنشیند، و <body> دوباره rtl می‌شود تا هیچ‌چیزِ
+     دیگری در چیدمان عوض نشود — تمامِ محتوا داخلِ body است.
+     این ترفند فقط وقتی لازمه که واقعا RTLایم (فارسی): عمدا شرطیِ
+     html[dir="rtl"] شد — با زبانِ انگلیسی (lib/language.ts، dir="ltr" رویِ
+     <html>) اگه این‌جا بی‌قیدوشرط body رو rtl می‌کرد، سوییچِ زبان کاملا
+     بی‌اثر می‌موند: همه‌چیزِ داخلِ body (یعنی کلِ محتوایِ واقعیِ صفحه) با
+     همون CSS-propertyِ direction:rtl رندر می‌شد، مستقل از اتریبیوتِ dir —
+     دقیقا همون باگی که با علامتِ «!» جلوترِ «Welcome» به‌جایِ بعدش دیده شد.
      رنگ: تیغه هم مثل شیارش سیاه است، فقط یک پله روشن‌تر تا دیده شود. */
-  html{ direction:ltr; scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
-  body{ direction:rtl; }
+  html{ scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
+  html[dir="rtl"]{ direction:ltr; }
+  html[dir="rtl"] body{ direction:rtl; }
   html::-webkit-scrollbar{ width:6px; }
   html::-webkit-scrollbar-track{ background:#000000; }
   html::-webkit-scrollbar-thumb{ background:#2B2F33; border-radius:10px; }
@@ -2984,6 +2991,11 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
 .auth-home-btn svg{ width:23px; height:23px; }
 .auth-home-btn-right{ left:auto; right:16px; }
 .auth-home-btn-right:hover{ transform:translateX(3px); }
+/* توی LTR (زبانِ انگلیسی) «بازگشت» باید بالا-چپ باشه، نه بالا-راست —
+   left/right اینجا فیزیکی‌ان و با فقط عوض‌شدنِ dir خودشون فلیپ نمی‌شن. */
+html[dir="ltr"] .auth-home-btn-right{ left:16px; right:auto; }
+html[dir="ltr"] .auth-home-btn-right svg{ transform:scaleX(-1); }
+html[dir="ltr"] .auth-home-btn-right:hover{ transform:translateX(-3px); }
 
 /* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
    "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست). عمدا بدون بک‌گراند/

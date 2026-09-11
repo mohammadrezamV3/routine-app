@@ -12,7 +12,8 @@ import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
-import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
+import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_LABELS_EN, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
+import { useT } from "@/components/LanguageProvider";
 
 type FieldErrors = {
   phone?: string; name?: string; username?: string;
@@ -38,6 +39,7 @@ const RESEND_COOLDOWN_SECONDS = 120;
 // چک می‌شه.
 export default function SignupPage() {
   const router = useRouter();
+  const t = useT();
 
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -86,11 +88,11 @@ export default function SignupPage() {
   async function requestOtp() {
     const trimmed = phone.trim();
     if (!trimmed) {
-      setFieldErrors((f) => ({ ...f, phone: "شماره همراه را وارد کن" }));
+      setFieldErrors((f) => ({ ...f, phone: t({ fa: "شماره همراه را وارد کن", en: "Enter your phone number" }) }));
       return;
     }
     if (!isValidIranPhone(trimmed)) {
-      setFieldErrors((f) => ({ ...f, phone: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)" }));
+      setFieldErrors((f) => ({ ...f, phone: t({ fa: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)", en: "Invalid phone format (e.g. 09xxxxxxxxx)" }) }));
       return;
     }
     clearError("phone");
@@ -104,7 +106,7 @@ export default function SignupPage() {
       const data = await res.json().catch(() => ({}));
       setSendingCode(false);
       if (!res.ok) {
-        setFieldErrors((f) => ({ ...f, phone: data.error || "خطایی پیش آمد" }));
+        setFieldErrors((f) => ({ ...f, phone: data.error || t({ fa: "خطایی پیش آمد", en: "An error occurred" }) }));
         return;
       }
       setOtpCode("");
@@ -113,7 +115,7 @@ export default function SignupPage() {
       setOtpSent(true);
     } catch {
       setSendingCode(false);
-      setFieldErrors((f) => ({ ...f, phone: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" }));
+      setFieldErrors((f) => ({ ...f, phone: t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }) }));
     }
   }
 
@@ -130,24 +132,24 @@ export default function SignupPage() {
 
     const errs: FieldErrors = {};
     const { name, lastName } = splitFullName(fullName);
-    if (!name) errs.name = "نام و نام‌خانوادگی را وارد کن";
-    else if (!lastName) errs.name = "نام و نام‌خانوادگی را کامل وارد کن";
+    if (!name) errs.name = t({ fa: "نام و نام‌خانوادگی را وارد کن", en: "Enter your first and last name" });
+    else if (!lastName) errs.name = t({ fa: "نام و نام‌خانوادگی را کامل وارد کن", en: "Enter your full first and last name" });
     // فقط فارسی — همین بررسی سمت سرور هم تکرار می‌شود (قابل دور زدن است)
     else if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
-      errs.name = "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود";
+      errs.name = t({ fa: "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود", en: "Name must be written in Persian letters only" });
     }
-    if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
-    else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
-    if (!password) errs.password = "رمز عبور را وارد کن";
+    if (!username.trim()) errs.username = t({ fa: "یوزرنیم را وارد کن", en: "Enter a username" });
+    else if (!isValidUsername(username.trim())) errs.username = t({ fa: "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد", en: "Username must be 3-20 English letters/digits/underscores" });
+    if (!password) errs.password = t({ fa: "رمز عبور را وارد کن", en: "Enter a password" });
     else {
       const pwErr = await validatePassword(password, [username, fullName, phone]);
       if (pwErr) errs.password = pwErr;
     }
-    if (!phone.trim()) errs.phone = "شماره همراه را وارد کن";
-    else if (!isValidIranPhone(phone.trim())) errs.phone = "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)";
-    else if (!otpSent) errs.phone = "اول باید کد تایید رو ارسال کنی";
-    if (otpSent && !otpCode.trim()) errs.otp = "کد ارسال‌شده را وارد کن";
-    if (!agreed) errs.agreed = "برای ادامه باید قوانین سایت را بپذیری";
+    if (!phone.trim()) errs.phone = t({ fa: "شماره همراه را وارد کن", en: "Enter your phone number" });
+    else if (!isValidIranPhone(phone.trim())) errs.phone = t({ fa: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)", en: "Invalid phone format (e.g. 09xxxxxxxxx)" });
+    else if (!otpSent) errs.phone = t({ fa: "اول باید کد تایید رو ارسال کنی", en: "You need to send the verification code first" });
+    if (otpSent && !otpCode.trim()) errs.otp = t({ fa: "کد ارسال‌شده را وارد کن", en: "Enter the code you received" });
+    if (!agreed) errs.agreed = t({ fa: "برای ادامه باید قوانین سایت را بپذیری", en: "You must accept the site's terms to continue" });
 
     setFieldErrors(errs);
     if (Object.keys(errs).length) {
@@ -167,12 +169,12 @@ export default function SignupPage() {
       verifyData = await verifyRes.json().catch(() => ({}));
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
       return;
     }
     if (!verifyRes.ok) {
       setLoading(false);
-      setFieldErrors((f) => ({ ...f, otp: verifyData.error || "کد وارد شده اشتباه است" }));
+      setFieldErrors((f) => ({ ...f, otp: verifyData.error || t({ fa: "کد وارد شده اشتباه است", en: "The code you entered is incorrect" }) }));
       return;
     }
 
@@ -187,12 +189,12 @@ export default function SignupPage() {
       data = await res.json();
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
       return;
     }
     if (!res.ok) {
       setLoading(false);
-      setError(data.error || "خطایی پیش آمد — دوباره امتحان کن");
+      setError(data.error || t({ fa: "خطایی پیش آمد — دوباره امتحان کن", en: "An error occurred — please try again" }));
       return;
     }
 
@@ -223,19 +225,19 @@ export default function SignupPage() {
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
           <AuthBackButton />
-          <AuthBrandMark subtitle="به آریون خوش اومدی!" />
+          <AuthBrandMark subtitle={t({ fa: "به آریون خوش اومدی!", en: "Welcome to Arion!" })} />
 
-          <AuthField id="fullName" label="نام و نام‌خانوادگی" error={fieldErrors.name} icon={<User size={15} />} ref={nameRef}>
+          <AuthField id="fullName" label={t({ fa: "نام و نام‌خانوادگی", en: "First and last name" })} error={fieldErrors.name} icon={<User size={15} />} ref={nameRef}>
             <input
-              id="fullName" type="text" className="wsearch-newform-name" value={fullName} placeholder="نام و نام‌خانوادگی خود را وارد کنید"
+              id="fullName" type="text" className="wsearch-newform-name" value={fullName} placeholder={t({ fa: "نام و نام‌خانوادگی خود را وارد کنید", en: "Enter your first and last name" })}
               onChange={(e) => { setFullName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
             />
           </AuthField>
 
           <div style={{ marginTop: 14 }}>
-            <AuthField id="username" label="یوزرنیم" error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
+            <AuthField id="username" label={t({ fa: "یوزرنیم", en: "Username" })} error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
               <input
-                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder="یوزرنیم خود را وارد کنید"
+                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder={t({ fa: "یوزرنیم خود را وارد کنید", en: "Enter a username" })}
                 onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
               />
             </AuthField>
@@ -243,32 +245,32 @@ export default function SignupPage() {
 
           <div style={{ marginTop: 14 }}>
             <AuthField
-              id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
+              id="password" label={t({ fa: "رمز عبور", en: "Password" })} error={fieldErrors.password} ref={passwordRef}
               icon={<Lock size={15} />}
               endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
             >
               <input
-                id="password" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={password} placeholder="حداقل ۸ کاراکتر"
+                id="password" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={password} placeholder={t({ fa: "حداقل ۸ کاراکتر", en: "At least 8 characters" })}
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
             </AuthField>
             {tier && (
               <div className={`pw-strength pw-strength-${tier}`}>
                 <div className="pw-strength-bars">
-                  {PASSWORD_TIER_ORDER.map((t, i) => (
-                    <div key={t} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
+                  {PASSWORD_TIER_ORDER.map((tv, i) => (
+                    <div key={tv} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
                   ))}
                 </div>
                 <div className="pw-strength-label">
-                  قدرت رمز: {PASSWORD_TIER_LABELS[tier]}
-                  {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
+                  {t({ fa: `قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`, en: `Password strength: ${PASSWORD_TIER_LABELS_EN[tier]}` })}
+                  {!isPasswordAcceptable(tier) && t({ fa: " — حداقل باید «خوب» باشه", en: " — must be at least \"Good\"" })}
                 </div>
               </div>
             )}
           </div>
 
           <div style={{ marginTop: 14 }} ref={phoneRef}>
-            <AuthField id="phone" label="شماره همراه" error={fieldErrors.phone}>
+            <AuthField id="phone" label={t({ fa: "شماره همراه", en: "Phone number" })} error={fieldErrors.phone}>
               <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
                 <input
                   id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" style={{ textAlign: "right" }}
@@ -282,7 +284,7 @@ export default function SignupPage() {
                   disabled={sendingCode || (otpSent && resendCooldown > 0)}
                   onClick={otpSent ? changePhone : requestOtp}
                 >
-                  {sendingCode ? "در حال ارسال…" : otpSent ? "تغییر شماره" : "ارسال کد"}
+                  {sendingCode ? t({ fa: "در حال ارسال…", en: "Sending…" }) : otpSent ? t({ fa: "تغییر شماره", en: "Change number" }) : t({ fa: "ارسال کد", en: "Send code" })}
                 </button>
               </div>
             </AuthField>
@@ -290,8 +292,10 @@ export default function SignupPage() {
 
           {otpSent && (
             <div className="auth-otp-reveal" ref={otpRef}>
-              <div className="auth-otp-hint">کدی که به {phone.trim()} پیامک شد رو وارد کن.</div>
-              <AuthField id="signupOtp" label="کد ۵ رقمی" error={fieldErrors.otp}>
+              <div className="auth-otp-hint">
+                {t({ fa: `کدی که به ${phone.trim()} پیامک شد رو وارد کن.`, en: `Enter the code that was sent by SMS to ${phone.trim()}.` })}
+              </div>
+              <AuthField id="signupOtp" label={t({ fa: "کد ۵ رقمی", en: "5-digit code" })} error={fieldErrors.otp}>
                 <input
                   id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
                   onChange={(e) => { const v = digitsOnly(e.target.value); setOtpCode(v); if (v) clearError("otp"); }}
@@ -303,7 +307,9 @@ export default function SignupPage() {
                 disabled={resendCooldown > 0 || sendingCode}
                 onClick={requestOtp}
               >
-                {resendCooldown > 0 ? `ارسال مجدد کد ${faNum(resendCooldown)}` : "ارسال مجدد کد"}
+                {resendCooldown > 0
+                  ? t({ fa: `ارسال مجدد کد ${faNum(resendCooldown)}`, en: `Resend code in ${resendCooldown}` })
+                  : t({ fa: "ارسال مجدد کد", en: "Resend code" })}
               </button>
             </div>
           )}
@@ -322,9 +328,9 @@ export default function SignupPage() {
             </div>
             <div className="task-name">
               <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-                قوانین و مقررات
+                {t({ fa: "قوانین و مقررات", en: "terms and conditions" })}
               </Link>
-              {" "}سایت را می‌پذیرم
+              {" "}{t({ fa: "سایت را می‌پذیرم", en: "of the site" })}
             </div>
           </div>
           {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}
@@ -332,7 +338,7 @@ export default function SignupPage() {
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
           <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field style={{ marginTop: 16 }}>
-            {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
+            {loading ? t({ fa: "در حال ثبت‌نام…", en: "Signing up…" }) : t({ fa: "ساخت حساب", en: "Create account" })}
           </button>
         </form>
       </div>
