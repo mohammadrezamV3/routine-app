@@ -883,8 +883,39 @@
      باکس‌ها از پس زمینه قابل تشخیص نبودن. اینجا یه مقدار میانه (۱۶٪) که
      هم شیشه‌ای/ترنسپرنت بمونه (نه سفید تخت مثل قبل) هم واقعا به‌چشم بیاد. */
   body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.16); }
-  .trade-stat-label{ font-size:9.5px; font-weight:700; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-transform:uppercase; letter-spacing:.05em; }
+  .trade-stat-label{
+    display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:700; color:var(--muted2);
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; text-transform:uppercase; letter-spacing:.05em;
+  }
+  .trade-stat-label svg{ flex-shrink:0; opacity:.75; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
+
+  /* تقویم سود/زیان حساب — همون قاب .cal-grid موجود، خانه‌ها رنگ‌شده طبق
+     سود/زیان روز (dailyPnl) به‌جای وضعیت انجام‌شده/نشده‌ی روتین. */
+  .trade-calendar-box{ padding:14px 16px 16px; margin-top:14px; }
+  .trade-calendar-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .trade-calendar-head .trade-section-title{ display:flex; align-items:center; gap:6px; }
+  .trade-calendar-total{ font-size:13px; font-weight:800; }
+  .trade-cal-grid{ margin-top:2px; }
+  .trade-cal-cell{ gap:1px; padding:2px; cursor:default; }
+  .trade-cal-cell.no-data:hover{ border-color:var(--line); transform:none; }
+  .trade-cal-cell.win, .trade-cal-cell.loss{ cursor:pointer; }
+  .trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--accent-rgb),.24), rgba(var(--accent-rgb),.06)); border-color:rgba(var(--accent-rgb),.5); }
+  .trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(224,82,82,.18), rgba(224,82,82,.05)); border-color:rgba(224,82,82,.5); }
+  .trade-cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
+  .trade-cal-pnl{ font-size:8.5px; font-weight:700; line-height:1; }
+  .trade-cal-cell.win .trade-cal-pnl{ color:var(--accent); }
+  .trade-cal-cell.loss .trade-cal-pnl{ color:#E05252; }
+
+  /* چیپ فیلتر روز انتخاب‌شده از تقویم — کنار جست‌وجو/وضعیت لیست معاملات */
+  .trade-day-filter-chip{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px;
+    font-size:11px; font-weight:700; color:var(--accent); border:1px solid rgba(var(--accent-rgb),.4);
+    background:rgba(var(--accent-rgb),.08); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    transition:background .18s ease;
+  }
+  @media (hover:hover){ .trade-day-filter-chip:hover{ background:rgba(var(--accent-rgb),.16); } }
+  body[data-theme="light"] .trade-day-filter-chip, body:not([data-theme="light"]) .trade-day-filter-chip{ background:rgba(var(--accent-rgb),.08); box-shadow:none; }
   .trade-entry-date-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
 
   /* calendar */
@@ -4956,6 +4987,8 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-header-main{ flex:1; min-width:180px; }
 .trade-account-header h1{ font-size:19px; }
 .trade-account-meta{ display:flex; flex-wrap:wrap; gap:5px 13px; margin-top:7px; font-size:11.5px; color:var(--muted); }
+.trade-account-meta span{ display:inline-flex; align-items:center; gap:4px; }
+.trade-account-meta svg{ flex-shrink:0; opacity:.7; }
 .trade-account-header-actions{ display:flex; align-items:center; gap:7px; }
 
 .trade-account-picker{ display:flex; flex-direction:column; gap:7px; margin-top:8px; }
