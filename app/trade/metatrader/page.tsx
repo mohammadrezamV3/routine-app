@@ -66,7 +66,7 @@ function AccountsForMt() {
 export default function TradeMetaTraderPage() {
   return (
     <TradePageShell
-      title="اتصال متاتریدر"
+      title="حساب‌ها:"
     >
       <AccountsForMt />
     </TradePageShell>

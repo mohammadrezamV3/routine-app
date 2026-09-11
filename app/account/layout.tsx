@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown,
+  User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown, Dumbbell,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -16,6 +16,8 @@ import { clearAuthHintCookie } from "@/lib/preload";
 // پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → منوی بخش‌ها (فقط لیست زبانه‌ها، بدون محتوا)
 //   /account/profile            → پروفایل
+//   /account/sport-profile      → پروفایل ورزشی (قد/وزن/سن/جنسیت — طبق
+//                                  درخواست صریح از پروفایل عمومی جدا شد)
 //   /account/general            → «تنظیمات» — تنظیمات آریون + تنظیمات روتین و
 //                                  ترید، همه یک‌جا و بدون ناوبری تودرتو
 //                                  (تم نمایش عمدا این‌جا نیست — همون سوییچ
@@ -26,6 +28,7 @@ import { clearAuthHintCookie } from "@/lib/preload";
 //   /account/support            → پشتیبانی
 export const ACCOUNT_SECTIONS: { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
   { href: "/account/profile", label: "پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
+  { href: "/account/sport-profile", label: "پروفایل ورزشی", icon: <Dumbbell size={15} />, match: (p) => p.startsWith("/account/sport-profile") },
   { href: "/account/general", label: "تنظیمات", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") },
   { href: "/account/subscription", label: "اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
   { href: "/account/security", label: "امنیت", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },

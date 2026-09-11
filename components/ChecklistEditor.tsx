@@ -5,7 +5,7 @@ import { Reorder } from "framer-motion";
 import { GripVertical, Loader2, Plus, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { LockBodyScroll } from "./LockBodyScroll";
-import { MAX_CHECKLIST_ITEMS, TAG_COLORS } from "@/lib/tradeTypes";
+import { MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS, TAG_COLORS } from "@/lib/tradeTypes";
 
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -43,6 +43,7 @@ export function ChecklistEditor({
   async function save() {
     if (saving) return;
     if (!name.trim()) { setError("نام چک‌لیست را وارد کن"); return; }
+    if (items.length < MIN_CHECKLIST_ITEMS) { setError(`چک‌لیست باید حداقل ${faNum(MIN_CHECKLIST_ITEMS)} مورد داشته باشد`); return; }
     setSaving(true);
     setError(null);
     const body = {
@@ -92,7 +93,9 @@ export function ChecklistEditor({
           </span>
         </button>
 
-        <label className="exercise-form-label">موارد ({faNum(items.length)}/{faNum(MAX_CHECKLIST_ITEMS)})</label>
+        <label className="exercise-form-label">
+          موارد ({faNum(items.length)}/{faNum(MAX_CHECKLIST_ITEMS)}) — حداقل {faNum(MIN_CHECKLIST_ITEMS)} مورد لازم است
+        </label>
         <Reorder.Group axis="y" values={items} onReorder={setItems} className="trade-checklist-edit-list">
           {items.map((it) => (
             <Reorder.Item key={it.key} value={it} className="trade-checklist-edit-row">
@@ -102,7 +105,13 @@ export function ChecklistEditor({
                 onChange={(e) => setItems((prev) => prev.map((p) => (p.key === it.key ? { ...p, text: e.target.value } : p)))}
                 maxLength={200}
               />
-              <button type="button" className="trade-icon-btn danger" onClick={() => setItems((prev) => prev.filter((p) => p.key !== it.key))} aria-label="حذف">
+              <button
+                type="button"
+                className="trade-icon-btn danger"
+                disabled={items.length <= MIN_CHECKLIST_ITEMS}
+                onClick={() => setItems((prev) => (prev.length <= MIN_CHECKLIST_ITEMS ? prev : prev.filter((p) => p.key !== it.key)))}
+                aria-label="حذف"
+              >
                 <Trash2 size={14} />
               </button>
             </Reorder.Item>
@@ -138,7 +147,7 @@ export function ChecklistEditor({
 
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
-          <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
+          <button type="button" className="trade-primary-btn" onClick={save} disabled={saving || items.length < MIN_CHECKLIST_ITEMS}>
             {saving ? <Loader2 size={15} className="trade-spin" /> : "ذخیره"}
           </button>
         </div>

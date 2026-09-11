@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSetting } from "@/lib/storage";
-import { ACCOUNT_TYPE_LABELS, CAL_SYSTEM_KEY, CalSystem, TradeAccount } from "@/lib/tradeTypes";
+import { CAL_SYSTEM_KEY, CalSystem, TradeAccount } from "@/lib/tradeTypes";
 import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 
@@ -36,19 +36,5 @@ export function TradeMtAccountPanel({ accountId }: { accountId: string }) {
   if (loading) return <PanelSkeleton />;
   if (notFound || !account) return <div className="item-line empty">این حساب پیدا نشد.</div>;
 
-  return (
-    <div>
-      <div className="trade-surface trade-account-header">
-        <span className="trade-account-stripe" style={{ background: account.color }} />
-        <div className="trade-account-header-main">
-          <div className="trade-account-title-row">
-            <span className="trade-account-name">{account.name}</span>
-            <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
-          </div>
-        </div>
-      </div>
-
-      <TradeMtLinkPanel accountId={account.id} calSystem={calSystem} />
-    </div>
-  );
+  return <TradeMtLinkPanel accountId={account.id} calSystem={calSystem} accountName={account.name} />;
 }

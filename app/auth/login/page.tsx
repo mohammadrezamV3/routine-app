@@ -13,6 +13,7 @@ import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle"
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
 import { toEnDigits } from "@/lib/schedule";
+import { useT } from "@/components/LanguageProvider";
 
 // ورود فقط با یوزرنیم/شماره + رمز عبوره — روش کد ایمیل از اینجا حذف شد
 // (تصمیم صریح کاربر: «ورود به پنل فقط با رمز عبور باشه نه کد ایمیل»).
@@ -21,6 +22,7 @@ import { toEnDigits } from "@/lib/schedule";
 // و ممکنه بعدا لازم بشن؛ حذف کامل‌شون یه تصمیم جدا و بزرگ‌تره.
 export default function LoginPage() {
   const router = useRouter();
+  const t = useT();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +59,7 @@ export default function LoginPage() {
     // می‌شود: نشستِ جعلی هیچ‌وقت کاربر ندارد.
     const session = await getSession();
     if (!(session?.user as any)?.id) {
-      setError("ورود ناموفق بود — دوباره امتحان کن");
+      setError(t({ fa: "ورود ناموفق بود — دوباره امتحان کن", en: "Login failed — please try again" }));
       return false;
     }
 
@@ -76,8 +78,8 @@ export default function LoginPage() {
     setError(null);
 
     const errs: typeof fieldErrors = {};
-    if (!identifier.trim()) errs.identifier = "یوزرنیم یا شماره موبایل را وارد کن";
-    if (!password) errs.password = "رمز عبور را وارد کن";
+    if (!identifier.trim()) errs.identifier = t({ fa: "یوزرنیم یا شماره موبایل را وارد کن", en: "Enter your username or phone number" });
+    if (!password) errs.password = t({ fa: "رمز عبور را وارد کن", en: "Enter your password" });
     if (Object.keys(errs).length) {
       setFieldErrors(errs);
       return;
@@ -109,7 +111,7 @@ export default function LoginPage() {
       res = await signIn("credentials", { redirect: false, identifier, password, remember: remember ? "1" : "0" });
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
       return;
     }
     setLoading(false);
@@ -117,11 +119,11 @@ export default function LoginPage() {
     if (res?.error) {
       // پیام عمدا کلیه (نه «یوزرنیم اشتباهه» / «رمز اشتباهه» جدا) تا کسی که
       // فقط رمز رو حدس می‌زنه نتونه بفهمه شناسه‌ی درست رو پیدا کرده یا نه.
-      setError("یوزرنیم/شماره موبایل یا رمز عبور اشتباه است");
+      setError(t({ fa: "یوزرنیم/شماره موبایل یا رمز عبور اشتباه است", en: "Incorrect username/phone number or password" }));
       return;
     }
     if (!res?.ok) {
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
       return;
     }
     setLoading(true);
@@ -132,7 +134,7 @@ export default function LoginPage() {
   async function submitOtp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (otpCode.trim().length < 4) { setError("کد پیامک‌شده رو کامل وارد کن"); return; }
+    if (otpCode.trim().length < 4) { setError(t({ fa: "کد پیامک‌شده رو کامل وارد کن", en: "Enter the full code you received by SMS" })); return; }
 
     setLoading(true);
     let res;
@@ -140,10 +142,10 @@ export default function LoginPage() {
       res = await signIn("sms-2fa", { redirect: false, identifier, code: otpCode.trim(), remember: remember ? "1" : "0" });
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(t({ fa: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", en: "There was a problem connecting to the server — please try again" }));
       return;
     }
-    if (res?.error || !res?.ok) { setLoading(false); setError("کد وارد‌شده درست نیست یا منقضی شده"); return; }
+    if (res?.error || !res?.ok) { setLoading(false); setError(t({ fa: "کد وارد‌شده درست نیست یا منقضی شده", en: "The code you entered is incorrect or has expired" })); return; }
     const ok = await finalizeLogin();
     if (!ok) setLoading(false);
   }
@@ -155,13 +157,16 @@ export default function LoginPage() {
           <AuthTabs active="login" />
           <form onSubmit={submitOtp} className="auth-box">
             <AuthBackButton />
-            <AuthBrandMark subtitle="ورود دومرحله‌ای" />
+            <AuthBrandMark subtitle={t({ fa: "ورود دومرحله‌ای", en: "Two-factor login" })} />
 
             <div className="section-note" style={{ marginBottom: 12 }}>
-              یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…{toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.
+              {t({
+                fa: `یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`,
+                en: `A code was sent by SMS to your registered number (…${toEnDigits(twoFactor.phoneHint)}). Enter the code.`,
+              })}
             </div>
 
-            <AuthField id="otp" label="کد پیامک‌شده" icon={<ShieldCheck size={15} />}>
+            <AuthField id="otp" label={t({ fa: "کد پیامک‌شده", en: "SMS code" })} icon={<ShieldCheck size={15} />}>
               <input
                 id="otp"
                 type="text"
@@ -178,7 +183,7 @@ export default function LoginPage() {
             {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
             <button type="submit" className="auth-full-btn" disabled={loading}>
-              {loading ? "در حال ورود…" : "تایید و ورود"}
+              {loading ? t({ fa: "در حال ورود…", en: "Signing in…" }) : t({ fa: "تایید و ورود", en: "Verify & sign in" })}
             </button>
             <button
               type="button"
@@ -186,7 +191,7 @@ export default function LoginPage() {
               style={{ marginTop: 12, background: "none", display: "block", width: "100%" }}
               onClick={() => { setTwoFactor(null); setError(null); }}
             >
-              بازگشت
+              {t({ fa: "بازگشت", en: "Back" })}
             </button>
           </form>
         </div>
@@ -201,9 +206,9 @@ export default function LoginPage() {
 
         <form ref={formRef} onSubmit={submitPassword} className="auth-box">
           <AuthBackButton />
-          <AuthBrandMark subtitle="ورود به پنل کاربری" />
+          <AuthBrandMark subtitle={t({ fa: "ورود به پنل کاربری", en: "Sign in to your account" })} />
 
-          <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
+          <AuthField id="identifier" label={t({ fa: "یوزرنیم یا شماره همراه", en: "Username or phone number" })} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
             <input
               id="identifier"
               type="text"
@@ -216,7 +221,7 @@ export default function LoginPage() {
 
           <div style={{ marginTop: 14 }}>
             <AuthField
-              id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
+              id="password" label={t({ fa: "رمز عبور", en: "Password" })} error={fieldErrors.password} ref={passwordRef}
               icon={<Lock size={15} />}
               endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
             >
@@ -224,7 +229,7 @@ export default function LoginPage() {
                 id="password"
                 type={passwordVisible ? "text" : "password"}
                 className="wsearch-newform-name"
-                placeholder="رمز عبورت رو وارد کن"
+                placeholder={t({ fa: "رمز عبورت رو وارد کن", en: "Enter your password" })}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
@@ -239,15 +244,15 @@ export default function LoginPage() {
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
               />
-              منو به‌یاد داشته باش
+              {t({ fa: "منو به‌یاد داشته باش", en: "Remember me" })}
             </label>
-            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
+            <Link href="/auth/forgot-password" className="auth-forgot-link">{t({ fa: "فراموشی رمز عبور؟", en: "Forgot password?" })}</Link>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
           <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field>
-            {loading ? "در حال ورود…" : "ورود"}
+            {loading ? t({ fa: "در حال ورود…", en: "Signing in…" }) : t({ fa: "ورود", en: "Sign in" })}
           </button>
         </form>
       </div>

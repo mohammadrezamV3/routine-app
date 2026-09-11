@@ -40,13 +40,6 @@ function probes(): Probe[] {
       body: { merchant: "zibal", amount: 10000, callbackUrl: "https://arionapp.ir/cb" },
       note: "درگاه پرداخت زیبال",
     },
-    {
-      name: "zarinpal",
-      url: "https://api.zarinpal.com/pg/v4/payment/request.json",
-      method: "POST",
-      body: { merchant_id: "0".repeat(36), amount: 10000, description: "probe", callback_url: "https://arionapp.ir/cb" },
-      note: "درگاه پرداخت زرین‌پال",
-    },
   ];
 
   // ملی‌پیامک — رایج‌ترین شکایت «کد پیامکی نمی‌آید» یا از نبود env می‌آید،
@@ -217,7 +210,6 @@ export async function GET() {
       MELIPAYAMAK_PASSWORD: !!process.env.MELIPAYAMAK_PASSWORD,
       MELIPAYAMAK_PATTERN_ID: !!process.env.MELIPAYAMAK_PATTERN_ID,
       ZIBAL_MERCHANT_KEY: !!process.env.ZIBAL_MERCHANT_KEY,
-      ZARINPAL_MERCHANT_ID: !!process.env.ZARINPAL_MERCHANT_ID,
       ARVAN_AI_BASE_URL: !!process.env.ARVAN_AI_BASE_URL,
       ARVAN_AI_API_KEY: !!process.env.ARVAN_AI_API_KEY,
       NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,

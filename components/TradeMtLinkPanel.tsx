@@ -17,7 +17,7 @@ type MtLink = {
 
 // اتصال متاتریدر **همین حساب**. عمدا داخل صفحه‌ی حساب است نه یک صفحه‌ی
 // سراسری: هر کاربر ده‌ها حساب دارد و هرکدام ترمینال و لاگین خودش را دارد.
-export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; calSystem: CalSystem }) {
+export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accountId: string; calSystem: CalSystem; accountName?: string }) {
   const [link, setLink] = useState<MtLink | null>(null);
   const [platform, setPlatform] = useState<"MT4" | "MT5">("MT4");
   const [code, setCode] = useState<string | null>(null);
@@ -87,6 +87,7 @@ export function TradeMtLinkPanel({ accountId, calSystem }: { accountId: string; 
 
   return (
     <div className="trade-surface trade-page-box trade-mt-panel">
+      {accountName && <div className="trade-mt-account-name-line">نام حساب: <b>{accountName}</b></div>}
       <div className="trade-mt-panel-head">
         <div className="domain-sub" style={{ margin: 0 }}>اتصال متاتریدر</div>
         <span className={`trade-mt-live${link?.connected ? " connected" : ""}`}>

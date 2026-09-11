@@ -11,7 +11,7 @@ import { toEnDigits } from "@/lib/schedule";
 
 export type DashTaskItem = {
   id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean;
-  isPast?: boolean; dayPast?: boolean; notStarted?: boolean;
+  isPast?: boolean; dayPast?: boolean; notStarted?: boolean; isFuture?: boolean;
   /** ردیفِ سنتتیکِ «برنامه تمرینی امروز» — بجای چک‌باکس، دکمه‌ی «شروع»
    * دارد که با کلیک هم تیک می‌خورد هم به صفحه‌ی بدنسازی می‌برد. سه‌نقطه
    * (ویرایش/انتقال/حذف) برایش نیست چون یک occurrence واقعی نیست. */
@@ -29,6 +29,7 @@ export function DashTaskRow({
   onOpen,
   onEdit,
   onDelete,
+  onDeleteAll,
   onMove,
   onStart,
 }: {
@@ -38,6 +39,7 @@ export function DashTaskRow({
   onOpen: (name: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onDeleteAll?: (id: string) => void;
   onMove: (id: string) => void;
   onStart?: (id: string) => void;
 }) {
@@ -117,19 +119,40 @@ export function DashTaskRow({
               ویرایش برنامه
             </div>
             <div
-              onClick={() => { setMenuOpen(false); onMove(task.id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
+              onClick={() => { if (task.isPast) return; setMenuOpen(false); onMove(task.id); }}
+              aria-disabled={task.isPast}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-dash-text hover:bg-white/5"
+              )}
             >
               <CalendarClock size={13} className="shrink-0" />
-              انتقال به یک روز دیگر
+              انتقال به یک روز دیگر{task.isPast ? " (گذشته)" : ""}
             </div>
             <div
-              onClick={() => { setMenuOpen(false); onDelete(task.id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
+              onClick={() => { if (task.isPast) return; setMenuOpen(false); onDelete(task.id); }}
+              aria-disabled={task.isPast}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"
+              )}
             >
               <Trash2 size={13} className="shrink-0" />
-              حذف کامل برنامه
+              حذف همین روز{task.isPast ? " (گذشته)" : ""}
             </div>
+            {onDeleteAll && (
+              <div
+                onClick={() => { if (task.isPast) return; setMenuOpen(false); onDeleteAll(task.id); }}
+                aria-disabled={task.isPast}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                  task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"
+                )}
+              >
+                <Trash2 size={13} className="shrink-0" />
+                حذف همه‌ی تکرارها
+              </div>
+            )}
           </div>,
           document.body
         )}
@@ -184,15 +207,15 @@ export function DashTaskRow({
         <motion.button
           type="button"
           whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
-          disabled={!editable || starting}
+          disabled={!editable || starting || task.isFuture}
           onClick={() => {
-            if (starting) return;
+            if (starting || task.isFuture) return;
             setStarting(true);
             onStart?.(task.id);
           }}
           className={cn(
             "flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors sm:text-[12.5px]",
-            (!editable || starting) && "cursor-not-allowed opacity-60"
+            (!editable || starting || task.isFuture) && "cursor-not-allowed opacity-60"
           )}
           style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
         >
@@ -203,11 +226,13 @@ export function DashTaskRow({
       <motion.button
         type="button"
         whileTap={{ scale: 0.85, transition: { duration: 0.1 } }}
-        disabled={!editable}
-        onClick={() => onToggle(task.id)}
+        disabled={!editable || task.isFuture}
+        onClick={() => { if (!task.isFuture) onToggle(task.id); }}
         aria-pressed={task.done}
         aria-label={
-          task.done
+          task.isFuture
+            ? "این برنامه هنوز نرسیده — قابل تیک‌زدن نیست"
+            : task.done
             ? "علامت‌زدن به‌عنوان انجام‌نشده"
             : task.dayPast
             ? "این برنامه انجام نشده و روزش گذشته"
@@ -217,7 +242,7 @@ export function DashTaskRow({
         transition={{ duration: 0.16, ease: "easeOut" }}
         className={cn(
           "relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
-          !editable && "cursor-not-allowed opacity-50",
+          (!editable || task.isFuture) && "cursor-not-allowed opacity-50",
           task.done || (task.dayPast && !task.done) ? "text-white" : "text-transparent hover:border-white/45",
           task.dayPast && !task.done && "task-check-missed"
         )}

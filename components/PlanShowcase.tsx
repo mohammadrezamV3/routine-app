@@ -360,6 +360,10 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
   );
 }
 
+// لیبل‌های کاملا لاتین (مثل "Ask AI") باید چپ‌چین بمونن، نه راست‌چین —
+// حتی داخل جدولی که کلا dir="rtl" ارث می‌بره.
+const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim());
+
 // گرید پلن‌ها + جدول مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراک داخل
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
 export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
@@ -408,7 +412,7 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
           <tbody>
             {mainRows.map((row) => (
               <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
-                <th scope="row" className={`py-3.5 text-right text-[11.5px] font-normal ${t.muted}`}>{row.label}</th>
+                <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-right"}`}>{row.label}</th>
                 {plans.map((p) => (
                   <td key={p.key} className="py-3.5">
                     <div className="flex justify-center">
@@ -436,7 +440,7 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
                       <tbody>
                         {upcomingRows.map((row) => (
                           <tr key={row.label}>
-                            <th scope="row" className={`py-3.5 text-right text-[11.5px] font-normal ${t.muted}`}>{row.label}</th>
+                            <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-right"}`}>{row.label}</th>
                             {plans.map((p) => (
                               <td key={p.key} className="py-3.5">
                                 <div className="flex justify-center">

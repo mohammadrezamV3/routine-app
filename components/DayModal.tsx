@@ -43,11 +43,13 @@ export function DayModal({
 
   const isFuture = iso > todayKey;
   const isPast = iso < todayKey;
-  // تیک‌زدنِ کارها روی *هر* روزی باز است (درخواستِ صریحِ کاربر). فقط ثبتِ
-  // «ساعت بیداری» برای روزِ آینده معنا ندارد و بسته می‌ماند.
+  // تیک‌زدنِ کارها روی روزِ گذشته/امروز باز است — ولی نه روزِ آینده: طبقِ
+  // درخواستِ صریحِ کاربر، وانمود به انجام‌شدنِ کاری که هنوز نرسیده مجاز
+  // نیست. ثبتِ «ساعت بیداری» هم برای روزِ آینده معنا ندارد و بسته می‌ماند.
   const jd = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
   async function toggleTask(id: string) {
+    if (isFuture) return;
     const next = { ...daily!, tasks: { ...daily!.tasks, [id]: !daily!.tasks[id] } };
     setDailyState(next);
     await setDaily(iso, next);
@@ -94,7 +96,8 @@ export function DayModal({
                 <div
                   key={t.id}
                   onClick={() => toggleTask(t.id)}
-                  className="task"
+                  className={`task${isFuture ? " disabled" : ""}`}
+                  aria-disabled={isFuture}
                 >
                   <div className={`check${checked ? " on" : ""}`}>
                     <svg className="c-check" viewBox="0 0 24 24" fill="none">
