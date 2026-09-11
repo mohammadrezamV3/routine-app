@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { Camera, Trash2, Mail, Phone, Cake, VenetianMask, Ruler, Weight, AtSign, User as UserIcon } from "lucide-react";
+import { Camera, Trash2, Mail, Phone, Cake, AtSign, User as UserIcon } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
-import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
 import { resizeImageToDataUrl } from "@/lib/avatarUpload";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { isValidEmail, isValidUsername } from "@/lib/validate";
-import { NumberInput } from "@/components/NumberInput";
 import { AccountBackButton } from "@/components/AccountBackButton";
 
 type ProfileUser = {
@@ -22,24 +19,7 @@ type ProfileUser = {
   firstName: string | null;
   lastName: string | null;
   birthDate: string | null;
-  gender: string | null;
-  heightCm: number | null;
-  weightKg: number | null;
   subscriptions: { status: string; currentPeriodEnd: string; plan: { nameFa: string; key: string } }[];
-};
-
-const GENDER_OPTIONS: { value: "male" | "female" | "unset"; label: string }[] = [
-  { value: "male", label: "مرد" },
-  { value: "female", label: "زن" },
-  { value: "unset", label: "نامشخص" },
-];
-
-const SUB_STATUS_FA: Record<string, string> = {
-  TRIAL: "دوره آزمایشی",
-  ACTIVE: "فعال",
-  PAST_DUE: "پرداخت معوق",
-  CANCELED: "لغوشده",
-  EXPIRED: "منقضی",
 };
 
 export default function AccountProfilePage() {
@@ -52,11 +32,8 @@ export default function AccountProfilePage() {
   // فیلدهای «باز» — همیشه قابل‌ویرایش‌ن (نه پشت یه حالت ویرایش جدا)، فقط
   // با یه دکمه‌ی «ذخیره»ی مشترک ثبت می‌شن. نام/نام‌خانوادگی/شماره موبایل
   // این‌جا نیستن — همیشه قفل/فقط‌نمایشی‌ن.
-  const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
   const [birthDate, setBirthDate] = useState<JalaliDate | null>(null);
   const [dobOpen, setDobOpen] = useState(false);
-  const [heightCm, setHeightCm] = useState("");
-  const [weightKg, setWeightKg] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -89,10 +66,7 @@ export default function AccountProfilePage() {
   function applyUser(u: ProfileUser) {
     setData(u);
     setUsername(u.username ?? null);
-    setGender(u.gender === "male" || u.gender === "female" ? u.gender : "unset");
     setBirthDate(u.birthDate ? (() => { const d = new Date(u.birthDate as string); return toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate()); })() : null);
-    setHeightCm(u.heightCm != null ? String(u.heightCm) : "");
-    setWeightKg(u.weightKg != null ? String(u.weightKg) : "");
   }
 
   function startEditUsername() {
@@ -168,22 +142,11 @@ export default function AccountProfilePage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const height = heightCm.trim() ? Number(heightCm) : null;
-      const weight = weightKg.trim() ? Number(weightKg) : null;
-      if (height != null && (!Number.isFinite(height) || height < 100 || height > 250)) {
-        setSaveError("قد باید بین ۱۰۰ تا ۲۵۰ سانتی‌متر باشه"); return;
-      }
-      if (weight != null && (!Number.isFinite(weight) || weight < 20 || weight > 300)) {
-        setSaveError("وزن باید بین ۲۰ تا ۳۰۰ کیلوگرم باشه"); return;
-      }
       const res = await fetch("/api/account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          gender: gender === "unset" ? null : gender,
           birthDate: birthDate ? isoLocal(jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2])) : null,
-          heightCm: height,
-          weightKg: weight,
         }),
       });
       const resData = await res.json().catch(() => ({}));
@@ -191,9 +154,7 @@ export default function AccountProfilePage() {
       invalidateAccountCache();
       setData((d) => (d ? {
         ...d,
-        gender: gender === "unset" ? null : gender,
         birthDate: birthDate ? jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2]).toISOString() : null,
-        heightCm: height, weightKg: weight,
       } : d));
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
@@ -253,7 +214,6 @@ export default function AccountProfilePage() {
   if (!data) return null;
 
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(" ") || "کاربر آریون";
-  const currentSub = data.subscriptions?.[0];
 
   return (
     <section>
@@ -406,37 +366,12 @@ export default function AccountProfilePage() {
           </button>
         </div>
 
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}><VenetianMask size={13} style={{ verticalAlign: "-2px", marginLeft: 5 }} />جنسیت</label>
-          <SegmentedTabs options={GENDER_OPTIONS} active={gender} onChange={setGender} />
-        </div>
-
-        <div className="auth-field-grid">
-          <AuthField id="pf-height" label="قد (سانتی‌متر)" icon={<Ruler size={16} />}>
-            <NumberInput id="pf-height" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={heightCm} onChange={(v) => setHeightCm(v)} />
-          </AuthField>
-          <AuthField id="pf-weight" label="وزن (کیلوگرم)" icon={<Weight size={16} />}>
-            <NumberInput decimal id="pf-weight" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={weightKg} onChange={(v) => setWeightKg(v)} />
-          </AuthField>
-        </div>
-
         {saveError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{saveError}</div>}
 
         <button type="button" className="account-outline-btn" style={{ marginTop: 16 }} onClick={saveProfile} disabled={saving}>
           {saving ? "در حال ذخیره…" : "ذخیره"}
         </button>
       </motion.div>
-
-      <div className="tm-extra">
-        <div className="domain-sub">اشتراک</div>
-        <div className="account-sub-mini-card">
-          <div>
-            <div className="account-sub-mini-name">{currentSub ? currentSub.plan.nameFa : "بدون اشتراک فعال"}</div>
-            <div className="item-line">{currentSub ? SUB_STATUS_FA[currentSub.status] || currentSub.status : "فقط ماژول‌های دوره‌ی آزمایشی در دسترسه"}</div>
-          </div>
-          <Link href="/account/subscription" className="account-sub-mini-link">جزئیات</Link>
-        </div>
-      </div>
 
       {dobOpen && (
         <JalaliDatePicker

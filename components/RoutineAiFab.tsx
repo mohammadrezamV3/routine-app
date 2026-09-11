@@ -48,6 +48,35 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // فیکسِ سافاری/iOS برای شکافِ کیبورد: dvh + interactive-widget (توی
+  // app/layout.tsx) فقط روی کروم/اندروید کار می‌کنه — وبکیت با بازشدنِ
+  // کیبورد فقط visual viewport رو کوچیک می‌کنه، نه layout viewport، پس
+  // top:50%ی مودال (که رویِ layout viewport حساب می‌شه) همون‌جای قبل از
+  // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم و
+  // مرکز/ارتفاعِ پنل رو با inline style بازنویسی می‌کنیم — کروم هم چیزی از
+  // دست نمی‌ده چون وقتی interactive-widget درست کار کنه، visualViewport و
+  // layout viewport یکی می‌شن و این مقدارها با نسخه‌ی CSS یکی درمی‌آد.
+  const [kbViewport, setKbViewport] = useState<{ top: number; maxHeight: number } | null>(null);
+  useEffect(() => {
+    if (!open) { setKbViewport(null); return; }
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    function update() {
+      if (!vv) return;
+      setKbViewport({
+        top: vv.offsetTop + vv.height / 2,
+        maxHeight: Math.min(vv.height * 0.88, 760),
+      });
+    }
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [open]);
+
   // وضعیتِ گویِ دستیار. یک منبعِ واحد برای هر دو گو (دکمه‌ی شناور و سرِ پنل)
   // تا هر دو یک چیز بگویند.
   const [orbState, setOrbState] = useState<AIState>("idle");
@@ -209,7 +238,13 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         <>
           <LockBodyScroll />
           <div className="modal-overlay open" onClick={() => setOpen(false)} />
-          <div className="modal-panel routine-ai-panel open" role="dialog" aria-modal="true" aria-label="مدیر برنامه">
+          <div
+            className="modal-panel routine-ai-panel open"
+            style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight } : undefined}
+            role="dialog"
+            aria-modal="true"
+            aria-label="مدیر برنامه"
+          >
             <div className="modal-head">
               <div className="modal-title routine-ai-title">
                 <SiriOrb

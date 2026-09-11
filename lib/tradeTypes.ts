@@ -110,6 +110,9 @@ export const MAX_TAGS = 40;
 export const MAX_IMAGES_PER_TRADE = 2;
 export const MAX_CHECKLISTS = 20;
 export const MAX_CHECKLIST_ITEMS = 40;
+// چک‌لیست بدون آیتم یا با فقط یک آیتم عملا هیچ ارزش چک‌کردنی نداره —
+// حداقل دو مورد باید باشه تا واقعا «چک‌لیست» به‌حساب بیاد.
+export const MIN_CHECKLIST_ITEMS = 2;
 
 // ── شکل داده ─────────────────────────────────────────────────────────────
 export type TradeTag = { id: string; name: string; color: string };

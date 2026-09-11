@@ -750,6 +750,7 @@
     padding:12px 2px; transition:.15s;
   }
   .nav-link:hover{color:var(--accent);}
+  .nav-link:active{transform:scale(.97);}
 
   /* tips / extra lists */
   .tm-extra{margin-top:22px;}
@@ -858,10 +859,15 @@
   :where(.dash-scope) button{
     font:inherit; color:inherit; padding:0; margin:0;
     border-style:solid; border-width:0; border-color:transparent; border-radius:0;
-    background:none; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none; transition:none;
+    background:none; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none; transition:transform .12s ease;
   }
   :where(.dash-scope) button:hover{ border-color:transparent; color:inherit; background:none; box-shadow:none; }
-  :where(.dash-scope) button:active{ transform:none; }
+  /* طبقِ درخواستِ صریح: کلیکِ دکمه باید یک فیدبکِ بصری بدهد — قبلا این‌جا
+     transform:none بود (فقط برای خنثی‌کردنِ ریست، نه یک تصمیمِ عمدی علیه
+     فیدبک). دکمه‌هایی که خودشان whileTap فریمر-موشن دارند (چک‌باکس/دکمه‌ی
+     شروع در DashTaskRow) تحتِ‌تاثیر قرار نمی‌گیرند چون transformِ اینلاینِ
+     جاوااسکریپت همیشه رویِ این قانونِ CSS اولویت دارد. */
+  :where(.dash-scope) button:active{ transform:scale(.96); }
   :where(.dash-scope) button:disabled{ opacity:1; }
   :where(.dash-scope) button:disabled:hover{ border-color:transparent; color:inherit; background:none; box-shadow:none; }
   /* body[data-theme="light"] button{} (پایین همین فایل) اسپسیفیسیتی
@@ -1049,7 +1055,9 @@
      محتوا توی یک ستون باریک می‌موند — همون «کامل صفحه رو نگرفتن، سمت چپ
      خالی»ی که گزارش شد. سقف عرض عمدا از داشبوردها کمتره (۱۰۸۰) چون این
      صفحه‌ها متنی‌ان، نه گرید چندستونه. */
-  .account-shell{ position:relative; }
+  /* طبقِ درخواستِ صریح: پنلِ کاربری نباید فقط نیمه‌ی بالاییِ صفحه رو بگیره و
+     زیرش خالی بمونه — باکس‌ها باید فول‌اسکرین باشن. */
+  .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
   @media (min-width:1024px){
     .account-shell{
       --acc-w: min(1080px, calc(100vw - 64px));
@@ -1238,8 +1246,15 @@
 
     /* دکمه‌ی همبرگری محلی پنل کاربری — با زدنش لیست تایتل‌ها (همون‌هایی که
        دسکتاپ توی سایدبار می‌بینه) به‌صورت آکاردئون زیرش باز می‌شه، به‌جای اینکه
-       همیشه یه نوار افقی اسکرول‌شونده جا بگیره. */
+       همیشه یه نوار افقی اسکرول‌شونده جا بگیره.
+       باگِ واقعیِ «بخش‌ها از بالای صفحه‌ی اول (index) پاک نمی‌شه»: این قانون
+       display:block رو بدونِ قید می‌ذاشت، درحالی‌که component خودش با پراپِ
+       HTMLِ hidden={isIndex} می‌خواست این نوار رو توی همون صفحه مخفی کنه —
+       چون specificityِ این کلاس با selectorِ اتریبیوتِ [hidden] برابره،
+       استایلِ نویسنده (این قانون) روی رفتارِ پیش‌فرضِ مرورگر برای hidden برنده
+       می‌شد و نوار هم‌زمان با فهرستِ خودِ صفحه‌ی index دوبار نشون داده می‌شد. */
     .account-mobile-menu{ display:block; margin-bottom:16px; }
+    .account-mobile-menu[hidden]{ display:none; }
     .account-mobile-menu-btn{
       display:flex; align-items:center; gap:9px; width:100%; padding:11px 14px;
       border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.03);
@@ -1678,7 +1693,11 @@
        نسخه‌های نسبتا جدید)، و flip-card به‌جای چرخش سه‌بعدی، مسطح/بدون
        افکت می‌شه یا هر دو رو (جلو/پشت) هم‌زمان نشون می‌ده. */
     -webkit-transform-style:preserve-3d; transform-style:preserve-3d;
-    transition:transform .7s cubic-bezier(.4,.2,.2,1);
+    /* قبلا .7s بود؛ کاربر گفت رفتن به داخل باکس «خیلی طول می‌کشد» — چون
+       کارت با rotateY(180deg) شروع می‌شود و باز شدنش عملا منتظر تمامِ این
+       transition می‌ماند. .38s هنوز افکتِ فلیپ رو حس می‌کنه ولی محتوا خیلی
+       زودتر قابل‌تعامل می‌شه. */
+    transition:transform .38s cubic-bezier(.4,.2,.2,1);
     transform:rotateY(180deg);
   }
   .pcard-stage.open .pcard-inner{transform:rotateY(0deg);}
@@ -4894,7 +4913,9 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-pnl-pct{ font-size:12px; font-weight:700; opacity:.8; }
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
-.trade-account-stripe{ position:absolute; top:0; right:0; bottom:0; width:3px; }
+/* قبلا یک نوارِ رنگیِ عمودی به ارتفاعِ کاملِ کارت بود (right:0;top:0;bottom:0)
+   — طبقِ درخواستِ صریح، به یک توپِ کوچیکِ گوشه‌ی بالا-راستِ کارت تبدیل شد. */
+.trade-account-stripe{ position:absolute; top:9px; right:10px; width:8px; height:8px; border-radius:50%; }
 .trade-account-main{ display:block; text-decoration:none; color:var(--text); }
 /* باگِ برچسبِ بیرون‌زده: این ردیف min-width:0 نداشت و .trade-account-name
    (بدون overflow/ellipsis) هیچ‌وقت زیرِ عرضِ متنِ خودش تنگ نمی‌شد؛ روی
@@ -5122,6 +5143,10 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]) .trade-cal-search button{ background:none; box-shadow:none; }
 @media (max-width:520px){ .trade-cal-search{ flex-basis:100%; order:-1; } }
 .trade-cal-search-banner{ font-size:11.5px; color:var(--muted); margin:0 2px 10px; }
+/* دکمه‌ی toggleِ جستجو — کنارِ فیلتر/تاریخچه/امروز، بدونِ پاپ‌اپ نوارِ
+   جستجو رو همین‌جا با انیمیشن باز/بسته می‌کنه. */
+.trade-cal-search-toggle{ padding:8px; }
+.trade-cal-search-toggle.active{ color:var(--accent); border-color:var(--accent); }
 .trade-cal-filters{
   padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both;
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
@@ -5144,14 +5169,29 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 .trade-checklist-news-list{ display:flex; flex-direction:column; }
 .trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
 
-/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar) — طبقِ
-   درخواستِ صریح، دقیقاً همین ترتیبِ ۸ستونیِ فارکس‌فکتوری، هم دسکتاپ هم
-   موبایل (بدونِ حذف/فولدِ هیچ ستونی روی موبایل): Time, Currency, Event,
-   Alert, Detail, Actual, Forecast, Previous. عرضِ ستون‌ها با grid ثابته
-   تا همه‌ی ردیف‌های یک روز دقیقاً زیرِ هم بشینن؛ اگه صفحه خیلی باریک بود،
-   خودِ باکس (نه کلِ صفحه) اسکرولِ افقیِ نازک می‌گیره.*/
+/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar) — دسکتاپ همین
+   ترتیبِ ۸ستونیِ فارکس‌فکتوری با grid: Time, Currency, Event, Alert,
+   Detail, Actual, Forecast, Previous.
+   طبقِ درخواستِ جدیدِ صریح (که تصمیمِ قبلیِ «بدونِ فولد، با اسکرولِ افقیِ
+   خودِ باکس» رو نقض می‌کنه): زیرِ ۵۶۰px دیگه هیچ اسکرولِ افقی‌ای نیست —
+   grid ثابت به یک چیدمانِ فلکس‌ِ دورچین تبدیل می‌شه (پایین‌تر). */
 .trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
 .trade-cal-table{ min-width:420px; }
+@media (max-width:560px){
+  .trade-cal-table-scroll{ overflow-x:visible; }
+  .trade-cal-table{ min-width:0; }
+  .trade-cal-thead{ display:none; }
+  .trade-cal-tr{
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;
+    padding:11px 2px;
+  }
+  .trade-cal-tr .tc-col-time{ order:1; flex:0 0 auto; }
+  .trade-cal-tr .tc-col-cur{ order:2; flex:0 0 auto; white-space:nowrap; }
+  .trade-cal-tr .tc-col-event{ order:3; flex:1 1 100%; white-space:normal; }
+  .trade-cal-tr .tc-col-num{ order:4; flex:0 0 auto; text-align:left; }
+  .trade-cal-tr .tc-col-num::before{ content:attr(data-label) ": "; color:var(--muted2); font-weight:400; }
+  .trade-cal-tr .tc-col-icon{ order:5; flex:0 0 auto; margin-inline-start:auto; }
+}
 .trade-cal-thead{
   display:grid; grid-template-columns:34px 54px minmax(80px,1fr) 28px 28px 38px 38px 38px; gap:6px;
   align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
@@ -5351,6 +5391,10 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
 
 /* ── اتصال متاتریدر ────────────────────────────────────────── */
 .trade-mt-panel{ margin-top:24px; padding:18px 20px; }
+/* طبقِ درخواستِ صریح: اسمِ حساب دیگر باکسِ جدا (.trade-account-header)
+   ندارد — همین یک خط بالای پنلِ توضیحاتِ اتصال است. */
+.trade-mt-account-name-line{ font-size:13px; color:var(--muted); margin-bottom:10px; }
+.trade-mt-account-name-line b{ color:var(--text); font-weight:700; }
 .trade-mt-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
 /* تایتل داخل پنل متاتریدر — .domain-sub سبز و ریز بود؛ درخواست صریح:
    بزرگ‌تر و سفید (رنگ متن اصلی). */
@@ -5472,9 +5516,12 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    .trade-checklist-detail-box است، لیست هم زیرش. */
 .trade-checklist-detail-head{
   position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
-  flex-wrap:wrap; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--surface-line);
+  flex-wrap:wrap; padding-bottom:12px; margin-bottom:12px;
+  /* قبلا var(--surface-line) بود که رنگش از var(--line) (خط بینِ آیتم‌های
+     چک‌لیست) پررنگ‌تره — همین اختلافِ رنگ بود که خطِ اول رو نسبت‌به خط‌های
+     بینِ آیتم‌ها «بزرگ‌تر/پررنگ‌تر» جلوه می‌داد. */
+  border-bottom:1px solid var(--line);
 }
-.trade-checklist-detail-head .trade-account-stripe{ right:-14px; }
 .trade-checklist-detail-title{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1; }
 .trade-checklist-detail-title h1{ font-size:17px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* هر ردیفِ چک‌لیست حالا خودش یک کارتِ مجزا با گوشه‌ی کاملاً گرد است (نه
@@ -5489,8 +5536,11 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 .trade-checklist-row:active{ transform:scale(.99); }
 @media (hover:hover){ .trade-checklist-row:hover{ background:rgba(var(--surface-rgb),.3); border-color:var(--accent); } }
+/* قبلا یک نوارِ رنگیِ عمودی بود (right:0;top:10px;bottom:10px) — طبقِ
+   درخواستِ صریح، به توپ تبدیل شد (هم‌الگو با .trade-account-stripe). گوشه‌ی
+   بالا-راست (نه وسط‌چینِ عمودی) تا رویِ دکمه‌ی سه‌نقطه‌ی هم‌ردیف سوار نشه. */
 .trade-checklist-row-stripe{
-  position:absolute; top:10px; bottom:10px; right:0; width:3px; border-radius:2px;
+  position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%;
 }
 .trade-checklist-row-kebab{ flex-shrink:0; margin-right:-4px; }
 .trade-checklist-row-main{

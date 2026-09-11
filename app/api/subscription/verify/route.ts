@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { zarinpalVerifyPayment } from "@/lib/zarinpal";
 import { zibalVerify } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import type { Duration } from "@/lib/planPricing";
@@ -60,10 +59,6 @@ export async function GET(req: NextRequest) {
     return failRedirect("no_session", undefined);
   }
 
-  // درگاه از همون callbackUrlی که خودمون موقع ساخت درخواست ساختیم میاد —
-  // نه چیزی که کاربر/درگاه بتونه دستکاری کنه به‌نفع خودش، چون verify هنوزم
-  // مستقیم از همون درگاه انتخاب‌شده با merchant/amount سمت سرور چک می‌شه.
-  const gateway = searchParams.get("gateway") === "zibal" ? "zibal" : "zarinpal";
   const planKey = searchParams.get("planKey");
   const duration = searchParams.get("duration") as Duration | null;
   const amount = Number(searchParams.get("amount"));
@@ -78,26 +73,17 @@ export async function GET(req: NextRequest) {
 
   let verified: { ok: boolean; refId?: string };
   try {
-    if (gateway === "zibal") {
-      const trackId = searchParams.get("trackId");
-      const success = searchParams.get("success");
-      if (!trackId || success !== "1") {
-        return failRedirect("gateway_canceled_or_error", userId, planKey, duration);
-      }
-      const result = await zibalVerify(Number(trackId));
-      // زیبال برخلاف زرین‌پال مبلغ رو به verify نمی‌گیره، فقط توی جواب برمی‌گردونه —
-      // پس تطبیق مبلغ رو خودمون اینجا چک می‌کنیم (همون تضمین امنیتی زرین‌پال).
-      verified = result.ok && result.amount === amount
-        ? { ok: true, refId: String(result.refNumber ?? trackId) }
-        : { ok: false };
-    } else {
-      const status = searchParams.get("Status");
-      const authority = searchParams.get("Authority");
-      if (status !== "OK" || !authority) {
-        return failRedirect("gateway_canceled_or_error", userId, planKey, duration);
-      }
-      verified = await zarinpalVerifyPayment({ amountRial: amount, authority });
+    const trackId = searchParams.get("trackId");
+    const success = searchParams.get("success");
+    if (!trackId || success !== "1") {
+      return failRedirect("gateway_canceled_or_error", userId, planKey, duration);
     }
+    const result = await zibalVerify(Number(trackId));
+    // زیبال مبلغ رو به verify نمی‌گیره، فقط توی جواب برمی‌گردونه — پس
+    // تطبیق مبلغ رو خودمون اینجا چک می‌کنیم (تضمین امنیتی مقابل دستکاری).
+    verified = result.ok && result.amount === amount
+      ? { ok: true, refId: String(result.refNumber ?? trackId) }
+      : { ok: false };
   } catch {
     return failRedirect("verify_request_error", userId, planKey, duration);
   }
@@ -141,7 +127,7 @@ export async function GET(req: NextRequest) {
         create: {
           amount,
           currency: "IRR",
-          provider: gateway,
+          provider: "zibal",
           providerRef: verified.refId,
           paidAt: new Date(),
         },

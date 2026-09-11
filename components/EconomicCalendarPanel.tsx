@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, BellRing, ChevronLeft, ChevronRight, Filter, History, Info, Loader2, Search, X } from "lucide-react";
@@ -75,6 +75,21 @@ export function EconomicCalendarPanel() {
     return () => clearTimeout(t);
   }, [searchInput]);
   const searching = query.length > 0;
+  // نوارِ جستجو دیگه همیشه‌باز نیست — طبقِ درخواستِ صریح، یک دکمه کنارِ
+  // فیلتر/تاریخچه/امروزه که با زدنش، بدونِ پاپ‌اپ، همین‌جا با انیمیشن باز
+  // می‌شه (نه یک مودالِ جدا).
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  function toggleSearch() {
+    setSearchOpen((v) => {
+      const next = !v;
+      if (!next) { setSearchInput(""); }
+      return next;
+    });
+  }
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [historyById, setHistoryById] = useState<Record<string, HistoryRow[] | "loading" | "error">>({});
@@ -114,6 +129,9 @@ export function EconomicCalendarPanel() {
         qs.set("from", iso);
         qs.set("to", iso);
       }
+      // افستِ واقعیِ تایم‌زونِ کاربر (دقیقه، شرقِ UTC مثبت) — سرور با این
+      // «روزِ محلی» رو درست حساب می‌کنه، نه رویِ نیمه‌شبِ UTC.
+      qs.set("tz", String(-new Date().getTimezoneOffset()));
       if (currencies.length) qs.set("currencies", currencies.join(","));
       if (otherCurrencies) qs.set("other", "1");
       if (impacts.length) qs.set("impacts", impacts.join(","));
@@ -162,21 +180,42 @@ export function EconomicCalendarPanel() {
   return (
     <div>
       <div className="trade-cal-filter-bar">
-        <div className="trade-cal-search">
-          <Search size={14} />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="جستجوی یک رویداد خاص…"
-            className="ltr-inline"
-          />
-          {searchInput && (
-            <button type="button" onClick={() => setSearchInput("")} aria-label="پاک‌کردن جستجو">
-              <X size={13} />
-            </button>
+        <AnimatePresence initial={false}>
+          {searchOpen && (
+            <motion.div
+              className="trade-cal-search"
+              style={{ overflow: "hidden" }}
+              initial={{ flexBasis: 0, opacity: 0 }}
+              animate={{ flexBasis: 170, opacity: 1 }}
+              exit={{ flexBasis: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Search size={14} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Escape") toggleSearch(); }}
+                placeholder="جستجوی یک رویداد خاص…"
+                className="ltr-inline"
+              />
+              {searchInput && (
+                <button type="button" onClick={() => setSearchInput("")} aria-label="پاک‌کردن جستجو">
+                  <X size={13} />
+                </button>
+              )}
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
+        <button
+          type="button"
+          className={`trade-ghost-btn trade-cal-search-toggle${searchOpen ? " active" : ""}`}
+          onClick={toggleSearch}
+          aria-label={searchOpen ? "بستن جستجو" : "جستجو"}
+        >
+          <Search size={13} />
+        </button>
         <button type="button" className="trade-ghost-btn" onClick={() => setFiltersOpen((v) => !v)}>
           <Filter size={13} /> فیلتر
           {(currencies.length || impacts.length || otherCurrencies) ? ` (${faNum(currencies.length + impacts.length + (otherCurrencies ? 1 : 0))})` : ""}
@@ -368,12 +407,13 @@ export function EconomicCalendarPanel() {
                       </span>
                       <span
                         className={`tc-col-num mono${e.actual ? "" : " muted"}`}
+                        data-label="Actual"
                         style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
                       >
                         {e.actual || "—"}
                       </span>
-                      <span className="tc-col-num mono">{e.forecast || "—"}</span>
-                      <span className="tc-col-num mono">{e.previous || "—"}</span>
+                      <span className="tc-col-num mono" data-label="Forecast">{e.forecast || "—"}</span>
+                      <span className="tc-col-num mono" data-label="Previous">{e.previous || "—"}</span>
                     </div>
 
                     {expanded && (

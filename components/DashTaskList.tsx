@@ -12,6 +12,7 @@ export function DashTaskList({
   onOpenProgram,
   onEditTask,
   onDeleteTask,
+  onDeleteAllTask,
   onMoveTask,
   onStartExercise,
   className,
@@ -24,6 +25,7 @@ export function DashTaskList({
   onOpenProgram: (name: string) => void;
   onEditTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onDeleteAllTask?: (id: string) => void;
   onMoveTask: (id: string) => void;
   onStartExercise?: (id: string) => void;
   className?: string;
@@ -59,6 +61,7 @@ export function DashTaskList({
               onOpen={onOpenProgram}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
+              onDeleteAll={onDeleteAllTask}
               onMove={onMoveTask}
               onStart={onStartExercise}
             />

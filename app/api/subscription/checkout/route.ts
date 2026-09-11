@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
-import { zarinpalRequestPayment } from "@/lib/zarinpal";
 import { zibalRequest } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { resolveDiscountCode } from "@/lib/discountValidation";
@@ -12,12 +11,13 @@ import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } fro
 
 const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
 
-const GATEWAYS = ["zarinpal", "zibal"] as const;
+// زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
+const GATEWAYS = ["zibal"] as const;
 type Gateway = (typeof GATEWAYS)[number];
 
 // POST /api/subscription/checkout → پلن+مدت+کدتخفیف اختیاری رو می‌گیره،
 // مبلغ رو از جدول قیمت سمت سرور (نه از ورودی کلاینت) حساب می‌کنه، و
-// درخواست پرداخت رو به زرین‌پال می‌فرسته. فقط بازار ایران/ریال پشتیبانی
+// درخواست پرداخت رو به زیبال می‌فرسته. فقط بازار ایران/ریال پشتیبانی
 // می‌شه — درگاه بین‌المللی هنوز وصل نشده.
 export async function POST(req: NextRequest) {
   // **کل** تابع داخل یک try واحد است — شامل خواندن سشن و ریت‌لیمیت، که
@@ -42,13 +42,13 @@ export async function POST(req: NextRequest) {
     const { planKey, duration, discountCode, gateway: rawGateway } = body as {
       planKey: string; duration: Duration; discountCode?: string; gateway?: string;
     };
-    const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zarinpal";
+    const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zibal";
 
     if (!planKey || !DURATIONS.includes(duration)) {
       return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true, phone: true } });
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true } });
     if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
     if (user.market !== "IRAN") {
       return NextResponse.json({ error: "درگاه پرداخت بین‌المللی هنوز فعال نشده — به‌زودی" }, { status: 503 });
@@ -113,14 +113,7 @@ export async function POST(req: NextRequest) {
     const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}`;
 
     const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
-    const { paymentUrl } = gateway === "zibal"
-      ? await zibalRequest(finalAmount, callbackUrl, description)
-      : await zarinpalRequestPayment({
-          amountRial: finalAmount,
-          description,
-          callbackUrl,
-          mobile: user.phone || undefined,
-        });
+    const { paymentUrl } = await zibalRequest(finalAmount, callbackUrl, description);
     // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعا درخواست
     // پرداخت به درگاه با موفقیت ساخته شده باشه (نه هر کلیک فرانت)
     prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration, gateway } } }).catch(() => {});
