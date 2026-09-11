@@ -6418,6 +6418,28 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
 @media (min-width:768px){ .routine-ai-panel{ max-width:680px; } }
 body[data-theme="light"] .routine-ai-panel{ background:rgba(255,255,255,.16); }
 
+/* موبایل: طبق درخواستِ صریح، باکسِ چت باید «اندازه‌ی صفحه باشه، نه بیشتر
+   نه کمتر» — کارتِ وسط‌چینِ قبلی روی موبایل به یک شیتِ تمام‌صفحه تبدیل
+   می‌شه. top/height دقیقا از window.visualViewport (توی RoutineAiFab.tsx)
+   میاد، نه vh/dvh، چون سافاری با بازشدنِ کیبورد فقط visual viewport رو
+   کوچیک می‌کنه. min-height/max-height ثابتِ .routine-ai-panel این‌جا خنثی
+   می‌شه — همون تداخلی که باعث می‌شد وقتی کیبورد باز بود، پنل بلندتر از
+   ویوپورتِ واقعا دیده‌شده بمونه و نیمه‌ی بالاش (هدر/پیام‌ها) از صفحه بیرون
+   بزنه (باگِ گزارش‌شده). انیمیشنِ ورودش هم عوض شد چون modalPopIn با
+   transform:translate(-50%,-50%) کار می‌کرد که برای یک شیتِ چسبیده‌به‌لبه
+   بی‌معنیه؛ اسلایدِ ساده‌ی از پایین جایگزینش شد. */
+@media (max-width:640px){
+  .routine-ai-panel.open{
+    left:0; top:0; width:100%; max-width:100%;
+    height:100vh; height:100dvh; min-height:0; max-height:none; border-radius:0;
+    animation:routineAiSheetIn .32s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes routineAiSheetIn{
+    from{ transform:translateY(4%); opacity:0; }
+    to{ transform:translateY(0); opacity:1; }
+  }
+}
+
 .routine-ai-list{
   flex:1 1 auto; min-height:140px; overflow-y:auto;
   display:flex; flex-direction:column; gap:12px;

@@ -109,18 +109,17 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
   const stateMotion = getAIStateMotion(state);
 
   /**
-   * Higher chroma than the original pastels.
-   *
-   * The first palette sat at chroma 0.12–0.15, which washes out once the mesh is
-   * blurred and the dot pattern is overlaid on top. Pushing to ~0.2 and adding a
-   * saturate() pass to the mesh is what makes the colour survive all that.
+   * طبق درخواست صریح: گو دیگه پالت ثابت صورتی/آبی/بنفشِ SmoothUI اصلی رو
+   * نداره — رنگش از var(--accent) همون دکمه‌های اصلی اپ (trade-primary-btn
+   * و بقیه) میاد، پس با تم روز/شب سایت (که --accent رو عوض می‌کنه) خودش
+   * خودکار جابه‌جا می‌شه، بدون نیاز به state جدا این‌جا.
    */
   const defaultColors = {
-    bg: "oklch(92% 0.03 300)",
-    c1: "oklch(68% 0.21 350)", // Pink
-    c2: "oklch(70% 0.18 210)", // Blue
-    c3: "oklch(66% 0.2 285)", // Violet
-    c4: "oklch(72% 0.19 325)", // Magenta, the fourth stop for variety
+    bg: "color-mix(in oklab, var(--accent) 10%, var(--bg) 90%)",
+    c1: "color-mix(in oklab, var(--accent) 88%, white 10%)",
+    c2: "var(--accent)",
+    c3: "color-mix(in oklab, var(--accent) 55%, var(--secondary) 45%)",
+    c4: "color-mix(in oklab, var(--accent) 78%, black 10%)",
   };
 
   const finalColors = { ...defaultColors, ...colors };
