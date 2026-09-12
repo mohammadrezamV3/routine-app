@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Mail, MessageCircleWarning } from "lucide-react";
 import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
-import { AccountBackButton } from "@/components/AccountBackButton";
+import { AccountPageHead, AccountBlock, AccountLine } from "@/components/AccountUI";
 
 const FAQ = [
   { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخش «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
@@ -17,44 +17,41 @@ export default function SupportPage() {
 
   return (
     <section>
-      <AccountBackButton />
-      <h1>پشتیبانی</h1>
-      <div className="account-content-hint">اگه سوالی داری یا با مشکلی روبه‌رو شدی</div>
+      <AccountPageHead title="پشتیبانی" hint="اگه سوالی داری یا با مشکلی روبه‌رو شدی" />
 
-      <div className="account-card">
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="account-row2">
-          <span className="account-row2-icon"><Mail size={16} /></span>
-          <span className="account-row2-body">
-            <span className="account-row2-label">تماس با پشتیبانی</span>
-            <span className="account-row2-desc mono" dir="ltr">{SUPPORT_EMAIL}</span>
+      <AccountBlock title="راه‌های ارتباطی" icon={<Mail size={15} />} flush index={0}>
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="acc-line">
+          <span className="acc-line-icon"><Mail size={16} /></span>
+          <span className="acc-line-body">
+            <span className="acc-line-label">تماس با پشتیبانی</span>
+            <span className="acc-line-value mono" dir="ltr">{SUPPORT_EMAIL}</span>
           </span>
         </a>
-        <a href={mailto} className="account-row2">
-          <span className="account-row2-icon"><MessageCircleWarning size={16} /></span>
-          <span className="account-row2-body">
-            <span className="account-row2-label">گزارش مشکل</span>
-            <span className="account-row2-desc">ارسال ایمیل برای گزارش باگ یا مشکل</span>
+        <a href={mailto} className="acc-line">
+          <span className="acc-line-icon"><MessageCircleWarning size={16} /></span>
+          <span className="acc-line-body">
+            <span className="acc-line-label">گزارش مشکل</span>
+            <span className="acc-line-value">ارسال ایمیل برای گزارش باگ یا مشکل</span>
           </span>
         </a>
-        <a href={SOCIAL.telegram.url} target="_blank" rel="me noopener noreferrer" className="account-row2">
-          <span className="account-row2-icon"><TelegramIcon size={16} /></span>
-          <span className="account-row2-body">
-            <span className="account-row2-label">پشتیبانی در تلگرام</span>
-            <span className="account-row2-desc mono" dir="ltr">{SOCIAL.telegram.handle}</span>
+        <a href={SOCIAL.telegram.url} target="_blank" rel="me noopener noreferrer" className="acc-line">
+          <span className="acc-line-icon"><TelegramIcon size={16} /></span>
+          <span className="acc-line-body">
+            <span className="acc-line-label">پشتیبانی در تلگرام</span>
+            <span className="acc-line-value mono" dir="ltr">{SOCIAL.telegram.handle}</span>
           </span>
         </a>
-        <a href={SOCIAL.instagram.url} target="_blank" rel="me noopener noreferrer" className="account-row2">
-          <span className="account-row2-icon"><InstagramIcon size={16} /></span>
-          <span className="account-row2-body">
-            <span className="account-row2-label">اینستاگرام</span>
-            <span className="account-row2-desc mono" dir="ltr">{SOCIAL.instagram.handle}</span>
+        <a href={SOCIAL.instagram.url} target="_blank" rel="me noopener noreferrer" className="acc-line">
+          <span className="acc-line-icon"><InstagramIcon size={16} /></span>
+          <span className="acc-line-body">
+            <span className="acc-line-label">اینستاگرام</span>
+            <span className="acc-line-value mono" dir="ltr">{SOCIAL.instagram.handle}</span>
           </span>
         </a>
-      </div>
+      </AccountBlock>
 
-      <div className="tm-extra">
-        <div className="domain-sub">سوالات متداول</div>
-        <div className="account-card" style={{ padding: "4px 16px" }}>
+      <AccountBlock title="سوالات متداول" icon={<MessageCircleWarning size={15} />} index={1}>
+        <div>
           {FAQ.map((f, i) => (
             <motion.div
               key={f.q}
@@ -68,7 +65,7 @@ export default function SupportPage() {
             </motion.div>
           ))}
         </div>
-      </div>
+      </AccountBlock>
     </section>
   );
 }

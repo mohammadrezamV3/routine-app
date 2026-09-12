@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { KeyRound, ShieldCheck, MonitorSmartphone, History, Lock, UserX } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
-import { AccountSectionCard } from "@/components/AccountSectionCard";
-import { AccountBackButton } from "@/components/AccountBackButton";
+
+import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
 
@@ -191,12 +191,10 @@ export default function SecurityPage() {
 
   return (
     <section>
-      <AccountBackButton />
-      <h1>امنیت</h1>
       {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
-      <div className="account-content-hint">رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی</div>
+      <AccountPageHead title="امنیت" hint="رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی" />
 
-      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={0}>
+      <AccountBlock icon={<KeyRound size={15} />} title="تغییر رمز عبور" index={0}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
@@ -212,9 +210,9 @@ export default function SecurityPage() {
             {pwSaving ? "در حال ذخیره…" : "ذخیره رمز جدید"}
           </button>
         </div>
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={1}>
+      <AccountBlock icon={<ShieldCheck size={15} />} title="ورود دومرحله‌ای" index={1}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تایید ورود با پیامک</div>
@@ -227,9 +225,9 @@ export default function SecurityPage() {
           )}
         </div>
         {twoFactorError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{twoFactorError}</div>}
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={2}>
+      <AccountBlock icon={<MonitorSmartphone size={15} />} title="دستگاه‌های فعال" index={2}>
         {!sessions ? (
           <div className="item-line is-loading">در حال بارگذاری…</div>
         ) : sessions.length === 0 ? (
@@ -263,9 +261,9 @@ export default function SecurityPage() {
           </div>
         )}
         {sessionError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{sessionError}</div>}
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={3}>
+      <AccountBlock icon={<History size={15} />} title="ورودهای اخیر" index={3}>
         {!events ? (
           <div className="item-line is-loading">در حال بارگذاری…</div>
         ) : events.length === 0 ? (
@@ -282,9 +280,9 @@ export default function SecurityPage() {
             ))}
           </div>
         )}
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<Lock size={16} />} title="حریم خصوصی" index={4}>
+      <AccountBlock icon={<Lock size={15} />} title="حریم خصوصی" index={4}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>قابل‌جست‌وجو بودن با یوزرنیم</div>
@@ -322,7 +320,7 @@ export default function SecurityPage() {
             </div>
           )}
         </div>
-      </AccountSectionCard>
+      </AccountBlock>
     </section>
   );
 }

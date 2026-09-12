@@ -15,17 +15,14 @@ import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 type FieldErrors = {
-  phone?: string; name?: string; username?: string;
+  phone?: string; name?: string; lastName?: string; username?: string;
   password?: string; agreed?: string; otp?: string;
 };
 
-// یک باکس واحد «نام و نام‌خانوادگی» — سرور همچنان name/lastName جدا
-// می‌خواد، پس این‌جا از روی فاصله‌ی بین کلمات جدا می‌شن: اولین کلمه نام،
-// بقیه نام‌خانوادگی.
-function splitFullName(v: string): { name: string; lastName: string } {
-  const parts = v.trim().split(/\s+/).filter(Boolean);
-  return { name: parts[0] || "", lastName: parts.slice(1).join(" ") };
-}
+// طبقِ درخواستِ صریح، نام و نام‌خانوادگی دو فیلدِ جدان (قبلا یک باکسِ واحد
+// بود که از روی فاصله جدا می‌شد — و برای اسم‌های چندبخشی یا کسی که فقط
+// اسمش را می‌نوشت اشتباه جدا می‌کرد). سرور از قبل هم name/lastName جدا
+// می‌خواست، پس چیزی سمت API عوض نشد.
 
 const RESEND_COOLDOWN_SECONDS = 120;
 
@@ -39,7 +36,8 @@ const RESEND_COOLDOWN_SECONDS = 120;
 export default function SignupPage() {
   const router = useRouter();
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastNameInput, setLastNameInput] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -69,9 +67,9 @@ export default function SignupPage() {
   useEffect(() => {
     if (!password) { setTier(null); return; }
     let cancelled = false;
-    passwordTier(password, [username, fullName, phone]).then((t) => { if (!cancelled) setTier(t); });
+    passwordTier(password, [username, firstName, lastNameInput, phone]).then((t) => { if (!cancelled) setTier(t); });
     return () => { cancelled = true; };
-  }, [password, username, fullName, phone]);
+  }, [password, username, firstName, lastNameInput, phone]);
 
   function clearError(key: keyof FieldErrors) {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
@@ -129,18 +127,18 @@ export default function SignupPage() {
     setError(null);
 
     const errs: FieldErrors = {};
-    const { name, lastName } = splitFullName(fullName);
-    if (!name) errs.name = "نام و نام‌خانوادگی را وارد کن";
-    else if (!lastName) errs.name = "نام و نام‌خانوادگی را کامل وارد کن";
+    const name = firstName.trim();
+    const lastName = lastNameInput.trim();
+    if (!name) errs.name = "نام را وارد کن";
     // فقط فارسی — همین بررسی سمت سرور هم تکرار می‌شود (قابل دور زدن است)
-    else if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
-      errs.name = "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود";
-    }
+    else if (!isValidPersianName(name)) errs.name = "نام باید فقط با حروف فارسی نوشته شود";
+    if (!lastName) errs.lastName = "نام خانوادگی را وارد کن";
+    else if (!isValidPersianName(lastName)) errs.lastName = "نام خانوادگی باید فقط با حروف فارسی نوشته شود";
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
     else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
     if (!password) errs.password = "رمز عبور را وارد کن";
     else {
-      const pwErr = await validatePassword(password, [username, fullName, phone]);
+      const pwErr = await validatePassword(password, [username, firstName, lastNameInput, phone]);
       if (pwErr) errs.password = pwErr;
     }
     if (!phone.trim()) errs.phone = "شماره همراه را وارد کن";
@@ -225,12 +223,20 @@ export default function SignupPage() {
           <AuthBackButton />
           <AuthBrandMark subtitle={"به آریون خوش اومدی!"} />
 
-          <AuthField id="fullName" label={"نام و نام‌خانوادگی"} error={fieldErrors.name} icon={<User size={15} />} ref={nameRef}>
-            <input
-              id="fullName" type="text" className="wsearch-newform-name" value={fullName} placeholder={"نام و نام‌خانوادگی خود را وارد کنید"}
-              onChange={(e) => { setFullName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
-            />
-          </AuthField>
+          <div className="auth-field-grid" ref={nameRef}>
+            <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
+              <input
+                id="firstName" type="text" className="wsearch-newform-name" value={firstName} placeholder={"نام"}
+                onChange={(e) => { setFirstName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
+              />
+            </AuthField>
+            <AuthField id="lastName" label={"نام خانوادگی"} error={fieldErrors.lastName} icon={<User size={15} />}>
+              <input
+                id="lastName" type="text" className="wsearch-newform-name" value={lastNameInput} placeholder={"نام خانوادگی"}
+                onChange={(e) => { setLastNameInput(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
+              />
+            </AuthField>
+          </div>
 
           <div style={{ marginTop: 14 }}>
             <AuthField id="username" label={"یوزرنیم"} error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>

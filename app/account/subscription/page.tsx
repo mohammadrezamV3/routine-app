@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { getAccount, AccountData } from "@/lib/accountCache";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
-import { AccountBackButton } from "@/components/AccountBackButton";
+import { AccountPageHead, AccountBlock, AccountLine } from "@/components/AccountUI";
+import { CreditCard } from "lucide-react";
 
 type SubUser = {
   isSuperAdmin: boolean;
@@ -46,40 +47,24 @@ export default function AccountSubscriptionPage() {
 
   return (
     <section>
-      <AccountBackButton />
-      <h1>اشتراک</h1>
-      <div className="account-content-hint">وضعیت فعلی اشتراک حسابت</div>
+      <AccountPageHead title="اشتراک" hint="وضعیت فعلی اشتراک حسابت" />
 
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="account-card" style={{ padding: 16 }}>
+      <AccountBlock title="پلن فعلی" icon={<CreditCard size={15} />} flush>
         {data.isSuperAdmin ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span className="about-label">وضعیت</span>
-            <span style={{ color: "var(--accent)", fontWeight: 700 }}>سوپریوزر — دسترسی نامحدود</span>
-          </div>
+          <AccountLine label="وضعیت" value="سوپریوزر — دسترسی نامحدود" />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span className="about-label">پلن فعلی</span>
-              <span style={{ fontWeight: 700, color: "var(--text)" }}>{currentSub ? currentSub.plan.nameFa : "بدون اشتراک فعال"}</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span className="about-label">وضعیت</span>
-              <span style={{ color: "var(--text)" }}>{currentSub ? SUB_STATUS_FA[currentSub.status] || currentSub.status : "—"}</span>
-            </div>
+          <>
+            <AccountLine label="پلن فعلی" value={currentSub ? currentSub.plan.nameFa : "بدون اشتراک فعال"} />
+            <AccountLine label="وضعیت" value={currentSub ? SUB_STATUS_FA[currentSub.status] || currentSub.status : "—"} />
             {currentSub?.currentPeriodEnd && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span className="about-label">تاریخ پایان</span>
-                <span className="mono" dir="ltr" style={{ color: "var(--text)" }}>{formatJalaliDate(currentSub.currentPeriodEnd)}</span>
-              </div>
+              <AccountLine label="تاریخ پایان" value={formatJalaliDate(currentSub.currentPeriodEnd)} mono />
             )}
-          </div>
+          </>
         )}
-      </motion.div>
+      </AccountBlock>
 
       {!data.isSuperAdmin && (
-        <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-          <Link href="/subscription" className="account-sub-cta-btn">مشاهده و مدیریت پلن‌ها</Link>
-        </div>
+        <Link href="/subscription" className="account-sub-cta-btn">مشاهده و مدیریت پلن‌ها</Link>
       )}
     </section>
   );
