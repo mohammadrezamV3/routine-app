@@ -6562,6 +6562,59 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    مدیرِ برنامه — گویِ گوشه‌ی صفحه‌ی روتین + پنلِ گفت‌وگو
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ── نوارِ پیشنهادِ نصبِ اپ (PWA) ─────────────────────────────────────────
+   پایینِ صفحه می‌نشیند، بالاترِ نوارِ ناوبریِ موبایل تا رویش نیفتد. */
+.pwa-install-bar{
+  position:fixed; z-index:60;
+  inset-inline:12px; bottom:calc(12px + env(safe-area-inset-bottom));
+  display:flex; align-items:center; gap:10px; justify-content:space-between;
+  padding:11px 14px; border-radius:18px;
+  border:1px solid var(--line); background:var(--card-bg);
+  box-shadow:0 12px 34px rgba(0,0,0,.32);
+  animation:pwa-bar-in .32s cubic-bezier(.22,1,.36,1);
+}
+@media (max-width:1023px){
+  .pwa-install-bar{ bottom:calc(70px + env(safe-area-inset-bottom)); }
+}
+@media (min-width:640px){
+  .pwa-install-bar{ inset-inline-start:auto; inset-inline-end:16px; max-width:400px; }
+}
+@keyframes pwa-bar-in{
+  from{ opacity:0; transform:translateY(14px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+@media (prefers-reduced-motion:reduce){ .pwa-install-bar{ animation:none; } }
+.pwa-install-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.pwa-install-text b{ font-size:13px; font-weight:800; color:var(--text); }
+.pwa-install-text span{ font-size:11px; line-height:1.6; color:var(--muted); }
+.pwa-install-actions{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.pwa-install-btn{
+  display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:12px;
+  font-size:12.5px; font-weight:800; color:#fff; border:none;
+  background:var(--accent); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:filter .18s ease, transform .15s ease;
+}
+@media (hover:hover){ .pwa-install-btn:hover{ filter:brightness(1.07); } }
+.pwa-install-btn:active{ transform:scale(.95); }
+.pwa-install-close{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; height:32px; border-radius:10px; color:var(--muted);
+  border:none; background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+body[data-theme="light"] .pwa-install-close, body:not([data-theme="light"]) .pwa-install-close{
+  background:none; box-shadow:none;
+}
+@media (hover:hover){ .pwa-install-close:hover{ color:var(--text); } }
+
+/* صفحه‌ی آفلاین */
+.offline-wrap{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; min-height:60dvh; padding:24px; text-align:center;
+}
+.offline-wrap h1{ font-size:19px; font-weight:800; color:var(--text); }
+.offline-wrap p{ font-size:13px; line-height:1.9; color:var(--muted); max-width:330px; }
+
 /* هشدارِ CLAUDE.md دقیقا این‌جا اتفاق افتاد: قانونِ سراسریِ `button{}` به هر
    دکمه‌ای بک‌گراندِ شیشه‌ای + `backdrop-filter` + `box-shadow` می‌دهد. تنها
    `background:none` کافی نبود — بلورِ پس‌زمینه و سایه می‌ماندند و پشتِ گو یک
