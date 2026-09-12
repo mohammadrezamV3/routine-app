@@ -1,16 +1,17 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { Bell, BellRing, ChevronLeft, ChevronRight, Filter, History, Info, Loader2, Search, X } from "lucide-react";
-import { faNum, isoLocal } from "@/lib/jalali";
+import { Bell, BellRing, Calendar, Filter, History, Info, Loader2, Search, X } from "lucide-react";
+import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
+import { G_MONTHS } from "@/lib/gregorian";
 import { getSetting, setSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
   IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, compareActualToForecast,
 } from "@/lib/economicCalendar";
+import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
 import {
   DEFAULT_NEWS_ALERT_PREFS, NEWS_ALERT_KEY,
   NewsAlertPrefs, newsEventWatchKey, normalizeNewsAlertPrefs,
@@ -18,14 +19,13 @@ import {
 
 type HistoryRow = { id: string; occursAt: string; actual: string | null; forecast: string | null; previous: string | null };
 
-// طبقِ درخواستِ صریح: این جدول باید دقیقاً مثلِ خودِ فارکس‌فکتوری انگلیسی
-// بمونه — هم متنِ رویدادها (که از منبع همین‌جوری میان، دیگه به فارسی
-// ترجمه نمی‌شن — نگاه کن به lib/economicCalendar.ts) هم اعداد (رقمِ
-// لاتین، نه faNum). برای همین اینجا از calSystem/formatTradeTime/
-// formatTradeDateتِ سراسریِ اپ (که رقم‌ها رو فارسی می‌کنن) استفاده نمی‌کنیم؛
-// یک فرمتِ محلیِ انگلیسیِ مستقل داریم، فقط برای همین بخش.
+// طبقِ درخواستِ صریح: خودِ جدولِ رویدادها (اسم/اعداد Actual-Forecast-Previous)
+// همچنان باید دقیقاً مثلِ خودِ فارکس‌فکتوریِ انگلیسی بمونه — نگاه کن به
+// lib/economicCalendar.ts. این تصمیم عوض نشده و فقط شاملِ خودِ جدوله؛
+// نوارِ بالای صفحه (استریپِ روزها + فیلتر/امروز/تاریخچه) از این‌جا به بعد
+// طبقِ شماتیکِ تازه‌ی کاربر فارسی/شمسی شد (سازگار با calSystem سراسریِ
+// ماژولِ ترید، هم‌الگویِ TradeAccountView/TradeCalendarPanel).
 const enTimeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-const enDayFmt = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" });
 const enShortDateFmt = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric" });
 
 function startOfLocalDay(d: Date): Date {
@@ -37,25 +37,31 @@ function addDays(d: Date, n: number): Date {
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-/** شنبه‌ی همان هفته‌ای که d توش است — دقیقاً همان تعریفِ هفته‌ی «برنامه‌ی
- * هفتگی»ِ روتین من (WEEK_ORDER، lib/schedule.ts)، نه یک هفته‌ی دلخواهِ تازه. */
-function weekStartOf(d: Date): Date {
-  const jsDay = d.getDay();
-  const diffFromSat = (jsDay - 6 + 7) % 7;
-  return addDays(startOfLocalDay(d), -diffFromSat);
+/** «سه‌شنبه ۱۷ شهریور» یا معادلِ میلادی‌اش — طبقِ calSystemِ انتخابیِ کاربر،
+ * دقیقا هم‌قاعده‌ی formatTradeDateTime (lib/tradeDateTime.ts). */
+function dayLabel(d: Date, calSystem: CalSystem): { weekday: string; date: string } {
+  const weekday = FA_WEEKDAY[d.getDay()];
+  if (calSystem === "jalali") {
+    const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    return { weekday, date: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
+  }
+  return { weekday, date: `${faNum(d.getDate())} ${G_MONTHS[d.getMonth()]}` };
 }
-const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const enMonthYearFmt = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
-const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(weekStartOf(new Date()), i)));
+const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
+const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(startOfLocalDay(new Date()), i - new Date().getDay())));
+// استریپِ روزها یک بازه‌ی ثابتِ پیوسته (نه هفته‌به‌هفته) — امروز همیشه
+// همون اول‌ها می‌شینه، اسکرولِ افقیِ خودِ مرورگر (نه drag دستی) کاربر رو
+// می‌بره عقب/جلوتر؛ برای پرش دور «تاریخچه» (ماه‌شمارِ کامل) هست.
+const DAY_STRIP_BACK = 7;
+const DAY_STRIP_FORWARD = 21;
 
 export function EconomicCalendarPanel() {
-  // مثلِ خودِ ForexFactory: یک روز در یک لحظه، با فلشِ قبلی/بعدی — نه
-  // «روزهای بیشتر»ی که همه‌چیز رو یک‌جا پشتِ هم می‌ریخت.
+  // مثلِ خودِ ForexFactory: یک روز در یک لحظه.
   const [date, setDate] = useState(() => startOfLocalDay(new Date()));
-  // جهتِ آخرین جابه‌جایی — برایِ اینکه اسلایدِ هفته‌ی جدید از سمتِ درستی
-  // بیاد تو (+۱ یعنی هفته‌ی بعد از راست به چپ می‌ره، -۱ برعکس).
-  const [weekDir, setWeekDir] = useState(1);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
+  useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -150,13 +156,21 @@ export function EconomicCalendarPanel() {
   const today = startOfLocalDay(new Date());
   const now = new Date();
 
-  function goWeek(dir: 1 | -1) {
-    setWeekDir(dir);
-    setDate((d) => addDays(d, dir * 7));
-  }
+  // استریپِ روزها یک بازه‌ی ثابتِ پیوسته حولِ امروز است (نه هفته‌به‌هفته‌ی
+  // قبلی) — دقیقا هم‌شکلِ ردیفِ روزهای تصویرِ مرجع. برای رفتنِ به تاریخ‌های
+  // دورتر «تاریخچه» (ماه‌شمارِ کامل) هست.
+  const dayStrip = useMemo(
+    () => Array.from({ length: DAY_STRIP_BACK + DAY_STRIP_FORWARD + 1 }, (_, i) => addDays(today, i - DAY_STRIP_BACK)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+  const stripRef = useRef<HTMLDivElement>(null);
+  const activeDayRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeDayRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [date]);
 
   function pickDate(d: Date) {
-    setWeekDir(d.getTime() >= date.getTime() ? 1 : -1);
     setDate(d);
     setMonthPickerOpen(false);
   }
@@ -179,54 +193,6 @@ export function EconomicCalendarPanel() {
 
   return (
     <div>
-      <div className="trade-cal-filter-bar">
-        <AnimatePresence initial={false}>
-          {searchOpen && (
-            <motion.div
-              className="trade-cal-search"
-              style={{ overflow: "hidden" }}
-              initial={{ flexBasis: 0, opacity: 0 }}
-              animate={{ flexBasis: 170, opacity: 1 }}
-              exit={{ flexBasis: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Search size={14} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Escape") toggleSearch(); }}
-                placeholder="جستجوی یک رویداد خاص…"
-                className="ltr-inline"
-              />
-              {searchInput && (
-                <button type="button" onClick={() => setSearchInput("")} aria-label="پاک‌کردن جستجو">
-                  <X size={13} />
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <button
-          type="button"
-          className={`trade-ghost-btn trade-cal-search-toggle${searchOpen ? " active" : ""}`}
-          onClick={toggleSearch}
-          aria-label={searchOpen ? "بستن جستجو" : "جستجو"}
-        >
-          <Search size={13} />
-        </button>
-        <button type="button" className="trade-ghost-btn" onClick={() => setFiltersOpen((v) => !v)}>
-          <Filter size={13} /> فیلتر
-          {(currencies.length || impacts.length || otherCurrencies) ? ` (${faNum(currencies.length + impacts.length + (otherCurrencies ? 1 : 0))})` : ""}
-        </button>
-        {(currencies.length > 0 || impacts.length > 0 || otherCurrencies) && (
-          <button type="button" className="trade-ghost-btn" onClick={() => { setCurrencies([]); setImpacts([]); setOtherCurrencies(false); }}>
-            پاک‌کردن فیلترها
-          </button>
-        )}
-      </div>
-
       {filtersOpen && (
         <div className="trade-surface trade-cal-filters">
           <label className="exercise-form-label">سطح تأثیر</label>
@@ -270,67 +236,93 @@ export function EconomicCalendarPanel() {
       {/* طبقِ درخواستِ صریح: این بخش هم داخلِ یک باکسِ صفحه‌بزرگ — هم‌الگویِ
           چک‌لیست‌ها/یادداشت‌ها — نه یک ناحیه‌ی کوچیکِ شناور روی بک‌گراند. */}
       <div className="trade-surface trade-page-box trade-cal-box">
-      {/* ناوبری — به‌جای «روزهای بیشتر»ی که همه‌چیز رو یک‌جا پشتِ هم
-          می‌ریخت، حالا مثلِ هفته‌ی «برنامه‌ی هفتگی»ِ روتین من (همان تعریفِ
-          هفته‌ی شنبه‌تا‌جمعه): یک ردیفِ ثابتِ ۷ روزِ کلیک‌پذیر، به‌جای فقط
-          یک فلشِ قبلی/بعدی که هیچ‌وقت نمی‌گفت «چند روزِ دیگه چی هست». */}
+      {/* بارِ تقویم — از اول بازطراحی شد طبقِ شماتیکِ تازه: استریپِ روزها
+          (فارسی/شمسی، هم‌قاعده‌ی calSystemِ سراسریِ ماژولِ ترید) + یک ردیفِ
+          واحد فیلتر/امروز/تاریخچه، به‌جای نوارِ جداگانه‌ی قبلی. */}
       {searching ? (
         <div className="trade-cal-search-banner">
           نتیجه‌ی جستجو برای «<b>{query}</b>» — {faNum(events.length)} رویداد
         </div>
       ) : (
         <>
-          <div className="trade-cal-daynav">
-            <button type="button" className="trade-icon-btn" onClick={() => goWeek(-1)} aria-label="هفته‌ی قبل">
-              <ChevronRight size={16} />
-            </button>
-            <div className="trade-cal-week-viewport">
-              <AnimatePresence mode="popLayout" initial={false} custom={weekDir}>
-                <motion.div
-                  key={isoLocal(weekStartOf(date))}
-                  custom={weekDir}
-                  initial={{ x: weekDir > 0 ? 56 : -56, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: weekDir > 0 ? -56 : 56, opacity: 0 }}
-                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.18}
-                  onDragEnd={(_e, info) => {
-                    if (info.offset.x < -55 || info.velocity.x < -500) goWeek(1);
-                    else if (info.offset.x > 55 || info.velocity.x > 500) goWeek(-1);
-                  }}
-                  className="trade-cal-week-strip"
-                >
-                  {Array.from({ length: 7 }, (_, i) => addDays(weekStartOf(date), i)).map((d) => (
-                    <button
-                      key={isoLocal(d)}
-                      type="button"
-                      className={`trade-cal-day-pill${isSameDay(d, date) ? " active" : ""}${isSameDay(d, today) ? " today" : ""}`}
-                      onClick={() => pickDate(d)}
-                    >
-                      <span className="trade-cal-day-pill-wd">{enWeekdayShort.format(d)}</span>
-                      <span className="trade-cal-day-pill-num mono">{d.getDate()}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
+          <div className="trade-cal-strip-box">
+            <div ref={stripRef} className="trade-cal-week-strip thin-scroll">
+              {dayStrip.map((d) => {
+                const active = isSameDay(d, date);
+                const { weekday, date: dateLabel } = dayLabel(d, calSystem);
+                return (
+                  <button
+                    key={isoLocal(d)}
+                    ref={active ? activeDayRef : undefined}
+                    type="button"
+                    className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
+                    onClick={() => pickDate(d)}
+                  >
+                    <span className="trade-cal-day-pill-wd">{weekday}</span>
+                    <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
+                  </button>
+                );
+              })}
             </div>
-            <button type="button" className="trade-icon-btn" onClick={() => goWeek(1)} aria-label="هفته‌ی بعد">
-              <ChevronLeft size={16} />
-            </button>
           </div>
-          <div className="trade-cal-daynav-sub">
-            <span className="ltr-inline">{isSameDay(date, today) ? "Today: " : ""}{enDayFmt.format(date)}</span>
-            <button type="button" className="trade-ghost-btn trade-cal-month-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
-              <History size={13} /> تاریخچه
+
+          <div className="trade-cal-actions-row">
+            <button
+              type="button"
+              className={`trade-cal-search-icon-btn${searchOpen ? " active" : ""}`}
+              onClick={toggleSearch}
+              aria-label={searchOpen ? "بستن جستجو" : "جستجو"}
+            >
+              <Search size={14} />
             </button>
-            {!isSameDay(date, today) && (
-              <button type="button" className="trade-ghost-btn" onClick={() => { setWeekDir(1); setDate(today); }}>
-                امروز
-              </button>
+            {searchOpen && (
+              <div className="trade-cal-search">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape") toggleSearch(); }}
+                  placeholder="جستجوی یک رویداد خاص…"
+                  className="ltr-inline"
+                />
+                {searchInput && (
+                  <button type="button" onClick={() => setSearchInput("")} aria-label="پاک‌کردن جستجو">
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            )}
+            {!searchOpen && (
+              <>
+                <button type="button" className="trade-cal-pill-btn" onClick={() => setFiltersOpen((v) => !v)}>
+                  <Filter size={13} /> فیلتر
+                  {(currencies.length || impacts.length || otherCurrencies) ? ` (${faNum(currencies.length + impacts.length + (otherCurrencies ? 1 : 0))})` : ""}
+                </button>
+                <button
+                  type="button"
+                  className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
+                  onClick={() => setDate(today)}
+                >
+                  <Calendar size={13} /> امروز
+                </button>
+                <button type="button" className="trade-cal-pill-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
+                  <History size={13} /> تاریخچه
+                </button>
+              </>
             )}
           </div>
+
+          {(currencies.length > 0 || impacts.length > 0 || otherCurrencies) && (
+            <button
+              type="button"
+              className="trade-ghost-btn"
+              style={{ marginTop: 6 }}
+              onClick={() => { setCurrencies([]); setImpacts([]); setOtherCurrencies(false); }}
+            >
+              پاک‌کردن فیلترها
+            </button>
+          )}
         </>
       )}
 
@@ -418,6 +410,10 @@ export function EconomicCalendarPanel() {
 
                     {expanded && (
                       <div className="trade-cal-history">
+                        <div className="trade-cal-impact-line">
+                          <span className="trade-cal-impact-dot" style={{ background: IMPACT_COLORS[e.impact] }} />
+                          میزان تأثیر: <b>{IMPACT_LABELS[e.impact]}</b>
+                        </div>
                         <div className="trade-cal-detail">
                           {e.description || "توضیحی برای این رویداد ثبت نشده."}
                         </div>
