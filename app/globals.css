@@ -1417,7 +1417,7 @@
     background:var(--surface-1); margin-bottom:18px;
     /* حداقلِ فضای زیرِ بنر برای نیمه‌ی آویزانِ آواتار، حتی وقتی هیچ
        محتوایی زیرِ بنر نیست (عکسِ پروفایل ندارد → ردیفِ حذف رندر نمی‌شود). */
-    padding-bottom:38px;
+    padding-bottom:54px;
   }
   .profile-hero:has(.profile-hero-meta){ padding-bottom:0; }
   .profile-banner{
@@ -1445,7 +1445,9 @@
      <button> واقعی‌ست، ریستِ سراسریِ button{} باید صریح خاموش شود وگرنه
      یک سطحِ شیشه‌ای و سایه‌ی inset می‌گیرد. */
   .profile-hero-avatar-wrap{
-    position:absolute; bottom:-30px; inset-inline-start:20px; width:88px; height:88px;
+    /* دقیقا نصفِ دایره زیرِ لبه‌ی بنر می‌افتد (bottom = نصفِ قطر)، مثل
+       شماتیک — نه یک‌سومِ قبلی. */
+    position:absolute; bottom:-46px; inset-inline-start:20px; width:92px; height:92px;
     padding:0; border:none; background:none; box-shadow:none; cursor:pointer;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
@@ -1458,14 +1460,16 @@
   .profile-hero-avatar-wrap:hover .profile-hero-avatar-hint,
   .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint,
   .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
+  /* حلقه‌ی خالیِ دورِ دایره: یک بوردرِ ضخیم به رنگِ خودِ کارت، پس مثلِ
+     یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی. */
   .profile-hero-avatar-img{
-    width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;
-    border:3px solid var(--bg); background:var(--surface-2);
+    width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
+    border:6px solid var(--surface-1); background:var(--surface-2);
   }
   /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذفِ عکس. پدینگِ بالا همچنان
      باید از ۳۰پیکسلِ آویزانِ آواتار بیشتر باشد تا دکمه زیرِ عکس بیفتد. */
   .profile-hero-meta{
-    padding:40px 20px 14px; display:flex; justify-content:flex-end;
+    padding:56px 20px 14px; display:flex; justify-content:flex-end;
   }
 
   /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
@@ -1629,9 +1633,9 @@
   .profile-section-title svg{ color:var(--accent); }
 
   @media (max-width:520px){
-    .profile-hero-avatar-wrap{ width:72px; height:72px; bottom:-26px; inset-inline-start:16px; }
-    .profile-hero-avatar-img{ width:72px; height:72px; }
-    .profile-hero-meta{ padding:38px 16px 12px; }
+    .profile-hero-avatar-wrap{ width:78px; height:78px; bottom:-39px; inset-inline-start:16px; }
+    .profile-hero-avatar-img{ width:78px; height:78px; border-width:5px; }
+    .profile-hero-meta{ padding:48px 16px 12px; }
     .profile-banner-btn span{ display:none; }
     .profile-banner-btn{ padding:6px; }
   }

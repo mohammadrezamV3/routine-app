@@ -330,7 +330,7 @@ export default function AccountProfilePage() {
             {avatarUrl ? (
               <img src={avatarUrl} alt="عکس پروفایل" className="profile-hero-avatar-img" />
             ) : (
-              <AgentAvatar seed={fullName || username || data.email || "؟"} size={88} className="profile-hero-avatar-img" />
+              <AgentAvatar seed={fullName || username || data.email || "؟"} size={92} className="profile-hero-avatar-img" />
             )}
             <span className="profile-hero-avatar-hint" aria-hidden="true">
               {avatarSaving ? <Loader2 size={15} className="trade-spin" /> : <Camera size={15} />}
