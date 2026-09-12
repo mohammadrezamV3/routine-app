@@ -39,6 +39,9 @@ export default function robots(): MetadataRoute.Robots {
         // مسیر برای کراولر محتوای بی‌ارزش/تکراری‌ست.
         "/subscription$",
         "/subscription/",
+        // صفحه‌ی fallbackِ سرویس‌ورکر — محتوای واقعی نیست، فقط وقتی شبکه
+        // نیست نشان داده می‌شود. `noindex` هم روی خودش هست.
+        "/offline",
       ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
