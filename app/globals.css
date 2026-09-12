@@ -46,13 +46,6 @@
     --secondary-rgb:62,123,250;
     --secondary-dim:rgba(62,123,250,.18);
 
-    /* پالت گوی SiriOrb (دستیار AI) — طبق درخواست صریح: شب سبز/آبی/سیاه */
-    --orb-bg:#0A0F0D;
-    --orb-c1:#16C79A;
-    --orb-c2:#3E7BFA;
-    --orb-c3:#05070A;
-    --orb-c4:#00A86B;
-
     /* ── سطح کارت‌ها و پاپ‌آپ‌ها ──────────────────────────────────
        تا الان هر کارت یه شیشه‌ی خیلی شفاف بود (مثلا rgba(255,255,255,.02))
        که فقط با `backdrop-filter` شبیه کارت دیده می‌شد. ولی بلور روی
@@ -105,13 +98,6 @@
     --secondary:#5A4024;
     --secondary-rgb:90,64,36;
     --secondary-dim:rgba(90,64,36,.16);
-
-    /* پالت گوی SiriOrb (دستیار AI) — طبق درخواست صریح: روز شیری/قهوه‌ای/نارنجی */
-    --orb-bg:#FDF6EA;
-    --orb-c1:#F3E3C3;
-    --orb-c2:#8B5A2B;
-    --orb-c3:#F0862A;
-    --orb-c4:#B36B2F;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
 
@@ -930,9 +916,11 @@
      سود/زیان روز (dailyPnl) به‌جای وضعیت انجام‌شده/نشده‌ی روتین. */
   .trade-calendar-box{ padding:14px 16px 16px; margin-top:14px; }
   .trade-cal-grid{ margin-top:2px; }
-  .trade-cal-cell{ gap:1px; padding:2px; cursor:default; }
-  .trade-cal-cell.no-data:hover{ border-color:var(--line); transform:none; }
-  .trade-cal-cell.win, .trade-cal-cell.loss{ cursor:pointer; }
+  /* باگِ فیکس‌شده: قبلا فقط روزهای دارایِ ترید کلیک‌پذیر بودن، پس همه‌ی
+     خانه‌ها cursor:pointer نداشتن و hoverِ no-data خنثی می‌شد. حالا هر
+     روزی قابل‌انتخابه (روزهای بی‌ترید فقط لیستِ خالی نشون می‌دن)، پس
+     همه‌شون باید ظاهرِ کلیک‌پذیر داشته باشن. */
+  .trade-cal-cell{ gap:1px; padding:2px; cursor:pointer; }
   .trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--pnl-win-rgb),.24), rgba(var(--pnl-win-rgb),.06)); border-color:rgba(var(--pnl-win-rgb),.5); }
   .trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(var(--pnl-loss-rgb),.18), rgba(var(--pnl-loss-rgb),.05)); border-color:rgba(var(--pnl-loss-rgb),.5); }
   .trade-cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
@@ -4451,7 +4439,6 @@ html[data-perf="low"] .tv-chart-card,
 html[data-perf="low"] .trade-chart-side,
 html[data-perf="low"] .trade-chat-panel,
 html[data-perf="low"] .trade-cal-card,
-html[data-perf="low"] .trade-cal-box,
 html[data-perf="low"] .trade-cal-filters,
 html[data-perf="low"] .trade-cal-search,
 html[data-perf="low"] .trade-econ-monthpicker,
@@ -5448,25 +5435,16 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
 .trade-cal-tr.past .tc-col-time, .trade-cal-tr.past .tc-col-event{ opacity:.55; }
 .trade-cal-card-row.past .trade-cal-card-when, .trade-cal-card-row.past .trade-cal-card-title{ opacity:.55; }
 
-.trade-cal-box{
-  margin-top:14px; padding:14px;
-  background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
-  border:1px solid var(--surface-line); border-radius:18px;
-}
-
-/* بارِ تقویم — از اول بازطراحی شد طبقِ عکسِ مرجع: یک قابِ جدا برایِ
-   استریپِ روزها (فارسی/شمسی)، و زیرش یک ردیفِ جداگانه‌ی فیلتر/امروز/
-   تاریخچه با همون سبزِ اکسنتِ اپ (نه یک رنگِ بیرونی). */
-.trade-cal-strip-box{
-  border-radius:16px; border:1px solid var(--surface-line); background:rgba(var(--surface-rgb),.08);
-  padding:10px; margin-bottom:10px;
-}
-/* استریپِ روزها دیگه هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی
-   اسکرول‌پذیرِ افقیه (اسکرولِ خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛
-   برایِ تاریخ‌های دورتر دکمه‌ی «تاریخچه» (ماه‌شمار) هست. */
+/* طبقِ درخواستِ صریحِ تازه: بارِ تقویم دیگه هیچ باکس/قابِ بوردردار/شیشه‌ای
+   نداره — دقیقا مثلِ ماه‌شمارِ «روتین من» مستقیم روی بک‌گراندِ صفحه
+   می‌شینه (.trade-cal-box/.trade-cal-strip-box قبلی حذف شدن). استریپِ
+   روزها هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی اسکرول‌پذیرِ افقیه
+   (اسکرولِ خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛ برایِ تاریخ‌های
+   دورتر دکمه‌ی «تاریخچه» (ماه‌شمار) هست. */
 .trade-cal-week-strip{
   display:flex; gap:6px; overflow-x:auto; scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch; touch-action:pan-x;
+  margin-top:14px; padding-bottom:2px;
 }
 .trade-cal-day-pill{
   flex:0 0 auto; scroll-snap-align:center; min-width:56px;
@@ -5502,7 +5480,12 @@ body[data-theme="light"] .trade-cal-pill-btn, body:not([data-theme="light"]) .tr
 body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
 @media (hover:hover){ .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
 .trade-cal-search-icon-btn{
-  display:inline-flex; align-items:center; justify-content:center; width:33px; height:33px; border-radius:999px;
+  /* باگِ گزارش‌شده «آیکون جستجو خالیه»: پدینگِ پیش‌فرضِ سراسریِ button{}
+     (8px 16px) این‌جا ریست نشده بود — روی یک باکسِ ثابتِ ۳۳px، همون پدینگ
+     تقریبا کل جای داخلی رو می‌خورد و آیکون رو له/نامرئی می‌کرد. بقیه‌ی
+     دکمه‌های آیکونیِ این فایل (trade-icon-btn، trade-cal-icon-btn، ...) هم
+     همیشه padding رو صریح صفر می‌کنن — این یکی جا افتاده بود. */
+  display:inline-flex; align-items:center; justify-content:center; width:33px; height:33px; padding:0; border-radius:999px;
   color:var(--muted); border:1px solid var(--surface-line); background:rgba(var(--surface-rgb),.08);
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; transition:border-color .18s ease, color .18s ease;
   flex-shrink:0;
@@ -6535,13 +6518,20 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    طبقِ درخواستِ صریح: وسطِ بالای صفحه (نه وسطِ عمودیِ معمولِ بقیه‌ی
    پاپ‌آپ‌ها) — position:fixed با یک top ثابت، نه transform:translateY(-50%). */
 .friend-profile-panel{
-  position:fixed; top:64px; inset-inline-end:50%; transform:translateX(-50%); z-index:71;
+  /* باگِ گزارش‌شده: «باز که می‌کنم بیرون صفحه‌ست». این تنها پاپ‌آپِ اپ بود
+     که با inset-inline-end (به‌جای left ساده‌ی بقیه‌ی .modal-panelها)
+     وسط‌چین می‌شد — روی مرورگر/وبویوی بدونِ پشتیبانیِ کامل، inset-inline-end
+     بی‌اثر می‌ماند و فقط translateX(-50%) روی موقعیتِ پیش‌فرض (بالا-چپِ
+     body، چون position:fixed پورتال‌شده است) اثر می‌کرد — یعنی پنل نصفش
+     واقعا از چپِ صفحه بیرون می‌زد. left ساده دقیقاً هم‌الگویِ همه‌ی
+     .modal-panelهای دیگر اپه، بدونِ این وابستگی. */
+  position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:71;
   width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
   padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
   animation:tradeFadeIn .22s ease both;
 }
-.friend-profile-close{ position:absolute; top:12px; inset-inline-end:12px; }
+.friend-profile-close{ position:absolute; top:12px; right:12px; }
 .friend-profile-loading{ display:flex; align-items:center; justify-content:center; padding:30px 0; color:var(--muted); }
 .friend-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
 .friend-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:8px; }

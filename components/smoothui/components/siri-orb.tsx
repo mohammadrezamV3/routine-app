@@ -109,18 +109,22 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
   const stateMotion = getAIStateMotion(state);
 
   /**
-   * طبق درخواست صریح: گو دیگه پالت ثابت صورتی/آبی/بنفشِ SmoothUI اصلی رو
-   * نداره — پالتش از --orb-* (تعریف‌شده در globals.css :root و
-   * body[data-theme="light"]) میاد: شب سبز/آبی/سیاه، روز شیری/قهوه‌ای/
-   * نارنجی. با تم روز/شب سایت خودکار جابه‌جا می‌شه، بدون نیاز به state
-   * جدا این‌جا.
+   * طبق درخواست صریح: پالتِ گو برگشت به همون حالتِ دیفالتِ اولیه‌ی
+   * SmoothUI — نه بر پایه‌ی --accent (تلاشِ اول)، نه --orb-*ِ سبز/آبی/سیاه
+   * و شیری/قهوه‌ای/نارنجیِ اختصاصی (تلاشِ دوم). ثابته، مستقل از تمِ روز/شب.
+   *
+   * Higher chroma than the original pastels.
+   *
+   * The first palette sat at chroma 0.12–0.15, which washes out once the mesh is
+   * blurred and the dot pattern is overlaid on top. Pushing to ~0.2 and adding a
+   * saturate() pass to the mesh is what makes the colour survive all that.
    */
   const defaultColors = {
-    bg: "var(--orb-bg)",
-    c1: "var(--orb-c1)",
-    c2: "var(--orb-c2)",
-    c3: "var(--orb-c3)",
-    c4: "var(--orb-c4)",
+    bg: "oklch(92% 0.03 300)",
+    c1: "oklch(68% 0.21 350)", // Pink
+    c2: "oklch(70% 0.18 210)", // Blue
+    c3: "oklch(66% 0.2 285)", // Violet
+    c4: "oklch(72% 0.19 325)", // Magenta, the fourth stop for variety
   };
 
   const finalColors = { ...defaultColors, ...colors };

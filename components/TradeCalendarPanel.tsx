@@ -68,7 +68,12 @@ export function TradeCalendarPanel({
     cells.push(
       <div
         key={iso}
-        onClick={() => hasTrades && onSelectDay(iso)}
+        // باگِ گزارش‌شده: کلیک روی روزی که ترید نداشت هیچ‌کاری نمی‌کرد
+        // (اینجا `hasTrades &&` جلوش رو می‌گرفت) — یعنی انتخاب گیر می‌کرد
+        // روی همون روزِ قبلی و لیستِ پایین صفحه هیچ‌وقت عوض نمی‌شد. حالا
+        // هر روزی قابل‌کلیکه؛ روزهای بی‌ترید فقط پیام «معامله‌ای ثبت
+        // نشده» رو نشون می‌دن (نگاه کن به TradeAccountView).
+        onClick={() => onSelectDay(iso)}
         className={`cal-cell trade-cal-cell${isToday ? " today" : ""}${isSelected ? " selected" : ""}${hasTrades ? (pnl >= 0 ? " win" : " loss") : ""}${!hasTrades ? " no-data" : ""}`}
       >
         <span className="cal-daynum mono">{faNum(d)}</span>

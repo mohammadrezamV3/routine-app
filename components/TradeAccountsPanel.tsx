@@ -211,6 +211,10 @@ function AccountRow({
   // منطق باز/بسته و موقعیت منو حالا داخل خود TradeKebabMenu است (مشترک با
   // چک‌لیست‌ها و یادداشت‌ها) — این‌جا فقط کارهایش تعریف می‌شود.
   const netPnl = a.summary?.netPnl ?? 0;
+  // طبق درخواست صریح: عددِ اصلیِ کارت دیگه سود/زیان نیست، بالانسِ کلیِ
+  // حسابه (initialBalance + netPnl) — رنگ/درصد/فلش همچنان از رویِ
+  // سود/زیان حساب می‌شن، فقط خودِ عددِ نمایشی عوض شد.
+  const balance = a.summary?.balance ?? a.initialBalance;
   // درصد نسبت به بالانس اولیه — بدون بالانس اولیه معنایی ندارد، پس نشان داده نمی‌شود
   const pnlPct = a.initialBalance > 0 ? Math.round((netPnl / a.initialBalance) * 1000) / 10 : null;
 
@@ -247,7 +251,7 @@ function AccountRow({
         </Link>
 
         <span className="trade-account-pnl-inline mono" dir="ltr" style={{ color: netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
-          {formatMoney(netPnl, a.currency)}
+          {formatMoney(balance, a.currency)}
           {pnlPct !== null && <span className="trade-account-pnl-pct">{pnlPct}%</span>}
           {netPnl >= 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
         </span>
