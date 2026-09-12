@@ -6710,12 +6710,12 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
           animation: siri-drift var(--drift-duration) ease-in-out infinite alternate;
         }
 
-        /* Lit top edge, shaded bottom, thin inner ring. */
+        /* طبق درخواستِ صریح: سایه‌ی «لبه‌ی روشن/تیره» که با hsl(0 0% 100%)
+           و hsl(0 0% 0%) ثابت کشیده می‌شد حذف شد — چون روی پالتِ خودِ گو
+           (که در تمِ روشن نزدیکِ سفید و در تمِ تیره نزدیکِ مشکیه) یک تکه‌ی
+           کاملاً سفید/مشکیِ قابل‌توجه می‌ساخت. فقط حلقه‌ی نازکِ لبه می‌ماند. */
         .siri-orb-rim {
-          box-shadow:
-            inset 0 0 0 1px hsl(0 0% 100% / 0.16),
-            inset 0 calc(var(--rim) * 1) calc(var(--rim) * 2) hsl(0 0% 100% / 0.22),
-            inset 0 calc(var(--rim) * -1.2) calc(var(--rim) * 2.4) hsl(0 0% 0% / 0.4);
+          box-shadow: inset 0 0 0 1px hsl(0 0% 100% / 0.16);
           pointer-events: none;
         }
 
@@ -6768,8 +6768,10 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
               transparent 20% 80%,
               var(--c3)
             );
-          box-shadow: inset var(--bg) 0 0 var(--shadow-spread)
-            calc(var(--shadow-spread) * 0.2);
+          /* طبق درخواستِ صریح: این box-shadow با var(--bg) (که در تمِ روشن
+             نزدیکِ سفید و در تمِ تیره نزدیکِ مشکیه) حذف شد — همراه با سایه‌ی
+             لبه‌ی siri-orb-rim، باعثِ یک تکه‌ی محسوسِ سفید/مشکی روی گو
+             می‌شد. */
           /* The saturate() pass is what keeps the colour alive after the blur
              and the overlaid dot pattern have both eaten into it. */
           filter: blur(var(--blur-amount)) contrast(var(--contrast-amount))
