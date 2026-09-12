@@ -26,6 +26,14 @@
     --accent:#00A86B;
     --accent-rgb:0,168,107;
     --accent-dim:rgba(var(--accent-rgb),.20);
+    /* سود/زیانِ ترید عمدا *بیرونِ* پالتِ تم است: سبز=سود و قرمز=ضرر یک
+       قرارداد جهانیِ بازار است، نه یک انتخابِ ظاهری. اگر از --accent بیاید،
+       توی تمِ روشن قهوه‌ای می‌شود و معنی‌اش را از دست می‌دهد. این توکن‌ها
+       فقط همین‌جا تعریف می‌شوند و در بلاکِ تمِ روشن بازتعریف نمی‌شوند. */
+    --pnl-win:#16C79A;
+    --pnl-win-rgb:22,199,154;
+    --pnl-loss:#E05252;
+    --pnl-loss-rgb:224,82,82;
     --accent-soft:#5FBE93;
     --accent-deep:#00623D;
     --card-bg:#0A0A0A;
@@ -921,19 +929,191 @@
   /* تقویم سود/زیان حساب — همون قاب .cal-grid موجود، خانه‌ها رنگ‌شده طبق
      سود/زیان روز (dailyPnl) به‌جای وضعیت انجام‌شده/نشده‌ی روتین. */
   .trade-calendar-box{ padding:14px 16px 16px; margin-top:14px; }
-  .trade-calendar-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .trade-calendar-head .trade-section-title{ display:flex; align-items:center; gap:6px; }
-  .trade-calendar-total{ font-size:13px; font-weight:800; }
   .trade-cal-grid{ margin-top:2px; }
   .trade-cal-cell{ gap:1px; padding:2px; cursor:default; }
   .trade-cal-cell.no-data:hover{ border-color:var(--line); transform:none; }
   .trade-cal-cell.win, .trade-cal-cell.loss{ cursor:pointer; }
-  .trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--accent-rgb),.24), rgba(var(--accent-rgb),.06)); border-color:rgba(var(--accent-rgb),.5); }
-  .trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(224,82,82,.18), rgba(224,82,82,.05)); border-color:rgba(224,82,82,.5); }
+  .trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--pnl-win-rgb),.24), rgba(var(--pnl-win-rgb),.06)); border-color:rgba(var(--pnl-win-rgb),.5); }
+  .trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(var(--pnl-loss-rgb),.18), rgba(var(--pnl-loss-rgb),.05)); border-color:rgba(var(--pnl-loss-rgb),.5); }
   .trade-cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
-  .trade-cal-pnl{ font-size:8.5px; font-weight:700; line-height:1; }
-  .trade-cal-cell.win .trade-cal-pnl{ color:var(--accent); }
-  .trade-cal-cell.loss .trade-cal-pnl{ color:#E05252; }
+  /* خانه‌ی تقویم روی موبایل جای عدد ندارد (سه‌رقمی + نمادِ ارز می‌شکند)، پس
+     آن‌جا فقط یک نقطه‌ی رنگی سود/ضرر را می‌رساند و عدد از ۷۰۱px به بالا
+     برمی‌گردد — همان نقطه‌ای که .cal-grid هم عریض‌تر می‌شود. */
+  .trade-cal-pnl{ display:none; font-size:8.5px; font-weight:700; line-height:1; white-space:nowrap; }
+  .trade-cal-dot{ display:block; width:5px; height:5px; border-radius:50%; }
+  .trade-cal-cell.win .trade-cal-pnl{ color:var(--pnl-win); }
+  .trade-cal-cell.loss .trade-cal-pnl{ color:var(--pnl-loss); }
+  .trade-cal-cell.win .trade-cal-dot{ background:var(--pnl-win); }
+  .trade-cal-cell.loss .trade-cal-dot{ background:var(--pnl-loss); }
+  @media (min-width:701px){
+    .trade-cal-pnl{ display:block; }
+    .trade-cal-dot{ display:none; }
+  }
+
+  /* ── صفحه‌ی ژورنال‌نویسی (حساب) ───────────────────────────────────────
+     چیدمان طبق شماتیک: تایتل، خطِ «نام حساب ↔ بالانس اولیه»، یک باکسِ
+     دوبخشیِ آمار+تقویم، بعد بخشِ تریدهای همان روز. */
+  .trade-journal-title{ font-size:20px; font-weight:800; margin:0 0 10px; }
+
+  .trade-journal-idrow{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding-bottom:9px; border-bottom:1px solid var(--line);
+  }
+  .trade-journal-idrow-name{ display:flex; align-items:center; gap:7px; min-width:0; }
+  .trade-journal-idrow-name b{ font-size:16px; font-weight:800; color:var(--text); }
+  .trade-journal-acc-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .trade-journal-idrow-balance{ display:flex; align-items:baseline; gap:7px; font-size:11.5px; color:var(--muted); }
+  .trade-journal-idrow-balance b{ font-size:14.5px; font-weight:800; color:var(--text); }
+  .trade-journal-submeta{
+    display:flex; flex-wrap:wrap; gap:5px 13px; margin-top:7px; font-size:11.5px; color:var(--muted);
+  }
+  .trade-journal-submeta span{ display:inline-flex; align-items:center; gap:4px; }
+  .trade-journal-submeta svg{ flex-shrink:0; opacity:.7; }
+
+  /* باکسِ واحد: بخشِ بالا آمار، بخشِ پایین تقویم — بی هیچ جداکننده‌ای،
+     آمارها مستقیم به تقویم می‌چسبند (درخواستِ صریح). */
+  .trade-journal-box{ margin-top:14px; padding:0; overflow:hidden; }
+  .trade-journal-stats-part{ padding:14px 14px 0; }
+
+  /* سه ستونِ هم‌عرض با خطِ عمودی بینشان */
+  .trade-headline-stats{ display:grid; grid-template-columns:repeat(3, 1fr); align-items:center; gap:0; }
+  .trade-headline-stat{ min-width:0; text-align:center; padding-inline:6px; }
+  .trade-headline-stat .trade-stat-label{ justify-content:center; white-space:nowrap; }
+  .trade-headline-value{
+    font-size:15px; font-weight:800; margin-top:5px;
+    font-variant-numeric:proportional-nums; white-space:nowrap;
+  }
+  @media (min-width:480px){
+    .trade-headline-stat{ padding-inline:10px; }
+    .trade-headline-value{ font-size:16px; }
+  }
+  /* ستونِ وسط: دایره سمتِ راست، لیبل و مقدارِ هدف سمتِ چپش. روی موبایل عرضِ
+     هر ستون ~۱۱۰px است، پس دایره و فاصله‌ها کوچک‌ترند تا لیبل دوخطی نشود. */
+  .trade-headline-goal{
+    display:flex; align-items:center; justify-content:center; gap:7px; padding-inline:6px;
+    border-inline-start:1px solid var(--line); border-inline-end:1px solid var(--line);
+  }
+  .trade-headline-goal-text{ min-width:0; text-align:start; }
+  .trade-headline-goal-text .trade-stat-label{ white-space:nowrap; }
+  .trade-headline-goal-target{
+    font-size:11.5px; font-weight:700; color:var(--text); margin-top:3px; white-space:nowrap;
+  }
+  .trade-headline-goal .trade-goal-ring-wrap{ width:46px; height:46px; flex-shrink:0; }
+  .trade-headline-goal .trade-goal-ring-pct{ font-size:9.5px; }
+  @media (min-width:480px){
+    .trade-headline-goal{ gap:10px; padding-inline:10px; }
+    .trade-headline-goal .trade-goal-ring-wrap{ width:58px; height:58px; }
+    .trade-headline-goal .trade-goal-ring-pct{ font-size:11px; }
+  }
+
+  /* دستگیره‌ی بازکردنِ بقیه‌ی آمارها: بی‌متن — فقط یک پیکانِ رو به پایینِ
+     اکسنت‌رنگ با نبضِ آرام. سطحِ لمسی کلِ عرض است، ولی چیزی که دیده
+     می‌شود همان پیکانِ کوچک است. */
+  .trade-stats-handle{
+    display:flex; align-items:center; justify-content:center; width:100%;
+    padding:6px 0 4px; border:none; border-radius:0; color:var(--accent);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .trade-stats-handle, body:not([data-theme="light"]) .trade-stats-handle{
+    background:none; box-shadow:none;
+  }
+  .trade-stats-handle svg{
+    animation:trade-handle-pulse 2.2s ease-in-out infinite;
+    transition:transform .28s cubic-bezier(.22,1,.36,1);
+  }
+  .trade-stats-handle.open svg{ transform:rotate(180deg); animation:none; }
+  @keyframes trade-handle-pulse{
+    0%, 100%{ opacity:.5; transform:translateY(0); }
+    50%{ opacity:1; transform:translateY(2px); }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .trade-stats-handle svg{ animation:none; opacity:.8; }
+  }
+
+  /* دکمه‌ی «افزودن» بالای لیست تریدها — بدونِ بک‌گراند (درخواستِ صریح) */
+  .trade-add-btn{
+    display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:12px;
+    font-size:12.5px; font-weight:700; color:var(--accent);
+    border:none; background:none; box-shadow:none;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    transition:opacity .18s ease, transform .15s ease;
+  }
+  @media (hover:hover){ .trade-add-btn:hover{ opacity:.75; } }
+  .trade-add-btn:active{ transform:scale(.95); }
+  body[data-theme="light"] .trade-add-btn, body:not([data-theme="light"]) .trade-add-btn{
+    background:none; box-shadow:none;
+  }
+
+  /* باز/بسته‌شدنِ نرم: grid-template-rows از 0fr به 1fr — به ارتفاعِ واقعیِ
+     محتوا گره خورده، پس برخلاف max-heightِ حدسی نه می‌پرد نه نصفه می‌ماند. */
+  .trade-stats-collapse{
+    display:grid; grid-template-rows:0fr; opacity:0;
+    transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1), opacity .24s ease;
+  }
+  .trade-stats-collapse.open{ grid-template-rows:1fr; opacity:1; }
+  .trade-stats-collapse-inner{ overflow:hidden; min-height:0; }
+  .trade-stats-collapse .trade-stats-grid{ padding-top:10px; }
+  @media (prefers-reduced-motion:reduce){ .trade-stats-collapse{ transition:none; } }
+
+  /* تقویم وقتی داخلِ همان باکس است: نه سطحِ جدا می‌گیرد نه حاشیه‌ی بالا */
+  .trade-calendar-box.embedded{
+    margin-top:0; border:none; background:none; box-shadow:none;
+    padding:0 14px 14px;
+  }
+  /* فاصله‌ی پیش‌فرضِ .cal-controls برای صفحه‌ی روتین است؛ این‌جا آمارها باید
+     به تقویم بچسبند، پس حاشیه‌ی بالایش برداشته می‌شود. */
+  .trade-calendar-box.embedded .cal-controls{ margin:0 0 12px; }
+  /* روی دسکتاپ قانونِ سراسریِ `.trade-desktop .cal-grid{max-width:520px;
+     margin-inline-start:0}` تقویم را به یک لبه می‌چسباند و نیمی از باکس خالی
+     می‌ماند. داخلِ این باکس، تقویم و ناوبری‌اش باید وسطِ همان باکس بنشینند. */
+  @media (min-width:1024px){
+    .trade-desktop .trade-calendar-box.embedded .cal-grid,
+    .trade-desktop .trade-calendar-box.embedded .cal-controls{
+      max-width:620px; margin-inline:auto;
+    }
+    .trade-desktop .trade-calendar-box.embedded .cal-controls{ margin-bottom:12px; }
+  }
+
+  /* بخشِ تریدهای روزِ انتخاب‌شده */
+  .trade-day-label{ font-size:11.5px; font-weight:600; color:var(--muted); margin-inline-start:8px; }
+  .trade-day-box{ margin-top:10px; padding:4px 14px; }
+  .trade-day-row{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .trade-day-row:last-child{ border-bottom:none; }
+  .trade-day-row-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .trade-day-row-pnl{ margin-inline-start:auto; font-size:14px; font-weight:800; }
+  .trade-day-row-facts{
+    display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:7px; font-size:11px; color:var(--muted);
+  }
+  .trade-day-row-facts b{ color:var(--text); font-weight:700; margin-inline-start:3px; }
+  .trade-day-row .trade-row-badges{ margin-top:7px; }
+  .trade-detail-btn{
+    display:inline-flex; align-items:center; gap:5px; margin-top:9px;
+    padding:6px 14px; border-radius:11px; font-size:11.5px; font-weight:700;
+    color:var(--accent); border:1px solid rgba(var(--accent-rgb),.4);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    transition:background .18s ease;
+  }
+  @media (hover:hover){ .trade-detail-btn:hover{ background:rgba(var(--accent-rgb),.1); } }
+  body[data-theme="light"] .trade-detail-btn, body:not([data-theme="light"]) .trade-detail-btn{
+    background:none; box-shadow:none;
+  }
+
+  /* روی دسکتاپ هر ترید یک خطِ واحد است: جهت/نماد/سود در ابتدای خط، جزئیات و
+     برچسب‌ها وسط (بدونِ شکستن، هرچه جا نشد پنهان)، و دکمه‌ی جزئیات انتهای خط.
+     روی موبایل همان کارتِ چندخطی می‌ماند چون این‌همه ستون آن‌جا جا نمی‌شود. */
+  @media (min-width:1024px){
+    .trade-desktop .trade-day-row{
+      display:flex; align-items:center; gap:14px; padding:10px 0; min-width:0;
+    }
+    .trade-desktop .trade-day-row-head{ flex-wrap:nowrap; flex-shrink:0; gap:9px; }
+    .trade-desktop .trade-day-row-pnl{ margin-inline-start:0; min-width:96px; text-align:start; }
+    .trade-desktop .trade-day-row-facts{
+      flex-wrap:nowrap; overflow:hidden; margin-top:0; flex:1; min-width:0; gap:0 14px;
+    }
+    .trade-desktop .trade-day-row-facts span{ white-space:nowrap; }
+    .trade-desktop .trade-day-row .trade-row-badges{ margin-top:0; flex-wrap:nowrap; flex-shrink:0; }
+    .trade-desktop .trade-detail-btn{ margin-top:0; flex-shrink:0; }
+  }
 
   /* چیپ فیلتر روز انتخاب‌شده از تقویم — کنار جست‌وجو/وضعیت لیست معاملات */
   .trade-day-filter-chip{
@@ -4729,6 +4909,11 @@ select.wsearch-newform-name{ cursor:pointer; }
 .trade-tag-chip:active{ transform:scale(.96); }
 .trade-tag-chip.active{ font-weight:700; --tag-c:var(--accent); }
 .trade-tag-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
+/* نقطه‌ی برچسب باید سمتِ چپِ نام بنشیند، نه قبلش (سمتِ راست). چون این چیپ
+   توی چهار جای مختلف (یادداشت‌ها، حساب‌ها، فیلدِ برچسب، کارتِ جزئیات) با
+   همین ترتیبِ DOM رندر می‌شود، جابه‌جایی با order یک‌بار همه‌جا را درست
+   می‌کند — به‌جای چهار بار ویرایشِ JSX که یکی‌اش فراموش می‌شود. */
+.trade-tag-chip .trade-tag-dot{ order:1; }
 .trade-tag-add{ border-style:dashed; }
 
 /* ── فرم تب‌دار معامله ────────────────────────────────────── */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LineChart, CalendarDays, BarChart2, BellRing } from "lucide-react";
+import { LineChart, CalendarDays, BarChart2, BellRing, ListChecks } from "lucide-react";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { TradeStatsPicker } from "@/components/TradeStatsPicker";
@@ -19,7 +19,10 @@ import {
 import {
   CAL_SYSTEM_KEY, CalSystem,
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STAT_ORDER, TRADE_STATS_VISIBILITY_KEY,
+  TradeFactKey, DEFAULT_VISIBLE_TRADE_FACTS, TRADE_FACTS_VISIBILITY_KEY,
+  MAX_VISIBLE_TRADE_FACTS,
 } from "@/lib/tradeTypes";
+import { TradeFactsPicker } from "@/components/TradeFactsPicker";
 
 // تنظیمات بخش «ترید» — مثل RoutineSettings، مستقیم داخل صفحه‌ی تنظیمات.
 export function TradeSettings() {
@@ -28,6 +31,8 @@ export function TradeSettings() {
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
   const [statsPickerOpen, setStatsPickerOpen] = useState(false);
+  const [visibleFacts, setVisibleFacts] = useState<TradeFactKey[]>(DEFAULT_VISIBLE_TRADE_FACTS);
+  const [factsPickerOpen, setFactsPickerOpen] = useState(false);
   const [alerts, setAlerts] = useState<NewsAlertPrefs>(DEFAULT_NEWS_ALERT_PREFS);
 
   useEffect(() => {
@@ -35,6 +40,7 @@ export function TradeSettings() {
     getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => setTickerSymbols(saved?.length ? saved : defaultSymbols));
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
     getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS).then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
+    getSetting<TradeFactKey[]>(TRADE_FACTS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_FACTS).then((v) => setVisibleFacts(v?.length ? v : DEFAULT_VISIBLE_TRADE_FACTS));
     getSetting<unknown>(NEWS_ALERT_KEY, DEFAULT_NEWS_ALERT_PREFS).then((v) => setAlerts(normalizeNewsAlertPrefs(v)));
   }, []);
 
@@ -74,6 +80,20 @@ export function TradeSettings() {
     });
   }
 
+  // سقفِ هشت‌تایی همین‌جا نگه داشته می‌شود (نه فقط در UI): تاگل بیشتر از سقف
+  // اصلا اعمال نمی‌شود، پس حتی اگر دو تب هم‌زمان باز باشند مقدارِ ذخیره‌شده
+  // از سقف رد نمی‌شود.
+  function toggleVisibleFact(key: TradeFactKey) {
+    setVisibleFacts((prev) => {
+      const has = prev.includes(key);
+      if (has && prev.length <= 1) return prev;
+      if (!has && prev.length >= MAX_VISIBLE_TRADE_FACTS) return prev;
+      const next = has ? prev.filter((k) => k !== key) : [...prev, key];
+      setSetting(TRADE_FACTS_VISIBILITY_KEY, next);
+      return next;
+    });
+  }
+
   return (
     <>
 
@@ -100,7 +120,16 @@ export function TradeSettings() {
         </button>
       </AccountSectionCard>
 
-      <AccountSectionCard icon={<BellRing size={16} />} title="هشدار قبل از اخبار مهم" index={3}>
+      <AccountSectionCard icon={<ListChecks size={16} />} title="جزئیات ترید در لیست" index={3}>
+        <div className="item-line" style={{ marginBottom: 10 }}>
+          {visibleFacts.length} از {MAX_VISIBLE_TRADE_FACTS} جزئیات برای نمایش کنار هر ترید انتخاب شده
+        </div>
+        <button className="account-outline-btn" onClick={() => setFactsPickerOpen(true)}>
+          تغییر
+        </button>
+      </AccountSectionCard>
+
+      <AccountSectionCard icon={<BellRing size={16} />} title="هشدار قبل از اخبار مهم" index={4}>
         <div className="item-line" style={{ marginBottom: 10 }}>
           قبل از انتشار رویدادهای تقویم اقتصادی، نوتیفیکیشن بگیر. برای رسیدن نوتیف باید
           اجازه‌ی نوتیفیکیشن مرورگر را هم داده باشی.
@@ -179,6 +208,14 @@ export function TradeSettings() {
           visible={visibleStats}
           onToggle={toggleVisibleStat}
           onClose={() => setStatsPickerOpen(false)}
+        />
+      )}
+
+      {factsPickerOpen && (
+        <TradeFactsPicker
+          visible={visibleFacts}
+          onToggle={toggleVisibleFact}
+          onClose={() => setFactsPickerOpen(false)}
         />
       )}
     </>

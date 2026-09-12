@@ -48,30 +48,41 @@ export function TradeDetailDrawer({
 
   if (typeof document === "undefined") return null;
 
-  const rows: [string, string][] = entry
+  // بخش‌بندیِ کارت دقیقا همان بخش‌هایی‌ست که کاربر موقعِ «افزودن» پر می‌کند
+  // (تب‌های TradeFormModal): اطلاعات / دلایل / چک‌لیست / عکس‌ها / برچسب‌ها /
+  // احساسات — تا خواندنِ معامله همان نقشه‌ی ذهنیِ نوشتنش را داشته باشد.
+  const row = (k: string, v: string | null | undefined): [string, string][] =>
+    v === null || v === undefined || v === "" ? [] : [[k, v]];
+
+  const coreRows: [string, string][] = entry
     ? [
         ["جهت", DIRECTION_LABELS[entry.direction]],
         ["وضعیت", STATUS_LABELS[entry.status]],
         ["نتیجه", RESULT_LABELS[entry.result]],
         ["حجم", `${faNum(entry.volume)} ${entry.volumeUnit === "LOT" ? "لات" : "دلار"}`],
         ["زمان ورود", formatTradeDateTime(entry.openedAt, calSystem)],
-        ...(entry.closedAt ? ([["زمان خروج", formatTradeDateTime(entry.closedAt, calSystem)]] as [string, string][]) : []),
-        ...(entry.timeframe ? ([["تایم فریم", entry.timeframe]] as [string, string][]) : []),
-        ...(entry.entryPrice !== null ? ([["قیمت ورود", faNum(entry.entryPrice)]] as [string, string][]) : []),
-        ...(entry.exitPrice !== null ? ([["قیمت خروج", faNum(entry.exitPrice)]] as [string, string][]) : []),
-        ...(entry.stopLoss !== null ? ([["حد ضرر", faNum(entry.stopLoss)]] as [string, string][]) : []),
-        ...(entry.takeProfit !== null ? ([["حد سود", faNum(entry.takeProfit)]] as [string, string][]) : []),
-        ...(entry.commission !== null ? ([["کمیسیون", faNum(entry.commission)]] as [string, string][]) : []),
-        ...(entry.swap !== null ? ([["سواپ", faNum(entry.swap)]] as [string, string][]) : []),
-        ...(entry.riskAmount !== null ? ([["ریسک اولیه", `${faNum(entry.riskAmount)} ${currency}`]] as [string, string][]) : []),
-        ...(entry.rMultiple !== null ? ([["R", `${entry.rMultiple > 0 ? "+" : ""}${faNum(entry.rMultiple)}`]] as [string, string][]) : []),
-        ...(entry.sessions.length ? ([["جلسه", entry.sessions.map((s) => SESSION_LABELS[s]).join("، ")]] as [string, string][]) : []),
-        ...(entry.setup ? ([["ستاپ", entry.setup]] as [string, string][]) : []),
-        ...(entry.riskFree ? ([["ریسک‌فری", "بله"]] as [string, string][]) : []),
-        ...(entry.confidence !== null ? ([["میزان اطمینان", `${faNum(entry.confidence)} از ۱۰`]] as [string, string][]) : []),
-        ...(entry.emotionBefore ? ([["حال قبل از معامله", EMOTION_BEFORE_LABELS[entry.emotionBefore]]] as [string, string][]) : []),
-        ...(entry.emotionAfter ? ([["حال بعد از معامله", EMOTION_AFTER_LABELS[entry.emotionAfter]]] as [string, string][]) : []),
-        ...(entry.followedPlan !== null ? ([["طبق پلن", entry.followedPlan ? "بله" : "خیر"]] as [string, string][]) : []),
+        ...row("زمان خروج", entry.closedAt ? formatTradeDateTime(entry.closedAt, calSystem) : null),
+        ...row("تایم فریم", entry.timeframe),
+        ...row("قیمت ورود", entry.entryPrice !== null ? faNum(entry.entryPrice) : null),
+        ...row("قیمت خروج", entry.exitPrice !== null ? faNum(entry.exitPrice) : null),
+        ...row("حد ضرر", entry.stopLoss !== null ? faNum(entry.stopLoss) : null),
+        ...row("حد سود", entry.takeProfit !== null ? faNum(entry.takeProfit) : null),
+        ...row("کمیسیون", entry.commission !== null ? faNum(entry.commission) : null),
+        ...row("سواپ", entry.swap !== null ? faNum(entry.swap) : null),
+        ...row("ریسک اولیه", entry.riskAmount !== null ? `${faNum(entry.riskAmount)} ${currency}` : null),
+        ...row("R", entry.rMultiple !== null ? `${entry.rMultiple > 0 ? "+" : ""}${faNum(entry.rMultiple)}` : null),
+        ...row("جلسه", entry.sessions.length ? entry.sessions.map((s) => SESSION_LABELS[s]).join("، ") : null),
+        ...row("ستاپ", entry.setup),
+        ...row("ریسک‌فری", entry.riskFree ? "بله" : null),
+      ]
+    : [];
+
+  const emotionRows: [string, string][] = entry
+    ? [
+        ...row("میزان اطمینان", entry.confidence !== null ? `${faNum(entry.confidence)} از ۱۰` : null),
+        ...row("حال قبل از معامله", entry.emotionBefore ? EMOTION_BEFORE_LABELS[entry.emotionBefore] : null),
+        ...row("حال بعد از معامله", entry.emotionAfter ? EMOTION_AFTER_LABELS[entry.emotionAfter] : null),
+        ...row("طبق پلن", entry.followedPlan !== null ? (entry.followedPlan ? "بله" : "خیر") : null),
       ]
     : [];
 
@@ -104,24 +115,16 @@ export function TradeDetailDrawer({
 
         {entry && (
           <>
-            {!!entry.tags.length && (
-              <div className="trade-tag-row">
-                {entry.tags.map((t) => (
-                  <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
-                    <span className="trade-tag-dot" style={{ background: t.color }} />{t.name}
-                  </span>
+            <Section title="اطلاعات">
+              <div className="trade-detail-grid">
+                {coreRows.map(([k, v]) => (
+                  <div key={k} className="trade-detail-cell">
+                    <span>{k}</span>
+                    <b>{v}</b>
+                  </div>
                 ))}
               </div>
-            )}
-
-            <div className="trade-detail-grid">
-              {rows.map(([k, v]) => (
-                <div key={k} className="trade-detail-cell">
-                  <span>{k}</span>
-                  <b>{v}</b>
-                </div>
-              ))}
-            </div>
+            </Section>
 
             {!!entry.entryReasons.length && (
               <Section title="دلایل ورود">
@@ -158,10 +161,8 @@ export function TradeDetailDrawer({
               </Section>
             )}
 
-            {entry.note && <Section title="نکات معامله"><p className="trade-detail-note">{entry.note}</p></Section>}
-
             {!!entry.images.length && (
-              <Section title="تصاویر">
+              <Section title="عکس‌ها">
                 <div className="trade-image-grid">
                   {entry.images.map((img) => (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -170,6 +171,33 @@ export function TradeDetailDrawer({
                 </div>
               </Section>
             )}
+
+            {!!entry.tags.length && (
+              <Section title="برچسب‌ها">
+                <div className="trade-tag-row">
+                  {entry.tags.map((t) => (
+                    <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
+                      <span className="trade-tag-dot" style={{ background: t.color }} />{t.name}
+                    </span>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {!!emotionRows.length && (
+              <Section title="احساسات">
+                <div className="trade-detail-grid">
+                  {emotionRows.map(([k, v]) => (
+                    <div key={k} className="trade-detail-cell">
+                      <span>{k}</span>
+                      <b>{v}</b>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {entry.note && <Section title="نکات معامله"><p className="trade-detail-note">{entry.note}</p></Section>}
           </>
         )}
 

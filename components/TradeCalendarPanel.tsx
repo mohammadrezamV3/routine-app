@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, PiggyBank } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, J_MONTHS, faNum,
   isoLocal, jalaliMonthLength, jalaliToGregorianApprox, toJalali,
 } from "@/lib/jalali";
 import { G_MONTHS, gregorianMonthLength } from "@/lib/gregorian";
 import { dailyPnl } from "@/lib/tradeAnalytics";
-import type { CalSystem, TradeEntry } from "@/lib/tradeTypes";
+import { currencySymbol, type CalSystem, type TradeEntry } from "@/lib/tradeTypes";
 
 const now = new Date();
 const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -24,11 +24,17 @@ export function TradeCalendarPanel({
   calSystem,
   selectedDay,
   onSelectDay,
+  currency,
+  embedded = false,
 }: {
   entries: TradeEntry[];
   calSystem: CalSystem;
   selectedDay: string | null;
   onSelectDay: (iso: string) => void;
+  /** کدِ ارزِ حساب — فقط برای نمادِ کنارِ عددِ سود/زیان روی دسکتاپ */
+  currency: string;
+  /** داخلِ باکسِ ژورنال رندر می‌شود، پس نه سطحِ خودش را می‌گیرد نه حاشیه‌ی بالا */
+  embedded?: boolean;
 }) {
   const jalali = calSystem === "jalali";
   const [year, setYear] = useState(jalali ? jNow[0] : now.getFullYear());
@@ -48,7 +54,7 @@ export function TradeCalendarPanel({
     setMonth(m); setYear(y);
   }
 
-  let monthNet = 0;
+
   const cells: JSX.Element[] = [];
   for (let i = 0; i < startCol; i++) cells.push(<div key={`e${i}`} className="cal-cell empty" />);
   for (let d = 1; d <= monthLen; d++) {
@@ -56,7 +62,7 @@ export function TradeCalendarPanel({
     const iso = isoLocal(gd);
     const pnl = pnlByDay[iso];
     const hasTrades = pnl !== undefined;
-    if (hasTrades) monthNet += pnl;
+
     const isToday = iso === todayIso;
     const isSelected = iso === selectedDay;
     cells.push(
@@ -66,25 +72,28 @@ export function TradeCalendarPanel({
         className={`cal-cell trade-cal-cell${isToday ? " today" : ""}${isSelected ? " selected" : ""}${hasTrades ? (pnl >= 0 ? " win" : " loss") : ""}${!hasTrades ? " no-data" : ""}`}
       >
         <span className="cal-daynum mono">{faNum(d)}</span>
-        {hasTrades && <span className="trade-cal-pnl mono">{formatCompact(pnl)}</span>}
+        {hasTrades && (
+          <>
+            {/* دسکتاپ: عدد با نمادِ ارز. موبایل: خانه جای عدد ندارد، پس فقط
+                یک نقطه‌ی رنگی که سود یا ضررِ آن روز را می‌رساند (CSS کدام را
+                نشان بدهد تصمیم می‌گیرد، نه JS — تا با تغییر عرضِ پنجره هم
+                درست بماند). */}
+            <span className="trade-cal-pnl mono">{formatCompact(pnl)} {currencySymbol(currency)}</span>
+            <span className="trade-cal-dot" aria-hidden="true" />
+          </>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="trade-surface trade-calendar-box">
-      <div className="trade-calendar-head">
-        <div className="trade-section-title"><PiggyBank size={15} /> تقویم سود/زیان</div>
-        {!!monthNet && (
-          <span className="trade-calendar-total mono" style={{ color: monthNet > 0 ? "var(--accent)" : "#E05252" }}>
-            {formatCompact(monthNet, true)}
-          </span>
-        )}
-      </div>
-      <div className="cal-controls">
-        <button type="button" className="trade-icon-btn" onClick={() => go(-1)} aria-label="ماه قبل"><ChevronLeft size={16} /></button>
+    <div className={embedded ? "trade-calendar-box embedded" : "trade-surface trade-calendar-box"}>
+      {/* بدونِ تایتل/آیکون و بدونِ جمعِ ماه (درخواستِ صریح) — فقط ناوبریِ ماه.
+          جهتِ پیکان‌ها طبقِ RTL: «قبل» به راست و «بعد» به چپ اشاره می‌کند. */}
+      <div className="cal-controls trade-cal-controls">
+        <button type="button" className="trade-icon-btn" onClick={() => go(-1)} aria-label="ماه قبل"><ChevronRight size={16} /></button>
         <div className="cal-label">{label}</div>
-        <button type="button" className="trade-icon-btn" onClick={() => go(1)} aria-label="ماه بعد"><ChevronRight size={16} /></button>
+        <button type="button" className="trade-icon-btn" onClick={() => go(1)} aria-label="ماه بعد"><ChevronLeft size={16} /></button>
       </div>
       <div className="cal-grid trade-cal-grid">
         {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
@@ -95,9 +104,8 @@ export function TradeCalendarPanel({
 }
 
 // اعداد بزرگ داخل خانه‌ی کوچیک تقویم جا نمی‌شن — «۱۲۰۰» به «۱.2k» کوتاه می‌شه
-function formatCompact(n: number, withSign = false): string {
+function formatCompact(n: number): string {
   const abs = Math.abs(n);
   const val = abs >= 1000 ? `${(abs / 1000).toFixed(abs >= 10000 ? 0 : 1)}k` : abs.toFixed(0);
-  const sign = n < 0 ? "-" : withSign && n > 0 ? "+" : "";
-  return `${sign}${faNum(val)}`;
+  return `${n < 0 ? "-" : ""}${faNum(val)}`;
 }

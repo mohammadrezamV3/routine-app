@@ -7,8 +7,8 @@ import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
 import {
-  ACCOUNT_TYPE_LABELS, TAG_COLORS, TradeAccount, TradeAccountType,
-  TradeGoalType, TradeTag,
+  ACCOUNT_CURRENCIES, ACCOUNT_TYPE_LABELS, CURRENCY_LABELS, TAG_COLORS,
+  TradeAccount, TradeAccountType, TradeGoalType, TradeTag,
 } from "@/lib/tradeTypes";
 import { NumberInput } from "./NumberInput";
 
@@ -106,7 +106,14 @@ export function TradeAccountModal({
           </div>
           <div>
             <label className="exercise-form-label">ارز حساب</label>
-            <input className="wsearch-newform-name trade-glass-field" value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={8} placeholder="USD" />
+            {/* انتخابی‌ست نه تایپ آزاد: بالانس اولیه باید بتواند دلار/یورو/
+                تومان باشد و کد ارز در بقیه‌ی صفحه‌ها (سود/زیان، ریسک، هدف)
+                همان‌جا استفاده می‌شود، پس نباید غلط تایپ شود. */}
+            <select className="wsearch-newform-name trade-glass-field" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {ACCOUNT_CURRENCIES.map((c) => (
+                <option key={c} value={c}>{CURRENCY_LABELS[c]} ({c})</option>
+              ))}
+            </select>
           </div>
         </div>
 
