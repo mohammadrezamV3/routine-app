@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Award, Building2, ChevronRight, Flame, Gauge, Hash,
+  Award, Building2, ChevronDown, ChevronRight, Flame, Gauge, Hash,
   Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
   TrendingUp, Wallet, Zap,
 } from "lucide-react";
@@ -180,9 +180,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             />
 
             {/* دایره‌ی هدفِ سود: توی ضرر خالی می‌ماند (صفر)، توی سود پر می‌شود.
-                لیبل بالای دایره می‌نشیند و فقط عددِ هدف زیرش می‌ماند. */}
+                دایره سمتِ راست، و لیبل + مقدارِ هدف سمتِ چپش. */}
             <div className="trade-headline-goal">
-              <div className="trade-stat-label">هدف سود</div>
               <div className="trade-goal-ring-wrap">
                 <svg viewBox="0 0 72 72" className="trade-goal-ring">
                   <circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" strokeWidth="6" />
@@ -199,8 +198,11 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
                   {faNum(Math.round((inProfit ? (goal ?? 0) : 0) * 100))}٪
                 </span>
               </div>
-              <div className="trade-headline-goal-target mono">
-                {faNum((stats.goalTarget || 0).toFixed(0))} {sym}
+              <div className="trade-headline-goal-text">
+                <div className="trade-stat-label">هدف سود</div>
+                <div className="trade-headline-goal-target mono">
+                  {faNum((stats.goalTarget || 0).toFixed(0))} {sym}
+                </div>
               </div>
             </div>
 
@@ -214,9 +216,9 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
           {!!restStats.length && (
             <>
-              {/* دستگیره‌ی کوچکِ بی‌متن زیرِ آمارها: فقط با یک نبضِ آرام
-                  می‌فهماند این‌جا چیزی برای باز کردن هست. متنِ واقعی‌اش
-                  توی aria-label می‌ماند تا برای اسکرین‌ریدر گنگ نباشد. */}
+              {/* دستگیره‌ی کوچکِ بی‌متن زیرِ آمارها: یک پیکانِ رو به پایین با
+                  رنگِ اکسنت که با نبضِ آرام می‌فهماند این‌جا چیزی برای باز
+                  کردن هست. متنِ واقعی‌اش در aria-label می‌ماند. */}
               <button
                 type="button"
                 className={`trade-stats-handle${statsOpen ? " open" : ""}`}
@@ -224,7 +226,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
                 aria-expanded={statsOpen}
                 aria-label={statsOpen ? "بستن بقیه‌ی آمارها" : "نمایش بقیه‌ی آمارها"}
               >
-                <span className="trade-stats-handle-bar" aria-hidden="true" />
+                <ChevronDown size={18} aria-hidden="true" />
               </button>
 
               {/* انیمیشنِ نرمِ باز شدن با grid-template-rows: 0fr → 1fr — برخلاف
@@ -259,6 +261,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         <TradeCalendarPanel
           embedded
           entries={entries}
+          currency={account.currency}
           calSystem={calSystem}
           selectedDay={selectedDay}
           onSelectDay={(iso) => setSelectedDay((prev) => (prev === iso ? null : iso))}
