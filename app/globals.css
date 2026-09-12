@@ -1098,6 +1098,23 @@
     background:none; box-shadow:none;
   }
 
+  /* روی دسکتاپ هر ترید یک خطِ واحد است: جهت/نماد/سود در ابتدای خط، جزئیات و
+     برچسب‌ها وسط (بدونِ شکستن، هرچه جا نشد پنهان)، و دکمه‌ی جزئیات انتهای خط.
+     روی موبایل همان کارتِ چندخطی می‌ماند چون این‌همه ستون آن‌جا جا نمی‌شود. */
+  @media (min-width:1024px){
+    .trade-desktop .trade-day-row{
+      display:flex; align-items:center; gap:14px; padding:10px 0; min-width:0;
+    }
+    .trade-desktop .trade-day-row-head{ flex-wrap:nowrap; flex-shrink:0; gap:9px; }
+    .trade-desktop .trade-day-row-pnl{ margin-inline-start:0; min-width:96px; text-align:start; }
+    .trade-desktop .trade-day-row-facts{
+      flex-wrap:nowrap; overflow:hidden; margin-top:0; flex:1; min-width:0; gap:0 14px;
+    }
+    .trade-desktop .trade-day-row-facts span{ white-space:nowrap; }
+    .trade-desktop .trade-day-row .trade-row-badges{ margin-top:0; flex-wrap:nowrap; flex-shrink:0; }
+    .trade-desktop .trade-detail-btn{ margin-top:0; flex-shrink:0; }
+  }
+
   /* چیپ فیلتر روز انتخاب‌شده از تقویم — کنار جست‌وجو/وضعیت لیست معاملات */
   .trade-day-filter-chip{
     display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px;

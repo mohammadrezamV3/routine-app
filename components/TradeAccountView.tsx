@@ -13,10 +13,12 @@ import { computeTradeStats, statValue } from "@/lib/tradeAnalytics";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import {
   ACCOUNT_TYPE_LABELS, CAL_SYSTEM_KEY, CalSystem, currencySymbol,
-  DEFAULT_VISIBLE_TRADE_STATS, STATUS_LABELS, TRADE_STAT_LABELS, TRADE_STAT_ORDER,
+  DEFAULT_VISIBLE_TRADE_FACTS, DEFAULT_VISIBLE_TRADE_STATS, RESULT_LABELS, STATUS_LABELS,
+  TRADE_FACT_LABELS, TRADE_FACTS_VISIBILITY_KEY, TRADE_STAT_LABELS, TRADE_STAT_ORDER,
   TRADE_STATS_VISIBILITY_KEY, TradeAccount, TradeEntry, TradeEntryDetail,
-  TradeStatKey, TradeTag,
+  TradeFactKey, TradeStatKey, TradeTag,
 } from "@/lib/tradeTypes";
+import { SESSION_LABELS } from "@/lib/forexSessions";
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
@@ -62,6 +64,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   const [tags, setTags] = useState<TradeTag[]>([]);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
+  const [visibleFacts, setVisibleFacts] = useState<TradeFactKey[]>(DEFAULT_VISIBLE_TRADE_FACTS);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -78,6 +81,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
     getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS)
       .then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
+    getSetting<TradeFactKey[]>(TRADE_FACTS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_FACTS)
+      .then((v) => setVisibleFacts(v?.length ? v : DEFAULT_VISIBLE_TRADE_FACTS));
   }, []);
 
   const load = useCallback(async (silent = false) => {
@@ -301,12 +306,15 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             </div>
 
             <div className="trade-day-row-facts">
-              <span>ورود <b className="mono">{formatTradeDateTime(e.openedAt, calSystem).split(" ").slice(-1)[0]}</b></span>
-              {e.closedAt && <span>خروج <b className="mono">{formatTradeDateTime(e.closedAt, calSystem).split(" ").slice(-1)[0]}</b></span>}
-              <span>حجم <b className="mono">{faNum(e.volume)} {e.volumeUnit === "LOT" ? "لات" : "$"}</b></span>
-              {e.rMultiple !== null && <span>R <b className="mono">{e.rMultiple > 0 ? "+" : ""}{faNum(e.rMultiple)}</b></span>}
-              {e.timeframe && <span>تایم‌فریم <b>{e.timeframe}</b></span>}
-              {e.setup && <span>ستاپ <b>{e.setup}</b></span>}
+              {visibleFacts.map((k) => {
+                const v = tradeFactValue(k, e, calSystem, sym);
+                if (!v) return null;
+                return (
+                  <span key={k}>
+                    {TRADE_FACT_LABELS[k]} <b className="mono">{v}</b>
+                  </span>
+                );
+              })}
             </div>
 
             {(e.checklistTotal !== null || !!e.tags.length) && (
@@ -373,6 +381,38 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       )}
     </div>
   );
+}
+
+/**
+ * مقدارِ یک «جزئیاتِ اولیه» برای نمایش در ردیفِ ترید.
+ * `null` یعنی این ترید آن فیلد را ندارد، پس اصلا رندر نمی‌شود (نه «—»).
+ */
+function tradeFactValue(
+  key: TradeFactKey,
+  e: TradeEntry,
+  calSystem: CalSystem,
+  sym: string
+): string | null {
+  // فقط ساعت، نه تاریخ: تاریخِ همه‌ی این ردیف‌ها همان روزِ انتخاب‌شده است
+  const timeOf = (iso: string) => formatTradeDateTime(iso, calSystem).split(" ").slice(-1)[0];
+  switch (key) {
+    case "openedAt": return timeOf(e.openedAt);
+    case "closedAt": return e.closedAt ? timeOf(e.closedAt) : null;
+    case "volume": return `${faNum(e.volume)} ${e.volumeUnit === "LOT" ? "لات" : "$"}`;
+    case "rMultiple": return e.rMultiple === null ? null : `${e.rMultiple > 0 ? "+" : ""}${faNum(e.rMultiple)}`;
+    case "timeframe": return e.timeframe || null;
+    case "setup": return e.setup || null;
+    case "entryPrice": return e.entryPrice === null ? null : faNum(e.entryPrice);
+    case "exitPrice": return e.exitPrice === null ? null : faNum(e.exitPrice);
+    case "stopLoss": return e.stopLoss === null ? null : faNum(e.stopLoss);
+    case "takeProfit": return e.takeProfit === null ? null : faNum(e.takeProfit);
+    case "riskAmount": return e.riskAmount === null ? null : `${faNum(e.riskAmount)} ${sym}`;
+    case "commission": return e.commission === null ? null : faNum(e.commission);
+    case "swap": return e.swap === null ? null : faNum(e.swap);
+    case "session": return e.sessions.length ? e.sessions.map((s) => SESSION_LABELS[s]).join("، ") : null;
+    case "confidence": return e.confidence === null ? null : `${faNum(e.confidence)}/۱۰`;
+    case "result": return RESULT_LABELS[e.result];
+  }
 }
 
 function HeadlineStat({

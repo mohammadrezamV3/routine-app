@@ -422,3 +422,45 @@ export const DEFAULT_VISIBLE_TRADE_STATS: TradeStatKey[] = [
 ];
 
 export const TRADE_STATS_VISIBILITY_KEY = SETTING_KEYS.tradeVisibleStats;
+
+// ── جزئیاتِ اولیه‌ی هر ترید در لیستِ روز ───────────────────────────────────
+// این‌ها همان فیلدهایی‌اند که کاربر موقعِ ثبت پر می‌کند و می‌تواند انتخاب کند
+// کدام‌هایشان بدونِ باز کردنِ کارتِ جزئیات، همان‌جا در ردیفِ ترید دیده شوند.
+export type TradeFactKey =
+  | "openedAt" | "closedAt" | "volume" | "rMultiple" | "timeframe" | "setup"
+  | "entryPrice" | "exitPrice" | "stopLoss" | "takeProfit"
+  | "riskAmount" | "commission" | "swap" | "session" | "confidence" | "result";
+
+export const TRADE_FACT_LABELS: Record<TradeFactKey, string> = {
+  openedAt: "ساعت ورود",
+  closedAt: "ساعت خروج",
+  volume: "حجم",
+  rMultiple: "R",
+  timeframe: "تایم‌فریم",
+  setup: "ستاپ",
+  entryPrice: "قیمت ورود",
+  exitPrice: "قیمت خروج",
+  stopLoss: "حد ضرر",
+  takeProfit: "حد سود",
+  riskAmount: "ریسک اولیه",
+  commission: "کمیسیون",
+  swap: "سواپ",
+  session: "جلسه",
+  confidence: "میزان اطمینان",
+  result: "نتیجه",
+};
+
+export const TRADE_FACT_ORDER: TradeFactKey[] = [
+  "openedAt", "closedAt", "volume", "rMultiple", "timeframe", "setup",
+  "entryPrice", "exitPrice", "stopLoss", "takeProfit",
+  "riskAmount", "commission", "swap", "session", "confidence", "result",
+];
+
+export const DEFAULT_VISIBLE_TRADE_FACTS: TradeFactKey[] = [
+  "openedAt", "closedAt", "volume", "rMultiple", "timeframe", "setup",
+];
+
+/** بیشتر از این تعداد توی یک ردیف جا نمی‌شود — مخصوصا وقتی ردیف تک‌خطی است */
+export const MAX_VISIBLE_TRADE_FACTS = 8;
+
+export const TRADE_FACTS_VISIBILITY_KEY = SETTING_KEYS.tradeVisibleFacts;
