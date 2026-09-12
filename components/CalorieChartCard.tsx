@@ -64,16 +64,22 @@ export function CalorieChartCard({
       if (!d) continue;
       byDate[d] = (byDate[d] || 0) + e.customCalories;
     }
-    const out: { value: number; label: string; key: string }[] = [];
+    const out: { value: number; label: string; key: string; showLabel: boolean }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
       const key = isoLocal(d);
-      // ماهانه ۳۰ برچسب کنار هم جا نمی‌شه — هر پنج روز یکی
+      // ماهانه ۳۰ برچسب کنار هم جا نمی‌شه — هر پنج روز یکی نشون داده می‌شه
+      // (بقیه invisible می‌مونن، نه حذف — نگاه کن به توضیح پایین JSX).
       const showLabel = !isMonthly || i % 5 === 0;
+      // روزِ ماه باید شمسی باشه، نه d.getDate()ِ میلادی — قبلا همینجا
+      // باگ بود: بج بالا (formatJalaliShort) درست شمسی نشون می‌داد ولی
+      // برچسبِ زیرِ خودِ میله‌ها میلادی مونده بود.
+      const [, , jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
       out.push({
         key,
         value: byDate[key] || 0,
-        label: showLabel ? (isMonthly ? faNum(d.getDate()) : FA_WEEKDAY_SHORT[d.getDay()]) : "",
+        label: isMonthly ? faNum(jd) : FA_WEEKDAY_SHORT[d.getDay()],
+        showLabel,
       });
     }
     return out;
@@ -166,12 +172,21 @@ export function CalorieChartCard({
                     />
                   </div>
                   {/* برچسب زیر میله سفید (رنگ متن اصلی) و توی ماهانه
-                      بزرگ‌تر — قبلا خاکستری کم‌رنگ و ریز بود و دیده نمی‌شد. */}
+                      بزرگ‌تر — قبلا خاکستری کم‌رنگ و ریز بود و دیده نمی‌شد.
+                      باگِ ریشه‌ای: توی ماهانه فقط هر پنج روز یکی برچسب
+                      داشت و بقیه رشته‌ی خالی — یک <span> خالی از یکی با
+                      متن کوتاه‌تره (ارتفاعِ خط فرق می‌کنه)، و چون کل دکمه
+                      با items-end به پایینِ ردیف می‌چسبه، میله‌های ستون‌های
+                      بی‌برچسب چسبیده به میله‌های برچسب‌دار نبودن — انگار
+                      برآمدگی داشتن. حالا همه‌ی ستون‌ها همیشه متن دارن، فقط
+                      ستون‌های بینابینی با invisible مخفی می‌شن (نه حذف)، پس
+                      فضاشون و در نتیجه خط پایه‌ی میله‌ها همیشه یکسانه. */}
                   <span
                     className={cn(
                       "whitespace-nowrap font-semibold",
                       isMonthly ? "text-[9.5px] sm:text-[11px]" : "text-[10px] sm:text-[11.5px]",
-                      isActive ? "text-dash-green" : "text-dash-text"
+                      isActive ? "text-dash-green" : "text-dash-text",
+                      !b.showLabel && "invisible"
                     )}
                   >
                     {b.label}
