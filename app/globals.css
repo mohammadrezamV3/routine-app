@@ -1417,9 +1417,10 @@
     background:var(--surface-1); margin-bottom:18px;
   }
   .profile-banner{
-    /* width صریح لازم است: با width:auto، مرورگر عرض را از aspect-ratio و
-       max-height حساب می‌کند و بنر روی دسکتاپ باریک‌تر از کارت می‌شد. */
-    position:relative; width:100%; aspect-ratio:3.2 / 1; max-height:220px;
+    /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
+       ۳۰۰px+ می‌رسید و نصفِ صفحه را می‌گرفت. عکس با object-fit:cover داخلِ
+       همین ارتفاع جا می‌شود، پس هیچ عکسی کشیده نمی‌شود. */
+    position:relative; width:100%; height:132px;
     /* بدونِ عکس، یه گرادیانِ ملایم از رنگِ اکسنتِ خودِ تم — نه یه رنگِ ثابت */
     background:linear-gradient(120deg, var(--accent-dim), var(--surface-2));
   }
@@ -1464,6 +1465,25 @@
   }
   .profile-hero-meta .account-profile-name{ margin-top:0; }
   .profile-hero-meta .account-avatar-remove-btn{ margin-top:8px; }
+
+  /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
+     طبقِ درخواستِ صریح، اندازه‌ها روی دسکتاپ جدا از موبایل تنظیم شده‌اند:
+     ستونِ محتوا عرضِ خواناتری می‌گیرد (نه تمامِ ۱۰۸۰px)، فاصله‌ها کمی
+     جمع‌تر، و بنر بلندتر ولی همچنان با ارتفاعِ ثابت. */
+  @media (min-width:701px){
+    .account-content{ max-width:720px; }
+    .profile-banner{ height:168px; }
+    .profile-hero{ margin-bottom:22px; }
+    .acc-block{ margin-bottom:22px; }
+    .acc-block-body{ padding:18px; }
+    .acc-scroll-box{ max-height:250px; }
+    /* روی دسکتاپ دو ستونِ فیلد فاصله‌ی کمی بازتری می‌گیرند */
+    .acc-block-body .auth-field-grid{ gap:16px 14px; }
+  }
+  @media (min-width:1280px){
+    .account-content{ max-width:780px; }
+    .profile-banner{ height:186px; }
+  }
 
   /* ── پایه‌ی مشترکِ زیرصفحه‌های پنل کاربری ─────────────────────────────
      همه‌ی صفحه‌ها (پروفایل، تنظیمات، امنیت، اشتراک، اعلان‌ها، پشتیبانی)
@@ -1511,9 +1531,13 @@
   /* «دستگاه‌های فعال»: یک حساب می‌تواند ده‌ها نشست داشته باشد و لیستِ باز
      کلِ صفحه را می‌بلعید — حالا داخلِ یک باکسِ اسکرول‌شونده‌ی بلندیِ ثابت. */
   .acc-scroll-box{
-    max-height:300px; overflow-y:auto; overscroll-behavior:contain;
-    display:flex; flex-direction:column; gap:12px; padding-inline-end:4px;
+    max-height:290px; overflow-y:auto; overscroll-behavior:contain;
+    display:flex; flex-direction:column; gap:12px;
+    /* طبقِ درخواستِ صریح بدونِ نوارِ اسکرولِ دیده‌شونده — خودِ اسکرول کار
+       می‌کند، فقط دستگیره‌اش رسم نمی‌شود. */
+    scrollbar-width:none; -ms-overflow-style:none;
   }
+  .acc-scroll-box::-webkit-scrollbar{ width:0; height:0; display:none; }
 
   .acc-savebar{ display:flex; flex-direction:column; gap:10px; align-items:flex-end; margin-top:18px; }
   .acc-savebar .account-outline-btn{ display:inline-flex; align-items:center; gap:7px; }
