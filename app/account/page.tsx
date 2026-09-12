@@ -42,9 +42,9 @@ export default function AccountIndexPage() {
         </motion.div>
       )}
 
-      <div className="account-card">
+      <div className="account-card account-card-full">
         {ACCOUNT_SECTIONS.map((s, i) => (
-          <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} index={i} />
+          <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
         ))}
       </div>
     </section>

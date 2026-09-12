@@ -1524,6 +1524,21 @@
     }
     .account-mobile-menu-item.active{ color:var(--accent); background:var(--accent-dim); }
     .account-mobile-menu-item-danger{ color:#E05252; }
+
+    /* طبقِ درخواستِ صریح: توی موبایل کارتِ فهرستِ زبانه‌های صفحه‌ی اول
+       (نه هدر بالای صفحه، فقط همین) باید از چپ تا راستِ واقعیِ صفحه کشیده
+       بشه، نه داخلِ پدینگِ ۲۰پیکسلیِ body بمونه. همون ترفندِ breakoutِ
+       `.tv-chart-card`: 100vw + مارجینِ منفیِ نصفِ ویوپورت. */
+    .account-card-full{
+      width:100vw; max-width:none; position:relative; inset-inline-end:50%; inset-inline-start:50%;
+      margin-inline-end:-50vw; margin-inline-start:-50vw;
+      border-radius:0; border-inline-end:none; border-inline-start:none;
+      box-sizing:border-box;
+    }
+    .account-card-full .account-row2{
+      padding-inline-end:calc(15px + env(safe-area-inset-right));
+      padding-inline-start:calc(15px + env(safe-area-inset-left));
+    }
   }
 
   /* صفحه‌ی چک‌اوت — خلاصه‌ی سفارش + کد تخفیف + قوانین + دکمه‌ی پرداخت.

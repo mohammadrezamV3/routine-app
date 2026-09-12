@@ -71,7 +71,7 @@ function GateDenied() {
           className="module-gate-cta"
           onClick={() => router.push("/subscription")}
         >
-          خرید این پلن
+          خرید اشتراک
         </button>
       </div>
     </div>
