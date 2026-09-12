@@ -104,7 +104,19 @@ export default function FaqPage() {
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 28, fontSize: 12.5, color: "var(--muted)" }}>
+      {/* لینک‌های داخلی با متنِ توصیفی — هر کدام به صفحه‌ای می‌روند که همان
+          موضوع را کامل توضیح داده، نه یک «اینجا کلیک کنید». */}
+      <div style={{ marginTop: 28, fontSize: 12.5, color: "var(--muted)", lineHeight: 2 }}>
+        توضیح کامل هر بخش:{" "}
+        <Link href="/routine" style={{ color: "var(--accent)" }}>روتین اپ آریون</Link>
+        ،{" "}
+        <Link href="/habit-tracker" style={{ color: "var(--accent)" }}>مدیریت عادت‌ها در آریون</Link>
+        ،{" "}
+        <Link href="/daily-planner" style={{ color: "var(--accent)" }}>برنامه‌ریزی روزانه با آریون</Link>{" "}
+        و{" "}
+        <Link href="/trading-journal" style={{ color: "var(--accent)" }}>ژورنال معاملاتی آریون</Link>
+        .
+        <br />
         سوال دیگه‌ای داری؟ <Link href="/about" style={{ color: "var(--accent)" }}>با ما تماس بگیر</Link>.
       </div>
     </section>

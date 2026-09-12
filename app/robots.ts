@@ -1,8 +1,5 @@
 import type { MetadataRoute } from "next";
-
-// آدرس پایه‌ی production — از env می‌خونیم تا هاردکد نباشه (دامنه می‌تونه
-// عوض بشه)؛ fallback فقط برای build/dev محلی.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
+import { SITE_URL } from "@/lib/seo";
 
 // فقط صفحات عمومی بازاریابی/محتوایی قابل کراله؛ همه‌چیز دیگه (داشبورد
 // شخصی کاربر، پنل ادمین، فرم‌های auth، API) نباید crawl بشه — چون یا
@@ -15,23 +12,32 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      // هشدارِ واقعی که این‌جا خورده شد: در robots.txt تطابق **پیشوندی**
+      // است، نه مسیرِ کامل. یعنی `Disallow: /trade` صفحه‌ی عمومیِ
+      // `/trading-journal` را هم بلاک می‌کرد. برای مسیرهایی که یک صفحه‌ی
+      // عمومی با همان پیشوند وجود دارد، باید `$` (پایانِ آدرس) گذاشت و
+      // زیرمسیرها را جدا با `/` بست. next.config.js این مشکل را ندارد
+      // چون آن‌جا `source` تطابقِ کاملِ مسیر است، نه پیشوندی.
       disallow: [
         "/api/",
         "/auth/",
-        "/weekly",
-        "/exercise",
-        "/trade",
-        "/roadmaps",
+        "/weekly$",
+        "/weekly/",
+        "/exercise$",
+        "/exercise/",
+        "/trade$",
+        "/trade/",
+        "/roadmaps$",
         "/roadmaps/",
-        "/account",
+        "/account$",
         "/account/",
-        "/admin",
+        "/admin$",
         "/admin/",
         // خود /subscription پشت AuthGate ـه (کاربر مهمان فقط پیام «وارد
         // شو» می‌بینه، نه جدول پلن‌ها) — جدول واقعی پلن‌ها که عمومیه از
         // قبل توی صفحه‌ی اصلی (PlansSection mode="landing") هست، پس این
         // مسیر برای کراولر محتوای بی‌ارزش/تکراری‌ست.
-        "/subscription",
+        "/subscription$",
         "/subscription/",
       ],
     },

@@ -97,7 +97,27 @@ export default function AboutPage() {
           <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "none" }}>
             قوانین و مقررات
           </Link>
-          .
+          . درباره‌ی هر بخش هم یک صفحه‌ی جدا هست:{" "}
+          <Link href="/routine" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            روتین اپ آریون و برنامه‌ی روتین روزانه
+          </Link>
+          ،{" "}
+          <Link href="/habit-tracker" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            پیگیری عادت‌ها
+          </Link>
+          ،{" "}
+          <Link href="/daily-planner" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            برنامه‌ریزی روزانه
+          </Link>{" "}
+          و{" "}
+          <Link href="/trading-journal" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            ژورنال معاملاتی
+          </Link>
+          . مقاله‌های آموزشی هم در{" "}
+          <Link href="/blog" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            بخش مقاله‌ها
+          </Link>{" "}
+          هستند.
         </div>
       </div>
 
