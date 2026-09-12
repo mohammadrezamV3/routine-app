@@ -13,7 +13,8 @@ import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
-import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
+import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
+import { SITE_URL } from "@/lib/seo";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
@@ -37,12 +38,6 @@ const latin = Inter({
   variable: "--font-latin",
 });
 
-// آدرس پایه‌ی production — برای resolve کردن URLهای نسبی توی OG/canonical
-// (metadataBase) و برای ساختن لینک‌های مطلق توی robots.ts/sitemap.ts.
-// از env می‌خونیم چون دامنه هاردکد نباید بشه؛ fallback فقط برای وقتیه که
-// env ست نشده (dev/build محلی).
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -61,7 +56,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   // کلمه‌کلیدی صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
   // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن.
-  keywords: [BRAND_FA, BRAND_EN, `${BRAND_FA} اپ`, "اپ روتین", "برنامه‌ریزی روزانه", "ژورنال ترید", "برنامه ورزشی"],
+  keywords: [BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, `${BRAND_CATEGORY_FA} ${BRAND_FA}`, "اپ روتین", "برنامه روتین روزانه", "برنامه‌ریزی روزانه", "مدیریت عادت", "ژورنال ترید"],
   openGraph: {
     ...OG_BASE,
     url: SITE_URL,

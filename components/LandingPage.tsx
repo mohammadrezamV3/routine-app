@@ -411,15 +411,30 @@ export function LandingPage() {
               «آریون» صفر بار در کل متن صفحه بود و جست‌وجوی فارسی برند
               هیچ تطابقی پیدا نمی‌کرد. ظاهر تغییری نمی‌کنه — «آریون» با همون
               رنگ اکسنت کنار لوگوتایپ لاتین می‌شینه. */}
+          {/* نام فارسی برند و دسته‌ی محصول («روتین اپ») هردو در خود h1 هستند،
+              نه فقط در متادیتا: تطابق متنی گوگل روی محتوای واقعی صفحه انجام
+              می‌شه. قبل از این، «آریون» صفر بار در کل متن صفحه بود و
+              جست‌وجوی فارسی برند هیچ تطابقی پیدا نمی‌کرد. */}
           <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
-            همه‌ی نظم زندگی‌ات، توی{" "}
+            روتین اپ{" "}
             <span className={t.accentText}>آریون</span>{" "}
-            <span className={t.accentText}>(Arion)</span>
+            <span className={t.accentText}>(Arion)</span>؛ همه‌ی نظم زندگی‌ات یک‌جا
           </h1>
           <p className={`mt-4 text-right text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
-            آریون (Arion) یک اپ فارسیه برای روتین روزانه، بدنسازی،
-            ژورنال ترید و مسیر یادگیری — هرکدوم دقیق، ساده و بدون شلوغی.
-            همه‌چیز یک‌جا، همه‌چیز به‌موقع.
+            آریون (Arion) یک روتین اپ فارسیه: روتین روزانه و هفتگی بساز،
+            عادت‌هات رو پیگیری کن، و بدنسازی، تغذیه، ژورنال ترید و مسیر
+            یادگیری رو هم همون‌جا داشته باش — هرکدوم دقیق، ساده و بدون شلوغی.
+          </p>
+          {/* لینک‌های داخلی از هیرو به صفحه‌های دسته — هم برای کاربری که
+              هنوز ثبت‌نام نکرده و می‌خواهد اول بفهمد ماجرا چیست، هم برای
+              انتقال اعتبار صفحه‌ی اصلی به صفحه‌های فرود. */}
+          <p className={`mt-3 text-right text-[12px] leading-7 ${t.muted}`} data-anim-field>
+            بیشتر بخوانید:{" "}
+            <Link href="/routine" className={`font-bold ${t.accentText} hover:underline`}>برنامه‌ی روتین روزانه</Link>
+            {" · "}
+            <Link href="/habit-tracker" className={`font-bold ${t.accentText} hover:underline`}>پیگیری عادت‌ها</Link>
+            {" · "}
+            <Link href="/trading-journal" className={`font-bold ${t.accentText} hover:underline`}>ژورنال معاملاتی</Link>
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-2.5" data-anim-field>
             <Link
@@ -465,7 +480,16 @@ export function LandingPage() {
           اصلی نداشتن — یعنی برای کراولرها عملا صفحات ایزوله بودن (فقط با
           دونستن آدرس دقیق پیدا می‌شدن، نه با دنبال‌کردن لینک). */}
       <footer className={`mt-10 border-t ${t.line} px-4 py-6 text-center text-[11.5px] ${t.muted}`}>
-        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+        {/* صفحه‌های فرودِ عمومی هم باید از این‌جا لینک بگیرند، وگرنه دقیقا
+            همان مشکل قبلی را پیدا می‌کنند: صفحه‌ای که هیچ لینک داخلی به آن
+            اشاره نمی‌کند، برای کراولر یتیم است. متنِ لینک‌ها توصیفی‌ست تا
+            هم کاربر هم گوگل بدانند مقصد چیست. */}
+        <nav aria-label="صفحه‌های آریون" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <Link href="/routine" className="hover:underline">روتین روزانه</Link>
+          <Link href="/habit-tracker" className="hover:underline">پیگیری عادت‌ها</Link>
+          <Link href="/daily-planner" className="hover:underline">برنامه‌ریزی روزانه</Link>
+          <Link href="/trading-journal" className="hover:underline">ژورنال معاملاتی</Link>
+          <Link href="/blog" className="hover:underline">مقاله‌ها</Link>
           <Link href="/about" className="hover:underline">درباره ما</Link>
           <Link href="/faq" className="hover:underline">سوالات متداول</Link>
           <Link href="/terms" className="hover:underline">قوانین و مقررات</Link>
