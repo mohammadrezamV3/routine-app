@@ -4672,6 +4672,7 @@ html[data-perf="low"] .trade-chat-panel,
 html[data-perf="low"] .trade-cal-card,
 html[data-perf="low"] .trade-cal-filters,
 html[data-perf="low"] .trade-cal-search,
+html[data-perf="low"] .trade-cal-week-strip,
 html[data-perf="low"] .trade-econ-monthpicker,
 html[data-perf="low"] .tv-surface{
   background:var(--surface-2);
@@ -5617,21 +5618,6 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
    grid ثابت به یک چیدمانِ فلکس‌ِ دورچین تبدیل می‌شه (پایین‌تر). */
 .trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
 .trade-cal-table{ min-width:420px; }
-@media (max-width:560px){
-  .trade-cal-table-scroll{ overflow-x:visible; }
-  .trade-cal-table{ min-width:0; }
-  .trade-cal-thead{ display:none; }
-  .trade-cal-tr{
-    display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;
-    padding:11px 2px;
-  }
-  .trade-cal-tr .tc-col-time{ order:1; flex:0 0 auto; }
-  .trade-cal-tr .tc-col-cur{ order:2; flex:0 0 auto; white-space:nowrap; }
-  .trade-cal-tr .tc-col-event{ order:3; flex:1 1 100%; white-space:normal; }
-  .trade-cal-tr .tc-col-num{ order:4; flex:0 0 auto; text-align:end; }
-  .trade-cal-tr .tc-col-num::before{ content:attr(data-label) ": "; color:var(--muted2); font-weight:400; }
-  .trade-cal-tr .tc-col-icon{ order:5; flex:0 0 auto; margin-inline-start:auto; }
-}
 .trade-cal-thead{
   display:grid; grid-template-columns:34px 54px minmax(80px,1fr) 28px 28px 38px 38px 38px; gap:6px;
   align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
@@ -5648,6 +5634,31 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 .tc-col-icon{ display:flex; align-items:center; justify-content:center; }
 .tc-col-num{ text-align:center; color:var(--text); }
 .tc-col-num.muted{ color:var(--muted2); }
+/* طبقِ درخواستِ جدیدِ صریح (که تصمیمِ قبلیِ «بدونِ فولد، با اسکرولِ افقیِ
+   خودِ باکس» رو نقض می‌کنه): زیرِ ۵۶۰px دیگه هیچ اسکرولِ افقی‌ای نیست —
+   grid ثابت به یک چیدمانِ فلکس‌ِ دورچین تبدیل می‌شه.
+   باگِ واقعیِ «همه‌چیز رفته توی هم»: این media query قبلا *قبل* از قوانینِ
+   بدونِ‌شرطِ بالا (`.trade-cal-thead`/`.trade-cal-tr` با `display:grid`)
+   نوشته شده بود — توی CSS، بینِ دو قانونِ هم‌specificity، همیشه آخرینی که
+   توی فایل میاد برنده‌ست، صرف‌نظر از اینکه داخلِ media query باشه یا نه؛
+   پس زیرِ ۵۶۰px هم `display:grid` (که بعدا اومده) رویِ `display:flex` این
+   بلاک برنده می‌شد و ۸ستونِ گرید توی یک باکسِ باریکِ موبایل له/همپوشان
+   می‌شدن. فیکس: همین بلاک بعدِ قوانینِ بدونِ‌شرط منتقل شد، نه قبلش. */
+@media (max-width:560px){
+  .trade-cal-table-scroll{ overflow-x:visible; }
+  .trade-cal-table{ min-width:0; }
+  .trade-cal-thead{ display:none; }
+  .trade-cal-tr{
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;
+    padding:11px 2px;
+  }
+  .trade-cal-tr .tc-col-time{ order:1; flex:0 0 auto; }
+  .trade-cal-tr .tc-col-cur{ order:2; flex:0 0 auto; white-space:nowrap; }
+  .trade-cal-tr .tc-col-event{ order:3; flex:1 1 100%; white-space:normal; }
+  .trade-cal-tr .tc-col-num{ order:4; flex:0 0 auto; text-align:end; }
+  .trade-cal-tr .tc-col-num::before{ content:attr(data-label) ": "; color:var(--muted2); font-weight:400; }
+  .trade-cal-tr .tc-col-icon{ order:5; flex:0 0 auto; margin-inline-start:auto; }
+}
 .trade-cal-impact-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 /* دکمه‌های ستونِ Alert/Detail — ریز و بی‌بک‌گراند، فقط رنگشون عوض می‌شه */
 .trade-cal-icon-btn{
@@ -5666,21 +5677,26 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
 .trade-cal-tr.past .tc-col-time, .trade-cal-tr.past .tc-col-event{ opacity:.55; }
 .trade-cal-card-row.past .trade-cal-card-when, .trade-cal-card-row.past .trade-cal-card-title{ opacity:.55; }
 
-/* طبقِ درخواستِ صریحِ تازه: بارِ تقویم دیگه هیچ باکس/قابِ بوردردار/شیشه‌ای
-   نداره — دقیقا مثلِ ماه‌شمارِ «روتین من» مستقیم روی بک‌گراندِ صفحه
-   می‌شینه (.trade-cal-box/.trade-cal-strip-box قبلی حذف شدن). استریپِ
-   روزها هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی اسکرول‌پذیرِ افقیه
-   (اسکرولِ خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛ برایِ تاریخ‌های
-   دورتر دکمه‌ی «تاریخچه» (ماه‌شمار) هست. */
+/* طبقِ درخواستِ صریحِ تازه («نوارِ تقویم هر دو باید یک‌شکل باشن، اقتصادی
+   دقیقا مثلِ روتین من»): خودِ جدولِ رویدادها همچنان بدونِ باکسه (تصمیمِ
+   قبلی)، ولی نوارِ روزها حالا دقیقا هم‌شکلِ نوارِ روزِ «روتین من»
+   (DashDateSelector) شد — یک قرصِ بزرگِ گردِ بوردردار/شیشه‌ای که کلِ
+   روزها توش می‌شینن، نه دیگه روی بک‌گراندِ لختِ صفحه. استریپِ روزها
+   هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی اسکرول‌پذیرِ افقیه (اسکرولِ
+   خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛ برایِ تاریخ‌های دورتر دکمه‌ی
+   «تاریخچه» (ماه‌شمار) هست. */
 .trade-cal-week-strip{
   display:flex; gap:6px; overflow-x:auto; scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch; touch-action:pan-x;
-  margin-top:14px; padding-bottom:2px;
+  margin-top:14px; padding:10px 12px;
+  border-radius:18px; border:1px solid var(--surface-line);
+  background:rgba(var(--bg-rgb),.16);
+  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
 }
 .trade-cal-day-pill{
   flex:0 0 auto; scroll-snap-align:center; min-width:56px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  padding:9px 8px; border-radius:13px; color:var(--muted);
+  padding:9px 8px; border-radius:14px; color:var(--muted);
   border:1px solid transparent; background:none; box-shadow:none;
   transition:background .15s ease, color .15s ease, border-color .15s ease;
 }
