@@ -500,18 +500,6 @@ export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
   return setSetting("theme", value);
 }
 
-/** هم‌الگوی theme — کوکیِ `lang` رو lib/language.ts (اسکریپتِ inline) می‌خونه. */
-export async function getLanguageSetting(): Promise<"fa" | "en" | null> {
-  return getSetting<"fa" | "en" | null>("language", null);
-}
-export async function setLanguageSetting(value: "fa" | "en"): Promise<void> {
-  if (typeof document !== "undefined") {
-    const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
-    document.cookie = `lang=${value}; path=/; max-age=31536000; samesite=lax${secure}`;
-  }
-  return setSetting("language", value);
-}
-
 // ---------- روزهای «بیرون رفتن» (حالا فقط داخل تقویم اصلی نشون داده می‌شه) ----------
 
 export async function getOutingDates(): Promise<string[]> {
