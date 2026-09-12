@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown, Dumbbell,
+  User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -15,9 +15,9 @@ import { clearAuthHintCookie } from "@/lib/preload";
 
 // پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → منوی بخش‌ها (فقط لیست زبانه‌ها، بدون محتوا)
-//   /account/profile            → پروفایل
-//   /account/sport-profile      → پروفایل ورزشی (قد/وزن/سن/جنسیت — طبق
-//                                  درخواست صریح از پروفایل عمومی جدا شد)
+//   /account/profile            → پروفایل (دو بخش: «پروفایل عمومی» و
+//                                  «پروفایل ورزشی»، هردو توی همین یک صفحه)
+//   /account/sport-profile      → فقط ریدایرکت به /account/profile (مسیر قدیمی)
 //   /account/general            → «تنظیمات» — تنظیمات آریون + تنظیمات روتین و
 //                                  ترید، همه یک‌جا و بدون ناوبری تودرتو
 //                                  (تم نمایش عمدا این‌جا نیست — همون سوییچ
@@ -27,8 +27,7 @@ import { clearAuthHintCookie } from "@/lib/preload";
 //   /account/notifications      → اعلان‌ها
 //   /account/support            → پشتیبانی
 export const ACCOUNT_SECTIONS: { href: string; label: string; desc: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
-  { href: "/account/profile", label: "پروفایل", desc: "نام، نام‌کاربری و عکس پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
-  { href: "/account/sport-profile", label: "پروفایل ورزشی", desc: "قد، وزن، سن و جنسیت برای برنامه‌ی ورزش/کالری", icon: <Dumbbell size={15} />, match: (p) => p.startsWith("/account/sport-profile") },
+  { href: "/account/profile", label: "پروفایل", desc: "پروفایل عمومی و پروفایل ورزشی، بنر و عکس پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
   { href: "/account/general", label: "تنظیمات", desc: "تنظیمات آریون، روتین و ترید", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") },
   { href: "/account/subscription", label: "اشتراک", desc: "پلن فعلی و مدیریت خرید اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
   { href: "/account/security", label: "امنیت", desc: "رمز عبور و امنیت حساب", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },

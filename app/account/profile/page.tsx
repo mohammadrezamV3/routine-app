@@ -2,21 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Trash2, Mail, Phone, Cake, AtSign, User as UserIcon } from "lucide-react";
+import { Camera, Trash2, Mail, Phone, Cake, AtSign, User as UserIcon, ImagePlus, Dumbbell, IdCard } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
-import { resizeImageToDataUrl } from "@/lib/avatarUpload";
+import { resizeImageToDataUrl, resizeBannerToDataUrl } from "@/lib/avatarUpload";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { isValidEmail, isValidUsername } from "@/lib/validate";
 import { AccountBackButton } from "@/components/AccountBackButton";
+import { SportProfileForm } from "@/components/SportProfileForm";
 
 type ProfileUser = {
   email: string | null;
   username: string | null;
   phone: string | null;
-  firstName: string | null;
+  /** توجه: /api/account این فیلد را `name` برمی‌گرداند، نه `firstName` —
+   *  قبلا این‌جا `firstName` خوانده می‌شد و همیشه undefined بود، یعنی
+   *  «نام و نام خانوادگی» فقط نام خانوادگی را نشان می‌داد. */
+  name: string | null;
   lastName: string | null;
   birthDate: string | null;
   subscriptions: { status: string; currentPeriodEnd: string; plan: { nameFa: string; key: string } }[];
@@ -28,6 +32,10 @@ export default function AccountProfilePage() {
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [bannerSaving, setBannerSaving] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // فیلدهای «باز» — همیشه قابل‌ویرایش‌ن (نه پشت یه حالت ویرایش جدا)، فقط
   // با یه دکمه‌ی «ذخیره»ی مشترک ثبت می‌شن. نام/نام‌خانوادگی/شماره موبایل
@@ -61,6 +69,10 @@ export default function AccountProfilePage() {
       if (u) applyUser(u);
     });
     getAvatarUrl().then(setAvatarUrl);
+    fetch("/api/account/banner")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setBannerUrl(d?.bannerUrl ?? null))
+      .catch(() => {});
   }, []);
 
   function applyUser(u: ProfileUser) {
@@ -138,6 +150,33 @@ export default function AccountProfilePage() {
     window.dispatchEvent(new Event("avatar-updated"));
   }
 
+  async function uploadBanner(file: File) {
+    setBannerError(null);
+    setBannerSaving(true);
+    try {
+      const dataUrl = await resizeBannerToDataUrl(file);
+      const res = await fetch("/api/account/banner", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) { setBannerError(resData.error || "خطایی پیش اومد"); return; }
+      setBannerUrl(resData.bannerUrl);
+    } catch {
+      setBannerError("خطا در پردازش عکس");
+    } finally {
+      setBannerSaving(false);
+    }
+  }
+
+  async function removeBanner() {
+    setBannerSaving(true);
+    await fetch("/api/account/banner", { method: "DELETE" });
+    setBannerUrl(null);
+    setBannerSaving(false);
+  }
+
   async function saveProfile() {
     setSaving(true);
     setSaveError(null);
@@ -213,7 +252,7 @@ export default function AccountProfilePage() {
 
   if (!data) return null;
 
-  const fullName = [data.firstName, data.lastName].filter(Boolean).join(" ") || "کاربر آریون";
+  const fullName = [data.name, data.lastName].filter(Boolean).join(" ") || "کاربر آریون";
 
   return (
     <section>
@@ -221,13 +260,31 @@ export default function AccountProfilePage() {
       <h1>پروفایل</h1>
       <div className="account-content-hint">اطلاعات حساب و مشخصات شخصیت</div>
 
-      <motion.div className="account-profile-head" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-        <div className="account-avatar-row">
-          <div className="account-avatar-wrap">
+      {/* سرصفحه: بنر + آواتارِ روی بنر + نام — هردو عکس از همین‌جا عوض می‌شن */}
+      <motion.div className="profile-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
+        <div className="profile-banner">
+          {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
+          <div className="profile-banner-actions">
+            <button type="button" className="profile-banner-btn" onClick={() => bannerInputRef.current?.click()} disabled={bannerSaving} aria-label={bannerUrl ? "تغییر بنر" : "افزودن بنر"}>
+              <ImagePlus size={14} />
+              <span>{bannerUrl ? "تغییر بنر" : "افزودن بنر"}</span>
+            </button>
+            {bannerUrl && (
+              <button type="button" className="profile-banner-btn" onClick={removeBanner} disabled={bannerSaving} aria-label="حذف بنر">
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+          <input
+            ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBanner(f); e.target.value = ""; }}
+          />
+
+          <div className="profile-hero-avatar-wrap">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="عکس پروفایل" className="account-avatar-img" />
+              <img src={avatarUrl} alt="عکس پروفایل" className="profile-hero-avatar-img" />
             ) : (
-              <AgentAvatar seed={fullName || username || data.email || "؟"} size={76} className="account-avatar-fallback" />
+              <AgentAvatar seed={fullName || username || data.email || "؟"} size={88} className="profile-hero-avatar-img" />
             )}
             <button type="button" className="account-avatar-edit-btn" onClick={() => avatarInputRef.current?.click()} aria-label="تغییر عکس پروفایل" disabled={avatarSaving}>
               <Camera size={13} />
@@ -237,19 +294,26 @@ export default function AccountProfilePage() {
               onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = ""; }}
             />
           </div>
+        </div>
+
+        <div className="profile-hero-meta">
+          <div className="account-profile-name">{fullName}</div>
+          {username && <div className="account-profile-username mono" dir="ltr">@{username}</div>}
           {avatarUrl && (
             <button type="button" className="account-avatar-remove-btn" onClick={removeAvatar} disabled={avatarSaving}>
               <Trash2 size={13} />
-              حذف عکس
+              حذف عکس پروفایل
             </button>
           )}
         </div>
-        {avatarError && <div className="field-error-msg" style={{ display: "block", marginBottom: 10 }}>{avatarError}</div>}
 
-        <div className="account-profile-name">{fullName}</div>
-        {username && <div className="account-profile-username mono" dir="ltr">@{username}</div>}
-        {saved && <div className="account-save-toast">اطلاعات با موفقیت ذخیره شد.</div>}
+        {(avatarError || bannerError) && (
+          <div className="field-error-msg" style={{ display: "block", padding: "0 16px 12px" }}>{avatarError || bannerError}</div>
+        )}
+        {saved && <div className="account-save-toast" style={{ margin: "0 16px 14px" }}>اطلاعات با موفقیت ذخیره شد.</div>}
       </motion.div>
+
+      <h2 className="profile-section-title"><IdCard size={15} /> پروفایل عمومی</h2>
 
       {/* فیلدهای قفل — همیشه فقط‌نمایشی، هیچ‌وقت از همین‌جا قابل‌تغییر نیستن */}
       <div className="account-card">
@@ -369,9 +433,17 @@ export default function AccountProfilePage() {
         {saveError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{saveError}</div>}
 
         <button type="button" className="account-outline-btn" style={{ marginTop: 16 }} onClick={saveProfile} disabled={saving}>
-          {saving ? "در حال ذخیره…" : "ذخیره"}
+          {saving ? "در حال ذخیره…" : "ثبت تغییرات"}
         </button>
       </motion.div>
+
+      {/* تایتلِ دومِ همین صفحه — طبقِ درخواستِ صریح، پروفایلِ ورزشی صفحه‌ی
+          جدا نیست و همین‌جا زیرِ پروفایلِ عمومی می‌نشیند. */}
+      <h2 className="profile-section-title"><Dumbbell size={15} /> پروفایل ورزشی</h2>
+      <div className="account-content-hint" style={{ marginTop: -6 }}>
+        قد/وزن/سن/جنسیت — همین اطلاعات توی فرم‌های بدنسازی و کالری هم استفاده می‌شه
+      </div>
+      <SportProfileForm />
 
       {dobOpen && (
         <JalaliDatePicker

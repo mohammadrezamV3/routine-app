@@ -1408,6 +1408,61 @@
   .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
   .account-profile-name{ font-size:16.5px; font-weight:800; color:var(--text); margin-top:12px; letter-spacing:-.01em; }
   .account-profile-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+
+  /* سرصفحه‌ی پروفایل: بنر + آواتارِ نشسته روی لبه‌ی بنر + نام زیرش.
+     نسبتِ ۳.۲:۱ همون نسبتیه که resizeBannerToDataUrl باهاش کراپ می‌کنه،
+     پس چیزی از عکسِ کاربر بریده/کشیده نمی‌شه. */
+  .profile-hero{
+    border:1px solid var(--surface-line); border-radius:20px; overflow:hidden;
+    background:var(--surface-1); margin-bottom:18px;
+  }
+  .profile-banner{
+    position:relative; aspect-ratio:3.2 / 1; max-width:100%;
+    /* بدونِ عکس، یه گرادیانِ ملایم از رنگِ اکسنتِ خودِ تم — نه یه رنگِ ثابت */
+    background:linear-gradient(120deg, var(--accent-dim), var(--surface-2));
+  }
+  .profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .profile-banner-actions{
+    position:absolute; top:10px; inset-inline-end:10px; display:flex; gap:6px;
+  }
+  /* این دوتا دکمه روی خودِ عکس می‌شینن، پس بدونِ یه پس‌زمینه‌ی نیمه‌شفاف
+     روی عکسِ روشن اصلا خونده نمی‌شن — تنها جاییه که این لازمه. */
+  .profile-banner-btn{
+    display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:999px;
+    font-size:11px; font-weight:700; color:#fff; cursor:pointer;
+    background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.25);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  .profile-banner-btn:disabled{ opacity:.6; cursor:default; }
+  .profile-hero-avatar-wrap{
+    position:absolute; bottom:-30px; inset-inline-start:20px; width:88px; height:88px;
+  }
+  .profile-hero-avatar-img{
+    width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;
+    border:3px solid var(--bg); background:var(--surface-2);
+  }
+  .profile-hero-meta{
+    /* پدینگِ بالا باید از ۳۰px آویزانِ آواتار بیشتر باشد، وگرنه نام روی
+       عکس می‌افتد. */
+    padding:46px 20px 16px; display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  }
+  .profile-hero-meta .account-profile-name{ margin-top:0; }
+  .profile-hero-meta .account-avatar-remove-btn{ margin-top:8px; }
+
+  /* تایتلِ بخش‌های داخلِ صفحه‌ی پروفایل («پروفایل عمومی» / «پروفایل ورزشی») */
+  .profile-section-title{
+    display:flex; align-items:center; gap:7px; margin:22px 0 12px;
+    font-size:13.5px; font-weight:800; color:var(--text);
+  }
+  .profile-section-title svg{ color:var(--accent); }
+
+  @media (max-width:520px){
+    .profile-hero-avatar-wrap{ width:72px; height:72px; bottom:-26px; inset-inline-start:16px; }
+    .profile-hero-avatar-img{ width:72px; height:72px; }
+    .profile-hero-meta{ padding:44px 16px 14px; }
+    .profile-banner-btn span{ display:none; }
+    .profile-banner-btn{ padding:6px; }
+  }
   .account-edit-btn{
     display:flex; align-items:center; gap:6px; margin-top:14px;
     font-size:11.5px; border-color:var(--accent); color:var(--accent);
@@ -6554,14 +6609,15 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    طبقِ درخواستِ صریح: وسطِ بالای صفحه (نه وسطِ عمودیِ معمولِ بقیه‌ی
    پاپ‌آپ‌ها) — position:fixed با یک top ثابت، نه transform:translateY(-50%). */
 .friend-profile-panel{
-  /* باگِ گزارش‌شده: «باز که می‌کنم بیرون صفحه‌ست». این تنها پاپ‌آپِ اپ بود
-     که با inset-inline-end (به‌جای left ساده‌ی بقیه‌ی .modal-panelها)
-     وسط‌چین می‌شد — روی مرورگر/وبویوی بدونِ پشتیبانیِ کامل، inset-inline-end
-     بی‌اثر می‌ماند و فقط translateX(-50%) روی موقعیتِ پیش‌فرض (بالا-چپِ
-     body، چون position:fixed پورتال‌شده است) اثر می‌کرد — یعنی پنل نصفش
-     واقعا از چپِ صفحه بیرون می‌زد. left ساده دقیقاً هم‌الگویِ همه‌ی
-     .modal-panelهای دیگر اپه، بدونِ این وابستگی. */
-  position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:71;
+  /* باگِ گزارش‌شده: «باز که می‌کنم بیرون صفحه‌ست». دو علتِ پشت‌سرهم داشت:
+     اولی inset-inline-end بود (روی وبویوی بدونِ پشتیبانیِ کامل بی‌اثر)، و
+     بعد از تعویضش با left:50%+translateX(-50%)، خودِ انیمیشنِ پایین
+     (`tradeFadeIn` که فریمِ آخرش `transform:none` است و با fill-mode
+     `both` همان را برای همیشه نگه می‌دارد) همان translate را پاک می‌کرد و
+     پنل باز هم نصفه از لبه بیرون می‌زد. وسط‌چینی حالا با margin:auto است
+     که نه به پشتیبانیِ logical property وابسته است و نه انیمیشن می‌تواند
+     پاکش کند. */
+  position:fixed; top:64px; left:0; right:0; margin-left:auto; margin-right:auto; z-index:71;
   width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
   padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
