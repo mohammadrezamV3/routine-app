@@ -16,6 +16,7 @@ import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
 import { SITE_URL } from "@/lib/seo";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
+import { PwaProvider } from "@/components/PwaProvider";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
@@ -178,6 +179,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <MotionTuner>
               <NavDrawer />
               <NotificationEngine />
+              {/* ثبتِ سرویس‌ورکر (کشِ app shell) + پیشنهادِ نصبِ اپ */}
+              <PwaProvider />
               <div className="wrap">{children}</div>
             </MotionTuner>
           </ThemeProvider>
