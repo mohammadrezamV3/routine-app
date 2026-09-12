@@ -117,6 +117,21 @@ if (cluster.isPrimary) {
     console.warn("[cluster] CRON_SECRET ست نشده — همگام‌سازیِ خودکارِ تقویم اقتصادی غیرفعاله");
   } else {
     const port = process.env.PORT || 3000;
+    const SLOW_INTERVAL_MS = 10 * 60 * 1000;
+    const ERROR_RETRY_MS = 2 * 60 * 1000;
+
+    // طبقِ درخواستِ صریح («سرِ ساعتِ ایونت دقیقا ۱۰ثانیه بعدش اپدیت شه، در
+    // غیرِ این حالت نیازی نیست تند‌تند اپدیت شه»): این دیگه یک setInterval
+    // با بازه‌ی ثابت نیست — یک لوپِ خودتنظیمِ setTimeout که هربار خودِ روت
+    // (`computeNextSyncDelayMs`، بر اساسِ نزدیک‌ترین رویدادِ بی‌actual توی
+    // دیتابیس) می‌گه دفعه‌ی بعد کِی دوباره چک کنه. وقتی رویدادی نزدیکه،
+    // این فاصله چند ثانیه می‌شه؛ در حالتِ آروم به همون ۱۰دقیقه‌ی قبلی
+    // برمی‌گرده. خودتنظیم‌بودن یعنی بعدِ هر ری‌استارتِ سرور هم بدونِ نیاز
+    // به یادآوریِ چیزی، خودش از نو تصمیمِ درست رو می‌گیره.
+    function scheduleNext(delayMs) {
+      setTimeout(syncEconomicCalendarNow, Math.max(1000, delayMs)).unref();
+    }
+
     async function syncEconomicCalendarNow() {
       try {
         const res = await fetch(`http://127.0.0.1:${port}/api/cron/economic-calendar`, {
@@ -126,24 +141,21 @@ if (cluster.isPrimary) {
         const body = await res.json().catch(() => null);
         if (!res.ok) {
           console.error(`[cluster] همگام‌سازیِ تقویم اقتصادی با خطا مواجه شد: ${res.status} ${JSON.stringify(body)}`);
+          scheduleNext(ERROR_RETRY_MS);
           return;
         }
         console.log(`[cluster] تقویمِ اقتصادی همگام‌سازی شد: ${JSON.stringify(body)}`);
+        scheduleNext(typeof body?.nextCheckInMs === "number" ? body.nextCheckInMs : SLOW_INTERVAL_MS);
       } catch (err) {
         // اگه workerها هنوز کاملاً بالا نیومده باشن (مثلاً درست بعدِ استارتِ
-        // کانتینر)، این fail می‌شه — بی‌خطر: زمان‌بندیِ روزانه‌ی بعدی جبران
-        // می‌کنه، و ادمین همیشه می‌تونه از پنل «همگام‌سازی الان» بزنه.
+        // کانتینر)، این fail می‌شه — بی‌خطر: retry کوتاه‌مدت جبران می‌کنه، و
+        // ادمین همیشه می‌تونه از پنل «همگام‌سازی الان» بزنه.
         console.error(`[cluster] همگام‌سازیِ تقویم اقتصادی شکست خورد: ${err && err.message}`);
+        scheduleNext(ERROR_RETRY_MS);
       }
     }
 
-    // طبقِ درخواستِ صریح: هر ۱۰ دقیقه (نه فقط یک‌بار در روز) — چون
-    // actual/forecastِ رویدادها دقیقاً لحظه‌ی انتشارِ خبر پر می‌شود، نه
-    // شبِ قبل؛ با کرانِ روزانه، actual تا ۲۴ساعتِ بعد از خودِ خبر روی
-    // سایت دیده نمی‌شد. یک بار کمی بعدِ بالا آمدنِ سرور (دیپلویِ تازه بدونِ
-    // داده نمونه)، و بعدش هر ۱۰ دقیقه.
     setTimeout(syncEconomicCalendarNow, 30_000).unref();
-    setInterval(syncEconomicCalendarNow, 10 * 60 * 1000).unref();
   }
 } else {
   // هر worker همون سرورِ standalone نکست رو مستقیم اجرا می‌کنه؛ رفتارش با

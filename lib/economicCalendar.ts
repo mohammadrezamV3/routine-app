@@ -133,6 +133,10 @@ export type NormalizedEvent = {
   actual: string | null;
   forecast: string | null;
   previous: string | null;
+  // فیدِ رایگانِ پیش‌فرض (فارکس‌فکتوری) این فیلد رو نمی‌ده، پس همیشه
+  // null می‌مونه — ولی اگه یه‌روز ECONOMIC_CALENDAR_URL به یه فیدِ تجاریِ
+  // دارایِ توضیح عوض بشه، همین‌جا بدونِ تغییرِ کدِ دیگه‌ای پر می‌شه.
+  description: string | null;
 };
 
 // حالا همیشه یک منبع هست (فارکس‌فکتوری به‌عنوان پیش‌فرض)، پس این دیگر
@@ -212,6 +216,7 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
       actual: pickString(row, ["actual", "Actual"]),
       forecast: pickString(row, ["forecast", "estimate", "Forecast"]),
       previous: pickString(row, ["previous", "Previous"]),
+      description: pickString(row, ["description", "desc", "details", "Description", "Detail"]),
     });
   }
   return out;
@@ -282,15 +287,75 @@ export async function syncEconomicCalendar(prisma: {
   let created = 0;
   let updated = 0;
   for (const e of events) {
-    const { externalId, ...data } = e;
+    const { externalId, description, ...data } = e;
+    // منبعِ رایگانِ پیش‌فرض description نمی‌ده (همیشه null) — اگه بدونِ‌قید
+    // توی update بذاریمش، هر sync توضیحی رو که ادمین دستی رویِ همین رویدادِ
+    // sync‌شده نوشته پاک می‌کنه. فقط وقتی خودِ منبع واقعاً یه description
+    // داده (فیدِ تجاریِ آینده) رویِ ردیف می‌شینه؛ create همیشه هرچی هست
+    // (حتی null) رو می‌ذاره، چون رکورد تازه‌ست و چیزی برایِ پاک‌کردن نیست.
+    const updateData = description == null ? data : { ...data, description };
     const result = await prisma.economicEvent.upsert({
       where: { source_externalId: { source, externalId } },
-      create: { ...data, source, externalId },
-      update: data,
+      create: { ...data, description, source, externalId },
+      update: updateData,
       select: { createdAt: true, updatedAt: true },
     });
     if (result.createdAt.getTime() === result.updatedAt.getTime()) created++;
     else updated++;
   }
   return { source, fetched: events.length, created, updated };
+}
+
+// ── زمان‌بندیِ خودتنظیمِ sync بعدی ────────────────────────────────────────
+//
+// طبقِ درخواستِ صریح: «سرِ ساعتِ ایونت باید اپدیت شه، ۱۰ ثانیه بعدش —
+// در غیرِ این حالت نیازی نیست تند‌تند اپدیت شه». راهِ حلِ ساده و مقاومِ
+// «یک setTimeout دقیق برایِ هر رویداد» نبود، چون با ری‌استارتِ سرور
+// (دیپلویِ تازه) همه‌ی تایمرهایِ زمان‌بندی‌شده از بین می‌رن. به‌جاش این
+// یک لوپِ خودتنظیمه: بعدِ هر sync، خودش می‌گه «دفعه‌ی بعد کِی چک کنی» —
+// اگه رویدادی نزدیکه (تا ۱۰دقیقه‌ی دیگه) که هنوز actual نداره، چک بعدی
+// خیلی زودتر (حداکثر هر ۱۵ثانیه) انجام می‌شه تا لحظه‌ی واقعیِ انتشارِ
+// خبر (نه فقط زمانِ برنامه‌ریزی‌شده‌ش، که واقعیت گاهی چند ثانیه دیرتره)
+// از دست نره؛ وگرنه به همون بازه‌ی آرومِ معمولی برمی‌گرده. این خودش
+// بعدِ ری‌استارت هم خودکار درست کار می‌کنه چون هر فراخوانی از نو
+// تصمیم می‌گیره، نه اینکه به یک تایمرِ قدیمی تکیه کنه.
+export const SLOW_SYNC_INTERVAL_MS = 10 * 60 * 1000;
+const FAST_POLL_INTERVAL_MS = 15 * 1000;
+const SETTLE_GRACE_MS = 10 * 1000;
+const PENDING_LOOKAHEAD_MS = 10 * 60 * 1000;
+const PENDING_LOOKBACK_MS = 10 * 60 * 1000;
+
+export async function computeNextSyncDelayMs(prisma: {
+  economicEvent: {
+    findFirst: (args: any) => Promise<{ occursAt: Date } | null>;
+  };
+}): Promise<number> {
+  const now = Date.now();
+  // نزدیک‌ترین رویدادی که هنوز actual نداره و یا تازه رسیده یا تا ۱۰دقیقه‌ی
+  // دیگه می‌رسه — یعنی «منتظرِ انتشارِ خبر»یم.
+  const pending = await prisma.economicEvent.findFirst({
+    where: {
+      actual: null,
+      occursAt: {
+        gte: new Date(now - PENDING_LOOKBACK_MS),
+        lte: new Date(now + PENDING_LOOKAHEAD_MS),
+      },
+    },
+    orderBy: { occursAt: "asc" },
+    select: { occursAt: true },
+  });
+  if (!pending) return SLOW_SYNC_INTERVAL_MS;
+
+  const dueAt = pending.occursAt.getTime() + SETTLE_GRACE_MS;
+  const msUntilDue = dueAt - now;
+  if (msUntilDue <= 0) {
+    // زمانِ رویداد + ۱۰ثانیه گذشته ولی actual هنوز نیومده (یا این
+    // رویداد اصلا actual نداره، مثلِ سخنرانی) — تا سقفِ بازه‌ی بالا
+    // (۱۰دقیقه‌ی بعدِ زمانش) هر ۱۵ثانیه دوباره چک می‌کنیم؛ بعدش خودش از
+    // بازه‌ی pending بیرون می‌افته و به حالتِ آروم برمی‌گرده.
+    return FAST_POLL_INTERVAL_MS;
+  }
+  // هنوز نرسیده — دقیقا تا لحظه‌ی سررسید+۱۰ثانیه صبر کن، مگر اینکه از
+  // بازه‌ی آرومِ معمولی هم دیرتر باشه (رویدادِ خیلی دورتر).
+  return Math.min(msUntilDue, SLOW_SYNC_INTERVAL_MS);
 }
