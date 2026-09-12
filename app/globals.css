@@ -1415,7 +1415,11 @@
   .profile-hero{
     border:1px solid var(--surface-line); border-radius:20px; overflow:hidden;
     background:var(--surface-1); margin-bottom:18px;
+    /* حداقلِ فضای زیرِ بنر برای نیمه‌ی آویزانِ آواتار، حتی وقتی هیچ
+       محتوایی زیرِ بنر نیست (عکسِ پروفایل ندارد → ردیفِ حذف رندر نمی‌شود). */
+    padding-bottom:38px;
   }
+  .profile-hero:has(.profile-hero-meta){ padding-bottom:0; }
   .profile-banner{
     /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
        ۳۰۰px+ می‌رسید و نصفِ صفحه را می‌گرفت. عکس با object-fit:cover داخلِ
@@ -1458,13 +1462,11 @@
     width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;
     border:3px solid var(--bg); background:var(--surface-2);
   }
+  /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذفِ عکس. پدینگِ بالا همچنان
+     باید از ۳۰پیکسلِ آویزانِ آواتار بیشتر باشد تا دکمه زیرِ عکس بیفتد. */
   .profile-hero-meta{
-    /* پدینگِ بالا باید از ۳۰px آویزانِ آواتار بیشتر باشد، وگرنه نام روی
-       عکس می‌افتد. */
-    padding:46px 20px 16px; display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+    padding:40px 20px 14px; display:flex; justify-content:flex-end;
   }
-  .profile-hero-meta .account-profile-name{ margin-top:0; }
-  .profile-hero-meta .account-avatar-remove-btn{ margin-top:8px; }
 
   /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
      طبقِ درخواستِ صریح، اندازه‌ها روی دسکتاپ جدا از موبایل تنظیم شده‌اند:
@@ -1629,7 +1631,7 @@
   @media (max-width:520px){
     .profile-hero-avatar-wrap{ width:72px; height:72px; bottom:-26px; inset-inline-start:16px; }
     .profile-hero-avatar-img{ width:72px; height:72px; }
-    .profile-hero-meta{ padding:44px 16px 14px; }
+    .profile-hero-meta{ padding:38px 16px 12px; }
     .profile-banner-btn span{ display:none; }
     .profile-banner-btn{ padding:6px; }
   }

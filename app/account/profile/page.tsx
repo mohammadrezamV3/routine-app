@@ -342,15 +342,16 @@ export default function AccountProfilePage() {
           />
         </div>
 
-        <div className="profile-hero-meta">
-          <div className="account-profile-name">{fullName}</div>
-          {username && <div className="account-profile-username mono" dir="ltr">@{username}</div>}
-          {avatarUrl && (
+        {/* طبقِ درخواستِ صریح، نام و آیدی زیرِ بنر نوشته نمی‌شوند — همان‌ها
+            پایین‌تر توی فیلدهای «پروفایل عمومی» هستند. این ردیف فقط جای
+            دکمه‌ی حذفِ عکس است و اگر عکسی نباشد اصلا رندر نمی‌شود. */}
+        {avatarUrl && (
+          <div className="profile-hero-meta">
             <button type="button" className="account-avatar-remove-btn" onClick={removeAvatar} disabled={avatarSaving}>
               <Trash2 size={13} /> حذف عکس پروفایل
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {mediaError && <div className="field-error-msg" style={{ display: "block", padding: "0 16px 12px" }}>{mediaError}</div>}
       </motion.div>
