@@ -499,6 +499,20 @@
     border-radius:inherit; box-sizing:border-box;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
   }
+  /* طبقِ درخواستِ صریح: خودِ .app-topbar از `14px + safe-area-inset-top`
+     شروع می‌شود (یک قرصِ شناور، نه سراسری) — یعنی از لبه‌ی بالای صفحه تا
+     همان‌جا (دقیقاً همان ناحیه‌ای که نوارِ وضعیت/بریدگیِ دوربینِ موبایل
+     رویش می‌نشیند) قبلاً هیچ بلوری نداشت و محتوای اسکرول‌شده زیرش خام
+     دیده می‌شد. این عنصرِ مستقل فقط همان نوار را می‌پوشاند؛ روی دستگاهِ
+     بدونِ notch مقدارِ safe-area-inset-top صفر است، پس height:0 می‌شود و
+     کاملاً بی‌اثر می‌ماند — چیزی برای موبایل‌های بدون بریدگی عوض نمی‌شود. */
+  .app-topbar-statusbar-blur{
+    position:fixed; top:0; left:0; right:0; z-index:39;
+    height:env(safe-area-inset-top);
+    background:var(--surface-glass);
+    backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%);
+    pointer-events:none;
+  }
   /* توجه: بدون transform برای وسط‌چین عمودی — چون transform روی این
      والد یه stacking context جدید می‌سازه و backdrop-filter بچه‌هاش
      (مثل .notif-panel) دیگه نمی‌تونن محتوای واقعی پشت صفحه رو ببینن
@@ -6576,6 +6590,18 @@ html[data-perf="low"] .routine-ai-action:not(.is-send):not(.is-recording){
   -webkit-backdrop-filter:blur(14px) saturate(170%) !important;
 }
 
+/* .app-topbar-statusbar-blur برخلافِ پاپ‌آپ‌های بالا واقعاً پشتش دائم
+   اسکرول می‌شود، پس توجیهِ «آن‌جا اصلاً اسکرولی نیست» این‌جا صدق نمی‌کند —
+   ولی طبقِ درخواستِ صریح («حتی بالای دوربین بلور باشه») دقیقاً همین دستگاه‌های
+   لمسی (notch/Dynamic Island) هدفِ اصلی‌اند، پس بی‌اثر گذاشتنش این‌جا یعنی
+   خودِ درخواست هیچ‌وقت روی موبایل دیده نمی‌شود. هزینه به حداقل رسیده: ارتفاعش
+   فقط safe-area-inset-top (چند ده پیکسل) است، نه یک پنلِ بزرگ، و شعاعِ بلور
+   از خودِ .app-topbar هم کمتر است. */
+html[data-perf="low"] .app-topbar-statusbar-blur{
+  backdrop-filter:blur(10px) saturate(160%) !important;
+  -webkit-backdrop-filter:blur(10px) saturate(160%) !important;
+}
+
 .routine-ai-exhausted{
   display:flex; flex-direction:column; align-items:center; gap:10px;
   padding-top:12px; border-top:1px solid var(--surface-line);
@@ -6645,6 +6671,22 @@ html[data-perf="low"] .routine-ai-action:not(.is-send):not(.is-recording){
           display: grid;
           grid-template-areas: "stack";
           position: relative;
+          /* باگِ گزارش‌شده: رنگِ گو توی تمِ تیره جابه‌جا/عوض می‌شود (فقط
+             سافاری). ریشه‌اش هم‌خانواده‌ی همان باگِ isolation بالاست:
+             `::after` (نقطه‌های ریز) با mix-blend-mode:overlay روی
+             `::before` (مشِ رنگی) می‌نشیند و isolation:isolate روی
+             .siri-orb-clip قرار است این بلندینگ را فقط به همین دو لایه
+             محدود کند — ولی پشتیبانیِ isolation از استکینگ‌کانتکستِ بلندمد
+             بینِ مرورگرها یکسان نیست. اگر ایزوله نشود، overlay به‌جای
+             مشِ خودِ گو با بک‌گراندِ واقعیِ صفحه (که خودِ .routine-ai-fab
+             عمداً background:none دارد) ترکیب می‌شود — و چون overlay روی
+             پایه‌ی تیره مثلِ multiply عمل می‌کند و روی پایه‌ی روشن مثلِ
+             screen، نتیجه بینِ تمِ روشن/تیره کاملاً متفاوت به‌نظر می‌رسد
+             («رنگ عوض می‌شود»، فقط توی تیره چشمگیرتر). یک بک‌گراندِ توپرِ
+             مستقل از تم (همان پالتِ خودِ گو) پشتِ خودِ مش می‌گذاریم تا حتی
+             وقتی isolation شکست بخورد، چیزی که overlay واقعاً می‌بیند
+             همیشه همین رنگِ ثابت باشد، نه بک‌گراندِ در حالِ تغییرِ صفحه. */
+          background: var(--bg);
         }
 
         .siri-orb::before,
