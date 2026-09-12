@@ -3,18 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Award, Banknote, Building2, ChevronRight, Coins, Flame, Gauge, Hash,
-  Pencil, Percent, Plus, Scale, Search, Sigma, Snowflake, TrendingDown,
-  TrendingUp, Wallet, X, Zap,
+  Award, Building2, ChevronDown, ChevronRight, Flame, Gauge, Hash,
+  Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
+  TrendingUp, Wallet, Zap,
 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { computeTradeStats, statValue } from "@/lib/tradeAnalytics";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import {
-  ACCOUNT_TYPE_LABELS, CAL_SYSTEM_KEY, CalSystem, DEFAULT_VISIBLE_TRADE_STATS,
-  RESULT_LABELS, STATUS_LABELS, TRADE_STAT_LABELS, TRADE_STAT_ORDER, TRADE_STATS_VISIBILITY_KEY,
-  TradeAccount, TradeEntry, TradeEntryDetail, TradeStatKey, TradeStatus, TradeTag,
+  ACCOUNT_TYPE_LABELS, CAL_SYSTEM_KEY, CalSystem, currencySymbol,
+  DEFAULT_VISIBLE_TRADE_STATS, STATUS_LABELS, TRADE_STAT_LABELS, TRADE_STAT_ORDER,
+  TRADE_STATS_VISIBILITY_KEY, TradeAccount, TradeEntry, TradeEntryDetail,
+  TradeStatKey, TradeTag,
 } from "@/lib/tradeTypes";
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
@@ -42,11 +43,19 @@ const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
   expectancy: Sigma,
 };
 
-type StatusFilter = "ALL" | TradeStatus;
+// سه آماری که همیشه بالای باکس‌اند و توی لیست «بقیه‌ی آمارها» تکرار نمی‌شوند
+const HEADLINE_STATS: TradeStatKey[] = ["goalRing", "monthTotal", "winRate"];
 
-// صفحه‌ی یک حساب: مشخصات + آمار + لیست معاملات. طبق اصل «بدون شلوغی
-// غیرضروری»ی اسپک، این‌جا فقط همین سه بخش است و هر چیز عمیق‌تر (جزئیات
-// معامله، تصاویر، چک‌لیست) یک لایه پایین‌تر، در کشوی جزئیات، باز می‌شود.
+/**
+ * صفحه‌ی یک حساب («ژورنال‌نویسی»).
+ *
+ * چیدمان طبق شماتیکِ خواسته‌شده، از بالا به پایین:
+ *   ۱) تایتل صفحه، و زیرش نام حساب (ابتدای خط) هم‌ردیفِ بالانس اولیه (انتهای خط)
+ *   ۲) یک باکسِ واحدِ دوبخشی: بالا سه آمارِ سرخط (سود/زیان، دایره‌ی هدف،
+ *      نرخ برد) + کشویی نرمِ بقیه‌ی آمارها؛ پایینِ همان باکس، تقویمِ ماهانه
+ *   ۳) «تریدها» هم‌ردیفِ دکمه‌ی افزودن، و زیرش تریدهای همان روزِ انتخاب‌شده‌ی
+ *      تقویم — هرکدام با دکمه‌ی «جزئیات» که کارتِ کاملِ معامله را باز می‌کند.
+ */
 export function TradeAccountView({ accountId }: { accountId: string }) {
   const [account, setAccount] = useState<TradeAccount | null>(null);
   const [entries, setEntries] = useState<TradeEntry[]>([]);
@@ -56,9 +65,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [query, setQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   const [editingAccount, setEditingAccount] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -95,15 +103,13 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
   const stats = useMemo(() => computeTradeStats(entries, account || undefined), [entries, account]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toUpperCase();
-    return entries.filter((e) => {
-      if (statusFilter !== "ALL" && e.status !== statusFilter) return false;
-      if (q && !e.symbol.includes(q) && !(e.setup || "").toUpperCase().includes(q)) return false;
-      if (selectedDay && isoLocal(new Date(e.openedAt)) !== selectedDay) return false;
-      return true;
-    });
-  }, [entries, statusFilter, query, selectedDay]);
+  // روزِ نمایش‌داده‌شده: هرچه روی تقویم انتخاب شده، وگرنه امروز. لیستِ پایین
+  // همیشه «تریدهای همان روز» است، نه کلِ تاریخچه — طبق شماتیک.
+  const activeDay = selectedDay || isoLocal(new Date());
+  const dayEntries = useMemo(
+    () => entries.filter((e) => isoLocal(new Date(e.openedAt)) === activeDay),
+    [entries, activeDay]
+  );
 
   function editEntry(entry: TradeEntryDetail) {
     setEditingEntry(entry);
@@ -126,153 +132,194 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   if (!account) return null;
 
   const goal = stats.goalProgress;
+  const inProfit = stats.netPnl > 0;
+  const sym = currencySymbol(account.currency);
+  const restStats = TRADE_STAT_ORDER.filter((k) => !HEADLINE_STATS.includes(k) && visibleStats.includes(k));
 
   return (
     <div>
       <Link href="/trade/journal" className="trade-back-link"><ChevronRight size={15} /> حساب‌ها</Link>
 
-      <div className="trade-surface trade-account-header">
-        <span className="trade-account-stripe" style={{ background: account.color }} />
-        <div className="trade-account-header-main">
-          <div className="trade-account-title-row">
-            <h1 style={{ margin: 0 }}>{account.name}</h1>
-            <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
-            {account.archived && <span className="trade-account-archived-badge">آرشیو</span>}
-          </div>
-          <div className="trade-account-meta">
-            {account.broker && <span><Building2 size={12} /> {account.broker}</span>}
-            <span className="mono"><Coins size={12} /> {account.currency}</span>
-            {account.leverage ? <span className="mono"><Zap size={12} /> 1:{faNum(account.leverage)}</span> : null}
-            <span><Banknote size={12} /> بالانس اولیه: <b className="mono">{faNum(account.initialBalance.toFixed(2))}</b></span>
-          </div>
-        </div>
-        <div className="trade-account-header-actions">
-          <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label="ویرایش حساب"><Pencil size={16} /></button>
-          <button type="button" className="trade-primary-btn" onClick={() => { setEditingEntry(null); setFormOpen(true); }}>
-            <Plus size={15} /> افزودن معامله
+      <h1 className="trade-journal-title">ژورنال‌نویسی</h1>
+
+      {/* نام حساب ابتدای خط، بالانس اولیه انتهای همان خط */}
+      <div className="trade-journal-idrow">
+        <div className="trade-journal-idrow-name">
+          <span className="trade-journal-acc-dot" style={{ background: account.color }} />
+          <b>{account.name}</b>
+          <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
+          {account.archived && <span className="trade-account-archived-badge">آرشیو</span>}
+          <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label="ویرایش حساب">
+            <Pencil size={14} />
           </button>
+        </div>
+        <div className="trade-journal-idrow-balance">
+          <span>بالانس اولیه</span>
+          <b className="mono">{faNum(account.initialBalance.toFixed(2))} {sym}</b>
         </div>
       </div>
 
-      {actionError && <div className="trade-form-error">{actionError}</div>}
-
-      {visibleStats.includes("goalRing") && goal !== null && (
-        <div className="trade-goal-ring-row">
-          <div className="trade-goal-ring-wrap">
-            <svg viewBox="0 0 72 72" className="trade-goal-ring">
-              <circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" strokeWidth="6" />
-              <circle
-                cx="36" cy="36" r="30" fill="none" strokeWidth="6" strokeLinecap="round"
-                stroke={stats.netPnl >= 0 ? "var(--accent)" : "#E05252"}
-                strokeDasharray={2 * Math.PI * 30}
-                strokeDashoffset={2 * Math.PI * 30 * (1 - goal)}
-                transform="rotate(-90 36 36)"
-                className="trade-goal-ring-fill"
-              />
-            </svg>
-            <span className="trade-goal-ring-pct mono">{faNum(Math.round(goal * 100))}٪</span>
-          </div>
-          <div className="trade-goal-ring-text">
-            <div className="trade-stat-label">هدف سود</div>
-            <div className="trade-stat-value" style={{ color: stats.netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
-              {faNum(stats.netPnl.toFixed(2))}
-              <span className="calorie-meal-of"> / {faNum((stats.goalTarget || 0).toFixed(2))}</span>
-            </div>
-          </div>
+      {(account.broker || account.leverage) && (
+        <div className="trade-journal-submeta">
+          {account.broker && <span><Building2 size={12} /> {account.broker}</span>}
+          {account.leverage ? <span className="mono"><Zap size={12} /> 1:{faNum(account.leverage)}</span> : null}
         </div>
       )}
 
-      <div className="trade-stats-grid">
-        {TRADE_STAT_ORDER.filter((k) => k !== "goalRing" && visibleStats.includes(k)).map((k) => {
-          const v = statValue(k, stats);
-          if (!v) return null;
-          const Icon = TRADE_STAT_ICONS[k];
-          return (
-            <div key={k} className="trade-stat-tile">
-              <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
-              <div
-                className="trade-stat-value mono"
-                style={v.positive === undefined ? undefined : { color: v.positive ? "var(--accent)" : "#E05252" }}
-              >
-                {faNum(v.value)}
+      {actionError && <div className="trade-form-error">{actionError}</div>}
+
+      {/* ── باکسِ واحدِ دوبخشی: آمار (بالا) + تقویم (پایین) ────────────── */}
+      <div className="trade-surface trade-journal-box">
+        <div className="trade-journal-stats-part">
+          <div className="trade-headline-stats">
+            <HeadlineStat
+              label="نرخ برد"
+              value={stats.winRate === null ? "—" : `${faNum(stats.winRate)}٪`}
+              tone={stats.winRate === null ? undefined : stats.winRate >= 50 ? "up" : "down"}
+              icon={<Percent size={13} />}
+            />
+
+            {/* دایره‌ی هدفِ سود: توی ضرر خالی می‌ماند (صفر)، توی سود پر می‌شود */}
+            <div className="trade-headline-goal">
+              <div className="trade-goal-ring-wrap">
+                <svg viewBox="0 0 72 72" className="trade-goal-ring">
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" strokeWidth="6" />
+                  <circle
+                    cx="36" cy="36" r="30" fill="none" strokeWidth="6" strokeLinecap="round"
+                    stroke="var(--accent)"
+                    strokeDasharray={2 * Math.PI * 30}
+                    strokeDashoffset={2 * Math.PI * 30 * (1 - (inProfit ? (goal ?? 0) : 0))}
+                    transform="rotate(-90 36 36)"
+                    className="trade-goal-ring-fill"
+                  />
+                </svg>
+                <span className="trade-goal-ring-pct mono">
+                  {faNum(Math.round((inProfit ? (goal ?? 0) : 0) * 100))}٪
+                </span>
+              </div>
+              <div className="trade-stat-label">هدف سود</div>
+              <div className="trade-headline-goal-target mono">
+                {faNum((stats.goalTarget || 0).toFixed(0))} {sym}
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      <TradeCalendarPanel
-        entries={entries}
-        calSystem={calSystem}
-        selectedDay={selectedDay}
-        onSelectDay={(iso) => setSelectedDay((prev) => (prev === iso ? null : iso))}
-      />
-
-      <div className="trade-list-head">
-        <div className="domain-sub" style={{ margin: 0 }}>معاملات ({faNum(filtered.length)})</div>
-        <div className="trade-list-filters">
-          {selectedDay && (
-            <button type="button" className="trade-day-filter-chip" onClick={() => setSelectedDay(null)}>
-              {formatTradeDateTime(new Date(`${selectedDay}T00:00:00`).toISOString(), calSystem, false)}
-              <X size={12} />
-            </button>
-          )}
-          <div className="trade-search">
-            <Search size={14} />
-            <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="نماد یا ستاپ" />
+            <HeadlineStat
+              label="سود / ضرر"
+              value={`${faNum(stats.netPnl.toFixed(2))} ${sym}`}
+              tone={stats.netPnl >= 0 ? "up" : "down"}
+              icon={stats.netPnl >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+            />
           </div>
-          <select className="wsearch-newform-name trade-glass-field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
-            <option value="ALL">همه</option>
-            <option value="CLOSED">بسته</option>
-            <option value="OPEN">باز</option>
-            <option value="CANCELED">لغو شده</option>
-          </select>
+
+          {!!restStats.length && (
+            <>
+              {/* دکمه زیرِ باکسِ وسط: بقیه‌ی آمارها را باز/بسته می‌کند */}
+              <button
+                type="button"
+                className={`trade-stats-toggle${statsOpen ? " open" : ""}`}
+                onClick={() => setStatsOpen((v) => !v)}
+                aria-expanded={statsOpen}
+              >
+                <span>{statsOpen ? "بستن آمارها" : "بقیه‌ی آمارها"}</span>
+                <ChevronDown size={16} />
+              </button>
+
+              {/* انیمیشنِ نرمِ باز شدن با grid-template-rows: 0fr → 1fr — برخلاف
+                  max-height ثابت، به ارتفاعِ واقعیِ محتوا گره خورده، پس نه
+                  می‌پرد نه وسطِ راه قطع می‌شود. */}
+              <div className={`trade-stats-collapse${statsOpen ? " open" : ""}`}>
+                <div className="trade-stats-collapse-inner">
+                  <div className="trade-stats-grid">
+                    {restStats.map((k) => {
+                      const v = statValue(k, stats);
+                      if (!v) return null;
+                      const Icon = TRADE_STAT_ICONS[k];
+                      return (
+                        <div key={k} className="trade-stat-tile">
+                          <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
+                          <div
+                            className="trade-stat-value mono"
+                            style={v.positive === undefined ? undefined : { color: v.positive ? "var(--accent)" : "#E05252" }}
+                          >
+                            {faNum(v.value)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
+
+        <TradeCalendarPanel
+          embedded
+          entries={entries}
+          calSystem={calSystem}
+          selectedDay={selectedDay}
+          onSelectDay={(iso) => setSelectedDay((prev) => (prev === iso ? null : iso))}
+        />
       </div>
 
-      {!filtered.length && <div className="item-line empty">معامله‌ای برای نمایش نیست</div>}
+      {/* ── تریدهای روزِ انتخاب‌شده ───────────────────────────────────── */}
+      <div className="trade-list-head">
+        <div className="trade-section-title">
+          تریدها
+          <span className="trade-day-label">
+            {formatTradeDateTime(new Date(`${activeDay}T00:00:00`).toISOString(), calSystem, false)}
+          </span>
+        </div>
+        <button type="button" className="trade-primary-btn" onClick={() => { setEditingEntry(null); setFormOpen(true); }}>
+          <Plus size={15} /> افزودن
+        </button>
+      </div>
 
-      <div className="trade-list">
-        {filtered.map((e) => (
-          <button key={e.id} type="button" className="trade-row" onClick={() => setDetailId(e.id)}>
-            <span className={`trade-row-dir ${e.direction === "BUY" ? "buy" : "sell"}`}>
-              {e.direction === "BUY" ? "خرید" : "فروش"}
-            </span>
+      <div className="trade-surface trade-day-box">
+        {!dayEntries.length && <div className="item-line empty">برای این روز معامله‌ای ثبت نشده</div>}
 
-            <span className="trade-row-main">
-              <span className="trade-row-symbol mono">{e.symbol}</span>
-              <span className="trade-row-sub">
-                {formatTradeDateTime(e.openedAt, calSystem)}
-                {e.timeframe ? ` · ${e.timeframe}` : ""}
-                {e.setup ? ` · ${e.setup}` : ""}
+        {dayEntries.map((e) => (
+          <div key={e.id} className="trade-day-row">
+            <div className="trade-day-row-head">
+              <span className={`trade-row-dir ${e.direction === "BUY" ? "buy" : "sell"}`}>
+                {e.direction === "BUY" ? "خرید" : "فروش"}
               </span>
-              {(e.checklistTotal !== null || !!e.tags.length) && (
-                <span className="trade-row-badges">
-                  {e.checklistTotal !== null && (
-                    <span className={`trade-row-badge${(e.checklistDone ?? 0) < (e.checklistTotal ?? 0) ? " warn" : ""}`}>
-                      {e.checklistName}: {faNum(e.checklistDone ?? 0)}/{faNum(e.checklistTotal ?? 0)}
-                    </span>
-                  )}
-                  {e.tags.map((t) => (
-                    <span key={t.id} className="trade-row-badge" style={{ borderColor: t.color, color: t.color }}>{t.name}</span>
-                  ))}
-                </span>
-              )}
-            </span>
-
-            <span className="trade-row-numbers">
+              <span className="trade-row-symbol mono">{e.symbol}</span>
               {e.status === "CLOSED" ? (
-                <b className="mono" style={{ color: e.pnl > 0 ? "var(--accent)" : e.pnl < 0 ? "#E05252" : "var(--muted)" }}>
-                  {faNum(e.pnl.toFixed(2))}
+                <b className="mono trade-day-row-pnl" style={{ color: e.pnl > 0 ? "var(--accent)" : e.pnl < 0 ? "#E05252" : "var(--muted)" }}>
+                  {faNum(e.pnl.toFixed(2))} {sym}
                 </b>
               ) : (
-                <b className="trade-row-status">{STATUS_LABELS[e.status]}</b>
+                <b className="trade-row-status trade-day-row-pnl">{STATUS_LABELS[e.status]}</b>
               )}
-              <span className="trade-row-r mono">
-                {e.rMultiple !== null ? `${e.rMultiple > 0 ? "+" : ""}${faNum(e.rMultiple)}R` : `${faNum(e.volume)} ${e.volumeUnit === "LOT" ? "لات" : "$"}`}
-              </span>
-            </span>
-          </button>
+            </div>
+
+            <div className="trade-day-row-facts">
+              <span>ورود <b className="mono">{formatTradeDateTime(e.openedAt, calSystem).split(" ").slice(-1)[0]}</b></span>
+              {e.closedAt && <span>خروج <b className="mono">{formatTradeDateTime(e.closedAt, calSystem).split(" ").slice(-1)[0]}</b></span>}
+              <span>حجم <b className="mono">{faNum(e.volume)} {e.volumeUnit === "LOT" ? "لات" : "$"}</b></span>
+              {e.rMultiple !== null && <span>R <b className="mono">{e.rMultiple > 0 ? "+" : ""}{faNum(e.rMultiple)}</b></span>}
+              {e.timeframe && <span>تایم‌فریم <b>{e.timeframe}</b></span>}
+              {e.setup && <span>ستاپ <b>{e.setup}</b></span>}
+            </div>
+
+            {(e.checklistTotal !== null || !!e.tags.length) && (
+              <div className="trade-row-badges">
+                {e.checklistTotal !== null && (
+                  <span className={`trade-row-badge${(e.checklistDone ?? 0) < (e.checklistTotal ?? 0) ? " warn" : ""}`}>
+                    {e.checklistName}: {faNum(e.checklistDone ?? 0)}/{faNum(e.checklistTotal ?? 0)}
+                  </span>
+                )}
+                {e.tags.map((t) => (
+                  <span key={t.id} className="trade-row-badge" style={{ borderColor: t.color, color: t.color }}>{t.name}</span>
+                ))}
+              </div>
+            )}
+
+            <button type="button" className="trade-detail-btn" onClick={() => setDetailId(e.id)}>
+              جزئیات
+            </button>
+          </div>
         ))}
       </div>
 
@@ -318,6 +365,27 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           onDelete={() => deleteEntry(detailId)}
         />
       )}
+    </div>
+  );
+}
+
+function HeadlineStat({
+  label, value, tone, icon,
+}: {
+  label: string;
+  value: string;
+  tone?: "up" | "down";
+  icon: JSX.Element;
+}) {
+  return (
+    <div className="trade-headline-stat">
+      <div className="trade-stat-label">{icon} {label}</div>
+      <div
+        className="trade-headline-value mono"
+        style={tone ? { color: tone === "up" ? "var(--accent)" : "#E05252" } : undefined}
+      >
+        {value}
+      </div>
     </div>
   );
 }

@@ -24,11 +24,14 @@ export function TradeCalendarPanel({
   calSystem,
   selectedDay,
   onSelectDay,
+  embedded = false,
 }: {
   entries: TradeEntry[];
   calSystem: CalSystem;
   selectedDay: string | null;
   onSelectDay: (iso: string) => void;
+  /** داخلِ باکسِ ژورنال رندر می‌شود، پس نه سطحِ خودش را می‌گیرد نه حاشیه‌ی بالا */
+  embedded?: boolean;
 }) {
   const jalali = calSystem === "jalali";
   const [year, setYear] = useState(jalali ? jNow[0] : now.getFullYear());
@@ -72,7 +75,7 @@ export function TradeCalendarPanel({
   }
 
   return (
-    <div className="trade-surface trade-calendar-box">
+    <div className={embedded ? "trade-calendar-box embedded" : "trade-surface trade-calendar-box"}>
       <div className="trade-calendar-head">
         <div className="trade-section-title"><PiggyBank size={15} /> تقویم سود/زیان</div>
         {!!monthNet && (

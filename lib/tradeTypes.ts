@@ -104,6 +104,31 @@ export const TAG_COLORS = [
   "#A855F7", "#F5B841", "#22C55E", "#EF4444", "#3E7BFA",
 ];
 
+// ── ارزِ حساب ─────────────────────────────────────────────────────────────
+// قبلا یک input آزاد بود و کاربر باید خودش «USD» تایپ می‌کرد؛ حالا انتخابی‌ست
+// تا بالانس اولیه بتواند دلار/یورو/تومان (یا هر کدام از این‌ها) باشد. کد ارز
+// همان چیزی‌ست که در دیتابیس ذخیره می‌شود، `CURRENCY_SYMBOLS` فقط برای نمایش.
+export const ACCOUNT_CURRENCIES = ["USD", "EUR", "IRT", "IRR", "AED", "TRY", "GBP", "USDT"] as const;
+
+export const CURRENCY_LABELS: Record<string, string> = {
+  USD: "دلار آمریکا",
+  EUR: "یورو",
+  IRT: "تومان",
+  IRR: "ریال",
+  AED: "درهم امارات",
+  TRY: "لیر ترکیه",
+  GBP: "پوند انگلیس",
+  USDT: "تتر",
+};
+
+export const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$", EUR: "€", IRT: "تومان", IRR: "ریال", AED: "د.إ", TRY: "₺", GBP: "£", USDT: "₮",
+};
+
+export function currencySymbol(code: string): string {
+  return CURRENCY_SYMBOLS[code] || code;
+}
+
 // ── سقف‌ها ────────────────────────────────────────────────────────────────
 export const MAX_ACCOUNTS = 10;
 export const MAX_TAGS = 40;
