@@ -233,7 +233,8 @@ export default function SecurityPage() {
         ) : sessions.length === 0 ? (
           <div className="item-line empty">نشست فعالی پیدا نشد.</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <>
+          <div className="acc-scroll-box">
             {sessions.map((s) => (
               <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
@@ -253,12 +254,13 @@ export default function SecurityPage() {
                 )}
               </div>
             ))}
-            {otherSessionCount > 0 && (
-              <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ alignSelf: "flex-start" }}>
-                {sessionBusy === "others" ? "در حال انجام…" : `خروج از همه‌ی دستگاه‌های دیگر (${otherSessionCount})`}
-              </button>
-            )}
           </div>
+          {otherSessionCount > 0 && (
+            <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ marginTop: 14 }}>
+              {sessionBusy === "others" ? "در حال انجام…" : `خروج از همه‌ی دستگاه‌های دیگر (${otherSessionCount})`}
+            </button>
+          )}
+          </>
         )}
         {sessionError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{sessionError}</div>}
       </AccountBlock>
@@ -269,7 +271,7 @@ export default function SecurityPage() {
         ) : events.length === 0 ? (
           <div className="item-line empty">هنوز ورودی ثبت نشده.</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="acc-scroll-box">
             {events.map((ev) => (
               <div key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <span style={{ fontSize: 12, color: "var(--text)" }}>{PROVIDER_FA[ev.provider] || ev.provider} · {guessDevice(ev.userAgent)}</span>

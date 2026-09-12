@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Camera, Trash2, Mail, Phone, Cake, AtSign, User as UserIcon, ImagePlus,
-  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown,
+  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2,
 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
@@ -321,20 +321,25 @@ export default function AccountProfilePage() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBanner(f); e.target.value = ""; }}
           />
 
-          <div className="profile-hero-avatar-wrap">
+          {/* طبقِ درخواستِ صریح دکمه‌ی جدا ندارد — خودِ عکس کلیک‌پذیر است.
+              آیکونِ دوربین فقط یک نشانه‌ی بصری است (pointer-events ندارد). */}
+          <button
+            type="button" className="profile-hero-avatar-wrap" onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarSaving} aria-label="تغییر عکس پروفایل"
+          >
             {avatarUrl ? (
               <img src={avatarUrl} alt="عکس پروفایل" className="profile-hero-avatar-img" />
             ) : (
               <AgentAvatar seed={fullName || username || data.email || "؟"} size={88} className="profile-hero-avatar-img" />
             )}
-            <button type="button" className="account-avatar-edit-btn" onClick={() => avatarInputRef.current?.click()} aria-label="تغییر عکس پروفایل" disabled={avatarSaving}>
-              <Camera size={13} />
-            </button>
-            <input
-              ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }}
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = ""; }}
-            />
-          </div>
+            <span className="profile-hero-avatar-hint" aria-hidden="true">
+              {avatarSaving ? <Loader2 size={15} className="trade-spin" /> : <Camera size={15} />}
+            </span>
+          </button>
+          <input
+            ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = ""; }}
+          />
         </div>
 
         <div className="profile-hero-meta">
@@ -352,6 +357,8 @@ export default function AccountProfilePage() {
 
       {/* ── پروفایل عمومی ── */}
       <AccountBlock title="پروفایل عمومی" icon={<IdCard size={15} />} index={0}>
+        {/* طبقِ درخواستِ صریح: فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه
+            هرکدام یک خطِ کامل می‌گیرند. */}
         <div className="auth-field-grid">
           <AuthField id="pf-name" label="نام" icon={<UserIcon size={16} />}>
             <input id="pf-name" type="text" className="wsearch-newform-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -359,7 +366,9 @@ export default function AccountProfilePage() {
           <AuthField id="pf-lastname" label="نام خانوادگی" icon={<UserIcon size={16} />}>
             <input id="pf-lastname" type="text" className="wsearch-newform-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </AuthField>
+        </div>
 
+        <div className="acc-field-stack">
           {/* شماره همراه عمدا فقط‌خواندنی است: تغییرش یعنی تغییر شناسه‌ی ورود
               و باید با تأیید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
           <AuthField id="pf-phone" label="شماره همراه" icon={<Phone size={16} />}>

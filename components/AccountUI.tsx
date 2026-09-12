@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { AccountBackButton } from "./AccountBackButton";
 
 /**
@@ -107,8 +108,10 @@ export function AccountSaveBar({
     <div className="acc-savebar">
       {error && <div className="field-error-msg" style={{ display: "block" }}>{error}</div>}
       {saved && <div className="account-save-toast">ذخیره شد.</div>}
+      {/* طبقِ درخواستِ صریح: دکمه سمتِ چپ (پایانِ ردیف) و موقعِ ذخیره یک
+          دایره‌ی لودینگ نشان می‌دهد، نه فقط متن. */}
       <button type="button" className="account-outline-btn" onClick={onSave} disabled={saving || disabled}>
-        {saving ? "در حال ذخیره…" : label}
+        {saving ? (<><Loader2 size={14} className="trade-spin" /> در حال ذخیره…</>) : label}
       </button>
     </div>
   );

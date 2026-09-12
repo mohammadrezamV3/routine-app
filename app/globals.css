@@ -1417,7 +1417,9 @@
     background:var(--surface-1); margin-bottom:18px;
   }
   .profile-banner{
-    position:relative; aspect-ratio:3.2 / 1; max-width:100%; max-height:220px;
+    /* width صریح لازم است: با width:auto، مرورگر عرض را از aspect-ratio و
+       max-height حساب می‌کند و بنر روی دسکتاپ باریک‌تر از کارت می‌شد. */
+    position:relative; width:100%; aspect-ratio:3.2 / 1; max-height:220px;
     /* بدونِ عکس، یه گرادیانِ ملایم از رنگِ اکسنتِ خودِ تم — نه یه رنگِ ثابت */
     background:linear-gradient(120deg, var(--accent-dim), var(--surface-2));
   }
@@ -1434,9 +1436,23 @@
     backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   }
   .profile-banner-btn:disabled{ opacity:.6; cursor:default; }
+  /* خودِ آواتار دکمه‌ی آپلود است (دکمه‌ی دوربینِ جدا حذف شد). چون این یک
+     <button> واقعی‌ست، ریستِ سراسریِ button{} باید صریح خاموش شود وگرنه
+     یک سطحِ شیشه‌ای و سایه‌ی inset می‌گیرد. */
   .profile-hero-avatar-wrap{
     position:absolute; bottom:-30px; inset-inline-start:20px; width:88px; height:88px;
+    padding:0; border:none; background:none; box-shadow:none; cursor:pointer;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
   }
+  body[data-theme="light"] .profile-hero-avatar-wrap,
+  body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
+  .profile-hero-avatar-hint{
+    position:absolute; inset:0; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    color:#fff; background:rgba(0,0,0,.45); opacity:0; transition:opacity .18s ease; pointer-events:none;
+  }
+  .profile-hero-avatar-wrap:hover .profile-hero-avatar-hint,
+  .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint,
+  .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
   .profile-hero-avatar-img{
     width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;
     border:3px solid var(--bg); background:var(--surface-2);
@@ -1491,7 +1507,49 @@
     .acc-block-body .auth-field-grid{ grid-template-columns:1fr; }
   }
 
-  .acc-savebar{ display:flex; flex-direction:column; gap:10px; align-items:flex-start; margin-top:18px; }
+  /* دکمه‌ی ذخیره سمتِ چپ (پایانِ ردیف در RTL) */
+  /* «دستگاه‌های فعال»: یک حساب می‌تواند ده‌ها نشست داشته باشد و لیستِ باز
+     کلِ صفحه را می‌بلعید — حالا داخلِ یک باکسِ اسکرول‌شونده‌ی بلندیِ ثابت. */
+  .acc-scroll-box{
+    max-height:300px; overflow-y:auto; overscroll-behavior:contain;
+    display:flex; flex-direction:column; gap:12px; padding-inline-end:4px;
+  }
+
+  .acc-savebar{ display:flex; flex-direction:column; gap:10px; align-items:flex-end; margin-top:18px; }
+  .acc-savebar .account-outline-btn{ display:inline-flex; align-items:center; gap:7px; }
+
+  /* فیلدهای تک‌خطی (هرکدام یک ردیف کامل) */
+  .acc-field-stack{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+
+  /* ── شکلِ فیلدها در پنل کاربری ─────────────────────────────────────
+     طبقِ درخواستِ صریح: گردتر، و بک‌گراندشان مثل بقیه‌ی فیلدهای اپ
+     (سطحِ شیشه‌ایِ نیمه‌شفاف) نه آن مشکیِ تختِ پیش‌فرض. همان ترکیبی که
+     فرم‌های بدنسازی/افزودن برنامه استفاده می‌کنند، این‌جا هم تکرار می‌شود
+     تا پنل با بقیه‌ی اپ یکی به‌نظر برسد. */
+  .account-shell .wsearch-newform-name,
+  .account-shell .jdate-btn{
+    border-radius:14px; padding-inline-start:14px; padding-inline-end:14px;
+    backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .account-shell .wsearch-newform-name,
+  body:not([data-theme="light"]) .account-shell .jdate-btn{
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  }
+  body[data-theme="light"] .account-shell .wsearch-newform-name,
+  body[data-theme="light"] .account-shell .jdate-btn{
+    background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08);
+  }
+  .account-shell .wsearch-newform-name:focus,
+  .account-shell .jdate-btn:focus{ border-color:var(--accent); }
+  /* فیلدهای قفل (شماره/ایمیل/یوزرنیم) نباید مثل فیلدِ خاموش کم‌رنگ بشن */
+  .account-shell .wsearch-newform-name:disabled{ opacity:1; color:var(--text); cursor:default; }
+  /* پدینگ‌های آیکون/دکمه باید روی همین رادیوسِ جدید هم درست بمانند */
+  .account-shell .field-error-wrap.has-icon input,
+  .account-shell .field-error-wrap.has-icon .jdate-btn,
+  .account-shell .field-error-wrap.has-icon .acc-select{ padding-inline-start:38px; }
+  .account-shell .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:14px; padding-inline-end:38px; }
+  .account-shell .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:58px; padding-inline-end:38px; }
+  .account-shell .field-icon{ inset-inline-start:14px; }
 
   /* دکمه‌ی کوچکِ «تغییر» داخلِ خودِ فیلد (ایمیل/یوزرنیم) — همان جایگاهی
      که دکمه‌ی نمایشِ رمز در فرم‌های auth دارد. بک‌گراند صراحتاً خاموش است
@@ -1629,44 +1687,12 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
-  .account-mobile-menu{ display:none; }
-
   @media (max-width:700px){
     .account-body{ flex-direction:column; }
+    /* روی موبایل سایدبار جا نمی‌شود و طبقِ درخواستِ صریح، نوارِ منوی زیرِ
+       هدر هم حذف شد — ناوبری از صفحه‌ی اولِ پنل و دکمه‌ی «بازگشت» انجام
+       می‌شود. */
     .account-sidebar{ display:none; }
-
-    /* دکمه‌ی همبرگری محلی پنل کاربری — با زدنش لیست تایتل‌ها (همون‌هایی که
-       دسکتاپ توی سایدبار می‌بینه) به‌صورت آکاردئون زیرش باز می‌شه، به‌جای اینکه
-       همیشه یه نوار افقی اسکرول‌شونده جا بگیره.
-       باگِ واقعیِ «بخش‌ها از بالای صفحه‌ی اول (index) پاک نمی‌شه»: این قانون
-       display:block رو بدونِ قید می‌ذاشت، درحالی‌که component خودش با پراپِ
-       HTMLِ hidden={isIndex} می‌خواست این نوار رو توی همون صفحه مخفی کنه —
-       چون specificityِ این کلاس با selectorِ اتریبیوتِ [hidden] برابره،
-       استایلِ نویسنده (این قانون) روی رفتارِ پیش‌فرضِ مرورگر برای hidden برنده
-       می‌شد و نوار هم‌زمان با فهرستِ خودِ صفحه‌ی index دوبار نشون داده می‌شد. */
-    .account-mobile-menu{ display:block; margin-bottom:16px; }
-    .account-mobile-menu[hidden]{ display:none; }
-    .account-mobile-menu-btn{
-      display:flex; align-items:center; gap:9px; width:100%; padding:11px 14px;
-      border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.03);
-      color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
-      font-family:var(--font-vazir), sans-serif;
-    }
-    body[data-theme="light"] .account-mobile-menu-btn{ background:rgba(255,255,255,.4); }
-    .account-mobile-menu-btn-icon{ display:flex; color:var(--accent); flex-shrink:0; }
-    .account-mobile-menu-btn-label{ flex:1; text-align:start; }
-    .account-mobile-menu-btn-chevron{ color:var(--muted2); transition:transform .2s ease; flex-shrink:0; }
-    .account-mobile-menu-btn-chevron.open{ transform:rotate(180deg); }
-
-    .account-mobile-menu-panel{ overflow:hidden; }
-    .account-mobile-menu-panel-inner{ display:flex; flex-direction:column; gap:2px; padding-top:8px; }
-    .account-mobile-menu-item{
-      display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
-      color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
-      background:none; border:none; text-align:start; width:100%; cursor:pointer;
-    }
-    .account-mobile-menu-item.active{ color:var(--accent); background:var(--accent-dim); }
-    .account-mobile-menu-item-danger{ color:#E05252; }
 
     /* طبقِ درخواستِ صریح: توی موبایل کارتِ فهرستِ زبانه‌های صفحه‌ی اول
        (نه هدر بالای صفحه، فقط همین) باید از چپ تا راستِ واقعیِ صفحه کشیده
