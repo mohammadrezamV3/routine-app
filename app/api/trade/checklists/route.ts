@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
-import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
+import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
 
 // چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
 // نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
@@ -113,6 +113,9 @@ export async function POST(req: NextRequest) {
   }
 
   if (!name) return NextResponse.json({ error: "نام چک‌لیست الزامی است" }, { status: 400 });
+  if (items.length < MIN_CHECKLIST_ITEMS) {
+    return NextResponse.json({ error: `چک‌لیست باید حداقل ${MIN_CHECKLIST_ITEMS} مورد داشته باشد` }, { status: 400 });
+  }
 
   const checklist = await prisma.tradeChecklist.create({
     data: {
@@ -152,6 +155,9 @@ export async function PATCH(req: NextRequest) {
 
   const hasItems = Array.isArray(body.items);
   const items = hasItems ? parseItems(body.items) : [];
+  if (hasItems && items.length < MIN_CHECKLIST_ITEMS) {
+    return NextResponse.json({ error: `چک‌لیست باید حداقل ${MIN_CHECKLIST_ITEMS} مورد داشته باشد` }, { status: 400 });
+  }
 
   const checklist = await prisma.$transaction(async (tx) => {
     if (hasItems) {

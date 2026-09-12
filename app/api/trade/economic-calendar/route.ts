@@ -22,8 +22,22 @@ export async function GET(req: NextRequest) {
   const range = parseDateRange(params.get("from"), params.get("to"), MAX_RANGE_DAYS);
   if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
 
+  // parseDateRange مرزها رو رویِ نیمه‌شبِ UTC می‌سازه (قرارداد مشترکِ عمومیِ
+  // parseIsoDate، مناسبِ ستون‌های @db.Date)، ولی «روز»ی که کاربر با انتخابِ
+  // تاریخ توی این تقویم می‌خواد، روزِ محلیِ خودشه، نه UTC. ایران +۳:۳۰ست؛
+  // بدونِ این جابه‌جایی، رویدادهایِ ۰۰:۰۰-۰۳:۳۰ بامدادِ محلی به روزِ قبل
+  // می‌چسبیدن و رویدادهایِ اواخرِ شب به روزِ بعد — نتیجه‌ش «این روز داده‌ای
+  // نداره»یِ گزارش‌شده بود، درحالی‌که داده واقعاً وجود داشت، فقط روزِ
+  // مجاورش خونده می‌شد. کلاینت افستِ واقعیِ تایم‌زونِ مرورگر رو می‌فرسته
+  // (دقیقه، شرق UTC مثبت) تا هم برایِ ایران هم بازارِ بین‌المللی درست باشه.
+  const tzOffsetMin = Number(params.get("tz"));
+  const tzShiftMs = Number.isFinite(tzOffsetMin) ? tzOffsetMin * 60_000 : 0;
+
   const where: Prisma.EconomicEventWhereInput = {
-    occursAt: { gte: range.from, lte: new Date(range.to.getTime() + 86_400_000 - 1) },
+    occursAt: {
+      gte: new Date(range.from.getTime() - tzShiftMs),
+      lte: new Date(range.to.getTime() + 86_400_000 - 1 - tzShiftMs),
+    },
   };
 
   const q = clampQuery(params.get("q"), 120);

@@ -155,13 +155,13 @@ export default function LoginPage() {
           <AuthTabs active="login" />
           <form onSubmit={submitOtp} className="auth-box">
             <AuthBackButton />
-            <AuthBrandMark subtitle="ورود دومرحله‌ای" />
+            <AuthBrandMark subtitle={"ورود دومرحله‌ای"} />
 
             <div className="section-note" style={{ marginBottom: 12 }}>
-              یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…{toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.
+              {`یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`}
             </div>
 
-            <AuthField id="otp" label="کد پیامک‌شده" icon={<ShieldCheck size={15} />}>
+            <AuthField id="otp" label={"کد پیامک‌شده"} icon={<ShieldCheck size={15} />}>
               <input
                 id="otp"
                 type="text"
@@ -186,7 +186,7 @@ export default function LoginPage() {
               style={{ marginTop: 12, background: "none", display: "block", width: "100%" }}
               onClick={() => { setTwoFactor(null); setError(null); }}
             >
-              بازگشت
+              {"بازگشت"}
             </button>
           </form>
         </div>
@@ -201,9 +201,9 @@ export default function LoginPage() {
 
         <form ref={formRef} onSubmit={submitPassword} className="auth-box">
           <AuthBackButton />
-          <AuthBrandMark subtitle="ورود به پنل کاربری" />
+          <AuthBrandMark subtitle={"ورود به پنل کاربری"} />
 
-          <AuthField id="identifier" label="یوزرنیم یا شماره همراه" error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
+          <AuthField id="identifier" label={"یوزرنیم یا شماره همراه"} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
             <input
               id="identifier"
               type="text"
@@ -216,7 +216,7 @@ export default function LoginPage() {
 
           <div style={{ marginTop: 14 }}>
             <AuthField
-              id="password" label="رمز عبور" error={fieldErrors.password} ref={passwordRef}
+              id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
               icon={<Lock size={15} />}
               endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
             >
@@ -224,7 +224,7 @@ export default function LoginPage() {
                 id="password"
                 type={passwordVisible ? "text" : "password"}
                 className="wsearch-newform-name"
-                placeholder="رمز عبورت رو وارد کن"
+                placeholder={"رمز عبورت رو وارد کن"}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
               />
@@ -239,9 +239,9 @@ export default function LoginPage() {
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
               />
-              منو به‌یاد داشته باش
+              {"منو به‌یاد داشته باش"}
             </label>
-            <Link href="/auth/forgot-password" className="auth-forgot-link">فراموشی رمز عبور؟</Link>
+            <Link href="/auth/forgot-password" className="auth-forgot-link">{"فراموشی رمز عبور؟"}</Link>
           </div>
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}

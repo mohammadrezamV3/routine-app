@@ -1,52 +1,26 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
+
 /**
- * دکمه‌ی نمایش/مخفی‌کردن رمز — چشمی که واقعاً باز و بسته می‌شود.
+ * دکمه‌ی نمایش/مخفی‌کردن رمز.
  *
- * سه چیزی که قبلاً غلط بود:
- *
- *   ۱. **پرشِ صفحه.** قبلاً دو آیکونِ جدا (`Eye` و `EyeOff`) با
- *      `AnimatePresence` جابه‌جا می‌شدند؛ یعنی در لحظه‌ی تعویض، عنصر از
- *      DOM درمی‌آمد و دوباره مونت می‌شد و چیدمان تکان می‌خورد. حالا یک SVGِ
- *      ثابت است و فقط `d`ِ مسیرها با CSS transition عوض می‌شود — هیچ
- *      مونت/آنمونتی در کار نیست، پس هیچ‌چیز جابه‌جا نمی‌شود.
- *
- *   ۲. **خط روی چشم.** حالتِ «مخفی» با خطِ اریب روی چشم نشان داده می‌شد.
- *      حالا خودِ پلک بسته می‌شود: کمانِ بالا پایین می‌آید، مردمک محو
- *      می‌شود، و پنج مژه‌ی کوتاه زیرِ پلک درمی‌آید.
- *
- *   ۳. **اندازه و بک‌گراند.** بزرگ‌تر شد و هیچ بک‌گراندی ندارد
- *      (ریستِ سراسریِ `button{}` صراحتاً خنثی شده).
+ * قبلا یک SVGِ دست‌ساز بود که پلک واقعی باز/بسته می‌شد (مسیرها با
+ * transition:d انیمیت می‌شدن، مردمک/مژه‌ها فید می‌شدن) — طبقِ درخواستِ
+ * صریح («چشمک چشم» را با چیز خیلی ساده‌تری جایگزین کن) حالا فقط یک
+ * آیکونِ ثابت (Eye/EyeOff) بدونِ هیچ انیمیشنی سوییچ می‌شه.
  */
 export function PasswordVisibilityToggle({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
-      className={`field-toggle-visibility-btn${visible ? " is-open" : ""}`}
+      className="field-toggle-visibility-btn"
       tabIndex={-1}
       aria-label={visible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
       aria-pressed={visible}
       onClick={onToggle}
     >
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="fx-eye">
-        {/* پلکِ پایین — همیشه ثابت است */}
-        <path className="fx-eye-lower" d="M2.6 12c2.6 3.9 5.8 5.9 9.4 5.9s6.8-2 9.4-5.9"
-              stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-        {/* پلکِ بالا — بسته: روی همان کمانِ پایین می‌خوابد، باز: بالا می‌رود */}
-        <path className="fx-eye-upper" d="M2.6 12c2.6-3.9 5.8-5.9 9.4-5.9s6.8 2 9.4 5.9"
-              stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-        {/* مردمک — فقط در حالتِ باز دیده می‌شود */}
-        <circle className="fx-eye-pupil" cx="12" cy="12" r="3.1"
-                stroke="currentColor" strokeWidth="1.7" />
-        {/* مژه‌ها — فقط در حالتِ بسته درمی‌آیند */}
-        <g className="fx-eye-lashes" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-          <path d="M4.9 14.9 3.6 16.6" />
-          <path d="M8.4 16.6 7.7 18.5" />
-          <path d="M12 17.2v2" />
-          <path d="M15.6 16.6l.7 1.9" />
-          <path d="M19.1 14.9l1.3 1.7" />
-        </g>
-      </svg>
+      {visible ? <EyeOff size={19} aria-hidden="true" /> : <Eye size={19} aria-hidden="true" />}
     </button>
   );
 }

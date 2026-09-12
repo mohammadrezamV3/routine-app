@@ -260,6 +260,7 @@ export default function WeeklyPage() {
           isPast: isTaskPast(selectedIso, t.time),
           dayPast: isDayPast(selectedIso),
           notStarted: isTaskNotStarted(selectedIso, t.time),
+          isFuture: selectedIso > todayKey,
         };
       })
       .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
@@ -280,6 +281,7 @@ export default function WeeklyPage() {
         isPast: false,
         dayPast: isDayPast(selectedIso),
         notStarted: false,
+        isFuture: selectedIso > todayKey,
         exercise: true,
       });
     }
@@ -316,9 +318,12 @@ export default function WeeklyPage() {
   }
 
   async function toggleDashTask(id: string) {
-    // عمداً هیچ قفلِ روز/ساعتی نیست: کاربر باید بتواند برنامه‌های *هر* روز را
-    // تیک بزند — روزِ گذشته برای جبرانِ عقب‌افتاده، و برنامه‌ای که هنوز
-    // ساعتش نرسیده هم اگر زودتر انجامش داده. درخواستِ صریحِ کاربر.
+    // روزِ گذشته برای جبرانِ عقب‌افتاده قابلِ تیک‌زدنه، و برنامه‌ای که هنوز
+    // ساعتش نرسیده هم اگر زودتر انجامش داده — ولی روزِ *آینده* نه: طبقِ
+    // درخواستِ صریحِ کاربر، تیک‌زدنِ برنامه‌ی روزی که هنوز نرسیده یعنی
+    // وانمود به انجام‌شدنِ کاری که اصلاً شروع نشده، پس این‌جا بلاک می‌شود.
+    const task = dashTasks.find((t) => t.id === id);
+    if (task?.isFuture) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
@@ -368,10 +373,24 @@ export default function WeeklyPage() {
     setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: isCustom, importance: task.importance, tag: task.tag } });
   }
 
+  // حذف فقط همین یک occurrence (یک روزِ خاص) — چون هر روزِ یک برنامه‌ی
+  // تکرارشونده رکورد id جداگانه‌ی خودش را دارد، این پیش‌فرض از قبل هم
+  // «فقط این روز» عمل می‌کرد؛ فقط لیبل دکمه اشتباه («حذف کامل برنامه»)
+  // بود و کاربر را گیج می‌کرد.
   async function deleteTaskCompletely(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (task?.isPast) return;
     await setCustomOccurrences(customOcc.filter((c) => c.id !== id));
+    refresh();
+  }
+
+  // حذفِ همه‌ی تکرارها — همه‌ی occurrenceهایی که هم‌نامِ همین برنامه‌اند
+  // (روی هر روزی که باشند)، طبقِ درخواستِ صریح («یا فقط یکشنبه یا فقط
+  // چهارشنبه یا کلا هر دو»).
+  async function deleteAllTaskOccurrences(id: string) {
+    const task = dashTasks.find((t) => t.id === id);
+    if (!task || task.isPast) return;
+    await setCustomOccurrences(customOcc.filter((c) => c.name !== task.name));
     refresh();
   }
 
@@ -440,6 +459,7 @@ export default function WeeklyPage() {
                 onOpenProgram={openProgram}
                 onEditTask={editTaskFromDash}
                 onDeleteTask={deleteTaskCompletely}
+                onDeleteAllTask={deleteAllTaskOccurrences}
                 onMoveTask={moveTaskFromDash}
                 onStartExercise={startExercise}
                 delay={0.05}

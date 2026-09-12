@@ -5,7 +5,7 @@ import { takePreloaded } from "./preload";
 // از قبل پر می‌شه. روی همون UserSetting عمومی کلید/مقدار ذخیره می‌شه (بدون
 // نیاز به migration جدید)، کلیدش "bodyMetrics".
 
-export type BodyMetrics = { heightCm?: number; weightKg?: number; ageYears?: number };
+export type BodyMetrics = { heightCm?: number; weightKg?: number; ageYears?: number; gender?: "male" | "female" };
 
 // نام کلید از allowlist میاد تا این دوتا نتونن از هم واگرا بشن
 const KEY = SETTING_KEYS.bodyMetrics;

@@ -31,15 +31,15 @@ export default function ForgotPasswordPage() {
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
-    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendCooldown]);
 
   const [tier, setTier] = useState<Awaited<ReturnType<typeof passwordTier>> | null>(null);
   useEffect(() => {
     if (!newPassword) { setTier(null); return; }
     let cancelled = false;
-    passwordTier(newPassword, [identifier]).then((t) => { if (!cancelled) setTier(t); });
+    passwordTier(newPassword, [identifier]).then((tr) => { if (!cancelled) setTier(tr); });
     return () => { cancelled = true; };
   }, [newPassword, identifier]);
 
@@ -116,14 +116,14 @@ export default function ForgotPasswordPage() {
       <div className="auth-shell">
         <div className="auth-box">
           <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
-          <AuthBrandMark subtitle="فراموشی رمز عبور" />
+          <AuthBrandMark subtitle={"فراموشی رمز عبور"} />
 
           {step === 1 && (
             <form onSubmit={requestCode} className="auth-step" key="step1">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                شماره‌همراه یا ایمیلی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه.
+                {"شماره‌همراه یا ایمیلی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
               </div>
-              <AuthField id="identifier" label="شماره همراه یا ایمیل" icon={<User size={15} />}>
+              <AuthField id="identifier" label={"شماره همراه یا ایمیل"} icon={<User size={15} />}>
                 <input
                   id="identifier" type="text" className="wsearch-newform-name" value={identifier} dir="ltr" style={{ textAlign: "right" }} placeholder="09123456789"
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -139,9 +139,9 @@ export default function ForgotPasswordPage() {
           {step === 2 && (
             <form onSubmit={verifyAndReset} className="auth-step" key="step2">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                کدی که به {identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.
+                {`کدی که به ${identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.`}
               </div>
-              <AuthField id="code" label="کد ۵ رقمی">
+              <AuthField id="code" label={"کد ۵ رقمی"}>
                 <input
                   id="code" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
                   onChange={(e) => setCode(digitsOnly(e.target.value))}
@@ -153,11 +153,13 @@ export default function ForgotPasswordPage() {
                 disabled={resendCooldown > 0 || loading}
                 onClick={resendCode}
               >
-                {resendCooldown > 0 ? `ارسال مجدد کد ${faNum(resendCooldown)}` : "ارسال مجدد کد"}
+                {resendCooldown > 0
+                  ? `ارسال مجدد کد ${faNum(resendCooldown)}`
+                  : "ارسال مجدد کد"}
               </button>
               <div style={{ marginTop: 14 }}>
                 <AuthField
-                  id="newPassword" label="رمز عبور جدید"
+                  id="newPassword" label={"رمز عبور جدید"}
                   icon={<Lock size={15} />}
                   endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
                 >
@@ -169,12 +171,12 @@ export default function ForgotPasswordPage() {
                 {tier && (
                   <div className={`pw-strength pw-strength-${tier}`}>
                     <div className="pw-strength-bars">
-                      {PASSWORD_TIER_ORDER.map((t, i) => (
-                        <div key={t} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
+                      {PASSWORD_TIER_ORDER.map((tv, i) => (
+                        <div key={tv} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
                       ))}
                     </div>
                     <div className="pw-strength-label">
-                      قدرت رمز: {PASSWORD_TIER_LABELS[tier]}
+                      {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
                       {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
                     </div>
                   </div>
@@ -190,10 +192,10 @@ export default function ForgotPasswordPage() {
           {step === 3 && (
             <div className="auth-step" key="step3" style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13, color: "var(--text)", marginTop: 10, lineHeight: 1.8 }}>
-                رمزت با موفقیت عوض شد. حالا می‌تونی با رمز جدید وارد بشی.
+                {"رمزت با موفقیت عوض شد. حالا می‌تونی با رمز جدید وارد بشی."}
               </div>
               <button type="button" className="auth-full-btn" onClick={() => router.push("/auth/login")}>
-                بازگشت به ورود
+                {"بازگشت به ورود"}
               </button>
             </div>
           )}

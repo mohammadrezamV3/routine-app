@@ -10,19 +10,10 @@ import { getSiteMarket } from "@/lib/market";
 import { formatPriceAmount } from "@/lib/formatPrice";
 import { findPlanCard, formatJalaliLong, DURATION_LABELS, DURATION_LABELS_INTL, Duration, UpgradeOffer } from "@/components/PlanShowcase";
 
-type Gateway = "zarinpal" | "zibal";
+type Gateway = "zibal";
 
-// نشان‌های خود درگاه‌ها — آیکون عمومی ShieldCheck که قبلا هر دو دکمه
-// مشترک بودن، جای دو نشان متمایز رو (رنگ/شکل مخصوص خود زرین‌پال/زیبال)
-// نمی‌گرفت. طراحی ساده و غیر عین لوگوی رسمی، فقط برای تمایز بصری.
-function ZarinpalMark() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect x="1" y="1" width="22" height="22" rx="7" fill="#FFB800" />
-      <path d="M12 6.2 L17 16.4 H7 Z" fill="#241C08" />
-    </svg>
-  );
-}
+// نشان خود درگاه — آیکون عمومی ShieldCheck قبلا جای یک نشان متمایز
+// (رنگ/شکل مخصوص زیبال) رو نمی‌گرفت. طراحی ساده، فقط برای تمایز بصری.
 function ZibalMark() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -33,8 +24,8 @@ function ZibalMark() {
 }
 
 // چک‌اوت واقعی خرید پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
-// باز می‌شه. کد تخفیف (رفرال یک نفر دیگه)، پذیرش قوانین، انتخاب درگاه
-// (زرین‌پال یا زیبال) و دکمه‌ی پرداخت.
+// باز می‌شه. کد تخفیف (رفرال یک نفر دیگه)، پذیرش قوانین و دکمه‌ی پرداخت.
+// زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
 export default function CheckoutPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -67,11 +58,7 @@ export default function CheckoutPage() {
   // اعمال می‌کنه یه بار نه»).
   const applyingRef = useRef(false);
   const requestGenRef = useRef(0);
-  const [gateway, setGateway] = useState<Gateway>("zibal");
-  // کدام درگاه‌ها روی این سرور واقعا تنظیم شده‌اند. تا وقتی جواب نیامده،
-  // null است و هر دو نشان داده می‌شوند (رفتار قبلی) — این‌طور اگر این
-  // درخواست شکست بخورد، صفحه بدترنمی‌شود.
-  const [availableGateways, setAvailableGateways] = useState<Gateway[] | null>(null);
+  const gateway: Gateway = "zibal";
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,20 +71,6 @@ export default function CheckoutPage() {
     if (status !== "authenticated") return;
     fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
   }, [status]);
-
-  useEffect(() => {
-    fetch("/api/subscription/gateways")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        const list: Gateway[] = Array.isArray(d?.available) ? d.available : [];
-        if (!list.length) return;
-        setAvailableGateways(list);
-        // اگر درگاه انتخاب‌شده روی این سرور تنظیم نشده، برو سراغ اولین
-        // درگاه سالم — وگرنه کاربر روی گزینه‌ای می‌ماند که حتما خطا می‌دهد.
-        setGateway((g) => (list.includes(g) ? g : list[0]));
-      })
-      .catch(() => {});
-  }, []);
 
   if (!query) return null;
 
@@ -284,26 +257,10 @@ export default function CheckoutPage() {
       <div className="checkout-box">
         <div className="checkout-field-label">درگاه پرداخت</div>
         <div className="checkout-gateway-row">
-          {(!availableGateways || availableGateways.includes("zarinpal")) && (
-          <button
-            type="button"
-            className={`checkout-gateway-pill${gateway === "zarinpal" ? " on" : ""}`}
-            onClick={() => setGateway("zarinpal")}
-          >
-            <ZarinpalMark />
-            زرین‌پال
-          </button>
-          )}
-          {(!availableGateways || availableGateways.includes("zibal")) && (
-          <button
-            type="button"
-            className={`checkout-gateway-pill${gateway === "zibal" ? " on" : ""}`}
-            onClick={() => setGateway("zibal")}
-          >
+          <button type="button" className="checkout-gateway-pill on" disabled>
             <ZibalMark />
             زیبال
           </button>
-          )}
         </div>
       </div>
 
