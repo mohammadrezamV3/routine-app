@@ -352,7 +352,7 @@ function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFr
             href={buyHref}
             className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
-            <ShoppingCart size={14} /> خرید این پلن
+            <ShoppingCart size={14} /> خرید اشتراک
           </Link>
         </>
       )}

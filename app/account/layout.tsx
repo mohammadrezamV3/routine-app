@@ -26,14 +26,14 @@ import { clearAuthHintCookie } from "@/lib/preload";
 //   /account/security           → امنیت
 //   /account/notifications      → اعلان‌ها
 //   /account/support            → پشتیبانی
-export const ACCOUNT_SECTIONS: { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
-  { href: "/account/profile", label: "پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
-  { href: "/account/sport-profile", label: "پروفایل ورزشی", icon: <Dumbbell size={15} />, match: (p) => p.startsWith("/account/sport-profile") },
-  { href: "/account/general", label: "تنظیمات", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") },
-  { href: "/account/subscription", label: "اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
-  { href: "/account/security", label: "امنیت", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },
-  { href: "/account/notifications", label: "اعلان‌ها", icon: <Bell size={15} />, match: (p) => p.startsWith("/account/notifications") },
-  { href: "/account/support", label: "پشتیبانی", icon: <Headset size={15} />, match: (p) => p.startsWith("/account/support") },
+export const ACCOUNT_SECTIONS: { href: string; label: string; desc: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
+  { href: "/account/profile", label: "پروفایل", desc: "نام، نام‌کاربری و عکس پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
+  { href: "/account/sport-profile", label: "پروفایل ورزشی", desc: "قد، وزن، سن و جنسیت برای برنامه‌ی ورزش/کالری", icon: <Dumbbell size={15} />, match: (p) => p.startsWith("/account/sport-profile") },
+  { href: "/account/general", label: "تنظیمات", desc: "تنظیمات آریون، روتین و ترید", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") },
+  { href: "/account/subscription", label: "اشتراک", desc: "پلن فعلی و مدیریت خرید اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
+  { href: "/account/security", label: "امنیت", desc: "رمز عبور و امنیت حساب", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },
+  { href: "/account/notifications", label: "اعلان‌ها", desc: "مدیریت اعلان‌های اپ", icon: <Bell size={15} />, match: (p) => p.startsWith("/account/notifications") },
+  { href: "/account/support", label: "پشتیبانی", desc: "ارتباط با تیم پشتیبانی", icon: <Headset size={15} />, match: (p) => p.startsWith("/account/support") },
 ];
 const SECTIONS = ACCOUNT_SECTIONS;
 
