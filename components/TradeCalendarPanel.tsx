@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, PiggyBank } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, J_MONTHS, faNum,
   isoLocal, jalaliMonthLength, jalaliToGregorianApprox, toJalali,
@@ -76,17 +76,20 @@ export function TradeCalendarPanel({
 
   return (
     <div className={embedded ? "trade-calendar-box embedded" : "trade-surface trade-calendar-box"}>
-      <div className="trade-calendar-head">
-        <div className="trade-section-title"><PiggyBank size={15} /> تقویم سود/زیان</div>
-        {!!monthNet && (
-          <span className="trade-calendar-total mono" style={{ color: monthNet > 0 ? "var(--accent)" : "#E05252" }}>
-            {formatCompact(monthNet, true)}
-          </span>
-        )}
-      </div>
-      <div className="cal-controls">
+      {/* بدونِ تایتل/آیکون (درخواستِ صریح) — فقط ناوبریِ ماه، و جمعِ همان ماه
+          کنارش. رنگِ سود/زیان از --pnl-* می‌آید که به تم گره نخورده. */}
+      <div className="cal-controls trade-cal-controls">
         <button type="button" className="trade-icon-btn" onClick={() => go(-1)} aria-label="ماه قبل"><ChevronLeft size={16} /></button>
-        <div className="cal-label">{label}</div>
+        {/* لیبلِ ماه و جمعِ همان ماه یک واحدند، وگرنه روی دسکتاپ که
+            .cal-label مطلق می‌شود، عددِ جمع از چیدمان بیرون می‌افتد. */}
+        <div className="trade-cal-label-wrap">
+          <div className="cal-label">{label}</div>
+          {!!monthNet && (
+            <span className="trade-calendar-total mono" style={{ color: monthNet > 0 ? "var(--pnl-win)" : "var(--pnl-loss)" }}>
+              {formatCompact(monthNet, true)}
+            </span>
+          )}
+        </div>
         <button type="button" className="trade-icon-btn" onClick={() => go(1)} aria-label="ماه بعد"><ChevronRight size={16} /></button>
       </div>
       <div className="cal-grid trade-cal-grid">

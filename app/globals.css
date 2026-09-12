@@ -26,6 +26,14 @@
     --accent:#00A86B;
     --accent-rgb:0,168,107;
     --accent-dim:rgba(var(--accent-rgb),.20);
+    /* سود/زیانِ ترید عمدا *بیرونِ* پالتِ تم است: سبز=سود و قرمز=ضرر یک
+       قرارداد جهانیِ بازار است، نه یک انتخابِ ظاهری. اگر از --accent بیاید،
+       توی تمِ روشن قهوه‌ای می‌شود و معنی‌اش را از دست می‌دهد. این توکن‌ها
+       فقط همین‌جا تعریف می‌شوند و در بلاکِ تمِ روشن بازتعریف نمی‌شوند. */
+    --pnl-win:#16C79A;
+    --pnl-win-rgb:22,199,154;
+    --pnl-loss:#E05252;
+    --pnl-loss-rgb:224,82,82;
     --accent-soft:#5FBE93;
     --accent-deep:#00623D;
     --card-bg:#0A0A0A;
@@ -921,19 +929,20 @@
   /* تقویم سود/زیان حساب — همون قاب .cal-grid موجود، خانه‌ها رنگ‌شده طبق
      سود/زیان روز (dailyPnl) به‌جای وضعیت انجام‌شده/نشده‌ی روتین. */
   .trade-calendar-box{ padding:14px 16px 16px; margin-top:14px; }
-  .trade-calendar-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .trade-calendar-head .trade-section-title{ display:flex; align-items:center; gap:6px; }
+  .trade-cal-label-wrap{ display:flex; align-items:center; gap:9px; }
+  /* روی دسکتاپ .cal-label مطلق‌چین می‌شود؛ مرکزِ آن باید همین wrapper باشد */
+  @media (min-width:701px){ .trade-cal-label-wrap{ position:relative; } }
   .trade-calendar-total{ font-size:13px; font-weight:800; }
   .trade-cal-grid{ margin-top:2px; }
   .trade-cal-cell{ gap:1px; padding:2px; cursor:default; }
   .trade-cal-cell.no-data:hover{ border-color:var(--line); transform:none; }
   .trade-cal-cell.win, .trade-cal-cell.loss{ cursor:pointer; }
-  .trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--accent-rgb),.24), rgba(var(--accent-rgb),.06)); border-color:rgba(var(--accent-rgb),.5); }
-  .trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(224,82,82,.18), rgba(224,82,82,.05)); border-color:rgba(224,82,82,.5); }
+  .trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--pnl-win-rgb),.24), rgba(var(--pnl-win-rgb),.06)); border-color:rgba(var(--pnl-win-rgb),.5); }
+  .trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(var(--pnl-loss-rgb),.18), rgba(var(--pnl-loss-rgb),.05)); border-color:rgba(var(--pnl-loss-rgb),.5); }
   .trade-cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
   .trade-cal-pnl{ font-size:8.5px; font-weight:700; line-height:1; }
-  .trade-cal-cell.win .trade-cal-pnl{ color:var(--accent); }
-  .trade-cal-cell.loss .trade-cal-pnl{ color:#E05252; }
+  .trade-cal-cell.win .trade-cal-pnl{ color:var(--pnl-win); }
+  .trade-cal-cell.loss .trade-cal-pnl{ color:var(--pnl-loss); }
 
   /* ── صفحه‌ی ژورنال‌نویسی (حساب) ───────────────────────────────────────
      چیدمان طبق شماتیک: تایتل، خطِ «نام حساب ↔ بالانس اولیه»، یک باکسِ
@@ -955,34 +964,61 @@
   .trade-journal-submeta span{ display:inline-flex; align-items:center; gap:4px; }
   .trade-journal-submeta svg{ flex-shrink:0; opacity:.7; }
 
-  /* باکسِ واحد: بخشِ بالا آمار، بخشِ پایین تقویم — با یک خطِ جداکننده بینشان */
+  /* باکسِ واحد: بخشِ بالا آمار، بخشِ پایین تقویم — بی هیچ جداکننده‌ای،
+     آمارها مستقیم به تقویم می‌چسبند (درخواستِ صریح). */
   .trade-journal-box{ margin-top:14px; padding:0; overflow:hidden; }
-  .trade-journal-stats-part{ padding:14px 14px 10px; border-bottom:1px solid var(--line); }
+  .trade-journal-stats-part{ padding:14px 14px 0; }
 
-  .trade-headline-stats{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; }
-  .trade-headline-stat{ min-width:0; text-align:center; }
+  /* خطِ عمودی بینِ سه آمارِ سرخط */
+  .trade-headline-stats{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:0; }
+  .trade-headline-stat{ min-width:0; text-align:center; padding-inline:10px; }
   .trade-headline-stat .trade-stat-label{ justify-content:center; }
   .trade-headline-value{ font-size:16px; font-weight:800; margin-top:5px; font-variant-numeric:proportional-nums; }
-  .trade-headline-goal{ text-align:center; padding-inline:6px; }
-  .trade-headline-goal .trade-stat-label{ justify-content:center; margin-top:4px; }
-  .trade-headline-goal-target{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .trade-headline-goal{
+    text-align:center; padding-inline:14px;
+    border-inline-start:1px solid var(--line); border-inline-end:1px solid var(--line);
+  }
+  .trade-headline-goal .trade-stat-label{ justify-content:center; margin-bottom:6px; }
+  .trade-headline-goal-target{ font-size:11px; color:var(--muted); margin-top:4px; }
   .trade-headline-goal .trade-goal-ring-wrap{ width:66px; height:66px; margin-inline:auto; }
 
-  /* دکمه‌ی زیرِ باکسِ وسط که بقیه‌ی آمارها را باز می‌کند */
-  .trade-stats-toggle{
-    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
-    margin-top:10px; padding:7px 10px; border-radius:12px;
-    font-size:11.5px; font-weight:700; color:var(--muted);
-    border:1px solid var(--line); background:none; box-shadow:none;
-    backdrop-filter:none; -webkit-backdrop-filter:none;
-    transition:color .18s ease, border-color .18s ease;
+  /* دستگیره‌ی بازکردنِ بقیه‌ی آمارها: بی‌متن و کوچک — فقط یک میله‌ی باریک که
+     با نبضِ آرام خودش را نشان می‌دهد. عرضِ لمسیِ دکمه بزرگ می‌ماند (۱۰۰٪)
+     ولی چیزی که دیده می‌شود همان میله‌ی ۲۸ پیکسلی‌ست. */
+  .trade-stats-handle{
+    display:flex; align-items:center; justify-content:center; width:100%;
+    padding:9px 0 7px; border:none; border-radius:0;
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   }
-  @media (hover:hover){ .trade-stats-toggle:hover{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); } }
-  .trade-stats-toggle svg{ transition:transform .28s cubic-bezier(.22,1,.36,1); }
-  .trade-stats-toggle.open svg{ transform:rotate(180deg); }
-  /* هم‌همان اسپسیفیسیتیِ ریستِ سراسریِ button{} — وگرنه این دکمه بک‌گراندِ
-     شیشه‌ای می‌گیرد، دقیقاً همان چیزی که نباید. */
-  body[data-theme="light"] .trade-stats-toggle, body:not([data-theme="light"]) .trade-stats-toggle{
+  body[data-theme="light"] .trade-stats-handle, body:not([data-theme="light"]) .trade-stats-handle{
+    background:none; box-shadow:none;
+  }
+  .trade-stats-handle-bar{
+    display:block; width:28px; height:3px; border-radius:999px; background:var(--muted2);
+    animation:trade-handle-pulse 2.4s ease-in-out infinite;
+    transition:width .28s cubic-bezier(.22,1,.36,1), background .18s ease;
+  }
+  .trade-stats-handle.open .trade-stats-handle-bar{ width:44px; background:var(--accent); animation:none; }
+  @media (hover:hover){ .trade-stats-handle:hover .trade-stats-handle-bar{ background:var(--accent); } }
+  @keyframes trade-handle-pulse{
+    0%, 100%{ opacity:.45; transform:scaleX(1); }
+    50%{ opacity:1; transform:scaleX(1.35); }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .trade-stats-handle-bar{ animation:none; opacity:.7; }
+  }
+
+  /* دکمه‌ی «افزودن» بالای لیست تریدها — بدونِ بک‌گراند (درخواستِ صریح) */
+  .trade-add-btn{
+    display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:12px;
+    font-size:12.5px; font-weight:700; color:var(--accent);
+    border:none; background:none; box-shadow:none;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    transition:opacity .18s ease, transform .15s ease;
+  }
+  @media (hover:hover){ .trade-add-btn:hover{ opacity:.75; } }
+  .trade-add-btn:active{ transform:scale(.95); }
+  body[data-theme="light"] .trade-add-btn, body:not([data-theme="light"]) .trade-add-btn{
     background:none; box-shadow:none;
   }
 
@@ -998,7 +1034,13 @@
   @media (prefers-reduced-motion:reduce){ .trade-stats-collapse{ transition:none; } }
 
   /* تقویم وقتی داخلِ همان باکس است: نه سطحِ جدا می‌گیرد نه حاشیه‌ی بالا */
-  .trade-calendar-box.embedded{ margin-top:0; border:none; background:none; box-shadow:none; }
+  .trade-calendar-box.embedded{
+    margin-top:0; border:none; background:none; box-shadow:none;
+    padding:0 14px 14px;
+  }
+  /* فاصله‌ی پیش‌فرضِ .cal-controls برای صفحه‌ی روتین است؛ این‌جا آمارها باید
+     به تقویم بچسبند، پس حاشیه‌ی بالایش برداشته می‌شود. */
+  .trade-calendar-box.embedded .cal-controls{ margin:0 0 12px; }
 
   /* بخشِ تریدهای روزِ انتخاب‌شده */
   .trade-day-label{ font-size:11.5px; font-weight:600; color:var(--muted); margin-inline-start:8px; }

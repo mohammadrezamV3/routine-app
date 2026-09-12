@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Award, Building2, ChevronDown, ChevronRight, Flame, Gauge, Hash,
+  Award, Building2, ChevronRight, Flame, Gauge, Hash,
   Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
   TrendingUp, Wallet, Zap,
 } from "lucide-react";
@@ -179,14 +179,16 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
               icon={<Percent size={13} />}
             />
 
-            {/* دایره‌ی هدفِ سود: توی ضرر خالی می‌ماند (صفر)، توی سود پر می‌شود */}
+            {/* دایره‌ی هدفِ سود: توی ضرر خالی می‌ماند (صفر)، توی سود پر می‌شود.
+                لیبل بالای دایره می‌نشیند و فقط عددِ هدف زیرش می‌ماند. */}
             <div className="trade-headline-goal">
+              <div className="trade-stat-label">هدف سود</div>
               <div className="trade-goal-ring-wrap">
                 <svg viewBox="0 0 72 72" className="trade-goal-ring">
                   <circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" strokeWidth="6" />
                   <circle
                     cx="36" cy="36" r="30" fill="none" strokeWidth="6" strokeLinecap="round"
-                    stroke="var(--accent)"
+                    stroke="var(--pnl-win)"
                     strokeDasharray={2 * Math.PI * 30}
                     strokeDashoffset={2 * Math.PI * 30 * (1 - (inProfit ? (goal ?? 0) : 0))}
                     transform="rotate(-90 36 36)"
@@ -197,7 +199,6 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
                   {faNum(Math.round((inProfit ? (goal ?? 0) : 0) * 100))}٪
                 </span>
               </div>
-              <div className="trade-stat-label">هدف سود</div>
               <div className="trade-headline-goal-target mono">
                 {faNum((stats.goalTarget || 0).toFixed(0))} {sym}
               </div>
@@ -213,15 +214,17 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
           {!!restStats.length && (
             <>
-              {/* دکمه زیرِ باکسِ وسط: بقیه‌ی آمارها را باز/بسته می‌کند */}
+              {/* دستگیره‌ی کوچکِ بی‌متن زیرِ آمارها: فقط با یک نبضِ آرام
+                  می‌فهماند این‌جا چیزی برای باز کردن هست. متنِ واقعی‌اش
+                  توی aria-label می‌ماند تا برای اسکرین‌ریدر گنگ نباشد. */}
               <button
                 type="button"
-                className={`trade-stats-toggle${statsOpen ? " open" : ""}`}
+                className={`trade-stats-handle${statsOpen ? " open" : ""}`}
                 onClick={() => setStatsOpen((v) => !v)}
                 aria-expanded={statsOpen}
+                aria-label={statsOpen ? "بستن بقیه‌ی آمارها" : "نمایش بقیه‌ی آمارها"}
               >
-                <span>{statsOpen ? "بستن آمارها" : "بقیه‌ی آمارها"}</span>
-                <ChevronDown size={16} />
+                <span className="trade-stats-handle-bar" aria-hidden="true" />
               </button>
 
               {/* انیمیشنِ نرمِ باز شدن با grid-template-rows: 0fr → 1fr — برخلاف
@@ -239,7 +242,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
                           <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
                           <div
                             className="trade-stat-value mono"
-                            style={v.positive === undefined ? undefined : { color: v.positive ? "var(--accent)" : "#E05252" }}
+                            style={v.positive === undefined ? undefined : { color: v.positive ? "var(--pnl-win)" : "var(--pnl-loss)" }}
                           >
                             {faNum(v.value)}
                           </div>
@@ -270,7 +273,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             {formatTradeDateTime(new Date(`${activeDay}T00:00:00`).toISOString(), calSystem, false)}
           </span>
         </div>
-        <button type="button" className="trade-primary-btn" onClick={() => { setEditingEntry(null); setFormOpen(true); }}>
+        <button type="button" className="trade-add-btn" onClick={() => { setEditingEntry(null); setFormOpen(true); }}>
           <Plus size={15} /> افزودن
         </button>
       </div>
@@ -286,7 +289,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
               </span>
               <span className="trade-row-symbol mono">{e.symbol}</span>
               {e.status === "CLOSED" ? (
-                <b className="mono trade-day-row-pnl" style={{ color: e.pnl > 0 ? "var(--accent)" : e.pnl < 0 ? "#E05252" : "var(--muted)" }}>
+                <b className="mono trade-day-row-pnl" style={{ color: e.pnl > 0 ? "var(--pnl-win)" : e.pnl < 0 ? "var(--pnl-loss)" : "var(--muted)" }}>
                   {faNum(e.pnl.toFixed(2))} {sym}
                 </b>
               ) : (
@@ -382,7 +385,7 @@ function HeadlineStat({
       <div className="trade-stat-label">{icon} {label}</div>
       <div
         className="trade-headline-value mono"
-        style={tone ? { color: tone === "up" ? "var(--accent)" : "#E05252" } : undefined}
+        style={tone ? { color: tone === "up" ? "var(--pnl-win)" : "var(--pnl-loss)" } : undefined}
       >
         {value}
       </div>
