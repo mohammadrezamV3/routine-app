@@ -134,7 +134,11 @@ export function CalorieChartCard({
             )}
           </div>
 
-          <div className={cn("mt-1 flex items-end", isMonthly ? "gap-0.5 sm:gap-1" : "gap-1.5 sm:gap-2")}>
+          {/* طبقِ درخواستِ صریح: تاریخ باید از چپ به راست بره (قدیم چپ،
+              امروز راست) — چون داده‌ها به ترتیبِ صعودی (قدیم اول) ساخته
+              می‌شن، بدونِ dir="ltr" چیدمانِ RTLِ صفحه اولین آیتم (قدیم) رو
+              سمتِ راست می‌ذاشت، برعکسِ خواسته. */}
+          <div dir="ltr" className={cn("mt-1 flex items-end", isMonthly ? "gap-0.5 sm:gap-1" : "gap-1.5 sm:gap-2")}>
             {bars.map((b, i) => {
               const pct = targetKcal > 0 ? Math.round((b.value / targetKcal) * 100) : 0;
               const isActive = selected === i;

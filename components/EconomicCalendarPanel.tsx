@@ -233,37 +233,34 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
-      {/* طبقِ درخواستِ صریح: این بخش هم داخلِ یک باکسِ صفحه‌بزرگ — هم‌الگویِ
-          چک‌لیست‌ها/یادداشت‌ها — نه یک ناحیه‌ی کوچیکِ شناور روی بک‌گراند. */}
-      <div className="trade-surface trade-page-box trade-cal-box">
-      {/* بارِ تقویم — از اول بازطراحی شد طبقِ شماتیکِ تازه: استریپِ روزها
-          (فارسی/شمسی، هم‌قاعده‌ی calSystemِ سراسریِ ماژولِ ترید) + یک ردیفِ
-          واحد فیلتر/امروز/تاریخچه، به‌جای نوارِ جداگانه‌ی قبلی. */}
+      {/* طبقِ درخواستِ صریحِ تازه: این بخش دیگه توی هیچ باکس/قابِ شیشه‌ای
+          نیست — دقیقا مثلِ ماه‌شمارِ «روتین من» (cal-controls/cal-grid) که
+          مستقیم روی بک‌گراندِ صفحه می‌شینه، نه یک ناحیه‌ی جداگانه‌ی بوردردار.
+          تصمیمِ قبلی (باکسِ صفحه‌بزرگ، هم‌الگویِ چک‌لیست‌ها/یادداشت‌ها) عمدا
+          نقض شد. */}
       {searching ? (
         <div className="trade-cal-search-banner">
           نتیجه‌ی جستجو برای «<b>{query}</b>» — {faNum(events.length)} رویداد
         </div>
       ) : (
         <>
-          <div className="trade-cal-strip-box">
-            <div ref={stripRef} className="trade-cal-week-strip thin-scroll">
-              {dayStrip.map((d) => {
-                const active = isSameDay(d, date);
-                const { weekday, date: dateLabel } = dayLabel(d, calSystem);
-                return (
-                  <button
-                    key={isoLocal(d)}
-                    ref={active ? activeDayRef : undefined}
-                    type="button"
-                    className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
-                    onClick={() => pickDate(d)}
-                  >
-                    <span className="trade-cal-day-pill-wd">{weekday}</span>
-                    <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
-                  </button>
-                );
-              })}
-            </div>
+          <div ref={stripRef} className="trade-cal-week-strip thin-scroll">
+            {dayStrip.map((d) => {
+              const active = isSameDay(d, date);
+              const { weekday, date: dateLabel } = dayLabel(d, calSystem);
+              return (
+                <button
+                  key={isoLocal(d)}
+                  ref={active ? activeDayRef : undefined}
+                  type="button"
+                  className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
+                  onClick={() => pickDate(d)}
+                >
+                  <span className="trade-cal-day-pill-wd">{weekday}</span>
+                  <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="trade-cal-actions-row">
@@ -458,7 +455,6 @@ export function EconomicCalendarPanel() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
@@ -492,14 +488,15 @@ function EconMonthPicker({ date, onPick, onClose }: { date: Date; onPick: (d: Da
     );
   }
 
-  // طبقِ ریشه‌یابیِ باگِ «تاریخچه کار نمی‌کند»: .trade-cal-box (والدِ این
-  // کامپوننت) خودش backdrop-filter دارد، و طبقِ اسپکِ CSS Filter Effects
-  // هر عنصرِ دارایِ filter/backdrop-filter برای فرزندهایِ position:fixed
-  // یک containing-block جدید می‌سازد — یعنی inset:0 این بک‌دراپ به‌جایِ
-  // کلِ ویوپورت، فقط نسبت‌به همان باکسِ کوچکِ تقویم حساب می‌شد و پاپ‌آپ
-  // یا اصلا دیده نمی‌شد یا جایِ درستی نمی‌نشست. createPortal با بردنِ این
-  // عنصر به body، مستقیم زیرِ containing-blockِ ویوپورت می‌رود — دقیقاً
-  // همان ترفندِ TradeKebabMenu.
+  // ریشه‌یابیِ باگِ قدیمیِ «تاریخچه کار نمی‌کند»: هر جدِ دارایِ
+  // filter/backdrop-filter برای فرزندهایِ position:fixed یک
+  // containing-block جدید می‌سازد — یعنی inset:0 این بک‌دراپ به‌جایِ کلِ
+  // ویوپورت، فقط نسبت‌به همون جدِ شیشه‌ای حساب می‌شد و پاپ‌آپ یا اصلا دیده
+  // نمی‌شد یا جایِ درستی نمی‌نشست (حالا که بارِ تقویم دیگه هیچ باکسِ
+  // شیشه‌ای‌ای نداره، این خطر عملا از بین رفته، ولی createPortal همچنان
+  // درستیه — هر جدِ آینده‌ای هم اگه backdrop-filter بگیره این پاپ‌آپ سالم
+  // می‌مونه). createPortal با بردنِ این عنصر به body، مستقیم زیرِ
+  // containing-blockِ ویوپورت می‌رود — دقیقاً همان ترفندِ TradeKebabMenu.
   return createPortal(
     <>
       <div className="trade-econ-monthpicker-backdrop" onClick={onClose} />

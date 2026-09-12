@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Award, Building2, ChevronDown, ChevronRight, Flame, Gauge, Hash,
-  Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
+  Inbox, Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
   TrendingUp, Wallet, Zap,
 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
@@ -287,7 +287,12 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       </div>
 
       <div className="trade-surface trade-day-box">
-        {!dayEntries.length && <div className="item-line empty">برای این روز معامله‌ای ثبت نشده</div>}
+        {!dayEntries.length && (
+          <div className="trade-empty-state">
+            <Inbox size={28} />
+            <p>برای این روز معامله‌ای ثبت نشده</p>
+          </div>
+        )}
 
         {dayEntries.map((e) => (
           <div key={e.id} className="trade-day-row">

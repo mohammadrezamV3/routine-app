@@ -48,7 +48,7 @@ export function DashTaskList({
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col divide-y divide-dash-border">
+      <div className="mt-4 flex flex-col gap-1">
         {tasks.length === 0 ? (
           <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">برنامه‌ای برای این روز ثبت نشده</div>
         ) : (

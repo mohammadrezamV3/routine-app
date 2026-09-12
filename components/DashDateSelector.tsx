@@ -138,10 +138,10 @@ export function DashDateSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days.length]);
 
-  // سوایپ با انگشت: کشیدن به راست → روزهای گذشته، به چپ → روزهای آینده
-  // (هم‌جهت با فلش‌های دسکتاپ که توی RTL «قبلی» سمت راسته). فقط وقتی
-  // حرکت افقی واضحا از عمودی بیشتره عمل می‌کنه تا اسکرول عمودی صفحه
-  // رو نشکنه.
+  // سوایپ با انگشت: کشیدن به راست → روزهای آینده، به چپ → روزهای گذشته
+  // (طبقِ گزارشِ باگ: قبلا برعکس بود — سوایپ‌راست می‌رفت به قدیم). فقط
+  // وقتی حرکت افقی واضحا از عمودی بیشتره عمل می‌کنه تا اسکرول عمودی
+  // صفحه رو نشکنه.
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   function onTouchStart(e: React.TouchEvent) {
     const t = e.touches[0];
@@ -155,8 +155,8 @@ export function DashDateSelector({
     const dx = t.clientX - start.x;
     const dy = t.clientY - start.y;
     if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    if (dx > 0) onPrevWeek();
-    else onNextWeek();
+    if (dx > 0) onNextWeek();
+    else onPrevWeek();
   }
 
   return (
