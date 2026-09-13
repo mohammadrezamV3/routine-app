@@ -37,14 +37,12 @@ export default function RoadmapsHub() {
           + افزودن رودمپ
         </button>
       </div>
-      <div className="section-note">بگو چی می‌خوای یاد بگیری، یه مسیر کامل باهات می‌سازیم</div>
-
       {status === "authenticated" ? (
         <SuperAdminGate>
           {!loaded ? (
             <LoadingBlock />
           ) : !customRoadmaps.length ? (
-            <div className="trade-surface trade-page-box rm-page-box">
+            <div className="trade-surface trade-page-box rm-page-box rm-empty-box">
               <div className="trade-empty-state">
                 <Map size={32} />
                 <p>هنوز رودمپی نساختی</p>

@@ -188,9 +188,16 @@ function parseJsonResponse(text: string): any {
 // نمی‌دانست *دقیقاً فردا صبح چه کار کند*. این نسخه عمداً سخت‌گیر است:
 // هر مرحله باید هدفِ قابل‌سنجش، کارهای عملیِ مشخص، تمرین، معیارِ اتمام و
 // زمانِ تقریبی داشته باشد.
-const SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ آموزش هستی که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده‌ای.
-کاربر یک موضوع می‌دهد به‌همراهِ **زمانی که واقعاً می‌تواند بگذارد**، و تو یک مسیرِ یادگیریِ کامل،
-**جلسه‌به‌جلسه** و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
+//
+// طبقِ درخواستِ صریح: خطِ اولِ پرامپت حالا صریحاً نقش+وظیفه را با هم می‌گوید
+// («تو الان قراره یک رودمپ بسازی») — قبلاً مستقیم می‌رفت سراغِ توصیفِ
+// مربی‌بودن، بدونِ این‌که کلمه‌ی خودِ کار (ساختِ رودمپ) را جایی بگوید.
+const SYSTEM_PROMPT = `تو الان قراره برای یک کاربر یک رودمپ (مسیرِ یادگیریِ گام‌به‌گام) بسازی.
+برای این کار، نقشِ یک مربیِ حرفه‌ایِ آموزش رو داری که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده.
+کاربر یک موضوع می‌دهد، همراهِ **هدفش از یادگیری** (اگر گفته باشد) و **زمانی که واقعاً می‌تواند بگذارد**،
+و تو یک مسیرِ یادگیریِ کامل، **جلسه‌به‌جلسه** و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
+اگر کاربر هدفش را گفته (مثلاً «برای مصاحبه‌ی کاری» یا «فقط سرگرمی و کنجکاوی»)، مسیر را دقیقاً برای
+همان هدف بچین — عمقِ مطالب، سرعت و انتخابِ مثال‌ها باید با هدفِ او هماهنگ باشد، نه یک مسیرِ عمومی.
 
 قواعدِ سخت‌گیرانه:
 
@@ -363,24 +370,29 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
 
 const FA_DAY_NAMES = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
 
-/** پیامِ کاربر: موضوع + وقتی که واقعاً دارد. مدل بدونِ این نمی‌تواند
- *  جلسه‌ها را به اندازه‌ی درست ببُرد. */
-function roadmapUserMessage(topic: string, schedule?: RoadmapSchedule): string {
-  if (!schedule || !schedule.jsDays.length) return `موضوع: ${topic}`;
+/** پیامِ کاربر: موضوع + هدف (اختیاری) + وقتی که واقعاً دارد. مدل بدونِ
+ *  این نمی‌تواند جلسه‌ها را به اندازه‌ی درست ببُرد یا مسیر را برای همان
+ *  هدفِ کاربر بچیند. */
+function roadmapUserMessage(topic: string, schedule?: RoadmapSchedule, goal?: string): string {
+  const lines = [`موضوع: ${topic}`];
+  if (goal?.trim()) lines.push(`هدفِ کاربر از یادگیری: ${goal.trim()}`);
+
+  if (!schedule || !schedule.jsDays.length) return lines.join("\n");
+
   const days = schedule.jsDays.map((d) => FA_DAY_NAMES[d] ?? "").filter(Boolean).join("، ");
   const perWeek = schedule.jsDays.length * schedule.minutesPerDay;
-  return [
-    `موضوع: ${topic}`,
+  lines.push(
     `روزهای تمرین: ${days} (هفته‌ای ${schedule.jsDays.length} جلسه)`,
     `مدتِ هر جلسه: ${schedule.minutesPerDay} دقیقه`,
     `ساعتِ شروع: ${schedule.startTime}`,
     `مجموعِ وقتِ هفتگی: ${perWeek} دقیقه`,
-    `هر جلسه باید دقیقاً در ${schedule.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`,
-  ].join("\n");
+    `هر جلسه باید دقیقاً در ${schedule.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`
+  );
+  return lines.join("\n");
 }
 
-async function callRoadmapOnce(topic: string, userId: string, schedule: RoadmapSchedule | undefined, timeoutMs: number): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule), 6000, AI_MODEL_NAME, timeoutMs);
+async function callRoadmapOnce(topic: string, userId: string, schedule: RoadmapSchedule | undefined, goal: string | undefined, timeoutMs: number): Promise<GeneratedRoadmap> {
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule, goal), 6000, AI_MODEL_NAME, timeoutMs);
   // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
   // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
@@ -394,9 +406,9 @@ async function callRoadmapOnce(topic: string, userId: string, schedule: RoadmapS
  * حلقه با ۲×۴۵ثانیه می‌تونست تا ۹۰ ثانیه طول بکشه که باعث می‌شد ساختِ
  * رودمپ «توی ساخت گیر کنه» (nginx بعد از ۶۰s کانکشن رو می‌بست).
  */
-export async function generateRoadmap(topic: string, userId: string, schedule?: RoadmapSchedule): Promise<GeneratedRoadmap> {
+export async function generateRoadmap(topic: string, userId: string, schedule?: RoadmapSchedule, goal?: string): Promise<GeneratedRoadmap> {
   try {
-    return await withAiBudget((timeoutMs) => callRoadmapOnce(topic, userId, schedule, timeoutMs));
+    return await withAiBudget((timeoutMs) => callRoadmapOnce(topic, userId, schedule, goal, timeoutMs));
   } catch (err: any) {
     logError("ai-gateway", `ساخت رودمپ شکست خورد: ${err?.message || err}`, { context: { feature: "ROADMAP_GENERATION" } });
     throw err;

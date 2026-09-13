@@ -1360,6 +1360,9 @@ model Roadmap {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   topic String // مثلاً "لایت‌روم" یا "مدیریت مالی"
+  // هدفِ کاربر از یادگیری — اختیاری، فقط برای راهنماییِ بهترِ مدل موقعِ
+  // ساخت (مثلاً «برای مصاحبه‌ی کاری» یا «فقط سرگرمی» مسیرِ متفاوتی می‌سازد).
+  goal  String?
   title String
   note  String?
 

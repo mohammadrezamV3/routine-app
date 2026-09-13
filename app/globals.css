@@ -1287,6 +1287,11 @@
      چک‌لیست‌ها/یادداشت‌ها؛ خودِ گریدِ داخلی همچنان به ۴۰۰px محدود و
      وسط‌چین می‌ماند (عرضِ کارت‌ها طبقِ همان درخواستِ قبلی). */
   .rm-page-box{ margin-top:16px; padding:16px; }
+  /* باگِ گزارش‌شده: حالتِ خالی («هنوز رودمپی نساختی») بالای باکسِ بلند
+     می‌نشست، نه وسطش — چون .trade-empty-state فقط محتوای خودش رو
+     وسط‌چین می‌کنه، نه اینکه رویِ کلِ ارتفاعِ بلندِ .rm-page-box (که
+     min-height داره) بشینه. این کلاس فقط روی نسخه‌ی خالی اضافه می‌شه. */
+  .rm-empty-box{ display:flex; align-items:center; justify-content:center; }
   .rm-grid{display:flex; flex-direction:column; gap:10px; max-width:400px; margin-inline:auto;}
   .rm-box{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -6821,24 +6826,17 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
   padding:4px 2px; font-size:12.5px; font-weight:700; color:var(--muted);
 }
 .rm-wizard-actions .wsearch-add-btn:hover{ color:var(--accent); }
-.rm-wizard-loading{
-  display:flex; align-items:center; gap:10px; margin-top:16px;
-  font-size:12.5px; color:var(--muted); line-height:2;
-}
+.rm-wizard-actions .wsearch-add-btn:disabled{ opacity:.5; cursor:default; }
 
 /* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
 /* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
    یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
-/* طبقِ درخواستِ صریح، این هشدار حالا قرمز است (نه خاکستریِ خنثیِ قبلی) —
-   هم‌رنگِ بقیه‌ی هشدارهای اپ (#E05252). */
+/* طبقِ درخواستِ صریحِ تازه: دیگه هیچ باکس/بردر/آیکونی نداره — فقط خودِ
+   متنِ قرمز، وسط‌چین، توی یک خط (بدونِ شکستن‌خط، حتی روی موبایل). */
 .rm-disclaimer{
-  display:flex; align-items:flex-start; gap:8px;
-  max-width:400px; margin:26px auto 0; padding:11px 13px;
-  border:1px dashed rgba(224,82,82,.45); border-radius:14px; background:rgba(224,82,82,.06);
-  font-size:11.5px; line-height:2; color:#E05252; text-align:start;
+  margin:20px 0 0; font-size:11px; line-height:1.6; color:#E05252; text-align:center;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.rm-disclaimer svg{ flex-shrink:0; color:#E05252; }
-.rm-disclaimer svg{ flex-shrink:0; margin-top:4px; color:var(--muted); }
 
 /* ===================== جلسه‌های یک مرحله ===================== */
 .rm-schedule{
