@@ -5727,7 +5727,10 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 /* طبقِ درخواستِ صریح، جستجوی نامِ رویداد دیگر یک دکمه/نوارِ جدا کنارِ
    «تاریخچه/امروز/فیلتر» نیست — یک فیلدِ تمام‌عرض داخلِ خودِ پنلِ فیلتره. */
 .trade-cal-filters .trade-cal-search{ width:100%; margin-bottom:4px; }
-.trade-cal-filters .trade-cal-search > svg{ flex-shrink:0; color:var(--muted2); }
+/* آیکونِ ذره‌بین طبقِ درخواستِ صریح سمتِ چپِ فیلد است — در RTL یعنی
+   آخرین فرزندِ ردیف، پس در خودِ JSX هم بعد از input رندر می‌شود. */
+.trade-cal-filters .trade-cal-search > svg{ flex-shrink:0; color:var(--muted2); order:2; }
+.trade-cal-filters .trade-cal-search > button{ order:1; }
 .trade-cal-filters{
   padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both;
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
@@ -5836,42 +5839,74 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
   background:rgba(var(--bg-rgb),.16);
   backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
 }
+/* طبقِ درخواستِ صریح، اندازه‌ها *دقیقا* همان DashDateSelectorِ «روتین من»
+   است (components/DashDateSelector.tsx) و نه یک پیکسل بزرگ‌تر:
+   موبایل min-w 54 / padding 4 / radius 16 / gap 2، و از ۶۴۰px به بالا
+   min-w 92 / padding 8-12 / gap 4. قبلا پدینگ ۹پیکسل بود و همین پیل‌ها را
+   محسوس درشت‌تر از نسخه‌ی روتین می‌کرد. */
 .trade-cal-day-pill{
-  flex:0 0 auto; scroll-snap-align:center; min-width:56px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  padding:9px 8px; border-radius:14px; color:var(--muted);
-  border:1px solid transparent; background:none; box-shadow:none;
-  transition:background .15s ease, color .15s ease, border-color .15s ease;
+  flex:0 0 auto; scroll-snap-align:center; min-width:54px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  padding:4px; border-radius:16px; color:var(--muted);
+  /* بدونِ border — پیل‌های روتین من هم ندارند و همان ۱پیکسلِ شفاف، پیل را
+     ۲پیکسل بلندتر از مرجع می‌کرد. حلقه‌ی «امروز» با box-shadowِ inset کشیده
+     می‌شود که ابعاد را عوض نمی‌کند. */
+  border:none; background:none; box-shadow:none;
+  transition:background .15s ease, color .15s ease, box-shadow .15s ease;
 }
-.trade-cal-day-pill-wd{ font-size:10.5px; font-weight:600; white-space:nowrap; }
-.trade-cal-day-pill-num{ font-size:11px; white-space:nowrap; opacity:.85; }
-.trade-cal-day-pill.today{ border-color:rgba(var(--accent-rgb),.4); color:var(--accent); }
+/* روزِ غیرفعال: نامِ روز پررنگ، تاریخ کم‌رنگ — همان تفکیکِ روتین من
+   (text-dash-text در برابر text-dash-muted)، نه هردو خاکستری. */
+/* line-height صریح ۱.۶ — همان چیزی که پیل‌های روتین من از اسکوپِ خودشان
+   می‌گیرند؛ بدونش پیل ۲پیکسل بلندتر می‌شد. */
+.trade-cal-day-pill-wd{ font-size:10px; line-height:1.6; font-weight:600; white-space:nowrap; color:var(--text); }
+.trade-cal-day-pill-num{ font-size:9px; line-height:1.6; white-space:nowrap; color:var(--muted); }
+.trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
+.trade-cal-day-pill.today .trade-cal-day-pill-wd{ color:var(--accent); }
 .trade-cal-day-pill.active{
-  background:var(--accent); border-color:var(--accent); color:var(--bg);
-  box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
+  background:var(--accent);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
 }
-.trade-cal-day-pill.active .trade-cal-day-pill-num{ opacity:.9; }
-@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(var(--surface-rgb),.5); color:var(--text); } }
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
+@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
+@media (min-width:640px){
+  .trade-cal-day-pill{ min-width:92px; gap:4px; padding:8px 12px; }
+  .trade-cal-day-pill-wd{ font-size:13px; }
+  .trade-cal-day-pill-num{ font-size:12px; }
+}
 
 /* ردیفِ فیلتر/امروز/تاریخچه — سه قرصِ هم‌شکل، «امروز» وقتی روزِ انتخابی
    خودِ امروزه پر/سبز می‌شه (دقیقا هم‌رنگِ پیل‌های فعالِ استریپِ بالا). */
-.trade-cal-actions-row{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+/* فاصله‌ها هم از روتین من گرفته شده: نوار→دکمه‌ها ۱۰px (۱۲ روی دسکتاپ)،
+   و دکمه‌ها→لیستِ رویدادها ۱۶px (۲۴ روی دسکتاپ). قبلا این دومی صفر بود و
+   جدول عملا به دکمه‌ها چسبیده بود. */
+.trade-cal-actions-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+/* اندازه‌ها دقیقا همان DashFilterButtonِ «روتین من» */
 .trade-cal-pill-btn{
-  display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px;
-  font-size:11.5px; font-weight:600; color:var(--muted); border:1px solid var(--surface-line);
-  background:rgba(var(--surface-rgb),.08); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border-radius:18px;
+  font-size:11px; font-weight:600; color:var(--muted); border:1px solid var(--surface-line);
+  background:var(--surface-1); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease, color .18s ease, background .18s ease;
 }
+@media (min-width:640px){
+  .trade-cal-actions-row{ gap:8px; margin-top:12px; }
+  .trade-cal-pill-btn{ gap:6px; padding:10px 16px; font-size:13px; }
+}
 @media (hover:hover){ .trade-cal-pill-btn:hover{ border-color:var(--accent); color:var(--accent); } }
-body[data-theme="light"] .trade-cal-pill-btn, body:not([data-theme="light"]) .trade-cal-pill-btn{ background:rgba(var(--surface-rgb),.08); box-shadow:none; }
+body[data-theme="light"] .trade-cal-pill-btn, body:not([data-theme="light"]) .trade-cal-pill-btn{ background:var(--surface-1); box-shadow:none; }
 .trade-cal-pill-btn.today.active{
-  background:var(--accent); border-color:var(--accent); color:var(--bg); font-weight:700;
+  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--bg); font-weight:700;
+  box-shadow:0 0 8px rgba(var(--accent-rgb),.25);
 }
 body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
 @media (hover:hover){ .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
 /* «فیلتر» وقتی بازه یا فیلترِ فعالی دارد فقط لبه/متنش اکسنت می‌شود — پر
    نمی‌شود، چون پُر بودن در این ردیف معنیِ «روزِ انتخابی = امروز» را دارد. */
 .trade-cal-pill-btn.on{ border-color:var(--accent); color:var(--accent); }
+/* «زیادی چسبیدن به هم»: بینِ ردیفِ دکمه‌ها و بخشِ رویدادها (یا پنلِ فیلتر
+   که بازش می‌کند) هیچ فاصله‌ای نبود. */
+.trade-cal-below{ margin-top:16px; }
+@media (min-width:640px){ .trade-cal-below{ margin-top:24px; } }
 
 
 /* دکمه‌ی «تاریخچه» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ روتین

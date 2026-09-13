@@ -250,30 +250,31 @@ export function EconomicCalendarPanel() {
       {/* ── سه دکمه، دقیقاً به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
       <div className="trade-cal-actions-row">
         <button type="button" className="trade-cal-pill-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
-          <History size={13} /> تاریخچه
+          <History size={15} /> تاریخچه
         </button>
         <button
           type="button"
           className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
           onClick={() => pickDate(today)}
         >
-          <Calendar size={13} /> امروز
+          <Calendar size={15} /> امروز
         </button>
         <button
           type="button"
           className={`trade-cal-pill-btn${filtersOpen || activeFilterCount ? " on" : ""}`}
           onClick={() => setFiltersOpen((v) => !v)}
         >
-          <Filter size={13} /> فیلتر{activeFilterCount ? ` (${faNum(activeFilterCount)})` : ""}
+          <Filter size={15} /> فیلتر{activeFilterCount ? ` (${faNum(activeFilterCount)})` : ""}
         </button>
       </div>
 
       {/* ── پنلِ فیلتر ── */}
       {filtersOpen && (
-        <div className="trade-surface trade-cal-filters">
+        <div className="trade-surface trade-cal-filters trade-cal-below">
           <label className="exercise-form-label">نام رویداد</label>
+          {/* ترتیبِ DOM عمدی‌ست: در RTL آخرین فرزند سمتِ چپ می‌نشیند، پس
+              ذره‌بین بعد از input می‌آید تا طبقِ درخواستِ صریح چپِ فیلد باشد. */}
           <div className="trade-cal-search">
-            <Search size={13} />
             <input
               type="text"
               value={nameInput}
@@ -286,6 +287,7 @@ export function EconomicCalendarPanel() {
                 <X size={13} />
               </button>
             )}
+            <Search size={14} />
           </div>
 
           <label className="exercise-form-label">سطح تأثیر</label>
@@ -341,16 +343,16 @@ export function EconomicCalendarPanel() {
         <EconMonthPicker date={date} range={range} onPick={pickDate} onClose={() => setMonthPickerOpen(false)} />
       )}
 
-      {loading && firstLoad && <PanelSkeleton />}
+      {loading && firstLoad && <div className="trade-cal-below"><PanelSkeleton /></div>}
 
       {!firstLoad && loadError && (
-        <div className="item-line empty" style={{ marginTop: 16 }}>
+        <div className="item-line empty trade-cal-below">
           {loadError} — <button type="button" className="trade-ghost-btn" onClick={() => load()}>تلاش دوباره</button>
         </div>
       )}
 
       {!firstLoad && !loadError && !loading && !events.length && (
-        <div className="item-line empty" style={{ marginTop: 16 }}>
+        <div className="item-line empty trade-cal-below">
           {/* توضیحِ صادقانه‌ی «چرا این روز خالیه»: یا منبع هنوز تا این تاریخ
               نرسیده، یا فیلترها چیزی باقی نگذاشته‌اند، یا واقعاً رویدادی
               نیست. قبلاً هر سه حالت یک پیام می‌گرفتند و روزهای بیرونِ بازه
@@ -364,7 +366,7 @@ export function EconomicCalendarPanel() {
       )}
 
       {!firstLoad && !!events.length && (
-        <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
+        <div className="trade-cal-below" style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
           <div className="trade-cal-table-scroll">
             <div className="trade-cal-table ltr-inline">
               <div className="trade-cal-thead">
