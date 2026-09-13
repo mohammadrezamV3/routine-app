@@ -76,6 +76,32 @@ nano .env
 ⚠️ `NEXTAUTH_URL` و `NEXT_PUBLIC_SITE_URL` باید **دقیقاً** آدرس نهایی با
 `https://` و بدون اسلش آخر باشند.
 
+### اندازه‌گذاری بر اساس سرور
+
+قاعده: `WEB_CONCURRENCY × NODE_HEAP_MB` باید از **نصف رم** کمتر بماند تا
+Postgres و کشِ فایل‌سیستم هم جا داشته باشند.
+
+| رم / هسته | `WEB_CONCURRENCY` | `NODE_HEAP_MB` | `DB_CONNECTION_LIMIT` |
+|---|---|---|---|
+| ۲ گیگ / ۱ | 1 | 512 | 5 |
+| ۴ گیگ / ۲ | 2 | 512 | 5 |
+| **۸ گیگ / ۴** | **4** | **768** | **5** |
+| ۱۶ گیگ / ۸ | 6 | 1024 | 5 |
+
+`WEB_CONCURRENCY` را از تعداد هسته‌ها بیشتر نگذار — worker اضافه فقط رم
+می‌خورد و context switch زیاد می‌کند.
+
+### swap (توصیه‌شده)
+
+حتی روی سرور پرِ رم، یک swap کوچک جلوی OOM-killer را موقع build می‌گیرد:
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+```
+
 ## ۵) بالا آوردن اپ
 
 ```bash
