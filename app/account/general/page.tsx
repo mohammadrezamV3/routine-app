@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe, Bell, Users, BarChart3, Tablets, CalendarCheck2, CandlestickChart } from "lucide-react";
+import { Globe, Bell, Users, BarChart3, Tablets } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountPageHead, AccountBlock, AccountLine } from "@/components/AccountUI";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
 const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
@@ -25,6 +26,8 @@ const DASHBOARD_PREFS: [keyof DashboardPrefs, string, string?][] = [
 // ۲) روتین و ترید دیگه پشت یک باکس و یک ناوبری دیگه قایم نیستن؛ تنظیماتشون
 //    همین‌جا مستقیم رندر می‌شه و فقط یک تیتر می‌گه مال کدوم بخشه.
 // ۳) «قابل‌جست‌وجو بودن با یوزرنیم» به بخش امنیت منتقل شد (تنظیم حریم خصوصیه).
+// ۴) «اعلان‌ها» دیگر صفحه‌ی جدا نیست و همین‌جا یک بخش است.
+// ۵) روتین و ترید هرکدام *یک* بخش‌اند؛ بالای هر گزینه فقط اسمِ خودش.
 export default function AccountSettingsPage() {
   const [prefs, setPrefs] = useState<DashboardPrefs>(DEFAULT_DASHBOARD_PREFS);
 
@@ -62,12 +65,10 @@ export default function AccountSettingsPage() {
         ))}
       </AccountBlock>
 
-      {/* این دو خودشان بخش‌های استاندارد را رندر می‌کنند، پس این‌جا فقط
-          یک عنوانِ دامنه می‌گذاریم — نه یک قابِ دیگر دورِ قاب. */}
-      <h2 className="acc-block-title" style={{ marginTop: 30 }}><CalendarCheck2 size={15} /> روتین</h2>
+      {/* هرکدام خودش یک بخشِ کامل (تیتر + قاب) است — این‌جا دیگر تیترِ
+          جداگانه‌ای بالای‌شان گذاشته نمی‌شود، وگرنه دو تیتر روی هم می‌افتاد. */}
+      <NotificationSettings index={2} />
       <RoutineSettings />
-
-      <h2 className="acc-block-title" style={{ marginTop: 30 }}><CandlestickChart size={15} /> ترید</h2>
       <TradeSettings />
     </section>
   );

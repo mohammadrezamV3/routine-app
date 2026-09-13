@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Loader2 } from "lucide-react";
+import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Loader2, Check, AlertTriangle } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
@@ -187,25 +187,31 @@ export default function SecurityPage() {
   const otherSessionCount = sessions ? sessions.filter((s) => !s.current).length : 0;
 
   return (
-    <section>
+    // طبقِ درخواستِ صریح این صفحه جمع‌تر شد (acc-compact): فاصله‌ها کمتر و
+    // توضیح‌ها یک‌خطی — قبلا بینِ چهار بخش فضای خالیِ زیادی می‌افتاد.
+    <section className="acc-compact">
       {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
       <AccountPageHead title="امنیت" hint="رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی" />
 
       <AccountBlock icon={<KeyRound size={15} />} title="تغییر رمز عبور" index={0}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="تکرار رمز عبور جدید" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
-          {pwSuccess && <div className="account-save-toast" style={{ marginTop: 0 }}>رمز عبور با موفقیت تغییر کرد.</div>}
-          {/* مثل بقیه‌ی دکمه‌های ذخیره‌ی پنل: سمت چپ + دایره‌ی لودینگ */}
+          {/* مثل دکمه‌ی ذخیره‌ی بقیه‌ی پنل: سمت چپ، موقعِ ذخیره فقط دایره‌ی
+              لودینگ، بعدش تیک — بدونِ هیچ متنِ «ذخیره شد». */}
           <button
-            className="account-outline-btn"
+            className={`account-outline-btn acc-save-btn is-${pwSaving ? "saving" : pwSuccess ? "ok" : pwError ? "bad" : "idle"}`}
             onClick={changePassword}
             disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
-            style={{ alignSelf: "flex-end", display: "inline-flex", alignItems: "center", gap: 7 }}
+            style={{ alignSelf: "flex-end" }}
+            aria-label="ذخیره رمز جدید"
           >
-            {pwSaving ? (<><Loader2 size={14} className="trade-spin" /> در حال ذخیره…</>) : "ذخیره رمز جدید"}
+            {pwSaving ? <Loader2 size={16} className="trade-spin" />
+              : pwSuccess ? <Check size={16} />
+              : pwError ? <AlertTriangle size={16} />
+              : "ذخیره رمز جدید"}
           </button>
         </div>
       </AccountBlock>
@@ -215,7 +221,7 @@ export default function SecurityPage() {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تایید ورود با پیامک</div>
             <div className="item-line" style={{ marginTop: 2 }}>
-              با روشن‌بودنش، هر بار بعد از رمز درست یک کد به شماره‌ی حسابت پیامک می‌شه و بدون اون کد ورود انجام نمی‌شه.
+              بعد از رمزِ درست، یک کد به شماره‌ی حسابت پیامک می‌شه.
             </div>
           </div>
           {twoFactor !== null && (
@@ -254,8 +260,8 @@ export default function SecurityPage() {
             ))}
           </div>
           {otherSessionCount > 0 && (
-            <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ marginTop: 14, display: "block", marginInlineStart: "auto" }}>
-              {sessionBusy === "others" ? "در حال انجام…" : `خروج از همه‌ی دستگاه‌های دیگر (${otherSessionCount})`}
+            <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ marginTop: 10, display: "block", marginInlineStart: "auto" }}>
+              {sessionBusy === "others" ? "در حال انجام…" : `خروج از دستگاه‌های دیگر (${otherSessionCount})`}
             </button>
           )}
           </>
@@ -267,14 +273,14 @@ export default function SecurityPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>قابل‌جست‌وجو بودن با یوزرنیم</div>
-            <div className="item-line" style={{ marginTop: 2 }}>خاموش‌کردنش یعنی توی جست‌وجوی دوستان دیده نمی‌شی</div>
+            <div className="item-line" style={{ marginTop: 2 }}>خاموش یعنی توی جست‌وجوی دوستان دیده نمی‌شی</div>
           </div>
           {discoverable !== null && (
             <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label="قابل‌جست‌وجو بودن" />
           )}
         </div>
 
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
             <UserX size={15} /> افراد بلاک‌شده
           </div>

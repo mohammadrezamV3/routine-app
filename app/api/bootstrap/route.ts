@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
         // lastName/birthDate هم لازم‌ن: صفحه‌ی پروفایل از همین پاسخ (از راه
         // lib/accountCache) می‌خونه و بدونشون «نام و نام خانوادگی» فقط نام
         // رو نشون می‌داد و تاریخ تولدِ ذخیره‌شده هیچ‌وقت پر نمی‌شد.
-        lastName: true, birthDate: true,
+        lastName: true, birthDate: true, bio: true,
         createdAt: true, isSuperAdmin: true, avatarUrl: true,
         referralCode: { select: { code: true } },
         moduleAccess: { select: { module: true, active: true, expiresAt: true } },

@@ -13,6 +13,8 @@ type Profile = {
   name: string;
   username: string | null;
   avatarUrl: string | null;
+  bannerUrl: string | null;
+  bio: string | null;
   streak: number;
   bestStreak: number;
   starsCount: number;
@@ -104,6 +106,13 @@ export function FriendProfileModal({
 
         {profile && (
           <>
+            {/* طبقِ درخواستِ صریح: پروفایلِ دوست هم مثلِ پروفایلِ خودِ کاربر
+                بنر دارد و بیوگرافی‌اش را نشان می‌دهد. بدونِ بنرِ آپلودشده
+                همان گرادیانِ اکسنتِ تم کشیده می‌شود، نه یک تکه‌ی خالی. */}
+            <div className="friend-profile-banner">
+              {profile.bannerUrl && <img src={profile.bannerUrl} alt="" className="friend-profile-banner-img" />}
+            </div>
+
             <div className="friend-profile-head">
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="friend-profile-avatar" />
@@ -113,6 +122,7 @@ export function FriendProfileModal({
               <div className="friend-profile-name">{profile.name}</div>
               {profile.username && <div className="friend-profile-username mono">@{profile.username}</div>}
               {profile.planName && <div className="friend-profile-plan">{profile.planName}</div>}
+              {profile.bio && <p className="friend-profile-bio">{profile.bio}</p>}
             </div>
 
             <div className="friend-profile-stats">

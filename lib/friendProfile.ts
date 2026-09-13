@@ -9,6 +9,8 @@ export type FriendProfile = {
   name: string;
   username: string | null;
   avatarUrl: string | null;
+  bannerUrl: string | null;
+  bio: string | null;
   streak: number;
   bestStreak: number;
   starsCount: number;
@@ -43,7 +45,7 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
   const [user, starsCount, starredByMe, roadmapsCompleted, plansCompleted, activeSub, liveStats] = await Promise.all([
     prisma.user.findUnique({
       where: { id: targetUserId },
-      select: { id: true, name: true, username: true, avatarUrl: true, bestStreak: true },
+      select: { id: true, name: true, username: true, avatarUrl: true, bannerUrl: true, bio: true, bestStreak: true },
     }),
     prisma.friendStar.count({ where: { receiverId: targetUserId } }),
     prisma.friendStar.findUnique({ where: { giverId_receiverId: { giverId: viewerId, receiverId: targetUserId } } }),
@@ -74,6 +76,8 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
     name: user.name || "کاربر",
     username: user.username,
     avatarUrl: user.avatarUrl,
+    bannerUrl: user.bannerUrl,
+    bio: user.bio,
     streak: liveStreak,
     bestStreak,
     starsCount,

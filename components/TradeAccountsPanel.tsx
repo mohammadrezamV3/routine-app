@@ -233,6 +233,21 @@ function AccountRow({
           بالا-راستِ کارت»): توپِ رنگیِ حساب دیگه absolute-positioned و
           مستقل از اسم نیست — داخلِ خودِ لینکِ اسم، بلافاصله بعدِ متنِ اسم
           نشسته (که توی RTL یعنی دقیقا سمتِ چپِ اسم). */}
+      {/* باگِ گزارش‌شده: «روی حساب می‌زنم نمی‌ره تو». تنها ناحیه‌ی کلیک‌پذیرِ
+          کارت، خودِ متنِ نامِ حساب بود (و `.trade-account-main` که وقتی
+          برچسبی نبود ارتفاعِ صفر داشت) — یعنی بیشترِ سطحِ کارت اصلا لینک
+          نبود. حالا یک لینکِ کششیِ نامرئی کلِ کارت را می‌پوشاند و بقیه‌ی
+          محتوا رویش می‌نشیند؛ سه‌نقطه هم چون z-index بالاتری دارد همچنان
+          خودش کلیک می‌گیرد. `prefetch` هم روشن است تا مقصد از قبل آماده
+          باشد و ورود به حساب کند نباشد. */}
+      <Link
+        href={`/trade/accounts/${a.id}`}
+        className="trade-account-hit"
+        prefetch
+        aria-label={`باز کردن حساب ${a.name}`}
+        tabIndex={-1}
+      />
+
       <div className="trade-account-top-row">
         <div className="trade-account-kebab-inline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <TradeKebabMenu
@@ -249,7 +264,7 @@ function AccountRow({
           />
         </div>
 
-        <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link">
+        <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link" prefetch>
           <span className="trade-account-name">{a.name}</span>
           <span className="trade-account-dot" style={{ background: a.color }} />
           {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
@@ -262,7 +277,7 @@ function AccountRow({
         </span>
       </div>
 
-      <Link href={`/trade/accounts/${a.id}`} className="trade-account-main">
+      <div className="trade-account-main">
         {!!a.tags.length && (
           <div className="trade-tag-row" style={{ marginTop: 10 }}>
             {a.tags.map((t) => (
@@ -273,7 +288,7 @@ function AccountRow({
             ))}
           </div>
         )}
-      </Link>
+      </div>
     </motion.div>
   );
 }

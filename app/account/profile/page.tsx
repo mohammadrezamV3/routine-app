@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Camera, Trash2, Mail, Phone, Cake, AtSign, User as UserIcon, ImagePlus,
-  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2,
+  Camera, Trash2, Phone, Cake, AtSign, User as UserIcon, ImagePlus,
+  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2, NotebookPen,
 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
@@ -15,29 +15,32 @@ import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal }
 import { resizeImageToDataUrl, resizeBannerToDataUrl } from "@/lib/avatarUpload";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
-import { isValidEmail, isValidUsername, isValidPersianName } from "@/lib/validate";
+import { isValidUsername, isValidPersianName } from "@/lib/validate";
 
 type ProfileUser = {
-  email: string | null;
   username: string | null;
   phone: string | null;
   /** توجه: /api/account این فیلد را `name` می‌دهد، نه `firstName`. */
   name: string | null;
   lastName: string | null;
+  bio: string | null;
   birthDate: string | null;
 };
 
+const BIO_MAX = 200;
+
 /**
- * صفحه‌ی پروفایل — طبقِ شماتیکِ دست‌نویس:
- *   بنر (با آواتارِ نشسته روی لبه‌اش)
- *   ← «پروفایل عمومی»: نام | نام خانوادگی · شماره همراه | ایمیل · یوزرنیم | تاریخ تولد
+ * صفحه‌ی پروفایل:
+ *   بنر (کلیک‌پذیر برای آپلود) با آواتارِ کلیک‌پذیرِ نشسته روی لبه‌اش
+ *   ← «پروفایل عمومی»: نام | نام خانوادگی · شماره · یوزرنیم · تاریخ تولد · بیوگرافی
  *   ← «پروفایل ورزشی»: سن | قد · وزن | جنسیت
- *   ← یک دکمه‌ی «ذخیره تغییرات» برای هردو بخش
+ *   ← یک دکمه‌ی «ذخیره تغییرات» برای همه‌چیز
  *
- * فیلدها همان `AuthField` صفحه‌های ورود/ثبت‌نام‌اند تا پنل کاربری با بقیه‌ی
- * اپ یک‌زبان باشد. ایمیل و یوزرنیم دکمه‌ی «تغییر» خودشان را دارند چون
- * تغییرشان فلوی جدا دارد (کد تأیید / یکتابودن) و نباید با ذخیره‌ی معمولی
- * قاطی شود.
+ * طبقِ درخواستِ صریحِ کاربر:
+ *   • ایمیل اصلا این‌جا نیست (نه نمایش، نه فلوی تغییر).
+ *   • یوزرنیم دکمه‌ی «تغییر» ندارد — خودِ فیلد ویرایش‌پذیر است و با همان
+ *     دکمه‌ی ذخیره‌ی پایین ثبت می‌شود (روتِ اختصاصی‌اش داخلِ saveAll صدا زده
+ *     می‌شود، چون یکتایی‌اش سمت سرور چک می‌شود).
  */
 export default function AccountProfilePage() {
   const [data, setData] = useState<ProfileUser | null>(null);
@@ -53,6 +56,9 @@ export default function AccountProfilePage() {
   // ── فیلدهای قابل ویرایش ──
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [savedUsername, setSavedUsername] = useState<string | null>(null);
+  const [bio, setBio] = useState("");
   const [birthDate, setBirthDate] = useState<JalaliDate | null>(null);
   const [dobOpen, setDobOpen] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
@@ -64,31 +70,16 @@ export default function AccountProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // فلوی تغییر ایمیل — کد به ایمیل جدید می‌رود، تا وارد نکردن کد درست
-  // ایمیل حساب عوض نمی‌شود (جلوگیری از قبضه‌کردن حساب با یک سشن سرقتی).
-  const [emailChanging, setEmailChanging] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [emailCodeSent, setEmailCodeSent] = useState(false);
-  const [emailCode, setEmailCode] = useState("");
-  const [emailBusy, setEmailBusy] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-
-  // یوزرنیم — تنها جای تغییرش همین صفحه است (از «امنیت» برداشته شد)
-  const [username, setUsername] = useState<string | null>(null);
-  const [usernameDraft, setUsernameDraft] = useState("");
-  const [usernameEditing, setUsernameEditing] = useState(false);
-  const [usernameSaving, setUsernameSaving] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [usernameSuccess, setUsernameSuccess] = useState(false);
-
   useEffect(() => {
     getAccount().then((res: AccountData) => {
       const u = res?.user as ProfileUser | undefined;
       if (!u) return;
       setData(u);
-      setUsername(u.username ?? null);
+      setUsername(u.username ?? "");
+      setSavedUsername(u.username ?? null);
       setFirstName(u.name ?? "");
       setLastName(u.lastName ?? "");
+      setBio(u.bio ?? "");
       if (u.birthDate) {
         const d = new Date(u.birthDate);
         setBirthDate(toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate()));
@@ -169,13 +160,16 @@ export default function AccountProfilePage() {
     setBannerSaving(false);
   }
 
-  /** یک دکمه برای هر دو بخش: پروفایل عمومی روی /api/account، ورزشی روی bodyMetrics */
+  /** یک دکمه برای همه‌چیز: عمومی روی /api/account، یوزرنیم روی روتِ خودش، ورزشی روی bodyMetrics */
   async function saveAll() {
     setSaveError(null);
+    setSaved(false);
     const name = firstName.trim();
     const family = lastName.trim();
+    const uname = username.trim().replace(/^@/, "");
     if (name && !isValidPersianName(name)) { setSaveError("نام باید فقط با حروف فارسی نوشته شود"); return; }
     if (family && !isValidPersianName(family)) { setSaveError("نام خانوادگی باید فقط با حروف فارسی نوشته شود"); return; }
+    if (uname && !isValidUsername(uname)) { setSaveError("یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد"); return; }
 
     const height = heightCm.trim() ? Number(heightCm) : undefined;
     const weight = weightKg.trim() ? Number(weightKg) : undefined;
@@ -186,11 +180,24 @@ export default function AccountProfilePage() {
 
     setSaving(true);
     try {
+      // یوزرنیم اول: روتِ خودش را دارد (یکتایی) و اگر تکراری بود نباید
+      // بقیه‌ی فیلدها هم بی‌سروصدا ذخیره شده باشند.
+      if (uname && uname !== savedUsername) {
+        const uRes = await fetch("/api/account/username", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: uname }),
+        });
+        const uData = await uRes.json().catch(() => ({}));
+        if (!uRes.ok) { setSaveError(uData.error || "تغییر یوزرنیم ناموفق بود"); return; }
+        setSavedUsername(uname);
+      }
+
       const res = await fetch("/api/account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, lastName: family,
+          name, lastName: family, bio: bio.trim(),
           gender: gender === "unset" ? null : gender,
           birthDate: birthDate ? isoLocal(jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2])) : null,
         }),
@@ -207,7 +214,7 @@ export default function AccountProfilePage() {
 
       invalidateAccountCache();
       setData((d) => (d ? {
-        ...d, name, lastName: family,
+        ...d, name, lastName: family, bio: bio.trim() || null, username: uname || null,
         birthDate: birthDate ? jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2]).toISOString() : null,
       } : d));
       setSaved(true);
@@ -216,80 +223,6 @@ export default function AccountProfilePage() {
       setSaveError("مشکلی در اتصال به سرور پیش اومد");
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function saveUsername() {
-    const trimmed = usernameDraft.trim();
-    if (!isValidUsername(trimmed)) {
-      setUsernameError("یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد");
-      return;
-    }
-    setUsernameSaving(true);
-    setUsernameError(null);
-    try {
-      const res = await fetch("/api/account/username", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: trimmed }),
-      });
-      const resData = await res.json().catch(() => ({}));
-      if (!res.ok) { setUsernameError(resData.error || "خطایی پیش اومد"); return; }
-      setUsername(trimmed);
-      invalidateAccountCache();
-      setUsernameEditing(false);
-      setUsernameSuccess(true);
-      setTimeout(() => setUsernameSuccess(false), 2500);
-    } catch {
-      setUsernameError("مشکلی در اتصال به سرور پیش اومد");
-    } finally {
-      setUsernameSaving(false);
-    }
-  }
-
-  async function sendEmailCode() {
-    if (emailBusy || !newEmail.trim()) return;
-    if (!isValidEmail(newEmail.trim())) { setEmailError("ایمیل معتبر نیست"); return; }
-    setEmailBusy(true);
-    setEmailError(null);
-    try {
-      const res = await fetch("/api/account/email/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newEmail: newEmail.trim() }),
-      });
-      const resData = await res.json().catch(() => ({}));
-      if (!res.ok) { setEmailError(resData.error || "خطایی پیش اومد"); return; }
-      setEmailCodeSent(true);
-    } catch {
-      setEmailError("مشکلی در اتصال به سرور پیش اومد");
-    } finally {
-      setEmailBusy(false);
-    }
-  }
-
-  async function verifyEmailCode() {
-    if (emailBusy || !emailCode.trim()) return;
-    setEmailBusy(true);
-    setEmailError(null);
-    try {
-      const res = await fetch("/api/account/email/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newEmail: newEmail.trim(), code: emailCode.trim() }),
-      });
-      const resData = await res.json().catch(() => ({}));
-      if (!res.ok) { setEmailError(resData.error || "خطایی پیش اومد"); return; }
-      invalidateAccountCache();
-      setData((d) => (d ? { ...d, email: resData.email } : d));
-      setEmailChanging(false);
-      setEmailCodeSent(false);
-      setNewEmail("");
-      setEmailCode("");
-    } catch {
-      setEmailError("مشکلی در اتصال به سرور پیش اومد");
-    } finally {
-      setEmailBusy(false);
     }
   }
 
@@ -304,12 +237,21 @@ export default function AccountProfilePage() {
       {/* ── بنر + آواتار ── */}
       <motion.div className="profile-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}>
         <div className="profile-banner">
-          {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
+          {/* طبقِ درخواستِ صریح، خودِ بنر هم مثلِ عکسِ پروفایل با کلیک عوض
+              می‌شود — دکمه‌ی «افزودن بنر» فقط یک میان‌بُرِ دیده‌شونده روی
+              همان کار است، نه تنها راهش. */}
+          <button
+            type="button" className="profile-banner-hit" onClick={() => bannerInputRef.current?.click()}
+            disabled={bannerSaving} aria-label={bannerUrl ? "تغییر بنر" : "افزودن بنر"}
+          >
+            {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
+          </button>
+
           <div className="profile-banner-actions">
-            <button type="button" className="profile-banner-btn" onClick={() => bannerInputRef.current?.click()} disabled={bannerSaving}>
-              <ImagePlus size={14} />
+            <span className="profile-banner-btn" aria-hidden="true">
+              {bannerSaving ? <Loader2 size={14} className="trade-spin" /> : <ImagePlus size={14} />}
               <span>{bannerUrl ? "تغییر بنر" : "افزودن بنر"}</span>
-            </button>
+            </span>
             {bannerUrl && (
               <button type="button" className="profile-banner-btn" onClick={removeBanner} disabled={bannerSaving} aria-label="حذف بنر">
                 <Trash2 size={14} />
@@ -330,7 +272,7 @@ export default function AccountProfilePage() {
             {avatarUrl ? (
               <img src={avatarUrl} alt="عکس پروفایل" className="profile-hero-avatar-img" />
             ) : (
-              <AgentAvatar seed={fullName || username || data.email || "؟"} size={92} className="profile-hero-avatar-img" />
+              <AgentAvatar seed={fullName || username || "؟"} size={92} className="profile-hero-avatar-img" />
             )}
             <span className="profile-hero-avatar-hint" aria-hidden="true">
               {avatarSaving ? <Loader2 size={15} className="trade-spin" /> : <Camera size={15} />}
@@ -375,84 +317,29 @@ export default function AccountProfilePage() {
           <AuthField id="pf-phone" label="شماره همراه" icon={<Phone size={16} />}>
             <input id="pf-phone" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }} value={data.phone || "ثبت نشده"} readOnly disabled />
           </AuthField>
-          <AuthField
-            id="pf-email" label="ایمیل" icon={<Mail size={16} />}
-            endAction={!emailChanging ? (
-              <button type="button" className="acc-field-action" onClick={() => setEmailChanging(true)}>تغییر</button>
-            ) : undefined}
-          >
-            <input id="pf-email" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }} value={data.email || "ثبت نشده"} readOnly disabled />
+
+          <AuthField id="pf-username" label="یوزرنیم" icon={<AtSign size={16} />}>
+            <input
+              id="pf-username" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }}
+              value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
+            />
           </AuthField>
 
-          <AuthField
-            id="pf-username" label="یوزرنیم" icon={<AtSign size={16} />}
-            endAction={!usernameEditing ? (
-              <button type="button" className="acc-field-action" onClick={() => { setUsernameDraft(username || ""); setUsernameError(null); setUsernameEditing(true); }}>
-                {username ? "تغییر" : "تنظیم"}
-              </button>
-            ) : undefined}
-          >
-            <input id="pf-username" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }} value={username ? `@${username}` : "ثبت نشده"} readOnly disabled />
-          </AuthField>
           <AuthField id="pf-dob" label="تاریخ تولد" icon={<Cake size={16} />}>
             <button type="button" id="pf-dob" className={`jdate-btn${birthDate ? "" : " placeholder"}`} onClick={() => setDobOpen(true)}>
               {birthDate ? formatJalali(birthDate) : "انتخاب تاریخ تولد"}
             </button>
           </AuthField>
-        </div>
 
-        {usernameEditing && (
-          <div className="acc-inline-form">
-            <input
-              type="text" className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }}
-              value={usernameDraft} onChange={(e) => { setUsernameDraft(e.target.value); setUsernameError(null); }}
-              placeholder="یوزرنیم جدید"
+          <AuthField id="pf-bio" label="بیوگرافی" icon={<NotebookPen size={16} />}>
+            <textarea
+              id="pf-bio" className="wsearch-newform-name acc-textarea" rows={3} maxLength={BIO_MAX}
+              value={bio} onChange={(e) => setBio(e.target.value)}
+              placeholder="یک توضیح کوتاه درباره‌ی خودت — توی پروفایلی که دوستانت می‌بینن نشون داده می‌شه"
             />
-            {usernameError && <div className="field-error-msg" style={{ display: "block" }}>{usernameError}</div>}
-            <div className="acc-inline-actions">
-              <button type="button" className="account-outline-btn" onClick={saveUsername} disabled={usernameSaving}>
-                {usernameSaving ? "در حال ذخیره…" : "ذخیره یوزرنیم"}
-              </button>
-              <button type="button" className="account-outline-btn muted" onClick={() => { setUsernameEditing(false); setUsernameError(null); }} disabled={usernameSaving}>انصراف</button>
-            </div>
-          </div>
-        )}
-        {usernameSuccess && <div className="account-save-toast" style={{ marginTop: 10 }}>یوزرنیم با موفقیت تغییر کرد.</div>}
-
-        {emailChanging && (
-          <motion.div className="acc-inline-form" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}>
-            {!emailCodeSent ? (
-              <>
-                <input
-                  type="email" dir="ltr" className="wsearch-newform-name" style={{ textAlign: "right" }} placeholder="ایمیل جدید"
-                  value={newEmail} onChange={(e) => { setNewEmail(e.target.value); setEmailError(null); }}
-                />
-                <div className="acc-inline-actions">
-                  <button type="button" className="account-outline-btn" onClick={sendEmailCode} disabled={emailBusy || !newEmail.trim()}>
-                    {emailBusy ? "در حال ارسال…" : "ارسال کد"}
-                  </button>
-                  <button type="button" className="account-outline-btn muted" onClick={() => { setEmailChanging(false); setEmailError(null); }} disabled={emailBusy}>انصراف</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="acc-block-desc" style={{ margin: 0 }}>کد تایید به {newEmail} فرستاده شد.</div>
-                <input
-                  type="text" dir="ltr" className="wsearch-newform-name mono" style={{ textAlign: "right" }} placeholder="کد تایید"
-                  value={emailCode} onChange={(e) => { setEmailCode(e.target.value); setEmailError(null); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); verifyEmailCode(); } }}
-                />
-                <div className="acc-inline-actions">
-                  <button type="button" className="account-outline-btn" onClick={verifyEmailCode} disabled={emailBusy || !emailCode.trim()}>
-                    {emailBusy ? "در حال تایید…" : "تایید کد"}
-                  </button>
-                  <button type="button" className="account-outline-btn muted" onClick={() => { setEmailChanging(false); setEmailCodeSent(false); setEmailError(null); }} disabled={emailBusy}>انصراف</button>
-                </div>
-              </>
-            )}
-            {emailError && <div className="field-error-msg" style={{ display: "block" }}>{emailError}</div>}
-          </motion.div>
-        )}
+            <span className="acc-field-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
+          </AuthField>
+        </div>
       </AccountBlock>
 
       {/* ── پروفایل ورزشی ── */}
