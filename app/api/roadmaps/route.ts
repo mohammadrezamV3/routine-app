@@ -52,11 +52,12 @@ export async function POST(req: NextRequest) {
   const userId = guard.userId;
 
   const body = await req.json();
-  const { topic, schedule } = body as { topic: string; schedule?: unknown };
+  const { topic, schedule, goal } = body as { topic: string; schedule?: unknown; goal?: string };
   if (!topic || !topic.trim()) {
     return NextResponse.json({ error: "موضوع الزامی است" }, { status: 400 });
   }
   const cleanTopic = clampText(topic.trim(), 120);
+  const cleanGoal = typeof goal === "string" && goal.trim() ? clampText(goal.trim(), 300) : null;
 
   const cleanSchedule = parseSchedule(schedule);
   if (schedule && !cleanSchedule) {
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   let generated;
   try {
-    generated = await generateRoadmap(cleanTopic, userId, cleanSchedule ?? undefined);
+    generated = await generateRoadmap(cleanTopic, userId, cleanSchedule ?? undefined, cleanGoal ?? undefined);
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "خطا در ساخت رودمپ" }, { status: 500 });
   }
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId,
         topic: cleanTopic,
+        goal: cleanGoal,
         title: generated.title,
         note: generated.note,
         stations: generated.stations as any,
