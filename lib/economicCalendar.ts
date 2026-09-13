@@ -253,10 +253,16 @@ async function fetchOneFeed(url: string, key: string | undefined): Promise<Norma
  * نه فقط «همین هفته». شکستِ یکی از سه فید کل sync را نمی‌شکند (مثلاً اگر
  * فقط nextweek موقتاً در دسترس نبود، دو فیدِ دیگر همچنان ذخیره می‌شوند).
  */
-export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
+export async function fetchExternalEvents(opts?: { fast?: boolean }): Promise<NormalizedEvent[]> {
   const key = process.env.ECONOMIC_CALENDAR_API_KEY;
   const customUrl = process.env.ECONOMIC_CALENDAR_URL;
-  const urls = customUrl ? [customUrl] : DEFAULT_CALENDAR_URLS;
+  // در حالتِ «تند» (لحظه‌ی انتشارِ یک خبر، هر چند ثانیه یک‌بار) فقط فیدِ
+  // همین هفته لازم است — رویدادی که همین حالا منتشر می‌شود قطعاً در
+  // هفته‌ی جاری‌ست. گرفتنِ هر سه فید هر ۵ثانیه هم سه برابر ترافیکِ بی‌مورد
+  // به منبع می‌زد هم شانسِ محدودشدن از سمتِ آن‌ها را بالا می‌برد.
+  const urls = customUrl
+    ? [customUrl]
+    : opts?.fast ? [DEFAULT_CALENDAR_URL] : DEFAULT_CALENDAR_URLS;
 
   const results = await Promise.allSettled(urls.map((u) => fetchOneFeed(u, key)));
   const events: NormalizedEvent[] = [];
@@ -281,9 +287,16 @@ export async function fetchExternalEvents(): Promise<NormalizedEvent[]> {
  */
 export async function syncEconomicCalendar(prisma: {
   economicEvent: { upsert: (args: any) => Promise<{ createdAt: Date; updatedAt: Date }> };
-}): Promise<{ source: string; fetched: number; created: number; updated: number }> {
+}, opts?: { fast?: boolean }): Promise<{ source: string; fetched: number; created: number; updated: number; fast: boolean }> {
   const source = externalProviderName();
-  const events = await fetchExternalEvents();
+  const fetched = await fetchExternalEvents(opts);
+  // در حالتِ تند فقط رویدادهای همین حدودِ زمانی نوشته می‌شوند. یک sync
+  // کامل چند صد upsertِ پشت‌سرهم است؛ تکرارِ آن هر ۵ثانیه فقط برایِ یک
+  // رویداد، بی‌دلیل دیتابیس را مشغول می‌کرد. کلِ فید همچنان در پاس‌های
+  // آرومِ معمولی (هر ۱۰دقیقه) نوشته می‌شود، پس چیزی از قلم نمی‌افتد.
+  const events = opts?.fast
+    ? fetched.filter((e) => Math.abs(e.occursAt.getTime() - Date.now()) <= 86_400_000)
+    : fetched;
   let created = 0;
   let updated = 0;
   for (const e of events) {
@@ -303,7 +316,7 @@ export async function syncEconomicCalendar(prisma: {
     if (result.createdAt.getTime() === result.updatedAt.getTime()) created++;
     else updated++;
   }
-  return { source, fetched: events.length, created, updated };
+  return { source, fetched: events.length, created, updated, fast: !!opts?.fast };
 }
 
 // ── زمان‌بندیِ خودتنظیمِ sync بعدی ────────────────────────────────────────
@@ -320,10 +333,39 @@ export async function syncEconomicCalendar(prisma: {
 // بعدِ ری‌استارت هم خودکار درست کار می‌کنه چون هر فراخوانی از نو
 // تصمیم می‌گیره، نه اینکه به یک تایمرِ قدیمی تکیه کنه.
 export const SLOW_SYNC_INTERVAL_MS = 10 * 60 * 1000;
-const FAST_POLL_INTERVAL_MS = 15 * 1000;
-const SETTLE_GRACE_MS = 10 * 1000;
+/**
+ * طبقِ درخواستِ صریح: «نهایتاً تا ده ثانیه بعد از انتشار، داده روی سایت
+ * آماده باشد». بودجه‌ی ۱۰ثانیه بینِ دو حلقه تقسیم می‌شود:
+ *   • سرور (همین‌جا): اولین چک ۳ثانیه بعدِ زمانِ رویداد، بعدش هر ۵ثانیه.
+ *   • کلاینت (EconomicCalendarPanel): هر ۵ثانیه تازه‌سازیِ بی‌صدا، فقط
+ *     وقتی رویدادِ منتشرنشده‌ای روی همان صفحه هست.
+ * پس بدترین حالتِ «انتشار → دیده‌شدن» حدودِ ۱۰ثانیه می‌ماند، نه ۱۵ثانیه‌ی
+ * قبلی که خودش به‌تنهایی از بودجه رد می‌شد.
+ */
+const FAST_POLL_INTERVAL_MS = 5 * 1000;
+const SETTLE_GRACE_MS = 3 * 1000;
 const PENDING_LOOKAHEAD_MS = 10 * 60 * 1000;
 const PENDING_LOOKBACK_MS = 10 * 60 * 1000;
+
+/**
+ * آیا همین حالا منتظرِ انتشارِ یک رویدادیم؟ (رویدادِ بی‌actual که زمانش
+ * همین حوالی‌ست.) روتِ کران با این تصمیم می‌گیرد پاسِ بعدی «تند» باشد یا
+ * «کامل» — همان شرطی که computeNextSyncDelayMs هم بر اساسش زمان‌بندی
+ * می‌کند، پس این دو هیچ‌وقت با هم اختلاف نظر پیدا نمی‌کنند.
+ */
+export async function hasPendingRelease(prisma: {
+  economicEvent: { findFirst: (args: any) => Promise<{ occursAt: Date } | null> };
+}): Promise<boolean> {
+  const now = Date.now();
+  const pending = await prisma.economicEvent.findFirst({
+    where: {
+      actual: null,
+      occursAt: { gte: new Date(now - PENDING_LOOKBACK_MS), lte: new Date(now + PENDING_LOOKAHEAD_MS) },
+    },
+    select: { occursAt: true },
+  });
+  return !!pending;
+}
 
 export async function computeNextSyncDelayMs(prisma: {
   economicEvent: {
@@ -349,13 +391,13 @@ export async function computeNextSyncDelayMs(prisma: {
   const dueAt = pending.occursAt.getTime() + SETTLE_GRACE_MS;
   const msUntilDue = dueAt - now;
   if (msUntilDue <= 0) {
-    // زمانِ رویداد + ۱۰ثانیه گذشته ولی actual هنوز نیومده (یا این
+    // زمانِ رویداد + مهلتِ کوتاه گذشته ولی actual هنوز نیومده (یا این
     // رویداد اصلا actual نداره، مثلِ سخنرانی) — تا سقفِ بازه‌ی بالا
     // (۱۰دقیقه‌ی بعدِ زمانش) هر ۱۵ثانیه دوباره چک می‌کنیم؛ بعدش خودش از
     // بازه‌ی pending بیرون می‌افته و به حالتِ آروم برمی‌گرده.
     return FAST_POLL_INTERVAL_MS;
   }
-  // هنوز نرسیده — دقیقا تا لحظه‌ی سررسید+۱۰ثانیه صبر کن، مگر اینکه از
+  // هنوز نرسیده — دقیقا تا لحظه‌ی سررسید+مهلت صبر کن، مگر اینکه از
   // بازه‌ی آرومِ معمولی هم دیرتر باشه (رویدادِ خیلی دورتر).
   return Math.min(msUntilDue, SLOW_SYNC_INTERVAL_MS);
 }

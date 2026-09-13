@@ -4,7 +4,7 @@ import { isValidCronRequest } from "@/lib/cronAuth";
 import { logError } from "@/lib/errorLog";
 import {
   computeNextSyncDelayMs, externalProviderConfigured, externalProviderName,
-  SLOW_SYNC_INTERVAL_MS, syncEconomicCalendar,
+  hasPendingRelease, SLOW_SYNC_INTERVAL_MS, syncEconomicCalendar,
 } from "@/lib/economicCalendar";
 
 // POST /api/cron/economic-calendar — همگام‌سازی تقویم اقتصادی از منبع
@@ -28,7 +28,11 @@ export async function POST(req: NextRequest) {
 
   const source = externalProviderName();
   try {
-    const result = await syncEconomicCalendar(prisma);
+    // نزدیکِ لحظه‌ی انتشارِ یک خبر، پاسِ «تند» می‌زنیم (فقط فیدِ هفته‌ی
+    // جاری و فقط رویدادهای همین حوالی) — همان چیزی که اجازه می‌دهد هر
+    // چند ثانیه تکرار شود بدونِ اینکه منبع یا دیتابیس را بکوبد.
+    const fast = await hasPendingRelease(prisma);
+    const result = await syncEconomicCalendar(prisma, { fast });
     const nextCheckInMs = await computeNextSyncDelayMs(prisma);
     return NextResponse.json({ ok: true, ...result, nextCheckInMs });
   } catch (err) {
