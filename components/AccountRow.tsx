@@ -16,6 +16,7 @@ function RowShell({
   desc,
   end,
   as: As = "div",
+  className,
   ...rest
 }: {
   index?: number;
@@ -24,6 +25,7 @@ function RowShell({
   desc?: string;
   end: React.ReactNode;
   as?: any;
+  className?: string;
   [k: string]: any;
 }) {
   return (
@@ -32,7 +34,7 @@ function RowShell({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, delay: (index ?? 0) * 0.035, ease: [0.22, 1, 0.36, 1] }}
     >
-      <As className="account-row2" {...rest}>
+      <As className={`account-row2${className ? ` ${className}` : ""}`} {...rest}>
         <span className="account-row2-icon">{icon}</span>
         <span className="account-row2-body">
           <span className="account-row2-label">{label}</span>
@@ -56,6 +58,26 @@ export function AccountRowLink({
       label={label}
       desc={desc}
       end={<ChevronLeft size={15} className="account-row2-chevron" />}
+    />
+  );
+}
+
+// ردیفِ اکشن (نه ناوبری) — برای «خروج از حساب» توی صفحه‌ی اولِ پنل، طبقِ
+// درخواستِ صریح («روی موبایل هیچ راهی برای خروج نبود، اضافه‌ش کن این‌جا»).
+export function AccountRowButton({
+  icon, label, desc, onClick, index, danger,
+}: { icon: React.ReactNode; label: string; desc?: string; onClick: () => void; index?: number; danger?: boolean }) {
+  return (
+    <RowShell
+      as="button"
+      type="button"
+      onClick={onClick}
+      index={index}
+      icon={icon}
+      label={label}
+      desc={desc}
+      className={danger ? "account-row2-danger" : undefined}
+      end={null}
     />
   );
 }
