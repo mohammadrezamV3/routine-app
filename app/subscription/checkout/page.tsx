@@ -6,9 +6,8 @@ import { XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGate } from "@/components/AuthGate";
-import { getSiteMarket } from "@/lib/market";
 import { formatPriceAmount } from "@/lib/formatPrice";
-import { findPlanCard, formatJalaliLong, DURATION_LABELS, DURATION_LABELS_INTL, Duration, UpgradeOffer } from "@/components/PlanShowcase";
+import { findPlanCard, formatJalaliLong, DURATION_LABELS, Duration, UpgradeOffer } from "@/components/PlanShowcase";
 
 type Gateway = "zibal";
 
@@ -29,7 +28,6 @@ function ZibalMark() {
 export default function CheckoutPage() {
   const { status } = useSession();
   const router = useRouter();
-  const isIntl = getSiteMarket() === "INTERNATIONAL";
 
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
   // نباشه (قاعده‌ی معمول پروژه — نگاه کن به app/auth/login/page.tsx).
@@ -46,7 +44,7 @@ export default function CheckoutPage() {
 
   const planKey = query?.planKey || "";
   const duration = query?.duration || "1";
-  const plan = query ? findPlanCard(planKey, isIntl) : undefined;
+  const plan = query ? findPlanCard(planKey) : undefined;
 
   const [discountCode, setDiscountCode] = useState("");
   const [discountResult, setDiscountResult] = useState<{ ok: true; percentOff: number } | { ok: false; error: string } | null>(null);
@@ -93,7 +91,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
+  const labels = DURATION_LABELS;
   const price = plan.prices[duration];
   const upgradeInfo = planKey === "max" ? upgradeOffer?.perDuration[duration] : undefined;
   // اعتبار ارتقا (اگه باشه) اول اعمال می‌شه، بعد اگه کد تخفیفی هم اعمال
@@ -105,7 +103,7 @@ export default function CheckoutPage() {
     : upgradeInfo
     ? upgradeInfo.amount
     : null;
-  const finalPriceLabel = discountedAmount != null ? formatPriceAmount(discountedAmount, isIntl) : price;
+  const finalPriceLabel = discountedAmount != null ? formatPriceAmount(discountedAmount) : price;
 
   async function applyDiscount() {
     if (discountResult?.ok) {

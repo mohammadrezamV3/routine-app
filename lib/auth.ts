@@ -5,7 +5,6 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { Market } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
@@ -336,13 +335,12 @@ export const authOptions: NextAuthOptions = {
           // نمی‌شیم — ثبت‌نام معمولی این سایت اصلا ایمیل نمی‌گیره/تأیید
           // نمی‌کنه، پس اتکا به ایمیل این‌جا می‌تونست مسیر سوءاستفاده باز کنه.
           // اولین ورود با هر Google account، همیشه یک کاربر کاملا تازه می‌سازه.
-          const siteMarket = getSiteMarket();
           dbUser = await prisma.user.create({
             data: {
               email: (user as any).email || undefined,
               name: (user as any).name || undefined,
-              market: siteMarket === "INTERNATIONAL" ? Market.INTERNATIONAL : Market.IRAN,
-              locale: siteMarket === "INTERNATIONAL" ? "en" : "fa",
+              market: Market.IRAN,
+              locale: "fa",
               emailVerifiedAt: (user as any).email ? new Date() : undefined,
             },
           });

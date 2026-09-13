@@ -256,7 +256,6 @@ export const CATEGORY_LABELS: Record<TickerSymbol["category"], string> = {
 
 // بازار ایران عمدتا فارکس/طلا/کریپتو دنبال می‌کنه؛ بازار بین‌المللی به شاخص‌های آمریکایی نزدیک‌تره
 export const DEFAULT_TICKER_SYMBOLS_IRAN = ["GC=F", "EURUSD=X", "GBPUSD=X", "BTC-USD", "ETH-USD"];
-export const DEFAULT_TICKER_SYMBOLS_INTERNATIONAL = ["SPY", "QQQ", "^VIX", "DIA", "BTC-USD"];
 
 export const MAX_TICKER_SYMBOLS = 20;
 export const MIN_TICKER_SYMBOLS = 1;

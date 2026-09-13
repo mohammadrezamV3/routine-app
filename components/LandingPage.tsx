@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
-import { getSiteMarket } from "@/lib/market";
 import { useThemeTokens, PlansSection } from "@/components/PlanShowcase";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
@@ -75,13 +74,6 @@ const TODAY_ITEMS = [
   { label: "نوشیدن آب", done: true },
   { label: "یادداشت روزانه", done: true },
 ];
-const TODAY_ITEMS_INTL = [
-  { label: "Meditation", done: true },
-  { label: "Workout", done: true },
-  { label: "Reading", done: true },
-  { label: "Drink water", done: true },
-  { label: "Daily journal", done: true },
-];
 
 const WHY_US = [
   { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعات تو 100٪ محفوظ می‌مونه" },
@@ -93,17 +85,6 @@ const WHY_US = [
   { icon: Zap, color: "#F97316", title: "سریع و ساده", body: "بدون شلوغی، فقط چیزی که واقعا لازم داری" },
   { icon: Users, color: "#14B8A6", title: "برای همه سبک‌ها", body: "از مبتدی تا حرفه‌ای، متناسب با روال خودت" },
   { icon: Sparkles, color: "#8B5CF6", title: "همیشه در حال بهتر شدن", body: "فیچرهای جدید مرتب اضافه می‌شن" },
-];
-const WHY_US_INTL = [
-  { icon: ShieldCheck, color: "#22C55E", title: "Private & secure", body: "Your data stays 100% protected" },
-  { icon: TrendingUp, color: "#A855F7", title: "Personalized plans", body: "Matched to your goals & lifestyle" },
-  { icon: Headset, color: "#3B82F6", title: "Real support", body: "We're with you whenever you need us" },
-  { icon: Lightbulb, color: "#F59E0B", title: "Practical tools", body: "Everything to grow, in one app" },
-  { icon: Smartphone, color: "#EC4899", title: "Access anywhere", body: "Mobile, tablet or desktop — always with you" },
-  { icon: BarChart3, color: "#06B6D4", title: "Visible progress", body: "Clear stats and reports on your journey" },
-  { icon: Zap, color: "#F97316", title: "Fast & simple", body: "No clutter, just what you actually need" },
-  { icon: Users, color: "#14B8A6", title: "For every style", body: "Beginner to pro, fits your own routine" },
-  { icon: Sparkles, color: "#8B5CF6", title: "Always improving", body: "New features shipped regularly" },
 ];
 
 function FeatureCarousel() {
@@ -241,9 +222,9 @@ function RingProgress({ pct, label, pulse }: { pct: number; label: string; pulse
   );
 }
 
-function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
+function TodayProgressCard() {
   const t = useThemeTokens();
-  const items = isIntl ? TODAY_ITEMS_INTL : TODAY_ITEMS;
+  const items = TODAY_ITEMS;
   const cardRef = useRef<HTMLDivElement>(null);
   const dirRef = useRef<"down" | "up" | null>(null);
   const lastYRef = useRef<number | null>(null);
@@ -313,17 +294,17 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
   return (
     <div ref={cardRef}>
       <div className="text-right">
-        <h2 className={`text-xl font-extrabold ${t.heading}`}>{isIntl ? "Today's progress" : "امروز چی داریم؟"}</h2>
-        <p className={`mt-1 text-[13px] ${t.muted}`}>{isIntl ? "A quick look at what matters today" : "یک نگاه سریع به کارهای مهم امروزت"}</p>
+        <h2 className={`text-xl font-extrabold ${t.heading}`}>{"امروز چی داریم؟"}</h2>
+        <p className={`mt-1 text-[13px] ${t.muted}`}>{"یک نگاه سریع به کارهای مهم امروزت"}</p>
       </div>
 
       <div className={`mt-4 rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-5 ${t.shadow} backdrop-blur-xl sm:p-6`}>
         <div className="flex items-center gap-4">
           <RingProgress pct={doneSoFar / items.length} label={`${doneSoFar}/${items.length}`} pulse={pulse} />
           <div className="min-w-0 flex-1 text-right">
-            <div className={`text-[15px] font-extrabold ${t.heading}`}>{isIntl ? "You're off to a great start!" : "روزت رو عالی شروع کردی!"}</div>
+            <div className={`text-[15px] font-extrabold ${t.heading}`}>{"روزت رو عالی شروع کردی!"}</div>
             <div className={`mt-1 text-[12.5px] ${t.muted}`}>
-              {isIntl ? `${doneSoFar} of ${items.length} tasks done today` : `${doneSoFar} مورد از ${items.length} کار امروز انجام شده`}
+              {`${doneSoFar} مورد از ${items.length} کار امروز انجام شده`}
             </div>
           </div>
           <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${t.accentBgSofter} ${t.accentText}`}>
@@ -370,13 +351,13 @@ function TodayProgressCard({ isIntl }: { isIntl: boolean }) {
 // (useSeamlessMarquee)؛ کاربر خواسته بود این بخش «یه‌جا ثابت وایسه»، پس
 // کارت‌ها با یه گرید ساده‌ی چندستونه (بدون تکرار/duplicate برای چرخش)
 // نشون داده می‌شن.
-function WhyUsSection({ isIntl }: { isIntl: boolean }) {
+function WhyUsSection() {
   const t = useThemeTokens();
-  const items = isIntl ? WHY_US_INTL : WHY_US;
+  const items = WHY_US;
 
   return (
     <div>
-      <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{isIntl ? "Why us?" : "چرا ما؟"}</h2>
+      <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{"چرا ما؟"}</h2>
       <div className="whyus-grid mt-4">
         {items.map((item, i) => {
           const Icon = item.icon;
@@ -398,7 +379,6 @@ function WhyUsSection({ isIntl }: { isIntl: boolean }) {
 export function LandingPage() {
   const t = useThemeTokens();
   const heroRef = useRef<HTMLDivElement>(null);
-  const isIntl = getSiteMarket() === "INTERNATIONAL";
 
   useEffect(() => { staggerFieldsIn(heroRef.current); }, []);
 
@@ -461,7 +441,7 @@ export function LandingPage() {
       </section>
 
       <section id="sec-landing-whyus" style={{ paddingTop: 32 }}>
-        <WhyUsSection isIntl={isIntl} />
+        <WhyUsSection />
       </section>
 
       <section id="sec-landing-trust" style={{ paddingTop: 32 }}>
@@ -469,11 +449,11 @@ export function LandingPage() {
       </section>
 
       <section id="sec-landing-today" style={{ paddingTop: 32 }}>
-        <TodayProgressCard isIntl={isIntl} />
+        <TodayProgressCard />
       </section>
 
       <section id="sec-landing-plans" style={{ paddingTop: 32 }}>
-        <PlansSection isIntl={isIntl} mode="landing" />
+        <PlansSection mode="landing" />
       </section>
 
       {/* بدون این فوتر، /about و /faq و /terms هیچ لینک HTMLای از صفحه‌ی

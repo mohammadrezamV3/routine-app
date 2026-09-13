@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { getSiteMarket } from "@/lib/market";
 import { PlansSection, UpgradeOffer } from "@/components/PlanShowcase";
 import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration";
 
@@ -22,7 +21,6 @@ export default function SubscriptionPage() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const isIntl = getSiteMarket() === "INTERNATIONAL";
 
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
   // نباشه (قاعده‌ی معمول پروژه — نگاه کن به app/auth/login/page.tsx).
@@ -91,7 +89,7 @@ export default function SubscriptionPage() {
         <div className="item-line is-loading" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
       ) : (
         <div style={{ marginTop: 8 }}>
-          <PlansSection isIntl={isIntl} mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" upgradeOffer={upgradeOffer} />
+          <PlansSection mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" upgradeOffer={upgradeOffer} />
         </div>
       )}
 

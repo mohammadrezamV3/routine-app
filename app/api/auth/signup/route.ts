@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Market } from "@prisma/client";
-import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText } from "@/lib/validate";
@@ -80,10 +79,6 @@ export async function POST(req: NextRequest) {
 
   const passwordHash = await bcrypt.hash(password, 12);
 
-  // بازار از env var همین دیپلوی خونده می‌شه (نه از ورودی کاربر) — چون
-  // این پروژه به‌صورت دو سایت جدا منتشر می‌شه، نه یک سوییچ داخل یک سایت.
-  const siteMarket = getSiteMarket();
-
   const user = await prisma.user.create({
     data: {
       phone,
@@ -92,8 +87,9 @@ export async function POST(req: NextRequest) {
       lastName: clampText(lastName.trim(), 80),
       birthDate: dob,
       passwordHash,
-      market: siteMarket === "INTERNATIONAL" ? Market.INTERNATIONAL : Market.IRAN,
-      locale: siteMarket === "INTERNATIONAL" ? "en" : "fa",
+      // این اپ فقط بازار ایران دارد (نسخه‌ی بین‌المللی طبق درخواست صریح حذف شد)
+      market: Market.IRAN,
+      locale: "fa",
     },
   });
 

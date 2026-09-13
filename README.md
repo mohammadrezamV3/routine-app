@@ -12,6 +12,31 @@ Prisma + PostgreSQL · NextAuth.js
 
 ---
 
+## نسخه: v1.191.0 (حذف کامل بازار بین‌المللی — اپ فقط بازار ایران)
+
+طبق درخواست صریح، نسخه‌ی بین‌المللی از کل سایت برداشته شد:
+
+- `lib/market.ts` حذف شد (متغیر `NEXT_PUBLIC_MARKET` هم از `Dockerfile`،
+  `docker-compose.yml` و `.env.example` برداشته شد — دیگر خوانده نمی‌شود).
+- جدول قیمت و کارت پلن‌های دلاری (`PLAN_PRICING_INTL`, `PLANS_INTL`,
+  `COMPARE_ROWS_INTL`, `DURATION_LABELS_INTL`) و متن‌های انگلیسیِ لندینگ
+  (`TODAY_ITEMS_INTL`, `WHY_US_INTL`) حذف شدند؛ پراپ `isIntl` از
+  `PlansSection`/`PlanCardView` و امضای `findPlanCard`/`findPlanPricing`/
+  `formatPriceAmount` برداشته شد.
+- ثبت‌نام معمولی و ثبت‌نام با گوگل همیشه `market: IRAN` و `locale: "fa"`
+  می‌سازند (قبلا از env می‌خواندند).
+- در `/api/subscription/checkout` چکِ `user.market !== "IRAN"` که خطای
+  «درگاه پرداخت بین‌المللی هنوز فعال نشده» می‌داد حذف شد.
+- `prisma/seed.ts` دیگر ۴ پلن `INTERNATIONAL` را نمی‌سازد.
+- نمادهای پیش‌فرض تیکر هم فقط نسخه‌ی ایران (`DEFAULT_TICKER_SYMBOLS_IRAN`).
+
+مقدار `INTERNATIONAL` در enum `Market` اسکیما **عمدا دست‌نخورده ماند**:
+حذفش یک migration خطرناک روی ستونی‌ست که ردیف‌های موجود به آن اشاره دارند،
+در حالی که هیچ کدی دیگر تولیدش نمی‌کند. ردیف‌های پلنِ بین‌المللیِ موجود روی
+سرور با یک `delete` ساده پاک می‌شوند (راهنما در `deploy/`).
+
+---
+
 ## نسخه: v1.190.0 (جای دایره‌ی پروفایل روی لبه‌ی بنر + حلقه‌ی خالی دورش)
 
 طبق تصویر مرجع: دایره‌ی عکس پروفایل حالا دقیقا نصفش زیر لبه‌ی بنر می‌افتد

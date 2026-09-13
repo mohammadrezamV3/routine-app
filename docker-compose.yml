@@ -34,7 +34,6 @@ services:
       # پر می‌شه، نه در runtime؛ چون .env توی .dockerignoreست، باید صریح از
       # همین‌جا (که docker compose خودش .env رو برای ${...} می‌خونه) رد بشن.
       args:
-        NEXT_PUBLIC_MARKET: ${NEXT_PUBLIC_MARKET:-IRAN}
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
     restart: unless-stopped
     depends_on:
