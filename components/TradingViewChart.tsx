@@ -43,19 +43,6 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
   const [reachable, setReachable] = useState<boolean | null>(null);
   const attemptRef = useRef(0);
 
-  // نوارِ کناریِ ابزارهای رسم (خط روند، فیبوناچی، …) خودِ تریدینگ‌ویو
-  // ریسپانسیو نیست — روی موبایل به‌جای جمع‌شدن، همون عرضِ ثابتش رو از فضای
-  // چارت می‌گیره و کلِ ویجت رو «زیادی عریض/فشرده» نشون می‌ده. برای همین فقط
-  // روی دسکتاپ (هم‌مرزِ ۱۰۲۴px با بقیه‌ی اپ) بازش می‌کنیم.
-  const [isDesktop, setIsDesktop] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const apply = () => setIsDesktop(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
   const tvSymbol = tradingViewSymbol(symbol);
 
   const src = useMemo(() => {
@@ -66,18 +53,20 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       style: "1", // کندل‌استیک
       locale: "fa_IR",
       timezone: "Asia/Tehran",
-      hide_side_toolbar: isDesktop ? "0" : "1",
+      // طبقِ درخواستِ صریح («ابزارِ خط‌کشیدن/فیبو هم اضافه شه»): نوارِ
+      // کناریِ ابزارهایِ رسم (خط روند، فیبوناچی، …) همیشه بازه، حتی روی
+      // موبایل — قبلا فقط دسکتاپ باز می‌شد چون این نوار ریسپانسیو نیست و
+      // عرضِ ثابتش از فضای چارت می‌گرفت؛ این تصمیم صریحاً عوض شد.
+      hide_side_toolbar: "0",
       // نوارِ بالاییِ خودِ تریدینگ‌ویو تایم‌فریم را دارد، پس ما جدا نمی‌سازیم
       hide_top_toolbar: "0",
       withdateranges: "1",
       // طبقِ درخواستِ صریح: قابلیت‌های خودِ ویجتِ تریدینگ‌ویو (ابزارهای رسم،
       // مقایسه، و از همه مهم‌تر جست‌وجوی نمادِ داخلی‌اش که هزاران نماد
-      // دارد، نه فقط کاتالوگِ ~۵۰تاییِ خودمان) کامل باز بمانند. توجه: این
-      // جست‌وجو مستقلِ SymbolSearchFieldِ بالای صفحه است — نمادی که کاربر
-      // از همین‌جا (داخلِ iframe) عوض کند به بقیه‌ی اجزای صفحه (گفت‌وگو/
-      // ثبتِ معامله) sync نمی‌شود، چون این iframe یک embedِ ساده‌ست، نه
-      // با APIِ رویدادیِ tv.js — برای نمادِ سراسریِ صفحه همچنان همان فیلدِ
-      // بالا منبعِ درست است.
+      // دارد، نه فقط کاتالوگِ ~۵۰تاییِ خودمان) کامل باز بمانند. توجه: نمادی
+      // که کاربر از همین‌جا (داخلِ iframe) عوض کند فقط رویِ خودِ چارت اثر
+      // می‌گذارد و به بقیه‌ی اجزای صفحه (گفت‌وگو/ثبتِ معامله) sync نمی‌شود،
+      // چون این iframe یک embedِ ساده‌ست، نه با APIِ رویدادیِ tv.js.
       allow_symbol_change: "1",
       save_image: "1",
       details: "1",
@@ -89,7 +78,7 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       _t: String(attempt),
     });
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
-  }, [tvSymbol, theme, attempt, isDesktop]);
+  }, [tvSymbol, theme, attempt]);
 
   const retry = useCallback(() => {
     if (attemptRef.current >= MAX_ATTEMPTS) { setExhausted(true); return; }
