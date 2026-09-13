@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getSetting, setSetting } from "@/lib/storage";
-import { getSiteMarket } from "@/lib/market";
 import {
-  DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL,
+  DEFAULT_TICKER_SYMBOLS_IRAN,
   MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, tickerLabelFor, TICKER_SETTING_KEY,
 } from "@/lib/tickerSymbols";
 import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
@@ -22,7 +21,7 @@ type Quote = { symbol: string; price: number; changePercent: number; changeAbs: 
 // نکرده، همینجا ازش می‌پرسیم کدوم بازارها رو دنبال کنه.
 export function MarketTicker() {
   const defaultSymbols = useMemo(
-    () => (getSiteMarket() === "INTERNATIONAL" ? DEFAULT_TICKER_SYMBOLS_INTERNATIONAL : DEFAULT_TICKER_SYMBOLS_IRAN),
+    () => DEFAULT_TICKER_SYMBOLS_IRAN,
     []
   );
   const [symbols, setSymbols] = useState<string[]>(defaultSymbols);

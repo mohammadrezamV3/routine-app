@@ -1,11 +1,9 @@
 import type { NextAuthOptions } from "next-auth";
 import { encode as encodeJwt } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { Market } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getSiteMarket } from "@/lib/market";
 import { BASIC_MODULES } from "@/lib/modules";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
@@ -70,13 +68,8 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/login",
   },
   providers: [
-    // برای فعال‌شدن واقعی این روش، باید GOOGLE_CLIENT_ID و GOOGLE_CLIENT_SECRET
-    // (از Google Cloud Console) به env این دیپلوی اضافه بشه — بدون اون‌ها،
-    // دکمه‌ی «ورود با گوگل» نمایش داده می‌شه ولی گوگل درخواست رو رد می‌کنه.
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
+    // ورود با گوگل طبق درخواست صریح کامل حذف شد — تنها راه ورود، شماره‌ی
+    // موبایل (و یوزرنیم/ایمیلِ همان حساب) با رمز است.
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -302,73 +295,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    // برای ورود گوگل هم باید مسدودبودن چک بشه — authorize() فقط مسیر
-    // credentials رو می‌بینه. false برگردوندن یعنی NextAuth ورود رو رد می‌کنه.
-    async signIn({ account }) {
-      if (account?.provider === "google") {
-        const link = await prisma.oAuthAccount.findUnique({
-          where: { provider_providerAccountId: { provider: "google", providerAccountId: account.providerAccountId } },
-          include: { user: true },
-        });
-        if (link?.user?.isBlocked) return false;
-      }
-      return true;
-    },
     // «منو به‌یاد داشته باش» تیک نخورده → توکن رو کوتاه‌مدت می‌کنیم (۱ روز)
     // به‌جای پیش‌فرض ۳۰ روزه‌ی next-auth؛ چون کوکی خودش همیشه با maxAge
     // استاتیک ست می‌شه (نه به‌ازای هر لاگین)، این‌جوری واقعا session رو کوتاه
     // می‌کنیم: بعد از یک روز، exp توکن رد می‌شه و useSession/getServerSession
     // خودشون session رو نامعتبر می‌دونن، حتی اگه کوکی خامش هنوز تو مرورگره.
     async jwt({ token, user, account }) {
-      // ورود با گوگل: user.id این‌جا شناسه‌ی داخلی ما نیست، profile.sub گوگله
-      // (چون provider سفارشی تعریف نکردیم) — پس شناسه‌ی واقعی رو از خود
-      // account.providerAccountId می‌گیریم و اتصال/ساخت کاربر رو دستی مدیریت می‌کنیم.
-      if (user && account?.provider === "google") {
-        const providerAccountId = account.providerAccountId;
-        const link = await prisma.oAuthAccount.findUnique({
-          where: { provider_providerAccountId: { provider: "google", providerAccountId } },
-          include: { user: true },
-        });
-
-        let dbUser = link?.user;
-        if (!dbUser) {
-          // به‌عمد هیچ‌وقت صرفا بر اساس تطابق ایمیل به حساب موجودی وصل
-          // نمی‌شیم — ثبت‌نام معمولی این سایت اصلا ایمیل نمی‌گیره/تأیید
-          // نمی‌کنه، پس اتکا به ایمیل این‌جا می‌تونست مسیر سوءاستفاده باز کنه.
-          // اولین ورود با هر Google account، همیشه یک کاربر کاملا تازه می‌سازه.
-          const siteMarket = getSiteMarket();
-          dbUser = await prisma.user.create({
-            data: {
-              email: (user as any).email || undefined,
-              name: (user as any).name || undefined,
-              market: siteMarket === "INTERNATIONAL" ? Market.INTERNATIONAL : Market.IRAN,
-              locale: siteMarket === "INTERNATIONAL" ? "en" : "fa",
-              emailVerifiedAt: (user as any).email ? new Date() : undefined,
-            },
-          });
-          await prisma.oAuthAccount.create({
-            data: { userId: dbUser.id, provider: "google", providerAccountId },
-          });
-          await provisionNewUser(dbUser.id);
-        }
-
-        prisma.loginEvent.create({ data: { userId: dbUser.id, provider: "google" } }).catch(() => {});
-
-        token.userId = dbUser.id;
-        token.name = dbUser.name;
-        token.market = dbUser.market;
-        token.isSuperAdmin = dbUser.isSuperAdmin;
-        // گوگل چک‌باکس «به‌یاد داشته باش» نداره — پیش‌فرض همون ۳۰ روز حالت تیک‌خورده
-        token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30;
-        token.sid = newSessionId();
-        // ورود گوگل از داخل این callback هدر درخواست رو نداره، پس
-        // دستگاه «نامشخص» ثبت می‌شه؛ خود ابطال نشست کامل کار می‌کنه.
-        await createDeviceSession({
-          userId: dbUser.id, sid: token.sid as string, provider: "google",
-          expiresAt: new Date((token.exp as number) * 1000),
-        }).catch(() => {});
-        return token;
-      }
 
       if (user) {
         token.userId = (user as any).id;

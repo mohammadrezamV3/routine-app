@@ -62,52 +62,6 @@ const PLANS: {
       ModuleKey.AI_INSIGHT,
     ],
   },
-  // ---------------- بین‌المللی (دلار) ----------------
-  {
-    key: "basic",
-    nameFa: "پایه",
-    nameEn: "Basic",
-    market: Market.INTERNATIONAL,
-    currency: Currency.USD,
-    priceMonthly: 0, // free
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS],
-  },
-  {
-    key: "exercise",
-    nameFa: "Plan Gym",
-    nameEn: "Plan Gym",
-    market: Market.INTERNATIONAL,
-    currency: Currency.USD,
-    priceMonthly: 799, // $7.99
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.ROADMAP],
-  },
-  {
-    key: "trade",
-    nameFa: "Plan Trader",
-    nameEn: "Plan Trader",
-    market: Market.INTERNATIONAL,
-    currency: Currency.USD,
-    priceMonthly: 1299, // $12.99
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE, ModuleKey.ROADMAP],
-  },
-  {
-    key: "max",
-    nameFa: "Plan Max",
-    nameEn: "Plan Max",
-    market: Market.INTERNATIONAL,
-    currency: Currency.USD,
-    priceMonthly: 1799, // $17.99
-    modules: [
-      ModuleKey.ROUTINE,
-      ModuleKey.SLEEP,
-      ModuleKey.TASKS,
-      ModuleKey.EXERCISE,
-      ModuleKey.TRADE,
-      ModuleKey.CALORIE,
-      ModuleKey.ROADMAP,
-      ModuleKey.AI_INSIGHT,
-    ],
-  },
 ];
 
 async function main() {
@@ -137,7 +91,7 @@ async function main() {
     }
   }
 
-  console.log(`Seeded ${PLANS.length} plans across both markets.`);
+  console.log(`Seeded ${PLANS.length} plans (بازار ایران).`);
 
   // ---------------- سوپریوزر/ادمین ----------------
   // دسترسی نامحدود به همه ماژول‌ها، بدون نیاز به اشتراک یا انقضا.

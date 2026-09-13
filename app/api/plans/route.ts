@@ -43,12 +43,12 @@ export async function GET() {
   let upgradeOffer: { fromPlanKey: string; toPlanKey: string; perDuration: Record<string, UpgradeOfferDuration> } | null = null;
   if (user.market === "IRAN") {
     const upgradeSource = await findUpgradeSource(userId);
-    const maxPricing = upgradeSource ? findPlanPricing(UPGRADE_TARGET_PLAN_KEY, false) : undefined;
+    const maxPricing = upgradeSource ? findPlanPricing(UPGRADE_TARGET_PLAN_KEY) : undefined;
     if (upgradeSource && maxPricing?.amounts) {
       const perDuration: Record<string, UpgradeOfferDuration> = {};
       for (const d of DURATIONS) {
         const { amount, periodEnd, capped } = computeUpgradePricing(maxPricing.amounts[d], upgradeSource, DURATION_MONTHS[d]);
-        perDuration[d] = { amount, priceLabel: formatPriceAmount(amount, false), capEndIso: periodEnd.toISOString(), capped };
+        perDuration[d] = { amount, priceLabel: formatPriceAmount(amount), capEndIso: periodEnd.toISOString(), capped };
       }
       upgradeOffer = { fromPlanKey: upgradeSource.fromPlanKey, toPlanKey: UPGRADE_TARGET_PLAN_KEY, perDuration };
     }

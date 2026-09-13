@@ -187,7 +187,7 @@ step "۸/۱۱ داده‌ی اولیه (پلن‌ها و سوپرادمین)"
 if docker compose exec -T db psql -U routine -d routine -tAc 'select count(*) from "Plan"' 2>/dev/null | grep -qE '^[1-9]'; then
   ok "دیتابیس از قبل seed شده"
 else
-  docker compose --profile tools run --rm --build migrate npm run seed
+  docker compose --profile tools run --rm --build migrate npm run prisma:seed
   ok "seed انجام شد"
 fi
 

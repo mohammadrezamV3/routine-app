@@ -48,13 +48,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true } });
+    // نسخه‌ی بین‌المللی طبق درخواست صریح کامل حذف شد؛ همه‌ی کاربرها بازار
+    // ایران‌اند، پس دیگر چکِ market لازم نیست.
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
     if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
-    if (user.market !== "IRAN") {
-      return NextResponse.json({ error: "درگاه پرداخت بین‌المللی هنوز فعال نشده — به‌زودی" }, { status: 503 });
-    }
 
-    const pricing = findPlanPricing(planKey, false);
+    const pricing = findPlanPricing(planKey);
     if (!pricing || pricing.free || !pricing.amounts) {
       return NextResponse.json({ error: "این پلن قابل خرید نیست" }, { status: 400 });
     }

@@ -25,7 +25,6 @@ export function formatJalaliLong(iso: string): string {
 export type Duration = "1" | "3" | "6" | "12";
 export const DURATIONS: Duration[] = ["1", "3", "6", "12"];
 export const DURATION_LABELS: Record<Duration, string> = { "1": "1 ماهه", "3": "3 ماهه", "6": "6 ماهه", "12": "12 ماهه" };
-export const DURATION_LABELS_INTL: Record<Duration, string> = { "1": "1 mo", "3": "3 mo", "6": "6 mo", "12": "12 mo" };
 
 export type PlanCard = {
   key: string; nameFa: string; highlight?: boolean; icon: JSX.Element;
@@ -83,30 +82,6 @@ export const PLANS_IRAN: PlanCard[] = [
   },
 ];
 
-export const PLANS_INTL: PlanCard[] = [
-  {
-    key: "basic", nameFa: "Basic", free: true, icon: ICONS.weekly,
-    features: ["Weekly plan & daily routine", "Program & medication reminders", "Sleep tracking"],
-  },
-  {
-    key: "exercise", nameFa: "Plan Gym", icon: ICONS.exercise,
-    prices: { "1": "$7.99", "3": "$20.97", "6": "$41.95", "12": "$83.90" },
-    originalPrices: { "3": "$23.97", "6": "$47.94", "12": "$95.88" },
-    amounts: { "1": 799, "3": 2097, "6": 4195, "12": 8390 },
-  },
-  {
-    key: "trade", nameFa: "Plan Trader", icon: ICONS.trade,
-    prices: { "1": "$12.99", "3": "$34.10", "6": "$68.20", "12": "$136.40" },
-    originalPrices: { "3": "$38.97", "6": "$77.94", "12": "$155.88" },
-    amounts: { "1": 1299, "3": 3410, "6": 6820, "12": 13640 },
-  },
-  {
-    key: "max", nameFa: "Plan Max", highlight: true, icon: <Sparkles size={16} />,
-    prices: { "1": "$17.99", "3": "$47.22", "6": "$94.45", "12": "$188.90" },
-    originalPrices: { "3": "$53.97", "6": "$107.94", "12": "$215.88" },
-    amounts: { "1": 1799, "3": 4722, "6": 9445, "12": 18890 },
-  },
-];
 
 export type CompareRow = { label: string; included: Record<string, boolean>; upcoming?: boolean };
 
@@ -128,21 +103,6 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "ردیابی کدنویسی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
 ];
 
-export const COMPARE_ROWS_INTL: CompareRow[] = [
-  { label: "Daily routine", included: { basic: true, exercise: true, trade: true, max: true } },
-  { label: "Bodybuilding program", included: { basic: false, exercise: true, trade: false, max: true } },
-  { label: "Calorie tracking", included: { basic: false, exercise: true, trade: false, max: true } },
-  { label: "Trade journal", included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: "Trade checklist", included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: "Roadmap", included: { basic: false, exercise: true, trade: true, max: true } },
-  { label: "Ask AI", included: { basic: false, exercise: false, trade: false, max: true } },
-  { label: "Mobile app", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: "Smartwatch integration", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: "AI weekly report", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: "Smart insights", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: "Share with a coach or friends", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: "Coding tracker", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-];
 
 // زیر md عمدا بدون کف‌عرض پیکسلی‌ست (نه minmax با کف px) — تا هیچ‌کدوم از
 // عرض صفحه بیرون نزنه و نیازی به اسکرول افقی نباشه، حتی روی باریک‌ترین موبایل؛
@@ -191,11 +151,11 @@ export function useThemeTokens() {
 // mode="landing": دکمه‌ی هر پلن می‌بره به ثبت‌نام (کاربر هنوز حسابی نداره).
 // mode="account": کاربر از قبل واردشده — دکمه می‌بره به چک‌اوت واقعی، و
 // پلن فعلیش (currentPlanKey) به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
-function PlanCardView({ p, isIntl, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
+function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
   const t = useThemeTokens();
   const [duration, setDuration] = useState<Duration>("1");
   const [renewOpen, setRenewOpen] = useState(false);
-  const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
+  const labels = DURATION_LABELS;
   const isCurrent = mode === "account" && currentPlanKey === p.key;
   // پیشنهاد «ارتقا به مکس» فقط روی خود کارت مکس نشون داده می‌شه — فقط
   // وقتی کاربر از قبل پلن ورزش/ترید فعال داره (upgradeOffer از سرور اومده).
@@ -366,10 +326,10 @@ const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim(
 
 // گرید پلن‌ها + جدول مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراک داخل
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
-export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { isIntl: boolean; mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
+export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
-  const plans = isIntl ? PLANS_INTL : PLANS_IRAN;
-  const compareRows = isIntl ? COMPARE_ROWS_INTL : COMPARE_ROWS_IRAN;
+  const plans = PLANS_IRAN;
+  const compareRows = COMPARE_ROWS_IRAN;
   const mainRows = compareRows.filter((r) => !r.upcoming);
   const upcomingRows = compareRows.filter((r) => r.upcoming);
   const upgradeFromNameFa = upgradeOffer ? plans.find((pp) => pp.key === upgradeOffer.fromPlanKey)?.nameFa : undefined;
@@ -384,7 +344,7 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
 
       <div className={`grid gap-6 pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>
         {plans.map((p) => (
-          <PlanCardView key={p.key} p={p} isIntl={isIntl} mode={mode} currentPlanKey={currentPlanKey} upgradeOffer={upgradeOffer} upgradeFromNameFa={upgradeFromNameFa} />
+          <PlanCardView key={p.key} p={p} mode={mode} currentPlanKey={currentPlanKey} upgradeOffer={upgradeOffer} upgradeFromNameFa={upgradeFromNameFa} />
         ))}
       </div>
 
@@ -396,7 +356,7 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
           محتوای واقعی ردیف‌ها با بلور کم تمام‌کنتراست پیش‌نمایش می‌شه و یک
           نشان صریح «به‌زودی» روش می‌شینه — حس شیشه‌ی مات، نه خالی. */}
       <div id="plans-compare-table" className={`mt-6 scroll-mt-[96px] rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
-        <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={isIntl ? "Plan comparison" : "مقایسه پلن‌ها"}>
+        <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label="مقایسه پلن‌ها">
           <colgroup>
             <col style={{ width: "24%" }} />
             {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
@@ -454,7 +414,7 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
                     </table>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className={`rounded-full px-4 py-1.5 text-xs font-extrabold text-white ${t.accentBg} ${t.accentShadow}`}>
-                        {isIntl ? "Coming soon" : "به‌زودی"}
+                        {"به‌زودی"}
                       </span>
                     </div>
                   </div>
@@ -468,6 +428,6 @@ export function PlansSection({ isIntl, mode, currentPlanKey, title = "پلن‌�
   );
 }
 
-export function findPlanCard(key: string, isIntl: boolean): PlanCard | undefined {
-  return (isIntl ? PLANS_INTL : PLANS_IRAN).find((p) => p.key === key);
+export function findPlanCard(key: string): PlanCard | undefined {
+  return PLANS_IRAN.find((p) => p.key === key);
 }
