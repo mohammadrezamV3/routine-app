@@ -57,9 +57,10 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
           و ویرایش هم‌ردیف بالای باکس، لیست زیرش. */}
       <div className="trade-surface trade-page-box trade-checklist-detail-box">
         <div className="trade-checklist-detail-head">
-          <span className="trade-account-stripe" style={{ background: checklist.color }} />
           <div className="trade-checklist-detail-title">
             <h1 style={{ margin: 0 }}>{checklist.name}</h1>
+            {/* توپِ رنگی سمتِ چپِ اسم، نه گوشه‌ی مطلقِ باکس */}
+            <span className="trade-account-dot" style={{ background: checklist.color }} />
             {checklist.required && <span className="trade-account-type">الزامی</span>}
           </div>
           <button type="button" className="trade-title-add-btn" onClick={() => setEditing(true)}>

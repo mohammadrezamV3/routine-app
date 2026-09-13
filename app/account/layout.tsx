@@ -1,15 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { ACCOUNT_SECTIONS } from "@/components/accountSections";
-import { invalidateStorageCache } from "@/lib/storage";
-import { invalidateAccountCache } from "@/lib/accountCache";
-import { clearAuthHintCookie } from "@/lib/preload";
+import { logoutAndRedirect } from "@/lib/logout";
 
 // پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → منوی بخش‌ها (فقط لیست زبانه‌ها، بدون محتوا)
@@ -51,13 +49,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     );
   }
 
-  function doLogout() {
-    invalidateStorageCache();
-    invalidateAccountCache();
-    clearAuthHintCookie();
-    signOut({ callbackUrl: "/" });
-  }
-
   return (
     <div className="account-shell" dir="rtl">
       <div className="account-body">
@@ -75,7 +66,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               );
             })}
           </div>
-          <button type="button" className="account-sidebar-logout" onClick={doLogout}>
+          <button type="button" className="account-sidebar-logout" onClick={logoutAndRedirect}>
             <span className="account-sidebar-link-icon"><LogOut size={15} /></span>
             <span>خروج از حساب</span>
           </button>

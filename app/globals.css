@@ -1324,7 +1324,10 @@
   .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
   @media (min-width:1024px){
     .account-shell{
-      --acc-w: min(1080px, calc(100vw - 64px));
+      /* عرض = سایدبار (۱۶۴) + گپ (۲۲) + ستونِ محتوا (~۷۸۰). قبلا شل ۱۰۸۰
+         بود و ستونِ محتوا جدا با max-width کپ می‌شد — نتیجه‌اش یک نوارِ
+         خالیِ ~۱۱۴پیکسلی فقط سمتِ چپ بود، یعنی همان بی‌قرینگیِ گزارش‌شده. */
+      --acc-w: min(966px, calc(100vw - 64px));
       width: var(--acc-w);
       margin-inline: calc((620px - var(--acc-w)) / 2);
     }
@@ -1517,7 +1520,6 @@
      ستونِ محتوا عرضِ خواناتری می‌گیرد (نه تمامِ ۱۰۸۰px)، فاصله‌ها کمی
      جمع‌تر، و بنر بلندتر ولی همچنان با ارتفاعِ ثابت. */
   @media (min-width:701px){
-    .account-content{ max-width:720px; }
     .profile-banner{ height:168px; }
     .profile-hero{ margin-bottom:22px; }
     .acc-block{ margin-bottom:22px; }
@@ -1527,7 +1529,6 @@
     .acc-block-body .auth-field-grid{ gap:16px 14px; }
   }
   @media (min-width:1280px){
-    .account-content{ max-width:780px; }
     .profile-banner{ height:186px; }
   }
 
@@ -1791,8 +1792,49 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
+  /* ── ته صفحه‌ی اولِ پنل کاربری ────────────────────────────────────────
+     خروج از حساب (فقط موبایل) + لینک‌های حقوقی + نسخه‌ی اپ، همه وسط‌چین. */
+  .account-index-foot{
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+    margin-top:26px; padding-top:22px; border-top:1px solid var(--surface-line);
+  }
+  .account-index-logout{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 22px; border-radius:14px; font-size:12.5px; font-weight:700;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    cursor:pointer; transition:background .18s ease;
+  }
+  body[data-theme="light"] .account-index-logout,
+  body:not([data-theme="light"]) .account-index-logout{ background:none; box-shadow:none; }
+  /* `color` این‌جا هم باید تکرار شود: قانونِ سراسریِ `button:hover` (که
+     رنگِ اکسنت می‌دهد) اسپسیفیسیتیِ (0,1,1) دارد و از تک‌کلاسِ (0,1,0) بالا
+     قوی‌تر است — بدونِ این خط، دکمه‌ی خروج زیرِ ماوس سبز می‌شد. */
+  @media (hover:hover) and (pointer:fine){
+    .account-index-logout:hover{
+      color:#E05252; border-color:#E05252;
+      background:rgba(224,82,82,.08); box-shadow:none;
+    }
+  }
+  .account-index-logout:active{ transform:scale(.97); }
+  /* روی دسکتاپ سایدبار خودش دکمه‌ی خروج دارد — دو دکمه‌ی خروج در یک صفحه نه. */
+  @media (min-width:701px){ .account-index-logout{ display:none; } }
+
+  .account-index-links{
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    font-size:11.5px; color:var(--muted2);
+  }
+  .account-index-links a{ color:var(--muted); text-decoration:none; transition:color .18s ease; }
+  @media (hover:hover) and (pointer:fine){ .account-index-links a:hover{ color:var(--accent); } }
+  .account-index-version{ font-size:11px; color:var(--muted2); letter-spacing:.02em; }
+
   @media (max-width:700px){
-    .account-body{ flex-direction:column; }
+    /* باگِ گزارش‌شده («فاصله‌ی چپ و راستِ پنل با لبه یکی نیست»): والد
+       `align-items:flex-start` دارد — روی محورِ عمودیِ row بی‌ضرر است، ولی
+       اینجا که ستونی می‌شود همان قانون محورِ *عرضی* را کنترل می‌کند و
+       `.account-content` به‌جای پرکردنِ عرض، به اندازه‌ی محتوایش جمع می‌شد و
+       در RTL به لبه‌ی راست می‌چسبید — یعنی تمامِ فضای اضافه سمتِ چپ می‌ماند. */
+    .account-body{ flex-direction:column; align-items:stretch; }
     /* روی موبایل سایدبار جا نمی‌شود و طبقِ درخواستِ صریح، نوارِ منوی زیرِ
        هدر هم حذف شد — ناوبری از صفحه‌ی اولِ پنل و دکمه‌ی «بازگشت» انجام
        می‌شود. */
@@ -5444,11 +5486,11 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-pnl-pct{ font-size:12px; font-weight:700; opacity:.8; }
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
-/* قبلا یک نوارِ رنگیِ عمودی به ارتفاعِ کاملِ کارت بود (inset-inline-start:0;top:0;bottom:0)
-   — طبقِ درخواستِ صریح، به یک توپِ کوچیکِ گوشه‌ی بالا-راستِ کارت تبدیل شد.
-   نکته: این کلاس همچنان توی TradeNotesPanel/TradeChecklistDetailView
-   استفاده می‌شه (absolute، گوشه‌ی کارت) — دست‌نخورده می‌مونه. */
-.trade-account-stripe{ position:absolute; top:9px; inset-inline-start:10px; width:8px; height:8px; border-radius:50%; }
+/* `.trade-account-stripe` (توپِ مطلقِ گوشه‌ی کارت) کاملا حذف شد: طبقِ
+   درخواستِ صریح، توی *همه‌ی* صفحه‌های ترید — حساب‌ها، چک‌لیست‌ها، یادداشت‌ها،
+   متاتریدر — توپِ برچسب سمتِ چپِ اسم می‌نشیند (inline، بلافاصله بعدِ متنِ
+   اسم در RTL)، نه گوشه‌ی بالا-راستِ کارت. همه‌شان حالا `.trade-account-dot`
+   را استفاده می‌کنند. */
 /* طبقِ درخواستِ صریحِ تازه («توپِ برچسبِ حساب باید سمتِ چپِ اسم باشه، نه
    گوشه‌ی بالا-راستِ کارت»): فقط توی فهرستِ حساب‌های معاملاتی
    (TradeAccountsPanel) توپ دیگه absolute نیست — inline، داخلِ همون لینکِ
@@ -5467,7 +5509,9 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
 .trade-account-name{ font-size:14.5px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-account-title-row .trade-account-type,
+.trade-account-title-row .trade-account-dot,
 .trade-account-title-row .trade-account-archived-badge{ flex-shrink:0; }
+.trade-checklist-detail-title .trade-account-dot{ flex-shrink:0; }
 .trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
 /* .trade-account-card دیگه بک‌گراندِ خودش رو از .trade-surface نمی‌گیره
    (چون حالا ردیفِ داخلِ یک باکسِ بیرونیه، نه کارتِ جدا) — پس اسکلتون باید
@@ -6115,10 +6159,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 /* قبلا یک نوارِ رنگیِ عمودی بود (inset-inline-start:0;top:10px;bottom:10px) — طبقِ
    درخواستِ صریح، به توپ تبدیل شد (هم‌الگو با .trade-account-stripe). گوشه‌ی
    بالا-راست (نه وسط‌چینِ عمودی) تا رویِ دکمه‌ی سه‌نقطه‌ی هم‌ردیف سوار نشه. */
-.trade-checklist-row-stripe{
-  position:absolute; top:8px; inset-inline-start:8px; width:8px; height:8px; border-radius:50%;
-}
-.trade-checklist-row-kebab{ flex-shrink:0; margin-inline-start:-4px; }
+/* سه‌نقطه دقیقا هم‌ترازِ خطِ اسم — مثلِ فهرستِ حساب‌های معاملاتی: ارتفاعِ
+   حداقلیِ ردیف با ارتفاعِ دکمه یکی می‌شود و مارجینِ منفیِ نامتقارن حذف شد. */
+.trade-checklist-row{ min-height:34px; }
+.trade-checklist-row-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-4px; }
 .trade-checklist-row-main{
   display:flex; align-items:center; gap:8px; flex:1; min-width:0;
   text-decoration:none; color:var(--text);
@@ -6139,9 +6183,12 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 
 /* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
-.trade-note-kebab{ flex-shrink:0; margin-inline-start:-6px; }
-.trade-note-head{ align-items:center; }
-.trade-note-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-note-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-6px; }
+/* ردیف از ابتدا (راست) پُر می‌شود تا توپِ رنگی بچسبد به عنوان — با
+   `justify-content:space-between` و عنوانِ کشیده، توپ تا لبه‌ی چپِ کارت
+   هل داده می‌شد و دیگر «کنارِ اسم» نبود. */
+.trade-note-head{ align-items:center; justify-content:flex-start; min-height:26px; }
+.trade-note-title{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }
 
 /* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
