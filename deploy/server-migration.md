@@ -4,6 +4,38 @@
 ترتیب درست این است: سرور جدید را کامل بالا بیاور → تست کن → DNS را عوض کن →
 چند روز صبر کن → تازه آن‌وقت سرور قدیمی را حذف کن.
 
+## حالت ساده: سرور فعلی هنوز داده‌ی واقعی ندارد
+
+اگر روی سرور قدیمی هنوز داده‌ی کاربران نیست، کل بخش بکاپ/ریستور و رقص DNS
+لازم نیست. فقط این‌ها:
+
+1. **از سرور قدیمی فقط `.env` را بردار.** کلیدهایی که *نمی‌توانی* خودت
+   دوباره بسازی و باید عیناً منتقل شوند چون به پنل سرویس بیرونی وصل‌اند:
+   `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`، `MELIPAYAMAK_*`،
+   `ARVAN_AI_*`، `ZIBAL_MERCHANT_KEY`، `SMTP_*`.
+   بقیه (`NEXTAUTH_SECRET`، `CRON_SECRET`، کلیدهای VAPID) چون هنوز نه
+   نشستی هست نه اشتراک نوتیفی، می‌توانی روی سرور جدید از نو بسازی:
+   `openssl rand -hex 32` و برای VAPID `npx web-push generate-vapid-keys`.
+2. روی سرور جدید:
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   ufw allow 22 && ufw allow 80 && ufw allow 443 && ufw enable
+   git clone <repo-url> /opt/routine-app && cd /opt/routine-app
+   # .env را بگذار (بخش ۲ پایین را برای مقادیر ببین)
+   bash deploy/update.sh
+   ```
+3. **دیتابیس خالی را seed کن** (پلن‌ها/ماژول‌ها و کاربر سوپرادمین):
+   ```bash
+   # SUPERADMIN_USERNAME و SUPERADMIN_PASSWORD را اول در .env بگذار
+   docker compose --profile tools run --rm --build migrate npm run seed
+   ```
+   بدون seed، جدول `Plan`/`PlanModule` خالی می‌ماند و ثبت‌نام دوره‌ی
+   آزمایشی نمی‌گیرد.
+4. nginx + TLS (بخش ۴)، crontab (بخش ۵)، تست‌های بخش ۶، و بعد رکورد A را
+   به IP جدید بده. چون داده‌ای نیست، سرور قدیمی را هر وقت خواستی پاک کن.
+
+---
+
 ## ۰) قبل از هرچیز: چه چیزهایی «حالت» (state) این سایت‌اند؟
 
 - **دیتابیس Postgres** — همه‌چیز این‌جاست: کاربرها، برنامه‌ها، تریدها،
