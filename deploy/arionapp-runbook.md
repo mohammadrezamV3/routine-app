@@ -84,7 +84,7 @@ SUPERADMIN_PASSWORD=<رمز قوی>
 
 ```bash
 bash deploy/update.sh
-docker compose --profile tools run --rm --build migrate npm run seed
+docker compose --profile tools run --rm --build migrate npm run prisma:seed
 
 curl -I http://127.0.0.1:3000/api/health   # 200
 curl -I http://127.0.0.1:3000/api/ready    # 200

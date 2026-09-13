@@ -164,7 +164,7 @@ bash deploy/update.sh
 ## ۶) seed اولیه — این را فراموش نکن
 
 ```bash
-docker compose --profile tools run --rm --build migrate npm run seed
+docker compose --profile tools run --rm --build migrate npm run prisma:seed
 ```
 
 بدون seed، جدول `Plan`/`PlanModule` خالی می‌ماند و **ثبت‌نام دوره‌ی آزمایشی

@@ -27,7 +27,7 @@
 3. **دیتابیس خالی را seed کن** (پلن‌ها/ماژول‌ها و کاربر سوپرادمین):
    ```bash
    # SUPERADMIN_USERNAME و SUPERADMIN_PASSWORD را اول در .env بگذار
-   docker compose --profile tools run --rm --build migrate npm run seed
+   docker compose --profile tools run --rm --build migrate npm run prisma:seed
    ```
    بدون seed، جدول `Plan`/`PlanModule` خالی می‌ماند و ثبت‌نام دوره‌ی
    آزمایشی نمی‌گیرد.
