@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe, Bell, Users, BarChart3, Tablets } from "lucide-react";
+import { Bell, Users, BarChart3, Tablets } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
-import { AccountPageHead, AccountBlock, AccountLine } from "@/components/AccountUI";
+import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
 import { NotificationSettings } from "@/components/NotificationSettings";
@@ -47,11 +47,7 @@ export default function AccountSettingsPage() {
     <section>
       <AccountPageHead title="تنظیمات" hint="تنظیمات کلی آریون و تنظیمات هر بخش" />
 
-      <AccountBlock title="آریون" icon={<Globe size={15} />} flush index={0}>
-        <AccountLine icon={<Globe size={16} />} label="زبان" value="فعلا فقط فارسی — زبان‌های دیگه به‌زودی اضافه می‌شن" />
-      </AccountBlock>
-
-      <AccountBlock title="نمایش کارت‌ها در داشبوردها" icon={<BarChart3 size={15} />} flush index={1}>
+      <AccountBlock title="نمایش کارت‌ها در داشبوردها" icon={<BarChart3 size={15} />} flush index={0}>
         {DASHBOARD_PREFS.map(([key, label, desc], i) => (
           <AccountToggleRow
             key={key}
@@ -67,7 +63,7 @@ export default function AccountSettingsPage() {
 
       {/* هرکدام خودش یک بخشِ کامل (تیتر + قاب) است — این‌جا دیگر تیترِ
           جداگانه‌ای بالای‌شان گذاشته نمی‌شود، وگرنه دو تیتر روی هم می‌افتاد. */}
-      <NotificationSettings index={2} />
+      <NotificationSettings index={1} />
       <RoutineSettings />
       <TradeSettings />
     </section>

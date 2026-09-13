@@ -286,6 +286,15 @@
 
   section{padding:34px 0; border-top:1px solid var(--line);}
   section:first-child{border-top:none; padding-top:0;}
+  /* باگِ گزارش‌شده («بین هر بخشِ پنلِ کاربری یه خط اضافه هست»): صفحه‌های
+     پنلِ کاربری (AccountUI.tsx) هم خودشون یک `<section>` رو برمی‌گردونن هم
+     هر `AccountBlock` یک `motion.section` جداست — قانونِ سراسریِ بالا
+     (که برای بخش‌های صفحه‌ی فرودی نوشته شده) بدونِ قصد رویِ همه‌ی این‌ها هم
+     می‌شینه، چون :first-child فقط اولین section رو نجات می‌ده نه بقیه رو،
+     و حتی padding-bottom رو هم :first-child نجات نمی‌ده. پنلِ کاربری فاصله‌ی
+     خودش رو با margin (`.acc-block{margin-bottom}`) می‌گیره، پس این ریست
+     رو کامل خنثی می‌کنیم. */
+  .account-content section{ padding:0; border-top:none; }
 
   .eyebrow{
     font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11px; letter-spacing:.12em;
@@ -1395,12 +1404,24 @@
     padding:6px 11px; border-radius:999px; border:1px solid var(--line);
     background:rgba(255,255,255,.04); color:var(--muted); font-size:11px; font-weight:700; white-space:nowrap;
   }
-  .account-hero-badge.premium{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  /* طبقِ درخواستِ صریح: وقتی کاربر واقعاً یه پلنِ خریداری‌شده داره (نه پلنِ
+     پایه‌ی رایگان)، دورِ نشان طلایی می‌شه — نه سبزِ اکسنتِ همیشگی، تا حسِ
+     «ویژه/پریمیوم» جدا از رنگِ اصلیِ اپ منتقل بشه. */
+  .account-hero-badge.premium{
+    border-color:#F0B429; color:#F0B429; background:rgba(240,180,41,.14);
+  }
   /* نشان اشتراک باید بچسبه به لبه‌ی چپ، پس این بلوک فاصله‌ی وسط رو پر می‌کنه */
   .account-hero-info{ flex:1; min-width:0; }
   /* اسم کامل نوشته می‌شه — نه truncate با «…» */
   .account-hero-name{ font-size:15px; font-weight:800; color:var(--text); line-height:1.45; overflow-wrap:anywhere; }
-  .account-hero-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+  /* باگِ گزارش‌شده («یوزرنیم جاش اشتباهه، باید راست باشه»): این عنصر
+     dir="ltr" داره (برای این‌که «@user» چپ‌به‌راست درست نوشته بشه)، ولی
+     dir="ltr" خودش پیش‌فرضِ text-align رو هم به left عوض می‌کنه — درحالی‌که
+     .account-hero-name بالاش (بدونِ dir override) راست‌چین می‌مونه. نتیجه
+     این بود که یوزرنیم زیرِ اسم، از چپِ ستون شروع می‌شد، نه از راستِ
+     هم‌ترازِ اسم. text-align یه مقدارِ فیزیکیه، به dir داخلیِ عنصر کاری
+     نداره، پس همینجا صریح ستش می‌کنیم. */
+  .account-hero-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; text-align:right; }
 
   /* پیش‌نمایش ساعت نوبت‌های دارو، پایین فرم افزودن/ویرایش دارو — کاربر
      همون‌جا می‌بینه «۴ بار در روز» با شروع ۰۸:۰۰ دقیقا یعنی چه ساعت‌هایی. */
@@ -1761,12 +1782,21 @@
   }
     .account-row2{
     position:relative; display:flex; align-items:center; gap:12px; padding:14px 15px;
-    text-decoration:none; color:inherit; border-bottom:1px solid var(--line);
+    text-decoration:none; color:inherit; border-top:none; border-inline:none;
+    border-bottom:1px solid var(--line);
     transition:background .15s ease;
+    /* .account-row2 حالا یه <button> هم می‌تونه باشه (AccountRowButton، مثلا
+       «خروج از حساب») — ریستِ سراسریِ button{} (بک‌گراندِ شیشه‌ای/پدینگِ
+       ثابت) اینجا صریح خاموش می‌شه، همون الگوی همیشگیِ فایل. */
+    width:100%; text-align:inherit; font:inherit; cursor:pointer;
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .account-row2, body:not([data-theme="light"]) .account-row2{
+    background:none; box-shadow:none;
   }
   .account-card .account-row2:last-child{ border-bottom:none; }
   @media (hover:hover) and (pointer:fine){
-    a.account-row2:hover{ background:rgba(255,255,255,.03); }
+    a.account-row2:hover, button.account-row2:hover{ background:rgba(255,255,255,.03); }
     a.account-row2:hover .account-row2-chevron{ transform:translateX(-2px); color:var(--accent); }
   }
   .account-row2-icon{
@@ -1778,10 +1808,69 @@
   .account-row2-label{ font-size:13.5px; font-weight:700; color:var(--text); }
   .account-row2-desc{ font-size:11.5px; color:var(--muted); line-height:1.5; }
   .account-row2-chevron{ color:var(--muted2); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
+  /* ردیفِ «خروج از حساب» — قرمزِ خطر، هم‌رنگِ .account-sidebar-logout */
+  .account-row2-danger .account-row2-label{ color:#E05252; }
+  .account-row2-danger .account-row2-icon{ background:rgba(224,82,82,.1); color:#E05252; }
+  @media (hover:hover) and (pointer:fine){
+    button.account-row2-danger:hover{ background:rgba(224,82,82,.06); }
+  }
   /* مثل account-row2 (آیکون+برچسب+توضیح) ولی بدون پدینگ/بردر خودش —
      برای وقتی که از قبل داخل یه account-card با پدینگ خودش قرار داره
      (مثلا ردیف ایمیل توی پروفایل که یه دکمه‌ی «تغییر» هم کنارش داره). */
   .account-field-label-row{ display:flex; align-items:center; gap:12px; }
+
+  /* ── پشتیبانیِ در-سایت (تیکت) ────────────────────────────────────────
+     طبقِ درخواستِ صریح: تایتلِ صفحه هم‌ردیفِ دکمه‌ی «ایجاد تیکت». */
+  .support-head-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .support-head-row h1{ margin:0; }
+  .support-new-btn{ display:inline-flex; align-items:center; gap:6px; flex-shrink:0; }
+
+  .support-status{
+    display:inline-flex; align-items:center; flex-shrink:0;
+    padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700; white-space:nowrap;
+  }
+  .support-status.open{ background:var(--accent-dim); color:var(--accent); }
+  .support-status.answered{ background:rgba(62,123,250,.14); color:#3E7BFA; }
+  .support-status.closed{ background:rgba(255,255,255,.06); color:var(--muted2); }
+
+  .support-ticket-time{ font-size:10px; color:var(--muted2); margin-top:2px; }
+
+  /* ── صفحه‌ی جزئیاتِ یک تیکت — رشته‌ی گفت‌وگو ─────────────────────────
+     مثلِ هر اپِ پیام‌رسانِ دیگه‌ای: پیامِ «خودم» همیشه راست (اکسنت)، پیامِ
+     طرفِ مقابل همیشه چپ (خنثی) — ولی «خودم» نسبت به بیننده فرق می‌کنه:
+     توی صفحه‌ی کاربر (account/support/[id]) کلاسِ mine رو پیامِ خودِ
+     کاربر می‌گیره؛ توی پنلِ ادمین (admin/support/[id]) همون کلاسِ mine رو
+     پیامِ ادمین می‌گیره — هرکدوم پیامِ خودشون رو راست می‌بینن، دقیقا مثلِ
+     واتس‌اپ. همین یک جفت کلاس (mine/admin) با معنیِ متفاوت توی هر صفحه. */
+  .support-thread{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .support-msg{
+    max-width:82%; padding:10px 14px; border-radius:17px;
+    font-size:12.5px; line-height:1.8; white-space:pre-wrap; word-break:break-word;
+  }
+  .support-msg.mine{
+    align-self:flex-start; background:var(--accent); color:var(--bg); border-bottom-right-radius:4px;
+  }
+  .support-msg.admin{
+    align-self:flex-end; background:var(--surface-2); color:var(--text); border-bottom-left-radius:4px;
+  }
+  .support-msg-time{ display:block; margin-top:5px; font-size:9.5px; opacity:.7; }
+
+  .support-reply-row{ display:flex; align-items:flex-end; gap:8px; margin-top:16px; }
+  .support-reply-row textarea{
+    flex:1; min-height:44px; max-height:160px; resize:vertical;
+  }
+  .support-reply-send{
+    flex-shrink:0; width:44px; height:44px; border-radius:13px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:var(--bg); border:1px solid var(--accent);
+  }
+  .support-reply-send:disabled{ opacity:.5; cursor:default; }
+  .support-reply-send:hover:not(:disabled){ filter:brightness(1.06); }
+
+  .support-closed-note{
+    text-align:center; font-size:11.5px; color:var(--muted); margin-top:14px;
+    padding:12px; border-radius:14px; background:rgba(255,255,255,.03);
+  }
 
   .account-sub-cta-btn{
     display:inline-flex; align-items:center; justify-content:center;
@@ -1792,34 +1881,7 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
-  /* ── ته صفحه‌ی اولِ پنل کاربری ────────────────────────────────────────
-     خروج از حساب (فقط موبایل) + لینک‌های حقوقی + نسخه‌ی اپ، همه وسط‌چین. */
-  .account-index-foot{
-    display:flex; flex-direction:column; align-items:center; gap:16px;
-    margin-top:26px; padding-top:22px; border-top:1px solid var(--surface-line);
-  }
-  .account-index-logout{
-    display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    padding:11px 22px; border-radius:14px; font-size:12.5px; font-weight:700;
-    color:#E05252; border:1px solid rgba(224,82,82,.35);
-    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-    cursor:pointer; transition:background .18s ease;
-  }
-  body[data-theme="light"] .account-index-logout,
-  body:not([data-theme="light"]) .account-index-logout{ background:none; box-shadow:none; }
-  /* `color` این‌جا هم باید تکرار شود: قانونِ سراسریِ `button:hover` (که
-     رنگِ اکسنت می‌دهد) اسپسیفیسیتیِ (0,1,1) دارد و از تک‌کلاسِ (0,1,0) بالا
-     قوی‌تر است — بدونِ این خط، دکمه‌ی خروج زیرِ ماوس سبز می‌شد. */
-  @media (hover:hover) and (pointer:fine){
-    .account-index-logout:hover{
-      color:#E05252; border-color:#E05252;
-      background:rgba(224,82,82,.08); box-shadow:none;
-    }
-  }
-  .account-index-logout:active{ transform:scale(.97); }
-  /* روی دسکتاپ سایدبار خودش دکمه‌ی خروج دارد — دو دکمه‌ی خروج در یک صفحه نه. */
-  @media (min-width:701px){ .account-index-logout{ display:none; } }
-
+  
   .account-index-links{
     display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
     font-size:11.5px; color:var(--muted2);

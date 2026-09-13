@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { LogOut } from "lucide-react";
-import { AccountRowLink } from "@/components/AccountRow";
+import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
 import { logoutAndRedirect } from "@/lib/logout";
 import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
@@ -37,6 +37,10 @@ export default function AccountIndexPage() {
   const sub = data?.subscriptions?.[0];
   const isPremium = !!sub && sub.plan.key !== "basic";
 
+  // همون توالیِ خروجِ سایدبارِ دسکتاپ (app/account/layout.tsx) — طبقِ
+  // گزارشِ باگ، روی موبایل سایدبار دیده نمی‌شه و راهِ دیگه‌ای برای خروج از
+  // حساب نبود. این‌جا (صفحه‌ی اولِ پنل) تنها جایی‌ست که موبایل همیشه بهش
+  // می‌رسه، پس همین‌جا هم اضافه شد.
   return (
     <section>
       {data && (
@@ -51,15 +55,19 @@ export default function AccountIndexPage() {
         ))}
       </div>
 
-      {/* ته صفحه‌ی اولِ پنل: خروج از حساب، لینک‌های حقوقی، و نسخه‌ی اپ.
-          دکمه‌ی خروج فقط روی موبایل رندر می‌شود (با CSS) — روی دسکتاپ خودِ
-          سایدبار دکمه‌اش را دارد و دو دکمه‌ی خروج توی یک صفحه گیج‌کننده است. */}
-      <div className="account-index-foot">
-        <button type="button" className="account-index-logout" onClick={logoutAndRedirect}>
-          <LogOut size={15} />
-          <span>خروج از حساب</span>
-        </button>
+      <div className="account-card account-card-full" style={{ marginTop: 14 }}>
+        <AccountRowButton
+          icon={<LogOut size={15} />}
+          label="خروج از حساب"
+          onClick={logoutAndRedirect}
+          danger
+          index={ACCOUNT_SECTIONS.length}
+        />
+      </div>
 
+      {/* ته صفحه‌ی اولِ پنل: لینک‌های حقوقی + نسخه‌ی اپ. دکمه‌ی خروج خودش
+          یک ردیفِ کارت بالاست، پس این‌جا تکرار نمی‌شود. */}
+      <div className="account-index-foot">
         <nav className="account-index-links">
           <Link href="/terms">قوانین و مقررات</Link>
           <span aria-hidden="true">·</span>
