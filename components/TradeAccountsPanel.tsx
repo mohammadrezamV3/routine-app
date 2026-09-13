@@ -84,10 +84,10 @@ export function TradeAccountsPanel({
   if (loading) {
     return (
       <div>
-        <div className="trade-accounts-head">
-          <div className="trade-section-title">حساب‌های معاملاتی</div>
-        </div>
         <div className="trade-surface trade-account-grid">
+          <div className="trade-accounts-head">
+            <div className="trade-section-title">حساب‌های معاملاتی</div>
+          </div>
           {[0, 1, 2].map((i) => <div key={i} className="trade-account-card trade-account-skel" />)}
         </div>
       </div>
@@ -96,23 +96,25 @@ export function TradeAccountsPanel({
 
   return (
     <div>
-      <div className="trade-accounts-head">
-        <div className="trade-section-title">حساب‌های معاملاتی</div>
-        <button type="button" className="trade-ghost-btn" onClick={() => { setArchiveOpen(true); setArchived(null); loadArchived(); }}>
-          نمایش آرشیو
-        </button>
-      </div>
-
-      {actionError && <div className="trade-form-error">{actionError}</div>}
-
-      {!accounts.length && (
-        <div className="trade-empty-state">
-          <Wallet size={32} />
-          <p>هنوز حسابی ایجاد نکردی</p>
-        </div>
-      )}
-
+      {/* طبقِ درخواستِ صریح: تایتل + دکمه‌ی «نمایش آرشیو» دیگه بالای باکس
+          نیستن — اولین ردیفِ داخلِ خودِ باکسن. */}
       <div className="trade-surface trade-account-grid">
+        <div className="trade-accounts-head">
+          <div className="trade-section-title">حساب‌های معاملاتی</div>
+          <button type="button" className="trade-ghost-btn" onClick={() => { setArchiveOpen(true); setArchived(null); loadArchived(); }}>
+            نمایش آرشیو
+          </button>
+        </div>
+
+        {actionError && <div className="trade-form-error">{actionError}</div>}
+
+        {!accounts.length && (
+          <div className="trade-empty-state">
+            <Wallet size={32} />
+            <p>هنوز حسابی ایجاد نکردی</p>
+          </div>
+        )}
+
         {accounts.map((a, i) => (
           <AccountRow
             key={a.id}
@@ -152,7 +154,6 @@ export function TradeAccountsPanel({
               <div className="trade-account-grid" style={{ marginTop: 4 }}>
                 {archived.map((a) => (
                   <div key={a.id} className="trade-surface trade-account-card archived">
-                    <span className="trade-account-stripe" style={{ background: a.color }} />
                     <div className="trade-account-top-row">
                       <div className="trade-account-kebab-inline">
                         <TradeKebabMenu
@@ -174,6 +175,7 @@ export function TradeAccountsPanel({
                       </div>
                       <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link">
                         <span className="trade-account-name">{a.name}</span>
+                        <span className="trade-account-dot" style={{ background: a.color }} />
                       </Link>
                     </div>
                   </div>
@@ -225,10 +227,12 @@ function AccountRow({
       transition={{ duration: 0.32, delay: Math.min(index, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
       className={`trade-surface trade-account-card${a.archived ? " archived" : ""}`}
     >
-      <span className="trade-account-stripe" style={{ background: a.color }} />
-
       {/* ردیف بالا: سه‌نقطه کنار نام حساب (توی RTL یعنی سمت راست، اولین
-          فرزند DOM)، و سود/زیان چپ‌چین انتهای همان ردیف — «1000$ 10% ↑». */}
+          فرزند DOM)، و سود/زیان چپ‌چین انتهای همان ردیف — «1000$ 10% ↑».
+          طبقِ درخواستِ صریح («توپِ برچسب باید سمتِ چپِ اسم باشه، نه گوشه‌ی
+          بالا-راستِ کارت»): توپِ رنگیِ حساب دیگه absolute-positioned و
+          مستقل از اسم نیست — داخلِ خودِ لینکِ اسم، بلافاصله بعدِ متنِ اسم
+          نشسته (که توی RTL یعنی دقیقا سمتِ چپِ اسم). */}
       <div className="trade-account-top-row">
         <div className="trade-account-kebab-inline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <TradeKebabMenu
@@ -247,6 +251,7 @@ function AccountRow({
 
         <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link">
           <span className="trade-account-name">{a.name}</span>
+          <span className="trade-account-dot" style={{ background: a.color }} />
           {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
         </Link>
 
