@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LineChart, CalendarDays, BarChart2, BellRing, ListChecks } from "lucide-react";
+import { CandlestickChart } from "lucide-react";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { TradeStatsPicker } from "@/components/TradeStatsPicker";
-import { AccountSectionCard } from "@/components/AccountSectionCard";
+import { AccountBlock, AccountOption } from "@/components/AccountUI";
 import { getSetting, setSetting } from "@/lib/storage";
 import { DEFAULT_TICKER_SYMBOLS_IRAN, MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, TICKER_SETTING_KEY } from "@/lib/tickerSymbols";
 import {
@@ -24,6 +24,10 @@ import {
 import { TradeFactsPicker } from "@/components/TradeFactsPicker";
 
 // تنظیمات بخش «ترید» — مثل RoutineSettings، مستقیم داخل صفحه‌ی تنظیمات.
+//
+// طبقِ درخواستِ صریح، ترید *یک* بخش است: یک تیتر، یک قاب، و بالای هر
+// گزینه فقط اسمِ خودش. قبلا هر گزینه یک کارتِ مستقل با تیتر و آیکونِ
+// خودش بود و صفحه‌ی تنظیمات شبیه هشت کارتِ پشت‌سرهم می‌شد.
 export function TradeSettings() {
   const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
   const [marketPickerOpen, setMarketPickerOpen] = useState(false);
@@ -94,41 +98,41 @@ export function TradeSettings() {
   }
 
   return (
-    <>
+    <AccountBlock icon={<CandlestickChart size={15} />} title="ترید" index={3}>
 
-      <AccountSectionCard icon={<LineChart size={16} />} title="بازارهای دنبال‌شده" index={0}>
+      <AccountOption label="بازارهای دنبال‌شده">
         <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمت بالای صفحه‌ی ترید انتخاب شده</div>
         <button className="account-outline-btn" onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10 }}>
           تغییر بازارها
         </button>
-      </AccountSectionCard>
+      </AccountOption>
 
-      <AccountSectionCard icon={<CalendarDays size={16} />} title="تقویم ژورنال ترید" index={1}>
+      <AccountOption label="تقویم ژورنال ترید">
         <div className="item-line" style={{ marginBottom: 10 }}>تاریخ‌های ژورنال ترید به چه تقویمی نمایش داده بشه</div>
         <SegmentedTabs
           options={[{ value: "jalali", label: "شمسی" }, { value: "gregorian", label: "میلادی" }]}
           active={calSystem}
           onChange={changeCalSystem}
         />
-      </AccountSectionCard>
+      </AccountOption>
 
-      <AccountSectionCard icon={<BarChart2 size={16} />} title="آمارهای صفحه ترید" index={2}>
+      <AccountOption label="آمارهای صفحه ترید">
         <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از {TRADE_STAT_ORDER.length} آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
         <button className="account-outline-btn" onClick={() => setStatsPickerOpen(true)}>
           تغییر
         </button>
-      </AccountSectionCard>
+      </AccountOption>
 
-      <AccountSectionCard icon={<ListChecks size={16} />} title="جزئیات ترید در لیست" index={3}>
+      <AccountOption label="جزئیات ترید در لیست">
         <div className="item-line" style={{ marginBottom: 10 }}>
           {visibleFacts.length} از {MAX_VISIBLE_TRADE_FACTS} جزئیات برای نمایش کنار هر ترید انتخاب شده
         </div>
         <button className="account-outline-btn" onClick={() => setFactsPickerOpen(true)}>
           تغییر
         </button>
-      </AccountSectionCard>
+      </AccountOption>
 
-      <AccountSectionCard icon={<BellRing size={16} />} title="هشدار قبل از اخبار مهم" index={4}>
+      <AccountOption label="هشدار قبل از اخبار مهم">
         <div className="item-line" style={{ marginBottom: 10 }}>
           قبل از انتشار رویدادهای تقویم اقتصادی، نوتیفیکیشن بگیر. برای رسیدن نوتیف باید
           اجازه‌ی نوتیفیکیشن مرورگر را هم داده باشی.
@@ -191,7 +195,7 @@ export function TradeSettings() {
             </div>
           </>
         )}
-      </AccountSectionCard>
+      </AccountOption>
 
       {marketPickerOpen && (
         <MarketPicker
@@ -217,6 +221,6 @@ export function TradeSettings() {
           onClose={() => setFactsPickerOpen(false)}
         />
       )}
-    </>
+    </AccountBlock>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Moon } from "lucide-react";
+import { CalendarCheck2 } from "lucide-react";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
+import { AccountBlock, AccountOption } from "@/components/AccountUI";
 
-// تنظیمات بخش «روتین» — قبلا یک صفحه‌ی جدا پشت یک لینک بود؛ حالا
-// مستقیم داخل صفحه‌ی تنظیمات رندر می‌شه، فقط با یک تیتر که می‌گه مال کدوم بخشه.
+// تنظیمات بخش «روتین» — مثلِ ترید، یک بخش با یک قاب؛ بالای هر گزینه فقط
+// اسمِ خودش (نه یک کارتِ مستقل برای هرکدام).
 export function RoutineSettings() {
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editing, setEditing] = useState(false);
@@ -15,25 +15,16 @@ export function RoutineSettings() {
   useEffect(() => { getWakeSleepTimes().then(setWakeSleep); }, []);
 
   return (
-    <>
-
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="account-card" style={{ padding: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <span className="account-row2-icon" style={{ width: 34, height: 34 }}><Moon size={16} /></span>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>ساعت بیداری و خواب</span>
-        </div>
-        <div className="item-line" style={{ textAlign: "center" }}>
+    <AccountBlock icon={<CalendarCheck2 size={15} />} title="روتین" index={2}>
+      <AccountOption label="ساعت بیداری و خواب">
+        <div className="item-line">
           بیداری <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.wake || DEFAULT_WAKE}</b>
           {" — "}خواب <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.sleep || DEFAULT_SLEEP}</b>
         </div>
-        <button className="account-outline-btn" onClick={() => setEditing(true)} style={{ marginTop: 12 }}>
+        <button className="account-outline-btn" onClick={() => setEditing(true)} style={{ marginTop: 10 }}>
           تغییر ساعت‌ها
         </button>
-      </motion.div>
-
-      <div className="section-note" style={{ marginTop: 16 }}>
-        یادآوری برنامه‌های روزانه از بخش «اعلان‌ها» قابل تنظیمه.
-      </div>
+      </AccountOption>
 
       {editing && (
         <WakeSleepSetup
@@ -42,6 +33,6 @@ export function RoutineSettings() {
           onDone={(v) => { setWakeSleep(v); setEditing(false); }}
         />
       )}
-    </>
+    </AccountBlock>
   );
 }

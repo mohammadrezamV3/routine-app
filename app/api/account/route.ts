@@ -21,6 +21,7 @@ export async function GET() {
       phone: true,
       name: true,
       lastName: true,
+      bio: true,
       birthDate: true,
       gender: true,
       heightCm: true,
@@ -92,6 +93,11 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "نام خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
     }
     data.lastName = v || null;
+  }
+  // بیوگرافی: متنِ آزاد ولی کوتاه — هم توی پروفایلِ خودِ کاربر ویرایش
+  // می‌شه هم توی پاپ‌آپِ پروفایلِ دوستان نشون داده می‌شه.
+  if (body.bio !== undefined) {
+    data.bio = clampText(String(body.bio || "").trim(), 200) || null;
   }
   if (body.gender !== undefined) {
     const v = body.gender === null ? null : String(body.gender);

@@ -112,6 +112,9 @@ model User {
   // بنرِ بالای پروفایل — مثل avatarUrl به‌شکل data URL ذخیره می‌شه (استوریج
   // ابری هنوز راه‌اندازی نشده) و سمت کلاینت قبل از ارسال فشرده می‌شه.
   bannerUrl    String?
+  // بیوگرافیِ کوتاهِ پروفایل — هم توی پنل کاربری ویرایش می‌شه هم توی
+  // پاپ‌آپِ پروفایلِ دوستان دیده می‌شه.
+  bio          String?
   birthDate    DateTime?
   gender       String? // "male" | "female" | null — اختیاری، فقط اگه کاربر خودش پر کنه
   // پروفایل — مستقل از اسنپ‌شاتِ heightCm/weightKgِ خودِ ExercisePlan/CalorieTarget

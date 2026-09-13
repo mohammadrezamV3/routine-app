@@ -1440,14 +1440,35 @@
     /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
        ۳۰۰px+ می‌رسید و نصفِ صفحه را می‌گرفت. عکس با object-fit:cover داخلِ
        همین ارتفاع جا می‌شود، پس هیچ عکسی کشیده نمی‌شود. */
+    /* عمدا بدونِ overflow:hidden — آواتار نیمه‌آویزان از لبه‌ی پایینِ بنر
+       بیرون می‌زند و با کلیپ، نصفش بریده می‌شد. گوشه‌ی گردِ کارت را خودِ
+       `.profile-hero` (که overflow:hidden دارد) می‌بُرد. */
     position:relative; width:100%; height:132px;
-    /* بدونِ عکس، یه گرادیانِ ملایم از رنگِ اکسنتِ خودِ تم — نه یه رنگِ ثابت */
-    background:linear-gradient(120deg, var(--accent-dim), var(--surface-2));
+    /* باگِ گزارش‌شده («یه قسمتِ بنر رنگ نداره»): ایستگاهِ دومِ گرادیان
+       var(--surface-2) بود — یعنی نیمه‌ی چپِ بنر عملا هم‌رنگِ خودِ کارت
+       می‌شد و خالی به‌نظر می‌رسید. حالا هر سه ایستگاه از خودِ اکسنت‌اند،
+       پس تمامِ پهنای بنر رنگ دارد. */
+    background:linear-gradient(120deg,
+      rgba(var(--accent-rgb),.42), rgba(var(--accent-rgb),.14) 52%, rgba(var(--accent-rgb),.34));
   }
+  /* طبقِ درخواستِ صریح: خودِ بنر هم مثلِ عکسِ پروفایل با کلیک عوض می‌شود.
+     یک <button> تمام‌قد پشتِ همه‌چیز؛ ریستِ سراسریِ button{} صریح خاموش. */
+  .profile-banner-hit{
+    position:absolute; inset:0; z-index:0; padding:0; width:100%; height:100%;
+    border:none; background:none; box-shadow:none; cursor:pointer;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .profile-banner-hit,
+  body:not([data-theme="light"]) .profile-banner-hit{ background:none; box-shadow:none; }
   .profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .profile-banner-hit .profile-banner-img{ border-radius:inherit; }
   .profile-banner-actions{
-    position:absolute; top:10px; inset-inline-end:10px; display:flex; gap:6px;
+    position:absolute; top:10px; inset-inline-end:10px; z-index:2; display:flex; gap:6px;
+    pointer-events:none;
   }
+  /* فقط دکمه‌ی حذف واقعا کلیک می‌گیرد؛ «تغییر بنر» یک برچسبِ راهنماست و
+     کلیکش باید به خودِ بنر برسد (وگرنه دوباره «حتما باید اون دکمه رو بزنم»). */
+  .profile-banner-actions button{ pointer-events:auto; }
   /* این دوتا دکمه روی خودِ عکس می‌شینن، پس بدونِ یه پس‌زمینه‌ی نیمه‌شفاف
      روی عکسِ روشن اصلا خونده نمی‌شن — تنها جاییه که این لازمه. */
   .profile-banner-btn{
@@ -1469,8 +1490,11 @@
   }
   body[data-theme="light"] .profile-hero-avatar-wrap,
   body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
+  /* باگِ گزارش‌شده («سایه‌ی ادیت روی عکس پروفایل جاش اشتباهه»): این هاله
+     inset:0 بود، یعنی حلقه‌ی ۶پیکسلیِ دورِ عکس را هم می‌پوشاند و یک لبه‌ی
+     تیره‌ی بیرون‌زده می‌ساخت. حالا دقیقا روی خودِ عکس می‌نشیند. */
   .profile-hero-avatar-hint{
-    position:absolute; inset:0; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    position:absolute; inset:6px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     color:#fff; background:rgba(0,0,0,.45); opacity:0; transition:opacity .18s ease; pointer-events:none;
   }
   .profile-hero-avatar-wrap:hover .profile-hero-avatar-hint,
@@ -1563,6 +1587,32 @@
 
   .acc-savebar{ display:flex; flex-direction:column; gap:10px; align-items:flex-end; margin-top:18px; }
   .acc-savebar .account-outline-btn{ display:inline-flex; align-items:center; gap:7px; }
+  /* طبقِ درخواستِ صریح، دکمه‌ی ذخیره خودش سه حالت را می‌گوید و هیچ متنِ
+     «ذخیره شد»ی زیرش نوشته نمی‌شود: موقعِ ذخیره فقط دایره‌ی لودینگ،
+     بعدش تیک، و اگر شکست خورد علامتِ هشدار (متنِ خطا بالای دکمه). عرضِ
+     حداقلی نگه داشته می‌شود تا دکمه با عوض‌شدنِ محتوا نپرد. */
+  .acc-save-btn{ min-width:132px; min-height:36px; transition:color .2s ease, border-color .2s ease; }
+  .acc-save-btn.is-ok{ border-color:var(--accent); color:var(--accent); }
+  .acc-save-btn.is-bad{ border-color:#E05252; color:#E05252; }
+  .acc-save-btn:disabled{ opacity:1; }
+
+  /* بیوگرافی — همان فیلدِ استانداردِ پنل، فقط چندخطی */
+  .acc-textarea{ min-height:86px; padding-block:11px; line-height:1.9; resize:vertical; }
+  .acc-field-counter{
+    position:absolute; bottom:7px; inset-inline-start:12px;
+    font-size:10px; color:var(--muted2); pointer-events:none;
+  }
+
+  /* صفحه‌های جمع‌وجور (امنیت) — طبقِ درخواستِ صریح فاصله‌ها کمتر */
+  .acc-compact .acc-block{ margin-bottom:16px; }
+  .acc-compact .acc-block-body{ padding:13px 14px; }
+  .acc-compact .acc-block-title{ margin-bottom:2px; }
+  .acc-compact .acc-scroll-box{ gap:9px; max-height:210px; }
+
+  /* یک گزینه داخلِ یک بخش: فقط نامش بالای خودش، بدونِ قابِ جدا. */
+  .acc-option + .acc-option{ margin-top:18px; padding-top:16px; border-top:1px solid var(--surface-line); }
+  .acc-option-label{ font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .acc-option-desc{ font-size:11.5px; color:var(--muted); line-height:1.8; margin:0 0 8px; }
 
   /* فیلدهای تک‌خطی (هرکدام یک ردیف کامل) */
   .acc-field-stack{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
@@ -1585,14 +1635,21 @@
   body[data-theme="light"] .account-shell .jdate-btn{
     background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08);
   }
+  /* `.jdate-btn` یک <button> واقعی‌ست و ریستِ سراسریِ button{} یک
+     box-shadow (هایلایتِ inset + سایه‌ی بیرونی) رویش می‌گذاشت — تنها فیلدِ
+     سایه‌دارِ این صفحه بود. طبقِ درخواستِ صریح، مثلِ بقیه‌ی فیلدها بی‌سایه. */
+  .account-shell .jdate-btn{ box-shadow:none; }
   .account-shell .wsearch-newform-name:focus,
   .account-shell .jdate-btn:focus{ border-color:var(--accent); }
   /* فیلدهای قفل (شماره/ایمیل/یوزرنیم) نباید مثل فیلدِ خاموش کم‌رنگ بشن */
   .account-shell .wsearch-newform-name:disabled{ opacity:1; color:var(--text); cursor:default; }
   /* پدینگ‌های آیکون/دکمه باید روی همین رادیوسِ جدید هم درست بمانند */
   .account-shell .field-error-wrap.has-icon input,
+  .account-shell .field-error-wrap.has-icon textarea,
   .account-shell .field-error-wrap.has-icon .jdate-btn,
   .account-shell .field-error-wrap.has-icon .acc-select{ padding-inline-start:38px; }
+  /* توی فیلدِ چندخطی، آیکونِ وسط‌چینِ پیش‌فرض وسطِ متن می‌افتاد — بالا می‌نشیند. */
+  .field-error-wrap:has(> textarea) .field-icon{ top:20px; transform:none; }
   .account-shell .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:14px; padding-inline-end:38px; }
   .account-shell .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:58px; padding-inline-end:38px; }
   .account-shell .field-icon{ inset-inline-start:14px; }
@@ -1651,6 +1708,7 @@
   @media (max-width:520px){
     .profile-hero-avatar-wrap{ width:78px; height:78px; bottom:-39px; inset-inline-start:16px; }
     .profile-hero-avatar-img{ width:78px; height:78px; border-width:5px; }
+    .profile-hero-avatar-hint{ inset:5px; }
     .profile-hero-meta{ padding:48px 16px 12px; }
     .profile-banner-btn span{ display:none; }
     .profile-banner-btn{ padding:6px; }
@@ -1740,20 +1798,13 @@
        می‌شود. */
     .account-sidebar{ display:none; }
 
-    /* طبقِ درخواستِ صریح: توی موبایل کارتِ فهرستِ زبانه‌های صفحه‌ی اول
-       (نه هدر بالای صفحه، فقط همین) باید از چپ تا راستِ واقعیِ صفحه کشیده
-       بشه، نه داخلِ پدینگِ ۲۰پیکسلیِ body بمونه. همون ترفندِ breakoutِ
-       `.tv-chart-card`: 100vw + مارجینِ منفیِ نصفِ ویوپورت. */
-    .account-card-full{
-      width:100vw; max-width:none; position:relative; inset-inline-end:50%; inset-inline-start:50%;
-      margin-inline-end:-50vw; margin-inline-start:-50vw;
-      border-radius:0; border-inline-end:none; border-inline-start:none;
-      box-sizing:border-box;
-    }
-    .account-card-full .account-row2{
-      padding-inline-end:calc(15px + env(safe-area-inset-right));
-      padding-inline-start:calc(15px + env(safe-area-inset-left));
-    }
+    /* باگِ گزارش‌شده («پنل کاربری جاهاش به‌هم‌ریخته‌ست و باکسش کرو نیست»):
+       این کارت قبلا با ترفندِ breakout تا لبه‌های واقعیِ صفحه کشیده می‌شد و
+       در نتیجه هم گوشه‌ی گردش را از دست می‌داد (border-radius:0) هم با
+       کارتِ سرصفحه‌ی بالایش — که داخلِ پدینگِ body می‌ماند — هم‌تراز نبود.
+       حالا مثلِ بقیه‌ی کارت‌های همین صفحه داخلِ همان پدینگ و با همان
+       گوشه‌ی گرد می‌ماند. */
+    .account-card-full{ width:auto; border-radius:18px; }
   }
 
   /* صفحه‌ی چک‌اوت — خلاصه‌ی سفارش + کد تخفیف + قوانین + دکمه‌ی پرداخت.
@@ -5369,8 +5420,17 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 @media (hover:hover){ .trade-account-card:hover, .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.3); } }
 /* سه‌نقطه دیگر گوشه‌ی چپ مطلق نیست؛ اول ردیف (توی RTL یعنی سمت راست)
    کنار نام حساب می‌نشیند و سود/زیان انتهای همان ردیف (چپ) می‌رود. */
-.trade-account-top-row{ display:flex; align-items:center; gap:8px; }
-.trade-account-kebab-inline{ flex-shrink:0; margin-inline-start:-6px; }
+/* لینکِ کششیِ نامرئی — کلِ سطحِ کارت را کلیک‌پذیر می‌کند (باگِ «روی حساب
+   می‌زنم نمی‌ره تو»). زیرِ همه‌ی محتوا می‌ماند، پس سه‌نقطه و برچسب‌ها
+   همچنان کلیکِ خودشان را می‌گیرند. */
+.trade-account-hit{ position:absolute; inset:0; z-index:0; }
+.trade-account-top-row, .trade-account-main{ position:relative; z-index:1; }
+/* سه‌نقطه باید *دقیقا* هم‌ترازِ خطِ نامِ حساب بشینه: ارتفاعِ دکمه و ارتفاعِ
+   خطِ متن یکی می‌شود تا align-items:center روی هر دو یک نتیجه بدهد، و
+   مارجینِ منفیِ قبلی (که فقط دکمه را از لبه‌ی کارت بیرون می‌زد) حذف شد. */
+.trade-account-top-row{ display:flex; align-items:center; gap:8px; min-height:30px; }
+.trade-account-kebab-inline{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-7px; }
+.trade-account-kebab-inline .trade-icon-btn{ display:flex; padding:6px; }
 .trade-account-title-link{
   display:flex; align-items:center; gap:8px; min-width:0; flex:1;
   text-decoration:none; color:var(--text);
@@ -6210,10 +6270,17 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   .tv-chart-card{
     width:100vw; max-width:none; position:relative; inset-inline-end:50%; inset-inline-start:50%;
     margin-inline-end:-50vw; margin-inline-start:-50vw;
-    padding:0 calc(11px + env(safe-area-inset-right)) 0 calc(11px + env(safe-area-inset-left));
-    box-sizing:border-box;
+    padding:0; box-sizing:border-box;
   }
-  .tv-chart-box{ border-radius:0; border-inline-end:none; border-inline-start:none; }
+  /* طبقِ درخواستِ صریح: خودِ چارت هیچ فاصله‌ای از چپ و راست ندارد — نه
+     پدینگِ کارت، نه پدینگِ باکس، نه گوشه‌ی گرد. فقط تایتل (که بیرونِ باکس
+     است) هم‌ترازِ متنِ بقیه‌ی صفحه نگه داشته می‌شود. */
+  .tv-chart-title{ padding-inline:calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-left)); }
+  .tv-chart-box{
+    border-radius:0; border-inline-end:none; border-inline-start:none;
+    padding-inline:0;
+  }
+  .tv-chart-frame{ border-radius:0; }
 }
 
 .tv-chart-frame iframe{ width:100%; height:100%; border:0; display:block; transition:opacity .3s ease; }
@@ -6776,7 +6843,26 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
   animation:tradeFadeIn .22s ease both;
 }
-.friend-profile-close{ position:absolute; top:12px; right:12px; }
+/* بنرِ پاپ‌آپ تا لبه‌های خودِ پنل کشیده می‌شود، پس پدینگِ پنل
+   (۲۴px بالا / ۲۰px کناره) را با مارجینِ منفی خنثی می‌کند. */
+.friend-profile-banner{
+  position:relative; height:96px; overflow:hidden;
+  margin:-24px -20px 0; border-radius:24px 24px 0 0;
+  background:linear-gradient(120deg,
+    rgba(var(--accent-rgb),.42), rgba(var(--accent-rgb),.14) 52%, rgba(var(--accent-rgb),.34));
+}
+.friend-profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* آواتار نیمه روی لبه‌ی بنر می‌نشیند و حلقه‌ای هم‌رنگِ پنل دورش دارد */
+.friend-profile-banner + .friend-profile-head{ margin-top:-40px; }
+.friend-profile-banner + .friend-profile-head .friend-profile-avatar{
+  border:4px solid var(--surface-2); background:var(--surface-1);
+}
+.friend-profile-bio{
+  margin:8px 0 0; font-size:12px; line-height:1.9; color:var(--muted);
+  overflow-wrap:anywhere; white-space:pre-line;
+}
+/* دکمه‌ی بستن روی بنر می‌افتد، پس باید بالاتر و خوانا باشد */
+.friend-profile-close{ position:absolute; top:12px; right:12px; z-index:2; }
 .friend-profile-loading{ display:flex; align-items:center; justify-content:center; padding:30px 0; color:var(--muted); }
 .friend-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
 .friend-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:8px; }
@@ -7097,6 +7183,9 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
 }
 .ai-message-action-agent{ --ai-message-slide:-6px; }
 .ai-message-action-user{ --ai-message-slide:6px; }
+/* گوی کنارِ پیام: هم‌ترازِ خطِ اولِ متنِ حباب (نه بالاتر از حباب). */
+.ai-message-avatar{ align-self:flex-start; margin-top:8px; }
+
 .ai-message-root:hover .ai-message-action,
 .ai-message-root:focus-within .ai-message-action{
   opacity:1; transform:translateX(0) scale(1);
@@ -7151,6 +7240,15 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
           display: grid;
           grid-template-areas: "stack";
           position: relative;
+          /* باگِ گزارش‌شده («دورِ گوها انگار توی یک مربع‌ان»): این لایه یک
+             بک‌گراندِ توپر به اندازه‌ی کلِ باکسِ *مربعیِ* خودش می‌کشد و
+             گردشدنش تماماً به کلیپِ جدش (.siri-orb-clip) بند بود — و همان
+             کلیپ روی المانی که filter دارد، در بعضی مرورگرها (همان
+             خانواده‌ی باگِ سافاریِ توضیح‌داده‌شده بالا) نادیده گرفته می‌شود
+             و مربعِ خام دیده می‌شود. clip-path یک برشِ مستقلِ دوم است که
+             به overflowِ جد کاری ندارد، پس گو در هر حالت دایره می‌ماند. */
+          border-radius: 50%;
+          clip-path: circle(50% at 50% 50%);
           /* باگِ گزارش‌شده: رنگِ گو توی تمِ تیره جابه‌جا/عوض می‌شود (فقط
              سافاری). ریشه‌اش هم‌خانواده‌ی همان باگِ isolation بالاست:
              `::after` (نقطه‌های ریز) با mix-blend-mode:overlay روی

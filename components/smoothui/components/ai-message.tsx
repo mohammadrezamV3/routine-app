@@ -147,7 +147,11 @@ const AIMessage = ({
         className
       )}
     >
-      {avatar ? <div className="mt-0.5 shrink-0">{avatar}</div> : null}
+      {/* باگِ گزارش‌شده («توی چت جای گو درست نیست، خیلی بالاتره»): ردیف
+          align-items پیش‌فرض دارد و این wrapper با mt-0.5 عملا بالای
+          حبابِ پیام می‌نشست، نه هم‌ترازِ خطِ اولِ متن. حالا دقیقا وسطِ
+          همان خطِ اول قرار می‌گیرد (padding حباب + نصفِ line-height). */}
+      {avatar ? <div className="ai-message-avatar shrink-0">{avatar}</div> : null}
 
       <div className={cn("flex min-w-0 flex-col gap-1", isUser && "items-end")}>
         <div

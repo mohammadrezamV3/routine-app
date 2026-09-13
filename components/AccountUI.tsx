@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { AccountBackButton } from "./AccountBackButton";
 
 /**
@@ -93,7 +93,14 @@ export function AccountLine({
   return <div className="acc-line">{body}</div>;
 }
 
-/** نوارِ ذخیره‌ی ته بخش — یک دکمه، یک پیام خطا، یک پیام موفقیت */
+/**
+ * نوارِ ذخیره‌ی ته بخش — یک دکمه و بس.
+ *
+ * طبقِ درخواستِ صریحِ کاربر، خودِ دکمه سه حالت را نشان می‌دهد و دیگر هیچ
+ * «ذخیره شد»ی زیرش نوشته نمی‌شود: موقعِ ذخیره فقط یک دایره‌ی لودینگ،
+ * بعدش یک تیکِ سبز اگر موفق بود، و اگر نبود متنِ خطا (دکمه هم علامتِ
+ * هشدار می‌گیرد).
+ */
 export function AccountSaveBar({
   onSave, saving, saved, error, label = "ذخیره تغییرات", disabled,
 }: {
@@ -104,15 +111,43 @@ export function AccountSaveBar({
   label?: string;
   disabled?: boolean;
 }) {
+  const state = saving ? "saving" : saved ? "ok" : error ? "bad" : "idle";
   return (
     <div className="acc-savebar">
       {error && <div className="field-error-msg" style={{ display: "block" }}>{error}</div>}
-      {saved && <div className="account-save-toast">ذخیره شد.</div>}
-      {/* طبقِ درخواستِ صریح: دکمه سمتِ چپ (پایانِ ردیف) و موقعِ ذخیره یک
-          دایره‌ی لودینگ نشان می‌دهد، نه فقط متن. */}
-      <button type="button" className="account-outline-btn" onClick={onSave} disabled={saving || disabled}>
-        {saving ? (<><Loader2 size={14} className="trade-spin" /> در حال ذخیره…</>) : label}
+      {/* دکمه سمتِ چپ (پایانِ ردیف در RTL) */}
+      <button
+        type="button"
+        className={`account-outline-btn acc-save-btn is-${state}`}
+        onClick={onSave}
+        disabled={saving || disabled}
+        aria-label={label}
+      >
+        {state === "saving" ? <Loader2 size={16} className="trade-spin" />
+          : state === "ok" ? <Check size={16} />
+          : state === "bad" ? <AlertTriangle size={16} />
+          : label}
       </button>
+    </div>
+  );
+}
+
+/**
+ * یک «گزینه» داخلِ یک بخش — فقط نامِ گزینه بالای خودش، بدونِ قاب/کارتِ جدا.
+ *
+ * طبقِ درخواستِ صریحِ کاربر برای صفحه‌ی تنظیمات: «ترید یک بخش باشه، فقط
+ * بالای هر گزینه اسمشو بنویسه». قبلا هر گزینه یک `AccountBlock` کامل
+ * (تیتر + قابِ مستقل) بود و یک صفحه‌ی تنظیمات شبیه هشت کارتِ پشت‌سرهم
+ * می‌شد.
+ */
+export function AccountOption({
+  label, desc, children,
+}: { label: string; desc?: string; children: React.ReactNode }) {
+  return (
+    <div className="acc-option">
+      <div className="acc-option-label">{label}</div>
+      {desc && <p className="acc-option-desc">{desc}</p>}
+      {children}
     </div>
   );
 }

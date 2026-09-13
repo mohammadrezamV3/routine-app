@@ -16,13 +16,14 @@ import { clearAuthHintCookie } from "@/lib/preload";
 //   /account/profile            → پروفایل (دو بخش: «پروفایل عمومی» و
 //                                  «پروفایل ورزشی»، هردو توی همین یک صفحه)
 //   /account/sport-profile      → فقط ریدایرکت به /account/profile (مسیر قدیمی)
-//   /account/general            → «تنظیمات» — تنظیمات آریون + تنظیمات روتین و
-//                                  ترید، همه یک‌جا و بدون ناوبری تودرتو
+//   /account/general            → «تنظیمات» — تنظیمات آریون + اعلان‌ها +
+//                                  تنظیمات روتین و ترید، همه یک‌جا و بدون
+//                                  ناوبری تودرتو
 //                                  (تم نمایش عمدا این‌جا نیست — همون سوییچ
 //                                  بالای منوی همبرگری کفایت می‌کنه)
 //   /account/subscription       → اشتراک
 //   /account/security           → امنیت
-//   /account/notifications      → اعلان‌ها
+//   /account/notifications      → فقط ریدایرکت به /account/general (ادغام شد)
 //   /account/support            → پشتیبانی
 const SECTIONS = ACCOUNT_SECTIONS;
 
