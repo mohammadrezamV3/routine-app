@@ -1,71 +1,109 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, MessageCircleWarning } from "lucide-react";
-import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
-import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
-import { AccountPageHead, AccountBlock, AccountLine } from "@/components/AccountUI";
+import { Plus, MessageCircleQuestion, Inbox } from "lucide-react";
+import { AccountBackButton } from "@/components/AccountBackButton";
+import { SupportTicketModal } from "@/components/SupportTicketModal";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
+import { toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 
-const FAQ = [
-  { q: "چطور اشتراکم رو ارتقا بدم؟", a: "از بخش «اشتراک» توی همین پنل، دکمه‌ی «ارتقا به پلن بالاتر» رو بزن." },
-  { q: "چطور رمز عبورم رو عوض کنم؟", a: "از بخش «امنیت» توی همین پنل، رمز فعلی و رمز جدید رو وارد کن." },
-  { q: "چطور دوستام پیدام کنن؟", a: "از بخش «پروفایل» یه یوزرنیم برای خودت تنظیم کن." },
-];
+type TicketStatus = "OPEN" | "ANSWERED" | "CLOSED";
+type TicketRow = {
+  id: string; subject: string; status: TicketStatus; updatedAt: string;
+  lastMessage: { body: string; fromAdmin: boolean } | null;
+};
 
+const STATUS_LABEL: Record<TicketStatus, string> = {
+  OPEN: "در انتظار پاسخ",
+  ANSWERED: "پاسخ داده شد",
+  CLOSED: "بسته‌شده",
+};
+const STATUS_CLASS: Record<TicketStatus, string> = { OPEN: "open", ANSWERED: "answered", CLOSED: "closed" };
+
+function formatTicketDate(iso: string): string {
+  const d = new Date(iso);
+  const [jy, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  const hh = faNum(String(d.getHours()).padStart(2, "0"));
+  const mm = faNum(String(d.getMinutes()).padStart(2, "0"));
+  return `${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}، ${hh}:${mm}`;
+}
+
+// پشتیبانیِ در-سایت — طبق درخواستِ صریح («راه‌های ارتباطی راهِ پشتیبانی
+// نیست، فقط توی سایت می‌تونه پشتیبانی صورت بگیره») ایمیل/تلگرام/اینستاگرام
+// قبلی کامل حذف شد؛ به‌جاش یک سیستمِ تیکتِ واقعی: هر کاربر تیکت می‌سازه،
+// روی همون تیکت با ادمین گفت‌وگو می‌کنه (SupportTicket/SupportMessage،
+// app/api/support/tickets). سمتِ ادمین: app/admin/support.
 export default function SupportPage() {
-  const mailto = `mailto:${SUPPORT_EMAIL}?subject=` + encodeURIComponent("گزارش مشکل — Arion");
+  const router = useRouter();
+  const [tickets, setTickets] = useState<TicketRow[] | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(() => {
+    fetch("/api/support/tickets")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setTickets(d?.tickets || []));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   return (
     <section>
-      <AccountPageHead title="پشتیبانی" hint="اگه سوالی داری یا با مشکلی روبه‌رو شدی" />
+      <div className="acc-head">
+        <AccountBackButton />
+        {/* طبقِ درخواستِ صریح: تایتل «پشتیبانی» هم‌ردیفِ دکمه‌ی «ایجاد تیکت»
+            (سمتِ چپ) — نه زیرِ هم مثلِ بقیه‌ی صفحه‌ها. */}
+        <div className="support-head-row">
+          <h1>پشتیبانی</h1>
+          <button type="button" className="account-outline-btn support-new-btn" onClick={() => setCreating(true)}>
+            <Plus size={15} /> ایجاد تیکت
+          </button>
+        </div>
+        <p className="acc-head-hint">سوال یا مشکلی داری؟ یه تیکت بساز — فقط از همین‌جا، جواب رو هم همین‌جا می‌گیری.</p>
+      </div>
 
-      <AccountBlock title="راه‌های ارتباطی" icon={<Mail size={15} />} flush index={0}>
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="acc-line">
-          <span className="acc-line-icon"><Mail size={16} /></span>
-          <span className="acc-line-body">
-            <span className="acc-line-label">تماس با پشتیبانی</span>
-            <span className="acc-line-value mono" dir="ltr">{SUPPORT_EMAIL}</span>
-          </span>
-        </a>
-        <a href={mailto} className="acc-line">
-          <span className="acc-line-icon"><MessageCircleWarning size={16} /></span>
-          <span className="acc-line-body">
-            <span className="acc-line-label">گزارش مشکل</span>
-            <span className="acc-line-value">ارسال ایمیل برای گزارش باگ یا مشکل</span>
-          </span>
-        </a>
-        <a href={SOCIAL.telegram.url} target="_blank" rel="me noopener noreferrer" className="acc-line">
-          <span className="acc-line-icon"><TelegramIcon size={16} /></span>
-          <span className="acc-line-body">
-            <span className="acc-line-label">پشتیبانی در تلگرام</span>
-            <span className="acc-line-value mono" dir="ltr">{SOCIAL.telegram.handle}</span>
-          </span>
-        </a>
-        <a href={SOCIAL.instagram.url} target="_blank" rel="me noopener noreferrer" className="acc-line">
-          <span className="acc-line-icon"><InstagramIcon size={16} /></span>
-          <span className="acc-line-body">
-            <span className="acc-line-label">اینستاگرام</span>
-            <span className="acc-line-value mono" dir="ltr">{SOCIAL.instagram.handle}</span>
-          </span>
-        </a>
-      </AccountBlock>
+      {tickets === null && <PanelSkeleton />}
 
-      <AccountBlock title="سوالات متداول" icon={<MessageCircleWarning size={15} />} index={1}>
-        <div>
-          {FAQ.map((f, i) => (
+      {tickets !== null && !tickets.length && (
+        <div className="trade-empty-state">
+          <MessageCircleQuestion size={32} />
+          <p>هنوز تیکتی نساختی</p>
+        </div>
+      )}
+
+      {tickets !== null && !!tickets.length && (
+        <div className="account-card">
+          {tickets.map((t, i) => (
             <motion.div
-              key={f.q}
+              key={t.id}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.04 }}
-              style={{ padding: "14px 0", borderBottom: i < FAQ.length - 1 ? "1px solid var(--line)" : "none" }}
+              transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.035, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>{f.q}</div>
-              <div className="item-line">{f.a}</div>
+              <Link href={`/account/support/${t.id}`} className="account-row2">
+                <span className="account-row2-icon"><Inbox size={16} /></span>
+                <span className="account-row2-body">
+                  <span className="account-row2-label">{t.subject}</span>
+                  <span className="account-row2-desc">
+                    {t.lastMessage ? `${t.lastMessage.fromAdmin ? "پشتیبانی: " : ""}${t.lastMessage.body}` : ""}
+                  </span>
+                  <span className="support-ticket-time mono" dir="ltr">{formatTicketDate(t.updatedAt)}</span>
+                </span>
+                <span className={`support-status ${STATUS_CLASS[t.status]}`}>{STATUS_LABEL[t.status]}</span>
+              </Link>
             </motion.div>
           ))}
         </div>
-      </AccountBlock>
+      )}
+
+      {creating && (
+        <SupportTicketModal
+          onClose={() => setCreating(false)}
+          onCreated={(ticketId) => { setCreating(false); router.push(`/account/support/${ticketId}`); }}
+        />
+      )}
     </section>
   );
 }

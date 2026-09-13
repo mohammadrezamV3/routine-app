@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { AccountRowLink } from "@/components/AccountRow";
+import { signOut } from "next-auth/react";
+import { LogOut } from "lucide-react";
+import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
 import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
 import { ACCOUNT_SECTIONS } from "@/components/accountSections";
+import { invalidateStorageCache } from "@/lib/storage";
+import { invalidateAccountCache } from "@/lib/accountCache";
+import { clearAuthHintCookie } from "@/lib/preload";
 
 type IndexUser = {
   name: string | null; lastName: string | null; username: string | null;
@@ -34,6 +39,17 @@ export default function AccountIndexPage() {
   const sub = data?.subscriptions?.[0];
   const isPremium = !!sub && sub.plan.key !== "basic";
 
+  // همون توالیِ خروجِ سایدبارِ دسکتاپ (app/account/layout.tsx) — طبقِ
+  // گزارشِ باگ، روی موبایل سایدبار دیده نمی‌شه و راهِ دیگه‌ای برای خروج از
+  // حساب نبود. این‌جا (صفحه‌ی اولِ پنل) تنها جایی‌ست که موبایل همیشه بهش
+  // می‌رسه، پس همین‌جا هم اضافه شد.
+  function doLogout() {
+    invalidateStorageCache();
+    invalidateAccountCache();
+    clearAuthHintCookie();
+    signOut({ callbackUrl: "/" });
+  }
+
   return (
     <section>
       {data && (
@@ -46,6 +62,16 @@ export default function AccountIndexPage() {
         {ACCOUNT_SECTIONS.map((s, i) => (
           <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
         ))}
+      </div>
+
+      <div className="account-card account-card-full" style={{ marginTop: 14 }}>
+        <AccountRowButton
+          icon={<LogOut size={15} />}
+          label="خروج از حساب"
+          onClick={doLogout}
+          danger
+          index={ACCOUNT_SECTIONS.length}
+        />
       </div>
     </section>
   );

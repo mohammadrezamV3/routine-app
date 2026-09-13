@@ -223,6 +223,7 @@ model User {
   tradeMtLinks           TradeMtLink[]
   tradeChatMessages      TradeChatMessage[]
   tradeChatReports       TradeChatReport[]  @relation("ChatReporter")
+  supportTickets         SupportTicket[]
 
   @@index([market])
   @@index([gymPartnerId])
@@ -1672,4 +1673,50 @@ model TradeChatReport {
   // می‌تواند با تکرارِ گزارش، صف را پر و اولویت را جعل کند.
   @@unique([messageId, reporterId])
   @@index([status, createdAt])
+}
+
+// ============================================================================
+// MODULE: SUPPORT (تیکت‌های پشتیبانی — فقط توی سایت، بدون ایمیل/تلگرام)
+// ============================================================================
+
+enum SupportTicketStatus {
+  OPEN // کاربر ثبت کرده، هنوز ادمین جواب نداده
+  ANSWERED // ادمین جواب داده، منتظرِ کاربر یا بسته می‌مونه
+  CLOSED // بسته‌شده (دستیِ ادمین یا خودِ کاربر)
+}
+
+model SupportTicket {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subject String
+  status  SupportTicketStatus @default(OPEN)
+
+  createdAt DateTime @default(now())
+  // با هر پیامِ جدید (از کاربر یا ادمین) آپدیت می‌شه — لیستِ هر دو طرف بر
+  // همین اساس مرتب می‌شه، نه createdAt، تا تیکتِ تازه‌جواب‌داده‌شده بیاد بالا.
+  updatedAt DateTime @updatedAt
+
+  messages SupportMessage[]
+
+  @@index([userId, updatedAt])
+  @@index([status, updatedAt])
+}
+
+model SupportMessage {
+  id String @id @default(cuid())
+
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  // true یعنی این پیام از طرفِ ادمینه، نه خودِ صاحبِ تیکت — پیامِ ادمین
+  // نویسنده‌ی جدا نداره (هر سوپریوزری می‌تونه جواب بده)، فقط پرچمِ همینه.
+  fromAdmin Boolean @default(false)
+  body      String
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
 }
