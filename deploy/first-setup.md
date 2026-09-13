@@ -46,6 +46,43 @@ newgrp docker          # یا logout/login
 docker --version && docker compose version
 ```
 
+## ۲.۵) اگر سرور داخل ایران است — قبل از build بخوان
+
+روی IPهای ایران، رجیستری‌های عمومی معمولاً از بیرون بسته‌اند و اولین
+`docker compose build` با خطای timeout/403 شکست می‌خورد. دو جا باید mirror
+بدهی:
+
+**Docker Hub** — یک آینه در `/etc/docker/daemon.json`:
+
+```bash
+sudo tee /etc/docker/daemon.json >/dev/null <<'JSON'
+{ "registry-mirrors": ["https://docker.arvancloud.ir"] }
+JSON
+sudo systemctl restart docker
+docker pull hello-world   # تست
+```
+
+(آینه‌ها هرچند وقت عوض می‌شوند؛ اگر این یکی جواب نداد، آینه‌ی فعالِ همان
+ارائه‌دهنده‌ی سرورت را بگذار.)
+
+**npm** — اگر `npm ci` داخل build گیر کرد، قبل از build:
+
+```bash
+npm config set registry https://registry.npmmirror.com   # یا آینه‌ی داخلی
+```
+
+**چیزهایی که از IP ایران ممکن است سمت سرور کار نکنند:**
+
+- **ورود با گوگل**: تبادل توکن سمت *سرور* انجام می‌شود، پس اگر خروجی به
+  گوگل بسته باشد این قابلیت کار نمی‌کند. ثبت‌نام با شماره‌ی موبایل مسیر
+  اصلی بماند و `GOOGLE_CLIENT_ID/SECRET` را خالی بگذار تا دکمه‌اش نیاید.
+- **AI**: به همین دلیل از گیت‌وی آروان‌کلود استفاده می‌شود که از داخل
+  در دسترس است — `ARVAN_AI_BASE_URL` را از پنل خودشان بردار.
+- **Let's Encrypt**: معمولاً بدون مشکل کار می‌کند.
+
+بعد از هر تغییر، با `/api/admin/diagnostics/outbound` (از حساب سوپرادمین)
+می‌توانی ببینی اپ از داخل سرور به کدام سرویس‌ها واقعاً دسترسی دارد.
+
 ## ۳) گرفتن کد
 
 ```bash
