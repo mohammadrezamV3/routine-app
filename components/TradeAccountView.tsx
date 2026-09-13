@@ -150,8 +150,9 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       {/* نام حساب ابتدای خط، بالانس اولیه انتهای همان خط */}
       <div className="trade-journal-idrow">
         <div className="trade-journal-idrow-name">
-          <span className="trade-journal-acc-dot" style={{ background: account.color }} />
           <b>{account.name}</b>
+          {/* توپِ رنگی سمتِ چپِ اسم (بعدش در RTL) — هم‌قاعده‌ی بقیه‌ی صفحه‌های ترید */}
+          <span className="trade-journal-acc-dot" style={{ background: account.color }} />
           <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
           {account.archived && <span className="trade-account-archived-badge">آرشیو</span>}
           <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label="ویرایش حساب">

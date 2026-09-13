@@ -1324,7 +1324,10 @@
   .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
   @media (min-width:1024px){
     .account-shell{
-      --acc-w: min(1080px, calc(100vw - 64px));
+      /* عرض = سایدبار (۱۶۴) + گپ (۲۲) + ستونِ محتوا (~۷۸۰). قبلا شل ۱۰۸۰
+         بود و ستونِ محتوا جدا با max-width کپ می‌شد — نتیجه‌اش یک نوارِ
+         خالیِ ~۱۱۴پیکسلی فقط سمتِ چپ بود، یعنی همان بی‌قرینگیِ گزارش‌شده. */
+      --acc-w: min(966px, calc(100vw - 64px));
       width: var(--acc-w);
       margin-inline: calc((620px - var(--acc-w)) / 2);
     }
@@ -1517,7 +1520,6 @@
      ستونِ محتوا عرضِ خواناتری می‌گیرد (نه تمامِ ۱۰۸۰px)، فاصله‌ها کمی
      جمع‌تر، و بنر بلندتر ولی همچنان با ارتفاعِ ثابت. */
   @media (min-width:701px){
-    .account-content{ max-width:720px; }
     .profile-banner{ height:168px; }
     .profile-hero{ margin-bottom:22px; }
     .acc-block{ margin-bottom:22px; }
@@ -1527,7 +1529,6 @@
     .acc-block-body .auth-field-grid{ gap:16px 14px; }
   }
   @media (min-width:1280px){
-    .account-content{ max-width:780px; }
     .profile-banner{ height:186px; }
   }
 
@@ -1791,8 +1792,49 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
+  /* ── ته صفحه‌ی اولِ پنل کاربری ────────────────────────────────────────
+     خروج از حساب (فقط موبایل) + لینک‌های حقوقی + نسخه‌ی اپ، همه وسط‌چین. */
+  .account-index-foot{
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+    margin-top:26px; padding-top:22px; border-top:1px solid var(--surface-line);
+  }
+  .account-index-logout{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 22px; border-radius:14px; font-size:12.5px; font-weight:700;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+    cursor:pointer; transition:background .18s ease;
+  }
+  body[data-theme="light"] .account-index-logout,
+  body:not([data-theme="light"]) .account-index-logout{ background:none; box-shadow:none; }
+  /* `color` این‌جا هم باید تکرار شود: قانونِ سراسریِ `button:hover` (که
+     رنگِ اکسنت می‌دهد) اسپسیفیسیتیِ (0,1,1) دارد و از تک‌کلاسِ (0,1,0) بالا
+     قوی‌تر است — بدونِ این خط، دکمه‌ی خروج زیرِ ماوس سبز می‌شد. */
+  @media (hover:hover) and (pointer:fine){
+    .account-index-logout:hover{
+      color:#E05252; border-color:#E05252;
+      background:rgba(224,82,82,.08); box-shadow:none;
+    }
+  }
+  .account-index-logout:active{ transform:scale(.97); }
+  /* روی دسکتاپ سایدبار خودش دکمه‌ی خروج دارد — دو دکمه‌ی خروج در یک صفحه نه. */
+  @media (min-width:701px){ .account-index-logout{ display:none; } }
+
+  .account-index-links{
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    font-size:11.5px; color:var(--muted2);
+  }
+  .account-index-links a{ color:var(--muted); text-decoration:none; transition:color .18s ease; }
+  @media (hover:hover) and (pointer:fine){ .account-index-links a:hover{ color:var(--accent); } }
+  .account-index-version{ font-size:11px; color:var(--muted2); letter-spacing:.02em; }
+
   @media (max-width:700px){
-    .account-body{ flex-direction:column; }
+    /* باگِ گزارش‌شده («فاصله‌ی چپ و راستِ پنل با لبه یکی نیست»): والد
+       `align-items:flex-start` دارد — روی محورِ عمودیِ row بی‌ضرر است، ولی
+       اینجا که ستونی می‌شود همان قانون محورِ *عرضی* را کنترل می‌کند و
+       `.account-content` به‌جای پرکردنِ عرض، به اندازه‌ی محتوایش جمع می‌شد و
+       در RTL به لبه‌ی راست می‌چسبید — یعنی تمامِ فضای اضافه سمتِ چپ می‌ماند. */
+    .account-body{ flex-direction:column; align-items:stretch; }
     /* روی موبایل سایدبار جا نمی‌شود و طبقِ درخواستِ صریح، نوارِ منوی زیرِ
        هدر هم حذف شد — ناوبری از صفحه‌ی اولِ پنل و دکمه‌ی «بازگشت» انجام
        می‌شود. */
@@ -5444,11 +5486,11 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-pnl-pct{ font-size:12px; font-weight:700; opacity:.8; }
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
-/* قبلا یک نوارِ رنگیِ عمودی به ارتفاعِ کاملِ کارت بود (inset-inline-start:0;top:0;bottom:0)
-   — طبقِ درخواستِ صریح، به یک توپِ کوچیکِ گوشه‌ی بالا-راستِ کارت تبدیل شد.
-   نکته: این کلاس همچنان توی TradeNotesPanel/TradeChecklistDetailView
-   استفاده می‌شه (absolute، گوشه‌ی کارت) — دست‌نخورده می‌مونه. */
-.trade-account-stripe{ position:absolute; top:9px; inset-inline-start:10px; width:8px; height:8px; border-radius:50%; }
+/* `.trade-account-stripe` (توپِ مطلقِ گوشه‌ی کارت) کاملا حذف شد: طبقِ
+   درخواستِ صریح، توی *همه‌ی* صفحه‌های ترید — حساب‌ها، چک‌لیست‌ها، یادداشت‌ها،
+   متاتریدر — توپِ برچسب سمتِ چپِ اسم می‌نشیند (inline، بلافاصله بعدِ متنِ
+   اسم در RTL)، نه گوشه‌ی بالا-راستِ کارت. همه‌شان حالا `.trade-account-dot`
+   را استفاده می‌کنند. */
 /* طبقِ درخواستِ صریحِ تازه («توپِ برچسبِ حساب باید سمتِ چپِ اسم باشه، نه
    گوشه‌ی بالا-راستِ کارت»): فقط توی فهرستِ حساب‌های معاملاتی
    (TradeAccountsPanel) توپ دیگه absolute نیست — inline، داخلِ همون لینکِ
@@ -5467,7 +5509,9 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
 .trade-account-name{ font-size:14.5px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-account-title-row .trade-account-type,
+.trade-account-title-row .trade-account-dot,
 .trade-account-title-row .trade-account-archived-badge{ flex-shrink:0; }
+.trade-checklist-detail-title .trade-account-dot{ flex-shrink:0; }
 .trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
 /* .trade-account-card دیگه بک‌گراندِ خودش رو از .trade-surface نمی‌گیره
    (چون حالا ردیفِ داخلِ یک باکسِ بیرونیه، نه کارتِ جدا) — پس اسکلتون باید
@@ -5680,8 +5724,10 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 /* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش دکمه‌ی
    پاک‌کردنِ جستجو توی تمِ روشن دوباره بک‌گراندِ شیشه‌ای می‌گرفت. */
 body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]) .trade-cal-search button{ background:none; box-shadow:none; }
-@media (max-width:520px){ .trade-cal-search{ flex-basis:100%; order:-1; } }
-.trade-cal-search-banner{ font-size:11.5px; color:var(--muted); margin:0 2px 10px; }
+/* طبقِ درخواستِ صریح، جستجوی نامِ رویداد دیگر یک دکمه/نوارِ جدا کنارِ
+   «تاریخچه/امروز/فیلتر» نیست — یک فیلدِ تمام‌عرض داخلِ خودِ پنلِ فیلتره. */
+.trade-cal-filters .trade-cal-search{ width:100%; margin-bottom:4px; }
+.trade-cal-filters .trade-cal-search > svg{ flex-shrink:0; color:var(--muted2); }
 .trade-cal-filters{
   padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both;
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
@@ -5704,21 +5750,23 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 .trade-checklist-news-list{ display:flex; flex-direction:column; }
 .trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
 
-/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar) — دسکتاپ همین
-   ترتیبِ ۸ستونیِ فارکس‌فکتوری با grid: Time, Currency, Event, Alert,
-   Detail, Actual, Forecast, Previous.
-   طبقِ درخواستِ جدیدِ صریح (که تصمیمِ قبلیِ «بدونِ فولد، با اسکرولِ افقیِ
-   خودِ باکس» رو نقض می‌کنه): زیرِ ۵۶۰px دیگه هیچ اسکرولِ افقی‌ای نیست —
-   grid ثابت به یک چیدمانِ فلکس‌ِ دورچین تبدیل می‌شه (پایین‌تر). */
+/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar).
+   طبقِ شماتیکِ صریحِ کاربر ترتیبِ ستون‌های داده دقیقاً این است:
+   Time · Currency · Event · Actual · Forecast · Previous — و «Detail»
+   (بازشدنِ ردیف و باکسِ هیستوری) کاملاً حذف شد، چون منبعِ رایگان
+   انتشارهای قبلی را نمی‌دهد. فقط ستونِ باریکِ Alert (زنگوله‌ی هر رویداد)
+   بعد از آن‌ها می‌ماند، چون یک قابلیتِ واقعیِ مستقل است، نه داده‌ی جدول.
+   طبقِ درخواستِ صریح، زیرِ ۵۶۰px هیچ اسکرولِ افقی‌ای نیست — grid ثابت به
+   یک چیدمانِ فلکسِ دورچین تبدیل می‌شود (پایین‌تر). */
 .trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
 .trade-cal-table{ min-width:420px; }
 .trade-cal-thead{
-  display:grid; grid-template-columns:34px 54px minmax(80px,1fr) 28px 28px 38px 38px 38px; gap:6px;
+  display:grid; grid-template-columns:38px 56px minmax(80px,1fr) 44px 44px 44px 28px; gap:6px;
   align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
   font-size:9.5px; font-weight:700; color:var(--muted2);
 }
 .trade-cal-tr{
-  display:grid; grid-template-columns:34px 54px minmax(80px,1fr) 28px 28px 38px 38px 38px; gap:6px;
+  display:grid; grid-template-columns:38px 56px minmax(80px,1fr) 44px 44px 44px 28px; gap:6px;
   align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:11.5px;
 }
 .trade-cal-tr:last-child{ border-bottom:none; }
@@ -5762,9 +5810,10 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 @media (hover:hover){ .trade-cal-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); } }
 .trade-cal-icon-btn.active{ color:var(--accent); }
 body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .trade-cal-icon-btn{ background:none; box-shadow:none; }
-.trade-cal-tr{ cursor:pointer; transition:background .15s ease; }
-@media (hover:hover){ .trade-cal-tr:hover{ background:rgba(var(--accent-rgb),.05); } }
-.trade-cal-tr.expanded{ background:rgba(var(--accent-rgb),.07); border-bottom-color:transparent; }
+/* ردیف دیگر کلیک‌پذیر نیست — با حذفِ باکسِ دیتیل/هیستوری چیزی برایِ
+   بازشدن نمانده، و یک cursor:pointer روی چیزی که کاری نمی‌کند، خودش باگ
+   به‌نظر می‌رسد. */
+.trade-cal-tr{ transition:background .15s ease; }
 /* رویدادِ گذشته — طبقِ درخواستِ صریح («مثلِ فارکس‌فکتوری نشون بده گذشته»):
    فقط زمان/رویداد کم‌رنگ می‌شن، نه اعدادِ actual/forecast/previous که
    رنگِ سبز/قرمزشون خودش اطلاعاته و نباید کم‌رنگ بشه. */
@@ -5820,23 +5869,10 @@ body[data-theme="light"] .trade-cal-pill-btn, body:not([data-theme="light"]) .tr
 }
 body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
 @media (hover:hover){ .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
-.trade-cal-search-icon-btn{
-  /* باگِ گزارش‌شده «آیکون جستجو خالیه»: پدینگِ پیش‌فرضِ سراسریِ button{}
-     (8px 16px) این‌جا ریست نشده بود — روی یک باکسِ ثابتِ ۳۳px، همون پدینگ
-     تقریبا کل جای داخلی رو می‌خورد و آیکون رو له/نامرئی می‌کرد. بقیه‌ی
-     دکمه‌های آیکونیِ این فایل (trade-icon-btn، trade-cal-icon-btn، ...) هم
-     همیشه padding رو صریح صفر می‌کنن — این یکی جا افتاده بود. */
-  display:inline-flex; align-items:center; justify-content:center; width:33px; height:33px; padding:0; border-radius:999px;
-  color:var(--muted); border:1px solid var(--surface-line); background:rgba(var(--surface-rgb),.08);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; transition:border-color .18s ease, color .18s ease;
-  flex-shrink:0;
-}
-.trade-cal-search-icon-btn.active{ color:var(--accent); border-color:var(--accent); }
-body[data-theme="light"] .trade-cal-search-icon-btn, body:not([data-theme="light"]) .trade-cal-search-icon-btn{ background:rgba(var(--surface-rgb),.08); box-shadow:none; }
+/* «فیلتر» وقتی بازه یا فیلترِ فعالی دارد فقط لبه/متنش اکسنت می‌شود — پر
+   نمی‌شود، چون پُر بودن در این ردیف معنیِ «روزِ انتخابی = امروز» را دارد. */
+.trade-cal-pill-btn.on{ border-color:var(--accent); color:var(--accent); }
 
-/* خطِ «میزان تأثیر» بالای توضیحِ رویدادِ بازشده */
-.trade-cal-impact-line{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); margin-bottom:6px; }
-.trade-cal-impact-line b{ color:var(--text); }
 
 /* دکمه‌ی «تاریخچه» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ روتین
    من (cal-grid/cal-cell). باگِ «کار نمی‌کند»: قبلا این دو با position:fixed
@@ -5855,31 +5891,10 @@ body[data-theme="light"] .trade-cal-search-icon-btn, body:not([data-theme="light
   border:1px solid var(--surface-line); border-radius:18px;
 }
 
-/* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
-   شاخص رو نشون می‌ده؛ چون واقعاً از رکوردهای قبلیِ همین جدول میاد (نه
-   فبریکیت‌شده)، تعدادش می‌تونه کمتر از حداکثر باشه یا حتی خالی. */
-.trade-cal-history{
-  padding:10px 8px 14px; margin-bottom:2px; border-bottom:1px solid var(--line);
-  animation:tradeFadeIn .18s ease both;
-}
-/* بخشِ دیتیل — توضیحِ کوتاهِ رویداد (ورودِ دستیِ ادمین)؛ خیلی از رویدادها
-   این فیلد رو خالی دارن (فیدِ بیرونی نمی‌دهدش)، پس متنِ جایگزین هم باید
-   خوانا باشه، نه یک خطای مخفی. */
-.trade-cal-detail{
-  font-size:11.5px; line-height:1.9; color:var(--muted); padding:2px 4px 12px;
-  border-bottom:1px solid var(--line); margin-bottom:8px;
-}
-.trade-cal-history-status{
-  display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted2); padding:6px 4px;
-}
-.trade-cal-history-table{ font-size:11px; }
-.trade-cal-history-head, .trade-cal-history-row{
-  display:grid; grid-template-columns:1fr 60px 60px 60px; gap:6px; padding:5px 6px;
-}
-.trade-cal-history-head{ color:var(--muted2); font-weight:700; font-size:9.5px; }
-.trade-cal-history-row{ color:var(--text); border-top:1px solid var(--line); }
-.trade-cal-history-row span:not(.mono){ color:var(--muted); }
-.trade-cal-history-head span:not(:first-child), .trade-cal-history-row span:not(:first-child){ text-align:center; }
+/* بخشِ هیستوری/دیتیلِ هر رویداد کاملاً حذف شد (درخواستِ صریح): منبعِ
+   رایگانِ فعلی انتشارهای قبلیِ یک شاخص را نمی‌دهد، پس آن باکس یا خالی بود
+   یا فقط همان چند ردیفِ محدودِ خودمان را تکرار می‌کرد. روتِ
+   /api/trade/economic-calendar/history هم با همین تغییر حذف شد. */
 
 /* ── ساعت فارکس ────────────────────────────────────────────── */
 .forex-market-state{
@@ -6115,10 +6130,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 /* قبلا یک نوارِ رنگیِ عمودی بود (inset-inline-start:0;top:10px;bottom:10px) — طبقِ
    درخواستِ صریح، به توپ تبدیل شد (هم‌الگو با .trade-account-stripe). گوشه‌ی
    بالا-راست (نه وسط‌چینِ عمودی) تا رویِ دکمه‌ی سه‌نقطه‌ی هم‌ردیف سوار نشه. */
-.trade-checklist-row-stripe{
-  position:absolute; top:8px; inset-inline-start:8px; width:8px; height:8px; border-radius:50%;
-}
-.trade-checklist-row-kebab{ flex-shrink:0; margin-inline-start:-4px; }
+/* سه‌نقطه دقیقا هم‌ترازِ خطِ اسم — مثلِ فهرستِ حساب‌های معاملاتی: ارتفاعِ
+   حداقلیِ ردیف با ارتفاعِ دکمه یکی می‌شود و مارجینِ منفیِ نامتقارن حذف شد. */
+.trade-checklist-row{ min-height:34px; }
+.trade-checklist-row-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-4px; }
 .trade-checklist-row-main{
   display:flex; align-items:center; gap:8px; flex:1; min-width:0;
   text-decoration:none; color:var(--text);
@@ -6139,9 +6154,12 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 
 /* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
-.trade-note-kebab{ flex-shrink:0; margin-inline-start:-6px; }
-.trade-note-head{ align-items:center; }
-.trade-note-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-note-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-6px; }
+/* ردیف از ابتدا (راست) پُر می‌شود تا توپِ رنگی بچسبد به عنوان — با
+   `justify-content:space-between` و عنوانِ کشیده، توپ تا لبه‌ی چپِ کارت
+   هل داده می‌شد و دیگر «کنارِ اسم» نبود. */
+.trade-note-head{ align-items:center; justify-content:flex-start; min-height:26px; }
+.trade-note-title{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }
 
 /* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
