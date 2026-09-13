@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { AccountRowLink } from "@/components/AccountRow";
 import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
-import { ACCOUNT_SECTIONS } from "./layout";
+import { ACCOUNT_SECTIONS } from "@/components/accountSections";
 
 type IndexUser = {
   name: string | null; lastName: string | null; username: string | null;

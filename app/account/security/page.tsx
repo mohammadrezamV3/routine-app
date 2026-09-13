@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, MonitorSmartphone, History, Lock, UserX } from "lucide-react";
+import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Loader2 } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
-import { AccountSectionCard } from "@/components/AccountSectionCard";
-import { AccountBackButton } from "@/components/AccountBackButton";
+
+import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
 
-type LoginEvent = { id: string; provider: string; ip: string | null; userAgent: string | null; createdAt: string };
 type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null };
 type DeviceSession = {
   id: string; provider: string | null; ip: string | null; userAgent: string | null;
@@ -54,7 +53,6 @@ export default function SecurityPage() {
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSuccess, setPwSuccess] = useState(false);
 
-  const [events, setEvents] = useState<LoginEvent[] | null>(null);
   const [sessions, setSessions] = useState<DeviceSession[] | null>(null);
   const [sessionBusy, setSessionBusy] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -73,7 +71,6 @@ export default function SecurityPage() {
   const [unblocking, setUnblocking] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/account/login-events").then((r) => (r.ok ? r.json() : { events: [] })).then((res) => setEvents(res.events || []));
     loadSessions();
     getAccount().then((res: AccountData) => {
       const u = res?.user as { discoverable?: boolean; twoFactorEnabled?: boolean } | undefined;
@@ -191,30 +188,29 @@ export default function SecurityPage() {
 
   return (
     <section>
-      <AccountBackButton />
-      <h1>امنیت</h1>
       {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
-      <div className="account-content-hint">رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی</div>
+      <AccountPageHead title="امنیت" hint="رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی" />
 
-      <AccountSectionCard icon={<KeyRound size={16} />} title="تغییر رمز عبور" index={0}>
+      <AccountBlock icon={<KeyRound size={15} />} title="تغییر رمز عبور" index={0}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="تکرار رمز عبور جدید" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
           {pwSuccess && <div className="account-save-toast" style={{ marginTop: 0 }}>رمز عبور با موفقیت تغییر کرد.</div>}
+          {/* مثل بقیه‌ی دکمه‌های ذخیره‌ی پنل: سمت چپ + دایره‌ی لودینگ */}
           <button
             className="account-outline-btn"
             onClick={changePassword}
             disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
-            style={{ alignSelf: "flex-start" }}
+            style={{ alignSelf: "flex-end", display: "inline-flex", alignItems: "center", gap: 7 }}
           >
-            {pwSaving ? "در حال ذخیره…" : "ذخیره رمز جدید"}
+            {pwSaving ? (<><Loader2 size={14} className="trade-spin" /> در حال ذخیره…</>) : "ذخیره رمز جدید"}
           </button>
         </div>
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<ShieldCheck size={16} />} title="ورود دومرحله‌ای" index={1}>
+      <AccountBlock icon={<ShieldCheck size={15} />} title="ورود دومرحله‌ای" index={1}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تایید ورود با پیامک</div>
@@ -227,15 +223,16 @@ export default function SecurityPage() {
           )}
         </div>
         {twoFactorError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{twoFactorError}</div>}
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<MonitorSmartphone size={16} />} title="دستگاه‌های فعال" index={2}>
+      <AccountBlock icon={<MonitorSmartphone size={15} />} title="دستگاه‌های فعال" index={2}>
         {!sessions ? (
           <div className="item-line is-loading">در حال بارگذاری…</div>
         ) : sessions.length === 0 ? (
           <div className="item-line empty">نشست فعالی پیدا نشد.</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <>
+          <div className="acc-scroll-box">
             {sessions.map((s) => (
               <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
@@ -255,36 +252,18 @@ export default function SecurityPage() {
                 )}
               </div>
             ))}
-            {otherSessionCount > 0 && (
-              <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ alignSelf: "flex-start" }}>
-                {sessionBusy === "others" ? "در حال انجام…" : `خروج از همه‌ی دستگاه‌های دیگر (${otherSessionCount})`}
-              </button>
-            )}
           </div>
+          {otherSessionCount > 0 && (
+            <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ marginTop: 14, display: "block", marginInlineStart: "auto" }}>
+              {sessionBusy === "others" ? "در حال انجام…" : `خروج از همه‌ی دستگاه‌های دیگر (${otherSessionCount})`}
+            </button>
+          )}
+          </>
         )}
         {sessionError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{sessionError}</div>}
-      </AccountSectionCard>
+      </AccountBlock>
 
-      <AccountSectionCard icon={<History size={16} />} title="ورودهای اخیر" index={3}>
-        {!events ? (
-          <div className="item-line is-loading">در حال بارگذاری…</div>
-        ) : events.length === 0 ? (
-          <div className="item-line empty">هنوز ورودی ثبت نشده.</div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {events.map((ev) => (
-              <div key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: 12, color: "var(--text)" }}>{PROVIDER_FA[ev.provider] || ev.provider} · {guessDevice(ev.userAgent)}</span>
-                <span className="mono" dir="ltr" style={{ color: "var(--muted2)", fontSize: 11 }}>
-                  {formatDateTimeEn(ev.createdAt)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </AccountSectionCard>
-
-      <AccountSectionCard icon={<Lock size={16} />} title="حریم خصوصی" index={4}>
+      <AccountBlock icon={<Lock size={15} />} title="حریم خصوصی" index={3}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>قابل‌جست‌وجو بودن با یوزرنیم</div>
@@ -322,7 +301,7 @@ export default function SecurityPage() {
             </div>
           )}
         </div>
-      </AccountSectionCard>
+      </AccountBlock>
     </section>
   );
 }

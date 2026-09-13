@@ -6,7 +6,7 @@ import { CalendarCheck2, Dumbbell, BellRing } from "lucide-react";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { AccountToggleRow } from "@/components/AccountRow";
-import { AccountBackButton } from "@/components/AccountBackButton";
+import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 
 // فقط دسته‌هایی که واقعا سمت سرور (app/api/push/send-reminders) و پنل
 // اعلان زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
@@ -42,17 +42,15 @@ export default function NotificationsPage() {
 
   return (
     <section>
-      <AccountBackButton />
-      <h1>اعلان‌ها</h1>
-      <div className="account-content-hint">مدیریت اعلان‌های Arion</div>
+      <AccountPageHead title="اعلان‌ها" hint="مدیریت اعلان‌های آریون" />
 
       {notifPermission !== "granted" && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="account-card"
-          style={{ padding: "15px 16px", marginBottom: 16 }}
+          className="acc-block-body"
+          style={{ marginBottom: 22 }}
         >
           {notifPermission === "unsupported" ? (
             <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
@@ -74,12 +72,11 @@ export default function NotificationsPage() {
         </motion.div>
       )}
 
-      <div className="domain-sub" style={{ marginTop: 0 }}>کدوم دسته‌ها یادآوری بگیرن</div>
-      <div className="account-card" style={{ marginTop: 6 }}>
+      <AccountBlock title="کدوم دسته‌ها یادآوری بگیرن" icon={<BellRing size={15} />} flush>
         {ROWS.map(([key, label, icon], i) => (
           <AccountToggleRow key={key} index={i} icon={icon} label={label} checked={prefs[key]} onChange={(v) => toggle(key, v)} />
         ))}
-      </div>
+      </AccountBlock>
     </section>
   );
 }

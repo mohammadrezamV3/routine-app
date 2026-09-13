@@ -1408,6 +1408,237 @@
   .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
   .account-profile-name{ font-size:16.5px; font-weight:800; color:var(--text); margin-top:12px; letter-spacing:-.01em; }
   .account-profile-username{ font-size:11.5px; color:var(--muted2); margin-top:2px; }
+
+  /* سرصفحه‌ی پروفایل: بنر + آواتارِ نشسته روی لبه‌ی بنر + نام زیرش.
+     نسبتِ ۳.۲:۱ همون نسبتیه که resizeBannerToDataUrl باهاش کراپ می‌کنه،
+     پس چیزی از عکسِ کاربر بریده/کشیده نمی‌شه. */
+  .profile-hero{
+    border:1px solid var(--surface-line); border-radius:20px; overflow:hidden;
+    background:var(--surface-1); margin-bottom:18px;
+    /* حداقلِ فضای زیرِ بنر برای نیمه‌ی آویزانِ آواتار، حتی وقتی هیچ
+       محتوایی زیرِ بنر نیست (عکسِ پروفایل ندارد → ردیفِ حذف رندر نمی‌شود). */
+    padding-bottom:54px;
+  }
+  .profile-hero:has(.profile-hero-meta){ padding-bottom:0; }
+  .profile-banner{
+    /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
+       ۳۰۰px+ می‌رسید و نصفِ صفحه را می‌گرفت. عکس با object-fit:cover داخلِ
+       همین ارتفاع جا می‌شود، پس هیچ عکسی کشیده نمی‌شود. */
+    position:relative; width:100%; height:132px;
+    /* بدونِ عکس، یه گرادیانِ ملایم از رنگِ اکسنتِ خودِ تم — نه یه رنگِ ثابت */
+    background:linear-gradient(120deg, var(--accent-dim), var(--surface-2));
+  }
+  .profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .profile-banner-actions{
+    position:absolute; top:10px; inset-inline-end:10px; display:flex; gap:6px;
+  }
+  /* این دوتا دکمه روی خودِ عکس می‌شینن، پس بدونِ یه پس‌زمینه‌ی نیمه‌شفاف
+     روی عکسِ روشن اصلا خونده نمی‌شن — تنها جاییه که این لازمه. */
+  .profile-banner-btn{
+    display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:999px;
+    font-size:11px; font-weight:700; color:#fff; cursor:pointer;
+    background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.25);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  .profile-banner-btn:disabled{ opacity:.6; cursor:default; }
+  /* خودِ آواتار دکمه‌ی آپلود است (دکمه‌ی دوربینِ جدا حذف شد). چون این یک
+     <button> واقعی‌ست، ریستِ سراسریِ button{} باید صریح خاموش شود وگرنه
+     یک سطحِ شیشه‌ای و سایه‌ی inset می‌گیرد. */
+  .profile-hero-avatar-wrap{
+    /* دقیقا نصفِ دایره زیرِ لبه‌ی بنر می‌افتد (bottom = نصفِ قطر)، مثل
+       شماتیک — نه یک‌سومِ قبلی. */
+    position:absolute; bottom:-46px; inset-inline-start:20px; width:92px; height:92px;
+    padding:0; border:none; background:none; box-shadow:none; cursor:pointer;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .profile-hero-avatar-wrap,
+  body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
+  .profile-hero-avatar-hint{
+    position:absolute; inset:0; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    color:#fff; background:rgba(0,0,0,.45); opacity:0; transition:opacity .18s ease; pointer-events:none;
+  }
+  .profile-hero-avatar-wrap:hover .profile-hero-avatar-hint,
+  .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint,
+  .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
+  /* حلقه‌ی خالیِ دورِ دایره: یک بوردرِ ضخیم به رنگِ خودِ کارت، پس مثلِ
+     یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی. */
+  .profile-hero-avatar-img{
+    width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
+    border:6px solid var(--surface-1); background:var(--surface-2);
+  }
+  /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذفِ عکس. پدینگِ بالا همچنان
+     باید از ۳۰پیکسلِ آویزانِ آواتار بیشتر باشد تا دکمه زیرِ عکس بیفتد. */
+  .profile-hero-meta{
+    padding:56px 20px 14px; display:flex; justify-content:flex-end;
+  }
+
+  /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
+     طبقِ درخواستِ صریح، اندازه‌ها روی دسکتاپ جدا از موبایل تنظیم شده‌اند:
+     ستونِ محتوا عرضِ خواناتری می‌گیرد (نه تمامِ ۱۰۸۰px)، فاصله‌ها کمی
+     جمع‌تر، و بنر بلندتر ولی همچنان با ارتفاعِ ثابت. */
+  @media (min-width:701px){
+    .account-content{ max-width:720px; }
+    .profile-banner{ height:168px; }
+    .profile-hero{ margin-bottom:22px; }
+    .acc-block{ margin-bottom:22px; }
+    .acc-block-body{ padding:18px; }
+    .acc-scroll-box{ max-height:250px; }
+    /* روی دسکتاپ دو ستونِ فیلد فاصله‌ی کمی بازتری می‌گیرند */
+    .acc-block-body .auth-field-grid{ gap:16px 14px; }
+  }
+  @media (min-width:1280px){
+    .account-content{ max-width:780px; }
+    .profile-banner{ height:186px; }
+  }
+
+  /* ── پایه‌ی مشترکِ زیرصفحه‌های پنل کاربری ─────────────────────────────
+     همه‌ی صفحه‌ها (پروفایل، تنظیمات، امنیت، اشتراک، اعلان‌ها، پشتیبانی)
+     از همین چند کلاس ساخته می‌شن تا کنار هم یک‌دست باشن. عمدا مینیمال:
+     قابِ مویی به‌جای کارتِ تودرتو، و همون فیلدهای صفحه‌ی ورود/ثبت‌نام. */
+  .acc-head{ margin-bottom:22px; }
+  .acc-head h1{ margin:0; }
+  .acc-head-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin:6px 0 0; }
+
+  .acc-block{ margin-bottom:26px; }
+  .acc-block-title{
+    display:flex; align-items:center; gap:7px; margin:0 0 4px;
+    font-size:13.5px; font-weight:800; color:var(--text);
+  }
+  .acc-block-title svg{ color:var(--accent); }
+  .acc-block-desc{ font-size:11.5px; color:var(--muted); line-height:1.8; margin:0 0 12px; }
+  .acc-block-title + .acc-block-body{ margin-top:12px; }
+  .acc-block-body{
+    border:1px solid var(--surface-line); border-radius:18px; background:var(--surface-1);
+    padding:16px;
+  }
+  .acc-block-body.flush{ padding:0; overflow:hidden; }
+
+  .acc-line{
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    border-bottom:1px solid var(--surface-line); text-decoration:none;
+  }
+  .acc-block-body:not(.flush) > .acc-line{ padding-inline:0; }
+  .acc-line:last-child{ border-bottom:none; }
+  .acc-line-icon{
+    display:flex; align-items:center; justify-content:center; width:34px; height:34px;
+    border-radius:12px; color:var(--accent); background:var(--accent-dim); flex-shrink:0;
+  }
+  .acc-line-body{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+  .acc-line-label{ font-size:12.5px; font-weight:700; color:var(--text); }
+  .acc-line-value{ font-size:11.5px; color:var(--muted2); word-break:break-word; }
+
+  /* روی موبایلِ باریک، دو ستون یعنی هر فیلد ~۱۶۰px و مقدارهای بلند
+     (ایمیل) بریده می‌شوند — پس همان‌جا تک‌ستونه می‌شود. */
+  @media (max-width:430px){
+    .acc-block-body .auth-field-grid{ grid-template-columns:1fr; }
+  }
+
+  /* دکمه‌ی ذخیره سمتِ چپ (پایانِ ردیف در RTL) */
+  /* «دستگاه‌های فعال»: یک حساب می‌تواند ده‌ها نشست داشته باشد و لیستِ باز
+     کلِ صفحه را می‌بلعید — حالا داخلِ یک باکسِ اسکرول‌شونده‌ی بلندیِ ثابت. */
+  .acc-scroll-box{
+    max-height:290px; overflow-y:auto; overscroll-behavior:contain;
+    display:flex; flex-direction:column; gap:12px;
+    /* طبقِ درخواستِ صریح بدونِ نوارِ اسکرولِ دیده‌شونده — خودِ اسکرول کار
+       می‌کند، فقط دستگیره‌اش رسم نمی‌شود. */
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .acc-scroll-box::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+  .acc-savebar{ display:flex; flex-direction:column; gap:10px; align-items:flex-end; margin-top:18px; }
+  .acc-savebar .account-outline-btn{ display:inline-flex; align-items:center; gap:7px; }
+
+  /* فیلدهای تک‌خطی (هرکدام یک ردیف کامل) */
+  .acc-field-stack{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+
+  /* ── شکلِ فیلدها در پنل کاربری ─────────────────────────────────────
+     طبقِ درخواستِ صریح: گردتر، و بک‌گراندشان مثل بقیه‌ی فیلدهای اپ
+     (سطحِ شیشه‌ایِ نیمه‌شفاف) نه آن مشکیِ تختِ پیش‌فرض. همان ترکیبی که
+     فرم‌های بدنسازی/افزودن برنامه استفاده می‌کنند، این‌جا هم تکرار می‌شود
+     تا پنل با بقیه‌ی اپ یکی به‌نظر برسد. */
+  .account-shell .wsearch-newform-name,
+  .account-shell .jdate-btn{
+    border-radius:14px; padding-inline-start:14px; padding-inline-end:14px;
+    backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+  }
+  body:not([data-theme="light"]) .account-shell .wsearch-newform-name,
+  body:not([data-theme="light"]) .account-shell .jdate-btn{
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  }
+  body[data-theme="light"] .account-shell .wsearch-newform-name,
+  body[data-theme="light"] .account-shell .jdate-btn{
+    background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08);
+  }
+  .account-shell .wsearch-newform-name:focus,
+  .account-shell .jdate-btn:focus{ border-color:var(--accent); }
+  /* فیلدهای قفل (شماره/ایمیل/یوزرنیم) نباید مثل فیلدِ خاموش کم‌رنگ بشن */
+  .account-shell .wsearch-newform-name:disabled{ opacity:1; color:var(--text); cursor:default; }
+  /* پدینگ‌های آیکون/دکمه باید روی همین رادیوسِ جدید هم درست بمانند */
+  .account-shell .field-error-wrap.has-icon input,
+  .account-shell .field-error-wrap.has-icon .jdate-btn,
+  .account-shell .field-error-wrap.has-icon .acc-select{ padding-inline-start:38px; }
+  .account-shell .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:14px; padding-inline-end:38px; }
+  .account-shell .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:58px; padding-inline-end:38px; }
+  .account-shell .field-icon{ inset-inline-start:14px; }
+
+  /* دکمه‌ی کوچکِ «تغییر» داخلِ خودِ فیلد (ایمیل/یوزرنیم) — همان جایگاهی
+     که دکمه‌ی نمایشِ رمز در فرم‌های auth دارد. بک‌گراند صراحتاً خاموش است
+     چون ریستِ سراسریِ button{} یک سطحِ شیشه‌ای و سایه‌ی inset می‌دهد. */
+  .acc-field-action{
+    position:absolute; inset-inline-end:8px; top:50%; transform:translateY(-50%);
+    padding:4px 8px; font-size:11px; font-weight:700; color:var(--accent); cursor:pointer;
+    background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .acc-field-action,
+  body:not([data-theme="light"]) .acc-field-action{ background:none; box-shadow:none; }
+  .field-error-wrap.has-end-action input{ padding-inline-end:56px; }
+
+  /* فیلدهای dir="ltr" (ایمیل/یوزرنیم/شماره) آینه‌ی فیلدهای فارسی‌اند:
+     `padding-inline-*` روی خودِ input با جهتِ خودش حساب می‌شود، ولی آیکون و
+     دکمه با جهتِ قابِ RTL جا می‌گیرند — بدون این سه قانون، متنِ راست‌چین
+     دقیقا روی آیکون می‌افتاد. */
+  .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:11px; padding-inline-end:34px; }
+  .field-error-wrap.has-end-action:not(.has-icon) > input[dir="ltr"]{ padding-inline-start:56px; padding-inline-end:11px; }
+  .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:56px; padding-inline-end:34px; }
+
+  /* فیلدهای غیر-input داخلِ AuthField (دکمه‌ی تاریخ، سلکت) باید همان
+     فاصله‌ی input را از آیکونِ داخلِ فیلد بگیرند، وگرنه متن روی آیکون می‌افتد. */
+  .field-error-wrap.has-icon .jdate-btn,
+  .field-error-wrap.has-icon .acc-select{ padding-inline-start:34px; }
+  .field-error-wrap .jdate-btn{ text-align:start; direction:rtl; }
+
+  /* فرمِ کوچکی که بعد از زدنِ «تغییر» زیرِ گرید باز می‌شود */
+  .acc-inline-form{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .acc-inline-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* سلکتِ هم‌شکلِ بقیه‌ی ورودی‌ها (مثلا جنسیت) — فلشِ خودمان، نه فلشِ سیستم */
+  .acc-select{
+    width:100%; appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:none;
+  }
+  .acc-select-wrap{ position:relative; display:block; }
+  /* فلش سمت «پایانِ» فیلد می‌نشیند (چپ در RTL) — سمت شروع، جای آیکونِ
+     خودِ AuthField است و روی هم می‌افتادند. */
+  .acc-select-wrap > svg{
+    position:absolute; inset-inline-end:12px; top:50%; transform:translateY(-50%);
+    pointer-events:none; color:var(--muted);
+  }
+  .acc-select{ padding-inline-end:32px; }
+
+  /* تایتلِ بخش‌های داخلِ صفحه‌ی پروفایل («پروفایل عمومی» / «پروفایل ورزشی») */
+  .profile-section-title{
+    display:flex; align-items:center; gap:7px; margin:22px 0 12px;
+    font-size:13.5px; font-weight:800; color:var(--text);
+  }
+  .profile-section-title svg{ color:var(--accent); }
+
+  @media (max-width:520px){
+    .profile-hero-avatar-wrap{ width:78px; height:78px; bottom:-39px; inset-inline-start:16px; }
+    .profile-hero-avatar-img{ width:78px; height:78px; border-width:5px; }
+    .profile-hero-meta{ padding:48px 16px 12px; }
+    .profile-banner-btn span{ display:none; }
+    .profile-banner-btn{ padding:6px; }
+  }
   .account-edit-btn{
     display:flex; align-items:center; gap:6px; margin-top:14px;
     font-size:11.5px; border-color:var(--accent); color:var(--accent);
@@ -1486,44 +1717,12 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
-  .account-mobile-menu{ display:none; }
-
   @media (max-width:700px){
     .account-body{ flex-direction:column; }
+    /* روی موبایل سایدبار جا نمی‌شود و طبقِ درخواستِ صریح، نوارِ منوی زیرِ
+       هدر هم حذف شد — ناوبری از صفحه‌ی اولِ پنل و دکمه‌ی «بازگشت» انجام
+       می‌شود. */
     .account-sidebar{ display:none; }
-
-    /* دکمه‌ی همبرگری محلی پنل کاربری — با زدنش لیست تایتل‌ها (همون‌هایی که
-       دسکتاپ توی سایدبار می‌بینه) به‌صورت آکاردئون زیرش باز می‌شه، به‌جای اینکه
-       همیشه یه نوار افقی اسکرول‌شونده جا بگیره.
-       باگِ واقعیِ «بخش‌ها از بالای صفحه‌ی اول (index) پاک نمی‌شه»: این قانون
-       display:block رو بدونِ قید می‌ذاشت، درحالی‌که component خودش با پراپِ
-       HTMLِ hidden={isIndex} می‌خواست این نوار رو توی همون صفحه مخفی کنه —
-       چون specificityِ این کلاس با selectorِ اتریبیوتِ [hidden] برابره،
-       استایلِ نویسنده (این قانون) روی رفتارِ پیش‌فرضِ مرورگر برای hidden برنده
-       می‌شد و نوار هم‌زمان با فهرستِ خودِ صفحه‌ی index دوبار نشون داده می‌شد. */
-    .account-mobile-menu{ display:block; margin-bottom:16px; }
-    .account-mobile-menu[hidden]{ display:none; }
-    .account-mobile-menu-btn{
-      display:flex; align-items:center; gap:9px; width:100%; padding:11px 14px;
-      border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.03);
-      color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
-      font-family:var(--font-vazir), sans-serif;
-    }
-    body[data-theme="light"] .account-mobile-menu-btn{ background:rgba(255,255,255,.4); }
-    .account-mobile-menu-btn-icon{ display:flex; color:var(--accent); flex-shrink:0; }
-    .account-mobile-menu-btn-label{ flex:1; text-align:start; }
-    .account-mobile-menu-btn-chevron{ color:var(--muted2); transition:transform .2s ease; flex-shrink:0; }
-    .account-mobile-menu-btn-chevron.open{ transform:rotate(180deg); }
-
-    .account-mobile-menu-panel{ overflow:hidden; }
-    .account-mobile-menu-panel-inner{ display:flex; flex-direction:column; gap:2px; padding-top:8px; }
-    .account-mobile-menu-item{
-      display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
-      color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
-      background:none; border:none; text-align:start; width:100%; cursor:pointer;
-    }
-    .account-mobile-menu-item.active{ color:var(--accent); background:var(--accent-dim); }
-    .account-mobile-menu-item-danger{ color:#E05252; }
 
     /* طبقِ درخواستِ صریح: توی موبایل کارتِ فهرستِ زبانه‌های صفحه‌ی اول
        (نه هدر بالای صفحه، فقط همین) باید از چپ تا راستِ واقعیِ صفحه کشیده
@@ -6570,14 +6769,15 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
    طبقِ درخواستِ صریح: وسطِ بالای صفحه (نه وسطِ عمودیِ معمولِ بقیه‌ی
    پاپ‌آپ‌ها) — position:fixed با یک top ثابت، نه transform:translateY(-50%). */
 .friend-profile-panel{
-  /* باگِ گزارش‌شده: «باز که می‌کنم بیرون صفحه‌ست». این تنها پاپ‌آپِ اپ بود
-     که با inset-inline-end (به‌جای left ساده‌ی بقیه‌ی .modal-panelها)
-     وسط‌چین می‌شد — روی مرورگر/وبویوی بدونِ پشتیبانیِ کامل، inset-inline-end
-     بی‌اثر می‌ماند و فقط translateX(-50%) روی موقعیتِ پیش‌فرض (بالا-چپِ
-     body، چون position:fixed پورتال‌شده است) اثر می‌کرد — یعنی پنل نصفش
-     واقعا از چپِ صفحه بیرون می‌زد. left ساده دقیقاً هم‌الگویِ همه‌ی
-     .modal-panelهای دیگر اپه، بدونِ این وابستگی. */
-  position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:71;
+  /* باگِ گزارش‌شده: «باز که می‌کنم بیرون صفحه‌ست». دو علتِ پشت‌سرهم داشت:
+     اولی inset-inline-end بود (روی وبویوی بدونِ پشتیبانیِ کامل بی‌اثر)، و
+     بعد از تعویضش با left:50%+translateX(-50%)، خودِ انیمیشنِ پایین
+     (`tradeFadeIn` که فریمِ آخرش `transform:none` است و با fill-mode
+     `both` همان را برای همیشه نگه می‌دارد) همان translate را پاک می‌کرد و
+     پنل باز هم نصفه از لبه بیرون می‌زد. وسط‌چینی حالا با margin:auto است
+     که نه به پشتیبانیِ logical property وابسته است و نه انیمیشن می‌تواند
+     پاکش کند. */
+  position:fixed; top:64px; left:0; right:0; margin-left:auto; margin-right:auto; z-index:71;
   width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
   padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);

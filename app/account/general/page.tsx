@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe, Bell, Users, BarChart3, Tablets } from "lucide-react";
+import { Globe, Bell, Users, BarChart3, Tablets, CalendarCheck2, CandlestickChart } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
-import { AccountBackButton } from "@/components/AccountBackButton";
+import { AccountPageHead, AccountBlock, AccountLine } from "@/components/AccountUI";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
@@ -42,47 +42,33 @@ export default function AccountSettingsPage() {
 
   return (
     <section>
-      <AccountBackButton />
-      <h1>تنظیمات</h1>
-      <div className="account-content-hint">تنظیمات کلی آریون و تنظیمات هر بخش</div>
+      <AccountPageHead title="تنظیمات" hint="تنظیمات کلی آریون و تنظیمات هر بخش" />
 
-      <div className="domain-sub">آریون</div>
-      <div className="account-card" style={{ marginBottom: 6 }}>
-        <div className="account-row2">
-          <span className="account-row2-icon"><Globe size={17} /></span>
-          <span className="account-row2-body">
-            <span className="account-row2-label">زبان</span>
-            <span className="account-row2-desc">فعلا فقط فارسی — زبان‌های دیگه به‌زودی اضافه می‌شن</span>
-          </span>
-        </div>
-      </div>
+      <AccountBlock title="آریون" icon={<Globe size={15} />} flush index={0}>
+        <AccountLine icon={<Globe size={16} />} label="زبان" value="فعلا فقط فارسی — زبان‌های دیگه به‌زودی اضافه می‌شن" />
+      </AccountBlock>
 
-      <div className="tm-extra">
-        <div className="domain-sub">نمایش کارت‌ها در داشبوردها</div>
-        <div className="account-card" style={{ marginTop: 6 }}>
-          {DASHBOARD_PREFS.map(([key, label, desc], i) => (
-            <AccountToggleRow
-              key={key}
-              index={i}
-              icon={PREF_ICONS[i]}
-              label={label}
-              desc={desc}
-              checked={prefs[key]}
-              onChange={(v) => toggleDashboardPref(key, v)}
-            />
-          ))}
-        </div>
-      </div>
+      <AccountBlock title="نمایش کارت‌ها در داشبوردها" icon={<BarChart3 size={15} />} flush index={1}>
+        {DASHBOARD_PREFS.map(([key, label, desc], i) => (
+          <AccountToggleRow
+            key={key}
+            index={i}
+            icon={PREF_ICONS[i]}
+            label={label}
+            desc={desc}
+            checked={prefs[key]}
+            onChange={(v) => toggleDashboardPref(key, v)}
+          />
+        ))}
+      </AccountBlock>
 
-      <div className="tm-extra">
-        <div className="domain-sub">روتین</div>
-        <RoutineSettings />
-      </div>
+      {/* این دو خودشان بخش‌های استاندارد را رندر می‌کنند، پس این‌جا فقط
+          یک عنوانِ دامنه می‌گذاریم — نه یک قابِ دیگر دورِ قاب. */}
+      <h2 className="acc-block-title" style={{ marginTop: 30 }}><CalendarCheck2 size={15} /> روتین</h2>
+      <RoutineSettings />
 
-      <div className="tm-extra">
-        <div className="domain-sub">ترید</div>
-        <TradeSettings />
-      </div>
+      <h2 className="acc-block-title" style={{ marginTop: 30 }}><CandlestickChart size={15} /> ترید</h2>
+      <TradeSettings />
     </section>
   );
 }

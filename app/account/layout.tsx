@@ -1,23 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  User, SlidersHorizontal, CreditCard, ShieldCheck, Bell, Headset, LogOut, Menu, ChevronDown, Dumbbell,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
+import { ACCOUNT_SECTIONS } from "@/components/accountSections";
 import { invalidateStorageCache } from "@/lib/storage";
 import { invalidateAccountCache } from "@/lib/accountCache";
 import { clearAuthHintCookie } from "@/lib/preload";
 
 // پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → منوی بخش‌ها (فقط لیست زبانه‌ها، بدون محتوا)
-//   /account/profile            → پروفایل
-//   /account/sport-profile      → پروفایل ورزشی (قد/وزن/سن/جنسیت — طبق
-//                                  درخواست صریح از پروفایل عمومی جدا شد)
+//   /account/profile            → پروفایل (دو بخش: «پروفایل عمومی» و
+//                                  «پروفایل ورزشی»، هردو توی همین یک صفحه)
+//   /account/sport-profile      → فقط ریدایرکت به /account/profile (مسیر قدیمی)
 //   /account/general            → «تنظیمات» — تنظیمات آریون + تنظیمات روتین و
 //                                  ترید، همه یک‌جا و بدون ناوبری تودرتو
 //                                  (تم نمایش عمدا این‌جا نیست — همون سوییچ
@@ -26,15 +24,6 @@ import { clearAuthHintCookie } from "@/lib/preload";
 //   /account/security           → امنیت
 //   /account/notifications      → اعلان‌ها
 //   /account/support            → پشتیبانی
-export const ACCOUNT_SECTIONS: { href: string; label: string; desc: string; icon: React.ReactNode; match: (p: string) => boolean }[] = [
-  { href: "/account/profile", label: "پروفایل", desc: "نام، نام‌کاربری و عکس پروفایل", icon: <User size={15} />, match: (p) => p.startsWith("/account/profile") },
-  { href: "/account/sport-profile", label: "پروفایل ورزشی", desc: "قد، وزن، سن و جنسیت برای برنامه‌ی ورزش/کالری", icon: <Dumbbell size={15} />, match: (p) => p.startsWith("/account/sport-profile") },
-  { href: "/account/general", label: "تنظیمات", desc: "تنظیمات آریون، روتین و ترید", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/general") },
-  { href: "/account/subscription", label: "اشتراک", desc: "پلن فعلی و مدیریت خرید اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
-  { href: "/account/security", label: "امنیت", desc: "رمز عبور و امنیت حساب", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },
-  { href: "/account/notifications", label: "اعلان‌ها", desc: "مدیریت اعلان‌های اپ", icon: <Bell size={15} />, match: (p) => p.startsWith("/account/notifications") },
-  { href: "/account/support", label: "پشتیبانی", desc: "ارتباط با تیم پشتیبانی", icon: <Headset size={15} />, match: (p) => p.startsWith("/account/support") },
-];
 const SECTIONS = ACCOUNT_SECTIONS;
 
 // انیمیشن ورود صفحه‌های پنل. عمدا بدون فاز exit و بدون `mode="wait"`:
@@ -50,12 +39,6 @@ const pageTransition = {
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/account";
   const { status } = useSession();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // با هر تغییر مسیر (چه با کلیک روی یه تایتل، چه از هرجای دیگه) منوی
-  // همبرگری موبایل باید بسته بشه — وگرنه باز می‌مونه رو صفحه‌ی جدید.
-  useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
-
   if (status === "loading") return null;
 
   if (status === "unauthenticated") {
@@ -74,46 +57,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     signOut({ callbackUrl: "/" });
   }
 
-  // توی صفحه‌ی اول پنل (/account) خود فهرست بخش‌ها به‌صورت کارت پایین
-  // صفحه هست، پس منوی همبرگری بالای صفحه فقط یک تکرار بی‌فایده بود.
-  const isIndex = pathname === "/account" || pathname === "/account/";
-
   return (
     <div className="account-shell" dir="rtl">
-      <div className="account-mobile-menu" hidden={isIndex}>
-        <button
-          type="button"
-          className="account-mobile-menu-btn"
-          onClick={() => setMobileMenuOpen((v) => !v)}
-          aria-expanded={mobileMenuOpen}
-        >
-          <span className="account-mobile-menu-btn-icon"><Menu size={16} /></span>
-          <span className="account-mobile-menu-btn-label">
-            {SECTIONS.find((s) => s.match(pathname))?.label || "بخش‌ها"}
-          </span>
-          <ChevronDown size={15} className={`account-mobile-menu-btn-chevron${mobileMenuOpen ? " open" : ""}`} />
-        </button>
-        {mobileMenuOpen && (
-            <nav className="account-mobile-menu-panel">
-              <div className="account-mobile-menu-panel-inner">
-                {SECTIONS.map((s) => {
-                  const active = s.match(pathname);
-                  return (
-                    <Link key={s.href} href={s.href} className={`account-mobile-menu-item${active ? " active" : ""}`}>
-                      {s.icon}
-                      <span>{s.label}</span>
-                    </Link>
-                  );
-                })}
-                <button type="button" className="account-mobile-menu-item account-mobile-menu-item-danger" onClick={doLogout}>
-                  <LogOut size={15} />
-                  <span>خروج</span>
-                </button>
-              </div>
-            </nav>
-          )}
-      </div>
-
       <div className="account-body">
         <aside className="account-sidebar">
           <div className="account-sidebar-title">پنل کاربری</div>
