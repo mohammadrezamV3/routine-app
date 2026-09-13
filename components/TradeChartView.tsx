@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getSetting, setSetting } from "@/lib/storage";
+import { getSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { CAL_SYSTEM_KEY, CalSystem, TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { TRADE_PAIRS } from "@/lib/tradePairs";
 import { TradingViewChart } from "./TradingViewChart";
-import { SymbolSearchField } from "./SymbolSearchField";
 import { ChartTradePanel } from "./ChartTradePanel";
 import { ChartCalendarPanel } from "./ChartCalendarPanel";
 import { SymbolChatPanel } from "./SymbolChatPanel";
@@ -33,7 +32,14 @@ const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
  * خانه‌ها نمی‌توانستند در دو محور جدا از هم جا بگیرند.
  *
  * نماد یک انتخابِ سراسریِ صفحه است: هر سه بخش (چارت، ثبتِ معامله، اتاقِ
- * گفت‌وگو) از همان یک نماد پیروی می‌کنند.
+ * گفت‌وگو) از همان یک نماد پیروی می‌کنند؛ فقط از همون تنظیماتِ ذخیره‌شده
+ * (`SYMBOL_KEY`) خونده می‌شه، دیگه فیلدِ جست‌وجویِ نمادِ جداگونه‌ای این‌جا
+ * نیست — طبقِ درخواستِ صریح («جست‌وجوی نماد از داخلِ باکس حذف بشه، خودِ
+ * تریدینگ‌ویو می‌تونه»). توجه: جست‌وجوی داخلِ خودِ iframeِ تریدینگ‌ویو
+ * (allow_symbol_change) عوضِ نمادش فقط رویِ خودِ چارت اثر می‌ذاره، به
+ * چت/ثبتِ‌معامله sync نمی‌شه (iframeِ ساده‌ست، نه APIِ رویدادیِ tv.js) —
+ * برایِ عوض‌کردنِ نمادِ این سه بخش با هم، فعلاً راهی جز تغییرِ تنظیمات
+ * نیست.
  *
  * تایم‌فریم عمداً این‌جا نیست — نوارِ بالاییِ خودِ تریدینگ‌ویو داردش و دو
  * جای کنترلِ یک چیز فقط گیج‌کننده است.
@@ -96,21 +102,15 @@ export function TradeChartView() {
     return () => { clearTimeout(t); window.removeEventListener("resize", apply); };
   }, [loading]);
 
-  function changeSymbol(next: string) {
-    setSymbol(next);
-    setSetting(SYMBOL_KEY, next);
-  }
-
   if (loading) return <PanelSkeleton />;
 
   return (
     <div className="tv-page" ref={pageRef}>
       <div className="tv-chart-card">
-        <div className="tv-chart-toolbar">
-          <span className="tv-chart-title">چارت</span>
-          <SymbolSearchField symbol={symbol} onChange={changeSymbol} />
+        <span className="tv-chart-title">چارت</span>
+        <div className="tv-chart-box">
+          <TradingViewChart symbol={symbol} />
         </div>
-        <TradingViewChart symbol={symbol} />
       </div>
 
       <SymbolChatPanel symbol={symbol} />

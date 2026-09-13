@@ -5320,7 +5320,14 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-time-input{ width:80px; flex-shrink:0; text-align:center; }
 
 /* ── حساب‌ها ──────────────────────────────────────────────── */
-.trade-accounts-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
+/* طبقِ درخواستِ صریح: «حساب‌های معاملاتی» و «نمایش آرشیو» دیگه بالای
+   باکس نیستن — اولین ردیفِ داخلِ خودِ باکسن (نگاه کن به
+   TradeAccountsPanel.tsx)، پس دیگه margin-top نمی‌خواد؛ یک بردرِ پایین
+   جداش می‌کنه از ردیف‌های حساب زیرش. */
+.trade-accounts-head{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding-bottom:11px; border-bottom:1px solid var(--line);
+}
 /* «حساب‌های معاملاتی» دیگه یک لیبل کوچیک خنثیه نیست — عملا تایتل همین
    بخشه (تایتل صفحه «ژورنال‌نویسی»ی)، پس فونت تایتل‌مانند + سبز می‌گیره. */
 .trade-section-title{ font-size:15px; font-weight:800; color:var(--text); }
@@ -5362,8 +5369,15 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
 /* قبلا یک نوارِ رنگیِ عمودی به ارتفاعِ کاملِ کارت بود (inset-inline-start:0;top:0;bottom:0)
-   — طبقِ درخواستِ صریح، به یک توپِ کوچیکِ گوشه‌ی بالا-راستِ کارت تبدیل شد. */
+   — طبقِ درخواستِ صریح، به یک توپِ کوچیکِ گوشه‌ی بالا-راستِ کارت تبدیل شد.
+   نکته: این کلاس همچنان توی TradeNotesPanel/TradeChecklistDetailView
+   استفاده می‌شه (absolute، گوشه‌ی کارت) — دست‌نخورده می‌مونه. */
 .trade-account-stripe{ position:absolute; top:9px; inset-inline-start:10px; width:8px; height:8px; border-radius:50%; }
+/* طبقِ درخواستِ صریحِ تازه («توپِ برچسبِ حساب باید سمتِ چپِ اسم باشه، نه
+   گوشه‌ی بالا-راستِ کارت»): فقط توی فهرستِ حساب‌های معاملاتی
+   (TradeAccountsPanel) توپ دیگه absolute نیست — inline، داخلِ همون لینکِ
+   اسم، بلافاصله بعدِ متنِ اسم (توی RTL یعنی سمتِ چپش). */
+.trade-account-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .trade-account-main{ display:block; text-decoration:none; color:var(--text); }
 /* باگِ برچسبِ بیرون‌زده: این ردیف min-width:0 نداشت و .trade-account-name
    (بدون overflow/ellipsis) هیچ‌وقت زیرِ عرضِ متنِ خودش تنگ نمی‌شد؛ روی
@@ -6138,11 +6152,21 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   .tv-page .tv-cell-scroll{ flex:1; min-height:0; max-height:none; overflow-y:auto; }
 }
 
-.tv-chart-card{
+/* طبقِ درخواستِ صریح: تایتلِ «چارت» دیگه داخلِ باکسِ شیشه‌ای نیست، بیرونِ
+   ازشه — پس .tv-chart-card (که همچنان خودِ خانه‌ی گریدِ .tv-page ست، طبقِ
+   `.tv-page > .tv-chart-card{grid-area:chart}`) دیگه خودش باکس نیست، فقط
+   یک ستونِ ساده‌ست که تایتل و باکسِ واقعی (.tv-chart-box) رو زیرِ هم نگه
+   می‌داره. اگه یک لایه‌ی جدیدِ wrapper دورِ .tv-chart-card اضافه می‌شد،
+   grid-area دیگه رویِ فرزندِ مستقیمِ .tv-page اعمال نمی‌شد و کلِ گریدِ
+   دسکتاپ می‌شکست — برایِ همین باکسِ واقعی یک بچه‌ی جدید شد، نه یک جدِ جدید. */
+.tv-chart-card{ display:flex; flex-direction:column; gap:8px; }
+.tv-chart-title{ flex-shrink:0; font-size:14px; font-weight:800; color:var(--text); }
+.tv-chart-box{
   background:var(--surface-glass);
   backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
   border:1px solid var(--surface-line); border-radius:18px;
   padding:11px; display:flex; flex-direction:column; gap:11px;
+  flex:1; min-height:0;
 }
 
 /* موبایل: ارتفاعِ ثابتِ سخاوتمندانه (نه بیشتر — طبقِ اصلاحِ صریحِ کاربر،
@@ -6162,22 +6186,20 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    بقیه‌ی خانه‌های `.tv-page`) با همان ترفندِ breakoutِ `.ticker-bar`
    (100vw + مارجینِ منفیِ نصفِ ویوپورت، هم‌جهت در LTR/RTL) از پدینگِ
    ۲۰پیکسلیِ `body` و سقفِ ۶۲۰پیکسلیِ `.wrap` بیرون می‌زند و تا لبه‌های
-   واقعیِ صفحه می‌رود؛ فقط یک گوشه‌ی کوچک برای این‌که به لبه نچسبد. */
+   واقعیِ صفحه می‌رود؛ فقط یک گوشه‌ی کوچک برای این‌که به لبه نچسبد. حالا که
+   تایتل بیرونِ باکسه، breakout رویِ خودِ .tv-chart-card (که تایتل+باکس رو
+   داره) می‌شینه تا هر دو با هم لبه‌ها رو بگیرن — دقیقاً همون الگوی
+   `.trade-desktop-full` بالاتر همین فایل. */
 @media (max-width:1023px){
   .tv-chart-card{
     width:100vw; max-width:none; position:relative; inset-inline-end:50%; inset-inline-start:50%;
     margin-inline-end:-50vw; margin-inline-start:-50vw;
-    padding:11px calc(11px + env(safe-area-inset-right)) 11px calc(11px + env(safe-area-inset-left));
-    border-radius:0; border-inline-end:none; border-inline-start:none;
+    padding:0 calc(11px + env(safe-area-inset-right)) 0 calc(11px + env(safe-area-inset-left));
     box-sizing:border-box;
   }
+  .tv-chart-box{ border-radius:0; border-inline-end:none; border-inline-start:none; }
 }
 
-.tv-chart-toolbar{ display:flex; align-items:center; gap:8px; }
-/* تایتلِ صفحه از بالای صفحه (کنارِ لینکِ بازگشت) به همین‌جا — بالایِ خودِ
-   چارت — منتقل شد؛ طبقِ درخواستِ صریح، بدونِ توضیحاتِ زیرِ آن. */
-.tv-chart-title{ flex-shrink:0; font-size:14px; font-weight:800; color:var(--text); }
-.tv-chart-toolbar > .tv-symbol-search{ flex:1; min-width:0; }
 .tv-chart-frame iframe{ width:100%; height:100%; border:0; display:block; transition:opacity .3s ease; }
 .tv-chart-loading{
   position:absolute; inset:0; z-index:2;
@@ -6190,51 +6212,6 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   animation:tvSpin .8s linear infinite;
 }
 @keyframes tvSpin{ to{ transform:rotate(360deg); } }
-
-/* جست‌وجوی نماد */
-.tv-symbol-search{ position:relative; }
-/* طبقِ درخواستِ صریح، آیکونِ جست‌وجو چپ‌چین شد؛ دکمه‌ی پاک‌کردن (X) که
-   قبلاً همان‌جا بود کنارش (کمی سمت راست‌ترِ آیکونِ جست‌وجو) جا گرفت تا
-   روی هم نیفتند — پدینگِ چپِ اینپوت هم برایِ هر دو آیکون بزرگ‌تر شد. */
-.tv-symbol-search-icon{ position:absolute; inset-inline-end:13px; inset-inline-start:auto; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
-.tv-symbol-input{
-  width:100%; box-sizing:border-box; padding:11px 14px 11px 62px;
-  border-radius:12px; font-size:13px; font-weight:600; color:var(--text);
-  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.24);
-  outline:none; transition:border-color .18s ease;
-}
-.tv-symbol-input:focus{ border-color:var(--accent); }
-.tv-symbol-input::placeholder{ color:var(--muted2); font-weight:500; }
-.tv-symbol-clear{
-  position:absolute; inset-inline-end:36px; top:50%; transform:translateY(-50%);
-  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
-  color:var(--muted); background:none; border:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-}
-.tv-symbol-clear:hover{ color:var(--text); background:none; box-shadow:none; }
-
-/* لیستِ نتایج — حداکثر هشت‌تا، پس اسکرول‌بار لازم نیست */
-.tv-symbol-results{
-  position:absolute; z-index:30; inset-inline:0; top:calc(100% + 6px);
-  padding:5px; border-radius:14px;
-  background:var(--surface-2); border:1px solid var(--surface-line);
-  box-shadow:0 14px 40px rgba(0,0,0,.34);
-  animation:tvResultsIn .16s ease both;
-}
-@keyframes tvResultsIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
-.tv-symbol-option{
-  display:flex; width:100%; align-items:center; gap:10px;
-  padding:9px 11px; border-radius:10px; text-align:start;
-  background:none; border:none; box-shadow:none; color:var(--text);
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:background .14s ease;
-}
-.tv-symbol-option.active{ background:rgba(var(--accent-rgb),.13); }
-.tv-symbol-option:hover{ background:rgba(var(--accent-rgb),.13); box-shadow:none; }
-.tv-symbol-option.current .tv-symbol-code{ color:var(--accent); }
-.tv-symbol-code{ font-size:12.5px; font-weight:800; min-width:76px; }
-.tv-symbol-label{ font-size:11.5px; color:var(--muted); }
-.tv-symbol-empty{ padding:12px; font-size:12px; color:var(--muted); text-align:center; }
 
 /* ── پنل‌های صفحه‌ی چارت: چک‌لیست/ثبت معامله، گفت‌وگو، تقویم ─────────── */
 .trade-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
