@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Maximize, Minimize } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { tradingViewSymbol } from "@/lib/tradingView";
 
@@ -42,6 +43,8 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
   // null = هنوز نمی‌دانیم. فقط مقدارِ صریحِ false چارت را کنار می‌زند.
   const [reachable, setReachable] = useState<boolean | null>(null);
   const attemptRef = useRef(0);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const tvSymbol = tradingViewSymbol(symbol);
 
@@ -96,6 +99,26 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
   // با هر عوض‌شدنِ نماد/تم از نو شروع کن
   useEffect(() => { restart(); }, [tvSymbol, theme, restart]);
 
+  // فول‌اسکرینِ خودِ باکسِ چارت (نه کلِ صفحه) — طبقِ درخواستِ صریح. روی
+  // خروج با Esc هم باید وضعیتِ دکمه درست برگردد، برای همین به‌جای اینکه
+  // فقط بعدِ کلیکِ خودمان state را عوض کنیم، به رویدادِ خودِ مرورگر گوش
+  // می‌دهیم — تنها منبعِ درستِ «الان فول‌اسکرینیم یا نه».
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === frameRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    } else {
+      el.requestFullscreen?.().catch(() => {});
+    }
+  }, []);
+
   // تا وقتی iframe لود نشده، خودش دوباره تلاش می‌کند.
   useEffect(() => {
     if (loaded || exhausted) return;
@@ -141,13 +164,22 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="tv-chart-frame">
+    <div className="tv-chart-frame" ref={frameRef}>
       {!loaded && (
         <div className="tv-chart-loading">
           <span className="tv-chart-spinner" aria-hidden="true" />
           <span>در حال بارگذاری چارت…</span>
         </div>
       )}
+      <button
+        type="button"
+        className="tv-fullscreen-btn"
+        onClick={toggleFullscreen}
+        aria-label={isFullscreen ? "خروج از تمام‌صفحه" : "تمام‌صفحه"}
+        title={isFullscreen ? "خروج از تمام‌صفحه" : "تمام‌صفحه"}
+      >
+        {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+      </button>
       <iframe
         key={src}
         src={src}
@@ -155,6 +187,8 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
         onLoad={() => setLoaded(true)}
         loading="eager"
         referrerPolicy="origin"
+        allowFullScreen
+        allow="fullscreen"
         // sandbox عمداً نگه داشته شده ولی فقط برای یک چیز: جلوگیری از
         // `allow-top-navigation` — یعنی این iframe نمی‌تواند کلِ صفحه‌ی ما
         // را به جای دیگری ببرد. بقیه‌ی مجوزها باز شده‌اند چون هرکدامشان یک
