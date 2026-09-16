@@ -25,10 +25,22 @@ input string ArionUrl    = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode = "";                     // کد اتصال (فقط بار اول)
 input int    SyncSeconds = 60;                     // فاصله‌ی ارسال، به ثانیه
 
+// حداکثر تعداد معامله‌ی بسته‌شده در هر درخواست — تاریخچه‌ی طولانی توی چند
+// درخواستِ پشتِ‌سرهم چانک می‌شه، نه یک درخواستِ غول‌پیکرِ تک.
+#define MT_CHUNK_SIZE 300
+
 string   g_token     = "";
 datetime g_lastSync  = 0;
 string   g_status    = "در حال راه‌اندازی…";
+int      g_failCount = 0;
 string   g_tokenFile = "arion_token.txt";
+
+// زمانِ deal بستنِ آخرین معامله‌ای که با موفقیت فرستاده شده. صفر یعنی
+// «هنوز هیچ بک‌فیلی انجام نشده» — دفعه‌ی اول کل تاریخچه‌ی حساب فرستاده
+// می‌شود (نه فقط ۳۰ روزِ اخیر). بعد از بک‌فیلِ کامل، هر سینکِ بعدی فقط از
+// همین زمان به بعد را می‌خواند — سینک سریع می‌ماند.
+datetime g_cursorTime = 0;
+string   g_cursorFile = "arion_cursor.txt";
 
 // تا وقتی وصل نشده‌ایم زود‌به‌زود تلاش می‌کنیم (نه با فاصله‌ی ارسالِ کامل)،
 // چون معمولا کاربر همین چند دقیقه‌ی اول دارد تنظیمات را درست می‌کند.
@@ -38,12 +50,16 @@ string   g_tokenFile = "arion_token.txt";
 int OnInit()
   {
    g_token = LoadToken();
+   g_cursorTime = (datetime)LoadCursor();
    // تلاشِ اول همین‌جا، ولی *شکستش پایان کار نیست* — تایمر باز هم تلاش
    // می‌کند. باگِ نسخه‌ی قبلی همین بود: اگر این یک تلاش شکست می‌خورد
    // (WebRequest هنوز اجازه نداشت، یا کاربر کد را بعدا می‌گذاشت) اکسپرت
    // تا حذف و نصبِ دوباره برای همیشه «غیرفعال» می‌ماند.
    if(g_token == "") Pair();
    EventSetTimer(g_token == "" ? RETRY_SECONDS : (int)MathMax(15, SyncSeconds));
+   // منتظرِ اولین تیکِ تایمر نمی‌مانیم — همین که وصل شدیم (یا توکنِ قبلی را
+   // پیدا کردیم)، بلافاصله یک سینک می‌زنیم تا اتصال حسِ آنی داشته باشد.
+   if(g_token != "") Sync();
    ShowStatus();
    return(INIT_SUCCEEDED);
   }
@@ -136,6 +152,23 @@ void SaveToken(string token)
    FileClose(h);
   }
 
+long LoadCursor()
+  {
+   int h = FileOpen(g_cursorFile, FILE_READ|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return(0);
+   string s = FileReadString(h);
+   FileClose(h);
+   return(StringToInteger(s));
+  }
+
+void SaveCursor(datetime t)
+  {
+   int h = FileOpen(g_cursorFile, FILE_WRITE|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   FileWriteString(h, IntegerToString((long)t));
+   FileClose(h);
+  }
+
 //+------------------------------------------------------------------+
 string HttpPost(string url, string headers, string body, int &status)
   {
@@ -196,22 +229,87 @@ void Pair()
    g_token = token;
    SaveToken(token);
    g_status = "اتصال برقرار شد";
-   Print("Arion: اتصال برقرار شد");
+   Print("Arion: اتصال برقرار شد — در حال گرفتنِ کل تاریخچه‌ی حساب…");
+  }
+
+//+------------------------------------------------------------------+
+//| یک دسته از معاملات را می‌فرستد (بالانس/اکوئیتی همیشه همراهش می‌رود)  |
+//+------------------------------------------------------------------+
+bool SendBatch(string tradesJson)
+  {
+   string body = StringFormat(
+      "{\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"tzOffsetMinutes\":%d,\"trades\":[%s]}",
+      AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
+      JsonEscape(AccountInfoString(ACCOUNT_CURRENCY)), BrokerTzOffsetMinutes(), tradesJson);
+
+   int status;
+   string res = HttpPost(ArionUrl + "/api/mt/sync",
+                         "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n",
+                         body, status);
+
+   if(status == -1) return(false);
+   if(status == 401)
+     {
+      g_token = "";
+      SaveToken("");
+      g_status = "توکن باطل شده — از Arion کد اتصال جدید بگیرید";
+      Print("Arion: ", g_status);
+      EventKillTimer();
+      EventSetTimer(RETRY_SECONDS);
+      return(false);
+     }
+   if(status != 200)
+     {
+      g_failCount++;
+      g_status = "ارسال ناموفق (کد " + IntegerToString(status) + ")";
+      Print("Arion: ", g_status, " ", res);
+      return(false);
+     }
+
+   g_failCount = 0;
+   return(true);
+  }
+
+//+------------------------------------------------------------------+
+//| مجموعِ کمیسیون/سواپِ یک پوزیشن روی همه‌ی dealهایش (ورود + خروج).    |
+//| چرا لازم است: بعضی بروکرها کمیسیون را نصف روی dealِ ورود و نصف روی  |
+//| dealِ خروج می‌زنند — اگر فقط dealِ بستن را بخوانیم، نصفِ کمیسیون جا   |
+//| می‌ماند. HistorySelectByPosition خودش context انتخابِ فعلی را عوض   |
+//| می‌کند، برای همین بعدش HistorySelect را با همان بازه دوباره صدا      |
+//| می‌زنیم تا حلقه‌ی بیرونی (که روی بازه‌ی from..now کار می‌کند) خراب     |
+//| نشود.                                                               |
+//+------------------------------------------------------------------+
+void PositionCommissionSwap(long positionId, datetime from, double &outCommission, double &outSwap)
+  {
+   outCommission = 0;
+   outSwap = 0;
+   if(HistorySelectByPosition(positionId))
+     {
+      int n = HistoryDealsTotal();
+      for(int i = 0; i < n; i++)
+        {
+         ulong d = HistoryDealGetTicket(i);
+         outCommission += HistoryDealGetDouble(d, DEAL_COMMISSION);
+         outSwap       += HistoryDealGetDouble(d, DEAL_SWAP);
+        }
+     }
+   // بازگرداندنِ انتخابِ اصلی — وگرنه حلقه‌ی بیرونی که روی همین بازه کار
+   // می‌کند از اینجا به بعد دادهٔ اشتباه می‌بیند.
+   HistorySelect(from, TimeCurrent());
   }
 
 //+------------------------------------------------------------------+
 void Sync()
   {
-   string trades = "";
-   int count = 0;
-
-   // پوزیشن‌های باز
+   // پوزیشن‌های باز — هر بار کامل فرستاده می‌شوند
+   string openTrades = "";
+   int openCount = 0;
    for(int i = 0; i < PositionsTotal(); i++)
      {
       ulong ticket = PositionGetTicket(i);
       if(ticket == 0) continue;
-      if(count > 0) trades += ",";
-      trades += StringFormat(
+      if(openCount > 0) openTrades += ",";
+      openTrades += StringFormat(
          "{\"ticket\":\"%I64u\",\"symbol\":\"%s\",\"type\":\"%s\",\"volume\":%.2f,"
          "\"openPrice\":%.5f,\"stopLoss\":%.5f,\"takeProfit\":%.5f,"
          "\"profit\":%.2f,\"swap\":%.2f,\"openTime\":%I64d,\"closed\":false}",
@@ -221,15 +319,25 @@ void Sync()
          PositionGetDouble(POSITION_SL), PositionGetDouble(POSITION_TP),
          PositionGetDouble(POSITION_PROFIT), PositionGetDouble(POSITION_SWAP),
          PositionGetInteger(POSITION_TIME));
-      count++;
+      openCount++;
      }
+   if(!SendBatch(openTrades)) return;
 
-   // معاملات بسته‌ی ۳۰ روز اخیر — در MT5 هر پوزیشن از چند «deal» ساخته
-   // می‌شود؛ deal با ENTRY_OUT همان بسته‌شدن پوزیشن است و شناسه‌ی پوزیشن
-   // را دارد، پس دقیقا همان externalId سمت سرور می‌شود.
-   datetime from = TimeCurrent() - 30 * 24 * 60 * 60;
+   // معاملاتِ بسته‌ی تازه — از کِرسرِ فعلی تا الان. دفعه‌ی اول (کِرسر صفر)
+   // یعنی کلِ تاریخچه‌ی حساب، نه فقط ۳۰ روزِ اخیر.
+   //
+   // نکته: اگر پوزیشنی چند بار پشتِ‌سرهم partial-close شود، همه‌ی آن
+   // dealهای خروج همان DEAL_POSITION_ID را دارند و در Arion روی یک ردیف
+   // می‌نشینند (شناسه‌ی یکتا همان position id است) — یعنی فقط آخرین
+   // partial-close دیده می‌شود. این محدودیتِ شناخته‌شده‌ایست و جدا از
+   // مشکلِ کمیسیون/سواپ/بازه‌ی تاریخچه است که اینجا رفع شده.
+   datetime from = g_cursorTime;
    HistorySelect(from, TimeCurrent());
    int deals = HistoryDealsTotal();
+
+   string batch[]; ArrayResize(batch, 0);
+   datetime newCursor = g_cursorTime;
+
    for(int j = 0; j < deals; j++)
      {
       ulong deal = HistoryDealGetTicket(j);
@@ -239,55 +347,59 @@ void Sync()
       long dealType = HistoryDealGetInteger(deal, DEAL_TYPE);
       if(dealType != DEAL_TYPE_BUY && dealType != DEAL_TYPE_SELL) continue;
 
-      if(count > 0) trades += ",";
-      trades += StringFormat(
+      datetime dealTime = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
+      if(dealTime <= g_cursorTime) continue;
+
+      long posId = (long)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+      double commission, swap;
+      PositionCommissionSwap(posId, from, commission, swap);
+      // PositionCommissionSwap انتخابِ history را دوباره روی from..now
+      // گذاشت، پس deals همچنان معتبر است؛ ولی چون HistorySelect دوباره
+      // صدا زده شده، برای اطمینان دوباره همان deal را با HistoryDealGetTicket
+      // نمی‌خوانیم — مقادیرِ لازم (dealType، dealTime، symbol، …) را همین
+      // بالا از قبل گرفته‌ایم.
+
+      int n = ArraySize(batch);
+      ArrayResize(batch, n + 1);
+      batch[n] = StringFormat(
          "{\"ticket\":\"%I64u\",\"symbol\":\"%s\",\"type\":\"%s\",\"volume\":%.2f,"
          "\"closePrice\":%.5f,\"profit\":%.2f,\"commission\":%.2f,\"swap\":%.2f,"
          "\"openTime\":%I64d,\"closeTime\":%I64d,\"closed\":true}",
-         HistoryDealGetInteger(deal, DEAL_POSITION_ID),
+         (ulong)posId,
          HistoryDealGetString(deal, DEAL_SYMBOL),
          // deal بستن، جهت مخالف خود پوزیشن است — پس برعکسش می‌کنیم
          (dealType == DEAL_TYPE_SELL ? "BUY" : "SELL"),
          HistoryDealGetDouble(deal, DEAL_VOLUME),
          HistoryDealGetDouble(deal, DEAL_PRICE),
          HistoryDealGetDouble(deal, DEAL_PROFIT),
-         HistoryDealGetDouble(deal, DEAL_COMMISSION),
-         HistoryDealGetDouble(deal, DEAL_SWAP),
-         HistoryDealGetInteger(deal, DEAL_TIME),
-         HistoryDealGetInteger(deal, DEAL_TIME));
-      count++;
+         commission, swap,
+         (long)dealTime, (long)dealTime);
+
+      if(dealTime > newCursor) newCursor = dealTime;
      }
 
-   string body = StringFormat(
-      "{\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"tzOffsetMinutes\":%d,\"trades\":[%s]}",
-      AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
-      JsonEscape(AccountInfoString(ACCOUNT_CURRENCY)), BrokerTzOffsetMinutes(), trades);
-
-   int status;
-   string res = HttpPost(ArionUrl + "/api/mt/sync",
-                         "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n",
-                         body, status);
-
-   if(status == -1) return;
-   if(status == 401)
+   int nClosed = ArraySize(batch);
+   int sent = 0;
+   while(sent < nClosed)
      {
-      g_token = "";
-      SaveToken("");
-      g_status = "توکن باطل شده — از Arion کد اتصال جدید بگیرید";
-      Print("Arion: ", g_status);
-      EventKillTimer();
-      EventSetTimer(RETRY_SECONDS);
-      return;
-     }
-   if(status != 200)
-     {
-      g_status = "ارسال ناموفق (کد " + IntegerToString(status) + ")";
-      Print("Arion: ", g_status, " ", res);
-      return;
+      int end = MathMin(sent + MT_CHUNK_SIZE, nClosed);
+      string chunk = "";
+      for(int k = sent; k < end; k++)
+        {
+         if(k > sent) chunk += ",";
+         chunk += batch[k];
+        }
+      // اگه یک دسته شکست بخورد همین‌جا متوقف می‌شویم — چون کِرسر هنوز
+      // آپدیت نشده، دفعه‌ی بعد همین بازه دوباره (و امن، چون سمتِ سرور با
+      // شناسه‌ی یکتای هر پوزیشن ضدتکرار است) امتحان می‌شود.
+      if(!SendBatch(chunk)) return;
+      sent = end;
+      if(sent < nClosed) Sleep(250); // فشار روی سرور/محدودیتِ نرخ را کم نگه می‌دارد
      }
 
+   if(newCursor > g_cursorTime) { g_cursorTime = newCursor; SaveCursor(g_cursorTime); }
    g_lastSync = TimeCurrent();
-   g_status = "ارسال شد: " + IntegerToString(count) + " معامله";
+   g_status = "ارسال شد: " + IntegerToString(openCount + sent) + " معامله";
   }
 
 //+------------------------------------------------------------------+

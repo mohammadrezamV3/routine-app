@@ -129,42 +129,14 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
             options={[{ value: "MT4" as const, label: "MetaTrader 4" }, { value: "MT5" as const, label: "MetaTrader 5" }]}
           />
 
-          <ol className="trade-mt-steps">
-            <li>
-              <span>فایل اکسپرت را دانلود کنید</span>
-              <a className="trade-mt-download" href={platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
-                <Download size={14} /> {platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
-              </a>
-            </li>
-            <li>
-              <span>
-                از منوی <b className="mono ltr-inline">File</b> در متاتریدر گزینه‌ی{" "}
-                <b className="mono ltr-inline">Open Data Folder</b> را بزن؛ در پوشه‌ای که باز می‌شود مسیر{" "}
-                <b className="mono ltr-inline">{platform === "MT4" ? "MQL4/Experts" : "MQL5/Experts"}</b> را باز کن
-                و فایل دانلودشده را همان‌جا کپی کن.
-              </span>
-            </li>
-            <li>
-              <span>
-                در <b className="mono ltr-inline">MetaEditor</b> بازش کن و <b className="mono ltr-inline">F7</b> بزن تا کامپایل شود
-              </span>
-            </li>
-            <li>
-              <span>
-                در متاتریدر: <b className="mono ltr-inline">Tools → Options → Expert Advisors</b> — گزینه‌ی{" "}
-                <b className="mono ltr-inline">Allow WebRequest for listed URL</b> را تیک بزن و آدرس سایت را اضافه کن.
-              </span>
-            </li>
-            <li>
-              <span>اکسپرت را روی یک چارت بینداز و کد زیر را در فیلد <b className="mono ltr-inline">PairingCode</b> بگذار</span>
-            </li>
-          </ol>
-
+          {/* قدمِ اول همیشه گرفتنِ کده — قبلا کد پایینِ لیست بود و لیست از
+              «کدِ زیر» حرف می‌زد، یعنی کاربر باید اول اسکرول می‌کرد پایین
+              می‌دید کد کجاست، بعد برمی‌گشت بالا شروع می‌کرد. الان کد همینجا
+              بالای لیسته، و خودِ لیست به‌جاش می‌گه «همون کدی که بالا گرفتی». */}
           {code ? (
             <div className="trade-mt-code-box">
-              <div className="trade-stat-label">کد اتصال</div>
+              <div className="trade-stat-label">این کدته — این رو لازم داری</div>
               <div className="trade-mt-code-row">
-                <div className="trade-mt-code mono">{code}</div>
                 <button
                   type="button"
                   className="trade-icon-btn trade-mt-copy-btn"
@@ -174,20 +146,92 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                 >
                   {copied ? <Check size={15} /> : <Copy size={15} />}
                 </button>
+                <div className="trade-mt-code mono">{code}</div>
               </div>
               <div className="trade-mt-note">
-                این کد فقط یک‌بار مصرف می‌شود و
-                {codeExpires ? ` تا ${formatTradeDateTime(codeExpires, calSystem)} ` : " تا ۱۵ دقیقه "}
-                معتبر است. بعد از بستن این صفحه دیگر نمایش داده نمی‌شود.
+                روی آیکونِ کپی که کنارِ کد هست بزن تا کد کپی بشه. این کد فقط یک‌بار قابل استفاده‌ست و
+                {codeExpires ? ` تا ${formatTradeDateTime(codeExpires, calSystem)} ` : " تا ۱۵ دقیقه دیگه "}
+                اعتبار داره — اگه دیر کردی، کافیه دوباره بزنی «ساخت کد اتصال» و یه کدِ تازه بگیری.
               </div>
             </div>
           ) : (
-            <button type="button" className="trade-primary-btn" onClick={requestCode} disabled={busy} style={{ marginTop: 14 }}>
-              {busy ? <Loader2 size={14} className="trade-spin" /> : "ساخت کد اتصال"}
-            </button>
+            <>
+              <div className="trade-mt-note" style={{ marginTop: 10 }}>
+                اول این دکمه رو بزن تا یه کدِ مخصوصِ همین حساب برات ساخته بشه. بعد توی متاتریدر همین کد رو جا می‌ذاری تا این دو تا به هم وصل بشن.
+              </div>
+              <button type="button" className="trade-primary-btn" onClick={requestCode} disabled={busy} style={{ marginTop: 10 }}>
+                {busy ? <Loader2 size={14} className="trade-spin" /> : "ساخت کد اتصال"}
+              </button>
+            </>
           )}
 
           {error && <div className="trade-form-error">{error}</div>}
+
+          <div className="domain-sub" style={{ marginTop: 18, marginBottom: 6 }}>حالا این مراحل رو توی متاتریدر انجام بده</div>
+          <ol className="trade-mt-steps">
+            <li>
+              <span>
+                اول این فایل رو دانلود کن — این همون برنامه‌ی کوچیکیه که قراره توی متاتریدرت نصب بشه و معاملاتت رو برای آریون بفرسته:
+              </span>
+              <a className="trade-mt-download" href={platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
+                <Download size={14} /> {platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
+              </a>
+            </li>
+            <li>
+              <span>
+                متاتریدر رو باز کن. از نوارِ بالا روی <b className="mono ltr-inline">File</b> بزن، بعد{" "}
+                <b className="mono ltr-inline">Open Data Folder</b> رو انتخاب کن — یه پنجره‌ی جدید باز می‌شه که یه سری پوشه توشه.
+              </span>
+            </li>
+            <li>
+              <span>
+                توی همون پنجره برو توی پوشه‌ی <b className="mono ltr-inline">{platform === "MT4" ? "MQL4" : "MQL5"}</b>، و از توش پوشه‌ی{" "}
+                <b className="mono ltr-inline">Experts</b> رو باز کن. فایلی که مرحله‌ی ۱ دانلود کردی رو بکش و همین‌جا بنداز (یا کپی/پیست کن).
+              </span>
+            </li>
+            <li>
+              <span>
+                حالا باید این فایل رو «کامپایل» کنی — یعنی بگی متاتریدر ازش استفاده کنه. روش دابل‌کلیک کن تا{" "}
+                <b className="mono ltr-inline">MetaEditor</b> باز بشه، بعد کلیدِ <b className="mono ltr-inline">F7</b> رو بزن. اگه پایین صفحه نوشت{" "}
+                <b className="mono ltr-inline">0 error(s)</b> یعنی درست شد؛ می‌تونی MetaEditor رو ببندی.
+              </span>
+            </li>
+            <li>
+              <span>
+                برگرد به متاتریدر. توی پنجره‌ی سمتِ چپ به اسمِ <b className="mono ltr-inline">Navigator</b> (اگه نبود از منوی{" "}
+                <b className="mono ltr-inline">View</b> بازش کن)، روی <b className="mono ltr-inline">Expert Advisors</b> راست‌کلیک کن و{" "}
+                <b className="mono ltr-inline">Refresh</b> رو بزن — الان باید اسمِ <b className="mono ltr-inline">Arion</b> اونجا دیده بشه.
+              </span>
+            </li>
+            <li>
+              <span>
+                اسمِ <b className="mono ltr-inline">Arion</b> رو با ماوس بگیر و روی نمودارِ (چارتِ) هر جفت‌ارزی که باز داری ولش کن. یه پنجره‌ی تنظیمات باز می‌شه.
+              </span>
+            </li>
+            <li>
+              <span>
+                توی همون پنجره، برو تبِ <b className="mono ltr-inline">Inputs</b> (یا <b className="mono ltr-inline">Common</b> در نسخه‌های قدیمی‌تر) و جلوی{" "}
+                <b className="mono ltr-inline">PairingCode</b>، همون کدی که بالای همین صفحه گرفتی رو بچسبون. بعد <b className="mono ltr-inline">OK</b> رو بزن.
+              </span>
+            </li>
+            <li>
+              <span>
+                یه بار هم برو <b className="mono ltr-inline">Tools → Options → Expert Advisors</b> و تیکِ{" "}
+                <b className="mono ltr-inline">Allow WebRequest for listed URL</b> رو بزن؛ بعد توی لیستِ زیرش آدرسِ{" "}
+                <b className="mono ltr-inline">https://arionapp.ir</b> رو اضافه کن و <b className="mono ltr-inline">OK</b> بزن.
+                بدونِ این تیک، متاتریدر اصلاً اجازه نمی‌ده اکسپرت چیزی برای آریون بفرسته.
+              </span>
+            </li>
+          </ol>
+
+          <div className="trade-mt-note trade-mt-note-warn">
+            نکته‌ی خیلی مهم: بعد از این کارها، بالا-سمتِ راستِ نمودار باید یه آیکونِ لبخند 🙂 و رنگی ببینی، کنارِ اسمِ Arion. اگه به‌جاش یه ضربدرِ قرمز دیدی، یعنی دکمه‌ی{" "}
+            <b className="mono ltr-inline">AutoTrading</b> (یا <b className="mono ltr-inline">Algo Trading</b>) بالای متاتریدر خاموشه — روش بزن تا روشن (سبز) بشه.
+          </div>
+
+          <div className="trade-mt-note" style={{ marginTop: 10 }}>
+            همین که وصل بشه، آریون خودش بلافاصله کل تاریخچه‌ی معاملاتِ این حساب رو (نه فقط چند تای اخیر) می‌کِشه بالا — چیزی نیاز نیست دستی وارد کنی.
+          </div>
 
           <div className="trade-mt-note" style={{ marginTop: 14 }}>
             رمز حساب معاملاتی‌ات هیچ‌وقت از تو خواسته و هیچ‌جا ذخیره نمی‌شود. اکسپرت فقط

@@ -28,7 +28,10 @@ input string ArionUrl     = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode  = "";                     // کد اتصال (فقط بار اول)
 input int    SyncSeconds  = 60;                     // فاصله‌ی ارسال، به ثانیه
 
-// توکن بعد از اولین اتصال موفق روی همین ترمینال ذخیره می‌شود تا کد اتصال
+// حداکثر تعداد معامله‌ی بسته‌شده در هر درخواست — تاریخچه‌ی طولانی توی چند
+// درخواستِ پشتِ‌سرهم چانک می‌شه، نه یک درخواستِ غول‌پیکرِ تک.
+#define MT_CHUNK_SIZE 300
+
 // دیگر لازم نباشد. شماره‌ی حساب کنارش ذخیره می‌شود تا توکنِ حسابِ دیگری
 // اشتباهی روی این حساب استفاده نشود.
 string   g_token      = "";
@@ -36,6 +39,14 @@ datetime g_lastSync   = 0;
 string   g_status     = "در حال راه‌اندازی…";
 int      g_failCount  = 0;
 string   g_tokenFile  = "arion_token.txt";
+
+// زمانِ close آخرین معامله‌ای که با موفقیت فرستاده شده. صفر یعنی «هنوز هیچ
+// بک‌فیلی انجام نشده» — یعنی دفعه‌ی اول کل تاریخچه‌ی حساب فرستاده می‌شود، نه
+// فقط چند تای آخر. بعد از اولین بک‌فیلِ کامل، هر سینکِ بعدی فقط معاملاتی که
+// از این زمان به بعد بسته شده‌اند را می‌فرستد — همان چیزی که سینک را سریع
+// نگه می‌دارد.
+int      g_cursorTime  = 0;
+string   g_cursorFile  = "arion_cursor.txt";
 
 // تا وقتی وصل نشده‌ایم زود‌به‌زود تلاش می‌کنیم (نه با فاصله‌ی ارسالِ کامل)،
 // چون معمولا کاربر همین چند دقیقه‌ی اول دارد تنظیمات را درست می‌کند.
@@ -45,12 +56,16 @@ string   g_tokenFile  = "arion_token.txt";
 int OnInit()
   {
    g_token = LoadToken();
+   g_cursorTime = LoadCursor();
    // تلاشِ اول همین‌جا، ولی *شکستش پایان کار نیست* — تایمر باز هم تلاش
    // می‌کند. باگِ نسخه‌ی قبلی همین بود: اگر این یک تلاش شکست می‌خورد
    // (WebRequest هنوز اجازه نداشت، یا کاربر کد را بعدا می‌گذاشت) اکسپرت
    // تا حذف و نصبِ دوباره برای همیشه «غیرفعال» می‌ماند.
    if(g_token == "") Pair();
    EventSetTimer(g_token == "" ? RETRY_SECONDS : MathMax(15, SyncSeconds));
+   // منتظرِ اولین تیکِ تایمر نمی‌مانیم — همین که وصل شدیم (یا توکنِ قبلی را
+   // پیدا کردیم)، بلافاصله یک سینک می‌زنیم تا اتصال حسِ آنی داشته باشد.
+   if(g_token != "") Sync();
    ShowStatus();
    return(INIT_SUCCEEDED);
   }
@@ -86,7 +101,7 @@ void ShowStatus()
   }
 
 //+------------------------------------------------------------------+
-//| ذخیره و خواندن توکن (به‌همراه شماره‌ی حساب)                        |
+//| ذخیره و خواندن توکن (به‌همراه شماره‌ی حساب) و کِرسر                 |
 //+------------------------------------------------------------------+
 string LoadToken()
   {
@@ -114,6 +129,23 @@ void SaveToken(string token)
    int h = FileOpen(g_tokenFile, FILE_WRITE|FILE_TXT);
    if(h == INVALID_HANDLE) { Print("Arion: نوشتن توکن ناموفق"); return; }
    FileWriteString(h, token == "" ? "" : token + "|" + IntegerToString(AccountNumber()));
+   FileClose(h);
+  }
+
+int LoadCursor()
+  {
+   int h = FileOpen(g_cursorFile, FILE_READ|FILE_TXT);
+   if(h == INVALID_HANDLE) return(0);
+   string s = FileReadString(h);
+   FileClose(h);
+   return((int)StringToInteger(s));
+  }
+
+void SaveCursor(int t)
+  {
+   int h = FileOpen(g_cursorFile, FILE_WRITE|FILE_TXT);
+   if(h == INVALID_HANDLE) return;
+   FileWriteString(h, IntegerToString(t));
    FileClose(h);
   }
 
@@ -209,50 +241,25 @@ void Pair()
    g_token = token;
    SaveToken(token);
    g_status = "اتصال برقرار شد";
-   Print("Arion: اتصال برقرار شد");
+   Print("Arion: اتصال برقرار شد — در حال گرفتنِ کل تاریخچه‌ی حساب…");
   }
 
 //+------------------------------------------------------------------+
-//| ارسال معاملات                                                    |
+//| یک دسته از معاملات را می‌فرستد (بالانس/اکوئیتی همیشه همراهش می‌رود)  |
 //+------------------------------------------------------------------+
-void Sync()
+bool SendBatch(string tradesJson)
   {
-   string trades = "";
-   int count = 0;
-
-   // معاملات باز
-   for(int i = 0; i < OrdersTotal(); i++)
-     {
-      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
-      if(OrderType() > OP_SELL) continue; // فقط خرید/فروش، نه سفارش‌های در انتظار
-      if(count > 0) trades += ",";
-      trades += TradeJson(false);
-      count++;
-     }
-
-   // معاملات بسته‌ی اخیر (حداکثر ۲۰۰ تای آخر)
-   int total = OrdersHistoryTotal();
-   int from  = MathMax(0, total - 200);
-   for(int j = from; j < total; j++)
-     {
-      if(!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
-      if(OrderType() > OP_SELL) continue;
-      if(count > 0) trades += ",";
-      trades += TradeJson(true);
-      count++;
-     }
-
    string body = StringFormat(
       "{\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"tzOffsetMinutes\":%d,\"trades\":[%s]}",
       AccountBalance(), AccountEquity(), JsonEscape(AccountCurrency()),
-      BrokerTzOffsetMinutes(), trades);
+      BrokerTzOffsetMinutes(), tradesJson);
 
    int status;
    string res = HttpPost(ArionUrl + "/api/mt/sync",
                          "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n",
                          body, status);
 
-   if(status == -1) return;
+   if(status == -1) return(false);
    if(status == 401)
      {
       // توکن باطل شده (کاربر از پنل ابطالش کرده یا کد جدید گرفته)
@@ -262,19 +269,77 @@ void Sync()
       Print("Arion: ", g_status);
       EventKillTimer();
       EventSetTimer(RETRY_SECONDS);
-      return;
+      return(false);
      }
    if(status != 200)
      {
       g_failCount++;
       g_status = "ارسال ناموفق (کد " + IntegerToString(status) + ")";
       Print("Arion: ", g_status, " ", res);
-      return;
+      return(false);
      }
 
    g_failCount = 0;
+   return(true);
+  }
+
+//+------------------------------------------------------------------+
+//| ارسال معاملات                                                    |
+//+------------------------------------------------------------------+
+void Sync()
+  {
+   // معاملات باز — هر بار کامل فرستاده می‌شوند (سود/حجم/… هر لحظه عوض می‌شود)
+   string openTrades = "";
+   int openCount = 0;
+   for(int i = 0; i < OrdersTotal(); i++)
+     {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderType() > OP_SELL) continue; // فقط خرید/فروش، نه سفارش‌های در انتظار
+      if(openCount > 0) openTrades += ",";
+      openTrades += TradeJson(false);
+      openCount++;
+     }
+   if(!SendBatch(openTrades)) return;
+
+   // معاملاتِ بسته‌ی تازه — هرچه از کِرسرِ فعلی به بعد بسته شده. دفعه‌ی اول
+   // (کِرسر صفر) یعنی کلِ تاریخچه‌ی حساب، نه فقط چند تای آخر.
+   int total = OrdersHistoryTotal();
+   string batch[]; ArrayResize(batch, 0);
+   int newCursor = g_cursorTime;
+   for(int j = 0; j < total; j++)
+     {
+      if(!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
+      if(OrderType() > OP_SELL) continue;
+      int ct = (int)OrderCloseTime();
+      if(ct <= g_cursorTime) continue;
+      int n = ArraySize(batch);
+      ArrayResize(batch, n + 1);
+      batch[n] = TradeJson(true);
+      if(ct > newCursor) newCursor = ct;
+     }
+
+   int nClosed = ArraySize(batch);
+   int sent = 0;
+   while(sent < nClosed)
+     {
+      int end = MathMin(sent + MT_CHUNK_SIZE, nClosed);
+      string chunk = "";
+      for(int k = sent; k < end; k++)
+        {
+         if(k > sent) chunk += ",";
+         chunk += batch[k];
+        }
+      // اگه یک دسته شکست بخورد، همین‌جا متوقف می‌شویم — چون کِرسر هنوز
+      // آپدیت نشده، دفعه‌ی بعد همین بازه دوباره (و امن، چون سمتِ سرور با
+      // شناسه‌ی یکتای هر تیکت ضدتکرار است) امتحان می‌شود.
+      if(!SendBatch(chunk)) return;
+      sent = end;
+      if(sent < nClosed) Sleep(250); // فشار روی سرور/محدودیتِ نرخ را کم نگه می‌دارد
+     }
+
+   if(newCursor > g_cursorTime) { g_cursorTime = newCursor; SaveCursor(g_cursorTime); }
    g_lastSync = TimeCurrent();
-   g_status = "ارسال شد: " + IntegerToString(count) + " معامله";
+   g_status = "ارسال شد: " + IntegerToString(openCount + sent) + " معامله";
   }
 
 //+------------------------------------------------------------------+
