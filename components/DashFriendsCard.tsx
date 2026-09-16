@@ -275,22 +275,25 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                                 key={u.id}
                                 className="flex items-center justify-between gap-2 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5"
                               >
+                                {/* ترتیبِ DOM عمدی‌ست: در RTL فرزندِ اول سمتِ راست
+                                    می‌نشیند، پس پروفایل (آواتار + اسم) اول می‌آید و
+                                    دکمه‌ی «افزودن» به لبه‌ی چپ می‌رود — قبلاً برعکس بود. */}
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingProfile({ id: u.id, canStar: u.status === "friends" })}
+                                  className="flex min-w-0 items-center gap-2.5 bg-transparent"
+                                >
+                                  <Avatar name={u.name} avatarUrl={u.avatarUrl} size={32} />
+                                  <div className="truncate text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
+                                </button>
                                 <button
                                   type="button"
                                   onClick={clickable ? () => sendRequest(u) : undefined}
                                   disabled={!clickable}
-                                  className="bg-transparent text-[11.5px] font-semibold"
+                                  className="shrink-0 bg-transparent text-[11.5px] font-semibold"
                                   style={{ color: clickable ? "var(--accent)" : "var(--muted)", cursor: clickable ? "pointer" : "default" }}
                                 >
                                   {u.status === "none" ? "افزودن" : STATUS_LABEL[u.status]}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setViewingProfile({ id: u.id, canStar: u.status === "friends" })}
-                                  className="flex items-center gap-2.5 bg-transparent"
-                                >
-                                  <Avatar name={u.name} avatarUrl={u.avatarUrl} size={32} />
-                                  <div className="text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
                                 </button>
                               </div>
                             );

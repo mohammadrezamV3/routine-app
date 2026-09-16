@@ -5679,9 +5679,6 @@ body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-fi
 .trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 /* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنارِ هم، نه زیرِ هم. هر ردیفِ جدا
    در صفحه‌ی چارت یعنی همان‌قدر ارتفاعِ کمتر برای خودِ چارت. */
-.trade-head-inline{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
-.trade-head-inline .trade-back-link{ margin-bottom:0; }
-.trade-head-inline h1{ margin-bottom:0; }
 .trade-head-row h1{ margin-bottom:0; }
 .trade-title-add-btn{
   display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
@@ -6310,7 +6307,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   /* این یک خط توضیح روی دسکتاپ فقط ارتفاع می‌خورد؛ در ازایش چارت بزرگ‌تر
      می‌شود — که خواسته‌ی صریحِ همین صفحه است. روی موبایل سرِ جایش می‌ماند. */
   .trade-desktop-full .section-note{ display:none; }
-  .trade-desktop-full .trade-head-inline{ margin-bottom:12px; }
+  .trade-desktop-full .trade-head-row, .trade-desktop-full > h1{ margin-bottom:12px; }
 
   .tv-page{
     height:var(--tv-h, calc(100vh - 200px));
@@ -6351,7 +6348,6 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    grid-area دیگه رویِ فرزندِ مستقیمِ .tv-page اعمال نمی‌شد و کلِ گریدِ
    دسکتاپ می‌شکست — برایِ همین باکسِ واقعی یک بچه‌ی جدید شد، نه یک جدِ جدید. */
 .tv-chart-card{ display:flex; flex-direction:column; gap:8px; }
-.tv-chart-title{ flex-shrink:0; font-size:14px; font-weight:800; color:var(--text); }
 .tv-chart-box{
   background:var(--surface-glass);
   backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
@@ -6390,7 +6386,6 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   /* طبقِ درخواستِ صریح: خودِ چارت هیچ فاصله‌ای از چپ و راست ندارد — نه
      پدینگِ کارت، نه پدینگِ باکس، نه گوشه‌ی گرد. فقط تایتل (که بیرونِ باکس
      است) هم‌ترازِ متنِ بقیه‌ی صفحه نگه داشته می‌شود. */
-  .tv-chart-title{ padding-inline:calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-left)); }
   .tv-chart-box{
     border-radius:0; border-inline-end:none; border-inline-start:none;
     padding-inline:0;
@@ -6953,39 +6948,69 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
      که نه به پشتیبانیِ logical property وابسته است و نه انیمیشن می‌تواند
      پاکش کند. */
   position:fixed; top:64px; left:0; right:0; margin-left:auto; margin-right:auto; z-index:71;
-  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
+  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto; overflow-x:hidden;
   padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
   animation:tradeFadeIn .22s ease both;
 }
-/* بنرِ پاپ‌آپ تا لبه‌های خودِ پنل کشیده می‌شود، پس پدینگِ پنل
-   (۲۴px بالا / ۲۰px کناره) را با مارجینِ منفی خنثی می‌کند. */
+/* ── پاپ‌آپِ پروفایلِ دوست — چیدمانِ شماتیکِ صریحِ کاربر ──────────────────
+   بنر و عکسِ پروفایل توی هم؛ آواتار روی لبه‌ی پایینِ بنر سمتِ راست؛ نامِ فرد
+   پایین-چپِ *داخلِ* بنر؛ ستاره بالا-چپ؛ سه‌نقطه‌ی بلاک بالا-راست؛ زیرِ بنر
+   آیدی و بیو سمتِ چپ؛ بعد سه آمار (استار/استریک/بیشترین) و بعد دو آمار. */
 .friend-profile-banner{
-  position:relative; height:96px; overflow:hidden;
+  position:relative; height:112px; overflow:visible;
   margin:-24px -20px 0; border-radius:24px 24px 0 0;
   background:linear-gradient(120deg,
     rgba(var(--accent-rgb),.42), rgba(var(--accent-rgb),.14) 52%, rgba(var(--accent-rgb),.34));
 }
-.friend-profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
-/* آواتار نیمه روی لبه‌ی بنر می‌نشیند و حلقه‌ای هم‌رنگِ پنل دورش دارد */
-.friend-profile-banner + .friend-profile-head{ margin-top:-40px; }
-.friend-profile-banner + .friend-profile-head .friend-profile-avatar{
+.friend-profile-banner-img{
+  width:100%; height:100%; object-fit:cover; display:block; border-radius:24px 24px 0 0;
+}
+/* گوشه‌ها عمداً فیزیکی‌اند (left/right)، نه منطقی: «بالا-چپ» و «بالا-راست»
+   این‌جا گوشه‌ی واقعیِ کادرند، نه ابتدا/انتهای جهتِ متن. */
+.friend-profile-banner-kebab{ position:absolute; top:8px; right:8px; z-index:3; }
+.friend-profile-banner-kebab .trade-kebab-trigger{ color:#fff; background:rgba(0,0,0,.35); }
+.friend-profile-star-btn{
+  position:absolute; top:8px; left:8px; z-index:3;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; padding:0; border-radius:999px; cursor:pointer;
+  color:#fff; background:rgba(0,0,0,.35); border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, background .18s ease;
+}
+body[data-theme="light"] .friend-profile-star-btn,
+body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.35); box-shadow:none; }
+.friend-profile-star-btn.on{ color:#F5C518; }
+.friend-profile-star-btn:disabled{ opacity:.55; cursor:default; }
+@media (hover:hover){ .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:rgba(0,0,0,.45); } }
+/* نامِ فرد پایین-چپِ داخلِ بنر */
+.friend-profile-banner-name{
+  position:absolute; bottom:10px; left:16px; z-index:2; max-width:55%;
+  font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.5);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* آواتار سمتِ راست، نیمه‌آویزان از لبه‌ی پایینِ بنر */
+.friend-profile-banner .friend-profile-avatar{
+  position:absolute; bottom:-30px; right:20px; z-index:2;
+  width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0;
   border:4px solid var(--surface-2); background:var(--surface-1);
 }
-.friend-profile-bio{
-  margin:8px 0 0; font-size:12px; line-height:1.9; color:var(--muted);
-  overflow-wrap:anywhere; white-space:pre-line;
+/* زیرِ بنر: آیدی و بیو، سمتِ چپ. پدینگِ بالا باید از ۳۰پیکسلِ آویزانِ
+   آواتار بیشتر باشد وگرنه متن زیرِ عکس می‌رود. */
+/* آیدی/پلن/بیو سمتِ چپ‌اند (طبقِ شماتیک). این پنل همیشه RTL است، پس
+   «چپ» یعنی flex-end — نه flex-start که سمتِ راست می‌افتد. */
+.friend-profile-id{
+  display:flex; flex-direction:column; align-items:flex-end; gap:4px;
+  padding-top:40px; text-align:left;
 }
-/* دکمه‌ی بستن روی بنر می‌افتد، پس باید بالاتر و خوانا باشد */
-.friend-profile-close{ position:absolute; top:12px; right:12px; z-index:2; }
-.friend-profile-loading{ display:flex; align-items:center; justify-content:center; padding:30px 0; color:var(--muted); }
-.friend-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
-.friend-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:8px; }
-.friend-profile-name{ font-size:17px; font-weight:800; color:var(--text); }
 .friend-profile-username{ font-size:12px; color:var(--muted2); direction:ltr; }
 .friend-profile-plan{
-  margin-top:6px; padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
+  padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
   color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);
+}
+.friend-profile-bio{
+  margin:2px 0 0; font-size:12px; line-height:1.9; color:var(--muted);
+  text-align:left; max-width:100%; overflow-wrap:anywhere; white-space:pre-line;
 }
 .friend-profile-stats{
   display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; padding-top:16px;
@@ -7000,8 +7025,6 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 .friend-profile-stat-icon{ color:var(--accent); }
 .friend-profile-stat b{ font-size:15px; font-weight:800; color:var(--text); }
 .friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
-.friend-profile-actions{ display:flex; gap:8px; margin-top:18px; }
-.friend-profile-actions button{ flex:1; }
 .account-outline-btn.active{ background:rgba(245,197,24,.1); }
 
 /* ═══════════════════════════════════════════════════════════════════════

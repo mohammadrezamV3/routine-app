@@ -280,7 +280,10 @@ export function EconomicCalendarPanel() {
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="مثلا CPI یا Non-Farm"
+              // متن از راست شروع شود (طبقِ درخواستِ صریح) ولی جهتِ نوشتن
+              // همچنان LTR بماند، چون نامِ رویدادها انگلیسی‌ست.
               className="ltr-inline"
+              style={{ textAlign: "right" }}
             />
             {nameInput && (
               <button type="button" onClick={() => setNameInput("")} aria-label="پاک‌کردن نام رویداد">

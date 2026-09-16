@@ -282,8 +282,9 @@ function AccountRow({
           <div className="trade-tag-row" style={{ marginTop: 10 }}>
             {a.tags.map((t) => (
               <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
-                <span className="trade-tag-dot" style={{ background: t.color }} />
+                {/* توپِ برچسب سمتِ چپِ نامش (در RTL یعنی بعد از متن) */}
                 {t.name}
+                <span className="trade-tag-dot" style={{ background: t.color }} />
               </span>
             ))}
           </div>

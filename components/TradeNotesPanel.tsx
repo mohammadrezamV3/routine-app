@@ -110,8 +110,9 @@ export function TradeNotesPanel({
                     style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
                     onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
                   >
-                    <span className="trade-tag-dot" style={{ background: t.color }} />
+                    {/* توپِ برچسب سمتِ چپِ نامش (در RTL یعنی بعد از متن) */}
                     {t.name}
+                    <span className="trade-tag-dot" style={{ background: t.color }} />
                   </button>
                 );
               })}

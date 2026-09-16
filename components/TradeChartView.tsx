@@ -106,8 +106,9 @@ export function TradeChartView() {
 
   return (
     <div className="tv-page" ref={pageRef}>
+      {/* عنوانِ «چارت» دیگر این‌جا نیست — عنوانِ خودِ صفحه شد
+          (app/trade/chart/page.tsx)، بالای باکس و زیرِ لینکِ بازگشت. */}
       <div className="tv-chart-card">
-        <span className="tv-chart-title">چارت</span>
         <div className="tv-chart-box">
           <TradingViewChart symbol={symbol} />
         </div>

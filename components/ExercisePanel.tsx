@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { Dumbbell } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import { ExerciseDashboard } from "./ExerciseDashboard";
@@ -11,6 +12,9 @@ import { takePreloaded } from "@/lib/preload";
 export function ExercisePanel() {
   const { status } = useSession();
   const [plan, setPlan] = useState<ExercisePlan | null | undefined>(undefined);
+  // طبقِ درخواستِ صریح، اولین ورود دیگر مستقیم داخلِ ویزاردِ ساختِ برنامه
+  // نمی‌افتد — کاربر اول صفحه‌ی خالی را می‌بیند و خودش تصمیم می‌گیرد.
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     // status اولش "loading"ه (نه "authenticated" نه "unauthenticated") تا
@@ -34,12 +38,30 @@ export function ExercisePanel() {
     return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
   }
 
-  // ------------- بدون برنامه فعال: onboarding -------------
+  // ------------- بدون برنامه فعال -------------
   if (!plan) {
+    if (!wizardOpen) {
+      return (
+        <div>
+          <div className="trade-empty-state" style={{ marginTop: 10 }}>
+            <Dumbbell size={32} />
+            <p>هنوز برنامه‌ی تمرینی نداری</p>
+          </div>
+          <div className="section-note" style={{ textAlign: "center" }}>
+            هر وقت خواستی، برنامه‌ات را بر اساس روزهای باشگاه، سطح، هدف و توضیحاتت می‌سازیم.
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
+            <button type="button" className="account-outline-btn" onClick={() => setWizardOpen(true)}>
+              ساخت برنامه تمرینی
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div>
         <div className="section-note" style={{ marginTop: 10 }}>برنامه‌ات رو بر اساس روزهای باشگاه، سطح، هدف و توضیحاتت می‌سازیم</div>
-        <AiExercisePlanWizard onCreated={setPlan} />
+        <AiExercisePlanWizard onCreated={setPlan} onClose={() => setWizardOpen(false)} />
         <div className="disclaimer-note">
           این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
         </div>
