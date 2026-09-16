@@ -41,6 +41,9 @@ export function ChartTradePanel({
   onSaved: () => void;
 }) {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
+  // طبقِ درخواستِ صریح، چک‌لیست قابلِ عوض‌کردن است — قبلا همیشه اولین
+  // چک‌لیست بود و هیچ راهی برای انتخابِ بقیه نبود.
+  const [checklistId, setChecklistId] = useState<string>("");
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [accountId, setAccountId] = useState<string>("");
   const [formOpen, setFormOpen] = useState(false);
@@ -57,7 +60,12 @@ export function ChartTradePanel({
     if (!accountId && active.length) setAccountId(active[0].id);
   }, [active, accountId]);
 
-  const checklist = checklists[0] || null;
+  const checklist = checklists.find((c) => c.id === checklistId) || checklists[0] || null;
+  useEffect(() => {
+    if (!checklistId && checklists.length) setChecklistId(checklists[0].id);
+  }, [checklists, checklistId]);
+  // عوض‌کردنِ چک‌لیست یعنی تیک‌های قبلی بی‌معنی‌اند
+  useEffect(() => { setChecked({}); }, [checklistId]);
   // با عوض‌شدنِ نماد، تیک‌ها پاک می‌شوند — چک‌لیستِ EURUSD به XAUUSD
   // ربطی ندارد و نگه‌داشتنِ تیک‌ها یک تأییدِ جعلی است.
   useEffect(() => { setChecked({}); }, [symbol]);
@@ -87,6 +95,19 @@ export function ChartTradePanel({
           <div className="trade-chat-empty">
             هنوز چک‌لیستی نساخته‌ای — از بخش چک‌لیست‌ها یکی بساز.
           </div>
+        )}
+
+        {checklists.length > 1 && (
+          <select
+            className="wsearch-newform-name trade-glass-field trade-chart-check-picker"
+            value={checklist ? checklist.id : ""}
+            onChange={(e) => setChecklistId(e.target.value)}
+            aria-label="انتخاب چک‌لیست"
+          >
+            {checklists.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         )}
 
         {checklist && (

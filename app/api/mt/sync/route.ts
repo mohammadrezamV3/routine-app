@@ -37,6 +37,14 @@ export async function POST(req: NextRequest) {
   if (!link || link.revokedAt) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
+  // زمانِ معاملات در متاتریدر زمانِ *سرورِ بروکر* است نه UTC (اکثر بروکرها
+  // UTC+2/+3)، و Arion همه‌چیز را UTC ذخیره می‌کند. اکسپرت اختلافش را
+  // می‌فرستد تا همین‌جا تصحیح شود؛ اکسپرت‌های قدیمی این فیلد را ندارند و
+  // مثل قبل (بدون تصحیح) رفتار می‌کنند.
+  const tzRaw = Number(body?.tzOffsetMinutes);
+  const tzOffsetMs = Number.isFinite(tzRaw) && Math.abs(tzRaw) <= 14 * 60 ? tzRaw * 60_000 : 0;
+  const toUtc = (d: Date | null) => (d && tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
+
   const trades = normalizeMtTrades(body?.trades);
 
   let created = 0;
@@ -52,8 +60,8 @@ export async function POST(req: NextRequest) {
       direction: t.direction,
       volume: t.volume,
       volumeUnit: "LOT",
-      openedAt: t.openTime,
-      closedAt: t.closeTime,
+      openedAt: toUtc(t.openTime)!,
+      closedAt: toUtc(t.closeTime),
       status: (t.closed ? "CLOSED" : "OPEN") as "CLOSED" | "OPEN",
       result: (pnl > 0 ? "PROFIT" : pnl < 0 ? "LOSS" : "BREAKEVEN") as "PROFIT" | "LOSS" | "BREAKEVEN",
       pnl: t.closed ? pnl : 0,
@@ -63,7 +71,7 @@ export async function POST(req: NextRequest) {
       takeProfit: t.takeProfit,
       commission: t.commission,
       swap: t.swap,
-      sessions: sessionsAt(t.openTime),
+      sessions: sessionsAt(toUtc(t.openTime)!),
       externalSource: link.platform,
     };
 

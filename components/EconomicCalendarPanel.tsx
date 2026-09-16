@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, BellRing, Calendar, Filter, History, Search, X } from "lucide-react";
+import { Bell, BellRing, Calendar, ChevronLeft, ChevronRight, Filter, History, Search, X } from "lucide-react";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { G_MONTHS } from "@/lib/gregorian";
 import { getSetting, setSetting } from "@/lib/storage";
@@ -53,9 +53,8 @@ const enMonthYearFmt = new Intl.DateTimeFormat("en-US", { month: "long", year: "
 const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(startOfLocalDay(new Date()), i - new Date().getDay())));
 
-/** سقفِ نوارِ روزها وقتی هنوز نمی‌دانیم منبع چه بازه‌ای دارد (اولین لود) */
-const FALLBACK_BACK = 7;
-const FALLBACK_FORWARD = 7;
+/** تعدادِ روزهای نوار — دقیقا مثلِ نوارِ روزِ «روتین من» (پنج روز) */
+const DAY_WINDOW = 5;
 
 /**
  * تازه‌سازیِ بی‌صدا وقتی رویدادِ منتشرنشده‌ای روی همین صفحه هست.
@@ -201,25 +200,41 @@ export function EconomicCalendarPanel() {
   }, [load]);
 
   // ── نوارِ روزها ─────────────────────────────────────────────────────────
-  // از مرزهای واقعیِ داده ساخته می‌شود (نه یک بازه‌ی حدسیِ ثابت)، ولی امروز
-  // همیشه داخلش هست حتی اگر جدول خالی باشد.
+  // پنج روز، دقیقا مثلِ نوارِ روزِ «روتین من»: یک پنجره‌ی لغزان که با دو
+  // فلشِ کنارش جلو/عقب می‌رود (نه یک نوارِ بلندِ اسکرول‌شونده).
+  const [windowOffset, setWindowOffset] = useState(0);
   const dayStrip = useMemo(() => {
-    const from = range ? (range.from < today ? range.from : today) : addDays(today, -FALLBACK_BACK);
-    const to = range ? (range.to > today ? range.to : today) : addDays(today, FALLBACK_FORWARD);
-    const len = Math.min(daysBetween(from, to) + 1, 120);
-    return Array.from({ length: Math.max(len, 1) }, (_, i) => addDays(from, i));
+    const center = addDays(today, windowOffset * DAY_WINDOW);
+    return Array.from({ length: DAY_WINDOW }, (_, i) => addDays(center, i - Math.floor(DAY_WINDOW / 2)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range?.from.getTime(), range?.to.getTime(), today.getTime()]);
+  }, [windowOffset, today.getTime()]);
+
+  // پنجره فقط تا جایی جلو/عقب می‌رود که هنوز با بازه‌ی داده‌ی موجود هم‌پوشانی
+  // داشته باشد — وگرنه کاربر وارد روزهایی می‌شد که *همیشه* خالی‌اند و از
+  // بیرون شبیهِ «لود نمی‌شه» دیده می‌شد.
+  function windowOverlapsRange(offset: number): boolean {
+    if (!range) return Math.abs(offset) <= 4;
+    const center = addDays(today, offset * DAY_WINDOW);
+    const first = addDays(center, -Math.floor(DAY_WINDOW / 2));
+    const last = addDays(center, DAY_WINDOW - 1 - Math.floor(DAY_WINDOW / 2));
+    return last >= range.from && first <= range.to;
+  }
+  const canGoBack = windowOverlapsRange(windowOffset - 1);
+  const canGoForward = windowOverlapsRange(windowOffset + 1);
 
   const outOfRange = !!range && (date < range.from || date > range.to);
 
-  const activeDayRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    activeDayRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }, [date, dayStrip]);
-
   function pickDate(d: Date) {
     setDate(startOfLocalDay(d));
+    setMonthPickerOpen(false);
+  }
+
+  // پرشِ تاریخ از ماه‌شمار باید پنجره را هم با خودش ببرد، وگرنه روزِ
+  // انتخاب‌شده اصلا توی نوار دیده نمی‌شود.
+  function jumpToDate(d: Date) {
+    const day = startOfLocalDay(d);
+    setDate(day);
+    setWindowOffset(Math.round(daysBetween(today, day) / DAY_WINDOW));
     setMonthPickerOpen(false);
   }
 
@@ -227,24 +242,39 @@ export function EconomicCalendarPanel() {
 
   return (
     <div>
-      {/* ── نوارِ روزها ── */}
-      <div className="trade-cal-week-strip thin-scroll">
-        {dayStrip.map((d) => {
-          const active = isSameDay(d, date);
-          const { weekday, date: dateLabel } = dayLabel(d, calSystem);
-          return (
-            <button
-              key={isoLocal(d)}
-              ref={active ? activeDayRef : undefined}
-              type="button"
-              className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
-              onClick={() => pickDate(d)}
-            >
-              <span className="trade-cal-day-pill-wd">{weekday}</span>
-              <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
-            </button>
-          );
-        })}
+      {/* ── نوارِ روزها: پنج روز + فلشِ قبلی/بعدی، بدونِ باکس ── */}
+      <div className="trade-cal-week-strip">
+        <button
+          type="button" className="trade-cal-week-arrow" aria-label="روزهای قبل"
+          onClick={() => setWindowOffset((v) => v - 1)} disabled={!canGoBack}
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <div className="trade-cal-week-days">
+          {dayStrip.map((d) => {
+            const active = isSameDay(d, date);
+            const { weekday, date: dateLabel } = dayLabel(d, calSystem);
+            return (
+              <button
+                key={isoLocal(d)}
+                type="button"
+                className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
+                onClick={() => pickDate(d)}
+              >
+                <span className="trade-cal-day-pill-wd">{weekday}</span>
+                <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button" className="trade-cal-week-arrow" aria-label="روزهای بعد"
+          onClick={() => setWindowOffset((v) => v + 1)} disabled={!canGoForward}
+        >
+          <ChevronLeft size={18} />
+        </button>
       </div>
 
       {/* ── سه دکمه، دقیقاً به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
@@ -255,7 +285,7 @@ export function EconomicCalendarPanel() {
         <button
           type="button"
           className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
-          onClick={() => pickDate(today)}
+          onClick={() => { setWindowOffset(0); pickDate(today); }}
         >
           <Calendar size={15} /> امروز
         </button>
@@ -343,7 +373,7 @@ export function EconomicCalendarPanel() {
       )}
 
       {monthPickerOpen && (
-        <EconMonthPicker date={date} range={range} onPick={pickDate} onClose={() => setMonthPickerOpen(false)} />
+        <EconMonthPicker date={date} range={range} onPick={jumpToDate} onClose={() => setMonthPickerOpen(false)} />
       )}
 
       {loading && firstLoad && <div className="trade-cal-below"><PanelSkeleton /></div>}
@@ -368,8 +398,10 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
+      {/* طبقِ درخواستِ صریح، خودِ اخبار توی یک باکس‌اند — ولی تقویمِ
+          بالای سرشان نه. */}
       {!firstLoad && !!events.length && (
-        <div className="trade-cal-below" style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
+        <div className="trade-surface trade-page-box trade-cal-table-box trade-cal-below" style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
           <div className="trade-cal-table-scroll">
             <div className="trade-cal-table ltr-inline">
               <div className="trade-cal-thead">

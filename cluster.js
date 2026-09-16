@@ -50,6 +50,18 @@ if (cluster.isPrimary) {
     return worker;
   }
 
+  // بدونِ `CRON_SECRET`، همگام‌سازیِ خودکارِ تقویمِ اقتصادی کلاً خاموش می‌ماند —
+  // یعنی جدولِ رویدادها هیچ‌وقت پر/به‌روز نمی‌شود و از بیرون دقیقاً شبیهِ
+  // «اکشوال‌ها هیچ‌وقت نمی‌آیند» دیده می‌شود، بدونِ هیچ خطایی. چون فراخوانِ
+  // کران همیشه روی `127.0.0.1` از خودِ همین پروسه است، یک رمزِ تصادفیِ
+  // در-حافظه برایِ همین بوت کافی‌ست: primary می‌سازدش و workerها آن را با
+  // env به ارث می‌برند (پس فورک باید بعدِ این باشد). ست‌کردنِ دستیِ
+  // `CRON_SECRET` همچنان کار می‌کند و برایِ crontabِ بیرونی لازم است.
+  if (!process.env.CRON_SECRET) {
+    process.env.CRON_SECRET = require("node:crypto").randomBytes(32).toString("hex");
+    console.warn("[cluster] CRON_SECRET ست نشده — یک رمزِ موقتِ داخلی برایِ کرانِ لوکال ساخته شد (برایِ crontabِ بیرونی در .env مقدار بده)");
+  }
+
   console.log(`[cluster] primary ${process.pid} در حال بالا آوردنِ ${numWorkers} worker`);
   for (let i = 0; i < numWorkers; i++) forkWorker();
 
@@ -113,9 +125,7 @@ if (cluster.isPrimary) {
   // (app/api/cron/economic-calendar) رو روی خودِ localhost صدا می‌زنه —
   // دقیقاً همون‌کاری که crontabِ بیرونی می‌کرد، فقط از داخلِ خودِ کانتینر.
   const CRON_SECRET = process.env.CRON_SECRET;
-  if (!CRON_SECRET) {
-    console.warn("[cluster] CRON_SECRET ست نشده — همگام‌سازیِ خودکارِ تقویم اقتصادی غیرفعاله");
-  } else {
+  {
     const port = process.env.PORT || 3000;
     const SLOW_INTERVAL_MS = 10 * 60 * 1000;
     const ERROR_RETRY_MS = 2 * 60 * 1000;
