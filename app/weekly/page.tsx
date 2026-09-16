@@ -13,6 +13,7 @@ import {
   timeEndMinutes,
   splitTimeRange,
   toEnDigits,
+  computeDayStats,
   DayStats,
 } from "@/lib/schedule";
 import { dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
@@ -299,9 +300,12 @@ export default function WeeklyPage() {
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: true } };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
+    // حلقه‌ی روتین نباید منتظر رفت‌وبرگشتِ شبکه بمونه — همین‌جا، همون لحظه،
+    // از رویِ داده‌ی محلی حساب می‌شه؛ درخواست‌های زیر فقط برای هم‌خوانیِ نهایی‌ان.
+    if (selectedIso === todayKey) setTodayStats(computeDayStats(now, opts, next));
+    setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
     getTodayStats().then(setTodayStats);
-    setStatsRefreshKey((k) => k + 1);
     router.push("/exercise?tab=exercise");
   }
 
@@ -328,9 +332,12 @@ export default function WeeklyPage() {
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
+    // همین‌جا از رویِ داده‌ی محلی حساب می‌شه، بدونِ صبر برایِ شبکه — درخواستِ
+    // زیر فقط برایِ هم‌خوانیِ نهایی با سرور می‌مونه، دیگه چیزی رو در جا نگه نمی‌داره.
+    if (selectedIso === todayKey) setTodayStats(computeDayStats(now, opts, next));
+    setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
     getTodayStats().then(setTodayStats);
-    setStatsRefreshKey((k) => k + 1);
   }
 
   function toggleProgramFilter(name: string) {

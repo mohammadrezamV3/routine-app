@@ -70,27 +70,29 @@ export function RoadmapWizard({ onClose, onCreated }: { onClose: () => void; onC
 
     const schedule: RoadmapSchedule = { jsDays: [...jsDays].sort((a, b) => a - b), minutesPerDay: minutes, startTime };
 
+    let data: any;
     try {
       const res = await fetch("/api/roadmaps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic: topic.trim(), goal: goal.trim() || undefined, schedule }),
       });
-      const data = await res.json();
+      data = await res.json();
       if (!res.ok) {
         flashError(data.error || "خطایی پیش آمد — دوباره امتحان کن");
         return;
       }
-      setStatus("success");
-      // نشاندنِ جلسه‌ها در «روتین من». اگر این مرحله شکست بخورد، خودِ رودمپ
-      // ساخته شده و نباید کاربر را سرِ همان نگه داریم — بعداً از صفحه‌ی
-      // رودمپ هم می‌شود دوباره اضافه‌اش کرد.
-      await addRoadmapToRoutine(data.roadmap.id, data.roadmap.title, schedule).catch(() => {});
-      onCreated?.();
-      router.push(`/roadmaps/custom/${data.roadmap.id}`);
     } catch {
       flashError("ارتباط با سرور برقرار نشد — دوباره امتحان کن");
+      return;
     }
+
+    // از اینجا به بعد رودمپ روی سرور قطعاً ساخته شده — هر خطای بعدی
+    // (نشاندن در روتین، ناوبری) نباید به کاربر «ساخت نشد» نشون بده.
+    setStatus("success");
+    await addRoadmapToRoutine(data.roadmap.id, data.roadmap.title, schedule).catch(() => {});
+    onCreated?.();
+    router.push(`/roadmaps/custom/${data.roadmap.id}`);
   }
 
   const endTime = addMinutes(startTime, minutes);

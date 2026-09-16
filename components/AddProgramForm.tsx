@@ -163,38 +163,38 @@ export function AddProgramForm({
       }
     }
 
+    if (conflictMsg) {
+      setFormError(null);
+      setStatus("error");
+      setFormError(conflictMsg);
+      setTimeout(() => setStatus("idle"), 900);
+      return;
+    }
+
     setFormError(null);
     setStatus("loading");
-    setTimeout(async () => {
-      if (conflictMsg) {
-        setStatus("error");
-        setFormError(conflictMsg!);
-        setTimeout(() => setStatus("idle"), 900);
-        return;
-      }
-      setStatus("success");
-      if (navigator.vibrate) navigator.vibrate(15);
 
-      const trimmedTag = tag.trim();
-      const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
-        id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-        name,
-        jsDay: r.jsDay,
-        time: r.end ? `${r.start} – ${r.end}` : r.start,
-        // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلا اگه امروز
-        // چهارشنبه‌ست و برنامه رو برای چهارشنبه ثبت می‌کنی، چهارشنبه‌های
-        // گذشته نباید یهو این برنامه رو داشته باشن.
-        startDate: isoLocal(now),
-        importance,
-        ...(trimmedTag ? { tag: trimmedTag } : {}),
-      }));
-      await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
-
-      setTimeout(() => {
-        onChanged();
-        onClose();
-      }, 480);
-    }, 550);
+    // دیگه هیچ تاخیر مصنوعی‌ای قبل از نوشتن نیست — طبق درخواست صریح، برنامه
+    // باید همون لحظه‌ای که واقعاً ذخیره شد توی بقیه‌ی اپ هم دیده بشه، نه
+    // بعد از یک لودینگ ساختگی که فقط برای نمایش بود.
+    const trimmedTag = tag.trim();
+    const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
+      id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name,
+      jsDay: r.jsDay,
+      time: r.end ? `${r.start} – ${r.end}` : r.start,
+      // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلا اگه امروز
+      // چهارشنبه‌ست و برنامه رو برای چهارشنبه ثبت می‌کنی، چهارشنبه‌های
+      // گذشته نباید یهو این برنامه رو داشته باشن.
+      startDate: isoLocal(now),
+      importance,
+      ...(trimmedTag ? { tag: trimmedTag } : {}),
+    }));
+    await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
+    if (navigator.vibrate) navigator.vibrate(15);
+    setStatus("success");
+    onChanged();
+    setTimeout(onClose, 480);
   }
 
   return (
