@@ -67,44 +67,44 @@ export function MoveOccurrenceModal({
     // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواستِ صریحِ کاربر.
     const conflict = findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
 
+    if (conflict) {
+      setFormError(null);
+      setStatus("error");
+      setFormError(`تداخل زمانی با «${conflict.name}» — منتقل نشد`);
+      setTimeout(() => setStatus("idle"), 900);
+      return;
+    }
+
     setFormError(null);
     setStatus("loading");
-    setTimeout(async () => {
-      if (conflict) {
-        setStatus("error");
-        setFormError(`تداخل زمانی با «${conflict.name}» — منتقل نشد`);
-        setTimeout(() => setStatus("idle"), 900);
-        return;
-      }
 
-      setStatus("success");
-      if (navigator.vibrate) navigator.vibrate(15);
+    // بدون لودینگِ مصنوعی — همین که واقعاً ذخیره شد باید همه‌جای اپ دیده بشه.
+    let nextRemoved = scheduleOpts.removedOccurrences;
+    let nextCustom = scheduleOpts.customOccurrences;
+    if (occ.custom) {
+      nextCustom = scheduleOpts.customOccurrences.filter((c) => c.id !== occ.id);
+    } else {
+      nextRemoved = new Set(scheduleOpts.removedOccurrences);
+      nextRemoved.add(occ.id + "|" + occ.jsDay);
+    }
 
-      let nextRemoved = scheduleOpts.removedOccurrences;
-      let nextCustom = scheduleOpts.customOccurrences;
-      if (occ.custom) {
-        nextCustom = scheduleOpts.customOccurrences.filter((c) => c.id !== occ.id);
-      } else {
-        nextRemoved = new Set(scheduleOpts.removedOccurrences);
-        nextRemoved.add(occ.id + "|" + occ.jsDay);
-      }
+    const newOcc: CustomOccurrence = {
+      id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name,
+      jsDay: targetJsDay,
+      time: endFa ? `${startFa} – ${endFa}` : startFa,
+      startDate: isoLocal(now),
+      ...(occ.importance ? { importance: occ.importance } : {}),
+      ...(occ.tag ? { tag: occ.tag } : {}),
+    };
+    nextCustom = [...nextCustom, newOcc];
 
-      const newOcc: CustomOccurrence = {
-        id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-        name,
-        jsDay: targetJsDay,
-        time: endFa ? `${startFa} – ${endFa}` : startFa,
-        startDate: isoLocal(now),
-        ...(occ.importance ? { importance: occ.importance } : {}),
-        ...(occ.tag ? { tag: occ.tag } : {}),
-      };
-      nextCustom = [...nextCustom, newOcc];
-
-      await setCustomOccurrences(nextCustom);
-      await setRemovedOccurrences(Array.from(nextRemoved));
-
-      setTimeout(() => { onChanged(); onClose(); }, 480);
-    }, 550);
+    await setCustomOccurrences(nextCustom);
+    await setRemovedOccurrences(Array.from(nextRemoved));
+    if (navigator.vibrate) navigator.vibrate(15);
+    setStatus("success");
+    onChanged();
+    setTimeout(onClose, 480);
   }
 
   return (
