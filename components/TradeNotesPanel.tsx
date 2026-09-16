@@ -110,8 +110,9 @@ export function TradeNotesPanel({
                     style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
                     onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
                   >
-                    <span className="trade-tag-dot" style={{ background: t.color }} />
+                    {/* توپِ برچسب سمتِ چپِ نامش (در RTL یعنی بعد از متن) */}
                     {t.name}
+                    <span className="trade-tag-dot" style={{ background: t.color }} />
                   </button>
                 );
               })}
@@ -138,7 +139,6 @@ export function TradeNotesPanel({
               className="trade-surface trade-note-card"
               onClick={() => setViewing(n)}
             >
-              <span className="trade-account-stripe" style={{ background: n.color }} />
               {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
                   (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راستِ
                   عنوان است و حذف/سنجاق را می‌دهد. */}
@@ -159,6 +159,8 @@ export function TradeNotesPanel({
                   />
                 </div>
                 <span className="trade-note-title">{n.title}</span>
+                {/* توپِ رنگی سمتِ چپِ عنوان، نه گوشه‌ی مطلقِ کارت */}
+                <span className="trade-account-dot" style={{ background: n.color }} />
                 {n.pinned && <Pin size={12} className="trade-note-pinned-mark" />}
               </div>
               <div className="trade-note-foot">

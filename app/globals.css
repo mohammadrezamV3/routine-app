@@ -1338,7 +1338,10 @@
   .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
   @media (min-width:1024px){
     .account-shell{
-      --acc-w: min(1080px, calc(100vw - 64px));
+      /* عرض = سایدبار (۱۶۴) + گپ (۲۲) + ستونِ محتوا (~۷۸۰). قبلا شل ۱۰۸۰
+         بود و ستونِ محتوا جدا با max-width کپ می‌شد — نتیجه‌اش یک نوارِ
+         خالیِ ~۱۱۴پیکسلی فقط سمتِ چپ بود، یعنی همان بی‌قرینگیِ گزارش‌شده. */
+      --acc-w: min(966px, calc(100vw - 64px));
       width: var(--acc-w);
       margin-inline: calc((620px - var(--acc-w)) / 2);
     }
@@ -1543,7 +1546,6 @@
      ستونِ محتوا عرضِ خواناتری می‌گیرد (نه تمامِ ۱۰۸۰px)، فاصله‌ها کمی
      جمع‌تر، و بنر بلندتر ولی همچنان با ارتفاعِ ثابت. */
   @media (min-width:701px){
-    .account-content{ max-width:720px; }
     .profile-banner{ height:168px; }
     .profile-hero{ margin-bottom:22px; }
     .acc-block{ margin-bottom:22px; }
@@ -1553,7 +1555,6 @@
     .acc-block-body .auth-field-grid{ gap:16px 14px; }
   }
   @media (min-width:1280px){
-    .account-content{ max-width:780px; }
     .profile-banner{ height:186px; }
   }
 
@@ -1885,8 +1886,22 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
+  
+  .account-index-links{
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    font-size:11.5px; color:var(--muted2);
+  }
+  .account-index-links a{ color:var(--muted); text-decoration:none; transition:color .18s ease; }
+  @media (hover:hover) and (pointer:fine){ .account-index-links a:hover{ color:var(--accent); } }
+  .account-index-version{ font-size:11px; color:var(--muted2); letter-spacing:.02em; }
+
   @media (max-width:700px){
-    .account-body{ flex-direction:column; }
+    /* باگِ گزارش‌شده («فاصله‌ی چپ و راستِ پنل با لبه یکی نیست»): والد
+       `align-items:flex-start` دارد — روی محورِ عمودیِ row بی‌ضرر است، ولی
+       اینجا که ستونی می‌شود همان قانون محورِ *عرضی* را کنترل می‌کند و
+       `.account-content` به‌جای پرکردنِ عرض، به اندازه‌ی محتوایش جمع می‌شد و
+       در RTL به لبه‌ی راست می‌چسبید — یعنی تمامِ فضای اضافه سمتِ چپ می‌ماند. */
+    .account-body{ flex-direction:column; align-items:stretch; }
     /* روی موبایل سایدبار جا نمی‌شود و طبقِ درخواستِ صریح، نوارِ منوی زیرِ
        هدر هم حذف شد — ناوبری از صفحه‌ی اولِ پنل و دکمه‌ی «بازگشت» انجام
        می‌شود. */
@@ -5538,11 +5553,11 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-pnl-pct{ font-size:12px; font-weight:700; opacity:.8; }
 @media (hover:hover){ .trade-account-card:hover{ border-color:var(--accent); } }
 .trade-account-card.archived{ opacity:.6; }
-/* قبلا یک نوارِ رنگیِ عمودی به ارتفاعِ کاملِ کارت بود (inset-inline-start:0;top:0;bottom:0)
-   — طبقِ درخواستِ صریح، به یک توپِ کوچیکِ گوشه‌ی بالا-راستِ کارت تبدیل شد.
-   نکته: این کلاس همچنان توی TradeNotesPanel/TradeChecklistDetailView
-   استفاده می‌شه (absolute، گوشه‌ی کارت) — دست‌نخورده می‌مونه. */
-.trade-account-stripe{ position:absolute; top:9px; inset-inline-start:10px; width:8px; height:8px; border-radius:50%; }
+/* `.trade-account-stripe` (توپِ مطلقِ گوشه‌ی کارت) کاملا حذف شد: طبقِ
+   درخواستِ صریح، توی *همه‌ی* صفحه‌های ترید — حساب‌ها، چک‌لیست‌ها، یادداشت‌ها،
+   متاتریدر — توپِ برچسب سمتِ چپِ اسم می‌نشیند (inline، بلافاصله بعدِ متنِ
+   اسم در RTL)، نه گوشه‌ی بالا-راستِ کارت. همه‌شان حالا `.trade-account-dot`
+   را استفاده می‌کنند. */
 /* طبقِ درخواستِ صریحِ تازه («توپِ برچسبِ حساب باید سمتِ چپِ اسم باشه، نه
    گوشه‌ی بالا-راستِ کارت»): فقط توی فهرستِ حساب‌های معاملاتی
    (TradeAccountsPanel) توپ دیگه absolute نیست — inline، داخلِ همون لینکِ
@@ -5561,7 +5576,9 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 .trade-account-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
 .trade-account-name{ font-size:14.5px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-account-title-row .trade-account-type,
+.trade-account-title-row .trade-account-dot,
 .trade-account-title-row .trade-account-archived-badge{ flex-shrink:0; }
+.trade-checklist-detail-title .trade-account-dot{ flex-shrink:0; }
 .trade-account-pnl{ font-size:17px; font-weight:800; margin-top:7px; }
 /* .trade-account-card دیگه بک‌گراندِ خودش رو از .trade-surface نمی‌گیره
    (چون حالا ردیفِ داخلِ یک باکسِ بیرونیه، نه کارتِ جدا) — پس اسکلتون باید
@@ -5667,9 +5684,6 @@ body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-fi
 .trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 /* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنارِ هم، نه زیرِ هم. هر ردیفِ جدا
    در صفحه‌ی چارت یعنی همان‌قدر ارتفاعِ کمتر برای خودِ چارت. */
-.trade-head-inline{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
-.trade-head-inline .trade-back-link{ margin-bottom:0; }
-.trade-head-inline h1{ margin-bottom:0; }
 .trade-head-row h1{ margin-bottom:0; }
 .trade-title-add-btn{
   display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
@@ -5774,8 +5788,13 @@ body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
 /* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش دکمه‌ی
    پاک‌کردنِ جستجو توی تمِ روشن دوباره بک‌گراندِ شیشه‌ای می‌گرفت. */
 body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]) .trade-cal-search button{ background:none; box-shadow:none; }
-@media (max-width:520px){ .trade-cal-search{ flex-basis:100%; order:-1; } }
-.trade-cal-search-banner{ font-size:11.5px; color:var(--muted); margin:0 2px 10px; }
+/* طبقِ درخواستِ صریح، جستجوی نامِ رویداد دیگر یک دکمه/نوارِ جدا کنارِ
+   «تاریخچه/امروز/فیلتر» نیست — یک فیلدِ تمام‌عرض داخلِ خودِ پنلِ فیلتره. */
+.trade-cal-filters .trade-cal-search{ width:100%; margin-bottom:4px; }
+/* آیکونِ ذره‌بین طبقِ درخواستِ صریح سمتِ چپِ فیلد است — در RTL یعنی
+   آخرین فرزندِ ردیف، پس در خودِ JSX هم بعد از input رندر می‌شود. */
+.trade-cal-filters .trade-cal-search > svg{ flex-shrink:0; color:var(--muted2); order:2; }
+.trade-cal-filters .trade-cal-search > button{ order:1; }
 .trade-cal-filters{
   padding:14px 16px; margin-bottom:8px; animation:tradeFadeIn .26s ease both;
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
@@ -5798,21 +5817,23 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 .trade-checklist-news-list{ display:flex; flex-direction:column; }
 .trade-cal-values b.muted{ color:var(--muted2); font-weight:400; }
 
-/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar) — دسکتاپ همین
-   ترتیبِ ۸ستونیِ فارکس‌فکتوری با grid: Time, Currency, Event, Alert,
-   Detail, Actual, Forecast, Previous.
-   طبقِ درخواستِ جدیدِ صریح (که تصمیمِ قبلیِ «بدونِ فولد، با اسکرولِ افقیِ
-   خودِ باکس» رو نقض می‌کنه): زیرِ ۵۶۰px دیگه هیچ اسکرولِ افقی‌ای نیست —
-   grid ثابت به یک چیدمانِ فلکس‌ِ دورچین تبدیل می‌شه (پایین‌تر). */
+/* جدولِ ردیفیِ صفحه‌ی اصلیِ تقویم اقتصادی (/trade/calendar).
+   طبقِ شماتیکِ صریحِ کاربر ترتیبِ ستون‌های داده دقیقاً این است:
+   Time · Currency · Event · Actual · Forecast · Previous — و «Detail»
+   (بازشدنِ ردیف و باکسِ هیستوری) کاملاً حذف شد، چون منبعِ رایگان
+   انتشارهای قبلی را نمی‌دهد. فقط ستونِ باریکِ Alert (زنگوله‌ی هر رویداد)
+   بعد از آن‌ها می‌ماند، چون یک قابلیتِ واقعیِ مستقل است، نه داده‌ی جدول.
+   طبقِ درخواستِ صریح، زیرِ ۵۶۰px هیچ اسکرولِ افقی‌ای نیست — grid ثابت به
+   یک چیدمانِ فلکسِ دورچین تبدیل می‌شود (پایین‌تر). */
 .trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
 .trade-cal-table{ min-width:420px; }
 .trade-cal-thead{
-  display:grid; grid-template-columns:34px 54px minmax(80px,1fr) 28px 28px 38px 38px 38px; gap:6px;
+  display:grid; grid-template-columns:38px 56px minmax(80px,1fr) 44px 44px 44px 28px; gap:6px;
   align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
   font-size:9.5px; font-weight:700; color:var(--muted2);
 }
 .trade-cal-tr{
-  display:grid; grid-template-columns:34px 54px minmax(80px,1fr) 28px 28px 38px 38px 38px; gap:6px;
+  display:grid; grid-template-columns:38px 56px minmax(80px,1fr) 44px 44px 44px 28px; gap:6px;
   align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:11.5px;
 }
 .trade-cal-tr:last-child{ border-bottom:none; }
@@ -5856,9 +5877,10 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 @media (hover:hover){ .trade-cal-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); } }
 .trade-cal-icon-btn.active{ color:var(--accent); }
 body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .trade-cal-icon-btn{ background:none; box-shadow:none; }
-.trade-cal-tr{ cursor:pointer; transition:background .15s ease; }
-@media (hover:hover){ .trade-cal-tr:hover{ background:rgba(var(--accent-rgb),.05); } }
-.trade-cal-tr.expanded{ background:rgba(var(--accent-rgb),.07); border-bottom-color:transparent; }
+/* ردیف دیگر کلیک‌پذیر نیست — با حذفِ باکسِ دیتیل/هیستوری چیزی برایِ
+   بازشدن نمانده، و یک cursor:pointer روی چیزی که کاری نمی‌کند، خودش باگ
+   به‌نظر می‌رسد. */
+.trade-cal-tr{ transition:background .15s ease; }
 /* رویدادِ گذشته — طبقِ درخواستِ صریح («مثلِ فارکس‌فکتوری نشون بده گذشته»):
    فقط زمان/رویداد کم‌رنگ می‌شن، نه اعدادِ actual/forecast/previous که
    رنگِ سبز/قرمزشون خودش اطلاعاته و نباید کم‌رنگ بشه. */
@@ -5881,56 +5903,75 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
   background:rgba(var(--bg-rgb),.16);
   backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
 }
+/* طبقِ درخواستِ صریح، اندازه‌ها *دقیقا* همان DashDateSelectorِ «روتین من»
+   است (components/DashDateSelector.tsx) و نه یک پیکسل بزرگ‌تر:
+   موبایل min-w 54 / padding 4 / radius 16 / gap 2، و از ۶۴۰px به بالا
+   min-w 92 / padding 8-12 / gap 4. قبلا پدینگ ۹پیکسل بود و همین پیل‌ها را
+   محسوس درشت‌تر از نسخه‌ی روتین می‌کرد. */
 .trade-cal-day-pill{
-  flex:0 0 auto; scroll-snap-align:center; min-width:56px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  padding:9px 8px; border-radius:14px; color:var(--muted);
-  border:1px solid transparent; background:none; box-shadow:none;
-  transition:background .15s ease, color .15s ease, border-color .15s ease;
+  flex:0 0 auto; scroll-snap-align:center; min-width:54px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  padding:4px; border-radius:16px; color:var(--muted);
+  /* بدونِ border — پیل‌های روتین من هم ندارند و همان ۱پیکسلِ شفاف، پیل را
+     ۲پیکسل بلندتر از مرجع می‌کرد. حلقه‌ی «امروز» با box-shadowِ inset کشیده
+     می‌شود که ابعاد را عوض نمی‌کند. */
+  border:none; background:none; box-shadow:none;
+  transition:background .15s ease, color .15s ease, box-shadow .15s ease;
 }
-.trade-cal-day-pill-wd{ font-size:10.5px; font-weight:600; white-space:nowrap; }
-.trade-cal-day-pill-num{ font-size:11px; white-space:nowrap; opacity:.85; }
-.trade-cal-day-pill.today{ border-color:rgba(var(--accent-rgb),.4); color:var(--accent); }
+/* روزِ غیرفعال: نامِ روز پررنگ، تاریخ کم‌رنگ — همان تفکیکِ روتین من
+   (text-dash-text در برابر text-dash-muted)، نه هردو خاکستری. */
+/* line-height صریح ۱.۶ — همان چیزی که پیل‌های روتین من از اسکوپِ خودشان
+   می‌گیرند؛ بدونش پیل ۲پیکسل بلندتر می‌شد. */
+.trade-cal-day-pill-wd{ font-size:10px; line-height:1.6; font-weight:600; white-space:nowrap; color:var(--text); }
+.trade-cal-day-pill-num{ font-size:9px; line-height:1.6; white-space:nowrap; color:var(--muted); }
+.trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
+.trade-cal-day-pill.today .trade-cal-day-pill-wd{ color:var(--accent); }
 .trade-cal-day-pill.active{
-  background:var(--accent); border-color:var(--accent); color:var(--bg);
-  box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
+  background:var(--accent);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
 }
-.trade-cal-day-pill.active .trade-cal-day-pill-num{ opacity:.9; }
-@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(var(--surface-rgb),.5); color:var(--text); } }
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
+@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
+@media (min-width:640px){
+  .trade-cal-day-pill{ min-width:92px; gap:4px; padding:8px 12px; }
+  .trade-cal-day-pill-wd{ font-size:13px; }
+  .trade-cal-day-pill-num{ font-size:12px; }
+}
 
 /* ردیفِ فیلتر/امروز/تاریخچه — سه قرصِ هم‌شکل، «امروز» وقتی روزِ انتخابی
    خودِ امروزه پر/سبز می‌شه (دقیقا هم‌رنگِ پیل‌های فعالِ استریپِ بالا). */
-.trade-cal-actions-row{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+/* فاصله‌ها هم از روتین من گرفته شده: نوار→دکمه‌ها ۱۰px (۱۲ روی دسکتاپ)،
+   و دکمه‌ها→لیستِ رویدادها ۱۶px (۲۴ روی دسکتاپ). قبلا این دومی صفر بود و
+   جدول عملا به دکمه‌ها چسبیده بود. */
+.trade-cal-actions-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+/* اندازه‌ها دقیقا همان DashFilterButtonِ «روتین من» */
 .trade-cal-pill-btn{
-  display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px;
-  font-size:11.5px; font-weight:600; color:var(--muted); border:1px solid var(--surface-line);
-  background:rgba(var(--surface-rgb),.08); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border-radius:18px;
+  font-size:11px; font-weight:600; color:var(--muted); border:1px solid var(--surface-line);
+  background:var(--surface-1); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .18s ease, color .18s ease, background .18s ease;
 }
+@media (min-width:640px){
+  .trade-cal-actions-row{ gap:8px; margin-top:12px; }
+  .trade-cal-pill-btn{ gap:6px; padding:10px 16px; font-size:13px; }
+}
 @media (hover:hover){ .trade-cal-pill-btn:hover{ border-color:var(--accent); color:var(--accent); } }
-body[data-theme="light"] .trade-cal-pill-btn, body:not([data-theme="light"]) .trade-cal-pill-btn{ background:rgba(var(--surface-rgb),.08); box-shadow:none; }
+body[data-theme="light"] .trade-cal-pill-btn, body:not([data-theme="light"]) .trade-cal-pill-btn{ background:var(--surface-1); box-shadow:none; }
 .trade-cal-pill-btn.today.active{
-  background:var(--accent); border-color:var(--accent); color:var(--bg); font-weight:700;
+  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--bg); font-weight:700;
+  box-shadow:0 0 8px rgba(var(--accent-rgb),.25);
 }
 body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
 @media (hover:hover){ .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
-.trade-cal-search-icon-btn{
-  /* باگِ گزارش‌شده «آیکون جستجو خالیه»: پدینگِ پیش‌فرضِ سراسریِ button{}
-     (8px 16px) این‌جا ریست نشده بود — روی یک باکسِ ثابتِ ۳۳px، همون پدینگ
-     تقریبا کل جای داخلی رو می‌خورد و آیکون رو له/نامرئی می‌کرد. بقیه‌ی
-     دکمه‌های آیکونیِ این فایل (trade-icon-btn، trade-cal-icon-btn، ...) هم
-     همیشه padding رو صریح صفر می‌کنن — این یکی جا افتاده بود. */
-  display:inline-flex; align-items:center; justify-content:center; width:33px; height:33px; padding:0; border-radius:999px;
-  color:var(--muted); border:1px solid var(--surface-line); background:rgba(var(--surface-rgb),.08);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; transition:border-color .18s ease, color .18s ease;
-  flex-shrink:0;
-}
-.trade-cal-search-icon-btn.active{ color:var(--accent); border-color:var(--accent); }
-body[data-theme="light"] .trade-cal-search-icon-btn, body:not([data-theme="light"]) .trade-cal-search-icon-btn{ background:rgba(var(--surface-rgb),.08); box-shadow:none; }
+/* «فیلتر» وقتی بازه یا فیلترِ فعالی دارد فقط لبه/متنش اکسنت می‌شود — پر
+   نمی‌شود، چون پُر بودن در این ردیف معنیِ «روزِ انتخابی = امروز» را دارد. */
+.trade-cal-pill-btn.on{ border-color:var(--accent); color:var(--accent); }
+/* «زیادی چسبیدن به هم»: بینِ ردیفِ دکمه‌ها و بخشِ رویدادها (یا پنلِ فیلتر
+   که بازش می‌کند) هیچ فاصله‌ای نبود. */
+.trade-cal-below{ margin-top:16px; }
+@media (min-width:640px){ .trade-cal-below{ margin-top:24px; } }
 
-/* خطِ «میزان تأثیر» بالای توضیحِ رویدادِ بازشده */
-.trade-cal-impact-line{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); margin-bottom:6px; }
-.trade-cal-impact-line b{ color:var(--text); }
 
 /* دکمه‌ی «تاریخچه» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ روتین
    من (cal-grid/cal-cell). باگِ «کار نمی‌کند»: قبلا این دو با position:fixed
@@ -5949,31 +5990,10 @@ body[data-theme="light"] .trade-cal-search-icon-btn, body:not([data-theme="light
   border:1px solid var(--surface-line); border-radius:18px;
 }
 
-/* باکسِ هیستوری — دقیقاً مثلِ خودِ ForexFactory، انتشارهای قبلیِ همین
-   شاخص رو نشون می‌ده؛ چون واقعاً از رکوردهای قبلیِ همین جدول میاد (نه
-   فبریکیت‌شده)، تعدادش می‌تونه کمتر از حداکثر باشه یا حتی خالی. */
-.trade-cal-history{
-  padding:10px 8px 14px; margin-bottom:2px; border-bottom:1px solid var(--line);
-  animation:tradeFadeIn .18s ease both;
-}
-/* بخشِ دیتیل — توضیحِ کوتاهِ رویداد (ورودِ دستیِ ادمین)؛ خیلی از رویدادها
-   این فیلد رو خالی دارن (فیدِ بیرونی نمی‌دهدش)، پس متنِ جایگزین هم باید
-   خوانا باشه، نه یک خطای مخفی. */
-.trade-cal-detail{
-  font-size:11.5px; line-height:1.9; color:var(--muted); padding:2px 4px 12px;
-  border-bottom:1px solid var(--line); margin-bottom:8px;
-}
-.trade-cal-history-status{
-  display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted2); padding:6px 4px;
-}
-.trade-cal-history-table{ font-size:11px; }
-.trade-cal-history-head, .trade-cal-history-row{
-  display:grid; grid-template-columns:1fr 60px 60px 60px; gap:6px; padding:5px 6px;
-}
-.trade-cal-history-head{ color:var(--muted2); font-weight:700; font-size:9.5px; }
-.trade-cal-history-row{ color:var(--text); border-top:1px solid var(--line); }
-.trade-cal-history-row span:not(.mono){ color:var(--muted); }
-.trade-cal-history-head span:not(:first-child), .trade-cal-history-row span:not(:first-child){ text-align:center; }
+/* بخشِ هیستوری/دیتیلِ هر رویداد کاملاً حذف شد (درخواستِ صریح): منبعِ
+   رایگانِ فعلی انتشارهای قبلیِ یک شاخص را نمی‌دهد، پس آن باکس یا خالی بود
+   یا فقط همان چند ردیفِ محدودِ خودمان را تکرار می‌کرد. روتِ
+   /api/trade/economic-calendar/history هم با همین تغییر حذف شد. */
 
 /* ── ساعت فارکس ────────────────────────────────────────────── */
 .forex-market-state{
@@ -6209,10 +6229,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 /* قبلا یک نوارِ رنگیِ عمودی بود (inset-inline-start:0;top:10px;bottom:10px) — طبقِ
    درخواستِ صریح، به توپ تبدیل شد (هم‌الگو با .trade-account-stripe). گوشه‌ی
    بالا-راست (نه وسط‌چینِ عمودی) تا رویِ دکمه‌ی سه‌نقطه‌ی هم‌ردیف سوار نشه. */
-.trade-checklist-row-stripe{
-  position:absolute; top:8px; inset-inline-start:8px; width:8px; height:8px; border-radius:50%;
-}
-.trade-checklist-row-kebab{ flex-shrink:0; margin-inline-start:-4px; }
+/* سه‌نقطه دقیقا هم‌ترازِ خطِ اسم — مثلِ فهرستِ حساب‌های معاملاتی: ارتفاعِ
+   حداقلیِ ردیف با ارتفاعِ دکمه یکی می‌شود و مارجینِ منفیِ نامتقارن حذف شد. */
+.trade-checklist-row{ min-height:34px; }
+.trade-checklist-row-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-4px; }
 .trade-checklist-row-main{
   display:flex; align-items:center; gap:8px; flex:1; min-width:0;
   text-decoration:none; color:var(--text);
@@ -6233,9 +6253,12 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 
 /* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
-.trade-note-kebab{ flex-shrink:0; margin-inline-start:-6px; }
-.trade-note-head{ align-items:center; }
-.trade-note-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trade-note-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-6px; }
+/* ردیف از ابتدا (راست) پُر می‌شود تا توپِ رنگی بچسبد به عنوان — با
+   `justify-content:space-between` و عنوانِ کشیده، توپ تا لبه‌ی چپِ کارت
+   هل داده می‌شد و دیگر «کنارِ اسم» نبود. */
+.trade-note-head{ align-items:center; justify-content:flex-start; min-height:26px; }
+.trade-note-title{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }
 
 /* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
@@ -6289,7 +6312,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   /* این یک خط توضیح روی دسکتاپ فقط ارتفاع می‌خورد؛ در ازایش چارت بزرگ‌تر
      می‌شود — که خواسته‌ی صریحِ همین صفحه است. روی موبایل سرِ جایش می‌ماند. */
   .trade-desktop-full .section-note{ display:none; }
-  .trade-desktop-full .trade-head-inline{ margin-bottom:12px; }
+  .trade-desktop-full .trade-head-row, .trade-desktop-full > h1{ margin-bottom:12px; }
 
   .tv-page{
     height:var(--tv-h, calc(100vh - 200px));
@@ -6330,7 +6353,6 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    grid-area دیگه رویِ فرزندِ مستقیمِ .tv-page اعمال نمی‌شد و کلِ گریدِ
    دسکتاپ می‌شکست — برایِ همین باکسِ واقعی یک بچه‌ی جدید شد، نه یک جدِ جدید. */
 .tv-chart-card{ display:flex; flex-direction:column; gap:8px; }
-.tv-chart-title{ flex-shrink:0; font-size:14px; font-weight:800; color:var(--text); }
 .tv-chart-box{
   background:var(--surface-glass);
   backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
@@ -6369,7 +6391,6 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   /* طبقِ درخواستِ صریح: خودِ چارت هیچ فاصله‌ای از چپ و راست ندارد — نه
      پدینگِ کارت، نه پدینگِ باکس، نه گوشه‌ی گرد. فقط تایتل (که بیرونِ باکس
      است) هم‌ترازِ متنِ بقیه‌ی صفحه نگه داشته می‌شود. */
-  .tv-chart-title{ padding-inline:calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-left)); }
   .tv-chart-box{
     border-radius:0; border-inline-end:none; border-inline-start:none;
     padding-inline:0;
@@ -6925,39 +6946,69 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
      که نه به پشتیبانیِ logical property وابسته است و نه انیمیشن می‌تواند
      پاکش کند. */
   position:fixed; top:64px; left:0; right:0; margin-left:auto; margin-right:auto; z-index:71;
-  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto;
+  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto; overflow-x:hidden;
   padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
   animation:tradeFadeIn .22s ease both;
 }
-/* بنرِ پاپ‌آپ تا لبه‌های خودِ پنل کشیده می‌شود، پس پدینگِ پنل
-   (۲۴px بالا / ۲۰px کناره) را با مارجینِ منفی خنثی می‌کند. */
+/* ── پاپ‌آپِ پروفایلِ دوست — چیدمانِ شماتیکِ صریحِ کاربر ──────────────────
+   بنر و عکسِ پروفایل توی هم؛ آواتار روی لبه‌ی پایینِ بنر سمتِ راست؛ نامِ فرد
+   پایین-چپِ *داخلِ* بنر؛ ستاره بالا-چپ؛ سه‌نقطه‌ی بلاک بالا-راست؛ زیرِ بنر
+   آیدی و بیو سمتِ چپ؛ بعد سه آمار (استار/استریک/بیشترین) و بعد دو آمار. */
 .friend-profile-banner{
-  position:relative; height:96px; overflow:hidden;
+  position:relative; height:112px; overflow:visible;
   margin:-24px -20px 0; border-radius:24px 24px 0 0;
   background:linear-gradient(120deg,
     rgba(var(--accent-rgb),.42), rgba(var(--accent-rgb),.14) 52%, rgba(var(--accent-rgb),.34));
 }
-.friend-profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
-/* آواتار نیمه روی لبه‌ی بنر می‌نشیند و حلقه‌ای هم‌رنگِ پنل دورش دارد */
-.friend-profile-banner + .friend-profile-head{ margin-top:-40px; }
-.friend-profile-banner + .friend-profile-head .friend-profile-avatar{
+.friend-profile-banner-img{
+  width:100%; height:100%; object-fit:cover; display:block; border-radius:24px 24px 0 0;
+}
+/* گوشه‌ها عمداً فیزیکی‌اند (left/right)، نه منطقی: «بالا-چپ» و «بالا-راست»
+   این‌جا گوشه‌ی واقعیِ کادرند، نه ابتدا/انتهای جهتِ متن. */
+.friend-profile-banner-kebab{ position:absolute; top:8px; right:8px; z-index:3; }
+.friend-profile-banner-kebab .trade-kebab-trigger{ color:#fff; background:rgba(0,0,0,.35); }
+.friend-profile-star-btn{
+  position:absolute; top:8px; left:8px; z-index:3;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; padding:0; border-radius:999px; cursor:pointer;
+  color:#fff; background:rgba(0,0,0,.35); border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, background .18s ease;
+}
+body[data-theme="light"] .friend-profile-star-btn,
+body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.35); box-shadow:none; }
+.friend-profile-star-btn.on{ color:#F5C518; }
+.friend-profile-star-btn:disabled{ opacity:.55; cursor:default; }
+@media (hover:hover){ .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:rgba(0,0,0,.45); } }
+/* نامِ فرد پایین-چپِ داخلِ بنر */
+.friend-profile-banner-name{
+  position:absolute; bottom:10px; left:16px; z-index:2; max-width:55%;
+  font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.5);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* آواتار سمتِ راست، نیمه‌آویزان از لبه‌ی پایینِ بنر */
+.friend-profile-banner .friend-profile-avatar{
+  position:absolute; bottom:-30px; right:20px; z-index:2;
+  width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0;
   border:4px solid var(--surface-2); background:var(--surface-1);
 }
-.friend-profile-bio{
-  margin:8px 0 0; font-size:12px; line-height:1.9; color:var(--muted);
-  overflow-wrap:anywhere; white-space:pre-line;
+/* زیرِ بنر: آیدی و بیو، سمتِ چپ. پدینگِ بالا باید از ۳۰پیکسلِ آویزانِ
+   آواتار بیشتر باشد وگرنه متن زیرِ عکس می‌رود. */
+/* آیدی/پلن/بیو سمتِ چپ‌اند (طبقِ شماتیک). این پنل همیشه RTL است، پس
+   «چپ» یعنی flex-end — نه flex-start که سمتِ راست می‌افتد. */
+.friend-profile-id{
+  display:flex; flex-direction:column; align-items:flex-end; gap:4px;
+  padding-top:40px; text-align:left;
 }
-/* دکمه‌ی بستن روی بنر می‌افتد، پس باید بالاتر و خوانا باشد */
-.friend-profile-close{ position:absolute; top:12px; right:12px; z-index:2; }
-.friend-profile-loading{ display:flex; align-items:center; justify-content:center; padding:30px 0; color:var(--muted); }
-.friend-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
-.friend-profile-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:8px; }
-.friend-profile-name{ font-size:17px; font-weight:800; color:var(--text); }
 .friend-profile-username{ font-size:12px; color:var(--muted2); direction:ltr; }
 .friend-profile-plan{
-  margin-top:6px; padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
+  padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
   color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);
+}
+.friend-profile-bio{
+  margin:2px 0 0; font-size:12px; line-height:1.9; color:var(--muted);
+  text-align:left; max-width:100%; overflow-wrap:anywhere; white-space:pre-line;
 }
 .friend-profile-stats{
   display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; padding-top:16px;
@@ -6972,8 +7023,6 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 .friend-profile-stat-icon{ color:var(--accent); }
 .friend-profile-stat b{ font-size:15px; font-weight:800; color:var(--text); }
 .friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
-.friend-profile-actions{ display:flex; gap:8px; margin-top:18px; }
-.friend-profile-actions button{ flex:1; }
 .account-outline-btn.active{ background:rgba(245,197,24,.1); }
 
 /* ═══════════════════════════════════════════════════════════════════════

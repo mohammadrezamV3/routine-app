@@ -62,17 +62,29 @@ export async function GET(req: NextRequest) {
     .filter((i): i is "LOW" | "MEDIUM" | "HIGH" => i === "LOW" || i === "MEDIUM" || i === "HIGH");
   if (impacts.length) where.impact = { in: impacts };
 
-  const events = await prisma.economicEvent.findMany({
-    where,
-    orderBy: { occursAt: "asc" },
-    take: 500,
-    select: {
-      id: true, title: true, country: true, currency: true, impact: true,
-      occursAt: true, actual: true, forecast: true, previous: true, description: true, source: true,
-    },
-  });
+  const [events, bounds] = await Promise.all([
+    prisma.economicEvent.findMany({
+      where,
+      orderBy: { occursAt: "asc" },
+      take: 500,
+      select: {
+        id: true, title: true, country: true, currency: true, impact: true,
+        occursAt: true, actual: true, forecast: true, previous: true, description: true, source: true,
+      },
+    }),
+    // بازه‌ای که واقعاً داده داریم. بدونِ این، نوارِ روزهای کلاینت یک بازه‌ی
+    // حدسیِ ثابت (‎-۷ تا ‎+۲۱ روز) می‌ساخت، درحالی‌که فیدِ رایگانِ منبع فقط
+    // سه هفته (هفته‌ی قبل/جاری/بعد) را می‌دهد — یعنی روزهای انتهای آن نوار
+    // *همیشه* خالی بودند و از بیرون دقیقاً شبیهِ «این روز اصلاً لود نمی‌شه»
+    // دیده می‌شد. حالا کلاینت نوارش را از همین مرزهای واقعی می‌سازد.
+    prisma.economicEvent.aggregate({ _min: { occursAt: true }, _max: { occursAt: true } }),
+  ]);
 
   return NextResponse.json({
     events: events.map((e) => ({ ...e, occursAt: e.occursAt.toISOString() })),
+    range: {
+      from: bounds._min.occursAt?.toISOString() ?? null,
+      to: bounds._max.occursAt?.toISOString() ?? null,
+    },
   });
 }

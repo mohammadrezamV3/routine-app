@@ -69,19 +69,10 @@ export function TradePageShell({
 
   return (
     <section className={fullBleed ? "trade-desktop trade-desktop-full" : "trade-desktop"}>
-      {/* در حالتِ تمام‌صفحه، لینکِ بازگشت و عنوان یک ردیف‌اند — هر ردیفِ
-          جدا در این صفحه یعنی همان‌قدر ارتفاعِ کمتر برای چارت. */}
-      {fullBleed ? (
-        <div className="trade-head-inline">
-          {back && (
-            <Link href={back.href} prefetch className="trade-back-link">
-              <ChevronRight size={15} /> {back.label}
-            </Link>
-          )}
-          {!!title && <h1>{title}</h1>}
-          {titleAction}
-        </div>
-      ) : (
+      {/* سرصفحه‌ی همه‌ی صفحه‌های ترید یک‌شکل است: لینکِ بازگشت، و عنوان
+          زیرش. حالتِ «یک‌ردیفهٔ» قبلیِ صفحه‌ی چارت طبقِ درخواستِ صریح حذف
+          شد (عنوان باید زیرِ «بازگشت به ترید» بیاید، نه کنارش). */}
+      {(
         <>
           {back && (
             <Link href={back.href} prefetch className="trade-back-link">

@@ -88,7 +88,6 @@ export function TradeChecklistsPanel({
               transition={{ duration: 0.28, delay: Math.min(idx, 8) * 0.04, ease: [0.22, 1, 0.36, 1] }}
               className="trade-checklist-row"
             >
-              <span className="trade-checklist-row-stripe" style={{ background: c.color }} />
               <div className="trade-checklist-row-kebab">
                 <TradeKebabMenu
                   label={`گزینه‌های ${c.name}`}
@@ -101,6 +100,9 @@ export function TradeChecklistsPanel({
               </div>
               <Link href={`/trade/checklists/${c.id}`} prefetch className="trade-checklist-row-main">
                 <span className="trade-account-name">{c.name}</span>
+                {/* توپِ رنگی سمتِ چپِ اسم (بلافاصله بعدش در RTL) — نه گوشه‌ی
+                    مطلقِ کارت. هم‌قاعده‌ی فهرستِ حساب‌های معاملاتی. */}
+                <span className="trade-account-dot" style={{ background: c.color }} />
                 {c.required && <span className="trade-account-type">الزامی</span>}
                 <span className="trade-checklist-row-count mono">{faNum(c.items.length)} مورد</span>
               </Link>

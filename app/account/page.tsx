@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { signOut } from "next-auth/react";
+import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
+import { logoutAndRedirect } from "@/lib/logout";
 import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
 import { ACCOUNT_SECTIONS } from "@/components/accountSections";
-import { invalidateStorageCache } from "@/lib/storage";
-import { invalidateAccountCache } from "@/lib/accountCache";
-import { clearAuthHintCookie } from "@/lib/preload";
 
 type IndexUser = {
   name: string | null; lastName: string | null; username: string | null;
@@ -43,13 +41,6 @@ export default function AccountIndexPage() {
   // گزارشِ باگ، روی موبایل سایدبار دیده نمی‌شه و راهِ دیگه‌ای برای خروج از
   // حساب نبود. این‌جا (صفحه‌ی اولِ پنل) تنها جایی‌ست که موبایل همیشه بهش
   // می‌رسه، پس همین‌جا هم اضافه شد.
-  function doLogout() {
-    invalidateStorageCache();
-    invalidateAccountCache();
-    clearAuthHintCookie();
-    signOut({ callbackUrl: "/" });
-  }
-
   return (
     <section>
       {data && (
@@ -68,10 +59,26 @@ export default function AccountIndexPage() {
         <AccountRowButton
           icon={<LogOut size={15} />}
           label="خروج از حساب"
-          onClick={doLogout}
+          onClick={logoutAndRedirect}
           danger
           index={ACCOUNT_SECTIONS.length}
         />
+      </div>
+
+      {/* ته صفحه‌ی اولِ پنل: لینک‌های حقوقی + نسخه‌ی اپ. دکمه‌ی خروج خودش
+          یک ردیفِ کارت بالاست، پس این‌جا تکرار نمی‌شود. */}
+      <div className="account-index-foot">
+        <nav className="account-index-links">
+          <Link href="/terms">قوانین و مقررات</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/about">درباره آریون</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/blog">وبلاگ</Link>
+        </nav>
+
+        <div className="account-index-version mono" dir="ltr">
+          Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}
+        </div>
       </div>
     </section>
   );

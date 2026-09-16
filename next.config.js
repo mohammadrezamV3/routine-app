@@ -77,6 +77,9 @@ const NOINDEX_PATH_PREFIXES = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // نسخه‌ی اپ که ته پنل کاربری نشان داده می‌شود. تک‌منبعِ حقیقت خودِ
+  // package.json است تا هیچ‌وقت با نسخه‌ی واقعیِ بیلد فرق نکند.
+  env: { NEXT_PUBLIC_APP_VERSION: require("./package.json").version },
   // instrumentation.ts رو فعال می‌کنه — اون‌جا کانکشن‌پولِ دیتابیس موقعِ بالا
   // آمدنِ سرور گرم می‌شه تا اولین بازدیدکننده‌ی بعد از هر ری‌استارت هزینه‌ی
   // ساختِ کانکشن رو ندهد. (در Next 15 پیش‌فرض شده؛ در 14 هنوز فلگ می‌خواد.)

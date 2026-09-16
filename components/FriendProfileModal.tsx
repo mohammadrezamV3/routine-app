@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Ban, Loader2, Map, Star, User as UserIcon, X } from "lucide-react";
+import { Ban, Loader2, Map, Star, User as UserIcon } from "lucide-react";
 import { AgentAvatar } from "./AgentAvatar";
 import { StreakFlame } from "./StreakFlame";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
 
 type Profile = {
@@ -58,6 +59,14 @@ export function FriendProfileModal({
     return () => { cancelled = true; };
   }, [userId]);
 
+  // گوشه‌های بالای بنر طبقِ شماتیک به ستاره و سه‌نقطه داده شدند، پس دکمه‌ی
+  // ضربدر حذف شد — بستن با کلیک روی پس‌زمینه یا Escape انجام می‌شود.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   async function toggleStar() {
     if (!profile || starBusy) return;
     const next = !profile.starredByMe;
@@ -92,10 +101,6 @@ export function FriendProfileModal({
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={onClose} />
       <div className="friend-profile-panel" role="dialog" aria-modal="true">
-        <button type="button" className="trade-icon-btn friend-profile-close" onClick={onClose} aria-label="بستن">
-          <X size={16} />
-        </button>
-
         {!profile && !notFound && (
           <div className="friend-profile-loading">
             <Loader2 size={20} className="trade-spin" />
@@ -106,26 +111,54 @@ export function FriendProfileModal({
 
         {profile && (
           <>
-            {/* طبقِ درخواستِ صریح: پروفایلِ دوست هم مثلِ پروفایلِ خودِ کاربر
-                بنر دارد و بیوگرافی‌اش را نشان می‌دهد. بدونِ بنرِ آپلودشده
-                همان گرادیانِ اکسنتِ تم کشیده می‌شود، نه یک تکه‌ی خالی. */}
+            {/* بنر و عکسِ پروفایل توی هم‌اند (طبقِ شماتیک): آواتار روی لبه‌ی
+                پایینِ بنر سمتِ راست، نامِ فرد پایین-چپِ *داخلِ* بنر، ستاره
+                بالا-چپ و سه‌نقطه‌ی بلاک بالا-راست. */}
             <div className="friend-profile-banner">
               {profile.bannerUrl && <img src={profile.bannerUrl} alt="" className="friend-profile-banner-img" />}
-            </div>
 
-            <div className="friend-profile-head">
+              <div className="friend-profile-banner-kebab">
+                <TradeKebabMenu
+                  label={`گزینه‌های ${profile.name}`}
+                  actions={[{ label: "بلاک کردن", icon: <Ban size={14} />, danger: true, onClick: () => setConfirmBlock(true) }]}
+                />
+              </div>
+
+              <button
+                type="button"
+                className={`friend-profile-star-btn${profile.starredByMe ? " on" : ""}`}
+                onClick={toggleStar}
+                disabled={starBusy || !canStar}
+                title={canStar ? (profile.starredByMe ? "استار داده شد" : "دادن استار") : "بعد از دوست‌شدن می‌توانی استار بدهی"}
+                aria-label={profile.starredByMe ? "برداشتن استار" : "دادن استار"}
+              >
+                <Star size={16} fill={profile.starredByMe ? "currentColor" : "none"} />
+              </button>
+
+              <div className="friend-profile-banner-name">{profile.name}</div>
+
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="friend-profile-avatar" />
               ) : (
                 <AgentAvatar seed={profile.name || "؟"} size={72} className="friend-profile-avatar" />
               )}
-              <div className="friend-profile-name">{profile.name}</div>
+            </div>
+
+            <div className="friend-profile-id">
               {profile.username && <div className="friend-profile-username mono">@{profile.username}</div>}
               {profile.planName && <div className="friend-profile-plan">{profile.planName}</div>}
               {profile.bio && <p className="friend-profile-bio">{profile.bio}</p>}
             </div>
 
+            {/* از راست به چپ: استارها · استریک فعلی · بیشترین استریک */}
             <div className="friend-profile-stats">
+              <div className="friend-profile-stat">
+                <span className="friend-profile-stat-star">
+                  <Star size={16} style={{ color: "#F5C518" }} fill="#F5C518" />
+                  <b className="mono">{faNum(profile.starsCount)}</b>
+                </span>
+                <span>استار</span>
+              </div>
               <div className="friend-profile-stat">
                 <StreakFlame streak={profile.streak} />
                 <span>استریک فعلی</span>
@@ -133,13 +166,6 @@ export function FriendProfileModal({
               <div className="friend-profile-stat">
                 <StreakFlame streak={profile.bestStreak} />
                 <span>بیشترین استریک</span>
-              </div>
-              <div className="friend-profile-stat">
-                <span className="friend-profile-stat-star">
-                  <Star size={16} style={{ color: "#F5C518" }} fill="#F5C518" />
-                  <b className="mono">{faNum(profile.starsCount)}</b>
-                </span>
-                <span>استار</span>
               </div>
             </div>
 
@@ -154,24 +180,6 @@ export function FriendProfileModal({
                 <b className="mono">{faNum(profile.plansCompleted)}</b>
                 <span>برنامه تمام‌شده</span>
               </div>
-            </div>
-
-            <div className="friend-profile-actions">
-              {canStar && (
-                <button
-                  type="button"
-                  className={`account-outline-btn${profile.starredByMe ? " active" : ""}`}
-                  onClick={toggleStar}
-                  disabled={starBusy}
-                  style={profile.starredByMe ? { borderColor: "#F5C518", color: "#F5C518" } : undefined}
-                >
-                  <Star size={14} fill={profile.starredByMe ? "currentColor" : "none"} />
-                  {profile.starredByMe ? "استار داده شد" : "دادن استار"}
-                </button>
-              )}
-              <button type="button" className="trade-danger-btn" onClick={() => setConfirmBlock(true)}>
-                <Ban size={14} /> بلاک کردن
-              </button>
             </div>
           </>
         )}

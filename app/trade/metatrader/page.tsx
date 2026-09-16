@@ -47,9 +47,10 @@ function AccountsForMt() {
           transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
         >
           <Link href={`/trade/metatrader/${a.id}`} prefetch className="trade-surface trade-mt-row">
-            <span className="trade-account-stripe" style={{ background: a.color }} />
             <div className="trade-account-title-row">
               <span className="trade-account-name">{a.name}</span>
+              {/* توپِ رنگی سمتِ چپِ اسم، نه گوشه‌ی مطلقِ کارت */}
+              <span className="trade-account-dot" style={{ background: a.color }} />
               <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[a.type]}</span>
             </div>
             <div className={`trade-mt-status${a.mtConnected ? " connected" : ""}`} style={{ marginTop: 10 }}>
