@@ -19,6 +19,7 @@
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
 #property version   "1.10"
+#property strict
 
 input string ArionUrl    = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode = "";                     // کد اتصال (فقط بار اول)
@@ -29,6 +30,9 @@ input int    SyncSeconds = 60;                     // فاصله‌ی ارسال
 #define MT_CHUNK_SIZE 300
 
 string   g_token     = "";
+datetime g_lastSync  = 0;
+string   g_status    = "در حال راه‌اندازی…";
+int      g_failCount = 0;
 string   g_tokenFile = "arion_token.txt";
 
 // زمانِ deal بستنِ آخرین معامله‌ای که با موفقیت فرستاده شده. صفر یعنی
@@ -38,39 +42,113 @@ string   g_tokenFile = "arion_token.txt";
 datetime g_cursorTime = 0;
 string   g_cursorFile = "arion_cursor.txt";
 
+// تا وقتی وصل نشده‌ایم زود‌به‌زود تلاش می‌کنیم (نه با فاصله‌ی ارسالِ کامل)،
+// چون معمولا کاربر همین چند دقیقه‌ی اول دارد تنظیمات را درست می‌کند.
+#define RETRY_SECONDS 10
+
 //+------------------------------------------------------------------+
 int OnInit()
   {
    g_token = LoadToken();
    g_cursorTime = (datetime)LoadCursor();
-   if(g_token == "" && PairingCode != "")
-      Pair();
-   EventSetTimer((int)MathMax(15, SyncSeconds));
+   // تلاشِ اول همین‌جا، ولی *شکستش پایان کار نیست* — تایمر باز هم تلاش
+   // می‌کند. باگِ نسخه‌ی قبلی همین بود: اگر این یک تلاش شکست می‌خورد
+   // (WebRequest هنوز اجازه نداشت، یا کاربر کد را بعدا می‌گذاشت) اکسپرت
+   // تا حذف و نصبِ دوباره برای همیشه «غیرفعال» می‌ماند.
+   if(g_token == "") Pair();
+   EventSetTimer(g_token == "" ? RETRY_SECONDS : (int)MathMax(15, SyncSeconds));
    // منتظرِ اولین تیکِ تایمر نمی‌مانیم — همین که وصل شدیم (یا توکنِ قبلی را
    // پیدا کردیم)، بلافاصله یک سینک می‌زنیم تا اتصال حسِ آنی داشته باشد.
    if(g_token != "") Sync();
+   ShowStatus();
    return(INIT_SUCCEEDED);
   }
 
-void OnDeinit(const int reason) { EventKillTimer(); }
+void OnDeinit(const int reason) { EventKillTimer(); Comment(""); }
 
-void OnTimer() { if(g_token != "") Sync(); }
+void OnTimer()
+  {
+   if(g_token == "")
+     {
+      Pair();
+      if(g_token != "")
+        {
+         EventKillTimer();
+         EventSetTimer((int)MathMax(15, SyncSeconds));
+         Sync();
+        }
+     }
+   else Sync();
+   ShowStatus();
+  }
+
+//+------------------------------------------------------------------+
+//| نمایش وضعیت روی چارت                                             |
+//+------------------------------------------------------------------+
+void ShowStatus()
+  {
+   string line2 = (g_lastSync > 0 ? "آخرین ارسال: " + TimeToString(g_lastSync, TIME_MINUTES|TIME_SECONDS)
+                                  : "هنوز چیزی ارسال نشده");
+   Comment("Arion — ", (g_token == "" ? "متصل نیست" : "متصل"), "\n",
+           g_status, "\n", line2);
+  }
+
+//+------------------------------------------------------------------+
+//| فرار دادنِ کاراکترهای خاصِ JSON                                    |
+//+------------------------------------------------------------------+
+string JsonEscape(string s)
+  {
+   string out = "";
+   int n = StringLen(s);
+   for(int i = 0; i < n; i++)
+     {
+      ushort c = StringGetCharacter(s, i);
+      if(c == '"')       out += "\\\"";
+      else if(c == '\\') out += "\\\\";
+      else if(c < 32)    out += " ";
+      else               out += ShortToString(c);
+     }
+   return(out);
+  }
+
+//+------------------------------------------------------------------+
+//| اختلافِ ساعتِ سرورِ بروکر با UTC، به دقیقه                          |
+//+------------------------------------------------------------------+
+int BrokerTzOffsetMinutes()
+  {
+   // زمانِ معاملات در متاتریدر زمانِ *سرورِ بروکر* است، نه UTC. Arion
+   // همه‌چیز را UTC ذخیره می‌کند، پس همین اختلاف را می‌فرستیم تا سرور
+   // تصحیح کند.
+   return((int)((TimeCurrent() - TimeGMT()) / 60));
+  }
 
 //+------------------------------------------------------------------+
 string LoadToken()
   {
    int h = FileOpen(g_tokenFile, FILE_READ|FILE_TXT|FILE_ANSI);
    if(h == INVALID_HANDLE) return("");
-   string t = FileReadString(h);
+   string line = FileReadString(h);
    FileClose(h);
-   return(t);
+
+   int sep = StringFind(line, "|");
+   if(sep < 0) return("");          // فرمتِ قدیمی/ناقص — نادیده
+   string tok = StringSubstr(line, 0, sep);
+   string acc = StringSubstr(line, sep + 1);
+   if(acc != IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)))
+     {
+      // توکنِ یک حسابِ دیگر است؛ استفاده‌اش یعنی ریختنِ معاملات توی
+      // حسابِ اشتباه در Arion.
+      g_status = "توکنِ ذخیره‌شده برای حسابِ دیگری‌ست — کد اتصالِ جدید بگذارید";
+      return("");
+     }
+   return(tok);
   }
 
 void SaveToken(string token)
   {
    int h = FileOpen(g_tokenFile, FILE_WRITE|FILE_TXT|FILE_ANSI);
    if(h == INVALID_HANDLE) { Print("Arion: نوشتن توکن ناموفق"); return; }
-   FileWriteString(h, token);
+   FileWriteString(h, token == "" ? "" : token + "|" + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)));
    FileClose(h);
   }
 
@@ -96,14 +174,20 @@ string HttpPost(string url, string headers, string body, int &status)
   {
    char post[], result[];
    string resultHeaders;
-   StringToCharArray(body, post, 0, StringLen(body), CP_UTF8);
-   ArrayResize(post, StringLen(body));
+   // StringLen تعدادِ *کاراکتر* می‌دهد، نه بایتِ UTF-8 — با نامِ بروکر یا
+   // سرورِ غیرانگلیسی، بدنه وسطِ یک کاراکتر بریده و JSON خراب می‌شد و
+   // سرور ۴۰۰ می‌داد. اندازه‌ی واقعیِ آرایه‌ی بایت‌ها ملاک است.
+   int len = StringToCharArray(body, post, 0, WHOLE_ARRAY, CP_UTF8) - 1;
+   if(len < 0) len = 0;
+   ArrayResize(post, len);
    ResetLastError();
    status = WebRequest("POST", url, headers, 10000, post, result, resultHeaders);
    if(status == -1)
      {
-      Print("Arion: WebRequest ناموفق (کد ", GetLastError(),
-            "). آدرس سایت را در Tools → Options → Expert Advisors اضافه کرده‌اید؟");
+      int err = GetLastError();
+      g_status = "WebRequest اجازه ندارد (خطای " + IntegerToString(err) +
+                 ") — آدرس «" + ArionUrl + "» را در Tools → Options → Expert Advisors اضافه کنید";
+      Print("Arion: ", g_status);
       return("");
      }
    return(CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8));
@@ -112,20 +196,39 @@ string HttpPost(string url, string headers, string body, int &status)
 //+------------------------------------------------------------------+
 void Pair()
   {
+   if(PairingCode == "")
+     {
+      g_status = "کد اتصال وارد نشده — از Arion کد بگیرید و در PairingCode بگذارید";
+      return;
+     }
+
    string body = StringFormat(
       "{\"code\":\"%s\",\"platform\":\"MT5\",\"accountLogin\":\"%I64d\",\"server\":\"%s\",\"broker\":\"%s\"}",
-      PairingCode, AccountInfoInteger(ACCOUNT_LOGIN),
-      AccountInfoString(ACCOUNT_SERVER), AccountInfoString(ACCOUNT_COMPANY));
+      JsonEscape(PairingCode), AccountInfoInteger(ACCOUNT_LOGIN),
+      JsonEscape(AccountInfoString(ACCOUNT_SERVER)), JsonEscape(AccountInfoString(ACCOUNT_COMPANY)));
 
    int status;
    string res = HttpPost(ArionUrl + "/api/mt/pair", "Content-Type: application/json\r\n", body, status);
-   if(status != 200) { Print("Arion: اتصال ناموفق (", status, ") ", res); return; }
+   if(status == -1) return;
+   if(status == 401)
+     {
+      g_status = "کد اتصال اشتباه یا منقضی است — کد تازه بگیرید (هر کد ۱۵ دقیقه معتبر است)";
+      Print("Arion: ", g_status);
+      return;
+     }
+   if(status != 200)
+     {
+      g_status = "اتصال ناموفق (کد " + IntegerToString(status) + ")";
+      Print("Arion: ", g_status, " ", res);
+      return;
+     }
 
    string token = JsonValue(res, "token");
-   if(token == "") { Print("Arion: پاسخ سرور توکن نداشت"); return; }
+   if(token == "") { g_status = "پاسخ سرور توکن نداشت"; Print("Arion: ", g_status); return; }
 
    g_token = token;
    SaveToken(token);
+   g_status = "اتصال برقرار شد";
    Print("Arion: اتصال برقرار شد — در حال گرفتنِ کل تاریخچه‌ی حساب…");
   }
 
@@ -134,23 +237,36 @@ void Pair()
 //+------------------------------------------------------------------+
 bool SendBatch(string tradesJson)
   {
-   string body = StringFormat("{\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"trades\":[%s]}",
-                              AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
-                              AccountInfoString(ACCOUNT_CURRENCY), tradesJson);
+   string body = StringFormat(
+      "{\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"tzOffsetMinutes\":%d,\"trades\":[%s]}",
+      AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
+      JsonEscape(AccountInfoString(ACCOUNT_CURRENCY)), BrokerTzOffsetMinutes(), tradesJson);
 
    int status;
    string res = HttpPost(ArionUrl + "/api/mt/sync",
                          "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n",
                          body, status);
 
+   if(status == -1) return(false);
    if(status == 401)
      {
-      Print("Arion: توکن معتبر نیست — از پنل Arion کد اتصال جدید بگیرید");
       g_token = "";
       SaveToken("");
+      g_status = "توکن باطل شده — از Arion کد اتصال جدید بگیرید";
+      Print("Arion: ", g_status);
+      EventKillTimer();
+      EventSetTimer(RETRY_SECONDS);
       return(false);
      }
-   if(status != 200) { Print("Arion: ارسال ناموفق (", status, ") ", res); return(false); }
+   if(status != 200)
+     {
+      g_failCount++;
+      g_status = "ارسال ناموفق (کد " + IntegerToString(status) + ")";
+      Print("Arion: ", g_status, " ", res);
+      return(false);
+     }
+
+   g_failCount = 0;
    return(true);
   }
 
@@ -282,6 +398,8 @@ void Sync()
      }
 
    if(newCursor > g_cursorTime) { g_cursorTime = newCursor; SaveCursor(g_cursorTime); }
+   g_lastSync = TimeCurrent();
+   g_status = "ارسال شد: " + IntegerToString(openCount + sent) + " معامله";
   }
 
 //+------------------------------------------------------------------+

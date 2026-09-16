@@ -5825,49 +5825,34 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
    بعد از آن‌ها می‌ماند، چون یک قابلیتِ واقعیِ مستقل است، نه داده‌ی جدول.
    طبقِ درخواستِ صریح، زیرِ ۵۶۰px هیچ اسکرولِ افقی‌ای نیست — grid ثابت به
    یک چیدمانِ فلکسِ دورچین تبدیل می‌شود (پایین‌تر). */
-.trade-cal-table-scroll{ overflow-x:auto; margin:0 -4px; padding:0 4px; }
-.trade-cal-table{ min-width:420px; }
-.trade-cal-thead{
-  display:grid; grid-template-columns:38px 56px minmax(80px,1fr) 44px 44px 44px 28px; gap:6px;
-  align-items:center; padding-bottom:7px; margin-bottom:2px; border-bottom:1px solid var(--line);
-  font-size:9.5px; font-weight:700; color:var(--muted2);
-}
-.trade-cal-tr{
-  display:grid; grid-template-columns:38px 56px minmax(80px,1fr) 44px 44px 44px 28px; gap:6px;
-  align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:11.5px;
-}
-.trade-cal-tr:last-child{ border-bottom:none; }
-.tc-col-time{ font-weight:700; }
-.tc-col-cur{ display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; white-space:nowrap; }
-.tc-col-event{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.tc-col-icon{ display:flex; align-items:center; justify-content:center; }
-.tc-col-num{ text-align:center; color:var(--text); }
-.tc-col-num.muted{ color:var(--muted2); }
-/* طبقِ درخواستِ جدیدِ صریح (که تصمیمِ قبلیِ «بدونِ فولد، با اسکرولِ افقیِ
-   خودِ باکس» رو نقض می‌کنه): زیرِ ۵۶۰px دیگه هیچ اسکرولِ افقی‌ای نیست —
-   grid ثابت به یک چیدمانِ فلکس‌ِ دورچین تبدیل می‌شه.
-   باگِ واقعیِ «همه‌چیز رفته توی هم»: این media query قبلا *قبل* از قوانینِ
-   بدونِ‌شرطِ بالا (`.trade-cal-thead`/`.trade-cal-tr` با `display:grid`)
-   نوشته شده بود — توی CSS، بینِ دو قانونِ هم‌specificity، همیشه آخرینی که
-   توی فایل میاد برنده‌ست، صرف‌نظر از اینکه داخلِ media query باشه یا نه؛
-   پس زیرِ ۵۶۰px هم `display:grid` (که بعدا اومده) رویِ `display:flex` این
-   بلاک برنده می‌شد و ۸ستونِ گرید توی یک باکسِ باریکِ موبایل له/همپوشان
-   می‌شدن. فیکس: همین بلاک بعدِ قوانینِ بدونِ‌شرط منتقل شد، نه قبلش. */
-@media (max-width:560px){
-  .trade-cal-table-scroll{ overflow-x:visible; }
-  .trade-cal-table{ min-width:0; }
-  .trade-cal-thead{ display:none; }
-  .trade-cal-tr{
-    display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;
-    padding:11px 2px;
-  }
-  .trade-cal-tr .tc-col-time{ order:1; flex:0 0 auto; }
-  .trade-cal-tr .tc-col-cur{ order:2; flex:0 0 auto; white-space:nowrap; }
-  .trade-cal-tr .tc-col-event{ order:3; flex:1 1 100%; white-space:normal; }
-  .trade-cal-tr .tc-col-num{ order:4; flex:0 0 auto; text-align:end; }
-  .trade-cal-tr .tc-col-num::before{ content:attr(data-label) ": "; color:var(--muted2); font-weight:400; }
-  .trade-cal-tr .tc-col-icon{ order:5; flex:0 0 auto; margin-inline-start:auto; }
-}
+/* خودِ ناحیه‌ی اسکرول باید LTR باشد: جدول `ltr-inline` است ولی ظرفِ
+   اسکرول RTL بود، پس مرورگر اسکرول را از انتهای LTR شروع می‌کرد و
+   Time/Currency بیرونِ کادر می‌افتادند (Actual/Forecast اول دیده می‌شد). */
+/* هر رویداد دو ردیف است (طبقِ درخواستِ صریح): ردیفِ اول زمان/حساسیت/ارز/
+   نامِ رویداد/هشدار، ردیفِ دوم Actual/Previous/Forecast. جدولِ گریدِ قبلی
+   حذف شد چون با دو ردیف، هدرِ ستونی بی‌معنی می‌شد و همان هدر بود که روی
+   موبایل ستونِ Actual را بیرونِ کادر می‌برد. */
+.trade-cal-list{ display:flex; flex-direction:column; }
+.trade-cal-item{ padding:10px 0; border-bottom:1px solid var(--line); }
+.trade-cal-item:first-child{ padding-top:0; }
+.trade-cal-item:last-child{ padding-bottom:0; border-bottom:none; }
+.tc-line1{ display:flex; align-items:center; gap:7px; min-width:0; font-size:11.5px; }
+.tc-time{ font-weight:700; flex-shrink:0; }
+.tc-cur{ flex-shrink:0; }
+.tc-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+.tc-alert{ flex-shrink:0; margin-inline-start:auto; }
+.tc-line2{ display:flex; align-items:center; gap:14px; margin-top:5px; padding-inline-start:2px; }
+/* برچسبِ کوچکِ بالای عدد لازم است — بدونِ هدرِ ستونی، سه عددِ لخت از هم
+   قابلِ تشخیص نیستند. */
+.tc-stat{ display:flex; align-items:baseline; gap:4px; }
+.tc-stat i{ font-style:normal; font-size:8.5px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:.03em; }
+.tc-stat b{ font-size:11px; font-weight:700; color:var(--text); }
+.tc-stat b.muted{ color:var(--muted2); font-weight:400; }
+/* رویدادِ گذشته — فقط زمان/نام کم‌رنگ می‌شوند، نه اعدادِ Actual که رنگِ
+   سبز/قرمزشان خودش اطلاعات است. */
+.trade-cal-item.past .tc-time, .trade-cal-item.past .tc-title{ opacity:.55; }
+.trade-cal-card-row.past .trade-cal-card-when, .trade-cal-card-row.past .trade-cal-card-title{ opacity:.55; }
+
 .trade-cal-impact-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 /* دکمه‌های ستونِ Alert/Detail — ریز و بی‌بک‌گراند، فقط رنگشون عوض می‌شه */
 .trade-cal-icon-btn{
@@ -5877,16 +5862,6 @@ body[data-theme="light"] .trade-cal-search button, body:not([data-theme="light"]
 @media (hover:hover){ .trade-cal-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); } }
 .trade-cal-icon-btn.active{ color:var(--accent); }
 body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .trade-cal-icon-btn{ background:none; box-shadow:none; }
-/* ردیف دیگر کلیک‌پذیر نیست — با حذفِ باکسِ دیتیل/هیستوری چیزی برایِ
-   بازشدن نمانده، و یک cursor:pointer روی چیزی که کاری نمی‌کند، خودش باگ
-   به‌نظر می‌رسد. */
-.trade-cal-tr{ transition:background .15s ease; }
-/* رویدادِ گذشته — طبقِ درخواستِ صریح («مثلِ فارکس‌فکتوری نشون بده گذشته»):
-   فقط زمان/رویداد کم‌رنگ می‌شن، نه اعدادِ actual/forecast/previous که
-   رنگِ سبز/قرمزشون خودش اطلاعاته و نباید کم‌رنگ بشه. */
-.trade-cal-tr.past .tc-col-time, .trade-cal-tr.past .tc-col-event{ opacity:.55; }
-.trade-cal-card-row.past .trade-cal-card-when, .trade-cal-card-row.past .trade-cal-card-title{ opacity:.55; }
-
 /* طبقِ درخواستِ صریحِ تازه («نوارِ تقویم هر دو باید یک‌شکل باشن، اقتصادی
    دقیقا مثلِ روتین من»): خودِ جدولِ رویدادها همچنان بدونِ باکسه (تصمیمِ
    قبلی)، ولی نوارِ روزها حالا دقیقا هم‌شکلِ نوارِ روزِ «روتین من»
@@ -5895,14 +5870,31 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
    هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی اسکرول‌پذیرِ افقیه (اسکرولِ
    خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛ برایِ تاریخ‌های دورتر دکمه‌ی
    «تاریخچه» (ماه‌شمار) هست. */
+/* طبقِ درخواستِ صریحِ تازه: خودِ نوارِ روزها دیگر باکس و بک‌گراند ندارد
+   (فقط خودِ رویدادها توی یک باکس‌اند، نه تقویمِ بالای سرشان). دو فلشِ
+   قبلی/بعدی هم مثلِ نوارِ روزِ «روتین من» کنارش نشسته‌اند. */
 .trade-cal-week-strip{
-  display:flex; gap:6px; overflow-x:auto; scroll-snap-type:x proximity;
-  -webkit-overflow-scrolling:touch; touch-action:pan-x;
-  margin-top:14px; padding:10px 12px;
-  border-radius:18px; border:1px solid var(--surface-line);
-  background:rgba(var(--bg-rgb),.16);
-  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+  display:flex; align-items:center; gap:2px;
+  margin-top:14px; padding:0;
+  border:none; background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
+.trade-cal-week-days{
+  display:flex; flex:1; min-width:0; justify-content:space-between; gap:6px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.trade-cal-week-days::-webkit-scrollbar{ width:0; height:0; display:none; }
+/* فلش‌های جابه‌جاییِ پنجره‌ی روزها — هم‌شکلِ فلش‌های DashDateSelector */
+.trade-cal-week-arrow{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:30px; height:30px; padding:0; border-radius:999px;
+  color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; cursor:pointer;
+  transition:color .18s ease, background .18s ease;
+}
+body[data-theme="light"] .trade-cal-week-arrow,
+body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shadow:none; }
+@media (hover:hover){ .trade-cal-week-arrow:not(:disabled):hover{ color:var(--text); background:rgba(255,255,255,.05); } }
+.trade-cal-week-arrow:disabled{ opacity:.3; cursor:default; }
 /* طبقِ درخواستِ صریح، اندازه‌ها *دقیقا* همان DashDateSelectorِ «روتین من»
    است (components/DashDateSelector.tsx) و نه یک پیکسل بزرگ‌تر:
    موبایل min-w 54 / padding 4 / radius 16 / gap 2، و از ۶۴۰px به بالا
@@ -5926,13 +5918,15 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
 .trade-cal-day-pill-num{ font-size:9px; line-height:1.6; white-space:nowrap; color:var(--muted); }
 .trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
 .trade-cal-day-pill.today .trade-cal-day-pill-wd{ color:var(--accent); }
+/* طبقِ درخواستِ صریح، روزها هیچ بک‌گراندی ندارند — نه فعال نه هاور. روزِ
+   انتخاب‌شده فقط با یک حلقه‌ی نازکِ اکسنت (box-shadow، نه background) و
+   رنگِ متن مشخص می‌شود، دقیقا مثلِ نوارِ «روتین من». */
 .trade-cal-day-pill.active{
-  background:var(--accent);
-  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
+  background:none;
+  box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.55);
 }
-.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
-.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
-@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--accent); }
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--accent); opacity:.8; }
 @media (min-width:640px){
   .trade-cal-day-pill{ min-width:92px; gap:4px; padding:8px 12px; }
   .trade-cal-day-pill-wd{ font-size:13px; }
@@ -5982,10 +5976,18 @@ body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme=
    EconomicCalendarPanel.tsx) مستقیم زیرِ body می‌نشینند، پس اینجا هم باید
    مثلِ یک مودالِ واقعی روی صفحه سنتر شوند، نه مثلِ قبل بخشی از فلوِ عادی. */
 .trade-econ-monthpicker-backdrop{ position:fixed; inset:0; z-index:60; }
+/* باگِ گزارش‌شده («روی تاریخچه می‌زنم، بیرونِ صفحه‌ست»): وسط‌چینی با
+   transform:translate(-50%,-50%) بود، ولی همین المان animation:tradeFadeIn
+   با fill-mode `both` دارد و فریمِ آخرِ آن `transform:none` است — یعنی
+   انیمیشن دقیقا همان translate را پاک می‌کرد و گوشه‌ی بالا-چپِ پاپ‌آپ روی
+   مرکزِ صفحه می‌نشست (پس نیمه‌اش بیرون می‌افتاد). دقیقا همان باگی که قبلا
+   برای `.friend-profile-panel` پیدا شد. وسط‌چینی حالا با inset:0 + margin
+   انجام می‌شود که انیمیشن نمی‌تواند پاکش کند. */
 .trade-econ-monthpicker{
-  position:fixed; top:50%; inset-inline-end:50%; transform:translate(-50%,-50%);
+  position:fixed; inset:0; margin:auto;
+  height:max-content; max-height:calc(100vh - 80px); overflow-y:auto;
   z-index:61; padding:14px; animation:tradeFadeIn .18s ease both;
-  width:88%; max-width:320px;
+  width:min(320px, calc(100vw - 32px));
   background:var(--surface-glass); backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
   border:1px solid var(--surface-line); border-radius:18px;
 }
@@ -6156,7 +6158,13 @@ body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
   direction:ltr; color:var(--accent);
 }
 .trade-mt-copy-btn{ flex-shrink:0; color:var(--accent); }
-.trade-mt-row{ text-decoration:none; color:var(--text); display:block; }
+/* هر حساب یک خط: اسم/برچسب از راست، وضعیت چپ‌چین در همان خط (درخواستِ صریح) */
+.trade-mt-row{
+  text-decoration:none; color:var(--text);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.trade-mt-row .trade-account-title-row{ flex:1; min-width:0; flex-wrap:nowrap; }
+.trade-mt-row .trade-mt-status{ flex-shrink:0; }
 @media (hover:hover){ .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.4); } }
 
 /* خط وضعیت متاتریدر روی صفحه‌ی خود حساب — جزئیات کامل جاش صفحه‌ی
@@ -6196,6 +6204,9 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    کل صفحه باشه، نه یه‌ذره‌ی کوچیک؛ همین کلاس روی یادداشت‌ها/متاتریدر/
    ژورنال‌نویسی/تقویمِ اقتصادی هم گذاشته می‌شه. */
 .trade-page-box{ min-height:min(calc(100vh - 340px), 560px); }
+/* باکسِ اخبارِ تقویم به اندازه‌ی محتوایش است، نه نصفِ صفحه — این‌جا بعد از
+   `.trade-page-box` می‌آید تا در تساویِ اسپسیفیسیتی برنده شود. */
+.trade-cal-table-box{ min-height:0; padding:12px 14px; margin-top:16px; }
 
 /* صفحه‌ی خودش دیگر اسکرول نمی‌خورد؛ همین ناحیه (زیرِ تایتل) داخلش اسکرول
    دارد — طبقِ درخواستِ صریح برایِ یادداشت‌ها/چک‌لیست‌ها/ژورنال. فقط
@@ -6435,6 +6446,9 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 .trade-chat-panel, .trade-cal-card{ display:flex; flex-direction:column; min-height:300px; }
 
 /* پنلِ کناری: چک‌لیست + ثبت معامله */
+/* انتخابگرِ چک‌لیست بالای فهرستِ تیک‌ها (صفحه‌ی چارت) */
+.trade-chart-check-picker{ margin:2px 0 10px; font-size:12px; }
+
 .trade-chart-checklist{ display:flex; flex-direction:column; gap:2px; }
 .trade-chart-check-row{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
