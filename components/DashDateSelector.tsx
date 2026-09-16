@@ -161,8 +161,9 @@ export function DashDateSelector({
 
   return (
     <div
-      className={cn("flex flex-1 items-center gap-1 overflow-hidden rounded-dash border border-dash-border backdrop-blur-xl", className)}
-      style={{ background: "rgba(var(--bg-rgb), .16)" }}
+      // طبقِ درخواستِ صریح، نوارِ تقویم دیگر باکس/بک‌گراند ندارد — نه خودِ
+      // نوار، نه پیل‌های روز.
+      className={cn("flex flex-1 items-center gap-1 overflow-hidden", className)}
     >
       <button
         type="button"
@@ -191,18 +192,16 @@ export function DashDateSelector({
                 onClick={() => onSelect(d.iso)}
                 className={cn(
                   "flex min-w-[54px] shrink-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
-                  active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
+                  active ? "text-dash-green" : "text-dash-muted"
                 )}
-                style={
-                  active
-                    ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
-                    : undefined
-                }
+                // روزِ انتخاب‌شده بدونِ بک‌گراند مشخص می‌شود: یک حلقه‌ی نازکِ
+                // اکسنت (box-shadow، نه background) به‌علاوه‌ی رنگِ متن.
+                style={active ? { boxShadow: "inset 0 0 0 1px rgba(var(--accent-rgb),.55)" } : undefined}
               >
-                <span className={cn("whitespace-nowrap text-[10px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
+                <span className={cn("whitespace-nowrap text-[10px] font-semibold sm:text-[13px]", active ? "text-dash-green" : "text-dash-text")}>
                   {d.weekday}
                 </span>
-                <span className={cn("whitespace-nowrap text-[9px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
+                <span className={cn("whitespace-nowrap text-[9px] sm:text-[12px]", active ? "text-dash-green/80" : "text-dash-muted")}>{d.dateLabel}</span>
               </button>
             );
           })}

@@ -402,54 +402,52 @@ export function EconomicCalendarPanel() {
           بالای سرشان نه. */}
       {!firstLoad && !!events.length && (
         <div className="trade-surface trade-page-box trade-cal-table-box trade-cal-below" style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
-          <div className="trade-cal-table-scroll">
-            <div className="trade-cal-table ltr-inline">
-              <div className="trade-cal-thead">
-                <span className="tc-col-time">Time</span>
-                <span className="tc-col-cur">Currency</span>
-                <span className="tc-col-event">Event</span>
-                <span className="tc-col-num">Actual</span>
-                <span className="tc-col-num">Forecast</span>
-                <span className="tc-col-num">Previous</span>
-                <span className="tc-col-icon">Alert</span>
-              </div>
-              {events.map((e) => {
-                const occursAt = new Date(e.occursAt);
-                const isPast = occursAt.getTime() < now;
-                const cmp = compareActualToForecast(e.actual, e.forecast);
-                const watched = alerts.watchedEventKeys.includes(newsEventWatchKey(e.currency, e.title));
-                return (
-                  <div key={e.id} className={`trade-cal-tr${isPast ? " past" : ""}`}>
-                    <span className="tc-col-time mono">{enTimeFmt.format(occursAt)}</span>
-                    <span className="tc-col-cur">
-                      <span className="trade-cal-impact-dot" style={{ background: IMPACT_COLORS[e.impact] }} title={IMPACT_LABELS[e.impact]} />
-                      <b className="mono">{e.currency}</b>
-                    </span>
-                    <span className="tc-col-event" title={e.title}>{e.title}</span>
+          <div className="trade-cal-list ltr-inline">
+            {events.map((e) => {
+              const occursAt = new Date(e.occursAt);
+              const isPast = occursAt.getTime() < now;
+              const cmp = compareActualToForecast(e.actual, e.forecast);
+              const watched = alerts.watchedEventKeys.includes(newsEventWatchKey(e.currency, e.title));
+              return (
+                <div key={e.id} className={`trade-cal-item${isPast ? " past" : ""}`}>
+                  {/* ردیفِ اول: زمان، حساسیت، ارز، نامِ رویداد، هشدار */}
+                  <div className="tc-line1">
+                    <span className="tc-time mono">{enTimeFmt.format(occursAt)}</span>
                     <span
-                      className={`tc-col-num mono${e.actual ? "" : " muted"}`}
-                      data-label="Actual"
-                      style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
+                      className="trade-cal-impact-dot"
+                      style={{ background: IMPACT_COLORS[e.impact] }}
+                      title={IMPACT_LABELS[e.impact]}
+                    />
+                    <b className="tc-cur mono">{e.currency}</b>
+                    <span className="tc-title" title={e.title}>{e.title}</span>
+                    <button
+                      type="button"
+                      className={`trade-cal-icon-btn tc-alert${watched ? " active" : ""}`}
+                      onClick={() => toggleWatchEvent(e)}
+                      aria-label={watched ? "حذفِ هشدار برای این رویداد" : "هشدار برای این رویداد"}
+                      title={watched ? "هشدار روشن است" : "هشدار بده"}
                     >
-                      {e.actual || "—"}
-                    </span>
-                    <span className="tc-col-num mono" data-label="Forecast">{e.forecast || "—"}</span>
-                    <span className="tc-col-num mono" data-label="Previous">{e.previous || "—"}</span>
-                    <span className="tc-col-icon">
-                      <button
-                        type="button"
-                        className={`trade-cal-icon-btn${watched ? " active" : ""}`}
-                        onClick={() => toggleWatchEvent(e)}
-                        aria-label={watched ? "حذفِ هشدار برای این رویداد" : "هشدار برای این رویداد"}
-                        title={watched ? "هشدار روشن است" : "هشدار بده"}
-                      >
-                        {watched ? <BellRing size={13} /> : <Bell size={13} />}
-                      </button>
-                    </span>
+                      {watched ? <BellRing size={13} /> : <Bell size={13} />}
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                  {/* ردیفِ دوم: اکشوال، پریویوس، فورکست — با برچسب، چون
+                      بدونِ هدرِ ستونی سه عددِ لخت قابلِ تشخیص نیستند. */}
+                  <div className="tc-line2">
+                    <span className="tc-stat">
+                      <i>Actual</i>
+                      <b
+                        className={`mono${e.actual ? "" : " muted"}`}
+                        style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
+                      >
+                        {e.actual || "—"}
+                      </b>
+                    </span>
+                    <span className="tc-stat"><i>Previous</i><b className="mono">{e.previous || "—"}</b></span>
+                    <span className="tc-stat"><i>Forecast</i><b className="mono">{e.forecast || "—"}</b></span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
