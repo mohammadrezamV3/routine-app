@@ -58,6 +58,7 @@ const SECTIONS: NavSection[] = [
       { label: "کالری", href: "/admin/products/calorie" },
       { label: "ترید", href: "/admin/products/trade" },
       { label: "Skill / یادگیری", href: "/admin/products/roadmap" },
+      { label: "عکس حرکات ورزشی", href: "/admin/exercise-media" },
     ],
   },
   { label: "مصرف AI", icon: <Sparkles size={17} />, href: "/admin/ai-usage" },
