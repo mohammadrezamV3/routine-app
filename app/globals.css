@@ -6383,8 +6383,11 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
       هر خانه `min-height:0` دارد (بدونش آیتمِ گرید از محتوایش کوچک‌تر
       نمی‌شود و کلِ صفحه دوباره اسکرول می‌خورد) و خودش داخلش اسکرول دارد.
 
-   چیدمان طبقِ اسکچ (راست‌به‌چپ؛ ستونِ اولِ رشته‌ی area سمتِ راست است):
+   چیدمان طبقِ اسکچ (راست‌به‌چپ؛ ستونِ اولِ رشته‌ی area سمتِ راست است) —
+   چارت و ثبتِ معامله دو ردیفِ بالا را با هم می‌گیرند (بلندتر)، چک‌لیست فقط
+   ردیفِ اول، چت/تقویم فقط یک ردیفِ کوتاهِ پایینی:
        chart chart check
+       chart chart entry
        chat  cal   entry                                              */
 @media (min-width:1024px){
   /* پدینگِ پایینِ body برای نوارِ پایینِ موبایل است؛ روی دسکتاپ هیچ نوارِ
@@ -6409,12 +6412,15 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   .tv-page{
     height:var(--tv-h, calc(100vh - 200px));
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) 330px;
-    /* طبقِ درخواستِ صریح: باکسِ «ثبت معامله» بزرگ‌تر شود تا نیاز به اسکرول
-       نباشد — یک‌ذره از سهمِ ردیفِ بالا (چارت+چک‌لیست) به ردیفِ پایین
-       (چت/تقویم/ثبتِ معامله) داده شد. */
-    grid-template-rows:minmax(0,1.6fr) minmax(0,1.4fr);
+    /* طبقِ درخواستِ صریح: چارت بزرگ‌تر، گفت‌وگو و تقویمِ اقتصادی کوچیک‌تر.
+       چون چت/تقویم (ستون‌های ۱و۲) و ثبتِ معامله (ستونِ ۳) مستقلن، چارت+ثبتِ
+       معامله حالا دو ردیفِ بالایی رو با هم می‌گیرن (قدشون بلند می‌شه، بدونِ
+       این‌که ثبتِ معامله کوچیک بشه — چیزی که قبلا صریحاً درخواست شده بود
+       نیاز به اسکرول نداشته باشه) و چت+تقویم فقط یک ردیفِ کوتاهِ پایینی. */
+    grid-template-rows:minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,.6fr);
     grid-template-areas:
       "chart chart check"
+      "chart chart entry"
       "chat  cal   entry";
     gap:12px; align-items:stretch;
   }
@@ -6465,6 +6471,24 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 @media (min-width:1024px){
   .tv-chart-frame{ flex:1; height:auto; min-height:0; }
 }
+/* حالتِ تمام‌صفحه (Fullscreen API روی خودِ این باکس، نه کلِ صفحه) — رادیوس
+   برداشته می‌شود چون دیگر داخلِ یک کارت نیست، خودش کلِ صفحه‌ی نمایشه. */
+.tv-chart-frame:fullscreen{ height:100%; border-radius:0; background:var(--bg); }
+.tv-chart-frame:fullscreen iframe{ height:100%; }
+
+.tv-fullscreen-btn{
+  position:absolute; top:10px; inset-inline-start:10px; z-index:3;
+  width:30px; height:30px; padding:0; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text); background:rgba(var(--surface-rgb),.55);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--surface-line); box-shadow:none;
+  opacity:.75; transition:opacity .15s ease, background .15s ease;
+}
+@media (hover:hover){
+  .tv-fullscreen-btn:hover{ opacity:1; background:rgba(var(--surface-rgb),.8); color:var(--accent); }
+}
+.tv-fullscreen-btn:active{ transform:scale(.92); }
 
 /* موبایل: عریض‌تر — طبقِ درخواستِ صریح. کارتِ چارت (فقط همین یکی، نه
    بقیه‌ی خانه‌های `.tv-page`) با همان ترفندِ breakoutِ `.ticker-bar`
