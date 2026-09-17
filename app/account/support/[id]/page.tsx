@@ -135,7 +135,7 @@ export default function SupportTicketPage() {
   if (!ticket) return <PanelSkeleton />;
 
   return (
-    <section>
+    <section className="support-ticket-page">
       <div className="acc-head">
         <AccountBackButton />
         <div className="support-head-row">

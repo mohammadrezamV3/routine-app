@@ -1473,22 +1473,27 @@
   /* سرصفحه‌ی پروفایل: بنر + آواتارِ نشسته روی لبه‌ی بنر + نام زیرش.
      نسبتِ ۳.۲:۱ همون نسبتیه که resizeBannerToDataUrl باهاش کراپ می‌کنه،
      پس چیزی از عکسِ کاربر بریده/کشیده نمی‌شه. */
+  /* باگِ گزارش‌شده («یه بخشِ سیاهِ بی‌دلیل زیرِ بنره»): وقتی عکسِ پروفایلِ
+     سفارشی نبود، ردیفِ حذف (.profile-hero-meta) رندر نمی‌شد ولی
+     padding-bottomِ ۵۴پیکسلیِ رزروشده‌ی زیرش (با همون بک‌گراندِ
+     var(--surface-1) پر می‌شد) خالی و بی‌کاربرد می‌ماند — یک مستطیلِ تیره‌ی
+     توضیح‌ناپذیر. حالا آن رزرو اصلا داخلِ خودِ باکس نیست (نه overflow:hidden
+     نه padding-bottom) — کارت دقیقا به اندازه‌ی بنر جمع می‌شود و نیمه‌ی
+     آویزانِ آواتار در فضای *شفافِ* بیرونِ کارت (همین margin-bottom) می‌افتد،
+     نه در یک ناحیه‌ی توپرِ داخلِ کارت. */
   .profile-hero{
-    border:1px solid var(--surface-line); border-radius:20px; overflow:hidden;
-    background:var(--surface-1); margin-bottom:18px;
-    /* حداقلِ فضای زیرِ بنر برای نیمه‌ی آویزانِ آواتار، حتی وقتی هیچ
-       محتوایی زیرِ بنر نیست (عکسِ پروفایل ندارد → ردیفِ حذف رندر نمی‌شود). */
-    padding-bottom:54px;
+    border:1px solid var(--surface-line); border-radius:20px;
+    background:var(--surface-1); margin-bottom:64px;
   }
-  .profile-hero:has(.profile-hero-meta){ padding-bottom:0; }
   .profile-banner{
     /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
        ۳۰۰px+ می‌رسید و نصفِ صفحه را می‌گرفت. عکس با object-fit:cover داخلِ
        همین ارتفاع جا می‌شود، پس هیچ عکسی کشیده نمی‌شود. */
     /* عمدا بدونِ overflow:hidden — آواتار نیمه‌آویزان از لبه‌ی پایینِ بنر
-       بیرون می‌زند و با کلیپ، نصفش بریده می‌شد. گوشه‌ی گردِ کارت را خودِ
-       `.profile-hero` (که overflow:hidden دارد) می‌بُرد. */
-    position:relative; width:100%; height:132px;
+       بیرون می‌زند و با کلیپ، نصفش بریده می‌شد. رندِ بالا رو خودش گرد می‌کند
+       (پایین‌تر توضیح داده شده)، چون `.profile-hero` دیگر overflow:hidden
+       ندارد. */
+    position:relative; width:100%; height:132px; border-radius:20px 20px 0 0;
     /* باگِ گزارش‌شده («یه قسمتِ بنر رنگ نداره»): ایستگاهِ دومِ گرادیان
        var(--surface-2) بود — یعنی نیمه‌ی چپِ بنر عملا هم‌رنگِ خودِ کارت
        می‌شد و خالی به‌نظر می‌رسید. حالا هر سه ایستگاه از خودِ اکسنت‌اند،
@@ -1497,11 +1502,15 @@
       rgba(var(--accent-rgb),.42), rgba(var(--accent-rgb),.14) 52%, rgba(var(--accent-rgb),.34));
   }
   /* طبقِ درخواستِ صریح: خودِ بنر هم مثلِ عکسِ پروفایل با کلیک عوض می‌شود.
-     یک <button> تمام‌قد پشتِ همه‌چیز؛ ریستِ سراسریِ button{} صریح خاموش. */
+     یک <button> تمام‌قد پشتِ همه‌چیز؛ ریستِ سراسریِ button{} صریح خاموش.
+     overflow:hidden فقط این‌جاست (نه رویِ `.profile-hero` یا `.profile-banner`
+     که آواتار هم داخلشان است) — همین باعث می‌شود گوشه‌های بالاییِ خودِ
+     عکس گرد بمانند بدونِ این‌که آواتارِ آویزان کلیپ شود. */
   .profile-banner-hit{
     position:absolute; inset:0; z-index:0; padding:0; width:100%; height:100%;
     border:none; background:none; box-shadow:none; cursor:pointer;
     backdrop-filter:none; -webkit-backdrop-filter:none;
+    border-radius:20px 20px 0 0; overflow:hidden;
   }
   body[data-theme="light"] .profile-banner-hit,
   body:not([data-theme="light"]) .profile-banner-hit{ background:none; box-shadow:none; }
@@ -1612,7 +1621,9 @@
      جمع‌تر، و بنر بلندتر ولی همچنان با ارتفاعِ ثابت. */
   @media (min-width:701px){
     .profile-banner{ height:168px; }
-    .profile-hero{ margin-bottom:22px; }
+    /* margin-bottomِ پایه (۶۴) همچنان لازم است — فضای نیمه‌آویزانِ آواتار
+       را نگه می‌دارد، چون دیگر داخلِ خودِ کارت رزرو نمی‌شود (نگاه کن به
+       کامنتِ .profile-hero بالاتر). این‌جا override نمی‌شود. */
     .acc-block{ margin-bottom:22px; }
     .acc-block-body{ padding:18px; }
     .acc-scroll-box{ max-height:250px; }
@@ -1897,8 +1908,25 @@
   /* ── پشتیبانیِ در-سایت (تیکت) ────────────────────────────────────────
      طبقِ درخواستِ صریح: تایتلِ صفحه هم‌ردیفِ دکمه‌ی «ایجاد تیکت». */
   .support-head-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  /* طبقِ درخواستِ صریح، نوارِ نوشتن باید همیشه ته‌ِ صفحه بنشیند، نه
+     بلافاصله بعدِ آخرین پیام (که با یک تِردِ کوتاه، وسطِ یک صفحه‌ی خالی
+     می‌افتاد). ستونِ فلکس با ارتفاعِ حداقلِ برابرِ فضایِ واقعیِ زیرِ
+     هدر/بالایِ ناوبریِ پایین (همان محاسبه‌ای که body برایِ padding خودش
+     می‌کند) — تِرد flex:1 می‌گیرد و همیشه خودش را تا کفِ همین فضا می‌کشد،
+     پس composer همیشه همان‌جا می‌ماند. */
+  .support-ticket-page{
+    display:flex; flex-direction:column;
+    min-height:calc(100dvh - 118px - env(safe-area-inset-top) - 90px - env(safe-area-inset-bottom));
+  }
   .support-head-row h1{ margin:0; }
-  .support-new-btn{ display:inline-flex; align-items:center; gap:6px; flex-shrink:0; }
+  /* طبقِ درخواستِ صریح، دیگر خطِ دورِ دکمه‌ی «ایجاد تیکت» نیست — فقط متنِ
+     رنگی+آیکون، بدونِ قاب. (همین کلاس بعدِ .account-outline-btn در فایل
+     می‌آید، پس با اسپسیفیسیتیِ برابر برنده می‌شود.) */
+  .support-new-btn{
+    display:inline-flex; align-items:center; gap:6px; flex-shrink:0;
+    border:none; background:none; box-shadow:none; padding:0;
+  }
+  @media (hover:hover) and (pointer:fine){ .support-new-btn:hover{ background:none; } }
 
   .support-status{
     display:inline-flex; align-items:center; flex-shrink:0;
@@ -1917,7 +1945,18 @@
      کاربر می‌گیره؛ توی پنلِ ادمین (admin/support/[id]) همون کلاسِ mine رو
      پیامِ ادمین می‌گیره — هرکدوم پیامِ خودشون رو راست می‌بینن، دقیقا مثلِ
      واتس‌اپ. همین یک جفت کلاس (mine/admin) با معنیِ متفاوت توی هر صفحه. */
-  .support-thread{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  /* طبقِ درخواستِ صریح: خودِ تِرد یک باکسِ واقعی با بک‌گراند است (قبلا
+     پیام‌ها مستقیم روی بک‌گراندِ صفحه شناور بودند)، و flex:1 داخلِ
+     `.support-ticket-page` تا نوارِ نوشتن همیشه ته صفحه بنشیند، نه
+     بلافاصله بعدِ آخرین پیام وسطِ صفحه. min-height:0 لازم است چون بدونش
+     فلکس‌چایلدها به‌جای اجازه‌ی اسکرولِ داخلی، والد را هول می‌دهند
+     (تله‌ی معروفِ flexbox). */
+  .support-thread{
+    display:flex; flex-direction:column; gap:10px; margin-top:6px;
+    flex:1; min-height:0; overflow-y:auto;
+    border:1px solid var(--surface-line); border-radius:18px; background:var(--surface-1);
+    padding:14px;
+  }
   .support-msg{
     max-width:82%; padding:10px 14px; border-radius:17px;
     font-size:12.5px; line-height:1.8; white-space:pre-wrap; word-break:break-word;
@@ -5958,13 +5997,15 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
    هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی اسکرول‌پذیرِ افقیه (اسکرولِ
    خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛ برایِ تاریخ‌های دورتر دکمه‌ی
    «تاریخچه» (ماه‌شمار) هست. */
-/* طبقِ درخواستِ صریحِ تازه: خودِ نوارِ روزها دیگر باکس و بک‌گراند ندارد
-   (فقط خودِ رویدادها توی یک باکس‌اند، نه تقویمِ بالای سرشان). دو فلشِ
+/* طبقِ درخواستِ صریح، نوارِ روزها به همان باکسِ شیشه‌ایِ «روتین من»
+   برگشت — border+بک‌گراند+بلور، دقیقا هم‌شکلِ DashDateSelector. دو فلشِ
    قبلی/بعدی هم مثلِ نوارِ روزِ «روتین من» کنارش نشسته‌اند. */
 .trade-cal-week-strip{
   display:flex; align-items:center; gap:2px;
-  margin-top:14px; padding:0;
-  border:none; background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  margin-top:14px; padding:10px 12px;
+  border-radius:18px; border:1px solid var(--surface-line);
+  background:rgba(var(--bg-rgb),.16);
+  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
 }
 .trade-cal-week-days{
   display:flex; flex:1; min-width:0; justify-content:space-between; gap:6px;
@@ -6006,15 +6047,15 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
 .trade-cal-day-pill-num{ font-size:9px; line-height:1.6; white-space:nowrap; color:var(--muted); }
 .trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
 .trade-cal-day-pill.today .trade-cal-day-pill-wd{ color:var(--accent); }
-/* طبقِ درخواستِ صریح، روزها هیچ بک‌گراندی ندارند — نه فعال نه هاور. روزِ
-   انتخاب‌شده فقط با یک حلقه‌ی نازکِ اکسنت (box-shadow، نه background) و
-   رنگِ متن مشخص می‌شود، دقیقا مثلِ نوارِ «روتین من». */
+/* طبقِ درخواستِ صریح، روزِ فعال دوباره بک‌گراندِ توپرِ اکسنت دارد — دقیقا
+   هم‌شکلِ پیلِ فعالِ نوارِ «روتین من» (DashDateSelector). */
 .trade-cal-day-pill.active{
-  background:none;
-  box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.55);
+  background:var(--accent);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
 }
-.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--accent); }
-.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--accent); opacity:.8; }
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
+@media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
 @media (min-width:640px){
   .trade-cal-day-pill{ min-width:92px; gap:4px; padding:8px 12px; }
   .trade-cal-day-pill-wd{ font-size:13px; }

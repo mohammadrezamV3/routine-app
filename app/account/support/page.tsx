@@ -61,7 +61,6 @@ export default function SupportPage() {
             <Plus size={15} /> ایجاد تیکت
           </button>
         </div>
-        <p className="acc-head-hint">سوال یا مشکلی داری؟ یه تیکت بساز — فقط از همین‌جا، جواب رو هم همین‌جا می‌گیری.</p>
       </div>
 
       {tickets === null && <PanelSkeleton />}
