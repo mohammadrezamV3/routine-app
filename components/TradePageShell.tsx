@@ -72,19 +72,22 @@ export function TradePageShell({
       {/* سرصفحه‌ی همه‌ی صفحه‌های ترید یک‌شکل است: لینکِ بازگشت، و عنوان
           زیرش. حالتِ «یک‌ردیفهٔ» قبلیِ صفحه‌ی چارت طبقِ درخواستِ صریح حذف
           شد (عنوان باید زیرِ «بازگشت به ترید» بیاید، نه کنارش). */}
-      {(
-        <>
-          {back && (
-            <Link href={back.href} prefetch className="trade-back-link">
-              <ChevronRight size={15} /> {back.label}
-            </Link>
-          )}
-          <div className={titleAction ? "trade-head-row" : undefined}>
-            <h1>{title}</h1>
-            {titleAction}
-          </div>
-        </>
-      )}
+      {/* trade-head-block خودش هیچ چیدمانی تحمیل نمی‌کند (پیش‌فرض یعنی
+          بازگشت/تایتل هنوز زیرِ هم‌اند، دقیقا مثلِ قبل) — فقط برای صفحه‌ی
+          چارت (fullBleed) با CSS اسکوپ‌شده به flex-row تبدیل می‌شود تا
+          طبقِ درخواستِ صریح تایتل سمتِ چپِ دکمه‌ی بازگشت بنشیند، بدونِ
+          این‌که رفتارِ بقیه‌ی صفحه‌های ترید عوض شود. */}
+      <div className="trade-head-block">
+        {back && (
+          <Link href={back.href} prefetch className="trade-back-link">
+            <ChevronRight size={15} /> {back.label}
+          </Link>
+        )}
+        <div className={titleAction ? "trade-head-row" : undefined}>
+          <h1>{title}</h1>
+          {titleAction}
+        </div>
+      </div>
       {note && <div className="section-note">{note}</div>}
 
       {status === "loading" && <PanelSkeleton />}

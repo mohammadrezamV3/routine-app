@@ -1,4 +1,4 @@
-import type { ExerciseDay, ExerciseGoalOption, ExerciseLevel } from "./exercisePlans";
+import type { ExerciseDay, ExerciseLevel } from "./exercisePlans";
 
 export type ExercisePlan = {
   id: string;
@@ -7,7 +7,9 @@ export type ExercisePlan = {
   level: ExerciseLevel | "custom";
   heightCm: number | null;
   weightKg: number | null;
-  goal: ExerciseGoalOption | null;
+  // طبقِ درخواستِ صریح، هدف دیگر یکی از چند گزینه‌ی ثابت نیست — متنِ آزادِ
+  // خودِ کاربر است.
+  goal: string | null;
   gymDays: string[] | null;
   generatedByAi: boolean;
   createdAt: string;
@@ -18,7 +20,7 @@ export type ExercisePlanFormValue = {
   level: ExerciseLevel;
   heightCm: string;
   weightKg: string;
-  goal: ExerciseGoalOption | null;
+  goal: string;
   hasLimitation: boolean;
   limitationDetails: string;
   gymDays: string[];
@@ -29,7 +31,7 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   level: "beginner",
   heightCm: "",
   weightKg: "",
-  goal: null,
+  goal: "",
   hasLimitation: false,
   limitationDetails: "",
   gymDays: [],

@@ -119,11 +119,15 @@ export async function PATCH(req: NextRequest) {
   const parsed = parseTradeInput(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
-  const existing = await prisma.tradeEntry.findFirst({ where: { id, userId }, select: { id: true } });
+  const existing = await prisma.tradeEntry.findFirst({ where: { id, userId }, select: { id: true, externalId: true } });
   if (!existing) return NextResponse.json({ error: "معامله پیدا نشد" }, { status: 404 });
   if (!(await ownedAccount(userId, parsed.data.accountId))) {
     return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
   }
+
+  // معامله‌ای که از متاتریدر آمده (externalId دارد) و کاربر الان دستی ویرایشش
+  // می‌کند — از این به بعد sync دیگر رویش را بازنویسی نکند.
+  const syncLock = existing.externalId ? { syncLocked: true } : {};
 
   const checklist = await buildChecklistSnapshot(userId, body?.checklistId ?? null, parsed.checklistState);
   const ownedTags = parsed.tagIds.length
@@ -139,6 +143,7 @@ export async function PATCH(req: NextRequest) {
       data: {
         ...parsed.data,
         ...checklist,
+        ...syncLock,
         tags: { set: ownedTags.map((t) => ({ id: t.id })) },
         images: { create: parsed.images.map((img, i) => ({ dataUrl: img.dataUrl, caption: img.caption, order: i })) },
       },

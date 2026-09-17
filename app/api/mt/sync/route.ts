@@ -85,8 +85,14 @@ export async function POST(req: NextRequest) {
     // همگام‌شده تحلیل نوشته باشد و sync بعدی نباید پاکش کند.
     const existing = await prisma.tradeEntry.findUnique({
       where: { accountId_externalId: { accountId: link.accountId, externalId: t.externalId } },
-      select: { id: true, riskAmount: true },
+      select: { id: true, riskAmount: true, syncLocked: true },
     });
+
+    // کاربر یک‌بار خودش جزئیاتِ این معامله را دستی ویرایش کرده — دیگر حتی
+    // فیلدهای اصلی (symbol/pnl/قیمت‌ها/...) هم با sync بازنویسی نشوند.
+    if (existing?.syncLocked) {
+      continue;
+    }
 
     if (existing) {
       await prisma.tradeEntry.update({

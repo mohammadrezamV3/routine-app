@@ -10,12 +10,12 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { NumberInput } from "@/components/NumberInput";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
-import { ImageCropModal } from "@/components/ImageCropModal";
 import { AccountPageHead, AccountBlock, AccountSaveBar } from "@/components/AccountUI";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
+import { centerCropToDataUrl } from "@/lib/imageResize";
 
 type ProfileUser = {
   username: string | null;
@@ -53,10 +53,6 @@ export default function AccountProfilePage() {
   const [bannerSaving, setBannerSaving] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  // پاپ‌آپِ انتخابِ محلِ کراپ (طبقِ درخواستِ صریح) — قبل از آپلودِ واقعی،
-  // فایلِ انتخاب‌شده این‌جا می‌نشیند تا کاربر جابه‌جا/زوم کند؛ تاییدش
-  // مستقیم dataURL نهایی را می‌دهد که با همان روتِ همیشگی آپلود می‌شود.
-  const [cropTarget, setCropTarget] = useState<{ kind: "avatar" | "banner"; file: File } | null>(null);
 
   // ── فیلدهای قابل ویرایش ──
   const [firstName, setFirstName] = useState("");
@@ -104,8 +100,9 @@ export default function AccountProfilePage() {
     });
   }, []);
 
-  // ورودیِ هر دو تابع دیگر خودِ File نیست — همان dataURLِ از قبل کراپ‌شده‌ای
-  // که ImageCropModal (بعد از تاییدِ کاربر) تحویل می‌دهد.
+  // ورودیِ هر دو تابع دیگر خودِ File نیست — همان dataURLِ از قبل با
+  // centerCropToDataUrl ریسایزشده (کراپِ خودکارِ وسط، بدونِ پاپ‌آپِ انتخابِ
+  // کاربر — طبقِ درخواستِ صریح، همون عکس همونطوری آپلود می‌شود).
   async function uploadAvatar(dataUrl: string) {
     setMediaError(null);
     setAvatarSaving(true);
@@ -158,11 +155,24 @@ export default function AccountProfilePage() {
     }
   }
 
-  function confirmCrop(dataUrl: string) {
-    if (!cropTarget) return;
-    if (cropTarget.kind === "avatar") uploadAvatar(dataUrl);
-    else uploadBanner(dataUrl);
-    setCropTarget(null);
+  async function pickAvatarFile(file: File) {
+    setMediaError(null);
+    try {
+      const dataUrl = await centerCropToDataUrl(file, 256, 256);
+      await uploadAvatar(dataUrl);
+    } catch {
+      setMediaError("خطا در پردازش عکس");
+    }
+  }
+
+  async function pickBannerFile(file: File) {
+    setMediaError(null);
+    try {
+      const dataUrl = await centerCropToDataUrl(file, 1024, 320);
+      await uploadBanner(dataUrl);
+    } catch {
+      setMediaError("خطا در پردازش عکس");
+    }
   }
 
   async function removeBanner() {
@@ -271,7 +281,7 @@ export default function AccountProfilePage() {
           )}
           <input
             ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropTarget({ kind: "banner", file: f }); e.target.value = ""; }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) pickBannerFile(f); e.target.value = ""; }}
           />
 
           {/* طبقِ درخواستِ صریح دکمه‌ی جدا ندارد — خودِ عکس کلیک‌پذیر است.
@@ -291,7 +301,7 @@ export default function AccountProfilePage() {
           </button>
           <input
             ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropTarget({ kind: "avatar", file: f }); e.target.value = ""; }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) pickAvatarFile(f); e.target.value = ""; }}
           />
         </div>
 
@@ -396,28 +406,6 @@ export default function AccountProfilePage() {
         />
       )}
 
-      {cropTarget && cropTarget.kind === "avatar" && (
-        <ImageCropModal
-          file={cropTarget.file}
-          aspect={1}
-          shape="circle"
-          outputW={256}
-          outputH={256}
-          onCancel={() => setCropTarget(null)}
-          onConfirm={confirmCrop}
-        />
-      )}
-      {cropTarget && cropTarget.kind === "banner" && (
-        <ImageCropModal
-          file={cropTarget.file}
-          aspect={1024 / 320}
-          shape="rect"
-          outputW={1024}
-          outputH={320}
-          onCancel={() => setCropTarget(null)}
-          onConfirm={confirmCrop}
-        />
-      )}
     </section>
   );
 }
