@@ -200,25 +200,25 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         ) : (
           list.map((f) => (
             <div key={f.friendshipId} className="flex items-center justify-between gap-3">
-              <div className="flex flex-1 items-center justify-start gap-2.5">
+              {/* کل باکسِ آواتار+اسم کلیک‌پذیره (نه فقط اسم) — قبلا فقط اسم
+                  دکمه بود و کلیک روی عکس/فاصله‌ی خالی هیچ کاری نمی‌کرد. */}
+              <button
+                type="button"
+                onClick={() => setViewingProfile({ id: f.id, canStar: true })}
+                className="flex flex-1 items-center justify-start gap-2.5 bg-transparent text-right"
+              >
                 <span className="sm:hidden"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} /></span>
                 <span className="hidden sm:inline-flex"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={36} /></span>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setViewingProfile({ id: f.id, canStar: true })}
-                      className="bg-transparent text-[11.5px] font-semibold text-dash-text hover:text-dash-green sm:text-[13.5px]"
-                    >
-                      {f.name}
-                    </button>
+                    <span className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</span>
                     <StreakFlame streak={f.streak} className="text-[10px] sm:text-[11px]" />
                   </div>
                   <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]">
                     {f.completed} از {f.total} {unitLabel}
                   </div>
                 </div>
-              </div>
+              </button>
               <span className="sm:hidden"><DashProgressCircle value={f.pct} size={34} strokeWidth={3.5} /></span>
               <span className="hidden sm:inline-block"><DashProgressCircle value={f.pct} size={40} strokeWidth={4} /></span>
             </div>

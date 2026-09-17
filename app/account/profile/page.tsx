@@ -3,16 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Camera, Trash2, Phone, Cake, AtSign, User as UserIcon, ImagePlus,
+  Camera, Trash2, Phone, Cake, AtSign, User as UserIcon,
   Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2, NotebookPen,
 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { NumberInput } from "@/components/NumberInput";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
+import { ImageCropModal } from "@/components/ImageCropModal";
 import { AccountPageHead, AccountBlock, AccountSaveBar } from "@/components/AccountUI";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
-import { resizeImageToDataUrl, resizeBannerToDataUrl } from "@/lib/avatarUpload";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
@@ -52,6 +52,11 @@ export default function AccountProfilePage() {
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [bannerSaving, setBannerSaving] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  // پاپ‌آپِ انتخابِ محلِ کراپ (طبقِ درخواستِ صریح) — قبل از آپلودِ واقعی،
+  // فایلِ انتخاب‌شده این‌جا می‌نشیند تا کاربر جابه‌جا/زوم کند؛ تاییدش
+  // مستقیم dataURL نهایی را می‌دهد که با همان روتِ همیشگی آپلود می‌شود.
+  const [cropTarget, setCropTarget] = useState<{ kind: "avatar" | "banner"; file: File } | null>(null);
 
   // ── فیلدهای قابل ویرایش ──
   const [firstName, setFirstName] = useState("");
@@ -99,11 +104,12 @@ export default function AccountProfilePage() {
     });
   }, []);
 
-  async function uploadAvatar(file: File) {
+  // ورودیِ هر دو تابع دیگر خودِ File نیست — همان dataURLِ از قبل کراپ‌شده‌ای
+  // که ImageCropModal (بعد از تاییدِ کاربر) تحویل می‌دهد.
+  async function uploadAvatar(dataUrl: string) {
     setMediaError(null);
     setAvatarSaving(true);
     try {
-      const dataUrl = await resizeImageToDataUrl(file);
       const res = await fetch("/api/account/avatar", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -133,11 +139,10 @@ export default function AccountProfilePage() {
     window.dispatchEvent(new Event("avatar-updated"));
   }
 
-  async function uploadBanner(file: File) {
+  async function uploadBanner(dataUrl: string) {
     setMediaError(null);
     setBannerSaving(true);
     try {
-      const dataUrl = await resizeBannerToDataUrl(file);
       const res = await fetch("/api/account/banner", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -151,6 +156,13 @@ export default function AccountProfilePage() {
     } finally {
       setBannerSaving(false);
     }
+  }
+
+  function confirmCrop(dataUrl: string) {
+    if (!cropTarget) return;
+    if (cropTarget.kind === "avatar") uploadAvatar(dataUrl);
+    else uploadBanner(dataUrl);
+    setCropTarget(null);
   }
 
   async function removeBanner() {
@@ -237,30 +249,29 @@ export default function AccountProfilePage() {
       {/* ── بنر + آواتار ── */}
       <motion.div className="profile-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}>
         <div className="profile-banner">
-          {/* طبقِ درخواستِ صریح، خودِ بنر هم مثلِ عکسِ پروفایل با کلیک عوض
-              می‌شود — دکمه‌ی «افزودن بنر» فقط یک میان‌بُرِ دیده‌شونده روی
-              همان کار است، نه تنها راهش. */}
+          {/* طبقِ درخواستِ صریح، دیگر دکمه‌ی جدای «افزودن/تغییر بنر» نیست —
+              خودِ بنر مثلِ عکسِ پروفایل کلیک‌پذیر است؛ یک لایه‌ی نیمه‌شفافِ
+              دوربین فقط موقعِ هاور/فوکوس راهنماییِ بصری می‌دهد. */}
           <button
             type="button" className="profile-banner-hit" onClick={() => bannerInputRef.current?.click()}
             disabled={bannerSaving} aria-label={bannerUrl ? "تغییر بنر" : "افزودن بنر"}
           >
             {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
+            <span className="profile-banner-hint" aria-hidden="true">
+              {bannerSaving ? <Loader2 size={16} className="trade-spin" /> : <Camera size={16} />}
+            </span>
           </button>
 
-          <div className="profile-banner-actions">
-            <span className="profile-banner-btn" aria-hidden="true">
-              {bannerSaving ? <Loader2 size={14} className="trade-spin" /> : <ImagePlus size={14} />}
-              <span>{bannerUrl ? "تغییر بنر" : "افزودن بنر"}</span>
-            </span>
-            {bannerUrl && (
+          {bannerUrl && (
+            <div className="profile-banner-actions">
               <button type="button" className="profile-banner-btn" onClick={removeBanner} disabled={bannerSaving} aria-label="حذف بنر">
                 <Trash2 size={14} />
               </button>
-            )}
-          </div>
+            </div>
+          )}
           <input
             ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBanner(f); e.target.value = ""; }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropTarget({ kind: "banner", file: f }); e.target.value = ""; }}
           />
 
           {/* طبقِ درخواستِ صریح دکمه‌ی جدا ندارد — خودِ عکس کلیک‌پذیر است.
@@ -280,7 +291,7 @@ export default function AccountProfilePage() {
           </button>
           <input
             ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = ""; }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropTarget({ kind: "avatar", file: f }); e.target.value = ""; }}
           />
         </div>
 
@@ -382,6 +393,29 @@ export default function AccountProfilePage() {
           initial={birthDate}
           onPick={(d) => { setBirthDate(d); setDobOpen(false); }}
           onClose={() => setDobOpen(false)}
+        />
+      )}
+
+      {cropTarget && cropTarget.kind === "avatar" && (
+        <ImageCropModal
+          file={cropTarget.file}
+          aspect={1}
+          shape="circle"
+          outputW={256}
+          outputH={256}
+          onCancel={() => setCropTarget(null)}
+          onConfirm={confirmCrop}
+        />
+      )}
+      {cropTarget && cropTarget.kind === "banner" && (
+        <ImageCropModal
+          file={cropTarget.file}
+          aspect={1024 / 320}
+          shape="rect"
+          outputW={1024}
+          outputH={320}
+          onCancel={() => setCropTarget(null)}
+          onConfirm={confirmCrop}
         />
       )}
     </section>

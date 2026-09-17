@@ -47,14 +47,18 @@ export function AccountBlock({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: Math.min(index, 5) * 0.04, ease: [0.22, 1, 0.36, 1] }}
     >
-      {title && (
-        <h2 className="acc-block-title">
-          {icon}
-          {title}
-        </h2>
-      )}
-      {desc && <p className="acc-block-desc">{desc}</p>}
-      <div className={`acc-block-body${flush ? " flush" : ""}`}>{children}</div>
+      {/* طبقِ درخواستِ صریح، تایتل/توضیح دیگر بالای باکس شناور نیستند —
+          داخلِ همان باکسِ اطلاعات می‌نشینند. */}
+      <div className={`acc-block-body${flush ? " flush" : ""}`}>
+        {title && (
+          <h2 className="acc-block-title">
+            {icon}
+            {title}
+          </h2>
+        )}
+        {desc && <p className="acc-block-desc">{desc}</p>}
+        {children}
+      </div>
     </motion.section>
   );
 }

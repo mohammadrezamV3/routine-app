@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
 import { logoutAndRedirect } from "@/lib/logout";
@@ -19,8 +19,19 @@ type IndexUser = {
 // زبانه‌ها با آیکون؛ محتوای هر بخش (پروفایل، تنظیمات و...) توی صفحه‌ی
 // اختصاصی خودش با کلیک روی همین ردیف‌ها باز می‌شه.
 export default function AccountIndexPage() {
+  const router = useRouter();
   const [data, setData] = useState<IndexUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // طبقِ درخواستِ صریح: روی دسکتاپ سایدبار (app/account/layout.tsx) از قبل
+  // همینِ فهرستِ بخش‌ها را نشان می‌دهد، پس تکرارش این‌جا (توی ستونِ محتوا)
+  // یک باکسِ اضافه‌ی بی‌فایده بود — «سمتِ چپیِ» گزارش‌شده. روی دسکتاپ، پیشِ‌فرض
+  // مستقیم می‌رود روی «پروفایل»؛ موبایل (که سایدبار ندارد) دست‌نخورده می‌ماند.
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      router.replace("/account/profile");
+    }
+  }, [router]);
 
   useEffect(() => {
     getAccount().then((res: AccountData) => {
@@ -49,13 +60,12 @@ export default function AccountIndexPage() {
         </motion.div>
       )}
 
+      {/* طبقِ درخواستِ صریح، «خروج از حساب» دیگر باکسِ جدا و مجزا نیست —
+          داخلِ همون یک کارتِ بخش‌ها می‌نشیند، درست مثلِ بقیه‌ی ردیف‌ها. */}
       <div className="account-card account-card-full">
         {ACCOUNT_SECTIONS.map((s, i) => (
           <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
         ))}
-      </div>
-
-      <div className="account-card account-card-full" style={{ marginTop: 14 }}>
         <AccountRowButton
           icon={<LogOut size={15} />}
           label="خروج از حساب"
@@ -65,20 +75,10 @@ export default function AccountIndexPage() {
         />
       </div>
 
-      {/* ته صفحه‌ی اولِ پنل: لینک‌های حقوقی + نسخه‌ی اپ. دکمه‌ی خروج خودش
-          یک ردیفِ کارت بالاست، پس این‌جا تکرار نمی‌شود. */}
-      <div className="account-index-foot">
-        <nav className="account-index-links">
-          <Link href="/terms">قوانین و مقررات</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/about">درباره آریون</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/blog">وبلاگ</Link>
-        </nav>
-
-        <div className="account-index-version mono" dir="ltr">
-          Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}
-        </div>
+      {/* طبقِ درخواستِ صریح، لینک‌های حقوقی/فوتر حذف شدند — فقط نسخه‌ی اپ
+          می‌ماند، آن‌هم دیگر وسطِ صفحه نیست: گوشه‌ی پایین-راست. */}
+      <div className="account-index-version mono" dir="ltr">
+        Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}
       </div>
     </section>
   );

@@ -71,7 +71,7 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
         <div
           ref={menuRef}
           style={{ top: pos.top, right: pos.right }}
-          className="dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
+          className="dash-context-menu fixed z-[96] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
         >
           {actions.map((a) => (
             <div
