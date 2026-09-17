@@ -42,10 +42,8 @@ export async function GET(req: NextRequest) {
   });
   return NextResponse.json({
     events: events.map((e) => ({ ...e, occursAt: e.occursAt.toISOString(), createdAt: e.createdAt.toISOString(), updatedAt: e.updatedAt.toISOString() })),
-    // همیشه یک منبعِ بیرونی هست (فارکس‌فکتوری پیش‌فرض، مگر با
-    // ECONOMIC_CALENDAR_URL چیزِ دیگه‌ای ست شده باشه) — externalConfigured
-    // قبلا مستقیم process.env.ECONOMIC_CALENDAR_URL رو چک می‌کرد که با این
-    // تصمیمِ معماری (lib/economicCalendar.ts) هماهنگ نبود.
+    // منبعِ پیش‌فرض Trading Economics است (نیازمندِ ECONOMIC_CALENDAR_API_KEY)،
+    // مگر با ECONOMIC_CALENDAR_URL چیزِ دیگه‌ای ست شده باشه.
     externalSource: externalProviderName(),
   });
 }

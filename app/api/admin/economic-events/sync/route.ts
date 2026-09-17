@@ -8,7 +8,7 @@ import { syncEconomicCalendar } from "@/lib/economicCalendar";
 // همون کاری که کرانِ روزانه (/api/cron/economic-calendar) انجام می‌ده، ولی
 // دستی و فوری — برای وقتی که crontabِ سرور (deploy/cron.example) هنوز ست
 // نشده یا ادمین می‌خواد بدونِ صبرکردن تا اجرای بعدیِ کران، همین الان از
-// فارکس‌فکتوری/منبعِ تنظیم‌شده به‌روز کنه.
+// Trading Economics/منبعِ تنظیم‌شده به‌روز کنه.
 export async function POST() {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
