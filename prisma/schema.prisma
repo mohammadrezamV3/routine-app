@@ -1373,7 +1373,26 @@ model Roadmap {
   outcome String?
 
   // ساختار ایستگاه‌ها: [{ t, track, goal, weeks, items, practice, checkpoint, sessions }]
+  // رودمپ‌های گراف‌محور (نسخه‌ی جدید) این را خالی می‌گذارند؛ رودمپ‌های قدیمی
+  // همچنان از همین خوانده و رندر می‌شوند.
   stations Json
+
+  // ── گرافِ وابستگی (AI Roadmap Builder) ────────────────────────────────
+  // مرحله‌ها با نودهایشان: [{ id, title, description, order, nodes: [...] }]
+  // و یال‌ها جدا: [{ from, to }]. وجودِ stages یعنی این رودمپ گراف‌محور است.
+  stages      Json?
+  connections Json?
+  // وضعیتِ هر نود: { "http-basics": "completed" }. هیچ‌وقت مدل پُرش نمی‌کند —
+  // فقط خودِ کاربر، و درصدِ پیشرفت همیشه سمتِ سرور از روی همین حساب می‌شود.
+  nodeProgress Json?
+
+  estimatedHours Int?
+
+  // نسخه‌بندی: هر ویرایشِ AI یا بازتولید، نسخه را یک واحد بالا می‌برد و
+  // نسخه‌ی قبلی در history می‌نشیند تا قابلِ برگشت باشد.
+  // شکل: [{ version, graph, nodeProgress, savedAt, reason }]
+  version Int   @default(1)
+  history Json?
 
   // حوزه‌هایی که باید خوانده شوند، به ترتیبِ خواندن، هرکدام با دلیل —
   // جوابِ اصلیِ سوالِ «برای رسیدن به این خواسته اصلاً چی باید بخونم؟»

@@ -12,6 +12,8 @@ import { RoadmapStepToProgram } from "@/components/RoadmapStepToProgram";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
 import { ROADMAP_DAYS, addMinutes } from "@/lib/roadmapSchedule";
+import { RoadmapGraphView } from "@/components/RoadmapGraphView";
+import type { NodeProgress, ProgressSummary, RoadmapGraph } from "@/lib/roadmapGraph";
 
 // لینک‌کردن منابع به یک جست‌وجوی واقعی — نه یک URLِ ساختگی که معلوم نیست
 // درست باشد، بلکه جست‌وجوی همان عنوان به‌همراهِ موضوعِ رودمپ.
@@ -58,6 +60,12 @@ export default function CustomRoadmapDetailPage() {
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
+  // رودمپِ گراف‌محور (نسخه‌ی جدید). رودمپ‌های قدیمی این را ندارند و با همان
+  // رندرِ ایستگاهیِ پایین نشان داده می‌شوند.
+  const [gr, setGr] = useState<{
+    graph: RoadmapGraph; nodeProgress: NodeProgress; progress: ProgressSummary | null;
+    version: number; versions: { version: number; savedAt: string; reason: string }[];
+  } | null>(null);
 
   useEffect(() => {
     fetch(`/api/roadmaps/${params.id}`)
@@ -66,6 +74,15 @@ export default function CustomRoadmapDetailPage() {
         const rm: Roadmap | null = res.roadmap || null;
         setData(rm);
         setDone((rm?.progress as Record<string, boolean>) || {});
+        if (res.graph) {
+          setGr({
+            graph: res.graph,
+            nodeProgress: res.nodeProgress || {},
+            progress: res.progress || null,
+            version: res.version ?? 1,
+            versions: Array.isArray(res.versions) ? res.versions : [],
+          });
+        }
       })
       .catch(() => setData(null));
   }, [params.id]);
@@ -93,6 +110,35 @@ export default function CustomRoadmapDetailPage() {
 
   if (data === undefined) return <section className="trade-desktop"><LoadingBlock /></section>;
   if (data === null) return <section className="trade-desktop"><div className="item-line empty">این مسیر پیدا نشد.</div></section>;
+
+  // نسخه‌ی گراف‌محور: کلِ صفحه را خودش می‌سازد (نقشه، کشوی نود، ویرایشِ AI).
+  if (gr) {
+    return (
+      <section className="trade-desktop rm-page">
+        <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> مسیرها</Link>
+        {confirmDelete && (
+          <div className="rm-confirm">
+            <span>این مسیر و پیشرفتش حذف شود؟</span>
+            <div className="rm-confirm-actions">
+              <button type="button" className="account-outline-btn" onClick={() => setConfirmDelete(false)}>لغو</button>
+              <button type="button" className="trade-danger-btn" onClick={removeRoadmap}>حذف</button>
+            </div>
+          </div>
+        )}
+        <RoadmapGraphView
+          id={data.id}
+          topic={data.topic}
+          graph={gr.graph}
+          initialProgress={gr.nodeProgress}
+          initialSummary={gr.progress}
+          initialVersion={gr.version}
+          initialVersions={gr.versions}
+          onDelete={() => setConfirmDelete(true)}
+        />
+        <RoadmapDisclaimer />
+      </section>
+    );
+  }
 
   const total = data.stations.length;
   const doneCount = data.stations.filter((_, i) => done[String(i)]).length;

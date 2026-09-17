@@ -7040,6 +7040,156 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 .rm-answer span{ font-size:11px; line-height:1.9; color:var(--muted2); }
 .rm-answer b{ font-size:12px; line-height:1.9; color:var(--text); font-weight:700; }
 
+/* ── گرافِ رودمپ (AI Roadmap Builder) ─────────────────────────────────
+   نقشه‌ی وابستگی: مرحله‌ها نوارهای افقی‌اند و نودها داخلشان، با یال‌های
+   SVG بینشان. هیچ کتابخانه‌ی گرافی اضافه نشده — همان توکن‌ها و همان
+   شیشه‌ی بقیه‌ی اپ. */
+.rmg-wrap{ position:relative; margin-top:18px; }
+.rmg-canvas{
+  position:relative; overflow:hidden; touch-action:none; cursor:grab;
+  height:min(62vh, 560px); border-radius:18px;
+  background:var(--surface-1); border:1px solid var(--surface-line);
+}
+.rmg-canvas.dragging{ cursor:grabbing; }
+@media (max-width:640px){ .rmg-canvas{ height:min(58vh, 460px); } }
+
+.rmg-world{ position:absolute; top:0; inset-inline-start:0; transform-origin:0 0; }
+/* جهتِ چیدمان دستی (px) است، پس ظرف باید LTR بماند وگرنه inset-inline-start
+   مختصات‌ها را آینه می‌کند. خودِ متنِ داخلِ نودها دوباره RTL می‌شود. */
+.rmg-world{ direction:ltr; }
+.rmg-node, .rmg-stage-label{ direction:rtl; }
+
+.rmg-stage{
+  position:absolute; border-radius:16px;
+  background:rgba(var(--surface-rgb),.10); border:1px dashed rgba(var(--surface-rgb),.30);
+}
+.rmg-stage-label{
+  position:absolute; top:10px; inset-inline-end:14px;
+  font-size:11px; font-weight:700; color:var(--muted);
+}
+.rmg-stage-label b{ color:var(--accent); }
+
+.rmg-edges{ position:absolute; top:0; left:0; pointer-events:none; overflow:visible; }
+.rmg-edge{
+  fill:none; stroke:rgba(var(--surface-rgb),.55); stroke-width:1.6;
+  transition:stroke .2s ease;
+}
+.rmg-edge.done{ stroke:rgba(var(--accent-rgb),.75); stroke-width:2; }
+
+/* نود — دکمه است، پس ریستِ سراسریِ button باید صریح خنثی شود */
+.rmg-node{
+  position:absolute; display:flex; flex-direction:column; justify-content:center; gap:5px;
+  padding:9px 11px; border-radius:13px; cursor:pointer; text-align:start; overflow:hidden;
+  font:inherit; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  background:var(--surface-2); border:1px solid var(--line); color:var(--text);
+  transition:border-color .16s ease, background .16s ease, transform .12s ease;
+}
+body[data-theme="light"] .rmg-node, body:not([data-theme="light"]) .rmg-node{
+  background:var(--surface-2); box-shadow:none;
+}
+.rmg-node:active{ transform:scale(.98); }
+@media (hover:hover) and (pointer:fine){
+  .rmg-node:hover{ border-color:var(--accent); }
+}
+.rmg-node-title{
+  font-size:12px; font-weight:700; line-height:1.55;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.rmg-node-meta{
+  display:flex; align-items:center; gap:5px;
+  font-size:9.5px; color:var(--muted2);
+}
+.rmg-node.locked{ opacity:.62; }
+.rmg-node.in_progress{ border-color:rgba(var(--accent-rgb),.55); }
+.rmg-node.in_progress .rmg-node-meta{ color:var(--accent); }
+.rmg-node.completed,
+body[data-theme="light"] .rmg-node.completed,
+body:not([data-theme="light"]) .rmg-node.completed{
+  background:var(--accent-dim); border-color:var(--accent);
+}
+.rmg-node.completed .rmg-node-meta{ color:var(--accent); }
+.rmg-node.selected{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(var(--accent-rgb),.25); }
+
+.rmg-controls{
+  position:absolute; bottom:12px; inset-inline-end:12px; z-index:2;
+  display:flex; flex-direction:column; gap:6px;
+}
+.rmg-controls button{
+  width:32px; height:32px; padding:0; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text); background:rgba(var(--surface-rgb),.6);
+  border:1px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+}
+@media (hover:hover) and (pointer:fine){
+  .rmg-controls button:hover{ color:var(--accent); border-color:var(--accent); }
+}
+
+/* ── کشوی نود ─────────────────────────────────────────────────────── */
+.rmg-drawer-desc{ margin:0; font-size:12.5px; line-height:2; color:var(--muted); }
+.rmg-prereq-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+.rmg-prereq-list li{
+  display:flex; align-items:center; gap:7px;
+  font-size:12px; line-height:1.8; color:var(--muted);
+}
+.rmg-prereq-list li svg{ flex-shrink:0; color:var(--muted2); }
+.rmg-prereq-list li.done{ color:var(--text); }
+.rmg-prereq-list li.done svg{ color:var(--accent); }
+.rmg-locked-note{
+  margin-top:9px; padding:9px 11px; border-radius:11px; font-size:11px; line-height:1.9;
+  color:#E5A83C; background:rgba(229,168,60,.12); border:1px solid rgba(229,168,60,.3);
+}
+.rmg-bullets{ margin:0; padding-inline-start:17px; display:flex; flex-direction:column; gap:7px; }
+.rmg-bullets li{ font-size:12px; line-height:1.95; color:var(--muted); }
+.rmg-bullets li::marker{ color:var(--accent); }
+.rmg-bullets.task li{ color:var(--text); }
+
+.rmg-resources{ display:flex; flex-direction:column; gap:8px; }
+.rmg-resource{
+  display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:12px;
+  text-decoration:none; color:var(--text);
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
+  transition:border-color .16s ease;
+}
+@media (hover:hover) and (pointer:fine){ .rmg-resource:hover{ border-color:var(--accent); } }
+.rmg-resource > svg{ flex-shrink:0; color:var(--accent); }
+.rmg-resource-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.rmg-resource-body b{ font-size:12px; font-weight:700; line-height:1.7; unicode-bidi:plaintext; }
+.rmg-resource-body em{ font-size:10px; font-style:normal; color:var(--muted2); }
+
+.rmg-status-actions{ display:flex; gap:7px; margin-top:22px; }
+.rmg-status-btn{
+  flex:1; padding:11px 0; border-radius:12px; cursor:pointer;
+  font:inherit; font-size:11.5px; font-weight:700; box-shadow:none;
+  color:var(--muted); background:rgba(var(--bg-rgb),.5); border:1px solid var(--line);
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
+}
+body:not([data-theme="light"]) .rmg-status-btn{ background:#0B0C0D; }
+.rmg-status-btn.on,
+body[data-theme="light"] .rmg-status-btn.on,
+body:not([data-theme="light"]) .rmg-status-btn.on{
+  color:var(--accent); border-color:var(--accent); background:var(--accent-dim);
+}
+.rmg-status-btn:disabled{ opacity:.6; cursor:default; }
+
+/* ── ویرایش با AI / نسخه‌ها ────────────────────────────────────────── */
+.rmg-edit{ margin-top:24px; }
+.rmg-edit-row{ display:flex; gap:9px; margin-top:12px; }
+.rmg-edit-row .wsearch-newform-name{ flex:1; min-width:0; }
+.rmg-edit-btn{ width:auto; flex:0 0 auto; padding-inline:20px; }
+.rmg-edit-hints{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.rmg-edit-actions{ display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }
+.rmg-edit-actions button{ display:inline-flex; align-items:center; gap:7px; }
+
+.rmg-version-list{ display:flex; flex-direction:column; gap:9px; margin-top:12px; }
+.rmg-version{
+  display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:12px;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
+}
+.rmg-version-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.rmg-version-body b{ font-size:12px; font-weight:700; }
+.rmg-version-body span{ font-size:11px; color:var(--muted); line-height:1.8; }
+
 /* ===================== لودینگِ مشترک ===================== */
 /* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد، بدونِ هیچ متنِ دیگری» —
    درخواستِ صریحِ کاربر. Spinner (components/Spinner.tsx) حالا از

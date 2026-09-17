@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { computeProgress, sanitizeProgress } from "@/lib/roadmapGraph";
+import { graphFromRow } from "@/lib/roadmapStore";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireSuperAdmin();
@@ -20,7 +22,24 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     );
   }
   if (!roadmap) return NextResponse.json({ error: "not found" }, { status: 404 });
-  return NextResponse.json({ roadmap });
+
+  // رودمپِ گراف‌محور علاوه بر ردیفِ خام، خودِ گرافِ نرمال‌شده و پیشرفتِ
+  // حساب‌شده‌ی سمتِ سرور را هم می‌گیرد. رودمپ‌های قدیمی (بدونِ stages) مثلِ
+  // قبل فقط ردیف را می‌گیرند و با رندرِ قدیمی نشان داده می‌شوند.
+  const graph = graphFromRow(roadmap);
+  if (!graph) return NextResponse.json({ roadmap });
+
+  const nodeProgress = sanitizeProgress(graph, roadmap.nodeProgress);
+  return NextResponse.json({
+    roadmap,
+    graph,
+    nodeProgress,
+    progress: computeProgress(graph, nodeProgress),
+    version: roadmap.version,
+    versions: Array.isArray(roadmap.history)
+      ? (roadmap.history as any[]).map((h) => ({ version: h?.version, savedAt: h?.savedAt, reason: h?.reason }))
+      : [],
+  });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
