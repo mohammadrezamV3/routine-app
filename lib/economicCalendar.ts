@@ -7,18 +7,16 @@
 //   • این ماژول نباید به در دسترس بودن یک سرویس خارجی گره بخورد. با
 //     ورود دستی ادمین از همین حالا کامل کار می‌کند.
 //
-// منبع پیش‌فرض حالا Trading Economics است (نه دیگر فارکس‌فکتوری — طبقِ
-// درخواستِ صریح عوض شد، چون فیدِ رایگانِ فارکس‌فکتوری actual رو قابلِ
-// اعتماد نمی‌داد). کران روزانه آن را می‌گیرد و در همین جدول upsert
-// می‌کند؛ ورود دستی ادمین هم سر جایش می‌ماند. Trading Economics بدونِ
-// کلید کار نمی‌کند — `ECONOMIC_CALENDAR_API_KEY` باید ست شود، وگرنه (طبقِ
-// همون قرارداد) sync خودکار غیرفعال می‌ماند و فقط ورود دستی ادمین کار
-// می‌کند. با ست‌کردن `ECONOMIC_CALENDAR_URL` می‌شود منبع را کامل با یک
-// فیدِ دیگر عوض کرد، بدون اینکه هیچ‌جای دیگر اپ تغییر کند.
+// منبع پیش‌فرض حالا JBlanked Calendar API است (نه Trading Economics و نه
+// فارکس‌فکتوری — طبقِ درخواستِ صریح عوض شد). کران روزانه آن را می‌گیرد و
+// در همین جدول upsert می‌کند؛ ورود دستی ادمین هم سر جایش می‌ماند. JBlanked
+// بدونِ کلید کار نمی‌کند — `ECONOMIC_CALENDAR_API_KEY` باید ست شود (از
+// jblanked.com/profile)، وگرنه sync خودکار غیرفعال می‌ماند و فقط ورود
+// دستی ادمین کار می‌کند. با ست‌کردن `ECONOMIC_CALENDAR_URL` می‌شود منبع
+// را کامل با یک فیدِ دیگر عوض کرد، بدون اینکه هیچ‌جای دیگر اپ تغییر کند.
 //
 // طبقِ درخواستِ صریح، عنوانِ رویدادها دیگر به فارسی ترجمه نمی‌شود — دقیقاً
-// همان متنِ انگلیسیِ منبع (مثلِ خودِ Trading Economics) ذخیره/نمایش داده
-// می‌شود.
+// همان متنِ انگلیسیِ منبع (مثلِ خودِ JBlanked) ذخیره/نمایش داده می‌شود.
 
 export type EconomicImpact = "LOW" | "MEDIUM" | "HIGH";
 
@@ -54,48 +52,53 @@ export function currencyMeta(code: string) {
 }
 
 /**
- * منبع پیش‌فرض: Trading Economics — `/calendar/country/all/{از}/{تا}`
- * با کلید در query (`c=`)، نه هدر Bearer (طبقِ مستندِ خودِ Trading
- * Economics که کلید را همین‌طوری می‌خواهد).
+ * منبع پیش‌فرض: JBlanked Calendar API — `/news/api/mql5/calendar/range/`
+ * با `from`/`to` (فرمت YYYY-MM-DD) در query؛ کلید در هدرِ
+ * `Authorization: Api-Key ...` می‌رود (طبقِ مستندِ خودِ JBlanked)، نه در
+ * URL — برایِ همین این تابع فقط URL را می‌سازد و کلید جای دیگری
+ * (`fetchExternalEvents`) به‌عنوانِ هدر اضافه می‌شود.
  *
- * برخلافِ فارکس‌فکتوریِ رایگان (که فقط سه بازه‌ی ثابتِ هفتگی داشت و
- * روزهایِ فراتر از آن سه هفته همیشه خالی می‌ماندند)، اینجا یک بازه‌ی
- * تاریخِ دلخواه می‌گیریم — پس «تا یک ماهِ آینده» واقعاً امکان‌پذیر است، نه
- * محدود به سه هفته.
+ * یک درخواستِ تکی با بازه‌ی تاریخِ دلخواه — پس «تا یک ماهِ آینده» واقعاً
+ * امکان‌پذیر است.
  */
-const TRADINGECONOMICS_BASE_URL = "https://api.tradingeconomics.com/calendar/country/all";
-const TE_LOOKBACK_DAYS = 7;
-const TE_LOOKAHEAD_DAYS = 30;
+const JBLANKED_BASE_URL = "https://www.jblanked.com/news/api/mql5/calendar/range/";
+const JB_LOOKBACK_DAYS = 7;
+const JB_LOOKAHEAD_DAYS = 30;
 // در حالتِ «تند» (نزدیکِ لحظه‌ی انتشارِ یک خبر) فقط بازه‌ی خیلی نزدیکِ
 // امروز لازم است، نه کلِ بازه‌ی یک‌ماهه.
-const TE_FAST_WINDOW_DAYS = 1;
+const JB_FAST_WINDOW_DAYS = 1;
 
 function isoDateOnly(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/**
- * URL منبعِ پیش‌فرض را با بازه‌ی تاریخ و کلیدِ API می‌سازد. بدونِ
- * `ECONOMIC_CALENDAR_API_KEY` خطا می‌دهد — Trading Economics بدونِ کلید
- * اصلاً پاسخ نمی‌دهد، پس بهتر است همین‌جا با پیامِ فارسیِ روشن متوقف شود
- * تا با یک خطایِ شبکه‌ایِ مبهم اشتباه گرفته نشود. صدا زدنِ این تابع همیشه
- * پشتِ `externalProviderConfigured()` است (کران/همگام‌سازیِ دستی) پس در
- * عمل فقط وقتی خودِ ادمین «همگام‌سازی الان» را با کلیدِ خالی بزند دیده
- * می‌شود.
- */
 function buildDefaultCalendarUrl(fast: boolean | undefined): string {
-  const key = process.env.ECONOMIC_CALENDAR_API_KEY;
-  if (!key) {
-    throw new Error(
-      "ECONOMIC_CALENDAR_API_KEY تنظیم نشده — Trading Economics بدونِ کلید کار نمی‌کند. رویدادها را دستی از پنلِ ادمین اضافه کن یا کلید را در env ست کن."
-    );
-  }
   const now = Date.now();
-  const lookbackDays = fast ? TE_FAST_WINDOW_DAYS : TE_LOOKBACK_DAYS;
-  const lookaheadDays = fast ? TE_FAST_WINDOW_DAYS : TE_LOOKAHEAD_DAYS;
-  const d1 = isoDateOnly(new Date(now - lookbackDays * 86_400_000));
-  const d2 = isoDateOnly(new Date(now + lookaheadDays * 86_400_000));
-  return `${TRADINGECONOMICS_BASE_URL}/${d1}/${d2}?c=${encodeURIComponent(key)}&f=json`;
+  const lookbackDays = fast ? JB_FAST_WINDOW_DAYS : JB_LOOKBACK_DAYS;
+  const lookaheadDays = fast ? JB_FAST_WINDOW_DAYS : JB_LOOKAHEAD_DAYS;
+  const from = isoDateOnly(new Date(now - lookbackDays * 86_400_000));
+  const to = isoDateOnly(new Date(now + lookaheadDays * 86_400_000));
+  return `${JBLANKED_BASE_URL}?from=${from}&to=${to}`;
+}
+
+// JBlanked تاریخ را به‌شکلِ «YYYY.MM.DD HH:mm:ss» می‌دهد (نه ISO)، پس
+// new Date() معمولی قابلِ‌اتکا نیست (پارس‌کردنِ این فرمت جزوِ استانداردِ
+// ECMAScript نیست، فقط یک fallbackِ غیررسمیِ V8 است که با TZ سرور فرق
+// می‌کند). این‌جا صریحاً UTC فرض می‌شود.
+//
+// ⚠️ این فرض تأیید‌نشده است (مستندِ jblanked.com از پشتِ پراکسیِ این محیط
+// در دسترس نبود) — بعدِ اولین sync واقعی، ساعتِ یک رویدادِ شناخته‌شده
+// (مثلاً NFP) را با MT5/سایتِ خودِ JBlanked مقایسه کن؛ اگر آفست داشت،
+// همین‌جا (`JBLANKED_DATE_RE`) باید یک offset ثابت اضافه شود.
+const JBLANKED_DATE_RE = /^(\d{4})\.(\d{2})\.(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/;
+
+function parseCalendarDate(raw: string): Date {
+  const m = raw.match(JBLANKED_DATE_RE);
+  if (m) {
+    const [, y, mo, d, h, mi, s] = m;
+    return new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}Z`);
+  }
+  return new Date(raw);
 }
 
 export type EconomicEventDto = {
@@ -155,23 +158,23 @@ export type NormalizedEvent = {
   actual: string | null;
   forecast: string | null;
   previous: string | null;
-  // فیدِ رایگانِ پیش‌فرض (فارکس‌فکتوری) این فیلد رو نمی‌ده، پس همیشه
-  // null می‌مونه — ولی اگه یه‌روز ECONOMIC_CALENDAR_URL به یه فیدِ تجاریِ
-  // دارایِ توضیح عوض بشه، همین‌جا بدونِ تغییرِ کدِ دیگه‌ای پر می‌شه.
+  // منبعِ پیش‌فرض (JBlanked) این فیلد رو نمی‌ده، پس همیشه null می‌مونه —
+  // ولی اگه یه‌روز ECONOMIC_CALENDAR_URL به یه فیدِ دیگه‌ی دارایِ توضیح
+  // عوض بشه، همین‌جا بدونِ تغییرِ کدِ دیگه‌ای پر می‌شه.
   description: string | null;
 };
 
-// Trading Economics بدونِ کلید کار نمی‌کند (برخلافِ فارکس‌فکتوریِ رایگانِ
-// قبلی) — پس این دیگر همیشه true نیست: فقط وقتی یا یک URL دستی ست شده یا
-// کلیدِ Trading Economics موجود است. نبودِ هیچ‌کدام یعنی sync خودکار
-// خاموش می‌ماند و تقویم فقط با ورود دستیِ ادمین پر می‌شود.
+// JBlanked بدونِ کلید کار نمی‌کند (برخلافِ فارکس‌فکتوریِ رایگانِ قبلی) —
+// پس این دیگر همیشه true نیست: فقط وقتی یا یک URL دستی ست شده یا کلیدِ
+// JBlanked موجود است. نبودِ هیچ‌کدام یعنی sync خودکار خاموش می‌ماند و
+// تقویم فقط با ورود دستیِ ادمین پر می‌شود.
 export function externalProviderConfigured(): boolean {
   return !!(process.env.ECONOMIC_CALENDAR_URL || process.env.ECONOMIC_CALENDAR_API_KEY);
 }
 
 export function externalProviderName(): string {
   if (process.env.ECONOMIC_CALENDAR_SOURCE) return process.env.ECONOMIC_CALENDAR_SOURCE;
-  return process.env.ECONOMIC_CALENDAR_URL ? "EXTERNAL" : "TRADINGECONOMICS";
+  return process.env.ECONOMIC_CALENDAR_URL ? "EXTERNAL" : "JBLANKED";
 }
 
 function pickString(row: Record<string, unknown>, keys: string[]): string | null {
@@ -190,8 +193,9 @@ function normalizeImpact(raw: string | null): EconomicImpact {
   return "LOW";
 }
 
-// Trading Economics سطحِ تأثیر را در فیلدِ `Importance` (عددِ ۱ تا ۳)
-// می‌دهد — نامِ فیلد با فارکس‌فکتوریِ قبلی («impact») فرق دارد.
+// JBlanked سطحِ تأثیر را در فیلدِ `Impact` («High»/«Medium»/«Low») می‌دهد؛
+// «Importance» هم نگه داشته شده برایِ سازگاری با فیدهایِ عددیِ دیگر
+// (مثلِ Trading Economics که این ماژول قبلاً به آن وصل بود).
 const IMPACT_FIELD_KEYS = ["impact", "importance", "Impact", "Importance"];
 
 /**
@@ -216,11 +220,11 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
 
-    const title = pickString(row, ["title", "event", "name", "Event"]);
+    const title = pickString(row, ["title", "event", "name", "Event", "Name"]);
     const dateRaw = pickString(row, ["date", "occursAt", "datetime", "Date", "time"]);
     if (!title || !dateRaw) continue;
 
-    const occursAt = new Date(dateRaw);
+    const occursAt = parseCalendarDate(dateRaw);
     if (isNaN(occursAt.getTime())) continue;
 
     // فارکس‌فکتوری کد ارز را توی فیلد `country` می‌گذارد (نه کد کشور)، پس
@@ -234,7 +238,7 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
     if (!currency) continue;
 
     out.push({
-      externalId: pickString(row, ["id", "eventId", "calendarId"]) || `${currency}-${title}-${occursAt.toISOString()}`,
+      externalId: pickString(row, ["id", "eventId", "calendarId", "ID", "Id"]) || `${currency}-${title}-${occursAt.toISOString()}`,
       title: title.slice(0, 160),
       country: (currencyMeta(currency)?.country || rawCountry || currency).toUpperCase().slice(0, 2),
       currency: currency.slice(0, 8),
@@ -253,11 +257,11 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 // گاهی با تأخیرِ خیلی زیاد/قطعیِ اتصال مواجه می‌شود) کل sync رو تا مدتِ
 // نامعلومی معلق نگه می‌داشت — از بیرون دقیقاً شبیهِ «دیتا نمیاد» بود، چون
 // نه خطا می‌داد نه جواب. ۱۲ ثانیه برایِ یک فیدِ JSONِ سبک کافی‌ست.
-async function fetchOneFeed(url: string, bearerKey: string | undefined): Promise<NormalizedEvent[]> {
+async function fetchOneFeed(url: string, headers: Record<string, string> | undefined): Promise<NormalizedEvent[]> {
   let res: Response;
   try {
     res = await fetch(url, {
-      headers: bearerKey ? { Authorization: `Bearer ${bearerKey}` } : undefined,
+      headers,
       cache: "no-store",
       signal: AbortSignal.timeout(12_000),
     });
@@ -275,19 +279,28 @@ async function fetchOneFeed(url: string, bearerKey: string | undefined): Promise
  * فراخوانی منبع بیرونی — فقط از سمت سرور (کران) صدا زده می‌شود.
  *
  * وقتی `ECONOMIC_CALENDAR_URL` ست نشده (پیش‌فرض)، یک درخواستِ تکی به
- * Trading Economics با بازه‌ی تاریخِ کامل (لغایتِ یک ماهِ آینده) می‌رود —
- * برخلافِ فارکس‌فکتوریِ قبلی که مجبور بودیم سه فیدِ هفتگیِ جدا را merge
- * کنیم، Trading Economics یک بازه‌ی دلخواه را در یک درخواست می‌دهد. کلید
- * اینجا به‌صورتِ query param (`c=`) در خودِ URL نشسته (نه هدرِ Bearer —
- * Trading Economics کلید را این‌طوری می‌خواهد)؛ هدرِ Bearer فقط برایِ
- * `ECONOMIC_CALENDAR_URL` دستی (یک فیدِ تجاریِ دیگر) نگه داشته شده.
+ * JBlanked با بازه‌ی تاریخِ کامل (لغایتِ یک ماهِ آینده) می‌رود. کلید
+ * به‌صورتِ هدرِ `Authorization: Api-Key ...` می‌رود (طبقِ مستندِ خودِ
+ * JBlanked)، نه query param. بدونِ کلید همین‌جا با پیامِ فارسیِ روشن متوقف
+ * می‌شود تا با یک خطایِ شبکه‌ایِ مبهم اشتباه گرفته نشود — صدا زدنِ این تابع
+ * همیشه پشتِ `externalProviderConfigured()` است (کران) پس در عمل فقط
+ * وقتی خودِ ادمین «همگام‌سازی الان» را با کلیدِ خالی بزند دیده می‌شود.
+ *
+ * برایِ `ECONOMIC_CALENDAR_URL` دستی (یک فیدِ دیگر)، کلید همچنان به‌صورتِ
+ * هدرِ Bearer فرستاده می‌شود — قراردادِ قبلیِ این ماژول برایِ فیدهایِ دیگر.
  */
 export async function fetchExternalEvents(opts?: { fast?: boolean }): Promise<NormalizedEvent[]> {
   const customUrl = process.env.ECONOMIC_CALENDAR_URL;
+  const key = process.env.ECONOMIC_CALENDAR_API_KEY;
   if (customUrl) {
-    return fetchOneFeed(customUrl, process.env.ECONOMIC_CALENDAR_API_KEY);
+    return fetchOneFeed(customUrl, key ? { Authorization: `Bearer ${key}` } : undefined);
   }
-  return fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), undefined);
+  if (!key) {
+    throw new Error(
+      "ECONOMIC_CALENDAR_API_KEY تنظیم نشده — JBlanked بدونِ کلید کار نمی‌کند. رویدادها را دستی از پنلِ ادمین اضافه کن یا کلید را (از jblanked.com/profile) در env ست کن."
+    );
+  }
+  return fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), { Authorization: `Api-Key ${key}` });
 }
 
 /**
@@ -316,7 +329,7 @@ export async function syncEconomicCalendar(prisma: {
   let updated = 0;
   for (const e of events) {
     const { externalId, description, ...data } = e;
-    // Trading Economics هم description نمی‌ده (همیشه null) — اگه بدونِ‌قید
+    // JBlanked هم description نمی‌ده (همیشه null) — اگه بدونِ‌قید
     // توی update بذاریمش، هر sync توضیحی رو که ادمین دستی رویِ همین رویدادِ
     // sync‌شده نوشته پاک می‌کنه. فقط وقتی خودِ منبع واقعاً یه description
     // داده (فیدِ تجاریِ دیگه‌ای) رویِ ردیف می‌شینه؛ create همیشه هرچی هست

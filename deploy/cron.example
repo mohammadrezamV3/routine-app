@@ -27,10 +27,10 @@
 # (نگاه کن به app/api/cron/economic-alerts)
 */5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-alerts >/dev/null 2>&1
 
-# همگام‌سازیِ تقویم اقتصادی — منبع Trading Economics است؛ بدونِ
-# ECONOMIC_CALENDAR_API_KEY توی env، این کران کاری نمی‌کنه و تقویم فقط با
-# ورود دستیِ ادمین پر می‌شه. ECONOMIC_CALENDAR_URL فقط برای عوض‌کردنِ کاملِ
-# منبع به یک فیدِ دیگه لازمه.
+# همگام‌سازیِ تقویم اقتصادی — منبع JBlanked Calendar API است؛ بدونِ
+# ECONOMIC_CALENDAR_API_KEY توی env (از jblanked.com/profile)، این کران
+# کاری نمی‌کنه و تقویم فقط با ورود دستیِ ادمین پر می‌شه. ECONOMIC_CALENDAR_URL
+# فقط برای عوض‌کردنِ کاملِ منبع به یک فیدِ دیگه لازمه.
 #
 # توجه مهم: اگه از Docker (cluster.js) دیپلوی می‌کنی، این خط رو اصلا اضافه
 # نکن — cluster.js با همون CRON_SECRET خودش از داخلِ کانتینر یک لوپِ

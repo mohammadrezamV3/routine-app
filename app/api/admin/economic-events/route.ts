@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
   });
   return NextResponse.json({
     events: events.map((e) => ({ ...e, occursAt: e.occursAt.toISOString(), createdAt: e.createdAt.toISOString(), updatedAt: e.updatedAt.toISOString() })),
-    // منبعِ پیش‌فرض Trading Economics است (نیازمندِ ECONOMIC_CALENDAR_API_KEY)،
+    // منبعِ پیش‌فرض JBlanked Calendar API است (نیازمندِ ECONOMIC_CALENDAR_API_KEY)،
     // مگر با ECONOMIC_CALENDAR_URL چیزِ دیگه‌ای ست شده باشه.
     externalSource: externalProviderName(),
   });

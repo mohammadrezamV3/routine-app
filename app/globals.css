@@ -7458,30 +7458,27 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
 }
 
 /* ── پاپ‌آپ پروفایل دوست ──────────────────────────────────────
-   طبقِ درخواستِ صریح: وسطِ بالای صفحه (نه وسطِ عمودیِ معمولِ بقیه‌ی
-   پاپ‌آپ‌ها) — position:fixed با یک top ثابت، نه transform:translateY(-50%). */
+   طبقِ گزارشِ صریحِ تازه («توی موبایل و دسکتاپ جاش درست نیست، خیلی
+   بالای صفحه‌ست») دیگر «نزدیکِ بالا»ی ثابت نیست — روی هر عرضِ صفحه‌ای
+   عمودی وسط‌چین می‌شود، دقیقاً مثلِ بقیه‌ی پاپ‌آپ‌های اپ. قبلاً فقط
+   دسکتاپ (min-width:768px) این وسط‌چینی را داشت و موبایل عمداً روی
+   top:64px پین بود؛ آن تصمیم اینجا برداشته شد. */
 .friend-profile-panel{
   /* باگِ گزارش‌شده: «باز که می‌کنم بیرون صفحه‌ست». دو علتِ پشت‌سرهم داشت:
      اولی inset-inline-end بود (روی وبویوی بدونِ پشتیبانیِ کامل بی‌اثر)، و
      بعد از تعویضش با left:50%+translateX(-50%)، خودِ انیمیشنِ پایین
      (`tradeFadeIn` که فریمِ آخرش `transform:none` است و با fill-mode
      `both` همان را برای همیشه نگه می‌دارد) همان translate را پاک می‌کرد و
-     پنل باز هم نصفه از لبه بیرون می‌زد. وسط‌چینی حالا با margin:auto است
-     که نه به پشتیبانیِ logical property وابسته است و نه انیمیشن می‌تواند
-     پاکش کند. */
-  position:fixed; top:64px; left:0; right:0; margin-left:auto; margin-right:auto; z-index:71;
-  width:min(360px, calc(100vw - 32px)); max-height:calc(100vh - 100px); overflow-y:auto; overflow-x:hidden;
+     پنل باز هم نصفه از لبه بیرون می‌زد. وسط‌چینی حالا با inset:0+margin:auto
+     است که نه به پشتیبانیِ logical property وابسته است و نه انیمیشن
+     می‌تواند پاکش کند. */
+  position:fixed; inset:0; margin:auto; z-index:71; height:max-content;
+  width:min(360px, calc(100vw - 32px));
+  max-height:calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y:auto; overflow-x:hidden;
   padding:24px 20px 20px; border-radius:24px; border:1px solid var(--surface-line);
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
   animation:tradeFadeIn .22s ease both;
-}
-/* طبقِ گزارشِ صریح، توی نسخه‌ی دسکتاپ این پاپ‌آپ وسطِ صفحه نیست — روی
-   صفحه‌ی بلند فقط نزدیکِ بالا می‌نشیند و پایینش خالی می‌ماند. از تبلت/
-   دسکتاپ به بالا وسط‌چینیِ عمودی هم اضافه می‌شود (با inset+margin:auto،
-   نه transform، وگرنه همان باگِ tradeFadeIn دوباره پاکش می‌کند)؛ روی
-   موبایل همان چیدمانِ «نزدیکِ بالا»ی قبلی می‌ماند. */
-@media (min-width:768px){
-  .friend-profile-panel{ top:0; bottom:0; margin-top:auto; margin-bottom:auto; height:max-content; }
 }
 /* ── پاپ‌آپِ پروفایلِ دوست — چیدمانِ شماتیکِ صریحِ کاربر ──────────────────
    بنر و عکسِ پروفایل توی هم؛ آواتار روی لبه‌ی پایینِ بنر سمتِ راست؛ نامِ فرد
@@ -7527,13 +7524,25 @@ body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.
   width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0;
   border:4px solid var(--surface-2); background:var(--surface-1);
 }
-/* زیرِ بنر: آیدی و بیو، سمتِ چپ. پدینگِ بالا باید از ۳۰پیکسلِ آویزانِ
-   آواتار بیشتر باشد وگرنه متن زیرِ عکس می‌رود. */
-/* آیدی/پلن/بیو سمتِ چپ‌اند (طبقِ شماتیک). این پنل همیشه RTL است، پس
+/* زیرِ بنر: پلن/بیو/آیدی/شماره، سمتِ چپ. پدینگِ بالا باید از ۳۰پیکسلِ
+   آویزانِ آواتار بیشتر باشد وگرنه متن زیرِ عکس می‌رود. */
+/* پلن/بیو/آیدی/شماره سمتِ چپ‌اند (طبقِ شماتیک). این پنل همیشه RTL است، پس
    «چپ» یعنی flex-end — نه flex-start که سمتِ راست می‌افتد. */
-.friend-profile-id{
-  display:flex; flex-direction:column; align-items:flex-end; gap:4px;
+.friend-profile-body{
+  display:flex; flex-direction:column; align-items:flex-end;
   padding-top:40px; text-align:left;
+}
+.friend-profile-plan-row{ display:flex; justify-content:flex-end; width:100%; margin-bottom:6px; }
+/* هر جعبه (بیو/آیدی/شماره) یک بخشِ جداست، با خط‌جداکننده‌ی خودش — طبقِ
+   شماتیکِ صریحِ کاربر. چون این بخش‌ها شرطی رندر می‌شوند (اگه فیلد خالی
+   باشد، کلِ جعبه‌اش حذف می‌شود، نه فقط متنش)، اولین بخشِ دیده‌شده هرکدام
+   که باشد همین خط را دارد — دقیقاً زیرِ بنر، جای همان خطِ شماتیک. */
+.friend-profile-section{
+  width:100%; display:flex; flex-direction:column; align-items:flex-end;
+  margin-top:10px; padding-top:10px; border-top:1px solid var(--surface-line);
+}
+.friend-profile-section-label{
+  font-size:10px; font-weight:700; color:var(--muted2); margin-bottom:4px;
 }
 /* آیدی حالا یک دکمه‌ی کپی‌شدنی است — طبقِ درخواستِ صریح */
 .friend-profile-username{
@@ -7546,7 +7555,7 @@ body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.
   color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);
 }
 .friend-profile-bio{
-  margin:2px 0 0; font-size:12px; line-height:1.9; color:var(--muted);
+  margin:0; font-size:12px; line-height:1.9; color:var(--muted);
   text-align:left; max-width:100%; overflow-wrap:anywhere; white-space:pre-line;
 }
 .friend-profile-stats{
