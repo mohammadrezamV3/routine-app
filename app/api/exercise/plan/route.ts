@@ -3,14 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey, AiFeatureKey } from "@prisma/client";
-import { getExercisePlan, GOAL_FALLBACK_MAP, GOAL_OPTION_LABELS, ExerciseGoalOption, ExerciseLevel } from "@/lib/exercisePlans";
+import { getExercisePlan, guessFallbackGoal, ExerciseLevel } from "@/lib/exercisePlans";
 import { generateExercisePlan } from "@/lib/aiClient";
 import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { FA_WEEKDAY } from "@/lib/jalali";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
-const VALID_GOALS = Object.keys(GOAL_OPTION_LABELS) as ExerciseGoalOption[];
 const MAX_DESCRIPTION_LEN = 500;
+const MAX_GOAL_LEN = 200;
 
 // AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاستِ
 // سرورلس ممکنه زودتر از اون قطعش کنه.
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     level: ExerciseLevel;
     heightCm?: number;
     weightKg?: number;
-    goal: ExerciseGoalOption;
+    goal: string;
     hasPhysicalLimitation: boolean;
     limitationDetails?: string;
     gymDays: string[];
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   if (!level || !VALID_LEVELS.includes(level)) {
     return NextResponse.json({ error: "سطح نامعتبر است" }, { status: 400 });
   }
-  if (!goal || !VALID_GOALS.includes(goal)) {
+  if (!goal || typeof goal !== "string" || !goal.trim() || goal.trim().length > MAX_GOAL_LEN) {
     return NextResponse.json({ error: "هدف تمرین نامعتبر است" }, { status: 400 });
   }
   if (!Array.isArray(gymDays) || gymDays.length === 0 || !gymDays.every((d) => FA_WEEKDAY.includes(d))) {
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
   }
 
   const uniqueDays = [...new Set(gymDays)];
+  const cleanGoal = goal.trim();
   const cleanDescription = description?.trim() || null;
   const cleanLimitationDetails = hasPhysicalLimitation ? limitationDetails?.trim() || null : null;
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
   let generatedByAi = false;
   try {
     const result = await generateExercisePlan({
-      level, goalLabel: GOAL_OPTION_LABELS[goal], gymDays: uniqueDays,
+      level, goalLabel: cleanGoal, gymDays: uniqueDays,
       heightCm: heightCm || null, weightKg: weightKg || null,
       hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
     }, userId);
@@ -106,8 +107,10 @@ export async function POST(req: NextRequest) {
     // نه اینکه کل onboarding رو خراب کنیم. ولی خطای واقعی رو لاگ می‌کنیم چون
     // قبلا اینجا کاملا بی‌صدا قورت داده می‌شد — روی سرور واقعی هیچ‌جوره
     // نمی‌شد فهمید مشکل env نتنظیم‌شده‌ست یا خطای شبکه یا چیز دیگه.
+    // هدف دیگه یکی از چهار گزینه‌ی ثابت نیست (متنِ آزاد است)، پس برای
+    // انتخابِ قالبِ ایستا باید حدس زده بشه — guessFallbackGoal.
     console.error("[exercise/plan] AI generation failed, falling back to static template:", err);
-    planData = getExercisePlan(GOAL_FALLBACK_MAP[goal], level, !!hasPhysicalLimitation, uniqueDays);
+    planData = getExercisePlan(guessFallbackGoal(cleanGoal), level, !!hasPhysicalLimitation, uniqueDays);
   }
 
   // پلن قبلی (اگه بود) غیرفعال می‌شه؛ همیشه فقط یک پلن فعال داریم
@@ -119,7 +122,7 @@ export async function POST(req: NextRequest) {
       level,
       heightCm: heightCm || null,
       weightKg: weightKg || null,
-      goal,
+      goal: cleanGoal,
       hasPhysicalLimitation: !!hasPhysicalLimitation,
       disclaimerAcceptedAt: new Date(),
       gymDays: uniqueDays as any,

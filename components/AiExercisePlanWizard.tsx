@@ -4,10 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
-import {
-  LEVEL_LABELS, GOAL_OPTION_LABELS, GOAL_FALLBACK_MAP, getRequiredDaysCount,
-  ExerciseLevel, ExerciseGoalOption,
-} from "@/lib/exercisePlans";
+import { LEVEL_LABELS, ExerciseLevel } from "@/lib/exercisePlans";
 import { ExercisePlanFormValue, EMPTY_EXERCISE_FORM, ExercisePlan } from "@/lib/exerciseTypes";
 import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
 import { focusNextOnEnter } from "@/lib/formNav";
@@ -60,10 +57,8 @@ export function AiExercisePlanWizard({
     patch({ gymDays: form.gymDays.includes(day) ? form.gymDays.filter((d) => d !== day) : [...form.gymDays, day] });
   }
 
-  const requiredDays = form.goal ? getRequiredDaysCount(GOAL_FALLBACK_MAP[form.goal], form.level) : null;
-
   async function submit() {
-    if (!form.goal) return;
+    if (!form.goal.trim()) return;
     markExerciseRulesSeen();
     setSubmitting(true);
     setRejection(null);
@@ -75,7 +70,7 @@ export function AiExercisePlanWizard({
         level: form.level,
         heightCm: form.heightCm ? +form.heightCm : undefined,
         weightKg: form.weightKg ? +form.weightKg : undefined,
-        goal: form.goal,
+        goal: form.goal.trim(),
         hasPhysicalLimitation: form.hasLimitation,
         limitationDetails: form.hasLimitation ? form.limitationDetails.trim() || undefined : undefined,
         gymDays: form.gymDays,
@@ -101,14 +96,10 @@ export function AiExercisePlanWizard({
       setFieldErrors({});
       setStep("goal");
     } else if (step === "goal") {
-      if (!form.goal) { setError("انتخاب هدف تمرین لازمه"); return; }
+      if (!form.goal.trim()) { setError("نوشتن هدف تمرین لازمه"); return; }
       setStep("days");
     } else if (step === "days") {
       if (form.gymDays.length === 0) { setError("حداقل یک روز باشگاه رو انتخاب کن"); return; }
-      if (form.goal) {
-        const req = getRequiredDaysCount(GOAL_FALLBACK_MAP[form.goal], form.level);
-        if (form.gymDays.length < req) { setError(`این هدف حداقل ${req} روز در هفته لازم داره`); return; }
-      }
       setStep("description");
     } else if (step === "description") {
       if (hasSeenExerciseRules()) submit();
@@ -175,18 +166,14 @@ export function AiExercisePlanWizard({
       {step === "goal" && (
         <>
           <label className="exercise-wizard-title">هدف تمرینت چیه؟</label>
-          <div className="day-picker" style={{ flexWrap: "wrap" }}>
-            {(Object.keys(GOAL_OPTION_LABELS) as ExerciseGoalOption[]).map((g) => (
-              <span
-                key={g}
-                className={`day-pill${form.goal === g ? " on" : ""}`}
-                onClick={() => patch({ goal: g })}
-                style={{ flex: "1 1 calc(50% - 4px)" }}
-              >
-                {GOAL_OPTION_LABELS[g]}
-              </span>
-            ))}
-          </div>
+          <textarea
+            dir="rtl"
+            className="exercise-desc-textarea"
+            rows={3}
+            placeholder="با کلمات خودت بنویس — مثلا «می‌خوام حجم عضلات بالاتنه‌م زیاد بشه» یا «می‌خوام چربی کم کنم و فرم بدنم بهتر بشه»"
+            value={form.goal}
+            onChange={(e) => patch({ goal: e.target.value })}
+          />
         </>
       )}
 
@@ -205,12 +192,7 @@ export function AiExercisePlanWizard({
             ))}
           </div>
 
-          <label className="exercise-form-label">
-            سطح
-            {requiredDays !== null && (
-              <span style={{ color: "var(--muted2)", fontWeight: 400 }}> (این هدف حداقل {requiredDays} روز لازم داره)</span>
-            )}
-          </label>
+          <label className="exercise-form-label">سطح</label>
           <div className="day-picker">
             {(["beginner", "intermediate", "advanced"] as ExerciseLevel[]).map((l) => (
               <span key={l} className={`day-pill${form.level === l ? " on" : ""}`} onClick={() => patch({ level: l })}>

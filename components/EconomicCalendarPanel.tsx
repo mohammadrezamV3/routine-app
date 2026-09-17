@@ -53,8 +53,14 @@ const enMonthYearFmt = new Intl.DateTimeFormat("en-US", { month: "long", year: "
 const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(startOfLocalDay(new Date()), i - new Date().getDay())));
 
-/** تعدادِ روزهای نوار — دقیقا مثلِ نوارِ روزِ «روتین من» (پنج روز) */
-const DAY_WINDOW = 5;
+/**
+ * تعدادِ روزهای نوار دیگر ثابت نیست — باگِ گزارش‌شده: «توی دسکتاپ فقط
+ * پنج روز نشون می‌ده» چون قبلا همیشه ۵ بود، حتی وقتی عرضِ واقعیِ نوار
+ * (روی دسکتاپِ عریض) جای بیشتری داشت. حالا دقیقا همون الگوریتمِ
+ * DashDateSelectorِ «روتین من» (اندازه‌گیریِ عرضِ واقعیِ نوار + عرضِ
+ * رندرشده‌ی پیل‌ها) این‌جا هم پیاده شده — نگاه کن به computeDayWindow پایین‌تر.
+ */
+const DEFAULT_DAY_WINDOW = 5;
 
 /**
  * تازه‌سازیِ بی‌صدا وقتی رویدادِ منتشرنشده‌ای روی همین صفحه هست.
@@ -200,23 +206,51 @@ export function EconomicCalendarPanel() {
   }, [load]);
 
   // ── نوارِ روزها ─────────────────────────────────────────────────────────
-  // پنج روز، دقیقا مثلِ نوارِ روزِ «روتین من»: یک پنجره‌ی لغزان که با دو
-  // فلشِ کنارش جلو/عقب می‌رود (نه یک نوارِ بلندِ اسکرول‌شونده).
+  // یک پنجره‌ی لغزان که با دو فلشِ کنارش جلو/عقب می‌رود (نه یک نوارِ بلندِ
+  // اسکرول‌شونده) — تعدادِ روزها دیگر ثابت نیست، هرچقدر عرضِ واقعیِ نوار
+  // جا داشته باشد (دقیقا مثلِ DashDateSelectorِ «روتین من»).
   const [windowOffset, setWindowOffset] = useState(0);
+  const [dayWindow, setDayWindow] = useState(DEFAULT_DAY_WINDOW);
+  const weekStripRef = useRef<HTMLDivElement>(null);
   const dayStrip = useMemo(() => {
-    const center = addDays(today, windowOffset * DAY_WINDOW);
-    return Array.from({ length: DAY_WINDOW }, (_, i) => addDays(center, i - Math.floor(DAY_WINDOW / 2)));
+    const center = addDays(today, windowOffset * dayWindow);
+    return Array.from({ length: dayWindow }, (_, i) => addDays(center, i - Math.floor(dayWindow / 2)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [windowOffset, today.getTime()]);
+  }, [windowOffset, dayWindow, today.getTime()]);
+
+  // همون الگوریتمِ DashDateSelector: عرضِ واقعیِ نوار رو اندازه می‌گیره و
+  // بسته‌به عرضِ رندرشده‌ی خودِ پیل‌ها (نه یه عددِ فرضی) می‌فهمه چندتا جا
+  // می‌شه — با تغییرِ سایزِ صفحه هم خودش دوباره حساب می‌کنه.
+  useEffect(() => {
+    const el = weekStripRef.current;
+    if (!el) return;
+    const compute = () => {
+      const w = el.clientWidth;
+      if (w <= 0) return;
+      const isSm = window.innerWidth >= 640;
+      let pillWidth = isSm ? 92 : 54;
+      el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
+        pillWidth = Math.max(pillWidth, Math.ceil(pill.getBoundingClientRect().width));
+      });
+      const gap = 6;
+      const n = Math.floor((w + gap) / (pillWidth + gap));
+      const odd = n % 2 === 0 ? n - 1 : n;
+      setDayWindow(Math.max(3, odd));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // پنجره فقط تا جایی جلو/عقب می‌رود که هنوز با بازه‌ی داده‌ی موجود هم‌پوشانی
   // داشته باشد — وگرنه کاربر وارد روزهایی می‌شد که *همیشه* خالی‌اند و از
   // بیرون شبیهِ «لود نمی‌شه» دیده می‌شد.
   function windowOverlapsRange(offset: number): boolean {
     if (!range) return Math.abs(offset) <= 4;
-    const center = addDays(today, offset * DAY_WINDOW);
-    const first = addDays(center, -Math.floor(DAY_WINDOW / 2));
-    const last = addDays(center, DAY_WINDOW - 1 - Math.floor(DAY_WINDOW / 2));
+    const center = addDays(today, offset * dayWindow);
+    const first = addDays(center, -Math.floor(dayWindow / 2));
+    const last = addDays(center, dayWindow - 1 - Math.floor(dayWindow / 2));
     return last >= range.from && first <= range.to;
   }
   const canGoBack = windowOverlapsRange(windowOffset - 1);
@@ -234,7 +268,7 @@ export function EconomicCalendarPanel() {
   function jumpToDate(d: Date) {
     const day = startOfLocalDay(d);
     setDate(day);
-    setWindowOffset(Math.round(daysBetween(today, day) / DAY_WINDOW));
+    setWindowOffset(Math.round(daysBetween(today, day) / dayWindow));
     setMonthPickerOpen(false);
   }
 
@@ -242,60 +276,66 @@ export function EconomicCalendarPanel() {
 
   return (
     <div>
-      {/* ── نوارِ روزها: پنج روز + فلشِ قبلی/بعدی، بدونِ باکس ── */}
-      <div className="trade-cal-week-strip">
-        <button
-          type="button" className="trade-cal-week-arrow" aria-label="روزهای قبل"
-          onClick={() => setWindowOffset((v) => v - 1)} disabled={!canGoBack}
-        >
-          <ChevronRight size={18} />
-        </button>
+      {/* ── نوارِ روزها + سه دکمه، دقیقا هم‌چیدمانِ «روتین من»: روی دسکتاپ
+          کنارِ هم (دکمه‌ها سمتِ راست، نوار سمتِ چپ و flex-1)، روی موبایل
+          زیرِ هم — نگاه کن به app/weekly/page.tsx (DashDateSelector +
+          DashFilterButton، همون الگو). */}
+      <div className="trade-cal-header-row flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
+        <div className="trade-cal-week-strip lg:order-2 lg:flex-1">
+          <button
+            type="button" className="trade-cal-week-arrow" aria-label="روزهای قبل"
+            onClick={() => setWindowOffset((v) => v - 1)} disabled={!canGoBack}
+          >
+            <ChevronRight size={18} />
+          </button>
 
-        <div className="trade-cal-week-days">
-          {dayStrip.map((d) => {
-            const active = isSameDay(d, date);
-            const { weekday, date: dateLabel } = dayLabel(d, calSystem);
-            return (
-              <button
-                key={isoLocal(d)}
-                type="button"
-                className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
-                onClick={() => pickDate(d)}
-              >
-                <span className="trade-cal-day-pill-wd">{weekday}</span>
-                <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
-              </button>
-            );
-          })}
+          <div className="trade-cal-week-days" ref={weekStripRef}>
+            {dayStrip.map((d) => {
+              const active = isSameDay(d, date);
+              const { weekday, date: dateLabel } = dayLabel(d, calSystem);
+              return (
+                <button
+                  key={isoLocal(d)}
+                  type="button"
+                  data-day-pill
+                  className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
+                  onClick={() => pickDate(d)}
+                >
+                  <span className="trade-cal-day-pill-wd">{weekday}</span>
+                  <span className="trade-cal-day-pill-num mono">{dateLabel}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button" className="trade-cal-week-arrow" aria-label="روزهای بعد"
+            onClick={() => setWindowOffset((v) => v + 1)} disabled={!canGoForward}
+          >
+            <ChevronLeft size={18} />
+          </button>
         </div>
 
-        <button
-          type="button" className="trade-cal-week-arrow" aria-label="روزهای بعد"
-          onClick={() => setWindowOffset((v) => v + 1)} disabled={!canGoForward}
-        >
-          <ChevronLeft size={18} />
-        </button>
-      </div>
-
-      {/* ── سه دکمه، دقیقاً به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
-      <div className="trade-cal-actions-row">
-        <button type="button" className="trade-cal-pill-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
-          <History size={15} /> تاریخچه
-        </button>
-        <button
-          type="button"
-          className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
-          onClick={() => { setWindowOffset(0); pickDate(today); }}
-        >
-          <Calendar size={15} /> امروز
-        </button>
-        <button
-          type="button"
-          className={`trade-cal-pill-btn${filtersOpen || activeFilterCount ? " on" : ""}`}
-          onClick={() => setFiltersOpen((v) => !v)}
-        >
-          <Filter size={15} /> فیلتر{activeFilterCount ? ` (${faNum(activeFilterCount)})` : ""}
-        </button>
+        {/* ── سه دکمه، دقیقاً به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
+        <div className="trade-cal-actions-row lg:order-1 lg:shrink-0 lg:flex-nowrap">
+          <button type="button" className="trade-cal-pill-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
+            <History size={15} /> تاریخچه
+          </button>
+          <button
+            type="button"
+            className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
+            onClick={() => { setWindowOffset(0); pickDate(today); }}
+          >
+            <Calendar size={15} /> امروز
+          </button>
+          <button
+            type="button"
+            className={`trade-cal-pill-btn${filtersOpen || activeFilterCount ? " on" : ""}`}
+            onClick={() => setFiltersOpen((v) => !v)}
+          >
+            <Filter size={15} /> فیلتر{activeFilterCount ? ` (${faNum(activeFilterCount)})` : ""}
+          </button>
+        </div>
       </div>
 
       {/* ── پنلِ فیلتر ── */}

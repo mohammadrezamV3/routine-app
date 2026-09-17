@@ -26,39 +26,19 @@ export const GOAL_LABELS: Record<ExerciseGoal, string> = {
   endurance: "استقامت",
 };
 
-// گزینه‌های هدف نمایش‌داده‌شده به کاربر توی فرم ساخت با AI — بیشتر از
-// چهارتای اصلی بالا (که فقط برای قالب ایستای fallback لازمه). هر گزینه
-// به یکی از همون چهارتا برای fallback/محاسبه‌ی حداقل روزها نگاشت می‌شه؛
-// وقتی AI در دسترسه، از خود برچسب فارسی برای پرامپت استفاده می‌شه، نه از
-// این نگاشت.
-export type ExerciseGoalOption =
-  | ExerciseGoal
-  | "general_fitness"
-  | "athletic_performance"
-  | "toning"
-  | "mobility";
-
-export const GOAL_OPTION_LABELS: Record<ExerciseGoalOption, string> = {
-  strength: "قدرت / لیفتینگ",
-  hypertrophy: "حجم عضلانی",
-  cut: "کات (کاهش چربی)",
-  endurance: "استقامت",
-  general_fitness: "تناسب‌اندام عمومی",
-  athletic_performance: "عملکرد و چابکی ورزشی",
-  toning: "فرم‌دهی بدن",
-  mobility: "انعطاف‌پذیری و تحرک‌پذیری",
-};
-
-export const GOAL_FALLBACK_MAP: Record<ExerciseGoalOption, ExerciseGoal> = {
-  strength: "strength",
-  hypertrophy: "hypertrophy",
-  cut: "cut",
-  endurance: "endurance",
-  general_fitness: "hypertrophy",
-  athletic_performance: "strength",
-  toning: "cut",
-  mobility: "endurance",
-};
+// طبقِ درخواستِ صریح، هدف دیگر چندگزینه‌ای نیست — یک فیلدِ متنیِ آزاد است
+// که کاربر خودش می‌نویسد (مثلا «می‌خوام حجم بگیرم و شکمم آب بشه»). وقتی
+// AI در دسترسه، همین متنِ خام مستقیم به پرامپت می‌ره (بدونِ محدودشدن به
+// چند دسته‌ی از پیش‌تعیین‌شده). فقط برای مسیرِ fallback (بدونِ کلیدِ API یا
+// خطای موقتِ گیت‌وی) که باید یکی از چهار قالبِ ایستای بالا انتخاب بشه، این
+// تابع با چند کلیدواژه‌ی رایج حدس می‌زنه کدوم قالب مناسب‌تره.
+export function guessFallbackGoal(freeText: string): ExerciseGoal {
+  const t = (freeText || "").toLowerCase();
+  if (/لاغر|چربی|کات|کاهش\s*وزن|آب\s*شدن|خشک/.test(t)) return "cut";
+  if (/قدرت|لیفت|پاور|یک\s*تکراری|1rm/.test(t)) return "strength";
+  if (/استقامت|هوازی|کاردیو|دویدن|استمینا/.test(t)) return "endurance";
+  return "hypertrophy";
+}
 
 // ============================================================
 // منطق برنامه‌ریزی بر اساس هدف + سطح — نه یک قالب ثابت برای همه.
@@ -185,11 +165,6 @@ const PLAN_MATRIX: Record<ExerciseGoal, Record<ExerciseLevel, ExerciseDay[]>> = 
   cut: CUT,
   endurance: ENDURANCE,
 };
-
-/** تعداد حداقل روزهایی که این ترکیب هدف/سطح برای اجرا لازم داره (طول قالبش) */
-export function getRequiredDaysCount(goal: ExerciseGoal, level: ExerciseLevel): number {
-  return (PLAN_MATRIX[goal]?.[level] || PLAN_MATRIX.hypertrophy.beginner).length;
-}
 
 function sortDaysCalendarOrder(days: string[]): string[] {
   return [...days].sort(

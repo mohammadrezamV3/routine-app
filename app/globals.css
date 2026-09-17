@@ -1350,16 +1350,16 @@
   .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
   @media (min-width:1024px){
     .account-shell{
-      /* عرض = سایدبار (۱۶۴) + گپ (۲۲) + ستونِ محتوا (~۷۸۰). قبلا شل ۱۰۸۰
-         بود و ستونِ محتوا جدا با max-width کپ می‌شد — نتیجه‌اش یک نوارِ
-         خالیِ ~۱۱۴پیکسلی فقط سمتِ چپ بود، یعنی همان بی‌قرینگیِ گزارش‌شده. */
-      --acc-w: min(966px, calc(100vw - 64px));
-      width: var(--acc-w);
-      /* طبقِ درخواستِ صریح: پنل دیگر وسطِ صفحه شناور نیست، لبه‌ی راستش
-         دقیقا سرِ جای همیشگیِ ستون (.wrap) می‌ماند و فقط به چپ باز می‌شود —
-         margin-inline-start همیشه صفر، margin-inline-end از همان معادله
-         (که مجموعش دقیقا برابرِ عرضِ ستون است، پس بدونِ ابهامِ over-constraint). */
-      margin-inline: 0 calc(620px - var(--acc-w));
+      /* باگِ گزارش‌شده («جاش دسکتاپ خرابه»): فرمولِ قبلی لبه‌ی راست را با
+         margin-inline-end (بدونِ /۲) پین می‌کرد، نه واقعا وسط‌چین — نتیجه‌اش
+         محتوای چسبیده‌به‌راست با یک فاصله‌ی خالیِ بزرگ سمتِ چپ بود. حالا
+         دقیقا همون ترفندِ اثبات‌شده‌ی `.dash-breakout` (روتین من): وسط‌چینیِ
+         متقارن حولِ مرکزِ همون ستونِ ۶۲۰پیکسلیِ سایت، با margin-inline-start
+         مثبت/منفیِ محاسبه‌شده از calc(.../2) — نه پین‌کردنِ یک لبه.
+         سقفِ عرض هم کمی بزرگ‌تر شد (۹۶۶ → ۱۰۸۰، طبقِ درخواستِ صریح). */
+      --acc-w: min(1080px, calc(100vw - 64px));
+      width: var(--acc-w); max-width: var(--acc-w);
+      margin-inline-start: calc((620px - var(--acc-w)) / 2);
     }
   }
   /* row (نه row-reverse) — توی dir="rtl" فرزند اول DOM (سایدبار/تایتل‌ها)
@@ -1464,6 +1464,14 @@
   .account-back-btn:hover{ color:var(--accent); }
   .account-back-btn svg{ transition:transform .18s ease; }
   .account-back-btn:hover svg{ transform:translateX(2px); }
+  /* طبقِ درخواستِ صریح: دسکتاپ نیازی به دکمه‌ی «بازگشت» ندارد — سایدبارِ
+     همیشه‌دیده‌ی کنارش خودش راهِ ناوبریِ بینِ بخش‌هاست. فقط موبایل/تبلت
+     (که سایدبار مخفی می‌شود) این دکمه را دارند. باید *بعدِ* قاعده‌ی پایه
+     بیاید — دو قاعده با اسپسیفیسیتیِ برابر، آخری در ترتیبِ منبع برنده
+     است، صرفِ‌نظر از این‌که کدام داخلِ media query است. */
+  @media (min-width:1024px){
+    .account-back-btn{ display:none; }
+  }
 
   /* پروفایل — بالای صفحه */
   .account-profile-head{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:4px; }
@@ -1481,9 +1489,18 @@
      نه padding-bottom) — کارت دقیقا به اندازه‌ی بنر جمع می‌شود و نیمه‌ی
      آویزانِ آواتار در فضای *شفافِ* بیرونِ کارت (همین margin-bottom) می‌افتد،
      نه در یک ناحیه‌ی توپرِ داخلِ کارت. */
+  /* باگِ گزارش‌شده («گوشه‌های بنر همه گرد نیستن»): وقتی عکسِ پروفایلِ
+     سفارشی نبود، `.profile-hero-meta` اصلا رندر نمی‌شد، پس ارتفاعِ واقعیِ
+     این باکس دقیقا برابرِ ارتفاعِ بنر می‌شد — یعنی هیچ پیکسلی از خودِ کارت
+     زیرِ بنر نمی‌ماند تا گردیِ ۲۰پیکسلیِ خودش را نشان بدهد؛ بنر (فرزند، با
+     گوشه‌های پایینیِ تیز) دقیقا همان مختصاتِ گوشه‌ی گردِ کارت را با
+     مستطیلِ خودش می‌پوشاند. این پدینگِ ثابتِ ۲۰پیکسلی (دقیقا هم‌اندازه‌ی
+     خودِ border-radius) همیشه — نه فقط وقتی آواتار نیست — همان مقدار جا
+     را زیرِ بنر با رنگِ خودِ کارت باز نگه می‌دارد؛ نه اونقدر کمه که گردی
+     بپوشونه، نه اونقدر زیاده که دوباره شبیهِ باگِ «باکسِ سیاهِ بی‌دلیل»ِ قبلی بشه. */
   .profile-hero{
     border:1px solid var(--surface-line); border-radius:20px;
-    background:var(--surface-1); margin-bottom:64px;
+    background:var(--surface-1); margin-bottom:64px; padding-bottom:20px;
   }
   .profile-banner{
     /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
@@ -1572,48 +1589,6 @@
   .profile-hero-meta{
     padding:56px 20px 14px; display:flex; justify-content:flex-end;
   }
-
-  /* ── پاپ‌آپِ انتخابِ محلِ کراپ (components/ImageCropModal.tsx) ──────────
-     طبقِ درخواستِ صریح — کاربر خودش انتخاب می‌کند دقیقا کدوم بخشِ عکس
-     داخلِ قابِ آواتار/بنر بیفتد، نه یک کراپِ خودکارِ همیشه-وسط. */
-  .crop-modal{
-    position:fixed; inset:0; margin:auto; z-index:90; height:max-content;
-    display:flex; flex-direction:column; align-items:center; gap:14px;
-    width:min(340px, calc(100vw - 32px)); padding:20px;
-    background:var(--surface-2); border:1px solid var(--surface-line); border-radius:24px;
-    box-shadow:0 20px 60px rgba(0,0,0,.4);
-  }
-  .crop-modal-head{ display:flex; align-items:center; justify-content:space-between; width:100%; }
-  .crop-modal-back, .crop-modal-confirm{
-    display:flex; align-items:center; justify-content:center; width:34px; height:34px;
-    border-radius:50%; border:none; background:none; box-shadow:none; cursor:pointer;
-    color:var(--muted); transition:color .15s ease, background .15s ease;
-  }
-  .crop-modal-confirm{ color:var(--accent); }
-  .crop-modal-confirm:disabled{ opacity:.4; cursor:default; }
-  @media (hover:hover){
-    .crop-modal-back:hover{ color:var(--text); background:rgba(255,255,255,.06); }
-    .crop-modal-confirm:not(:disabled):hover{ background:var(--accent-dim); }
-  }
-  /* ناحیه‌ی خودِ کراپ — عکس با touch-action:none تا روی موبایل اسکرولِ
-     صفحه با درگ‌کردنِ عکس قاطی نشود. */
-  .crop-modal-stage{
-    position:relative; overflow:hidden; border-radius:16px; background:#000;
-    touch-action:none; cursor:grab; user-select:none;
-  }
-  .crop-modal-stage:active{ cursor:grabbing; }
-  .crop-modal-img{ position:absolute; top:50%; left:50%; max-width:none; pointer-events:none; }
-  /* ماسکِ بیرونِ قاب: یک سایه‌ی خیلی بزرگ (نه بک‌گراندِ جدا) تا هم گردیِ
-     دایره را نگه دارد هم روی مستطیلِ بنر هم کار کند. */
-  .crop-modal-mask{
-    position:absolute; inset:0; pointer-events:none; box-shadow:0 0 0 999px rgba(0,0,0,.6);
-    border:2px solid rgba(255,255,255,.9);
-  }
-  .crop-modal-mask.circle{ border-radius:50%; }
-  .crop-modal-mask.rect{ border-radius:10px; }
-  .crop-modal-zoom{ display:flex; align-items:center; gap:8px; width:100%; color:var(--muted); }
-  .crop-modal-zoom input[type="range"]{ flex:1; accent-color:var(--accent); }
-  .crop-modal-hint{ margin:0; font-size:11px; color:var(--muted2); text-align:center; }
 
   /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
      طبقِ درخواستِ صریح، اندازه‌ها روی دسکتاپ جدا از موبایل تنظیم شده‌اند:
@@ -5887,28 +5862,26 @@ body[data-theme="light"] .trade-title-add-btn, body:not([data-theme="light"]) .t
 .trade-row-status{ font-size:11.5px; color:var(--muted); font-weight:600; }
 .trade-row-r{ font-size:10px; color:var(--muted2); }
 
-/* ── کشوی جزئیات معامله ──────────────────────────────────── */
+/* ── پاپ‌آپِ جزئیاتِ معامله ──────────────────────────────────── */
+/* باگِ گزارش‌شده: قبلا یک کشوی چسبیده‌به‌لبه بود — موبایل چسبیده به پایین
+   (فقط گوشه‌های بالا گرد)، دسکتاپ چسبیده به لبه‌ی راست و کاملا تمام‌قد
+   (اصلا گرد نبود، دو گوشه‌اش تیز). طبقِ درخواستِ صریح حالا مثلِ بقیه‌ی
+   پاپ‌آپ‌های اپ (همون الگوی .friend-profile-panel) وسطِ صفحه می‌نشیند،
+   inset:0+margin:auto، با گردیِ کاملِ چهارگوشه، نه چسبیده به هیچ لبه‌ای. */
 .trade-drawer{
-  position:fixed; z-index:56; inset-inline-start:0; inset-inline-end:0; bottom:0; max-height:88vh; max-height:88dvh;
+  position:fixed; inset:0; margin:auto; z-index:56; height:max-content;
+  width:min(480px, calc(100vw - 32px));
+  max-height:calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow-y:auto; -webkit-overflow-scrolling:touch;
   background:var(--surface-glass); border:1px solid var(--line);
-  border-radius:26px 26px 0 0; padding:22px;
+  border-radius:26px; padding:22px;
   backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
   isolation:isolate;
   -webkit-mask-image:-webkit-radial-gradient(white, black);
   mask-image:radial-gradient(white, black);
-  animation:tradeDrawerUp .38s cubic-bezier(.22,1,.36,1) both;
+  animation:tradeFadeIn .3s cubic-bezier(.22,1,.36,1) both;
 }
 body[data-theme="light"] .trade-drawer{ background:rgba(var(--bg-rgb), .9); }
-@keyframes tradeDrawerUp{ from{ transform:translateY(30px); opacity:0; } to{ transform:none; opacity:1; } }
-@keyframes tradeDrawerSide{ from{ transform:translateX(-30px); opacity:0; } to{ transform:none; opacity:1; } }
-@media (min-width:700px){
-  .trade-drawer{
-    inset-inline-start:auto; inset-inline-end:0; top:0; bottom:0; width:440px;
-    border-radius:0 26px 26px 0; max-height:100vh; max-height:100dvh;
-    animation:tradeDrawerSide .38s cubic-bezier(.22,1,.36,1) both;
-  }
-}
 .trade-drawer-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:15px; }
 .trade-drawer-actions{ display:flex; align-items:center; gap:2px; }
 .trade-detail-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:11px 15px; margin-top:14px; }
@@ -6029,12 +6002,18 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
    هفته‌به‌هفته پیج نمی‌شه — یک بازه‌ی پیوسته‌ی اسکرول‌پذیرِ افقیه (اسکرولِ
    خودِ مرورگر/لمسی)، امروز مرکزش می‌مونه؛ برایِ تاریخ‌های دورتر دکمه‌ی
    «تاریخچه» (ماه‌شمار) هست. */
+/* دقیقا هم‌چیدمانِ ردیفِ DashDateSelector+DashFilterButtonِ «روتین من»
+   (app/weekly/page.tsx): روی دسکتاپ نوار و دکمه‌ها کنارِ همند (دکمه‌ها
+   سمتِ راست)، روی موبایل زیرِ هم — فاصله‌ی بالای این ردیف (که قبلا رویِ
+   خودِ week-strip بود) حالا این‌جاست چون week-strip دیگر همیشه اولین
+   فرزند نیست (روی دسکتاپ ترتیبِ بصری‌اش با order عوض می‌شود). */
+.trade-cal-header-row{ margin-top:14px; }
 /* طبقِ درخواستِ صریح، نوارِ روزها به همان باکسِ شیشه‌ایِ «روتین من»
    برگشت — border+بک‌گراند+بلور، دقیقا هم‌شکلِ DashDateSelector. دو فلشِ
    قبلی/بعدی هم مثلِ نوارِ روزِ «روتین من» کنارش نشسته‌اند. */
 .trade-cal-week-strip{
   display:flex; align-items:center; gap:2px;
-  margin-top:14px; padding:10px 12px;
+  padding:10px 12px;
   border-radius:18px; border:1px solid var(--surface-line);
   background:rgba(var(--bg-rgb),.16);
   backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
@@ -6095,11 +6074,11 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
 }
 
 /* ردیفِ فیلتر/امروز/تاریخچه — سه قرصِ هم‌شکل، «امروز» وقتی روزِ انتخابی
-   خودِ امروزه پر/سبز می‌شه (دقیقا هم‌رنگِ پیل‌های فعالِ استریپِ بالا). */
-/* فاصله‌ها هم از روتین من گرفته شده: نوار→دکمه‌ها ۱۰px (۱۲ روی دسکتاپ)،
-   و دکمه‌ها→لیستِ رویدادها ۱۶px (۲۴ روی دسکتاپ). قبلا این دومی صفر بود و
-   جدول عملا به دکمه‌ها چسبیده بود. */
-.trade-cal-actions-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+   خودِ امروزه پر/سبز می‌شه (دقیقا هم‌رنگِ پیل‌های فعالِ استریپِ بالا).
+   فاصله‌ی بالاش دیگه اینجا نیست — الان کنارِ نوارِ روزهاست، توی همون
+   ردیفِ flexِ `.trade-cal-header-row` (فاصله‌شون با gap-2.5/sm:gap-3
+   تنظیم می‌شه، نه margin-top). */
+.trade-cal-actions-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 /* اندازه‌ها دقیقا همان DashFilterButtonِ «روتین من» */
 .trade-cal-pill-btn{
   display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border-radius:18px;
@@ -6108,7 +6087,6 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
   transition:border-color .18s ease, color .18s ease, background .18s ease;
 }
 @media (min-width:640px){
-  .trade-cal-actions-row{ gap:8px; margin-top:12px; }
   .trade-cal-pill-btn{ gap:6px; padding:10px 16px; font-size:13px; }
 }
 @media (hover:hover){ .trade-cal-pill-btn:hover{ border-color:var(--accent); color:var(--accent); } }
@@ -6492,17 +6470,25 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   /* این یک خط توضیح روی دسکتاپ فقط ارتفاع می‌خورد؛ در ازایش چارت بزرگ‌تر
      می‌شود — که خواسته‌ی صریحِ همین صفحه است. روی موبایل سرِ جایش می‌ماند. */
   .trade-desktop-full .section-note{ display:none; }
-  .trade-desktop-full .trade-head-row, .trade-desktop-full > h1{ margin-bottom:12px; }
+  .trade-desktop-full .trade-head-row{ margin-bottom:12px; }
+  /* طبقِ درخواستِ صریح: توی صفحه‌ی چارت، تایتل سمتِ چپِ دکمه‌ی «بازگشت»
+     می‌نشیند (هم‌ردیف)، نه زیرش — بقیه‌ی صفحه‌های ترید (trade-head-block
+     بدونِ این اسکوپ) دست‌نخورده، همچنان بازگشت/تایتل زیرِ هم‌اند. */
+  .trade-desktop-full .trade-head-block{
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  }
+  .trade-desktop-full .trade-head-block .trade-back-link{ margin-bottom:0; }
+  .trade-desktop-full .trade-head-block h1{ margin:0; }
 
   .tv-page{
     height:var(--tv-h, calc(100vh - 200px));
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 330px;
-    /* طبقِ درخواستِ صریح: چارت بزرگ‌تر، گفت‌وگو و تقویمِ اقتصادی کوچیک‌تر.
-       چون چت/تقویم (ستون‌های ۱و۲) و ثبتِ معامله (ستونِ ۳) مستقلن، چارت+ثبتِ
-       معامله حالا دو ردیفِ بالایی رو با هم می‌گیرن (قدشون بلند می‌شه، بدونِ
-       این‌که ثبتِ معامله کوچیک بشه — چیزی که قبلا صریحاً درخواست شده بود
-       نیاز به اسکرول نداشته باشه) و چت+تقویم فقط یک ردیفِ کوتاهِ پایینی. */
-    grid-template-rows:minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,.6fr);
+    /* طبقِ درخواستِ صریحِ تازه («تقویمِ اقتصادی، چک‌لیست و گفت‌وگو بزرگ‌تر
+       شن») ستونِ سوم عریض‌تر شد (۳۳۰ → ۳۸۰) و ردیفِ پایینی (چت+تقویم) سهمِ
+       بیشتری از ارتفاع گرفت — تصمیمِ قبلیِ «چارت بزرگ‌تر، این دوتا
+       کوچیک‌تر» این‌جا برعکس شده، بدونِ این‌که چارت آن‌قدر کوچک شود که
+       غیرقابلِ‌استفاده باشد. */
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 380px;
+    grid-template-rows:minmax(0,.95fr) minmax(0,.95fr) minmax(0,.85fr);
     grid-template-areas:
       "chart chart check"
       "chart chart entry"
@@ -7817,6 +7803,16 @@ body[data-theme="light"] .routine-ai-action{
   60%{ box-shadow:0 0 0 7px rgba(224,82,82,0); }
 }
 html[data-perf="low"] .routine-ai-action.is-recording{ animation:none; }
+
+/* دکمه‌ی ارسالِ «مدیرِ برنامه» — بعدِ حذفِ قابلیتِ ویس دیگر سه‌حالته نیست،
+   فقط یک آیکونِ ارسال دارد (nth-child(1)، پیش‌فرض already opacity:1 است،
+   بدونِ نیاز به کلاسِ is-send که مالِ الگوی سه‌آیکونیِ بالا/پشتیبانی است).
+   این کلاسِ جدا فقط رنگِ پر را می‌دهد، بدونِ دست‌زدن به قواعدِ is-send/
+   is-recordingِ بالا که همچنان composerِ پشتیبانی (سه‌حالته) از آن‌ها استفاده می‌کند. */
+.routine-ai-action.has-text{
+  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
 
 /* استثنای عمدی روی قانونِ سراسریِ `html[data-perf="low"] *` که بلور را با
    !important از همه‌جا برمی‌دارد.

@@ -1201,6 +1201,9 @@ model TradeEntry {
   // کاملاً عادی است — هیچ‌وقت معامله‌ی تکراری نسازد.
   externalId     String?
   externalSource String?
+  // کاربر یک‌بار جزئیاتِ این معامله‌ی همگام‌شده را دستی ویرایش کرده — از این به
+  // بعد sync دیگر فیلدهای اصلی‌اش را (symbol/pnl/قیمت‌ها/...) بازنویسی نمی‌کند.
+  syncLocked     Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
