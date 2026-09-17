@@ -181,54 +181,310 @@ function parseJsonResponse(text: string): any {
   }
 }
 
-// پرامپتِ ساختِ رودمپ.
+// ============================================================================
+// رودمپ (مسیرِ یادگیری) — دو مرحله‌ای
 //
-// نسخه‌ی قبلی فقط می‌گفت «۴ تا ۶ مرحله، هرکدام ۳ تا ۵ آیتم، واقع‌بین باش»
-// و خروجی‌اش فهرستی از سرفصل‌ها بود — چیزی که کاربر بعد از خواندنش هنوز
-// نمی‌دانست *دقیقاً فردا صبح چه کار کند*. این نسخه عمداً سخت‌گیر است:
-// هر مرحله باید هدفِ قابل‌سنجش، کارهای عملیِ مشخص، تمرین، معیارِ اتمام و
-// زمانِ تقریبی داشته باشد.
+// چرا دو مرحله‌ای شد: نسخه‌ی قبلی یک فراخوانیِ تکی بود که فقط همان چیزی را
+// می‌دانست که کاربر در فرم تایپ کرده بود. مشکلِ واقعی این است که کاربر
+// معمولاً خودش هم نمی‌داند «برای رسیدن به این خواسته اصلاً باید چه چیزهایی
+// بخوانم» — کسی که می‌گوید «می‌خواهم امنیت شبکه کار کنم» نمی‌داند اول باید
+// شبکه و لینوکس بخواند، بعد امنیت، و مدرکی مثل OSCP کجای مسیر می‌نشیند.
 //
-// طبقِ درخواستِ صریح: خطِ اولِ پرامپت حالا صریحاً نقش+وظیفه را با هم می‌گوید
-// («تو الان قراره یک رودمپ بسازی») — قبلاً مستقیم می‌رفت سراغِ توصیفِ
-// مربی‌بودن، بدونِ این‌که کلمه‌ی خودِ کار (ساختِ رودمپ) را جایی بگوید.
-const SYSTEM_PROMPT = `تو الان قراره برای یک کاربر یک رودمپ (مسیرِ یادگیریِ گام‌به‌گام) بسازی.
-برای این کار، نقشِ یک مربیِ حرفه‌ایِ آموزش رو داری که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده.
-کاربر یک موضوع می‌دهد، همراهِ **هدفش از یادگیری** (اگر گفته باشد) و **زمانی که واقعاً می‌تواند بگذارد**،
-و تو یک مسیرِ یادگیریِ کامل، **جلسه‌به‌جلسه** و عملی می‌سازی — به زبان فارسیِ روان و خودمانی.
-اگر کاربر هدفش را گفته (مثلاً «برای مصاحبه‌ی کاری» یا «فقط سرگرمی و کنجکاوی»)، مسیر را دقیقاً برای
-همان هدف بچین — عمقِ مطالب، سرعت و انتخابِ مثال‌ها باید با هدفِ او هماهنگ باشد، نه یک مسیرِ عمومی.
+// حالا:
+//   مرحله‌ی ۱ (generateRoadmapQuestions) — مدل خودش چند سوالِ *مخصوصِ همان
+//   موضوع* می‌سازد (بلدی لینوکس؟ تیمِ آبی یا تستِ نفوذ؟ لابراتوار داری؟).
+//   مرحله‌ی ۲ (generateRoadmap) — با جوابِ همان سوال‌ها مسیر ساخته می‌شود.
+//
+// خروجیِ مرحله‌ی ۲ عمداً از «فهرستِ سرفصل» فراتر رفته: tracks (چه حوزه‌هایی
+// و با چه ترتیبی باید خوانده شوند و چرا)، certifications (مدرک‌ها، سرِ جای
+// درستِ مسیر) و projects (چه چیزی بساز تا ثابت کنی بلدی) — همان چیزهایی که
+// یک «سرفصلِ خشک» را به یک مسیرِ واقعیِ شغلی تبدیل می‌کنند.
+// ============================================================================
+
+/** یک نشستِ واقعی به اندازه‌ی همان دقیقه‌هایی که کاربر اعلام کرده. */
+export type GeneratedSession = {
+  title: string;
+  goal?: string;
+  steps: string[];
+  howTo?: string;
+  refs?: string[];
+  checkpoint?: string;
+};
+
+export type GeneratedStation = {
+  t: string;
+  items: string[];
+  /** حوزه‌ای (track) که این مرحله زیرِ آن می‌نشیند — برای نشان‌دادنِ ربطِ مرحله به نقشه‌ی کلی */
+  track?: string;
+  goal?: string;
+  weeks?: number;
+  practice?: string;
+  checkpoint?: string;
+  sessions?: GeneratedSession[];
+};
+
+/**
+ * یک «حوزه‌ای که باید خوانده شود» — جوابِ اصلیِ سوالِ کاربر: *چی بخوانم؟*
+ * ترتیبِ آرایه یعنی ترتیبِ خواندن.
+ */
+export type RoadmapTrack = {
+  t: string;
+  /** چرا این حوزه برای رسیدن به خواسته‌ی کاربر لازم است */
+  why: string;
+  weeks?: number;
+  /** سرفصل‌های کلیدیِ همین حوزه */
+  topics: string[];
+};
+
+/** مدرک/سرتیفیکیت، سرِ جای درستِ مسیر (نه یک فهرستِ بی‌ترتیب) */
+export type RoadmapCert = {
+  name: string;
+  /** کجای مسیر سراغش برود */
+  when: string;
+  why: string;
+  /** لازم است یا فقط خوب است داشته باشی */
+  required?: boolean;
+};
+
+/** پروژه‌ای که بعدش می‌شود نشانش داد — «بلدم» با این ثابت می‌شود، نه با گواهی */
+export type RoadmapProject = {
+  t: string;
+  what: string;
+  /** چه مهارتی را ثابت می‌کند */
+  proves: string;
+};
+
+/** آنچه کاربر در گامِ زمان‌بندیِ ویزارد انتخاب می‌کند. */
+export type RoadmapSchedule = {
+  /** روزهای هفته به سبکِ Date.getDay() — ۰ یکشنبه … ۶ شنبه */
+  jsDays: number[];
+  minutesPerDay: number;
+  /** "HH:MM" ۲۴ساعته */
+  startTime: string;
+};
+
+/** هرچه کاربر پیش از ساختِ مسیر درباره‌ی خودش گفته — ورودیِ هر دو مرحله. */
+export type RoadmapProfile = {
+  topic: string;
+  goal?: string;
+  /** «از صفر» | «یه چیزایی بلدم» | «متوسط» | «پیشرفته» */
+  level?: string;
+  /** تا چند ماهِ دیگر می‌خواهد به خواسته‌اش برسد */
+  deadlineMonths?: number;
+  /** «فقط فارسی» | «فارسی و انگلیسی» */
+  resourceLang?: string;
+  /** «فقط رایگان» | «پولی هم اوکیه» */
+  budget?: string;
+  /** «ویدیو» | «کتاب و مستند» | «پروژه‌محور» */
+  learnStyle?: string;
+  schedule?: RoadmapSchedule;
+};
+
+export type RoadmapQuestion = {
+  id: string;
+  q: string;
+  /** یک جمله: چرا این سوال پرسیده می‌شود — بدونش کاربر حس می‌کند دارد فرمِ بی‌دلیل پر می‌کند */
+  why?: string;
+  options: string[];
+  multi: boolean;
+  allowFree: boolean;
+};
+
+export type RoadmapQuestionSet = {
+  intro: string;
+  questions: RoadmapQuestion[];
+};
+
+/** جوابِ کاربر به سوال‌های مرحله‌ی ۱ — همان‌طور که به مدل پس داده می‌شود. */
+export type RoadmapAnswer = { q: string; a: string };
+
+export type GeneratedRoadmap = {
+  title: string;
+  note: string;
+  level?: string;
+  totalWeeks?: number;
+  /** بعد از تمام‌کردنِ مسیر دقیقاً چه کاری/نقشی می‌تواند بگیرد */
+  outcome?: string;
+  tracks: RoadmapTrack[];
+  stations: GeneratedStation[];
+  certifications: RoadmapCert[];
+  projects: RoadmapProject[];
+  tips: string[];
+  mistakes: string[];
+  pro: string[];
+  books: string[];
+};
+
+// ── مرحله‌ی ۱: سوال‌ها ───────────────────────────────────────────────────
+
+const QUESTIONS_SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ایِ مسیرِ یادگیری هستی که سال‌ها آدم‌ها را از صفر تا سطحِ کارِ واقعی برده.
+همین الان یک کاربر آمده و گفته می‌خواهد چیزی را یاد بگیرد. قبل از ساختنِ مسیرش، باید چند سوالِ کوتاه از او بپرسی —
+فقط سوال‌هایی که جوابشان **واقعاً مسیر را عوض می‌کند**.
+
+قواعد:
+
+۱. سوال‌ها باید مخصوصِ **همین موضوع** باشند، نه سوال‌هایی که برای هر موضوعی می‌شود پرسید.
+   بد (عمومی و بی‌فایده): «چقدر انگیزه داری؟» / «چند ساعت وقت داری؟»
+   خوب (برای امنیت شبکه): «تا حالا با خطِ فرمانِ لینوکس کار کردی؟» / «کدام سمت را می‌خواهی: تستِ نفوذ یا دفاع و مانیتورینگ؟»
+   خوب (برای گیتار): «ساز داری یا هنوز نخریدی؟» / «هدفت نوازندگیِ آهنگ‌های آماده است یا آهنگ‌سازی؟»
+۲. چیزهایی که کاربر از قبل گفته را دوباره نپرس (موضوع، هدف، وقتِ هفتگی، سطح، ددلاین، زبانِ منابع، بودجه، سبکِ یادگیری).
+۳. روی این‌ها تمرکز کن:
+   • پیش‌نیازهایی که معلوم نیست بلد است یا نه — چون اگر بلد نباشد باید اول آن‌ها در مسیر بیایند.
+   • دقیقاً کدام شاخه یا نقشِ شغلیِ همان موضوع را می‌خواهد (هر موضوعی چند شاخه‌ی متفاوت دارد و مسیرشان یکی نیست).
+   • ابزار/امکاناتی که در دسترسش هست و نبودشان مسیر را عوض می‌کند.
+   • مدرک/سرتیفیکیت می‌خواهد یا فقط مهارتِ کاری.
+   • محدودیتی که واقعاً مسیر را عوض می‌کند (مثلاً سطحِ انگلیسی، دسترسی به ابزار یا سرویسِ خاص).
+۴. بینِ ۴ تا ۶ سوال بپرس — نه کمتر، نه بیشتر.
+۵. هر سوال باید ۳ تا ۵ گزینه‌ی **مشخص و واقعی** داشته باشد تا کاربر فقط انتخاب کند (تایپ روی موبایل سخت است).
+   گزینه‌ها هم باید مخصوصِ همان موضوع باشند. «بله / خیر / نمی‌دانم» گزینه‌ی بی‌ارزشی است؛
+   به‌جایش سطح‌های واقعی بنویس: «اصلاً کار نکردم»، «چند دستورِ ساده بلدم»، «راحت باهاش کار می‌کنم».
+۶. یک گزینه‌ی «مطمئن نیستم / نمی‌دانم» فقط وقتی بگذار که واقعاً ممکن است کاربر نداند — و در آن صورت
+   خودت در مسیر محافظه‌کارانه‌ترین حالت را فرض می‌کنی.
+۷. فارسیِ ساده و خودمانی. جمله‌ها کوتاه. بدونِ اصطلاحِ قلمبه.
+
+فقط و فقط یک JSONِ خام برگردان، بدونِ هیچ متنِ اضافه قبل یا بعدش، بدونِ Markdown fences.
+دقیقاً با این شکل:
+
+{
+  "intro": "یک جمله‌ی کوتاه: از خواسته‌اش چه فهمیدی (تا کاربر مطمئن شود درست فهمیده‌ای)",
+  "questions": [
+    {
+      "id": "q1",
+      "q": "متنِ سوال، کوتاه و روشن",
+      "why": "یک جمله: چرا این را می‌پرسم و جوابش چه چیزی را در مسیر عوض می‌کند",
+      "options": ["گزینه‌ی مشخصِ ۱", "گزینه‌ی مشخصِ ۲", "گزینه‌ی مشخصِ ۳"],
+      "multi": false,
+      "allowFree": true
+    }
+  ]
+}
+
+"multi": true فقط برای سوالی که واقعاً می‌شود چند جواب داشت (مثلاً «کدام‌ها را قبلاً کار کرده‌ای؟»).
+"allowFree": true یعنی کاربر بتواند جوابِ خودش را هم بنویسد — برای سوال‌هایی که گزینه‌ها ممکن است کاملش نکنند.`;
+
+const FA_DAY_NAMES = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
+
+function profileLines(p: RoadmapProfile): string[] {
+  const lines = [`موضوع: ${p.topic}`];
+  if (p.goal?.trim()) lines.push(`هدفِ کاربر از یادگیری: ${p.goal.trim()}`);
+  if (p.level?.trim()) lines.push(`سطحِ فعلیِ کاربر: ${p.level.trim()}`);
+  if (p.deadlineMonths) lines.push(`می‌خواهد ظرفِ ${p.deadlineMonths} ماه به این خواسته برسد`);
+  if (p.resourceLang?.trim()) lines.push(`زبانِ منابعی که می‌تواند استفاده کند: ${p.resourceLang.trim()}`);
+  if (p.budget?.trim()) lines.push(`بودجه برای منابع: ${p.budget.trim()}`);
+  if (p.learnStyle?.trim()) lines.push(`سبکِ یادگیریِ ترجیحی: ${p.learnStyle.trim()}`);
+
+  const s = p.schedule;
+  if (s && s.jsDays.length) {
+    const days = s.jsDays.map((d) => FA_DAY_NAMES[d] ?? "").filter(Boolean).join("، ");
+    lines.push(
+      `روزهای تمرین: ${days} (هفته‌ای ${s.jsDays.length} جلسه)`,
+      `مدتِ هر جلسه: ${s.minutesPerDay} دقیقه`,
+      `مجموعِ وقتِ هفتگی: ${s.jsDays.length * s.minutesPerDay} دقیقه`
+    );
+  }
+  return lines;
+}
+
+function normalizeQuestions(raw: any): RoadmapQuestionSet {
+  if (!raw || typeof raw !== "object") throw new Error("خروجی مدل ساختار معتبری نداشت");
+  const list = Array.isArray(raw.questions) ? raw.questions : [];
+
+  const questions: RoadmapQuestion[] = list
+    .map((x: any, i: number) => ({
+      id: typeof x?.id === "string" && x.id.trim() ? x.id.trim().slice(0, 20) : `q${i + 1}`,
+      q: typeof x?.q === "string" ? x.q.trim() : "",
+      why: typeof x?.why === "string" && x.why.trim() ? x.why.trim() : undefined,
+      // گزینه‌ها سقف دارند چون مستقیم دکمه می‌شوند — ۸ تا دکمه روی موبایل
+      // دیگر «انتخابِ سریع» نیست، یک فهرستِ خسته‌کننده است.
+      options: asStringArray(x?.options).slice(0, 6),
+      multi: x?.multi === true,
+      allowFree: x?.allowFree !== false,
+    }))
+    // سوالِ بدونِ متن، یا سوالی که نه گزینه دارد نه اجازه‌ی متنِ آزاد، قابلِ جواب‌دادن نیست
+    .filter((x: RoadmapQuestion) => x.q.length > 0 && (x.options.length > 0 || x.allowFree))
+    .slice(0, 6);
+
+  if (!questions.length) throw new Error("مدل هیچ سوالِ قابل‌استفاده‌ای برنگرداند");
+
+  return {
+    intro: typeof raw.intro === "string" ? raw.intro.trim() : "",
+    questions,
+  };
+}
+
+async function callQuestionsOnce(profile: RoadmapProfile, userId: string, timeoutMs: number): Promise<RoadmapQuestionSet> {
+  const { text, usage, durationMs } = await callAiChat(
+    QUESTIONS_SYSTEM_PROMPT,
+    profileLines(profile).join("\n"),
+    1500,
+    AI_MODEL_NAME,
+    timeoutMs
+  );
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  return normalizeQuestions(parseJsonResponse(text));
+}
+
+/** مرحله‌ی ۱: سوال‌های مخصوصِ همین موضوع را از مدل می‌گیرد. */
+export async function generateRoadmapQuestions(profile: RoadmapProfile, userId: string): Promise<RoadmapQuestionSet> {
+  try {
+    return await withAiBudget((timeoutMs) => callQuestionsOnce(profile, userId, timeoutMs));
+  } catch (err: any) {
+    logError("ai-gateway", `ساخت سوال‌های رودمپ شکست خورد: ${err?.message || err}`, { context: { feature: "ROADMAP_GENERATION" } });
+    throw err;
+  }
+}
+
+// ── مرحله‌ی ۲: خودِ مسیر ─────────────────────────────────────────────────
+
+const ROADMAP_SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ای هستی که کارِ واقعی‌ات این است: کسی که هیچ نمی‌داند را برداری و تا سطحِ
+«می‌تواند کارِ واقعی انجام دهد / قابلِ استخدام است» ببری. الان قرار است برای یک کاربرِ مشخص، با جواب‌هایی که همین الان
+به سوال‌هایت داده، یک رودمپِ کامل بسازی.
+
+**مهم‌ترین کارِ تو:** کاربر فقط یک خواسته‌ی نهایی گفته (مثلاً «می‌خواهم امنیت شبکه کار کنم»). او **نمی‌داند برای رسیدن
+به آن باید چه چیزهایی بخواند**. وظیفه‌ی تو این است که خودت تصمیم بگیری چه حوزه‌هایی، با چه ترتیبی، باید خوانده شوند —
+و برای هرکدام بگویی **چرا** لازم است.
+مثال برای «امنیت شبکه»: اول شبکه (TCP/IP، سوئیچ/روتر، مدلِ OSI)، بعد لینوکس و خطِ فرمان، بعد مبانیِ امنیت و
+رمزنگاری، بعد تخصص (تستِ نفوذ یا دفاع و مانیتورینگ)، و در کنارش مدرک‌هایی مثل Network+/CCNA و بعدتر OSCP.
+اگر این ترتیب و دلیلش را ننویسی، کاربر دقیقاً همان‌جا که بود می‌ماند — پس این بخش (tracks) از همه مهم‌تر است.
 
 قواعدِ سخت‌گیرانه:
 
-۱. مسیر از **صفرِ مطلق** شروع شود و به **توانِ انجامِ کارِ واقعی** برسد. فرض کن مخاطب هیچ پیش‌زمینه‌ای ندارد.
-۲. هر چیزی که می‌نویسی باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه اینکه «چه چیزی یاد بگیرد».
-   بد: «مبانی رنگ را یاد بگیر». خوب: «۱۰ عکس از آرشیوت بردار و فقط با تنظیمِ White Balance و Exposure اصلاحشان کن».
-۳. **مهم‌ترین قاعده — جلسه‌ها:** کاربر می‌گوید هفته‌ای چند روز و هر بار چند دقیقه وقت دارد.
-   مسیر را دقیقاً به همان اندازه جلسه ببُر. هر جلسه باید در همان دقیقه‌های اعلام‌شده **واقعاً تمام شود** —
-   نه بیشتر، نه یک سرفصلِ چندهفته‌ای که اسمش را گذاشته‌ای «جلسه».
-۴. هر جلسه این‌ها را دارد:
-   • هدفِ همان یک جلسه (یک جمله، قابلِ سنجش)
-   • قدم‌های اجرایی به‌ترتیب، با زمانِ تقریبیِ هر قدم — جوری که کاربر بنشیند و مو‌به‌مو انجامش دهد
-   • «چطور یاد بگیر»: روشِ یادگیریِ همان جلسه (تمرینِ فعال، تکرارِ فاصله‌دار، ساختِ نمونه، …)
-   • منابعِ **مشخص و واقعی** برای همان جلسه: نامِ دقیقِ کتاب و فصل، نامِ دوره و شماره‌ی درس، نامِ کانال/مستندات.
-     هرگز ننویس «یک ویدیوی خوب پیدا کن».
-   • معیارِ اتمامِ همان جلسه: از کجا بفهمد این جلسه را واقعاً بلد شده.
-۵. جلسه‌ها زیرِ مرحله‌ها گروه‌بندی می‌شوند. هر مرحله هدف، تمرینِ عملی و معیارِ اتمامِ خودش را دارد.
-۶. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارها وقتشان را رویش تلف می‌کنند.
-۷. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
+۱. جواب‌های کاربر را **واقعاً اعمال کن**. اگر گفته لینوکس بلد است، حوزه‌ی لینوکس را حذف یا خیلی کوتاه کن؛ اگر گفته
+   بلد نیست، همان اولِ مسیر بگذارش. اگر شاخه‌ای را انتخاب کرده، کلِ مسیر را برای همان شاخه بچین نه یک مسیرِ عمومی.
+۲. مسیر از **سطحِ واقعیِ فعلیِ کاربر** شروع شود (نه همیشه از صفر) و به همان خواسته‌ی نهایی برسد.
+۳. هر چیزی که می‌نویسی باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه «چه چیزی یاد بگیرد».
+   بد: «مبانی شبکه را یاد بگیر». خوب: «با Wireshark یک نشستِ HTTP را ضبط کن و سه‌مرحله‌ی دست‌دادنِ TCP را رویش پیدا کن».
+۴. **جلسه‌ها:** کاربر گفته هفته‌ای چند روز و هر بار چند دقیقه وقت دارد. مسیر را دقیقاً به همان اندازه جلسه ببُر.
+   هر جلسه باید در همان دقیقه‌های اعلام‌شده **واقعاً تمام شود** — نه یک سرفصلِ چندهفته‌ای که اسمش را گذاشته‌ای جلسه.
+۵. اگر کاربر ددلاین داده، کلِ مسیر باید تا همان موعد جا شود. اگر با وقتی که دارد واقعاً جا نمی‌شود،
+   دامنه را کوچک‌تر کن (روی حیاتی‌ترین‌ها تمرکز کن) و در note صادقانه بگو چه چیزی از مسیر بیرون ماند.
+۶. منابع باید **مشخص و واقعی** باشند: نامِ دقیقِ کتاب و فصل، نامِ دوره و شماره‌ی درس، نامِ ابزار/مستند.
+   هرگز ننویس «یک ویدیوی خوب پیدا کن». زبان و بودجه‌ای که کاربر گفته را رعایت کن.
+۷. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارهای همین حوزه وقتشان را رویش تلف می‌کنند.
+۸. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
+۹. همه‌چیز فارسیِ روان و خودمانی — ولی نامِ ابزار، مدرک، کتاب و اصطلاحِ فنی را به همان شکلِ اصلی (انگلیسی) بنویس.
 
 فقط و فقط یک JSONِ خام برگردان، بدونِ هیچ متنِ اضافه قبل یا بعدش، بدونِ Markdown fences.
 دقیقاً با این شکل:
 
 {
   "title": "عنوانِ کوتاه و مشخصِ مسیر",
-  "note": "یک تا دو جمله: بعد از تمام‌کردنِ این مسیر دقیقاً چه کاری می‌توانی انجام دهی",
-  "level": "از صفر",
-  "totalWeeks": 12,
+  "note": "یک تا دو جمله: این مسیر دقیقاً چه چیزی را پوشش می‌دهد و چه چیزی را نه",
+  "level": "نقطه‌ی شروعِ مسیر، مثلاً: از صفر",
+  "totalWeeks": 24,
+  "outcome": "بعد از تمام‌کردنِ این مسیر دقیقاً چه کاری می‌توانی انجام دهی یا چه نقشی را می‌توانی بگیری",
+  "tracks": [
+    {
+      "t": "نامِ حوزه‌ای که باید خوانده شود",
+      "why": "چرا بدونِ این نمی‌شود به خواسته‌ی کاربر رسید",
+      "weeks": 4,
+      "topics": ["سرفصلِ کلیدیِ ۱", "سرفصلِ کلیدیِ ۲", "سرفصلِ کلیدیِ ۳"]
+    }
+  ],
   "stations": [
     {
       "t": "عنوانِ مرحله",
+      "track": "نامِ همان حوزه‌ای که این مرحله زیرش است",
       "goal": "بعد از این مرحله دقیقاً چه کاری می‌توانی بکنی (یک جمله، قابلِ سنجش)",
       "weeks": 2,
       "items": ["کارِ عملیِ ۱ (فعل‌محور و مشخص)", "کارِ عملیِ ۲", "کارِ عملیِ ۳"],
@@ -246,60 +502,25 @@ const SYSTEM_PROMPT = `تو الان قراره برای یک کاربر یک ر
       ]
     }
   ],
+  "certifications": [
+    { "name": "نامِ دقیقِ مدرک", "when": "کجای مسیر سراغش برود", "why": "چه چیزی را ثابت می‌کند و به چه دردش می‌خورد", "required": false }
+  ],
+  "projects": [
+    { "t": "نامِ پروژه", "what": "دقیقاً چه چیزی بسازد", "proves": "چه مهارتی را ثابت می‌کند" }
+  ],
   "tips": ["نکته‌ی کاربردی ۱", "نکته‌ی کاربردی ۲", "نکته‌ی کاربردی ۳"],
   "mistakes": ["اشتباهِ رایجِ ۱ و چرا وقت‌تلف‌کن است", "اشتباهِ رایجِ ۲"],
   "pro": ["برای رسیدن به سطحِ حرفه‌ای ۱", "برای رسیدن به سطحِ حرفه‌ای ۲"],
   "books": ["نامِ دقیقِ کتاب/دوره/منبعِ واقعی ۱", "نامِ دقیقِ منبعِ ۲"]
 }
 
-بینِ ۴ تا ۷ مرحله بساز. مراحل باید به هم وصل باشند: هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود.
-مجموعِ جلسه‌ها را از ۱۲ بیشتر و از ۴۰ کمتر نگه دار.`;
-
-/** یک نشستِ واقعی به اندازه‌ی همان دقیقه‌هایی که کاربر اعلام کرده. */
-export type GeneratedSession = {
-  title: string;
-  goal?: string;
-  steps: string[];
-  howTo?: string;
-  refs?: string[];
-  checkpoint?: string;
-};
-
-export type GeneratedStation = {
-  t: string;
-  items: string[];
-  /** فیلدهای تازه — رودمپ‌های قدیمی ندارندشان، پس همه اختیاری‌اند */
-  goal?: string;
-  weeks?: number;
-  practice?: string;
-  checkpoint?: string;
-  sessions?: GeneratedSession[];
-};
-
-/** آنچه کاربر در گامِ دومِ ویزارد انتخاب می‌کند. */
-export type RoadmapSchedule = {
-  /** روزهای هفته به سبکِ Date.getDay() — ۰ یکشنبه … ۶ شنبه */
-  jsDays: number[];
-  minutesPerDay: number;
-  /** "HH:MM" ۲۴ساعته */
-  startTime: string;
-};
-
-export type GeneratedRoadmap = {
-  title: string;
-  note: string;
-  level?: string;
-  totalWeeks?: number;
-  stations: GeneratedStation[];
-  tips: string[];
-  mistakes: string[];
-  pro: string[];
-  books: string[];
-};
+بینِ ۳ تا ۶ حوزه (tracks) بنویس، به ترتیبِ خواندن. بینِ ۴ تا ۷ مرحله (stations) بساز؛
+هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود. مجموعِ جلسه‌ها را از ۱۲ بیشتر و از ۴۰ کمتر نگه دار.
+اگر موضوع اصلاً مدرکِ معناداری ندارد، certifications را خالی بگذار — مدرکِ الکی نساز.`;
 
 function asStringArray(v: unknown): string[] {
   if (!Array.isArray(v)) return [];
-  return v.filter((x) => typeof x === "string" && x.trim().length > 0);
+  return v.filter((x) => typeof x === "string" && x.trim().length > 0).map((x) => (x as string).trim());
 }
 
 /**
@@ -313,8 +534,10 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
     throw new Error("خروجی مدل ساختار معتبری نداشت");
   }
 
-  const stationsRaw = Array.isArray(raw.stations) ? raw.stations : [];
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const posInt = (v: unknown, max: number) =>
+    Number.isFinite(Number(v)) && Number(v) > 0 ? Math.min(Math.round(Number(v)), max) : undefined;
+
   const normSessions = (v: unknown): GeneratedSession[] | undefined => {
     if (!Array.isArray(v)) return undefined;
     const out = v
@@ -331,15 +554,23 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
     return out.length ? out : undefined;
   };
 
-  const stations: GeneratedStation[] = stationsRaw
+  const tracks: RoadmapTrack[] = (Array.isArray(raw.tracks) ? raw.tracks : [])
+    .map((x: any) => ({
+      t: typeof x?.t === "string" ? x.t.trim() : "",
+      why: typeof x?.why === "string" ? x.why.trim() : "",
+      weeks: posInt(x?.weeks, 104),
+      topics: asStringArray(x?.topics),
+    }))
+    .filter((x: RoadmapTrack) => x.t.length > 0);
+
+  const stations: GeneratedStation[] = (Array.isArray(raw.stations) ? raw.stations : [])
     .map((s: any) => ({
       t: typeof s?.t === "string" && s.t.trim() ? s.t.trim() : "مرحله بدون عنوان",
       items: asStringArray(s?.items),
+      track: str(s?.track),
       goal: str(s?.goal),
       // مدل گاهی هفته را رشته می‌دهد ("۲ هفته") — فقط عددِ معتبر را می‌پذیریم
-      weeks: Number.isFinite(Number(s?.weeks)) && Number(s.weeks) > 0
-        ? Math.min(Math.round(Number(s.weeks)), 52)
-        : undefined,
+      weeks: posInt(s?.weeks, 52),
       practice: str(s?.practice),
       checkpoint: str(s?.checkpoint),
       sessions: normSessions(s?.sessions),
@@ -351,16 +582,38 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
     throw new Error("مدل هیچ مرحله‌ی قابل‌استفاده‌ای برنگردوند");
   }
 
-  const totalWeeks = Number.isFinite(Number(raw.totalWeeks)) && Number(raw.totalWeeks) > 0
-    ? Math.min(Math.round(Number(raw.totalWeeks)), 260)
-    : stations.reduce((sum, st) => sum + (st.weeks || 0), 0) || undefined;
+  const certifications: RoadmapCert[] = (Array.isArray(raw.certifications) ? raw.certifications : [])
+    .map((c: any) => ({
+      name: typeof c?.name === "string" ? c.name.trim() : "",
+      when: typeof c?.when === "string" ? c.when.trim() : "",
+      why: typeof c?.why === "string" ? c.why.trim() : "",
+      required: c?.required === true,
+    }))
+    .filter((c: RoadmapCert) => c.name.length > 0);
+
+  const projects: RoadmapProject[] = (Array.isArray(raw.projects) ? raw.projects : [])
+    .map((p: any) => ({
+      t: typeof p?.t === "string" ? p.t.trim() : "",
+      what: typeof p?.what === "string" ? p.what.trim() : "",
+      proves: typeof p?.proves === "string" ? p.proves.trim() : "",
+    }))
+    .filter((p: RoadmapProject) => p.t.length > 0);
+
+  const totalWeeks =
+    posInt(raw.totalWeeks, 260) ||
+    stations.reduce((sum, st) => sum + (st.weeks || 0), 0) ||
+    undefined;
 
   return {
     title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "مسیر یادگیری",
     note: typeof raw.note === "string" ? raw.note.trim() : "",
-    level: typeof raw.level === "string" && raw.level.trim() ? raw.level.trim() : undefined,
+    level: str(raw.level),
     totalWeeks,
+    outcome: str(raw.outcome),
+    tracks,
     stations,
+    certifications,
+    projects,
     tips: asStringArray(raw.tips),
     mistakes: asStringArray(raw.mistakes),
     pro: asStringArray(raw.pro),
@@ -368,31 +621,43 @@ function normalizeRoadmap(raw: any): GeneratedRoadmap {
   };
 }
 
-const FA_DAY_NAMES = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
+/**
+ * پیامِ کاربر برای مرحله‌ی ۲: همه‌ی پروفایل + جوابِ سوال‌ها. مدل بدونِ این
+ * نمی‌تواند جلسه‌ها را به اندازه‌ی درست ببُرد یا مسیر را برای همان شاخه‌ای
+ * که کاربر انتخاب کرده بچیند.
+ */
+function roadmapUserMessage(profile: RoadmapProfile, answers: RoadmapAnswer[]): string {
+  const lines = profileLines(profile);
 
-/** پیامِ کاربر: موضوع + هدف (اختیاری) + وقتی که واقعاً دارد. مدل بدونِ
- *  این نمی‌تواند جلسه‌ها را به اندازه‌ی درست ببُرد یا مسیر را برای همان
- *  هدفِ کاربر بچیند. */
-function roadmapUserMessage(topic: string, schedule?: RoadmapSchedule, goal?: string): string {
-  const lines = [`موضوع: ${topic}`];
-  if (goal?.trim()) lines.push(`هدفِ کاربر از یادگیری: ${goal.trim()}`);
+  const s = profile.schedule;
+  if (s && s.jsDays.length) {
+    lines.push(
+      `ساعتِ شروع: ${s.startTime}`,
+      `هر جلسه باید دقیقاً در ${s.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`
+    );
+  }
 
-  if (!schedule || !schedule.jsDays.length) return lines.join("\n");
+  if (answers.length) {
+    lines.push("", "جواب‌های کاربر به سوال‌هایی که پرسیدی (این‌ها را حتماً در مسیر اعمال کن):");
+    for (const a of answers) lines.push(`• ${a.q} → ${a.a}`);
+  }
 
-  const days = schedule.jsDays.map((d) => FA_DAY_NAMES[d] ?? "").filter(Boolean).join("، ");
-  const perWeek = schedule.jsDays.length * schedule.minutesPerDay;
-  lines.push(
-    `روزهای تمرین: ${days} (هفته‌ای ${schedule.jsDays.length} جلسه)`,
-    `مدتِ هر جلسه: ${schedule.minutesPerDay} دقیقه`,
-    `ساعتِ شروع: ${schedule.startTime}`,
-    `مجموعِ وقتِ هفتگی: ${perWeek} دقیقه`,
-    `هر جلسه باید دقیقاً در ${schedule.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`
-  );
   return lines.join("\n");
 }
 
-async function callRoadmapOnce(topic: string, userId: string, schedule: RoadmapSchedule | undefined, goal: string | undefined, timeoutMs: number): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, roadmapUserMessage(topic, schedule, goal), 6000, AI_MODEL_NAME, timeoutMs);
+async function callRoadmapOnce(
+  profile: RoadmapProfile,
+  answers: RoadmapAnswer[],
+  userId: string,
+  timeoutMs: number
+): Promise<GeneratedRoadmap> {
+  const { text, usage, durationMs } = await callAiChat(
+    ROADMAP_SYSTEM_PROMPT,
+    roadmapUserMessage(profile, answers),
+    8000,
+    AI_MODEL_NAME,
+    timeoutMs
+  );
   // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
   // ساختار خروجی پایین‌تر موفق بشه یا نه
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
@@ -400,15 +665,17 @@ async function callRoadmapOnce(topic: string, userId: string, schedule: RoadmapS
 }
 
 /**
- * تا ۲ بار امتحان می‌کنه — چون خطای parse/شکل گاهی گذراست (یک تولید بد
- * تصادفی)، نه یک خطای ساختاری همیشگی. زیرِ یک بودجه‌ی زمانیِ کل
- * (withAiBudget) تا از سقفِ nginx.conf.example رد نزنه — قبلاً همین
- * حلقه با ۲×۴۵ثانیه می‌تونست تا ۹۰ ثانیه طول بکشه که باعث می‌شد ساختِ
- * رودمپ «توی ساخت گیر کنه» (nginx بعد از ۶۰s کانکشن رو می‌بست).
+ * مرحله‌ی ۲: خودِ مسیر. تا ۲ بار امتحان می‌کنه — چون خطای parse/شکل گاهی
+ * گذراست (یک تولید بد تصادفی)، نه یک خطای ساختاری همیشگی. زیرِ یک بودجه‌ی
+ * زمانیِ کل (withAiBudget) تا از سقفِ nginx.conf.example رد نزنه.
  */
-export async function generateRoadmap(topic: string, userId: string, schedule?: RoadmapSchedule, goal?: string): Promise<GeneratedRoadmap> {
+export async function generateRoadmap(
+  profile: RoadmapProfile,
+  answers: RoadmapAnswer[],
+  userId: string
+): Promise<GeneratedRoadmap> {
   try {
-    return await withAiBudget((timeoutMs) => callRoadmapOnce(topic, userId, schedule, goal, timeoutMs));
+    return await withAiBudget((timeoutMs) => callRoadmapOnce(profile, answers, userId, timeoutMs));
   } catch (err: any) {
     logError("ai-gateway", `ساخت رودمپ شکست خورد: ${err?.message || err}`, { context: { feature: "ROADMAP_GENERATION" } });
     throw err;
