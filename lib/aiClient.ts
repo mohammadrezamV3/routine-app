@@ -13,6 +13,9 @@ import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/errorLog";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
+import {
+  GraphIssue, RoadmapGraph, normalizeGraph, validateGraph, LIMITS,
+} from "@/lib/roadmapGraph";
 
 const AI_MODEL_NAME = "gpt-4o-mini";
 
@@ -201,59 +204,6 @@ function parseJsonResponse(text: string): any {
 // یک «سرفصلِ خشک» را به یک مسیرِ واقعیِ شغلی تبدیل می‌کنند.
 // ============================================================================
 
-/** یک نشستِ واقعی به اندازه‌ی همان دقیقه‌هایی که کاربر اعلام کرده. */
-export type GeneratedSession = {
-  title: string;
-  goal?: string;
-  steps: string[];
-  howTo?: string;
-  refs?: string[];
-  checkpoint?: string;
-};
-
-export type GeneratedStation = {
-  t: string;
-  items: string[];
-  /** حوزه‌ای (track) که این مرحله زیرِ آن می‌نشیند — برای نشان‌دادنِ ربطِ مرحله به نقشه‌ی کلی */
-  track?: string;
-  goal?: string;
-  weeks?: number;
-  practice?: string;
-  checkpoint?: string;
-  sessions?: GeneratedSession[];
-};
-
-/**
- * یک «حوزه‌ای که باید خوانده شود» — جوابِ اصلیِ سوالِ کاربر: *چی بخوانم؟*
- * ترتیبِ آرایه یعنی ترتیبِ خواندن.
- */
-export type RoadmapTrack = {
-  t: string;
-  /** چرا این حوزه برای رسیدن به خواسته‌ی کاربر لازم است */
-  why: string;
-  weeks?: number;
-  /** سرفصل‌های کلیدیِ همین حوزه */
-  topics: string[];
-};
-
-/** مدرک/سرتیفیکیت، سرِ جای درستِ مسیر (نه یک فهرستِ بی‌ترتیب) */
-export type RoadmapCert = {
-  name: string;
-  /** کجای مسیر سراغش برود */
-  when: string;
-  why: string;
-  /** لازم است یا فقط خوب است داشته باشی */
-  required?: boolean;
-};
-
-/** پروژه‌ای که بعدش می‌شود نشانش داد — «بلدم» با این ثابت می‌شود، نه با گواهی */
-export type RoadmapProject = {
-  t: string;
-  what: string;
-  /** چه مهارتی را ثابت می‌کند */
-  proves: string;
-};
-
 /** آنچه کاربر در گامِ زمان‌بندیِ ویزارد انتخاب می‌کند. */
 export type RoadmapSchedule = {
   /** روزهای هفته به سبکِ Date.getDay() — ۰ یکشنبه … ۶ شنبه */
@@ -297,23 +247,6 @@ export type RoadmapQuestionSet = {
 
 /** جوابِ کاربر به سوال‌های مرحله‌ی ۱ — همان‌طور که به مدل پس داده می‌شود. */
 export type RoadmapAnswer = { q: string; a: string };
-
-export type GeneratedRoadmap = {
-  title: string;
-  note: string;
-  level?: string;
-  totalWeeks?: number;
-  /** بعد از تمام‌کردنِ مسیر دقیقاً چه کاری/نقشی می‌تواند بگیرد */
-  outcome?: string;
-  tracks: RoadmapTrack[];
-  stations: GeneratedStation[];
-  certifications: RoadmapCert[];
-  projects: RoadmapProject[];
-  tips: string[];
-  mistakes: string[];
-  pro: string[];
-  books: string[];
-};
 
 // ── مرحله‌ی ۱: سوال‌ها ───────────────────────────────────────────────────
 
@@ -385,6 +318,12 @@ function profileLines(p: RoadmapProfile): string[] {
   return lines;
 }
 
+/** فقط رشته‌های ناتهیِ یک آرایه — خروجیِ مدل پر از null/عدد/شیء هم می‌تواند باشد. */
+function asStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((x) => typeof x === "string" && x.trim().length > 0).map((x) => (x as string).trim());
+}
+
 function normalizeQuestions(raw: any): RoadmapQuestionSet {
   if (!raw || typeof raw !== "object") throw new Error("خروجی مدل ساختار معتبری نداشت");
   const list = Array.isArray(raw.questions) ? raw.questions : [];
@@ -434,252 +373,285 @@ export async function generateRoadmapQuestions(profile: RoadmapProfile, userId: 
   }
 }
 
-// ── مرحله‌ی ۲: خودِ مسیر ─────────────────────────────────────────────────
+// ============================================================================
+// مرحله‌ی ۳: گرافِ وابستگیِ مسیر (AI Roadmap Builder)
+//
+// تفاوتش با generateRoadmap بالا: خروجی یک *فهرستِ مرحله* نیست، یک DAGِ
+// واقعی‌ست — نودها با پیش‌نیاز، و یال‌هایی که ترتیبِ یادگیری را می‌سازند.
+// UI روی همین گراف رسم می‌شود و پیشرفت هم نود‌به‌نود است.
+//
+// هیچ خروجی‌ای بدونِ اعتبارسنجی ذخیره یا نمایش داده نمی‌شود. اگر گراف ایراد
+// داشت (نودِ تکراری، ارجاعِ ناموجود، حلقه، …) همان فهرستِ ایرادها به خودِ
+// مدل پس داده می‌شود تا تعمیرش کند — چون یک حلقه‌ی وابستگی معمولاً یک
+// اشتباهِ موضعی‌ست، نه دلیلی برای دورانداختنِ کلِ تولید (که هزینه‌ی توکنش
+// هم پرداخت شده).
+// ============================================================================
 
-const ROADMAP_SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ای هستی که کارِ واقعی‌ات این است: کسی که هیچ نمی‌داند را برداری و تا سطحِ
-«می‌تواند کارِ واقعی انجام دهد / قابلِ استخدام است» ببری. الان قرار است برای یک کاربرِ مشخص، با جواب‌هایی که همین الان
-به سوال‌هایت داده، یک رودمپِ کامل بسازی.
+/** حداکثر تلاشِ تعمیر بعد از تولیدِ اول — سقفِ هزینه و زمان. */
+const MAX_REPAIR_ATTEMPTS = 2;
 
-**مهم‌ترین کارِ تو:** کاربر فقط یک خواسته‌ی نهایی گفته (مثلاً «می‌خواهم امنیت شبکه کار کنم»). او **نمی‌داند برای رسیدن
-به آن باید چه چیزهایی بخواند**. وظیفه‌ی تو این است که خودت تصمیم بگیری چه حوزه‌هایی، با چه ترتیبی، باید خوانده شوند —
-و برای هرکدام بگویی **چرا** لازم است.
-مثال برای «امنیت شبکه»: اول شبکه (TCP/IP، سوئیچ/روتر، مدلِ OSI)، بعد لینوکس و خطِ فرمان، بعد مبانیِ امنیت و
-رمزنگاری، بعد تخصص (تستِ نفوذ یا دفاع و مانیتورینگ)، و در کنارش مدرک‌هایی مثل Network+/CCNA و بعدتر OSCP.
-اگر این ترتیب و دلیلش را ننویسی، کاربر دقیقاً همان‌جا که بود می‌ماند — پس این بخش (tracks) از همه مهم‌تر است.
+export type GraphGenerationMeta = {
+  attempts: number;
+  repaired: boolean;
+  issuesFixed: string[];
+  durationMs: number;
+};
+
+export type GraphGenerationResult = {
+  graph: RoadmapGraph;
+  meta: GraphGenerationMeta;
+};
+
+const GRAPH_SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ای هستی که کارت این است: کسی را که هیچ نمی‌داند برداری و تا سطحِ «می‌تواند کارِ
+واقعی انجام دهد» ببری. الان قرار است برای یک کاربرِ مشخص یک **گرافِ وابستگیِ یادگیری** بسازی.
+
+کاربر فقط خواسته‌ی نهایی‌اش را می‌گوید (مثلاً «می‌خواهم OWASP را از صفر تا سطحِ باگ‌بانتی یاد بگیرم»).
+او **نمی‌داند برای رسیدن به آن باید چه چیزهایی و با چه ترتیبی بخواند**. تصمیمِ آن ترتیب کارِ توست.
 
 قواعدِ سخت‌گیرانه:
 
-۱. جواب‌های کاربر را **واقعاً اعمال کن**. اگر گفته لینوکس بلد است، حوزه‌ی لینوکس را حذف یا خیلی کوتاه کن؛ اگر گفته
-   بلد نیست، همان اولِ مسیر بگذارش. اگر شاخه‌ای را انتخاب کرده، کلِ مسیر را برای همان شاخه بچین نه یک مسیرِ عمومی.
-۲. مسیر از **سطحِ واقعیِ فعلیِ کاربر** شروع شود (نه همیشه از صفر) و به همان خواسته‌ی نهایی برسد.
-۳. هر چیزی که می‌نویسی باید بگوید کاربر **دقیقاً چه کاری انجام دهد**، نه «چه چیزی یاد بگیرد».
-   بد: «مبانی شبکه را یاد بگیر». خوب: «با Wireshark یک نشستِ HTTP را ضبط کن و سه‌مرحله‌ی دست‌دادنِ TCP را رویش پیدا کن».
-۴. **جلسه‌ها:** کاربر گفته هفته‌ای چند روز و هر بار چند دقیقه وقت دارد. مسیر را دقیقاً به همان اندازه جلسه ببُر.
-   هر جلسه باید در همان دقیقه‌های اعلام‌شده **واقعاً تمام شود** — نه یک سرفصلِ چندهفته‌ای که اسمش را گذاشته‌ای جلسه.
-۵. اگر کاربر ددلاین داده، کلِ مسیر باید تا همان موعد جا شود. اگر با وقتی که دارد واقعاً جا نمی‌شود،
-   دامنه را کوچک‌تر کن (روی حیاتی‌ترین‌ها تمرکز کن) و در note صادقانه بگو چه چیزی از مسیر بیرون ماند.
-۶. منابع باید **مشخص و واقعی** باشند: نامِ دقیقِ کتاب و فصل، نامِ دوره و شماره‌ی درس، نامِ ابزار/مستند.
-   هرگز ننویس «یک ویدیوی خوب پیدا کن». زبان و بودجه‌ای که کاربر گفته را رعایت کن.
-۷. اشتباهاتِ رایج را بگو — چیزهایی که تازه‌کارهای همین حوزه وقتشان را رویش تلف می‌کنند.
-۸. هیچ‌چیزِ کلی و بی‌مصرف ننویس. اگر جمله‌ای برای هر موضوعی صادق است، بی‌ارزش است و باید حذف شود.
-۹. همه‌چیز فارسیِ روان و خودمانی — ولی نامِ ابزار، مدرک، کتاب و اصطلاحِ فنی را به همان شکلِ اصلی (انگلیسی) بنویس.
+۱. اول خواسته‌ی کاربر را تحلیل کن: دقیقاً به چه توانایی‌ای می‌خواهد برسد؟
+۲. سطحِ فعلیِ کاربر را نقطه‌ی شروع بگیر. چیزی را که گفته بلد است دوباره از صفر نیاور.
+۳. پیش‌نیازها را صریح مشخص کن: هر نود فقط به نودهایی وابسته باشد که *واقعاً* بدونشان قابلِ فهم نیست.
+۴. ترتیبِ یادگیری را با همین وابستگی‌ها بساز، نه با حدس. چیزی که موازی قابلِ یادگیری‌ست را وابسته نکن.
+۵. **هیچ حلقه‌ای نساز.** اگر A پیش‌نیازِ B است، B هرگز نباید (مستقیم یا با واسطه) پیش‌نیازِ A باشد.
+۶. موضوعِ تکراری نساز: هر مفهوم فقط در یک نود. دو نود با عنوانِ هم‌معنی ممنوع.
+۷. زمانِ تخمینیِ هر نود واقع‌بینانه باشد (ساعت). مجموعش باید با وقتِ هفتگیِ کاربر جور دربیاید.
+۸. رودمپ را بی‌جهت بزرگ نکن: حداکثر ${LIMITS.maxStages} مرحله و در کل حداکثر ${LIMITS.maxNodes} نود.
+۹. اگر کاربر هدفِ مشخصی دارد، چیزی خارج از آن هدف اضافه نکن.
+۱۰. **منبعِ جعلی نساز.** فقط منابعی بنویس که مطمئنی وجود دارند و آدرسشان را دقیق می‌دانی
+    (مستنداتِ رسمی، سایت‌های مرجعِ شناخته‌شده). اگر آدرسِ دقیق را نمی‌دانی، فیلدِ url را کلاً ننویس
+    و فقط عنوان و ناشر را بده — این کاملاً قابلِ قبول است. یک لینکِ اشتباه از نبودنِ لینک بدتر است.
+۱۱. خروجی فقط و فقط JSON مطابقِ همین schema، بدونِ هیچ متنِ اضافه، بدونِ Markdown fences.
+۱۲. توضیح‌ها کوتاه و مفید باشند — یکی دو جمله، نه یک پاراگراف.
+۱۳. رودمپ باید **قابلِ اجرا** باشد، نه فهرستِ سرفصل: هر نود باید بگوید کاربر دقیقاً چه کاری انجام دهد.
+۱۴. برای هر نود حداقل یک تمرینِ عملیِ مشخص در tasks بنویس (چه چیزی بساز/امتحان کن، نه «تمرین کن»).
+۱۵. هر نود در مرحله‌ای باشد که پیش‌نیازهایش در همان مرحله یا مرحله‌های *قبل* باشند — هرگز مرحله‌ی بعد.
+۱۶. زبانِ همه‌ی متن‌ها فارسیِ روان باشد، ولی نامِ ابزار/استاندارد/کتاب/آسیب‌پذیری را به همان شکلِ اصلی
+    (انگلیسی) بنویس — مثلاً "SQL Injection" نه «تزریق اس‌کیو‌ال».
 
-فقط و فقط یک JSONِ خام برگردان، بدونِ هیچ متنِ اضافه قبل یا بعدش، بدونِ Markdown fences.
-دقیقاً با این شکل:
+شناسه‌ها (id): انگلیسی، کوچک، با خط‌تیره — مثل "http-basics" یا "sql-injection". یکتا در کلِ رودمپ.
+
+خروجی دقیقاً با این شکل:
 
 {
-  "title": "عنوانِ کوتاه و مشخصِ مسیر",
-  "note": "یک تا دو جمله: این مسیر دقیقاً چه چیزی را پوشش می‌دهد و چه چیزی را نه",
-  "level": "نقطه‌ی شروعِ مسیر، مثلاً: از صفر",
-  "totalWeeks": 24,
-  "outcome": "بعد از تمام‌کردنِ این مسیر دقیقاً چه کاری می‌توانی انجام دهی یا چه نقشی را می‌توانی بگیری",
-  "tracks": [
+  "title": "عنوانِ کوتاهِ مسیر",
+  "description": "یکی دو جمله: این مسیر چه چیزی را پوشش می‌دهد و چه چیزی را نه",
+  "goal": "هدفِ کاربر، همان‌طور که فهمیدی",
+  "level": "نقطه‌ی شروع، مثلاً: beginner",
+  "estimated_hours": 240,
+  "estimated_weeks": 24,
+  "stages": [
     {
-      "t": "نامِ حوزه‌ای که باید خوانده شود",
-      "why": "چرا بدونِ این نمی‌شود به خواسته‌ی کاربر رسید",
-      "weeks": 4,
-      "topics": ["سرفصلِ کلیدیِ ۱", "سرفصلِ کلیدیِ ۲", "سرفصلِ کلیدیِ ۳"]
-    }
-  ],
-  "stations": [
-    {
-      "t": "عنوانِ مرحله",
-      "track": "نامِ همان حوزه‌ای که این مرحله زیرش است",
-      "goal": "بعد از این مرحله دقیقاً چه کاری می‌توانی بکنی (یک جمله، قابلِ سنجش)",
-      "weeks": 2,
-      "items": ["کارِ عملیِ ۱ (فعل‌محور و مشخص)", "کارِ عملیِ ۲", "کارِ عملیِ ۳"],
-      "practice": "تمرینِ عملیِ این مرحله با خروجیِ مشخص",
-      "checkpoint": "از کجا بفهمی این مرحله تمام شده",
-      "sessions": [
+      "id": "stage-1",
+      "title": "عنوانِ مرحله",
+      "description": "این مرحله چه چیزی را می‌سازد",
+      "order": 1,
+      "nodes": [
         {
-          "title": "عنوانِ جلسه",
-          "goal": "هدفِ همین یک جلسه، در یک جمله",
-          "steps": ["۰-۱۰ دقیقه: کارِ مشخص", "۱۰-۳۵ دقیقه: کارِ مشخص", "۳۵-۴۵ دقیقه: کارِ مشخص"],
-          "howTo": "روشِ یادگیریِ این جلسه — چطور تمرین کن که واقعاً بماند",
-          "refs": ["نامِ دقیقِ منبع + فصل/درسِ مشخص", "منبعِ دومِ مشخص"],
-          "checkpoint": "از کجا بفهمی این جلسه را بلد شده‌ای"
+          "id": "http-basics",
+          "title": "HTTP Fundamentals",
+          "description": "یکی دو جمله",
+          "level": "beginner",
+          "estimated_hours": 12,
+          "prerequisites": [],
+          "topics": ["زیرموضوعِ مشخص ۱", "زیرموضوعِ مشخص ۲"],
+          "resources": [
+            { "title": "نامِ دقیقِ منبع", "type": "documentation", "url": "https://…", "source": "MDN" }
+          ],
+          "tasks": ["کارِ عملیِ مشخص با خروجیِ قابلِ دیدن"]
         }
       ]
     }
   ],
-  "certifications": [
-    { "name": "نامِ دقیقِ مدرک", "when": "کجای مسیر سراغش برود", "why": "چه چیزی را ثابت می‌کند و به چه دردش می‌خورد", "required": false }
-  ],
-  "projects": [
-    { "t": "نامِ پروژه", "what": "دقیقاً چه چیزی بسازد", "proves": "چه مهارتی را ثابت می‌کند" }
-  ],
-  "tips": ["نکته‌ی کاربردی ۱", "نکته‌ی کاربردی ۲", "نکته‌ی کاربردی ۳"],
-  "mistakes": ["اشتباهِ رایجِ ۱ و چرا وقت‌تلف‌کن است", "اشتباهِ رایجِ ۲"],
-  "pro": ["برای رسیدن به سطحِ حرفه‌ای ۱", "برای رسیدن به سطحِ حرفه‌ای ۲"],
-  "books": ["نامِ دقیقِ کتاب/دوره/منبعِ واقعی ۱", "نامِ دقیقِ منبعِ ۲"]
+  "connections": [
+    { "from": "http-basics", "to": "authentication" }
+  ]
 }
 
-بینِ ۳ تا ۶ حوزه (tracks) بنویس، به ترتیبِ خواندن. بینِ ۴ تا ۷ مرحله (stations) بساز؛
-هر مرحله روی مهارتِ مرحله‌ی قبل سوار شود. مجموعِ جلسه‌ها را از ۱۲ بیشتر و از ۴۰ کمتر نگه دار.
-اگر موضوع اصلاً مدرکِ معناداری ندارد، certifications را خالی بگذار — مدرکِ الکی نساز.`;
+"type" منبع یکی از این‌هاست: article | documentation | video | course | lab | book
+"level" نود یکی از این‌هاست: beginner | intermediate | advanced
+connections باید دقیقاً همان وابستگی‌هایی باشد که در prerequisites گفته‌ای — نه کم، نه زیاد.`;
 
-function asStringArray(v: unknown): string[] {
-  if (!Array.isArray(v)) return [];
-  return v.filter((x) => typeof x === "string" && x.trim().length > 0).map((x) => (x as string).trim());
-}
-
-/**
- * مدل زبانی گاهی خروجی رو دقیقا طبق شکل خواسته‌شده برنمی‌گردونه (فیلد
- * جاافتاده، station بدون items، و ...). این تابع خروجی رو اعتبارسنجی و
- * نرمال می‌کنه تا هیچ‌وقت داده ناقص/بدشکل به دیتابیس یا UI نرسه — چون
- * صفحه جزئیات رودمپ مستقیم روی این فیلدها .map می‌زنه و با undefined کرش می‌کنه.
- */
-function normalizeRoadmap(raw: any): GeneratedRoadmap {
-  if (!raw || typeof raw !== "object") {
-    throw new Error("خروجی مدل ساختار معتبری نداشت");
-  }
-
-  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
-  const posInt = (v: unknown, max: number) =>
-    Number.isFinite(Number(v)) && Number(v) > 0 ? Math.min(Math.round(Number(v)), max) : undefined;
-
-  const normSessions = (v: unknown): GeneratedSession[] | undefined => {
-    if (!Array.isArray(v)) return undefined;
-    const out = v
-      .map((x: any) => ({
-        title: typeof x?.title === "string" && x.title.trim() ? x.title.trim() : "",
-        goal: str(x?.goal),
-        steps: asStringArray(x?.steps),
-        howTo: str(x?.howTo),
-        refs: asStringArray(x?.refs),
-        checkpoint: str(x?.checkpoint),
-      }))
-      // یک جلسه بدونِ عنوان یا بدونِ قدمِ اجرایی چیزی به کاربر نمی‌دهد
-      .filter((x: GeneratedSession) => x.title && x.steps.length > 0);
-    return out.length ? out : undefined;
-  };
-
-  const tracks: RoadmapTrack[] = (Array.isArray(raw.tracks) ? raw.tracks : [])
-    .map((x: any) => ({
-      t: typeof x?.t === "string" ? x.t.trim() : "",
-      why: typeof x?.why === "string" ? x.why.trim() : "",
-      weeks: posInt(x?.weeks, 104),
-      topics: asStringArray(x?.topics),
-    }))
-    .filter((x: RoadmapTrack) => x.t.length > 0);
-
-  const stations: GeneratedStation[] = (Array.isArray(raw.stations) ? raw.stations : [])
-    .map((s: any) => ({
-      t: typeof s?.t === "string" && s.t.trim() ? s.t.trim() : "مرحله بدون عنوان",
-      items: asStringArray(s?.items),
-      track: str(s?.track),
-      goal: str(s?.goal),
-      // مدل گاهی هفته را رشته می‌دهد ("۲ هفته") — فقط عددِ معتبر را می‌پذیریم
-      weeks: posInt(s?.weeks, 52),
-      practice: str(s?.practice),
-      checkpoint: str(s?.checkpoint),
-      sessions: normSessions(s?.sessions),
-    }))
-    // مرحله‌ای که نه کارِ عملی دارد نه جلسه، چیزی برای نشان‌دادن ندارد
-    .filter((s: GeneratedStation) => s.items.length > 0 || (s.sessions?.length ?? 0) > 0);
-
-  if (stations.length === 0) {
-    throw new Error("مدل هیچ مرحله‌ی قابل‌استفاده‌ای برنگردوند");
-  }
-
-  const certifications: RoadmapCert[] = (Array.isArray(raw.certifications) ? raw.certifications : [])
-    .map((c: any) => ({
-      name: typeof c?.name === "string" ? c.name.trim() : "",
-      when: typeof c?.when === "string" ? c.when.trim() : "",
-      why: typeof c?.why === "string" ? c.why.trim() : "",
-      required: c?.required === true,
-    }))
-    .filter((c: RoadmapCert) => c.name.length > 0);
-
-  const projects: RoadmapProject[] = (Array.isArray(raw.projects) ? raw.projects : [])
-    .map((p: any) => ({
-      t: typeof p?.t === "string" ? p.t.trim() : "",
-      what: typeof p?.what === "string" ? p.what.trim() : "",
-      proves: typeof p?.proves === "string" ? p.proves.trim() : "",
-    }))
-    .filter((p: RoadmapProject) => p.t.length > 0);
-
-  const totalWeeks =
-    posInt(raw.totalWeeks, 260) ||
-    stations.reduce((sum, st) => sum + (st.weeks || 0), 0) ||
-    undefined;
-
-  return {
-    title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "مسیر یادگیری",
-    note: typeof raw.note === "string" ? raw.note.trim() : "",
-    level: str(raw.level),
-    totalWeeks,
-    outcome: str(raw.outcome),
-    tracks,
-    stations,
-    certifications,
-    projects,
-    tips: asStringArray(raw.tips),
-    mistakes: asStringArray(raw.mistakes),
-    pro: asStringArray(raw.pro),
-    books: asStringArray(raw.books),
-  };
-}
-
-/**
- * پیامِ کاربر برای مرحله‌ی ۲: همه‌ی پروفایل + جوابِ سوال‌ها. مدل بدونِ این
- * نمی‌تواند جلسه‌ها را به اندازه‌ی درست ببُرد یا مسیر را برای همان شاخه‌ای
- * که کاربر انتخاب کرده بچیند.
- */
-function roadmapUserMessage(profile: RoadmapProfile, answers: RoadmapAnswer[]): string {
+function graphUserMessage(profile: RoadmapProfile, answers: RoadmapAnswer[]): string {
   const lines = profileLines(profile);
-
   const s = profile.schedule;
   if (s && s.jsDays.length) {
+    const weekly = s.jsDays.length * s.minutesPerDay;
     lines.push(
-      `ساعتِ شروع: ${s.startTime}`,
-      `هر جلسه باید دقیقاً در ${s.minutesPerDay} دقیقه تمام شود؛ قدم‌های هر جلسه را با همین بودجه‌ی زمانی بنویس.`
+      `وقتِ هفتگیِ کاربر: ${Math.round((weekly / 60) * 10) / 10} ساعت`,
+      "مجموعِ estimated_hours باید با همین وقتِ هفتگی و مدتی که کاربر گفته جور دربیاید."
     );
   }
-
+  if (profile.deadlineMonths) {
+    lines.push(`کاربر می‌خواهد ظرفِ ${profile.deadlineMonths} ماه به خواسته‌اش برسد — مسیر باید در همین بازه جا شود.`);
+  }
   if (answers.length) {
-    lines.push("", "جواب‌های کاربر به سوال‌هایی که پرسیدی (این‌ها را حتماً در مسیر اعمال کن):");
+    lines.push("", "جواب‌های کاربر به سوال‌هایی که پرسیدی (این‌ها را حتماً اعمال کن):");
     for (const a of answers) lines.push(`• ${a.q} → ${a.a}`);
   }
-
   return lines.join("\n");
 }
 
-async function callRoadmapOnce(
-  profile: RoadmapProfile,
-  answers: RoadmapAnswer[],
-  userId: string,
-  timeoutMs: number
-): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(
-    ROADMAP_SYSTEM_PROMPT,
-    roadmapUserMessage(profile, answers),
-    8000,
-    AI_MODEL_NAME,
-    timeoutMs
-  );
-  // گیت‌وی واقعا پاسخ داد و توکن مصرف شد — صرف‌نظر از اینکه اعتبارسنجی
-  // ساختار خروجی پایین‌تر موفق بشه یا نه
+/** پیامِ تعمیر: خروجیِ قبلی + دقیقاً چه چیزی خراب بود. */
+function repairMessage(previous: string, issues: GraphIssue[]): string {
+  return [
+    "این JSONی که دادی ایرادِ ساختاری دارد و قابلِ استفاده نیست:",
+    "",
+    previous.slice(0, 12_000),
+    "",
+    "ایرادها:",
+    ...issues.map((i, n) => `${n + 1}. ${i.message}`),
+    "",
+    "همین رودمپ را با رفعِ این ایرادها دوباره بده — ساختار و محتوای درست را نگه دار،",
+    "فقط چیزی را که ایراد دارد اصلاح کن. باز هم فقط JSONِ خام، بدونِ متنِ اضافه.",
+  ].join("\n");
+}
+
+type GraphAttempt = { graph: RoadmapGraph; issues: GraphIssue[]; raw: string };
+
+async function callGraphOnce(system: string, user: string, userId: string, timeoutMs: number): Promise<GraphAttempt> {
+  const { text, usage, durationMs } = await callAiChat(system, user, 12000, AI_MODEL_NAME, timeoutMs);
   recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
-  return normalizeRoadmap(parseJsonResponse(text));
+  const graph = normalizeGraph(parseJsonResponse(text));
+  return { graph, issues: validateGraph(graph), raw: text };
 }
 
 /**
- * مرحله‌ی ۲: خودِ مسیر. تا ۲ بار امتحان می‌کنه — چون خطای parse/شکل گاهی
- * گذراست (یک تولید بد تصادفی)، نه یک خطای ساختاری همیشگی. زیرِ یک بودجه‌ی
- * زمانیِ کل (withAiBudget) تا از سقفِ nginx.conf.example رد نزنه.
+ * تولیدِ گراف با حلقه‌ی تعمیر.
+ *
+ * تفاوتش با withAiBudget: آن‌جا «تلاشِ دوم» فقط وقتی معنی داشت که تلاشِ اول
+ * *پرتاب* کرده باشد. این‌جا خروجی می‌تواند کاملاً معتبرِ JSON باشد ولی گرافش
+ * خراب — که خطا پرتاب نمی‌کند. پس خودمان حلقه را می‌نویسیم و ایرادها را به
+ * مدل پس می‌دهیم.
  */
-export async function generateRoadmap(
+export async function generateRoadmapGraph(
   profile: RoadmapProfile,
   answers: RoadmapAnswer[],
   userId: string
-): Promise<GeneratedRoadmap> {
-  try {
-    return await withAiBudget((timeoutMs) => callRoadmapOnce(profile, answers, userId, timeoutMs));
-  } catch (err: any) {
-    logError("ai-gateway", `ساخت رودمپ شکست خورد: ${err?.message || err}`, { context: { feature: "ROADMAP_GENERATION" } });
-    throw err;
+): Promise<GraphGenerationResult> {
+  const startedAt = Date.now();
+  const user = graphUserMessage(profile, answers);
+
+  let attempts = 0;
+  let last: GraphAttempt | null = null;
+  const fixed: string[] = [];
+
+  for (let i = 0; i <= MAX_REPAIR_ATTEMPTS; i++) {
+    const remaining = AI_TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    if (i > 0 && remaining < AI_MIN_ATTEMPT_MS) break;
+    const timeoutMs = Math.max(AI_MIN_ATTEMPT_MS, Math.min(AI_TIMEOUT_MS, remaining));
+
+    attempts++;
+    try {
+      // تلاشِ دوم دو حالت دارد: یا خروجیِ قبلی *بود ولی خراب* (تعمیرش
+      // می‌کنیم)، یا اصلاً خروجی‌ای نبود چون تلاشِ قبلی پرتاب کرد — آن‌وقت
+      // همان پرامپتِ اول دوباره فرستاده می‌شود، نه یک پیامِ تعمیرِ تهی.
+      const result: GraphAttempt = last
+        ? await callGraphOnce(GRAPH_SYSTEM_PROMPT, repairMessage(last.raw, last.issues), userId, timeoutMs)
+        : await callGraphOnce(GRAPH_SYSTEM_PROMPT, user, userId, timeoutMs);
+
+      if (!result.issues.length) {
+        return {
+          graph: result.graph,
+          meta: { attempts, repaired: i > 0, issuesFixed: fixed, durationMs: Date.now() - startedAt },
+        };
+      }
+
+      // هنوز ایراد دارد — برای دورِ بعد نگهش دار
+      if (i === 0 || result.issues.length < (last?.issues.length ?? Infinity)) {
+        fixed.push(...result.issues.map((x: GraphIssue) => x.code));
+        last = result;
+      }
+      logError("roadmap-graph", `roadmap_validation_failed (تلاشِ ${attempts})`, {
+        severity: "WARNING" as any,
+        context: { feature: "ROADMAP_GRAPH", issues: result.issues.map((x: GraphIssue) => x.code) },
+      });
+    } catch (err: any) {
+      // خطای شبکه/parse — همان حلقه دوباره تلاش می‌کند
+      logError("roadmap-graph", `تلاشِ ${attempts} شکست خورد: ${err?.message || err}`, {
+        severity: "WARNING" as any,
+        context: { feature: "ROADMAP_GRAPH" },
+      });
+      if (i === MAX_REPAIR_ATTEMPTS) throw err;
+    }
   }
+
+  if (!last) throw new Error("ساختِ رودمپ انجام نشد — گیت‌وی هوش مصنوعی پاسخِ قابلِ استفاده نداد");
+
+  // بعد از همه‌ی تلاش‌ها هنوز ایراد دارد. یک گرافِ حلقه‌دار یا با ارجاعِ
+  // شکسته را نباید نشان داد — طبقِ خواسته‌ی صریح.
+  throw new Error(
+    `رودمپ ساخته شد ولی ساختارش معتبر نبود: ${last.issues.slice(0, 3).map((i) => i.message).join(" | ")}`
+  );
+}
+
+// ── ویرایشِ گراف با AI ───────────────────────────────────────────────────
+
+const GRAPH_EDIT_SYSTEM_PROMPT = `تو یک ویرایشگرِ رودمپ هستی. یک گرافِ یادگیریِ موجود و یک درخواستِ تغییر از کاربر می‌گیری،
+و همان گراف را با اعمالِ آن تغییر برمی‌گردانی.
+
+مهم‌ترین قاعده: **تغییر را حداقلی نگه دار.** چیزی را که کاربر نخواسته دست نزن —
+نه عنوان، نه شناسه، نه ترتیب، نه زمان‌ها. شناسه‌ی (id) نودهایی که می‌مانند باید *دقیقاً* همان بماند،
+وگرنه پیشرفتِ ثبت‌شده‌ی کاربر روی آن نودها از بین می‌رود.
+
+وقتی نودی را حذف می‌کنی:
+• هر نودی که آن را پیش‌نیاز داشت باید به پیش‌نیازِ *قبل‌تر* وصل شود تا زنجیره نشکند.
+• connections را هم متناسب اصلاح کن.
+
+وقتی نودی اضافه می‌کنی، پیش‌نیازِ درست برایش تعیین کن و در مرحله‌ی مناسب بگذارش.
+
+بقیه‌ی قواعد همان قواعدِ ساختِ رودمپ است: بدونِ حلقه، بدونِ نودِ تکراری، پیش‌نیاز فقط به مرحله‌ی
+هم‌سطح یا قبل‌تر، منبعِ جعلی ممنوع، و خروجی فقط JSONِ خامِ کاملِ همان schema (کلِ گراف، نه فقط قسمتِ عوض‌شده).`;
+
+/**
+ * ویرایشِ گرافِ موجود با یک دستورِ زبانِ طبیعی («پایتون رو بلدم، حذفش کن»).
+ * خروجی دوباره کامل اعتبارسنجی می‌شود؛ ایرادها مثلِ مسیرِ تولید تعمیر می‌شوند.
+ */
+export async function editRoadmapGraph(
+  current: RoadmapGraph,
+  instruction: string,
+  userId: string
+): Promise<GraphGenerationResult> {
+  const startedAt = Date.now();
+  const user = [
+    "گرافِ فعلی:",
+    JSON.stringify(current),
+    "",
+    `درخواستِ کاربر: ${instruction}`,
+  ].join("\n");
+
+  let attempts = 0;
+  let last: GraphAttempt | null = null;
+
+  for (let i = 0; i <= MAX_REPAIR_ATTEMPTS; i++) {
+    const remaining = AI_TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    if (i > 0 && remaining < AI_MIN_ATTEMPT_MS) break;
+    const timeoutMs = Math.max(AI_MIN_ATTEMPT_MS, Math.min(AI_TIMEOUT_MS, remaining));
+
+    attempts++;
+    try {
+      const result: GraphAttempt = last
+        ? await callGraphOnce(GRAPH_EDIT_SYSTEM_PROMPT, repairMessage(last.raw, last.issues), userId, timeoutMs)
+        : await callGraphOnce(GRAPH_EDIT_SYSTEM_PROMPT, user, userId, timeoutMs);
+
+      if (!result.issues.length) {
+        return {
+          graph: result.graph,
+          meta: { attempts, repaired: i > 0, issuesFixed: [], durationMs: Date.now() - startedAt },
+        };
+      }
+      last = result;
+    } catch (err: any) {
+      if (i === MAX_REPAIR_ATTEMPTS) throw err;
+    }
+  }
+
+  throw new Error(
+    last
+      ? `ویرایش انجام شد ولی ساختارش معتبر نبود: ${last.issues.slice(0, 3).map((i) => i.message).join(" | ")}`
+      : "ویرایشِ رودمپ انجام نشد"
+  );
 }
 
 // ============================================================================
