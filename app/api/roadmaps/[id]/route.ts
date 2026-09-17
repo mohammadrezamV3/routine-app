@@ -1,87 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
-import { computeProgress, sanitizeProgress } from "@/lib/roadmapGraph";
-import { graphFromRow } from "@/lib/roadmapStore";
+import { computePlanProgress, normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
 
+/**
+ * یک مسیر با مرحله‌های نرمال‌شده و پیشرفتِ حساب‌شده‌ی سمتِ سرور.
+ *
+ * چرا ردیف دوباره normalize می‌شود: ردیفی که پیش از یک تغییرِ ساختار ذخیره
+ * شده ممکن است فیلدی کم داشته باشد و UI مستقیم روی این فیلدها map می‌زند.
+ * کوئری هم همیشه `{ id, userId }` است، نه فقط `{ id }` — وگرنه با عوض‌کردنِ
+ * id در URL می‌شود مسیرِ کاربرِ دیگری را دید.
+ */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
-  const userId = guard.userId;
 
-  let roadmap;
-  try {
-    roadmap = await prisma.roadmap.findFirst({ where: { id: params.id, userId } });
-  } catch (err) {
-    // همون دلیلِ POST /api/roadmaps: ستونی که در schema.prisma هست ولی
-    // migration نخورده (findFirst بدون select همه‌ی ستون‌ها رو می‌خواد).
-    console.error("roadmap.findFirst failed", err);
-    return NextResponse.json(
-      { error: "خوندن رودمپ از دیتابیس شکست خورد — احتمالاً دیتابیس migration ندارد (prisma migrate deploy لازمه)" },
-      { status: 500 }
-    );
-  }
-  if (!roadmap) return NextResponse.json({ error: "not found" }, { status: 404 });
+  const row = await prisma.roadmap.findFirst({
+    where: { id: params.id, userId: guard.userId },
+    select: {
+      id: true, topic: true, goal: true, title: true, summary: true, guide: true,
+      steps: true, tools: true, totalDuration: true, progress: true, createdAt: true,
+    },
+  });
+  if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  // رودمپِ گراف‌محور علاوه بر ردیفِ خام، خودِ گرافِ نرمال‌شده و پیشرفتِ
-  // حساب‌شده‌ی سمتِ سرور را هم می‌گیرد. رودمپ‌های قدیمی (بدونِ stages) مثلِ
-  // قبل فقط ردیف را می‌گیرند و با رندرِ قدیمی نشان داده می‌شوند.
-  const graph = graphFromRow(roadmap);
-  if (!graph) return NextResponse.json({ roadmap });
+  const plan = normalizePlan({
+    title: row.title,
+    summary: row.summary,
+    guide: row.guide,
+    totalDuration: row.totalDuration,
+    tools: row.tools,
+    stages: row.steps,
+  });
+  const progress = sanitizeStepProgress(plan.stages, row.progress);
 
-  const nodeProgress = sanitizeProgress(graph, roadmap.nodeProgress);
   return NextResponse.json({
-    roadmap,
-    graph,
-    nodeProgress,
-    progress: computeProgress(graph, nodeProgress),
-    version: roadmap.version,
-    versions: Array.isArray(roadmap.history)
-      ? (roadmap.history as any[]).map((h) => ({ version: h?.version, savedAt: h?.savedAt, reason: h?.reason }))
-      : [],
+    roadmap: { id: row.id, topic: row.topic, goal: row.goal, createdAt: row.createdAt },
+    plan,
+    stepProgress: progress,
+    progress: computePlanProgress(plan.stages, progress),
   });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
-  const userId = guard.userId;
 
-  await prisma.roadmap.deleteMany({ where: { id: params.id, userId } });
-  return NextResponse.json({ ok: true });
-}
-
-// PATCH /api/roadmaps/[id]  { progress: { "0": true, ... } }
-//
-// پیشرفت این‌جا ذخیره می‌شود نه در UserSetting: کلیدِ پویا
-// (`roadmapDone:custom-<id>`) اصلاً در allowlistِ کلیدها نبود و روت
-// تنظیمات برایش ۴۰۰ می‌داد، یعنی پیشرفتِ کاربرِ واردشده هیچ‌وقت ذخیره
-// نمی‌شد.
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
-  if (!guard.ok) return guard.response;
-  const userId = guard.userId;
-
-  const body = await req.json().catch(() => null);
-  const raw = body?.progress;
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return NextResponse.json({ error: "progress نامعتبر است" }, { status: 400 });
-  }
-
-  // فقط دو شکلِ کلیدِ شناخته‌شده و مقدارِ بولی — تا کاربر نتواند هر چیزی
-  // در ستونِ Json بریزد:
-  //   "3"     → مرحله‌ی چهارم
-  //   "s2-5"  → جلسه‌ی ششمِ مرحله‌ی سوم
-  const progress: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(raw).slice(0, 600)) {
-    if (/^(\d{1,3}|s\d{1,3}-\d{1,3})$/.test(k) && typeof v === "boolean") progress[k] = v;
-  }
-
-  const updated = await prisma.roadmap.updateMany({
-    where: { id: params.id, userId },
-    data: { progress },
-  });
-  if (updated.count === 0) return NextResponse.json({ error: "not found" }, { status: 404 });
-
+  // deleteMany با شرطِ userId — delete با `{id}` تنها یعنی هر کاربری
+  // می‌تواند مسیرِ کاربرِ دیگری را پاک کند.
+  const { count } = await prisma.roadmap.deleteMany({ where: { id: params.id, userId: guard.userId } });
+  if (!count) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

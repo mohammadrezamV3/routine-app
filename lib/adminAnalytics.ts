@@ -9,6 +9,7 @@
 // «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عدد ساختگی.
 
 import { prisma } from "@/lib/prisma";
+import { countRowProgress } from "@/lib/roadmapPlan";
 import { ModuleKey } from "@prisma/client";
 
 // ============================================================================
@@ -552,18 +553,20 @@ export async function getProductAnalytics(module: ModuleKey, range: Range): Prom
       activeUserIds = new Set(entries.map((e) => e.userId));
       metrics.entriesInRange = entries.length;
     } else if (module === "ROADMAP") {
-      const roadmaps = await prisma.roadmap.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, generatedByAi: true, stations: true } });
+      const roadmaps = await prisma.roadmap.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, generatedByAi: true, steps: true, progress: true } });
       activeUserIds = new Set(roadmaps.map((r) => r.userId));
       metrics.roadmapsInRange = roadmaps.length;
       metrics.aiGeneratedInRange = roadmaps.filter((r) => r.generatedByAi).length;
-      let totalStations = 0;
-      let doneStations = 0;
+      let totalStages = 0;
+      let doneStages = 0;
       for (const r of roadmaps) {
-        const stations = Array.isArray(r.stations) ? (r.stations as any[]) : [];
-        totalStations += stations.length;
-        doneStations += stations.filter((s) => s?.done).length;
+        // شمارش از countRowProgress می‌آید تا تعریفِ «مرحله‌ی انجام‌شده»
+        // یک‌جا بماند (همان تعریفی که خودِ ماژول و گزارشِ هفتگی دارند).
+        const c = countRowProgress(r.steps, r.progress);
+        totalStages += c.total;
+        doneStages += c.done;
       }
-      metrics.stationCompletionPercent = totalStations > 0 ? Math.round((doneStations / totalStations) * 100) : 0;
+      metrics.stageCompletionPercent = totalStages > 0 ? Math.round((doneStages / totalStages) * 100) : 0;
     }
 
     return {

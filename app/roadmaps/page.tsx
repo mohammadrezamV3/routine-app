@@ -15,10 +15,10 @@ type RoadmapCard = {
   id: string;
   topic: string;
   title: string;
-  note: string | null;
-  level: string | null;
-  totalWeeks: number | null;
-  stationCount: number;
+  summary: string | null;
+  goal: string | null;
+  totalDuration: string | null;
+  stageCount: number;
   doneCount: number;
   pct: number;
 };
@@ -56,7 +56,7 @@ export default function RoadmapsHub() {
             <div className="trade-surface trade-page-box rm-page-box rm-empty-box">
               <div className="trade-empty-state">
                 <Map size={32} />
-                <p>هنوز رودمپی نساختی</p>
+                <p>هنوز مسیری نساختی</p>
               </div>
             </div>
           ) : (
@@ -70,15 +70,14 @@ export default function RoadmapsHub() {
                     onClick={() => router.push(`/roadmaps/custom/${r.id}`)}
                   >
                     <div className="rm-card-title">{r.title}</div>
-                    {r.note && <div className="rm-card-desc">{r.note}</div>}
+                    {r.summary && <div className="rm-card-desc">{r.summary}</div>}
 
                     <div className="rm-card-meta">
-                      {r.level && <span className="rm-chip">{r.level}</span>}
-                      {r.totalWeeks ? <span className="rm-chip">{faNum(r.totalWeeks)} هفته</span> : null}
-                      {r.stationCount > 0 && <span className="rm-chip">{faNum(r.stationCount)} مرحله</span>}
+                      {r.totalDuration && <span className="rm-chip">{r.totalDuration}</span>}
+                      {r.stageCount > 0 && <span className="rm-chip">{faNum(r.stageCount)} مرحله</span>}
                     </div>
 
-                    {r.stationCount > 0 && (
+                    {r.stageCount > 0 && (
                       <div className="rm-card-progress">
                         <div className="rm-progress-bar"><span style={{ width: `${r.pct}%` }} /></div>
                         <span className="rm-card-pct">{faNum(r.pct)}٪</span>

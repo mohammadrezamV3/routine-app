@@ -117,13 +117,19 @@ export async function POST() {
   }
   if (tradeData.length) await prisma.tradeEntry.createMany({ data: tradeData });
 
-  // --- یادگیری: یه رودمپ نمونه با ۸ ایستگاه، ۵تاش انجام‌شده ---
+  // --- یادگیری: یه مسیر نمونه با ۸ مرحله، ۵تاش انجام‌شده ---
   let roadmap = await prisma.roadmap.findFirst({ where: { userId } });
-  const stations = Array.from({ length: 8 }, (_, i) => ({ title: `مرحله‌ی ${i + 1}`, items: ["نکته‌ی نمونه"], done: i < 5 }));
+  const steps = Array.from({ length: 8 }, (_, i) => ({
+    n: i + 1, title: `مرحله‌ی ${i + 1}`, goal: "", duration: "۱ هفته",
+    learn: ["نکته‌ی نمونه"], do: ["تمرینِ نمونه"], tools: [], resources: [], done: "تمرین انجام شد",
+  }));
+  const progress = Object.fromEntries(steps.slice(0, 5).map((s) => [String(s.n), true]));
   if (!roadmap) {
-    roadmap = await prisma.roadmap.create({ data: { userId, topic: "داده‌ی تست", title: "رودمپ تست گزارش هفتگی", stations } });
+    roadmap = await prisma.roadmap.create({
+      data: { userId, topic: "داده‌ی تست", title: "مسیر تست گزارش هفتگی", steps, progress },
+    });
   } else {
-    await prisma.roadmap.update({ where: { id: roadmap.id }, data: { stations, updatedAt: new Date() } });
+    await prisma.roadmap.update({ where: { id: roadmap.id }, data: { steps, progress, updatedAt: new Date() } });
   }
 
   // --- تغذیه: هدف روزانه + ۲ تا ۴ وعده در روز با نوسان حول هدف ---

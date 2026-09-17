@@ -1,5 +1,6 @@
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { countRowProgress } from "@/lib/roadmapPlan";
 import { isoLocal } from "@/lib/jalali";
 import { daysOfWeek, WeekRange } from "./weekRange";
 
@@ -154,36 +155,36 @@ async function computeTradingMetric(userId: string, week: WeekRange, active: boo
 }
 
 // ------------------------------------------------------------------
-// Learning — چون Roadmap.stations تاریخ تکمیل هر آیتم رو ذخیره نمی‌کنه
+// Learning — چون Roadmap.progress تاریخ تکمیل هر مرحله رو ذخیره نمی‌کنه
 // (فقط done:boolean فعلی)، این عدد «پیشرفت کلی رودمپ‌ها»ست، نه «کار
 // دقیقا همین هفته» — همین‌جا صادقانه با raw.weeklyActivity مشخص می‌شه.
 // ------------------------------------------------------------------
 async function computeLearningMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const roadmaps = await prisma.roadmap.findMany({
     where: { userId },
-    select: { stations: true, updatedAt: true },
+    select: { steps: true, progress: true, updatedAt: true },
   });
 
   if (roadmaps.length === 0) {
     return { active, hasData: false, daysWithData: 0, dailyScores: Array(7).fill(null), score: null, raw: {} };
   }
 
-  let totalStations = 0, doneStations = 0;
+  let totalStages = 0, doneStages = 0;
   let weeklyActivity = false;
   const weekEndExclusive = new Date(week.weekEnd.getTime() + 86400000);
   for (const r of roadmaps) {
-    const stations = Array.isArray(r.stations) ? (r.stations as { done?: boolean }[]) : [];
-    totalStations += stations.length;
-    doneStations += stations.filter((s) => s?.done).length;
+    const c = countRowProgress(r.steps, r.progress);
+    totalStages += c.total;
+    doneStages += c.done;
     if (r.updatedAt >= week.weekStart && r.updatedAt < weekEndExclusive) weeklyActivity = true;
   }
 
-  const hasData = totalStations > 0;
-  const score = hasData ? round((doneStations / totalStations) * 100) : null;
+  const hasData = totalStages > 0;
+  const score = hasData ? round((doneStages / totalStages) * 100) : null;
 
   return {
     active, hasData, daysWithData: weeklyActivity ? 1 : 0, dailyScores: Array(7).fill(null), score,
-    raw: { totalStations, doneStations, weeklyActivity, isOverallProgress: true },
+    raw: { totalStages, doneStages, weeklyActivity, isOverallProgress: true },
   };
 }
 

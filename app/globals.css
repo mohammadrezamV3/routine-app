@@ -7031,6 +7031,10 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 .rm-items{ margin:11px 0 0; padding-inline-start:17px; display:flex; flex-direction:column; gap:7px; }
 .rm-items li{ font-size:12.5px; line-height:1.9; color:var(--text); }
 .rm-items li::marker{ color:var(--accent); }
+/* «چیکار کن» یک <ol> است و شماره‌گذاری پیش‌فرضِ مرورگر لاتین می‌دهد
+   (۱ می‌شود 1) — وسطِ متنِ فارسی ناجور است. `persian` یک counter-style
+   استانداردِ CSS است، نه یک ترفند. */
+ol.rm-items{ list-style-type:persian; }
 .rm-items a{
   color:inherit; text-decoration:none;
   display:inline-flex; align-items:baseline; gap:5px;
@@ -7049,7 +7053,6 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 }
 .rm-note-box b{ font-size:10.5px; font-weight:700; color:var(--muted); }
 .rm-note-box span{ color:var(--text); }
-.rm-practice{ border-inline-start:2px solid var(--accent); }
 .rm-checkpoint{ border-inline-start:2px solid var(--secondary); }
 
 /* افزودن مرحله به برنامه‌های هفتگی */
@@ -7103,34 +7106,6 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
   font-size:13px; font-weight:800; color:var(--text);
 }
 .rm-section.warn .rm-section-title{ color:#E0A452; }
-.rm-section-list{ margin:0; padding-inline-start:17px; display:flex; flex-direction:column; gap:8px; }
-.rm-section-list li{ font-size:12.5px; line-height:1.95; color:var(--muted); }
-.rm-section-list li::marker{ color:var(--accent); }
-.rm-section.warn .rm-section-list li::marker{ color:#E0A452; }
-.rm-section-list a{ color:inherit; text-decoration:none; display:inline-flex; align-items:baseline; gap:5px; }
-.rm-section-list a:hover{ color:var(--accent); }
-.rm-section-list a svg{ opacity:.45; flex-shrink:0; }
-
-/* ── «برای این کار چی‌ها باید بلد بشی» ────────────────────────────────
-   مهم‌ترین بخشِ صفحه و عمداً بالاتر از مرحله‌ها: کاربر اول باید نقشه‌ی کلی
-   را ببیند (چه حوزه‌هایی، با چه ترتیبی، و چرا)، بعد برود سراغِ جلسه‌ی اول. */
-.rm-tracks{ margin-top:22px; }
-.rm-track-list{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-.rm-track{
-  display:flex; gap:12px; padding:13px 14px; border-radius:14px;
-  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
-}
-.rm-track-num{
-  flex-shrink:0; width:24px; height:24px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:11.5px; font-weight:800; color:var(--accent);
-  background:var(--accent-dim); border:1px solid rgba(var(--accent-rgb),.35);
-}
-.rm-track-body{ flex:1; min-width:0; }
-.rm-track-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
-.rm-track-head b{ font-size:13.5px; font-weight:800; color:var(--text); line-height:1.7; }
-.rm-track-weeks{ flex-shrink:0; font-size:10.5px; color:var(--muted2); }
-.rm-track-why{ margin-top:5px; font-size:12px; line-height:2; color:var(--muted); }
 .rm-track-topics{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
 .rm-topic-chip{
   padding:5px 10px; border-radius:9px; font-size:11px; font-weight:600;
@@ -7142,12 +7117,6 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
   .rm-topic-chip:hover{ color:var(--accent); border-color:var(--accent); }
 }
 
-/* نامِ حوزه‌ای که هر مرحله زیرش است — ربطِ مرحله به نقشه‌ی بالا */
-.rm-step-track{
-  display:inline-block; margin-top:6px; padding:3px 9px; border-radius:8px;
-  font-size:10px; font-weight:700; color:var(--accent); background:var(--accent-dim);
-}
-
 /* ── خروجیِ نهایی، مدرک‌ها، پروژه‌ها ───────────────────────────────── */
 .rm-outcome{
   display:flex; gap:8px; margin-top:13px; padding:11px 13px; border-radius:12px;
@@ -7156,49 +7125,39 @@ html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
 }
 .rm-outcome svg{ flex-shrink:0; margin-top:5px; color:var(--accent); }
 .rm-outcome b{ color:var(--accent); }
-
-.rm-cert-list, .rm-project-list{ display:flex; flex-direction:column; gap:9px; }
-.rm-cert, .rm-project{
-  padding:11px 13px; border-radius:12px;
-  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
-}
-.rm-cert-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 /* نامِ مدرک/پروژه/سرفصل معمولاً انگلیسی‌ست و گاهی به علامت ختم می‌شود
    («CompTIA Network+»). داخلِ یک ظرفِ RTL، آن علامتِ پایانی می‌پرد اولِ
    عبارت و «+CompTIA Network» دیده می‌شود. plaintext جهتِ هر رشته را از
    اولین حرفِ خودش می‌گیرد، پس هم نامِ انگلیسی درست می‌ماند هم فارسی. */
-.rm-cert-name, .rm-topic-chip, .rm-project b{ unicode-bidi:plaintext; }
-.rm-cert-name{
-  display:inline-flex; align-items:baseline; gap:5px;
-  font-size:13px; font-weight:800; color:var(--text); text-decoration:none;
-}
-@media (hover:hover) and (pointer:fine){ .rm-cert-name:hover{ color:var(--accent); } }
-.rm-cert-name svg{ opacity:.45; flex-shrink:0; }
-.rm-cert-tag{
-  flex-shrink:0; padding:3px 9px; border-radius:999px; font-size:9.5px; font-weight:700;
-  color:var(--muted2); border:1px solid var(--line);
-}
-.rm-cert-tag.req{ color:var(--accent); border-color:rgba(var(--accent-rgb),.4); background:var(--accent-dim); }
-.rm-cert-when{ margin-top:6px; font-size:11.5px; line-height:1.95; color:var(--accent); }
-.rm-cert-why{ margin-top:4px; font-size:11.5px; line-height:1.95; color:var(--muted); }
+.rm-topic-chip{ unicode-bidi:plaintext; }
 
-.rm-project{ display:flex; flex-direction:column; gap:5px; }
-.rm-project b{ font-size:13px; font-weight:800; color:var(--text); line-height:1.7; }
-.rm-project span{ font-size:12px; line-height:1.95; color:var(--muted); }
-.rm-project em{ font-size:11px; font-style:normal; color:var(--accent); }
-
-/* ── «این مسیر بر چه اساسی ساخته شد» ─────────────────────────────── */
-.rm-answers-toggle{
-  display:flex; align-items:center; gap:8px; width:100%; padding:0;
-  border:none; background:none; box-shadow:none; cursor:pointer;
-  font:inherit; font-size:13px; font-weight:700; color:var(--text);
+/* ── راهنمای متنیِ مسیر ─────────────────────────────────────────────────
+   خروجیِ مدل فقط سه چیز دارد: تیتر، بند، آیتمِ فهرست — و هر سه به‌صورتِ
+   متنِ ساده رندر می‌شوند (نه dangerouslySetInnerHTML)، پس هیچ HTMLی از
+   خروجیِ مدل اجرا نمی‌شود. */
+.rm-tabs{ margin:16px 0 4px; }
+.rm-guide{
+  margin-top:14px; padding:16px 18px; border-radius:18px;
+  border:1px solid var(--line); background:rgba(var(--surface-rgb),.14);
 }
-.rm-answers-toggle svg{ color:var(--accent); flex-shrink:0; }
-.rm-answers-caret{ margin-inline-start:auto; font-size:15px; color:var(--muted); }
-.rm-answer-list{ display:flex; flex-direction:column; gap:9px; margin-top:12px; }
-.rm-answer{ display:flex; flex-direction:column; gap:3px; }
-.rm-answer span{ font-size:11px; line-height:1.9; color:var(--muted2); }
-.rm-answer b{ font-size:12px; line-height:1.9; color:var(--text); font-weight:700; }
+.rm-guide-h{
+  margin:20px 0 0; font-size:14.5px; font-weight:800; color:var(--accent); line-height:1.9;
+}
+.rm-guide-h:first-child{ margin-top:0; }
+.rm-guide-p{ margin:9px 0 0; font-size:13px; line-height:2.15; color:var(--text); }
+/* آیتمِ فهرست با ::before نقطه می‌گیرد نه با <li>، چون بلوک‌ها صاف‌اند
+   (پارسر تودرتویی نمی‌سازد) و یک <ul>ِ ساختگی فقط ساختارِ الکی اضافه می‌کرد. */
+.rm-guide-li{
+  position:relative; margin:7px 0 0; padding-inline-start:16px;
+  font-size:12.5px; line-height:2.05; color:var(--text);
+}
+.rm-guide-li::before{
+  content:""; position:absolute; inset-inline-start:4px; top:13px;
+  width:5px; height:5px; border-radius:50%; background:var(--accent);
+}
+.rm-res-source{ font-size:11px; color:var(--muted2); }
+
+@media (hover:hover) and (pointer:fine){ }
 
 /* ── گرافِ رودمپ (AI Roadmap Builder) ─────────────────────────────────
    نقشه‌ی وابستگی: مرحله‌ها نوارهای افقی‌اند و نودها داخلشان، با یال‌های
@@ -7382,13 +7341,6 @@ body:not([data-theme="light"]) .rmg-status-btn.on{
 .rm-wiz-hint{ margin-top:11px; font-size:11.5px; line-height:2; color:var(--muted); }
 .rm-wiz-hint b{ color:var(--text); }
 
-/* ردیفِ روزها/دقیقه‌ها/ماه‌ها — همان .day-pill اپ، فقط به‌اندازه‌ی محتوا */
-.rm-wiz-days{ display:flex; flex-wrap:wrap; gap:7px; }
-.rm-wiz-days .day-pill{
-  flex:0 0 auto; width:auto; min-width:0; padding:8px 14px;
-  font-size:12px; line-height:1.4; white-space:nowrap;
-}
-
 /* گزینه‌های سوال و چیپ‌های هدف — انتخابی، نه دکمه‌ی عملی؛ پس ریستِ
    سراسریِ `button{}` (بک‌گراند/سایه‌ی شیشه‌ای) صریح خنثی می‌شود. */
 .rm-wiz-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
@@ -7409,29 +7361,7 @@ body:not([data-theme="light"]) .rm-wiz-chip.on,
 body[data-theme="light"] .rm-wiz-chip.on{
   color:var(--accent); border-color:var(--accent); background:var(--accent-dim);
 }
-
-/* صفحه‌ی «چند تا سوال دارم» */
-.rm-wiz-intro{ padding:6px 0 2px; }
-.rm-wiz-intro-quote{
-  padding:11px 13px; border-radius:12px; font-size:12.5px; line-height:2;
-  color:var(--text); background:rgba(var(--surface-rgb),.12);
-  border-inline-start:2px solid var(--accent);
-}
-.rm-wiz-intro-count{ margin-top:14px; font-size:15px; font-weight:800; color:var(--text); }
-.rm-wiz-intro-count b{ color:var(--accent); }
-.rm-wiz-intro-sub{ margin-top:7px; font-size:11.5px; line-height:2; color:var(--muted); }
-
-/* خودِ سوال */
-.rm-wiz-q-num{ font-size:10.5px; font-weight:700; color:var(--accent); }
-.rm-wiz-q-text{ margin-top:6px; font-size:14px; font-weight:700; line-height:1.9; color:var(--text); }
-.rm-wiz-q-why{ margin-top:5px; font-size:11px; line-height:1.95; color:var(--muted2); }
-.rm-wiz-q-multi{ margin-top:8px; font-size:10.5px; color:var(--muted2); }
-.rm-wiz-skip{
-  display:block; width:100%; margin-top:10px; padding:6px 0;
-  border:none; background:none; box-shadow:none;
-  font:inherit; font-size:11.5px; color:var(--muted2); cursor:pointer;
-}
-@media (hover:hover) and (pointer:fine){ .rm-wiz-skip:hover{ color:var(--accent); } }
+@media (hover:hover) and (pointer:fine){ }
 
 /* لودینگِ داخلِ همین باکس — طبقِ درخواستِ صریح، نه اسپینرِ سراسری */
 .rm-wiz-loading{
@@ -7469,54 +7399,10 @@ body[data-theme="light"] .rm-wiz-chip.on{
   margin:20px 0 0; font-size:11px; line-height:1.6; color:#E05252; text-align:center;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-
-/* ===================== جلسه‌های یک مرحله ===================== */
-.rm-schedule{
-  display:flex; align-items:center; gap:7px; margin-top:12px;
-  font-size:12px; color:var(--muted);
-}
-.rm-schedule svg{ color:var(--accent); flex-shrink:0; }
-
-.rm-sessions{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
-.rm-session{
-  border:1px solid var(--line); border-radius:16px; padding:13px 14px;
-  transition:border-color .18s ease, opacity .18s ease;
-}
-.rm-session.done{ opacity:.6; border-color:rgba(var(--accent-rgb),.35); }
-.rm-session-head{ display:flex; align-items:center; gap:9px; }
-.rm-session-num{
-  flex-shrink:0; width:24px; height:24px; border-radius:50%;
-  border:1.5px solid var(--line); color:var(--muted);
-  display:inline-flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:700; cursor:pointer; padding:0;
-  background:none; box-shadow:none; backdrop-filter:none;
-  transition:border-color .18s ease, color .18s ease;
-}
-.rm-session-num:hover{ border-color:var(--accent); color:var(--accent); }
-.rm-session.done .rm-session-num{ border-color:var(--accent); color:var(--accent); }
-.rm-session-title{ font-size:12.5px; font-weight:600; color:var(--text); line-height:1.9; }
-.rm-session-title b{ color:var(--accent); font-weight:700; }
-.rm-session-goal{ margin-top:8px; font-size:12px; line-height:2; color:var(--muted); }
 .rm-session-label{
   margin-top:11px; font-size:10px; font-weight:700; letter-spacing:.02em;
   color:var(--accent); text-transform:none;
 }
-.rm-session-steps{ margin:6px 0 0; padding-inline-start:18px; }
-.rm-session-steps li{ font-size:12px; line-height:2.1; color:var(--text); }
-.rm-session-text{ margin-top:5px; font-size:12px; line-height:2.1; color:var(--muted); }
-.rm-session-refs{ margin:5px 0 0; padding-inline-start:18px; }
-.rm-session-refs li{ font-size:12px; line-height:2.1; }
-.rm-session-refs a{
-  color:var(--muted); text-decoration:none;
-  display:inline-flex; align-items:center; gap:5px;
-}
-.rm-session-refs a:hover{ color:var(--accent); }
-.rm-session-check{
-  margin-top:11px; padding:8px 11px; border-radius:11px;
-  border:1px solid rgba(var(--accent-rgb),.22);
-  font-size:11.5px; line-height:2; color:var(--muted);
-}
-.rm-session-check b{ color:var(--text); }
 
 /* هر عنصری که کلاسِ is-loading بگیرد، یک دایره‌ی چرخانِ کوچک قبل از متنش
    می‌گیرد. عمداً با ::before و نه یک کامپوننت: این حالت‌ها در ده‌ها فایل
