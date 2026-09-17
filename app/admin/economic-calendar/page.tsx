@@ -14,9 +14,10 @@ type EventRow = {
 type Resp = { events: EventRow[]; externalSource: string };
 
 // ورود دستی رویدادهای تقویم اقتصادی + همگام‌سازیِ دستی از منبعِ بیرونی
-// (پیش‌فرض فارکس‌فکتوری، یا ECONOMIC_CALENDAR_URL اگه ست شده باشه). همگام‌سازیِ
-// خودکار با یک crontab بیرونی روی /api/cron/economic-calendar انجام می‌شه —
-// این صفحه راهِ دستی/فوریِ همون کار رو هم می‌ده.
+// (پیش‌فرض Trading Economics — نیازمندِ ECONOMIC_CALENDAR_API_KEY، یا
+// ECONOMIC_CALENDAR_URL اگه ست شده باشه). همگام‌سازیِ خودکار با یک crontab
+// بیرونی روی /api/cron/economic-calendar انجام می‌شه — این صفحه راهِ
+// دستی/فوریِ همون کار رو هم می‌ده.
 export default function AdminEconomicCalendarPage() {
   const [data, setData] = useState<Resp | null>(null);
   const [title, setTitle] = useState("");

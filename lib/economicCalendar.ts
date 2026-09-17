@@ -7,15 +7,18 @@
 //   • این ماژول نباید به در دسترس بودن یک سرویس خارجی گره بخورد. با
 //     ورود دستی ادمین از همین حالا کامل کار می‌کند.
 //
-// منبع پیش‌فرض حالا فید هفتگی عمومی فارکس‌فکتوری است (پایین‌تر،
-// DEFAULT_CALENDAR_URL). کران روزانه آن را می‌گیرد و در همین جدول upsert
-// می‌کند؛ ورود دستی ادمین هم سر جایش می‌ماند. با ست‌کردن
-// `ECONOMIC_CALENDAR_URL` (و در صورت نیاز `ECONOMIC_CALENDAR_API_KEY`)
-// می‌شود منبع را با یک فید تجاری عوض کرد، بدون اینکه هیچ‌جای دیگر اپ
-// تغییر کند.
+// منبع پیش‌فرض حالا Trading Economics است (نه دیگر فارکس‌فکتوری — طبقِ
+// درخواستِ صریح عوض شد، چون فیدِ رایگانِ فارکس‌فکتوری actual رو قابلِ
+// اعتماد نمی‌داد). کران روزانه آن را می‌گیرد و در همین جدول upsert
+// می‌کند؛ ورود دستی ادمین هم سر جایش می‌ماند. Trading Economics بدونِ
+// کلید کار نمی‌کند — `ECONOMIC_CALENDAR_API_KEY` باید ست شود، وگرنه (طبقِ
+// همون قرارداد) sync خودکار غیرفعال می‌ماند و فقط ورود دستی ادمین کار
+// می‌کند. با ست‌کردن `ECONOMIC_CALENDAR_URL` می‌شود منبع را کامل با یک
+// فیدِ دیگر عوض کرد، بدون اینکه هیچ‌جای دیگر اپ تغییر کند.
 //
 // طبقِ درخواستِ صریح، عنوانِ رویدادها دیگر به فارسی ترجمه نمی‌شود — دقیقاً
-// همان متنِ انگلیسیِ منبع (مثلِ خودِ فارکس‌فکتوری) ذخیره/نمایش داده می‌شود.
+// همان متنِ انگلیسیِ منبع (مثلِ خودِ Trading Economics) ذخیره/نمایش داده
+// می‌شود.
 
 export type EconomicImpact = "LOW" | "MEDIUM" | "HIGH";
 
@@ -51,30 +54,49 @@ export function currencyMeta(code: string) {
 }
 
 /**
- * منبع پیش‌فرض: فیدهای هفتگیِ عمومیِ فارکس‌فکتوری.
+ * منبع پیش‌فرض: Trading Economics — `/calendar/country/all/{از}/{تا}`
+ * با کلید در query (`c=`)، نه هدر Bearer (طبقِ مستندِ خودِ Trading
+ * Economics که کلید را همین‌طوری می‌خواهد).
  *
- * چرا سه فایل، نه یکی: نسخه‌ی قبلی فقط `ff_calendar_thisweek.json` را
- * می‌گرفت — یعنی به‌محضِ رد شدنِ یک هفته، رویدادهای آن (actual/تاریخچه)
- * دیگر هیچ‌وقت دوباره fetch نمی‌شدند (چون از «this week» بیرون افتاده
- * بودند) و رویدادهای بیش از یک هفته‌ی جلوتر هم اصلاً وجود نداشتند — دقیقاً
- * گزارشِ کاربر: «داده‌های قدیمی نشون نمیده، روزهای بعدی رو هم نشون نمیده».
- * فارکس‌فکتوریِ رایگان («nfs.faireconomy.media») فقط همین سه بازه‌ی ثابت
- * را دارد (lastweek/thisweek/nextweek) — هیچ فیدِ رایگانِ «یک‌ماهه»ای وجود
- * ندارد، پس «تا ماهِ آینده» را با صداقت به «حداکثرِ همین سه هفته» محدود
- * می‌کنیم؛ فبریکیت‌کردنِ داده‌ای که منبع نمی‌دهد خلافِ اصلِ این ماژول است.
- *
- * ست‌کردن `ECONOMIC_CALENDAR_URL` همچنان همه‌ی این‌ها را کنار می‌زند (برای
- * وقتی فیدِ تجاریِ واقعی خریداری شد) و فقط همان یک URL را می‌گیرد.
- *
- * توجه: در فید فارکس‌فکتوری فیلد `country` در واقع *کد ارز* است
- * («USD»/«EUR»)، نه کد کشور — نرمال‌ساز پایین همین را در نظر می‌گیرد.
+ * برخلافِ فارکس‌فکتوریِ رایگان (که فقط سه بازه‌ی ثابتِ هفتگی داشت و
+ * روزهایِ فراتر از آن سه هفته همیشه خالی می‌ماندند)، اینجا یک بازه‌ی
+ * تاریخِ دلخواه می‌گیریم — پس «تا یک ماهِ آینده» واقعاً امکان‌پذیر است، نه
+ * محدود به سه هفته.
  */
-export const DEFAULT_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
-export const DEFAULT_CALENDAR_URLS = [
-  "https://nfs.faireconomy.media/ff_calendar_lastweek.json",
-  "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-  "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
-];
+const TRADINGECONOMICS_BASE_URL = "https://api.tradingeconomics.com/calendar/country/all";
+const TE_LOOKBACK_DAYS = 7;
+const TE_LOOKAHEAD_DAYS = 30;
+// در حالتِ «تند» (نزدیکِ لحظه‌ی انتشارِ یک خبر) فقط بازه‌ی خیلی نزدیکِ
+// امروز لازم است، نه کلِ بازه‌ی یک‌ماهه.
+const TE_FAST_WINDOW_DAYS = 1;
+
+function isoDateOnly(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * URL منبعِ پیش‌فرض را با بازه‌ی تاریخ و کلیدِ API می‌سازد. بدونِ
+ * `ECONOMIC_CALENDAR_API_KEY` خطا می‌دهد — Trading Economics بدونِ کلید
+ * اصلاً پاسخ نمی‌دهد، پس بهتر است همین‌جا با پیامِ فارسیِ روشن متوقف شود
+ * تا با یک خطایِ شبکه‌ایِ مبهم اشتباه گرفته نشود. صدا زدنِ این تابع همیشه
+ * پشتِ `externalProviderConfigured()` است (کران/همگام‌سازیِ دستی) پس در
+ * عمل فقط وقتی خودِ ادمین «همگام‌سازی الان» را با کلیدِ خالی بزند دیده
+ * می‌شود.
+ */
+function buildDefaultCalendarUrl(fast: boolean | undefined): string {
+  const key = process.env.ECONOMIC_CALENDAR_API_KEY;
+  if (!key) {
+    throw new Error(
+      "ECONOMIC_CALENDAR_API_KEY تنظیم نشده — Trading Economics بدونِ کلید کار نمی‌کند. رویدادها را دستی از پنلِ ادمین اضافه کن یا کلید را در env ست کن."
+    );
+  }
+  const now = Date.now();
+  const lookbackDays = fast ? TE_FAST_WINDOW_DAYS : TE_LOOKBACK_DAYS;
+  const lookaheadDays = fast ? TE_FAST_WINDOW_DAYS : TE_LOOKAHEAD_DAYS;
+  const d1 = isoDateOnly(new Date(now - lookbackDays * 86_400_000));
+  const d2 = isoDateOnly(new Date(now + lookaheadDays * 86_400_000));
+  return `${TRADINGECONOMICS_BASE_URL}/${d1}/${d2}?c=${encodeURIComponent(key)}&f=json`;
+}
 
 export type EconomicEventDto = {
   id: string;
@@ -139,16 +161,17 @@ export type NormalizedEvent = {
   description: string | null;
 };
 
-// حالا همیشه یک منبع هست (فارکس‌فکتوری به‌عنوان پیش‌فرض)، پس این دیگر
-// «آیا env ست شده» نیست — همیشه true است. نگه داشته شد چون پنل ادمین و
-// روت تشخیصی ازش استفاده می‌کنند.
+// Trading Economics بدونِ کلید کار نمی‌کند (برخلافِ فارکس‌فکتوریِ رایگانِ
+// قبلی) — پس این دیگر همیشه true نیست: فقط وقتی یا یک URL دستی ست شده یا
+// کلیدِ Trading Economics موجود است. نبودِ هیچ‌کدام یعنی sync خودکار
+// خاموش می‌ماند و تقویم فقط با ورود دستیِ ادمین پر می‌شود.
 export function externalProviderConfigured(): boolean {
-  return true;
+  return !!(process.env.ECONOMIC_CALENDAR_URL || process.env.ECONOMIC_CALENDAR_API_KEY);
 }
 
 export function externalProviderName(): string {
   if (process.env.ECONOMIC_CALENDAR_SOURCE) return process.env.ECONOMIC_CALENDAR_SOURCE;
-  return process.env.ECONOMIC_CALENDAR_URL ? "EXTERNAL" : "FOREXFACTORY";
+  return process.env.ECONOMIC_CALENDAR_URL ? "EXTERNAL" : "TRADINGECONOMICS";
 }
 
 function pickString(row: Record<string, unknown>, keys: string[]): string | null {
@@ -166,6 +189,10 @@ function normalizeImpact(raw: string | null): EconomicImpact {
   if (v.includes("med") || v === "2" || v.includes("متوسط")) return "MEDIUM";
   return "LOW";
 }
+
+// Trading Economics سطحِ تأثیر را در فیلدِ `Importance` (عددِ ۱ تا ۳)
+// می‌دهد — نامِ فیلد با فارکس‌فکتوریِ قبلی («impact») فرق دارد.
+const IMPACT_FIELD_KEYS = ["impact", "importance", "Impact", "Importance"];
 
 /**
  * پاسخ خام منبع را به شکل داخلی تبدیل می‌کند.
@@ -211,7 +238,7 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
       title: title.slice(0, 160),
       country: (currencyMeta(currency)?.country || rawCountry || currency).toUpperCase().slice(0, 2),
       currency: currency.slice(0, 8),
-      impact: normalizeImpact(pickString(row, ["impact", "importance", "Impact"])),
+      impact: normalizeImpact(pickString(row, IMPACT_FIELD_KEYS)),
       occursAt,
       actual: pickString(row, ["actual", "Actual"]),
       forecast: pickString(row, ["forecast", "estimate", "Forecast"]),
@@ -226,11 +253,11 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 // گاهی با تأخیرِ خیلی زیاد/قطعیِ اتصال مواجه می‌شود) کل sync رو تا مدتِ
 // نامعلومی معلق نگه می‌داشت — از بیرون دقیقاً شبیهِ «دیتا نمیاد» بود، چون
 // نه خطا می‌داد نه جواب. ۱۲ ثانیه برایِ یک فیدِ JSONِ سبک کافی‌ست.
-async function fetchOneFeed(url: string, key: string | undefined): Promise<NormalizedEvent[]> {
+async function fetchOneFeed(url: string, bearerKey: string | undefined): Promise<NormalizedEvent[]> {
   let res: Response;
   try {
     res = await fetch(url, {
-      headers: key ? { Authorization: `Bearer ${key}` } : undefined,
+      headers: bearerKey ? { Authorization: `Bearer ${bearerKey}` } : undefined,
       cache: "no-store",
       signal: AbortSignal.timeout(12_000),
     });
@@ -247,32 +274,20 @@ async function fetchOneFeed(url: string, key: string | undefined): Promise<Norma
 /**
  * فراخوانی منبع بیرونی — فقط از سمت سرور (کران) صدا زده می‌شود.
  *
- * وقتی `ECONOMIC_CALENDAR_URL` ست نشده (پیش‌فرض)، هر سه فیدِ فارکس‌فکتوری
- * (هفته‌ی قبل/همین‌هفته/هفته‌ی بعد) گرفته و با هم merge می‌شوند تا هم
- * تاریخچه‌ی هفته‌ی گذشته هم رویدادهای هفته‌ی پیشِ‌رو در دیتابیس بمانند —
- * نه فقط «همین هفته». شکستِ یکی از سه فید کل sync را نمی‌شکند (مثلاً اگر
- * فقط nextweek موقتاً در دسترس نبود، دو فیدِ دیگر همچنان ذخیره می‌شوند).
+ * وقتی `ECONOMIC_CALENDAR_URL` ست نشده (پیش‌فرض)، یک درخواستِ تکی به
+ * Trading Economics با بازه‌ی تاریخِ کامل (لغایتِ یک ماهِ آینده) می‌رود —
+ * برخلافِ فارکس‌فکتوریِ قبلی که مجبور بودیم سه فیدِ هفتگیِ جدا را merge
+ * کنیم، Trading Economics یک بازه‌ی دلخواه را در یک درخواست می‌دهد. کلید
+ * اینجا به‌صورتِ query param (`c=`) در خودِ URL نشسته (نه هدرِ Bearer —
+ * Trading Economics کلید را این‌طوری می‌خواهد)؛ هدرِ Bearer فقط برایِ
+ * `ECONOMIC_CALENDAR_URL` دستی (یک فیدِ تجاریِ دیگر) نگه داشته شده.
  */
 export async function fetchExternalEvents(opts?: { fast?: boolean }): Promise<NormalizedEvent[]> {
-  const key = process.env.ECONOMIC_CALENDAR_API_KEY;
   const customUrl = process.env.ECONOMIC_CALENDAR_URL;
-  // در حالتِ «تند» (لحظه‌ی انتشارِ یک خبر، هر چند ثانیه یک‌بار) فقط فیدِ
-  // همین هفته لازم است — رویدادی که همین حالا منتشر می‌شود قطعاً در
-  // هفته‌ی جاری‌ست. گرفتنِ هر سه فید هر ۵ثانیه هم سه برابر ترافیکِ بی‌مورد
-  // به منبع می‌زد هم شانسِ محدودشدن از سمتِ آن‌ها را بالا می‌برد.
-  const urls = customUrl
-    ? [customUrl]
-    : opts?.fast ? [DEFAULT_CALENDAR_URL] : DEFAULT_CALENDAR_URLS;
-
-  const results = await Promise.allSettled(urls.map((u) => fetchOneFeed(u, key)));
-  const events: NormalizedEvent[] = [];
-  const errors: string[] = [];
-  for (const r of results) {
-    if (r.status === "fulfilled") events.push(...r.value);
-    else errors.push(r.reason instanceof Error ? r.reason.message : String(r.reason));
+  if (customUrl) {
+    return fetchOneFeed(customUrl, process.env.ECONOMIC_CALENDAR_API_KEY);
   }
-  if (!events.length && errors.length) throw new Error(errors.join(" | "));
-  return events;
+  return fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), undefined);
 }
 
 /**
@@ -301,10 +316,10 @@ export async function syncEconomicCalendar(prisma: {
   let updated = 0;
   for (const e of events) {
     const { externalId, description, ...data } = e;
-    // منبعِ رایگانِ پیش‌فرض description نمی‌ده (همیشه null) — اگه بدونِ‌قید
+    // Trading Economics هم description نمی‌ده (همیشه null) — اگه بدونِ‌قید
     // توی update بذاریمش، هر sync توضیحی رو که ادمین دستی رویِ همین رویدادِ
     // sync‌شده نوشته پاک می‌کنه. فقط وقتی خودِ منبع واقعاً یه description
-    // داده (فیدِ تجاریِ آینده) رویِ ردیف می‌شینه؛ create همیشه هرچی هست
+    // داده (فیدِ تجاریِ دیگه‌ای) رویِ ردیف می‌شینه؛ create همیشه هرچی هست
     // (حتی null) رو می‌ذاره، چون رکورد تازه‌ست و چیزی برایِ پاک‌کردن نیست.
     const updateData = description == null ? data : { ...data, description };
     const result = await prisma.economicEvent.upsert({
