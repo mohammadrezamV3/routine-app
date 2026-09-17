@@ -12,9 +12,14 @@ import { Download, X } from "lucide-react";
  *     نمی‌افتاد. (رجیسترِ دوباره در pushClient بی‌ضرر است: مرورگر همان
  *     رجیستریشن موجود را برمی‌گرداند.)
  *
- *  ۲) دکمه‌ی نصب واقعی. کروم اندروید رویداد `beforeinstallprompt` را
- *     می‌دهد و اگر نگهش نداریم، تنها راهِ نصب منوی سه‌نقطه‌ی مرورگر است که
- *     عملا هیچ‌کس پیدایش نمی‌کند.
+ *  ۲) پیشنهادِ نصب — **دقیقا یک بار، بعد از ثبت‌نام**. کروم اندروید رویداد
+ *     `beforeinstallprompt` را می‌دهد و اگر نگهش نداریم تنها راهِ نصب
+ *     منوی سه‌نقطه‌ی مرورگر است که عملا هیچ‌کس پیدایش نمی‌کند — ولی
+ *     نشان‌دادنش در هر بازدید (رفتارِ قبلی: «تا وقتی نبندیش هر بار
+ *     می‌آید») اسپم است. حالا صفحه‌ی ثبت‌نام یک کلید می‌گذارد، این
+ *     کامپوننت همان یک بار بنر را نشان می‌دهد و **بلافاصله کلید را
+ *     مصرف می‌کند**؛ چه نصب کند، چه ببندد، چه اصلا واکنش ندهد و صفحه را
+ *     ببندد، دیگر تکرار نمی‌شود.
  */
 
 type InstallPromptEvent = Event & {
@@ -22,7 +27,14 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "arion-install-dismissed";
+/**
+ * صفحه‌ی ثبت‌نام این را ست می‌کند؛ همین کامپوننت می‌خواندش و فورا پاکش
+ * می‌کند. وجودش یعنی «این کاربر تازه ثبت‌نام کرده و هنوز پیشنهاد نگرفته».
+ */
+export const PWA_OFFER_KEY = "arion-install-offer";
+
+/** ثبت‌نام بعدِ ست‌کردنِ کلید این را می‌فرستد (ناوبریِ کلاینتی mount نمی‌سازد). */
+export const PWA_OFFER_EVENT = "arion-pwa-offer";
 
 export function PwaProvider() {
   const [deferred, setDeferred] = useState<InstallPromptEvent | null>(null);
@@ -41,14 +53,14 @@ export function PwaProvider() {
   }, []);
 
   // ── گرفتنِ رویدادِ نصب ──
+  // `beforeinstallprompt` وقتِ خودش می‌آید (معمولا در همان لودِ اول، یعنی
+  // خیلی قبل‌تر از ثبت‌نام)، پس این‌جا فقط نگهش می‌داریم. تصمیمِ نشان‌دادن
+  // جای دیگری‌ست.
   useEffect(() => {
     function onBeforeInstall(e: Event) {
       // جلوگیری از بنرِ پیش‌فرضِ مرورگر تا خودمان در جای مناسب نشانش بدهیم
       e.preventDefault();
       setDeferred(e as InstallPromptEvent);
-      let dismissed = false;
-      try { dismissed = localStorage.getItem(DISMISS_KEY) === "1"; } catch { /* حالت ناشناس/کوکی‌بسته */ }
-      if (!dismissed) setVisible(true);
     }
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     // وقتی نصب شد دیگر پیشنهاد بی‌معنی‌ست
@@ -60,6 +72,32 @@ export function PwaProvider() {
     };
   }, []);
 
+  // ── تصمیمِ نشان‌دادن: فقط یک بار، فقط بعد از ثبت‌نام ──
+  //
+  // دو مسیر لازم است و هر دو واقعی‌اند:
+  //   • رویدادِ سفارشی — ثبت‌نام با ناوبریِ کلاینتی به /weekly می‌رود و این
+  //     کامپوننت (که در layout است) اصلا دوباره mount نمی‌شود.
+  //   • بررسی در mount — اگر کاربر بعدِ ثبت‌نام صفحه را رفرش کند یا
+  //     `beforeinstallprompt` دیرتر برسد، کلید هنوز سرِ جایش است.
+  useEffect(() => {
+    function consume() {
+      let offered = false;
+      try {
+        offered = localStorage.getItem(PWA_OFFER_KEY) === "1";
+      } catch { /* حالت ناشناس/کوکی‌بسته */ }
+      if (!offered) return;
+      // بدونِ رویدادِ مرورگر دکمه‌ی نصب کارِ خاصی نمی‌کند، پس کلید را هم
+      // مصرف نمی‌کنیم — می‌ماند تا دفعه‌ای که مرورگر واقعا نصب را پیشنهاد
+      // می‌دهد (مثلا وقتی معیارهای PWA کامل شد).
+      if (!deferred) return;
+      try { localStorage.removeItem(PWA_OFFER_KEY); } catch { /* بی‌اهمیت */ }
+      setVisible(true);
+    }
+    consume();
+    window.addEventListener(PWA_OFFER_EVENT, consume);
+    return () => window.removeEventListener(PWA_OFFER_EVENT, consume);
+  }, [deferred]);
+
   async function install() {
     if (!deferred) return;
     setVisible(false);
@@ -70,7 +108,6 @@ export function PwaProvider() {
 
   function dismiss() {
     setVisible(false);
-    try { localStorage.setItem(DISMISS_KEY, "1"); } catch { /* بی‌اهمیت */ }
   }
 
   if (!visible) return null;

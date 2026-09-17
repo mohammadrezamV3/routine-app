@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { faNum } from "@/lib/jalali";
 import { signIn, getSession } from "next-auth/react";
+import { PWA_OFFER_EVENT, PWA_OFFER_KEY } from "@/components/PwaProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, AtSign, Lock } from "lucide-react";
@@ -211,6 +212,13 @@ export default function SignupPage() {
     // (چرا: همان بازنویسیِ پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
     const session = await getSession();
     setLoading(false);
+    // تنها جایی که پیشنهادِ نصبِ PWA مجاز است: بلافاصله بعد از ثبت‌نام.
+    // (PwaProvider فقط با دیدنِ همین کلید بنر را نشان می‌دهد و بعدش
+    // برای همیشه خاموش می‌شود — نگاه کن به components/PwaProvider.tsx.)
+    try {
+      localStorage.setItem(PWA_OFFER_KEY, "1");
+      window.dispatchEvent(new Event(PWA_OFFER_EVENT));
+    } catch { /* حالت ناشناس */ }
     router.push((session?.user as any)?.id ? "/weekly" : "/auth/login");
   }
 

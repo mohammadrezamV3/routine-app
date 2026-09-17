@@ -178,7 +178,17 @@ export function DashDateSelector({
           ref={scrollRef}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          className="no-scrollbar flex items-center justify-between gap-1.5 overflow-x-auto px-3 py-2.5"
+          // باگِ گزارش‌شده: «روی موبایل‌های کوچک‌تر روزها خیلی از هم فاصله
+          // می‌گیرند». علتش justify-between بود: تعدادِ روزها طوری حساب
+          // می‌شود که *جا شود*، پس تقریبا همیشه چند ده پیکسل فضای اضافه
+          // می‌ماند — و justify-between تمامِ آن فضا را بینِ خودِ پیل‌ها پخش
+          // می‌کرد. روی یک صفحه‌ی ۳۹۰ پیکسلی که فقط ۳ روز جا می‌شود، همان
+          // یعنی فاصله‌ی ~۶۰ پیکسلی بینِ هر دو روز.
+          // حالا فضای اضافه به دو طرفِ نوار می‌رود و گپ ثابت می‌ماند.
+          // `safe` هم لازم است: اگر روزی محتوا واقعا سرریز کند، مرکزچین
+          // کردن ابتدای لیست را زیرِ لبه‌ی اسکرول می‌برد و دیگر قابلِ
+          // اسکرول نیست؛ با safe، مرورگر در آن حالت به start برمی‌گردد.
+          className="no-scrollbar dash-daystrip flex items-center gap-1.5 overflow-x-auto px-3 py-2.5"
         >
           {days.map((d) => {
             const active = d.iso === activeIso;

@@ -163,10 +163,12 @@ export function NavDrawer() {
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
   const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
 
-  function go(href: string) {
-    setOpen(false);
-    router.push(href);
-  }
+  // آیتم‌های منو عمداً `<Link>` واقعی‌اند، نه `<a onClick={router.push}>`.
+  // دو باگِ گزارش‌شده مستقیم از همان می‌آمد: «دکمه رو می‌زنم نمی‌ره» و «خیلی
+  // دیر می‌ره». با router.push هیچ prefetchی وجود ندارد، پس ضربه یعنی
+  // شروعِ دانلودِ صفحه از صفر — و چون هندلر جاوااسکریپتی‌ست، اگر همان
+  // لحظه ترد اصلی مشغول باشد (بسته‌شدنِ کشو، انیمیشن‌ها) کلیک عملا گم
+  // می‌شود. Link مقصد را از قبل آماده می‌کند و ناوبری‌اش دستِ خودِ Next است.
 
   // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابل بازشدن
   // بودن (سه تا state جدا، بدون هماهنگی) — کاربر می‌تونست چندتاشونو با هم
@@ -489,10 +491,16 @@ export function NavDrawer() {
                     <div className="nav-group-sub-inner">
                       <div className="nav-group-children">
                         {item.children.map((c) => (
-                          <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
+                          <Link
+                            key={c.href}
+                            href={c.href}
+                            prefetch
+                            onClick={() => setOpen(false)}
+                            className="nav-link-sub-item"
+                          >
                             <span style={{ flex: 1 }}>{c.label}</span>
                             {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     </div>
@@ -501,11 +509,17 @@ export function NavDrawer() {
               );
             }
             return (
-              <a key={item.href} onClick={() => go(item.href)} className="nav-link nav-link-icon">
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch
+                onClick={() => setOpen(false)}
+                className="nav-link nav-link-icon"
+              >
                 <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {isLocked(item.module) && <Lock size={13} className="nav-link-lock" />}
-              </a>
+              </Link>
             );
           })}
 
@@ -514,14 +528,14 @@ export function NavDrawer() {
               دوباره‌کاری نداره. مهمون هنوز آواتار نداره، پس ورود/ثبت‌نامش می‌مونه. */}
           {status !== "authenticated" && (
             <div style={{ borderTop: "1px solid var(--line)", marginTop: 6, paddingTop: 6 }}>
-              <a onClick={() => go("/auth/login")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
+              <Link href="/auth/login" prefetch onClick={() => setOpen(false)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS.login}</span>
                 <span>ورود</span>
-              </a>
-              <a onClick={() => go("/auth/signup")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
+              </Link>
+              <Link href="/auth/signup" prefetch onClick={() => setOpen(false)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS.signup}</span>
                 <span>ثبت‌نام</span>
-              </a>
+              </Link>
             </div>
           )}
         </div>
