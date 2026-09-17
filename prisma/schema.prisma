@@ -1369,15 +1369,36 @@ model Roadmap {
   goal  String?
   title String
   note  String?
+  // بعد از تمام‌کردنِ مسیر دقیقاً چه کاری می‌تواند بکند / چه نقشی بگیرد
+  outcome String?
 
-  // ساختار ایستگاه‌ها دقیقاً مطابق همان مدل treasure-map در HTML فعلی:
-  // [{ title, items: [string], done: boolean }]
+  // ساختار ایستگاه‌ها: [{ t, track, goal, weeks, items, practice, checkpoint, sessions }]
   stations Json
+
+  // حوزه‌هایی که باید خوانده شوند، به ترتیبِ خواندن، هرکدام با دلیل —
+  // جوابِ اصلیِ سوالِ «برای رسیدن به این خواسته اصلاً چی باید بخونم؟»
+  // شکل: [{ t, why, weeks, topics: string[] }]
+  tracks Json?
+  // مدرک‌ها سرِ جای درستِ مسیر: [{ name, when, why, required }]
+  certifications Json?
+  // پروژه‌هایی که «بلدم» را ثابت می‌کنند: [{ t, what, proves }]
+  projects Json?
 
   tips     Json? // string[]
   proTips  Json? // string[]
   books    Json? // string[]
   mistakes Json? // string[] — اشتباه‌های رایجی که تازه‌کارها وقتشان را رویش تلف می‌کنند
+
+  // سوال‌هایی که مدل پرسید و جوابی که کاربر داد: [{ q, a }]. هم برای
+  // نمایش در صفحه‌ی مسیر («این مسیر بر چه اساسی ساخته شد») و هم اگر بعداً
+  // بخواهیم مسیر را با همان جواب‌ها بازتولید کنیم.
+  answers Json?
+
+  // بقیه‌ی چیزهایی که کاربر در ویزارد گفت و مسیر را عوض می‌کنند
+  deadlineMonths Int?
+  resourceLang   String? // «فقط فارسی» | «فارسی و انگلیسی»
+  budget         String? // «فقط رایگان» | «پولی هم اوکیه»
+  learnStyle     String? // «ویدیو» | «کتاب و مستند» | «پروژه‌محور»
 
   // «از صفر» / «متوسط» و برآوردِ کلِ زمانِ مسیر — هر دو اختیاری چون
   // رودمپ‌های ساخته‌شده پیش از این نسخه ندارندشان.

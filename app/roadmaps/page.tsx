@@ -9,13 +9,24 @@ import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
+import { faNum } from "@/lib/jalali";
 
-type CustomRoadmapSummary = { id: string; topic: string; title: string; note: string };
+type RoadmapCard = {
+  id: string;
+  topic: string;
+  title: string;
+  note: string | null;
+  level: string | null;
+  totalWeeks: number | null;
+  stationCount: number;
+  doneCount: number;
+  pct: number;
+};
 
 export default function RoadmapsHub() {
   const router = useRouter();
   const { status } = useSession();
-  const [customRoadmaps, setCustomRoadmaps] = useState<CustomRoadmapSummary[]>([]);
+  const [roadmaps, setRoadmaps] = useState<RoadmapCard[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
 
@@ -23,7 +34,7 @@ export default function RoadmapsHub() {
     if (status !== "authenticated") { setLoaded(true); return; }
     fetch("/api/roadmaps")
       .then((r) => r.json())
-      .then((res) => setCustomRoadmaps(res.roadmaps || []))
+      .then((res) => setRoadmaps(res.roadmaps || []))
       .finally(() => setLoaded(true));
   }, [status]);
 
@@ -41,7 +52,7 @@ export default function RoadmapsHub() {
         <SuperAdminGate>
           {!loaded ? (
             <LoadingBlock />
-          ) : !customRoadmaps.length ? (
+          ) : !roadmaps.length ? (
             <div className="trade-surface trade-page-box rm-page-box rm-empty-box">
               <div className="trade-empty-state">
                 <Map size={32} />
@@ -51,13 +62,29 @@ export default function RoadmapsHub() {
           ) : (
             <div className="trade-surface trade-page-box rm-page-box">
               <div className="rm-grid">
-                {customRoadmaps.map((r) => (
-                  <div key={r.id} className="rm-box" onClick={() => router.push(`/roadmaps/custom/${r.id}`)} style={{ cursor: "pointer" }}>
-                    <div>
-                      <div className="rm-box-title">{r.title}</div>
-                      <div className="rm-box-desc">{r.note}</div>
+                {roadmaps.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className="rm-card"
+                    onClick={() => router.push(`/roadmaps/custom/${r.id}`)}
+                  >
+                    <div className="rm-card-title">{r.title}</div>
+                    {r.note && <div className="rm-card-desc">{r.note}</div>}
+
+                    <div className="rm-card-meta">
+                      {r.level && <span className="rm-chip">{r.level}</span>}
+                      {r.totalWeeks ? <span className="rm-chip">{faNum(r.totalWeeks)} هفته</span> : null}
+                      {r.stationCount > 0 && <span className="rm-chip">{faNum(r.stationCount)} مرحله</span>}
                     </div>
-                  </div>
+
+                    {r.stationCount > 0 && (
+                      <div className="rm-card-progress">
+                        <div className="rm-progress-bar"><span style={{ width: `${r.pct}%` }} /></div>
+                        <span className="rm-card-pct">{faNum(r.pct)}٪</span>
+                      </div>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>

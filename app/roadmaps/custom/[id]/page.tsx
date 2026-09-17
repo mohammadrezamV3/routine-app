@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  AlertTriangle, BookOpen, Check, ChevronRight, Clock, ExternalLink, Flag,
-  Lightbulb, ListChecks, Sparkles, Target, Trash2,
+  AlertTriangle, Award, BookOpen, Check, ChevronRight, Clock, ExternalLink, Flag,
+  Hammer, Lightbulb, ListChecks, MessageCircleQuestion, Route, Sparkles, Target, Trash2,
 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { RoadmapStepToProgram } from "@/components/RoadmapStepToProgram";
@@ -19,25 +19,15 @@ function searchUrl(query: string, topic: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(`${query} ${topic}`)}`;
 }
 
-type Session = {
-  title: string;
-  goal?: string;
-  steps: string[];
-  howTo?: string;
-  refs?: string[];
-  checkpoint?: string;
-};
-
+type Session = { title: string; goal?: string; steps: string[]; howTo?: string; refs?: string[]; checkpoint?: string };
 type Station = {
-  t: string;
-  items: string[];
-  goal?: string;
-  weeks?: number;
-  practice?: string;
-  checkpoint?: string;
-  sessions?: Session[];
+  t: string; items: string[]; track?: string; goal?: string; weeks?: number;
+  practice?: string; checkpoint?: string; sessions?: Session[];
 };
-
+type Track = { t: string; why: string; weeks?: number; topics: string[] };
+type Cert = { name: string; when: string; why: string; required?: boolean };
+type Project = { t: string; what: string; proves: string };
+type Answer = { q: string; a: string };
 type Schedule = { jsDays: number[]; minutesPerDay: number; startTime: string };
 
 type Roadmap = {
@@ -45,13 +35,18 @@ type Roadmap = {
   title: string;
   topic: string;
   note: string;
+  outcome?: string | null;
   level?: string | null;
   totalWeeks?: number | null;
+  tracks?: Track[] | null;
   stations: Station[];
+  certifications?: Cert[] | null;
+  projects?: Project[] | null;
   tips: string[];
   proTips: string[];
   books: string[];
   mistakes?: string[] | null;
+  answers?: Answer[] | null;
   progress?: Record<string, boolean> | null;
   schedule?: Schedule | null;
 };
@@ -62,6 +57,7 @@ export default function CustomRoadmapDetailPage() {
   const [data, setData] = useState<Roadmap | null | undefined>(undefined);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAnswers, setShowAnswers] = useState(false);
 
   useEffect(() => {
     fetch(`/api/roadmaps/${params.id}`)
@@ -84,10 +80,6 @@ export default function CustomRoadmapDetailPage() {
     }).catch(() => {});
   }, [params.id]);
 
-  function toggle(idx: number) {
-    toggleKey(String(idx));
-  }
-
   function toggleKey(key: string) {
     const next = { ...done, [key]: !done[key] };
     setDone(next);
@@ -106,6 +98,10 @@ export default function CustomRoadmapDetailPage() {
   const doneCount = data.stations.filter((_, i) => done[String(i)]).length;
   const pct = total ? Math.round((doneCount / total) * 100) : 0;
   const sessionCount = data.stations.reduce((n, st) => n + (st.sessions?.length ?? 0), 0);
+  const tracks = data.tracks ?? [];
+  const certs = data.certifications ?? [];
+  const projects = data.projects ?? [];
+  const answers = data.answers ?? [];
 
   const sc = data.schedule;
   const scheduleText = sc && sc.jsDays?.length
@@ -120,7 +116,7 @@ export default function CustomRoadmapDetailPage() {
     <section className="trade-desktop rm-page">
       <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> مسیرها</Link>
 
-      {/* سربرگ: عنوان، هدفِ نهایی، و نوارِ پیشرفت */}
+      {/* سربرگ: عنوان، خروجیِ نهایی، و نوارِ پیشرفت */}
       <div className="rm-hero">
         <div className="rm-hero-top">
           <h1>{data.title}</h1>
@@ -128,6 +124,13 @@ export default function CustomRoadmapDetailPage() {
                   onClick={() => setConfirmDelete(true)}><Trash2 size={16} /></button>
         </div>
         {data.note && <p className="rm-hero-note">{data.note}</p>}
+
+        {data.outcome && (
+          <div className="rm-outcome">
+            <Target size={14} />
+            <span><b>آخرِ این مسیر:</b> {data.outcome}</span>
+          </div>
+        )}
 
         <div className="rm-meta">
           {data.level && <span className="rm-chip"><Flag size={12} /> {data.level}</span>}
@@ -158,13 +161,44 @@ export default function CustomRoadmapDetailPage() {
         </div>
       )}
 
+      {/* «چی باید بخونی» — جوابِ اصلیِ سوالِ کاربر. عمداً بالاتر از مرحله‌هاست:
+          اول باید بفهمد نقشه‌ی کلی چیست، بعد برود سراغِ جلسه‌ی اول. */}
+      {!!tracks.length && (
+        <div className="rm-tracks">
+          <div className="rm-section-title"><Route size={15} /> برای این کار، چی‌ها باید بلد بشی</div>
+          <div className="rm-track-list">
+            {tracks.map((tr, i) => (
+              <div key={i} className="rm-track">
+                <div className="rm-track-num">{faNum(i + 1)}</div>
+                <div className="rm-track-body">
+                  <div className="rm-track-head">
+                    <b>{tr.t}</b>
+                    {tr.weeks ? <span className="rm-track-weeks">{faNum(tr.weeks)} هفته</span> : null}
+                  </div>
+                  {tr.why && <div className="rm-track-why">{tr.why}</div>}
+                  {!!tr.topics?.length && (
+                    <div className="rm-track-topics">
+                      {tr.topics.map((tp, j) => (
+                        <a key={j} href={searchUrl(tp, data.topic)} target="_blank" rel="noopener noreferrer" className="rm-topic-chip">
+                          {tp}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* مرحله‌ها */}
       <ol className="rm-steps">
         {data.stations.map((st, i) => {
           const isDone = !!done[String(i)];
           return (
             <li key={i} className={`rm-step${isDone ? " done" : ""}`}>
-              <button type="button" className="rm-step-num" onClick={() => toggle(i)}
+              <button type="button" className="rm-step-num" onClick={() => toggleKey(String(i))}
                       aria-label={isDone ? "برگرداندن به انجام‌نشده" : "تمام شد"}>
                 {isDone ? <Check size={15} /> : faNum(i + 1)}
               </button>
@@ -174,6 +208,8 @@ export default function CustomRoadmapDetailPage() {
                   <h2>{st.t}</h2>
                   {st.weeks ? <span className="rm-step-weeks">{faNum(st.weeks)} هفته</span> : null}
                 </div>
+
+                {st.track && <div className="rm-step-track">{st.track}</div>}
 
                 {st.goal && (
                   <div className="rm-goal"><Target size={13} /> <span>{st.goal}</span></div>
@@ -190,13 +226,13 @@ export default function CustomRoadmapDetailPage() {
                 </ul>
 
                 {st.practice && (
-                  <div className="rm-box rm-practice">
+                  <div className="rm-note-box rm-practice">
                     <b>تمرین</b>
                     <span>{st.practice}</span>
                   </div>
                 )}
                 {st.checkpoint && (
-                  <div className="rm-box rm-checkpoint">
+                  <div className="rm-note-box rm-checkpoint">
                     <b>کی تمام است؟</b>
                     <span>{st.checkpoint}</span>
                   </div>
@@ -272,6 +308,43 @@ export default function CustomRoadmapDetailPage() {
         })}
       </ol>
 
+      {/* مدرک‌ها — سرِ جای درستِ مسیر، نه یک فهرستِ بی‌ترتیب */}
+      {!!certs.length && (
+        <div className="rm-section">
+          <div className="rm-section-title"><Award size={15} /> مدرک‌ها</div>
+          <div className="rm-cert-list">
+            {certs.map((c, i) => (
+              <div key={i} className="rm-cert">
+                <div className="rm-cert-head">
+                  <a href={searchUrl(c.name, data.topic)} target="_blank" rel="noopener noreferrer" className="rm-cert-name">
+                    {c.name}<ExternalLink size={11} />
+                  </a>
+                  <span className={`rm-cert-tag${c.required ? " req" : ""}`}>{c.required ? "لازم" : "خوبه داشته باشی"}</span>
+                </div>
+                {c.when && <div className="rm-cert-when">{c.when}</div>}
+                {c.why && <div className="rm-cert-why">{c.why}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* پروژه‌ها — «بلدم» با این ثابت می‌شود، نه با گواهی */}
+      {!!projects.length && (
+        <div className="rm-section">
+          <div className="rm-section-title"><Hammer size={15} /> این‌ها را بساز</div>
+          <div className="rm-project-list">
+            {projects.map((p, i) => (
+              <div key={i} className="rm-project">
+                <b>{p.t}</b>
+                {p.what && <span>{p.what}</span>}
+                {p.proves && <em>ثابت می‌کند: {p.proves}</em>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* بخش‌های پایانی */}
       {!!data.mistakes?.length && (
         <RoadmapList icon={<AlertTriangle size={15} />} title="اشتباه‌های رایج" items={data.mistakes} tone="warn" />
@@ -284,6 +357,29 @@ export default function CustomRoadmapDetailPage() {
       )}
       {!!data.books?.length && (
         <RoadmapList icon={<BookOpen size={15} />} title="منابع" items={data.books} topic={data.topic} />
+      )}
+
+      {/* بر چه اساسی ساخته شد — جوابِ سوال‌هایی که موقعِ ساخت داده شد. جمع
+          است چون نودِ درصدِ وقت‌ها کاربر لازمش ندارد، ولی وقتی مسیر عجیب به
+          نظر برسد اولین چیزی است که می‌خواهد ببیند. */}
+      {!!answers.length && (
+        <div className="rm-section">
+          <button type="button" className="rm-answers-toggle" onClick={() => setShowAnswers((v) => !v)}>
+            <MessageCircleQuestion size={15} />
+            این مسیر بر چه اساسی ساخته شد؟
+            <span className="rm-answers-caret">{showAnswers ? "−" : "+"}</span>
+          </button>
+          {showAnswers && (
+            <div className="rm-answer-list">
+              {answers.map((a, i) => (
+                <div key={i} className="rm-answer">
+                  <span>{a.q}</span>
+                  <b>{a.a}</b>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       <RoadmapDisclaimer />
