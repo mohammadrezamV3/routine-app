@@ -2,6 +2,7 @@
 // این‌جا زندگی می‌کند (نه داخل route.ts) تا هم روتِ پروفایل هم بوت‌استرپ/
 // جاهای دیگر بتوانند صدایش بزنند بدون تکرارِ منطق.
 import { prisma } from "@/lib/prisma";
+import { countRowProgress } from "@/lib/roadmapPlan";
 import { routineStatsForUsers } from "@/lib/friendStats";
 
 export type FriendProfile = {
@@ -23,22 +24,19 @@ export type FriendProfile = {
 };
 
 /**
- * تعدادِ رودمپ‌هایی که کاربر تمام کرده — یعنی همه‌ی ایستگاه‌هایش در
- * progress علامت خورده. stations یک آرایه‌ی JSON است (نه یک عدد ذخیره‌شده)،
- * پس این‌جا باید واقعاً هر رودمپ را بخوانیم و بشماریم، نه یک کوئریِ COUNT ساده.
+ * تعدادِ مسیرهایی که کاربر تمام کرده — یعنی همه‌ی مرحله‌هایش در progress
+ * علامت خورده. steps یک آرایه‌ی JSON است (نه یک عدد ذخیره‌شده)، پس این‌جا
+ * باید واقعاً هر مسیر را بخوانیم و بشماریم، نه یک کوئریِ COUNT ساده.
  */
 async function countCompletedRoadmaps(userId: string): Promise<number> {
   const roadmaps = await prisma.roadmap.findMany({
     where: { userId },
-    select: { stations: true, progress: true },
+    select: { steps: true, progress: true },
   });
   let done = 0;
   for (const r of roadmaps) {
-    const stations = Array.isArray(r.stations) ? r.stations : [];
-    if (!stations.length) continue;
-    const progress = (r.progress as Record<string, boolean> | null) ?? {};
-    const doneCount = stations.filter((_, i) => progress[String(i)]).length;
-    if (doneCount === stations.length) done++;
+    const c = countRowProgress(r.steps, r.progress);
+    if (c.total > 0 && c.done === c.total) done++;
   }
   return done;
 }

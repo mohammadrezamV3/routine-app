@@ -11,7 +11,7 @@ const MODULE_META: Record<string, { title: string; metricLabels: Record<string, 
   exercise: { title: "بدنسازی", metricLabels: { totalPlans: "تعداد برنامه‌های تمرینی", aiGeneratedPlans: "ساخته‌شده با AI", logsInRange: "جلسه‌های ثبت‌شده در بازه" } },
   calorie: { title: "کالری", metricLabels: { foodLogsInRange: "ثبت غذا در بازه", aiScannedLogsInRange: "تحلیل تصویر با AI در بازه" } },
   trade: { title: "ترید", metricLabels: { entriesInRange: "معامله‌های ثبت‌شده در بازه" } },
-  roadmap: { title: "Skill / یادگیری", metricLabels: { roadmapsInRange: "رودمپ‌های ساخته‌شده در بازه", aiGeneratedInRange: "ساخته‌شده با AI", stationCompletionPercent: "نرخ تکمیل ایستگاه‌ها" } },
+  roadmap: { title: "Skill / یادگیری", metricLabels: { roadmapsInRange: "رودمپ‌های ساخته‌شده در بازه", aiGeneratedInRange: "ساخته‌شده با AI", stageCompletionPercent: "نرخ تکمیل مرحله‌ها" } },
 };
 
 type Resp = { analytics: { module: string; usersWithAccess: number; activeUsers: number; usageRatePercent: number | null; metrics: Record<string, number> } };

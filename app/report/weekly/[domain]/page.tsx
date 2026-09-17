@@ -23,7 +23,7 @@ const RAW_LABELS: Record<Domain, Record<string, string>> = {
   routine: { daysWithData: "روزهای دارای داده" },
   fitness: { completedSessions: "جلسات انجام‌شده", expectedSessions: "جلسات برنامه‌ریزی‌شده" },
   trading: { totalTrades: "تعداد معاملات", totalClosed: "معاملات بسته‌شده", totalWins: "معاملات سودده" },
-  learning: { totalStations: "کل مراحل رودمپ‌ها", doneStations: "مراحل انجام‌شده" },
+  learning: { totalStages: "کل مرحله‌های مسیرها", doneStages: "مرحله‌های انجام‌شده" },
   nutrition: { avgKcal: "میانگین کالری روزانه", targetKcal: "هدف روزانه", loggingDays: "روزهای ثبت‌شده" },
 };
 
