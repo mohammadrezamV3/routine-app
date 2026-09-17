@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ImageOff, Star } from "lucide-react";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey, getExerciseDifficulty } from "@/lib/exerciseCatalog";
+import { mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
 import { MuscleDiagram } from "./MuscleDiagram";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -52,6 +53,45 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | null>(null);
   const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);
+  const [photo, setPhoto] = useState<string | null>(null);
+
+  // عکسِ حرکات را ادمین دستی اضافه می‌کند، پس همه‌ی حرکات عکس ندارند و
+  // مجموعِ عکس‌ها هم چند مگابایت است. اول فقط *فهرستِ کلیدها* (چند کیلوبایت)
+  // می‌آید؛ بعد فقط عکسِ حرکتی که کاربر بازش می‌کند دانلود می‌شود — و همان
+  // یک‌بار، چون در cache می‌ماند. حرکتی که کلیدش در فهرست نیست اصلاً درخواستی
+  // نمی‌سازد و مستقیم placeholder می‌گیرد.
+  const [mediaKeys, setMediaKeys] = useState<Set<string> | null>(null);
+  const photoCache = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/exercise/media")
+      .then((r) => (r.ok ? r.json() : { keys: [] }))
+      .then((d) => { if (alive) setMediaKeys(new Set<string>(d.keys || [])); })
+      .catch(() => { if (alive) setMediaKeys(new Set<string>()); });
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!selected || !mediaKeys) { setPhoto(null); return; }
+    const key = mediaKey(selected.name);
+    if (!mediaKeys.has(key)) { setPhoto(null); return; }
+
+    const cached = photoCache.current.get(key);
+    if (cached) { setPhoto(cached); return; }
+
+    let alive = true;
+    setPhoto(null);
+    fetch(`/api/exercise/media?name=${encodeURIComponent(selected.name)}`)
+      .then((r) => (r.ok ? r.json() : { dataUrl: null }))
+      .then((d) => {
+        if (!d?.dataUrl) return;
+        photoCache.current.set(key, d.dataUrl);
+        if (alive) setPhoto(d.dataUrl);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [selected, mediaKeys]);
 
   const normalizedQuery = normalizeFa(query);
   const visible = useMemo(
@@ -158,9 +198,18 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
 
               <div className="no-scrollbar exercise-catalog-detail-body">
                 <div className="exercise-pictogram-stage">
-                  <div className="exercise-photo-placeholder" style={{ width: 120, height: 120 }}>
-                    <ImageOff size={32} />
-                  </div>
+                  {photo ? (
+                    <div className="exercise-photo">
+                      {/* عکسِ ادمین یک data URL است، نه فایلِ استاتیک؛ next/image
+                          روی data URL چیزی بهینه نمی‌کند و فقط محدودیت اضافه می‌کند. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={photo} alt={selected.name} />
+                    </div>
+                  ) : (
+                    <div className="exercise-photo-placeholder" style={{ width: 120, height: 120 }}>
+                      <ImageOff size={32} />
+                    </div>
+                  )}
                 </div>
                 <div className="modal-title exercise-detail-name">{selected.name}</div>
 

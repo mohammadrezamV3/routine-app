@@ -4492,6 +4492,14 @@ body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5);
 }
 body[data-theme="light"] .exercise-photo-placeholder{ background:rgba(255,255,255,.6); }
 
+/* عکسِ واقعیِ حرکت (وقتی ادمین از پنل گذاشته باشد) — دقیقا جای همان
+   placeholder، با همان گوشه‌ها، تا چیدمانِ کارت جابه‌جا نشود. */
+.exercise-photo{
+  width:180px; height:180px; flex-shrink:0; border-radius:12px; overflow:hidden;
+  border:1px solid var(--line); background:rgba(255,255,255,.03);
+}
+.exercise-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+
 /* جعبه‌ی قفل روزهای آینده — یک باکس واحد به‌جای تکرار بج روی هر ردیف،
    عینا هم‌بک‌گراند/بلور هدر سایت (.app-topbar). */
 .exercise-locked-box{
@@ -4913,6 +4921,30 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 .admin-pagination{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; }
 
 .admin-form-row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+
+/* پیشنهادِ اسمِ حرکت در «عکس حرکات ورزشی» — لیستِ شناور زیرِ اینپوت تا
+   ادمین حرکت را از خودِ کاتالوگ انتخاب کند، نه تایپِ آزاد. */
+.admin-suggest{
+  position:absolute; top:100%; inset-inline:0; z-index:30; margin-top:4px;
+  max-height:240px; overflow-y:auto; border-radius:var(--adm-radius);
+  border:1px solid var(--adm-border); background:var(--adm-panel-2);
+  box-shadow:0 12px 32px rgba(0,0,0,.28);
+}
+.admin-suggest-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+  padding:9px 12px; font-size:12.5px; text-align:start; color:var(--adm-text);
+  background:transparent; border:none; border-bottom:1px solid var(--adm-border);
+}
+.admin-suggest-row:last-child{ border-bottom:none; }
+.admin-suggest-row:hover{ background:rgba(var(--accent-rgb),.07); }
+.admin-suggest-tag{ font-size:10.5px; font-weight:700; color:var(--adm-accent); flex-shrink:0; }
+
+.admin-media-preview{
+  width:96px; height:96px; border-radius:var(--adm-radius); overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  border:1px dashed var(--adm-border); color:var(--adm-muted); background:var(--adm-panel-2);
+}
+.admin-media-preview img{ width:100%; height:100%; object-fit:cover; }
 
 @media (max-width:900px){
   .admin-sidebar-desktop{ display:none; }
