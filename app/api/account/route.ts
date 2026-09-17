@@ -27,6 +27,7 @@ export async function GET() {
       heightCm: true,
       weightKg: true,
       discoverable: true,
+      sharePhone: true,
       twoFactorEnabled: true,
       phoneVerifiedAt: true,
       market: true,
@@ -59,7 +60,7 @@ export async function GET() {
   return NextResponse.json({ user: { ...user, firstName: user.name, name: fullName, moduleAccess } });
 }
 
-// PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable? }
+// PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable?, sharePhone? }
 // فقط فیلدهای «امن» پروفایل از همین‌جا قابل تغییرن — ایمیل/شماره موبایل عمدا
 // این‌جا نیستن (نیاز به فلوی تایید جدا دارن، مثل signup/forgot-password؛
 // بدون اون تاییدیه، اجازه‌ی تغییر مستقیم یعنی هرکسی با یه سشن سرقتی می‌تونه
@@ -117,6 +118,9 @@ export async function PATCH(req: NextRequest) {
   }
   if (body.discoverable !== undefined) {
     data.discoverable = !!body.discoverable;
+  }
+  if (body.sharePhone !== undefined) {
+    data.sharePhone = !!body.sharePhone;
   }
   if (body.heightCm !== undefined) {
     if (body.heightCm === null) {

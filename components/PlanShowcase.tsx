@@ -54,7 +54,7 @@ export const PLANS_IRAN: PlanCard[] = [
     // (قبلا کارت رایگان هیچ لیستی نداشت و کاربر نمی‌فهمید اصلا چی می‌گیره).
     // طبق درخواست صریح: «آمار و استریک» و «تقویم و تاریخچه‌ی روزها» دیگر
     // این‌جا نوشته نمی‌شوند (فیچرهایی که تصمیم بود روی کارت برجسته نشوند).
-    features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو"],
+    features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو", "ثبت خواب و استریک"],
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
@@ -68,7 +68,7 @@ export const PLANS_IRAN: PlanCard[] = [
     prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
     originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
     amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
-    features: ["ژورنال و چک‌لیست ترید", "روتین روزانه"],
+    features: ["ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "روتین روزانه"],
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
@@ -77,8 +77,8 @@ export const PLANS_IRAN: PlanCard[] = [
     amounts: { "1": 2500000, "3": 6560000, "6": 13130000, "12": 26250000 },
     // «تحلیل هوشمند» طبق درخواست صریح از فیچرهای پلن حذف شد (هنوز آماده
     // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، COMPARE_ROWS_IRAN
-    // پایین همین فایل)؛ جایگزینش «Ask AI» است.
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "Ask AI — پرسش‌وپاسخ با هوش مصنوعی", "روتین روزانه"],
+    // پایین همین فایل)؛ جایگزینش «مدیربرنامه هوشمند» است.
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — ۵ بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "مدیربرنامه هوشمند — پرسش‌وپاسخ با هوش مصنوعی", "روتین روزانه"],
   },
 ];
 
@@ -91,8 +91,10 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "ژورنال ترید", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "چک‌لیست ترید", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "تقویم اقتصادی", included: { basic: false, exercise: false, trade: true, max: true } },
+  { label: "اتصال متاتریدر", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "رودمپ", included: { basic: false, exercise: true, trade: true, max: true } },
-  { label: "Ask AI", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "مدیربرنامه هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "اپلیکیشن موبایل", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "یکپارچه‌سازی با ساعت هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "گزارش هفتگی هوش مصنوعی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
@@ -109,10 +111,19 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
 // sm یک برش میانی (تبلت) هم داره تا موبایل/دسکتاپ صرف نباشه.
 export const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
-// اسکرول کنار هم جا بشن؛ margin-right ثابته (نه بر پایه‌ی vw) چون توی RTL،
-// margin-left در تعارض نادیده گرفته می‌شه و فقط margin-right اثر می‌کنه —
-// مقدار از (عرض ستون ۶۲۰px - عرض هدف ۱۲۴۰px)/۲ به دست اومده.
-export const BREAKOUT = "md:w-screen md:max-w-[1240px] md:mr-[-310px]";
+// اسکرول کنار هم جا بشن.
+//
+// باگِ گزارش‌شده («توی دسکتاپ اشتراک اومده وسط صفحه [و از لبه بیرون می‌زنه]»):
+// نسخه‌ی قبلی عرض رو با `w-screen + max-w-[1240px]` می‌ساخت ولی margin-right
+// رو یک عدد *ثابت* (-310px، یعنی دقیقا نصفِ ۱۲۴۰-۶۲۰) می‌ذاشت — درست فقط
+// وقتی عرضِ واقعی دقیقا ۱۲۴۰px بود؛ زیرِ آن (اکثرِ لپ‌تاپ‌ها، ۱۰۲۴/۱۲۸۰px)
+// که `w-screen` عرض را کوچیک‌تر می‌کرد، همان مارجینِ ثابت باقی می‌ماند و
+// جعبه از لبه بیرون می‌زد. کلاسِ Tailwindِ `mx-auto` هم اینجا امتحان شد ولی
+// مرورگر مارجینِ منفیِ حاصل از auto را قرینه تقسیم نکرد (یک سمت صفر، سمتِ
+// دیگر کل عددِ منفی) — به‌جایش `.plans-breakout` در globals.css با یک
+// margin-inline صریح و محاسبه‌شده تعریف شده که هر دو سمت را قطعی و برابر
+// می‌کند، مستقل از عرضِ واقعی و جهت (RTL/LTR).
+export const BREAKOUT = "plans-breakout";
 
 // روز = نارنجی (طبق طرح جدید)، شب = همون هویت رنگی قبلی سایت (سبز اصلی +
 // آبی برای تراز ویژه‌ی پلن مکس) — یکی‌شدن دو تم فقط قالب/چیدمانه، نه رنگ.
@@ -320,8 +331,9 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
   );
 }
 
-// لیبل‌های کاملا لاتین (مثل "Ask AI") باید چپ‌چین بمونن، نه راست‌چین —
-// حتی داخل جدولی که کلا dir="rtl" ارث می‌بره.
+// لیبل‌های کاملا لاتین (مثل نام‌های انگلیسیِ باقی‌مانده) باید چپ‌چین بمونن،
+// نه راست‌چین — حتی داخل جدولی که کلا dir="rtl" ارث می‌بره. «مدیربرنامه
+// هوشمند» فارسی‌ست، پس این قانون رویش اثر نمی‌کند و خودش راست‌چین می‌ماند.
 const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim());
 
 // گرید پلن‌ها + جدول مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراک داخل

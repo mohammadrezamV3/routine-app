@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Ban, Loader2, Map, Star, User as UserIcon } from "lucide-react";
+import { Ban, Check, Copy, Loader2, Map, Phone, Star, User as UserIcon } from "lucide-react";
 import { AgentAvatar } from "./AgentAvatar";
 import { StreakFlame } from "./StreakFlame";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -16,6 +16,7 @@ type Profile = {
   avatarUrl: string | null;
   bannerUrl: string | null;
   bio: string | null;
+  phone: string | null;
   streak: number;
   bestStreak: number;
   starsCount: number;
@@ -45,6 +46,7 @@ export function FriendProfileModal({
   const [starBusy, setStarBusy] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +86,17 @@ export function FriendProfileModal({
       }
     } finally {
       setStarBusy(false);
+    }
+  }
+
+  async function copyUsername() {
+    if (!profile?.username || copied) return;
+    try {
+      await navigator.clipboard.writeText(profile.username);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // کلیپ‌بورد روی بعضی مرورگرهای بدون HTTPS/اجازه در دسترس نیست — بی‌صدا نادیده می‌گیریم
     }
   }
 
@@ -145,7 +158,22 @@ export function FriendProfileModal({
             </div>
 
             <div className="friend-profile-id">
-              {profile.username && <div className="friend-profile-username mono">@{profile.username}</div>}
+              {profile.username && (
+                <button
+                  type="button"
+                  className="friend-profile-username mono"
+                  onClick={copyUsername}
+                  title="کپیِ آیدی"
+                >
+                  @{profile.username}
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                </button>
+              )}
+              {profile.phone && (
+                <div className="friend-profile-username mono" dir="ltr" style={{ cursor: "default" }}>
+                  <Phone size={12} /> {profile.phone}
+                </div>
+              )}
               {profile.planName && <div className="friend-profile-plan">{profile.planName}</div>}
               {profile.bio && <p className="friend-profile-bio">{profile.bio}</p>}
             </div>

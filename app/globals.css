@@ -1343,7 +1343,11 @@
          خالیِ ~۱۱۴پیکسلی فقط سمتِ چپ بود، یعنی همان بی‌قرینگیِ گزارش‌شده. */
       --acc-w: min(966px, calc(100vw - 64px));
       width: var(--acc-w);
-      margin-inline: calc((620px - var(--acc-w)) / 2);
+      /* طبقِ درخواستِ صریح: پنل دیگر وسطِ صفحه شناور نیست، لبه‌ی راستش
+         دقیقا سرِ جای همیشگیِ ستون (.wrap) می‌ماند و فقط به چپ باز می‌شود —
+         margin-inline-start همیشه صفر، margin-inline-end از همان معادله
+         (که مجموعش دقیقا برابرِ عرضِ ستون است، پس بدونِ ابهامِ over-constraint). */
+      margin-inline: 0 calc(620px - var(--acc-w));
     }
   }
   /* row (نه row-reverse) — توی dir="rtl" فرزند اول DOM (سایدبار/تایتل‌ها)
@@ -1491,15 +1495,22 @@
   body:not([data-theme="light"]) .profile-banner-hit{ background:none; box-shadow:none; }
   .profile-banner-img{ width:100%; height:100%; object-fit:cover; display:block; }
   .profile-banner-hit .profile-banner-img{ border-radius:inherit; }
+  /* طبقِ درخواستِ صریح، دکمه‌ی متنیِ «افزودن/تغییر بنر» حذف شد — همان
+     لایه‌ی نیمه‌شفافِ دوربینِ خودِ عکسِ پروفایل (profile-hero-avatar-hint)
+     این‌جا هم تکرار می‌شود، فقط روی کلِ بنر به‌جای یک دایره. */
+  .profile-banner-hint{
+    position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
+    color:#fff; background:rgba(0,0,0,.35); opacity:0; transition:opacity .18s ease; pointer-events:none;
+    border-radius:inherit;
+  }
+  .profile-banner-hit:hover .profile-banner-hint,
+  .profile-banner-hit:focus-visible .profile-banner-hint,
+  .profile-banner-hit:disabled .profile-banner-hint{ opacity:1; }
   .profile-banner-actions{
     position:absolute; top:10px; inset-inline-end:10px; z-index:2; display:flex; gap:6px;
-    pointer-events:none;
   }
-  /* فقط دکمه‌ی حذف واقعا کلیک می‌گیرد؛ «تغییر بنر» یک برچسبِ راهنماست و
-     کلیکش باید به خودِ بنر برسد (وگرنه دوباره «حتما باید اون دکمه رو بزنم»). */
-  .profile-banner-actions button{ pointer-events:auto; }
-  /* این دوتا دکمه روی خودِ عکس می‌شینن، پس بدونِ یه پس‌زمینه‌ی نیمه‌شفاف
-     روی عکسِ روشن اصلا خونده نمی‌شن — تنها جاییه که این لازمه. */
+  /* این دکمه روی خودِ عکس می‌شیند، پس بدونِ یه پس‌زمینه‌ی نیمه‌شفاف روی
+     عکسِ روشن اصلا خونده نمی‌شه. */
   .profile-banner-btn{
     display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:999px;
     font-size:11px; font-weight:700; color:#fff; cursor:pointer;
@@ -1541,6 +1552,48 @@
     padding:56px 20px 14px; display:flex; justify-content:flex-end;
   }
 
+  /* ── پاپ‌آپِ انتخابِ محلِ کراپ (components/ImageCropModal.tsx) ──────────
+     طبقِ درخواستِ صریح — کاربر خودش انتخاب می‌کند دقیقا کدوم بخشِ عکس
+     داخلِ قابِ آواتار/بنر بیفتد، نه یک کراپِ خودکارِ همیشه-وسط. */
+  .crop-modal{
+    position:fixed; inset:0; margin:auto; z-index:90; height:max-content;
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    width:min(340px, calc(100vw - 32px)); padding:20px;
+    background:var(--surface-2); border:1px solid var(--surface-line); border-radius:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .crop-modal-head{ display:flex; align-items:center; justify-content:space-between; width:100%; }
+  .crop-modal-back, .crop-modal-confirm{
+    display:flex; align-items:center; justify-content:center; width:34px; height:34px;
+    border-radius:50%; border:none; background:none; box-shadow:none; cursor:pointer;
+    color:var(--muted); transition:color .15s ease, background .15s ease;
+  }
+  .crop-modal-confirm{ color:var(--accent); }
+  .crop-modal-confirm:disabled{ opacity:.4; cursor:default; }
+  @media (hover:hover){
+    .crop-modal-back:hover{ color:var(--text); background:rgba(255,255,255,.06); }
+    .crop-modal-confirm:not(:disabled):hover{ background:var(--accent-dim); }
+  }
+  /* ناحیه‌ی خودِ کراپ — عکس با touch-action:none تا روی موبایل اسکرولِ
+     صفحه با درگ‌کردنِ عکس قاطی نشود. */
+  .crop-modal-stage{
+    position:relative; overflow:hidden; border-radius:16px; background:#000;
+    touch-action:none; cursor:grab; user-select:none;
+  }
+  .crop-modal-stage:active{ cursor:grabbing; }
+  .crop-modal-img{ position:absolute; top:50%; left:50%; max-width:none; pointer-events:none; }
+  /* ماسکِ بیرونِ قاب: یک سایه‌ی خیلی بزرگ (نه بک‌گراندِ جدا) تا هم گردیِ
+     دایره را نگه دارد هم روی مستطیلِ بنر هم کار کند. */
+  .crop-modal-mask{
+    position:absolute; inset:0; pointer-events:none; box-shadow:0 0 0 999px rgba(0,0,0,.6);
+    border:2px solid rgba(255,255,255,.9);
+  }
+  .crop-modal-mask.circle{ border-radius:50%; }
+  .crop-modal-mask.rect{ border-radius:10px; }
+  .crop-modal-zoom{ display:flex; align-items:center; gap:8px; width:100%; color:var(--muted); }
+  .crop-modal-zoom input[type="range"]{ flex:1; accent-color:var(--accent); }
+  .crop-modal-hint{ margin:0; font-size:11px; color:var(--muted2); text-align:center; }
+
   /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
      طبقِ درخواستِ صریح، اندازه‌ها روی دسکتاپ جدا از موبایل تنظیم شده‌اند:
      ستونِ محتوا عرضِ خواناتری می‌گیرد (نه تمامِ ۱۰۸۰px)، فاصله‌ها کمی
@@ -1567,18 +1620,24 @@
   .acc-head-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin:6px 0 0; }
 
   .acc-block{ margin-bottom:26px; }
+  /* طبقِ درخواستِ صریح، تایتل/توضیحِ هر بخش دیگر بالای باکس شناور نیست —
+     داخلِ همان باکسِ اطلاعات می‌نشیند (نگاه کن به AccountUI.tsx). */
   .acc-block-title{
     display:flex; align-items:center; gap:7px; margin:0 0 4px;
     font-size:13.5px; font-weight:800; color:var(--text);
   }
   .acc-block-title svg{ color:var(--accent); }
   .acc-block-desc{ font-size:11.5px; color:var(--muted); line-height:1.8; margin:0 0 12px; }
-  .acc-block-title + .acc-block-body{ margin-top:12px; }
   .acc-block-body{
     border:1px solid var(--surface-line); border-radius:18px; background:var(--surface-1);
     padding:16px;
   }
+  /* حالتِ flush برای وقتی‌ست که بدنه خودش ردیف‌های لبه‌به‌لبه دارد
+     (مثلِ AccountToggleRow/AccountRowLink) — ولی تایتلِ بالای همان ردیف‌ها
+     همچنان پدینگِ خودش را لازم دارد، وگرنه به لبه‌ی باکس می‌چسبد. */
   .acc-block-body.flush{ padding:0; overflow:hidden; }
+  .acc-block-body.flush > .acc-block-title{ margin:14px 16px 4px; }
+  .acc-block-body.flush > .acc-block-desc{ margin:0 16px 10px; }
 
   .acc-line{
     display:flex; align-items:center; gap:12px; padding:14px 16px;
@@ -1737,7 +1796,6 @@
     .profile-hero-avatar-img{ width:78px; height:78px; border-width:5px; }
     .profile-hero-avatar-hint{ inset:5px; }
     .profile-hero-meta{ padding:48px 16px 12px; }
-    .profile-banner-btn span{ display:none; }
     .profile-banner-btn{ padding:6px; }
   }
   .account-edit-btn{
@@ -1886,14 +1944,13 @@
   .account-sub-cta-btn:hover{ filter:brightness(1.06); }
   .account-sub-cta-btn:active{ transform:scale(.97); }
 
-  
-  .account-index-links{
-    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
-    font-size:11.5px; color:var(--muted2);
+  /* طبقِ درخواستِ صریح، لینک‌های حقوقی (قوانین/درباره/وبلاگ) حذف شدند و
+     نسخه‌ی اپ دیگر وسطِ صفحه نیست — گوشه‌ی پایین-راستِ خودِ پنل (نه کلِ
+     ویوپورت، چون این صفحه داخلِ ستونِ محتواست، نه یک لایه‌ی مستقل). */
+  .account-index-version{
+    margin-top:18px; text-align:end;
+    font-size:10.5px; color:var(--muted2); letter-spacing:.02em; opacity:.7;
   }
-  .account-index-links a{ color:var(--muted); text-decoration:none; transition:color .18s ease; }
-  @media (hover:hover) and (pointer:fine){ .account-index-links a:hover{ color:var(--accent); } }
-  .account-index-version{ font-size:11px; color:var(--muted2); letter-spacing:.02em; }
 
   @media (max-width:700px){
     /* باگِ گزارش‌شده («فاصله‌ی چپ و راستِ پنل با لبه یکی نیست»): والد
@@ -3322,9 +3379,13 @@ body[data-theme="light"] .nav-link-sub-item:hover{ color:#5C3D22; }
 .profile-chip-wrap{ position:relative; display:flex; }
 .profile-menu-item{ display:flex; align-items:center; gap:8px; }
 .profile-menu-item .nav-link-icon-svg{ width:16px; height:16px; flex-shrink:0; display:flex; }
+/* باگِ گزارش‌شده: قبلا این دکمه یک پیلِ نامتقارن بود (پدینگِ راست برای
+   جای اسمی که اصلا رندر نمی‌شه — کامپوننت پایین‌تر فقط آواتار را می‌گذارد)
+   پس هاورش یک بیضیِ ۴۸×۳۸ بزرگ‌تر از خودِ عکسِ ۳۰پیکسلی نشان می‌داد. حالا
+   پدینگ یکسان و کوچک است، پس حلقه‌ی هاور دقیقا دورِ خودِ عکس می‌نشیند. */
 .profile-chip{
-  display:flex; align-items:center; gap:8px;
-  height:38px; padding:0 14px 0 4px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  padding:4px; border-radius:50%;
   background:none; border:none; cursor:pointer;
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:background .2s ease, transform .15s ease;
@@ -4911,6 +4972,21 @@ html[data-perf="low"] .app-bottombar{
    همون دلیل .checkout-summary-icon svg بالاتر؛ Sparkles (پلن مکس) خودش
    size=16 داره، این‌جا فقط برای آیکون‌های خام بقیه‌ی پلن‌ها لازمه. */
 .plan-icon-badge svg{ width:16px; height:16px; display:block; }
+
+/* کارت‌های پلن + جدولِ مقایسه (components/PlanShowcase.tsx) — breakout از
+   ستونِ باریکِ ۶۲۰px سایت. طبقِ گزارشِ صریح، نسخه‌ی قبلی (`w-screen` +
+   `max-w` + یک `margin-right` ثابت) فقط وقتی عرضِ واقعی دقیقا ۱۲۴۰px بود
+   درست وسط می‌چید؛ زیرِ آن (اکثرِ لپ‌تاپ‌ها) از لبه بیرون می‌زد. تلاشِ
+   بعدی با Tailwindِ `mx-auto` هم مارجینِ منفیِ حاصل را قرینه تقسیم نکرد
+   (یک سمت صفر ماند، سمتِ دیگر کلِ عدد را گرفت). این‌جا هر دو سمت با یک
+   margin-inline صریح و یکسان محاسبه می‌شوند — قطعی، مستقلِ عرضِ واقعی و
+   مستقلِ جهت (RTL/LTR). */
+@media (min-width:768px){
+  .plans-breakout{
+    width:min(1240px, calc(100vw - 32px));
+    margin-inline:calc((620px - min(1240px, calc(100vw - 32px))) / 2);
+  }
+}
 
 /* .wbox-liquid یک blur(9px) روی کانتینری است که بچه‌هایش (.wbox-blob) مدام
    transform می‌شوند — یعنی مرورگر باید آن لایه‌ی بلورشده را در *هر فریم*
@@ -6970,6 +7046,14 @@ html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
   background:var(--surface-2); box-shadow:0 20px 60px rgba(0,0,0,.4);
   animation:tradeFadeIn .22s ease both;
 }
+/* طبقِ گزارشِ صریح، توی نسخه‌ی دسکتاپ این پاپ‌آپ وسطِ صفحه نیست — روی
+   صفحه‌ی بلند فقط نزدیکِ بالا می‌نشیند و پایینش خالی می‌ماند. از تبلت/
+   دسکتاپ به بالا وسط‌چینیِ عمودی هم اضافه می‌شود (با inset+margin:auto،
+   نه transform، وگرنه همان باگِ tradeFadeIn دوباره پاکش می‌کند)؛ روی
+   موبایل همان چیدمانِ «نزدیکِ بالا»ی قبلی می‌ماند. */
+@media (min-width:768px){
+  .friend-profile-panel{ top:0; bottom:0; margin-top:auto; margin-bottom:auto; height:max-content; }
+}
 /* ── پاپ‌آپِ پروفایلِ دوست — چیدمانِ شماتیکِ صریحِ کاربر ──────────────────
    بنر و عکسِ پروفایل توی هم؛ آواتار روی لبه‌ی پایینِ بنر سمتِ راست؛ نامِ فرد
    پایین-چپِ *داخلِ* بنر؛ ستاره بالا-چپ؛ سه‌نقطه‌ی بلاک بالا-راست؛ زیرِ بنر
@@ -7000,11 +7084,13 @@ body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.
 .friend-profile-star-btn.on{ color:#F5C518; }
 .friend-profile-star-btn:disabled{ opacity:.55; cursor:default; }
 @media (hover:hover){ .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:rgba(0,0,0,.45); } }
-/* نامِ فرد پایین-چپِ داخلِ بنر */
+/* طبقِ درخواستِ صریحِ تازه، اسمِ فرد به‌جای گوشه‌ی مخالف، *سمتِ چپِ* خودِ
+   عکسِ پروفایل می‌نشیند (avatar right:20px تا right:92px، پس name از
+   right:100px شروع می‌شود و به چپ رشد می‌کند) — نه دیگر گوشه‌ی دوردست. */
 .friend-profile-banner-name{
-  position:absolute; bottom:10px; left:16px; z-index:2; max-width:55%;
+  position:absolute; bottom:16px; right:100px; z-index:2; max-width:calc(100% - 116px);
   font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.5);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right;
 }
 /* آواتار سمتِ راست، نیمه‌آویزان از لبه‌ی پایینِ بنر */
 .friend-profile-banner .friend-profile-avatar{
@@ -7020,7 +7106,12 @@ body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.
   display:flex; flex-direction:column; align-items:flex-end; gap:4px;
   padding-top:40px; text-align:left;
 }
-.friend-profile-username{ font-size:12px; color:var(--muted2); direction:ltr; }
+/* آیدی حالا یک دکمه‌ی کپی‌شدنی است — طبقِ درخواستِ صریح */
+.friend-profile-username{
+  display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted2); direction:ltr;
+  background:none; border:none; padding:0; cursor:pointer; transition:color .15s ease;
+}
+@media (hover:hover){ button.friend-profile-username:hover{ color:var(--accent); } }
 .friend-profile-plan{
   padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
   color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);

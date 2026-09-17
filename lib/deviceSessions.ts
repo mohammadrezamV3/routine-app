@@ -23,6 +23,17 @@ export function newSessionId(): string {
   return randomBytes(24).toString("hex");
 }
 
+/**
+ * باگِ گزارش‌شده: «با یک موبایل هزاربار میام، هزاربار همون موبایل لاگین‌شده
+ * نشون می‌ده» — روی موبایل (خصوصا PWA/وب‌ویوی گوگل)، کوکیِ سشن گاهی بینِ
+ * بازکردن‌های پیاپیِ اپ پایدار نمی‌مونه، پس هر بازِ اپ یک signIn واقعیِ
+ * تازه (خصوصا OAuth) می‌زنه و اینجا (`user` توی jwt callback) دوباره صدا
+ * زده می‌شه. قبلا هر بار یک ردیفِ `Session` کاملا جدید می‌ساخت — یعنی
+ * لیستِ «دستگاه‌ها» با صدها ردیفِ *همون یک* گوشی پر می‌شد. حالا اول دنبالِ
+ * یک نشستِ زنده‌ی همین کاربر با همین provider+userAgent می‌گردیم (یعنی
+ * «همون دستگاه») و به‌جای ساختنِ ردیفِ تازه، فقط توکنش رو roll می‌کنیم —
+ * یک ردیف به‌ازای هر دستگاهِ واقعی، نه هر signIn.
+ */
 export async function createDeviceSession(input: {
   userId: string;
   sid: string;
@@ -31,16 +42,43 @@ export async function createDeviceSession(input: {
   userAgent?: string | null;
   expiresAt: Date;
 }): Promise<void> {
-  await prisma.session.create({
-    data: {
-      userId: input.userId,
-      sessionToken: input.sid,
-      provider: input.provider,
-      ip: input.ip ?? null,
-      userAgent: input.userAgent ?? null,
-      expiresAt: input.expiresAt,
-    },
-  });
+  const existing = input.userAgent
+    ? await prisma.session.findFirst({
+        where: {
+          userId: input.userId,
+          provider: input.provider,
+          userAgent: input.userAgent,
+          revokedAt: null,
+        },
+        select: { id: true, sessionToken: true },
+        orderBy: { lastSeenAt: "desc" },
+      })
+    : null;
+
+  if (existing) {
+    await prisma.session.update({
+      where: { id: existing.id },
+      data: {
+        sessionToken: input.sid,
+        ip: input.ip ?? null,
+        expiresAt: input.expiresAt,
+        lastSeenAt: new Date(),
+        revokedAt: null,
+      },
+    });
+    validCache.delete(existing.sessionToken);
+  } else {
+    await prisma.session.create({
+      data: {
+        userId: input.userId,
+        sessionToken: input.sid,
+        provider: input.provider,
+        ip: input.ip ?? null,
+        userAgent: input.userAgent ?? null,
+        expiresAt: input.expiresAt,
+      },
+    });
+  }
   validCache.set(input.sid, Date.now() + CHECK_TTL_MS);
 }
 

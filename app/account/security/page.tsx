@@ -66,6 +66,12 @@ export default function SecurityPage() {
   const [discoverable, setDiscoverable] = useState<boolean | null>(null);
   const [discoverableSaving, setDiscoverableSaving] = useState(false);
 
+  // اشتراک‌گذاریِ شماره با دوستان — طبقِ درخواستِ صریح، توی همین بخشِ
+  // حریمِ خصوصی. بدونِ شماره‌ی ثبت‌شده معنا ندارد، پس سوییچش غیرفعال می‌ماند.
+  const [hasPhone, setHasPhone] = useState(false);
+  const [sharePhone, setSharePhone] = useState<boolean | null>(null);
+  const [sharePhoneSaving, setSharePhoneSaving] = useState(false);
+
   // افرادی که بلاک کرده — طبق درخواست صریح، از همین‌جا قابل آنبلاک
   const [blocked, setBlocked] = useState<BlockedUser[] | null>(null);
   const [unblocking, setUnblocking] = useState<string | null>(null);
@@ -73,9 +79,11 @@ export default function SecurityPage() {
   useEffect(() => {
     loadSessions();
     getAccount().then((res: AccountData) => {
-      const u = res?.user as { discoverable?: boolean; twoFactorEnabled?: boolean } | undefined;
+      const u = res?.user as { discoverable?: boolean; twoFactorEnabled?: boolean; sharePhone?: boolean; phone?: string | null } | undefined;
       setDiscoverable(u?.discoverable ?? true);
       setTwoFactor(u?.twoFactorEnabled ?? false);
+      setHasPhone(!!u?.phone);
+      setSharePhone(u?.sharePhone ?? false);
     });
     loadBlocked();
   }, []);
@@ -140,6 +148,25 @@ export default function SecurityPage() {
       setTwoFactorError("مشکلی در اتصال به سرور پیش اومد");
     } finally {
       setTwoFactorSaving(false);
+    }
+  }
+
+  async function toggleSharePhone(next: boolean) {
+    if (sharePhoneSaving || !hasPhone) return;
+    setSharePhoneSaving(true);
+    setSharePhone(next);
+    try {
+      const res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sharePhone: next }),
+      });
+      if (!res.ok) setSharePhone(!next);
+      else invalidateAccountCache();
+    } catch {
+      setSharePhone(!next);
+    } finally {
+      setSharePhoneSaving(false);
     }
   }
 
@@ -277,6 +304,18 @@ export default function SecurityPage() {
           </div>
           {discoverable !== null && (
             <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label="قابل‌جست‌وجو بودن" />
+          )}
+        </div>
+
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>اشتراک‌گذاری شماره با دوستان</div>
+            <div className="item-line" style={{ marginTop: 2 }}>
+              {hasPhone ? "روشن یعنی شماره‌ات توی پاپ‌آپ پروفایل برای دوستانت دیده می‌شه" : "اول باید شماره‌ای روی حسابت ثبت باشه"}
+            </div>
+          </div>
+          {sharePhone !== null && (
+            <ToggleSwitch checked={sharePhone} onChange={toggleSharePhone} disabled={!hasPhone} label="اشتراک‌گذاری شماره" />
           )}
         </div>
 
