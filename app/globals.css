@@ -1108,6 +1108,30 @@
     .trade-desktop .trade-calendar-box.embedded .cal-controls{ margin-bottom:12px; }
   }
 
+  /* دسکتاپِ صفحه‌ی یک حساب (همان ژورنال‌نویسی، یک لایه داخل‌تر): آمار و
+     تقویم به‌جای روی‌هم، کنارِ هم. قبلاً این باکس روی دسکتاپ یک ستونِ بلند
+     بود و کاربر برای رسیدن به تریدهای همان روز باید از کلِ تقویم رد می‌شد،
+     در حالی که دو طرفِ تقویم خالی بود. موبایل دست‌نخورده می‌ماند (این بلوک
+     فقط ۱۰۲۴+ است) چون آن‌جا کنارِ هم‌گذاشتن یعنی دو ستونِ خرد و ناخوانا. */
+  @media (min-width:1024px){
+    .trade-desktop .trade-journal-box{
+      display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 480px);
+      align-items:start;
+    }
+    .trade-desktop .trade-journal-box .trade-journal-stats-part{ padding:16px; }
+    /* ستونِ آمار حالا نصفِ عرض است، پس ۵ ستونِ کاشیِ آمار آن‌جا خرد می‌شد. */
+    .trade-desktop .trade-journal-box .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); }
+    .trade-desktop .trade-journal-box .trade-calendar-box.embedded{
+      padding:16px;
+      /* در RTL، inline-start یعنی لبه‌ی راستِ تقویم — همان مرزِ بینِ دو ستون. */
+      border-inline-start:1px solid var(--line);
+    }
+    .trade-desktop .trade-journal-box .trade-calendar-box.embedded .cal-grid,
+    .trade-desktop .trade-journal-box .trade-calendar-box.embedded .cal-controls{
+      max-width:none; margin-inline:0;
+    }
+  }
+
   /* بخشِ تریدهای روزِ انتخاب‌شده */
   .trade-day-label{ font-size:11.5px; font-weight:600; color:var(--muted); margin-inline-start:8px; }
   .trade-day-box{ margin-top:10px; padding:4px 14px; }
@@ -5743,6 +5767,69 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
    (چون حالا ردیفِ داخلِ یک باکسِ بیرونیه، نه کارتِ جدا) — پس اسکلتون باید
    بک‌گراندِ pulseِ خودش رو مستقیم داشته باشه، وگرنه نامرئی می‌شه. */
 .trade-account-skel{ height:88px; background:rgba(var(--surface-rgb),.35); border-radius:12px; margin:4px 0; }
+
+/* ── ژورنال‌نویسی: چیدمانِ مخصوصِ دسکتاپ ─────────────────────────────
+   طبقِ درخواستِ صریح، صفحه‌ی ژورنال روی دسکتاپ دیزاینِ *جدا* دارد، با
+   دقیقاً همان امکانات. سه چیز فقط این‌جا اضافه می‌شود و زیرِ ۱۰۲۴px هیچ‌کدام
+   وجودِ بصری ندارند (کارتِ فشرده‌ی موبایل مو‌به‌مو دست‌نخورده می‌ماند):
+     • نوارِ جمعِ کل بالای فهرست
+     • دو ستون به‌جای یک ستونِ باریکِ وسطِ ۱۱۰۰ پیکسل فضای خالی
+     • ردیفِ حقایق و نوارِ هدف داخلِ هر کارت
+   مخفی‌سازی با CSS انجام می‌شود نه شرطِ جاوااسکریپتی، چون تشخیصِ عرض در
+   رندرِ سرور ممکن نیست و هر راهِ JSای این‌جا یعنی hydration mismatch. */
+.trade-journal-kpis,
+.trade-account-facts,
+.trade-account-goalbar{ display:none; }
+
+@media (min-width:1024px){
+  .trade-journal-grid{
+    display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px; align-content:start; padding:14px;
+  }
+  /* سرصفحه، جمعِ کل، خطا و حالتِ خالی هرکدام یک ردیفِ کاملند، نه یک خانه‌ی گرید. */
+  .trade-journal-grid > .trade-accounts-head,
+  .trade-journal-grid > .trade-journal-kpis,
+  .trade-journal-grid > .trade-form-error,
+  .trade-journal-grid > .trade-empty-state{ grid-column:1 / -1; }
+
+  .trade-journal-kpis{
+    display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px;
+    margin:2px 0 2px;
+  }
+  .trade-journal-kpis .trade-stat-value{ font-size:15px; }
+
+  /* کارت‌ها هم‌ارتفاع می‌شوند تا ردیف‌ها لبه‌ی صافی داشته باشند؛ محتوا از
+     بالا می‌چیند و برچسب‌ها ته کارت می‌نشینند. */
+  .trade-journal-grid .trade-account-card{
+    display:flex; flex-direction:column; padding:15px 17px;
+  }
+  .trade-journal-grid .trade-account-card .trade-account-main{ margin-top:auto; }
+  .trade-journal-grid .trade-account-name{ font-size:15.5px; }
+  .trade-journal-grid .trade-account-skel{ height:132px; margin:0; }
+
+  .trade-account-facts{
+    display:flex; align-items:center; flex-wrap:wrap; gap:6px 14px;
+    margin-top:11px; font-size:11.5px; font-weight:600; color:var(--muted2);
+  }
+  .trade-account-facts span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+  .trade-account-facts svg{ opacity:.7; flex-shrink:0; }
+  /* نامِ بروکر لاتین است و کنارِ متنِ فارسی جهتش می‌پرد. */
+  .trade-account-facts-broker{ unicode-bidi:plaintext; }
+  .trade-account-facts-mt{ color:var(--accent); }
+
+  .trade-account-goalbar{
+    display:flex; align-items:center; gap:8px; margin-top:10px;
+    font-size:11px; font-weight:700; color:var(--muted2);
+  }
+  .trade-account-goalbar-track{
+    flex:1; height:5px; border-radius:999px; overflow:hidden;
+    background:rgba(var(--surface-rgb),.55);
+  }
+  .trade-account-goalbar-fill{
+    height:100%; border-radius:999px; background:var(--accent);
+    transition:width .45s cubic-bezier(.22,1,.36,1);
+  }
+}
 /* منویِ سه‌نقطه — کنارِ اسم، سمتِ مخالفِ نوارِ رنگی. با createPortal به
    body می‌ره (هم‌الگویِ DashTaskRow) چون بلورِ .trade-surface یک
    stacking-context جدید می‌سازه و z-index رو به همون کارت محدود می‌کنه.

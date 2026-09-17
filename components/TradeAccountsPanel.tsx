@@ -3,7 +3,7 @@
 import { CSSProperties, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Loader2, Pencil, Trash2, Wallet, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Hash, Loader2, Pencil, Percent, Target, Trash2, Wallet, X } from "lucide-react";
 import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeAccount, TradeTag } from "@/lib/tradeTypes";
 import { takePreloaded } from "@/lib/preload";
@@ -84,11 +84,11 @@ export function TradeAccountsPanel({
   if (loading) {
     return (
       <div>
-        <div className="trade-surface trade-account-grid">
+        <div className="trade-surface trade-account-grid trade-journal-grid">
           <div className="trade-accounts-head">
             <div className="trade-section-title">حساب‌های معاملاتی</div>
           </div>
-          {[0, 1, 2].map((i) => <div key={i} className="trade-account-card trade-account-skel" />)}
+          {[0, 1, 2, 3].map((i) => <div key={i} className="trade-account-card trade-account-skel" />)}
         </div>
       </div>
     );
@@ -98,13 +98,20 @@ export function TradeAccountsPanel({
     <div>
       {/* طبقِ درخواستِ صریح: تایتل + دکمه‌ی «نمایش آرشیو» دیگه بالای باکس
           نیستن — اولین ردیفِ داخلِ خودِ باکسن. */}
-      <div className="trade-surface trade-account-grid">
+      <div className="trade-surface trade-account-grid trade-journal-grid">
         <div className="trade-accounts-head">
           <div className="trade-section-title">حساب‌های معاملاتی</div>
           <button type="button" className="trade-ghost-btn" onClick={() => { setArchiveOpen(true); setArchived(null); loadArchived(); }}>
             نمایش آرشیو
           </button>
         </div>
+
+        {/* جمعِ همه‌ی حساب‌ها — فقط روی دسکتاپ دیده می‌شود (CSS مخفی‌اش
+            می‌کند زیرِ ۱۰۲۴px). روی موبایل فهرست باید کوتاه و بدونِ مقدمه
+            بماند؛ روی دسکتاپ اما عرضِ خالیِ بالای صفحه به‌جای هیچ، همان
+            چیزی را می‌دهد که کاربر برای دیدنش باید تک‌تکِ حساب‌ها را باز
+            می‌کرد. */}
+        {!!accounts.length && <JournalTotals accounts={accounts} />}
 
         {actionError && <div className="trade-form-error">{actionError}</div>}
 
@@ -198,6 +205,62 @@ export function TradeAccountsPanel({
   );
 }
 
+// جمعِ کلِ همه‌ی حساب‌های فعال — فقط دسکتاپ (`.trade-journal-kpis` زیرِ
+// ۱۰۲۴px مخفی است). ارزها ممکن است فرق کنند، پس جمعِ پولی فقط وقتی نشان
+// داده می‌شود که همه‌ی حساب‌ها یک ارز داشته باشند؛ وگرنه جمع‌زدنِ دلار و
+// یورو یک عددِ بی‌معنا می‌سازد و بدترین حالتِ ممکن است: عددی که درست
+// به‌نظر می‌رسد ولی نیست.
+function JournalTotals({ accounts }: { accounts: TradeAccount[] }) {
+  const currencies = new Set(accounts.map((a) => a.currency));
+  const sameCurrency = currencies.size === 1 ? accounts[0].currency : null;
+
+  const balance = accounts.reduce((sum, a) => sum + (a.summary?.balance ?? a.initialBalance), 0);
+  const netPnl = accounts.reduce((sum, a) => sum + (a.summary?.netPnl ?? 0), 0);
+  const trades = accounts.reduce((sum, a) => sum + (a.summary?.tradeCount ?? 0), 0);
+
+  // نرخِ بردِ کل باید وزنیِ تعدادِ معامله باشد، نه میانگینِ ساده‌ی نرخ‌ها:
+  // حسابی با ۲ معامله نباید هم‌وزنِ حسابی با ۲۰۰ معامله باشد.
+  const closed = accounts.reduce((sum, a) => sum + (a.summary?.closedCount ?? 0), 0);
+  const wins = accounts.reduce(
+    (sum, a) => sum + ((a.summary?.winRate ?? 0) / 100) * (a.summary?.closedCount ?? 0),
+    0
+  );
+  const winRate = closed > 0 ? Math.round((wins / closed) * 1000) / 10 : null;
+
+  return (
+    <div className="trade-journal-kpis">
+      <div className="trade-stat-tile">
+        <div className="trade-stat-label"><Wallet size={12} /> بالانس کل</div>
+        <div className="trade-stat-value mono" dir="ltr">
+          {sameCurrency ? formatMoney(balance, sameCurrency) : "—"}
+        </div>
+      </div>
+      <div className="trade-stat-tile">
+        <div className="trade-stat-label">{netPnl >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />} سود/زیان خالص</div>
+        <div
+          className="trade-stat-value mono"
+          dir="ltr"
+          style={{ color: netPnl >= 0 ? "var(--pnl-win)" : "var(--pnl-loss)" }}
+        >
+          {sameCurrency ? formatMoney(netPnl, sameCurrency) : "—"}
+        </div>
+      </div>
+      <div className="trade-stat-tile">
+        <div className="trade-stat-label"><Hash size={12} /> کل معاملات</div>
+        <div className="trade-stat-value mono" dir="ltr">{trades}</div>
+      </div>
+      <div className="trade-stat-tile">
+        <div className="trade-stat-label"><Percent size={12} /> نرخ برد</div>
+        <div className="trade-stat-value mono" dir="ltr">{winRate === null ? "—" : `${winRate}%`}</div>
+      </div>
+      <div className="trade-stat-tile">
+        <div className="trade-stat-label"><Target size={12} /> حساب فعال</div>
+        <div className="trade-stat-value mono" dir="ltr">{accounts.length}</div>
+      </div>
+    </div>
+  );
+}
+
 // ردیف فشرده‌ی یک حساب — اسم + سود/زیان + برچسب، به‌علاوه‌ی منوی
 // سه‌نقطه‌ی کنار اسم (ویرایش/آرشیو). جزئیات کامل حساب فقط با بازکردن
 // خود صفحه‌ی حساب دیده می‌شود.
@@ -276,6 +339,30 @@ function AccountRow({
           {netPnl >= 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
         </span>
       </div>
+
+      {/* فقط دسکتاپ: همان چیزهایی که تا حالا برای دیدنشان باید حساب را باز
+          می‌کردی. روی موبایل CSS این ردیف را کامل برمی‌دارد تا کارتِ فشرده‌ی
+          فعلی مو‌به‌مو همان بماند. */}
+      <div className="trade-account-facts">
+        <span><Hash size={12} /> {a.summary?.tradeCount ?? 0} معامله</span>
+        {a.summary?.winRate != null && <span><Percent size={12} /> {a.summary.winRate}% برد</span>}
+        {a.broker && <span className="trade-account-facts-broker">{a.broker}</span>}
+        {a.mtConnected && <span className="trade-account-facts-mt">متاتریدر</span>}
+      </div>
+
+      {/* نوارِ هدف — عددِ درصد کنارش، چون خودِ نوار بدونِ عدد فقط یک حسِ
+          مبهم می‌دهد. وقتی هدفی ست نشده اصلاً رندر نمی‌شود. */}
+      {a.summary?.goalProgress != null && (
+        <div className="trade-account-goalbar">
+          <div className="trade-account-goalbar-track">
+            <div
+              className="trade-account-goalbar-fill"
+              style={{ width: `${Math.min(100, Math.max(0, Math.round(a.summary.goalProgress * 100)))}%` }}
+            />
+          </div>
+          <span className="mono" dir="ltr">{Math.round(a.summary.goalProgress * 100)}%</span>
+        </div>
+      )}
 
       <div className="trade-account-main">
         {!!a.tags.length && (
