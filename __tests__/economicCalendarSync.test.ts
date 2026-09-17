@@ -5,14 +5,13 @@ import { normalizeExternalEvents, syncEconomicCalendar, compareActualToForecast 
 // → upsert باید در پاسِ دوم مقدارِ actual تازه‌منتشرشده را روی همان ردیف
 // بنشاند (نه ردیفِ تکراری بسازد و نه مقدارِ قبلی را نگه دارد).
 
-const teRow = (actual: string) => [{
-  CalendarId: "12345",
-  Date: "2026-09-16T12:30:00",
-  Country: "United States",
-  Category: "Employment",
-  Event: "Non Farm Payrolls",
+const jbRow = (actual: string | number) => [{
+  ID: "12345",
+  Name: "Non Farm Payrolls",
   Currency: "USD",
-  Importance: 3,
+  Category: "Employment",
+  Impact: "High",
+  Date: "2026.09.16 12:30:00",
   Forecast: "160K",
   Previous: "142K",
   Actual: actual,
@@ -50,9 +49,9 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
-describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ Trading Economics)", () => {
+describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ JBlanked)", () => {
   it("ارز را از فیلد Currency می‌گیرد و actualِ خالی را null می‌کند", () => {
-    const [e] = normalizeExternalEvents(teRow(""));
+    const [e] = normalizeExternalEvents(jbRow(""));
     expect(e.currency).toBe("USD");
     expect(e.country).toBe("US");
     expect(e.impact).toBe("HIGH");
@@ -61,16 +60,21 @@ describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ Trading Econom
   });
 
   it("externalId بینِ پاسِ بی‌actual و پاسِ باactual یکی می‌ماند", () => {
-    const before = normalizeExternalEvents(teRow(""))[0];
-    const after = normalizeExternalEvents(teRow("173K"))[0];
+    const before = normalizeExternalEvents(jbRow(""))[0];
+    const after = normalizeExternalEvents(jbRow("173K"))[0];
     expect(after.externalId).toBe(before.externalId);
   });
 
-  it("Importanceِ عددی (۱ تا ۳) را به سطحِ تأثیر درست تبدیل می‌کند", () => {
-    const [low] = normalizeExternalEvents([{ ...teRow("")[0], Importance: 1 }]);
-    const [medium] = normalizeExternalEvents([{ ...teRow("")[0], Importance: 2 }]);
-    expect(low.impact).toBe("LOW");
+  it("تاریخِ نقطه‌ای JBlanked («YYYY.MM.DD HH:mm:ss») را به‌عنوانِ UTC پارس می‌کند", () => {
+    const [e] = normalizeExternalEvents(jbRow(""));
+    expect(e.occursAt.toISOString()).toBe("2026-09-16T12:30:00.000Z");
+  });
+
+  it("Impactِ متنی («High»/«Medium») را به سطحِ تأثیر درست تبدیل می‌کند", () => {
+    const [medium] = normalizeExternalEvents([{ ...jbRow("")[0], Impact: "Medium" }]);
+    const [low] = normalizeExternalEvents([{ ...jbRow("")[0], Impact: "Low" }]);
     expect(medium.impact).toBe("MEDIUM");
+    expect(low.impact).toBe("LOW");
   });
 });
 
@@ -78,13 +82,13 @@ describe("syncEconomicCalendar", () => {
   it("پاسِ دوم actual را روی همان ردیف به‌روز می‌کند، نه ردیفِ تازه", async () => {
     const prisma = fakePrisma();
 
-    stubFeed(teRow(""));
+    stubFeed(jbRow(""));
     const first = await syncEconomicCalendar(prisma as any);
     expect(first.created).toBe(1);
     expect(prisma.rows.size).toBe(1);
     expect([...prisma.rows.values()][0].actual).toBeNull();
 
-    stubFeed(teRow("173K"));
+    stubFeed(jbRow("173K"));
     const second = await syncEconomicCalendar(prisma as any);
     expect(second.created).toBe(0);
     expect(second.updated).toBe(1);
@@ -94,12 +98,12 @@ describe("syncEconomicCalendar", () => {
 
   it("توضیحِ دستیِ ادمین را با nullِ منبع پاک نمی‌کند", async () => {
     const prisma = fakePrisma();
-    stubFeed(teRow(""));
+    stubFeed(jbRow(""));
     await syncEconomicCalendar(prisma as any);
     const row = [...prisma.rows.values()][0];
     row.description = "توضیحِ دستی";
 
-    stubFeed(teRow("173K"));
+    stubFeed(jbRow("173K"));
     await syncEconomicCalendar(prisma as any);
     expect(row.description).toBe("توضیحِ دستی");
     expect(row.actual).toBe("173K");

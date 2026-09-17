@@ -157,25 +157,46 @@ export function FriendProfileModal({
               )}
             </div>
 
-            <div className="friend-profile-id">
-              {profile.username && (
-                <button
-                  type="button"
-                  className="friend-profile-username mono"
-                  onClick={copyUsername}
-                  title="کپیِ آیدی"
-                >
-                  @{profile.username}
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                </button>
-              )}
-              {profile.phone && (
-                <div className="friend-profile-username mono" dir="ltr" style={{ cursor: "default" }}>
-                  <Phone size={12} /> {profile.phone}
+            <div className="friend-profile-body">
+              {profile.planName && (
+                <div className="friend-profile-plan-row">
+                  <div className="friend-profile-plan">{profile.planName}</div>
                 </div>
               )}
-              {profile.planName && <div className="friend-profile-plan">{profile.planName}</div>}
-              {profile.bio && <p className="friend-profile-bio">{profile.bio}</p>}
+
+              {/* هرکدام از بیو/آیدی/شماره جعبه‌ی خودش را دارد و اگر آن فیلد
+                  خالی باشد، کل جعبه‌اش (نه فقط متنش) حذف می‌شود — طبقِ
+                  درخواستِ صریح. */}
+              {profile.bio && (
+                <div className="friend-profile-section">
+                  <div className="friend-profile-section-label">بیو</div>
+                  <p className="friend-profile-bio">{profile.bio}</p>
+                </div>
+              )}
+
+              {profile.username && (
+                <div className="friend-profile-section">
+                  <div className="friend-profile-section-label">آیدی</div>
+                  <button
+                    type="button"
+                    className="friend-profile-username mono"
+                    onClick={copyUsername}
+                    title="کپیِ آیدی"
+                  >
+                    @{profile.username}
+                    {copied ? <Check size={12} /> : <Copy size={12} />}
+                  </button>
+                </div>
+              )}
+
+              {profile.phone && (
+                <div className="friend-profile-section">
+                  <div className="friend-profile-section-label">شماره تماس</div>
+                  <div className="friend-profile-username mono" dir="ltr" style={{ cursor: "default" }}>
+                    <Phone size={12} /> {profile.phone}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* از راست به چپ: استارها · استریک فعلی · بیشترین استریک */}

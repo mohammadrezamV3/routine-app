@@ -14,7 +14,7 @@ type EventRow = {
 type Resp = { events: EventRow[]; externalSource: string };
 
 // ورود دستی رویدادهای تقویم اقتصادی + همگام‌سازیِ دستی از منبعِ بیرونی
-// (پیش‌فرض Trading Economics — نیازمندِ ECONOMIC_CALENDAR_API_KEY، یا
+// (پیش‌فرض JBlanked Calendar API — نیازمندِ ECONOMIC_CALENDAR_API_KEY، یا
 // ECONOMIC_CALENDAR_URL اگه ست شده باشه). همگام‌سازیِ خودکار با یک crontab
 // بیرونی روی /api/cron/economic-calendar انجام می‌شه — این صفحه راهِ
 // دستی/فوریِ همون کار رو هم می‌ده.
