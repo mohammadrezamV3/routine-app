@@ -42,11 +42,13 @@ export async function POST(req: NextRequest) {
   const userId = guard.userId;
 
   const body = await req.json();
-  const { level, heightCm, weightKg, goal, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted } = body as {
+  const { level, heightCm, weightKg, goal, trainingMonth, equipment, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted } = body as {
     level: ExerciseLevel;
     heightCm?: number;
     weightKg?: number;
     goal: string;
+    trainingMonth?: number;
+    equipment: string;
     hasPhysicalLimitation: boolean;
     limitationDetails?: string;
     gymDays: string[];
@@ -59,6 +61,12 @@ export async function POST(req: NextRequest) {
   }
   if (!goal || typeof goal !== "string" || !goal.trim() || goal.trim().length > MAX_GOAL_LEN) {
     return NextResponse.json({ error: "هدف تمرین نامعتبر است" }, { status: 400 });
+  }
+  if (!equipment || typeof equipment !== "string" || !equipment.trim() || equipment.trim().length > MAX_DESCRIPTION_LEN) {
+    return NextResponse.json({ error: "تجهیزات وارد شده نامعتبر است" }, { status: 400 });
+  }
+  if (trainingMonth !== undefined && (typeof trainingMonth !== "number" || !Number.isInteger(trainingMonth) || trainingMonth < 1 || trainingMonth > 600)) {
+    return NextResponse.json({ error: "ماه تمرین وارد شده معتبر نیست" }, { status: 400 });
   }
   if (!Array.isArray(gymDays) || gymDays.length === 0 || !gymDays.every((d) => FA_WEEKDAY.includes(d))) {
     return NextResponse.json({ error: "روزهای باشگاه نامعتبر است" }, { status: 400 });
@@ -81,6 +89,7 @@ export async function POST(req: NextRequest) {
 
   const uniqueDays = [...new Set(gymDays)];
   const cleanGoal = goal.trim();
+  const cleanEquipment = equipment.trim();
   const cleanDescription = description?.trim() || null;
   const cleanLimitationDetails = hasPhysicalLimitation ? limitationDetails?.trim() || null : null;
 
@@ -89,13 +98,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: quota.error }, { status: 429 });
   }
 
+  // برنامه‌ی قبلی (اگه بود) برای پیش‌روی منطقی (progressive overload) به AI داده
+  // می‌شود — بدون این، مدل هر بار از صفر طراحی می‌کند و «پیشرفت نسبت به ماه قبل»
+  // معنی ندارد.
+  const previousPlan = await prisma.exercisePlan.findFirst({
+    where: { userId, isActive: false, generatedByAi: true },
+    orderBy: { createdAt: "desc" },
+    select: { planData: true },
+  });
+
   let planData: unknown;
   let generatedByAi = false;
   try {
     const result = await generateExercisePlan({
       level, goalLabel: cleanGoal, gymDays: uniqueDays,
       heightCm: heightCm || null, weightKg: weightKg || null,
+      trainingMonth: trainingMonth || null, equipment: cleanEquipment,
       hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
+      previousProgram: previousPlan?.planData ?? null,
     }, userId);
     if (!result.feasible) {
       return NextResponse.json({ ok: false, feasible: false, message: result.message });
@@ -123,6 +143,8 @@ export async function POST(req: NextRequest) {
       heightCm: heightCm || null,
       weightKg: weightKg || null,
       goal: cleanGoal,
+      trainingMonth: trainingMonth || null,
+      equipment: cleanEquipment,
       hasPhysicalLimitation: !!hasPhysicalLimitation,
       disclaimerAcceptedAt: new Date(),
       gymDays: uniqueDays as any,

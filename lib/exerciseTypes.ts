@@ -11,6 +11,8 @@ export type ExercisePlan = {
   // خودِ کاربر است.
   goal: string | null;
   gymDays: string[] | null;
+  trainingMonth: number | null;
+  equipment: string | null;
   generatedByAi: boolean;
   createdAt: string;
   planData: ExerciseDay[];
@@ -21,6 +23,8 @@ export type ExercisePlanFormValue = {
   heightCm: string;
   weightKg: string;
   goal: string;
+  trainingMonth: string;
+  equipment: string;
   hasLimitation: boolean;
   limitationDetails: string;
   gymDays: string[];
@@ -32,6 +36,8 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   heightCm: "",
   weightKg: "",
   goal: "",
+  trainingMonth: "",
+  equipment: "",
   hasLimitation: false,
   limitationDetails: "",
   gymDays: [],

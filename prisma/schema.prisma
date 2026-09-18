@@ -781,6 +781,8 @@ model ExercisePlan {
 
   gymDays       Json? // آرایه‌ای از نام فارسی روزهای هفته که کاربر باشگاه می‌ره، مثلاً ["شنبه","دوشنبه","چهارشنبه"]
   trainingPhase String? // bulk | cut | maintenance | none
+  trainingMonth Int? // چندمین ماهِ تمرینِ کاربره — برای پیش‌روی منطقی (progressive overload) به AI داده می‌شه
+  equipment     String? // تجهیزات در دسترس کاربر، متنِ آزاد — مثلاً "باشگاه کامل" یا "فقط دمبل خونگی"
   generatedByAi Boolean @default(false) // false یعنی از قالب ایستای lib/exercisePlans.ts ساخته شده (fallback بدون کلید API)
 
   startDate DateTime @default(now())
