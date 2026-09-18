@@ -31,7 +31,14 @@ export const PERF_INIT_SCRIPT = `(function(){try{
 var coarse=window.matchMedia&&window.matchMedia("(pointer:coarse)").matches;
 if(!coarse)return;
 document.documentElement.setAttribute("${PERF_TIER_ATTR}","low");
+document.addEventListener("touchstart",function(){},{passive:true});
 }catch(e){}})();`;
+
+// آن `touchstart`ِ خالی یک لیسنرِ بی‌کار نیست: سافاریِ iOS حالتِ `:active`
+// را فقط روی عناصری اعمال می‌کند که در مسیرِ رویدادشان یک هندلرِ لمس وجود
+// داشته باشد. بدونِ آن، هر بازخوردِ لمسیِ CSS روی آیفون *اصلا دیده نمی‌شود*
+// — همان «می‌زنم ولی هیچ واکنشی نشان نمی‌دهد». passive است، پس روی اسکرول
+// هیچ اثری ندارد.
 
 /** روی کلاینت: آیا این دستگاه رده پایین علامت خورده؟ */
 export function isLowPerfDevice(): boolean {

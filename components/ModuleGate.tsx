@@ -49,6 +49,10 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
 
 function GateDenied() {
   const router = useRouter();
+  // این صفحه یک بن‌بست است: تنها کارِ ممکن زدنِ همان یک دکمه است. پس
+  // مقصدش را همین حالا آماده می‌کنیم، نه لحظه‌ی ضربه — وگرنه ضربه یعنی
+  // شروعِ دانلودِ صفحه از صفر و همان مکثِ گزارش‌شده («دیر می‌ره»).
+  useEffect(() => { router.prefetch("/subscription"); }, [router]);
   return (
     <div className="module-gate">
       <div className="module-gate-blur" aria-hidden="true">
