@@ -178,6 +178,15 @@ export function NavDrawer() {
     setProfileMenuOpen(false);
     setNotifPanelOpen(false);
   }
+  // مقصدهای منوی پروفایل در هیچ `<Link>`ی نیستند (آیتم‌هایش دکمه‌اند، چون
+  // پنل پورتال‌شده است)، پس Next خودش آماده‌شان نمی‌کند. با بازشدنِ پنل
+  // همان‌جا prefetch می‌شوند تا ضربه‌ی بعدی منتظرِ دانلود نماند.
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    router.prefetch("/account");
+    router.prefetch("/subscription");
+  }, [profileMenuOpen, router]);
+
   function toggleProfileMenu() {
     setProfileMenuOpen((v) => {
       const next = !v;
