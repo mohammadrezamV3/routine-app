@@ -14,6 +14,7 @@ import { NumberInput } from "./NumberInput";
 type Step = "hw" | "goal" | "gear" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, gear: 2, days: 3, description: 4, rules: 4 };
 const STEP_DOTS = [0, 1, 2, 3, 4];
+const EQUIPMENT_OPTIONS = ["باشگاه", "خانه"];
 
 // فرم «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
 // توضیح آزاد) به‌جای یک فرم تک‌صفحه‌ای. حداقل روزهای لازم برای هر هدف فقط
@@ -32,7 +33,7 @@ export function AiExercisePlanWizard({
 }) {
   const [step, setStep] = useState<Step>("hw");
   const [form, setForm] = useState<ExercisePlanFormValue>(EMPTY_EXERCISE_FORM);
-  const [fieldErrors, setFieldErrors] = useState<{ heightCm?: string; weightKg?: string; trainingMonth?: string; equipment?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ heightCm?: string; weightKg?: string; trainingMonth?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [rejection, setRejection] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -102,11 +103,9 @@ export function AiExercisePlanWizard({
       if (!form.goal.trim()) { setError("نوشتن هدف تمرین لازمه"); return; }
       setStep("gear");
     } else if (step === "gear") {
-      const fe: typeof fieldErrors = {};
-      if (!form.trainingMonth) fe.trainingMonth = "چندمین ماه تمرینت رو وارد کن";
-      if (!form.equipment.trim()) fe.equipment = "تجهیزات در دسترست رو بنویس";
-      if (fe.trainingMonth || fe.equipment) { setFieldErrors(fe); return; }
+      if (!form.trainingMonth) { setFieldErrors({ trainingMonth: "چندمین ماه تمرینت رو وارد کن" }); return; }
       setFieldErrors({});
+      if (!form.equipment) { setError("یکی از گزینه‌ها رو انتخاب کن"); return; }
       setStep("days");
     } else if (step === "days") {
       if (form.gymDays.length === 0) { setError("حداقل یک روز باشگاه رو انتخاب کن"); return; }
@@ -199,21 +198,14 @@ export function AiExercisePlanWizard({
             </div>
           )}
 
-          <label className="exercise-form-label" style={{ marginTop: 14 }}>چه تجهیزاتی در دسترست هست؟</label>
-          <textarea
-            dir="rtl"
-            className="exercise-desc-textarea"
-            rows={3}
-            placeholder="مثلا «باشگاه کامل با دستگاه و هالتر» یا «فقط دمبل و کش خونگی» یا «فقط وزن بدن»"
-            value={form.equipment}
-            onChange={(e) => patch({ equipment: e.target.value })}
-          />
-          {fieldErrors.equipment && (
-            <div className="field-error-msg field-error-msg-inline">
-              <AlertCircle size={12} />
-              {fieldErrors.equipment}
-            </div>
-          )}
+          <label className="exercise-form-label" style={{ marginTop: 14 }}>کجا تمرین می‌کنی؟</label>
+          <div className="day-picker">
+            {EQUIPMENT_OPTIONS.map((eq) => (
+              <span key={eq} className={`day-pill${form.equipment === eq ? " on" : ""}`} onClick={() => patch({ equipment: eq })}>
+                {eq}
+              </span>
+            ))}
+          </div>
         </>
       )}
 
