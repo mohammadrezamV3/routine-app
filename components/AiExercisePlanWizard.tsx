@@ -11,8 +11,9 @@ import { focusNextOnEnter } from "@/lib/formNav";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { NumberInput } from "./NumberInput";
 
-type Step = "hw" | "goal" | "days" | "description" | "rules";
-const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, days: 2, description: 3, rules: 3 };
+type Step = "hw" | "goal" | "gear" | "days" | "description" | "rules";
+const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, gear: 2, days: 3, description: 4, rules: 4 };
+const STEP_DOTS = [0, 1, 2, 3, 4];
 
 // فرم «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
 // توضیح آزاد) به‌جای یک فرم تک‌صفحه‌ای. حداقل روزهای لازم برای هر هدف فقط
@@ -31,7 +32,7 @@ export function AiExercisePlanWizard({
 }) {
   const [step, setStep] = useState<Step>("hw");
   const [form, setForm] = useState<ExercisePlanFormValue>(EMPTY_EXERCISE_FORM);
-  const [fieldErrors, setFieldErrors] = useState<{ heightCm?: string; weightKg?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ heightCm?: string; weightKg?: string; trainingMonth?: string; equipment?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [rejection, setRejection] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -71,6 +72,8 @@ export function AiExercisePlanWizard({
         heightCm: form.heightCm ? +form.heightCm : undefined,
         weightKg: form.weightKg ? +form.weightKg : undefined,
         goal: form.goal.trim(),
+        trainingMonth: form.trainingMonth ? +form.trainingMonth : undefined,
+        equipment: form.equipment.trim(),
         hasPhysicalLimitation: form.hasLimitation,
         limitationDetails: form.hasLimitation ? form.limitationDetails.trim() || undefined : undefined,
         gymDays: form.gymDays,
@@ -97,6 +100,13 @@ export function AiExercisePlanWizard({
       setStep("goal");
     } else if (step === "goal") {
       if (!form.goal.trim()) { setError("نوشتن هدف تمرین لازمه"); return; }
+      setStep("gear");
+    } else if (step === "gear") {
+      const fe: typeof fieldErrors = {};
+      if (!form.trainingMonth) fe.trainingMonth = "چندمین ماه تمرینت رو وارد کن";
+      if (!form.equipment.trim()) fe.equipment = "تجهیزات در دسترست رو بنویس";
+      if (fe.trainingMonth || fe.equipment) { setFieldErrors(fe); return; }
+      setFieldErrors({});
       setStep("days");
     } else if (step === "days") {
       if (form.gymDays.length === 0) { setError("حداقل یک روز باشگاه رو انتخاب کن"); return; }
@@ -110,7 +120,8 @@ export function AiExercisePlanWizard({
   function goBack() {
     setError(null);
     if (step === "goal") setStep("hw");
-    else if (step === "days") setStep("goal");
+    else if (step === "gear") setStep("goal");
+    else if (step === "days") setStep("gear");
     else if (step === "description") { setRejection(null); setStep("days"); }
     else if (step === "rules") setStep("description");
     else if (step === "hw" && onCancel) onCancel();
@@ -174,6 +185,35 @@ export function AiExercisePlanWizard({
             value={form.goal}
             onChange={(e) => patch({ goal: e.target.value })}
           />
+        </>
+      )}
+
+      {step === "gear" && (
+        <>
+          <label className="exercise-wizard-title">چندمین ماهته که تمرین می‌کنی؟</label>
+          <NumberInput className="wsearch-newform-name" placeholder="مثلا ۳" value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
+          {fieldErrors.trainingMonth && (
+            <div className="field-error-msg field-error-msg-inline">
+              <AlertCircle size={12} />
+              {fieldErrors.trainingMonth}
+            </div>
+          )}
+
+          <label className="exercise-form-label" style={{ marginTop: 14 }}>چه تجهیزاتی در دسترست هست؟</label>
+          <textarea
+            dir="rtl"
+            className="exercise-desc-textarea"
+            rows={3}
+            placeholder="مثلا «باشگاه کامل با دستگاه و هالتر» یا «فقط دمبل و کش خونگی» یا «فقط وزن بدن»"
+            value={form.equipment}
+            onChange={(e) => patch({ equipment: e.target.value })}
+          />
+          {fieldErrors.equipment && (
+            <div className="field-error-msg field-error-msg-inline">
+              <AlertCircle size={12} />
+              {fieldErrors.equipment}
+            </div>
+          )}
         </>
       )}
 
@@ -261,7 +301,7 @@ export function AiExercisePlanWizard({
       )}
 
       <div className="exercise-wizard-dots">
-        {[0, 1, 2, 3].map((i) => (
+        {STEP_DOTS.map((i) => (
           <span key={i} className={`exercise-wizard-dot${i === STEP_INDEX[step] ? " on" : ""}`} />
         ))}
       </div>
