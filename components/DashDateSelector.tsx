@@ -105,13 +105,18 @@ export function DashDateSelector({
 
   // به‌جای یک عدد ثابت، هرچقدر عرض واقعی نوار جا داره روز نشون می‌ده.
   //
-  // نسخه‌ی قبلی عرض هر پیل رو ثابت ۶۲px (موبایل) فرض می‌کرد، ولی پیل‌ها
-  // `shrink-0`ـن و عرضشون از محتواشون میاد — «چهارشنبه» + «۳۰ شهریور» روی
-  // یه گوشی ۳۹۰ پیکسلی حدود ۷۵px می‌شه، نه ۶۲. نتیجه این بود که تخمین
-  // بیشتر از واقعیت درمی‌اومد، پیل‌ها سرریز می‌کردن و عملا فقط سه روز
-  // دیده می‌شد (بقیه زیر لبه‌ی اسکرول). حالا عرض واقعی رندرشده‌ی
-  // پهن‌ترین پیل اندازه گرفته می‌شه. چون خود پیل‌ها با تغییر تعداد
-  // عرضشون عوض نمی‌شه، این حلقه در یک قدم همگرا می‌شه.
+  // نسخه‌ی قبلی عرض هر پیل رو ثابت ۶۲px (موبایل) فرض می‌کرد، ولی
+  // «چهارشنبه» + «۳۰ شهریور» روی یه گوشی ۳۹۰ پیکسلی حدود ۷۵px می‌شه، نه
+  // ۶۲. نتیجه این بود که تخمین بیشتر از واقعیت درمی‌اومد، پیل‌ها سرریز
+  // می‌کردن و عملا فقط سه روز دیده می‌شد.
+  //
+  // نکته‌ی مهم: از وقتی پیل‌ها فضای اضافه‌ی نوار رو پر می‌کنن (grow)، دیگه
+  // *نمی‌شه* عرضِ رندرشده‌ی خودِ پیل رو معیار گرفت — چون اون عرض به تعداد
+  // روزها وابسته‌ست و این حلقه رو ناپایدار می‌کنه (کمتر روز ← پیلِ پهن‌تر
+  // ← تخمینِ باز هم کمتر). به‌جاش عرضِ *محتوای* پیل اندازه گرفته می‌شه:
+  // اسپن‌های داخلش `whitespace-nowrap`ـن و توی یه فلکسِ ستونیِ
+  // items-center به اندازه‌ی متنِ خودشون عرض می‌گیرن، مستقل از این‌که
+  // والدشون چقدر کش اومده.
   useEffect(() => {
     if (!onVisibleCountChange) return;
     const el = scrollRef.current;
@@ -122,7 +127,13 @@ export function DashDateSelector({
       const isSm = window.innerWidth >= 640;
       let pillWidth = isSm ? 92 : 62;
       el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
-        pillWidth = Math.max(pillWidth, Math.ceil(pill.getBoundingClientRect().width));
+        const cs = getComputedStyle(pill);
+        const padding = parseFloat(cs.paddingInlineStart || "0") + parseFloat(cs.paddingInlineEnd || "0");
+        let content = 0;
+        for (const child of Array.from(pill.children)) {
+          content = Math.max(content, child.getBoundingClientRect().width);
+        }
+        pillWidth = Math.max(pillWidth, Math.ceil(content + padding));
       });
       const gap = 6;
       // پدینگ افقی خود نوار (px-3) داخل clientWidth حساب شده، پس ازش کم می‌شه
@@ -168,7 +179,7 @@ export function DashDateSelector({
         type="button"
         aria-label="روزهای قبل"
         onClick={onPrevWeek}
-        className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:flex"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
       >
         <ChevronRight size={18} />
       </button>
@@ -178,17 +189,16 @@ export function DashDateSelector({
           ref={scrollRef}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          // باگِ گزارش‌شده: «روی موبایل‌های کوچک‌تر روزها خیلی از هم فاصله
-          // می‌گیرند». علتش justify-between بود: تعدادِ روزها طوری حساب
-          // می‌شود که *جا شود*، پس تقریبا همیشه چند ده پیکسل فضای اضافه
-          // می‌ماند — و justify-between تمامِ آن فضا را بینِ خودِ پیل‌ها پخش
-          // می‌کرد. روی یک صفحه‌ی ۳۹۰ پیکسلی که فقط ۳ روز جا می‌شود، همان
-          // یعنی فاصله‌ی ~۶۰ پیکسلی بینِ هر دو روز.
-          // حالا فضای اضافه به دو طرفِ نوار می‌رود و گپ ثابت می‌ماند.
-          // `safe` هم لازم است: اگر روزی محتوا واقعا سرریز کند، مرکزچین
-          // کردن ابتدای لیست را زیرِ لبه‌ی اسکرول می‌برد و دیگر قابلِ
-          // اسکرول نیست؛ با safe، مرورگر در آن حالت به start برمی‌گردد.
-          className="no-scrollbar dash-daystrip flex items-center gap-1.5 overflow-x-auto px-3 py-2.5"
+          // فضای اضافه‌ی نوار به *خودِ پیل‌ها* داده می‌شود، نه به فاصله‌ی
+          // بینشان. دو نسخه‌ی قبلی هر دو غلط بودند و دقیقا به دو شکلِ
+          // مخالف: `justify-between` تمامِ فضای اضافه را بینِ روزها پخش
+          // می‌کرد (روی صفحه‌ی باریک فاصله‌ی ~۶۰ پیکسلی)، و `safe center`
+          // همه را وسط جمع می‌کرد و دو طرفِ نوار خالی می‌ماند.
+          // با `grow basis-0` هر روز سهمِ مساوی از عرض می‌گیرد: نوار پر
+          // است، گپ ثابت ۶ پیکسل می‌ماند، و هیچ‌جا جمع نمی‌شود.
+          // `shrink-0` سرِ جایش است تا وقتی روزها واقعا از عرض بیشتر شدند
+          // له نشوند و به‌جایش نوار اسکرول بخورد.
+          className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-3 py-2.5"
         >
           {days.map((d) => {
             const active = d.iso === activeIso;
@@ -200,7 +210,7 @@ export function DashDateSelector({
                 type="button"
                 onClick={() => onSelect(d.iso)}
                 className={cn(
-                  "flex min-w-[54px] shrink-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
+                  "flex min-w-[54px] shrink-0 grow basis-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
                   active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
                 )}
                 style={
@@ -225,7 +235,7 @@ export function DashDateSelector({
         type="button"
         aria-label="روزهای بعد"
         onClick={onNextWeek}
-        className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text sm:flex"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
       >
         <ChevronLeft size={18} />
       </button>

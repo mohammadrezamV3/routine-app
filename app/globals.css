@@ -5050,7 +5050,6 @@ html[data-perf="low"] .trade-chat-panel,
 html[data-perf="low"] .trade-cal-card,
 html[data-perf="low"] .trade-cal-filters,
 html[data-perf="low"] .trade-cal-search,
-html[data-perf="low"] .trade-cal-week-strip,
 html[data-perf="low"] .trade-econ-monthpicker,
 html[data-perf="low"] .tv-surface{
   background:var(--surface-2);
@@ -5124,10 +5123,6 @@ html[data-perf="low"] .siri-orb *{
    transition عمداً تقریبا صفر است: بازخورد باید *همان لحظه* باشد؛ ۱۵۰
    میلی‌ثانیه‌ی نرم روی یک ضربه‌ی کوتاه اصلا دیده نمی‌شود.
    ============================================================ */
-/* نوارِ روزهای داشبورد — نگاه کن به کامنتِ DashDateSelector.tsx. با
-   یوتیلیتیِ Tailwind نوشته نمی‌شود چون `safe` را پشتیبانی نمی‌کند. */
-.dash-daystrip{ justify-content:safe center; }
-
 @media (hover:none){
   a:active,
   button:not(:disabled):active,
@@ -6223,7 +6218,7 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
   backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
 }
 .trade-cal-week-days{
-  display:flex; flex:1; min-width:0; justify-content:space-between; gap:6px;
+  display:flex; flex:1; min-width:0; gap:6px;
   overflow-x:auto; scrollbar-width:none;
 }
 .trade-cal-week-days::-webkit-scrollbar{ width:0; height:0; display:none; }
@@ -6245,7 +6240,10 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
    min-w 92 / padding 8-12 / gap 4. قبلا پدینگ ۹پیکسل بود و همین پیل‌ها را
    محسوس درشت‌تر از نسخه‌ی روتین می‌کرد. */
 .trade-cal-day-pill{
-  flex:0 0 auto; scroll-snap-align:center; min-width:54px;
+  /* هم‌قاعده‌ی نوارِ «روتین من»: هر روز سهمِ مساوی از عرضِ نوار می‌گیرد
+     (grow) ولی زیرِ عرضِ محتوایش له نمی‌شود (shrink:0) — نه فاصله‌ی
+     بیش‌ازحد بینِ روزها، نه جمع‌شدنشان وسطِ نوار. */
+  flex:1 0 0; scroll-snap-align:center; min-width:54px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   padding:4px; border-radius:16px; color:var(--muted);
   /* بدونِ border — پیل‌های روتین من هم ندارند و همان ۱پیکسلِ شفاف، پیل را
