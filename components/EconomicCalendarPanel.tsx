@@ -231,7 +231,14 @@ export function EconomicCalendarPanel() {
       const w = el.clientWidth;
       if (w <= 0) return;
       const isSm = window.innerWidth >= 640;
-      let pillWidth = isSm ? 92 : 54;
+      // موبایل: همیشه دقیقا ۵ روز، مثل نوارِ «روتین من» — محاسبه‌ی داینامیک
+      // روی صفحه‌ی باریک ممکنه به ۳ برسه؛ اگه ۵تا جا نشه همین نوار با انگشت
+      // اسکرول می‌خوره. دسکتاپ دست‌نخورده: هرچقدر واقعا جا داره همون بمونه.
+      if (!isSm) {
+        setDayWindow(5);
+        return;
+      }
+      let pillWidth = 92;
       el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
         pillWidth = Math.max(pillWidth, Math.ceil(pill.getBoundingClientRect().width));
       });
