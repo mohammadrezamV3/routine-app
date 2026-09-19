@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { normalizeExternalEvents, syncEconomicCalendar, compareActualToForecast } from "@/lib/economicCalendar";
+import {
+  RELEASE_WATCH_WINDOW_MS, compareActualToForecast, computeNextSyncDelayMs,
+  normalizeExternalEvents, syncEconomicCalendar,
+} from "@/lib/economicCalendar";
 
 // رگرسیونِ گزارشِ «اکشوال‌ها هیچ‌وقت نمی‌آیند»: مسیرِ کامل fetch → نرمال‌سازی
 // → upsert باید در پاسِ دوم مقدارِ actual تازه‌منتشرشده را روی همان ردیف
@@ -227,5 +230,57 @@ describe("compareActualToForecast", () => {
     expect(compareActualToForecast("-1.4M", "-0.9M")).toBe("down");
     expect(compareActualToForecast("3.2%", "3.2%")).toBe("flat");
     expect(compareActualToForecast(null, "3.2%")).toBeNull();
+  });
+});
+
+// ── پنجره‌ی رصدِ انتشار ─────────────────────────────────────────────────
+// خواسته‌ی صریح: «تا حدود ۳ دقیقه بعد، هر ۵ ثانیه، تا وقتی آپدیت شود».
+
+/** prismaی قلابی که واقعاً شرطِ where را اعمال می‌کند (وگرنه تست چیزی را نمی‌سنجد). */
+function prismaWithEvents(rows: { occursAt: Date; actual: string | null }[]) {
+  return {
+    economicEvent: {
+      findFirst: async ({ where }: any) => {
+        const match = rows
+          .filter((r) => (where.actual === null ? r.actual === null : true))
+          .filter((r) => r.occursAt >= where.occursAt.gte && r.occursAt <= where.occursAt.lte)
+          .sort((a, b) => a.occursAt.getTime() - b.occursAt.getTime())[0];
+        return match ? { occursAt: match.occursAt } : null;
+      },
+    },
+  };
+}
+
+const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
+
+describe("computeNextSyncDelayMs — رصدِ لحظه‌ی انتشار", () => {
+  it("تا ۳ دقیقه بعدِ رویدادِ بی‌actual، هر ۵ ثانیه چک می‌کند", async () => {
+    for (const m of [0.5, 1, 2, 2.9]) {
+      const prisma = prismaWithEvents([{ occursAt: minutesAgo(m), actual: null }]);
+      expect(await computeNextSyncDelayMs(prisma as any)).toBe(5_000);
+    }
+  });
+
+  it("بعد از ۳ دقیقه دست می‌کشد و به حالتِ آرام برمی‌گردد", async () => {
+    const prisma = prismaWithEvents([{ occursAt: minutesAgo(4), actual: null }]);
+    expect(await computeNextSyncDelayMs(prisma as any)).toBe(10 * 60 * 1000);
+  });
+
+  it("به‌محضِ رسیدنِ actual، رصدِ تند تمام می‌شود (نه اینکه ۳ دقیقه را صبر کند)", async () => {
+    const prisma = prismaWithEvents([{ occursAt: minutesAgo(1), actual: "173K" }]);
+    expect(await computeNextSyncDelayMs(prisma as any)).toBe(10 * 60 * 1000);
+  });
+
+  it("رویدادی که هنوز نرسیده: دقیقاً تا لحظه‌ی سررسید صبر می‌کند", async () => {
+    const in30s = new Date(Date.now() + 30_000);
+    const prisma = prismaWithEvents([{ occursAt: in30s, actual: null }]);
+    const delay = await computeNextSyncDelayMs(prisma as any);
+    // ۳۰ثانیه تا رویداد + ۳ثانیه مهلتِ ته‌نشینی
+    expect(delay).toBeGreaterThan(30_000);
+    expect(delay).toBeLessThanOrEqual(34_000);
+  });
+
+  it("پنجره همان چیزی‌ست که کلاینت هم استفاده می‌کند", () => {
+    expect(RELEASE_WATCH_WINDOW_MS).toBe(3 * 60 * 1000);
   });
 });
