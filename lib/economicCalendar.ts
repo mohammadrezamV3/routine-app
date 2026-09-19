@@ -62,6 +62,29 @@ export function currencyMeta(code: string) {
  * امکان‌پذیر است.
  */
 const JBLANKED_BASE_URL = "https://www.jblanked.com/news/api/mql5/calendar/range/";
+
+/**
+ * فیدِ پشتیبان — **بدونِ هیچ کلید و هیچ کارِ ادمینی**.
+ *
+ * چرا لازم شد: JBlanked کلید می‌خواهد، و وقتی کلید ست نبود این ماژول
+ * *بی‌صدا* هیچ‌کاری نمی‌کرد (کرانِ خودش ۲۰۰ برمی‌گرداند). نتیجه‌اش دقیقاً
+ * گزارشِ «actual هیچ‌وقت نمی‌آید» بود: جدول فقط رویدادهای دستیِ ادمین را
+ * داشت، و آن‌ها هم چون *قبل* از انتشار ساخته می‌شوند actualشان تا ابد
+ * خالی می‌ماند. حالا نبودِ کلید یعنی «برو سراغِ فیدِ رایگان»، نه «کاری نکن».
+ *
+ * سه فایلِ هفتگی، نه یکی: فایلِ thisweek به‌محضِ رد شدنِ هفته، actualِ
+ * رویدادهای همان هفته را هم با خودش می‌برد؛ بدونِ lastweek تاریخچه هیچ‌وقت
+ * کامل نمی‌شود و بدونِ nextweek روزهای پیشِ‌رو خالی‌اند.
+ *
+ * ⚠️ این سه بازه‌ی ثابت تنها چیزی‌ست که فیدِ رایگان می‌دهد — «تا یک ماهِ
+ * آینده»ی حالتِ JBlanked این‌جا واقعاً وجود ندارد و ساختنش یعنی جعلِ داده.
+ */
+const FREE_FEED_THIS_WEEK = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
+const FREE_FEED_URLS = [
+  "https://nfs.faireconomy.media/ff_calendar_lastweek.json",
+  FREE_FEED_THIS_WEEK,
+  "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
+];
 const JB_LOOKBACK_DAYS = 7;
 const JB_LOOKAHEAD_DAYS = 30;
 // در حالتِ «تند» (نزدیکِ لحظه‌ی انتشارِ یک خبر) فقط بازه‌ی خیلی نزدیکِ
@@ -164,17 +187,29 @@ export type NormalizedEvent = {
   description: string | null;
 };
 
-// JBlanked بدونِ کلید کار نمی‌کند (برخلافِ فارکس‌فکتوریِ رایگانِ قبلی) —
-// پس این دیگر همیشه true نیست: فقط وقتی یا یک URL دستی ست شده یا کلیدِ
-// JBlanked موجود است. نبودِ هیچ‌کدام یعنی sync خودکار خاموش می‌ماند و
-// تقویم فقط با ورود دستیِ ادمین پر می‌شود.
+/**
+ * همیشه true — و این عمدی‌ست.
+ *
+ * قبلاً وقتی کلیدی ست نبود این false می‌شد و کرانِ تقویم بی‌سر‌و‌صدا
+ * (با وضعیتِ ۲۰۰ و فیلدِ `skipped`) هیچ‌کاری نمی‌کرد؛ هیچ لاگِ خطایی،
+ * هیچ نشانه‌ای در UI. تقویم عملاً مرده بود و کسی نمی‌فهمید. حالا همیشه
+ * یک منبع هست (کلیدی یا رایگان)، پس دیگر حالتِ «تنظیم‌نشده» وجود ندارد.
+ * تابع برای سازگاریِ فراخوان‌ها نگه داشته شده.
+ */
 export function externalProviderConfigured(): boolean {
-  return !!(process.env.ECONOMIC_CALENDAR_URL || process.env.ECONOMIC_CALENDAR_API_KEY);
+  return true;
 }
 
+/**
+ * نامِ منبع — دقیقاً با همان اولویتی که fetchExternalEvents منبع را
+ * انتخاب می‌کند. این دو *باید* هم‌نظر بمانند: `source` نیمی از کلیدِ یکتای
+ * upsert است، پس اگر این تابع منبعی را بگوید که واقعاً fetch نشده، هر sync
+ * ردیف‌های تازه می‌سازد به‌جای به‌روزکردنِ ردیف‌های موجود.
+ */
 export function externalProviderName(): string {
   if (process.env.ECONOMIC_CALENDAR_SOURCE) return process.env.ECONOMIC_CALENDAR_SOURCE;
-  return process.env.ECONOMIC_CALENDAR_URL ? "EXTERNAL" : "JBLANKED";
+  if (process.env.ECONOMIC_CALENDAR_URL) return "EXTERNAL";
+  return process.env.ECONOMIC_CALENDAR_API_KEY ? "JBLANKED" : "FOREXFACTORY";
 }
 
 function pickString(row: Record<string, unknown>, keys: string[]): string | null {
@@ -238,7 +273,13 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
     if (!currency) continue;
 
     out.push({
-      externalId: pickString(row, ["id", "eventId", "calendarId", "ID", "Id"]) || `${currency}-${title}-${occursAt.toISOString()}`,
+      // `Event_ID` همان شناسه‌ی پایدارِ فیدِ MQL5ِ JBlanked است و قبلاً در این
+      // فهرست نبود — بدونش externalId به کلیدِ ترکیبیِ پایین می‌افتاد که
+      // *زمانِ رویداد* را در خود دارد. اگر منبع برای ردیفِ منتشرشده حتی یک
+      // ثانیه زمانِ متفاوت بدهد، آن کلید عوض می‌شود و upsert به‌جای به‌روزکردنِ
+      // همان ردیف، یک ردیفِ دوم می‌سازد: کاربر یک خطِ تکراری می‌بیند و خطِ
+      // اصلی همچنان «—» می‌ماند.
+      externalId: pickString(row, ["id", "eventId", "calendarId", "ID", "Id", "Event_ID"]) || `${currency}-${title}-${occursAt.toISOString()}`,
       title: title.slice(0, 160),
       country: (currencyMeta(currency)?.country || rawCountry || currency).toUpperCase().slice(0, 2),
       currency: currency.slice(0, 8),
@@ -295,12 +336,43 @@ export async function fetchExternalEvents(opts?: { fast?: boolean }): Promise<No
   if (customUrl) {
     return fetchOneFeed(customUrl, key ? { Authorization: `Bearer ${key}` } : undefined);
   }
-  if (!key) {
-    throw new Error(
-      "ECONOMIC_CALENDAR_API_KEY تنظیم نشده — JBlanked بدونِ کلید کار نمی‌کند. رویدادها را دستی از پنلِ ادمین اضافه کن یا کلید را (از jblanked.com/profile) در env ست کن."
-    );
+  if (key) {
+    return fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), { Authorization: `Api-Key ${key}` });
   }
-  return fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), { Authorization: `Api-Key ${key}` });
+  // بدونِ کلید: فیدِ رایگان. در حالتِ «تند» (نزدیکِ لحظه‌ی انتشار) فقط
+  // فایلِ همین هفته لازم است — تنها جایی‌ست که رویدادِ در حالِ انتشار
+  // می‌تواند باشد، و هر ۵ثانیه گرفتنِ سه فایل بی‌دلیل است.
+  return fetchFreeFeeds(opts?.fast ? [FREE_FEED_THIS_WEEK] : FREE_FEED_URLS);
+}
+
+/**
+ * چند فیدِ هفتگی را می‌گیرد و یکی می‌کند.
+ *
+ * دو تصمیم که هردو از یک جنسِ «هیچ‌وقت داده‌ی موجود را با خالی خراب نکن»‌اند:
+ *   • خطای یک فایل کلِ sync را نمی‌شکند — فقط وقتی پرتاب می‌کنیم که *همه*
+ *     شکست خورده باشند. یک فایلِ در دسترس بهتر از هیچ است.
+ *   • در هم‌پوشانیِ فایل‌ها (یک رویداد هم در thisweek هم در lastweek)،
+ *     نسخه‌ای که actual دارد برنده است — وگرنه یک فایلِ عقب‌مانده می‌توانست
+ *     عددِ منتشرشده را با null بازنویسی کند.
+ */
+async function fetchFreeFeeds(urls: string[]): Promise<NormalizedEvent[]> {
+  const results = await Promise.allSettled(urls.map((u) => fetchOneFeed(u, undefined)));
+  const ok = results.filter((r): r is PromiseFulfilledResult<NormalizedEvent[]> => r.status === "fulfilled");
+  if (!ok.length) {
+    const reasons = results
+      .map((r) => (r.status === "rejected" ? (r.reason instanceof Error ? r.reason.message : String(r.reason)) : ""))
+      .filter(Boolean);
+    throw new Error(`هیچ‌کدام از فیدهای تقویم اقتصادی در دسترس نبودند: ${reasons.join(" | ")}`);
+  }
+
+  const merged = new Map<string, NormalizedEvent>();
+  for (const r of ok) {
+    for (const e of r.value) {
+      const prev = merged.get(e.externalId);
+      if (!prev || (!prev.actual && e.actual)) merged.set(e.externalId, e);
+    }
+  }
+  return [...merged.values()];
 }
 
 /**
@@ -373,7 +445,25 @@ export const SLOW_SYNC_INTERVAL_MS = 10 * 60 * 1000;
 const FAST_POLL_INTERVAL_MS = 5 * 1000;
 const SETTLE_GRACE_MS = 3 * 1000;
 const PENDING_LOOKAHEAD_MS = 10 * 60 * 1000;
-const PENDING_LOOKBACK_MS = 10 * 60 * 1000;
+
+/**
+ * چقدر بعد از زمانِ رویداد، هر ۵ثانیه دنبالِ actual بگردیم.
+ *
+ * طبقِ درخواستِ صریح: «تا حدود ۳ دقیقه بعد، هر ۵ ثانیه، تا وقتی آپدیت
+ * شود». پیش از این ۱۰ دقیقه بود — که برای رویدادهایی که اصلاً actual
+ * ندارند (سخنرانی، تعطیلی) یعنی ۱۲۰ بار پشتِ‌سرِ هم گرفتنِ فید بدونِ
+ * هیچ نتیجه‌ای.
+ *
+ * حلقه به‌محضِ رسیدنِ actual خودش می‌ایستد، نه سرِ وقت: کوئریِ pending
+ * شرطِ `actual: null` دارد، پس ردیفِ پرشده دیگر اصلاً pending نیست.
+ *
+ * **همین یک ثابت هم سمتِ سرور و هم سمتِ کلاینت استفاده می‌شود**
+ * (EconomicCalendarPanel آن را import می‌کند). قبلاً دو عددِ جدا بودند —
+ * ۱۰دقیقه سمتِ سرور و ۱۵دقیقه سمتِ کلاینت — یعنی کلاینت ۵ دقیقه بیشتر
+ * از چیزی که سرور اصلاً به‌روز می‌کرد، بی‌فایده poll می‌زد.
+ */
+export const RELEASE_WATCH_WINDOW_MS = 3 * 60 * 1000;
+const PENDING_LOOKBACK_MS = RELEASE_WATCH_WINDOW_MS;
 
 /**
  * آیا همین حالا منتظرِ انتشارِ یک رویدادیم؟ (رویدادِ بی‌actual که زمانش
@@ -420,9 +510,10 @@ export async function computeNextSyncDelayMs(prisma: {
   const msUntilDue = dueAt - now;
   if (msUntilDue <= 0) {
     // زمانِ رویداد + مهلتِ کوتاه گذشته ولی actual هنوز نیومده (یا این
-    // رویداد اصلا actual نداره، مثلِ سخنرانی) — تا سقفِ بازه‌ی بالا
-    // (۱۰دقیقه‌ی بعدِ زمانش) هر ۱۵ثانیه دوباره چک می‌کنیم؛ بعدش خودش از
-    // بازه‌ی pending بیرون می‌افته و به حالتِ آروم برمی‌گرده.
+    // رویداد اصلا actual نداره، مثلِ سخنرانی) — تا سقفِ
+    // RELEASE_WATCH_WINDOW_MS (۳دقیقه‌ی بعدِ زمانش) هر ۵ثانیه دوباره چک
+    // می‌کنیم؛ بعدش خودش از بازه‌ی pending بیرون می‌افته و به حالتِ آروم
+    // برمی‌گرده.
     return FAST_POLL_INTERVAL_MS;
   }
   // هنوز نرسیده — دقیقا تا لحظه‌ی سررسید+مهلت صبر کن، مگر اینکه از

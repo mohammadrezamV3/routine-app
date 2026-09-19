@@ -9,7 +9,7 @@ import { getSetting, setSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
 import {
   CALENDAR_CURRENCIES, EconomicEventDto, EconomicImpact,
-  IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, compareActualToForecast,
+  IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, RELEASE_WATCH_WINDOW_MS, compareActualToForecast,
 } from "@/lib/economicCalendar";
 import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
 import {
@@ -70,7 +70,10 @@ const DEFAULT_DAY_WINDOW = 5;
 const LIVE_POLL_MS = 5_000;
 /** پنجره‌ای که یک رویدادِ بی‌actual «در حالِ انتشار» حساب می‌شود */
 const PENDING_BEFORE_MS = 2 * 60_000;
-const PENDING_AFTER_MS = 15 * 60_000;
+// بعد از زمانِ رویداد، دقیقاً همان پنجره‌ای که سرور هم در آن دنبالِ actual
+// می‌گردد (lib/economicCalendar.ts). دو عددِ جدا یعنی کلاینت یا زودتر از
+// سرور دست می‌کشد (آپدیت را نمی‌بیند) یا دیرتر (بی‌فایده poll می‌زند).
+const PENDING_AFTER_MS = RELEASE_WATCH_WINDOW_MS;
 
 export function EconomicCalendarPanel() {
   // مثلِ خودِ فارکس‌فکتوری: یک روز در یک لحظه.

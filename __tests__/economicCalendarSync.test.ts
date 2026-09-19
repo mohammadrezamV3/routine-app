@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { normalizeExternalEvents, syncEconomicCalendar, compareActualToForecast } from "@/lib/economicCalendar";
+import {
+  RELEASE_WATCH_WINDOW_MS, compareActualToForecast, computeNextSyncDelayMs,
+  normalizeExternalEvents, syncEconomicCalendar,
+} from "@/lib/economicCalendar";
 
 // رگرسیونِ گزارشِ «اکشوال‌ها هیچ‌وقت نمی‌آیند»: مسیرِ کامل fetch → نرمال‌سازی
 // → upsert باید در پاسِ دوم مقدارِ actual تازه‌منتشرشده را روی همان ردیف
@@ -109,10 +112,115 @@ describe("syncEconomicCalendar", () => {
     expect(row.actual).toBe("173K");
   });
 
-  it("بدونِ ECONOMIC_CALENDAR_API_KEY خطایِ روشن می‌دهد، نه خطایِ شبکه‌ایِ مبهم", async () => {
+  it("بدونِ ECONOMIC_CALENDAR_API_KEY هم کار می‌کند — سراغِ فیدِ رایگان می‌رود", async () => {
+    // این تست قبلاً برعکس بود (انتظارِ پرتابِ خطا) و دقیقاً همان رفتاری را
+    // تثبیت می‌کرد که باعثِ «actual هیچ‌وقت نمی‌آید» می‌شد: نبودِ کلید یعنی
+    // هیچ داده‌ای، برای همیشه.
     vi.unstubAllEnvs();
     const prisma = fakePrisma();
-    await expect(syncEconomicCalendar(prisma as any)).rejects.toThrow(/ECONOMIC_CALENDAR_API_KEY/);
+    stubFeed(ffRow("173K"));
+
+    const res = await syncEconomicCalendar(prisma as any);
+
+    expect(res.source).toBe("FOREXFACTORY");
+    expect(res.created).toBe(1);
+    expect([...prisma.rows.values()][0].actual).toBe("173K");
+  });
+});
+
+// ── فیدِ رایگانِ فارکس‌فکتوری ────────────────────────────────────────────
+// شکلش با JBlanked فرق دارد: کلیدها کوچک‌اند، `country` در واقع *کد ارز*
+// است، تاریخ ISO با آفست است، و شناسه‌ی پایداری وجود ندارد.
+
+const ffRow = (actual: string) => [{
+  title: "Non-Farm Employment Change",
+  country: "USD",
+  date: "2026-09-16T08:30:00-04:00",
+  impact: "High",
+  forecast: "160K",
+  previous: "142K",
+  actual,
+}];
+
+describe("فیدِ رایگان (بدونِ کلید)", () => {
+  beforeEach(() => { vi.unstubAllEnvs(); });
+
+  it("کدِ ارز را از فیلدِ country می‌خواند و تاریخِ ISO با آفست را درست می‌فهمد", () => {
+    const [e] = normalizeExternalEvents(ffRow("173K"));
+    expect(e.currency).toBe("USD");
+    expect(e.country).toBe("US");
+    expect(e.impact).toBe("HIGH");
+    expect(e.actual).toBe("173K");
+    // ۰۸:۳۰ به وقتِ ‎-۰۴:۰۰ یعنی ۱۲:۳۰ UTC
+    expect(e.occursAt.toISOString()).toBe("2026-09-16T12:30:00.000Z");
+  });
+
+  it("actualِ خالی null می‌شود ولی externalId همان می‌ماند", () => {
+    const before = normalizeExternalEvents(ffRow(""))[0];
+    const after = normalizeExternalEvents(ffRow("173K"))[0];
+    expect(before.actual).toBeNull();
+    expect(after.externalId).toBe(before.externalId);
+  });
+
+  it("actualِ منتشرشده روی همان ردیف می‌نشیند (بدونِ هیچ کارِ ادمین)", async () => {
+    const prisma = fakePrisma();
+
+    stubFeed(ffRow(""));
+    await syncEconomicCalendar(prisma as any);
+    expect([...prisma.rows.values()][0].actual).toBeNull();
+
+    stubFeed(ffRow("173K"));
+    const second = await syncEconomicCalendar(prisma as any);
+    expect(second.created).toBe(0);
+    expect(prisma.rows.size).toBe(1);
+    expect([...prisma.rows.values()][0].actual).toBe("173K");
+  });
+
+  it("یک فیدِ از‌کارافتاده کلِ sync را نمی‌شکند", async () => {
+    const prisma = fakePrisma();
+    let call = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      // اولین فایل (lastweek) خراب، بقیه سالم
+      if (++call === 1) return new Response("boom", { status: 503 });
+      return new Response(JSON.stringify(ffRow("173K")), { status: 200, headers: { "content-type": "application/json" } });
+    }));
+
+    const res = await syncEconomicCalendar(prisma as any);
+    expect(res.created).toBe(1);
+    expect([...prisma.rows.values()][0].actual).toBe("173K");
+  });
+
+  it("فایلِ عقب‌مانده، actualِ منتشرشده را با خالی بازنویسی نمی‌کند", async () => {
+    const prisma = fakePrisma();
+    let call = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      // یک فایل هنوز actual ندارد، فایلِ دیگر دارد — همان رویداد
+      const body = ++call === 1 ? ffRow("") : ffRow("173K");
+      return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+    }));
+
+    await syncEconomicCalendar(prisma as any);
+    expect(prisma.rows.size).toBe(1);
+    expect([...prisma.rows.values()][0].actual).toBe("173K");
+  });
+
+  it("وقتی هیچ فیدی در دسترس نیست، صریح خطا می‌دهد (نه سکوت)", async () => {
+    const prisma = fakePrisma();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })));
+    await expect(syncEconomicCalendar(prisma as any)).rejects.toThrow(/فیدهای تقویم اقتصادی/);
+  });
+});
+
+describe("externalProviderName", () => {
+  beforeEach(() => { vi.unstubAllEnvs(); });
+
+  it("با اولویتِ واقعیِ انتخابِ منبع هم‌نظر است", async () => {
+    const { externalProviderName } = await import("@/lib/economicCalendar");
+    expect(externalProviderName()).toBe("FOREXFACTORY");
+    vi.stubEnv("ECONOMIC_CALENDAR_API_KEY", "k");
+    expect(externalProviderName()).toBe("JBLANKED");
+    vi.stubEnv("ECONOMIC_CALENDAR_URL", "https://example.test/feed.json");
+    expect(externalProviderName()).toBe("EXTERNAL");
   });
 });
 
@@ -122,5 +230,57 @@ describe("compareActualToForecast", () => {
     expect(compareActualToForecast("-1.4M", "-0.9M")).toBe("down");
     expect(compareActualToForecast("3.2%", "3.2%")).toBe("flat");
     expect(compareActualToForecast(null, "3.2%")).toBeNull();
+  });
+});
+
+// ── پنجره‌ی رصدِ انتشار ─────────────────────────────────────────────────
+// خواسته‌ی صریح: «تا حدود ۳ دقیقه بعد، هر ۵ ثانیه، تا وقتی آپدیت شود».
+
+/** prismaی قلابی که واقعاً شرطِ where را اعمال می‌کند (وگرنه تست چیزی را نمی‌سنجد). */
+function prismaWithEvents(rows: { occursAt: Date; actual: string | null }[]) {
+  return {
+    economicEvent: {
+      findFirst: async ({ where }: any) => {
+        const match = rows
+          .filter((r) => (where.actual === null ? r.actual === null : true))
+          .filter((r) => r.occursAt >= where.occursAt.gte && r.occursAt <= where.occursAt.lte)
+          .sort((a, b) => a.occursAt.getTime() - b.occursAt.getTime())[0];
+        return match ? { occursAt: match.occursAt } : null;
+      },
+    },
+  };
+}
+
+const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
+
+describe("computeNextSyncDelayMs — رصدِ لحظه‌ی انتشار", () => {
+  it("تا ۳ دقیقه بعدِ رویدادِ بی‌actual، هر ۵ ثانیه چک می‌کند", async () => {
+    for (const m of [0.5, 1, 2, 2.9]) {
+      const prisma = prismaWithEvents([{ occursAt: minutesAgo(m), actual: null }]);
+      expect(await computeNextSyncDelayMs(prisma as any)).toBe(5_000);
+    }
+  });
+
+  it("بعد از ۳ دقیقه دست می‌کشد و به حالتِ آرام برمی‌گردد", async () => {
+    const prisma = prismaWithEvents([{ occursAt: minutesAgo(4), actual: null }]);
+    expect(await computeNextSyncDelayMs(prisma as any)).toBe(10 * 60 * 1000);
+  });
+
+  it("به‌محضِ رسیدنِ actual، رصدِ تند تمام می‌شود (نه اینکه ۳ دقیقه را صبر کند)", async () => {
+    const prisma = prismaWithEvents([{ occursAt: minutesAgo(1), actual: "173K" }]);
+    expect(await computeNextSyncDelayMs(prisma as any)).toBe(10 * 60 * 1000);
+  });
+
+  it("رویدادی که هنوز نرسیده: دقیقاً تا لحظه‌ی سررسید صبر می‌کند", async () => {
+    const in30s = new Date(Date.now() + 30_000);
+    const prisma = prismaWithEvents([{ occursAt: in30s, actual: null }]);
+    const delay = await computeNextSyncDelayMs(prisma as any);
+    // ۳۰ثانیه تا رویداد + ۳ثانیه مهلتِ ته‌نشینی
+    expect(delay).toBeGreaterThan(30_000);
+    expect(delay).toBeLessThanOrEqual(34_000);
+  });
+
+  it("پنجره همان چیزی‌ست که کلاینت هم استفاده می‌کند", () => {
+    expect(RELEASE_WATCH_WINDOW_MS).toBe(3 * 60 * 1000);
   });
 });

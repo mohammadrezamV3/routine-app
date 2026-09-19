@@ -3,16 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { isValidCronRequest } from "@/lib/cronAuth";
 import { logError } from "@/lib/errorLog";
 import {
-  computeNextSyncDelayMs, externalProviderConfigured, externalProviderName,
-  hasPendingRelease, SLOW_SYNC_INTERVAL_MS, syncEconomicCalendar,
+  computeNextSyncDelayMs, externalProviderName,
+  hasPendingRelease, syncEconomicCalendar,
 } from "@/lib/economicCalendar";
 
 // POST /api/cron/economic-calendar — همگام‌سازی تقویم اقتصادی از منبع
 // بیرونی. مثل بقیه‌ی کران‌ها پشت CRON_SECRET قفل است و یا یک crontab
 // بیرونی صدایش می‌زند یا خودِ cluster.js (primary) از داخل کانتینر.
 //
-// اگر هیچ منبعی تنظیم نشده باشد، این روت عمدا خطا نمی‌دهد و فقط گزارش
-// می‌کند که کاری نبود — تقویم در آن حالت از ورود دستی ادمین پر می‌شود.
+// دیگر حالتِ «منبعی تنظیم نشده» وجود ندارد: بدونِ کلید هم فیدِ رایگان
+// (فارکس‌فکتوری) گرفته می‌شود. قبلاً این روت در آن حالت بی‌صدا ۲۰۰ با
+// `skipped` برمی‌گرداند و cluster.js آن را موفق می‌دید — تقویم ماه‌ها
+// مرده می‌ماند بدونِ اینکه جایی خطایی دیده شود.
 //
 // `nextCheckInMs` توی پاسخ: طبقِ درخواستِ صریح («سرِ ساعتِ ایونت دقیقا
 // ۱۰ثانیه بعدش اپدیت شه، در غیرِ این حالت نیازی نیست تند‌تند اپدیت شه»)
@@ -22,10 +24,6 @@ export async function POST(req: NextRequest) {
   if (!isValidCronRequest(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!externalProviderConfigured()) {
-    return NextResponse.json({ ok: true, skipped: "منبع بیرونی تنظیم نشده — تقویم از ورود دستی پر می‌شود", nextCheckInMs: SLOW_SYNC_INTERVAL_MS });
-  }
-
   const source = externalProviderName();
   try {
     // نزدیکِ لحظه‌ی انتشارِ یک خبر، پاسِ «تند» می‌زنیم (فقط فیدِ هفته‌ی
