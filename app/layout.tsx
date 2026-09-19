@@ -13,6 +13,7 @@ import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
+import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
 import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
 import { SITE_URL } from "@/lib/seo";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
@@ -166,6 +167,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* تشخیص دستگاه ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
             همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
         <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
+        {/* بازخوردِ کلیک/لمس روی هر باکسِ قابل‌کلیک — چه با موس چه با دست */}
+        <script dangerouslySetInnerHTML={{ __html: TAP_FEEDBACK_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
         <InlineBootstrap />
