@@ -125,7 +125,16 @@ export function DashDateSelector({
       const w = el.clientWidth;
       if (w <= 0) return;
       const isSm = window.innerWidth >= 640;
-      let pillWidth = isSm ? 92 : 62;
+      // موبایل: همیشه دقیقا ۵ روز — صفحه‌ی خیلی باریک (یا اسمِ روزِ بلند مثل
+      // «چهارشنبه») نباید باعث بشه محاسبه‌ی داینامیک عملا بره روی ۳. اگه ۵تا
+      // جا نشه، همون نوار (overflow-x-auto) با انگشت اسکرول می‌خوره — قبلا هم
+      // این رفتار برای همین بود. دسکتاپ دست‌نخورده می‌مونه: هرچقدر واقعا جا
+      // داره همون تعداد نشون داده می‌شه.
+      if (!isSm) {
+        onVisibleCountChange(5);
+        return;
+      }
+      let pillWidth = 92;
       el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
         const cs = getComputedStyle(pill);
         const padding = parseFloat(cs.paddingInlineStart || "0") + parseFloat(cs.paddingInlineEnd || "0");
