@@ -238,9 +238,22 @@ export function EconomicCalendarPanel() {
         setDayWindow(5);
         return;
       }
+      // باگ: پیل‌ها flex:1 دارن و فضای خالیِ نوار رو پر می‌کنن (grow)، پس
+      // عرضِ رندرشده‌ی خودِ پیل به تعدادِ فعلیِ روزها وابسته‌ست و این حلقه
+      // رو ناپایدار می‌کنه (کمتر روز ← پیلِ پهن‌تر ← تخمینِ باز هم کمتر →
+      // قفل‌شدن رویِ همون عددِ فعلی، نه حداکثرِ واقعیِ جاگیری). دقیقا همون
+      // چیزی که DashDateSelector قبلا برایش فیکس شد: به‌جای عرضِ خودِ پیل،
+      // عرضِ *محتوای* پیل (اسپن‌های داخلش) اندازه گرفته می‌شه — که مستقل از
+      // کش‌اومدنِ والدشه.
       let pillWidth = 92;
       el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
-        pillWidth = Math.max(pillWidth, Math.ceil(pill.getBoundingClientRect().width));
+        const cs = getComputedStyle(pill);
+        const padding = parseFloat(cs.paddingInlineStart || "0") + parseFloat(cs.paddingInlineEnd || "0");
+        let content = 0;
+        for (const child of Array.from(pill.children)) {
+          content = Math.max(content, child.getBoundingClientRect().width);
+        }
+        pillWidth = Math.max(pillWidth, Math.ceil(content + padding));
       });
       const gap = 6;
       const n = Math.floor((w + gap) / (pillWidth + gap));

@@ -55,16 +55,39 @@ export function TradePageShell({
     const el = boxRef.current;
     if (!el) return;
     const apply = () => {
-      if (window.innerWidth < 1024) { el.style.removeProperty("--tp-h"); return; }
+      if (window.innerWidth < 1024) {
+        el.style.removeProperty("--tp-h");
+        document.documentElement.style.removeProperty("--tp-sb");
+        return;
+      }
       const top = el.getBoundingClientRect().top;
       const bodyPad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
       const h = window.innerHeight - top - Math.min(bodyPad, 24) - 12;
       el.style.setProperty("--tp-h", `${Math.max(360, Math.round(h))}px`);
+      // باگِ «دکمه‌ی افزودن از باکس زده بیرون»: این ناحیه (نه کل صفحه)
+      // اسکرول می‌شود، پس وقتی محتوا واقعا سرریز کند یک اسکرول‌بارِ واقعیِ
+      // مرورگر عرضش را از خودِ باکس می‌خورد — ولی سرصفحه (تایتل+دکمه‌ی
+      // افزودن) بیرونِ همین ناحیه است و آن عرض را نمی‌بیند، پس چند پیکسل
+      // پهن‌تر از باکسِ زیرش می‌ماند. عرضِ واقعیِ اسکرول‌بار (که بسته به
+      // مرورگر/سیستم‌عامل فرق می‌کند) اندازه گرفته می‌شود تا سرصفحه هم
+      // دقیقا همان‌قدر از سمتِ دکمه تو برود.
+      const sb = Math.max(0, Math.round(el.offsetWidth - el.clientWidth));
+      document.documentElement.style.setProperty("--tp-sb", `${sb}px`);
     };
     apply();
     const t = setTimeout(apply, 460);
     window.addEventListener("resize", apply);
-    return () => { clearTimeout(t); window.removeEventListener("resize", apply); };
+    // محتوا (تعداد ردیف‌ها) می‌تواند بدونِ تغییرِ اندازه‌ی پنجره عوض شود —
+    // افزودن/حذفِ یک آیتم ممکن است باعث ظاهر/ناپدیدشدنِ اسکرول‌بار شود، پس
+    // عرضش هم باید دوباره اندازه گرفته شود.
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", apply);
+      ro.disconnect();
+      document.documentElement.style.removeProperty("--tp-sb");
+    };
   }, [noScroll, status]);
 
   return (

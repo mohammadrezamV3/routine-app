@@ -1063,30 +1063,6 @@
     .trade-headline-goal .trade-goal-ring-pct{ font-size:11px; }
   }
 
-  /* دستگیره‌ی بازکردنِ بقیه‌ی آمارها: بی‌متن — فقط یک پیکانِ رو به پایینِ
-     اکسنت‌رنگ با نبضِ آرام. سطحِ لمسی کلِ عرض است، ولی چیزی که دیده
-     می‌شود همان پیکانِ کوچک است. */
-  .trade-stats-handle{
-    display:flex; align-items:center; justify-content:center; width:100%;
-    padding:6px 0 4px; border:none; border-radius:0; color:var(--accent);
-    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  }
-  body[data-theme="light"] .trade-stats-handle, body:not([data-theme="light"]) .trade-stats-handle{
-    background:none; box-shadow:none;
-  }
-  .trade-stats-handle svg{
-    animation:trade-handle-pulse 2.2s ease-in-out infinite;
-    transition:transform .28s cubic-bezier(.22,1,.36,1);
-  }
-  .trade-stats-handle.open svg{ transform:rotate(180deg); animation:none; }
-  @keyframes trade-handle-pulse{
-    0%, 100%{ opacity:.5; transform:translateY(0); }
-    50%{ opacity:1; transform:translateY(2px); }
-  }
-  @media (prefers-reduced-motion:reduce){
-    .trade-stats-handle svg{ animation:none; opacity:.8; }
-  }
-
   /* دکمه‌ی «افزودن» بالای لیست تریدها — بدونِ بک‌گراند (درخواستِ صریح) */
   .trade-add-btn{
     display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:12px;
@@ -1101,16 +1077,9 @@
     background:none; box-shadow:none;
   }
 
-  /* باز/بسته‌شدنِ نرم: grid-template-rows از 0fr به 1fr — به ارتفاعِ واقعیِ
-     محتوا گره خورده، پس برخلاف max-heightِ حدسی نه می‌پرد نه نصفه می‌ماند. */
-  .trade-stats-collapse{
-    display:grid; grid-template-rows:0fr; opacity:0;
-    transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1), opacity .24s ease;
-  }
-  .trade-stats-collapse.open{ grid-template-rows:1fr; opacity:1; }
-  .trade-stats-collapse-inner{ overflow:hidden; min-height:0; }
-  .trade-stats-collapse .trade-stats-grid{ padding-top:10px; }
-  @media (prefers-reduced-motion:reduce){ .trade-stats-collapse{ transition:none; } }
+  /* آمارهای اضافی حالا همیشه دیده می‌شوند (بدونِ کشوی باز/بسته) — فاصله‌ی
+     بالای گریدشان از خودِ سه آمارِ سرخط. */
+  .trade-headline-stats + .trade-stats-grid{ margin-top:10px; }
 
   /* تقویم وقتی داخلِ همان باکس است: نه سطحِ جدا می‌گیرد نه حاشیه‌ی بالا */
   .trade-calendar-box.embedded{
@@ -1135,19 +1104,23 @@
      تقویم به‌جای روی‌هم، کنارِ هم. قبلاً این باکس روی دسکتاپ یک ستونِ بلند
      بود و کاربر برای رسیدن به تریدهای همان روز باید از کلِ تقویم رد می‌شد،
      در حالی که دو طرفِ تقویم خالی بود. موبایل دست‌نخورده می‌ماند (این بلوک
-     فقط ۱۰۲۴+ است) چون آن‌جا کنارِ هم‌گذاشتن یعنی دو ستونِ خرد و ناخوانا. */
+     فقط ۱۰۲۴+ است) چون آن‌جا کنارِ هم‌گذاشتن یعنی دو ستونِ خرد و ناخوانا.
+     طبقِ درخواستِ صریح: تقویم سمتِ راستِ باکس، جزئیات/آمار سمتِ چپ — با
+     `order` جابه‌جا می‌شود (نه تغییرِ ترتیبِ DOM) چون ترتیبِ منطقی/خواندنِ
+     صفحه (اول آمار، بعد تقویم) نباید عوض شود. */
   @media (min-width:1024px){
     .trade-desktop .trade-journal-box{
-      display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 480px);
+      display:grid; grid-template-columns:minmax(0, 480px) minmax(0, 1fr);
       align-items:start;
     }
-    .trade-desktop .trade-journal-box .trade-journal-stats-part{ padding:16px; }
+    .trade-desktop .trade-journal-box .trade-journal-stats-part{ padding:16px; order:2; }
     /* ستونِ آمار حالا نصفِ عرض است، پس ۵ ستونِ کاشیِ آمار آن‌جا خرد می‌شد. */
     .trade-desktop .trade-journal-box .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); }
     .trade-desktop .trade-journal-box .trade-calendar-box.embedded{
-      padding:16px;
-      /* در RTL، inline-start یعنی لبه‌ی راستِ تقویم — همان مرزِ بینِ دو ستون. */
-      border-inline-start:1px solid var(--line);
+      padding:16px; order:1;
+      /* در RTL، inline-end یعنی لبه‌ی چپِ تقویم — همان مرزِ بینِ دو ستون
+         (تقویم حالا ستونِ راست است، پس مرز با ستونِ آمار سمتِ چپِ خودش است). */
+      border-inline-end:1px solid var(--line);
     }
     .trade-desktop .trade-journal-box .trade-calendar-box.embedded .cal-grid,
     .trade-desktop .trade-journal-box .trade-calendar-box.embedded .cal-controls{
@@ -5117,7 +5090,6 @@ html[data-perf="low"] .ai-sparkle-twinkle,
 html[data-perf="low"] .tm-station.active .tm-marker,
 html[data-perf="low"] .module-gate-cta,
 html[data-perf="low"] .task-check-missed,
-html[data-perf="low"] .trade-stats-handle svg,
 html[data-perf="low"] .exercise-set-circle-live::after,
 html[data-perf="low"] .routine-ai-action.is-recording,
 html[data-perf="low"] .trade-mt-live-dot::after{
@@ -5698,12 +5670,14 @@ body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-to
   transition:color .18s ease;
 }
 .trade-check-row:last-child{ border-bottom:none; }
-@media (hover:hover){ .trade-check-row:hover{ background:none; color:var(--text); } }
+/* طبقِ درخواستِ صریح: هاور دیگر رنگِ متن/چک‌باکس رو عوض نمی‌کنه (که با
+   حالتِ done قاطی می‌شد) — فقط یک بک‌گراندِ خیلی کم‌رنگ، همون‌قدر که کاربر
+   بفهمه روی همین ردیف/دکمه‌ست. */
+@media (hover:hover){ .trade-check-row:hover{ background:rgba(var(--surface-rgb),.12); border-radius:10px; } }
 .trade-check-box{
   width:17px; height:17px; min-width:17px; border-radius:6px; border:1.5px solid var(--line);
   position:relative; transition:border-color .18s ease, background .18s ease, transform .15s ease;
 }
-@media (hover:hover){ .trade-check-row:hover .trade-check-box{ border-color:var(--accent); } }
 .trade-check-row.done .trade-check-box{ background:var(--accent); border-color:var(--accent); }
 .trade-check-row.done .trade-check-box::after{
   content:""; position:absolute; inset:0; margin:auto; width:4px; height:8px;
@@ -5881,9 +5855,15 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
      • ردیفِ حقایق و نوارِ هدف داخلِ هر کارت
    مخفی‌سازی با CSS انجام می‌شود نه شرطِ جاوااسکریپتی، چون تشخیصِ عرض در
    رندرِ سرور ممکن نیست و هر راهِ JSای این‌جا یعنی hydration mismatch. */
-.trade-journal-kpis,
 .trade-account-facts,
 .trade-account-goalbar{ display:none; }
+/* طبقِ درخواستِ صریح، جمعِ کلِ همه‌ی حساب‌ها دیگه مخصوصِ دسکتاپ نیست —
+   روی موبایل هم دو‌ستونه دیده می‌شود؛ از ۱۰۲۴px به بالا همان گریدِ
+   پنج‌ستونه‌ی قبلی جایش را می‌گیرد. */
+.trade-journal-kpis{
+  display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;
+  margin:2px 0 10px;
+}
 
 @media (min-width:1024px){
   .trade-journal-grid{
@@ -6031,7 +6011,15 @@ body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-fi
 
 /* ردیف تایتل + دکمه‌ی «افزودن» هم‌ردیف، چپ‌چین (ادامه‌ی همون الگوی
    .tm-head-row/.weekly-head-row). */
-.trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+/* padding-inline-end: جبرانِ عرضِ اسکرول‌بارِ واقعیِ `.trade-noscroll-box`
+   (پایین‌تر همین صفحه) — وقتی آن ناحیه واقعا سرریز می‌کند و اسکرول‌بار
+   می‌گیرد، باکسِ زیرش همان‌قدر باریک‌تر می‌شود؛ این سرصفحه (تایتل+دکمه‌ی
+   افزودن) خودش داخلِ آن ناحیه نیست، پس بدونِ این جبران چند پیکسل پهن‌تر
+   از باکسِ زیرش می‌ماند و دکمه انگار از باکس بیرون زده — دقیقا باگِ
+   گزارش‌شده. مقدارِ واقعیِ عرضِ اسکرول‌بار توسطِ TradePageShell اندازه
+   گرفته و در `--tp-sb` گذاشته می‌شود؛ صفحه‌هایی که noScroll نیستند اصلا
+   این متغیر را ست نمی‌کنند، پس مقدارِ پیش‌فرض صفر بی‌اثر می‌ماند. */
+.trade-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-inline-end:var(--tp-sb, 0px); box-sizing:border-box; }
 /* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنارِ هم، نه زیرِ هم. هر ردیفِ جدا
    در صفحه‌ی چارت یعنی همان‌قدر ارتفاعِ کمتر برای خودِ چارت. */
 .trade-head-row h1{ margin-bottom:0; }
@@ -6565,6 +6553,10 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 /* باکسِ اخبارِ تقویم به اندازه‌ی محتوایش است، نه نصفِ صفحه — این‌جا بعد از
    `.trade-page-box` می‌آید تا در تساویِ اسپسیفیسیتی برنده شود. */
 .trade-cal-table-box{ min-height:0; padding:12px 14px; margin-top:16px; }
+/* طبقِ درخواستِ صریح: اندازه‌ی این باکس باید اندازه‌ی خودِ چک‌لیست باشه،
+   نه حداقلِ ۵۶۰پیکسلیِ عمومیِ `.trade-page-box` — چک‌لیستِ کوتاه دیگه یک
+   باکسِ نیمه‌خالیِ بلند نمی‌سازه. */
+.trade-checklist-detail-box{ min-height:0; }
 
 /* صفحه‌ی خودش دیگر اسکرول نمی‌خورد؛ همین ناحیه (زیرِ تایتل) داخلش اسکرول
    دارد — طبقِ درخواستِ صریح برایِ یادداشت‌ها/چک‌لیست‌ها/ژورنال. فقط
@@ -6613,7 +6605,6 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 .trade-checklist-row-main .trade-account-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .trade-checklist-row-count{ margin-inline-start:auto; flex-shrink:0; font-size:11.5px; color:var(--muted); }
-@media (hover:hover){ .trade-checklist-row-main:hover .trade-account-name{ color:var(--accent); } }
 
 /* دکمه‌ی محرکِ منوی سه‌نقطه — طبقِ درخواستِ صریح، دقیقاً هم‌شکلِ دکمه‌ی
    سه‌نقطه‌ی «روتین من» (DashTaskRow): دایره‌ی کامل و ثابت (نه مربعِ گردِ
@@ -6708,9 +6699,13 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
        غیرقابلِ‌استفاده باشد. */
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) 380px;
     grid-template-rows:minmax(0,.95fr) minmax(0,.95fr) minmax(0,.85fr);
+    /* باگ: «ثبت معامله» (فقط انتخابِ حساب+دکمه) دو ردیف می‌گرفت و بیشترش
+       خالی می‌ماند، درحالی‌که «چک‌لیست» (لیستِ بلندِ آیتم‌ها) فقط یک ردیفِ
+       کوچیک داشت. جاشون عوض شد: چک‌لیست حالا هم‌قدِ چارت (دو ردیف)، ثبتِ
+       معامله فقط ردیفِ پایین کنارِ چت/تقویم. */
     grid-template-areas:
       "chart chart check"
-      "chart chart entry"
+      "chart chart check"
       "chat  cal   entry";
     gap:12px; align-items:stretch;
   }

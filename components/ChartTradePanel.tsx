@@ -30,6 +30,7 @@ export function ChartTradePanel({
   accounts,
   tags,
   calSystem,
+  initialChecklistId = null,
   onTagCreated,
   onSaved,
 }: {
@@ -37,13 +38,15 @@ export function ChartTradePanel({
   accounts: TradeAccount[];
   tags: TradeTag[];
   calSystem: CalSystem;
+  /** از صفحه‌ی یک چک‌لیستِ تکمیل‌شده اومده باشیم، همون چک‌لیست پیش‌انتخاب می‌شه. */
+  initialChecklistId?: string | null;
   onTagCreated: (t: TradeTag) => void;
   onSaved: () => void;
 }) {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   // طبقِ درخواستِ صریح، چک‌لیست قابلِ عوض‌کردن است — قبلا همیشه اولین
   // چک‌لیست بود و هیچ راهی برای انتخابِ بقیه نبود.
-  const [checklistId, setChecklistId] = useState<string>("");
+  const [checklistId, setChecklistId] = useState<string>(initialChecklistId || "");
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [accountId, setAccountId] = useState<string>("");
   const [formOpen, setFormOpen] = useState(false);
