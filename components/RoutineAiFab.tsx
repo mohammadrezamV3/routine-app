@@ -7,6 +7,7 @@ import { Send, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { primeSettingCache } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import { isoLocal } from "@/lib/jalali";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
 import AIMessage from "@/components/smoothui/components/ai-message";
 import AILoader from "@/components/smoothui/components/ai-loader";
@@ -144,7 +145,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       const res = await fetch("/api/routine/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: body, history }),
+        // تاریخِ محلیِ دستگاه — «امروز/فردا» باید همان روزی باشد که کاربر می‌بیند
+        body: JSON.stringify({ message: body, history, today: isoLocal(new Date()) }),
       });
       const data = await res.json().catch(() => null);
 
@@ -161,6 +163,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         // سرور نوشته، پس کشِ کلاینت باید همان لحظه مقدارِ تازه را بگیرد —
         // وگرنه refresh() زیر، تا انقضای TTL همان فهرستِ قدیمی را می‌خواند.
         primeSettingCache(SETTING_KEYS.customOccurrences, data.occurrences);
+        if (Array.isArray(data.removed)) primeSettingCache(SETTING_KEYS.removedOccurrences, data.removed);
         onChanged();
       }
 

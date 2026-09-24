@@ -35,3 +35,22 @@ export function formatDateTime(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleString("en-CA", { hour12: false });
 }
+
+/**
+ * ISOِ UTC → مقداری که `<input type="datetime-local">` می‌پذیرد.
+ *
+ * دقیقاً معکوسِ `new Date(value).toISOString()` است که مسیرِ ذخیره استفاده
+ * می‌کند، پس باز کردن و بی‌تغییر ذخیره‌کردنِ یک رویداد همان زمانِ قبلی را
+ * می‌نویسد.
+ *
+ * `toISOString().slice(0,16)` این‌جا **غلط** می‌بود: آن UTC می‌دهد ولی
+ * اینپوت مقدار را وقتِ محلی می‌فهمد — یعنی هر بار باز و ذخیره‌کردن، ساعتِ
+ * رویداد را به‌اندازه‌ی افستِ تایم‌زون جابه‌جا می‌کرد (برای ایران ۳:۳۰ در
+ * هر رفت‌وبرگشت).
+ */
+export function toLocalInputValue(iso: string | Date): string {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}

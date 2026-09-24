@@ -11,6 +11,15 @@ function occ(id: string, name: string, jsDay: number, time: string) {
   return { id, name, jsDay, time, startDate: "2026-01-01" };
 }
 
+/**
+ * برنامه‌هایی که از امروز به بعد هنوز اتفاق می‌افتند. تغییر/حذف دیگر
+ * ردیفِ قبلی را پاک نمی‌کند (گذشته حفظ می‌شود) — ردیفِ قدیمی با endDate
+ * بسته می‌ماند، پس تست‌ها باید وضعیتِ «زنده» را بسنجند.
+ */
+function live(r: { occurrences: { endDate?: string }[] }) {
+  return r.occurrences.filter((o) => !o.endDate || o.endDate >= TODAY) as any[];
+}
+
 const BASE = [
   occ("a", "کلاس زبان", 6, "۰۸:۰۰ – ۰۹:۳۰"),
   occ("b", "باشگاه", 6, "۱۸:۰۰ – ۱۹:۳۰"),
@@ -59,9 +68,9 @@ describe("applyOps — افزودن", () => {
     const r = applyOps(BASE, [], [{ op: "add", name: "دویدن", days: [0, 2], start: "۰۶:۰۰", end: "۰۷:۰۰" }], TODAY);
     expect(r.applied).toHaveLength(2);
     expect(r.problems).toHaveLength(0);
-    expect(r.occurrences.filter((o) => o.name === "دویدن")).toHaveLength(2);
-    expect(r.occurrences.find((o) => o.name === "دویدن")!.time).toBe("۰۶:۰۰ – ۰۷:۰۰");
-    expect(r.occurrences.find((o) => o.name === "دویدن")!.startDate).toBe(TODAY);
+    expect(live(r).filter((o) => o.name === "دویدن")).toHaveLength(2);
+    expect(live(r).find((o) => o.name === "دویدن")!.time).toBe("۰۶:۰۰ – ۰۷:۰۰");
+    expect(live(r).find((o) => o.name === "دویدن")!.startDate).toBe(TODAY);
   });
 
   it("«پر بودنِ» ساعت را با پیشنهادِ وقتِ آزاد جواب می‌دهد", () => {
@@ -108,7 +117,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     const r = applyOps(BASE, [], [
       { op: "add", name: "ترید", days: [4], start: "۰۸:۰۰", end: "۰۸:۰۵", repeatEveryMin: 60 },
     ], TODAY);
-    const created = r.occurrences.filter((o) => o.name === "ترید");
+    const created = live(r).filter((o) => o.name === "ترید");
     expect(created).toHaveLength(15); // ۰۸:۰۰ تا ۲۲:۰۰ هر ساعت (پیش‌فرضِ DEFAULT_AWAKE)
     expect(created[0].time).toBe("۰۸:۰۰ – ۰۸:۰۵");
     expect(created[created.length - 1].time).toBe("۲۲:۰۰ – ۲۲:۰۵");
@@ -120,7 +129,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     const r = applyOps(BASE, [], [
       { op: "add", name: "استراحتِ چشم", days: [4], repeatEveryMin: 120 },
     ], TODAY);
-    const created = r.occurrences.filter((o) => o.name === "استراحتِ چشم");
+    const created = live(r).filter((o) => o.name === "استراحتِ چشم");
     expect(created[0].time).toBe("۰۸:۰۰ – ۰۸:۰۵");
   });
 
@@ -128,7 +137,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     const r = applyOps(BASE, [], [
       { op: "add", name: "کشش", days: [4], start: "۰۸:۰۰", end: "۰۸:۱۰", repeatEveryMin: 30, repeatUntil: "۰۹:۰۰" },
     ], TODAY);
-    const created = r.occurrences.filter((o) => o.name === "کشش");
+    const created = live(r).filter((o) => o.name === "کشش");
     expect(created.map((o) => o.time)).toEqual([
       "۰۸:۰۰ – ۰۸:۱۰", "۰۸:۳۰ – ۰۸:۴۰", "۰۹:۰۰ – ۰۹:۱۰",
     ]);
@@ -140,7 +149,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     const r = applyOps(BASE, [], [
       { op: "add", name: "یادآوری", days: [6], start: "۰۸:۰۰", end: "۰۸:۱۰", repeatEveryMin: 60, repeatUntil: "۱۰:۰۰" },
     ], TODAY);
-    const created = r.occurrences.filter((o) => o.name === "یادآوری");
+    const created = live(r).filter((o) => o.name === "یادآوری");
     expect(created).toHaveLength(1);
     expect(created[0].time).toBe("۱۰:۰۰ – ۱۰:۱۰");
     expect(r.applied[0]).toContain("۲ بار به‌خاطرِ تداخل");
@@ -150,7 +159,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     const r = applyOps(BASE, [], [
       { op: "add", name: "غلط", days: [4], start: "۰۸:۰۰", repeatEveryMin: 1 },
     ], TODAY);
-    expect(r.occurrences.some((o) => o.name === "غلط")).toBe(false);
+    expect(live(r).some((o) => o.name === "غلط")).toBe(false);
     expect(r.problems[0]).toContain("بازه‌ی تکرار");
   });
 
@@ -158,7 +167,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     const r = applyOps([], [], [
       { op: "add", name: "زیاد", days: [4], start: "۰۰:۰۰", end: "۰۰:۰۵", repeatEveryMin: 5, repeatUntil: "۲۳:۵۵" },
     ], TODAY, { startMin: 0, endMin: 24 * 60 - 1 });
-    const created = r.occurrences.filter((o) => o.name === "زیاد");
+    const created = live(r).filter((o) => o.name === "زیاد");
     expect(created.length).toBeLessThanOrEqual(MAX_REPEATS_PER_OP);
   });
 });
@@ -167,7 +176,7 @@ describe("applyOps — تغییرِ ساعت / جابه‌جایی / حذف", ()
   it("ساعت را عوض می‌کند و شناسه‌ی تازه می‌دهد", () => {
     const r = applyOps(BASE, [], [{ op: "retime", ref: 1, start: "۱۰:۰۰", end: "۱۱:۰۰" }], TODAY);
     expect(r.problems).toHaveLength(0);
-    const moved = r.occurrences.find((o) => o.name === "کلاس زبان")!;
+    const moved = live(r).find((o) => o.name === "کلاس زبان")!;
     expect(moved.time).toBe("۱۰:۰۰ – ۱۱:۰۰");
     expect(moved.id).not.toBe("a");
     expect(r.applied[0]).toContain("۰۸:۰۰ – ۰۹:۳۰");
@@ -176,7 +185,7 @@ describe("applyOps — تغییرِ ساعت / جابه‌جایی / حذف", ()
   it("به روزِ دیگر منتقل می‌کند و ساعتِ قبلی را نگه می‌دارد", () => {
     const r = applyOps(BASE, [], [{ op: "move", ref: 3, toDay: 4 }], TODAY);
     expect(r.problems).toHaveLength(0);
-    const m = r.occurrences.find((o) => o.name === "مطالعه")!;
+    const m = live(r).find((o) => o.name === "مطالعه")!;
     expect(m.jsDay).toBe(4);
     expect(m.time).toBe("۲۰:۰۰ – ۲۱:۰۰");
     expect(r.applied[0]).toContain("پنجشنبه");
@@ -194,11 +203,20 @@ describe("applyOps — تغییرِ ساعت / جابه‌جایی / حذف", ()
     expect(r.problems[0]).toContain("همین حالا هم");
   });
 
-  it("حذف می‌کند و کلیدهای removed همان برنامه را پاک می‌کند", () => {
-    const r = applyOps(BASE, ["c|1", "a|6"], [{ op: "delete", ref: 3 }], TODAY);
-    expect(r.occurrences.find((o) => o.name === "مطالعه")).toBeUndefined();
+  it("حذف از امروز به بعد است و گذشته را نگه می‌دارد", () => {
+    const r = applyOps(BASE, ["a|6"], [{ op: "delete", ref: 3 }], TODAY);
+    expect(live(r).find((o) => o.name === "مطالعه")).toBeUndefined();
+    const old = r.occurrences.find((o) => o.id === "c")!;
+    expect(old.endDate).toBe("2026-09-04");
     expect(r.removed).toEqual(["a|6"]);
     expect(r.applied[0]).toContain("مطالعه");
+  });
+
+  it("برنامه‌ای که هنوز شروع نشده، با حذف کامل می‌رود و کلیدهای removed‌اش هم", () => {
+    const future = [{ id: "f", name: "آینده", jsDay: 1, time: "", startDate: "2026-10-01" }];
+    const r = applyOps(future, ["f|1"], [{ op: "delete", ref: 1 }], TODAY);
+    expect(r.occurrences).toHaveLength(0);
+    expect(r.removed).toEqual([]);
   });
 
   it("ارجاعِ ناموجود/غیرعددی پیامِ روشن می‌دهد، نه کرش", () => {
@@ -208,7 +226,7 @@ describe("applyOps — تغییرِ ساعت / جابه‌جایی / حذف", ()
       { op: "delete" },
     ], TODAY);
     expect(r.problems).toHaveLength(3);
-    expect(r.occurrences).toHaveLength(3);
+    expect(live(r)).toHaveLength(3);
     expect(r.changed).toBe(false);
   });
 
@@ -227,18 +245,18 @@ describe("applyOps — ترکیبی و سقف", () => {
     ], TODAY);
     expect(r.problems).toHaveLength(0);
     expect(r.applied).toHaveLength(2);
-    expect(r.occurrences.find((o) => o.name === "صبحانه")!.time).toBe("۰۸:۰۰ – ۰۹:۰۰");
+    expect(live(r).find((o) => o.name === "صبحانه")!.time).toBe("۰۸:۰۰ – ۰۹:۰۰");
   });
 
   it("ref بعد از حذف هم به برنامه‌ی درست اشاره می‌کند", () => {
     const r = applyOps(BASE, [], [{ op: "delete", ref: 1 }, { op: "delete", ref: 2 }], TODAY);
     expect(r.applied).toHaveLength(2);
-    expect(r.occurrences.map((o) => o.name)).toEqual(["مطالعه"]);
+    expect(live(r).map((o) => o.name)).toEqual(["مطالعه"]);
   });
 
   it("بیش از سقفِ عملیات را می‌برد و صریح می‌گوید", () => {
     const ops = Array.from({ length: MAX_OPS_PER_MESSAGE + 3 }, (_, i) => ({
-      op: "add", name: `ب${i}`, days: [2], start: `${String(i).padStart(2, "0")}:00`,
+      op: "add", name: `ب${i}`, days: [2],
     }));
     const r = applyOps([], [], ops, TODAY);
     expect(r.applied).toHaveLength(MAX_OPS_PER_MESSAGE);
@@ -266,7 +284,7 @@ describe("برنامه‌ی بدونِ ساعت", () => {
     const r = applyOps(BASE, [], [{ op: "add", name: "ورزش", days: [6] }], TODAY);
     expect(r.problems).toHaveLength(0);
     expect(r.changed).toBe(true);
-    const added = r.occurrences.find((o) => o.name === "ورزش")!;
+    const added = live(r).find((o) => o.name === "ورزش")!;
     expect(added.jsDay).toBe(6);
     expect(added.time).toBe("");
     expect(r.applied[0]).toContain("بدونِ ساعت");
@@ -277,7 +295,7 @@ describe("برنامه‌ی بدونِ ساعت", () => {
     const full = [occ("f", "پر", 3, "۰۰:۰۰ – ۲۳:۵۹")];
     const r = applyOps(full, [], [{ op: "add", name: "خرید", days: [3] }], TODAY);
     expect(r.problems).toHaveLength(0);
-    expect(r.occurrences.find((o) => o.name === "خرید")!.time).toBe("");
+    expect(live(r).find((o) => o.name === "خرید")!.time).toBe("");
   });
 
   it("چند برنامه‌ی بی‌ساعت در یک روز کنارِ هم می‌نشینند", () => {
@@ -286,7 +304,7 @@ describe("برنامه‌ی بدونِ ساعت", () => {
       { op: "add", name: "خرید", days: [1] },
     ], TODAY);
     expect(r.applied).toHaveLength(2);
-    expect(r.occurrences.every((o) => o.time === "")).toBe(true);
+    expect(live(r).every((o) => o.time === "")).toBe(true);
   });
 
   it("ساعتِ شروعِ بدشکل هنوز خطاست (فرقِ «نگفتن» با «غلط گفتن»)", () => {
@@ -299,15 +317,15 @@ describe("برنامه‌ی بدونِ ساعت", () => {
     const list = [{ id: "u", name: "ورزش", jsDay: 6, time: "", startDate: "2026-01-01" }];
     const r = applyOps(list, [], [{ op: "move", ref: 1, toDay: 2 }], TODAY);
     expect(r.problems).toHaveLength(0);
-    expect(r.occurrences[0].jsDay).toBe(2);
-    expect(r.occurrences[0].time).toBe("");
+    expect(live(r)[0].jsDay).toBe(2);
+    expect(live(r)[0].time).toBe("");
     expect(r.applied[0]).toContain("بدونِ ساعت");
   });
 
   it("retime بدونِ ساعت یعنی «ساعتش را بردار»", () => {
     const r = applyOps(BASE, [], [{ op: "retime", ref: 1 }], TODAY);
     expect(r.problems).toHaveLength(0);
-    expect(r.occurrences.find((o) => o.name === "کلاس زبان")!.time).toBe("");
+    expect(live(r).find((o) => o.name === "کلاس زبان")!.time).toBe("");
     expect(r.applied[0]).toContain("برداشته شد");
   });
 
@@ -322,7 +340,7 @@ describe("برنامه‌ی بدونِ ساعت", () => {
     const list = [{ id: "u", name: "ورزش", jsDay: 1, time: "", startDate: "2026-01-01" }];
     const r = applyOps(list, [], [{ op: "retime", ref: 1, start: "07:00", end: "08:00" }], TODAY);
     expect(r.problems).toHaveLength(0);
-    expect(r.occurrences[0].time).toBe("۰۷:۰۰ – ۰۸:۰۰");
+    expect(live(r)[0].time).toBe("۰۷:۰۰ – ۰۸:۰۰");
   });
 });
 

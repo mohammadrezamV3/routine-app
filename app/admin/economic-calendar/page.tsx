@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2, X } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { formatDateTime } from "@/lib/adminFormat";
+import { formatDateTime, toLocalInputValue } from "@/lib/adminFormat";
 import { CALENDAR_CURRENCIES, EconomicImpact, IMPACT_LABELS, IMPACT_ORDER } from "@/lib/economicCalendar";
 
 type EventRow = {
@@ -32,6 +32,10 @@ export default function AdminEconomicCalendarPage() {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  // null یعنی حالتِ «ثبتِ جدید»؛ وگرنه همین فرم دارد همان رویداد را ویرایش
+  // می‌کند. یک فرم برای هر دو کار، چون فیلدها دقیقاً یکی‌اند — دو فرمِ جدا
+  // یعنی دو جا برای از قلم‌افتادنِ یک فیلد.
+  const [editing, setEditing] = useState<EventRow | null>(null);
 
   function load() {
     fetch("/api/admin/economic-events").then((r) => r.json()).then(setData);
@@ -54,29 +58,52 @@ export default function AdminEconomicCalendarPage() {
     load();
   }
 
-  async function create() {
+  function resetForm() {
+    setEditing(null);
+    setTitle(""); setForecast(""); setPrevious(""); setActual(""); setDescription("");
+    setOccursAt(""); setCurrency("USD"); setImpact("HIGH");
+    setError(null);
+  }
+
+  /** ردیف را داخلِ همان فرمِ بالا باز می‌کند. */
+  function startEdit(e: EventRow) {
+    setEditing(e);
+    setTitle(e.title);
+    setCurrency(e.currency);
+    setImpact(e.impact);
+    setOccursAt(toLocalInputValue(e.occursAt));
+    setForecast(e.forecast || "");
+    setPrevious(e.previous || "");
+    setActual(e.actual || "");
+    setDescription(e.description || "");
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function save() {
     if (!title.trim() || !occursAt || saving) return;
     setSaving(true);
     setError(null);
     const country = CALENDAR_CURRENCIES.find((c) => c.code === currency)?.country || currency.slice(0, 2);
+    const payload = {
+      title: title.trim(), currency, country, impact,
+      // فیلد datetime-local وقت محلی ادمین را می‌دهد؛ اینجا به ISO/UTC
+      // تبدیل می‌شود تا با بقیه‌ی داده‌ی اپ هم‌قرارداد بماند.
+      occursAt: new Date(occursAt).toISOString(),
+      forecast: forecast.trim() || null,
+      previous: previous.trim() || null,
+      actual: actual.trim() || null,
+      description: description.trim() || null,
+    };
     const res = await fetch("/api/admin/economic-events", {
-      method: "POST",
+      method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: title.trim(), currency, country, impact,
-        // فیلد datetime-local وقت محلی ادمین را می‌دهد؛ اینجا به ISO/UTC
-        // تبدیل می‌شود تا با بقیه‌ی داده‌ی اپ هم‌قرارداد بماند.
-        occursAt: new Date(occursAt).toISOString(),
-        forecast: forecast.trim() || null,
-        previous: previous.trim() || null,
-        actual: actual.trim() || null,
-        description: description.trim() || null,
-      }),
+      body: JSON.stringify(editing ? { ...payload, id: editing.id } : payload),
     });
     const body = await res.json().catch(() => null);
     setSaving(false);
-    if (!res.ok) { setError(body?.error || "خطا در ثبت رویداد"); return; }
-    setTitle(""); setForecast(""); setPrevious(""); setActual(""); setDescription("");
+    if (!res.ok) { setError(body?.error || (editing ? "خطا در ویرایش رویداد" : "خطا در ثبت رویداد")); return; }
+    resetForm();
     load();
   }
 
@@ -103,7 +130,23 @@ export default function AdminEconomicCalendarPage() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">ثبت رویداد جدید</span></div>
+        <div className="admin-chart-head">
+          <span className="admin-chart-title">{editing ? `ویرایش: ${editing.title}` : "ثبت رویداد جدید"}</span>
+          {editing && (
+            <button type="button" className="account-outline-btn" onClick={resetForm}>
+              <X size={14} style={{ marginLeft: 5, verticalAlign: "-2px" }} /> انصراف
+            </button>
+          )}
+        </div>
+        {/* رویدادِ همگام‌شده را sync بعدی دوباره می‌نویسد — جز توضیحات، که
+            عمداً محافظت شده (lib/economicCalendar.ts). بدونِ این هشدار،
+            ادمین عددی را اصلاح می‌کند و چند دقیقه بعد بی‌دلیل برمی‌گردد. */}
+        {editing && editing.source !== "MANUAL" && (
+          <div className="account-content-hint" style={{ marginBottom: 10 }}>
+            این رویداد از <b>{editing.source}</b> همگام‌سازی شده — هر تغییری جز «توضیحات» در
+            همگام‌سازیِ بعدی با مقدارِ خودِ منبع بازنویسی می‌شود.
+          </div>
+        )}
         <div className="admin-form-row">
           <div className="admin-form-field">
             <label>عنوان</label>
@@ -112,6 +155,12 @@ export default function AdminEconomicCalendarPage() {
           <div className="admin-form-field">
             <label>ارز</label>
             <select className="admin-input" style={{ width: 130 }} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {/* ارزِ رویدادهای همگام‌شده همیشه توی این نُه‌تا نیست؛ بدونِ این
+                  گزینه‌ی اضافه، باز کردنِ چنین رویدادی در فرم بی‌صدا ارزش را
+                  به USD عوض می‌کرد و ذخیره همان را می‌نوشت. */}
+              {!CALENDAR_CURRENCIES.some((c) => c.code === currency) && (
+                <option value={currency}>{currency}</option>
+              )}
               {CALENDAR_CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
             </select>
           </div>
@@ -150,8 +199,8 @@ export default function AdminEconomicCalendarPage() {
           </div>
           <div className="admin-form-field">
             <label>&nbsp;</label>
-            <button className="account-outline-btn" onClick={create} disabled={!title.trim() || !occursAt || saving}>
-              {saving ? "..." : "ثبت رویداد"}
+            <button className="account-outline-btn" onClick={save} disabled={!title.trim() || !occursAt || saving}>
+              {saving ? "..." : editing ? "ذخیره‌ی تغییرات" : "ثبت رویداد"}
             </button>
           </div>
         </div>
@@ -170,6 +219,9 @@ export default function AdminEconomicCalendarPage() {
                 {formatDateTime(e.occursAt)} · {IMPACT_LABELS[e.impact]} · منبع: {e.source}
               </span>
             </span>
+            <button type="button" className="trade-icon-btn" onClick={() => startEdit(e)} aria-label="ویرایش">
+              <Pencil size={15} />
+            </button>
             <button type="button" className="trade-icon-btn danger" onClick={() => remove(e.id)} aria-label="حذف">
               <Trash2 size={15} />
             </button>

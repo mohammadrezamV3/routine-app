@@ -2,13 +2,13 @@
 
 import { useRef, useState } from "react";
 import { ChevronRight, Minus } from "lucide-react";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { WEEK_ORDER, jsDayOfIso } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
-import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
+import { findConflictOnDate, findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
-import { formatJalali, isoLocal, JalaliDate } from "@/lib/jalali";
+import { formatJalali, isoLocal, jalaliToIso, JalaliDate, toJalali } from "@/lib/jalali";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
@@ -30,14 +30,22 @@ type Step = "info" | "details";
 // فرم مستقل «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
 // بعدش میزان اهمیت و تگ. اعتبارسنجی هر مرحله جدا انجام می‌شه؛ دکمه‌ی «بعدی»
 // اگه چیزی ناقصه یه لرزش خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
+function isoToJalali(iso: string): JalaliDate {
+  const d = new Date(iso + "T00:00:00");
+  return toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+}
+
 export function AddProgramForm({
   scheduleOpts,
   onClose,
   onChanged,
+  defaultDateIso,
 }: {
   scheduleOpts: ScheduleOpts;
   onClose: () => void;
   onChanged: () => void;
+  /** روزی که کاربر در صفحه انتخاب کرده — پیش‌فرضِ گزینه‌ی «فقط برای یک روز» */
+  defaultDateIso?: string;
 }) {
   useLockBodyScroll();
   const [step, setStep] = useState<Step>("info");
@@ -45,9 +53,13 @@ export function AddProgramForm({
   const [tag, setTag] = useState("");
   const [importance, setImportance] = useState<Importance>("medium");
   const [isPeriod, setIsPeriod] = useState(false);
+  // «فقط برای یک روز»: برنامه روی همان یک تاریخ ثبت می‌شود (startDate =
+  // endDate) و هفته‌های بعد تکرار نمی‌شود. با «دوره» هم‌زمان نمی‌شود.
+  const [isOnce, setIsOnce] = useState(false);
+  const [onceJalali, setOnceJalali] = useState<JalaliDate>(() => isoToJalali(defaultDateIso || isoLocal(now)));
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
-  const [pickerFor, setPickerFor] = useState<"start" | "end" | null>(null);
+  const [pickerFor, setPickerFor] = useState<"start" | "end" | "once" | null>(null);
   const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   // پیامِ خطا عمداً *داخلِ همین فرم* نشان داده می‌شود، نه با بنرِ بالای صفحه:
@@ -56,7 +68,7 @@ export function AddProgramForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
-  const [periodError, setPeriodError] = useState(false);
+  const [periodError, setPeriodError] = useState<null | "missing" | "order">(null);
   const [shakeNext, setShakeNext] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -103,7 +115,7 @@ export function AddProgramForm({
     const rErrs: typeof rowErrors = {};
     rows.forEach((r, i) => {
       const e: { start?: boolean; end?: boolean; days?: boolean; order?: boolean } = {};
-      if (!r.jsDays.length) { e.days = true; hasError = true; }
+      if (!isOnce && !r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
       // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه — بازه‌ی
@@ -118,7 +130,11 @@ export function AddProgramForm({
     });
     setRowErrors(rErrs);
 
-    const pErr = isPeriod && (!startJalali || !endJalali);
+    let pErr: typeof periodError = null;
+    if (isPeriod) {
+      if (!startJalali || !endJalali) pErr = "missing";
+      else if ((jalaliToIso(...endJalali) ?? "") < (jalaliToIso(...startJalali) ?? "")) pErr = "order";
+    }
     setPeriodError(pErr);
     if (pErr) hasError = true;
 
@@ -138,18 +154,41 @@ export function AddProgramForm({
     if (status !== "idle") return;
     if (!validateInfoStep()) { setStep("info"); return; }
 
+    const today = isoLocal(now);
+    const onceIso = isOnce ? jalaliToIso(...onceJalali) : null;
+    const periodStart = isPeriod && startJalali ? jalaliToIso(...startJalali) : null;
+    const periodEnd = isPeriod && endJalali ? jalaliToIso(...endJalali) : null;
+    // تاریخِ ثبت: تک‌روزه → همان روز؛ دوره → بازه‌ی انتخاب‌شده؛ هفتگی → از امروز
+    const dates: { startDate: string; endDate?: string } = onceIso
+      ? { startDate: onceIso, endDate: onceIso }
+      : periodStart && periodEnd
+        ? { startDate: periodStart, endDate: periodEnd }
+        : { startDate: today };
+
+    /** اولین وقوعِ واقعیِ این روزِ هفته — تداخل باید همان‌جا سنجیده شود، نه لزوما این هفته */
+    function firstOccurrence(jsDay: number): Date | null {
+      const from = dates.startDate > today ? dates.startDate : today;
+      const d = new Date(from + "T00:00:00");
+      d.setDate(d.getDate() + ((jsDay - d.getDay() + 7) % 7));
+      if (dates.endDate && isoLocal(d) > dates.endDate) return null;
+      return d;
+    }
+
     const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
     let conflictMsg: string | null = null;
-    outer: for (const r of rows) {
+    outer: for (const r of (isOnce ? rows.slice(0, 1) : rows)) {
       const startFa = normalizeTimeToFa(r.start);
       const endFa = normalizeTimeToFa(r.end);
       const startMin = timeStartMinutes(startFa);
       const endMin = timeStartMinutes(endFa);
 
-      for (const jsDay of r.jsDays) {
+      for (const jsDay of (onceIso ? [jsDayOfIso(onceIso)] : r.jsDays)) {
         // عمداً هیچ قفلی روی «این ساعت امروز گذشته» نیست: کاربر باید بتواند
         // برنامه‌ی همین امروز را هم ثبت کند، حتی اگر ساعتش رد شده باشد.
-        let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts);
+        const at = onceIso || isPeriod ? firstOccurrence(jsDay) : null;
+        let conflict = onceIso || isPeriod
+          ? (at ? findConflictOnDate(at, startMin, endMin, scheduleOpts) : null)
+          : findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts);
         if (!conflict) {
           for (const other of normalizedRows) {
             if (other.jsDay === jsDay && rangesOverlap(startMin!, endMin, other.startMin!, other.endMin)) {
@@ -183,10 +222,10 @@ export function AddProgramForm({
       name,
       jsDay: r.jsDay,
       time: r.end ? `${r.start} – ${r.end}` : r.start,
-      // از همین امروز به بعد اعمال می‌شه — نه هفته‌های قبل. مثلا اگه امروز
-      // چهارشنبه‌ست و برنامه رو برای چهارشنبه ثبت می‌کنی، چهارشنبه‌های
-      // گذشته نباید یهو این برنامه رو داشته باشن.
-      startDate: isoLocal(now),
+      // هفتگی: از همین امروز به بعد — چهارشنبه‌های گذشته نباید یهو این
+      // برنامه رو داشته باشن. دوره/تک‌روزه: دقیقا بازه‌ای که کاربر انتخاب
+      // کرد (قبلا تاریخ‌های دوره گرفته می‌شد ولی هیچ‌وقت ذخیره نمی‌شد).
+      ...dates,
       importance,
       ...(trimmedTag ? { tag: trimmedTag } : {}),
     }));
@@ -231,8 +270,39 @@ export function AddProgramForm({
               </div>
               {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>اسم برنامه رو وارد کن</div>}
 
+              <label className="auth-remember-label" style={{ marginTop: 14 }}>
+                <input
+                  type="checkbox"
+                  className="auth-checkbox"
+                  checked={isOnce}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    setIsOnce(on);
+                    if (on) {
+                      // تک‌روزه یک ردیف ساعت دارد و روزش از تاریخ می‌آید
+                      setIsPeriod(false);
+                      setPeriodError(null);
+                      setRows((r) => r.slice(0, 1));
+                      setRowErrors({});
+                    }
+                  }}
+                />
+                فقط برای یک روز (تکرار نشه)
+              </label>
+
+              {isOnce && (
+                <div className="wsearch-date-row">
+                  <div className="time-field">
+                    <span className="time-field-label">تاریخ</span>
+                    <button type="button" className="jdate-btn" onClick={() => setPickerFor("once")}>
+                      {formatJalali(onceJalali)}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="wsearch-newrow-list">
-                {rows.map((r, ri) => {
+                {(isOnce ? rows.slice(0, 1) : rows).map((r, ri) => {
                   const err = rowErrors[ri];
                   const rowErrMsgs: string[] = [];
                   if (err?.days) rowErrMsgs.push("حداقل یک روز رو انتخاب کن");
@@ -242,6 +312,7 @@ export function AddProgramForm({
                   return (
                     <div key={r.id} className="wsearch-newrow-anim">
                       <div className="wsearch-newrow">
+                        {!isOnce && (
                         <div className="wsearch-newrow-daywrap">
                           <div className={`day-picker${err?.days ? " field-error" : ""}`}>
                             {WEEK_ORDER.map((o) => (
@@ -255,6 +326,7 @@ export function AddProgramForm({
                             ))}
                           </div>
                         </div>
+                        )}
                         <div className={`time-field${err?.start || err?.order ? " field-error" : ""}`}>
                           <span className="time-field-label">ساعت شروع</span>
                           <div className="field-error-wrap">
@@ -284,17 +356,23 @@ export function AddProgramForm({
                 })}
               </div>
 
-              <button type="button" className="wsearch-add-btn" onClick={addRow}>
-                افزودن روز دیگر
-                <span className="wsearch-add-btn-icon">+</span>
-              </button>
+              {!isOnce && (
+                <button type="button" className="wsearch-add-btn" onClick={addRow}>
+                  افزودن روز دیگر
+                  <span className="wsearch-add-btn-icon">+</span>
+                </button>
+              )}
 
               <label className="auth-remember-label" style={{ marginTop: 16 }}>
                 <input
                   type="checkbox"
                   className="auth-checkbox"
                   checked={isPeriod}
-                  onChange={(e) => { setIsPeriod(e.target.checked); if (!e.target.checked) setPeriodError(false); }}
+                  onChange={(e) => {
+                    setIsPeriod(e.target.checked);
+                    if (e.target.checked) setIsOnce(false);
+                    else setPeriodError(null);
+                  }}
                 />
                 این یک دوره است
               </label>
@@ -315,7 +393,11 @@ export function AddProgramForm({
                   </div>
                 </div>
               )}
-              {periodError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>تاریخ شروع و پایان دوره رو انتخاب کن</div>}
+              {periodError && (
+                <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>
+                  {periodError === "order" ? "تاریخ پایان دوره باید بعد از تاریخ شروع باشه" : "تاریخ شروع و پایان دوره رو انتخاب کن"}
+                </div>
+              )}
 
               <button
                 type="button"
@@ -376,11 +458,12 @@ export function AddProgramForm({
 
       {pickerFor && (
         <JalaliDatePicker
-          initial={pickerFor === "start" ? startJalali : endJalali}
-          title={pickerFor === "start" ? "تاریخ شروع دوره" : "تاریخ پایان دوره"}
+          initial={pickerFor === "once" ? onceJalali : pickerFor === "start" ? startJalali : endJalali}
+          title={pickerFor === "once" ? "تاریخ برنامه" : pickerFor === "start" ? "تاریخ شروع دوره" : "تاریخ پایان دوره"}
           onClose={() => setPickerFor(null)}
           onPick={(d) => {
-            if (pickerFor === "start") { setStartJalali(d); setPickerFor("end"); }
+            if (pickerFor === "once") { setOnceJalali(d); setPickerFor(null); }
+            else if (pickerFor === "start") { setStartJalali(d); setPickerFor("end"); }
             else { setEndJalali(d); setPickerFor(null); }
           }}
         />

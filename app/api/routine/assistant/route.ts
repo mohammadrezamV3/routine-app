@@ -7,11 +7,12 @@ import { readJsonBody } from "@/lib/validate";
 import { planRoutineChange, type RoutineChatTurn } from "@/lib/aiClient";
 import { logError } from "@/lib/errorLog";
 import { SETTING_KEYS, ROUTINE_ASSISTANT_USES_KEY } from "@/lib/userSettingKeys";
-import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
+import { toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import {
-  applyOps, describeSchedule, sortOccurrences,
+  applyOps, describeSchedule, sortOccurrences, stripInventedTimes,
   FREE_ASSISTANT_USES, DAY_NAME_FA, DEFAULT_AWAKE, type AwakeWindow,
 } from "@/lib/routineAssistant";
+import { addDaysIso, jsDayOfIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
 
 // دستیارِ «مدیرِ برنامه» — تنها نقطه‌ای که مدلِ زبانی اجازه دارد برنامه‌های
@@ -101,14 +102,57 @@ function parseHistory(raw: unknown): RoutineChatTurn[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((t: any) => t && (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
-    .slice(-6)
-    .map((t: any) => ({ role: t.role, text: String(t.text).slice(0, 400) }));
+    .slice(-8)
+    .map((t: any) => ({ role: t.role, text: String(t.text).slice(0, 600) }));
 }
 
-function todayLabelFa(): string {
-  const now = new Date();
-  const j = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  return `${DAY_NAME_FA[now.getDay()]} ${faNum(j[2])} ${J_MONTHS[j[1] - 1]} ${faNum(j[0])}`;
+/** امروز به وقتِ ایران — سرور (Docker) معمولا UTC است و بینِ ۰۰:۰۰ تا ۰۳:۳۰
+ *  بامدادِ ایران، `new Date()` سرور هنوز «دیروز» را می‌دهد. */
+function tehranTodayIso(): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  } catch {
+    return new Date(Date.now() + 3.5 * 3600_000).toISOString().slice(0, 10);
+  }
+}
+
+/**
+ * «امروز»ِ کاربر. ریشه‌ی باگِ «روزِ اشتباه»: قبلا سرور با ساعتِ خودش
+ * (UTC) امروز را حساب می‌کرد و «فردا»ی کاربر نیمه‌شب‌ها یک روز عقب ثبت
+ * می‌شد. حالا تاریخِ محلیِ دستگاهِ کاربر ملاک است — ولی چون از کلاینت
+ * می‌آید، فقط اگر حداکثر یک روز با تاریخِ ایران فاصله داشته باشد پذیرفته
+ * می‌شود.
+ */
+function resolveToday(raw: unknown): string {
+  const tehran = tehranTodayIso();
+  if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return tehran;
+  const ok = [addDaysIso(tehran, -1), tehran, addDaysIso(tehran, 1)].includes(raw);
+  return ok ? raw : tehran;
+}
+
+function jalaliLabel(iso: string, withWeekday = true): string {
+  const d = new Date(iso + "T00:00:00");
+  const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  const text = `${faNum(j[2])} ${J_MONTHS[j[1] - 1]} ${faNum(j[0])}`;
+  return withWeekday ? `${DAY_NAME_FA[d.getDay()]} ${text}` : text;
+}
+
+/**
+ * جدولِ سه هفته‌ی پیش‌رو برای مدل: مدل روزِ هفته‌ی یک تاریخ را از حافظه
+ * حساب نمی‌کند (همان‌جا بود که «این پنجشنبه» روزِ اشتباه می‌خورد)، از این
+ * جدول برمی‌دارد.
+ */
+function calendarTable(todayIso: string, days = 21): string {
+  const lines: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const iso = addDaysIso(todayIso, i);
+    const d = new Date(iso + "T00:00:00");
+    const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    const jal = `${j[0]}/${String(j[1]).padStart(2, "0")}/${String(j[2]).padStart(2, "0")}`;
+    const tag = i === 0 ? " (امروز)" : i === 1 ? " (فردا)" : "";
+    lines.push(`${iso} | ${DAY_NAME_FA[jsDayOfIso(iso)]} | ${jal}${tag}`);
+  }
+  return lines.join("\n");
 }
 
 export async function POST(req: NextRequest) {
@@ -129,7 +173,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const parsed = await readJsonBody<{ message?: unknown; history?: unknown }>(req, 16 * 1024);
+  const parsed = await readJsonBody<{ message?: unknown; history?: unknown; today?: unknown }>(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
 
   const message = typeof parsed.body?.message === "string" ? parsed.body.message.trim() : "";
@@ -179,11 +223,19 @@ export async function POST(req: NextRequest) {
   const awake = awakeWindow(await readOccurrences(userId, SETTING_KEYS.wakeSleepTimes));
 
   const ordered = sortOccurrences(occurrences);
+  const todayIso = resolveToday(parsed.body?.today);
 
   // ---------- فراخوانی مدل ----------
   let plan;
   try {
-    plan = await planRoutineChange(message, describeSchedule(ordered), todayLabelFa(), userId, history);
+    plan = await planRoutineChange(
+      message,
+      describeSchedule(ordered, { todayIso, removed: new Set(removed) }),
+      jalaliLabel(todayIso),
+      userId,
+      history,
+      calendarTable(todayIso)
+    );
   } catch (err: any) {
     await refundQuota();
     logError("ai-gateway", `دستیارِ روتین شکست خورد: ${err?.message || err}`, {
@@ -242,7 +294,11 @@ export async function POST(req: NextRequest) {
   }
 
   // ---------- اعمال ----------
-  const outcome = applyOps(ordered, removed, plan.ops, isoLocal(new Date()), awake);
+  // ساعتی که کاربر اصلا نگفته، دور ریخته می‌شود — آخرین پیامِ کاربر و دو
+  // پیامِ قبلی‌اش (برای جواب‌های کوتاه به سوالِ دستیار) ملاک‌اند.
+  const userTexts = [message, ...history.filter((t) => t.role === "user").slice(-2).map((t) => t.text)];
+  const { ops } = stripInventedTimes(plan.ops, userTexts);
+  const outcome = applyOps(ordered, removed, ops, todayIso, awake);
 
   if (outcome.changed) {
     const next = sortOccurrences(outcome.occurrences);
@@ -276,6 +332,7 @@ export async function POST(req: NextRequest) {
     options: outcome.options,
     changed: outcome.changed,
     occurrences: outcome.changed ? sortOccurrences(outcome.occurrences) : null,
+    removed: outcome.changed ? outcome.removed : null,
     quota: quotaAfter(unlimited ? 0 : usesBefore + 1),
   });
 }

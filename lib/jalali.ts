@@ -55,6 +55,25 @@ export function jalaliToGregorianApprox(jy: number, jm: number, jd: number): Dat
   return d;
 }
 
+/**
+ * تبدیلِ *دقیقِ* جلالی → ISO محلی. `jalaliToGregorianApprox` نوروز را همیشه
+ * ۲۱ مارس و اسفند را ۲۹ روزه فرض می‌کند، پس گاهی یک روز جابه‌جاست؛ این‌جا از
+ * همان تقریب شروع می‌کنیم و با `toJalali` (که دقیق است) تا ±۲ روز اصلاحش
+ * می‌کنیم. null یعنی چنین تاریخِ جلالی‌ای وجود ندارد (مثلا ۳۱ مهر).
+ */
+export function jalaliToIso(jy: number, jm: number, jd: number): string | null {
+  if (!Number.isInteger(jy) || !Number.isInteger(jm) || !Number.isInteger(jd)) return null;
+  if (jm < 1 || jm > 12 || jd < 1 || jd > 31) return null;
+  const base = jalaliToGregorianApprox(jy, jm, jd);
+  for (const delta of [0, -1, 1, -2, 2]) {
+    const d = new Date(base);
+    d.setDate(d.getDate() + delta);
+    const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    if (j[0] === jy && j[1] === jm && j[2] === jd) return isoLocal(d);
+  }
+  return null;
+}
+
 export const J_MONTHS = [
   "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
   "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند",
