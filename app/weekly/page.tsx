@@ -15,6 +15,7 @@ import {
   toEnDigits,
   computeDayStats,
   DayStats,
+  dayBeforeIso,
 } from "@/lib/schedule";
 import { dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
 import {
@@ -52,19 +53,11 @@ import { RoutineAiFab } from "@/components/RoutineAiFab";
 const now = new Date();
 const todayKey = isoLocal(now);
 
-// یه برنامه‌ای که زمانش گذشته (روز قبل، یا امروز ولی ساعت پایانش رد شده)
-// دیگه نباید قابل «انتقال به یک روز دیگر» یا «حذف» باشه — چون در واقع
-// اتفاق افتاده، جابه‌جایی/حذفش یعنی وانمود کردن به این‌که هنوز نیفتاده.
-// ویرایش (مثلا تصحیح ساعت/تگ) همچنان مجازه، فقط انتقال و حذف بلاک می‌شن.
-function isTaskPast(iso: string, time: string): boolean {
-  if (iso < todayKey) return true;
-  if (iso > todayKey) return false;
-  const endMin = timeEndMinutes(time);
-  const startMin = timeStartMinutes(time);
-  const checkMin = endMin ?? startMin;
-  if (checkMin === null) return false;
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  return nowMin >= checkMin;
+// طبقِ درخواستِ صریح، برنامه‌های «امروز» — حتی اگر ساعتشان گذشته باشد —
+// همیشه قابل «انتقال» و «حذف» بمانند؛ فقط روزهای واقعا گذشته (دیروز و
+// قبل‌تر) قفل می‌شوند. ویرایش هم همیشه مجاز بوده و هست.
+function isTaskPast(iso: string): boolean {
+  return iso < todayKey;
 }
 
 // برخلاف isTaskPast (که برای غیرفعال‌کردن انتقال/حذف، ساعت دقیق امروز رو
@@ -94,7 +87,7 @@ export default function WeeklyPage() {
     WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
   );
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; importance?: Importance; tag?: string; roadmapId?: string }[]>([]);
+  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string }[]>([]);
   const router = useRouter();
   const [cardName, setCardName] = useState<string | null>(null);
 
@@ -258,7 +251,7 @@ export default function WeeklyPage() {
           importance: occ?.importance,
           tag: occ?.tag,
           done: !!selectedDaily?.tasks[t.id],
-          isPast: isTaskPast(selectedIso, t.time),
+          isPast: isTaskPast(selectedIso),
           dayPast: isDayPast(selectedIso),
           notStarted: isTaskNotStarted(selectedIso, t.time),
           isFuture: selectedIso > todayKey,
@@ -295,6 +288,10 @@ export default function WeeklyPage() {
   // دکمه سمتِ DashTaskRow گارد شده (starting)؛ اینجا هم به‌جای toggle
   // (که ممکن است دوباره خاموشش کند) صریحاً true می‌نویسیم.
   async function startExercise(id: string) {
+    // طبقِ درخواستِ صریح: برنامه‌ی تمرینیِ روزهای واقعا گذشته دیگر قابلِ
+    // «شروع» نیست (خودِ دکمه هم توی DashTaskRow برای dayPast غیرفعال است؛
+    // این‌جا هم گارد می‌شود که مستقیم صدازدنِ تابع هم بی‌اثر بماند).
+    if (isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
     if (current.tasks[id]) { router.push("/exercise?tab=exercise"); return; }
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: true } };
@@ -380,24 +377,49 @@ export default function WeeklyPage() {
     setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: isCustom, importance: task.importance, tag: task.tag } });
   }
 
-  // حذف فقط همین یک occurrence (یک روزِ خاص) — چون هر روزِ یک برنامه‌ی
-  // تکرارشونده رکورد id جداگانه‌ی خودش را دارد، این پیش‌فرض از قبل هم
-  // «فقط این روز» عمل می‌کرد؛ فقط لیبل دکمه اشتباه («حذف کامل برنامه»)
-  // بود و کاربر را گیج می‌کرد.
+  // حذف فقط همین یک occurrence (یک روزِ هفته‌ی خاص) — چون هر روزِ یک
+  // برنامه‌ی تکرارشونده رکورد id جداگانه‌ی خودش را دارد، این پیش‌فرض از
+  // قبل هم «فقط این روز» عمل می‌کرد.
+  //
+  // طبقِ درخواستِ صریح: حذف یعنی «از همین روزی که رویش زده شده به بعد»،
+  // نه پاک‌کردنِ کاملِ رکورد — چون رکورد کاملا پاک‌کردن یعنی گذشته‌ی همین
+  // occurrence هم دیگر توی «برنامه هفتگی»/تاریخچه دیده نشود (تاریخچه از
+  // روی همین آرایه‌ی زنده محاسبه می‌شود، نه یک اسنپ‌شاتِ جدا). به‌جایش
+  // endDate روی «یک روز قبل از روزِ انتخاب‌شده» ست می‌شود؛ tasksForDate
+  // (lib/schedule.ts) از آن به بعد دیگر این occurrence را برنمی‌گرداند،
+  // ولی برای هر روزِ *قبل*‌ از این تاریخ دقیقا مثل قبل باقی می‌ماند.
   async function deleteTaskCompletely(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (task?.isPast) return;
-    await setCustomOccurrences(customOcc.filter((c) => c.id !== id));
+    const cutoff = dayBeforeIso(selectedIso);
+    await setCustomOccurrences(
+      customOcc.flatMap((c) => {
+        if (c.id !== id) return [c];
+        // اگه خودِ occurrence از تاریخِ برشِ جدید دیرتر شروع شده (یعنی هیچ‌وقت
+        // واقعا در گذشته اتفاق نیفتاده)، دیگه چیزی برای نگه‌داشتن نیست —
+        // کاملا حذفش کن تا آرایه بی‌جهت بزرگ نشه.
+        if (c.startDate && c.startDate > cutoff) return [];
+        return [{ ...c, endDate: cutoff }];
+      })
+    );
     refresh();
   }
 
   // حذفِ همه‌ی تکرارها — همه‌ی occurrenceهایی که هم‌نامِ همین برنامه‌اند
   // (روی هر روزی که باشند)، طبقِ درخواستِ صریح («یا فقط یکشنبه یا فقط
-  // چهارشنبه یا کلا هر دو»).
+  // چهارشنبه یا کلا هر دو»). همون منطقِ «از این روز به بعد» بالا، برای
+  // همه‌ی روزهای هفته‌ای که این برنامه رویشان تکرار می‌شود.
   async function deleteAllTaskOccurrences(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (!task || task.isPast) return;
-    await setCustomOccurrences(customOcc.filter((c) => c.name !== task.name));
+    const cutoff = dayBeforeIso(selectedIso);
+    await setCustomOccurrences(
+      customOcc.flatMap((c) => {
+        if (c.name !== task.name) return [c];
+        if (c.startDate && c.startDate > cutoff) return [];
+        return [{ ...c, endDate: cutoff }];
+      })
+    );
     refresh();
   }
 
@@ -627,6 +649,7 @@ export default function WeeklyPage() {
             name={moveTarget.name}
             occ={moveTarget.occ}
             scheduleOpts={opts}
+            sourceIso={selectedIso}
             onClose={() => setMoveTarget(null)}
             onChanged={refresh}
           />

@@ -14,6 +14,17 @@ export type ScheduleTask = {
   custom?: boolean;
 };
 
+/**
+ * یک روز قبل از iso — برای «حذف/انتقال از این روز به بعد»: به‌جای پاک‌کردنِ
+ * کاملِ یک occurrence (که گذشته‌اش را هم از تاریخچه محو می‌کند)، endDate
+ * روی همین مقدار ست می‌شود تا هر روزِ *قبل* از iso دقیقا مثل قبل بماند.
+ */
+export function dayBeforeIso(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return isoLocal(d);
+}
+
 const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
 /** نامِ قدیمی که جاهای زیادی از آن import می‌کنند — پیاده‌سازی در
@@ -72,7 +83,7 @@ export function sortTasksByTime(list: ScheduleTask[]): ScheduleTask[] {
  */
 export function tasksForDate(
   d: Date,
-  opts?: { removedOccurrences?: Set<string>; customOccurrences?: { id: string; name: string; jsDay: number; time: string; startDate?: string }[] }
+  opts?: { removedOccurrences?: Set<string>; customOccurrences?: { id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string }[] }
 ): ScheduleTask[] {
   const day = d.getDay();
   let filtered: ScheduleTask[] = [];
@@ -80,10 +91,13 @@ export function tasksForDate(
   if (opts?.customOccurrences) {
     // مقایسه‌ی رشته‌ای ISO «YYYY-MM-DD» درسته چون هردو طرف همون فرمت
     // قابل‌مرتب‌سازی لغوی‌ان — نبود startDate (آیتم‌های ثبت‌شده قبل از این
-    // فیلد) یعنی همیشه اعمال بشه، نه اینکه رد بشه.
+    // فیلد) یعنی همیشه اعمال بشه، نه اینکه رد بشه. endDate هم همین‌طور:
+    // «حذف از یک روز به بعد» به‌جای پاک‌کردنِ کاملِ آیتم، همین فیلد رو
+    // ست می‌کنه — تا گذشته (روزهای قبل از endDate) دقیقا همون‌طور که
+    // بوده دیده بشه، فقط از endDate به بعد دیگه نیاد.
     const dIso = isoLocal(d);
     opts.customOccurrences.forEach((c) => {
-      if (c.jsDay === day && (!c.startDate || dIso >= c.startDate)) {
+      if (c.jsDay === day && (!c.startDate || dIso >= c.startDate) && (!c.endDate || dIso <= c.endDate)) {
         filtered.push({ id: c.id, name: c.name, time: c.time, custom: true });
       }
     });

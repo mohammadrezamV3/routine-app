@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
-import { timeStartMinutes } from "@/lib/schedule";
+import { timeStartMinutes, dayBeforeIso } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
@@ -26,12 +26,16 @@ export function MoveOccurrenceModal({
   name,
   occ,
   scheduleOpts,
+  sourceIso,
   onClose,
   onChanged,
 }: {
   name: string;
   occ: Occ;
   scheduleOpts: ScheduleOpts;
+  /** روزی که کاربر از رویش «انتقال» را زده — برای اینکه نسخه‌ی قبلی
+   * فقط از همین روز به بعد ناپدید شود، نه این‌که گذشته‌اش هم پاک شود. */
+  sourceIso: string;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -82,7 +86,16 @@ export function MoveOccurrenceModal({
     let nextRemoved = scheduleOpts.removedOccurrences;
     let nextCustom = scheduleOpts.customOccurrences;
     if (occ.custom) {
-      nextCustom = scheduleOpts.customOccurrences.filter((c) => c.id !== occ.id);
+      // پاک‌کردنِ کاملِ رکوردِ قبلی یعنی گذشته‌ی همان occurrence هم از
+      // «برنامه هفتگی» ناپدید می‌شود (چون از روی همین آرایه محاسبه می‌شود،
+      // نه یک اسنپ‌شاتِ جدا) — به‌جایش endDate روی «یک روز قبل از روزی که
+      // انتقال از رویش زده شده» ست می‌شود، دقیقا مثلِ حذف.
+      const cutoff = dayBeforeIso(sourceIso);
+      nextCustom = scheduleOpts.customOccurrences.flatMap((c) => {
+        if (c.id !== occ.id) return [c];
+        if (c.startDate && c.startDate > cutoff) return [];
+        return [{ ...c, endDate: cutoff }];
+      });
     } else {
       nextRemoved = new Set(scheduleOpts.removedOccurrences);
       nextRemoved.add(occ.id + "|" + occ.jsDay);

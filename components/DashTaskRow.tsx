@@ -207,15 +207,15 @@ export function DashTaskRow({
         <motion.button
           type="button"
           whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
-          disabled={!editable || starting || task.isFuture}
+          disabled={!editable || starting || task.isFuture || task.dayPast}
           onClick={() => {
-            if (starting || task.isFuture) return;
+            if (starting || task.isFuture || task.dayPast) return;
             setStarting(true);
             onStart?.(task.id);
           }}
           className={cn(
             "flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors sm:text-[12.5px]",
-            (!editable || starting || task.isFuture) && "cursor-not-allowed opacity-60"
+            (!editable || starting || task.isFuture || task.dayPast) && "cursor-not-allowed opacity-60"
           )}
           style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
         >
