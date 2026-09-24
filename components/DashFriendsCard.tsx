@@ -238,7 +238,19 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                     <ChevronRight size={20} />
                   </button>
                 ) : (
-                  <div className="modal-title">دوستان</div>
+                  <div className="flex flex-1 items-center justify-between gap-2">
+                    <div className="modal-title">دوستان</div>
+                    {!authRequired && (
+                      <button
+                        type="button"
+                        onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+                        className="flex shrink-0 items-center gap-1.5 bg-transparent text-[12px] font-semibold text-dash-green transition hover:brightness-110"
+                      >
+                        <Plus size={15} />
+                        افزودن دوست
+                      </button>
+                    )}
+                  </div>
                 )}
                 <button className="nav-close" onClick={closePanel} aria-label="بستن">×</button>
               </div>
@@ -342,15 +354,9 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
 
                 {!authRequired && !addMode && (
                   <div className="tm-extra">
-                    <button
-                      type="button"
-                      onClick={() => { setAddMode(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-                      className="flex items-center gap-1.5 text-[12px] font-semibold text-dash-green transition hover:brightness-110"
-                      style={{ marginBottom: list.length ? 12 : 0 }}
-                    >
-                      <Plus size={15} />
-                      افزودن دوست
-                    </button>
+                    {list.length === 0 && (
+                      <div className="item-line empty" style={{ marginBottom: 0 }}>هنوز دوستی اضافه نکردی.</div>
+                    )}
                     {list.length > 0 && (
                       <div className="flex flex-col gap-2">
                         {list.map((f) => (

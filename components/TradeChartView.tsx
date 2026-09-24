@@ -45,6 +45,13 @@ const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
  * جای کنترلِ یک چیز فقط گیج‌کننده است.
  */
 export function TradeChartView() {
+  // وقتی از صفحه‌ی یک چک‌لیستِ کامل («همه‌ی تیک‌ها خورده») اینجا می‌آییم
+  // (?checklist=id)، همون چک‌لیست باید از پیش انتخاب شده باشه — طبقِ قاعده‌ی
+  // پروژه (خوندنِ مستقیمِ window.location به‌جای useSearchParams+Suspense،
+  // چون فقط مقدارِ اولیه لازم است، نه واکنش به تغییرِ زنده‌ی کوئری).
+  const [presetChecklistId] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("checklist")
+  );
   const [symbol, setSymbol] = useState("EURUSD");
   const [accounts, setAccounts] = useState<TradeAccount[]>([]);
   const [tags, setTags] = useState<TradeTag[]>([]);
@@ -123,6 +130,7 @@ export function TradeChartView() {
         accounts={accounts}
         tags={tags}
         calSystem={calSystem}
+        initialChecklistId={presetChecklistId}
         onTagCreated={(t) => setTags((prev) => [...prev, t])}
         onSaved={() => load(true)}
       />

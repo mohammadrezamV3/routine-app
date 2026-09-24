@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
+import Link from "next/link";
+import { Pencil, NotebookPen } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { ChecklistEditor } from "./ChecklistEditor";
@@ -86,6 +87,14 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
         <div className="trade-checklist-card-foot" style={{ marginTop: 14 }}>
           <span className="mono">{faNum(done)} / {faNum(checklist.items.length)}</span>
         </div>
+
+        {/* طبقِ درخواستِ صریح: وقتی همه‌ی آیتم‌ها تیک خوردند، راهِ رفتن به
+            صفحه‌ی ثبتِ معامله (با همین چک‌لیستِ از پیش انتخاب‌شده) ظاهر شود. */}
+        {done > 0 && done === checklist.items.length && (
+          <Link href={`/trade/chart?checklist=${checklist.id}`} className="account-outline-btn" style={{ width: "100%", marginTop: 10 }}>
+            <NotebookPen size={15} /> ثبت معامله
+          </Link>
+        )}
       </div>
 
       {editing && (

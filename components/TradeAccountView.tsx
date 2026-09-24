@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Award, Building2, ChevronDown, ChevronRight, Flame, Gauge, Hash,
+  Award, Building2, ChevronRight, Flame, Gauge, Hash,
   Inbox, Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
   TrendingUp, Wallet, Zap,
 } from "lucide-react";
@@ -69,7 +69,6 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   const [notFound, setNotFound] = useState(false);
 
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [statsOpen, setStatsOpen] = useState(false);
 
   const [editingAccount, setEditingAccount] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -220,50 +219,33 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             />
           </div>
 
+          {/* طبقِ درخواستِ صریح، دیگه دکمه‌ی «نمایش بقیه‌ی آمارها» نیست —
+              همه‌ی آمارها از اول با همون دیزاینِ یکسانِ کاشی‌ای دیده می‌شن. */}
           {!!restStats.length && (
-            <>
-              {/* دستگیره‌ی کوچکِ بی‌متن زیرِ آمارها: یک پیکانِ رو به پایین با
-                  رنگِ اکسنت که با نبضِ آرام می‌فهماند این‌جا چیزی برای باز
-                  کردن هست. متنِ واقعی‌اش در aria-label می‌ماند. */}
-              <button
-                type="button"
-                className={`trade-stats-handle${statsOpen ? " open" : ""}`}
-                onClick={() => setStatsOpen((v) => !v)}
-                aria-expanded={statsOpen}
-                aria-label={statsOpen ? "بستن بقیه‌ی آمارها" : "نمایش بقیه‌ی آمارها"}
-              >
-                <ChevronDown size={18} aria-hidden="true" />
-              </button>
-
-              {/* انیمیشنِ نرمِ باز شدن با grid-template-rows: 0fr → 1fr — برخلاف
-                  max-height ثابت، به ارتفاعِ واقعیِ محتوا گره خورده، پس نه
-                  می‌پرد نه وسطِ راه قطع می‌شود. */}
-              <div className={`trade-stats-collapse${statsOpen ? " open" : ""}`}>
-                <div className="trade-stats-collapse-inner">
-                  <div className="trade-stats-grid">
-                    {restStats.map((k) => {
-                      const v = statValue(k, stats);
-                      if (!v) return null;
-                      const Icon = TRADE_STAT_ICONS[k];
-                      return (
-                        <div key={k} className="trade-stat-tile">
-                          <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
-                          <div
-                            className="trade-stat-value mono"
-                            style={v.positive === undefined ? undefined : { color: v.positive ? "var(--pnl-win)" : "var(--pnl-loss)" }}
-                          >
-                            {faNum(v.value)}
-                          </div>
-                        </div>
-                      );
-                    })}
+            <div className="trade-stats-grid">
+              {restStats.map((k) => {
+                const v = statValue(k, stats);
+                if (!v) return null;
+                const Icon = TRADE_STAT_ICONS[k];
+                return (
+                  <div key={k} className="trade-stat-tile">
+                    <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
+                    <div
+                      className="trade-stat-value mono"
+                      style={v.positive === undefined ? undefined : { color: v.positive ? "var(--pnl-win)" : "var(--pnl-loss)" }}
+                    >
+                      {faNum(v.value)}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </>
+                );
+              })}
+            </div>
           )}
         </div>
 
+        {/* طبقِ درخواستِ صریح: تقویم سمتِ راستِ باکس، جزئیات/آمار سمتِ چپ —
+            روی دسکتاپ کنارِ هم (CSSِ `.trade-journal-box`)، روی موبایل
+            همچنان زیرِ هم. */}
         <TradeCalendarPanel
           embedded
           entries={entries}
