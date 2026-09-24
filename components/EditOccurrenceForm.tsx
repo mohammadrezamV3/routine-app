@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { WEEK_ORDER, sameWeekIso } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
 import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
@@ -141,12 +141,29 @@ export function EditOccurrenceForm({
     }
 
     const trimmedTag = tag.trim();
+    // دوره/تک‌روزه بودنِ برنامه با ویرایش از دست نمی‌رود: قبلا ویرایش
+    // همیشه startDate=امروز و بدونِ endDate می‌ساخت، یعنی یک برنامه‌ی «فقط
+    // همین پنجشنبه» بعد از ویرایش هر هفته تکرار می‌شد.
+    const orig = scheduleOpts.customOccurrences.find((c) => c.id === occ.id);
+    const today = isoLocal(now);
+    const isOneOff = !!orig?.startDate && orig.startDate === orig.endDate;
+    const datesFor = (jsDay: number): Pick<CustomOccurrence, "startDate" | "endDate"> => {
+      if (isOneOff) {
+        const iso = sameWeekIso(orig!.startDate!, jsDay);
+        return { startDate: iso, endDate: iso };
+      }
+      if (orig?.endDate && orig.endDate < today) return { startDate: orig.startDate, endDate: orig.endDate };
+      return {
+        startDate: orig?.startDate && orig.startDate > today ? orig.startDate : today,
+        ...(orig?.endDate ? { endDate: orig.endDate } : {}),
+      };
+    };
     const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
       id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       name,
       jsDay: r.jsDay,
       time: r.end ? `${r.start} – ${r.end}` : r.start,
-      startDate: isoLocal(now),
+      ...datesFor(r.jsDay),
       importance,
       ...(trimmedTag ? { tag: trimmedTag } : {}),
     }));

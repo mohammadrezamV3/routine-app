@@ -249,19 +249,35 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const data = await res.json();
 
     expect(data.changed).toBe(true);
+    // ردیفِ شنبه با endDate بسته می‌ماند (گذشته حفظ می‌شود)؛ ردیفِ زنده پنجشنبه است
     const saved = await readOccurrences(currentUserId);
-    expect(saved[0].jsDay).toBe(4);
-    expect(saved[0].time).toBe("۰۸:۰۰ – ۰۹:۳۰");
+    const current = saved.filter((o: any) => !o.endDate);
+    expect(current).toHaveLength(1);
+    expect(current[0].jsDay).toBe(4);
+    expect(current[0].time).toBe("۰۸:۰۰ – ۰۹:۳۰");
+    expect(saved.find((o: any) => o.id === "a").endDate).toBeTruthy();
     expect(data.reply).toContain("پنجشنبه");
   });
 
-  it("حذف را ذخیره می‌کند", async () => {
+  it("حذف را ذخیره می‌کند — از امروز به بعد، گذشته دست‌نخورده", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = { offTopic: false, reply: "", ops: [{ op: "delete", ref: 1 }] };
 
     await POST(post({ message: "کلاس زبان رو پاک کن" }));
-    expect(await readOccurrences(currentUserId)).toHaveLength(0);
+    const saved = await readOccurrences(currentUserId);
+    expect(saved).toHaveLength(1);
+    expect(saved[0].endDate).toBeTruthy();
+  });
+
+  it("ساعتی که کاربر نگفته ثبت نمی‌شود، حتی اگر مدل ساخته باشد", async () => {
+    currentUserId = await makeUser();
+    await setOccurrences(currentUserId, []);
+    nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "ورزش", days: ["شنبه"], start: "08:00", end: "09:00" }] };
+
+    await POST(post({ message: "شنبه‌ها ورزش بذار" }));
+    const saved = await readOccurrences(currentUserId);
+    expect(saved[0].time).toBe("");
   });
 
   it("ارجاع به برنامه‌ای که وجود ندارد، پیامِ روشن می‌دهد نه کرش", async () => {

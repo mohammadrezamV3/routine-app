@@ -629,6 +629,7 @@ export default function WeeklyPage() {
         {addProgramOpen && (
           <AddProgramForm
             scheduleOpts={opts}
+            defaultDateIso={selectedIso}
             onClose={() => setAddProgramOpen(false)}
             onChanged={refresh}
           />

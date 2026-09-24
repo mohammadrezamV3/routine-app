@@ -25,6 +25,28 @@ export function dayBeforeIso(iso: string): string {
   return isoLocal(d);
 }
 
+/** iso + n روز (n می‌تواند منفی باشد) — به وقتِ محلی، بدونِ لغزشِ DST */
+export function addDaysIso(iso: string, n: number): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return isoLocal(d);
+}
+
+/** روزِ هفته‌ی یک تاریخِ ISO (مثل Date.getDay: یکشنبه=0 … شنبه=6) */
+export function jsDayOfIso(iso: string): number {
+  return new Date(iso + "T00:00:00").getDay();
+}
+
+/**
+ * همان روزِ هفته‌ی `jsDay` داخلِ *همان هفته‌ی شنبه‌شروعِ* `iso`. برای وقتی
+ * یک برنامه‌ی تک‌روزه روزِ هفته‌اش عوض می‌شود: «این شنبه» که به یکشنبه برود
+ * باید یکشنبه‌ی همین هفته شود، نه هفته‌ی بعد.
+ */
+export function sameWeekIso(iso: string, jsDay: number): string {
+  const offsetFromSat = (jsDayOfIso(iso) + 1) % 7;
+  return addDaysIso(iso, ((jsDay + 1) % 7) - offsetFromSat);
+}
+
 const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
 /** نامِ قدیمی که جاهای زیادی از آن import می‌کنند — پیاده‌سازی در
