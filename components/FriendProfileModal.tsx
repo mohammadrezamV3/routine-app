@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Ban, Check, Copy, Loader2, Map, Phone, Star, User as UserIcon } from "lucide-react";
+import { Ban, Loader2, Map, Phone, Star, User as UserIcon } from "lucide-react";
 import { AgentAvatar } from "./AgentAvatar";
 import { StreakFlame } from "./StreakFlame";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -176,15 +176,16 @@ export function FriendProfileModal({
 
               {profile.username && (
                 <div className="friend-profile-section">
-                  <div className="friend-profile-section-label">آیدی</div>
+                  <div className="friend-profile-section-label">
+                    {copied ? "کپی شد" : "آیدی"}
+                  </div>
                   <button
                     type="button"
                     className="friend-profile-username mono"
                     onClick={copyUsername}
-                    title="کپیِ آیدی"
+                    title="برای کپی‌کردن بزن"
                   >
                     @{profile.username}
-                    {copied ? <Check size={12} /> : <Copy size={12} />}
                   </button>
                 </div>
               )}
