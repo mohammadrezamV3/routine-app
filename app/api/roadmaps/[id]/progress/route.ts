@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
-import { computePlanProgress, normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
+import { computePlanProgress, normalizePlan, sanitizeStepProgress, taskKey } from "@/lib/roadmapPlan";
 
 /**
- * تیک‌زدن/برداشتنِ یک مرحله.
+ * تیک‌زدن/برداشتنِ یک مرحله (`{n, done}`) یا یک کارِ داخلِ مرحله
+ * (`{n, task, done}` — task اندیسِ صفرمبنای کار است).
  *
  * درصد را همیشه سرور حساب می‌کند و هر درصدی که کلاینت بفرستد نادیده گرفته
  * می‌شود؛ کلیدِ مرحله‌ای که وجود ندارد هم دور ریخته می‌شود.
@@ -16,7 +17,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const body = await req.json().catch(() => null);
   const n = (body as any)?.n;
   const done = (body as any)?.done;
-  if (typeof n !== "number" || !Number.isFinite(n) || typeof done !== "boolean") {
+  const task = (body as any)?.task;
+  if (
+    typeof n !== "number" || !Number.isFinite(n) || typeof done !== "boolean" ||
+    (task !== undefined && (typeof task !== "number" || !Number.isInteger(task) || task < 0))
+  ) {
     return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
   }
 
@@ -29,9 +34,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const plan = normalizePlan({ stages: row.steps });
   const current = sanitizeStepProgress(plan.stages, row.progress);
 
+  // کلیدِ ناموجود (مرحله/کاری که نیست) این‌جا اضافه می‌شود و sanitize
+  // پایین دورش می‌ریزد — پس نیازی به چکِ جدا نیست.
+  const key = task === undefined ? String(n) : taskKey(n, task);
   const next = { ...current };
-  if (done) next[String(n)] = true;
-  else delete next[String(n)];
+  if (done) next[key] = true;
+  else delete next[key];
   const cleaned = sanitizeStepProgress(plan.stages, next);
 
   await prisma.roadmap.updateMany({

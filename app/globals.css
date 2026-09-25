@@ -1300,46 +1300,6 @@
   .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   .modal-title{font-size:16px; font-weight:700; margin-top:3px;}
 
-  /* roadmaps hub */
-  /* عرضِ کارت‌ها به اندازه‌ی صفحه‌ی موبایل و یک‌ذره کوچک‌تر (درخواستِ صریحِ
-     کاربر) — تا فوترِ هشدارِ AI هم جا شود و کارت‌ها تا لبه نچسبند. */
-  /* طبقِ درخواستِ صریح: یک باکسِ کلیِ صفحه‌بزرگ دورِ فهرست — هم‌الگویِ
-     چک‌لیست‌ها/یادداشت‌ها؛ خودِ گریدِ داخلی همچنان به ۴۰۰px محدود و
-     وسط‌چین می‌ماند (عرضِ کارت‌ها طبقِ همان درخواستِ قبلی). */
-  .rm-page-box{ margin-top:16px; padding:16px; }
-  /* باگِ گزارش‌شده: حالتِ خالی («هنوز رودمپی نساختی») بالای باکسِ بلند
-     می‌نشست، نه وسطش — چون .trade-empty-state فقط محتوای خودش رو
-     وسط‌چین می‌کنه، نه اینکه رویِ کلِ ارتفاعِ بلندِ .rm-page-box (که
-     min-height داره) بشینه. این کلاس فقط روی نسخه‌ی خالی اضافه می‌شه. */
-  .rm-empty-box{ display:flex; align-items:center; justify-content:center; }
-  .rm-grid{display:flex; flex-direction:column; gap:10px; max-width:400px; margin-inline:auto;}
-  /* کارتِ هر مسیر در فهرست. حالا <button>ه (نه <div> با onClick) تا با
-     کیبورد هم برود؛ یعنی باید ریستِ سراسریِ `button{}` را صریح خنثی کند،
-     وگرنه بک‌گراند/پدینگ/سایه‌ی شیشه‌ایِ آن ریست را می‌گیرد. */
-  .rm-card{
-    display:block; width:100%; text-align:inherit; font:inherit;
-    border:1px solid var(--line); border-radius:12px; padding:14px 15px;
-    text-decoration:none; color:var(--text); cursor:pointer;
-    background:rgba(var(--surface-rgb), .13);
-    backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
-    box-shadow:none; transition:.18s; box-sizing:border-box;
-  }
-  body[data-theme="light"] .rm-card, body:not([data-theme="light"]) .rm-card{
-    background:rgba(var(--surface-rgb), .13); box-shadow:none;
-  }
-  @media (hover:hover) and (pointer:fine){
-    .rm-card:hover{border-color:var(--accent); background:var(--accent-dim);}
-  }
-  .rm-card:active{ transform:scale(.99); }
-  .rm-card-title{font-size:15px; font-weight:700; color:var(--text);}
-  .rm-card-desc{
-    font-size:12px; line-height:1.9; color:var(--muted); margin-top:4px;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-  }
-  .rm-card-meta{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-  .rm-card-progress{ display:flex; align-items:center; gap:9px; margin-top:11px; }
-  .rm-card-progress .rm-progress-bar{ flex:1; }
-  .rm-card-pct{ flex-shrink:0; font-size:10.5px; font-weight:700; color:var(--accent); }
 
   /* صفحه‌ی «اشتراک» — کارت‌ها/جدول مقایسه از PlansSection میان (هم‌قاعده‌ی
      صفحه‌ی لندینگ)، اینجا فقط عرض ماکزیمم محتوا و نوار وضعیت لازمه */
@@ -4714,7 +4674,6 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
-  .rm-card{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .tm-station{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .weekly-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .checklist-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
@@ -7072,355 +7031,6 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
 }
 .fx-card-value.open{ color:var(--accent); }
 
-/* ── رودمپ ────────────────────────────────────────────────────────────
-   مسیر به‌صورتِ یک ستونِ مرحله‌به‌مرحله با خطِ عمودیِ وصل‌کننده — هر مرحله
-   هدف، کارهای عملی، تمرین و معیارِ اتمامِ خودش را دارد. */
-.rm-page{ padding-bottom:40px; }
-
-.rm-hero{
-  background:var(--surface-glass);
-  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
-  border:1px solid var(--surface-line); border-radius:20px;
-  padding:20px; margin-bottom:20px;
-}
-html[data-perf="low"] .rm-hero{ background:var(--surface-2); }
-.rm-hero-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-.rm-hero-top h1{ margin:0; font-size:21px; font-weight:800; color:var(--text); line-height:1.6; }
-.rm-hero-note{ margin:9px 0 0; font-size:12.5px; line-height:2; color:var(--muted); }
-.rm-meta{ display:flex; flex-wrap:wrap; gap:7px; margin-top:13px; }
-.rm-chip{
-  display:inline-flex; align-items:center; gap:5px;
-  padding:5px 11px; border-radius:999px; font-size:10.5px; font-weight:600;
-  color:var(--accent); background:var(--accent-dim); border:1px solid rgba(var(--accent-rgb),.28);
-}
-.rm-progress{ margin-top:16px; }
-.rm-progress-bar{ height:6px; border-radius:999px; background:rgba(var(--surface-rgb),.2); overflow:hidden; }
-.rm-progress-bar span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s cubic-bezier(.22,1,.36,1); }
-.rm-progress-text{ margin-top:7px; font-size:11px; color:var(--muted); }
-
-.rm-confirm{
-  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
-  padding:14px 16px; border-radius:14px; margin-bottom:18px; font-size:12.5px; color:var(--text);
-  background:rgba(224,82,82,.08); border:1px solid rgba(224,82,82,.34);
-}
-.rm-confirm-actions{ display:flex; gap:9px; }
-
-/* مرحله‌ها */
-.rm-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
-.rm-step{ position:relative; display:flex; gap:14px; padding-bottom:22px; }
-/* خطِ عمودیِ وصل‌کننده بینِ شماره‌ها */
-.rm-step::before{
-  content:""; position:absolute; top:34px; bottom:0; inset-inline-start:16px;
-  width:2px; background:rgba(var(--surface-rgb),.24);
-}
-.rm-step:last-child::before{ display:none; }
-.rm-step.done::before{ background:rgba(var(--accent-rgb),.42); }
-
-.rm-step-num{
-  position:relative; z-index:1; flex-shrink:0;
-  width:34px; height:34px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:13px; font-weight:800;
-  color:var(--muted); background:var(--surface-2);
-  border:1.5px solid var(--surface-line); box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:color .2s ease, border-color .2s ease, background .2s ease;
-}
-@media (hover:hover){.rm-step-num:hover{ border-color:var(--accent); color:var(--accent); background:var(--surface-2); box-shadow:none; }}
-.rm-step.done .rm-step-num{ color:#fff; background:var(--accent); border-color:var(--accent); }
-
-.rm-step-body{ flex:1; min-width:0; padding-top:3px; }
-.rm-step-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
-.rm-step-head h2{ margin:0; font-size:15px; font-weight:800; color:var(--text); line-height:1.7; }
-.rm-step.done .rm-step-head h2{ color:var(--muted); }
-.rm-step-weeks{ flex-shrink:0; font-size:10.5px; color:var(--muted2); }
-
-.rm-goal{
-  display:flex; align-items:flex-start; gap:7px; margin-top:9px;
-  font-size:12px; line-height:1.9; color:var(--accent-soft);
-}
-.rm-goal svg{ flex-shrink:0; margin-top:4px; }
-
-.rm-items{ margin:11px 0 0; padding-inline-start:17px; display:flex; flex-direction:column; gap:7px; }
-.rm-items li{ font-size:12.5px; line-height:1.9; color:var(--text); }
-.rm-items li::marker{ color:var(--accent); }
-/* «چیکار کن» یک <ol> است و شماره‌گذاری پیش‌فرضِ مرورگر لاتین می‌دهد
-   (۱ می‌شود 1) — وسطِ متنِ فارسی ناجور است. `persian` یک counter-style
-   استانداردِ CSS است، نه یک ترفند. */
-ol.rm-items{ list-style-type:persian; }
-.rm-items a{
-  color:inherit; text-decoration:none;
-  display:inline-flex; align-items:baseline; gap:5px;
-  transition:color .16s ease;
-}
-@media (hover:hover){.rm-items a:hover{ color:var(--accent); }}
-.rm-items a svg{ opacity:.45; flex-shrink:0; }
-
-/* باکسِ «تمرین»/«کی تمام است؟» زیرِ هر مرحله. اسمش عمداً با کارتِ فهرست
-   (.rm-card) یکی نیست — قبلاً هر دو .rm-box بودند و قانونِ کارت (پدینگ،
-   هاورِ accent) ناخواسته روی این باکس‌ها هم می‌نشست. */
-.rm-note-box{
-  display:flex; flex-direction:column; gap:4px; margin-top:11px;
-  padding:11px 13px; border-radius:12px; font-size:12px; line-height:1.9;
-  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
-}
-.rm-note-box b{ font-size:10.5px; font-weight:700; color:var(--muted); }
-.rm-note-box span{ color:var(--text); }
-.rm-checkpoint{ border-inline-start:2px solid var(--secondary); }
-
-/* افزودن مرحله به برنامه‌های هفتگی */
-.rm-toprogram{ margin-top:12px; }
-.rm-add-btn{
-  display:inline-flex; align-items:center; gap:6px;
-  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:700;
-  color:var(--accent); background:none; border:1px solid rgba(var(--accent-rgb),.4);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:background .18s ease;
-}
-@media (hover:hover){.rm-add-btn:hover{ background:var(--accent-dim); box-shadow:none; }}
-.rm-add-panel{
-  margin-top:4px; padding:14px; border-radius:14px;
-  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.22);
-}
-.rm-add-title{ font-size:12px; font-weight:700; color:var(--text); margin-bottom:10px; }
-.rm-day-row{ display:flex; flex-wrap:wrap; gap:6px; }
-.rm-day{
-  padding:6px 11px; border-radius:999px; font-size:11px; font-weight:600;
-  color:var(--muted); background:none; border:1px solid rgba(var(--surface-rgb),.26);
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:color .16s ease, border-color .16s ease, background .16s ease;
-}
-@media (hover:hover){.rm-day:hover{ color:var(--text); background:none; box-shadow:none; }}
-.rm-day.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
-.rm-time-row{ display:flex; gap:11px; margin-top:12px; }
-.rm-time-row label{ flex:1; display:flex; flex-direction:column; gap:5px; }
-.rm-time-row span{ font-size:10.5px; color:var(--muted); }
-.rm-time-row input{
-  width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px;
-  font-size:12.5px; color:var(--text); direction:ltr; text-align:center;
-  background:rgba(var(--surface-rgb),.16); border:1px solid rgba(var(--surface-rgb),.26); outline:none;
-}
-.rm-time-row input:focus{ border-color:var(--accent); }
-.rm-add-actions{ display:flex; gap:9px; margin-top:14px; }
-.rm-add-actions button{ flex:1; }
-.rm-added{
-  display:inline-flex; align-items:center; gap:6px; margin-top:12px;
-  font-size:11.5px; font-weight:700; color:var(--accent);
-}
-
-/* بخش‌های پایانی */
-.rm-section{
-  margin-top:16px; padding:16px 18px; border-radius:16px;
-  background:rgba(var(--surface-rgb),.1); border:1px solid rgba(var(--surface-rgb),.2);
-}
-.rm-section.warn{ background:rgba(224,164,82,.07); border-color:rgba(224,164,82,.3); }
-.rm-section-title{
-  display:flex; align-items:center; gap:8px; margin-bottom:11px;
-  font-size:13px; font-weight:800; color:var(--text);
-}
-.rm-section.warn .rm-section-title{ color:#E0A452; }
-.rm-track-topics{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
-.rm-topic-chip{
-  padding:5px 10px; border-radius:9px; font-size:11px; font-weight:600;
-  color:var(--muted); background:rgba(var(--surface-rgb),.2);
-  border:1px solid rgba(var(--surface-rgb),.25); text-decoration:none;
-  transition:color .15s ease, border-color .15s ease;
-}
-@media (hover:hover) and (pointer:fine){
-  .rm-topic-chip:hover{ color:var(--accent); border-color:var(--accent); }
-}
-
-/* ── خروجیِ نهایی، مدرک‌ها، پروژه‌ها ───────────────────────────────── */
-.rm-outcome{
-  display:flex; gap:8px; margin-top:13px; padding:11px 13px; border-radius:12px;
-  font-size:12.5px; line-height:2; color:var(--text);
-  background:var(--accent-dim); border:1px solid rgba(var(--accent-rgb),.3);
-}
-.rm-outcome svg{ flex-shrink:0; margin-top:5px; color:var(--accent); }
-.rm-outcome b{ color:var(--accent); }
-/* نامِ مدرک/پروژه/سرفصل معمولاً انگلیسی‌ست و گاهی به علامت ختم می‌شود
-   («CompTIA Network+»). داخلِ یک ظرفِ RTL، آن علامتِ پایانی می‌پرد اولِ
-   عبارت و «+CompTIA Network» دیده می‌شود. plaintext جهتِ هر رشته را از
-   اولین حرفِ خودش می‌گیرد، پس هم نامِ انگلیسی درست می‌ماند هم فارسی. */
-.rm-topic-chip{ unicode-bidi:plaintext; }
-
-/* ── راهنمای متنیِ مسیر ─────────────────────────────────────────────────
-   خروجیِ مدل فقط سه چیز دارد: تیتر، بند، آیتمِ فهرست — و هر سه به‌صورتِ
-   متنِ ساده رندر می‌شوند (نه dangerouslySetInnerHTML)، پس هیچ HTMLی از
-   خروجیِ مدل اجرا نمی‌شود. */
-.rm-tabs{ margin:16px 0 4px; }
-.rm-guide{
-  margin-top:14px; padding:16px 18px; border-radius:18px;
-  border:1px solid var(--line); background:rgba(var(--surface-rgb),.14);
-}
-.rm-guide-h{
-  margin:20px 0 0; font-size:14.5px; font-weight:800; color:var(--accent); line-height:1.9;
-}
-.rm-guide-h:first-child{ margin-top:0; }
-.rm-guide-p{ margin:9px 0 0; font-size:13px; line-height:2.15; color:var(--text); }
-/* آیتمِ فهرست با ::before نقطه می‌گیرد نه با <li>، چون بلوک‌ها صاف‌اند
-   (پارسر تودرتویی نمی‌سازد) و یک <ul>ِ ساختگی فقط ساختارِ الکی اضافه می‌کرد. */
-.rm-guide-li{
-  position:relative; margin:7px 0 0; padding-inline-start:16px;
-  font-size:12.5px; line-height:2.05; color:var(--text);
-}
-.rm-guide-li::before{
-  content:""; position:absolute; inset-inline-start:4px; top:13px;
-  width:5px; height:5px; border-radius:50%; background:var(--accent);
-}
-.rm-res-source{ font-size:11px; color:var(--muted2); }
-
-@media (hover:hover) and (pointer:fine){ }
-
-/* ── گرافِ رودمپ (AI Roadmap Builder) ─────────────────────────────────
-   نقشه‌ی وابستگی: مرحله‌ها نوارهای افقی‌اند و نودها داخلشان، با یال‌های
-   SVG بینشان. هیچ کتابخانه‌ی گرافی اضافه نشده — همان توکن‌ها و همان
-   شیشه‌ی بقیه‌ی اپ. */
-.rmg-wrap{ position:relative; margin-top:18px; }
-.rmg-canvas{
-  position:relative; overflow:hidden; touch-action:none; cursor:grab;
-  height:min(62vh, 560px); border-radius:18px;
-  background:var(--surface-1); border:1px solid var(--surface-line);
-}
-.rmg-canvas.dragging{ cursor:grabbing; }
-@media (max-width:640px){ .rmg-canvas{ height:min(58vh, 460px); } }
-
-.rmg-world{ position:absolute; top:0; inset-inline-start:0; transform-origin:0 0; }
-/* جهتِ چیدمان دستی (px) است، پس ظرف باید LTR بماند وگرنه inset-inline-start
-   مختصات‌ها را آینه می‌کند. خودِ متنِ داخلِ نودها دوباره RTL می‌شود. */
-.rmg-world{ direction:ltr; }
-.rmg-node, .rmg-stage-label{ direction:rtl; }
-
-.rmg-stage{
-  position:absolute; border-radius:16px;
-  background:rgba(var(--surface-rgb),.10); border:1px dashed rgba(var(--surface-rgb),.30);
-}
-.rmg-stage-label{
-  position:absolute; top:10px; inset-inline-end:14px;
-  font-size:11px; font-weight:700; color:var(--muted);
-}
-.rmg-stage-label b{ color:var(--accent); }
-
-.rmg-edges{ position:absolute; top:0; left:0; pointer-events:none; overflow:visible; }
-.rmg-edge{
-  fill:none; stroke:rgba(var(--surface-rgb),.55); stroke-width:1.6;
-  transition:stroke .2s ease;
-}
-.rmg-edge.done{ stroke:rgba(var(--accent-rgb),.75); stroke-width:2; }
-
-/* نود — دکمه است، پس ریستِ سراسریِ button باید صریح خنثی شود */
-.rmg-node{
-  position:absolute; display:flex; flex-direction:column; justify-content:center; gap:5px;
-  padding:9px 11px; border-radius:13px; cursor:pointer; text-align:start; overflow:hidden;
-  font:inherit; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  background:var(--surface-2); border:1px solid var(--line); color:var(--text);
-  transition:border-color .16s ease, background .16s ease, transform .12s ease;
-}
-body[data-theme="light"] .rmg-node, body:not([data-theme="light"]) .rmg-node{
-  background:var(--surface-2); box-shadow:none;
-}
-.rmg-node:active{ transform:scale(.98); }
-@media (hover:hover) and (pointer:fine){
-  .rmg-node:hover{ border-color:var(--accent); }
-}
-.rmg-node-title{
-  font-size:12px; font-weight:700; line-height:1.55;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-}
-.rmg-node-meta{
-  display:flex; align-items:center; gap:5px;
-  font-size:9.5px; color:var(--muted2);
-}
-.rmg-node.locked{ opacity:.62; }
-.rmg-node.in_progress{ border-color:rgba(var(--accent-rgb),.55); }
-.rmg-node.in_progress .rmg-node-meta{ color:var(--accent); }
-.rmg-node.completed,
-body[data-theme="light"] .rmg-node.completed,
-body:not([data-theme="light"]) .rmg-node.completed{
-  background:var(--accent-dim); border-color:var(--accent);
-}
-.rmg-node.completed .rmg-node-meta{ color:var(--accent); }
-.rmg-node.selected{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(var(--accent-rgb),.25); }
-
-.rmg-controls{
-  position:absolute; bottom:12px; inset-inline-end:12px; z-index:2;
-  display:flex; flex-direction:column; gap:6px;
-}
-.rmg-controls button{
-  width:32px; height:32px; padding:0; border-radius:10px;
-  display:flex; align-items:center; justify-content:center;
-  color:var(--text); background:rgba(var(--surface-rgb),.6);
-  border:1px solid var(--surface-line); box-shadow:none;
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-}
-@media (hover:hover) and (pointer:fine){
-  .rmg-controls button:hover{ color:var(--accent); border-color:var(--accent); }
-}
-
-/* ── کشوی نود ─────────────────────────────────────────────────────── */
-.rmg-drawer-desc{ margin:0; font-size:12.5px; line-height:2; color:var(--muted); }
-.rmg-prereq-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
-.rmg-prereq-list li{
-  display:flex; align-items:center; gap:7px;
-  font-size:12px; line-height:1.8; color:var(--muted);
-}
-.rmg-prereq-list li svg{ flex-shrink:0; color:var(--muted2); }
-.rmg-prereq-list li.done{ color:var(--text); }
-.rmg-prereq-list li.done svg{ color:var(--accent); }
-.rmg-locked-note{
-  margin-top:9px; padding:9px 11px; border-radius:11px; font-size:11px; line-height:1.9;
-  color:#E5A83C; background:rgba(229,168,60,.12); border:1px solid rgba(229,168,60,.3);
-}
-.rmg-bullets{ margin:0; padding-inline-start:17px; display:flex; flex-direction:column; gap:7px; }
-.rmg-bullets li{ font-size:12px; line-height:1.95; color:var(--muted); }
-.rmg-bullets li::marker{ color:var(--accent); }
-.rmg-bullets.task li{ color:var(--text); }
-
-.rmg-resources{ display:flex; flex-direction:column; gap:8px; }
-.rmg-resource{
-  display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:12px;
-  text-decoration:none; color:var(--text);
-  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
-  transition:border-color .16s ease;
-}
-@media (hover:hover) and (pointer:fine){ .rmg-resource:hover{ border-color:var(--accent); } }
-.rmg-resource > svg{ flex-shrink:0; color:var(--accent); }
-.rmg-resource-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-.rmg-resource-body b{ font-size:12px; font-weight:700; line-height:1.7; unicode-bidi:plaintext; }
-.rmg-resource-body em{ font-size:10px; font-style:normal; color:var(--muted2); }
-
-.rmg-status-actions{ display:flex; gap:7px; margin-top:22px; }
-.rmg-status-btn{
-  flex:1; padding:11px 0; border-radius:12px; cursor:pointer;
-  font:inherit; font-size:11.5px; font-weight:700; box-shadow:none;
-  color:var(--muted); background:rgba(var(--bg-rgb),.5); border:1px solid var(--line);
-  transition:color .15s ease, border-color .15s ease, background .15s ease;
-}
-body:not([data-theme="light"]) .rmg-status-btn{ background:#0B0C0D; }
-.rmg-status-btn.on,
-body[data-theme="light"] .rmg-status-btn.on,
-body:not([data-theme="light"]) .rmg-status-btn.on{
-  color:var(--accent); border-color:var(--accent); background:var(--accent-dim);
-}
-.rmg-status-btn:disabled{ opacity:.6; cursor:default; }
-
-/* ── ویرایش با AI / نسخه‌ها ────────────────────────────────────────── */
-.rmg-edit{ margin-top:24px; }
-.rmg-edit-row{ display:flex; gap:9px; margin-top:12px; }
-.rmg-edit-row .wsearch-newform-name{ flex:1; min-width:0; }
-.rmg-edit-btn{ width:auto; flex:0 0 auto; padding-inline:20px; }
-.rmg-edit-hints{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
-.rmg-edit-actions{ display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }
-.rmg-edit-actions button{ display:inline-flex; align-items:center; gap:7px; }
-
-.rmg-version-list{ display:flex; flex-direction:column; gap:9px; margin-top:12px; }
-.rmg-version{
-  display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:12px;
-  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.2);
-}
-.rmg-version-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
-.rmg-version-body b{ font-size:12px; font-weight:700; }
-.rmg-version-body span{ font-size:11px; color:var(--muted); line-height:1.8; }
 
 /* ===================== لودینگِ مشترک ===================== */
 /* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد، بدونِ هیچ متنِ دیگری» —
@@ -7432,90 +7042,6 @@ body:not([data-theme="light"]) .rmg-status-btn.on{
   padding:30px 12px; font-size:12.5px; color:var(--muted); text-align:center;
 }
 
-/* ===================== ویزارد ساختِ رودمپ =====================
-   ویزارد چندگامی است و همه‌ی گام‌ها داخلِ همان پاپ‌آپِ مشترکِ اپ
-   (.wsearch-newform + .add-program-glass) می‌نشینند — هیچ پوسته‌ی تازه‌ای
-   ساخته نشده؛ این‌ها فقط چیدمانِ داخلِ همان باکس‌اند. */
-
-/* این ویزارد از پاپ‌آپ‌های دیگر پرمحتواتر است (سوال + دلیلش + چند گزینه +
-   فیلدِ آزاد + دو دکمه)، پس کمی بلندتر می‌شود تا معمولاً بدونِ اسکرول جا شود. */
-.wsearch-newform:has(.rm-wiz){ max-height:min(88vh, 640px); }
-
-/* نوارِ پیشرفتِ بالای فرم */
-.rm-wiz-progress{
-  height:3px; border-radius:999px; overflow:hidden; margin:2px 0 14px;
-  background:rgba(var(--surface-rgb),.25);
-}
-.rm-wiz-progress span{
-  display:block; height:100%; border-radius:999px; background:var(--accent);
-  transition:width .35s cubic-bezier(.22,1,.36,1);
-}
-
-.rm-wiz-hint{ margin-top:11px; font-size:11.5px; line-height:2; color:var(--muted); }
-.rm-wiz-hint b{ color:var(--text); }
-
-/* گزینه‌های سوال و چیپ‌های هدف — انتخابی، نه دکمه‌ی عملی؛ پس ریستِ
-   سراسریِ `button{}` (بک‌گراند/سایه‌ی شیشه‌ای) صریح خنثی می‌شود. */
-.rm-wiz-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
-.rm-wiz-chip{
-  flex:0 0 auto; padding:9px 14px; border-radius:11px; cursor:pointer;
-  border:1px solid var(--line); background:rgba(var(--bg-rgb),.5);
-  color:var(--muted); font:inherit; font-size:12px; font-weight:700; line-height:1.5;
-  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
-}
-body:not([data-theme="light"]) .rm-wiz-chip{ background:#0B0C0D; border:1px solid rgba(255,255,255,.07); }
-@media (hover:hover) and (pointer:fine){
-  .rm-wiz-chip:hover{ border-color:var(--accent); color:var(--text); }
-}
-.rm-wiz-chip:active{ transform:scale(.97); }
-.rm-wiz-chip.on,
-body:not([data-theme="light"]) .rm-wiz-chip.on,
-body[data-theme="light"] .rm-wiz-chip.on{
-  color:var(--accent); border-color:var(--accent); background:var(--accent-dim);
-}
-@media (hover:hover) and (pointer:fine){ }
-
-/* لودینگِ داخلِ همین باکس — طبقِ درخواستِ صریح، نه اسپینرِ سراسری */
-.rm-wiz-loading{
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:9px; padding:30px 8px 24px; text-align:center;
-}
-.rm-wiz-spinner{ width:22px; height:22px; border-width:2.5px; border-color:rgba(var(--accent-rgb),.25); border-top-color:var(--accent); }
-.rm-wiz-loading-title{ font-size:13px; font-weight:700; color:var(--text); line-height:1.9; }
-.rm-wiz-loading-sub{ font-size:11.5px; line-height:1.95; color:var(--muted); min-height:20px; }
-.rm-wiz-loading-hint{ margin-top:4px; font-size:10.5px; color:var(--muted2); }
-
-/* ردیفِ دکمه‌ها: «بعدی» تمام‌عرض + دکمه‌ی برگشتِ آیکونی کنارش.
-   اسپسیفیسیتیِ بالاتر لازم است چون قانونِ پایه
-   `.wsearch-newform-actions:has(.wsearch-submit-btn){display:block}` وگرنه
-   دکمه‌ها را زیرِ هم می‌چیند. */
-.wsearch-newform-actions.rm-wiz-actions{ display:flex; align-items:center; gap:10px; }
-.rm-wiz-actions .wsearch-submit-btn{ flex:1; width:auto; }
-.rm-wiz-back{
-  flex:0 0 auto; width:44px; height:44px; padding:0; border-radius:14px;
-  display:flex; align-items:center; justify-content:center;
-  border:1px solid var(--line); background:none; box-shadow:none;
-  color:var(--muted); cursor:pointer;
-  transition:border-color .15s ease, color .15s ease;
-}
-@media (hover:hover) and (pointer:fine){
-  .rm-wiz-back:hover{ border-color:var(--accent); color:var(--accent); }
-}
-
-/* ===================== فوترِ هشدارِ هوش مصنوعی ===================== */
-/* روی هر صفحه‌ی رودمپ می‌نشیند — مسیر را یک مدلِ زبانی ساخته و نامِ منابع
-   یا ترتیبِ مراحل می‌توانند اشتباه باشند. */
-/* طبقِ درخواستِ صریحِ تازه: دیگه هیچ باکس/بردر/آیکونی نداره — فقط خودِ
-   متنِ قرمز، وسط‌چین، توی یک خط (بدونِ شکستن‌خط، حتی روی موبایل). */
-.rm-disclaimer{
-  margin:20px 0 0; font-size:11px; line-height:1.6; color:#E05252; text-align:center;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.rm-session-label{
-  margin-top:11px; font-size:10px; font-weight:700; letter-spacing:.02em;
-  color:var(--accent); text-transform:none;
-}
 
 /* هر عنصری که کلاسِ is-loading بگیرد، یک دایره‌ی چرخانِ کوچک قبل از متنش
    می‌گیرد. عمداً با ::before و نه یک کامپوننت: این حالت‌ها در ده‌ها فایل
@@ -8185,3 +7711,384 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
           }
         }
       
+
+/* ============================================================
+   رودمپ (rp-) — هاب، صفحه‌ی مسیر، کارتِ مرحله، ویزارد
+   ------------------------------------------------------------
+   سطح‌ها همان .trade-surfaceِ بقیه‌ی اپ‌اند؛ این‌جا فقط چیدمان. ریستِ
+   سراسریِ `button{}` به هر دکمه بک‌گراندِ شیشه‌ای می‌دهد — همه‌ی دکمه‌های
+   این بخش (به‌جز trade-primary/danger که خودشان تعریف دارند) صریح
+   background:none/box-shadow:none/backdrop-filter:none می‌گیرند تا شفاف
+   بمانند.
+   ============================================================ */
+.rp-hub, .rp-page{ padding-bottom:40px; }
+
+/* ── هاب ── */
+.rp-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
+@media (min-width:720px){ .rp-grid{ grid-template-columns:1fr 1fr; } }
+.rp-card{
+  display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
+}
+@media (hover:hover) and (pointer:fine){ .rp-card:hover{ border-color:var(--accent); } }
+.rp-card:active{ transform:scale(.99); }
+.rp-card-eyebrow{ font-size:10.5px; font-weight:700; color:var(--accent); unicode-bidi:plaintext; }
+.rp-card-title{ margin-top:4px; font-size:15px; font-weight:800; line-height:1.7; }
+.rp-card-desc{
+  margin:5px 0 0; font-size:12px; line-height:1.95; color:var(--muted);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.rp-card-meta{ display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:11px; font-size:11px; color:var(--muted); }
+.rp-card-meta span{ display:inline-flex; align-items:center; gap:4px; }
+.rp-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; padding-top:14px; }
+.rp-card-foot .rp-bar{ flex:1; }
+.rp-card-pct{ flex-shrink:0; font-size:11px; font-weight:800; color:var(--accent); }
+.rp-card-arrow{ flex-shrink:0; color:var(--muted2); transition:transform .18s ease, color .18s ease; }
+@media (hover:hover) and (pointer:fine){ .rp-card:hover .rp-card-arrow{ color:var(--accent); transform:translateX(-3px); } }
+
+.rp-bar{ height:6px; border-radius:999px; background:rgba(var(--surface-rgb),.22); overflow:hidden; }
+.rp-bar span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s cubic-bezier(.22,1,.36,1); }
+
+.rp-empty{
+  margin-top:16px; padding:34px 20px 28px; text-align:center;
+  display:flex; flex-direction:column; align-items:center;
+}
+.rp-empty-icon{
+  width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); border:1px solid rgba(var(--accent-rgb),.35);
+}
+.rp-empty h2{ margin:14px 0 0; font-size:16px; font-weight:800; color:var(--text); }
+.rp-empty p{ margin:8px auto 0; max-width:440px; font-size:12.5px; line-height:2.05; color:var(--muted); }
+.rp-empty-chips{ display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin-top:16px; max-width:480px; }
+.rp-chip-btn{
+  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:600; color:var(--muted);
+  background:none; border:1px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .15s ease, border-color .15s ease;
+}
+@media (hover:hover) and (pointer:fine){ .rp-chip-btn:hover{ color:var(--accent); border-color:var(--accent); background:none; box-shadow:none; } }
+.rp-empty-cta{ margin-top:18px; }
+
+/* ── هیروی صفحه‌ی مسیر ── */
+.rp-hero{ padding:18px 20px 20px; }
+.rp-hero-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.rp-eyebrow{ font-size:11px; font-weight:700; color:var(--accent); unicode-bidi:plaintext; }
+.rp-hero-main{ display:flex; align-items:flex-start; gap:18px; margin-top:6px; }
+.rp-hero-text{ flex:1; min-width:0; }
+.rp-hero-text h1{ margin:0; font-size:21px; font-weight:800; line-height:1.65; color:var(--text); }
+.rp-hero-text p{ margin:8px 0 0; font-size:12.5px; line-height:2.05; color:var(--muted); }
+
+.rp-ring{ position:relative; flex-shrink:0; width:74px; height:74px; }
+.rp-ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+.rp-ring circle{ fill:none; stroke-width:5; }
+.rp-ring-track{ stroke:rgba(var(--surface-rgb),.24); }
+.rp-ring-fill{ stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .5s cubic-bezier(.22,1,.36,1); }
+.rp-ring-text{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.3; }
+.rp-ring-text b{ font-size:14px; font-weight:800; color:var(--text); }
+.rp-ring-text span{ font-size:10px; color:var(--muted); }
+
+.rp-hero-goal{
+  display:flex; gap:8px; margin-top:14px; padding:10px 13px; border-radius:12px;
+  font-size:12.5px; line-height:2; color:var(--text); border:1px solid rgba(var(--accent-rgb),.3);
+}
+.rp-hero-goal svg{ flex-shrink:0; margin-top:5px; color:var(--accent); }
+.rp-hero-goal b{ color:var(--accent); }
+
+.rp-stats{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:1px; margin-top:14px;
+  border:1px solid var(--surface-line); border-radius:14px; overflow:hidden;
+}
+@media (min-width:640px){ .rp-stats{ grid-template-columns:repeat(4, 1fr); } }
+.rp-stat{ display:flex; flex-direction:column; gap:3px; padding:10px 12px; outline:1px solid var(--surface-line); }
+.rp-stat-label{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); }
+.rp-stat-label svg{ color:var(--accent); }
+.rp-stat-value{ font-size:12.5px; font-weight:700; color:var(--text); line-height:1.7; }
+
+.rp-next{
+  display:flex; align-items:center; gap:10px; width:100%; margin-top:14px; padding:11px 14px;
+  border-radius:13px; text-align:start; font:inherit; color:var(--text); cursor:pointer;
+  background:none; border:1px dashed rgba(var(--accent-rgb),.5); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; transition:border-color .16s ease;
+}
+@media (hover:hover) and (pointer:fine){ .rp-next:hover{ border-color:var(--accent); background:none; box-shadow:none; } }
+.rp-next-label{ flex-shrink:0; font-size:10.5px; font-weight:800; color:var(--accent); }
+.rp-next-title{ flex:1; min-width:0; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-next svg{ flex-shrink:0; color:var(--accent); }
+
+.rp-confirm{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  padding:14px 16px; border-radius:14px; margin-top:14px; font-size:12.5px; color:var(--text);
+  background:rgba(224,82,82,.08); border:1px solid rgba(224,82,82,.34);
+}
+.rp-confirm-actions{ display:flex; gap:9px; }
+.rp-notice{
+  margin-top:14px; padding:10px 14px; border-radius:12px; font-size:12px; line-height:1.95;
+  color:#E0A452; border:1px solid rgba(224,164,82,.35);
+}
+.rp-tabs{ margin:18px 0 6px; }
+
+/* ── تایم‌لاینِ مرحله‌ها ── */
+.rp-timeline{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; }
+.rp-stage{ position:relative; display:flex; gap:12px; padding-bottom:14px; scroll-margin-top:84px; }
+.rp-stage::before{
+  content:""; position:absolute; top:36px; bottom:0; inset-inline-start:17px;
+  width:2px; background:rgba(var(--surface-rgb),.24);
+}
+.rp-stage:last-child::before{ display:none; }
+.rp-stage.done::before{ background:rgba(var(--accent-rgb),.45); }
+
+.rp-stage-num{
+  position:relative; z-index:1; flex-shrink:0; margin-top:10px;
+  width:36px; height:36px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; color:var(--muted);
+  background:var(--surface-2); border:1.5px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .2s ease, border-color .2s ease, background .2s ease;
+}
+@media (hover:hover){ .rp-stage-num:hover{ border-color:var(--accent); color:var(--accent); background:var(--surface-2); box-shadow:none; } }
+.rp-stage.done .rp-stage-num, .rp-stage.done .rp-stage-num:hover{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+.rp-stage-card{ flex:1; min-width:0; overflow:hidden; }
+.rp-stage.open .rp-stage-card{ border-color:rgba(var(--accent-rgb),.4); }
+.rp-stage-head{
+  display:flex; align-items:center; gap:10px; width:100%; padding:13px 15px;
+  text-align:start; font:inherit; color:var(--text); cursor:pointer; border-radius:0;
+  background:none; border:0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+@media (hover:hover){ .rp-stage-head:hover{ background:none; box-shadow:none; } }
+.rp-stage-head-main{ flex:1; min-width:0; }
+.rp-stage-head h3{ margin:0; font-size:14.5px; font-weight:800; line-height:1.75; }
+.rp-stage.done .rp-stage-head h3{ color:var(--muted); }
+.rp-stage-sub{ display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:2px; font-size:10.5px; color:var(--muted); }
+.rp-pending{ color:#E0A452; }
+.rp-stage-chevron{ flex-shrink:0; color:var(--muted2); transition:transform .22s ease; }
+.rp-stage.open .rp-stage-chevron{ transform:rotate(180deg); color:var(--accent); }
+
+.rp-stage-body{ padding:2px 15px 16px; animation:tradeFadeIn .24s ease both; }
+.rp-goal{ display:flex; gap:7px; font-size:12.5px; line-height:1.95; color:var(--accent-soft); font-weight:600; }
+.rp-goal svg{ flex-shrink:0; margin-top:5px; }
+.rp-why{ margin:6px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-sec{ margin-top:16px; padding-top:14px; border-top:1px solid var(--surface-line); }
+.rp-sec-title{
+  display:flex; align-items:center; gap:7px; margin-bottom:10px;
+  font-size:12.5px; font-weight:800; color:var(--text);
+}
+.rp-sec-title svg{ color:var(--accent); flex-shrink:0; }
+.rp-sec.warn .rp-sec-title svg{ color:#E0A452; }
+
+.rp-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+.rp-tag{
+  padding:4px 10px; border-radius:8px; font-size:11px; font-weight:600; color:var(--muted);
+  border:1px solid var(--surface-line); unicode-bidi:plaintext;
+}
+
+/* سرفصل‌ها: شماره‌ی فارسی، عنوان، توضیح، ریزمبحث‌ها */
+.rp-topics{ margin:0; padding-inline-start:20px; list-style-type:persian; display:flex; flex-direction:column; gap:13px; }
+.rp-topics > li::marker{ color:var(--accent); font-weight:800; }
+.rp-topic-title{ font-size:13px; font-weight:800; color:var(--text); line-height:1.8; }
+.rp-topic-detail{ margin:3px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+.rp-points{ margin:7px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; }
+.rp-points li{
+  position:relative; padding-inline-start:14px; font-size:12px; line-height:1.95; color:var(--text);
+}
+.rp-points li::before{
+  content:""; position:absolute; inset-inline-start:2px; top:11px;
+  width:5px; height:5px; border-radius:50%; background:var(--accent);
+}
+.rp-points.warn li::before{ background:#E0A452; }
+
+/* کارهای عملی — چک‌لیست */
+.rp-tasks{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+.rp-tasks li{ display:flex; gap:10px; }
+.rp-check{
+  flex-shrink:0; width:20px; height:20px; margin-top:3px; padding:0; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; color:#fff;
+  background:none; border:1.5px solid var(--muted2); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:background .16s ease, border-color .16s ease;
+}
+@media (hover:hover){ .rp-check:hover{ border-color:var(--accent); background:none; box-shadow:none; } }
+.rp-tasks li.checked .rp-check, .rp-tasks li.checked .rp-check:hover{ background:var(--accent); border-color:var(--accent); }
+.rp-task-body{ flex:1; min-width:0; }
+.rp-task-title{ font-size:12.5px; font-weight:700; color:var(--text); line-height:1.9; }
+.rp-tasks li.checked .rp-task-title{ color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(var(--accent-rgb),.6); }
+.rp-task-body p{ margin:2px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+.rp-task-output{ margin-top:4px; font-size:11.5px; line-height:1.9; color:var(--text); }
+.rp-task-output b{ color:var(--accent); font-weight:700; }
+
+.rp-project{
+  margin-top:16px; padding:13px 15px; border-radius:14px;
+  border:1px dashed rgba(var(--accent-rgb),.55);
+}
+.rp-project-label{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800; color:var(--accent); }
+.rp-project-title{ margin-top:5px; font-size:13.5px; font-weight:800; color:var(--text); line-height:1.8; }
+.rp-project p{ margin:4px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-tools{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; }
+.rp-tools li{ display:flex; flex-direction:column; gap:1px; font-size:12px; line-height:1.9; color:var(--muted); }
+.rp-tool-name{
+  align-self:flex-start; font-size:12.5px; font-weight:800; color:var(--text); text-decoration:none;
+  unicode-bidi:plaintext; transition:color .15s ease;
+}
+@media (hover:hover){ a.rp-tool-name:hover{ color:var(--accent); } }
+
+.rp-resources{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+.rp-resources li{ display:flex; gap:9px; align-items:flex-start; }
+.rp-res-type{
+  flex-shrink:0; min-width:44px; margin-top:2px; padding:2px 7px; border-radius:7px; text-align:center;
+  font-size:10px; font-weight:700; color:var(--accent); border:1px solid rgba(var(--accent-rgb),.35);
+}
+.rp-res-body{ flex:1; min-width:0; }
+.rp-res-body a{
+  display:inline-flex; align-items:baseline; gap:5px; font-size:12.5px; font-weight:700;
+  color:var(--text); text-decoration:none; unicode-bidi:plaintext; transition:color .15s ease;
+}
+.rp-res-body a svg{ opacity:.45; flex-shrink:0; }
+@media (hover:hover){ .rp-res-body a:hover{ color:var(--accent); } }
+.rp-res-source{ margin-inline-start:7px; font-size:10.5px; color:var(--muted2); }
+.rp-res-body p{ margin:1px 0 0; font-size:11.5px; line-height:1.9; color:var(--muted); }
+
+.rp-done{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+.rp-done li{ display:flex; gap:8px; font-size:12px; line-height:1.95; color:var(--text); }
+.rp-done svg{ flex-shrink:0; margin-top:5px; color:var(--accent); }
+
+.rp-pending-box{ margin-top:12px; display:flex; flex-direction:column; align-items:flex-start; gap:11px; }
+.rp-pending-box p{ margin:0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-stage-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; padding-top:14px; border-top:1px solid var(--surface-line); }
+.rp-ghost-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:700;
+  color:var(--muted); background:none; border:1px solid var(--surface-line);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .16s ease, border-color .16s ease;
+}
+@media (hover:hover){ .rp-ghost-btn:hover{ color:var(--accent); border-color:var(--accent); background:none; box-shadow:none; } }
+.rp-ghost-btn.on{ color:var(--accent); border-color:var(--accent); }
+.rp-ghost-btn:disabled{ opacity:.55; cursor:default; }
+
+/* افزودنِ مرحله به برنامه‌ی هفتگی (RoadmapStepToProgram) */
+.rp-toprogram{ margin-top:10px; }
+.rp-toprogram > .rp-ghost-btn{ color:var(--accent); border-color:rgba(var(--accent-rgb),.4); }
+.rp-add-panel{ margin-top:4px; padding:14px; border-radius:14px; border:1px solid var(--surface-line); }
+.rp-add-title{ font-size:12px; font-weight:700; color:var(--text); margin-bottom:10px; }
+.rp-day-row{ display:flex; flex-wrap:wrap; gap:6px; }
+.rp-day{
+  padding:6px 11px; border-radius:999px; font-size:11px; font-weight:600;
+  color:var(--muted); background:none; border:1px solid var(--surface-line);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .16s ease, border-color .16s ease;
+}
+@media (hover:hover){ .rp-day:hover{ color:var(--text); background:none; box-shadow:none; } }
+.rp-day.on, .rp-day.on:hover{ color:var(--accent); border-color:var(--accent); }
+.rp-time-row{ display:flex; gap:11px; margin-top:12px; }
+.rp-time-row label{ flex:1; display:flex; flex-direction:column; gap:5px; }
+.rp-time-row span{ font-size:10.5px; color:var(--muted); }
+.rp-time-row input{
+  width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px;
+  font-size:12.5px; color:var(--text); direction:ltr; text-align:center;
+  background:none; border:1px solid var(--surface-line); outline:none;
+}
+.rp-time-row input:focus{ border-color:var(--accent); }
+.rp-add-actions{ display:flex; gap:9px; margin-top:14px; }
+.rp-add-actions button{ flex:1; }
+.rp-added{ display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:11.5px; font-weight:700; color:var(--accent); }
+
+/* ── راهنما ── */
+.rp-guide{ margin-top:14px; padding:18px 20px 22px; }
+.rp-guide h2{ margin:22px 0 0; font-size:14.5px; font-weight:800; color:var(--accent); line-height:1.9; }
+.rp-guide h2:first-child{ margin-top:0; }
+.rp-guide p{ margin:9px 0 0; font-size:13px; line-height:2.2; color:var(--text); }
+.rp-guide-li{
+  position:relative; margin:7px 0 0; padding-inline-start:16px;
+  font-size:12.5px; line-height:2.05; color:var(--text);
+}
+.rp-guide-li::before{
+  content:""; position:absolute; inset-inline-start:4px; top:13px;
+  width:5px; height:5px; border-radius:50%; background:var(--accent);
+}
+
+/* ── نمای کلی ── */
+.rp-overview{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:14px; }
+@media (min-width:720px){ .rp-overview{ grid-template-columns:1fr 1fr; } .rp-ov-card:last-child{ grid-column:1 / -1; } }
+.rp-ov-card{ padding:15px 17px; }
+.rp-ov-text{ margin:0; font-size:12.5px; line-height:2; color:var(--text); }
+.rp-mini-stages{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:2px; }
+.rp-mini-stages button{
+  display:flex; align-items:center; gap:10px; width:100%; padding:8px 6px; border-radius:10px;
+  text-align:start; font:inherit; color:var(--text); cursor:pointer;
+  background:none; border:0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+@media (hover:hover){ .rp-mini-stages button:hover{ background:none; box-shadow:none; color:var(--accent); } }
+.rp-mini-n{
+  flex-shrink:0; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; color:var(--muted); border:1.5px solid var(--surface-line);
+}
+.rp-mini-stages li.done .rp-mini-n{ color:#fff; background:var(--accent); border-color:var(--accent); }
+.rp-mini-title{ flex:1; min-width:0; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-mini-stages li.done .rp-mini-title{ color:var(--muted); }
+.rp-mini-dur{ flex-shrink:0; font-size:10.5px; color:var(--muted2); }
+
+/* ── فوترِ هشدارِ AI — فقط متنِ قرمز، یک خط (درخواستِ صریح) ── */
+.rp-disclaimer{
+  margin:20px 0 0; font-size:11px; line-height:1.6; color:#E05252; text-align:center;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ── ویزارد (داخلِ همان پاپ‌آپِ مشترکِ .wsearch-newform) ── */
+.wsearch-newform:has(.rp-wiz){ max-height:min(90vh, 680px); }
+.rp-wiz-steps{ display:flex; gap:5px; margin:2px 0 14px; }
+.rp-wiz-steps span{ flex:1; height:3px; border-radius:999px; background:rgba(var(--surface-rgb),.25); transition:background .3s ease; }
+.rp-wiz-steps span.on{ background:var(--accent); }
+.rp-wiz-label{ display:block; margin-top:16px; }
+.rp-wiz-optional{ font-weight:400; color:var(--muted2); }
+.rp-wiz-hint{ margin-top:11px; font-size:11.5px; line-height:2; color:var(--muted); }
+.rp-wiz-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.rp-wiz-chip{
+  flex:0 0 auto; padding:9px 14px; border-radius:11px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(var(--bg-rgb),.5);
+  color:var(--muted); font:inherit; font-size:12px; font-weight:700; line-height:1.5;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
+}
+body:not([data-theme="light"]) .rp-wiz-chip{ background:#0B0C0D; border:1px solid rgba(255,255,255,.07); }
+@media (hover:hover) and (pointer:fine){ .rp-wiz-chip:hover{ border-color:var(--accent); color:var(--text); } }
+.rp-wiz-chip:active{ transform:scale(.97); }
+.rp-wiz-chip.on,
+body:not([data-theme="light"]) .rp-wiz-chip.on,
+body[data-theme="light"] .rp-wiz-chip.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.rp-wiz-loading{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 6px 16px; text-align:center; }
+.rp-wiz-spinner{ width:22px; height:22px; border-width:2.5px; border-color:rgba(var(--accent-rgb),.25); border-top-color:var(--accent); }
+.rp-wiz-loading-title{ font-size:13.5px; font-weight:800; color:var(--text); unicode-bidi:plaintext; }
+.rp-wiz-phases{ margin:4px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; text-align:start; }
+.rp-wiz-phases li{
+  position:relative; padding-inline-start:18px; font-size:11.5px; line-height:1.9; color:var(--muted2);
+  transition:color .3s ease;
+}
+.rp-wiz-phases li::before{
+  content:""; position:absolute; inset-inline-start:3px; top:8px;
+  width:7px; height:7px; border-radius:50%; border:1.5px solid var(--muted2); box-sizing:border-box;
+}
+.rp-wiz-phases li.done{ color:var(--muted); }
+.rp-wiz-phases li.done::before{ background:var(--accent); border-color:var(--accent); }
+.rp-wiz-phases li.now{ color:var(--text); font-weight:700; }
+.rp-wiz-phases li.now::before{ border-color:var(--accent); animation:rpPulse 1.2s ease-in-out infinite; }
+@keyframes rpPulse{ 50%{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.18); } }
+.rp-wiz-loading-hint{ margin-top:6px; font-size:10.5px; color:var(--muted2); }
+
+.wsearch-newform-actions.rp-wiz-actions{ display:flex; align-items:center; gap:10px; }
+.rp-wiz-actions .wsearch-submit-btn{ flex:1; width:auto; }
+.rp-wiz-back{
+  flex:0 0 auto; width:44px; height:44px; padding:0; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--line); background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; color:var(--muted); cursor:pointer;
+  transition:border-color .15s ease, color .15s ease;
+}
+@media (hover:hover) and (pointer:fine){ .rp-wiz-back:hover{ border-color:var(--accent); color:var(--accent); background:none; box-shadow:none; } }
+
+@media (prefers-reduced-motion:reduce){
+  .rp-stage-body, .rp-wiz-phases li.now::before{ animation:none; }
+}

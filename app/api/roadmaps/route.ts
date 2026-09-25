@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 import { generateRoadmapPlan } from "@/lib/aiClient";
-import { countRowProgress } from "@/lib/roadmapPlan";
+import { countRowProgress, parseHours, parseLevel } from "@/lib/roadmapPlan";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 
-// تولید مسیر تا ۵۵ ثانیه طول می‌کشه (AI_TOTAL_BUDGET_MS) — بدون این،
+// تولید مسیر (اسکلت + راهنما و جزئیاتِ موازیِ هر مرحله) تا ۵۵ ثانیه طول می‌کشه (AI_TOTAL_BUDGET_MS) — بدون این،
 // روی هاست‌هایی که فانکشن سرورلس رو خودکار قطع می‌کنن (مثل Vercel، سقف
 // پیش‌فرض ۱۰-۱۵ ثانیه‌ست)، دقیقاً وسط تولید قطع می‌شه و کلاینت به‌جای
 // جواب سرور یه قطعیِ خامِ اتصال می‌بینه («ارتباط برقرار نشد»).
@@ -17,6 +17,7 @@ const WINDOW_MS = 30 * 60_000;
 
 const MAX_TOPIC = 120;
 const MAX_GOAL = 300;
+const MAX_BACKGROUND = 300;
 
 export async function GET() {
   const guard = await requireSuperAdmin();
@@ -27,7 +28,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     select: {
       id: true, topic: true, title: true, summary: true, goal: true,
-      totalDuration: true, createdAt: true, steps: true, progress: true,
+      totalDuration: true, createdAt: true, steps: true, progress: true, meta: true,
     },
   });
 
@@ -37,6 +38,7 @@ export async function GET() {
     return {
       id: r.id, topic: r.topic, title: r.title, summary: r.summary,
       goal: r.goal, totalDuration: r.totalDuration, createdAt: r.createdAt,
+      level: (r.meta as any)?.level ?? null,
       stageCount: total, doneCount: done,
       pct: total ? Math.round((done / total) * 100) : 0,
     };
@@ -61,11 +63,19 @@ export async function POST(req: NextRequest) {
   if (!topic) return NextResponse.json({ error: "بگو چی می‌خوای یاد بگیری" }, { status: 400 });
   const goalRaw = String((body as any)?.goal || "").trim();
   const goal = goalRaw ? clampText(goalRaw, MAX_GOAL) : undefined;
+  // سطح و وقتِ هفتگی فقط از فهرستِ ثابت پذیرفته می‌شوند — هر مقدارِ دیگری
+  // یعنی «نگفته»، نه متنی که مستقیم به پرامپت برود.
+  const level = parseLevel((body as any)?.level);
+  const weeklyHours = parseHours((body as any)?.weeklyHours);
+  const bgRaw = String((body as any)?.background || "").trim();
+  const background = bgRaw ? clampText(bgRaw, MAX_BACKGROUND) : undefined;
 
   let plan;
+  let meta;
   try {
-    const result = await generateRoadmapPlan({ topic, goal }, userId);
+    const result = await generateRoadmapPlan({ topic, goal, level, weeklyHours, background }, userId);
     plan = result.plan;
+    meta = result.meta;
   } catch (err: any) {
     console.error("roadmap generation failed", err);
     return NextResponse.json(
@@ -85,10 +95,14 @@ export async function POST(req: NextRequest) {
       steps: plan.stages as any,
       totalDuration: plan.totalDuration || null,
       tools: plan.tools as any,
+      meta: plan.meta as any,
       generatedByAi: true,
     },
     select: { id: true },
   });
 
-  return NextResponse.json({ id: created.id }, { status: 201 });
+  return NextResponse.json(
+    { id: created.id, pendingStages: meta.pendingStages, guideReady: meta.guideReady },
+    { status: 201 }
+  );
 }

@@ -1399,12 +1399,16 @@ model Roadmap {
   // *خوانده‌شدن* است، نه برای map‌زدنِ UI.
   guide String? @db.Text
 
-  // همان مسیر، بریده به ۱ تا ۲۰ مرحله (lib/roadmapPlan.ts):
-  // [{ n, title, goal, duration, learn[], do[], tools[], resources[], done }]
+  // همان مسیر، بریده به ۳ تا ۱۶ مرحله با جزئیاتِ ریز (lib/roadmapPlan.ts → PlanStage):
+  // [{ n, title, goal, duration, focus, why, detailed, topics[], tasks[], project, tools[], resources[], pitfalls[], done[] }]
   steps Json?
 
   totalDuration String? // برآوردِ کلِ مسیر، مثلاً «۶ ماه»
-  tools         Json? // ابزارهای کلِ مسیر: string[]
+  tools         Json? // ابزارهای کلِ مسیر: {name, use}[] (ردیف‌های قدیمی: string[])
+
+  // سطح/وقتِ هفتگی/پیش‌زمینه‌ی کاربر + برداشتِ مدل (مخاطب، پیش‌نیازها،
+  // خروجی‌های نهایی، مدرک‌ها) — lib/roadmapPlan.ts → PlanMeta
+  meta Json?
 
   // کدام مرحله‌ها تیک خورده‌اند: { "1": true, "3": true } — کلید شماره‌ی
   // مرحله است نه اندیسِ آرایه، چون شماره همان چیزی‌ست که به کاربر نشان
