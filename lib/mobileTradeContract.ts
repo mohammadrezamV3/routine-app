@@ -56,7 +56,15 @@ export type TradeSyncEntity = "tradeAccount" | "tradeTag" | "tradeChecklist" | "
 /** موجودیت‌هایی که حذفِ واقعی دارن (و tombstone) — حساب آرشیو می‌شه، تنظیم null */
 export type TradeDeletableEntity = "tradeTag" | "tradeChecklist" | "tradeEntry" | "tradeNote";
 
-/** کلیدهای تنظیماتِ ترید که همگام می‌شن (زیرمجموعه‌ی allowlistِ /api/settings) */
+/**
+ * کلیدهای تنظیماتِ ترید که با entity "tradeSetting" همگام می‌شن (زیرمجموعه‌ی
+ * allowlistِ /api/settings). شکلِ value همونیه که وب می‌نویسه (TradeSettingValues
+ * پایین)؛ سرور فقط سقفِ ۶۴KB رو چک می‌کنه، پس کلاینت خودش شکل رو رعایت کنه و
+ * مقدارِ ناشناخته/بدشکلِ pullشده رو با پیش‌فرض جایگزین کنه.
+ * value=null (یا op=delete) یعنی «برگرد به پیش‌فرض».
+ * عمدا نیستن: tradeChatRulesAccepted (چت همگام نمی‌شه) و کلیدهای سرور-مدیریت
+ * (tradeChecklistSeeded، tradeNewsAlertLog) — push‌شون rejected/invalid می‌شه.
+ */
 export const TRADE_SYNC_SETTING_KEYS = [
   "tradeTickerSymbols",
   "tradeCalendarSystem",
@@ -68,6 +76,34 @@ export const TRADE_SYNC_SETTING_KEYS = [
   "tradeChartInterval",
 ] as const;
 export type TradeSyncSettingKey = (typeof TRADE_SYNC_SETTING_KEYS)[number];
+
+/** شکلِ valueِ هر کلید (و پیش‌فرضِ وب وقتی null/نبود) */
+export type TradeSettingValues = {
+  /** نمادهای نوارِ قیمت (Yahoo، مثلا "GC=F"، "EURUSD=X")، ۱ تا ۲۰ تا. پیش‌فرض بسته به بازار */
+  tradeTickerSymbols: string[];
+  /** تقویمِ نمایشِ تاریخِ معاملات. پیش‌فرض "jalali" */
+  tradeCalendarSystem: "jalali" | "gregorian";
+  /** کلیدِ آمارهای قابلِ‌نمایش در صفحه‌ی حساب (TradeStatKeyِ lib/tradeTypes.ts). پیش‌فرض DEFAULT_VISIBLE_TRADE_STATS */
+  tradeVisibleStats: string[];
+  /** کلیدِ «واقعیت»های نمایش‌داده‌شده (TradeFactKey)، حداکثر ۸. پیش‌فرض DEFAULT_VISIBLE_TRADE_FACTS */
+  tradeVisibleFacts: string[];
+  /** onboardingِ نوارِ بازار دیده شده؟ پیش‌فرض false */
+  tradeMarketsOnboarded: boolean;
+  /** هشدارِ خبرهای تقویمِ اقتصادی (NewsAlertPrefsِ lib/tradeNewsAlerts.ts) */
+  tradeNewsAlerts: {
+    enabled: boolean;
+    minutesBefore: number;
+    impacts: ("LOW" | "MEDIUM" | "HIGH")[];
+    /** خالی = همه‌ی ارزها */
+    currencies: string[];
+    /** کلیدِ پایدارِ «currency|title» برای هشدارِ تک‌رویداد */
+    watchedEventKeys: string[];
+  };
+  /** نمادِ نمودار (مثلا "EURUSD"). پیش‌فرض "EURUSD" */
+  tradeChartSymbol: string;
+  /** بازه‌ی نمودار (رشته‌ی TradingView مثلِ "60"، "D"). فعلا وب نمی‌نویسدش */
+  tradeChartInterval: string;
+};
 
 /**
  * فیلدهای «بروکری»ِ معامله‌ای که از متاتریدر همگام شده (`externalId != null`).

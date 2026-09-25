@@ -23,12 +23,33 @@ export type MobileModuleKey =
   | "ROADMAP"
   | "AI_INSIGHT";
 
+/** یک ماژولِ فعال با انقضاش (null = بی‌انقضا، مثلا پلنِ پایه یا سوپریوزر) */
+export type MobileModuleAccess = { module: MobileModuleKey; expiresAt: string | null };
+
+/** اشتراکِ فعلیِ کاربر — همون «پلن فعلی»ِ پنلِ حسابِ وب (ACTIVE/TRIAL و منقضی‌نشده) */
+export type MobilePlanInfo = {
+  /** "basic" | "exercise" | "trade" | "max" | … */
+  key: string;
+  /** نامِ فارسیِ پلن (Plan.nameFa) */
+  name: string;
+  status: "ACTIVE" | "TRIAL";
+  /** ISO — پایانِ دوره‌ی فعلیِ اشتراک (Subscription.currentPeriodEnd) */
+  expiresAt: string;
+};
+
 export type MobileUser = {
   id: string;
   name: string | null;
+  username: string | null;
+  /** شماره‌ی ماسک‌شده برای نمایش، مثلا "0912***4567" — شماره‌ی کامل هیچ‌وقت نمیاد */
+  phoneMasked: string | null;
   market: "IRAN" | "INTERNATIONAL";
   /** ماژول‌های فعال و منقضی‌نشده — فقط برای نمایش؛ سرور خودش دوباره چک می‌کنه */
   modules: MobileModuleKey[];
+  /** همون ماژول‌ها با تاریخِ انقضا */
+  moduleAccess: MobileModuleAccess[];
+  /** null یعنی اشتراکِ فعالی نداره */
+  plan: MobilePlanInfo | null;
 };
 
 export type MobileTokens = {
@@ -64,6 +85,12 @@ export type MobileVerify2faResponse = MobileAuthSuccess;
 export type MobileRefreshRequest = { refreshToken: string };
 /** 200 | 401 (توکن نامعتبر/باطل/منقضی ← کاربر باید دوباره وارد بشه) */
 export type MobileRefreshResponse = MobileAuthSuccess;
+
+/**
+ * GET /api/mobile/me — Bearer. همون MobileUserِ login/refresh، برای تازه‌کردنِ
+ * اطلاعاتِ حساب (پلن/ماژول‌ها) بدونِ refreshِ توکن. 200 | 401 | 429
+ */
+export type MobileMeResponse = { user: MobileUser };
 
 /** POST /api/mobile/auth/logout — Bearer اختیاری؛ همیشه 200 */
 export type MobileLogoutRequest = { refreshToken?: string };
@@ -210,6 +237,8 @@ export type ExerciseLogRecord = SyncMeta & {
   date: string;
   completed: boolean;
   completedItems: string[];
+  /** یادداشتِ آزادِ همین جلسه (حداکثر EXERCISE_LOG_NOTES_MAX کاراکتر) */
+  notes: string | null;
 };
 
 export type FoodLogEntryRecord = SyncMeta & {
@@ -248,16 +277,50 @@ export type CalorieTargetRecord = SyncMeta & {
   effectiveTo: string | null;
 };
 
+/** سطح‌های مجازِ برنامه — سه سطحِ قالب‌های ایستا/AI + custom (برنامه‌ی دستی) */
+export const EXERCISE_PLAN_LEVELS = ["beginner", "intermediate", "advanced", "custom"] as const;
+export type ExercisePlanLevel = (typeof EXERCISE_PLAN_LEVELS)[number];
+export const EXERCISE_TRAINING_PHASES = ["bulk", "cut", "maintenance", "none"] as const;
+export type ExerciseTrainingPhase = (typeof EXERCISE_TRAINING_PHASES)[number];
+
 /**
- * برنامه‌ی تمرینی: فقط جایگزینیِ حرکت/چیدمان (planData) و فعال/غیرفعال‌کردن.
- * ساختِ id جدید فقط برای «برنامه‌ی دستی» (level=custom) و با rulesAccepted=true.
- * ساختِ برنامه با AI از این راه نیست (endpointِ AI جدا). delete پشتیبانی نمی‌شه.
+ * متادیتای اختیاریِ برنامه (همون ستون‌هایی که وب برای برنامه‌ی قالبی/AI
+ * ذخیره می‌کنه)، با همون سقف‌های POST /api/exercise/plan:
+ *   goal ≤ ۲۰۰، equipment ≤ ۵۰۰، heightCm ۵۰..۲۶۰، weightKg ۲۰..۴۰۰،
+ *   trainingMonth عددِ صحیحِ ۱..۶۰۰، gymDays نامِ فارسیِ روزهای هفته (بی‌تکرار).
+ * نبودِ هر فیلد: در ساخت = پیش‌فرض (level=custom، goal=null، trainingPhase=none،
+ * gymDays = روزهای planData)؛ در ویرایش = مقدارِ فعلی دست نمی‌خوره.
+ * null برای فیلدهای nullable یعنی پاک‌کردن. generatedByAi همیشه سمتِ سروره.
+ */
+export type ExercisePlanMeta = {
+  level?: ExercisePlanLevel;
+  goal?: string | null;
+  equipment?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  trainingMonth?: number | null;
+  trainingPhase?: ExerciseTrainingPhase;
+  hasPhysicalLimitation?: boolean;
+  gymDays?: string[];
+};
+
+/**
+ * برنامه‌ی تمرینی: جایگزینیِ حرکت/چیدمان (planData)، فعال/غیرفعال‌کردن و
+ * متادیتای اختیاری (ExercisePlanMeta). ساختِ id جدید (برنامه‌ی دستی یا قالبیِ
+ * آفلاین) فقط با rulesAccepted=true. ساختِ برنامه با AI از این راه نیست
+ * (endpointِ AI جدا). delete پشتیبانی نمی‌شه.
  * سقف‌ها: ۱ تا ۷ روز، هر روز ۱ تا ۵۰ حرکت، هر حرکت ≤ ۲۰۰ کاراکتر، focus ≤ ۱۰۰.
  */
-export type ExercisePlanData = { planData: ExerciseDay[]; isActive: boolean; rulesAccepted?: boolean };
+export type ExercisePlanData = ExercisePlanMeta & { planData: ExerciseDay[]; isActive: boolean; rulesAccepted?: boolean };
 
-/** completedItems حداکثر ۵۰۰ مورد، هر کدوم ≤ ۲۰۰ کاراکتر. planId باید برنامه‌ی خودِ کاربر باشه */
-export type ExerciseLogData = { completed: boolean; completedItems: string[] };
+export const EXERCISE_LOG_NOTES_MAX = 1000;
+
+/**
+ * completedItems حداکثر ۵۰۰ مورد، هر کدوم ≤ ۲۰۰ کاراکتر. planId باید برنامه‌ی خودِ کاربر باشه.
+ * notes: اختیاری، حداکثر EXERCISE_LOG_NOTES_MAX کاراکتر (trim می‌شه). نبودنش
+ * (undefined) یادداشتِ فعلی رو نگه می‌داره؛ null یا "" پاکش می‌کنه. delete هم پاکش می‌کنه.
+ */
+export type ExerciseLogData = { completed: boolean; completedItems: string[]; notes?: string | null };
 
 /**
  * همون قواعدِ POST /api/calorie/log: customName ۱ تا ۸۰ کاراکتر، customCalories > 0،

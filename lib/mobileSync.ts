@@ -23,6 +23,11 @@ import {
   MOBILE_SYNC_MAX_BATCH,
   MOBILE_SYNC_SETTING_KEYS,
   TASK_PRIORITY_DEFAULT,
+  EXERCISE_LOG_NOTES_MAX,
+  EXERCISE_PLAN_LEVELS,
+  EXERCISE_TRAINING_PHASES,
+  type ExercisePlanLevel,
+  type ExerciseTrainingPhase,
   type DailyEntryData,
   type DailyEntryRecord,
   type SleepEntryRecord,
@@ -367,17 +372,93 @@ export function validatePlanDays(v: unknown): V<ParsedExerciseDay[]> {
   return { ok: true, value: out };
 }
 
-export type ParsedExercisePlanData = { planData: ParsedExerciseDay[]; isActive: boolean; rulesAccepted: boolean };
+/**
+ * متادیتای اختیاریِ برنامه (ExercisePlanMeta در قرارداد). فقط فیلدهای فرستاده‌شده
+ * در خروجی هستن — undefined یعنی «دست نزن» (ویرایش) یا «پیش‌فرض» (ساخت).
+ * سقف‌ها آینه‌ی lib/exercisePlanGeneration.ts (POST /api/exercise/plan).
+ */
+export type ParsedExercisePlanMeta = {
+  level?: ExercisePlanLevel;
+  goal?: string | null;
+  equipment?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  trainingMonth?: number | null;
+  trainingPhase?: ExerciseTrainingPhase;
+  hasPhysicalLimitation?: boolean;
+  gymDays?: string[];
+};
+
+export const MAX_PLAN_GOAL_LEN = 200;
+export const MAX_PLAN_EQUIPMENT_LEN = 500;
+
+export function validateExercisePlanMeta(data: Record<string, unknown>): V<ParsedExercisePlanMeta> {
+  const out: ParsedExercisePlanMeta = {};
+  if (data.level !== undefined) {
+    if (!(EXERCISE_PLAN_LEVELS as readonly unknown[]).includes(data.level)) return { ok: false, error: "سطح نامعتبر است" };
+    out.level = data.level as ExercisePlanLevel;
+  }
+  if (data.trainingPhase !== undefined) {
+    if (!(EXERCISE_TRAINING_PHASES as readonly unknown[]).includes(data.trainingPhase)) return { ok: false, error: "فازِ تمرین نامعتبر است" };
+    out.trainingPhase = data.trainingPhase as ExerciseTrainingPhase;
+  }
+  for (const [f, max, label] of [
+    ["goal", MAX_PLAN_GOAL_LEN, "هدف تمرین"],
+    ["equipment", MAX_PLAN_EQUIPMENT_LEN, "تجهیزات"],
+  ] as const) {
+    const v = data[f];
+    if (v === undefined) continue;
+    if (v === null) {
+      out[f] = null;
+      continue;
+    }
+    if (typeof v !== "string" || v.trim().length > max) return { ok: false, error: `${label} نامعتبر است` };
+    out[f] = v.trim() || null;
+  }
+  for (const [f, min, max, int, label] of [
+    ["heightCm", 50, 260, true, "قد"],
+    ["weightKg", 20, 400, false, "وزن"],
+    ["trainingMonth", 1, 600, true, "ماه تمرین"],
+  ] as const) {
+    const v = data[f];
+    if (v === undefined) continue;
+    if (v === null) {
+      out[f] = null;
+      continue;
+    }
+    if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max || (int && !Number.isInteger(v))) {
+      return { ok: false, error: `${label} معتبر نیست` };
+    }
+    out[f] = v;
+  }
+  if (data.hasPhysicalLimitation !== undefined) {
+    if (typeof data.hasPhysicalLimitation !== "boolean") return { ok: false, error: "hasPhysicalLimitation باید true/false باشد" };
+    out.hasPhysicalLimitation = data.hasPhysicalLimitation;
+  }
+  if (data.gymDays !== undefined) {
+    const g = data.gymDays;
+    if (!Array.isArray(g) || g.length === 0 || g.length > 7 || !g.every((d) => typeof d === "string" && FA_WEEKDAY.includes(d))) {
+      return { ok: false, error: "روزهای باشگاه نامعتبر است" };
+    }
+    out.gymDays = [...new Set(g as string[])];
+  }
+  return { ok: true, value: out };
+}
+
+export type ParsedExercisePlanData = { planData: ParsedExerciseDay[]; isActive: boolean; rulesAccepted: boolean; meta: ParsedExercisePlanMeta };
 
 export function validateExercisePlanData(data: unknown): V<ParsedExercisePlanData> {
   if (!isPlainObject(data)) return { ok: false, error: "داده‌ی برنامه نامعتبر است" };
   const days = validatePlanDays(data.planData);
   if (!days.ok) return days;
   if (typeof data.isActive !== "boolean") return { ok: false, error: "isActive باید true/false باشد" };
-  return { ok: true, value: { planData: days.value, isActive: data.isActive, rulesAccepted: data.rulesAccepted === true } };
+  const meta = validateExercisePlanMeta(data);
+  if (!meta.ok) return meta;
+  return { ok: true, value: { planData: days.value, isActive: data.isActive, rulesAccepted: data.rulesAccepted === true, meta: meta.value } };
 }
 
-export type ParsedExerciseLogData = { completed: boolean; completedItems: string[] };
+/** notes: undefined = دست نزن، null = پاک کن */
+export type ParsedExerciseLogData = { completed: boolean; completedItems: string[]; notes?: string | null };
 
 export function validateExerciseLogData(data: unknown): V<ParsedExerciseLogData> {
   if (!isPlainObject(data) || typeof data.completed !== "boolean") return { ok: false, error: "completed باید true/false باشد" };
@@ -388,7 +469,15 @@ export function validateExerciseLogData(data: unknown): V<ParsedExerciseLogData>
   for (const it of items) {
     if (typeof it !== "string" || it.length > MAX_EXERCISE_ITEM_LEN) return { ok: false, error: "نام حرکت نامعتبر است" };
   }
-  return { ok: true, value: { completed: data.completed, completedItems: items as string[] } };
+  let notes: string | null | undefined;
+  if (data.notes === null) notes = null;
+  else if (data.notes !== undefined) {
+    if (typeof data.notes !== "string" || data.notes.trim().length > EXERCISE_LOG_NOTES_MAX) {
+      return { ok: false, error: `یادداشت حداکثر ${EXERCISE_LOG_NOTES_MAX} کاراکتر است` };
+    }
+    notes = data.notes.trim() || null;
+  }
+  return { ok: true, value: { completed: data.completed, completedItems: items as string[], ...(notes !== undefined ? { notes } : {}) } };
 }
 
 /** کلیدِ لاگِ تمرین: `${planId}|YYYY-MM-DD` */
@@ -730,10 +819,12 @@ export function serializeExercisePlan(
   };
 }
 
-export function serializeExerciseLog(r: SyncTimestamps & { planId: string | null; date: Date; completed: boolean; completedItems: unknown }) {
+export function serializeExerciseLog(
+  r: SyncTimestamps & { planId: string | null; date: Date; completed: boolean; completedItems: unknown; notes: string | null }
+) {
   const date = toIsoDateKey(r.date);
   const planId = r.planId ?? "";
-  return { key: `${planId}|${date}`, planId, date, completed: r.completed, completedItems: stringArray(r.completedItems), ...meta(r) };
+  return { key: `${planId}|${date}`, planId, date, completed: r.completed, completedItems: stringArray(r.completedItems), notes: r.notes, ...meta(r) };
 }
 
 export function serializeFoodLogEntry(

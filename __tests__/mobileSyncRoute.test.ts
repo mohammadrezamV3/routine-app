@@ -16,6 +16,8 @@ import { POST as refresh } from "@/app/api/mobile/auth/refresh/route";
 import { POST as logout } from "@/app/api/mobile/auth/logout/route";
 import { GET as pull } from "@/app/api/mobile/sync/pull/route";
 import { POST as push } from "@/app/api/mobile/sync/push/route";
+import { GET as me } from "@/app/api/mobile/me/route";
+import { maskPhone } from "@/lib/mobileAuth";
 import { prisma } from "@/lib/prisma";
 import { revokeDeviceSession } from "@/lib/deviceSessions";
 import { issueTwoFactorOtp } from "@/lib/twoFactor";
@@ -401,5 +403,65 @@ describe("mobile sync — contract fixes", () => {
     });
     const p = await doPull(accessToken);
     expect(p.sleepEntries[0]).toMatchObject({ targetWokeAtHhmm: "07:00", timezone: "Europe/London" });
+  });
+});
+
+describe("mobile account info (login/refresh user + GET /api/mobile/me)", () => {
+  it("masks phones", () => {
+    expect(maskPhone("09121234567")).toBe("0912***4567");
+    expect(maskPhone("+989121234567")).toBe("+989***4567");
+    expect(maskPhone("1234")).toBe("***34");
+    expect(maskPhone(null)).toBeNull();
+  });
+
+  it("returns username, masked phone, current plan and modules with expiry — never the full phone or isSuperAdmin", async () => {
+    const u = await makeUser();
+    const phone = `09${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;
+    await prisma.user.update({ where: { id: u.id }, data: { phone } });
+    const exp = new Date(Date.now() + 20 * 86400_000);
+    await prisma.moduleAccess.createMany({
+      data: [
+        { userId: u.id, module: "TRADE", active: true, expiresAt: exp },
+        { userId: u.id, module: "EXERCISE", active: true, expiresAt: new Date(Date.now() - 1000) }, // منقضی
+        { userId: u.id, module: "ROUTINE", active: true, expiresAt: null },
+      ],
+    });
+    const plan = await prisma.plan.create({
+      data: { key: `trade_${Date.now()}`, nameFa: "پلن ترید", nameEn: "Trade", market: "IRAN", currency: "IRR", priceMonthly: 1000 },
+    });
+    try {
+      // اشتراکِ لغوشده‌ی دیرتر نباید انتخاب بشه
+      await prisma.subscription.create({ data: { userId: u.id, planId: plan.id, status: "CANCELED", currentPeriodEnd: new Date(Date.now() + 90 * 86400_000) } });
+      await prisma.subscription.create({ data: { userId: u.id, planId: plan.id, status: "ACTIVE", currentPeriodEnd: exp } });
+
+      const auth = await loginAs(u.username!);
+      const expected = {
+        id: u.id,
+        username: u.username,
+        phoneMasked: `${phone.slice(0, 4)}***${phone.slice(-4)}`,
+        plan: { key: plan.key, name: "پلن ترید", status: "ACTIVE", expiresAt: exp.toISOString() },
+        moduleAccess: [
+          { module: "ROUTINE", expiresAt: null },
+          { module: "TRADE", expiresAt: exp.toISOString() },
+        ],
+      };
+      expect(auth.user).toMatchObject(expected);
+      expect(auth.user.modules.sort()).toEqual(["ROUTINE", "TRADE"]);
+      expect(JSON.stringify(auth.user)).not.toContain(phone);
+      expect(auth.user).not.toHaveProperty("isSuperAdmin");
+
+      const r = await me(jsonReq("/api/mobile/me", null, auth.accessToken, "GET"));
+      expect(r.status).toBe(200);
+      const body = await r.json();
+      expect(body.user).toMatchObject(expected);
+
+      const rr = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
+      expect((await rr.json()).user).toMatchObject(expected);
+
+      expect((await me(jsonReq("/api/mobile/me", null, undefined, "GET"))).status).toBe(401);
+    } finally {
+      await prisma.subscription.deleteMany({ where: { userId: u.id } });
+      await prisma.plan.delete({ where: { id: plan.id } });
+    }
   });
 });

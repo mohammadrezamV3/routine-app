@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from "crypto";
 import { encode, decode } from "next-auth/jwt";
-import { ModuleKey, type User } from "@prisma/client";
+import { ModuleKey, SubscriptionStatus, type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { MobileAuthSuccess, MobileGatedModule, MobileModuleKey, MobileUser } from "@/lib/mobileApiContract";
+import type { MobileAuthSuccess, MobileGatedModule, MobileModuleAccess, MobileModuleKey, MobileUser } from "@/lib/mobileApiContract";
 import { checkModuleForUser } from "@/lib/moduleAccess";
 import { checkRoadmapForUser } from "@/lib/roadmapAccess";
 
@@ -134,8 +134,57 @@ export async function getActiveModules(user: Pick<User, "id" | "isSuperAdmin">):
   return rows.filter((r) => !r.expiresAt || r.expiresAt.getTime() > now).map((r) => r.module as MobileModuleKey);
 }
 
-async function buildUser(user: User): Promise<MobileUser> {
-  return { id: user.id, name: user.name, market: user.market, modules: await getActiveModules(user) };
+/** "09121234567" → "0912***4567"؛ شماره‌ی کوتاه‌تر فقط دو رقمِ آخر */
+export function maskPhone(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const p = phone.trim();
+  if (p.length >= 8) return `${p.slice(0, 4)}***${p.slice(-4)}`;
+  return `***${p.slice(-2)}`;
+}
+
+/** ماژول‌های فعال با انقضا — همون قاعده‌ی getActiveModules */
+async function getModuleAccessList(user: Pick<User, "id" | "isSuperAdmin">): Promise<MobileModuleAccess[]> {
+  if (user.isSuperAdmin) return (Object.values(ModuleKey) as MobileModuleKey[]).map((module) => ({ module, expiresAt: null }));
+  const now = Date.now();
+  const rows = await prisma.moduleAccess.findMany({
+    where: { userId: user.id, active: true },
+    select: { module: true, expiresAt: true },
+    orderBy: { module: "asc" },
+  });
+  return rows
+    .filter((r) => !r.expiresAt || r.expiresAt.getTime() > now)
+    .map((r) => ({ module: r.module as MobileModuleKey, expiresAt: r.expiresAt ? r.expiresAt.toISOString() : null }));
+}
+
+/** اشتراکِ فعلی — همون انتخابِ /api/account (ACTIVE/TRIAL، منقضی‌نشده، دیرترین پایان) */
+async function getCurrentPlan(userId: string): Promise<MobileUser["plan"]> {
+  const sub = await prisma.subscription.findFirst({
+    where: { userId, status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
+    orderBy: { currentPeriodEnd: "desc" },
+    select: { status: true, currentPeriodEnd: true, plan: { select: { key: true, nameFa: true } } },
+  });
+  if (!sub) return null;
+  return {
+    key: sub.plan.key,
+    name: sub.plan.nameFa,
+    status: sub.status === SubscriptionStatus.TRIAL ? "TRIAL" : "ACTIVE",
+    expiresAt: sub.currentPeriodEnd.toISOString(),
+  };
+}
+
+/** شکلِ MobileUser برای login/refresh/verify-2fa و GET /api/mobile/me — isSuperAdmin عمدا بیرون نمی‌ره */
+export async function buildMobileUser(user: User): Promise<MobileUser> {
+  const [modules, moduleAccess, plan] = await Promise.all([getActiveModules(user), getModuleAccessList(user), getCurrentPlan(user.id)]);
+  return {
+    id: user.id,
+    name: user.name,
+    username: user.username ?? null,
+    phoneMasked: maskPhone(user.phone),
+    market: user.market,
+    modules,
+    moduleAccess,
+    plan,
+  };
 }
 
 async function tokensFor(user: User, sid: string, refreshToken: string, refreshExpiresAt: Date): Promise<MobileAuthSuccess> {
@@ -144,7 +193,7 @@ async function tokensFor(user: User, sid: string, refreshToken: string, refreshE
     accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
     refreshToken,
     refreshTokenExpiresAt: refreshExpiresAt.toISOString(),
-    user: await buildUser(user),
+    user: await buildMobileUser(user),
   };
 }
 

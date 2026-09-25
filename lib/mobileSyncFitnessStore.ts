@@ -62,13 +62,15 @@ async function applyExercisePlan(
     return { ...ref, status: "stale", serverRecord: existing ? serializeExercisePlan(existing) : null };
   }
 
-  const { planData, isActive, rulesAccepted } = change.data;
-  // gymDays همیشه از خودِ روزهای برنامه — همون کاری که /api/exercise/plan/manual می‌کنه
-  const gymDays = planData.map((d) => d.day);
+  const { planData, isActive, rulesAccepted, meta } = change.data;
+  // gymDays: اگه فرستاده نشده، از خودِ روزهای برنامه — همون کاری که /api/exercise/plan/manual می‌کنه
+  const gymDays = meta.gymDays ?? planData.map((d) => d.day);
+  // فقط فیلدهای فرستاده‌شده (ویرایش: بقیه دست نمی‌خورن)
+  const { gymDays: _g, ...metaFields } = meta;
 
   if (!existing) {
-    // فقط «برنامه‌ی دستی» از گوشی ساخته می‌شه (برنامه‌ی AI از endpointِ AI)،
-    // و مثل وب بدونِ پذیرفتنِ قوانین/سلبِ مسئولیت نه.
+    // برنامه‌ی دستی یا قالبیِ آفلاین (برنامه‌ی AI از endpointِ AI)، و مثل وب
+    // بدونِ پذیرفتنِ قوانین/سلبِ مسئولیت نه. generatedByAi همیشه false.
     if (!rulesAccepted) return rejected(ref, "قبول‌کردن قوانین الزامی است");
     const row = await prisma.exercisePlan.create({
       data: {
@@ -77,9 +79,10 @@ async function applyExercisePlan(
         level: "custom",
         goal: null,
         hasPhysicalLimitation: false,
+        trainingPhase: "none",
+        ...metaFields,
         disclaimerAcceptedAt: new Date(),
         gymDays: gymDays as any,
-        trainingPhase: "none",
         generatedByAi: false,
         isActive,
         planData: planData as any,
@@ -92,7 +95,7 @@ async function applyExercisePlan(
 
   const { count } = await prisma.exercisePlan.updateMany({
     where: { id: existing.id, userId, updatedAt: existing.updatedAt },
-    data: { planData: planData as any, gymDays: gymDays as any, isActive, ...syncStamp(change.clientAt) },
+    data: { ...metaFields, planData: planData as any, gymDays: gymDays as any, isActive, ...syncStamp(change.clientAt) },
   });
   if (count === 0) return "retry";
   if (isActive) await deactivateOtherPlans(userId, existing.id);
@@ -117,7 +120,7 @@ async function applyExerciseLog(
     return { ...ref, status: "stale", serverRecord: existing ? serializeExerciseLog(existing) : null };
   }
   // delete = پاک‌کردنِ جلسه؛ ردیف (حتی اگه نبود) به‌عنوان tombstone می‌مونه
-  const fields = change.op === "upsert" ? change.data : { completed: false, completedItems: [] as string[] };
+  const fields = change.op === "upsert" ? change.data : { completed: false, completedItems: [] as string[], notes: null };
 
   if (!existing) {
     const row = await prisma.exerciseLog.create({

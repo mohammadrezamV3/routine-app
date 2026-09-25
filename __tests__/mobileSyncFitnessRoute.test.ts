@@ -257,3 +257,73 @@ describe("catalog + media + food scan", () => {
     expect(scanCalls).toContain(u.id);
   });
 });
+
+describe("exercise plan metadata + log notes", () => {
+  it("phone-created plans accept validated template metadata; rulesAccepted still required", async () => {
+    const u = await makeUser(["EXERCISE"]);
+    const token = await tokenFor(u.username!);
+    const id = newId();
+    const planData = [
+      { day: "شنبه", focus: "سینه", items: ["پرس سینه"] },
+      { day: "دوشنبه", focus: "پا", items: ["اسکات"] },
+    ];
+    const meta = { level: "intermediate", goal: "افزایش حجم", equipment: "باشگاه کامل", heightCm: 180, weightKg: 78.5, trainingMonth: 3, trainingPhase: "bulk", hasPhysicalLimitation: false };
+
+    const noRules = await doPush(token, [{ entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, ...meta }, clientUpdatedAt: now() }]);
+    expect(noRules.results[0]).toMatchObject({ status: "rejected", code: "invalid" });
+
+    const bad = await doPush(token, [
+      { entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, rulesAccepted: true, level: "pro" }, clientUpdatedAt: now() },
+      { entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, rulesAccepted: true, heightCm: 20 }, clientUpdatedAt: now() },
+      { entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, rulesAccepted: true, gymDays: ["Monday"] }, clientUpdatedAt: now() },
+      { entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, rulesAccepted: true, goal: "x".repeat(201) }, clientUpdatedAt: now() },
+    ]);
+    expect(bad.results.map((r) => r.code)).toEqual(["invalid", "invalid", "invalid", "invalid"]);
+
+    const ok = await doPush(token, [
+      { entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, rulesAccepted: true, generatedByAi: true, ...meta }, clientUpdatedAt: now() },
+    ]);
+    expect(ok.results[0]).toMatchObject({
+      status: "applied",
+      serverRecord: { level: "intermediate", goal: "افزایش حجم", equipment: "باشگاه کامل", heightCm: 180, weightKg: 78.5, trainingMonth: 3, trainingPhase: "bulk", gymDays: ["شنبه", "دوشنبه"], generatedByAi: false },
+    });
+    const row = await prisma.exercisePlan.findUnique({ where: { id } });
+    expect(row?.disclaimerAcceptedAt).not.toBeNull();
+
+    // ویرایش بدونِ متادیتا: متادیتای قبلی دست نمی‌خوره؛ null پاک می‌کنه
+    const edit = await doPush(token, [
+      { entity: "exercisePlan", id, op: "upsert", data: { planData, isActive: true, goal: null }, clientUpdatedAt: now() },
+    ]);
+    expect(edit.results[0]).toMatchObject({ status: "applied", serverRecord: { level: "intermediate", goal: null, equipment: "باشگاه کامل" } });
+
+    // بدونِ متادیتا → همون پیش‌فرضِ قبلی (custom)
+    const plain = await doPush(token, [{ entity: "exercisePlan", id: newId(), op: "upsert", data: { planData, isActive: false, rulesAccepted: true }, clientUpdatedAt: now() }]);
+    expect(plain.results[0]).toMatchObject({ status: "applied", serverRecord: { level: "custom", goal: null, trainingPhase: "none" } });
+  });
+
+  it("exercise log notes sync with limits; omitted keeps, null clears, delete clears", async () => {
+    const u = await makeUser(["EXERCISE"]);
+    const token = await tokenFor(u.username!);
+    const planId = newId();
+    await doPush(token, [
+      { entity: "exercisePlan", id: planId, op: "upsert", data: { planData: [{ day: "شنبه", focus: "x", items: ["a"] }], isActive: true, rulesAccepted: true }, clientUpdatedAt: now() },
+    ]);
+    const key = `${planId}|2026-09-24`;
+    const t0 = Date.now() - 60_000;
+    const at = (i: number) => new Date(t0 + i * 1000).toISOString();
+
+    const tooLong = await doPush(token, [{ entity: "exerciseLog", key, op: "upsert", data: { completed: true, completedItems: [], notes: "x".repeat(1001) }, clientUpdatedAt: at(1) }]);
+    expect(tooLong.results[0]).toMatchObject({ status: "rejected", code: "invalid" });
+
+    const r1 = await doPush(token, [{ entity: "exerciseLog", key, op: "upsert", data: { completed: true, completedItems: ["a"], notes: "  زانو درد داشت  " }, clientUpdatedAt: at(2) }]);
+    expect(r1.results[0]).toMatchObject({ status: "applied", serverRecord: { notes: "زانو درد داشت" } });
+    const r2 = await doPush(token, [{ entity: "exerciseLog", key, op: "upsert", data: { completed: false, completedItems: [] }, clientUpdatedAt: at(3) }]);
+    expect(r2.results[0]).toMatchObject({ status: "applied", serverRecord: { completed: false, notes: "زانو درد داشت" } });
+    expect((await doPull(token)).exerciseLogs?.find((l) => l.key === key)).toMatchObject({ notes: "زانو درد داشت" });
+    const r3 = await doPush(token, [{ entity: "exerciseLog", key, op: "upsert", data: { completed: true, completedItems: [], notes: null }, clientUpdatedAt: at(4) }]);
+    expect(r3.results[0]).toMatchObject({ serverRecord: { notes: null } });
+    await doPush(token, [{ entity: "exerciseLog", key, op: "upsert", data: { completed: true, completedItems: [], notes: "n" }, clientUpdatedAt: at(5) }]);
+    const del = await doPush(token, [{ entity: "exerciseLog", key, op: "delete", clientUpdatedAt: at(6) }]);
+    expect(del.results[0]).toMatchObject({ status: "applied", serverRecord: { notes: null, completed: false } });
+  });
+});
