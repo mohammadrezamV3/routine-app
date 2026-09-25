@@ -9,14 +9,20 @@ import AddOccurrenceSheet from "@/components/AddOccurrenceSheet";
 import MoveOccurrenceSheet from "@/components/MoveOccurrenceSheet";
 import QuickAddTaskSheet from "@/components/QuickAddTaskSheet";
 import SleepLogSheet from "@/components/SleepLogSheet";
+import SleepHistorySheet from "@/components/SleepHistorySheet";
+import TaskRow from "@/components/TaskRow";
+import TaskActionsSheet from "@/components/TaskActionsSheet";
+import EditTaskSheet from "@/components/EditTaskSheet";
+import ImportantUpcomingCard from "@/components/ImportantUpcomingCard";
 import { faNum, isoLocal, J_MONTHS, toJalali } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime, timeToMinutes } from "@/lib/wakeSleepLogic";
 import { Occ } from "@/lib/occurrenceTypes";
-import { tapHaptic } from "@/lib/haptics";
+import { TaskRow as TaskRowData } from "@/db/db";
 import {
   useCustomOccurrences, useRemovedOccurrences, useDaily, useStreak, useWeekStats,
-  useTasks, useWakeSleepTimes, toggleDailyTask, toggleTaskDone, deleteOccurrence,
+  useTasks, useWakeSleepTimes, useImportantUpcoming, toggleDailyTask, toggleTaskDone,
+  deleteOccurrence, deleteTask,
 } from "@/db/repo";
 
 const now = new Date();
@@ -45,6 +51,10 @@ export default function Dashboard() {
   const [moving, setMoving] = useState<{ occ: Occ; name: string } | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [sleepOpen, setSleepOpen] = useState(false);
+  const [sleepHistoryOpen, setSleepHistoryOpen] = useState(false);
+  const [taskActionsFor, setTaskActionsFor] = useState<TaskRowData | null>(null);
+  const [editingTask, setEditingTask] = useState<TaskRowData | null>(null);
+  const importantUpcoming = useImportantUpcoming();
 
   const scheduleOpts = useMemo(
     () => ({ removedOccurrences: new Set(removedOcc ?? []), customOccurrences: customOcc ?? [] }),
@@ -105,25 +115,36 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <button
-          onClick={() => setSleepOpen(true)}
-          className="flex items-center gap-3 rounded-card p-4 text-start"
+        <div
+          className="flex items-center gap-3 rounded-card p-4"
           style={{ background: "var(--surface-1)", border: "1px solid var(--surface-line)" }}
         >
-          <span className="flex items-center justify-center rounded-full" style={{ width: 40, height: 40, background: "rgba(var(--accent-rgb),.14)" }}>
-            {daily?.wake ? <Sun size={20} color="var(--accent)" /> : <Moon size={20} color="var(--accent)" />}
-          </span>
-          <div className="flex-1">
-            <div className="font-vazir text-[13.5px] font-semibold" style={{ color: "var(--text)" }}>
-              {daily?.wake ? "بیداری ثبت شده" : "بیداری هنوز ثبت نشده"}
+          <button onClick={() => setSleepOpen(true)} className="flex flex-1 items-center gap-3 text-start">
+            <span className="flex items-center justify-center rounded-full" style={{ width: 40, height: 40, background: "rgba(var(--accent-rgb),.14)", flexShrink: 0 }}>
+              {daily?.wake ? <Sun size={20} color="var(--accent)" /> : <Moon size={20} color="var(--accent)" />}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="font-vazir text-[13.5px] font-semibold" style={{ color: "var(--text)" }}>
+                {daily?.wake ? "بیداری ثبت شده" : "بیداری هنوز ثبت نشده"}
+              </div>
+              <div className="font-vazir text-[12px]" style={{ color: "var(--muted)" }}>
+                {daily?.wake
+                  ? `${new Date(daily.wake).getHours().toString().padStart(2, "0")}:${new Date(daily.wake).getMinutes().toString().padStart(2, "0")} — ${isWakeOnTime(daily.wake, wakeMinutes) ? "به‌موقع" : "دیرتر از هدف"}`
+                  : `هدف: خواب ${sleep} — بیداری ${wake}`}
+              </div>
             </div>
-            <div className="font-vazir text-[12px]" style={{ color: "var(--muted)" }}>
-              {daily?.wake
-                ? `${new Date(daily.wake).getHours().toString().padStart(2, "0")}:${new Date(daily.wake).getMinutes().toString().padStart(2, "0")} — ${isWakeOnTime(daily.wake, wakeMinutes) ? "به‌موقع" : "دیرتر از هدف"}`
-                : `هدف: خواب ${sleep} — بیداری ${wake}`}
-            </div>
-          </div>
-        </button>
+          </button>
+          <button
+            onClick={() => setSleepHistoryOpen(true)}
+            aria-label="تاریخچه‌ی خواب"
+            className="shrink-0 rounded-xl px-3 font-vazir text-[11.5px]"
+            style={{ minHeight: 36, background: "var(--surface-2)", color: "var(--muted)" }}
+          >
+            تاریخچه
+          </button>
+        </div>
+
+        <ImportantUpcomingCard items={importantUpcoming} />
 
         {weekStats && (
           <div className="rounded-card p-4" style={{ background: "var(--surface-1)", border: "1px solid var(--surface-line)" }}>
@@ -157,21 +178,12 @@ export default function Dashboard() {
               />
             ))}
             {openTasks.map((t) => (
-              <button
+              <TaskRow
                 key={t.id}
-                onClick={() => { void tapHaptic(); void toggleTaskDone(t.id); }}
-                className="flex items-center gap-3 rounded-2xl px-3 text-start"
-                style={{ minHeight: 56, background: "var(--surface-1)", border: "1px dashed var(--surface-line)" }}
-              >
-                <span
-                  className="flex items-center justify-center rounded-full"
-                  style={{ width: 26, height: 26, border: "2px solid var(--surface-line)", flexShrink: 0 }}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-vazir text-[14px]" style={{ color: "var(--text)" }}>{t.title}</div>
-                  <div className="font-vazir text-[11.5px]" style={{ color: "var(--muted)" }}>کارِ آزاد</div>
-                </div>
-              </button>
+                task={t}
+                onToggle={() => toggleTaskDone(t.id)}
+                onLongPress={() => setTaskActionsFor(t)}
+              />
             ))}
             {!todayOccurrences.length && !openTasks.length && (
               <div className="rounded-2xl px-3 py-6 text-center font-vazir text-[13px]" style={{ background: "var(--surface-1)", color: "var(--muted)" }}>
@@ -198,6 +210,24 @@ export default function Dashboard() {
 
       <QuickAddTaskSheet open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
       <SleepLogSheet open={sleepOpen} onClose={() => setSleepOpen(false)} />
+      <SleepHistorySheet open={sleepHistoryOpen} onClose={() => setSleepHistoryOpen(false)} />
+
+      {taskActionsFor && (
+        <TaskActionsSheet
+          open={!!taskActionsFor}
+          title={taskActionsFor.title}
+          onClose={() => setTaskActionsFor(null)}
+          onEdit={() => { setEditingTask(taskActionsFor); setTaskActionsFor(null); }}
+          onDelete={async () => {
+            await deleteTask(taskActionsFor.id);
+            setTaskActionsFor(null);
+          }}
+        />
+      )}
+
+      {editingTask && (
+        <EditTaskSheet open={!!editingTask} task={editingTask} onClose={() => setEditingTask(null)} />
+      )}
 
       {actionsFor && (
         <OccurrenceActionsSheet

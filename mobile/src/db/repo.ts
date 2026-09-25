@@ -249,6 +249,12 @@ export async function getSleepEntry(date: string): Promise<SleepEntryRow | null>
   return row && !row.deletedAt ? row : null;
 }
 
+/** بازه‌ی خواب — برای تاریخچه‌ی خواب (مثلا ۱۴ روزِ اخیر)، تازه‌ترین اول. */
+export async function getSleepRange(fromIso: string, toIso: string): Promise<SleepEntryRow[]> {
+  const rows = await db.sleepEntries.where("date").between(fromIso, toIso, true, true).toArray();
+  return rows.filter((r) => !r.deletedAt).sort((a, b) => b.date.localeCompare(a.date));
+}
+
 export async function setSleepEntry(date: string, patch: SleepInput): Promise<void> {
   const existing = await db.sleepEntries.get(date);
   await db.sleepEntries.put({
@@ -314,4 +320,8 @@ export function useTasks(): TaskRow[] | undefined {
 
 export function useSleepEntry(date: string): SleepEntryRow | null | undefined {
   return useLiveQuery(() => getSleepEntry(date), [date]);
+}
+
+export function useSleepRange(fromIso: string, toIso: string): SleepEntryRow[] | undefined {
+  return useLiveQuery(() => getSleepRange(fromIso, toIso), [fromIso, toIso]);
 }
