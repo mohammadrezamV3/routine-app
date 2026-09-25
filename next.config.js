@@ -24,7 +24,11 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "img-src 'self' data: https:",
+      // blob: لازمه: کراپِ عکسِ پروفایل/بنر، پیش‌نمایشِ اسکنِ غذا و آپلودِ
+      // عکسِ حرکات با URL.createObjectURL کار می‌کنن و بدونش فقط روی
+      // پروداکشن بی‌صدا شکست می‌خوردن («نمی‌تونم عکس پروفایل/بنر بذارم»).
+      // blob: فقط به داده‌ای اشاره می‌کنه که خودِ همین صفحه ساخته.
+      "img-src 'self' data: blob: https:",
       // s.tradingview.com فقط برای یک پروبِ `no-cors` است که می‌سنجد آیا
       // میزبانِ ویجت اصلاً در دسترس هست یا نه (نگاه کن به
       // components/TradingViewChart.tsx). پاسخ خوانده نمی‌شود — همان

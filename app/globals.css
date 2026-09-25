@@ -1518,10 +1518,10 @@
      خودِ border-radius) همیشه — نه فقط وقتی آواتار نیست — همان مقدار جا
      را زیرِ بنر با رنگِ خودِ کارت باز نگه می‌دارد؛ نه اونقدر کمه که گردی
      بپوشونه، نه اونقدر زیاده که دوباره شبیهِ باگِ «باکسِ سیاهِ بی‌دلیل»ِ قبلی بشه. */
-  .profile-hero{
-    border:1px solid var(--surface-line); border-radius:20px;
-    background:var(--surface-1); margin-bottom:64px; padding-bottom:20px;
-  }
+  /* طبقِ درخواستِ صریح، نوارِ تیره‌ی زیرِ بنر حذف شد: کارت دیگه نه
+     بک‌گراند داره نه بوردر نه padding-bottom — فقط خودِ بنر (با هر چهار
+     گوشه‌ی گرد) دیده می‌شه و آواتار روی لبه‌ی پایینش می‌شینه. */
+  .profile-hero{ margin-bottom:64px; }
   .profile-banner{
     /* ارتفاعِ ثابت (نه aspect-ratio): با نسبتِ تصویر، بنر روی دسکتاپ به
        ۳۰۰px+ می‌رسید و نصفِ صفحه را می‌گرفت. عکس با object-fit:cover داخلِ
@@ -1530,7 +1530,7 @@
        بیرون می‌زند و با کلیپ، نصفش بریده می‌شد. رندِ بالا رو خودش گرد می‌کند
        (پایین‌تر توضیح داده شده)، چون `.profile-hero` دیگر overflow:hidden
        ندارد. */
-    position:relative; width:100%; height:132px; border-radius:20px 20px 0 0;
+    position:relative; width:100%; height:132px; border-radius:20px;
     /* باگِ گزارش‌شده («یه قسمتِ بنر رنگ نداره»): ایستگاهِ دومِ گرادیان
        var(--surface-2) بود — یعنی نیمه‌ی چپِ بنر عملا هم‌رنگِ خودِ کارت
        می‌شد و خالی به‌نظر می‌رسید. حالا هر سه ایستگاه از خودِ اکسنت‌اند،
@@ -1547,7 +1547,7 @@
     position:absolute; inset:0; z-index:0; padding:0; width:100%; height:100%;
     border:none; background:none; box-shadow:none; cursor:pointer;
     backdrop-filter:none; -webkit-backdrop-filter:none;
-    border-radius:20px 20px 0 0; overflow:hidden;
+    border-radius:20px; overflow:hidden;
   }
   body[data-theme="light"] .profile-banner-hit,
   body:not([data-theme="light"]) .profile-banner-hit{ background:none; box-shadow:none; }
@@ -1600,13 +1600,29 @@
      یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی. */
   .profile-hero-avatar-img{
     width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
-    border:6px solid var(--surface-1); background:var(--surface-2);
+    border:6px solid var(--bg); background:var(--surface-2);
   }
   /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذفِ عکس. پدینگِ بالا همچنان
      باید از ۳۰پیکسلِ آویزانِ آواتار بیشتر باشد تا دکمه زیرِ عکس بیفتد. */
   .profile-hero-meta{
     padding:56px 20px 14px; display:flex; justify-content:flex-end;
   }
+
+  /* پاپ‌آپِ پیش‌نمایش/جابه‌جاییِ عکس پروفایل و بنر (ImageCropModal) —
+     خودِ پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه. */
+  .crop-modal{ max-width:400px; }
+  .crop-frame{
+    position:relative; width:100%; max-width:340px; margin:0 auto; overflow:hidden;
+    border-radius:16px; border:1px solid var(--surface-line); touch-action:none; cursor:grab;
+    user-select:none; -webkit-user-select:none;
+  }
+  .crop-frame:active{ cursor:grabbing; }
+  .crop-frame.is-circle{ border-radius:50%; max-width:260px; }
+  .crop-img{ position:absolute; top:0; left:0; max-width:none; pointer-events:none; will-change:transform; }
+  .crop-hint{ text-align:center; font-size:11.5px; color:var(--muted); margin:10px 0 4px; }
+  .crop-zoom{ display:flex; align-items:center; gap:10px; color:var(--muted); margin:8px auto 0; max-width:340px; }
+  .crop-zoom input{ flex:1; accent-color:var(--accent); }
+  .crop-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
   /* ── تیونِ دسکتاپِ پنل کاربری ─────────────────────────────────────────
      طبقِ درخواستِ صریح، اندازه‌ها روی دسکتاپ جدا از موبایل تنظیم شده‌اند:
@@ -7599,7 +7615,18 @@ body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.
   display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted2); direction:ltr;
   background:none; border:none; padding:0; cursor:pointer; transition:color .15s ease;
 }
-@media (hover:hover){ button.friend-profile-username:hover{ color:var(--accent); } }
+/* ریست سراسری button{} سایه‌ی inset + بلور + گردی می‌ده که آیدی رو شبیه یه
+   قرص با بک‌گراند نشون می‌داد — این‌جا کاملا ghost (تم روشن هم، چون
+   body[data-theme="light"] button از .friend-profile-username قوی‌تره). */
+button.friend-profile-username,
+body[data-theme="light"] button.friend-profile-username{
+  background:none; border:none; box-shadow:none; border-radius:0; padding:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+@media (hover:hover){
+  button.friend-profile-username:hover,
+  body[data-theme="light"] button.friend-profile-username:hover{ color:var(--accent); background:none; border:none; box-shadow:none; }
+}
 .friend-profile-plan{
   padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
   color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);

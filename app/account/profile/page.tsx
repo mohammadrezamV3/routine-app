@@ -15,7 +15,7 @@ import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal }
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
-import { centerCropToDataUrl } from "@/lib/imageResize";
+import { ImageCropModal } from "@/components/ImageCropModal";
 
 type ProfileUser = {
   username: string | null;
@@ -155,24 +155,20 @@ export default function AccountProfilePage() {
     }
   }
 
-  async function pickAvatarFile(file: File) {
+  // انتخاب فایل دیگه مستقیم آپلود نمی‌کنه — اول پاپ‌آپِ پیش‌نمایش باز
+  // می‌شه تا کاربر خودش جای عکس داخل قاب رو تعیین کنه (ImageCropModal).
+  const [cropping, setCropping] = useState<{ file: File; kind: "avatar" | "banner" } | null>(null);
+
+  function pickAvatarFile(file: File) {
     setMediaError(null);
-    try {
-      const dataUrl = await centerCropToDataUrl(file, 256, 256);
-      await uploadAvatar(dataUrl);
-    } catch {
-      setMediaError("خطا در پردازش عکس");
-    }
+    if (!file.type.startsWith("image/")) { setMediaError("فایل انتخاب‌شده عکس نیست"); return; }
+    setCropping({ file, kind: "avatar" });
   }
 
-  async function pickBannerFile(file: File) {
+  function pickBannerFile(file: File) {
     setMediaError(null);
-    try {
-      const dataUrl = await centerCropToDataUrl(file, 1024, 320);
-      await uploadBanner(dataUrl);
-    } catch {
-      setMediaError("خطا در پردازش عکس");
-    }
+    if (!file.type.startsWith("image/")) { setMediaError("فایل انتخاب‌شده عکس نیست"); return; }
+    setCropping({ file, kind: "banner" });
   }
 
   async function removeBanner() {
@@ -318,6 +314,22 @@ export default function AccountProfilePage() {
 
         {mediaError && <div className="field-error-msg" style={{ display: "block", padding: "0 16px 12px" }}>{mediaError}</div>}
       </motion.div>
+
+      {cropping && (
+        <ImageCropModal
+          file={cropping.file}
+          shape={cropping.kind === "avatar" ? "circle" : "rect"}
+          outputW={cropping.kind === "avatar" ? 256 : 1024}
+          outputH={cropping.kind === "avatar" ? 256 : 320}
+          title={cropping.kind === "avatar" ? "عکس پروفایل" : "بنر"}
+          onCancel={() => setCropping(null)}
+          onConfirm={(dataUrl) => {
+            const kind = cropping.kind;
+            setCropping(null);
+            if (kind === "avatar") uploadAvatar(dataUrl); else uploadBanner(dataUrl);
+          }}
+        />
+      )}
 
       {/* ── پروفایل عمومی ── */}
       <AccountBlock title="پروفایل عمومی" icon={<IdCard size={15} />} index={0}>
