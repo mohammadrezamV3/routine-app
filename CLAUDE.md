@@ -45,7 +45,7 @@ public/images/             # لوگو و asset های استاتیک
 نکته: پوشه‌بندی فرضی قدیمی (`src/components`, `src/pages`, `src/hooks`, `src/data`) دیگه درست نیست — این پروژه از `app/` (routing) + `components/` (فلت) + `lib/` (منطق/دیتای مشترک) استفاده می‌کنه، بدون پوشه `src/`.
 
 ## روت‌های واقعی (از `NavDrawer`)
-`/` (خانه) · `/weekly` (برنامه هفتگی) · `/roadmaps` + `/roadmaps/new` + `/roadmaps/custom/[id]` (رودمپ‌ها) · `/exercise` (بدنسازی) · `/trade` (هاب ترید) + `/trade/journal` (حساب‌های معاملاتی) + `/trade/accounts/[id]` (آمار و معاملات یک حساب) + `/trade/checklists` (چک‌لیست‌ها) + `/trade/calendar` (تقویم اقتصادی) + `/trade/clock` (ساعت فارکس) + `/trade/notes` (یادداشت‌ها) + `/trade/metatrader` (اتصال متاتریدر) · `/about` (درباره من) — به‌علاوه `/auth/login`, `/auth/signup`, `/auth/forgot-password`, `/terms` که توی nav اصلی نیستن.
+`/` (خانه) · `/weekly` (برنامه هفتگی) · `/roadmaps` + `/roadmaps/new` + `/roadmaps/custom/[id]` (رودمپ‌ها) · `/exercise` (بدنسازی) · `/trade` (هاب ترید) + `/trade/journal` (حساب‌های معاملاتی) + `/trade/accounts/[id]` (آمار و معاملات یک حساب) + `/trade/checklists` (چک‌لیست‌ها) + `/trade/calendar` (تقویم اقتصادی) + `/trade/clock` (ساعت فارکس) + `/trade/notes` (یادداشت‌ها) + `/trade/metatrader` (اتصال متاتریدر) · `/analysis/weekly` (آنالیز هفتگی) · `/about` (درباره من) — به‌علاوه `/auth/login`, `/auth/signup`, `/auth/forgot-password`, `/terms` که توی nav اصلی نیستن.
 
 ## مدل پلن/ماژول (باید در ذهن بمونه)
 - `ModuleKey`: `ROUTINE`, `SLEEP`, `TASKS` (همیشه در پلن پایه) + `EXERCISE`, `CALORIE`, `TRADE`, `ROADMAP`, `AI_INSIGHT` (پولی/مشروط).
