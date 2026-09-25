@@ -5116,9 +5116,31 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
    نکته: بک‌گراند نیمه‌شفاف خود این عناصر (rgba(...)) از قبل در CSS
    هست و دست نمی‌خورد.
    ============================================================ */
+/* ⚠️ هیچ‌وقت دوباره blur را روی `*` نگذار. نسخه‌ی قبلی
+   (`html[data-perf="low"] *{backdrop-filter:blur(6px)}`) روی *هر* عنصرِ
+   صفحه — هر span و p و svg — یک لایه‌ی بلورِ جدا روی GPU می‌ساخت:
+     • گوشی به‌شدت داغ می‌شد (صدها لایه‌ی بلور در هر فریم اسکرول)؛
+     • پشتِ هر متن یک «بک‌گراندِ» تار دیده می‌شد؛
+     • backdrop-filter برای فرزندانِ position:fixed «containing block»
+       می‌سازد، پس اورب و هر المانِ fixedِ دیگر به‌جای viewport به
+       والدش می‌چسبید (اوربِ چسبیده به پایینِ صفحه).
+   پس پایه همان «بدونِ بلور» است و فقط چند پنلِ شناورِ مشخص (که کم‌تعدادند
+   و فقط وقتِ باز بودن رندر می‌شوند) بلورِ سبکِ ۶px می‌گیرند — شیشه‌ای
+   بودن از بین نمی‌رود، ولی هزینه‌اش محدود و کنترل‌شده می‌ماند. */
 html[data-perf="low"] *,
 html[data-perf="low"] *::before,
 html[data-perf="low"] *::after{
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+html[data-perf="low"] .notif-panel,
+html[data-perf="low"] .nav-drawer-glass,
+html[data-perf="low"] .modal-panel,
+html[data-perf="low"] .wsearch-panel,
+html[data-perf="low"] .wsearch-newform,
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur.open,
+html[data-perf="low"] .dash-context-menu,
+html[data-perf="low"] .exercise-catalog-popup-panel{
   backdrop-filter:blur(6px) !important;
   -webkit-backdrop-filter:blur(6px) !important;
 }
