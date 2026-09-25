@@ -830,9 +830,14 @@ model ExercisePlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   logs ExerciseLog[]
 
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 model ExerciseLog {
@@ -850,9 +855,15 @@ model ExerciseLog {
   notes          String?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   @@unique([userId, planId, date])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // عکسِ حرکاتِ کاتالوگ (lib/exerciseCatalog.ts). خودِ کاتالوگ یک فایلِ ثابتِ
@@ -925,8 +936,17 @@ model FoodLogEntry {
   aiScanned Boolean @default(false)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // soft-delete — tombstoneِ همگام‌سازیِ موبایل. هر کوئریِ خواندنی باید
+  // deletedAt: null فیلتر کنه (DELETE /api/calorie/log هم حالا soft-delete است).
+  deletedAt DateTime?
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }
 
 model CalorieTarget {
@@ -954,8 +974,14 @@ model CalorieTarget {
   effectiveTo   DateTime?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================

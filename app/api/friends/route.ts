@@ -48,7 +48,7 @@ async function statsForUserCalorie(userId: string) {
   const now = new Date();
   const start = new Date(now); start.setDate(start.getDate() - 90);
   const rows = await prisma.foodLogEntry.findMany({
-    where: { userId, date: { gte: start, lte: now } },
+    where: { userId, deletedAt: null, date: { gte: start, lte: now } },
     select: { date: true, customCalories: true },
   });
   const byDate: Record<string, number> = {};

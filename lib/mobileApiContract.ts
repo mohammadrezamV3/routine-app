@@ -73,7 +73,26 @@ export type MobileErrorResponse = { error: string };
 
 // ─── Sync (فاز ۱: روتین/داشبورد) ───────────────────────────────────────
 
-export type SyncEntity = "dailyEntry" | "sleepEntry" | "task" | "setting";
+export type SyncEntity =
+  | "dailyEntry"
+  | "sleepEntry"
+  | "task"
+  | "setting"
+  // فاز ۴ — فقط با دسترسیِ فعالِ ماژولِ مربوطه (سمتِ سرور چک می‌شه)
+  | "exercisePlan"
+  | "exerciseLog"
+  | "foodLogEntry"
+  | "calorieTarget";
+
+/** ماژول‌های پولی که موجودیت‌هاشون در sync گیت می‌شن */
+export type MobileGatedModule = "EXERCISE" | "CALORIE";
+/** entity → ماژولی که لازم داره */
+export const SYNC_ENTITY_MODULE: Partial<Record<SyncEntity, MobileGatedModule>> = {
+  exercisePlan: "EXERCISE",
+  exerciseLog: "EXERCISE",
+  foodLogEntry: "CALORIE",
+  calorieTarget: "CALORIE",
+};
 
 /** کلیدهای تنظیماتی که توی فاز ۱ همگام می‌شن */
 export const MOBILE_SYNC_SETTING_KEYS = [
@@ -132,6 +151,115 @@ export type SettingRecord = SyncMeta & {
   value: unknown;
 };
 
+// ─── فاز ۴: بدنسازی و کالری ────────────────────────────────────────────
+
+/** یک روزِ برنامه‌ی تمرینی. day یکی از روزهای هفته به فارسی (یکشنبه…شنبه) */
+export type ExerciseDay = { day: string; focus: string; items: string[] };
+
+export type ExercisePlanRecord = SyncMeta & {
+  id: string;
+  /** beginner | intermediate | advanced | custom (برنامه‌ی دستی) */
+  level: string;
+  goal: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  hasPhysicalLimitation: boolean;
+  gymDays: string[];
+  trainingPhase: string | null;
+  trainingMonth: number | null;
+  equipment: string | null;
+  generatedByAi: boolean;
+  startDate: string;
+  /** همیشه حداکثر یک برنامه‌ی فعال — فعال‌کردنِ یکی، بقیه رو غیرفعال می‌کنه */
+  isActive: boolean;
+  planData: ExerciseDay[];
+  createdAt: string;
+};
+
+export type ExerciseLogRecord = SyncMeta & {
+  /** `${planId}|${date}` — کلیدِ همین رکورد در push */
+  key: string;
+  planId: string;
+  date: string;
+  completed: boolean;
+  completedItems: string[];
+};
+
+export type FoodLogEntryRecord = SyncMeta & {
+  id: string;
+  date: string;
+  customName: string | null;
+  /** کالریِ کلِ همین مقدار (نه به‌ازای ۱۰۰ گرم) */
+  customCalories: number | null;
+  grams: number;
+  mealType: string | null;
+  proteinG: number | null;
+  carbsG: number | null;
+  fatG: number | null;
+  aiScanned: boolean;
+  createdAt: string;
+  deleted: boolean;
+};
+
+export type MealBreakdownItem = { key: string; label: string; kcal: number };
+
+export type CalorieTargetRecord = SyncMeta & {
+  id: string;
+  dailyTargetKcal: number;
+  goal: string | null;
+  mealsPerDay: number | null;
+  mealBreakdown: MealBreakdownItem[] | null;
+  proteinTargetG: number | null;
+  carbsTargetG: number | null;
+  fatTargetG: number | null;
+  sex: string | null;
+  ageYears: number | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  effectiveFrom: string;
+  /** null = هدفِ فعلی؛ پر = تاریخچه */
+  effectiveTo: string | null;
+};
+
+/**
+ * برنامه‌ی تمرینی: فقط جایگزینیِ حرکت/چیدمان (planData) و فعال/غیرفعال‌کردن.
+ * ساختِ id جدید فقط برای «برنامه‌ی دستی» (level=custom) و با rulesAccepted=true.
+ * ساختِ برنامه با AI از این راه نیست (endpointِ AI جدا). delete پشتیبانی نمی‌شه.
+ * سقف‌ها: ۱ تا ۷ روز، هر روز ۱ تا ۵۰ حرکت، هر حرکت ≤ ۲۰۰ کاراکتر، focus ≤ ۱۰۰.
+ */
+export type ExercisePlanData = { planData: ExerciseDay[]; isActive: boolean; rulesAccepted?: boolean };
+
+/** completedItems حداکثر ۵۰۰ مورد، هر کدوم ≤ ۲۰۰ کاراکتر. planId باید برنامه‌ی خودِ کاربر باشه */
+export type ExerciseLogData = { completed: boolean; completedItems: string[] };
+
+/**
+ * همون قواعدِ POST /api/calorie/log: customName ۱ تا ۸۰ کاراکتر، customCalories > 0،
+ * 0 < grams ≤ 10000، mealType ≤ ۲۰ کاراکتر، درشت‌مغذی‌ها یا هر سه (۰ تا ۲۰۰۰) یا هیچ‌کدوم.
+ */
+export type FoodLogEntryData = {
+  date: string;
+  customName: string;
+  customCalories: number;
+  grams: number;
+  mealType: string | null;
+  proteinG?: number | null;
+  carbsG?: number | null;
+  fatG?: number | null;
+  aiScanned?: boolean;
+};
+
+/**
+ * هدفِ کالری — دو نوع:
+ *  - compute: فقط با id *جدید*. سرور خودش با فرمول حساب می‌کنه (عدد از کلاینت
+ *    گرفته نمی‌شه) و هدفِ فعلی رو می‌بنده. اگه هدفِ فعلیِ سرور جدیدتر از
+ *    clientUpdatedAt باشه → stale و هدفِ فعلی برمی‌گرده.
+ *  - meals: ویرایشِ وعده‌ها/درشت‌مغذی‌های یک هدفِ *فعلیِ* موجود (مثل PATCH وب).
+ * delete پشتیبانی نمی‌شه.
+ */
+export type CalorieTargetData =
+  | { kind: "compute"; goal: "lose" | "maintain" | "gain"; mealsPerDay: number; sex: "male" | "female"; ageYears?: number; heightCm: number; weightKg: number }
+  | { kind: "meals"; mealBreakdown: MealBreakdownItem[]; proteinTargetG?: number | null; carbsTargetG?: number | null; fatTargetG?: number | null };
+
 /** GET /api/mobile/sync/pull?since=<cursor> — بدونِ since یعنی همه‌چیز */
 export type SyncPullResponse = {
   /** برای درخواستِ بعدی عینا به‌عنوان since بفرست (مات فرضش کن) */
@@ -143,6 +271,16 @@ export type SyncPullResponse = {
   sleepEntries: SleepEntryRecord[];
   tasks: TaskRecord[];
   settings: SettingRecord[];
+  /**
+   * ماژول‌هایی که الان دسترسی نداره — آرایه‌های مربوط به اون‌ها *اصلا* توی
+   * پاسخ نیستن (نه خالی). مهم: اگه ماژولی از locked به باز تغییر کرد، یک‌بار
+   * بدونِ since برای اون موجودیت‌ها pull کن — cursor در دورانِ قفل جلو رفته.
+   */
+  lockedModules: MobileGatedModule[];
+  exercisePlans?: ExercisePlanRecord[];
+  exerciseLogs?: ExerciseLogRecord[];
+  foodLogEntries?: FoodLogEntryRecord[];
+  calorieTargets?: CalorieTargetRecord[];
 };
 
 export type DailyEntryData = { tasks: Record<string, boolean>; wake: string | null };
@@ -178,19 +316,35 @@ export type SyncChange =
   | { entity: "task"; id: string; op: "upsert"; data: TaskData; clientUpdatedAt: string }
   | { entity: "task"; id: string; op: "delete"; clientUpdatedAt: string }
   | { entity: "setting"; key: MobileSyncSettingKey; op: "upsert"; data: SettingData; clientUpdatedAt: string }
-  | { entity: "setting"; key: MobileSyncSettingKey; op: "delete"; clientUpdatedAt: string };
+  | { entity: "setting"; key: MobileSyncSettingKey; op: "delete"; clientUpdatedAt: string }
+  | { entity: "exercisePlan"; id: string; op: "upsert"; data: ExercisePlanData; clientUpdatedAt: string }
+  | { entity: "exerciseLog"; key: string; op: "upsert"; data: ExerciseLogData; clientUpdatedAt: string }
+  | { entity: "exerciseLog"; key: string; op: "delete"; clientUpdatedAt: string }
+  | { entity: "foodLogEntry"; id: string; op: "upsert"; data: FoodLogEntryData; clientUpdatedAt: string }
+  | { entity: "foodLogEntry"; id: string; op: "delete"; clientUpdatedAt: string }
+  | { entity: "calorieTarget"; id: string; op: "upsert"; data: CalorieTargetData; clientUpdatedAt: string };
 
 /** POST /api/mobile/sync/push — حداکثر MOBILE_SYNC_MAX_BATCH تغییر، بدنه حداکثر ۱MB */
 export type SyncPushRequest = { changes: SyncChange[] };
 
 export const MOBILE_SYNC_MAX_BATCH = 200;
 
-export type SyncServerRecord = DailyEntryRecord | SleepEntryRecord | TaskRecord | SettingRecord;
+export type SyncServerRecord =
+  | DailyEntryRecord
+  | SleepEntryRecord
+  | TaskRecord
+  | SettingRecord
+  | ExercisePlanRecord
+  | ExerciseLogRecord
+  | FoodLogEntryRecord
+  | CalorieTargetRecord;
 
 /**
  * applied: نوشته شد؛ serverRecord نسخه‌ی نهاییه.
  * stale:   نسخه‌ی سرور جدیدتر (یا هم‌زمان) بود؛ serverRecord رو جایگزینِ نسخه‌ی محلی کن.
  * rejected: ورودی نامعتبر (یا id متعلق به کسِ دیگه) — دوباره نفرست، error دلیلشه.
+ *   error === "module_locked" (ثابت، نه فارسی) یعنی ماژولِ این موجودیت فعال
+ *   نیست؛ تغییر رو نگه دار و بعد از فعال‌شدنِ اشتراک دوباره بفرست.
  */
 export type SyncChangeResult = {
   index: number;
@@ -203,3 +357,46 @@ export type SyncChangeResult = {
 };
 
 export type SyncPushResponse = { serverTime: string; results: SyncChangeResult[] };
+
+export const SYNC_ERROR_MODULE_LOCKED = "module_locked";
+
+// ─── Catalog (دیتای مرجعِ فقط‌خواندنی برای آفلاین) ───────────────────────
+
+export type CatalogFood = { name: string; caloriesPer100g: number };
+export type CatalogExercise = {
+  name: string;
+  muscleGroup: string;
+  muscleKeys: string[];
+  pattern: string;
+  howTo: string[];
+  benefits: string;
+};
+
+/**
+ * GET /api/mobile/catalog — Bearer لازم. `ETag` برمی‌گرده؛ درخواستِ بعدی با
+ * `If-None-Match: <همون ETag>` → 304 بدونِ بدنه اگه تغییری نکرده.
+ * exerciseMedia فقط با دسترسیِ EXERCISE (وگرنه null): کلیدِ نرمال‌شده‌ی نامِ
+ * حرکت‌هایی که عکس دارن + updatedAt — اگه updatedAt عوض شد عکس رو دوباره بگیر.
+ */
+export type MobileCatalogResponse = {
+  version: string;
+  foods: CatalogFood[];
+  exercises: CatalogExercise[];
+  exerciseMedia: { key: string; updatedAt: string }[] | null;
+};
+
+/**
+ * GET /api/mobile/catalog/media?key=<کلیدِ exerciseMedia> — ماژولِ EXERCISE.
+ * 200 {dataUrl} | 404 | 403 {error:"module_locked"}. `ETag` + `If-None-Match` هم دارد.
+ */
+export type MobileCatalogMediaResponse = { key: string; dataUrl: string; updatedAt: string };
+
+// ─── AI ────────────────────────────────────────────────────────────────
+
+/** POST /api/mobile/ai/food-scan — ماژولِ CALORIE، سقفِ ۱۵ اسکن در ساعت (مشترک با وب) */
+export type MobileFoodScanRequest = { imageBase64: string; mediaType: "image/jpeg" | "image/png" | "image/webp" };
+export type FoodScanResult =
+  | { recognized: true; name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number }
+  | { recognized: false; message: string };
+/** 200 | 400 | 401 | 403 {error:"module_locked"} | 429 | 500 */
+export type MobileFoodScanResponse = { ok: true; result: FoodScanResult };

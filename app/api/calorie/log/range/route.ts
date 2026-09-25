@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
 
   const entries = await prisma.foodLogEntry.findMany({
-    where: { userId, date: { gte: range.from, lte: range.to } },
+    where: { userId, deletedAt: null, date: { gte: range.from, lte: range.to } },
     orderBy: { date: "desc" },
     take: MAX_ROWS,
   });

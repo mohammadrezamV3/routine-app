@@ -53,7 +53,9 @@ function applyMobileCors(res: NextResponse, origin: string | null): NextResponse
   if (origin) {
     res.headers.set("Access-Control-Allow-Origin", origin);
     res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, If-None-Match");
+    // /api/mobile/catalog: گوشی باید ETag رو بخونه تا دفعه‌ی بعد If-None-Match بفرسته
+    res.headers.set("Access-Control-Expose-Headers", "ETag");
     res.headers.set("Access-Control-Max-Age", "600");
   }
   return res;

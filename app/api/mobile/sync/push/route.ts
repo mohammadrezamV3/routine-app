@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readJsonBody } from "@/lib/validate";
-import { getMobileUserId } from "@/lib/mobileAuth";
+import { getMobileModuleAccess, getMobileUserId } from "@/lib/mobileAuth";
 import { MOBILE_SYNC_MAX_BATCH, parseSyncChange } from "@/lib/mobileSync";
-import { applyChange } from "@/lib/mobileSyncStore";
+import { applyChange, refOf } from "@/lib/mobileSyncStore";
+import { SYNC_ENTITY_MODULE, SYNC_ERROR_MODULE_LOCKED } from "@/lib/mobileApiContract";
 import type { SyncChangeResult, SyncPushResponse } from "@/lib/mobileApiContract";
 
 // POST /api/mobile/sync/push { changes: SyncChange[] }
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
   // «حالا» یک‌بار برای کلِ دسته — سقفِ clampِ زمانِ کلاینت
   const now = new Date();
   const results: SyncChangeResult[] = [];
+  let access: Awaited<ReturnType<typeof getMobileModuleAccess>> | undefined;
   try {
     // ترتیبی، نه موازی: دو تغییر روی یک رکورد در یک دسته باید به ترتیب اعمال بشن
     for (let index = 0; index < changes.length; index++) {
@@ -40,6 +42,15 @@ export async function POST(req: NextRequest) {
       if (!p.ok) {
         results.push({ index, entity: p.entity, key: p.key, id: p.id, status: "rejected", error: p.error, serverRecord: null });
         continue;
+      }
+      // گیتِ سمتِ سرورِ ماژول‌های پولی — کلاینت (ModuleGateِ اپ) قابلِ دورزدنه
+      const module = SYNC_ENTITY_MODULE[p.change.entity];
+      if (module) {
+        access ??= await getMobileModuleAccess(userId);
+        if (!access[module]) {
+          results.push({ index, ...refOf(p.change), status: "rejected", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
+          continue;
+        }
       }
       results.push({ index, ...(await applyChange(userId, p.change)) });
     }

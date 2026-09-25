@@ -1,16 +1,23 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { SyncChangeResult, SyncPullResponse } from "@/lib/mobileApiContract";
+import type { MobileGatedModule, SyncPullResponse } from "@/lib/mobileApiContract";
 import {
   PULL_PAGE_LIMIT,
   computePullCursor,
   decideLww,
+  serializeCalorieTarget,
   serializeDailyEntry,
+  serializeExerciseLog,
+  serializeExercisePlan,
+  serializeFoodLogEntry,
   serializeSetting,
   serializeSleepEntry,
   serializeTask,
+  syncStamp,
   type ParsedChange,
+  type SyncResult as Result,
 } from "@/lib/mobileSync";
+import { applyFitnessOnce } from "@/lib/mobileSyncFitnessStore";
 import { MOBILE_SYNC_SETTING_KEYS } from "@/lib/mobileApiContract";
 
 // بخشِ دیتابیسیِ همگام‌سازیِ موبایل. هر کوئری با userId محدود می‌شه (ضد IDOR)
@@ -25,24 +32,21 @@ function isUniqueViolation(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 }
 
-function syncStamp(clientAt: Date) {
-  // updatedAt و syncWrittenAt دقیقا یک مقدار — نشانه‌ی «آخرین نویسنده موبایل بوده»
-  const writeAt = new Date();
-  return { updatedAt: writeAt, syncWrittenAt: writeAt, syncEditedAt: clientAt };
-}
-
-type Result = Omit<SyncChangeResult, "index">;
 
 // ─── Pull ────────────────────────────────────────────────────────────────
 
-export async function pullChanges(userId: string, since: Date | null): Promise<SyncPullResponse> {
+/** ماژول‌های پولی‌ای که الان دسترسی داره — route با checkModuleForUser پرش می‌کنه */
+export type ModuleAccessMap = Record<MobileGatedModule, boolean>;
+
+export async function pullChanges(userId: string, since: Date | null, access: ModuleAccessMap): Promise<SyncPullResponse> {
   // زمانِ سرور *قبل* از کوئری‌ها گرفته می‌شه — هر چیزی که حینِ کوئری نوشته
   // بشه، دفعه‌ی بعد (با همپوشانیِ PULL_CURSOR_OVERLAP_MS) دوباره دیده می‌شه.
   const serverStart = new Date();
   const updatedAt = since ? { gt: since } : undefined;
   const page = { orderBy: { updatedAt: "asc" as const }, take: PULL_PAGE_LIMIT + 1 };
+  const none = Promise.resolve(null);
 
-  const [daily, sleep, tasks, settings] = await Promise.all([
+  const [daily, sleep, tasks, settings, plans, exLogs, foodLogs, targets] = await Promise.all([
     prisma.dailyEntry.findMany({ where: { userId, updatedAt }, ...page }),
     prisma.sleepEntry.findMany({ where: { userId, updatedAt }, ...page }),
     // tombstoneها (deletedAt پر) عمدا برگردونده می‌شن
@@ -51,6 +55,11 @@ export async function pullChanges(userId: string, since: Date | null): Promise<S
       where: { userId, key: { in: [...MOBILE_SYNC_SETTING_KEYS] }, updatedAt },
       ...page,
     }),
+    // ماژولِ قفل → اصلا کوئری نمی‌زنیم و فیلد توی پاسخ نمیاد
+    access.EXERCISE ? prisma.exercisePlan.findMany({ where: { userId, updatedAt }, ...page }) : none,
+    access.EXERCISE ? prisma.exerciseLog.findMany({ where: { userId, planId: { not: null }, updatedAt }, ...page }) : none,
+    access.CALORIE ? prisma.foodLogEntry.findMany({ where: { userId, updatedAt }, ...page }) : none,
+    access.CALORIE ? prisma.calorieTarget.findMany({ where: { userId, updatedAt }, ...page }) : none,
   ]);
 
   const truncated: Date[] = [];
@@ -64,12 +73,17 @@ export async function pullChanges(userId: string, since: Date | null): Promise<S
   const s = trim(sleep);
   const t = trim(tasks);
   const st = trim(settings);
+  const p = plans && trim(plans);
+  const el = exLogs && trim(exLogs);
+  const fl = foodLogs && trim(foodLogs);
+  const ct = targets && trim(targets);
   const { cursor, hasMore } = computePullCursor(serverStart, truncated);
 
   // اگه یک موجودیت بریده شد، ردیف‌های بقیه که updatedAtشون از cursor جلوتره
   // هم دوباره توی صفحه‌ی بعد میان — تکراری و بی‌ضرر، ولی حذفشون حجم رو کم می‌کنه.
   const keep = <T extends { updatedAt: Date }>(rows: T[]) => (hasMore ? rows.filter((r) => r.updatedAt <= cursor) : rows);
 
+  const lockedModules = (Object.keys(access) as MobileGatedModule[]).filter((m) => !access[m]);
   return {
     cursor: cursor.toISOString(),
     hasMore,
@@ -78,6 +92,11 @@ export async function pullChanges(userId: string, since: Date | null): Promise<S
     sleepEntries: keep(s).map(serializeSleepEntry),
     tasks: keep(t).map(serializeTask),
     settings: keep(st).map(serializeSetting),
+    lockedModules,
+    ...(p ? { exercisePlans: keep(p).map(serializeExercisePlan) } : {}),
+    ...(el ? { exerciseLogs: keep(el).map(serializeExerciseLog) } : {}),
+    ...(fl ? { foodLogEntries: keep(fl).map(serializeFoodLogEntry) } : {}),
+    ...(ct ? { calorieTargets: keep(ct).map(serializeCalorieTarget) } : {}),
   };
 }
 
@@ -97,12 +116,21 @@ export async function applyChange(userId: string, change: ParsedChange): Promise
   return { ...refOf(change), status: "rejected", error: "تغییر هم‌زمان — دوباره تلاش کن", serverRecord: null };
 }
 
-function refOf(change: ParsedChange): Pick<Result, "entity" | "key" | "id"> {
-  return change.entity === "task" ? { entity: "task", id: change.id } : { entity: change.entity, key: change.key };
+export function refOf(change: ParsedChange): Pick<Result, "entity" | "key" | "id"> {
+  return "id" in change ? { entity: change.entity, id: change.id } : { entity: change.entity, key: change.key };
 }
 
 async function applyOnce(userId: string, change: ParsedChange): Promise<Result | "retry"> {
   const ref = refOf(change);
+
+  if (
+    change.entity === "exercisePlan" ||
+    change.entity === "exerciseLog" ||
+    change.entity === "foodLogEntry" ||
+    change.entity === "calorieTarget"
+  ) {
+    return applyFitnessOnce(userId, change, ref);
+  }
 
   if (change.entity === "dailyEntry") {
     const where = { userId_date: { userId, date: change.date } };

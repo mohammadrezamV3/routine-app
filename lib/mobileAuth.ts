@@ -2,7 +2,8 @@ import { createHash, randomBytes } from "crypto";
 import { encode, decode } from "next-auth/jwt";
 import { ModuleKey, type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { MobileAuthSuccess, MobileModuleKey, MobileUser } from "@/lib/mobileApiContract";
+import type { MobileAuthSuccess, MobileGatedModule, MobileModuleKey, MobileUser } from "@/lib/mobileApiContract";
+import { checkModuleForUser } from "@/lib/moduleAccess";
 
 // احرازِ هویتِ اپ موبایل با توکنِ Bearer (نه کوکی).
 //
@@ -239,4 +240,16 @@ export async function revokeMobileSession(opts: { refreshToken?: unknown; auth?:
       data: { revokedAt: now },
     });
   }
+}
+
+/**
+ * دسترسیِ ماژول‌های پولیِ همگام‌شونده، با همون منطقِ requireModule (از
+ * دیتابیس، نه از ادعای کلاینت). یک‌بار به‌ازای هر درخواستِ sync.
+ */
+export async function getMobileModuleAccess(userId: string): Promise<Record<MobileGatedModule, boolean>> {
+  const [exercise, calorie] = await Promise.all([
+    checkModuleForUser(userId, ModuleKey.EXERCISE),
+    checkModuleForUser(userId, ModuleKey.CALORIE),
+  ]);
+  return { EXERCISE: exercise.ok, CALORIE: calorie.ok };
 }

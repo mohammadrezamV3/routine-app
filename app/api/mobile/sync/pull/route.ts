@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { getMobileUserId } from "@/lib/mobileAuth";
+import { getMobileModuleAccess, getMobileUserId } from "@/lib/mobileAuth";
 import { parseIsoDateTime } from "@/lib/mobileSync";
 import { pullChanges } from "@/lib/mobileSyncStore";
 
@@ -21,5 +21,6 @@ export async function GET(req: NextRequest) {
     if (!since) return NextResponse.json({ error: "since نامعتبر است" }, { status: 400 });
   }
 
-  return NextResponse.json(await pullChanges(userId, since));
+  // موجودیت‌های بدنسازی/کالری فقط با دسترسیِ فعالِ همون ماژول (lockedModules در پاسخ)
+  return NextResponse.json(await pullChanges(userId, since, await getMobileModuleAccess(userId)));
 }

@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
-import { calcAge, calcDailyTargetKcal, splitMeals, CalorieGoal, Sex } from "@/lib/calorieCalc";
-import { clampText } from "@/lib/validate";
-
-const VALID_GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
-const VALID_SEX: Sex[] = ["male", "female"];
+import { computeCalorieTarget, validateCalorieTargetInput, validateMealsPatch } from "@/lib/calorieTargetService";
 
 export async function GET() {
   const guard = await requireModule(ModuleKey.CALORIE);
@@ -29,49 +25,13 @@ export async function POST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
-  const { goal, mealsPerDay, sex, ageYears, heightCm, weightKg } = body as {
-    goal: CalorieGoal; mealsPerDay: number; sex: Sex; ageYears?: number; heightCm: number; weightKg: number;
-  };
-
-  if (!goal || !VALID_GOALS.includes(goal)) {
-    return NextResponse.json({ error: "هدف کالری نامعتبر است" }, { status: 400 });
-  }
-  if (!mealsPerDay || mealsPerDay < 2 || mealsPerDay > 6) {
-    return NextResponse.json({ error: "تعداد وعده باید بین ۲ تا ۶ باشد" }, { status: 400 });
-  }
-  if (!sex || !VALID_SEX.includes(sex)) {
-    return NextResponse.json({ error: "جنسیت نامعتبر است" }, { status: 400 });
-  }
-  if (!heightCm || typeof heightCm !== "number" || heightCm < 50 || heightCm > 260) {
-    return NextResponse.json({ error: "قد وارد شده معتبر نیست" }, { status: 400 });
-  }
-  if (!weightKg || typeof weightKg !== "number" || weightKg < 20 || weightKg > 400) {
-    return NextResponse.json({ error: "وزن وارد شده معتبر نیست" }, { status: 400 });
-  }
-
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { birthDate: true } });
-  let age: number | null = null;
-  if (user?.birthDate) {
-    age = calcAge(user.birthDate);
-  } else if (typeof ageYears === "number" && ageYears >= 10 && ageYears <= 100) {
-    age = ageYears;
-  }
-  if (age === null) {
-    return NextResponse.json({ error: "سن لازم است (تاریخ تولدت توی حسابت ثبت نشده)" }, { status: 400 });
-  }
-
-  const activePlan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true } });
-  const activeGymDays = activePlan?.gymDays && Array.isArray(activePlan.gymDays) ? (activePlan.gymDays as string[]) : null;
-  // اگه برنامه‌ی ورزشی فعالی نبود، «۳ روز باشگاه» فرض نکن — این ضریب ۱.۵۵
-  // (فعالیت متوسط) رو می‌داد و هدف رو برای کسی که اصلا تمرین نمی‌کنه چند صد
-  // کالری بیش‌برآورد می‌کرد. فرض واقعا محافظه‌کارانه «کم‌تحرک سبک» (۱.۳۷۵)ه.
-  const gymDaysPerWeek = activeGymDays ? activeGymDays.length : 1;
-
-  const dailyTargetKcal = calcDailyTargetKcal({
-    sex, weightKg, heightCm, age, gymDaysPerWeek, goal, trainingPhase: activePlan?.trainingPhase,
-  });
-  const mealBreakdown = splitMeals(dailyTargetKcal, mealsPerDay);
+  const body = await req.json().catch(() => null);
+  // اعتبارسنجی + محاسبه‌ی Mifflin-St Jeor مشترک با همگام‌سازیِ موبایل (lib/calorieTargetService.ts)
+  const input = validateCalorieTargetInput(body);
+  if (!input.ok) return NextResponse.json({ error: input.error }, { status: 400 });
+  const computed = await computeCalorieTarget(userId, input.value);
+  if (!computed.ok) return NextResponse.json({ error: computed.error }, { status: 400 });
+  const { mealBreakdown, ...fields } = computed.value;
 
   // هدف قبلی (اگه بود) بسته می‌شه، هدف جدید از امروز شروع می‌شه
   await prisma.calorieTarget.updateMany({
@@ -79,11 +39,7 @@ export async function POST(req: NextRequest) {
     data: { effectiveTo: new Date() },
   });
   const target = await prisma.calorieTarget.create({
-    data: {
-      userId, dailyTargetKcal, goal, mealsPerDay, sex, heightCm, weightKg,
-      ageYears: user?.birthDate ? null : age,
-      mealBreakdown: mealBreakdown as any,
-    },
+    data: { userId, ...fields, mealBreakdown: mealBreakdown as any },
   });
 
   return NextResponse.json({ ok: true, target });
@@ -98,57 +54,16 @@ export async function PATCH(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
-  const { mealBreakdown, proteinTargetG, carbsTargetG, fatTargetG } = body as {
-    mealBreakdown: { key: string; label: string; kcal: number }[];
-    proteinTargetG?: number | null;
-    carbsTargetG?: number | null;
-    fatTargetG?: number | null;
-  };
-
-  // هدف درشت‌مغذی اختیاریه؛ هر کدوم که خالی بمونه null ذخیره می‌شه.
-  // سقف ۲۰۰۰ گرم صرفا یک نگهبان بی‌معنی‌نبودنه، نه توصیه‌ی تغذیه‌ای.
-  function macro(v: unknown): number | null | "invalid" {
-    if (v === undefined || v === null || v === "") return null;
-    const n = Number(v);
-    if (!isFinite(n) || n < 0 || n > 2000) return "invalid";
-    return Math.round(n);
-  }
-  const protein = macro(proteinTargetG);
-  const carbs = macro(carbsTargetG);
-  const fat = macro(fatTargetG);
-  if (protein === "invalid" || carbs === "invalid" || fat === "invalid") {
-    return NextResponse.json({ error: "هدف درشت‌مغذی نامعتبر است" }, { status: 400 });
-  }
-
-  if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {
-    return NextResponse.json({ error: "بین ۱ تا ۸ وعده مجاز است" }, { status: 400 });
-  }
-  const cleaned: { key: string; label: string; kcal: number }[] = [];
-  for (const m of mealBreakdown) {
-    if (!m || typeof m.label !== "string" || !m.label.trim()) {
-      return NextResponse.json({ error: "اسم وعده نمی‌تواند خالی باشد" }, { status: 400 });
-    }
-    if (typeof m.kcal !== "number" || !isFinite(m.kcal) || m.kcal < 0 || m.kcal > 10000) {
-      return NextResponse.json({ error: "مقدار کالری وعده نامعتبر است" }, { status: 400 });
-    }
-    const key = m.key || `meal_${cleaned.length}_${Date.now().toString(36)}`;
-    cleaned.push({ key, label: clampText(m.label, 30), kcal: Math.round(m.kcal) });
-  }
-  const dailyTargetKcal = cleaned.reduce((s, m) => s + m.kcal, 0);
-  if (dailyTargetKcal < 500) {
-    return NextResponse.json({ error: "جمع کالری وعده‌ها خیلی کم است" }, { status: 400 });
-  }
+  const body = await req.json().catch(() => null);
+  const patch = validateMealsPatch(body);
+  if (!patch.ok) return NextResponse.json({ error: patch.error }, { status: 400 });
 
   const existing = await prisma.calorieTarget.findFirst({ where: { userId, effectiveTo: null }, orderBy: { effectiveFrom: "desc" } });
   if (!existing) return NextResponse.json({ error: "اول باید هدف کالری‌ات را بسازی" }, { status: 400 });
 
   const target = await prisma.calorieTarget.update({
     where: { id: existing.id },
-    data: {
-      mealBreakdown: cleaned as any, dailyTargetKcal, mealsPerDay: cleaned.length,
-      proteinTargetG: protein, carbsTargetG: carbs, fatTargetG: fat,
-    },
+    data: { ...patch.value, mealBreakdown: patch.value.mealBreakdown as any },
   });
 
   return NextResponse.json({ ok: true, target });
