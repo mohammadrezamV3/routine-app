@@ -9,3 +9,7 @@ Dockerfile
 docker-compose.yml
 .dockerignore
 tsconfig.tsbuildinfo
+
+# اپ موبایل (mobile/) یک پروژه‌ی کاملا جدا (Vite+Capacitor) است — به
+# ایمیج Docker وب نباید بره.
+mobile

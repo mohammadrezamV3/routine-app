@@ -15,3 +15,13 @@ build
 # روی هر مرج یه تداخلِ بی‌معنی می‌ساخت. CLAUDE.md هم از اول گفته بود باید
 # ignore بشه.
 tsconfig.tsbuildinfo
+
+# اپ موبایل (mobile/) — خروجی بیلد Vite، محیط Capacitor Android و کش
+# Gradle نباید کامیت بشن (حجیم و ماشین‌ساخته)؛ خود پروژه‌ی mobile/android
+# (فایل‌های source-controlled کپاسیتور) کامیت می‌مونه.
+mobile/node_modules
+mobile/dist
+mobile/android/app/build
+mobile/android/.gradle
+mobile/android/build
+mobile/android/local.properties
