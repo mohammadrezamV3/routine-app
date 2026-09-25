@@ -1883,3 +1883,42 @@ model SupportMessage {
 
   @@index([ticketId, createdAt])
 }
+
+// ============================================================================
+// خریدِ پلن از اپ موبایل (lib/mobileBilling.ts) — «دست‌به‌دست» به وب
+// ============================================================================
+// اپ هیچ‌وقت خودش پرداخت نمی‌کنه و هیچ‌وقت موفقیتِ پرداخت رو اعلام نمی‌کنه:
+// یک ردیفِ PENDING + توکنِ یک‌بارمصرفِ ≤۱۰ دقیقه‌ای (فقط SHA-256ش) می‌سازه،
+// مرورگرِ سیستم با همون توکن یک نشستِ وبِ کوتاه‌عمر می‌گیره و وارد همون
+// صفحه‌ی چک‌اوتِ وب می‌شه؛ برگشتِ درگاه دقیقا همون /api/subscription/verify
+// ِ وبه — تنها جایی که Subscription/Payment/ModuleAccess ساخته می‌شه. این
+// جدول فقط «قصدِ خرید» رو نگه می‌داره و paymentId بعدا فقط با یک Paymentِ
+// verify‌شده (paidAt پر) ِ همون کاربر جفت می‌شه.
+// userId عمدا relation نداره (تا مدلِ User دست نخوره)؛ همه‌ی کوئری‌ها با
+// where:{id, userId} و ردیف‌های قدیمی با cleanup پاک می‌شن.
+model MobileCheckout {
+  id       String @id @default(cuid())
+  userId   String
+  planKey  String
+  duration String // "1" | "3" | "6" | "12"
+
+  // کدِ تخفیف/رفرالِ اعتبارسنجی‌شده (نرمال‌شده) — فقط برای نمایش/پیش‌پرکردن؛
+  // مصرفِ واقعی‌اش همچنان در چک‌اوت/verify ِ وب
+  discountCode String?
+  quotedAmount Int // پیش‌نمایشِ مبلغ (ریال) — مبلغِ واقعی را چک‌اوتِ وب از نو حساب می‌کنه
+
+  provider String @default("web") // BillingProvider: web | bazaar | play (آینده)
+  status   String @default("PENDING") // PENDING | OPENED | PAID | EXPIRED
+
+  tokenHash      String    @unique
+  tokenExpiresAt DateTime
+  tokenUsedAt    DateTime?
+
+  paymentId  String?   @unique
+  openedAt   DateTime?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
