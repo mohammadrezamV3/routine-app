@@ -1120,7 +1120,13 @@ model TradeAccount {
   tags    TradeTag[]   @relation("TradeAccountTags")
   mtLink  TradeMtLink?
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, archived])
+  @@index([userId, updatedAt])
 }
 
 // برچسبِ رنگیِ کاربرساخته — هم روی حساب استفاده می‌شه هم روی معامله، چون
@@ -1132,6 +1138,13 @@ model TradeTag {
   name      String
   color     String   @default("#3E7BFA")
   createdAt DateTime @default(now())
+  // cursorِ pullِ موبایل — قبلا این مدل updatedAt نداشت
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   accounts TradeAccount[] @relation("TradeAccountTags")
   entries  TradeEntry[]   @relation("TradeEntryTags")
@@ -1139,6 +1152,7 @@ model TradeTag {
 
   @@unique([userId, name])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // چک‌لیستِ پیش از معامله. برخلافِ نسخه‌ی قبلی (یک لیستِ تختِ واحد برای هر
@@ -1166,7 +1180,13 @@ model TradeChecklist {
   items   TradeChecklistItem[]
   entries TradeEntry[]
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, archived])
+  @@index([userId, updatedAt])
 }
 
 model TradeChecklistItem {
@@ -1272,8 +1292,14 @@ model TradeEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([accountId, externalId])
   @@index([userId, openedAt])
+  @@index([userId, updatedAt])
   @@index([accountId, openedAt])
   @@index([checklistId])
 }
@@ -1384,9 +1410,44 @@ model TradeNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, updatedAt])
   @@index([accountId])
   @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — tombstoneِ حذف‌ها برای همگام‌سازیِ موبایل
+//
+// روت‌های وبِ ترید ردیف‌ها رو واقعا پاک می‌کنن (نه soft-delete)؛ اگه به‌جاش
+// ستونِ deletedAt اضافه می‌شد، *همه‌ی* خواندن‌های وب (لیست، آمار، تقویم،
+// گزارشِ هفتگی، دوستان، …) باید فیلترش می‌کردن. پس حذف همون حذفِ واقعی
+// می‌مونه و ردِ اون این‌جا نوشته می‌شه — توسطِ یک trigger دیتابیسی
+// (migration 20260925150000_mobile_trade_sync) روی DELETEِ هر پنج جدول، تا
+// حذف از وب، cascade (purgeِ حساب → معاملاتش) و حذف از موبایل همه یکسان
+// ثبت بشن بدونِ دست‌زدن به روت‌های وب.
+//
+// عمدا FK به User نداره: trigger موقعِ cascadeِ حذفِ خودِ کاربر چیزی
+// نمی‌نویسه (User دیگه وجود نداره) و ردیف‌های قبلی با deleteManyِ صریح در
+// کنارِ حذفِ کاربر، یا با پاک‌سازیِ دوره‌ای، می‌رن.
+// ============================================================================
+
+model TradeSyncTombstone {
+  userId    String
+  // tradeAccount | tradeTag | tradeChecklist | tradeEntry | tradeNote
+  entity    String
+  entityId  String
+  // زمانِ منطقیِ حذف (LWW): حذفِ موبایل = clientUpdatedAt، حذفِ وب = زمانِ سرور
+  deletedAt DateTime
+  // cursorِ pull
+  updatedAt DateTime @default(now())
+
+  @@id([userId, entity, entityId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
