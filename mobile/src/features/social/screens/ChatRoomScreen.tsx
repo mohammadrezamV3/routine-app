@@ -329,7 +329,7 @@ export default function ChatRoomScreen() {
 
       <footer
         className="sticky bottom-0 border-t px-4 pt-3"
-        style={{ borderColor: "var(--surface-line)", background: "var(--surface-1)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+        style={{ borderColor: "var(--surface-line)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
       >
         {!online ? (
           <p className="text-center font-vazir text-[12.5px]" style={{ color: "var(--muted)" }}>
