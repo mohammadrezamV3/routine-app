@@ -3,12 +3,15 @@ import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseDateRange, clampQuery } from "@/lib/validate";
-import { CALENDAR_CURRENCIES } from "@/lib/economicCalendar";
+import { CALENDAR_CURRENCIES, ensureFreshCalendar } from "@/lib/economicCalendar";
 
 // جستجو («سرچ یک ایونت خاص») بازه‌ی تاریخِ خیلی وسیع‌تری لازم دارد (چند
 // ماه قبل/بعد، نه فقط یک روز/هفته) — سقفِ معمولیِ ۶۰ روز برایِ حالتِ
 // جستجو کافی نیست.
 const MAX_RANGE_DAYS = 180;
+
+// هر درخواست باید داده‌ی زنده (و sync هنگامِ خواندن) ببیند، نه پاسخِ کش‌شده.
+export const dynamic = "force-dynamic";
 
 const KNOWN_CURRENCY_CODES = CALENDAR_CURRENCIES.map((c) => c.code);
 
@@ -17,6 +20,11 @@ const KNOWN_CURRENCY_CODES = CALENDAR_CURRENCIES.map((c) => c.code);
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
+
+  // داده‌ی کهنه را قبل از خواندن تازه می‌کند (حداکثر چند ثانیه صبر) — تقویم
+  // دیگر به کران/cluster.js وابسته نیست. خطای sync هیچ‌وقت جلوی خواندنِ
+  // داده‌ی موجود را نمی‌گیرد.
+  await ensureFreshCalendar(prisma).catch(() => {});
 
   const params = req.nextUrl.searchParams;
   const range = parseDateRange(params.get("from"), params.get("to"), MAX_RANGE_DAYS);
