@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 const STATUSES = ["OPEN", "ANSWERED", "CLOSED"] as const;
 
 // GET /api/admin/support?status=OPEN — فهرستِ تیکت‌های همه‌ی کاربرها،
 // تازه‌آپدیت‌شده اول (هم تیکتِ تازه‌ساز هم تیکتی که کاربر تازه بهش جواب داده).
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;
 
   const statusParam = req.nextUrl.searchParams.get("status");

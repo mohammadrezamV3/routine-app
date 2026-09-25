@@ -1,24 +1,22 @@
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
-import { authOptions } from "@/lib/auth";
+import { getAdminContext } from "@/lib/requireAdmin";
 import { AdminShell } from "@/components/AdminShell";
 
-// این پنل دیتای خصوصی کسب‌وکار (کاربران، تراکنش‌ها) رو نشون می‌ده — علاوه
-// بر X-Robots-Tag توی next.config.js و notFound() پایین (که اصلا محتوایی
-// به غیر سوپرادمین نمی‌ده)، این هم یه لایه‌ی اضافه‌ست.
+// این پنل دیتای خصوصی کسب‌وکار رو نشون می‌ده — علاوه بر X-Robots-Tag توی
+// next.config.js و notFound() پایین، این هم یه لایه‌ی اضافه‌ست.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-// گیت سمت سرور کامل پنل Owner — این یک Server Component است (نه
-// "use client")، پس این چک روی *هر* درخواست به /admin/* قبل از رندر هر
-// چیزی اجرا می‌شه، نه فقط یک گیت بصری کلاینتی که با تغییر URL دور زده
-// بشه. یک کاربر عادی که مستقیم /admin رو باز کنه، اصلا محتوایی دریافت
-// نمی‌کنه — notFound() (نه redirect) چون طبق درخواست صریح نباید حتی وجود
-// این روت لو بره.
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-  const isSuperAdmin = !!(session?.user as any)?.isSuperAdmin;
-  if (!isSuperAdmin) notFound();
+// گیت سمت سرور کل پنل — Server Component، پس روی *هر* درخواست به /admin/*
+// قبل از رندر اجرا می‌شه. وضعیت ادمین مستقیم از دیتابیس خونده می‌شه (نه
+// JWT) تا گرفتن دسترسی فوری اثر کنه. غیرادمین → notFound() تا حتی وجود
+// روت لو نره. دسترسی هر صفحه جدا هم سمت سرور (requireAdmin توی هر API) چک
+// می‌شه؛ AdminShell فقط منو رو فیلتر و صفحه‌ی «بدون دسترسی» نشون می‌ده.
+export const dynamic = "force-dynamic";
 
-  return <AdminShell>{children}</AdminShell>;
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const ctx = await getAdminContext();
+  if (!ctx) notFound();
+
+  return <AdminShell isSuperAdmin={ctx.isSuperAdmin} permissions={ctx.permissions}>{children}</AdminShell>;
 }

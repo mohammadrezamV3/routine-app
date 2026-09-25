@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { prisma } from "@/lib/prisma";
 
 // GET → لیست همه‌ی کدهای تخفیف + لیست پلن‌های ایران (برای پرکردن سلکت
 // «کدوم پکیج») یک‌جا برمی‌گرده تا صفحه‌ی ادمین با یک درخواست کامل رندر بشه.
 export async function GET() {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("discounts");
   if (!guard.ok) return guard.response;
 
   const [codes, plans] = await Promise.all([
@@ -18,7 +18,7 @@ export async function GET() {
 // POST → ساخت کد تخفیف جدید. عمدا هیچ‌جا انقضا/پلن رو اجباری نمی‌کنه —
 // expiresAt خالی یعنی بدون انقضا، planKey خالی یعنی روی همه‌ی پکیج‌ها.
 export async function POST(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("discounts");
   if (!guard.ok) return guard.response;
 
   const body = await req.json();

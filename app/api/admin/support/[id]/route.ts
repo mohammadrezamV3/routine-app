@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 // GET /api/admin/support/:id — جزئیاتِ یک تیکت (هر تیکتی، نه فقط تیکتِ خودِ ادمین).
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;
 
   const ticket = await prisma.supportTicket.findUnique({
@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
 // PATCH /api/admin/support/:id — فقط برای بستنِ دستیِ تیکت.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);

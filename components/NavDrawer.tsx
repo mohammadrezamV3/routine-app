@@ -116,7 +116,7 @@ const LINKS: NavItem[] = [
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
-  { href: "/report/weekly", label: "گزارش هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", superAdminOnly: true },
+  { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", superAdminOnly: true },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
@@ -387,7 +387,7 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
                         </div>
-                        {(session?.user as any)?.isSuperAdmin && (
+                        {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (
                           <div
                             className="notif-panel-item profile-menu-item"
                             onClick={() => { setProfileMenuOpen(false); router.push("/admin"); }}

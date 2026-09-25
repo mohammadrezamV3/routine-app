@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { syncEconomicCalendar } from "@/lib/economicCalendar";
@@ -10,7 +10,7 @@ import { syncEconomicCalendar } from "@/lib/economicCalendar";
 // نشده یا ادمین می‌خواد بدونِ صبرکردن تا اجرای بعدیِ کران، همین الان از
 // JBlanked/منبعِ تنظیم‌شده به‌روز کنه.
 export async function POST() {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   // فراخوانیِ یک سرویسِ بیرونی — یه سقفِ سبک تا کلیکِ تکراری/اسکریپت اتفاقی
