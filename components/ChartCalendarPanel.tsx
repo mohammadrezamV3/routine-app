@@ -45,8 +45,11 @@ export function ChartCalendarPanel() {
       const now = new Date();
       const to = new Date(now.getTime() + 6 * 86_400_000);
       const qs = new URLSearchParams({ from: isoLocal(now), to: isoLocal(to) });
+      // بدونِ tz سرور مرزِ روزها را نیمه‌شبِ UTC می‌گرفت (برای ایران ۳:۳۰ جابه‌جا)
+      // و رویدادهای نزدیکِ نیمه‌شبِ محلی بیرون می‌افتادند.
+      qs.set("tz", String(-now.getTimezoneOffset()));
       if (highOnly) qs.set("impacts", "HIGH");
-      const res = await fetch(`/api/trade/economic-calendar?${qs}`);
+      const res = await fetch(`/api/trade/economic-calendar?${qs}`, { cache: "no-store" });
       setEvents(res.ok ? (await res.json()).events || [] : []);
     } finally {
       setLoading(false);

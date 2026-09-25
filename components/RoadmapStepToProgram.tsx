@@ -55,32 +55,32 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
 
   if (added) {
     return (
-      <div className="rm-added"><Check size={14} /> به برنامه‌های هفتگی اضافه شد</div>
+      <div className="rp-added"><Check size={14} /> به برنامه‌های هفتگی اضافه شد</div>
     );
   }
 
   return (
-    <div className="rm-toprogram">
+    <div className="rp-toprogram">
       {!open ? (
-        <button type="button" className="rm-add-btn" onClick={() => setOpen(true)}>
+        <button type="button" className="rp-ghost-btn" onClick={() => setOpen(true)}>
           <CalendarPlus size={14} /> افزودن به برنامه‌هایم
         </button>
       ) : (
-        <div className="rm-add-panel">
-          <div className="rm-add-title">کدام روزها روی این مرحله کار می‌کنی؟</div>
-          <div className="rm-day-row">
+        <div className="rp-add-panel">
+          <div className="rp-add-title">کدام روزها روی این مرحله کار می‌کنی؟</div>
+          <div className="rp-day-row">
             {DAYS.map((d) => (
               <button
                 key={d.jsDay}
                 type="button"
-                className={`rm-day${days.includes(d.jsDay) ? " on" : ""}`}
+                className={`rp-day${days.includes(d.jsDay) ? " on" : ""}`}
                 onClick={() => setDays((p) => p.includes(d.jsDay) ? p.filter((x) => x !== d.jsDay) : [...p, d.jsDay])}
               >
                 {d.label}
               </button>
             ))}
           </div>
-          <div className="rm-time-row">
+          <div className="rp-time-row">
             <label>
               <span>ساعت شروع</span>
               <input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
@@ -91,7 +91,7 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
             </label>
           </div>
           {error && <div className="trade-form-error">{error}</div>}
-          <div className="rm-add-actions">
+          <div className="rp-add-actions">
             <button type="button" className="account-outline-btn" onClick={() => setOpen(false)}>لغو</button>
             <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
               {saving ? <Loader2 size={14} className="trade-spin" /> : "افزودن"}
