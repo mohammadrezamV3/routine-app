@@ -387,7 +387,7 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
                         </div>
-                        {(session?.user as any)?.isSuperAdmin && (
+                        {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (
                           <div
                             className="notif-panel-item profile-menu-item"
                             onClick={() => { setProfileMenuOpen(false); router.push("/admin"); }}

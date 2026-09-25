@@ -61,6 +61,7 @@ public/images/             # لوگو و asset های استاتیک
 - هدرهای امنیتی HTTP در `next.config.js` فقط روی production اعمال می‌شن، نه `next dev` (چون CSP سخت‌گیرانه با `eval` تداخل داره و Hot Reload رو می‌شکنه) — این تمایز رو حفظ کن.
 - همه‌ی کوئری‌ها Prisma پارامتری‌شده (بدون raw SQL)، بدون `dangerouslySetInnerHTML`/`eval`، روت‌های حذف/ویرایش همیشه با `where:{id, userId}` (نه فقط `{id}`) برای جلوگیری از IDOR.
 - رمز عبور با bcrypt (۱۲ round)، session با JWT امضاشده (`NEXTAUTH_SECRET`)، `isSuperAdmin` فقط سمت سرور/دیتابیس تعیین می‌شه.
+- پنل ادمین نقش‌محوره: `isSuperAdmin` = Owner (همه‌چیز)، ادمین محدود = `User.adminPermissions` (کلیدها در `lib/adminPermissions.ts`). هر روت `/api/admin/*` با `requireAdmin(perm)` (`lib/requireAdmin.ts`) گیت می‌شه که وضعیت رو *همیشه از دیتابیس* می‌خونه، نه JWT. قوانین «کی روی کی» (ادمین محدود روی Owner هیچ، روی ادمین دیگه فقط با `admins.manage`، فقط دسترسی‌هایی که خودش داره رو می‌ده، اقدام مخرب روی خودش نه) فقط توی `lib/adminUsers.ts` — دور نزن. هر اقدام در `AuditLog` ثبت می‌شه.
 
 هنوز مونده (قبل از لانچ واقعی):
 - عوض کردن رمز پیش‌فرض سوپریوزر قبل از production (دیگه هیچ رمز پیش‌فرضی هاردکد نیست، ولی `.env` باید پر بشه).

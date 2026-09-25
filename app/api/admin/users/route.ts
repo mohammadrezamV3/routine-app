@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getUsersList, UsersListFilter } from "@/lib/adminAnalytics";
 
-const VALID_FILTERS: UsersListFilter[] = ["all", "new", "active", "inactive", "free", "paid", "blocked"];
+const VALID_FILTERS: UsersListFilter[] = ["all", "new", "active", "inactive", "free", "paid", "blocked", "admins", "deleted"];
 
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("users.view");
   if (!guard.ok) return guard.response;
 
   const sp = req.nextUrl.searchParams;

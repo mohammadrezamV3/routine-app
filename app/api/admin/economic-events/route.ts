@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { clampText } from "@/lib/validate";
 import { externalProviderName } from "@/lib/economicCalendar";
 
@@ -33,7 +33,7 @@ function parseBody(body: any): string | { title: string; country: string; curren
 }
 
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   const events = await prisma.economicEvent.findMany({
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   const parsed = parseBody(await req.json().catch(() => null));
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);
@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });

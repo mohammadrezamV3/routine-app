@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { prisma } from "@/lib/prisma";
 import { migrationState } from "@/lib/migrationState";
@@ -178,7 +178,7 @@ function eventLoopLag(): Promise<number> {
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("system");
   if (!guard.ok) return guard.response;
 
   const started = Date.now();
