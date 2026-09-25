@@ -2,11 +2,32 @@ import { LogOut, User, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "@/components/AppHeader";
 import ListRow from "@/components/ListRow";
+import { formatJalali, toJalali } from "@/lib/jalali";
 import { useMoreContext } from "./MoreContext";
+
+const PLAN_STATUS_LABELS: Record<"ACTIVE" | "TRIAL", string> = { ACTIVE: "فعال", TRIAL: "آزمایشی" };
+
+/** ISO → «۱۴۰۴/۰۵/۰۷»، null → null (یعنی بی‌انقضا) */
+function formatExpiry(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return formatJalali(toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate()));
+}
 
 export default function MoreAccount() {
   const navigate = useNavigate();
-  const { isLoggedIn, userName, userPhone, planName, modules, onLogout } = useMoreContext();
+  const {
+    isLoggedIn,
+    userName,
+    userUsername,
+    userPhone,
+    planName,
+    planStatus,
+    planExpiresAt,
+    modules,
+    onLogout,
+  } = useMoreContext();
 
   const handleLogout = () => {
     onLogout();
@@ -59,6 +80,17 @@ export default function MoreAccount() {
           </div>
         )}
 
+        {userUsername && (
+          <div className="flex w-full items-center gap-3 border-b px-4" style={{ borderColor: "var(--surface-line)", minHeight: 52 }}>
+            <span className="flex-1 text-start font-vazir text-[14.5px]" style={{ color: "var(--muted)" }}>
+              نامِ کاربری
+            </span>
+            <span className="font-vazir text-[14.5px] font-mono" style={{ color: "var(--text)" }} dir="ltr">
+              {userUsername}
+            </span>
+          </div>
+        )}
+
         {userPhone && (
           <div className="flex w-full items-center gap-3 border-b px-4" style={{ borderColor: "var(--surface-line)", minHeight: 52 }}>
             <span className="flex-1 text-start font-vazir text-[14.5px]" style={{ color: "var(--muted)" }}>
@@ -86,7 +118,29 @@ export default function MoreAccount() {
               <span className="flex-1 text-start font-vazir text-[14.5px]" style={{ color: "var(--text)" }}>
                 {planName}
               </span>
+              {planStatus && (
+                <span
+                  className="rounded-full px-2.5 py-1 font-vazir text-[11.5px] font-semibold"
+                  style={{
+                    background: planStatus === "ACTIVE" ? "var(--accent-dim)" : "var(--surface-2)",
+                    color: planStatus === "ACTIVE" ? "var(--accent)" : "var(--muted)",
+                  }}
+                >
+                  {PLAN_STATUS_LABELS[planStatus]}
+                </span>
+              )}
             </div>
+
+            {formatExpiry(planExpiresAt) && (
+              <div className="flex w-full items-center gap-3 border-b px-4" style={{ borderColor: "var(--surface-line)", minHeight: 52 }}>
+                <span className="flex-1 text-start font-vazir text-[14.5px]" style={{ color: "var(--muted)" }}>
+                  انقضای اشتراک
+                </span>
+                <span className="font-vazir text-[14.5px] tabular-nums" style={{ color: "var(--text)" }}>
+                  {formatExpiry(planExpiresAt)}
+                </span>
+              </div>
+            )}
           </>
         )}
 
@@ -101,7 +155,7 @@ export default function MoreAccount() {
               </div>
             </div>
 
-            {modules.map((module, idx) => (
+            {modules.map((module) => (
               <div
                 key={module.key}
                 className="flex w-full items-center gap-3 border-b px-4"
@@ -109,6 +163,9 @@ export default function MoreAccount() {
               >
                 <span className="flex-1 text-start font-vazir text-[14.5px]" style={{ color: "var(--text)" }}>
                   {module.label}
+                </span>
+                <span className="font-vazir text-[12px]" style={{ color: "var(--muted)" }}>
+                  {formatExpiry(module.expiresAt) ? `تا ${formatExpiry(module.expiresAt)}` : "بی‌انقضا"}
                 </span>
               </div>
             ))}

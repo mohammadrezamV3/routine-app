@@ -151,6 +151,17 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (engine.getState().status === "idle" && tokens.isLoggedIn()) void refreshCatalog(api);
   }, [api, engine, tokens]);
 
+  /** GET /api/mobile/me — تازه‌کردنِ پلن/ماژول‌ها (شروعِ اپ + برگشت به اپ).
+   *  خطا (آفلاین/سرور) بی‌صدا نادیده گرفته می‌شه؛ دفعه‌ی بعد دوباره امتحان می‌شه. */
+  const refreshUser = useCallback(async () => {
+    if (!SYNC_ENABLED || !tokens.isLoggedIn()) return;
+    try {
+      await api.me();
+    } catch {
+      /* noop */
+    }
+  }, [api, tokens]);
+
   const trigger = useCallback(() => {
     if (!SYNC_ENABLED || !tokens.isLoggedIn()) return;
     void runSync();
@@ -185,13 +196,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setLoggedIn(tokens.isLoggedIn());
       setReady(true);
       trigger();
+      void refreshUser();
     })();
     return () => {
       cancelled = true;
       unsubState();
       unsubAuth();
     };
-  }, [api, engine, tokens, trigger]);
+  }, [api, engine, tokens, trigger, refreshUser]);
 
   // نوشتنِ محلی (هر ماژول) → سینک با debounce
   useEffect(() => {
@@ -235,7 +247,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       try {
         const { App } = await import("@capacitor/app");
         const h = await App.addListener("appStateChange", (s) => {
-          if (s.isActive) trigger();
+          if (s.isActive) {
+            trigger();
+            void refreshUser();
+          }
         });
         if (cancelled) void h.remove();
         else cleanups.push(() => void h.remove());
@@ -247,7 +262,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       cleanups.forEach((c) => c());
     };
-  }, [engine, trigger]);
+  }, [engine, trigger, refreshUser]);
 
   const syncNow = useCallback(async () => {
     if (!SYNC_ENABLED || !tokens.isLoggedIn()) return;
@@ -327,13 +342,17 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   );
 
   const moreValue = useMemo(() => {
+    const moduleExpiry = new Map((user?.moduleAccess ?? []).map((m) => [m.module, m.expiresAt]));
     const modules: PlanModule[] = (user?.modules ?? [])
       .filter((m) => !lockedModules.includes(m))
-      .map((m) => ({ key: m, label: MODULE_LABELS[m] ?? m }));
+      .map((m) => ({ key: m, label: MODULE_LABELS[m] ?? m, expiresAt: moduleExpiry.get(m) ?? null }));
     return {
       userName: user?.name ?? null,
-      userPhone: null, // قراردادِ MobileUser شماره نداره
-      planName: null, // قراردادِ MobileUser اسمِ پلن نداره
+      userUsername: user?.username ?? null,
+      userPhone: user?.phoneMasked ?? null,
+      planName: user?.plan?.name ?? null,
+      planStatus: user?.plan?.status ?? null,
+      planExpiresAt: user?.plan?.expiresAt ?? null,
       modules,
       lastSyncTime: loggedIn && syncState.lastSyncAt ? formatLastSync(syncState.lastSyncAt) : null,
       onSync: () => void syncNow(),

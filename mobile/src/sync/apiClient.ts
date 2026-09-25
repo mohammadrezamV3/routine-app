@@ -10,6 +10,7 @@ import type {
   MobileAuthSuccess,
   MobileLoginRequest,
   MobileLoginResponse,
+  MobileMeResponse,
   MobileUser,
   MobileVerify2faRequest,
 } from "@/lib/api-contract";
@@ -232,6 +233,19 @@ export class ApiClient {
     await this.tokens.setSession(data, this.now());
     this.emit({ type: "login", user: data.user });
     return data;
+  }
+
+  /**
+   * GET /api/mobile/me — تازه‌کردنِ اطلاعاتِ حساب (پلن/ماژول‌ها/…) بدونِ refreshِ
+   * توکن. فقط وقتی وارد شده صدا زده می‌شه؛ نتیجه هم در tokenStore ذخیره می‌شه
+   * هم به شنونده‌ها (AuthEvent) اطلاع داده می‌شه تا UI فورا آپدیت بشه.
+   * خطاها (آفلاین/سرور) بی‌صدا throw می‌شن — کالر (SyncProvider) بی‌سروصدا نادیده می‌گیره.
+   */
+  async me(): Promise<MobileUser> {
+    const data = await this.authed<MobileMeResponse>("GET", "/api/mobile/me");
+    await this.tokens.setUser(data.user);
+    this.emit({ type: "user", user: data.user });
+    return data.user;
   }
 
   /** خروج: باطل‌کردنِ نشست روی سرور (best-effort، ۵ ثانیه) و بعد پاک‌کردنِ توکن‌های محلی — همیشه موفق */

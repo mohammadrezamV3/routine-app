@@ -7,7 +7,8 @@
 //     «حذف/آرشیو»ی محلی = push با isActive=false و deletedAt فقط محلی می‌مونه.
 //     برنامه‌ی «قالبِ آماده»ی محلی روی سرور custom ثبت می‌شه؛ متادیتای محلیش
 //     (level/goal/قد/وزن/…) موقعِ برگشتِ رکورد نگه داشته می‌شه.
-//   • exerciseLogs: کلیدِ سرور `${planId}|${date}`؛ id محلی و notes فقط محلی‌ان.
+//   • exerciseLogs: کلیدِ سرور `${planId}|${date}`؛ id فقط محلیه. notes هم مثلِ
+//     بقیه‌ی فیلدها سینک می‌شه (قبلا فقط محلی می‌موند).
 //   • setLogs و customFoods: موجودیتِ سروری ندارن (وب هم ذخیره‌شون نمی‌کنه) — فقط محلی.
 //   • calorieEntries ↔ foodLogEntry: محلی «به‌ازای ۱۰۰ گرم» نگه می‌داره، سرور
 //     «کلِ همین مقدار» (customCalories/proteinG/…) — تبدیل با grams.
@@ -17,11 +18,14 @@
 import type {
   CalorieTargetRecord,
   ExerciseLogRecord,
+  ExercisePlanLevel,
   ExercisePlanRecord,
+  ExerciseTrainingPhase,
   FoodLogEntryRecord,
   SyncChange,
   SyncServerRecord,
 } from "@/lib/api-contract";
+import { EXERCISE_LOG_NOTES_MAX, EXERCISE_TRAINING_PHASES } from "@/lib/api-contract";
 import { fitnessDb } from "@/features/fitness/db";
 import { newLocalId } from "@/features/fitness/lib/id";
 import type {
@@ -63,6 +67,11 @@ async function settleRow<T extends { id: string; updatedAt: string }>(
 
 // ─── mapping: محلی → push ──────────────────────────────────────────────
 
+/** `trainingPhase`ِ محلی رشته‌ی آزاده؛ فقط مقادیرِ معتبرِ سرور رو پاس بده، وگرنه "none" */
+function normalizeTrainingPhase(v: string | null): ExerciseTrainingPhase {
+  return (EXERCISE_TRAINING_PHASES as readonly string[]).includes(v ?? "") ? (v as ExerciseTrainingPhase) : "none";
+}
+
 export function planToChange(row: ExercisePlanRow): SyncChange {
   return {
     entity: "exercisePlan",
@@ -72,6 +81,17 @@ export function planToChange(row: ExercisePlanRow): SyncChange {
       planData: row.planData.map((d) => ({ day: d.day, focus: d.focus, items: d.items })),
       isActive: row.isActive && !row.deletedAt,
       rulesAccepted: !!row.rulesAcceptedAt,
+      // متادیتای برنامه (قبلا فقط محلی می‌موند، حالا با سرور سینک می‌شه —
+      // نمایشِ درست در پنلِ وب/AI Insight به این وابسته‌ست)
+      level: row.level as ExercisePlanLevel,
+      goal: row.goal,
+      equipment: row.equipment,
+      heightCm: row.heightCm,
+      weightKg: row.weightKg,
+      trainingMonth: row.trainingMonth,
+      trainingPhase: normalizeTrainingPhase(row.trainingPhase),
+      hasPhysicalLimitation: row.hasPhysicalLimitation,
+      gymDays: row.gymDays ?? row.planData.map((d) => d.day),
     },
     clientUpdatedAt: row.updatedAt,
   };
@@ -89,7 +109,14 @@ export function exerciseLogToChange(row: ExerciseLogRow): SyncChange | null {
     entity: "exerciseLog",
     key,
     op: "upsert",
-    data: { completed: row.completed, completedItems: row.completedItems ?? [] },
+    data: {
+      completed: row.completed,
+      completedItems: row.completedItems ?? [],
+      // یادداشتِ جلسه — قبلا فقط محلی می‌موند، حالا با سرور سینک می‌شه.
+      // null/"" یعنی صراحتا پاک‌شده (سرور با undefined فرق می‌ذاره، پس هیچ‌وقت
+      // undefined نفرست این‌جا — همیشه مقدارِ واقعیِ محلی رو، truncate‌شده).
+      notes: row.notes == null ? row.notes : row.notes.slice(0, EXERCISE_LOG_NOTES_MAX),
+    },
     clientUpdatedAt: row.updatedAt,
   };
 }
@@ -198,7 +225,10 @@ export function remoteExerciseLog(r: ExerciseLogRecord, local?: ExerciseLogRow):
     date: r.date,
     completed: r.completed,
     completedItems: r.completedItems ?? [],
-    notes: local?.notes ?? null,
+    // یادداشت حالا با سرور سینک می‌شه (قبلا همیشه فقط محلی می‌موند).
+    // این تابع صداش می‌زنیم فقط وقتی remoteWins (ریموت برنده‌ست)، پس مقدارِ
+    // سرور رو معتبر بدون — نه fallback به local.notes.
+    notes: r.notes ?? null,
     createdAt: local?.createdAt ?? r.editedAt,
     updatedAt: r.editedAt,
     deletedAt: null,

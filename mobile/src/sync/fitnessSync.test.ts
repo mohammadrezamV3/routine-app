@@ -187,7 +187,7 @@ describe("fitness push/pull", () => {
     expect((await fitnessDb.plans.get(plan.id))?.deletedAt).not.toBeNull();
   });
 
-  it("pull: لاگِ سرور با ردیفِ محلیِ همون planId|date ادغام می‌شه (id و notesِ محلی می‌مونه)", async () => {
+  it("pull: لاگِ سرور با ردیفِ محلیِ همون planId|date ادغام می‌شه (id ِ محلی می‌مونه، notes هم مثلِ بقیه‌ی فیلدها از سرور میاد)", async () => {
     const planId = "mpln0000000000000000000000000002";
     await fitnessDb.exerciseLogs.put({
       id: "mlocal00000000000000000000000001",
@@ -195,7 +195,7 @@ describe("fitness push/pull", () => {
       date: "2026-09-20",
       completed: false,
       completedItems: [],
-      notes: "یادداشتِ محلی",
+      notes: "یادداشتِ محلیِ قدیمی",
       createdAt: T1,
       updatedAt: "2026-09-20T00:00:00.000Z",
       deletedAt: null,
@@ -204,7 +204,18 @@ describe("fitness push/pull", () => {
     const srv = recordingServer(() =>
       emptyPull({
         exercisePlans: [planRecord({ id: planId })],
-        exerciseLogs: [{ key: `${planId}|2026-09-20`, planId, date: "2026-09-20", completed: true, completedItems: ["اسکات"], editedAt: T1, updatedAt: T1 }],
+        exerciseLogs: [
+          {
+            key: `${planId}|2026-09-20`,
+            planId,
+            date: "2026-09-20",
+            completed: true,
+            completedItems: ["اسکات"],
+            notes: "یادداشتِ سرور",
+            editedAt: T1,
+            updatedAt: T1,
+          },
+        ],
         foodLogEntries: [],
         calorieTargets: [],
       })
@@ -213,7 +224,10 @@ describe("fitness push/pull", () => {
     await engine.sync();
     const logs = await fitnessDb.exerciseLogs.toArray();
     expect(logs).toHaveLength(1);
-    expect(logs[0]).toMatchObject({ id: "mlocal00000000000000000000000001", notes: "یادداشتِ محلی", completed: true, dirty: 0 });
+    // id فقط محلیه (حفظ می‌شه)؛ notes دیگه فقط محلی نیست — چون local.dirty=0
+    // بود (ادیتِ سینک‌نشده‌ای در جریان نیست)، ریموت برنده‌ست و همه‌ی فیلدها
+    // از سرور میان.
+    expect(logs[0]).toMatchObject({ id: "mlocal00000000000000000000000001", notes: "یادداشتِ سرور", completed: true, dirty: 0 });
     expect(await fitnessDb.plans.get(planId)).toMatchObject({ isActive: true, dirty: 0 });
   });
 

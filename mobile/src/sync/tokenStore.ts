@@ -44,6 +44,14 @@ export class TokenStore {
     ]);
   }
 
+  /** تازه‌کردنِ کاربر بدونِ دست‌زدن به توکن‌ها — بعدِ GET /api/mobile/me. اگه از قبل
+   *  وارد نشده (لاگ‌اوت هم‌زمان شده) بی‌اثره تا نشستِ خروج‌شده رو دوباره «واردشده» نشون نده. */
+  async setUser(user: MobileUser): Promise<void> {
+    if (!this.isLoggedIn()) return;
+    this.user = user;
+    await setJson(this.kv, K_USER, user);
+  }
+
   async clear(): Promise<void> {
     this.accessToken = null;
     this.accessExpiresAt = 0;
