@@ -6,9 +6,11 @@ interface ListRowProps {
   label: string;
   onClick?: () => void;
   danger?: boolean;
+  /** متنِ کم‌رنگِ کنارِ فلش (مثلا زمانِ آخرین همگام‌سازی) */
+  detail?: string;
 }
 
-export default function ListRow({ icon, label, onClick, danger }: ListRowProps) {
+export default function ListRow({ icon, label, onClick, danger, detail }: ListRowProps) {
   return (
     <button
       onClick={onClick}
@@ -22,6 +24,11 @@ export default function ListRow({ icon, label, onClick, danger }: ListRowProps) 
       >
         {label}
       </span>
+      {detail && (
+        <span className="font-vazir text-[12px]" style={{ color: "var(--muted)" }}>
+          {detail}
+        </span>
+      )}
       <ChevronLeft size={18} color="var(--muted)" />
     </button>
   );

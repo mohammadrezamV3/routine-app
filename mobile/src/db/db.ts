@@ -71,13 +71,18 @@ class ArionDB extends Dexie {
 
 export const db = new ArionDB();
 
-/** شناسه‌ی محلی برای رکوردهای جدید (Task و…) — پیشوند 'm' تا از هر شناسه‌ی
- *  سروری (که لایه‌ی سینک بعدا اختصاص می‌ده) قابل‌تشخیص باشه. */
+/** شناسه‌ی محلی برای رکوردهای جدید (Task و…). قالبش باید با اعتبارسنجیِ
+ *  سرور (isValidClientId در lib/mobileSync.ts: `^[a-z][a-z0-9]{19,31}$`)
+ *  جور باشه، چون همین id عینا push می‌شه: پیشوندِ 'm' + ۳۱ کاراکترِ hexِ
+ *  کوچک (بدونِ خط‌تیره) = ۳۲ کاراکتر. */
 export function newId(): string {
-  const rnd = typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-  return "m" + rnd;
+  let hex = "";
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    hex = crypto.randomUUID().replace(/-/g, "");
+  } else {
+    while (hex.length < 32) hex += Math.floor(Math.random() * 16).toString(16);
+  }
+  return "m" + hex.toLowerCase().slice(0, 31);
 }
 
 export function nowIso(): string {

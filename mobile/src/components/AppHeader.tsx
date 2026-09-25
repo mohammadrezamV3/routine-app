@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OfflinePill from "./OfflinePill";
+import SyncStatusIcon from "./SyncStatusIcon";
 
 interface AppHeaderProps {
   title: string;
@@ -33,6 +34,7 @@ export default function AppHeader({ title, showBack, right }: AppHeaderProps) {
       <h1 className="flex-1 truncate font-vazir text-[17px] font-semibold" style={{ color: "var(--text)" }}>
         {title}
       </h1>
+      <SyncStatusIcon />
       <OfflinePill />
       {right}
     </header>

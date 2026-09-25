@@ -12,6 +12,7 @@ import Login from "@/screens/Login";
 import { useHardwareBack } from "@/lib/useHardwareBack";
 import { useTheme } from "@/lib/useTheme";
 import { hideSplash } from "@/lib/statusBar";
+import { SyncProvider } from "@/sync/SyncProvider";
 
 export default function App() {
   const location = useLocation();
@@ -23,22 +24,24 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--bg)" }}>
-      <div style={{ paddingBottom: "calc(52px + env(safe-area-inset-bottom))" }}>
-        <AnimatePresence mode="wait" initial={false}>
-          <PageTransition key={location.pathname}>
-            <Routes location={location}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/routine" element={<Routine />} />
-              <Route path="/exercise" element={<Exercise />} />
-              <Route path="/trade" element={<Trade />} />
-              <Route path="/more" element={<More />} />
-              <Route path="/login" element={<Login />} />
-            </Routes>
-          </PageTransition>
-        </AnimatePresence>
+    <SyncProvider>
+      <div style={{ minHeight: "100dvh", background: "var(--bg)" }}>
+        <div style={{ paddingBottom: "calc(52px + env(safe-area-inset-bottom))" }}>
+          <AnimatePresence mode="wait" initial={false}>
+            <PageTransition key={location.pathname}>
+              <Routes location={location}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/routine" element={<Routine />} />
+                <Route path="/exercise" element={<Exercise />} />
+                <Route path="/trade" element={<Trade />} />
+                <Route path="/more" element={<More />} />
+                <Route path="/login" element={<Login />} />
+              </Routes>
+            </PageTransition>
+          </AnimatePresence>
+        </div>
+        <BottomTabBar />
       </div>
-      <BottomTabBar />
-    </div>
+    </SyncProvider>
   );
 }
