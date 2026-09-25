@@ -1,11 +1,11 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `ژورنال معاملاتی فارسی | ثبت و تحلیل معاملات | ${BRAND_FA}`,
   description:
-    `معاملاتت را در ${BRAND_FA} (${BRAND_EN}) ثبت کن و عملکردت را ببین: سود و زیان، نرخ برد، ` +
+    `معاملاتت را در ${BRAND_FA} ثبت کن و عملکردت را ببین: سود و زیان، نرخ برد، ` +
     `میانگین R، تقویم معاملات و چک‌لیست ورود — یک ژورنال معاملاتی منظم و فارسی.`,
   path: "/trading-journal",
   ogTitle: `ژورنال معاملاتی ${BRAND_FA}`,
@@ -50,7 +50,7 @@ export default function TradingJournalPage() {
         breadcrumb={BREADCRUMB}
         h1={`ژورنال معاملاتی ${BRAND_FA}؛ معاملاتت را ثبت کن و عملکردت را ببین`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) یک ژورنال معاملاتی فارسی دارد: هر معامله را با جزئیاتش ثبت می‌کنی و ` +
+          `${BRAND_FA} یک ژورنال معاملاتی فارسی دارد: هر معامله را با جزئیاتش ثبت می‌کنی و ` +
           `آمار واقعی عملکردت را می‌بینی — نرخ برد، میانگین R، تقویم سود و زیان و بیشتر. ` +
           `این صفحه توضیح می‌دهد ژورنال معاملاتی چیست و چه چیزی را باید ثبت کرد.`
         }
@@ -98,7 +98,9 @@ export default function TradingJournalPage() {
         faqTitle="سوال‌های رایج درباره ژورنال معاملاتی"
         related={[
           { href: "/blog/what-is-a-trading-journal", label: "ژورنال معاملاتی چیست و چطور بنویسیم؟", note: "مقاله‌ی کامل درباره‌ی ساختن و مرورکردن ژورنال." },
-          { href: "/routine", label: "روتین اپ آریون", note: "نظم روزانه و برنامه‌ی تکرارشونده، در همان حساب کاربری." },
+          { href: "/economic-calendar", label: "تقویم اقتصادی آریون", note: "رویدادهای مهم اقتصادی، برای برنامه‌ریزی روز معاملاتی." },
+          { href: "/forex-sessions", label: "ساعت جلسه‌های بازار فارکس", note: "زمان باز و بسته‌شدن بازارهای آسیا، اروپا و آمریکا." },
+          { href: "/routine", label: "روتین روزانه در آریون", note: "نظم روزانه و برنامه‌ی تکرارشونده، در همان حساب کاربری." },
           { href: "/faq", label: "سوالات متداول آریون", note: "جواب سوال‌های رایج درباره‌ی همه‌ی بخش‌های اپ." },
         ]}
       />

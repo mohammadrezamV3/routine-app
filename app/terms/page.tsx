@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { OG_BASE } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: { absolute: "قوانین و مقررات آریون (Arion)" },
+  title: { absolute: "قوانین و مقررات آریون" },
   description: "قوانین و مقررات استفاده از آریون — ماهیت سرویس، حساب کاربری، و حریم داده‌های شما.",
   alternates: { canonical: "/terms" },
   openGraph: { ...OG_BASE, url: "/terms", title: "قوانین و مقررات" },
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const SECTIONS = [
   {
     title: "ماهیت سرویس",
-    body: "«Arion» ابزاری شخصی برای پیگیری روتین روزانه، خواب، ورزش، کالری و ترید توئه. اطلاعاتی که وارد می‌کنی فقط برای نمایش به خودت و محاسبه آمارهای همون بخش استفاده می‌شه.",
+    body: "«آریون» ابزاری شخصی برای پیگیری روتین روزانه، خواب، ورزش، کالری و ترید توئه. اطلاعاتی که وارد می‌کنی فقط برای نمایش به خودت و محاسبه آمارهای همون بخش استفاده می‌شه.",
   },
   {
     title: "بدون توصیه پزشکی یا مالی",

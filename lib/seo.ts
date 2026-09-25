@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   BRAND_ALT_NAMES, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_DESC, BRAND_EN, BRAND_FA,
-  BRAND_SAME_AS, OG_BASE,
+  BRAND_SAME_AS, OG_BASE, SUPPORT_EMAIL,
 } from "./brand";
 
 /**
@@ -52,6 +52,54 @@ export function pageMetadata({
 
 type JsonLd = Record<string, unknown>;
 
+// شناسه‌های `@id` — تنها راهی که JSON-LD چند بلوکی (Organization/WebSite/
+// SoftwareApplication) رو به «یک موجودیت» به‌جای سه موجودیت بی‌ربط تبدیل
+// می‌کنه. بدون این‌ها، هر بلوک برای گوگل یک entity جدا حساب می‌شه و
+// نتیجه‌ی نهایی (Knowledge Panel/entity واحد) شکل نمی‌گیره.
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
+export const SOFTWARE_ID = `${SITE_URL}/#software`;
+
+/**
+ * Organization — تنها یک بار در root layout رندر می‌شود. name عمدا
+ * انگلیسیِ «Arion» است (شکلِ رسمیِ نامِ برند در schema.org) و «آریون»
+ * توی alternateName می‌آید؛ دقیقا همون قراردادی که BRAND_ALT_NAMES/
+ * BRAND_SAME_AS برای گوگل تعریف می‌کنن.
+ */
+export function organizationJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: BRAND_EN,
+    alternateName: BRAND_ALT_NAMES,
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.png`,
+    description: BRAND_DESC,
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: SUPPORT_EMAIL,
+      contactType: "customer support",
+      availableLanguage: ["fa", "en"],
+    },
+    sameAs: BRAND_SAME_AS,
+  };
+}
+
+/** WebSite — با `publisher` به همون Organization بالا وصل می‌شه (نه یک کپی جدا). */
+export function websiteJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    name: BRAND_FA,
+    alternateName: [BRAND_EN, BRAND_BOTH],
+    url: SITE_URL,
+    inLanguage: "fa-IR",
+    publisher: { "@id": ORGANIZATION_ID },
+  };
+}
+
 /**
  * BreadcrumbList — به گوگل می‌گوید این صفحه کجای ساختار سایت است و در
  * نتیجه‌ی جست‌وجو به‌جای URL خام، مسیر خوانا نشان داده می‌شود.
@@ -87,29 +135,58 @@ export function faqJsonLd(faqs: { q: string; a: string }[]): JsonLd {
   };
 }
 
+// فهرست واقعیِ بخش‌های آریون — دقیقا منطبق با چیزی که کد الان انجام
+// می‌دهد (چک‌شده روی app/ و components/). رودمپ یادگیری و تحلیل هفتگیِ
+// AI عمدا اینجا با «به‌زودی برای عموم» می‌آیند: هردو پشت گیت هستند
+// (رودمپ کاملا مخصوص سوپریوزر، تحلیل هفتگی هنوز از منوی اصلی مخفی است)
+// و ادعای «همین الان برای همه در دسترس است» درست نیست.
+export const FEATURE_LIST_FA = [
+  "برنامه‌ی هفتگی و روتین روزانه با تقویم شمسی",
+  "پیگیری عادت‌ها و استریک روزانه",
+  "مدیریت کارهای روزمره و یادآوری",
+  "ثبت و پیگیری خواب",
+  "برنامه‌ی تمرینی بدنسازی با کمک هوش‌مصنوعی",
+  "کالری‌شمار و اسکن هوشمند غذا",
+  "ژورنال معاملات ترید: چند حساب، آمار کامل، چک‌لیست ورود",
+  "همگام‌سازی خودکار معاملات با متاتریدر",
+  "تقویم اقتصادی و ساعت جلسه‌های بازار فارکس",
+  "رودمپ یادگیری با هوش مصنوعی (به‌زودی برای عموم)",
+  "تحلیل هفتگی هوشمند AI Insight (به‌زودی برای عموم)",
+];
+
 /**
  * SoftwareApplication — توصیفِ خودِ محصول.
  *
- * عمدا بدون `aggregateRating`، `review`، `offers` و تعداد دانلود: آریون
- * هنوز هیچ‌کدام از این داده‌ها را واقعی ندارد و ساختنشان هم نقضِ
- * راهنمای گوگل است هم ریسکِ جریمه‌ی دستی.
+ * عمدا بدون `aggregateRating`/`review`/تعداد دانلود: آریون هنوز هیچ‌کدام
+ * از این داده‌ها را واقعی ندارد و ساختنشان هم نقضِ راهنمای گوگل است هم
+ * ریسکِ جریمه‌ی دستی. `offers` فقط همان پلن پایه‌ی رایگان را می‌گوید —
+ * قیمت پلن‌های پولی (lib/planPricing.ts) به تومان/دوره‌ست، نه یک عدد
+ * ثابت قابل‌بیان با schema.org Offer، پس ادعای نادرست بهتر از سکوت نیست.
  */
 export function softwareApplicationJsonLd(): JsonLd {
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: BRAND_BOTH,
+    "@type": ["SoftwareApplication", "WebApplication"],
+    "@id": SOFTWARE_ID,
+    name: BRAND_FA,
     alternateName: BRAND_ALT_NAMES,
     url: SITE_URL,
     // دسته‌ی درستِ schema.org برای اپِ برنامه‌ریزی/بهره‌وری. قبلا
     // LifestyleApplication بود که برای یک روتین اپ دقیق نیست.
     applicationCategory: "ProductivityApplication",
-    operatingSystem: "Web",
+    operatingSystem: "Web, Android, iOS (PWA)",
     browserRequirements: "نیاز به مرورگر مدرن با پشتیبانی JavaScript",
     inLanguage: "fa-IR",
     description: BRAND_DESC,
     softwareHelp: absoluteUrl("/faq"),
-    publisher: { "@type": "Organization", name: BRAND_EN, url: SITE_URL },
+    featureList: FEATURE_LIST_FA,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "IRR",
+      description: "بخش روتین، کارهای روزانه و خواب رایگان‌اند؛ ورزش/تغذیه، ژورنال ترید و رودمپ اشتراکی‌اند و دوره‌ی آزمایشی رایگان دارند.",
+    },
+    publisher: { "@id": ORGANIZATION_ID },
     sameAs: BRAND_SAME_AS,
   };
 }

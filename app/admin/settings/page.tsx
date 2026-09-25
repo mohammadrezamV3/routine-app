@@ -15,6 +15,8 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [audit, setAudit] = useState<AuditRow[] | null>(null);
+  const [indexNowState, setIndexNowState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [indexNowMsg, setIndexNowMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/settings").then((r) => r.json()).then((d: SettingsResp) => {
@@ -41,8 +43,41 @@ export default function AdminSettingsPage() {
     }
   }
 
+  async function submitIndexNow() {
+    setIndexNowState("loading");
+    setIndexNowMsg("");
+    try {
+      const res = await fetch("/api/admin/seo/indexnow", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "خطای ناشناخته");
+      setIndexNowState("done");
+      setIndexNowMsg(`${data.submitted} آدرس ارسال شد`);
+      fetch("/api/admin/audit-log?pageSize=15").then((r) => r.json()).then((d) => setAudit(d.entries));
+    } catch (e: any) {
+      setIndexNowState("error");
+      setIndexNowMsg(e?.message || "ارسال ناموفق بود");
+    }
+    setTimeout(() => setIndexNowState("idle"), 4000);
+  }
+
   return (
     <section>
+      <div className="admin-chart-card">
+        <div className="admin-chart-head"><span className="admin-chart-title">ایندکسِ فوریِ سایت (IndexNow)</span></div>
+        <div className="admin-section-hint" style={{ marginTop: 0 }}>
+          همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراولِ دوره‌ای ایندکس بشن —
+          نیاز به تنظیم <code className="mono">INDEXNOW_KEY</code> در env داره.
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button type="button" className="admin-btn primary" onClick={submitIndexNow} disabled={indexNowState === "loading"}>
+            {indexNowState === "loading" ? "در حال ارسال…" : "ارسال به IndexNow"}
+          </button>
+          {indexNowMsg && (
+            <span style={{ fontSize: 12, color: indexNowState === "error" ? "#E05252" : "var(--adm-muted)" }}>{indexNowMsg}</span>
+          )}
+        </div>
+      </div>
+
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">نرخ تخمین هزینه AI</span></div>
         <div className="admin-section-hint" style={{ marginTop: 0 }}>

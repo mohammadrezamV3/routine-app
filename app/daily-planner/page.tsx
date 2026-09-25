@@ -1,11 +1,11 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `برنامه‌ریزی روزانه و مدیریت کارها با تقویم شمسی | ${BRAND_FA}`,
   description:
-    `برنامه‌ی روزانه‌ات را در ${BRAND_FA} (${BRAND_EN}) بچین: کارهای امروز، کارهای بدون ساعت، ` +
+    `برنامه‌ی روزانه‌ات را در ${BRAND_FA} بچین: کارهای امروز، کارهای بدون ساعت، ` +
     `یادآوری و تقویم شمسی — بدون شلوغی و در یک صفحه.`,
   path: "/daily-planner",
   ogTitle: `برنامه‌ریزی روزانه با ${BRAND_FA}`,
@@ -47,7 +47,7 @@ export default function DailyPlannerPage() {
         breadcrumb={BREADCRUMB}
         h1={`برنامه‌ریزی روزانه با ${BRAND_FA}؛ کارهای امروزت در یک صفحه`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) روتین تکرارشونده و کارهای مخصوص همان روز را کنار هم نشان می‌دهد، ` +
+          `${BRAND_FA} روتین تکرارشونده و کارهای مخصوص همان روز را کنار هم نشان می‌دهد، ` +
           `با تقویم شمسی و هفته‌ای که از شنبه شروع می‌شود. این صفحه توضیح می‌دهد یک برنامه‌ی روزانه‌ی ` +
           `قابل‌اجرا چه شکلی است و در آریون چطور ساخته می‌شود.`
         }
@@ -82,9 +82,10 @@ export default function DailyPlannerPage() {
         faqs={FAQS}
         faqTitle="سوال‌های رایج درباره برنامه‌ریزی روزانه"
         related={[
-          { href: "/routine", label: "روتین اپ آریون و برنامه‌ی روتین روزانه", note: "چطور کارهای تکرارشونده را یک‌بار بسازیم و هر هفته استفاده کنیم." },
+          { href: "/routine", label: "روتین روزانه در آریون", note: "چطور کارهای تکرارشونده را یک‌بار بسازیم و هر هفته استفاده کنیم." },
           { href: "/habit-tracker", label: "مدیریت عادت‌ها در آریون", note: "پیگیری عادت‌های روزانه و نگه‌داشتن زنجیره." },
           { href: "/blog/daily-planning-guide", label: "راهنمای برنامه‌ریزی روزانه", note: "مقاله‌ی کامل درباره‌ی چیدن یک برنامه‌ی روزانه‌ی قابل‌اجرا." },
+          { href: "/ai-planner", label: "برنامه‌ریز هوشمند آریون", note: "پیشنهاد برنامه‌ریزی روزانه با کمک هوش‌مصنوعی." },
         ]}
       />
     </>

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { OG_BASE, SOCIAL, SUPPORT_EMAIL, BRAND_FA, BRAND_EN } from "@/lib/brand";
+import { OG_BASE, SOCIAL, SUPPORT_EMAIL, BRAND_FA } from "@/lib/brand";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
 export const metadata: Metadata = {
-  title: { absolute: `درباره ${BRAND_FA} (${BRAND_EN}) — اپ فارسی روتین و ورزش` },
+  title: { absolute: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش` },
   description:
-    `${BRAND_FA} (${BRAND_EN}) چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
+    `${BRAND_FA} چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
     `برنامه‌ی بدنسازی، کالری‌شماری، ژورنال ترید و رودمپ یادگیری — همه در یک حساب کاربری.`,
   alternates: { canonical: "/about" },
   openGraph: { ...OG_BASE, url: "/about", title: `درباره ${BRAND_FA}` },
@@ -23,7 +23,7 @@ const SECTIONS: { title: string; body: string }[] = [
   {
     title: `${BRAND_FA} چیست؟`,
     body:
-      `${BRAND_FA} (${BRAND_EN}) یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. به‌جای اینکه برای هر بخش ` +
+      `${BRAND_FA} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. به‌جای اینکه برای هر بخش ` +
       `از زندگی‌ات یک اپ جدا نصب کنی — یکی برای برنامه‌ریزی روزانه، یکی برای برنامه‌ی ورزشی، ` +
       `یکی برای شمارش کالری و یکی برای ژورنال معاملات — همه‌ی این‌ها در آریون زیر یک حساب کاربری کنار هم‌اند. ` +
       `همه‌چیز فارسی است، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان کار می‌کند.`,
@@ -41,8 +41,9 @@ const SECTIONS: { title: string; body: string }[] = [
     body:
       "برنامه‌ی روزانه و هفتگی برای ساختن روتین و تیک‌زدن کارها؛ " +
       "برنامه‌ی بدنسازی با تمرین‌های تفکیک‌شده و ثبت وزن و اندازه‌های بدن؛ " +
-      "کالری‌شماری با پایگاه غذای فارسی و محاسبه‌ی نیاز روزانه؛ ژورنال ترید برای ثبت معاملات، سود و زیان و " +
-      "چک‌لیست پیش از ورود؛ و رودمپ یادگیری که با کمک هوش مصنوعی برای هر مهارتی یک مسیر گام‌به‌گام می‌سازد.",
+      "کالری‌شماری با پایگاه غذای فارسی و محاسبه‌ی نیاز روزانه؛ و ژورنال ترید برای ثبت معاملات، سود و زیان، " +
+      "چک‌لیست پیش از ورود، تقویم اقتصادی و اتصال متاتریدر. رودمپ یادگیری با کمک هوش مصنوعی هم در حال " +
+      "تکمیل است و به‌زودی برای عموم کاربران باز می‌شود.",
   },
   {
     title: "آریون برای چه کسانی مناسب است؟",
@@ -73,7 +74,7 @@ export default function AboutPage() {
     <section>
       <h1>{`درباره ${BRAND_FA}`}</h1>
       <div className="dateline" style={{ marginBottom: 18 }}>
-        {`${BRAND_FA} (${BRAND_EN}) — همه‌ی نظم زندگی‌ات، یک‌جا`}
+        {`${BRAND_FA} — همه‌ی نظم زندگی‌ات، یک‌جا`}
       </div>
 
       {SECTIONS.map((s) => (
@@ -99,7 +100,7 @@ export default function AboutPage() {
           </Link>
           . درباره‌ی هر بخش هم یک صفحه‌ی جدا هست:{" "}
           <Link href="/routine" style={{ color: "var(--accent)", textDecoration: "none" }}>
-            روتین اپ آریون و برنامه‌ی روتین روزانه
+            روتین روزانه
           </Link>
           ،{" "}
           <Link href="/habit-tracker" style={{ color: "var(--accent)", textDecoration: "none" }}>
@@ -108,10 +109,26 @@ export default function AboutPage() {
           ،{" "}
           <Link href="/daily-planner" style={{ color: "var(--accent)", textDecoration: "none" }}>
             برنامه‌ریزی روزانه
-          </Link>{" "}
-          و{" "}
+          </Link>
+          ،{" "}
+          <Link href="/bodybuilding-program" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            برنامه‌ی بدنسازی هوشمند
+          </Link>
+          ،{" "}
+          <Link href="/calorie-counter" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            کالری‌شمار
+          </Link>
+          ،{" "}
           <Link href="/trading-journal" style={{ color: "var(--accent)", textDecoration: "none" }}>
             ژورنال معاملاتی
+          </Link>
+          ،{" "}
+          <Link href="/economic-calendar" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            تقویم اقتصادی
+          </Link>{" "}
+          و{" "}
+          <Link href="/forex-sessions" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            ساعت بازار فارکس
           </Link>
           . مقاله‌های آموزشی هم در{" "}
           <Link href="/blog" style={{ color: "var(--accent)", textDecoration: "none" }}>

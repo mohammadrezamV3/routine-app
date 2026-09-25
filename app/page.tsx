@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { HomeClient } from "@/components/HomeClient";
 import { BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
-import { softwareApplicationJsonLd } from "@/lib/seo";
 
 // این فایل عمدا Server Component شده (نه "use client" مثل قبل) — فقط
 // برای اینکه بتونه metadata/JSON-LD صادر کنه؛ کل منطق/UI واقعی توی
@@ -21,16 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return (
-    <>
-      {/* SoftwareApplication از lib/seo.ts می‌آید تا با صفحه‌ی /routine
-          (که همان schema را دارد) یکی بماند — دو توصیفِ متفاوت از یک
-          محصول، سیگنالِ موجودیت را ضعیف می‌کند نه قوی. */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationJsonLd()) }}
-      />
-      <HomeClient />
-    </>
-  );
+  // Organization/WebSite/SoftwareApplication (با @id) از root layout
+  // میان — تکرارِ همون بلوک اینجا فقط یه کپیِ عینا یکسان توی <head> بود.
+  return <HomeClient />;
 }
