@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import { tapHaptic } from "@/lib/haptics";
 import { calcDailyTargetKcal, splitMeals, CALORIE_GOAL_LABELS, type CalorieGoal, type Sex } from "../lib/calorieCalc";
-import { setCalorieTarget } from "../lib/repo";
+import { setCalorieTarget, getActivePlan } from "../lib/repo";
 import type { CalorieTargetRow } from "../lib/exerciseTypes";
 
 const GOALS = Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[];
 
-/** محاسبه‌ی هدفِ کالریِ روزانه (Mifflin-St Jeor، همون فرمولِ وب) — کاملا آفلاین. */
+/**
+ * محاسبه‌ی هدفِ کالریِ روزانه (Mifflin-St Jeor، همون فرمولِ وب) — کاملا آفلاین.
+ * روزهای باشگاه دیگه ورودیِ دستی نیست: دقیقا مثلِ سرور
+ * (lib/calorieTargetService.ts → computeCalorieTarget) از برنامه‌ی ورزشیِ
+ * فعالِ محلی مشتق می‌شه (gymDays.length، وگرنه پیش‌فرضِ محافظه‌کارانه‌ی ۱ روز)
+ * تا عدد قبل از sync هم با سرور یکی باشه.
+ */
 export default function GoalSheet({
   open,
   onClose,
@@ -21,12 +27,30 @@ export default function GoalSheet({
   const [age, setAge] = useState(current?.ageYears ? String(current.ageYears) : "");
   const [heightCm, setHeightCm] = useState(current?.heightCm ? String(current.heightCm) : "");
   const [weightKg, setWeightKg] = useState(current?.weightKg ? String(current.weightKg) : "");
-  const [gymDays, setGymDays] = useState(current?.mealsPerDay ? "3" : "3");
+  const [gymDaysPerWeek, setGymDaysPerWeek] = useState<number | null>(null);
+  const [trainingPhase, setTrainingPhase] = useState<string | null>(null);
   const [goal, setGoal] = useState<CalorieGoal>((current?.goal as CalorieGoal) ?? "maintain");
   const [mealsPerDay, setMealsPerDay] = useState(current?.mealsPerDay ? String(current.mealsPerDay) : "3");
   const [saving, setSaving] = useState(false);
 
-  const canCompute = age && heightCm && weightKg;
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      const activePlan = await getActivePlan();
+      if (cancelled) return;
+      // همون قاعده‌ی سرور: بدونِ برنامه‌ی فعال، «۳ روز» فرض نکن (ضریب فعالیتِ
+      // متوسط رو به یه کاربرِ بدونِ تمرین می‌داد) — پیش‌فرضِ محافظه‌کارانه ۱ روزه.
+      const activeGymDays = activePlan?.gymDays && Array.isArray(activePlan.gymDays) ? activePlan.gymDays : null;
+      setGymDaysPerWeek(activeGymDays ? activeGymDays.length : 1);
+      setTrainingPhase(activePlan?.trainingPhase ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const canCompute = age && heightCm && weightKg && gymDaysPerWeek !== null;
 
   async function submit() {
     setSaving(true);
@@ -39,8 +63,9 @@ export default function GoalSheet({
           weightKg: Number(weightKg),
           heightCm: Number(heightCm),
           age: Number(age),
-          gymDaysPerWeek: Number(gymDays) || 0,
+          gymDaysPerWeek: gymDaysPerWeek ?? 1,
           goal,
+          trainingPhase,
         });
       }
       const mealBreakdown = splitMeals(dailyTargetKcal, meals);
@@ -90,7 +115,14 @@ export default function GoalSheet({
           <Num label="وزن (kg)" value={weightKg} onChange={setWeightKg} />
         </div>
 
-        <Num label="روزِ باشگاه در هفته" value={gymDays} onChange={setGymDays} />
+        <div className="rounded-lg px-3 py-2" style={{ background: "var(--surface-2)" }}>
+          <p className="font-vazir text-[11px]" style={{ color: "var(--muted)" }}>
+            روزِ باشگاه در هفته (از برنامه‌ی ورزشیِ فعال)
+          </p>
+          <p className="font-vazir text-[13px] font-medium" style={{ color: "var(--text)" }}>
+            {gymDaysPerWeek === null ? "در حال بارگذاری…" : `${gymDaysPerWeek} روز`}
+          </p>
+        </div>
 
         <div>
           <p className="mb-1.5 font-vazir text-[12px] font-medium" style={{ color: "var(--muted)" }}>
