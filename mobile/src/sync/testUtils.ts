@@ -4,7 +4,7 @@ import { ApiClient } from "./apiClient";
 import { memoryKV } from "./kv";
 import { TokenStore } from "./tokenStore";
 
-export const TEST_USER: MobileUser = { id: "u1", name: "تست", market: "IRAN", modules: ["ROUTINE", "SLEEP", "TASKS"] };
+export const TEST_USER: MobileUser = { id: "u1", name: "تست", market: "IRAN", modules: ["ROUTINE", "SLEEP", "TASKS"], username: null, phoneMasked: null, moduleAccess: [], plan: null };
 
 export function authSuccess(n: number): MobileAuthSuccess {
   return {
