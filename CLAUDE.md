@@ -89,17 +89,29 @@ public/images/             # لوگو و asset های استاتیک
 6. ✅ اکانت پنل + auth کامل (`AccountPanel.tsx`, `app/auth/*`, NextAuth + Google OAuth)
 7. ✅ لوگو (`public/images/logo-*`)
 8. ➕ سیستم پلن/اشتراک/رفرال/پارتنر که در roadmap قدیمی اصلا نبود (`Plan`, `Subscription`, `Payment`, `ReferralCode`, `Partner`, `AiUsageRecord`)
+9. ✅ اپ اندروید آفلاین (`mobile/` — بخش «اپ موبایل» پایین)
 
-هنوز راه‌اندازی نشده: دیپلوی روی سرور شخصی (Docker+Nginx)، اپ اندروید (PWA/React Native)، 2FA و امنیت سطح لانچ.
+هنوز راه‌اندازی نشده: دیپلوی روی سرور شخصی (Docker+Nginx)، انتشار اپ اندروید در بازار/پلی (keystore + Secrets — `mobile/RELEASE.md`)، 2FA و امنیت سطح لانچ.
+
+## اپ موبایل (`mobile/`) — قوانین ثابت
+- پروژه‌ی جدا: Vite + React + TS + Tailwind + Capacitor Android (`ir.arion.app`). UI داخل APK باندل می‌شه (هیچ `server.url`)؛ فقط دیتابیس با وب مشترکه. `mobile` از tsconfig/docker ریشه exclude شده.
+- offline-first: هر ماژول Dexie خودش رو داره (`arion`، `arion-fitness`، `arion-trade`، `arion-roadmaps`، `arion-trade-online`، `arion-social`، کاتالوگ) — هر DB جدید باید به `LOCAL_DB_NAMES` (`mobile/src/sync/localData.ts`) اضافه بشه وگرنه خروج/تعویض حساب پاکش نمی‌کنه.
+- هر ردیف محلی `updatedAt/deletedAt/dirty` داره؛ هرگز hard delete نکن. شناسه‌ی کلاینت باید با `^[a-z][a-z0-9]{19,31}$` بخونه.
+- sync: `/api/mobile/sync` (روتین/فیتنس/رودمپ) و `/api/mobile/trade` — قانون «آخرین ویرایش برنده» با `syncEditedAt`؛ `updatedAt` سرور همیشه زمان سرور می‌مونه (cursor). tombstone ترید با تریگر `TradeSyncTombstone`. هر پاسخ pull سقف ۴MB داره.
+- auth موبایل Bearer (نه کوکی): access ۱۵ دقیقه، refresh چرخشی فقط SHA-256 روی جدول `Session` (`provider:"mobile"`)، مهلت ۳۰ثانیه‌ای یک‌باره، سقف ۱۸۰ روز؛ refresh کلاینت حتما تک‌پرواز. تغییر/بازیابی رمز نشست‌های موبایل رو باطل می‌کنه.
+- مالک داده‌ی محلی ثبت می‌شه؛ ورود کاربر دیگه = پاک‌سازی کامل محلی قبل از pull (هرگز داده‌ی کاربر قبلی رو به حساب جدید push نکن).
+- قرارداد API هر بخش دو نسخه‌ی byte-identical داره (`lib/mobile*Contract.ts` ↔ `mobile/src/lib/*-contract.ts`) با تست parity.
+- گیت ماژول پولی سمت سرور روی push/pull هم اعمال می‌شه (`module_locked`)؛ رودمپ فعلا فقط سوپرادمین (`lib/roadmapAccess.ts`).
+- خرید پلن: لینک handoff یک‌بارمصرف ≤۱۰ دقیقه → صفحه‌ی پرداخت وب؛ اعطای ماژول فقط در verify وب.
+- بیلد: `.github/workflows/android-apk.yml` (debug) و `android-release.yml` (تگ `mobile-vN`، امضا از Secrets).
 
 ## Roadmap بلندمدت باقی‌مانده (فقط یادآوری، هنوز نساز مگه خواسته بشه)
-1. اپ اندروید (PWA/React Native)
-2. مارکتینگ/برندینگ
-3. باگ‌هانتینگ کلی
-4. تکمیل امنیت سطح لانچ (لیست بالا: Redis rate limit، CSP nonce، 2FA، مانیتورینگ، پنتست، بک‌آپ)
-5. cross-browser optimization
-6. دیپلوی روی سرور شخصی (Docker + Nginx)
-7. code cleanup کلی
+1. مارکتینگ/برندینگ
+2. باگ‌هانتینگ کلی
+3. تکمیل امنیت سطح لانچ (لیست بالا: Redis rate limit، CSP nonce، 2FA، مانیتورینگ، پنتست، بک‌آپ)
+4. cross-browser optimization
+5. دیپلوی روی سرور شخصی (Docker + Nginx)
+6. code cleanup کلی
 
 ## ignore
 node_modules, .next, dist, build, *.log, .env, tsconfig.tsbuildinfo
