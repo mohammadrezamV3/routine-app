@@ -92,6 +92,24 @@ export function decideAgainstTombstone(tombstone: { deletedAt: Date } | null, cl
   return clientAt.getTime() > tombstone.deletedAt.getTime() ? "apply" : "stale";
 }
 
+/**
+ * زمانِ LWWِ فیلدهای دستیِ یک معامله.
+ *
+ * معامله‌ی متاتریدری که کاربر از وب ویرایشش نکرده (syncLocked=false) فقط دو
+ * نویسنده داره: EA (/api/mt/sync — فقط فیلدهای بروکری، و syncEditedAt/
+ * syncWrittenAt رو دست نمی‌زنه) و موبایل (فقط فیلدهای دستی). پس زمانِ آخرین
+ * ویرایشِ دستی همون syncEditedAt ـه (یا createdAt اگه هیچ‌وقت ویرایش نشده) و
+ * syncهای EA نباید ویرایشِ دستیِ آفلاینِ قبلی رو stale کنن.
+ * ویرایشِ وب روی چنین معامله‌ای syncLocked رو true می‌کنه (و ممکنه فیلدهای
+ * دستی رو هم عوض کرده باشه) — از اون به بعد LWWِ عادیِ کلِ ردیف.
+ */
+export function tradeEntryManualEditedAt(
+  row: SyncTimestamps & { externalId: string | null; syncLocked: boolean; createdAt: Date }
+): Date {
+  if (!row.externalId || row.syncLocked) return effectiveEditedAt(row);
+  return row.syncEditedAt ?? row.createdAt;
+}
+
 /** archivedAt سمتِ سرور: لحظه‌ی آرشیو حفظ می‌شه، برگشت از آرشیو پاکش می‌کنه */
 export function nextArchivedAt(existing: { archived: boolean; archivedAt: Date | null } | null, archived: boolean, clientAt: Date): Date | null {
   if (!archived) return null;
@@ -604,6 +622,7 @@ export function serializeTradeEntry(r: EntryRow): TradeEntryRecord {
     tagIds: r.tags.map((t) => t.id),
     imageCount: r._count.images,
     externalId: r.externalId,
+    manualEditedAt: tradeEntryManualEditedAt(r).toISOString(),
     externalSource: r.externalSource,
     createdAt: r.createdAt.toISOString(),
     ...meta(effectiveEditedAt(r), r.updatedAt),

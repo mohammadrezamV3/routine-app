@@ -427,3 +427,41 @@ describe("mobile trade sync — limits", () => {
     ]);
   });
 });
+
+describe("mobile trade sync — MetaTrader per-field LWW", () => {
+  it("EA syncs after an offline manual edit do not make that edit stale; web edits (syncLocked) do", async () => {
+    const { user, token } = await makeUser();
+    const accId = cid();
+    await doPush(token, [account(accId, "2026-09-24T10:00:00.000Z")]);
+    const mt = await prisma.tradeEntry.create({
+      data: {
+        userId: user.id, accountId: accId, externalId: "5550001", externalSource: "MT5", symbol: "EURUSD", direction: "BUY",
+        volume: 1, openedAt: new Date("2026-09-23T09:00:00.000Z"), status: "OPEN", result: "BREAKEVEN", pnl: 0, sessions: ["LONDON"],
+        // EA ده دقیقه پیش ساختش
+        createdAt: new Date(Date.now() - 10 * 60_000),
+      },
+    });
+    const edit1 = new Date(Date.now() - 60_000).toISOString();
+    const r1 = await doPush(token, [{ entity: "tradeEntry", id: mt.id, op: "upsert", clientUpdatedAt: edit1, data: { note: "first" } }]);
+    expect(r1.results[0]).toMatchObject({ status: "applied", serverRecord: { note: "first", manualEditedAt: edit1 } });
+
+    // EA بعدش پوزیشن رو می‌بنده (همون شکلِ به‌روزرسانیِ /api/mt/sync)
+    await prisma.tradeEntry.update({ where: { id: mt.id }, data: { status: "CLOSED", result: "PROFIT", pnl: 88, closedAt: new Date() } });
+    const pulled = (await doPull(token)).entries.find((e) => e.id === mt.id)!;
+    expect(new Date(pulled.editedAt).getTime()).toBeGreaterThan(new Date(edit1).getTime());
+    expect(pulled.manualEditedAt).toBe(edit1);
+
+    // ویرایشِ آفلاینی که *قبل* از syncِ EA انجام شده ولی الان رسیده → برنده، فیلدهای EA می‌مونن
+    const offline = new Date(Date.now() - 30_000).toISOString();
+    const r2 = await doPush(token, [{ entity: "tradeEntry", id: mt.id, op: "upsert", clientUpdatedAt: offline, data: { note: "offline", emotionAfter: "RELIEVED" } }]);
+    expect(r2.results[0]).toMatchObject({ status: "applied", serverRecord: { note: "offline", emotionAfter: "RELIEVED", pnl: 88, status: "CLOSED" } });
+    // ویرایشِ دستیِ قدیمی‌تر هنوز stale
+    const r3 = await doPush(token, [{ entity: "tradeEntry", id: mt.id, op: "upsert", clientUpdatedAt: edit1, data: { note: "older" } }]);
+    expect(r3.results[0].status).toBe("stale");
+
+    // ویرایشِ وب (PATCH → syncLocked) از این به بعد LWWِ کلِ ردیف
+    await prisma.tradeEntry.update({ where: { id: mt.id }, data: { note: "web", syncLocked: true } });
+    const r4 = await doPush(token, [{ entity: "tradeEntry", id: mt.id, op: "upsert", clientUpdatedAt: new Date(Date.now() - 10_000).toISOString(), data: { note: "late" } }]);
+    expect(r4.results[0]).toMatchObject({ status: "stale", serverRecord: { note: "web" } });
+  });
+});

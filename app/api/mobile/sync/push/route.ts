@@ -43,12 +43,12 @@ export async function POST(req: NextRequest) {
       if ((changes[index] as any)?.entity === "roadmapProgress") {
         const rp = parseRoadmapProgressChange(changes[index], now);
         if (!rp.ok) {
-          results.push({ index, entity: rp.entity, id: rp.id, status: "rejected", error: rp.error, serverRecord: null });
+          results.push({ index, entity: rp.entity, id: rp.id, status: "rejected", code: "invalid", error: rp.error, serverRecord: null });
           continue;
         }
         access ??= await getMobileModuleAccess(userId);
         if (!access.ROADMAP) {
-          results.push({ index, entity: "roadmapProgress", id: rp.change.id, status: "rejected", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
+          results.push({ index, entity: "roadmapProgress", id: rp.change.id, status: "rejected", code: "module_locked", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
           continue;
         }
         results.push({ index, ...(await applyRoadmapProgress(userId, rp.change)) });
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       }
       const p = parseSyncChange(changes[index], now);
       if (!p.ok) {
-        results.push({ index, entity: p.entity, key: p.key, id: p.id, status: "rejected", error: p.error, serverRecord: null });
+        results.push({ index, entity: p.entity, key: p.key, id: p.id, status: "rejected", code: "invalid", error: p.error, serverRecord: null });
         continue;
       }
       // گیتِ سمتِ سرورِ ماژول‌های پولی — کلاینت (ModuleGateِ اپ) قابلِ دورزدنه
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       if (module) {
         access ??= await getMobileModuleAccess(userId);
         if (!access[module]) {
-          results.push({ index, ...refOf(p.change), status: "rejected", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
+          results.push({ index, ...refOf(p.change), status: "rejected", code: "module_locked", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
           continue;
         }
       }
@@ -75,6 +75,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "خطای سرور — دوباره تلاش کن" }, { status: 500 });
   }
 
+  // تورِ ایمنی: هر rejected بدونِ code (مسیرِ تازه‌ای که کدش فراموش شده) = invalid
+  for (const r of results) if (r.status === "rejected" && !r.code) r.code = "invalid";
   const body: SyncPushResponse = { serverTime: new Date().toISOString(), results };
   return NextResponse.json(body);
 }

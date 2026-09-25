@@ -125,23 +125,46 @@ export type DailyEntryRecord = SyncMeta & {
   tasks: Record<string, boolean>;
   /** ISO یا null */
   wake: string | null;
+  /**
+   * true یعنی روزِ خالی (tombstoneِ delete: هیچ تیکی و wake=null) — ردیف فقط
+   * برای LWW روی سرور می‌مونه؛ کلاینت نسخه‌ی محلی رو پاک کنه.
+   */
+  deleted: boolean;
 };
 
 export type SleepEntryRecord = SyncMeta & {
   date: string;
   sleptAt: string | null;
   wokeAt: string | null;
+  /** ISOِ کامل (UTC) */
   targetSleptAt: string | null;
   targetWokeAt: string | null;
+  /** همون هدف‌ها به‌شکلِ "HH:mm" به ساعتِ User.timezone (نه ساعتِ گوشی) */
+  targetSleptAtHhmm: string | null;
+  targetWokeAtHhmm: string | null;
+  /** IANAِ کاربر که HH:mmها باهاش حساب شدن (User.timezone) */
+  timezone: string;
   /** ۱ تا ۵ یا null */
   quality: number | null;
+  /** true یعنی روزِ خالی (tombstoneِ delete: همه‌ی فیلدها null) — کلاینت پاکش کنه */
+  deleted: boolean;
 };
+
+/**
+ * اولویتِ تسک — عدد ۰ تا ۱۰ روی سیم، با این نگاشت:
+ *   0 = low، 1 = medium (پیش‌فرض)، 2 = high. مقادیرِ ۳ تا ۱۰ (قدیمی/آینده)
+ *   رو «high» نمایش بده.
+ */
+export const TASK_PRIORITY = { low: 0, medium: 1, high: 2 } as const;
+export const TASK_PRIORITY_DEFAULT = TASK_PRIORITY.medium;
 
 export type TaskRecord = SyncMeta & {
   id: string;
   title: string;
   notes: string | null;
+  /** "YYYY-MM-DD" (روزِ تقویمی، بدونِ ساعت — سرور نیمه‌شبِ UTC ذخیره می‌کنه) */
   dueDate: string | null;
+  /** TASK_PRIORITY */
   priority: number;
   completedAt: string | null;
   createdAt: string;
@@ -357,6 +380,11 @@ export type SyncPullResponse = {
 };
 
 export type DailyEntryData = { tasks: Record<string, boolean>; wake: string | null };
+/**
+ * targetSleptAt/targetWokeAt: یا "HH:mm" (ساعتِ دیواری — سرور با تاریخِ همین
+ * روز (key) و User.timezone به UTC تبدیلش می‌کنه)، یا ISOِ کامل با منطقه‌ی
+ * زمانی (سازگاریِ قبلی)، یا null.
+ */
 export type SleepEntryData = {
   sleptAt: string | null;
   wokeAt: string | null;
@@ -364,11 +392,17 @@ export type SleepEntryData = {
   targetWokeAt: string | null;
   quality: number | null;
 };
+/**
+ * dueDate: "YYYY-MM-DD" (پیشنهادی — نیمه‌شبِ UTCِ همون روز ذخیره می‌شه، پس
+ * اختلافِ یک‌روزه‌ی منطقه‌ی زمانی پیش نمیاد). ISOِ کامل هم برای سازگاری
+ * قبول می‌شه و فقط بخشِ روزِ UTCش نگه داشته می‌شه.
+ * priority: اختیاری؛ نبودش = TASK_PRIORITY_DEFAULT (1).
+ */
 export type TaskData = {
   title: string;
   notes: string | null;
   dueDate: string | null;
-  priority: number;
+  priority?: number;
   completedAt: string | null;
 };
 export type SettingData = { value: unknown };
@@ -415,11 +449,20 @@ export type SyncServerRecord =
   | RoadmapProgressRecord;
 
 /**
+ * کدِ ماشین‌خوانِ هر rejected — روی این منطق بساز، نه روی متنِ error:
+ *   module_locked  ماژولِ این موجودیت فعال نیست — نگه دار، بعد از تمدید دوباره بفرست
+ *   invalid        ورودیِ نامعتبر یا id مالِ کسِ دیگه — دوباره نفرست
+ *   not_found      مرجع (برنامه/رودمپ/هدفِ فعلی) پیدا نشد — دوباره نفرست
+ *   conflict       با وضعیتِ سرور جور نیست (مثلا هدفی که دیگه فعال نیست)
+ *   busy           تغییرِ هم‌زمان — همون تغییر رو بعدا دوباره بفرست (retryable)
+ */
+export type SyncRejectCode = "module_locked" | "invalid" | "not_found" | "conflict" | "busy";
+
+/**
  * applied: نوشته شد؛ serverRecord نسخه‌ی نهاییه.
  * stale:   نسخه‌ی سرور جدیدتر (یا هم‌زمان) بود؛ serverRecord رو جایگزینِ نسخه‌ی محلی کن.
- * rejected: ورودی نامعتبر (یا id متعلق به کسِ دیگه) — دوباره نفرست، error دلیلشه.
- *   error === "module_locked" (ثابت، نه فارسی) یعنی ماژولِ این موجودیت فعال
- *   نیست؛ تغییر رو نگه دار و بعد از فعال‌شدنِ اشتراک دوباره بفرست.
+ * rejected: code دلیلشه (فقط busy و module_locked ارزشِ دوباره‌فرستادن دارن).
+ *   برای سازگاری، module_locked هنوز error === "module_locked" هم داره.
  */
 export type SyncChangeResult = {
   index: number;
@@ -427,6 +470,8 @@ export type SyncChangeResult = {
   key?: string;
   id?: string;
   status: "applied" | "stale" | "rejected";
+  /** فقط روی rejected */
+  code?: SyncRejectCode;
   error?: string;
   serverRecord: SyncServerRecord | null;
 };

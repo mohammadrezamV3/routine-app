@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { SyncRejectCode } from "@/lib/mobileApiContract";
 import { computeCalorieTarget } from "@/lib/calorieTargetService";
 import {
   decideLww,
@@ -23,7 +24,7 @@ import {
 type FitnessChange = Extract<ParsedChange, { entity: "exercisePlan" | "exerciseLog" | "foodLogEntry" | "calorieTarget" }>;
 type Ref = Pick<SyncResult, "entity" | "key" | "id">;
 
-const rejected = (ref: Ref, error: string): SyncResult => ({ ...ref, status: "rejected", error, serverRecord: null });
+const rejected = (ref: Ref, error: string, code: SyncRejectCode = "invalid"): SyncResult => ({ ...ref, status: "rejected", code, error, serverRecord: null });
 
 /** تاریخِ UTCِ یک لحظه به‌شکلِ ستونِ @db.Date */
 function utcDay(d: Date): Date {
@@ -108,7 +109,7 @@ async function applyExerciseLog(
 ): Promise<SyncResult | "retry"> {
   // لاگ فقط روی برنامه‌ی *خودِ* کاربر (وب این رو چک نمی‌کرد؛ این‌جا سخت‌گیرتریم)
   const plan = await prisma.exercisePlan.findFirst({ where: { id: change.planId, userId }, select: { id: true } });
-  if (!plan) return rejected(ref, "برنامه پیدا نشد");
+  if (!plan) return rejected(ref, "برنامه پیدا نشد", "not_found");
 
   const where = { userId_planId_date: { userId, planId: change.planId, date: change.date } };
   const existing = await prisma.exerciseLog.findUnique({ where });
@@ -209,11 +210,11 @@ async function applyCalorieTarget(
   }
 
   // meals: فقط روی هدفِ *فعلیِ* موجود — مثل PATCH /api/calorie/target
-  if (!existing) return rejected(ref, "اول باید هدف کالری‌ات را بسازی");
+  if (!existing) return rejected(ref, "اول باید هدف کالری‌ات را بسازی", "not_found");
   if (decideLww(existing, change.clientAt) === "stale") {
     return { ...ref, status: "stale", serverRecord: serializeCalorieTarget(existing) };
   }
-  if (existing.effectiveTo) return rejected(ref, "این هدف دیگر فعال نیست");
+  if (existing.effectiveTo) return rejected(ref, "این هدف دیگر فعال نیست", "conflict");
   const { mealBreakdown, ...patch } = change.data.patch;
   const { count } = await prisma.calorieTarget.updateMany({
     where: { id: existing.id, userId, updatedAt: existing.updatedAt, effectiveTo: null },

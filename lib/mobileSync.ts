@@ -22,7 +22,10 @@
 import {
   MOBILE_SYNC_MAX_BATCH,
   MOBILE_SYNC_SETTING_KEYS,
+  TASK_PRIORITY_DEFAULT,
   type DailyEntryData,
+  type DailyEntryRecord,
+  type SleepEntryRecord,
   type MobileSyncSettingKey,
   type SleepEntryData,
   type SyncChangeResult,
@@ -170,20 +173,93 @@ export function validateDailyData(data: unknown): V<ParsedDailyData> {
   return { ok: true, value: { completedItems, wakeUpAt: wake.value } };
 }
 
+// ─── منطقه‌ی زمانیِ کاربر (User.timezone) ────────────────────────────────
+
+export const DEFAULT_USER_TIMEZONE = "Asia/Tehran"; // پیش‌فرضِ ستونِ User.timezone
+const HHMM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+/** IANAِ معتبر یا پیش‌فرض — مقدارِ خراب در دیتابیس نباید sync رو بشکنه */
+export function safeTimezone(tz: unknown): string {
+  if (typeof tz !== "string" || !tz) return DEFAULT_USER_TIMEZONE;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return tz;
+  } catch {
+    return DEFAULT_USER_TIMEZONE;
+  }
+}
+
+/** افستِ tz در لحظه‌ی t (میلی‌ثانیه، محلی منهای UTC) */
+function tzOffsetMs(t: number, tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(t));
+  const g = (k: string) => Number(parts.find((p) => p.type === k)?.value);
+  return Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute"), g("second")) - Math.floor(t / 1000) * 1000;
+}
+
+/**
+ * ساعتِ دیواریِ "HH:mm" روی روزِ dateKey در منطقه‌ی tz → لحظه‌ی UTC.
+ * دو پاس: افستِ لحظه‌ی حدسی با افستِ لحظه‌ی واقعی در روزِ تغییرِ ساعت فرق داره.
+ */
+export function zonedHhmmToUtc(dateKey: string, hhmm: string, tz: string): Date | null {
+  const m = HHMM_RE.exec(hhmm);
+  const day = parseIsoDate(dateKey);
+  if (!m || !day) return null;
+  const wall = day.getTime() + (Number(m[1]) * 60 + Number(m[2])) * 60_000;
+  let t = wall - tzOffsetMs(wall, tz);
+  t = wall - tzOffsetMs(t, tz);
+  return new Date(t);
+}
+
+/** لحظه‌ی UTC → "HH:mm" به ساعتِ tz */
+export function utcToZonedHhmm(d: Date | null, tz: string): string | null {
+  if (!d) return null;
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", hour: "2-digit", minute: "2-digit" }).formatToParts(d);
+  const g = (k: string) => parts.find((p) => p.type === k)?.value ?? "00";
+  return `${g("hour")}:${g("minute")}`;
+}
+
+/** هدفِ خواب: لحظه‌ی کامل، یا "HH:mm" که store با تاریخِ روز و User.timezone حلش می‌کنه */
+export type SleepTargetInput = Date | { hhmm: string } | null;
+
 export type ParsedSleepData = {
   sleptAt: Date | null;
   wokeAt: Date | null;
-  targetSleptAt: Date | null;
-  targetWokeAt: Date | null;
+  targetSleptAt: SleepTargetInput;
+  targetWokeAt: SleepTargetInput;
   quality: number | null;
 };
+
+/** تبدیلِ هدف‌های "HH:mm" به UTC با منطقه‌ی زمانیِ کاربر */
+export function resolveSleepTargets(data: ParsedSleepData, dateKey: string, tz: string) {
+  const resolve = (v: SleepTargetInput): Date | null => (v === null || v instanceof Date ? v : zonedHhmmToUtc(dateKey, v.hhmm, tz));
+  return { ...data, targetSleptAt: resolve(data.targetSleptAt), targetWokeAt: resolve(data.targetWokeAt) };
+}
 
 export function validateSleepData(data: unknown): V<ParsedSleepData> {
   if (!isPlainObject(data)) return { ok: false, error: "داده‌ی خواب نامعتبر است" };
   const out: Partial<ParsedSleepData> = {};
-  for (const f of ["sleptAt", "wokeAt", "targetSleptAt", "targetWokeAt"] as const) {
+  for (const f of ["sleptAt", "wokeAt"] as const) {
     const r = nullableDateTime(data[f], f);
     if (!r.ok) return r;
+    out[f] = r.value;
+  }
+  for (const f of ["targetSleptAt", "targetWokeAt"] as const) {
+    const v = data[f];
+    if (typeof v === "string" && HHMM_RE.test(v)) {
+      out[f] = { hhmm: v };
+      continue;
+    }
+    const r = nullableDateTime(v, f);
+    if (!r.ok) return { ok: false, error: `${f}: "HH:mm" یا زمانِ ISO لازم است` };
     out[f] = r.value;
   }
   const q = data.quality;
@@ -202,6 +278,19 @@ export type ParsedTaskData = {
   completedAt: Date | null;
 };
 
+/**
+ * dueDate روزِ تقویمیه نه لحظه: "YYYY-MM-DD" (یا برای سازگاری ISOِ کامل، که
+ * فقط روزِ UTCش نگه داشته می‌شه) → نیمه‌شبِ UTCِ همون روز.
+ */
+export function parseDueDate(v: unknown): V<Date | null> {
+  if (v === null || v === undefined) return { ok: true, value: null };
+  const day = parseIsoDate(v);
+  if (day) return { ok: true, value: day };
+  const d = parseIsoDateTime(v);
+  if (!d) return { ok: false, error: "dueDate باید YYYY-MM-DD باشد" };
+  return { ok: true, value: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())) };
+}
+
 export function validateTaskData(data: unknown): V<ParsedTaskData> {
   if (!isPlainObject(data)) return { ok: false, error: "داده‌ی تسک نامعتبر است" };
   const title = typeof data.title === "string" ? data.title.trim() : "";
@@ -213,11 +302,12 @@ export function validateTaskData(data: unknown): V<ParsedTaskData> {
     }
     notes = data.notes;
   }
-  const priority = data.priority ?? 0;
+  // نگاشت: TASK_PRIORITY در قرارداد (0 low، 1 medium، 2 high)؛ نبودش = medium
+  const priority = data.priority ?? TASK_PRIORITY_DEFAULT;
   if (!Number.isInteger(priority) || (priority as number) < 0 || (priority as number) > MAX_TASK_PRIORITY) {
     return { ok: false, error: "اولویت نامعتبر است" };
   }
-  const dueDate = nullableDateTime(data.dueDate, "dueDate");
+  const dueDate = parseDueDate(data.dueDate);
   if (!dueDate.ok) return dueDate;
   const completedAt = nullableDateTime(data.completedAt, "completedAt");
   if (!completedAt.ok) return completedAt;
@@ -564,21 +654,29 @@ export function toIsoDateKey(d: Date): string {
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
 const meta = (r: SyncTimestamps) => ({ editedAt: effectiveEditedAt(r).toISOString(), updatedAt: r.updatedAt.toISOString() });
 
-export function serializeDailyEntry(r: SyncTimestamps & { date: Date; completedItems: unknown; wakeUpAt: Date | null }) {
+export function serializeDailyEntry(r: SyncTimestamps & { date: Date; completedItems: unknown; wakeUpAt: Date | null }): DailyEntryRecord {
   const tasks = isPlainObject(r.completedItems) ? (r.completedItems as Record<string, boolean>) : {};
-  return { date: toIsoDateKey(r.date), tasks, wake: iso(r.wakeUpAt), ...meta(r) };
+  // روزِ خالی = tombstoneِ delete (یا روزی که هیچ‌وقت چیزی نداشت) — کلاینت پاکش می‌کنه
+  const deleted = Object.keys(tasks).length === 0 && !r.wakeUpAt;
+  return { date: toIsoDateKey(r.date), tasks, wake: iso(r.wakeUpAt), deleted, ...meta(r) };
 }
 
 export function serializeSleepEntry(
-  r: SyncTimestamps & { date: Date; sleptAt: Date | null; wokeAt: Date | null; targetSleptAt: Date | null; targetWokeAt: Date | null; quality: number | null }
-) {
+  r: SyncTimestamps & { date: Date; sleptAt: Date | null; wokeAt: Date | null; targetSleptAt: Date | null; targetWokeAt: Date | null; quality: number | null },
+  timezone: string = DEFAULT_USER_TIMEZONE
+): SleepEntryRecord {
+  const tz = safeTimezone(timezone);
   return {
     date: toIsoDateKey(r.date),
     sleptAt: iso(r.sleptAt),
     wokeAt: iso(r.wokeAt),
     targetSleptAt: iso(r.targetSleptAt),
     targetWokeAt: iso(r.targetWokeAt),
+    targetSleptAtHhmm: utcToZonedHhmm(r.targetSleptAt, tz),
+    targetWokeAtHhmm: utcToZonedHhmm(r.targetWokeAt, tz),
+    timezone: tz,
     quality: r.quality,
+    deleted: !r.sleptAt && !r.wokeAt && !r.targetSleptAt && !r.targetWokeAt && r.quality === null,
     ...meta(r),
   };
 }
@@ -590,7 +688,7 @@ export function serializeTask(
     id: r.id,
     title: r.title,
     notes: r.notes,
-    dueDate: iso(r.dueDate),
+    dueDate: r.dueDate ? toIsoDateKey(r.dueDate) : null,
     priority: r.priority,
     completedAt: iso(r.completedAt),
     createdAt: r.createdAt.toISOString(),

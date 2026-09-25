@@ -68,7 +68,7 @@ export async function applyRoadmapProgress(userId: string, change: ParsedRoadmap
       where: { id: change.id, userId },
       select: { id: true, steps: true, progress: true, updatedAt: true, syncEditedAt: true, syncWrittenAt: true },
     });
-    if (!row) return { ...ref, status: "rejected", error: "رودمپ پیدا نشد", serverRecord: null };
+    if (!row) return { ...ref, status: "rejected", code: "not_found", error: "رودمپ پیدا نشد", serverRecord: null };
     if (decideLww(row, change.clientAt) === "stale") {
       return { ...ref, status: "stale", serverRecord: serializeRoadmapProgress(row) };
     }
@@ -85,5 +85,5 @@ export async function applyRoadmapProgress(userId: string, change: ParsedRoadmap
     });
     return { ...ref, status: "applied", serverRecord: fresh ? serializeRoadmapProgress(fresh) : null };
   }
-  return { ...ref, status: "rejected", error: "تغییر هم‌زمان — دوباره تلاش کن", serverRecord: null };
+  return { ...ref, status: "rejected", code: "busy", error: "تغییر هم‌زمان — دوباره تلاش کن", serverRecord: null };
 }

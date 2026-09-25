@@ -23,6 +23,7 @@ import {
   serializeTradeNote,
   serializeTradeSetting,
   serializeTradeTag,
+  tradeEntryManualEditedAt,
   type ParsedTradeChange,
 } from "@/lib/mobileTradeSync";
 import { MAX_ACCOUNTS, MAX_CHECKLISTS, MAX_TAGS } from "@/lib/tradeTypes";
@@ -207,7 +208,15 @@ async function applyOnce(userId: string, change: ParsedTradeChange): Promise<Res
 
   // ─── upsert ───
   if (existing) {
-    if (clientBeats(existing, change.clientAt) === "stale") {
+    // معامله‌ی متاتریدری: فقط فیلدهای دستی عوض می‌شن، پس LWW هم فقط با زمانِ
+    // آخرین ویرایشِ دستی — syncهای EA بعد از ویرایشِ آفلاین برنده نمی‌شن.
+    const beats =
+      change.entity === "tradeEntry" && (existing as EntryRow).externalId
+        ? change.clientAt.getTime() > tradeEntryManualEditedAt(existing as EntryRow).getTime()
+          ? "apply"
+          : "stale"
+        : clientBeats(existing, change.clientAt);
+    if (beats === "stale") {
       return { ...ref, status: "stale", serverRecord: await serverRecordOf(change.entity, change.id) };
     }
   } else {

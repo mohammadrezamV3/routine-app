@@ -13,6 +13,8 @@ import {
   serializeSetting,
   serializeSleepEntry,
   serializeTask,
+  resolveSleepTargets,
+  safeTimezone,
   syncStamp,
   type ParsedChange,
   type SyncResult as Result,
@@ -32,6 +34,12 @@ function isUniqueViolation(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 }
 
+/** User.timezone (معتبر) — مبنای تبدیلِ "HH:mm"ِ هدف‌های خواب */
+async function userTimezone(userId: string): Promise<string> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } });
+  return safeTimezone(u?.timezone);
+}
+
 
 // ─── Pull ────────────────────────────────────────────────────────────────
 
@@ -46,7 +54,8 @@ export async function pullChanges(userId: string, since: Date | null, access: Mo
   const page = { orderBy: { updatedAt: "asc" as const }, take: PULL_PAGE_LIMIT + 1 };
   const none = Promise.resolve(null);
 
-  const [daily, sleep, tasks, settings, plans, exLogs, foodLogs, targets] = await Promise.all([
+  const [tz, daily, sleep, tasks, settings, plans, exLogs, foodLogs, targets] = await Promise.all([
+    userTimezone(userId),
     prisma.dailyEntry.findMany({ where: { userId, updatedAt }, ...page }),
     prisma.sleepEntry.findMany({ where: { userId, updatedAt }, ...page }),
     // tombstoneها (deletedAt پر) عمدا برگردونده می‌شن
@@ -89,7 +98,7 @@ export async function pullChanges(userId: string, since: Date | null, access: Mo
     hasMore,
     serverTime: serverStart.toISOString(),
     dailyEntries: keep(d).map(serializeDailyEntry),
-    sleepEntries: keep(s).map(serializeSleepEntry),
+    sleepEntries: keep(s).map((r) => serializeSleepEntry(r, tz)),
     tasks: keep(t).map(serializeTask),
     settings: keep(st).map(serializeSetting),
     lockedModules,
@@ -113,7 +122,7 @@ export async function applyChange(userId: string, change: ParsedChange): Promise
       if (!isUniqueViolation(err)) throw err;
     }
   }
-  return { ...refOf(change), status: "rejected", error: "تغییر هم‌زمان — دوباره تلاش کن", serverRecord: null };
+  return { ...refOf(change), status: "rejected", code: "busy", error: "تغییر هم‌زمان — دوباره تلاش کن", serverRecord: null };
 }
 
 export function refOf(change: ParsedChange): Pick<Result, "entity" | "key" | "id"> {
@@ -160,17 +169,19 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
 
   if (change.entity === "sleepEntry") {
     const where = { userId_date: { userId, date: change.date } };
-    const existing = await prisma.sleepEntry.findUnique({ where });
+    const [existing, tz] = await Promise.all([prisma.sleepEntry.findUnique({ where }), userTimezone(userId)]);
+    const serializeSleep = (r: Parameters<typeof serializeSleepEntry>[0]) => serializeSleepEntry(r, tz);
     if (decideLww(existing, change.clientAt) === "stale") {
-      return { ...ref, status: "stale", serverRecord: existing ? serializeSleepEntry(existing) : null };
+      return { ...ref, status: "stale", serverRecord: existing ? serializeSleep(existing) : null };
     }
+    // هدف‌های "HH:mm" با تاریخِ همین روز و User.timezone به UTC تبدیل می‌شن
     const fields =
       change.op === "upsert"
-        ? change.data
+        ? resolveSleepTargets(change.data, change.key, tz)
         : { sleptAt: null, wokeAt: null, targetSleptAt: null, targetWokeAt: null, quality: null };
     if (!existing) {
       const row = await prisma.sleepEntry.create({ data: { userId, date: change.date, ...fields, ...syncStamp(change.clientAt) } });
-      return { ...ref, status: "applied", serverRecord: serializeSleepEntry(row) };
+      return { ...ref, status: "applied", serverRecord: serializeSleep(row) };
     }
     const { count } = await prisma.sleepEntry.updateMany({
       where: { id: existing.id, userId, updatedAt: existing.updatedAt },
@@ -178,7 +189,7 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
     });
     if (count === 0) return "retry";
     const row = await prisma.sleepEntry.findUnique({ where });
-    return { ...ref, status: "applied", serverRecord: row ? serializeSleepEntry(row) : null };
+    return { ...ref, status: "applied", serverRecord: row ? serializeSleep(row) : null };
   }
 
   if (change.entity === "task") {
@@ -186,7 +197,7 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
     // خونده می‌شه نه نوشته. پیامِ خطا با «id بدشکل» یکیه تا وجودِ id لو نره.
     const existing = await prisma.task.findUnique({ where: { id: change.id } });
     if (existing && existing.userId !== userId) {
-      return { ...ref, status: "rejected", error: "شناسه‌ی تسک نامعتبر است", serverRecord: null };
+      return { ...ref, status: "rejected", code: "invalid", error: "شناسه‌ی تسک نامعتبر است", serverRecord: null };
     }
     if (decideLww(existing, change.clientAt) === "stale") {
       return { ...ref, status: "stale", serverRecord: existing ? serializeTask(existing) : null };

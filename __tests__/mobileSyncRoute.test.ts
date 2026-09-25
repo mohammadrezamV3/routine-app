@@ -329,3 +329,77 @@ describe("mobile sync — LWW", () => {
     expect(res.status).toBe(413);
   });
 });
+
+describe("mobile sync — contract fixes", () => {
+  it("rejections carry a stable code; exhausted concurrency retries are code=busy", async () => {
+    const u = await makeUser();
+    const { accessToken } = await loginAs(u.username!);
+    await doPush(accessToken, [{ entity: "dailyEntry", key: "2026-09-21", op: "upsert", data: { tasks: { a: true }, wake: null }, clientUpdatedAt: "2026-09-21T08:00:00.000Z" }]);
+
+    // هر updateMany «وسطش عوض شد» برمی‌گردونه → سه دور retry و بعد busy
+    const spy = vi.spyOn(prisma.dailyEntry, "updateMany").mockResolvedValue({ count: 0 } as any);
+    try {
+      const r = await doPush(accessToken, [
+        { entity: "dailyEntry", key: "2026-09-21", op: "upsert", data: { tasks: { b: true }, wake: null }, clientUpdatedAt: new Date().toISOString() },
+        { entity: "setting", key: "pushSentLog", op: "upsert", data: { value: 1 }, clientUpdatedAt: new Date().toISOString() },
+        { entity: "foodLogEntry", id: "cfood0000000000000000000001", op: "delete", clientUpdatedAt: new Date().toISOString() },
+      ]);
+      expect(r.results.map((x) => [x.status, x.code])).toEqual([
+        ["rejected", "busy"],
+        ["rejected", "invalid"],
+        ["rejected", "module_locked"],
+      ]);
+      expect(r.results[2].error).toBe("module_locked"); // سازگاریِ قبلی
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("cleared days come back from pull as deleted:true", async () => {
+    const u = await makeUser();
+    const { accessToken } = await loginAs(u.username!);
+    await doPush(accessToken, [
+      { entity: "dailyEntry", key: "2026-09-22", op: "upsert", data: { tasks: { a: true }, wake: null }, clientUpdatedAt: "2026-09-22T08:00:00.000Z" },
+      { entity: "sleepEntry", key: "2026-09-22", op: "upsert", data: { quality: 4 }, clientUpdatedAt: "2026-09-22T08:00:00.000Z" },
+      { entity: "dailyEntry", key: "2026-09-22", op: "delete", clientUpdatedAt: "2026-09-22T09:00:00.000Z" },
+      { entity: "sleepEntry", key: "2026-09-22", op: "delete", clientUpdatedAt: "2026-09-22T09:00:00.000Z" },
+    ]);
+    const p = await doPull(accessToken);
+    expect(p.dailyEntries.find((d) => d.date === "2026-09-22")).toMatchObject({ deleted: true, tasks: {} });
+    expect(p.sleepEntries.find((d) => d.date === "2026-09-22")).toMatchObject({ deleted: true, quality: null });
+  });
+
+  it("tasks: priority defaults to 1 and dueDate round-trips as YYYY-MM-DD", async () => {
+    const u = await makeUser();
+    const { accessToken } = await loginAs(u.username!);
+    const id = `d${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.slice(0, 24).padEnd(24, "z");
+    const r = await doPush(accessToken, [
+      { entity: "task", id, op: "upsert", data: { title: "t", notes: null, dueDate: "2026-10-01", completedAt: null }, clientUpdatedAt: "2026-09-24T10:00:00.000Z" },
+    ]);
+    expect(r.results[0]).toMatchObject({ status: "applied", serverRecord: { priority: 1, dueDate: "2026-10-01" } });
+    expect((await prisma.task.findUnique({ where: { id } }))?.dueDate?.toISOString()).toBe("2026-10-01T00:00:00.000Z");
+  });
+
+  it("sleep targets accept HH:mm in the user's timezone and return ISO + HH:mm", async () => {
+    const u = await makeUser();
+    await prisma.user.update({ where: { id: u.id }, data: { timezone: "Europe/London" } });
+    const { accessToken } = await loginAs(u.username!);
+    const r = await doPush(accessToken, [
+      { entity: "sleepEntry", key: "2026-07-10", op: "upsert", data: { targetSleptAt: "23:15", targetWokeAt: "07:00" }, clientUpdatedAt: "2026-07-10T08:00:00.000Z" },
+    ]);
+    // لندن در جولای BST (+01:00)
+    expect(r.results[0]).toMatchObject({
+      status: "applied",
+      serverRecord: {
+        targetSleptAt: "2026-07-10T22:15:00.000Z",
+        targetWokeAt: "2026-07-10T06:00:00.000Z",
+        targetSleptAtHhmm: "23:15",
+        targetWokeAtHhmm: "07:00",
+        timezone: "Europe/London",
+        deleted: false,
+      },
+    });
+    const p = await doPull(accessToken);
+    expect(p.sleepEntries[0]).toMatchObject({ targetWokeAtHhmm: "07:00", timezone: "Europe/London" });
+  });
+});

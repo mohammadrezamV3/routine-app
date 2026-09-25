@@ -12,6 +12,13 @@ import {
   validateSleepData,
   validateTaskData,
   MAX_DAILY_TASK_KEYS,
+  parseDueDate,
+  resolveSleepTargets,
+  serializeDailyEntry,
+  serializeSleepEntry,
+  serializeTask,
+  utcToZonedHhmm,
+  zonedHhmmToUtc,
 } from "@/lib/mobileSync";
 import { MOBILE_SYNC_SETTING_KEYS } from "@/lib/mobileApiContract";
 import { MAX_SETTING_VALUE_BYTES, SERVER_MANAGED_SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -117,7 +124,7 @@ describe("entity validators", () => {
     expect(validateSleepData({ sleptAt: "bad" }).ok).toBe(false);
   });
   it("task: title required and length-capped, priority bounded", () => {
-    expect(validateTaskData({ title: "  خرید  " })).toMatchObject({ ok: true, value: { title: "خرید", priority: 0, notes: null } });
+    expect(validateTaskData({ title: "  خرید  " })).toMatchObject({ ok: true, value: { title: "خرید", priority: 1, notes: null } });
     expect(validateTaskData({ title: "" }).ok).toBe(false);
     expect(validateTaskData({ title: "x".repeat(201) }).ok).toBe(false);
     expect(validateTaskData({ title: "a", priority: 99 }).ok).toBe(false);
@@ -165,5 +172,54 @@ describe("parseSyncChange", () => {
   it("clamps a future clientUpdatedAt to now", () => {
     const r = parseSyncChange({ entity: "task", id: "tz4a98xxat96iws9zmbrgj3a", op: "delete", clientUpdatedAt: "2030-01-01T00:00:00Z" }, NOW);
     expect(r.ok && r.change.clientAt.getTime()).toBe(NOW.getTime());
+  });
+});
+
+describe("contract fixes — tasks, sleep targets, day tombstones", () => {
+  const stamps = { updatedAt: t("2026-09-24T10:00:00.000Z"), syncEditedAt: null, syncWrittenAt: null };
+
+  it("task priority defaults to medium (1) and dueDate is a calendar day stored at UTC midnight", () => {
+    expect(validateTaskData({ title: "a", priority: 2 })).toMatchObject({ ok: true, value: { priority: 2 } });
+    expect(parseDueDate("2026-09-30")).toEqual({ ok: true, value: t("2026-09-30T00:00:00.000Z") });
+    // ISOِ قدیمی: فقط روزِ UTC نگه داشته می‌شه
+    expect(parseDueDate("2026-09-30T21:30:00.000Z")).toEqual({ ok: true, value: t("2026-09-30T00:00:00.000Z") });
+    expect(parseDueDate("2026-02-31").ok).toBe(false);
+    expect(parseDueDate(null)).toEqual({ ok: true, value: null });
+    const rec = serializeTask({ ...stamps, id: "x", title: "a", notes: null, dueDate: t("2026-09-30T00:00:00.000Z"), priority: 1, completedAt: null, createdAt: stamps.updatedAt, deletedAt: null });
+    expect(rec.dueDate).toBe("2026-09-30");
+  });
+
+  it("converts HH:mm sleep targets with the user's timezone (DST-aware) and back", () => {
+    // تهران +03:30 (بدونِ DST)
+    expect(zonedHhmmToUtc("2026-09-25", "23:30", "Asia/Tehran")?.toISOString()).toBe("2026-09-25T20:00:00.000Z");
+    // نیویورک: تابستان -04:00، زمستان -05:00
+    expect(zonedHhmmToUtc("2026-07-01", "07:00", "America/New_York")?.toISOString()).toBe("2026-07-01T11:00:00.000Z");
+    expect(zonedHhmmToUtc("2026-01-15", "07:00", "America/New_York")?.toISOString()).toBe("2026-01-15T12:00:00.000Z");
+    expect(utcToZonedHhmm(t("2026-09-25T20:00:00.000Z"), "Asia/Tehran")).toBe("23:30");
+    expect(zonedHhmmToUtc("2026-09-25", "24:00", "Asia/Tehran")).toBeNull();
+
+    const parsed = validateSleepData({ targetSleptAt: "23:30", targetWokeAt: "2026-09-26T03:30:00.000Z" });
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const resolved = resolveSleepTargets(parsed.value, "2026-09-25", "Asia/Tehran");
+    expect(resolved.targetSleptAt?.toISOString()).toBe("2026-09-25T20:00:00.000Z");
+    expect(resolved.targetWokeAt?.toISOString()).toBe("2026-09-26T03:30:00.000Z");
+    expect(validateSleepData({ targetWokeAt: "7:00" }).ok).toBe(false);
+
+    const rec = serializeSleepEntry(
+      { ...stamps, date: t("2026-09-25T00:00:00.000Z"), sleptAt: null, wokeAt: null, targetSleptAt: resolved.targetSleptAt, targetWokeAt: null, quality: null },
+      "Asia/Tehran"
+    );
+    expect(rec).toMatchObject({ targetSleptAt: "2026-09-25T20:00:00.000Z", targetSleptAtHhmm: "23:30", targetWokeAtHhmm: null, timezone: "Asia/Tehran", deleted: false });
+    // منطقه‌ی خراب در دیتابیس → پیش‌فرض، نه کرش
+    expect(serializeSleepEntry({ ...stamps, date: t("2026-09-25T00:00:00.000Z"), sleptAt: null, wokeAt: null, targetSleptAt: null, targetWokeAt: null, quality: null }, "Mars/Base").timezone).toBe("Asia/Tehran");
+  });
+
+  it("cleared day entries serialize as deleted tombstones", () => {
+    const day = t("2026-09-25T00:00:00.000Z");
+    expect(serializeDailyEntry({ ...stamps, date: day, completedItems: {}, wakeUpAt: null }).deleted).toBe(true);
+    expect(serializeDailyEntry({ ...stamps, date: day, completedItems: { a: true }, wakeUpAt: null }).deleted).toBe(false);
+    expect(serializeSleepEntry({ ...stamps, date: day, sleptAt: null, wokeAt: null, targetSleptAt: null, targetWokeAt: null, quality: null }).deleted).toBe(true);
+    expect(serializeSleepEntry({ ...stamps, date: day, sleptAt: null, wokeAt: null, targetSleptAt: null, targetWokeAt: null, quality: 3 }).deleted).toBe(false);
   });
 });
