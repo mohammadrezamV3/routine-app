@@ -6,6 +6,7 @@ import { useSync } from "@/sync/SyncProvider";
 import { ApiError } from "@/sync/apiClient";
 import { formatLastSync } from "@/sync/format";
 import { toEnglishDigits } from "@/lib/digits";
+import { faNum } from "@/lib/jalali";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
 
 // ورود به حسابِ وب (/api/mobile/auth/*) + نمایِ حساب بعد از ورود (وضعیتِ
@@ -231,7 +232,7 @@ function AccountView() {
         </p>
         {rejectedCount > 0 && (
           <p className="mt-1 font-vazir text-[12px]" style={{ color: "var(--muted)" }}>
-            {rejectedCount.toLocaleString("fa-IR")} تغییر توسطِ سرور پذیرفته نشد
+            {faNum(rejectedCount)} تغییر توسطِ سرور پذیرفته نشد
           </p>
         )}
       </div>

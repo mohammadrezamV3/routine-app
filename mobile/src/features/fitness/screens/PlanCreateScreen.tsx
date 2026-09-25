@@ -245,7 +245,7 @@ function ManualForm({ onDone }: { onDone: () => void }) {
               style={{ height: 40, background: "var(--surface-2)", color: "var(--text)", border: "1px solid var(--surface-line)" }}
             />
             {days.length > 1 && (
-              <button onClick={() => removeDay(di)} className="flex items-center justify-center" style={{ width: 40, height: 40 }}>
+              <button onClick={() => removeDay(di)} aria-label="حذفِ روز" className="flex items-center justify-center" style={{ width: 40, height: 40 }}>
                 <Trash2 size={16} color="var(--pnl-loss)" />
               </button>
             )}
@@ -261,7 +261,7 @@ function ManualForm({ onDone }: { onDone: () => void }) {
                 style={{ height: 40, background: "var(--surface-2)", color: "var(--text)", border: "1px solid var(--surface-line)" }}
               />
               {d.items.length > 1 && (
-                <button onClick={() => removeItem(di, ii)} className="flex items-center justify-center" style={{ width: 36, height: 36 }}>
+                <button onClick={() => removeItem(di, ii)} aria-label="حذفِ حرکت" className="flex items-center justify-center" style={{ width: 36, height: 36 }}>
                   <Trash2 size={14} color="var(--muted)" />
                 </button>
               )}

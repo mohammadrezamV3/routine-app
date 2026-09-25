@@ -22,6 +22,7 @@ const TABS: Tab[] = [
 export default function BottomTabBar() {
   return (
     <nav
+      aria-label="ناوبری اصلی"
       className="no-select fixed inset-x-0 bottom-0 z-40 flex border-t"
       style={{
         borderColor: "var(--surface-line)",

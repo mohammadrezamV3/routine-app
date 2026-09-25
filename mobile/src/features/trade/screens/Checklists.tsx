@@ -77,9 +77,19 @@ export default function Checklists() {
               </span>
             </div>
             <span
+              role="button"
+              tabIndex={0}
+              aria-label="آرشیوِ چک‌لیست"
               onClick={(e) => {
                 e.stopPropagation();
                 void archiveChecklist(c);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void archiveChecklist(c);
+                }
               }}
               className="flex items-center justify-center rounded-full"
               style={{ width: 36, height: 36 }}
@@ -216,6 +226,7 @@ function ChecklistEditorSheet({ checklist, open, onClose }: { checklist: TradeCh
               <button
                 onClick={() => removeItem(it.id)}
                 disabled={draftItems.length <= MIN_CHECKLIST_ITEMS}
+                aria-label="حذفِ آیتم"
                 className="flex items-center justify-center rounded-full"
                 style={{ width: 40, height: 40, background: "var(--surface-2)", opacity: draftItems.length <= MIN_CHECKLIST_ITEMS ? 0.4 : 1 }}
               >

@@ -64,10 +64,21 @@ export default function Notes() {
                   {n.title || "بدون عنوان"}
                 </span>
               </button>
-              <button onClick={() => togglePin(n)} style={{ width: 36, height: 36 }} className="flex items-center justify-center">
+              <button
+                onClick={() => togglePin(n)}
+                aria-label={n.pinned ? "برداشتنِ سنجاق" : "سنجاق کردن"}
+                aria-pressed={n.pinned}
+                style={{ width: 36, height: 36 }}
+                className="flex items-center justify-center"
+              >
                 <Pin size={16} color={n.pinned ? "var(--accent)" : "var(--muted)"} fill={n.pinned ? "var(--accent)" : "none"} />
               </button>
-              <button onClick={() => remove(n)} style={{ width: 36, height: 36 }} className="flex items-center justify-center">
+              <button
+                onClick={() => remove(n)}
+                aria-label="حذفِ یادداشت"
+                style={{ width: 36, height: 36 }}
+                className="flex items-center justify-center"
+              >
                 <Trash2 size={16} color="var(--muted)" />
               </button>
             </div>

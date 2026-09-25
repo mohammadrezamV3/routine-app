@@ -32,3 +32,16 @@ input {
   font-family: inherit;
   color: inherit;
 }
+
+/* فوکوسِ کیبورد/سوییچ‌کنترل — فقط outline (بدون هیچ بک‌گراندی، طبقِ
+   قانونِ CLAUDE.md) تا عناصرِ transparent/ghost شفاف بمونن و فقط یک
+   حلقه‌ی قابلِ‌مشاهده دورشون اضافه بشه. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="tab"]:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

@@ -29,6 +29,9 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
             onClick={onClose}
           />
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-card"
             style={{ background: "var(--surface-1)", borderTop: "1px solid var(--surface-line)" }}
             initial={{ y: "100%" }}

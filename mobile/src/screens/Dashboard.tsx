@@ -14,6 +14,8 @@ import TaskRow from "@/components/TaskRow";
 import TaskActionsSheet from "@/components/TaskActionsSheet";
 import EditTaskSheet from "@/components/EditTaskSheet";
 import ImportantUpcomingCard from "@/components/ImportantUpcomingCard";
+import PullToRefresh from "@/components/PullToRefresh";
+import { useSync } from "@/sync/SyncProvider";
 import { faNum, isoLocal, J_MONTHS, toJalali } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime, timeToMinutes } from "@/lib/wakeSleepLogic";
@@ -38,6 +40,7 @@ function greeting(): string {
 }
 
 export default function Dashboard() {
+  const { loggedIn, syncNow } = useSync();
   const customOcc = useCustomOccurrences();
   const removedOcc = useRemovedOccurrences();
   const daily = useDaily(todayIso);
@@ -83,6 +86,7 @@ export default function Dashboard() {
   return (
     <div>
       <AppHeader title="داشبورد" />
+      <PullToRefresh enabled={loggedIn} onRefresh={syncNow}>
       <main className="flex flex-col gap-4 px-4 pt-4" style={{ paddingBottom: 96 }}>
         <div className="flex items-center justify-between">
           <div>
@@ -193,6 +197,7 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+      </PullToRefresh>
 
       <button
         onClick={() => setQuickAddOpen(true)}

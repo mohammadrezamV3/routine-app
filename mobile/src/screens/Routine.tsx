@@ -9,6 +9,8 @@ import MoveOccurrenceSheet from "@/components/MoveOccurrenceSheet";
 import WeekDayStrip from "@/components/WeekDayStrip";
 import JalaliMonthGrid, { DayMark } from "@/components/JalaliMonthGrid";
 import DayDetailSheet from "@/components/DayDetailSheet";
+import PullToRefresh from "@/components/PullToRefresh";
+import { useSync } from "@/sync/SyncProvider";
 import { isoLocal, jalaliMonthLength, jalaliToGregorianApprox, toJalali } from "@/lib/jalali";
 import { tasksForDate, ScheduleOpts } from "@/lib/schedule";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleepLogic";
@@ -30,6 +32,7 @@ function occFromOccurrence(customOcc: ReturnType<typeof useCustomOccurrences>, i
 }
 
 export default function Routine() {
+  const { loggedIn, syncNow } = useSync();
   const [tab, setTab] = useState<RoutineTab>("today");
   const customOcc = useCustomOccurrences();
   const removedOcc = useRemovedOccurrences();
@@ -60,6 +63,7 @@ export default function Routine() {
   return (
     <div>
       <AppHeader title="روتین" />
+      <PullToRefresh enabled={loggedIn} onRefresh={syncNow}>
       <main className="flex flex-col gap-4 px-4 pt-4" style={{ paddingBottom: 96 }}>
         <SegmentedTabs
           active={tab}
@@ -90,6 +94,7 @@ export default function Routine() {
           />
         )}
       </main>
+      </PullToRefresh>
 
       <button
         onClick={() => { setAddDefaultIso(tab === "weekly" ? weeklyIso : todayIso); setAddOpen(true); }}

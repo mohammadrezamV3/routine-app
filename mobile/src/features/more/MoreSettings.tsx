@@ -37,6 +37,8 @@ export default function MoreSettings() {
 
         <button
           onClick={toggle}
+          role="switch"
+          aria-checked={mode === "dark"}
           className="flex w-full items-center gap-3 border-b px-4"
           style={{ borderColor: "var(--surface-line)", minHeight: 52 }}
         >

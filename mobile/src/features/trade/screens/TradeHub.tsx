@@ -10,6 +10,8 @@ import AccountFormSheet from "../components/AccountFormSheet";
 import ComingSoon from "../components/ComingSoon";
 import { tradeRoutePaths } from "../paths";
 import { tapHaptic } from "@/lib/haptics";
+import PullToRefresh from "@/components/PullToRefresh";
+import { useSync } from "@/sync/SyncProvider";
 
 const TILES = [
   { to: tradeRoutePaths.checklists, label: "چک‌لیست‌ها", icon: ListChecks },
@@ -20,6 +22,7 @@ const TILES = [
 
 export default function TradeHub() {
   const navigate = useNavigate();
+  const { loggedIn, syncNow } = useSync();
   const [formOpen, setFormOpen] = useState(false);
   const [showOnlineInfo, setShowOnlineInfo] = useState(false);
 
@@ -50,6 +53,7 @@ export default function TradeHub() {
   return (
     <div>
       <AppHeader title="ترید" />
+      <PullToRefresh enabled={loggedIn} onRefresh={syncNow}>
       <div className="flex flex-col gap-4 px-4 py-4">
         <div
           className="flex items-center justify-between rounded-card border px-4 py-3.5"
@@ -142,6 +146,7 @@ export default function TradeHub() {
         </button>
         {showOnlineInfo && <ComingSoon title="تقویم اقتصادی و متاتریدر" note="این دو فقط با اینترنت کار می‌کنند؛ در نسخه‌ی بعدی اپ آفلاین اضافه می‌شوند." />}
       </div>
+      </PullToRefresh>
 
       <button
         onClick={() => {

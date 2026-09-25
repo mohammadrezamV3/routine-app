@@ -1,9 +1,10 @@
-import { lazy, ReactNode, Suspense, useEffect } from "react";
+import { lazy, ReactNode, Suspense, useEffect, useState } from "react";
 import { Routes, Route, useLocation, useNavigationType, UNSAFE_LocationContext, type Location } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import BottomTabBar from "@/components/BottomTabBar";
 import PageTransition from "@/components/PageTransition";
 import RouteSkeleton from "@/components/RouteSkeleton";
+import Onboarding from "@/components/Onboarding";
 import Dashboard from "@/screens/Dashboard";
 import Routine from "@/screens/Routine";
 import More from "@/screens/More";
@@ -13,6 +14,7 @@ import AppHeader from "@/components/AppHeader";
 import { useHardwareBack } from "@/lib/useHardwareBack";
 import { useTheme } from "@/lib/useTheme";
 import { hideSplash } from "@/lib/statusBar";
+import { hasSeenOnboarding } from "@/lib/onboarding";
 import { SyncProvider, useSync } from "@/sync/SyncProvider";
 import { useNotifications } from "@/notifications";
 
@@ -60,6 +62,7 @@ export default function App() {
   const location = useLocation();
   useHardwareBack();
   useTheme();
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
 
   useEffect(() => {
     void hideSplash();
@@ -68,6 +71,7 @@ export default function App() {
   return (
     <SyncProvider>
       <NotificationsBootstrap />
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <div style={{ minHeight: "100dvh", background: "var(--bg)" }}>
         <div style={{ paddingBottom: "calc(52px + env(safe-area-inset-bottom))" }}>
           <AnimatePresence mode="wait" initial={false}>
