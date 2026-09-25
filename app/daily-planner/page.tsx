@@ -8,6 +8,7 @@ export const metadata = pageMetadata({
     `برنامه‌ی روزانه‌ات را در ${BRAND_FA} بچین: کارهای امروز، کارهای بدون ساعت، ` +
     `یادآوری و تقویم شمسی — بدون شلوغی و در یک صفحه.`,
   path: "/daily-planner",
+  ownOgImage: true,
   ogTitle: `برنامه‌ریزی روزانه با ${BRAND_FA}`,
 });
 

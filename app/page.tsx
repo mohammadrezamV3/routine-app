@@ -15,8 +15,10 @@ export const metadata: Metadata = {
   },
   description: BRAND_DESC,
   alternates: { canonical: "/" },
-  openGraph: { ...OG_BASE, url: "/", title: BRAND_TITLE, description: BRAND_DESC },
-  twitter: { card: "summary_large_image", title: BRAND_TITLE, description: BRAND_DESC, images: ["/og.png"] },
+  // images عمدا حذف شده تا app/opengraph-image.tsx (اختصاصیِ همین مسیر)
+  // به‌جای /og.png عمومی تزریق بشه.
+  openGraph: { ...OG_BASE, images: undefined, url: "/", title: BRAND_TITLE, description: BRAND_DESC },
+  twitter: { card: "summary_large_image", title: BRAND_TITLE, description: BRAND_DESC },
 };
 
 export default function HomePage() {

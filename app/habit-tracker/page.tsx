@@ -8,6 +8,7 @@ export const metadata = pageMetadata({
     `عادت‌های روزانه‌ات را در ${BRAND_FA} ثبت و پیگیری کن: تکرار هفتگی، تیک روزانه و ` +
     `استریک. راهنمای ساختن یک عادت جدید و نگه‌داشتنش.`,
   path: "/habit-tracker",
+  ownOgImage: true,
   ogTitle: `عادت‌ساز فارسی ${BRAND_FA}`,
 });
 

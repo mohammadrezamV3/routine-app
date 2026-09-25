@@ -15,7 +15,8 @@ import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
 import { BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
-import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd } from "@/lib/seo";
+import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd, siteNavigationJsonLd } from "@/lib/seo";
+import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
 
@@ -68,6 +69,10 @@ export const metadata: Metadata = {
   // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننت
   // کلاینتی‌ان و نمی‌تونن این metadata رو override کنن.
   robots: { index: true, follow: true },
+  // فیدِ RSS بلاگ سراسری اعلام می‌شه (نه فقط توی /blog) تا فیدخوان‌ها/
+  // خزنده‌ها از هر صفحه‌ای پیداش کنن — <link rel="alternate" type=
+  // "application/rss+xml"> توی <head> میاد.
+  alternates: { types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` } },
   ...(Object.keys(verification).length ? { verification } : {}),
   // کلمه‌کلیدی صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
   // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن — پوشش همه‌ی بخش‌های
@@ -78,17 +83,25 @@ export const metadata: Metadata = {
     "برنامه بدنسازی هوشمند", "کالری‌شمار فارسی", "ژورنال ترید", "ژورنال معاملاتی فارسی",
     "رودمپ یادگیری هوش مصنوعی", "اتصال متاتریدر", "تقویم اقتصادی فارکس",
   ],
+  // images این‌جا هم عمدا حذف شده — همون دلیلِ توضیحِ زیرِ twitter؛
+  // app/opengraph-image.tsx تصویرِ ریشه رو خودکار تزریق می‌کنه.
   openGraph: {
     ...OG_BASE,
+    images: undefined,
     url: SITE_URL,
     title: BRAND_TITLE,
     description: BRAND_DESC,
   },
+  // images عمدا این‌جا هاردکد نیست: نکست به‌صورت خودکار opengraph-image.tsx
+  // خودِ هر مسیر رو (یا در نبودش، همین app/opengraph-image.tsx ریشه رو)
+  // به‌عنوان تصویرِ توییتر/OG تزریق می‌کنه — ولی *فقط* اگه اینجا صراحتا
+  // images ست نشده باشه. قبلا همین یک خط باعث می‌شد هر صفحه‌ای که خودش
+  // twitter تعریف نمی‌کرد (faq، about، …) به‌جای تصویرِ اختصاصی‌اش همیشه
+  // /og.png عمومی رو نشون بده.
   twitter: {
     card: "summary_large_image",
     title: BRAND_TITLE,
     description: BRAND_DESC,
-    images: ["/og.png"],
   },
   // سافاری آیفون display:"standalone" manifest.ts رو نمی‌خونه — «افزودن به
   // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپ واقعی standalone می‌سازه (بدون
@@ -107,7 +120,12 @@ export const metadata: Metadata = {
 // صفحه‌ی خاص) چون توصیف خود سایته، نه محتوای یک صفحه. توابعش از
 // lib/seo.ts می‌آیند تا صفحه‌ی اصلی (که همین SoftwareApplication رو
 // دوباره استفاده می‌کنه) با این گراف یکی بمونه، نه یک کپیِ واگرا.
-const JSON_LD_GRAPH = [organizationJsonLd(), websiteJsonLd(), softwareApplicationJsonLd()];
+const JSON_LD_GRAPH = [
+  organizationJsonLd(),
+  websiteJsonLd(),
+  softwareApplicationJsonLd(),
+  siteNavigationJsonLd(PUBLIC_PAGES),
+];
 
 // viewport-fit:cover لازمه تا سافاری صفحه رو زیر ناچ/نوار وضعیت هم بکشه؛
 // بدونش، سافاری اون نواحی رو با یه نوار سیستمی توپر (معمولا سیاه) پر

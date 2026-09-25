@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `کالری شمار فارسی | محاسبه کالری و اسکن غذا با هوش مصنوعی | ${BRAND_FA}`,
   description:
-    `کالری روزانه‌ات را در ${BRAND_FA} (${BRAND_EN}) محاسبه کن، وعده‌ها را تقسیم کن و با گرفتن ` +
+    `کالری روزانه‌ات را در ${BRAND_FA} محاسبه کن، وعده‌ها را تقسیم کن و با گرفتن ` +
     `یک عکس از غذا، کالری و درشت‌مغذی‌هایش را با هوش مصنوعی تخمین بزن.`,
   path: "/calorie-counter",
+  ownOgImage: true,
   ogTitle: `کالری‌شمار ${BRAND_FA}`,
 });
 
@@ -56,7 +57,7 @@ export default function CalorieCounterPage() {
         breadcrumb={BREADCRUMB}
         h1={`کالری شمار فارسی ${BRAND_FA}؛ محاسبه کالری و اسکن غذا با هوش مصنوعی`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) کالری روزانه‌ی موردنیازت را با فرمول علمی محاسبه می‌کند و با گرفتن ` +
+          `${BRAND_FA} کالری روزانه‌ی موردنیازت را با فرمول علمی محاسبه می‌کند و با گرفتن ` +
           `یک عکس از غذا، کالری و درشت‌مغذی‌هایش را تخمین می‌زند. این صفحه توضیح می‌دهد محاسبه‌ی کالری ` +
           `چطور کار می‌کند و اسکن غذا چه چیزی به تو می‌دهد.`
         }
@@ -105,7 +106,7 @@ export default function CalorieCounterPage() {
         related={[
           { href: "/bodybuilding-program", label: "برنامه بدنسازی با هوش مصنوعی", note: "برنامه‌ی تمرینی متناسب با هدف و سطح، برای هماهنگی با تغذیه." },
           { href: "/ai-planner", label: "برنامه‌ریزی با هوش مصنوعی", note: "دستیار هوشمند برنامه‌ی هفتگی." },
-          { href: "/routine", label: "روتین اپ آریون", note: "ثبت وعده‌های غذایی به‌عنوان بخشی از روتین روزانه." },
+          { href: "/routine", label: "روتین آریون", note: "ثبت وعده‌های غذایی به‌عنوان بخشی از روتین روزانه." },
           { href: "/blog", label: "مقاله‌های آریون", note: "راهنماهای کاربردی درباره‌ی تغذیه و تمرین." },
         ]}
       />

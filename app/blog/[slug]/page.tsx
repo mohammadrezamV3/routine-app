@@ -23,6 +23,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     description: post.description,
     path: `/blog/${post.slug}`,
     ogTitle: post.title,
+    ownOgImage: true,
   });
 }
 

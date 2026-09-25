@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `ساعت بازار فارکس به وقت تهران | سشن‌های معاملاتی سیدنی، توکیو، لندن، نیویورک | ${BRAND_FA}`,
   description:
     `ساعت باز و بسته‌شدن چهار سشن اصلی فارکس (سیدنی، توکیو، لندن، نیویورک) به وقت تهران، با ` +
-    `شمارش معکوس و محاسبه‌ی درست تغییر ساعت تابستانی — در ${BRAND_FA} (${BRAND_EN}).`,
+    `شمارش معکوس و محاسبه‌ی درست تغییر ساعت تابستانی — در ${BRAND_FA}.`,
   path: "/forex-sessions",
+  ownOgImage: true,
   ogTitle: `ساعت بازار فارکس | ${BRAND_FA}`,
 });
 
@@ -56,7 +57,7 @@ export default function ForexSessionsPage() {
         breadcrumb={BREADCRUMB}
         h1={`ساعت بازار فارکس به وقت تهران — ${BRAND_FA}`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) ساعت باز و بسته‌ی چهار سشن اصلی فارکس را به وقت محلی‌ات نشان می‌دهد ` +
+          `${BRAND_FA} ساعت باز و بسته‌ی چهار سشن اصلی فارکس را به وقت محلی‌ات نشان می‌دهد ` +
           `و تغییر ساعت تابستانی لندن، نیویورک و سیدنی را واقعی حساب می‌کند، نه با یک عدد ثابت UTC. ` +
           `این صفحه سشن‌های معاملاتی، هم‌پوشانی‌ها و DST را توضیح می‌دهد.`
         }

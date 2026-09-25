@@ -8,9 +8,10 @@ export const metadata: Metadata = {
   title: { absolute: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش` },
   description:
     `${BRAND_FA} چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
-    `برنامه‌ی بدنسازی، کالری‌شماری، ژورنال ترید و رودمپ یادگیری — همه در یک حساب کاربری.`,
+    `برنامه‌ی بدنسازی، کالری‌شماری و ژورنال ترید — همه در یک حساب کاربری.`,
   alternates: { canonical: "/about" },
-  openGraph: { ...OG_BASE, url: "/about", title: `درباره ${BRAND_FA}` },
+  // images حذف شده تا opengraph-image.tsx اختصاصیِ /about به‌جای /og.png بیاد.
+  openGraph: { ...OG_BASE, images: undefined, url: "/about", title: `درباره ${BRAND_FA}` },
 };
 
 // محتوای این صفحه عمدا واقعی و دقیقا منطبق بر کاری‌ست که اپ الان انجام
@@ -64,7 +65,7 @@ const SECTIONS: { title: string; body: string }[] = [
 
 export default function AboutPage() {
   const rows = [
-    { label: "سازنده", value: "Arion Group" },
+    { label: "سازنده", value: BRAND_FA },
     { label: "ایمیل", value: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },
     { label: "تلگرام", value: SOCIAL.telegram.handle, href: SOCIAL.telegram.url, icon: <TelegramIcon size={14} /> },
     { label: "اینستاگرام", value: SOCIAL.instagram.handle, href: SOCIAL.instagram.url, icon: <InstagramIcon size={14} /> },

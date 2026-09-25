@@ -27,6 +27,7 @@ function build(): string {
   }
   lines.push("");
   lines.push("## مقاله‌ها");
+  lines.push(`- فید RSS: ${absoluteUrl("/blog/feed.xml")}`);
   for (const post of sortedPosts()) {
     lines.push(`- [${post.title}](${absoluteUrl(`/blog/${post.slug}`)}): ${post.excerpt}`);
   }

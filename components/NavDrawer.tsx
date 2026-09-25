@@ -334,7 +334,7 @@ export function NavDrawer() {
             <Link href="/" aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
               <Image
                 src="/images/logo-lockup-dark-theme.png"
-                alt="Arion"
+                alt="آریون"
                 width={138}
                 height={34}
                 className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
@@ -342,7 +342,7 @@ export function NavDrawer() {
               />
               <Image
                 src="/images/logo-lockup-light-theme.webp"
-                alt="Arion"
+                alt="آریون"
                 width={138}
                 height={34}
                 className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}

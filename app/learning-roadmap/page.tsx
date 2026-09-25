@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `رودمپ یادگیری با هوش مصنوعی | نقشه راه یادگیری | ${BRAND_FA}`,
   description:
-    `رودمپ یادگیری ${BRAND_FA} (${BRAND_EN}) با دو سوال ساده — چی می‌خواهی یاد بگیری و برای چه هدفی — ` +
+    `رودمپ یادگیری ${BRAND_FA} با دو سوال ساده — چی می‌خواهی یاد بگیری و برای چه هدفی — ` +
     `یک نقشه‌ی راه مرحله‌به‌مرحله با هوش مصنوعی می‌سازد. فعلا در حال تکمیل و به‌زودی برای همه.`,
   path: "/learning-roadmap",
+  ownOgImage: true,
   ogTitle: `رودمپ یادگیری با هوش مصنوعی | ${BRAND_FA}`,
 });
 
@@ -50,7 +51,7 @@ export default function LearningRoadmapPage() {
         breadcrumb={BREADCRUMB}
         h1={`رودمپ یادگیری با هوش مصنوعی — ${BRAND_FA} (به‌زودی برای همه)`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) قرار است با دو سوال ساده — چی می‌خواهی یاد بگیری و برای چه هدفی — ` +
+          `${BRAND_FA} قرار است با دو سوال ساده — چی می‌خواهی یاد بگیری و برای چه هدفی — ` +
           `یک نقشه‌ی راه یادگیری با هوش مصنوعی بسازد. این بخش هنوز در حال تکمیل است و فعلا فقط برای تیم ` +
           `داخلی فعال است؛ این صفحه توضیح می‌دهد قرار است چطور کار کند و کِی برای همه باز می‌شود.`
         }
@@ -92,7 +93,7 @@ export default function LearningRoadmapPage() {
         faqTitle="سوال‌های رایج درباره رودمپ یادگیری"
         related={[
           { href: "/ai-planner", label: "برنامه‌ریزی با هوش مصنوعی", note: "دستیار هوشمند برنامه‌ی هفتگی و آنالیز هفتگی — همین حالا در دسترس." },
-          { href: "/routine", label: "روتین اپ آریون", note: "روتین روزانه، برای وقتی که یادگیری را به یک برنامه‌ی مشخص تبدیل کردی." },
+          { href: "/routine", label: "روتین آریون", note: "روتین روزانه، برای وقتی که یادگیری را به یک برنامه‌ی مشخص تبدیل کردی." },
           { href: "/bodybuilding-program", label: "برنامه بدنسازی با هوش مصنوعی", note: "همان اصل هوش مصنوعیِ شخصی‌سازی‌شده، برای برنامه‌ی تمرینی." },
           { href: "/blog", label: "مقاله‌های آریون", note: "راهنماهای کاربردی درباره‌ی برنامه‌ریزی و یادگیری." },
         ]}

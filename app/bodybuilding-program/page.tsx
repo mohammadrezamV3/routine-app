@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `ساخت برنامه بدنسازی با هوش مصنوعی | برنامه تمرینی شخصی‌سازی‌شده | ${BRAND_FA}`,
   description:
-    `برنامه بدنسازی متناسب با هدف، سطح و روزهای باشگاهت را در ${BRAND_FA} (${BRAND_EN}) با هوش ` +
+    `برنامه بدنسازی متناسب با هدف، سطح و روزهای باشگاهت را در ${BRAND_FA} با هوش ` +
     `مصنوعی بساز — قدرت، حجم، کات یا استقامت، با توضیح اجرای هر حرکت.`,
   path: "/bodybuilding-program",
+  ownOgImage: true,
   ogTitle: `برنامه بدنسازی با هوش مصنوعی | ${BRAND_FA}`,
 });
 
@@ -56,7 +57,7 @@ export default function BodybuildingProgramPage() {
         breadcrumb={BREADCRUMB}
         h1={`برنامه بدنسازی با هوش مصنوعی — ${BRAND_FA}`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) برنامه‌ی تمرینی‌ات را بر اساس هدف، سطح، قد و وزن و روزهای واقعیِ ` +
+          `${BRAND_FA} برنامه‌ی تمرینی‌ات را بر اساس هدف، سطح، قد و وزن و روزهای واقعیِ ` +
           `باشگاهت با هوش مصنوعی می‌سازد — نه یک قالب ثابت که به همه داده می‌شود. این صفحه توضیح می‌دهد ` +
           `یک برنامه بدنسازی خوب چه اصولی دارد و در آریون چطور ساخته می‌شود.`
         }
@@ -104,7 +105,7 @@ export default function BodybuildingProgramPage() {
         related={[
           { href: "/calorie-counter", label: "کالری‌شمار آریون", note: "محاسبه‌ی کالری روزانه و اسکن غذا با هوش مصنوعی، برای هماهنگی تغذیه با تمرین." },
           { href: "/ai-planner", label: "برنامه‌ریزی با هوش مصنوعی", note: "دستیار هوشمند برنامه‌ی هفتگی و آنالیز هفتگی روتین." },
-          { href: "/routine", label: "روتین اپ آریون", note: "روتین روزانه و هفتگی، برای هماهنگ‌کردن تمرین با بقیه‌ی برنامه‌ات." },
+          { href: "/routine", label: "روتین آریون", note: "روتین روزانه و هفتگی، برای هماهنگ‌کردن تمرین با بقیه‌ی برنامه‌ات." },
           { href: "/blog", label: "مقاله‌های آریون", note: "راهنماهای کاربردی درباره‌ی تمرین، تغذیه و برنامه‌ریزی." },
         ]}
       />

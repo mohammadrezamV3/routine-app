@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `تقویم اقتصادی فارکس به وقت ایران | تقویم شمسی رویدادهای اقتصادی | ${BRAND_FA}`,
   description:
-    `تقویم اقتصادی فارکس ${BRAND_FA} (${BRAND_EN}) با تاریخ شمسی و فیلتر بر اساس ارز و میزان تأثیر — ` +
+    `تقویم اقتصادی فارکس ${BRAND_FA} با تاریخ شمسی و فیلتر بر اساس ارز و میزان تأثیر — ` +
     `رویدادهای مهم اقتصادی، Actual/Forecast/Previous و یادآوری قبل از انتشار.`,
   path: "/economic-calendar",
+  ownOgImage: true,
   ogTitle: `تقویم اقتصادی فارکس | ${BRAND_FA}`,
 });
 
@@ -60,7 +61,7 @@ export default function EconomicCalendarPage() {
         breadcrumb={BREADCRUMB}
         h1={`تقویم اقتصادی فارکس به وقت ایران — ${BRAND_FA}`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) رویدادهای اقتصادی مهم فارکس را با نوار روزهای شمسی، فیلتر بر اساس ارز ` +
+          `${BRAND_FA} رویدادهای اقتصادی مهم فارکس را با نوار روزهای شمسی، فیلتر بر اساس ارز ` +
           `و میزان تأثیر، و یادآوری قبل از انتشار نمایش می‌دهد. این صفحه توضیح می‌دهد تقویم اقتصادی چیست ` +
           `و چطور می‌شود از آن برای برنامه‌ریزی روز معاملاتی استفاده کرد.`
         }

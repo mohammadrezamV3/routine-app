@@ -8,6 +8,7 @@ export const metadata = pageMetadata({
     `معاملاتت را در ${BRAND_FA} ثبت کن و عملکردت را ببین: سود و زیان، نرخ برد، ` +
     `میانگین R، تقویم معاملات و چک‌لیست ورود — یک ژورنال معاملاتی منظم و فارسی.`,
   path: "/trading-journal",
+  ownOgImage: true,
   ogTitle: `ژورنال معاملاتی ${BRAND_FA}`,
 });
 

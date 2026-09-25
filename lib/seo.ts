@@ -33,20 +33,37 @@ export function pageMetadata({
   description,
   path,
   ogTitle,
+  ownOgImage,
 }: {
   title: string;
   description: string;
   path: string;
   /** اگر عنوانِ کارتِ اشتراک‌گذاری باید کوتاه‌تر از عنوانِ تبِ مرورگر باشد */
   ogTitle?: string;
+  /**
+   * true وقتی این مسیر خودش یک `opengraph-image.tsx` کنارش داره. نکست
+   * خودش og:image رو از اون فایل تزریق می‌کنه، ولی *فقط* اگه
+   * `openGraph.images` این‌جا صریح ست نشده باشه — وگرنه همیشه `/og.png`ی
+   * که پایین می‌ذاریم رو می‌بینه، نه تصویرِ اختصاصیِ صفحه. پس این‌جا فیلد
+   * images رو کلا حذف می‌کنیم تا نکست بتونه خودش تزریق کنه.
+   */
+  ownOgImage?: boolean;
 }): Metadata {
   const canonical = path === "/" ? "/" : `/${path.replace(/^\/+/, "")}`;
+  const openGraph = ownOgImage
+    ? { ...OG_BASE, images: undefined, url: canonical, title: ogTitle || title, description }
+    : { ...OG_BASE, url: canonical, title: ogTitle || title, description };
   return {
     title: { absolute: title },
     description,
     alternates: { canonical },
-    openGraph: { ...OG_BASE, url: canonical, title: ogTitle || title, description },
-    twitter: { card: "summary_large_image", title: ogTitle || title, description, images: ["/og.png"] },
+    openGraph,
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle || title,
+      description,
+      ...(ownOgImage ? {} : { images: ["/og.png"] }),
+    },
   };
 }
 
@@ -115,6 +132,24 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]): JsonL
       name: it.name,
       item: absoluteUrl(it.path),
     })),
+  };
+}
+
+/**
+ * SiteNavigationElement — فهرستِ صفحه‌های اصلیِ عمومی با نامِ فارسی.
+ * این دقیقا سیگنالی است که گوگل برای ساختنِ «sitelinks» زیرِ نتیجه‌ی
+ * برند استفاده می‌کند؛ بدونش گوگل خودش حدس می‌زند کدام لینک‌ها مهم‌ترند
+ * (و معمولا حدسش با همین لیستِ واقعیِ منوی سایت یکی نیست).
+ * ورودی‌اش عمدا از بیرون می‌آید (نه import مستقیمِ `PUBLIC_PAGES` این‌جا)
+ * چون `lib/llmsContent.ts` خودش از این فایل import می‌کند — وارد کردنِ
+ * مستقیمِ آن این‌جا یک import دایره‌ای می‌ساخت.
+ */
+export function siteNavigationJsonLd(pages: { path: string; label: string }[]): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SiteNavigationElement",
+    name: pages.map((p) => p.label),
+    url: pages.map((p) => absoluteUrl(p.path)),
   };
 }
 
@@ -191,36 +226,41 @@ export function softwareApplicationJsonLd(): JsonLd {
   };
 }
 
-/** برای صفحه‌های محتوایی (مقاله‌های بلاگ) */
+/**
+ * برای صفحه‌های محتوایی (مقاله‌های بلاگ). نوعش BlogPosting است (زیرمجموعه‌ی
+ * دقیق‌تر Article برای پست‌های بلاگ)، و author/publisher به همون
+ * Organization ریشه (`ORGANIZATION_ID` در root layout) با `@id` وصل می‌شن —
+ * نه یک کپی جدا — تا گوگل این‌ها رو یک موجودیت واحد ببینه، نه چند تا.
+ * image پیش‌فرض همون opengraph-image خودِ صفحه است (اگه صفحه یکی نداشته
+ * باشه، مقدار دیگه‌ای پاس داده می‌شود).
+ */
 export function articleJsonLd({
   title,
   description,
   path,
   published,
   modified,
+  image,
 }: {
   title: string;
   description: string;
   path: string;
   published: string;
   modified?: string;
+  image?: string;
 }): JsonLd {
   return {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: title,
     description,
     inLanguage: "fa-IR",
     mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(path) },
+    image: image || absoluteUrl(`${path}/opengraph-image`),
     datePublished: published,
     dateModified: modified || published,
-    author: { "@type": "Organization", name: BRAND_EN, url: SITE_URL },
-    publisher: {
-      "@type": "Organization",
-      name: BRAND_EN,
-      url: SITE_URL,
-      logo: { "@type": "ImageObject", url: absoluteUrl("/icon.png") },
-    },
+    author: { "@id": ORGANIZATION_ID },
+    publisher: { "@id": ORGANIZATION_ID },
   };
 }
 

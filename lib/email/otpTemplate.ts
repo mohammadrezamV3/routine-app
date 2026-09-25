@@ -6,18 +6,20 @@
 // مالکیت ایمیل جدید موقع تغییر ایمیل حساب از پنل کاربری — متنش عمدا
 // جداست چون «کد ورود» توی این کانتکست گمراه‌کننده/نگران‌کننده بود (کاربر
 // فکر می‌کرد یعنی کسی داره وارد حسابش می‌شه، نه اینکه خودش داره ایمیل عوض می‌کنه).
+import { BRAND_FA } from "@/lib/brand";
+
 export type OtpEmailPurpose = "login" | "change-email";
 
 const COPY: Record<OtpEmailPurpose, { subject: string; heading: string }> = {
-  login: { subject: "کد ورود به Arion", heading: "کد ورود شما" },
-  "change-email": { subject: "کد تایید تغییر ایمیل در Arion", heading: "کد تایید ایمیل جدید" },
+  login: { subject: `کد ورود به ${BRAND_FA}`, heading: "کد ورود شما" },
+  "change-email": { subject: `کد تایید تغییر ایمیل در ${BRAND_FA}`, heading: "کد تایید ایمیل جدید" },
 };
 
 export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login"): { subject: string; html: string; text: string } {
   const { subject, heading } = COPY[purpose];
 
   const text = [
-    "Arion",
+    BRAND_FA,
     heading,
     "",
     code,
@@ -40,7 +42,7 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:420px; background-color:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #e6e9e7;">
             <tr>
               <td style="background-color:#06120c; padding:22px 28px; text-align:center;">
-                <span style="font-family: Arial, sans-serif; font-size:20px; font-weight:700; color:#00A86B; letter-spacing:0.5px;">Arion</span>
+                <span style="font-family: Tahoma, Arial, sans-serif; font-size:20px; font-weight:700; color:#00A86B; letter-spacing:0.5px;">${BRAND_FA}</span>
               </td>
             </tr>
             <tr>
@@ -67,7 +69,7 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
             </tr>
             <tr>
               <td style="padding:16px 28px; border-top:1px solid #eef1ef; text-align:center;">
-                <p style="margin:0; font-size:11px; color:#a9b2ae;">Arion</p>
+                <p style="margin:0; font-size:11px; color:#a9b2ae;">${BRAND_FA}</p>
               </td>
             </tr>
           </table>

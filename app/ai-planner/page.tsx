@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `برنامه ریزی با هوش مصنوعی | دستیار برنامه‌ریزی و آنالیز هفتگی | ${BRAND_FA}`,
   description:
-    `در ${BRAND_FA} (${BRAND_EN}) با زبان خودت به دستیار هوش مصنوعی بگو چه می‌خواهی و برنامه‌ی ` +
+    `در ${BRAND_FA} با زبان خودت به دستیار هوش مصنوعی بگو چه می‌خواهی و برنامه‌ی ` +
     `هفتگی‌ات را بچین، و با آنالیز هفتگی هوشمند ببین کدام بخش‌های زندگی‌ات واقعا پیش رفته‌اند.`,
   path: "/ai-planner",
+  ownOgImage: true,
   ogTitle: `برنامه‌ریزی با هوش مصنوعی | ${BRAND_FA}`,
 });
 
@@ -56,7 +57,7 @@ export default function AiPlannerPage() {
         breadcrumb={BREADCRUMB}
         h1={`برنامه ریزی با هوش مصنوعی — دستیار و آنالیز هفتگی ${BRAND_FA}`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) دو ابزار هوش مصنوعی برای برنامه‌ریزی دارد: یک دستیار گفت‌وگویی که با ` +
+          `${BRAND_FA} دو ابزار هوش مصنوعی برای برنامه‌ریزی دارد: یک دستیار گفت‌وگویی که با ` +
           `زبان خودت برنامه‌ی هفتگی‌ات را می‌چیند، و یک آنالیز هفتگی هوشمند که بعد از یک هفته نشان می‌دهد ` +
           `کجا واقعا پیش رفته‌ای. این صفحه توضیح می‌دهد هرکدام چطور کار می‌کنند.`
         }
@@ -101,7 +102,7 @@ export default function AiPlannerPage() {
         faqs={FAQS}
         faqTitle="سوال‌های رایج درباره برنامه‌ریزی با هوش مصنوعی"
         related={[
-          { href: "/routine", label: "روتین اپ آریون", note: "برنامه‌ی روتین روزانه‌ای که دستیار هوش مصنوعی روی همان کار می‌کند." },
+          { href: "/routine", label: "روتین آریون", note: "برنامه‌ی روتین روزانه‌ای که دستیار هوش مصنوعی روی همان کار می‌کند." },
           { href: "/learning-roadmap", label: "رودمپ یادگیری با هوش مصنوعی", note: "ساخت مسیر یادگیری یک مهارت با هوش مصنوعی — فعلا در حال تکمیل." },
           { href: "/bodybuilding-program", label: "برنامه بدنسازی با هوش مصنوعی", note: "همان اصل هوش مصنوعیِ شخصی‌سازی‌شده، برای برنامه‌ی تمرینی." },
           { href: "/daily-planner", label: "برنامه‌ریزی روزانه با آریون", note: "کارهای امروز و برنامه‌ی هفتگی در یک صفحه." },

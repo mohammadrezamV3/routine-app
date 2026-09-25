@@ -40,7 +40,7 @@ export default function TermsPage() {
     <section>
       <h1>قوانین و مقررات</h1>
       <div className="dateline" style={{ marginBottom: 18 }}>
-        با ثبت‌نام در «Arion»، موارد زیر رو می‌پذیری
+        با ثبت‌نام در «آریون»، موارد زیر رو می‌پذیری
       </div>
       {SECTIONS.map((s) => (
         <div key={s.title} style={{ marginTop: 20 }}>

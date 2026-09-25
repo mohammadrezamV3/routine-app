@@ -19,6 +19,7 @@ export const metadata = pageMetadata({
     `روتین روزانه یعنی چه، چطور یک برنامه‌ی روتین بسازیم که رها نشود، و ${BRAND_FA} ` +
     `به‌عنوان یک ${BRAND_CATEGORY_FA} فارسی با تقویم شمسی چطور کمک می‌کند.`,
   path: "/routine",
+  ownOgImage: true,
   ogTitle: `${BRAND_CATEGORY_FA} ${BRAND_FA} — برنامه‌ی روتین روزانه`,
 });
 

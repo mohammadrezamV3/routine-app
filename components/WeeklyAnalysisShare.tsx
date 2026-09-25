@@ -158,7 +158,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
     text(String(s), 120, y, f(800, 40), p.accent, "left", "ltr");
   });
 
-  text(`${BRAND_FA} · ${BRAND_EN}`, cx, H - 110, f(600, 30), p.muted, "center");
+  text(BRAND_FA, cx, H - 110, f(600, 30), p.muted, "center");
   return canvas;
 }
 
