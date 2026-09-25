@@ -253,8 +253,12 @@ model Session {
   id           String    @id @default(cuid())
   userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessionToken String    @unique // همون sid داخلِ JWT
-  provider     String? // credentials | google | email-otp | sms-2fa
+  // وب: همون sid داخلِ JWT. اپ موبایل (provider «mobile»): SHA-256ِ
+  // refresh token — خودِ توکن هیچ‌وقت ذخیره نمی‌شه (lib/mobileAuth.ts).
+  sessionToken String    @unique
+  provider     String? // credentials | google | email-otp | sms-2fa | mobile
+  // فقط برای اپ موبایل: اسمی که خودِ اپ از دستگاه فرستاده (نمایش در «دستگاه‌های فعال»)
+  deviceName   String?
   ip           String?
   userAgent    String?
   expiresAt    DateTime
@@ -655,8 +659,16 @@ model DailyEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([userId, date])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -738,8 +750,16 @@ model SleepEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([userId, date])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -760,7 +780,19 @@ model Task {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // soft-delete — ردیفِ حذف‌شده tombstoneِ همگام‌سازیِ موبایله (تا دستگاه‌های
+  // دیگه هم بفهمن حذف شده). هر کوئریِ وب باید deletedAt: null فیلتر کنه.
+  deletedAt DateTime?
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, dueDate])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -1530,8 +1562,16 @@ model UserSetting {
 
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([userId, key])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 model ExportRequest {

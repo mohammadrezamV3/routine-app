@@ -30,7 +30,53 @@ function hostOf(value: string | null | undefined): string | null {
   }
 }
 
+// ─── /api/mobile/*: اپ اندروید (Capacitor) ───────────────────────────────
+//
+// این مسیرها فقط با هدرِ `Authorization: Bearer` احراز می‌شن و هیچ کوکی‌ای
+// نمی‌خونن (lib/mobileAuth.ts)؛ صفحه‌ی مخربِ یه سایتِ دیگه نمی‌تونه اون هدر
+// رو جعل کنه، پس CSRF معنی نداره و بررسیِ Originِ پایین براشون اجرا نمی‌شه.
+// به‌جاش CORS لازم دارن: UIِ اپ از `https://localhost` (اندروید) یا
+// `capacitor://localhost` (iOS) لود می‌شه. بدونِ credentials — کوکی هیچ‌وقت
+// همراهِ این درخواست‌ها نمی‌ره. Originِ ناشناسِ مرورگری صریحا ۴۰۳ می‌گیره؛
+// نبودِ Origin (HTTPِ نیتیوِ Capacitor) مجازه چون باز هم فقط Bearer کار می‌کنه.
+const MOBILE_PREFIX = "/api/mobile/";
+
+function mobileAllowedOrigins(): Set<string> {
+  const origins = new Set(["https://localhost", "capacitor://localhost"]);
+  // سرورِ dev ِ Vite برای توسعه‌ی UIِ اپ توی مرورگر — هرگز در production
+  if (process.env.NODE_ENV !== "production") origins.add("http://localhost:5173");
+  return origins;
+}
+
+function applyMobileCors(res: NextResponse, origin: string | null): NextResponse {
+  res.headers.set("Vary", "Origin");
+  if (origin) {
+    res.headers.set("Access-Control-Allow-Origin", origin);
+    res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.headers.set("Access-Control-Max-Age", "600");
+  }
+  return res;
+}
+
+function handleMobile(req: NextRequest): NextResponse {
+  const origin = req.headers.get("origin");
+  const allowed = !!origin && mobileAllowedOrigins().has(origin);
+  // Originِ خودِ سایت (مثلا تست از همون دامنه) هم مثل بقیه‌ی API مجازه، ولی CORS لازم نداره
+  const sameHost = !!origin && hostOf(origin) === req.headers.get("host");
+
+  if (req.method === "OPTIONS") {
+    return applyMobileCors(new NextResponse(null, { status: allowed ? 204 : 403 }), allowed ? origin : null);
+  }
+  if (origin && !allowed && !sameHost) {
+    return NextResponse.json({ error: "cross-origin request rejected" }, { status: 403 });
+  }
+  return applyMobileCors(NextResponse.next(), allowed ? origin : null);
+}
+
 export function middleware(req: NextRequest) {
+  if (req.nextUrl.pathname.startsWith(MOBILE_PREFIX)) return handleMobile(req);
+
   if (SAFE_METHODS.has(req.method)) return NextResponse.next();
 
   const { pathname } = req.nextUrl;

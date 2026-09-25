@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     sessions: rows.map((r) => ({
       id: r.id,
       provider: r.provider,
+      deviceName: r.deviceName,
       ip: r.ip,
       userAgent: r.userAgent,
       createdAt: r.createdAt,
