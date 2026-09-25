@@ -17,14 +17,20 @@ import { hideSplash } from "@/lib/statusBar";
 import { hasSeenOnboarding } from "@/lib/onboarding";
 import { SyncProvider, useSync } from "@/sync/SyncProvider";
 import { useNotifications } from "@/notifications";
+import PaymentDeepLinkListener from "@/features/account/components/PaymentDeepLinkListener";
 
 // چهار ماژولِ فیچر (ورزش/ترید/رودمپ/بیشتر) هرکدوم lazy chunk جدا هستن —
 // چانکِ اصلی (Dashboard/Routine/Login که همیشه لازمن) دیگه صفحات دیگه رو
 // حمل نمی‌کنه؛ Suspense پایین‌تر یک اسکلتونِ سبک نشون می‌ده تا چانک لود بشه.
+// از فایلِ مستقیمِ هر فیچر (نه barrelِ index.ts) import می‌کنیم تا چانک‌بندی
+// حفظ بشه — barrel معمولا چیزهای سبکِ دیگه (api/paths/کامپوننت) رو هم
+// re-export می‌کنه که eager بودنش چانکِ سنگین رو با خودش می‌کشه.
 const FitnessRoutes = lazy(() => import("@/features/fitness").then((m) => ({ default: m.FitnessRoutes })));
 const TradeRoutes = lazy(() => import("@/features/trade"));
 const MoreRoutes = lazy(() => import("@/features/more").then((m) => ({ default: m.MoreRoutes })));
 const RoadmapRoutes = lazy(() => import("@/features/roadmaps").then((m) => ({ default: m.RoadmapRoutes })));
+const AccountRoutes = lazy(() => import("@/features/account/routes").then((m) => ({ default: m.AccountRoutes })));
+const SocialRoutes = lazy(() => import("@/features/social/routes").then((m) => ({ default: m.SocialRoutes })));
 
 /**
  * صفحه‌ی در حالِ خروج (AnimatePresence) باید با location ِ *خودش* رندر بشه، نه
@@ -71,6 +77,7 @@ export default function App() {
   return (
     <SyncProvider>
       <NotificationsBootstrap />
+      <PaymentDeepLinkListener />
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <div style={{ minHeight: "100dvh", background: "var(--bg)" }}>
         <div style={{ paddingBottom: "calc(52px + env(safe-area-inset-bottom))" }}>
@@ -86,6 +93,8 @@ export default function App() {
                     <Route path="/more" element={<More />} />
                     <Route path="/more/*" element={<MoreRoutes />} />
                     <Route path="/roadmaps/*" element={<RoadmapRoutes />} />
+                    <Route path="/account/*" element={<AccountRoutes />} />
+                    <Route path="/social/*" element={<SocialRoutes />} />
                     <Route path="/login" element={<Login />} />
                   </Routes>
                 </Suspense>

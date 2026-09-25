@@ -16,6 +16,8 @@ import { onLocalWrite } from "@/db/syncHooks";
 // یک چانک eager می‌ساخت که همه‌چیز از جمله صفحات رو با خودش می‌کشید).
 import { MoreProvider, type PlanModule } from "@/features/more/MoreContext";
 import { RoadmapApiProvider, RoadmapApiError, type RoadmapApi } from "@/features/roadmaps/api";
+import { AccountApiProvider, createAccountApi } from "@/features/account/api";
+import { SocialApiProvider, createSocialApi } from "@/features/social/api";
 import { API_BASE_URL, LOCAL_WRITE_DEBOUNCE_MS, SYNC_ENABLED } from "./config";
 import { preferencesKV } from "./kv";
 import { TokenStore } from "./tokenStore";
@@ -27,6 +29,8 @@ import { roadmapSyncTables } from "./roadmapAdapter";
 import { tradeSyncTables } from "./tradeAdapter";
 import { getDeviceName } from "./deviceName";
 import { wipeAllLocalData } from "./localData";
+import { clearSocialCache } from "@/features/social/db";
+import { clearTradeOnlineCache } from "@/features/trade-online/db";
 import { refreshCatalog } from "./catalog";
 import { formatLastSync } from "./format";
 
@@ -195,6 +199,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setUser(tokens.getUser());
       setLoggedIn(tokens.isLoggedIn());
       setReady(true);
+      const u = tokens.getUser();
+      if (tokens.isLoggedIn() && u?.id) void engine.adoptOwner(u.id).catch(() => undefined);
       trigger();
       void refreshUser();
     })();
@@ -269,18 +275,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     await runSync();
   }, [runSync, tokens]);
 
-  const afterLogin = useCallback(async () => {
-    setSessionExpired(false);
-    // دیتای مهمان/محلی از دست نمی‌ره: همه dirty ← push ← LWW
-    await engine.prepareFirstSync();
-    void runSync();
-  }, [engine, runSync]);
+  const afterLogin = useCallback(
+    async (userId: string) => {
+      setSessionExpired(false);
+      // دیتای مهمان/محلیِ همین کاربر از دست نمی‌ره: همه dirty ← push ← LWW.
+      // دیتای محلیِ یک *حسابِ دیگه* ادغام نمی‌شه — پاک می‌شه و pullِ کامل میاد
+      // (wipeAllLocalData شاملِ arion-trade-online/arion-social هم هست).
+      await engine.prepareFirstSync(userId, () => wipeAllLocalData());
+      void runSync();
+    },
+    [engine, runSync]
+  );
 
   const login = useCallback(
     async (identifier: string, password: string): Promise<LoginResult> => {
       const r = await api.login({ identifier: identifier.trim(), password, deviceName: getDeviceName() });
       if ("requires2fa" in r) return { status: "2fa", phoneHint: r.phoneHint };
-      await afterLogin();
+      await afterLogin(r.user.id);
       return { status: "ok" };
     },
     [api, afterLogin]
@@ -288,8 +299,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const verify2fa = useCallback(
     async (identifier: string, code: string) => {
-      await api.verify2fa({ identifier: identifier.trim(), code: code.trim(), deviceName: getDeviceName() });
-      await afterLogin();
+      const r = await api.verify2fa({ identifier: identifier.trim(), code: code.trim(), deviceName: getDeviceName() });
+      await afterLogin(r.user.id);
     },
     [api, afterLogin]
   );
@@ -297,11 +308,16 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(
     async (opts: { wipeLocal?: boolean } = {}) => {
       const wipeLocal = opts.wipeLocal === true;
-      // قبل از پاک‌کردن، آخرین تغییرها رو (اگه بشه) بفرست
-      if (wipeLocal && tokens.isLoggedIn()) await engine.sync();
+      // قبل از خروج، آخرین تغییرها رو (اگه بشه) بفرست — حتی بدونِ پاک‌کردن، چون اگه
+      // بعدا حسابِ دیگه‌ای روی این گوشی وارد بشه دیتای محلی پاک می‌شه (prepareFirstSync)
+      if (tokens.isLoggedIn()) await engine.sync();
       await engine.idle();
       await api.logout();
       await engine.resetAfterLogout(wipeLocal ? () => wipeAllLocalData() : undefined);
+      // کشِ اجتماعی/آنلاینِ ترید داده‌ی خصوصیِ همون کاربره (نه دیتای
+      // آفلاین‌اولِ خودِ دستگاه)، پس صرف‌نظر از wipeLocal همیشه پاک می‌شه —
+      // وگرنه کاربرِ بعدیِ همین دستگاه چتِ نمادها/دوستانِ قبلی رو می‌بینه.
+      await Promise.all([clearSocialCache(), clearTradeOnlineCache()]);
       setSessionExpired(false);
     },
     [api, engine, tokens]
@@ -374,10 +390,28 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const roadmapApi = useMemo(() => makeRoadmapApi(api), [api]);
 
+  const accountApi = useMemo(
+    () =>
+      createAccountApi(
+        async (method, path, body) => {
+          const res = await api.authedRaw(method, path, body);
+          return { status: res.status, body: await ApiClient.readJson(res) };
+        },
+        { refreshAccount: refreshUser }
+      ),
+    [api, refreshUser]
+  );
+
+  const socialApi = useMemo(() => createSocialApi(api), [api]);
+
   return (
     <SyncContext.Provider value={value}>
       <MoreProvider value={moreValue}>
-        <RoadmapApiProvider value={roadmapApi}>{children}</RoadmapApiProvider>
+        <RoadmapApiProvider value={roadmapApi}>
+          <AccountApiProvider value={accountApi}>
+            <SocialApiProvider value={socialApi}>{children}</SocialApiProvider>
+          </AccountApiProvider>
+        </RoadmapApiProvider>
       </MoreProvider>
     </SyncContext.Provider>
   );

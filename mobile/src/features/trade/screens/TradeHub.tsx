@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ListChecks, CalendarDays, Clock, StickyNote, LineChart, Cable } from "lucide-react";
+import { Plus, ListChecks, CalendarDays, Clock, StickyNote, LineChart } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import { db } from "../db";
 import { useLiveQuery } from "../lib/useLiveQuery";
 import { computeTradeStats } from "../lib/tradeAnalytics";
 import AccountCard from "../components/AccountCard";
 import AccountFormSheet from "../components/AccountFormSheet";
-import ComingSoon from "../components/ComingSoon";
+import TradeOnlineEntryCards from "@/features/trade-online/components/TradeOnlineEntryCards";
 import { tradeRoutePaths } from "../paths";
 import { tapHaptic } from "@/lib/haptics";
 import PullToRefresh from "@/components/PullToRefresh";
@@ -24,7 +24,6 @@ export default function TradeHub() {
   const navigate = useNavigate();
   const { loggedIn, syncNow } = useSync();
   const [formOpen, setFormOpen] = useState(false);
-  const [showOnlineInfo, setShowOnlineInfo] = useState(false);
 
   const accounts =
     useLiveQuery(
@@ -134,17 +133,7 @@ export default function TradeHub() {
           ))}
         </div>
 
-        <button
-          onClick={() => setShowOnlineInfo((v) => !v)}
-          className="flex items-center gap-2 rounded-card border px-3.5 py-3"
-          style={{ borderColor: "var(--surface-line)", background: "var(--surface-1)" }}
-        >
-          <Cable size={18} color="var(--muted)" />
-          <span className="flex-1 text-start font-vazir text-[13px]" style={{ color: "var(--text)" }}>
-            تقویم اقتصادی زنده و اتصال متاتریدر
-          </span>
-        </button>
-        {showOnlineInfo && <ComingSoon title="تقویم اقتصادی و متاتریدر" note="این دو فقط با اینترنت کار می‌کنند؛ در نسخه‌ی بعدی اپ آفلاین اضافه می‌شوند." />}
+        <TradeOnlineEntryCards />
       </div>
       </PullToRefresh>
 

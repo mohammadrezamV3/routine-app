@@ -341,6 +341,42 @@ describe("ادغامِ مهمان → ورود", () => {
     expect(await db.tasks.get(guest.id)).toMatchObject({ title: "تسکِ مهمان", dirty: 0 });
   });
 
+  it("خروج بدونِ پاک‌کردن و ورود با کاربرِ دیگه → دیتای کاربرِ قبلی پاک می‌شه، به حسابِ جدید push نمی‌شه", async () => {
+    const srv = fakeServer();
+    const { engine } = await setup(srv.handler);
+    const wipe = () => wipeAllLocalData();
+    await engine.prepareFirstSync("user-1", wipe);
+    await addTask({ title: "مالِ کاربرِ ۱" });
+    await engine.sync();
+    expect(srv.pushes.flat()).toHaveLength(1);
+    await engine.resetAfterLogout(); // بدونِ wipe
+    expect(await db.tasks.count()).toBe(1);
+
+    const pushedBefore = srv.pushes.flat().length;
+    await engine.prepareFirstSync("user-2", wipe);
+    expect(await db.tasks.count()).toBe(0);
+    await engine.sync();
+    expect(srv.pushes.flat().length).toBe(pushedBefore);
+
+    // همون کاربر دوباره: دیتا نگه داشته و ادغام می‌شه
+    await addTask({ title: "مالِ کاربرِ ۲" });
+    await engine.resetAfterLogout();
+    await engine.prepareFirstSync("user-2", wipe);
+    expect(await db.tasks.count()).toBe(1);
+  });
+
+  it("دیتای مهمان (بی‌صاحب) و خروج با پاک‌کردن → صاحب پاک می‌شه و ورودِ بعدی ادغام می‌کنه", async () => {
+    const { engine, kv } = await setup(fakeServer().handler);
+    await addTask({ title: "مهمان" });
+    await engine.prepareFirstSync("user-1", () => wipeAllLocalData());
+    expect(await db.tasks.count()).toBe(1);
+    await engine.resetAfterLogout(() => wipeAllLocalData());
+    expect(await kv.get("arion.sync.dataOwner")).toBeNull();
+    await addTask({ title: "مهمانِ بعدی" });
+    await engine.prepareFirstSync("user-2", () => wipeAllLocalData());
+    expect(await db.tasks.count()).toBe(1);
+  });
+
   it("خروج با wipeLocal دیتای محلی رو پاک می‌کنه؛ بدونِ اون نگه می‌داره", async () => {
     const { engine, kv } = await setup(fakeServer().handler);
     await addTask({ title: "بمون" });

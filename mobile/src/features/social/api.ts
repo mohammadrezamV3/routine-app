@@ -91,6 +91,9 @@ export function createSocialApi(t: SocialTransport): SocialApi {
       res = await t.authedRaw(method, path, method === "POST" ? body ?? {} : undefined, timeoutMs ? { timeoutMs } : undefined);
     } catch (err: any) {
       if (err?.kind === "network" || err?.kind === "timeout") throw new SocialApiError(0, "offline");
+      // نشستِ منقضی/کاربرِ مهمان (authedRaw سینکرون throw می‌کنه) — همون ۴۰۱ ِ
+      // معمولی نمایش داده بشه، نه خطای عمومی
+      if (err?.kind === "session_expired") throw new SocialApiError(401, "unauthorized");
       throw err;
     }
     let data: any = null;

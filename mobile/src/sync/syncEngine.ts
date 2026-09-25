@@ -51,6 +51,8 @@ const K_CURSOR = (ch: string) => (ch === "main" ? "arion.sync.cursor" : `arion.s
 const K_LOCKED = (ch: string) => `arion.sync.locked.${ch}`;
 const K_FAILURES = "arion.sync.failures";
 const K_LAST = "arion.sync.lastSyncAt";
+/** شناسه‌ی کاربری که دیتای محلی مالِ اوست (null = مهمان) */
+const K_OWNER = "arion.sync.dataOwner";
 
 /** سقفِ حجمِ بدنه‌ی هر push (سرور ۱MB قبول می‌کنه — حاشیه‌ی امن) */
 export const MAX_PUSH_BYTES = 900 * 1024;
@@ -316,12 +318,28 @@ export class SyncEngine {
    * بعد از ورودِ موفق: همه‌ی ردیف‌های محلی (از جمله دیتای مهمان) dirty می‌شن
    * و cursorها از صفر — اولین سینک همه‌چیز رو push می‌کنه و LWWِ سرور تصمیم
    * می‌گیره؛ هیچ دیتای محلی‌ای گم نمی‌شه.
+   *
+   * استثنا: اگه دیتای محلی مالِ *حسابِ دیگه‌ای* است (خروج بدونِ پاک‌کردن و ورود
+   * با کاربرِ دیگه)، به‌جای ادغام پاک می‌شه (`wipe`) — وگرنه روتین/تنظیمات/…ِ
+   * کاربرِ قبلی به حسابِ جدید push و روی گوشی زیرِ اسمِ کاربرِ جدید نشون داده
+   * می‌شد. دیتای مهمان (بی‌صاحب) همچنان ادغام می‌شه.
    */
-  async prepareFirstSync(): Promise<void> {
+  async prepareFirstSync(userId?: string, wipe?: () => Promise<void>): Promise<void> {
     await this.idle();
-    for (const ch of this.channels) for (const a of ch.adapters) await a.markAllDirty();
+    const owner = await this.kv.get(K_OWNER);
+    if (userId && owner && owner !== userId && wipe) {
+      await wipe();
+    } else {
+      for (const ch of this.channels) for (const a of ch.adapters) await a.markAllDirty();
+    }
     await this.clearSyncMeta();
+    if (userId) await this.kv.set(K_OWNER, userId);
     this.setState({ rejectedCount: 0, error: null, lockedModules: [] });
+  }
+
+  /** نصب‌های قبل از ثبتِ صاحب: کاربرِ واردشده‌ی فعلی صاحبِ دیتای محلیه (اگه هنوز ثبت نشده) */
+  async adoptOwner(userId: string): Promise<void> {
+    if (!(await this.kv.get(K_OWNER))) await this.kv.set(K_OWNER, userId);
   }
 
   /** بعدِ پاک‌کردنِ دیتای محلی (کاربرِ واردشده): pullِ کامل تا دیتای سرور برگرده */
@@ -336,7 +354,11 @@ export class SyncEngine {
     await this.idle();
     await this.clearSyncMeta();
     await this.kv.remove(K_LAST);
-    if (wipe) await wipe();
+    // بدونِ wipe صاحب می‌مونه تا ورودِ بعدی بفهمه دیتا مالِ کیه
+    if (wipe) {
+      await wipe();
+      await this.kv.remove(K_OWNER);
+    }
     this.setState({ status: this.online ? "idle" : "offline", lastSyncAt: null, error: null, rejectedCount: 0, lockedModules: [] });
   }
 }

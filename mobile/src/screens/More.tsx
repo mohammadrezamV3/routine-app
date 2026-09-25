@@ -1,15 +1,21 @@
-import { Map, User, Settings, Info, Moon, Sun, RefreshCw, LogIn } from "lucide-react";
+import { Map, User, Settings, Info, Moon, Sun, RefreshCw, LogIn, CreditCard, Users, MessagesSquare, LifeBuoy, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "@/components/AppHeader";
 import ListRow from "@/components/ListRow";
 import { useTheme } from "@/lib/useTheme";
 import { useSync } from "@/sync/SyncProvider";
 import { formatLastSync } from "@/sync/format";
+import { accountRoutePaths } from "@/features/account/paths";
+import { socialRoutePaths } from "@/features/social/paths";
+import { useNotices } from "@/features/account/useNotices";
+import { badgeLabel } from "@/features/account/logic";
 
 export default function More() {
   const navigate = useNavigate();
   const { mode, toggle } = useTheme();
   const sync = useSync();
+  const { unreadCount } = useNotices();
+  const noticesBadge = badgeLabel(unreadCount);
 
   return (
     <div>
@@ -21,6 +27,32 @@ export default function More() {
           label="حساب کاربری"
           detail={sync.loggedIn ? sync.user?.name || undefined : "مهمان"}
           onClick={() => navigate("/more/account")}
+        />
+        <ListRow
+          icon={<CreditCard size={18} color="var(--muted)" />}
+          label="حساب و اشتراک"
+          onClick={() => navigate(accountRoutePaths.hub)}
+        />
+        <ListRow
+          icon={<Users size={18} color="var(--muted)" />}
+          label="دوستان و گزارش هفتگی"
+          onClick={() => navigate(socialRoutePaths.home)}
+        />
+        <ListRow
+          icon={<MessagesSquare size={18} color="var(--muted)" />}
+          label="چت نماد"
+          onClick={() => navigate(socialRoutePaths.chatRooms)}
+        />
+        <ListRow
+          icon={<LifeBuoy size={18} color="var(--muted)" />}
+          label="پشتیبانی"
+          onClick={() => navigate(accountRoutePaths.support)}
+        />
+        <ListRow
+          icon={<Bell size={18} color="var(--muted)" />}
+          label="اعلانیه‌ها"
+          detail={noticesBadge ? `${noticesBadge} نخوانده` : undefined}
+          onClick={() => navigate(accountRoutePaths.notices)}
         />
         {sync.enabled && (
           <ListRow

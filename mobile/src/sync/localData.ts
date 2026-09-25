@@ -3,7 +3,15 @@
 // نمونه‌های باز (useLiveQuery و …) بدونِ reload به کار ادامه بدن.
 import Dexie from "dexie";
 
-export const LOCAL_DB_NAMES = ["arion-mobile", "arion-fitness", "arion-trade", "arion-roadmaps", "arion-catalog"] as const;
+export const LOCAL_DB_NAMES = [
+  "arion-mobile",
+  "arion-fitness",
+  "arion-trade",
+  "arion-roadmaps",
+  "arion-catalog",
+  "arion-trade-online",
+  "arion-social",
+] as const;
 
 export async function wipeAllLocalData(names: readonly string[] = LOCAL_DB_NAMES): Promise<void> {
   for (const name of names) {

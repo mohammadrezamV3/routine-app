@@ -23,6 +23,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- برگشت از پرداخت (mobile/README-billing.md) — هیچ پارامتری از این
+                 دیپ‌لینک باور نمی‌شه؛ فقط محرکِ چک‌کردنِ وضعیتِ چک‌اوتِ محلیه. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="arion" android:host="payment-result" />
+            </intent-filter>
+
         </activity>
 
         <provider

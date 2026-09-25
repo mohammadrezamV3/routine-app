@@ -5,6 +5,7 @@ import Checklists from "./screens/Checklists";
 import Calendar from "./screens/Calendar";
 import Clock from "./screens/Clock";
 import Notes from "./screens/Notes";
+import { TradeOnlineRoutes } from "@/features/trade-online/routes";
 
 // مسیرهای مطلق در ./paths.ts (جدا، تا صفحه‌ها چرخه‌ی import نسازن)
 export { tradeRoutePaths } from "./paths";
@@ -19,6 +20,7 @@ export default function TradeRoutes() {
       <Route path="calendar" element={<Calendar />} />
       <Route path="clock" element={<Clock />} />
       <Route path="notes" element={<Notes />} />
+      <Route path="online/*" element={<TradeOnlineRoutes />} />
     </Routes>
   );
 }
