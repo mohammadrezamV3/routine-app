@@ -87,7 +87,7 @@ describe("module gating", () => {
     const u = await makeUser();
     const t = await tokenFor(u.username!);
     const p = await doPull(t);
-    expect(p.lockedModules.sort()).toEqual(["CALORIE", "EXERCISE"]);
+    expect(p.lockedModules.sort()).toEqual(["CALORIE", "EXERCISE", "ROADMAP"]);
     expect(p).not.toHaveProperty("foodLogEntries");
     expect(p).not.toHaveProperty("exercisePlans");
 
@@ -111,7 +111,7 @@ describe("module gating", () => {
   it("partial access: only the unlocked module's entities are included", async () => {
     const u = await makeUser(["CALORIE"]);
     const p = await doPull(await tokenFor(u.username!));
-    expect(p.lockedModules).toEqual(["EXERCISE"]);
+    expect(p.lockedModules).toEqual(["EXERCISE", "ROADMAP"]);
     expect(p.foodLogEntries).toEqual([]);
     expect(p).not.toHaveProperty("exerciseLogs");
   });

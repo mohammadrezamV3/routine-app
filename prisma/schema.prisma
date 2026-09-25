@@ -1478,7 +1478,13 @@ model Roadmap {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ پیشرفتِ مسیر از اپ موبایل (LWW روی کلِ progress) —
+  // lib/mobileSync.ts توضیح کامل داره. محتوای مسیر از گوشی عوض نمی‌شه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================

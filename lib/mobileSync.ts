@@ -380,6 +380,46 @@ export function validateCalorieTargetData(data: unknown): V<ParsedCalorieTargetD
   return { ok: false, error: "kind باید compute یا meals باشد" };
 }
 
+// ─── رودمپ: پیشرفت ────────────────────────────────────────────────────────
+
+export const MAX_ROADMAP_PROGRESS_KEYS = 50;
+
+export type ParsedRoadmapProgressChange = {
+  entity: "roadmapProgress";
+  id: string;
+  op: "upsert";
+  stepProgress: Record<string, true>;
+  clientAt: Date;
+};
+
+/**
+ * جدا از parseSyncChange چون ذخیره‌اش در lib/mobileRoadmap.ts است (نه
+ * mobileSyncStore). اینجا فقط شکل؛ حذفِ کلیدهای مرحله‌ی ناموجود بعدا با
+ * sanitizeStepProgress روی خودِ مراحلِ رودمپ انجام می‌شه.
+ */
+export function parseRoadmapProgressChange(
+  raw: unknown,
+  now: Date
+): { ok: true; change: ParsedRoadmapProgressChange } | { ok: false; error: string; entity: "roadmapProgress"; id?: string } {
+  const r = isPlainObject(raw) ? raw : {};
+  const id = typeof r.id === "string" ? r.id.slice(0, 64) : undefined;
+  const fail = (error: string) => ({ ok: false as const, error, entity: "roadmapProgress" as const, id });
+  if (!isValidClientId(r.id)) return fail("شناسه‌ی رودمپ نامعتبر است");
+  if (r.op !== "upsert") return fail("فقط upsert پشتیبانی می‌شود");
+  const clientAt = clampClientTimestamp(r.clientUpdatedAt, now);
+  if (!clientAt) return fail("clientUpdatedAt نامعتبر است");
+  const sp = isPlainObject(r.data) ? r.data.stepProgress : undefined;
+  if (!isPlainObject(sp)) return fail("stepProgress باید یک شیء باشد");
+  const entries = Object.entries(sp);
+  if (entries.length > MAX_ROADMAP_PROGRESS_KEYS) return fail("تعداد مرحله‌ها بیش از حد است");
+  const stepProgress: Record<string, true> = {};
+  for (const [k, v] of entries) {
+    if (!/^\d{1,3}$/.test(k) || typeof v !== "boolean") return fail("stepProgress نامعتبر است");
+    if (v) stepProgress[k] = true;
+  }
+  return { ok: true, change: { entity: "roadmapProgress", id: r.id as string, op: "upsert", stepProgress, clientAt } };
+}
+
 // ─── تجزیه‌ی یک تغییرِ push ───────────────────────────────────────────────
 
 export type ParsedChange =
@@ -488,6 +528,9 @@ export function parseSyncChange(raw: unknown, now: Date): ParseChangeResult {
     if (!d.ok) return fail(d.error);
     return { ok: true, change: { entity, id: raw.id, op, data: d.value, clientAt } };
   }
+
+  // roadmapProgress جدا در parseRoadmapProgressChange تجزیه می‌شه (push route)
+  if (entity !== "setting") return fail("نوعِ موجودیت نامعتبر است");
 
   // setting
   if (!isMobileSyncSettingKey(raw.key)) return fail("کلید تنظیمات نامعتبر است");

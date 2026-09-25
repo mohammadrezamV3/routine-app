@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  parseRoadmapProgressChange,
   parseExerciseLogKey,
   parseSyncChange,
   validateCalorieTargetData,
@@ -101,7 +102,7 @@ describe("parseSyncChange — phase 4 entities", () => {
     expect(b).toMatchObject({ ok: false, entity: "exerciseLog", key: "nope" });
   });
   it("every phase-4 entity maps to a gated module", () => {
-    expect(SYNC_ENTITY_MODULE).toEqual({ exercisePlan: "EXERCISE", exerciseLog: "EXERCISE", foodLogEntry: "CALORIE", calorieTarget: "CALORIE" });
+    expect(SYNC_ENTITY_MODULE).toEqual({ exercisePlan: "EXERCISE", exerciseLog: "EXERCISE", foodLogEntry: "CALORIE", calorieTarget: "CALORIE", roadmapProgress: "ROADMAP" });
   });
 });
 
@@ -118,5 +119,22 @@ describe("catalog versioning", () => {
     expect(etagMatches('W/"abc", "def"', '"abc"')).toBe(true);
     expect(etagMatches('"def"', '"abc"')).toBe(false);
     expect(etagMatches(null, '"abc"')).toBe(false);
+  });
+});
+
+describe("parseRoadmapProgressChange", () => {
+  const base = { entity: "roadmapProgress", id: ID, op: "upsert", clientUpdatedAt: TS };
+  it("keeps only true flags on numeric step keys", () => {
+    const r = parseRoadmapProgressChange({ ...base, data: { stepProgress: { "1": true, "2": false, "3": true } } }, NOW);
+    expect(r).toMatchObject({ ok: true, change: { stepProgress: { "1": true, "3": true } } });
+    expect(r.ok && Object.keys(r.change.stepProgress)).toEqual(["1", "3"]);
+  });
+  it("rejects bad ids, delete, non-numeric keys, non-booleans, too many keys", () => {
+    expect(parseRoadmapProgressChange({ ...base, id: "x", data: { stepProgress: {} } }, NOW).ok).toBe(false);
+    expect(parseRoadmapProgressChange({ ...base, op: "delete" }, NOW).ok).toBe(false);
+    expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { a: true } } }, NOW).ok).toBe(false);
+    expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { "1": "yes" } } }, NOW).ok).toBe(false);
+    const many = Object.fromEntries(Array.from({ length: 51 }, (_, i) => [String(i), true]));
+    expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: many } }, NOW).ok).toBe(false);
   });
 });

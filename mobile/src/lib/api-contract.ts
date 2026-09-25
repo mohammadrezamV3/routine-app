@@ -82,16 +82,19 @@ export type SyncEntity =
   | "exercisePlan"
   | "exerciseLog"
   | "foodLogEntry"
-  | "calorieTarget";
+  | "calorieTarget"
+  // پیشرفتِ رودمپ — ماژولِ ROADMAP
+  | "roadmapProgress";
 
 /** ماژول‌های پولی که موجودیت‌هاشون در sync گیت می‌شن */
-export type MobileGatedModule = "EXERCISE" | "CALORIE";
+export type MobileGatedModule = "EXERCISE" | "CALORIE" | "ROADMAP";
 /** entity → ماژولی که لازم داره */
 export const SYNC_ENTITY_MODULE: Partial<Record<SyncEntity, MobileGatedModule>> = {
   exercisePlan: "EXERCISE",
   exerciseLog: "EXERCISE",
   foodLogEntry: "CALORIE",
   calorieTarget: "CALORIE",
+  roadmapProgress: "ROADMAP",
 };
 
 /** کلیدهای تنظیماتی که توی فاز ۱ همگام می‌شن */
@@ -103,6 +106,7 @@ export const MOBILE_SYNC_SETTING_KEYS = [
   "wakeSleepTimes",
   "medications",
   "dashboardPrefs",
+  "bodyMetrics",
 ] as const;
 export type MobileSyncSettingKey = (typeof MOBILE_SYNC_SETTING_KEYS)[number];
 
@@ -260,6 +264,69 @@ export type CalorieTargetData =
   | { kind: "compute"; goal: "lose" | "maintain" | "gain"; mealsPerDay: number; sex: "male" | "female"; ageYears?: number; heightCm: number; weightKg: number }
   | { kind: "meals"; mealBreakdown: MealBreakdownItem[]; proteinTargetG?: number | null; carbsTargetG?: number | null; fatTargetG?: number | null };
 
+// ─── رودمپ ─────────────────────────────────────────────────────────────
+
+/** تیکِ مرحله‌ها: کلید = شماره‌ی مرحله (n) به‌شکلِ رشته، فقط true نگه داشته می‌شه */
+export type RoadmapStepProgress = Record<string, boolean>;
+/** همیشه سمتِ سرور حساب می‌شه؛ هر درصدی که کلاینت بفرسته نادیده گرفته می‌شه */
+export type RoadmapProgressSummary = { total: number; done: number; pct: number };
+
+export type RoadmapProgressRecord = SyncMeta & {
+  /** id خودِ رودمپ */
+  id: string;
+  stepProgress: RoadmapStepProgress;
+  progress: RoadmapProgressSummary;
+};
+
+/**
+ * LWW روی *کلِ* نقشه‌ی پیشرفتِ یک رودمپ (نه تک‌مرحله). رودمپ باید مالِ خودِ
+ * کاربر باشه؛ کلیدِ مرحله‌ای که وجود نداره یا مقدارِ غیرِ true دور ریخته می‌شه.
+ * ساخت/حذفِ رودمپ از این راه نیست. حداکثر ۵۰ کلید.
+ */
+export type RoadmapProgressData = { stepProgress: RoadmapStepProgress };
+
+export type RoadmapResource = { title: string; type: string; source?: string; url?: string };
+export type RoadmapStage = {
+  n: number;
+  title: string;
+  goal: string;
+  duration: string;
+  learn: string[];
+  do: string[];
+  tools: string[];
+  resources: RoadmapResource[];
+  done: string;
+};
+export type RoadmapPlan = {
+  title: string;
+  summary: string;
+  guide: string;
+  totalDuration: string;
+  tools: string[];
+  stages: RoadmapStage[];
+};
+
+export type MobileRoadmap = {
+  id: string;
+  topic: string;
+  goal: string | null;
+  generatedByAi: boolean;
+  createdAt: string;
+  plan: RoadmapPlan;
+  stepProgress: RoadmapStepProgress;
+  progress: RoadmapProgressSummary;
+  /** برای LWWِ پیشرفت — همون معنیِ editedAt در sync */
+  editedAt: string;
+  updatedAt: string;
+};
+
+/**
+ * GET /api/mobile/roadmaps — فهرستِ *کاملِ* رودمپ‌های کاربر با محتوا و پیشرفت
+ * (جدیدترین اول). ETag + If-None-Match → 304. 403 {error:"module_locked"}.
+ * این فهرست مرجعِ «کدوم رودمپ‌ها وجود دارن» است (حذف‌ها فقط این‌جا دیده می‌شن).
+ */
+export type MobileRoadmapsResponse = { roadmaps: MobileRoadmap[] };
+
 /** GET /api/mobile/sync/pull?since=<cursor> — بدونِ since یعنی همه‌چیز */
 export type SyncPullResponse = {
   /** برای درخواستِ بعدی عینا به‌عنوان since بفرست (مات فرضش کن) */
@@ -281,6 +348,12 @@ export type SyncPullResponse = {
   exerciseLogs?: ExerciseLogRecord[];
   foodLogEntries?: FoodLogEntryRecord[];
   calorieTargets?: CalorieTargetRecord[];
+  /**
+   * پیشرفتِ رودمپ‌هایی که بعد از since عوض شدن. حذفِ رودمپ اینجا نمیاد
+   * (وب واقعا پاکش می‌کنه) — فهرستِ مرجع GET /api/mobile/roadmaps است؛
+   * progressِ رودمپی که توی اون فهرست نیست رو نادیده بگیر.
+   */
+  roadmapProgress?: RoadmapProgressRecord[];
 };
 
 export type DailyEntryData = { tasks: Record<string, boolean>; wake: string | null };
@@ -322,7 +395,8 @@ export type SyncChange =
   | { entity: "exerciseLog"; key: string; op: "delete"; clientUpdatedAt: string }
   | { entity: "foodLogEntry"; id: string; op: "upsert"; data: FoodLogEntryData; clientUpdatedAt: string }
   | { entity: "foodLogEntry"; id: string; op: "delete"; clientUpdatedAt: string }
-  | { entity: "calorieTarget"; id: string; op: "upsert"; data: CalorieTargetData; clientUpdatedAt: string };
+  | { entity: "calorieTarget"; id: string; op: "upsert"; data: CalorieTargetData; clientUpdatedAt: string }
+  | { entity: "roadmapProgress"; id: string; op: "upsert"; data: RoadmapProgressData; clientUpdatedAt: string };
 
 /** POST /api/mobile/sync/push — حداکثر MOBILE_SYNC_MAX_BATCH تغییر، بدنه حداکثر ۱MB */
 export type SyncPushRequest = { changes: SyncChange[] };
@@ -337,7 +411,8 @@ export type SyncServerRecord =
   | ExercisePlanRecord
   | ExerciseLogRecord
   | FoodLogEntryRecord
-  | CalorieTargetRecord;
+  | CalorieTargetRecord
+  | RoadmapProgressRecord;
 
 /**
  * applied: نوشته شد؛ serverRecord نسخه‌ی نهاییه.
@@ -400,3 +475,34 @@ export type FoodScanResult =
   | { recognized: false; message: string };
 /** 200 | 400 | 401 | 403 {error:"module_locked"} | 429 | 500 */
 export type MobileFoodScanResponse = { ok: true; result: FoodScanResult };
+
+/**
+ * POST /api/mobile/ai/exercise-plan — ماژولِ EXERCISE. همون ورودی/سهمیه‌ی ماهانه/
+ * fallbackِ POST /api/exercise/plan. برنامه‌ی قبلیِ فعال غیرفعال می‌شه؛ تغییرها
+ * توی pullِ بعدی هم میان.
+ */
+export type MobileExercisePlanRequest = {
+  level: "beginner" | "intermediate" | "advanced";
+  goal: string;
+  equipment: string;
+  gymDays: string[];
+  rulesAccepted: true;
+  heightCm?: number;
+  weightKg?: number;
+  trainingMonth?: number;
+  hasPhysicalLimitation?: boolean;
+  limitationDetails?: string;
+  description?: string;
+};
+/** 200 | 400 | 401 | 403 {error:"module_locked"} | 429 (سهمیه‌ی ماهانه) */
+export type MobileExercisePlanResponse =
+  | { ok: true; feasible: true; plan: ExercisePlanRecord; generatedByAi: boolean }
+  | { ok: false; feasible: false; message: string };
+
+/**
+ * POST /api/mobile/ai/roadmap — ماژولِ ROADMAP. همون ورودی و سقفِ POST /api/roadmaps
+ * (۶ مسیر در ۳۰ دقیقه، مشترک با وب). تا ۶۰ ثانیه طول می‌کشه.
+ */
+export type MobileRoadmapRequest = { topic: string; goal?: string };
+/** 201 | 400 | 401 | 403 {error:"module_locked"} | 429 | 502 */
+export type MobileRoadmapResponse = { roadmap: MobileRoadmap };

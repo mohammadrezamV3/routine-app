@@ -4,6 +4,7 @@ import { ModuleKey, type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { MobileAuthSuccess, MobileGatedModule, MobileModuleKey, MobileUser } from "@/lib/mobileApiContract";
 import { checkModuleForUser } from "@/lib/moduleAccess";
+import { checkRoadmapForUser } from "@/lib/roadmapAccess";
 
 // احرازِ هویتِ اپ موبایل با توکنِ Bearer (نه کوکی).
 //
@@ -247,9 +248,10 @@ export async function revokeMobileSession(opts: { refreshToken?: unknown; auth?:
  * دیتابیس، نه از ادعای کلاینت). یک‌بار به‌ازای هر درخواستِ sync.
  */
 export async function getMobileModuleAccess(userId: string): Promise<Record<MobileGatedModule, boolean>> {
-  const [exercise, calorie] = await Promise.all([
+  const [exercise, calorie, roadmap] = await Promise.all([
     checkModuleForUser(userId, ModuleKey.EXERCISE),
     checkModuleForUser(userId, ModuleKey.CALORIE),
+    checkRoadmapForUser(userId),
   ]);
-  return { EXERCISE: exercise.ok, CALORIE: calorie.ok };
+  return { EXERCISE: exercise.ok, CALORIE: calorie.ok, ROADMAP: roadmap.ok };
 }

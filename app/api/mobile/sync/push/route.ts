@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readJsonBody } from "@/lib/validate";
 import { getMobileModuleAccess, getMobileUserId } from "@/lib/mobileAuth";
-import { MOBILE_SYNC_MAX_BATCH, parseSyncChange } from "@/lib/mobileSync";
+import { MOBILE_SYNC_MAX_BATCH, parseRoadmapProgressChange, parseSyncChange } from "@/lib/mobileSync";
+import { applyRoadmapProgress } from "@/lib/mobileRoadmap";
 import { applyChange, refOf } from "@/lib/mobileSyncStore";
 import { SYNC_ENTITY_MODULE, SYNC_ERROR_MODULE_LOCKED } from "@/lib/mobileApiContract";
 import type { SyncChangeResult, SyncPushResponse } from "@/lib/mobileApiContract";
@@ -38,6 +39,21 @@ export async function POST(req: NextRequest) {
   try {
     // ترتیبی، نه موازی: دو تغییر روی یک رکورد در یک دسته باید به ترتیب اعمال بشن
     for (let index = 0; index < changes.length; index++) {
+      // پیشرفتِ رودمپ مسیرِ جدای خودش رو داره (lib/mobileRoadmap.ts)
+      if ((changes[index] as any)?.entity === "roadmapProgress") {
+        const rp = parseRoadmapProgressChange(changes[index], now);
+        if (!rp.ok) {
+          results.push({ index, entity: rp.entity, id: rp.id, status: "rejected", error: rp.error, serverRecord: null });
+          continue;
+        }
+        access ??= await getMobileModuleAccess(userId);
+        if (!access.ROADMAP) {
+          results.push({ index, entity: "roadmapProgress", id: rp.change.id, status: "rejected", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
+          continue;
+        }
+        results.push({ index, ...(await applyRoadmapProgress(userId, rp.change)) });
+        continue;
+      }
       const p = parseSyncChange(changes[index], now);
       if (!p.ok) {
         results.push({ index, entity: p.entity, key: p.key, id: p.id, status: "rejected", error: p.error, serverRecord: null });

@@ -3,6 +3,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { getMobileModuleAccess, getMobileUserId } from "@/lib/mobileAuth";
 import { parseIsoDateTime } from "@/lib/mobileSync";
 import { pullChanges } from "@/lib/mobileSyncStore";
+import { pullRoadmapProgress } from "@/lib/mobileRoadmap";
 
 // GET /api/mobile/sync/pull?since=<cursor>
 // همه‌ی رکوردهای فاز ۱ِ همین کاربر که بعد از since عوض شدن (+ tombstoneِ تسک‌ها).
@@ -21,6 +22,11 @@ export async function GET(req: NextRequest) {
     if (!since) return NextResponse.json({ error: "since نامعتبر است" }, { status: 400 });
   }
 
-  // موجودیت‌های بدنسازی/کالری فقط با دسترسیِ فعالِ همون ماژول (lockedModules در پاسخ)
-  return NextResponse.json(await pullChanges(userId, since, await getMobileModuleAccess(userId)));
+  // موجودیت‌های بدنسازی/کالری/رودمپ فقط با دسترسیِ فعالِ همون ماژول (lockedModules در پاسخ)
+  const access = await getMobileModuleAccess(userId);
+  const body = await pullChanges(userId, since, access);
+  // پیشرفتِ رودمپ جدا از mobileSyncStore خونده می‌شه (lib/mobileRoadmap.ts). کمی
+  // بعد از زمانِ cursor خونده می‌شه، پس هر چی وسطش عوض بشه دفعه‌ی بعد دوباره میاد.
+  if (access.ROADMAP) body.roadmapProgress = await pullRoadmapProgress(userId, since);
+  return NextResponse.json(body);
 }
