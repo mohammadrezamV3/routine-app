@@ -73,7 +73,12 @@ export async function computeWeeklyAnalysis(
   });
 
   // ── دامنه‌ها + مقایسه با هفته‌ی قبل ──
-  const domainResults: DomainResult[] = domains.map((d) => {
+  // دامنه‌ای که در کل ۸ هفته هیچ داده‌ای نداشته (مثلا خواب/کارها که فعلا
+  // هیچ مسیری در اپ براشون ردیف نمی‌سازه) کارت خالیِ دائمی می‌شد — مخفی.
+  // اگه هیچ دامنه‌ای داده نداشت، همه می‌مونن تا حالت خالیِ UI نشون داده بشه.
+  const withHistory = domains.filter((d) => all.get(d)!.some((w) => w.result.hasData));
+  const shown = withHistory.length ? withHistory : domains;
+  const domainResults: DomainResult[] = shown.map((d) => {
     const r = all.get(d)![cur].result;
     const prev = all.get(d)![cur - 1].result;
     const prevScore = prev.hasData ? prev.score : null;
