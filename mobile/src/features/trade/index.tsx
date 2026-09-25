@@ -6,17 +6,8 @@ import Calendar from "./screens/Calendar";
 import Clock from "./screens/Clock";
 import Notes from "./screens/Notes";
 
-// مسیرهای واقعی این ماژول — لیدر همین‌ها را در App.tsx (زیر یک <Route
-// path="/trade/*">) سیم‌کشی می‌کند. هر مسیرِ مطلق از این آبجکت ساخته می‌شود
-// تا هیچ رشته‌ی "/trade/..." در کد دیگر هاردکد نشود.
-export const tradeRoutePaths = {
-  hub: "/trade",
-  account: (id: string) => `/trade/accounts/${id}`,
-  checklists: "/trade/checklists",
-  calendar: "/trade/calendar",
-  clock: "/trade/clock",
-  notes: "/trade/notes",
-};
+// مسیرهای مطلق در ./paths.ts (جدا، تا صفحه‌ها چرخه‌ی import نسازن)
+export { tradeRoutePaths } from "./paths";
 
 /** باید زیرِ یک مسیرِ `"/trade/*"` مونت شود (Routes داخلی‌اش نسبی‌ست). */
 export default function TradeRoutes() {

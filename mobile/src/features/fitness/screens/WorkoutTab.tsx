@@ -70,7 +70,11 @@ export default function WorkoutTab() {
               >
                 ساخت برنامه
               </button>
-              <OnlineFeatureButton label="ساخت با هوش مصنوعی" online={online} />
+              <OnlineFeatureButton
+                label="ساخت با هوش مصنوعی"
+                online={online}
+                onlineAction={() => navigate(fitnessRoutePaths.planAi)}
+              />
             </div>
           }
         />

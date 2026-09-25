@@ -11,6 +11,7 @@ import { computeCalorieStreak } from "../lib/stats";
 import { Card, SectionTitle, ProgressRing, MacroBar, EmptyState, OnlineFeatureButton } from "../components/ui";
 import AddCalorieEntrySheet from "../components/AddCalorieEntrySheet";
 import GoalSheet from "../components/GoalSheet";
+import FoodScanSheet from "../components/FoodScanSheet";
 import type { CalorieEntryRow } from "../lib/exerciseTypes";
 
 const MEAL_LABELS: Record<string, string> = { breakfast: "صبحانه", lunch: "ناهار", dinner: "شام", snack: "میان‌وعده" };
@@ -35,6 +36,7 @@ export default function CalorieTab() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
+  const [scanToken, setScanToken] = useState(0);
 
   const totalKcal = entries.reduce((s, e) => s + kcalOf(e), 0);
   const macros = entries.reduce(
@@ -108,7 +110,8 @@ export default function CalorieTab() {
         </button>
       </div>
 
-      <OnlineFeatureButton label="اسکنِ عکسِ غذا با هوش مصنوعی" online={online} />
+      <OnlineFeatureButton label="اسکنِ عکسِ غذا با هوش مصنوعی" online={online} onlineAction={() => setScanToken((t) => t + 1)} />
+      <FoodScanSheet pickToken={scanToken} date={date} />
 
       <Card>
         <div className="flex items-center justify-between">

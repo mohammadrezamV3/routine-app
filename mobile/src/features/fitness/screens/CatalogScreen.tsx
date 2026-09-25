@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
-import { EXERCISE_CATALOG, getExerciseDifficulty } from "../lib/exerciseCatalog";
+import { EXERCISE_CATALOG, getExerciseDifficulty, type ExerciseCatalogEntry } from "../lib/exerciseCatalog";
+import { useCatalogExercises, useExerciseMedia } from "@/sync/catalog";
+import { useSync } from "@/sync/SyncProvider";
 import { MuscleDiagram } from "../components/MuscleDiagram";
 import { EmptyState } from "../components/ui";
 
@@ -11,12 +13,14 @@ import { EmptyState } from "../components/ui";
 export default function CatalogScreen() {
   const [query, setQuery] = useState("");
   const [openName, setOpenName] = useState<string | null>(null);
+  // کاتالوگِ دانلودشده از سرور (اگه هست)، وگرنه نسخه‌ی داخلِ باندل
+  const catalog = useCatalogExercises<ExerciseCatalogEntry>(EXERCISE_CATALOG);
 
   const results = useMemo(() => {
     const q = query.trim();
-    if (!q) return EXERCISE_CATALOG.slice(0, 40);
-    return EXERCISE_CATALOG.filter((e) => e.name.indexOf(q) !== -1 || e.muscleGroup.indexOf(q) !== -1).slice(0, 60);
-  }, [query]);
+    if (!q) return catalog.slice(0, 40);
+    return catalog.filter((e) => e.name.indexOf(q) !== -1 || e.muscleGroup.indexOf(q) !== -1).slice(0, 60);
+  }, [query, catalog]);
 
   return (
     <div>
@@ -60,6 +64,7 @@ export default function CatalogScreen() {
               </button>
               {open && (
                 <div className="flex flex-col gap-3 px-3 pb-3">
+                  <ExerciseImage name={entry.name} />
                   <MuscleDiagram keys={entry.muscleKeys} />
                   <div>
                     <p className="mb-1 font-vazir text-[12px] font-semibold" style={{ color: "var(--text)" }}>
@@ -84,4 +89,12 @@ export default function CatalogScreen() {
       </div>
     </div>
   );
+}
+
+/** عکسِ حرکت — تنبل: فقط وقتی کارت باز می‌شه از سرور گرفته و کش می‌شه */
+function ExerciseImage({ name }: { name: string }) {
+  const { api, isModuleLocked } = useSync();
+  const url = useExerciseMedia(api, name, !isModuleLocked("EXERCISE"));
+  if (!url) return null;
+  return <img src={url} alt={name} loading="lazy" className="w-full rounded-lg object-contain" style={{ maxHeight: 220 }} />;
 }

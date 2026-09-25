@@ -22,7 +22,10 @@ export type ExercisePlanRow = {
   isActive: boolean;
   planData: ExerciseDay[];
   createdAt: string;
+  /** لحظه‌ی پذیرفتنِ قوانین/سلبِ مسئولیت — سرور بدونِ اون برنامه‌ی دستیِ جدید رو نمی‌سازه (rulesAccepted) */
+  rulesAcceptedAt?: string | null;
   updatedAt: string;
+  /** فقط محلی: «حذف» = آرشیو. سرور حذفِ برنامه نداره؛ push به‌صورتِ isActive=false می‌ره */
   deletedAt: string | null;
   dirty: 0 | 1;
 };
@@ -97,6 +100,8 @@ export type CalorieTargetRow = {
   weightKg: number | null;
   effectiveFrom: string;
   effectiveTo: string | null;
+  /** سرور این هدف رو می‌شناسه (از pull اومده یا compute شده) — push بعدی از نوعِ meals می‌ره نه compute */
+  synced?: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;

@@ -116,8 +116,9 @@ export async function rekeyTask(oldId: string, newId: string): Promise<void> {
  * نوشتنِ repo، نه applyRemote/markClean که dirty=0 می‌گذارند). برای
  * زمان‌بندیِ سینکِ debounced بعد از ویرایشِ کاربر. خروجی: تابعِ لغو.
  */
-export function onLocalWrite(cb: () => void): () => void {
-  const tables = [db.dailyEntries, db.tasks, db.sleepEntries, db.settings] as any[];
+export function onLocalWrite(cb: () => void, extraTables: unknown[] = []): () => void {
+  // extraTables: جدول‌های Dexieِ ماژول‌های دیگه (ورزش/ترید/رودمپ) با همون قراردادِ dirty
+  const tables = [db.dailyEntries, db.tasks, db.sleepEntries, db.settings, ...extraTables] as any[];
   const creating = function (_pk: unknown, obj: any) {
     if (obj && obj.dirty === 1) queueMicrotask(cb);
   };

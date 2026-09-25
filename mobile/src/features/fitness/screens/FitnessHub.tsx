@@ -3,6 +3,8 @@ import AppHeader from "@/components/AppHeader";
 import { SegmentedTabs } from "../components/ui";
 import WorkoutTab from "./WorkoutTab";
 import CalorieTab from "./CalorieTab";
+import LockedModuleScreen from "@/components/LockedModuleScreen";
+import { useSync } from "@/sync/SyncProvider";
 
 type Tab = "workout" | "calorie";
 
@@ -11,6 +13,8 @@ type Tab = "workout" | "calorie";
 // بالای صفحه (مثل وب) رو نداریم.
 export default function FitnessHub() {
   const [tab, setTab] = useState<Tab>("workout");
+  // قفل فقط وقتی سرور برای کاربرِ واردشده گزارشش کرده (مهمان کاملا محلی کار می‌کنه)
+  const { isModuleLocked } = useSync();
 
   return (
     <div>
@@ -25,7 +29,13 @@ export default function FitnessHub() {
           ]}
         />
       </div>
-      {tab === "workout" ? <WorkoutTab /> : <CalorieTab />}
+      {tab === "workout" ? (
+        isModuleLocked("EXERCISE") ? <LockedModuleScreen title="برنامه‌ی تمرینی" /> : <WorkoutTab />
+      ) : isModuleLocked("CALORIE") ? (
+        <LockedModuleScreen title="کالری‌شمار" />
+      ) : (
+        <CalorieTab />
+      )}
     </div>
   );
 }

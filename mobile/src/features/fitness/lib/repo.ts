@@ -3,6 +3,7 @@ import { newLocalId, nowIso } from "./id";
 import { isoLocal } from "./jalali";
 import { getExercisePlan, type ExerciseDay, type ExerciseGoal, type ExerciseLevel } from "./exercisePlans";
 import { FOOD_SEED } from "./foodSeed";
+import { getCatalogFoods } from "@/sync/catalog";
 import type {
   ExercisePlanRow,
   ExerciseLogRow,
@@ -30,6 +31,7 @@ export async function createTemplatePlan(input: {
   equipment: string | null;
   heightCm: number | null;
   weightKg: number | null;
+  rulesAccepted?: boolean;
 }): Promise<ExercisePlanRow> {
   const planData = getExercisePlan(input.goal, input.level, input.hasPhysicalLimitation, input.gymDays);
   return insertPlan({
@@ -44,6 +46,7 @@ export async function createTemplatePlan(input: {
     equipment: input.equipment,
     generatedByAi: false,
     planData,
+    rulesAcceptedAt: input.rulesAccepted ? nowIso() : null,
   });
 }
 
@@ -51,6 +54,7 @@ export async function createManualPlan(input: {
   goal: string | null;
   gymDays: string[];
   days: ExerciseDay[];
+  rulesAccepted?: boolean;
 }): Promise<ExercisePlanRow> {
   return insertPlan({
     level: "custom",
@@ -64,6 +68,7 @@ export async function createManualPlan(input: {
     equipment: null,
     generatedByAi: false,
     planData: input.days,
+    rulesAcceptedAt: input.rulesAccepted ? nowIso() : null,
   });
 }
 
@@ -242,6 +247,7 @@ export async function addCalorieEntry(input: {
   grams: number;
   date: string;
   mealType: MealType | null;
+  aiScanned?: boolean;
 }): Promise<CalorieEntryRow> {
   const now = nowIso();
   const row: CalorieEntryRow = {
@@ -254,7 +260,7 @@ export async function addCalorieEntry(input: {
     grams: input.grams,
     date: input.date,
     mealType: input.mealType,
-    aiScanned: false,
+    aiScanned: input.aiScanned === true,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
@@ -349,7 +355,7 @@ export type FoodSearchResult = {
   custom: boolean;
 };
 
-/** جستجوی غذا کاملا آفلاین: کاتالوگ ثابتِ FOOD_SEED + غذاهای سفارشیِ خودِ کاربر. */
+/** جستجوی غذا کاملا آفلاین: کاتالوگِ دانلودشده (یا FOOD_SEEDِ باندل) + غذاهای سفارشیِ خودِ کاربر. */
 export async function searchFoods(query: string): Promise<FoodSearchResult[]> {
   const q = query.trim();
   const custom = (await fitnessDb.customFoods.filter((f) => !f.deletedAt).toArray()).map((f) => ({
@@ -360,7 +366,9 @@ export async function searchFoods(query: string): Promise<FoodSearchResult[]> {
     fatPer100g: f.fatPer100g,
     custom: true,
   }));
-  const seed = FOOD_SEED.map((f) => ({
+  // کاتالوگِ دانلودشده از سرور (اگه هست)، وگرنه seedِ داخلِ باندل
+  const catalogFoods = (await getCatalogFoods()) ?? FOOD_SEED;
+  const seed = catalogFoods.map((f) => ({
     name: f.name,
     caloriesPer100g: f.caloriesPer100g,
     proteinPer100g: null as number | null,

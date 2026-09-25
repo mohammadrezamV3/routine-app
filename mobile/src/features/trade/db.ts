@@ -42,6 +42,9 @@ export interface TradeAccountRow extends SyncRow {
   archivedAt: string | null;
   order: number;
   tagIds: string[];
+  /** فقط‌خواندنی از سرور: اتصالِ فعالِ متاتریدر روی همین حساب */
+  mtConnected?: boolean;
+  mtLastSyncAt?: string | null;
 }
 
 export interface TradeEntryRow extends SyncRow {
@@ -80,7 +83,20 @@ export interface TradeEntryRow extends SyncRow {
   checklistName: string | null;
   checklistSnapshot: TradeChecklistSnapshotItem[] | null;
   tagIds: string[];
+  /** عکس‌ها فعلا همگام نمی‌شن — فقط محلی */
   images: TradeImage[];
+  // ── فیلدهایی که از سرور میان و باید در push برگردن (جایگزینیِ کامل) ──
+  entryReasons?: string[];
+  exitReasons?: string[];
+  checklistDone?: number | null;
+  checklistTotal?: number | null;
+  /** تعدادِ عکس‌های روی سرور (خودِ عکس‌ها همگام نمی‌شن) */
+  imageCount?: number;
+  /** پر = معامله از متاتریدر اومده ← فیلدهای بروکری فقط‌خواندنی‌ان */
+  externalId?: string | null;
+  externalSource?: string | null;
+  /** وضعیتِ تیکِ آیتم‌ها ({itemId: checked}) در لحظه‌ی ثبت — سرور از روی این اسنپ‌شات می‌سازه */
+  checklistState?: Record<string, boolean> | null;
 }
 
 export interface TradeChecklistRow extends SyncRow {

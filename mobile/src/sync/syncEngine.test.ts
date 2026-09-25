@@ -5,6 +5,8 @@ import { db } from "@/db/db";
 import { addTask, deleteTask, setDaily, updateTask } from "@/db/repo";
 import { applyRemote, wipeAll } from "@/db/syncHooks";
 import { makeBatches, SyncEngine } from "./syncEngine";
+import { mainChannel } from "./channels";
+import { wipeAllLocalData } from "./localData";
 import { remoteDaily, remoteTask } from "./mappers";
 import { Call, json, loggedInClient } from "./testUtils";
 
@@ -64,6 +66,7 @@ function fakeServer() {
             date: ch.key,
             tasks: ch.op === "upsert" ? ch.data.tasks : {},
             wake: ch.op === "upsert" ? ch.data.wake : null,
+            deleted: ch.op === "delete",
             editedAt: ch.clientUpdatedAt,
             updatedAt: new Date().toISOString(),
           };
@@ -93,13 +96,14 @@ function fakeServer() {
 
 async function setup(handler: (c: Call) => Response | Promise<Response>) {
   const ctx = await loggedInClient(handler);
-  const engine = new SyncEngine(ctx.api, ctx.kv);
+  const engine = new SyncEngine(ctx.api, ctx.kv, [mainChannel]);
   await engine.init();
   return { ...ctx, engine };
 }
 
 beforeEach(async () => {
   await wipeAll();
+  await wipeAllLocalData();
 });
 
 describe("applyRemote — LWW", () => {
@@ -128,7 +132,7 @@ describe("applyRemote — LWW", () => {
 
   it("محلیِ تمیز ولی با updatedAt جدیدتر → ریموت برنده (سرور منبعِ حقیقته)", async () => {
     await db.dailyEntries.put({ date: "2026-09-20", completedItems: { a: true }, wakeUpAt: null, updatedAt: T2, deletedAt: null, dirty: 0 });
-    const ok = await applyRemote("dailyEntries", remoteDaily({ date: "2026-09-20", tasks: { b: true }, wake: null, editedAt: T1, updatedAt: T1 }));
+    const ok = await applyRemote("dailyEntries", remoteDaily({ date: "2026-09-20", tasks: { b: true }, wake: null, editedAt: T1, updatedAt: T1, deleted: false }));
     expect(ok).toBe(true);
     expect(await db.dailyEntries.get("2026-09-20")).toMatchObject({ completedItems: { b: true }, updatedAt: T1, dirty: 0 });
   });
@@ -150,7 +154,7 @@ describe("push", () => {
 
     const pushed = srv.pushes[0];
     const tc = pushed.find((c) => c.entity === "task")!;
-    expect(tc).toMatchObject({ op: "upsert", id: t.id, data: { priority: 2, dueDate: "2026-09-26T00:00:00.000Z" } });
+    expect(tc).toMatchObject({ op: "upsert", id: t.id, data: { priority: 2, dueDate: "2026-09-26" } });
     const dc = pushed.find((c) => c.entity === "dailyEntry")!;
     expect(dc).toMatchObject({ key: "2026-09-25", data: { tasks: { gym: true }, wake: "2026-09-25T03:30:00.000Z" } });
 
@@ -319,7 +323,7 @@ describe("ادغامِ مهمان → ورود", () => {
     // ردیفِ تمیز (مثلا از نشستِ قبلی نگه داشته شده)
     await db.dailyEntries.put({ date: "2026-09-01", completedItems: { old: true }, wakeUpAt: null, updatedAt: T0, deletedAt: null, dirty: 0 });
     // سرور نسخه‌ی جدیدتری از یکی داره
-    srv.daily.set("2026-09-01", { date: "2026-09-01", tasks: { server: true }, wake: null, editedAt: T2, updatedAt: T2 });
+    srv.daily.set("2026-09-01", { date: "2026-09-01", tasks: { server: true }, wake: null, editedAt: T2, updatedAt: T2, deleted: false });
 
     const { engine, kv } = await setup(srv.handler);
     await kv.set("arion.sync.cursor", "stale-cursor-of-another-account");
@@ -341,10 +345,10 @@ describe("ادغامِ مهمان → ورود", () => {
     const { engine, kv } = await setup(fakeServer().handler);
     await addTask({ title: "بمون" });
     await kv.set("arion.sync.cursor", T1);
-    await engine.resetAfterLogout(false);
+    await engine.resetAfterLogout();
     expect(await db.tasks.count()).toBe(1);
     expect(await kv.get("arion.sync.cursor")).toBeNull();
-    await engine.resetAfterLogout(true);
+    await engine.resetAfterLogout(() => wipeAllLocalData());
     expect(await db.tasks.count()).toBe(0);
   });
 });
@@ -377,8 +381,8 @@ describe("onLocalWrite", () => {
     await setDaily("2026-09-10", { tasks: { a: true }, wake: null }); // put روی ردیفِ dirtyِ موجود
     await flush();
     expect(n).toBe(2);
-    await applyRemote("dailyEntries", remoteDaily({ date: "2026-09-11", tasks: {}, wake: null, editedAt: T1, updatedAt: T1 }));
-    await applyRemote("dailyEntries", remoteDaily({ date: "2026-09-10", tasks: {}, wake: null, editedAt: "2099-01-01T00:00:00.000Z", updatedAt: T1 }));
+    await applyRemote("dailyEntries", remoteDaily({ date: "2026-09-11", tasks: {}, wake: null, editedAt: T1, updatedAt: T1, deleted: false }));
+    await applyRemote("dailyEntries", remoteDaily({ date: "2026-09-10", tasks: {}, wake: null, editedAt: "2099-01-01T00:00:00.000Z", updatedAt: T1, deleted: false }));
     await flush();
     expect(n).toBe(2);
     off();

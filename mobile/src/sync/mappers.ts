@@ -1,10 +1,11 @@
 // نگاشتِ ردیف‌های محلی (Dexie — mobile/src/db/db.ts) ↔ شکل‌های قراردادِ سرور
 // (mobile/src/lib/api-contract.ts). تفاوت‌ها:
 //   • dailyEntry: completedItems/wakeUpAt ↔ tasks/wake
-//   • task: priority "low|medium|high" ↔ عدد ۰..۱۰؛ dueDate "YYYY-MM-DD" ↔ ISOِ
-//     نیمه‌شبِ UTC؛ deletedAt ↔ deleted (tombstone)
-//   • sleepEntry: targetSleptAt/targetWokeAt محلی "HH:mm" (ساعتِ دیواری) ↔
-//     ISOِ کامل روی سرور (ستونِ DateTime) — با تاریخِ همون روز و منطقه‌ی زمانیِ گوشی
+//   • task: priority "low|medium|high" ↔ TASK_PRIORITY (۰/۱/۲؛ ۳+ = high)؛
+//     dueDate "YYYY-MM-DD" هر دو طرف؛ deletedAt ↔ deleted (tombstone)
+//   • sleepEntry: targetSleptAt/targetWokeAt محلی "HH:mm" ↔ سرور "HH:mm" هم
+//     قبول می‌کنه (با User.timezone) و targetSleptAtHhmm برمی‌گردونه
+//   • dailyEntry/sleepEntry: deleted=true (روزِ خالی) ↔ deletedAt محلی
 //   • setting: value=null روی سرور ↔ deletedAt محلی
 // در همه‌ی جهت‌ها، updatedAtِ محلی = editedAtِ سرور (زمانِ منطقیِ LWW).
 import type {
@@ -15,7 +16,7 @@ import type {
   SyncChange,
   TaskRecord,
 } from "@/lib/api-contract";
-import { MOBILE_SYNC_SETTING_KEYS } from "@/lib/api-contract";
+import { MOBILE_SYNC_SETTING_KEYS, TASK_PRIORITY } from "@/lib/api-contract";
 import type { DailyEntryRow, SettingRow, SleepEntryRow, TaskPriority, TaskRow } from "@/db/db";
 import type { EntityName } from "@/db/syncHooks";
 
@@ -36,6 +37,14 @@ export function hhmmToIso(date: string, v: string | null): string | null {
   }
   const [y, mo, d] = date.split("-").map(Number);
   return new Date(y, mo - 1, d, Number(m[1]), Number(m[2]), 0, 0).toISOString();
+}
+
+/** "HH:mm" همون‌طور (سرور تبدیل می‌کنه)؛ هر چیزِ دیگه → ISO یا null */
+export function hhmmOrIso(v: string | null): string | null {
+  if (!v) return null;
+  if (HHMM_RE.test(v)) return v;
+  const t = Date.parse(v);
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
 /** ISO → "HH:mm" به ساعتِ محلیِ گوشی */
@@ -60,7 +69,7 @@ export function isoToDateKey(v: string | null): string | null {
   return DATE_RE.test(v.slice(0, 10)) ? v.slice(0, 10) : null;
 }
 
-const PRIORITY_TO_NUM: Record<TaskPriority, number> = { low: 0, medium: 1, high: 2 };
+const PRIORITY_TO_NUM: Record<TaskPriority, number> = TASK_PRIORITY;
 
 export function priorityToNum(p: TaskPriority | undefined | null): number {
   return PRIORITY_TO_NUM[p ?? "medium"] ?? 1;
@@ -85,12 +94,13 @@ export function isSyncedSettingKey(key: string): key is MobileSyncSettingKey {
 // ─── ریموت → محلی ──────────────────────────────────────────────────────
 
 export function remoteDaily(r: DailyEntryRecord): DailyEntryRow {
+  // deleted = روزِ خالی (tombstone) — محلی به‌صورتِ soft-delete نگه داشته می‌شه
   return {
     date: r.date,
-    completedItems: r.tasks ?? {},
-    wakeUpAt: r.wake ?? null,
+    completedItems: r.deleted ? {} : (r.tasks ?? {}),
+    wakeUpAt: r.deleted ? null : (r.wake ?? null),
     updatedAt: r.editedAt,
-    deletedAt: null,
+    deletedAt: r.deleted ? r.editedAt : null,
     dirty: 0,
   };
 }
@@ -100,11 +110,12 @@ export function remoteSleep(r: SleepEntryRecord): SleepEntryRow {
     date: r.date,
     sleptAt: r.sleptAt ?? null,
     wokeAt: r.wokeAt ?? null,
-    targetSleptAt: isoToHhmm(r.targetSleptAt),
-    targetWokeAt: isoToHhmm(r.targetWokeAt),
+    // HH:mm به ساعتِ User.timezone از خودِ سرور (نه تبدیلِ ساعتِ گوشی)
+    targetSleptAt: r.targetSleptAtHhmm ?? isoToHhmm(r.targetSleptAt),
+    targetWokeAt: r.targetWokeAtHhmm ?? isoToHhmm(r.targetWokeAt),
     quality: r.quality ?? null,
     updatedAt: r.editedAt,
-    deletedAt: null,
+    deletedAt: r.deleted ? r.editedAt : null,
     dirty: 0,
   };
 }
@@ -165,8 +176,9 @@ export function toChange(entity: EntityName, row: any): SyncChange | null {
         data: {
           sleptAt: r.sleptAt ?? null,
           wokeAt: r.wokeAt ?? null,
-          targetSleptAt: hhmmToIso(r.date, r.targetSleptAt),
-          targetWokeAt: hhmmToIso(r.date, r.targetWokeAt),
+          // "HH:mm" مستقیم — سرور با تاریخِ همین روز و User.timezone به UTC تبدیل می‌کنه
+          targetSleptAt: hhmmOrIso(r.targetSleptAt),
+          targetWokeAt: hhmmOrIso(r.targetWokeAt),
           quality: r.quality ?? null,
         },
         clientUpdatedAt,
@@ -182,7 +194,7 @@ export function toChange(entity: EntityName, row: any): SyncChange | null {
         data: {
           title: r.title,
           notes: r.notes ?? null,
-          dueDate: dateKeyToIso(r.dueDate),
+          dueDate: r.dueDate && DATE_RE.test(r.dueDate) ? r.dueDate : dateKeyToIso(r.dueDate),
           priority: priorityToNum(r.priority),
           completedAt: r.completedAt ?? null,
         },

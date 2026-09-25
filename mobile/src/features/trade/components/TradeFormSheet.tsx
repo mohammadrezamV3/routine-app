@@ -15,6 +15,12 @@ interface Props {
   existing?: TradeEntryRow | null;
 }
 
+/** فیلدهای بروکری (TRADE_ENTRY_BROKER_FIELDS) — برای معامله‌ی متاتریدری قابلِ ویرایش نیستن */
+const BROKER_FIELDS = [
+  "accountId", "symbol", "direction", "volume", "volumeUnit", "openedAt", "closedAt", "status",
+  "result", "pnl", "entryPrice", "exitPrice", "stopLoss", "takeProfit", "commission", "swap",
+] as const;
+
 function toLocalInput(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -121,8 +127,10 @@ export default function TradeFormSheet({ open, onClose, accountId, existing }: P
     [checklistItems, checklistId],
   );
 
+  const brokerLocked = !!existing?.externalId;
+
   async function handleSubmit() {
-    if (!symbol.trim() || !volume.trim()) return;
+    if (!brokerLocked && (!symbol.trim() || !volume.trim())) return;
     setSaving(true);
     try {
       const openedIso = localInputToUtcIso(openedAt);
@@ -131,9 +139,18 @@ export default function TradeFormSheet({ open, onClose, accountId, existing }: P
       const riskAmountNum = null;
       const rMultiple = riskAmountNum ? Math.round((pnl / riskAmountNum) * 100) / 100 : null;
       const checklist = checklists.find((c) => c.id === checklistId) || null;
-      const snapshot = checklist
-        ? activeChecklistItems.map((i) => ({ text: i.text, checked: !!checklistState[i.id] }))
-        : null;
+      // اسنپ‌شاتِ چک‌لیست فقط لحظه‌ی *ثبت* ساخته می‌شه و بعدش هیچ‌وقت عوض
+      // نمی‌شه (قانونِ CLAUDE.md) — در ویرایش همون قبلی می‌مونه.
+      const snapshot = existing
+        ? existing.checklistSnapshot
+        : checklist
+          ? activeChecklistItems.map((i) => ({ text: i.text, checked: !!checklistState[i.id] }))
+          : null;
+      const snapState = existing
+        ? (existing.checklistState ?? null)
+        : checklist
+          ? Object.fromEntries(activeChecklistItems.map((i) => [i.id, !!checklistState[i.id]]))
+          : null;
 
       const row: TradeEntryRow = {
         ...(existing ? touch(existing) : (baseRow() as any)),
@@ -166,12 +183,19 @@ export default function TradeFormSheet({ open, onClose, accountId, existing }: P
         emotionAfter: existing?.emotionAfter ?? null,
         confidence: existing?.confidence ?? null,
         followedPlan: existing?.followedPlan ?? null,
-        checklistId: checklist?.id ?? null,
-        checklistName: checklist?.name ?? null,
+        checklistId: existing ? existing.checklistId : (checklist?.id ?? null),
+        checklistName: existing ? existing.checklistName : (checklist?.name ?? null),
         checklistSnapshot: snapshot,
+        checklistState: snapState,
         tagIds,
         images: existing?.images ?? [],
       };
+      if (brokerLocked && existing) {
+        // معامله‌ی متاتریدری: فیلدهای بروکری فقط‌خواندنی‌ان — همون مقدارِ قبلی
+        for (const f of BROKER_FIELDS) (row as any)[f] = (existing as any)[f];
+        row.sessions = existing.sessions;
+        row.rMultiple = existing.rMultiple;
+      }
 
       await db.trades.put(row);
       await tapHaptic();
@@ -184,6 +208,17 @@ export default function TradeFormSheet({ open, onClose, accountId, existing }: P
   return (
     <BottomSheet open={open} onClose={onClose} title={existing ? "ویرایش معامله" : "ثبت معامله"}>
       <div className="flex flex-col gap-3 pt-1">
+        {brokerLocked && (
+          <p className="font-vazir text-[12px] leading-6" style={{ color: "var(--muted)" }}>
+            این معامله از متاتریدر همگام شده — نماد، حجم، زمان‌ها، قیمت‌ها و سود/زیان فقط‌خواندنی‌اند؛
+            یادداشت، برچسب و بقیه‌ی فیلدهای دستی قابلِ ویرایش‌اند.
+          </p>
+        )}
+        <fieldset
+          disabled={brokerLocked}
+          className="flex flex-col gap-3"
+          style={{ border: 0, padding: 0, margin: 0, minWidth: 0, opacity: brokerLocked ? 0.6 : 1 }}
+        >
         <div className="flex gap-2">
           <Field label="نماد" value={symbol} onChange={setSymbol} placeholder="EURUSD" />
         </div>
@@ -289,6 +324,7 @@ export default function TradeFormSheet({ open, onClose, accountId, existing }: P
           <Field label="حد ضرر" value={stopLoss} onChange={setStopLoss} type="number" />
           <Field label="حد سود" value={takeProfit} onChange={setTakeProfit} type="number" />
         </div>
+        </fieldset>
 
         {tags.length > 0 && (
           <div className="flex flex-col gap-1.5">

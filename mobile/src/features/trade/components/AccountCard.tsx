@@ -3,7 +3,7 @@ import { ChevronLeft } from "lucide-react";
 import type { TradeAccountRow } from "../db";
 import type { TradeStats } from "../lib/tradeAnalytics";
 import { ACCOUNT_TYPE_LABELS, currencySymbol } from "../lib/types";
-import { tradeRoutePaths } from "..";
+import { tradeRoutePaths } from "../paths";
 
 interface Props {
   account: TradeAccountRow;

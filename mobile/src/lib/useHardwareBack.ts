@@ -4,6 +4,12 @@ import { Capacitor } from "@capacitor/core";
 
 const ROOT_TABS = new Set(["/", "/routine", "/exercise", "/trade", "/more"]);
 
+/** فقط خودِ ریشه‌ی تب‌ها (نه زیرمسیرهای تو در توی فیچرها مثل /exercise/catalog) */
+export function isRootTab(pathname: string): boolean {
+  const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return ROOT_TABS.has(p || "/");
+}
+
 // دکمه‌ی برگشت هاردویر اندروید: توی تب‌های ریشه اپ رو می‌بنده (طبق رفتار
 // استاندارد اندروید)، وگرنه توی history برمی‌گرده.
 export function useHardwareBack() {
@@ -19,7 +25,7 @@ export function useHardwareBack() {
       try {
         const { App } = await import("@capacitor/app");
         const handle = await App.addListener("backButton", () => {
-          if (ROOT_TABS.has(location.pathname)) {
+          if (isRootTab(location.pathname)) {
             App.exitApp();
           } else {
             navigate(-1);

@@ -48,6 +48,7 @@ function TemplateForm({ onDone }: { onDone: () => void }) {
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [equipment, setEquipment] = useState("");
+  const [rulesAccepted, setRulesAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
 
   function toggleDay(d: string) {
@@ -67,6 +68,7 @@ function TemplateForm({ onDone }: { onDone: () => void }) {
         equipment: equipment || null,
         heightCm: heightCm ? Number(heightCm) : null,
         weightKg: weightKg ? Number(weightKg) : null,
+        rulesAccepted,
       });
       void tapHaptic();
       onDone();
@@ -139,11 +141,13 @@ function TemplateForm({ onDone }: { onDone: () => void }) {
         />
       </button>
 
+      <RulesCheckbox checked={rulesAccepted} onChange={setRulesAccepted} />
+
       <button
         onClick={submit}
-        disabled={saving || gymDays.length === 0}
+        disabled={saving || gymDays.length === 0 || !rulesAccepted}
         className="rounded-xl font-vazir text-[14.5px] font-semibold"
-        style={{ minHeight: 50, background: "var(--accent)", color: "#fff", opacity: gymDays.length === 0 ? 0.5 : 1 }}
+        style={{ minHeight: 50, background: "var(--accent)", color: "#fff", opacity: gymDays.length === 0 || !rulesAccepted ? 0.5 : 1 }}
       >
         {saving ? "در حال ساخت…" : "ساخت برنامه"}
       </button>
@@ -154,6 +158,7 @@ function TemplateForm({ onDone }: { onDone: () => void }) {
 function ManualForm({ onDone }: { onDone: () => void }) {
   const [goal, setGoal] = useState("");
   const [days, setDays] = useState<ExerciseDay[]>([{ day: "شنبه", focus: "", items: [""] }]);
+  const [rulesAccepted, setRulesAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
 
   function updateDay(i: number, patch: Partial<ExerciseDay>) {
@@ -184,7 +189,8 @@ function ManualForm({ onDone }: { onDone: () => void }) {
         .map((d) => ({ ...d, items: d.items.map((it) => it.trim()).filter(Boolean) }))
         .filter((d) => d.items.length > 0);
       if (cleaned.length === 0) return;
-      await createManualPlan({ goal: goal || null, gymDays: cleaned.map((d) => d.day), days: cleaned });
+      if (!rulesAccepted) return;
+      await createManualPlan({ goal: goal || null, gymDays: cleaned.map((d) => d.day), days: cleaned, rulesAccepted });
       void tapHaptic();
       onDone();
     } finally {
@@ -267,11 +273,13 @@ function ManualForm({ onDone }: { onDone: () => void }) {
         <Plus size={15} /> افزودنِ روز
       </button>
 
+      <RulesCheckbox checked={rulesAccepted} onChange={setRulesAccepted} />
+
       <button
         onClick={submit}
-        disabled={saving}
+        disabled={saving || !rulesAccepted}
         className="rounded-xl font-vazir text-[14.5px] font-semibold"
-        style={{ minHeight: 50, background: "var(--accent)", color: "#fff" }}
+        style={{ minHeight: 50, background: "var(--accent)", color: "#fff", opacity: rulesAccepted ? 1 : 0.5 }}
       >
         {saving ? "در حال ساخت…" : "ذخیره‌ی برنامه"}
       </button>
@@ -279,7 +287,35 @@ function ManualForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+/**
+ * پذیرشِ قوانین/سلبِ مسئولیت — همون شرطِ وب (rulesAccepted) برای ساختِ برنامه.
+ * سرور برنامه‌ی دستیِ جدید رو بدونِ این قبول نمی‌کنه، پس سینک هم بهش نیاز داره.
+ */
+export function RulesCheckbox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="flex items-center justify-between gap-3 rounded-xl p-3 text-start"
+      style={{ minHeight: 48, background: "var(--surface-1)", border: "1px solid var(--surface-line)" }}
+    >
+      <span className="font-vazir text-[12.5px] leading-6" style={{ color: "var(--text)" }}>
+        قوانین و سلبِ مسئولیتِ برنامه‌ی ورزشی رو خوندم و می‌پذیرم — در صورتِ بیماری یا آسیب، قبل از شروع با پزشک/مربی مشورت می‌کنم.
+      </span>
+      <span
+        className="flex shrink-0 items-center justify-center rounded-md"
+        style={{
+          width: 22,
+          height: 22,
+          background: checked ? "var(--accent)" : "transparent",
+          border: "1px solid var(--surface-line)",
+        }}
+      />
+    </button>
+  );
+}
+
+export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       <span className="font-vazir text-[12.5px] font-medium" style={{ color: "var(--muted)" }}>
@@ -290,7 +326,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+export function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -307,7 +343,7 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   );
 }
 
-function NumInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function NumInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <input
       inputMode="numeric"

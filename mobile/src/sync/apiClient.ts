@@ -83,12 +83,20 @@ export class ApiClient {
 
   // ─── پایه ────────────────────────────────────────────────────────────
 
-  private async raw(method: string, path: string, body: unknown, bearer: string | null, timeoutMs = this.timeoutMs): Promise<Response> {
+  private async raw(
+    method: string,
+    path: string,
+    body: unknown,
+    bearer: string | null,
+    timeoutMs = this.timeoutMs,
+    extraHeaders?: Record<string, string>
+  ): Promise<Response> {
     if (!this.baseUrl) throw new ApiError("not_configured", 0);
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     const headers: Record<string, string> = { Accept: "application/json" };
     if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (extraHeaders) Object.assign(headers, extraHeaders);
     if (bearer) headers.Authorization = `Bearer ${bearer}`;
     try {
       return await this.fetchImpl(this.baseUrl + path, {
@@ -107,7 +115,7 @@ export class ApiClient {
     }
   }
 
-  private static async readJson(res: Response): Promise<any> {
+  static async readJson(res: Response): Promise<any> {
     try {
       return await res.json();
     } catch {
@@ -116,8 +124,7 @@ export class ApiClient {
   }
 
   private static async fail(res: Response): Promise<never> {
-    const j = await ApiClient.readJson(res);
-    throw new ApiError("http", res.status, typeof j?.error === "string" ? j.error : null);
+    throw await ApiClient.errorFrom(res);
   }
 
   // ─── refresh (single-flight) ─────────────────────────────────────────
@@ -165,23 +172,42 @@ export class ApiClient {
 
   // ─── درخواستِ احرازشده ───────────────────────────────────────────────
 
-  /** درخواستِ Bearer؛ روی 401 یک‌بار refresh و تکرار. خطای 401ِ دوم = نشست باطل. */
-  async authed<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
+  /**
+   * درخواستِ Bearer؛ روی 401 یک‌بار refresh و تکرار. خطای 401ِ دوم = نشست باطل.
+   * Responseِ خام رو برمی‌گردونه (برای 304/ETag) — وضعیت‌های غیرِ ok رو خودت چک کن.
+   */
+  async authedRaw(
+    method: "GET" | "POST",
+    path: string,
+    body?: unknown,
+    opts: { headers?: Record<string, string>; timeoutMs?: number } = {}
+  ): Promise<Response> {
     if (!this.tokens.isLoggedIn()) throw new ApiError("session_expired", 401);
     let token = this.tokens.getAccessToken(ACCESS_TOKEN_SKEW_MS, this.now()) ?? (await this.refreshAccessToken());
-    let res = await this.raw(method, path, body, token);
+    let res = await this.raw(method, path, body, token, opts.timeoutMs, opts.headers);
     if (res.status === 401) {
       this.tokens.invalidateAccessToken(token);
       token = await this.refreshAccessToken(token);
-      res = await this.raw(method, path, body, token);
+      res = await this.raw(method, path, body, token, opts.timeoutMs, opts.headers);
       if (res.status === 401) {
         // توکنِ تازه هم رد شد (کاربر مسدود/حذف) — خروجِ محلی
         await this.expireSession();
         throw new ApiError("session_expired", 401);
       }
     }
+    return res;
+  }
+
+  /** مثلِ authedRaw ولی JSON برمی‌گردونه و غیرِ ok رو ApiError می‌کنه */
+  async authed<T>(method: "GET" | "POST", path: string, body?: unknown, opts: { timeoutMs?: number } = {}): Promise<T> {
+    const res = await this.authedRaw(method, path, body, opts);
     if (!res.ok) await ApiClient.fail(res);
     return (await ApiClient.readJson(res)) as T;
+  }
+
+  static async errorFrom(res: Response): Promise<ApiError> {
+    const j = await ApiClient.readJson(res);
+    return new ApiError("http", res.status, typeof j?.error === "string" ? j.error : typeof j?.message === "string" ? j.message : null);
   }
 
   // ─── auth ────────────────────────────────────────────────────────────

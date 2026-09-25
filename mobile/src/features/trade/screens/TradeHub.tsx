@@ -8,7 +8,7 @@ import { computeTradeStats } from "../lib/tradeAnalytics";
 import AccountCard from "../components/AccountCard";
 import AccountFormSheet from "../components/AccountFormSheet";
 import ComingSoon from "../components/ComingSoon";
-import { tradeRoutePaths } from "..";
+import { tradeRoutePaths } from "../paths";
 import { tapHaptic } from "@/lib/haptics";
 
 const TILES = [
