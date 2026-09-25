@@ -5,8 +5,16 @@
 // صفحه‌ی /exercise می‌نشست، حتی برای کاربری که هیچ‌وقت لیست حرکات یا فرم
 // ساخت دستی رو باز نمی‌کنه.
 
-import { EXERCISE_CATALOG, MuscleKey } from "./exerciseCatalog";
+import type { ExerciseCatalogEntry, MuscleKey } from "./exerciseCatalog";
 import { stripSetSuffix } from "./exerciseSets";
+
+// EXERCISE_CATALOG (~۸۵KB) فقط با dynamic import لود می‌شه (نه استاتیک بالای
+// فایل) — این توابع فقط از WorkoutTab/SubstituteSheet صدا زده می‌شن، پس تا
+// کاربر واقعا این‌ها رو باز نکنه، این حجم دانلود نمی‌شه.
+async function loadCatalog(): Promise<ExerciseCatalogEntry[]> {
+  const { EXERCISE_CATALOG } = await import("./exerciseCatalog");
+  return EXERCISE_CATALOG;
+}
 
 // سه حرکت جایگزین آماده (بدون هوش‌مصنوعی) — از کاتالوگ حرکات
 // (lib/exerciseCatalog.ts) حرکاتی با همون الگوی حرکتی (اولویت) یا هم‌پوشانی
@@ -18,7 +26,8 @@ const CORE_KEYS: MuscleKey[] = ["abs", "obliques"];
 
 /** «تمرکز امروز» رو خود سیستم از روی حرکات اضافه‌شده تشخیص می‌ده (نه اینکه
  * کاربر تایپ کنه) — بر اساس گروه عضلانی غالب در حرکات همون روز. */
-export function computeDayFocus(items: string[]): string {
+export async function computeDayFocus(items: string[]): Promise<string> {
+  const EXERCISE_CATALOG = await loadCatalog();
   const cats = new Set<"upper" | "lower" | "core" | "cardio" | "flex" | "full">();
   for (const item of items) {
     const entry = EXERCISE_CATALOG.find((e) => e.name === stripSetSuffix(item));
@@ -59,7 +68,8 @@ function broadGroupOf(keys: MuscleKey[]): MuscleKey[] {
 // نبود، به‌جای AI خودش با معیار شل‌تر (هم‌خانواده‌ی عضلانی کلی: بالاتنه/
 // پایین‌تنه/مرکز بدن/کاردیو/انعطاف/بدن‌کامل) و در نهایت هر حرکت باقی‌مونده‌ی
 // کاتالوگ پر می‌کنه — همیشه تا سقف max نتیجه می‌ده (تا وقتی کاتالوگ خالی نشه).
-export function getCatalogSubstitutes(item: string, max = 3, excludeNames: string[] = []): string[] {
+export async function getCatalogSubstitutes(item: string, max = 3, excludeNames: string[] = []): Promise<string[]> {
+  const EXERCISE_CATALOG = await loadCatalog();
   const baseName = stripSetSuffix(item);
   const suffix = item.startsWith(baseName) ? item.slice(baseName.length) : "";
   const source = EXERCISE_CATALOG.find((e) => e.name === baseName);

@@ -15,6 +15,7 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
 
             <intent-filter>
@@ -38,4 +39,15 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- یادآوری‌های محلی (@capacitor/local-notifications) -->
+    <!-- اندروید ۱۳+ (API 33): بدونش دیالوگِ اجازه‌ی نوتیف اصلا نشون داده نمی‌شه -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- اندروید ۱۲+ (API 31): برای زمان‌بندیِ دقیقِ alarm (setExactAndAllowWhileIdle).
+         یک اجازه‌ی «special access» است که کاربر باید از تنظیماتِ سیستم بده؛
+         عمدا از USE_EXACT_ALARM استفاده نشده چون طبقِ سیاستِ Play، آن فقط برای
+         اپ‌هایی مجازه که کارِ اصلی‌شون آلارم/تقویمه (Arion نیست) — بدونِ این
+         اجازه هم پلاگین/سیستم به‌صورتِ inexact زمان‌بندی می‌کنه، فقط با کمی
+         تاخیرِ احتمالی در Doze، که برای یادآوریِ نرم مشکلی نداره. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 </manifest>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Flame, Repeat, Sparkles, Trash2 } from "lucide-react";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
@@ -50,6 +50,20 @@ export default function WorkoutTab() {
     if (!plan) return [];
     return [...plan.planData].sort((a, b) => WEEK_ORDER.indexOf(a.day) - WEEK_ORDER.indexOf(b.day));
   }, [plan]);
+
+  // computeDayFocus حالا async است (کاتالوگِ ۸۵KB dynamic import می‌شه) —
+  // نتیجه‌ی هر روز یک‌بار محاسبه و کش می‌شه؛ تا لود شدن یک نقطه‌چین نشون داده می‌شه.
+  const [dayFocuses, setDayFocuses] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(orderedDays.map((d) => computeDayFocus(d.items).then((focus) => [d.day, focus] as const))).then((pairs) => {
+      if (!cancelled) setDayFocuses(Object.fromEntries(pairs));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderedDays]);
 
   const weekDone = plan ? sessionsThisWeekDone(logs, now) : 0;
   const weekTotal = plan ? sessionsThisWeekTotal(plan.gymDays) : 0;
@@ -138,7 +152,7 @@ export default function WorkoutTab() {
                   {d.day}
                 </span>
                 <span className="font-vazir text-[10px]" style={{ color: "var(--muted)" }}>
-                  {computeDayFocus(d.items)}
+                  {dayFocuses[d.day] ?? "…"}
                 </span>
                 {done && <Check size={14} color="var(--accent)" />}
               </div>

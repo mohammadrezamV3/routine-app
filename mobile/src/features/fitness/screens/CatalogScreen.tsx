@@ -1,11 +1,29 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
-import { EXERCISE_CATALOG, getExerciseDifficulty, type ExerciseCatalogEntry } from "../lib/exerciseCatalog";
+import type { ExerciseCatalogEntry } from "../lib/exerciseCatalog";
 import { useCatalogExercises, useExerciseMedia } from "@/sync/catalog";
 import { useSync } from "@/sync/SyncProvider";
 import { MuscleDiagram } from "../components/MuscleDiagram";
 import { EmptyState } from "../components/ui";
+
+type CatalogModule = { EXERCISE_CATALOG: ExerciseCatalogEntry[]; getExerciseDifficulty: (e: ExerciseCatalogEntry) => number };
+
+/** کاتالوگِ کامل حرکات (~۸۵KB دیتا) فقط وقتی این صفحه واقعا باز بشه dynamic
+ * import می‌شه — بقیه‌ی ماژول ورزش (پلن/کالری) هیچ‌وقت این حجم رو دانلود نمی‌کنه. */
+function useCatalogModule(): CatalogModule | null {
+  const [mod, setMod] = useState<CatalogModule | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    import("../lib/exerciseCatalog").then((m) => {
+      if (!cancelled) setMod(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return mod;
+}
 
 // جستجو/مرورِ کاتالوگِ حرکات — کاملا آفلاین، همون دیتای وب
 // (lib/exerciseCatalog.ts). هر ردیف با تپ باز می‌شه و نحوه‌ی انجام + مزایا
@@ -13,8 +31,9 @@ import { EmptyState } from "../components/ui";
 export default function CatalogScreen() {
   const [query, setQuery] = useState("");
   const [openName, setOpenName] = useState<string | null>(null);
-  // کاتالوگِ دانلودشده از سرور (اگه هست)، وگرنه نسخه‌ی داخلِ باندل
-  const catalog = useCatalogExercises<ExerciseCatalogEntry>(EXERCISE_CATALOG);
+  const catalogModule = useCatalogModule();
+  // کاتالوگِ دانلودشده از سرور (اگه هست)، وگرنه نسخه‌ی داخلِ باندل (وقتی لود شد)
+  const catalog = useCatalogExercises<ExerciseCatalogEntry>(catalogModule?.EXERCISE_CATALOG ?? []);
 
   const results = useMemo(() => {
     const q = query.trim();
@@ -57,7 +76,7 @@ export default function CatalogScreen() {
                     {entry.name}
                   </p>
                   <p className="font-vazir text-[11.5px]" style={{ color: "var(--muted)" }}>
-                    {entry.muscleGroup} · سختی {getExerciseDifficulty(entry)}/۵
+                    {entry.muscleGroup} · سختی {catalogModule?.getExerciseDifficulty(entry) ?? "…"}/۵
                   </p>
                 </div>
                 <ChevronDown size={16} color="var(--muted)" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />

@@ -12,6 +12,23 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
+    backgroundColor: "#0e1011",
+  },
+  backgroundColor: "#0e1011",
+  plugins: {
+    // launchShowDuration ~0: خودِ splashِ نیتیو خیلی زود محو می‌شه، و
+    // hideSplash (lib/statusBar.ts) بعدِ اولین رندرِ واقعیِ ری‌اکت دستی صداش
+    // می‌زنه (App.tsx → useEffect) — یعنی «صفحه‌ی سفید» بینِ این دو دیده نمی‌شه.
+    SplashScreen: {
+      launchShowDuration: 0,
+      launchAutoHide: false,
+      backgroundColor: "#0e1011",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
   },
 };
 

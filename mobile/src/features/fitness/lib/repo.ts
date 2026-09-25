@@ -2,7 +2,6 @@ import { fitnessDb } from "../db";
 import { newLocalId, nowIso } from "./id";
 import { isoLocal } from "./jalali";
 import { getExercisePlan, type ExerciseDay, type ExerciseGoal, type ExerciseLevel } from "./exercisePlans";
-import { FOOD_SEED } from "./foodSeed";
 import { getCatalogFoods } from "@/sync/catalog";
 import type {
   ExercisePlanRow,
@@ -366,8 +365,9 @@ export async function searchFoods(query: string): Promise<FoodSearchResult[]> {
     fatPer100g: f.fatPer100g,
     custom: true,
   }));
-  // کاتالوگِ دانلودشده از سرور (اگه هست)، وگرنه seedِ داخلِ باندل
-  const catalogFoods = (await getCatalogFoods()) ?? FOOD_SEED;
+  // کاتالوگِ دانلودشده از سرور (اگه هست)، وگرنه seedِ داخلِ باندل — FOOD_SEED
+  // فقط با dynamic import لود می‌شه تا وقتی سرچ غذا واقعا اتفاق نیفتاده باندل نشه.
+  const catalogFoods = (await getCatalogFoods()) ?? (await import("./foodSeed")).FOOD_SEED;
   const seed = catalogFoods.map((f) => ({
     name: f.name,
     caloriesPer100g: f.caloriesPer100g,

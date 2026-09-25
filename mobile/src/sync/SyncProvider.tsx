@@ -9,8 +9,13 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { MobileModuleKey, MobileUser } from "@/lib/api-contract";
 import { onLocalWrite } from "@/db/syncHooks";
-import { MoreProvider, type PlanModule } from "@/features/more";
-import { RoadmapApiProvider, RoadmapApiError, type RoadmapApi } from "@/features/roadmaps";
+// عمدا از باطنِ فیچرها (نه از barrel `index.ts`) import می‌کنیم — barrelِ
+// `@/features/more` و `@/features/roadmaps` صفحات/مسیرهای سنگین رو هم
+// re-export می‌کنن؛ اگه از همون barrel اینجا (که همیشه eager لود می‌شه) وارد
+// می‌شد، React.lazy(...) در App.tsx برای همون ماژول‌ها بی‌اثر می‌شد (Rollup
+// یک چانک eager می‌ساخت که همه‌چیز از جمله صفحات رو با خودش می‌کشید).
+import { MoreProvider, type PlanModule } from "@/features/more/MoreContext";
+import { RoadmapApiProvider, RoadmapApiError, type RoadmapApi } from "@/features/roadmaps/api";
 import { API_BASE_URL, LOCAL_WRITE_DEBOUNCE_MS, SYNC_ENABLED } from "./config";
 import { preferencesKV } from "./kv";
 import { TokenStore } from "./tokenStore";

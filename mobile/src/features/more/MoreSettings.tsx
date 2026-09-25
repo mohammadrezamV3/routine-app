@@ -4,11 +4,16 @@ import AppHeader from "@/components/AppHeader";
 import ListRow from "@/components/ListRow";
 import BottomSheet from "@/components/BottomSheet";
 import { useTheme } from "@/lib/useTheme";
+import { useSync } from "@/sync/SyncProvider";
+import { useCalorieReminderSetting } from "@/notifications";
 import { useMoreContext } from "./MoreContext";
 
 export default function MoreSettings() {
   const { mode, toggle } = useTheme();
   const { lastSyncTime, onSync, isSyncing, onClearData, notificationsEnabled, onNotificationsToggle } = useMoreContext();
+  const { isModuleLocked } = useSync();
+  const [calorieReminderEnabled, setCalorieReminderEnabled] = useCalorieReminderSetting();
+  const calorieUnlocked = !isModuleLocked("CALORIE");
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const handleClearData = () => {
@@ -82,6 +87,27 @@ export default function MoreSettings() {
             اطلاع‌رسانی‌ها
           </span>
         </button>
+
+        {calorieUnlocked && (
+          <button
+            onClick={() => setCalorieReminderEnabled(!calorieReminderEnabled)}
+            className="flex w-full items-center gap-3 border-b px-4"
+            style={{ borderColor: "var(--surface-line)", minHeight: 52 }}
+          >
+            <div
+              className="h-5 w-9 rounded-full flex items-center px-1 cursor-pointer transition-colors"
+              style={{ background: calorieReminderEnabled ? "var(--text)" : "var(--muted2)" }}
+            >
+              <div
+                className="h-3.5 w-3.5 rounded-full bg-white transition-transform"
+                style={{ transform: calorieReminderEnabled ? "translateX(100%)" : "translateX(0)" }}
+              />
+            </div>
+            <span className="flex-1 text-start font-vazir text-[14.5px]" style={{ color: "var(--text)" }}>
+              یادآورِ روزانه‌ی ثبتِ وعده‌های غذایی
+            </span>
+          </button>
+        )}
 
         {/* زبان - ثابت فارسی */}
         <div style={{ paddingTop: 16, paddingBottom: 12 }}>

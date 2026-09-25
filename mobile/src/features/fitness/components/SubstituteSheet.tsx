@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import { tapHaptic } from "@/lib/haptics";
 import { getCatalogSubstitutes } from "../lib/exerciseCatalogUtils";
@@ -23,10 +23,17 @@ export default function SubstituteSheet({
   item: string;
   otherItemsToday: string[];
 }) {
-  const options = useMemo(
-    () => (open ? getCatalogSubstitutes(item, 3, otherItemsToday.map(stripSetSuffix)) : []),
-    [open, item, otherItemsToday]
-  );
+  const [options, setOptions] = useState<string[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    getCatalogSubstitutes(item, 3, otherItemsToday.map(stripSetSuffix)).then((res) => {
+      if (!cancelled) setOptions(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, item, otherItemsToday]);
 
   async function pick(name: string) {
     await substituteItem(planId, dayIndex, itemIndex, name);
