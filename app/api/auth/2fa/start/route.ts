@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { findUserByIdentifier, startSmsTwoFactor } from "@/lib/credentials";
+import { findUserByIdentifier, identifierRateKey, startSmsTwoFactor } from "@/lib/credentials";
 
 // POST /api/auth/2fa/start { identifier, password }
 //
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const password = typeof body.password === "string" ? body.password : "";
   if (!identifier || !password) return NextResponse.json({ required: false });
 
-  if (!(await checkRateLimit(`2fa-start-id:${identifier}`, 8, 10 * 60 * 1000))) {
+  if (!(await checkRateLimit(`2fa-start-id:${identifierRateKey(identifier)}`, 8, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 

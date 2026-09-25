@@ -20,6 +20,16 @@ import { sendOtpSms } from "@/lib/sms";
 
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 
+/**
+ * کلیدِ سطلِ rate limitِ «به‌ازای شناسه». جستجوی کاربر (findUserByIdentifier)
+ * ایمیل/یوزرنیم رو بدونِ حساسیت به حروف پیدا می‌کنه، پس کلید هم باید همین‌طور
+ * باشه — وگرنه «Alice»، «aLice»، «ALICE» … هرکدوم سطلِ جدای خودشون رو داشتن و
+ * سقفِ ۸ تلاش روی یک حساب با عوض‌کردنِ بزرگی/کوچکیِ حروف عملا بی‌اثر می‌شد.
+ */
+export function identifierRateKey(identifier: string): string {
+  return identifier.trim().toLowerCase();
+}
+
 /** ایمیل/یوزرنیم بدونِ حساسیت به حروف، شماره دقیق — همون قاعده‌ی قبلیِ authorize() */
 export function findUserByIdentifier(identifier: string) {
   return prisma.user.findFirst({
@@ -52,7 +62,7 @@ export async function verifyPasswordLogin(input: {
   if (!id || !input.password) return { ok: false, reason: "invalid" };
 
   const ipOk = await checkRateLimit(`login-ip:${input.ip}`, 8, LOGIN_WINDOW_MS);
-  const idOk = await checkRateLimit(`login-id:${id}`, 8, LOGIN_WINDOW_MS);
+  const idOk = await checkRateLimit(`login-id:${identifierRateKey(id)}`, 8, LOGIN_WINDOW_MS);
   if (!ipOk || !idOk) {
     console.warn(`[auth] rate-limited login attempt for "${id}"`);
     return { ok: false, reason: "rate_limited" };
@@ -111,7 +121,7 @@ export async function verifySmsTwoFactorLogin(input: {
 
   if (
     !(await checkRateLimit(`sms-2fa-ip:${input.ip}`, 20, LOGIN_WINDOW_MS)) ||
-    !(await checkRateLimit(`sms-2fa-id:${id}`, 10, LOGIN_WINDOW_MS))
+    !(await checkRateLimit(`sms-2fa-id:${identifierRateKey(id)}`, 10, LOGIN_WINDOW_MS))
   ) {
     console.warn(`[auth] rate-limited sms-2fa attempt for "${id}"`);
     return { ok: false, reason: "rate_limited" };
