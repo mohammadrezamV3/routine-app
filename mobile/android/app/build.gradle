@@ -1,4 +1,33 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
+
+// versionName: از env ANDROID_VERSION_NAME یا نسخه‌ی mobile/package.json (fallback نهایی "1.0")
+def resolveVersionName = {
+    def envVersion = System.getenv("ANDROID_VERSION_NAME")
+    if (envVersion) {
+        return envVersion
+    }
+    try {
+        def pkgJsonFile = file("${rootDir}/../package.json")
+        def pkgJson = new JsonSlurper().parseText(pkgJsonFile.text)
+        if (pkgJson.version) {
+            return pkgJson.version.toString()
+        }
+    } catch (Exception ignored) {
+        // package.json در دسترس نیست، از fallback استفاده می‌شه
+    }
+    return "1.0"
+}
+
+// versionCode: از env ANDROID_VERSION_CODE، وگرنه مقدار فعلی همین فایل حفظ می‌شه
+def resolveVersionCode = {
+    def envCode = System.getenv("ANDROID_VERSION_CODE")
+    if (envCode) {
+        return envCode.toInteger()
+    }
+    return 1
+}
 
 android {
     namespace "ir.arion.app"
@@ -7,8 +36,8 @@ android {
         applicationId "ir.arion.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode resolveVersionCode()
+        versionName resolveVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +45,34 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    // signingConfigs.release فقط وقتی تعریف می‌شه که همه‌ی env varهای لازم موجود باشن —
+    // این‌طوری بیلد debug/local بدون keystore هم سالم می‌مونه.
+    def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+    def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+    def keyAliasEnv = System.getenv("ANDROID_KEY_ALIAS")
+    def keyPasswordEnv = System.getenv("ANDROID_KEY_PASSWORD")
+    def hasReleaseSigningEnv = keystorePath && keystorePassword && keyAliasEnv && keyPasswordEnv
+
+    if (hasReleaseSigningEnv) {
+        signingConfigs {
+            release {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias keyAliasEnv
+                keyPassword keyPasswordEnv
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Capacitor به‌صورت پیش‌فرض minify رو خاموش می‌ذاره؛ همینو نگه می‌داریم (امن و بدون سورپرایز R8)
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigningEnv) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
