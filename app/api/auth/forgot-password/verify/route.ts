@@ -3,6 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { revokeAllMobileSessions } from "@/lib/mobileAuth";
 import { isValidIranPhone, isValidEmail, validatePassword } from "@/lib/validate";
 
 function hashCode(code: string): string {
@@ -67,6 +68,8 @@ export async function POST(req: NextRequest) {
   await prisma.$transaction([
     prisma.user.update({ where: { id: user.id }, data: { passwordHash: newHash } }),
     prisma.passwordResetOtp.update({ where: { id: otp.id }, data: { usedAt: new Date() } }),
+    // refresh tokenهای اپ موبایل (تا ۱۸۰ روز) با رمزِ جدید باطل می‌شن
+    revokeAllMobileSessions(user.id),
   ]);
 
   return NextResponse.json({ ok: true });

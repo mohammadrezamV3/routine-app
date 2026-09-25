@@ -174,15 +174,23 @@ async function getCurrentPlan(userId: string): Promise<MobileUser["plan"]> {
 
 /** شکلِ MobileUser برای login/refresh/verify-2fa و GET /api/mobile/me — isSuperAdmin عمدا بیرون نمی‌ره */
 export async function buildMobileUser(user: User): Promise<MobileUser> {
-  const [modules, moduleAccess, plan] = await Promise.all([getActiveModules(user), getModuleAccessList(user), getCurrentPlan(user.id)]);
+  const [allModules, allAccess, plan, roadmap] = await Promise.all([
+    getActiveModules(user),
+    getModuleAccessList(user),
+    getCurrentPlan(user.id),
+    checkRoadmapForUser(user.id),
+  ]);
+  // ROADMAP فقط وقتی که گیتِ سرور (lib/roadmapAccess.ts — فعلا فقط سوپریوزر) واقعا
+  // اجازه می‌ده؛ وگرنه اپ قفلِ ماژول رو باز نشون می‌داد و بعد 403 می‌گرفت.
+  const visible = (m: MobileModuleKey) => m !== "ROADMAP" || roadmap.ok;
   return {
     id: user.id,
     name: user.name,
     username: user.username ?? null,
     phoneMasked: maskPhone(user.phone),
     market: user.market,
-    modules,
-    moduleAccess,
+    modules: allModules.filter(visible),
+    moduleAccess: allAccess.filter((a) => visible(a.module)),
     plan,
   };
 }
@@ -221,31 +229,51 @@ export async function createMobileSession(
   return tokensFor(user, row.id, refreshToken, expiresAt);
 }
 
+/** مهلتِ تکرارِ refresh با توکنِ *قبلی* بعد از یک rotation (پاسخِ گم‌شده روی شبکه) */
+export const REFRESH_GRACE_MS = 30 * 1000;
+
+const ROTATE_SELECT = {
+  id: true,
+  sessionToken: true,
+  provider: true,
+  revokedAt: true,
+  expiresAt: true,
+  createdAt: true,
+  rotatedAt: true,
+  graceUsed: true,
+  user: true,
+} as const;
+
+type RotatableSession = { provider: string | null; revokedAt: Date | null; expiresAt: Date; createdAt: Date; user: User };
+
+function isUsable(s: RotatableSession, now: Date): boolean {
+  if (s.provider !== MOBILE_PROVIDER || s.revokedAt || s.expiresAt <= now) return false;
+  if (s.createdAt.getTime() + SESSION_MAX_LIFETIME_MS <= now.getTime()) return false;
+  return !s.user.isBlocked && !s.user.deletedAt;
+}
+
 /**
  * rotation: توکنِ قبلی فقط یک‌بار قابلِ مصرفه. updateMany با شرطِ هشِ قبلی
- * اتمیکه — دو refreshِ هم‌زمان با یک توکن، فقط یکی‌شون برنده می‌شه.
+ * اتمیکه — دو refreshِ هم‌زمان با یک توکن، فقط یکی‌شون rotation ِ عادی می‌گیره.
  *
- * reuse detection: هشِ توکنِ مصرف‌شده در previousTokenHash می‌مونه. اگه
- * همون توکنِ قدیمی دوباره بیاد، یا مهاجم کپی‌اش رو داره یا کاربرِ واقعی —
- * نمی‌شه فهمید کدوم، پس کلِ نشست باطل می‌شه (هر دو طرف باید دوباره وارد
- * بشن؛ مهاجم دیگه نمی‌تونه ادامه بده). همین‌طور بازنده‌ی دو refreshِ هم‌زمان
- * با یک توکن هم نشست رو باطل می‌کنه — اپ باید refresh رو سریالی کنه.
+ * مهلتِ تکرار (grace): اگه توکنِ *بلافاصله قبلی* حداکثر REFRESH_GRACE_MS بعد
+ * از rotation دوباره بیاد (پاسخِ refresh روی شبکه گم شده و اپ دوباره فرستاده،
+ * یا بازنده‌ی دو refreshِ هم‌زمان)، یک‌بار — فقط یک‌بار به‌ازای هر rotation —
+ * یک جفتِ تازه صادر می‌شه به‌جای ابطالِ نشست. توکنی که همون rotation صادر
+ * کرده بود از اون لحظه «قبلی» حساب می‌شه: اگه بعدا بیاد یعنی دو نفر یک
+ * نشست رو دارن → ابطال.
+ *
+ * reuse detection: بیرون از این مهلت (یا بعد از مصرفِ مهلت)، اومدنِ توکنِ
+ * مصرف‌شده یعنی یا مهاجم کپی‌اش رو داره یا کاربرِ واقعی — نمی‌شه فهمید کدوم،
+ * پس کلِ نشست باطل می‌شه و هر دو طرف باید دوباره وارد بشن.
  */
 export async function rotateMobileSession(refreshToken: string, ip: string | null): Promise<MobileAuthSuccess | null> {
   if (!isWellFormedRefreshToken(refreshToken)) return null;
   const oldHash = hashRefreshToken(refreshToken);
   const now = new Date();
-  const session = await prisma.session.findUnique({
-    where: { sessionToken: oldHash },
-    select: { id: true, provider: true, revokedAt: true, expiresAt: true, createdAt: true, user: true },
-  });
-  if (!session) {
-    await revokeOnReuse(oldHash, now);
-    return null;
-  }
-  if (session.provider !== MOBILE_PROVIDER || session.revokedAt || session.expiresAt <= now) return null;
-  if (session.createdAt.getTime() + SESSION_MAX_LIFETIME_MS <= now.getTime()) return null;
-  if (session.user.isBlocked || session.user.deletedAt) return null;
+  const session = await prisma.session.findUnique({ where: { sessionToken: oldHash }, select: ROTATE_SELECT });
+  if (!session) return graceOrRevoke(oldHash, now, ip);
+  if (!isUsable(session, now)) return null;
 
   const next = newRefreshToken();
   const expiresAt = nextRefreshExpiry(session.createdAt, now);
@@ -254,17 +282,49 @@ export async function rotateMobileSession(refreshToken: string, ip: string | nul
     data: {
       sessionToken: hashRefreshToken(next),
       previousTokenHash: oldHash,
+      rotatedAt: now,
+      graceUsed: false,
       expiresAt,
       lastSeenAt: now,
       ...(ip ? { ip } : {}),
     },
   });
-  if (count === 0) {
-    // یکی دیگه همین لحظه همین توکن رو مصرف کرد → همون reuse
-    await revokeOnReuse(oldHash, now);
-    return null;
-  }
+  // یکی دیگه همین لحظه همین توکن رو مصرف کرد → مسیرِ مهلت/reuse
+  if (count === 0) return graceOrRevoke(oldHash, now, ip);
   return tokensFor(session.user, session.id, next, expiresAt);
+}
+
+async function graceOrRevoke(oldHash: string, now: Date, ip: string | null): Promise<MobileAuthSuccess | null> {
+  const prev = await prisma.session.findFirst({
+    where: { previousTokenHash: oldHash, provider: MOBILE_PROVIDER, revokedAt: null },
+    select: ROTATE_SELECT,
+  });
+  if (
+    prev &&
+    !prev.graceUsed &&
+    prev.rotatedAt &&
+    now.getTime() - prev.rotatedAt.getTime() <= REFRESH_GRACE_MS &&
+    isUsable(prev, now)
+  ) {
+    const next = newRefreshToken();
+    const expiresAt = nextRefreshExpiry(prev.createdAt, now);
+    const { count } = await prisma.session.updateMany({
+      where: { id: prev.id, sessionToken: prev.sessionToken, previousTokenHash: oldHash, graceUsed: false, revokedAt: null },
+      data: {
+        sessionToken: hashRefreshToken(next),
+        // توکنی که rotationِ قبلی صادر کرده بود حالا «قبلی»ـه؛ rotatedAt عمدا
+        // جلو نمی‌ره تا مهلت تمدید نشه
+        previousTokenHash: prev.sessionToken,
+        graceUsed: true,
+        expiresAt,
+        lastSeenAt: now,
+        ...(ip ? { ip } : {}),
+      },
+    });
+    if (count === 1) return tokensFor(prev.user, prev.id, next, expiresAt);
+  }
+  await revokeOnReuse(oldHash, now);
+  return null;
 }
 
 async function revokeOnReuse(oldHash: string, now: Date) {
@@ -290,6 +350,19 @@ export async function revokeMobileSession(opts: { refreshToken?: unknown; auth?:
       data: { revokedAt: now },
     });
   }
+}
+
+/**
+ * ابطالِ همه‌ی نشست‌های موبایلِ کاربر — بعد از تغییر/بازیابیِ رمز. refresh tokenِ
+ * موبایل تا ۱۸۰ روز زنده‌ست؛ بدونِ این، کسی که رمز رو دزدیده و با گوشی وارد شده
+ * بعد از عوض‌شدنِ رمز هم داخل می‌موند. نشست‌های وب دست نمی‌خورن (رفتارِ قبلیِ وب).
+ * PrismaPromise برمی‌گردونه تا توی $transaction ِ خودِ تغییرِ رمز بره.
+ */
+export function revokeAllMobileSessions(userId: string) {
+  return prisma.session.updateMany({
+    where: { userId, provider: MOBILE_PROVIDER, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
 }
 
 /**

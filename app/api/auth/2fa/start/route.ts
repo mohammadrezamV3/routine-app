@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { findUserByIdentifier, identifierRateKey, startSmsTwoFactor } from "@/lib/credentials";
+import { consumePasswordAttempt, findUserByIdentifier, identifierRateKey, startSmsTwoFactor, timingSafePasswordCheck } from "@/lib/credentials";
 
 // POST /api/auth/2fa/start { identifier, password }
 //
@@ -31,15 +30,28 @@ export async function POST(req: NextRequest) {
   // جستجوی کاربر و صدور/ارسالِ کد با lib/credentials.ts مشترکه (همون مسیری
   // که ورودِ اپ موبایل هم می‌ره).
   const user = await findUserByIdentifier(identifier);
+  const eligible = !!user && !!user.passwordHash && !user.isBlocked && !user.deletedAt && user.twoFactorEnabled && !!user.phone;
 
-  if (!user || !user.passwordHash || user.isBlocked || user.deletedAt || !user.twoFactorEnabled || !user.phone) {
+  if (!eligible) {
+    // رمز این‌جا سنجیده نمی‌شه (مسیرِ بعدیِ فرانت، credentials، می‌سنجه و سطلِ
+    // مشترک رو همون‌جا مصرف می‌کنه)، ولی compareِ ساختگی اجرا می‌شه تا زمانِ
+    // پاسخ نگه «این شناسه حسابِ دومرحله‌ای نیست/وجود نداره».
+    await timingSafePasswordCheck(password, null);
     return NextResponse.json({ required: false });
   }
-  if (!(await bcrypt.compare(password, user.passwordHash))) {
+  // این‌جا رمز واقعا سنجیده می‌شه → همون سطلِ «حدسِ رمزِ» ورود (login-ip/login-id)،
+  // نه سقفِ جدا. پرشدنش مثلِ رمزِ غلط جواب می‌گیره تا فرانت مسیرِ عادی رو بره
+  // (که اونم rate-limited ـه و پیامِ عمومی می‌ده) — 429ِ مخصوصِ این‌جا لو می‌داد
+  // که این شناسه یک حسابِ دومرحله‌ایه.
+  if (!(await consumePasswordAttempt(identifier, ip))) {
+    await timingSafePasswordCheck(password, null);
+    return NextResponse.json({ required: false });
+  }
+  if (!(await timingSafePasswordCheck(password, user!.passwordHash))) {
     return NextResponse.json({ required: false });
   }
 
-  const started = await startSmsTwoFactor(user);
+  const started = await startSmsTwoFactor(user!);
   if (!started.ok) {
     return NextResponse.json({ error: "ارسال پیامک ناموفق بود — کمی بعد دوباره امتحان کن" }, { status: 502 });
   }

@@ -58,6 +58,14 @@ const MAX_DATA_TIME = Date.UTC(2100, 0, 1);
 export const PULL_CURSOR_OVERLAP_MS = 5_000;
 /** سقفِ ردیف به‌ازای هر موجودیت در یک پاسخِ pull */
 export const PULL_PAGE_LIMIT = 1000;
+/**
+ * سقفِ ردیف برای موجودیت‌هایی که یک ردیفشون می‌تونه ~۱۰۰KB باشه (روزِ روتین با
+ * ۵۰۰ کلید، لاگِ تمرین با ۵۰۰ حرکت، برنامه‌ی ۷×۵۰ حرکتی) — با ۱۰۰۰ ردیف، خودِ
+ * خوندن از دیتابیس صدها مگابایت حافظه می‌گرفت، قبل از اینکه بودجه‌ی بایت برسه.
+ */
+export const PULL_PAGE_LIMIT_HEAVY = 200;
+/** سقفِ تقریبیِ حجمِ JSONِ رکوردهای یک پاسخِ pull (کنارِ سقفِ ردیف) */
+export const PULL_BYTE_BUDGET = 4 * 1024 * 1024;
 
 export const MAX_DAILY_TASK_KEYS = 500; // هم‌سقفِ /api/tasks/daily
 export const MAX_DAILY_TASK_KEY_LEN = 200;
@@ -132,6 +140,64 @@ export function computePullCursor(serverStart: Date, truncatedLastUpdatedAt: Dat
   }
   const min = Math.min(...truncatedLastUpdatedAt.map((d) => d.getTime()));
   return { cursor: new Date(min - 1), hasMore: true };
+}
+
+/** یک رکوردِ سریال‌شده + زمانِ صفحه‌بندی‌اش (updatedAt، یا زمانِ مؤثر برای چک‌لیست) */
+export type Stamped<T> = { at: Date; rec: T };
+
+/**
+ * بودجه‌ی بایت: رکوردها به ترتیبِ زمان جمع می‌شن؛ اولین رکوردی که جمع رو از
+ * بودجه رد کنه (زمانش T) مرزِ صفحه‌ست. cursor = T−1ms یعنی همه‌ی رکوردهای
+ * قبل از T (که جمعشون ≤ بودجه‌ست) می‌رن و T به بعد صفحه‌ی بعد میاد. اگه خودِ
+ * اولین میلی‌ثانیه به‌تنهایی از بودجه بزرگ‌تر باشه، همه‌ی ردیف‌های همون
+ * میلی‌ثانیه با هم می‌رن (cursor = T) — وگرنه cursor جلو نمی‌رفت و کلاینت
+ * تا ابد همون صفحه‌ی خالی رو می‌گرفت. null = همه جا شد.
+ */
+export function byteBudgetCursor(items: { at: Date; size: number }[], budget: number): Date | null {
+  const sorted = [...items].sort((a, b) => a.at.getTime() - b.at.getTime());
+  let total = 0;
+  for (const it of sorted) {
+    total += it.size;
+    if (total <= budget) continue;
+    const t = it.at.getTime();
+    return sorted[0].at.getTime() < t ? new Date(t - 1) : new Date(t);
+  }
+  return null;
+}
+
+/**
+ * صفحه‌ی نهاییِ pull: اول مرزِ «سقفِ ردیف» (computePullCursor)، بعد مرزِ
+ * «بودجه‌ی بایت» روی رکوردهای باقی‌مونده. هر کدوم بریده بشه hasMore=true و
+ * فقط رکوردهای تا cursor برمی‌گردن؛ کلاینت با همون cursor ادامه می‌ده.
+ */
+export function paginatePull<G extends Record<string, Stamped<unknown>[]>>(
+  serverStart: Date,
+  groups: G,
+  truncated: Date[],
+  budget: number = PULL_BYTE_BUDGET
+): { cursor: Date; hasMore: boolean; page: { [K in keyof G]: G[K][number]["rec"][] } } {
+  let { cursor, hasMore } = computePullCursor(serverStart, truncated);
+  const upTo = (limit: Date) => (rows: Stamped<unknown>[]) => rows.filter((r) => r.at.getTime() <= limit.getTime());
+  let current: Record<string, Stamped<unknown>[]> = { ...groups };
+  if (hasMore) current = Object.fromEntries(Object.entries(current).map(([k, rows]) => [k, upTo(cursor)(rows)]));
+
+  const sizes = Object.values(current).flatMap((rows) => rows.map((r) => ({ at: r.at, size: Buffer.byteLength(JSON.stringify(r.rec)) })));
+  const cut = byteBudgetCursor(sizes, budget);
+  if (cut) {
+    cursor = cut;
+    hasMore = true;
+    current = Object.fromEntries(Object.entries(current).map(([k, rows]) => [k, upTo(cut)(rows)]));
+  }
+  const page = Object.fromEntries(Object.entries(current).map(([k, rows]) => [k, rows.map((r) => r.rec)]));
+  return { cursor, hasMore, page: page as { [K in keyof G]: G[K][number]["rec"][] } };
+}
+
+/** سقفِ ردیف: limit+1 خونده شده؛ اضافه بریده و زمانِ آخرین ردیفِ نگه‌داشته ثبت می‌شه */
+export function trimPage<T extends { updatedAt: Date }>(rows: T[], limit: number, truncated: Date[]): T[] {
+  if (rows.length <= limit) return rows;
+  const kept = rows.slice(0, limit);
+  truncated.push(kept[kept.length - 1].updatedAt);
+  return kept;
 }
 
 // ─── شناسه‌ها ─────────────────────────────────────────────────────────────

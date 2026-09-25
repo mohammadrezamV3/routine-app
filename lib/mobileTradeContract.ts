@@ -291,14 +291,14 @@ export type TradeTombstoneRecord = {
 export type TradeSyncPullResponse = {
   /** برای درخواستِ بعدی عینا به‌عنوان since بفرست. وقتی moduleLocked، همون since قبلی (یا null) */
   cursor: string | null;
-  /** true یعنی هنوز صفحه‌ی بعدی هست — فورا دوباره با cursor جدید pull کن */
+  /** true یعنی هنوز صفحه‌ی بعدی هست (سقفِ ردیف یا حجمِ ~۴MBِ پاسخ پر شد) — فورا دوباره با cursor جدید pull کن */
   hasMore: boolean;
   serverTime: string;
   /** true: کاربر به ماژولِ ترید دسترسی نداره؛ همه‌ی آرایه‌ها خالی‌ان */
   moduleLocked: boolean;
   accounts: TradeAccountRecord[];
   tags: TradeTagRecord[];
-  /** چک‌لیست‌ها صفحه‌بندی نمی‌شن (حداکثر چند ده‌تا) */
+  /** مثلِ بقیه صفحه‌بندی می‌شن — با زمانِ مؤثرِ چک‌لیست (خودش یا دیرترین آیتمش) */
   checklists: TradeChecklistRecord[];
   entries: TradeEntryRecord[];
   notes: TradeNoteRecord[];

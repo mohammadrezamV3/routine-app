@@ -2,8 +2,12 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { MobileGatedModule, SyncPullResponse } from "@/lib/mobileApiContract";
 import {
+  PULL_BYTE_BUDGET,
   PULL_PAGE_LIMIT,
-  computePullCursor,
+  PULL_PAGE_LIMIT_HEAVY,
+  paginatePull,
+  trimPage,
+  type Stamped,
   decideLww,
   serializeCalorieTarget,
   serializeDailyEntry,
@@ -46,17 +50,24 @@ async function userTimezone(userId: string): Promise<string> {
 /** ماژول‌های پولی‌ای که الان دسترسی داره — route با checkModuleForUser پرش می‌کنه */
 export type ModuleAccessMap = Record<MobileGatedModule, boolean>;
 
-export async function pullChanges(userId: string, since: Date | null, access: ModuleAccessMap): Promise<SyncPullResponse> {
+export async function pullChanges(
+  userId: string,
+  since: Date | null,
+  access: ModuleAccessMap,
+  byteBudget: number = PULL_BYTE_BUDGET
+): Promise<SyncPullResponse> {
   // زمانِ سرور *قبل* از کوئری‌ها گرفته می‌شه — هر چیزی که حینِ کوئری نوشته
   // بشه، دفعه‌ی بعد (با همپوشانیِ PULL_CURSOR_OVERLAP_MS) دوباره دیده می‌شه.
   const serverStart = new Date();
   const updatedAt = since ? { gt: since } : undefined;
   const page = { orderBy: { updatedAt: "asc" as const }, take: PULL_PAGE_LIMIT + 1 };
+  // موجودیت‌هایی که یک ردیفشون می‌تونه ~۱۰۰KB باشه سقفِ ردیفِ کوچیک‌تری دارن
+  const heavyPage = { orderBy: { updatedAt: "asc" as const }, take: PULL_PAGE_LIMIT_HEAVY + 1 };
   const none = Promise.resolve(null);
 
   const [tz, daily, sleep, tasks, settings, plans, exLogs, foodLogs, targets] = await Promise.all([
     userTimezone(userId),
-    prisma.dailyEntry.findMany({ where: { userId, updatedAt }, ...page }),
+    prisma.dailyEntry.findMany({ where: { userId, updatedAt }, ...heavyPage }),
     prisma.sleepEntry.findMany({ where: { userId, updatedAt }, ...page }),
     // tombstoneها (deletedAt پر) عمدا برگردونده می‌شن
     prisma.task.findMany({ where: { userId, updatedAt }, ...page }),
@@ -65,47 +76,42 @@ export async function pullChanges(userId: string, since: Date | null, access: Mo
       ...page,
     }),
     // ماژولِ قفل → اصلا کوئری نمی‌زنیم و فیلد توی پاسخ نمیاد
-    access.EXERCISE ? prisma.exercisePlan.findMany({ where: { userId, updatedAt }, ...page }) : none,
-    access.EXERCISE ? prisma.exerciseLog.findMany({ where: { userId, planId: { not: null }, updatedAt }, ...page }) : none,
+    access.EXERCISE ? prisma.exercisePlan.findMany({ where: { userId, updatedAt }, ...heavyPage }) : none,
+    access.EXERCISE ? prisma.exerciseLog.findMany({ where: { userId, planId: { not: null }, updatedAt }, ...heavyPage }) : none,
     access.CALORIE ? prisma.foodLogEntry.findMany({ where: { userId, updatedAt }, ...page }) : none,
     access.CALORIE ? prisma.calorieTarget.findMany({ where: { userId, updatedAt }, ...page }) : none,
   ]);
 
   const truncated: Date[] = [];
-  const trim = <T extends { updatedAt: Date }>(rows: T[]): T[] => {
-    if (rows.length <= PULL_PAGE_LIMIT) return rows;
-    const kept = rows.slice(0, PULL_PAGE_LIMIT);
-    truncated.push(kept[kept.length - 1].updatedAt);
-    return kept;
+  const stamp = <T extends { updatedAt: Date }, R>(rows: T[], limit: number, ser: (r: T) => R): Stamped<R>[] =>
+    trimPage(rows, limit, truncated).map((r) => ({ at: r.updatedAt, rec: ser(r) }));
+  const groups = {
+    dailyEntries: stamp(daily, PULL_PAGE_LIMIT_HEAVY, serializeDailyEntry),
+    sleepEntries: stamp(sleep, PULL_PAGE_LIMIT, (r) => serializeSleepEntry(r, tz)),
+    tasks: stamp(tasks, PULL_PAGE_LIMIT, serializeTask),
+    settings: stamp(settings, PULL_PAGE_LIMIT, serializeSetting),
+    exercisePlans: plans ? stamp(plans, PULL_PAGE_LIMIT_HEAVY, serializeExercisePlan) : [],
+    exerciseLogs: exLogs ? stamp(exLogs, PULL_PAGE_LIMIT_HEAVY, serializeExerciseLog) : [],
+    foodLogEntries: foodLogs ? stamp(foodLogs, PULL_PAGE_LIMIT, serializeFoodLogEntry) : [],
+    calorieTargets: targets ? stamp(targets, PULL_PAGE_LIMIT, serializeCalorieTarget) : [],
   };
-  const d = trim(daily);
-  const s = trim(sleep);
-  const t = trim(tasks);
-  const st = trim(settings);
-  const p = plans && trim(plans);
-  const el = exLogs && trim(exLogs);
-  const fl = foodLogs && trim(foodLogs);
-  const ct = targets && trim(targets);
-  const { cursor, hasMore } = computePullCursor(serverStart, truncated);
-
-  // اگه یک موجودیت بریده شد، ردیف‌های بقیه که updatedAtشون از cursor جلوتره
-  // هم دوباره توی صفحه‌ی بعد میان — تکراری و بی‌ضرر، ولی حذفشون حجم رو کم می‌کنه.
-  const keep = <T extends { updatedAt: Date }>(rows: T[]) => (hasMore ? rows.filter((r) => r.updatedAt <= cursor) : rows);
+  // سقفِ ردیف + بودجه‌ی بایت (lib/mobileSync.ts → paginatePull)
+  const { cursor, hasMore, page: out } = paginatePull(serverStart, groups, truncated, byteBudget);
 
   const lockedModules = (Object.keys(access) as MobileGatedModule[]).filter((m) => !access[m]);
   return {
     cursor: cursor.toISOString(),
     hasMore,
     serverTime: serverStart.toISOString(),
-    dailyEntries: keep(d).map(serializeDailyEntry),
-    sleepEntries: keep(s).map((r) => serializeSleepEntry(r, tz)),
-    tasks: keep(t).map(serializeTask),
-    settings: keep(st).map(serializeSetting),
+    dailyEntries: out.dailyEntries,
+    sleepEntries: out.sleepEntries,
+    tasks: out.tasks,
+    settings: out.settings,
     lockedModules,
-    ...(p ? { exercisePlans: keep(p).map(serializeExercisePlan) } : {}),
-    ...(el ? { exerciseLogs: keep(el).map(serializeExerciseLog) } : {}),
-    ...(fl ? { foodLogEntries: keep(fl).map(serializeFoodLogEntry) } : {}),
-    ...(ct ? { calorieTargets: keep(ct).map(serializeCalorieTarget) } : {}),
+    ...(plans ? { exercisePlans: out.exercisePlans } : {}),
+    ...(exLogs ? { exerciseLogs: out.exerciseLogs } : {}),
+    ...(foodLogs ? { foodLogEntries: out.foodLogEntries } : {}),
+    ...(targets ? { calorieTargets: out.calorieTargets } : {}),
   };
 }
 

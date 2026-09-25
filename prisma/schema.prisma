@@ -262,6 +262,11 @@ model Session {
   // فقط برای اپ موبایل: هشِ refresh tokenِ *قبلی* (بعد از rotation). اگه
   // همون توکنِ مصرف‌شده دوباره بیاد یعنی توکن دزدیده/کپی شده → کلِ نشست باطل.
   previousTokenHash String?
+  // فقط برای اپ موبایل: لحظه‌ی آخرین rotation و اینکه «مهلتِ تکرار» (grace) ِ
+  // همون rotation مصرف شده یا نه — تکرارِ refresh با توکنِ قبلی تا ۳۰ ثانیه
+  // بعد (پاسخِ گم‌شده روی شبکه‌ی موبایل) یک‌بار rotation می‌گیره، نه ابطال.
+  rotatedAt    DateTime?
+  graceUsed    Boolean   @default(false)
   ip           String?
   userAgent    String?
   expiresAt    DateTime

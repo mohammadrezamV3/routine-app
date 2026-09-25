@@ -417,7 +417,7 @@ export type MobileRoadmapsResponse = { roadmaps: MobileRoadmap[] };
 export type SyncPullResponse = {
   /** برای درخواستِ بعدی عینا به‌عنوان since بفرست (مات فرضش کن) */
   cursor: string;
-  /** true یعنی هنوز صفحه‌ی بعدی هست — فورا دوباره با cursor جدید pull کن */
+  /** true یعنی هنوز صفحه‌ی بعدی هست (سقفِ ردیف یا حجمِ ~۴MBِ پاسخ پر شد) — فورا دوباره با cursor جدید pull کن */
   hasMore: boolean;
   serverTime: string;
   dailyEntries: DailyEntryRecord[];

@@ -19,6 +19,31 @@ import { sendOtpSms } from "@/lib/sms";
 // user-enumeration).
 
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_LIMIT = 8;
+
+/**
+ * هشِ bcryptِ ثابت با همون cost ِ رمزهای واقعی (۱۲). وقتی کاربر نیست/رمز نداره/
+ * حذف یا مسدود شده، باز هم یک compare روی این اجرا می‌شه تا زمانِ پاسخ با
+ * «کاربر هست ولی رمز غلطه» یکی باشه — وگرنه اختلافِ ~۲۵۰ms وجودِ حساب رو لو می‌داد.
+ */
+const DUMMY_BCRYPT_HASH = "$2a$12$rooBowch5pNVeY4z5SDHYueYI5h60F9PY8/gD/HoGtm.wbqIIUO6.";
+
+/** compare علیه هشِ واقعی، یا هشِ ساختگی وقتی هشی نیست (نتیجه‌ی ساختگی همیشه false) */
+export async function timingSafePasswordCheck(password: string, passwordHash: string | null | undefined): Promise<boolean> {
+  const ok = await bcrypt.compare(password, passwordHash || DUMMY_BCRYPT_HASH);
+  return !!passwordHash && ok;
+}
+
+/**
+ * سطلِ مشترکِ «حدسِ رمز» (۸ در ۱۰ دقیقه، به‌ازای IP و شناسه) — هر مسیری که رمز
+ * رو می‌سنجه (ورودِ وب، ورودِ موبایل، /api/auth/2fa/start) همین رو مصرف می‌کنه،
+ * تا هیچ مسیری سقفِ جدای خودش رو به مهاجم نده.
+ */
+export async function consumePasswordAttempt(identifier: string, ip: string): Promise<boolean> {
+  const ipOk = await checkRateLimit(`login-ip:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS);
+  const idOk = await checkRateLimit(`login-id:${identifierRateKey(identifier)}`, LOGIN_LIMIT, LOGIN_WINDOW_MS);
+  return ipOk && idOk;
+}
 
 /**
  * کلیدِ سطلِ rate limitِ «به‌ازای شناسه». جستجوی کاربر (findUserByIdentifier)
@@ -61,9 +86,7 @@ export async function verifyPasswordLogin(input: {
   const id = input.identifier.trim();
   if (!id || !input.password) return { ok: false, reason: "invalid" };
 
-  const ipOk = await checkRateLimit(`login-ip:${input.ip}`, 8, LOGIN_WINDOW_MS);
-  const idOk = await checkRateLimit(`login-id:${identifierRateKey(id)}`, 8, LOGIN_WINDOW_MS);
-  if (!ipOk || !idOk) {
+  if (!(await consumePasswordAttempt(id, input.ip))) {
     console.warn(`[auth] rate-limited login attempt for "${id}"`);
     return { ok: false, reason: "rate_limited" };
   }
@@ -78,7 +101,11 @@ export async function verifyPasswordLogin(input: {
     logError("database", `اتصال به دیتابیس حین ورود شکست خورد: ${err?.message || err}`, { severity: "CRITICAL" as any });
     return { ok: false, reason: "db_error" };
   }
-  if (!user || !user.passwordHash || user.deletedAt) {
+  // compare همیشه اجرا می‌شه (با هشِ ساختگی اگه لازم بود) — زمانِ پاسخ نباید
+  // بگه حساب وجود داره، حذف شده یا مسدوده
+  const usable = !!user && !!user.passwordHash && !user.deletedAt;
+  const isValid = await timingSafePasswordCheck(input.password, usable ? user!.passwordHash : null);
+  if (!user || !usable) {
     console.warn(`[auth] no user found for identifier "${id}"`);
     return { ok: false, reason: "invalid" };
   }
@@ -86,8 +113,6 @@ export async function verifyPasswordLogin(input: {
     console.warn(`[auth] blocked user tried to log in: "${id}"`);
     return { ok: false, reason: "blocked" };
   }
-
-  const isValid = await bcrypt.compare(input.password, user.passwordHash);
   if (!isValid) {
     console.warn(`[auth] wrong password for identifier "${id}"`);
     return { ok: false, reason: "invalid" };

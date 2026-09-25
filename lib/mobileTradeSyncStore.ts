@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveModules } from "@/lib/mobileAuth";
-import { PULL_PAGE_LIMIT, computePullCursor, decideLww } from "@/lib/mobileSync";
+import { PULL_BYTE_BUDGET, PULL_PAGE_LIMIT, decideLww, paginatePull, trimPage, type Stamped } from "@/lib/mobileSync";
 import {
   TRADE_SYNC_SETTING_KEYS,
   type TradeDeletableEntity,
@@ -38,8 +38,6 @@ import { MAX_ACCOUNTS, MAX_CHECKLISTS, MAX_TAGS } from "@/lib/tradeTypes";
 
 const MAX_ATTEMPTS = 3;
 const MAX_NOTES = 300; // هم‌سقفِ /api/trade/notes
-/** چک‌لیست‌ها صفحه‌بندی نمی‌شن (شرطِ OR روی آیتم‌ها با cursorِ updatedAt جور درنمیاد) */
-const MAX_CHECKLISTS_PULL = 500;
 
 const ACCOUNT_INCLUDE = {
   tags: { select: { id: true } },
@@ -75,7 +73,7 @@ export async function hasTradeModule(userId: string): Promise<boolean> {
 
 // ─── Pull ────────────────────────────────────────────────────────────────
 
-export async function pullTradeChanges(userId: string, since: Date | null): Promise<TradeSyncPullResponse> {
+export async function pullTradeChanges(userId: string, since: Date | null, byteBudget: number = PULL_BYTE_BUDGET): Promise<TradeSyncPullResponse> {
   const serverStart = new Date();
   const empty = { accounts: [], tags: [], checklists: [], entries: [], notes: [], settings: [], tombstones: [] };
   if (!(await hasTradeModule(userId))) {
@@ -93,44 +91,61 @@ export async function pullTradeChanges(userId: string, since: Date | null): Prom
     prisma.tradeNote.findMany({ where: { userId, updatedAt }, include: NOTE_INCLUDE, ...page }),
     prisma.userSetting.findMany({ where: { userId, key: { in: [...TRADE_SYNC_SETTING_KEYS] }, updatedAt }, ...page }),
     prisma.tradeSyncTombstone.findMany({ where: { userId, updatedAt }, ...page }),
-    // تیکِ وب فقط updatedAtِ آیتم رو عوض می‌کنه، پس آیتم‌ها هم شرطِ تغییرن
-    prisma.tradeChecklist.findMany({
-      where: { userId, ...(since ? { OR: [{ updatedAt: { gt: since } }, { items: { some: { updatedAt: { gt: since } } } }] } : {}) },
-      include: CHECKLIST_INCLUDE,
-      orderBy: { updatedAt: "asc" },
-      take: MAX_CHECKLISTS_PULL,
-    }),
+    pullChecklistPage(userId, since),
   ]);
 
   const truncated: Date[] = [];
-  const trim = <T extends { updatedAt: Date }>(rows: T[]): T[] => {
-    if (rows.length <= PULL_PAGE_LIMIT) return rows;
-    const kept = rows.slice(0, PULL_PAGE_LIMIT);
-    truncated.push(kept[kept.length - 1].updatedAt);
-    return kept;
+  const stamp = <T extends { updatedAt: Date }, R>(rows: T[], ser: (r: T) => R): Stamped<R>[] =>
+    trimPage(rows, PULL_PAGE_LIMIT, truncated).map((r) => ({ at: r.updatedAt, rec: ser(r) }));
+  if (checklists.truncatedAt) truncated.push(checklists.truncatedAt);
+  const groups = {
+    accounts: stamp(accounts, serializeTradeAccount),
+    tags: stamp(tags, serializeTradeTag),
+    // زمانِ صفحه‌بندیِ چک‌لیست = زمانِ مؤثر (خودش یا دیرترین آیتمش) — تیکِ وب فقط آیتم رو عوض می‌کنه
+    checklists: checklists.rows.map((r) => ({ at: checklistPageAt(r), rec: serializeTradeChecklist(r) })),
+    entries: stamp(entries, serializeTradeEntry),
+    notes: stamp(notes, serializeTradeNote),
+    settings: stamp(settings, serializeTradeSetting),
+    tombstones: stamp(tombstones, serializeTombstone),
   };
-  const a = trim(accounts);
-  const t = trim(tags);
-  const e = trim(entries);
-  const n = trim(notes);
-  const s = trim(settings);
-  const tb = trim(tombstones);
-  const { cursor, hasMore } = computePullCursor(serverStart, truncated);
-  const keep = <T extends { updatedAt: Date }>(rows: T[]) => (hasMore ? rows.filter((r) => r.updatedAt <= cursor) : rows);
+  // سقفِ ردیف + بودجه‌ی بایت (lib/mobileSync.ts → paginatePull)
+  const { cursor, hasMore, page: out } = paginatePull(serverStart, groups, truncated, byteBudget);
 
   return {
     cursor: cursor.toISOString(),
     hasMore,
     serverTime: serverStart.toISOString(),
     moduleLocked: false,
-    accounts: keep(a).map(serializeTradeAccount),
-    tags: keep(t).map(serializeTradeTag),
-    checklists: checklists.map(serializeTradeChecklist),
-    entries: keep(e).map(serializeTradeEntry),
-    notes: keep(n).map(serializeTradeNote),
-    settings: keep(s).map(serializeTradeSetting),
-    tombstones: keep(tb).map(serializeTombstone),
+    ...out,
   };
+}
+
+/** زمانِ صفحه‌بندیِ چک‌لیست: max(updatedAtِ خودش، updatedAtِ آیتم‌هاش) */
+function checklistPageAt(r: { updatedAt: Date; items: { updatedAt: Date }[] }): Date {
+  return new Date(Math.max(r.updatedAt.getTime(), ...r.items.map((i) => i.updatedAt.getTime())));
+}
+
+/**
+ * چک‌لیست‌های تغییرکرده، صفحه‌بندی‌شده با زمانِ مؤثر. شرطِ OR روی آیتم‌ها با
+ * orderBy/takeِ دیتابیس جور درنمیاد، پس اول یک کوئریِ سبک (فقط id و زمان‌ها)،
+ * مرتب‌سازی و بریدن در حافظه، بعد ردیفِ کاملِ همون صفحه. قبلا سقفِ ثابتِ ۵۰۰
+ * بدونِ hasMore بود و مازادش بی‌صدا هیچ‌وقت همگام نمی‌شد.
+ */
+async function pullChecklistPage(userId: string, since: Date | null) {
+  const light = await prisma.tradeChecklist.findMany({
+    where: { userId, ...(since ? { OR: [{ updatedAt: { gt: since } }, { items: { some: { updatedAt: { gt: since } } } }] } : {}) },
+    select: { id: true, updatedAt: true, items: { select: { updatedAt: true } } },
+  });
+  const ordered = light
+    .map((r) => ({ id: r.id, at: checklistPageAt(r) }))
+    .filter((r) => !since || r.at.getTime() > since.getTime())
+    .sort((a, b) => a.at.getTime() - b.at.getTime());
+  const kept = ordered.slice(0, PULL_PAGE_LIMIT);
+  const truncatedAt = ordered.length > PULL_PAGE_LIMIT ? kept[kept.length - 1].at : null;
+  const rows = kept.length
+    ? await prisma.tradeChecklist.findMany({ where: { userId, id: { in: kept.map((k) => k.id) } }, include: CHECKLIST_INCLUDE })
+    : [];
+  return { rows, truncatedAt };
 }
 
 // ─── Push ────────────────────────────────────────────────────────────────

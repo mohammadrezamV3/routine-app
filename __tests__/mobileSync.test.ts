@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   clampClientTimestamp,
   computePullCursor,
+  byteBudgetCursor,
+  paginatePull,
   decideLww,
   effectiveEditedAt,
   isMobileSyncSettingKey,
@@ -91,6 +93,48 @@ describe("computePullCursor", () => {
     const r = computePullCursor(NOW, [t("2026-09-10T00:00:00.500Z"), t("2026-09-05T00:00:00.000Z")]);
     expect(r.hasMore).toBe(true);
     expect(r.cursor.toISOString()).toBe("2026-09-04T23:59:59.999Z");
+  });
+});
+
+describe("pull byte budget", () => {
+  const at = (ms: number) => new Date(Date.UTC(2026, 8, 20) + ms);
+  it("byteBudgetCursor: null when everything fits", () => {
+    expect(byteBudgetCursor([{ at: at(1), size: 10 }, { at: at(2), size: 10 }], 100)).toBeNull();
+  });
+  it("byteBudgetCursor: cuts 1ms before the first row that overflows", () => {
+    const c = byteBudgetCursor([{ at: at(3), size: 60 }, { at: at(1), size: 30 }, { at: at(2), size: 30 }], 100);
+    expect(c?.getTime()).toBe(at(3).getTime() - 1);
+  });
+  it("byteBudgetCursor: an oversized first millisecond still ships whole (progress)", () => {
+    const c = byteBudgetCursor([{ at: at(1), size: 80 }, { at: at(1), size: 80 }, { at: at(2), size: 1 }], 100);
+    expect(c?.getTime()).toBe(at(1).getTime());
+  });
+  it("paginatePull: pages through every record exactly once across calls", () => {
+    // ۵۰ رکورد، هر کدوم ~۱۰۰ بایت، در دو گروه؛ بودجه ~۱KB
+    const all = Array.from({ length: 50 }, (_, i) => ({ at: at(i + 1), rec: { i, pad: "x".repeat(80) } }));
+    const serverStart = at(10_000);
+    let since = -1;
+    const seen: number[] = [];
+    for (let guard = 0; guard < 100; guard++) {
+      const g = {
+        a: all.filter((r) => r.rec.i % 2 === 0 && r.at.getTime() > since),
+        b: all.filter((r) => r.rec.i % 2 === 1 && r.at.getTime() > since),
+      };
+      const r = paginatePull(serverStart, g, [], 1000);
+      seen.push(...r.page.a.map((x) => x.i), ...r.page.b.map((x) => x.i));
+      since = r.cursor.getTime();
+      if (!r.hasMore) break;
+      expect(JSON.stringify([...r.page.a, ...r.page.b]).length).toBeLessThanOrEqual(1100);
+    }
+    expect([...new Set(seen)].sort((x, y) => x - y)).toEqual(all.map((r) => r.rec.i));
+    expect(seen.length).toBe(50);
+  });
+  it("paginatePull: row truncation still wins when it is earlier", () => {
+    const g = { a: [{ at: at(1), rec: 1 }, { at: at(5), rec: 5 }] };
+    const r = paginatePull(at(100), g, [at(3)], 10_000);
+    expect(r.hasMore).toBe(true);
+    expect(r.page.a).toEqual([1]);
+    expect(r.cursor.getTime()).toBe(at(3).getTime() - 1);
   });
 });
 

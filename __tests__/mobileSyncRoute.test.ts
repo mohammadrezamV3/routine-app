@@ -114,7 +114,12 @@ describe("mobile auth", () => {
     expect((await ok.json()).accessToken).toBeTruthy();
   });
 
-  it("rotates refresh tokens: the old one dies after use", async () => {
+  /** مهلتِ تکرار (REFRESH_GRACE_MS) رو برای یک نشست تموم‌شده فرض کن */
+  async function expireGrace(userId: string) {
+    await prisma.session.updateMany({ where: { userId, provider: "mobile" }, data: { rotatedAt: new Date(Date.now() - 60_000) } });
+  }
+
+  it("rotates refresh tokens: the old one dies after use (outside the grace window)", async () => {
     const u = await makeUser();
     const auth = await loginAs(u.username!);
     const r1 = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
@@ -123,16 +128,18 @@ describe("mobile auth", () => {
     expect(next.refreshToken).not.toBe(auth.refreshToken);
     // access tokenِ جدید کار می‌کنه
     await doPull(next.accessToken);
+    await expireGrace(u.id);
     // توکنِ قبلی دیگه قبول نمی‌شه (و طبقِ reuse detection کلِ نشست رو می‌کشه — تستِ بعدی)
     const reuse = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
     expect(reuse.status).toBe(401);
   });
 
-  it("reusing an already-rotated refresh token revokes the whole session", async () => {
+  it("reusing an already-rotated refresh token after the grace window revokes the whole session", async () => {
     const u = await makeUser();
     const auth = await loginAs(u.username!);
     const r1 = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
     const next: MobileAuthSuccess = await r1.json();
+    await expireGrace(u.id);
     // مهاجم (یا کپیِ قدیمی) توکنِ مصرف‌شده رو می‌فرسته
     expect((await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).status).toBe(401);
     // حالا توکنِ «سالمِ» جدید و access tokenش هم مردن
@@ -140,6 +147,35 @@ describe("mobile auth", () => {
     expect((await pull(jsonReq("/api/mobile/sync/pull", null, next.accessToken, "GET"))).status).toBe(401);
     const row = await prisma.session.findFirst({ where: { userId: u.id, provider: "mobile" } });
     expect(row?.revokedAt).not.toBeNull();
+  });
+
+  it("grace: a lost refresh response can be retried once with the previous token", async () => {
+    const u = await makeUser();
+    const auth = await loginAs(u.username!);
+    // پاسخِ این refresh «گم می‌شه» — اپ هیچ‌وقت t2 رو نمی‌بینه
+    const lost: MobileAuthSuccess = await (await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).json();
+    const retry = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
+    expect(retry.status).toBe(200);
+    const t3: MobileAuthSuccess = await retry.json();
+    expect(t3.refreshToken).not.toBe(lost.refreshToken);
+    await doPull(t3.accessToken);
+    // فقط یک‌بار: تکرارِ دوم با همون توکنِ قدیمی دیگه نه
+    expect((await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).status).toBe(401);
+    // t3 نشستِ زنده‌ست و rotationِ عادی می‌گیره
+    const t4: MobileAuthSuccess = await (await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: t3.refreshToken }))).json();
+    expect(t4.refreshToken).toBeTruthy();
+    await doPull(t4.accessToken);
+  });
+
+  it("grace: if the superseded token (the 'lost' one) shows up later, the session is revoked", async () => {
+    const u = await makeUser();
+    const auth = await loginAs(u.username!);
+    const t2: MobileAuthSuccess = await (await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).json();
+    const t3: MobileAuthSuccess = await (await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).json();
+    // دو نفر یک نشست رو دارن → ابطال
+    expect((await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: t2.refreshToken }))).status).toBe(401);
+    expect((await pull(jsonReq("/api/mobile/sync/pull", null, t3.accessToken, "GET"))).status).toBe(401);
+    expect((await prisma.session.findFirst({ where: { userId: u.id, provider: "mobile" } }))?.revokedAt).not.toBeNull();
   });
 
   it("enforces the absolute 180-day lifetime regardless of the sliding window", async () => {
