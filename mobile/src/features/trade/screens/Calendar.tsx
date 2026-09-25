@@ -3,7 +3,7 @@ import AppHeader from "@/components/AppHeader";
 import { db } from "../db";
 import { useLiveQuery } from "../lib/useLiveQuery";
 import { dailyPnl } from "../lib/tradeAnalytics";
-import { isoLocal, toJalali } from "../lib/jalali";
+import { isoLocal, jalaliToGregorianApprox, toJalali } from "../lib/jalali";
 import MonthHeatmap from "../components/MonthHeatmap";
 import TradeListRow from "../components/TradeListRow";
 import TradeDetailSheet from "../components/TradeDetailSheet";
@@ -15,24 +15,32 @@ type CalSystem = "jalali" | "gregorian";
 export default function Calendar() {
   const [system, setSystem] = useState<CalSystem>("jalali");
   const today = new Date();
-  const [gy, setGy] = useState(today.getFullYear());
-  const [gm, setGm] = useState(today.getMonth() + 1);
+  // باگِ حل‌شده — دوباره برنگرده: قبلا gy/gm (میلادی، از «امروز») حالتِ اصلی
+  // بود و jy/jm با یک anchorِ ثابت (روزِ ۱۵ِ همون ماهِ میلادی) محاسبه می‌شد.
+  // چون ماهِ شمسی همیشه وسطِ یک ماهِ میلادی شروع می‌شه (تقریبا ۲۱ تا ۲۳ام)، روزِ
+  // ۱۵ِ میلادی خیلی‌وقتا هنوز توی ماهِ شمسیِ *قبلی* بود — یعنی این تقویم موقعِ
+  // بازشدن، به‌جایِ «مهر» مثلا «شهریور» رو نشون می‌داد. حالا jy/jm (شمسی)
+  // حالتِ اصلیه و gy/gm ازش مشتق می‌شه — این جهت امن‌تره چون روزِ ۱۵ِ یک ماهِ
+  // شمسی همیشه کاملا داخلِ یک ماهِ میلادیِ مشخص می‌افته (بدونِ ابهام).
+  const [todayJy, todayJm] = toJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  const [jy, setJy] = useState(todayJy);
+  const [jm, setJm] = useState(todayJm);
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
   const [selectedTrade, setSelectedTrade] = useState<TradeEntryRow | null>(null);
   const [editingTrade, setEditingTrade] = useState<TradeEntryRow | null>(null);
 
   const trades = useLiveQuery(() => db.trades.toArray().then((rows) => rows.filter((t) => !t.deletedAt)), [], []) ?? [];
 
-  const [jy, jm] = useMemo(() => {
-    const j = toJalali(gy, gm, 15);
-    return [j[0], j[1]];
-  }, [gy, gm]);
+  const [gy, gm] = useMemo(() => {
+    const g = jalaliToGregorianApprox(jy, jm, 15);
+    return [g.getFullYear(), g.getMonth() + 1];
+  }, [jy, jm]);
 
   const pnlByIso = useMemo(() => dailyPnl(trades, (d) => isoLocal(d)), [trades]);
 
   function shiftMonth(delta: number) {
-    let newM = gm + delta;
-    let newY = gy;
+    let newM = jm + delta;
+    let newY = jy;
     if (newM > 12) {
       newM = 1;
       newY++;
@@ -40,8 +48,8 @@ export default function Calendar() {
       newM = 12;
       newY--;
     }
-    setGm(newM);
-    setGy(newY);
+    setJm(newM);
+    setJy(newY);
     setSelectedIso(null);
   }
 

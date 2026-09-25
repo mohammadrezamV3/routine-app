@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { startOfWeek, WEEK_ORDER } from "@/lib/schedule";
 import { WeekDayStat } from "@/db/repo";
@@ -13,6 +14,18 @@ export default function WeekDayStrip({
   onSelect: (iso: string) => void;
   stats?: WeekDayStat[];
 }) {
+  const selectedRef = useRef<HTMLButtonElement | null>(null);
+
+  // باگِ حل‌شده — دوباره برنگرده: این strip عرضش از صفحه بیشتره
+  // (overflow-x-auto)، ولی موقعِ mount مرورگر موقعیتِ اسکرول رو پیشِ‌فرض
+  // "۰" می‌ذاره که توی dir=rtl معادلِ نشون‌دادنِ آخرینِ روزهای هفته‌ست، نه
+  // امروز/انتخاب‌شده — یعنی کارتِ امروز (اولین آیتم، معمولا selected) عملا
+  // نصفه از سمتِ راستِ صفحه بیرون می‌زد و دیده نمی‌شد. اسکرولش می‌کنیم تا
+  // کاملا داخلِ دید باشه.
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
+  }, [selectedIso]);
+
   const start = startOfWeek(new Date());
   const days: Date[] = [];
   for (let i = 0; i < 7; i++) {
@@ -34,6 +47,7 @@ export default function WeekDayStrip({
         return (
           <button
             key={iso}
+            ref={selected ? selectedRef : undefined}
             onClick={() => onSelect(iso)}
             className="flex flex-shrink-0 flex-col items-center gap-1 rounded-2xl px-3 py-2 font-vazir"
             style={{

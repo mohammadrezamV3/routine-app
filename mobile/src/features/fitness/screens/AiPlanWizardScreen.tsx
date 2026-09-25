@@ -106,7 +106,7 @@ export default function AiPlanWizardScreen() {
   return (
     <div>
       <AppHeader title="برنامه با هوش مصنوعی" showBack />
-      <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
+      <div className="flex flex-col gap-5 px-4 pb-24 pt-4">
         {locked && (
           <p className="font-vazir text-[13px]" style={{ color: "var(--pnl-loss)" }}>
             این قابلیت در پلنِ فعلیت فعال نیست
@@ -222,7 +222,16 @@ export default function AiPlanWizardScreen() {
           onClick={() => void submit()}
           disabled={busy || locked}
           className="rounded-xl font-vazir text-[14.5px] font-semibold"
-          style={{ minHeight: 50, background: "var(--accent)", color: "#fff", opacity: busy || locked ? 0.6 : 1 }}
+          style={{
+            minHeight: 50,
+            background: "var(--accent)",
+            color: "#fff",
+            opacity: busy || locked ? 0.6 : 1,
+            // همون باگِ PlanCreateScreen: دکمه‌ی آخرِ فرم می‌تونه زیرِ
+            // BottomTabBarِ ثابت بیفته و لمسش به‌جایِ ثبت، تب رو عوض کنه.
+            position: "sticky",
+            bottom: "calc(64px + env(safe-area-inset-bottom))",
+          }}
         >
           {busy ? "در حالِ ساخت… (تا یک دقیقه)" : "ساختِ برنامه"}
         </button>

@@ -78,7 +78,7 @@ function TemplateForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
+    <div className="flex flex-col gap-5 px-4 pb-24 pt-4">
       <Field label="هدف">
         <div className="flex flex-wrap gap-2">
           {GOALS.map((g) => (
@@ -147,7 +147,19 @@ function TemplateForm({ onDone }: { onDone: () => void }) {
         onClick={submit}
         disabled={saving || gymDays.length === 0 || !rulesAccepted}
         className="rounded-xl font-vazir text-[14.5px] font-semibold"
-        style={{ minHeight: 50, background: "var(--accent)", color: "#fff", opacity: gymDays.length === 0 || !rulesAccepted ? 0.5 : 1 }}
+        style={{
+          minHeight: 50,
+          background: "var(--accent)",
+          color: "#fff",
+          opacity: gymDays.length === 0 || !rulesAccepted ? 0.5 : 1,
+          // باگِ حل‌شده: این فرم گاهی دقیقا به‌اندازه‌ی ارتفاعِ صفحه‌ست، یعنی
+          // موقعِ لودِ اولیه (بدونِ اسکرول) این دکمه زیرِ نوارِ پایینِ ثابت
+          // (BottomTabBar, z-40) می‌افته — چون تب‌های اون نوار کلِ ارتفاعش رو
+          // کلیک‌پذیر می‌کنن، لمسِ اون بخشِ همپوشان واقعا می‌ره به ناوبریِ تب،
+          // نه ثبتِ فرم. sticky با فاصله از نوارِ پایین این رو قطعی حل می‌کنه.
+          position: "sticky",
+          bottom: "calc(64px + env(safe-area-inset-bottom))",
+        }}
       >
         {saving ? "در حال ساخت…" : "ساخت برنامه"}
       </button>
@@ -199,7 +211,7 @@ function ManualForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-4 pb-8 pt-4">
+    <div className="flex flex-col gap-4 px-4 pb-24 pt-4">
       <Field label="هدف (اختیاری، متنِ آزاد)">
         <input
           value={goal}
@@ -279,7 +291,15 @@ function ManualForm({ onDone }: { onDone: () => void }) {
         onClick={submit}
         disabled={saving || !rulesAccepted}
         className="rounded-xl font-vazir text-[14.5px] font-semibold"
-        style={{ minHeight: 50, background: "var(--accent)", color: "#fff", opacity: rulesAccepted ? 1 : 0.5 }}
+        style={{
+          minHeight: 50,
+          background: "var(--accent)",
+          color: "#fff",
+          opacity: rulesAccepted ? 1 : 0.5,
+          // همون باگِ TemplateForm (بالاتر) — نگاه کن به توضیحش.
+          position: "sticky",
+          bottom: "calc(64px + env(safe-area-inset-bottom))",
+        }}
       >
         {saving ? "در حال ساخت…" : "ذخیره‌ی برنامه"}
       </button>

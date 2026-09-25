@@ -59,7 +59,7 @@ export default function CalorieTab() {
   }, [entries]);
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
+    <div className="flex flex-col gap-5 px-4 pb-24 pt-4">
       <div className="flex items-center justify-between">
         <button onClick={() => setDateOffset((o) => o - 1)} style={{ width: 44, height: 44 }} aria-label="روز قبل">
           <ChevronRight size={20} color="var(--muted)" />

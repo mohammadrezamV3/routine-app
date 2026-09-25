@@ -49,7 +49,7 @@ export default function CalorieHistoryScreen() {
   return (
     <div>
       <AppHeader title="تاریخچه‌ی کالری" showBack />
-      <div className="flex flex-col gap-4 px-4 pb-8 pt-4">
+      <div className="flex flex-col gap-4 px-4 pb-24 pt-4">
         <div className="flex items-center justify-between">
           <button onClick={() => shiftMonth(-1)} style={{ width: 44, height: 44 }} aria-label="ماه قبل">
             <ChevronRight size={20} color="var(--muted)" />

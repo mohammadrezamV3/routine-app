@@ -41,7 +41,7 @@ export default function CatalogScreen() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 px-4 pb-8 pt-3">
+      <div className="flex flex-col gap-2 px-4 pb-24 pt-3">
         {results.length === 0 && <EmptyState title="چیزی پیدا نشد" />}
         {results.map((entry) => {
           const open = openName === entry.name;

@@ -57,7 +57,7 @@ export default function WorkoutTab() {
 
   if (!plan) {
     return (
-      <div className="px-4 pb-8 pt-6">
+      <div className="px-4 pb-24 pt-6">
         <EmptyState
           title="هنوز برنامه‌ی تمرینی نداری"
           note="یک برنامه‌ی آماده بساز یا خودت روزها و حرکات رو دستی بچین — همه‌چیز آفلاین کار می‌کنه."
@@ -85,7 +85,7 @@ export default function WorkoutTab() {
   const dayItems = todayDay?.items ?? [];
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
+    <div className="flex flex-col gap-5 px-4 pb-24 pt-4">
       <Card>
         <div className="flex items-center justify-between">
           <div>

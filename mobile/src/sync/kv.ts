@@ -9,21 +9,43 @@ export interface KV {
 }
 
 export function preferencesKV(): KV {
-  // import پویا تا تست‌ها (محیطِ node) مجبور به لودِ پلاگین نباشن
-  const load = () => import("@capacitor/preferences").then((m) => m.Preferences);
+  // import پویا تا تست‌ها (محیطِ node) مجبور به لودِ پلاگین نباشن.
+  //
+  // نکته‌ی مهم: پلاگین‌های Capacitor یک Proxy برمی‌گردونن که هر پراپرتی
+  // (از جمله "then") رو intercept می‌کنه و یه تابعِ قابلِ‌فراخوانی پس می‌ده.
+  // یعنی خودِ آبجکتِ پلاگین از دیدِ موتورِ جاوااسکریپت "thenable" به‌نظر
+  // می‌رسه. اگه این آبجکت مستقیم از داخلِ یک `.then()`/async function
+  // برگردونده بشه (مثلا `import(...).then(m => m.Preferences)`)، الگوریتمِ
+  // resolve کردنِ پرامیس فکر می‌کنه با یک پرامیسِ دیگه طرفه و خودش
+  // `Preferences.then(resolve, reject)` رو صدا می‌زنه — که چون متدِ واقعی
+  // «then» روی پلاگین وجود نداره، خطای «"Preferences.then()" is not
+  // implemented on web» پرت می‌شه (رویِ هر صفحه، به‌صورتِ unhandled). برای
+  // جلوگیری، ماژول رو با side-effect توی یک متغیر cache می‌کنیم، نه با
+  // return کردنِ مستقیمِ پلاگین از یک boundary ِ پرامیسی.
+  let mod: typeof import("@capacitor/preferences") | undefined;
+  let loading: Promise<void> | undefined;
+  const ensureLoaded = (): Promise<void> => {
+    if (mod) return Promise.resolve();
+    if (!loading) {
+      loading = import("@capacitor/preferences").then((m) => {
+        mod = m;
+      });
+    }
+    return loading;
+  };
   return {
     async get(key) {
-      const p = await load();
-      const { value } = await p.get({ key });
+      await ensureLoaded();
+      const { value } = await mod!.Preferences.get({ key });
       return value ?? null;
     },
     async set(key, value) {
-      const p = await load();
-      await p.set({ key, value });
+      await ensureLoaded();
+      await mod!.Preferences.set({ key, value });
     },
     async remove(key) {
-      const p = await load();
-      await p.remove({ key });
+      await ensureLoaded();
+      await mod!.Preferences.remove({ key });
     },
   };
 }
