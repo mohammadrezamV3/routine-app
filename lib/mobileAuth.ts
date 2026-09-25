@@ -27,6 +27,13 @@ import type { MobileAuthSuccess, MobileModuleKey, MobileUser } from "@/lib/mobil
 export const MOBILE_PROVIDER = "mobile";
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 export const REFRESH_TOKEN_TTL_MS = 60 * 24 * 60 * 60 * 1000; // ۶۰ روز، با هر refresh تمدید
+/** سقفِ مطلقِ عمرِ یک نشستِ موبایل از لحظه‌ی ورود — تمدیدِ لغزان هیچ‌وقت از این جلوتر نمی‌ره */
+export const SESSION_MAX_LIFETIME_MS = 180 * 24 * 60 * 60 * 1000;
+
+/** انقضای بعدیِ refresh: min(حالا + ۶۰ روز، زمانِ ورود + ۱۸۰ روز) */
+export function nextRefreshExpiry(createdAt: Date, now: Date): Date {
+  return new Date(Math.min(now.getTime() + REFRESH_TOKEN_TTL_MS, createdAt.getTime() + SESSION_MAX_LIFETIME_MS));
+}
 const ACCESS_TOKEN_SALT = "routine-mobile-access-token-v1";
 const AUDIENCE = "mobile";
 const LAST_SEEN_THROTTLE_MS = 60 * 1000;
@@ -145,7 +152,8 @@ export async function createMobileSession(
   meta: { deviceName: string | null; ip: string | null; userAgent: string | null }
 ): Promise<MobileAuthSuccess> {
   const refreshToken = newRefreshToken();
-  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+  const now = new Date();
+  const expiresAt = nextRefreshExpiry(now, now);
   const row = await prisma.session.create({
     data: {
       userId: user.id,
@@ -155,6 +163,7 @@ export async function createMobileSession(
       ip: meta.ip,
       userAgent: meta.userAgent ? meta.userAgent.slice(0, 400) : null,
       expiresAt,
+      createdAt: now,
     },
     select: { id: true },
   });
@@ -164,6 +173,12 @@ export async function createMobileSession(
 /**
  * rotation: توکنِ قبلی فقط یک‌بار قابلِ مصرفه. updateMany با شرطِ هشِ قبلی
  * اتمیکه — دو refreshِ هم‌زمان با یک توکن، فقط یکی‌شون برنده می‌شه.
+ *
+ * reuse detection: هشِ توکنِ مصرف‌شده در previousTokenHash می‌مونه. اگه
+ * همون توکنِ قدیمی دوباره بیاد، یا مهاجم کپی‌اش رو داره یا کاربرِ واقعی —
+ * نمی‌شه فهمید کدوم، پس کلِ نشست باطل می‌شه (هر دو طرف باید دوباره وارد
+ * بشن؛ مهاجم دیگه نمی‌تونه ادامه بده). همین‌طور بازنده‌ی دو refreshِ هم‌زمان
+ * با یک توکن هم نشست رو باطل می‌کنه — اپ باید refresh رو سریالی کنه.
  */
 export async function rotateMobileSession(refreshToken: string, ip: string | null): Promise<MobileAuthSuccess | null> {
   if (!isWellFormedRefreshToken(refreshToken)) return null;
@@ -171,19 +186,42 @@ export async function rotateMobileSession(refreshToken: string, ip: string | nul
   const now = new Date();
   const session = await prisma.session.findUnique({
     where: { sessionToken: oldHash },
-    select: { id: true, provider: true, revokedAt: true, expiresAt: true, user: true },
+    select: { id: true, provider: true, revokedAt: true, expiresAt: true, createdAt: true, user: true },
   });
-  if (!session || session.provider !== MOBILE_PROVIDER || session.revokedAt || session.expiresAt <= now) return null;
+  if (!session) {
+    await revokeOnReuse(oldHash, now);
+    return null;
+  }
+  if (session.provider !== MOBILE_PROVIDER || session.revokedAt || session.expiresAt <= now) return null;
+  if (session.createdAt.getTime() + SESSION_MAX_LIFETIME_MS <= now.getTime()) return null;
   if (session.user.isBlocked || session.user.deletedAt) return null;
 
   const next = newRefreshToken();
-  const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_TTL_MS);
+  const expiresAt = nextRefreshExpiry(session.createdAt, now);
   const { count } = await prisma.session.updateMany({
     where: { id: session.id, sessionToken: oldHash, revokedAt: null },
-    data: { sessionToken: hashRefreshToken(next), expiresAt, lastSeenAt: now, ...(ip ? { ip } : {}) },
+    data: {
+      sessionToken: hashRefreshToken(next),
+      previousTokenHash: oldHash,
+      expiresAt,
+      lastSeenAt: now,
+      ...(ip ? { ip } : {}),
+    },
   });
-  if (count === 0) return null;
+  if (count === 0) {
+    // یکی دیگه همین لحظه همین توکن رو مصرف کرد → همون reuse
+    await revokeOnReuse(oldHash, now);
+    return null;
+  }
   return tokensFor(session.user, session.id, next, expiresAt);
+}
+
+async function revokeOnReuse(oldHash: string, now: Date) {
+  const { count } = await prisma.session.updateMany({
+    where: { previousTokenHash: oldHash, provider: MOBILE_PROVIDER, revokedAt: null },
+    data: { revokedAt: now },
+  });
+  if (count > 0) console.warn(`[mobile-auth] refresh token reuse detected — session revoked`);
 }
 
 /** خروج: با refresh token و/یا نشستِ access token — فقط ردیف‌های موبایلِ همون کاربر */

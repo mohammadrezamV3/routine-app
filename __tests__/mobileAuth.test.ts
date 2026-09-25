@@ -12,6 +12,9 @@ import {
   isWellFormedRefreshToken,
   issueAccessToken,
   newRefreshToken,
+  nextRefreshExpiry,
+  REFRESH_TOKEN_TTL_MS,
+  SESSION_MAX_LIFETIME_MS,
   readBearer,
   verifyAccessToken,
 } from "@/lib/mobileAuth";
@@ -87,5 +90,18 @@ describe("request helpers", () => {
     expect(cleanDeviceName("x".repeat(100))?.length).toBe(60);
     expect(cleanDeviceName(42)).toBeNull();
     expect(cleanDeviceName("   ")).toBeNull();
+  });
+});
+
+describe("nextRefreshExpiry", () => {
+  it("slides 60 days while far from the absolute cap", () => {
+    const created = new Date("2026-01-01T00:00:00Z");
+    const now = new Date("2026-02-01T00:00:00Z");
+    expect(nextRefreshExpiry(created, now).getTime()).toBe(now.getTime() + REFRESH_TOKEN_TTL_MS);
+  });
+  it("never extends past createdAt + 180 days", () => {
+    const created = new Date("2026-01-01T00:00:00Z");
+    const now = new Date(created.getTime() + 170 * 86400_000);
+    expect(nextRefreshExpiry(created, now).getTime()).toBe(created.getTime() + SESSION_MAX_LIFETIME_MS);
   });
 });

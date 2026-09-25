@@ -77,6 +77,7 @@ export type SyncEntity = "dailyEntry" | "sleepEntry" | "task" | "setting";
 
 /** کلیدهای تنظیماتی که توی فاز ۱ همگام می‌شن */
 export const MOBILE_SYNC_SETTING_KEYS = [
+  "theme",
   "customOccurrences",
   "removedOccurrences",
   "outingDates",
@@ -165,6 +166,8 @@ export type SettingData = { value: unknown };
  * یک تغییرِ محلی. `clientUpdatedAt` = لحظه‌ی ویرایش روی گوشی (ISO).
  * `delete` روی dailyEntry/sleepEntry یعنی «پاک‌کردنِ محتوای اون روز»، روی
  * setting یعنی value=null، و روی task یعنی tombstone (soft-delete).
+ * حذفِ رکوردی که سرور هیچ‌وقت نداشته هم یک tombstone می‌سازه (applied با
+ * serverRecord) تا upsertِ قدیمی‌ترِ یک دستگاهِ دیگه بعدا برنده نشه.
  * `data` فقط برای upsert لازمه.
  */
 export type SyncChange =

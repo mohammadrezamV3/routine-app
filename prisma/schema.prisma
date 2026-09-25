@@ -259,6 +259,9 @@ model Session {
   provider     String? // credentials | google | email-otp | sms-2fa | mobile
   // فقط برای اپ موبایل: اسمی که خودِ اپ از دستگاه فرستاده (نمایش در «دستگاه‌های فعال»)
   deviceName   String?
+  // فقط برای اپ موبایل: هشِ refresh tokenِ *قبلی* (بعد از rotation). اگه
+  // همون توکنِ مصرف‌شده دوباره بیاد یعنی توکن دزدیده/کپی شده → کلِ نشست باطل.
+  previousTokenHash String?
   ip           String?
   userAgent    String?
   expiresAt    DateTime
@@ -268,6 +271,7 @@ model Session {
 
   @@index([userId])
   @@index([userId, revokedAt])
+  @@index([previousTokenHash])
 }
 
 // لاگِ append-only هر ورودِ موفق — پنل کاربری › امنیت › «ورودهای اخیر».

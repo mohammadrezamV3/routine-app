@@ -116,7 +116,8 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
         ? { completedItems: change.data.completedItems, wakeUpAt: change.data.wakeUpAt }
         : { completedItems: {}, wakeUpAt: null };
     if (!existing) {
-      if (change.op === "delete") return { ...ref, status: "applied", serverRecord: null };
+      // delete هم ردیف می‌سازه (tombstoneِ خالی) — وگرنه یک upsertِ قدیمی‌ترِ
+      // دستگاهِ دیگه که بعدا برسه، هیچ ردیفی برای مقایسه پیدا نمی‌کرد و برنده می‌شد.
       const row = await prisma.dailyEntry.create({ data: { userId, date: change.date, ...fields, ...syncStamp(change.clientAt) } });
       return { ...ref, status: "applied", serverRecord: serializeDailyEntry(row) };
     }
@@ -140,7 +141,6 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
         ? change.data
         : { sleptAt: null, wokeAt: null, targetSleptAt: null, targetWokeAt: null, quality: null };
     if (!existing) {
-      if (change.op === "delete") return { ...ref, status: "applied", serverRecord: null };
       const row = await prisma.sleepEntry.create({ data: { userId, date: change.date, ...fields, ...syncStamp(change.clientAt) } });
       return { ...ref, status: "applied", serverRecord: serializeSleepEntry(row) };
     }
@@ -164,10 +164,14 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
       return { ...ref, status: "stale", serverRecord: existing ? serializeTask(existing) : null };
     }
     if (!existing) {
-      // حذفِ تسکی که هیچ‌وقت به سرور نرسیده — چیزی برای نوشتن نیست
-      if (change.op === "delete") return { ...ref, status: "applied", serverRecord: null };
+      // حذفِ تسکی که هیچ‌وقت به سرور نرسیده → tombstone با همین id، تا upsertِ
+      // قدیمی‌ترِ همون تسک (از صفِ یک دستگاهِ دیگه) بعدا stale بشه نه زنده.
+      const fields =
+        change.op === "upsert"
+          ? { ...change.data, deletedAt: null }
+          : { title: "", notes: null, dueDate: null, priority: 0, completedAt: null, deletedAt: change.clientAt };
       const row = await prisma.task.create({
-        data: { id: change.id, userId, ...change.data, deletedAt: null, ...syncStamp(change.clientAt) },
+        data: { id: change.id, userId, ...fields, ...syncStamp(change.clientAt) },
       });
       return { ...ref, status: "applied", serverRecord: serializeTask(row) };
     }
@@ -189,7 +193,7 @@ async function applyOnce(userId: string, change: ParsedChange): Promise<Result |
   }
   const value = change.op === "upsert" && change.value !== null ? (change.value as Prisma.InputJsonValue) : Prisma.JsonNull;
   if (!existing) {
-    if (change.op === "delete") return { ...ref, status: "applied", serverRecord: null };
+    // delete → ردیف با JSON null (tombstone)
     const row = await prisma.userSetting.create({ data: { userId, key: change.key, value, ...syncStamp(change.clientAt) } });
     return { ...ref, status: "applied", serverRecord: serializeSetting(row) };
   }

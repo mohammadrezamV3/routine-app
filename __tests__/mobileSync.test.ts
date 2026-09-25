@@ -132,10 +132,13 @@ describe("setting keys", () => {
       expect(SERVER_MANAGED_SETTING_KEYS.has(k)).toBe(false);
     }
   });
+  it("syncs theme", () => {
+    expect(isMobileSyncSettingKey("theme")).toBe(true);
+  });
   it("rejects server-managed and non-routine keys", () => {
     expect(isMobileSyncSettingKey("pushSentLog")).toBe(false);
     expect(isMobileSyncSettingKey("routineAssistantUses")).toBe(false);
-    expect(isMobileSyncSettingKey("theme")).toBe(false);
+    expect(isMobileSyncSettingKey("tradeChartSymbol")).toBe(false);
     expect(isMobileSyncSettingKey("__proto__")).toBe(false);
   });
 });

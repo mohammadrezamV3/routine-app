@@ -119,10 +119,45 @@ describe("mobile auth", () => {
     expect(r1.status).toBe(200);
     const next: MobileAuthSuccess = await r1.json();
     expect(next.refreshToken).not.toBe(auth.refreshToken);
-    const reuse = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
-    expect(reuse.status).toBe(401);
     // access tokenِ جدید کار می‌کنه
     await doPull(next.accessToken);
+    // توکنِ قبلی دیگه قبول نمی‌شه (و طبقِ reuse detection کلِ نشست رو می‌کشه — تستِ بعدی)
+    const reuse = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
+    expect(reuse.status).toBe(401);
+  });
+
+  it("reusing an already-rotated refresh token revokes the whole session", async () => {
+    const u = await makeUser();
+    const auth = await loginAs(u.username!);
+    const r1 = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }));
+    const next: MobileAuthSuccess = await r1.json();
+    // مهاجم (یا کپیِ قدیمی) توکنِ مصرف‌شده رو می‌فرسته
+    expect((await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).status).toBe(401);
+    // حالا توکنِ «سالمِ» جدید و access tokenش هم مردن
+    expect((await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: next.refreshToken }))).status).toBe(401);
+    expect((await pull(jsonReq("/api/mobile/sync/pull", null, next.accessToken, "GET"))).status).toBe(401);
+    const row = await prisma.session.findFirst({ where: { userId: u.id, provider: "mobile" } });
+    expect(row?.revokedAt).not.toBeNull();
+  });
+
+  it("enforces the absolute 180-day lifetime regardless of the sliding window", async () => {
+    const u = await makeUser();
+    const auth = await loginAs(u.username!);
+    await prisma.session.updateMany({
+      where: { userId: u.id, provider: "mobile" },
+      data: { createdAt: new Date(Date.now() - 181 * 86400_000) },
+    });
+    expect((await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: auth.refreshToken }))).status).toBe(401);
+
+    // نزدیکِ سقف: انقضای جدید به createdAt + 180 روز بریده می‌شه
+    const u2 = await makeUser();
+    const a2 = await loginAs(u2.username!);
+    const created = new Date(Date.now() - 170 * 86400_000);
+    await prisma.session.updateMany({ where: { userId: u2.id, provider: "mobile" }, data: { createdAt: created } });
+    const r = await refresh(jsonReq("/api/mobile/auth/refresh", { refreshToken: a2.refreshToken }));
+    expect(r.status).toBe(200);
+    const body: MobileAuthSuccess = await r.json();
+    expect(new Date(body.refreshTokenExpiresAt).getTime()).toBe(created.getTime() + 180 * 86400_000);
   });
 
   it("revoking the device from the web sessions UI kills the access token immediately", async () => {
@@ -234,6 +269,49 @@ describe("mobile sync — LWW", () => {
     expect(del.results[0].status).toBe("applied");
     const pulled = await doPull(a.accessToken);
     expect(pulled.tasks.find((t) => t.id === id)).toMatchObject({ deleted: true });
+  });
+
+  it("deletes of records the server never had leave tombstones so older upserts lose", async () => {
+    const u = await makeUser();
+    const { accessToken } = await loginAs(u.username!);
+    const id = `k${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.slice(0, 24).padEnd(24, "q");
+    const del = "2026-09-24T12:00:00.000Z";
+    const older = "2026-09-24T11:00:00.000Z";
+
+    const d = await doPush(accessToken, [
+      { entity: "task", id, op: "delete", clientUpdatedAt: del },
+      { entity: "dailyEntry", key: "2026-09-10", op: "delete", clientUpdatedAt: del },
+      { entity: "sleepEntry", key: "2026-09-10", op: "delete", clientUpdatedAt: del },
+      { entity: "setting", key: "outingDates", op: "delete", clientUpdatedAt: del },
+    ]);
+    expect(d.results.map((r) => r.status)).toEqual(["applied", "applied", "applied", "applied"]);
+    expect(d.results[0].serverRecord).toMatchObject({ id, deleted: true, editedAt: del });
+    expect(d.results[1].serverRecord).toMatchObject({ tasks: {}, wake: null });
+    expect(d.results[3].serverRecord).toMatchObject({ key: "outingDates", value: null });
+
+    // upsertهای قدیمی‌ترِ یک دستگاهِ دیگه که دیر رسیدن
+    const late = await doPush(accessToken, [
+      { entity: "task", id, op: "upsert", data: { title: "zombie", notes: null, dueDate: null, priority: 0, completedAt: null }, clientUpdatedAt: older },
+      { entity: "dailyEntry", key: "2026-09-10", op: "upsert", data: { tasks: { a: true }, wake: null }, clientUpdatedAt: older },
+      { entity: "sleepEntry", key: "2026-09-10", op: "upsert", data: { quality: 5 }, clientUpdatedAt: older },
+      { entity: "setting", key: "outingDates", op: "upsert", data: { value: ["2026-09-01"] }, clientUpdatedAt: older },
+    ]);
+    expect(late.results.map((r) => r.status)).toEqual(["stale", "stale", "stale", "stale"]);
+    expect(await prisma.task.findUnique({ where: { id } })).toMatchObject({ userId: u.id, deletedAt: new Date(del) });
+
+    // tombstoneها توی pull هم میان
+    const p = await doPull(accessToken);
+    expect(p.tasks.find((t) => t.id === id)).toMatchObject({ deleted: true });
+    expect(p.settings.find((x) => x.key === "outingDates")).toMatchObject({ value: null });
+  });
+
+  it("syncs the theme setting", async () => {
+    const u = await makeUser();
+    const { accessToken } = await loginAs(u.username!);
+    const r = await doPush(accessToken, [
+      { entity: "setting", key: "theme", op: "upsert", data: { value: "dark" }, clientUpdatedAt: "2026-09-24T10:00:00.000Z" },
+    ]);
+    expect(r.results[0]).toMatchObject({ status: "applied", serverRecord: { key: "theme", value: "dark" } });
   });
 
   it("rejects invalid changes individually and caps the batch", async () => {
