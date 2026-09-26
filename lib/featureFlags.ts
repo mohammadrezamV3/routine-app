@@ -9,7 +9,7 @@
 
 export type FeatureMode = "on" | "admins" | "off";
 
-export const FEATURE_KEYS = ["roadmaps", "weeklyAnalysis", "tradeChat", "routineAssistant", "calorieScan"] as const;
+export const FEATURE_KEYS = ["roadmaps", "weeklyAnalysis", "tradeChat", "routineAssistant", "calorieScan", "mentors"] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
 export const FEATURE_META: Record<FeatureKey, { label: string; hint: string; default: FeatureMode }> = {
@@ -18,6 +18,7 @@ export const FEATURE_META: Record<FeatureKey, { label: string; hint: string; def
   tradeChat: { label: "چت نمادها", hint: "گفتگوی کاربران زیر چارت هر نماد", default: "on" },
   routineAssistant: { label: "دستیار هوشمند روتین", hint: "دکمه‌ی AI در صفحه‌ی روتین", default: "on" },
   calorieScan: { label: "اسکن غذا با AI", hint: "تشخیص غذا و کالری از روی عکس (تا الان «به‌زودی» بود)", default: "off" },
+  mentors: { label: "منتورها", hint: "اتصال منتور ↔ شاگرد، برنامه‌ها، چت و نظرات (/mentors)", default: "on" },
 };
 
 export const FEATURE_MODE_LABELS: Record<FeatureMode, string> = { on: "روشن برای همه", admins: "فقط ادمین‌ها", off: "خاموش" };
