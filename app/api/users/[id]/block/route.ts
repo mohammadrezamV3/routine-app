@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { blockUser, unblockUser } from "@/lib/mobileSocialFriends";
 
 // POST/DELETE /api/users/:id/block — بلاک/آنبلاکِ کاربر-به-کاربر. کاربرِ
@@ -8,8 +7,8 @@ import { blockUser, unblockUser } from "@/lib/mobileSocialFriends";
 // مستقل از دوستیِ Friendship — بلاک‌کردن دوستیِ موجود را پاک نمی‌کند (اگر
 // کاربر بخواهد کامل قطع کند، از «حذف دوست» جدا استفاده می‌کند).
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const r = await blockUser(userId, params.id);
@@ -17,8 +16,8 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const r = await unblockUser(userId, params.id);

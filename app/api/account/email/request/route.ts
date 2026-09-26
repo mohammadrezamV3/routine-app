@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidEmail } from "@/lib/validate";
@@ -12,8 +11,8 @@ import { generateEmailOtp, hashEmailOtp, EMAIL_OTP_TTL_MS } from "@/lib/emailOtp
 // می‌شه تا مالکیت ایمیل جدید ثابت بشه؛ بدون این، هرکسی با یه سشن
 // سرقتی می‌تونست ایمیل بازیابی حساب رو مستقیم عوض کنه.
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);

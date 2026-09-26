@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidEmail } from "@/lib/validate";
@@ -10,8 +9,8 @@ import { hashEmailOtp, hashesMatch, EMAIL_OTP_MAX_ATTEMPTS } from "@/lib/emailOt
 // کد درست بود → ایمیل حساب واقعا عوض می‌شه (emailVerifiedAt هم ست می‌شه،
 // چون همین لحظه با ارسال کد به همون آدرس اثبات شد).
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { getVisibleProfile } from "@/lib/mobileSocialFriends";
 
 // GET /api/users/:id/profile — پروفایلِ یک کاربر (پاپ‌آپِ کلیک روی اسم).
@@ -9,8 +8,8 @@ import { getVisibleProfile } from "@/lib/mobileSocialFriends";
 // این‌که دوست شوند. پس این‌جا شرط دوستی نیست، شرطِ discoverable/بلاک است
 // (پیاده‌سازی در lib/mobileSocialFriends.ts → getVisibleProfile).
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  const viewerId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const viewerId = auth?.userId;
   if (!viewerId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const r = await getVisibleProfile(viewerId, params.id);

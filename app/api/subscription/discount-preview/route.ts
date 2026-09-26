@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { resolveDiscountCode } from "@/lib/discountValidation";
 
@@ -10,8 +9,8 @@ import { resolveDiscountCode } from "@/lib/discountValidation";
 // اعتبارسنجی، نه اعمال نهایی؛ اعمال واقعی موقع خود پرداخت
 // (app/api/subscription/checkout) اتفاق می‌افته.
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);

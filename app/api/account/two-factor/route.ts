@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 
 // روشن/خاموش‌کردن ورود دومرحله‌ای پیامکی.
@@ -8,8 +7,8 @@ import { prisma } from "@/lib/prisma";
 // شرط روشن‌کردن: شماره‌ی موبایل تأییدشده روی حساب. بدونش، روشن‌کردن ۲FA
 // یعنی قفل‌شدن کاربر بیرون حساب خودش — چون هیچ‌جا نمی‌شه کد فرستاد.
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));

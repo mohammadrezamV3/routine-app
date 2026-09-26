@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { getClientIp } from "@/lib/rateLimit";
 import { searchUsers } from "@/lib/mobileSocialFriends";
 
@@ -9,11 +8,11 @@ import { searchUsers } from "@/lib/mobileSocialFriends";
 // تا سمت کلاینت بشه به‌جای دکمه‌ی ارسال، وضعیت «قبلا دوستید»/«در انتظار» رو نشون داد.
 // قواعد (discoverable، بلاکِ دوطرفه، سقف نرخ) در lib/mobileSocialFriends.ts.
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  const isSuperAdmin = !!auth!.isSuperAdmin;
   const r = await searchUsers(userId, isSuperAdmin, getClientIp(req.headers), req.nextUrl.searchParams.get("q"));
   return NextResponse.json(r.body, { status: r.status });
 }

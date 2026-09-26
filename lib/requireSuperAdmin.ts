@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 
 // رودمپ و نوت‌پد فعلا کاملا غیرفعالن برای همه به‌جز سوپریوزر — نه یه
@@ -11,13 +10,14 @@ export type SuperAdminGuardResult =
   | { ok: true; userId: string }
   | { ok: false; response: NextResponse };
 
-export async function requireSuperAdmin(): Promise<SuperAdminGuardResult> {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
-  if (!userId) {
+export async function requireSuperAdmin(req?: Request): Promise<SuperAdminGuardResult> {
+  // کوکیِ وب یا Bearerِ اپ موبایل (lib/requestAuth.ts)
+  const auth = await getRequestUser(req);
+  const userId = auth?.userId;
+  if (!auth || !userId) {
     return { ok: false, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
   }
-  if (!(session!.user as any).isSuperAdmin) {
+  if (!auth.isSuperAdmin) {
     return { ok: false, response: NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 }) };
   }
   const blockedCheck = await prisma.user.findUnique({ where: { id: userId }, select: { isBlocked: true } });

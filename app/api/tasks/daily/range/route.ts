@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { parseDateRange } from "@/lib/validate";
 
@@ -11,8 +10,8 @@ function toIso(d: Date) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 
 // یک کوئری واحد که کل بازه رو برمی‌گردونه — به‌جای این‌که صفحه اصلی مجبور
 // باشه برای هر روز جدا fetch بزنه (که با ۳۰-۹۰ روز، لود اولیه رو خیلی کند می‌کرد).
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   // بازه اعتبارسنجی و سقف‌گذاری می‌شه — قبلا `from=0001-01-01&to=9999-12-31`

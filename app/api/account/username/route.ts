@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { isValidUsername } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -11,12 +10,12 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 // فیچر دوستان پیدا نمی‌شن. تطبیق بدون حساسیت به بزرگ/کوچکی حروف، هم‌راستا
 // با همون قاعده‌ای که موقع ورود (lib/auth.ts) و جستجوی دوست (api/friends) هست.
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);
-  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  const isSuperAdmin = !!auth!.isSuperAdmin;
   if (!isSuperAdmin && (!(await checkRateLimit(`username-change:${userId}`, 5, 60 * 60 * 1000)) || !(await checkRateLimit(`username-change-ip:${ip}`, 10, 60 * 60 * 1000)))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }

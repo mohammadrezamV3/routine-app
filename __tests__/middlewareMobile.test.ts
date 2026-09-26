@@ -35,3 +35,65 @@ describe("middleware — /api/mobile/*", () => {
     expect(middleware(req("/api/tasks/daily", "POST", { origin: "https://routine.example" })).status).toBe(200);
   });
 });
+
+describe("middleware — Bearer bridge on web routes", () => {
+  const bearer = { authorization: "Bearer abc.def" };
+
+  it("answers the preflight for app origins asking for Authorization, all methods, no credentials", () => {
+    const res = middleware(
+      req("/api/trade/entries", "OPTIONS", {
+        origin: "https://localhost",
+        "access-control-request-method": "PATCH",
+        "access-control-request-headers": "content-type, authorization",
+      })
+    );
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://localhost");
+    expect(res.headers.get("access-control-allow-methods")).toBe("GET, POST, PATCH, PUT, DELETE, OPTIONS");
+    expect(res.headers.get("access-control-allow-headers")).toBe("Authorization, Content-Type, If-None-Match");
+    expect(res.headers.get("access-control-expose-headers")).toBe("ETag");
+    expect(res.headers.get("access-control-allow-credentials")).toBeNull();
+  });
+
+  it("does not answer preflights without authorization, from foreign origins, or on admin routes", () => {
+    const pre = (path: string, origin: string, hdrs: string) =>
+      middleware(req(path, "OPTIONS", { origin, "access-control-request-headers": hdrs }));
+    expect(pre("/api/tasks/daily", "https://localhost", "content-type").headers.get("access-control-allow-origin")).toBeNull();
+    expect(pre("/api/tasks/daily", "https://evil.example", "authorization").headers.get("access-control-allow-origin")).toBeNull();
+    expect(pre("/api/admin/overview", "https://localhost", "authorization").headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("Bearer mutations from app origins skip the Origin CSRF check and get CORS", () => {
+    for (const method of ["POST", "PATCH", "PUT", "DELETE"]) {
+      const res = middleware(req("/api/tasks/daily", method, { origin: "capacitor://localhost", ...bearer }));
+      expect(res.status).toBe(200);
+      expect(res.headers.get("access-control-allow-origin")).toBe("capacitor://localhost");
+      expect(res.headers.get("access-control-allow-credentials")).toBeNull();
+    }
+    const get = middleware(req("/api/trade/tags", "GET", { origin: "https://localhost", ...bearer }));
+    expect(get.headers.get("access-control-allow-origin")).toBe("https://localhost");
+  });
+
+  it("CSRF is still enforced for cookie requests and for Bearer from foreign origins / admin routes", () => {
+    expect(middleware(req("/api/tasks/daily", "POST", { origin: "https://localhost" })).status).toBe(403);
+    expect(middleware(req("/api/tasks/daily", "POST", { origin: "https://evil.example", ...bearer })).status).toBe(403);
+    expect(middleware(req("/api/admin/users", "POST", { origin: "https://localhost", ...bearer })).status).toBe(403);
+    // کوکیِ same-origin مثل قبل
+    const same = middleware(req("/api/tasks/daily", "POST", { origin: "https://routine.example" }));
+    expect(same.status).toBe(200);
+    expect(same.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("the Vite dev origin is allowed only outside production", () => {
+    const res = middleware(req("/api/tasks/daily", "POST", { origin: "http://localhost:5173", ...bearer }));
+    expect(res.status).toBe(200);
+    const env = process.env as Record<string, string | undefined>;
+    const prev = env.NODE_ENV;
+    env.NODE_ENV = "production";
+    try {
+      expect(middleware(req("/api/tasks/daily", "POST", { origin: "http://localhost:5173", ...bearer })).status).toBe(403);
+    } finally {
+      env.NODE_ENV = prev;
+    }
+  });
+});

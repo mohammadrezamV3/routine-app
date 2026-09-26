@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 
 // نگهبان سمت سرور دسترسی ماژول‌ها. تا پیش از این، گیت‌کردن ماژول‌های
@@ -21,10 +20,11 @@ export type ModuleGuardResult =
  * اگر نه، یک NextResponse آماده (۴۰۱ برای مهمان، ۴۰۳ برای نبود اشتراک)
  * برمی‌گرداند تا خود روت فقط `if (!guard.ok) return guard.response` بزند.
  */
-export async function requireModule(module: ModuleKey): Promise<ModuleGuardResult> {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
-  if (!userId) {
+export async function requireModule(module: ModuleKey, req?: Request): Promise<ModuleGuardResult> {
+  // کوکیِ وب یا Bearerِ اپ موبایل (lib/requestAuth.ts) — بقیه‌ی منطق یکیه
+  const auth = await getRequestUser(req);
+  const userId = auth?.userId;
+  if (!auth || !userId) {
     return { ok: false, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
   }
 
@@ -38,7 +38,7 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
   }
 
   // سوپریوزر به همه‌چیز دسترسی نامحدود دارد (هم‌راستا با /api/account)
-  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  const isSuperAdmin = auth.isSuperAdmin;
   if (isSuperAdmin) {
     return { ok: true, userId, isSuperAdmin: true };
   }

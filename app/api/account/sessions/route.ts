@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
+import { prisma } from "@/lib/prisma";
 import { listDeviceSessions, revokeDeviceSession, revokeOtherDeviceSessions } from "@/lib/deviceSessions";
 
 // دستگاه‌های فعال حساب (پنل کاربری › امنیت).
@@ -10,9 +10,17 @@ import { listDeviceSessions, revokeDeviceSession, revokeOtherDeviceSessions } fr
 // می‌ده کدوم ردیف همین دستگاهه. خود sid از JWT (که httpOnly است) سمت سرور
 // خونده می‌شه.
 async function requireUser(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
-  if (!userId) return null;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
+  if (!auth || !userId) return null;
+  // اپ موبایل (Bearer): «همین دستگاه» ردیفِ Sessionِ موبایله، و sessionTokenِ
+  // اون ردیف (هشِ refresh) همون چیزیه که revokeOtherDeviceSessions باهاش مقایسه می‌کنه.
+  if (auth.via === "bearer") {
+    const row = auth.mobileSessionId
+      ? await prisma.session.findFirst({ where: { id: auth.mobileSessionId, userId }, select: { sessionToken: true } })
+      : null;
+    return { userId, sid: row?.sessionToken ?? undefined };
+  }
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   return { userId, sid: (token as any)?.sid as string | undefined };
 }

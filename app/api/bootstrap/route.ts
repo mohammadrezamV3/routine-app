@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
@@ -28,8 +27,8 @@ import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
  * خواندنی که خارج از موج لود اولیه اتفاق می‌افته.
  */
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   // بازه اختیاریه: صفحه‌هایی که تاریخچه‌ی روزانه نمی‌خوان (مثلا /about)

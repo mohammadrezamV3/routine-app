@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { clampText } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -11,8 +10,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 
 // GET /api/support/tickets — فهرست تیکت‌های خودِ کاربر، تازه‌ترین اول
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const tickets = await prisma.supportTicket.findMany({
@@ -38,8 +37,8 @@ export async function GET() {
 
 // POST /api/support/tickets — تیکتِ جدید (موضوع + متنِ اولین پیام)
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (!(await checkRateLimit(`support-ticket-create:${userId}`, 5, 60 * 60 * 1000))) {

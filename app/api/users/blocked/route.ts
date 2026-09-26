@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/users/blocked — فهرستِ کاربرهایی که همین کاربر بلاک کرده، برای
 // بخشِ «تنظیمات › افراد بلاک‌شده» که بشود از آن‌جا آنبلاک کرد.
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const rows = await prisma.userBlock.findMany({

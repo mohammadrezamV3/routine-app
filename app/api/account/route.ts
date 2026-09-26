@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
@@ -9,8 +8,8 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 const GENDER_VALUES = new Set(["male", "female"]);
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const user = await prisma.user.findUnique({
@@ -66,12 +65,12 @@ export async function GET() {
 // بدون اون تاییدیه، اجازه‌ی تغییر مستقیم یعنی هرکسی با یه سشن سرقتی می‌تونه
 // شماره‌ی بازیابی حساب رو عوض کنه). یوزرنیم هم روت اختصاصی خودش رو داره.
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);
-  const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
+  const isSuperAdmin = !!auth!.isSuperAdmin;
   if (!isSuperAdmin && (!(await checkRateLimit(`profile-edit:${userId}`, 20, 60 * 60 * 1000)) || !(await checkRateLimit(`profile-edit-ip:${ip}`, 40, 60 * 60 * 1000)))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }

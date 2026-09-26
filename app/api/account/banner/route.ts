@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 
@@ -10,19 +9,19 @@ import { checkRateLimit } from "@/lib/rateLimit";
 const MAX_DATA_URL_LENGTH = 700_000;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { bannerUrl: true } });
   return NextResponse.json({ bannerUrl: user?.bannerUrl ?? null });
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!(session!.user as any).isSuperAdmin && !(await checkRateLimit(`banner-change:${userId}`, 10, 60 * 60 * 1000))) {
+  if (!auth!.isSuperAdmin && !(await checkRateLimit(`banner-change:${userId}`, 10, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
@@ -40,8 +39,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   await prisma.user.update({ where: { id: userId }, data: { bannerUrl: null } });

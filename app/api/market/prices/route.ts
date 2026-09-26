@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { checkRateLimit } from "@/lib/rateLimit";
 import {
   MARKET_PRICES_RATE_LIMIT, MARKET_PRICES_RATE_WINDOW_MS, fetchMarketQuotes, marketPricesRateKey, parseMarketSymbols,
@@ -15,12 +14,12 @@ import {
 export async function GET(req: NextRequest) {
   // قبلا کاملا باز بود: هرکسی بدون حساب می‌تونست از این سرور به‌عنوان یه
   // پروکسی رایگان یاهو استفاده کنه. حالا هم لاگین لازمه هم سقف نرخ داره.
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (
-    !(session!.user as any).isSuperAdmin &&
+    !auth!.isSuperAdmin &&
     !(await checkRateLimit(marketPricesRateKey(userId), MARKET_PRICES_RATE_LIMIT, MARKET_PRICES_RATE_WINDOW_MS))
   ) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });

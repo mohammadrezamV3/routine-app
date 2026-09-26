@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readAudioFromRequest, transcribeVoice } from "@/lib/speechToText";
 
@@ -14,8 +13,8 @@ import { readAudioFromRequest, transcribeVoice } from "@/lib/speechToText";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (!(await checkRateLimit(`support-voice:${userId}`, 20, 10 * 60 * 1000))) {

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { DURATIONS, findPlanPricing } from "@/lib/planPricing";
 import { formatPriceAmount } from "@/lib/formatPrice";
@@ -12,8 +11,8 @@ const DURATION_MONTHS: Record<string, number> = { "1": 1, "3": 3, "6": 6, "12": 
 // برای صفحه‌ی «اشتراک». قیمت‌گذاری بازاری‌ست (هر پلن مخصوص یک Market)، پس
 // همیشه فقط پلن‌های هم‌بازار خود کاربر برمی‌گرده.
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true, isSuperAdmin: true } });

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { revokeAllMobileSessions } from "@/lib/mobileAuth";
 import { validatePassword } from "@/lib/validate";
@@ -13,8 +12,8 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 // همون تاییدیه‌ست؛ جلوی این رو می‌گیره که یه سشن سرقتی/بازمونده‌ی باز یه
 // دستگاه مشترک بتونه بدون دونستن رمز واقعی، رمز رو عوض کنه و صاحب اصلی رو بندازه بیرون.
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);

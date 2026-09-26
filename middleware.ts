@@ -48,11 +48,11 @@ function mobileAllowedOrigins(): Set<string> {
   return origins;
 }
 
-function applyMobileCors(res: NextResponse, origin: string | null): NextResponse {
+function applyMobileCors(res: NextResponse, origin: string | null, methods = "GET, POST, OPTIONS"): NextResponse {
   res.headers.set("Vary", "Origin");
   if (origin) {
     res.headers.set("Access-Control-Allow-Origin", origin);
-    res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.headers.set("Access-Control-Allow-Methods", methods);
     res.headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, If-None-Match");
     // /api/mobile/catalog: گوشی باید ETag رو بخونه تا دفعه‌ی بعد If-None-Match بفرسته
     res.headers.set("Access-Control-Expose-Headers", "ETag");
@@ -76,8 +76,47 @@ function handleMobile(req: NextRequest): NextResponse {
   return applyMobileCors(NextResponse.next(), allowed ? origin : null);
 }
 
+// ─── پلِ Bearer روی روت‌های وب (اپ موبایل همون روت‌های وب رو صدا می‌زنه) ─────
+//
+// روت‌های «وبِ کاربر» (lib/requestAuth.ts → getRequestUser) هم کوکی و هم
+// Bearer قبول می‌کنن. درخواستی که هدرِ `Authorization: Bearer` داره *و* از
+// یکی از Originهای اپ میاد CORS می‌گیره و بررسیِ Originِ CSRF براش اجرا
+// نمی‌شه — چون سمتِ سرور وقتی Bearer حاضره هیچ‌وقت کوکی خونده نمی‌شه
+// (بدونِ fallback)، پس کوکیِ همراه هیچ اثری نداره؛ و Access-Control-Allow-
+// Credentials هم هرگز ست نمی‌شه. درخواست‌های کوکی‌محور دقیقا مثل قبل.
+// preflight (OPTIONS) خودش هدرِ Authorization نداره — با Origin +
+// Access-Control-Request-Headersِ شاملِ authorization شناخته می‌شه.
+// ادمین/next-auth/کران/EA/وب‌پوش هیچ‌وقت Bearer قبول نمی‌کنن → این پل روشون نیست.
+const BEARER_BRIDGE_EXCLUDED = ["/api/admin/", "/api/auth/", "/api/cron/", "/api/mt/", "/api/push/"];
+const BEARER_BRIDGE_METHODS = "GET, POST, PATCH, PUT, DELETE, OPTIONS";
+
+function isBearerBridgePath(pathname: string): boolean {
+  return pathname.startsWith("/api/") && !BEARER_BRIDGE_EXCLUDED.some((p) => pathname.startsWith(p) || pathname === p.slice(0, -1));
+}
+
+function handleBearerBridge(req: NextRequest): NextResponse | null {
+  const origin = req.headers.get("origin");
+  if (!origin || !mobileAllowedOrigins().has(origin)) return null;
+  if (!isBearerBridgePath(req.nextUrl.pathname)) return null;
+
+  if (req.method === "OPTIONS") {
+    const requested = (req.headers.get("access-control-request-headers") || "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase());
+    if (!requested.includes("authorization")) return null;
+    return applyMobileCors(new NextResponse(null, { status: 204 }), origin, BEARER_BRIDGE_METHODS);
+  }
+
+  const authz = req.headers.get("authorization");
+  if (!authz || !/^Bearer\b/i.test(authz.trim())) return null;
+  return applyMobileCors(NextResponse.next(), origin, BEARER_BRIDGE_METHODS);
+}
+
 export function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith(MOBILE_PREFIX)) return handleMobile(req);
+
+  const bridged = handleBearerBridge(req);
+  if (bridged) return bridged;
 
   if (SAFE_METHODS.has(req.method)) return NextResponse.next();
 

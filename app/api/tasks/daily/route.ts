@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 
@@ -9,8 +8,8 @@ const MAX_DAILY_TASK_KEYS = 500;
 
 // GET /api/tasks/daily?date=2026-07-24
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   // `new Date(userInput)` مستقیم استفاده نمی‌شه: یه ورودی بدشکل یه
@@ -30,8 +29,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/tasks/daily  { date, tasks, wake }
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const parsed = await readJsonBody<{ date?: string; tasks?: Record<string, boolean>; wake?: string | null }>(req);

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestUser } from "@/lib/requestAuth";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/support/tickets/:id — جزئیاتِ یک تیکت + کلِ پیام‌ها. طبقِ قاعده‌ی
 // ثابتِ پروژه (IDOR)، where همیشه هم id هم userId دارد — یک کاربر هیچ‌وقت
 // نباید تیکتِ کاربرِ دیگر را با حدس‌زدنِ id ببیند.
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id as string | undefined;
+  const auth = await getRequestUser();
+  const userId = auth?.userId;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ticket = await prisma.supportTicket.findFirst({
