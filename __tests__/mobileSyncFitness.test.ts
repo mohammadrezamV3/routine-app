@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   parseRoadmapProgressChange,
+  MAX_ROADMAP_PROGRESS_KEYS,
   parseExerciseLogKey,
   parseSyncChange,
   validateCalorieTargetData,
@@ -134,7 +135,11 @@ describe("parseRoadmapProgressChange", () => {
     expect(parseRoadmapProgressChange({ ...base, op: "delete" }, NOW).ok).toBe(false);
     expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { a: true } } }, NOW).ok).toBe(false);
     expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { "1": "yes" } } }, NOW).ok).toBe(false);
-    const many = Object.fromEntries(Array.from({ length: 51 }, (_, i) => [String(i), true]));
+    // کلیدِ کار ("n.i") مجازه؛ شکلِ دیگه نه
+    expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { "1": true, "1.2": true } } }, NOW).ok).toBe(true);
+    expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { "1.": true } } }, NOW).ok).toBe(false);
+    expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: { "1.2.3": true } } }, NOW).ok).toBe(false);
+    const many = Object.fromEntries(Array.from({ length: MAX_ROADMAP_PROGRESS_KEYS + 1 }, (_, i) => [String(i), true]));
     expect(parseRoadmapProgressChange({ ...base, data: { stepProgress: many } }, NOW).ok).toBe(false);
   });
 });

@@ -627,7 +627,8 @@ export function validateCalorieTargetData(data: unknown): V<ParsedCalorieTargetD
 
 // ─── رودمپ: پیشرفت ────────────────────────────────────────────────────────
 
-export const MAX_ROADMAP_PROGRESS_KEYS = 50;
+// ۱۶ مرحله × (۱ کلیدِ مرحله + تا ۱۲ کار) = ۲۰۸ — با کمی حاشیه
+export const MAX_ROADMAP_PROGRESS_KEYS = 250;
 
 export type ParsedRoadmapProgressChange = {
   entity: "roadmapProgress";
@@ -659,7 +660,8 @@ export function parseRoadmapProgressChange(
   if (entries.length > MAX_ROADMAP_PROGRESS_KEYS) return fail("تعداد مرحله‌ها بیش از حد است");
   const stepProgress: Record<string, true> = {};
   for (const [k, v] of entries) {
-    if (!/^\d{1,3}$/.test(k) || typeof v !== "boolean") return fail("stepProgress نامعتبر است");
+    // "n" = مرحله، "n.i" = کارِ iامِ مرحله (taskKey در lib/roadmapPlan.ts)
+    if (!/^\d{1,3}(\.\d{1,3})?$/.test(k) || typeof v !== "boolean") return fail("stepProgress نامعتبر است");
     if (v) stepProgress[k] = true;
   }
   return { ok: true, change: { entity: "roadmapProgress", id: r.id as string, op: "upsert", stepProgress, clientAt } };

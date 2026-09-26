@@ -3,7 +3,13 @@
 // (روی apiClient مشترک با auth/refresh) را جای‌گذاری می‌کند. مقدارِ
 // پیش‌فرضِ context عمداً throw می‌کند تا فراموشیِ wiring بی‌سروصدا رد نشه.
 import { createContext, useContext } from "react";
-import type { MobileRoadmap, MobileRoadmapRequest, MobileRoadmapResponse } from "@/lib/api-contract";
+import type {
+  MobileRoadmap,
+  MobileRoadmapRegenerateRequest,
+  MobileRoadmapRegenerateResponse,
+  MobileRoadmapRequest,
+  MobileRoadmapResponse,
+} from "@/lib/api-contract";
 
 export type RoadmapFetchResult = { status: 304 } | { status: 200; etag: string; data: MobileRoadmap[] };
 
@@ -29,6 +35,8 @@ export type RoadmapApi = {
   fetchRoadmaps(etag?: string): Promise<RoadmapFetchResult>;
   /** POST /api/mobile/ai/roadmap — نیازمندِ اینترنت؛ خطا با RoadmapApiError */
   createAi(req: MobileRoadmapRequest): Promise<MobileRoadmapResponse>;
+  /** POST /api/mobile/ai/roadmap/{id}/regenerate — ساختِ دوباره‌ی جزئیاتِ یک مرحله یا راهنما */
+  regenerate(id: string, req: MobileRoadmapRegenerateRequest): Promise<MobileRoadmapRegenerateResponse>;
 };
 
 const notWired: RoadmapApi = {
@@ -36,6 +44,9 @@ const notWired: RoadmapApi = {
     throw new Error("offline: RoadmapApi وصل نشده — لایه‌ی apiClient باید Provider واقعی بده");
   },
   async createAi() {
+    throw new Error("offline: RoadmapApi وصل نشده — لایه‌ی apiClient باید Provider واقعی بده");
+  },
+  async regenerate() {
     throw new Error("offline: RoadmapApi وصل نشده — لایه‌ی apiClient باید Provider واقعی بده");
   },
 };

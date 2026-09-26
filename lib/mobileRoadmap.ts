@@ -9,7 +9,7 @@ import type { MobileRoadmap, RoadmapProgressRecord } from "@/lib/mobileApiContra
 // /api/roadmaps/[id] و /progress.
 
 const FULL_SELECT = {
-  id: true, topic: true, goal: true, title: true, summary: true, guide: true, steps: true, tools: true,
+  id: true, topic: true, goal: true, title: true, summary: true, guide: true, steps: true, tools: true, meta: true,
   totalDuration: true, progress: true, generatedByAi: true, createdAt: true,
   updatedAt: true, syncEditedAt: true, syncWrittenAt: true,
 } as const;
@@ -28,12 +28,12 @@ export function serializeRoadmapProgress(r: ProgressRow): RoadmapProgressRecord 
   return { id: r.id, ...progressOf(r), ...meta(r) };
 }
 
-export async function listMobileRoadmaps(userId: string): Promise<MobileRoadmap[]> {
-  const rows = await prisma.roadmap.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, select: FULL_SELECT });
+export async function listMobileRoadmaps(userId: string, onlyId?: string): Promise<MobileRoadmap[]> {
+  const rows = await prisma.roadmap.findMany({ where: { userId, ...(onlyId ? { id: onlyId } : {}) }, orderBy: { createdAt: "desc" }, select: FULL_SELECT });
   return rows.map((r) => {
     // ردیفِ قدیمی‌تر از تغییرِ ساختار هم با normalizePlan کامل می‌شه (مثل وب)
     const plan = normalizePlan({
-      title: r.title, summary: r.summary, guide: r.guide, totalDuration: r.totalDuration, tools: r.tools, stages: r.steps,
+      title: r.title, summary: r.summary, guide: r.guide, totalDuration: r.totalDuration, tools: r.tools, meta: r.meta, stages: r.steps,
     });
     const stepProgress = sanitizeStepProgress(plan.stages, r.progress);
     return {

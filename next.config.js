@@ -100,6 +100,20 @@ const nextConfig = {
       ...noindexHeaders,
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/report/weekly",
+        destination: "/analysis/weekly",
+        permanent: true,
+      },
+      {
+        source: "/report/weekly/:path*",
+        destination: "/analysis/weekly",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

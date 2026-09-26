@@ -8,7 +8,7 @@ import { SYNC_ERROR_MODULE_LOCKED, type MobileRoadmapResponse } from "@/lib/mobi
 
 export const maxDuration = 60;
 
-// POST /api/mobile/ai/roadmap { topic, goal? } — نسخه‌ی Bearerِ POST /api/roadmaps.
+// POST /api/mobile/ai/roadmap { topic, goal?, level?, weeklyHours?, background? } — نسخه‌ی Bearerِ POST /api/roadmaps.
 // همون هسته (lib/roadmapGeneration.ts): سطلِ مشترکِ rate limit، ثبتِ مصرفِ AI.
 export async function POST(req: NextRequest) {
   const userId = await getMobileUserId(req);
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const r = await createAiRoadmap(userId, parsed.body);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-  const roadmap = (await listMobileRoadmaps(userId)).find((x) => x.id === r.id)!;
-  const body: MobileRoadmapResponse = { roadmap };
+  const [roadmap] = await listMobileRoadmaps(userId, r.id);
+  const body: MobileRoadmapResponse = { roadmap, pendingStages: r.pendingStages, guideReady: r.guideReady };
   return NextResponse.json(body, { status: 201 });
 }

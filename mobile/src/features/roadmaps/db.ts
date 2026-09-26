@@ -41,6 +41,8 @@ export interface RoadmapMetaRow {
   value: string;
 }
 
+export const LIST_ETAG_KEY = "listEtag";
+
 class RoadmapsDB extends Dexie {
   roadmaps!: Table<RoadmapCacheRow, string>;
   progress!: Table<RoadmapProgressRow, string>;
@@ -53,6 +55,20 @@ class RoadmapsDB extends Dexie {
       progress: "id, updatedAt, dirty",
       meta: "key",
     });
+    // v2: شکلِ plan عوض شد (ساختِ دوفازی: topics/tasks/project/meta به‌جای
+    // learn/do/done). کشِ قدیمی فقط‌خواندنیه و سرور مرجعشه — پاکش می‌کنیم و
+    // ETag رو هم، تا فهرستِ بعدی کامل (۲۰۰) بیاد و کشِ هم‌شکل بسازه. پیشرفتِ
+    // محلی (کلیدهای مرحله) دست نمی‌خوره.
+    this.version(2)
+      .stores({
+        roadmaps: "id, updatedAt",
+        progress: "id, updatedAt, dirty",
+        meta: "key",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("roadmaps").clear();
+        await tx.table("meta").delete(LIST_ETAG_KEY);
+      });
   }
 }
 
@@ -61,8 +77,6 @@ export const db = new RoadmapsDB();
 export function nowIso(): string {
   return new Date().toISOString();
 }
-
-export const LIST_ETAG_KEY = "listEtag";
 
 export async function getListEtag(): Promise<string | undefined> {
   const row = await db.meta.get(LIST_ETAG_KEY);

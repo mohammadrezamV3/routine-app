@@ -129,6 +129,36 @@ function CalendarBody({ onLocked }: { onLocked: () => void }) {
     return () => clearInterval(t);
   }, [online, load]);
 
+  // اپی که از دیروز باز مونده روی «دیروز/هفته‌ی قبل» گیر نکنه (همون رفعِ
+  // EconomicCalendarPanelِ وب): اگه کاربر روی هفته‌ی جاریِ اون موقع بود، با
+  // عوض‌شدنِ هفته به هفته‌ی جدید می‌ره؛ برگشتن به اپ هم بی‌صدا تازه‌سازی
+  // می‌کنه. تیکِ دقیقه‌ای «امروز» رو هم بعد از نیمه‌شب درست می‌کنه.
+  const weekAnchor = useRef(isoLocal(weekStartOf(new Date())));
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    function check(reload: boolean) {
+      if (document.visibilityState !== "visible") return;
+      setNowTick((n) => n + 1);
+      const nowWeek = isoLocal(weekStartOf(new Date()));
+      if (nowWeek !== weekAnchor.current) {
+        const wasOnThisWeek = weekIso === weekAnchor.current;
+        weekAnchor.current = nowWeek;
+        if (wasOnThisWeek) {
+          setWeekStart(weekStartOf(new Date()));
+          return;
+        }
+      }
+      if (reload) void load(true);
+    }
+    const onVisible = () => check(true);
+    const tick = setInterval(() => check(false), 60_000);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(tick);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [load, weekIso]);
+
   const days = useMemo(() => groupByLocalDay(applyCalendarFilters(events, filters)), [events, filters]);
   const filterCount = activeFilterCount(filters);
   const todayIso = isoLocal(new Date());

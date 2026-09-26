@@ -323,7 +323,7 @@ export async function getRenewalsAndUpgrades(range: Range): Promise<RenewalsUpgr
 // کاربران
 // ============================================================================
 
-export type UsersListFilter = "all" | "new" | "active" | "inactive" | "free" | "paid" | "blocked";
+export type UsersListFilter = "all" | "new" | "active" | "inactive" | "free" | "paid" | "blocked" | "admins" | "deleted";
 export type UsersListParams = { search?: string; filter?: UsersListFilter; page?: number; pageSize?: number; sort?: "newest" | "oldest" | "name" };
 
 export async function getUsersList(params: UsersListParams) {
@@ -333,10 +333,11 @@ export async function getUsersList(params: UsersListParams) {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
 
-  const where: any = { deletedAt: null };
+  const where: any = { deletedAt: params.filter === "deleted" ? { not: null } : null };
   if (params.search?.trim()) {
     const q = params.search.trim();
     where.OR = [
+      { id: q },
       { name: { contains: q, mode: "insensitive" } },
       { lastName: { contains: q, mode: "insensitive" } },
       { email: { contains: q, mode: "insensitive" } },
@@ -363,6 +364,9 @@ export async function getUsersList(params: UsersListParams) {
     case "blocked":
       where.isBlocked = true;
       break;
+    case "admins":
+      where.AND = [{ OR: [{ isSuperAdmin: true }, { NOT: { adminPermissions: { isEmpty: true } } }] }];
+      break;
   }
 
   const orderBy =
@@ -383,7 +387,10 @@ export async function getUsersList(params: UsersListParams) {
         username: true,
         market: true,
         isSuperAdmin: true,
+        adminPermissions: true,
         isBlocked: true,
+        deletedAt: true,
+        avatarUrl: true,
         createdAt: true,
         subscriptions: { where: { status: "ACTIVE" }, take: 1, orderBy: { createdAt: "desc" }, select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, priceMonthly: true } } } },
         loginEvents: { take: 1, orderBy: { createdAt: "desc" }, select: { createdAt: true } },
@@ -402,7 +409,10 @@ export async function getUsersList(params: UsersListParams) {
       username: u.username,
       market: u.market,
       isSuperAdmin: u.isSuperAdmin,
+      isAdmin: u.isSuperAdmin || u.adminPermissions.length > 0,
       isBlocked: u.isBlocked,
+      deletedAt: u.deletedAt,
+      avatarUrl: u.avatarUrl,
       createdAt: u.createdAt,
       plan: u.subscriptions[0]?.plan?.nameFa || null,
       subscriptionStatus: u.subscriptions[0]?.status || null,
@@ -420,8 +430,9 @@ export async function getUserDetail(userId: string) {
     where: { id: userId },
     select: {
       id: true, name: true, lastName: true, email: true, phone: true, username: true,
-      market: true, locale: true, isSuperAdmin: true, isBlocked: true, blockedAt: true,
-      createdAt: true, gender: true, birthDate: true,
+      market: true, locale: true, isSuperAdmin: true, adminPermissions: true, isBlocked: true, blockedAt: true,
+      createdAt: true, gender: true, birthDate: true, deletedAt: true, avatarUrl: true, bio: true,
+      emailVerifiedAt: true, phoneVerifiedAt: true, twoFactorEnabled: true, updatedAt: true,
       chatBanUntil: true, chatDisabled: true, chatWarnAt: true, chatWarnNote: true, chatWarnSeenAt: true,
       subscriptions: { orderBy: { createdAt: "desc" }, include: { plan: true, payments: { orderBy: { createdAt: "desc" } } } },
       moduleAccess: true,
@@ -430,7 +441,7 @@ export async function getUserDetail(userId: string) {
   });
   if (!user) return null;
 
-  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory] = await Promise.all([
+  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory, adminHistory, activeSessions] = await Promise.all([
     prisma.dailyEntry.count({ where: { userId } }),
     prisma.exerciseLog.count({ where: { userId } }),
     prisma.foodLogEntry.count({ where: { userId, deletedAt: null } }),
@@ -441,6 +452,11 @@ export async function getUserDetail(userId: string) {
       where: { targetType: "User", targetId: userId, action: { startsWith: "chat." } },
       orderBy: { createdAt: "desc" }, take: 20,
     }),
+    prisma.auditLog.findMany({
+      where: { targetType: "User", targetId: userId, NOT: { action: { startsWith: "chat." } } },
+      orderBy: { createdAt: "desc" }, take: 30,
+    }),
+    prisma.session.count({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } } }),
   ]);
 
   return {
@@ -453,6 +469,8 @@ export async function getUserDetail(userId: string) {
       costUsdMicros: aiUsage._sum.costUsdMicros || 0,
     },
     chatModerationHistory,
+    adminHistory,
+    activeSessions,
   };
 }
 

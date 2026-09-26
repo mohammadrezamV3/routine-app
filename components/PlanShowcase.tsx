@@ -97,7 +97,7 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "مدیربرنامه هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "اپلیکیشن موبایل", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "یکپارچه‌سازی با ساعت هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: "گزارش هفتگی هوش مصنوعی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
+  { label: "آنالیز هفتگی هوش مصنوعی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   // «تحلیل هوشمند» طبق درخواست صریح دیگر فیچر آماده نیست — به همین بخشِ
   // «به‌زودی» (تارشده در جدول) منتقل شد.
   { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },

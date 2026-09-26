@@ -8,6 +8,11 @@ vi.hoisted(() => {
   process.env.NEXTAUTH_SECRET ||= "test-secret-for-mobile-auth-at-least-32-chars";
 });
 
+// sync هنگامِ خواندن (ensureFreshCalendar) نباید در تست به منبعِ بیرونی بره —
+// فقط چک می‌کنیم روتِ موبایل هم مثلِ وب قبل از خواندن صداش می‌زنه.
+const { ensureFreshCalendar } = vi.hoisted(() => ({ ensureFreshCalendar: vi.fn(async () => {}) }));
+vi.mock("@/lib/economicCalendar", async (orig) => ({ ...(await orig<typeof import("@/lib/economicCalendar")>()), ensureFreshCalendar }));
+
 import { POST as login } from "@/app/api/mobile/auth/login/route";
 import { GET as calendar } from "@/app/api/mobile/trade-online/calendar/route";
 import { GET as prices } from "@/app/api/mobile/trade-online/market/prices/route";
@@ -112,7 +117,9 @@ describe("economic calendar (from our table)", () => {
     const t = await tokenFor(u.username!);
     const q = (qs: string) => calendar(get(`/api/mobile/trade-online/calendar?${qs}`, t));
 
+    ensureFreshCalendar.mockClear();
     let body: EconomicCalendarResponse = await (await q(`from=2031-01-10&to=2031-01-10&tz=210&currencies=${CUR}`)).json();
+    expect(ensureFreshCalendar).toHaveBeenCalledTimes(1);
     expect(body.events.map((e) => e.title)).toEqual(["ZZ Night CPI", "ZZ Noon PMI"]);
     expect(body.events[0]).toMatchObject({ actual: "3.1%", forecast: "3.0%", previous: "2.9%", impact: "HIGH", occursAt: "2031-01-09T21:00:00.000Z" });
     expect(body.range.to).not.toBeNull();

@@ -8,14 +8,31 @@ vi.hoisted(() => {
   process.env.NEXTAUTH_SECRET ||= "test-secret-for-mobile-auth-at-least-32-chars";
 });
 
+// ردیفِ قدیمی (learn/do/done) — normalizePlan باید به شکلِ جدید نگاشتش کنه
 const STAGES = [1, 2, 3].map((n) => ({
-  n, title: `مرحله ${n}`, goal: "g", duration: "۱ هفته", learn: ["a"], do: ["b"], tools: [], resources: [], done: "d",
+  n, title: `مرحله ${n}`, goal: "g", duration: "۱ هفته", learn: ["a"], do: ["b", "c"], tools: [], resources: [], done: "d",
+}));
+// خروجیِ ساختِ دوفازی: مرحله‌ی ۳ جزئیاتش نرسیده (detailed:false)
+const AI_STAGES = [1, 2, 3].map((n) => ({
+  n, title: `مرحله ${n}`, goal: "g", duration: "۱ هفته", focus: "f", why: "w", detailed: n !== 3,
+  prerequisites: [], topics: n !== 3 ? [{ title: "t", detail: "", points: [] }] : [],
+  tasks: n !== 3 ? [{ title: "k1", detail: "", output: "" }, { title: "k2", detail: "", output: "" }] : [],
+  project: null, tools: [{ name: "x", use: "" }], resources: [], pitfalls: [], done: ["d"],
 }));
 let exerciseAiFails = false;
 vi.mock("@/lib/aiClient", () => ({
-  generateRoadmapPlan: vi.fn(async () => ({
-    plan: { title: "شبکه", summary: "s", guide: "g".repeat(500), totalDuration: "۳ ماه", tools: ["x"], stages: STAGES },
+  generateRoadmapPlan: vi.fn(async (profile: any) => ({
+    plan: {
+      title: "شبکه", summary: "s", guide: "g".repeat(700), totalDuration: "۳ ماه", tools: [{ name: "x", use: "" }],
+      meta: { level: profile.level, weeklyHours: profile.weeklyHours, audience: "a", prerequisites: [], outcomes: ["o"], certifications: [] },
+      stages: AI_STAGES,
+    },
+    meta: { attempts: 1, durationMs: 1, pendingStages: [3], guideReady: true },
   })),
+  generateStageDetail: vi.fn(async (_ctx: any, n: number) => ({
+    ...AI_STAGES[0], n, title: `مرحله ${n}`, detailed: true, tasks: [{ title: "new", detail: "", output: "" }],
+  })),
+  generateRoadmapGuide: vi.fn(async () => "## راهنما\nمتن"),
   generateExercisePlan: vi.fn(async () => {
     if (exerciseAiFails) throw new Error("gateway down");
     return { feasible: true, days: [{ day: "شنبه", focus: "سینه", items: ["پرس سینه"] }] };
@@ -27,9 +44,10 @@ import { GET as pull } from "@/app/api/mobile/sync/pull/route";
 import { POST as push } from "@/app/api/mobile/sync/push/route";
 import { GET as roadmaps } from "@/app/api/mobile/roadmaps/route";
 import { POST as aiRoadmap } from "@/app/api/mobile/ai/roadmap/route";
+import { POST as aiRoadmapRegenerate } from "@/app/api/mobile/ai/roadmap/[id]/regenerate/route";
 import { POST as aiExercise } from "@/app/api/mobile/ai/exercise-plan/route";
 import { prisma } from "@/lib/prisma";
-import type { MobileAuthSuccess, MobileRoadmapsResponse, SyncPullResponse, SyncPushResponse } from "@/lib/mobileApiContract";
+import type { MobileAuthSuccess, MobileRoadmapRegenerateResponse, MobileRoadmapResponse, MobileRoadmapsResponse, SyncPullResponse, SyncPushResponse } from "@/lib/mobileApiContract";
 
 const PASSWORD = "Correct-Horse-Battery-9";
 const createdUsers: string[] = [];
@@ -108,6 +126,11 @@ describe("roadmaps (superadmin)", () => {
     expect(list.roadmaps).toHaveLength(1);
     expect(list.roadmaps[0]).toMatchObject({ id: rm.id, stepProgress: { "1": true }, progress: { total: 3, done: 1, pct: 33 } });
     expect(list.roadmaps[0].plan.stages).toHaveLength(3);
+    // ردیفِ قدیمی به شکلِ دوفازی نگاشت می‌شه (learn → topics، do → tasks، done → [done])
+    expect(list.roadmaps[0].plan.stages[0]).toMatchObject({
+      detailed: true, topics: [{ title: "a" }], tasks: [{ title: "b" }, { title: "c" }], done: ["d"],
+    });
+    expect(list.roadmaps[0].plan.meta).toEqual({ audience: "", prerequisites: [], outcomes: [], certifications: [] });
     const etag = r1.headers.get("etag")!;
     expect((await roadmaps(req("/api/mobile/roadmaps", null, t, "GET", { "if-none-match": etag }))).status).toBe(304);
 
@@ -121,6 +144,12 @@ describe("roadmaps (superadmin)", () => {
     expect(after.roadmapProgress?.[0]).toMatchObject({ id: rm.id, progress: { done: 2 } });
     // ETag عوض شد
     expect((await roadmaps(req("/api/mobile/roadmaps", null, t, "GET", { "if-none-match": etag }))).status).toBe(200);
+
+    // کلیدِ کار ("n.i") هم sync می‌شه ولی در درصد حساب نمی‌شه؛ کارِ ناموجود (1.3) دور ریخته می‌شه
+    const tasks = await doPush(t, [{ entity: "roadmapProgress", id: rm.id, op: "upsert", data: { stepProgress: { "1": true, "1.2": true, "1.3": true } }, clientUpdatedAt: now() }]);
+    expect(tasks.results[0]).toMatchObject({ status: "applied", serverRecord: { stepProgress: { "1": true, "1.2": true }, progress: { done: 1 } } });
+    const bad = await doPush(t, [{ entity: "roadmapProgress", id: rm.id, op: "upsert", data: { stepProgress: { "1.x": true } }, clientUpdatedAt: now() }]);
+    expect(bad.results[0]).toMatchObject({ status: "rejected" });
 
     // ویرایشِ وب (PATCH progress → updatedAt خودکار) بعدش؛ ویرایشِ قدیمی‌ترِ گوشی می‌بازه
     await prisma.roadmap.updateMany({ where: { id: rm.id, userId: u.id }, data: { progress: { "3": true } as any } });
@@ -136,11 +165,54 @@ describe("roadmaps (superadmin)", () => {
     const u = await makeUser({ superAdmin: true });
     const t = await tokenFor(u.username!);
     expect((await aiRoadmap(req("/api/mobile/ai/roadmap", { topic: "  " }, t))).status).toBe(400);
-    const res = await aiRoadmap(req("/api/mobile/ai/roadmap", { topic: "شبکه", goal: "استخدام" }, t));
+    const res = await aiRoadmap(req("/api/mobile/ai/roadmap", { topic: "شبکه", goal: "استخدام", level: "mid", weeklyHours: "8", background: "پایتون" }, t));
     expect(res.status).toBe(201);
-    const body = await res.json();
+    const body: MobileRoadmapResponse = await res.json();
     expect(body.roadmap).toMatchObject({ topic: "شبکه", goal: "استخدام", generatedByAi: true, progress: { total: 3, done: 0 } });
-    expect(await prisma.roadmap.count({ where: { userId: u.id } })).toBe(1);
+    expect(body.roadmap.plan.meta).toMatchObject({ level: "mid", weeklyHours: "8", outcomes: ["o"] });
+    expect(body).toMatchObject({ pendingStages: [3], guideReady: true });
+    const { generateRoadmapPlan } = await import("@/lib/aiClient");
+    expect(generateRoadmapPlan).toHaveBeenLastCalledWith(
+      { topic: "شبکه", goal: "استخدام", level: "mid", weeklyHours: "8", background: "پایتون" }, u.id
+    );
+    // مقدارِ خارج از فهرست یعنی «نگفته»، نه متنی که به پرامپت بره
+    await aiRoadmap(req("/api/mobile/ai/roadmap", { topic: "شبکه", level: "hacker", weeklyHours: "99" }, t));
+    expect(generateRoadmapPlan).toHaveBeenLastCalledWith(
+      { topic: "شبکه", goal: undefined, level: undefined, weeklyHours: undefined, background: undefined }, u.id
+    );
+    expect(await prisma.roadmap.count({ where: { userId: u.id } })).toBe(2);
+  });
+
+  it("regenerate wrapper: pending stage gets details, task ticks of the replaced stage are dropped, ownership", async () => {
+    const u = await makeUser({ superAdmin: true });
+    const other = await makeUser({ superAdmin: true });
+    const t = await tokenFor(u.username!);
+    const created: MobileRoadmapResponse = await (await aiRoadmap(req("/api/mobile/ai/roadmap", { topic: "شبکه" }, t))).json();
+    const id = created.roadmap.id;
+    await prisma.roadmap.updateMany({ where: { id, userId: u.id }, data: { progress: { "1": true, "3": true, "3.2": true } as any } });
+
+    const regen = (body: unknown, rid = id) =>
+      aiRoadmapRegenerate(req(`/api/mobile/ai/roadmap/${rid}/regenerate`, body, t), { params: { id: rid } });
+    expect((await regen({ target: "nope" })).status).toBe(400);
+    expect((await regen({ target: "stage", n: "3" })).status).toBe(400);
+
+    const res = await regen({ target: "stage", n: 3 });
+    expect(res.status).toBe(200);
+    const body: MobileRoadmapRegenerateResponse = await res.json();
+    expect(body.roadmap.plan.stages[2]).toMatchObject({ n: 3, detailed: true, tasks: [{ title: "new" }] });
+    expect(body.roadmap.stepProgress).toEqual({ "1": true, "3": true });
+
+    const g = await regen({ target: "guide" });
+    expect(((await g.json()) as MobileRoadmapRegenerateResponse).roadmap.plan.guide).toBe("## راهنما\nمتن");
+
+    const foreign = await prisma.roadmap.create({ data: { userId: other.id, topic: "x", title: "x", guide: "g", steps: STAGES as any } });
+    expect((await regen({ target: "guide" }, foreign.id)).status).toBe(404);
+    expect((await prisma.roadmap.findUnique({ where: { id: foreign.id } }))?.guide).toBe("g");
+
+    const locked = await makeUser({ modules: ["ROADMAP"] });
+    const lt = await tokenFor(locked.username!);
+    expect((await aiRoadmapRegenerate(req(`/api/mobile/ai/roadmap/${id}/regenerate`, { target: "guide" }, lt), { params: { id } })).status).toBe(403);
+    expect((await aiRoadmapRegenerate(req(`/api/mobile/ai/roadmap/${id}/regenerate`, { target: "guide" }), { params: { id } })).status).toBe(401);
   });
 });
 

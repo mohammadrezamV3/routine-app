@@ -14,3 +14,12 @@ describe("mobile API contract", () => {
     expect(fs.readFileSync(mobilePath, "utf8")).toBe(server);
   });
 });
+
+describe("roadmap contract mirrors lib/roadmapPlan", () => {
+  it("level/hours options match (value + label, same order)", async () => {
+    const { LEVEL_OPTIONS, HOURS_OPTIONS } = await import("@/lib/roadmapPlan");
+    const { ROADMAP_LEVEL_OPTIONS, ROADMAP_HOURS_OPTIONS } = await import("@/lib/mobileApiContract");
+    expect(ROADMAP_LEVEL_OPTIONS.map((o) => [o.value, o.label])).toEqual(LEVEL_OPTIONS.map((o) => [o.value, o.label]));
+    expect(ROADMAP_HOURS_OPTIONS.map((o) => [o.value, o.label])).toEqual(HOURS_OPTIONS.map((o) => [o.value, o.label]));
+  });
+});

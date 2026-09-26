@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isoLocal } from "@/lib/jalali";
@@ -30,7 +30,7 @@ function pick<T>(arr: T[]): T {
 }
 
 export async function POST() {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("system");
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 

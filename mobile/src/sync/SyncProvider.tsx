@@ -136,6 +136,17 @@ function makeRoadmapApi(api: ApiClient): RoadmapApi {
         throw toRoadmapError(err);
       }
     },
+    async regenerate(id, req) {
+      try {
+        if (!api.baseUrl || !api.tokens.isLoggedIn()) throw new RoadmapApiError(401, "unauthorized");
+        const res = await api.authedRaw("POST", `/api/mobile/ai/roadmap/${encodeURIComponent(id)}/regenerate`, req, { timeoutMs: 75_000 });
+        const body = await ApiClient.readJson(res);
+        if (!res.ok || !body?.roadmap) throw new RoadmapApiError(res.status, typeof body?.error === "string" ? body.error : "");
+        return body;
+      } catch (err) {
+        throw toRoadmapError(err);
+      }
+    },
   };
 }
 

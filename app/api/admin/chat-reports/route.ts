@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TradeChatReportStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 // صفِ بررسیِ گزارش‌های چت. فقط سوپریوزر.
 //
@@ -11,7 +11,7 @@ import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 const STATUSES = ["OPEN", "ACTIONED", "DISMISSED"] as const;
 
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("chat");
   if (!guard.ok) return guard.response;
 
   const statusRaw = req.nextUrl.searchParams.get("status");
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/admin/chat-reports  { id, action: "delete" | "dismiss" }
 export async function PATCH(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("chat");
   if (!guard.ok) return guard.response;
 
   const payload = await req.json().catch(() => null);

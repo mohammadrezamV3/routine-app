@@ -7,13 +7,17 @@
 //   • این ماژول نباید به در دسترس بودن یک سرویس خارجی گره بخورد. با
 //     ورود دستی ادمین از همین حالا کامل کار می‌کند.
 //
-// منبع پیش‌فرض حالا JBlanked Calendar API است (نه Trading Economics و نه
-// فارکس‌فکتوری — طبقِ درخواستِ صریح عوض شد). کران روزانه آن را می‌گیرد و
-// در همین جدول upsert می‌کند؛ ورود دستی ادمین هم سر جایش می‌ماند. JBlanked
-// بدونِ کلید کار نمی‌کند — `ECONOMIC_CALENDAR_API_KEY` باید ست شود (از
-// jblanked.com/profile)، وگرنه sync خودکار غیرفعال می‌ماند و فقط ورود
-// دستی ادمین کار می‌کند. با ست‌کردن `ECONOMIC_CALENDAR_URL` می‌شود منبع
-// را کامل با یک فیدِ دیگر عوض کرد، بدون اینکه هیچ‌جای دیگر اپ تغییر کند.
+// اولویتِ انتخابِ منبع (هر دو `fetchExternalEvents` و `externalProviderName`
+// باید هم‌نظر بمانند):
+//   ۱) `ECONOMIC_CALENDAR_URL` — عوضِ کاملِ منبع با یک فیدِ دلخواه (override دستی)
+//   ۲) `ECONOMIC_CALENDAR_API_KEY` — JBlanked Calendar API (بازه تا یک ماهِ جلوتر)
+//   ۳) بدونِ کلید (پیش‌فرض): TradingView — بدونِ کلید، actual دارد
+//   ۴) اگر TradingView در دسترس نبود (فقط در پاسِ کامل، نه پاسِ تند):
+//      فارکس‌فکتوریِ رایگان — actual ندارد، ولی همیشه در دسترس است
+// یعنی تقویم *هیچ‌وقت* بدونِ کارِ ادمین مرده نمی‌ماند. جدا از کرانِ روزانه،
+// خودِ روتِ خواندن هم هر بار داده‌ی کهنه را با `ensureFreshCalendar` تازه
+// می‌کند — پس sync دیگر به هیچ زمان‌بندِ بیرونی (crontab/cluster.js) وابسته
+// نیست، آن‌ها فقط تازگی را زودتر تضمین می‌کنند.
 //
 // طبقِ درخواستِ صریح، عنوانِ رویدادها دیگر به فارسی ترجمه نمی‌شود — دقیقاً
 // همان متنِ انگلیسیِ منبع (مثلِ خودِ JBlanked) ذخیره/نمایش داده می‌شود.
@@ -85,6 +89,92 @@ const FREE_FEED_URLS = [
   FREE_FEED_THIS_WEEK,
   "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
 ];
+/**
+ * منبعِ پیش‌فرضِ بدونِ کلید: تقویمِ اقتصادیِ TradingView.
+ *
+ * چرا جای فارکس‌فکتوری را گرفت: فیدِ رایگانِ faireconomy اصلاً فیلدِ
+ * `actual` ندارد (فقط title/country/date/impact/forecast/previous)؛ پس هر
+ * چقدر هم sync درست کار می‌کرد، actual *هیچ‌وقت* نمی‌رسید — همان باگِ
+ * گزارش‌شده. فیدِ nextweek/lastweekِ آن هم همیشه در دسترس نیست، پس روزهای
+ * پیشِ‌رو خالی می‌ماندند. TradingView با یک درخواست بازه‌ی دلخواه (۷ روز قبل
+ * تا ۳۰ روز بعد) را با actual، شناسه‌ی پایدار، تاریخِ ISOِ UTC و توضیح می‌دهد.
+ * فارکس‌فکتوری فقط پشتیبان است (وقتی TradingView در دسترس نبود).
+ */
+const TRADINGVIEW_URL = "https://economic-calendar.tradingview.com/events";
+const TRADINGVIEW_HEADERS = {
+  Origin: "https://www.tradingview.com",
+  Referer: "https://www.tradingview.com/",
+  Accept: "application/json",
+};
+
+function buildTradingViewUrl(fast: boolean | undefined): string {
+  const now = Date.now();
+  const back = fast ? JB_FAST_WINDOW_DAYS : JB_LOOKBACK_DAYS;
+  const ahead = fast ? JB_FAST_WINDOW_DAYS : JB_LOOKAHEAD_DAYS;
+  const qs = new URLSearchParams({
+    from: new Date(now - back * 86_400_000).toISOString(),
+    to: new Date(now + ahead * 86_400_000).toISOString(),
+    countries: CALENDAR_CURRENCIES.map((c) => c.country).join(","),
+  });
+  return `${TRADINGVIEW_URL}?${qs}`;
+}
+
+/** عددِ TradingView (مثلاً 175 با scale=K) → «175K»؛ واحدِ درصد هم می‌چسبد. */
+function tvValue(row: Record<string, unknown>, key: "actual" | "forecast" | "previous"): string | null {
+  const v = row[key];
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v !== "number" && typeof v !== "string") return null;
+  const scale = typeof row.scale === "string" ? row.scale.trim() : "";
+  const unit = typeof row.unit === "string" ? row.unit.trim() : "";
+  const suffix = `${["K", "M", "B", "T"].includes(scale) ? scale : ""}${unit === "%" ? "%" : ""}`;
+  return `${v}${suffix}`;
+}
+
+/** importance: ‎-1 کم، 0 متوسط، 1 بالا. */
+function tvImpact(v: unknown): EconomicImpact {
+  const n = Number(v);
+  if (n >= 1) return "HIGH";
+  if (n === 0) return "MEDIUM";
+  return "LOW";
+}
+
+export function normalizeTradingViewEvents(raw: unknown): NormalizedEvent[] {
+  const rows: unknown[] = Array.isArray((raw as any)?.result) ? (raw as any).result : Array.isArray(raw) ? (raw as unknown[]) : [];
+  const out: NormalizedEvent[] = [];
+  for (const item of rows) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Record<string, unknown>;
+    const title = pickString(row, ["title", "indicator"]);
+    const dateRaw = pickString(row, ["date"]);
+    const id = pickString(row, ["id"]);
+    if (!title || !dateRaw || !id) continue;
+    const occursAt = new Date(dateRaw);
+    if (isNaN(occursAt.getTime())) continue;
+    const rawCountry = (pickString(row, ["country"]) || "").toUpperCase();
+    const currency = (
+      pickString(row, ["currency"]) ||
+      CALENDAR_CURRENCIES.find((c) => c.country === rawCountry)?.code ||
+      ""
+    ).toUpperCase();
+    if (!currency) continue;
+    const period = pickString(row, ["period"]);
+    out.push({
+      externalId: id,
+      title: (period ? `${title} (${period})` : title).slice(0, 160),
+      country: (rawCountry || currencyMeta(currency)?.country || currency).slice(0, 2),
+      currency: currency.slice(0, 8),
+      impact: tvImpact(row.importance),
+      occursAt,
+      actual: tvValue(row, "actual"),
+      forecast: tvValue(row, "forecast"),
+      previous: tvValue(row, "previous"),
+      description: pickString(row, ["comment"])?.slice(0, 2000) ?? null,
+    });
+  }
+  return out;
+}
+
+const FOREXFACTORY_SOURCE = "FOREXFACTORY";
 const JB_LOOKBACK_DAYS = 7;
 const JB_LOOKAHEAD_DAYS = 30;
 // در حالتِ «تند» (نزدیکِ لحظه‌ی انتشارِ یک خبر) فقط بازه‌ی خیلی نزدیکِ
@@ -209,7 +299,7 @@ export function externalProviderConfigured(): boolean {
 export function externalProviderName(): string {
   if (process.env.ECONOMIC_CALENDAR_SOURCE) return process.env.ECONOMIC_CALENDAR_SOURCE;
   if (process.env.ECONOMIC_CALENDAR_URL) return "EXTERNAL";
-  return process.env.ECONOMIC_CALENDAR_API_KEY ? "JBLANKED" : "FOREXFACTORY";
+  return process.env.ECONOMIC_CALENDAR_API_KEY ? "JBLANKED" : "TRADINGVIEW";
 }
 
 function pickString(row: Record<string, unknown>, keys: string[]): string | null {
@@ -298,7 +388,11 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 // گاهی با تأخیرِ خیلی زیاد/قطعیِ اتصال مواجه می‌شود) کل sync رو تا مدتِ
 // نامعلومی معلق نگه می‌داشت — از بیرون دقیقاً شبیهِ «دیتا نمیاد» بود، چون
 // نه خطا می‌داد نه جواب. ۱۲ ثانیه برایِ یک فیدِ JSONِ سبک کافی‌ست.
-async function fetchOneFeed(url: string, headers: Record<string, string> | undefined): Promise<NormalizedEvent[]> {
+async function fetchOneFeed(
+  url: string,
+  headers: Record<string, string> | undefined,
+  normalize: (raw: unknown) => NormalizedEvent[] = normalizeExternalEvents
+): Promise<NormalizedEvent[]> {
   let res: Response;
   try {
     res = await fetch(url, {
@@ -313,7 +407,15 @@ async function fetchOneFeed(url: string, headers: Record<string, string> | undef
     throw new Error(`اتصال به منبع تقویم اقتصادی (${url}) ناموفق بود: ${reason}`);
   }
   if (!res.ok) throw new Error(`منبع تقویم اقتصادی (${url}) پاسخ ${res.status} داد`);
-  return normalizeExternalEvents(await res.json());
+  // فیدی که به‌جای JSON یک صفحه‌ی HTML (محدودیتِ نرخ/بلاک) برمی‌گرداند
+  // باید خطای روشن بدهد، نه SyntaxErrorِ مبهم.
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    throw new Error(`منبع تقویم اقتصادی (${url}) پاسخِ JSON نداد (احتمالاً محدودیتِ نرخ یا بلاک)`);
+  }
+  return normalize(body);
 }
 
 /**
@@ -330,19 +432,29 @@ async function fetchOneFeed(url: string, headers: Record<string, string> | undef
  * برایِ `ECONOMIC_CALENDAR_URL` دستی (یک فیدِ دیگر)، کلید همچنان به‌صورتِ
  * هدرِ Bearer فرستاده می‌شود — قراردادِ قبلیِ این ماژول برایِ فیدهایِ دیگر.
  */
-export async function fetchExternalEvents(opts?: { fast?: boolean }): Promise<NormalizedEvent[]> {
+export type FetchedCalendar = { source: string; events: NormalizedEvent[] };
+
+export async function fetchExternalEvents(opts?: { fast?: boolean }): Promise<FetchedCalendar> {
   const customUrl = process.env.ECONOMIC_CALENDAR_URL;
   const key = process.env.ECONOMIC_CALENDAR_API_KEY;
+  const source = externalProviderName();
   if (customUrl) {
-    return fetchOneFeed(customUrl, key ? { Authorization: `Bearer ${key}` } : undefined);
+    return { source, events: await fetchOneFeed(customUrl, key ? { Authorization: `Bearer ${key}` } : undefined) };
   }
   if (key) {
-    return fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), { Authorization: `Api-Key ${key}` });
+    return { source, events: await fetchOneFeed(buildDefaultCalendarUrl(opts?.fast), { Authorization: `Api-Key ${key}` }) };
   }
-  // بدونِ کلید: فیدِ رایگان. در حالتِ «تند» (نزدیکِ لحظه‌ی انتشار) فقط
-  // فایلِ همین هفته لازم است — تنها جایی‌ست که رویدادِ در حالِ انتشار
-  // می‌تواند باشد، و هر ۵ثانیه گرفتنِ سه فایل بی‌دلیل است.
-  return fetchFreeFeeds(opts?.fast ? [FREE_FEED_THIS_WEEK] : FREE_FEED_URLS);
+  // بدونِ کلید: TradingView (با actual). اگر در دسترس نبود، فارکس‌فکتوری به‌عنوانِ
+  // پشتیبان — actual ندارد ولی دستِ‌کم روزها و forecast/previous خالی نمی‌مانند.
+  try {
+    return { source, events: await fetchOneFeed(buildTradingViewUrl(opts?.fast), TRADINGVIEW_HEADERS, normalizeTradingViewEvents) };
+  } catch (err) {
+    // حالتِ تند هر چند ثانیه صدا زده می‌شود؛ فیدِ فارکس‌فکتوری محدودیتِ نرخِ
+    // سخت دارد و با این تکرار بلاک می‌شود — پس پشتیبان فقط در پاسِ کامل.
+    if (opts?.fast) throw err;
+    const events = await fetchFreeFeeds(FREE_FEED_URLS);
+    return { source: FOREXFACTORY_SOURCE, events };
+  }
 }
 
 /**
@@ -385,15 +497,20 @@ async function fetchFreeFeeds(urls: string[]): Promise<NormalizedEvent[]> {
  * رویدادهای دستی (source=MANUAL) دست‌نخورده می‌مونن چون کلید یکتا شاملِ
  * source هم هست.
  */
-export async function syncEconomicCalendar(prisma: {
-  economicEvent: { upsert: (args: any) => Promise<{ createdAt: Date; updatedAt: Date }> };
-}, opts?: { fast?: boolean }): Promise<{ source: string; fetched: number; created: number; updated: number; fast: boolean }> {
-  const source = externalProviderName();
-  const fetched = await fetchExternalEvents(opts);
-  // در حالتِ تند فقط رویدادهای همین حدودِ زمانی نوشته می‌شوند. یک sync
-  // کامل چند صد upsertِ پشت‌سرهم است؛ تکرارِ آن هر ۵ثانیه فقط برایِ یک
-  // رویداد، بی‌دلیل دیتابیس را مشغول می‌کرد. کلِ فید همچنان در پاس‌های
-  // آرومِ معمولی (هر ۱۰دقیقه) نوشته می‌شود، پس چیزی از قلم نمی‌افتد.
+type CalendarDb = {
+  economicEvent: {
+    upsert: (args: any) => Promise<{ createdAt: Date; updatedAt: Date }>;
+    deleteMany?: (args: any) => Promise<{ count: number }>;
+  };
+};
+
+export async function syncEconomicCalendar(
+  prisma: CalendarDb,
+  opts?: { fast?: boolean }
+): Promise<{ source: string; fetched: number; created: number; updated: number; removed: number; fast: boolean }> {
+  const { source, events: fetched } = await fetchExternalEvents(opts);
+  // در حالتِ تند فقط رویدادهای همین حدودِ زمانی نوشته می‌شوند. کلِ فید
+  // همچنان در پاس‌های آرومِ معمولی نوشته می‌شود، پس چیزی از قلم نمی‌افتد.
   const events = opts?.fast
     ? fetched.filter((e) => Math.abs(e.occursAt.getTime() - Date.now()) <= 86_400_000)
     : fetched;
@@ -401,11 +518,8 @@ export async function syncEconomicCalendar(prisma: {
   let updated = 0;
   for (const e of events) {
     const { externalId, description, ...data } = e;
-    // JBlanked هم description نمی‌ده (همیشه null) — اگه بدونِ‌قید
-    // توی update بذاریمش، هر sync توضیحی رو که ادمین دستی رویِ همین رویدادِ
-    // sync‌شده نوشته پاک می‌کنه. فقط وقتی خودِ منبع واقعاً یه description
-    // داده (فیدِ تجاریِ دیگه‌ای) رویِ ردیف می‌شینه؛ create همیشه هرچی هست
-    // (حتی null) رو می‌ذاره، چون رکورد تازه‌ست و چیزی برایِ پاک‌کردن نیست.
+    // منبعی که description نمی‌دهد (null) نباید توضیحِ دستیِ ادمین روی همان
+    // ردیف را پاک کند؛ create همیشه هرچه هست را می‌گذارد.
     const updateData = description == null ? data : { ...data, description };
     const result = await prisma.economicEvent.upsert({
       where: { source_externalId: { source, externalId } },
@@ -416,7 +530,84 @@ export async function syncEconomicCalendar(prisma: {
     if (result.createdAt.getTime() === result.updatedAt.getTime()) created++;
     else updated++;
   }
-  return { source, fetched: events.length, created, updated, fast: !!opts?.fast };
+
+  // پاک‌سازی — فقط در پاسِ کامل و فقط وقتی فید واقعاً داده داده (فیدِ خالی
+  // یعنی احتمالاً خرابیِ منبع، نه «هیچ رویدادی نیست»؛ با آن چیزی پاک نمی‌شود).
+  //   • ردیف‌های *منابعِ خودکارِ دیگر* در همین بازه: بعد از عوضِ منبع
+  //     (مثلاً فارکس‌فکتوری → TradingView) هر رویداد دوبار دیده می‌شد، و
+  //     نسخه‌ی قدیمی actual نداشت.
+  //   • ردیف‌های همین منبع در همین بازه که دیگر در فید نیستند: رویدادِ
+  //     لغوشده یا جابه‌جاشده (کلیدِ ترکیبیِ فارکس‌فکتوری زمان را دارد) وگرنه
+  //     به‌صورتِ ردیفِ شبح با «—» برای همیشه می‌ماند.
+  // رویدادهای دستیِ ادمین (MANUAL) هیچ‌وقت دست نمی‌خورند.
+  let removed = 0;
+  if (!opts?.fast && events.length && prisma.economicEvent.deleteMany) {
+    const times = events.map((e) => e.occursAt.getTime());
+    const window = { gte: new Date(Math.min(...times)), lte: new Date(Math.max(...times)) };
+    const other = await prisma.economicEvent.deleteMany({
+      where: { source: { notIn: [source, "MANUAL"] }, occursAt: window },
+    });
+    const stale = await prisma.economicEvent.deleteMany({
+      where: { source, occursAt: window, externalId: { notIn: events.map((e) => e.externalId) } },
+    });
+    removed = other.count + stale.count;
+  }
+  return { source, fetched: events.length, created, updated, removed, fast: !!opts?.fast };
+}
+
+// ── تازه‌نگه‌داشتن هنگامِ خواندن ─────────────────────────────────────────
+//
+// sync قبلاً *فقط* از دو جا اجرا می‌شد: لوپِ cluster.js (فقط داخلِ Docker و
+// فقط اگر CRON_SECRET ست باشد — وگرنه هر ۲ دقیقه ۴۰۱ می‌گرفت) و crontabِ
+// بیرونی. با `next start`/`next dev` یا بدونِ CRON_SECRET هیچ sync‌ای اجرا
+// نمی‌شد: جدول در همان روزی که آخرین بار دستی پر شده بود یخ می‌زد — دقیقاً
+// «روزهای جدید نمیاد». حالا خودِ روتِ خواندن، اگر داده کهنه باشد، sync
+// می‌زند؛ پس تقویم به هیچ زمان‌بندِ بیرونی وابسته نیست.
+
+let inflight: Promise<unknown> | null = null;
+/** آخرین تلاش (موفق یا ناموفق) در همین پروسه — تا منبعِ خراب را هر درخواست نکوبیم. */
+let lastAttemptAt = 0;
+const MIN_ATTEMPT_GAP_MS = 60 * 1000;
+/** بیشترین زمانی که درخواستِ کاربر منتظرِ sync می‌ماند؛ بعدش با داده‌ی موجود جواب می‌دهد. */
+const READ_WAIT_MS = 8 * 1000;
+
+type FreshnessDb = CalendarDb & {
+  economicEvent: CalendarDb["economicEvent"] & {
+    findFirst: (args: any) => Promise<any>;
+  };
+};
+
+export async function ensureFreshCalendar(prisma: FreshnessDb): Promise<void> {
+  const now = Date.now();
+  const pendingRelease = await hasPendingRelease(prisma);
+  const maxAge = pendingRelease ? FAST_POLL_INTERVAL_MS : SLOW_SYNC_INTERVAL_MS;
+  if (inflight) {
+    await Promise.race([inflight, sleep(READ_WAIT_MS)]);
+    return;
+  }
+  if (now - lastAttemptAt < (pendingRelease ? FAST_POLL_INTERVAL_MS : MIN_ATTEMPT_GAP_MS)) return;
+
+  // آخرین sync از روی updatedAtِ ردیف‌های خودکار (upsert همیشه updatedAt را
+  // جلو می‌برد) — مشترک بینِ همه‌ی workerها، نه فقط همین پروسه.
+  const latest = await prisma.economicEvent.findFirst({
+    where: { source: { not: "MANUAL" } },
+    orderBy: { updatedAt: "desc" },
+    select: { updatedAt: true },
+  });
+  const age = latest ? now - new Date(latest.updatedAt).getTime() : Infinity;
+  if (age < maxAge) return;
+
+  lastAttemptAt = now;
+  inflight = syncEconomicCalendar(prisma, { fast: pendingRelease && age !== Infinity })
+    .catch((err) => {
+      console.error(`[economic-calendar] sync هنگامِ خواندن شکست خورد: ${err instanceof Error ? err.message : err}`);
+    })
+    .finally(() => { inflight = null; });
+  await Promise.race([inflight, sleep(READ_WAIT_MS)]);
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((r) => setTimeout(r, ms));
 }
 
 // ── زمان‌بندیِ خودتنظیمِ sync بعدی ────────────────────────────────────────

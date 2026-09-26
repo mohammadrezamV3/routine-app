@@ -7,7 +7,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { parseDateRange, clampQuery } from "@/lib/validate";
-import { CALENDAR_CURRENCIES } from "@/lib/economicCalendar";
+import { CALENDAR_CURRENCIES, ensureFreshCalendar } from "@/lib/economicCalendar";
 import {
   ECON_CALENDAR_MAX_EVENTS,
   ECON_CALENDAR_MAX_RANGE_DAYS,
@@ -62,6 +62,16 @@ export function buildEconomicCalendarWhere(
   if (impacts.length) where.impact = { in: impacts };
 
   return { where };
+}
+
+/**
+ * sync هنگامِ خواندن: اگه داده‌ی جدول کهنه‌ست قبل از خواندن تازه‌ش می‌کنه
+ * (حداکثر چند ثانیه صبر) تا تقویم به کران/cluster.js وابسته نباشه. خطای sync
+ * هیچ‌وقت جلوی خواندنِ داده‌ی موجود رو نمی‌گیره. هر دو روتِ وب و موبایل
+ * قبل از خواندن صداش می‌کنن.
+ */
+export async function refreshEconomicCalendar(): Promise<void> {
+  await ensureFreshCalendar(prisma).catch(() => {});
 }
 
 /** رویدادها + بازه‌ای که واقعاً داده داریم (کلاینت نوارِ روزهاش رو از همین می‌سازه، نه حدس) */

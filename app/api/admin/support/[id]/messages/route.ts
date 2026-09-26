@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { clampText } from "@/lib/validate";
 
 // POST /api/admin/support/:id/messages — جوابِ ادمین روی هر تیکتی. تیکت
 // خودکار ANSWERED می‌شه (منتظرِ کاربر) — برخلافِ پیامِ کاربر که تیکت رو
 // OPEN می‌کنه (منتظرِ ادمین).
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;
 
   const ticket = await prisma.supportTicket.findUnique({ where: { id: params.id }, select: { id: true } });

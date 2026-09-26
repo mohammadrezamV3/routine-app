@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     where: { id: params.id, userId: guard.userId },
     select: {
       id: true, topic: true, goal: true, title: true, summary: true, guide: true,
-      steps: true, tools: true, totalDuration: true, progress: true, createdAt: true,
+      steps: true, tools: true, meta: true, totalDuration: true, progress: true, createdAt: true,
     },
   });
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -30,6 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     guide: row.guide,
     totalDuration: row.totalDuration,
     tools: row.tools,
+    meta: row.meta,
     stages: row.steps,
   });
   const progress = sanitizeStepProgress(plan.stages, row.progress);

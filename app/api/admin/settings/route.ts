@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getAiCostRate, setAiCostRate, DEFAULT_AI_COST_RATE } from "@/lib/appSettings";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 
 export async function GET() {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("settings");
   if (!guard.ok) return guard.response;
 
   const aiCostRate = await getAiCostRate();
@@ -15,7 +15,7 @@ export async function GET() {
 // قابل‌تنظیم این بخش (نرخ تخمین هزینه‌ی AI)؛ بقیه‌ی «تنظیمات Owner» چیزی
 // نیست که این اپ الان یک لیور واقعی براش داشته باشه.
 export async function PATCH(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("settings");
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);

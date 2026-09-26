@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { clampText } from "@/lib/validate";
 import { checkMediaDataUrl, mediaKey } from "@/lib/exerciseMedia";
 
@@ -13,7 +13,7 @@ import { checkMediaDataUrl, mediaKey } from "@/lib/exerciseMedia";
 
 /** فهرست *بدونِ* dataUrl برمی‌گردد — چند صد عکسِ base64 در یک پاسخ یعنی چند ده مگابایت. */
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   const name = req.nextUrl.searchParams.get("name");
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
 /** ثبت/جایگزینیِ عکسِ یک حرکت — upsert، چون «اضافه» و «عوض‌کردن» از نگاهِ ادمین یک کارند. */
 export async function PUT(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);
@@ -55,7 +55,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
   const name = req.nextUrl.searchParams.get("name");

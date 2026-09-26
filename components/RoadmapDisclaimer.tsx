@@ -10,7 +10,7 @@
  */
 export function RoadmapDisclaimer() {
   return (
-    <p className="rm-disclaimer" role="note">
+    <p className="rp-disclaimer" role="note">
       هوش مصنوعی ممکنه اشتباه کنه — خودت هم تحقیق کن.
     </p>
   );

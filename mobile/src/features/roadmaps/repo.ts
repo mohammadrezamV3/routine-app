@@ -3,7 +3,14 @@
 import { db, nowIso, getListEtag, setListEtag, RoadmapCacheRow, RoadmapProgressRow } from "./db";
 import { applyRemote as applyRemoteProgress } from "./syncHooks";
 import { RoadmapApi } from "./api";
-import type { MobileRoadmap, RoadmapStepProgress } from "@/lib/api-contract";
+import type {
+  MobileRoadmap,
+  MobileRoadmapRegenerateRequest,
+  RoadmapLevel,
+  RoadmapStage,
+  RoadmapStepProgress,
+  RoadmapWeeklyHours,
+} from "@/lib/api-contract";
 
 export type RoadmapListItem = {
   id: string;
@@ -12,7 +19,11 @@ export type RoadmapListItem = {
   title: string;
   summary: string;
   totalDuration: string;
+  level: RoadmapLevel | null;
+  weeklyHours: RoadmapWeeklyHours | null;
   stageCount: number;
+  /** مرحله‌هایی که جزئیاتشون هنوز ساخته نشده (detailed:false) */
+  pendingCount: number;
   progress: { total: number; done: number; pct: number };
 };
 
@@ -48,18 +59,7 @@ async function applyServerList(list: MobileRoadmap[]): Promise<void> {
     }
 
     for (const r of list) {
-      const cacheRow: RoadmapCacheRow = {
-        id: r.id,
-        topic: r.topic,
-        goal: r.goal,
-        generatedByAi: r.generatedByAi,
-        createdAt: r.createdAt,
-        plan: r.plan,
-        serverStepProgress: r.stepProgress,
-        serverProgress: r.progress,
-        updatedAt: r.updatedAt,
-      };
-      await db.roadmaps.put(cacheRow);
+      await db.roadmaps.put(cacheRowOf(r));
       await applyRemoteProgress({ id: r.id, stepProgress: r.stepProgress, editedAt: r.editedAt });
 
       // رودمپِ تازه (بدونِ ردیفِ progress محلی) — seed اولیه از سرور.
@@ -72,30 +72,71 @@ async function applyServerList(list: MobileRoadmap[]): Promise<void> {
   });
 }
 
+function cacheRowOf(r: MobileRoadmap): RoadmapCacheRow {
+  return {
+    id: r.id,
+    topic: r.topic,
+    goal: r.goal,
+    generatedByAi: r.generatedByAi,
+    createdAt: r.createdAt,
+    plan: r.plan,
+    serverStepProgress: r.stepProgress,
+    serverProgress: r.progress,
+    updatedAt: r.updatedAt,
+  };
+}
+
 /** پس از ساختِ موفقِ یک رودمپِ جدید با AI — بلافاصله کش محلی را هم پر می‌کند
  *  تا کاربر بدونِ رفرشِ فهرست وارد جزئیاتش بشه. */
 export async function seedRoadmap(roadmap: MobileRoadmap): Promise<void> {
   await db.transaction("rw", db.roadmaps, db.progress, async () => {
-    const cacheRow: RoadmapCacheRow = {
-      id: roadmap.id,
-      topic: roadmap.topic,
-      goal: roadmap.goal,
-      generatedByAi: roadmap.generatedByAi,
-      createdAt: roadmap.createdAt,
-      plan: roadmap.plan,
-      serverStepProgress: roadmap.stepProgress,
-      serverProgress: roadmap.progress,
-      updatedAt: roadmap.updatedAt,
-    };
-    await db.roadmaps.put(cacheRow);
+    await db.roadmaps.put(cacheRowOf(roadmap));
     await db.progress.put({ id: roadmap.id, stepProgress: roadmap.stepProgress, updatedAt: roadmap.editedAt, dirty: 0 });
   });
 }
 
-function computeProgress(total: number, stepProgress: RoadmapStepProgress) {
-  const done = Object.values(stepProgress).filter(Boolean).length;
+/** کلیدِ تیکِ کارِ iام (صفرمبنا) از مرحله‌ی n — همون taskKeyِ lib/roadmapPlan.ts */
+export function taskKey(n: number, i: number): string {
+  return `${n}.${i + 1}`;
+}
+
+/** فقط کلیدهایی که واقعا مرحله/کاری به اون شماره هست — آینه‌ی sanitizeStepProgressِ سرور */
+export function sanitizeLocalProgress(stages: RoadmapStage[], raw: RoadmapStepProgress): RoadmapStepProgress {
+  const valid = new Set<string>();
+  for (const s of stages) {
+    valid.add(String(s.n));
+    s.tasks.forEach((_, i) => valid.add(taskKey(s.n, i)));
+  }
+  const out: RoadmapStepProgress = {};
+  for (const [k, v] of Object.entries(raw)) if (valid.has(k) && v === true) out[k] = true;
+  return out;
+}
+
+/** درصد فقط از کلیدهای *مرحله* (نه کار) — دقیقا مثلِ computePlanProgressِ سرور */
+export function computeProgress(stages: RoadmapStage[], stepProgress: RoadmapStepProgress) {
+  const total = stages.length;
+  const done = stages.filter((s) => stepProgress[String(s.n)]).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  return { done, pct };
+  return { total, done, pct };
+}
+
+/**
+ * ساختِ دوباره‌ی جزئیاتِ یک مرحله یا راهنما (نیازمندِ اینترنت). کشِ محتوا
+ * با جوابِ سرور عوض می‌شه؛ پیشرفت: اگه تیکِ محلیِ push‌نشده (dirty) داریم،
+ * همون نگه داشته می‌شه (فقط کلیدِ کارهای حذف‌شده می‌ره) تا بعدا push بشه،
+ * وگرنه نسخه‌ی سرور.
+ */
+export async function regenerateRoadmapPart(api: RoadmapApi, id: string, req: MobileRoadmapRegenerateRequest): Promise<void> {
+  const { roadmap } = await api.regenerate(id, req);
+  await db.transaction("rw", db.roadmaps, db.progress, async () => {
+    await db.roadmaps.put(cacheRowOf(roadmap));
+    const local = await db.progress.get(id);
+    if (local?.dirty === 1) {
+      await db.progress.put({ ...local, stepProgress: sanitizeLocalProgress(roadmap.plan.stages, local.stepProgress) });
+    } else {
+      await db.progress.put({ id, stepProgress: roadmap.stepProgress, updatedAt: roadmap.editedAt, dirty: 0 });
+    }
+  });
 }
 
 export async function listRoadmaps(): Promise<RoadmapListItem[]> {
@@ -104,8 +145,7 @@ export async function listRoadmaps(): Promise<RoadmapListItem[]> {
   for (const r of rows) {
     const progressRow = await db.progress.get(r.id);
     const stepProgress = progressRow?.stepProgress ?? r.serverStepProgress;
-    const total = r.plan.stages.length;
-    const { done, pct } = computeProgress(total, stepProgress);
+    const { total, done, pct } = computeProgress(r.plan.stages, stepProgress);
     items.push({
       id: r.id,
       topic: r.topic,
@@ -113,7 +153,10 @@ export async function listRoadmaps(): Promise<RoadmapListItem[]> {
       title: r.plan.title,
       summary: r.plan.summary,
       totalDuration: r.plan.totalDuration,
+      level: r.plan.meta.level ?? null,
+      weeklyHours: r.plan.meta.weeklyHours ?? null,
       stageCount: total,
+      pendingCount: r.plan.stages.filter((st) => !st.detailed).length,
       progress: { total, done, pct },
     });
   }
@@ -127,15 +170,13 @@ export async function getRoadmap(id: string): Promise<RoadmapDetail | null> {
   if (!row) return null;
   const progressRow = await db.progress.get(id);
   const stepProgress = progressRow?.stepProgress ?? row.serverStepProgress;
-  const total = row.plan.stages.length;
-  const { done, pct } = computeProgress(total, stepProgress);
+  const { total, done, pct } = computeProgress(row.plan.stages, stepProgress);
   return { ...row, stepProgress, done, total, pct };
 }
 
-/** تیکِ یک مرحله را می‌زند/برمی‌گرداند — کاملاً محلی و فوری (offline-first)،
+/** یک کلیدِ پیشرفت را می‌زند/برمی‌گرداند — کاملاً محلی و فوری (offline-first)،
  *  و رکورد را dirty می‌کند تا لایه‌ی سینک بعداً push کند. */
-export async function toggleStep(roadmapId: string, stageN: number): Promise<RoadmapStepProgress> {
-  const key = String(stageN);
+async function toggleKey(roadmapId: string, key: string): Promise<RoadmapStepProgress> {
   const existing = await db.progress.get(roadmapId);
   const current = existing?.stepProgress ?? {};
   const next: RoadmapStepProgress = { ...current };
@@ -145,4 +186,14 @@ export async function toggleStep(roadmapId: string, stageN: number): Promise<Roa
   const row: RoadmapProgressRow = { id: roadmapId, stepProgress: next, updatedAt: nowIso(), dirty: 1 };
   await db.progress.put(row);
   return next;
+}
+
+/** تیکِ «این مرحله تمام شد» (کلیدِ "n") */
+export function toggleStep(roadmapId: string, stageN: number): Promise<RoadmapStepProgress> {
+  return toggleKey(roadmapId, String(stageN));
+}
+
+/** تیکِ کارِ iامِ (صفرمبنا) مرحله‌ی n (کلیدِ "n.i") — در درصدِ کل حساب نمی‌شه، مثلِ وب */
+export function toggleTask(roadmapId: string, stageN: number, taskIndex: number): Promise<RoadmapStepProgress> {
+  return toggleKey(roadmapId, taskKey(stageN, taskIndex));
 }

@@ -10,6 +10,7 @@ import { isValidEmail } from "@/lib/validate";
 import { verifyAndConsumeEmailOtp } from "@/lib/emailOtp";
 import { verifyPasswordLogin, verifySmsTwoFactorLogin, recordLoginEvent } from "@/lib/credentials";
 import { createDeviceSession, isSessionLive, newSessionId } from "@/lib/deviceSessions";
+import { getAdminFlags } from "@/lib/adminFlag";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقا همون تدارک ثبت‌نام معمولی
 // (دوره آزمایشی ماژول‌های پایه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
@@ -231,6 +232,8 @@ export const authOptions: NextAuthOptions = {
         token.name = (user as any).name;
         token.market = (user as any).market;
         token.isSuperAdmin = (user as any).isSuperAdmin;
+        const flags = await getAdminFlags((user as any).id).catch(() => null);
+        token.isAdmin = flags?.isAdmin ?? !!(user as any).isSuperAdmin;
         const remember = (user as any).remember !== false;
         const maxAgeSeconds = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
         token.exp = Math.floor(Date.now() / 1000) + maxAgeSeconds;
@@ -253,6 +256,13 @@ export const authOptions: NextAuthOptions = {
         const live = await isSessionLive(token.sid as string).catch(() => true);
         if (!live) return {} as any;
       }
+      if (token.userId) {
+        const flags = await getAdminFlags(token.userId as string).catch(() => null);
+        if (flags) {
+          token.isSuperAdmin = flags.isSuperAdmin;
+          token.isAdmin = flags.isAdmin;
+        }
+      }
       return token;
     },
     async session({ session, token }) {
@@ -261,6 +271,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).name = token.name;
         (session.user as any).market = token.market;
         (session.user as any).isSuperAdmin = token.isSuperAdmin;
+        (session.user as any).isAdmin = token.isAdmin ?? token.isSuperAdmin;
       }
       return session;
     },

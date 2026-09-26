@@ -1,5 +1,6 @@
 import { Flag, Clock } from "lucide-react";
 import ProgressRing from "@/components/ProgressRing";
+import { ROADMAP_LEVEL_OPTIONS } from "@/lib/api-contract";
 import type { RoadmapListItem } from "../repo";
 
 function faDigits(n: number): string {
@@ -46,6 +47,7 @@ export default function RoadmapCard({ item, onClick }: { item: RoadmapListItem; 
             </span>
           )}
           {item.stageCount > 0 && <span>{faDigits(item.stageCount)} مرحله</span>}
+          {item.level && <span>{ROADMAP_LEVEL_OPTIONS.find((o) => o.value === item.level)?.label}</span>}
           {item.stageCount > 0 && (
             <span>
               {faDigits(item.progress.done)} از {faDigits(item.progress.total)} انجام‌شده

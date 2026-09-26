@@ -352,9 +352,13 @@ export type CalorieTargetData =
 
 // ─── رودمپ ─────────────────────────────────────────────────────────────
 
-/** تیکِ مرحله‌ها: کلید = شماره‌ی مرحله (n) به‌شکلِ رشته، فقط true نگه داشته می‌شه */
+/**
+ * تیکِ مرحله‌ها و کارها: کلیدِ `"n"` (شماره‌ی مرحله) = کلِ مرحله تمام شد،
+ * کلیدِ `"n.i"` (i یک‌مبنا) = کارِ iامِ مرحله‌ی n — همون taskKeyِ
+ * lib/roadmapPlan.ts. فقط true نگه داشته می‌شه؛ درصد فقط از کلیدهای مرحله.
+ */
 export type RoadmapStepProgress = Record<string, boolean>;
-/** همیشه سمتِ سرور حساب می‌شه؛ هر درصدی که کلاینت بفرسته نادیده گرفته می‌شه */
+/** همیشه سمتِ سرور حساب می‌شه (فقط کلیدهای مرحله، نه کار)؛ هر درصدی که کلاینت بفرسته نادیده گرفته می‌شه */
 export type RoadmapProgressSummary = { total: number; done: number; pct: number };
 
 export type RoadmapProgressRecord = SyncMeta & {
@@ -366,29 +370,79 @@ export type RoadmapProgressRecord = SyncMeta & {
 
 /**
  * LWW روی *کلِ* نقشه‌ی پیشرفتِ یک رودمپ (نه تک‌مرحله). رودمپ باید مالِ خودِ
- * کاربر باشه؛ کلیدِ مرحله‌ای که وجود نداره یا مقدارِ غیرِ true دور ریخته می‌شه.
- * ساخت/حذفِ رودمپ از این راه نیست. حداکثر ۵۰ کلید.
+ * کاربر باشه؛ کلیدِ مرحله/کاری که وجود نداره یا مقدارِ غیرِ true دور ریخته
+ * می‌شه. ساخت/حذفِ رودمپ از این راه نیست. حداکثر ۲۵۰ کلید.
  */
 export type RoadmapProgressData = { stepProgress: RoadmapStepProgress };
 
-export type RoadmapResource = { title: string; type: string; source?: string; url?: string };
+// شکلِ مسیر — آینه‌ی RoadmapPlan در lib/roadmapPlan.ts (ساختِ دوفازی: اسکلت +
+// جزئیاتِ ریزِ هر مرحله). سرور همیشه با normalizePlan کاملش می‌کنه، پس هیچ
+// فیلدی غایب نیست (ردیفِ قدیمیِ learn/do/done هم به همین شکل نگاشت می‌شه).
+/** سطحِ شروع — همون LEVEL_OPTIONSِ lib/roadmapPlan.ts (مقدار + برچسب) */
+export const ROADMAP_LEVEL_OPTIONS = [
+  { value: "zero", label: "صفرِ مطلق" },
+  { value: "basic", label: "یه چیزایی بلدم" },
+  { value: "mid", label: "متوسطم" },
+  { value: "pro", label: "حرفه‌ای‌ام، می‌خوام عمیق‌تر شم" },
+] as const;
+/** وقتِ هفتگی — همون HOURS_OPTIONSِ lib/roadmapPlan.ts */
+export const ROADMAP_HOURS_OPTIONS = [
+  { value: "3", label: "کمتر از ۵ ساعت" },
+  { value: "8", label: "۵ تا ۱۰ ساعت" },
+  { value: "15", label: "۱۰ تا ۲۰ ساعت" },
+  { value: "25", label: "بیشتر از ۲۰ ساعت" },
+] as const;
+export type RoadmapLevel = (typeof ROADMAP_LEVEL_OPTIONS)[number]["value"];
+export type RoadmapWeeklyHours = (typeof ROADMAP_HOURS_OPTIONS)[number]["value"];
+export type RoadmapResource = {
+  title: string;
+  type: string;
+  source?: string;
+  /** فقط لینکِ دامنه‌های شناخته‌شده — بقیه رو با جست‌وجوی عنوان باز کن */
+  url?: string;
+  /** این منبع دقیقا برای کدوم بخشِ مرحله‌ست */
+  why?: string;
+};
+export type RoadmapTool = { name: string; use: string };
+export type RoadmapTopic = { title: string; detail: string; points: string[] };
+export type RoadmapTask = { title: string; detail: string; output: string };
+export type RoadmapProject = { title: string; brief: string; deliverables: string[] };
 export type RoadmapStage = {
   n: number;
   title: string;
   goal: string;
   duration: string;
-  learn: string[];
-  do: string[];
-  tools: string[];
+  focus: string;
+  why: string;
+  /** false یعنی فقط اسکلت ساخته شده — با POST /api/mobile/ai/roadmap/{id}/regenerate بساز */
+  detailed: boolean;
+  prerequisites: string[];
+  topics: RoadmapTopic[];
+  /** تیکِ کارِ iام (صفرمبنا در آرایه) با کلیدِ `${n}.${i + 1}` */
+  tasks: RoadmapTask[];
+  project: RoadmapProject | null;
+  tools: RoadmapTool[];
   resources: RoadmapResource[];
-  done: string;
+  pitfalls: string[];
+  done: string[];
+};
+export type RoadmapCert = { name: string; note: string };
+export type RoadmapMeta = {
+  level?: RoadmapLevel;
+  weeklyHours?: RoadmapWeeklyHours;
+  background?: string;
+  audience: string;
+  prerequisites: string[];
+  outcomes: string[];
+  certifications: RoadmapCert[];
 };
 export type RoadmapPlan = {
   title: string;
   summary: string;
   guide: string;
   totalDuration: string;
-  tools: string[];
+  tools: RoadmapTool[];
+  meta: RoadmapMeta;
   stages: RoadmapStage[];
 };
 
@@ -611,6 +665,29 @@ export type MobileExercisePlanResponse =
  * POST /api/mobile/ai/roadmap — ماژولِ ROADMAP. همون ورودی و سقفِ POST /api/roadmaps
  * (۶ مسیر در ۳۰ دقیقه، مشترک با وب). تا ۶۰ ثانیه طول می‌کشه.
  */
-export type MobileRoadmapRequest = { topic: string; goal?: string };
-/** 201 | 400 | 401 | 403 {error:"module_locked"} | 429 | 502 */
-export type MobileRoadmapResponse = { roadmap: MobileRoadmap };
+export type MobileRoadmapRequest = {
+  topic: string;
+  goal?: string;
+  /** فقط از فهرستِ ثابت — هر مقدارِ دیگه یعنی «نگفته» */
+  level?: RoadmapLevel;
+  weeklyHours?: RoadmapWeeklyHours;
+  /** پیش‌زمینه‌ی آزاد، حداکثر ۳۰۰ نویسه */
+  background?: string;
+};
+/**
+ * 201 | 400 | 401 | 403 {error:"module_locked"} | 429 | 502.
+ * pendingStages = مرحله‌هایی که جزئیاتشون در بودجه‌ی زمانیِ ساخت نرسید
+ * (detailed:false)؛ guideReady=false یعنی متنِ راهنما خالی موند — هر دو با
+ * regenerate ساخته می‌شن.
+ */
+export type MobileRoadmapResponse = { roadmap: MobileRoadmap; pendingStages: number[]; guideReady: boolean };
+
+/**
+ * POST /api/mobile/ai/roadmap/{id}/regenerate — ساختِ دوباره‌ی یک تکه از مسیر
+ * (همون POST /api/roadmaps/{id}/regenerate): `{target:"stage", n}` جزئیاتِ یک
+ * مرحله، `{target:"guide"}` متنِ راهنما. اسکلت هیچ‌وقت عوض نمی‌شه. سقف ۲۰ بار
+ * در ۳۰ دقیقه (سطلِ مشترک با وب). تیکِ کارهایی که دیگه نیستن دور ریخته می‌شه.
+ * 200 | 400 | 401 | 403 {error:"module_locked"} | 404 | 429 | 502.
+ */
+export type MobileRoadmapRegenerateRequest = { target: "guide" } | { target: "stage"; n: number };
+export type MobileRoadmapRegenerateResponse = { roadmap: MobileRoadmap };
