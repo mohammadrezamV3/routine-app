@@ -143,7 +143,7 @@ export function EconomicCalendarPanel() {
       if (otherCurrencies) qs.set("other", "1");
       if (impacts.length) qs.set("impacts", impacts.join(","));
 
-      const res = await fetch(`/api/trade/economic-calendar?${qs}`);
+      const res = await fetch(`/api/trade/economic-calendar?${qs}`, { cache: "no-store" });
       if (seq !== reqSeq.current) return;
       if (!res.ok) {
         setLoadError("گرفتن داده‌ی این روز ناموفق بود");
@@ -198,15 +198,31 @@ export function EconomicCalendarPanel() {
 
   // برگشتن به تب هم باید تازه‌سازی کند — یک تبِ باز از دیروز نباید داده‌ی
   // کهنه نشان بدهد.
+  // تبی که از دیروز باز مانده روی «دیروز» گیر می‌کرد: date فقط یک بار موقعِ
+  // mount روی امروز ست می‌شد، پس روزِ جدید هیچ‌وقت خودش نمی‌آمد. اگر کاربر
+  // روی «امروزِ آن موقع» بود، با عوض‌شدنِ روز به امروزِ جدید می‌رود.
+  const dayAnchor = useRef(startOfLocalDay(new Date()).getTime());
   useEffect(() => {
-    function onVisible() { if (document.visibilityState === "visible") load({ silent: true }); }
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      const nowDay = startOfLocalDay(new Date()).getTime();
+      if (nowDay !== dayAnchor.current) {
+        const wasOnToday = date.getTime() === dayAnchor.current;
+        dayAnchor.current = nowDay;
+        if (wasOnToday) { setDate(new Date(nowDay)); return; }
+      }
+      load({ silent: true });
+    }
+    // بدونِ فوکوس/تغییرِ تب هم روزِ جدید باید برسد (صفحه‌ی باز روی مانیتور).
+    const tick = setInterval(onVisible, 60_000);
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
     return () => {
+      clearInterval(tick);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [load]);
+  }, [load, date]);
 
   // ── نوارِ روزها ─────────────────────────────────────────────────────────
   // یک پنجره‌ی لغزان که با دو فلشِ کنارش جلو/عقب می‌رود (نه یک نوارِ بلندِ

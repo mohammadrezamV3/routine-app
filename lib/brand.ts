@@ -85,7 +85,7 @@ export const SOCIAL = {
   instagram: { handle: "@Arionapp", url: "https://instagram.com/Arionapp" },
 } as const;
 
-export const SUPPORT_EMAIL = "smm881517@gmail.com";
+export const SUPPORT_EMAIL = "Arionapp.support@gmail.com";
 
 // sameAs همان چیزی است که گوگل برای وصل‌کردن یک موجودیت به پروفایل‌های
 // رسمی‌اش استفاده می‌کند. برای دامنه‌ای که هیچ بک‌لینکی ندارد این یکی از

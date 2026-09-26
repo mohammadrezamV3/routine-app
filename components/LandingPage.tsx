@@ -11,7 +11,7 @@ import {
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
 import { useThemeTokens, PlansSection } from "@/components/PlanShowcase";
-import { EnamadBadge } from "@/components/EnamadBadge";
+import { LandingFooter } from "@/components/LandingFooter";
 
 const FEATURES = [
   {
@@ -452,34 +452,7 @@ export function LandingPage() {
         <PlansSection mode="landing" />
       </section>
 
-      {/* بدون این فوتر، /about و /faq و /terms هیچ لینک HTMLای از صفحه‌ی
-          اصلی نداشتن — یعنی برای کراولرها عملا صفحات ایزوله بودن (فقط با
-          دونستن آدرس دقیق پیدا می‌شدن، نه با دنبال‌کردن لینک). */}
-      <footer className={`mt-10 border-t ${t.line} px-4 py-6 text-center text-[11.5px] ${t.muted}`}>
-        {/* صفحه‌های فرودِ عمومی هم باید از این‌جا لینک بگیرند، وگرنه دقیقا
-            همان مشکل قبلی را پیدا می‌کنند: صفحه‌ای که هیچ لینک داخلی به آن
-            اشاره نمی‌کند، برای کراولر یتیم است. متنِ لینک‌ها توصیفی‌ست تا
-            هم کاربر هم گوگل بدانند مقصد چیست. */}
-        <nav aria-label="صفحه‌های آریون" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-          <Link href="/routine" className="hover:underline">روتین روزانه</Link>
-          <Link href="/habit-tracker" className="hover:underline">پیگیری عادت‌ها</Link>
-          <Link href="/daily-planner" className="hover:underline">برنامه‌ریزی روزانه</Link>
-          <Link href="/ai-planner" className="hover:underline">برنامه‌ریز هوشمند</Link>
-          <Link href="/bodybuilding-program" className="hover:underline">برنامه‌ی بدنسازی</Link>
-          <Link href="/calorie-counter" className="hover:underline">کالری‌شمار</Link>
-          <Link href="/trading-journal" className="hover:underline">ژورنال معاملاتی</Link>
-          <Link href="/economic-calendar" className="hover:underline">تقویم اقتصادی</Link>
-          <Link href="/forex-sessions" className="hover:underline">ساعت بازار فارکس</Link>
-          <Link href="/learning-roadmap" className="hover:underline">رودمپ یادگیری</Link>
-          <Link href="/blog" className="hover:underline">مقاله‌ها</Link>
-          <Link href="/about" className="hover:underline">درباره ما</Link>
-          <Link href="/faq" className="hover:underline">سوالات متداول</Link>
-          <Link href="/terms" className="hover:underline">قوانین و مقررات</Link>
-        </nav>
-        <div className="mt-4 flex justify-center">
-          <EnamadBadge />
-        </div>
-      </footer>
+      <LandingFooter />
     </>
   );
 }

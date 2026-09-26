@@ -18,7 +18,8 @@ import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/errorLog";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
 import {
-  PLAN_LIMITS, PlanIssue, RoadmapPlan, normalizePlan, validatePlan,
+  HOURS_OPTIONS, HoursValue, LEVEL_OPTIONS, LevelValue, PLAN_LIMITS, PlanIssue, PlanStage, RoadmapPlan,
+  normalizePlan, normalizeStage, validateGuide, validateOutline, validateStageDetail,
 } from "@/lib/roadmapPlan";
 
 export const AI_MODEL_NAME = "gpt-4o-mini";
@@ -190,210 +191,385 @@ export function parseJsonResponse(text: string): any {
 }
 
 // ============================================================================
-// رودمپ (مسیرِ یادگیری)
+// رودمپ (مسیرِ یادگیری) — ساختِ دوفازی
 //
-// از کاربر فقط دو چیز پرسیده می‌شود: «چی می‌خوای یاد بگیری؟» و «هدفت چیه؟».
-// عمداً همین دوتا: نسخه‌های قبلی هفت گام سوال می‌پرسیدند (سطح، وقت، بودجه،
-// سبکِ یادگیری، و بعد چند سوالِ تولیدشده‌ی دیگر) و بیشترِ آن جواب‌ها یا
-// حدسی بودند یا مسیر را واقعاً عوض نمی‌کردند — فقط یک فرمِ طولانی بینِ
-// کاربر و جوابش بودند.
+// فاز ۱ (اسکلت): یک فراخوانی که هدف را تحلیل می‌کند و مسیر را به ۳ تا ۱۶
+// مرحله با محدوده‌ی دقیق می‌بُرد. کوچک است، پس سریع است.
+// فاز ۲ (موازی): متنِ کاملِ راهنما + جزئیاتِ ریزِ هر مرحله، هرکدام یک
+// فراخوانیِ جدا و هم‌زمان. هر مرحله توجهِ کاملِ مدل را می‌گیرد (نه یک‌دهمِ
+// یک خروجیِ بزرگ) و کلِ کار زیرِ سقفِ ۶۰ ثانیه‌ی nginx می‌ماند.
 //
-// در عوض خروجی سنگین‌تر شد: مدل باید هم **متنِ کاملِ مسیر** را بنویسد (چه
-// چیزهایی باید خوانده شود، با چه ترتیبی، چرا، با چه ابزارهایی، کجا وقت
-// تلف نشود) و هم همان را به ۱ تا ۲۰ مرحله‌ی عملی ببُرد. کاربر نمی‌داند
-// برای رسیدن به خواسته‌اش چه باید بخواند — تشخیصِ آن دقیقاً کارِ مدل است،
-// نه سوالِ دیگری از خودِ کاربر.
+// مرحله‌ای که جزئیاتش در این بودجه نرسید `detailed:false` ذخیره می‌شود و
+// کاربر از روی صفحه دوباره می‌سازدش (generateStageDetail) — یک مرحله‌ی
+// کُند هیچ‌وقت کلِ مسیر را خراب نمی‌کند.
 // ============================================================================
 
-/** همان دو چیزی که از کاربر پرسیده می‌شود — ورودیِ کاملِ ساختِ مسیر. */
+/** ورودیِ کاملِ ساختِ مسیر — همان چیزهایی که ویزارد می‌پرسد. */
 export type RoadmapProfile = {
   topic: string;
   goal?: string;
+  level?: LevelValue;
+  weeklyHours?: HoursValue;
+  background?: string;
 };
-
-/** حداکثر تلاشِ تعمیر بعد از تولیدِ اول — سقفِ هزینه و زمان. */
-const MAX_REPAIR_ATTEMPTS = 2;
 
 export type PlanGenerationMeta = {
   attempts: number;
-  repaired: boolean;
-  issuesFixed: string[];
   durationMs: number;
+  /** شماره‌ی مرحله‌هایی که جزئیاتشان نرسید. */
+  pendingStages: number[];
+  guideReady: boolean;
 };
 
-export type PlanGenerationResult = {
-  plan: RoadmapPlan;
-  meta: PlanGenerationMeta;
-};
+export type PlanGenerationResult = { plan: RoadmapPlan; meta: PlanGenerationMeta };
 
-const PLAN_SYSTEM_PROMPT = `تو یک مربیِ حرفه‌ای هستی که سال‌ها آدم‌ها را از «هیچی بلد نیستم» تا «دارم با همین کار می‌کنم»
-برده‌ای. کاربر فقط دو چیز به تو می‌گوید: چه چیزی می‌خواهد یاد بگیرد، و هدفش از آن چیست.
+/** زمانی که برای ذخیره و پاسخ بعد از آخرین فراخوانی کنار گذاشته می‌شود. */
+const ROADMAP_SAFETY_MS = 3_000;
+const OUTLINE_TIMEOUT_MS = 24_000;
 
-او **نمی‌داند برای رسیدن به آن هدف اصلاً باید چه چیزهایی بخواند.** کسی که می‌گوید «می‌خواهم امنیت شبکه کار کنم»
-نمی‌داند اول باید شبکه و لینوکس بخواند، بعد مبانیِ امنیت، بعد تستِ نفوذ، و مدرکی مثل OSCP کجای مسیر می‌نشیند.
-تشخیصِ کاملِ آن مسیر کارِ توست، نه سوالِ بیشتر از او.
+function profileBlock(p: RoadmapProfile): string {
+  const level = LEVEL_OPTIONS.find((o) => o.value === p.level);
+  const hours = HOURS_OPTIONS.find((o) => o.value === p.weeklyHours);
+  return [
+    `موضوع: ${p.topic}`,
+    p.goal
+      ? `هدفِ کاربر: ${p.goal}`
+      : "هدف: مشخص نکرده — مسیری بساز که هم به توانِ کارِ واقعی برسد هم برای علاقه‌ی شخصی بی‌ربط نباشد.",
+    level ? `سطحِ فعلی: ${level.label} — ${level.prompt}` : "سطحِ فعلی: نگفته — فرض کن تازه‌کار است ولی آدمِ باهوشی‌ست.",
+    hours
+      ? `وقتِ هفتگی: حدودِ ${hours.hours} ساعت در هفته (${hours.label}). همه‌ی مدت‌زمان‌ها را با همین عدد حساب کن.`
+      : "وقتِ هفتگی: نگفته — حدودِ ۸ ساعت در هفته فرض کن.",
+    p.background ? `چیزهای مرتبطی که الان بلد است: ${p.background}` : "",
+  ].filter(Boolean).join("\n");
+}
 
-هدفِ کاربر مسیر را از ریشه عوض می‌کند: مسیرِ «می‌خواهم استخدام شوم» با مسیرِ «برای سرگرمی» یکی نیست.
-اول هدف را تحلیل کن، بعد مسیر را بچین.
+const OUTLINE_SYSTEM_PROMPT = `تو یک طراحِ ارشدِ مسیرِ یادگیری هستی: ترکیبی از یک متخصصِ باتجربه‌ی همان حوزه که سال‌ها استخدام کرده، و
+یک مربی که صدها نفر را از صفر به کارِ واقعی رسانده. الان فقط **اسکلتِ** مسیر را می‌سازی؛ جزئیاتِ هر مرحله را بعداً
+یک همکار جداگانه می‌نویسد و فقط از روی همین اسکلت کار می‌کند — پس محدوده‌ی هر مرحله باید آن‌قدر دقیق باشد که
+دو مرحله هیچ‌وقت هم‌پوشانی نداشته باشند و هیچ مبحثِ لازمی بینِ دو مرحله جا نیفتد.
 
-باید **هر دو** خروجی را بدهی:
+## گام ۱ — تحلیل (در ذهنت، خروجی نده)
+- هدفِ کاربر در عمل یعنی چه؟ «استخدام» یعنی مهارت‌هایی که آگهی‌های شغلیِ واقعی می‌خواهند + نمونه‌کار؛ «پروژه‌ی شخصی»
+  یعنی کوتاه‌ترین مسیر تا ساختنِ همان چیز؛ «مدرک» یعنی سرفصلِ رسمیِ همان آزمون؛ «علاقه» یعنی لذت و فهمِ عمیق بدونِ فشارِ بازار.
+- سطحِ کاربر: چیزی را که بلد است دوباره درس نده؛ پیش‌نیازِ واقعی‌ای را که بلد نیست حتماً بیاور، حتی اگر اسمش را نبرده.
+- گرافِ وابستگی: کدام مبحث پیش‌نیازِ کدام است؟ ترتیب را از روی همین گراف بچین، نه از روی فهرستِ سرفصلِ یک کتاب.
+- مقیاس: یک مهارتِ کوچک ۳ تا ۵ مرحله، یک مهارتِ متوسط ۶ تا ۹، یک تغییرِ شغلیِ کامل ۱۰ تا ${PLAN_LIMITS.maxStages}. مرحله‌ی الکی
+  برای پرکردنِ عدد ممنوع؛ ادغامِ دو مرحله‌ی واقعاً جدا هم ممنوع.
 
-── ۱) guide — متنِ کاملِ مسیر
-یک متنِ پیوسته و کامل به فارسی، که خودش به‌تنهایی جوابِ کاربر باشد؛ یعنی اگر کسی فقط همین متن را بخواند
-دقیقاً بداند باید چه کند. حداقل ۸۰۰ نویسه، معمولاً خیلی بیشتر. با تیترِ بخش‌ها بنویس (هر تیتر در خطِ خودش،
-با ## شروع شود) و زیرِ هر تیتر بندهای واقعی. این بخش‌ها را حتماً پوشش بده:
-  • مسیر در یک نگاه: از کجا شروع می‌شود، به کجا می‌رسد، چقدر طول می‌کشد.
-  • چه چیزهایی باید یاد بگیری و **با چه ترتیبی** — و مهم‌تر: **چرا این ترتیب**.
-  • ابزارها: دقیقاً با چه نرم‌افزار/سرویس/سخت‌افزاری باید کار کنی و هرکدام کجای مسیر لازم می‌شوند.
-  • منابع: چه نوع منبعی برای هر بخش (مستندِ رسمی، دوره، کتاب، تمرینِ عملی) و اگر منبعِ نام‌آشنایی هست اسمش را بیاور.
-  • مدرک/گواهی اگر در این حوزه معنا دارد: کدام، کِی، و اصلاً لازم است یا نه.
-  • چطور ثابت کنی بلدی: چه چیزی بساز/چه کاری انجام بده.
-  • اشتباه‌های رایج: کجاها تازه‌کارها وقتشان را تلف می‌کنند.
-  • از کجا بفهمی آماده‌ای.
-متن باید *مشخص* باشد نه کلی. «تمرین کن» بی‌فایده است؛ «۲۰ ماشینِ TryHackMe مسیرِ Pre-Security را تمام کن» مفید است.
+## گام ۲ — زمان‌بندی
+- مدت‌زمانِ هر مرحله را از روی «ساعتِ لازم ÷ وقتِ هفتگیِ کاربر» حساب کن، نه حدسِ کلی. هر مرحله بینِ ۱ تا ۸ هفته.
+- totalDuration جمعِ واقعیِ مرحله‌هاست (مثلاً «حدودِ ۷ ماه با هفته‌ای ۸ ساعت»). واقع‌بین باش، نه تبلیغاتی.
 
-── ۲) stages — همان مسیر، بریده‌شده به مرحله
-بینِ ۱ تا ۲۰ مرحله. تعدادِ مرحله‌ها را خودت از روی بزرگیِ موضوع انتخاب کن — یک مهارتِ کوچک شاید ۴ مرحله باشد
-و یک تغییرِ شغلیِ کامل ۱۵ تا ۲۰. مرحله‌سازیِ الکی برای پرکردنِ عدد ممنوع.
-هر مرحله باید:
-  • پشتِ‌سرِ مرحله‌ی قبلی معنا بدهد — چیزی که پیش‌نیازش هنوز نیامده، نباید در این مرحله باشد.
-  • ابزارهای همان مرحله را داشته باشد.
-  • «چه‌کار کنم»ش عملی و قابلِ انجام باشد، نه توصیه‌ی کلی.
-  • معیارِ تمام‌شدن (done) داشته باشد: یک چیزِ قابلِ سنجش، نه «وقتی خوب فهمیدی».
+## گام ۳ — خروجی
+برای هر مرحله:
+- title: اسمِ مشخص (نه «مقدمات» یا «مرحله‌ی پیشرفته»). مثال خوب: «شبکه برای امنیت: TCP/IP، DNS و تحلیلِ بسته با Wireshark».
+- goal: یک جمله با فعلِ قابلِ دیدن — «بعد از این مرحله می‌توانی …».
+- focus: ۲ تا ۴ جمله که **دقیقاً** بگوید چه مباحثی مالِ این مرحله است (با اسم) و چه چیزهایی عمداً به مرحله‌ی بعد موکول شده.
+- why: چرا این مرحله این‌جای مسیر است و روی کدام مرحله‌ی قبلی سوار می‌شود.
+- duration: مثلاً «۳ هفته».
 
-قواعدِ سخت:
-۱. همه‌چیز فارسیِ روان و ساده. نامِ فنیِ لاتین (Linux، Wireshark، OSCP) لاتین بماند.
-۲. **لینکِ ساختگی ممنوع.** اگر از آدرسِ دقیقِ یک صفحه مطمئن نیستی، فقط نامِ منبع را بنویس و url را نگذار.
-   لینکِ ۴۰۴ از نبودنِ لینک بدتر است.
-۳. چیزی را که کاربر نخواسته به مسیر اضافه نکن؛ ولی پیش‌نیازِ واقعی را حتماً بیاور، حتی اگر کاربر اسمش را نبرده.
-۴. زمان‌ها واقع‌بینانه باشند، نه تبلیغاتی. «در ۷ روز متخصص شو» ننویس.
-۵. حداکثر ${PLAN_LIMITS.maxStages} مرحله.
+meta:
+- audience: یک جمله — این مسیر را برای چه کسی با چه وضعیتی طراحی کردی (برداشتت از کاربر).
+- prerequisites: چیزهایی که *قبل از* مرحله‌ی ۱ باید داشته باشد (سخت‌افزار، زبان انگلیسیِ فنی، ریاضی…). اگر هیچ، آرایه‌ی خالی.
+- outcomes: ۵ تا ۸ توانایی‌ی مشخص و قابلِ نمایش در پایانِ مسیر («یک API با احرازِ هویتِ JWT می‌سازی و روی سرور دیپلوی می‌کنی»).
+- certifications: فقط اگر در این حوزه واقعاً معنا دارد: [{ "name": "…", "note": "کِی و آیا اصلاً لازم است" }]؛ وگرنه آرایه‌ی خالی.
 
-خروجی **فقط** JSONِ خام، بدونِ هیچ متنِ اضافه، دقیقاً با این ساختار:
+tools: همه‌ی ابزارهای کلِ مسیر: [{ "name": "VS Code", "use": "یک جمله: برای چه و از کدام مرحله" }].
+
+## قواعدِ سخت
+۱. فارسیِ روان و ساده؛ نامِ فنیِ لاتین (Linux، React، OSCP) لاتین بماند.
+۲. هیچ چیزی که کاربر نخواسته و به هدفش ربطی ندارد اضافه نکن.
+۳. خروجی **فقط** JSONِ خام، بدونِ هیچ متنِ اضافه، دقیقاً با این ساختار:
 
 {
-  "title": "عنوانِ کوتاهِ مسیر",
-  "summary": "یک پاراگراف: این مسیر چیست و آخرش کجاست",
-  "totalDuration": "۶ ماه",
-  "tools": ["ابزارهای کلِ مسیر"],
-  "guide": "## مسیر در یک نگاه\\n…\\n\\n## چی باید بخونی\\n…",
-  "stages": [
-    {
-      "title": "نامِ مرحله",
-      "goal": "بعدِ این مرحله چه کاری می‌توانی بکنی",
-      "duration": "۲ هفته",
-      "learn": ["چیزهایی که باید بخوانی/بفهمی"],
-      "do": ["کارِ عملیِ مشخص با خروجیِ قابلِ دیدن"],
-      "tools": ["ابزارهای همین مرحله"],
-      "resources": [{ "title": "نامِ دقیقِ منبع", "type": "documentation", "source": "MDN", "url": "https://…" }],
-      "done": "معیارِ قابلِ سنجشِ تمام‌شدنِ مرحله"
-    }
-  ]
+  "title": "عنوانِ کوتاه و مشخصِ مسیر",
+  "summary": "یک پاراگرافِ ۳ تا ۵ جمله‌ای: از کجا شروع می‌شود، از چه مسیری می‌گذرد، آخرش دقیقاً کجاست",
+  "totalDuration": "حدودِ ۶ ماه با هفته‌ای ۸ ساعت",
+  "tools": [{ "name": "…", "use": "…" }],
+  "meta": { "audience": "…", "prerequisites": ["…"], "outcomes": ["…"], "certifications": [] },
+  "stages": [{ "title": "…", "goal": "…", "focus": "…", "why": "…", "duration": "۳ هفته" }]
+}`;
+
+const STAGE_SYSTEM_PROMPT = `تو یک مربیِ خصوصیِ فوق‌العاده دقیق هستی که فقط **یک مرحله** از یک مسیرِ یادگیری را با ریزترین جزئیات می‌نویسی.
+کلِ مسیر و محدوده‌ی همه‌ی مرحله‌ها را می‌بینی؛ فقط مرحله‌ای را بنویس که از تو خواسته شده.
+
+## معیارِ کیفیت
+کاربر باید بتواند فقط با خواندنِ خروجیِ تو، بدونِ هیچ جست‌وجوی اضافه، بفهمد **دقیقاً** چه چیزی را، با چه عمقی، با چه ترتیبی
+بخواند و چه کاری انجام دهد. هر جمله‌ای که بشود آن را کپی کرد و در مسیرِ یک موضوعِ دیگر گذاشت، بی‌ارزش است.
+- بد: «مفاهیمِ پایه‌ی شبکه را یاد بگیر.»  خوب: «سه‌مرحله‌ای‌بودنِ TCP (SYN, SYN-ACK, ACK)، فرقِ TCP و UDP، و اینکه چرا DNS معمولاً روی UDP پورتِ ۵۳ است.»
+- بد: «تمرین کن.»  خوب: «با Wireshark ترافیکِ بازکردنِ یک سایتِ HTTP را ضبط کن، فیلترِ http.request بزن و هدرِ Host و User-Agent را پیدا کن.»
+
+## محدوده
+- فقط مباحثی که در focusِ همین مرحله آمده. چیزی که مالِ مرحله‌ی قبلی است را دوباره درس نده (فقط اگر لازم است یک خط مرور).
+- از مرحله‌های بعدی جلو نزن. اگر مبحثی بیرون از محدوده لازم شد، در prerequisites بیاورش.
+- حجمِ کار باید در duration و وقتِ هفتگیِ کاربر جا شود — نه بیشتر، نه خیلی کمتر.
+
+## چه چیزهایی بنویسی
+- why: ۲ تا ۳ جمله — چرا این مرحله، و بدونِ آن کجای مسیر گیر می‌کند.
+- prerequisites: چیزهایی که قبل از شروعِ همین مرحله باید بلد باشد (معمولاً از مرحله‌های قبل).
+- topics: ۴ تا ۸ سرفصل **به ترتیبِ یادگیری**. هر سرفصل:
+    title: اسمِ دقیقِ مبحث.
+    detail: ۲ تا ۴ جمله — این مبحث چیست، چرا لازم است، و **تا چه عمقی** باید بلدش باشی (چه چیزی را لازم نیست فعلاً بخوانی).
+    points: ۳ تا ۶ ریزمبحثِ مشخص (اصطلاح، دستور، تابع، فرمول، تکنیک) — همان چیزهایی که باید بتوانی بی‌نگاه توضیح بدهی.
+- tasks: ۴ تا ۸ کارِ عملی به ترتیب، از ساده به سخت. هر کار:
+    title: یک جمله‌ی دستوری.
+    detail: قدم‌به‌قدم و مشخص: با چه ابزاری، روی چه ورودی‌ای، چه تنظیمی — طوری که گیر نکند.
+    output: خروجیِ قابلِ دیدن و تحویل‌دادنی (فایل، اسکرین‌شات، ریپوی گیت‌هاب، ویدیوی ۳۰ ثانیه‌ای…).
+- project: یک پروژه‌ی کوچکِ جمع‌بندی که همه‌ی مباحثِ مرحله را کنارِ هم به کار بگیرد:
+    { "title": "…", "brief": "۳ تا ۵ جمله: چه چیزی می‌سازی، با چه قیودی، چه چیزی آن را سخت/جالب می‌کند", "deliverables": ["…"] }
+    اگر برای این مرحله واقعاً بی‌معناست (مثلاً مرحله‌ی نصب و آماده‌سازی)، null بگذار.
+- tools: ابزارهای همین مرحله: [{ "name": "…", "use": "دقیقاً در این مرحله برای چه — و اگر نصب/تنظیمِ خاصی لازم است همان را بگو" }].
+- resources: ۳ تا ۶ منبعِ **واقعی و نام‌آشنا** (مستندِ رسمی، کتاب با نامِ نویسنده، دوره‌ی مشهور، کانالِ شناخته‌شده، سایتِ تمرین):
+    { "title": "نامِ دقیق", "type": "…", "source": "ناشر/پلتفرم/نویسنده", "why": "برای کدام سرفصل/کارِ همین مرحله و کدام بخشش", "url": "…" }
+    اگر از آدرسِ دقیقِ صفحه ۱۰۰٪ مطمئن نیستی، url را نگذار. لینکِ ساختگی بدترین خطاست. منبعی که مطمئن نیستی وجود دارد را نیاور.
+- pitfalls: ۳ تا ۵ اشتباهِ رایجِ تازه‌کارها **در همین مرحله** — هرکدام با راهِ پرهیزش در همان جمله.
+- done: ۳ تا ۵ معیارِ قابلِ سنجش برای اینکه بفهمد مرحله تمام شده («بدونِ نگاه‌کردن به مستند، … را در کمتر از ۲۰ دقیقه انجام می‌دهی»)،
+  نه «وقتی خوب فهمیدی».
+
+## قواعدِ سخت
+۱. فارسیِ روان و ساده؛ نام‌های فنیِ لاتین، لاتین بمانند.
+۲. "type" منبع یکی از این‌ها: article | documentation | video | course | lab | book | tool
+۳. خروجی **فقط** JSONِ خام، بدونِ متنِ اضافه، دقیقاً با این ساختار:
+
+{
+  "why": "…",
+  "prerequisites": ["…"],
+  "topics": [{ "title": "…", "detail": "…", "points": ["…"] }],
+  "tasks": [{ "title": "…", "detail": "…", "output": "…" }],
+  "project": { "title": "…", "brief": "…", "deliverables": ["…"] },
+  "tools": [{ "name": "…", "use": "…" }],
+  "resources": [{ "title": "…", "type": "book", "source": "…", "why": "…" }],
+  "pitfalls": ["…"],
+  "done": ["…"]
+}`;
+
+const GUIDE_SYSTEM_PROMPT = `تو یک مربیِ باتجربه هستی و داری «نامه‌ی راهنمای» یک مسیرِ یادگیری را برای شاگردت می‌نویسی. اسکلتِ مسیر (مرحله‌ها و
+محدوده‌شان) آماده است و جزئیاتِ هر مرحله جدا نوشته می‌شود؛ کارِ تو **تصویرِ بزرگ** است: چرا این مسیر، چطور جلو برود، چطور
+انگیزه و کیفیت را نگه دارد. متن باید خودش به‌تنهایی خواندنی و کامل باشد.
+
+ساختار (هر تیتر در خطِ خودش با ## شروع شود؛ زیرش بندهای واقعی؛ فهرست‌ها با «- » در ابتدای خط):
+## مسیر در یک نگاه
+  از کجا شروع می‌شود، از چه ایستگاه‌هایی می‌گذرد، آخرش کجاست، چقدر طول می‌کشد با وقتِ هفتگیِ همین کاربر.
+## چرا این ترتیب
+  منطقِ وابستگیِ مرحله‌ها؛ به شماره‌ی مرحله‌ها ارجاع بده («مرحله‌ی ۳ بدونِ مرحله‌ی ۲ …»).
+## برنامه‌ی هفتگیِ پیشنهادی
+  یک الگوی هفته‌ی نمونه با همان وقتِ هفتگی: چند جلسه، هر جلسه چقدر، سهمِ خواندن/تمرین/پروژه/مرور — مشخص با عدد.
+## روشِ یادگرفتن در این حوزه
+  تکنیک‌های مشخصِ همین حوزه (نه توصیه‌ی عمومیِ «پیوسته باش»): چطور یادداشت بردارد، چطور تمرین کند، کجا سوال بپرسد.
+## ابزارها و محیطِ کار
+  چه چیزی را کِی نصب/تهیه کند، و چه چیزی را فعلاً لازم ندارد (تا وقت و پول هدر نرود).
+## نمونه‌کار و اثباتِ مهارت
+  چه چیزهایی بسازد و کجا نشان بدهد (گیت‌هاب، پورتفولیو، …) — متناسب با هدفِ کاربر.
+## مدرک‌ها
+  فقط اگر در این حوزه معنا دارد: کدام، کِی، و آیا اصلاً ارزشِ هزینه دارد. وگرنه این بخش را ننویس.
+## اشتباه‌های بزرگی که وقت را می‌سوزانند
+  ۴ تا ۶ مورد، مخصوصِ همین حوزه، هرکدام با راهِ پرهیز.
+## وقتی گیر کردی
+  نشانه‌های فرسودگی/درجازدن و دقیقاً چه کند.
+## از کجا بفهمی به هدف رسیدی
+  معیارهای قابلِ سنجش برای پایانِ کلِ مسیر، هم‌راستا با هدفِ کاربر.
+
+قواعد: حداقل ۲۵۰۰ نویسه. مشخص، نه کلی — «تمرین کن» بی‌ارزش است. هیچ لینکی ننویس. فارسیِ روان؛ نام‌های فنیِ لاتین، لاتین.
+خروجی **فقط** JSONِ خام: { "guide": "## مسیر در یک نگاه\\n…" }`;
+
+type OutlineAttempt = { plan: RoadmapPlan; issues: PlanIssue[]; raw: string };
+
+async function callOutline(user: string, userId: string, timeoutMs: number): Promise<OutlineAttempt> {
+  const { text, usage, durationMs } = await callAiChat(OUTLINE_SYSTEM_PROMPT, user, 3500, AI_MODEL_NAME, timeoutMs);
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  const parsed = parseJsonResponse(text);
+  // اسکلت هنوز جزئیات ندارد؛ detailed:false تا normalize آن را «کامل» فرض نکند.
+  if (Array.isArray(parsed?.stages)) parsed.stages = parsed.stages.map((s: any) => ({ ...s, detailed: false }));
+  const plan = normalizePlan(parsed);
+  return { plan, issues: validateOutline(plan), raw: text };
 }
 
-"type" منبع یکی از این‌هاست: article | documentation | video | course | lab | book | tool`;
-
-function planUserMessage(profile: RoadmapProfile): string {
-  const lines = [`موضوع: ${profile.topic}`];
-  lines.push(
-    profile.goal
-      ? `هدفِ کاربر از یادگیریِ این: ${profile.goal}`
-      : "کاربر هدفِ مشخصی نگفته — مسیرِ عمومی ولی کاربردی بساز که هم به کارِ واقعی برسد هم برای علاقه‌ی شخصی بی‌ربط نباشد."
-  );
-  lines.push(
-    "",
-    "برای همین کاربر، هم متنِ کاملِ مسیر (guide) و هم مرحله‌ها (stages) را بساز.",
-    "فقط JSONِ خام برگردان."
-  );
-  return lines.join("\n");
-}
-
-/** پیامِ تعمیر: خروجیِ قبلی + دقیقاً چه چیزی خراب بود. */
-function repairMessage(previous: string, issues: PlanIssue[]): string {
+function outlineRepairMessage(user: string, previous: string, issues: PlanIssue[]): string {
   return [
-    "این JSONی که دادی ایراد دارد و قابلِ استفاده نیست:",
+    user,
     "",
-    previous.slice(0, 12_000),
+    "اسکلتی که قبلاً دادی ایراد داشت:",
+    previous.slice(0, 8_000),
     "",
     "ایرادها:",
     ...issues.map((i, n) => `${n + 1}. ${i.message}`),
     "",
-    "همین مسیر را با رفعِ این ایرادها دوباره بده — محتوای درست را نگه دار،",
-    "فقط چیزی را که ایراد دارد اصلاح کن. باز هم فقط JSONِ خام، بدونِ متنِ اضافه.",
+    "همان مسیر را با رفعِ این ایرادها دوباره بده. فقط JSONِ خام.",
   ].join("\n");
 }
 
-type PlanAttempt = { plan: RoadmapPlan; issues: PlanIssue[]; raw: string };
+/** همه‌ی چیزی که یک فراخوانیِ جزئیات/راهنما از کلِ مسیر باید ببیند. */
+export type RoadmapContext = { profile: RoadmapProfile; plan: RoadmapPlan };
 
-async function callPlanOnce(system: string, user: string, userId: string, timeoutMs: number): Promise<PlanAttempt> {
-  // سقفِ توکنِ خروجی بالاست چون guide عمداً یک متنِ بلند است، نه چند جمله.
-  const { text, usage, durationMs } = await callAiChat(system, user, 14000, AI_MODEL_NAME, timeoutMs);
-  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
-  const plan = normalizePlan(parseJsonResponse(text));
-  return { plan, issues: validatePlan(plan), raw: text };
+function contextBlock({ profile, plan }: RoadmapContext): string {
+  return [
+    profileBlock(profile),
+    "",
+    `عنوانِ مسیر: ${plan.title}`,
+    plan.summary ? `خلاصه: ${plan.summary}` : "",
+    plan.totalDuration ? `مدتِ کل: ${plan.totalDuration}` : "",
+    plan.meta.outcomes.length ? `خروجی‌های نهایی:\n${plan.meta.outcomes.map((o) => `- ${o}`).join("\n")}` : "",
+    "",
+    "همه‌ی مرحله‌ها:",
+    ...plan.stages.map((s) => `${s.n}. ${s.title} (${s.duration || "—"})\n   هدف: ${s.goal}\n   محدوده: ${s.focus}`),
+  ].filter((l) => l !== "").join("\n");
+}
+
+function stageUserMessage(ctx: RoadmapContext, stage: PlanStage): string {
+  return [
+    contextBlock(ctx),
+    "",
+    `── فقط مرحله‌ی ${stage.n} را بنویس: «${stage.title}»`,
+    `هدف: ${stage.goal}`,
+    `محدوده: ${stage.focus}`,
+    `مدت: ${stage.duration || "—"}`,
+    stage.n > 1 ? `مرحله‌ی قبلی: «${ctx.plan.stages[stage.n - 2]?.title}» — تکرارش نکن.` : "این اولین مرحله است.",
+    stage.n < ctx.plan.stages.length ? `مرحله‌ی بعدی: «${ctx.plan.stages[stage.n]?.title}» — از آن جلو نزن.` : "این آخرین مرحله است؛ به خروجی‌های نهایی برسان.",
+    "",
+    "فقط JSONِ خام.",
+  ].join("\n");
 }
 
 /**
- * ساختِ مسیر با حلقه‌ی تعمیر.
+ * جزئیاتِ ریزِ یک مرحله. خروجی روی اسکلتِ همان مرحله سوار می‌شود (عنوان،
+ * هدف، محدوده و مدت از اسکلت می‌مانند — مدل نباید آن‌ها را عوض کند، وگرنه
+ * با بقیه‌ی مسیر ناهم‌خوان می‌شود).
+ */
+export async function generateStageDetail(
+  ctx: RoadmapContext,
+  n: number,
+  userId: string,
+  timeoutMs: number = AI_TIMEOUT_MS
+): Promise<PlanStage> {
+  const base = ctx.plan.stages.find((s) => s.n === n);
+  if (!base) throw new Error("این مرحله در مسیر نیست");
+  const { text, usage, durationMs } = await callAiChat(
+    STAGE_SYSTEM_PROMPT, stageUserMessage(ctx, base), 4500, AI_MODEL_NAME, timeoutMs
+  );
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  const raw = parseJsonResponse(text);
+  const merged = normalizeStage(
+    { ...raw, title: base.title, goal: base.goal, focus: base.focus, duration: base.duration, why: raw?.why || base.why },
+    n - 1
+  );
+  if (!merged) throw new Error("جزئیاتِ مرحله قابلِ استفاده نبود");
+  const issues = validateStageDetail(merged);
+  // حداقلِ قابلِ اجرا: یک سرفصل و یک کار. کمبودِ جزئی (مثلاً ۳ سرفصل به‌جای ۴)
+  // فقط لاگ می‌شود؛ یک مرحله‌ی نسبتاً کامل از «بدونِ جزئیات» خیلی بهتر است.
+  if (!merged.topics.length || !merged.tasks.length) {
+    throw new Error(`جزئیاتِ مرحله ناقص بود: ${issues.map((i) => i.message).join(" | ")}`);
+  }
+  if (issues.length) {
+    logError("roadmap-plan", `stage_detail_partial (مرحله‌ی ${n})`, {
+      severity: "WARNING" as any,
+      context: { feature: "ROADMAP_STAGE", issues: issues.map((i) => i.code) },
+    });
+  }
+  return { ...merged, detailed: true };
+}
+
+export async function generateRoadmapGuide(
+  ctx: RoadmapContext,
+  userId: string,
+  timeoutMs: number = AI_TIMEOUT_MS
+): Promise<string> {
+  const user = [contextBlock(ctx), "", "نامه‌ی راهنمای همین مسیر را بنویس. فقط JSONِ خام."].join("\n");
+  const { text, usage, durationMs } = await callAiChat(GUIDE_SYSTEM_PROMPT, user, 4500, AI_MODEL_NAME, timeoutMs);
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  const guide = normalizePlan({ guide: parseJsonResponse(text)?.guide }).guide;
+  const issues = validateGuide(guide);
+  if (issues.length) throw new Error(issues[0].message);
+  return guide;
+}
+
+/**
+ * ساختِ کاملِ مسیر: اسکلت (با یک بار تعمیر اگر وقت بود) و بعد راهنما + همه‌ی
+ * مرحله‌ها به‌صورتِ موازی، همه زیرِ AI_TOTAL_BUDGET_MS.
  *
- * تفاوتش با withAiBudget: آن‌جا تلاشِ دوم فقط وقتی معنا داشت که تلاشِ اول
- * *پرتاب* کرده باشد. این‌جا خروجی می‌تواند JSONِ کاملاً معتبر باشد ولی
- * محتوایش ناقص (متنِ راهنمای دوخطی، مرحله‌ی بدونِ کار) — که خطا پرتاب
- * نمی‌کند. پس خودمان حلقه را می‌زنیم و ایرادها را به مدل پس می‌دهیم.
+ * فقط شکستِ اسکلت کلِ ساخت را شکست می‌دهد؛ شکستِ راهنما یا یک مرحله فقط
+ * در meta گزارش می‌شود و آن تکه بعداً از صفحه ساخته می‌شود.
  */
 export async function generateRoadmapPlan(profile: RoadmapProfile, userId: string): Promise<PlanGenerationResult> {
   const startedAt = Date.now();
-  const user = planUserMessage(profile);
+  const left = () => AI_TOTAL_BUDGET_MS - ROADMAP_SAFETY_MS - (Date.now() - startedAt);
+  const user = [profileBlock(profile), "", "اسکلتِ مسیر را برای همین کاربر بساز. فقط JSONِ خام."].join("\n");
 
   let attempts = 0;
-  let last: PlanAttempt | null = null;
-  const fixed: string[] = [];
-
-  for (let i = 0; i <= MAX_REPAIR_ATTEMPTS; i++) {
-    const remaining = AI_TOTAL_BUDGET_MS - (Date.now() - startedAt);
-    if (i > 0 && remaining < AI_MIN_ATTEMPT_MS) break;
-    const timeoutMs = Math.max(AI_MIN_ATTEMPT_MS, Math.min(AI_TIMEOUT_MS, remaining));
-
+  let outline: OutlineAttempt | null = null;
+  let lastErr: any = null;
+  for (let i = 0; i < 2; i++) {
+    // تلاشِ دوم فقط وقتی که بعدش هنوز برای فازِ جزئیات وقت بماند.
+    if (i > 0 && left() < OUTLINE_TIMEOUT_MS + 12_000) break;
     attempts++;
     try {
-      // تلاشِ دوم دو حالت دارد: یا خروجیِ قبلی بود ولی خراب (تعمیرش
-      // می‌کنیم)، یا اصلاً خروجی‌ای نبود چون تلاشِ قبلی پرتاب کرد — آن‌وقت
-      // همان پرامپتِ اول دوباره فرستاده می‌شود، نه یک پیامِ تعمیرِ تهی.
-      const result: PlanAttempt = last
-        ? await callPlanOnce(PLAN_SYSTEM_PROMPT, repairMessage(last.raw, last.issues), userId, timeoutMs)
-        : await callPlanOnce(PLAN_SYSTEM_PROMPT, user, userId, timeoutMs);
-
-      if (!result.issues.length) {
-        return {
-          plan: result.plan,
-          meta: { attempts, repaired: i > 0, issuesFixed: fixed, durationMs: Date.now() - startedAt },
-        };
-      }
-
-      if (i === 0 || result.issues.length < (last?.issues.length ?? Infinity)) {
-        fixed.push(...result.issues.map((x: PlanIssue) => x.code));
-        last = result;
-      }
-      logError("roadmap-plan", `roadmap_validation_failed (تلاشِ ${attempts})`, {
+      const res = await callOutline(
+        outline ? outlineRepairMessage(user, outline.raw, outline.issues) : user,
+        userId,
+        Math.min(OUTLINE_TIMEOUT_MS, left())
+      );
+      // ایرادِ جزئی (مثلاً یک مرحله بی‌focus) قابلِ تحمل است؛ فقط نبودِ
+      // عنوان یا مرحله‌ی کافی ساخت را متوقف می‌کند. تعمیر فقط وقتی جایگزین
+      // می‌شود که واقعاً ایرادِ کمتری داشته باشد.
+      if (!outline || res.issues.length < outline.issues.length) outline = res;
+      if (!res.issues.length) break;
+      logError("roadmap-plan", `outline_validation_failed (تلاشِ ${attempts})`, {
         severity: "WARNING" as any,
-        context: { feature: "ROADMAP_PLAN", issues: result.issues.map((x: PlanIssue) => x.code) },
+        context: { feature: "ROADMAP_PLAN", issues: res.issues.map((x) => x.code) },
       });
     } catch (err: any) {
-      logError("roadmap-plan", `تلاشِ ${attempts} شکست خورد: ${err?.message || err}`, {
+      logError("roadmap-plan", `اسکلت، تلاشِ ${attempts} شکست خورد: ${err?.message || err}`, {
         severity: "WARNING" as any,
         context: { feature: "ROADMAP_PLAN" },
       });
-      if (i === MAX_REPAIR_ATTEMPTS) throw err;
+      lastErr = err;
     }
   }
 
-  if (!last) throw new Error("ساختِ مسیر انجام نشد — گیت‌وی هوش مصنوعی پاسخِ قابلِ استفاده نداد");
+  const fatal = outline?.issues.filter((x) => x.code === "no_title" || x.code === "too_few_stages") ?? [];
+  if (!outline || fatal.length) {
+    throw new Error(
+      fatal.length
+        ? `اسکلتِ مسیر کامل نبود: ${fatal.map((i) => i.message).join(" | ")}`
+        : lastErr?.message || "ساختِ مسیر انجام نشد — گیت‌وی هوش مصنوعی پاسخِ قابلِ استفاده نداد"
+    );
+  }
 
-  // بعد از همه‌ی تلاش‌ها هنوز ایراد دارد. یک مسیرِ ناقص بدتر از نساختن است:
-  // کاربر بر اساسش وقت می‌گذارد.
-  throw new Error(
-    `مسیر ساخته شد ولی کامل نبود: ${last.issues.slice(0, 3).map((i) => i.message).join(" | ")}`
-  );
+  const ctx: RoadmapContext = { profile, plan: outline.plan };
+  const phaseTimeout = Math.max(AI_MIN_ATTEMPT_MS, left());
+
+  const [guideRes, ...stageRes] = await Promise.allSettled([
+    generateRoadmapGuide(ctx, userId, phaseTimeout),
+    ...outline.plan.stages.map((s) => generateStageDetail(ctx, s.n, userId, phaseTimeout)),
+  ]);
+
+  const stages = outline.plan.stages.map((s, i) => {
+    const r = stageRes[i];
+    return r.status === "fulfilled" ? (r.value as PlanStage) : s;
+  });
+  const pendingStages = stages.filter((s) => !s.detailed).map((s) => s.n);
+  const guide = guideRes.status === "fulfilled" ? (guideRes.value as string) : "";
+
+  if (pendingStages.length || !guide) {
+    logError("roadmap-plan", `roadmap_partial (مرحله‌های بی‌جزئیات: ${pendingStages.join(",") || "—"}، راهنما: ${guide ? "دارد" : "ندارد"})`, {
+      severity: "WARNING" as any,
+      context: { feature: "ROADMAP_PLAN" },
+    });
+  }
+
+  return {
+    plan: {
+      ...outline.plan,
+      guide,
+      stages,
+      meta: {
+        ...outline.plan.meta,
+        level: profile.level,
+        weeklyHours: profile.weeklyHours,
+        background: profile.background,
+      },
+    },
+    meta: { attempts, durationMs: Date.now() - startedAt, pendingStages, guideReady: !!guide },
+  };
 }
 
 // ============================================================================
