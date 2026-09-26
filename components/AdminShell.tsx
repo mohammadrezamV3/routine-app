@@ -8,14 +8,14 @@ import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
-  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock,
+  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { AdminToastProvider } from "@/components/admin/useAdminToast";
 import { AdminAccessContext } from "@/components/admin/AdminAccess";
 import { AdminPermission, hasPermission, permissionForPath } from "@/lib/adminPermissions";
 
-type Leaf = { label: string; href: string; perm?: AdminPermission };
+type Leaf = { label: string; href: string; perm?: AdminPermission; exact?: boolean };
 type NavSection = { label: string; icon: React.ReactNode; href?: string; perm?: AdminPermission; children?: Leaf[] };
 type NavGroup = { title: string; sections: NavSection[] };
 
@@ -71,6 +71,15 @@ const GROUPS: NavGroup[] = [
     sections: [
       { label: "تیکت‌های پشتیبانی", icon: <Headset size={17} />, href: "/admin/support", perm: "support" },
       { label: "گزارش‌های چت", icon: <Flag size={17} />, href: "/admin/chat-reports", perm: "chat" },
+      {
+        label: "منتورها", icon: <GraduationCap size={17} />, perm: "mentors",
+        children: [
+          { label: "صف احراز هویت", href: "/admin/mentors?tab=pending", exact: true },
+          { label: "همه منتورها", href: "/admin/mentors?tab=all", exact: true },
+          { label: "نظرات", href: "/admin/mentors/reviews" },
+          { label: "گزارش‌ها", href: "/admin/mentors/reports" },
+        ],
+      },
       { label: "تقویم اقتصادی", icon: <CalendarClock size={17} />, href: "/admin/economic-calendar", perm: "content" },
       {
         label: "محصولات", icon: <Boxes size={17} />,
@@ -124,9 +133,9 @@ function visibleGroups(access: Access): NavGroup[] {
   })).filter((g) => g.sections.length > 0);
 }
 
-function isActive(pathname: string, href: string): boolean {
+function isActive(pathname: string, href: string, exact = false): boolean {
   const path = href.split("?")[0];
-  if (path === "/admin") return pathname === "/admin";
+  if (path === "/admin" || exact) return pathname === path;
   return pathname === path || pathname.startsWith(path + "/");
 }
 
@@ -206,7 +215,7 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
                     >
                       <div className="admin-nav-children">
                         {section.children.map((leaf) => (
-                          <Link key={leaf.href} href={leaf.href} onClick={onNavigate} className={`admin-nav-leaf${isActive(pathname, leaf.href) ? " active" : ""}`}>
+                          <Link key={leaf.href} href={leaf.href} onClick={onNavigate} className={`admin-nav-leaf${isActive(pathname, leaf.href, leaf.exact) ? " active" : ""}`}>
                             {leaf.label}
                           </Link>
                         ))}

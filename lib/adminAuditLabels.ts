@@ -18,6 +18,14 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "chat.ban_72h": "بن موقت چت",
   "chat.disable_chat": "غیرفعال‌کردن چت",
   "chat.enable_chat": "رفع محدودیت چت",
+  "mentor.verify_identity": "بررسی احراز هویت منتور",
+  "mentor.verify_certificate": "بررسی مدرک منتور",
+  "mentor.suspend": "تعلیق منتور",
+  "mentor.unsuspend": "رفع تعلیق منتور",
+  "mentor.review_hide": "پنهان‌کردن نظر منتور",
+  "mentor.review_restore": "بازگردانی نظر منتور",
+  "mentor.report_resolve": "رسیدگی به گزارش منتورها",
+  "mentor.document_view": "مشاهده مدرک منتور",
 };
 
 export function auditLabel(action: string) {
