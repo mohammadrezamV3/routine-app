@@ -23,8 +23,15 @@ import { wipeAllLocalData } from "./localData";
 import { clearSocialCache } from "@m/features/social/db";
 import { clearTradeOnlineCache } from "@m/features/trade-online/db";
 import { refreshCatalog } from "./catalog";
+import { nativeFetch } from "@m/localApi/nativeFetch";
+import { clearHttpCache } from "@m/localApi/cache";
+import { clearAccountSnapshot, loadAccountSnapshot } from "@m/localApi/accountState";
+import { refreshCached } from "@m/localApi/dispatch";
 
 type Services = { tokens: TokenStore; api: ApiClient; engine: SyncEngine };
+
+/** حداکثر انتظارِ ورود برای اولین سینک */
+const FIRST_SYNC_WAIT_MS = 10_000;
 let services: Services | null = null;
 
 /** سرویس‌های singleton (یک ApiClient ← یک promiseِ refresh برای کلِ اپ) */
@@ -32,7 +39,7 @@ export function getSyncServices(): Services {
   if (!services) {
     const kv = preferencesKV();
     const tokens = new TokenStore(kv);
-    const api = new ApiClient({ baseUrl: API_BASE_URL, tokens });
+    const api = new ApiClient({ baseUrl: API_BASE_URL, tokens, fetch: nativeFetch });
     services = { tokens, api, engine: new SyncEngine(api, kv, ALL_CHANNELS) };
   }
   return services;
@@ -89,6 +96,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
    *  خطا (آفلاین/سرور) بی‌صدا نادیده گرفته می‌شه؛ دفعه‌ی بعد دوباره امتحان می‌شه. */
   const refreshUser = useCallback(async () => {
     if (!SYNC_ENABLED || !tokens.isLoggedIn()) return;
+    // /api/account ِ کش‌شده (localApi) منبعِ isSuperAdmin/moduleAccess ِ صفحه‌های وبه
+    void refreshCached("/api/account");
     try {
       await api.me();
     } catch {
@@ -130,7 +139,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setLoggedIn(tokens.isLoggedIn());
       setReady(true);
       const u = tokens.getUser();
-      if (tokens.isLoggedIn() && u?.id) void engine.adoptOwner(u.id).catch(() => undefined);
+      if (tokens.isLoggedIn() && u?.id) {
+        void engine.adoptOwner(u.id).catch(() => undefined);
+        void loadAccountSnapshot(u.id).catch(() => undefined);
+      }
       trigger();
       void refreshUser();
     })();
@@ -212,7 +224,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // دیتای محلیِ یک *حسابِ دیگه* ادغام نمی‌شه — پاک می‌شه و pullِ کامل میاد
       // (wipeAllLocalData شاملِ arion-trade-online/arion-social هم هست).
       await engine.prepareFirstSync(userId, () => wipeAllLocalData());
-      void runSync();
+      // اولین pull (و /api/account) قبل از اینکه صفحه‌ی ورودِ وب به /weekly بره —
+      // مثلِ وب که دیتا از اولین رندر حاضره؛ وگرنه روی دستگاهِ تازه صفحه با
+      // Dexie ِ خالی مانت می‌شد (مثلا مودالِ «ساعت بیداری/خواب» باز می‌شد).
+      // سقف‌دار: شبکه‌ی کند نباید ورود رو گیر بندازه (بقیه‌اش با remount میاد).
+      const first = Promise.all([runSync(), refreshCached("/api/account")]);
+      await Promise.race([first, new Promise((r) => setTimeout(r, FIRST_SYNC_WAIT_MS))]);
     },
     [engine, runSync]
   );
@@ -247,7 +264,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // کشِ اجتماعی/آنلاینِ ترید داده‌ی خصوصیِ همون کاربره (نه دیتای
       // آفلاین‌اولِ خودِ دستگاه)، پس صرف‌نظر از wipeLocal همیشه پاک می‌شه —
       // وگرنه کاربرِ بعدیِ همین دستگاه چتِ نمادها/دوستانِ قبلی رو می‌بینه.
-      await Promise.all([clearSocialCache(), clearTradeOnlineCache()]);
+      await Promise.all([clearSocialCache(), clearTradeOnlineCache(), clearHttpCache()]);
+      clearAccountSnapshot();
       setSessionExpired(false);
     },
     [api, engine, tokens]

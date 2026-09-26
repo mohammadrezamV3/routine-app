@@ -206,6 +206,87 @@ export class ApiClient {
     return (await ApiClient.readJson(res)) as T;
   }
 
+  // ─── فورواردِ عمومی (localApi → روت‌های وب با Bearer) ─────────────────
+
+  /**
+   * درخواستِ خام با بدنه‌ی دست‌نخورده (FormData/Blob/رشته — هیچ JSON.stringify و
+   * هیچ Content-Typeِ اضافه‌ای؛ مرورگر boundaryِ multipart رو خودش می‌ذاره).
+   * `signal`ِ کالر احترام گذاشته می‌شه: لغوِ کالر → همون AbortErrorِ DOM
+   * (نه ApiError)، دقیقا مثلِ fetchِ معمولی.
+   */
+  private async rawFetch(
+    path: string,
+    init: { method: string; headers?: Record<string, string>; body?: BodyInit | null; signal?: AbortSignal | null },
+    bearer: string | null,
+    timeoutMs: number
+  ): Promise<Response> {
+    if (!this.baseUrl) throw new ApiError("not_configured", 0);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    const outer = init.signal ?? null;
+    const onOuterAbort = () => ctrl.abort();
+    if (outer) {
+      if (outer.aborted) ctrl.abort();
+      else outer.addEventListener("abort", onOuterAbort, { once: true });
+    }
+    const headers: Record<string, string> = { ...(init.headers ?? {}) };
+    if (bearer) headers.Authorization = `Bearer ${bearer}`;
+    try {
+      return await this.fetchImpl(this.baseUrl + path, {
+        method: init.method,
+        headers,
+        body: init.body ?? undefined,
+        signal: ctrl.signal,
+        credentials: "omit",
+        cache: "no-store",
+      });
+    } catch (err: any) {
+      if (outer?.aborted) throw new DOMException("The operation was aborted.", "AbortError");
+      if (ctrl.signal.aborted || err?.name === "AbortError") throw new ApiError("timeout", 0);
+      throw new ApiError("network", 0);
+    } finally {
+      clearTimeout(timer);
+      outer?.removeEventListener("abort", onOuterAbort);
+    }
+  }
+
+  /** 401ای که از «نشست نداری» (getRequestUser ← {error:"unauthorized"}) میاد؛ نه
+   *  401ِ منطقیِ یک روت (مثلا «رمز فعلی اشتباه است» در /api/account/password) —
+   *  اون‌ها نباید refresh/خروج راه بندازن. */
+  private static async isSessionRejection(res: Response): Promise<boolean> {
+    if (res.status !== 401) return false;
+    const j = await ApiClient.readJson(res.clone());
+    return !j || j.error === "unauthorized" || j.error === "Unauthorized";
+  }
+
+  /**
+   * فوروارد به یک روتِ وب. `auth: "bearer"` ← همون قراردادِ authedRaw (refreshِ
+   * پیش‌دستانه، single-flight، یک‌بار تکرار روی 401ِ نشست، 401ِ دوم = خروج)؛
+   * `auth: "none"` ← روت‌های عمومی (ثبت‌نام/بازیابی رمز) بدونِ هیچ توکنی.
+   * بدنه باید تکرارپذیر باشه (FormData/Blob/string/ArrayBuffer — نه stream).
+   */
+  async forward(
+    path: string,
+    init: { method: string; headers?: Record<string, string>; body?: BodyInit | null; signal?: AbortSignal | null },
+    opts: { auth: "bearer" | "none"; timeoutMs?: number }
+  ): Promise<Response> {
+    const timeoutMs = opts.timeoutMs ?? this.timeoutMs;
+    if (opts.auth === "none") return this.rawFetch(path, init, null, timeoutMs);
+    if (!this.tokens.isLoggedIn()) throw new ApiError("session_expired", 401);
+    let token = this.tokens.getAccessToken(ACCESS_TOKEN_SKEW_MS, this.now()) ?? (await this.refreshAccessToken());
+    let res = await this.rawFetch(path, init, token, timeoutMs);
+    if (await ApiClient.isSessionRejection(res)) {
+      this.tokens.invalidateAccessToken(token);
+      token = await this.refreshAccessToken(token);
+      res = await this.rawFetch(path, init, token, timeoutMs);
+      if (await ApiClient.isSessionRejection(res)) {
+        await this.expireSession();
+        throw new ApiError("session_expired", 401);
+      }
+    }
+    return res;
+  }
+
   static async errorFrom(res: Response): Promise<ApiError> {
     const j = await ApiClient.readJson(res);
     return new ApiError("http", res.status, typeof j?.error === "string" ? j.error : typeof j?.message === "string" ? j.message : null);

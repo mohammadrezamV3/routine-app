@@ -4,13 +4,17 @@
 //   = واردشده) — مثلِ وب که بدونِ نشست به صفحه‌های محافظت‌شده راه نمی‌ده.
 // • signIn("credentials") → SyncProvider.login، signIn("sms-2fa") → verify2fa،
 //   signOut → logout (دیتای محلی پاک نمی‌شه؛ قانونِ مالک در prepareFirstSync).
-// • isSuperAdmin فعلا همیشه false — فاز 1b از /api/accountِ کش‌شده پرش می‌کنه.
+// • isSuperAdmin از /api/account ِ کش‌شده (localApi/accountState) — همون
+//   فیلدی که وب از JWT می‌خونه؛ آفلاین هم از Dexie معتبره.
+// • signIn("credentials") اگه shimِ /api/auth/2fa/start همین الان با همون
+//   شناسه/رمز وارد شده، نتیجه‌ی همون رو برمی‌گردونه (ورودِ دوم نمی‌ره).
 import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSync } from "@m/sync/SyncProvider";
+import { getSyncServices, useSync } from "@m/sync/SyncProvider";
 import { ApiError } from "@m/sync/apiClient";
 import type { MobileUser } from "@m/lib/api-contract";
-import { currentAuthBridge, setAuthBridge, whenAuthReady } from "./authBridge";
+import { isSuperAdminCached, useAccountSnapshotVersion } from "@m/localApi/accountState";
+import { currentAuthBridge, setAuthBridge, takePreLogin, whenAuthReady } from "./authBridge";
 import type { Session } from "./next-auth";
 
 export type SessionStatus = "loading" | "authenticated" | "unauthenticated";
@@ -35,7 +39,9 @@ export function toSession(user: MobileUser | null): Session | null {
       email: null,
       image: null,
       username: user.username,
-      isSuperAdmin: false,
+      isSuperAdmin: isSuperAdminCached(user.id),
+      // پنلِ ادمین در اپ روت نمی‌شه (routes.tsx ← EXCLUDED)
+      isAdmin: false,
     },
     expires: FAR_EXPIRY(),
   };
@@ -44,9 +50,10 @@ export function toSession(user: MobileUser | null): Session | null {
 export function SessionProvider({ children }: { children: ReactNode; session?: Session | null; refetchOnWindowFocus?: boolean; refetchInterval?: number; basePath?: string }) {
   const sync = useSync();
   const navigate = useNavigate();
+  const accountVersion = useAccountSnapshotVersion();
   const userKey = sync.user ? `${sync.user.id}:${sync.user.name ?? ""}:${sync.user.username ?? ""}` : "";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const session = useMemo(() => (sync.loggedIn ? toSession(sync.user) : null), [sync.loggedIn, userKey]);
+  const session = useMemo(() => (sync.loggedIn ? toSession(sync.user) : null), [sync.loggedIn, userKey, accountVersion]);
   const status: SessionStatus = !sync.ready ? "loading" : session ? "authenticated" : "unauthenticated";
 
   // پل همین حالا (نه در effect) به‌روز می‌شه تا getSession ِ بلافاصله بعد از
@@ -80,9 +87,23 @@ export function useSession(options?: { required?: boolean; onUnauthenticated?: (
   return value;
 }
 
+/**
+ * نشستِ فعلی مستقیم از tokenStore (نه از contextِ React که تا رندرِ بعدی
+ * عقب‌تره) — صفحه‌ی ورودِ وب بلافاصله بعد از signIn همین رو می‌پرسه.
+ *
+ * و یک نکته‌ی lib/storage: صفحه‌ی ورود بعد از getSession، invalidateStorageCache()
+ * می‌زنه؛ وضعیتِ «واردشده» ِ لایه‌ی داده تا وقتی SessionBridge دوباره اعلامش
+ * نکنه (که فقط با *تغییرِ* status می‌کنه) معطلِ fallbackِ ۳ثانیه‌ای می‌مونه.
+ * پس بعد از همین تیک دوباره اعلامش می‌کنیم.
+ */
 export async function getSession(): Promise<Session | null> {
-  const b = await whenAuthReady();
-  return currentAuthBridge()?.session ?? b.session;
+  await whenAuthReady();
+  const { tokens } = getSyncServices();
+  const session = tokens.isLoggedIn() ? toSession(tokens.getUser()) : null;
+  setTimeout(() => {
+    void import("@/lib/storage").then((m) => m.publishSessionState(getSyncServices().tokens.isLoggedIn()));
+  }, 0);
+  return session;
 }
 
 export type SignInResponse = { ok: boolean; error: string | null; status: number; url: string | null };
@@ -108,6 +129,14 @@ export async function signIn(provider?: string, options: Record<string, unknown>
   const b = await whenAuthReady();
   const identifier = String(options.identifier ?? "").trim();
   if (provider === "credentials") {
+    const pre = takePreLogin(identifier, String(options.password ?? ""));
+    if (pre) {
+      if (pre.ok) {
+        pending2fa = null;
+        return { ok: true, error: null, status: 200, url: null };
+      }
+      return failure(pre.error);
+    }
     try {
       const r = await b.login(identifier, String(options.password ?? ""));
       if (r.status === "2fa") {

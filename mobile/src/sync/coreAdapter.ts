@@ -62,10 +62,13 @@ export const coreAdapter: SyncAdapter = {
   },
 
   async applyPull(res) {
-    for (const r of res.dailyEntries ?? []) await applyRemote("dailyEntries", remoteDaily(r));
-    for (const r of res.sleepEntries ?? []) await applyRemote("sleepEntries", remoteSleep(r));
-    for (const r of res.tasks ?? []) await applyRemote("tasks", remoteTask(r));
-    for (const r of res.settings ?? []) await applyRemote("settings", remoteSetting(r));
+    let applied = 0;
+    const count = (ok: boolean) => void (ok && applied++);
+    for (const r of res.dailyEntries ?? []) count(await applyRemote("dailyEntries", remoteDaily(r)));
+    for (const r of res.sleepEntries ?? []) count(await applyRemote("sleepEntries", remoteSleep(r)));
+    for (const r of res.tasks ?? []) count(await applyRemote("tasks", remoteTask(r)));
+    for (const r of res.settings ?? []) count(await applyRemote("settings", remoteSetting(r)));
+    return applied;
   },
 
   markAllDirty,

@@ -11,6 +11,8 @@ export const LOCAL_DB_NAMES = [
   "arion-catalog",
   "arion-trade-online",
   "arion-social",
+  // کشِ HTTPِ روت‌های CACHED ِ localApi (/api/account، …) — دیتای خصوصیِ کاربر
+  "arion-http-cache",
 ] as const;
 
 export async function wipeAllLocalData(names: readonly string[] = LOCAL_DB_NAMES): Promise<void> {

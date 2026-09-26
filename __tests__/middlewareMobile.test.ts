@@ -97,3 +97,24 @@ describe("middleware — Bearer bridge on web routes", () => {
     }
   });
 });
+
+describe("middleware — public signup/forgot-password for the app", () => {
+  it("answers preflight + POST from app origins with CORS and no credentials", () => {
+    const pre = middleware(req("/api/auth/signup", "OPTIONS", { origin: "https://localhost", "access-control-request-headers": "content-type" }));
+    expect(pre.status).toBe(204);
+    expect(pre.headers.get("access-control-allow-origin")).toBe("https://localhost");
+    expect(pre.headers.get("access-control-allow-credentials")).toBeNull();
+    const post = middleware(req("/api/auth/forgot-password/verify", "POST", { origin: "capacitor://localhost" }));
+    expect(post.status).toBe(200);
+    expect(post.headers.get("access-control-allow-origin")).toBe("capacitor://localhost");
+  });
+
+  it("never opens next-auth, 2fa/start or foreign origins", () => {
+    for (const path of ["/api/auth/callback/credentials", "/api/auth/session", "/api/auth/2fa/start"]) {
+      const res = middleware(req(path, "OPTIONS", { origin: "https://localhost", "access-control-request-headers": "content-type" }));
+      expect(res.headers.get("access-control-allow-origin")).toBeNull();
+    }
+    const evil = middleware(req("/api/auth/signup", "OPTIONS", { origin: "https://evil.example" }));
+    expect(evil.headers.get("access-control-allow-origin")).toBeNull();
+  });
+});

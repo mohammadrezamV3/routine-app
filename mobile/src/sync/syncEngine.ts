@@ -113,6 +113,9 @@ export class SyncEngine {
   private online = true;
   /** قفل‌های هر کانال؛ null = هنوز نمی‌دونیم */
   private locked = new Map<string, Set<string> | null>();
+  /** ردیف‌های ریموتی که در اجرای جاری واقعا اعمال شدن */
+  private appliedThisRun = 0;
+  private remoteListeners = new Set<(count: number) => void>();
 
   constructor(
     private api: ApiClient,
@@ -131,6 +134,15 @@ export class SyncEngine {
 
   getState(): SyncState {
     return this.state;
+  }
+
+  /**
+   * بعد از هر اجرای سینک که pullش ردیفِ ریموتی رو واقعا عوض کرده (نه
+   * برگشتِ همون تغییرِ خودمون) — شل lib/storage رو invalidate و صفحه رو remount می‌کنه.
+   */
+  onRemoteApplied(l: (count: number) => void): () => void {
+    this.remoteListeners.add(l);
+    return () => this.remoteListeners.delete(l);
   }
 
   subscribe(l: (s: SyncState) => void): () => void {
@@ -199,6 +211,17 @@ export class SyncEngine {
         }
       } finally {
         this.running = null;
+        const applied = this.appliedThisRun;
+        this.appliedThisRun = 0;
+        if (applied > 0) {
+          for (const l of this.remoteListeners) {
+            try {
+              l(applied);
+            } catch {
+              /* noop */
+            }
+          }
+        }
       }
     })();
     return this.running;
@@ -285,7 +308,10 @@ export class SyncEngine {
       const unlocked = prev ? [...prev].filter((m) => !now.has(m)) : [];
       if (!prev || unlocked.length || [...now].some((m) => !prev.has(m))) await this.setLocked(ch, now);
 
-      for (const a of ch.adapters) await a.applyPull(res);
+      for (const a of ch.adapters) {
+        const n = await a.applyPull(res);
+        if (typeof n === "number") this.appliedThisRun += n;
+      }
 
       if (typeof res.cursor === "string") {
         const next: string = res.cursor;

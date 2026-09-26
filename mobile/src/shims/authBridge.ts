@@ -32,3 +32,27 @@ export function whenAuthReady(): Promise<AuthBridge> {
 export function currentAuthBridge(): AuthBridge | null {
   return bridge;
 }
+
+// ─── نتیجه‌ی «پیش‌ورودِ» /api/auth/2fa/start ───────────────────────────────
+// صفحه‌ی ورودِ وب اول POST /api/auth/2fa/start می‌زنه و اگه دومرحله‌ای لازم
+// نبود، signIn("credentials") رو با همون شناسه/رمز صدا می‌زنه. در اپ هر دو
+// مرحله یک درخواست‌اند (POST /api/mobile/auth/login)، پس shimِ 2fa/start خودش
+// وارد می‌شه و نتیجه رو این‌جا می‌ذاره تا signIn همون رو مصرف کنه — نه یک
+// ورودِ دوم (که یک نشستِ اضافه روی سرور می‌ساخت). فقط در حافظه، یک‌بارمصرف،
+// حداکثر ۶۰ ثانیه، و فقط برای *همون* شناسه و رمز.
+export type PreLoginOutcome = { ok: true } | { ok: false; error: unknown };
+type PreLogin = { identifier: string; password: string; outcome: PreLoginOutcome; at: number };
+const PRE_LOGIN_TTL_MS = 60_000;
+let preLogin: PreLogin | null = null;
+
+export function recordPreLogin(identifier: string, password: string, outcome: PreLoginOutcome): void {
+  preLogin = { identifier, password, outcome, at: Date.now() };
+}
+
+export function takePreLogin(identifier: string, password: string): PreLoginOutcome | null {
+  const p = preLogin;
+  preLogin = null;
+  if (!p || Date.now() - p.at > PRE_LOGIN_TTL_MS) return null;
+  if (p.identifier !== identifier || p.password !== password) return null;
+  return p.outcome;
+}

@@ -24,8 +24,12 @@ export interface SyncAdapter {
   prepare?(): Promise<void>;
   /** ردیف‌های dirty → تغییرِ push */
   collect(): Promise<PendingItem[]>;
-  /** اعمالِ یک صفحه‌ی pull (فقط آرایه‌های مربوط به همین آداپتور) */
-  applyPull(res: any): Promise<void>;
+  /**
+   * اعمالِ یک صفحه‌ی pull (فقط آرایه‌های مربوط به همین آداپتور). خروجیِ عددی =
+   * تعدادِ ردیف‌هایی که واقعا عوض شدن (برای remountِ صفحه‌ی فعلی —
+   * SyncEngine.onRemoteApplied)؛ void یعنی این آداپتور هنوز گزارش نمی‌ده.
+   */
+  applyPull(res: any): Promise<number | void>;
   /** اولین ورود: همه‌ی ردیف‌های قابلِ سینک dirty بشن تا LWW تصمیم بگیره */
   markAllDirty(): Promise<void>;
 }

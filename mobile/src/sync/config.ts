@@ -25,3 +25,6 @@ export const LOCAL_WRITE_DEBOUNCE_MS = 2_000;
 export const ACCESS_TOKEN_SKEW_MS = 30_000;
 
 export { normalizeBaseUrl };
+
+/** سقفِ زمانِ روت‌های AI (دستیارِ روتین، ساختِ برنامه/رودمپ، اسکنِ غذا) */
+export const AI_REQUEST_TIMEOUT_MS = 90_000;

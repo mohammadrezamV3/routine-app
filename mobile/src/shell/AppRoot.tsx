@@ -20,6 +20,7 @@ import { NotificationsBootstrap } from "./NotificationsBootstrap";
 import { RouteBoundary } from "./RouteBoundary";
 import { ScrollToTop } from "./ScrollToTop";
 import { useHardwareBack } from "./hardwareBack";
+import { startRemoteRefresh } from "@m/localApi/remoteRefresh";
 import { buildRoutes, preloadPath, RouteSuspense, TAB_PREFETCH_PATHS } from "./routes";
 
 setPrefetcher(preloadPath);
@@ -51,6 +52,8 @@ function useStatusBarThemeSync() {
 function ShellEffects() {
   useHardwareBack();
   useStatusBarThemeSync();
+  // pullی که دیتای ریموت آورد ← کشِ lib/storage + remountِ صفحه‌ی فعلی
+  useEffect(() => startRemoteRefresh(), []);
   useEffect(() => {
     void hideSplash();
     // چانکِ تب‌های اصلی در زمانِ بیکاری — ضربه‌ی بعدی منتظرِ دانلود نمی‌مونه

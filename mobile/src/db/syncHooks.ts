@@ -76,9 +76,28 @@ export async function applyRemote<E extends EntityName>(
       local.dirty !== 1 ||
       Date.parse(record.updatedAt) > Date.parse(local.updatedAt);
     if (!wins) return false;
+    // همون نسخه‌ای که الان داریم (مثلا pullِ برگشتیِ تغییری که خودمون همین الان
+    // push کردیم) — «تغییرِ ریموت» حساب نمی‌شه تا صفحه بی‌دلیل remount نشه
+    if (local && local.dirty !== 1 && sameRow(local, record)) return false;
     await table.put({ ...record, dirty: 0 });
     return true;
   });
+}
+
+/** مقایسه‌ی عمیقِ دو ردیف بدونِ `dirty` (ترتیبِ کلیدها بی‌اثر) */
+export function sameRow(a: unknown, b: unknown): boolean {
+  const norm = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(norm);
+    if (v && typeof v === "object") {
+      const o = v as Record<string, unknown>;
+      return Object.keys(o)
+        .filter((k) => k !== "dirty" && o[k] !== undefined)
+        .sort()
+        .map((k) => [k, norm(o[k])]);
+    }
+    return v;
+  };
+  return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
 }
 
 /** همه‌ی ردیف‌های همه‌ی جدول‌ها را dirty می‌کند (بدونِ دست‌زدن به updatedAt) —

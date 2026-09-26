@@ -1,6 +1,7 @@
 // نقطه‌ی ورودِ اپ — معادلِ <head>/<body>ِ app/layout.tsx:
 //   ۱) اسکریپت‌های init ِ خودِ وب (تم از کوکی، ردهٔ دستگاه، بازخوردِ لمس) —
 //      قبل از اولین رندرِ React، دقیقا مثلِ تگ‌های <script> inline ِ layout
+//   ۱/۲) روترِ API ِ محلی (window.fetch) — قبل از اولین رندر
 //   ۲) فونت‌ها + app/globals.css ِ وب + app-shell.css
 //   ۳) BrowserRouter (Capacitor برای مسیرهای بدونِ پسوند index.html رو
 //      سرو می‌کنه؛ کدِ وب هم window.location.search رو مستقیم می‌خونه)
@@ -14,6 +15,7 @@ import "@m/shell/fonts.css";
 import "@/app/globals.css";
 import "@m/shell/app-shell.css";
 import { AppRoot } from "@m/shell/AppRoot";
+import { installLocalApi } from "@m/localApi/install";
 
 // همون اجرای سینکرونِ <script> inline (نه eval): تگ ساخته و به body
 // چسبونده می‌شه، مرورگر همون لحظه اجراش می‌کنه.
@@ -23,6 +25,11 @@ function runInlineScript(code: string) {
   document.body.appendChild(s);
   s.remove();
 }
+
+// روترِ API ِ محلی (mobile/src/localApi) قبل از هر fetchی از کدِ وب — هیچ
+// درخواستِ /api/ ای نباید به مبدأِ خودِ اپ (https://localhost) بره.
+// PRELOAD_SCRIPT/InlineBootstrap ِ وب عمدا اجرا نمی‌شن (دیتا محلیه؛ /api/bootstrap = NA).
+installLocalApi();
 
 document.documentElement.setAttribute("data-shell", "app");
 runInlineScript(THEME_INIT_SCRIPT);

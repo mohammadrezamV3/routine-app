@@ -112,11 +112,38 @@ function handleBearerBridge(req: NextRequest): NextResponse | null {
   return applyMobileCors(NextResponse.next(), origin, BEARER_BRIDGE_METHODS);
 }
 
+// ─── روت‌های عمومیِ ثبت‌نام/بازیابیِ رمز برای اپ ─────────────────────────
+// صفحه‌های ثبت‌نام و «فراموشی رمز» ِ وب در اپ هم اجرا می‌شن و همین روت‌ها رو
+// *بدونِ هیچ نشستی* صدا می‌زنن (نه کوکی می‌خونن نه می‌نویسن — نشست بعدش از
+// /api/mobile/auth/login صادر می‌شه). پس CORSِ بدونِ credentials از Originهای
+// اپ کافی و بی‌خطره؛ CSRF برای /api/auth/ از قبل معافه (EXEMPT_PREFIXES) و
+// rate-limitِ خودِ روت‌ها دست‌نخورده. بقیه‌ی /api/auth/* (next-auth، 2fa/start)
+// عمدا بیرونِ این لیست‌اند.
+const PUBLIC_APP_AUTH_PATHS = new Set([
+  "/api/auth/signup",
+  "/api/auth/signup/otp/request",
+  "/api/auth/signup/otp/verify",
+  "/api/auth/forgot-password/request",
+  "/api/auth/forgot-password/verify",
+]);
+
+function handlePublicAppAuth(req: NextRequest): NextResponse | null {
+  if (!PUBLIC_APP_AUTH_PATHS.has(req.nextUrl.pathname)) return null;
+  const origin = req.headers.get("origin");
+  if (!origin || !mobileAllowedOrigins().has(origin)) return null;
+  if (req.method === "OPTIONS") return applyMobileCors(new NextResponse(null, { status: 204 }), origin, "POST, OPTIONS");
+  if (req.method !== "POST") return null;
+  return applyMobileCors(NextResponse.next(), origin, "POST, OPTIONS");
+}
+
 export function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith(MOBILE_PREFIX)) return handleMobile(req);
 
   const bridged = handleBearerBridge(req);
   if (bridged) return bridged;
+
+  const publicAuth = handlePublicAppAuth(req);
+  if (publicAuth) return publicAuth;
 
   if (SAFE_METHODS.has(req.method)) return NextResponse.next();
 
