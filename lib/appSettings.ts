@@ -20,6 +20,16 @@ async function getSetting<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
+// نسخه‌ی عمومیِ همین خواندن/نوشتن برای بقیه‌ی تنظیماتِ سراسری (مثلا فلگِ قابلیت‌ها)
+export function getAppSetting<T>(key: string, fallback: T): Promise<T> {
+  return getSetting(key, fallback);
+}
+
+export async function setAppSetting(key: string, value: unknown) {
+  await prisma.appSetting.upsert({ where: { key }, update: { value: value as any }, create: { key, value: value as any } });
+  invalidateAppSettingsCache();
+}
+
 export function invalidateAppSettingsCache() {
   cache.clear();
 }

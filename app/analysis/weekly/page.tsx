@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { BarChart3 } from "lucide-react";
 import type { AiCoach, AnalysisDomain, ReflectionDto, WeeklyAnalysis, WeeklyGoalDto } from "@/lib/weeklyAnalysis/types";
 import { ModuleGate } from "@/components/ModuleGate";
+import { FeatureGate } from "@/components/FeatureGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { DashCard } from "@/components/DashCard";
@@ -156,9 +157,11 @@ export default function WeeklyAnalysisPage() {
   const { status } = useSession();
   if (status === "authenticated") {
     return (
-      <ModuleGate module="AI_INSIGHT">
-        <WeeklyAnalysisContent />
-      </ModuleGate>
+      <FeatureGate feature="weeklyAnalysis">
+        <ModuleGate module="AI_INSIGHT">
+          <WeeklyAnalysisContent />
+        </ModuleGate>
+      </FeatureGate>
     );
   }
   return (

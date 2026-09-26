@@ -1,5 +1,6 @@
 "use client";
 
+import { useFeature } from "@/lib/useFeatures";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -45,6 +46,7 @@ const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
  * جای کنترلِ یک چیز فقط گیج‌کننده است.
  */
 export function TradeChartView() {
+  const chatOn = useFeature("tradeChat") === true;
   // وقتی از صفحه‌ی یک چک‌لیستِ کامل («همه‌ی تیک‌ها خورده») اینجا می‌آییم
   // (?checklist=id)، همون چک‌لیست باید از پیش انتخاب شده باشه — طبقِ قاعده‌ی
   // پروژه (خوندنِ مستقیمِ window.location به‌جای useSearchParams+Suspense،
@@ -121,7 +123,7 @@ export function TradeChartView() {
         </div>
       </div>
 
-      <SymbolChatPanel symbol={symbol} />
+      {chatOn && <SymbolChatPanel symbol={symbol} />}
       <ChartCalendarPanel />
 
       {/* دو کارتِ جدا برمی‌گرداند: چک‌لیست و ثبتِ معامله */}

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireFeature } from "@/lib/featureFlagsServer";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 import { computePlanProgress, normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
+import { buildStatusOf } from "@/lib/roadmapBuilder";
 
 /**
  * یک مسیر با مرحله‌های نرمال‌شده و پیشرفتِ حساب‌شده‌ی سمتِ سرور.
@@ -12,8 +15,10 @@ import { computePlanProgress, normalizePlan, sanitizeStepProgress } from "@/lib/
  * id در URL می‌شود مسیرِ کاربرِ دیگری را دید.
  */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
   const row = await prisma.roadmap.findFirst({
     where: { id: params.id, userId: guard.userId },
@@ -40,12 +45,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     plan,
     stepProgress: progress,
     progress: computePlanProgress(plan.stages, progress),
+    build: buildStatusOf(row.meta),
   });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
   // deleteMany با شرطِ userId — delete با `{id}` تنها یعنی هر کاربری
   // می‌تواند مسیرِ کاربرِ دیگری را پاک کند.

@@ -118,9 +118,12 @@ export function RoadmapWizard({
       return;
     }
 
+    // ساخت در پس‌زمینه‌ی سرور ادامه دارد — کاربر فورا به لیست برمی‌گردد و
+    // کارتِ همین رودمپ پیشرفت را نشان می‌دهد (نه ماندن پشتِ صفحه‌ی ساخت).
     setStatus("success");
     onCreated?.();
-    router.push(`/roadmaps/custom/${data.id}`);
+    onClose();
+    router.push("/roadmaps");
   }
 
   function next() {
@@ -169,7 +172,7 @@ export function RoadmapWizard({
                   <li key={i} className={i < buildLine ? "done" : i === buildLine ? "now" : ""}>{line}</li>
                 ))}
               </ul>
-              <div className="rp-wiz-loading-hint">تا حدودِ یک دقیقه طول می‌کشه — صفحه رو نبند.</div>
+              <div className="rp-wiz-loading-hint">چند ثانیه — بعدش ساخت در پس‌زمینه ادامه پیدا می‌کنه.</div>
             </div>
           ) : (
             <>

@@ -1,3 +1,4 @@
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -62,6 +63,7 @@ function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): C
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
+  { const off = await featureBlocked("tradeChat", guard.userId); if (off) return off; }
 
   const symbol = normalizeRoomSymbol(req.nextUrl.searchParams.get("symbol"));
   if (!symbol) return NextResponse.json({ error: "نماد نامعتبر است" }, { status: 400 });
@@ -106,6 +108,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
+  { const off = await featureBlocked("tradeChat", guard.userId); if (off) return off; }
 
   const payload = await req.json().catch(() => null);
   const symbol = normalizeRoomSymbol(payload?.symbol);
@@ -163,6 +166,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
+  { const off = await featureBlocked("tradeChat", guard.userId); if (off) return off; }
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "شناسه پیام لازم است" }, { status: 400 });

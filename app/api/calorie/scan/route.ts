@@ -1,3 +1,4 @@
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
@@ -21,6 +22,7 @@ export const maxDuration = 60;
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
+  { const off = await featureBlocked("calorieScan", guard.userId); if (off) return off; }
   const userId = guard.userId;
 
   const body = await req.json().catch(() => null);

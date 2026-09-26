@@ -1,5 +1,7 @@
 "use client";
 
+import { useFeatures } from "@/lib/useFeatures";
+import type { FeatureKey } from "@/lib/featureFlags";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
@@ -95,7 +97,8 @@ export const ICONS: Record<string, JSX.Element> = {
 // نشانه‌ست، enforcement واقعی همچنان سمت سرور/ModuleGate انجام می‌شه).
 // superAdminOnly: کلا برای همه به‌جز سوپریوزر غیرفعاله (نه یه ماژول
 // خریدنی مثل بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
-type NavLink = { href: string; label: string; icon: string; module?: string; superAdminOnly?: boolean };
+// feature: روشن/خاموش از پنل ادمین (lib/featureFlags.ts) — خاموش یعنی از منو مخفی.
+type NavLink = { href: string; label: string; icon: string; module?: string; feature?: FeatureKey };
 type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string };
 type NavItem = NavLink | NavGroup;
 
@@ -105,7 +108,7 @@ function isGroup(item: NavItem): item is NavGroup {
 
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
-  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", superAdminOnly: true },
+  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
@@ -116,7 +119,7 @@ const LINKS: NavItem[] = [
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
-  { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", superAdminOnly: true },
+  { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
@@ -154,6 +157,7 @@ export function NavDrawer() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const features = useFeatures();
   const authSlotRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const bellBtnRef = useRef<HTMLButtonElement>(null);
@@ -469,7 +473,7 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
-          {LINKS.filter((item) => !("superAdminOnly" in item && item.superAdminOnly) || (session?.user as any)?.isSuperAdmin).map((item) => {
+          {LINKS.filter((item) => !("feature" in item && item.feature) || features?.[item.feature] === true).map((item) => {
             const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;

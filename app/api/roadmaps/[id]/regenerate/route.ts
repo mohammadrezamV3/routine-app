@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
-import { generateRoadmapGuide, generateStageDetail } from "@/lib/aiClient";
+import { requireFeature } from "@/lib/featureFlagsServer";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
+import { buildStatusOf } from "@/lib/roadmapBuilder";
+import { generateRoadmapGuide, generateStageDetail, STAGE_REGEN_TIMEOUT_MS } from "@/lib/aiClient";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
 
 // یک فراخوانیِ AI تا ۴۵ ثانیه (AI_TIMEOUT_MS) — همان دلیلِ روتِ ساخت.
-export const maxDuration = 60;
+// یک مرحله با جزئیاتِ کامل (تا ۹۰۰۰ توکن) بیشتر از ۶۰ ثانیه طول می‌کشد؛
+// nginx همین مسیر را ۱۳۰ ثانیه صبر می‌کند (deploy/nginx.*.conf).
+export const maxDuration = 120;
 
 const LIMIT = 20;
 const WINDOW_MS = 30 * 60_000;
@@ -21,8 +26,10 @@ const WINDOW_MS = 30 * 60_000;
  * آن ناهم‌خوان می‌شدند.
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
   const userId = guard.userId;
 
   if (!(await checkRateLimit(`roadmap-part:${userId}`, LIMIT, WINDOW_MS))) {
@@ -47,6 +54,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     },
   });
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
+  // تا وقتی ساختِ پس‌زمینه همین ردیف را می‌نویسد، ساختِ دستی یعنی دو نویسنده
+  // روی یک steps — یکی کارِ دیگری را پاک می‌کند.
+  if (buildStatusOf(row.meta)?.status === "building") {
+    return NextResponse.json({ error: "این مسیر هنوز در حالِ ساخته‌شدن است — چند لحظه صبر کن" }, { status: 409 });
+  }
 
   const plan = normalizePlan({
     title: row.title, summary: row.summary, guide: row.guide, totalDuration: row.totalDuration,
@@ -65,12 +77,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     if (target === "guide") {
-      const guide = await generateRoadmapGuide(ctx, userId);
+      const guide = await generateRoadmapGuide(ctx, userId, STAGE_REGEN_TIMEOUT_MS);
       await prisma.roadmap.updateMany({ where: { id: params.id, userId }, data: { guide } });
       return NextResponse.json({ guide });
     }
 
-    const stage = await generateStageDetail(ctx, n, userId);
+    const stage = await generateStageDetail(ctx, n, userId, STAGE_REGEN_TIMEOUT_MS);
     const stages = plan.stages.map((s) => (s.n === n ? stage : s));
     // کارهای مرحله عوض شده‌اند؛ تیکِ کارهایی که دیگر نیستند دور ریخته می‌شود.
     const progress = sanitizeStepProgress(stages, row.progress);

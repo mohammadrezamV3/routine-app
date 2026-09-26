@@ -18,8 +18,9 @@ export const PLAN_LIMITS = {
   minStages: 3,
   maxGuideChars: 24_000,
   minGuideChars: 600,
-  maxListItems: 12,
-  maxTextLen: 900,
+  // points یک سرفصل می‌تواند یک استانداردِ کامل باشد (مثلا ده موردِ OWASP)
+  maxListItems: 16,
+  maxTextLen: 1600,
   maxTitleLen: 140,
 } as const;
 
