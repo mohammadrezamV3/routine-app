@@ -1,86 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
-import { generateRoadmapGuide, generateStageDetail } from "@/lib/aiClient";
-import { checkRateLimit } from "@/lib/rateLimit";
-import { normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
+import { regenerateRoadmapPart } from "@/lib/roadmapGeneration";
 
 // یک فراخوانیِ AI تا ۴۵ ثانیه (AI_TIMEOUT_MS) — همان دلیلِ روتِ ساخت.
 export const maxDuration = 60;
 
-const LIMIT = 20;
-const WINDOW_MS = 30 * 60_000;
-
 /**
  * ساختنِ دوباره‌ی یک تکه از مسیر: `{target:"stage", n}` جزئیاتِ یک مرحله،
- * `{target:"guide"}` متنِ راهنما.
- *
- * برای تکه‌هایی‌ست که در بودجه‌ی زمانیِ ساختِ اول نرسیدند (detailed:false یا
- * راهنمای خالی)، یا کاربر از جزئیاتِ یک مرحله راضی نیست. اسکلت (عنوان،
- * هدف، محدوده‌ی مرحله‌ها) هیچ‌وقت عوض نمی‌شود — وگرنه بقیه‌ی مرحله‌ها با
- * آن ناهم‌خوان می‌شدند.
+ * `{target:"guide"}` متنِ راهنما. سقفِ نرخ + اعتبارسنجی + AI + ذخیره در
+ * lib/roadmapGeneration.ts (مشترک با /api/mobile/ai/roadmap/[id]/regenerate).
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireSuperAdmin();
   if (!guard.ok) return guard.response;
-  const userId = guard.userId;
-
-  if (!(await checkRateLimit(`roadmap-part:${userId}`, LIMIT, WINDOW_MS))) {
-    return NextResponse.json({ error: "تعداد درخواست زیاد شد — کمی بعد دوباره امتحان کن" }, { status: 429 });
-  }
 
   const body = await req.json().catch(() => null);
-  const target = (body as any)?.target;
-  const n = (body as any)?.n;
-  if (target !== "guide" && target !== "stage") {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
-  }
-  if (target === "stage" && (typeof n !== "number" || !Number.isInteger(n))) {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
-  }
-
-  const row = await prisma.roadmap.findFirst({
-    where: { id: params.id, userId },
-    select: {
-      topic: true, goal: true, title: true, summary: true, guide: true,
-      steps: true, tools: true, meta: true, totalDuration: true, progress: true,
-    },
-  });
-  if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
-
-  const plan = normalizePlan({
-    title: row.title, summary: row.summary, guide: row.guide, totalDuration: row.totalDuration,
-    tools: row.tools, meta: row.meta, stages: row.steps,
-  });
-  const ctx = {
-    profile: {
-      topic: row.topic,
-      goal: row.goal ?? undefined,
-      level: plan.meta.level,
-      weeklyHours: plan.meta.weeklyHours,
-      background: plan.meta.background,
-    },
-    plan,
-  };
-
-  try {
-    if (target === "guide") {
-      const guide = await generateRoadmapGuide(ctx, userId);
-      await prisma.roadmap.updateMany({ where: { id: params.id, userId }, data: { guide } });
-      return NextResponse.json({ guide });
-    }
-
-    const stage = await generateStageDetail(ctx, n, userId);
-    const stages = plan.stages.map((s) => (s.n === n ? stage : s));
-    // کارهای مرحله عوض شده‌اند؛ تیکِ کارهایی که دیگر نیستند دور ریخته می‌شود.
-    const progress = sanitizeStepProgress(stages, row.progress);
-    await prisma.roadmap.updateMany({
-      where: { id: params.id, userId },
-      data: { steps: stages as any, progress: progress as any },
-    });
-    return NextResponse.json({ stage, stepProgress: progress });
-  } catch (err: any) {
-    console.error("roadmap regenerate failed", err);
-    return NextResponse.json({ error: err?.message || "ساخته نشد — دوباره امتحان کن" }, { status: 502 });
-  }
+  const r = await regenerateRoadmapPart(guard.userId, params.id, body);
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+  if (r.target === "guide") return NextResponse.json({ guide: r.guide });
+  return NextResponse.json({ stage: r.stage, stepProgress: r.stepProgress });
 }

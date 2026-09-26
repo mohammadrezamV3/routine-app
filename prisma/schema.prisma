@@ -258,8 +258,20 @@ model Session {
   id           String    @id @default(cuid())
   userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessionToken String    @unique // همون sid داخلِ JWT
-  provider     String? // credentials | google | email-otp | sms-2fa
+  // وب: همون sid داخلِ JWT. اپ موبایل (provider «mobile»): SHA-256ِ
+  // refresh token — خودِ توکن هیچ‌وقت ذخیره نمی‌شه (lib/mobileAuth.ts).
+  sessionToken String    @unique
+  provider     String? // credentials | google | email-otp | sms-2fa | mobile
+  // فقط برای اپ موبایل: اسمی که خودِ اپ از دستگاه فرستاده (نمایش در «دستگاه‌های فعال»)
+  deviceName   String?
+  // فقط برای اپ موبایل: هشِ refresh tokenِ *قبلی* (بعد از rotation). اگه
+  // همون توکنِ مصرف‌شده دوباره بیاد یعنی توکن دزدیده/کپی شده → کلِ نشست باطل.
+  previousTokenHash String?
+  // فقط برای اپ موبایل: لحظه‌ی آخرین rotation و اینکه «مهلتِ تکرار» (grace) ِ
+  // همون rotation مصرف شده یا نه — تکرارِ refresh با توکنِ قبلی تا ۳۰ ثانیه
+  // بعد (پاسخِ گم‌شده روی شبکه‌ی موبایل) یک‌بار rotation می‌گیره، نه ابطال.
+  rotatedAt    DateTime?
+  graceUsed    Boolean   @default(false)
   ip           String?
   userAgent    String?
   expiresAt    DateTime
@@ -269,6 +281,7 @@ model Session {
 
   @@index([userId])
   @@index([userId, revokedAt])
+  @@index([previousTokenHash])
 }
 
 // لاگِ append-only هر ورودِ موفق — پنل کاربری › امنیت › «ورودهای اخیر».
@@ -660,8 +673,16 @@ model DailyEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([userId, date])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -743,8 +764,16 @@ model SleepEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([userId, date])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -765,7 +794,19 @@ model Task {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // soft-delete — ردیفِ حذف‌شده tombstoneِ همگام‌سازیِ موبایله (تا دستگاه‌های
+  // دیگه هم بفهمن حذف شده). هر کوئریِ وب باید deletedAt: null فیلتر کنه.
+  deletedAt DateTime?
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, dueDate])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -799,9 +840,14 @@ model ExercisePlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   logs ExerciseLog[]
 
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 model ExerciseLog {
@@ -819,9 +865,15 @@ model ExerciseLog {
   notes          String?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   @@unique([userId, planId, date])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // عکسِ حرکاتِ کاتالوگ (lib/exerciseCatalog.ts). خودِ کاتالوگ یک فایلِ ثابتِ
@@ -894,8 +946,17 @@ model FoodLogEntry {
   aiScanned Boolean @default(false)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // soft-delete — tombstoneِ همگام‌سازیِ موبایل. هر کوئریِ خواندنی باید
+  // deletedAt: null فیلتر کنه (DELETE /api/calorie/log هم حالا soft-delete است).
+  deletedAt DateTime?
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }
 
 model CalorieTarget {
@@ -923,8 +984,14 @@ model CalorieTarget {
   effectiveTo   DateTime?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -1063,7 +1130,13 @@ model TradeAccount {
   tags    TradeTag[]   @relation("TradeAccountTags")
   mtLink  TradeMtLink?
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, archived])
+  @@index([userId, updatedAt])
 }
 
 // برچسبِ رنگیِ کاربرساخته — هم روی حساب استفاده می‌شه هم روی معامله، چون
@@ -1075,6 +1148,13 @@ model TradeTag {
   name      String
   color     String   @default("#3E7BFA")
   createdAt DateTime @default(now())
+  // cursorِ pullِ موبایل — قبلا این مدل updatedAt نداشت
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
 
   accounts TradeAccount[] @relation("TradeAccountTags")
   entries  TradeEntry[]   @relation("TradeEntryTags")
@@ -1082,6 +1162,7 @@ model TradeTag {
 
   @@unique([userId, name])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // چک‌لیستِ پیش از معامله. برخلافِ نسخه‌ی قبلی (یک لیستِ تختِ واحد برای هر
@@ -1109,7 +1190,13 @@ model TradeChecklist {
   items   TradeChecklistItem[]
   entries TradeEntry[]
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, archived])
+  @@index([userId, updatedAt])
 }
 
 model TradeChecklistItem {
@@ -1215,8 +1302,14 @@ model TradeEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([accountId, externalId])
   @@index([userId, openedAt])
+  @@index([userId, updatedAt])
   @@index([accountId, openedAt])
   @@index([checklistId])
 }
@@ -1327,9 +1420,44 @@ model TradeNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (lib/mobileTradeSync.ts) — زمانِ منطقیِ آخرین
+  // ویرایشِ موبایل و زمانِ سروریِ همون نوشتن؛ توضیح در lib/mobileSync.ts
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId, updatedAt])
   @@index([accountId])
   @@index([entryId])
+}
+
+// ============================================================================
+// MODULE: TRADE — tombstoneِ حذف‌ها برای همگام‌سازیِ موبایل
+//
+// روت‌های وبِ ترید ردیف‌ها رو واقعا پاک می‌کنن (نه soft-delete)؛ اگه به‌جاش
+// ستونِ deletedAt اضافه می‌شد، *همه‌ی* خواندن‌های وب (لیست، آمار، تقویم،
+// گزارشِ هفتگی، دوستان، …) باید فیلترش می‌کردن. پس حذف همون حذفِ واقعی
+// می‌مونه و ردِ اون این‌جا نوشته می‌شه — توسطِ یک trigger دیتابیسی
+// (migration 20260925150000_mobile_trade_sync) روی DELETEِ هر پنج جدول، تا
+// حذف از وب، cascade (purgeِ حساب → معاملاتش) و حذف از موبایل همه یکسان
+// ثبت بشن بدونِ دست‌زدن به روت‌های وب.
+//
+// عمدا FK به User نداره: trigger موقعِ cascadeِ حذفِ خودِ کاربر چیزی
+// نمی‌نویسه (User دیگه وجود نداره) و ردیف‌های قبلی با deleteManyِ صریح در
+// کنارِ حذفِ کاربر، یا با پاک‌سازیِ دوره‌ای، می‌رن.
+// ============================================================================
+
+model TradeSyncTombstone {
+  userId    String
+  // tradeAccount | tradeTag | tradeChecklist | tradeEntry | tradeNote
+  entity    String
+  entityId  String
+  // زمانِ منطقیِ حذف (LWW): حذفِ موبایل = clientUpdatedAt، حذفِ وب = زمانِ سرور
+  deletedAt DateTime
+  // cursorِ pull
+  updatedAt DateTime @default(now())
+
+  @@id([userId, entity, entityId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -1425,7 +1553,13 @@ model Roadmap {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ پیشرفتِ مسیر از اپ موبایل (LWW روی کلِ progress) —
+  // lib/mobileSync.ts توضیح کامل داره. محتوای مسیر از گوشی عوض نمی‌شه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 // ============================================================================
@@ -1539,8 +1673,16 @@ model UserSetting {
 
   updatedAt DateTime @updatedAt
 
+  // همگام‌سازیِ اپ موبایل (LWW) — lib/mobileSync.ts توضیح کامل داره.
+  // syncEditedAt: زمانِ ویرایشِ واقعی روی گوشی (clamp شده به «حالا»).
+  // syncWrittenAt: زمانِ سروریِ همون نوشتن؛ اگه با updatedAt برابر بود یعنی
+  // آخرین نویسنده موبایل بوده، وگرنه یک نوشتنِ وب بعدش اومده و updatedAt ملاکه.
+  syncEditedAt  DateTime?
+  syncWrittenAt DateTime?
+
   @@unique([userId, key])
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 model ExportRequest {
@@ -1749,4 +1891,43 @@ model SupportMessage {
   createdAt DateTime @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+// ============================================================================
+// خریدِ پلن از اپ موبایل (lib/mobileBilling.ts) — «دست‌به‌دست» به وب
+// ============================================================================
+// اپ هیچ‌وقت خودش پرداخت نمی‌کنه و هیچ‌وقت موفقیتِ پرداخت رو اعلام نمی‌کنه:
+// یک ردیفِ PENDING + توکنِ یک‌بارمصرفِ ≤۱۰ دقیقه‌ای (فقط SHA-256ش) می‌سازه،
+// مرورگرِ سیستم با همون توکن یک نشستِ وبِ کوتاه‌عمر می‌گیره و وارد همون
+// صفحه‌ی چک‌اوتِ وب می‌شه؛ برگشتِ درگاه دقیقا همون /api/subscription/verify
+// ِ وبه — تنها جایی که Subscription/Payment/ModuleAccess ساخته می‌شه. این
+// جدول فقط «قصدِ خرید» رو نگه می‌داره و paymentId بعدا فقط با یک Paymentِ
+// verify‌شده (paidAt پر) ِ همون کاربر جفت می‌شه.
+// userId عمدا relation نداره (تا مدلِ User دست نخوره)؛ همه‌ی کوئری‌ها با
+// where:{id, userId} و ردیف‌های قدیمی با cleanup پاک می‌شن.
+model MobileCheckout {
+  id       String @id @default(cuid())
+  userId   String
+  planKey  String
+  duration String // "1" | "3" | "6" | "12"
+
+  // کدِ تخفیف/رفرالِ اعتبارسنجی‌شده (نرمال‌شده) — فقط برای نمایش/پیش‌پرکردن؛
+  // مصرفِ واقعی‌اش همچنان در چک‌اوت/verify ِ وب
+  discountCode String?
+  quotedAmount Int // پیش‌نمایشِ مبلغ (ریال) — مبلغِ واقعی را چک‌اوتِ وب از نو حساب می‌کنه
+
+  provider String @default("web") // BillingProvider: web | bazaar | play (آینده)
+  status   String @default("PENDING") // PENDING | OPENED | PAID | EXPIRED
+
+  tokenHash      String    @unique
+  tokenExpiresAt DateTime
+  tokenUsedAt    DateTime?
+
+  paymentId  String?   @unique
+  openedAt   DateTime?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }

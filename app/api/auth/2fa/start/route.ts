@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { issueTwoFactorOtp } from "@/lib/twoFactor";
-import { sendOtpSms } from "@/lib/sms";
+import { consumePasswordAttempt, findUserByIdentifier, identifierRateKey, startSmsTwoFactor, timingSafePasswordCheck } from "@/lib/credentials";
 
 // POST /api/auth/2fa/start { identifier, password }
 //
@@ -26,34 +23,39 @@ export async function POST(req: NextRequest) {
   const password = typeof body.password === "string" ? body.password : "";
   if (!identifier || !password) return NextResponse.json({ required: false });
 
-  if (!(await checkRateLimit(`2fa-start-id:${identifier}`, 8, 10 * 60 * 1000))) {
+  if (!(await checkRateLimit(`2fa-start-id:${identifierRateKey(identifier)}`, 8, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { email: { equals: identifier, mode: "insensitive" } },
-        { phone: identifier },
-        { username: { equals: identifier, mode: "insensitive" } },
-      ],
-    },
-    select: { id: true, phone: true, passwordHash: true, isBlocked: true, twoFactorEnabled: true },
-  });
+  // جستجوی کاربر و صدور/ارسالِ کد با lib/credentials.ts مشترکه (همون مسیری
+  // که ورودِ اپ موبایل هم می‌ره).
+  const user = await findUserByIdentifier(identifier);
+  const eligible = !!user && !!user.passwordHash && !user.isBlocked && !user.deletedAt && user.twoFactorEnabled && !!user.phone;
 
-  if (!user || !user.passwordHash || user.isBlocked || !user.twoFactorEnabled || !user.phone) {
+  if (!eligible) {
+    // رمز این‌جا سنجیده نمی‌شه (مسیرِ بعدیِ فرانت، credentials، می‌سنجه و سطلِ
+    // مشترک رو همون‌جا مصرف می‌کنه)، ولی compareِ ساختگی اجرا می‌شه تا زمانِ
+    // پاسخ نگه «این شناسه حسابِ دومرحله‌ای نیست/وجود نداره».
+    await timingSafePasswordCheck(password, null);
     return NextResponse.json({ required: false });
   }
-  if (!(await bcrypt.compare(password, user.passwordHash))) {
+  // این‌جا رمز واقعا سنجیده می‌شه → همون سطلِ «حدسِ رمزِ» ورود (login-ip/login-id)،
+  // نه سقفِ جدا. پرشدنش مثلِ رمزِ غلط جواب می‌گیره تا فرانت مسیرِ عادی رو بره
+  // (که اونم rate-limited ـه و پیامِ عمومی می‌ده) — 429ِ مخصوصِ این‌جا لو می‌داد
+  // که این شناسه یک حسابِ دومرحله‌ایه.
+  if (!(await consumePasswordAttempt(identifier, ip))) {
+    await timingSafePasswordCheck(password, null);
+    return NextResponse.json({ required: false });
+  }
+  if (!(await timingSafePasswordCheck(password, user!.passwordHash))) {
     return NextResponse.json({ required: false });
   }
 
-  const code = await issueTwoFactorOtp(user.id);
-  const sent = await sendOtpSms(user.phone, code);
-  if (!sent.ok) {
+  const started = await startSmsTwoFactor(user!);
+  if (!started.ok) {
     return NextResponse.json({ error: "ارسال پیامک ناموفق بود — کمی بعد دوباره امتحان کن" }, { status: 502 });
   }
 
   // فقط چهار رقم آخر شماره نشون داده می‌شه، نه کل شماره
-  return NextResponse.json({ required: true, phoneHint: user.phone.slice(-4), simulated: sent.simulated });
+  return NextResponse.json({ required: true, phoneHint: started.phoneHint, simulated: started.simulated });
 }

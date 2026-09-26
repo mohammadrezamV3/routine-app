@@ -1,0 +1,82 @@
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { readJsonBody } from "@/lib/validate";
+import { getMobileModuleAccess, getMobileUserId } from "@/lib/mobileAuth";
+import { MOBILE_SYNC_MAX_BATCH, parseRoadmapProgressChange, parseSyncChange } from "@/lib/mobileSync";
+import { applyRoadmapProgress } from "@/lib/mobileRoadmap";
+import { applyChange, refOf } from "@/lib/mobileSyncStore";
+import { SYNC_ENTITY_MODULE, SYNC_ERROR_MODULE_LOCKED } from "@/lib/mobileApiContract";
+import type { SyncChangeResult, SyncPushResponse } from "@/lib/mobileApiContract";
+
+// POST /api/mobile/sync/push { changes: SyncChange[] }
+//
+// هر تغییر مستقل اعتبارسنجی و با LWW اعمال می‌شه (lib/mobileSync.ts). نتیجه
+// به‌ازای هر تغییر: applied | stale | rejected. خطای دیتابیس کلِ درخواست رو
+// ۵۰۰ می‌کنه (نه rejected) تا کلاینت کلِ دسته رو دوباره بفرسته — تکرارِ
+// تغییرهای قبلا اعمال‌شده بی‌ضرره (تساوی ← stale).
+
+const MAX_PUSH_BODY_BYTES = 1024 * 1024;
+
+export async function POST(req: NextRequest) {
+  const userId = await getMobileUserId(req);
+  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await checkRateLimit(`mobile-push:${userId}`, 120, 10 * 60 * 1000))) {
+    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
+  }
+
+  const parsed = await readJsonBody<{ changes?: unknown }>(req, MAX_PUSH_BODY_BYTES);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+  const changes = parsed.body?.changes;
+  if (!Array.isArray(changes)) return NextResponse.json({ error: "changes باید آرایه باشد" }, { status: 400 });
+  if (changes.length > MOBILE_SYNC_MAX_BATCH) {
+    return NextResponse.json({ error: `حداکثر ${MOBILE_SYNC_MAX_BATCH} تغییر در هر درخواست` }, { status: 413 });
+  }
+
+  // «حالا» یک‌بار برای کلِ دسته — سقفِ clampِ زمانِ کلاینت
+  const now = new Date();
+  const results: SyncChangeResult[] = [];
+  let access: Awaited<ReturnType<typeof getMobileModuleAccess>> | undefined;
+  try {
+    // ترتیبی، نه موازی: دو تغییر روی یک رکورد در یک دسته باید به ترتیب اعمال بشن
+    for (let index = 0; index < changes.length; index++) {
+      // پیشرفتِ رودمپ مسیرِ جدای خودش رو داره (lib/mobileRoadmap.ts)
+      if ((changes[index] as any)?.entity === "roadmapProgress") {
+        const rp = parseRoadmapProgressChange(changes[index], now);
+        if (!rp.ok) {
+          results.push({ index, entity: rp.entity, id: rp.id, status: "rejected", code: "invalid", error: rp.error, serverRecord: null });
+          continue;
+        }
+        access ??= await getMobileModuleAccess(userId);
+        if (!access.ROADMAP) {
+          results.push({ index, entity: "roadmapProgress", id: rp.change.id, status: "rejected", code: "module_locked", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
+          continue;
+        }
+        results.push({ index, ...(await applyRoadmapProgress(userId, rp.change)) });
+        continue;
+      }
+      const p = parseSyncChange(changes[index], now);
+      if (!p.ok) {
+        results.push({ index, entity: p.entity, key: p.key, id: p.id, status: "rejected", code: "invalid", error: p.error, serverRecord: null });
+        continue;
+      }
+      // گیتِ سمتِ سرورِ ماژول‌های پولی — کلاینت (ModuleGateِ اپ) قابلِ دورزدنه
+      const module = SYNC_ENTITY_MODULE[p.change.entity];
+      if (module) {
+        access ??= await getMobileModuleAccess(userId);
+        if (!access[module]) {
+          results.push({ index, ...refOf(p.change), status: "rejected", code: "module_locked", error: SYNC_ERROR_MODULE_LOCKED, serverRecord: null });
+          continue;
+        }
+      }
+      results.push({ index, ...(await applyChange(userId, p.change)) });
+    }
+  } catch (err: any) {
+    console.error(`[mobile-sync] push failed for ${userId}: ${err?.message || err}`);
+    return NextResponse.json({ error: "خطای سرور — دوباره تلاش کن" }, { status: 500 });
+  }
+
+  // تورِ ایمنی: هر rejected بدونِ code (مسیرِ تازه‌ای که کدش فراموش شده) = invalid
+  for (const r of results) if (r.status === "rejected" && !r.code) r.code = "invalid";
+  const body: SyncPushResponse = { serverTime: new Date().toISOString(), results };
+  return NextResponse.json(body);
+}

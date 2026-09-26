@@ -1,0 +1,47 @@
+@import "@fontsource-variable/vazirmatn/wght.css";
+@import "@fontsource-variable/inter/wght.css";
+@import "./theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-vazir: "Vazirmatn Variable";
+  --font-latin: "Inter Variable";
+}
+
+/* دکمه‌های خام مرورگر معمولا یه استایل پیش‌فرض دارن — طبق قانون
+   CLAUDE.md هیچ بک‌گراندی به هیچ عنصری خودسرانه اضافه نمی‌کنیم، پس فقط
+   ریست خنثی (بدون رنگ/بک‌گراند) می‌زنیم، نه یه بک‌گراند جدید. */
+button {
+  font-family: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* فوکوسِ کیبورد/سوییچ‌کنترل — فقط outline (بدون هیچ بک‌گراندی، طبقِ
+   قانونِ CLAUDE.md) تا عناصرِ transparent/ghost شفاف بمونن و فقط یک
+   حلقه‌ی قابلِ‌مشاهده دورشون اضافه بشه. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="tab"]:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

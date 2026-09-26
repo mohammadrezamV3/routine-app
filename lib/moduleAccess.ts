@@ -43,14 +43,7 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
     return { ok: true, userId, isSuperAdmin: true };
   }
 
-  const access = await prisma.moduleAccess.findUnique({
-    where: { userId_module: { userId, module } },
-    select: { active: true, expiresAt: true },
-  });
-
-  const now = Date.now();
-  const hasAccess = !!access && access.active && (!access.expiresAt || access.expiresAt.getTime() > now);
-  if (!hasAccess) {
+  if (!(await hasActiveModuleRow(userId, module))) {
     return {
       ok: false,
       response: NextResponse.json({ error: "این بخش نیاز به اشتراک فعال دارد" }, { status: 403 }),
@@ -58,4 +51,31 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
   }
 
   return { ok: true, userId, isSuperAdmin: false };
+}
+
+/** ردیفِ moduleAccessِ فعال و منقضی‌نشده — هسته‌ی مشترکِ requireModule و checkModuleForUser */
+async function hasActiveModuleRow(userId: string, module: ModuleKey): Promise<boolean> {
+  const access = await prisma.moduleAccess.findUnique({
+    where: { userId_module: { userId, module } },
+    select: { active: true, expiresAt: true },
+  });
+  return !!access && access.active && (!access.expiresAt || access.expiresAt.getTime() > Date.now());
+}
+
+/**
+ * همون تصمیمِ requireModule برای وقتی هویت از کوکیِ next-auth نمیاد (اپ
+ * موبایل با توکنِ Bearer — lib/mobileAuth.ts). چون این‌جا JWTِ وب نیست،
+ * isSuperAdmin و مسدودی مستقیم از دیتابیس خونده می‌شن، نه از هیچ ادعای کلاینت.
+ */
+export async function checkModuleForUser(
+  userId: string,
+  module: ModuleKey
+): Promise<{ ok: true; isSuperAdmin: boolean } | { ok: false; reason: "blocked" | "locked" }> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isBlocked: true, deletedAt: true, isSuperAdmin: true },
+  });
+  if (!user || user.isBlocked || user.deletedAt) return { ok: false, reason: "blocked" };
+  if (user.isSuperAdmin) return { ok: true, isSuperAdmin: true };
+  return (await hasActiveModuleRow(userId, module)) ? { ok: true, isSuperAdmin: false } : { ok: false, reason: "locked" };
 }

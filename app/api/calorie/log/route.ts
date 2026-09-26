@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
 
   const entries = await prisma.foodLogEntry.findMany({
-    where: { userId, date },
+    where: { userId, date, deletedAt: null },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json({ entries });
@@ -76,6 +76,8 @@ export async function DELETE(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
-  await prisma.foodLogEntry.deleteMany({ where: { id, userId } });
+  // soft-delete (نه پاک‌کردنِ واقعی) — ردیف tombstoneِ همگام‌سازیِ موبایل
+  // می‌مونه تا گوشی‌ها هم بفهمن این ثبت حذف شده. همه‌ی خواندنی‌ها deletedAt: null فیلتر می‌کنن.
+  await prisma.foodLogEntry.updateMany({ where: { id, userId, deletedAt: null }, data: { deletedAt: new Date() } });
   return NextResponse.json({ ok: true });
 }

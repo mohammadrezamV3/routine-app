@@ -119,15 +119,38 @@ export async function readJsonBody<T = any>(
   if (declared > maxBytes) {
     return { ok: false, status: 413, error: "حجم درخواست بیش از حد مجاز است" };
   }
+  // بدنه تکه‌تکه و با شمارشِ بایت خونده می‌شه، نه با req.text(): بدنه‌ی
+  // chunked (بدونِ Content-Length) با req.text() اول *کامل* توی حافظه می‌اومد
+  // و بعد سنجیده می‌شد — روی روت‌های بدونِ احراز (/api/mobile/auth/*) یعنی
+  // هر کسی با یک بدنه‌ی چندگیگابایتی می‌تونست حافظه‌ی سرور رو پر کنه.
   let text: string;
   try {
-    text = await req.text();
+    const reader = req.body?.getReader();
+    if (!reader) {
+      text = "";
+    } else {
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > maxBytes) {
+          reader.cancel().catch(() => {});
+          return { ok: false, status: 413, error: "حجم درخواست بیش از حد مجاز است" };
+        }
+        chunks.push(value);
+      }
+      const buf = new Uint8Array(total);
+      let off = 0;
+      for (const c of chunks) {
+        buf.set(c, off);
+        off += c.byteLength;
+      }
+      text = new TextDecoder().decode(buf);
+    }
   } catch {
     return { ok: false, status: 400, error: "بدنه‌ی درخواست خوانده نشد" };
-  }
-  // طول رشته کاراکتره نه بایت؛ برای متن فارسی بایت‌ها بیشترن، پس واقعیش رو می‌سنجیم
-  if (new TextEncoder().encode(text).length > maxBytes) {
-    return { ok: false, status: 413, error: "حجم درخواست بیش از حد مجاز است" };
   }
   try {
     return { ok: true, body: (text ? JSON.parse(text) : {}) as T };

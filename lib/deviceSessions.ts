@@ -131,6 +131,6 @@ export async function listDeviceSessions(userId: string) {
   return prisma.session.findMany({
     where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
     orderBy: { lastSeenAt: "desc" },
-    select: { id: true, sessionToken: true, provider: true, ip: true, userAgent: true, createdAt: true, lastSeenAt: true },
+    select: { id: true, sessionToken: true, provider: true, deviceName: true, ip: true, userAgent: true, createdAt: true, lastSeenAt: true },
   });
 }

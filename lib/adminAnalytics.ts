@@ -444,7 +444,7 @@ export async function getUserDetail(userId: string) {
   const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory, adminHistory, activeSessions] = await Promise.all([
     prisma.dailyEntry.count({ where: { userId } }),
     prisma.exerciseLog.count({ where: { userId } }),
-    prisma.foodLogEntry.count({ where: { userId } }),
+    prisma.foodLogEntry.count({ where: { userId, deletedAt: null } }),
     prisma.tradeEntry.count({ where: { userId } }),
     prisma.roadmap.count({ where: { userId } }),
     prisma.aiUsageRecord.aggregate({ where: { userId }, _count: { _all: true }, _sum: { inputTokens: true, outputTokens: true, costUsdMicros: true } }),
@@ -560,8 +560,8 @@ export async function getProductAnalytics(module: ModuleKey, range: Range): Prom
       metrics.logsInRange = logs.length;
     } else if (module === "CALORIE") {
       const [logs, aiScanned] = await Promise.all([
-        prisma.foodLogEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, aiScanned: true } }),
-        prisma.foodLogEntry.count({ where: { createdAt: { gte: range.from, lte: range.to }, aiScanned: true } }),
+        prisma.foodLogEntry.findMany({ where: { deletedAt: null, createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, aiScanned: true } }),
+        prisma.foodLogEntry.count({ where: { deletedAt: null, createdAt: { gte: range.from, lte: range.to }, aiScanned: true } }),
       ]);
       activeUserIds = new Set(logs.map((l) => l.userId));
       metrics.foodLogsInRange = logs.length;
@@ -691,7 +691,7 @@ export async function getFunnel(range: Range): Promise<FunnelStep[]> {
     const [de, el, fl, te, rm, viewed, checkoutStarted, paidPayments, paidUsers] = await Promise.all([
       prisma.dailyEntry.findMany({ where: { userId: { in: ids } }, select: { userId: true }, distinct: ["userId"] }),
       prisma.exerciseLog.findMany({ where: { userId: { in: ids } }, select: { userId: true }, distinct: ["userId"] }),
-      prisma.foodLogEntry.findMany({ where: { userId: { in: ids } }, select: { userId: true }, distinct: ["userId"] }),
+      prisma.foodLogEntry.findMany({ where: { userId: { in: ids }, deletedAt: null }, select: { userId: true }, distinct: ["userId"] }),
       prisma.tradeEntry.findMany({ where: { userId: { in: ids } }, select: { userId: true }, distinct: ["userId"] }),
       prisma.roadmap.findMany({ where: { userId: { in: ids } }, select: { userId: true }, distinct: ["userId"] }),
       prisma.analyticsEvent.findMany({ where: { type: "view_subscription_page", userId: { in: ids } }, select: { userId: true }, distinct: ["userId"] }),

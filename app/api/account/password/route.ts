@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revokeAllMobileSessions } from "@/lib/mobileAuth";
 import { validatePassword } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
@@ -42,7 +43,8 @@ export async function POST(req: NextRequest) {
   if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+  // refresh tokenهای اپ موبایل (تا ۱۸۰ روز) با رمزِ جدید باطل می‌شن؛ نشست‌های وب مثل قبل
+  await prisma.$transaction([prisma.user.update({ where: { id: userId }, data: { passwordHash } }), revokeAllMobileSessions(userId)]);
 
   return NextResponse.json({ ok: true });
 }

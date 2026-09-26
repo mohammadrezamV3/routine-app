@@ -10,7 +10,7 @@ import { toJalali, J_MONTHS } from "@/lib/jalali";
 
 type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null };
 type DeviceSession = {
-  id: string; provider: string | null; ip: string | null; userAgent: string | null;
+  id: string; provider: string | null; deviceName?: string | null; ip: string | null; userAgent: string | null;
   createdAt: string; lastSeenAt: string; current: boolean;
 };
 
@@ -19,6 +19,7 @@ const PROVIDER_FA: Record<string, string> = {
   google: "ورود با گوگل",
   "email-otp": "ورود با کد ایمیل",
   "sms-2fa": "ورود دومرحله‌ای",
+  mobile: "اپ اندروید",
 };
 
 // یه حدس خیلی سبک از روی User-Agent — فقط برای نمایش خوانا، نه parsing دقیق
@@ -270,7 +271,7 @@ export default function SecurityPage() {
               <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
-                    {guessDevice(s.userAgent)}
+                    {s.provider === "mobile" && s.deviceName ? s.deviceName : guessDevice(s.userAgent)}
                     {s.current && <span style={{ color: "var(--accent)", fontWeight: 700 }}> · همین دستگاه</span>}
                   </div>
                   <div className="item-line" style={{ marginTop: 2 }}>

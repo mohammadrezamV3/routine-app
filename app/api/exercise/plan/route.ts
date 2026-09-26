@@ -2,15 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey, AiFeatureKey } from "@prisma/client";
-import { getExercisePlan, guessFallbackGoal, ExerciseLevel } from "@/lib/exercisePlans";
-import { generateExercisePlan } from "@/lib/aiClient";
-import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
-import { FA_WEEKDAY } from "@/lib/jalali";
-
-const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
-const MAX_DESCRIPTION_LEN = 500;
-const MAX_GOAL_LEN = 200;
+import { ModuleKey } from "@prisma/client";
+import { createAiExercisePlan } from "@/lib/exercisePlanGeneration";
 
 // AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاستِ
 // سرورلس ممکنه زودتر از اون قطعش کنه.
@@ -39,120 +32,10 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
-  const userId = guard.userId;
 
-  const body = await req.json();
-  const { level, heightCm, weightKg, goal, trainingMonth, equipment, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted } = body as {
-    level: ExerciseLevel;
-    heightCm?: number;
-    weightKg?: number;
-    goal: string;
-    trainingMonth?: number;
-    equipment: string;
-    hasPhysicalLimitation: boolean;
-    limitationDetails?: string;
-    gymDays: string[];
-    description?: string;
-    rulesAccepted: boolean;
-  };
-
-  if (!level || !VALID_LEVELS.includes(level)) {
-    return NextResponse.json({ error: "سطح نامعتبر است" }, { status: 400 });
-  }
-  if (!goal || typeof goal !== "string" || !goal.trim() || goal.trim().length > MAX_GOAL_LEN) {
-    return NextResponse.json({ error: "هدف تمرین نامعتبر است" }, { status: 400 });
-  }
-  if (!equipment || typeof equipment !== "string" || !equipment.trim() || equipment.trim().length > MAX_DESCRIPTION_LEN) {
-    return NextResponse.json({ error: "تجهیزات وارد شده نامعتبر است" }, { status: 400 });
-  }
-  if (trainingMonth !== undefined && (typeof trainingMonth !== "number" || !Number.isInteger(trainingMonth) || trainingMonth < 1 || trainingMonth > 600)) {
-    return NextResponse.json({ error: "ماه تمرین وارد شده معتبر نیست" }, { status: 400 });
-  }
-  if (!Array.isArray(gymDays) || gymDays.length === 0 || !gymDays.every((d) => FA_WEEKDAY.includes(d))) {
-    return NextResponse.json({ error: "روزهای باشگاه نامعتبر است" }, { status: 400 });
-  }
-  if (heightCm !== undefined && (typeof heightCm !== "number" || heightCm < 50 || heightCm > 260)) {
-    return NextResponse.json({ error: "قد وارد شده معتبر نیست" }, { status: 400 });
-  }
-  if (weightKg !== undefined && (typeof weightKg !== "number" || weightKg < 20 || weightKg > 400)) {
-    return NextResponse.json({ error: "وزن وارد شده معتبر نیست" }, { status: 400 });
-  }
-  if (description !== undefined && (typeof description !== "string" || description.length > MAX_DESCRIPTION_LEN)) {
-    return NextResponse.json({ error: "توضیحات خیلی طولانی است" }, { status: 400 });
-  }
-  if (limitationDetails !== undefined && (typeof limitationDetails !== "string" || limitationDetails.length > MAX_DESCRIPTION_LEN)) {
-    return NextResponse.json({ error: "توضیح محدودیت خیلی طولانی است" }, { status: 400 });
-  }
-  if (!rulesAccepted) {
-    return NextResponse.json({ error: "قبول‌کردن قوانین الزامی است" }, { status: 400 });
-  }
-
-  const uniqueDays = [...new Set(gymDays)];
-  const cleanGoal = goal.trim();
-  const cleanEquipment = equipment.trim();
-  const cleanDescription = description?.trim() || null;
-  const cleanLimitationDetails = hasPhysicalLimitation ? limitationDetails?.trim() || null : null;
-
-  const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.EXERCISE_PLAN_GENERATION);
-  if (!quota.ok) {
-    return NextResponse.json({ error: quota.error }, { status: 429 });
-  }
-
-  // برنامه‌ی قبلی (اگه بود) برای پیش‌روی منطقی (progressive overload) به AI داده
-  // می‌شود — بدون این، مدل هر بار از صفر طراحی می‌کند و «پیشرفت نسبت به ماه قبل»
-  // معنی ندارد.
-  const previousPlan = await prisma.exercisePlan.findFirst({
-    where: { userId, isActive: false, generatedByAi: true },
-    orderBy: { createdAt: "desc" },
-    select: { planData: true },
-  });
-
-  let planData: unknown;
-  let generatedByAi = false;
-  try {
-    const result = await generateExercisePlan({
-      level, goalLabel: cleanGoal, gymDays: uniqueDays,
-      heightCm: heightCm || null, weightKg: weightKg || null,
-      trainingMonth: trainingMonth || null, equipment: cleanEquipment,
-      hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
-      previousProgram: previousPlan?.planData ?? null,
-    }, userId);
-    if (!result.feasible) {
-      return NextResponse.json({ ok: false, feasible: false, message: result.message });
-    }
-    planData = result.days;
-    generatedByAi = true;
-  } catch (err) {
-    // بدون کلید API یا خطای موقت سرویس — به قالب ایستای از‌پیش‌طراحی‌شده برمی‌گردیم،
-    // نه اینکه کل onboarding رو خراب کنیم. ولی خطای واقعی رو لاگ می‌کنیم چون
-    // قبلا اینجا کاملا بی‌صدا قورت داده می‌شد — روی سرور واقعی هیچ‌جوره
-    // نمی‌شد فهمید مشکل env نتنظیم‌شده‌ست یا خطای شبکه یا چیز دیگه.
-    // هدف دیگه یکی از چهار گزینه‌ی ثابت نیست (متنِ آزاد است)، پس برای
-    // انتخابِ قالبِ ایستا باید حدس زده بشه — guessFallbackGoal.
-    console.error("[exercise/plan] AI generation failed, falling back to static template:", err);
-    planData = getExercisePlan(guessFallbackGoal(cleanGoal), level, !!hasPhysicalLimitation, uniqueDays);
-  }
-
-  // پلن قبلی (اگه بود) غیرفعال می‌شه؛ همیشه فقط یک پلن فعال داریم
-  await prisma.exercisePlan.updateMany({ where: { userId, isActive: true }, data: { isActive: false } });
-
-  const plan = await prisma.exercisePlan.create({
-    data: {
-      userId,
-      level,
-      heightCm: heightCm || null,
-      weightKg: weightKg || null,
-      goal: cleanGoal,
-      trainingMonth: trainingMonth || null,
-      equipment: cleanEquipment,
-      hasPhysicalLimitation: !!hasPhysicalLimitation,
-      disclaimerAcceptedAt: new Date(),
-      gymDays: uniqueDays as any,
-      trainingPhase: "none",
-      generatedByAi,
-      planData: planData as any,
-    },
-  });
-
-  return NextResponse.json({ ok: true, feasible: true, plan, generatedByAi });
+  // اعتبارسنجی + سهمیه + AI + fallback در lib/exercisePlanGeneration.ts
+  // (مشترک با /api/mobile/ai/exercise-plan)
+  const body = await req.json().catch(() => null);
+  const { status, json } = await createAiExercisePlan(guard.userId, guard.isSuperAdmin, body);
+  return NextResponse.json(json, { status });
 }

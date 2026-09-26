@@ -196,7 +196,7 @@ async function computeLearningMetric(userId: string, week: WeekRange, active: bo
 async function computeNutritionMetric(userId: string, week: WeekRange, active: boolean): Promise<DomainMetric> {
   const [logs, target] = await Promise.all([
     prisma.foodLogEntry.findMany({
-      where: { userId, date: { gte: week.weekStart, lte: week.weekEnd } },
+      where: { userId, deletedAt: null, date: { gte: week.weekStart, lte: week.weekEnd } },
       select: { date: true, customCalories: true },
     }),
     prisma.calorieTarget.findFirst({

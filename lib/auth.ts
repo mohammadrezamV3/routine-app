@@ -1,7 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import { encode as encodeJwt } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { Market } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BASIC_MODULES } from "@/lib/modules";
@@ -9,7 +8,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { isValidEmail } from "@/lib/validate";
 import { verifyAndConsumeEmailOtp } from "@/lib/emailOtp";
-import { verifyAndConsumeTwoFactorOtp } from "@/lib/twoFactor";
+import { verifyPasswordLogin, verifySmsTwoFactorLogin, recordLoginEvent } from "@/lib/credentials";
 import { createDeviceSession, isSessionLive, newSessionId } from "@/lib/deviceSessions";
 import { getAdminFlags } from "@/lib/adminFlag";
 
@@ -83,70 +82,21 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         if (!credentials?.identifier || !credentials.password) return null;
 
-        const id = credentials.identifier.trim();
-
-        // حداکثر ۸ تلاش ناموفق در ۱۰ دقیقه، هم به‌ازای IP هم به‌ازای همون
-        // شناسه ورود — جلوگیری از brute-force روی رمز عبور.
         const ip = getClientIp((req?.headers as any) || {});
-        const ipOk = await checkRateLimit(`login-ip:${ip}`, 8, 10 * 60 * 1000);
-        const idOk = await checkRateLimit(`login-id:${id}`, 8, 10 * 60 * 1000);
-        if (!ipOk || !idOk) {
-          console.warn(`[auth] rate-limited login attempt for "${id}"`);
-          return null;
-        }
+        const userAgent = (req?.headers as any)?.["user-agent"] || null;
 
-        // یوزرنیم/ایمیل بدون حساسیت به بزرگ/کوچک حروف مقایسه می‌شن (کسی که
-        // "Mohammadreza" یا "mohammadreza" می‌زنه باید یکی حساب بشه)؛
-        // شماره موبایل دقیق مقایسه می‌شه چون فقط رقمه.
-        let user;
-        try {
-          user = await prisma.user.findFirst({
-            where: {
-              OR: [
-                { email: { equals: id, mode: "insensitive" } },
-                { phone: id },
-                { username: { equals: id, mode: "insensitive" } },
-              ],
-            },
-          });
-        } catch (err: any) {
-          // این‌جا اگه دیتابیس اصلا در دسترس نباشه (DATABASE_URL غلط،
-          // Postgres خاموش، migration اجرا نشده) گیر می‌افتیم — به‌جای اینکه
-          // بذاریم NextAuth یه 401 مبهم بده، خطای واقعی رو لاگ می‌کنیم.
-          console.error(`[auth] DATABASE ERROR during login — is Postgres running and DATABASE_URL correct? ${err?.message || err}`);
-          logError("database", `اتصال به دیتابیس حین ورود شکست خورد: ${err?.message || err}`, { severity: "CRITICAL" as any });
-          return null;
-        }
-        if (!user || !user.passwordHash) {
-          console.warn(`[auth] no user found for identifier "${id}"`);
-          return null;
-        }
-        if (user.isBlocked) {
-          console.warn(`[auth] blocked user tried to log in: "${id}"`);
-          return null;
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!isValid) {
-          console.warn(`[auth] wrong password for identifier "${id}"`);
-          return null;
-        }
-
-        // ورود دومرحله‌ای روشنه → این مسیر به‌تنهایی نباید نشست صادر کنه.
-        // فرانت اول /api/auth/2fa/start رو می‌زنه و بعد با provider «sms-2fa»
-        // (با کد پیامکی) وارد می‌شه. این‌جا صریحا رد می‌کنیم تا حتی اگه
-        // کسی مستقیم این provider رو صدا بزنه، دومرحله‌ای دور زده نشه.
-        if (user.twoFactorEnabled) {
-          console.warn(`[auth] credentials login blocked — 2FA required for "${id}"`);
-          return null;
-        }
+        // کل بررسی (rate limit ۸/۱۰دقیقه روی IP و شناسه، جستجوی کاربر،
+        // مسدودی، bcrypt، و ردِ ورود وقتی دومرحله‌ای روشنه) حالا توی
+        // lib/credentials.ts مشترکه تا ورودِ اپ موبایل عینا همین قواعد رو
+        // بگیره. دومرحله‌ای روشن → این مسیر به‌تنهایی نشست صادر نمی‌کنه؛
+        // فرانت اول /api/auth/2fa/start و بعد provider «sms-2fa» رو می‌زنه.
+        const result = await verifyPasswordLogin({ identifier: credentials.identifier, password: credentials.password, ip });
+        if (!result.ok) return null;
+        const user = result.user;
 
         // پنل کاربری › امنیت › «ورودهای اخیر» — فقط یک لاگ append-only،
-        // نه چیزی که خود فلوی ورود بهش وابسته باشه؛ اگه شکست بخوره نباید
-        // جلوی ورود واقعی رو بگیره.
-        prisma.loginEvent
-          .create({ data: { userId: user.id, provider: "credentials", ip, userAgent: (req?.headers as any)?.["user-agent"] || null } })
-          .catch(() => {});
+        // نه چیزی که خود فلوی ورود بهش وابسته باشه.
+        recordLoginEvent(user.id, "credentials", ip, userAgent);
 
         return {
           id: user.id,
@@ -157,7 +107,7 @@ export const authOptions: NextAuthOptions = {
           remember: credentials.remember !== "0",
           // به callback  jwt می‌رسن تا ردیف «دستگاه فعال» با مشخصات درست ساخته بشه
           loginIp: ip,
-          loginUserAgent: (req?.headers as any)?.["user-agent"] || null,
+          loginUserAgent: userAgent,
           loginProvider: "credentials",
         } as any;
       },
@@ -244,42 +194,16 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials, req) {
         if (!credentials?.identifier || !credentials.code) return null;
-        const id = credentials.identifier.trim();
-        const code = credentials.code.trim();
-
         const ip = getClientIp((req?.headers as any) || {});
-        if (!(await checkRateLimit(`sms-2fa-ip:${ip}`, 20, 10 * 60 * 1000)) || !(await checkRateLimit(`sms-2fa-id:${id}`, 10, 10 * 60 * 1000))) {
-          console.warn(`[auth] rate-limited sms-2fa attempt for "${id}"`);
-          return null;
-        }
+        const userAgent = (req?.headers as any)?.["user-agent"] || null;
 
-        let user;
-        try {
-          user = await prisma.user.findFirst({
-            where: {
-              OR: [
-                { email: { equals: id, mode: "insensitive" } },
-                { phone: id },
-                { username: { equals: id, mode: "insensitive" } },
-              ],
-            },
-          });
-        } catch (err: any) {
-          console.error(`[auth] DATABASE ERROR during sms-2fa login: ${err?.message || err}`);
-          logError("database", `اتصال به دیتابیس حین ورود دومرحله‌ای شکست خورد: ${err?.message || err}`, { severity: "CRITICAL" as any });
-          return null;
-        }
-        if (!user || user.isBlocked || !user.twoFactorEnabled) return null;
+        // اعتبارسنجی + مصرفِ کد (با rate limit) توی lib/credentials.ts مشترکه
+        // — همون تابعی که /api/mobile/auth/verify-2fa صدا می‌زنه.
+        const result = await verifySmsTwoFactorLogin({ identifier: credentials.identifier, code: credentials.code, ip });
+        if (!result.ok) return null;
+        const user = result.user;
 
-        const consumed = await verifyAndConsumeTwoFactorOtp(user.id, code);
-        if (!consumed.ok) {
-          console.warn(`[auth] sms-2fa rejected for "${id}": ${consumed.reason}`);
-          return null;
-        }
-
-        prisma.loginEvent
-          .create({ data: { userId: user.id, provider: "sms-2fa", ip, userAgent: (req?.headers as any)?.["user-agent"] || null } })
-          .catch(() => {});
+        recordLoginEvent(user.id, "sms-2fa", ip, userAgent);
 
         return {
           id: user.id,
@@ -289,7 +213,7 @@ export const authOptions: NextAuthOptions = {
           isSuperAdmin: user.isSuperAdmin,
           remember: credentials.remember !== "0",
           loginIp: ip,
-          loginUserAgent: (req?.headers as any)?.["user-agent"] || null,
+          loginUserAgent: userAgent,
           loginProvider: "sms-2fa",
         } as any;
       },
