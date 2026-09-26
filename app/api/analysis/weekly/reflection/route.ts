@@ -1,3 +1,4 @@
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -15,6 +16,7 @@ export async function PUT(req: NextRequest) {
   try {
     const guard = await requireModule(ModuleKey.AI_INSIGHT);
     if (!guard.ok) return guard.response;
+    { const off = await featureBlocked("weeklyAnalysis", guard.userId); if (off) return off; }
     const { userId, isSuperAdmin } = guard;
 
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis-reflection:${userId}`, 30, 10 * 60 * 1000))) {

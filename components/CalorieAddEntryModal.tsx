@@ -8,6 +8,7 @@ import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
+import { useFeature } from "@/lib/useFeatures";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -36,6 +37,7 @@ export function CalorieAddEntryModal({
   onAdded: () => void;
   onOpenAiScan: () => void;
 }) {
+  const scanOn = useFeature("calorieScan") === true;
   useLockBodyScroll();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
@@ -223,6 +225,20 @@ export function CalorieAddEntryModal({
               <span className="h-px flex-1" style={{ background: "var(--line)" }} />
             </div>
 
+            {/* اسکن غذا با AI — روشن/خاموشش از پنل ادمین (فلگِ calorieScan).
+                خاموش: همون حالتِ «به‌زودی» با بلور؛ روشن: دکمه‌ی واقعی. */}
+            {scanOn ? (
+              <button
+                type="button"
+                onClick={onOpenAiScan}
+                className="flex w-full items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[12px] font-bold sm:text-[13.5px]"
+                style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "none", boxShadow: "none", backdropFilter: "none" }}
+              >
+                <Sparkles size={15} />
+                اسکن غذا با هوش مصنوعی
+              </button>
+            ) : (
+            <>
             {/* فعلا غیرفعال — طبق همون الگوی ردیف‌های «به‌زودی» توی جدول
                 مقایسه‌ی پلن‌ها (PlanShowcase): خود محتوا با بلور پیش‌نمایش
                 می‌شه (نه یه متن جایگزین کم‌کنتراست)، یه نشان صریح روش می‌شینه. */}
@@ -247,6 +263,8 @@ export function CalorieAddEntryModal({
                 </span>
               </div>
             </div>
+            </>
+            )}
           </motion.div>
 
           <AnimatePresence>

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireFeature } from "@/lib/featureFlagsServer";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 import { generateRoadmapGuide, generateStageDetail } from "@/lib/aiClient";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
@@ -21,8 +23,10 @@ const WINDOW_MS = 30 * 60_000;
  * آن ناهم‌خوان می‌شدند.
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
   const userId = guard.userId;
 
   if (!(await checkRateLimit(`roadmap-part:${userId}`, LIMIT, WINDOW_MS))) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireFeature } from "@/lib/featureFlagsServer";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 import { generateRoadmapPlan } from "@/lib/aiClient";
 import { countRowProgress, parseHours, parseLevel } from "@/lib/roadmapPlan";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -20,8 +22,10 @@ const MAX_GOAL = 300;
 const MAX_BACKGROUND = 300;
 
 export async function GET() {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
   const roadmaps = await prisma.roadmap.findMany({
     where: { userId: guard.userId },
@@ -48,8 +52,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
   const userId = guard.userId;
 
   // ساختِ هر مسیر یک فراخوانیِ گرانِ AI است (گاهی سه‌تا، با حلقه‌ی تعمیر) —

@@ -6,10 +6,12 @@ import { useSession } from "next-auth/react";
 // نوت‌پد) — برخلاف ModuleGate، اینجا هیچ دکمه‌ی «خرید اشتراک» نشون داده
 // نمی‌شه چون این بخش‌ها اصلا خریدنی نیستن؛ enforcement واقعی همیشه سمت
 // سرور (requireSuperAdmin) انجام می‌شه.
-export function SuperAdminGate({ children }: { children: React.ReactNode }) {
+export function SuperAdminGate({ children, forceLocked = false }: { children: React.ReactNode; forceLocked?: boolean }) {
   const { data: session, status } = useSession();
-  if (status === "loading") return null;
-  if ((session?.user as any)?.isSuperAdmin) return <>{children}</>;
+  if (!forceLocked) {
+    if (status === "loading") return null;
+    if ((session?.user as any)?.isSuperAdmin) return <>{children}</>;
+  }
   return (
     <div className="module-gate">
       <div className="module-gate-blur" aria-hidden="true">

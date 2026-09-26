@@ -5122,6 +5122,10 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
 .admin-lookup{ display:flex; gap:8px; margin-bottom:10px; }
 .admin-found-user{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--adm-border); border-radius:14px; margin-top:6px; }
 
+/* صفحه‌ی قابلیت‌ها — همون .admin-tab موجود؛ فقط چیدمان */
+.admin-feature-modes{ margin:0; flex-shrink:0; }
+.admin-feature-modes .admin-tab.is-off.active{ background:var(--adm-red-dim); border-color:rgba(224,82,82,.4); color:var(--adm-red); }
+@media (max-width:700px){ .admin-feature-row{ flex-direction:column; align-items:stretch; } }
 .admin-quick-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:10px; margin-bottom:20px; }
 .admin-quick-link{ display:flex; align-items:center; gap:10px; padding:14px; text-decoration:none; color:var(--adm-text); font-size:13px; font-weight:700; transition:border-color .15s ease, color .15s ease; }
 @media (hover:hover){ .admin-quick-link:hover{ border-color:var(--adm-accent); color:var(--adm-accent); } }

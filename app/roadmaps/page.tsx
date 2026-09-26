@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ChevronLeft, Clock, Layers, Map, Plus } from "lucide-react";
-import { SuperAdminGate } from "@/components/SuperAdminGate";
+import { FeatureGate } from "@/components/FeatureGate";
 import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
@@ -58,7 +58,7 @@ export default function RoadmapsHub() {
       </div>
 
       {status === "authenticated" ? (
-        <SuperAdminGate>
+        <FeatureGate feature="roadmaps">
           {!loaded ? (
             <LoadingBlock />
           ) : !roadmaps.length ? (
@@ -104,7 +104,7 @@ export default function RoadmapsHub() {
             </div>
           )}
           <RoadmapDisclaimer />
-        </SuperAdminGate>
+        </FeatureGate>
       ) : (
         <AuthGate message="برای استفاده از این سرویس وارد شوید" />
       )}
