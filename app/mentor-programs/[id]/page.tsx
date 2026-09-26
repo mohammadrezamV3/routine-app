@@ -94,7 +94,9 @@ function ProgramView() {
     }
   }, [id, weekStart, weekEnd]);
 
-  useEffect(() => { load({ quiet: !!data }); }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
+  // بارِ اول کل صفحه، بعد از آن (عوض‌شدنِ هفته) فقط نشانگرِ کوچکِ بالای روزها
+  const hasData = !!data;
+  useEffect(() => { load({ quiet: hasData }); }, [load]);
 
   // باز شدنِ صفحه توسطِ شاگرد = دیدنِ بازخوردها؛ فقط یک بار و فقط اگر نخوانده‌ای هست
   useEffect(() => {
@@ -144,7 +146,7 @@ function ProgramView() {
   const rangeEnd = program.endDate;
   const inRange = (d: string) => (!rangeStart || d >= rangeStart) && (!rangeEnd || d <= rangeEnd);
   const trackable = program.status === "ACTIVE" || program.status === "COMPLETED" || (!isStudent && program.status === "CANCELLED");
-  const canCancel = ["PENDING", "ACCEPTED", "ACTIVE"].includes(program.status) || (!isStudent && program.status === "DRAFT");
+  const canCancel = ["DRAFT", "PENDING", "ACCEPTED", "ACTIVE"].includes(program.status);
   const canActivate = program.status === "ACCEPTED" && (!program.startDate || program.startDate <= today);
   const sortedItems = [...items].sort((a, b) => a.order - b.order || (a.startTime ?? "").localeCompare(b.startTime ?? ""));
   const dayItems = sortedItems.filter((it) => itemRuns(it, selected));

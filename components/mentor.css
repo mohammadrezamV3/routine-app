@@ -75,8 +75,8 @@ body[data-theme="light"] .mentor-star-input button, body:not([data-theme="light"
 .mentor-filter-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .mentor-search{ position:relative; flex:1 1 220px; min-width:0; }
 .mentor-search svg{ position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); color:var(--muted2); pointer-events:none; }
-.mentor-search input{ width:100%; padding-inline-start:38px; }
-.mentor-sort{ flex:0 0 auto; width:auto; min-width:130px; }
+.mentor-search input.wsearch-newform-name{ width:100%; padding-inline-start:38px; }
+select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:130px; }
 .mentor-popular-row{
   display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 82%); gap:12px;
   overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory;
