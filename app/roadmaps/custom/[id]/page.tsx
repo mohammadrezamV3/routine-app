@@ -122,6 +122,19 @@ export default function RoadmapDetailPage() {
     }
   }
 
+  // مرحله‌هایی که موقعِ ساختِ اولیه به بودجه‌ی زمانی نرسیدن (حالا که جزئیاتِ
+  // هر مرحله خیلی ریزتر و طولانی‌تره، این طبیعیه) یکی‌یکی و خودکار کامل می‌شن —
+  // کاربر لازم نیست برای هرکدوم دکمه بزنه. با اولین خطا متوقف می‌شه تا حلقه نشه.
+  const [autoFillStopped, setAutoFillStopped] = useState(false);
+  useEffect(() => {
+    if (!data || busy || autoFillStopped) return;
+    const pending = data.plan.stages.find((s) => !s.detailed);
+    if (pending) { regenerate("stage", pending.n).then(() => {}); return; }
+    if (!data.plan.guide) regenerate("guide").then(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, busy, autoFillStopped]);
+  useEffect(() => { if (error) setAutoFillStopped(true); }, [error]);
+
   function openStage(n: number) {
     setTab("stages");
     setOpenStages((prev) => new Set(prev).add(n));
