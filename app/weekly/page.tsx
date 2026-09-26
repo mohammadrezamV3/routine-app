@@ -49,6 +49,7 @@ import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
 import { RoutineAiFab } from "@/components/RoutineAiFab";
+import { useFeature } from "@/lib/useFeatures";
 
 const now = new Date();
 const todayKey = isoLocal(now);
@@ -81,6 +82,7 @@ function isTaskNotStarted(iso: string, time: string): boolean {
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
 export default function WeeklyPage() {
+  const assistantOn = useFeature("routineAssistant") === true;
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [openIdx, setOpenIdx] = useState<number | null>(
@@ -698,7 +700,7 @@ export default function WeeklyPage() {
         {/* دایره‌ی «مدیرِ برنامه» — گوشه‌ی چپ‌پایینِ همین صفحه. عمدا آخرین
             فرزندِ section است تا روی بقیه بنشیند بدون این‌که به z-index
             دستی نیاز داشته باشد. */}
-        <RoutineAiFab onChanged={refresh} />
+        {assistantOn && <RoutineAiFab onChanged={refresh} />}
       </section>
     </>
   );

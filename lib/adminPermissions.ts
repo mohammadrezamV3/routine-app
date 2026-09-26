@@ -41,7 +41,7 @@ export const PERMISSION_META: Record<AdminPermission, { label: string; hint: str
   ai_usage: { label: "مصرف AI", hint: "هزینه و مصرف توکن", group: "تحلیل و سیستم" },
   analytics: { label: "تحلیل‌ها", hint: "Retention، Funnel، Churn، Cohort و محصولات", group: "تحلیل و سیستم" },
   system: { label: "سیستم", hint: "وضعیت سرور، خطاها و ابزارهای تست", group: "تحلیل و سیستم" },
-  settings: { label: "تنظیمات", hint: "تنظیمات سراسری اپ", group: "تحلیل و سیستم" },
+  settings: { label: "تنظیمات", hint: "تنظیمات سراسری اپ و روشن/خاموش‌کردن قابلیت‌ها", group: "تحلیل و سیستم" },
   audit: { label: "لاگ فعالیت ادمین‌ها", hint: "مشاهده تاریخچه اقدامات پنل", group: "تحلیل و سیستم" },
 };
 
@@ -89,6 +89,7 @@ const ROUTE_PERMISSIONS: [string, AdminPermission | null][] = [
   ["/admin/analytics", "analytics"],
   ["/admin/ai-usage", "ai_usage"],
   ["/admin/system", "system"],
+  ["/admin/features", "settings"],
   ["/admin/settings", "settings"],
   ["/admin/audit", "audit"],
 ];

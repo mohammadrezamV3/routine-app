@@ -20,8 +20,12 @@ import { ImageCropModal } from "@/components/ImageCropModal";
 type ProfileUser = {
   username: string | null;
   phone: string | null;
-  /** توجه: /api/account این فیلد را `name` می‌دهد، نه `firstName`. */
+  /** توجه: /api/account در `name` نامِ *کامل* (نام + نام خانوادگی) را
+   *  می‌دهد و نامِ کوچک را در `firstName`. باگِ «فامیل می‌پره توی اسم»
+   *  دقیقا از همین بود: فیلدِ نام با `name` پر می‌شد، یعنی بعد از هر
+   *  ذخیره نام خانوادگی به ته نام اضافه می‌شد. */
   name: string | null;
+  firstName?: string | null;
   lastName: string | null;
   bio: string | null;
   birthDate: string | null;
@@ -78,7 +82,12 @@ export default function AccountProfilePage() {
       setData(u);
       setUsername(u.username ?? "");
       setSavedUsername(u.username ?? null);
-      setFirstName(u.name ?? "");
+      // ذخیره‌های قبلی (با همون باگ) ممکنه نام خانوادگی رو یک یا چند بار
+      // به ته نام چسبونده باشن — این‌جا پاکش می‌کنیم تا ذخیره‌ی بعدی درستش کنه.
+      let first = (u.firstName ?? "").trim();
+      const last = (u.lastName ?? "").trim();
+      while (last && first !== last && first.endsWith(" " + last)) first = first.slice(0, -(last.length + 1)).trim();
+      setFirstName(first);
       setLastName(u.lastName ?? "");
       setBio(u.bio ?? "");
       if (u.birthDate) {
@@ -232,7 +241,7 @@ export default function AccountProfilePage() {
 
       invalidateAccountCache();
       setData((d) => (d ? {
-        ...d, name, lastName: family, bio: bio.trim() || null, username: uname || null,
+        ...d, firstName: name, name: [name, family].filter(Boolean).join(" ") || null, lastName: family, bio: bio.trim() || null, username: uname || null,
         birthDate: birthDate ? jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2]).toISOString() : null,
       } : d));
       setSaved(true);

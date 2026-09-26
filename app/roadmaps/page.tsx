@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ChevronLeft, Clock, Layers, Map, Plus } from "lucide-react";
-import { SuperAdminGate } from "@/components/SuperAdminGate";
+import { FeatureGate } from "@/components/FeatureGate";
 import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
+import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
 
@@ -23,6 +24,7 @@ type RoadmapCard = {
   stageCount: number;
   doneCount: number;
   pct: number;
+  build: BuildInfo;
 };
 
 // چند موضوعِ نمونه برای حالتِ خالی — یک کلیک ویزارد را با همان موضوع باز
@@ -46,6 +48,15 @@ export default function RoadmapsHub() {
 
   useEffect(() => { load(); }, [load]);
 
+  // تا وقتی رودمپی در حالِ ساخت است، لیست هر ۴ ثانیه تازه می‌شود تا پیشرفت
+  // روی کارتش زنده دیده شود؛ بعد از آماده‌شدنِ همه، polling قطع می‌شود.
+  const anyBuilding = roadmaps.some((r) => r.build?.status === "building");
+  useEffect(() => {
+    if (!anyBuilding) return;
+    const t = setInterval(load, 4000);
+    return () => clearInterval(t);
+  }, [anyBuilding, load]);
+
   return (
     <section className="roadmaps-desktop rp-hub">
       <div className="trade-head-row">
@@ -58,7 +69,7 @@ export default function RoadmapsHub() {
       </div>
 
       {status === "authenticated" ? (
-        <SuperAdminGate>
+        <FeatureGate feature="roadmaps">
           {!loaded ? (
             <LoadingBlock />
           ) : !roadmaps.length ? (
@@ -94,6 +105,8 @@ export default function RoadmapsHub() {
                     {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
                   </div>
 
+                  {r.build && r.build.status !== "ready" && <RoadmapBuildStatus build={r.build} compact />}
+
                   <div className="rp-card-foot">
                     <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>
                     <span className="rp-card-pct">{faNum(r.pct)}٪</span>
@@ -104,7 +117,7 @@ export default function RoadmapsHub() {
             </div>
           )}
           <RoadmapDisclaimer />
-        </SuperAdminGate>
+        </FeatureGate>
       ) : (
         <AuthGate message="برای استفاده از این سرویس وارد شوید" />
       )}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireFeature } from "@/lib/featureFlagsServer";
+import { requireModule } from "@/lib/moduleAccess";
+import { ModuleKey } from "@prisma/client";
 import { computePlanProgress, normalizePlan, sanitizeStepProgress, taskKey } from "@/lib/roadmapPlan";
 
 /**
@@ -11,8 +13,10 @@ import { computePlanProgress, normalizePlan, sanitizeStepProgress, taskKey } fro
  * می‌شود؛ کلیدِ مرحله‌ای که وجود ندارد هم دور ریخته می‌شود.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
+  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
   const body = await req.json().catch(() => null);
   const n = (body as any)?.n;

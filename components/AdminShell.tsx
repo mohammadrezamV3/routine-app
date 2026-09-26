@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutGrid, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
+  LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
   Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -105,6 +105,7 @@ const GROUPS: NavGroup[] = [
           { label: "خطاها و لاگ‌ها", href: "/admin/system/errors" },
         ],
       },
+      { label: "قابلیت‌ها", icon: <ToggleRight size={17} />, href: "/admin/features", perm: "settings" },
       { label: "تنظیمات", icon: <Settings size={17} />, href: "/admin/settings", perm: "settings" },
     ],
   },

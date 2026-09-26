@@ -1,3 +1,4 @@
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
   // کاربرِ مسدودشده، و بیرون‌دادنِ userId/isSuperAdmin.
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
+  { const off = await featureBlocked("routineAssistant", guard.userId); if (off) return off; }
   const { userId, isSuperAdmin } = guard;
 
   // سقفِ نرخ مستقل از سهمیه است: سهمیه محدودیتِ محصولی است، این جلوی
@@ -342,6 +344,7 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
+  { const off = await featureBlocked("routineAssistant", guard.userId); if (off) return off; }
   const { userId, isSuperAdmin } = guard;
 
   const unlimited = isSuperAdmin || (await hasActiveSubscription(userId));
