@@ -89,7 +89,7 @@ export default function WeeklyPage() {
     WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
   );
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string }[]>([]);
+  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string; mentorProgramId?: string }[]>([]);
   const router = useRouter();
   const [cardName, setCardName] = useState<string | null>(null);
 
@@ -101,6 +101,9 @@ export default function WeeklyPage() {
   function openProgram(name: string) {
     const fromRoadmap = customOcc.find((c) => c.name === name && c.roadmapId);
     if (fromRoadmap?.roadmapId) { router.push(`/roadmaps/custom/${fromRoadmap.roadmapId}`); return; }
+    // برنامه‌ای که از برنامه‌ی یک منتور آینه شده → صفحه‌ی اجرای همان برنامه
+    const fromMentor = customOcc.find((c) => c.name === name && c.mentorProgramId);
+    if (fromMentor?.mentorProgramId) { router.push(`/mentor-programs/${fromMentor.mentorProgramId}`); return; }
     setCardName(name);
   }
   const [addProgramOpen, setAddProgramOpen] = useState(false);

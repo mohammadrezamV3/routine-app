@@ -1,15 +1,50 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getCustomOccurrences, getRemovedOccurrences, getDaily, getSetting, setSetting } from "@/lib/storage";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { getNotifPrefs } from "@/lib/notifPrefs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { fmtRelative } from "@/lib/mentorFormat";
+import { Spinner } from "./Spinner";
+import type { InAppNotification, NotificationsResponse } from "@/lib/mentorTypes";
 
+type ServerNotif = { kind: "server"; id: string; title: string; body: string; url: string | null; readAt: string | null; createdAt: string };
 type NotifItem =
   | { kind: "info"; id: string; title: string; body: string }
-  | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string };
+  | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string }
+  | ServerNotif;
+
+// اعلان‌های ذخیره‌شده‌ی سرور (InAppNotification — منتورها و …) فقط برای کاربرِ
+// لاگین‌کرده؛ برای مهمان یا وقتی قابلیت خاموش است پاسخ ok نیست و بی‌صدا
+// نادیده گرفته می‌شود، پس بقیه‌ی اطلاعیه‌های محاسبه‌شده دست‌نخورده می‌مانند.
+let serverHasMore = false;
+
+function toServerNotif(n: InAppNotification): ServerNotif {
+  return { kind: "server", id: `srv:${n.id}`, title: n.title, body: n.body ?? "", url: n.url, readAt: n.readAt, createdAt: n.createdAt };
+}
+
+async function loadServerNotifications(before?: string): Promise<{ items: ServerNotif[]; hasMore: boolean } | null> {
+  try {
+    const res = await fetch(`/api/notifications${before ? `?before=${encodeURIComponent(before)}` : ""}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const d: NotificationsResponse = await res.json();
+    return { items: (d.notifications || []).map(toServerNotif), hasMore: !!d.hasMore };
+  } catch {
+    return null;
+  }
+}
+
+function serverId(it: ServerNotif): string {
+  return it.id.slice("srv:".length);
+}
+
+/** تعدادِ «نخوانده»‌ها برای نقطه‌ی زنگوله — اعلانِ سرورِ خوانده‌شده حساب نمی‌شود */
+export function countUnreadNotifications(items: NotifItem[]): number {
+  return items.filter((i) => i.kind !== "server" || !i.readAt).length;
+}
 
 const EXERCISE_REMINDER_HOUR = 17;
 
@@ -74,12 +109,15 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
   const items: NotifItem[] = [];
 
   const wantsExercise = prefs.exerciseReminders && new Date().getHours() >= EXERCISE_REMINDER_HOUR;
-  const [removedArr, customArr, daily, exerciseItem] = await Promise.all([
+  const [removedArr, customArr, daily, exerciseItem, server] = await Promise.all([
     getRemovedOccurrences(),
     getCustomOccurrences(),
     getDaily(isoLocal(new Date())),
     wantsExercise ? loadExerciseReminder() : Promise.resolve(null),
+    loadServerNotifications(),
   ]);
+  serverHasMore = !!server?.hasMore;
+  const serverItems = server?.items ?? [];
 
   if (prefs.taskReminders) {
     const tasks = tasksForDate(new Date(), { removedOccurrences: new Set(removedArr), customOccurrences: customArr });
@@ -99,7 +137,13 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
 
   if (exerciseItem) items.push(exerciseItem);
 
-  return [...staticItems, ...items];
+  // نخوانده‌های سرور اول، خوانده‌شده‌ها ته لیست
+  return [
+    ...serverItems.filter((n) => !n.readAt),
+    ...staticItems,
+    ...items,
+    ...serverItems.filter((n) => n.readAt),
+  ];
 }
 
 // کش‌شده بیرون کامپوننت (نه یه state داخلی) — پنل هر بار که باز/بسته
@@ -123,7 +167,67 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
   const [openStatic, setOpenStatic] = useState<Extract<NotifItem, { kind: "static" }> | null>(null);
+  const [hasMore, setHasMore] = useState(serverHasMore);
+  const [moreBusy, setMoreBusy] = useState(false);
+  const [markAllBusy, setMarkAllBusy] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  function updateItems(fn: (prev: NotifItem[]) => NotifItem[]) {
+    setItems((prev) => {
+      const next = fn(prev ?? []);
+      cachedItems = next;
+      return next;
+    });
+  }
+
+  function markRead(ids: string[] | "all") {
+    const now = new Date().toISOString();
+    updateItems((prev) => prev.map((x) => (x.kind === "server" && !x.readAt && (ids === "all" || ids.includes(serverId(x))) ? { ...x, readAt: now } : x)));
+    return fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ids === "all" ? { all: true } : { ids }),
+    });
+  }
+
+  function openServerNotif(it: ServerNotif) {
+    if (!it.readAt) markRead([serverId(it)]).catch(() => {});
+    // فقط مسیرِ داخلی — url سمتِ سرور همیشه «/…» است، این فقط کمربندِ ایمنی است
+    if (it.url && it.url.startsWith("/") && !it.url.startsWith("//")) {
+      onClose();
+      router.push(it.url);
+    }
+  }
+
+  async function markAllRead() {
+    setMarkAllBusy(true);
+    setServerError(null);
+    const snapshot = items;
+    try {
+      const res = await markRead("all");
+      if (!res.ok) throw new Error();
+    } catch {
+      if (snapshot) updateItems(() => snapshot);
+      setServerError("علامت‌گذاری انجام نشد — دوباره تلاش کن");
+    } finally {
+      setMarkAllBusy(false);
+    }
+  }
+
+  async function loadMore() {
+    const oldest = (items ?? []).filter((x): x is ServerNotif => x.kind === "server").map((x) => x.createdAt).sort()[0];
+    if (!oldest) return;
+    setMoreBusy(true);
+    setServerError(null);
+    const res = await loadServerNotifications(oldest);
+    setMoreBusy(false);
+    if (!res) { setServerError("بارگذاری نشد — دوباره تلاش کن"); return; }
+    serverHasMore = res.hasMore;
+    setHasMore(res.hasMore);
+    updateItems((prev) => [...prev, ...res.items.filter((n) => !prev.some((p) => p.id === n.id))]);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -131,6 +235,7 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
       if (cancelled) return;
       cachedItems = res;
       setItems(res);
+      setHasMore(serverHasMore);
     });
     return () => { cancelled = true; };
   }, []);
@@ -168,7 +273,15 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
         ref={panelRef}
         style={{ position: "fixed", top: anchor.top, right: anchor.right, left: "auto" }}
       >
-        <div className="notif-panel-head">اطلاعیه‌ها</div>
+        <div className="notif-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <span>اطلاعیه‌ها</span>
+          {items?.some((x) => x.kind === "server" && !x.readAt) && (
+            <button type="button" className="trade-ghost-btn" style={{ padding: "3px 8px", fontSize: 11 }} onClick={markAllRead} disabled={markAllBusy}>
+              خواندن همه
+            </button>
+          )}
+        </div>
+        {serverError && <div className="trade-form-error" style={{ margin: "0 4px 6px" }}>{serverError}</div>}
         {items === null ? (
           <div className="item-line is-loading" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
         ) : items.length === 0 ? (
@@ -176,7 +289,22 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
         ) : (
           <div className="notif-panel-list">
             {items.map((it) =>
-              it.kind === "static" ? (
+              it.kind === "server" ? (
+                <div
+                  key={it.id}
+                  className="notif-panel-item"
+                  onClick={() => openServerNotif(it)}
+                  role={it.url ? "link" : undefined}
+                  style={{ cursor: it.url ? "pointer" : "default", opacity: it.readAt ? 0.62 : 1 }}
+                >
+                  <div className="notif-panel-item-title">
+                    {!it.readAt && <span aria-label="نخوانده" style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
+                    {it.title}
+                  </div>
+                  {it.body && <div className="notif-panel-item-body">{it.body}</div>}
+                  <div className="notif-panel-item-body" style={{ fontSize: 10.5, opacity: 0.75 }}>{fmtRelative(it.createdAt)}</div>
+                </div>
+              ) : it.kind === "static" ? (
                 <div key={it.id} className="notif-panel-item" onClick={() => openStaticNotif(it)} style={{ cursor: "pointer" }}>
                   <div className="notif-panel-item-title">{it.title}</div>
                   <div className="notif-panel-item-body">{it.body}</div>
@@ -187,6 +315,11 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
                   <div className="notif-panel-item-body">{it.body}</div>
                 </div>
               )
+            )}
+            {hasMore && (
+              <button type="button" className="trade-ghost-btn" style={{ alignSelf: "center", margin: "6px auto 2px", display: "flex" }} onClick={loadMore} disabled={moreBusy}>
+                {moreBusy ? <Spinner size={13} /> : "اعلان‌های قبلی"}
+              </button>
             )}
           </div>
         )}
