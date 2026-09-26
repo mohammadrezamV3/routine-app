@@ -8132,6 +8132,15 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-card-meta span{ display:inline-flex; align-items:center; gap:4px; }
 .rp-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; padding-top:14px; }
 .rp-card-foot .rp-bar{ flex:1; }
+/* وضعیتِ ساختِ پس‌زمینه (RoadmapBuildStatus) — بدون بک‌گراندِ جدید؛ فقط بوردر،
+   متن و همان .rp-bar. */
+.rp-build{ display:flex; flex-direction:column; gap:8px; margin:0 0 14px; padding:12px 14px; border:1px solid rgba(var(--accent-rgb),.35); border-radius:16px; }
+.rp-build.compact{ margin:12px 0 0; padding:9px 11px; border-radius:12px; }
+.rp-build-head{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700; color:var(--accent); }
+.rp-build-count{ margin-inline-start:auto; font-size:11px; color:var(--muted); font-weight:700; }
+.rp-build-bar span{ transition:width .6s cubic-bezier(.22,1,.36,1); }
+.rp-build-hint{ margin:0; font-size:11.5px; color:var(--muted); line-height:1.8; }
+.rp-build.is-failed{ flex-direction:row; align-items:center; gap:7px; border-color:rgba(var(--pnl-loss-rgb),.4); color:var(--pnl-loss); font-size:12px; }
 .rp-card-pct{ flex-shrink:0; font-size:11px; font-weight:800; color:var(--accent); }
 .rp-card-arrow{ flex-shrink:0; color:var(--muted2); transition:transform .18s ease, color .18s ease; }
 @media (hover:hover) and (pointer:fine){ .rp-card:hover .rp-card-arrow{ color:var(--accent); transform:translateX(-3px); } }

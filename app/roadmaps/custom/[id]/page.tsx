@@ -10,6 +10,7 @@ import {
 import { faNum } from "@/lib/jalali";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { RoadmapStageCard, searchUrl } from "@/components/RoadmapStageCard";
+import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { LoadingBlock } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { hoursLabel, levelLabel, type PlanStage, type RoadmapPlan } from "@/lib/roadmapPlan";
@@ -19,6 +20,7 @@ type Detail = {
   plan: RoadmapPlan;
   stepProgress: Record<string, boolean>;
   progress: { total: number; done: number; pct: number };
+  build: BuildInfo;
 };
 
 type Tab = "stages" | "guide" | "overview";
@@ -126,8 +128,17 @@ export default function RoadmapDetailPage() {
   // هر مرحله خیلی ریزتر و طولانی‌تره، این طبیعیه) یکی‌یکی و خودکار کامل می‌شن —
   // کاربر لازم نیست برای هرکدوم دکمه بزنه. با اولین خطا متوقف می‌شه تا حلقه نشه.
   const [autoFillStopped, setAutoFillStopped] = useState(false);
+  // ساختِ پس‌زمینه هنوز در جریان است → هر ۵ ثانیه تازه کن تا مرحله‌های آماده‌شده
+  // بیایند؛ و تا وقتی سرور خودش دارد می‌سازد، این صفحه هیچ مرحله‌ای را جدا نمی‌سازد.
+  const serverBuilding = data?.build?.status === "building";
   useEffect(() => {
-    if (!data || busy || autoFillStopped) return;
+    if (!serverBuilding) return;
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, [serverBuilding, load]);
+
+  useEffect(() => {
+    if (!data || busy || autoFillStopped || data.build?.status === "building") return;
     const pending = data.plan.stages.find((s) => !s.detailed);
     if (pending) { regenerate("stage", pending.n).then(() => {}); return; }
     if (!data.plan.guide) regenerate("guide").then(() => {});
@@ -169,6 +180,8 @@ export default function RoadmapDetailPage() {
   return (
     <section className="roadmaps-desktop rp-page">
       <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> رودمپ‌ها</Link>
+
+      <RoadmapBuildStatus build={data.build} />
 
       <header className="trade-surface rp-hero">
         <div className="rp-hero-top">

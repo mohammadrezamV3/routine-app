@@ -9,6 +9,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
+import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
 
@@ -23,6 +24,7 @@ type RoadmapCard = {
   stageCount: number;
   doneCount: number;
   pct: number;
+  build: BuildInfo;
 };
 
 // چند موضوعِ نمونه برای حالتِ خالی — یک کلیک ویزارد را با همان موضوع باز
@@ -45,6 +47,15 @@ export default function RoadmapsHub() {
   }, [status]);
 
   useEffect(() => { load(); }, [load]);
+
+  // تا وقتی رودمپی در حالِ ساخت است، لیست هر ۴ ثانیه تازه می‌شود تا پیشرفت
+  // روی کارتش زنده دیده شود؛ بعد از آماده‌شدنِ همه، polling قطع می‌شود.
+  const anyBuilding = roadmaps.some((r) => r.build?.status === "building");
+  useEffect(() => {
+    if (!anyBuilding) return;
+    const t = setInterval(load, 4000);
+    return () => clearInterval(t);
+  }, [anyBuilding, load]);
 
   return (
     <section className="roadmaps-desktop rp-hub">
@@ -93,6 +104,8 @@ export default function RoadmapsHub() {
                     {r.stageCount > 0 && <span><Layers size={12} /> {faNum(r.stageCount)} مرحله</span>}
                     {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
                   </div>
+
+                  {r.build && r.build.status !== "ready" && <RoadmapBuildStatus build={r.build} compact />}
 
                   <div className="rp-card-foot">
                     <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>

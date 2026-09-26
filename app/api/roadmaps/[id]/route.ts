@@ -4,6 +4,7 @@ import { requireFeature } from "@/lib/featureFlagsServer";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { computePlanProgress, normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
+import { buildStatusOf } from "@/lib/roadmapBuilder";
 
 /**
  * یک مسیر با مرحله‌های نرمال‌شده و پیشرفتِ حساب‌شده‌ی سمتِ سرور.
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     plan,
     stepProgress: progress,
     progress: computePlanProgress(plan.stages, progress),
+    build: buildStatusOf(row.meta),
   });
 }
 

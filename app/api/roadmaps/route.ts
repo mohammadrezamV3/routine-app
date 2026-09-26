@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
-import { generateRoadmapPlan } from "@/lib/aiClient";
+import { startRoadmapBuild, buildStatusOf } from "@/lib/roadmapBuilder";
 import { countRowProgress, parseHours, parseLevel } from "@/lib/roadmapPlan";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 
-// تولید مسیر (اسکلت + راهنما و جزئیاتِ موازیِ هر مرحله) تا ۵۵ ثانیه طول می‌کشه (AI_TOTAL_BUDGET_MS) — بدون این،
+// تولید حالا در پس‌زمینه است و خودِ POST فورا برمی‌گردد؛ این مقدار فقط برای
+// اطمینان باقی مانده. توضیحِ قبلی: تولید تا ۵۵ ثانیه طول می‌کشید — بدون این،
 // روی هاست‌هایی که فانکشن سرورلس رو خودکار قطع می‌کنن (مثل Vercel، سقف
 // پیش‌فرض ۱۰-۱۵ ثانیه‌ست)، دقیقاً وسط تولید قطع می‌شه و کلاینت به‌جای
 // جواب سرور یه قطعیِ خامِ اتصال می‌بینه («ارتباط برقرار نشد»).
@@ -43,6 +44,7 @@ export async function GET() {
       id: r.id, topic: r.topic, title: r.title, summary: r.summary,
       goal: r.goal, totalDuration: r.totalDuration, createdAt: r.createdAt,
       level: (r.meta as any)?.level ?? null,
+      build: buildStatusOf(r.meta),
       stageCount: total, doneCount: done,
       pct: total ? Math.round((done / total) * 100) : 0,
     };
@@ -76,39 +78,22 @@ export async function POST(req: NextRequest) {
   const bgRaw = String((body as any)?.background || "").trim();
   const background = bgRaw ? clampText(bgRaw, MAX_BACKGROUND) : undefined;
 
-  let plan;
-  let meta;
-  try {
-    const result = await generateRoadmapPlan({ topic, goal, level, weeklyHours, background }, userId);
-    plan = result.plan;
-    meta = result.meta;
-  } catch (err: any) {
-    console.error("roadmap generation failed", err);
-    return NextResponse.json(
-      { error: err?.message || "ساختِ مسیر انجام نشد — دوباره امتحان کن" },
-      { status: 502 }
-    );
-  }
-
+  // ساخت در پس‌زمینه: ردیف فورا ذخیره می‌شود و کاربر پشتِ صفحه‌ی ساخت نمی‌ماند
+  // (lib/roadmapBuilder.ts). پیشرفت روی کارتِ همین رودمپ در لیست دیده می‌شود.
+  const profile = { topic, goal, level, weeklyHours, background };
   const created = await prisma.roadmap.create({
     data: {
       userId,
       topic,
       goal: goal ?? null,
-      title: plan.title || topic,
-      summary: plan.summary || null,
-      guide: plan.guide,
-      steps: plan.stages as any,
-      totalDuration: plan.totalDuration || null,
-      tools: plan.tools as any,
-      meta: plan.meta as any,
+      title: topic,
+      steps: [] as any,
+      meta: { level, weeklyHours, background, build: { status: "building", phase: "outline", done: 0, total: 0, at: Date.now() } } as any,
       generatedByAi: true,
     },
     select: { id: true },
   });
+  startRoadmapBuild(created.id, userId, profile);
 
-  return NextResponse.json(
-    { id: created.id, pendingStages: meta.pendingStages, guideReady: meta.guideReady },
-    { status: 201 }
-  );
+  return NextResponse.json({ id: created.id, building: true }, { status: 202 });
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
+import { buildStatusOf } from "@/lib/roadmapBuilder";
 import { generateRoadmapGuide, generateStageDetail, STAGE_REGEN_TIMEOUT_MS } from "@/lib/aiClient";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
@@ -53,6 +54,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     },
   });
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
+  // تا وقتی ساختِ پس‌زمینه همین ردیف را می‌نویسد، ساختِ دستی یعنی دو نویسنده
+  // روی یک steps — یکی کارِ دیگری را پاک می‌کند.
+  if (buildStatusOf(row.meta)?.status === "building") {
+    return NextResponse.json({ error: "این مسیر هنوز در حالِ ساخته‌شدن است — چند لحظه صبر کن" }, { status: 409 });
+  }
 
   const plan = normalizePlan({
     title: row.title, summary: row.summary, guide: row.guide, totalDuration: row.totalDuration,
