@@ -5,7 +5,7 @@ import {
   type MarketQuote,
   type TickerCategory,
   type TickerSymbolDto,
-} from "@/lib/trade-online-contract";
+} from "@m/lib/trade-online-contract";
 
 /** همون قالبِ نوارِ قیمتِ وب: زیرِ ۱۰ → ۴ رقمِ اعشار، وگرنه ۲ */
 export function formatPrice(price: number): string {

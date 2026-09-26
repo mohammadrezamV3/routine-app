@@ -1,38 +1,17 @@
 import type { Config } from "tailwindcss";
+import webConfig from "../tailwind.config";
 
-// همون پالت اپ وب (app/globals.css) روی متغیرهای CSS تم سوار شده تا با
-// تغییر تم (روشن/تاریک) خودکار آپدیت بشه — نگاه کن به src/styles/theme.css.
+// اپ همون صفحه‌ها/کامپوننت‌های وب رو رندر می‌کنه، پس کانفیگ همون کانفیگِ
+// ریشه‌ست (preset) — فقط مسیرهای content از دیدِ mobile/ نوشته شده‌ن.
 const config: Config = {
-  darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  theme: {
-    extend: {
-      colors: {
-        bg: "var(--bg)",
-        surface: "var(--surface-1)",
-        surface2: "var(--surface-2)",
-        border: "var(--surface-line)",
-        text: "var(--text)",
-        muted: "var(--muted)",
-        muted2: "var(--muted2)",
-        accent: "var(--accent)",
-        "accent-soft": "var(--accent-soft)",
-        "accent-deep": "var(--accent-deep)",
-        secondary: "var(--secondary)",
-        "pnl-win": "var(--pnl-win)",
-        "pnl-loss": "var(--pnl-loss)",
-      },
-      borderRadius: {
-        card: "18px",
-      },
-      fontFamily: {
-        vazir: ["var(--font-vazir)", "sans-serif"],
-        latin: ["var(--font-latin)", "sans-serif"],
-      },
-    },
-  },
-  plugins: [],
-  future: { hoverOnlyWhenSupported: true },
+  presets: [webConfig],
+  content: [
+    "./index.html",
+    "./src/**/*.{ts,tsx}",
+    "../app/**/*.{ts,tsx}",
+    "../components/**/*.{ts,tsx}",
+    "../lib/**/*.{ts,tsx}",
+  ],
 };
 
 export default config;

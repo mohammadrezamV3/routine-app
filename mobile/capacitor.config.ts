@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
   // فقط بعدا برای لاگین/سینک از داخل کد (fetch) اضافه می‌شه، نه از این‌جا.
   webDir: "dist",
   server: {
+    // https://localhost + html5 mode (پیش‌فرضِ WebViewLocalServer): هر مسیرِ
+    // بدونِ پسوند (/weekly، /trade/accounts/x) همون index.html رو می‌گیره، پس
+    // BrowserRouter (نه HashRouter) امنه — کدِ وب window.location رو مستقیم می‌خونه.
     androidScheme: "https",
   },
   android: {

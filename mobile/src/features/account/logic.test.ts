@@ -10,7 +10,7 @@ import {
 } from "./logic";
 import { AccountApiError, createAccountApi, describeAccountError } from "./api";
 import { isPaymentResultUrl } from "./browser";
-import type { MobileCheckoutStatusResponse } from "@/lib/account-contract";
+import type { MobileCheckoutStatusResponse } from "@m/lib/account-contract";
 
 const st = (status: MobileCheckoutStatusResponse["status"]): MobileCheckoutStatusResponse => ({
   checkoutId: "c1", status, planKey: "exercise", duration: "1", paidAt: null, subscriptionExpiresAt: null,

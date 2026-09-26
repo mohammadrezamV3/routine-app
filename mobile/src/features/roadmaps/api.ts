@@ -9,7 +9,7 @@ import type {
   MobileRoadmapRegenerateResponse,
   MobileRoadmapRequest,
   MobileRoadmapResponse,
-} from "@/lib/api-contract";
+} from "@m/lib/api-contract";
 
 export type RoadmapFetchResult = { status: 304 } | { status: 200; etag: string; data: MobileRoadmap[] };
 

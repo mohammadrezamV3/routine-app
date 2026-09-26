@@ -1,4 +1,4 @@
-import { faNum, J_MONTHS, toJalali } from "@/lib/jalali";
+import { faNum, J_MONTHS, toJalali } from "@m/lib/jalali";
 
 // نمایشِ فارسیِ زمانِ آخرین همگام‌سازی.
 //

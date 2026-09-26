@@ -5,7 +5,7 @@
 //   • kv: واچ‌لیست، کاتالوگِ نمادها، آخرین فهرستِ وضعیتِ متاتریدر
 // هیچ رازی این‌جا نیست — کدِ اتصالِ متاتریدر فقط در stateِ صفحه می‌مونه.
 import Dexie, { type Table } from "dexie";
-import type { EconomicEventDto, MarketQuote, MtAccountStatus, TickerSymbolDto } from "@/lib/trade-online-contract";
+import type { EconomicEventDto, MarketQuote, MtAccountStatus, TickerSymbolDto } from "@m/lib/trade-online-contract";
 import { weeksToEvict } from "./lib/calendar";
 
 export const TRADE_ONLINE_DB_NAME = "arion-trade-online";

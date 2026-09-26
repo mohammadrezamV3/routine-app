@@ -1,8 +1,8 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
-import { MOBILE_SYNC_SETTING_KEYS, type SettingRecord } from "@/lib/api-contract";
-import { db } from "@/db/db";
-import { wipeAll } from "@/db/syncHooks";
+import { MOBILE_SYNC_SETTING_KEYS, type SettingRecord } from "@m/lib/api-contract";
+import { db } from "@m/db/db";
+import { wipeAll } from "@m/db/syncHooks";
 import { coreAdapter } from "./coreAdapter";
 import { toChange } from "./mappers";
 

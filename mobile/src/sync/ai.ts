@@ -4,7 +4,7 @@ import type {
   MobileExercisePlanRequest,
   MobileExercisePlanResponse,
   MobileFoodScanResponse,
-} from "@/lib/api-contract";
+} from "@m/lib/api-contract";
 import { ApiClient, ApiError } from "./apiClient";
 import { resizeToJpegBase64 } from "./image";
 

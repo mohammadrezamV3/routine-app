@@ -1,0 +1,110 @@
+/* شلِ اپ موبایل روی app/globals.cssِ وب. فقط چیزهایی که به هدرِ ثابتِ وب
+   (.app-topbar — که در اپ نیست) گره خورده‌ن این‌جا جابه‌جا می‌شن، و تب‌بارِ
+   پایین با همون توکن‌های شیشه‌ی هدر ساخته می‌شه. همه‌چیز زیرِ
+   html[data-shell="app"] تا هیچ قانونی بیرون از اپ اثر نکنه.
+
+   حساب: وب body رو از بالا 118px (+safe-area) پد می‌کنه تا زیرِ هدرِ شناور
+   (14px فاصله + 58px ارتفاع + فاصله‌ی محتوا) بیفته، و صفحه‌های بی‌هدر (/auth)
+   با margin-top:-98px به 20px برمی‌گردن. اپ هدر نداره، پس همه‌ی صفحه‌ها
+   همون 20px + safe-area رو می‌گیرن (= اختلافِ ثابتِ 98px با وب). پایین
+   دست‌نخورده‌ست: 90px + safe-area وب دقیقا جای تب‌بار (14 + 62 + 14) رو داره. */
+html[data-shell="app"]{
+  --app-topbar-offset:98px;
+  --app-tabbar-height:62px;
+}
+
+html[data-shell="app"] body{
+  padding-top:calc(20px + env(safe-area-inset-top));
+}
+html[data-shell="app"] .auth-page{ margin-top:0; }
+html[data-shell="app"] .support-ticket-page{
+  min-height:calc(100dvh - 20px - env(safe-area-inset-top) - 90px - env(safe-area-inset-bottom));
+}
+html[data-shell="app"] .checkout-back-btn{ top:calc(20px + env(safe-area-inset-top)); }
+html[data-shell="app"] .account-sidebar{ top:calc(20px + env(safe-area-inset-top)); }
+html[data-shell="app"] .nav-drawer{ top:calc(14px + env(safe-area-inset-top)); }
+
+/* ── تب‌بار: همون قرصِ شیشه‌ای .app-topbar، شناور در پایین ─────────────── */
+html[data-shell="app"] .app-tabbar{
+  position:fixed; bottom:calc(14px + env(safe-area-inset-bottom));
+  inset-inline-start:14px; inset-inline-end:14px; z-index:40;
+  height:var(--app-tabbar-height);
+  display:flex; align-items:stretch; justify-content:space-between;
+  padding:0 6px;
+  border-radius:999px;
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line);
+  transform:translateZ(0); -webkit-transform:translateZ(0);
+  will-change:transform;
+  max-width:620px; margin:0 auto;
+}
+html[data-shell="app"] .app-tabbar::before{
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  border-radius:inherit; box-sizing:border-box;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* هر تب شفاف می‌مونه (بدونِ بک‌گراند) — اسپسیفیسیتیِ html[data-shell] body
+   از `button{}` و `body[data-theme="light"] button{}` و `button:hover` سراسری
+   بیشتره، پس اون شیشه‌ی پیش‌فرضِ دکمه‌ها هیچ‌وقت این‌جا نمی‌شینه. */
+html[data-shell="app"] body .app-tabbar-item{
+  position:relative; z-index:2;
+  flex:1 1 0; min-width:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  padding:0; margin:0; border:none; border-radius:999px;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--muted); text-decoration:none; cursor:pointer;
+  font-family:var(--font-vazir), sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  transition:color .2s ease, transform .15s ease;
+}
+html[data-shell="app"] body .app-tabbar-item:active{ transform:scale(.94); }
+@media (hover:hover){
+  html[data-shell="app"] body .app-tabbar-item:hover{
+    color:var(--accent); background:none; box-shadow:none; border:none;
+  }
+}
+html[data-shell="app"] body .app-tabbar-item.active{ color:var(--accent); }
+
+html[data-shell="app"] .app-tabbar-glyph{
+  position:relative; width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center;
+}
+html[data-shell="app"] .app-tabbar-icon{ display:flex; width:22px; height:22px; }
+html[data-shell="app"] .app-tabbar-icon svg{ width:100%; height:100%; }
+html[data-shell="app"] .app-tabbar-label{
+  font-size:10.5px; font-weight:600; line-height:1; white-space:nowrap;
+}
+html[data-shell="app"] .app-tabbar-lock{
+  position:absolute; top:-2px; inset-inline-end:-6px; color:var(--muted2);
+}
+
+/* چیپِ آواتار — همون .profile-chip-avatarِ هدرِ وب، کمی کوچک‌تر */
+html[data-shell="app"] .app-tabbar-avatar.profile-chip-avatar{
+  width:26px; height:26px; min-width:26px; overflow:hidden;
+}
+html[data-shell="app"] body .app-tabbar-item.active .app-tabbar-avatar{ border-color:var(--accent); }
+
+/* منو: همون خط‌های همبرگرِ وب با مورفِ X (.hamburger) */
+html[data-shell="app"] .app-tabbar-burger{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  transition:transform .5s cubic-bezier(.68,-.4,.27,1.4);
+}
+html[data-shell="app"] .app-tabbar-burger span{
+  width:18px; height:2px; border-radius:2px; background:currentColor; display:block;
+  transition:transform .35s cubic-bezier(.68,-.4,.27,1.4), opacity .22s ease, width .25s ease;
+}
+html[data-shell="app"] .app-tabbar-burger.open{ transform:rotate(90deg); }
+html[data-shell="app"] .app-tabbar-burger.open span:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+html[data-shell="app"] .app-tabbar-burger.open span:nth-child(2){ opacity:0; width:0; }
+html[data-shell="app"] .app-tabbar-burger.open span:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
+
+/* آیتم‌های پروفایل ته کشوی منو (لیستِ منوی چیپِ پروفایلِ وب) */
+html[data-shell="app"] .app-tabbar-menu-extra{
+  border-top:1px solid var(--line); margin-top:6px; padding-top:6px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  html[data-shell="app"] .app-tabbar-burger, html[data-shell="app"] .app-tabbar-burger span{ transition:none; }
+}

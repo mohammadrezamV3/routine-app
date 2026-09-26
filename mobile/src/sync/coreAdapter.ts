@@ -1,7 +1,7 @@
 // آداپتورِ سینکِ چهار جدولِ هسته (mobile/src/db): dailyEntries، sleepEntries، tasks، settings.
-import type { SyncServerRecord } from "@/lib/api-contract";
-import { newId } from "@/db/db";
-import { applyRemote, EntityName, getDirty, markAllDirty, rekeyTask, settlePushed } from "@/db/syncHooks";
+import type { SyncServerRecord } from "@m/lib/api-contract";
+import { newId } from "@m/db/db";
+import { applyRemote, EntityName, getDirty, markAllDirty, rekeyTask, settlePushed } from "@m/db/syncHooks";
 import type { PendingItem, SyncAdapter } from "./adapter";
 import { isValidClientId, localKey, remoteDaily, remoteSetting, remoteSleep, remoteTask, toChange } from "./mappers";
 

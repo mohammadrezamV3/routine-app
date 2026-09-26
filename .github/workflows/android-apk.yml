@@ -6,6 +6,12 @@ on:
       - "**"
     paths:
       - "mobile/**"
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "prisma/schema.prisma"
+      - "public/images/**"
+      - "tailwind.config.ts"
       - ".github/workflows/android-apk.yml"
   workflow_dispatch: {}
 

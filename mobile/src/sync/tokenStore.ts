@@ -6,7 +6,7 @@
 // refreshToken یک‌بارمصرفه و با هر refresh عوض می‌شه؛ استفاده‌ی دوباره از
 // نسخه‌ی قبلی کلِ نشست رو سمتِ سرور باطل می‌کنه — پس setSession بلافاصله بعد
 // از هر پاسخِ موفق صدا زده می‌شه (apiClient این رو تضمین می‌کنه).
-import type { MobileAuthSuccess, MobileUser } from "@/lib/api-contract";
+import type { MobileAuthSuccess, MobileUser } from "@m/lib/api-contract";
 import { getJson, KV, setJson } from "./kv";
 
 const K_REFRESH = "arion.sync.refreshToken";

@@ -1,13 +1,14 @@
 <!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-theme="dark" data-shell="app">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+    <!-- همون viewport ِ app/layout.tsx (Next: export const viewport) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#0E1011" />
     <link rel="icon" href="/images/logo-icon-dark-theme.png" />
     <title>آریون</title>
   </head>
-  <body>
+  <body data-theme="dark">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

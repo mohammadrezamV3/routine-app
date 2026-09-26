@@ -24,7 +24,7 @@ import type {
   MobileTicketDetailResponse,
   MobileTicketReplyResponse,
   MobileTicketsResponse,
-} from "@/lib/account-contract";
+} from "@m/lib/account-contract";
 
 /** خطای API ِ حساب — status صفر یعنی شبکه/آفلاین. message همون متنِ فارسیِ سرور (اگه بود). */
 export class AccountApiError extends Error {

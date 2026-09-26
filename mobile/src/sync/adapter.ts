@@ -1,7 +1,7 @@
 // قراردادِ «آداپتور»های سینک: هر گروه از جدول‌های محلی (هسته‌ی روتین، ورزش/کالری،
 // …) یک آداپتور داره که موتور (syncEngine.ts) بدونِ دونستنِ شکلِ جدول‌ها صداش می‌زنه.
-import type { SyncChange } from "@/lib/api-contract";
-import type { TradeSyncChange } from "@/lib/trade-contract";
+import type { SyncChange } from "@m/lib/api-contract";
+import type { TradeSyncChange } from "@m/lib/trade-contract";
 
 export type PendingItem = {
   /** کلیدِ یکتای محلی برای ثبتِ خطای rejected — `${table}:${key}` */

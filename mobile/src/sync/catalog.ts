@@ -4,7 +4,7 @@
 // عکسِ حرکات تنبل (فقط وقتی کارتِ حرکت باز می‌شه) از /catalog/media و کش می‌شه.
 import Dexie, { type Table } from "dexie";
 import { useEffect, useState } from "react";
-import type { CatalogExercise, CatalogFood, MobileCatalogMediaResponse, MobileCatalogResponse } from "@/lib/api-contract";
+import type { CatalogExercise, CatalogFood, MobileCatalogMediaResponse, MobileCatalogResponse } from "@m/lib/api-contract";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ApiClient } from "./apiClient";
 

@@ -13,7 +13,7 @@ import type {
   MobileMeResponse,
   MobileUser,
   MobileVerify2faRequest,
-} from "@/lib/api-contract";
+} from "@m/lib/api-contract";
 import { ACCESS_TOKEN_SKEW_MS, REQUEST_TIMEOUT_MS } from "./config";
 import { TokenStore } from "./tokenStore";
 

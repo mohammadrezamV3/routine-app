@@ -10,7 +10,7 @@ import type {
   RoadmapStage,
   RoadmapStepProgress,
   RoadmapWeeklyHours,
-} from "@/lib/api-contract";
+} from "@m/lib/api-contract";
 
 export type RoadmapListItem = {
   id: string;

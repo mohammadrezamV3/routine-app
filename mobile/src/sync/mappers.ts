@@ -15,10 +15,10 @@ import type {
   SleepEntryRecord,
   SyncChange,
   TaskRecord,
-} from "@/lib/api-contract";
-import { MOBILE_SYNC_SETTING_KEYS, TASK_PRIORITY } from "@/lib/api-contract";
-import type { DailyEntryRow, SettingRow, SleepEntryRow, TaskPriority, TaskRow } from "@/db/db";
-import type { EntityName } from "@/db/syncHooks";
+} from "@m/lib/api-contract";
+import { MOBILE_SYNC_SETTING_KEYS, TASK_PRIORITY } from "@m/lib/api-contract";
+import type { DailyEntryRow, SettingRow, SleepEntryRow, TaskPriority, TaskRow } from "@m/db/db";
+import type { EntityName } from "@m/db/syncHooks";
 
 // ─── کمکی‌ها ───────────────────────────────────────────────────────────
 

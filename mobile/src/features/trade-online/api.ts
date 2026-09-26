@@ -5,7 +5,7 @@
 // می‌ده (Bearer + refreshِ single-flight) — پس wiringِ جدا لازم نیست. برای
 // تست یا جایگزینی، TradeOnlineApiProvider مقدارِ دیگه‌ای تزریق می‌کنه.
 import { createContext, useContext, useMemo } from "react";
-import { useSync } from "@/sync/SyncProvider";
+import { useSync } from "@m/sync/SyncProvider";
 import { makeTradeOnlineApi, type TradeOnlineApi } from "./client";
 
 export * from "./client";

@@ -1,9 +1,9 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { SyncChange, SyncChangeResult, TaskRecord } from "@/lib/api-contract";
-import { db } from "@/db/db";
-import { addTask, deleteTask, setDaily, updateTask } from "@/db/repo";
-import { applyRemote, wipeAll } from "@/db/syncHooks";
+import type { SyncChange, SyncChangeResult, TaskRecord } from "@m/lib/api-contract";
+import { db } from "@m/db/db";
+import { addTask, deleteTask, setDaily, updateTask } from "@m/db/repo";
+import { applyRemote, wipeAll } from "@m/db/syncHooks";
 import { makeBatches, SyncEngine } from "./syncEngine";
 import { mainChannel } from "./channels";
 import { wipeAllLocalData } from "./localData";
@@ -407,7 +407,7 @@ describe("single-flight sync", () => {
 
 describe("onLocalWrite", () => {
   it("برای نوشتنِ repo (dirty=1) صدا زده می‌شه، نه برای applyRemote", async () => {
-    const { onLocalWrite } = await import("@/db/syncHooks");
+    const { onLocalWrite } = await import("@m/db/syncHooks");
     let n = 0;
     const off = onLocalWrite(() => n++);
     const flush = () => new Promise((r) => setTimeout(r, 0));

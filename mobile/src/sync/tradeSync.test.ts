@@ -1,8 +1,8 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { TradeEntryRecord, TradeSyncChange } from "@/lib/trade-contract";
-import { db as tradeDb, type TradeEntryRow } from "@/features/trade/db";
-import { newId } from "@/features/trade/lib/id";
+import type { TradeEntryRecord, TradeSyncChange } from "@m/lib/trade-contract";
+import { db as tradeDb, type TradeEntryRow } from "@m/features/trade/db";
+import { newId } from "@m/features/trade/lib/id";
 import { applyTombstone, applyTradeRecord, entryToChange, remoteEntry } from "./tradeAdapter";
 import { SyncEngine } from "./syncEngine";
 import { tradeChannel } from "./channels";

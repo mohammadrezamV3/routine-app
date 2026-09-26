@@ -1,5 +1,5 @@
 // منطقِ خالص (بدونِ React/Dexie) — جدا تا تست‌پذیر باشه.
-import type { SocialChatMessage, SocialWeeklyDay, SocialWeeklyDomain } from "@/lib/social-contract";
+import type { SocialChatMessage, SocialWeeklyDay, SocialWeeklyDomain } from "@m/lib/social-contract";
 
 /**
  * ادغامِ پیام‌های تازه با فهرستِ فعلی: یکتا بر اساسِ id، مرتبِ صعودی بر

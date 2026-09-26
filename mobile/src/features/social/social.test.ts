@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { SocialChatMessage, SocialWeeklyDay } from "@/lib/social-contract";
+import type { SocialChatMessage, SocialWeeklyDay } from "@m/lib/social-contract";
 import { createSocialApi, SocialApiError } from "./api";
 import { cacheKeys, clearSocialCache, readCache, writeCache } from "./db";
 import { describeSocialError, isModuleLocked, isOffline, isRulesNotAccepted, NEED_INTERNET_LONG } from "./errors";

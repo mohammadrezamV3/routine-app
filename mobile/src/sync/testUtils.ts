@@ -1,5 +1,5 @@
 // کمکی‌های مشترکِ تست‌های سینک (فقط در vitest import می‌شه)
-import type { MobileAuthSuccess, MobileUser } from "@/lib/api-contract";
+import type { MobileAuthSuccess, MobileUser } from "@m/lib/api-contract";
 import { ApiClient } from "./apiClient";
 import { memoryKV } from "./kv";
 import { TokenStore } from "./tokenStore";

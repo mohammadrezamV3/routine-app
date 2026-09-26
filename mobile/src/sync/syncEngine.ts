@@ -14,7 +14,7 @@
 //   • دو «کانال»: /api/mobile/sync (هسته + ورزش/کالری + رودمپ) و
 //     /api/mobile/trade (ترید) — هر کدوم cursor و آداپتورهای خودش.
 //   • هر اجرا single-flight.
-import { MOBILE_SYNC_MAX_BATCH } from "@/lib/api-contract";
+import { MOBILE_SYNC_MAX_BATCH } from "@m/lib/api-contract";
 import type { PendingItem, SyncAdapter } from "./adapter";
 import { ApiClient, ApiError } from "./apiClient";
 import { getJson, KV, setJson } from "./kv";

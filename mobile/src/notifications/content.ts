@@ -2,10 +2,10 @@
 // components/NotificationEngine.tsx وب (آفست‌های یادآوری، اهمیت) بدونِ
 // وابستگی به Notification API مرورگر؛ این‌جا فقط لیستی از «چه‌چیزی، کِی»
 // می‌سازیم، خودِ زمان‌بندی روی native (scheduler.ts) انجام می‌شه.
-import { getCustomOccurrences, getDaily, getRemovedOccurrences, getWakeSleepTimes } from "@/db/repo";
-import { isoLocal } from "@/lib/jalali";
-import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
-import { DEFAULT_SLEEP, DEFAULT_WAKE, timeToMinutes } from "@/lib/wakeSleepLogic";
+import { getCustomOccurrences, getDaily, getRemovedOccurrences, getWakeSleepTimes } from "@m/db/repo";
+import { isoLocal } from "@m/lib/jalali";
+import { tasksForDate, timeStartMinutes } from "@m/lib/schedule";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, timeToMinutes } from "@m/lib/wakeSleepLogic";
 
 /** پنجره‌ی زمان‌بندیِ occurrence های روتین — محدودِ ۷ روزِ آینده، تا سقفِ
  *  ۵۰۰ نوتیفِ همزمانِ اندروید هیچ‌وقت رد نشه (بازآوری در شروع/resume/تغییرِ
@@ -67,7 +67,7 @@ async function buildRoutineOccurrenceNotifications(now: Date): Promise<PlannedNo
           id: OCCURRENCE_ID_BASE + seq++,
           title: "یادآوری برنامه",
           body: `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.`,
-          route: "/routine",
+          route: "/weekly",
           at: soonAt,
         });
       }
@@ -76,7 +76,7 @@ async function buildRoutineOccurrenceNotifications(now: Date): Promise<PlannedNo
           id: OCCURRENCE_ID_BASE + seq++,
           title: "یادآوری برنامه",
           body: `وقت «${t.name}» رسیده.`,
-          route: "/routine",
+          route: "/weekly",
           at: startAt,
         });
       }
@@ -96,7 +96,7 @@ async function buildWakeSleepNotifications(): Promise<PlannedNotification[]> {
       id: RESERVED_ID_WAKE,
       title: "یادآوریِ بیداری",
       body: "وقتِ بیدارشدنه — بیداریِ امروز رو ثبت کن.",
-      route: "/",
+      route: "/weekly",
       at: null,
       daily: { hour: Math.floor(wakeMin / 60), minute: wakeMin % 60 },
     },
@@ -104,7 +104,7 @@ async function buildWakeSleepNotifications(): Promise<PlannedNotification[]> {
       id: RESERVED_ID_SLEEP,
       title: "یادآوریِ خواب",
       body: "نزدیکِ وقتِ خوابه — برای فردا آماده شو.",
-      route: "/",
+      route: "/weekly",
       at: null,
       daily: { hour: Math.floor(sleepMin / 60), minute: sleepMin % 60 },
     },
@@ -118,7 +118,7 @@ function buildCalorieReminder(): PlannedNotification {
     id: RESERVED_ID_CALORIE,
     title: "یادآوریِ کالری",
     body: "وعده‌های غذاییِ امروز رو ثبت کردی؟",
-    route: "/exercise",
+    route: "/exercise?tab=calorie",
     at: null,
     daily: { hour: CALORIE_REMINDER_HOUR, minute: 0 },
   };

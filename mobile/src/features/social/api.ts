@@ -21,7 +21,7 @@ import {
   type SocialStarResponse,
   type SocialStatsModule,
   type SocialWeeklyReportResponse,
-} from "@/lib/social-contract";
+} from "@m/lib/social-contract";
 
 /**
  * خطای API اجتماعی — status + بدنه‌ی error خامِ سرور (برای 403 ماژول

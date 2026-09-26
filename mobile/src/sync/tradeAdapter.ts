@@ -22,8 +22,8 @@ import type {
   TradeSyncPullResponse,
   TradeTagRecord,
   TradeTombstoneRecord,
-} from "@/lib/trade-contract";
-import { TRADE_ENTRY_BROKER_FIELDS } from "@/lib/trade-contract";
+} from "@m/lib/trade-contract";
+import { TRADE_ENTRY_BROKER_FIELDS } from "@m/lib/trade-contract";
 import {
   db as tradeDb,
   type TradeAccountRow,
@@ -32,8 +32,8 @@ import {
   type TradeEntryRow,
   type TradeNoteRow,
   type TradeTagRow,
-} from "@/features/trade/db";
-import { newId as newTradeId } from "@/features/trade/lib/id";
+} from "@m/features/trade/db";
+import { newId as newTradeId } from "@m/features/trade/lib/id";
 import type { PendingItem, SyncAdapter } from "./adapter";
 import { isValidClientId } from "./mappers";
 

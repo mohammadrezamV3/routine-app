@@ -1,12 +1,11 @@
 // هوکِ عمومیِ ماژولِ نوتیفِ محلی. عمدا از هیچ فیچرِ سنگینی (fitness/trade/
-// roadmaps) وارد نمی‌کنه — فقط جدول‌های هسته (@/db) که همیشه توی چانکِ اصلی
+// roadmaps) وارد نمی‌کنه — فقط جدول‌های هسته (@m/db) که همیشه توی چانکِ اصلی
 // هستن؛ وگرنه خودِ کد-اسپلیتینگِ App.tsx بی‌اثر می‌شد.
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { onLocalWrite } from "@/db/syncHooks";
-import { useMoreContext } from "@/features/more/MoreContext";
-import { useSync } from "@/sync/SyncProvider";
+import { onLocalWrite } from "@m/db/syncHooks";
+import { useSync } from "@m/sync/SyncProvider";
 import { buildAllNotifications } from "./content";
 import { reconcileScheduled, cancelAllScheduled } from "./scheduler";
 import { getPermissionState, requestNotificationPermission } from "./permission";
@@ -22,12 +21,12 @@ export function useCalorieReminderSetting(): [boolean, (v: boolean) => void] {
 
 /**
  * (Re)scheduleِ کاملِ نوتیف‌های محلی + دیپ‌لینکِ تپ روی نوتیف. باید یک‌بار،
- * داخلِ Router و SyncProvider، مونت بشه (App.tsx → NotificationsBootstrap).
+ * داخلِ Router و SyncProvider، مونت بشه (shell/NotificationsBootstrap.tsx).
+ * `notificationsEnabled` از تنظیمِ وبِ notifPrefs میاد (lib/notifPrefs.ts).
  * روی وب کاملا no-op است (Capacitor.isNativePlatform() فالس).
  */
-export function useNotifications(): void {
+export function useNotifications({ notificationsEnabled }: { notificationsEnabled: boolean }): void {
   const navigate = useNavigate();
-  const { notificationsEnabled } = useMoreContext();
   const { isModuleLocked } = useSync();
   const [calorieReminderEnabled] = useCalorieReminderSetting();
   const calorieUnlocked = !isModuleLocked("CALORIE");

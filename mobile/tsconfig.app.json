@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
@@ -17,10 +16,40 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowJs": false,
+    "types": ["vite/client", "node"],
     "baseUrl": ".",
+    // `@/…` = ریشه‌ی ریپو (کدِ وب، مثلِ tsconfigِ ریشه)؛ `@m/…` = کدِ خودِ اپ.
+    // next/* و next-auth و @prisma/client روی shimها؛ وابستگی‌های مشترک از
+    // node_modulesِ mobile/ (کدِ وب بیرونِ mobile/ است و بدونِ این‌ها یا
+    // تایپِ دومی از node_modulesِ ریشه برمی‌داشت یا روی CI اصلا پیدا نمی‌کرد).
     "paths": {
-      "@/*": ["./src/*"]
+      "@m/*": ["./src/*"],
+      "@/lib/pushClient": ["./src/shims/pushClient.ts"],
+      "@/*": ["../*"],
+      "next/link": ["./src/shims/next-link.tsx"],
+      "next/navigation": ["./src/shims/next-navigation.ts"],
+      "next/image": ["./src/shims/next-image.tsx"],
+      "next/dynamic": ["./src/shims/next-dynamic.tsx"],
+      "next-auth/react": ["./src/shims/next-auth-react.tsx"],
+      "next-auth": ["./src/shims/next-auth.ts"],
+      "next": ["./src/shims/next.ts"],
+      "@prisma/client": ["./src/shims/prisma-client.ts"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/*": ["./node_modules/@types/react-dom/*"],
+      "framer-motion": ["./node_modules/framer-motion"],
+      "lucide-react": ["./node_modules/lucide-react"],
+      "animejs": ["./node_modules/animejs"],
+      "clsx": ["./node_modules/clsx"],
+      "tailwind-merge": ["./node_modules/tailwind-merge"],
+      "zxcvbn": ["./node_modules/@types/zxcvbn"]
     }
   },
-  "include": ["src"]
+  // صفحه‌های وبی که اپ روت می‌کنه هم type-check می‌شن (import.meta.glob رو
+  // tsc دنبال نمی‌کنه) — تا shimها با استفاده‌ی واقعیِ وب هم‌خوان بمونن.
+  "include": ["src", "tooling/*.d.mts", "../app/**/page.tsx", "../app/*/**/layout.tsx", "../app/not-found.tsx"],
+  "exclude": ["../app/admin/**", "../app/api/**", "../app/offline/**", "../app/daily-planner/**", "../app/habit-tracker/**", "../app/routine/**", "../app/trading-journal/**"]
 }

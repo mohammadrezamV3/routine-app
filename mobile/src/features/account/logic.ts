@@ -1,11 +1,11 @@
 // منطقِ خالص (بدونِ React/Capacitor) ِ فیچرِ حساب — قابلِ تست.
-import { formatJalali, toJalali } from "@/lib/jalali";
+import { formatJalali, toJalali } from "@m/lib/jalali";
 import type {
   MobileBillingDuration,
   MobileBillingPrice,
   MobileCheckoutStatusResponse,
   MobileTicketStatus,
-} from "@/lib/account-contract";
+} from "@m/lib/account-contract";
 
 export const DURATION_LABELS: Record<MobileBillingDuration, string> = {
   "1": "یک ماهه",

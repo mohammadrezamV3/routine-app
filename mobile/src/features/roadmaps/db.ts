@@ -10,7 +10,7 @@
 //     dirty=1 یعنی «تیک‌خوردنِ آفلاین که هنوز push نشده». updatedAt همان
 //     معنایِ editedAt در قراردادِ سرور را دارد؛ LWW با همین مقایسه می‌شود.
 import Dexie, { Table } from "dexie";
-import type { RoadmapPlan, RoadmapProgressSummary, RoadmapStepProgress } from "@/lib/api-contract";
+import type { RoadmapPlan, RoadmapProgressSummary, RoadmapStepProgress } from "@m/lib/api-contract";
 
 export interface RoadmapCacheRow {
   id: string;

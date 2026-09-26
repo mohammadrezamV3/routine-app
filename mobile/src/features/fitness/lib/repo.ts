@@ -2,7 +2,7 @@ import { fitnessDb } from "../db";
 import { newLocalId, nowIso } from "./id";
 import { isoLocal } from "./jalali";
 import { getExercisePlan, type ExerciseDay, type ExerciseGoal, type ExerciseLevel } from "./exercisePlans";
-import { getCatalogFoods } from "@/sync/catalog";
+import { getCatalogFoods } from "@m/sync/catalog";
 import type {
   ExercisePlanRow,
   ExerciseLogRow,

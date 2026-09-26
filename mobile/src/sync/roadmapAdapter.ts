@@ -1,8 +1,8 @@
 // آداپتورِ سینکِ پیشرفتِ رودمپ (features/roadmaps — دیتابیسِ arion-roadmaps).
 // فقط جدولِ progress همگام می‌شه (LWW روی کلِ نقشه‌ی تیک‌ها)؛ خودِ رودمپ‌ها
 // از GET /api/mobile/roadmaps کش می‌شن (features/roadmaps/repo.ts).
-import type { RoadmapProgressRecord } from "@/lib/api-contract";
-import { db as roadmapDb, type RoadmapProgressRow } from "@/features/roadmaps/db";
+import type { RoadmapProgressRecord } from "@m/lib/api-contract";
+import { db as roadmapDb, type RoadmapProgressRow } from "@m/features/roadmaps/db";
 import type { PendingItem, SyncAdapter } from "./adapter";
 
 function remoteWins(local: RoadmapProgressRow | undefined, editedAt: string): boolean {

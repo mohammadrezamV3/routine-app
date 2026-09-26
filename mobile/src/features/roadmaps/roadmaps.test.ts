@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { MobileRoadmap, RoadmapStage } from "@/lib/api-contract";
+import type { MobileRoadmap, RoadmapStage } from "@m/lib/api-contract";
 import { db } from "./db";
 import { computeProgress, getRoadmap, regenerateRoadmapPart, sanitizeLocalProgress, seedRoadmap, toggleStep, toggleTask } from "./repo";
 import type { RoadmapApi } from "./api";

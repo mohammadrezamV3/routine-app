@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { EconomicEventDto } from "@/lib/trade-online-contract";
-import { json, loggedInClient } from "@/sync/testUtils";
+import type { EconomicEventDto } from "@m/lib/trade-online-contract";
+import { json, loggedInClient } from "@m/sync/testUtils";
 import {
   EMPTY_FILTERS,
   activeFilterCount,

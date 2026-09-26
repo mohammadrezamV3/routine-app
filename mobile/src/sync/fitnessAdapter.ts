@@ -24,17 +24,17 @@ import type {
   FoodLogEntryRecord,
   SyncChange,
   SyncServerRecord,
-} from "@/lib/api-contract";
-import { EXERCISE_LOG_NOTES_MAX, EXERCISE_TRAINING_PHASES } from "@/lib/api-contract";
-import { fitnessDb } from "@/features/fitness/db";
-import { newLocalId } from "@/features/fitness/lib/id";
+} from "@m/lib/api-contract";
+import { EXERCISE_LOG_NOTES_MAX, EXERCISE_TRAINING_PHASES } from "@m/lib/api-contract";
+import { fitnessDb } from "@m/features/fitness/db";
+import { newLocalId } from "@m/features/fitness/lib/id";
 import type {
   CalorieEntryRow,
   CalorieTargetRow,
   ExerciseLogRow,
   ExercisePlanRow,
   MealType,
-} from "@/features/fitness/lib/exerciseTypes";
+} from "@m/features/fitness/lib/exerciseTypes";
 import type { PendingItem, SyncAdapter } from "./adapter";
 import { isValidClientId } from "./mappers";
 

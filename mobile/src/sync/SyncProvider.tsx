@@ -1,5 +1,5 @@
-// Context ِ همگام‌سازی/ورود برای کلِ اپ — به‌علاوه‌ی Providerهای فیچرها که به
-// نشست/سینک وابسته‌ان (MoreContext، RoadmapApi).
+// Context ِ همگام‌سازی/ورود برای کلِ اپ. از UIِ فیچرها جداست — صفحه‌ها (کدِ
+// وب) نشست رو از shimِ next-auth/react می‌خونن (src/shims/next-auth-react.tsx).
 //
 // محرک‌های سینک (فقط وقتی وارد شده و VITE_API_BASE_URL تنظیم شده):
 //   • شروعِ اپ   • برگشتِ اینترنت (@capacitor/network)
@@ -7,21 +7,12 @@
 //   • بعد از هر نوشتنِ محلی در هر ماژول (debounce ۲ ثانیه)   • «همگام‌سازی الان»
 // خودِ موتور single-flight است؛ این لایه فقط زمان‌بندی می‌کنه.
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { MobileModuleKey, MobileUser } from "@/lib/api-contract";
-import { onLocalWrite } from "@/db/syncHooks";
-// عمدا از باطنِ فیچرها (نه از barrel `index.ts`) import می‌کنیم — barrelِ
-// `@/features/more` و `@/features/roadmaps` صفحات/مسیرهای سنگین رو هم
-// re-export می‌کنن؛ اگه از همون barrel اینجا (که همیشه eager لود می‌شه) وارد
-// می‌شد، React.lazy(...) در App.tsx برای همون ماژول‌ها بی‌اثر می‌شد (Rollup
-// یک چانک eager می‌ساخت که همه‌چیز از جمله صفحات رو با خودش می‌کشید).
-import { MoreProvider, type PlanModule } from "@/features/more/MoreContext";
-import { RoadmapApiProvider, RoadmapApiError, type RoadmapApi } from "@/features/roadmaps/api";
-import { AccountApiProvider, createAccountApi } from "@/features/account/api";
-import { SocialApiProvider, createSocialApi } from "@/features/social/api";
+import type { MobileUser } from "@m/lib/api-contract";
+import { onLocalWrite } from "@m/db/syncHooks";
 import { API_BASE_URL, LOCAL_WRITE_DEBOUNCE_MS, SYNC_ENABLED } from "./config";
 import { preferencesKV } from "./kv";
 import { TokenStore } from "./tokenStore";
-import { ApiClient, ApiError } from "./apiClient";
+import { ApiClient } from "./apiClient";
 import { SyncEngine, SyncState, SyncStatus } from "./syncEngine";
 import { ALL_CHANNELS } from "./channels";
 import { fitnessSyncTables } from "./fitnessAdapter";
@@ -29,10 +20,9 @@ import { roadmapSyncTables } from "./roadmapAdapter";
 import { tradeSyncTables } from "./tradeAdapter";
 import { getDeviceName } from "./deviceName";
 import { wipeAllLocalData } from "./localData";
-import { clearSocialCache } from "@/features/social/db";
-import { clearTradeOnlineCache } from "@/features/trade-online/db";
+import { clearSocialCache } from "@m/features/social/db";
+import { clearTradeOnlineCache } from "@m/features/trade-online/db";
 import { refreshCatalog } from "./catalog";
-import { formatLastSync } from "./format";
 
 type Services = { tokens: TokenStore; api: ApiClient; engine: SyncEngine };
 let services: Services | null = null;
@@ -80,76 +70,6 @@ export type SyncContextValue = {
 
 const SyncContext = createContext<SyncContextValue | null>(null);
 
-const MODULE_LABELS: Record<MobileModuleKey, string> = {
-  ROUTINE: "روتین",
-  SLEEP: "خواب",
-  TASKS: "تسک‌ها",
-  EXERCISE: "بدنسازی",
-  CALORIE: "کالری",
-  TRADE: "ترید",
-  ROADMAP: "رودمپ",
-  AI_INSIGHT: "تحلیلِ هوشمند",
-};
-
-const NOTIF_KEY = "arion:notifications";
-
-function readNotifPref(): boolean {
-  try {
-    return localStorage.getItem(NOTIF_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-/** پیاده‌سازیِ واقعیِ RoadmapApi روی apiClientِ مشترک (auth/refresh) */
-function makeRoadmapApi(api: ApiClient): RoadmapApi {
-  const toRoadmapError = (err: unknown): Error => {
-    if (err instanceof RoadmapApiError) return err;
-    if (err instanceof ApiError) {
-      if (err.kind === "session_expired") return new RoadmapApiError(401, "unauthorized");
-      if (err.kind === "http") return new RoadmapApiError(err.status, err.serverMessage ?? "");
-      return new RoadmapApiError(0, err.kind);
-    }
-    return new RoadmapApiError(0, "unknown");
-  };
-  return {
-    async fetchRoadmaps(etag) {
-      try {
-        if (!api.baseUrl || !api.tokens.isLoggedIn()) throw new RoadmapApiError(401, "unauthorized");
-        const res = await api.authedRaw("GET", "/api/mobile/roadmaps", undefined, { headers: etag ? { "If-None-Match": etag } : {} });
-        if (res.status === 304) return { status: 304 };
-        const body = await ApiClient.readJson(res);
-        if (!res.ok) throw new RoadmapApiError(res.status, typeof body?.error === "string" ? body.error : "");
-        return { status: 200, etag: res.headers.get("ETag") ?? "", data: Array.isArray(body?.roadmaps) ? body.roadmaps : [] };
-      } catch (err) {
-        throw toRoadmapError(err);
-      }
-    },
-    async createAi(req) {
-      try {
-        if (!api.baseUrl || !api.tokens.isLoggedIn()) throw new RoadmapApiError(401, "unauthorized");
-        const res = await api.authedRaw("POST", "/api/mobile/ai/roadmap", req, { timeoutMs: 75_000 });
-        const body = await ApiClient.readJson(res);
-        if (!res.ok || !body?.roadmap) throw new RoadmapApiError(res.status, typeof body?.error === "string" ? body.error : "");
-        return body;
-      } catch (err) {
-        throw toRoadmapError(err);
-      }
-    },
-    async regenerate(id, req) {
-      try {
-        if (!api.baseUrl || !api.tokens.isLoggedIn()) throw new RoadmapApiError(401, "unauthorized");
-        const res = await api.authedRaw("POST", `/api/mobile/ai/roadmap/${encodeURIComponent(id)}/regenerate`, req, { timeoutMs: 75_000 });
-        const body = await ApiClient.readJson(res);
-        if (!res.ok || !body?.roadmap) throw new RoadmapApiError(res.status, typeof body?.error === "string" ? body.error : "");
-        return body;
-      } catch (err) {
-        throw toRoadmapError(err);
-      }
-    },
-  };
-}
-
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { tokens, api, engine } = getSyncServices();
   const [ready, setReady] = useState(false);
@@ -157,7 +77,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>(engine.getState());
-  const [notificationsEnabled, setNotificationsEnabled] = useState(readNotifPref);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runSync = useCallback(async () => {
@@ -368,64 +287,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     [ready, syncState, user, loggedIn, sessionExpired, lockedModules, isModuleLocked, api, syncNow, login, verify2fa, logout, clearLocalData]
   );
 
-  const moreValue = useMemo(() => {
-    const moduleExpiry = new Map((user?.moduleAccess ?? []).map((m) => [m.module, m.expiresAt]));
-    const modules: PlanModule[] = (user?.modules ?? [])
-      .filter((m) => !lockedModules.includes(m))
-      .map((m) => ({ key: m, label: MODULE_LABELS[m] ?? m, expiresAt: moduleExpiry.get(m) ?? null }));
-    return {
-      userName: user?.name ?? null,
-      userUsername: user?.username ?? null,
-      userPhone: user?.phoneMasked ?? null,
-      planName: user?.plan?.name ?? null,
-      planStatus: user?.plan?.status ?? null,
-      planExpiresAt: user?.plan?.expiresAt ?? null,
-      modules,
-      lastSyncTime: loggedIn && syncState.lastSyncAt ? formatLastSync(syncState.lastSyncAt) : null,
-      onSync: () => void syncNow(),
-      isSyncing: syncState.status === "syncing",
-      onClearData: () => void clearLocalData(),
-      isLoggedIn: loggedIn,
-      onLogout: () => void logout({ wipeLocal: false }),
-      notificationsEnabled,
-      onNotificationsToggle: (enabled: boolean) => {
-        setNotificationsEnabled(enabled);
-        try {
-          localStorage.setItem(NOTIF_KEY, enabled ? "1" : "0");
-        } catch {
-          /* noop */
-        }
-      },
-    };
-  }, [user, lockedModules, loggedIn, syncState.lastSyncAt, syncState.status, syncNow, clearLocalData, logout, notificationsEnabled]);
-
-  const roadmapApi = useMemo(() => makeRoadmapApi(api), [api]);
-
-  const accountApi = useMemo(
-    () =>
-      createAccountApi(
-        async (method, path, body) => {
-          const res = await api.authedRaw(method, path, body);
-          return { status: res.status, body: await ApiClient.readJson(res) };
-        },
-        { refreshAccount: refreshUser }
-      ),
-    [api, refreshUser]
-  );
-
-  const socialApi = useMemo(() => createSocialApi(api), [api]);
-
-  return (
-    <SyncContext.Provider value={value}>
-      <MoreProvider value={moreValue}>
-        <RoadmapApiProvider value={roadmapApi}>
-          <AccountApiProvider value={accountApi}>
-            <SocialApiProvider value={socialApi}>{children}</SocialApiProvider>
-          </AccountApiProvider>
-        </RoadmapApiProvider>
-      </MoreProvider>
-    </SyncContext.Provider>
-  );
+  return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }
 
 export function useSync(): SyncContextValue {

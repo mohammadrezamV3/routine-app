@@ -1,11 +1,11 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ExercisePlanRecord, FoodLogEntryRecord, SyncChange } from "@/lib/api-contract";
-import { fitnessDb } from "@/features/fitness/db";
-import { addCalorieEntry, archivePlan, createManualPlan, setCalorieTarget, toggleTodayItem } from "@/features/fitness/lib/repo";
-import { newLocalId } from "@/features/fitness/lib/id";
-import { db as roadmapDb } from "@/features/roadmaps/db";
-import { db as coreDb } from "@/db/db";
+import type { ExercisePlanRecord, FoodLogEntryRecord, SyncChange } from "@m/lib/api-contract";
+import { fitnessDb } from "@m/features/fitness/db";
+import { addCalorieEntry, archivePlan, createManualPlan, setCalorieTarget, toggleTodayItem } from "@m/features/fitness/lib/repo";
+import { newLocalId } from "@m/features/fitness/lib/id";
+import { db as roadmapDb } from "@m/features/roadmaps/db";
+import { db as coreDb } from "@m/db/db";
 import { calorieEntryToChange, calorieTargetToChange, remoteFoodLog, remotePlan } from "./fitnessAdapter";
 import { SyncEngine } from "./syncEngine";
 import { mainChannel } from "./channels";

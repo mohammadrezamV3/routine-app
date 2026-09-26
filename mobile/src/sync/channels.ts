@@ -1,7 +1,7 @@
 // دو کانالِ همگام‌سازی: /api/mobile/sync (هسته + ورزش/کالری + پیشرفتِ رودمپ)
 // و /api/mobile/trade (ترید — endpoint و cursorِ جدا).
-import { MOBILE_SYNC_MAX_BATCH } from "@/lib/api-contract";
-import { TRADE_SYNC_MAX_BATCH } from "@/lib/trade-contract";
+import { MOBILE_SYNC_MAX_BATCH } from "@m/lib/api-contract";
+import { TRADE_SYNC_MAX_BATCH } from "@m/lib/trade-contract";
 import type { SyncChannel } from "./syncEngine";
 import { coreAdapter } from "./coreAdapter";
 import { fitnessAdapter } from "./fitnessAdapter";

@@ -1,7 +1,7 @@
 // ترجمه‌ی خطاهای SocialApi به پیامِ نمایشی. سرور برای خطاهای «قاعده‌ای»
 // (بن، سقفِ نرخ، «قبلا دوست هستید»، …) متنِ فارسیِ قابلِ نمایش می‌فرسته؛
 // کدهای ثابت (module_locked, rules_not_accepted, not found) این‌جا ترجمه می‌شن.
-import { SOCIAL_ERROR_MODULE_LOCKED, SOCIAL_ERROR_RULES_NOT_ACCEPTED } from "@/lib/social-contract";
+import { SOCIAL_ERROR_MODULE_LOCKED, SOCIAL_ERROR_RULES_NOT_ACCEPTED } from "@m/lib/social-contract";
 import { SocialApiError } from "./api";
 
 export const NEED_INTERNET = "نیاز به اینترنت";

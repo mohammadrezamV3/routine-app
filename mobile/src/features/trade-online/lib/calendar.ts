@@ -3,8 +3,8 @@
 // اپ هر بار یک «هفته»ی کامل (شنبه تا جمعه، روزِ محلی) رو بدونِ فیلتر از
 // سرور می‌گیره و کش می‌کنه؛ فیلترها سمتِ کلاینت با *همون* معنای سرور
 // (lib/mobileTradeOnlineCalendar.ts) اعمال می‌شن — پس آفلاین هم فیلتر کار می‌کنه.
-import { FA_WEEKDAY, J_MONTHS, isoLocal, pad, toJalali } from "@/lib/jalali";
-import { ECON_CALENDAR_CURRENCIES, type EconomicEventDto, type EconomicImpact } from "@/lib/trade-online-contract";
+import { FA_WEEKDAY, J_MONTHS, isoLocal, pad, toJalali } from "@m/lib/jalali";
+import { ECON_CALENDAR_CURRENCIES, type EconomicEventDto, type EconomicImpact } from "@m/lib/trade-online-contract";
 
 export type CalendarFilters = {
   currencies: string[];

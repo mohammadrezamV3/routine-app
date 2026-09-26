@@ -1,6 +1,6 @@
 // کلاینتِ خالصِ /api/mobile/trade-online/* روی ApiClientِ مشترک (بدونِ React
 // و بدونِ SyncProvider — تست‌پذیر). هوکِ useTradeOnlineApi در ./api.ts.
-import { ApiClient, ApiError } from "@/sync/apiClient";
+import { ApiClient, ApiError } from "@m/sync/apiClient";
 import type {
   EconomicCalendarResponse,
   MarketPricesResponse,
@@ -12,8 +12,8 @@ import type {
   MtLinkDto,
   MtLinkResponse,
   MtPlatform,
-} from "@/lib/trade-online-contract";
-import { MARKET_MAX_SYMBOLS_PER_REQUEST, MT_EA_FILES } from "@/lib/trade-online-contract";
+} from "@m/lib/trade-online-contract";
+import { MARKET_MAX_SYMBOLS_PER_REQUEST, MT_EA_FILES } from "@m/lib/trade-online-contract";
 
 /** status=0 یعنی شبکه/timeout/پیکربندی‌نشده؛ code = متنِ error سرور یا نوعِ خطای کلاینت */
 export class TradeOnlineError extends Error {
