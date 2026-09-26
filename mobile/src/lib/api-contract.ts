@@ -124,7 +124,11 @@ export const SYNC_ENTITY_MODULE: Partial<Record<SyncEntity, MobileGatedModule>> 
   roadmapProgress: "ROADMAP",
 };
 
-/** کلیدهای تنظیماتی که توی فاز ۱ همگام می‌شن */
+/**
+ * کلیدهای تنظیماتی که همگام می‌شن — هرکدوم باید توی allowlistِ عمومی
+ * (lib/userSettingKeys.ts → isUserSettingKey) هم باشه و سرور-مدیریت نباشه
+ * (تست: __tests__/mobileSync.test.ts).
+ */
 export const MOBILE_SYNC_SETTING_KEYS = [
   "theme",
   "customOccurrences",
@@ -134,6 +138,19 @@ export const MOBILE_SYNC_SETTING_KEYS = [
   "medications",
   "dashboardPrefs",
   "bodyMetrics",
+  // اعلان‌ها — ترجیحاتِ یادآوری و اطلاعیه‌های ثابتِ بسته‌شده
+  "notifPrefs",
+  "dismissedStaticNotifs",
+  // ترجیحاتِ UIِ ماژولِ ترید (فقط ترجیح؛ دیتای ترید خودش از /api/mobile/trade میاد)
+  "tradeTickerSymbols",
+  "tradeCalendarSystem",
+  "tradeVisibleStats",
+  "tradeVisibleFacts",
+  "tradeMarketsOnboarded",
+  "tradeNewsAlerts",
+  "tradeChartSymbol",
+  "tradeChartInterval",
+  "tradeChatRulesAccepted",
 ] as const;
 export type MobileSyncSettingKey = (typeof MOBILE_SYNC_SETTING_KEYS)[number];
 

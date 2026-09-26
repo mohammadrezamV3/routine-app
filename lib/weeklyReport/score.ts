@@ -1,4 +1,5 @@
-import { Domain, DomainMetric, DOMAINS } from "./metrics";
+import { Domain, DOMAINS } from "./domains";
+import type { DomainMetric } from "./metrics";
 
 // وزن پایه‌ی هر دامنه (بند ۹ اسپک) — Configurable در یک جا، نه پراکنده.
 export const DOMAIN_WEIGHTS: Record<Domain, number> = {

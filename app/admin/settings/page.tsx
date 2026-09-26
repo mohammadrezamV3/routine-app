@@ -74,7 +74,7 @@ export default function AdminSettingsPage() {
           <button type="button" className="admin-btn primary" onClick={seedWeeklyReportTestData} disabled={seeding}>
             {seeding ? "در حال ساخت داده…" : "ساخت داده‌ی تست"}
           </button>
-          <Link href="/report/weekly" className="admin-btn" style={{ textDecoration: "none", display: "inline-flex" }}>دیدن گزارش هفتگی</Link>
+          <Link href="/analysis/weekly" className="admin-btn" style={{ textDecoration: "none", display: "inline-flex" }}>دیدن گزارش هفتگی</Link>
         </div>
         {seedResult && <div className="admin-section-hint" style={{ color: "#3FAE6B", marginTop: 10 }}>{seedResult}</div>}
         {seedError && <div className="admin-section-hint" style={{ color: "#E05252", marginTop: 10 }}>{seedError}</div>}

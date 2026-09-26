@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { ICONS } from "@/components/NavDrawer";
+import { ICONS } from "@/components/NavIcons";
 
 // هاب بخش ترید — تنها ورودی ماژول. منو دیگر زیرمجموعه ندارد؛ با زدن
 // «ترید» مستقیم همین صفحه بالا می‌آید و انتخاب بخش این‌جا انجام می‌شود.

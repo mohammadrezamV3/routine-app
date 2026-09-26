@@ -9,7 +9,7 @@ import {
   Smartphone, BarChart3, Zap, Users, Sparkles,
 } from "lucide-react";
 import { staggerFieldsIn } from "@/lib/uiAnim";
-import { ICONS } from "@/components/NavDrawer";
+import { ICONS } from "@/components/NavIcons";
 import { useThemeTokens, PlansSection } from "@/components/PlanShowcase";
 import { LandingFooter } from "@/components/LandingFooter";
 

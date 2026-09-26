@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { Domain, DOMAIN_LABELS_FA } from "@/lib/weeklyReport/metrics";
+import { Domain, DOMAIN_LABELS_FA } from "@/lib/weeklyReport/domains";
 
 export type DomainScoreRowData = {
   domain: Domain;

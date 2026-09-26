@@ -1,4 +1,5 @@
-import { Domain, DomainMetric, DOMAINS, DOMAIN_LABELS_FA } from "./metrics";
+import { Domain, DOMAINS, DOMAIN_LABELS_FA } from "./domains";
+import type { DomainMetric } from "./metrics";
 import { computeOverallScore } from "./score";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { daysOfWeek } from "./weekRange";

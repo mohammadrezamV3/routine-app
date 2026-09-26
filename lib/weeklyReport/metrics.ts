@@ -4,21 +4,16 @@ import { countRowProgress } from "@/lib/roadmapPlan";
 import { isoLocal } from "@/lib/jalali";
 import { daysOfWeek, WeekRange } from "./weekRange";
 
-export type Domain = "routine" | "fitness" | "trading" | "learning" | "nutrition";
-export const DOMAINS: Domain[] = ["routine", "fitness", "trading", "learning", "nutrition"];
+import { Domain, DOMAINS } from "./domains";
+
+export { DOMAINS, DOMAIN_LABELS_FA } from "./domains";
+export type { Domain } from "./domains";
 export const DOMAIN_MODULE: Record<Domain, ModuleKey> = {
   routine: ModuleKey.ROUTINE,
   fitness: ModuleKey.EXERCISE,
   trading: ModuleKey.TRADE,
   learning: ModuleKey.ROADMAP,
   nutrition: ModuleKey.CALORIE,
-};
-export const DOMAIN_LABELS_FA: Record<Domain, string> = {
-  routine: "روتین",
-  fitness: "بدنسازی",
-  trading: "ترید",
-  learning: "یادگیری",
-  nutrition: "تغذیه",
 };
 
 // فرق «داده نداریم» و «صفر» (بند ۵۵ اسپک) — active یعنی کاربر اصلا این

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
-import { ICONS } from "@/components/NavDrawer";
+import { ICONS } from "@/components/NavIcons";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,

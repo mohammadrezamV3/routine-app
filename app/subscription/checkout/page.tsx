@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGate } from "@/components/AuthGate";
 import { formatPriceAmount } from "@/lib/formatPrice";
+import { openExternalUrl } from "@/lib/platform/external";
 import { findPlanCard, formatJalaliLong, DURATION_LABELS, Duration, UpgradeOffer } from "@/components/PlanShowcase";
 
 type Gateway = "zibal";
@@ -174,7 +175,7 @@ export default function CheckoutPage() {
         setLoading(false);
         return;
       }
-      window.location.href = data.paymentUrl;
+      openExternalUrl(data.paymentUrl);
     } catch {
       // این‌جا فقط خطای واقعی شبکه می‌رسد (اینترنت کاربر قطع شده)، نه پاسخ
       // نامعتبر سرور — پس این پیام حالا واقعا درست است.

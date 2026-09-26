@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer";
 import { parseDateRange } from "@/lib/validate";
+import { buildChecklistSnapshotData } from "@/lib/tradeShapes";
 
 // معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
 // می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
@@ -16,28 +17,23 @@ async function ownedAccount(userId: string, accountId: string) {
 }
 
 /**
- * اسنپ‌شات چک‌لیست در لحظه‌ی ثبت.
- * متن آیتم‌ها کپی می‌شود نه ارجاع داده — اگر کاربر فردا یک آیتم را عوض یا
- * حذف کند، آمار معاملات دیروز نباید بی‌صدا معنی دیگری پیدا کند.
+ * اسنپ‌شات چک‌لیست در لحظه‌ی ثبت — منطق خالصش در lib/tradeShapes.ts
+ * (buildChecklistSnapshotData)؛ این‌جا فقط خواندن چک‌لیستِ مالِ همین کاربر
+ * و تبدیل «بدون اسنپ‌شات» به Prisma.DbNull.
  */
 async function buildChecklistSnapshot(userId: string, checklistId: string | null, state: Record<string, boolean>) {
-  if (!checklistId) {
-    return { checklistId: null, checklistName: null, checklistDone: null, checklistTotal: null, checklistSnapshot: Prisma.DbNull };
-  }
-  const checklist = await prisma.tradeChecklist.findFirst({
-    where: { id: checklistId, userId },
-    select: { id: true, name: true, items: { select: { id: true, text: true }, orderBy: { order: "asc" } } },
-  });
-  if (!checklist) {
-    return { checklistId: null, checklistName: null, checklistDone: null, checklistTotal: null, checklistSnapshot: Prisma.DbNull };
-  }
-  const snapshot = checklist.items.map((i) => ({ text: i.text, checked: !!state[i.id] }));
+  const checklist = checklistId
+    ? await prisma.tradeChecklist.findFirst({
+        where: { id: checklistId, userId },
+        select: { id: true, name: true, items: { select: { id: true, text: true }, orderBy: { order: "asc" } } },
+      })
+    : null;
+  const data = buildChecklistSnapshotData(checklist, state);
   return {
-    checklistId: checklist.id,
-    checklistName: checklist.name,
-    checklistDone: snapshot.filter((i) => i.checked).length,
-    checklistTotal: snapshot.length,
-    checklistSnapshot: snapshot as unknown as Prisma.InputJsonValue,
+    ...data,
+    checklistSnapshot: data.checklistSnapshot === null
+      ? Prisma.DbNull
+      : (data.checklistSnapshot as unknown as Prisma.InputJsonValue),
   };
 }
 

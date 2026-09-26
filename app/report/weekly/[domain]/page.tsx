@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { Domain, DOMAINS, DOMAIN_LABELS_FA } from "@/lib/weeklyReport/metrics";
+import { Domain, DOMAINS, DOMAIN_LABELS_FA } from "@/lib/weeklyReport/domains";
 
 type DomainDetailResponse = {
   domain: Domain;
@@ -53,7 +53,7 @@ function GateModuleContent() {
 
   return (
     <section className="wr-page">
-      <Link href="/report/weekly" className="wr-back-link"><ChevronRight size={16} /> بازگشت به گزارش هفتگی</Link>
+      <Link href="/analysis/weekly" className="wr-back-link"><ChevronRight size={16} /> بازگشت به گزارش هفتگی</Link>
       <h1>گزارش {DOMAIN_LABELS_FA[domain]}</h1>
 
       {error && <div className="wr-error-box">{error}</div>}

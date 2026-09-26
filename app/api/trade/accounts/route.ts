@@ -3,7 +3,7 @@ import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseAccountInput } from "@/lib/tradeServer";
-import { computeTradeStats } from "@/lib/tradeAnalytics";
+import { shapeAccountSummaries } from "@/lib/tradeShapes";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
 
 // حساب‌های معاملاتی کاربر. ورودی صفحه‌ی «ژورنال‌نویسی» همین است: اول
@@ -43,33 +43,7 @@ export async function GET(req: NextRequest) {
     take: 20_000,
   });
 
-  const byAccount = new Map<string, typeof stats>();
-  for (const s of stats) {
-    if (!byAccount.has(s.accountId)) byAccount.set(s.accountId, []);
-    byAccount.get(s.accountId)!.push(s);
-  }
-
-  const withSummary = accounts.map((account) => {
-    const { mtLink, ...a } = account;
-    const list = (byAccount.get(a.id) || []).map((e) => ({
-      status: e.status, pnl: e.pnl, rMultiple: e.rMultiple, openedAt: e.openedAt.toISOString(),
-    }));
-    const s = computeTradeStats(list, a);
-    return {
-      ...a,
-      // هش توکن عمدا بیرون داده نمی‌شود — فقط «متصل هست یا نه»
-      mtConnected: !!mtLink?.tokenHash && !mtLink.revokedAt,
-      mtLastSyncAt: mtLink?.lastSyncAt ? mtLink.lastSyncAt.toISOString() : null,
-      summary: {
-        tradeCount: s.total,
-        closedCount: s.closedCount,
-        netPnl: s.netPnl,
-        balance: s.balance,
-        winRate: s.winRate,
-        goalProgress: s.goalProgress,
-      },
-    };
-  });
+  const withSummary = shapeAccountSummaries(accounts, stats);
 
   return NextResponse.json({ accounts: withSummary });
 }

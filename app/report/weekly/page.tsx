@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { RefreshCw, TrendingDown } from "lucide-react";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
-import { Domain, DOMAINS } from "@/lib/weeklyReport/metrics";
+import { Domain, DOMAINS } from "@/lib/weeklyReport/domains";
 import { WeekSelector } from "@/components/weeklyReport/WeekSelector";
 import { WeeklyScoreCard } from "@/components/weeklyReport/WeeklyScoreCard";
 import { DomainScoreRow, DomainScoreRowData } from "@/components/weeklyReport/DomainScoreRow";
@@ -138,7 +138,7 @@ function WeeklyReportContent() {
               {DOMAINS.map((d) => (
                 <DomainScoreRow
                   key={d}
-                  href={`/report/weekly/${d}?offset=${offset}`}
+                  href={`/analysis/weekly/${d}?offset=${offset}`}
                   data={{
                     domain: d,
                     active: report.domainScores[d].active,

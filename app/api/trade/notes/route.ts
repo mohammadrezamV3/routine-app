@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
+import { serializeNote } from "@/lib/tradeShapes";
 
 // یادداشت‌های ترید. جست‌وجو عمدا روی عنوان و متن با `contains` انجام
 // می‌شود (نه full-text index): حجم یادداشت‌های یک کاربر کوچک است و
@@ -18,7 +19,7 @@ const NOTE_SELECT = {
 } as const;
 
 function serialize(n: Prisma.TradeNoteGetPayload<{ select: typeof NOTE_SELECT }>) {
-  return { ...n, createdAt: n.createdAt.toISOString(), updatedAt: n.updatedAt.toISOString() };
+  return serializeNote(n);
 }
 
 async function ownedTagIds(userId: string, raw: unknown): Promise<{ id: string }[]> {

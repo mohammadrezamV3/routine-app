@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { DOMAIN_LABELS_FA, Domain } from "@/lib/weeklyReport/metrics";
-import { DailyBreakdownDay } from "@/lib/weeklyReport/analysis";
+import { DOMAIN_LABELS_FA, Domain } from "@/lib/weeklyReport/domains";
+import type { DailyBreakdownDay } from "@/lib/weeklyReport/analysis";
 
 function overallOf(day: DailyBreakdownDay): number | null {
   const vals = Object.values(day.domains).filter((v): v is number => v != null);

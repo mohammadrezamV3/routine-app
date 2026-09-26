@@ -14,7 +14,8 @@
     "db:status": "prisma migrate status",
     "check:sql": "node scripts/check-sql-safety.js",
     "check:settings": "node scripts/check-setting-keys.js",
-    "check": "npm run check:sql && npm run check:settings && tsc --noEmit",
+    "check:client": "node scripts/check-client-imports.js",
+    "check": "npm run check:sql && npm run check:settings && npm run check:client && tsc --noEmit",
     "optimize:images": "node scripts/optimize-images.js",
     "test": "vitest run"
   },

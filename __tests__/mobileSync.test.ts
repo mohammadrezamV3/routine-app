@@ -23,7 +23,7 @@ import {
   zonedHhmmToUtc,
 } from "@/lib/mobileSync";
 import { MOBILE_SYNC_SETTING_KEYS } from "@/lib/mobileApiContract";
-import { MAX_SETTING_VALUE_BYTES, SERVER_MANAGED_SETTING_KEYS } from "@/lib/userSettingKeys";
+import { MAX_SETTING_VALUE_BYTES, SERVER_MANAGED_SETTING_KEYS, isUserSettingKey } from "@/lib/userSettingKeys";
 
 const NOW = new Date("2026-09-25T12:00:00.000Z");
 const t = (iso: string) => new Date(iso);
@@ -186,10 +186,22 @@ describe("setting keys", () => {
   it("syncs theme", () => {
     expect(isMobileSyncSettingKey("theme")).toBe(true);
   });
-  it("rejects server-managed and non-routine keys", () => {
+  it("syncs notification and trade UI preference keys (Phase 0b)", () => {
+    for (const k of [
+      "notifPrefs", "dismissedStaticNotifs",
+      "tradeTickerSymbols", "tradeCalendarSystem", "tradeVisibleStats", "tradeVisibleFacts",
+      "tradeMarketsOnboarded", "tradeNewsAlerts", "tradeChartSymbol", "tradeChartInterval",
+      "tradeChatRulesAccepted",
+    ]) {
+      expect(isUserSettingKey(k)).toBe(true);
+      expect(isMobileSyncSettingKey(k)).toBe(true);
+    }
+  });
+  it("rejects server-managed and non-synced keys", () => {
     expect(isMobileSyncSettingKey("pushSentLog")).toBe(false);
     expect(isMobileSyncSettingKey("routineAssistantUses")).toBe(false);
-    expect(isMobileSyncSettingKey("tradeChartSymbol")).toBe(false);
+    expect(isMobileSyncSettingKey("tradeChecklistSeeded")).toBe(false);
+    expect(isMobileSyncSettingKey("tradeNewsAlertLog")).toBe(false);
     expect(isMobileSyncSettingKey("__proto__")).toBe(false);
   });
 });

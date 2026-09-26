@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
-import { ICONS } from "@/components/NavDrawer";
+import { ICONS } from "@/components/NavIcons";
 import { useTheme } from "@/components/ThemeProvider";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
 
