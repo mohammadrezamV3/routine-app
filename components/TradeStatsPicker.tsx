@@ -6,14 +6,24 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 // صفحه‌ی انتخاب آمارهای قابل‌نمایش توی صفحه‌ی ترید — از پنل کاربری با دکمه‌ی
 // «تغییر» باز می‌شه؛ هر ردیف یک تاگل لیکوئید گلس سبک iOS داره.
-export function TradeStatsPicker({
+// generic روی نوعِ کلید: همین پاپ‌آپ هم برای آمارهای صفحه‌ی یک حساب
+// (پیش‌فرض) و هم برای جمعِ کلِ صفحه‌ی حساب‌ها استفاده می‌شه.
+export function TradeStatsPicker<K extends string = TradeStatKey>({
   visible,
   onToggle,
   onClose,
+  title = "آمارهای صفحه ترید",
+  note = "کدوم آمارها توی صفحه‌ی ترید نشون داده بشن رو انتخاب کن.",
+  order = TRADE_STAT_ORDER as unknown as K[],
+  labels = TRADE_STAT_LABELS as unknown as Record<K, string>,
 }: {
-  visible: TradeStatKey[];
-  onToggle: (key: TradeStatKey) => void;
+  visible: K[];
+  onToggle: (key: K) => void;
   onClose: () => void;
+  title?: string;
+  note?: string;
+  order?: K[];
+  labels?: Record<K, string>;
 }) {
   useLockBodyScroll();
   return (
@@ -21,18 +31,18 @@ export function TradeStatsPicker({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel open">
         <div className="modal-head">
-          <div className="modal-title">آمارهای صفحه ترید</div>
+          <div className="modal-title">{title}</div>
           <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
         </div>
         <div className="modal-body">
           <div className="section-note" style={{ marginTop: 0 }}>
-            کدوم آمارها توی صفحه‌ی ترید نشون داده بشن رو انتخاب کن.
+            {note}
           </div>
           <div className="tm-extra" style={{ marginTop: 10 }}>
-            {TRADE_STAT_ORDER.map((key) => (
+            {order.map((key) => (
               <div key={key} className="stat-toggle-row">
-                <span className="stat-toggle-label">{TRADE_STAT_LABELS[key]}</span>
-                <ToggleSwitch checked={visible.includes(key)} onChange={() => onToggle(key)} label={TRADE_STAT_LABELS[key]} />
+                <span className="stat-toggle-label">{labels[key]}</span>
+                <ToggleSwitch checked={visible.includes(key)} onChange={() => onToggle(key)} label={labels[key]} />
               </div>
             ))}
           </div>

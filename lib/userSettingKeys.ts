@@ -35,6 +35,7 @@ export const SETTING_KEYS = {
   tradeTickerSymbols: "tradeTickerSymbols",
   tradeCalendarSystem: "tradeCalendarSystem",
   tradeVisibleStats: "tradeVisibleStats",
+  tradeTotalsStats: "tradeTotalsStats",
   tradeVisibleFacts: "tradeVisibleFacts",
   tradeMarketsOnboarded: "tradeMarketsOnboarded",
   tradeNewsAlerts: "tradeNewsAlerts",

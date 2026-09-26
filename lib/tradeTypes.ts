@@ -423,6 +423,27 @@ export const DEFAULT_VISIBLE_TRADE_STATS: TradeStatKey[] = [
 
 export const TRADE_STATS_VISIBILITY_KEY = SETTING_KEYS.tradeVisibleStats;
 
+// ── آمارِ جمعِ کلِ همه‌ی حساب‌ها (صفحه‌ی حساب‌ها) ─────────────────────────
+// سه تای اولِ قابل‌نمایش سرخط‌اند، بقیه پشتِ «جزئیات بیشتر» — همان مدلِ
+// صفحه‌ی ژورنال‌نویسیِ یک حساب. کاربر از تنظیمات انتخاب می‌کند کدام‌ها باشند.
+export type TradeTotalsStatKey = "balance" | "netPnl" | "winRate" | "trades" | "closed" | "open" | "accounts";
+
+export const TRADE_TOTALS_STAT_LABELS: Record<TradeTotalsStatKey, string> = {
+  balance: "بالانس کل",
+  netPnl: "سود/زیان خالص",
+  winRate: "نرخ برد",
+  trades: "کل معاملات",
+  closed: "معاملات بسته‌شده",
+  open: "معاملات باز",
+  accounts: "حساب فعال",
+};
+
+export const TRADE_TOTALS_STAT_ORDER: TradeTotalsStatKey[] = ["balance", "netPnl", "winRate", "trades", "closed", "open", "accounts"];
+
+export const DEFAULT_VISIBLE_TRADE_TOTALS_STATS: TradeTotalsStatKey[] = [...TRADE_TOTALS_STAT_ORDER];
+
+export const TRADE_TOTALS_VISIBILITY_KEY = SETTING_KEYS.tradeTotalsStats;
+
 // ── جزئیاتِ اولیه‌ی هر ترید در لیستِ روز ───────────────────────────────────
 // این‌ها همان فیلدهایی‌اند که کاربر موقعِ ثبت پر می‌کند و می‌تواند انتخاب کند
 // کدام‌هایشان بدونِ باز کردنِ کارتِ جزئیات، همان‌جا در ردیفِ ترید دیده شوند.

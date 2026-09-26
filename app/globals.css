@@ -1081,6 +1081,39 @@
      بالای گریدشان از خودِ سه آمارِ سرخط. */
   .trade-headline-stats + .trade-stats-grid{ margin-top:10px; }
 
+  /* «جزئیات بیشتر» (TradeStatsCollapse) — دستگیره‌ی بی‌بک‌گراند با پیکانِ
+     اکسنت‌رنگ و نبضِ آرام؛ ریستِ سراسریِ button{} صریح خاموش. */
+  .trade-stats-handle{
+    display:flex; align-items:center; justify-content:center; gap:4px; width:100%;
+    padding:8px 0 4px; border:none; border-radius:0; color:var(--accent);
+    font-size:11.5px; font-weight:700;
+    background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  body[data-theme="light"] .trade-stats-handle, body:not([data-theme="light"]) .trade-stats-handle{
+    background:none; box-shadow:none;
+  }
+  @media (hover:hover){ .trade-stats-handle:hover{ background:none; box-shadow:none; border:none; opacity:.8; } }
+  .trade-stats-handle svg{
+    animation:trade-handle-pulse 2.2s ease-in-out infinite;
+    transition:transform .28s cubic-bezier(.22,1,.36,1);
+  }
+  .trade-stats-handle.open svg{ transform:rotate(180deg); animation:none; }
+  @keyframes trade-handle-pulse{
+    0%, 100%{ opacity:.5; transform:translateY(0); }
+    50%{ opacity:1; transform:translateY(2px); }
+  }
+  .trade-stats-collapse{
+    display:grid; grid-template-rows:0fr; opacity:0;
+    transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1), opacity .24s ease;
+  }
+  .trade-stats-collapse.open{ grid-template-rows:1fr; opacity:1; }
+  .trade-stats-collapse-inner{ overflow:hidden; min-height:0; }
+  .trade-stats-collapse .trade-stats-grid{ padding:6px 0 10px; }
+  @media (prefers-reduced-motion:reduce){
+    .trade-stats-handle svg{ animation:none; opacity:.8; }
+    .trade-stats-collapse{ transition:none; }
+  }
+
   /* تقویم وقتی داخلِ همان باکس است: نه سطحِ جدا می‌گیرد نه حاشیه‌ی بالا */
   .trade-calendar-box.embedded{
     margin-top:0; border:none; background:none; box-shadow:none;
@@ -5839,10 +5872,8 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 /* طبقِ درخواستِ صریح، جمعِ کلِ همه‌ی حساب‌ها دیگه مخصوصِ دسکتاپ نیست —
    روی موبایل هم دو‌ستونه دیده می‌شود؛ از ۱۰۲۴px به بالا همان گریدِ
    پنج‌ستونه‌ی قبلی جایش را می‌گیرد. */
-.trade-journal-kpis{
-  display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;
-  margin:2px 0 10px;
-}
+/* حالا همان مدلِ صفحه‌ی ژورنال‌نویسی: ردیفِ سه‌تاییِ سرخط + «جزئیات بیشتر». */
+.trade-journal-kpis{ display:block; margin:2px 0 10px; }
 
 @media (min-width:1024px){
   .trade-journal-grid{
@@ -5855,11 +5886,8 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
   .trade-journal-grid > .trade-form-error,
   .trade-journal-grid > .trade-empty-state{ grid-column:1 / -1; }
 
-  .trade-journal-kpis{
-    display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px;
-    margin:2px 0 2px;
-  }
-  .trade-journal-kpis .trade-stat-value{ font-size:15px; }
+  .trade-journal-kpis{ margin:2px 0 2px; }
+  .trade-journal-kpis .trade-stats-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
 
   /* کارت‌ها هم‌ارتفاع می‌شوند تا ردیف‌ها لبه‌ی صافی داشته باشند؛ محتوا از
      بالا می‌چیند و برچسب‌ها ته کارت می‌نشینند. */
@@ -6753,6 +6781,8 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   .tv-fullscreen-btn:hover{ opacity:1; background:rgba(var(--surface-rgb),.8); color:var(--accent); }
 }
 .tv-fullscreen-btn:active{ transform:scale(.92); }
+/* طبقِ درخواستِ صریح: روی موبایل دکمه‌ی تمام‌صفحه نباشد. */
+@media (max-width:700px){ .tv-fullscreen-btn{ display:none; } }
 
 /* موبایل: عریض‌تر — طبقِ درخواستِ صریح. کارتِ چارت (فقط همین یکی، نه
    بقیه‌ی خانه‌های `.tv-page`) با همان ترفندِ breakoutِ `.ticker-bar`

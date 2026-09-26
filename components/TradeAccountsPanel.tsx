@@ -5,7 +5,12 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Hash, Loader2, Pencil, Percent, Target, Trash2, Wallet, X } from "lucide-react";
 import { TradeAccountModal } from "./TradeAccountModal";
-import { TradeAccount, TradeTag } from "@/lib/tradeTypes";
+import {
+  TradeAccount, TradeTag, TradeTotalsStatKey, TRADE_TOTALS_STAT_LABELS, TRADE_TOTALS_STAT_ORDER,
+  DEFAULT_VISIBLE_TRADE_TOTALS_STATS, TRADE_TOTALS_VISIBILITY_KEY,
+} from "@/lib/tradeTypes";
+import { getSetting } from "@/lib/storage";
+import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { takePreloaded } from "@/lib/preload";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { TradeKebabMenu } from "./TradeKebabMenu";
@@ -106,11 +111,7 @@ export function TradeAccountsPanel({
           </button>
         </div>
 
-        {/* جمعِ همه‌ی حساب‌ها — فقط روی دسکتاپ دیده می‌شود (CSS مخفی‌اش
-            می‌کند زیرِ ۱۰۲۴px). روی موبایل فهرست باید کوتاه و بدونِ مقدمه
-            بماند؛ روی دسکتاپ اما عرضِ خالیِ بالای صفحه به‌جای هیچ، همان
-            چیزی را می‌دهد که کاربر برای دیدنش باید تک‌تکِ حساب‌ها را باز
-            می‌کرد. */}
+        {/* جمعِ همه‌ی حساب‌ها — موبایل و دسکتاپ؛ سه آمار سرخط + «جزئیات بیشتر». */}
         {!!accounts.length && <JournalTotals accounts={accounts} />}
 
         {actionError && <div className="trade-form-error">{actionError}</div>}
@@ -205,19 +206,29 @@ export function TradeAccountsPanel({
   );
 }
 
-// جمعِ کلِ همه‌ی حساب‌های فعال — فقط دسکتاپ (`.trade-journal-kpis` زیرِ
-// ۱۰۲۴px مخفی است). ارزها ممکن است فرق کنند، پس جمعِ پولی فقط وقتی نشان
-// داده می‌شود که همه‌ی حساب‌ها یک ارز داشته باشند؛ وگرنه جمع‌زدنِ دلار و
-// یورو یک عددِ بی‌معنا می‌سازد و بدترین حالتِ ممکن است: عددی که درست
-// به‌نظر می‌رسد ولی نیست.
+// جمعِ کلِ همه‌ی حساب‌های فعال — طبقِ درخواستِ صریح دقیقا همان مدلِ صفحه‌ی
+// ژورنال‌نویسیِ یک حساب: سه آمارِ اول سرخط، بقیه پشتِ «جزئیات بیشتر»، و
+// کاربر از تنظیماتِ ترید انتخاب می‌کند کدام آمارها اصلا باشند. ارزها ممکن
+// است فرق کنند، پس جمعِ پولی فقط وقتی نشان داده می‌شود که همه‌ی حساب‌ها
+// یک ارز داشته باشند؛ جمع‌زدنِ دلار و یورو عددی می‌سازد که درست به‌نظر
+// می‌رسد ولی نیست.
+const TOTALS_ICONS: Record<TradeTotalsStatKey, typeof Wallet> = {
+  balance: Wallet, netPnl: ArrowUp, winRate: Percent, trades: Hash, closed: Hash, open: Hash, accounts: Target,
+};
+
 function JournalTotals({ accounts }: { accounts: TradeAccount[] }) {
+  const [visible, setVisible] = useState<TradeTotalsStatKey[]>(DEFAULT_VISIBLE_TRADE_TOTALS_STATS);
+  useEffect(() => {
+    getSetting<TradeTotalsStatKey[]>(TRADE_TOTALS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_TOTALS_STATS)
+      .then((v) => setVisible(Array.isArray(v) && v.length ? v : DEFAULT_VISIBLE_TRADE_TOTALS_STATS));
+  }, []);
+
   const currencies = new Set(accounts.map((a) => a.currency));
   const sameCurrency = currencies.size === 1 ? accounts[0].currency : null;
 
   const balance = accounts.reduce((sum, a) => sum + (a.summary?.balance ?? a.initialBalance), 0);
   const netPnl = accounts.reduce((sum, a) => sum + (a.summary?.netPnl ?? 0), 0);
   const trades = accounts.reduce((sum, a) => sum + (a.summary?.tradeCount ?? 0), 0);
-
   // نرخِ بردِ کل باید وزنیِ تعدادِ معامله باشد، نه میانگینِ ساده‌ی نرخ‌ها:
   // حسابی با ۲ معامله نباید هم‌وزنِ حسابی با ۲۰۰ معامله باشد.
   const closed = accounts.reduce((sum, a) => sum + (a.summary?.closedCount ?? 0), 0);
@@ -227,36 +238,50 @@ function JournalTotals({ accounts }: { accounts: TradeAccount[] }) {
   );
   const winRate = closed > 0 ? Math.round((wins / closed) * 1000) / 10 : null;
 
+  const values: Record<TradeTotalsStatKey, { value: string; tone?: "up" | "down" }> = {
+    balance: { value: sameCurrency ? formatMoney(balance, sameCurrency) : "—" },
+    netPnl: { value: sameCurrency ? formatMoney(netPnl, sameCurrency) : "—", tone: sameCurrency ? (netPnl >= 0 ? "up" : "down") : undefined },
+    winRate: { value: winRate === null ? "—" : `${winRate}%`, tone: winRate === null ? undefined : winRate >= 50 ? "up" : "down" },
+    trades: { value: String(trades) },
+    closed: { value: String(closed) },
+    open: { value: String(Math.max(0, trades - closed)) },
+    accounts: { value: String(accounts.length) },
+  };
+
+  const keys = TRADE_TOTALS_STAT_ORDER.filter((k) => visible.includes(k));
+  const head = keys.slice(0, 3);
+  const rest = keys.slice(3);
+  const toneColor = (t?: "up" | "down") => (t ? { color: t === "up" ? "var(--pnl-win)" : "var(--pnl-loss)" } : undefined);
+
+  if (!keys.length) return null;
   return (
     <div className="trade-journal-kpis">
-      <div className="trade-stat-tile">
-        <div className="trade-stat-label"><Wallet size={12} /> بالانس کل</div>
-        <div className="trade-stat-value mono" dir="ltr">
-          {sameCurrency ? formatMoney(balance, sameCurrency) : "—"}
-        </div>
+      <div className="trade-headline-stats" style={{ gridTemplateColumns: `repeat(${head.length}, 1fr)` }}>
+        {head.map((k) => {
+          const Icon = k === "netPnl" && netPnl < 0 ? ArrowDown : TOTALS_ICONS[k];
+          return (
+            <div key={k} className="trade-headline-stat">
+              <div className="trade-stat-label"><Icon size={12} /> {TRADE_TOTALS_STAT_LABELS[k]}</div>
+              <div className="trade-headline-value mono" dir="ltr" style={toneColor(values[k].tone)}>{values[k].value}</div>
+            </div>
+          );
+        })}
       </div>
-      <div className="trade-stat-tile">
-        <div className="trade-stat-label">{netPnl >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />} سود/زیان خالص</div>
-        <div
-          className="trade-stat-value mono"
-          dir="ltr"
-          style={{ color: netPnl >= 0 ? "var(--pnl-win)" : "var(--pnl-loss)" }}
-        >
-          {sameCurrency ? formatMoney(netPnl, sameCurrency) : "—"}
-        </div>
-      </div>
-      <div className="trade-stat-tile">
-        <div className="trade-stat-label"><Hash size={12} /> کل معاملات</div>
-        <div className="trade-stat-value mono" dir="ltr">{trades}</div>
-      </div>
-      <div className="trade-stat-tile">
-        <div className="trade-stat-label"><Percent size={12} /> نرخ برد</div>
-        <div className="trade-stat-value mono" dir="ltr">{winRate === null ? "—" : `${winRate}%`}</div>
-      </div>
-      <div className="trade-stat-tile">
-        <div className="trade-stat-label"><Target size={12} /> حساب فعال</div>
-        <div className="trade-stat-value mono" dir="ltr">{accounts.length}</div>
-      </div>
+      {!!rest.length && (
+        <TradeStatsCollapse>
+          <div className="trade-stats-grid">
+            {rest.map((k) => {
+              const Icon = TOTALS_ICONS[k];
+              return (
+                <div key={k} className="trade-stat-tile">
+                  <div className="trade-stat-label"><Icon size={12} /> {TRADE_TOTALS_STAT_LABELS[k]}</div>
+                  <div className="trade-stat-value mono" dir="ltr" style={toneColor(values[k].tone)}>{values[k].value}</div>
+                </div>
+              );
+            })}
+          </div>
+        </TradeStatsCollapse>
+      )}
     </div>
   );
 }

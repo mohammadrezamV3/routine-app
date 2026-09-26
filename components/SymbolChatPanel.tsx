@@ -311,7 +311,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                 type="submit" className="trade-chat-send"
                 disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
               >
-                {pendingKey === "send" ? <Loader2 size={18} className="trade-spin" /> : <Send size={19} />}
+                {pendingKey === "send" ? <Loader2 size={20} className="trade-spin" /> : <Send size={24} strokeWidth={2.2} />}
               </button>
             </form>
           </div>
