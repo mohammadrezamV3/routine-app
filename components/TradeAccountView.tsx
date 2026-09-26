@@ -23,6 +23,7 @@ import { TradeAccountModal } from "./TradeAccountModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
 import { TradeCalendarPanel } from "./TradeCalendarPanel";
+import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
@@ -219,27 +220,29 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             />
           </div>
 
-          {/* طبقِ درخواستِ صریح، دیگه دکمه‌ی «نمایش بقیه‌ی آمارها» نیست —
-              همه‌ی آمارها از اول با همون دیزاینِ یکسانِ کاشی‌ای دیده می‌شن. */}
+          {/* طبقِ درخواستِ صریح، دکمه‌ی «جزئیات بیشتر» برگشت: بقیه‌ی آمارها
+              پشتِ دستگیره‌ی پیکان، نرم باز/بسته می‌شوند. */}
           {!!restStats.length && (
-            <div className="trade-stats-grid">
-              {restStats.map((k) => {
-                const v = statValue(k, stats);
-                if (!v) return null;
-                const Icon = TRADE_STAT_ICONS[k];
-                return (
-                  <div key={k} className="trade-stat-tile">
-                    <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
-                    <div
-                      className="trade-stat-value mono"
-                      style={v.positive === undefined ? undefined : { color: v.positive ? "var(--pnl-win)" : "var(--pnl-loss)" }}
-                    >
-                      {faNum(v.value)}
+            <TradeStatsCollapse>
+              <div className="trade-stats-grid">
+                {restStats.map((k) => {
+                  const v = statValue(k, stats);
+                  if (!v) return null;
+                  const Icon = TRADE_STAT_ICONS[k];
+                  return (
+                    <div key={k} className="trade-stat-tile">
+                      <div className="trade-stat-label"><Icon size={12} /> {TRADE_STAT_LABELS[k]}</div>
+                      <div
+                        className="trade-stat-value mono"
+                        style={v.positive === undefined ? undefined : { color: v.positive ? "var(--pnl-win)" : "var(--pnl-loss)" }}
+                      >
+                        {faNum(v.value)}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </TradeStatsCollapse>
           )}
         </div>
 

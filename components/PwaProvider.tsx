@@ -113,7 +113,7 @@ export function PwaProvider() {
   if (!visible) return null;
 
   return (
-    <div className="pwa-install-bar" role="dialog" aria-label="نصب اپ آریون">
+    <div className="pwa-install-bar" role="dialog" aria-label="نصب آریون">
       <div className="pwa-install-text">
         <b>آریون را نصب کن</b>
         <span>سریع‌تر باز می‌شود و بدون نوار مرورگر، مثل یک اپ واقعی.</span>

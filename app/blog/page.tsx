@@ -12,6 +12,9 @@ export const metadata = pageMetadata({
   description: INTRO,
   path: "/blog",
 });
+// feed.xml برای فیدخوان‌ها/خزنده‌ها — pageMetadata فیلد `types` رو نمی‌سازه
+// چون فقط توی همین یک صفحه لازمه، پس جدا merge می‌شه.
+metadata.alternates = { ...metadata.alternates, types: { "application/rss+xml": absoluteUrl("/blog/feed.xml") } };
 
 const BREADCRUMB = [
   { name: BRAND_FA, path: "/" },

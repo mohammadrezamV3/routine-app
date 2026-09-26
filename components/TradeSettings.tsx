@@ -18,6 +18,7 @@ import {
 import {
   CAL_SYSTEM_KEY, CalSystem,
   TradeStatKey, DEFAULT_VISIBLE_TRADE_STATS, TRADE_STAT_ORDER, TRADE_STATS_VISIBILITY_KEY,
+  TradeTotalsStatKey, DEFAULT_VISIBLE_TRADE_TOTALS_STATS, TRADE_TOTALS_STAT_ORDER, TRADE_TOTALS_STAT_LABELS, TRADE_TOTALS_VISIBILITY_KEY,
   TradeFactKey, DEFAULT_VISIBLE_TRADE_FACTS, TRADE_FACTS_VISIBILITY_KEY,
   MAX_VISIBLE_TRADE_FACTS,
 } from "@/lib/tradeTypes";
@@ -34,6 +35,8 @@ export function TradeSettings() {
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   const [visibleStats, setVisibleStats] = useState<TradeStatKey[]>(DEFAULT_VISIBLE_TRADE_STATS);
   const [statsPickerOpen, setStatsPickerOpen] = useState(false);
+  const [visibleTotals, setVisibleTotals] = useState<TradeTotalsStatKey[]>(DEFAULT_VISIBLE_TRADE_TOTALS_STATS);
+  const [totalsPickerOpen, setTotalsPickerOpen] = useState(false);
   const [visibleFacts, setVisibleFacts] = useState<TradeFactKey[]>(DEFAULT_VISIBLE_TRADE_FACTS);
   const [factsPickerOpen, setFactsPickerOpen] = useState(false);
   const [alerts, setAlerts] = useState<NewsAlertPrefs>(DEFAULT_NEWS_ALERT_PREFS);
@@ -43,6 +46,7 @@ export function TradeSettings() {
     getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => setTickerSymbols(saved?.length ? saved : defaultSymbols));
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
     getSetting<TradeStatKey[]>(TRADE_STATS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_STATS).then((v) => setVisibleStats(v?.length ? v : DEFAULT_VISIBLE_TRADE_STATS));
+    getSetting<TradeTotalsStatKey[]>(TRADE_TOTALS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_TOTALS_STATS).then((v) => setVisibleTotals(Array.isArray(v) && v.length ? v : DEFAULT_VISIBLE_TRADE_TOTALS_STATS));
     getSetting<TradeFactKey[]>(TRADE_FACTS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_FACTS).then((v) => setVisibleFacts(v?.length ? v : DEFAULT_VISIBLE_TRADE_FACTS));
     getSetting<unknown>(NEWS_ALERT_KEY, DEFAULT_NEWS_ALERT_PREFS).then((v) => setAlerts(normalizeNewsAlertPrefs(v)));
   }, []);
@@ -83,6 +87,16 @@ export function TradeSettings() {
     });
   }
 
+  function toggleVisibleTotal(key: TradeTotalsStatKey) {
+    setVisibleTotals((prev) => {
+      const has = prev.includes(key);
+      if (has && prev.length <= 1) return prev;
+      const next = has ? prev.filter((k) => k !== key) : [...prev, key];
+      setSetting(TRADE_TOTALS_VISIBILITY_KEY, next);
+      return next;
+    });
+  }
+
   // سقفِ هشت‌تایی همین‌جا نگه داشته می‌شود (نه فقط در UI): تاگل بیشتر از سقف
   // اصلا اعمال نمی‌شود، پس حتی اگر دو تب هم‌زمان باز باشند مقدارِ ذخیره‌شده
   // از سقف رد نمی‌شود.
@@ -119,6 +133,15 @@ export function TradeSettings() {
       <AccountOption label="آمارهای صفحه ترید">
         <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از {TRADE_STAT_ORDER.length} آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
         <button className="account-outline-btn" onClick={() => setStatsPickerOpen(true)}>
+          تغییر
+        </button>
+      </AccountOption>
+
+      <AccountOption label="آمارهای کلِ حساب‌ها">
+        <div className="item-line" style={{ marginBottom: 10 }}>
+          {visibleTotals.length} از {TRADE_TOTALS_STAT_ORDER.length} آمار برای بالای صفحه‌ی حساب‌ها انتخاب شده — سه‌تای اول سرخط، بقیه پشتِ «جزئیات بیشتر»
+        </div>
+        <button className="account-outline-btn" onClick={() => setTotalsPickerOpen(true)}>
           تغییر
         </button>
       </AccountOption>
@@ -203,6 +226,18 @@ export function TradeSettings() {
           symbols={tickerSymbols}
           onToggle={toggleTickerSymbol}
           onClose={() => setMarketPickerOpen(false)}
+        />
+      )}
+
+      {totalsPickerOpen && (
+        <TradeStatsPicker<TradeTotalsStatKey>
+          title="آمارهای کلِ حساب‌ها"
+          note="کدوم آمارها بالای صفحه‌ی حساب‌ها نشون داده بشن رو انتخاب کن. سه‌تای اول سرخط می‌شن."
+          order={TRADE_TOTALS_STAT_ORDER}
+          labels={TRADE_TOTALS_STAT_LABELS}
+          visible={visibleTotals}
+          onToggle={toggleVisibleTotal}
+          onClose={() => setTotalsPickerOpen(false)}
         />
       )}
 

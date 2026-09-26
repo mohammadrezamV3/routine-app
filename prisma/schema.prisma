@@ -207,8 +207,9 @@ model User {
   tradeTags             TradeTag[]
   tradeChecklists       TradeChecklist[]
   roadmaps              Roadmap[]
-  weeklyReportSnapshots WeeklyReportSnapshot[]
-  weeklyGoals           WeeklyGoal[]
+  weeklyAnalysisAi      WeeklyAnalysisAi[]
+  weeklyAnalysisGoals   WeeklyAnalysisGoal[]
+  weeklyReflections     WeeklyReflection[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -1429,79 +1430,66 @@ model Roadmap {
 }
 
 // ============================================================================
-// MODULE: WEEKLY REPORT (گزارش هفتگی — ماژول AI_INSIGHT) — یک ردیف
-// snapshot به‌ازای هر (کاربر، شروعِ هفته، algorithmVersion). چون snapshotه
-// و نه Event خام، تولیدش idempotent با @@unique زیره: اگه دوباره درخواست
-// بشه، همون ردیف برمی‌گرده (نه ردیفِ تکراری). algorithmVersion بالا رفتنش
-// یعنی فرمولِ Score عوض شده — گزارش‌های قدیمی نباید ناگهان با فرمولِ جدید
-// بازتفسیر بشن.
+// MODULE: WEEKLY ANALYSIS (آنالیز هفتگی — ماژول AI_INSIGHT) — جایگزینِ
+// «گزارش هفتگی» قدیمی (WeeklyReportSnapshot/WeeklyGoal، حذف شد). محاسبه‌ی
+// خودِ آنالیز (امتیازها/روند/بینش) دیگه snapshot نمی‌شه و همیشه زنده از
+// lib/weeklyAnalysis/compute.ts محاسبه می‌شه؛ فقط سه چیز واقعا نیاز به
+// ذخیره‌سازی دارن: خروجیِ AI (که هزینه/زمان داره)، اهدافِ هفتگیِ کاربر، و
+// ریفلکشنِ متنیِ خودِ کاربر. قرارداد کامل: lib/weeklyAnalysis/types.ts.
 // ============================================================================
 
-model WeeklyReportSnapshot {
+// خروجیِ کش‌شده‌ی مربیِ AI برای یک هفته‌ی مشخص — idempotent با @@unique زیر
+// (درخواستِ دوباره‌ی همون هفته باید همون ردیف رو بازسازی/آپدیت کنه، نه
+// ردیفِ تکراری بسازه).
+model WeeklyAnalysisAi {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   weekStart DateTime @db.Date // شنبه، به‌وقتِ محلیِ کاربر
-  weekEnd   DateTime @db.Date // جمعه
 
-  status           String // COLLECTING | READY | PARTIAL | FAILED
-  algorithmVersion Int    @default(1)
-
-  overallScore   Int?
-  // { routine?: DomainScore, fitness?: DomainScore, trading?: DomainScore,
-  //   learning?: DomainScore, nutrition?: DomainScore } — فقط دامنه‌های
-  // فعالِ کاربر (ماژولی که ندارد اصلاً کلید ندارد، نه صفر)
-  domainScores   Json
-  dailyBreakdown Json // [{ date, domains: { [domain]: number|null } }] × ۷ روز
-  wins           Json // string[]
-  problems       Json // string[]
-  comparison     Json // { [domain]: { current, previousWeek, avg4Week } }
-
-  // AI اختیاریه — aiModel=null یعنی یا ARVAN_AI_* ست نشده یا فراخوانی شکست
-  // خورده؛ UI باید بدونِ این فیلدها هم کامل قابل‌استفاده بمونه (بخش ۶۶).
-  aiModel           String?
-  aiSummary         String?
-  aiRecommendations Json?
-
-  // V2 — عمداً nullable و مستقل از algorithmVersion: فرمولِ Score عوض
-  // نشده، فقط بینشِ اضافه شده؛ Snapshotِ قدیمیِ V1 هنوز معتبره، فقط این
-  // فیلدها تا اولین regenerate خالی می‌مونن.
-  patterns   Json? // { trends, streaks, outliers, correlations } — خروجیِ lib/weeklyReport/patterns.ts
-  aiInsights Json? // { title, description, evidence, confidence }[]
-
-  // V3 — پیش‌بینیِ نرم، فقط برایِ هفته‌ی جاری معنا داره؛ برایِ هفته‌های
-  // گذشته همیشه null می‌مونه.
-  prediction Json? // { domain, message, confidence, evidence } | null
+  data  Json // شیءِ AiCoach کامل (summary/recommendations/generatedAt/model)
+  model String // نامِ دقیقِ مدلِ فراخوانی‌شده — برای ممیزی/هزینه
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, weekStart, algorithmVersion])
+  @@unique([userId, weekStart])
+}
+
+// هدفِ هفتگیِ کاربر — همیشه برایِ هفته‌ی *بعدِ* هفته‌ی جاری ساخته می‌شه.
+// وضعیتش وقتی اون هفته کامل تموم شد، lazily توسطِ service.ts محاسبه/قفل
+// می‌شه (DONE اگه امتیازِ دامنه به target رسیده باشه، وگرنه MISSED).
+model WeeklyAnalysisGoal {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart     DateTime  @db.Date // هفته‌ای که هدف *برای* اونه
+  domain        String?
+  title         String
+  target        Int? // امتیازِ هدفِ دامنه (۰..۱۰۰)؛ null یعنی هدفِ متنی/دستی بدونِ سنجشِ خودکار
+  status        String // ACTIVE | DONE | MISSED
+  achievedScore Int? // امتیازِ واقعیِ همون دامنه وقتی هفته تموم شد
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
   @@index([userId, weekStart])
 }
 
-// هدفِ هفتگیِ پذیرفته‌شده — فقط با Accept/Edit ساخته می‌شه (نه با صرفِ
-// نمایشِ پیشنهاد، نه با Reject؛ بندِ ۳۶: «AI نباید هدف را مستقیماً فعال
-// کند»). followUpWeekStart هفته‌ی بعده — وقتی اون هفته تولید می‌شه،
-// snapshot.ts چک می‌کنه امتیازِ همون دامنه بهتر شده یا نه و COMPLETED/
-// MISSED می‌کنه (Feedback Loop، بندِ ۳۷).
-model WeeklyGoal {
-  id                  String    @id @default(cuid())
-  userId              String
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weekStart           DateTime  @db.Date
-  domain              String?
-  title               String
-  description         String
-  wasEdited           Boolean   @default(false)
-  status              String // ACCEPTED | COMPLETED | MISSED
-  followUpWeekStart   DateTime  @db.Date
-  followUpScoreBefore Int?
-  followUpScoreAfter  Int?
-  createdAt           DateTime  @default(now())
-  resolvedAt          DateTime?
+// ریفلکشنِ متنیِ هفتگیِ کاربر (چی خوب پیش رفت/چی باید بهتر بشه/حال‌وهوا) —
+// یک ردیف به‌ازای هر (کاربر، هفته)، با ویرایشِ مجدد (upsert).
+model WeeklyReflection {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date
 
-  @@index([userId, weekStart])
-  @@index([userId, followUpWeekStart])
+  wentWell String
+  improve  String
+  mood     Int? // ۱..۵
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart])
 }
 
 // ============================================================================

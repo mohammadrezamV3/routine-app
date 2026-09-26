@@ -18,7 +18,13 @@ const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/routine", label: "روتین روزانه" },
       { href: "/habit-tracker", label: "پیگیری عادت‌ها" },
       { href: "/daily-planner", label: "برنامه‌ریزی روزانه" },
+      { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
+      { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی" },
+      { href: "/calorie-counter", label: "کالری‌شمار" },
       { href: "/trading-journal", label: "ژورنال معاملاتی" },
+      { href: "/economic-calendar", label: "تقویم اقتصادی" },
+      { href: "/forex-sessions", label: "ساعت بازار فارکس" },
+      { href: "/learning-roadmap", label: "رودمپ یادگیری" },
     ],
   },
   {
@@ -67,7 +73,7 @@ export function LandingFooter() {
               />
             </span>
             <span className={`text-[15px] font-extrabold ${t.heading}`}>
-              آریون <span className={`text-[12px] font-bold ${t.accentText}`}>Arion</span>
+              آریون
             </span>
           </Link>
           <p className={`mt-3 text-[12px] leading-6 ${t.muted}`}>

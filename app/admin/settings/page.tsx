@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatDateTime } from "@/lib/adminFormat";
 import { NumberInput } from "@/components/NumberInput";
@@ -16,9 +15,8 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [audit, setAudit] = useState<AuditRow[] | null>(null);
-  const [seeding, setSeeding] = useState(false);
-  const [seedResult, setSeedResult] = useState<string | null>(null);
-  const [seedError, setSeedError] = useState<string | null>(null);
+  const [indexNowState, setIndexNowState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [indexNowMsg, setIndexNowMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/settings").then((r) => r.json()).then((d: SettingsResp) => {
@@ -45,39 +43,39 @@ export default function AdminSettingsPage() {
     }
   }
 
-  async function seedWeeklyReportTestData() {
-    if (seeding) return;
-    setSeeding(true);
-    setSeedResult(null);
-    setSeedError(null);
+  async function submitIndexNow() {
+    setIndexNowState("loading");
+    setIndexNowMsg("");
     try {
-      const res = await fetch("/api/admin/weekly-report/seed-test-data", { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setSeedError(data.error || "خطایی پیش اومد"); return; }
-      setSeedResult(`${data.weeksSeeded} هفته داده‌ی نمونه برای هر ۵ بخش ساخته شد.`);
-    } catch {
-      setSeedError("مشکلی در اتصال به سرور پیش اومد");
-    } finally {
-      setSeeding(false);
+      const res = await fetch("/api/admin/seo/indexnow", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "خطای ناشناخته");
+      setIndexNowState("done");
+      setIndexNowMsg(`${data.submitted} آدرس ارسال شد`);
+      fetch("/api/admin/audit-log?pageSize=15").then((r) => r.json()).then((d) => setAudit(d.entries));
+    } catch (e: any) {
+      setIndexNowState("error");
+      setIndexNowMsg(e?.message || "ارسال ناموفق بود");
     }
+    setTimeout(() => setIndexNowState("idle"), 4000);
   }
 
   return (
     <section>
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">تست گزارش هفتگی</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">ایندکسِ فوریِ سایت (IndexNow)</span></div>
         <div className="admin-section-hint" style={{ marginTop: 0 }}>
-          داده‌ی مصنوعی ۱۰هفته‌ای (روتین/بدنسازی/ترید/یادگیری/تغذیه) روی همین حساب سوپریوزر می‌سازه تا Trend/Streak/Correlation واقعا چیزی برای نمایش داشته باشن.
-          ⚠️ داده‌های واقعی همین حساب در همین بازه‌ی ۱۰هفته‌ای پاک و با داده‌ی نمونه جایگزین می‌شن.
+          همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراولِ دوره‌ای ایندکس بشن —
+          نیاز به تنظیم <code className="mono">INDEXNOW_KEY</code> در env داره.
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" className="admin-btn primary" onClick={seedWeeklyReportTestData} disabled={seeding}>
-            {seeding ? "در حال ساخت داده…" : "ساخت داده‌ی تست"}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button type="button" className="admin-btn primary" onClick={submitIndexNow} disabled={indexNowState === "loading"}>
+            {indexNowState === "loading" ? "در حال ارسال…" : "ارسال به IndexNow"}
           </button>
-          <Link href="/report/weekly" className="admin-btn" style={{ textDecoration: "none", display: "inline-flex" }}>دیدن گزارش هفتگی</Link>
+          {indexNowMsg && (
+            <span style={{ fontSize: 12, color: indexNowState === "error" ? "#E05252" : "var(--adm-muted)" }}>{indexNowMsg}</span>
+          )}
         </div>
-        {seedResult && <div className="admin-section-hint" style={{ color: "#3FAE6B", marginTop: 10 }}>{seedResult}</div>}
-        {seedError && <div className="admin-section-hint" style={{ color: "#E05252", marginTop: 10 }}>{seedError}</div>}
       </div>
 
       <div className="admin-chart-card">

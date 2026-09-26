@@ -7,9 +7,22 @@ import { SITE_URL } from "@/lib/seo";
 // هدر می‌ده). این با X-Robots-Tag توی next.config.js هم تقویت می‌شه —
 // اینجا جلوی کراول رو می‌گیریم، اونجا حتی اگه یه لینک بیرونی به یکی از
 // این مسیرها اشاره کنه هم از ایندکس بیرون می‌مونه.
+// خزنده‌های هوش‌مصنوعی که پاسخ‌های ChatGPT/Claude/Perplexity/Gemini/
+// Copilot و امثالشون رو تغذیه می‌کنن. عمدا صریح allow می‌شن (نه فقط
+// تکیه به قانون `*`) تا اگه فردا قانون `*` سخت‌گیرانه‌تر شد، این‌ها جدا
+// بمونن — دیسالووِشون دقیقا همون لیست پایینه، یعنی بخش‌های خصوصی برای
+// این‌ها هم بسته می‌مونه.
+const AI_CRAWLER_AGENTS = [
+  "GPTBot", "OAI-SearchBot", "ChatGPT-User",
+  "ClaudeBot", "Claude-SearchBot", "Claude-User", "anthropic-ai",
+  "PerplexityBot", "Perplexity-User",
+  "Google-Extended", "Applebot-Extended", "Bingbot",
+  "CCBot", "meta-externalagent", "cohere-ai", "YandexBot",
+];
+
 export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
+  const rules: MetadataRoute.Robots["rules"] = [
+    {
       userAgent: "*",
       allow: "/",
       // هشدارِ واقعی که این‌جا خورده شد: در robots.txt تطابق **پیشوندی**
@@ -44,6 +57,12 @@ export default function robots(): MetadataRoute.Robots {
         "/offline",
       ],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
-  };
+  ];
+
+  const disallow = rules[0].disallow as string[];
+  for (const agent of AI_CRAWLER_AGENTS) {
+    rules.push({ userAgent: agent, allow: "/", disallow });
+  }
+
+  return { rules, host: SITE_URL, sitemap: `${SITE_URL}/sitemap.xml` };
 }

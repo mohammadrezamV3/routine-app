@@ -1,13 +1,14 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: `عادت‌ساز و پیگیری عادت‌ها (Habit Tracker) فارسی | ${BRAND_FA}`,
   description:
-    `عادت‌های روزانه‌ات را در ${BRAND_FA} (${BRAND_EN}) ثبت و پیگیری کن: تکرار هفتگی، تیک روزانه و ` +
+    `عادت‌های روزانه‌ات را در ${BRAND_FA} ثبت و پیگیری کن: تکرار هفتگی، تیک روزانه و ` +
     `استریک. راهنمای ساختن یک عادت جدید و نگه‌داشتنش.`,
   path: "/habit-tracker",
+  ownOgImage: true,
   ogTitle: `عادت‌ساز فارسی ${BRAND_FA}`,
 });
 
@@ -48,7 +49,7 @@ export default function HabitTrackerPage() {
         h1={`عادت‌ساز فارسی ${BRAND_FA}؛ عادت‌هایت را روز به روز پیگیری کن`}
         lead={
           `پیگیری عادت یعنی هر روز ببینی کاری را که برایش تصمیم گرفته‌ای انجام داده‌ای یا نه. ` +
-          `در ${BRAND_FA} (${BRAND_EN}) عادت‌ها بخشی از همان برنامه‌ی هفتگی‌اند: یک‌بار ثبتشان می‌کنی، ` +
+          `در ${BRAND_FA} عادت‌ها بخشی از همان برنامه‌ی هفتگی‌اند: یک‌بار ثبتشان می‌کنی، ` +
           `هر روز تیک می‌زنی و زنجیره‌ات را می‌بینی.`
         }
         ctaNote="بدون اشتراک"
@@ -83,9 +84,10 @@ export default function HabitTrackerPage() {
         faqs={FAQS}
         faqTitle="سوال‌های رایج درباره عادت‌ها"
         related={[
-          { href: "/routine", label: "روتین اپ آریون و برنامه‌ی روتین روزانه", note: "روتین روزانه چیست و چطور یک برنامه‌ی تکرارشونده بسازیم." },
+          { href: "/routine", label: "روتین روزانه در آریون", note: "روتین روزانه چیست و چطور یک برنامه‌ی تکرارشونده بسازیم." },
           { href: "/daily-planner", label: "برنامه‌ریزی روزانه با آریون", note: "کارهای امروز، ساعت‌ها و یادآوری‌ها در یک نگاه." },
           { href: "/blog/how-to-build-a-habit", label: "راهنمای ساختن عادت جدید", note: "مقاله‌ی کامل درباره‌ی مراحل ساختن و نگه‌داشتن یک عادت." },
+          { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی هوشمند آریون", note: "عادت ورزش‌کردن را با یک برنامه‌ی تمرینی واقعی نگه دار." },
         ]}
       />
     </>

@@ -88,8 +88,9 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
   return (
     <div className="trade-surface trade-page-box trade-mt-panel">
       {accountName && <div className="trade-mt-account-name-line">نام حساب: <b>{accountName}</b></div>}
+      {/* تایتلِ «اتصال متاتریدر» خودِ صفحه بالای این باکس هست — طبقِ درخواستِ
+          صریح داخلِ باکس تکرار نمی‌شود؛ فقط وضعیتِ اتصال می‌ماند. */}
       <div className="trade-mt-panel-head">
-        <div className="domain-sub" style={{ margin: 0 }}>اتصال متاتریدر</div>
         <span className={`trade-mt-live${link?.connected ? " connected" : ""}`}>
           <span className="trade-mt-live-dot" />
           {link?.connected ? "فعال" : "غیرفعال"}

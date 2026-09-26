@@ -1,8 +1,6 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
-import { BRAND_CATEGORY_FA, BRAND_EN, BRAND_FA } from "@/lib/brand";
-import {
-  breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd,
-} from "@/lib/seo";
+import { BRAND_CATEGORY_FA, BRAND_FA } from "@/lib/brand";
+import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 /**
  * صفحه‌ی فرودِ دسته‌ی «روتین».
@@ -19,8 +17,9 @@ export const metadata = pageMetadata({
   title: `${BRAND_CATEGORY_FA} چیست؟ راهنمای ساخت روتین روزانه با ${BRAND_FA}`,
   description:
     `روتین روزانه یعنی چه، چطور یک برنامه‌ی روتین بسازیم که رها نشود، و ${BRAND_FA} ` +
-    `(${BRAND_EN}) به‌عنوان یک ${BRAND_CATEGORY_FA} فارسی با تقویم شمسی چطور کمک می‌کند.`,
+    `به‌عنوان یک ${BRAND_CATEGORY_FA} فارسی با تقویم شمسی چطور کمک می‌کند.`,
   path: "/routine",
+  ownOgImage: true,
   ogTitle: `${BRAND_CATEGORY_FA} ${BRAND_FA} — برنامه‌ی روتین روزانه`,
 });
 
@@ -58,18 +57,14 @@ export default function RoutinePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            breadcrumbJsonLd(BREADCRUMB),
-            faqJsonLd(FAQS),
-            softwareApplicationJsonLd(),
-          ]),
+          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(FAQS)]),
         }}
       />
       <SeoLanding
         breadcrumb={BREADCRUMB}
         h1={`${BRAND_CATEGORY_FA} ${BRAND_FA}؛ برنامه‌ی روتین روزانه که رها نمی‌شود`}
         lead={
-          `${BRAND_FA} (${BRAND_EN}) یک ${BRAND_CATEGORY_FA} فارسی است: کارهای تکرارشونده‌ات را یک‌بار ثبت می‌کنی، ` +
+          `${BRAND_FA} یک ${BRAND_CATEGORY_FA} فارسی است: کارهای تکرارشونده‌ات را یک‌بار ثبت می‌کنی، ` +
           `هر روز سرِ جای خودش می‌آید و پیشرفتت را می‌بینی. این صفحه توضیح می‌دهد روتین روزانه چیست، ` +
           `چرا بیشتر برنامه‌ها بعد از چند روز رها می‌شوند و در آریون چطور می‌شود این را حل کرد.`
         }
@@ -117,6 +112,7 @@ export default function RoutinePage() {
         related={[
           { href: "/habit-tracker", label: "پیگیری عادت‌ها در آریون", note: "چطور یک عادت جدید را تا جاافتادن دنبال کنیم و استریک را نگه داریم." },
           { href: "/daily-planner", label: "برنامه‌ریزی روزانه با آریون", note: "برنامه‌ی امروز، کارهای بدون ساعت و یادآوری‌ها در یک صفحه." },
+          { href: "/ai-planner", label: "برنامه‌ریز هوشمند آریون", note: "پیشنهاد برنامه‌ریزی روزانه با کمک هوش‌مصنوعی." },
           { href: "/blog", label: "مقاله‌های آریون درباره نظم و برنامه‌ریزی", note: "راهنماهای کاربردی برای ساختن روتین، عادت و برنامه‌ی روزانه." },
           { href: "/about", label: "درباره آریون", note: "آریون چیست، چرا ساخته شد و چه بخش‌هایی دارد." },
         ]}

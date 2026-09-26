@@ -35,8 +35,8 @@ const FEATURES = [
   {
     icon: ICONS.roadmaps,
     title: "ai mapping",
-    hook: "بهترین مسیر رو برات می‌چینیم",
-    body: "با هوش مصنوعی، یکی از بهترین راه‌ها برای رسیدن به هدفت رو طراحی می‌کنیم — از گیتار تا اسپانیایی تا فتوشاپ، هر چیزی بخوای یاد بگیری، یک نقطه شروع مشخص داری.",
+    hook: "بهترین مسیر رو برات می‌چینیم — به‌زودی",
+    body: "با هوش مصنوعی، یکی از بهترین راه‌ها برای رسیدن به هدفت رو طراحی می‌کنیم — از گیتار تا اسپانیایی تا فتوشاپ. این بخش در حال تکمیل است و به‌زودی برای عموم باز می‌شود.",
   },
 ];
 
@@ -386,24 +386,18 @@ export function LandingPage() {
     <>
       <section id="sec-landing-hero" style={{ paddingTop: 18 }}>
         <div ref={heroRef} className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 text-right ${t.shadow} backdrop-blur-xl sm:p-9`}>
-          {/* نام فارسی برند عمدا در خود h1 است، نه فقط در متادیتا: تطابق
-              متنی گوگل روی محتوای واقعی صفحه انجام می‌شه. قبل از این،
-              «آریون» صفر بار در کل متن صفحه بود و جست‌وجوی فارسی برند
-              هیچ تطابقی پیدا نمی‌کرد. ظاهر تغییری نمی‌کنه — «آریون» با همون
-              رنگ اکسنت کنار لوگوتایپ لاتین می‌شینه. */}
           {/* نام فارسی برند و دسته‌ی محصول («روتین اپ») هردو در خود h1 هستند،
               نه فقط در متادیتا: تطابق متنی گوگل روی محتوای واقعی صفحه انجام
-              می‌شه. قبل از این، «آریون» صفر بار در کل متن صفحه بود و
-              جست‌وجوی فارسی برند هیچ تطابقی پیدا نمی‌کرد. */}
+              می‌شه. طبق درخواست صریح کاربر، برند فقط «آریون» است — بدون
+              «(Arion)» کنارش در متن فارسی. */}
           <h1 className={`text-[1.7rem] font-extrabold leading-[1.35] sm:text-[2.3rem] ${t.heading}`} data-anim-field>
             روتین اپ{" "}
-            <span className={t.accentText}>آریون</span>{" "}
-            <span className={t.accentText}>(Arion)</span>؛ همه‌ی نظم زندگی‌ات یک‌جا
+            <span className={t.accentText}>آریون</span>؛ همه‌ی نظم زندگی‌ات یک‌جا
           </h1>
           <p className={`mt-4 text-right text-[13.5px] leading-7 sm:text-[15px] sm:leading-8 ${t.muted}`} data-anim-field>
-            آریون (Arion) یک روتین اپ فارسیه: روتین روزانه و هفتگی بساز،
-            عادت‌هات رو پیگیری کن، و بدنسازی، تغذیه، ژورنال ترید و مسیر
-            یادگیری رو هم همون‌جا داشته باش — هرکدوم دقیق، ساده و بدون شلوغی.
+            آریون یک روتین اپ فارسیه: روتین روزانه و هفتگی بساز،
+            عادت‌هات رو پیگیری کن، و بدنسازی، تغذیه و ژورنال ترید رو هم
+            همون‌جا داشته باش — هرکدوم دقیق، ساده و بدون شلوغی.
           </p>
           {/* لینک‌های داخلی از هیرو به صفحه‌های دسته — هم برای کاربری که
               هنوز ثبت‌نام نکرده و می‌خواهد اول بفهمد ماجرا چیست، هم برای
@@ -413,6 +407,8 @@ export function LandingPage() {
             <Link href="/routine" className={`font-bold ${t.accentText} hover:underline`}>برنامه‌ی روتین روزانه</Link>
             {" · "}
             <Link href="/habit-tracker" className={`font-bold ${t.accentText} hover:underline`}>پیگیری عادت‌ها</Link>
+            {" · "}
+            <Link href="/bodybuilding-program" className={`font-bold ${t.accentText} hover:underline`}>برنامه‌ی بدنسازی هوشمند</Link>
             {" · "}
             <Link href="/trading-journal" className={`font-bold ${t.accentText} hover:underline`}>ژورنال معاملاتی</Link>
           </p>

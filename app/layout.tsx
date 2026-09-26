@@ -14,8 +14,9 @@ import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
-import { BRAND_FA, BRAND_EN, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, BRAND_ALT_NAMES, BRAND_SAME_AS, OG_BASE } from "@/lib/brand";
-import { SITE_URL } from "@/lib/seo";
+import { BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
+import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd, siteNavigationJsonLd } from "@/lib/seo";
+import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
 
@@ -40,6 +41,14 @@ const latin = Inter({
   variable: "--font-latin",
 });
 
+// وریفیکیشن موتورهای جست‌وجو/نقشه — فقط وقتی env مقدار داره اضافه می‌شه؛
+// خالی‌بودنش نباید یک متاتگ verification خالی/نامعتبر توی <head> بذاره.
+const verification: Metadata["verification"] = {
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+  ...(process.env.YANDEX_VERIFICATION ? { yandex: process.env.YANDEX_VERIFICATION } : {}),
+  ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -48,28 +57,51 @@ export const metadata: Metadata = {
     // اگه صفحه‌ای عمدا metadata نده (صفحات خصوصی که noindex هستن)، همین
     // fallback عمومی نشون داده می‌شه — قابل قبوله چون این صفحات ایندکس
     // نمی‌شن، فقط برای عنوان تب مرورگر لازمه.
-    template: `%s | ${BRAND_EN} ${BRAND_FA}`,
+    template: `%s | ${BRAND_FA}`,
   },
   description: BRAND_DESC,
-  applicationName: BRAND_EN,
+  applicationName: BRAND_FA,
+  category: "productivity",
+  creator: BRAND_EN,
+  publisher: BRAND_EN,
+  authors: [{ name: BRAND_EN, url: SITE_URL }],
   // پیش‌فرض سراسری «ایندکس بشو» — صفحات خصوصی از طریق X-Robots-Tag توی
   // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننت
   // کلاینتی‌ان و نمی‌تونن این metadata رو override کنن.
   robots: { index: true, follow: true },
+  // فیدِ RSS بلاگ سراسری اعلام می‌شه (نه فقط توی /blog) تا فیدخوان‌ها/
+  // خزنده‌ها از هر صفحه‌ای پیداش کنن — <link rel="alternate" type=
+  // "application/rss+xml"> توی <head> میاد.
+  alternates: { types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` } },
+  ...(Object.keys(verification).length ? { verification } : {}),
   // کلمه‌کلیدی صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
-  // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن.
-  keywords: [BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, `${BRAND_CATEGORY_FA} ${BRAND_FA}`, "اپ روتین", "برنامه روتین روزانه", "برنامه‌ریزی روزانه", "مدیریت عادت", "ژورنال ترید"],
+  // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن — پوشش همه‌ی بخش‌های
+  // واقعی محصول، نه فقط روتین.
+  keywords: [
+    BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, `${BRAND_CATEGORY_FA} ${BRAND_FA}`,
+    "برنامه روتین روزانه", "مدیریت عادت", "برنامه‌ریزی روزانه", "تقویم شمسی",
+    "برنامه بدنسازی هوشمند", "کالری‌شمار فارسی", "ژورنال ترید", "ژورنال معاملاتی فارسی",
+    "رودمپ یادگیری هوش مصنوعی", "اتصال متاتریدر", "تقویم اقتصادی فارکس",
+  ],
+  // images این‌جا هم عمدا حذف شده — همون دلیلِ توضیحِ زیرِ twitter؛
+  // app/opengraph-image.tsx تصویرِ ریشه رو خودکار تزریق می‌کنه.
   openGraph: {
     ...OG_BASE,
+    images: undefined,
     url: SITE_URL,
     title: BRAND_TITLE,
     description: BRAND_DESC,
   },
+  // images عمدا این‌جا هاردکد نیست: نکست به‌صورت خودکار opengraph-image.tsx
+  // خودِ هر مسیر رو (یا در نبودش، همین app/opengraph-image.tsx ریشه رو)
+  // به‌عنوان تصویرِ توییتر/OG تزریق می‌کنه — ولی *فقط* اگه اینجا صراحتا
+  // images ست نشده باشه. قبلا همین یک خط باعث می‌شد هر صفحه‌ای که خودش
+  // twitter تعریف نمی‌کرد (faq، about، …) به‌جای تصویرِ اختصاصی‌اش همیشه
+  // /og.png عمومی رو نشون بده.
   twitter: {
     card: "summary_large_image",
     title: BRAND_TITLE,
     description: BRAND_DESC,
-    images: ["/og.png"],
   },
   // سافاری آیفون display:"standalone" manifest.ts رو نمی‌خونه — «افزودن به
   // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپ واقعی standalone می‌سازه (بدون
@@ -78,39 +110,22 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: BRAND_EN,
+    title: BRAND_FA,
   },
 };
 
-// Organization + WebSite — دو schema پایه‌ای که واقعا روی این پروژه صدق
-// می‌کنن (یه اپ واقعی با برند مشخص)، بدون هیچ داده‌ی ساختگی (نه rating نه
-// review نه قیمت اینجا). عمدا توی root layout (نه یه صفحه‌ی خاص) چون
-// توصیف خود سایته، نه محتوای یک صفحه.
-const ORGANIZATION_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: BRAND_EN,
-  // alternateName همون چیزیه که گوگل برای وصل‌کردن یک برند به املاهای
-  // دیگه‌اش استفاده می‌کنه. بدونش، «آریون» و «Arion» از نظر گوگل دو چیز
-  // بی‌ربطن و جست‌وجوی فارسی برند به این سایت نمی‌رسه.
-  alternateName: BRAND_ALT_NAMES,
-  url: SITE_URL,
-  logo: `${SITE_URL}/icon.png`,
-  description: BRAND_DESC,
-  // پروفایل‌های رسمی. برای دامنه‌ای که هنوز بک‌لینکی ندارد، این یکی از معدود
-  // راه‌هایی است که می‌شود از داخل خود سایت به گوگل گفت این حساب‌ها مال
-  // همین برندند — مکمل `rel="me"` روی خود لینک‌ها در صفحه‌ی «درباره ما».
-  sameAs: BRAND_SAME_AS,
-};
-
-const WEBSITE_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: BRAND_BOTH,
-  alternateName: BRAND_ALT_NAMES,
-  url: SITE_URL,
-  inLanguage: "fa-IR",
-};
+// Organization + WebSite + SoftwareApplication — یک گراف واحد (با @id)
+// که واقعا روی این پروژه صدق می‌کنه (یه اپ واقعی با برند مشخص)، بدون هیچ
+// داده‌ی ساختگی (نه rating نه review). عمدا توی root layout (نه یه
+// صفحه‌ی خاص) چون توصیف خود سایته، نه محتوای یک صفحه. توابعش از
+// lib/seo.ts می‌آیند تا صفحه‌ی اصلی (که همین SoftwareApplication رو
+// دوباره استفاده می‌کنه) با این گراف یکی بمونه، نه یک کپیِ واگرا.
+const JSON_LD_GRAPH = [
+  organizationJsonLd(),
+  websiteJsonLd(),
+  softwareApplicationJsonLd(),
+  siteNavigationJsonLd(PUBLIC_PAGES),
+];
 
 // viewport-fit:cover لازمه تا سافاری صفحه رو زیر ناچ/نوار وضعیت هم بکشه؛
 // بدونش، سافاری اون نواحی رو با یه نوار سیستمی توپر (معمولا سیاه) پر
@@ -161,7 +176,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body data-theme="dark" suppressHydrationWarning>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD_GRAPH) }}
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/* تشخیص دستگاه ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه

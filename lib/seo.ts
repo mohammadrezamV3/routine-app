@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   BRAND_ALT_NAMES, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_DESC, BRAND_EN, BRAND_FA,
-  BRAND_SAME_AS, OG_BASE,
+  BRAND_SAME_AS, OG_BASE, SUPPORT_EMAIL,
 } from "./brand";
 
 /**
@@ -33,24 +33,89 @@ export function pageMetadata({
   description,
   path,
   ogTitle,
+  ownOgImage,
 }: {
   title: string;
   description: string;
   path: string;
   /** اگر عنوانِ کارتِ اشتراک‌گذاری باید کوتاه‌تر از عنوانِ تبِ مرورگر باشد */
   ogTitle?: string;
+  /**
+   * true وقتی این مسیر خودش یک `opengraph-image.tsx` کنارش داره. نکست
+   * خودش og:image رو از اون فایل تزریق می‌کنه، ولی *فقط* اگه
+   * `openGraph.images` این‌جا صریح ست نشده باشه — وگرنه همیشه `/og.png`ی
+   * که پایین می‌ذاریم رو می‌بینه، نه تصویرِ اختصاصیِ صفحه. پس این‌جا فیلد
+   * images رو کلا حذف می‌کنیم تا نکست بتونه خودش تزریق کنه.
+   */
+  ownOgImage?: boolean;
 }): Metadata {
   const canonical = path === "/" ? "/" : `/${path.replace(/^\/+/, "")}`;
+  const openGraph = ownOgImage
+    ? { ...OG_BASE, images: undefined, url: canonical, title: ogTitle || title, description }
+    : { ...OG_BASE, url: canonical, title: ogTitle || title, description };
   return {
     title: { absolute: title },
     description,
     alternates: { canonical },
-    openGraph: { ...OG_BASE, url: canonical, title: ogTitle || title, description },
-    twitter: { card: "summary_large_image", title: ogTitle || title, description, images: ["/og.png"] },
+    openGraph,
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle || title,
+      description,
+      ...(ownOgImage ? {} : { images: ["/og.png"] }),
+    },
   };
 }
 
 type JsonLd = Record<string, unknown>;
+
+// شناسه‌های `@id` — تنها راهی که JSON-LD چند بلوکی (Organization/WebSite/
+// SoftwareApplication) رو به «یک موجودیت» به‌جای سه موجودیت بی‌ربط تبدیل
+// می‌کنه. بدون این‌ها، هر بلوک برای گوگل یک entity جدا حساب می‌شه و
+// نتیجه‌ی نهایی (Knowledge Panel/entity واحد) شکل نمی‌گیره.
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
+export const SOFTWARE_ID = `${SITE_URL}/#software`;
+
+/**
+ * Organization — تنها یک بار در root layout رندر می‌شود. name عمدا
+ * انگلیسیِ «Arion» است (شکلِ رسمیِ نامِ برند در schema.org) و «آریون»
+ * توی alternateName می‌آید؛ دقیقا همون قراردادی که BRAND_ALT_NAMES/
+ * BRAND_SAME_AS برای گوگل تعریف می‌کنن.
+ */
+export function organizationJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: BRAND_EN,
+    alternateName: BRAND_ALT_NAMES,
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.png`,
+    description: BRAND_DESC,
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: SUPPORT_EMAIL,
+      contactType: "customer support",
+      availableLanguage: ["fa", "en"],
+    },
+    sameAs: BRAND_SAME_AS,
+  };
+}
+
+/** WebSite — با `publisher` به همون Organization بالا وصل می‌شه (نه یک کپی جدا). */
+export function websiteJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    name: BRAND_FA,
+    alternateName: [BRAND_EN, BRAND_BOTH],
+    url: SITE_URL,
+    inLanguage: "fa-IR",
+    publisher: { "@id": ORGANIZATION_ID },
+  };
+}
 
 /**
  * BreadcrumbList — به گوگل می‌گوید این صفحه کجای ساختار سایت است و در
@@ -71,6 +136,24 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]): JsonL
 }
 
 /**
+ * SiteNavigationElement — فهرستِ صفحه‌های اصلیِ عمومی با نامِ فارسی.
+ * این دقیقا سیگنالی است که گوگل برای ساختنِ «sitelinks» زیرِ نتیجه‌ی
+ * برند استفاده می‌کند؛ بدونش گوگل خودش حدس می‌زند کدام لینک‌ها مهم‌ترند
+ * (و معمولا حدسش با همین لیستِ واقعیِ منوی سایت یکی نیست).
+ * ورودی‌اش عمدا از بیرون می‌آید (نه import مستقیمِ `PUBLIC_PAGES` این‌جا)
+ * چون `lib/llmsContent.ts` خودش از این فایل import می‌کند — وارد کردنِ
+ * مستقیمِ آن این‌جا یک import دایره‌ای می‌ساخت.
+ */
+export function siteNavigationJsonLd(pages: { path: string; label: string }[]): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SiteNavigationElement",
+    name: pages.map((p) => p.label),
+    url: pages.map((p) => absoluteUrl(p.path)),
+  };
+}
+
+/**
  * FAQPage — فقط وقتی مجاز است که *دقیقا* همین پرسش/پاسخ‌ها در خود صفحه
  * دیده شوند. برای همین این تابع همان آرایه‌ای را می‌گیرد که کامپوننت
  * نمایش‌دهنده هم می‌گیرد؛ هیچ راهی نمی‌ماند که این دو از هم واگرا شوند.
@@ -87,63 +170,97 @@ export function faqJsonLd(faqs: { q: string; a: string }[]): JsonLd {
   };
 }
 
+// فهرست واقعیِ بخش‌های آریون — دقیقا منطبق با چیزی که کد الان انجام
+// می‌دهد (چک‌شده روی app/ و components/). رودمپ یادگیری و تحلیل هفتگیِ
+// AI عمدا اینجا با «به‌زودی برای عموم» می‌آیند: هردو پشت گیت هستند
+// (رودمپ کاملا مخصوص سوپریوزر، تحلیل هفتگی هنوز از منوی اصلی مخفی است)
+// و ادعای «همین الان برای همه در دسترس است» درست نیست.
+export const FEATURE_LIST_FA = [
+  "برنامه‌ی هفتگی و روتین روزانه با تقویم شمسی",
+  "پیگیری عادت‌ها و استریک روزانه",
+  "مدیریت کارهای روزمره و یادآوری",
+  "ثبت و پیگیری خواب",
+  "برنامه‌ی تمرینی بدنسازی با کمک هوش‌مصنوعی",
+  "کالری‌شمار و اسکن هوشمند غذا",
+  "ژورنال معاملات ترید: چند حساب، آمار کامل، چک‌لیست ورود",
+  "همگام‌سازی خودکار معاملات با متاتریدر",
+  "تقویم اقتصادی و ساعت جلسه‌های بازار فارکس",
+  "رودمپ یادگیری با هوش مصنوعی (به‌زودی برای عموم)",
+  "تحلیل هفتگی هوشمند AI Insight (به‌زودی برای عموم)",
+];
+
 /**
  * SoftwareApplication — توصیفِ خودِ محصول.
  *
- * عمدا بدون `aggregateRating`، `review`، `offers` و تعداد دانلود: آریون
- * هنوز هیچ‌کدام از این داده‌ها را واقعی ندارد و ساختنشان هم نقضِ
- * راهنمای گوگل است هم ریسکِ جریمه‌ی دستی.
+ * عمدا بدون `aggregateRating`/`review`/تعداد دانلود: آریون هنوز هیچ‌کدام
+ * از این داده‌ها را واقعی ندارد و ساختنشان هم نقضِ راهنمای گوگل است هم
+ * ریسکِ جریمه‌ی دستی. `offers` فقط همان پلن پایه‌ی رایگان را می‌گوید —
+ * قیمت پلن‌های پولی (lib/planPricing.ts) به تومان/دوره‌ست، نه یک عدد
+ * ثابت قابل‌بیان با schema.org Offer، پس ادعای نادرست بهتر از سکوت نیست.
  */
 export function softwareApplicationJsonLd(): JsonLd {
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: BRAND_BOTH,
+    "@type": ["SoftwareApplication", "WebApplication"],
+    "@id": SOFTWARE_ID,
+    name: BRAND_FA,
     alternateName: BRAND_ALT_NAMES,
     url: SITE_URL,
     // دسته‌ی درستِ schema.org برای اپِ برنامه‌ریزی/بهره‌وری. قبلا
     // LifestyleApplication بود که برای یک روتین اپ دقیق نیست.
     applicationCategory: "ProductivityApplication",
-    operatingSystem: "Web",
+    operatingSystem: "Web, Android, iOS (PWA)",
     browserRequirements: "نیاز به مرورگر مدرن با پشتیبانی JavaScript",
     inLanguage: "fa-IR",
     description: BRAND_DESC,
     softwareHelp: absoluteUrl("/faq"),
-    publisher: { "@type": "Organization", name: BRAND_EN, url: SITE_URL },
+    featureList: FEATURE_LIST_FA,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "IRR",
+      description: "بخش روتین، کارهای روزانه و خواب رایگان‌اند؛ ورزش/تغذیه، ژورنال ترید و رودمپ اشتراکی‌اند و دوره‌ی آزمایشی رایگان دارند.",
+    },
+    publisher: { "@id": ORGANIZATION_ID },
     sameAs: BRAND_SAME_AS,
   };
 }
 
-/** برای صفحه‌های محتوایی (مقاله‌های بلاگ) */
+/**
+ * برای صفحه‌های محتوایی (مقاله‌های بلاگ). نوعش BlogPosting است (زیرمجموعه‌ی
+ * دقیق‌تر Article برای پست‌های بلاگ)، و author/publisher به همون
+ * Organization ریشه (`ORGANIZATION_ID` در root layout) با `@id` وصل می‌شن —
+ * نه یک کپی جدا — تا گوگل این‌ها رو یک موجودیت واحد ببینه، نه چند تا.
+ * image پیش‌فرض همون opengraph-image خودِ صفحه است (اگه صفحه یکی نداشته
+ * باشه، مقدار دیگه‌ای پاس داده می‌شود).
+ */
 export function articleJsonLd({
   title,
   description,
   path,
   published,
   modified,
+  image,
 }: {
   title: string;
   description: string;
   path: string;
   published: string;
   modified?: string;
+  image?: string;
 }): JsonLd {
   return {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: title,
     description,
     inLanguage: "fa-IR",
     mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(path) },
+    image: image || absoluteUrl(`${path}/opengraph-image`),
     datePublished: published,
     dateModified: modified || published,
-    author: { "@type": "Organization", name: BRAND_EN, url: SITE_URL },
-    publisher: {
-      "@type": "Organization",
-      name: BRAND_EN,
-      url: SITE_URL,
-      logo: { "@type": "ImageObject", url: absoluteUrl("/icon.png") },
-    },
+    author: { "@id": ORGANIZATION_ID },
+    publisher: { "@id": ORGANIZATION_ID },
   };
 }
 
