@@ -245,7 +245,7 @@ export async function addCalorieEntry(input: {
   fatPer100g?: number | null;
   grams: number;
   date: string;
-  mealType: MealType | null;
+  mealType: MealType | string | null;
   aiScanned?: boolean;
 }): Promise<CalorieEntryRow> {
   const now = nowIso();

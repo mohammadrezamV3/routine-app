@@ -11,10 +11,16 @@
 //     بقیه‌ی فیلدها سینک می‌شه (قبلا فقط محلی می‌موند).
 //   • setLogs و customFoods: موجودیتِ سروری ندارن (وب هم ذخیره‌شون نمی‌کنه) — فقط محلی.
 //   • calorieEntries ↔ foodLogEntry: محلی «به‌ازای ۱۰۰ گرم» نگه می‌داره، سرور
-//     «کلِ همین مقدار» (customCalories/proteinG/…) — تبدیل با grams.
+//     «کلِ همین مقدار» (customCalories/proteinG/…) — تبدیل با grams، در
+//     features/fitness/lib/foodLogMapping.ts (مشترک با هندلرِ محلیِ /api/calorie/log).
+//     mealType عینا (snack1/snack2/meal_… ِ چیدمانِ وعده‌های وب) — نرمال نمی‌شه.
 //   • calorieTargets: سرور عدد رو خودش حساب می‌کنه. هدفِ جدید → kind=compute
 //     (id تازه)، ویرایشِ هدفِ فعلیِ شناخته‌شده → kind=meals؛ بستنِ هدفِ قبلی رو
 //     سرور خودش انجام می‌ده (push نمی‌شه). synced=true یعنی سرور این id رو داره.
+//     ویرایشِ وعده‌ها روی هدفی که هنوز compute نشده (mealsEdited) بعد از compute
+//     حفظ می‌شه و دور بعد kind=meals می‌ره.
+//   • applyPull تعدادِ ردیف‌هایی که *واقعا* عوض شدن رو برمی‌گردونه (remountِ صفحه —
+//     SyncEngine.onRemoteApplied)؛ برگشتِ همون چیزی که خودمون push کردیم حساب نمی‌شه.
 import type {
   CalorieTargetRecord,
   ExerciseLogRecord,
@@ -28,24 +34,31 @@ import type {
 import { EXERCISE_LOG_NOTES_MAX, EXERCISE_TRAINING_PHASES } from "@m/lib/api-contract";
 import { fitnessDb } from "@m/features/fitness/db";
 import { newLocalId } from "@m/features/fitness/lib/id";
+import { foodTotals, per100FromTotals } from "@m/features/fitness/lib/foodLogMapping";
+import { sameRow } from "@m/db/syncHooks";
 import type {
   CalorieEntryRow,
   CalorieTargetRow,
   ExerciseLogRow,
   ExercisePlanRow,
-  MealType,
 } from "@m/features/fitness/lib/exerciseTypes";
 import type { PendingItem, SyncAdapter } from "./adapter";
 import { isValidClientId } from "./mappers";
 
 type Table = typeof fitnessDb.plans | typeof fitnessDb.exerciseLogs | typeof fitnessDb.calorieEntries | typeof fitnessDb.calorieTargets;
 
-const round1 = (n: number) => Math.round(n * 10) / 10;
 const ms = (iso: string | null | undefined) => (iso ? Date.parse(iso) : NaN);
 
 /** LWW برای pull: ریموت برنده‌ست اگه محلی نباشه، dirty نباشه، یا editedAt جدیدتر باشه */
 function remoteWins(local: { dirty: 0 | 1; updatedAt: string } | undefined, editedAt: string): boolean {
   return !local || local.dirty !== 1 || ms(editedAt) > ms(local.updatedAt);
+}
+
+/** ردیفِ ریموتِ نگاشت‌شده رو می‌نویسه، مگر اینکه با ردیفِ تمیزِ محلی یکی باشه (برگشتِ push ِ خودمون) */
+async function putIfChanged<T extends { dirty: 0 | 1 }>(table: Table, local: T | undefined, next: T): Promise<boolean> {
+  if (local && local.dirty !== 1 && sameRow(local, next)) return false;
+  await (table as any).put(next);
+  return true;
 }
 
 /** نتیجه‌ی push رو اتمیک اعمال می‌کنه — فقط اگه ردیف از لحظه‌ی snapshot عوض نشده */
@@ -123,10 +136,10 @@ export function exerciseLogToChange(row: ExerciseLogRow): SyncChange | null {
 
 export function calorieEntryToChange(row: CalorieEntryRow): SyncChange | null {
   if (row.deletedAt) return { entity: "foodLogEntry", id: row.id, op: "delete", clientUpdatedAt: row.updatedAt };
-  const factor = row.grams / 100;
-  const kcal = Math.round(row.caloriesPer100g * factor);
+  const totals = foodTotals(row);
+  const kcal = totals.customCalories;
   if (!(kcal > 0) || !(row.grams > 0)) return null; // سرور کالری/گرمِ صفر رو ناقص می‌دونه
-  const hasMacros = row.proteinPer100g != null && row.carbsPer100g != null && row.fatPer100g != null;
+  const hasMacros = totals.proteinG !== null;
   return {
     entity: "foodLogEntry",
     id: row.id,
@@ -137,13 +150,7 @@ export function calorieEntryToChange(row: CalorieEntryRow): SyncChange | null {
       customCalories: kcal,
       grams: row.grams,
       mealType: row.mealType ?? null,
-      ...(hasMacros
-        ? {
-            proteinG: round1(row.proteinPer100g! * factor),
-            carbsG: round1(row.carbsPer100g! * factor),
-            fatG: round1(row.fatPer100g! * factor),
-          }
-        : {}),
+      ...(hasMacros ? { proteinG: totals.proteinG, carbsG: totals.carbsG, fatG: totals.fatG } : {}),
       aiScanned: hasMacros && row.aiScanned,
     },
     clientUpdatedAt: row.updatedAt,
@@ -236,27 +243,15 @@ export function remoteExerciseLog(r: ExerciseLogRecord, local?: ExerciseLogRow):
   };
 }
 
-const MEAL_TYPES = new Set(["breakfast", "lunch", "dinner", "snack"]);
-function normalizeMealType(v: string | null): MealType | null {
-  if (!v) return null;
-  if (MEAL_TYPES.has(v)) return v as MealType;
-  // وب چند میان‌وعده داره (snack1، snack2، …)
-  if (v.startsWith("snack")) return "snack";
-  return v as MealType;
-}
-
 export function remoteFoodLog(r: FoodLogEntryRecord, local?: CalorieEntryRow): CalorieEntryRow {
-  const per100 = (total: number | null) => (total != null && r.grams > 0 ? round1((total * 100) / r.grams) : null);
   return {
     id: r.id,
     name: r.customName ?? local?.name ?? "غذا",
-    caloriesPer100g: per100(r.customCalories) ?? 0,
-    proteinPer100g: per100(r.proteinG),
-    carbsPer100g: per100(r.carbsG),
-    fatPer100g: per100(r.fatG),
+    ...per100FromTotals(r),
     grams: r.grams,
     date: r.date,
-    mealType: normalizeMealType(r.mealType),
+    // عینا — وب وعده‌ها رو با کلیدِ چیدمانِ هدف (snack1، snack2، …) گروه می‌کنه
+    mealType: r.mealType ?? null,
     aiScanned: r.aiScanned,
     createdAt: r.createdAt,
     updatedAt: r.editedAt,
@@ -295,8 +290,7 @@ export async function applyRemotePlan(r: ExercisePlanRecord, opts: { force?: boo
   return fitnessDb.transaction("rw", fitnessDb.plans, async () => {
     const local = await fitnessDb.plans.get(r.id);
     if (!opts.force && !remoteWins(local, r.editedAt)) return false;
-    await fitnessDb.plans.put(remotePlan(r, local));
-    return true;
+    return putIfChanged(fitnessDb.plans, local, remotePlan(r, local));
   });
 }
 
@@ -305,8 +299,7 @@ export async function applyRemoteExerciseLog(r: ExerciseLogRecord): Promise<bool
   return fitnessDb.transaction("rw", fitnessDb.exerciseLogs, async () => {
     const local = await fitnessDb.exerciseLogs.where("[planId+date]").equals([r.planId, r.date]).first();
     if (!remoteWins(local, r.editedAt)) return false;
-    await fitnessDb.exerciseLogs.put(remoteExerciseLog(r, local));
-    return true;
+    return putIfChanged(fitnessDb.exerciseLogs, local, remoteExerciseLog(r, local));
   });
 }
 
@@ -314,8 +307,7 @@ export async function applyRemoteFoodLog(r: FoodLogEntryRecord): Promise<boolean
   return fitnessDb.transaction("rw", fitnessDb.calorieEntries, async () => {
     const local = await fitnessDb.calorieEntries.get(r.id);
     if (!remoteWins(local, r.editedAt)) return false;
-    await fitnessDb.calorieEntries.put(remoteFoodLog(r, local));
-    return true;
+    return putIfChanged(fitnessDb.calorieEntries, local, remoteFoodLog(r, local));
   });
 }
 
@@ -323,7 +315,44 @@ export async function applyRemoteCalorieTarget(r: CalorieTargetRecord): Promise<
   return fitnessDb.transaction("rw", fitnessDb.calorieTargets, async () => {
     const local = await fitnessDb.calorieTargets.get(r.id);
     if (!remoteWins(local, r.editedAt)) return false;
-    await fitnessDb.calorieTargets.put(remoteCalorieTarget(r, local));
+    return putIfChanged(fitnessDb.calorieTargets, local, remoteCalorieTarget(r, local));
+  });
+}
+
+/**
+ * نتیجه‌ی موفقِ compute: سرور حالا این id رو داره (synced). اگه ردیف بعد از snapshot
+ * ویرایش شده یا قبلش وعده‌هاش دستی چیده شده بود (mealsEdited — PATCHِ محلی روی هدفِ
+ * هنوز-compute‌نشده)، چیدمانِ محلی می‌مونه و dirty با زمانِ تازه‌تر از editedAtِ سرور،
+ * تا push ِ بعدی kind=meals بره (وگرنه splitMeals ِ سرور جاش می‌نشست) — true ← «repush»:
+ * موتور همین sync یک دورِ دیگه می‌زنه.
+ */
+async function settleComputedTarget(id: string, pushedUpdatedAt: string, r: CalorieTargetRecord): Promise<boolean> {
+  return fitnessDb.transaction("rw", fitnessDb.calorieTargets, async () => {
+    const local = await fitnessDb.calorieTargets.get(id);
+    if (!local) return false;
+    const edited = local.updatedAt !== pushedUpdatedAt;
+    if (!edited && !local.mealsEdited) {
+      await fitnessDb.calorieTargets.put({ ...remoteCalorieTarget(r, local), dirty: 0 });
+      return false;
+    }
+    if (local.effectiveTo || local.deletedAt) {
+      // بعدش هدفِ جدیدتری ساخته شد — این یکی فقط «شناخته‌شده» می‌شه (push نمی‌شه)
+      await fitnessDb.calorieTargets.update(id, { synced: true, mealsEdited: undefined });
+      return false;
+    }
+    const bumped = new Date(Math.max(Date.now(), ms(r.editedAt) + 1, ms(local.updatedAt))).toISOString();
+    await fitnessDb.calorieTargets.put({
+      ...remoteCalorieTarget(r, local),
+      dailyTargetKcal: local.dailyTargetKcal,
+      mealsPerDay: local.mealsPerDay,
+      mealBreakdown: local.mealBreakdown,
+      proteinTargetG: local.proteinTargetG,
+      carbsTargetG: local.carbsTargetG,
+      fatTargetG: local.fatTargetG,
+      mealsEdited: undefined,
+      updatedAt: bumped,
+      dirty: 1,
+    });
     return true;
   });
 }
@@ -447,6 +476,8 @@ export const fitnessAdapter: SyncAdapter = {
             }));
             return;
           }
+          // calorieTargetToChange: synced=false ← kind=compute
+          if (r && !row.synced) return (await settleComputedTarget(row.id, updatedAt, r)) ? "repush" : undefined;
           await settleRow<CalorieTargetRow>(fitnessDb.calorieTargets, row.id, updatedAt, (local) =>
             r ? remoteCalorieTarget(r, local) : null
           );
@@ -458,10 +489,13 @@ export const fitnessAdapter: SyncAdapter = {
 
   async applyPull(res) {
     // موجودیتِ ماژولِ قفل اصلا توی پاسخ نیست (undefined) — چیزی پاک نمی‌شه
-    for (const r of res.exercisePlans ?? []) await applyRemotePlan(r);
-    for (const r of res.exerciseLogs ?? []) await applyRemoteExerciseLog(r);
-    for (const r of res.foodLogEntries ?? []) await applyRemoteFoodLog(r);
-    for (const r of res.calorieTargets ?? []) await applyRemoteCalorieTarget(r);
+    let applied = 0;
+    const count = (ok: boolean) => void (ok && applied++);
+    for (const r of res.exercisePlans ?? []) count(await applyRemotePlan(r));
+    for (const r of res.exerciseLogs ?? []) count(await applyRemoteExerciseLog(r));
+    for (const r of res.foodLogEntries ?? []) count(await applyRemoteFoodLog(r));
+    for (const r of res.calorieTargets ?? []) count(await applyRemoteCalorieTarget(r));
+    return applied;
   },
 
   async markAllDirty() {

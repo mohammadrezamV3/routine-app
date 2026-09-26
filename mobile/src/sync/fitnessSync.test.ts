@@ -83,7 +83,7 @@ describe("fitness mapping", () => {
     for (let i = 0; i < 20; i++) expect(newLocalId()).toMatch(/^[a-z][a-z0-9]{19,31}$/);
   });
 
-  it("ثبتِ غذا: به‌ازای ۱۰۰ گرم → کلِ مقدار (و برعکس)", () => {
+  it("ثبتِ غذا: به‌ازای ۱۰۰ گرم → کلِ مقدار (و برعکس)، بدونِ گردکردن", () => {
     const row = {
       id: "mabc0000000000000000000000000001",
       name: "برنج",
@@ -104,7 +104,7 @@ describe("fitness mapping", () => {
     expect(ch).toMatchObject({
       entity: "foodLogEntry",
       op: "upsert",
-      data: { customName: "برنج", customCalories: 325, grams: 250, proteinG: 6.8, carbsG: 70, fatG: 0.8 },
+      data: { customName: "برنج", customCalories: 325, grams: 250, proteinG: 6.75, carbsG: 70, fatG: 0.75 },
     });
     const rec: FoodLogEntryRecord = {
       id: row.id,
@@ -122,7 +122,11 @@ describe("fitness mapping", () => {
       editedAt: T1,
       updatedAt: T1,
     };
-    expect(remoteFoodLog(rec)).toMatchObject({ caloriesPer100g: 130, proteinPer100g: null, mealType: "snack", dirty: 0 });
+    // mealType عینا (چیدمانِ وعده‌های وب: snack1، snack2، …) — قبلا به "snack" نرمال می‌شد
+    expect(remoteFoodLog(rec)).toMatchObject({ caloriesPer100g: 130, proteinPer100g: null, mealType: "snack2", dirty: 0 });
+    // رفت‌وبرگشتِ دقیق: کلِ ۲۵۰ کالری روی ۱۵۰ گرم (per100 ِ نامتناهی) دوباره ۲۵۰ می‌شه
+    const odd = remoteFoodLog({ ...rec, customCalories: 250, grams: 150, proteinG: 12.34, carbsG: 0.1, fatG: 7 });
+    expect(calorieEntryToChange({ ...odd, dirty: 1 })).toMatchObject({ data: { customCalories: 250, proteinG: 12.34, carbsG: 0.1, fatG: 7 } });
     expect(calorieEntryToChange({ ...row, deletedAt: T1 })).toMatchObject({ op: "delete" });
   });
 
@@ -344,5 +348,129 @@ describe("رودمپ و پاک‌کردنِ داده", () => {
     expect(await coreDb.tasks.count()).toBe(0);
     await addCalorieEntry({ name: "y", caloriesPer100g: 10, grams: 10, date: "2026-09-25", mealType: null });
     expect(await fitnessDb.calorieEntries.count()).toBe(1);
+  });
+});
+
+describe("fitness ← onRemoteApplied / هدفِ کالریِ ویرایش‌شده قبل از compute", () => {
+  /** سرورِ حالت‌دار برای ثبتِ غذا: push ← رکوردِ سرور، pull ← همه‌ی رکوردها (+ رکوردِ ریموتِ تزریقی) */
+  function foodServer() {
+    const rows = new Map<string, FoodLogEntryRecord>();
+    const handler = (c: Call) => {
+      if (c.path === "/api/mobile/sync/push") {
+        const changes: SyncChange[] = c.body.changes;
+        return json(200, {
+          serverTime: T1,
+          results: changes.map((ch: any, index) => {
+            const rec: FoodLogEntryRecord = {
+              id: ch.id,
+              ...ch.data,
+              mealType: ch.data?.mealType ?? null,
+              proteinG: ch.data?.proteinG ?? null,
+              carbsG: ch.data?.carbsG ?? null,
+              fatG: ch.data?.fatG ?? null,
+              aiScanned: !!ch.data?.aiScanned,
+              createdAt: T1,
+              deleted: ch.op === "delete",
+              editedAt: ch.clientUpdatedAt,
+              updatedAt: new Date().toISOString(),
+            };
+            rows.set(ch.id, rec);
+            return { index, entity: ch.entity, id: ch.id, status: "applied", serverRecord: rec };
+          }),
+        });
+      }
+      return json(200, emptyPull({ foodLogEntries: [...rows.values()], calorieTargets: [], exercisePlans: [], exerciseLogs: [] }));
+    };
+    return { handler, rows };
+  }
+
+  it("برگشتِ push ِ خودمون در pull ← بدونِ remount؛ رکوردِ واقعا ریموت ← remount", async () => {
+    const srv = foodServer();
+    const { engine } = await setup(srv.handler);
+    const seen: number[] = [];
+    engine.onRemoteApplied((n) => seen.push(n));
+    await addCalorieEntry({ name: "برنج", caloriesPer100g: 250 / 1.5, grams: 150, date: "2026-09-25", mealType: "snack2" });
+    await engine.sync();
+    expect(seen).toEqual([]);
+    srv.rows.set("cfromweb000000000000000001", {
+      id: "cfromweb000000000000000001",
+      date: "2026-09-25",
+      customName: "نان",
+      customCalories: 187,
+      grams: 70,
+      mealType: "breakfast",
+      proteinG: null,
+      carbsG: null,
+      fatG: null,
+      aiScanned: false,
+      createdAt: T1,
+      deleted: false,
+      editedAt: "2026-09-25T09:00:00.000Z",
+      updatedAt: "2026-09-25T09:00:00.000Z",
+    });
+    await engine.sync();
+    expect(seen).toEqual([1]);
+    await engine.sync(); // همون رکورد دوباره ← بی‌تغییر
+    expect(seen).toEqual([1]);
+    expect([...srv.rows.values()].find((r) => r.customName === "برنج")).toMatchObject({ customCalories: 250, mealType: "snack2" });
+  });
+
+  it("PATCH ِ وعده‌ها روی هدفِ هنوز-compute‌نشده: compute ← بعدش meals با همون چیدمان، در همون sync", async () => {
+    const meals = [{ key: "a", label: "الف", kcal: 900 }, { key: "b", label: "ب", kcal: 600 }];
+    const serverMeals = [{ key: "breakfast", label: "صبحانه", kcal: 700 }, { key: "lunch", label: "ناهار", kcal: 1100 }];
+    const pushed: any[] = [];
+    const handler = (c: Call) => {
+      if (c.path === "/api/mobile/sync/push") {
+        const changes: any[] = c.body.changes;
+        pushed.push(...changes);
+        return json(200, {
+          serverTime: T1,
+          results: changes.map((ch, index) => {
+            const computed = ch.data.kind === "compute";
+            const rec = {
+              id: ch.id,
+              dailyTargetKcal: computed ? 1800 : 1500,
+              goal: "lose",
+              mealsPerDay: computed ? 2 : 2,
+              mealBreakdown: computed ? serverMeals : ch.data.mealBreakdown,
+              proteinTargetG: null,
+              carbsTargetG: null,
+              fatTargetG: null,
+              sex: "male",
+              ageYears: 30,
+              heightCm: 180,
+              weightKg: 80,
+              effectiveFrom: T1,
+              effectiveTo: null,
+              editedAt: ch.clientUpdatedAt,
+              updatedAt: new Date().toISOString(),
+            };
+            return { index, entity: ch.entity, id: ch.id, status: "applied", serverRecord: rec };
+          }),
+        });
+      }
+      return json(200, emptyPull({ calorieTargets: [], foodLogEntries: [], exercisePlans: [], exerciseLogs: [] }));
+    };
+    const { engine } = await setup(handler);
+    const t = await setCalorieTarget({
+      dailyTargetKcal: 1500,
+      goal: "lose",
+      mealsPerDay: 2,
+      mealBreakdown: meals,
+      proteinTargetG: null,
+      carbsTargetG: null,
+      fatTargetG: null,
+      sex: "male",
+      ageYears: 30,
+      heightCm: 180,
+      weightKg: 80,
+    });
+    await fitnessDb.calorieTargets.update(t.id, { mealsEdited: true });
+    // یک sync: compute، بعد (settle ← "repush") همون دور meals
+    await engine.sync();
+    expect(pushed.map((c) => c.data.kind)).toEqual(["compute", "meals"]);
+    expect((await fitnessDb.calorieTargets.get(t.id))?.mealsEdited).toBeFalsy();
+    expect(pushed[1].data.mealBreakdown).toEqual(meals);
+    expect(await fitnessDb.calorieTargets.get(t.id)).toMatchObject({ synced: true, dirty: 0, mealBreakdown: meals });
   });
 });

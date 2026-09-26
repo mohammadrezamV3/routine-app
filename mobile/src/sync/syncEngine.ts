@@ -281,7 +281,8 @@ export class SyncEngine {
             nextFailures[item.key] = { updatedAt: item.updatedAt, error: r.code || r.error || "rejected" };
             continue;
           }
-          await item.settle(r.serverRecord ?? null);
+          // "repush" ← ردیف بعد از این نتیجه دوباره dirty شده و باید همین دور بره (مثلا compute ← meals)
+          if ((await item.settle(r.serverRecord ?? null)) === "repush") this.rerun = true;
           delete nextFailures[item.key];
         }
         if (newlyLocked.size !== (locked?.size ?? 0)) await this.setLocked(ch, newlyLocked);

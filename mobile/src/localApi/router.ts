@@ -16,7 +16,12 @@ import type { HttpMethod, LocalHandler } from "./types";
 import { getDaily, getDailyKeys, getDailyRange, postDaily } from "./handlers/routine";
 import { getSettingHandler, postSettingHandler } from "./handlers/settings";
 import { getExerciseSchedule } from "./handlers/exercise";
+import { lazyHandler } from "./lazy";
 import { start2fa } from "./handlers/auth";
+
+// فاز ۲ (بدنسازی/کالری) — تنبل
+const exerciseH = (name: keyof typeof import("./handlers/exerciseLocal") & string) => lazyHandler(() => import("./handlers/exerciseLocal"), name);
+const calorieH = (name: keyof typeof import("./handlers/calorie") & string) => lazyHandler(() => import("./handlers/calorie"), name);
 
 export type EndpointClass = "LOCAL" | "CACHED" | "ONLINE" | "NA";
 
@@ -55,6 +60,24 @@ export const ROUTES: RouteDef[] = [
   R("/api/settings/:key", ["GET"], "LOCAL", { handler: getSettingHandler }),
   R("/api/settings/:key", ["POST"], "LOCAL", { handler: postSettingHandler }),
   R("/api/exercise/schedule", ["GET"], "LOCAL", { handler: getExerciseSchedule, module: "EXERCISE" }),
+  // ─── LOCAL (فاز 2): بدنسازی/کالری ───────────────────────────────────
+  R("/api/exercise/plan", ["GET"], "LOCAL", { handler: exerciseH("getExercisePlan"), module: "EXERCISE" }),
+  R("/api/exercise/plan/manual", ["POST"], "LOCAL", { handler: exerciseH("postManualPlan"), module: "EXERCISE" }),
+  R("/api/exercise/plan/substitute", ["PATCH"], "LOCAL", { handler: exerciseH("patchSubstitute"), module: "EXERCISE" }),
+  R("/api/exercise/log", ["GET"], "LOCAL", { handler: exerciseH("getExerciseLog"), module: "EXERCISE" }),
+  R("/api/exercise/log", ["POST"], "LOCAL", { handler: exerciseH("postExerciseLog"), module: "EXERCISE" }),
+  R("/api/exercise/log/range", ["GET"], "LOCAL", { handler: exerciseH("getExerciseLogRange"), module: "EXERCISE" }),
+  // arion-catalog؛ تا کاتالوگ دانلود نشده ← CACHED (dispatch.cachedFallback)
+  R("/api/exercise/media", ["GET"], "LOCAL", { handler: exerciseH("getExerciseMedia"), module: "EXERCISE" }),
+  // فهرستِ ثابتِ غذاها — روتِ وب هم بدونِ لاگینه
+  R("/api/calorie/foods", ["GET"], "LOCAL", { handler: calorieH("getFoods"), public: true }),
+  R("/api/calorie/log", ["GET"], "LOCAL", { handler: calorieH("getCalorieLog"), module: "CALORIE" }),
+  R("/api/calorie/log", ["POST"], "LOCAL", { handler: calorieH("postCalorieLog"), module: "CALORIE" }),
+  R("/api/calorie/log", ["DELETE"], "LOCAL", { handler: calorieH("deleteCalorieLog"), module: "CALORIE" }),
+  R("/api/calorie/log/range", ["GET"], "LOCAL", { handler: calorieH("getCalorieLogRange"), module: "CALORIE" }),
+  R("/api/calorie/target", ["GET"], "LOCAL", { handler: calorieH("getCalorieTarget"), module: "CALORIE" }),
+  R("/api/calorie/target", ["POST"], "LOCAL", { handler: calorieH("postCalorieTarget"), module: "CALORIE" }),
+  R("/api/calorie/target", ["PATCH"], "LOCAL", { handler: calorieH("patchCalorieTarget"), module: "CALORIE" }),
   // پیش‌ورودِ صفحه‌ی لاگینِ وب ← ورودِ موبایل (shims/authBridge)
   R("/api/auth/2fa/start", ["POST"], "LOCAL", { handler: start2fa, public: true }),
 
@@ -125,16 +148,6 @@ export const ROUTES: RouteDef[] = [
   R("/api/auth/forgot-password/verify", "*", "ONLINE", { public: true }),
 
   // ─── TODO: فعلا ONLINE، در فازهای بعد LOCAL ────────────────────────
-  R("/api/exercise/plan", ["GET"], "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/exercise/plan/manual", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/exercise/plan/substitute", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/exercise/log", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/exercise/log/range", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/exercise/media", "*", "ONLINE", { todo: "phase2 LOCAL (arion-catalog, CACHED fallback)" }),
-  R("/api/calorie/foods", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/calorie/log", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/calorie/log/range", "*", "ONLINE", { todo: "phase2 LOCAL" }),
-  R("/api/calorie/target", "*", "ONLINE", { todo: "phase2 LOCAL" }),
   R("/api/trade/accounts", "*", "ONLINE", { todo: "phase3 LOCAL" }),
   R("/api/trade/entries", "*", "ONLINE", { todo: "phase3 LOCAL" }),
   R("/api/trade/entries/:id", "*", "ONLINE", { todo: "phase3 LOCAL" }),

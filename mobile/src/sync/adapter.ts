@@ -13,9 +13,10 @@ export type PendingItem = {
   module?: "EXERCISE" | "CALORIE" | "ROADMAP" | "TRADE";
   /**
    * نتیجه‌ی applied/stale رو اعمال می‌کنه — فقط اگه ردیف از لحظه‌ی snapshot
-   * دوباره ویرایش نشده باشه. serverRecord ممکنه null باشه.
+   * دوباره ویرایش نشده باشه. serverRecord ممکنه null باشه. "repush" = ردیف
+   * دوباره dirty شده و موتور باید در همین sync یک دورِ دیگه push کنه.
    */
-  settle(serverRecord: any): Promise<void>;
+  settle(serverRecord: any): Promise<void | "repush">;
 };
 
 export interface SyncAdapter {

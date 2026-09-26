@@ -54,6 +54,17 @@ async function cachedGet(route: RouteDef, url: URL, out: OutgoingRequest): Promi
   return fetchAndStore(route, url, out);
 }
 
+/**
+ * هندلرِ LOCAL که داده‌ی محلیِ لازم رو نداره (مثلا کاتالوگِ عکسِ حرکات هنوز
+ * دانلود نشده) ← همون رفتارِ CACHED برای همین GET.
+ */
+export function cachedFallback(url: URL, req: Request): Promise<Response> {
+  const headers: Record<string, string> = {};
+  req.headers.forEach((v, k) => (headers[k] = v));
+  const route: RouteDef = { pattern: url.pathname, methods: ["GET"], cls: "CACHED" };
+  return cachedGet(route, url, { method: "GET", headers, body: null, signal: req.signal ?? null });
+}
+
 /** تازه‌سازیِ اجباریِ یک مسیرِ CACHED (مثلا /api/account در شروع/برگشت به اپ) */
 export async function refreshCached(path: string): Promise<void> {
   const url = new URL(path, "http://local");

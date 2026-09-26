@@ -178,11 +178,43 @@ describe("localApi classification guard", () => {
     expect(cls("GET", "/api/exercise/schedule")?.module).toBe("EXERCISE");
   });
 
+  it("phase-2 exercise/calorie handlers are LOCAL with module gates; AI routes ONLINE", () => {
+    const cls = (m: string, p: string) => matchRoute(m, p)?.route;
+    const local: [string, string, string | undefined][] = [
+      ["GET", "/api/exercise/plan", "EXERCISE"],
+      ["POST", "/api/exercise/plan/manual", "EXERCISE"],
+      ["PATCH", "/api/exercise/plan/substitute", "EXERCISE"],
+      ["GET", "/api/exercise/log", "EXERCISE"],
+      ["POST", "/api/exercise/log", "EXERCISE"],
+      ["GET", "/api/exercise/log/range", "EXERCISE"],
+      ["GET", "/api/exercise/media", "EXERCISE"],
+      ["GET", "/api/calorie/foods", undefined],
+      ["GET", "/api/calorie/log", "CALORIE"],
+      ["POST", "/api/calorie/log", "CALORIE"],
+      ["DELETE", "/api/calorie/log", "CALORIE"],
+      ["GET", "/api/calorie/log/range", "CALORIE"],
+      ["GET", "/api/calorie/target", "CALORIE"],
+      ["POST", "/api/calorie/target", "CALORIE"],
+      ["PATCH", "/api/calorie/target", "CALORIE"],
+    ];
+    for (const [m, p, mod] of local) {
+      const r = cls(m, p);
+      expect(r?.cls, `${m} ${p}`).toBe("LOCAL");
+      expect(r?.module, `${m} ${p}`).toBe(mod);
+      expect(r?.todo, `${m} ${p}`).toBeUndefined();
+    }
+    expect(cls("GET", "/api/calorie/foods")?.public).toBe(true);
+    expect(cls("POST", "/api/exercise/plan")).toMatchObject({ cls: "ONLINE", ai: true, barrier: true });
+    expect(cls("POST", "/api/calorie/scan")).toMatchObject({ cls: "ONLINE", ai: true });
+    // هیچ مسیرِ exercise/calorie دیگه todo ِ فاز ۲ نداره
+    expect(ROUTES.filter((r) => /^\/api\/(exercise|calorie)\//.test(r.pattern) && r.todo)).toEqual([]);
+  });
+
   it("reports the classification counts", () => {
     const c = classificationCounts();
     // eslint-disable-next-line no-console
     console.info(`[localApi] routes: ${JSON.stringify(c)}; distinct web /api/ literals: ${literals.size}`);
-    expect(c.LOCAL).toBeGreaterThanOrEqual(8);
+    expect(c.LOCAL).toBeGreaterThanOrEqual(23);
   });
 
   it("main.tsx installs the interceptor and never runs the web preload", () => {

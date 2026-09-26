@@ -75,7 +75,9 @@ export type CalorieEntryRow = {
   fatPer100g: number | null;
   grams: number;
   date: string; // yyyy-mm-dd
-  mealType: MealType | null;
+  // کلیدِ وعده همون‌طور که وب/سرور نگه می‌داره — وب تعداد/چیدمانِ وعده‌ها رو از
+  // هدفِ کالری می‌گیره (snack1، snack2، meal_…)، پس به MealType محدود/نرمال نمی‌شه.
+  mealType: MealType | string | null;
   aiScanned: boolean;
   createdAt: string;
   updatedAt: string;
@@ -102,6 +104,9 @@ export type CalorieTargetRow = {
   effectiveTo: string | null;
   /** سرور این هدف رو می‌شناسه (از pull اومده یا compute شده) — push بعدی از نوعِ meals می‌ره نه compute */
   synced?: boolean;
+  /** PATCHِ وعده‌ها روی هدفی که هنوز compute نشده (synced=false) — بعد از compute،
+   *  چیدمانِ دستی حفظ و به‌صورتِ kind=meals دوباره push می‌شه (fitnessAdapter) */
+  mealsEdited?: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
