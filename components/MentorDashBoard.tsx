@@ -3,34 +3,40 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Activity, AlertTriangle, BadgeCheck, Ban, CalendarCheck, ClipboardList, EyeOff, Inbox,
-  MessageCircle, Send, UserPlus, Users, Hourglass, Pencil, ChevronLeft, AtSign,
+  Activity, AlertCircle, Ban, BadgeCheck, CalendarCheck, CalendarDays, Check, CheckCircle2, CircleSlash,
+  ClipboardList, Dumbbell, Eye, EyeOff, Hourglass, Inbox, MessageCircle, Pencil, Send, UserPlus, UserRound, Users, X, XCircle,
 } from "lucide-react";
-import { AccountBlock } from "./AccountUI";
-import { AuthField } from "./AuthField";
-import { DashCard } from "./DashCard";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { ProgramStatusBadge } from "./ProgramStatusBadge";
-import {
-  MentorDashBar, MentorDashEmpty, MentorDashError, MentorDashNotice,
-  fa, mentorApi, pct,
-} from "./MentorDashKit";
+import { MentorDashBar, MentorDashError, fa, mentorApi, pct } from "./MentorDashKit";
+import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorField, MentorNotice, MentorRow, MentorSection } from "./MentorUI";
 import { MentorUserAvatar } from "./MentorUserAvatar";
 import { categoryLabel } from "./MentorBadges";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { isValidUsername } from "@/lib/validate";
 import { VERIFICATION_LABELS } from "@/lib/mentorCategories";
 import { publicUserName } from "@/lib/mentorTypes";
-import type { MentorDashboard, MentorSelf, MentorshipAction, MentorshipRow, MentorshipsResponse } from "@/lib/mentorTypes";
+import type {
+  MentorDashboard, MentorSelf, MentorshipAction, MentorshipRow, MentorshipsResponse, VerificationStatus,
+} from "@/lib/mentorTypes";
 
-const ROW = "flex items-center gap-3 border-b border-dash-border py-3 last:border-b-0";
-const DANGER_BTN: React.CSSProperties = { borderColor: "rgba(224,82,82,.55)", color: "#E05252" };
-const SMALL_BTN: React.CSSProperties = { padding: "6px 12px", fontSize: 12 };
+const ic = (Icon: typeof Users, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
-/** داشبوردِ ساده‌ی منتور — عمدا یک پلتفرمِ آنالیتیکس نیست. */
+/** چیپ وضعیت احراز هویت (یک خط؛ PENDING هرگز جعبه/اطلاعیه نیست) */
+function IdentityChip({ status }: { status: VerificationStatus }) {
+  switch (status) {
+    case "PENDING": return <MentorChip tone="info" icon={ic(Hourglass, MI.chip)}>{VERIFICATION_LABELS.PENDING}</MentorChip>;
+    case "VERIFIED": return <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>{VERIFICATION_LABELS.VERIFIED}</MentorChip>;
+    case "REJECTED": return <MentorChip tone="danger" icon={ic(XCircle, MI.chip)}>{VERIFICATION_LABELS.REJECTED}</MentorChip>;
+    default: return <MentorChip tone="neutral" icon={ic(CircleSlash, MI.chip)}>{VERIFICATION_LABELS.NOT_PROVIDED}</MentorChip>;
+  }
+}
+
+/** داشبورد منتور: وضعیت‌های نیازمند اقدام، شاگردها، درخواست‌ها، برنامه‌ها. */
 export function MentorDashBoard({ self }: { self: MentorSelf }) {
   const [dash, setDash] = useState<MentorDashboard | null>(null);
   const [rows, setRows] = useState<MentorshipRow[]>([]);
+  const [rowsError, setRowsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,208 +47,223 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       mentorApi<MentorDashboard>("/api/mentor/dashboard"),
       mentorApi<MentorshipsResponse>("/api/mentorships?role=mentor"),
     ]);
-    if (!d.ok) { setError(d.error); setLoading(false); return; }
-    setDash(d.data);
-    if (m.ok) setRows(m.data.mentorships || []);
-    else setError(m.error);
     setLoading(false);
+    if (!d.ok) { setError(d.error); return; }
+    setDash(d.data);
+    if (m.ok) { setRows(m.data.mentorships || []); setRowsError(null); }
+    else setRowsError(m.error);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   if (loading && !dash) return <LoadingBlock />;
-  if (!dash) return <MentorDashError message={error || "داشبورد بارگذاری نشد"} onRetry={() => load()} />;
+  if (!dash) return <MentorDashError message={error || "داشبورد دریافت نشد؛ دوباره تلاش کن"} onRetry={() => load()} />;
 
   const profile = dash.profile;
   const suspended = !!(profile?.suspendedAt ?? self.suspendedAt);
   const published = profile?.published ?? self.published;
   const identity = profile?.identityStatus ?? self.identityStatus;
   const active = rows.filter((r) => r.status === "ACTIVE");
-  // درخواست‌هایی که خودِ منتور فرستاده (دعوت) و هنوز بی‌جواب‌اند
+  // دعوت‌هایی که خود منتور فرستاده و هنوز بی‌پاسخ‌اند
   const sentInvites = rows.filter((r) => r.status === "PENDING" && r.initiatedBy === "MENTOR");
   const incoming = dash.requests.filter((r) => r.status === "PENDING" && r.initiatedBy === "STUDENT");
 
+  // اطلاعیه‌ها فقط برای وضعیت‌هایی که اقدام می‌خواهند؛ حداکثر دو مورد، به‌ترتیب شدت
+  const notices: React.ReactNode[] = [];
+  if (suspended) {
+    notices.push(
+      <MentorNotice key="susp" tone="danger" icon={ic(Ban, MI.row)} title="حساب منتوری معلق است">
+        {self.suspendedReason || "تا رفع تعلیق، شاگرد جدید و ارسال برنامه ممکن نیست"}
+      </MentorNotice>,
+    );
+  }
+  if (identity === "REJECTED") {
+    notices.push(
+      <MentorNotice
+        key="idrej" tone="danger" icon={ic(BadgeCheck, MI.row)} title="مدرک شناسایی رد شد"
+        action={<Link href="/mentor/profile#verification" className="mentor-link">ارسال دوباره</Link>}
+      >
+        {self.identityRejectReason || "مدرک واضح‌تری بفرست"}
+      </MentorNotice>,
+    );
+  }
+  if (!published && !suspended) {
+    notices.push(
+      <MentorNotice
+        key="unpub" tone="warn" icon={ic(EyeOff, MI.row)} title="پروفایل منتشر نشده"
+        action={<Link href="/mentor/profile" className="mentor-link">تکمیل پروفایل</Link>}
+      >
+        شاگردها تا انتشار آن را نمی‌بینند
+      </MentorNotice>,
+    );
+  }
+  if (identity === "NOT_PROVIDED") {
+    notices.push(
+      <MentorNotice
+        key="idnone" tone="warn" icon={ic(BadgeCheck, MI.row)} title="احراز هویت انجام نشده"
+        action={<Link href="/mentor/profile#verification" className="mentor-link">ارسال مدرک</Link>}
+      >
+        پس از تأیید، نشان «هویت تأییدشده» روی پروفایلت نمایش داده می‌شود
+      </MentorNotice>,
+    );
+  }
+
   return (
-    <div>
-      {/* ── بنرهای وضعیت ── */}
-      {suspended && (
-        <MentorDashNotice tone="danger" icon={<Ban size={16} />} title="حساب منتوری‌ات معلق شده">
-          {self.suspendedReason ? `دلیل: ${self.suspendedReason}. ` : ""}
-          تا رفع تعلیق پروفایلت در فهرست منتورها دیده نمی‌شه و نمی‌تونی شاگرد جدید بپذیری یا برنامه بفرستی. برای پیگیری با پشتیبانی در ارتباط باش.
-        </MentorDashNotice>
-      )}
-      {!published && !suspended && (
-        <MentorDashNotice
-          tone="warn" icon={<EyeOff size={16} />} title="پروفایلت هنوز منتشر نشده"
-          action={<Link href="/mentor/profile" className="text-[12px] font-bold text-dash-green no-underline">تکمیل پروفایل</Link>}
-        >
-          تا منتشر نکنی، شاگردها نمی‌تونن پیدات کنن یا درخواست بدن. حداقل یک دسته و بیوگرافی لازمه.
-        </MentorDashNotice>
-      )}
-      {identity !== "VERIFIED" && (
-        <MentorDashNotice
-          tone={identity === "REJECTED" ? "danger" : identity === "PENDING" ? "info" : "warn"}
-          icon={<BadgeCheck size={16} />}
-          title={`احراز هویت: ${VERIFICATION_LABELS[identity]}`}
-          action={identity !== "PENDING" ? <Link href="/mentor/profile#verification" className="text-[12px] font-bold text-dash-green no-underline">{identity === "REJECTED" ? "ارسال دوباره" : "ارسال مدرک"}</Link> : undefined}
-        >
-          {identity === "PENDING"
-            ? "مدرکت در صف بررسی ادمین‌های آریونه."
-            : identity === "REJECTED"
-              ? (self.identityRejectReason ? `دلیل رد: ${self.identityRejectReason}` : "مدرک شناسایی‌ات رد شد؛ لطفا مدرک واضح‌تری بفرست.")
-              : "با احراز هویت، نشان «تأییدشده» روی پروفایلت می‌گیری و شاگردها راحت‌تر بهت اعتماد می‌کنن."}
-        </MentorDashNotice>
-      )}
+    <>
+      {notices.slice(0, 2)}
 
-      {error && <div className="form-inline-error mb-3">{error}</div>}
-
-      {/* ── کاشی‌های آمار ── */}
-      <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <StatTile icon={<Users size={16} />} label="کل شاگردها" value={dash.stats.students} delay={0} />
-        <StatTile icon={<Activity size={16} />} label="شاگرد فعال" value={dash.stats.activeStudents} delay={0.04} />
-        <StatTile icon={<Inbox size={16} />} label="درخواست در انتظار" value={dash.stats.pendingRequests} delay={0.08} />
-        <StatTile icon={<Hourglass size={16} />} label="برنامه در انتظار تأیید" value={dash.stats.pendingPrograms} delay={0.12} />
+      <div className="mentor-stats" style={{ marginTop: 0, marginBottom: "var(--m-4)" }}>
+        <div className="mentor-stat"><b>{fa(dash.stats.students)}</b><span>{ic(Users, MI.chip)} کل شاگردها</span></div>
+        <div className="mentor-stat"><b>{fa(dash.stats.activeStudents)}</b><span>{ic(Activity, MI.chip)} شاگرد فعال</span></div>
+        <div className="mentor-stat"><b>{fa(dash.stats.pendingRequests)}</b><span>{ic(Inbox, MI.chip)} درخواست بی‌پاسخ</span></div>
+        <div className="mentor-stat"><b>{fa(dash.stats.pendingPrograms)}</b><span>{ic(Hourglass, MI.chip)} برنامه‌ی منتظر پاسخ</span></div>
       </div>
 
-      {/* ── نیازمند توجه ── */}
       {dash.attention.length > 0 && (
-        <AccountBlock title="نیازمند توجه" icon={<AlertTriangle size={15} />} index={0}>
+        <MentorSection title="نیازمند توجه" icon={ic(AlertCircle, MI.section)} count={fa(dash.attention.length)} flush>
           {dash.attention.map((a) => (
-            <Link key={a.studentId + a.reason} href={`/mentor/students/${a.studentId}`} className={`${ROW} text-dash-text no-underline`}>
-              <MentorUserAvatar avatarUrl={a.avatarUrl} name={a.name} size={34} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-bold">{a.name}</span>
-                <span className="block text-[11.5px] leading-6" style={{ color: "#e0a636" }}>{a.reason}</span>
-              </span>
-              <ChevronLeft size={16} className="shrink-0 text-dash-muted" />
-            </Link>
+            <MentorRow
+              key={a.studentId + a.reason}
+              href={`/mentor/students/${a.studentId}`}
+              lead={<MentorUserAvatar avatarUrl={a.avatarUrl} name={a.name} size={36} />}
+              title={a.name}
+              sub={<span>{a.reason}</span>}
+            />
           ))}
-        </AccountBlock>
+        </MentorSection>
       )}
 
-      {/* ── درخواست‌ها + دعوت ── */}
-      <MentorDashRequests incoming={incoming} sent={sentInvites} suspended={suspended} categories={self.categories} onChanged={() => load(true)} />
+      <MentorDashRequests incoming={incoming} sent={sentInvites} suspended={suspended} onChanged={() => load(true)} />
 
-      {/* ── شاگردها ── */}
-      <AccountBlock title="شاگردهای فعال" icon={<Users size={15} />} index={2}>
-        {active.length === 0 ? (
-          <MentorDashEmpty>هنوز شاگرد فعالی نداری. درخواست‌ها رو بپذیر یا یک شاگرد رو با یوزرنیمش دعوت کن.</MentorDashEmpty>
-        ) : active.map((r) => (
-          <div key={r.id} className={ROW}>
-            <Link href={`/mentor/students/${r.counterpart.id}`} className="flex min-w-0 flex-1 items-center gap-3 text-dash-text no-underline">
-              <MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={publicUserName(r.counterpart)} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-bold">{publicUserName(r.counterpart)}</span>
-                <span className="block text-[11px] text-dash-muted">
-                  {r.startedAt ? `از ${fmtDate(r.startedAt)}` : ""}
-                  {r.activePrograms > 0 ? ` · ${fa(r.activePrograms)} برنامه‌ی فعال` : " · بدون برنامه‌ی فعال"}
-                </span>
-              </span>
-            </Link>
-            <Link href={`/mentorship/${r.id}`} className="flex shrink-0 items-center gap-1 text-[12px] font-bold text-dash-green no-underline" aria-label={`چت با ${publicUserName(r.counterpart)}`}>
-              <MessageCircle size={15} />
-              {r.unread > 0 ? `${fa(r.unread)} پیام جدید` : "چت"}
-            </Link>
-          </div>
-        ))}
-      </AccountBlock>
-
-      {/* ── برنامه‌های در انتظار ── */}
-      <AccountBlock title="برنامه‌های در انتظار پاسخ شاگرد" icon={<ClipboardList size={15} />} index={3}>
-        {dash.pendingPrograms.length === 0 ? (
-          <MentorDashEmpty>برنامه‌ای در انتظار تأیید نیست.</MentorDashEmpty>
-        ) : dash.pendingPrograms.map((p) => (
-          <Link key={p.id} href={`/mentor-programs/${p.id}`} className={`${ROW} text-dash-text no-underline`}>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-bold">{p.title}</span>
-              <span className="block text-[11px] text-dash-muted">
-                {publicUserName(p.counterpart)} · {p.type === "WORKOUT" ? "تمرینی" : "روتین"}
-                {p.sentAt ? ` · ارسال ${fmtRelative(p.sentAt)}` : ""}
-                {p.version > 1 ? ` · نسخه ${fa(p.version)}` : ""}
-              </span>
-            </span>
-            <ProgramStatusBadge status={p.status} />
-          </Link>
-        ))}
-      </AccountBlock>
-
-      {/* ── ۷ روز اخیر ── */}
-      <AccountBlock title="پایبندی ۷ روز اخیر" icon={<CalendarCheck size={15} />} desc="فقط برنامه‌هایی که خودت فرستادی و شاگرد فعالش کرده." index={4}>
-        {dash.completion.length === 0 ? (
-          <MentorDashEmpty>هنوز داده‌ای برای ۷ روز اخیر ثبت نشده.</MentorDashEmpty>
-        ) : dash.completion.map((c) => (
-          <Link key={c.studentId} href={`/mentor/students/${c.studentId}`} className={`${ROW} text-dash-text no-underline`}>
-            <MentorUserAvatar avatarUrl={c.avatarUrl} name={c.name} size={32} />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center justify-between gap-2">
-                <span className="truncate text-[12.5px] font-bold">{c.name}</span>
-                <span className="shrink-0 text-[12px] font-bold text-dash-green">{pct(c.rate)}</span>
-              </span>
-              <span className="mt-1.5 block"><MentorDashBar rate={c.rate} /></span>
-              <span className="mt-1 block text-[10.5px] text-dash-muted">
-                {fa(c.completed)} انجام‌شده · {fa(c.partial)} ناقص · {fa(c.missed)} انجام‌نشده
-              </span>
-            </span>
-          </Link>
-        ))}
-      </AccountBlock>
-
-      {/* ── فعالیت اخیر ── */}
-      <AccountBlock title="فعالیت اخیر" icon={<Activity size={15} />} index={5}>
-        {dash.recentActivity.length === 0 ? (
-          <MentorDashEmpty>فعالیتی ثبت نشده.</MentorDashEmpty>
-        ) : dash.recentActivity.map((a, i) => {
-          const icon = a.type === "message" ? <MessageCircle size={15} /> : a.type === "program" ? <ClipboardList size={15} /> : <CalendarCheck size={15} />;
-          const body = (
-            <>
-              <span className="shrink-0 text-dash-green">{icon}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12.5px] leading-6"><b>{a.studentName}</b> — {a.text}</span>
-                <span className="block text-[10.5px] text-dash-muted">{fmtRelative(a.at)}</span>
-              </span>
-            </>
-          );
-          // url فقط مسیرِ داخلی — هر چیزِ دیگه لینک نمی‌شه
-          return typeof a.url === "string" && a.url.startsWith("/") && !a.url.startsWith("//") ? (
-            <Link key={i} href={a.url} className={`${ROW} text-dash-text no-underline`}>{body}</Link>
-          ) : (
-            <div key={i} className={ROW}>{body}</div>
+      <MentorSection title="شاگردهای فعال" icon={ic(Users, MI.section)} count={active.length ? fa(active.length) : undefined} flush>
+        {rowsError ? (
+          <MentorEmpty>فهرست شاگردها دریافت نشد؛ صفحه را تازه کن</MentorEmpty>
+        ) : active.length === 0 ? (
+          <MentorEmpty>هنوز شاگرد فعالی نداری</MentorEmpty>
+        ) : active.map((r) => {
+          const name = publicUserName(r.counterpart);
+          return (
+            <MentorRow
+              key={r.id}
+              href={`/mentor/students/${r.counterpart.id}`}
+              lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
+              title={name}
+              sub={
+                <>
+                  {r.startedAt && <span>از {fmtDate(r.startedAt)}</span>}
+                  <span>{r.activePrograms > 0 ? `${fa(r.activePrograms)} برنامه‌ی فعال` : "بدون برنامه‌ی فعال"}</span>
+                  {r.categories.length > 0 && <span>{r.categories.map(categoryLabel).join("، ")}</span>}
+                </>
+              }
+              end={r.unread > 0 ? (
+                <span className="mentor-unread" title={`${fa(r.unread)} پیام خوانده‌نشده`} aria-label={`${fa(r.unread)} پیام خوانده‌نشده`}>{fa(r.unread)}</span>
+              ) : undefined}
+            />
           );
         })}
-      </AccountBlock>
+      </MentorSection>
 
-      <div className="mt-2 flex justify-center">
-        <Link href="/mentor/profile" className="flex items-center gap-1.5 text-[12.5px] font-bold text-dash-green no-underline">
-          <Pencil size={14} /> ویرایش پروفایل منتوری و احراز هویت
-        </Link>
-      </div>
-    </div>
+      <MentorDashInvite suspended={suspended} categories={self.categories} onSent={() => load(true)} />
+
+      <MentorSection title="منتظر پاسخ شاگرد" icon={ic(ClipboardList, MI.section)} count={dash.pendingPrograms.length ? fa(dash.pendingPrograms.length) : undefined} flush>
+        {dash.pendingPrograms.length === 0 ? (
+          <MentorEmpty>برنامه‌ای منتظر پاسخ شاگرد نیست</MentorEmpty>
+        ) : dash.pendingPrograms.map((p) => (
+          <MentorRow
+            key={p.id}
+            href={`/mentor-programs/${p.id}`}
+            lead={p.type === "WORKOUT" ? ic(Dumbbell, MI.row) : ic(CalendarCheck, MI.row)}
+            title={p.title}
+            sub={
+              <>
+                <span>{publicUserName(p.counterpart)}</span>
+                {p.sentAt && <span>ارسال {fmtRelative(p.sentAt)}</span>}
+                {p.version > 1 && <span>نسخه‌ی {fa(p.version)}</span>}
+              </>
+            }
+            end={<ProgramStatusBadge status={p.status} />}
+          />
+        ))}
+      </MentorSection>
+
+      <MentorSection
+        title="پایبندی ۷ روز اخیر" icon={ic(CalendarDays, MI.section)} flush
+        desc="فقط برنامه‌هایی که فرستاده‌ای و شاگرد فعال کرده است"
+      >
+        {dash.completion.length === 0 ? (
+          <MentorEmpty>در ۷ روز اخیر ثبتی نیست</MentorEmpty>
+        ) : dash.completion.map((c) => (
+          <MentorRow
+            key={c.studentId}
+            href={`/mentor/students/${c.studentId}`}
+            lead={<MentorUserAvatar avatarUrl={c.avatarUrl} name={c.name} size={36} />}
+            title={c.name}
+            sub={
+              <>
+                <span>{fa(c.completed)} انجام‌شده</span>
+                <span>{fa(c.partial)} ناقص</span>
+                <span>{fa(c.missed)} انجام‌نشده</span>
+              </>
+            }
+            end={
+              <span className="mentor-progress" style={{ marginTop: 0, width: 96 }}>
+                <MentorDashBar rate={c.rate} />
+                <span className="mentor-progress-value">{pct(c.rate)}</span>
+              </span>
+            }
+          />
+        ))}
+      </MentorSection>
+
+      <MentorSection title="فعالیت اخیر" icon={ic(Activity, MI.section)} flush>
+        {dash.recentActivity.length === 0 ? (
+          <MentorEmpty>فعالیتی ثبت نشده است</MentorEmpty>
+        ) : dash.recentActivity.map((a, i) => {
+          const lead = a.type === "message" ? ic(MessageCircle, MI.row) : a.type === "program" ? ic(ClipboardList, MI.row) : ic(CalendarCheck, MI.row);
+          // url فقط مسیر داخلی؛ هر چیز دیگری لینک نمی‌شود
+          const internal = typeof a.url === "string" && a.url.startsWith("/") && !a.url.startsWith("//");
+          return (
+            <MentorRow
+              key={i}
+              href={internal ? a.url : undefined}
+              lead={lead}
+              title={a.studentName}
+              sub={<><span>{a.text}</span><span>{fmtRelative(a.at)}</span></>}
+            />
+          );
+        })}
+      </MentorSection>
+
+      <MentorSection
+        title="پروفایل" icon={ic(UserRound, MI.section)} flush
+        action={<Link href="/mentor/profile" className="mentor-link">{ic(Pencil, MI.btnSm)} ویرایش</Link>}
+      >
+        <MentorRow
+          title="نمایش در کشف منتور"
+          end={suspended
+            ? <MentorChip tone="danger" icon={ic(Ban, MI.chip)}>معلق</MentorChip>
+            : published
+              ? <MentorChip tone="accent" icon={ic(Eye, MI.chip)}>منتشرشده</MentorChip>
+              : <MentorChip tone="neutral" icon={ic(EyeOff, MI.chip)}>منتشرنشده</MentorChip>}
+        />
+        <MentorRow
+          title="پذیرش شاگرد جدید"
+          end={self.acceptingStudents
+            ? <MentorChip tone="ok" icon={ic(CheckCircle2, MI.chip)}>باز</MentorChip>
+            : <MentorChip tone="neutral" icon={ic(CircleSlash, MI.chip)}>بسته</MentorChip>}
+        />
+        <MentorRow title="احراز هویت" end={<IdentityChip status={identity} />} />
+      </MentorSection>
+    </>
   );
 }
 
-function StatTile({ icon, label, value, delay }: { icon: React.ReactNode; label: string; value: number; delay: number }) {
-  return (
-    <DashCard delay={delay} className="!p-3.5">
-      <div className="flex items-center gap-1.5 text-[11px] text-dash-muted">
-        <span className="text-dash-green">{icon}</span>
-        {label}
-      </div>
-      <div className="mt-2 text-[22px] font-extrabold text-dash-text">{fa(value)}</div>
-    </DashCard>
-  );
-}
-
-/** درخواست‌های ورودی (پذیرش/رد)، دعوت‌های ارسالی (لغو) و فرمِ دعوت با یوزرنیم */
+/** درخواست‌های ورودی (پذیرش/رد) و دعوت‌های ارسالیِ بی‌پاسخ (لغو) */
 function MentorDashRequests({
-  incoming, sent, suspended, categories, onChanged,
-}: { incoming: MentorshipRow[]; sent: MentorshipRow[]; suspended: boolean; categories: string[]; onChanged: () => void }) {
-  // حوزه‌ی دعوت (مثلا فقط «روتین») — پیش‌فرض همه‌ی حوزه‌های خودِ منتور
-  const [cats, setCats] = useState<string[]>(categories);
+  incoming, sent, suspended, onChanged,
+}: { incoming: MentorshipRow[]; sent: MentorshipRow[]; suspended: boolean; onChanged: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
-  const [message, setMessage] = useState("");
-  const [inviteState, setInviteState] = useState<{ sending: boolean; error: string | null; ok: string | null }>({ sending: false, error: null, ok: null });
 
   async function act(id: string, action: MentorshipAction) {
     if (busy) return;
@@ -254,114 +275,159 @@ function MentorDashRequests({
     onChanged();
   }
 
-  async function invite() {
+  const total = incoming.length + sent.length;
+  return (
+    <MentorSection title="درخواست‌ها" icon={ic(Inbox, MI.section)} count={total ? fa(total) : undefined} flush>
+      {total === 0 && <MentorEmpty>درخواست بی‌پاسخی نیست</MentorEmpty>}
+
+      {incoming.map((r) => {
+        const name = publicUserName(r.counterpart);
+        return (
+          <MentorRow
+            key={r.id}
+            lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
+            title={name}
+            sub={
+              <>
+                <span>درخواست شاگردی</span>
+                {r.categories.length > 0 && <span>{r.categories.map(categoryLabel).join("، ")}</span>}
+                <span>{fmtRelative(r.createdAt)}</span>
+              </>
+            }
+            below={
+              <>
+                {r.message && <p className="mentor-quote">{r.message}</p>}
+                <div className="mentor-btn-group is-end">
+                  <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={!!busy} onClick={() => act(r.id, "reject")}>
+                    {busy === r.id + "reject" ? <Spinner size={14} /> : <>{ic(X, MI.btnSm)} رد درخواست</>}
+                  </button>
+                  <button
+                    type="button" className="trade-primary-btn mentor-btn is-sm" disabled={!!busy || suspended}
+                    title={suspended ? "در حالت تعلیق، شاگرد جدید پذیرفته نمی‌شود" : undefined}
+                    onClick={() => act(r.id, "accept")}
+                  >
+                    {busy === r.id + "accept" ? <Spinner size={14} /> : <>{ic(Check, MI.btnSm)} پذیرفتن</>}
+                  </button>
+                </div>
+              </>
+            }
+          />
+        );
+      })}
+
+      {sent.map((r) => {
+        const name = publicUserName(r.counterpart);
+        return (
+          <MentorRow
+            key={r.id}
+            lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
+            title={name}
+            sub={<><span>{ic(Hourglass, MI.chip)} منتظر پاسخ شاگرد</span><span>دعوت {fmtRelative(r.createdAt)}</span></>}
+            end={
+              <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={!!busy} onClick={() => act(r.id, "cancel")}>
+                {busy === r.id + "cancel" ? <Spinner size={14} /> : "لغو دعوت"}
+              </button>
+            }
+          />
+        );
+      })}
+
+      {actionError && (
+        <div style={{ padding: "0 var(--m-4) var(--m-4)" }}>
+          <div className="form-inline-error" role="alert">{actionError}</div>
+        </div>
+      )}
+    </MentorSection>
+  );
+}
+
+/** دعوت شاگرد با یوزرنیم */
+function MentorDashInvite({
+  suspended, categories, onSent,
+}: { suspended: boolean; categories: string[]; onSent: () => void }) {
+  // حوزه‌ی دعوت (مثلاً فقط «روتین»)؛ پیش‌فرض همه‌ی حوزه‌های خود منتور
+  const [cats, setCats] = useState<string[]>(categories);
+  const [username, setUsername] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [userErr, setUserErr] = useState<string | null>(null);
+  const [catErr, setCatErr] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function invite(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (sending) return;
+    setError(null);
+    setSent(false);
     const u = username.trim().replace(/^@/, "");
-    if (!u) { setInviteState({ sending: false, error: "یوزرنیم شاگرد رو وارد کن", ok: null }); return; }
-    if (!isValidUsername(u)) { setInviteState({ sending: false, error: "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشه", ok: null }); return; }
-    if (categories.length > 0 && cats.length === 0) { setInviteState({ sending: false, error: "حداقل یک حوزه انتخاب کن", ok: null }); return; }
-    setInviteState({ sending: true, error: null, ok: null });
+    if (!u) { setUserErr("یوزرنیم شاگرد را وارد کن"); return; }
+    if (!isValidUsername(u)) { setUserErr("یوزرنیم ۳ تا ۲۰ نویسه است: حرف انگلیسی، عدد یا زیرخط"); return; }
+    if (categories.length > 0 && cats.length === 0) { setCatErr("حداقل یک حوزه انتخاب کن"); return; }
+    setSending(true);
     const body: { studentUsername: string; message?: string; categories?: string[] } = { studentUsername: u };
     if (categories.length > 0) body.categories = cats;
     if (message.trim()) body.message = message.trim();
     const r = await mentorApi<unknown>("/api/mentorships", { method: "POST", body });
-    if (!r.ok) { setInviteState({ sending: false, error: r.error, ok: null }); return; }
+    setSending(false);
+    if (!r.ok) { setError(r.error); return; }
     setUsername("");
     setMessage("");
-    setInviteState({ sending: false, error: null, ok: `دعوت برای @${u} فرستاده شد` });
-    onChanged();
+    setSent(true);
+    setTimeout(() => setSent(false), 2400);
+    onSent();
   }
 
   return (
-    <AccountBlock title="درخواست‌ها و دعوت" icon={<Inbox size={15} />} index={1}>
-      {incoming.length === 0 && sent.length === 0 && <MentorDashEmpty>درخواست بی‌پاسخی نداری.</MentorDashEmpty>}
-
-      {incoming.map((r) => (
-        <div key={r.id} className="border-b border-dash-border py-3 last:border-b-0">
-          <div className="flex items-center gap-3">
-            <MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={publicUserName(r.counterpart)} size={34} />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-bold text-dash-text">{publicUserName(r.counterpart)}</div>
-              <div className="text-[11px] text-dash-muted">درخواست شاگردی{r.categories.length ? ` · ${r.categories.map(categoryLabel).join("، ")}` : ""} · {fmtRelative(r.createdAt)}</div>
-            </div>
-          </div>
-          {r.message && <p className="mb-0 mt-2 whitespace-pre-line text-[12px] leading-6 text-dash-muted">«{r.message}»</p>}
-          <div className="mt-2.5 flex flex-wrap justify-end gap-2">
-            <button type="button" className="account-outline-btn" style={SMALL_BTN} disabled={!!busy || suspended} onClick={() => act(r.id, "accept")}>
-              {busy === r.id + "accept" ? <Spinner size={13} /> : "پذیرش"}
-            </button>
-            <button type="button" className="account-outline-btn" style={{ ...SMALL_BTN, ...DANGER_BTN }} disabled={!!busy} onClick={() => act(r.id, "reject")}>
-              {busy === r.id + "reject" ? <Spinner size={13} /> : "رد"}
-            </button>
-          </div>
-        </div>
-      ))}
-
-      {sent.map((r) => (
-        <div key={r.id} className={ROW}>
-          <MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={publicUserName(r.counterpart)} size={34} />
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-bold text-dash-text">{publicUserName(r.counterpart)}</div>
-            <div className="text-[11px] text-dash-muted">دعوتت در انتظار پاسخ شاگرده · {fmtRelative(r.createdAt)}</div>
-          </div>
-          <button type="button" className="account-outline-btn muted" style={SMALL_BTN} disabled={!!busy} onClick={() => act(r.id, "cancel")}>
-            {busy === r.id + "cancel" ? <Spinner size={13} /> : "لغو دعوت"}
-          </button>
-        </div>
-      ))}
-
-      {actionError && <div className="form-inline-error">{actionError}</div>}
-
-      <div className="mt-4 border-t border-dash-border pt-4">
-        <div className="mb-1 flex items-center gap-1.5 text-[12.5px] font-bold text-dash-text"><UserPlus size={15} className="text-dash-green" /> دعوت شاگرد با یوزرنیم</div>
-        <p className="mb-3 mt-0 text-[11.5px] leading-6 text-dash-muted">شاگرد باید دعوت رو خودش بپذیره؛ تا اون موقع هیچ اطلاعاتی از او نمی‌بینی.</p>
-        {suspended ? (
-          <MentorDashEmpty>در حالت تعلیق امکان دعوت شاگرد جدید نیست.</MentorDashEmpty>
-        ) : (
-          <>
-            <div className="acc-field-stack" style={{ marginTop: 0 }}>
-              <AuthField id="md-invite-user" label="یوزرنیم شاگرد" icon={<AtSign size={16} />} error={inviteState.error && !username.trim() ? inviteState.error : undefined}>
-                <input
-                  id="md-invite-user" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }}
-                  value={username} placeholder="username" autoComplete="off" maxLength={21}
-                  onChange={(e) => { setUsername(e.target.value); setInviteState((s) => ({ ...s, error: null, ok: null })); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") invite(); }}
-                />
-              </AuthField>
-              {categories.length > 1 && (
-                <div>
-                  <div className="mb-1.5 text-[12px] font-bold text-dash-text">حوزه</div>
-                  <div className="trade-tag-row" role="group" aria-label="حوزه">
-                    {categories.map((c) => (
+    <MentorSection title="دعوت شاگرد" icon={ic(UserPlus, MI.section)}>
+      {suspended ? (
+        <MentorEmpty>در حالت تعلیق، دعوت شاگرد جدید ممکن نیست</MentorEmpty>
+      ) : (
+        <form onSubmit={invite} noValidate>
+          <div className="mentor-form">
+            <MentorField
+              label="یوزرنیم شاگرد" htmlFor="md-invite-user" error={userErr}
+              hint="شاگرد تا پذیرش دعوت، اطلاعاتی با تو به اشتراک نمی‌گذارد"
+            >
+              <input
+                id="md-invite-user" type="text" className="wsearch-newform-name trade-glass-field mono" dir="ltr"
+                style={{ textAlign: "right" }} value={username} placeholder="username" autoComplete="off" maxLength={21}
+                onChange={(e) => { setUsername(e.target.value); setUserErr(null); setError(null); setSent(false); }}
+              />
+            </MentorField>
+            {categories.length > 1 && (
+              <MentorField label="حوزه‌ی همکاری" error={catErr}>
+                <div className="trade-choice-grid" role="group" aria-label="حوزه‌ی همکاری">
+                  {categories.map((c) => {
+                    const on = cats.includes(c);
+                    return (
                       <button
-                        key={c}
-                        type="button"
-                        className={`trade-tag-chip${cats.includes(c) ? " active" : ""}`}
-                        aria-pressed={cats.includes(c)}
-                        onClick={() => setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]))}
+                        key={c} type="button" className={`trade-choice${on ? " active" : ""}`} aria-pressed={on}
+                        onClick={() => { setCats((p) => (on ? p.filter((x) => x !== c) : [...p, c])); setCatErr(null); }}
                       >
                         {categoryLabel(c)}
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
-              <AuthField id="md-invite-msg" label="پیام (اختیاری)">
-                <textarea
-                  id="md-invite-msg" className="wsearch-newform-name acc-textarea" rows={2} maxLength={500}
-                  value={message} onChange={(e) => setMessage(e.target.value)} placeholder="سلام، خوشحال می‌شم کمکت کنم…"
-                />
-              </AuthField>
-            </div>
-            {inviteState.error && username.trim() && <div className="form-inline-error">{inviteState.error}</div>}
-            {inviteState.ok && <div className="mt-2.5 text-center text-[12px] font-bold text-dash-green" role="status">{inviteState.ok}</div>}
-            <div className="mt-3 flex justify-end">
-              <button type="button" className="account-outline-btn" onClick={invite} disabled={inviteState.sending}>
-                {inviteState.sending ? <Spinner size={14} /> : <><Send size={14} /> ارسال دعوت</>}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </AccountBlock>
+              </MentorField>
+            )}
+            <MentorField label="پیام" htmlFor="md-invite-msg" optional>
+              <textarea
+                id="md-invite-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={500}
+                value={message} onChange={(e) => setMessage(e.target.value)}
+                placeholder="مثلاً «برای برنامه‌ی تمرینی این فصل با هم کار کنیم»"
+              />
+            </MentorField>
+          </div>
+          {error && <div className="form-inline-error" role="alert">{error}</div>}
+          <div className="mentor-form-actions">
+            <button type="submit" className="trade-primary-btn mentor-btn" disabled={sending}>
+              {sending ? <Spinner size={14} /> : sent ? <>{ic(Check, MI.btn)} دعوت ارسال شد</> : <>{ic(Send, MI.btn)} ارسال دعوت</>}
+            </button>
+          </div>
+        </form>
+      )}
+    </MentorSection>
   );
 }

@@ -1,22 +1,24 @@
 "use client";
 
-import { PROGRAM_TYPE_CATEGORY } from "@/lib/mentorCategories";
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { PROGRAM_TYPE_CATEGORY } from "@/lib/mentorCategories";
 import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import { MentorProgramEditor } from "@/components/MentorProgramEditor";
 import { LoadingBlock } from "@/components/Spinner";
+import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorshipRow, MentorshipsResponse } from "@/lib/mentorTypes";
 
-// mentorshipId از window.location خونده می‌شه (نه useSearchParams) تا
-// Suspense لازم نباشه — هم‌الگوی بقیه‌ی صفحه‌های اپ.
+// mentorshipId از window.location خوانده می‌شود (نه useSearchParams) تا
+// Suspense لازم نباشد؛ هم‌الگوی بقیه‌ی صفحه‌های اپ.
 function readMentorshipId(): string {
   if (typeof window === "undefined") return "";
   return new URLSearchParams(window.location.search).get("mentorshipId")?.trim() || "";
 }
 
-function NewProgramContent() {
-  const [state, setState] = useState<{ loading: boolean; error: string | null; row: MentorshipRow | null; missing: boolean }>({ loading: true, error: null, row: null, missing: false });
+type State = { loading: boolean; error: string | null; row: MentorshipRow | null; missing: boolean };
+
+export default function NewMentorProgramPage() {
+  const [state, setState] = useState<State>({ loading: true, error: null, row: null, missing: false });
 
   const load = useCallback(async () => {
     const id = readMentorshipId();
@@ -30,34 +32,32 @@ function NewProgramContent() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (state.loading) return <LoadingBlock />;
-  if (state.error) return <MentorDashError message={state.error} onRetry={load} />;
-  if (state.missing || !state.row) {
-    return (
-      <MentorDashError
-        message="رابطه‌ی فعالی با این شاگرد پیدا نشد. فقط برای شاگردهای فعالت می‌تونی برنامه بسازی."
-        action={<Link href="/mentor" className="text-[12.5px] font-bold text-dash-green no-underline">بازگشت به پنل منتور</Link>}
-      />
-    );
-  }
-  const allowedTypes = (["ROUTINE", "WORKOUT"] as const).filter(
-    (t) => state.row!.categories.length === 0 || state.row!.categories.includes(PROGRAM_TYPE_CATEGORY[t])
-  );
-  if (allowedTypes.length === 0) {
-    return (
-      <MentorDashError
-        message="حوزه‌ی رابطه با این شاگرد فعلا نوع برنامه‌ی قابل‌ساختی نداره (مثلا تغذیه). از چت و فیدبک استفاده کن."
-        action={<Link href="/mentor" className="text-[12.5px] font-bold text-dash-green no-underline">بازگشت به پنل منتور</Link>}
-      />
-    );
-  }
-  return <MentorProgramEditor mode="new" mentorshipId={state.row.id} student={state.row.counterpart} allowedTypes={[...allowedTypes]} />;
-}
+  const row = state.row;
+  const back = row
+    ? { href: `/mentor/students/${row.counterpart.id}`, label: publicUserName(row.counterpart) }
+    : { href: "/mentor", label: "پنل منتور" };
 
-export default function NewMentorProgramPage() {
+  let body: React.ReactNode;
+  if (state.loading) body = <LoadingBlock />;
+  else if (state.error) body = <MentorDashError message={state.error} onRetry={load} />;
+  else if (state.missing || !row) {
+    body = <MentorDashError message="رابطه‌ی فعالی با این شاگرد پیدا نشد؛ برنامه فقط برای شاگرد فعال ساخته می‌شود" />;
+  } else {
+    const allowedTypes = (["ROUTINE", "WORKOUT"] as const).filter(
+      (t) => row.categories.length === 0 || row.categories.includes(PROGRAM_TYPE_CATEGORY[t]),
+    );
+    body = allowedTypes.length === 0
+      ? <MentorDashError message="حوزه‌ی همکاری با این شاگرد نوع برنامه ندارد؛ از گفت‌وگو و بازخورد استفاده کن" />
+      : <MentorProgramEditor mode="new" mentorshipId={row.id} student={row.counterpart} allowedTypes={[...allowedTypes]} />;
+  }
+
   return (
-    <MentorDashShell title="برنامه‌ی جدید" hint="برنامه اول به‌صورت پیش‌نویس ذخیره می‌شه؛ هر وقت آماده بود برای شاگرد بفرست." back={{ href: "/mentor", label: "پنل منتور" }}>
-      <NewProgramContent />
+    <MentorDashShell
+      title="برنامه‌ی جدید"
+      hint="برنامه به‌صورت پیش‌نویس ذخیره می‌شود و تا ارسال، شاگرد آن را نمی‌بیند"
+      back={back}
+    >
+      {body}
     </MentorDashShell>
   );
 }

@@ -3,18 +3,25 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Lock } from "lucide-react";
-import { MentorDashShell, MentorDashError, MentorDashNotice, mentorApi } from "@/components/MentorDashKit";
+import { ClipboardList } from "lucide-react";
+import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import { MentorProgramEditor } from "@/components/MentorProgramEditor";
-import { ProgramStatusBadge } from "@/components/ProgramStatusBadge";
+import { MI, MI_STROKE, MentorEmptyState } from "@/components/MentorUI";
 import { LoadingBlock } from "@/components/Spinner";
+import { publicUserName } from "@/lib/mentorTypes";
 import type { ProgramDetailResponse } from "@/lib/mentorTypes";
 
-function EditProgramContent({ id }: { id: string }) {
-  const [state, setState] = useState<{ loading: boolean; error: string | null; status: number; data: ProgramDetailResponse | null }>({ loading: true, error: null, status: 200, data: null });
+type State = { loading: boolean; error: string | null; status: number; data: ProgramDetailResponse | null };
+
+export default function EditMentorProgramPage() {
+  const params = useParams<{ id: string }>();
+  const id = typeof params?.id === "string" ? params.id : "";
+  const [state, setState] = useState<State>({ loading: true, error: null, status: 200, data: null });
+  // ?saved=1 یعنی از «برنامه‌ی جدید» با ذخیره‌ی پیش‌نویس آمده؛ روی دکمه نشان داده می‌شود
   const [justSaved, setJustSaved] = useState(false);
 
   const load = useCallback(async () => {
+    if (!id) return;
     setState((s) => ({ ...s, loading: true, error: null }));
     const r = await mentorApi<ProgramDetailResponse>(`/api/mentor-programs/${encodeURIComponent(id)}`);
     if (!r.ok) { setState({ loading: false, error: r.error, status: r.status, data: null }); return; }
@@ -23,65 +30,48 @@ function EditProgramContent({ id }: { id: string }) {
 
   useEffect(() => { load(); }, [load]);
 
-  // ?saved=1 یعنی از صفحه‌ی «برنامه‌ی جدید» با ذخیره‌ی پیش‌نویس اومده
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("saved") === "1") {
       setJustSaved(true);
       window.history.replaceState(null, "", window.location.pathname);
-      const t = setTimeout(() => setJustSaved(false), 3000);
-      return () => clearTimeout(t);
     }
   }, []);
 
-  if (state.loading) return <LoadingBlock />;
-  if (state.error || !state.data) {
-    return (
-      <MentorDashError
-        message={state.status === 404 ? "این برنامه پیدا نشد یا به آن دسترسی نداری." : state.error || "برنامه بارگذاری نشد"}
-        onRetry={state.status === 404 || state.status === 403 ? undefined : load}
-        action={<Link href="/mentor" className="text-[12.5px] font-bold text-dash-green no-underline">بازگشت به پنل منتور</Link>}
-      />
-    );
-  }
+  const data = state.data;
+  const student = data?.role === "MENTOR" ? data.program.counterpart ?? null : null;
+  const back = student
+    ? { href: `/mentor/students/${student.id}`, label: publicUserName(student) }
+    : { href: "/mentor", label: "پنل منتور" };
 
-  const { program, role, items } = state.data;
-  if (role !== "MENTOR") {
-    return (
+  let body: React.ReactNode;
+  if (!id || state.loading) body = <LoadingBlock />;
+  else if (state.error || !data) {
+    const final = state.status === 404 || state.status === 403;
+    body = <MentorDashError message={state.error || "برنامه دریافت نشد؛ دوباره تلاش کن"} onRetry={final ? undefined : load} />;
+  } else if (data.role !== "MENTOR") {
+    body = (
       <MentorDashError
-        message="فقط منتوری که این برنامه رو ساخته می‌تونه ویرایشش کنه."
-        action={<Link href={`/mentor-programs/${program.id}`} className="text-[12.5px] font-bold text-dash-green no-underline">مشاهده‌ی برنامه</Link>}
+        message="فقط منتور سازنده‌ی این برنامه می‌تواند آن را ویرایش کند"
+        action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn is-sm">مشاهده‌ی برنامه</Link>}
       />
     );
-  }
-  if (program.status !== "DRAFT") {
-    return (
-      <MentorDashNotice
-        tone="info" icon={<Lock size={16} />} title="این برنامه دیگه قابل ویرایش نیست"
-        action={<Link href={`/mentor-programs/${program.id}`} className="text-[12px] font-bold text-dash-green no-underline">صفحه‌ی برنامه</Link>}
-      >
-        <span className="flex flex-wrap items-center gap-2">
-          فقط پیش‌نویس قابل ویرایشه. وضعیت فعلی: <ProgramStatusBadge status={program.status} />
-        </span>
-        <span className="mt-1 block">اگه شاگرد «درخواست تغییر» بده، برنامه دوباره پیش‌نویس می‌شه و می‌تونی ویرایشش کنی.</span>
-      </MentorDashNotice>
+  } else if (data.program.status !== "DRAFT") {
+    body = (
+      <MentorEmptyState
+        icon={<ClipboardList size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
+        title="این برنامه ارسال شده و دیگر ویرایش نمی‌شود"
+        text="اگر شاگرد درخواست تغییر بدهد، برنامه دوباره پیش‌نویس می‌شود"
+        action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn">مشاهده‌ی برنامه</Link>}
+      />
     );
+  } else {
+    body = <MentorProgramEditor mode="edit" program={data.program} items={data.items} student={student} initiallySaved={justSaved} />;
   }
 
   return (
-    <>
-      {justSaved && <div className="mb-3 text-center text-[12px] font-bold text-dash-green" role="status">پیش‌نویس ذخیره شد</div>}
-      <MentorProgramEditor mode="edit" program={program} items={items} student={program.counterpart ?? null} />
-    </>
-  );
-}
-
-export default function EditMentorProgramPage() {
-  const params = useParams<{ id: string }>();
-  const id = typeof params?.id === "string" ? params.id : "";
-  return (
-    <MentorDashShell title="ویرایش برنامه" back={{ href: "/mentor", label: "پنل منتور" }}>
-      {id ? <EditProgramContent id={id} /> : <LoadingBlock />}
+    <MentorDashShell title="ویرایش برنامه" back={back}>
+      {body}
     </MentorDashShell>
   );
 }

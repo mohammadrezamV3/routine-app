@@ -1,21 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, ClipboardList, MessageCircle, MessagesSquare, Plus, UserX } from "lucide-react";
-import { AccountBlock } from "@/components/AccountUI";
+import {
+  CalendarCheck, ChevronLeft, ChevronRight, ClipboardList, Dumbbell, Eye, EyeOff, MessageCircle, MessageSquareText, ShieldCheck, UserRound,
+} from "lucide-react";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { ProgramStatusBadge } from "@/components/ProgramStatusBadge";
-import { MentorUserAvatar } from "@/components/MentorUserAvatar";
-import { MentorDashBar, MentorDashEmpty, MentorDashError, MentorDashShell, fa, mentorApi, pct } from "@/components/MentorDashKit";
-import { MentorStudentPrivacy } from "@/components/MentorStudentPrivacy";
+import { MentorDashBar, MentorDashError, MentorDashShell, fa, mentorApi, pct } from "@/components/MentorDashKit";
+import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorEmptyState, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorStudentWeek } from "@/components/MentorStudentWeek";
 import { MentorStudentModules } from "@/components/MentorStudentModules";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { isoLocal } from "@/lib/jalali";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { StudentView } from "@/components/MentorStudentTypes";
+
+const ic = (Icon: typeof Eye, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 function weekRange(offset: number): { from: string; to: string } {
   const to = new Date();
@@ -26,7 +27,56 @@ function weekRange(offset: number): { from: string; to: string } {
   return { from: isoLocal(from), to: isoLocal(to) };
 }
 
-function StudentContent({ studentId }: { studentId: string }) {
+/**
+ * آنچه منتور از این شاگرد می‌بیند؛ دو ردیف چیپ (دیده می‌شود / مخفی).
+ * تنظیمات دست خود شاگرد است و سرور فقط همین‌ها را می‌فرستد.
+ */
+function PrivacySummary({ data }: { data: StudentView }) {
+  const p = data.privacy;
+  const programs = p.shareAllPrograms ? "همه‌ی برنامه‌ها" : p.sharedCount > 0 ? `${fa(p.sharedCount)} برنامه` : "برنامه‌های روتین";
+  const programsOn = p.shareAllPrograms || p.sharedCount > 0;
+  const items: { label: string; on: boolean }[] = [
+    { label: programs, on: programsOn },
+    { label: "زمان‌بندی", on: !(data.routine.scheduleHidden || !p.showSchedule) },
+    { label: "نام برنامه‌ها", on: p.showProgramName },
+    { label: "عنوان کارها", on: p.showTaskName },
+    { label: "جزئیات کارها", on: p.showTaskDetails },
+    { label: "پیشرفت روزانه", on: p.showProgress },
+    { label: "بدنسازی", on: data.modules.exercise !== null },
+    { label: "کالری", on: data.modules.calorie !== null },
+  ];
+  const visible = items.filter((i) => i.on);
+  const hidden = items.filter((i) => !i.on);
+  return (
+    <MentorSection
+      title="آنچه می‌بینی" icon={ic(ShieldCheck, MI.section)}
+      desc="این تنظیمات دست شاگرد است؛ برنامه‌هایی که خودت فرستاده‌ای همیشه دیده می‌شوند"
+    >
+      <div className="mentor-form" style={{ gap: "var(--m-2)" }}>
+        {visible.length > 0 && (
+          <div className="mentor-preview-row">
+            <span className="mentor-preview-tag">دیده می‌شود</span>
+            <span className="mentor-chips">
+              {visible.map((i) => <MentorChip key={i.label} tone="accent" icon={ic(Eye, MI.chip)}>{i.label}</MentorChip>)}
+            </span>
+          </div>
+        )}
+        {hidden.length > 0 && (
+          <div className="mentor-preview-row">
+            <span className="mentor-preview-tag">مخفی</span>
+            <span className="mentor-chips">
+              {hidden.map((i) => <MentorChip key={i.label} tone="neutral" icon={ic(EyeOff, MI.chip)}>{i.label}</MentorChip>)}
+            </span>
+          </div>
+        )}
+      </div>
+    </MentorSection>
+  );
+}
+
+export default function MentorStudentPage() {
+  const params = useParams<{ studentId: string }>();
+  const studentId = typeof params?.studentId === "string" ? params.studentId : "";
   const router = useRouter();
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<StudentView | null>(null);
@@ -35,6 +85,7 @@ function StudentContent({ studentId }: { studentId: string }) {
   const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async (off: number) => {
+    if (!studentId) return;
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -42,7 +93,7 @@ function StudentContent({ studentId }: { studentId: string }) {
     setError(null);
     const { from, to } = weekRange(off);
     const r = await mentorApi<StudentView>(`/api/mentor/students/${encodeURIComponent(studentId)}?from=${from}&to=${to}`, { signal: ctrl.signal });
-    if (r.status === -1) return; // درخواستِ قدیمی لغو شد
+    if (r.status === -1) return; // درخواست قدیمی لغو شد
     setLoading(false);
     if (!r.ok) { setError({ message: r.error, status: r.status }); return; }
     setData(r.data);
@@ -51,129 +102,129 @@ function StudentContent({ studentId }: { studentId: string }) {
   useEffect(() => { load(offset); }, [load, offset]);
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  if (loading && !data) return <LoadingBlock />;
-  if (error && !data) {
-    if (error.status === 404) {
-      return (
-        <div className="trade-surface rp-empty">
-          <span className="rp-empty-icon"><UserX size={24} /></span>
-          <h2>دسترسی نداری یا رابطه فعال نیست</h2>
-          <p>فقط اطلاعات شاگردهایی رو می‌بینی که رابطه‌ی منتوری‌شون با تو فعاله. شاید رابطه تموم شده یا آدرس اشتباهه.</p>
-          <Link href="/mentor" className="mt-4 text-[12.5px] font-bold text-dash-green no-underline">بازگشت به پنل منتور</Link>
-        </div>
-      );
-    }
-    return <MentorDashError message={error.message} onRetry={() => load(offset)} />;
-  }
-  if (!data) return null;
+  const name = data ? publicUserName(data.student) : "شاگرد";
+  const hint = data?.since ? `شاگرد از ${fmtDate(data.since)}` : undefined;
+  const titleAction = data ? (
+    <button
+      type="button" className="trade-title-add-btn"
+      onClick={() => router.push(`/mentor/programs/new?mentorshipId=${encodeURIComponent(data.mentorshipId)}`)}
+    >
+      + برنامه‌ی جدید
+    </button>
+  ) : undefined;
 
-  const name = publicUserName(data.student);
-  const { from, to } = weekRange(offset);
+  let body: React.ReactNode;
+  if (!studentId || (loading && !data)) body = <LoadingBlock />;
+  else if (error && !data) {
+    body = error.status === 404 || error.status === 403 ? (
+      <MentorEmptyState
+        icon={ic(UserRound, MI.empty)}
+        title="به اطلاعات این شاگرد دسترسی نداری"
+        text="فقط شاگردهایی که رابطه‌ی فعال با تو دارند اینجا نمایش داده می‌شوند"
+      />
+    ) : (
+      <MentorDashError message={error.message} onRetry={() => load(offset)} />
+    );
+  } else if (data) {
+    const { from, to } = weekRange(offset);
+    body = (
+      <>
+        <MentorSection flush>
+          <MentorRow
+            href={`/mentorship/${data.mentorshipId}`}
+            lead={ic(MessageCircle, MI.row)}
+            title="گفت‌وگو"
+            sub={<span>پیام‌ها و وضعیت رابطه با {name}</span>}
+          />
+        </MentorSection>
 
-  return (
-    <div>
-      {/* ── سرصفحه‌ی شاگرد ── */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <MentorUserAvatar avatarUrl={data.student.avatarUrl} name={name} size={54} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[16px] font-extrabold text-dash-text">{name}</div>
-          <div className="text-[11.5px] text-dash-muted">
-            {data.student.username && <span dir="ltr">@{data.student.username}</span>}
-            {data.since && <> · شاگرد از {fmtDate(data.since)}</>}
+        <PrivacySummary data={data} />
+
+        <MentorSection title="برنامه‌ی زمانی" icon={ic(CalendarCheck, MI.section)}>
+          <div className="flex items-center justify-between gap-2" style={{ marginBottom: "var(--m-2)" }}>
+            <button
+              type="button" className="trade-icon-btn" aria-label="هفته‌ی قبل"
+              onClick={() => setOffset((o) => o - 1)} disabled={loading || offset <= -4}
+            >
+              <ChevronRight size={MI.row} strokeWidth={MI_STROKE} />
+            </button>
+            <span className="mentor-row-sub" aria-live="polite">
+              {loading ? <Spinner size={14} /> : <span>{fmtDate(from)} تا {fmtDate(to)}</span>}
+            </span>
+            <button
+              type="button" className="trade-icon-btn" aria-label="هفته‌ی بعد"
+              onClick={() => setOffset((o) => o + 1)} disabled={loading || offset >= 0}
+            >
+              <ChevronLeft size={MI.row} strokeWidth={MI_STROKE} />
+            </button>
           </div>
-        </div>
-        <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
-          <Link href={`/mentorship/${data.mentorshipId}`} className="flex items-center gap-1 px-2 py-1.5 text-[12.5px] font-bold text-dash-green no-underline">
-            <MessageCircle size={15} /> چت
-          </Link>
-          <button type="button" className="account-outline-btn" onClick={() => router.push(`/mentor/programs/new?mentorshipId=${encodeURIComponent(data.mentorshipId)}`)}>
-            <Plus size={14} /> برنامه‌ی جدید
-          </button>
-        </div>
-      </div>
+          {error && <div className="form-inline-error" role="alert" style={{ marginTop: 0, marginBottom: "var(--m-2)" }}>{error.message}</div>}
+          <MentorStudentWeek from={from} to={to} routine={data.routine} privacy={data.privacy} />
+        </MentorSection>
 
-      {error && <div className="form-inline-error mb-3">{error.message}</div>}
+        <MentorStudentModules modules={data.modules} />
 
-      <MentorStudentPrivacy privacy={data.privacy} modules={data.modules} scheduleHidden={data.routine.scheduleHidden} />
+        <MentorSection title="برنامه‌ها" icon={ic(ClipboardList, MI.section)} count={data.programs.length ? fa(data.programs.length) : undefined} flush>
+          {data.programs.length === 0 ? (
+            <MentorEmpty>هنوز برنامه‌ای برای این شاگرد نساخته‌ای</MentorEmpty>
+          ) : data.programs.map((p) => {
+            const href = p.status === "DRAFT" ? `/mentor/programs/${p.id}/edit` : `/mentor-programs/${p.id}`;
+            const tracked = p.progress.completed + p.progress.partial + p.progress.missed > 0;
+            const showProgress = p.status === "ACTIVE" || p.status === "COMPLETED" || tracked;
+            const sub = (
+              <>
+                <span>{p.type === "WORKOUT" ? "تمرینی" : "روتین"}</span>
+                {p.version > 1 && <span>نسخه‌ی {fa(p.version)}</span>}
+                {(p.startDate || p.endDate) && (
+                  <span>
+                    {p.startDate ? `از ${fmtDate(p.startDate.slice(0, 10))}` : ""}
+                    {p.startDate && p.endDate ? " " : ""}
+                    {p.endDate ? `تا ${fmtDate(p.endDate.slice(0, 10))}` : ""}
+                  </span>
+                )}
+                <span>به‌روزرسانی {fmtRelative(p.updatedAt)}</span>
+              </>
+            );
+            return (
+              <MentorRow
+                key={p.id}
+                href={href}
+                lead={p.type === "WORKOUT" ? ic(Dumbbell, MI.row) : ic(CalendarCheck, MI.row)}
+                title={p.title}
+                sub={sub}
+                end={<ProgramStatusBadge status={p.status} />}
+                below={showProgress ? (
+                  <div className="mentor-progress" style={{ marginTop: 0 }}>
+                    <MentorDashBar rate={p.progress.rate} />
+                    <span className="mentor-progress-value">{pct(p.progress.rate)}</span>
+                  </div>
+                ) : undefined}
+              />
+            );
+          })}
+        </MentorSection>
 
-      {/* ── هفته ── */}
-      <AccountBlock
-        title="برنامه‌ی زمانی"
-        icon={<ClipboardList size={15} />}
-        index={1}
-      >
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <button type="button" className="account-outline-btn muted" style={{ padding: "5px 10px", fontSize: 12 }} onClick={() => setOffset((o) => o - 1)} disabled={loading || offset <= -4} aria-label="هفته‌ی قبل">
-            <ChevronRight size={14} /> قبل
-          </button>
-          <span className="flex items-center gap-1.5 text-[11.5px] text-dash-muted">
-            {loading && <Spinner size={12} />}
-            {fmtDate(from)} تا {fmtDate(to)}
-          </span>
-          <button type="button" className="account-outline-btn muted" style={{ padding: "5px 10px", fontSize: 12 }} onClick={() => setOffset((o) => o + 1)} disabled={loading || offset >= 0} aria-label="هفته‌ی بعد">
-            بعد <ChevronLeft size={14} />
-          </button>
-        </div>
-        <MentorStudentWeek from={from} to={to} routine={data.routine} privacy={data.privacy} />
-      </AccountBlock>
-
-      <MentorStudentModules modules={data.modules} />
-
-      {/* ── برنامه‌های من برای این شاگرد ── */}
-      <AccountBlock title="برنامه‌هایی که برای این شاگرد ساختی" icon={<ClipboardList size={15} />} index={3}>
-        {data.programs.length === 0 ? (
-          <MentorDashEmpty>هنوز برنامه‌ای نساختی. با «برنامه‌ی جدید» شروع کن.</MentorDashEmpty>
-        ) : data.programs.map((p) => {
-          const href = p.status === "DRAFT" ? `/mentor/programs/${p.id}/edit` : `/mentor-programs/${p.id}`;
-          const tracked = p.progress.completed + p.progress.partial + p.progress.missed > 0;
-          return (
-            <Link key={p.id} href={href} className="block border-b border-dash-border py-3 text-dash-text no-underline last:border-b-0">
-              <div className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 truncate text-[13px] font-bold">{p.title}</span>
-                <ProgramStatusBadge status={p.status} />
+        <MentorSection title="بازخوردهای اخیر" icon={ic(MessageSquareText, MI.section)}>
+          {data.recentFeedback.length === 0 ? (
+            <MentorEmpty>هنوز بازخوردی ننوشته‌ای</MentorEmpty>
+          ) : data.recentFeedback.map((f) => (
+            <div key={f.id} className="mentor-feedback">
+              <div className="mentor-feedback-head">
+                {f.itemTitle && <span className="mentor-feedback-ref">{f.itemTitle}</span>}
+                <span>{fmtRelative(f.createdAt)}</span>
+                <span>{f.readAt ? "خوانده شد" : "خوانده نشده"}</span>
               </div>
-              <div className="mt-1 text-[11px] text-dash-muted">
-                {p.type === "WORKOUT" ? "تمرینی" : "روتین"}
-                {p.version > 1 ? ` · نسخه ${fa(p.version)}` : ""}
-                {p.startDate ? ` · از ${fmtDate(p.startDate.slice(0, 10))}` : ""}
-                {p.endDate ? ` تا ${fmtDate(p.endDate.slice(0, 10))}` : ""}
-                {` · به‌روزرسانی ${fmtRelative(p.updatedAt)}`}
-              </div>
-              {(p.status === "ACTIVE" || p.status === "COMPLETED" || tracked) && (
-                <div className="mt-2 flex items-center gap-2.5">
-                  <div className="flex-1"><MentorDashBar rate={p.progress.rate} /></div>
-                  <span className="shrink-0 text-[11.5px] font-bold text-dash-green">{pct(p.progress.rate)}</span>
-                </div>
-              )}
-            </Link>
-          );
-        })}
-      </AccountBlock>
-
-      {/* ── بازخوردهای اخیر ── */}
-      <AccountBlock title="بازخوردهای اخیر تو" icon={<MessagesSquare size={15} />} index={4}>
-        {data.recentFeedback.length === 0 ? (
-          <MentorDashEmpty>هنوز بازخوردی ننوشتی. از صفحه‌ی هر برنامه می‌تونی روی آیتم‌ها یا ثبت‌های شاگرد بازخورد بدی.</MentorDashEmpty>
-        ) : data.recentFeedback.map((f) => (
-          <div key={f.id} className="border-b border-dash-border py-3 last:border-b-0">
-            {f.itemTitle && <div className="mb-1 text-[11px] font-bold text-dash-green">{f.itemTitle}</div>}
-            <p className="m-0 whitespace-pre-line text-[12.5px] leading-6 text-dash-text">{f.body}</p>
-            <div className="mt-1 text-[10.5px] text-dash-muted">
-              {fmtRelative(f.createdAt)} · {f.readAt ? "خوانده شد" : "هنوز خوانده نشده"}
+              <p className="mentor-feedback-body">{f.body}</p>
             </div>
-          </div>
-        ))}
-      </AccountBlock>
-    </div>
-  );
-}
+          ))}
+        </MentorSection>
+      </>
+    );
+  } else body = null;
 
-export default function MentorStudentPage() {
-  const params = useParams<{ studentId: string }>();
-  const studentId = typeof params?.studentId === "string" ? params.studentId : "";
   return (
-    <MentorDashShell title="شاگرد" back={{ href: "/mentor", label: "پنل منتور" }}>
-      {studentId ? <StudentContent studentId={studentId} /> : <LoadingBlock />}
+    <MentorDashShell title={name} hint={hint} back={{ href: "/mentor", label: "پنل منتور" }} titleAction={titleAction}>
+      {body}
     </MentorDashShell>
   );
 }
