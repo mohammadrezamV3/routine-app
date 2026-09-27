@@ -60,7 +60,7 @@ export default function MentorReportsPage() {
           active={week}
           onChange={setWeek}
           options={[
-            { value: "0", label: "۷ روز اخیر" },
+            { value: "0", label: "7 روز اخیر" },
             { value: "1", label: "هفته‌ی قبل" },
             { value: "2", label: "دو هفته قبل" },
           ]}
@@ -139,7 +139,7 @@ function StudentReportDetails({ s, current }: { s: WeeklyStudentReport; current:
       {!s.progressHidden && (
         <div className="mentor-btn-group is-end">
           <a href={exportCsvUrl(s.studentId)} download className="account-outline-btn mentor-btn is-sm">
-            {ic(Download, MI.btnSm)} خروجی ۳۰ روز (CSV)
+            {ic(Download, MI.btnSm)} خروجی 30 روز (CSV)
           </a>
         </div>
       )}

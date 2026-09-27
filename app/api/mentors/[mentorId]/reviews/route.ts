@@ -20,7 +20,7 @@ async function parseReview(req: Request): Promise<{ ok: true; rating: number; bo
   const b = parsed.body || {};
   const rating = b.rating;
   if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return { ok: false, response: badRequest("امتیاز باید عددی بین ۱ تا ۵ باشه") };
+    return { ok: false, response: badRequest("امتیاز باید عددی بین 1 تا 5 باشد") };
   }
   if (b.body !== undefined && b.body !== null && typeof b.body !== "string") return { ok: false, response: badRequest("متن نظر نامعتبره") };
   const body = typeof b.body === "string" ? b.body.trim().slice(0, REVIEW_BODY_MAX) || null : null;

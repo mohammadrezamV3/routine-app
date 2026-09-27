@@ -25,7 +25,7 @@ const COMPONENT_LABELS: Record<MeritComponentKey, string> = {
   adherence: "پایبندی شاگردها به برنامه",
   completion: "تکمیل برنامه",
   reviews: "نظرهای تأییدشده",
-  retention: "ماندگاری ۴ هفته‌ای",
+  retention: "ماندگاری 4 هفته‌ای",
   response: "سرعت پاسخ",
   renewal: "ادامه با برنامه‌ی بعدی",
 };
@@ -39,8 +39,8 @@ const MULTIPLIER_LABELS: Record<keyof MeritBreakdown["multipliers"], string> = {
 };
 
 const REASON_LABELS: Record<IneligibleReason, string> = {
-  few_students: "کمتر از ۳ شاگرد با نتیجه‌ی قابل اندازه‌گیری",
-  little_evidence: "کمتر از ۲۰ ثبت اجرای برنامه و کمتر از ۳ نظر تأییدشده",
+  few_students: "کمتر از 3 شاگرد با نتیجه‌ی قابل اندازه‌گیری",
+  little_evidence: "کمتر از 20 ثبت اجرای برنامه و کمتر از 3 نظر تأییدشده",
   identity_unverified: "هویت تأیید نشده",
   integrity: "گزارش تأییدشده یا تعلیق اخیر",
 };
@@ -77,7 +77,7 @@ export function MentorRankingBreakdown({ profileId }: { profileId: string }) {
         </button>
       </div>
       <div className="admin-section-hint" style={{ margin: "0 0 10px" }}>
-        امتیاز = ۱۰۰ × کیفیت × ضریب‌ها. کیفیت میانگین وزن‌دار شش مؤلفه است و هر مؤلفه با نمونه‌ی کم به سمت مقدار پیش‌فرض کشیده می‌شود.
+        امتیاز = 100 × کیفیت × ضریب‌ها. کیفیت میانگین وزن‌دار شش مؤلفه است و هر مؤلفه با نمونه‌ی کم به سمت مقدار پیش‌فرض کشیده می‌شود.
         فقط داده‌ی شاگردهای معتبر شمرده می‌شود؛ حساب‌های مسدود، حذف‌شده و آزمایشی کنار گذاشته می‌شوند.
       </div>
 
@@ -164,7 +164,7 @@ export function MentorRankingBreakdown({ profileId }: { profileId: string }) {
           </div>
           <div className="admin-info-grid" style={{ marginTop: 12 }}>
             <Info k="شاگرد با نتیجه / کل شاگردهای معتبر" v={`${formatNumber(rows[0].breakdown.sample.students)} / ${formatNumber(rows[0].breakdown.sample.startedStudents ?? rows[0].breakdown.sample.students)}`} />
-            <Info k="ثبت اجرای برنامه (۹۰ روز)" v={formatNumber(rows[0].breakdown.sample.adherenceEntries)} />
+            <Info k="ثبت اجرای برنامه (90 روز)" v={formatNumber(rows[0].breakdown.sample.adherenceEntries)} />
             <Info k="برنامه‌ی تمام‌شده / قضاوت‌شده" v={`${formatNumber(rows[0].breakdown.sample.programsCompleted)} / ${formatNumber(rows[0].breakdown.sample.programsJudged)}`} />
             <Info
               k="نظر تأییدشده / کنارگذاشته"

@@ -11,10 +11,10 @@ import type { AlertsResponse } from "@/lib/mentorToolsTypes";
 type Choice = "off" | "2" | "3" | "5" | "7";
 const OPTIONS: { value: Choice; label: string }[] = [
   { value: "off", label: "خاموش" },
-  { value: "2", label: "۲ روز" },
-  { value: "3", label: "۳ روز" },
-  { value: "5", label: "۵ روز" },
-  { value: "7", label: "۷ روز" },
+  { value: "2", label: "2 روز" },
+  { value: "3", label: "3 روز" },
+  { value: "5", label: "5 روز" },
+  { value: "7", label: "7 روز" },
 ];
 
 function toChoice(n: number | null): Choice {

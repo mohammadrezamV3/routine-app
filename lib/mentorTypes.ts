@@ -387,7 +387,7 @@ export type MentorDashboard = {
   stats: { students: number; activeStudents: number; pendingRequests: number; pendingPrograms: number; activePrograms: number };
   requests: MentorshipRow[];
   pendingPrograms: ProgramRow[];
-  recentActivity: { type: "log" | "program" | "message"; at: string; studentName: string; text: string; url: string }[];
+  recentActivity: { type: "log" | "program" | "message"; at: string; studentName: string; text: string; url: string; day?: string }[];
   completion: { studentId: string; name: string; avatarUrl: string | null; completed: number; partial: number; missed: number; rate: number }[];
   attention: { studentId: string; name: string; avatarUrl: string | null; reason: string }[];
 };

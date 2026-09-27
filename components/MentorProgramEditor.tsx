@@ -91,23 +91,23 @@ function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input
   if (d.details.trim().length > ITEM_DETAILS_MAX) errors.details = `حداکثر ${fa(ITEM_DETAILS_MAX)} نویسه`;
   if (d.repeat === "WEEKLY" && d.days.length === 0) errors.days = "حداقل یک روز هفته را انتخاب کن";
   const time = toEnDigits(d.startTime).trim();
-  if (time && !HHMM_RE.test(time)) errors.startTime = "ساعت باید به شکل ۰۸:۳۰ باشد";
+  if (time && !HHMM_RE.test(time)) errors.startTime = "ساعت باید به شکل 08:30 باشد";
   const dur = intIn(d.durationMin, 1, 1440);
-  if (dur === "bad") errors.durationMin = "بین ۱ تا ۱۴۴۰ دقیقه";
+  if (dur === "bad") errors.durationMin = "بین 1 تا 1440 دقیقه";
 
   let sets: number | null = null, reps: string | null = null, weight: number | null = null, rest: number | null = null;
   if (type === "WORKOUT") {
     const s = intIn(d.sets, 1, 100);
-    if (s === "bad") errors.sets = "بین ۱ تا ۱۰۰"; else sets = s;
+    if (s === "bad") errors.sets = "بین 1 تا 100"; else sets = s;
     const r = toEnDigits(d.reps).trim();
-    if (r && !REPS_RE.test(r)) errors.reps = "عدد یا بازه، مثل ۸-۱۲"; else reps = r || null;
+    if (r && !REPS_RE.test(r)) errors.reps = "عدد یا بازه، مثل 8-12"; else reps = r || null;
     const w = toEnDigits(d.weightKg).trim();
     if (w) {
       const n = Number(w);
-      if (!Number.isFinite(n) || n < 0 || n > 1000) errors.weightKg = "بین ۰ تا ۱۰۰۰ کیلوگرم"; else weight = Math.round(n * 10) / 10;
+      if (!Number.isFinite(n) || n < 0 || n > 1000) errors.weightKg = "بین 0 تا 1000 کیلوگرم"; else weight = Math.round(n * 10) / 10;
     }
     const rs = intIn(d.restSec, 0, 3600);
-    if (rs === "bad") errors.restSec = "بین ۰ تا ۳۶۰۰ ثانیه"; else rest = rs;
+    if (rs === "bad") errors.restSec = "بین 0 تا 3600 ثانیه"; else rest = rs;
   }
   if (Object.keys(errors).length) return { errors, input: null };
 

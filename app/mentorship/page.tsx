@@ -8,6 +8,7 @@ import { MentorEmpty, MentorEmptyState, MentorRow, MentorSection } from "@/compo
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
 import { MentorshipStatusBadge, ProgramStatusBadge } from "@/components/ProgramStatusBadge";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { MentorshipAction, MentorshipRow, MentorshipsResponse, ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
@@ -154,13 +155,12 @@ function MentorshipHome() {
 
       <MentorSection title="منتورهای فعال" icon={<Users {...SECTION} />} count={allActive.length ? faNum(allActive.length) : undefined} flush>
         {areas.length > 1 && (
-          <div className="trade-tag-row" role="group" aria-label="حوزه" style={{ padding: "0 16px 8px" }}>
-            <button type="button" className={`trade-tag-chip${activeArea === "" ? " active" : ""}`} aria-pressed={activeArea === ""} onClick={() => setArea("")}>همه</button>
-            {areas.map((c) => (
-              <button key={c} type="button" className={`trade-tag-chip${activeArea === c ? " active" : ""}`} aria-pressed={activeArea === c} onClick={() => setArea(c)}>
-                {MENTOR_CATEGORY_META[c].label}
-              </button>
-            ))}
+          <div className="mentor-section-filter">
+            <SegmentedTabs
+              options={[{ value: "", label: "همه" }, ...areas.map((c) => ({ value: c as string, label: MENTOR_CATEGORY_META[c].short }))]}
+              active={activeArea}
+              onChange={setArea}
+            />
           </div>
         )}
         {active.length === 0 ? (

@@ -7,6 +7,7 @@ import { displayName } from "@/lib/inAppNotify";
 import { PROGRAM_STATUS_LABELS } from "@/lib/mentorProgramState";
 import { syncProgramProgress } from "@/lib/mentorProgress";
 import { faNum } from "@/lib/jalali";
+import { groupLogActivity } from "@/lib/mentorActivity";
 import {
   MENTORSHIP_WITH_USERS_INCLUDE,
   PROGRAM_WITH_USERS_INCLUDE,
@@ -20,15 +21,15 @@ import {
   userTimezone,
 } from "@/lib/mentorServer";
 
-const LOG_STATUS_LABELS = { COMPLETED: "انجام شد", PARTIAL: "نیمه‌کاره", MISSED: "انجام نشد" } as const;
 const ACTIVITY_LIMIT = 15;
+
 // «نیاز به توجه»: ≥۲ آیتم/روزِ انجام‌نشده در ۷ روز، یا برنامه‌ی فعالی که ۳ روزه هیچ
 // آیتمی ازش انجام نشده (هر دو از پیشرفتِ خودکار). برنامه‌ای که کمتر از ۳ روزه فعال شده هنوز فرصت داره،
 // پس برای شرطِ دوم حساب نمی‌شه (وگرنه هر برنامه‌ی تازه فوراً قرمز می‌شد).
 const MISSED_THRESHOLD = 2;
 const SILENT_DAYS = 3;
 
-type Activity = { type: "log" | "program" | "message"; at: Date; studentName: string; text: string; url: string };
+type Activity = { type: "log" | "program" | "message"; at: Date; studentName: string; text: string; url: string; day?: string };
 
 // GET /api/mentor/dashboard → نمای کلیِ منتور: آمار، درخواست‌ها، برنامه‌های
 // منتظر، فعالیتِ اخیر، نرخِ انجامِ ۷ روزه و شاگردهای نیازمندِ توجه.
@@ -78,8 +79,9 @@ export async function GET() {
         updatedAt: { gte: recentCutoff },
       },
       orderBy: { updatedAt: "desc" },
-      take: ACTIVITY_LIMIT,
-      select: { programId: true, status: true, updatedAt: true, item: { select: { title: true } }, program: { select: { student: { select: PUBLIC_USER_SELECT } } } },
+      // چند ثبت در هر (برنامه، روز) یک ردیف می‌شوند — lib/mentorActivity.ts
+      take: ACTIVITY_LIMIT * 8,
+      select: { programId: true, status: true, date: true, doneOn: true, updatedAt: true, item: { select: { title: true } }, program: { select: { student: { select: PUBLIC_USER_SELECT } } } },
     }),
     prisma.mentorProgram.findMany({
       where: { mentorId: me, respondedAt: { gte: recentCutoff } },
@@ -106,13 +108,7 @@ export async function GET() {
   // منتورِ تعلیق‌شده اسنیپتِ لاگ/پیامِ شاگردها رو نمی‌بینه (مثل /api/mentor/students)
   const suspended = !!profile?.suspendedAt;
   const recentActivity: Activity[] = [
-    ...(suspended ? [] : recentLogs).map((l) => ({
-      type: "log" as const,
-      at: l.updatedAt,
-      studentName: displayName(l.program.student),
-      text: `${l.item.title}: ${LOG_STATUS_LABELS[l.status]}`,
-      url: `/mentor-programs/${l.programId}`,
-    })),
+    ...groupLogActivity(suspended ? [] : recentLogs).map(({ student, ...g }) => ({ ...g, studentName: displayName(student) })),
     ...recentPrograms.map((p) => ({
       type: "program" as const,
       at: p.respondedAt!,
@@ -128,7 +124,8 @@ export async function GET() {
       url: `/mentorship/${m.mentorshipId}`,
     })),
   ]
-    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    // همگام‌سازی چند روز را هم‌زمان می‌نویسد؛ در زمانِ برابر، روزِ جدیدتر اول
+    .sort((a, b) => b.at.getTime() - a.at.getTime() || ((b as Activity).day ?? "").localeCompare((a as Activity).day ?? ""))
     .slice(0, ACTIVITY_LIMIT);
 
   // نرخِ انجامِ ۷ روزه به‌ازای هر شاگردِ فعال (فقط لاگ‌های برنامه‌های همین منتور).
@@ -180,7 +177,7 @@ export async function GET() {
   for (const r of visibleRels) {
     const missed = missedMap.get(r.studentId) ?? 0;
     let reason: string | null = null;
-    if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتمِ انجام‌نشده در ۷ روز اخیر`;
+    if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتمِ انجام‌نشده در 7 روز اخیر`;
     else if (silentStudents.has(r.studentId)) reason = `${faNum(SILENT_DAYS)} روز است هیچ آیتمی از برنامه‌ی فعال انجام نشده`;
     if (reason) attention.push({ studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, reason });
   }

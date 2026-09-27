@@ -5,10 +5,10 @@
 export const MENTOR_CATEGORIES = ["ROUTINE", "FITNESS", "NUTRITION"] as const;
 export type MentorCategory = (typeof MENTOR_CATEGORIES)[number];
 
-export const MENTOR_CATEGORY_META: Record<MentorCategory, { label: string; certLabel: string }> = {
-  ROUTINE: { label: "روتین و برنامه‌ریزی", certLabel: "مدرک برنامه‌ریزی" },
-  FITNESS: { label: "بدنسازی", certLabel: "مدرک مربیگری بدنسازی" },
-  NUTRITION: { label: "تغذیه", certLabel: "مدرک تغذیه" },
+export const MENTOR_CATEGORY_META: Record<MentorCategory, { label: string; short: string; certLabel: string }> = {
+  ROUTINE: { label: "روتین و برنامه‌ریزی", short: "روتین", certLabel: "مدرک برنامه‌ریزی" },
+  FITNESS: { label: "بدنسازی", short: "بدنسازی", certLabel: "مدرک مربیگری بدنسازی" },
+  NUTRITION: { label: "تغذیه", short: "تغذیه", certLabel: "مدرک تغذیه" },
 };
 
 export function isMentorCategory(v: unknown): v is MentorCategory {

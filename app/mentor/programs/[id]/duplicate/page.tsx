@@ -153,8 +153,7 @@ export default function DuplicateMentorProgramPage() {
             >
               <div className="wsearch-date-row" style={{ marginTop: 0 }}>
                 <div className="time-field">
-                  <span className="time-field-label">تاریخ شروع</span>
-                  <button type="button" className={`jdate-btn${start ? "" : " placeholder"}`} onClick={() => setPicker(true)}>
+                  <button type="button" className={`jdate-btn${start ? "" : " placeholder"}`} aria-label="تاریخ شروع" onClick={() => setPicker(true)}>
                     {start ? formatJalali(start) : "روز / ماه / سال"}
                   </button>
                 </div>

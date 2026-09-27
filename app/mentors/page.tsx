@@ -5,6 +5,7 @@ import { Search, SearchX, Sparkles, Star, Users } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorEmptyState, MentorSectionTitle } from "@/components/MentorUI";
 import { MentorCard } from "@/components/MentorCard";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
@@ -124,14 +125,12 @@ function Discovery() {
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
-        <div className="trade-tag-row" role="group" aria-label="حوزه">
-          <button type="button" className={`trade-tag-chip${category === "" ? " active" : ""}`} aria-pressed={category === ""} onClick={() => setCategory("")}>همه</button>
-          {MENTOR_CATEGORIES.map((c) => (
-            <button key={c} type="button" className={`trade-tag-chip${category === c ? " active" : ""}`} aria-pressed={category === c} onClick={() => setCategory(c)}>
-              {MENTOR_CATEGORY_META[c].label}
-            </button>
-          ))}
-        </div>
+        {/* انتخابِ تکیِ حوزه → کامپوننتِ خودِ سایت */}
+        <SegmentedTabs
+          options={[{ value: "", label: "همه" }, ...MENTOR_CATEGORIES.map((c) => ({ value: c as string, label: MENTOR_CATEGORY_META[c].short }))]}
+          active={category}
+          onChange={setCategory}
+        />
       </div>
 
       {!filtered && popular && popular.length > 0 && (

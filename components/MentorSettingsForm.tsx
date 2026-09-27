@@ -67,7 +67,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
     const errs: typeof fieldErr = {};
     const capText = toEnDigits(capacity).trim();
     const cap = capText ? Number(capText) : null;
-    if (cap !== null && (!Number.isInteger(cap) || cap < 1 || cap > CAPACITY_MAX)) errs.capacity = `عددی بین ۱ تا ${fa(CAPACITY_MAX)} بنویس`;
+    if (cap !== null && (!Number.isInteger(cap) || cap < 1 || cap > CAPACITY_MAX)) errs.capacity = `عددی بین 1 تا ${fa(CAPACITY_MAX)} بنویس`;
     const awayIso = away && awayDate ? jalaliToIso(...awayDate) : null;
     if (away && !awayIso) errs.awayDate = "تاریخ بازگشت را انتخاب کن";
     if (awayMessage.trim().length > AWAY_MESSAGE_MAX) errs.awayMessage = `حداکثر ${fa(AWAY_MESSAGE_MAX)} نویسه`;
@@ -115,7 +115,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
         <div className="mentor-form" style={{ paddingTop: "var(--m-3)" }}>
           <MentorField
             label="سقف شاگرد فعال" htmlFor="ms-capacity" optional error={fieldErr.capacity}
-            hint={`خالی یعنی بدون سقف؛ الان ${fa(initial.activeStudents)} شاگرد فعال داری${full ? " و ظرفیت تکمیل است" : ""}. دعوت‌های خودت از این سقف مستثناست`}
+            hint={`خالی یعنی بدون سقف؛ اکنون ${fa(initial.activeStudents)} شاگرد فعال داری${full ? " و ظرفیت تکمیل است" : ""}. دعوت‌های خودت در این سقف شمرده نمی‌شوند`}
           >
             <input
               id="ms-capacity" type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" maxLength={4}
@@ -171,12 +171,12 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
 
       <MentorSection title="پاسخ‌گویی" icon={ic(MessageCircle, MI.section)}>
         <div className="mentor-form">
-          <MentorField label="زمان معمول پاسخ" hint="روی پروفایلت به‌صورت «معمولاً تا … ساعت پاسخ می‌دهد» نمایش داده می‌شود">
+          <MentorField label="زمان معمول پاسخ" hint={responseTime === "0" ? "روی پروفایلت زمان پاسخ نمایش داده نمی‌شود" : `روی پروفایلت نمایش داده می‌شود: «معمولاً تا ${fa(Number(responseTime))} ساعت پاسخ می‌دهد»`}>
             <SegmentedTabs options={RT_OPTIONS} active={responseTime} onChange={(v) => { setResponseTime(v); touched(); }} />
           </MentorField>
           <MentorField
             label="پیام خوش‌آمد" htmlFor="ms-welcome" optional error={fieldErr.welcome}
-            hint="با شروع هر رابطه در اعلان پذیرش به شاگرد می‌رسد و دو هفته بالای صفحه‌ی رابطه می‌ماند"
+            hint="با شروع هر رابطه در اعلان پذیرش به شاگرد می‌رسد و اول گفت‌وگو نمایش داده می‌شود"
           >
             <textarea
               id="ms-welcome" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={WELCOME_MAX + 50}

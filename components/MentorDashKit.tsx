@@ -25,7 +25,7 @@ export function statusMessage(status: number): string {
   if (status === 403) return "اجازه‌ی این کار را نداری";
   if (status === 404) return "پیدا نشد یا به آن دسترسی نداری";
   if (status === 409) return "وضعیت تغییر کرده است؛ صفحه را تازه کن";
-  if (status === 413) return "حجم فایل حداکثر ۵ مگابایت است";
+  if (status === 413) return "حجم فایل حداکثر 5 مگابایت است";
   if (status === 415) return "فقط تصویر (JPG، PNG، WebP) یا PDF پذیرفته می‌شود";
   if (status === 429) return "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کن";
   if (status >= 500) return "خطای سرور؛ چند دقیقه بعد دوباره تلاش کن";

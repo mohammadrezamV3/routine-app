@@ -108,7 +108,7 @@ export function MentorStudentsList({ data }: { data: StudentIndexResponse }) {
               title={name}
               sub={
                 <>
-                  <span>{r.adherence === null ? "بدون ثبت در ۷ روز" : `پایبندی ${pct(r.adherence)}`}</span>
+                  <span>{r.adherence === null ? "بدون ثبت در 7 روز" : `پایبندی ${pct(r.adherence)}`}</span>
                   <span>{r.lastActivityAt ? `فعالیت ${fmtRelative(r.lastActivityAt)}` : "بدون فعالیت"}</span>
                   {r.startedAt && <span>از {fmtDate(r.startedAt)}</span>}
                   {labels.length > 0 && <span>{labels.join("، ")}</span>}

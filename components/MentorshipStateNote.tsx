@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CirclePause, LogOut, MessageSquareText } from "lucide-react";
+import { CalendarDays, CirclePause, LogOut } from "lucide-react";
 import { MI, MI_STROKE, MentorChip } from "./MentorUI";
 import { fmtDate } from "@/lib/mentorFormat";
 import type { MentorshipRow } from "@/lib/mentorTypes";
@@ -43,14 +43,8 @@ export function MentorshipStateNote({ row, role }: { row: MentorshipRow; role: "
       </p>,
     );
   }
-  if (role === "student" && row.status === "ACTIVE" && row.welcomeMessage) {
-    lines.push(
-      <div key="welcome" className="mentor-state-note is-block">
-        <span className="mentor-state-label">{ic(MessageSquareText, MI.chip)} پیام خوش‌آمد منتور</span>
-        <p className="mentor-quote">{row.welcomeMessage}</p>
-      </div>,
-    );
-  }
+  // پیام خوش‌آمد این‌جا تکرار نمی‌شود: گفت‌وگو (MentorChat) آن را اولِ پیام‌ها
+  // سنجاق می‌کند و قبلاً هر دو هم‌زمان روی یک صفحه دیده می‌شدند.
 
   if (lines.length === 0) return null;
   return <div className="mentor-state-notes">{lines}</div>;

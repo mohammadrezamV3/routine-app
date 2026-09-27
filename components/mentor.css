@@ -303,7 +303,7 @@ body[data-theme="light"] .mentor-text-btn, body:not([data-theme="light"]) .mento
 }
 .mentor-card .rp-card-meta{ margin-top:0; }
 .mentor-card .rp-card-foot{ padding-top:0; }
-.mentor-card-closed{ font-size:11px; font-weight:700; color:var(--muted); }
+
 @media (hover:hover) and (pointer:fine){ .mentor-card:hover .mentor-card-name{ color:var(--accent); } }
 .mentor-card:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
@@ -593,11 +593,13 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 
 /* خطِ آرامِ قفل بالای گفت‌وگو (و هشدارِ تغییرِ کلید) */
 .mentor-e2ee-line{
-  display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-1) var(--m-2); margin:0 0 var(--m-2);
+  display:flex; align-items:flex-start; gap:var(--m-2); margin:0 0 var(--m-2);
   font-size:11.5px; line-height:1.9; color:var(--muted);
 }
-.mentor-e2ee-line > svg{ flex-shrink:0; }
-.mentor-e2ee-line > span{ flex:1 1 auto; min-width:0; }
+/* آیکون و دکمه کنارِ خطِ اولِ متن می‌مانند؛ در موبایل فقط متن می‌شکند */
+.mentor-e2ee-line > svg{ flex-shrink:0; margin-top:4px; }
+.mentor-e2ee-line > span{ flex:1 1 0; min-width:0; }
+.mentor-e2ee-line > .mentor-text-btn{ flex-shrink:0; }
 .mentor-e2ee-line .mentor-text-btn{ padding:0 2px; font-size:11.5px; }
 .mentor-e2ee-line.is-warn{ color:var(--m-warn); }
 
@@ -628,3 +630,13 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-program-tools .mentor-section-head{ display:none; }
 /* آیکونِ گفت‌وگو در انتهای ردیفِ منتورِ فعال (/mentorship) */
 .mentor-row-chat{ color:var(--muted2); flex-shrink:0; }
+
+/* ── QA round 2 ─────────────────────────────────────────────── */
+/* فیلترِ تک‌انتخابیِ داخلِ یک بخشِ flush (SegmentedTabs) */
+.mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
+/* سوییچِ روشن در تم روشن: قانونِ سراسریِ body[data-theme="light"] .ios-toggle
+   (اسپسیفیسیتیِ بالاتر) رنگِ accentِ .ios-toggle.on را می‌پوشاند و «روشن» و
+   «خاموش» یک‌رنگ دیده می‌شدند. فقط برای بخشِ منتور؛ رفعِ سراسری در globals.css
+   جداگانه گزارش شده است. */
+body[data-theme="light"] .mentor-page .ios-toggle.on{ background:var(--accent); border-color:var(--accent); }
+@media (hover:hover){ body[data-theme="light"] .mentor-page .ios-toggle.on:hover{ background:var(--accent); border-color:var(--accent); } }

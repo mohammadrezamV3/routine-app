@@ -148,7 +148,8 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     dash = await j(await dashboard());
     expect(dash.stats).toMatchObject({ students: 1, activeStudents: 1, pendingRequests: 0, activePrograms: 1 });
     expect(dash.completion).toEqual([expect.objectContaining({ studentId: student, completed: 2, rate: 100 })]);
-    expect(dash.recentActivity.some((a: any) => a.type === "log" && a.text.includes("اسکوات"))).toBe(true);
+    // دو آیتمِ یک روز یک ردیفِ فعالیت می‌شوند (lib/mentorActivity.ts)
+    expect(dash.recentActivity.some((a: any) => a.type === "log" && a.text === "2 آیتم انجام شد" && a.day === today())).toBe(true);
     expect(dash.attention).toEqual([]);
 
     // فیدبک → اعلانِ شاگرد

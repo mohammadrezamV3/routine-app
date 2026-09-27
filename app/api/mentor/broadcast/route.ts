@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   if (!g.ok) return g.response;
   const me = g.userId;
   if (!(await checkRateLimit(`mentor-broadcast:${me}`, 5, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "ارسال گروهی در یک ساعت حداکثر ۵ بار ممکن است" }, { status: 429 });
+    return NextResponse.json({ error: "ارسال گروهی در یک ساعت حداکثر 5 بار ممکن است" }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 3 * 1024 * 1024);

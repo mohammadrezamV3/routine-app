@@ -16,7 +16,7 @@ import { MentorIntakeAnswers } from "./MentorIntakeAnswers";
 import { MentorDashTools } from "./MentorDashTools";
 import { MentorBroadcast } from "./MentorBroadcast";
 import { categoryLabel } from "./MentorBadges";
-import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
+import { fmtDate, fmtRelative, fmtWeekday } from "@/lib/mentorFormat";
 import { isValidUsername } from "@/lib/validate";
 import { VERIFICATION_LABELS } from "@/lib/mentorCategories";
 import { publicUserName } from "@/lib/mentorTypes";
@@ -91,7 +91,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   if (identity === "REJECTED") {
     notices.push(
       <MentorNotice
-        key="idrej" tone="danger" icon={ic(BadgeCheck, MI.row)} title="مدرک شناسایی رد شد"
+        key="idrej" tone="danger" icon={ic(XCircle, MI.row)} title="مدرک شناسایی رد شد"
         action={<Link href="/mentor/profile#verification" className="mentor-link">ارسال دوباره</Link>}
       >
         {self.identityRejectReason || "مدرک واضح‌تری بفرست"}
@@ -111,7 +111,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   if (identity === "NOT_PROVIDED") {
     notices.push(
       <MentorNotice
-        key="idnone" tone="warn" icon={ic(BadgeCheck, MI.row)} title="احراز هویت انجام نشده"
+        key="idnone" tone="warn" icon={ic(AlertCircle, MI.row)} title="احراز هویت انجام نشده"
         action={<Link href="/mentor/profile#verification" className="mentor-link">ارسال مدرک</Link>}
       >
         پس از تأیید، نشان «هویت تأییدشده» روی پروفایلت نمایش داده می‌شود
@@ -209,30 +209,35 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       </MentorSection>
 
       <MentorSection
-        title="پایبندی ۷ روز اخیر" icon={ic(CalendarDays, MI.section)} flush
+        title="پایبندی 7 روز اخیر" icon={ic(CalendarDays, MI.section)} flush
         desc="فقط برنامه‌هایی که فرستاده‌ای و شاگرد فعال کرده است"
       >
         {dash.completion.length === 0 ? (
-          <MentorEmpty>در ۷ روز اخیر ثبتی نیست</MentorEmpty>
+          <MentorEmpty>در 7 روز اخیر ثبتی نیست</MentorEmpty>
         ) : dash.completion.map((c) => (
           <MentorRow
             key={c.studentId}
             href={`/mentor/students/${c.studentId}`}
             lead={<MentorUserAvatar avatarUrl={c.avatarUrl} name={c.name} size={36} />}
             title={c.name}
-            sub={
+            sub={c.completed + c.partial + c.missed === 0 ? (
+              <span>در این 7 روز آیتم سررسیدی نداشت</span>
+            ) : (
               <>
                 <span>{fa(c.completed)} انجام‌شده</span>
                 <span>{fa(c.partial)} ناقص</span>
                 <span>{fa(c.missed)} انجام‌نشده</span>
               </>
-            }
-            end={
+            )}
+            end={c.completed + c.partial + c.missed === 0 ? (
+              // «0٪» برای کسی که هنوز چیزی برای سنجیدن ندارد گمراه‌کننده است
+              <MentorChip tone="neutral" icon={ic(CircleSlash, MI.chip)}>بدون ثبت</MentorChip>
+            ) : (
               <span className="mentor-progress" style={{ marginTop: 0, width: 96 }}>
                 <MentorDashBar rate={c.rate} />
                 <span className="mentor-progress-value">{pct(c.rate)}</span>
               </span>
-            }
+            )}
           />
         ))}
       </MentorSection>
@@ -257,7 +262,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
               href={internal ? a.url : undefined}
               lead={lead}
               title={a.studentName}
-              sub={<><span>{a.text}</span><span>{fmtRelative(a.at)}</span></>}
+              sub={<><span>{a.text}</span><span>{a.day ? fmtWeekday(a.day) : fmtRelative(a.at)}</span></>}
             />
           );
         })}
@@ -390,7 +395,7 @@ function MentorDashInvite({
     setSent(false);
     const u = username.trim().replace(/^@/, "");
     if (!u) { setUserErr("یوزرنیم شاگرد را وارد کن"); return; }
-    if (!isValidUsername(u)) { setUserErr("یوزرنیم ۳ تا ۲۰ نویسه است: حرف انگلیسی، عدد یا زیرخط"); return; }
+    if (!isValidUsername(u)) { setUserErr("یوزرنیم 3 تا 20 نویسه است: حرف انگلیسی، عدد یا زیرخط"); return; }
     if (categories.length > 0 && cats.length === 0) { setCatErr("حداقل یک حوزه انتخاب کن"); return; }
     setSending(true);
     const body: { studentUsername: string; message?: string; categories?: string[] } = { studentUsername: u };

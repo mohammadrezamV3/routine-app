@@ -58,7 +58,7 @@ function PasscodePair({
 }) {
   return (
     <div className="mentor-field-row">
-      <MentorField label={label} htmlFor={`${idPrefix}-pass`} error={error} hint="حداقل ۱۰ نویسه؛ با رمز حساب آریون یکی نباشد">
+      <MentorField label={label} htmlFor={`${idPrefix}-pass`} error={error} hint="حداقل 10 نویسه؛ با رمز حساب آریون یکی نباشد">
         <input id={`${idPrefix}-pass`} type="password" className={FIELD} autoComplete="new-password" value={value} onChange={(e) => onValue(e.target.value)} aria-invalid={!!error} />
       </MentorField>
       <MentorField label="تکرار رمز" htmlFor={`${idPrefix}-repeat`} error={repeatError}>

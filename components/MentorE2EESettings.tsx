@@ -129,7 +129,7 @@ export function MentorE2EESettings({
               <input id="e2ee-cur" type="password" className={FIELD} autoComplete="current-password" value={cur} onChange={(e) => { setCur(e.target.value); setErrs((x) => ({ ...x, cur: null })); setSaved(false); }} />
             </MentorField>
             <div className="mentor-field-row">
-              <MentorField label="رمز تازه" htmlFor="e2ee-new" error={errs.np} hint="حداقل ۱۰ نویسه؛ با رمز حساب آریون یکی نباشد">
+              <MentorField label="رمز تازه" htmlFor="e2ee-new" error={errs.np} hint="حداقل 10 نویسه؛ با رمز حساب آریون یکی نباشد">
                 <input id="e2ee-new" type="password" className={FIELD} autoComplete="new-password" value={np} onChange={(e) => { setNp(e.target.value); setErrs((x) => ({ ...x, np: null })); setSaved(false); }} />
               </MentorField>
               <MentorField label="تکرار رمز تازه" htmlFor="e2ee-new2" error={errs.nr}>

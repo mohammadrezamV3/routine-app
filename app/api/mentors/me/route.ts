@@ -49,7 +49,7 @@ export async function PUT(req: Request) {
     data.bio = typeof b.bio === "string" ? b.bio.trim().slice(0, BIO_MAX) || null : null;
   }
   if (b.specialties !== undefined) {
-    if (!Array.isArray(b.specialties)) return badRequest("تخصص‌ها باید لیست باشه");
+    if (!Array.isArray(b.specialties)) return badRequest("تخصص‌ها باید فهرست باشد");
     const set = new Set<string>();
     for (const s of b.specialties) {
       if (typeof s !== "string") continue;
@@ -60,7 +60,7 @@ export async function PUT(req: Request) {
     data.specialties = Array.from(set);
   }
   if (b.categories !== undefined) {
-    if (!Array.isArray(b.categories)) return badRequest("دسته‌ها باید لیست باشه");
+    if (!Array.isArray(b.categories)) return badRequest("دسته‌ها باید فهرست باشد");
     data.categories = sanitizeCategories(b.categories);
   }
   if (b.routineRole !== undefined) {

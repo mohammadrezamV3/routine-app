@@ -99,7 +99,7 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
   }
 
   const durationMin = optInt(raw.durationMin, 1, 1440);
-  if (durationMin === "bad") return { ok: false, error: `${where}: مدت (دقیقه) باید بین ۱ تا ۱۴۴۰ باشه` };
+  if (durationMin === "bad") return { ok: false, error: `${where}: مدت (دقیقه) باید بین 1 تا 1440 باشد` };
 
   // فیلدهای حرکتی فقط برای برنامه‌ی تمرینی معنا دارن؛ برای روتین دور ریخته می‌شن
   let sets: number | null = null;
@@ -108,7 +108,7 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
   let restSec: number | null = null;
   if (type === "WORKOUT") {
     const s = optInt(raw.sets, 1, 100);
-    if (s === "bad") return { ok: false, error: `${where}: تعداد ست باید بین ۱ تا ۱۰۰ باشه` };
+    if (s === "bad") return { ok: false, error: `${where}: تعداد ست باید بین 1 تا 100 باشد` };
     sets = s;
 
     if (!isBlank(raw.reps)) {
@@ -119,12 +119,12 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
 
     if (!isBlank(raw.weightKg)) {
       const w = typeof raw.weightKg === "string" ? Number(toEnglishDigits(raw.weightKg)) : raw.weightKg;
-      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: `${where}: وزنه باید بین ۰ تا ۱۰۰۰ کیلو باشه` };
+      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: `${where}: وزنه باید بین 0 تا 1000 کیلوگرم باشد` };
       weightKg = Math.round(w * 10) / 10;
     }
 
     const rs = optInt(raw.restSec, 0, 3600);
-    if (rs === "bad") return { ok: false, error: `${where}: استراحت باید بین ۰ تا ۳۶۰۰ ثانیه باشه` };
+    if (rs === "bad") return { ok: false, error: `${where}: استراحت باید بین 0 تا 3600 ثانیه باشد` };
     restSec = rs;
   }
 

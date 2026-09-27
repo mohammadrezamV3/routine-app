@@ -347,7 +347,7 @@ export const PASSCODE_MIN = 10;
  * رمزشده را دارد) مقاوم باشد: حداقل ۱۰ نویسه و سطحِ «خوب» در zxcvbn.
  */
 export async function passcodeProblem(passcode: string, userInputs: string[] = []): Promise<string | null> {
-  if (passcode.length < PASSCODE_MIN) return `حداقل ${PASSCODE_MIN.toLocaleString("fa-IR")} نویسه لازم است`;
+  if (passcode.length < PASSCODE_MIN) return `حداقل ${PASSCODE_MIN} نویسه لازم است`;
   const { passwordTier, isPasswordAcceptable } = await import("@/lib/passwordStrength");
   const tier = await passwordTier(passcode, userInputs);
   if (!isPasswordAcceptable(tier)) return "این رمز قابل حدس است؛ چند کلمه‌ی نامرتبط یا ترکیب طولانی‌تری انتخاب کن";

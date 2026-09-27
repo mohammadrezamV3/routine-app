@@ -169,7 +169,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
           <label key={r.mentorshipId} className={`mentor-check${r.key ? "" : " is-disabled"}`}>
             <input type="checkbox" disabled={!r.key || busy} checked={!!r.key && selected.has(r.mentorshipId)} onChange={(e) => toggle(r.mentorshipId, e.target.checked)} />
             <span className="mentor-check-label">{publicUserName(r.student)}</span>
-            {!r.key && <span className="mentor-check-kind">رمزگذاری را فعال نکرده</span>}
+            {!r.key && <span className="mentor-check-kind">رمز گفت‌وگو ندارد</span>}
           </label>
         ))}
       </div>

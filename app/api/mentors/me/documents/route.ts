@@ -25,9 +25,9 @@ export async function POST(req: Request) {
   // req.formData() مستقیم کلِ بدنه رو بی‌حد توی حافظه می‌کشید.
   const MAX_BODY = MAX_DOCUMENT_BYTES + 64 * 1024;
   const declared = Number(req.headers.get("content-length") || 0);
-  if (declared > MAX_BODY) return NextResponse.json({ error: "حجم فایل حداکثر ۵ مگابایته" }, { status: 413 });
+  if (declared > MAX_BODY) return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
   const body = await readBodyCapped(req, MAX_BODY);
-  if (body === "too_large") return NextResponse.json({ error: "حجم فایل حداکثر ۵ مگابایته" }, { status: 413 });
+  if (body === "too_large") return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
 
   const profile = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true, categories: true, identityStatus: true } });
   if (!profile) return forbidden("اول پروفایل منتوری بساز");
@@ -44,13 +44,13 @@ export async function POST(req: Request) {
   let category: string | null = null;
   if (kind === "CERTIFICATE") {
     const c = form.get("category");
-    if (typeof c !== "string" || !profile.categories.includes(c)) return badRequest("دسته‌ی مدرک باید یکی از دسته‌های پروفایلت باشه");
+    if (typeof c !== "string" || !profile.categories.includes(c)) return badRequest("دسته‌ی مدرک باید یکی از دسته‌های پروفایلت باشد");
     category = c;
   }
 
   const file = form.get("file");
   if (!file || typeof file === "string") return badRequest("فایلی ارسال نشده");
-  if (file.size > MAX_DOCUMENT_BYTES) return NextResponse.json({ error: "حجم فایل حداکثر ۵ مگابایته" }, { status: 413 });
+  if (file.size > MAX_DOCUMENT_BYTES) return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
   const v = validateDocument(await file.arrayBuffer(), (file as File).name);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: v.status });
 

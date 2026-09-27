@@ -73,7 +73,7 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
     <div id="verification" style={{ scrollMarginTop: 80 }}>
       <MentorSection
         title={title} icon={icon}
-        desc="مدارک را فقط تو و ادمین‌های آریون می‌بینید؛ JPG، PNG، WebP یا PDF تا ۵ مگابایت"
+        desc="مدارک را فقط تو و ادمین‌های آریون می‌بینید؛ JPG، PNG، WebP یا PDF تا 5 مگابایت"
       >
         <MentorDocRow
           title="مدرک شناسایی"
@@ -133,7 +133,7 @@ function MentorDocRow({
   async function pick(file: File) {
     setError(null);
     if (file.size === 0) { setError("فایل خالی است"); return; }
-    if (file.size > MAX_BYTES) { setError(`حجم فایل حداکثر ۵ مگابایت است؛ این فایل ${formatBytes(file.size)} است`); return; }
+    if (file.size > MAX_BYTES) { setError(`حجم فایل حداکثر 5 مگابایت است؛ این فایل ${formatBytes(file.size)} است`); return; }
     const typeOk = file.type ? ALLOWED_MIME.includes(file.type) : ALLOWED_EXT.test(file.name);
     if (!typeOk) { setError("فقط تصویر (JPG، PNG، WebP) یا PDF پذیرفته می‌شود"); return; }
 

@@ -153,7 +153,7 @@ export function validateCapacity(v: unknown): Result<number | null> {
   if (v === null || v === undefined || v === "") return { ok: true, data: null };
   const n = typeof v === "string" ? Number(toEnglishDigits(v).trim()) : v;
   if (typeof n !== "number" || !Number.isInteger(n) || n < 1 || n > CAPACITY_MAX) {
-    return { ok: false, error: `ظرفیت عددی بین ۱ تا ${faNum(CAPACITY_MAX)} است` };
+    return { ok: false, error: `ظرفیت عددی بین 1 تا ${faNum(CAPACITY_MAX)} است` };
   }
   return { ok: true, data: n };
 }
