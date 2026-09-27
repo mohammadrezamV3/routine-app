@@ -128,3 +128,58 @@ describe("storage — optimistic + rollback روی باسِ زنده", () => {
     expect(fetchMock.mock.calls.length).toBe(before);
   });
 });
+
+describe("liveSync — رویدادهای سرور (WebSocket)", () => {
+  const g = globalThis as any;
+  let target: EventTarget;
+  beforeAll(() => {
+    target = new EventTarget();
+    g.window = Object.assign(target, {
+      location: { href: "http://localhost/", origin: "http://localhost" },
+      localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+      fetch: async () => ({ ok: true }),
+    });
+    g.document = { addEventListener: () => {}, visibilityState: "visible" };
+  });
+  afterAll(() => {
+    delete g.window;
+    delete g.document;
+  });
+
+  it("data.changed کلیدها را باطل می‌کند، اکوی همین تب نادیده گرفته می‌شود، و نوعِ بدون کلید نگاشت می‌شود", async () => {
+    vi.resetModules();
+    const live = await import("@/lib/liveSync");
+    const got: { keys: string[]; remote: boolean }[] = [];
+    live.subscribe(["trade", "notifications", "mentor"], (keys, meta) => got.push({ keys, remote: meta.remote }));
+    const fire = (detail: unknown) => target.dispatchEvent(Object.assign(new Event(live.SERVER_EVENT), { detail }));
+
+    fire({ type: "data.changed", keys: ["trade"] });
+    await flush();
+    expect(got).toEqual([{ keys: ["trade"], remote: true }]);
+
+    fire({ type: "data.changed", keys: ["trade"], src: live.LIVE_TAB_ID });
+    await flush();
+    expect(got.length).toBe(1);
+
+    fire({ type: "mentor.message" });
+    await flush();
+    expect(got[1].keys).toEqual(expect.arrayContaining(["mentor:messages", "notifications"]));
+
+    fire({ type: "notification.read" });
+    await flush();
+    expect(got[2].keys).toEqual(["notifications"]);
+
+    // همون نوشتن از دو راه (BroadcastChannel + WS) = یک باطل‌سازی؛ نوشتنِ بعدیِ همون کلید دوباره خبر می‌ده
+    const other = new BroadcastChannel("arion-live");
+    other.postMessage({ from: "tabX", keys: ["trade"] });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(got.length).toBe(4);
+    fire({ type: "data.changed", keys: ["trade"], src: "tabX" });
+    await flush();
+    expect(got.length).toBe(4);
+    fire({ type: "data.changed", keys: ["trade"], src: "tabX" });
+    await flush();
+    expect(got.length).toBe(5);
+    other.close();
+  });
+});

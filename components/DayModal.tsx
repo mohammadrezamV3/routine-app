@@ -6,6 +6,7 @@ import { tasksForDate, ScheduleTask } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime as isWakeOnTimeShared, timeToMinutes } from "@/lib/wakeSleep";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 
 const todayKey = isoLocal(new Date());
 
@@ -38,6 +39,14 @@ export function DayModal({
     setTasks(tasksForDate(date, scheduleOpts));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [iso]);
+
+  // لایه‌ی زنده: تیکِ همین روز از جای دیگه (تب دیگه/سرور) یا برگشتِ یک
+  // نوشتنِ ناموفق (rollback) همون لحظه این‌جا هم دیده بشه.
+  useLiveRefresh(["daily:" + iso, "outingDates"], (changed) => {
+    const all = changed.includes("*");
+    if (all || changed.some((c) => keyMatches("daily:" + iso, c))) getDaily(iso).then(setDailyState);
+    if (all || changed.includes("outingDates")) getOutingDates().then((arr) => setIsOuting(arr.includes(iso)));
+  });
 
   if (!daily) return null;
 

@@ -13,6 +13,7 @@ import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT, THEME_COLORS, THEME_COOKIE } from "@/lib/themeColor";
 import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
 import { BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
@@ -158,6 +159,22 @@ export const viewport: Viewport = {
 // این‌جا رندر تازه‌ای تحمیل نمی‌کند — ولی یک رفت‌وبرگشت کامل شبکه از هر
 // لود صفحه کم می‌کند، چون SessionProvider دیگر خودش `/api/auth/session` را
 // صدا نمی‌زند.
+async function resolveInitialTheme(userId: string | undefined): Promise<{ theme: "dark" | "light"; fromAccount: boolean }> {
+  const cookieTheme = cookies().get(THEME_COOKIE)?.value;
+  if (userId) {
+    try {
+      const row = await prisma.userSetting.findUnique({
+        where: { userId_key: { userId, key: "theme" } },
+        select: { value: true },
+      });
+      if (row?.value === "light" || row?.value === "dark") return { theme: row.value, fromAccount: true };
+    } catch {
+      // دیتابیس در دسترس نبود — همان کوکی
+    }
+  }
+  return { theme: cookieTheme === "light" ? "light" : "dark", fromAccount: false };
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   // تم از همون اولین بایتِ HTML درسته، نه بعد از اجرای اسکریپتِ inline.
@@ -169,7 +186,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // می‌بینم». اندازه‌گیری‌شده: در تمِ روشن ۳ فریمِ اولِ اسکرین‌کست تیره
   // (#0E1011) بودن. layout از قبل dynamic است (InlineBootstrap و سشن
   // کوکی می‌خونن)، پس خوندنِ این کوکی هزینه‌ی رندرِ اضافه‌ای نداره.
-  const theme = cookies().get(THEME_COOKIE)?.value === "light" ? "light" : "dark";
+  //
+  // برای کاربرِ لاگین‌کرده، تمِ *حساب* (UserSetting "theme") مرجع است نه
+  // کوکیِ این دستگاه: کوکی می‌تواند با حساب ناهماهنگ باشد (تم روی دستگاهِ
+  // دیگری عوض شده، کوکی پاک/منقضی شده، اپِ نصب‌شده) و در آن حالت صفحه اول با
+  // تمِ کوکی رسم می‌شد و بعد از رسیدنِ تمِ حساب (ThemeProvider) با فیدِ
+  // `transition:background` به تمِ دیگر می‌رفت — اندازه‌گیری‌شده روی کاربرِ
+  // آزمایشی با کوکیِ dark و تمِ حسابِ light. یک findUnique روی کلیدِ یکتای
+  // (userId, key)؛ فقط برای کاربرِ لاگین‌کرده.
+  const { theme, fromAccount } = await resolveInitialTheme((session?.user as { id?: string } | undefined)?.id);
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -179,6 +204,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="fa"
       dir="rtl"
       data-theme={theme}
+      // «account» = تم از حساب آمده و اسکریپتِ inline نباید با کوکی بازنویسی‌اش
+      // کند (برعکس: کوکی را با آن هم‌گام می‌کند) — lib/themeColor.ts
+      data-theme-src={fromAccount ? "account" : undefined}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >

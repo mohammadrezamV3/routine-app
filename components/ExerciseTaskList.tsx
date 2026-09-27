@@ -7,6 +7,7 @@ import { Check, Dumbbell, Loader2, Lock, Pencil, Play, Repeat2, RotateCw, Timer,
 import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
+import { reportLiveError } from "@/lib/liveSync";
 import { parseExerciseItem } from "@/lib/exerciseSets";
 import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
 import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
@@ -97,12 +98,17 @@ export function ExerciseTaskList({
 
   useEffect(() => { onActiveChange?.(active); }, [active, onActiveChange]);
 
-  async function persist(nextChecked: Set<string>, completed: boolean) {
-    await fetch("/api/exercise/log", {
+  // true = روی سرور نشست. خطا دیگه بی‌صدا بلعیده نمی‌شه: صدازننده تغییرِ
+  // optimistic رو برمی‌گردونه و پیامِ سراسری (LiveSyncToaster) نشون داده می‌شه.
+  async function persist(nextChecked: Set<string>, completed: boolean): Promise<boolean> {
+    const res = await fetch("/api/exercise/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ planId, date: dateIso, completed, completedItems: Array.from(nextChecked) }),
-    });
+    }).catch(() => null);
+    if (res?.ok) return true;
+    reportLiveError("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن");
+    return false;
   }
 
   function startWorkout() {
@@ -120,12 +126,24 @@ export function ExerciseTaskList({
     startWorkout();
   }
 
+  // optimistic: تیک همون لحظه می‌خوره؛ اگه سرور رد کرد همون حرکت برمی‌گرده.
+  // checkedRef تا چند تیکِ پشت‌سرهم قبل از رندرِ بعدی هم مجموعه‌ی کامل رو بفرستن.
+  const checkedRef = useRef(checked);
+  checkedRef.current = checked;
   function markItemDone(item: string) {
-    setChecked((prev) => {
-      if (prev.has(item)) return prev;
-      const next = new Set(prev).add(item);
-      persist(next, false);
-      return next;
+    const prev = checkedRef.current;
+    if (prev.has(item)) return;
+    const next = new Set(prev).add(item);
+    checkedRef.current = next;
+    setChecked(next);
+    persist(next, false).then((ok) => {
+      if (ok) return;
+      setChecked((cur) => {
+        if (!cur.has(item)) return cur;
+        const rolled = new Set(cur);
+        rolled.delete(item);
+        return rolled;
+      });
     });
   }
 
@@ -141,8 +159,9 @@ export function ExerciseTaskList({
   async function endWorkout() {
     setConfirmEnd(false);
     setEnding(true);
-    await persist(checked, true);
+    const ok = await persist(checked, true);
     setEnding(false);
+    if (!ok) return; // تمرین باز می‌مونه تا دوباره «پایان» بزنه
     setActive(false);
     setEnded(true);
     onSessionEnd();

@@ -85,10 +85,21 @@ export function applyThemeAttribute(theme: ThemeName) {
 //
 // برخلاف نسخه‌ی قبلی، این‌جا متا **همیشه** ست می‌شه (نه فقط وقتی تم روشنه)،
 // و اگه وجود نداشت ساخته می‌شه — چون دیگه نکست یکی نمی‌سازه.
+//
+// به‌روزرسانی: layout.tsx حالا خودش تم را سمتِ سرور تعیین می‌کند (برای
+// کاربرِ لاگین‌کرده از *حساب*، وگرنه از کوکی). وقتی مرجع حساب بوده
+// (`data-theme-src="account"` روی html)، کوکی دیگر حق بازنویسی ندارد —
+// برعکس، همین‌جا کوکی با تمِ حساب هم‌گام می‌شود تا صفحه‌های بعدی (و حتی
+// نسخه‌ی کش‌شده‌ی آفلاینِ سرویس‌ورکر) هم از اولین پینت درست باشند.
 export const THEME_INIT_SCRIPT = `(function(){try{
+var d=document.documentElement;
 var m=document.cookie.match(/(?:^|; )theme=(dark|light)/);
-var t=m?m[1]:"${"dark"}";
-document.documentElement.setAttribute("data-theme",t);
+var t;
+if(d.getAttribute("data-theme-src")==="account"){
+t=d.getAttribute("data-theme")==="light"?"light":"dark";
+if(!m||m[1]!==t)document.cookie="${THEME_COOKIE}="+t+"; path=/; max-age=31536000; samesite=lax"+(location.protocol==="https:"?"; secure":"");
+}else t=m?m[1]:"${"dark"}";
+d.setAttribute("data-theme",t);
 document.body.setAttribute("data-theme",t);
 var c=${JSON.stringify(THEME_COLORS)}[t];
 var all=document.querySelectorAll('meta[name="theme-color"]');
