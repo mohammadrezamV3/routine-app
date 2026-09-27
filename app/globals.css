@@ -7556,8 +7556,14 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
 }
 .ai-message-action-agent{ --ai-message-slide:-6px; }
 .ai-message-action-user{ --ai-message-slide:6px; }
-/* گوی کنارِ پیام: هم‌ترازِ خطِ اولِ متنِ حباب (نه بالاتر از حباب). */
-.ai-message-avatar{ align-self:flex-start; margin-top:8px; }
+/* گوی کنارِ پیام، مثلِ آواتارِ هر چتی: پایینش هم‌ترازِ پایینِ حباب، درست کنارِ
+   گوشه‌ی تیزِ حباب (rounded-bl-md — همان گوشه‌ای که به گو نزدیک است).
+   قبلا بالا/خطِ اول چسبیده بود؛ روی پیامِ چندخطی گو بالا-چپ معلق می‌ماند و
+   گوشه‌ی تیزِ حباب پایین، یعنی از حباب «جدا» دیده می‌شد.
+   ستونِ کنارش = حباب + ردیفِ کنش‌ها (کپی) زیرش؛ آن ردیف همیشه mount است
+   (فقط opacity:0) پس ارتفاعش ثابت است: 26px (دکمه: padding 6×2 + آیکنِ 14)
+   + 4px (gap-1 ستون) = 30px فاصله‌ی پایینِ حباب تا پایینِ ستون. */
+.ai-message-avatar{ align-self:flex-end; margin-bottom:30px; }
 
 .ai-message-root:focus-within .ai-message-action{
   opacity:1; transform:translateX(0) scale(1);
@@ -8216,12 +8222,6 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-next-title{ flex:1; min-width:0; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .rp-next svg{ flex-shrink:0; color:var(--accent); }
 
-.rp-confirm{
-  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
-  padding:14px 16px; border-radius:14px; margin-top:14px; font-size:12.5px; color:var(--text);
-  background:rgba(224,82,82,.08); border:1px solid rgba(224,82,82,.34);
-}
-.rp-confirm-actions{ display:flex; gap:9px; }
 .rp-notice{
   margin-top:14px; padding:10px 14px; border-radius:12px; font-size:12px; line-height:1.95;
   color:#E0A452; border:1px solid rgba(224,164,82,.35);

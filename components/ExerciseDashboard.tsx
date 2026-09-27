@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, History } from "lucide-react";
+import { useLiveRefresh } from "@/lib/liveSync";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { WEEK_ORDER } from "@/lib/schedule";
 import { ExercisePlan } from "@/lib/exerciseTypes";
@@ -40,6 +41,10 @@ export function ExerciseDashboard({
   const [logs, setLogs] = useState<ExerciseLogRange>({});
   const [selectedLog, setSelectedLog] = useState<{ completed: boolean; completedItems: string[] } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  // زنده: لاگِ تمرین از تبِ دیگه/دستگاهِ دیگه یا برگشت به تب. نوشتن‌های همین
+  // تب عمدا نادیده گرفته می‌شن — ExerciseTaskList خودش optimisticه و
+  // دوباره‌خوانیِ پژواکِ هر تیک وسطِ تمرین تیک‌های بعدی رو یه لحظه برمی‌گردوند.
+  useLiveRefresh("exercise", () => setRefreshKey((k) => k + 1), { remoteOnly: true });
 
   const [subbingItem, setSubbingItem] = useState<string | null>(null);
   const [subError, setSubError] = useState<string | null>(null);

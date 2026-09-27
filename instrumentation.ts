@@ -11,4 +11,14 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { warmUpDatabase } = await import("@/lib/prisma");
   warmUpDatabase();
+
+  // WebSocketِ `/ws` (lib/realtimeServer.ts) — همین پروسه‌ی سرورِ نکست، چه
+  // `next dev`، چه `next start`، چه هر workerِ cluster.js. شکستش نباید بالا
+  // آمدنِ خودِ سایت رو بخوابونه؛ بدونِ WS کلاینت‌ها به polling برمی‌گردن.
+  try {
+    const { startRealtimeServer } = await import("@/lib/realtimeServer");
+    startRealtimeServer();
+  } catch (err: any) {
+    console.error(`[realtime] failed to start: ${err?.message || err}`);
+  }
 }

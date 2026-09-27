@@ -4,6 +4,7 @@ import { requireMentorsUser, notFound, conflict, badRequest } from "@/lib/mentor
 import { readJsonBody, parseIsoDate } from "@/lib/validate";
 import { visibleToStudent } from "@/lib/mentorProgramState";
 import { isoDate, dateIsoInTz, serializeLog, userTimezone } from "@/lib/mentorServer";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 500;
@@ -19,7 +20,7 @@ export async function POST(req: Request, { params }: Ctx) {
 
   const p = await prisma.mentorProgram.findFirst({
     where: { id: params.id, studentId: me },
-    select: { id: true, status: true, sentAt: true, startDate: true, endDate: true, activatedAt: true, mentorship: { select: { status: true } } },
+    select: { id: true, mentorId: true, status: true, sentAt: true, startDate: true, endDate: true, activatedAt: true, mentorship: { select: { status: true } } },
   });
   if (!p || !visibleToStudent(p)) return notFound();
   if (p.status !== "ACTIVE") return conflict("فقط برای برنامه‌ی فعال می‌شه اجرا ثبت کرد");
@@ -64,5 +65,6 @@ export async function POST(req: Request, { params }: Ctx) {
     create: { programId: p.id, itemId: item.id, studentId: me, date, status, setsDone, note },
     update: { status, setsDone, note },
   });
+  void publishToUsers([p.mentorId, me], { type: "mentor.program", data: { id: p.id } });
   return NextResponse.json({ log: serializeLog(log) });
 }

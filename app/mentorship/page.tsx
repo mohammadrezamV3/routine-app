@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronLeft, ClipboardList, History, Inbox, LayoutDashboard, Loader2, Send, UserSearch, Users } from "lucide-react";
@@ -71,6 +72,9 @@ function MentorshipHome() {
   }, []);
 
   useEffect(() => { load(); loadPrograms(); }, [load, loadPrograms]);
+  // زنده: پذیرش/لغوِ رابطه یا برنامه‌ی تازه از طرفِ منتور (WebSocket/تب دیگه/برگشت به تب)
+  useLiveRefresh("mentor", () => { load(); loadPrograms(); });
+  useVisiblePolling(() => { load(); loadPrograms(); }, 30_000);
 
   useEffect(() => {
     fetch("/api/mentors/me", { cache: "no-store" })

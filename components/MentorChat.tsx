@@ -9,8 +9,9 @@ import { faNum } from "@/lib/jalali";
 import { LoadingBlock } from "./Spinner";
 import { MentorErrorState } from "./MentorPageShell";
 import { MentorReportModal } from "./MentorReportModal";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 
-const POLL_MS = 8000;
+const POLL_MS = 5000;
 const MAX_LEN = 2000;
 
 type Pending = { tempId: string; body: string; createdAt: string; state: "sending" | "failed"; error?: string };
@@ -83,13 +84,11 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
     fetchLatest(true);
   }, [fetchLatest]);
 
-  useEffect(() => {
-    const tick = () => { if (document.visibilityState === "visible") fetchLatest(); };
-    const t = setInterval(tick, POLL_MS);
-    const onVis = () => { if (document.visibilityState === "visible") fetchLatest(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
-  }, [fetchLatest]);
+  // زنده: پیامِ تازه از WebSocket (`mentor:messages`)، تبِ دیگه یا برگشت به تب
+  // همون لحظه؛ پولینگ فقط وقتی تب دیده می‌شه، و با WebSocketِ وصل خیلی کندتر
+  // (فقط تورِ ایمنی).
+  useLiveRefresh("mentor:messages", () => { fetchLatest(); });
+  useVisiblePolling(() => { fetchLatest(); }, POLL_MS, { realtimeIntervalMs: 30_000 });
 
   // اسکرول: بعد از «پیام‌های قبلی» جای فعلی حفظ می‌شود؛ پیامِ تازه فقط وقتی
   // پایین می‌کشد که کاربر خودش پایینِ گفت‌وگو بوده (وسطِ خواندن نمی‌پرد).

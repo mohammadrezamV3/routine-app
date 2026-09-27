@@ -13,6 +13,7 @@ import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import { getAccount, activeModulesOf, invalidateAccountCache } from "@/lib/accountCache";
 import { HeaderStreakClock } from "./HeaderStreakClock";
 import { AgentAvatar } from "./AgentAvatar";
@@ -278,16 +279,31 @@ export function NavDrawer() {
   // پیش‌بارگذاری اطلاعیه‌ها موقع لود صفحه — هم برای نشون تعداد نخونده‌ها
   // روی زنگوله، هم اینکه وقتی کاربر واقعا زنگوله رو بزنه، پنل از کش آماده
   // باز شه (نه از صفر، که «بارگذاری خیلی طول می‌کشه» حس می‌داد).
-  useEffect(() => {
+  const notifPanelOpenRef = useRef(false);
+  notifPanelOpenRef.current = notifPanelOpen;
+  const notifLoadSeq = useRef(0);
+  function loadNotifCount() {
     if (status !== "authenticated") return;
-    let cancelled = false;
+    const seq = ++notifLoadSeq.current;
     import("./NotificationPanel").then(({ preloadNotifications, countUnreadNotifications }) =>
       preloadNotifications().then((items) => {
-        if (!cancelled) setNotifCount(countUnreadNotifications(items));
+        // پنلِ باز یعنی کاربر همین الان داره می‌بینه — نقطه‌ی زنگوله خاموش می‌مونه
+        if (seq === notifLoadSeq.current && !notifPanelOpenRef.current) setNotifCount(countUnreadNotifications(items));
       })
     );
-    return () => { cancelled = true; };
+  }
+  useEffect(() => {
+    loadNotifCount();
+    return () => { notifLoadSeq.current++; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+  // زنده: اعلانِ تازه (WebSocket/تب دیگه) یا تغییرِ برنامه‌ها/تیک‌ها (یادآوری‌های
+  // امروز از همون‌ها ساخته می‌شن) → شمارنده همون لحظه. پولینگِ فقط-وقتِ-دیده‌شدن
+  // تورِ ایمنیه برای وقتی WebSocket وصل نیست.
+  useLiveRefresh(["notifications", "mentor", "customOccurrences", "removedOccurrences", "daily"], loadNotifCount, {
+    enabled: status === "authenticated",
+  });
+  useVisiblePolling(loadNotifCount, 60_000, { enabled: status === "authenticated", realtimeIntervalMs: 5 * 60_000 });
 
   // برای نشون قفل آیتم‌های پولی منو — همون /api/account که ModuleGate هم
   // استفاده می‌کنه (سوپریوزر توش خودش همه‌ی ماژول‌ها رو active برمی‌گردونه).

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, ClipboardList, MessageCircle, MessagesSquare, Plus, UserX } from "lucide-react";
@@ -49,6 +50,11 @@ function StudentContent({ studentId }: { studentId: string }) {
   }, [studentId]);
 
   useEffect(() => { load(offset); }, [load, offset]);
+  // زنده: لاگ/پیشرفتِ تازه‌ی شاگرد (WebSocket/برگشت به تب) — هفته‌ی فعلی دوباره
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
+  useLiveRefresh("mentor", () => { load(offsetRef.current); });
+  useVisiblePolling(() => { load(offsetRef.current); }, 30_000);
   useEffect(() => () => abortRef.current?.abort(), []);
 
   if (loading && !data) return <LoadingBlock />;

@@ -77,7 +77,9 @@ const PING_KEY = "arion-live-ping";
 const STORAGE_PREFIX = "panelMohammad:";
 const FOCUS_THROTTLE_MS = 3000;
 
-type Listener = { keys: string[]; cb: (changed: string[]) => void };
+/** remote = دست‌کم یکی از کلیدها از بیرونِ همین تب اومده (تب دیگه/سرور/برگشت به تب) */
+export type LiveMeta = { remote: boolean };
+type Listener = { keys: string[]; cb: (changed: string[], meta: LiveMeta) => void };
 
 const listeners = new Set<Listener>();
 const invalidators = new Set<(keys: string[]) => void>();
@@ -94,22 +96,22 @@ export function keyMatches(a: string, b: string): boolean {
 }
 
 // ── اطلاع‌رسانی دسته‌ای: چند publish در یک tick = یک بار صدا زدنِ هر مشترک ──
-let pendingKeys: Set<string> | null = null;
-function scheduleNotify(keys: string[]) {
+let pendingKeys: Map<string, boolean> | null = null; // کلید → remote
+function scheduleNotify(keys: string[], remote: boolean) {
   if (!pendingKeys) {
-    pendingKeys = new Set();
+    pendingKeys = new Map();
     queueMicrotask(flush);
   }
-  for (const k of keys) pendingKeys.add(k);
+  for (const k of keys) pendingKeys.set(k, remote || pendingKeys.get(k) === true);
 }
 function flush() {
-  const keys = Array.from(pendingKeys ?? []);
+  const entries = Array.from(pendingKeys ?? new Map<string, boolean>());
   pendingKeys = null;
-  if (!keys.length) return;
+  if (!entries.length) return;
   for (const l of Array.from(listeners)) {
-    const hit = keys.filter((k) => l.keys.some((lk) => keyMatches(lk, k)));
+    const hit = entries.filter(([k]) => l.keys.some((lk) => keyMatches(lk, k)));
     if (hit.length) {
-      try { l.cb(hit); } catch (e) { console.error(e); }
+      try { l.cb(hit.map(([k]) => k), { remote: hit.some(([, r]) => r) }); } catch (e) { console.error(e); }
     }
   }
 }
@@ -137,7 +139,7 @@ function toArray(keys: string | string[]) {
 /** فقط همین تب — برای به‌روزرسانیِ optimistic قبل از رسیدنِ جوابِ سرور */
 export function publishLocal(keys: string | string[]) {
   ensureStarted();
-  scheduleNotify(toArray(keys));
+  scheduleNotify(toArray(keys), false);
 }
 
 /** به تب‌های دیگه‌ی همین مرورگر خبر می‌ده (بعد از ذخیره‌ی موفق) */
@@ -168,11 +170,12 @@ export function publishChange(keys: string | string[]) {
 /** یه تغییر از بیرون (تب دیگه/سرور/برگشت به تب): کش باطل، بعد خبر */
 export function invalidate(keys: string | string[]) {
   const list = toArray(keys);
+  ensureStarted();
   runInvalidators(list);
-  publishLocal(list);
+  scheduleNotify(list, true);
 }
 
-export function subscribe(keys: string | string[], cb: (changed: string[]) => void): () => void {
+export function subscribe(keys: string | string[], cb: (changed: string[], meta: LiveMeta) => void): () => void {
   ensureStarted();
   const l: Listener = { keys: toArray(keys), cb };
   listeners.add(l);
@@ -183,25 +186,30 @@ export function subscribe(keys: string | string[], cb: (changed: string[]) => vo
  * هر بار یکی از این دامنه‌ها عوض شد (یا کاربر به تب برگشت)، cb دوباره صدا
  * زده می‌شه. cb همیشه آخرین نسخه‌ست (ref)، پس لازم نیست useCallback بشه.
  * `includeFocus: false` یعنی فقط تغییرِ واقعیِ داده، نه برگشت به تب.
+ * `remoteOnly: true` یعنی نوشتن‌های *همین تب* نادیده گرفته بشن — برای
+ * صفحه‌ای که خودش optimistic به‌روز می‌شه و دوباره‌خوانیِ پژواکِ نوشتنِ
+ * خودش (وسطِ چند تیکِ پشت‌سرهم) فقط باعثِ پرش می‌شد.
  */
 export function useLiveRefresh(
   keys: string | string[],
-  cb: (changed: string[]) => void,
-  opts: { includeFocus?: boolean; enabled?: boolean } = {}
+  cb: (changed: string[], meta: LiveMeta) => void,
+  opts: { includeFocus?: boolean; enabled?: boolean; remoteOnly?: boolean } = {}
 ) {
   const cbRef = useRef(cb);
   cbRef.current = cb;
   const keyStr = toArray(keys).join("|");
   const includeFocus = opts.includeFocus !== false;
   const enabled = opts.enabled !== false;
+  const remoteOnly = opts.remoteOnly === true;
   useEffect(() => {
     if (!enabled) return;
     const list = keyStr.split("|");
-    return subscribe(list, (changed) => {
+    return subscribe(list, (changed, meta) => {
       if (!includeFocus && changed.every((k) => k === ALL)) return;
-      cbRef.current(changed);
+      if (remoteOnly && !meta.remote) return;
+      cbRef.current(changed, meta);
     });
-  }, [keyStr, includeFocus, enabled]);
+  }, [keyStr, includeFocus, enabled, remoteOnly]);
 }
 
 // ── خطای ذخیره (rollback) — LiveSyncToaster نشونش می‌ده ──
@@ -265,6 +273,55 @@ export function useVisiblePolling(
   }, [intervalMs, rtInterval, enabled]);
 }
 
+// ── نوشتن‌های مستقیم (fetch) — خبرِ خودکار ──
+//
+// ترید/کالری/ورزش/رودمپ/منتور/اعلان‌ها از lib/storage.ts رد نمی‌شن و هرکدوم
+// مستقیم fetch می‌زنن. به‌جای دست‌بردن در ده‌ها نقطه‌ی نوشتن، هر درخواستِ
+// *غیر-GET*ِ موفق به این مسیرها خودش دامنه‌اش رو publish می‌کنه (همین تب +
+// تب‌های دیگه). ترتیب مهمه: خاص‌ترها اول.
+// `/api/settings/*` و `/api/tasks/daily*` عمدا این‌جا نیستن — lib/storage.ts
+// خودش optimistic و write-through خبرشون رو می‌ده؛ باطل‌کردنِ دوباره‌ی کش
+// این‌جا فقط یه رفت‌وبرگشتِ اضافه می‌ساخت.
+const MUTATION_DOMAINS: [RegExp, string[]][] = [
+  [/^\/api\/mentorships\/[^/]+\/messages/, [LIVE_DOMAINS.mentorMessages]],
+  [/^\/api\/mentorships/, [LIVE_DOMAINS.mentorMentorship]],
+  [/^\/api\/mentor-programs/, [LIVE_DOMAINS.mentorProgram, LIVE_DOMAINS.customOccurrences]],
+  [/^\/api\/mentor(\/|$|\?)/, [LIVE_DOMAINS.mentor]],
+  [/^\/api\/trade/, [LIVE_DOMAINS.trade]],
+  [/^\/api\/exercise/, [LIVE_DOMAINS.exercise]],
+  [/^\/api\/calorie/, [LIVE_DOMAINS.calorie]],
+  [/^\/api\/roadmaps/, [LIVE_DOMAINS.roadmaps]],
+  [/^\/api\/notifications/, [LIVE_DOMAINS.notifications]],
+  [/^\/api\/account/, [LIVE_DOMAINS.account]],
+];
+
+export function domainsForMutation(path: string): string[] {
+  for (const [re, keys] of MUTATION_DOMAINS) if (re.test(path)) return keys;
+  return [];
+}
+
+function installFetchHook() {
+  const orig = window.fetch;
+  if (typeof orig !== "function" || (orig as any).__arionLive) return;
+  const hooked = async function (input: RequestInfo | URL, init?: RequestInit) {
+    const res = await orig.call(window, input, init);
+    try {
+      const method = (init?.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET")).toUpperCase();
+      if (method !== "GET" && method !== "HEAD" && res.ok) {
+        const raw = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+        const url = new URL(raw, window.location.href);
+        if (url.origin === window.location.origin) {
+          const keys = domainsForMutation(url.pathname);
+          if (keys.length) publishChange(keys);
+        }
+      }
+    } catch {}
+    return res;
+  };
+  (hooked as any).__arionLive = true;
+  window.fetch = hooked as typeof window.fetch;
+}
+
 // ── راه‌اندازیِ شنونده‌های سراسری (یک‌بار، تنبل) ──
 function revalidateAll() {
   const now = Date.now();
@@ -294,6 +351,7 @@ export function ensureStarted() {
   if (started || typeof window === "undefined") return;
   started = true;
   lastRevalidate = Date.now();
+  installFetchHook();
 
   if (typeof BroadcastChannel !== "undefined") {
     try {

@@ -5,6 +5,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import { publishSessionState } from "@/lib/storage";
 import { setAuthHintCookie, clearAuthHintCookie } from "@/lib/preload";
+import { LiveSyncToaster } from "./LiveSyncToaster";
 
 // refetchOnWindowFocus خاموشه — این اپ نیازی به رفرش سشن با هر بار برگشتن
 // به تب نداره، و این رفتار فقط یه فچ اضافه‌ی بی‌فایده به /api/auth/session
@@ -55,6 +56,7 @@ export function AuthSessionProvider({
   return (
     <SessionProvider session={session ?? undefined} refetchOnWindowFocus={false}>
       <SessionBridge />
+      <LiveSyncToaster />
       {children}
     </SessionProvider>
   );

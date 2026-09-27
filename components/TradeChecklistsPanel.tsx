@@ -10,6 +10,7 @@ import { takePreloaded } from "@/lib/preload";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { ChecklistEditor } from "./ChecklistEditor";
+import { useLiveRefresh } from "@/lib/liveSync";
 
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -44,6 +45,8 @@ export function TradeChecklistsPanel({
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
+  useLiveRefresh("trade", () => { load(true); });
 
   async function duplicate(id: string) {
     const ok = await run(`dup:${id}`, () =>

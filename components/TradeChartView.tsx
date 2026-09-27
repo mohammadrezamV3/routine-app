@@ -11,6 +11,7 @@ import { ChartTradePanel } from "./ChartTradePanel";
 import { ChartCalendarPanel } from "./ChartCalendarPanel";
 import { SymbolChatPanel } from "./SymbolChatPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { useLiveRefresh } from "@/lib/liveSync";
 
 const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
 
@@ -82,6 +83,8 @@ export function TradeChartView() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
+  useLiveRefresh("trade", () => { load(true); });
 
   // ارتفاعِ گرید را دقیقاً «از بالای خودش تا کفِ پنجره» می‌گیریم تا صفحه
   // اسکرول نخورد. با CSS تنها نمی‌شد: ارتفاعِ سرصفحه‌ی این صفحه (لینکِ

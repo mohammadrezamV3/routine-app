@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -97,6 +98,9 @@ function ProgramView() {
   // بارِ اول کل صفحه، بعد از آن (عوض‌شدنِ هفته) فقط نشانگرِ کوچکِ بالای روزها
   const hasData = !!data;
   useEffect(() => { load({ quiet: hasData }); }, [load]);
+  // زنده: بازخورد/تغییرِ برنامه از طرفِ منتور یا لاگِ همین کاربر از تبِ دیگه
+  useLiveRefresh(["mentor:program", "customOccurrences"], () => { load({ quiet: true }); });
+  useVisiblePolling(() => { load({ quiet: true }); }, 30_000);
 
   // باز شدنِ صفحه توسطِ شاگرد = دیدنِ بازخوردها؛ فقط یک بار و فقط اگر نخوانده‌ای هست
   useEffect(() => {

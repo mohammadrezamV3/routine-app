@@ -19,6 +19,7 @@ import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd,
 import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
+import { RealtimeProvider } from "@/components/RealtimeProvider";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
@@ -197,6 +198,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <MotionTuner>
               <NavDrawer />
               <NotificationEngine />
+              {/* WebSocketِ `/ws` برای کاربرِ لاگین‌کرده — تغییرات همون لحظه روی همه‌ی دستگاه‌ها */}
+              <RealtimeProvider />
               {/* ثبتِ سرویس‌ورکر (کشِ app shell) + پیشنهادِ نصبِ اپ */}
               <PwaProvider />
               <div className="wrap">{children}</div>

@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_TAGS } from "@/lib/tradeTypes";
+import { withLiveSync } from "@/lib/realtime";
 
 // برچسب‌های کاربر — یک لیست واحد که هم روی حساب استفاده می‌شود هم روی
 // معامله. نام برچسب برای هر کاربر یکتاست (ایندکس userId+name)، پس تکراری
@@ -23,7 +24,7 @@ export async function GET() {
   return NextResponse.json({ tags });
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, tag });
 }
 
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -63,7 +64,7 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
@@ -73,3 +74,8 @@ export async function DELETE(req: NextRequest) {
   await prisma.tradeTag.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["trade"], handlePOST);
+export const PATCH = withLiveSync(["trade"], handlePATCH);
+export const DELETE = withLiveSync(["trade"], handleDELETE);

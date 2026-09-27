@@ -12,6 +12,7 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeTagField } from "./TradeTagField";
 import { CAL_SYSTEM_KEY, CalSystem, TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
+import { useLiveRefresh } from "@/lib/liveSync";
 
 type Note = {
   id: string; title: string; content: string; color: string; pinned: boolean;
@@ -65,6 +66,7 @@ export function TradeNotesPanel({
     const t = setTimeout(load, query ? 300 : 0);
     return () => clearTimeout(t);
   }, [load, query]);
+  useLiveRefresh("trade", () => { load(true); });
 
   async function togglePin(n: Note) {
     setNotes((prev) => prev.map((x) => (x.id === n.id ? { ...x, pinned: !x.pinned } : x)));

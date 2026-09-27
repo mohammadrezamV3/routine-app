@@ -6,6 +6,7 @@ import { readJsonBody } from "@/lib/validate";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { MENTORSHIP_WITH_USERS_INCLUDE, PUBLIC_USER_SELECT, buildMentorshipRows } from "@/lib/mentorServer";
 import { removeProgramMirrors } from "@/lib/mentorProgramMirror";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as const;
@@ -98,6 +99,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if ((action === "end" || action === "block") && (m.status === "ACTIVE" || m.status === "PENDING")) {
     await closeOpenPrograms(m.id, m.studentId);
   }
+  // هر دو طرف (و بقیه‌ی دستگاه‌های خودم) وضعیتِ تازه رو همون لحظه می‌بینن
+  void publishToUsers([m.mentorId, m.studentId], { type: "mentor.mentorship", data: { id: m.id } });
 
   if (action === "accept" || action === "reject" || action === "end") {
     const actor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });

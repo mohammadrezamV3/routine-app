@@ -4,11 +4,12 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { FA_WEEKDAY } from "@/lib/jalali";
 import { ExerciseDay } from "@/lib/exercisePlans";
+import { withLiveSync } from "@/lib/realtime";
 
 // POST /api/exercise/plan/manual — برنامه‌ای که خود کاربر دستی وارد کرده
 // (بدون هوش مصنوعی/قالب آماده)، جایگزین /api/exercise/plan (که فقط
 // AI-یا-fallback می‌سازه) برای وقتی کاربر برنامه‌ی شخصی خودشو داره.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -61,3 +62,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, plan });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["exercise"], handlePOST);

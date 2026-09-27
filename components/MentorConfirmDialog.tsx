@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -26,6 +27,22 @@ export function MentorConfirmDialog({
   onCancel: () => void;
   children?: React.ReactNode;
 }) {
+  // Escape = انصراف (مگر وسطِ انجامِ اقدام)؛ فوکوس اول روی «انصراف» که Enterِ
+  // اتفاقی اقدامِ مخرب رو انجام نده.
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const stateRef = useRef({ busy, onCancel });
+  stateRef.current = { busy, onCancel };
+  useEffect(() => {
+    cancelRef.current?.focus({ preventScroll: true });
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape" || stateRef.current.busy) return;
+      e.stopPropagation();
+      stateRef.current.onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
   if (typeof document === "undefined") return null;
   return createPortal(
     <>
@@ -39,7 +56,7 @@ export function MentorConfirmDialog({
           {children}
           {error && <div className="trade-form-error">{error}</div>}
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn" onClick={onCancel} disabled={busy}>
+            <button ref={cancelRef} type="button" className="account-outline-btn" onClick={onCancel} disabled={busy}>
               انصراف
             </button>
             <button type="button" className={danger ? "trade-danger-btn" : "trade-primary-btn"} onClick={onConfirm} disabled={busy}>

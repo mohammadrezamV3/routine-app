@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { parseAccountInput } from "@/lib/tradeServer";
 import { computeTradeStats } from "@/lib/tradeAnalytics";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
+import { withLiveSync } from "@/lib/realtime";
 
 // حساب‌های معاملاتی کاربر. ورودی صفحه‌ی «ژورنال‌نویسی» همین است: اول
 // حساب‌ها، بعد با انتخاب حساب می‌رویم داخل آمار و معاملاتش.
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/trade/accounts
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
 }
 
 // PATCH /api/trade/accounts  { id, ...fields }
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -143,7 +144,7 @@ export async function PATCH(req: NextRequest) {
 // پیش‌فرض «آرشیو» است، نه حذف: تاریخچه‌ی معاملات ارزشمندترین دارایی این
 // ماژول است و پاک‌کردنش با یک کلیک برگشت‌ناپذیر خواهد بود. حذف کامل فقط
 // وقتی انجام می‌شود که کلاینت صریحا mode=purge بفرستد (پشت تأیید تایپی).
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -168,3 +169,8 @@ export async function DELETE(req: NextRequest) {
   });
   return NextResponse.json({ ok: true, archived });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["trade"], handlePOST);
+export const PATCH = withLiveSync(["trade"], handlePATCH);
+export const DELETE = withLiveSync(["trade"], handleDELETE);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
+import { publishToUser } from "@/lib/realtime";
 
 const PAGE_SIZE = 30;
 const MAX_IDS = 100;
@@ -44,6 +45,7 @@ export async function PATCH(req: Request) {
 
   if (b.all === true) {
     await prisma.inAppNotification.updateMany({ where: { userId: me, readAt: null }, data: { readAt: new Date() } });
+    void publishToUser(me, { type: "notification.read", keys: ["notifications"] });
     return NextResponse.json({ ok: true });
   }
   if (!Array.isArray(b.ids) || b.ids.length === 0) return badRequest("ids یا all لازمه");
@@ -51,7 +53,9 @@ export async function PATCH(req: Request) {
   const ids = b.ids.filter((x: unknown): x is string => typeof x === "string" && x.length > 0 && x.length <= 64);
   if (ids.length > 0) {
     // userId در where: idِ اعلانِ کسِ دیگه بی‌اثر می‌مونه
-    await prisma.inAppNotification.updateMany({ where: { id: { in: ids }, userId: me, readAt: null }, data: { readAt: new Date() } });
+    const res = await prisma.inAppNotification.updateMany({ where: { id: { in: ids }, userId: me, readAt: null }, data: { readAt: new Date() } });
+    // شمارنده‌ی زنگوله‌ی بقیه‌ی دستگاه‌های خودم
+    if (res.count > 0) void publishToUser(me, { type: "notification.read", keys: ["notifications"] });
   }
   return NextResponse.json({ ok: true });
 }

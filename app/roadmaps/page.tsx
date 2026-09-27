@@ -12,6 +12,7 @@ import { LoadingBlock } from "@/components/Spinner";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
+import { useLiveRefresh } from "@/lib/liveSync";
 
 type RoadmapCard = {
   id: string;
@@ -47,6 +48,8 @@ export default function RoadmapsHub() {
   }, [status]);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: ساخت/حذف/پیشرفتِ رودمپ از هرجا (صفحه‌ی مسیر، تبِ دیگه) یا برگشت به تب
+  useLiveRefresh("roadmaps", load);
 
   // تا وقتی رودمپی در حالِ ساخت است، لیست هر ۴ ثانیه تازه می‌شود تا پیشرفت
   // روی کارتش زنده دیده شود؛ بعد از آماده‌شدنِ همه، polling قطع می‌شود.

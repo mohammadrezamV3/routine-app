@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const PAGE_SIZE = 50;
@@ -41,7 +42,11 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const page = rows.slice(0, PAGE_SIZE).reverse();
 
   // پیام‌های طرفِ مقابل با باز شدنِ گفت‌وگو خوانده‌شده حساب می‌شن
-  await prisma.mentorMessage.updateMany({ where: { mentorshipId: m.id, senderId: { not: me }, readAt: null }, data: { readAt: new Date() } });
+  const marked = await prisma.mentorMessage.updateMany({ where: { mentorshipId: m.id, senderId: { not: me }, readAt: null }, data: { readAt: new Date() } });
+  // رسیدِ خوانده‌شدن: تیکِ دوتاییِ فرستنده همون لحظه عوض می‌شه
+  if (marked.count > 0) {
+    void publishToUsers([m.mentorId === me ? m.studentId : m.mentorId], { type: "mentor.message", data: { mentorshipId: m.id, read: true } });
+  }
 
   return NextResponse.json({
     messages: page.map((r) => ({ id: r.id, body: r.body, createdAt: r.createdAt, readAt: r.readAt, mine: r.senderId === me })),
@@ -80,6 +85,8 @@ export async function POST(req: Request, { params }: Ctx) {
   if (m.mentorId === me) touchMentorActivity(me);
 
   const recipient = m.mentorId === me ? m.studentId : m.mentorId;
+  // گیرنده + بقیه‌ی دستگاه‌های خودم؛ فقط شناسه‌ی گفت‌وگو، متن از GET خونده می‌شه
+  void publishToUsers([recipient, me], { type: "mentor.message", data: { mentorshipId: m.id } });
   const url = `/mentorship/${m.id}`;
   const recent = await prisma.inAppNotification.findFirst({
     where: { userId: recipient, type: "message.new", url, readAt: null, createdAt: { gte: new Date(Date.now() - MESSAGE_NOTIFY_THROTTLE_MS) } },

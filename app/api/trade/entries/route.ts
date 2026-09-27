@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer";
 import { parseDateRange } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
 
 // معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
 // می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
@@ -73,7 +74,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/trade/entries
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/trade/entries  { id, ...همه‌ی فیلدها }
 // فرم همیشه کل رکورد را می‌فرستد، پس این جایگزینی کامل است نه patch جزئی.
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -155,7 +156,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 // DELETE /api/trade/entries?id=...
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
@@ -163,3 +164,8 @@ export async function DELETE(req: NextRequest) {
   await prisma.tradeEntry.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["trade"], handlePOST);
+export const PATCH = withLiveSync(["trade"], handlePATCH);
+export const DELETE = withLiveSync(["trade"], handleDELETE);
