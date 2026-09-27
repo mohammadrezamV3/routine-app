@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { writeAuditLog } from "@/lib/adminAnalytics";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { syncEconomicCalendar } from "@/lib/economicCalendar";
 
 // همون کاری که کرانِ روزانه (/api/cron/economic-calendar) انجام می‌ده، ولی
-// دستی و فوری — برای وقتی که crontabِ سرور (deploy/cron.example) هنوز ست
-// نشده یا ادمین می‌خواد بدونِ صبرکردن تا اجرای بعدیِ کران، همین الان از
-// JBlanked/منبعِ تنظیم‌شده به‌روز کنه.
+// دستی و فوری — برای وقتی که ادمین نمی‌خواد تا اجرای بعدیِ کران یا تازه‌سازیِ
+// خودکارِ روتِ خواندن (ensureFreshCalendar) صبر کنه و همین الان از منبعِ
+// فعال (externalProviderName) به‌روز کنه.
 export async function POST() {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
@@ -21,6 +22,9 @@ export async function POST() {
 
   try {
     const result = await syncEconomicCalendar(prisma);
+    await writeAuditLog(guard.userId, "economic_event.sync", "EconomicEvent", undefined, {
+      source: result.source, fetched: result.fetched, created: result.created, updated: result.updated, removed: result.removed,
+    });
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     logError(

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { clampText } from "@/lib/validate";
 import { checkMediaDataUrl, mediaKey } from "@/lib/exerciseMedia";
+import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
+import { writeAuditLog } from "@/lib/adminAnalytics";
 
 // مدیریتِ دستیِ عکسِ حرکاتِ ورزشی (پنلِ ادمین).
 //
@@ -37,8 +39,14 @@ export async function PUT(req: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);
-  const name = clampText(String((body as any)?.name || "").trim(), 160);
-  if (!name) return NextResponse.json({ error: "نام حرکت الزامی است" }, { status: 400 });
+  const rawName = clampText(String((body as any)?.name || "").trim(), 160);
+  if (!rawName) return NextResponse.json({ error: "نام حرکت الزامی است" }, { status: 400 });
+  // فرم فقط از کاتالوگ انتخاب می‌کنه، ولی تصمیمِ واقعی سمتِ سروره — عکس
+  // نباید به حرکتی بچسبه که وجود نداره (هیچ کاربری هیچ‌وقت نمی‌بیندش).
+  // نامِ ذخیره‌شده هم همون نامِ کانونیکالِ کاتالوگه، نه املای ورودی.
+  const entry = EXERCISE_CATALOG.find((e) => mediaKey(e.name) === mediaKey(rawName));
+  if (!entry) return NextResponse.json({ error: "این حرکت در کاتالوگ نیست" }, { status: 400 });
+  const name = entry.name;
 
   const dataUrl = (body as any)?.dataUrl;
   const check = checkMediaDataUrl(dataUrl);
@@ -51,6 +59,7 @@ export async function PUT(req: NextRequest) {
     create: { nameKey, name, dataUrl },
     select: { nameKey: true, name: true, updatedAt: true },
   });
+  await writeAuditLog(guard.userId, "exercise_media.upsert", "ExerciseMedia", nameKey, { name });
   return NextResponse.json({ ok: true, item: { ...row, updatedAt: row.updatedAt.toISOString() } });
 }
 
@@ -61,6 +70,9 @@ export async function DELETE(req: NextRequest) {
   const name = req.nextUrl.searchParams.get("name");
   if (!name) return NextResponse.json({ error: "نام حرکت الزامی است" }, { status: 400 });
 
-  await prisma.exerciseMedia.deleteMany({ where: { nameKey: mediaKey(name) } });
+  const nameKey = mediaKey(name);
+  const result = await prisma.exerciseMedia.deleteMany({ where: { nameKey } });
+  if (!result.count) return NextResponse.json({ error: "عکسی برای این حرکت پیدا نشد" }, { status: 404 });
+  await writeAuditLog(guard.userId, "exercise_media.delete", "ExerciseMedia", nameKey, { name });
   return NextResponse.json({ ok: true });
 }

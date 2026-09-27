@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { writeAuditLog } from "@/lib/adminAnalytics";
 import { clampText } from "@/lib/validate";
 import { externalProviderName } from "@/lib/economicCalendar";
 
@@ -42,8 +43,8 @@ export async function GET(req: NextRequest) {
   });
   return NextResponse.json({
     events: events.map((e) => ({ ...e, occursAt: e.occursAt.toISOString(), createdAt: e.createdAt.toISOString(), updatedAt: e.updatedAt.toISOString() })),
-    // منبعِ پیش‌فرض JBlanked Calendar API است (نیازمندِ ECONOMIC_CALENDAR_API_KEY)،
-    // مگر با ECONOMIC_CALENDAR_URL چیزِ دیگه‌ای ست شده باشه.
+    // همون اولویتِ lib/economicCalendar: ECONOMIC_CALENDAR_URL → JBlanked (با
+    // ECONOMIC_CALENDAR_API_KEY) → TradingViewِ بی‌کلید (پیش‌فرض).
     externalSource: externalProviderName(),
   });
 }
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   const event = await prisma.economicEvent.create({ data: { ...parsed, source: "MANUAL" } });
+  await writeAuditLog(guard.userId, "economic_event.create", "EconomicEvent", event.id, { title: event.title, currency: event.currency });
   return NextResponse.json({ ok: true, event });
 }
 
@@ -70,7 +72,11 @@ export async function PATCH(req: NextRequest) {
   const parsed = parseBody(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
-  await prisma.economicEvent.update({ where: { id }, data: parsed });
+  // updateMany تا شناسه‌ی ناموجود (مثلا رویدادی که همین حالا حذف شده) ۴۰۴
+  // بده، نه خطای ۵۰۰ِ P2025.
+  const result = await prisma.economicEvent.updateMany({ where: { id }, data: parsed });
+  if (!result.count) return NextResponse.json({ error: "رویداد پیدا نشد" }, { status: 404 });
+  await writeAuditLog(guard.userId, "economic_event.update", "EconomicEvent", id, { title: parsed.title });
   return NextResponse.json({ ok: true });
 }
 
@@ -79,6 +85,8 @@ export async function DELETE(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
-  await prisma.economicEvent.deleteMany({ where: { id } });
+  const result = await prisma.economicEvent.deleteMany({ where: { id } });
+  if (!result.count) return NextResponse.json({ error: "رویداد پیدا نشد" }, { status: 404 });
+  await writeAuditLog(guard.userId, "economic_event.delete", "EconomicEvent", id);
   return NextResponse.json({ ok: true });
 }
