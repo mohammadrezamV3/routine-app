@@ -23,10 +23,10 @@ function MentorProfileContent() {
 
   useEffect(() => { load(); }, [load]);
 
-  // پرش به بخش احراز وقتی از داشبورد با #verification اومده
+  // با #verification (از اطلاعیه‌ی داشبورد) مستقیم به بخش احراز می‌رود؛ بدون پیمایش نرم
   useEffect(() => {
     if (loading || typeof window === "undefined" || window.location.hash !== "#verification") return;
-    document.getElementById("verification")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("verification")?.scrollIntoView({ block: "start" });
   }, [loading]);
 
   if (loading) return <LoadingBlock />;
@@ -42,11 +42,7 @@ function MentorProfileContent() {
 
 export default function MentorProfilePage() {
   return (
-    <MentorDashShell
-      title="پروفایل منتوری"
-      hint="معرفی، دسته‌ها و وضعیت نمایش پروفایل — به‌علاوه‌ی احراز هویت و مدارک"
-      back={{ href: "/mentor", label: "پنل منتور" }}
-    >
+    <MentorDashShell title="پروفایل منتوری" back={{ href: "/mentor", label: "پنل منتور" }}>
       <MentorProfileContent />
     </MentorDashShell>
   );

@@ -1,23 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, IdCard, NotebookPen, Plus, Sparkles, Tag, UserCheck, X } from "lucide-react";
-import { AccountBlock, AccountOption, AccountSaveBar } from "./AccountUI";
-import { AuthField } from "./AuthField";
+import { Ban, Check, Eye, Plus, Tag, UserRound, X } from "lucide-react";
 import { ToggleSwitch } from "./ToggleSwitch";
-import { MentorDashNotice, fa, mentorApi } from "./MentorDashKit";
+import { Spinner } from "./Spinner";
+import { fa, mentorApi } from "./MentorDashKit";
+import { MI, MI_STROKE, MentorField, MentorNotice, MentorSection } from "./MentorUI";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, type MentorCategory } from "@/lib/mentorCategories";
 import type { MentorSelf } from "@/lib/mentorTypes";
 
+// همان سقف‌های سرور (app/api/mentors/me و lib/mentorValidate.ts)
 export const HEADLINE_MAX = 120;
 export const BIO_MAX = 2000;
 export const SPECIALTY_MAX = 40;
 export const SPECIALTIES_MAX = 10;
+export const ROUTINE_ROLE_MAX = 60;
+
+const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * فرمِ پروفایلِ منتوری — PUT /api/mentors/me. اولین ذخیره خودِ پروفایل رو
- * می‌سازه. انتشار فقط با حداقل یک دسته و بیوگرافی مجازه (سرور هم چک می‌کنه؛
- * این‌جا فقط راهنمایی و جلوگیری از رفت‌وبرگشتِ بی‌فایده‌ست).
+ * فرم پروفایل منتوری؛ PUT /api/mentors/me. اولین ذخیره پروفایل را می‌سازد.
+ * انتشار فقط با حداقل یک حوزه و بیوگرافی ممکن است (سرور هم بررسی می‌کند).
+ * نقش روتین فقط وقتی حوزه‌ی ROUTINE انتخاب شده ارسال می‌شود؛ بدون آن null.
+ * پذیرش شاگرد، ظرفیت و عدم حضور در /mentor/settings است و این فرم آن‌ها را نمی‌فرستد.
  */
 export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | null; onSaved: (p: MentorSelf) => void }) {
   const [headline, setHeadline] = useState(profile?.headline ?? "");
@@ -27,46 +32,54 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   const [categories, setCategories] = useState<MentorCategory[]>(
     (profile?.categories ?? []).filter((c): c is MentorCategory => (MENTOR_CATEGORIES as readonly string[]).includes(c)),
   );
+  const [routineRole, setRoutineRole] = useState(profile?.routineRole ?? "");
   const [published, setPublished] = useState(profile?.published ?? false);
-  const [accepting, setAccepting] = useState(profile?.acceptingStudents ?? true);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErr, setFieldErr] = useState<{ bio?: string; categories?: string; headline?: string; spec?: string }>({});
+  const [fieldErr, setFieldErr] = useState<{ bio?: string; categories?: string; headline?: string; spec?: string; role?: string }>({});
 
   const isNew = !profile;
-  const canPublish = categories.length > 0 && bio.trim().length > 0;
+  const hasRoutine = categories.includes("ROUTINE");
+  const missing = [categories.length === 0 && "حداقل یک حوزه", !bio.trim() && "بیوگرافی"].filter(Boolean) as string[];
+
+  function touched() { setSaved(false); setError(null); }
 
   function addSpecialty() {
     const v = specInput.trim().replace(/\s+/g, " ");
     if (!v) return;
-    if (v.length > SPECIALTY_MAX) { setFieldErr((e) => ({ ...e, spec: `هر تخصص حداکثر ${fa(SPECIALTY_MAX)} کاراکتر` })); return; }
+    if (v.length > SPECIALTY_MAX) { setFieldErr((e) => ({ ...e, spec: `هر تخصص حداکثر ${fa(SPECIALTY_MAX)} نویسه است` })); return; }
     if (specialties.length >= SPECIALTIES_MAX) { setFieldErr((e) => ({ ...e, spec: `حداکثر ${fa(SPECIALTIES_MAX)} تخصص` })); return; }
-    if (specialties.some((s) => s === v)) { setSpecInput(""); return; }
-    setSpecialties((s) => [...s, v]);
+    if (!specialties.includes(v)) setSpecialties((s) => [...s, v]);
     setSpecInput("");
     setFieldErr((e) => ({ ...e, spec: undefined }));
+    touched();
   }
 
   function toggleCategory(c: MentorCategory, on: boolean) {
     setCategories((cs) => (on ? Array.from(new Set([...cs, c])) : cs.filter((x) => x !== c)));
-    setFieldErr((e) => ({ ...e, categories: undefined }));
+    setFieldErr((e) => ({ ...e, categories: undefined, role: c === "ROUTINE" ? undefined : e.role }));
+    touched();
   }
 
-  async function save() {
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
     setError(null);
     setSaved(false);
+    const role = routineRole.replace(/\s+/g, " ").trim();
     const errs: typeof fieldErr = {};
-    if (headline.trim().length > HEADLINE_MAX) errs.headline = `حداکثر ${fa(HEADLINE_MAX)} کاراکتر`;
-    if (bio.trim().length > BIO_MAX) errs.bio = `حداکثر ${fa(BIO_MAX)} کاراکتر`;
-    if (published && !bio.trim()) errs.bio = "برای انتشار، بیوگرافی لازمه";
-    if (published && categories.length === 0) errs.categories = "برای انتشار، حداقل یک دسته انتخاب کن";
+    if (headline.trim().length > HEADLINE_MAX) errs.headline = `حداکثر ${fa(HEADLINE_MAX)} نویسه`;
+    if (bio.trim().length > BIO_MAX) errs.bio = `حداکثر ${fa(BIO_MAX)} نویسه`;
+    if (published && !bio.trim()) errs.bio = "برای انتشار، بیوگرافی لازم است";
+    if (published && categories.length === 0) errs.categories = "برای انتشار، حداقل یک حوزه انتخاب کن";
+    if (hasRoutine && role.length > ROUTINE_ROLE_MAX) errs.role = `حداکثر ${fa(ROUTINE_ROLE_MAX)} نویسه`;
     setFieldErr(errs);
-    if (Object.keys(errs).length) { setError("چند مورد نیاز به اصلاح داره"); return; }
+    if (Object.keys(errs).length) { setError("چند مورد نیاز به اصلاح دارد"); return; }
 
-    // تخصصِ تایپ‌شده‌ای که هنوز «افزودن» نخورده هم ذخیره بشه
-    const pending = specInput.trim();
+    // تخصصِ تایپ‌شده‌ای که هنوز «افزودن» نخورده هم ذخیره شود
+    const pending = specInput.trim().replace(/\s+/g, " ");
     const specs = pending && !specialties.includes(pending) && pending.length <= SPECIALTY_MAX && specialties.length < SPECIALTIES_MAX
       ? [...specialties, pending] : specialties;
 
@@ -78,121 +91,143 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
         bio: bio.trim(),
         specialties: specs,
         categories,
+        routineRole: hasRoutine ? role || null : null,
         published,
-        acceptingStudents: accepting,
       },
     });
     setSaving(false);
     if (!r.ok) { setError(r.error); return; }
     setSpecialties(specs);
     setSpecInput("");
+    setRoutineRole(r.data.profile.routineRole ?? "");
     setSaved(true);
     setTimeout(() => setSaved(false), 2400);
     onSaved(r.data.profile);
   }
 
   return (
-    <>
-      {isNew && (
-        <MentorDashNotice tone="info" icon={<Sparkles size={16} />} title="ساخت پروفایل منتوری">
-          با اولین ذخیره پروفایلت ساخته می‌شه. تا وقتی «انتشار» رو روشن نکنی، کسی نمی‌بیندش.
-          یادت باشه آریون فقط پلتفرمه و مسئولیت محتوای برنامه‌ها با خودته.
-        </MentorDashNotice>
-      )}
+    <form onSubmit={save} noValidate>
       {profile?.suspendedAt && (
-        <MentorDashNotice tone="danger" title="حساب منتوری‌ات معلق شده">
-          {profile.suspendedReason ? `دلیل: ${profile.suspendedReason}. ` : ""}تا رفع تعلیق پروفایلت در فهرست منتورها دیده نمی‌شه.
-        </MentorDashNotice>
+        <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب منتوری معلق است">
+          {profile.suspendedReason || "تا رفع تعلیق، پروفایل در فهرست منتورها دیده نمی‌شود"}
+        </MentorNotice>
       )}
 
-      <AccountBlock title="معرفی" icon={<IdCard size={15} />} index={0}>
-        <div className="acc-field-stack">
-          <AuthField id="mp-headline" label="عنوان کوتاه" icon={<UserCheck size={16} />} error={fieldErr.headline}>
+      <MentorSection
+        title="معرفی" icon={ic(UserRound, MI.section)}
+        desc={isNew ? "پروفایل با اولین ذخیره ساخته می‌شود و تا انتشار، پنهان می‌ماند" : undefined}
+      >
+        <div className="mentor-form">
+          <MentorField label="عنوان کوتاه" htmlFor="mp-headline" optional error={fieldErr.headline} hint={`حداکثر ${fa(HEADLINE_MAX)} نویسه`}>
             <input
-              id="mp-headline" type="text" className="wsearch-newform-name" maxLength={HEADLINE_MAX}
-              value={headline} onChange={(e) => setHeadline(e.target.value)}
-              placeholder="مثلا: مربی بدنسازی با ۸ سال سابقه"
+              id="mp-headline" type="text" className="wsearch-newform-name trade-glass-field" maxLength={HEADLINE_MAX}
+              value={headline} placeholder="مثلاً مربی بدنسازی با ۸ سال سابقه"
+              onChange={(e) => { setHeadline(e.target.value); setFieldErr((x) => ({ ...x, headline: undefined })); touched(); }}
             />
-          </AuthField>
-          <AuthField id="mp-bio" label="بیوگرافی" icon={<NotebookPen size={16} />} error={fieldErr.bio}>
+          </MentorField>
+          <MentorField
+            label="بیوگرافی" htmlFor="mp-bio" error={fieldErr.bio}
+            hint={`${fa(bio.length)} از ${fa(BIO_MAX)} نویسه`}
+          >
             <textarea
-              id="mp-bio" className="wsearch-newform-name acc-textarea" rows={5} maxLength={BIO_MAX}
-              value={bio} onChange={(e) => { setBio(e.target.value); setFieldErr((x) => ({ ...x, bio: undefined })); }}
-              placeholder="سابقه، روش کار و این‌که به چه کسانی می‌تونی کمک کنی"
+              id="mp-bio" className="wsearch-newform-name trade-glass-field" rows={5} maxLength={BIO_MAX}
+              value={bio} placeholder="مثلاً سابقه، روش کار و این‌که به چه کسانی کمک می‌کنی"
+              onChange={(e) => { setBio(e.target.value); setFieldErr((x) => ({ ...x, bio: undefined })); touched(); }}
             />
-            <span className="acc-field-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
-          </AuthField>
+          </MentorField>
         </div>
-      </AccountBlock>
+      </MentorSection>
 
-      <AccountBlock title="تخصص‌ها و دسته‌ها" icon={<Tag size={15} />} index={1}>
-        <AccountOption label="دسته‌ها" desc="هر دسته‌ای که انتخاب کنی یک کارت مدرک جدا در بخش احراز هویت می‌گیره.">
-          <div className="flex flex-col gap-2.5">
-            {MENTOR_CATEGORIES.map((c) => (
-              <label key={c} className="auth-remember-label" style={{ margin: 0 }}>
-                <input type="checkbox" className="auth-checkbox" checked={categories.includes(c)} onChange={(e) => toggleCategory(c, e.target.checked)} />
-                {MENTOR_CATEGORY_META[c].label}
-              </label>
-            ))}
-          </div>
-          {fieldErr.categories && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>{fieldErr.categories}</div>}
-        </AccountOption>
-
-        <AccountOption label="تخصص‌ها" desc={`تا ${fa(SPECIALTIES_MAX)} مورد — مثلا «کاهش وزن»، «حجم»، «رژیم گیاهی».`}>
-          {specialties.length > 0 && (
-            <div className="mb-2.5 flex flex-wrap gap-1.5">
-              {specialties.map((s) => (
-                <button
-                  key={s} type="button" className="account-outline-btn muted"
-                  style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 999 }}
-                  onClick={() => setSpecialties((xs) => xs.filter((x) => x !== s))}
-                  aria-label={`حذف ${s}`}
-                >
-                  {s} <X size={12} />
-                </button>
+      <MentorSection title="حوزه‌ها و تخصص‌ها" icon={ic(Tag, MI.section)}>
+        <div className="mentor-form">
+          <MentorField
+            label="حوزه‌ها" error={fieldErr.categories}
+            hint="برای هر حوزه، بخش مدرک جداگانه‌ای در احراز هویت اضافه می‌شود"
+          >
+            <div role="group" aria-label="حوزه‌ها">
+              {MENTOR_CATEGORIES.map((c) => (
+                <label key={c} className="mentor-check">
+                  <input type="checkbox" checked={categories.includes(c)} onChange={(e) => toggleCategory(c, e.target.checked)} />
+                  <span className="mentor-check-label">{MENTOR_CATEGORY_META[c].label}</span>
+                </label>
               ))}
             </div>
+          </MentorField>
+
+          {hasRoutine && (
+            <MentorField
+              label="نقش تو در این حوزه" htmlFor="mp-role" optional error={fieldErr.role}
+              hint={`کنار حوزه‌ی «${MENTOR_CATEGORY_META.ROUTINE.label}» روی پروفایلت نمایش داده می‌شود؛ حداکثر ${fa(ROUTINE_ROLE_MAX)} نویسه`}
+            >
+              <input
+                id="mp-role" type="text" className="wsearch-newform-name trade-glass-field" maxLength={ROUTINE_ROLE_MAX}
+                value={routineRole} placeholder="مثلاً استاد ریاضی، مشاور کنکور"
+                onChange={(e) => { setRoutineRole(e.target.value); setFieldErr((x) => ({ ...x, role: undefined })); touched(); }}
+              />
+            </MentorField>
           )}
-          <div className="flex items-stretch gap-2">
-            <div className="min-w-0 flex-1">
-              <AuthField id="mp-spec" label="تخصص جدید" error={fieldErr.spec}>
-                <input
-                  id="mp-spec" type="text" className="wsearch-newform-name" maxLength={SPECIALTY_MAX}
-                  value={specInput} placeholder="مثلا: کاهش وزن"
-                  onChange={(e) => { setSpecInput(e.target.value); setFieldErr((x) => ({ ...x, spec: undefined })); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
-                />
-              </AuthField>
+
+          <MentorField
+            label="تخصص‌ها" htmlFor="mp-spec" optional error={fieldErr.spec}
+            hint={`حداکثر ${fa(SPECIALTIES_MAX)} مورد`}
+          >
+            {specialties.length > 0 && (
+              <div className="mentor-chips">
+                {specialties.map((s) => (
+                  <span key={s} className="mentor-chip is-cat">
+                    <span>{s}</span>
+                    <button
+                      type="button" className="mentor-text-btn" style={{ padding: 0 }}
+                      onClick={() => { setSpecialties((xs) => xs.filter((x) => x !== s)); touched(); }}
+                      aria-label={`حذف تخصص ${s}`}
+                    >
+                      {ic(X, MI.chip)}
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex items-stretch gap-2">
+              <input
+                id="mp-spec" type="text" className="wsearch-newform-name trade-glass-field min-w-0 flex-1" maxLength={SPECIALTY_MAX}
+                value={specInput} placeholder="مثلاً کاهش وزن"
+                onChange={(e) => { setSpecInput(e.target.value); setFieldErr((x) => ({ ...x, spec: undefined })); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
+              />
+              <button
+                type="button" className="account-outline-btn mentor-btn" onClick={addSpecialty}
+                disabled={!specInput.trim() || specialties.length >= SPECIALTIES_MAX}
+              >
+                {ic(Plus, MI.btn)} افزودن
+              </button>
             </div>
-            <button type="button" className="account-outline-btn self-end" style={{ minHeight: 40 }} onClick={addSpecialty} disabled={!specInput.trim() || specialties.length >= SPECIALTIES_MAX}>
-              <Plus size={14} /> افزودن
-            </button>
-          </div>
-        </AccountOption>
-      </AccountBlock>
+          </MentorField>
+        </div>
+      </MentorSection>
 
-      <AccountBlock title="نمایش پروفایل" icon={<Eye size={15} />} index={2}>
-        <AccountOption label="انتشار پروفایل" desc="وقتی روشن باشه، پروفایلت در فهرست منتورها دیده می‌شه.">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[12px] text-dash-muted">{published ? "منتشرشده" : "پنهان"}</span>
-            <ToggleSwitch checked={published} onChange={(v) => { setPublished(v); setFieldErr((x) => ({ ...x, bio: undefined, categories: undefined })); }} label="انتشار پروفایل" />
+      <MentorSection title="نمایش پروفایل" icon={ic(Eye, MI.section)}>
+        <div className="mentor-toggle-row">
+          <div className="mentor-toggle-text">
+            <div className="mentor-toggle-title">انتشار پروفایل</div>
+            <div className="mentor-toggle-desc">
+              {missing.length > 0 && !published
+                ? `برای انتشار، ${missing.join(" و ")} لازم است`
+                : "پروفایل منتشرشده در فهرست منتورها دیده می‌شود"}
+            </div>
           </div>
-          {!canPublish && (
-            <ul className="mb-0 mt-2 list-inside list-disc ps-0 text-[11.5px] leading-6" style={{ color: "#e0a636" }}>
-              {categories.length === 0 && <li>حداقل یک دسته انتخاب کن</li>}
-              {!bio.trim() && <li>بیوگرافی رو بنویس</li>}
-            </ul>
-          )}
-        </AccountOption>
-        <AccountOption label="پذیرش شاگرد جدید" desc="اگه ظرفیتت پره خاموشش کن؛ شاگردهای فعلی دست نمی‌خورن.">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[12px] text-dash-muted">{accepting ? "درخواست می‌پذیرم" : "فعلا نمی‌پذیرم"}</span>
-            <ToggleSwitch checked={accepting} onChange={setAccepting} label="پذیرش شاگرد جدید" />
-          </div>
-        </AccountOption>
-      </AccountBlock>
+          <ToggleSwitch
+            checked={published} label="انتشار پروفایل"
+            onChange={(v) => { setPublished(v); setFieldErr((x) => ({ ...x, bio: undefined, categories: undefined })); touched(); }}
+          />
+        </div>
+      </MentorSection>
 
-      <AccountSaveBar onSave={save} saving={saving} saved={saved} error={error} label={isNew ? "ساخت پروفایل" : "ذخیره تغییرات"} />
-    </>
+      {error && <div className="form-inline-error" role="alert">{error}</div>}
+      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0, marginBottom: "var(--m-5)" }}>
+        <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
+          {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : isNew ? "ساخت پروفایل" : "ذخیره تغییرات"}
+        </button>
+      </div>
+    </form>
   );
 }

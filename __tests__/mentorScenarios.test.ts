@@ -51,6 +51,7 @@ import {
   today,
   jsDayOf,
 } from "./helpers/mentorTestUtils";
+import { mirrorOccurrenceId } from "@/lib/mentorProgressCore";
 
 afterAll(async () => {
   await cleanupUsers();
@@ -119,8 +120,9 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     expect(notifs.notifications.some((n: any) => n.type === "program.new" && n.url === `/mentor-programs/${pid}`)).toBe(true);
     const acc = await postTransition(req("POST", "/x", { action: "accept" }), P(pid));
     expect((await j(acc)).program.status).toBe("ACTIVE");
-    // WORKOUT در روتین آینه نمی‌شود
-    expect((await readOccurrences(student)).some((o) => o.mentorProgramId === pid)).toBe(false);
+    // WORKOUT هم در روتین آینه می‌شود — تیکِ همان‌جا منبعِ پیشرفتِ خودکار است
+    const mirrored = (await readOccurrences(student)).filter((o) => o.mentorProgramId === pid);
+    expect(mirrored.length).toBeGreaterThan(0);
 
     // اجرا
     as(student);
@@ -129,23 +131,25 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
       ["پرس سینه", 4, "8-12", 60],
       ["اسکوات", 5, "5", 100],
     ]);
-    for (const it of detail.items) {
-      as(student);
-      const lr = await postLog(req("POST", "/x", { itemId: it.id, date: today(), status: "COMPLETED", setsDone: it.sets }), P(pid));
-      expect(lr.status).toBe(200);
-    }
+    // ثبتِ دستیِ وضعیت دیگر ممکن نیست؛ شاگرد در روتینش تیک می‌زند
+    as(student);
+    expect((await postLog(req("POST", "/x", { itemId: detail.items[0].id, date: today(), status: "COMPLETED" }), P(pid))).status).toBe(410);
+    const todays = mirrored.filter((o) => o.jsDay === jsDayOf(today()));
+    await setDailyEntry(student, today(), Object.fromEntries(todays.map((o) => [o.id, true])));
 
     // منتور تکمیل را در برنامه و داشبورد می‌بیند
     as(mentor);
     const mv = await j(await getProgram(req("GET", "/x"), P(pid)));
     expect(mv.logs).toHaveLength(2);
     expect(mv.logs.every((l: any) => l.status === "COMPLETED")).toBe(true);
+    expect(mv.logs.every((l: any) => l.source === "AUTO")).toBe(true);
     expect(mv.program.progress).toEqual({ completed: 2, partial: 0, missed: 0, rate: 100 });
     as(mentor);
     dash = await j(await dashboard());
     expect(dash.stats).toMatchObject({ students: 1, activeStudents: 1, pendingRequests: 0, activePrograms: 1 });
     expect(dash.completion).toEqual([expect.objectContaining({ studentId: student, completed: 2, rate: 100 })]);
-    expect(dash.recentActivity.some((a: any) => a.type === "log" && a.text.includes("اسکوات"))).toBe(true);
+    // دو آیتمِ یک روز یک ردیفِ فعالیت می‌شوند (lib/mentorActivity.ts)
+    expect(dash.recentActivity.some((a: any) => a.type === "log" && a.text === "2 آیتم انجام شد" && a.day === today())).toBe(true);
     expect(dash.attention).toEqual([]);
 
     // فیدبک → اعلانِ شاگرد
@@ -156,7 +160,9 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     notifs = await j(await getNotifs(req("GET", "/api/notifications")));
     const fbN = notifs.notifications.find((n: any) => n.type === "program.feedback");
     expect(fbN).toBeTruthy();
-    expect(fbN.body).toContain("فرمِ اسکوات");
+    // متنِ فیدبک رمزشده در حالِ سکون است و در اعلان/پوش نمی‌آید (docs/mentor-e2ee.md)
+    expect(fbN.body).not.toContain("فرمِ اسکوات");
+    expect(fbN.body).toContain("هایپرتروفی");
     expect(fbN.url).toBe(`/mentor-programs/${pid}`);
     as(student);
     expect((await j(await readFeedback(req("POST", "/x"), P(pid)))).count).toBe(1);
@@ -252,7 +258,9 @@ describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ
     as(victim);
     const vItem = (await j(await getProgram(req("GET", "/x"), P(vProg)))).items[0];
     as(victim);
-    const vLog = (await j(await postLog(req("POST", "/x", { itemId: vItem.id, date: today(), status: "COMPLETED" }), P(vProg)))).log;
+    await setDailyEntry(victim, today(), { [mirrorOccurrenceId(vProg, 0, jsDayOf(today()))]: true });
+    as(victim);
+    const vLog = (await j(await getProgram(req("GET", "/x"), P(vProg)))).logs[0];
     const vDraft = await createProgramId(victimMentor, vMs, { title: "پیش‌نویس قربانی" });
 
     const attacker = await makeMentor();
@@ -295,7 +303,9 @@ describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ
 
     // شاگردِ همدست هم با itemIdِ قربانی روی برنامه‌ی خودش لاگ نمی‌تواند بزند
     as(accomplice);
-    expect((await postLog(req("POST", "/x", { itemId: vItem.id, date: today(), status: "COMPLETED" }), P(aProg))).status).toBe(404);
+    // (ثبتِ دستیِ وضعیت کلا منسوخ است: ۴۱۰ و هیچ ردیفی برای آیتمِ قربانی ساخته نمی‌شود)
+    expect((await postLog(req("POST", "/x", { itemId: vItem.id, date: today(), status: "COMPLETED" }), P(aProg))).status).toBe(410);
+    expect(await prisma.mentorProgramLog.count({ where: { itemId: vItem.id, programId: aProg } })).toBe(0);
     as(accomplice);
     expect((await getProgram(req("GET", "/x"), P(vProg))).status).toBe(404);
 

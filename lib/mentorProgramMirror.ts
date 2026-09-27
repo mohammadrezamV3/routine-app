@@ -3,8 +3,15 @@ import { SETTING_KEYS, MAX_SETTING_VALUE_BYTES } from "@/lib/userSettingKeys";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import type { StudentOccurrence } from "@/lib/mentorPrivacy";
 import { isoDate, isUniqueViolation } from "@/lib/mentorServer";
+import { mirrorOccurrenceId, mirrorOccurrenceName } from "@/lib/mentorProgressCore";
+import { syncProgramProgress } from "@/lib/mentorProgress";
 
-// آینه‌کردنِ برنامه‌ی ROUTINEِ فعالِ منتور در «روتین من»ِ شاگرد.
+// آینه‌کردنِ برنامه‌ی فعالِ منتور (ROUTINE و WORKOUT) در «روتین من»ِ شاگرد.
+//
+// روتین تنها ردیابِ روزانه‌ای‌ست که هر کاربرِ واردشده دارد (ماژولِ بدنسازی پولی
+// است و فقط یک برنامه‌ی فعال نگه می‌دارد)، پس WORKOUT هم همین‌جا آینه می‌شود:
+// هر حرکت در روزهای خودش یک occurrence (اسم + ست×تکرار). تیکِ شاگرد روی همین
+// occurrenceها منبعِ «پیشرفتِ خودکار» است (lib/mentorProgress.ts).
 //
 // روتینِ شاگرد یک آرایه‌ی JSON در UserSetting("customOccurrences")ـه که خودِ
 // کلاینت هم کلِ آن را بازنویسی می‌کنه. پس:
@@ -24,8 +31,17 @@ export class MirrorTooLargeError extends Error {
   }
 }
 
-type MirrorProgram = { id: string; title: string; startDate: Date | null; endDate: Date | null };
-type MirrorItem = { order: number; title: string; days: number[]; startTime: string | null; durationMin: number | null };
+type MirrorProgram = { id: string; type?: "ROUTINE" | "WORKOUT"; title: string; startDate: Date | null; endDate: Date | null };
+type MirrorItem = {
+  id?: string;
+  order: number;
+  title: string;
+  days: number[];
+  startTime: string | null;
+  durationMin: number | null;
+  sets?: number | null;
+  reps?: string | null;
+};
 
 function timeLabel(startTime: string | null, durationMin: number | null): string {
   if (!startTime) return "";
@@ -51,14 +67,16 @@ export function buildMirrorOccurrences(program: MirrorProgram, items: MirrorItem
   for (const it of items) {
     for (const jsDay of it.days) {
       out.push({
-        id: `mp-${program.id}-${it.order}-${jsDay}`,
-        name: it.title,
+        id: mirrorOccurrenceId(program.id, it.order, jsDay),
+        name: mirrorOccurrenceName(it, program.type ?? "ROUTINE"),
         jsDay,
         time: timeLabel(it.startTime, it.durationMin),
         startDate,
         ...(endDate ? { endDate } : {}),
         tag: program.title,
         mentorProgramId: program.id,
+        // پیوندِ occurrence به آیتم — بعد از ویرایش/جابه‌جایی (idِ تصادفی) هم تیک به همین آیتم می‌رسد
+        ...(it.id ? { mentorItemId: it.id } : {}),
       });
     }
   }
@@ -121,24 +139,51 @@ export async function writeProgramMirror(studentId: string, programId: string, o
   await rewriteOccurrences(studentId, (arr) => [...arr.filter((o) => !own(o)), ...occurrences]);
 }
 
-/** حذفِ آینه‌ی یک یا چند برنامه از روتینِ شاگرد (complete / cancel / پایانِ رابطه) */
+/**
+ * حذفِ آینه‌ی یک یا چند برنامه از روتینِ شاگرد (complete / cancel / پایانِ رابطه).
+ * قبل از حذف، پیشرفتِ خودکار نهایی می‌شود: پیوندِ occurrenceهای ویرایش‌شده
+ * (idِ تصادفی → آیتم) فقط تا وقتی آینه هست قابلِ خواندن است.
+ */
 export async function removeProgramMirrors(studentId: string, programIds: string[]): Promise<void> {
   if (programIds.length === 0) return;
+  await syncProgramProgress(programIds, { force: true, finalize: true }).catch(() => undefined);
   const match = isMirrorOf(new Set(programIds));
   await rewriteOccurrences(studentId, (arr) => (arr.some(match) ? arr.filter((o) => !match(o)) : null));
 }
 
-/** برنامه + آیتم‌ها رو از دیتابیس می‌خونه و occurrenceها رو می‌سازه (برای غیرِ ROUTINE خالی) */
+/** برنامه + آیتم‌ها رو از دیتابیس می‌خونه و occurrenceها رو می‌سازه (ROUTINE و WORKOUT) */
 export async function loadMirrorOccurrences(programId: string, activationIso: string): Promise<StudentOccurrence[]> {
   const p = await prisma.mentorProgram.findUnique({
     where: { id: programId },
     select: {
       id: true, type: true, title: true, startDate: true, endDate: true,
-      items: { select: { order: true, title: true, days: true, startTime: true, durationMin: true }, orderBy: { order: "asc" } },
+      items: {
+        select: { id: true, order: true, title: true, days: true, startTime: true, durationMin: true, sets: true, reps: true },
+        orderBy: { order: "asc" },
+      },
     },
   });
-  if (!p || p.type !== "ROUTINE") return [];
+  if (!p || (p.type !== "ROUTINE" && p.type !== "WORKOUT")) return [];
   return buildMirrorOccurrences(p, p.items, activationIso);
+}
+
+/**
+ * برنامه‌ی WORKOUTی که قبل از آینه‌شدنِ تمرین فعال شده بود، هنوز در روتینِ
+ * شاگرد نیست؛ یک بار (قبل از اولین همگام‌سازیِ پیشرفت) آینه می‌شود. شرطِ
+ * progressSyncedAt = null یعنی اگر شاگرد بعدا آینه را از روتینش پاک کند، دوباره
+ * برنمی‌گردد.
+ */
+export async function ensureLegacyWorkoutMirror(p: { id: string; type: string; status: string; studentId: string; activatedAt: Date | null; progressSyncedAt: Date | null }, activationIso: string): Promise<void> {
+  if (p.type !== "WORKOUT" || p.status !== "ACTIVE" || !p.activatedAt || p.progressSyncedAt) return;
+  const row = await prisma.userSetting.findUnique({
+    where: { userId_key: { userId: p.studentId, key: SETTING_KEYS.customOccurrences } },
+    select: { value: true },
+  });
+  const current = Array.isArray(row?.value) ? (row!.value as unknown[]) : [];
+  if (current.some(isMirrorOf(new Set([p.id])))) return;
+  const occ = await loadMirrorOccurrences(p.id, activationIso);
+  if (occ.length === 0 || !(await mirrorFits(p.studentId, occ, p.id))) return;
+  await writeProgramMirror(p.studentId, p.id, occ).catch(() => undefined);
 }
 
 export type ActivationResult = "ok" | "conflict" | "too_large";

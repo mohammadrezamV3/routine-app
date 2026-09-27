@@ -13,8 +13,12 @@ import {
   toFeedbackRow,
   loadProgramWithUsers,
   todayIsoForUser,
+  isoDate,
+  userTimezone,
 } from "@/lib/mentorServer";
-import { activateDuePrograms } from "@/lib/mentorProgramMirror";
+import { activateDuePrograms, ensureLegacyWorkoutMirror } from "@/lib/mentorProgramMirror";
+import { dayInTz, loadProgressView, syncProgramProgress } from "@/lib/mentorProgress";
+import { isoAddDays, weekStartIso } from "@/lib/mentorProgressCore";
 
 type Ctx = { params: { id: string } };
 const MAX_LOGS = 1000;
@@ -33,8 +37,10 @@ async function loadVisibleProgram(id: string, me: string) {
   return p;
 }
 
-// GET /api/mentor-programs/:id?from=&to= → برنامه + آیتم‌ها + لاگ‌ها + فیدبک.
+// GET /api/mentor-programs/:id?from=&to= → برنامه + آیتم‌ها + لاگ‌ها + فیدبک + progressView.
 // منتور فقط برنامه‌های *خودش* رو می‌بینه (mentorId در where) — منتورِ دیگه هرگز.
+// پیشرفت خودکار از تیک‌های روتینِ شاگرد همگام می‌شه (lib/mentorProgress.ts) و
+// برای منتور فقط وقتی شاگرد «نمایش پیشرفت» رو باز گذاشته برمی‌گرده.
 export async function GET(req: NextRequest, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -51,20 +57,41 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   const sp = req.nextUrl.searchParams;
   let dateWhere = {};
+  let viewFrom: string | null = null;
+  let viewTo: string | null = null;
   if (sp.get("from") || sp.get("to")) {
     const r = parseDateRange(sp.get("from"), sp.get("to"), MAX_LOG_RANGE_DAYS);
     if ("error" in r) return badRequest(r.error);
     dateWhere = { date: { gte: r.from, lte: r.to } };
+    viewFrom = isoDate(r.from);
+    viewTo = isoDate(r.to);
   }
 
-  // منتوری که شاگرد بلاکش کرده، دیگه لاگ/یادداشتِ اجرای شاگرد رو نمی‌بینه
+  // منتوری که شاگرد بلاکش کرده، دیگه لاگ/یادداشتِ اجرای شاگرد رو نمی‌بینه؛
+  // و وقتی شاگرد «نمایش پیشرفت» رو بسته، وضعیتِ روزها هم برنمی‌گرده
+  let progressHidden = false;
+  let accessClosed = false;
   if (p.mentorId === me) {
-    const rel = await prisma.mentorship.findUnique({ where: { id: p.mentorshipId }, select: { status: true } });
-    // منتورِ تعلیق‌شده هم مثلِ بلاک: دسترسی به داده‌ی اجرای شاگرد فوراً بسته
-    if (rel?.status === "BLOCKED" || (await isMentorSuspended(me))) dateWhere = { id: "__none__" };
+    const rel = await prisma.mentorship.findUnique({ where: { id: p.mentorshipId }, select: { status: true, showProgress: true } });
+    // منتورِ تعلیق‌شده هم مثلِ بلاک: دسترسی به داده‌ی اجرای شاگرد (حتی یادداشت‌ها) فوراً بسته
+    accessClosed = rel?.status === "BLOCKED" || (await isMentorSuspended(me));
+    progressHidden = accessClosed || !rel?.showProgress;
+    if (progressHidden) dateWhere = { id: "__none__" };
   }
 
-  const [items, logs, feedback] = await Promise.all([
+  // پیشرفتِ خودکار: WORKOUTِ قدیمیِ آینه‌نشده یک بار آینه می‌شه، بعد همگام‌سازی (بدونِ TTL)
+  let studentTz: string | null = null;
+  if (p.activatedAt && ["ACTIVE", "COMPLETED", "CANCELLED"].includes(p.status)) {
+    studentTz = await userTimezone(p.studentId);
+    await ensureLegacyWorkoutMirror(p, dayInTz(p.activatedAt, studentTz)).catch(() => undefined);
+    await syncProgramProgress([p.id], { force: true }).catch(() => undefined);
+  }
+  if (!viewFrom || !viewTo) {
+    viewFrom = weekStartIso(dayInTz(new Date(), studentTz ?? (await userTimezone(p.studentId))));
+    viewTo = isoAddDays(viewFrom, 6);
+  }
+
+  const [items, logs, feedback, progressView] = await Promise.all([
     prisma.mentorProgramItem.findMany({ where: { programId: p.id }, orderBy: { order: "asc" } }),
     prisma.mentorProgramLog.findMany({ where: { programId: p.id, ...dateWhere }, orderBy: { date: "desc" }, take: MAX_LOGS }),
     prisma.mentorFeedback.findMany({
@@ -73,6 +100,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       take: MAX_FEEDBACK,
       include: { item: { select: { title: true } } },
     }),
+    loadProgressView(p.id, viewFrom, viewTo, { hidden: progressHidden, withNotes: !accessClosed }),
   ]);
 
   return NextResponse.json({
@@ -81,6 +109,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     items: items.map(serializeItem),
     logs: logs.map(serializeLog),
     feedback: feedback.map(toFeedbackRow),
+    progressView,
   });
 }
 

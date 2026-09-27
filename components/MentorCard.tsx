@@ -2,43 +2,52 @@
 
 import "./mentor.css";
 import Link from "next/link";
-import { ChevronLeft, Users } from "lucide-react";
+import { CalendarDays, ChevronLeft, CircleSlash, Users } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { faNum } from "@/lib/jalali";
+import { availabilityShort } from "@/lib/mentorAvailability";
 import { MentorUserAvatar } from "./MentorUserAvatar";
-import { RatingStars, VerificationBadges, categoryLabel } from "./MentorBadges";
+import { CategoryChip, RatingStars, VerificationBadges } from "./MentorBadges";
+import { MentorChip } from "./MentorUI";
 
-// کارتِ یک منتور در لیستِ کشف/محبوب‌ها — همان قابِ rp-card رودمپ‌ها
-// (trade-surface + هاورِ بوردرِ اکسنت)، نه یک کارتِ تازه.
+// کارتِ یک منتور در لیستِ کشف — همان قابِ rp-card رودمپ‌ها (trade-surface).
+// هاور فقط رنگِ بوردر/نام را عوض می‌کند؛ حرکتی ندارد.
 export function MentorCard({ mentor }: { mentor: MentorCardData }) {
+  // ظرفیت/عدم حضور یک چیپِ فشرده کنارِ بقیه‌ی چیپ‌هاست، نه یک خطِ متنیِ جدا
+  const closed = mentor.availability && mentor.availability !== "OPEN"
+    ? availabilityShort(mentor.availability, mentor.awayUntil)
+    : !mentor.acceptingStudents ? "شاگرد جدید نمی‌پذیرد" : null;
+  const hasChips = !!closed || mentor.identityVerified || mentor.certifications.some((c) => c.verified) || mentor.categories.length > 0;
   return (
     <Link href={`/mentors/${mentor.userId}`} prefetch={false} className="trade-surface rp-card mentor-card">
       <div className="mentor-card-head">
-        <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={46} />
+        <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
         <div className="mentor-card-id">
+          {mentor.routineRole && <div className="rp-card-eyebrow">{mentor.routineRole}</div>}
           <div className="mentor-card-name">{mentor.name}</div>
           {mentor.headline && <div className="mentor-card-headline">{mentor.headline}</div>}
         </div>
       </div>
 
-      <VerificationBadges identityVerified={mentor.identityVerified} certifications={mentor.certifications} />
-
-      {mentor.categories.length > 0 && (
-        <div className="rp-card-meta">
-          {mentor.categories.map((c) => (
-            <span key={c} className="mentor-badge is-cat">{categoryLabel(c)}</span>
-          ))}
+      {hasChips && (
+        <div className="mentor-chips">
+          {closed && (
+            <MentorChip tone={mentor.availability === "AWAY" ? "info" : "neutral"} icon={mentor.availability === "AWAY" ? <CalendarDays size={13} strokeWidth={1.75} aria-hidden /> : <CircleSlash size={13} strokeWidth={1.75} aria-hidden />}>
+              {closed}
+            </MentorChip>
+          )}
+          <VerificationBadges identityVerified={mentor.identityVerified} certifications={mentor.certifications} />
+          {mentor.categories.map((c) => <CategoryChip key={c} category={c} />)}
         </div>
       )}
 
       <div className="rp-card-foot">
         <RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} />
-        <span className="rp-card-meta" style={{ marginTop: 0, marginInlineStart: "auto" }}>
-          <span><Users size={12} /> {faNum(mentor.activeStudents)} شاگرد فعال</span>
+        <span className="rp-card-meta" style={{ marginInlineStart: "auto" }}>
+          <span><Users size={13} strokeWidth={1.75} aria-hidden /> {faNum(mentor.activeStudents)} شاگرد فعال</span>
         </span>
-        <ChevronLeft size={16} className="rp-card-arrow" />
+        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" aria-hidden />
       </div>
-      {!mentor.acceptingStudents && <div className="mentor-card-closed" style={{ marginTop: 8 }}>فعلا شاگردِ جدید نمی‌پذیرد</div>}
     </Link>
   );
 }

@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
-  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap,
+  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { AdminToastProvider } from "@/components/admin/useAdminToast";
@@ -16,7 +17,7 @@ import { AdminAccessContext } from "@/components/admin/AdminAccess";
 import { AdminPermission, hasPermission, permissionForPath } from "@/lib/adminPermissions";
 
 type Leaf = { label: string; href: string; perm?: AdminPermission; exact?: boolean };
-type NavSection = { label: string; icon: React.ReactNode; href?: string; perm?: AdminPermission; children?: Leaf[] };
+type NavSection = { label: string; icon: React.ReactNode; href?: string; perm?: AdminPermission; ownerOnly?: boolean; children?: Leaf[] };
 type NavGroup = { title: string; sections: NavSection[] };
 
 const GROUPS: NavGroup[] = [
@@ -116,6 +117,7 @@ const GROUPS: NavGroup[] = [
       },
       { label: "قابلیت‌ها", icon: <ToggleRight size={17} />, href: "/admin/features", perm: "settings" },
       { label: "تنظیمات", icon: <Settings size={17} />, href: "/admin/settings", perm: "settings" },
+      { label: "داده‌ی آزمایشی", icon: <FlaskConical size={17} />, href: "/admin/demo-data", ownerOnly: true },
     ],
   },
 ];
@@ -127,7 +129,7 @@ function visibleGroups(access: Access): NavGroup[] {
   return GROUPS.map((g) => ({
     ...g,
     sections: g.sections
-      .filter((s) => hasPermission(access, s.perm))
+      .filter((s) => hasPermission(access, s.perm) && (!s.ownerOnly || access.isSuperAdmin))
       .map((s) => (s.children ? { ...s, children: s.children.filter((c) => hasPermission(access, c.perm)) } : s))
       .filter((s) => !s.children || s.children.length > 0),
   })).filter((g) => g.sections.length > 0);
@@ -234,7 +236,7 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
           <span className="admin-nav-icon"><Home size={17} /></span>
           <span className="admin-nav-label">بازگشت به اپ</span>
         </Link>
-        <button type="button" className="admin-nav-head admin-nav-logout" onClick={() => signOut({ callbackUrl: "/" })}>
+        <button type="button" className="admin-nav-head admin-nav-logout" onClick={() => { clearAllLocalKeys().catch(() => {}); signOut({ callbackUrl: "/" }); }}>
           <span className="admin-nav-icon"><LogOut size={17} /></span>
           <span className="admin-nav-label">خروج</span>
         </button>

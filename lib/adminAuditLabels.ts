@@ -26,6 +26,13 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "mentor.review_restore": "بازگردانی نظر منتور",
   "mentor.report_resolve": "رسیدگی به گزارش منتورها",
   "mentor.document_view": "مشاهده مدرک منتور",
+  // رمزگذاریِ سرتاسریِ گفت‌وگو — فقط رویداد، هرگز محتوا (agent D)
+  "e2ee.key_create": "فعال‌سازی رمزگذاری گفت‌وگو",
+  "e2ee.key_reset": "ساخت کلید تازه‌ی گفت‌وگو",
+  "e2ee.passcode_change": "تغییر رمز گفت‌وگو",
+  "mentor.broadcast": "ارسال گروهی منتور",
+  "demo.seed": "ساخت داده‌ی آزمایشی",
+  "demo.clear": "حذف داده‌ی آزمایشی",
 };
 
 export function auditLabel(action: string) {

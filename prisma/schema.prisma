@@ -246,6 +246,8 @@ model User {
   mentorReviewsReceived   MentorReview[]      @relation("MentorReviewMentor")
   mentorReportsFiled      MentorReport[]      @relation("MentorReportReporter")
   notifications           InAppNotification[]
+  // کلیدهای عمومیِ رمزگذاریِ سرتاسری (مهاجرت 20260927163000_mentor_e2ee)
+  e2eKeys                 UserE2EKey[]
 
   @@index([market])
   @@index([gymPartnerId])
@@ -1782,6 +1784,8 @@ model MentorProfile {
   specialties String[] @default([])
   // کلیدهای lib/mentorCategories.ts — مثلا ["FITNESS","NUTRITION"]
   categories  String[] @default([])
+  // نقشِ منتور در حوزه‌ی روتین به زبانِ خودش (مثلا «استاد ریاضی») — فقط وقتی categories شاملِ ROUTINE باشه نمایش داده می‌شه
+  routineRole String?
 
   // فقط وقتی true و موارد لازم پر باشه، توی کشف منتورها دیده می‌شه
   published         Boolean @default(false)
@@ -1808,7 +1812,62 @@ model MentorProfile {
   documents          MentorDocument[]
   verificationEvents MentorVerificationEvent[]
 
+  // ── دسترس‌پذیری و مدیریتِ شاگرد (مهاجرت 20260927161000_mentor_availability) ──
+  // هر گزینه مستقل است و با حذفِ ستون‌های همین بلوک برداشته می‌شود.
+  // سقفِ شاگردِ فعال؛ null = بدونِ سقف. پر بودن فقط درخواستِ شاگرد را می‌بندد، نه دعوتِ خودِ منتور
+  maxActiveStudents  Int?
+  // حالتِ «در دسترس نیستم تا …» — تاریخِ بازگشت (روز)؛ بعد از این روز خودبه‌خود بی‌اثر می‌شود
+  awayUntil          DateTime?            @db.Date
+  awayMessage        String?
+  // در مدتِ عدمِ حضور، درخواستِ شاگردِ جدید پذیرفته نشود
+  awayPausesRequests Boolean              @default(true)
+  // انتظارِ زمانِ پاسخ (ساعت) که روی پروفایل نمایش داده می‌شود
+  responseTimeHours  Int?
+  // پیامی که با پذیرشِ رابطه خودکار در گفت‌وگو فرستاده می‌شود
+  welcomeMessage     String?
+  // سؤال‌های پذیرش (حداکثر ۵) که شاگرد هنگامِ درخواست جواب می‌دهد
+  intakeQuestions    String[]             @default([])
+  studentLabels      MentorStudentLabel[]
+
+  // ── ابزارهای برنامه و گزارش (مهاجرت 20260927162000_mentor_tools) ──
+  // هر گزینه مستقل است و با حذفِ همین بلوک و مدل‌هایش برداشته می‌شود.
+  // هشدارِ پایبندی: وقتی شاگرد n روزِ برنامه‌دارِ پشت‌سرهم هیچ آیتمی انجام نداد؛ null = خاموش
+  alertMissedDays  Int?
+  programTemplates MentorProgramTemplate[]
+  savedReplies     MentorSavedReply[]
+
+  // ── رتبه‌بندیِ شایستگی (مهاجرت 20260927164000_mentor_ranking) — lib/mentorRankingStats.ts ──
+  rankingStats MentorRankingStat[]
+
   @@index([published, suspendedAt])
+}
+
+// امتیازِ شایستگیِ denormalizedِ هر منتور، یک ردیف به‌ازای هر دامنه: "ALL" (کلی)
+// و هر دسته‌ی منتور (FITNESS/ROUTINE/…، فقط از سیگنال‌های همون حوزه). خودِ روتِ
+// خواندن با ensureFreshRankings کهنه‌اش رو تازه می‌کنه (بدونِ cron). فرمول و
+// دلیلِ هر وزن: docs/mentor-ranking.md. کلِ جدول از روی داده‌ی خام قابلِ بازسازیه.
+model MentorRankingStat {
+  id           String        @id @default(cuid())
+  profileId    String
+  profile      MentorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  category     String // "ALL" | کلیدِ lib/mentorCategories.ts
+  // امتیازِ شایستگی ۰..۱۰۰ — ترتیبِ «بهترین نتیجه»
+  score        Float         @default(0)
+  // امتیازِ نظرهای تأییدشده (بیزی، ۰..۱) — ترتیبِ «بالاترین امتیاز»
+  ratingScore  Float         @default(0)
+  // حداقلِ نمونه و اعتماد برای ورود به «منتورهای محبوب»
+  eligible     Boolean       @default(false)
+  // شاگردهای معتبرِ شمرده‌شده و نظرهای تأییدشده — tie-break و نمایشِ ادمین
+  sampleStudents  Int        @default(0)
+  verifiedReviews Int        @default(0)
+  // جزئیاتِ هر مؤلفه برای توضیحِ ادمین (lib/mentorRanking.ts → MeritBreakdown)
+  breakdown    Json
+  computedAt   DateTime      @default(now())
+
+  @@unique([profileId, category])
+  @@index([category, score(sort: Desc)])
+  @@index([category, ratingScore(sort: Desc)])
+  @@index([computedAt])
 }
 
 // مدرکِ تخصصیِ یک دسته (مثلا FITNESS) — وضعیتش مستقل از هویت و از دسته‌های دیگه
@@ -1889,7 +1948,7 @@ model Mentorship {
   // حوزه‌هایی که این رابطه پوشش می‌ده (زیرمجموعه‌ی دسته‌های منتور، مثلا ["ROUTINE"]).
   // منتورهای شاگرد با همین از هم تفکیک می‌شن و نوعِ برنامه‌ی مجاز هم از همین میاد.
   // خالی = رابطه‌ی قدیمی قبل از این فیلد → همه‌ی حوزه‌های منتور.
-  categories  String[] @default([])
+  categories  String[]         @default([])
   message     String?
   blockedById String?
 
@@ -1913,9 +1972,113 @@ model Mentorship {
   messages MentorMessage[]
   reviews  MentorReview[]
 
+  // ── مدیریتِ شاگرد از سمتِ منتور (مهاجرت 20260927161000_mentor_availability) ──
+  // پاسخِ شاگرد به سؤال‌های پذیرش — هر جواب یک ردیف (MentorIntakeAnswer)
+  intakeAnswers   MentorIntakeAnswer[]
+  // توقفِ موقتِ رابطه توسطِ منتور (وضعیت ACTIVE می‌ماند)
+  pausedAt        DateTime?
+  pauseReason     String?
+  // دلیلِ پایان و این‌که کدام طرف پایان داد ("MENTOR" | "STUDENT")
+  endReason       String?
+  endedBy         String?
+  // برچسب‌های خصوصیِ منتور روی این شاگرد (idهای MentorStudentLabel)
+  mentorLabelIds  String[]               @default([])
+  mentorNotes     MentorStudentNote[]
+  // هشدارهای پایبندیِ ثبت‌شده (مهاجرت 20260927162000_mentor_tools)
+  adherenceAlerts MentorAdherenceAlert[]
+
   @@unique([mentorId, studentId])
   @@index([studentId, status])
   @@index([mentorId, status])
+}
+
+// برچسبِ خصوصیِ منتور برای دسته‌بندیِ شاگردها (مثلا «کنکور ۱۴۰۶») — فقط خودِ منتور می‌بیند
+model MentorStudentLabel {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   MentorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime      @default(now())
+
+  @@unique([profileId, name])
+}
+
+// یادداشتِ خصوصیِ منتور درباره‌ی یک شاگرد — هرگز به شاگرد نشان داده نمی‌شود
+model MentorStudentNote {
+  id           String     @id @default(cuid())
+  mentorshipId String
+  mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  mentorId     String
+  body         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([mentorshipId, createdAt])
+}
+
+// جوابِ شاگرد به یک سؤالِ پذیرش — snapshotِ متنِ سؤال در لحظه‌ی درخواست تا
+// ویرایشِ بعدیِ سؤال‌ها جوابِ قبلی را بی‌معنا نکند. با درخواستِ دوباره جایگزین می‌شود.
+model MentorIntakeAnswer {
+  id           String     @id @default(cuid())
+  mentorshipId String
+  mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  order        Int
+  question     String
+  answer       String
+  createdAt    DateTime   @default(now())
+
+  @@unique([mentorshipId, order])
+}
+
+// ── ابزارهای منتور (مهاجرت 20260927162000_mentor_tools) ──
+
+// قالبِ برنامه: کپیِ محتوای یک برنامه (بدونِ شاگرد و تاریخ) برای استفاده‌ی دوباره.
+// آیتم‌ها JSON‌اند (همان شکلِ ItemData در lib/mentorValidate.ts) و هنگامِ ساختِ
+// برنامه از قالب دوباره با validateProgramInput اعتبارسنجی می‌شوند.
+model MentorProgramTemplate {
+  id           String            @id @default(cuid())
+  profileId    String
+  profile      MentorProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name         String
+  type         MentorProgramType
+  title        String
+  description  String?
+  note         String?
+  // طولِ بازه‌ی برنامه‌ی مبدأ به روز (پایان − شروع)؛ با انتخابِ تاریخِ شروع، پایان از همین حساب می‌شود
+  durationDays Int?
+  items        Json
+  itemCount    Int               @default(0)
+  usedCount    Int               @default(0)
+  lastUsedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([profileId, updatedAt])
+}
+
+// پاسخِ آماده‌ی منتور برای گفت‌وگو — فقط متن؛ درج در گفت‌وگو سمتِ کلاینت انجام می‌شود
+model MentorSavedReply {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   MentorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([profileId, createdAt])
+}
+
+// هشدارِ پایبندیِ ثبت‌شده — یکتا به‌ازای رابطه و روز تا اعلانِ تکراری ساخته نشود
+model MentorAdherenceAlert {
+  id           String     @id @default(cuid())
+  mentorshipId String
+  mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  day          DateTime   @db.Date
+  missedDays   Int
+  createdAt    DateTime   @default(now())
+
+  @@unique([mentorshipId, day])
 }
 
 enum MentorProgramStatus {
@@ -1945,6 +2108,8 @@ model MentorProgram {
   type              MentorProgramType
   title             String
   description       String?
+  // یادداشتِ منتور برای شاگرد روی این برنامه (جدا از توضیحِ برنامه)
+  note              String?
   startDate         DateTime?           @db.Date
   endDate           DateTime?           @db.Date
   status            MentorProgramStatus @default(DRAFT)
@@ -1964,6 +2129,12 @@ model MentorProgram {
   items    MentorProgramItem[]
   logs     MentorProgramLog[]
   feedback MentorFeedback[]
+
+  // ── پیشرفتِ خودکار (مهاجرت 20260927160000_mentor_auto_progress) ──
+  // آخرین همگام‌سازیِ لاگ‌های AUTO از تیک‌های روتینِ شاگرد (lib/mentorProgress.ts).
+  // null روی برنامه‌ی بسته = برنامه‌ی قدیمیِ قبل از پیشرفتِ خودکار؛ دیگر همگام نمی‌شود.
+  progressSyncedAt DateTime?
+  dayNotes         MentorProgramDayNote[]
 
   @@index([studentId, status])
   @@index([mentorId, status])
@@ -2016,11 +2187,33 @@ model MentorProgramLog {
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
+  // ── پیشرفتِ خودکار (مهاجرت 20260927160000_mentor_auto_progress) ──
+  // "AUTO" = برگرفته از تیک‌های روتینِ شاگرد (فقط همگام‌سازی می‌نویسد/پاک می‌کند)؛
+  // "MANUAL" = ثبتِ دستیِ قدیمی، دست‌نخورده می‌ماند.
+  source String    @default("MANUAL")
+  // روزی که واقعا تیک خورد، وقتی شاگرد آیتم را در همان هفته به روزِ دیگری برده بود
+  doneOn DateTime? @db.Date
+
   feedback MentorFeedback[]
 
   @@unique([itemId, date])
   @@index([programId, date])
   @@index([studentId, date])
+}
+
+// یادداشتِ اختیاریِ شاگرد برای منتور روی یک روزِ برنامه — فقط توضیح، هرگز وضعیت
+// (مهاجرت 20260927160000_mentor_auto_progress)
+model MentorProgramDayNote {
+  id        String        @id @default(cuid())
+  programId String
+  program   MentorProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  studentId String
+  date      DateTime      @db.Date
+  body      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([programId, date])
 }
 
 model MentorFeedback {
@@ -2047,12 +2240,53 @@ model MentorMessage {
   mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
   senderId     String
   sender       User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  body         String
   readAt       DateTime?
   createdAt    DateTime   @default(now())
 
+  // ── رمزگذاریِ سرتاسری (مهاجرت 20260927163000_mentor_e2ee؛ docs/mentor-e2ee.md) ──
+  // سرور فقط متنِ رمزشده می‌بیند. دقیقا یکی از legacyBody / ciphertext پر است (CHECK در SQL).
+  // متنِ سادهِ پیام‌های پیش از رمزگذاری — فقط برای دو طرف؛ با بازرمزگذاری در کلاینت یا ۳۰ روز بعد پاک می‌شود
+  legacyBody          String?
+  // شناسه‌ی تصادفیِ کلاینت (بخشی از AAD)؛ یکتا در هر گفت‌وگو → ضدِ replay
+  clientId            String?
+  ciphertext          String?
+  iv                  String?
+  senderKeyVersion    Int?
+  recipientKeyVersion Int?
+  // تعهدِ فرانکینگ = HMAC(fk, زمینه‖متن)؛ serverTag = HMAC(رازِ سرور، تعهد+فرستنده+زمان)
+  commitment          String?
+  serverTag           String?
+  // پیام‌هایی که با «ارسال گروهی» ساخته شده‌اند یک شناسه‌ی مشترک دارند
+  broadcastId         String?
+
+  @@unique([mentorshipId, clientId])
   @@index([mentorshipId, createdAt])
   @@index([mentorshipId, senderId, readAt])
+}
+
+// کلیدِ هویتِ رمزگذاریِ سرتاسری (ECDH P-256) — مهاجرت 20260927163000_mentor_e2ee.
+// کلیدِ خصوصی هرگز به سرور نمی‌رسد؛ فقط «پشتیبانِ رمزشده» با کلیدی که از رمزِ
+// گفت‌وگوی کاربر (PBKDF2) ساخته می‌شود. سرور و Owner نمی‌توانند بازش کنند.
+model UserE2EKey {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version          Int
+  // نقطه‌ی فشرده‌نشده‌ی P-256 (۶۵ بایت) به base64
+  publicKey        String
+  // پشتیبانِ رمزشده‌ی کلیدِ خصوصی (PKCS8 ⟵ AES-256-GCM ⟵ PBKDF2-SHA256(رمزِ گفت‌وگو))
+  backupCiphertext String?
+  backupIv         String?
+  backupSalt       String?
+  backupIterations Int?
+  // null = کلیدِ جاری. با «بازنشانی» مقدار می‌گیرد و پشتیبانش پاک می‌شود؛ کلیدِ
+  // عمومی می‌ماند تا طرفِ مقابل پیام‌های قدیمی‌اش را هنوز بخواند.
+  retiredAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([userId, version])
+  @@index([userId, retiredAt])
 }
 
 enum MentorReviewStatus {
@@ -2108,6 +2342,14 @@ model MentorReport {
   resolvedById String?
   resolvedAt   DateTime?
   createdAt    DateTime           @default(now())
+
+  // ── گزارشِ پیامِ رمزشده (مهاجرت 20260927163000_mentor_e2ee) ──
+  // متنِ *همان یک* پیامِ گزارش‌شده، فقط پس از تأییدِ تعهدِ فرانکینگ؛ رمزشده
+  // در حالِ سکون (MENTOR_DATA_KEY). ادمین جز همین متن هیچ پیامی را نمی‌بیند.
+  reportedText      String?
+  reportedMessageAt DateTime?
+  // true = متن با تعهدِ رمزنگاریِ فرستنده تأیید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
+  reportVerified    Boolean   @default(false)
 
   @@unique([reporterId, targetType, targetId])
   @@index([status, createdAt])

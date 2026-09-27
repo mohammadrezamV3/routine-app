@@ -4,6 +4,7 @@ import { requireMentorsUser, badRequest, conflict, touchMentorActivity } from "@
 import { readJsonBody } from "@/lib/validate";
 import { sanitizeCategories } from "@/lib/mentorCategories";
 import { loadMentorSelf, isUniqueViolation } from "@/lib/mentorServer";
+import { validateRoutineRole } from "@/lib/mentorValidate";
 
 const HEADLINE_MAX = 120;
 const BIO_MAX = 2000;
@@ -34,6 +35,7 @@ export async function PUT(req: Request) {
     bio?: string | null;
     specialties?: string[];
     categories?: string[];
+    routineRole?: string | null;
     published?: boolean;
     acceptingStudents?: boolean;
   } = {};
@@ -47,7 +49,7 @@ export async function PUT(req: Request) {
     data.bio = typeof b.bio === "string" ? b.bio.trim().slice(0, BIO_MAX) || null : null;
   }
   if (b.specialties !== undefined) {
-    if (!Array.isArray(b.specialties)) return badRequest("تخصص‌ها باید لیست باشه");
+    if (!Array.isArray(b.specialties)) return badRequest("تخصص‌ها باید فهرست باشد");
     const set = new Set<string>();
     for (const s of b.specialties) {
       if (typeof s !== "string") continue;
@@ -58,8 +60,13 @@ export async function PUT(req: Request) {
     data.specialties = Array.from(set);
   }
   if (b.categories !== undefined) {
-    if (!Array.isArray(b.categories)) return badRequest("دسته‌ها باید لیست باشه");
+    if (!Array.isArray(b.categories)) return badRequest("دسته‌ها باید فهرست باشد");
     data.categories = sanitizeCategories(b.categories);
+  }
+  if (b.routineRole !== undefined) {
+    const r = validateRoutineRole(b.routineRole);
+    if (!r.ok) return badRequest(r.error);
+    data.routineRole = r.data;
   }
   if (b.published !== undefined) {
     if (typeof b.published !== "boolean") return badRequest("وضعیت انتشار نامعتبره");
@@ -76,6 +83,9 @@ export async function PUT(req: Request) {
   const finalCategories = data.categories ?? existing?.categories ?? [];
   const finalBio = data.bio !== undefined ? data.bio : existing?.bio ?? null;
   const finalPublished = data.published ?? existing?.published ?? false;
+  // نقشِ روتین فقط کنارِ دسته‌ی ROUTINE معنا داره — بدونِ اون پاک می‌شه تا
+  // متنِ قدیمی بعدا بی‌صدا دوباره روی کارت ظاهر نشه
+  if (!finalCategories.includes("ROUTINE")) data.routineRole = null;
   if (finalPublished && (finalCategories.length === 0 || !finalBio)) {
     return badRequest("برای انتشار پروفایل، حداقل یک دسته و بیوگرافی لازمه");
   }

@@ -1,17 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { MentorDashShell } from "@/components/MentorDashKit";
+import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import { MentorDashOnboarding } from "@/components/MentorDashOnboarding";
 import { MentorDashBoard } from "@/components/MentorDashBoard";
 import { LoadingBlock } from "@/components/Spinner";
-import { MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import type { MentorSelf } from "@/lib/mentorTypes";
 
 /**
- * /mentor — اگه کاربر هنوز پروفایلِ منتوری نداره، صفحه‌ی «منتور شو»؛
- * وگرنه داشبوردِ ساده‌ی منتور.
+ * /mentor — بدون پروفایل منتوری: معرفی کوتاه و ساخت پروفایل؛
+ * با پروفایل: داشبورد منتور.
  */
 function MentorHome() {
   const [state, setState] = useState<{ loading: boolean; error: string | null; profile: MentorSelf | null }>({ loading: true, error: null, profile: null });
@@ -32,9 +30,8 @@ function MentorHome() {
 }
 
 export default function MentorPage() {
-  const { status } = useSession();
   return (
-    <MentorDashShell title="پنل منتور" hint={status === "authenticated" ? "شاگردها، درخواست‌ها و برنامه‌هایی که ساختی — یک‌جا" : undefined}>
+    <MentorDashShell title="پنل منتور">
       <MentorHome />
     </MentorDashShell>
   );

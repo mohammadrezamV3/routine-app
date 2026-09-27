@@ -17,14 +17,35 @@ import { POST as postReview, PUT as putReview, DELETE as deleteReview } from "@/
 import { GET as mentorPage } from "@/app/api/mentors/[mentorId]/route";
 import { GET as getNotifs, PATCH as patchNotifs } from "@/app/api/notifications/route";
 import { as, req, j, makeUser, makeMentor, cleanupUsers, connect, requestMentorship, mentorshipAction } from "./helpers/mentorTestUtils";
+import { encFor, openAs } from "./helpers/e2eeTestUtils";
 
 afterAll(async () => {
   await cleanupUsers();
 });
 
+// گفت‌وگو رمزگذاریِ سرتاسری دارد: متن روی «دستگاه» (همین تست، webcryptoِ Node)
+// رمز می‌شود و فقط متنِ رمزشده به سرور می‌رود. رشته‌ی غیرِمتنی/خالی/بلند به
+// همان شکلِ خام (body) فرستاده می‌شود تا ردِ متنِ ساده هم تست شود.
 async function send(userId: string | null, id: string, body: unknown) {
+  let payload: unknown = { body };
+  if (typeof body === "string" && body.trim() && body.length <= 2000 && userId) {
+    const rel = await prisma.mentorship.findUnique({ where: { id }, select: { mentorId: true, studentId: true } });
+    if (rel && (rel.mentorId === userId || rel.studentId === userId)) {
+      const { frankingKey: _fk, ...enc } = await encFor(id, userId, body.trim());
+      payload = enc;
+    }
+  }
   as(userId);
-  return postMessage(req("POST", `/api/mentorships/${id}/messages`, { body }), { params: { id } });
+  return postMessage(req("POST", `/api/mentorships/${id}/messages`, payload), { params: { id } });
+}
+/** متنِ پیام‌های یک GET از دیدِ viewer (رمزگشایی روی «دستگاهِ» او) */
+async function texts(viewerId: string, id: string, v: any): Promise<string[]> {
+  const out: string[] = [];
+  for (const m of v.messages) {
+    const d: any = await openAs(viewerId, id, m);
+    out.push(typeof d === "string" ? d : d.text);
+  }
+  return out;
 }
 async function read(userId: string | null, id: string) {
   as(userId);
@@ -52,7 +73,10 @@ describe("چت", () => {
 
     const r1 = await send(s, id, "  سلام استاد  ");
     expect(r1.status).toBe(200);
-    expect((await j(r1)).message).toMatchObject({ body: "سلام استاد", mine: true, readAt: null });
+    const m1 = (await j(r1)).message;
+    expect(m1).toMatchObject({ mine: true, readAt: null, legacyBody: null });
+    expect(m1).not.toHaveProperty("body");
+    expect(JSON.stringify(m1)).not.toContain("سلام");
     expect((await send(s, id, "سوال دوم")).status).toBe(200);
 
     // فقط یک اعلانِ «پیام جدید» برای دو پیامِ پشت‌سرهم
@@ -71,7 +95,7 @@ describe("چت", () => {
     expect((await unread(m)).total).toBe(2);
 
     const mv = await j(await read(m, id));
-    expect(mv.messages.map((x: any) => x.body)).toEqual(["سلام استاد", "سوال دوم"]);
+    expect(await texts(m, id, mv)).toEqual(["سلام استاد", "سوال دوم"]);
     expect(mv.messages.every((x: any) => x.mine === false)).toBe(true);
     expect((await unread(m)).total).toBe(0);
     expect(await prisma.mentorMessage.count({ where: { mentorshipId: id, readAt: null } })).toBe(0);
@@ -107,7 +131,7 @@ describe("چت", () => {
     expect((await send(m, id, "x")).status).toBe(409);
     const v = await j(await read(m, id));
     expect(v.canSend).toBe(false);
-    expect(v.messages.map((x: any) => x.body)).toEqual(["قبل از پایان"]);
+    expect(await texts(m, id, v)).toEqual(["قبل از پایان"]);
 
     const m2 = await makeMentor();
     const s2 = await makeUser();

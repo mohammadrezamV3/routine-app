@@ -33,7 +33,9 @@ import {
   today,
   dayOffset,
   jsDayOf,
+  setDailyEntry,
 } from "./helpers/mentorTestUtils";
+import { mirrorOccurrenceId } from "@/lib/mentorProgressCore";
 
 afterAll(async () => {
   await cleanupUsers();
@@ -87,6 +89,19 @@ describe("برنامه — ساخت", () => {
     const row = await prisma.mentorProgram.findUnique({ where: { id: prog.id } });
     expect(row!.studentId).toBe(s);
     expect(row!.mentorId).toBe(m);
+  });
+
+  it("note: ساخت/ویرایش ذخیره می‌شود و بعد از ارسال برای شاگرد هم برمی‌گردد", async () => {
+    const { m, s, ms } = await pair();
+    const r = await createProgram(m, ms, { note: "  قبل از شروع جزوه رو داشته باش " });
+    const created = (await j(r)).program;
+    const id = created.id;
+    expect(created.note).toBe("قبل از شروع جزوه رو داشته باش");
+    as(m);
+    const put = await putProgram(req("PUT", "/x", { ...programBody(ms), note: "یادداشت دوم" }), p(id));
+    expect((await j(put)).program.note).toBe("یادداشت دوم");
+    expect((await transition(m, id, "send")).status).toBe(200);
+    expect((await j(await getP(s, id))).program.note).toBe("یادداشت دوم");
   });
 
   it("شاگرد (بدونِ پروفایل منتوری) نمی‌تواند بسازد ۴۰۳؛ منتورِ دیگر روی رابطه‌ی غیرِ خودش ۴۰۴", async () => {
@@ -172,9 +187,8 @@ describe("برنامه — ماشینِ حالت", () => {
     const a = await transition(s, fut, "accept");
     expect((await j(a)).program.status).toBe("ACCEPTED");
     expect((await readOccurrences(s)).some((o) => o.mentorProgramId === fut)).toBe(false);
-    // لاگ روی ACCEPTED ممنوع
-    const it0 = (await items(s, fut))[0];
-    expect((await log(s, fut, { itemId: it0.id, date: today(), status: "COMPLETED" })).status).toBe(409);
+    // یادداشتِ روز روی ACCEPTED ممنوع
+    expect((await log(s, fut, { date: today(), note: "x" })).status).toBe(409);
     // GET برنامه آن را زودتر از موعد فعال نمی‌کند
     expect((await j(await getP(s, fut))).program.status).toBe("ACCEPTED");
 
@@ -312,64 +326,31 @@ describe("برنامه — ماشینِ حالت", () => {
   });
 });
 
-describe("اجرا — لاگ‌ها", () => {
-  it("upsert، آینده ممنوع، قبل از شروع ممنوع، آیتمِ برنامه‌ی دیگر ۴۰۴، منتور لاگ‌ها را می‌بیند", async () => {
+describe("اجرا — لاگ‌ها (خودکار از روتین)", () => {
+  // جزئیاتِ مشتق‌سازی در __tests__/mentorProgress.test.ts
+  it("ثبتِ دستیِ وضعیت ۴۱۰؛ تیکِ روتین لاگِ AUTO می‌سازد که منتور می‌بیند؛ فیلترِ بازه", async () => {
     const { m, s, ms } = await pair();
-    const id = await activeProgram(m, s, ms, { startDate: dayOffset(-3) });
-    const other = await activeProgram(m, s, ms, { title: "دیگری" });
+    const id = await activeProgram(m, s, ms);
     const [item] = await items(s, id);
-    const [foreignItem] = await items(s, other);
-
-    const r1 = await log(s, id, { itemId: item.id, date: dayOffset(-1), status: "PARTIAL", note: "نصفه" });
-    expect(r1.status).toBe(200);
-    const l1 = (await j(r1)).log;
-    expect(l1.status).toBe("PARTIAL");
-    const r2 = await log(s, id, { itemId: item.id, date: dayOffset(-1), status: "COMPLETED" });
-    const l2 = (await j(r2)).log;
-    expect(l2.id).toBe(l1.id); // upsert
-    expect(l2.status).toBe("COMPLETED");
-    expect(await prisma.mentorProgramLog.count({ where: { programId: id } })).toBe(1);
-
-    expect((await log(s, id, { itemId: item.id, date: dayOffset(1), status: "COMPLETED" })).status).toBe(400);
-    expect((await log(s, id, { itemId: item.id, date: dayOffset(-10), status: "COMPLETED" })).status).toBe(400);
-    expect((await log(s, id, { itemId: foreignItem.id, date: today(), status: "COMPLETED" })).status).toBe(404);
-    expect((await log(s, id, { itemId: item.id, date: "2026/01/01", status: "COMPLETED" })).status).toBe(400);
-    expect((await log(s, id, { itemId: item.id, date: today(), status: "DONE" })).status).toBe(400);
-    expect((await log(s, id, { itemId: item.id, date: today(), status: "COMPLETED", setsDone: -1 })).status).toBe(400);
-
-    // منتور نمی‌تواند لاگ ثبت کند؛ غریبه هم نه
+    expect((await log(s, id, { itemId: item.id, date: today(), status: "COMPLETED" })).status).toBe(410);
     expect((await log(m, id, { itemId: item.id, date: today(), status: "COMPLETED" })).status).toBe(404);
-    expect((await log(await makeUser(), id, { itemId: item.id, date: today(), status: "COMPLETED" })).status).toBe(404);
 
+    await setDailyEntry(s, today(), { [mirrorOccurrenceId(id, 0, jsDayOf(today()))]: true });
     const mv = await j(await getP(m, id));
     expect(mv.role).toBe("MENTOR");
     expect(mv.logs).toHaveLength(1);
-    expect(mv.logs[0]).toMatchObject({ itemId: item.id, date: dayOffset(-1), status: "COMPLETED" });
+    expect(mv.logs[0]).toMatchObject({ itemId: item.id, date: today(), status: "COMPLETED", source: "AUTO" });
     expect(mv.program.progress).toMatchObject({ completed: 1, rate: 100 });
-    // فیلترِ بازه
-    const filtered = await j(await getP(m, id, `?from=${today()}&to=${today()}`));
+    const filtered = await j(await getP(m, id, `?from=${dayOffset(-3)}&to=${dayOffset(-1)}`));
     expect(filtered.logs).toHaveLength(0);
     expect((await getP(m, id, "?from=bad&to=bad")).status).toBe(400);
   });
 
-  it("آیتمِ هفتگی برای روزِ خارج از برنامه ۴۰۰", async () => {
-    const { m, s, ms } = await pair();
-    const wd = jsDayOf(today());
-    const other = (wd + 1) % 7;
-    const id = await activeProgram(m, s, ms, { startDate: dayOffset(-7), items: [{ title: "باشگاه", repeat: "WEEKLY", days: [other] }] });
-    const [item] = await items(s, id);
-    expect((await log(s, id, { itemId: item.id, date: today(), status: "COMPLETED" })).status).toBe(400);
-    // روزی در گذشته که همان روزِ هفته است
-    const ok = [...Array(7).keys()].map((i) => dayOffset(-i - 1)).find((d) => jsDayOf(d) === other)!;
-    expect((await log(s, id, { itemId: item.id, date: ok, status: "MISSED" })).status).toBe(200);
-  });
-
-  it("لاگ بعد از پایانِ رابطه ۴۰۹ (برنامه هم لغو شده)", async () => {
+  it("یادداشتِ روز بعد از پایانِ رابطه ۴۰۹", async () => {
     const { m, s, ms } = await pair();
     const id = await activeProgram(m, s, ms);
-    const [item] = await items(s, id);
     await prisma.mentorship.update({ where: { id: ms }, data: { status: "ENDED" } });
-    expect((await log(s, id, { itemId: item.id, date: today(), status: "COMPLETED" })).status).toBe(409);
+    expect((await log(s, id, { date: today(), note: "x" })).status).toBe(409);
   });
 });
 
@@ -380,8 +361,10 @@ describe("فیدبک", () => {
     const other = await activeProgram(m, s, ms, { title: "دیگر" });
     const [i1, i2] = await items(s, id);
     const [foreignItem] = await items(s, other);
-    const l1 = (await j(await log(s, id, { itemId: i1.id, date: today(), status: "COMPLETED" }))).log;
-    const foreignLog = (await j(await log(s, other, { itemId: foreignItem.id, date: today(), status: "COMPLETED" }))).log;
+    // اجراها از تیکِ روتین (DAILY → یک occurrence برای امروز)
+    await setDailyEntry(s, today(), { [mirrorOccurrenceId(id, 0, jsDayOf(today()))]: true, [mirrorOccurrenceId(other, 0, jsDayOf(today()))]: true });
+    const l1 = (await j(await getP(m, id))).logs.find((l: any) => l.itemId === i1.id);
+    const foreignLog = (await j(await getP(m, other))).logs[0];
 
     expect((await feedback(m, id, { body: "" })).status).toBe(400);
     expect((await feedback(m, id, { body: "x", itemId: foreignItem.id })).status).toBe(404);

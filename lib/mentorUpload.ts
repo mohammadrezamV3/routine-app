@@ -31,7 +31,7 @@ export type ValidatedDocument = { data: Buffer; mimeType: DocumentMime; sizeByte
 export function validateDocument(bytes: ArrayBuffer | Uint8Array, name: unknown): { ok: true; doc: ValidatedDocument } | { ok: false; error: string; status: number } {
   const buf = Buffer.from(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
   if (buf.length === 0) return { ok: false, error: "فایل خالیه", status: 400 };
-  if (buf.length > MAX_DOCUMENT_BYTES) return { ok: false, error: "حجم فایل حداکثر ۵ مگابایته", status: 413 };
+  if (buf.length > MAX_DOCUMENT_BYTES) return { ok: false, error: "حجم فایل حداکثر 5 مگابایت است", status: 413 };
   const mime = sniffDocumentMime(buf);
   if (!mime) return { ok: false, error: "فقط تصویر (JPG/PNG/WebP) یا PDF قابل قبوله", status: 415 };
   return {

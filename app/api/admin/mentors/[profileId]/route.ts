@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
   const profile = await prisma.mentorProfile.findUnique({
     where: { id: params.profileId },
     select: {
-      id: true, userId: true, headline: true, bio: true, specialties: true, categories: true,
+      id: true, userId: true, headline: true, routineRole: true, bio: true, specialties: true, categories: true,
       published: true, acceptingStudents: true,
       identityStatus: true, identityRejectReason: true, identityReviewedAt: true,
       suspendedAt: true, suspendedReason: true, ratingAvg: true, ratingCount: true,

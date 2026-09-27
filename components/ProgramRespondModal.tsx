@@ -1,42 +1,61 @@
 "use client";
 
+import "./mentor.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { Program, ProgramTransitionAction } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { faNum } from "@/lib/jalali";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { Spinner } from "./Spinner";
+import { MentorField } from "./MentorUI";
 
 const NOTE_MAX = 1000;
 
-const COPY: Record<"reject" | "request_changes" | "cancel", { title: string; hint: string; label: string; required: boolean; confirm: string }> = {
+type RespondAction = "reject" | "request_changes" | "cancel";
+
+const COPY: Record<RespondAction, {
+  title: string;
+  hint: string;
+  label: string | null;
+  placeholder?: string;
+  required: boolean;
+  confirm: string;
+  danger: boolean;
+}> = {
   reject: {
-    title: "ردِ برنامه",
-    hint: "برنامه کنار گذاشته می‌شود و منتور دلیلت را می‌بیند.",
-    label: "دلیل (اختیاری)",
+    title: "رد برنامه",
+    hint: "برنامه کنار گذاشته می‌شود و منتور دلیل رد را می‌بیند",
+    label: "دلیل رد",
+    placeholder: "مثلاً «با ساعت کاری‌ام هماهنگ نیست»",
     required: false,
-    confirm: "رد کن",
+    confirm: "رد برنامه",
+    danger: true,
   },
   request_changes: {
-    title: "درخواستِ تغییر",
-    hint: "برنامه به منتور برمی‌گردد تا اصلاحش کند و نسخه‌ی تازه بفرستد. بنویس دقیقا چه چیزی باید عوض شود.",
-    label: "چه چیزی باید تغییر کند؟",
+    title: "درخواست تغییر",
+    hint: "برنامه برای اصلاح به منتور برمی‌گردد و نسخه‌ی تازه دوباره برایت فرستاده می‌شود",
+    label: "چه چیزی تغییر کند",
+    placeholder: "مثلاً «روزهای تمرین را به ۳ روز در هفته کم کن»",
     required: true,
-    confirm: "ارسالِ درخواست",
+    confirm: "ارسال درخواست",
+    danger: false,
   },
   cancel: {
-    title: "لغوِ برنامه",
-    hint: "برنامه متوقف می‌شود و اگر در روتینت آمده بود از آن برداشته می‌شود. این کار برگشت‌پذیر نیست.",
-    label: "",
+    title: "لغو برنامه",
+    hint: "برنامه متوقف و از روتین برداشته می‌شود؛ این کار برگشت‌پذیر نیست",
+    label: null,
     required: false,
-    confirm: "لغوِ برنامه",
+    confirm: "لغو برنامه",
+    danger: true,
   },
 };
 
 /**
  * پاسخ به یک برنامه با یادداشت (رد / درخواستِ تغییر / لغو) —
  * POST /api/mentor-programs/[id]/transition. برای «درخواست تغییر» یادداشت
- * اجباری است و بدونش دکمه خطای اعتبارسنجی نشان می‌دهد، نه درخواستِ بی‌فایده.
+ * اجباری است و بدونش خطای زیرِ فیلد دیده می‌شود، نه درخواستِ بی‌فایده.
  */
 export function ProgramRespondModal({
   programId,
@@ -45,19 +64,20 @@ export function ProgramRespondModal({
   onDone,
 }: {
   programId: string;
-  action: "reject" | "request_changes" | "cancel";
+  action: RespondAction;
   onClose: () => void;
   onDone: (program: Program | null) => void;
 }) {
   const copy = COPY[action];
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     const n = note.trim();
-    if (copy.required && !n) { setError("این بخش را خالی نگذار — منتور باید بداند چه چیزی را عوض کند"); return; }
-    if (n.length > NOTE_MAX) { setError("یادداشت خیلی طولانی است"); return; }
+    if (copy.required && !n) { setFieldError("بنویس چه چیزی باید تغییر کند"); return; }
+    if (n.length > NOTE_MAX) { setFieldError(`یادداشت حداکثر ${faNum(NOTE_MAX)} نویسه است`); return; }
     setBusy(true);
     setError(null);
     try {
@@ -81,31 +101,40 @@ export function ProgramRespondModal({
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 440 }}>
+      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label={copy.title} style={{ zIndex: 91, maxWidth: 440 }}>
         <div className="modal-head">
           <div className="modal-title">{copy.title}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}><X size={16} /></button>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}>
+            <X size={16} strokeWidth={1.75} />
+          </button>
         </div>
-        <p className="mentor-muted" style={{ margin: 0 }}>{copy.hint}</p>
-        {copy.label && (
-          <>
-            <label className="exercise-form-label" htmlFor="program-note">{copy.label}</label>
-            <textarea
-              id="program-note"
-              className="wsearch-newform-name trade-glass-field"
-              rows={4}
-              value={note}
-              maxLength={NOTE_MAX + 50}
-              onChange={(e) => { setNote(e.target.value); setError(null); }}
-              aria-invalid={!!error}
-            />
-          </>
-        )}
-        {error && <div className="trade-form-error">{error}</div>}
+        <div className="mentor-form">
+          <p className="mentor-muted">{copy.hint}</p>
+          {copy.label && (
+            <MentorField label={copy.label} htmlFor="program-note" optional={!copy.required} error={fieldError}>
+              <textarea
+                id="program-note"
+                className="wsearch-newform-name trade-glass-field"
+                rows={4}
+                value={note}
+                maxLength={NOTE_MAX + 50}
+                placeholder={copy.placeholder}
+                onChange={(e) => { setNote(e.target.value); setFieldError(null); }}
+                aria-invalid={!!fieldError}
+              />
+            </MentorField>
+          )}
+        </div>
+        {error && <div className="form-inline-error" role="alert">{error}</div>}
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose} disabled={busy}>انصراف</button>
-          <button type="button" className={action === "request_changes" ? "trade-primary-btn" : "trade-danger-btn"} onClick={submit} disabled={busy}>
-            {busy ? <Loader2 size={14} className="trade-spin" /> : copy.confirm}
+          <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
+          <button
+            type="button"
+            className={`${copy.danger ? "trade-danger-btn" : "trade-primary-btn"} mentor-btn`}
+            onClick={submit}
+            disabled={busy}
+          >
+            {busy ? <Spinner size={14} /> : copy.confirm}
           </button>
         </div>
       </div>

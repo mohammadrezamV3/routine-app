@@ -169,6 +169,7 @@ export function EditOccurrenceForm({
       // آینه‌ی برنامه‌ی منتور باید بعد از ویرایش هم آینه بمونه — وگرنه به «برنامه‌ی
       // خودِ شاگرد» تبدیل می‌شه و ممکنه برای منتورِ دیگه‌ای قابل‌اشتراک بشه
       ...(orig?.mentorProgramId ? { mentorProgramId: orig.mentorProgramId } : {}),
+      ...(orig?.mentorProgramId && orig.mentorItemId ? { mentorItemId: orig.mentorItemId } : {}),
     }));
     nextCustom = [...nextCustom, ...additions];
 
