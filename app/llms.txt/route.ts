@@ -1,6 +1,7 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
 import { DESCRIPTION_FA, FACTS_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
+import { ALL_QA } from "@/lib/qa";
 import { sortedPosts } from "@/lib/blogPosts";
 
 // llms.txt — کانونشن llmstxt.org: یک فایل متنی ساده و کوتاه که به مدل‌های
@@ -30,6 +31,11 @@ function build(): string {
   lines.push(`- فید RSS: ${absoluteUrl("/blog/feed.xml")}`);
   for (const post of sortedPosts()) {
     lines.push(`- [${post.title}](${absoluteUrl(`/blog/${post.slug}`)}): ${post.excerpt}`);
+  }
+  lines.push("");
+  lines.push("## پرسش و پاسخ");
+  for (const q of ALL_QA) {
+    lines.push(`- [${q.question}](${absoluteUrl(`/q/${q.slug}`)}): ${q.short}`);
   }
   lines.push("");
   lines.push("## حقایق");

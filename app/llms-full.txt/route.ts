@@ -1,6 +1,7 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
 import { DESCRIPTION_FA, FACTS_FA, FEATURES_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
+import { ALL_QA, answerPlainText } from "@/lib/qa";
 import { sortedPosts, type BlogBlock } from "@/lib/blogPosts";
 import { FAQS } from "@/lib/faqContent";
 
@@ -48,6 +49,13 @@ function build(): string {
   for (const f of FAQS) {
     lines.push(`### ${f.q}`);
     lines.push(f.a);
+    lines.push("");
+  }
+  lines.push("## پرسش و پاسخ");
+  for (const q of ALL_QA) {
+    lines.push(`### ${q.question}`);
+    lines.push(`آدرس: ${absoluteUrl(`/q/${q.slug}`)}`);
+    lines.push(answerPlainText(q));
     lines.push("");
   }
   lines.push("## مقاله‌ها");

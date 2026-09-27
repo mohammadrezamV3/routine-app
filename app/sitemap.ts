@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { sortedPosts } from "@/lib/blogPosts";
+import { ALL_QA } from "@/lib/qa";
 import { absoluteUrl, SITE_URL } from "@/lib/seo";
 
 // فقط URLهای عمومی و کانونیکال — نه صفحات خصوصی/داشبورد (اون‌ها توی
@@ -22,6 +23,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/economic-calendar"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/forex-sessions"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/learning-roadmap"), lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: absoluteUrl("/weekly-planner"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: absoluteUrl("/todo-list"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: absoluteUrl("/sleep-tracker"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: absoluteUrl("/workout-tracker"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: absoluteUrl("/trading-checklist"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: absoluteUrl("/metatrader-journal"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: absoluteUrl("/prop-firm-journal"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: absoluteUrl("/habit-streak"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: absoluteUrl("/persian-calendar-planner"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: absoluteUrl("/q"), lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/blog"), lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: absoluteUrl("/faq"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
@@ -38,5 +49,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...posts];
+  // هر پرسشِ مرکزِ پرسش و پاسخ یک URL جدا — همان صفحه‌ای که برای جست‌وجوی
+  // همان سوال (در گوگل یا یک دستیارِ AI) باید پیدا شود.
+  const qa: MetadataRoute.Sitemap = ALL_QA.map((q) => ({
+    url: absoluteUrl(`/q/${q.slug}`),
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...posts, ...qa];
 }

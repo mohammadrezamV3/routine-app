@@ -13,23 +13,38 @@ import { EnamadBadge } from "@/components/EnamadBadge";
 // HTMLای از صفحه‌ی اصلی به آن‌ها نبود). فقط در سه گروهِ کوتاه چیده شده‌اند.
 const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
   {
-    title: "امکانات",
+    title: "روتین و سلامت",
     links: [
       { href: "/routine", label: "روتین روزانه" },
       { href: "/habit-tracker", label: "پیگیری عادت‌ها" },
+      { href: "/habit-streak", label: "استریک با دوستان" },
       { href: "/daily-planner", label: "برنامه‌ریزی روزانه" },
+      { href: "/weekly-planner", label: "برنامه‌ریزی هفتگی" },
+      { href: "/todo-list", label: "لیست کارهای روزانه" },
+      { href: "/persian-calendar-planner", label: "تقویم شمسی" },
+      { href: "/sleep-tracker", label: "پیگیری خواب" },
       { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
       { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی" },
+      { href: "/workout-tracker", label: "ثبت تمرین" },
       { href: "/calorie-counter", label: "کالری‌شمار" },
+      { href: "/learning-roadmap", label: "رودمپ یادگیری" },
+    ],
+  },
+  {
+    title: "ترید",
+    links: [
       { href: "/trading-journal", label: "ژورنال معاملاتی" },
+      { href: "/trading-checklist", label: "چک‌لیست ترید" },
+      { href: "/metatrader-journal", label: "ژورنال متاتریدر" },
+      { href: "/prop-firm-journal", label: "ژورنال پراپ" },
       { href: "/economic-calendar", label: "تقویم اقتصادی" },
       { href: "/forex-sessions", label: "ساعت بازار فارکس" },
-      { href: "/learning-roadmap", label: "رودمپ یادگیری" },
     ],
   },
   {
     title: "منابع",
     links: [
+      { href: "/q", label: "پرسش و پاسخ" },
       { href: "/blog", label: "مقاله‌ها" },
       { href: "/faq", label: "سوالات متداول" },
     ],
@@ -81,7 +96,7 @@ export function LandingFooter() {
           </p>
         </div>
 
-        <nav aria-label="صفحه‌های آریون" className="grid grid-cols-3 gap-6 sm:gap-9">
+        <nav aria-label="صفحه‌های آریون" className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-9">
           {GROUPS.map((g) => (
             <div key={g.title}>
               <div className={`text-[12px] font-bold ${t.heading}`}>{g.title}</div>
