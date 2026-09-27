@@ -87,6 +87,10 @@ export type CompareRow = { label: string; included: Record<string, boolean>; upc
 
 export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "روتین روزانه", included: { basic: true, exercise: true, trade: true, max: true } },
+  // طبق درخواست صریح: توی نسخه‌ی رایگان هم یادآوری دارو رایگانه — یک ردیف
+  // جدا (نه فقط بخشی از «روتین روزانه») که واضح نشون بده حتی پلن پایه هم
+  // این رو داره، در همه‌ی پلن‌ها همیشه فعاله.
+  { label: "یادآوری دارو", included: { basic: true, exercise: true, trade: true, max: true } },
   { label: "برنامه بدنسازی", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "شمارش کالری", included: { basic: false, exercise: true, trade: false, max: true } },
   { label: "ژورنال ترید", included: { basic: false, exercise: false, trade: true, max: true } },
@@ -211,7 +215,7 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
           <>
             <div className={`mt-3 text-[15px] font-extrabold ${t.heading}`}>رایگان</div>
             <Link href="/auth/signup" className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}>
-              <ShoppingCart size={14} /> شروع رایگان
+              شروع رایگان
             </Link>
           </>
         ) : (
@@ -340,7 +344,13 @@ const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim(
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
 export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
-  const plans = PLANS_IRAN;
+  // توی صفحه‌ی اشتراک (mode="account") کارتِ پلنِ رایگان نشون داده نمی‌شه —
+  // هر کاربری از قبل همیشه پلنِ پایه رو داره، پس چیزی برای «خریدن»‌ش نیست.
+  // این فقط کارتِ خریدِ بالای صفحه رو مخفی می‌کنه، نه دیتای پلن: PLANS_IRAN
+  // دست‌نخورده می‌مونه و جدولِ مقایسه‌ی پایین (tablePlans) هم‌چنان ستونِ
+  // رایگان رو داره، چون خودِ جدول برای مقایسه‌ست، نه خرید.
+  const tablePlans = PLANS_IRAN;
+  const plans = mode === "account" ? PLANS_IRAN.filter((p) => !p.free) : PLANS_IRAN;
   const compareRows = COMPARE_ROWS_IRAN;
   const mainRows = compareRows.filter((r) => !r.upcoming);
   const upcomingRows = compareRows.filter((r) => r.upcoming);
@@ -371,12 +381,12 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
         <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label="مقایسه پلن‌ها">
           <colgroup>
             <col style={{ width: "24%" }} />
-            {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+            {tablePlans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
           </colgroup>
           <thead>
             <tr className={`border-b ${t.line}`}>
               <th className={`pb-3 text-right text-[12.5px] font-bold ${t.heading}`} />
-              {plans.map((p) => (
+              {tablePlans.map((p) => (
                 <th key={p.key} className={`pb-3 text-center text-[11.5px] font-bold ${t.heading}`}>{p.nameFa}</th>
               ))}
             </tr>
@@ -385,7 +395,7 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
             {mainRows.map((row) => (
               <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
                 <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-right"}`}>{row.label}</th>
-                {plans.map((p) => (
+                {tablePlans.map((p) => (
                   <td key={p.key} className="py-3.5">
                     <div className="flex justify-center">
                       {row.included[p.key] ? <Check size={17} className={t.accentText} /> : <X size={17} className="text-[#C9524B]/60" />}
@@ -398,7 +408,7 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
           {upcomingRows.length > 0 && (
             <tbody>
               <tr>
-                <td colSpan={plans.length + 1} className={`border-t ${t.line} p-0`}>
+                <td colSpan={tablePlans.length + 1} className={`border-t ${t.line} p-0`}>
                   <div className="relative py-1">
                     <table
                       className="pointer-events-none w-full select-none border-collapse blur-sm"
@@ -407,13 +417,13 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
                     >
                       <colgroup>
                         <col style={{ width: "24%" }} />
-                        {plans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+                        {tablePlans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
                       </colgroup>
                       <tbody>
                         {upcomingRows.map((row) => (
                           <tr key={row.label}>
                             <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-right"}`}>{row.label}</th>
-                            {plans.map((p) => (
+                            {tablePlans.map((p) => (
                               <td key={p.key} className="py-3.5">
                                 <div className="flex justify-center">
                                   {row.included[p.key] ? <Check size={16} className={t.accentText} /> : <X size={16} className="text-[#C9524B]" />}

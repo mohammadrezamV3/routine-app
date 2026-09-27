@@ -365,6 +365,11 @@
   .check.on{border-color:var(--accent); background:var(--accent); transform:scale(1.06);}
   .check .c-check{width:11px; height:11px; opacity:0; transform:scale(.4) rotate(-20deg); transition:opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));}
   .check.on .c-check{opacity:1; transform:scale(1) rotate(0deg);}
+  .check.missed{border-color:#E05252; background:#E05252;}
+  .check .c-miss{width:10px; height:10px; display:block;}
+  .task-state{font-weight:600;}
+  .task-state.done{color:var(--accent);}
+  .task-state.missed{color:#E05252;}
   .task-name{font-size:14.5px;}
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
   .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px;}
@@ -2378,6 +2383,8 @@
     box-shadow:0 0 6px rgba(var(--accent-rgb),.45);
   }
   .wt-dot-done{background:var(--accent); color:#fff; box-shadow:0 0 8px rgba(var(--accent-rgb),.85), 0 0 16px rgba(var(--accent-rgb),.4);}
+  /* وقتش گذشته و تیک نخورده — همون ✕ قرمزِ DashTaskRow (task-check-missed) */
+  .wt-dot-missed{background:#E05252; border-color:#E05252; color:#fff; box-shadow:0 0 6px rgba(224,82,82,.55);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
   .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:3px; white-space:nowrap;}
@@ -2403,6 +2410,9 @@
     font-size:12.5px; color:var(--text); line-height:1.4;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-word;
   }
+  .wt-untimed-state{font-size:10px; font-weight:600; margin-top:3px; line-height:1.2;}
+  .wt-untimed-state.done{color:var(--accent);}
+  .wt-untimed-state.missed{color:#E05252;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
 
   /* بدنه‌ی روز باز — قبلا با framer-motion از height:0 به height:auto
@@ -2794,7 +2804,10 @@
      گرد کامل (پیل) و لیکوئید گلس واقعی، به‌جای بک‌گراند تخت پیش‌فرض؛ فقط
      همین بخش رو اسکوپ می‌کنه، بقیه‌ی جاهایی که از همین کلاس‌های پایه
      (day-pill, wsearch-newform-name, button) استفاده می‌کنن دست‌نخورده می‌مونن */
-  .bodybuilding-glass button{ border-radius:999px; }
+  /* پیلِ روزهای نوارِ تاریخ (DashDateSelector، data-day-pill) مستثناست: همون
+     کامپوننتِ «روتین من»ه و روزِ انتخاب‌شده‌ش باید دقیقاً همون rounded-2xl
+     (۱۶px) اون‌جا رو داشته باشه — قبلاً این قانون گردِ کاملش می‌کرد. */
+  .bodybuilding-glass button:not([data-day-pill]){ border-radius:999px; }
   .bodybuilding-glass .day-pill{
     border-radius:999px;
     backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
@@ -3857,9 +3870,8 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 }
 @media (prefers-reduced-motion: reduce){
   .aurora-blob{ animation:none; }
-  /* .whyus-track عمدا این‌جا نیست: نوار «چرا ما؟» بخش محتوایی اصلیه
-     (نه صرفا تزئینی مثل بلاب‌های پس‌زمینه)، طبق درخواست صریح باید همیشه
-     بچرخه، حتی وقتی سیستم‌عامل کاربر Reduce Motion/Low Power Mode روشنه. */
+  /* نوار مارکیِ «چرا ما؟» (.whyus-marquee-track) خودش جدا در قانونِ
+     prefers-reduced-motion بالاتر (کنارِ تعریفِ خودش) هندل می‌شه. */
 }
 /* filter:blur(120px) روی چند لایه‌ی همیشه-درحال-transform، روی GPU
    موبایل خیلی سنگینه (باعث داغ‌کردن/کندی گزارش‌شده می‌شه) — روی
@@ -3928,16 +3940,35 @@ body[data-theme="light"] .module-gate-cta, body:not([data-theme="light"]) .modul
   50%{ box-shadow:0 0 0 9px rgba(var(--accent-rgb),0); }
 }
 
-/* بخش «چرا ما؟» — نوار بی‌درز درحال‌عبور: لیست دوبار پشت‌سرهم چیده شده و
-   دقیقا نصف عرض ترک translate می‌شه، پس لحظه‌ی چرخش کاملا نامرئیه.
-   عمدا هاور/فوکوس رو نادیده می‌گیره — کاربر نباید هیچ کنترلی روی توقف/تندی
-   انیمیشن داشته باشه، همیشه با سرعت ثابت خودش می‌چرخه. */
-/* عمدا بدون اسکرول/چرخش — کاربر خواسته بود این بخش ثابت بمونه، یه گرید
-   ساده‌ی دوستونه (سه‌ستونه از sm به بالا) به‌جای مارکی قبلی. */
-.whyus-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
-.whyus-card{ width:auto; }
+/* بخش «چرا ما؟» — سه ردیفِ مارکیِ افقیِ بی‌درزِ درحال‌عبور (طبق درخواستِ
+   صریح): هر ردیف از useSeamlessMarquee (lib/useSeamlessMarquee.ts) میاد،
+   لیستش دوبار پشت‌سرهم چیده شده و دقیقا نصفِ عرضِ ترک translate می‌شه، پس
+   لحظه‌ی چرخش کاملا نامرئیه — همون هندسه‌ی .ticker-track (MarketTicker).
+   عمدا فقط transform (نه width/left) برای پرفورمنس روی موبایل/اندروید. */
+.whyus-marquee{ display:flex; flex-direction:column; gap:10px; }
+/* overflow:hidden روی خودِ ویوپورت، نه صفحه — پس هیچ‌وقت اسکرول افقیِ کلِ
+   صفحه رو نمی‌شکنه، حتی وقتی ترکِ زیرش از عرضِ container بیرون می‌زنه. */
+.whyus-marquee-viewport{ overflow:hidden; width:100%; }
+.whyus-marquee-track{
+  display:flex; align-items:stretch; gap:10px; width:max-content;
+  animation:whyus-marquee-scroll 1s linear infinite;
+}
+.whyus-marquee-track.is-reverse{ animation-direction:reverse; }
+@keyframes whyus-marquee-scroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+.whyus-marquee .whyus-card{ width:132px; }
 @media (min-width:640px){
-  .whyus-grid{ grid-template-columns:repeat(3, 1fr); gap:12px; }
+  .whyus-marquee .whyus-card{ width:168px; }
+}
+/* هاور فقط دسکتاپ واقعی (pointer:fine + hover:hover) رو متوقف می‌کنه —
+   روی موبایل/تاچ لمس، حرکت هیچ‌وقت با تپ‌کردنِ تصادفیِ روی کارت گیر نمی‌کنه. */
+@media (hover:hover) and (pointer:fine){
+  .whyus-marquee-viewport:hover .whyus-marquee-track{ animation-play-state:paused; }
+}
+@media (prefers-reduced-motion:reduce){
+  .whyus-marquee-track{ animation:none; }
 }
 
 /* لینک «جزئیات» توی کارت پلن‌ها — button ساده‌ای که فقط باید مثل یک متن
@@ -4577,6 +4608,8 @@ body[data-theme="light"] .exercise-photo-placeholder{ background:rgba(255,255,25
   color:#4C8DFF;
 }
 body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28); }
+.exercise-locked-box.exercise-state-done{ color:var(--accent); }
+.exercise-locked-box.exercise-state-missed{ color:#E05252; }
 
 /* خط جداکننده‌ی بین روزهای «برنامه هفتگی» — فقط دسکتاپ (lg+)، با فاصله
    از بالا/پایین سلول به‌جای بوردر تمام‌ارتفاع. */
