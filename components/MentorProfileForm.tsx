@@ -231,7 +231,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
       </MentorSection>
 
       {error && <div className="form-inline-error" role="alert">{error}</div>}
-      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
+      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0, marginBottom: "var(--m-5)" }}>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : isNew ? "ساخت پروفایل" : "ذخیره تغییرات"}
         </button>

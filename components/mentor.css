@@ -62,6 +62,9 @@ body[data-theme="light"]{ --m-warn:#9A6414; }
    همان acc-block سایت: عنوان داخل قاب. .mentor-section-head فقط عنوان و
    اکشنِ بخش را در یک ردیف می‌گذارد. */
 .mentor-page .acc-block{ margin-bottom:var(--m-4); }
+/* ریستِ سراسریِ section{padding:34px 0; border-top} نباید روی بخش‌ها بنشیند:
+   فاصله فقط همان margin-bottom بالاست و قاب از acc-block-body می‌آید */
+section.mentor-section{ padding:0; border-top:none; }
 .mentor-page .acc-block-body{ padding:var(--m-4); }
 .mentor-page .acc-block-body.flush{ padding:0; }
 .mentor-section-head{
@@ -199,6 +202,11 @@ a.mentor-btn.trade-danger-btn{ border-color:#E05252; color:#E05252; }
 /* گروه دکمه: فاصله 8، پیچش در موبایل */
 .mentor-btn-group{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
 .mentor-btn-group.is-end{ justify-content:flex-end; }
+/* در موبایل دکمه‌های گروهِ پایانی ردیف را پر می‌کنند تا دکمه‌ی تنهای خط دوم
+   وسطِ هوا نماند */
+@media (max-width:480px){
+  .mentor-btn-group.is-end > *, .mentor-hero-actions > *{ flex:1 1 auto; }
+}
 
 /* اکشن‌های پایانِ فرم: ثانویه اول، اصلی آخر (سمت چپ در RTL) */
 .mentor-form-actions{
@@ -242,6 +250,8 @@ body[data-theme="light"] .mentor-text-btn, body:not([data-theme="light"]) .mento
 .mentor-field-row{ display:grid; grid-template-columns:1fr; gap:var(--m-4) var(--m-3); }
 @media (min-width:520px){ .mentor-field-row{ grid-template-columns:1fr 1fr; } }
 .mentor-field .wsearch-newform-name{ width:100%; }
+/* تب‌های انتخابی داخلِ فیلد: فاصله‌ی برچسب همان 6px فیلدهاست، نه margin خودِ auth-tabs */
+.mentor-field > .auth-tabs{ margin-top:0; margin-bottom:0; }
 
 /* چک‌باکس/سوییچ در یک ردیف */
 .mentor-check{
@@ -296,10 +306,10 @@ body[data-theme="light"] .mentor-text-btn, body:not([data-theme="light"]) .mento
 /* ── کشف: جست‌وجو/فیلتر ─────────────────────────────────────── */
 .mentor-filter{ display:flex; flex-direction:column; gap:var(--m-2); margin-bottom:var(--m-4); }
 .mentor-filter-row{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
-.mentor-search{ position:relative; flex:1 1 220px; min-width:0; }
+.mentor-search{ position:relative; flex:1 1 180px; min-width:0; }
 .mentor-search svg{ position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); color:var(--muted2); pointer-events:none; }
 .mentor-search input.wsearch-newform-name{ width:100%; padding-inline-start:38px; }
-select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:130px; }
+select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:120px; }
 .mentor-popular-row{
   display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 82%); gap:var(--m-3);
   overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory;
@@ -307,7 +317,10 @@ select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:13
 }
 .mentor-popular-row::-webkit-scrollbar{ display:none; width:0; height:0; }
 .mentor-popular-row > *{ scroll-snap-align:start; }
-@media (min-width:720px){ .mentor-popular-row{ grid-auto-columns:minmax(280px, 46%); } }
+@media (min-width:720px){ .mentor-popular-row{ grid-auto-columns:calc((100% - 2 * var(--m-3)) / 2.5); } }
+/* فوتر کارت: امتیاز و تعداد شاگرد هرکدام یک خط؛ در کارت باریک نشکنند */
+.mentor-card .rp-card-foot{ flex-wrap:nowrap; }
+.mentor-card .rp-card-meta, .mentor-card .rp-card-meta span, .mentor-stars, .mentor-stars-count{ white-space:nowrap; flex-wrap:nowrap; }
 .mentor-more{ display:flex; justify-content:center; margin-top:var(--m-4); }
 
 /* ── امتیاز ────────────────────────────────────────────────── */
@@ -392,6 +405,15 @@ body[data-theme="light"] .mentor-star-input button, body:not([data-theme="light"
 @media (hover:hover){ .mentor-msg-actions button:hover{ opacity:1; text-decoration:underline; background:none; } }
 body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light"]) .mentor-msg-actions button{ background:none; box-shadow:none; }
 .mentor-chat-older{ align-self:center; }
+/* گزارش پیام: فقط آیکون، هم‌خطِ ساعت (نه یک ردیف جدا زیر هر پیام) */
+.mentor-msg-report{
+  display:inline-flex; align-items:center; margin-inline-start:auto; padding:2px; border:none; border-radius:6px;
+  color:inherit; cursor:pointer; opacity:.7;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .mentor-msg-report{ background:none; box-shadow:none; }
+@media (hover:hover){ .mentor-msg-report:hover{ opacity:1; color:var(--m-danger); background:none; } }
+.mentor-msg-report:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
 .mentor-chat-disabled{
   margin-top:var(--m-3); padding:var(--m-2) var(--m-3); border-radius:12px; border:1px dashed var(--surface-line);
   text-align:center; font-size:11.5px; color:var(--muted); line-height:1.9;
@@ -426,6 +448,11 @@ body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light
 .mentor-log-status .day-pill{ font-size:11.5px; padding:8px 0; }
 .mentor-log-status .day-pill.on.is-partial{ color:var(--m-warn); border-color:var(--m-warn); box-shadow:0 0 0 1px var(--m-warn); }
 .mentor-log-status .day-pill.on.is-missed{ color:var(--m-danger); border-color:var(--m-danger); box-shadow:0 0 0 1px var(--m-danger); }
+/* هاله و ته‌رنگِ سبزِ day-pill.on روی «نیمه‌کاره/انجام نشد» رنگِ همان وضعیت را می‌گیرد */
+.mentor-log-status .day-pill.on.is-partial{ background:color-mix(in srgb, var(--m-warn) 12%, transparent); }
+.mentor-log-status .day-pill.on.is-missed{ background:color-mix(in srgb, var(--m-danger) 12%, transparent); }
+.mentor-log-status .day-pill.on.is-partial::after,
+.mentor-log-status .day-pill.on.is-missed::after{ box-shadow:none; }
 .mentor-log-extra{ display:grid; grid-template-columns:1fr; gap:var(--m-2); margin-top:var(--m-2); }
 @media (min-width:520px){ .mentor-log-extra.has-sets{ grid-template-columns:120px 1fr; } }
 .mentor-log-foot{ display:flex; align-items:center; justify-content:flex-end; gap:var(--m-2); margin-top:var(--m-2); }

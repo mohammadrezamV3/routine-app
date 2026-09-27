@@ -87,7 +87,7 @@ function TargetSnippet({ t }: { t: Target }) {
             {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= (t.rating || 0) ? "currentColor" : "none"} strokeWidth={1.75} aria-hidden />)}
           </span>
         )}
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap" }}>{t.body || <span className="admin-muted">بدون متن</span>}</div>
+        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">بدون متن</span>}</div>
       </>
     );
   }
@@ -96,9 +96,9 @@ function TargetSnippet({ t }: { t: Target }) {
       <>
         <div className="trade-row-sub">
           پیام {t.sender ? displayName(t.sender) : "—"}
-          {t.createdAt && <span className="admin-ltr" style={{ display: "inline-block", marginInlineStart: 6 }}>{formatDateTime(t.createdAt)}</span>}
+          {t.createdAt && <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(t.createdAt)}</span>}
         </div>
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap" }}>{t.body}</div>
+        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body}</div>
       </>
     );
   }
@@ -203,7 +203,7 @@ export default function AdminMentorReportsPage() {
                     <div className="trade-row-sub">
                       {r.resolution ? `نتیجه: ${r.resolution}` : "بدون توضیح"}
                       {r.resolvedBy && `؛ ${displayName(r.resolvedBy)}`}
-                      {r.resolvedAt && <span className="admin-ltr" style={{ display: "inline-block", marginInlineStart: 6 }}>{formatDateTime(r.resolvedAt)}</span>}
+                      {r.resolvedAt && <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(r.resolvedAt)}</span>}
                     </div>
                   )}
 

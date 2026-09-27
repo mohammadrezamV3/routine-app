@@ -36,7 +36,7 @@ export function MentorSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="acc-block" id={id}>
+    <section className="acc-block mentor-section" id={id}>
       <div className={`acc-block-body${flush ? " flush" : ""}`}>
         {(title || action) && (
           <div className="mentor-section-head">

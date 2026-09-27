@@ -193,14 +193,12 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
               {m.mine && (m.readAt
                 ? <CheckCheck {...META_ICON} aria-label="خوانده شد" />
                 : <Check {...META_ICON} aria-label="ارسال شد" />)}
-            </span>
-            {!m.mine && (
-              <span className="mentor-msg-actions">
-                <button type="button" onClick={() => setReportId(m.id)} aria-label="گزارش این پیام">
-                  <Flag {...META_ICON} aria-hidden /> گزارش
+              {!m.mine && (
+                <button type="button" className="mentor-msg-report" onClick={() => setReportId(m.id)} aria-label="گزارش این پیام" title="گزارش این پیام">
+                  <Flag {...META_ICON} aria-hidden />
                 </button>
-              </span>
-            )}
+              )}
+            </span>
           </div>
         ))}
 

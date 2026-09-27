@@ -179,7 +179,7 @@ export default function AdminMentorDetailPage() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title"><UserRound {...I} className="admin-title-icon" aria-hidden />پروفایل منتوری</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title"><UserRound {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />پروفایل منتوری</span></div>
         <div className="admin-info-grid">
           <InfoRow k="عنوان" v={p.headline} />
           <div className="admin-info-row">
@@ -205,7 +205,7 @@ export default function AdminMentorDetailPage() {
 
       <div className="admin-chart-card">
         <div className="admin-chart-head">
-          <span className="admin-chart-title"><ShieldCheck {...I} className="admin-title-icon" aria-hidden />احراز هویت و مدارک</span>
+          <span className="admin-chart-title"><ShieldCheck {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />احراز هویت و مدارک</span>
           {!canReview && (
             <span className="admin-muted" style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Lock size={13} strokeWidth={1.75} aria-hidden />بررسی مدارک خودت فقط با Owner انجام می‌شود
@@ -247,7 +247,7 @@ export default function AdminMentorDetailPage() {
       {data.openReports.length > 0 && (
         <div className="admin-chart-card">
           <div className="admin-chart-head">
-            <span className="admin-chart-title"><Flag {...I} className="admin-title-icon" aria-hidden />گزارش‌های باز علیه این کاربر</span>
+            <span className="admin-chart-title"><Flag {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />گزارش‌های باز علیه این کاربر</span>
             <Link href="/admin/mentors/reports" className="admin-link" style={{ fontSize: 12, fontWeight: 700 }}>رسیدگی در صف گزارش‌ها</Link>
           </div>
           <div className="admin-table-wrap">
@@ -269,7 +269,7 @@ export default function AdminMentorDetailPage() {
       )}
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title"><History {...I} className="admin-title-icon" aria-hidden />تاریخچه‌ی احراز</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title"><History {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />تاریخچه‌ی احراز</span></div>
         {data.events.length === 0 ? <EmptyState message="تغییری ثبت نشده" /> : (
           <div className="admin-table-wrap">
             <table className="admin-table">

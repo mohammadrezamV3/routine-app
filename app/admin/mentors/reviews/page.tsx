@@ -119,7 +119,7 @@ export default function AdminMentorReviewsPage() {
                     </span>
                   </div>
                   <Stars n={r.rating} />
-                  <div className="trade-row-main" style={{ whiteSpace: "pre-wrap" }}>{r.body || <span className="admin-muted">بدون متن</span>}</div>
+                  <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{r.body || <span className="admin-muted">بدون متن</span>}</div>
                   {r.status === "HIDDEN" && r.hiddenReason && <div className="trade-row-sub">دلیل پنهان شدن: {r.hiddenReason}</div>}
                   <div style={ROW_LINE}>
                     <span className="trade-row-sub admin-ltr">{formatDateTime(r.createdAt)}</span>

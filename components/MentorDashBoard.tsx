@@ -20,6 +20,9 @@ import type {
   MentorDashboard, MentorSelf, MentorshipAction, MentorshipRow, MentorshipsResponse, VerificationStatus,
 } from "@/lib/mentorTypes";
 
+/** تعداد ردیف‌های «فعالیت اخیر» پیش از بازکردنِ کامل */
+const ACTIVITY_PREVIEW = 5;
+
 const ic = (Icon: typeof Users, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /** چیپ وضعیت احراز هویت (یک خط؛ PENDING هرگز جعبه/اطلاعیه نیست) */
@@ -39,6 +42,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   const [rowsError, setRowsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allActivity, setAllActivity] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -163,8 +167,6 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
         })}
       </MentorSection>
 
-      <MentorDashInvite suspended={suspended} categories={self.categories} onSent={() => load(true)} />
-
       <MentorSection title="منتظر پاسخ شاگرد" icon={ic(ClipboardList, MI.section)} count={dash.pendingPrograms.length ? fa(dash.pendingPrograms.length) : undefined} flush>
         {dash.pendingPrograms.length === 0 ? (
           <MentorEmpty>برنامه‌ای منتظر پاسخ شاگرد نیست</MentorEmpty>
@@ -215,10 +217,17 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
         ))}
       </MentorSection>
 
-      <MentorSection title="فعالیت اخیر" icon={ic(Activity, MI.section)} flush>
+      <MentorSection
+        title="فعالیت اخیر" icon={ic(Activity, MI.section)} flush
+        action={dash.recentActivity.length > ACTIVITY_PREVIEW ? (
+          <button type="button" className="mentor-text-btn" onClick={() => setAllActivity((v) => !v)} aria-expanded={allActivity}>
+            {allActivity ? "نمایش کمتر" : `همه (${fa(dash.recentActivity.length)})`}
+          </button>
+        ) : undefined}
+      >
         {dash.recentActivity.length === 0 ? (
           <MentorEmpty>فعالیتی ثبت نشده است</MentorEmpty>
-        ) : dash.recentActivity.map((a, i) => {
+        ) : (allActivity ? dash.recentActivity : dash.recentActivity.slice(0, ACTIVITY_PREVIEW)).map((a, i) => {
           const lead = a.type === "message" ? ic(MessageCircle, MI.row) : a.type === "program" ? ic(ClipboardList, MI.row) : ic(CalendarCheck, MI.row);
           // url فقط مسیر داخلی؛ هر چیز دیگری لینک نمی‌شود
           const internal = typeof a.url === "string" && a.url.startsWith("/") && !a.url.startsWith("//");
@@ -233,6 +242,8 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
           );
         })}
       </MentorSection>
+
+      <MentorDashInvite suspended={suspended} categories={self.categories} onSent={() => load(true)} />
 
       <MentorSection
         title="پروفایل" icon={ic(UserRound, MI.section)} flush
