@@ -72,7 +72,10 @@ export const metadata: Metadata = {
   // فیدِ RSS بلاگ سراسری اعلام می‌شه (نه فقط توی /blog) تا فیدخوان‌ها/
   // خزنده‌ها از هر صفحه‌ای پیداش کنن — <link rel="alternate" type=
   // "application/rss+xml"> توی <head> میاد.
-  alternates: { types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` } },
+  alternates: {
+    types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` },
+    languages: { "fa-IR": SITE_URL, "x-default": SITE_URL },
+  },
   ...(Object.keys(verification).length ? { verification } : {}),
   // کلمه‌کلیدی صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
   // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن — پوشش همه‌ی بخش‌های

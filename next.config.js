@@ -54,10 +54,10 @@ const securityHeaders = [
 // روی صفحات کلاینت‌ساید‌رندرشده (که نمی‌تونن metadata سرور صادر کنن) هم
 // اثر می‌کنه، و مستقل از robots.txt عمل می‌کنه (اگه یه لینک بیرونی هم به
 // این مسیرها اشاره کنه، بازم ایندکس نمی‌شن). لیست باید با disallow توی
-// app/robots.ts هماهنگ بمونه.
-const NOINDEX_PATH_PREFIXES = [
+// app/robots.ts هماهنگ بمونه. auth از این لیست جداست (پایین‌تر) چون
+// follow برایش مانعی ندارد — noindex/nofollow یکسان‌سازی بی‌دلیل بود.
+const NOINDEX_NOFOLLOW_PATH_PREFIXES = [
   "/api/:path*",
-  "/auth/:path*",
   "/weekly",
   "/weekly/:path*",
   "/exercise",
@@ -70,6 +70,8 @@ const NOINDEX_PATH_PREFIXES = [
   "/account/:path*",
   "/admin",
   "/admin/:path*",
+  "/analysis",
+  "/analysis/:path*",
   "/notepad",
   "/notepad/:path*",
   // خود /subscription (نه فقط چک‌اوت) پشت AuthGate‌ـه — کاربر مهمان/کراولر
@@ -78,6 +80,11 @@ const NOINDEX_PATH_PREFIXES = [
   "/subscription",
   "/subscription/:path*",
 ];
+
+// صفحات auth: نباید ایندکس بشن (محتوای واقعی ندارن)، ولی لینک‌های داخلشون
+// (مثلا لینک بازگشت به صفحه‌ی اصلی) بی‌ضرره که دنبال بشن — نیازی به
+// nofollow روی این‌ها نیست.
+const NOINDEX_FOLLOW_PATH_PREFIXES = ["/auth/:path*"];
 
 const nextConfig = {
   reactStrictMode: true,
@@ -91,10 +98,16 @@ const nextConfig = {
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {
-    const noindexHeaders = NOINDEX_PATH_PREFIXES.map((source) => ({
-      source,
-      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
-    }));
+    const noindexHeaders = [
+      ...NOINDEX_NOFOLLOW_PATH_PREFIXES.map((source) => ({
+        source,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      })),
+      ...NOINDEX_FOLLOW_PATH_PREFIXES.map((source) => ({
+        source,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, follow" }],
+      })),
+    ];
     if (!isProd) return noindexHeaders; // روی dev هیچ هدر امنیتی سخت‌گیرانه‌ای اعمال نمی‌شه، ولی noindex بی‌ضرره
     return [
       {

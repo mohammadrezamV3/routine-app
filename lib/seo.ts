@@ -56,7 +56,14 @@ export function pageMetadata({
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      // آریون فقط فارسی است، نسخه‌ی انگلیسی جدایی ندارد — پس هر دو
+      // fa-IR و x-default به همین یک URL اشاره می‌کنند. بدون این، گوگل
+      // زبان/منطقه‌ی هدفِ صفحه را صرفا از lang="fa" خودِ <html> حدس
+      // می‌زند؛ با این، صریح اعلام می‌شود.
+      languages: { "fa-IR": canonical, "x-default": canonical },
+    },
     openGraph,
     twitter: {
       card: "summary_large_image",
@@ -113,6 +120,9 @@ export function websiteJsonLd(): JsonLd {
     alternateName: [BRAND_EN, BRAND_BOTH],
     url: SITE_URL,
     inLanguage: "fa-IR",
+    // "about" یعنی این وب‌سایت درباره‌ی چه چیزی‌ست — همان Organization
+    // ریشه، نه یک کپیِ جدا از توضیحش.
+    about: { "@id": ORGANIZATION_ID },
     publisher: { "@id": ORGANIZATION_ID },
   };
 }
@@ -215,6 +225,10 @@ export function softwareApplicationJsonLd(): JsonLd {
     description: BRAND_DESC,
     softwareHelp: absoluteUrl("/faq"),
     featureList: FEATURE_LIST_FA,
+    // رشته‌ی کلیدواژه — همان چیزی که کاربر فارسی‌زبان واقعا سرچ می‌کند،
+    // برای اتصال بهترِ این موجودیت به آن عبارت‌ها (مثل keywords توی
+    // metadata سراسری در app/layout.tsx، اما این‌جا در بلوکِ JSON-LD).
+    keywords: "برنامه روتین روزانه, مدیریت عادت, برنامه‌ریزی روزانه, برنامه بدنسازی هوشمند, کالری‌شمار فارسی, ژورنال ترید, تقویم اقتصادی فارکس",
     offers: {
       "@type": "Offer",
       price: "0",

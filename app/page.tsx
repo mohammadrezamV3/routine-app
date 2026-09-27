@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     absolute: BRAND_TITLE,
   },
   description: BRAND_DESC,
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", languages: { "fa-IR": "/", "x-default": "/" } },
   // images عمدا حذف شده تا app/opengraph-image.tsx (اختصاصیِ همین مسیر)
   // به‌جای /og.png عمومی تزریق بشه.
   openGraph: { ...OG_BASE, images: undefined, url: "/", title: BRAND_TITLE, description: BRAND_DESC },

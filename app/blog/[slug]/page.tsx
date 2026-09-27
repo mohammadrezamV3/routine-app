@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/BlogArticle";
 import { BRAND_FA } from "@/lib/brand";
-import { BLOG_POSTS, getPost } from "@/lib/blogPosts";
+import { BLOG_POSTS, getPost, sortedPosts } from "@/lib/blogPosts";
 import { articleJsonLd, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 /**
@@ -37,6 +37,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     { name: post.title, path: `/blog/${post.slug}` },
   ];
 
+  // ترتیب واقعیِ فهرستِ بلاگ (همون sortedPosts که خودِ /blog نشون می‌ده) —
+  // prev/next باید با همون ترتیب باشه، نه با ترتیبِ خامِ BLOG_POSTS.
+  const all = sortedPosts();
+  const idx = all.findIndex((p) => p.slug === post.slug);
+  const prevPost = idx > 0 ? all[idx - 1] : undefined;
+  const nextPost = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : undefined;
+
   return (
     <>
       <script
@@ -54,7 +61,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           ]),
         }}
       />
-      <BlogArticle post={post} />
+      <BlogArticle
+        post={post}
+        prev={prevPost ? { href: `/blog/${prevPost.slug}`, label: prevPost.title } : undefined}
+        next={nextPost ? { href: `/blog/${nextPost.slug}`, label: nextPost.title } : undefined}
+      />
     </>
   );
 }

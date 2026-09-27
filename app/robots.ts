@@ -42,6 +42,8 @@ export default function robots(): MetadataRoute.Robots {
         "/trade/",
         "/roadmaps$",
         "/roadmaps/",
+        "/analysis$",
+        "/analysis/",
         "/account$",
         "/account/",
         "/admin$",
