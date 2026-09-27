@@ -111,6 +111,8 @@ export type MentorCard = {
   avatarUrl: string | null;
   headline: string | null;
   categories: string[];
+  // فقط وقتی categories شاملِ ROUTINE باشه، وگرنه null
+  routineRole: string | null;
   identityVerified: boolean;
   certifications: { category: string; verified: boolean }[];
   ratingAvg: number;
@@ -138,6 +140,11 @@ export async function loadMentorStats(mentorIds: string[]): Promise<Map<string, 
   return out;
 }
 
+/** نقشِ روتین برای نمایشِ عمومی — بدونِ دسته‌ی ROUTINE معنایی نداره */
+export function publicRoutineRole(p: { categories: string[]; routineRole: string | null }): string | null {
+  return p.categories.includes("ROUTINE") ? p.routineRole : null;
+}
+
 export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): MentorCard {
   // فقط مدرکِ دسته‌هایی که الان روی پروفایلن — مدرکِ دسته‌ی حذف‌شده نباید «تأییدشده» جلوه کنه
   const certifications = p.categories.map((category) => ({
@@ -150,6 +157,7 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
     avatarUrl: p.user.avatarUrl,
     headline: p.headline,
     categories: p.categories,
+    routineRole: publicRoutineRole(p),
     identityVerified: p.identityStatus === "VERIFIED",
     certifications,
     ratingAvg: Math.round(p.ratingAvg * 10) / 10,
@@ -185,6 +193,7 @@ export async function loadMentorSelf(userId: string) {
     bio: p.bio,
     specialties: p.specialties,
     categories: p.categories,
+    routineRole: p.routineRole,
     published: p.published,
     acceptingStudents: p.acceptingStudents,
     identityStatus: p.identityStatus,
@@ -367,6 +376,7 @@ export async function serializeProgram(p: ProgramWithUsers, viewerId: string) {
   return {
     ...toProgramRow(p, viewerId, progress),
     description: p.description,
+    note: p.note,
     changeRequestNote: p.changeRequestNote,
     rejectReason: p.rejectReason,
     respondedAt: p.respondedAt,

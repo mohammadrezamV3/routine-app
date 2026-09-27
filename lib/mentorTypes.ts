@@ -32,6 +32,8 @@ export type MentorCard = {
   avatarUrl: string | null;
   headline: string | null;
   categories: string[];
+  /** نقشِ منتور در حوزه‌ی روتین (مثلا «استاد ریاضی») — null وقتی ROUTINE جزوِ categories نیست یا پر نشده */
+  routineRole: string | null;
   identityVerified: boolean;
   certifications: Certification[];
   ratingAvg: number;
@@ -87,6 +89,8 @@ export type MentorSelf = {
   bio: string | null;
   specialties: string[];
   categories: string[];
+  /** مقدارِ ذخیره‌شده؛ PUT /api/mentors/me با { routineRole: string | null } — سقف ۶۰ حرف، بدونِ ROUTINE پاک می‌شه */
+  routineRole: string | null;
   published: boolean;
   acceptingStudents: boolean;
   identityStatus: VerificationStatus;
@@ -159,6 +163,8 @@ export type Program = ProgramRow & {
   mentorId?: string;
   studentId?: string;
   description: string | null;
+  /** یادداشتِ منتور روی برنامه (سقف ۱۰۰۰ حرف) — POST/PUT /api/mentor-programs با { note } */
+  note: string | null;
   changeRequestNote: string | null;
   rejectReason: string | null;
   respondedAt: string | null;

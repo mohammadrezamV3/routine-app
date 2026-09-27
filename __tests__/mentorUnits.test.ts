@@ -3,7 +3,7 @@ import { canTransition, isEditable, isProgramAction, visibleToStudent, PROGRAM_T
 import { validateDocument, sniffDocumentMime, sanitizeFileName, MAX_DOCUMENT_BYTES } from "@/lib/mentorUpload";
 import { sanitizeSharedPrograms, canSeeScope, routineScopeKey, MAX_SHARED_PROGRAMS } from "@/lib/mentorPrivacy";
 import { bayesianRating, retentionRatio, recencyFactor, popularScore, rankByPopularity, type RankingSignals } from "@/lib/mentorRanking";
-import { validateProgramInput, parseHHmm, MAX_PROGRAM_ITEMS } from "@/lib/mentorValidate";
+import { validateProgramInput, validateRoutineRole, parseHHmm, MAX_PROGRAM_ITEMS, PROGRAM_NOTE_MAX, ROUTINE_ROLE_MAX } from "@/lib/mentorValidate";
 import { pngBytes, pdfBytes, jpegBytes, webpBytes, exeBytes, htmlBytes } from "./helpers/mentorTestUtils";
 
 // تست‌های واحدِ خالصِ هسته‌ی منتور — بدونِ دیتابیس.
@@ -217,7 +217,17 @@ describe("mentorValidate — بدنه‌ی برنامه", () => {
   it("mass assignment: فیلدهای ناشناخته (status/version/studentId) در خروجی نیستند", () => {
     const r = validateProgramInput({ ...ok, status: "ACTIVE", version: 99, studentId: "victim", mentorId: "x", sentAt: "2020-01-01" });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(Object.keys(r.data).sort()).toEqual(["description", "endDate", "items", "startDate", "title", "type"]);
+    if (r.ok) expect(Object.keys(r.data).sort()).toEqual(["description", "endDate", "items", "note", "startDate", "title", "type"]);
+  });
+
+  it("یادداشتِ برنامه: trim، خالی → null، بلند بریده می‌شود، غیرِرشته ۴۰۰", () => {
+    const a = validateProgramInput({ ...ok, note: "  قبل از شروع جزوه رو داشته باش  " });
+    expect(a.ok && a.data.note).toBe("قبل از شروع جزوه رو داشته باش");
+    const b = validateProgramInput({ ...ok, note: "   " });
+    expect(b.ok && b.data.note).toBe(null);
+    const c = validateProgramInput({ ...ok, note: "x".repeat(PROGRAM_NOTE_MAX + 50) });
+    expect(c.ok && c.data.note?.length).toBe(PROGRAM_NOTE_MAX);
+    expect(validateProgramInput({ ...ok, note: 12 }).ok).toBe(false);
   });
 
   it.each([
@@ -259,5 +269,18 @@ describe("mentorValidate — بدنه‌ی برنامه", () => {
     expect(parseHHmm("۰۷:۰۵")).toBe("07:05");
     expect(parseHHmm("7:05")).toBeNull();
     expect(parseHHmm(705)).toBeNull();
+  });
+});
+
+describe("mentorValidate — نقشِ روتین", () => {
+  it("trim و یکی‌کردنِ فاصله‌ها؛ خالی/null → null", () => {
+    expect(validateRoutineRole("  استاد   ریاضی ")).toEqual({ ok: true, data: "استاد ریاضی" });
+    expect(validateRoutineRole("   ")).toEqual({ ok: true, data: null });
+    expect(validateRoutineRole(null)).toEqual({ ok: true, data: null });
+  });
+  it("بلندتر از سقف یا غیرِرشته رد می‌شود", () => {
+    expect(validateRoutineRole("x".repeat(ROUTINE_ROLE_MAX)).ok).toBe(true);
+    expect(validateRoutineRole("x".repeat(ROUTINE_ROLE_MAX + 1)).ok).toBe(false);
+    expect(validateRoutineRole(5).ok).toBe(false);
   });
 });

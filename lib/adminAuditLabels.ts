@@ -26,6 +26,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "mentor.review_restore": "بازگردانی نظر منتور",
   "mentor.report_resolve": "رسیدگی به گزارش منتورها",
   "mentor.document_view": "مشاهده مدرک منتور",
+  "demo.seed": "ساخت داده‌ی آزمایشی",
+  "demo.clear": "حذف داده‌ی آزمایشی",
 };
 
 export function auditLabel(action: string) {

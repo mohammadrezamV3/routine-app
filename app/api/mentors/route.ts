@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
       ? {
           OR: [
             { headline: { contains: q, mode: "insensitive" } },
+            { routineRole: { contains: q, mode: "insensitive" } },
             { specialties: { has: q } },
             { user: { name: { contains: q, mode: "insensitive" } } },
             { user: { lastName: { contains: q, mode: "insensitive" } } },

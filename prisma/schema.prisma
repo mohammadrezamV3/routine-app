@@ -1782,6 +1782,8 @@ model MentorProfile {
   specialties String[] @default([])
   // کلیدهای lib/mentorCategories.ts — مثلا ["FITNESS","NUTRITION"]
   categories  String[] @default([])
+  // نقشِ منتور در حوزه‌ی روتین به زبانِ خودش (مثلا «استاد ریاضی») — فقط وقتی categories شاملِ ROUTINE باشه نمایش داده می‌شه
+  routineRole String?
 
   // فقط وقتی true و موارد لازم پر باشه، توی کشف منتورها دیده می‌شه
   published         Boolean @default(false)
@@ -1945,6 +1947,8 @@ model MentorProgram {
   type              MentorProgramType
   title             String
   description       String?
+  // یادداشتِ منتور برای شاگرد روی این برنامه (جدا از توضیحِ برنامه)
+  note              String?
   startDate         DateTime?           @db.Date
   endDate           DateTime?           @db.Date
   status            MentorProgramStatus @default(DRAFT)

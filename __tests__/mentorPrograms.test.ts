@@ -89,6 +89,19 @@ describe("برنامه — ساخت", () => {
     expect(row!.mentorId).toBe(m);
   });
 
+  it("note: ساخت/ویرایش ذخیره می‌شود و بعد از ارسال برای شاگرد هم برمی‌گردد", async () => {
+    const { m, s, ms } = await pair();
+    const r = await createProgram(m, ms, { note: "  قبل از شروع جزوه رو داشته باش " });
+    const created = (await j(r)).program;
+    const id = created.id;
+    expect(created.note).toBe("قبل از شروع جزوه رو داشته باش");
+    as(m);
+    const put = await putProgram(req("PUT", "/x", { ...programBody(ms), note: "یادداشت دوم" }), p(id));
+    expect((await j(put)).program.note).toBe("یادداشت دوم");
+    expect((await transition(m, id, "send")).status).toBe(200);
+    expect((await j(await getP(s, id))).program.note).toBe("یادداشت دوم");
+  });
+
   it("شاگرد (بدونِ پروفایل منتوری) نمی‌تواند بسازد ۴۰۳؛ منتورِ دیگر روی رابطه‌ی غیرِ خودش ۴۰۴", async () => {
     const { s, ms } = await pair();
     expect((await createProgram(s, ms)).status).toBe(403);

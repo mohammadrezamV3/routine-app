@@ -139,12 +139,12 @@ describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () =
     expect((await act.doc(other)).status).toBe(200);
   });
 
-  it("Owner روی ادمینِ محدود مجاز است، ولی روی خودش نه", async () => {
+  it("Owner روی ادمینِ محدود مجاز است؛ روی خودش تأیید/مدرک مجاز، تعلیق/پنهان‌کردن نه", async () => {
     const limited = await mentorTarget({ adminPermissions: ["mentors"] });
     const owner = await mentorTarget({ owner: true });
     expect(await statusesAs(owner.userId, limited)).toEqual({ verify: 200, suspend: 200, unsuspend: 200, doc: 200, hide: 200 });
     const own = await statusesAs(owner.userId, owner);
-    expect(own).toEqual({ verify: 400, suspend: 400, unsuspend: 400, doc: 400, hide: 400 });
+    expect(own).toEqual({ verify: 200, suspend: 400, unsuspend: 400, doc: 200, hide: 400 });
   });
 
   it("ادمینِ mentors روی منتورِ عادی: همه مجاز + AuditLog", async () => {

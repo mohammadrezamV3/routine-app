@@ -8,6 +8,8 @@ import { parseIsoDate, toEnglishDigits } from "@/lib/validate";
 export const MAX_PROGRAM_ITEMS = 100;
 export const PROGRAM_TITLE_MAX = 120; // هم‌اندازه‌ی سقفِ برچسبِ روتین در lib/mentorPrivacy.ts
 export const PROGRAM_DESC_MAX = 2000;
+export const PROGRAM_NOTE_MAX = 1000;
+export const ROUTINE_ROLE_MAX = 60;
 export const ITEM_TITLE_MAX = 120;
 export const ITEM_DETAILS_MAX = 1000;
 
@@ -33,6 +35,7 @@ export type ProgramData = {
   type: MentorProgramType;
   title: string;
   description: string | null;
+  note: string | null;
   startDate: Date | null;
   endDate: Date | null;
   items: ItemData[];
@@ -166,5 +169,32 @@ export function validateProgramInput(body: any, fallbackType?: MentorProgramType
     items.push(r.data);
   }
 
-  return { ok: true, data: { type, title, description: optText(body.description, PROGRAM_DESC_MAX), startDate, endDate, items } };
+  if (body.note !== undefined && body.note !== null && typeof body.note !== "string") return { ok: false, error: "یادداشت برنامه نامعتبره" };
+
+  return {
+    ok: true,
+    data: {
+      type,
+      title,
+      description: optText(body.description, PROGRAM_DESC_MAX),
+      note: optText(body.note, PROGRAM_NOTE_MAX),
+      startDate,
+      endDate,
+      items,
+    },
+  };
+}
+
+/**
+ * نقشِ منتور در حوزه‌ی روتین (مثلا «استاد ریاضی»، «مشاور کنکور»).
+ * null/"" یعنی پاک‌کردن. فاصله‌های تکراری یکی می‌شن؛ بیشتر از سقف رد می‌شه
+ * (نه بریده‌شدنِ بی‌صدا) تا منتور بدونه متنش کامل ذخیره نشده.
+ */
+export function validateRoutineRole(v: unknown): Result<string | null> {
+  if (v === undefined || v === null) return { ok: true, data: null };
+  if (typeof v !== "string") return { ok: false, error: "نقش روتین نامعتبره" };
+  const t = v.replace(/\s+/g, " ").trim();
+  if (!t) return { ok: true, data: null };
+  if (t.length > ROUTINE_ROLE_MAX) return { ok: false, error: `نقش روتین حداکثر ${ROUTINE_ROLE_MAX} حرفه` };
+  return { ok: true, data: t };
 }
