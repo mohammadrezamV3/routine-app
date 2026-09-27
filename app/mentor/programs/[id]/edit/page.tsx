@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import { MentorProgramEditor } from "@/components/MentorProgramEditor";
+import { MentorProgramTools } from "@/components/MentorProgramTools";
 import { MI, MI_STROKE, MentorEmptyState } from "@/components/MentorUI";
 import { LoadingBlock } from "@/components/Spinner";
 import { publicUserName } from "@/lib/mentorTypes";
@@ -58,12 +59,15 @@ export default function EditMentorProgramPage() {
     );
   } else if (data.program.status !== "DRAFT") {
     body = (
+      <>
       <MentorEmptyState
         icon={<ClipboardList size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
         title="این برنامه ارسال شده و دیگر ویرایش نمی‌شود"
         text="اگر شاگرد درخواست تغییر بدهد، برنامه دوباره پیش‌نویس می‌شود"
         action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn">مشاهده‌ی برنامه</Link>}
       />
+      <MentorProgramTools programId={data.program.id} title={data.program.title} studentId={student?.id} />
+      </>
     );
   } else {
     body = <MentorProgramEditor mode="edit" program={data.program} items={data.items} student={student} initiallySaved={justSaved} />;

@@ -5,8 +5,8 @@ import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequ
 import { readJsonBody } from "@/lib/validate";
 import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCategories";
 import { validateProgramInput } from "@/lib/mentorValidate";
-import { PROGRAM_WITH_USERS_INCLUDE, buildProgramRows, loadProgramWithUsers, serializeProgram, todayIsoForUser } from "@/lib/mentorServer";
-import { activateDuePrograms } from "@/lib/mentorProgramMirror";
+import { PROGRAM_WITH_USERS_INCLUDE, buildProgramRows, loadProgramWithUsers, serializeProgram } from "@/lib/mentorServer";
+import { activateDueForUser } from "@/lib/mentorSchedule";
 
 const STATUSES: MentorProgramStatus[] = ["DRAFT", "PENDING", "ACCEPTED", "REJECTED", "ACTIVE", "COMPLETED", "CANCELLED"];
 // سقفِ پیش‌نویس‌های هم‌زمانِ یک منتور — جلوی پرکردنِ دیتابیس با برنامه‌ی خالی
@@ -34,10 +34,9 @@ export async function GET(req: NextRequest) {
   };
   const load = () => prisma.mentorProgram.findMany({ where, include: PROGRAM_WITH_USERS_INCLUDE, orderBy: { updatedAt: "desc" }, take: 200 });
 
-  let programs = await load();
-  // برنامه‌های پذیرفته‌شده‌ای که روزِ شروعشون رسیده همین‌جا فعال می‌شن
-  const activated = await activateDuePrograms(programs, todayIsoForUser);
-  if (activated.length > 0) programs = await load();
+  // برنامه‌های پذیرفته‌شده‌ای که روزِ شروعشون رسیده همین‌جا فعال می‌شن (+ اعلان به هر دو طرف)
+  await activateDueForUser(me);
+  const programs = await load();
 
   return NextResponse.json({ programs: await buildProgramRows(programs, me) });
 }
@@ -79,6 +78,13 @@ export async function POST(req: Request) {
     select: { id: true },
   });
   touchMentorActivity(me);
+
+  // ساخته‌شده از قالب؟ فقط آمارِ استفاده‌ی قالبِ *خودِ* همین منتور بالا می‌رود
+  if (typeof b.templateId === "string" && b.templateId.length > 0 && b.templateId.length <= 64) {
+    await prisma.mentorProgramTemplate
+      .updateMany({ where: { id: b.templateId, profileId: mp.profile.id }, data: { usedCount: { increment: 1 }, lastUsedAt: new Date() } })
+      .catch(() => undefined);
+  }
 
   const program = await loadProgramWithUsers(created.id);
   return NextResponse.json({ program: await serializeProgram(program!, me) });

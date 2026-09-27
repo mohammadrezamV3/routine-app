@@ -22,6 +22,7 @@ const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI
  * فرم پروفایل منتوری؛ PUT /api/mentors/me. اولین ذخیره پروفایل را می‌سازد.
  * انتشار فقط با حداقل یک حوزه و بیوگرافی ممکن است (سرور هم بررسی می‌کند).
  * نقش روتین فقط وقتی حوزه‌ی ROUTINE انتخاب شده ارسال می‌شود؛ بدون آن null.
+ * پذیرش شاگرد، ظرفیت و عدم حضور در /mentor/settings است و این فرم آن‌ها را نمی‌فرستد.
  */
 export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | null; onSaved: (p: MentorSelf) => void }) {
   const [headline, setHeadline] = useState(profile?.headline ?? "");
@@ -33,7 +34,6 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   );
   const [routineRole, setRoutineRole] = useState(profile?.routineRole ?? "");
   const [published, setPublished] = useState(profile?.published ?? false);
-  const [accepting, setAccepting] = useState(profile?.acceptingStudents ?? true);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -93,7 +93,6 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
         categories,
         routineRole: hasRoutine ? role || null : null,
         published,
-        acceptingStudents: accepting,
       },
     });
     setSaving(false);
@@ -110,7 +109,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
     <form onSubmit={save} noValidate>
       {profile?.suspendedAt && (
         <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب منتوری معلق است">
-          {profile.suspendedReason || "تا رفع تعلیق، پروفایل در کشف منتور دیده نمی‌شود"}
+          {profile.suspendedReason || "تا رفع تعلیق، پروفایل در فهرست منتورها دیده نمی‌شود"}
         </MentorNotice>
       )}
 
@@ -213,20 +212,13 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
             <div className="mentor-toggle-desc">
               {missing.length > 0 && !published
                 ? `برای انتشار، ${missing.join(" و ")} لازم است`
-                : "پروفایل منتشرشده در کشف منتور دیده می‌شود"}
+                : "پروفایل منتشرشده در فهرست منتورها دیده می‌شود"}
             </div>
           </div>
           <ToggleSwitch
             checked={published} label="انتشار پروفایل"
             onChange={(v) => { setPublished(v); setFieldErr((x) => ({ ...x, bio: undefined, categories: undefined })); touched(); }}
           />
-        </div>
-        <div className="mentor-toggle-row">
-          <div className="mentor-toggle-text">
-            <div className="mentor-toggle-title">پذیرش شاگرد جدید</div>
-            <div className="mentor-toggle-desc">با خاموش کردن، شاگرد جدید درخواست نمی‌دهد؛ شاگردهای فعلی می‌مانند</div>
-          </div>
-          <ToggleSwitch checked={accepting} label="پذیرش شاگرد جدید" onChange={(v) => { setAccepting(v); touched(); }} />
         </div>
       </MentorSection>
 

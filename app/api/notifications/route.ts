@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
+import { activateDueForUser } from "@/lib/mentorSchedule";
 
 const PAGE_SIZE = 30;
 const MAX_IDS = 100;
@@ -11,6 +12,9 @@ export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
+
+  // اعلان‌ها با لودِ هر صفحه خوانده می‌شوند؛ برنامه‌ی زمان‌بندی‌شده‌ای که روزش رسیده همین‌جا فعال می‌شود
+  if (!req.nextUrl.searchParams.get("before")) await activateDueForUser(me);
 
   const beforeRaw = req.nextUrl.searchParams.get("before");
   let before: Date | null = null;

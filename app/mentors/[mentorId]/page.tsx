@@ -20,6 +20,9 @@ import { LoadingBlock, Spinner } from "@/components/Spinner";
 import type { MentorProfileResponse, MyMentorship, Review, ReportTargetType } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
+import { MentorAvailabilityLine } from "@/components/MentorAvailabilityLine";
+import { INTAKE_ANSWER_MAX, availabilityShort } from "@/lib/mentorAvailability";
+import type { AvailabilityState } from "@/lib/mentorTypes";
 
 const MESSAGE_MAX = 500;
 const REVIEW_MAX = 1000;
@@ -30,7 +33,7 @@ const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorProfilePage() {
   return (
-    <MentorPageShell back={{ href: "/mentors", label: "کشف منتور" }}>
+    <MentorPageShell back={{ href: "/mentors", label: "انتخاب منتور" }}>
       <MentorProfile />
     </MentorPageShell>
   );
@@ -105,6 +108,12 @@ function MentorProfile() {
           <div className="mentor-stat"><b>{fmtRelative(mentor.lastActiveAt)}</b><span><Activity {...CHIP} /> آخرین فعالیت</span></div>
         </div>
 
+        <MentorAvailabilityLine
+          awayUntil={mentor.awayUntil}
+          awayMessage={mentor.awayMessage ?? null}
+          responseTimeHours={mentor.responseTimeHours}
+        />
+
         {isSelf ? (
           <div className="mentor-hero-actions">
             <MentorChip tone="neutral" icon={<UserRound {...CHIP} />}>پروفایل خودت</MentorChip>
@@ -115,6 +124,9 @@ function MentorProfile() {
             mentorName={mentor.name}
             mentorCategories={mentor.categories}
             accepting={mentor.acceptingStudents}
+            availability={mentor.availability ?? (mentor.acceptingStudents ? "OPEN" : "CLOSED")}
+            awayUntil={mentor.awayUntil ?? null}
+            intakeQuestions={mentor.intakeQuestions ?? []}
             mine={myMentorship}
             onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
             onStale={load}
@@ -185,12 +197,15 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
 
 /** اکشنِ اتصال — حالتش از myMentorship می‌آید. خطا بالای دکمه‌ها. */
 function ConnectAction({
-  mentorId, mentorName, mentorCategories, accepting, mine, onChange, onStale,
+  mentorId, mentorName, mentorCategories, accepting, availability, awayUntil, intakeQuestions, mine, onChange, onStale,
 }: {
   mentorId: string;
   mentorName: string;
   mentorCategories: string[];
   accepting: boolean;
+  availability: AvailabilityState;
+  awayUntil: string | null;
+  intakeQuestions: string[];
   mine: MyMentorship | null;
   onChange: (m: MyMentorship | null) => void;
   onStale: () => void;
@@ -259,6 +274,13 @@ function ConnectAction({
     );
   } else if (mine?.status === "BLOCKED") {
     body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این منتور ممکن نیست</MentorChip>;
+  } else if (availability !== "OPEN") {
+    // بسته / ظرفیت تکمیل / در دسترس نیست — سرور هم همین را اعمال می‌کند
+    body = (
+      <MentorChip tone={availability === "AWAY" ? "info" : "neutral"} icon={availability === "AWAY" ? <Hourglass {...CHIP} /> : <CircleSlash {...CHIP} />}>
+        {availabilityShort(availability, awayUntil)}
+      </MentorChip>
+    );
   } else if (!accepting) {
     body = <MentorChip tone="neutral" icon={<CircleSlash {...CHIP} />}>شاگرد جدید نمی‌پذیرد</MentorChip>;
   } else {
@@ -278,6 +300,7 @@ function ConnectAction({
           mentorId={mentorId}
           mentorName={mentorName}
           mentorCategories={mentorCategories}
+          intakeQuestions={intakeQuestions}
           onClose={() => setRequestOpen(false)}
           onDone={(m) => { setRequestOpen(false); onChange(m); }}
           onStale={onStale}
@@ -299,11 +322,12 @@ function ConnectAction({
 }
 
 function RequestModal({
-  mentorId, mentorName, mentorCategories, onClose, onDone, onStale,
+  mentorId, mentorName, mentorCategories, intakeQuestions, onClose, onDone, onStale,
 }: {
   mentorId: string;
   mentorName: string;
   mentorCategories: string[];
+  intakeQuestions: string[];
   onClose: () => void;
   onDone: (m: MyMentorship) => void;
   onStale: () => void;
@@ -314,21 +338,38 @@ function RequestModal({
   const [busy, setBusy] = useState(false);
   const [catsError, setCatsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // جواب به سؤال‌های پذیرشِ منتور — همه لازم، به همان ترتیب
+  const [answers, setAnswers] = useState<string[]>(() => intakeQuestions.map(() => ""));
+  const [answerErrs, setAnswerErrs] = useState<(string | null)[]>([]);
   const len = message.trim().length;
   const tooLong = len > MESSAGE_MAX;
 
   async function submit() {
     if (mentorCategories.length > 0 && cats.length === 0) { setCatsError("حداقل یک حوزه انتخاب کن"); return; }
     if (tooLong) return;
+    const aErrs = intakeQuestions.map((_, i) => {
+      const a = (answers[i] ?? "").trim();
+      if (!a) return "جواب این سؤال را بنویس";
+      if (a.length > INTAKE_ANSWER_MAX) return `حداکثر ${faNum(INTAKE_ANSWER_MAX)} نویسه`;
+      return null;
+    });
+    setAnswerErrs(aErrs);
+    if (aErrs.some(Boolean)) return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch("/api/mentorships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mentorId, message: message.trim() || undefined, ...(mentorCategories.length ? { categories: cats } : {}) }),
+        body: JSON.stringify({
+          mentorId,
+          message: message.trim() || undefined,
+          ...(mentorCategories.length ? { categories: cats } : {}),
+          ...(intakeQuestions.length ? { intakeAnswers: answers.map((a) => a.trim()) } : {}),
+        }),
       });
-      if (res.status === 409) { setError("با این منتور درخواست باز یا رابطه‌ی فعال داری"); onStale(); return; }
+      // ۴۰۹: درخواستِ باز/رابطه‌ی فعال، یا پذیرشِ بسته/ظرفیتِ پر/عدمِ حضور — پیامِ سرور دقیق‌تر است
+      if (res.status === 409) { setError(await readApiError(res, "با این منتور درخواست باز یا رابطه‌ی فعال داری")); onStale(); return; }
       if (!res.ok) { setError(await readApiError(res, "درخواست ارسال نشد؛ دوباره تلاش کن")); return; }
       const d = await res.json().catch(() => null);
       const m = d?.mentorship;
@@ -371,6 +412,23 @@ function RequestModal({
               </div>
             </MentorField>
           )}
+          {intakeQuestions.map((q, i) => (
+            <MentorField key={i} label={q} htmlFor={`mentor-req-q${i}`} error={answerErrs[i]}>
+              <textarea
+                id={`mentor-req-q${i}`}
+                className="wsearch-newform-name trade-glass-field"
+                rows={2}
+                value={answers[i] ?? ""}
+                maxLength={INTAKE_ANSWER_MAX + 20}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setAnswers((xs) => xs.map((x, j) => (j === i ? v : x)));
+                  setAnswerErrs((xs) => xs.map((x, j) => (j === i ? null : x)));
+                  setError(null);
+                }}
+              />
+            </MentorField>
+          ))}
           <MentorField
             label="پیام"
             htmlFor="mentor-req-msg"

@@ -1,9 +1,19 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import type { MentorProgramStatus, MentorProgramType, MentorshipStatus, Prisma, ProgramLogStatus, VerificationStatus } from "@prisma/client";
+import type { MentorProgramStatus, MentorProgramType, MentorshipStatus, Prisma, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { addDaysIso, dateFromIso, recomputeMentorRating, todayIsoInTz } from "@/lib/mentorServer";
+import { addDaysIso, dateFromIso, feedbackAad, recomputeMentorRating, todayIsoInTz } from "@/lib/mentorServer";
 import { loadMirrorOccurrences, removeProgramMirrors, writeProgramMirror } from "@/lib/mentorProgramMirror";
+import { clearManageDemo, seedManageDemo } from "@/lib/demoDataManage";
+import { clearToolsDemo, parseToolsDemoState, seedToolsDemo, type ToolsDemoState } from "@/lib/demoDataTools";
+import { deriveChatKeys, encryptMessage, generateIdentityKeyPair, importPublicKey } from "@/lib/e2ee/core";
+import { randomId } from "@/lib/e2ee/encoding";
+import { encryptedMessageData } from "@/lib/mentorChatServer";
+import { currentE2EKey, sealAtRest } from "@/lib/e2ee/server";
+import { sealReportedText } from "@/lib/e2ee/reportServer";
+import { syncProgramProgress } from "@/lib/mentorProgress";
+import { mirrorOccurrenceId } from "@/lib/mentorProgressCore";
+import { recomputeMentorRankings } from "@/lib/mentorRankingStats";
 
 // داده‌ی آزمایشیِ اکوسیستمِ منتور — فقط از پنلِ Owner (/admin/demo-data).
 //
@@ -35,6 +45,10 @@ type DemoState = {
   // فقط وقتی Owner قبلا پروفایلِ منتوری نداشته و همین ابزار ساخته
   ownerProfileId: string | null;
   notificationIds: string[];
+  // برچسب‌های مدیریتِ شاگرد روی پروفایلِ از قبل موجودِ Owner (lib/demoDataManage.ts)
+  manageLabelIds?: string[];
+  // قالب/پاسخ/هشدارِ آزمایشی روی پروفایلِ از قبل موجودِ Owner (lib/demoDataTools.ts)
+  toolsDemo?: ToolsDemoState;
 };
 
 export type DemoStatus = {
@@ -58,6 +72,8 @@ async function readState(): Promise<DemoState | null> {
     ownerId: v.ownerId,
     ownerProfileId: typeof v.ownerProfileId === "string" ? v.ownerProfileId : null,
     notificationIds: Array.isArray(v.notificationIds) ? v.notificationIds.filter((x): x is string => typeof x === "string") : [],
+    manageLabelIds: Array.isArray(v.manageLabelIds) ? v.manageLabelIds.filter((x): x is string => typeof x === "string") : [],
+    toolsDemo: parseToolsDemoState(v.toolsDemo),
   };
 }
 
@@ -100,13 +116,14 @@ export async function clearDemoData(): Promise<{ deletedUsers: number }> {
   if (ids.length > 0) {
     // آینه‌ی برنامه‌های منتورهای آزمایشی در روتینِ کاربرِ واقعی (Owner)
     const mirrored = await prisma.mentorProgram.findMany({
-      where: { mentorId: { in: ids }, studentId: { notIn: ids }, type: "ROUTINE" },
+      where: { mentorId: { in: ids }, studentId: { notIn: ids } },
       select: { id: true, studentId: true },
     });
     const byStudent = new Map<string, string[]>();
     for (const p of mirrored) byStudent.set(p.studentId, [...(byStudent.get(p.studentId) ?? []), p.id]);
     for (const [studentId, programIds] of Array.from(byStudent)) {
       await removeProgramMirrors(studentId, programIds).catch(() => undefined);
+      await stripDemoTicks(studentId, programIds);
     }
 
     // گزارش‌هایی که کاربرِ واقعی علیهِ کاربرِ آزمایشی ثبت کرده (reporter واقعیه، cascade نمی‌شه)
@@ -121,12 +138,34 @@ export async function clearDemoData(): Promise<{ deletedUsers: number }> {
   if (state) {
     if (state.notificationIds.length) await prisma.inAppNotification.deleteMany({ where: { id: { in: state.notificationIds }, userId: state.ownerId } });
     if (state.ownerProfileId) await prisma.mentorProfile.deleteMany({ where: { id: state.ownerProfileId, userId: state.ownerId } });
+    else await clearManageDemo(prisma, state.ownerId, state.manageLabelIds ?? []);
+    if (!state.ownerProfileId && state.toolsDemo) await clearToolsDemo(prisma, state.ownerId, state.toolsDemo);
   }
 
   const res = await prisma.user.deleteMany({ where: DEMO_USER_WHERE });
   for (const r of reviewed) await recomputeMentorRating(r.mentorId);
+  // امتیازِ منتورهای واقعی که شاگردِ آزمایشی داشتن (ردیف‌های آزمایشی با پروفایل cascade شدن)
+  await recomputeMentorRankings().catch(() => undefined);
   await prisma.appSetting.deleteMany({ where: { key: DEMO_DATA_SETTING_KEY } });
   return { deletedUsers: res.count };
+}
+
+/**
+ * تیک‌های آزمایشی (کلیدهای mp-<programId>-…) از DailyEntryِ کاربرِ واقعی (Owner)
+ * برداشته می‌شن؛ تیک‌های خودِ او دست نمی‌خورن. ردیفِ روزی که فقط تیکِ آزمایشی
+ * داشت و بیداری هم نداشت حذف می‌شه.
+ */
+async function stripDemoTicks(userId: string, programIds: string[]): Promise<void> {
+  const prefixes = programIds.map((id) => `mp-${id}-`);
+  const rows = await prisma.dailyEntry.findMany({ where: { userId }, select: { id: true, completedItems: true, wakeUpAt: true } });
+  for (const r of rows) {
+    const cur = (r.completedItems ?? {}) as Record<string, unknown>;
+    const keys = Object.keys(cur);
+    const kept = keys.filter((k) => !prefixes.some((p) => k.startsWith(p)));
+    if (kept.length === keys.length) continue;
+    if (kept.length === 0 && !r.wakeUpAt) await prisma.dailyEntry.delete({ where: { id: r.id } }).catch(() => undefined);
+    else await prisma.dailyEntry.update({ where: { id: r.id }, data: { completedItems: Object.fromEntries(kept.map((k) => [k, cur[k]])) as Prisma.InputJsonValue } });
+  }
 }
 
 // ───────────────────────── ساخت ─────────────────────────
@@ -154,6 +193,8 @@ type MentorSpec = Person & {
   acceptingStudents?: boolean;
   suspendedReason?: string;
   lastActiveDaysAgo: number;
+  // سنِ پروفایلِ منتوری (روز) — «منتورهای تازه» فقط پروفایلِ زیرِ ۹۰ روز؛ پیش‌فرض ۱۸۰
+  profileAgeDays?: number;
 };
 
 const MENTORS: MentorSpec[] = [
@@ -216,6 +257,30 @@ const MENTORS: MentorSpec[] = [
   },
 ];
 
+// منتورهای اضافه برای رتبه‌بندیِ شایستگی (lib/mentorRanking.ts):
+//   پریسا — تأییدشده و تازه، بدونِ شاگرد → «منتورهای تازه»
+//   کیان — چهار نظرِ ۵ستاره از رابطه‌های چندروزه و بدونِ برنامه → نظرها تأیید نمی‌شن
+MENTORS.push(
+  {
+    key: "parisa", name: "پریسا", lastName: "مرادی",
+    categories: ["FITNESS"],
+    headline: "تمرین اصلاحی و تحرک برای پشت‌میزنشین‌ها",
+    bio: "مربی حرکات اصلاحی. برای کسانی که بیشتر روز پشت میز هستند برنامه‌ی کوتاه روزانه‌ی تحرک و تقویت می‌نویسم.",
+    specialties: ["حرکات اصلاحی", "درد کمر", "تحرک"],
+    identity: "VERIFIED", credentials: { FITNESS: { status: "VERIFIED" } },
+    lastActiveDaysAgo: 0, profileAgeDays: 6,
+  },
+  {
+    key: "kian", name: "کیان", lastName: "فراهانی",
+    categories: ["FITNESS"],
+    headline: "برنامه‌ی کات و فرم بدن",
+    bio: "مربی بدنسازی. برنامه‌ی کات و تمرین با وزنه برای آماده‌شدن در مدت کوتاه می‌نویسم.",
+    specialties: ["کات", "فرم بدن"],
+    identity: "VERIFIED", credentials: { FITNESS: { status: "PENDING" } },
+    lastActiveDaysAgo: 1, profileAgeDays: 45,
+  }
+);
+
 const STUDENTS: Person[] = [
   { key: "ali", name: "علی", lastName: "محمدی" },
   { key: "zahra", name: "زهرا", lastName: "موسوی" },
@@ -225,6 +290,10 @@ const STUDENTS: Person[] = [
   { key: "narges", name: "نرگس", lastName: "عباسی" },
   { key: "pouya", name: "پویا", lastName: "شریفی" },
   { key: "elham", name: "الهام", lastName: "رحیمی" },
+  { key: "sina", name: "سینا", lastName: "اکبری" },
+  { key: "mina", name: "مینا", lastName: "نظری" },
+  { key: "kaveh", name: "کاوه", lastName: "یوسفی" },
+  { key: "leila", name: "لیلا", lastName: "صالحی" },
 ];
 
 type ItemSpec = {
@@ -251,8 +320,11 @@ type ProgramSpec = {
   changeRequestNote?: string;
   rejectReason?: string;
   items: ItemSpec[];
-  // لاگِ اجرا برای روزهای گذشته (تا دیروز، یا امروز هم اگه withToday)
+  // تیکِ روتینِ شاگرد برای روزهای گذشته (تا دیروز، یا امروز هم اگه withToday) —
+  // پیشرفتِ خودکار از همین تیک‌ها ساخته می‌شه (lib/mentorProgress.ts)
   logs?: boolean;
+  // یادداشتِ شاگرد برای منتور روی یک روز (offset نسبت به امروز)
+  dayNotes?: { offset: number; body: string }[];
   withToday?: boolean;
   feedback?: { body: string; read: boolean }[];
 };
@@ -292,17 +364,22 @@ const WORKOUT_B: ItemSpec[] = [
   { title: "زیربغل دمبل تک‌دست", days: ODD_DAYS, sets: 3, reps: "10", weightKg: 14, restSec: 60 },
 ];
 
-/** شبه‌تصادفیِ قطعی — هر بار ساخت همون الگوی لاگ رو می‌ده */
-function pattern(a: number, b: number): ProgramLogStatus | null {
-  const v = (a * 31 + b * 17) % 11;
-  if (v <= 6) return "COMPLETED";
-  if (v <= 8) return "PARTIAL";
-  if (v === 9) return "MISSED";
-  return null; // ثبت‌نشده
+/**
+ * شبه‌تصادفیِ قطعی — آیا شاگرد این آیتم را در این روز در روتینش تیک زده؟
+ * حدودِ دو سوم انجام، و هر چند روز یک روزِ کاملا خالی تا «انجام‌نشده» و
+ * «نیمه‌کاره»ی روز هم دیده شود.
+ */
+function ticked(off: number, order: number): boolean {
+  if (((off % 9) + 9) % 9 === 4) return false;
+  return (((off + 100) * 31 + order * 17) % 11) <= 6;
 }
 
 class Seeder {
   counts = { mentorships: 0, programs: 0, messages: 0, reviews: 0, reports: 0 };
+  // studentId → (روز → completedItems) — بعد از تراکنش در DailyEntry نوشته می‌شه
+  ticks = new Map<string, Map<string, Record<string, boolean>>>();
+  // برنامه‌های فعال/تمام‌شده که پیشرفتشان باید از تیک‌ها همگام شود؛ mirror = فعال و باید در روتین آینه شود
+  tracked: { programId: string; studentId: string; activationIso: string; mirror: boolean }[] = [];
   constructor(private tx: Tx, private today: string, private now: Date) {}
 
   day(offset: number): Date {
@@ -316,7 +393,10 @@ class Seeder {
     mentorId: string,
     studentId: string,
     status: MentorshipStatus,
-    opts: { initiatedBy?: "STUDENT" | "MENTOR"; categories?: string[]; message?: string; startedDaysAgo?: number; endedDaysAgo?: number; blockedById?: string; createdDaysAgo?: number } = {}
+    opts: {
+      initiatedBy?: "STUDENT" | "MENTOR"; categories?: string[]; message?: string; startedDaysAgo?: number; endedDaysAgo?: number; blockedById?: string; createdDaysAgo?: number;
+      showProgress?: boolean;
+    } = {}
   ): Promise<Rel> {
     const createdDaysAgo = opts.createdDaysAgo ?? (opts.startedDaysAgo !== undefined ? opts.startedDaysAgo + 1 : 1);
     const started = status === "ACTIVE" || status === "ENDED" || (status === "BLOCKED" && opts.startedDaysAgo !== undefined);
@@ -329,6 +409,7 @@ class Seeder {
         categories: opts.categories ?? [],
         message: opts.message ?? null,
         blockedById: status === "BLOCKED" ? opts.blockedById ?? studentId : null,
+        ...(opts.showProgress === false ? { showProgress: false } : {}),
         startedAt: started ? this.ago(opts.startedDaysAgo ?? 30) : null,
         endedAt: status === "ENDED" || status === "BLOCKED" ? this.ago(opts.endedDaysAgo ?? 2) : null,
         createdAt: this.ago(createdDaysAgo),
@@ -390,44 +471,39 @@ class Seeder {
       select: { id: true, order: true, days: true, sets: true },
     });
 
-    let lastLog: { id: string; itemId: string } | null = null;
+    if (activated) {
+      this.tracked.push({ programId: p.id, studentId: rel.studentId, activationIso: addDaysIso(this.today, Math.min(0, start)), mirror: s === "ACTIVE" });
+    }
     if (spec.logs && activated) {
       const lastOffset = s === "COMPLETED" ? spec.endOffset ?? -1 : spec.withToday ? 0 : -1;
-      const logs: Prisma.MentorProgramLogCreateManyInput[] = [];
+      if (!this.ticks.has(rel.studentId)) this.ticks.set(rel.studentId, new Map());
+      const byDay = this.ticks.get(rel.studentId)!;
       for (let off = start; off <= lastOffset; off++) {
-        const date = this.day(off);
-        const jsDay = date.getUTCDay();
+        const iso = addDaysIso(this.today, off);
+        const jsDay = dateFromIso(iso).getUTCDay();
         for (const it of items) {
-          if (!it.days.includes(jsDay)) continue;
-          const st = pattern(off + 100, it.order);
-          if (!st) continue;
-          logs.push({
-            programId: p.id,
-            itemId: it.id,
-            studentId: rel.studentId,
-            date,
-            status: st,
-            setsDone: spec.type === "WORKOUT" && it.sets ? (st === "COMPLETED" ? it.sets : st === "PARTIAL" ? Math.max(1, it.sets - 1) : 0) : null,
-            note: st === "MISSED" ? "این روز کلاس داشتم و نرسیدم." : st === "PARTIAL" && it.order === 0 ? "نصفش رو انجام دادم، وقت کم آوردم." : null,
-          });
+          if (!it.days.includes(jsDay) || !ticked(off, it.order)) continue;
+          if (!byDay.has(iso)) byDay.set(iso, {});
+          byDay.get(iso)![mirrorOccurrenceId(p.id, it.order, jsDay)] = true;
         }
       }
-      if (logs.length) {
-        const created = await this.tx.mentorProgramLog.createManyAndReturn({ data: logs, select: { id: true, itemId: true, date: true } });
-        created.sort((a, b) => b.date.getTime() - a.date.getTime());
-        lastLog = created[0] ?? null;
-      }
+    }
+    if (spec.dayNotes?.length && activated) {
+      await this.tx.mentorProgramDayNote.createMany({
+        data: spec.dayNotes.map((n) => ({ programId: p.id, studentId: rel.studentId, date: this.day(n.offset), body: n.body })),
+        skipDuplicates: true,
+      });
     }
 
     if (spec.feedback?.length) {
       await this.tx.mentorFeedback.createMany({
         data: spec.feedback.map((f, i) => ({
           programId: p.id,
-          itemId: i === 0 && lastLog ? lastLog.itemId : null,
-          logId: i === 0 && lastLog ? lastLog.id : null,
+          itemId: i === 0 && items[0] ? items[0].id : null,
+          logId: null,
           mentorId: rel.mentorId,
           studentId: rel.studentId,
-          body: f.body,
+          body: sealAtRest(f.body, feedbackAad(p.id, rel.mentorId)),
           readAt: f.read ? this.ago(0, 60) : null,
           createdAt: this.ago(0, 120 + (spec.feedback!.length - i) * 300),
         })),
@@ -436,19 +512,72 @@ class Seeder {
     return p.id;
   }
 
-  /** پیام‌ها به‌ترتیبِ زمان؛ m = از طرفِ منتور. پیام‌های آخرِ طرفِ مقابلِ «unreadFor» خوانده‌نشده می‌مونن */
-  async messages(rel: Rel, lines: [boolean, string][], unreadTail = 0) {
-    const n = lines.length;
-    await this.tx.mentorMessage.createMany({
-      data: lines.map(([fromMentor, body], i) => ({
-        mentorshipId: rel.id,
-        senderId: fromMentor ? rel.mentorId : rel.studentId,
-        body,
-        createdAt: this.ago(0, (n - i) * 47 + 30),
-        readAt: i >= n - unreadTail ? null : this.ago(0, (n - i) * 47),
-      })),
+  // ── رمزگذاریِ سرتاسریِ پیام‌های آزمایشی (docs/mentor-e2ee.md) ──
+  // کاربرِ آزمایشی کلیدِ واقعیِ P-256 می‌گیرد که همین‌جا ساخته و بعد از ساخت دور
+  // ریخته می‌شود (پشتیبان ندارد؛ کسی هم با این کاربرها وارد نمی‌شود). گفت‌وگوی
+  // دو کاربرِ آزمایشی برای هیچ‌کس — حتی Owner — خواندنی نیست، همان‌طور که باید.
+  // گفت‌وگو با Owner: اگر Owner کلید دارد، به کلیدِ عمومیِ او رمز می‌شود؛ وگرنه خالی می‌ماند.
+  demoKeys = new Map<string, { version: number; publicB64: string; privateKey: CryptoKey; publicKey: CryptoKey }>();
+  ownerKey: { userId: string; version: number; publicKey: CryptoKey } | null = null;
+  skippedOwnerThreads = 0;
+
+  private async demoKey(userId: string) {
+    let k = this.demoKeys.get(userId);
+    if (!k) {
+      const kp = await generateIdentityKeyPair();
+      await this.tx.userE2EKey.create({ data: { userId, version: 1, publicKey: kp.publicB64 } });
+      k = { version: 1, publicB64: kp.publicB64, privateKey: kp.privateKey, publicKey: kp.publicKey };
+      this.demoKeys.set(userId, k);
+    }
+    return k;
+  }
+
+  /**
+   * پیام‌ها به‌ترتیبِ زمان؛ true = از طرفِ منتور. پیام‌های آخرِ «unreadTail» خوانده‌نشده می‌مونن.
+   * خروجی: متن و clientIdِ هر پیام (برای ساختِ گزارشِ تأییدشده).
+   */
+  async messages(rel: Rel, lines: [boolean, string][], unreadTail = 0): Promise<{ clientId: string; senderId: string; text: string }[]> {
+    const ownerSide = this.ownerKey && (rel.mentorId === this.ownerKey.userId || rel.studentId === this.ownerKey.userId) ? this.ownerKey : null;
+    const involvesOwner = !this.isDemo(rel.mentorId) || !this.isDemo(rel.studentId);
+    if (involvesOwner && !ownerSide) {
+      this.skippedOwnerThreads++;
+      return [];
+    }
+    // یک طرف همیشه کاربرِ آزمایشی است و کلیدِ خصوصی‌اش را داریم
+    const demoId = this.isDemo(rel.mentorId) ? rel.mentorId : rel.studentId;
+    const otherId = demoId === rel.mentorId ? rel.studentId : rel.mentorId;
+    const mine = await this.demoKey(demoId);
+    const other = ownerSide && otherId === ownerSide.userId ? ownerSide : await this.demoKey(otherId);
+    const mentorV = rel.mentorId === demoId ? mine.version : other.version;
+    const studentV = rel.studentId === demoId ? mine.version : other.version;
+    const keys = await deriveChatKeys(mine.privateKey, other.publicKey, {
+      mentorshipId: rel.id, mentorId: rel.mentorId, studentId: rel.studentId, mentorKeyVersion: mentorV, studentKeyVersion: studentV,
     });
+
+    const n = lines.length;
+    const out: { clientId: string; senderId: string; text: string }[] = [];
+    const data: Prisma.MentorMessageCreateManyInput[] = [];
+    for (let i = 0; i < n; i++) {
+      const [fromMentor, text] = lines[i];
+      const senderId = fromMentor ? rel.mentorId : rel.studentId;
+      const clientId = randomId();
+      const enc = await encryptMessage(fromMentor ? keys.fromMentor : keys.fromStudent, text, {
+        mentorshipId: rel.id, senderId, clientId,
+        senderKeyVersion: fromMentor ? mentorV : studentV,
+        recipientKeyVersion: fromMentor ? studentV : mentorV,
+      });
+      const createdAt = this.ago(0, (n - i) * 47 + 30);
+      data.push({ ...encryptedMessageData(rel, senderId, enc, createdAt), readAt: i >= n - unreadTail ? null : this.ago(0, (n - i) * 47) });
+      out.push({ clientId, senderId, text });
+    }
+    await this.tx.mentorMessage.createMany({ data });
     this.counts.messages += n;
+    return out;
+  }
+
+  demoIds = new Set<string>();
+  private isDemo(userId: string): boolean {
+    return this.demoIds.has(userId);
   }
 
   async review(rel: Rel, rating: number, body: string, hiddenReason?: string) {
@@ -509,6 +638,7 @@ async function createMentorProfile(tx: Tx, userId: string, m: MentorSpec, ownerI
       suspendedAt: m.suspendedReason ? new Date(now.getTime() - 86_400_000) : null,
       suspendedReason: m.suspendedReason ?? null,
       lastActiveAt: new Date(now.getTime() - m.lastActiveDaysAgo * 86_400_000),
+      createdAt: new Date(now.getTime() - (m.profileAgeDays ?? 180) * 86_400_000),
     },
     select: { id: true },
   });
@@ -544,7 +674,6 @@ async function createMentorProfile(tx: Tx, userId: string, m: MentorSpec, ownerI
   if (events.length) await tx.mentorVerificationEvent.createMany({ data: events });
 }
 
-type PendingMirror = { programId: string; activationIso: string };
 
 /**
  * همه‌چیزِ قبلی رو پاک می‌کنه و دیتاستِ کامل رو می‌سازه. ownerId = Ownerی که
@@ -566,15 +695,25 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   const ownerWorkoutOk = ownerCats.length === 0 || ownerCats.includes("FITNESS");
   const ownerRelCats = ownerCats.filter((c) => c === "ROUTINE" || c === "FITNESS" || c === "NUTRITION");
 
-  const mirrors: PendingMirror[] = [];
+  // کلیدِ رمزگذاریِ Owner (اگر فعال کرده) — گفت‌وگوهای او با کاربرانِ آزمایشی به همین کلید رمز می‌شوند
+  const ownerCur = await currentE2EKey(ownerId);
+  const ownerE2E = ownerCur ? { userId: ownerId, version: ownerCur.version, publicKey: await importPublicKey(ownerCur.publicKey) } : null;
+  let skippedOwnerThreads = 0;
+
+  let tickPlan = new Map<string, Map<string, Record<string, boolean>>>();
+  let tracked: Seeder["tracked"] = [];
   let ownerProfileId: string | null = null;
   let notificationIds: string[] = [];
+  let manageLabelIds: string[] = [];
+  let toolsDemo: ToolsDemoState | undefined;
 
   const counts = await prisma.$transaction(
     async (tx) => {
       const S = new Seeder(tx, today, now);
       const u = await createDemoUsers(tx, passwordHash);
       const id = (k: string) => u.get(k)!;
+      for (const v of Array.from(u.values())) S.demoIds.add(v);
+      S.ownerKey = ownerE2E;
       for (const m of MENTORS) await createMentorProfile(tx, id(m.key), m, ownerId, now);
 
       // ── سارا (ROUTINE، استاد ریاضی) ──
@@ -584,6 +723,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
         description: "تمرکز روی مشتق و هندسه‌ی تحلیلی تا آزمون آبان.",
         note: "اگه تست‌های مشتق زیر ۶۰ درصد شد، جمعه یک جلسه‌ی مرور اضافه کن و بهم خبر بده.",
         items: ROUTINE_ITEMS, logs: true,
+        dayNotes: [{ offset: -2, body: "مدرسه کلاس جبرانی گذاشت؛ حل تمرین نصفه ماند." }],
         feedback: [{ body: "آزمون پنجشنبه خوب بود؛ سرعتت از هفته‌ی قبل بهتره.", read: true }, { body: "مرور هندسه دو بار جا افتاده، این هفته حتما انجامش بده.", read: false }],
       });
       await S.program(saraAli, {
@@ -622,6 +762,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
         description: "شش روز در هفته، دو الگوی تمرینی یک‌روز‌درمیان.",
         note: "وزنه‌ها رو فقط وقتی بالا ببر که همه‌ی ست‌ها رو با فرم درست کامل کردی.",
         items: WORKOUT_A, logs: true, withToday: true,
+        dayNotes: [{ offset: -1, body: "زانو کمی درد داشت؛ اسکوات را سبک‌تر زدم." }],
         feedback: [{ body: "اسکوات این هفته عالی بود؛ هفته‌ی بعد ۶۲٫۵ کیلو.", read: false }],
       });
       await S.program(amirMohammad, {
@@ -649,7 +790,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
 
       // ── رضا (NUTRITION، معلق) ──
       const rezaNarges = await S.mentorship(id("reza"), id("narges"), "ACTIVE", { categories: ["NUTRITION"], startedDaysAgo: 25 });
-      await S.messages(rezaNarges, [
+      const rezaLines = await S.messages(rezaNarges, [
         [true, "برای برنامه‌ی ویژه‌ی کاهش وزن، پکیج مکمل رو از پیج من بخر."],
         [false, "من فقط برنامه‌ی غذایی می‌خواستم."],
       ]);
@@ -661,12 +802,36 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       await S.program(maryamZahra, { type: "ROUTINE", title: "روتین ترم بهار", status: "COMPLETED", startOffset: -65, endOffset: -18, items: STUDY_ITEMS, logs: true });
       await S.review(maryamZahra, 2, "شماره‌ی تلفنش رو بده تا بیرون از اپ هماهنگ کنیم.", "شامل اطلاعات تماس شخصی");
 
+      // ── رتبه‌بندیِ شایستگی: شاگردهای بیشترِ امیر و نظرهای تأییدنشده‌ی کیان ──
+      const amirSina = await S.mentorship(id("amir"), id("sina"), "ACTIVE", { categories: ["FITNESS"], startedDaysAgo: 60 });
+      await S.program(amirSina, { type: "WORKOUT", title: "آمادگی پایه", status: "COMPLETED", startOffset: -55, endOffset: -25, items: WORKOUT_B, logs: true });
+      await S.program(amirSina, { type: "WORKOUT", title: "قدرت — دوره‌ی اول", status: "ACTIVE", startOffset: -20, endOffset: 30, items: WORKOUT_A, logs: true });
+      await S.review(amirSina, 4, "برنامه‌ی اول را کامل انجام دادم و دوره‌ی دوم را شروع کردم.");
+      const amirMina = await S.mentorship(id("amir"), id("mina"), "ACTIVE", { categories: ["FITNESS"], startedDaysAgo: 35 });
+      await S.program(amirMina, { type: "WORKOUT", title: "تمام‌بدن سه‌روزه", status: "ACTIVE", startOffset: -28, endOffset: 20, items: WORKOUT_B, logs: true });
+      const saraKaveh = await S.mentorship(id("sara"), id("kaveh"), "ACTIVE", { categories: ["ROUTINE"], startedDaysAgo: 50 });
+      await S.program(saraKaveh, { type: "ROUTINE", title: "برنامه‌ی جمع‌بندی شهریور", status: "COMPLETED", startOffset: -45, endOffset: -15, items: ROUTINE_ITEMS.slice(0, 3), logs: true });
+      await S.review(saraKaveh, 5, "هر هفته برنامه را با نتیجه‌ی آزمون تنظیم می‌کرد.");
+      for (const k of ["kaveh", "leila", "hossein", "elham"]) {
+        const r = await S.mentorship(id("kian"), id(k), "ACTIVE", { categories: ["FITNESS"], startedDaysAgo: 5 });
+        await S.review(r, 5, "عالی بود.");
+      }
+
       // ── گزارش‌ها ──
-      const rezaMsg = await tx.mentorMessage.findFirst({ where: { mentorshipId: rezaNarges.id, senderId: id("reza") }, select: { id: true } });
+      // گزارشِ پیام همان مدرکی را دارد که مسیرِ واقعی بعد از تأییدِ فرانکینگ ذخیره می‌کند
+      const rezaLine = rezaLines.find((l) => l.senderId === id("reza"));
+      const rezaMsg = rezaLine
+        ? await tx.mentorMessage.findFirst({ where: { mentorshipId: rezaNarges.id, clientId: rezaLine.clientId }, select: { id: true, createdAt: true } })
+        : null;
       await tx.mentorReport.createMany({
         data: [
           { reporterId: id("narges"), targetType: "USER", targetId: id("reza"), targetUserId: id("reza"), reason: "اسپم یا تبلیغ", details: "پیام تبلیغ مکمل می‌فرسته.", createdAt: S.ago(3) },
-          ...(rezaMsg ? [{ reporterId: id("narges"), targetType: "MESSAGE" as const, targetId: rezaMsg.id, targetUserId: id("reza"), reason: "درخواستِ پرداخت/ارتباط خارج از آریون", details: null, createdAt: S.ago(3, 10) }] : []),
+          ...(rezaMsg && rezaLine
+            ? [{
+                reporterId: id("narges"), targetType: "MESSAGE" as const, targetId: rezaMsg.id, targetUserId: id("reza"), reason: "درخواستِ پرداخت/ارتباط خارج از آریون", details: null, createdAt: S.ago(3, 10),
+                reportedText: sealReportedText(rezaLine.text, rezaMsg.id, id("narges")), reportedMessageAt: rezaMsg.createdAt, reportVerified: true,
+              }]
+            : []),
           {
             reporterId: id("elham"), targetType: "USER", targetId: id("maryam"), targetUserId: id("maryam"), reason: "رفتارِ نامناسب یا توهین‌آمیز", details: "پیام‌های خارج از برنامه می‌فرستاد.",
             status: "RESOLVED", resolution: "پیام‌ها بررسی شد؛ به منتور تذکر داده شد.", resolvedById: ownerId, resolvedAt: S.ago(5), createdAt: S.ago(6),
@@ -684,11 +849,10 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       const ownerActive = await S.program(saraOwner, {
         type: "ROUTINE", title: "برنامه‌ی مرور هفتگی", status: "ACTIVE", startOffset: -7, endOffset: 21,
         description: "برنامه‌ی آزمایشی برای تست بخش شاگرد.",
-        note: "هر روز بعد از انجام، وضعیت رو ثبت کن تا گزارش هفتگی دقیق باشه.",
+        note: "هر روز آیتم‌ها رو در روتینت تیک بزن تا گزارش هفتگی دقیق باشه.",
         items: ROUTINE_ITEMS, logs: true,
-        feedback: [{ body: "دو روز اول رو کامل انجام دادی. ادامه بده.", read: true }, { body: "آزمون پنجشنبه ثبت نشده؛ اگه انجام دادی ثبتش کن.", read: false }],
+        feedback: [{ body: "دو روز اول رو کامل انجام دادی. ادامه بده.", read: true }, { body: "آزمون پنجشنبه تیک نخورده؛ اگه انجامش دادی در روتینت تیکش بزن.", read: false }],
       });
-      mirrors.push({ programId: ownerActive, activationIso: addDaysIso(today, -7) });
       const ownerPending = await S.program(saraOwner, {
         type: "ROUTINE", title: "برنامه‌ی آمادگی آزمون آبان", status: "PENDING", startOffset: 22, endOffset: 50,
         note: "بعد از تموم‌شدن برنامه‌ی فعلی شروع می‌شه. اگه روزی جور نیست، «درخواست تغییر» بزن.", items: STUDY_ITEMS,
@@ -730,13 +894,13 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       if (pType) {
         await S.program(ownerFatemeh, {
           type: pType, title: pType === "ROUTINE" ? "روتین مطالعه‌ی روزانه" : "تمرین شش‌روزه", status: "ACTIVE", startOffset: -14, endOffset: 16,
-          note: "روزهایی که انجام نشد رو با توضیح ثبت کن.", items: pItems(pType), logs: true, withToday: true,
+          note: "برای روزهایی که انجام نشد، یادداشت روز بنویس.", items: pItems(pType), logs: true, withToday: true,
           feedback: [{ body: "هفته‌ی اول منظم بود.", read: true }],
         });
       }
       await S.messages(ownerFatemeh, [
         [false, "سلام، برنامه‌ی این هفته رو شروع کردم."],
-        [true, "سلام. ثبت روزانه یادت نره."],
+        [true, "سلام. تیک روزانه یادت نره."],
         [false, "دیروز نتونستم تست شیمی رو کامل کنم؛ نصفش رو زدم."],
       ], 1);
       await S.review(ownerFatemeh, 5, "برنامه واضح بود و پیگیری منظم.");
@@ -751,7 +915,8 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
         await S.program(ownerPouya, { type: pType, title: "برنامه‌ی پیش‌نویس", status: "DRAFT", startOffset: 10, endOffset: 40, items: pItems(pType).slice(0, 1) });
       }
 
-      const ownerElham = await S.mentorship(ownerId, id("elham"), "ACTIVE", { categories: ownerRelCats, startedDaysAgo: 45 });
+      // الهام «نمایش پیشرفت» را برای Owner بسته — نمای مخفیِ پیشرفت را نشان می‌دهد
+      const ownerElham = await S.mentorship(ownerId, id("elham"), "ACTIVE", { categories: ownerRelCats, startedDaysAgo: 45, showProgress: false });
       if (pType) {
         await S.program(ownerElham, { type: pType, title: "برنامه‌ی ماه قبل", status: "COMPLETED", startOffset: -40, endOffset: -12, items: pItems(pType), logs: true });
         await S.program(ownerElham, { type: pType, title: "برنامه‌ی فشرده", status: "CANCELLED", startOffset: -10, endOffset: 10, note: "به درخواست شاگرد لغو شد.", items: pItems(pType).slice(0, 2) });
@@ -768,6 +933,54 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       });
       notificationIds = notes.map((n) => n.id);
 
+      tickPlan = S.ticks;
+      tracked = S.tracked;
+      skippedOwnerThreads = S.skippedOwnerThreads;
+      // دسترس‌پذیری و مدیریتِ شاگرد (ظرفیت، عدم حضور، سؤال‌های پذیرش، برچسب، یادداشت، توقف، دلیلِ پایان)
+      const manage = await seedManageDemo({ tx, id, ownerId, ownerProfileCreated: !!ownerProfileId, today, now });
+      manageLabelIds = manage.ownerLabelIds;
+      S.counts.mentorships += manage.addedMentorships;
+
+      // ── ابزارهای منتور: هشدارِ پایبندی، گزارشِ هفتگی، شروعِ زمان‌بندی‌شده، قالب و پاسخِ آماده ──
+      if (pType) {
+        // علی: برنامه‌ی فعال که ۴ روزِ آخر هیچ تیکی ندارد → هشدارِ «۳ روز» با بازکردنِ پنل منتور
+        const ownerAli = await S.mentorship(ownerId, id("ali"), "ACTIVE", { categories: ownerRelCats, startedDaysAgo: 16 });
+        const aliItems = pItems(pType).slice(0, 2);
+        const aliProgram = await S.program(ownerAli, {
+          type: pType, title: "برنامه‌ی بازگشت به روال", status: "ACTIVE", startOffset: -12, endOffset: 16,
+          note: "اگر روزی نرسیدی، همان روز خبر بده تا برنامه را سبک‌تر کنم.", items: aliItems,
+        });
+        if (!S.ticks.has(id("ali"))) S.ticks.set(id("ali"), new Map());
+        const aliTicks = S.ticks.get(id("ali"))!;
+        for (let off = -12; off <= -5; off++) {
+          const iso = addDaysIso(today, off);
+          const jsDay = dateFromIso(iso).getUTCDay();
+          aliItems.forEach((it, order) => {
+            if (!it.days.includes(jsDay)) return;
+            if (!aliTicks.has(iso)) aliTicks.set(iso, {});
+            aliTicks.get(iso)![mirrorOccurrenceId(aliProgram, order, jsDay)] = true;
+          });
+        }
+        if (ownerFatemeh) {
+          // دوره‌ی بعد، پذیرفته‌شده و زمان‌بندی‌شده برای روزِ بعد از پایانِ برنامه‌ی فعلی
+          await S.program(ownerFatemeh, {
+            type: pType, title: pType === "ROUTINE" ? "روتین مطالعه — دوره‌ی دوم" : "تمرین شش‌روزه — دوره‌ی دوم", status: "ACCEPTED", startOffset: 17, endOffset: 46,
+            note: "بعد از پایان دوره‌ی اول خودکار شروع می‌شود.", items: pItems(pType),
+          });
+        }
+        // پویا: پذیرفته‌شده با شروعِ امروز → با بازکردنِ پنل منتور خودکار فعال می‌شود (اعلانِ «شروع برنامه»)
+        await S.program(ownerPouya, {
+          type: pType, title: "برنامه‌ی دو هفته‌ای", status: "ACCEPTED", startOffset: 0, endOffset: 13,
+          note: "از امروز شروع می‌شود.", items: pItems(pType).slice(0, 2),
+        });
+      }
+      const ownerMentorProfileId = ownerProfileId ?? owner.mentorProfile?.id ?? null;
+      if (ownerMentorProfileId) {
+        toolsDemo = await seedToolsDemo({
+          tx, ownerProfileId: ownerMentorProfileId, ownerProfileCreated: !!ownerProfileId, routineOk: ownerRoutineOk, workoutOk: ownerWorkoutOk, now,
+        });
+      }
+
       return S.counts;
     },
     { timeout: 60_000, maxWait: 10_000 }
@@ -781,17 +994,41 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   });
   for (const r of reviewedMentors) await recomputeMentorRating(r.mentorId);
 
-  // آینه‌ی برنامه‌ی فعالِ Owner در «روتین من» — همون مسیری که فعال‌سازیِ واقعی می‌ره
-  for (const m of mirrors) {
+  // آینه‌ی برنامه‌های فعال در «روتین من»ِ شاگردها (Owner هم) — همون مسیری که فعال‌سازیِ واقعی می‌ره
+  for (const m of tracked.filter((t) => t.mirror)) {
     try {
       const occ = await loadMirrorOccurrences(m.programId, m.activationIso);
-      if (occ.length) await writeProgramMirror(ownerId, m.programId, occ);
+      if (occ.length) await writeProgramMirror(m.studentId, m.programId, occ);
     } catch {
       warnings.push("برنامه‌ی فعال در «روتین من» نوشته نشد (سقف حجم روتین)");
     }
   }
 
-  const state: DemoState = { seededAt: now.toISOString(), ownerId, ownerProfileId, notificationIds };
+  // تیک‌های روتین — ادغام با DailyEntryِ موجود (برای Owner تیک‌های خودش می‌مونه)
+  for (const [userId, byDay] of Array.from(tickPlan)) {
+    for (const [iso, items] of Array.from(byDay)) {
+      const date = dateFromIso(iso);
+      const cur = await prisma.dailyEntry.findUnique({ where: { userId_date: { userId, date } }, select: { completedItems: true } });
+      const merged = { ...((cur?.completedItems ?? {}) as Record<string, unknown>), ...items } as Prisma.InputJsonValue;
+      await prisma.dailyEntry.upsert({ where: { userId_date: { userId, date } }, create: { userId, date, completedItems: merged }, update: { completedItems: merged } });
+    }
+  }
+
+  // پیشرفتِ خودکار از روی همین تیک‌ها (برنامه‌های تمام‌شده هم یک بار نهایی می‌شن)
+  await syncProgramProgress(tracked.map((t) => t.programId), { force: true, finalize: true }).catch(() => {
+    warnings.push("پیشرفت خودکار برنامه‌ها ساخته نشد");
+  });
+
+  // رتبه‌بندیِ شایستگی همین حالا از روی داده‌ی تازه (وگرنه تا TTL کهنه می‌موند)
+  await recomputeMentorRankings().catch(() => {
+    warnings.push("رتبه‌بندی منتورها بازمحاسبه نشد");
+  });
+
+  if (skippedOwnerThreads > 0) {
+    warnings.push("گفت‌وگوهای حساب شما با کاربران آزمایشی خالی ساخته شد؛ پیام‌ها رمزگذاری سرتاسری دارند و حساب شما هنوز رمز گفت‌وگو ندارد. پس از فعال‌سازی در یک گفت‌وگو، داده‌ی آزمایشی را دوباره بساز");
+  }
+
+  const state: DemoState = { seededAt: now.toISOString(), ownerId, ownerProfileId, notificationIds, manageLabelIds, toolsDemo };
   await prisma.appSetting.upsert({
     where: { key: DEMO_DATA_SETTING_KEY },
     update: { value: state as unknown as Prisma.InputJsonValue },

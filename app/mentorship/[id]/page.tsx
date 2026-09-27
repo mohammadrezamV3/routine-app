@@ -8,6 +8,7 @@ import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell"
 import { MentorEmpty, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
 import { MentorChat } from "@/components/MentorChat";
+import { MentorshipStateNote } from "@/components/MentorshipStateNote";
 import { MentorshipStatusBadge, ProgramStatusBadge } from "@/components/ProgramStatusBadge";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { ProgramRespondModal } from "@/components/ProgramRespondModal";
@@ -179,13 +180,15 @@ function Relationship({ onHead }: { onHead: (h: { back: Back | null; node: React
         </MentorSection>
       )}
 
+      <MentorshipStateNote row={row} role={role} />
+
       <div className="mentor-tabs">
         <SegmentedTabs options={tabs} active={activeTab} onChange={changeTab} />
       </div>
 
       {activeTab === "chat" && (
         row.status === "ACTIVE" || row.status === "ENDED" ? (
-          <MentorChat mentorshipId={row.id} />
+          <MentorChat mentorshipId={row.id} peerName={name} />
         ) : (
           <MentorEmpty>{isPending ? "گفت‌وگو پس از پذیرش درخواست باز می‌شود" : "این رابطه گفت‌وگو ندارد"}</MentorEmpty>
         )

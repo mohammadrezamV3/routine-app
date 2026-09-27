@@ -2,6 +2,7 @@ import { signOut } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
 import { invalidateAccountCache } from "@/lib/accountCache";
 import { clearAuthHintCookie } from "@/lib/preload";
+import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
 
 /**
  * خروج از حساب — یک‌جا، چون هم سایدبارِ پنل کاربری و هم دکمه‌ی موبایلِ
@@ -13,5 +14,8 @@ export function logoutAndRedirect() {
   invalidateStorageCache();
   invalidateAccountCache();
   clearAuthHintCookie();
-  signOut({ callbackUrl: "/" });
+  // کلیدِ رمزگذاریِ سرتاسریِ گفت‌وگوی منتور روی این مرورگر نمی‌ماند (دستگاهِ مشترک)؛
+  // ورودِ بعدی با «رمز گفت‌وگو» دوباره باز می‌شود. خطا مانعِ خروج نمی‌شود.
+  const timeout = new Promise<void>((r) => setTimeout(r, 800));
+  Promise.race([clearAllLocalKeys().catch(() => {}), timeout]).finally(() => signOut({ callbackUrl: "/" }));
 }

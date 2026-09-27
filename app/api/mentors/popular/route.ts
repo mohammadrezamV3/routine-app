@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { requireMentorsUser } from "@/lib/mentorGuard";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds, loadPopularCards } from "@/lib/mentorServer";
+import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds } from "@/lib/mentorServer";
+import { loadNewcomerCards, loadPopularMentorCards } from "@/lib/mentorRankingStats";
 
 const TOP_N = 12;
+const NEWCOMERS_N = 6;
 
-// GET /api/mentors/popular → منتورهای محبوب با امتیازِ ترکیبیِ lib/mentorRanking.ts
-// (نه صرفاً تعدادِ شاگرد). فقط کسایی که شاگرد می‌پذیرن — ویترینِ «محبوب‌ها»
-// نباید کاربر رو به منتوری بفرسته که درخواستش رو اصلا قبول نمی‌کنه.
+// GET /api/mentors/popular → دو ویترینِ جدا:
+//   mentors   «منتورهای محبوب»: فقط منتورهایی که حداقلِ نمونه، احرازِ هویت و
+//             سلامتِ کافی دارن، به ترتیبِ امتیازِ شایستگی (lib/mentorRanking.ts)
+//   newcomers «منتورهای تازه»: منتورِ تأییدشده با پروفایلِ کامل که هنوز نمونه‌ی
+//             کافی نداره — جایگاهِ جدا و برچسب‌دار، قاطیِ رتبه‌بندی نمی‌شه
+// هر دو فقط کسانی که همین الان درخواست می‌پذیرن (پذیرش باز، ظرفیت خالی، در دسترس).
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -16,10 +21,10 @@ export async function GET() {
   }
 
   const blocked = await blockedUserIds(g.userId);
-  const { cards } = await loadPopularCards(
-    { ...DISCOVERABLE_PROFILE_WHERE, acceptingStudents: true, ...(blocked.length ? { userId: { notIn: blocked } } : {}) },
-    0,
-    TOP_N
-  );
-  return NextResponse.json({ mentors: cards });
+  const where = { ...DISCOVERABLE_PROFILE_WHERE, acceptingStudents: true, ...(blocked.length ? { userId: { notIn: blocked } } : {}) };
+  const mentors = await loadPopularMentorCards(where, TOP_N);
+  const newcomers = await loadNewcomerCards(where, [], NEWCOMERS_N);
+  // یک منتور هم‌زمان در هر دو ویترین نمیاد
+  const shown = new Set(mentors.map((m) => m.userId));
+  return NextResponse.json({ mentors, newcomers: newcomers.filter((m) => !shown.has(m.userId)) });
 }

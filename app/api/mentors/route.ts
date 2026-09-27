@@ -5,15 +5,18 @@ import { requireMentorsUser } from "@/lib/mentorGuard";
 import { clampQuery } from "@/lib/validate";
 import { isMentorCategory } from "@/lib/mentorCategories";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, loadMentorStats, loadPopularCards, toMentorCard } from "@/lib/mentorServer";
+import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, loadMentorStats, toMentorCard } from "@/lib/mentorServer";
+import { RANK_SCOPE_ALL, loadRankedCards } from "@/lib/mentorRankingStats";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
-// «محبوب» در حافظه رتبه‌بندی می‌شه (امتیازِ ترکیبی قابل‌بیان با ORDER BY نیست)؛
-// این سقفِ نامزدهاست — بیشتر از این، کشف باید به ستونِ امتیازِ ذخیره‌شده مهاجرت کنه.
-const POPULAR_CANDIDATES = 500;
 
-// GET /api/mentors?q=&category=&sort=popular|rating|new&page= → کشفِ منتورها
+// GET /api/mentors?q=&category=&sort=best|rating|new&page= → فهرستِ منتورها
+//   best   «بهترین نتیجه» (پیش‌فرض): امتیازِ شایستگی — lib/mentorRanking.ts
+//   rating «بالاترین امتیاز»: فقط نظرهای تأییدشده، میانگینِ بیزی (نه میانگینِ خام)
+//   new    «تازه‌ترین»: زمانِ ساختِ پروفایل
+// با فیلترِ دسته، رتبه از امتیازِ *همون حوزه* میاد (مربیِ بدنسازی با نتیجه‌ی
+// برنامه‌های تمرینی، نه روتین). ترتیب همیشه قطعیه (tie-break با id).
 export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -26,7 +29,8 @@ export async function GET(req: NextRequest) {
   const categoryRaw = sp.get("category");
   const category = isMentorCategory(categoryRaw) ? categoryRaw : null;
   const sortRaw = sp.get("sort");
-  const sort = sortRaw === "rating" || sortRaw === "new" ? sortRaw : "popular";
+  // "popular" نامِ قدیمیِ همون best ـه
+  const sort = sortRaw === "rating" || sortRaw === "new" ? sortRaw : "best";
   const pageNum = Number(sp.get("page") || 1);
   const page = Number.isInteger(pageNum) && pageNum >= 1 ? Math.min(pageNum, MAX_PAGE) : 1;
 
@@ -51,13 +55,12 @@ export async function GET(req: NextRequest) {
       : {}),
   };
 
-  if (sort === "popular") {
-    const { cards, total } = await loadPopularCards(where, (page - 1) * PAGE_SIZE, PAGE_SIZE, POPULAR_CANDIDATES);
-    return NextResponse.json({ mentors: cards, hasMore: total > page * PAGE_SIZE });
+  if (sort !== "new") {
+    const { cards, hasMore } = await loadRankedCards(where, category ?? RANK_SCOPE_ALL, sort, (page - 1) * PAGE_SIZE, PAGE_SIZE);
+    return NextResponse.json({ mentors: cards, hasMore });
   }
 
-  const orderBy: Prisma.MentorProfileOrderByWithRelationInput[] =
-    sort === "rating" ? [{ ratingAvg: "desc" }, { ratingCount: "desc" }, { createdAt: "desc" }] : [{ createdAt: "desc" }];
+  const orderBy: Prisma.MentorProfileOrderByWithRelationInput[] = [{ createdAt: "desc" }, { id: "asc" }];
   const rows = await prisma.mentorProfile.findMany({
     where,
     include: MENTOR_CARD_INCLUDE,

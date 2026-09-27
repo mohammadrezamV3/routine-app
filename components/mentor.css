@@ -176,17 +176,21 @@ a.mentor-row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px;
 
 /* ── دکمه‌ها ──────────────────────────────────────────────────
    .mentor-btn کنار کلاس سایت می‌نشیند و فقط قاب را یکسان می‌کند
-   (پدینگ، ارتفاع، فاصله‌ی آیکون تا متن) — روی <a> و <button>. */
+   (پدینگ، ارتفاع، فاصله‌ی آیکون تا متن) — روی <a> و <button>. گردیِ گوشه و
+   بک‌گراند عمداً از خودِ کلاسِ سایت می‌آید تا عیناً مثلِ بقیه‌ی دکمه‌های سایت باشد. */
 .mentor-btn{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
-  min-height:38px; padding:8px 16px; border-radius:12px;
+  min-height:38px; padding:8px 16px;
   border-style:solid; border-width:1px;
   font-family:inherit; font-size:12.5px; font-weight:700; line-height:1.4;
   white-space:nowrap; text-decoration:none; cursor:pointer;
 }
-.mentor-btn.is-sm{ min-height:32px; padding:5px 12px; border-radius:10px; font-size:12px; gap:5px; }
+.mentor-btn.is-sm{ min-height:32px; padding:5px 12px; font-size:12px; gap:5px; }
 .mentor-btn.is-icon{ min-width:32px; padding:5px; }
 .mentor-btn svg{ flex-shrink:0; }
+/* <a> ریستِ سراسریِ button{} را نمی‌گیرد؛ همان گردیِ دکمه‌های سایت را صریح می‌دهیم */
+a.mentor-btn{ border-radius:11px; }
+a.mentor-btn.trade-primary-btn{ border-radius:13px; }
 .mentor-btn:focus-visible,
 .mentor-page .trade-title-add-btn:focus-visible,
 .mentor-link:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
@@ -497,3 +501,130 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 /* ── پاپ‌آپ تأیید ─────────────────────────────────────────── */
 .mentor-dialog-msg{ margin:0; font-size:13px; font-weight:700; line-height:1.9; color:var(--text); text-align:center; }
 .mentor-dialog-hint{ margin:6px 0 0; font-size:12px; line-height:1.9; color:var(--muted); text-align:center; }
+
+/* ── Agent A: پیشرفتِ خودکار (MentorProgressWeek) ─────────────────
+   جدولِ فقط‌خواندنیِ هفته: وضعیت فقط با رنگِ آیکون، بدونِ بک‌گراند. */
+.mentor-pg-nav{ display:flex; align-items:center; justify-content:space-between; gap:var(--m-2); margin-bottom:var(--m-2); }
+.mentor-pg-range{ display:inline-flex; align-items:center; gap:var(--m-2); font-size:12px; font-weight:700; color:var(--text); }
+.mentor-pg-today{ display:flex; justify-content:center; margin-bottom:var(--m-2); }
+.mentor-pg-scroll{ overflow-x:auto; margin:0 0 var(--m-3); }
+.mentor-pg{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:11.5px; }
+.mentor-pg th, .mentor-pg td{ padding:6px 0; text-align:center; border-bottom:1px solid var(--surface-line); font-weight:400; }
+.mentor-pg tbody tr:last-child th, .mentor-pg tbody tr:last-child td{ border-bottom:none; }
+.mentor-pg .mentor-pg-item{
+  width:34%; padding-inline-end:var(--m-2); text-align:start; color:var(--text); font-weight:600;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.mentor-pg thead .mentor-pg-item{ color:var(--muted); font-weight:700; font-size:11px; }
+.mentor-pg .mentor-pg-day{
+  flex-direction:column; gap:0; padding:2px 4px; margin:0 auto; font-size:11.5px; font-weight:700; color:var(--muted); line-height:1.5;
+}
+.mentor-pg .mentor-pg-day small{ font-size:10px; font-weight:600; }
+.mentor-pg .mentor-pg-day.is-today{ color:var(--text); }
+.mentor-pg .mentor-pg-day.is-on{ color:var(--accent); text-decoration:underline; text-underline-offset:4px; }
+.mentor-pg .mentor-pg-day:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+.mentor-pg td svg{ display:inline-block; vertical-align:middle; }
+.mentor-pg td.is-done{ color:var(--m-ok); }
+.mentor-pg td.is-partial{ color:var(--m-warn); }
+.mentor-pg td.is-missed{ color:var(--m-danger); }
+.mentor-pg td.is-upcoming, .mentor-pg td.is-untracked{ color:var(--muted); opacity:.7; }
+.mentor-pg-none{ color:var(--muted); opacity:.5; }
+
+/* ── رتبه‌بندیِ شایستگی (agent E — /mentors) ─────────────────────
+   فقط یک خطِ توضیحِ کوتاه زیرِ عنوانِ بخش؛ بدونِ سطح/پس‌زمینه. */
+.mentor-section-title + .mentor-section-note{ margin:calc(-1 * var(--m-2)) 0 var(--m-3); }
+
+/* ── ابزارهای منتور (agent C): قالب، پاسخ آماده، گزارش هفتگی ─────────── */
+/* پیش‌نمایشِ یک‌خطیِ متنِ پاسخ در ردیف */
+.mentor-reply-preview{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.mentor-row-sub > .mentor-reply-preview{ display:block; }
+/* انتخابگرِ پاسخِ آماده بالای کادرِ پیام: بی‌قاب و بی‌بک‌گراند */
+.mentor-replies-picker{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--m-2); margin-top:var(--m-2); }
+.mentor-replies-picker .mentor-btn-group{ width:100%; }
+/* جزئیاتِ زیرِ ردیفِ گزارش */
+.mentor-report-below{ display:flex; flex-direction:column; gap:var(--m-2); }
+.mentor-report-line{ margin:0; font-size:11.5px; line-height:1.9; color:var(--muted); word-break:break-word; }
+.mentor-report-line b{ color:var(--text); font-weight:700; }
+
+/* ============================================================
+   دسترس‌پذیری و مدیریتِ شاگرد (agent B — round 2)
+   پذیرش/ظرفیت/عدم حضور، سؤال‌های پذیرش، برچسب، یادداشتِ خصوصی،
+   توقف/پایانِ رابطه. بدونِ بک‌گراند و بدونِ حرکت.
+   ============================================================ */
+
+/* جواب‌های پذیرش: سؤال کم‌رنگ، جواب زیرش */
+.mentor-intake{ display:flex; flex-direction:column; gap:var(--m-2); margin:0; }
+.mentor-intake-item{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.mentor-intake-item dt{ font-size:11px; font-weight:700; color:var(--muted); line-height:1.8; }
+.mentor-intake-item dd{ margin:0; font-size:12px; color:var(--text); line-height:1.9; white-space:pre-wrap; word-break:break-word; }
+.mentor-row.is-stacked > .mentor-intake{ padding-inline-start:10px; border-inline-start:2px solid var(--surface-line); }
+
+/* ویرایشِ سؤال‌ها و افزودنِ برچسب: فیلد + دکمه در یک ردیف */
+.mentor-intake-edit, .mentor-inline-add{ display:flex; align-items:center; gap:var(--m-2); }
+.mentor-intake-edit > input, .mentor-inline-add > input{ flex:1; min-width:0; }
+.mentor-list .mentor-row > input.wsearch-newform-name{ flex:1; min-width:0; }
+
+/* فهرستِ شاگردها: تبِ مرتب‌سازی بدونِ حاشیه‌ی خودِ auth-tabs */
+.mentor-sort-tabs > .auth-tabs{ margin:0; }
+
+/* یادداشت‌های خصوصی */
+.mentor-notes{ margin-top:var(--m-2); }
+.mentor-note-actions{ display:inline-flex; align-items:center; gap:var(--m-1); margin-inline-start:auto; }
+
+/* کنترل‌های رابطه: وضعیتِ توقف بالای دکمه‌ها */
+.mentor-pause-state{ flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
+
+/* خط‌های وضعیت (توقف، عدم حضور، دلیلِ پایان، پیام خوش‌آمد، زمانِ پاسخ) */
+.mentor-state-notes{ display:flex; flex-direction:column; gap:var(--m-2); margin-bottom:var(--m-4); }
+.mentor-state-note{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-1) var(--m-2); margin:0;
+  font-size:12px; line-height:1.9; color:var(--muted); word-break:break-word;
+}
+.mentor-state-note.is-block{ flex-direction:column; align-items:stretch; }
+.mentor-state-label{ display:inline-flex; align-items:center; gap:var(--m-1); font-size:11.5px; font-weight:700; color:var(--muted); }
+
+/* فیلدِ داخلِ پاپ‌آپِ تأیید (دلیلِ توقف/پایان) */
+.mentor-modal .mentor-field{ margin-top:var(--m-3); text-align:start; }
+
+/* ============================================================
+   رمزگذاریِ سرتاسریِ گفت‌وگو و ارسالِ گروهی (agent D — docs/mentor-e2ee.md)
+   بدونِ بک‌گراند، بدونِ حرکت؛ فقط متن، رنگ و خطِ مو.
+   ============================================================ */
+
+/* خطِ آرامِ قفل بالای گفت‌وگو (و هشدارِ تغییرِ کلید) */
+.mentor-e2ee-line{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-1) var(--m-2); margin:0 0 var(--m-2);
+  font-size:11.5px; line-height:1.9; color:var(--muted);
+}
+.mentor-e2ee-line > svg{ flex-shrink:0; }
+.mentor-e2ee-line > span{ flex:1 1 auto; min-width:0; }
+.mentor-e2ee-line .mentor-text-btn{ padding:0 2px; font-size:11.5px; }
+.mentor-e2ee-line.is-warn{ color:var(--m-warn); }
+
+/* پیامی که خوانده نمی‌شود (کلیدِ قبلی/تأییدنشده) */
+.mentor-msg-unreadable{ font-size:12px; font-style:italic; opacity:.75; }
+/* پیامِ خوش‌آمد از تنظیماتِ منتور — همان حبابِ پیام، با خطِ نقطه‌چین به‌جای پر */
+.support-msg.mentor-msg-welcome{ border-style:dashed; }
+
+/* پاپ‌آپِ جزئیاتِ رمزگذاری: بخش‌ها با خطِ مو جدا می‌شوند */
+.mentor-e2ee-block{ padding-top:var(--m-3); border-top:1px solid var(--surface-line); }
+.mentor-e2ee-block:first-child{ padding-top:0; border-top:none; }
+.mentor-e2ee-block .mentor-field{ margin-top:0; }
+.mentor-e2ee-block > .mentor-form-actions{ margin-top:0; }
+.mentor-e2ee-block > .mentor-btn-group{ margin-top:var(--m-2); }
+.mentor-e2ee-code{
+  margin:var(--m-1) 0; font-size:15px; font-weight:700; letter-spacing:.06em; color:var(--text);
+  text-align:center; font-variant-numeric:tabular-nums; word-spacing:.35em;
+}
+
+/* ارسالِ گروهی: فهرستِ گیرنده‌ها داخلِ پاپ‌آپ */
+.mentor-broadcast-list{ max-height:min(38vh, 320px); overflow-y:auto; }
+.mentor-broadcast-summary{ margin:0; font-size:11.5px; line-height:1.9; color:var(--muted); }
+
+/* ابزارِ برنامه (MentorProgramTools، agent C) زیرِ ردیفِ برنامه در صفحه‌ی شاگرد:
+   قاب و سرِ بخشِ خودش برداشته می‌شود تا فقط گروهِ دکمه‌ها در ردیف بماند */
+.mentor-program-tools .acc-block{ margin:0; }
+.mentor-program-tools .acc-block-body{ padding:0; border:none; background:none; }
+.mentor-program-tools .mentor-section-head{ display:none; }
+/* آیکونِ گفت‌وگو در انتهای ردیفِ منتورِ فعال (/mentorship) */
+.mentor-row-chat{ color:var(--muted2); flex-shrink:0; }

@@ -4,7 +4,8 @@ import { requireMentorsUser, isMentorSuspended, notFound, forbidden, conflict, b
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
-import { PUBLIC_USER_SELECT, toFeedbackRow } from "@/lib/mentorServer";
+import { PUBLIC_USER_SELECT, feedbackAad, toFeedbackRow } from "@/lib/mentorServer";
+import { sealAtRest } from "@/lib/e2ee/server";
 
 type Ctx = { params: { id: string } };
 const BODY_MAX = 2000;
@@ -58,7 +59,8 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   const fb = await prisma.mentorFeedback.create({
-    data: { programId: p.id, itemId, logId, mentorId: me, studentId: p.studentId, body },
+    // رمزشده در حالِ سکون (MENTOR_DATA_KEY)؛ toFeedbackRow بازش می‌کند
+    data: { programId: p.id, itemId, logId, mentorId: me, studentId: p.studentId, body: sealAtRest(body, feedbackAad(p.id, me)) },
     include: { item: { select: { title: true } } },
   });
   touchMentorActivity(me);
@@ -67,7 +69,8 @@ export async function POST(req: Request, { params }: Ctx) {
   await notifyUser(p.studentId, {
     type: "program.feedback",
     title: "فیدبک جدید از منتور",
-    body: `${displayName(mentor)} درباره‌ی «${p.title}»: ${body.slice(0, 120)}`,
+    // متنِ فیدبک در اعلان/پوش نمی‌آید (اعلان رمز نمی‌شود و پوش از سرویسِ بیرونی رد می‌شود)
+    body: `${displayName(mentor)} درباره‌ی «${p.title}» فیدبک تازه‌ای نوشت`,
     url: `/mentor-programs/${p.id}`,
   });
 

@@ -20,6 +20,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 import { subscribeToPush } from "@/lib/pushClient";
 import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
+import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
 
 // این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
 // NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -66,7 +67,7 @@ export const ICONS: Record<string, JSX.Element> = {
   mentors: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17.2" cy="10" r="2.3" stroke="currentColor" strokeWidth="1.6"/><path d="M16.3 14.6c2.2-.2 3.9 1.1 4.7 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
   ),
-  // «کشف منتور» — یک نفر و ذره‌بین
+  // «انتخاب منتور» — یک نفر و ذره‌بین
   mentorsDiscover: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="9.5" cy="7.8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1.1-3.3 3.6-5 6.5-5 1.1 0 2.1.2 3 .7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17" cy="15.8" r="2.7" stroke="currentColor" strokeWidth="1.7"/><path d="m19 17.8 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -132,7 +133,7 @@ const LINKS: NavItem[] = [
   {
     label: "منتورها", icon: "mentors", feature: "mentors",
     children: [
-      { href: "/mentors", label: "کشف منتور", icon: "mentorsDiscover" },
+      { href: "/mentors", label: "انتخاب منتور", icon: "mentorsDiscover" },
       { href: "/mentorship", label: "منتورهای من", icon: "mentorsMine" },
     ],
   },
@@ -446,7 +447,7 @@ export function NavDrawer() {
                         <div
                           className="notif-panel-item profile-menu-item"
                           style={{ color: "#E05252" }}
-                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); clearAllLocalKeys().catch(() => {}); signOut({ callbackUrl: "/" }); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
                           <span>خروج از حساب</span>

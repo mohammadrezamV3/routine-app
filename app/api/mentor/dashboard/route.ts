@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser } from "@/lib/mentorGuard";
+import { activateDueForUser } from "@/lib/mentorSchedule";
+import { runAdherenceAlerts } from "@/lib/mentorReports";
 import { displayName } from "@/lib/inAppNotify";
 import { PROGRAM_STATUS_LABELS } from "@/lib/mentorProgramState";
+import { syncProgramProgress } from "@/lib/mentorProgress";
+import { faNum } from "@/lib/jalali";
 import {
   MENTORSHIP_WITH_USERS_INCLUDE,
   PROGRAM_WITH_USERS_INCLUDE,
@@ -18,8 +22,8 @@ import {
 
 const LOG_STATUS_LABELS = { COMPLETED: "انجام شد", PARTIAL: "نیمه‌کاره", MISSED: "انجام نشد" } as const;
 const ACTIVITY_LIMIT = 15;
-// «نیاز به توجه»: ≥۲ بار «انجام نشد» در ۷ روز، یا برنامه‌ی فعالی که ۳ روزه هیچ
-// اجرایی براش ثبت نشده. برنامه‌ای که کمتر از ۳ روزه فعال شده هنوز فرصت داره،
+// «نیاز به توجه»: ≥۲ آیتم/روزِ انجام‌نشده در ۷ روز، یا برنامه‌ی فعالی که ۳ روزه هیچ
+// آیتمی ازش انجام نشده (هر دو از پیشرفتِ خودکار). برنامه‌ای که کمتر از ۳ روزه فعال شده هنوز فرصت داره،
 // پس برای شرطِ دوم حساب نمی‌شه (وگرنه هر برنامه‌ی تازه فوراً قرمز می‌شد).
 const MISSED_THRESHOLD = 2;
 const SILENT_DAYS = 3;
@@ -33,6 +37,13 @@ export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
+
+  // lazy (بدونِ cron): شروعِ برنامه‌های زمان‌بندی‌شده و هشدارِ پایبندی — هیچ‌کدام throw نمی‌کنند
+  await activateDueForUser(me);
+  // پیشرفتِ خودکار: لاگ‌های AUTO از تیک‌های روتینِ شاگردها (با TTL) قبل از هر شمارش
+  const toSync = await prisma.mentorProgram.findMany({ where: { mentorId: me, status: "ACTIVE" }, select: { id: true }, take: 200 });
+  await syncProgramProgress(toSync.map((p) => p.id)).catch(() => undefined);
+  await runAdherenceAlerts(me);
 
   const tz = await userTimezone(me);
   const today = dateIsoInTz(new Date(), tz);
@@ -59,7 +70,13 @@ export async function GET() {
     }),
     prisma.mentorProgram.findMany({ where: { mentorId: me, status: "PENDING" }, include: PROGRAM_WITH_USERS_INCLUDE, orderBy: { sentAt: "desc" }, take: 50 }),
     prisma.mentorProgramLog.findMany({
-      where: { program: { mentorId: me, mentorship: { status: "ACTIVE" } }, updatedAt: { gte: recentCutoff } },
+      // فقط «انجام شد»: ردیف‌های MISSEDِ خودکار با گذشتِ روز ساخته می‌شوند و «فعالیت» نیستند؛
+      // و فقط شاگردهایی که «نمایش پیشرفت» را باز گذاشته‌اند
+      where: {
+        program: { mentorId: me, mentorship: { status: "ACTIVE", showProgress: true } },
+        status: { in: ["COMPLETED", "PARTIAL"] },
+        updatedAt: { gte: recentCutoff },
+      },
       orderBy: { updatedAt: "desc" },
       take: ACTIVITY_LIMIT,
       select: { programId: true, status: true, updatedAt: true, item: { select: { title: true } }, program: { select: { student: { select: PUBLIC_USER_SELECT } } } },
@@ -75,11 +92,12 @@ export async function GET() {
       where: { mentorship: { mentorId: me, status: "ACTIVE" }, senderId: { not: me }, createdAt: { gte: recentCutoff } },
       orderBy: { createdAt: "desc" },
       take: ACTIVITY_LIMIT,
-      select: { mentorshipId: true, body: true, createdAt: true, sender: { select: PUBLIC_USER_SELECT } },
+      // متنِ پیام رمزگذاریِ سرتاسری دارد و سرور آن را ندارد — فقط «پیام جدید»
+      select: { mentorshipId: true, createdAt: true, sender: { select: PUBLIC_USER_SELECT } },
     }),
     prisma.mentorship.findMany({
       where: { mentorId: me, status: "ACTIVE" },
-      select: { studentId: true, student: { select: PUBLIC_USER_SELECT } },
+      select: { studentId: true, showProgress: true, student: { select: PUBLIC_USER_SELECT } },
       take: 500,
     }),
     prisma.mentorProgram.findMany({ where: { mentorId: me, status: "ACTIVE" }, select: { id: true, studentId: true, activatedAt: true } }),
@@ -106,15 +124,17 @@ export async function GET() {
       type: "message" as const,
       at: m.createdAt,
       studentName: displayName(m.sender),
-      text: m.body.slice(0, 80),
+      text: "پیام جدید",
       url: `/mentorship/${m.mentorshipId}`,
     })),
   ]
     .sort((a, b) => b.at.getTime() - a.at.getTime())
     .slice(0, ACTIVITY_LIMIT);
 
-  // نرخِ انجامِ ۷ روزه به‌ازای هر شاگردِ فعال (فقط لاگ‌های برنامه‌های همین منتور)
-  const studentIds = activeRels.map((r) => r.studentId);
+  // نرخِ انجامِ ۷ روزه به‌ازای هر شاگردِ فعال (فقط لاگ‌های برنامه‌های همین منتور).
+  // شاگردی که «نمایش پیشرفت» را بسته در نرخ و «نیازمند توجه» نمی‌آید.
+  const visibleRels = activeRels.filter((r) => r.showProgress);
+  const studentIds = visibleRels.map((r) => r.studentId);
   const [logCounts, missedOnActive, lastLogs] = studentIds.length
     ? await Promise.all([
         prisma.mentorProgramLog.groupBy({
@@ -130,7 +150,7 @@ export async function GET() {
         activePrograms.length
           ? prisma.mentorProgramLog.groupBy({
               by: ["programId"],
-              where: { programId: { in: activePrograms.map((p) => p.id) }, date: { gte: silentSince } },
+              where: { programId: { in: activePrograms.map((p) => p.id) }, date: { gte: silentSince }, status: { in: ["COMPLETED", "PARTIAL"] } },
               _count: { _all: true },
             })
           : Promise.resolve([] as { programId: string; _count: { _all: number } }[]),
@@ -145,7 +165,7 @@ export async function GET() {
     else a.m += r._count._all;
     counts.set(r.studentId, a);
   }
-  const completion = activeRels.map((r) => {
+  const completion = visibleRels.map((r) => {
     const a = counts.get(r.studentId) ?? { c: 0, p: 0, m: 0 };
     const pr = progressFromCounts(a.c, a.p, a.m);
     return { studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, ...pr };
@@ -157,11 +177,11 @@ export async function GET() {
     activePrograms.filter((p) => p.activatedAt && p.activatedAt <= activeBefore && !recentlyLogged.has(p.id)).map((p) => p.studentId)
   );
   const attention: { studentId: string; name: string; avatarUrl: string | null; reason: string }[] = [];
-  for (const r of activeRels) {
+  for (const r of visibleRels) {
     const missed = missedMap.get(r.studentId) ?? 0;
     let reason: string | null = null;
-    if (missed >= MISSED_THRESHOLD) reason = `${missed} بار «انجام نشد» در ۷ روز اخیر`;
-    else if (silentStudents.has(r.studentId)) reason = `${SILENT_DAYS} روزه هیچ اجرایی برای برنامه‌ی فعال ثبت نکرده`;
+    if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتمِ انجام‌نشده در ۷ روز اخیر`;
+    else if (silentStudents.has(r.studentId)) reason = `${faNum(SILENT_DAYS)} روز است هیچ آیتمی از برنامه‌ی فعال انجام نشده`;
     if (reason) attention.push({ studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, reason });
   }
 

@@ -25,6 +25,7 @@ import { POST as postReview } from "@/app/api/mentors/[mentorId]/reviews/route";
 import { POST as postReport } from "@/app/api/mentor-reports/route";
 import { POST as postMessage } from "@/app/api/mentorships/[id]/messages/route";
 import { as, req, j, makeUser, makeMentor, cleanupUsers, connect, pngBytes, uniqueTag } from "./helpers/mentorTestUtils";
+import { encFor } from "./helpers/e2eeTestUtils";
 
 afterAll(async () => {
   await cleanupUsers();
@@ -248,19 +249,29 @@ describe("ادمین — لیست و جزئیات", () => {
 });
 
 
+// گفت‌وگو رمزگذاریِ سرتاسری دارد: گزارشِ پیام متن + کلیدِ فرانکینگِ همان پیام را
+// می‌فرستد (همان کاری که کلاینتِ گیرنده بعد از رمزگشایی می‌کند)
+const franking = new Map<string, { text: string; frankingKey: string }>();
+
 async function report(userId: string, body: Record<string, unknown>) {
   as(userId);
-  return postReport(req("POST", "/api/mentor-reports", body));
+  const withFranking = body.targetType === "MESSAGE" && !("franking" in body) && franking.has(body.targetId as string)
+    ? { ...body, franking: franking.get(body.targetId as string) }
+    : body;
+  return postReport(req("POST", "/api/mentor-reports", withFranking));
 }
 async function resolve(adminId: string, id: string, body: Record<string, unknown>) {
   as(adminId);
   return patchReport(req("PATCH", "/x", body) as any, { params: { id } });
 }
 async function sendMsg(userId: string, msId: string, body: string): Promise<string> {
+  const { frankingKey, ...enc } = await encFor(msId, userId, body);
   as(userId);
-  const r = await postMessage(req("POST", "/x", { body }), { params: { id: msId } });
+  const r = await postMessage(req("POST", "/x", enc), { params: { id: msId } });
   if (r.status !== 200) throw new Error("msg " + r.status);
-  return (await j(r)).message.id;
+  const id = (await j(r)).message.id as string;
+  franking.set(id, { text: body, frankingKey });
+  return id;
 }
 
 describe("گزارش‌ها — ثبت توسطِ کاربر", () => {

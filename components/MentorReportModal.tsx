@@ -33,10 +33,17 @@ const TITLES: Record<ReportTargetType, string> = {
 export function MentorReportModal({
   targetType,
   targetId,
+  franking,
   onClose,
 }: {
   targetType: ReportTargetType;
   targetId: string;
+  /**
+   * فقط برای پیامِ رمزگذاری‌شده: متن و کلیدِ فرانکینگِ همان پیام (از رمزگشاییِ
+   * روی همین دستگاه). سرور با تعهدِ ثبت‌شده‌ی فرستنده تطبیقش می‌دهد و فقط همین
+   * یک پیام را برای ادمین نگه می‌دارد (docs/mentor-e2ee.md).
+   */
+  franking?: { text: string; frankingKey: string };
   onClose: () => void;
 }) {
   const [reason, setReason] = useState("");
@@ -56,7 +63,7 @@ export function MentorReportModal({
       const res = await fetch("/api/mentor-reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetType, targetId, reason, details: details.trim() || undefined }),
+        body: JSON.stringify({ targetType, targetId, reason, details: details.trim() || undefined, ...(franking ? { franking } : {}) }),
       });
       if (res.status === 409) { setError("این مورد را قبلاً گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
       if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره تلاش کن")); return; }
@@ -91,6 +98,9 @@ export function MentorReportModal({
         ) : (
           <>
             <div className="mentor-form">
+              {targetType === "MESSAGE" && (
+                <p className="mentor-muted">با ثبت گزارش، متن همین یک پیام برای ادمین‌های آریون قابل مشاهده می‌شود؛ پیام‌های دیگر این گفت‌وگو رمزگذاری‌شده می‌مانند.</p>
+              )}
               <MentorField label="دلیل" htmlFor="mentor-report-reason" error={reasonError}>
                 <select
                   id="mentor-report-reason"

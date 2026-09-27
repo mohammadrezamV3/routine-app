@@ -14,6 +14,7 @@ import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { Spinner } from "@/components/Spinner";
+import { MentorRankingBreakdown } from "@/components/admin/MentorRankingBreakdown";
 import { formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
 
@@ -268,6 +269,9 @@ export default function AdminMentorDetailPage() {
         </div>
       )}
 
+      {/* رتبه‌بندیِ شایستگی — بخشِ مستقل (components/admin/MentorRankingBreakdown.tsx) */}
+      <MentorRankingBreakdown profileId={p.id} />
+
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title"><History {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />تاریخچه‌ی احراز</span></div>
         {data.events.length === 0 ? <EmptyState message="تغییری ثبت نشده" /> : (
@@ -310,7 +314,7 @@ export default function AdminMentorDetailPage() {
       {restoreOpen && (
         <ConfirmModal
           title="رفع تعلیق منتوری" danger={false} confirmLabel="رفع تعلیق"
-          message="پروفایل منتوری دوباره فعال می‌شود و اگر منتشرشده باشد، در کشف منتور نمایش داده می‌شود."
+          message="پروفایل منتوری دوباره فعال می‌شود و اگر منتشرشده باشد، در فهرست منتورها نمایش داده می‌شود."
           onClose={() => setRestoreOpen(false)}
           onConfirm={async () => {
             try {
@@ -506,7 +510,7 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
   return (
     <AdminModal title="تعلیق منتوری" eyebrow="تأیید اقدام" onClose={onClose}>
       <div className="admin-modal-text">
-        پروفایل از کشف منتور حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.
+        پروفایل از فهرست منتورها حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.
       </div>
       <label className="admin-field">
         <span>دلیل تعلیق</span>

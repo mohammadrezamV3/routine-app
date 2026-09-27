@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { canTransition, isEditable, isProgramAction, visibleToStudent, PROGRAM_TRANSITIONS } from "@/lib/mentorProgramState";
 import { validateDocument, sniffDocumentMime, sanitizeFileName, MAX_DOCUMENT_BYTES } from "@/lib/mentorUpload";
 import { sanitizeSharedPrograms, canSeeScope, routineScopeKey, MAX_SHARED_PROGRAMS } from "@/lib/mentorPrivacy";
-import { bayesianRating, retentionRatio, recencyFactor, popularScore, rankByPopularity, type RankingSignals } from "@/lib/mentorRanking";
 import { validateProgramInput, validateRoutineRole, parseHHmm, MAX_PROGRAM_ITEMS, PROGRAM_NOTE_MAX, ROUTINE_ROLE_MAX } from "@/lib/mentorValidate";
 import { pngBytes, pdfBytes, jpegBytes, webpBytes, exeBytes, htmlBytes } from "./helpers/mentorTestUtils";
 
@@ -155,43 +154,7 @@ describe("mentorPrivacy — sanitize و scope", () => {
   });
 });
 
-describe("mentorRanking — محبوبیت ترکیبی", () => {
-  const now = new Date("2026-06-01T00:00:00Z");
-  const base: RankingSignals = { ratingAvg: 0, ratingCount: 0, activeStudents: 0, totalStudents: 0, completedPrograms: 0, lastActiveAt: now };
-
-  it("میانگینِ بیزی: یک نظرِ ۵ از ۴۰ نظرِ ۴.۸ جلو نمی‌زند", () => {
-    expect(bayesianRating(5, 1)).toBeLessThan(bayesianRating(4.8, 40));
-    expect(bayesianRating(0, 0)).toBeCloseTo((3.5 - 1) / 4);
-    expect(bayesianRating(5, 100000)).toBeLessThanOrEqual(1);
-    expect(bayesianRating(1, 100000)).toBeGreaterThanOrEqual(0);
-  });
-
-  it("ماندگاری و تازگی", () => {
-    expect(retentionRatio(0, 0)).toBeCloseTo(0.5);
-    expect(retentionRatio(10, 10)).toBeGreaterThan(retentionRatio(2, 10));
-    expect(recencyFactor(null, now)).toBe(0);
-    expect(recencyFactor(now, now)).toBe(1);
-    expect(recencyFactor(new Date(now.getTime() - 14 * 86400000), now)).toBeCloseTo(0.5);
-  });
-
-  it("فقط تعدادِ شاگرد برنده نیست: منتورِ کوچک با امتیازِ عالی از منتورِ پرشاگردِ بدامتیاز و غیرفعال جلو می‌زند", () => {
-    const small = { ...base, ratingAvg: 4.9, ratingCount: 30, activeStudents: 5, totalStudents: 6, completedPrograms: 10 };
-    const big = { ...base, ratingAvg: 2, ratingCount: 30, activeStudents: 60, totalStudents: 200, completedPrograms: 0, lastActiveAt: new Date(now.getTime() - 90 * 86400000) };
-    expect(popularScore(small, now)).toBeGreaterThan(popularScore(big, now));
-  });
-
-  it("rankByPopularity مرتب و tie-break با تعدادِ نظر", () => {
-    const items = [
-      { id: "a", s: { ...base } },
-      { id: "b", s: { ...base, ratingAvg: 5, ratingCount: 20 } },
-      { id: "c", s: { ...base, ratingAvg: 3.5, ratingCount: 3 } },
-    ];
-    const ranked = rankByPopularity(items, (x) => x.s, now).map((x) => x.id);
-    expect(ranked[0]).toBe("b");
-    // a و c امتیازِ بیزیِ برابر (۳.۵) دارند؛ c نظرِ بیشتری دارد
-    expect(ranked.slice(1)).toEqual(["c", "a"]);
-  });
-});
+// رتبه‌بندیِ شایستگی: __tests__/mentorRanking.test.ts
 
 describe("mentorValidate — بدنه‌ی برنامه", () => {
   const ok = { type: "WORKOUT", title: "  پرس  ", items: [{ title: "اسکات", days: [1, 3, 1], sets: "۴", reps: "8-12", weightKg: "60.25", restSec: 90, startTime: "۰۸:۳۰" }] };

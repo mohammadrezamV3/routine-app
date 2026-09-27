@@ -11,6 +11,9 @@ import { MentorDashBar, MentorDashError, MentorDashShell, fa, mentorApi, pct } f
 import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorEmptyState, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorStudentWeek } from "@/components/MentorStudentWeek";
 import { MentorStudentModules } from "@/components/MentorStudentModules";
+import { MentorStudentManage, useStudentManage } from "@/components/MentorStudentManage";
+import { MentorStudentRelationControls } from "@/components/MentorStudentRelationControls";
+import { MentorProgramTools } from "@/components/MentorProgramTools";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { isoLocal } from "@/lib/jalali";
 import { publicUserName } from "@/lib/mentorTypes";
@@ -83,6 +86,8 @@ export default function MentorStudentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message: string; status: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // برچسب، یادداشت، جواب‌های پذیرش و توقف — داده‌ی خصوصیِ منتور
+  const manage = useStudentManage(studentId);
 
   const load = useCallback(async (off: number) => {
     if (!studentId) return;
@@ -137,6 +142,10 @@ export default function MentorStudentPage() {
             sub={<span>پیام‌ها و وضعیت رابطه با {name}</span>}
           />
         </MentorSection>
+
+        {manage.data && (
+          <MentorStudentManage studentId={studentId} data={manage.data} onChange={manage.setData} />
+        )}
 
         <PrivacySummary data={data} />
 
@@ -193,11 +202,24 @@ export default function MentorStudentPage() {
                 title={p.title}
                 sub={sub}
                 end={<ProgramStatusBadge status={p.status} />}
-                below={showProgress ? (
-                  <div className="mentor-progress" style={{ marginTop: 0 }}>
-                    <MentorDashBar rate={p.progress.rate} />
-                    <span className="mentor-progress-value">{pct(p.progress.rate)}</span>
-                  </div>
+                below={showProgress || p.status !== "DRAFT" ? (
+                  <>
+                    {showProgress && p.progress.hidden && (
+                      <span className="mentor-muted">پیشرفت را شاگرد برای تو پنهان کرده است</span>
+                    )}
+                    {showProgress && !p.progress.hidden && (
+                      <div className="mentor-progress" style={{ marginTop: 0 }}>
+                        <MentorDashBar rate={p.progress.rate} />
+                        <span className="mentor-progress-value">{pct(p.progress.rate)}</span>
+                      </div>
+                    )}
+                    {/* ابزارِ برنامه (قالب/کپی) فقط برای برنامه‌ی ارسال‌شده — agent C */}
+                    {p.status !== "DRAFT" && (
+                      <div className="mentor-program-tools">
+                        <MentorProgramTools programId={p.id} title={p.title} studentId={studentId} />
+                      </div>
+                    )}
+                  </>
                 ) : undefined}
               />
             );
@@ -218,6 +240,18 @@ export default function MentorStudentPage() {
             </div>
           ))}
         </MentorSection>
+
+        {manage.data && (
+          <MentorStudentRelationControls
+            studentId={studentId}
+            mentorshipId={data.mentorshipId}
+            name={name}
+            pausedAt={manage.data.pausedAt}
+            pauseReason={manage.data.pauseReason}
+            onPaused={(pausedAt, pauseReason) => manage.setData((d) => (d ? { ...d, pausedAt, pauseReason } : d))}
+            onEnded={() => router.push("/mentor")}
+          />
+        )}
       </>
     );
   } else body = null;

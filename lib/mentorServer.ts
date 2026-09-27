@@ -1,8 +1,11 @@
 import { Prisma, type MentorProgramStatus, type MentorProgram, type MentorFeedback } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { openAtRest } from "@/lib/e2ee/server";
 import { displayName } from "@/lib/inAppNotify";
-import { rankByPopularity } from "@/lib/mentorRanking";
 import { effectiveCategories } from "@/lib/mentorCategories";
+import { progressHiddenPrograms, syncProgramProgress } from "@/lib/mentorProgress";
+import { computeAvailability, dayIso, isAway, type AvailabilityState, type IntakeAnswer } from "@/lib/mentorAvailability";
+import { WELCOME_VISIBLE_DAYS, availabilityToday, readIntakeAnswers } from "@/lib/mentorManageServer";
 
 // کمک‌تابع‌های مشترکِ سمت سرورِ اکوسیستم منتور — شکلِ پاسخ‌های قرارداد
 // (docs/mentors.md) فقط همین‌جا ساخته می‌شه تا روت‌ها و پنلِ ادمین هر کدوم
@@ -120,6 +123,10 @@ export type MentorCard = {
   activeStudents: number;
   totalStudents: number;
   acceptingStudents: boolean;
+  // دسترس‌پذیری (lib/mentorAvailability.ts): پذیرش/ظرفیت/عدمِ حضور
+  availability: AvailabilityState;
+  awayUntil: string | null;
+  responseTimeHours: number | null;
 };
 
 export type MentorStats = { activeStudents: number; totalStudents: number; completedPrograms: number };
@@ -165,7 +172,13 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
     activeStudents: stats?.activeStudents ?? 0,
     totalStudents: stats?.totalStudents ?? 0,
     acceptingStudents: p.acceptingStudents,
+    ...cardAvailability(p, stats?.activeStudents ?? 0),
   };
+}
+
+function cardAvailability(p: CardProfile, activeStudents: number): Pick<MentorCard, "availability" | "awayUntil" | "responseTimeHours"> {
+  const a = computeAvailability(p, activeStudents, availabilityToday());
+  return { availability: a.state, awayUntil: a.awayUntil, responseTimeHours: p.responseTimeHours };
 }
 
 export async function buildMentorCards(profiles: CardProfile[]): Promise<MentorCard[]> {
@@ -204,6 +217,14 @@ export async function loadMentorSelf(userId: string) {
     ratingCount: p.ratingCount,
     credentials: p.credentials.filter((c) => p.categories.includes(c.category)),
     documents: p.documents,
+    // دسترس‌پذیری و تنظیماتِ شاگرد (GET/PUT /api/mentor/settings)
+    maxActiveStudents: p.maxActiveStudents,
+    awayUntil: dayIso(p.awayUntil),
+    awayMessage: p.awayMessage,
+    awayPausesRequests: p.awayPausesRequests,
+    responseTimeHours: p.responseTimeHours,
+    welcomeMessage: p.welcomeMessage,
+    intakeQuestions: p.intakeQuestions,
   };
 }
 
@@ -227,7 +248,7 @@ export async function recomputeMentorRating(mentorUserId: string): Promise<void>
 // ───────────────────────── رابطه ─────────────────────────
 
 export const MENTORSHIP_WITH_USERS_INCLUDE = {
-  mentor: { select: { ...PUBLIC_USER_SELECT, mentorProfile: { select: { categories: true } } } },
+  mentor: { select: { ...PUBLIC_USER_SELECT, mentorProfile: { select: { categories: true, awayUntil: true, awayMessage: true, welcomeMessage: true } } } },
   student: { select: PUBLIC_USER_SELECT },
 } satisfies Prisma.MentorshipInclude;
 
@@ -248,6 +269,16 @@ export type MentorshipRow = {
   blockedByMe: boolean;
   // حوزه‌های مؤثرِ رابطه (برای تفکیکِ منتورها و نوعِ برنامه‌ی مجاز)
   categories: string[];
+  // مدیریتِ رابطه (lib/mentorManageServer.ts)
+  intakeAnswers: IntakeAnswer[];
+  pausedAt: Date | null;
+  pauseReason: string | null;
+  endReason: string | null;
+  endedBy: string | null;
+  // عدمِ حضورِ منتور (فقط تا روزِ بازگشت)
+  mentorAway: { until: string; message: string | null } | null;
+  // پیامِ خوش‌آمدِ منتور — فقط برای شاگردِ رابطه‌ی ACTIVE، تا WELCOME_VISIBLE_DAYS روز پس از شروع
+  welcomeMessage: string | null;
 };
 
 /** ردیف‌های لیستِ رابطه از دیدِ viewer — شمارشِ خوانده‌نشده/برنامه‌ی فعال با کوئریِ گروهی */
@@ -265,6 +296,8 @@ export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId:
     : [[], []];
   const unreadMap = new Map(unread.map((r) => [r.mentorshipId, r._count._all]));
   const activeMap = new Map(active.map((r) => [r.mentorshipId, r._count._all]));
+  const intake = await readIntakeAnswers(ids);
+  const today = availabilityToday();
   return rows.map((r) => ({
     id: r.id,
     status: r.status,
@@ -278,6 +311,19 @@ export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId:
     activePrograms: activeMap.get(r.id) ?? 0,
     blockedByMe: r.status === "BLOCKED" && r.blockedById === viewerId,
     categories: effectiveCategories(r.categories, r.mentor.mentorProfile?.categories ?? []),
+    intakeAnswers: intake.get(r.id) ?? [],
+    pausedAt: r.status === "ACTIVE" ? r.pausedAt : null,
+    pauseReason: r.status === "ACTIVE" && r.pausedAt ? r.pauseReason : null,
+    endReason: r.status === "ENDED" ? r.endReason : null,
+    endedBy: r.status === "ENDED" ? r.endedBy : null,
+    mentorAway:
+      r.mentor.mentorProfile && isAway(r.mentor.mentorProfile.awayUntil, today)
+        ? { until: dayIso(r.mentor.mentorProfile.awayUntil)!, message: r.mentor.mentorProfile.awayMessage }
+        : null,
+    welcomeMessage:
+      r.studentId === viewerId && r.status === "ACTIVE" && r.startedAt && Date.now() - r.startedAt.getTime() < WELCOME_VISIBLE_DAYS * 86_400_000
+        ? r.mentor.mentorProfile?.welcomeMessage ?? null
+        : null,
   }));
 }
 
@@ -294,7 +340,12 @@ export const DEFAULT_PRIVACY = {
 
 // ───────────────────────── برنامه ─────────────────────────
 
-export type ProgramProgress = { completed: number; partial: number; missed: number; rate: number };
+// شمارش‌ها از MentorProgramLog‌اند که از این به بعد خودکار از تیک‌های روتینِ شاگرد
+// همگام می‌شوند (lib/mentorProgress.ts). hidden = شاگرد «نمایش پیشرفت» را برای این
+// منتور بسته؛ اعداد صفرند و نباید به‌عنوانِ «۰٪» نمایش داده شوند.
+export type ProgramProgress = { completed: number; partial: number; missed: number; rate: number; hidden?: boolean };
+
+const HIDDEN_PROGRESS: ProgramProgress = { completed: 0, partial: 0, missed: 0, rate: 0, hidden: true };
 
 /** rate = درصدِ انجام (PARTIAL نصف حساب می‌شه) از روزهای ثبت‌شده؛ ۰ تا ۱۰۰ */
 export function progressFromCounts(completed: number, partial: number, missed: number): ProgramProgress {
@@ -365,14 +416,24 @@ export function toProgramRow(p: ProgramWithUsers, viewerId: string, progress: Pr
   };
 }
 
+/** همگام‌سازیِ پیشرفتِ خودکار (با TTL) + شمارش + اعمالِ پرچمِ showProgress برای منتور */
+async function progressForRows(programs: ProgramWithUsers[], viewerId: string, force = false): Promise<Map<string, ProgramProgress>> {
+  const ids = programs.map((p) => p.id);
+  const trackable = programs.filter((p) => p.activatedAt && (p.status === "ACTIVE" || p.status === "COMPLETED" || p.status === "CANCELLED"));
+  if (trackable.length) await syncProgramProgress(trackable.map((p) => p.id), { force }).catch(() => undefined);
+  const [progress, hidden] = await Promise.all([loadProgramProgress(ids), progressHiddenPrograms(programs, viewerId)]);
+  hidden.forEach((id) => progress.set(id, HIDDEN_PROGRESS));
+  return progress;
+}
+
 export async function buildProgramRows(programs: ProgramWithUsers[], viewerId: string): Promise<ProgramRow[]> {
-  const progress = await loadProgramProgress(programs.map((p) => p.id));
+  const progress = await progressForRows(programs, viewerId);
   return programs.map((p) => toProgramRow(p, viewerId, progress.get(p.id)));
 }
 
 /** Program — ProgramRow به‌علاوه‌ی فیلدهای جزئیات (توضیح، یادداشتِ تغییر، زمان‌ها) */
-export async function serializeProgram(p: ProgramWithUsers, viewerId: string) {
-  const progress = (await loadProgramProgress([p.id])).get(p.id);
+export async function serializeProgram(p: ProgramWithUsers, viewerId: string, opts: { forceSync?: boolean } = {}) {
+  const progress = (await progressForRows([p], viewerId, !!opts.forceSync)).get(p.id);
   return {
     ...toProgramRow(p, viewerId, progress),
     description: p.description,
@@ -394,7 +455,14 @@ export async function loadProgramWithUsers(id: string): Promise<ProgramWithUsers
 export type FeedbackRow = { id: string; body: string; createdAt: Date; readAt: Date | null; itemId: string | null; logId: string | null; itemTitle: string | null };
 
 export function toFeedbackRow(f: MentorFeedback & { item: { title: string } | null }): FeedbackRow {
-  return { id: f.id, body: f.body, createdAt: f.createdAt, readAt: f.readAt, itemId: f.itemId, logId: f.logId, itemTitle: f.item?.title ?? null };
+  // متنِ فیدبک رمزشده در حالِ سکون است (agent D — docs/mentor-e2ee.md)؛ ردیفِ قدیمی متنِ ساده
+  const body = openAtRest(f.body, feedbackAad(f.programId, f.mentorId)) ?? "";
+  return { id: f.id, body, createdAt: f.createdAt, readAt: f.readAt, itemId: f.itemId, logId: f.logId, itemTitle: f.item?.title ?? null };
+}
+
+/** AADِ رمزِ در حالِ سکونِ MentorFeedback.body — مقدار به برنامه/منتورِ دیگری منتقل‌شدنی نیست */
+export function feedbackAad(programId: string, mentorId: string): string[] {
+  return ["MentorFeedback.body", programId, mentorId];
 }
 
 export function serializeItem(i: {
@@ -407,8 +475,16 @@ export function serializeItem(i: {
   };
 }
 
-export function serializeLog(l: { id: string; itemId: string; date: Date; status: string; setsDone: number | null; note: string | null; createdAt: Date; updatedAt: Date }) {
-  return { id: l.id, itemId: l.itemId, date: isoDate(l.date), status: l.status, setsDone: l.setsDone, note: l.note, createdAt: l.createdAt, updatedAt: l.updatedAt };
+export function serializeLog(l: {
+  id: string; itemId: string; date: Date; status: string; setsDone: number | null; note: string | null; createdAt: Date; updatedAt: Date;
+  source?: string; doneOn?: Date | null;
+}) {
+  return {
+    id: l.id, itemId: l.itemId, date: isoDate(l.date), status: l.status, setsDone: l.setsDone, note: l.note, createdAt: l.createdAt, updatedAt: l.updatedAt,
+    // "AUTO" = از تیک‌های روتینِ شاگرد؛ "MANUAL" = ثبتِ دستیِ قدیمی
+    source: l.source ?? "MANUAL",
+    doneOn: l.doneOn ? isoDate(l.doneOn) : null,
+  };
 }
 
 /** نوعِ کمکی برای روت‌هایی که فقط ستون‌های خودِ برنامه رو لازم دارن */
@@ -419,41 +495,4 @@ export function isUniqueViolation(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
 }
 
-/**
- * رتبه‌بندیِ «محبوب» روی ستون‌های سبک (بدونِ user/avatarUrl که data URLِ تا
- * ۴۰۰KB هست)، و فقط برای برشِ برگشتی کارتِ کامل لود می‌شه — وگرنه یک درخواست
- * می‌تونست صدها آواتار رو هم‌زمان توی حافظه بکشه.
- */
-export async function loadPopularCards(
-  where: Prisma.MentorProfileWhereInput,
-  offset: number,
-  limit: number,
-  maxCandidates = 500
-): Promise<{ cards: MentorCard[]; total: number }> {
-  const candidates = await prisma.mentorProfile.findMany({
-    where,
-    select: { id: true, userId: true, ratingAvg: true, ratingCount: true, lastActiveAt: true },
-    orderBy: [{ lastActiveAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-    take: maxCandidates,
-  });
-  const stats = await loadMentorStats(candidates.map((c) => c.userId));
-  const ranked = rankByPopularity(candidates, (c) => {
-    const s = stats.get(c.userId);
-    return {
-      ratingAvg: c.ratingAvg,
-      ratingCount: c.ratingCount,
-      activeStudents: s?.activeStudents ?? 0,
-      totalStudents: s?.totalStudents ?? 0,
-      completedPrograms: s?.completedPrograms ?? 0,
-      lastActiveAt: c.lastActiveAt,
-    };
-  });
-  const slice = ranked.slice(offset, offset + limit);
-  const full = await prisma.mentorProfile.findMany({ where: { id: { in: slice.map((s) => s.id) } }, include: MENTOR_CARD_INCLUDE });
-  const byId = new Map(full.map((p) => [p.id, p]));
-  const cards = slice.flatMap((s) => {
-    const p = byId.get(s.id);
-    return p ? [toMentorCard(p, stats.get(p.userId))] : [];
-  });
-  return { cards, total: ranked.length };
-}
+// رتبه‌بندیِ «بهترین نتیجه»/«محبوب»/«منتورهای تازه»: lib/mentorRankingStats.ts

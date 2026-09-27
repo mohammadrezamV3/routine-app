@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  CalendarCheck, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleSlash, ClipboardList, Clock, Dumbbell, Flag,
+  CalendarCheck, CalendarDays, Check, CheckCircle2, CircleSlash, ClipboardList, Clock, Dumbbell, EyeOff, Flag,
   Hourglass, MessageSquareText, Pencil, Send, X,
 } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
@@ -14,15 +14,14 @@ import { ProgramStatusBadge } from "@/components/ProgramStatusBadge";
 import { ProgramRespondModal } from "@/components/ProgramRespondModal";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { MentorReportModal } from "@/components/MentorReportModal";
-import { NumberInput } from "@/components/NumberInput";
+import { MentorProgressWeek } from "@/components/MentorProgressWeek";
+import { MentorProgramTools } from "@/components/MentorProgramTools";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
-import type { Feedback, Item, Log, ProgramDetailResponse, ProgramLogStatus, ProgramTransitionAction } from "@/lib/mentorTypes";
-import { dayKey, publicUserName } from "@/lib/mentorTypes";
-import { fmtDateTime, fmtDay, fmtWeekday, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
-import { FA_WEEKDAY, FA_WEEKDAY_SHORT, faNum, isoLocal, toJalali } from "@/lib/jalali";
+import type { Feedback, Item, ProgramDetailResponse, ProgramTransitionAction } from "@/lib/mentorTypes";
+import { publicUserName } from "@/lib/mentorTypes";
+import { fmtDateTime, fmtDay, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { FA_WEEKDAY, faNum, isoLocal } from "@/lib/jalali";
 
-const LOG_LABELS: Record<ProgramLogStatus, string> = { COMPLETED: "انجام شد", PARTIAL: "نیمه‌کاره", MISSED: "انجام نشد" };
-const NOTE_MAX = 500;
 const FEEDBACK_MAX = 2000;
 
 const CHIP = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -40,20 +39,10 @@ function addDays(iso: string, n: number): string { const d = parseDay(iso); d.se
 /** شنبه‌ی همان هفته (هفته‌ی ایرانی) */
 function weekStartOf(iso: string): string { const d = parseDay(iso); return addDays(iso, -((d.getDay() + 1) % 7)); }
 
-function itemRuns(item: Item, day: string): boolean {
-  if (item.repeat === "DAILY") return true;
-  return item.days.includes(parseDay(day).getDay());
-}
-
 function daysLabel(item: Item): string {
   if (item.repeat === "DAILY" || item.days.length === 7) return "هر روز";
   const order = [6, 0, 1, 2, 3, 4, 5];
   return order.filter((d) => item.days.includes(d)).map((d) => FA_WEEKDAY[d]).join("، ") || "بدون روز";
-}
-
-function jDay(iso: string): string {
-  const d = parseDay(iso);
-  return faNum(toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate())[2]);
 }
 
 // عنوان (نام برنامه) و بازگشت (نامِ طرفِ مقابل) فقط بعد از بارگذاری معلوم‌اند؛
@@ -86,6 +75,7 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
   const [reportOpen, setReportOpen] = useState(false);
   const [feedbackTarget, setFeedbackTarget] = useState<{ itemId?: string; logId?: string; label: string } | null>(null);
   const markedRead = useRef(false);
+  const jumpedToEnd = useRef(false);
   const reqId = useRef(0);
 
   const weekEnd = addDays(weekStart, 6);
@@ -118,6 +108,17 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
   // بارِ اول کل صفحه، بعد از آن (عوض‌شدنِ هفته) فقط نشانگرِ کوچکِ بالای روزها
   const hasData = !!data;
   useEffect(() => { load({ quiet: hasData }); }, [load]);
+
+  // برنامه‌ای که پیش از این هفته تمام شده، از آخرین هفته‌ی خودش باز می‌شود (نه هفته‌ی خالیِ جاری)
+  useEffect(() => {
+    const end = data?.progressView?.to;
+    if (!end || jumpedToEnd.current) return;
+    jumpedToEnd.current = true;
+    if (end < weekStart) {
+      setWeekStart(weekStartOf(end));
+      setSelected(end);
+    }
+  }, [data, weekStart]);
 
   // باز شدنِ صفحه توسطِ شاگرد = دیدنِ بازخوردها؛ فقط یک بار و فقط اگر نخوانده‌ای هست
   useEffect(() => {
@@ -159,28 +160,27 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
   if (error && !data) return <MentorErrorState message={error.msg} onRetry={error.retry ? () => load() : undefined} />;
   if (!data) return <LoadingBlock />;
 
-  const { program, role, items, logs, feedback } = data;
+  const { program, role, items, feedback } = data;
   const isStudent = role === "STUDENT";
   const other = program.counterpart;
   const otherName = publicUserName(other);
   const isWorkout = program.type === "WORKOUT";
-  const rangeStart = program.startDate ?? dayKey(program.activatedAt);
-  const rangeEnd = program.endDate;
-  const inRange = (d: string) => (!rangeStart || d >= rangeStart) && (!rangeEnd || d <= rangeEnd);
   const trackable = program.status === "ACTIVE" || program.status === "COMPLETED" || (!isStudent && program.status === "CANCELLED");
   const canCancel = ["DRAFT", "PENDING", "ACCEPTED", "ACTIVE"].includes(program.status);
   const canActivate = program.status === "ACCEPTED" && (!program.startDate || program.startDate <= today);
   const sortedItems = [...items].sort((a, b) => a.order - b.order || (a.startTime ?? "").localeCompare(b.startTime ?? ""));
-  const dayItems = sortedItems.filter((it) => itemRuns(it, selected));
-  const logFor = (itemId: string, day: string) => logs.find((l) => l.itemId === itemId && dayKey(l.date) === day) ?? null;
   const showProgress = program.status === "ACTIVE" || program.status === "COMPLETED";
   const mentorNote = program.note?.trim() || null;
   const answering = isStudent && program.status === "PENDING";
   const editDraft = !isStudent && program.status === "DRAFT";
   const hasActions = answering || editDraft || canActivate || program.status === "ACTIVE";
 
-  function setLog(l: Log) {
-    setData((d) => (d ? { ...d, logs: [...d.logs.filter((x) => !(x.itemId === l.itemId && dayKey(x.date) === dayKey(l.date))), l] } : d));
+  function setDayNote(date: string, body: string | null) {
+    setData((d) =>
+      d && d.progressView
+        ? { ...d, progressView: { ...d.progressView, days: d.progressView.days.map((x) => (x.date === date ? { ...x, note: body } : x)) } }
+        : d
+    );
   }
 
   return (
@@ -235,7 +235,12 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
             </div>
           )}
 
-          {showProgress && (
+          {showProgress && program.progress.hidden && (
+            <div className="mentor-chips">
+              <MentorChip tone="neutral" icon={<EyeOff {...CHIP} />}>پیشرفت برای تو نمایش داده نمی‌شود</MentorChip>
+            </div>
+          )}
+          {showProgress && !program.progress.hidden && (
             <div>
               <div className="mentor-progress" style={{ marginTop: 0 }}>
                 <div className="rp-bar" role="progressbar" aria-valuenow={Math.round(program.progress.rate)} aria-valuemin={0} aria-valuemax={100} aria-label="پایبندی">
@@ -245,7 +250,8 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
               </div>
               <div className="mentor-progress-legend">
                 <span>انجام‌شده {faNum(program.progress.completed)}</span>
-                <span>نیمه‌کاره {faNum(program.progress.partial)}</span>
+                {/* نیمه‌کاره فقط از ثبت‌های دستیِ قدیمی می‌آید */}
+                {program.progress.partial > 0 && <span>نیمه‌کاره {faNum(program.progress.partial)}</span>}
                 <span>انجام‌نشده {faNum(program.progress.missed)}</span>
               </div>
             </div>
@@ -290,55 +296,40 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
         </div>
       </MentorSection>
 
+      {/* ابزارهای منتور روی برنامه (قالب، کپی، CSV) — فقط سمتِ منتور */}
+      {!isStudent && <MentorProgramTools programId={program.id} title={program.title} studentId={program.counterpart.id} />}
+
       {trackable ? (
         <MentorSection
-          title={isStudent ? "ثبت اجرا" : "پایش اجرا"}
+          title={isStudent ? "ثبت خودکار از روتین تو" : "پیشرفت خودکار"}
           icon={<CalendarDays {...SECTION} />}
-          desc={isStudent && program.status === "ACTIVE" ? "روز را انتخاب کن و وضعیت هر آیتم را ثبت کن." : undefined}
+          desc={isStudent
+            ? "وضعیت هر آیتم از تیک‌های «روتین من» خوانده می‌شود؛ ثبت دستی لازم نیست."
+            : "وضعیت هر آیتم از تیک‌های شاگرد در روتینش خوانده می‌شود، نه گزارش دستی."}
         >
-          <WeekNav
-            weekStart={weekStart}
-            selected={selected}
-            today={today}
-            loading={weekLoading}
-            onPrev={() => { const s = addDays(weekStart, -7); setWeekStart(s); setSelected(weekStartOf(today) === s ? today : s); }}
-            onNext={() => { const s = addDays(weekStart, 7); setWeekStart(s); setSelected(weekStartOf(today) === s ? today : s); }}
-            onToday={() => { setWeekStart(weekStartOf(today)); setSelected(today); }}
-            onSelect={setSelected}
-            hasItem={(d) => inRange(d) && sortedItems.some((it) => itemRuns(it, d))}
-          />
-          <div className="mentor-week-label">{fmtWeekday(selected)}{selected === today ? "، امروز" : ""}</div>
-
-          {!inRange(selected) ? (
-            <MentorEmpty>این روز خارج از بازه‌ی برنامه است</MentorEmpty>
-          ) : dayItems.length === 0 ? (
-            <MentorEmpty>برای این روز آیتمی نیست</MentorEmpty>
+          {data.progressView ? (
+            <MentorProgressWeek
+              programId={program.id}
+              view={data.progressView}
+              items={sortedItems}
+              isWorkout={isWorkout}
+              isStudent={isStudent}
+              noteEditable={program.status === "ACTIVE"}
+              weekStart={weekStart}
+              weekEnd={weekEnd}
+              today={today}
+              loading={weekLoading}
+              selected={selected}
+              onSelect={setSelected}
+              onPrev={() => { const s = addDays(weekStart, -7); setWeekStart(s); setSelected(weekStartOf(today) === s ? today : s); }}
+              onNext={() => { const s = addDays(weekStart, 7); setWeekStart(s); setSelected(weekStartOf(today) === s ? today : s); }}
+              onToday={() => { setWeekStart(weekStartOf(today)); setSelected(today); }}
+              onNoteSaved={setDayNote}
+              canFeedback={program.status !== "DRAFT"}
+              onFeedback={(t) => setFeedbackTarget(t)}
+            />
           ) : (
-            dayItems.map((it) =>
-              isStudent ? (
-                <StudentItem
-                  key={`${it.id}:${selected}`}
-                  programId={program.id}
-                  item={it}
-                  isWorkout={isWorkout}
-                  day={selected}
-                  editable={program.status === "ACTIVE" && selected <= today}
-                  future={selected > today}
-                  log={logFor(it.id, selected)}
-                  onSaved={(l) => { setLog(l); load({ quiet: true }); }}
-                />
-              ) : (
-                <MentorItem
-                  key={`${it.id}:${selected}`}
-                  item={it}
-                  isWorkout={isWorkout}
-                  log={logFor(it.id, selected)}
-                  future={selected > today}
-                  canFeedback={program.status !== "DRAFT"}
-                  onFeedback={(t) => setFeedbackTarget(t)}
-                />
-              )
-            )
+            <MentorEmpty>پیشرفت از روز شروع برنامه نمایش داده می‌شود</MentorEmpty>
           )}
         </MentorSection>
       ) : (
@@ -393,7 +384,7 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
       {confirmComplete && (
         <MentorConfirmDialog
           message="برنامه تمام‌شده علامت بخورد؟"
-          hint="ثبت اجرا بسته می‌شود و برنامه از روتین برداشته می‌شود."
+          hint="پیگیری خودکار متوقف می‌شود و آیتم‌ها از روتین شاگرد برداشته می‌شوند."
           confirmLabel="اتمام برنامه"
           danger={false}
           busy={busy === "complete"}
@@ -403,51 +394,6 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
         />
       )}
       {reportOpen && <MentorReportModal targetType="PROGRAM" targetId={program.id} onClose={() => setReportOpen(false)} />}
-    </>
-  );
-}
-
-// ───────────────────────── ناوبریِ هفته ─────────────────────────
-
-function WeekNav({
-  weekStart, selected, today, loading, onPrev, onNext, onToday, onSelect, hasItem,
-}: {
-  weekStart: string; selected: string; today: string; loading: boolean;
-  onPrev: () => void; onNext: () => void; onToday: () => void; onSelect: (d: string) => void; hasItem: (d: string) => boolean;
-}) {
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const isThisWeek = weekStartOf(today) === weekStart;
-  return (
-    <>
-      <div className="mentor-week-nav">
-        <button type="button" className="trade-icon-btn" onClick={onPrev} aria-label="هفته‌ی قبل"><ChevronRight size={16} strokeWidth={1.75} aria-hidden /></button>
-        <div className="day-picker">
-          {days.map((d) => {
-            const js = parseDay(d).getDay();
-            return (
-              <button
-                key={d}
-                type="button"
-                className={`day-pill${d === selected ? " on" : ""}${d > today ? " is-future" : ""}`}
-                onClick={() => onSelect(d)}
-                aria-label={fmtWeekday(d)}
-                aria-pressed={d === selected}
-                style={!hasItem(d) && d !== selected ? { opacity: 0.45 } : undefined}
-              >
-                {FA_WEEKDAY_SHORT[js]}
-                <small>{jDay(d)}</small>
-              </button>
-            );
-          })}
-        </div>
-        <button type="button" className="trade-icon-btn" onClick={onNext} aria-label="هفته‌ی بعد"><ChevronLeft size={16} strokeWidth={1.75} aria-hidden /></button>
-      </div>
-      {(loading || !isThisWeek) && (
-        <div className="mentor-btn-group" style={{ justifyContent: "center", minHeight: 24, marginBottom: 4 }}>
-          {loading && <Spinner size={14} />}
-          {!isThisWeek && <button type="button" className="mentor-text-btn" onClick={onToday}>رفتن به هفته‌ی جاری</button>}
-        </div>
-      )}
     </>
   );
 }
@@ -463,145 +409,6 @@ function ItemMeta({ item, isWorkout, showDays }: { item: Item; isWorkout: boolea
       {isWorkout && item.sets != null && <span><Dumbbell {...CHIP} /> {faNum(item.sets)} ست{item.reps ? ` × ${faNum(item.reps)}` : ""}</span>}
       {isWorkout && item.weightKg != null && <span>{faNum(item.weightKg)} کیلوگرم</span>}
       {isWorkout && item.restSec != null && <span>استراحت {faNum(item.restSec)} ثانیه</span>}
-    </div>
-  );
-}
-
-function StudentItem({
-  programId, item, isWorkout, day, editable, future, log, onSaved,
-}: {
-  programId: string; item: Item; isWorkout: boolean; day: string; editable: boolean; future: boolean;
-  log: Log | null; onSaved: (l: Log) => void;
-}) {
-  const [status, setStatus] = useState<ProgramLogStatus | null>(log?.status ?? null);
-  const [setsDone, setSetsDone] = useState(log?.setsDone != null ? String(log.setsDone) : "");
-  const [note, setNote] = useState(log?.note ?? "");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
-
-  const dirty =
-    status !== (log?.status ?? null) ||
-    setsDone !== (log?.setsDone != null ? String(log.setsDone) : "") ||
-    note.trim() !== (log?.note ?? "").trim();
-  const justSaved = !!savedAt && !dirty && !error;
-
-  async function save() {
-    if (!status) { setError("وضعیت را انتخاب کن"); return; }
-    let sets: number | undefined;
-    if (isWorkout && setsDone.trim()) {
-      sets = Number(setsDone);
-      if (!Number.isInteger(sets) || sets < 0 || (item.sets != null && sets > item.sets * 3) || sets > 100) { setError("تعداد ست معتبر نیست"); return; }
-    }
-    if (note.trim().length > NOTE_MAX) { setError(`یادداشت حداکثر ${faNum(NOTE_MAX)} نویسه است`); return; }
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/mentor-programs/${programId}/logs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId: item.id, date: day, status, setsDone: sets, note: note.trim() || undefined }),
-      });
-      if (!res.ok) { setError(await readApiError(res, "ثبت نشد؛ دوباره تلاش کن")); return; }
-      const d: { log: Log } = await res.json();
-      setSavedAt(Date.now());
-      onSaved(d.log);
-    } catch {
-      setError(NETWORK_ERROR);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="mentor-item">
-      <div className="mentor-item-head">
-        <div className="mentor-item-title">{item.title}</div>
-        {log && !dirty && <span className={`mentor-log-chip is-${log.status.toLowerCase()}`}>{LOG_LABELS[log.status]}</span>}
-      </div>
-      <ItemMeta item={item} isWorkout={isWorkout} />
-      {item.details && <p className="mentor-item-details">{item.details}</p>}
-
-      {editable ? (
-        <>
-          <div className="mentor-log-status day-picker" role="radiogroup" aria-label="وضعیت اجرا">
-            {(Object.keys(LOG_LABELS) as ProgramLogStatus[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                role="radio"
-                aria-checked={status === s}
-                className={`day-pill${status === s ? ` on is-${s.toLowerCase()}` : ""}`}
-                onClick={() => { setStatus(s); setError(null); setSavedAt(null); }}
-              >
-                {LOG_LABELS[s]}
-              </button>
-            ))}
-          </div>
-          <div className={`mentor-log-extra${isWorkout ? " has-sets" : ""}`}>
-            {isWorkout && (
-              <NumberInput
-                className="wsearch-newform-name trade-glass-field"
-                value={setsDone}
-                onChange={(v) => { setSetsDone(v); setSavedAt(null); }}
-                placeholder={item.sets != null ? `مثلاً ${faNum(item.sets)}` : "مثلاً ۳"}
-                aria-label="تعداد ست انجام‌شده"
-              />
-            )}
-            <input
-              className="wsearch-newform-name trade-glass-field"
-              value={note}
-              maxLength={NOTE_MAX + 20}
-              onChange={(e) => { setNote(e.target.value); setSavedAt(null); }}
-              placeholder="مثلاً «ست آخر سنگین بود»"
-              aria-label="یادداشت برای منتور (اختیاری)"
-            />
-          </div>
-          <div className="mentor-log-foot">
-            {error && <p className="mentor-field-error" role="alert" style={{ flex: 1 }}>{error}</p>}
-            <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={save} disabled={busy || !dirty || !status}>
-              {busy ? <Spinner size={14} /> : justSaved ? <><Check {...BTN_SM} /> ثبت شد</> : log ? "به‌روزرسانی ثبت" : "ثبت اجرا"}
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          {future && <p className="mentor-log-note">ثبت اجرا برای روزهای آینده ممکن نیست</p>}
-          {!future && !log && <p className="mentor-log-note">ثبت نشده</p>}
-          {log?.setsDone != null && <p className="mentor-log-note">{faNum(log.setsDone)} ست انجام شد</p>}
-          {log?.note && <p className="mentor-log-note">{log.note}</p>}
-        </>
-      )}
-    </div>
-  );
-}
-
-function MentorItem({
-  item, isWorkout, log, future, canFeedback, onFeedback,
-}: {
-  item: Item; isWorkout: boolean; log: Log | null; future: boolean; canFeedback: boolean;
-  onFeedback: (t: { itemId?: string; logId?: string; label: string }) => void;
-}) {
-  const statusCls = log ? log.status.toLowerCase() : "none";
-  return (
-    <div className="mentor-item">
-      <div className="mentor-item-head">
-        <div className="mentor-item-title">{item.title}</div>
-        <span className={`mentor-log-chip is-${statusCls}`}>{log ? LOG_LABELS[log.status] : future ? "آینده" : "ثبت‌نشده"}</span>
-      </div>
-      <ItemMeta item={item} isWorkout={isWorkout} />
-      {log?.setsDone != null && <p className="mentor-log-note">{faNum(log.setsDone)}{item.sets != null ? ` از ${faNum(item.sets)}` : ""} ست انجام شد</p>}
-      {log?.note && <p className="mentor-log-note">یادداشت شاگرد: {log.note}</p>}
-      {canFeedback && (
-        <button
-          type="button"
-          className="mentor-text-btn"
-          style={{ marginTop: 4 }}
-          onClick={() => onFeedback(log ? { itemId: item.id, logId: log.id, label: `اجرای «${item.title}»` } : { itemId: item.id, label: `«${item.title}»` })}
-        >
-          <MessageSquareText {...BTN_SM} /> {log ? "بازخورد به این اجرا" : "بازخورد به این آیتم"}
-        </button>
-      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Users } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { faNum } from "@/lib/jalali";
+import { availabilityShort } from "@/lib/mentorAvailability";
 import { MentorUserAvatar } from "./MentorUserAvatar";
 import { CategoryChip, RatingStars, VerificationBadges } from "./MentorBadges";
 
@@ -37,7 +38,9 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
         </span>
         <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" aria-hidden />
       </div>
-      {!mentor.acceptingStudents && <div className="mentor-card-closed">شاگرد جدید نمی‌پذیرد</div>}
+      {mentor.availability && mentor.availability !== "OPEN" ? (
+        <div className="mentor-card-closed">{availabilityShort(mentor.availability, mentor.awayUntil)}</div>
+      ) : !mentor.acceptingStudents && <div className="mentor-card-closed">شاگرد جدید نمی‌پذیرد</div>}
     </Link>
   );
 }

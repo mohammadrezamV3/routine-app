@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, SearchX, Star, Users } from "lucide-react";
+import { Search, SearchX, Sparkles, Star, Users } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorEmptyState, MentorSectionTitle } from "@/components/MentorUI";
 import { MentorCard } from "@/components/MentorCard";
@@ -10,18 +10,24 @@ import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories"
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 
-type Sort = "popular" | "rating" | "new";
+type Sort = "best" | "rating" | "new";
 const SORTS: { value: Sort; label: string }[] = [
-  { value: "popular", label: "محبوب‌ترین" },
+  { value: "best", label: "بهترین نتیجه" },
   { value: "rating", label: "بالاترین امتیاز" },
   { value: "new", label: "تازه‌ترین" },
 ];
+// توضیحِ یک‌خطیِ هر ترتیب (مدلِ کامل: docs/mentor-ranking.md)
+const SORT_NOTES: Record<Sort, string | null> = {
+  best: "ترتیب بر اساس نتیجه‌ی واقعی شاگردها، پایبندی، ماندگاری و نظرهای تأییدشده",
+  rating: "فقط نظر شاگردهایی شمرده می‌شود که دست‌کم دو هفته با منتور کار کرده و برنامه‌ای را شروع کرده‌اند",
+  new: null,
+};
 
-// کشفِ منتور: جست‌وجو، فیلترِ دسته، مرتب‌سازی، و بخشِ «منتورهای محبوب» (که
-// رتبه‌اش سمتِ سرور از چند سیگنال ساخته می‌شود، نه صرفا تعداد شاگرد).
+// انتخابِ منتور: جست‌وجو، فیلترِ دسته، مرتب‌سازی، «منتورهای محبوب» (رتبه‌ی
+// شایستگیِ سمتِ سرور — lib/mentorRanking.ts) و جایگاهِ جدای «منتورهای تازه».
 export default function MentorsDiscoveryPage() {
   return (
-    <MentorPageShell title="کشف منتور">
+    <MentorPageShell title="انتخاب منتور">
       <Discovery />
     </MentorPageShell>
   );
@@ -31,7 +37,7 @@ function Discovery() {
   const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string>("");
-  const [sort, setSort] = useState<Sort>("popular");
+  const [sort, setSort] = useState<Sort>("best");
   const [page, setPage] = useState(1);
   const [mentors, setMentors] = useState<MentorCardData[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -39,6 +45,7 @@ function Discovery() {
   const [moreBusy, setMoreBusy] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
   const [popular, setPopular] = useState<MentorCardData[] | null>(null);
+  const [newcomers, setNewcomers] = useState<MentorCardData[]>([]);
   const reqId = useRef(0);
 
   // جست‌وجو با تأخیرِ کوتاه — هر حرف یک درخواست نمی‌شود
@@ -81,7 +88,10 @@ function Discovery() {
   const loadPopular = useCallback(() => {
     fetch("/api/mentors/popular", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: MentorsPopularResponse | null) => setPopular(d?.mentors ?? []))
+      .then((d: MentorsPopularResponse | null) => {
+        setPopular(d?.mentors ?? []);
+        setNewcomers(d?.newcomers ?? []);
+      })
       .catch(() => setPopular([]));
   }, []);
   useEffect(() => { loadPopular(); }, [loadPopular]);
@@ -133,9 +143,20 @@ function Discovery() {
         </>
       )}
 
+      {!filtered && newcomers.length > 0 && (
+        <>
+          <MentorSectionTitle icon={<Sparkles size={15} strokeWidth={1.75} aria-hidden />}>منتورهای تازه</MentorSectionTitle>
+          <p className="mentor-muted mentor-section-note">منتورهای تأییدشده‌ای که هنوز سابقه‌ی کافی برای رتبه‌بندی ندارند</p>
+          <div className="mentor-popular-row">
+            {newcomers.map((m) => <MentorCard key={m.userId} mentor={m} />)}
+          </div>
+        </>
+      )}
+
       <MentorSectionTitle icon={<Users size={15} strokeWidth={1.75} aria-hidden />}>
         {filtered ? "نتیجه‌ی جست‌وجو" : "همه‌ی منتورها"}
       </MentorSectionTitle>
+      {SORT_NOTES[sort] && <p className="mentor-muted mentor-section-note">{SORT_NOTES[sort]}</p>}
 
       {error ? (
         <MentorErrorState message={error} onRetry={() => load(1)} />

@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     type: "mentor.suspension",
     title: suspend ? "منتوری شما تعلیق شد" : "تعلیقِ منتوری برداشته شد",
     body: suspend
-      ? `پروفایل منتوری‌ات تا اطلاع ثانوی از کشف حذف شد.${reason ? ` دلیل: ${reason}` : ""}`
+      ? `پروفایل منتوری شما تا اطلاع ثانوی از فهرست منتورها حذف شد.${reason ? ` دلیل: ${reason}` : ""}`
       : "پروفایل منتوری‌ات دوباره فعاله.",
     url: "/mentor/profile",
   });

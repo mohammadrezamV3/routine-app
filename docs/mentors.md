@@ -41,8 +41,9 @@
 - `DELETE /api/mentors/me/documents/[docId]` → فقط وقتی وضعیتِ مربوط VERIFIED نیست.
 
 ### کشف منتور
-- `GET /api/mentors?q=&category=&sort=popular|rating|new&page=` → `{ mentors: MentorCard[], hasMore }`
-- `GET /api/mentors/popular` → `{ mentors: MentorCard[] }` (رتبه‌بندی `lib/mentorRanking.ts`، نه صرفاً تعداد شاگرد)
+- `GET /api/mentors?q=&category=&sort=best|rating|new&page=` → `{ mentors: MentorCard[], hasMore }` (`popular` = نامِ قدیمیِ `best`)
+- `GET /api/mentors/popular` → `{ mentors: MentorCard[], newcomers: MentorCard[] }` («منتورهای محبوب» + «منتورهای تازه»؛ مدل: `docs/mentor-ranking.md`)
+- `GET /api/admin/mentors/[profileId]/ranking` → `{ rows }` جزئیاتِ امتیاز برای هر دامنه (فقط ادمین)
   `MentorCard = { userId, name, avatarUrl, headline, categories[], identityVerified: bool, certifications: {category, verified: bool}[], ratingAvg, ratingCount, activeStudents, totalStudents, acceptingStudents }`
 - `GET /api/mentors/[mentorId]` (mentorId = userId) → `{ mentor: MentorCard & { bio, specialties[], completedPrograms, lastActiveAt, memberSince }, reviews: Review[], myMentorship: { id, status, initiatedBy } | null, canReview: bool, myReview: Review | null }`
   `Review = { id, rating, body, createdAt, student: { name, avatarUrl } }` (فقط VISIBLE).
@@ -81,13 +82,14 @@
   `Feedback = { id, body, createdAt, readAt, itemId, logId, itemTitle }`
 
 ### چت
-- `GET /api/mentorships/[id]/messages?before=<ISO>` → `{ messages: { id, body, createdAt, readAt, mine: bool }[], hasMore, canSend }` — پیام‌های دریافتی read می‌شن. رابطه‌ی ACTIVE یا ENDED (فقط‌خواندنی).
-- `POST /api/mentorships/[id]/messages` بدنه `{ body }` (≤2000، فقط ACTIVE، rate limit) → `{ message }`.
+گفت‌وگو رمزگذاریِ سرتاسری دارد — طرحِ کامل، APIها و مرزِ اعتماد: [`docs/mentor-e2ee.md`](./mentor-e2ee.md).
+- `GET /api/mentorships/[id]/messages?before=<ISO>` → `{ messages: { id, senderId, mine, createdAt, readAt, broadcast, enc | null, legacyBody | null }[], hasMore, canSend, mentorId, studentId, welcome }` — فقط متنِ رمزشده؛ پیام‌های دریافتی read می‌شن. رابطه‌ی ACTIVE یا ENDED (فقط‌خواندنی).
+- `POST /api/mentorships/[id]/messages` بدنه `{ clientId, ciphertext, iv, senderKeyVersion, recipientKeyVersion, commitment }` (فقط ACTIVE، rate limit؛ متنِ ساده `body` → ۴۰۰) → `{ message }`.
 - `GET /api/mentorships/unread` → `{ total, byMentorship: Record<id, number> }`
 
 ### نظر و گزارش
 - `POST /api/mentors/[mentorId]/reviews` بدنه `{ rating: 1..5, body? }` — فقط شاگردی با رابطه‌ای که `startedAt` داره (ACTIVE یا ENDED بعد از فعال‌شدن)؛ تکراری → ۴۰۹. `PUT` همون مسیر = ویرایشِ نظرِ خودم؛ `DELETE` = حذفِ نظرِ خودم. خلاصه‌ی امتیاز بعد از هر تغییر بازمحاسبه می‌شه.
-- `POST /api/mentor-reports` بدنه `{ targetType: USER|REVIEW|MESSAGE|PROGRAM, targetId, reason, details? }` — گزارش‌دهنده باید به هدف دسترسیِ مشروع داشته باشه؛ تکراری → ۴۰۹.
+- `POST /api/mentor-reports` بدنه `{ targetType: USER|REVIEW|MESSAGE|PROGRAM, targetId, reason, details?, franking? }` — گزارش‌دهنده باید به هدف دسترسیِ مشروع داشته باشه؛ تکراری → ۴۰۹. برای `MESSAGE`، `franking = { text, frankingKey }` لازم است و سرور تعهدِ فرستنده را تأیید می‌کند (docs/mentor-e2ee.md).
 
 ### اعلان‌ها
 - `GET /api/notifications?before=<ISO>` → `{ notifications: { id,type,title,body,url,readAt,createdAt }[], unread, hasMore }`
@@ -107,10 +109,9 @@
 - منتور: `/mentor` (داشبورد / شروعِ منتوری)، `/mentor/profile` (پروفایل + احراز)، `/mentor/students/[studentId]`، `/mentor/programs/new?mentorshipId=`، `/mentor/programs/[id]/edit`
 - ادمین: `/admin/mentors` (صف احراز + همه)، `/admin/mentors/[profileId]`، `/admin/mentors/reviews`، `/admin/mentors/reports`
 
-## رتبه‌بندیِ «محبوب‌ها»
-نه صرفاً تعداد شاگرد. `lib/mentorRanking.ts` امتیاز رو از چند سیگنالِ قابل‌اندازه‌گیری می‌سازه: میانگینِ بیزیِ امتیاز (با وزنِ تعداد نظر)، لگاریتمِ شاگردهای فعال، برنامه‌های تکمیل‌شده، نسبتِ ماندگاری (فعال ÷ کلِ شروع‌شده‌ها)، و تازگیِ فعالیت. زمان پاسخ‌گویی هنوز اندازه‌گیری نمی‌شه (مستند، نه جعلی).
+## رتبه‌بندی
+رتبه‌بندیِ شایستگی (نتیجه‌ی واقعیِ شاگردها، پایبندی، تکمیل، ماندگاری، سرعتِ پاسخ، نظرهای تأییدشده) — مدلِ کامل، وزن‌ها و قواعدِ ضدِ دست‌کاری: `docs/mentor-ranking.md`.
 
 ## عمداً عقب‌افتاده (پیاده نشده)
-- زمانِ پاسخ‌گویی به‌عنوان سیگنالِ رتبه‌بندی.
 - چتِ لحظه‌ای با WebSocket — چت با polling کار می‌کنه.
 - برنامه‌ی تغذیه به‌عنوانِ نوعِ برنامه (enum آماده‌ی افزودنه).

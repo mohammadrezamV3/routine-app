@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDown, ArrowUp, CalendarCheck, Check, ClipboardList, Dumbbell, MessageSquareText, Plus, Send, Trash2, X,
+  ArrowDown, ArrowUp, CalendarCheck, Check, ClipboardList, Dumbbell, LayoutTemplate, MessageSquareText, Plus, Send, Trash2, X,
 } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { NumberInput } from "./NumberInput";
@@ -11,6 +11,7 @@ import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
+import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmpty, MentorField, MentorNotice, MentorSection } from "./MentorUI";
 import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
@@ -123,8 +124,21 @@ function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input
   return { errors: {}, input };
 }
 
+/** پیش‌پرکردنِ «برنامه‌ی جدید» از قالب یا کپیِ برنامه‌ی قبلی (تاریخ‌ها از پیش جابه‌جا شده) */
+export type ProgramPrefill = {
+  type: ProgramType;
+  title: string;
+  description: string | null;
+  note: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  items: Item[];
+  /** وقتی از قالب آمده؛ با ذخیره آمارِ استفاده‌ی قالب بالا می‌رود */
+  templateId?: string;
+};
+
 export type MentorProgramEditorProps =
-  | { mode: "new"; mentorshipId: string; student: PublicUser; allowedTypes: ProgramType[] }
+  | { mode: "new"; mentorshipId: string; student: PublicUser; allowedTypes: ProgramType[]; initial?: ProgramPrefill | null }
   | { mode: "edit"; program: Program; items: Item[]; student: PublicUser | null; initiallySaved?: boolean };
 
 type ProgramBody = {
@@ -144,18 +158,26 @@ type ProgramBody = {
 export function MentorProgramEditor(props: MentorProgramEditorProps) {
   const router = useRouter();
   const initialProgram = props.mode === "edit" ? props.program : null;
+  const prefill = props.mode === "new" ? props.initial ?? null : null;
+  const seed = initialProgram ?? prefill;
 
   const [programId, setProgramId] = useState<string | null>(initialProgram?.id ?? null);
   // فقط نوع‌هایی که با حوزه‌ی این رابطه جورند (روتین ↔ ROUTINE، تمرینی ↔ FITNESS)
   const typeOptions = (props.mode === "new" ? props.allowedTypes : [initialProgram!.type]).map((v) => ({ value: v, label: v === "ROUTINE" ? "روتین" : "تمرینی" }));
-  const [type, setType] = useState<ProgramType>(initialProgram?.type ?? typeOptions[0]?.value ?? "ROUTINE");
-  const [title, setTitle] = useState(initialProgram?.title ?? "");
-  const [description, setDescription] = useState(initialProgram?.description ?? "");
-  const [note, setNote] = useState(initialProgram?.note ?? "");
-  const [startDate, setStartDate] = useState<JalaliDate | null>(isoToJalali(initialProgram?.startDate));
-  const [endDate, setEndDate] = useState<JalaliDate | null>(isoToJalali(initialProgram?.endDate));
+  const [type, setType] = useState<ProgramType>(
+    seed && typeOptions.some((o) => o.value === seed.type) ? seed.type : typeOptions[0]?.value ?? "ROUTINE",
+  );
+  const [title, setTitle] = useState(seed?.title ?? "");
+  const [description, setDescription] = useState(seed?.description ?? "");
+  const [note, setNote] = useState(seed?.note ?? "");
+  const [startDate, setStartDate] = useState<JalaliDate | null>(isoToJalali(seed?.startDate));
+  const [endDate, setEndDate] = useState<JalaliDate | null>(isoToJalali(seed?.endDate));
   const [picker, setPicker] = useState<"start" | "end" | null>(null);
-  const [items, setItems] = useState<Draft[]>(() => (props.mode === "edit" && props.items.length ? [...props.items].sort((a, b) => a.order - b.order).map(fromItem) : [emptyDraft()]));
+  const [items, setItems] = useState<Draft[]>(() => {
+    const src = props.mode === "edit" ? props.items : prefill?.items ?? [];
+    return src.length ? [...src].sort((a, b) => a.order - b.order).map(fromItem) : [emptyDraft()];
+  });
+  const [templateBody, setTemplateBody] = useState<ProgramBody | null>(null);
 
   const [itemErrors, setItemErrors] = useState<Record<string, ItemErrors>>({});
   const [formErr, setFormErr] = useState<{ title?: string; description?: string; note?: string; dates?: string; items?: string }>({});
@@ -258,7 +280,8 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       return programId;
     }
     const mentorshipId = props.mode === "new" ? props.mentorshipId : initialProgram?.mentorshipId;
-    const r = await mentorApi<{ program: Program }>("/api/mentor-programs", { method: "POST", body: { mentorshipId, ...body } });
+    const templateId = prefill?.templateId;
+    const r = await mentorApi<{ program: Program }>("/api/mentor-programs", { method: "POST", body: { mentorshipId, ...body, ...(templateId ? { templateId } : {}) } });
     if (!r.ok) { setError(r.error); return null; }
     setProgramId(r.data.program.id);
     return r.data.program.id;
@@ -296,6 +319,14 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
     router.push(`/mentor-programs/${id}`);
   }
 
+  /** «ذخیره به‌عنوان قالب» از محتوای فعلیِ فرم، بدونِ ذخیره‌ی خودِ برنامه */
+  function saveAsTemplate() {
+    if (busy) return;
+    setError(null);
+    const body = buildBody(true);
+    if (body) setTemplateBody(body);
+  }
+
   async function remove() {
     if (busy || !programId) return;
     setDeleteError(null);
@@ -317,6 +348,11 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
       <MentorSection
         title="مشخصات برنامه" icon={ic(ClipboardList, MI.section)}
+        action={
+          <button type="button" className="mentor-text-btn" onClick={saveAsTemplate} disabled={!!busy}>
+            {ic(LayoutTemplate, MI.btnSm)} ذخیره به‌عنوان قالب
+          </button>
+        }
         desc={initialProgram?.sentAt ? `این برنامه قبلاً ارسال شده؛ ارسال دوباره، نسخه‌ی ${fa(initialProgram.version + 1)} را برای شاگرد می‌فرستد` : undefined}
       >
         <div className="mentor-form">
@@ -353,7 +389,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
             />
           </MentorField>
 
-          <MentorField label="بازه‌ی زمانی" optional error={formErr.dates} hint="بدون تاریخ شروع، برنامه از روز پذیرش شاگرد شروع می‌شود">
+          <MentorField label="بازه‌ی زمانی" optional error={formErr.dates} hint="بدون تاریخ شروع، برنامه از روز پذیرش شاگرد شروع می‌شود؛ با تاریخ شروع در آینده، در همان روز خودکار فعال می‌شود">
             <div className={`wsearch-date-row${formErr.dates ? " field-error" : ""}`} style={{ marginTop: 0 }}>
               <div className="time-field">
                 <span className="time-field-label">تاریخ شروع</span>
@@ -455,6 +491,14 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           error={deleteError}
           onConfirm={remove}
           onCancel={() => { setConfirmDelete(false); setDeleteError(null); }}
+        />
+      )}
+
+      {templateBody && (
+        <MentorTemplateSaveDialog
+          defaultName={templateBody.title}
+          program={templateBody}
+          onClose={() => setTemplateBody(null)}
         />
       )}
 

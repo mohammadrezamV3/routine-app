@@ -18,7 +18,7 @@ type PublicUser = { id: string; name: string | null; lastName: string | null; us
 type Target =
   | { kind: "USER"; exists: boolean; user: PublicUser | null }
   | { kind: "REVIEW"; exists: boolean; rating: number | null; body: string | null; status: string | null; author: PublicUser | null; mentor: PublicUser | null }
-  | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null }
+  | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null; verified: boolean }
   | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null };
 type ReportStatus = "OPEN" | "RESOLVED" | "DISMISSED";
 type Report = {
@@ -73,7 +73,9 @@ function availableActions(r: Report): Action[] {
 }
 
 function TargetSnippet({ t }: { t: Target }) {
-  if (!t.exists) return <div className="trade-row-sub">محتوای گزارش‌شده حذف شده است</div>;
+  // پیامِ گفت‌وگو رمزگذاریِ سرتاسری دارد: متن فقط از خودِ گزارش می‌آید، پس حتی
+  // پس از حذفِ پیام هم نمایش داده می‌شود
+  if (!t.exists && t.kind !== "MESSAGE") return <div className="trade-row-sub">محتوای گزارش‌شده حذف شده است</div>;
   if (t.kind === "USER") return <div className="trade-row-main">{t.user ? displayName(t.user) : "—"}</div>;
   if (t.kind === "REVIEW") {
     return (
@@ -97,8 +99,14 @@ function TargetSnippet({ t }: { t: Target }) {
         <div className="trade-row-sub">
           پیام {t.sender ? displayName(t.sender) : "—"}
           {t.createdAt && <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(t.createdAt)}</span>}
+          {!t.exists && "؛ حذف‌شده"}
         </div>
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body}</div>
+        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">متن در دسترس نیست</span>}</div>
+        <div className="trade-row-sub">
+          {t.verified
+            ? "متن با تعهد رمزنگاری فرستنده تأیید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
+            : "پیام پیش از رمزگذاری سرتاسری ارسال شده و تأیید رمزنگاری ندارد"}
+        </div>
       </>
     );
   }

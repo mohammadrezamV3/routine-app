@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, Check, ClipboardList, Clock, Dumbbell, Inbox, Search, Send, Users, X } from "lucide-react";
+import { CalendarCheck, Check, ClipboardList, Clock, Dumbbell, Inbox, MessageCircle, Search, Send, Users, X } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorEmptyState, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
@@ -94,7 +94,7 @@ function MentorshipHome() {
         text="منتورها را بر اساس حوزه و امتیاز پیدا کن و درخواست بده."
         action={
           <Link href="/mentors" className="trade-primary-btn mentor-btn">
-            <Search size={15} strokeWidth={1.75} aria-hidden /> کشف منتور
+            <Search size={15} strokeWidth={1.75} aria-hidden /> انتخاب منتور
           </Link>
         }
       />
@@ -179,7 +179,12 @@ function MentorshipHome() {
                   {r.startedAt && <span>از {fmtDate(r.startedAt)}</span>}
                 </>
               }
-              end={r.unread > 0 ? <span className="mentor-unread" aria-label={`${faNum(r.unread)} پیام خوانده‌نشده`}>{faNum(r.unread)}</span> : undefined}
+              end={
+                // گفت‌وگو تبِ پیش‌فرضِ صفحه‌ی رابطه است؛ آیکون نشان می‌دهد این ردیف مستقیم به آن می‌رود
+                r.unread > 0
+                  ? <span className="mentor-unread" aria-label={`${faNum(r.unread)} پیام خوانده‌نشده`}>{faNum(r.unread)}</span>
+                  : <MessageCircle size={16} strokeWidth={1.75} className="mentor-row-chat" aria-hidden />
+              }
             />
           ))
         )}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Activity, AlertCircle, Ban, BadgeCheck, CalendarCheck, CalendarDays, Check, CheckCircle2, CircleSlash,
+  Activity, AlertCircle, Ban, BadgeCheck, CalendarCheck, CalendarDays, Check, CircleSlash,
   ClipboardList, Dumbbell, Eye, EyeOff, Hourglass, Inbox, MessageCircle, Pencil, Send, UserPlus, UserRound, Users, X, XCircle,
 } from "lucide-react";
 import { LoadingBlock, Spinner } from "./Spinner";
@@ -11,6 +11,10 @@ import { ProgramStatusBadge } from "./ProgramStatusBadge";
 import { MentorDashBar, MentorDashError, fa, mentorApi, pct } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorField, MentorNotice, MentorRow, MentorSection } from "./MentorUI";
 import { MentorUserAvatar } from "./MentorUserAvatar";
+import { MentorAvailabilityQuick } from "./MentorAvailabilityQuick";
+import { MentorIntakeAnswers } from "./MentorIntakeAnswers";
+import { MentorDashTools } from "./MentorDashTools";
+import { MentorBroadcast } from "./MentorBroadcast";
 import { categoryLabel } from "./MentorBadges";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { isValidUsername } from "@/lib/validate";
@@ -68,6 +72,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   const published = profile?.published ?? self.published;
   const identity = profile?.identityStatus ?? self.identityStatus;
   const active = rows.filter((r) => r.status === "ACTIVE");
+  // همکاریِ متوقف‌شده هشدارِ پایبندی نمی‌گیرد
+  const pausedIds = new Set(active.filter((r) => r.pausedAt).map((r) => r.counterpart.id));
+  const attention = dash.attention.filter((a) => !pausedIds.has(a.studentId));
   // دعوت‌هایی که خود منتور فرستاده و هنوز بی‌پاسخ‌اند
   const sentInvites = rows.filter((r) => r.status === "PENDING" && r.initiatedBy === "MENTOR");
   const incoming = dash.requests.filter((r) => r.status === "PENDING" && r.initiatedBy === "STUDENT");
@@ -123,9 +130,11 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
         <div className="mentor-stat"><b>{fa(dash.stats.pendingPrograms)}</b><span>{ic(Hourglass, MI.chip)} برنامه‌ی منتظر پاسخ</span></div>
       </div>
 
-      {dash.attention.length > 0 && (
-        <MentorSection title="نیازمند توجه" icon={ic(AlertCircle, MI.section)} count={fa(dash.attention.length)} flush>
-          {dash.attention.map((a) => (
+      <MentorAvailabilityQuick />
+
+      {attention.length > 0 && (
+        <MentorSection title="نیازمند توجه" icon={ic(AlertCircle, MI.section)} count={fa(attention.length)} flush>
+          {attention.map((a) => (
             <MentorRow
               key={a.studentId + a.reason}
               href={`/mentor/students/${a.studentId}`}
@@ -139,7 +148,10 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
 
       <MentorDashRequests incoming={incoming} sent={sentInvites} suspended={suspended} onChanged={() => load(true)} />
 
-      <MentorSection title="شاگردهای فعال" icon={ic(Users, MI.section)} count={active.length ? fa(active.length) : undefined} flush>
+      <MentorSection
+        title="شاگردهای فعال" icon={ic(Users, MI.section)} count={active.length ? fa(active.length) : undefined} flush
+        action={active.length > 0 ? <Link href="/mentor/students" className="mentor-link">همه</Link> : undefined}
+      >
         {rowsError ? (
           <MentorEmpty>فهرست شاگردها دریافت نشد؛ صفحه را تازه کن</MentorEmpty>
         ) : active.length === 0 ? (
@@ -159,13 +171,21 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
                   {r.categories.length > 0 && <span>{r.categories.map(categoryLabel).join("، ")}</span>}
                 </>
               }
-              end={r.unread > 0 ? (
-                <span className="mentor-unread" title={`${fa(r.unread)} پیام خوانده‌نشده`} aria-label={`${fa(r.unread)} پیام خوانده‌نشده`}>{fa(r.unread)}</span>
+              end={r.unread > 0 || r.pausedAt ? (
+                <>
+                  {r.pausedAt && <MentorChip tone="neutral" icon={ic(CircleSlash, MI.chip)}>متوقف</MentorChip>}
+                  {r.unread > 0 && (
+                    <span className="mentor-unread" title={`${fa(r.unread)} پیام خوانده‌نشده`} aria-label={`${fa(r.unread)} پیام خوانده‌نشده`}>{fa(r.unread)}</span>
+                  )}
+                </>
               ) : undefined}
             />
           );
         })}
       </MentorSection>
+
+      {/* ارسالِ گروهیِ رمزگذاری‌شده (agent D) — خودکفا در MentorBroadcast.tsx */}
+      {!suspended && !rowsError && <MentorBroadcast activeCount={active.length} />}
 
       <MentorSection title="منتظر پاسخ شاگرد" icon={ic(ClipboardList, MI.section)} count={dash.pendingPrograms.length ? fa(dash.pendingPrograms.length) : undefined} flush>
         {dash.pendingPrograms.length === 0 ? (
@@ -245,23 +265,19 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
 
       <MentorDashInvite suspended={suspended} categories={self.categories} onSent={() => load(true)} />
 
+      <MentorDashTools />
+
       <MentorSection
         title="پروفایل" icon={ic(UserRound, MI.section)} flush
         action={<Link href="/mentor/profile" className="mentor-link">{ic(Pencil, MI.btnSm)} ویرایش</Link>}
       >
         <MentorRow
-          title="نمایش در کشف منتور"
+          title="نمایش در فهرست منتورها"
           end={suspended
             ? <MentorChip tone="danger" icon={ic(Ban, MI.chip)}>معلق</MentorChip>
             : published
               ? <MentorChip tone="accent" icon={ic(Eye, MI.chip)}>منتشرشده</MentorChip>
               : <MentorChip tone="neutral" icon={ic(EyeOff, MI.chip)}>منتشرنشده</MentorChip>}
-        />
-        <MentorRow
-          title="پذیرش شاگرد جدید"
-          end={self.acceptingStudents
-            ? <MentorChip tone="ok" icon={ic(CheckCircle2, MI.chip)}>باز</MentorChip>
-            : <MentorChip tone="neutral" icon={ic(CircleSlash, MI.chip)}>بسته</MentorChip>}
         />
         <MentorRow title="احراز هویت" end={<IdentityChip status={identity} />} />
       </MentorSection>
@@ -308,6 +324,7 @@ function MentorDashRequests({
             below={
               <>
                 {r.message && <p className="mentor-quote">{r.message}</p>}
+                <MentorIntakeAnswers answers={r.intakeAnswers} />
                 <div className="mentor-btn-group is-end">
                   <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={!!busy} onClick={() => act(r.id, "reject")}>
                     {busy === r.id + "reject" ? <Spinner size={14} /> : <>{ic(X, MI.btnSm)} رد درخواست</>}
