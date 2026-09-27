@@ -5490,7 +5490,9 @@ html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:transform .15s ease, filter .15s ease, opacity .15s ease;
 }
-@media (hover:hover){ .trade-primary-btn:hover:not(:disabled){ filter:brightness(1.06); background:var(--accent); } }
+/* رنگِ متن و بوردر هم صریح — وگرنه قانونِ سراسریِ button:hover (color:accent) روی
+   دکمه‌ی پرِ اکسنت می‌نشست و متن هنگامِ هاور هم‌رنگِ بک‌گراند و نامرئی می‌شد. */
+@media (hover:hover){ .trade-primary-btn:hover:not(:disabled){ filter:brightness(1.06); background:var(--accent); color:var(--bg); border-color:var(--accent); } }
 .trade-primary-btn:active:not(:disabled){ transform:scale(.97); }
 .trade-primary-btn:disabled{ opacity:.5; cursor:default; }
 /* هم‌همان اسپسیفیسیتیِ body[data-theme="light"] button{} — بدونش دکمه‌ی

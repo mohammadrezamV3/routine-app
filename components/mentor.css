@@ -1,0 +1,255 @@
+/* ============================================================
+   اکوسیستم منتور (سمتِ شاگرد + کامپوننت‌های مشترک) — فقط چیدمان.
+   سطح‌ها/دکمه‌ها/فیلدها همه از کلاس‌های موجودِ اپ می‌آیند (trade-surface،
+   rp-card، account-card/account-row2، support-thread/support-msg،
+   trade-primary-btn/account-outline-btn/trade-ghost-btn، day-pill،
+   wsearch-newform-name). طبقِ قانونِ ثابتِ پروژه، این فایل به هیچ عنصری
+   بک‌گراند اضافه نمی‌کند — نشانه‌ها فقط با رنگِ متن و بوردر ساخته می‌شوند،
+   و هر <button>ِ تازه صریح background:none می‌گیرد تا ریستِ سراسریِ
+   button{} (از جمله body[data-theme] button{}) رویش نیفتد.
+   ============================================================ */
+
+.mentor-page{ padding-bottom:40px; }
+.mentor-muted{ color:var(--muted); font-size:12px; line-height:1.9; }
+.mentor-section-title{
+  display:flex; align-items:center; gap:7px; margin:22px 0 10px;
+  font-size:13.5px; font-weight:800; color:var(--text);
+}
+.mentor-section-title svg{ color:var(--accent); }
+.mentor-section-title .mentor-count{ font-size:11px; font-weight:700; color:var(--muted); }
+
+/* ── نشان‌ها (احراز/مدرک) و امتیاز ─────────────────────────── */
+.mentor-badges{ display:flex; flex-wrap:wrap; gap:6px; }
+.mentor-badge{
+  display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px;
+  font-size:10.5px; font-weight:700; line-height:1.6; white-space:nowrap;
+  border:1px solid var(--surface-line); color:var(--muted);
+}
+.mentor-badge.is-verified{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); }
+.mentor-badge.is-cat{ color:var(--text); }
+
+.mentor-stars{ display:inline-flex; align-items:center; gap:2px; color:var(--sun); }
+.mentor-stars svg{ flex-shrink:0; }
+.mentor-stars .is-empty{ color:var(--muted2); }
+.mentor-stars-value{ margin-inline-start:5px; font-size:11.5px; font-weight:800; color:var(--text); }
+.mentor-stars-count{ margin-inline-start:3px; font-size:11px; color:var(--muted); }
+
+/* امتیازدهی (فرمِ نظر) — پنج دکمه‌ی ستاره، بی‌بک‌گراند */
+.mentor-star-input{ display:flex; gap:4px; }
+.mentor-star-input button{
+  padding:4px; border:none; color:var(--muted2); cursor:pointer;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:transform .12s ease, color .12s ease;
+}
+.mentor-star-input button.on{ color:var(--sun); }
+.mentor-star-input button:active{ transform:scale(.9); }
+body[data-theme="light"] .mentor-star-input button, body:not([data-theme="light"]) .mentor-star-input button{ background:none; box-shadow:none; }
+
+/* ── وضعیت برنامه/رابطه — فقط رنگ + بوردر ───────────────────── */
+.mentor-status{
+  display:inline-flex; align-items:center; flex-shrink:0; padding:3px 9px; border-radius:999px;
+  font-size:10.5px; font-weight:700; white-space:nowrap; border:1px solid currentColor;
+}
+.mentor-status.is-draft, .mentor-status.is-cancelled, .mentor-status.is-ended{ color:var(--muted); }
+.mentor-status.is-pending{ color:var(--sun); }
+.mentor-status.is-accepted{ color:var(--secondary); }
+.mentor-status.is-active{ color:var(--accent); }
+.mentor-status.is-completed{ color:var(--pnl-win); }
+.mentor-status.is-rejected, .mentor-status.is-blocked{ color:var(--pnl-loss); }
+
+/* ── کارتِ منتور ───────────────────────────────────────────── */
+.mentor-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+@media (min-width:720px){ .mentor-grid{ grid-template-columns:1fr 1fr; } }
+.mentor-card-head{ display:flex; align-items:center; gap:12px; min-width:0; }
+.mentor-card-id{ flex:1; min-width:0; }
+.mentor-card-name{ font-size:14.5px; font-weight:800; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mentor-card-headline{
+  margin-top:2px; font-size:11.5px; color:var(--muted); line-height:1.7;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.mentor-card .mentor-badges{ margin-top:11px; }
+.mentor-card-closed{ font-size:10.5px; font-weight:700; color:var(--muted); }
+
+/* ── کشف: جست‌وجو/فیلتر/مرتب‌سازی ─────────────────────────── */
+.mentor-filter{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+.mentor-filter-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.mentor-search{ position:relative; flex:1 1 220px; min-width:0; }
+.mentor-search svg{ position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); color:var(--muted2); pointer-events:none; }
+.mentor-search input.wsearch-newform-name{ width:100%; padding-inline-start:38px; }
+select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:130px; }
+.mentor-popular-row{
+  display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 82%); gap:12px;
+  overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.mentor-popular-row::-webkit-scrollbar{ display:none; width:0; height:0; }
+.mentor-popular-row > *{ scroll-snap-align:start; }
+@media (min-width:720px){ .mentor-popular-row{ grid-auto-columns:minmax(280px, 46%); } }
+.mentor-more{ display:flex; justify-content:center; margin-top:16px; }
+
+/* بلوکِ خطا با دکمه‌ی «تلاش دوباره» — هم‌زبانِ trade-empty-state */
+.mentor-error{
+  display:flex; flex-direction:column; align-items:center; gap:10px; padding:32px 16px; text-align:center;
+}
+.mentor-error p{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.9; }
+.mentor-error svg{ color:var(--pnl-loss); opacity:.8; }
+
+/* ── پروفایلِ منتور ─────────────────────────────────────────── */
+.mentor-hero{ padding:18px; margin-top:4px; }
+.mentor-hero-top{ display:flex; align-items:flex-start; gap:14px; }
+.mentor-hero-id{ flex:1; min-width:0; }
+.mentor-hero-name{ margin:0; font-size:18px; font-weight:800; color:var(--text); line-height:1.6; }
+.mentor-hero-headline{ margin:2px 0 0; font-size:12.5px; color:var(--muted); line-height:1.8; }
+.mentor-hero .mentor-badges{ margin-top:12px; }
+.mentor-hero-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:16px; }
+.mentor-stats{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:16px; }
+@media (min-width:560px){ .mentor-stats{ grid-template-columns:repeat(4, 1fr); } }
+.mentor-stat{
+  display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:14px;
+  border:1px solid var(--surface-line);
+}
+.mentor-stat b{ font-size:15px; font-weight:800; color:var(--text); }
+.mentor-stat span{ font-size:10.5px; color:var(--muted); }
+.mentor-bio{ margin:0; font-size:12.5px; line-height:2.05; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+.mentor-chip-list{ display:flex; flex-wrap:wrap; gap:6px; }
+
+/* ── نظرها ─────────────────────────────────────────────────── */
+.mentor-review{ display:flex; gap:11px; padding:14px 0; border-bottom:1px solid var(--surface-line); }
+.mentor-review:last-child{ border-bottom:none; }
+.mentor-review-body{ flex:1; min-width:0; }
+.mentor-review-head{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; }
+.mentor-review-name{ font-size:12.5px; font-weight:700; color:var(--text); }
+.mentor-review-date{ font-size:10.5px; color:var(--muted2); }
+.mentor-review-text{ margin:6px 0 0; font-size:12px; line-height:1.95; color:var(--muted); white-space:pre-wrap; word-break:break-word; }
+
+/* ── ردیف‌های رابطه/برنامه ─────────────────────────────────── */
+.mentor-row-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; flex-shrink:0; }
+.mentor-row-actions .account-outline-btn, .mentor-row-actions .trade-danger-btn, .mentor-row-actions .trade-primary-btn{
+  padding:6px 11px; font-size:11.5px; border-radius:10px; min-height:32px;
+}
+.mentor-unread{
+  display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px;
+  border-radius:999px; font-size:10.5px; font-weight:800; color:var(--accent); border:1px solid var(--accent);
+}
+.mentor-row-stack{ display:flex; flex-direction:column; gap:10px; padding:14px 15px; border-bottom:1px solid var(--line); }
+.account-card .mentor-row-stack:last-child{ border-bottom:none; }
+.mentor-row-main{ display:flex; align-items:center; gap:12px; min-width:0; text-decoration:none; color:inherit; }
+.mentor-quote{
+  margin:0; padding-inline-start:10px; border-inline-start:2px solid var(--surface-line);
+  font-size:11.5px; color:var(--muted); line-height:1.9; white-space:pre-wrap; word-break:break-word;
+}
+@media (max-width:480px){
+  .mentor-row-stack .mentor-row-actions{ width:100%; }
+  .mentor-row-stack .mentor-row-actions > *{ flex:1; }
+}
+
+/* ── صفحه‌ی رابطه: تب‌ها + سربرگ ──────────────────────────── */
+.mentor-rel-head{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.mentor-rel-head h1{ margin:0; font-size:18px; }
+.mentor-rel-id{ flex:1; min-width:0; }
+.mentor-rel-sub{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:3px; font-size:11px; color:var(--muted); }
+.mentor-tabs{ margin-bottom:14px; }
+.mentor-danger-zone{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+
+/* ── چت ───────────────────────────────────────────────────── */
+.mentor-chat{ display:flex; flex-direction:column; }
+.mentor-chat .support-thread{ height:max(260px, min(58vh, calc(100dvh - 350px), 560px)); flex:none; margin-top:0; }
+.mentor-chat-empty{ margin:auto; text-align:center; font-size:12px; color:var(--muted); line-height:1.9; }
+.mentor-msg-meta{ display:flex; align-items:center; gap:5px; margin-top:5px; font-size:9.5px; opacity:.75; }
+.mentor-msg-meta .mono{ direction:ltr; }
+.support-msg.is-failed{ opacity:.65; }
+.mentor-msg-actions{ display:flex; gap:4px; margin-top:4px; }
+.mentor-msg-actions button{
+  display:inline-flex; align-items:center; gap:4px; padding:2px 4px; border:none; font-size:10px; color:inherit; cursor:pointer;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; opacity:.8;
+}
+@media (hover:hover){ .mentor-msg-actions button:hover{ opacity:1; text-decoration:underline; } }
+body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light"]) .mentor-msg-actions button{ background:none; box-shadow:none; }
+.mentor-chat-older{ align-self:center; }
+.mentor-chat-disabled{
+  margin-top:12px; padding:12px 14px; border-radius:14px; border:1px dashed var(--surface-line);
+  text-align:center; font-size:11.5px; color:var(--muted); line-height:1.9;
+}
+.mentor-chat .routine-ai-composer{ margin-top:12px; }
+
+/* ── حریم خصوصی ────────────────────────────────────────────── */
+.mentor-check{
+  display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--surface-line);
+  font-size:12.5px; color:var(--text); cursor:pointer;
+}
+.mentor-check:last-child{ border-bottom:none; }
+.mentor-check input{ width:17px; height:17px; accent-color:var(--accent); flex-shrink:0; cursor:pointer; }
+.mentor-check-label{ flex:1; min-width:0; word-break:break-word; }
+.mentor-check-kind{ font-size:10.5px; color:var(--muted2); }
+.mentor-check.is-disabled{ opacity:.55; cursor:default; }
+.mentor-toggle-row{ display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--surface-line); }
+.mentor-toggle-row:last-child{ border-bottom:none; }
+.mentor-toggle-text{ flex:1; min-width:0; }
+.mentor-toggle-title{ font-size:12.5px; font-weight:700; color:var(--text); }
+.mentor-toggle-desc{ margin-top:2px; font-size:11px; color:var(--muted); line-height:1.8; }
+.mentor-preview{
+  display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:14px;
+  border:1px dashed rgba(var(--accent-rgb),.45);
+}
+.mentor-preview-row{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; font-size:12px; line-height:1.9; }
+.mentor-preview-tag{ font-size:10.5px; font-weight:700; color:var(--muted); min-width:74px; }
+.mentor-preview-line{ color:var(--text); font-weight:700; direction:rtl; }
+.mentor-preview-line.is-mentor{ color:var(--accent); }
+
+/* ── اجرای برنامه ─────────────────────────────────────────── */
+.mentor-week-nav{ display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+.mentor-week-nav .day-picker{ flex:1; min-width:0; }
+.mentor-week-nav .day-pill{ padding:7px 0; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:11.5px; }
+.mentor-week-nav .day-pill small{ font-size:9.5px; font-weight:600; opacity:.8; }
+.mentor-week-nav .day-pill.is-future{ opacity:.55; }
+.mentor-week-label{ font-size:11.5px; color:var(--muted); text-align:center; margin-bottom:10px; }
+.mentor-item{ padding:14px 0; border-bottom:1px solid var(--surface-line); }
+.mentor-item:last-child{ border-bottom:none; }
+.mentor-item-head{ display:flex; align-items:flex-start; gap:10px; }
+.mentor-item-title{ flex:1; min-width:0; font-size:13px; font-weight:800; color:var(--text); line-height:1.7; word-break:break-word; }
+.mentor-item-meta{ display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:4px; font-size:11px; color:var(--muted); }
+.mentor-item-meta span{ display:inline-flex; align-items:center; gap:4px; }
+.mentor-item-details{ margin:6px 0 0; font-size:11.5px; color:var(--muted); line-height:1.9; white-space:pre-wrap; word-break:break-word; }
+.mentor-log-status{ display:flex; gap:6px; margin-top:10px; }
+.mentor-log-status .day-pill{ font-size:11.5px; padding:8px 0; }
+.mentor-log-status .day-pill.on.is-partial{ color:var(--sun); border-color:var(--sun); box-shadow:0 0 0 1px var(--sun); }
+.mentor-log-status .day-pill.on.is-missed{ color:var(--pnl-loss); border-color:var(--pnl-loss); box-shadow:0 0 0 1px var(--pnl-loss); }
+.mentor-log-extra{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:8px; }
+@media (min-width:520px){ .mentor-log-extra.has-sets{ grid-template-columns:120px 1fr; } }
+.mentor-log-foot{ display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:8px; }
+.mentor-log-foot .trade-form-error{ margin:0; flex:1; }
+.mentor-log-saved{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--accent); }
+.mentor-log-chip{
+  display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700;
+  border:1px solid currentColor;
+}
+.mentor-log-chip.is-completed{ color:var(--pnl-win); }
+.mentor-log-chip.is-partial{ color:var(--sun); }
+.mentor-log-chip.is-missed{ color:var(--pnl-loss); }
+.mentor-log-chip.is-none{ color:var(--muted2); }
+.mentor-log-note{ margin:6px 0 0; font-size:11.5px; color:var(--muted); line-height:1.8; white-space:pre-wrap; word-break:break-word; }
+
+.mentor-progress{ display:flex; align-items:center; gap:10px; margin-top:12px; }
+.mentor-progress .rp-bar{ flex:1; }
+.mentor-progress-legend{ display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:6px; font-size:11px; color:var(--muted); }
+
+.mentor-feedback{ padding:12px 0; border-bottom:1px solid var(--surface-line); }
+.mentor-feedback:last-child{ border-bottom:none; }
+.mentor-feedback-head{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:10.5px; color:var(--muted2); }
+.mentor-feedback-ref{ color:var(--accent); font-weight:700; }
+.mentor-feedback-new{ color:var(--accent); font-weight:800; }
+.mentor-feedback-body{ margin:5px 0 0; font-size:12.5px; line-height:1.95; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+.mentor-note-box{
+  margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--surface-line);
+  font-size:11.5px; line-height:1.9; color:var(--muted); white-space:pre-wrap; word-break:break-word;
+}
+.mentor-note-box b{ color:var(--text); }
+.mentor-actions-bar{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.mentor-actions-bar > button, .mentor-actions-bar > a{ flex:1 1 140px; }
+.mentor-date-group{ margin-top:6px; }
+.mentor-date-group-title{ font-size:11.5px; font-weight:800; color:var(--text); margin:12px 0 2px; }
+
+/* لینکِ متنیِ بی‌قاب (برای «پنل منتور» و مشابه) */
+.mentor-link{ display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--accent); text-decoration:none; }
+@media (hover:hover){ .mentor-link:hover{ opacity:.8; } }
+

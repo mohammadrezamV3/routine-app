@@ -62,6 +62,10 @@ export const ICONS: Record<string, JSX.Element> = {
   checklist: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 6.5 5.2 7.4 6.8 5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><rect x="3.5" y="14" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 16 5.2 16.9 6.8 15.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 6.5h9.5M11 16h9.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
+  // منتورها — یک نفر (منتور) و یک نفرِ کوچک‌ترِ کنارش (شاگرد)، هم‌خط با بقیه‌ی ست
+  mentors: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17.2" cy="10" r="2.3" stroke="currentColor" strokeWidth="1.6"/><path d="M16.3 14.6c2.2-.2 3.9 1.1 4.7 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
@@ -99,7 +103,7 @@ export const ICONS: Record<string, JSX.Element> = {
 // خریدنی مثل بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
 // feature: روشن/خاموش از پنل ادمین (lib/featureFlags.ts) — خاموش یعنی از منو مخفی.
 type NavLink = { href: string; label: string; icon: string; module?: string; feature?: FeatureKey };
-type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string };
+type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string; feature?: FeatureKey };
 type NavItem = NavLink | NavGroup;
 
 function isGroup(item: NavItem): item is NavGroup {
@@ -120,6 +124,14 @@ const LINKS: NavItem[] = [
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
   { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
+  {
+    label: "منتورها", icon: "mentors", feature: "mentors",
+    children: [
+      { href: "/mentors", label: "کشف منتور", icon: "mentors" },
+      { href: "/mentorship", label: "منتورهای من", icon: "mentors" },
+      { href: "/mentor", label: "پنل منتور", icon: "mentors" },
+    ],
+  },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
@@ -269,9 +281,9 @@ export function NavDrawer() {
   useEffect(() => {
     if (status !== "authenticated") return;
     let cancelled = false;
-    import("./NotificationPanel").then(({ preloadNotifications }) =>
+    import("./NotificationPanel").then(({ preloadNotifications, countUnreadNotifications }) =>
       preloadNotifications().then((items) => {
-        if (!cancelled) setNotifCount(items.length);
+        if (!cancelled) setNotifCount(countUnreadNotifications(items));
       })
     );
     return () => { cancelled = true; };

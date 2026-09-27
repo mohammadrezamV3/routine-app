@@ -166,6 +166,9 @@ export function EditOccurrenceForm({
       ...datesFor(r.jsDay),
       importance,
       ...(trimmedTag ? { tag: trimmedTag } : {}),
+      // آینه‌ی برنامه‌ی منتور باید بعد از ویرایش هم آینه بمونه — وگرنه به «برنامه‌ی
+      // خودِ شاگرد» تبدیل می‌شه و ممکنه برای منتورِ دیگه‌ای قابل‌اشتراک بشه
+      ...(orig?.mentorProgramId ? { mentorProgramId: orig.mentorProgramId } : {}),
     }));
     nextCustom = [...nextCustom, ...additions];
 

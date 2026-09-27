@@ -474,6 +474,8 @@ export type CustomOccurrence = {
    * جلسه‌های همان مسیر را باز می‌کند.
    */
   roadmapId?: string;
+  /** آینه‌ی یک برنامه‌ی ROUTINEِ منتور (lib/mentorProgramMirror.ts) — فقط سرور می‌سازه/حذفش می‌کنه */
+  mentorProgramId?: string;
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {

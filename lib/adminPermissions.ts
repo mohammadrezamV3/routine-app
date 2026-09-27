@@ -17,6 +17,7 @@ export const ADMIN_PERMISSIONS = [
   "support",
   "chat",
   "content",
+  "mentors",
   "ai_usage",
   "analytics",
   "system",
@@ -37,6 +38,7 @@ export const PERMISSION_META: Record<AdminPermission, { label: string; hint: str
   discounts: { label: "کدهای تخفیف", hint: "ساخت/ویرایش/حذف کد تخفیف", group: "مالی" },
   support: { label: "پشتیبانی", hint: "پاسخ به تیکت‌ها", group: "پشتیبانی و محتوا" },
   chat: { label: "گزارش‌های چت", hint: "بررسی گزارش‌ها و حذف پیام", group: "پشتیبانی و محتوا" },
+  mentors: { label: "منتورها", hint: "احراز هویت و مدارک منتورها، نظرات و گزارش‌ها", group: "پشتیبانی و محتوا" },
   content: { label: "محتوا", hint: "تقویم اقتصادی و عکس حرکات ورزشی", group: "پشتیبانی و محتوا" },
   ai_usage: { label: "مصرف AI", hint: "هزینه و مصرف توکن", group: "تحلیل و سیستم" },
   analytics: { label: "تحلیل‌ها", hint: "Retention، Funnel، Churn، Cohort و محصولات", group: "تحلیل و سیستم" },
@@ -51,7 +53,7 @@ export const PERMISSION_GROUPS: string[] = Array.from(new Set(ADMIN_PERMISSIONS.
 // خود لیست کلیدهاست، نه اسم نقش.
 export const ROLE_PRESETS: { key: string; label: string; permissions: AdminPermission[] }[] = [
   { key: "support", label: "پشتیبان", permissions: ["users.view", "support", "chat"] },
-  { key: "moderator", label: "ناظر کاربران", permissions: ["users.view", "users.edit", "users.access", "chat", "support"] },
+  { key: "moderator", label: "ناظر کاربران", permissions: ["users.view", "users.edit", "users.access", "chat", "support", "mentors"] },
   { key: "content", label: "مدیر محتوا", permissions: ["content", "analytics"] },
   { key: "finance", label: "مالی", permissions: ["users.view", "subscriptions", "finance", "discounts"] },
   { key: "full", label: "ادمین کامل", permissions: [...ADMIN_PERMISSIONS] },
@@ -83,6 +85,7 @@ const ROUTE_PERMISSIONS: [string, AdminPermission | null][] = [
   ["/admin/discount-codes", "discounts"],
   ["/admin/support", "support"],
   ["/admin/chat-reports", "chat"],
+  ["/admin/mentors", "mentors"],
   ["/admin/economic-calendar", "content"],
   ["/admin/exercise-media", "content"],
   ["/admin/products", "analytics"],

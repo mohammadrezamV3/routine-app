@@ -195,21 +195,21 @@ model User {
   gymPartner   Partner? @relation("GymUsers", fields: [gymPartnerId], references: [id])
 
   // داده‌های ماژول‌ها
-  dailyEntries          DailyEntry[]
-  sleepEntries          SleepEntry[]
-  tasks                 Task[]
-  exercisePlans         ExercisePlan[]
-  exerciseLogs          ExerciseLog[]
-  foodLogs              FoodLogEntry[]
-  calorieTargets        CalorieTarget[]
-  tradeEntries          TradeEntry[]
-  tradeAccounts         TradeAccount[]
-  tradeTags             TradeTag[]
-  tradeChecklists       TradeChecklist[]
-  roadmaps              Roadmap[]
-  weeklyAnalysisAi      WeeklyAnalysisAi[]
-  weeklyAnalysisGoals   WeeklyAnalysisGoal[]
-  weeklyReflections     WeeklyReflection[]
+  dailyEntries        DailyEntry[]
+  sleepEntries        SleepEntry[]
+  tasks               Task[]
+  exercisePlans       ExercisePlan[]
+  exerciseLogs        ExerciseLog[]
+  foodLogs            FoodLogEntry[]
+  calorieTargets      CalorieTarget[]
+  tradeEntries        TradeEntry[]
+  tradeAccounts       TradeAccount[]
+  tradeTags           TradeTag[]
+  tradeChecklists     TradeChecklist[]
+  roadmaps            Roadmap[]
+  weeklyAnalysisAi    WeeklyAnalysisAi[]
+  weeklyAnalysisGoals WeeklyAnalysisGoal[]
+  weeklyReflections   WeeklyReflection[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -223,17 +223,29 @@ model User {
   // آن یکی شخصی و فقط برای پین‌کردن در لیستِ خودِ کاربر بود، این یکی عمومی و
   // متقابل نیست (هرکسی می‌تواند به هر دوستی استار بدهد، مستقل از این‌که خودِ
   // آن طرف هم استار داده باشد یا نه) — دقیقاً همان چیزی که پروفایلِ دوست نشان می‌دهد.
-  starsGiven    FriendStar[] @relation("StarsGiven")
-  starsReceived FriendStar[] @relation("StarsReceived")
+  starsGiven             FriendStar[]       @relation("StarsGiven")
+  starsReceived          FriendStar[]       @relation("StarsReceived")
   // بلاکِ کاربر-به-کاربر (نه isBlockedِ بالا که فقط ادمین از پنل می‌زند) —
   // کاربرِ بلاک‌شده دیگر در جست‌وجوی دوستان دیده نمی‌شود.
-  blockedUsers   UserBlock[] @relation("Blocker")
-  blockedByUsers UserBlock[] @relation("Blocked")
+  blockedUsers           UserBlock[]        @relation("Blocker")
+  blockedByUsers         UserBlock[]        @relation("Blocked")
   tradeNotes             TradeNote[]
   tradeMtLinks           TradeMtLink[]
   tradeChatMessages      TradeChatMessage[]
   tradeChatReports       TradeChatReport[]  @relation("ChatReporter")
   supportTickets         SupportTicket[]
+
+  // اکوسیستم منتور — پروفایلِ منتوری (اختیاری؛ داشتنش یعنی کاربر منتور هم هست)
+  mentorProfile           MentorProfile?
+  mentorshipsAsMentor     Mentorship[]        @relation("MentorshipMentor")
+  mentorshipsAsStudent    Mentorship[]        @relation("MentorshipStudent")
+  mentorProgramsAsMentor  MentorProgram[]     @relation("MentorProgramMentor")
+  mentorProgramsAsStudent MentorProgram[]     @relation("MentorProgramStudent")
+  mentorMessagesSent      MentorMessage[]
+  mentorReviewsGiven      MentorReview[]      @relation("MentorReviewStudent")
+  mentorReviewsReceived   MentorReview[]      @relation("MentorReviewMentor")
+  mentorReportsFiled      MentorReport[]      @relation("MentorReportReporter")
+  notifications           InAppNotification[]
 
   @@index([market])
   @@index([gymPartnerId])
@@ -1211,7 +1223,7 @@ model TradeEntry {
   externalSource String?
   // کاربر یک‌بار جزئیاتِ این معامله‌ی همگام‌شده را دستی ویرایش کرده — از این به
   // بعد sync دیگر فیلدهای اصلی‌اش را (symbol/pnl/قیمت‌ها/...) بازنویسی نمی‌کند.
-  syncLocked     Boolean  @default(false)
+  syncLocked     Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1737,4 +1749,383 @@ model SupportMessage {
   createdAt DateTime @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// اکوسیستم منتور ↔ شاگرد
+//
+// آریون خودش مربی‌گری نمی‌کنه؛ فقط ابزارِ ارتباط، ساخت/تأیید/اجرای برنامه و
+// پایش رو بینِ منتورهای مستقل و شاگردها فراهم می‌کنه. نکات طراحی:
+//   - منتوربودن نقشِ جدا روی User نیست؛ داشتنِ MentorProfile یعنی منتور.
+//     (پس سیستمِ کاربر/احراز هویتِ موازی ساخته نشده.)
+//   - دسته‌های منتوری رشته‌ان، نه enum (lib/mentorCategories.ts رجیستری‌شونه)
+//     تا اضافه‌شدنِ دسته‌ی جدید فقط تغییرِ کد/داده باشه، نه مایگریشن.
+//   - هویت و مدرکِ تخصصی دو مفهومِ جدان؛ مدرک به‌ازای هر دسته یک ردیف.
+//   - حریم خصوصی به‌ازای هر رابطه (Mentorship) جداست — تغییرِ دسترسیِ منتور A
+//     هیچ اثری روی منتور B نداره. اعمالش فقط سمت سرور (lib/mentorPrivacy.ts).
+// ═════════════════════════════════════════════════════════════════════════
+
+enum VerificationStatus {
+  NOT_PROVIDED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model MentorProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  headline    String?
+  bio         String?
+  specialties String[] @default([])
+  // کلیدهای lib/mentorCategories.ts — مثلا ["FITNESS","NUTRITION"]
+  categories  String[] @default([])
+
+  // فقط وقتی true و موارد لازم پر باشه، توی کشف منتورها دیده می‌شه
+  published         Boolean @default(false)
+  acceptingStudents Boolean @default(true)
+
+  // وضعیتِ احراز هویت — فقط ادمین تغییرش می‌ده (هیچ روتِ کاربری این فیلد رو نمی‌نویسه)
+  identityStatus       VerificationStatus @default(NOT_PROVIDED)
+  identityRejectReason String?
+  identityReviewedAt   DateTime?
+
+  // تعلیقِ منتوری توسطِ ادمین — از کشف حذف و ساختِ برنامه/پذیرشِ شاگرد بسته می‌شه
+  suspendedAt     DateTime?
+  suspendedReason String?
+
+  // خلاصه‌ی نظرات (فقط نظراتِ VISIBLE) — denormalized برای رتبه‌بندی/کشف
+  ratingAvg   Float @default(0)
+  ratingCount Int   @default(0)
+
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  credentials        MentorCredential[]
+  documents          MentorDocument[]
+  verificationEvents MentorVerificationEvent[]
+
+  @@index([published, suspendedAt])
+}
+
+// مدرکِ تخصصیِ یک دسته (مثلا FITNESS) — وضعیتش مستقل از هویت و از دسته‌های دیگه
+model MentorCredential {
+  id           String             @id @default(cuid())
+  profileId    String
+  profile      MentorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  category     String
+  status       VerificationStatus @default(NOT_PROVIDED)
+  rejectReason String?
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([profileId, category])
+  @@index([status])
+}
+
+enum MentorDocumentKind {
+  IDENTITY
+  CERTIFICATE
+}
+
+// مدارکِ حساس (کارت ملی/مدرک). عمدا *داخلِ دیتابیس* نگه داشته می‌شن نه
+// public/ — استوریجِ ابری نداریم و هر فایلی در public/ مستقیم قابل‌دانلوده.
+// فقط از روتِ ادمین با requireAdmin("mentors") و خودِ صاحبش سرو می‌شن؛
+// هیچ مسیرِ فایلی به کلاینت برنمی‌گرده.
+model MentorDocument {
+  id        String             @id @default(cuid())
+  profileId String
+  profile   MentorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  kind      MentorDocumentKind
+  category  String? // فقط برای CERTIFICATE
+  fileName  String // نامِ پاک‌سازی‌شده، فقط برای نمایش
+  mimeType  String // از روی magic bytes تشخیص داده می‌شه، نه هدرِ کلاینت
+  sizeBytes Int
+  sha256    String
+  data      Bytes
+  createdAt DateTime           @default(now())
+
+  @@index([profileId, kind])
+}
+
+// تاریخچه‌ی تصمیم‌های احراز — هر تغییرِ وضعیت (ارسال، تأیید، رد) یک ردیف
+model MentorVerificationEvent {
+  id          String             @id @default(cuid())
+  profileId   String
+  profile     MentorProfile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  kind        MentorDocumentKind
+  category    String?
+  fromStatus  VerificationStatus
+  toStatus    VerificationStatus
+  reason      String?
+  actorUserId String
+  createdAt   DateTime           @default(now())
+
+  @@index([profileId, createdAt])
+}
+
+enum MentorshipStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  BLOCKED
+  ENDED
+}
+
+// رابطه‌ی منتور ↔ شاگرد — یک ردیف به‌ازای هر جفت (unique)، پس رابطه‌ی
+// تکراری ممکن نیست؛ درخواستِ دوباره بعد از رد/پایان همین ردیف رو PENDING می‌کنه.
+model Mentorship {
+  id          String           @id @default(cuid())
+  mentorId    String
+  mentor      User             @relation("MentorshipMentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User             @relation("MentorshipStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  status      MentorshipStatus @default(PENDING)
+  initiatedBy String // "STUDENT" | "MENTOR" — فقط طرفِ مقابل می‌تونه قبول کنه
+  // حوزه‌هایی که این رابطه پوشش می‌ده (زیرمجموعه‌ی دسته‌های منتور، مثلا ["ROUTINE"]).
+  // منتورهای شاگرد با همین از هم تفکیک می‌شن و نوعِ برنامه‌ی مجاز هم از همین میاد.
+  // خالی = رابطه‌ی قدیمی قبل از این فیلد → همه‌ی حوزه‌های منتور.
+  categories  String[] @default([])
+  message     String?
+  blockedById String?
+
+  // ── حریم خصوصیِ این رابطه (فقط شاگرد تغییرش می‌ده) ──
+  // کدوم برنامه‌های خودِ شاگرد برای این منتور دیده بشه (کلیدهای lib/mentorPrivacy.ts)
+  shareAllPrograms Boolean  @default(false)
+  sharedPrograms   String[] @default([])
+  // چه سطحی از جزئیات
+  showSchedule     Boolean  @default(true)
+  showProgramName  Boolean  @default(true)
+  showTaskName     Boolean  @default(false)
+  showTaskDetails  Boolean  @default(false)
+  showProgress     Boolean  @default(true)
+
+  startedAt DateTime?
+  endedAt   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  programs MentorProgram[]
+  messages MentorMessage[]
+  reviews  MentorReview[]
+
+  @@unique([mentorId, studentId])
+  @@index([studentId, status])
+  @@index([mentorId, status])
+}
+
+enum MentorProgramStatus {
+  DRAFT
+  PENDING
+  ACCEPTED
+  REJECTED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// نوعِ برنامه — enum که اضافه‌کردنِ نوعِ جدید (مثلا تغذیه) فقط یک مقدار اضافه کنه
+enum MentorProgramType {
+  ROUTINE
+  WORKOUT
+}
+
+model MentorProgram {
+  id                String              @id @default(cuid())
+  mentorshipId      String
+  mentorship        Mentorship          @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  mentorId          String
+  mentor            User                @relation("MentorProgramMentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  studentId         String
+  student           User                @relation("MentorProgramStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  type              MentorProgramType
+  title             String
+  description       String?
+  startDate         DateTime?           @db.Date
+  endDate           DateTime?           @db.Date
+  status            MentorProgramStatus @default(DRAFT)
+  // هر ارسالِ دوباره بعد از «درخواست تغییر» نسخه رو یکی بالا می‌بره
+  version           Int                 @default(1)
+  changeRequestNote String?
+  rejectReason      String?
+
+  sentAt      DateTime?
+  respondedAt DateTime?
+  activatedAt DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items    MentorProgramItem[]
+  logs     MentorProgramLog[]
+  feedback MentorFeedback[]
+
+  @@index([studentId, status])
+  @@index([mentorId, status])
+  @@index([mentorshipId])
+}
+
+// یک آیتمِ برنامه — برای ROUTINE تسکِ زمان‌دار، برای WORKOUT یک حرکت
+model MentorProgramItem {
+  id          String        @id @default(cuid())
+  programId   String
+  program     MentorProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  order       Int           @default(0)
+  title       String
+  details     String?
+  // زمان‌بندی: روزهای هفته به jsDay (۰=یکشنبه) — DAILY یعنی همه‌ی روزها
+  repeat      String        @default("WEEKLY") // "DAILY" | "WEEKLY"
+  days        Int[]         @default([])
+  startTime   String? // "HH:mm"
+  durationMin Int?
+  // فقط WORKOUT
+  sets        Int?
+  reps        String? // "8-12" یا "10"
+  weightKg    Float?
+  restSec     Int?
+
+  logs     MentorProgramLog[]
+  feedback MentorFeedback[]
+
+  @@index([programId, order])
+}
+
+enum ProgramLogStatus {
+  COMPLETED
+  PARTIAL
+  MISSED
+}
+
+// اجرای یک آیتم در یک روز — یک ردیف به‌ازای هر آیتم/روز
+model MentorProgramLog {
+  id        String            @id @default(cuid())
+  programId String
+  program   MentorProgram     @relation(fields: [programId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      MentorProgramItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  studentId String
+  date      DateTime          @db.Date
+  status    ProgramLogStatus
+  setsDone  Int?
+  note      String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  feedback MentorFeedback[]
+
+  @@unique([itemId, date])
+  @@index([programId, date])
+  @@index([studentId, date])
+}
+
+model MentorFeedback {
+  id        String             @id @default(cuid())
+  programId String
+  program   MentorProgram      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  itemId    String?
+  item      MentorProgramItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  logId     String?
+  log       MentorProgramLog?  @relation(fields: [logId], references: [id], onDelete: SetNull)
+  mentorId  String
+  studentId String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime           @default(now())
+
+  @@index([programId, createdAt])
+  @@index([studentId, readAt])
+}
+
+model MentorMessage {
+  id           String     @id @default(cuid())
+  mentorshipId String
+  mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  senderId     String
+  sender       User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body         String
+  readAt       DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([mentorshipId, createdAt])
+  @@index([mentorshipId, senderId, readAt])
+}
+
+enum MentorReviewStatus {
+  VISIBLE
+  HIDDEN
+}
+
+// فقط شاگردی که رابطه‌ی واقعی (ACTIVE یا ENDED بعد از فعال‌شدن) داشته؛ یکی به‌ازای هر جفت
+model MentorReview {
+  id           String             @id @default(cuid())
+  mentorId     String
+  mentor       User               @relation("MentorReviewMentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User               @relation("MentorReviewStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  mentorshipId String
+  mentorship   Mentorship         @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  rating       Int // ۱ تا ۵
+  body         String?
+  status       MentorReviewStatus @default(VISIBLE)
+  hiddenReason String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([mentorId, studentId])
+  @@index([mentorId, status, createdAt])
+}
+
+enum MentorReportTarget {
+  USER
+  REVIEW
+  MESSAGE
+  PROGRAM
+}
+
+enum MentorReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+model MentorReport {
+  id           String             @id @default(cuid())
+  reporterId   String
+  reporter     User               @relation("MentorReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType   MentorReportTarget
+  targetId     String
+  // صاحبِ محتوای گزارش‌شده — برای اقدامِ ادمین (تعلیق/مسدودی)
+  targetUserId String?
+  reason       String
+  details      String?
+  status       MentorReportStatus @default(OPEN)
+  resolution   String?
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime           @default(now())
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+}
+
+// اعلانِ درون‌برنامه‌ای (زنگوله) — پایدار روی سرور، برخلافِ NotificationPanel
+// قبلی که همه‌چیز رو سمت کلاینت حساب می‌کرد. پوش هم best-effort کنارش می‌ره.
+model InAppNotification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // مثلا "mentor.request" | "program.new" | "message.new"
+  title     String
+  body      String
+  url       String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
 }
