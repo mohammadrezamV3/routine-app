@@ -46,6 +46,8 @@ export type MentorCard = {
   /** YYYY-MM-DD روزِ بازگشت؛ فقط وقتی منتور در حالِ عدمِ حضور است */
   awayUntil: string | null;
   responseTimeHours: number | null;
+  /** زمانِ ساختِ پروفایلِ منتوری (ISO) */
+  memberSince: string;
 };
 
 export type MentorDetail = MentorCard & {
@@ -53,7 +55,6 @@ export type MentorDetail = MentorCard & {
   specialties: string[];
   completedPrograms: number;
   lastActiveAt: string | null;
-  memberSince: string;
   /** پیامِ عدمِ حضور — فقط وقتی awayUntil پر است */
   awayMessage?: string | null;
   /** سؤال‌هایی که شاگرد هنگامِ درخواست جواب می‌دهد؛ POST /api/mentorships با { intakeAnswers: string[] } به همین ترتیب */

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Bell, Users, BarChart3, Tablets } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { MentorPrivacyAccountSection } from "@/components/MentorPrivacyAccountSection";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
 const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
@@ -66,6 +67,8 @@ export default function AccountSettingsPage() {
       <NotificationSettings index={1} />
       <RoutineSettings />
       <TradeSettings />
+      {/* دسترسیِ منتورها به روتین — از زبانه‌ی «دسترسی‌ها»ی صفحه‌ی رابطه به این‌جا منتقل شد */}
+      <Suspense fallback={null}><MentorPrivacyAccountSection /></Suspense>
     </section>
   );
 }
