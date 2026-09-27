@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { useAdminToast } from "./useAdminToast";
 
 // پاپ‌آپ مشترک پنل — همون .modal-overlay/.modal-panel خود اپ (نه یه استایل
 // جدا) تا با بقیه‌ی مودال‌های اپ یکی باشه. پورتال به body چون .admin-topbar
@@ -23,7 +24,7 @@ export function AdminModal({
   return createPortal(
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel open admin-modal" role="dialog" aria-modal="true" dir="rtl" style={wide ? { maxWidth: 560 } : undefined}>
+      <div className={`modal-panel open admin-modal${wide ? " is-wide" : ""}`} role="dialog" aria-modal="true" aria-label={title} dir="rtl">
         <div className="modal-head">
           <div>
             {eyebrow && <div className="modal-eyebrow">{eyebrow}</div>}
@@ -47,6 +48,7 @@ export function ConfirmModal({
 }) {
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
+  const toast = useAdminToast();
   const blocked = !!typeToConfirm && typed.trim() !== typeToConfirm;
   return (
     <AdminModal title={title} eyebrow="تأیید اقدام" onClose={onClose}>
@@ -61,7 +63,13 @@ export function ConfirmModal({
         <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
         <button
           type="button" className={`admin-btn ${danger ? "danger" : "primary"}`} disabled={blocked || busy}
-          onClick={async () => { setBusy(true); try { await onConfirm(); } finally { setBusy(false); } }}
+          onClick={async () => {
+            setBusy(true);
+            // خطای onConfirm قبلا یه unhandled rejection بی‌صدا بود — حالا پیام می‌گیره
+            try { await onConfirm(); }
+            catch (e) { toast(e instanceof Error && e.message ? e.message : "خطا در انجام درخواست", "err"); }
+            finally { setBusy(false); }
+          }}
         >
           {busy ? "در حال انجام…" : confirmLabel}
         </button>

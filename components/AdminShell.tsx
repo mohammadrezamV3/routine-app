@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,6 +11,7 @@ import {
   Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { AdminToastProvider } from "@/components/admin/useAdminToast";
 import { AdminAccessContext } from "@/components/admin/AdminAccess";
 import { AdminPermission, hasPermission, permissionForPath } from "@/lib/adminPermissions";
@@ -141,7 +142,25 @@ function isActive(pathname: string, href: string, exact = false): boolean {
 
 function sectionActive(pathname: string, section: NavSection): boolean {
   if (section.href && isActive(pathname, section.href)) return true;
-  return !!section.children?.some((c) => isActive(pathname, c.href));
+  return !!section.children?.some((c) => isActive(pathname, c.href, c.exact));
+}
+
+// کدوم زیرمنو فعاله — با query هم مقایسه می‌شه. قبلا فقط path چک می‌شد،
+// پس روی /admin/users هر شش زیرمنوی «کاربران» (و «تراکنش‌ها»/«بازپرداخت‌ها»)
+// هم‌زمان سبز می‌شدن. برگی که query داره فقط وقتی همه‌ی پارامترهاش با URL
+// یکی باشه فعاله؛ برگِ بدون query فقط وقتی هیچ برگِ خاص‌تری مطابق نباشه.
+function activeLeafHref(pathname: string, search: URLSearchParams, leaves: Leaf[]): string | null {
+  let best: { href: string; score: number } | null = null;
+  for (const leaf of leaves) {
+    if (!isActive(pathname, leaf.href, leaf.exact)) continue;
+    const q = leaf.href.split("?")[1];
+    const params = q ? Array.from(new URLSearchParams(q).entries()) : [];
+    if (!params.every(([k, v]) => search.get(k) === v)) continue;
+    // برگِ بدون query وقتی URL یه فیلترِ دیگه داره که برگی براش نیست، باز هم «همه» حساب می‌شه
+    const score = params.length;
+    if (!best || score > best.score) best = { href: leaf.href, score };
+  }
+  return best?.href ?? null;
 }
 
 function Brand({ onClose }: { onClose?: () => void }) {
@@ -167,8 +186,8 @@ function RoleCard({ access }: { access: Access }) {
   const name = (session?.user as any)?.name || "ادمین";
   return (
     <div className="admin-role-card">
-      <span className="admin-avatar-fallback" style={{ width: 34, height: 34, fontSize: 13, borderRadius: 11 }}>{String(name)[0]?.toUpperCase()}</span>
-      <div style={{ minWidth: 0 }}>
+      <span className="admin-avatar-fallback admin-role-avatar">{String(name)[0]?.toUpperCase()}</span>
+      <div className="admin-role-info">
         <div className="admin-role-name">{name}</div>
         <div className="admin-role-sub">{access.isSuperAdmin ? "Owner — دسترسی کامل" : `ادمین · ${access.permissions.length} دسترسی`}</div>
       </div>
@@ -177,9 +196,16 @@ function RoleCard({ access }: { access: Access }) {
 }
 
 function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: string; groups: NavGroup[]; access: Access; onNavigate?: () => void }) {
-  const [expanded, setExpanded] = useState<string | null>(
-    () => groups.flatMap((g) => g.sections).find((s) => s.children && sectionActive(pathname, s))?.label || null,
-  );
+  const searchParams = useSearchParams();
+  const search = useMemo(() => new URLSearchParams(searchParams?.toString() || ""), [searchParams]);
+  const activeSectionLabel = groups.flatMap((g) => g.sections).find((s) => s.children && sectionActive(pathname, s))?.label || null;
+  const [expanded, setExpanded] = useState<string | null>(activeSectionLabel);
+
+  // سایدبارِ دسکتاپ بین صفحه‌ها unmount نمی‌شه — وقتی با میان‌بر/لینکِ داخلِ
+  // صفحه به یه بخشِ دیگه می‌ری، زیرمنوی همون بخش باید باز بشه (قبلا بسته می‌موند).
+  useEffect(() => {
+    if (activeSectionLabel) setExpanded(activeSectionLabel);
+  }, [activeSectionLabel]);
 
   return (
     <nav className="admin-nav">
@@ -193,7 +219,7 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
             return (
               <div key={section.label} className="admin-nav-section">
                 {section.children ? (
-                  <button type="button" className={`admin-nav-head${active ? " active" : ""}`} onClick={() => setExpanded(isOpen ? null : section.label)}>
+                  <button type="button" aria-expanded={isOpen} className={`admin-nav-head${active ? " active" : ""}`} onClick={() => setExpanded(isOpen ? null : section.label)}>
                     <span className="admin-nav-icon">{section.icon}</span>
                     <span className="admin-nav-label">{section.label}</span>
                     <motion.span animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="admin-nav-chevron">
@@ -201,7 +227,7 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
                     </motion.span>
                   </button>
                 ) : (
-                  <Link href={section.href!} className={`admin-nav-head${active ? " active" : ""}`} onClick={onNavigate}>
+                  <Link href={section.href!} aria-current={active ? "page" : undefined} className={`admin-nav-head${active ? " active" : ""}`} onClick={onNavigate}>
                     <span className="admin-nav-icon">{section.icon}</span>
                     <span className="admin-nav-label">{section.label}</span>
                   </Link>
@@ -214,11 +240,18 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
                       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} style={{ overflow: "hidden" }}
                     >
                       <div className="admin-nav-children">
-                        {section.children.map((leaf) => (
-                          <Link key={leaf.href} href={leaf.href} onClick={onNavigate} className={`admin-nav-leaf${isActive(pathname, leaf.href, leaf.exact) ? " active" : ""}`}>
-                            {leaf.label}
-                          </Link>
-                        ))}
+                        {(() => {
+                          const activeHref = activeLeafHref(pathname, search, section.children);
+                          return section.children.map((leaf) => (
+                            <Link
+                              key={leaf.href} href={leaf.href} onClick={onNavigate}
+                              aria-current={activeHref === leaf.href ? "page" : undefined}
+                              className={`admin-nav-leaf${activeHref === leaf.href ? " active" : ""}`}
+                            >
+                              {leaf.label}
+                            </Link>
+                          ));
+                        })()}
                       </div>
                     </motion.div>
                   )}
@@ -258,8 +291,8 @@ function NoAccess() {
     <div className="admin-card admin-no-access">
       <span className="admin-no-access-icon"><Lock size={22} /></span>
       <div className="admin-no-access-title">به این بخش دسترسی نداری</div>
-      <div className="admin-section-hint" style={{ margin: 0 }}>برای دسترسی، از Owner یا ادمینی که «مدیریت ادمین‌ها» داره بخواه دسترسی این بخش رو بهت بده.</div>
-      <Link href="/admin" className="admin-btn" style={{ marginTop: 14 }}>برگشت به داشبورد</Link>
+      <div className="admin-section-hint admin-no-access-hint">برای دسترسی، از Owner یا ادمینی که «مدیریت ادمین‌ها» داره بخواه دسترسی این بخش رو بهت بده.</div>
+      <Link href="/admin" className="admin-btn admin-no-access-btn">برگشت به داشبورد</Link>
     </div>
   );
 }
@@ -272,6 +305,17 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
   const groups = useMemo(() => visibleGroups(access), [access]);
   const allowed = hasPermission(access, permissionForPath(pathname) || undefined);
 
+  // کشوی موبایل: Esc می‌بنده، با عوض‌شدنِ مسیر (مثلا back) بسته می‌شه، و
+  // تا بازه اسکرولِ صفحه‌ی پشت قفله
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useLockBodyScroll(mobileOpen);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
   return (
     <AdminAccessContext.Provider value={access}>
     <AdminToastProvider>
@@ -283,7 +327,7 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
 
         <div className="admin-main">
           <div className="admin-topbar">
-            <button type="button" className="admin-mobile-toggle" onClick={() => setMobileOpen(true)} aria-label="منو">
+            <button type="button" className="admin-mobile-toggle" onClick={() => setMobileOpen(true)} aria-label="منو" aria-expanded={mobileOpen}>
               <Menu size={20} />
             </button>
             <h1 className="admin-page-title">{pageTitle(pathname)}</h1>
@@ -302,7 +346,7 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
             <>
               <motion.div className="admin-mobile-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
               <motion.div
-                className="admin-mobile-drawer"
+                className="admin-mobile-drawer" role="dialog" aria-modal="true" aria-label="منوی پنل"
                 initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
                 transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               >

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, findUserByIdentifier, setAdminRole } from "@/lib/adminUsers";
+import { sanitizePermissions } from "@/lib/adminPermissions";
 
 // GET — لیست Owner‌ها و ادمین‌ها + دسترسی‌های خود درخواست‌کننده
 // GET ?lookup=<id|username|email|phone> — پیش‌نمایش کاربر قبل از ادمین‌کردن
@@ -32,11 +33,15 @@ export async function POST(req: NextRequest) {
   const identifier = typeof body?.identifier === "string" ? body.identifier : "";
   const user = identifier ? await findUserByIdentifier(identifier) : null;
   if (!user || user.deletedAt) return NextResponse.json({ error: "کاربری با این شناسه پیدا نشد" }, { status: 404 });
-  if (!body?.superAdmin && (!Array.isArray(body?.permissions) || body.permissions.length === 0)) {
+  // کلیدهای نامعتبر قبل از چکِ «خالی‌نبودن» حذف می‌شن — وگرنه ["x"] رد می‌شد
+  // و یه «admin.grant» با دسترسیِ خالی ثبت می‌شد
+  const permissions = sanitizePermissions(body?.permissions);
+  const superAdmin = typeof body?.superAdmin === "boolean" ? body.superAdmin : undefined;
+  if (superAdmin !== true && permissions.length === 0) {
     return NextResponse.json({ error: "حداقل یک دسترسی انتخاب کن" }, { status: 400 });
   }
   try {
-    const updated = await setAdminRole(guard, user.id, { permissions: body.permissions, superAdmin: body.superAdmin });
+    const updated = await setAdminRole(guard, user.id, { permissions, superAdmin });
     return NextResponse.json({ ok: true, user: updated });
   } catch (e) {
     return adminErrorResponse(e);

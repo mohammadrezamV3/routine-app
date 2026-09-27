@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { RangePicker } from "@/components/admin/RangePicker";
 import { KpiGrid, KpiTile } from "@/components/admin/KpiTile";
 import { MultiLineChart } from "@/components/admin/MultiLineChart";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
+import { useAdminData } from "@/components/admin/useAdminData";
 import { formatCurrencyAmount, formatNumber, formatPercent } from "@/lib/adminFormat";
 import Link from "next/link";
 import { Users, ShieldCheck, Headset, Tag, History, Flag, CalendarClock, Settings } from "lucide-react";
@@ -40,6 +41,8 @@ function QuickLinks() {
   );
 }
 
+const CURRENCY_FA: Record<string, string> = { IRR: "تومان", USD: "دلار" };
+
 type OverviewResponse = {
   kpis: {
     totalUsers: number; newUsers: number; newUsersGrowthPercent: number | null;
@@ -57,7 +60,7 @@ function OverviewInner() {
     return (
       <section>
         <QuickLinks />
-        <div className="admin-section-hint" style={{ marginTop: 16 }}>آمار کلی فقط برای ادمین‌هایی با دسترسی «تحلیل‌ها» نمایش داده می‌شه.</div>
+        <div className="admin-section-hint admin-overview-hint">آمار کلی فقط برای ادمین‌هایی با دسترسی «تحلیل‌ها» نمایش داده می‌شه.</div>
       </section>
     );
   }
@@ -66,44 +69,34 @@ function OverviewInner() {
 
 function OverviewStats() {
   const searchParams = useSearchParams();
-  const range = searchParams.get("range") || "30d";
-  const [data, setData] = useState<OverviewResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const sp = new URLSearchParams(searchParams.toString());
-    fetch(`/api/admin/overview?${sp.toString()}`)
-      .then((r) => r.json())
-      .then(setData)
-      .finally(() => setLoading(false));
-  }, [range, searchParams]);
+  const { data, error, loading, reload } = useAdminData<OverviewResponse>(`/api/admin/overview?${searchParams.toString()}`);
+  const revenueEntries = data ? Object.entries(data.kpis.revenueByCurrency) : [];
 
   return (
     <section>
       <QuickLinks />
-      <div className="admin-chart-head" style={{ marginBottom: 18 }}>
-        <div />
+      <div className="admin-range-bar">
         <RangePicker />
       </div>
 
       {!data ? (
-        <div className={loading ? "admin-empty is-loading" : "admin-empty"}>{loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}</div>
+        error ? <ErrorState message={error} onRetry={reload} /> : <LoadingState />
       ) : (
-        <>
+        <div className={loading ? "admin-refreshing" : undefined} aria-busy={loading}>
+          {error && <ErrorState message={error} onRetry={reload} />}
           <KpiGrid>
             <KpiTile label="کاربران کل" value={formatNumber(data.kpis.totalUsers)} index={0} />
             <KpiTile label="کاربران فعال (این بازه)" value={formatNumber(data.kpis.activeUsers)} index={1} />
             <KpiTile label="کاربران جدید" value={formatNumber(data.kpis.newUsers)} deltaPercent={data.kpis.newUsersGrowthPercent} index={2} />
             <KpiTile label="کاربران پولی" value={formatNumber(data.kpis.paidUsers)} index={3} />
-            {Object.keys(data.kpis.revenueByCurrency).length === 0 ? (
+            {revenueEntries.length === 0 ? (
               <KpiTile label="درآمد" value="—" index={4} />
             ) : (
-              Object.entries(data.kpis.revenueByCurrency).map(([cur, amt], i) => (
-                <KpiTile key={cur} label={`درآمد (${cur})`} value={formatCurrencyAmount(amt, cur)} deltaPercent={data.kpis.revenueGrowthPercentByCurrency[cur]} index={4 + i} />
+              revenueEntries.map(([cur, amt], i) => (
+                <KpiTile key={cur} label={`درآمد (${CURRENCY_FA[cur] || cur})`} value={formatCurrencyAmount(amt, cur)} deltaPercent={data.kpis.revenueGrowthPercentByCurrency[cur] ?? null} index={4 + i} />
               ))
             )}
-            <KpiTile label="رشد کاربران جدید" value={formatPercent(data.kpis.newUsersGrowthPercent)} index={6} />
+            <KpiTile label="رشد کاربران جدید" value={formatPercent(data.kpis.newUsersGrowthPercent)} index={5 + Math.max(0, revenueEntries.length - 1)} />
           </KpiGrid>
 
           <div className="admin-chart-card">
@@ -113,7 +106,7 @@ function OverviewStats() {
             <MultiLineChart
               data={data.growthSeries.map((p) => ({ bucket: p.bucket, values: { newUsers: p.newUsers, activeUsers: p.activeUsers, paidUsers: p.paidUsers } }))}
               series={[
-                { key: "newUsers", label: "کاربران جدید", color: "#00A86B" },
+                { key: "newUsers", label: "کاربران جدید", color: "var(--adm-accent)" },
                 { key: "activeUsers", label: "کاربران فعال", color: "#5b9cf6" },
                 { key: "paidUsers", label: "کاربران پولی", color: "#e0a636" },
               ]}
@@ -150,7 +143,7 @@ function OverviewStats() {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </section>
   );
@@ -158,7 +151,7 @@ function OverviewStats() {
 
 export default function AdminOverviewPage() {
   return (
-    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
+    <Suspense fallback={<LoadingState />}>
       <OverviewInner />
     </Suspense>
   );

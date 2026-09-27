@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, ShieldCheck, ShieldPlus, UserMinus, Pencil, Crown } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { KpiTile } from "@/components/admin/KpiTile";
 import { AdminModal, ConfirmModal } from "@/components/admin/AdminModal";
 import { PermissionEditor } from "@/components/admin/PermissionEditor";
 import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
@@ -21,12 +22,16 @@ type AdminUser = {
 export default function AdminAdminsPage() {
   const toast = useAdminToast();
   const [list, setList] = useState<{ admins: AdminUser[]; me: { id: string } } | null>(null);
+  const [failed, setFailed] = useState(false);
   const [editing, setEditing] = useState<AdminUser | "new" | null>(null);
   const [revoking, setRevoking] = useState<AdminUser | null>(null);
 
   const load = useCallback(() => {
-    fetch("/api/admin/admins").then((r) => (r.ok ? r.json() : null)).then(setList);
-  }, []);
+    setFailed(false);
+    adminFetch<{ admins: AdminUser[]; me: { id: string } }>("/api/admin/admins")
+      .then(setList)
+      .catch((e: Error) => { setFailed(true); toast(e.message, "err"); });
+  }, [toast]);
   useEffect(load, [load]);
 
   const owners = list?.admins.filter((a) => a.isSuperAdmin) || [];
@@ -37,7 +42,7 @@ export default function AdminAdminsPage() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">ادمین‌ها و دسترسی‌ها</div>
-          <div className="admin-section-hint" style={{ margin: 0 }}>
+          <div className="admin-section-hint admin-page-sub">
             با آیدی، یوزرنیم، ایمیل یا شماره هر کاربری رو ادمین کن و دقیقا مشخص کن به کدوم بخش‌ها دسترسی داشته باشه.
           </div>
         </div>
@@ -45,26 +50,33 @@ export default function AdminAdminsPage() {
       </div>
 
       {!list ? (
-        <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        failed ? (
+          <div className="admin-empty">
+            <span>خطا در دریافت اطلاعات</span>
+            <button type="button" className="admin-btn sm" onClick={load}>تلاش دوباره</button>
+          </div>
+        ) : <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : (
         <>
           <div className="admin-kpi-grid">
-            <div className="admin-kpi-tile"><span className="admin-kpi-label">Owner</span><span className="admin-kpi-value">{formatNumber(owners.length)}</span></div>
-            <div className="admin-kpi-tile"><span className="admin-kpi-label">ادمین‌ها</span><span className="admin-kpi-value">{formatNumber(admins.length)}</span></div>
+            <KpiTile label="Owner" value={formatNumber(owners.length)} />
+            <KpiTile label="ادمین‌ها" value={formatNumber(admins.length)} index={1} />
           </div>
 
-          <div className="admin-admin-grid">
-            {[...owners, ...admins].map((a) => (
-              <AdminCard key={a.id} admin={a} isMe={a.id === list.me.id} onEdit={() => setEditing(a)} onRevoke={() => setRevoking(a)} />
-            ))}
-          </div>
-          {owners.length + admins.length === 0 && <EmptyState />}
+          {owners.length + admins.length === 0 ? <EmptyState message="هنوز ادمینی ثبت نشده" /> : (
+            <div className="admin-admin-grid">
+              {[...owners, ...admins].map((a) => (
+                <AdminCard key={a.id} admin={a} isMe={a.id === list.me.id} onEdit={() => setEditing(a)} onRevoke={() => setRevoking(a)} />
+              ))}
+            </div>
+          )}
         </>
       )}
 
       {editing && (
         <AdminEditorModal
           target={editing === "new" ? null : editing}
+          meId={list?.me.id || null}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); load(); }}
         />
@@ -77,8 +89,11 @@ export default function AdminAdminsPage() {
           onClose={() => setRevoking(null)}
           onConfirm={async () => {
             try {
-              await adminFetch(`/api/admin/admins/${revoking.id}`, { method: "DELETE" });
-              toast("نقش ادمین گرفته شد");
+              const r = await adminFetch<{ user: { isSuperAdmin: boolean; adminPermissions: string[] } }>(`/api/admin/admins/${revoking.id}`, { method: "DELETE" });
+              // ادمینِ محدود فقط دسترسی‌هایی رو می‌گیره که خودش داره — بقیه سرِ جاشون می‌مونن
+              const left = sanitizePermissions(r.user?.adminPermissions);
+              if (left.length) toast(`دسترسی‌های قابل‌گرفتن حذف شد؛ ${formatNumber(left.length)} دسترسی که خودت نداری باقی موند`, "err");
+              else toast("نقش ادمین گرفته شد");
               load();
             } catch (e: any) { toast(e.message, "err"); }
             setRevoking(null);
@@ -97,12 +112,15 @@ function AdminCard({ admin, isMe, onEdit, onRevoke }: { admin: AdminUser; isMe: 
     <div className="admin-card admin-admin-card">
       <div className="admin-admin-card-head">
         <UserAvatar user={admin} size={42} />
-        <div style={{ minWidth: 0, flex: 1 }}>
+        <div className="admin-admin-card-who">
           <Link href={`/admin/users/${admin.id}`} className="admin-user-cell-name">{displayName(admin)}</Link>
           <div className="admin-user-cell-sub admin-ltr">{admin.username ? `@${admin.username}` : admin.email || admin.phone || admin.id}</div>
         </div>
-        {admin.isSuperAdmin ? <span className="admin-badge amber"><Crown size={11} /> Owner</span> : <span className="admin-badge green">ادمین</span>}
-        {isMe && <span className="admin-badge gray">خودت</span>}
+        <span className="admin-badge-row">
+          {admin.isSuperAdmin ? <span className="admin-badge amber"><Crown size={11} /> Owner</span> : <span className="admin-badge green">ادمین</span>}
+          {admin.isBlocked && <span className="admin-badge red">مسدود</span>}
+          {isMe && <span className="admin-badge gray">خودت</span>}
+        </span>
       </div>
       <div className="admin-badge-row admin-admin-perms">
         {admin.isSuperAdmin
@@ -111,8 +129,8 @@ function AdminCard({ admin, isMe, onEdit, onRevoke }: { admin: AdminUser; isMe: 
       </div>
       {canTouch && (
         <div className="admin-head-actions">
-          <button type="button" className="admin-btn" onClick={onEdit}><Pencil size={13} /> ویرایش دسترسی‌ها</button>
-          <button type="button" className="admin-btn danger" onClick={onRevoke}><UserMinus size={13} /> گرفتن نقش</button>
+          <button type="button" className="admin-btn sm" onClick={onEdit}><Pencil size={13} /> ویرایش دسترسی‌ها</button>
+          <button type="button" className="admin-btn sm danger" onClick={onRevoke}><UserMinus size={13} /> گرفتن نقش</button>
         </div>
       )}
     </div>
@@ -121,32 +139,53 @@ function AdminCard({ admin, isMe, onEdit, onRevoke }: { admin: AdminUser; isMe: 
 
 type Found = AdminUser & { deletedAt?: string | null };
 
-function AdminEditorModal({ target, onClose, onSaved }: { target: AdminUser | null; onClose: () => void; onSaved: () => void }) {
+function AdminEditorModal({ target, meId, onClose, onSaved }: { target: AdminUser | null; meId: string | null; onClose: () => void; onSaved: () => void }) {
   const toast = useAdminToast();
   const { isSuperAdmin: meSuper } = useAdminAccess();
   const [identifier, setIdentifier] = useState("");
   const [found, setFound] = useState<Found | null>(target);
   const [lookupErr, setLookupErr] = useState<string | null>(null);
+  const [looking, setLooking] = useState(false);
   const [perms, setPerms] = useState<AdminPermission[]>(target ? sanitizePermissions(target.adminPermissions) : ["users.view"]);
   const [superAdmin, setSuperAdmin] = useState(!!target?.isSuperAdmin);
   const [busy, setBusy] = useState(false);
+  const lookupSeq = useRef(0);
 
   async function lookup() {
-    if (!identifier.trim()) return;
+    const q = identifier.trim();
+    if (!q || looking) return;
+    const seq = ++lookupSeq.current;
     setLookupErr(null);
+    setLooking(true);
     try {
-      const r = await adminFetch<{ user: Found }>(`/api/admin/admins?lookup=${encodeURIComponent(identifier.trim())}`);
+      const r = await adminFetch<{ user: Found }>(`/api/admin/admins?lookup=${encodeURIComponent(q)}`);
+      if (seq !== lookupSeq.current) return;
       setFound(r.user);
       setPerms(r.user.adminPermissions.length ? sanitizePermissions(r.user.adminPermissions) : ["users.view"]);
       setSuperAdmin(r.user.isSuperAdmin);
     } catch (e: any) {
+      if (seq !== lookupSeq.current) return;
       setFound(null);
       setLookupErr(e.message);
+    } finally {
+      if (seq === lookupSeq.current) setLooking(false);
     }
   }
 
+  // عوض‌شدنِ شناسه بعد از پیدا‌کردن → کاربرِ قبلی دیگه معتبر نیست
+  // (وگرنه «ادمین کن» روی کاربرِ قبلی اعمال می‌شد)
+  function onIdentifierChange(v: string) {
+    setIdentifier(v);
+    if (!target && found) { lookupSeq.current++; setFound(null); setLooking(false); }
+    setLookupErr(null);
+  }
+
+  const isSelf = !!found && found.id === meId;
+  const ownerLocked = !!found && found.isSuperAdmin && !meSuper;
+  const blockedReason = isSelf ? "دسترسی‌های خودت رو از این‌جا نمی‌تونی تغییر بدی." : ownerLocked ? "روی حساب Owner اقدامی نمی‌تونی بکنی." : null;
+
   async function save() {
-    if (!found) return;
+    if (!found || blockedReason) return;
     setBusy(true);
     try {
       if (target) await adminFetch(`/api/admin/admins/${found.id}`, { method: "PATCH", json: { permissions: perms, superAdmin } });
@@ -160,14 +199,17 @@ function AdminEditorModal({ target, onClose, onSaved }: { target: AdminUser | nu
     <AdminModal title={target ? "ویرایش دسترسی‌ها" : "افزودن ادمین"} eyebrow="نقش ادمین" onClose={onClose} wide>
       {!target && (
         <div className="admin-lookup">
-          <div className="admin-search" style={{ flex: 1 }}>
+          <div className="admin-search">
             <Search size={15} />
             <input
-              className="admin-input" dir="ltr" placeholder="آیدی / یوزرنیم / ایمیل / شماره"
-              value={identifier} onChange={(e) => setIdentifier(e.target.value)} onKeyDown={(e) => e.key === "Enter" && lookup()} autoFocus
+              className="admin-input" dir="ltr" placeholder="آیدی / یوزرنیم / ایمیل / شماره" aria-label="شناسه‌ی کاربر"
+              value={identifier} onChange={(e) => onIdentifierChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); lookup(); } }} autoFocus
             />
           </div>
-          <button type="button" className="admin-btn" onClick={lookup}>پیدا کن</button>
+          <button type="button" className="admin-btn" disabled={!identifier.trim() || looking} onClick={lookup}>
+            {looking ? "در حال جست‌وجو…" : "پیدا کن"}
+          </button>
         </div>
       )}
       {lookupErr && <div className="admin-form-error">{lookupErr}</div>}
@@ -176,28 +218,34 @@ function AdminEditorModal({ target, onClose, onSaved }: { target: AdminUser | nu
         <>
           <div className="admin-found-user">
             <UserAvatar user={found} size={38} />
-            <div style={{ minWidth: 0 }}>
+            <div className="admin-admin-card-who">
               <div className="admin-user-cell-name">{displayName(found)}</div>
               <div className="admin-user-cell-sub admin-ltr">{found.id}</div>
             </div>
-            {(found.isSuperAdmin || found.adminPermissions.length > 0) && <span className="admin-badge amber" style={{ marginInlineStart: "auto" }}>الان ادمینه</span>}
+            {(found.isSuperAdmin || found.adminPermissions.length > 0) && <span className="admin-badge amber">الان ادمینه</span>}
           </div>
 
-          {meSuper && (
-            <div className="admin-perm-row" style={{ margin: "12px 0" }}>
-              <div>
-                <div className="admin-perm-label"><Crown size={13} style={{ verticalAlign: "-2px" }} /> Owner (دسترسی کامل)</div>
-                <div className="admin-perm-hint">همه‌ی بخش‌های پنل + همه‌ی ماژول‌های اپ</div>
-              </div>
-              <ToggleSwitch checked={superAdmin} onChange={setSuperAdmin} label="Owner" />
-            </div>
-          )}
+          {blockedReason ? (
+            <div className="admin-form-error">{blockedReason}</div>
+          ) : (
+            <>
+              {meSuper && (
+                <div className="admin-perm-row admin-owner-row">
+                  <div>
+                    <div className="admin-perm-label"><Crown size={13} className="admin-title-icon" />Owner (دسترسی کامل)</div>
+                    <div className="admin-perm-hint">همه‌ی بخش‌های پنل + همه‌ی ماژول‌های اپ</div>
+                  </div>
+                  <ToggleSwitch checked={superAdmin} onChange={setSuperAdmin} label="Owner" />
+                </div>
+              )}
 
-          {!superAdmin && <PermissionEditor value={perms} onChange={setPerms} />}
+              {!superAdmin && <PermissionEditor value={perms} onChange={setPerms} />}
+            </>
+          )}
 
           <div className="admin-modal-actions">
             <button type="button" className="admin-btn" onClick={onClose}>انصراف</button>
-            <button type="button" className="admin-btn primary" disabled={busy || (!superAdmin && perms.length === 0)} onClick={save}>
+            <button type="button" className="admin-btn primary" disabled={busy || !!blockedReason || (!superAdmin && perms.length === 0)} onClick={save}>
               <ShieldCheck size={14} /> {busy ? "در حال ذخیره…" : target ? "ذخیره" : "ادمین کن"}
             </button>
           </div>

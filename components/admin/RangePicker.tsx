@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 const PRESETS: { key: string; label: string }[] = [
@@ -11,59 +11,102 @@ const PRESETS: { key: string; label: string }[] = [
   { key: "12m", label: "۱۲ ماه" },
 ];
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function todayLocal(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 // انتخاب‌گر بازه‌ی زمانی مشترک صفحات تحلیلی پنل Owner — وضعیت توی خود
 // URL نگه داشته می‌شه (?range=30d)، نه state محلی، تا لینک‌دادن/رفرش‌کردن
-// همون بازه رو حفظ کنه.
+// همون بازه رو حفظ کنه. تاریخ‌ها YYYY-MM-DD هستن و سرور «تا» رو تا آخرِ
+// همون روز حساب می‌کنه.
 export function RangePicker() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const active = searchParams.get("range") || "30d";
+  const urlFrom = searchParams.get("from") || "";
+  const urlTo = searchParams.get("to") || "";
   const [customOpen, setCustomOpen] = useState(active === "custom");
-  const [from, setFrom] = useState(searchParams.get("from") || "");
-  const [to, setTo] = useState(searchParams.get("to") || "");
+  const [from, setFrom] = useState(urlFrom);
+  const [to, setTo] = useState(urlTo);
+
+  // با back/forward مرورگر URL عوض می‌شه ولی state محلی نه — همگامش می‌کنیم
+  useEffect(() => {
+    setFrom(urlFrom);
+    setTo(urlTo);
+    if (active === "custom") setCustomOpen(true);
+  }, [active, urlFrom, urlTo]);
+
+  function push(sp: URLSearchParams) {
+    router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+  }
 
   function setRange(key: string) {
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("range", key);
     sp.delete("from");
     sp.delete("to");
-    router.push(`${pathname}?${sp.toString()}`);
+    sp.delete("page");
+    push(sp);
   }
 
+  const valid = DATE_RE.test(from) && DATE_RE.test(to);
+  const reversed = valid && from > to;
+
   function applyCustom() {
-    if (!from || !to) return;
+    if (!valid || reversed) return;
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("range", "custom");
     sp.set("from", from);
     sp.set("to", to);
-    router.push(`${pathname}?${sp.toString()}`);
+    sp.delete("page");
+    push(sp);
   }
+
+  const max = todayLocal();
 
   return (
     <div className="admin-range-picker">
-      {PRESETS.map((p) => (
+      <div className="admin-range-presets" role="group" aria-label="بازه‌ی زمانی">
+        {PRESETS.map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            aria-pressed={active === p.key}
+            className={`admin-range-btn${active === p.key ? " active" : ""}`}
+            onClick={() => { setCustomOpen(false); setRange(p.key); }}
+          >
+            {p.label}
+          </button>
+        ))}
         <button
-          key={p.key}
           type="button"
-          className={`admin-range-btn${active === p.key ? " active" : ""}`}
-          onClick={() => { setCustomOpen(false); setRange(p.key); }}
+          aria-expanded={customOpen}
+          className={`admin-range-btn${active === "custom" ? " active" : ""}${customOpen ? " is-open" : ""}`}
+          onClick={() => setCustomOpen((v) => !v)}
         >
-          {p.label}
+          بازه دلخواه
         </button>
-      ))}
-      <button type="button" className={`admin-range-btn${active === "custom" ? " active" : ""}`} onClick={() => setCustomOpen((v) => !v)}>
-        بازه دلخواه
-      </button>
+      </div>
       {customOpen && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <input type="date" className="admin-input" value={from} onChange={(e) => setFrom(e.target.value)} />
-          <span style={{ color: "var(--adm-muted-2)", fontSize: 11 }}>تا</span>
-          <input type="date" className="admin-input" value={to} onChange={(e) => setTo(e.target.value)} />
-          <button type="button" className="admin-btn primary" onClick={applyCustom} disabled={!from || !to} style={{ padding: "7px 12px" }}>
+        <form className="admin-range-custom" onSubmit={(e) => { e.preventDefault(); applyCustom(); }}>
+          <label className="admin-range-date">
+            <span>از</span>
+            <input type="date" className="admin-input" value={from} max={to || max} onChange={(e) => setFrom(e.target.value)} />
+          </label>
+          <label className="admin-range-date">
+            <span>تا</span>
+            <input type="date" className="admin-input" value={to} min={from || undefined} max={max} onChange={(e) => setTo(e.target.value)} />
+          </label>
+          <button type="submit" className="admin-btn primary sm" disabled={!valid || reversed}>
             اعمال
           </button>
-        </div>
+          {reversed && <span className="admin-form-error">تاریخِ «از» باید قبل از «تا» باشه</span>}
+        </form>
       )}
     </div>
   );
