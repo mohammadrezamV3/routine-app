@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
+import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity, isMentorSuspended } from "@/lib/mentorGuard";
 import { readJsonBody, parseDateRange } from "@/lib/validate";
 import { visibleToStudent } from "@/lib/mentorProgramState";
 import { validateProgramInput } from "@/lib/mentorValidate";
@@ -59,7 +59,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   // منتوری که شاگرد بلاکش کرده، دیگه لاگ/یادداشتِ اجرای شاگرد رو نمی‌بینه
   if (p.mentorId === me) {
     const rel = await prisma.mentorship.findUnique({ where: { id: p.mentorshipId }, select: { status: true } });
-    if (rel?.status === "BLOCKED") dateWhere = { id: "__none__" };
+    // منتورِ تعلیق‌شده هم مثلِ بلاک: دسترسی به داده‌ی اجرای شاگرد فوراً بسته
+    if (rel?.status === "BLOCKED" || (await isMentorSuspended(me))) dateWhere = { id: "__none__" };
   }
 
   const [items, logs, feedback] = await Promise.all([

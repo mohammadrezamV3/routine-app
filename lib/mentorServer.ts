@@ -243,7 +243,7 @@ export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId:
     ? await Promise.all([
         prisma.mentorMessage.groupBy({
           by: ["mentorshipId"],
-          where: { mentorshipId: { in: ids }, senderId: { not: viewerId }, readAt: null },
+          where: { mentorshipId: { in: ids }, senderId: { not: viewerId }, readAt: null, mentorship: { status: { in: ["ACTIVE", "ENDED"] } } },
           _count: { _all: true },
         }),
         prisma.mentorProgram.groupBy({ by: ["mentorshipId"], where: { mentorshipId: { in: ids }, status: "ACTIVE" }, _count: { _all: true } }),

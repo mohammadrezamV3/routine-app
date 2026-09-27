@@ -85,8 +85,10 @@ export async function GET() {
     prisma.mentorProgram.findMany({ where: { mentorId: me, status: "ACTIVE" }, select: { id: true, studentId: true, activatedAt: true } }),
   ]);
 
+  // منتورِ تعلیق‌شده اسنیپتِ لاگ/پیامِ شاگردها رو نمی‌بینه (مثل /api/mentor/students)
+  const suspended = !!profile?.suspendedAt;
   const recentActivity: Activity[] = [
-    ...recentLogs.map((l) => ({
+    ...(suspended ? [] : recentLogs).map((l) => ({
       type: "log" as const,
       at: l.updatedAt,
       studentName: displayName(l.program.student),
@@ -100,7 +102,7 @@ export async function GET() {
       text: `${p.title}: ${p.status === "DRAFT" ? "درخواست تغییر" : PROGRAM_STATUS_LABELS[p.status]}`,
       url: `/mentor-programs/${p.id}`,
     })),
-    ...recentMessages.map((m) => ({
+    ...(suspended ? [] : recentMessages).map((m) => ({
       type: "message" as const,
       at: m.createdAt,
       studentName: displayName(m.sender),

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 
 // GET /api/admin/mentors/:profileId — پروفایل + مدارک (فقط متا، هرگز بایت) +
 // تاریخچه‌ی احراز + آمار + گزارش‌های بازِ علیهِ همین کاربر.
@@ -35,6 +36,12 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
     },
   });
   if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
+  // ادمینِ محدود جزئیات/تاریخچه‌ی احرازِ Owner (یا ادمینِ دیگه بدونِ admins.manage) رو نمی‌بینه
+  try {
+    await loadTarget(g, profile.userId);
+  } catch (e) {
+    return adminErrorResponse(e);
+  }
 
   const mentorId = profile.userId;
   const [activeStudents, totalStudents, programs, completedPrograms, hiddenReviews, openReports] = await Promise.all([

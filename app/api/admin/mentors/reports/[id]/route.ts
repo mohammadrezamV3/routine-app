@@ -39,6 +39,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!report) return NextResponse.json({ error: "گزارش پیدا نشد" }, { status: 404 });
   if (report.status !== "OPEN") return NextResponse.json({ error: "این گزارش قبلا بررسی شده" }, { status: 409 });
 
+  // گزارشی که علیهِ خودِ ادمین یا Owner (یا ادمینِ دیگه بدونِ admins.manage) ثبت شده،
+  // حتی بدونِ اقدام هم نباید توسطِ همون ادمین بسته/رد بشه
+  if (report.targetUserId) {
+    try {
+      await loadTarget(g, report.targetUserId, { destructive: true });
+    } catch (e) {
+      return adminErrorResponse(e);
+    }
+  }
+
   // ── پیش‌بررسیِ اقدام (قبل از هر نوشتنی) ──
   let reviewMentorId: string | null = null;
   let suspendProfile: { id: string; userId: string; suspendedAt: Date | null } | null = null;
@@ -55,6 +65,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   } else if (action === "delete_message") {
     if (report.targetType !== "MESSAGE") return NextResponse.json({ error: "این اقدام فقط برای گزارشِ پیام است" }, { status: 400 });
+    const msg = await prisma.mentorMessage.findUnique({ where: { id: report.targetId }, select: { senderId: true } });
+    if (msg) {
+      try {
+        await loadTarget(g, msg.senderId, { destructive: true });
+      } catch (e) {
+        return adminErrorResponse(e);
+      }
+    }
   } else if (action === "suspend_mentor") {
     let mentorUserId: string | null = report.targetType === "USER" ? report.targetId : report.targetUserId;
     if (report.targetType === "PROGRAM") {
