@@ -27,10 +27,20 @@
 // نگه می‌دارد.
 export const PERF_TIER_ATTR = "data-perf";
 
+// ردیفِ دوم («ضعیف»): فقط روی همون دستگاه‌های لمسی، و فقط وقتی سیگنالِ
+// سخت‌افزاری واقعا پایین باشه — ≤۴ هسته، ≤۴GB رم (navigator.deviceMemory؛
+// فقط کروم/اندروید گزارشش می‌کنه، روی iOS undefinedه و این شرط بی‌اثره)، یا
+// حالتِ صرفه‌جوییِ داده. این ردیف چند افکتِ باقی‌مانده رو هم برمی‌داره
+// (globals.css → «ردیفِ ضعیف»)؛ گوشیِ لمسیِ قوی هیچ تغییری نمی‌بینه.
+export const PERF_WEAK_ATTR = "data-perf-weak";
+
 export const PERF_INIT_SCRIPT = `(function(){try{
 var coarse=window.matchMedia&&window.matchMedia("(pointer:coarse)").matches;
 if(!coarse)return;
-document.documentElement.setAttribute("${PERF_TIER_ATTR}","low");
+var d=document.documentElement;
+d.setAttribute("${PERF_TIER_ATTR}","low");
+var n=navigator,mem=n.deviceMemory,cores=n.hardwareConcurrency,c=n.connection;
+if((mem&&mem<=4)||(cores&&cores<=4)||(c&&c.saveData))d.setAttribute("${PERF_WEAK_ATTR}","");
 document.addEventListener("touchstart",function(){},{passive:true});
 }catch(e){}})();`;
 

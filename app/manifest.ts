@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { BRAND_FA } from "@/lib/brand";
+import { THEME_COLORS } from "@/lib/themeColor";
 
 // بدون این فایل، اصلا هیچ Web App Manifestی وجود نداشت — یعنی «افزودن به
 // صفحه‌ی اصلی» (که خود اپ توی پنل اعلانیه‌ها به کاربر پیشنهادش می‌ده) فقط
@@ -19,8 +20,13 @@ export default function manifest(): MetadataRoute.Manifest {
       "ژورنال معاملات ترید و رودمپ یادگیری — همه در یک اپ فارسی.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a0f0d",
-    theme_color: "#0a0f0d",
+    // اسپلش‌اسکرینِ اندروید (قبل از اولین پینتِ صفحه) دقیقا با همین رنگ
+    // کشیده می‌شه. قبلا #0a0f0d بود — نه --bg (#0E1011) نه رنگِ متای
+    // theme-color — یعنی هر بار باز کردنِ اپِ نصب‌شده اول یک پس‌زمینه‌ی
+    // دیگه (اسپلش) دیده می‌شد و بعد صفحه با رنگِ خودش. حالا از همون منبعِ
+    // واحدِ رنگِ تم می‌آد (تمِ پیش‌فرضِ سرور = تاریک).
+    background_color: THEME_COLORS.dark,
+    theme_color: THEME_COLORS.dark,
     dir: "rtl",
     lang: "fa",
     categories: ["productivity", "lifestyle", "health", "finance", "education"],

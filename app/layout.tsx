@@ -11,7 +11,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NotificationEngine } from "@/components/NotificationEngine";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
-import { THEME_INIT_SCRIPT } from "@/lib/themeColor";
+import { THEME_INIT_SCRIPT, THEME_COLORS, THEME_COOKIE } from "@/lib/themeColor";
+import { cookies } from "next/headers";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
 import { BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
@@ -159,6 +160,16 @@ export const viewport: Viewport = {
 // صدا نمی‌زند.
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
+  // تم از همون اولین بایتِ HTML درسته، نه بعد از اجرای اسکریپتِ inline.
+  // قبلا سرور همیشه data-theme="dark" می‌فرستاد و اسکریپت بعدا (روی کوکی)
+  // عوضش می‌کرد؛ ولی اگه مرورگر قبل از اون اسکریپت حتی یک بار استایل رو
+  // حساب کرده بود (پارسرِ استریمینگ، یا هر پینتِ زودرس روی اندروید)، body با
+  // تمِ تاریک رسم می‌شد و `transition:background .3s` روی body اون رو در
+  // چند فریم به کرمی «فید» می‌کرد — همون «هر بار اول یه بک‌گراندِ دیگه
+  // می‌بینم». اندازه‌گیری‌شده: در تمِ روشن ۳ فریمِ اولِ اسکرین‌کست تیره
+  // (#0E1011) بودن. layout از قبل dynamic است (InlineBootstrap و سشن
+  // کوکی می‌خونن)، پس خوندنِ این کوکی هزینه‌ی رندرِ اضافه‌ای نداره.
+  const theme = cookies().get(THEME_COOKIE)?.value === "light" ? "light" : "dark";
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -167,14 +178,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="fa"
       dir="rtl"
-      data-theme="dark"
+      data-theme={theme}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >
+      <head>
+        {/* نوارِ وضعیتِ اندروید از همون اولین پینت هم‌رنگِ تم — نه بعد از
+            اجرای اسکریپت. مالکِ این تگ هنوز خودِ اپه (نه metadataِ نکست؛
+            دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
+            syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
+        <meta name="theme-color" content={THEME_COLORS[theme]} />
+      </head>
       {/* suppressHydrationWarning لازمه چون اسکریپت بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
-          «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (همیشه dark) */}
-      <body data-theme="dark" suppressHydrationWarning>
+          «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (مثلا وقتی
+          ThemeProvider بعدا تمِ ذخیره‌شده‌ی حساب رو اعمال می‌کنه) */}
+      <body data-theme={theme} suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD_GRAPH) }}
@@ -194,7 +213,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SvgFilters />
         <BackgroundCanvasLoader />
         <AuthSessionProvider session={session}>
-          <ThemeProvider>
+          <ThemeProvider initialTheme={theme}>
             <MotionTuner>
               <NavDrawer />
               <NotificationEngine />

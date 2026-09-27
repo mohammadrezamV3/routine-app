@@ -24,6 +24,26 @@ export const THEME_COLORS = {
 
 export type ThemeName = keyof typeof THEME_COLORS;
 
+/** نامِ کوکیِ تم — layout.tsx (سمتِ سرور) و اسکریپتِ inline هر دو از همین می‌خونن. */
+export const THEME_COOKIE = "theme";
+
+/**
+ * فقط کوکیِ تم رو (بدونِ نوشتنِ دیتابیس) هم‌گام می‌کنه.
+ *
+ * چرا جدا از setThemeSetting: وقتی تمِ ذخیره‌شده‌ی حساب (DB) با کوکیِ این
+ * دستگاه فرق داره (تم روی دستگاهِ دیگه عوض شده، کوکی پاک/منقضی شده، یا
+ * اپِ نصب‌شده کوکیِ جدا داره)، ThemeProvider بعد از لود تم رو به مقدارِ DB
+ * برمی‌گردونه — ولی چون اون مقدار «از قبل ذخیره‌ست»، setThemeSetting صدا
+ * زده نمی‌شد و کوکی هیچ‌وقت درست نمی‌شد. نتیجه: *هر* بار باز کردنِ اپ،
+ * اول تمِ کوکی رسم می‌شد و بعد به تمِ حساب فید می‌کرد. با نوشتنِ کوکی در
+ * همون لحظه، این فقط یک بار (اولین لودِ بعد از ناهماهنگی) رخ می‌ده.
+ */
+export function writeThemeCookie(theme: ThemeName) {
+  if (typeof document === "undefined") return;
+  const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${THEME_COOKIE}=${theme}; path=/; max-age=31536000; samesite=lax${secure}`;
+}
+
 /**
  * دقیقا یک `<meta name="theme-color">` با رنگ تم داده‌شده باقی می‌ذاره:
  * اضافه‌ها حذف می‌شن، و اگه هیچی نبود ساخته می‌شه.

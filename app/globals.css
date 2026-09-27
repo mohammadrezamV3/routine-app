@@ -74,6 +74,18 @@
     --surface-glass:rgba(31,35,38,.72);
     /* بردر سطح‌ها هم باید با رنگ جدید هماهنگ باشه، نه --line قدیمی */
     --surface-line:#2A2F33;
+    /* ── بک‌گراندِ واحدِ همه‌ی باکس‌ها/کارت‌ها ─────────────────────────
+       طبقِ درخواستِ صریح («یک بک‌گراندِ کلی برای همه‌ی باکس‌ها»): هر کارت/
+       باکس/پنل/مودال فقط از همین یک توکن رنگ می‌گیرد. مقدارش همان
+       --surface-1 است (سطحِ غالبِ موجود: DashCard، account-card،
+       trade-surface، acc-block-body) و عمدا *توپر* است تا به backdrop-filter
+       (که روی لمسی خاموش است) و به چیزی که پشتش می‌گذرد (بلاب‌های aurora)
+       وابسته نباشد — یعنی روی هر دستگاه و هر بار لود دقیقا یک رنگ.
+       مقدار literal است نه var(--surface-1): متغیری که در :root با var()
+       تعریف شود همان‌جا (با مقدارِ تمِ شب) حل می‌شود و بلاکِ تمِ روز را
+       نمی‌بیند. */
+    --box-bg:#171A1C;
+    --box-line:#2A2F33;
   }
   /* پالت رسمی تم روز (طبق درخواست صریح) — رنگ اصلی/کارت‌ها/متن‌ها/خطوط
      دقیقا از پالت ارسالی؛ --bg عمدا کمی نارنجی‌تر از مقدار خام پالت
@@ -103,6 +115,8 @@
     --surface-2:#FFFCF5;
     --surface-glass:rgba(255,252,245,.72);
     --surface-line:#EADCC6;
+    --box-bg:#FDF6EA;
+    --box-line:#EADCC6;
     --sun:#FFC94A;
     --moon:#7B4FE0;
     /* قهوه‌ای تیره — رنگ دوم روز، برای همون لحظه‌های «ویژه»؛ قبلا طلایی بود،
@@ -1654,7 +1668,7 @@
   .acc-block-title svg{ color:var(--accent); }
   .acc-block-desc{ font-size:11.5px; color:var(--muted); line-height:1.8; margin:0 0 12px; }
   .acc-block-body{
-    border:1px solid var(--surface-line); border-radius:18px; background:var(--surface-1);
+    border:1px solid var(--surface-line); border-radius:18px; background:var(--box-bg);
     padding:16px;
   }
   /* حالتِ flush برای وقتی‌ست که بدنه خودش ردیف‌های لبه‌به‌لبه دارد
@@ -1866,7 +1880,7 @@
   /* ردیف نسل جدید — کارتی، آیکون در دایره‌ی نرم، هاور ظریف */
   .account-card{
     border:1px solid var(--surface-line); border-radius:18px; overflow:hidden;
-    background:var(--surface-1);
+    background:var(--box-bg);
   }
     .account-row2{
     position:relative; display:flex; align-items:center; gap:12px; padding:14px 15px;
@@ -4768,7 +4782,8 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
 
 :root{
   --adm-bg:var(--bg);
-  --adm-panel:rgba(255,255,255,.02);
+  /* کارت‌های پنل هم همان بک‌گراندِ واحدِ باکس‌ها (--box-bg) را می‌گیرند */
+  --adm-panel:var(--box-bg);
   --adm-panel-2:rgba(255,255,255,.045);
   --adm-border:var(--line);
   --adm-border-strong:rgba(255,255,255,.14);
@@ -4785,7 +4800,7 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   --adm-radius:18px;
 }
 body[data-theme="light"]{
-  --adm-panel:rgba(255,255,255,.42);
+  --adm-panel:var(--box-bg);
   --adm-panel-2:rgba(255,255,255,.6);
   --adm-border-strong:rgba(58,42,24,.14);
 }
@@ -5442,7 +5457,7 @@ html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
 /* سطح مشترک همه‌ی کارت‌های ترید — دقیقا همان دستور .rm-card */
 .trade-surface{
   border:1px solid var(--surface-line); border-radius:18px;
-  background:var(--surface-1);
+  background:var(--box-bg);
   transition:border-color .18s ease, background .18s ease, transform .18s ease;
 }
 
@@ -8494,3 +8509,73 @@ body[data-theme="light"] .rp-wiz-chip.on{ color:var(--accent); border-color:var(
 @media (prefers-reduced-motion:reduce){
   .rp-stage-body, .rp-wiz-phases li.now::before{ animation:none; }
 }
+
+/* ============================================================
+   بک‌گراندِ واحدِ باکس‌ها (--box-bg)
+   ------------------------------------------------------------
+   طبقِ درخواستِ صریح: «یک بک‌گراندِ کلی برای همه‌ی باکس‌ها». قبلا هر
+   کارت دستورِ خودش را داشت (سفیدِ ۲٪، سفیدِ ۱۶٪ در تمِ روز، surface-rgb با
+   آلفای ۵ تا ۵۵٪، surface-glass، surface-1، surface-2، card-bg، …) و چون
+   بیشترشان نیمه‌شفاف بودند، رنگِ نهایی‌شان به بلور (که روی لمسی خاموش است)
+   و به موقعیتِ لحظه‌ایِ بلاب‌های aurora پشتشان بستگی داشت — یک کارت روی
+   دسکتاپ و موبایل، یا در دو لودِ مختلف، دو رنگ دیده می‌شد.
+   حالا همه از یک توکنِ توپر (--box-bg، تعریف در :root و بلاکِ تمِ روز)
+   رنگ می‌گیرند. DashCard (bg-dash-card) از tailwind.config، و trade-surface/
+   account-card/acc-block-body مستقیم در قانونِ خودشان به همین توکن وصل‌اند.
+   این‌جا فقط باکس‌هایی جمع شده‌اند که رنگِ خودشان را داشتند.
+   اختصاصیت: `body[data-theme] :is(...)` = (0,2,1) — هم‌وزنِ اورراید‌های
+   `body[data-theme="light"] .x` و `html[data-perf="low"] .x` و چون بعدشان
+   آمده غالب است. هیچ‌کدام از این‌ها قانونِ hover/active با بک‌گراند ندارند،
+   پس بازخوردِ تعاملی‌ای از بین نمی‌رود. دکمه‌ها/عناصرِ ghost عمدا این‌جا
+   نیستند و شفاف می‌مانند.
+   ============================================================ */
+body[data-theme] :is(
+  .bg-dash-card, .weekly-glass, .checklist-glass, .glass-box, .auth-box, .fx-card,
+  .trade-day-card, .tv-surface, .tv-chart-box, .trade-chart-side, .trade-chat-panel,
+  .trade-cal-card, .modal-panel, .friend-profile-panel, .exercise-catalog-popup-panel,
+  .exercise-catalog-detail-card, .premium-celebration-card
+){
+  background:var(--box-bg);
+}
+/* بلورِ پشتِ یک سطحِ توپر هیچ اثرِ دیدنی‌ای ندارد ولی هزینه‌اش (نمونه‌برداری
+   و بلورِ دوباره‌ی پشت در هر فریمِ اسکرول) کامل پرداخت می‌شود. این کارت‌های
+   درون‌صفحه‌ای (نه پاپ‌آپ‌ها) روی لمسی از قبل بدونِ بلور بودند؛ حالا روی
+   دسکتاپ هم — بدونِ هیچ تفاوتِ بصری. */
+body[data-theme] :is(
+  .bg-dash-card, .weekly-glass, .checklist-glass, .glass-box, .auth-box, .fx-card,
+  .tv-surface, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card
+){
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+html[data-perf="low"] body[data-theme] .modal-panel{
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+}
+
+/* ============================================================
+   گویِ دستیار روی لمسی
+   ------------------------------------------------------------
+   قانونِ `html[data-perf="low"] .siri-orb *` فقط *فرزندانِ* واقعی را
+   می‌گیرد، نه ::before/::after — در حالی که چرخشِ همیشگیِ گو (`rotate`
+   روی --angle) دقیقا روی `.siri-orb::before` است. انیمیشنِ یک custom
+   property روی کامپوزیتور اجرا نمی‌شود: هر فریم یک style recalc + repaintِ
+   یک conic-gradientِ بلوردار روی main thread — اندازه‌گیری روی اندرویدِ
+   شبیه‌سازی‌شده: ~۶۰ recalc در ثانیه در حالتِ *بی‌کار*. همان قصدِ قانونِ
+   قبلی («روی دستگاهِ کم‌توان گو ثابت می‌ماند») حالا واقعا اعمال می‌شود. */
+html[data-perf="low"] .siri-orb::before,
+html[data-perf="low"] .siri-orb::after{
+  animation:none !important;
+}
+
+/* ============================================================
+   ردیفِ «ضعیف» (data-perf-weak) — lib/perfTier.ts
+   ------------------------------------------------------------
+   فقط گوشی‌های واقعا کم‌توان (≤۴ هسته یا ≤۴GB رم یا Save-Data). روی بقیه‌ی
+   لمسی‌ها هیچ‌چیز از این بلاک اعمال نمی‌شود.
+   ============================================================ */
+/* بلاب‌های aurora روی لمسی ثابت‌اند ولی هنوز blur(48px) روی سه لایه‌ی
+   ۴۰ تا ۶۰vmax دارند — بزرگ‌ترین تکسچرِ GPU صفحه. گرادیانِ شعاعی خودش تا
+   ۷۰٪ به شفاف می‌رسد، پس بدونِ blur هم همان لکه‌ی نورِ محو است. */
+html[data-perf-weak] .aurora-blob{ filter:none; }
+/* تغییرِ تم روی این ردیف بدونِ فیدِ ۰.۳ثانیه‌ایِ بک‌گراندِ کلِ صفحه —
+   repaintِ تمام‌صفحه در ۱۸ فریمِ پشتِ‌سرهم روی GPUِ ضعیف لگِ دیدنی دارد. */
+html[data-perf-weak] body{ transition:none; }
