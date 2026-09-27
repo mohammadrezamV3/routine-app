@@ -32,6 +32,33 @@ function findTappable(el){
   }
   return null;
 }
+/* هپتیک — لرزشِ خیلی کوتاه روی لمسِ هر چیزِ قابل‌کلیک، تا تپ «حس» بشه.
+   اندروید: navigator.vibrate. کروم فقط بعد از اولین تعاملِ کاربر (sticky
+   activation) اجازه می‌ده، و pointerdownِ لمسی خودش activation نیست — پس
+   تا قبل از اون، لرزش به pointerup (که activation حساب می‌شه) موکول می‌شه.
+   iOS (سافاری ۱۸+) vibrate نداره؛ کلیکِ برنامه‌ای روی لیبلِ یک
+   <input type=checkbox switch> مخفی هپتیکِ سیستمی رو فعال می‌کنه.
+   کاربر با localStorage["arion:haptics"]="off" خاموشش می‌کنه. */
+var HAPTIC_MS=8,pendingHaptic=false,iosLabel=null;
+function hapticsOff(){try{return localStorage.getItem("arion:haptics")==="off";}catch(_){return false;}}
+function isTextField(el){var t=el.tagName;return t==="TEXTAREA"||(t==="INPUT"&&!/^(checkbox|radio|button|submit|reset|range|color|file)$/i.test(el.type||""));}
+function iosHaptic(){
+  if(!iosLabel){
+    var input=document.createElement("input");input.type="checkbox";input.setAttribute("switch","");
+    iosLabel=document.createElement("label");iosLabel.setAttribute("aria-hidden","true");
+    iosLabel.style.cssText="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;left:-9px;top:-9px";
+    iosLabel.appendChild(input);document.body.appendChild(iosLabel);
+  }
+  iosLabel.click();
+}
+var canVibrate=typeof navigator.vibrate==="function";
+var isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+function haptic(){
+  try{
+    if(canVibrate)navigator.vibrate(HAPTIC_MS);
+    else if(isIOS)iosHaptic();
+  }catch(_){}
+}
 document.addEventListener("pointerdown",function(e){
   if(typeof e.button==="number"&&e.button!==0)return;
   clearCur();
@@ -39,7 +66,15 @@ document.addEventListener("pointerdown",function(e){
   if(!target)return;
   target.classList.add(CLS);
   cur=target;
+  pendingHaptic=false;
+  if(e.pointerType==="touch"&&!isTextField(target)&&!hapticsOff()){
+    var ua=navigator.userActivation;
+    if(canVibrate&&(!ua||ua.hasBeenActive))haptic();else pendingHaptic=true;
+  }
 },{passive:true});
+document.addEventListener("pointerup",function(){
+  if(pendingHaptic){pendingHaptic=false;haptic();}
+},{passive:true,capture:true});
 function release(){
   if(!cur)return;
   var el=cur;
