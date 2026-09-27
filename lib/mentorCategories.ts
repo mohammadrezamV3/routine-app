@@ -6,9 +6,9 @@ export const MENTOR_CATEGORIES = ["ROUTINE", "FITNESS", "NUTRITION"] as const;
 export type MentorCategory = (typeof MENTOR_CATEGORIES)[number];
 
 export const MENTOR_CATEGORY_META: Record<MentorCategory, { label: string; certLabel: string }> = {
-  ROUTINE: { label: "روتین و برنامه‌ریزی", certLabel: "مدرک مشاوره / برنامه‌ریزی" },
-  FITNESS: { label: "مربی بدنسازی", certLabel: "مدرک مربیگری بدنسازی" },
-  NUTRITION: { label: "تغذیه / کالری", certLabel: "مدرک تغذیه" },
+  ROUTINE: { label: "روتین و برنامه‌ریزی", certLabel: "مدرک برنامه‌ریزی" },
+  FITNESS: { label: "بدنسازی", certLabel: "مدرک مربیگری بدنسازی" },
+  NUTRITION: { label: "تغذیه", certLabel: "مدرک تغذیه" },
 };
 
 export function isMentorCategory(v: unknown): v is MentorCategory {
@@ -20,12 +20,21 @@ export function sanitizeCategories(v: unknown): MentorCategory[] {
   return Array.from(new Set(v.filter(isMentorCategory)));
 }
 
+// برچسب کامل وضعیت احراز (جمله‌ی وضعیت، اطلاعیه، ادمین)
 export const VERIFICATION_LABELS = {
   NOT_PROVIDED: "ارسال نشده",
-  PENDING: "در انتظار بررسی",
+  PENDING: "در صف بررسی ادمین‌های آریون",
   VERIFIED: "تأییدشده",
-  REJECTED: "ردشده",
+  REJECTED: "رد شده",
 } as const;
+
+// برچسب کوتاه برای چیپ‌ها (یک خط، حداکثر دو کلمه)
+export const VERIFICATION_SHORT: Record<keyof typeof VERIFICATION_LABELS, string> = {
+  NOT_PROVIDED: "ارسال نشده",
+  PENDING: "در صف بررسی",
+  VERIFIED: "تأییدشده",
+  REJECTED: "رد شده",
+};
 
 // کدوم نوعِ برنامه زیرِ کدوم حوزه ساخته می‌شه — تغذیه هنوز نوعِ برنامه‌ی خودش رو نداره
 // (فقط چت/فیدبک و دیدنِ کالری‌شمارِ شاگرد با اجازه‌ی خودش)
@@ -42,4 +51,4 @@ export function programTypeAllowed(type: keyof typeof PROGRAM_TYPE_CATEGORY, rel
   return eff.length === 0 || eff.includes(PROGRAM_TYPE_CATEGORY[type]);
 }
 
-export const PROGRAM_TYPE_BLOCKED_MSG = "این نوع برنامه خارج از حوزه‌ی رابطه با این شاگرده";
+export const PROGRAM_TYPE_BLOCKED_MSG = "این نوع برنامه خارج از حوزه‌های همکاری با این شاگرد است";

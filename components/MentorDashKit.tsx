@@ -1,36 +1,35 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import "./mentor.css";
 import { useSession } from "next-auth/react";
-import { AlertTriangle, ChevronRight, RefreshCw } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { FeatureGate } from "./FeatureGate";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { MentorErrorState, MentorPageHead } from "./MentorPageShell";
+import { MentorEmpty, MentorNotice } from "./MentorUI";
 import { faNum } from "@/lib/jalali";
 
 /**
- * تکه‌های مشترکِ صفحه‌های سمتِ منتور (/mentor/**): پوسته‌ی صفحه با گیتِ
- * ورود + فلگِ `mentors`، درخواستِ JSON با پیامِ خطای قابل‌نمایش، و حالت‌های
- * خطا/خالی. ظاهر عمدا از همون کلاس‌های موجودِ پنل کاربری/ترید ساخته شده
- * (account-shell، trade-back-link، acc-block، rp-empty) — هیچ سطح/بک‌گراندِ
- * جدیدی تعریف نمی‌شه.
+ * تکه‌های مشترک صفحه‌های سمت منتور (/mentor/**): پوسته با گیت ورود + فلگ
+ * `mentors`، درخواست JSON با پیام خطای قابل‌نمایش، و حالت‌های خطا/خالی.
+ * سرصفحه، خطا و اطلاعیه همان پایه‌های MentorPageShell/MentorUI هستند تا
+ * سمت منتور و سمت شاگرد یک‌شکل باشند. بدون انیمیشن و بدون بک‌گراند تازه.
  */
 
 export type ApiResult<T> = { ok: true; data: T; status: number } | { ok: false; error: string; status: number };
 
 /** پیامِ خطای عمومی بر اساسِ کدِ وضعیت — وقتی سرور `error` نفرستاده باشه */
 export function statusMessage(status: number): string {
-  if (status === 0) return "ارتباط با سرور برقرار نشد — اتصال اینترنت رو بررسی کن";
-  if (status === 401) return "نشستت منقضی شده — دوباره وارد شو";
-  if (status === 403) return "اجازه‌ی این کار رو نداری";
-  if (status === 404) return "پیدا نشد یا دسترسی نداری";
-  if (status === 409) return "وضعیت تغییر کرده — صفحه رو تازه کن و دوباره امتحان کن";
-  if (status === 413) return "حجم فایل حداکثر ۵ مگابایته";
-  if (status === 415) return "فقط تصویر (JPG/PNG/WebP) یا PDF قابل قبوله";
-  if (status === 429) return "تعداد درخواست‌ها زیاده — کمی بعد دوباره امتحان کن";
-  if (status >= 500) return "خطای سرور — کمی بعد دوباره امتحان کن";
-  return "انجام نشد — دوباره تلاش کن";
+  if (status === 0) return "ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی کن";
+  if (status === 401) return "نشستت تمام شده است؛ دوباره وارد شو";
+  if (status === 403) return "اجازه‌ی این کار را نداری";
+  if (status === 404) return "پیدا نشد یا به آن دسترسی نداری";
+  if (status === 409) return "وضعیت تغییر کرده است؛ صفحه را تازه کن";
+  if (status === 413) return "حجم فایل حداکثر ۵ مگابایت است";
+  if (status === 415) return "فقط تصویر (JPG، PNG، WebP) یا PDF پذیرفته می‌شود";
+  if (status === 429) return "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کن";
+  if (status >= 500) return "خطای سرور؛ چند دقیقه بعد دوباره تلاش کن";
+  return "انجام نشد؛ دوباره تلاش کن";
 }
 
 /** fetch با JSON و خطای یک‌دست؛ هیچ‌وقت throw نمی‌کنه */
@@ -66,7 +65,9 @@ export function formatBytes(n: number): string {
 
 /**
  * پوسته‌ی همه‌ی صفحه‌های /mentor: بازگشت + عنوان + گیت‌ها. تا وقتی نشست
- * در حالِ بارگذاریه اسکلت نشون داده می‌شه (نه پیامِ اشتباهِ «وارد شو»).
+ * در حال بارگذاری است اسکلت نشان داده می‌شود (نه پیام اشتباه «وارد شوید»).
+ * ظرفِ account-shell حفظ شده چون فرم‌های این بخش (AuthField) ظاهرشان را
+ * از همان می‌گیرند.
  */
 export function MentorDashShell({
   title, hint, back, titleAction, children,
@@ -79,57 +80,35 @@ export function MentorDashShell({
 }) {
   const { status } = useSession();
   return (
-    <section className="account-shell" dir="rtl">
-      <div className="acc-head">
-        {back && (
-          <Link href={back.href} className="trade-back-link">
-            <ChevronRight size={15} /> {back.label}
-          </Link>
-        )}
-        <div className="trade-head-row">
-          <h1>{title}</h1>
-          {status === "authenticated" && titleAction}
-        </div>
-        {hint && <p className="acc-head-hint">{hint}</p>}
-      </div>
+    <section className="account-shell mentor-page" dir="rtl">
+      <MentorPageHead
+        title={title}
+        hint={hint}
+        back={back}
+        titleAction={status === "authenticated" ? titleAction : undefined}
+      />
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش منتورها وارد شوید" />}
-      {status === "authenticated" && (
-        <FeatureGate feature="mentors">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-            {children}
-          </motion.div>
-        </FeatureGate>
-      )}
+      {status === "authenticated" && <FeatureGate feature="mentors">{children}</FeatureGate>}
     </section>
   );
 }
 
-/** حالتِ خطای کلِ صفحه/بخش با دکمه‌ی «تلاش دوباره» */
+/** خطای کل صفحه/بخش با «تلاش دوباره» — همان MentorErrorState */
 export function MentorDashError({ message, onRetry, action }: { message: string; onRetry?: () => void; action?: React.ReactNode }) {
-  return (
-    <div className="trade-surface rp-empty" role="alert">
-      <span className="rp-empty-icon" style={{ color: "#E05252", borderColor: "rgba(224,82,82,.35)" }}><AlertTriangle size={24} /></span>
-      <p style={{ color: "var(--text)" }}>{message}</p>
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        {onRetry && (
-          <button type="button" className="account-outline-btn" onClick={onRetry}>
-            <RefreshCw size={14} /> تلاش دوباره
-          </button>
-        )}
-        {action}
-      </div>
-    </div>
-  );
+  return <MentorErrorState message={message} onRetry={onRetry} action={action} />;
 }
 
-/** پیامِ خالیِ داخلِ یک بخش (بدونِ قابِ اضافه) */
+/** پیام خالیِ داخل یک بخش (بدون قاب اضافه) — همان MentorEmpty */
 export function MentorDashEmpty({ children }: { children: React.ReactNode }) {
-  return <p className="m-0 py-3 text-center text-[12px] leading-7 text-dash-muted">{children}</p>;
+  return <MentorEmpty>{children}</MentorEmpty>;
 }
 
-/** نوارِ اطلاع‌رسانیِ داخلِ صفحه — فقط قابِ رنگی، بدونِ بک‌گراند */
+/**
+ * اطلاعیه‌ی درون‌صفحه — همان MentorNotice (یک ردیف فشرده، بی‌بک‌گراند).
+ * برای وضعیت صرفاً اطلاعاتی (مثل «در صف بررسی») از MentorChip استفاده کنید.
+ */
 export function MentorDashNotice({
   tone = "info", icon, title, children, action,
 }: {
@@ -139,17 +118,7 @@ export function MentorDashNotice({
   children?: React.ReactNode;
   action?: React.ReactNode;
 }) {
-  const color = tone === "danger" ? "#E05252" : tone === "warn" ? "#e0a636" : tone === "ok" ? "var(--accent)" : "var(--secondary)";
-  return (
-    <div className="mb-3 flex items-start gap-3 rounded-[14px] border px-3.5 py-3" style={{ borderColor: color }} role={tone === "danger" ? "alert" : "status"}>
-      {icon && <span className="mt-0.5 shrink-0" style={{ color }}>{icon}</span>}
-      <div className="min-w-0 flex-1">
-        <div className="text-[12.5px] font-bold" style={{ color }}>{title}</div>
-        {children && <div className="mt-1 text-[11.5px] leading-6 text-dash-muted">{children}</div>}
-      </div>
-      {action && <div className="shrink-0 self-center">{action}</div>}
-    </div>
-  );
+  return <MentorNotice tone={tone} icon={icon} title={title} action={action}>{children}</MentorNotice>;
 }
 
 /** نوارِ پیشرفتِ باریک — همون `.rp-bar` رودمپ‌ها */
