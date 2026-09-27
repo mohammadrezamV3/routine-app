@@ -40,7 +40,7 @@ function findTappable(el){
    <input type=checkbox switch> مخفی هپتیکِ سیستمی رو فعال می‌کنه.
    کاربر با localStorage["arion:haptics"]="off" خاموشش می‌کنه. */
 var HAPTIC_MS=8,pendingHaptic=false,iosLabel=null;
-function hapticsOff(){try{return localStorage.getItem("arion:haptics")==="off";}catch(_){return false;}}
+function hapticsOff(){try{return localStorage.getItem("arion:haptics")==="off";}catch(_){return false;}} /* هم‌کلید با lib/haptics.ts (HAPTICS_KEY) — تنظیمات › بازخورد لمسی */
 function isTextField(el){var t=el.tagName;return t==="TEXTAREA"||(t==="INPUT"&&!/^(checkbox|radio|button|submit|reset|range|color|file)$/i.test(el.type||""));}
 function iosHaptic(){
   if(!iosLabel){
