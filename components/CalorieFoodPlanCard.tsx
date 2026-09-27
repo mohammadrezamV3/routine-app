@@ -7,7 +7,6 @@ import { Plus, UtensilsCrossed, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
-import { CalorieAiScanModal } from "./CalorieAiScanModal";
 import type { Target } from "./CaloriePanel";
 
 type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
@@ -47,7 +46,6 @@ export function CalorieFoodPlanCard({
   delay?: number;
 }) {
   const [addOpen, setAddOpen] = useState(false);
-  const [scanOpen, setScanOpen] = useState(false);
   const overGoal = pct > 100;
   const barColor = overGoal ? "#E05252" : "var(--accent)";
 
@@ -137,15 +135,10 @@ export function CalorieFoodPlanCard({
           mealTypes={mealTypes}
           onClose={() => setAddOpen(false)}
           onAdded={onAdded}
-          onOpenAiScan={() => { setAddOpen(false); setScanOpen(true); }}
         />,
         document.body
       )}
 
-      {scanOpen && createPortal(
-        <CalorieAiScanModal date={date} mealTypes={mealTypes} onClose={() => setScanOpen(false)} onLogged={onAdded} />,
-        document.body
-      )}
     </DashCard>
   );
 }

@@ -6,5 +6,5 @@ export const size = OG_IMAGE_SIZE;
 export const contentType = "image/png";
 
 export default async function Image() {
-  return renderOgImage("کالری‌شمار فارسی و اسکن غذا با هوش مصنوعی");
+  return renderOgImage("کالری‌شمار فارسی و محاسبه‌ی کالری روزانه");
 }

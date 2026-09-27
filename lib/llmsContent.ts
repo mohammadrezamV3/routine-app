@@ -18,7 +18,7 @@ export const PUBLIC_PAGES: { path: string; label: string; note: string }[] = [
   { path: "/habit-tracker", label: "پیگیری عادت‌ها", note: "عادت‌ساز فارسی با تیک روزانه و استریک" },
   { path: "/daily-planner", label: "برنامه‌ریزی روزانه", note: "کارهای امروز، تقویم شمسی، یادآوری" },
   { path: "/bodybuilding-program", label: "برنامه‌ی بدنسازی هوشمند", note: "برنامه‌ی تمرینی ساخته‌شده با هوش‌مصنوعی" },
-  { path: "/calorie-counter", label: "کالری‌شمار فارسی", note: "محاسبه‌ی نیاز روزانه و ثبت وعده‌ها (اسکن غذا با AI به‌زودی)" },
+  { path: "/calorie-counter", label: "کالری‌شمار فارسی", note: "محاسبه‌ی نیاز روزانه و ثبت وعده‌ها" },
   { path: "/trading-journal", label: "ژورنال معاملاتی", note: "ثبت معاملات، آمار عملکرد، چک‌لیست ورود" },
   { path: "/ai-planner", label: "برنامه‌ریز هوشمند", note: "پیشنهادهای برنامه‌ریزی با کمک هوش‌مصنوعی" },
   { path: "/economic-calendar", label: "تقویم اقتصادی", note: "رویدادهای مهم اقتصادی برای معامله‌گران" },

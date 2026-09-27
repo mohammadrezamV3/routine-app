@@ -229,7 +229,7 @@ export function CaloriePanel() {
     await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" });
   }
 
-  // بعد افزودن/حذف/اسکن، هم لیست روز انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
+  // بعد افزودن/حذف، هم لیست روز انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
   // به‌روز بشن — چون نمودار/روند موفقیت/ریز درشت‌مغذی‌ها به هردو وابسته‌ن
   function refreshAfterChange() {
     loadEntries();

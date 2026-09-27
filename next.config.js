@@ -24,7 +24,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      // blob: لازمه: کراپِ عکسِ پروفایل/بنر، پیش‌نمایشِ اسکنِ غذا و آپلودِ
+      // blob: لازمه: کراپِ عکسِ پروفایل/بنر و آپلودِ
       // عکسِ حرکات با URL.createObjectURL کار می‌کنن و بدونش فقط روی
       // پروداکشن بی‌صدا شکست می‌خوردن («نمی‌تونم عکس پروفایل/بنر بذارم»).
       // blob: فقط به داده‌ای اشاره می‌کنه که خودِ همین صفحه ساخته.

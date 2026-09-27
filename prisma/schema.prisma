@@ -83,7 +83,7 @@ enum AiFeatureKey {
   CORRELATION_INSIGHT
   ROADMAP_GENERATION
   EXERCISE_PLAN_GENERATION
-  FOOD_SCAN
+  FOOD_SCAN // قدیمی — اسکن غذا با AI از اپ حذف شد؛ فقط برای ردیف‌های مصرفِ قبلی مانده
   // دستیارِ «مدیرِ برنامه» روی صفحه‌ی روتین. شمارشِ همین ردیف‌هاست که سهمیه‌ی
   // سه‌بارِ رایگان را می‌سنجد، پس نباید بی‌جهت جای دیگری هم ثبت شود.
   ROUTINE_ASSISTANT
