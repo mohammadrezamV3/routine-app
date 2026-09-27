@@ -1,5 +1,6 @@
 "use client";
 
+import { PROGRAM_TYPE_CATEGORY } from "@/lib/mentorCategories";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
@@ -39,7 +40,18 @@ function NewProgramContent() {
       />
     );
   }
-  return <MentorProgramEditor mode="new" mentorshipId={state.row.id} student={state.row.counterpart} />;
+  const allowedTypes = (["ROUTINE", "WORKOUT"] as const).filter(
+    (t) => state.row!.categories.length === 0 || state.row!.categories.includes(PROGRAM_TYPE_CATEGORY[t])
+  );
+  if (allowedTypes.length === 0) {
+    return (
+      <MentorDashError
+        message="حوزه‌ی رابطه با این شاگرد فعلا نوع برنامه‌ی قابل‌ساختی نداره (مثلا تغذیه). از چت و فیدبک استفاده کن."
+        action={<Link href="/mentor" className="text-[12.5px] font-bold text-dash-green no-underline">بازگشت به پنل منتور</Link>}
+      />
+    );
+  }
+  return <MentorProgramEditor mode="new" mentorshipId={state.row.id} student={state.row.counterpart} allowedTypes={[...allowedTypes]} />;
 }
 
 export default function NewMentorProgramPage() {

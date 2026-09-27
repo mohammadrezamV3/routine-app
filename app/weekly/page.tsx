@@ -50,6 +50,7 @@ import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
 import { RoutineAiFab } from "@/components/RoutineAiFab";
 import { useFeature } from "@/lib/useFeatures";
+import { activeModulesOf, getAccount } from "@/lib/accountCache";
 
 const now = new Date();
 const todayKey = isoLocal(now);
@@ -136,8 +137,14 @@ export default function WeeklyPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     let alive = true;
-    fetch("/api/exercise/schedule")
-      .then((r) => (r.ok ? r.json() : null))
+    // بدونِ ماژولِ بدنسازی این روت ۴۰۳ می‌ده (و خطای کنسول) — اول دسترسی رو از
+    // همون کشِ /api/account چک می‌کنیم و اصلا درخواست نمی‌زنیم
+    getAccount()
+      .then((acc) => {
+        const allowed = !!acc?.user && activeModulesOf(acc).has("EXERCISE");
+        return allowed ? fetch("/api/exercise/schedule") : null;
+      })
+      .then((r) => (r && r.ok ? r.json() : null))
       .then((d) => { if (alive) setGymDays(Array.isArray(d?.gymDays) ? d.gymDays : []); })
       .catch(() => { if (alive) setGymDays([]); });
     return () => { alive = false; };
@@ -585,7 +592,7 @@ export default function WeeklyPage() {
                                       </div>
                                     </div>
                                     <div className="wt-content">
-                                      <div className="wt-range">{toEnDigits(r.full)}</div>
+                                      <div className="wt-range"><bdi dir="ltr">{toEnDigits(r.full)}</bdi></div>
                                       <div className="wt-name">{p.name}</div>
                                     </div>
                                   </div>
@@ -604,7 +611,7 @@ export default function WeeklyPage() {
                                   <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
                                     {/* `time` می‌تواند کاملا خالی باشد (برنامه‌ی بی‌ساعت)؛
                                         آن‌وقت این ردیف نباید یک کادرِ خالی نشان دهد. */}
-                                    {!!t.time && <div className="wt-range">{toEnDigits(t.time)}</div>}
+                                    {!!t.time && <div className="wt-range"><bdi dir="ltr">{toEnDigits(t.time)}</bdi></div>}
                                     <div className="wt-name">{t.name}</div>
                                   </div>
                                 ))}

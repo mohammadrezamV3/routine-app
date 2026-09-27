@@ -325,7 +325,7 @@ describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ
 describe("سناریو ۴ — تأییدِ مدرک توسطِ ادمین", () => {
   it("مدرک تأیید → نشانِ تأیید روی کارتِ کشف؛ کاربرانِ عادی به فایل دسترسی ندارند", async () => {
     const tag = uniqueTag();
-    const mentor = await makeMentor({ username: `${tag}cert`.slice(0, 20) });
+    const mentor = await makeMentor({ username: `${tag}cert`.slice(0, 20) }, { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true });
     as(mentor);
     const up = await uploadDoc(formReq("/api/mentors/me/documents", fileForm(pdfBytes(500), "مدرک.pdf", "CERTIFICATE", "FITNESS")));
     expect(up.status).toBe(200);

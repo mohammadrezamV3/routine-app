@@ -124,7 +124,7 @@ function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input
 }
 
 export type MentorProgramEditorProps =
-  | { mode: "new"; mentorshipId: string; student: PublicUser }
+  | { mode: "new"; mentorshipId: string; student: PublicUser; allowedTypes: ProgramType[] }
   | { mode: "edit"; program: Program; items: Item[]; student: PublicUser | null };
 
 /**
@@ -136,7 +136,9 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   const initialProgram = props.mode === "edit" ? props.program : null;
 
   const [programId, setProgramId] = useState<string | null>(initialProgram?.id ?? null);
-  const [type, setType] = useState<ProgramType>(initialProgram?.type ?? "ROUTINE");
+  // فقط نوع‌هایی که با حوزه‌ی این رابطه جور درمیان (روتین ↔ ROUTINE، بدنسازی ↔ WORKOUT)
+  const typeOptions = (props.mode === "new" ? props.allowedTypes : [initialProgram!.type]).map((v) => ({ value: v, label: v === "ROUTINE" ? "روتین" : "تمرینی" }));
+  const [type, setType] = useState<ProgramType>(initialProgram?.type ?? typeOptions[0]?.value ?? "ROUTINE");
   const [title, setTitle] = useState(initialProgram?.title ?? "");
   const [description, setDescription] = useState(initialProgram?.description ?? "");
   const [startDate, setStartDate] = useState<JalaliDate | null>(isoToJalali(initialProgram?.startDate));
@@ -306,11 +308,15 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       {/* ── مشخصات ── */}
       <AccountBlock title="مشخصات برنامه" icon={<ClipboardList size={15} />} index={0}>
         <div className="mb-1 mt-2 text-[12px] font-bold text-dash-text">نوع برنامه</div>
-        <SegmentedTabs<ProgramType>
-          active={type}
-          onChange={(v) => { setType(v); setItemErrors({}); setSavedAt(null); }}
-          options={[{ value: "ROUTINE", label: "روتین" }, { value: "WORKOUT", label: "تمرینی" }]}
-        />
+        {typeOptions.length > 1 ? (
+          <SegmentedTabs<ProgramType>
+            active={type}
+            onChange={(v) => { setType(v); setItemErrors({}); setSavedAt(null); }}
+            options={typeOptions}
+          />
+        ) : (
+          <div className="text-[13px] font-bold text-dash-text">{typeOptions[0]?.label}</div>
+        )}
         <p className="mb-0 mt-2 text-[11px] leading-6 text-dash-muted">
           {type === "ROUTINE"
             ? "آیتم‌ها بعد از فعال‌شدن، با برچسبِ عنوانِ برنامه به روتینِ شاگرد اضافه می‌شن."

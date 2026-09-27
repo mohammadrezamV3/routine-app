@@ -33,6 +33,9 @@ import {
   htmlBytes,
 } from "./helpers/mentorTestUtils";
 
+// این فایل روی مدرکِ بدنسازی تمرکز داره — منتورِ پیش‌فرضِ fixture دو حوزه داره
+const FITNESS_ONLY = { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true };
+
 afterAll(async () => {
   await cleanupUsers();
 });
@@ -60,7 +63,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("PNG هویت → PENDING + event؛ PDF مدرک → credential PENDING + event؛ mime از محتوا", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const r = await upload(m, fileForm(pngBytes(200), "../../etc/passwd.pdf", "IDENTITY", undefined, "application/pdf"));
     expect(r.status).toBe(200);
     const doc = (await j(r)).document;
@@ -87,7 +90,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("HTML یا اجرایی (MZ) با اسمِ .png → ۴۱۵ و چیزی ذخیره نمی‌شود", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     expect((await upload(m, fileForm(htmlBytes(), "x.png", "IDENTITY", undefined, "image/png"))).status).toBe(415);
     expect((await upload(m, fileForm(exeBytes(), "x.png", "IDENTITY", undefined, "image/png"))).status).toBe(415);
     const prof = await profileOf(m);
@@ -96,13 +99,13 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("فایلِ بزرگ‌تر از ۵MB در فرم → ۴۱۳", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const big = pngBytes(5 * 1024 * 1024 + 1);
     expect((await upload(m, fileForm(big, "big.png", "IDENTITY"))).status).toBe(413);
   });
 
   it("بدنه‌ی استریم‌شده‌ی بزرگ بدونِ content-length → ۴۱۳ (سقف حینِ خواندن)", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     as(m);
     const chunk = new Uint8Array(1024 * 1024);
     let sent = 0;
@@ -127,7 +130,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("content-lengthِ اعلام‌شده‌ی بزرگ → ۴۱۳ بدونِ خواندن", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     as(m);
     const r = new NextRequest("http://localhost/api/mentors/me/documents", {
       method: "POST",
@@ -138,7 +141,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("مدرکِ دسته‌ای که در پروفایل نیست → ۴۰۰؛ kind نامعتبر ۴۰۰؛ بدونِ فایل ۴۰۰", async () => {
-    const m = await makeMentor(); // فقط FITNESS
+    const m = await makeMentor({}, FITNESS_ONLY); // فقط FITNESS
     expect((await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "NUTRITION"))).status).toBe(400);
     expect((await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "HACKING"))).status).toBe(400);
     expect((await upload(m, fileForm(pngBytes(), "c.png", "PASSPORT"))).status).toBe(400);
@@ -150,7 +153,7 @@ describe("آپلودِ مدرک", () => {
 
 describe("بررسیِ ادمین", () => {
   it("تأیید → VERIFIED + event + اعلان + نشانِ تأیید روی کارت؛ مدرک هم", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const admin = await makeAdmin();
     await upload(m, fileForm(jpegBytes(), "id.jpg", "IDENTITY"));
     await upload(m, fileForm(pdfBytes(), "cert.pdf", "CERTIFICATE", "FITNESS"));
@@ -191,7 +194,7 @@ describe("بررسیِ ادمین", () => {
   });
 
   it("رد بدونِ دلیل ۴۰۰؛ با دلیل → دلیل در /api/mentors/me دیده می‌شود", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const admin = await makeAdmin();
     await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY"));
     await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "FITNESS"));
@@ -218,7 +221,7 @@ describe("بررسیِ ادمین", () => {
 
 describe("دانلودِ مدرک", () => {
   it("صاحب: هدرهای امن و بایت‌های درست؛ دیگران: روتِ صاحب ۴۰۴، روتِ ادمین ۴۰۱/۴۰۳", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const bytes = pngBytes(128);
     const doc = (await j(await upload(m, fileForm(bytes, "کارت ملی.png", "IDENTITY")))).document;
 
@@ -231,7 +234,7 @@ describe("دانلودِ مدرک", () => {
     expect(r.headers.get("content-type")).toBe("image/png");
     expect(new Uint8Array(await r.arrayBuffer())).toEqual(bytes);
 
-    const other = await makeMentor();
+    const other = await makeMentor({}, FITNESS_ONLY);
     as(other);
     expect((await ownerDoc(req("GET", "/x"), { params: { docId: doc.id } })).status).toBe(404);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId: doc.id } })).status).toBe(404);
@@ -257,7 +260,7 @@ describe("دانلودِ مدرک", () => {
   });
 
   it("صاحب مدرکِ PENDING را حذف می‌کند → وضعیت NOT_PROVIDED", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const doc = (await j(await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY")))).document;
     as(m);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId: doc.id } })).status).toBe(200);
@@ -267,7 +270,7 @@ describe("دانلودِ مدرک", () => {
 
 describe("PUT /api/mentors/me — mass assignment", () => {
   it("identityStatus/ratingAvg/suspendedAt/userId از بدنه نوشته نمی‌شوند", async () => {
-    const m = await makeMentor();
+    const m = await makeMentor({}, FITNESS_ONLY);
     const victim = await makeUser();
     as(m);
     const r = await putMe(

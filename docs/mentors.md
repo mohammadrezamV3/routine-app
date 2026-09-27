@@ -3,7 +3,7 @@
 آریون فقط پلتفرمه؛ منتورها کاربرهای مستقلن. این سند قراردادِ مشترکِ بک‌اند/فرانت/ادمین/تسته.
 
 ## مدل داده (prisma/schema.prisma — بخش «اکوسیستم منتور»)
-- `MentorProfile` (یکی به‌ازای User) — منتوربودن = داشتنِ این رکورد. `categories: string[]` (کلیدهای `lib/mentorCategories.ts`).
+- `MentorProfile` (یکی به‌ازای User) — منتوربودن = داشتنِ این رکورد. `categories: string[]` (کلیدهای `lib/mentorCategories.ts`: `ROUTINE`، `FITNESS`، `NUTRITION`).
 - `MentorCredential` (profileId+category یکتا) — مدرکِ تخصصیِ هر دسته، وضعیتِ مستقل.
 - `MentorDocument` — فایلِ مدرک *داخل دیتابیس* (Bytes)، هرگز در `public/`. فقط صاحبش و ادمینِ `mentors` از روتِ مجاز می‌گیرن.
 - `MentorVerificationEvent` — تاریخچه‌ی هر تغییرِ وضعیتِ هویت/مدرک.
@@ -48,8 +48,8 @@
   `Review = { id, rating, body, createdAt, student: { name, avatarUrl } }` (فقط VISIBLE).
 
 ### رابطه
-- `GET /api/mentorships?role=student|mentor` → `{ mentorships: { id, status, initiatedBy, message, createdAt, startedAt, endedAt, counterpart: PublicUser, unread: number, activePrograms: number }[] }`
-- `POST /api/mentorships` بدنه `{ mentorId, message? }` (شاگرد درخواست می‌ده) یا `{ studentUsername, message? }` (منتورِ فعال دعوت می‌کنه) → `{ mentorship }`. خود-به-خود ممنوع؛ ACTIVE/PENDING → ۴۰۹؛ BLOCKED یا UserBlock → ۴۰۳ با پیامِ عمومی؛ REJECTED/ENDED → همون ردیف PENDING می‌شه و حریم خصوصی به پیش‌فرض (هیچ برنامه‌ای) برمی‌گرده.
+- `GET /api/mentorships?role=student|mentor` → `{ mentorships: { id, status, initiatedBy, message, createdAt, startedAt, endedAt, counterpart: PublicUser, unread: number, activePrograms: number, blockedByMe: boolean, categories: string[] }[] }`
+- `POST /api/mentorships` بدنه `{ mentorId, message?, categories? }` (شاگرد درخواست می‌ده) یا `{ studentUsername, message?, categories? }` (منتورِ فعال دعوت می‌کنه). `categories` = حوزه‌ی رابطه (زیرمجموعه‌ی دسته‌های منتور، مثلا `["ROUTINE"]`)؛ نفرستادن = همه‌ی حوزه‌های منتور. نوعِ برنامه‌ی مجاز از حوزه میاد: ROUTINE ↔ `ROUTINE`، WORKOUT ↔ `FITNESS`؛ تغذیه فعلا نوعِ برنامه نداره (۴۰۰). → `{ mentorship }`. خود-به-خود ممنوع؛ ACTIVE/PENDING → ۴۰۹؛ BLOCKED یا UserBlock → ۴۰۳ با پیامِ عمومی؛ REJECTED/ENDED → همون ردیف PENDING می‌شه و حریم خصوصی به پیش‌فرض (هیچ برنامه‌ای) برمی‌گرده.
 - `PATCH /api/mentorships/[id]` بدنه `{ action }`:
   `accept` / `reject` (فقط طرفِ غیرِ initiator، از PENDING)، `cancel` (initiator، از PENDING → ENDED)، `end` (هر طرف، از ACTIVE → ENDED؛ برنامه‌های PENDING/ACCEPTED/ACTIVE لغو و آینه‌ی روتین حذف)، `block` (هر طرف → BLOCKED)، `unblock` (فقط blockedById → ENDED).
 - `GET /api/mentorships/[id]/privacy` (فقط شاگرد) → `{ privacy: PrivacySettings, scopes: {key,label,kind}[] }`

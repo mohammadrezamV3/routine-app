@@ -1886,6 +1886,10 @@ model Mentorship {
   student     User             @relation("MentorshipStudent", fields: [studentId], references: [id], onDelete: Cascade)
   status      MentorshipStatus @default(PENDING)
   initiatedBy String // "STUDENT" | "MENTOR" — فقط طرفِ مقابل می‌تونه قبول کنه
+  // حوزه‌هایی که این رابطه پوشش می‌ده (زیرمجموعه‌ی دسته‌های منتور، مثلا ["ROUTINE"]).
+  // منتورهای شاگرد با همین از هم تفکیک می‌شن و نوعِ برنامه‌ی مجاز هم از همین میاد.
+  // خالی = رابطه‌ی قدیمی قبل از این فیلد → همه‌ی حوزه‌های منتور.
+  categories  String[] @default([])
   message     String?
   blockedById String?
 

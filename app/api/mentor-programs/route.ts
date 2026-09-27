@@ -3,6 +3,7 @@ import type { MentorProgramStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
+import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCategories";
 import { validateProgramInput } from "@/lib/mentorValidate";
 import { PROGRAM_WITH_USERS_INCLUDE, buildProgramRows, loadProgramWithUsers, serializeProgram, todayIsoForUser } from "@/lib/mentorServer";
 import { activateDuePrograms } from "@/lib/mentorProgramMirror";
@@ -58,9 +59,10 @@ export async function POST(req: Request) {
   const v = validateProgramInput(b);
   if (!v.ok) return badRequest(v.error);
 
-  const m = await prisma.mentorship.findFirst({ where: { id: b.mentorshipId, mentorId: me }, select: { id: true, studentId: true, status: true } });
+  const m = await prisma.mentorship.findFirst({ where: { id: b.mentorshipId, mentorId: me }, select: { id: true, studentId: true, status: true, categories: true } });
   if (!m) return notFound();
   if (m.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
+  if (!programTypeAllowed(v.data.type, m.categories, mp.profile.categories)) return badRequest(PROGRAM_TYPE_BLOCKED_MSG);
 
   const drafts = await prisma.mentorProgram.count({ where: { mentorId: me, status: "DRAFT" } });
   if (drafts >= MAX_DRAFTS_PER_MENTOR) return conflict("تعداد پیش‌نویس‌ها به سقف رسیده؛ چندتا رو ارسال یا حذف کن");

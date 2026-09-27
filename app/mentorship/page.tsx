@@ -14,6 +14,8 @@ import type { MentorshipAction, MentorshipRow, MentorshipsResponse, ProgramRow, 
 import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
+import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
+import { categoryLabel } from "@/components/MentorBadges";
 
 const rowAnim = (i: number) => ({
   initial: { opacity: 0, y: 6 },
@@ -38,6 +40,8 @@ function MentorshipHome() {
   const [programsError, setProgramsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isMentor, setIsMentor] = useState(false);
+  // فیلترِ حوزه‌ی منتورهای فعال — فقط وقتی منتورها بیش از یک حوزه دارن نشون داده می‌شه
+  const [area, setArea] = useState<string>("");
   const [confirmCancel, setConfirmCancel] = useState<MentorshipRow | null>(null);
   const { pendingKey, error: actionError, run, clearError } = useAsyncAction();
   const [actionFor, setActionFor] = useState<string | null>(null);
@@ -96,7 +100,10 @@ function MentorshipHome() {
   if (!rows) return <LoadingBlock />;
 
   const invites = rows.filter((r) => r.status === "PENDING" && r.initiatedBy === "MENTOR");
-  const active = rows.filter((r) => r.status === "ACTIVE");
+  const allActive = rows.filter((r) => r.status === "ACTIVE");
+  const areas = MENTOR_CATEGORIES.filter((c) => allActive.some((r) => r.categories.includes(c)));
+  const activeArea = areas.includes(area as (typeof areas)[number]) ? area : "";
+  const active = activeArea ? allActive.filter((r) => r.categories.includes(activeArea)) : allActive;
   const outgoing = rows.filter((r) => r.status === "PENDING" && r.initiatedBy === "STUDENT");
   const past = rows.filter((r) => r.status === "ENDED" || r.status === "REJECTED" || r.status === "BLOCKED");
   const busy = (key: string) => pendingKey === key;
@@ -125,7 +132,9 @@ function MentorshipHome() {
                   <MentorUserAvatar name={publicUserName(r.counterpart)} avatarUrl={r.counterpart.avatarUrl} size={38} />
                   <span className="account-row2-body">
                     <span className="account-row2-label">{publicUserName(r.counterpart)}</span>
-                    <span className="account-row2-desc">تو را به‌عنوانِ شاگرد دعوت کرده · {fmtRelative(r.createdAt)}</span>
+                    <span className="account-row2-desc">
+                      تو را به‌عنوانِ شاگرد دعوت کرده{r.categories.length ? ` · ${r.categories.map(categoryLabel).join("، ")}` : ""} · {fmtRelative(r.createdAt)}
+                    </span>
                   </span>
                 </Link>
                 {r.message && <p className="mentor-quote">{r.message}</p>}
@@ -148,6 +157,16 @@ function MentorshipHome() {
       )}
 
       <h2 className="mentor-section-title"><Users size={16} /> منتورهای فعال</h2>
+      {areas.length > 1 && (
+        <div className="trade-tag-row" role="group" aria-label="حوزه" style={{ marginBottom: 10 }}>
+          <button type="button" className={`trade-tag-chip${activeArea === "" ? " active" : ""}`} onClick={() => setArea("")}>همه</button>
+          {areas.map((c) => (
+            <button key={c} type="button" className={`trade-tag-chip${activeArea === c ? " active" : ""}`} onClick={() => setArea(c)}>
+              {MENTOR_CATEGORY_META[c].label}
+            </button>
+          ))}
+        </div>
+      )}
       {active.length === 0 ? (
         <div className="trade-surface trade-empty-state">
           <UserSearch size={30} />
@@ -163,6 +182,7 @@ function MentorshipHome() {
                 <span className="account-row2-body">
                   <span className="account-row2-label">{publicUserName(r.counterpart)}</span>
                   <span className="account-row2-desc">
+                    {r.categories.length > 0 && `${r.categories.map(categoryLabel).join("، ")} · `}
                     {r.activePrograms > 0 ? `${faNum(r.activePrograms)} برنامه‌ی فعال` : "بدون برنامه‌ی فعال"}
                     {r.startedAt ? ` · از ${fmtDate(r.startedAt)}` : ""}
                   </span>

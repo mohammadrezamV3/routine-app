@@ -188,7 +188,7 @@ import { PUT as putPrivacy } from "@/app/api/mentorships/[id]/privacy/route";
 
 export async function makeMentorProfile(
   userId: string,
-  body: Record<string, unknown> = { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true }
+  body: Record<string, unknown> = { headline: "مربی", bio: "بیو", categories: ["ROUTINE", "FITNESS"], published: true }
 ): Promise<any> {
   as(userId);
   const res = await putMentorMe(req("PUT", "/api/mentors/me", body));

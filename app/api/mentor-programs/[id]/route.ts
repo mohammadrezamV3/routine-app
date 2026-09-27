@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity, isMentorSuspended } from "@/lib/mentorGuard";
 import { readJsonBody, parseDateRange } from "@/lib/validate";
 import { visibleToStudent } from "@/lib/mentorProgramState";
+import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCategories";
 import { validateProgramInput } from "@/lib/mentorValidate";
 import {
   PROGRAM_WITH_USERS_INCLUDE,
@@ -93,7 +94,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   const mp = await getActiveMentorProfile(me);
   if (!mp.ok) return mp.response;
 
-  const current = await prisma.mentorProgram.findFirst({ where: { id: params.id, mentorId: me }, select: { id: true, type: true, status: true } });
+  const current = await prisma.mentorProgram.findFirst({ where: { id: params.id, mentorId: me }, select: { id: true, type: true, status: true, mentorship: { select: { categories: true } } } });
   if (!current) return notFound();
   if (current.status !== "DRAFT") return conflict("فقط پیش‌نویس قابل ویرایشه");
 
@@ -101,6 +102,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const v = validateProgramInput(parsed.body, current.type);
   if (!v.ok) return badRequest(v.error);
+  if (!programTypeAllowed(v.data.type, current.mentorship.categories, mp.profile.categories)) return badRequest(PROGRAM_TYPE_BLOCKED_MSG);
   const { items, ...fields } = v.data;
 
   const ok = await prisma.$transaction(async (tx) => {

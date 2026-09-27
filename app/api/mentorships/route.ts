@@ -54,19 +54,21 @@ export async function POST(req: Request) {
   let mentorId: string;
   let studentId: string;
   let initiatedBy: "STUDENT" | "MENTOR";
+  let mentorCategories: string[] = [];
 
   if (b.mentorId !== undefined) {
     if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("منتور نامعتبره");
     if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
     const profile = await prisma.mentorProfile.findFirst({
       where: { userId: b.mentorId, published: true, suspendedAt: null, user: { isBlocked: false, deletedAt: null } },
-      select: { acceptingStudents: true },
+      select: { acceptingStudents: true, categories: true },
     });
     if (!profile) return notFound();
     if (!profile.acceptingStudents) return conflict("این منتور فعلا شاگرد جدید نمی‌پذیره");
     mentorId = b.mentorId;
     studentId = me;
     initiatedBy = "STUDENT";
+    mentorCategories = profile.categories;
   } else if (b.studentUsername !== undefined) {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
@@ -82,8 +84,20 @@ export async function POST(req: Request) {
     mentorId = me;
     studentId = target.id;
     initiatedBy = "MENTOR";
+    mentorCategories = mp.profile.categories;
   } else {
     return badRequest("منتور یا یوزرنیم شاگرد لازمه");
+  }
+
+  // حوزه‌های این رابطه (مثلا فقط «روتین») — باید زیرمجموعه‌ی دسته‌های منتور باشه؛
+  // نفرستادن یعنی همه‌ی حوزه‌های منتور
+  let categories: string[];
+  if (b.categories === undefined || b.categories === null) {
+    categories = mentorCategories;
+  } else {
+    if (!Array.isArray(b.categories)) return badRequest("حوزه‌ها نامعتبره");
+    categories = Array.from(new Set(b.categories.filter((c: unknown): c is string => typeof c === "string" && mentorCategories.includes(c))));
+    if (categories.length === 0 || categories.length !== new Set(b.categories).size) return badRequest("حداقل یک حوزه از حوزه‌های این منتور انتخاب کن");
   }
 
   // برای دعوت با یوزرنیم، «بلاک» و «وجود نداره» یک پاسخ دارن تا نشه یوزرنیم‌ها یا
@@ -106,13 +120,13 @@ export async function POST(req: Request) {
     // نباید بی‌صدا به رابطه‌ی جدید منتقل بشه.
     const res = await prisma.mentorship.updateMany({
       where: { id: existing.id, status: existing.status },
-      data: { status: "PENDING", initiatedBy, message, blockedById: null, endedAt: null, ...DEFAULT_PRIVACY },
+      data: { status: "PENDING", initiatedBy, message, categories, blockedById: null, endedAt: null, ...DEFAULT_PRIVACY },
     });
     if (res.count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
     id = existing.id;
   } else {
     try {
-      const created = await prisma.mentorship.create({ data: { mentorId, studentId, initiatedBy, message }, select: { id: true } });
+      const created = await prisma.mentorship.create({ data: { mentorId, studentId, initiatedBy, message, categories }, select: { id: true } });
       id = created.id;
     } catch (e) {
       if (isUniqueViolation(e)) return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");

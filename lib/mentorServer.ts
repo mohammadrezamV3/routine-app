@@ -2,6 +2,7 @@ import { Prisma, type MentorProgramStatus, type MentorProgram, type MentorFeedba
 import { prisma } from "@/lib/prisma";
 import { displayName } from "@/lib/inAppNotify";
 import { rankByPopularity } from "@/lib/mentorRanking";
+import { effectiveCategories } from "@/lib/mentorCategories";
 
 // کمک‌تابع‌های مشترکِ سمت سرورِ اکوسیستم منتور — شکلِ پاسخ‌های قرارداد
 // (docs/mentors.md) فقط همین‌جا ساخته می‌شه تا روت‌ها و پنلِ ادمین هر کدوم
@@ -217,7 +218,7 @@ export async function recomputeMentorRating(mentorUserId: string): Promise<void>
 // ───────────────────────── رابطه ─────────────────────────
 
 export const MENTORSHIP_WITH_USERS_INCLUDE = {
-  mentor: { select: PUBLIC_USER_SELECT },
+  mentor: { select: { ...PUBLIC_USER_SELECT, mentorProfile: { select: { categories: true } } } },
   student: { select: PUBLIC_USER_SELECT },
 } satisfies Prisma.MentorshipInclude;
 
@@ -236,6 +237,8 @@ export type MentorshipRow = {
   activePrograms: number;
   // فقط برای BLOCKED: خودِ بیننده بلاک کرده؟ (رفعِ مسدودی فقط برای همون)
   blockedByMe: boolean;
+  // حوزه‌های مؤثرِ رابطه (برای تفکیکِ منتورها و نوعِ برنامه‌ی مجاز)
+  categories: string[];
 };
 
 /** ردیف‌های لیستِ رابطه از دیدِ viewer — شمارشِ خوانده‌نشده/برنامه‌ی فعال با کوئریِ گروهی */
@@ -265,6 +268,7 @@ export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId:
     unread: unreadMap.get(r.id) ?? 0,
     activePrograms: activeMap.get(r.id) ?? 0,
     blockedByMe: r.status === "BLOCKED" && r.blockedById === viewerId,
+    categories: effectiveCategories(r.categories, r.mentor.mentorProfile?.categories ?? []),
   }));
 }
 

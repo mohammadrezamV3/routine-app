@@ -16,6 +16,7 @@ import {
   fa, mentorApi, pct,
 } from "./MentorDashKit";
 import { MentorUserAvatar } from "./MentorUserAvatar";
+import { categoryLabel } from "./MentorBadges";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { isValidUsername } from "@/lib/validate";
 import { VERIFICATION_LABELS } from "@/lib/mentorCategories";
@@ -120,7 +121,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       )}
 
       {/* ── درخواست‌ها + دعوت ── */}
-      <MentorDashRequests incoming={incoming} sent={sentInvites} suspended={suspended} onChanged={() => load(true)} />
+      <MentorDashRequests incoming={incoming} sent={sentInvites} suspended={suspended} categories={self.categories} onChanged={() => load(true)} />
 
       {/* ── شاگردها ── */}
       <AccountBlock title="شاگردهای فعال" icon={<Users size={15} />} index={2}>
@@ -233,8 +234,10 @@ function StatTile({ icon, label, value, delay }: { icon: React.ReactNode; label:
 
 /** درخواست‌های ورودی (پذیرش/رد)، دعوت‌های ارسالی (لغو) و فرمِ دعوت با یوزرنیم */
 function MentorDashRequests({
-  incoming, sent, suspended, onChanged,
-}: { incoming: MentorshipRow[]; sent: MentorshipRow[]; suspended: boolean; onChanged: () => void }) {
+  incoming, sent, suspended, categories, onChanged,
+}: { incoming: MentorshipRow[]; sent: MentorshipRow[]; suspended: boolean; categories: string[]; onChanged: () => void }) {
+  // حوزه‌ی دعوت (مثلا فقط «روتین») — پیش‌فرض همه‌ی حوزه‌های خودِ منتور
+  const [cats, setCats] = useState<string[]>(categories);
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [username, setUsername] = useState("");
@@ -255,8 +258,10 @@ function MentorDashRequests({
     const u = username.trim().replace(/^@/, "");
     if (!u) { setInviteState({ sending: false, error: "یوزرنیم شاگرد رو وارد کن", ok: null }); return; }
     if (!isValidUsername(u)) { setInviteState({ sending: false, error: "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشه", ok: null }); return; }
+    if (categories.length > 0 && cats.length === 0) { setInviteState({ sending: false, error: "حداقل یک حوزه انتخاب کن", ok: null }); return; }
     setInviteState({ sending: true, error: null, ok: null });
-    const body: { studentUsername: string; message?: string } = { studentUsername: u };
+    const body: { studentUsername: string; message?: string; categories?: string[] } = { studentUsername: u };
+    if (categories.length > 0) body.categories = cats;
     if (message.trim()) body.message = message.trim();
     const r = await mentorApi<unknown>("/api/mentorships", { method: "POST", body });
     if (!r.ok) { setInviteState({ sending: false, error: r.error, ok: null }); return; }
@@ -276,7 +281,7 @@ function MentorDashRequests({
             <MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={publicUserName(r.counterpart)} size={34} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-bold text-dash-text">{publicUserName(r.counterpart)}</div>
-              <div className="text-[11px] text-dash-muted">درخواست شاگردی · {fmtRelative(r.createdAt)}</div>
+              <div className="text-[11px] text-dash-muted">درخواست شاگردی{r.categories.length ? ` · ${r.categories.map(categoryLabel).join("، ")}` : ""} · {fmtRelative(r.createdAt)}</div>
             </div>
           </div>
           {r.message && <p className="mb-0 mt-2 whitespace-pre-line text-[12px] leading-6 text-dash-muted">«{r.message}»</p>}
@@ -322,6 +327,24 @@ function MentorDashRequests({
                   onKeyDown={(e) => { if (e.key === "Enter") invite(); }}
                 />
               </AuthField>
+              {categories.length > 1 && (
+                <div>
+                  <div className="mb-1.5 text-[12px] font-bold text-dash-text">حوزه</div>
+                  <div className="trade-tag-row" role="group" aria-label="حوزه">
+                    {categories.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`trade-tag-chip${cats.includes(c) ? " active" : ""}`}
+                        aria-pressed={cats.includes(c)}
+                        onClick={() => setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]))}
+                      >
+                        {categoryLabel(c)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <AuthField id="md-invite-msg" label="پیام (اختیاری)">
                 <textarea
                   id="md-invite-msg" className="wsearch-newform-name acc-textarea" rows={2} maxLength={500}

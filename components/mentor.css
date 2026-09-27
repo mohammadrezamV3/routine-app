@@ -253,10 +253,3 @@ body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light
 .mentor-link{ display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--accent); text-decoration:none; }
 @media (hover:hover){ .mentor-link:hover{ opacity:.8; } }
 
-/* مودال‌های منتور (پورتال به body) و صفحه‌های منتور بیرونِ .dash-scope‌اند، پس قانونِ سراسریِ
-   button:hover (رنگِ متن = اکسنت) روی دکمه‌ی پرِ اکسنت می‌نشست و متنش هنگامِ
-   هاور ناپدید می‌شد. فقط رنگِ متن برگردونده می‌شه؛ بک‌گراند دست نمی‌خوره. */
-@media (hover:hover){
-  .mentor-modal .trade-primary-btn:hover:not(:disabled),
-  .mentor-page .trade-primary-btn:hover:not(:disabled){ color:var(--bg); border-color:var(--accent); }
-}

@@ -111,6 +111,7 @@ export type MentorshipRow = {
   unread: number;
   activePrograms: number;
   blockedByMe: boolean;
+  categories: string[];
 };
 export type MentorshipsResponse = { mentorships: MentorshipRow[] };
 

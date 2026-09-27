@@ -107,6 +107,7 @@ function MentorProfile() {
             <ConnectAction
               mentorId={mentor.userId}
               mentorName={mentor.name}
+              mentorCategories={mentor.categories}
               accepting={mentor.acceptingStudents}
               mine={myMentorship}
               onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
@@ -175,10 +176,11 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
 
 /** دکمه‌ی اتصال — حالتش از myMentorship می‌آید */
 function ConnectAction({
-  mentorId, mentorName, accepting, mine, onChange, onStale,
+  mentorId, mentorName, mentorCategories, accepting, mine, onChange, onStale,
 }: {
   mentorId: string;
   mentorName: string;
+  mentorCategories: string[];
   accepting: boolean;
   mine: MyMentorship | null;
   onChange: (m: MyMentorship | null) => void;
@@ -264,6 +266,7 @@ function ConnectAction({
         <RequestModal
           mentorId={mentorId}
           mentorName={mentorName}
+          mentorCategories={mentorCategories}
           onClose={() => setRequestOpen(false)}
           onDone={(m) => { setRequestOpen(false); onChange(m); }}
           onStale={onStale}
@@ -284,19 +287,23 @@ function ConnectAction({
 }
 
 function RequestModal({
-  mentorId, mentorName, onClose, onDone, onStale,
+  mentorId, mentorName, mentorCategories, onClose, onDone, onStale,
 }: {
   mentorId: string;
   mentorName: string;
+  mentorCategories: string[];
   onClose: () => void;
   onDone: (m: MyMentorship) => void;
   onStale: () => void;
 }) {
   const [message, setMessage] = useState("");
+  // حوزه‌ی منتوری (مثلا فقط «روتین») — پیش‌فرض همه‌ی حوزه‌های منتور
+  const [cats, setCats] = useState<string[]>(mentorCategories);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
+    if (mentorCategories.length > 0 && cats.length === 0) { setError("حداقل یک حوزه انتخاب کن"); return; }
     if (message.trim().length > MESSAGE_MAX) { setError(`پیام حداکثر ${faNum(MESSAGE_MAX)} کاراکتر است`); return; }
     setBusy(true);
     setError(null);
@@ -304,7 +311,7 @@ function RequestModal({
       const res = await fetch("/api/mentorships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mentorId, message: message.trim() || undefined }),
+        body: JSON.stringify({ mentorId, message: message.trim() || undefined, ...(mentorCategories.length ? { categories: cats } : {}) }),
       });
       if (res.status === 409) { setError("قبلا با این منتور درخواست یا رابطه‌ی فعالی داری."); onStale(); return; }
       if (!res.ok) { setError(await readApiError(res, "ارسالِ درخواست انجام نشد")); return; }
@@ -332,6 +339,24 @@ function RequestModal({
         <p className="mentor-muted" style={{ margin: "0 0 4px" }}>
           بعد از پذیرفتنِ درخواست، منتور فقط همان بخش‌هایی از برنامه‌ات را می‌بیند که خودت در «دسترسی‌ها» اجازه بدهی — به‌طورِ پیش‌فرض هیچ‌کدام.
         </p>
+        {mentorCategories.length > 1 && (
+          <>
+            <div className="exercise-form-label">منتورت در چه حوزه‌ای باشه؟</div>
+            <div className="trade-tag-row" role="group" aria-label="حوزه">
+              {mentorCategories.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`trade-tag-chip${cats.includes(c) ? " active" : ""}`}
+                  onClick={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setError(null); }}
+                  aria-pressed={cats.includes(c)}
+                >
+                  {categoryLabel(c)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <label className="exercise-form-label" htmlFor="mentor-req-msg">پیام (اختیاری)</label>
         <textarea
           id="mentor-req-msg"
