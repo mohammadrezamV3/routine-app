@@ -14,7 +14,16 @@ import { cn } from "@/lib/utils";
 // سمت راست هر سلول (بین همون سلول و همسایه‌ی راستش، نه چپش، چون
 // توی RTL اولین بچه‌ی DOM سمت راست گرید می‌شینه) — به‌جای کشیدن
 // تمام‌ارتفاع، از بالا/پایین فاصله دارن (گرادیان محو به‌جای بوردر خام).
-export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDay[]; todayName: string }) {
+export function ExerciseWeekGrid({
+  planData,
+  todayName,
+  dayStatus,
+}: {
+  planData: ExerciseDay[];
+  todayName: string;
+  /** وضعیتِ روزهای باشگاهِ *همین هفته* (اسمِ روز → done/missed) از لاگِ واقعی */
+  dayStatus?: Record<string, "done" | "missed">;
+}) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
   return (
@@ -52,11 +61,21 @@ export function ExerciseWeekGrid({ planData, todayName }: { planData: ExerciseDa
                   <span className={cn("text-[12px] font-bold sm:text-[13px]", isToday ? "text-dash-green" : "text-dash-text")}>
                     {dayName}
                   </span>
-                  {isToday && (
-                    <span className="shrink-0 rounded-full bg-dash-green px-1.5 py-0.5 text-[8px] font-bold text-dash-bg sm:text-[8.5px]">
-                      امروز
-                    </span>
-                  )}
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {d && dayStatus?.[dayName] && (
+                      <span
+                        className="shrink-0 text-[9.5px] font-semibold sm:text-[10.5px]"
+                        style={{ color: dayStatus[dayName] === "done" ? "var(--accent)" : "#E05252" }}
+                      >
+                        {dayStatus[dayName] === "done" ? "انجام دادی" : "وقتش گذشته"}
+                      </span>
+                    )}
+                    {isToday && (
+                      <span className="shrink-0 rounded-full bg-dash-green px-1.5 py-0.5 text-[8px] font-bold text-dash-bg sm:text-[8.5px]">
+                        امروز
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {!d ? (

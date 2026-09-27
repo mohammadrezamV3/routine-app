@@ -12,6 +12,7 @@ import {
   timeStartMinutes,
   timeEndMinutes,
   splitTimeRange,
+  isTaskTimePassed,
   toEnDigits,
   computeDayStats,
   DayStats,
@@ -63,10 +64,10 @@ function isTaskPast(iso: string): boolean {
   return iso < todayKey;
 }
 
-// برخلاف isTaskPast (که برای غیرفعال‌کردن انتقال/حذف، ساعت دقیق امروز رو
-// هم حساب می‌کنه)، ضربدر قرمز «انجام‌نشده» فقط باید برای روزهای واقعا
-// گذشته (نه امروز، حتی اگه ساعت برنامه رد شده باشه) نشون داده بشه — کاربر
-// تا آخر همون روز فرصت داره تیکش بزنه، نباید زودتر از موعد «ازدست‌رفته» جلوه کنه.
+// روزِ واقعا گذشته — برای قفلِ «شروع»ِ تمرین. ضربدرِ «وقتش گذشته»ی برنامه‌ها
+// دیگه از این نمیاد: طبقِ درخواستِ صریح، برنامه‌ی امروزی که ساعتش رد شده و
+// تیک نخورده هم همون لحظه ✕ می‌گیره (isTaskTimePassed در lib/schedule.ts) —
+// ولی همچنان قابل تیک‌زدنه، ✕ فقط وضعیته نه قفل.
 function isDayPast(iso: string): boolean {
   return iso < todayKey;
 }
@@ -135,6 +136,18 @@ export default function WeeklyPage() {
   // باشد، یک ردیفِ «برنامه تمرینی امروز» بدونِ ساعت به «برنامه‌های امروز»
   // اضافه می‌شود. null یعنی هنوز نمی‌دانیم/پلنی نیست — هیچ ردیفی اضافه نمی‌شود.
   const [gymDays, setGymDays] = useState<string[] | null>(null);
+  // پلنِ فعالِ بدنسازی + وضعیتِ *واقعیِ* تمامِ تمرینِ روزِ انتخاب‌شده (از
+  // /api/exercise/log — همون منبعی که ExerciseDashboard می‌خونه). زدنِ «شروع»
+  // فقط یعنی رفتن سمتِ تمرین، نه تمام‌کردنش؛ «انجام دادی» فقط با completed.
+  const [exercisePlanId, setExercisePlanId] = useState<string | null>(null);
+  const [exerciseDone, setExerciseDone] = useState<Record<string, boolean>>({});
+  // ساعتِ زنده — «وقتش گذشته» باید با گذشتِ زمان خودش ظاهر بشه، نه فقط با
+  // ریلود (now بالای فایل فقط لحظه‌ی لودِ ماژوله).
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setClock(new Date()), 30_000);
+    return () => clearInterval(t);
+  }, []);
   useEffect(() => {
     if (status !== "authenticated") return;
     let alive = true;
@@ -146,10 +159,27 @@ export default function WeeklyPage() {
         return allowed ? fetch("/api/exercise/schedule") : null;
       })
       .then((r) => (r && r.ok ? r.json() : null))
-      .then((d) => { if (alive) setGymDays(Array.isArray(d?.gymDays) ? d.gymDays : []); })
+      .then((d) => {
+        if (!alive) return;
+        setGymDays(Array.isArray(d?.gymDays) ? d.gymDays : []);
+        setExercisePlanId(typeof d?.planId === "string" ? d.planId : null);
+      })
       .catch(() => { if (alive) setGymDays([]); });
     return () => { alive = false; };
   }, [status]);
+
+  const [exerciseLogKey, setExerciseLogKey] = useState(0);
+  useLiveRefresh("exercise", () => setExerciseLogKey((k) => k + 1));
+  useEffect(() => {
+    if (!exercisePlanId) return;
+    let alive = true;
+    const iso = selectedIso;
+    fetch(`/api/exercise/log?planId=${encodeURIComponent(exercisePlanId)}&date=${iso}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive && d) setExerciseDone((prev) => ({ ...prev, [iso]: !!d.completed })); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [exercisePlanId, selectedIso, exerciseLogKey]);
 
   const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
 
@@ -277,13 +307,15 @@ export default function WeeklyPage() {
     const list: DashTaskItem[] = tasksForDate(selectedDate, opts)
       .map((t) => {
         const occ = customOcc.find((c) => c.id === t.id);
+        const done = !!selectedDaily?.tasks[t.id];
         return {
           id: t.id,
           name: t.name,
           time: t.time,
           importance: occ?.importance,
           tag: occ?.tag,
-          done: !!selectedDaily?.tasks[t.id],
+          done,
+          missed: !done && isTaskTimePassed(selectedIso, t.time, clock),
           isPast: isTaskPast(selectedIso),
           dayPast: isDayPast(selectedIso),
           notStarted: isTaskNotStarted(selectedIso, t.time),
@@ -304,7 +336,8 @@ export default function WeeklyPage() {
         time: "",
         importance: undefined,
         tag: undefined,
-        done: !!selectedDaily?.tasks[EXERCISE_TASK_ID],
+        done: !!exerciseDone[selectedIso],
+        missed: !exerciseDone[selectedIso] && isDayPast(selectedIso),
         isPast: false,
         dayPast: isDayPast(selectedIso),
         notStarted: false,
@@ -314,7 +347,7 @@ export default function WeeklyPage() {
     }
 
     return list;
-  }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter, gymDays]);
+  }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter, gymDays, exerciseDone, clock]);
 
   // شروعِ تمرین: هم همین‌جا (روتین من) تیک می‌خورد هم کاربر به صفحه‌ی
   // بدنسازی می‌رود تا واقعاً برنامه را ببیند. تپ‌استرایک/دابل‌کلیکِ خودِ
@@ -554,7 +587,8 @@ export default function WeeklyPage() {
             {WEEK_ORDER.map((o, idx) => {
               const d = new Date(now);
               d.setDate(now.getDate() + (o.jsDay - now.getDay()));
-              const dDoneTasks = weekDaily[isoLocal(d)]?.tasks ?? {};
+              const dIso = isoLocal(d);
+              const dDoneTasks = weekDaily[dIso]?.tasks ?? {};
               const items = tasksForDate(d, opts);
               const isToday = o.jsDay === now.getDay();
               const isOpen = openIdx === idx;
@@ -595,6 +629,7 @@ export default function WeeklyPage() {
                               {positioned.map((p) => {
                                 const r = splitTimeRange(p.time);
                                 const done = !!dDoneTasks[p.id];
+                                const missed = !done && isTaskTimePassed(dIso, p.time, clock);
                                 return (
                                   <div
                                     key={p.id}
@@ -604,10 +639,18 @@ export default function WeeklyPage() {
                                   >
                                     <div className="wt-marker-col">
                                       <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
-                                      <div className={`wt-dot${done ? " wt-dot-done" : ""}`}>
+                                      <div
+                                        className={`wt-dot${done ? " wt-dot-done" : missed ? " wt-dot-missed" : ""}`}
+                                        aria-label={done ? "انجام دادی" : missed ? "وقتش گذشته" : undefined}
+                                      >
                                         {done && (
                                           <svg viewBox="0 0 24 24" fill="none">
                                             <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                        )}
+                                        {missed && (
+                                          <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
                                           </svg>
                                         )}
                                       </div>
@@ -628,14 +671,23 @@ export default function WeeklyPage() {
 
                             {!!untimedItems.length && (
                               <div className="wt-untimed-row">
-                                {untimedItems.map((t) => (
+                                {untimedItems.map((t) => {
+                                  const uDone = !!dDoneTasks[t.id];
+                                  const uMissed = !uDone && isTaskTimePassed(dIso, t.time, clock);
+                                  return (
                                   <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
                                     {/* `time` می‌تواند کاملا خالی باشد (برنامه‌ی بی‌ساعت)؛
                                         آن‌وقت این ردیف نباید یک کادرِ خالی نشان دهد. */}
                                     {!!t.time && <div className="wt-range"><bdi dir="ltr">{toEnDigits(t.time)}</bdi></div>}
                                     <div className="wt-name">{t.name}</div>
+                                    {(uDone || uMissed) && (
+                                      <div className={`wt-untimed-state${uDone ? " done" : " missed"}`}>
+                                        {uDone ? "✓ انجام دادی" : "✕ وقتش گذشته"}
+                                      </div>
+                                    )}
                                   </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             )}
                           </div>

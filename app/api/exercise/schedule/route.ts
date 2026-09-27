@@ -17,11 +17,13 @@ export async function GET() {
   const plan = await prisma.exercisePlan.findFirst({
     where: { userId: guard.userId, isActive: true },
     orderBy: { startDate: "desc" },
-    select: { gymDays: true },
+    select: { id: true, gymDays: true },
   });
 
   const gymDays = Array.isArray(plan?.gymDays)
     ? (plan!.gymDays as unknown[]).filter((d): d is string => typeof d === "string")
     : [];
-  return NextResponse.json({ gymDays });
+  // planId هم برمی‌گرده تا «روتین من» وضعیتِ *واقعیِ* تمامِ تمرینِ همون روز رو
+  // از /api/exercise/log بخونه (نه فقط این‌که کاربر «شروع» رو زده یا نه).
+  return NextResponse.json({ gymDays, planId: plan?.id ?? null });
 }

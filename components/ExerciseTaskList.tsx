@@ -305,6 +305,18 @@ export function ExerciseTaskList({
               <Lock size={14} />
               وقتش نرسیده!
             </div>
+          ) : ended && !active ? (
+            // تمرینِ این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
+            // باکسِ وضعیتِ «وقتش نرسیده!»، فقط با متن/رنگِ خودش.
+            <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
+              <Check size={14} strokeWidth={3} />
+              انجام دادی
+            </div>
+          ) : isPastDay && !active ? (
+            <div className="exercise-locked-box exercise-state-missed mt-5 shrink-0">
+              <X size={14} strokeWidth={3} />
+              وقتش گذشته
+            </div>
           ) : (
             editable && (!ended || active) && (
               <div className="mt-5 shrink-0">

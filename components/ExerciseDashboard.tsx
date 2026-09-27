@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Calendar, History } from "lucide-react";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { WEEK_ORDER, startOfWeek } from "@/lib/schedule";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import {
   fetchExerciseLogRange, sessionsThisWeekTotal, sessionsThisWeekDone,
@@ -111,6 +111,24 @@ export function ExerciseDashboard({
   const sessionsTotal = sessionsThisWeekTotal(plan.gymDays);
   const weekPct = weekProgressPct(plan.gymDays, logs, now);
   const todayLog = logs[todayIso];
+
+  // وضعیتِ هر روزِ باشگاهِ همین هفته (شنبه‌شروع) برای «برنامه هفتگی» پایین:
+  // «انجام دادی» اگه همون روز تمرین «تمام» ثبت شده، «وقتش گذشته» اگه روزش
+  // بی‌تمام‌شدن گذشته. امروزِ ناتمام هنوز وضعیتی نداره (تا آخرِ روز وقت هست).
+  const weekDayStatus = useMemo(() => {
+    const out: Record<string, "done" | "missed"> = {};
+    const start = startOfWeek(now);
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const iso = isoLocal(d);
+      const name = FA_WEEKDAY[d.getDay()];
+      if (!plan.planData.some((p) => p.day === name)) continue;
+      if (logs[iso]?.completed) out[name] = "done";
+      else if (iso < todayIso) out[name] = "missed";
+    }
+    return out;
+  }, [logs, plan.planData]);
   const todayPct = todayProgressPct(todayPlanForStats?.items.length ?? 0, todayLog);
 
   // «این تجهیزات رو ندارم» — اول سه‌تا پیشنهاد آماده می‌گیریم (بدون سویچ
@@ -228,7 +246,7 @@ export function ExerciseDashboard({
         )}
       </div>
 
-      {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} />}
+      {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} dayStatus={weekDayStatus} />}
 
       {historyPickerOpen && (
         <>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
-import { tasksForDate, ScheduleTask } from "@/lib/schedule";
+import { tasksForDate, ScheduleTask, isTaskTimePassed } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime as isWakeOnTimeShared, timeToMinutes } from "@/lib/wakeSleep";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -101,6 +101,9 @@ export function DayModal({
           {tasks.length ? (
             tasks.map((t) => {
               const checked = !!daily.tasks[t.id];
+              // همون قاعده‌ی ✕ لیستِ «برنامه‌های امروز»: روزِ گذشته، یا امروز
+              // و ساعتش رد شده، و تیک نخورده.
+              const missed = !checked && isTaskTimePassed(iso, t.time, new Date());
               return (
                 <div
                   key={t.id}
@@ -108,14 +111,27 @@ export function DayModal({
                   className={`task${isFuture ? " disabled" : ""}`}
                   aria-disabled={isFuture}
                 >
-                  <div className={`check${checked ? " on" : ""}`}>
-                    <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                      <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                  <div className={`check${checked ? " on" : missed ? " missed" : ""}`}>
+                    {missed ? (
+                      <svg className="c-miss" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 6l12 12M18 6L6 18" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
+                      </svg>
+                    ) : (
+                      <svg className="c-check" viewBox="0 0 24 24" fill="none">
+                        <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
                   </div>
                   <div>
                     <div className={`task-name${checked ? " done" : ""}`}>{t.name}</div>
-                    <div className="task-time">{t.time}</div>
+                    <div className="task-time">
+                      {t.time}
+                      {(checked || missed) && (
+                        <span className={`task-state${checked ? " done" : " missed"}`}>
+                          {t.time ? " · " : ""}{checked ? "انجام دادی" : "وقتش گذشته"}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
