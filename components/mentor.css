@@ -193,7 +193,7 @@ body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light
 }
 .mentor-preview-row{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; font-size:12px; line-height:1.9; }
 .mentor-preview-tag{ font-size:10.5px; font-weight:700; color:var(--muted); min-width:74px; }
-.mentor-preview-line{ color:var(--text); font-weight:700; unicode-bidi:plaintext; }
+.mentor-preview-line{ color:var(--text); font-weight:700; direction:rtl; }
 .mentor-preview-line.is-mentor{ color:var(--accent); }
 
 /* ── اجرای برنامه ─────────────────────────────────────────── */

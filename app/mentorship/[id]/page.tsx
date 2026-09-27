@@ -460,9 +460,10 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
   const ex: { name: string; tag?: string; time: string; importance?: Importance } =
     real ?? { name: "مطالعه‌ی فصل ۳", tag: "دانشگاه", time: "18:00 - 19:00", importance: "high" };
 
-  const actualParts = [prettyTime(ex.time), ex.tag?.trim() || null, ex.name, ex.importance ? `اهمیت ${IMPORTANCE_LABELS[ex.importance]}` : null].filter(Boolean);
+  const actualParts = [ex.tag?.trim() || null, ex.name, ex.importance ? `اهمیت ${IMPORTANCE_LABELS[ex.importance]}` : null].filter((x): x is string => !!x);
 
   let mentorLine: string;
+  let mentorParts: string[] | null = null;
   let hidden = false;
   if (!draft.showSchedule) { mentorLine = "هیچ زمان‌بندی‌ای دیده نمی‌شود"; hidden = true; }
   else if (!sample && !visible(real!)) { mentorLine = "این برنامه برای منتور دیده نمی‌شود"; hidden = true; }
@@ -470,24 +471,41 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
   else {
     const hasTag = !!ex.tag?.trim();
     const program = draft.showProgramName && (hasTag || draft.showTaskName) ? (ex.tag?.trim() || ex.name) : null;
-    const parts = [prettyTime(ex.time)];
+    const parts: string[] = [];
     if (program) parts.push(program);
     parts.push(draft.showTaskName ? ex.name : "مشغول");
     if (draft.showTaskDetails && ex.importance) parts.push(`اهمیت ${IMPORTANCE_LABELS[ex.importance]}`);
     if (draft.showProgress) parts.push("وضعیتِ انجام ✓");
-    mentorLine = parts.join(" · ");
+    mentorParts = parts;
+    mentorLine = "";
   }
 
   return (
     <div className="mentor-preview" aria-live="polite">
       <div className="mentor-preview-row">
         <span className="mentor-preview-tag">واقعی{sample ? " (نمونه)" : ""}</span>
-        <span className="mentor-preview-line">{actualParts.join(" · ")}</span>
+        <span className="mentor-preview-line"><PreviewParts time={ex.time} parts={actualParts} /></span>
       </div>
       <div className="mentor-preview-row">
         <span className="mentor-preview-tag">منتور می‌بیند</span>
-        <span className={`mentor-preview-line${hidden ? "" : " is-mentor"}`} style={hidden ? { color: "var(--muted)" } : undefined}>{mentorLine}</span>
+        <span className={`mentor-preview-line${hidden ? "" : " is-mentor"}`} style={hidden ? { color: "var(--muted)" } : undefined}>{mentorParts ? <PreviewParts time={ex.time} parts={mentorParts} /> : mentorLine}</span>
       </div>
     </div>
+  );
+}
+
+/**
+ * هر بخش جدا ایزوله می‌شود تا ترتیبِ راست‌به‌چپ حفظ شود — بدونِ این، متنی که
+ * با ساعت و برچسبِ لاتین (مثلا «Workout») شروع می‌شد کلِ خط را چپ‌به‌راست
+ * و ترتیبِ بخش‌ها را برعکس نشان می‌داد. بازه‌ی ساعت خودش چپ‌به‌راست می‌ماند.
+ */
+function PreviewParts({ time, parts }: { time: string; parts: string[] }) {
+  return (
+    <>
+      <bdi dir="ltr">{prettyTime(time)}</bdi>
+      {parts.map((p, i) => (
+        <span key={i}>{" · "}<bdi>{p}</bdi></span>
+      ))}
+    </>
   );
 }
