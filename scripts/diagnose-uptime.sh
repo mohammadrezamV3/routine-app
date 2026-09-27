@@ -84,7 +84,10 @@ NGX="$(ls /etc/nginx/sites-enabled/* 2>/dev/null | head -5)"
 if [ -n "$NGX" ]; then
   for f in $NGX; do
     echo "فایل: $f"
-    if grep -qE 'proxy_set_header[[:space:]]+Connection[[:space:]]+"upgrade"' "$f"; then
+    # کامنت‌ها رو قبلش حذف می‌کنیم — وگرنه همین کامنتِ توضیحیِ خودِ
+    # nginx.arionapp.ir.conf (که دقیقاً همین رشته رو برای توضیحِ باگِ قدیمی
+    # نقل‌قول می‌کنه) باعثِ یه false positive می‌شد.
+    if grep -vE '^[[:space:]]*#' "$f" | grep -qE 'proxy_set_header[[:space:]]+Connection[[:space:]]+"upgrade"'; then
       echo "  ✖ باگِ کلاسیک پیدا شد: هدرِ Connection روی *همه‌ی* درخواست‌ها ثابت \"upgrade\"ه."
       echo "    این دقیقاً همون «گاهی بالا نمیاد، ریلود می‌زنم درست می‌شه» رو می‌سازه."
       echo "    ← deploy/nginx.conf.example همین ریپو رو جایگزینش کن و: sudo nginx -t && sudo systemctl reload nginx"
@@ -101,6 +104,32 @@ hr "۹) خطاهای اخیرِ nginx"
 (tail -40 /var/log/nginx/error.log 2>/dev/null || sudo tail -40 /var/log/nginx/error.log 2>/dev/null) \
   | grep -Ei 'upstream|502|504|timed out|refused|worker_connections' | tail -20 \
   || echo "چیزی پیدا نشد (یا دسترسی نیست — با sudo اجرا کن)"
+
+hr "۱۰) فایلِ استاتیکِ بزرگ: مستقیم در مقابلِ پشتِ Cloudflare"
+# «سایت بدونِ استایل لود می‌شه» می‌تونه یعنیِ یه فایلِ CSS/JS بزرگ بینِ
+# Cloudflare و این سرور نصفه‌کاره کش/تحویل شده — نشونه‌ش اینه که اندازه‌ی
+# دریافتی از دامنه‌ی عمومی کمتر از اندازه‌ی واقعیِ رویِ دیسکه، درحالی‌که
+# مستقیم از Node/nginx (بدونِ Cloudflare) کامل میاد.
+CSS_FILE="$(find .next/static/css -name '*.css' 2>/dev/null | sort -rV | head -1)"
+if [ -n "$CSS_FILE" ] && [ -n "$DOMAIN" ]; then
+  CSS_NAME="$(basename "$CSS_FILE")"
+  REAL_SIZE="$(wc -c < "$CSS_FILE")"
+  DIRECT_SIZE="$(curl -s -o /dev/null -w '%{size_download}' --max-time 15 "http://127.0.0.1:3000/_next/static/css/$CSS_NAME" 2>/dev/null || echo 0)"
+  PUBLIC_SIZE="$(curl -s -o /dev/null -w '%{size_download}' --max-time 15 "https://$DOMAIN/_next/static/css/$CSS_NAME" 2>/dev/null || echo 0)"
+  echo "  فایل: $CSS_NAME"
+  echo "  روی دیسک:        $REAL_SIZE بایت"
+  echo "  مستقیم از Node:   $DIRECT_SIZE بایت"
+  echo "  از دامنه‌ی عمومی: $PUBLIC_SIZE بایت"
+  if [ "$DIRECT_SIZE" = "$REAL_SIZE" ] && [ "$PUBLIC_SIZE" != "$REAL_SIZE" ]; then
+    echo "  ✖ Node/nginx کامل می‌دن ولی از پشتِ Cloudflare ناقص میاد — مشکل مالِ"
+    echo "    مسیرِ Cloudflare↔سرورِه (مثلاً کندیِ لینکِ بین‌المللی)، نه خودِ اپ."
+    echo "    ← deploy/nginx.arionapp.ir.conf رو برای راه‌اندازیِ Full (strict) SSL ببین."
+  elif [ "$PUBLIC_SIZE" = "$REAL_SIZE" ]; then
+    echo "  ✓ از هر مسیری کامل میاد."
+  fi
+else
+  echo "  فایلِ CSS بیلد پیدا نشد یا دامنه مشخص نیست — این بخش رد شد."
+fi
 
 hr "پایان"
 echo "کلِ این خروجی رو کپی کن و بفرست."
