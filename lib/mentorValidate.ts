@@ -8,6 +8,8 @@ import { parseIsoDate, toEnglishDigits } from "@/lib/validate";
 export const MAX_PROGRAM_ITEMS = 100;
 export const PROGRAM_TITLE_MAX = 120; // هم‌اندازه‌ی سقفِ برچسبِ روتین در lib/mentorPrivacy.ts
 export const PROGRAM_DESC_MAX = 2000;
+export const PROGRAM_NOTE_MAX = 1000;
+export const ROUTINE_ROLE_MAX = 60;
 export const ITEM_TITLE_MAX = 120;
 export const ITEM_DETAILS_MAX = 1000;
 
@@ -33,6 +35,7 @@ export type ProgramData = {
   type: MentorProgramType;
   title: string;
   description: string | null;
+  note: string | null;
   startDate: Date | null;
   endDate: Date | null;
   items: ItemData[];
@@ -96,7 +99,7 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
   }
 
   const durationMin = optInt(raw.durationMin, 1, 1440);
-  if (durationMin === "bad") return { ok: false, error: `${where}: مدت (دقیقه) باید بین ۱ تا ۱۴۴۰ باشه` };
+  if (durationMin === "bad") return { ok: false, error: `${where}: مدت (دقیقه) باید بین 1 تا 1440 باشد` };
 
   // فیلدهای حرکتی فقط برای برنامه‌ی تمرینی معنا دارن؛ برای روتین دور ریخته می‌شن
   let sets: number | null = null;
@@ -105,7 +108,7 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
   let restSec: number | null = null;
   if (type === "WORKOUT") {
     const s = optInt(raw.sets, 1, 100);
-    if (s === "bad") return { ok: false, error: `${where}: تعداد ست باید بین ۱ تا ۱۰۰ باشه` };
+    if (s === "bad") return { ok: false, error: `${where}: تعداد ست باید بین 1 تا 100 باشد` };
     sets = s;
 
     if (!isBlank(raw.reps)) {
@@ -116,12 +119,12 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
 
     if (!isBlank(raw.weightKg)) {
       const w = typeof raw.weightKg === "string" ? Number(toEnglishDigits(raw.weightKg)) : raw.weightKg;
-      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: `${where}: وزنه باید بین ۰ تا ۱۰۰۰ کیلو باشه` };
+      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: `${where}: وزنه باید بین 0 تا 1000 کیلوگرم باشد` };
       weightKg = Math.round(w * 10) / 10;
     }
 
     const rs = optInt(raw.restSec, 0, 3600);
-    if (rs === "bad") return { ok: false, error: `${where}: استراحت باید بین ۰ تا ۳۶۰۰ ثانیه باشه` };
+    if (rs === "bad") return { ok: false, error: `${where}: استراحت باید بین 0 تا 3600 ثانیه باشد` };
     restSec = rs;
   }
 
@@ -166,5 +169,32 @@ export function validateProgramInput(body: any, fallbackType?: MentorProgramType
     items.push(r.data);
   }
 
-  return { ok: true, data: { type, title, description: optText(body.description, PROGRAM_DESC_MAX), startDate, endDate, items } };
+  if (body.note !== undefined && body.note !== null && typeof body.note !== "string") return { ok: false, error: "یادداشت برنامه نامعتبره" };
+
+  return {
+    ok: true,
+    data: {
+      type,
+      title,
+      description: optText(body.description, PROGRAM_DESC_MAX),
+      note: optText(body.note, PROGRAM_NOTE_MAX),
+      startDate,
+      endDate,
+      items,
+    },
+  };
+}
+
+/**
+ * نقشِ منتور در حوزه‌ی روتین (مثلا «استاد ریاضی»، «مشاور کنکور»).
+ * null/"" یعنی پاک‌کردن. فاصله‌های تکراری یکی می‌شن؛ بیشتر از سقف رد می‌شه
+ * (نه بریده‌شدنِ بی‌صدا) تا منتور بدونه متنش کامل ذخیره نشده.
+ */
+export function validateRoutineRole(v: unknown): Result<string | null> {
+  if (v === undefined || v === null) return { ok: true, data: null };
+  if (typeof v !== "string") return { ok: false, error: "نقش روتین نامعتبره" };
+  const t = v.replace(/\s+/g, " ").trim();
+  if (!t) return { ok: true, data: null };
+  if (t.length > ROUTINE_ROLE_MAX) return { ok: false, error: `نقش روتین حداکثر ${ROUTINE_ROLE_MAX} حرفه` };
+  return { ok: true, data: t };
 }

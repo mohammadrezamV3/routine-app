@@ -316,6 +316,20 @@ describe("PUT /api/mentors/me — mass assignment", () => {
     expect((await j(await getMe())).profile.userId).toBe(u);
   });
 
+  it("routineRole: فقط با دسته‌ی ROUTINE ذخیره می‌شود؛ بلند ۴۰۰؛ برداشتنِ ROUTINE پاکش می‌کند", async () => {
+    const u = await makeUser();
+    as(u);
+    let r = await putMe(req("PUT", "/x", { bio: "b", categories: ["ROUTINE"], routineRole: "  استاد   ریاضی " }));
+    expect(r.status).toBe(200);
+    expect((await j(r)).profile.routineRole).toBe("استاد ریاضی");
+    expect((await putMe(req("PUT", "/x", { routineRole: "x".repeat(61) }))).status).toBe(400);
+    expect((await profileOf(u)).routineRole).toBe("استاد ریاضی");
+    r = await putMe(req("PUT", "/x", { categories: ["FITNESS"] }));
+    expect((await j(r)).profile.routineRole).toBeNull();
+    r = await putMe(req("PUT", "/x", { categories: ["FITNESS"], routineRole: "مشاور" }));
+    expect((await j(r)).profile.routineRole).toBeNull();
+  });
+
   it("GET /api/mentors/me برای غیرمنتور null", async () => {
     as(await makeUser());
     expect((await j(await getMe())).profile).toBeNull();

@@ -4,6 +4,8 @@ import { requireMentorsUser, getActiveMentorProfile, badRequest, notFound, forbi
 import { readJsonBody, isValidUsername } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
+import { requestBlockedMessage, validateIntakeAnswers, type IntakeAnswer } from "@/lib/mentorAvailability";
+import { AVAILABILITY_SELECT, availabilityOf, countActiveStudents, writeIntakeAnswers } from "@/lib/mentorManageServer";
 import {
   MENTORSHIP_WITH_USERS_INCLUDE,
   DEFAULT_PRIVACY,
@@ -32,7 +34,9 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/mentorships
-//   { mentorId, message? }         → شاگرد به یک منتورِ قابل‌کشف درخواست می‌ده
+//   { mentorId, message?, intakeAnswers? } → شاگرد به یک منتورِ قابل‌کشف درخواست می‌ده
+//     (پذیرشِ خاموش، ظرفیتِ پر، یا عدمِ حضورِ منتور با توقفِ درخواست → ۴۰۹؛
+//      اگه منتور سؤالِ پذیرش تعریف کرده، جوابِ همه‌شون به همون ترتیب لازمه)
 //   { studentUsername, message? }  → منتورِ فعال (غیرمعلق) یک کاربر رو دعوت می‌کنه
 const REREQUEST_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -55,16 +59,22 @@ export async function POST(req: Request) {
   let studentId: string;
   let initiatedBy: "STUDENT" | "MENTOR";
   let mentorCategories: string[] = [];
+  let intakeAnswers: IntakeAnswer[] | null = null;
 
   if (b.mentorId !== undefined) {
     if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("منتور نامعتبره");
     if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
     const profile = await prisma.mentorProfile.findFirst({
       where: { userId: b.mentorId, published: true, suspendedAt: null, user: { isBlocked: false, deletedAt: null } },
-      select: { acceptingStudents: true, categories: true },
+      select: { ...AVAILABILITY_SELECT, categories: true, intakeQuestions: true },
     });
     if (!profile) return notFound();
-    if (!profile.acceptingStudents) return conflict("این منتور فعلا شاگرد جدید نمی‌پذیره");
+    // پذیرش/ظرفیت/عدمِ حضور — دعوتِ خودِ منتور (شاخه‌ی پایین) از این‌ها معافه
+    const availability = availabilityOf(profile, await countActiveStudents(b.mentorId));
+    if (availability.state !== "OPEN") return conflict(requestBlockedMessage(availability.state, availability.awayUntil));
+    const ia = validateIntakeAnswers(profile.intakeQuestions, b.intakeAnswers);
+    if (!ia.ok) return badRequest(ia.error);
+    intakeAnswers = ia.data;
     mentorId = b.mentorId;
     studentId = me;
     initiatedBy = "STUDENT";
@@ -118,16 +128,27 @@ export async function POST(req: Request) {
     // REJECTED/ENDED → همون ردیف دوباره PENDING می‌شه و حریم خصوصی به
     // پیش‌فرض (هیچ برنامه‌ای مشترک نیست) برمی‌گرده؛ اجازه‌ی رابطه‌ی قبلی
     // نباید بی‌صدا به رابطه‌ی جدید منتقل بشه.
-    const res = await prisma.mentorship.updateMany({
-      where: { id: existing.id, status: existing.status },
-      data: { status: "PENDING", initiatedBy, message, categories, blockedById: null, endedAt: null, ...DEFAULT_PRIVACY },
+    // وضعیتِ مدیریتیِ رابطه‌ی قبلی (توقف، دلیلِ پایان، جواب‌های پذیرش) هم پاک می‌شه
+    const count = await prisma.$transaction(async (tx) => {
+      const res = await tx.mentorship.updateMany({
+        where: { id: existing.id, status: existing.status },
+        data: {
+          status: "PENDING", initiatedBy, message, categories, blockedById: null, endedAt: null, ...DEFAULT_PRIVACY,
+          pausedAt: null, pauseReason: null, endReason: null, endedBy: null,
+        },
+      });
+      if (res.count > 0) await writeIntakeAnswers(tx, existing.id, intakeAnswers);
+      return res.count;
     });
-    if (res.count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
+    if (count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
     id = existing.id;
   } else {
     try {
-      const created = await prisma.mentorship.create({ data: { mentorId, studentId, initiatedBy, message, categories }, select: { id: true } });
-      id = created.id;
+      id = await prisma.$transaction(async (tx) => {
+        const created = await tx.mentorship.create({ data: { mentorId, studentId, initiatedBy, message, categories }, select: { id: true } });
+        await writeIntakeAnswers(tx, created.id, intakeAnswers);
+        return created.id;
+      });
     } catch (e) {
       if (isUniqueViolation(e)) return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");
       throw e;

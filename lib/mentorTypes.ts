@@ -32,6 +32,8 @@ export type MentorCard = {
   avatarUrl: string | null;
   headline: string | null;
   categories: string[];
+  /** نقشِ منتور در حوزه‌ی روتین (مثلا «استاد ریاضی») — null وقتی ROUTINE جزوِ categories نیست یا پر نشده */
+  routineRole: string | null;
   identityVerified: boolean;
   certifications: Certification[];
   ratingAvg: number;
@@ -39,6 +41,11 @@ export type MentorCard = {
   activeStudents: number;
   totalStudents: number;
   acceptingStudents: boolean;
+  /** OPEN | CLOSED (پذیرش خاموش) | FULL (ظرفیت تکمیل) | AWAY (در دسترس نیست و درخواست متوقف) */
+  availability: AvailabilityState;
+  /** YYYY-MM-DD روزِ بازگشت؛ فقط وقتی منتور در حالِ عدمِ حضور است */
+  awayUntil: string | null;
+  responseTimeHours: number | null;
 };
 
 export type MentorDetail = MentorCard & {
@@ -47,6 +54,63 @@ export type MentorDetail = MentorCard & {
   completedPrograms: number;
   lastActiveAt: string | null;
   memberSince: string;
+  /** پیامِ عدمِ حضور — فقط وقتی awayUntil پر است */
+  awayMessage?: string | null;
+  /** سؤال‌هایی که شاگرد هنگامِ درخواست جواب می‌دهد؛ POST /api/mentorships با { intakeAnswers: string[] } به همین ترتیب */
+  intakeQuestions?: string[];
+};
+
+// ───────────── دسترس‌پذیری و مدیریتِ شاگرد (پنلِ منتور) ─────────────
+
+export type AvailabilityState = "OPEN" | "CLOSED" | "FULL" | "AWAY";
+export type IntakeAnswer = { question: string; answer: string };
+
+/** GET/PUT /api/mentor/settings */
+export type MentorSettings = {
+  acceptingStudents: boolean;
+  maxActiveStudents: number | null;
+  awayUntil: string | null;
+  awayMessage: string | null;
+  awayPausesRequests: boolean;
+  responseTimeHours: number | null;
+  welcomeMessage: string | null;
+  intakeQuestions: string[];
+};
+export type MentorSettingsResponse = {
+  settings: MentorSettings;
+  activeStudents: number;
+  availability: { state: AvailabilityState; away: boolean; full: boolean; awayUntil: string | null };
+};
+
+export type StudentLabel = { id: string; name: string };
+
+/** GET /api/mentor/students — یک ردیف به‌ازای هر شاگردِ فعال */
+export type StudentIndexRow = {
+  mentorshipId: string;
+  student: PublicUser;
+  startedAt: string | null;
+  categories: string[];
+  labelIds: string[];
+  /** نرخِ انجامِ ۷ روزِ اخیر (۰ تا ۱۰۰)؛ null وقتی ثبتی نیست */
+  adherence: number | null;
+  lastActivityAt: string | null;
+  activePrograms: number;
+  unread: number;
+  pausedAt: string | null;
+};
+export type StudentIndexResponse = { students: StudentIndexRow[]; labels: StudentLabel[]; capacity: number | null };
+
+export type StudentNote = { id: string; body: string; createdAt: string; updatedAt: string };
+
+/** GET /api/mentor/students/[studentId]/manage — داده‌ی مدیریتیِ خصوصیِ منتور برای یک شاگرد */
+export type StudentManageResponse = {
+  mentorshipId: string;
+  labels: StudentLabel[];
+  labelIds: string[];
+  notes: StudentNote[];
+  intakeAnswers: IntakeAnswer[];
+  pausedAt: string | null;
+  pauseReason: string | null;
 };
 
 export type Review = {
@@ -60,7 +124,8 @@ export type Review = {
 export type MyMentorship = { id: string; status: MentorshipStatus; initiatedBy: MentorshipInitiator };
 
 export type MentorsListResponse = { mentors: MentorCard[]; hasMore: boolean };
-export type MentorsPopularResponse = { mentors: MentorCard[] };
+/** GET /api/mentors/popular — mentors: «منتورهای محبوب» (شایستگی)؛ newcomers: «منتورهای تازه» (جایگاهِ جدا) */
+export type MentorsPopularResponse = { mentors: MentorCard[]; newcomers?: MentorCard[] };
 export type MentorProfileResponse = {
   mentor: MentorDetail;
   reviews: Review[];
@@ -87,6 +152,8 @@ export type MentorSelf = {
   bio: string | null;
   specialties: string[];
   categories: string[];
+  /** مقدارِ ذخیره‌شده؛ PUT /api/mentors/me با { routineRole: string | null } — سقف ۶۰ حرف، بدونِ ROUTINE پاک می‌شه */
+  routineRole: string | null;
   published: boolean;
   acceptingStudents: boolean;
   identityStatus: VerificationStatus;
@@ -97,6 +164,14 @@ export type MentorSelf = {
   ratingCount: number;
   credentials: MentorCredential[];
   documents: MentorDocumentMeta[];
+  // تنظیماتِ دسترس‌پذیری (همان MentorSettings)
+  maxActiveStudents?: number | null;
+  awayUntil?: string | null;
+  awayMessage?: string | null;
+  awayPausesRequests?: boolean;
+  responseTimeHours?: number | null;
+  welcomeMessage?: string | null;
+  intakeQuestions?: string[];
 };
 
 export type MentorshipRow = {
@@ -112,6 +187,18 @@ export type MentorshipRow = {
   activePrograms: number;
   blockedByMe: boolean;
   categories: string[];
+  /** جواب‌های شاگرد به سؤال‌های پذیرش */
+  intakeAnswers?: IntakeAnswer[];
+  /** توقفِ موقت از طرفِ منتور (فقط ACTIVE) */
+  pausedAt?: string | null;
+  pauseReason?: string | null;
+  /** فقط ENDED */
+  endReason?: string | null;
+  endedBy?: MentorshipInitiator | null;
+  /** منتور تا این روز در دسترس نیست */
+  mentorAway?: { until: string; message: string | null } | null;
+  /** پیامِ خوش‌آمدِ منتور — فقط برای شاگرد، دو هفته‌ی اولِ رابطه */
+  welcomeMessage?: string | null;
 };
 export type MentorshipsResponse = { mentorships: MentorshipRow[] };
 
@@ -136,7 +223,8 @@ export type MentorRoutineSlot = {
   done: Record<string, boolean> | null;
 };
 
-export type ProgramProgress = { completed: number; partial: number; missed: number; rate: number };
+/** hidden = شاگرد «نمایش پیشرفت» را برای این منتور بسته؛ اعداد صفرند و نباید «۰٪» نمایش داده شوند */
+export type ProgramProgress = { completed: number; partial: number; missed: number; rate: number; hidden?: boolean };
 
 export type ProgramRow = {
   id: string;
@@ -159,6 +247,8 @@ export type Program = ProgramRow & {
   mentorId?: string;
   studentId?: string;
   description: string | null;
+  /** یادداشتِ منتور روی برنامه (سقف ۱۰۰۰ حرف) — POST/PUT /api/mentor-programs با { note } */
+  note: string | null;
   changeRequestNote: string | null;
   rejectReason: string | null;
   respondedAt: string | null;
@@ -205,6 +295,9 @@ export type Log = {
   note: string | null;
   createdAt?: string;
   updatedAt?: string;
+  /** "AUTO" = از تیک‌های روتینِ شاگرد؛ "MANUAL" = ثبتِ دستیِ قدیمی */
+  source?: "AUTO" | "MANUAL";
+  doneOn?: string | null;
 };
 
 export type Feedback = {
@@ -223,10 +316,59 @@ export type ProgramDetailResponse = {
   items: Item[];
   logs: Log[];
   feedback: Feedback[];
+  /** پیشرفتِ خودکار برای بازه‌ی from..to (پیش‌فرض هفته‌ی جاری)؛ null = برنامه هنوز فعال نشده */
+  progressView?: ProgressView | null;
 };
 
-export type ChatMessage = { id: string; body: string; createdAt: string; readAt: string | null; mine: boolean };
-export type MessagesResponse = { messages: ChatMessage[]; hasMore: boolean; canSend: boolean };
+// ───────────── پیشرفتِ خودکار (lib/mentorProgress.ts) ─────────────
+// شاگرد وضعیت را دستی ثبت نمی‌کند؛ هر آیتم/روز از تیک‌های روتینِ خودش خوانده می‌شود.
+
+/** untracked = برنامه‌ی قدیمیِ پیش از پیشرفتِ خودکار که برای آن روز ثبتی ندارد */
+export type ProgressState = "done" | "partial" | "missed" | "upcoming" | "untracked";
+export type ProgressCell = {
+  itemId: string;
+  state: ProgressState;
+  logId: string | null;
+  /** روزی که واقعا تیک خورد، وقتی شاگرد آیتم را در همان هفته جابه‌جا کرده بود */
+  doneOn: string | null;
+  setsDone: number | null;
+  note: string | null;
+};
+export type ProgressDay = { date: string; cells: ProgressCell[]; /** یادداشتِ شاگرد برای منتور روی این روز */ note: string | null };
+export type ProgressView = {
+  /** شاگرد «نمایش پیشرفت» را بسته؛ cells خالی‌اند ولی یادداشت‌های روز می‌مانند */
+  hidden: boolean;
+  from: string;
+  to: string | null;
+  /** «امروز»ِ شاگرد (یا روزِ بسته‌شدنِ برنامه) */
+  today: string;
+  days: ProgressDay[];
+};
+/** POST /api/mentor-programs/:id/logs { date, note } → یادداشتِ روز (note خالی = حذف). ثبتِ status رد می‌شود (۴۱۰). */
+export type DayNoteResponse = { note: { date: string; body: string } | null };
+
+// گفت‌وگو رمزگذاریِ سرتاسری دارد (docs/mentor-e2ee.md): سرور فقط enc برمی‌گرداند؛
+// legacyBody فقط برای پیام‌های پیش از رمزگذاری (تا بازرمزگذاری یا ۳۰ روز).
+export type ChatMessage = {
+  id: string;
+  senderId: string;
+  mine: boolean;
+  createdAt: string;
+  readAt: string | null;
+  /** با «ارسال گروهی» منتور ساخته شده */
+  broadcast?: boolean;
+  legacyBody: string | null;
+  enc: import("@/lib/e2ee/core").EncryptedMessage | null;
+};
+export type MessagesResponse = {
+  messages: ChatMessage[];
+  hasMore: boolean;
+  canSend: boolean;
+  mentorId: string;
+  studentId: string;
+  /** پیامِ خوش‌آمد از تنظیماتِ منتور (رمزگذاریِ سرتاسری ندارد و جدا نمایش داده می‌شود) */
+  welcome: { body: string; at: string } | null;
+};
 export type UnreadResponse = { total: number; byMentorship: Record<string, number> };
 
 export type InAppNotification = {
@@ -245,7 +387,7 @@ export type MentorDashboard = {
   stats: { students: number; activeStudents: number; pendingRequests: number; pendingPrograms: number; activePrograms: number };
   requests: MentorshipRow[];
   pendingPrograms: ProgramRow[];
-  recentActivity: { type: "log" | "program" | "message"; at: string; studentName: string; text: string; url: string }[];
+  recentActivity: { type: "log" | "program" | "message"; at: string; studentName: string; text: string; url: string; day?: string }[];
   completion: { studentId: string; name: string; avatarUrl: string | null; completed: number; partial: number; missed: number; rate: number }[];
   attention: { studentId: string; name: string; avatarUrl: string | null; reason: string }[];
 };

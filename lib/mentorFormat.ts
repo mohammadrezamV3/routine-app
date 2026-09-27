@@ -44,7 +44,7 @@ export function fmtRelative(iso: string | null | undefined): string {
   if (isNaN(t)) return "نامشخص";
   const diff = Math.max(0, Date.now() - t);
   const min = Math.floor(diff / 60000);
-  if (min < 5) return "همین حالا";
+  if (min < 5) return "چند دقیقه پیش";
   if (min < 60) return `${faNum(min)} دقیقه پیش`;
   const h = Math.floor(min / 60);
   if (h < 24) return `${faNum(h)} ساعت پیش`;
@@ -61,14 +61,14 @@ export function fmtWeekday(dayIso: string): string {
 }
 
 /** خطای fetch → پیامِ دوستانه (۴۰۳/۴۰۴ هیچ‌وقت صفحه‌ی خالی نمی‌دهند) */
-export async function readApiError(res: Response, fallback = "انجام نشد — دوباره تلاش کن"): Promise<string> {
+export async function readApiError(res: Response, fallback = "انجام نشد؛ دوباره تلاش کن"): Promise<string> {
   const body = await res.json().catch(() => null);
   if (body && typeof body.error === "string" && body.error) return body.error;
   if (res.status === 404) return "پیدا نشد یا به آن دسترسی نداری";
   if (res.status === 403) return "اجازه‌ی این کار را نداری";
-  if (res.status === 409) return "وضعیت تغییر کرده — صفحه را تازه کن";
-  if (res.status === 429) return "تعداد درخواست‌ها زیاد است؛ کمی بعد دوباره امتحان کن";
+  if (res.status === 409) return "وضعیت تغییر کرده است؛ صفحه را تازه کن";
+  if (res.status === 429) return "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کن";
   return fallback;
 }
 
-export const NETWORK_ERROR = "ارتباط با سرور برقرار نشد";
+export const NETWORK_ERROR = "ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی کن";

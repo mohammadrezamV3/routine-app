@@ -5124,7 +5124,7 @@ a.admin-btn{ text-decoration:none; }
 .admin-ltr{ direction:ltr; text-align:right; }
 .admin-muted{ color:var(--adm-muted); }
 .admin-link{ color:var(--adm-accent); text-decoration:none; }
-.admin-title-icon{ vertical-align:-2px; margin-inline-end:6px; }
+.admin-title-icon{ display:inline-block; vertical-align:-2px; margin-inline-end:6px; }
 .admin-badge-row{ display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .admin-badge svg{ vertical-align:-1px; }
 

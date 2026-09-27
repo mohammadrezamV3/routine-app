@@ -8,6 +8,7 @@ import { canTransition, isProgramAction, visibleToStudent, PROGRAM_TRANSITIONS, 
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { isoDate, loadProgramWithUsers, serializeProgram, todayIsoForUser } from "@/lib/mentorServer";
 import { activateWithMirror, removeProgramMirrors } from "@/lib/mentorProgramMirror";
+import { fmtDate } from "@/lib/mentorFormat";
 
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 1000;
@@ -25,7 +26,7 @@ export async function POST(req: Request, { params }: Ctx) {
 
   const p = await prisma.mentorProgram.findFirst({
     where: { id: params.id, OR: [{ mentorId: me }, { studentId: me }] },
-    include: { mentorship: { select: { status: true } }, mentor: { select: { name: true, lastName: true, username: true } }, student: { select: { name: true, lastName: true, username: true } } },
+    include: { mentorship: { select: { status: true, pausedAt: true } }, mentor: { select: { name: true, lastName: true, username: true } }, student: { select: { name: true, lastName: true, username: true } } },
   });
   if (!p) return notFound();
   const actor: ProgramActor = p.mentorId === me ? "MENTOR" : "STUDENT";
@@ -46,6 +47,10 @@ export async function POST(req: Request, { params }: Ctx) {
   // ارسال/پذیرش/فعال‌سازی فقط روی رابطه‌ی هنوز فعال
   if ((action === "send" || action === "accept" || action === "activate") && p.mentorship.status !== "ACTIVE") {
     return conflict("رابطه با این منتور/شاگرد دیگه فعال نیست");
+  }
+  // همکاریِ متوقف‌شده: برنامه‌ی تازه نه ارسال می‌شود نه فعال
+  if ((action === "send" || action === "activate") && p.mentorship.pausedAt) {
+    return conflict("همکاری با این شاگرد متوقف است؛ اول آن را ادامه بده");
   }
   if ((action === "accept" || action === "activate") && (await isMentorSuspended(p.mentorId))) {
     return forbidden("فعالیتِ این منتور موقتا متوقف شده");
@@ -123,7 +128,16 @@ export async function POST(req: Request, { params }: Ctx) {
       url,
     });
   } else if (action === "accept") {
-    await notifyUser(p.mentorId, { type: "program.accepted", title: "برنامه پذیرفته شد", body: `${studentName} برنامه‌ی «${p.title}» رو قبول کرد.`, url });
+    // شروعِ آینده = زمان‌بندی‌شده؛ در همان روز خودکار فعال می‌شود (lib/mentorSchedule.ts)
+    const scheduledFor = p.startDate && isoDate(p.startDate) > (await todayIsoForUser(p.studentId)) ? fmtDate(isoDate(p.startDate)) : null;
+    await notifyUser(p.mentorId, {
+      type: "program.accepted",
+      title: "برنامه پذیرفته شد",
+      body: scheduledFor
+        ? `${studentName} برنامه‌ی «${p.title}» را پذیرفت؛ ${scheduledFor} خودکار شروع می‌شود.`
+        : `${studentName} برنامه‌ی «${p.title}» رو قبول کرد.`,
+      url,
+    });
   } else if (action === "reject") {
     await notifyUser(p.mentorId, {
       type: "program.rejected",

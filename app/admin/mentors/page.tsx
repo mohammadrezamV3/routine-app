@@ -3,13 +3,13 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Eye, MessageSquareText, Flag, Search } from "lucide-react";
+import { BadgeCheck, CircleSlash, Eye, Hourglass, RefreshCw, Search, XCircle } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { AdminPagination } from "@/components/admin/Pagination";
 import { AdminTabBar } from "@/components/admin/TabBar";
 import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
 import { formatDateShort, formatNumber } from "@/lib/adminFormat";
-import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, isMentorCategory } from "@/lib/mentorCategories";
+import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
 
 type VStatus = keyof typeof VERIFICATION_LABELS;
 type MentorRow = {
@@ -24,11 +24,28 @@ type Data = { mentors: MentorRow[]; total: number; pageSize: number; counts: { p
 type Tab = "pending" | "all" | "suspended";
 const TABS: Tab[] = ["pending", "all", "suspended"];
 const TAB_LABELS: Record<Tab, string> = { pending: "صف احراز هویت", all: "همه منتورها", suspended: "تعلیق‌شده" };
+const EMPTY_LABELS: Record<Tab, string> = {
+  pending: "مدرکی در صف بررسی نیست",
+  all: "منتوری پیدا نشد",
+  suspended: "منتور تعلیق‌شده‌ای نیست",
+};
 
-const V_BADGE: Record<VStatus, "green" | "red" | "amber" | "gray"> = { VERIFIED: "green", REJECTED: "red", PENDING: "amber", NOT_PROVIDED: "gray" };
+const V_TONE: Record<VStatus, "green" | "red" | "amber" | "gray"> = { VERIFIED: "green", REJECTED: "red", PENDING: "amber", NOT_PROVIDED: "gray" };
+const V_ICON: Record<VStatus, typeof Hourglass> = { VERIFIED: BadgeCheck, REJECTED: XCircle, PENDING: Hourglass, NOT_PROVIDED: CircleSlash };
 
 function categoryLabel(c: string) {
   return isMentorCategory(c) ? MENTOR_CATEGORY_META[c].label : c;
+}
+
+// چیپِ فشرده‌ی وضعیتِ احراز: برچسبِ کوتاه روی چیپ، برچسبِ کامل در title
+function VBadge({ status, children }: { status: VStatus; children?: React.ReactNode }) {
+  const Icon = V_ICON[status];
+  return (
+    <span className={`admin-badge ${V_TONE[status]}`} title={VERIFICATION_LABELS[status]}>
+      <Icon size={13} strokeWidth={1.75} aria-hidden />
+      {children ?? VERIFICATION_SHORT[status]}
+    </span>
+  );
 }
 
 function MentorsInner() {
@@ -107,13 +124,7 @@ function MentorsInner() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">منتورها</div>
-          <div className="admin-section-hint">
-            {data ? `${formatNumber(data.total)} منتور` : "…"} — بررسی مدارک هویت و تخصص، تعلیق منتوری
-          </div>
-        </div>
-        <div className="admin-head-actions">
-          <Link href="/admin/mentors/reviews" className="admin-btn"><MessageSquareText size={14} /> نظرات</Link>
-          <Link href="/admin/mentors/reports" className="admin-btn"><Flag size={14} /> گزارش‌ها</Link>
+          {data && <div className="admin-section-hint" style={{ margin: 0 }}>{formatNumber(data.counts.all)} منتور</div>}
         </div>
       </div>
 
@@ -121,28 +132,33 @@ function MentorsInner() {
 
       <div className="admin-toolbar">
         <div className="admin-search">
-          <Search size={15} />
+          <Search size={15} strokeWidth={1.75} aria-hidden />
           <input
-            className="admin-input" placeholder="جست‌وجو با نام، یوزرنیم، عنوان یا آیدی…" value={search}
+            className="admin-input" placeholder="نام، یوزرنیم، عنوان یا آیدی" value={search}
+            aria-label="جست‌وجوی منتور"
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
       </div>
 
       {!data ? (
-        <div className={loading ? "admin-empty is-loading" : "admin-empty"}>
-          {loading ? "در حال بارگذاری…" : failed ? "خطا در دریافت اطلاعات" : null}
-          {!loading && failed && <button type="button" className="admin-btn" onClick={load}>تلاش دوباره</button>}
-        </div>
+        loading ? (
+          <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />
+        ) : failed ? (
+          <div className="admin-empty">
+            <span>فهرست منتورها دریافت نشد</span>
+            <button type="button" className="admin-btn" onClick={load}><RefreshCw size={14} strokeWidth={1.75} aria-hidden /> تلاش دوباره</button>
+          </div>
+        ) : null
       ) : rows.length === 0 ? (
-        <EmptyState message={tab === "pending" ? "درخواستی در صف بررسی نیست" : tab === "suspended" ? "منتور تعلیق‌شده‌ای نیست" : "منتوری پیدا نشد"} />
+        <EmptyState message={q ? "منتوری با این جست‌وجو پیدا نشد" : EMPTY_LABELS[tab]} />
       ) : (
         <>
           <div className={`admin-table-wrap${loading ? " is-stale" : ""}`} aria-busy={loading}>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>منتور</th><th>دسته‌ها</th><th>هویت</th><th>مدارک</th><th>وضعیت</th><th>امتیاز</th><th>شاگرد فعال</th><th>ثبت</th><th />
+                  <th>منتور</th><th>دسته‌ها</th><th>هویت</th><th>مدارک تخصصی</th><th>وضعیت</th><th>امتیاز</th><th>شاگرد فعال</th><th>ثبت</th><th />
                 </tr>
               </thead>
               <tbody>
@@ -153,19 +169,17 @@ function MentorsInner() {
                         <UserAvatar user={m.user} size={32} />
                         <span>
                           <span className="admin-user-cell-name">{displayName(m.user)}</span>
-                          {m.user.username && <span className="admin-user-cell-sub">@{m.user.username}</span>}
+                          {m.user.username && <span className="admin-user-cell-sub admin-ltr">@{m.user.username}</span>}
                         </span>
                       </Link>
                     </td>
                     <td>{m.categories.length ? m.categories.map(categoryLabel).join("، ") : <span className="admin-muted">—</span>}</td>
-                    <td><span className={`admin-badge ${V_BADGE[m.identityStatus]}`}>{VERIFICATION_LABELS[m.identityStatus]}</span></td>
+                    <td><VBadge status={m.identityStatus} /></td>
                     <td>
                       {m.credentials.length === 0 ? <span className="admin-muted">—</span> : (
                         <span className="admin-badge-row">
                           {m.credentials.map((c) => (
-                            <span key={c.category} className={`admin-badge ${V_BADGE[c.status]}`} title={VERIFICATION_LABELS[c.status]}>
-                              {categoryLabel(c.category)}
-                            </span>
+                            <VBadge key={c.category} status={c.status}>{categoryLabel(c.category)}</VBadge>
                           ))}
                         </span>
                       )}
@@ -174,16 +188,22 @@ function MentorsInner() {
                       <span className="admin-badge-row">
                         {m.suspendedAt ? <span className="admin-badge red">تعلیق</span>
                           : m.published ? <span className="admin-badge green">منتشرشده</span>
-                          : <span className="admin-badge gray">پیش‌نویس</span>}
+                          : <span className="admin-badge gray">منتشرنشده</span>}
                         {m.user.isBlocked && <span className="admin-badge red">حساب مسدود</span>}
-                        {m.pendingCount > 0 && <span className="admin-badge amber">{formatNumber(m.pendingCount)} در انتظار</span>}
+                        {m.pendingCount > 0 && (
+                          <span className="admin-badge amber" title={`${formatNumber(m.pendingCount)} مورد ${VERIFICATION_LABELS.PENDING}`}>
+                            <Hourglass size={13} strokeWidth={1.75} aria-hidden />{formatNumber(m.pendingCount)}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="admin-ltr">{m.ratingCount ? `${m.ratingAvg.toFixed(1)} (${formatNumber(m.ratingCount)})` : "—"}</td>
                     <td className="admin-ltr">{formatNumber(m.students)}</td>
                     <td className="admin-ltr">{formatDateShort(m.createdAt)}</td>
                     <td>
-                      <Link href={`/admin/mentors/${m.profileId}`} className="admin-icon-btn" aria-label="جزئیات"><Eye size={15} /></Link>
+                      <Link href={`/admin/mentors/${m.profileId}`} className="admin-icon-btn" aria-label={`جزئیات ${displayName(m.user)}`}>
+                        <Eye size={15} strokeWidth={1.75} aria-hidden />
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -199,7 +219,7 @@ function MentorsInner() {
 
 export default function AdminMentorsPage() {
   return (
-    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />}>
       <MentorsInner />
     </Suspense>
   );

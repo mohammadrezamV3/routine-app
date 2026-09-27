@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { MentorReportStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { openReportedText } from "@/lib/e2ee/reportServer";
 
 // GET /api/admin/mentors/reports?status=OPEN|RESOLVED|DISMISSED&page=
-// خلاصه‌ی محتوای هدف سمت سرور ساخته می‌شه (متن نظر، بخشی از پیام، عنوان
-// برنامه، اسم عمومی کاربر) — هرگز ایمیل/شماره.
+// خلاصه‌ی محتوای هدف سمت سرور ساخته می‌شه (متن نظر، عنوان برنامه، اسم عمومی
+// کاربر) — هرگز ایمیل/شماره. پیام‌های گفت‌وگو رمزگذاریِ سرتاسری دارند: ادمین فقط
+// متنِ *همان پیامِ گزارش‌شده* را می‌بیند که هنگامِ گزارش با تعهدِ فرانکینگ تأیید
+// و در خودِ گزارش ذخیره شده (reportedText) — هرگز از جدولِ پیام خوانده نمی‌شود.
 
 const STATUSES: MentorReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
 const PAGE_SIZE = 25;
@@ -16,7 +19,7 @@ type PublicUser = { id: string; name: string | null; lastName: string | null; us
 type Target =
   | { kind: "USER"; exists: boolean; user: PublicUser | null }
   | { kind: "REVIEW"; exists: boolean; rating: number | null; body: string | null; status: string | null; author: PublicUser | null; mentor: PublicUser | null }
-  | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null }
+  | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null; verified: boolean }
   | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null };
 
 function cut(s: string | null | undefined, n = SNIPPET): string | null {
@@ -45,6 +48,7 @@ export async function GET(req: NextRequest) {
       take: PAGE_SIZE,
       select: {
         id: true, targetType: true, targetId: true, targetUserId: true, reason: true, details: true,
+        reporterId: true, reportedText: true, reportedMessageAt: true, reportVerified: true,
         status: true, resolution: true, resolvedById: true, resolvedAt: true, createdAt: true,
         reporter: { select: PUBLIC_USER },
       },
@@ -73,10 +77,11 @@ export async function GET(req: NextRequest) {
           select: { id: true, rating: true, body: true, status: true, student: { select: PUBLIC_USER }, mentor: { select: PUBLIC_USER } },
         })
       : [],
+    // فقط وجود و فرستنده — هیچ ستونِ محتوایی (رمزشده یا قدیمی) انتخاب نمی‌شود
     messageIds.length
       ? prisma.mentorMessage.findMany({
           where: { id: { in: messageIds } },
-          select: { id: true, body: true, createdAt: true, sender: { select: PUBLIC_USER } },
+          select: { id: true, sender: { select: PUBLIC_USER } },
         })
       : [],
     programIds.length
@@ -98,7 +103,7 @@ export async function GET(req: NextRequest) {
   const pub = (u: (PublicUser & { mentorProfile?: unknown }) | null | undefined): PublicUser | null =>
     u ? { id: u.id, name: u.name, lastName: u.lastName, username: u.username, avatarUrl: u.avatarUrl } : null;
 
-  function target(type: string, id: string): Target {
+  function target(type: string, id: string, r?: (typeof rows)[number]): Target {
     if (type === "USER") {
       const u = userBy.get(id);
       return { kind: "USER", exists: !!u, user: pub(u) };
@@ -109,7 +114,12 @@ export async function GET(req: NextRequest) {
     }
     if (type === "MESSAGE") {
       const m = messageBy.get(id);
-      return { kind: "MESSAGE", exists: !!m, body: cut(m?.body), createdAt: m?.createdAt.toISOString() ?? null, sender: pub(m?.sender) };
+      const text = r ? openReportedText(r.reportedText, id, r.reporterId) : null;
+      const sender = m?.sender ?? (r?.targetUserId ? userBy.get(r.targetUserId) : undefined);
+      return {
+        kind: "MESSAGE", exists: !!m, body: cut(text, 2000), createdAt: r?.reportedMessageAt?.toISOString() ?? null,
+        sender: pub(sender), verified: !!r?.reportVerified,
+      };
     }
     const p = programBy.get(id);
     return { kind: "PROGRAM", exists: !!p, title: cut(p?.title, 120), type: p?.type ?? null, status: p?.status ?? null, mentor: pub(p?.mentor) };
@@ -130,7 +140,7 @@ export async function GET(req: NextRequest) {
         createdAt: r.createdAt.toISOString(),
         reporter: r.reporter,
         targetUser: tu ? { ...pub(tu)!, mentorProfileId: tu.mentorProfile?.id ?? null, mentorSuspended: !!tu.mentorProfile?.suspendedAt } : null,
-        target: target(r.targetType, r.targetId),
+        target: target(r.targetType, r.targetId, r),
       };
     }),
     total,

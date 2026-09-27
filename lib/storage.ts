@@ -476,6 +476,8 @@ export type CustomOccurrence = {
   roadmapId?: string;
   /** آینه‌ی یک برنامه‌ی ROUTINEِ منتور (lib/mentorProgramMirror.ts) — فقط سرور می‌سازه/حذفش می‌کنه */
   mentorProgramId?: string;
+  /** آیتمِ همان برنامه‌ی منتور؛ ویرایش/جابه‌جایی باید نگهش دارد تا تیک به پیشرفتِ خودکارِ همان آیتم برسد */
+  mentorItemId?: string;
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {

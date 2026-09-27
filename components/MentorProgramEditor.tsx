@@ -1,34 +1,35 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDown, ArrowUp, CalendarRange, ClipboardList, Dumbbell, ListChecks, MessageSquareWarning, Plus, Send, Trash2, X,
+  ArrowDown, ArrowUp, CalendarCheck, Check, ClipboardList, Dumbbell, LayoutTemplate, MessageSquareText, Plus, Send, Trash2, X,
 } from "lucide-react";
-import { AccountBlock } from "./AccountUI";
-import { AuthField } from "./AuthField";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { NumberInput } from "./NumberInput";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { Spinner } from "./Spinner";
-import { MentorUserAvatar } from "./MentorUserAvatar";
-import { MentorDashNotice, fa, mentorApi } from "./MentorDashKit";
+import { MentorConfirmDialog } from "./MentorConfirmDialog";
+import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
+import { fa, mentorApi } from "./MentorDashKit";
+import { MI, MI_STROKE, MentorEmpty, MentorField, MentorNotice, MentorSection } from "./MentorUI";
 import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { FA_WEEKDAY, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
-import { publicUserName } from "@/lib/mentorTypes";
 import type { Item, ItemInput, Program, ProgramType, PublicUser } from "@/lib/mentorTypes";
 
-// همون سقف‌های lib/mentorValidate.ts — اعتبارسنجیِ کلاینت آینه‌ی سروره.
+// همان سقف‌های lib/mentorValidate.ts؛ اعتبارسنجی کلاینت آینه‌ی سرور است.
 const MAX_ITEMS = 100;
 const TITLE_MAX = 120;
 const DESC_MAX = 2000;
+const NOTE_MAX = 1000;
 const ITEM_TITLE_MAX = 120;
 const ITEM_DETAILS_MAX = 1000;
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const REPS_RE = /^\d{1,3}(-\d{1,3})?$/;
+
+const ic = (Icon: typeof Check, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 type Draft = {
   key: string;
@@ -81,32 +82,32 @@ function intIn(v: string, min: number, max: number): number | null | "bad" {
   return Number.isInteger(n) && n >= min && n <= max ? n : "bad";
 }
 
-/** اعتبارسنجیِ یک آیتم + ساختِ بدنه‌ی ItemInput — آینه‌ی validateItem سرور */
+/** اعتبارسنجی یک آیتم + ساخت بدنه‌ی ItemInput؛ آینه‌ی validateItem سرور */
 function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input: ItemInput | null } {
   const errors: ItemErrors = {};
   const title = d.title.trim();
-  if (!title) errors.title = "عنوان لازمه";
-  else if (title.length > ITEM_TITLE_MAX) errors.title = `حداکثر ${fa(ITEM_TITLE_MAX)} کاراکتر`;
-  if (d.details.trim().length > ITEM_DETAILS_MAX) errors.details = `حداکثر ${fa(ITEM_DETAILS_MAX)} کاراکتر`;
-  if (d.repeat === "WEEKLY" && d.days.length === 0) errors.days = "حداقل یک روز هفته رو انتخاب کن";
+  if (!title) errors.title = "عنوان لازم است";
+  else if (title.length > ITEM_TITLE_MAX) errors.title = `حداکثر ${fa(ITEM_TITLE_MAX)} نویسه`;
+  if (d.details.trim().length > ITEM_DETAILS_MAX) errors.details = `حداکثر ${fa(ITEM_DETAILS_MAX)} نویسه`;
+  if (d.repeat === "WEEKLY" && d.days.length === 0) errors.days = "حداقل یک روز هفته را انتخاب کن";
   const time = toEnDigits(d.startTime).trim();
-  if (time && !HHMM_RE.test(time)) errors.startTime = "ساعت باید به شکل ۰۸:۳۰ باشه";
+  if (time && !HHMM_RE.test(time)) errors.startTime = "ساعت باید به شکل 08:30 باشد";
   const dur = intIn(d.durationMin, 1, 1440);
-  if (dur === "bad") errors.durationMin = "بین ۱ تا ۱۴۴۰ دقیقه";
+  if (dur === "bad") errors.durationMin = "بین 1 تا 1440 دقیقه";
 
   let sets: number | null = null, reps: string | null = null, weight: number | null = null, rest: number | null = null;
   if (type === "WORKOUT") {
     const s = intIn(d.sets, 1, 100);
-    if (s === "bad") errors.sets = "بین ۱ تا ۱۰۰"; else sets = s;
+    if (s === "bad") errors.sets = "بین 1 تا 100"; else sets = s;
     const r = toEnDigits(d.reps).trim();
-    if (r && !REPS_RE.test(r)) errors.reps = "عدد یا بازه مثل 8-12"; else reps = r || null;
+    if (r && !REPS_RE.test(r)) errors.reps = "عدد یا بازه، مثل 8-12"; else reps = r || null;
     const w = toEnDigits(d.weightKg).trim();
     if (w) {
       const n = Number(w);
-      if (!Number.isFinite(n) || n < 0 || n > 1000) errors.weightKg = "بین ۰ تا ۱۰۰۰ کیلو"; else weight = Math.round(n * 10) / 10;
+      if (!Number.isFinite(n) || n < 0 || n > 1000) errors.weightKg = "بین 0 تا 1000 کیلوگرم"; else weight = Math.round(n * 10) / 10;
     }
     const rs = intIn(d.restSec, 0, 3600);
-    if (rs === "bad") errors.restSec = "بین ۰ تا ۳۶۰۰ ثانیه"; else rest = rs;
+    if (rs === "bad") errors.restSec = "بین 0 تا 3600 ثانیه"; else rest = rs;
   }
   if (Object.keys(errors).length) return { errors, input: null };
 
@@ -123,40 +124,83 @@ function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input
   return { errors: {}, input };
 }
 
+/** پیش‌پرکردنِ «برنامه‌ی جدید» از قالب یا کپیِ برنامه‌ی قبلی (تاریخ‌ها از پیش جابه‌جا شده) */
+export type ProgramPrefill = {
+  type: ProgramType;
+  title: string;
+  description: string | null;
+  note: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  items: Item[];
+  /** وقتی از قالب آمده؛ با ذخیره آمارِ استفاده‌ی قالب بالا می‌رود */
+  templateId?: string;
+};
+
 export type MentorProgramEditorProps =
-  | { mode: "new"; mentorshipId: string; student: PublicUser; allowedTypes: ProgramType[] }
-  | { mode: "edit"; program: Program; items: Item[]; student: PublicUser | null };
+  | { mode: "new"; mentorshipId: string; student: PublicUser; allowedTypes: ProgramType[]; initial?: ProgramPrefill | null }
+  | { mode: "edit"; program: Program; items: Item[]; student: PublicUser | null; initiallySaved?: boolean };
+
+type ProgramBody = {
+  type: ProgramType;
+  title: string;
+  description?: string;
+  note: string | null;
+  startDate?: string;
+  endDate?: string;
+  items: ItemInput[];
+};
 
 /**
- * ویرایشگرِ برنامه‌ی منتور (ساخت و ویرایشِ پیش‌نویس). «ذخیره پیش‌نویس» =
- * POST/PUT؛ «ارسال برای شاگرد» = اول ذخیره، بعد transition `send`.
+ * ویرایشگر برنامه‌ی منتور (ساخت و ویرایش پیش‌نویس). «ذخیره‌ی پیش‌نویس» =
+ * POST/PUT؛ «ارسال برنامه» = اول ذخیره، بعد transition `send`.
  */
 export function MentorProgramEditor(props: MentorProgramEditorProps) {
   const router = useRouter();
   const initialProgram = props.mode === "edit" ? props.program : null;
+  const prefill = props.mode === "new" ? props.initial ?? null : null;
+  const seed = initialProgram ?? prefill;
 
   const [programId, setProgramId] = useState<string | null>(initialProgram?.id ?? null);
-  // فقط نوع‌هایی که با حوزه‌ی این رابطه جور درمیان (روتین ↔ ROUTINE، بدنسازی ↔ WORKOUT)
+  // فقط نوع‌هایی که با حوزه‌ی این رابطه جورند (روتین ↔ ROUTINE، تمرینی ↔ FITNESS)
   const typeOptions = (props.mode === "new" ? props.allowedTypes : [initialProgram!.type]).map((v) => ({ value: v, label: v === "ROUTINE" ? "روتین" : "تمرینی" }));
-  const [type, setType] = useState<ProgramType>(initialProgram?.type ?? typeOptions[0]?.value ?? "ROUTINE");
-  const [title, setTitle] = useState(initialProgram?.title ?? "");
-  const [description, setDescription] = useState(initialProgram?.description ?? "");
-  const [startDate, setStartDate] = useState<JalaliDate | null>(isoToJalali(initialProgram?.startDate));
-  const [endDate, setEndDate] = useState<JalaliDate | null>(isoToJalali(initialProgram?.endDate));
+  const [type, setType] = useState<ProgramType>(
+    seed && typeOptions.some((o) => o.value === seed.type) ? seed.type : typeOptions[0]?.value ?? "ROUTINE",
+  );
+  const [title, setTitle] = useState(seed?.title ?? "");
+  const [description, setDescription] = useState(seed?.description ?? "");
+  const [note, setNote] = useState(seed?.note ?? "");
+  const [startDate, setStartDate] = useState<JalaliDate | null>(isoToJalali(seed?.startDate));
+  const [endDate, setEndDate] = useState<JalaliDate | null>(isoToJalali(seed?.endDate));
   const [picker, setPicker] = useState<"start" | "end" | null>(null);
-  const [items, setItems] = useState<Draft[]>(() => (props.mode === "edit" && props.items.length ? [...props.items].sort((a, b) => a.order - b.order).map(fromItem) : [emptyDraft()]));
+  const [items, setItems] = useState<Draft[]>(() => {
+    const src = props.mode === "edit" ? props.items : prefill?.items ?? [];
+    return src.length ? [...src].sort((a, b) => a.order - b.order).map(fromItem) : [emptyDraft()];
+  });
+  const [templateBody, setTemplateBody] = useState<ProgramBody | null>(null);
 
   const [itemErrors, setItemErrors] = useState<Record<string, ItemErrors>>({});
-  const [formErr, setFormErr] = useState<{ title?: string; description?: string; dates?: string; items?: string }>({});
+  const [formErr, setFormErr] = useState<{ title?: string; description?: string; note?: string; dates?: string; items?: string }>({});
   const [busy, setBusy] = useState<"save" | "send" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [saved, setSaved] = useState(props.mode === "edit" && !!props.initiallySaved);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const neverSent = !initialProgram?.sentAt;
   const student = props.student;
   const exerciseNames = useMemo(() => (type === "WORKOUT" ? Array.from(new Set(EXERCISE_CATALOG.map((e) => e.name))) : []), [type]);
+  const itemWord = type === "WORKOUT" ? "حرکت" : "آیتم";
+
+  // حالت «ذخیره شد» روی دکمه چند ثانیه می‌ماند
+  useEffect(() => {
+    if (!saved) return;
+    const t = setTimeout(() => setSaved(false), 2400);
+    return () => clearTimeout(t);
+  }, [saved]);
+
+  function dirty() { setSaved(false); }
 
   function patchItem(key: string, patch: Partial<Draft>) {
     setItems((xs) => xs.map((x) => (x.key === key ? { ...x, ...patch } : x)));
@@ -166,7 +210,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       for (const k of Object.keys(patch)) delete next[k as keyof ItemErrors];
       return { ...e, [key]: next };
     });
-    setSavedAt(null);
+    dirty();
   }
 
   function move(idx: number, dir: -1 | 1) {
@@ -177,63 +221,67 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       [copy[idx], copy[j]] = [copy[j], copy[idx]];
       return copy;
     });
+    dirty();
   }
 
   function addItem() {
-    if (items.length >= MAX_ITEMS) { setFormErr((f) => ({ ...f, items: `حداکثر ${fa(MAX_ITEMS)} آیتم` })); return; }
+    if (items.length >= MAX_ITEMS) { setFormErr((f) => ({ ...f, items: `حداکثر ${fa(MAX_ITEMS)} ${itemWord}` })); return; }
     setItems((xs) => [...xs, emptyDraft()]);
     setFormErr((f) => ({ ...f, items: undefined }));
+    dirty();
     requestAnimationFrame(() => {
       const el = listRef.current?.lastElementChild as HTMLElement | null;
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      el?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
+      el?.querySelector<HTMLInputElement>("input")?.focus();
     });
   }
 
-  /** اعتبارسنجیِ کل فرم؛ null یعنی خطا داره */
-  function buildBody(forSend: boolean) {
+  /** اعتبارسنجی کل فرم؛ null یعنی خطا دارد */
+  function buildBody(forSend: boolean): ProgramBody | null {
     const f: typeof formErr = {};
     const t = title.trim();
-    if (!t) f.title = "عنوان برنامه لازمه";
-    else if (t.length > TITLE_MAX) f.title = `حداکثر ${fa(TITLE_MAX)} کاراکتر`;
-    if (description.trim().length > DESC_MAX) f.description = `حداکثر ${fa(DESC_MAX)} کاراکتر`;
+    if (!t) f.title = "عنوان برنامه لازم است";
+    else if (t.length > TITLE_MAX) f.title = `حداکثر ${fa(TITLE_MAX)} نویسه`;
+    if (description.trim().length > DESC_MAX) f.description = `حداکثر ${fa(DESC_MAX)} نویسه`;
+    if (note.trim().length > NOTE_MAX) f.note = `حداکثر ${fa(NOTE_MAX)} نویسه`;
     const sIso = startDate ? jalaliToIso(...startDate) : null;
     const eIso = endDate ? jalaliToIso(...endDate) : null;
-    if ((startDate && !sIso) || (endDate && !eIso)) f.dates = "تاریخ نامعتبره";
-    else if (sIso && eIso && eIso < sIso) f.dates = "تاریخ پایان باید بعد از تاریخ شروع باشه";
-    if (items.length > MAX_ITEMS) f.items = `حداکثر ${fa(MAX_ITEMS)} آیتم`;
+    if ((startDate && !sIso) || (endDate && !eIso)) f.dates = "تاریخ معتبر نیست";
+    else if (sIso && eIso && eIso < sIso) f.dates = "تاریخ پایان باید بعد از تاریخ شروع باشد";
+    if (items.length > MAX_ITEMS) f.items = `حداکثر ${fa(MAX_ITEMS)} ${itemWord}`;
 
     const errs: Record<string, ItemErrors> = {};
     const inputs: ItemInput[] = [];
-    // آیتمِ کاملا خالی (عنوان/جزئیات نداره) در پیش‌نویس نادیده گرفته می‌شه
+    // آیتمِ کاملاً خالی در پیش‌نویس نادیده گرفته می‌شود
     const meaningful = items.filter((d) => d.title.trim() || d.details.trim() || d.days.length || d.startTime || d.sets || d.reps);
     for (const d of meaningful) {
       const r = validateDraft(d, type);
       if (r.input) inputs.push(r.input); else errs[d.key] = r.errors;
     }
-    if (forSend && meaningful.length === 0) f.items = "برای ارسال حداقل یک آیتم لازمه";
+    if (forSend && meaningful.length === 0) f.items = `برای ارسال، حداقل یک ${itemWord} اضافه کن`;
 
     setFormErr(f);
     setItemErrors(errs);
-    if (Object.keys(f).length || Object.keys(errs).length) {
-      setError("چند مورد نیاز به اصلاح داره — موارد قرمز رو بررسی کن");
+    const bad = Object.keys(errs).length;
+    if (Object.keys(f).length || bad) {
+      setError(bad ? `چند مورد نیاز به اصلاح دارد؛ ${fa(bad)} ${itemWord} خطا دارد` : "چند مورد نیاز به اصلاح دارد");
       return null;
     }
-    const body: { type: ProgramType; title: string; description?: string; startDate?: string; endDate?: string; items: ItemInput[] } = { type, title: t, items: inputs };
+    const body: ProgramBody = { type, title: t, note: note.trim() || null, items: inputs };
     if (description.trim()) body.description = description.trim();
     if (sIso) body.startDate = sIso;
     if (eIso) body.endDate = eIso;
     return body;
   }
 
-  async function persist(body: NonNullable<ReturnType<typeof buildBody>>): Promise<string | null> {
+  async function persist(body: ProgramBody): Promise<string | null> {
     if (programId) {
       const r = await mentorApi<{ program: Program }>(`/api/mentor-programs/${programId}`, { method: "PUT", body });
-      if (!r.ok) { setError(r.status === 409 ? "این برنامه دیگه پیش‌نویس نیست و قابل ویرایش نیست — صفحه رو تازه کن" : r.error); return null; }
+      if (!r.ok) { setError(r.status === 409 ? "این برنامه ارسال شده و دیگر ویرایش نمی‌شود" : r.error); return null; }
       return programId;
     }
     const mentorshipId = props.mode === "new" ? props.mentorshipId : initialProgram?.mentorshipId;
-    const r = await mentorApi<{ program: Program }>("/api/mentor-programs", { method: "POST", body: { mentorshipId, ...body } });
+    const templateId = prefill?.templateId;
+    const r = await mentorApi<{ program: Program }>("/api/mentor-programs", { method: "POST", body: { mentorshipId, ...body, ...(templateId ? { templateId } : {}) } });
     if (!r.ok) { setError(r.error); return null; }
     setProgramId(r.data.program.id);
     return r.data.program.id;
@@ -248,10 +296,11 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
     const id = await persist(body);
     setBusy(null);
     if (!id) return;
-    setSavedAt(Date.now());
-    if (props.mode === "new") router.replace(`/mentor/programs/${id}/edit?saved=1`);
+    if (props.mode === "new") { router.replace(`/mentor/programs/${id}/edit?saved=1`); return; }
+    setSaved(true);
   }
 
+  // عمداً فرم (onSubmit) نیست: Enter در یک فیلد نباید برنامه را برای شاگرد بفرستد
   async function send() {
     if (busy) return;
     setError(null);
@@ -263,169 +312,195 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
     const r = await mentorApi<{ program: Program }>(`/api/mentor-programs/${id}/transition`, { method: "POST", body: { action: "send" } });
     if (!r.ok) {
       setBusy(null);
-      setSavedAt(Date.now());
-      setError(`پیش‌نویس ذخیره شد ولی ارسال نشد: ${r.error}`);
+      setError(`پیش‌نویس ذخیره شد اما ارسال نشد؛ ${r.error}`);
       if (props.mode === "new") window.history.replaceState(null, "", `/mentor/programs/${id}/edit`);
       return;
     }
     router.push(`/mentor-programs/${id}`);
   }
 
+  /** «ذخیره به‌عنوان قالب» از محتوای فعلیِ فرم، بدونِ ذخیره‌ی خودِ برنامه */
+  function saveAsTemplate() {
+    if (busy) return;
+    setError(null);
+    const body = buildBody(true);
+    if (body) setTemplateBody(body);
+  }
+
   async function remove() {
     if (busy || !programId) return;
-    setError(null);
+    setDeleteError(null);
     setBusy("delete");
     const r = await mentorApi<unknown>(`/api/mentor-programs/${programId}`, { method: "DELETE" });
     setBusy(null);
+    if (!r.ok) { setDeleteError(r.error); return; }
     setConfirmDelete(false);
-    if (!r.ok) { setError(r.error); return; }
     router.replace(student ? `/mentor/students/${student.id}` : "/mentor");
   }
 
-  const totalItemErrors = Object.values(itemErrors).filter((e) => Object.keys(e).length).length;
-
   return (
     <div>
-      {student && (
-        <div className="mb-4 flex items-center gap-3">
-          <MentorUserAvatar avatarUrl={student.avatarUrl} name={publicUserName(student)} size={36} />
-          <div className="min-w-0">
-            <div className="text-[11px] text-dash-muted">برنامه برای</div>
-            <div className="truncate text-[13.5px] font-bold text-dash-text">{publicUserName(student)}</div>
-          </div>
-        </div>
-      )}
-
       {initialProgram?.changeRequestNote && (
-        <MentorDashNotice tone="warn" icon={<MessageSquareWarning size={16} />} title="درخواست تغییر از طرف شاگرد">
-          <span className="whitespace-pre-line text-dash-text">{initialProgram.changeRequestNote}</span>
-        </MentorDashNotice>
-      )}
-      {initialProgram?.sentAt && (
-        <p className="mb-3 mt-0 text-[11.5px] text-dash-muted">این برنامه قبلا ارسال شده؛ با ارسال دوباره، نسخه‌ی {fa(initialProgram.version + 1)} برای شاگرد فرستاده می‌شه.</p>
+        <MentorNotice tone="warn" icon={ic(MessageSquareText, MI.row)} title="درخواست تغییر از شاگرد">
+          {initialProgram.changeRequestNote}
+        </MentorNotice>
       )}
 
-      {/* ── مشخصات ── */}
-      <AccountBlock title="مشخصات برنامه" icon={<ClipboardList size={15} />} index={0}>
-        <div className="mb-1 mt-2 text-[12px] font-bold text-dash-text">نوع برنامه</div>
-        {typeOptions.length > 1 ? (
-          <SegmentedTabs<ProgramType>
-            active={type}
-            onChange={(v) => { setType(v); setItemErrors({}); setSavedAt(null); }}
-            options={typeOptions}
-          />
-        ) : (
-          <div className="text-[13px] font-bold text-dash-text">{typeOptions[0]?.label}</div>
-        )}
-        <p className="mb-0 mt-2 text-[11px] leading-6 text-dash-muted">
-          {type === "ROUTINE"
-            ? "آیتم‌ها بعد از فعال‌شدن، با برچسبِ عنوانِ برنامه به روتینِ شاگرد اضافه می‌شن."
-            : "برای هر حرکت ست، تکرار، وزنه و استراحت تعیین کن؛ شاگرد هر روز انجامش رو ثبت می‌کنه."}
-        </p>
-
-        <div className="acc-field-stack">
-          <AuthField id="pe-title" label="عنوان" error={formErr.title}>
-            <input
-              id="pe-title" type="text" className="wsearch-newform-name" maxLength={TITLE_MAX} value={title}
-              placeholder={type === "WORKOUT" ? "مثلا: برنامه‌ی حجم ۸ هفته‌ای" : "مثلا: روتین صبحگاهی"}
-              onChange={(e) => { setTitle(e.target.value); setFormErr((f) => ({ ...f, title: undefined })); setSavedAt(null); }}
-            />
-          </AuthField>
-          <AuthField id="pe-desc" label="توضیحات (اختیاری)" error={formErr.description}>
-            <textarea
-              id="pe-desc" className="wsearch-newform-name acc-textarea" rows={3} maxLength={DESC_MAX} value={description}
-              placeholder="هدف برنامه، نکات کلی، هشدارها…"
-              onChange={(e) => { setDescription(e.target.value); setFormErr((f) => ({ ...f, description: undefined })); setSavedAt(null); }}
-            />
-          </AuthField>
-        </div>
-
-        <div className="mt-4 flex items-center gap-1.5 text-[12px] font-bold text-dash-text"><CalendarRange size={14} className="text-dash-green" /> بازه‌ی زمانی (اختیاری)</div>
-        <div className={`wsearch-date-row${formErr.dates ? " field-error" : ""}`} style={{ marginTop: 8 }}>
-          <div className="time-field">
-            <span className="time-field-label">تاریخ شروع</span>
-            <button type="button" className={`jdate-btn${startDate ? "" : " placeholder"}`} onClick={() => setPicker("start")}>
-              {startDate ? formatJalali(startDate) : "روز / ماه / سال"}
-            </button>
-          </div>
-          <div className="time-field">
-            <span className="time-field-label">تاریخ پایان</span>
-            <button type="button" className={`jdate-btn${endDate ? "" : " placeholder"}`} onClick={() => setPicker("end")}>
-              {endDate ? formatJalali(endDate) : "روز / ماه / سال"}
-            </button>
-          </div>
-        </div>
-        {(startDate || endDate) && (
-          <button type="button" className="trade-title-add-btn mt-1" onClick={() => { setStartDate(null); setEndDate(null); setFormErr((f) => ({ ...f, dates: undefined })); }}>
-            <X size={13} /> پاک‌کردن تاریخ‌ها
+      <MentorSection
+        title="مشخصات برنامه" icon={ic(ClipboardList, MI.section)}
+        action={
+          <button type="button" className="mentor-text-btn" onClick={saveAsTemplate} disabled={!!busy}>
+            {ic(LayoutTemplate, MI.btnSm)} ذخیره به‌عنوان قالب
           </button>
-        )}
-        {formErr.dates && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>{formErr.dates}</div>}
-        <p className="mb-0 mt-2 text-[11px] leading-6 text-dash-muted">اگه تاریخ شروع خالی باشه، برنامه از روزی که شاگرد بپذیره شروع می‌شه.</p>
-      </AccountBlock>
+        }
+        desc={initialProgram?.sentAt ? `این برنامه قبلاً ارسال شده؛ ارسال دوباره، نسخه‌ی ${fa(initialProgram.version + 1)} را برای شاگرد می‌فرستد` : undefined}
+      >
+        <div className="mentor-form">
+          <MentorField
+            label="نوع برنامه"
+            hint={type === "ROUTINE"
+              ? "پس از فعال شدن، آیتم‌ها با عنوان برنامه به روتین شاگرد اضافه می‌شوند"
+              : "شاگرد انجام هر حرکت را روزانه ثبت می‌کند"}
+          >
+            {typeOptions.length > 1 ? (
+              <SegmentedTabs<ProgramType>
+                active={type}
+                onChange={(v) => { setType(v); setItemErrors({}); dirty(); }}
+                options={typeOptions}
+              />
+            ) : (
+              <span className="mentor-row-title">{typeOptions[0]?.label}</span>
+            )}
+          </MentorField>
 
-      {/* ── آیتم‌ها ── */}
-      <AccountBlock
-        title={type === "WORKOUT" ? `حرکات (${fa(items.length)})` : `آیتم‌ها (${fa(items.length)})`}
-        icon={type === "WORKOUT" ? <Dumbbell size={15} /> : <ListChecks size={15} />}
-        desc={`حداکثر ${fa(MAX_ITEMS)} آیتم. ترتیب با فلش‌ها عوض می‌شه.`}
-        index={1}
+          <MentorField label="عنوان" htmlFor="pe-title" error={formErr.title}>
+            <input
+              id="pe-title" type="text" className="wsearch-newform-name trade-glass-field" maxLength={TITLE_MAX} value={title}
+              placeholder={type === "WORKOUT" ? "مثلاً برنامه‌ی حجم ۸ هفته‌ای" : "مثلاً روتین صبحگاهی"}
+              onChange={(e) => { setTitle(e.target.value); setFormErr((f) => ({ ...f, title: undefined })); dirty(); }}
+            />
+          </MentorField>
+
+          <MentorField label="توضیحات" htmlFor="pe-desc" optional error={formErr.description}>
+            <textarea
+              id="pe-desc" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={DESC_MAX} value={description}
+              placeholder="مثلاً هدف برنامه و نکات کلی"
+              onChange={(e) => { setDescription(e.target.value); setFormErr((f) => ({ ...f, description: undefined })); dirty(); }}
+            />
+          </MentorField>
+
+          <MentorField label="بازه‌ی زمانی" optional error={formErr.dates} hint="بدون تاریخ شروع، برنامه از روز پذیرش شاگرد شروع می‌شود؛ با تاریخ شروع در آینده، در همان روز خودکار فعال می‌شود">
+            <div className={`wsearch-date-row${formErr.dates ? " field-error" : ""}`} style={{ marginTop: 0 }}>
+              <div className="time-field">
+                <span className="time-field-label">تاریخ شروع</span>
+                <button type="button" className={`jdate-btn${startDate ? "" : " placeholder"}`} onClick={() => setPicker("start")}>
+                  {startDate ? formatJalali(startDate) : "روز / ماه / سال"}
+                </button>
+              </div>
+              <div className="time-field">
+                <span className="time-field-label">تاریخ پایان</span>
+                <button type="button" className={`jdate-btn${endDate ? "" : " placeholder"}`} onClick={() => setPicker("end")}>
+                  {endDate ? formatJalali(endDate) : "روز / ماه / سال"}
+                </button>
+              </div>
+            </div>
+            {(startDate || endDate) && (
+              <div>
+                <button
+                  type="button" className="mentor-text-btn"
+                  onClick={() => { setStartDate(null); setEndDate(null); setFormErr((f) => ({ ...f, dates: undefined })); dirty(); }}
+                >
+                  {ic(X, MI.btnSm)} پاک کردن تاریخ‌ها
+                </button>
+              </div>
+            )}
+          </MentorField>
+
+          <MentorField
+            label="یادداشت برای شاگرد" htmlFor="pe-note" optional error={formErr.note}
+            hint={`${fa(note.length)} از ${fa(NOTE_MAX)} نویسه`}
+          >
+            <textarea
+              id="pe-note" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={NOTE_MAX} value={note}
+              placeholder="مثلاً هفته‌ی اول وزنه‌ها را سبک‌تر بردار و فرم حرکت را تمرین کن"
+              onChange={(e) => { setNote(e.target.value); setFormErr((f) => ({ ...f, note: undefined })); dirty(); }}
+            />
+          </MentorField>
+        </div>
+      </MentorSection>
+
+      <MentorSection
+        title={type === "WORKOUT" ? "حرکات" : "آیتم‌ها"}
+        icon={type === "WORKOUT" ? ic(Dumbbell, MI.section) : ic(CalendarCheck, MI.section)}
+        count={fa(items.length)}
+        desc={`حداکثر ${fa(MAX_ITEMS)} ${itemWord}؛ ترتیب با دکمه‌های بالا و پایین عوض می‌شود`}
       >
         {type === "WORKOUT" && (
           <datalist id="pe-exercise-names">
             {exerciseNames.map((n) => <option key={n} value={n} />)}
           </datalist>
         )}
-        <div ref={listRef} className="flex flex-col gap-3">
+        <div ref={listRef}>
           {items.map((d, idx) => (
             <MentorProgramEditorItem
               key={d.key} draft={d} index={idx} count={items.length} type={type}
               errors={itemErrors[d.key] || {}}
               onPatch={(p) => patchItem(d.key, p)}
               onMove={(dir) => move(idx, dir)}
-              onRemove={() => { setItems((xs) => xs.filter((x) => x.key !== d.key)); setItemErrors((e) => { const n = { ...e }; delete n[d.key]; return n; }); }}
+              onRemove={() => {
+                setItems((xs) => xs.filter((x) => x.key !== d.key));
+                setItemErrors((e) => { const n = { ...e }; delete n[d.key]; return n; });
+                dirty();
+              }}
             />
           ))}
-          {items.length === 0 && <p className="m-0 py-2 text-center text-[12px] text-dash-muted">هنوز آیتمی اضافه نکردی.</p>}
         </div>
-        {formErr.items && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{formErr.items}</div>}
-        <div className="mt-3 flex justify-center">
-          <button type="button" className="account-outline-btn" onClick={addItem} disabled={items.length >= MAX_ITEMS}>
-            <Plus size={14} /> {type === "WORKOUT" ? "افزودن حرکت" : "افزودن آیتم"}
+        {items.length === 0 && <MentorEmpty>هنوز {itemWord}ی اضافه نشده است</MentorEmpty>}
+        {formErr.items && <p className="mentor-field-error" role="alert">{formErr.items}</p>}
+        <div className="mentor-btn-group" style={{ marginTop: "var(--m-3)" }}>
+          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={addItem} disabled={items.length >= MAX_ITEMS}>
+            {ic(Plus, MI.btnSm)} {type === "WORKOUT" ? "افزودن حرکت" : "افزودن آیتم"}
           </button>
         </div>
-      </AccountBlock>
+      </MentorSection>
 
-      {/* ── اکشن‌ها ── */}
-      {error && <div className="form-inline-error" role="alert">{error}{totalItemErrors > 0 ? ` (${fa(totalItemErrors)} آیتم)` : ""}</div>}
-      {savedAt && !error && <div className="mt-2.5 text-center text-[12px] font-bold text-dash-green" role="status">پیش‌نویس ذخیره شد</div>}
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-        {programId && neverSent && props.mode === "edit" && (
-          confirmDelete ? (
-            <>
-              <span className="text-[12px] text-dash-muted">پیش‌نویس حذف بشه؟</span>
-              <button type="button" className="account-outline-btn" style={{ borderColor: "rgba(224,82,82,.55)", color: "#E05252" }} disabled={!!busy} onClick={remove}>
-                {busy === "delete" ? <Spinner size={14} /> : "حذف"}
-              </button>
-              <button type="button" className="account-outline-btn muted" disabled={!!busy} onClick={() => setConfirmDelete(false)}>انصراف</button>
-            </>
-          ) : (
-            <button type="button" className="account-outline-btn muted me-auto" disabled={!!busy} onClick={() => setConfirmDelete(true)}>
-              <Trash2 size={14} /> حذف پیش‌نویس
-            </button>
-          )
-        )}
-        <button type="button" className="account-outline-btn muted" disabled={!!busy} onClick={saveDraft} style={{ minWidth: 128 }}>
-          {busy === "save" ? <Spinner size={14} /> : "ذخیره پیش‌نویس"}
+      {error && <div className="form-inline-error" role="alert">{error}</div>}
+      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
+        <button type="button" className="account-outline-btn mentor-btn" disabled={!!busy} onClick={saveDraft}>
+          {busy === "save" ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : "ذخیره‌ی پیش‌نویس"}
         </button>
-        <button type="button" className="account-outline-btn" disabled={!!busy} onClick={send} style={{ minWidth: 140 }}>
-          {busy === "send" ? <Spinner size={14} /> : <><Send size={14} /> ارسال برای شاگرد</>}
+        <button type="button" className="trade-primary-btn mentor-btn" disabled={!!busy} onClick={send}>
+          {busy === "send" ? <Spinner size={14} /> : <>{ic(Send, MI.btn)} ارسال برنامه</>}
         </button>
       </div>
-      <p className="mb-0 mt-3 text-[11px] leading-6 text-dash-muted">
-        بعد از ارسال، برنامه تا وقتی شاگرد بپذیره یا درخواست تغییر بده قابل ویرایش نیست.
-        {programId && <> <Link href={`/mentor-programs/${programId}`} className="font-bold text-dash-green no-underline">صفحه‌ی برنامه</Link></>}
-      </p>
+
+      {programId && neverSent && props.mode === "edit" && (
+        <div className="mentor-danger-zone">
+          <button type="button" className="trade-danger-btn mentor-btn is-sm" disabled={!!busy} onClick={() => { setDeleteError(null); setConfirmDelete(true); }}>
+            {ic(Trash2, MI.btnSm)} حذف پیش‌نویس
+          </button>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <MentorConfirmDialog
+          message={title.trim() ? `پیش‌نویس «${title.trim()}» حذف شود؟` : "این پیش‌نویس حذف شود؟"}
+          hint="پیش‌نویس حذف‌شده برنمی‌گردد"
+          confirmLabel="حذف پیش‌نویس"
+          busy={busy === "delete"}
+          error={deleteError}
+          onConfirm={remove}
+          onCancel={() => { setConfirmDelete(false); setDeleteError(null); }}
+        />
+      )}
+
+      {templateBody && (
+        <MentorTemplateSaveDialog
+          defaultName={templateBody.title}
+          program={templateBody}
+          onClose={() => setTemplateBody(null)}
+        />
+      )}
 
       {picker && (
         <JalaliDatePicker
@@ -435,7 +510,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           onClose={() => setPicker(null)}
           onPick={(v) => {
             setFormErr((f) => ({ ...f, dates: undefined }));
-            setSavedAt(null);
+            dirty();
             if (picker === "start") { setStartDate(v); setPicker(endDate ? null : "end"); }
             else { setEndDate(v); setPicker(null); }
           }}
@@ -445,7 +520,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   );
 }
 
-/** یک آیتمِ برنامه — فقط قابِ مویی (بی‌بک‌گراند) داخلِ بخشِ آیتم‌ها */
+/** یک آیتم برنامه: ردیفِ جداشده با خط مویی، بدون قاب و بک‌گراند */
 function MentorProgramEditorItem({
   draft: d, index, count, type, errors, onPatch, onMove, onRemove,
 }: {
@@ -459,44 +534,51 @@ function MentorProgramEditorItem({
   onRemove: () => void;
 }) {
   const id = (f: string) => `pe-${d.key}-${f}`;
-  const hasErr = Object.keys(errors).length > 0;
-  const iconBtn: React.CSSProperties = { padding: "5px 8px" };
+  const word = type === "WORKOUT" ? "حرکت" : "آیتم";
+  const toggleDay = (js: number) => onPatch({ days: d.days.includes(js) ? d.days.filter((x) => x !== js) : [...d.days, js] });
   return (
-    <div className="rounded-[14px] border p-3" style={{ borderColor: hasErr ? "rgba(224,82,82,.55)" : "var(--surface-line)" }}>
-      <div className="mb-2 flex items-center gap-1.5">
-        <span className="flex-1 text-[12px] font-bold text-dash-muted">{type === "WORKOUT" ? "حرکت" : "آیتم"} {fa(index + 1)}</span>
-        <button type="button" className="account-outline-btn muted" style={iconBtn} disabled={index === 0} onClick={() => onMove(-1)} aria-label="انتقال به بالا"><ArrowUp size={13} /></button>
-        <button type="button" className="account-outline-btn muted" style={iconBtn} disabled={index === count - 1} onClick={() => onMove(1)} aria-label="انتقال به پایین"><ArrowDown size={13} /></button>
-        <button type="button" className="account-outline-btn muted" style={{ ...iconBtn, color: "#E05252" }} onClick={onRemove} aria-label="حذف آیتم"><Trash2 size={13} /></button>
+    <div className="mentor-item">
+      <div className="mentor-item-head" style={{ alignItems: "center", marginBottom: "var(--m-2)" }}>
+        <span className="mentor-item-title">{word} {fa(index + 1)}</span>
+        <span className="mentor-row-end" style={{ gap: 2 }}>
+          <button type="button" className="trade-icon-btn" disabled={index === 0} onClick={() => onMove(-1)} aria-label={`انتقال ${word} ${fa(index + 1)} به بالا`}>
+            <ArrowUp size={MI.btnSm} strokeWidth={MI_STROKE} />
+          </button>
+          <button type="button" className="trade-icon-btn" disabled={index === count - 1} onClick={() => onMove(1)} aria-label={`انتقال ${word} ${fa(index + 1)} به پایین`}>
+            <ArrowDown size={MI.btnSm} strokeWidth={MI_STROKE} />
+          </button>
+          <button type="button" className="trade-icon-btn danger" onClick={onRemove} aria-label={`حذف ${word} ${fa(index + 1)}`}>
+            <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} />
+          </button>
+        </span>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <AuthField id={id("title")} label={type === "WORKOUT" ? "نام حرکت" : "عنوان"} error={errors.title}>
+      <div className="mentor-form" style={{ gap: "var(--m-3)" }}>
+        <MentorField label={type === "WORKOUT" ? "نام حرکت" : "عنوان"} htmlFor={id("title")} error={errors.title}>
           <input
-            id={id("title")} type="text" className="wsearch-newform-name" maxLength={ITEM_TITLE_MAX} value={d.title}
+            id={id("title")} type="text" className="wsearch-newform-name trade-glass-field" maxLength={ITEM_TITLE_MAX} value={d.title}
             list={type === "WORKOUT" ? "pe-exercise-names" : undefined}
-            placeholder={type === "WORKOUT" ? "از کاتالوگ حرکات انتخاب کن یا بنویس" : "مثلا: پیاده‌روی ۳۰ دقیقه"}
+            placeholder={type === "WORKOUT" ? "مثلاً اسکوات با هالتر" : "مثلاً پیاده‌روی ۳۰ دقیقه"}
             onChange={(e) => onPatch({ title: e.target.value })}
           />
-        </AuthField>
+        </MentorField>
 
-        <div>
-          <div className="mb-1.5 text-[11.5px] font-bold text-dash-text">تکرار</div>
+        <MentorField label="تکرار" error={errors.days}>
           <SegmentedTabs<"DAILY" | "WEEKLY">
             active={d.repeat}
             onChange={(v) => onPatch({ repeat: v, days: v === "DAILY" ? [] : d.days })}
             options={[{ value: "WEEKLY", label: "روزهای مشخص" }, { value: "DAILY", label: "هر روز" }]}
           />
           {d.repeat === "WEEKLY" && (
-            <div className={`day-picker${errors.days ? " field-error" : ""}`} style={{ marginTop: 8 }} role="group" aria-label="روزهای هفته">
+            <div className={`day-picker${errors.days ? " field-error" : ""}`} role="group" aria-label="روزهای هفته">
               {WEEK_ORDER.map((o) => {
                 const on = d.days.includes(o.jsDay);
                 return (
                   <span
                     key={o.jsDay} role="checkbox" aria-checked={on} aria-label={FA_WEEKDAY[o.jsDay]} tabIndex={0}
                     className={`day-pill${on ? " on" : ""}`}
-                    onClick={() => onPatch({ days: on ? d.days.filter((x) => x !== o.jsDay) : [...d.days, o.jsDay] })}
-                    onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); onPatch({ days: on ? d.days.filter((x) => x !== o.jsDay) : [...d.days, o.jsDay] }); } }}
+                    onClick={() => toggleDay(o.jsDay)}
+                    onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggleDay(o.jsDay); } }}
                   >
                     {o.short}
                   </span>
@@ -504,48 +586,51 @@ function MentorProgramEditorItem({
               })}
             </div>
           )}
-          {errors.days && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{errors.days}</div>}
-        </div>
+        </MentorField>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          <AuthField id={id("time")} label="ساعت شروع (اختیاری)" error={errors.startTime}>
+        <div className="mentor-field-row">
+          <MentorField label="ساعت شروع" optional error={errors.startTime}>
             <span dir="ltr" className="block">
-              <TimeInput value={d.startTime} onChange={(v) => onPatch({ startTime: v })} className="wsearch-newform-name mono" placeholder="--:--" />
+              <TimeInput value={d.startTime} onChange={(v) => onPatch({ startTime: v })} className="wsearch-newform-name trade-glass-field mono" placeholder="--:--" />
             </span>
-          </AuthField>
-          <AuthField id={id("dur")} label="مدت (دقیقه)" error={errors.durationMin}>
-            <NumberInput id={id("dur")} className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }} value={d.durationMin} onChange={(v) => onPatch({ durationMin: v })} maxLength={4} />
-          </AuthField>
+          </MentorField>
+          <MentorField label="مدت (دقیقه)" htmlFor={id("dur")} optional error={errors.durationMin}>
+            <NumberInput id={id("dur")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.durationMin} onChange={(v) => onPatch({ durationMin: v })} maxLength={4} />
+          </MentorField>
         </div>
 
         {type === "WORKOUT" && (
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <AuthField id={id("sets")} label="ست" error={errors.sets}>
-              <NumberInput id={id("sets")} className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }} value={d.sets} onChange={(v) => onPatch({ sets: v })} maxLength={3} />
-            </AuthField>
-            <AuthField id={id("reps")} label="تکرار" error={errors.reps}>
-              <input
-                id={id("reps")} type="text" inputMode="numeric" className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }}
-                value={d.reps} placeholder="8-12" maxLength={7}
-                onChange={(e) => onPatch({ reps: toEnDigits(e.target.value).replace(/[^\d-]/g, "") })}
-              />
-            </AuthField>
-            <AuthField id={id("w")} label="وزنه (کیلو)" error={errors.weightKg}>
-              <NumberInput decimal id={id("w")} className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }} value={d.weightKg} onChange={(v) => onPatch({ weightKg: v })} maxLength={6} />
-            </AuthField>
-            <AuthField id={id("rest")} label="استراحت (ثانیه)" error={errors.restSec}>
-              <NumberInput id={id("rest")} className="wsearch-newform-name" dir="ltr" style={{ textAlign: "right" }} value={d.restSec} onChange={(v) => onPatch({ restSec: v })} maxLength={4} />
-            </AuthField>
-          </div>
+          <>
+            <div className="mentor-field-row">
+              <MentorField label="ست" htmlFor={id("sets")} optional error={errors.sets}>
+                <NumberInput id={id("sets")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.sets} onChange={(v) => onPatch({ sets: v })} maxLength={3} />
+              </MentorField>
+              <MentorField label="تکرار در هر ست" htmlFor={id("reps")} optional error={errors.reps}>
+                <input
+                  id={id("reps")} type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }}
+                  value={d.reps} placeholder="8-12" maxLength={7}
+                  onChange={(e) => onPatch({ reps: toEnDigits(e.target.value).replace(/[^\d-]/g, "") })}
+                />
+              </MentorField>
+            </div>
+            <div className="mentor-field-row">
+              <MentorField label="وزنه (کیلوگرم)" htmlFor={id("w")} optional error={errors.weightKg}>
+                <NumberInput decimal id={id("w")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.weightKg} onChange={(v) => onPatch({ weightKg: v })} maxLength={6} />
+              </MentorField>
+              <MentorField label="استراحت (ثانیه)" htmlFor={id("rest")} optional error={errors.restSec}>
+                <NumberInput id={id("rest")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.restSec} onChange={(v) => onPatch({ restSec: v })} maxLength={4} />
+              </MentorField>
+            </div>
+          </>
         )}
 
-        <AuthField id={id("details")} label="جزئیات (اختیاری)" error={errors.details}>
+        <MentorField label="جزئیات" htmlFor={id("details")} optional error={errors.details}>
           <textarea
-            id={id("details")} className="wsearch-newform-name acc-textarea" rows={2} maxLength={ITEM_DETAILS_MAX} value={d.details}
-            placeholder={type === "WORKOUT" ? "نکات فرم حرکت، تمپو، …" : "توضیح کوتاه برای شاگرد"}
+            id={id("details")} className="wsearch-newform-name trade-glass-field" rows={2} maxLength={ITEM_DETAILS_MAX} value={d.details}
+            placeholder={type === "WORKOUT" ? "مثلاً تمپوی ۳-۱-۱، زانو هم‌راستای پنجه" : "مثلاً بعد از صبحانه"}
             onChange={(e) => onPatch({ details: e.target.value })}
           />
-        </AuthField>
+        </MentorField>
       </div>
     </div>
   );

@@ -6,6 +6,8 @@ import { readJsonBody } from "@/lib/validate";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { MENTORSHIP_WITH_USERS_INCLUDE, PUBLIC_USER_SELECT, buildMentorshipRows } from "@/lib/mentorServer";
 import { removeProgramMirrors } from "@/lib/mentorProgramMirror";
+import { END_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability";
+import { countActiveStudents, readWelcomeMessage } from "@/lib/mentorManageServer";
 
 type Ctx = { params: { id: string } };
 const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as const;
@@ -29,7 +31,8 @@ async function closeOpenPrograms(mentorshipId: string, studentId: string): Promi
   await removeProgramMirrors(studentId, open.map((p) => p.id));
 }
 
-// PATCH /api/mentorships/:id { action } → accept | reject | cancel | end | block | unblock
+// PATCH /api/mentorships/:id { action, reason? } → accept | reject | cancel | end | block | unblock
+// reason فقط برای end (دلیلِ پایان، اختیاری) — به طرفِ مقابل نشون داده می‌شه.
 export async function PATCH(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -50,6 +53,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
   let from: MentorshipStatus[];
   let data: Prisma.MentorshipUpdateManyMutationInput;
+  let endReason: string | null = null;
 
   switch (action) {
     case "accept":
@@ -58,10 +62,14 @@ export async function PATCH(req: Request, { params }: Ctx) {
       if (isInitiator) return forbidden("فقط طرف مقابل می‌تونه به درخواست پاسخ بده");
       if (action === "accept") {
         // منتورِ معلق شاگردِ جدید نمی‌پذیره — چه خودش قبول کنه، چه شاگرد دعوتش رو
-        const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true } });
+        const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true, maxActiveStudents: true } });
         if (!mp) return conflict("این کاربر دیگه پروفایل منتوری نداره");
         if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب منتوری تو تعلیق شده" : "این منتور فعلا امکان پذیرش شاگرد نداره");
-        data = { status: "ACTIVE", startedAt: now, endedAt: null };
+        // سقفِ ظرفیت فقط جلوی پذیرشِ *درخواستِ شاگرد* رو می‌گیره؛ دعوتِ خودِ منتور انتخابِ خودشه
+        if (role === "MENTOR" && mp.maxActiveStudents != null && (await countActiveStudents(m.mentorId)) >= mp.maxActiveStudents) {
+          return conflict("ظرفیت شاگردهایت تکمیل است؛ برای پذیرش، سقف ظرفیت را در تنظیمات بالا ببر");
+        }
+        data = { status: "ACTIVE", startedAt: now, endedAt: null, pausedAt: null, pauseReason: null, endReason: null, endedBy: null };
       } else {
         data = { status: "REJECTED", endedAt: now };
       }
@@ -73,15 +81,19 @@ export async function PATCH(req: Request, { params }: Ctx) {
       from = ["PENDING"];
       data = { status: "ENDED", endedAt: now };
       break;
-    case "end":
+    case "end": {
       if (m.status !== "ACTIVE") return conflict("این رابطه فعال نیست");
+      const r = validateOptionalText(parsed.body?.reason, END_REASON_MAX, "دلیل پایان");
+      if (!r.ok) return badRequest(r.error);
+      endReason = r.data;
       from = ["ACTIVE"];
-      data = { status: "ENDED", endedAt: now };
+      data = { status: "ENDED", endedAt: now, endReason, endedBy: role, pausedAt: null, pauseReason: null };
       break;
+    }
     case "block":
       if (m.status === "BLOCKED") return conflict("این رابطه از قبل مسدوده");
       from = [m.status];
-      data = { status: "BLOCKED", blockedById: me, endedAt: now };
+      data = { status: "BLOCKED", blockedById: me, endedAt: now, pausedAt: null, pauseReason: null };
       break;
     case "unblock":
       if (m.status !== "BLOCKED") return conflict("این رابطه مسدود نیست");
@@ -99,16 +111,29 @@ export async function PATCH(req: Request, { params }: Ctx) {
     await closeOpenPrograms(m.id, m.studentId);
   }
 
+  // پیامِ خوش‌آمدِ منتور (اگه تعریف شده) با اعلانِ شروعِ رابطه به شاگرد می‌رسه
+  const welcome = action === "accept" && counterpartId === m.studentId ? await readWelcomeMessage(m.mentorId) : null;
+
   if (action === "accept" || action === "reject" || action === "end") {
     const actor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
     const name = displayName(actor);
     const url = counterpartId === m.mentorId ? "/mentor" : `/mentorship/${m.id}`;
     const note =
       action === "accept"
-        ? { type: "mentor.accepted", title: "درخواست پذیرفته شد", body: `${name} درخواستت رو قبول کرد.`, url: `/mentorship/${m.id}` }
+        ? {
+            type: "mentor.accepted",
+            title: "درخواست پذیرفته شد",
+            body: welcome ? `${name} درخواستت رو قبول کرد: ${welcome}` : `${name} درخواستت رو قبول کرد.`,
+            url: `/mentorship/${m.id}`,
+          }
         : action === "reject"
           ? { type: "mentor.rejected", title: "درخواست رد شد", body: `${name} درخواستت رو نپذیرفت.`, url: counterpartId === m.mentorId ? "/mentor" : "/mentorship" }
-          : { type: "mentor.ended", title: "پایان رابطه", body: `${name} رابطه‌ی منتورشیپ رو تموم کرد.`, url };
+          : {
+              type: "mentor.ended",
+              title: "پایان رابطه",
+              body: endReason ? `${name} رابطه‌ی منتورشیپ رو تموم کرد؛ دلیل: ${endReason}` : `${name} رابطه‌ی منتورشیپ رو تموم کرد.`,
+              url,
+            };
     await notifyUser(counterpartId, note);
   }
 

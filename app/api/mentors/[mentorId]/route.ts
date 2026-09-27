@@ -73,6 +73,9 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
       completedPrograms: s?.completedPrograms ?? 0,
       lastActiveAt: profile.lastActiveAt,
       memberSince: profile.createdAt,
+      // دسترس‌پذیری (lib/mentorAvailability.ts): پیامِ عدمِ حضور فقط تا روزِ بازگشت
+      awayMessage: toMentorCard(profile, s).awayUntil ? profile.awayMessage : null,
+      intakeQuestions: profile.intakeQuestions,
     },
     reviews: reviews.map(toReview),
     myMentorship: myMentorship ? { id: myMentorship.id, status: myMentorship.status, initiatedBy: myMentorship.initiatedBy } : null,

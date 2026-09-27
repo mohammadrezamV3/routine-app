@@ -32,7 +32,7 @@ export function useAsyncAction() {
         const res = await fn();
         if (res && !res.ok) {
           const body = await res.json().catch(() => null);
-          setError(body?.error || "انجام نشد — دوباره تلاش کن");
+          setError(body?.error || "انجام نشد؛ دوباره تلاش کن");
           return false;
         }
         return true;

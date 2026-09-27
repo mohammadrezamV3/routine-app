@@ -20,6 +20,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 import { subscribeToPush } from "@/lib/pushClient";
 import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
+import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
 
 // این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
 // NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -65,6 +66,18 @@ export const ICONS: Record<string, JSX.Element> = {
   // منتورها — یک نفر (منتور) و یک نفرِ کوچک‌ترِ کنارش (شاگرد)، هم‌خط با بقیه‌ی ست
   mentors: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17.2" cy="10" r="2.3" stroke="currentColor" strokeWidth="1.6"/><path d="M16.3 14.6c2.2-.2 3.9 1.1 4.7 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  // «انتخاب منتور» — یک نفر و ذره‌بین
+  mentorsDiscover: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9.5" cy="7.8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1.1-3.3 3.6-5 6.5-5 1.1 0 2.1.2 3 .7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17" cy="15.8" r="2.7" stroke="currentColor" strokeWidth="1.7"/><path d="m19 17.8 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  // «منتورهای من» — یک نفر و تیک (رابطه‌ی برقرارشده)
+  mentorsMine: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M2.5 19c1.2-3.2 3.7-4.9 6.5-4.9s5.3 1.7 6.5 4.9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="m15.6 10.6 1.9 1.9 3.6-3.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  // «پنل منتور» — تخته‌ی ارائه با نمودار، برای کسی که منتوری می‌کند
+  mentorPanel: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="11.5" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="m7.5 12 3-3 2.5 2 3.5-3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.5V18m-3.5 2.5L12 18l3.5 2.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
@@ -113,6 +126,17 @@ function isGroup(item: NavItem): item is NavGroup {
 const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
+  // منتورها درست زیرِ رودمپ‌ها. گروه فقط صفحه‌های سمتِ شاگرد را دارد؛
+  // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپِ پروفایل،
+  // زیرِ «پنل کاربری»، کنارِ بقیه‌ی پنل‌ها. آیکونِ زیرمجموعه‌ها در داده هست ولی طبقِ درخواستِ قبلیِ
+  // کاربر زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
+  {
+    label: "منتورها", icon: "mentors", feature: "mentors",
+    children: [
+      { href: "/mentors", label: "انتخاب منتور", icon: "mentorsDiscover" },
+      { href: "/mentorship", label: "منتورهای من", icon: "mentorsMine" },
+    ],
+  },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
@@ -124,14 +148,6 @@ const LINKS: NavItem[] = [
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
   { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
-  {
-    label: "منتورها", icon: "mentors", feature: "mentors",
-    children: [
-      { href: "/mentors", label: "کشف منتور", icon: "mentors" },
-      { href: "/mentorship", label: "منتورهای من", icon: "mentors" },
-      { href: "/mentor", label: "پنل منتور", icon: "mentors" },
-    ],
-  },
   { href: "/about", label: "درباره ما", icon: "about" },
 ];
 
@@ -403,6 +419,15 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
                         </div>
+                        {features?.mentors === true && (
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); router.push("/mentor"); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.mentorPanel}</span>
+                            <span>پنل منتور</span>
+                          </div>
+                        )}
                         {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (
                           <div
                             className="notif-panel-item profile-menu-item"
@@ -422,7 +447,7 @@ export function NavDrawer() {
                         <div
                           className="notif-panel-item profile-menu-item"
                           style={{ color: "#E05252" }}
-                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); clearAllLocalKeys().catch(() => {}); signOut({ callbackUrl: "/" }); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
                           <span>خروج از حساب</span>

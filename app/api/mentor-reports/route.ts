@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { visibleToStudent } from "@/lib/mentorProgramState";
 import { isUniqueViolation } from "@/lib/mentorServer";
+import { sealReportedText, verifyMessageReport, type MessageReportEvidence } from "@/lib/e2ee/reportServer";
 
 const TARGETS = ["USER", "REVIEW", "MESSAGE", "PROGRAM"] as const;
 type Target = (typeof TARGETS)[number];
@@ -52,7 +53,10 @@ async function resolveTargetOwner(type: Target, targetId: string, me: string): P
   }
 }
 
-// POST /api/mentor-reports { targetType, targetId, reason, details? }
+// POST /api/mentor-reports { targetType, targetId, reason, details?, franking? }
+// برای MESSAGE: franking = { text, frankingKey } از کلاینتِ گیرنده (docs/mentor-e2ee.md).
+// سرور تعهدِ رمزنگاریِ فرستنده را چک می‌کند و فقط متنِ همین یک پیام را (رمزشده
+// در حالِ سکون) در گزارش نگه می‌دارد؛ ادمین هیچ پیامِ دیگری را نمی‌بیند.
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -77,9 +81,25 @@ export async function POST(req: Request) {
   const targetUserId = await resolveTargetOwner(targetType, b.targetId, me);
   if (!targetUserId) return notFound();
 
+  let evidence: MessageReportEvidence | null = null;
+  if (targetType === "MESSAGE") {
+    const v = await verifyMessageReport(b.targetId, me, b.franking);
+    if (!v.ok) return badRequest(v.error);
+    evidence = v.evidence;
+  }
+
   try {
     const report = await prisma.mentorReport.create({
-      data: { reporterId: me, targetType, targetId: b.targetId, targetUserId, reason, details },
+      data: {
+        reporterId: me, targetType, targetId: b.targetId, targetUserId, reason, details,
+        ...(evidence
+          ? {
+              reportedText: sealReportedText(evidence.reportedText, b.targetId, me),
+              reportedMessageAt: evidence.reportedMessageAt,
+              reportVerified: evidence.reportVerified,
+            }
+          : {}),
+      },
       select: { id: true, targetType: true, targetId: true, status: true, createdAt: true },
     });
     return NextResponse.json({ ok: true, report });

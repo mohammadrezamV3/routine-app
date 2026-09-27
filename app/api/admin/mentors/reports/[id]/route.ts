@@ -172,7 +172,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await notifyUser(suspendProfile.userId, {
       type: "mentor.suspension",
       title: "منتوری شما تعلیق شد",
-      body: "در پی بررسی یک گزارش، پروفایل منتوری‌ات تا اطلاع ثانوی از کشف حذف شد.",
+      body: "در پی بررسی یک گزارش، پروفایل منتوری شما تا اطلاع ثانوی از فهرست منتورها حذف شد.",
       url: "/mentor/profile",
     });
   }

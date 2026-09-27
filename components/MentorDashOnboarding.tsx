@@ -1,48 +1,46 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { GraduationCap, ShieldCheck, Users, ClipboardList } from "lucide-react";
-import { AccountBlock, AccountLine } from "./AccountUI";
+import Link from "next/link";
+import { AlertCircle, BadgeCheck, ClipboardList, ShieldCheck, UserRound } from "lucide-react";
+import { MI, MI_STROKE, MentorEmptyState, MentorRow, MentorSection } from "./MentorUI";
 
 /**
- * صفحه‌ی «منتور شو» — برای کاربری که هنوز پروفایلِ منتوری نساخته.
- * نکته‌ی اصلی که باید شفاف گفته بشه: آریون فقط پلتفرمه؛ منتورها مستقل‌اند
- * و آریون هیچ خدماتِ مربیگری/تغذیه‌ای ارائه نمی‌ده.
+ * /mentor برای کاربری که هنوز پروفایل منتوری ندارد: یک حالت خالیِ کل صفحه
+ * با یک اقدام (ساخت پروفایل) و سه نکته‌ی لازم پیش از شروع.
+ * نکته‌ی اصلی: آریون واسطه است و مسئولیت محتوای برنامه با منتور است.
  */
 export function MentorDashOnboarding() {
-  const router = useRouter();
   return (
     <>
-      <div className="trade-surface rp-empty">
-        <span className="rp-empty-icon"><GraduationCap size={26} /></span>
-        <h2>منتور شو</h2>
-        <p>
-          اگه مربی بدنسازی یا متخصص تغذیه هستی، می‌تونی توی آریون پروفایل منتوری بسازی، شاگرد بپذیری،
-          براشون برنامه‌ی روتین یا تمرینی بفرستی و پیشرفتشون رو (فقط در حدی که خودشون اجازه بدن) دنبال کنی.
-        </p>
-        <button type="button" className="account-outline-btn mt-5" onClick={() => router.push("/mentor/profile")}>
-          شروع و ساخت پروفایل
-        </button>
-      </div>
+      <MentorEmptyState
+        icon={<UserRound size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
+        title="هنوز پروفایل منتوری نداری"
+        text="پس از ساخت و انتشار پروفایل، شاگردها می‌توانند درخواست بدهند و تو برایشان برنامه می‌فرستی"
+        action={
+          <Link href="/mentor/profile" className="trade-primary-btn mentor-btn">
+            ساخت پروفایل
+          </Link>
+        }
+      />
 
-      <div className="mt-5">
-        <AccountBlock title="قبل از شروع بدون" icon={<ShieldCheck size={15} />} flush>
-          <AccountLine
-            icon={<ShieldCheck size={16} />}
-            label="آریون فقط پلتفرمه"
-            value="منتورها کاربرانِ مستقل‌اند. آریون هیچ خدماتِ مربیگری، تغذیه یا مشاوره‌ای ارائه نمی‌ده و مسئولیتِ محتوای برنامه‌ها با خودِ منتوره."
+      <div style={{ marginTop: "var(--m-4)" }}>
+        <MentorSection title="پیش از شروع" icon={<AlertCircle size={MI.section} strokeWidth={MI_STROKE} aria-hidden />} flush>
+          <MentorRow
+            lead={<ClipboardList size={MI.row} strokeWidth={MI_STROKE} aria-hidden />}
+            title="مسئولیت برنامه‌ها"
+            sub={<span>آریون واسطه‌ی ارتباط است و مسئولیت محتوای برنامه با منتور است</span>}
           />
-          <AccountLine
-            icon={<Users size={16} />}
-            label="حریم خصوصیِ شاگرد با خودِ شاگرده"
-            value="هر شاگرد تعیین می‌کنه کدوم برنامه‌ها، زمان‌بندی و پیشرفتش رو ببینی. چیزی که اجازه نده اصلا به تو نمی‌رسه."
+          <MentorRow
+            lead={<ShieldCheck size={MI.row} strokeWidth={MI_STROKE} aria-hidden />}
+            title="حریم خصوصی شاگرد"
+            sub={<span>هر شاگرد تعیین می‌کند چه بخشی از برنامه و پیشرفتش را ببینی</span>}
           />
-          <AccountLine
-            icon={<ClipboardList size={16} />}
-            label="احراز هویت و مدرک اختیاری ولی مهمه"
-            value="با ارسال مدرک شناسایی و مدرک تخصصی، نشانِ «تأییدشده» روی پروفایلت می‌گیری. مدارک فقط برای ادمین‌های آریون قابل مشاهده‌ست."
+          <MentorRow
+            lead={<BadgeCheck size={MI.row} strokeWidth={MI_STROKE} aria-hidden />}
+            title="احراز هویت و مدارک (اختیاری)"
+            sub={<span>پس از تأیید، نشان «هویت تأییدشده» روی پروفایلت نمایش داده می‌شود</span>}
           />
-        </AccountBlock>
+        </MentorSection>
       </div>
     </>
   );

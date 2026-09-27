@@ -35,6 +35,7 @@ export type StudentOccurrence = {
   importance?: string;
   tag?: string;
   mentorProgramId?: string;
+  mentorItemId?: string;
 };
 
 export function routineScopeKey(o: { name: string; tag?: string }): string {
