@@ -1,131 +1,179 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { formatDateTime } from "@/lib/adminFormat";
+import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
+import { useAdminAccess } from "@/components/admin/AdminAccess";
+import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { NumberInput } from "@/components/NumberInput";
 
-type SettingsResp = { aiCostRate: { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number }; defaultAiCostRate: { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number } };
+type Rate = { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number };
+type SettingsResp = { aiCostRate: Rate; defaultAiCostRate: Rate };
 type AuditRow = { id: string; action: string; targetType: string | null; targetId: string | null; createdAt: string; actor: { name: string | null; lastName: string | null; username: string | null } | null };
 
+const MAX_RATE = 100_000_000; // هم‌راستا با سقفِ PATCH /api/admin/settings
+
 export default function AdminSettingsPage() {
+  const toast = useAdminToast();
+  const { can } = useAdminAccess();
+  // لاگ فعالیت دسترسیِ جدای «audit» می‌خواد؛ ادمینی که فقط «settings» داره
+  // قبلا ۴۰۳ می‌گرفت و این کارت برای همیشه «در حال بارگذاری» می‌موند.
+  const canAudit = can("audit");
   const [settings, setSettings] = useState<SettingsResp | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
   const [inputRate, setInputRate] = useState("");
   const [outputRate, setOutputRate] = useState("");
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [audit, setAudit] = useState<AuditRow[] | null>(null);
-  const [indexNowState, setIndexNowState] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [indexNowMsg, setIndexNowMsg] = useState("");
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [indexNowBusy, setIndexNowBusy] = useState(false);
+  const [indexNowMsg, setIndexNowMsg] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
+
+  const loadAudit = useCallback(() => {
+    if (!canAudit) return;
+    adminFetch<{ entries: AuditRow[] }>("/api/admin/audit-log?pageSize=15")
+      .then((d) => { setAudit(d.entries); setAuditError(null); })
+      .catch((e) => setAuditError(e.message));
+  }, [canAudit]);
 
   useEffect(() => {
-    fetch("/api/admin/settings").then((r) => r.json()).then((d: SettingsResp) => {
-      setSettings(d);
-      setInputRate(String(d.aiCostRate.inputPer1kUsdMicros));
-      setOutputRate(String(d.aiCostRate.outputPer1kUsdMicros));
-    });
-    fetch("/api/admin/audit-log?pageSize=15").then((r) => r.json()).then((d) => setAudit(d.entries));
-  }, []);
+    adminFetch<SettingsResp>("/api/admin/settings")
+      .then((d) => {
+        setSettings(d);
+        setInputRate(String(d.aiCostRate.inputPer1kUsdMicros));
+        setOutputRate(String(d.aiCostRate.outputPer1kUsdMicros));
+      })
+      .catch((e) => setSettingsError(e.message));
+    loadAudit();
+  }, [loadAudit]);
+
+  const dirty = !!settings && (inputRate !== String(settings.aiCostRate.inputPer1kUsdMicros) || outputRate !== String(settings.aiCostRate.outputPer1kUsdMicros));
 
   async function save() {
+    if (saving || !settings) return;
+    if (inputRate === "" || outputRate === "") { setFormError("هر دو نرخ را وارد کن"); return; }
+    const inRate = Number(inputRate), outRate = Number(outputRate);
+    if (!Number.isFinite(inRate) || !Number.isFinite(outRate) || inRate > MAX_RATE || outRate > MAX_RATE) {
+      setFormError(`نرخ باید عددی بین 0 تا ${formatNumber(MAX_RATE)} باشد`);
+      return;
+    }
+    setFormError(null);
     setSaving(true);
-    setSaved(false);
-    const res = await fetch("/api/admin/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inputPer1kUsdMicros: Number(inputRate), outputPer1kUsdMicros: Number(outputRate) }),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      fetch("/api/admin/audit-log?pageSize=15").then((r) => r.json()).then((d) => setAudit(d.entries));
+    try {
+      const d = await adminFetch<{ aiCostRate: Rate }>("/api/admin/settings", {
+        method: "PATCH",
+        json: { inputPer1kUsdMicros: inRate, outputPer1kUsdMicros: outRate },
+      });
+      setSettings({ ...settings, aiCostRate: d.aiCostRate });
+      setInputRate(String(d.aiCostRate.inputPer1kUsdMicros));
+      setOutputRate(String(d.aiCostRate.outputPer1kUsdMicros));
+      toast("نرخ هزینه‌ی AI ذخیره شد");
+      loadAudit();
+    } catch (e: any) {
+      setFormError(e.message);
+    } finally {
+      setSaving(false);
     }
   }
 
   async function submitIndexNow() {
-    setIndexNowState("loading");
-    setIndexNowMsg("");
+    if (indexNowBusy) return;
+    setIndexNowBusy(true);
+    setIndexNowMsg(null);
     try {
-      const res = await fetch("/api/admin/seo/indexnow", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "خطای ناشناخته");
-      setIndexNowState("done");
-      setIndexNowMsg(`${data.submitted} آدرس ارسال شد`);
-      fetch("/api/admin/audit-log?pageSize=15").then((r) => r.json()).then((d) => setAudit(d.entries));
+      const d = await adminFetch<{ submitted: number }>("/api/admin/seo/indexnow", { method: "POST" });
+      setIndexNowMsg({ text: `${formatNumber(d.submitted)} آدرس ارسال شد`, tone: "ok" });
+      loadAudit();
     } catch (e: any) {
-      setIndexNowState("error");
-      setIndexNowMsg(e?.message || "ارسال ناموفق بود");
+      setIndexNowMsg({ text: e?.message || "ارسال ناموفق بود", tone: "err" });
+    } finally {
+      setIndexNowBusy(false);
     }
-    setTimeout(() => setIndexNowState("idle"), 4000);
   }
 
   return (
     <section>
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">ایندکسِ فوریِ سایت (IndexNow)</span></div>
-        <div className="admin-section-hint" style={{ marginTop: 0 }}>
+        <div className="admin-section-hint admin-settings-hint">
           همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراولِ دوره‌ای ایندکس بشن —
           نیاز به تنظیم <code className="mono">INDEXNOW_KEY</code> در env داره.
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <button type="button" className="admin-btn primary" onClick={submitIndexNow} disabled={indexNowState === "loading"}>
-            {indexNowState === "loading" ? "در حال ارسال…" : "ارسال به IndexNow"}
+        <div className="admin-settings-actions">
+          <button type="button" className="admin-btn primary" onClick={submitIndexNow} disabled={indexNowBusy}>
+            {indexNowBusy ? "در حال ارسال…" : "ارسال به IndexNow"}
           </button>
           {indexNowMsg && (
-            <span style={{ fontSize: 12, color: indexNowState === "error" ? "#E05252" : "var(--adm-muted)" }}>{indexNowMsg}</span>
+            <span className={`admin-settings-msg ${indexNowMsg.tone}`} role={indexNowMsg.tone === "err" ? "alert" : "status"}>{indexNowMsg.text}</span>
           )}
         </div>
       </div>
 
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">نرخ تخمین هزینه AI</span></div>
-        <div className="admin-section-hint" style={{ marginTop: 0 }}>
-          به میکرو-دلار به‌ازای هر ۱۰۰۰ توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini ({settings ? settings.defaultAiCostRate.inputPer1kUsdMicros : "…"}/{settings ? settings.defaultAiCostRate.outputPer1kUsdMicros : "…"}).
+        <div className="admin-section-hint admin-settings-hint">
+          به میکرو-دلار به‌ازای هر ۱۰۰۰ توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini
+          {settings && <> (<span className="admin-ltr mono">{settings.defaultAiCostRate.inputPer1kUsdMicros}/{settings.defaultAiCostRate.outputPer1kUsdMicros}</span>)</>}.
         </div>
-        {!settings ? (
+        {settingsError && !settings ? (
+          <EmptyState message={settingsError} />
+        ) : !settings ? (
           <div className="admin-empty is-loading">در حال بارگذاری…</div>
         ) : (
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
-            <div>
-              <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>نرخ ورودی (میکرو-دلار/۱۰۰۰ توکن)</label>
-              <NumberInput className="admin-input" min={0} value={inputRate} onChange={(v) => setInputRate(v)} style={{ width: 180 }} />
+          <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
+            <div className="admin-form-grid">
+              <label className="admin-field">
+                <span>نرخ ورودی (میکرو-دلار/۱۰۰۰ توکن)</span>
+                <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={9} value={inputRate} onChange={setInputRate} />
+              </label>
+              <label className="admin-field">
+                <span>نرخ خروجی (میکرو-دلار/۱۰۰۰ توکن)</span>
+                <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={9} value={outputRate} onChange={setOutputRate} />
+              </label>
             </div>
-            <div>
-              <label style={{ fontSize: 11.5, color: "var(--adm-muted)", display: "block", marginBottom: 5 }}>نرخ خروجی (میکرو-دلار/۱۰۰۰ توکن)</label>
-              <NumberInput className="admin-input" min={0} value={outputRate} onChange={(v) => setOutputRate(v)} style={{ width: 180 }} />
+            {formError && <div className="admin-form-error" role="alert">{formError}</div>}
+            <div className="admin-modal-actions">
+              <button type="submit" className="admin-btn primary" disabled={saving || !dirty}>
+                {saving ? "در حال ذخیره…" : "ذخیره"}
+              </button>
             </div>
-            <button type="button" className="admin-btn primary" onClick={save} disabled={saving}>
-              {saving ? "در حال ذخیره…" : saved ? "ذخیره شد ✓" : "ذخیره"}
-            </button>
-          </div>
+          </form>
         )}
       </div>
 
-      <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">فعالیت اخیر Owner</span></div>
-        {!audit ? (
-          <div className="admin-empty is-loading">در حال بارگذاری…</div>
-        ) : audit.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead><tr><th>اقدام</th><th>هدف</th><th>توسط</th><th>زمان</th></tr></thead>
-              <tbody>
-                {audit.map((a) => (
-                  <tr key={a.id}>
-                    <td className="mono" style={{ direction: "ltr", textAlign: "right" }}>{a.action}</td>
-                    <td>{a.targetType ? `${a.targetType}${a.targetId ? ` #${a.targetId.slice(0, 8)}` : ""}` : "—"}</td>
-                    <td>{a.actor ? [a.actor.name, a.actor.lastName].filter(Boolean).join(" ") || a.actor.username : "—"}</td>
-                    <td style={{ direction: "ltr", textAlign: "right" }}>{formatDateTime(a.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {canAudit && (
+        <div className="admin-chart-card">
+          <div className="admin-chart-head">
+            <span className="admin-chart-title">فعالیت اخیر ادمین‌ها</span>
+            <Link href="/admin/audit" className="admin-btn sm">همه‌ی فعالیت‌ها</Link>
           </div>
-        )}
-      </div>
+          {auditError && !audit ? (
+            <EmptyState message={auditError} />
+          ) : !audit ? (
+            <div className="admin-empty is-loading">در حال بارگذاری…</div>
+          ) : audit.length === 0 ? (
+            <EmptyState message="هنوز فعالیتی ثبت نشده" />
+          ) : (
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead><tr><th>اقدام</th><th>هدف</th><th>توسط</th><th>زمان</th></tr></thead>
+                <tbody>
+                  {audit.map((a) => (
+                    <tr key={a.id}>
+                      <td className="mono admin-ltr">{a.action}</td>
+                      <td>{a.targetType ? <span className="admin-ltr">{a.targetType}{a.targetId ? ` #${a.targetId.slice(0, 8)}` : ""}</span> : "—"}</td>
+                      <td>{a.actor ? [a.actor.name, a.actor.lastName].filter(Boolean).join(" ") || (a.actor.username ? `@${a.actor.username}` : "—") : "—"}</td>
+                      <td className="admin-ltr">{formatDateTime(a.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

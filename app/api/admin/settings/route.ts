@@ -19,9 +19,13 @@ export async function PATCH(req: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);
-  const inputRate = Number(body?.inputPer1kUsdMicros);
-  const outputRate = Number(body?.outputPer1kUsdMicros);
-  if (!Number.isFinite(inputRate) || inputRate < 0 || !Number.isFinite(outputRate) || outputRate < 0) {
+  // Number(null)/Number("") صفره — بدون این چک یه فیلدِ خالی بی‌صدا نرخ رو صفر می‌کرد
+  const parse = (v: unknown) => (v === null || v === undefined || (typeof v === "string" && !v.trim()) ? NaN : Number(v));
+  const inputRate = parse(body?.inputPer1kUsdMicros);
+  const outputRate = parse(body?.outputPer1kUsdMicros);
+  const MAX_RATE = 100_000_000; // ۱۰۰ دلار به‌ازای هر ۱۰۰۰ توکن — سقفِ منطقی برای جلوگیری از اشتباهِ تایپی
+  const valid = (n: number) => Number.isFinite(n) && n >= 0 && n <= MAX_RATE;
+  if (!valid(inputRate) || !valid(outputRate)) {
     return NextResponse.json({ error: "نرخ‌های وارد شده معتبر نیستند" }, { status: 400 });
   }
 

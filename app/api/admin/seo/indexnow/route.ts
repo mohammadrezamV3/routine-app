@@ -12,9 +12,12 @@ export async function POST() {
   if (!guard.ok) return guard.response;
 
   const urls = sitemap().map((entry) => entry.url);
-  const result = await submitUrlsToIndexNow(urls);
+  // خطای شبکه (DNS/timeout) از fetch داخلِ submitUrlsToIndexNow throw
+  // می‌شه — بدونِ این catch پاسخ ۵۰۰ِ بی‌پیام به پنل می‌رسید.
+  const result = await submitUrlsToIndexNow(urls).catch(() => ({ ok: false, status: 0, submitted: 0, error: "اتصال به IndexNow برقرار نشد" }));
   if (!result.ok) {
-    return NextResponse.json({ error: result.error || "ارسال به IndexNow ناموفق بود", status: result.status }, { status: 502 });
+    const error = result.error || `ارسال به IndexNow ناموفق بود (کد ${result.status})`;
+    return NextResponse.json({ error, status: result.status }, { status: 502 });
   }
 
   await writeAuditLog(guard.userId, "seo.indexnow_submit", "Sitemap", undefined, { submitted: result.submitted });
