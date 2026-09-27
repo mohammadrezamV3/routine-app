@@ -4853,7 +4853,7 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 .admin-page-title{ font-size:15.5px; font-weight:700; color:var(--adm-text); margin:0; }
 .admin-mobile-toggle, .admin-mobile-close{
   display:none; align-items:center; justify-content:center; width:34px; height:34px; border-radius:12px;
-  background:rgba(255,255,255,.045); border:1px solid var(--adm-border); color:var(--adm-text); cursor:pointer;
+  background:none; border:1px solid var(--adm-border); color:var(--adm-text); cursor:pointer;
 }
 .admin-content{ flex:1; padding:22px; max-width:1400px; width:100%; margin:0 auto; }
 
@@ -4910,41 +4910,99 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 .admin-badge.amber{ background:var(--adm-amber-dim); color:var(--adm-amber); }
 .admin-badge.gray{ background:rgba(255,255,255,.06); color:var(--adm-muted); }
 
+/* --- دکمه/فیلد/تب پنل — عینِ زبانِ بقیه‌ی اپ، نه یه سبکِ جدا:
+   .admin-btn          = .account-outline-btn.muted (خطی، بی‌بک‌گراند)
+   .admin-btn.primary  = .trade-primary-btn (پرِ اکسنت)
+   .admin-btn.danger   = .trade-danger-btn (خطیِ قرمز، بی‌بک‌گراند)
+   .admin-input        = .wsearch-newform-name.trade-glass-field
+   قانونِ سراسریِ body[data-theme="light"] button{} (tag+attr+tag) از یک
+   کلاسِ تنها قوی‌تره — برای همین هر حالت هم با پیشوندِ body[data-theme]
+   تکرار شده؛ وگرنه توی تمِ روشن دکمه‌ی primary سفید/شیشه‌ای می‌شد و
+   دکمه‌های بی‌بک‌گراند (تب/ناوبری) بک‌گراندِ شیشه‌ای می‌گرفتن. --- */
 .admin-btn{
-  display:inline-flex; align-items:center; gap:6px; padding:9px 15px; border-radius:12px; font-size:12.5px; font-weight:700;
-  border:1px solid var(--adm-border-strong); background:rgba(255,255,255,.035); color:var(--adm-text); cursor:pointer;
-  transition:background .15s ease, border-color .15s ease, color .15s ease;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 16px; border-radius:13px;
+  font-size:12.5px; font-weight:700; line-height:1.4; white-space:nowrap; text-decoration:none; cursor:pointer;
+  border:1px solid var(--line); background:none; color:var(--text);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:background .18s ease, border-color .18s ease, color .18s ease, filter .15s ease, transform .15s ease;
 }
-@media (hover:hover){.admin-btn:hover{ background:rgba(var(--adm-accent-rgb),.1); border-color:var(--adm-accent); color:var(--adm-accent); }}
-.admin-btn.primary{ background:var(--adm-accent); border-color:var(--adm-accent); color:var(--bg); }
-@media (hover:hover){.admin-btn.primary:hover{ filter:brightness(1.08); background:var(--adm-accent); color:var(--bg); }}
-.admin-btn.danger{ background:var(--adm-red-dim); border-color:rgba(224,82,82,.35); color:var(--adm-red); }
-@media (hover:hover){.admin-btn.danger:hover{ background:rgba(224,82,82,.2); border-color:var(--adm-red); color:var(--adm-red); }}
-.admin-btn:disabled{ opacity:.5; cursor:not-allowed; }
+body[data-theme="light"] .admin-btn, body:not([data-theme="light"]) .admin-btn{ background:none; box-shadow:none; }
+@media (hover:hover){
+  body .admin-btn:hover:not(:disabled){ background:rgba(var(--accent-rgb),.08); border-color:var(--accent); color:var(--accent); box-shadow:none; }
+}
+.admin-btn:active:not(:disabled){ transform:scale(.97); }
+
+body[data-theme="light"] .admin-btn.primary, body:not([data-theme="light"]) .admin-btn.primary{
+  background:var(--accent); border-color:var(--accent); color:var(--bg); box-shadow:none;
+}
+@media (hover:hover){
+  body .admin-btn.primary:hover:not(:disabled){ background:var(--accent); border-color:var(--accent); color:var(--bg); filter:brightness(1.06); }
+}
+
+body[data-theme="light"] .admin-btn.danger, body:not([data-theme="light"]) .admin-btn.danger{
+  background:none; border-color:var(--adm-red); color:var(--adm-red); box-shadow:none;
+}
+@media (hover:hover){
+  body .admin-btn.danger:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:var(--adm-red); color:var(--adm-red); }
+}
+.admin-btn.sm{ padding:6px 11px; font-size:11.5px; border-radius:10px; }
+.admin-btn:disabled, body .admin-btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
 
 .admin-input{
-  background:rgba(255,255,255,.035); border:1px solid var(--adm-border-strong); border-radius:12px; padding:9px 12px;
-  color:var(--adm-text); font-size:12.5px; outline:none; transition:border-color .15s ease;
+  font-family:var(--font-vazir), var(--font-latin), sans-serif;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:10px 13px;
+  color:var(--text); font-size:13px; line-height:1.5; outline:none; min-width:0;
+  backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  transition:border-color .15s ease;
 }
-.admin-input:focus{ border-color:var(--adm-accent); }
+body[data-theme="light"] .admin-input{ background:rgba(255,255,255,.35); border-color:var(--line); }
+.admin-input:focus{ border-color:var(--accent); }
+.admin-input::placeholder{ color:var(--muted2); }
+.admin-input:disabled{ opacity:.5; cursor:not-allowed; }
+select.admin-input{ cursor:pointer; }
+select.admin-input option{ background:var(--surface-2); color:var(--text); }
+input[type="date"].admin-input, input[type="datetime-local"].admin-input{ direction:ltr; text-align:right; }
+/* زیر ۱۶px سافاریِ موبایل موقعِ فوکوس زوم می‌کنه — همون قانونِ .wsearch-newform-name */
+@media (max-width:640px){ .admin-input{ font-size:16px; } }
 
 /* --- Range picker --- */
 .admin-range-picker{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .admin-range-btn{
-  padding:7px 13px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid var(--adm-border-strong);
-  background:rgba(255,255,255,.035); color:var(--adm-muted); cursor:pointer; transition:all .15s ease;
+  padding:7px 13px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid var(--line);
+  background:none; color:var(--muted); cursor:pointer; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
 }
-@media (hover:hover){.admin-range-btn:hover{ color:var(--adm-text); }}
-.admin-range-btn.active{ background:var(--adm-accent-dim); border-color:rgba(var(--adm-accent-rgb),.4); color:var(--adm-accent); }
+body[data-theme="light"] .admin-range-btn, body:not([data-theme="light"]) .admin-range-btn{ background:none; box-shadow:none; }
+@media (hover:hover){ body .admin-range-btn:hover{ color:var(--accent); border-color:var(--accent); background:none; box-shadow:none; } }
+body .admin-range-btn.active{ background:var(--adm-accent-dim); border-color:rgba(var(--adm-accent-rgb),.4); color:var(--adm-accent); }
 
-/* --- Filter tabs (users/subscriptions/transactions) --- */
+/* --- Filter tabs (users/subscriptions/transactions) — همون الگوی پیلِ
+   .admin-range-btn؛ حالتِ عادی بی‌بک‌گراند --- */
 .admin-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
 .admin-tab{
-  padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; border:1px solid var(--adm-border);
-  background:transparent; color:var(--adm-muted); cursor:pointer; transition:all .15s ease; text-decoration:none;
+  display:inline-flex; align-items:center; gap:5px;
+  padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; border:1px solid var(--line);
+  background:none; color:var(--muted); cursor:pointer; text-decoration:none; white-space:nowrap;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
 }
-@media (hover:hover){.admin-tab:hover{ color:var(--adm-text); }}
-.admin-tab.active{ background:var(--adm-accent-dim); border-color:rgba(var(--adm-accent-rgb),.4); color:var(--adm-accent); }
+body[data-theme="light"] .admin-tab, body:not([data-theme="light"]) .admin-tab{ background:none; box-shadow:none; }
+@media (hover:hover){ body .admin-tab:hover:not(:disabled){ color:var(--accent); border-color:var(--accent); background:none; box-shadow:none; } }
+body .admin-tab.active{ background:var(--adm-accent-dim); border-color:rgba(var(--adm-accent-rgb),.4); color:var(--adm-accent); }
+
+/* ناوبری/منوی کشویی/پیشنهاد — عنصرهای ghost؛ توی تمِ روشن هم نباید
+   بک‌گراندِ شیشه‌ایِ button{} سراسری رو بگیرن. */
+body[data-theme="light"] .admin-nav-head, body:not([data-theme="light"]) .admin-nav-head{ background:none; box-shadow:none; border-color:transparent; }
+body[data-theme="light"] .admin-suggest-row, body:not([data-theme="light"]) .admin-suggest-row{ background:none; box-shadow:none; }
+body .admin-nav-head.active{ background:var(--adm-accent-dim); color:var(--adm-accent); }
+@media (hover:hover){
+  body .admin-nav-head:not(.active):hover{ background:rgba(var(--accent-rgb),.06); color:var(--adm-text); }
+  body .admin-nav-logout:hover{ background:var(--adm-red-dim); color:var(--adm-red); }
+  body .admin-suggest-row:hover{ background:rgba(var(--accent-rgb),.07); color:var(--adm-text); }
+}
+body[data-theme="light"] .admin-mobile-toggle, body:not([data-theme="light"]) .admin-mobile-toggle,
+body[data-theme="light"] .admin-mobile-close, body:not([data-theme="light"]) .admin-mobile-close{ background:none; box-shadow:none; padding:0; }
+@media (hover:hover){ body .admin-mobile-toggle:hover, body .admin-mobile-close:hover{ background:none; color:var(--accent); border-color:var(--accent); } }
 
 /* --- Simple SVG line/bar chart primitives --- */
 .admin-svg-chart{ width:100%; height:auto; overflow:visible; }
@@ -5049,7 +5107,6 @@ body[data-theme="light"] button.admin-icon-btn{ background:transparent; box-shad
 .admin-page-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
 .admin-page-kicker{ font-size:17px; font-weight:800; color:var(--adm-text); margin-bottom:4px; }
 .admin-head-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.admin-btn:disabled{ opacity:.5; cursor:not-allowed; }
 a.admin-btn{ text-decoration:none; }
 
 .admin-toolbar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
@@ -5147,6 +5204,16 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
   .admin-access-controls .admin-input{ width:128px; }
   .admin-user-hero .admin-head-actions{ width:100%; }
 }
+
+/* ============================================================================
+   پنل مدیریت — اصلاحات صفحه‌به‌صفحه. هر گروه فقط زیر هدر خودش CSS اضافه می‌کنه.
+   ============================================================================ */
+/* [admin-pages:overview-analytics] */
+/* [admin-pages:users-admins] */
+/* [admin-pages:commerce] */
+/* [admin-pages:content-support] */
+/* [admin-pages:mentors-system] */
+
 
 /* ============================================================
    دستگاه‌های رده پایین (lib/perfTier.ts علامتشان می‌زند: هر دستگاه لمسی،
