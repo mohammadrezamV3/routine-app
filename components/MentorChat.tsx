@@ -2,16 +2,17 @@
 
 import "./mentor.css";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, CheckCheck, Clock, Flag, Loader2, RotateCcw, Send, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, CheckCheck, Clock, Flag, RefreshCw, Send, Trash2 } from "lucide-react";
 import type { ChatMessage, MessagesResponse } from "@/lib/mentorTypes";
 import { fmtMsgTime, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
-import { LoadingBlock } from "./Spinner";
+import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorErrorState } from "./MentorPageShell";
 import { MentorReportModal } from "./MentorReportModal";
 
 const POLL_MS = 8000;
 const MAX_LEN = 2000;
+const META_ICON = { size: 13, strokeWidth: 1.75 } as const;
 
 type Pending = { tempId: string; body: string; createdAt: string; state: "sending" | "failed"; error?: string };
 
@@ -24,8 +25,8 @@ function sortByTime(a: { createdAt: string }, b: { createdAt: string }) {
  *
  *  • هر ~۸ ثانیه فقط وقتی تب دیده می‌شود تازه می‌شود؛ برگشتن به تب فورا
  *    یک بار می‌گیرد. خودِ GET پیام‌های دریافتی را «خوانده» می‌کند.
- *  • ارسالِ خوش‌بینانه: پیام بلافاصله با ساعتِ «در حال ارسال» دیده می‌شود؛
- *    شکست → قرمز با «تلاش دوباره»/«حذف»، پس متن هیچ‌وقت گم نمی‌شود.
+ *  • ارسالِ خوش‌بینانه: پیام بلافاصله با آیکونِ ساعت دیده می‌شود؛
+ *    شکست → کم‌رنگ با «تلاش دوباره»/«حذف»، پس متن هیچ‌وقت گم نمی‌شود.
  *  • تیکِ خوانده‌شدن از readAt؛ «پیام‌های قبلی» با before=<قدیمی‌ترین>.
  *  • canSend=false (رابطه‌ی پایان‌یافته) → فقط‌خواندنی با دلیلِ روشن.
  */
@@ -60,7 +61,7 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
       if (!res.ok) {
         // فقط بارِ اول صفحه را به خطا می‌برد؛ شکستِ یک polling بعدی بی‌صدا
         // نادیده گرفته می‌شود و دورِ بعد دوباره امتحان می‌شود.
-        if (initial) setLoadError(await readApiError(res, "گفت‌وگو بارگذاری نشد"));
+        if (initial) setLoadError(await readApiError(res, "گفت‌وگو دریافت نشد؛ دوباره تلاش کن"));
         return;
       }
       const data: MessagesResponse = await res.json();
@@ -116,7 +117,7 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
     setOlderError(null);
     try {
       const res = await fetch(`/api/mentorships/${mentorshipId}/messages?before=${encodeURIComponent(messages[0].createdAt)}`, { cache: "no-store" });
-      if (!res.ok) { setOlderError(await readApiError(res, "پیام‌های قبلی بارگذاری نشد")); return; }
+      if (!res.ok) { setOlderError(await readApiError(res, "پیام‌های قبلی دریافت نشد؛ دوباره تلاش کن")); return; }
       const data: MessagesResponse = await res.json();
       const el = threadRef.current;
       if (el) preserveFrom.current = el.scrollHeight - el.scrollTop;
@@ -174,14 +175,14 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
     <div className="mentor-chat">
       <div className="support-thread thin-scroll" ref={threadRef} onScroll={onScroll} aria-live="polite">
         {hasMore && (
-          <button type="button" className="trade-ghost-btn mentor-chat-older" onClick={loadOlder} disabled={olderBusy}>
-            {olderBusy ? <Loader2 size={13} className="trade-spin" /> : "پیام‌های قبلی"}
+          <button type="button" className="mentor-text-btn mentor-chat-older" onClick={loadOlder} disabled={olderBusy}>
+            {olderBusy ? <Spinner size={14} /> : "نمایش پیام‌های قبلی"}
           </button>
         )}
-        {olderError && <div className="trade-form-error" style={{ textAlign: "center", marginTop: 0 }}>{olderError}</div>}
+        {olderError && <p className="mentor-field-error mentor-chat-older" role="alert">{olderError}</p>}
 
         {messages.length === 0 && pending.length === 0 && (
-          <div className="mentor-chat-empty">هنوز پیامی رد و بدل نشده.<br />{canSend ? "اولین پیام را بفرست." : ""}</div>
+          <div className="mentor-chat-empty">هنوز پیامی نیست</div>
         )}
 
         {messages.map((m) => (
@@ -190,13 +191,13 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
             <span className="mentor-msg-meta">
               <span className="mono">{fmtMsgTime(m.createdAt)}</span>
               {m.mine && (m.readAt
-                ? <CheckCheck size={12} aria-label="خوانده شد" />
-                : <Check size={12} aria-label="ارسال شد" />)}
+                ? <CheckCheck {...META_ICON} aria-label="خوانده شد" />
+                : <Check {...META_ICON} aria-label="ارسال شد" />)}
             </span>
             {!m.mine && (
               <span className="mentor-msg-actions">
                 <button type="button" onClick={() => setReportId(m.id)} aria-label="گزارش این پیام">
-                  <Flag size={10} /> گزارش
+                  <Flag {...META_ICON} aria-hidden /> گزارش
                 </button>
               </span>
             )}
@@ -208,18 +209,18 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
             {p.body}
             <span className="mentor-msg-meta">
               {p.state === "sending" ? (
-                <><Clock size={11} /> در حال ارسال…</>
+                <Clock {...META_ICON} aria-label="در صف ارسال" />
               ) : (
-                <><AlertTriangle size={11} /> {p.error || "ارسال نشد"}</>
+                <><AlertTriangle {...META_ICON} aria-hidden /> {p.error || "ارسال نشد"}</>
               )}
             </span>
             {p.state === "failed" && (
               <span className="mentor-msg-actions">
                 {canSend && (
-                  <button type="button" onClick={() => deliver(p)}><RotateCcw size={10} /> تلاش دوباره</button>
+                  <button type="button" onClick={() => deliver(p)}><RefreshCw {...META_ICON} aria-hidden /> ارسال دوباره</button>
                 )}
                 <button type="button" onClick={() => setPending((prev) => prev.filter((x) => x.tempId !== p.tempId))}>
-                  <Trash2 size={10} /> حذف
+                  <Trash2 {...META_ICON} aria-hidden /> حذف پیام
                 </button>
               </span>
             )}
@@ -228,33 +229,33 @@ export function MentorChat({ mentorshipId }: { mentorshipId: string }) {
       </div>
 
       {canSend ? (
-        <form className="routine-ai-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
-          <textarea
-            className="routine-ai-input"
-            rows={1}
-            value={draft}
-            maxLength={MAX_LEN + 200}
-            placeholder="پیامت را بنویس…"
-            aria-label="متن پیام"
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-          />
-          <button
-            type="submit"
-            className={`routine-ai-action${hasText ? " has-text" : ""}`}
-            disabled={!hasText}
-            aria-label="ارسال"
-            title="ارسال"
-          >
-            <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} /></span>
-          </button>
-        </form>
+        <>
+          {tooLong && <p className="mentor-field-error" role="alert">پیام حداکثر {faNum(MAX_LEN)} نویسه است</p>}
+          <form className="routine-ai-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
+            <textarea
+              className="routine-ai-input"
+              rows={1}
+              value={draft}
+              maxLength={MAX_LEN + 200}
+              placeholder="پیام"
+              aria-label="متن پیام"
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            />
+            <button
+              type="submit"
+              className={`routine-ai-action${hasText ? " has-text" : ""}`}
+              disabled={!hasText}
+              aria-label="ارسال پیام"
+              title="ارسال پیام"
+            >
+              <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} strokeWidth={1.75} /></span>
+            </button>
+          </form>
+        </>
       ) : (
-        <div className="mentor-chat-disabled">
-          این گفت‌وگو فقط‌خواندنی است — ارسالِ پیام فقط وقتی رابطه‌ی منتوری فعال باشد ممکن است.
-        </div>
+        <div className="mentor-chat-disabled">گفت‌وگو فقط‌خواندنی است؛ ارسال پیام فقط در رابطه‌ی فعال ممکن است</div>
       )}
-      {tooLong && <div className="trade-form-error">پیام حداکثر {faNum(MAX_LEN)} کاراکتر می‌تواند باشد.</div>}
 
       {reportId && <MentorReportModal targetType="MESSAGE" targetId={reportId} onClose={() => setReportId(null)} />}
     </div>

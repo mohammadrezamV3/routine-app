@@ -5,25 +5,32 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { createPortal } from "react-dom";
-import { Flag, Loader2, MessageSquareText, Pencil, Send, Star, Trash2, UserX, X } from "lucide-react";
+import {
+  Activity, AlertCircle, Ban, Check, CircleSlash, ClipboardList, Flag, Hourglass, MessageCircle, MessageSquareText, Pencil, Send, Star,
+  Trash2, UserRound, Users, X,
+} from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
+import { MentorChip, MentorEmpty, MentorField, MentorSection } from "@/components/MentorUI";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
-import { RatingStars, VerificationBadges, categoryLabel } from "@/components/MentorBadges";
+import { CategoryChip, RatingStars, VerificationBadges, categoryLabel } from "@/components/MentorBadges";
 import { MentorReportModal } from "@/components/MentorReportModal";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
-import { LoadingBlock } from "@/components/Spinner";
-import { AccountBlock } from "@/components/AccountUI";
+import { LoadingBlock, Spinner } from "@/components/Spinner";
 import type { MentorProfileResponse, MyMentorship, Review, ReportTargetType } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
 
 const MESSAGE_MAX = 500;
 const REVIEW_MAX = 1000;
+const CHIP = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
+const BTN = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
+const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
+const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorProfilePage() {
   return (
-    <MentorPageShell back={{ href: "/mentors", label: "منتورها" }}>
+    <MentorPageShell back={{ href: "/mentors", label: "کشف منتور" }}>
       <MentorProfile />
     </MentorPageShell>
   );
@@ -41,9 +48,9 @@ function MentorProfile() {
     setError(null);
     try {
       const res = await fetch(`/api/mentors/${mentorId}`, { cache: "no-store" });
-      if (res.status === 404) { setError({ msg: "این منتور پیدا نشد یا پروفایلش منتشر نشده است.", retry: false }); return; }
-      if (res.status === 403) { setError({ msg: await readApiError(res, "به این بخش دسترسی نداری."), retry: false }); return; }
-      if (!res.ok) { setError({ msg: await readApiError(res, "پروفایل بارگذاری نشد"), retry: true }); return; }
+      if (res.status === 404) { setError({ msg: "این منتور پیدا نشد یا پروفایلش منتشر نشده است", retry: false }); return; }
+      if (res.status === 403) { setError({ msg: await readApiError(res, "اجازه‌ی دیدن این پروفایل را نداری"), retry: false }); return; }
+      if (!res.ok) { setError({ msg: await readApiError(res, "پروفایل دریافت نشد؛ دوباره تلاش کن"), retry: true }); return; }
       setData(await res.json());
     } catch {
       setError({ msg: NETWORK_ERROR, retry: true });
@@ -52,101 +59,103 @@ function MentorProfile() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (error) {
-    return (
-      <>
-        <MentorErrorState message={error.msg} onRetry={error.retry ? load : undefined} />
-        {!error.retry && (
-          <div className="mentor-more"><Link href="/mentors" className="mentor-link">بازگشت به لیستِ منتورها</Link></div>
-        )}
-      </>
-    );
-  }
+  if (error) return <MentorErrorState message={error.msg} onRetry={error.retry ? load : undefined} />;
   if (!data) return <LoadingBlock />;
 
   const { mentor, reviews, myMentorship, canReview, myReview } = data;
   const isSelf = !!myId && myId === mentor.userId;
+  const role = mentor.categories.includes("ROUTINE") && mentor.routineRole?.trim() ? mentor.routineRole.trim() : null;
+  const hasChips = mentor.identityVerified || mentor.certifications.some((c) => c.verified) || mentor.categories.length > 0;
 
   return (
     <>
-      <div className="trade-surface mentor-hero">
+      <div className="trade-surface mentor-hero acc-block">
         <div className="mentor-hero-top">
-          <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={68} />
+          <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={48} />
           <div className="mentor-hero-id">
+            {role && <div className="rp-card-eyebrow">{role}</div>}
             <h1 className="mentor-hero-name">{mentor.name}</h1>
             {mentor.headline && <p className="mentor-hero-headline">{mentor.headline}</p>}
-            <div style={{ marginTop: 6 }}><RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} /></div>
+            <RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} />
           </div>
           {!isSelf && (
-            <button type="button" className="trade-icon-btn" onClick={() => setReport({ type: "USER", id: mentor.userId })} aria-label="گزارشِ این منتور" title="گزارشِ این منتور">
-              <Flag size={16} />
+            <button
+              type="button"
+              className="trade-icon-btn"
+              onClick={() => setReport({ type: "USER", id: mentor.userId })}
+              aria-label="گزارش این منتور"
+              title="گزارش این منتور"
+            >
+              <Flag size={16} strokeWidth={1.75} aria-hidden />
             </button>
           )}
         </div>
 
-        <VerificationBadges identityVerified={mentor.identityVerified} certifications={mentor.certifications} />
-        {mentor.categories.length > 0 && (
-          <div className="mentor-chip-list" style={{ marginTop: 8 }}>
-            {mentor.categories.map((c) => <span key={c} className="mentor-badge is-cat">{categoryLabel(c)}</span>)}
+        {hasChips && (
+          <div className="mentor-chips" style={{ marginTop: 12 }}>
+            <VerificationBadges identityVerified={mentor.identityVerified} certifications={mentor.certifications} />
+            {mentor.categories.map((c) => <CategoryChip key={c} category={c} />)}
           </div>
         )}
 
         <div className="mentor-stats">
-          <div className="mentor-stat"><b>{faNum(mentor.activeStudents)}</b><span>شاگردِ فعال</span></div>
-          <div className="mentor-stat"><b>{faNum(mentor.totalStudents)}</b><span>کلِ شاگردها</span></div>
-          <div className="mentor-stat"><b>{faNum(mentor.completedPrograms)}</b><span>برنامه‌ی تکمیل‌شده</span></div>
-          <div className="mentor-stat"><b style={{ fontSize: 12.5 }}>{fmtRelative(mentor.lastActiveAt)}</b><span>آخرین فعالیت</span></div>
+          <div className="mentor-stat"><b>{faNum(mentor.activeStudents)}</b><span><Users {...CHIP} /> شاگرد فعال</span></div>
+          <div className="mentor-stat"><b>{faNum(mentor.totalStudents)}</b><span><UserRound {...CHIP} /> کل شاگردها</span></div>
+          <div className="mentor-stat"><b>{faNum(mentor.completedPrograms)}</b><span><ClipboardList {...CHIP} /> برنامه‌ی تمام‌شده</span></div>
+          <div className="mentor-stat"><b>{fmtRelative(mentor.lastActiveAt)}</b><span><Activity {...CHIP} /> آخرین فعالیت</span></div>
         </div>
 
-        <div className="mentor-hero-actions">
-          {isSelf ? (
-            <Link href="/mentor/profile" className="mentor-link">
-              <Pencil size={14} /> ویرایشِ پروفایلِ منتوری
-            </Link>
-          ) : (
-            <ConnectAction
-              mentorId={mentor.userId}
-              mentorName={mentor.name}
-              mentorCategories={mentor.categories}
-              accepting={mentor.acceptingStudents}
-              mine={myMentorship}
-              onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
-              onStale={load}
-            />
-          )}
-        </div>
-        {mentor.memberSince && <div className="mentor-muted" style={{ marginTop: 10, fontSize: 11 }}>منتورِ آریون از {fmtDate(mentor.memberSince)}</div>}
+        {isSelf ? (
+          <div className="mentor-hero-actions">
+            <MentorChip tone="neutral" icon={<UserRound {...CHIP} />}>پروفایل خودت</MentorChip>
+          </div>
+        ) : (
+          <ConnectAction
+            mentorId={mentor.userId}
+            mentorName={mentor.name}
+            mentorCategories={mentor.categories}
+            accepting={mentor.acceptingStudents}
+            mine={myMentorship}
+            onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
+            onStale={load}
+          />
+        )}
+        {mentor.memberSince && <p className="mentor-muted" style={{ marginTop: 12 }}>منتور آریون از {fmtDate(mentor.memberSince)}</p>}
       </div>
 
       {(mentor.bio || mentor.specialties.length > 0) && (
-        <div style={{ marginTop: 16 }}>
-          <AccountBlock title="درباره‌ی منتور">
+        <MentorSection title="درباره‌ی منتور" icon={<UserRound {...SECTION} />}>
+          <div className="mentor-form">
             {mentor.bio && <p className="mentor-bio">{mentor.bio}</p>}
             {mentor.specialties.length > 0 && (
-              <>
-                <div className="exercise-form-label" style={{ marginTop: mentor.bio ? 14 : 4 }}>تخصص‌ها</div>
-                <div className="mentor-chip-list">
-                  {mentor.specialties.map((s) => <span key={s} className="mentor-badge is-cat">{s}</span>)}
+              <div className="mentor-field">
+                <span className="mentor-field-label">تخصص‌ها</span>
+                <div className="mentor-chips">
+                  {mentor.specialties.map((s) => <span key={s} className="mentor-chip is-cat"><span>{s}</span></span>)}
                 </div>
-              </>
+              </div>
             )}
-          </AccountBlock>
-        </div>
+          </div>
+        </MentorSection>
       )}
 
       {!isSelf && (canReview || myReview) && (
         <MyReviewBox mentorId={mentor.userId} myReview={myReview} onChanged={load} />
       )}
 
-      <AccountBlock title={`نظرها${reviews.length ? ` (${faNum(mentor.ratingCount || reviews.length)})` : ""}`} icon={<MessageSquareText size={15} />}>
+      <MentorSection
+        title="نظرها"
+        icon={<MessageSquareText {...SECTION} />}
+        count={reviews.length ? faNum(mentor.ratingCount || reviews.length) : undefined}
+      >
         {reviews.length === 0 ? (
-          <p className="mentor-muted" style={{ margin: 0 }}>هنوز نظری برای این منتور ثبت نشده.</p>
+          <MentorEmpty>هنوز نظری ثبت نشده است</MentorEmpty>
         ) : (
           reviews.map((r) => (
             <ReviewRow key={r.id} review={r} canReport={!isSelf && r.id !== myReview?.id} onReport={() => setReport({ type: "REVIEW", id: r.id })} />
           ))
         )}
-      </AccountBlock>
+      </MentorSection>
 
       {report && <MentorReportModal targetType={report.type} targetId={report.id} onClose={() => setReport(null)} />}
     </>
@@ -156,15 +165,15 @@ function MentorProfile() {
 function ReviewRow({ review, canReport, onReport }: { review: Review; canReport: boolean; onReport: () => void }) {
   return (
     <div className="mentor-review">
-      <MentorUserAvatar name={review.student.name} avatarUrl={review.student.avatarUrl} size={34} />
+      <MentorUserAvatar name={review.student.name} avatarUrl={review.student.avatarUrl} size={36} />
       <div className="mentor-review-body">
         <div className="mentor-review-head">
           <span className="mentor-review-name">{review.student.name || "شاگرد"}</span>
           <RatingStars value={review.rating} />
           <span className="mentor-review-date">{fmtDate(review.createdAt)}</span>
           {canReport && (
-            <button type="button" className="trade-ghost-btn" style={{ marginInlineStart: "auto", padding: "3px 6px" }} onClick={onReport} aria-label="گزارشِ این نظر">
-              <Flag size={12} />
+            <button type="button" className="trade-icon-btn" style={{ marginInlineStart: "auto" }} onClick={onReport} aria-label="گزارش این نظر" title="گزارش این نظر">
+              <Flag {...BTN_SM} />
             </button>
           )}
         </div>
@@ -174,7 +183,7 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
   );
 }
 
-/** دکمه‌ی اتصال — حالتش از myMentorship می‌آید */
+/** اکشنِ اتصال — حالتش از myMentorship می‌آید. خطا بالای دکمه‌ها. */
 function ConnectAction({
   mentorId, mentorName, mentorCategories, accepting, mine, onChange, onStale,
 }: {
@@ -221,47 +230,49 @@ function ConnectAction({
   let body: React.ReactNode;
   if (mine?.status === "ACTIVE") {
     body = (
-      <Link href={`/mentorship/${mine.id}`} className="trade-primary-btn" style={{ textDecoration: "none" }}>
-        <MessageSquareText size={15} /> گفت‌وگو و برنامه‌ها
+      <Link href={`/mentorship/${mine.id}`} className="trade-primary-btn mentor-btn">
+        <MessageCircle {...BTN} /> باز کردن گفت‌وگو
       </Link>
     );
   } else if (mine?.status === "PENDING" && mine.initiatedBy === "STUDENT") {
     body = (
       <>
-        <span className="mentor-status is-pending">درخواستت در انتظارِ پاسخِ منتور است</span>
-        <button type="button" className="account-outline-btn muted" onClick={() => setConfirmCancel(true)} disabled={!!busy}>
-          لغوِ درخواست
+        <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>منتظر پاسخ منتور</MentorChip>
+        <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmCancel(true); }} disabled={!!busy}>
+          <X {...BTN_SM} /> لغو درخواست
         </button>
       </>
     );
   } else if (mine?.status === "PENDING" && mine.initiatedBy === "MENTOR") {
     body = (
       <>
-        <span className="mentor-muted" style={{ width: "100%" }}>این منتور تو را به‌عنوانِ شاگرد دعوت کرده است.</span>
-        <button type="button" className="trade-primary-btn" onClick={() => patch("accept")} disabled={!!busy}>
-          {busy === "accept" ? <Loader2 size={15} className="trade-spin" /> : "پذیرفتنِ دعوت"}
-        </button>
-        <button type="button" className="account-outline-btn muted" onClick={() => patch("reject")} disabled={!!busy}>
-          {busy === "reject" ? <Loader2 size={15} className="trade-spin" /> : "رد"}
-        </button>
+        <MentorChip tone="warn" icon={<AlertCircle {...CHIP} />} title="این منتور تو را به‌عنوان شاگرد دعوت کرده است">منتظر پاسخ تو</MentorChip>
+        <div className="mentor-btn-group" style={{ width: "100%" }}>
+          <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => patch("reject")} disabled={!!busy}>
+            {busy === "reject" ? <Spinner size={14} /> : <><X {...BTN} /> رد دعوت</>}
+          </button>
+          <button type="button" className="trade-primary-btn mentor-btn" onClick={() => patch("accept")} disabled={!!busy}>
+            {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> پذیرفتن دعوت</>}
+          </button>
+        </div>
       </>
     );
   } else if (mine?.status === "BLOCKED") {
-    body = <span className="mentor-muted"><UserX size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> امکانِ ارتباط با این منتور وجود ندارد.</span>;
+    body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این منتور ممکن نیست</MentorChip>;
   } else if (!accepting) {
-    body = <span className="mentor-muted">این منتور فعلا شاگردِ جدید نمی‌پذیرد.</span>;
+    body = <MentorChip tone="neutral" icon={<CircleSlash {...CHIP} />}>شاگرد جدید نمی‌پذیرد</MentorChip>;
   } else {
     body = (
-      <button type="button" className="trade-primary-btn" onClick={() => setRequestOpen(true)}>
-        <Send size={15} /> {mine && (mine.status === "ENDED" || mine.status === "REJECTED") ? "درخواستِ دوباره" : "درخواستِ منتوری"}
+      <button type="button" className="trade-primary-btn mentor-btn" onClick={() => setRequestOpen(true)}>
+        <Send {...BTN} /> {mine && (mine.status === "ENDED" || mine.status === "REJECTED") ? "ارسال دوباره‌ی درخواست" : "ارسال درخواست"}
       </button>
     );
   }
 
   return (
     <>
-      {body}
-      {error && !confirmCancel && <div className="trade-form-error" style={{ width: "100%", marginTop: 4 }}>{error}</div>}
+      {error && !confirmCancel && <div className="form-inline-error" role="alert">{error}</div>}
+      <div className="mentor-hero-actions">{body}</div>
       {requestOpen && (
         <RequestModal
           mentorId={mentorId}
@@ -274,8 +285,9 @@ function ConnectAction({
       )}
       {confirmCancel && (
         <MentorConfirmDialog
-          message="درخواستِ منتوری لغو شود؟"
-          confirmLabel="لغوِ درخواست"
+          message={`درخواست به ${mentorName} لغو شود؟`}
+          hint="بعداً می‌توانی دوباره درخواست بدهی."
+          confirmLabel="لغو درخواست"
           busy={busy === "cancel"}
           error={error}
           onConfirm={() => patch("cancel")}
@@ -300,11 +312,14 @@ function RequestModal({
   // حوزه‌ی منتوری (مثلا فقط «روتین») — پیش‌فرض همه‌ی حوزه‌های منتور
   const [cats, setCats] = useState<string[]>(mentorCategories);
   const [busy, setBusy] = useState(false);
+  const [catsError, setCatsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const len = message.trim().length;
+  const tooLong = len > MESSAGE_MAX;
 
   async function submit() {
-    if (mentorCategories.length > 0 && cats.length === 0) { setError("حداقل یک حوزه انتخاب کن"); return; }
-    if (message.trim().length > MESSAGE_MAX) { setError(`پیام حداکثر ${faNum(MESSAGE_MAX)} کاراکتر است`); return; }
+    if (mentorCategories.length > 0 && cats.length === 0) { setCatsError("حداقل یک حوزه انتخاب کن"); return; }
+    if (tooLong) return;
     setBusy(true);
     setError(null);
     try {
@@ -313,8 +328,8 @@ function RequestModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mentorId, message: message.trim() || undefined, ...(mentorCategories.length ? { categories: cats } : {}) }),
       });
-      if (res.status === 409) { setError("قبلا با این منتور درخواست یا رابطه‌ی فعالی داری."); onStale(); return; }
-      if (!res.ok) { setError(await readApiError(res, "ارسالِ درخواست انجام نشد")); return; }
+      if (res.status === 409) { setError("با این منتور درخواست باز یا رابطه‌ی فعال داری"); onStale(); return; }
+      if (!res.ok) { setError(await readApiError(res, "درخواست ارسال نشد؛ دوباره تلاش کن")); return; }
       const d = await res.json().catch(() => null);
       const m = d?.mentorship;
       if (m?.id) onDone({ id: m.id, status: m.status ?? "PENDING", initiatedBy: m.initiatedBy ?? "STUDENT" });
@@ -331,50 +346,55 @@ function RequestModal({
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 440 }}>
+      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label={`درخواست منتوری از ${mentorName}`} style={{ zIndex: 91, maxWidth: 440 }}>
         <div className="modal-head">
-          <div className="modal-title">درخواستِ منتوری از {mentorName}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}><X size={16} /></button>
+          <div className="modal-title">درخواست منتوری از {mentorName}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}>
+            <X size={16} strokeWidth={1.75} />
+          </button>
         </div>
-        <p className="mentor-muted" style={{ margin: "0 0 4px" }}>
-          بعد از پذیرفتنِ درخواست، منتور فقط همان بخش‌هایی از برنامه‌ات را می‌بیند که خودت در «دسترسی‌ها» اجازه بدهی — به‌طورِ پیش‌فرض هیچ‌کدام.
-        </p>
-        {mentorCategories.length > 1 && (
-          <>
-            <div className="exercise-form-label">منتورت در چه حوزه‌ای باشه؟</div>
-            <div className="trade-tag-row" role="group" aria-label="حوزه">
-              {mentorCategories.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`trade-tag-chip${cats.includes(c) ? " active" : ""}`}
-                  onClick={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setError(null); }}
-                  aria-pressed={cats.includes(c)}
-                >
-                  {categoryLabel(c)}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-        <label className="exercise-form-label" htmlFor="mentor-req-msg">پیام (اختیاری)</label>
-        <textarea
-          id="mentor-req-msg"
-          className="wsearch-newform-name trade-glass-field"
-          rows={4}
-          value={message}
-          maxLength={MESSAGE_MAX + 50}
-          onChange={(e) => { setMessage(e.target.value); setError(null); }}
-          placeholder="هدفت چیست و از منتور چه انتظاری داری؟"
-        />
-        <div className="mentor-muted" style={{ fontSize: 10.5, textAlign: "left", color: message.trim().length > MESSAGE_MAX ? "#E05252" : undefined }}>
-          {faNum(message.trim().length)}/{faNum(MESSAGE_MAX)}
+        <div className="mentor-form">
+          <p className="mentor-muted">منتور تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.</p>
+          {mentorCategories.length > 1 && (
+            <MentorField label="حوزه‌ی همکاری" error={catsError}>
+              <div role="group" aria-label="حوزه‌ی همکاری">
+                {mentorCategories.map((c) => (
+                  <label key={c} className="mentor-check">
+                    <input
+                      type="checkbox"
+                      checked={cats.includes(c)}
+                      onChange={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
+                    />
+                    <span className="mentor-check-label">{categoryLabel(c)}</span>
+                  </label>
+                ))}
+              </div>
+            </MentorField>
+          )}
+          <MentorField
+            label="پیام"
+            htmlFor="mentor-req-msg"
+            optional
+            error={tooLong ? `پیام حداکثر ${faNum(MESSAGE_MAX)} نویسه است` : null}
+            hint={`${faNum(len)} از ${faNum(MESSAGE_MAX)} نویسه`}
+          >
+            <textarea
+              id="mentor-req-msg"
+              className="wsearch-newform-name trade-glass-field"
+              rows={4}
+              value={message}
+              maxLength={MESSAGE_MAX + 50}
+              onChange={(e) => { setMessage(e.target.value); setError(null); }}
+              placeholder="مثلاً «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»"
+              aria-invalid={tooLong}
+            />
+          </MentorField>
         </div>
-        {error && <div className="trade-form-error">{error}</div>}
+        {error && <div className="form-inline-error" role="alert">{error}</div>}
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose} disabled={busy}>انصراف</button>
-          <button type="button" className="trade-primary-btn" onClick={submit} disabled={busy}>
-            {busy ? <Loader2 size={15} className="trade-spin" /> : "ارسالِ درخواست"}
+          <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
+          <button type="button" className="trade-primary-btn mentor-btn" onClick={submit} disabled={busy || tooLong}>
+            {busy ? <Spinner size={14} /> : "ارسال درخواست"}
           </button>
         </div>
       </div>
@@ -389,8 +409,11 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
   const [rating, setRating] = useState(myReview?.rating ?? 0);
   const [body, setBody] = useState(myReview?.body ?? "");
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
+  const [ratingError, setRatingError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const len = body.trim().length;
+  const tooLong = len > REVIEW_MAX;
 
   useEffect(() => {
     setEditing(!myReview);
@@ -399,8 +422,8 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
   }, [myReview]);
 
   async function save() {
-    if (rating < 1 || rating > 5) { setError("امتیاز را با ستاره‌ها انتخاب کن"); return; }
-    if (body.trim().length > REVIEW_MAX) { setError(`متنِ نظر حداکثر ${faNum(REVIEW_MAX)} کاراکتر است`); return; }
+    if (rating < 1 || rating > 5) { setRatingError("امتیاز را انتخاب کن"); return; }
+    if (tooLong) return;
     setBusy("save");
     setError(null);
     try {
@@ -409,8 +432,8 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, body: body.trim() || undefined }),
       });
-      if (res.status === 409) { setError("قبلا برای این منتور نظر ثبت کرده‌ای."); onChanged(); return; }
-      if (!res.ok) { setError(await readApiError(res, "ثبتِ نظر انجام نشد")); return; }
+      if (res.status === 409) { setError("برای این منتور قبلاً نظر ثبت کرده‌ای"); onChanged(); return; }
+      if (!res.ok) { setError(await readApiError(res, "نظر ثبت نشد؛ دوباره تلاش کن")); return; }
       setEditing(false);
       onChanged();
     } catch {
@@ -425,7 +448,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
     setError(null);
     try {
       const res = await fetch(`/api/mentors/${mentorId}/reviews`, { method: "DELETE" });
-      if (!res.ok && res.status !== 404) { setError(await readApiError(res, "حذفِ نظر انجام نشد")); return; }
+      if (!res.ok && res.status !== 404) { setError(await readApiError(res, "نظر حذف نشد؛ دوباره تلاش کن")); return; }
       setConfirmDelete(false);
       onChanged();
     } catch {
@@ -436,63 +459,89 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
   }
 
   return (
-    <AccountBlock title={myReview ? "نظرِ تو" : "نظرت را بنویس"} icon={<Star size={15} />} desc={myReview ? undefined : "نظرت بعد از ثبت برای همه دیده می‌شود و در امتیازِ منتور حساب می‌شود."}>
+    <MentorSection
+      title={myReview ? "نظر تو" : "ثبت نظر"}
+      icon={<Star {...SECTION} />}
+      desc={myReview ? undefined : "نظر پس از ثبت برای همه دیده می‌شود و در امتیاز منتور حساب می‌شود."}
+    >
       {!editing && myReview ? (
         <>
           <ReviewRow review={myReview} canReport={false} onReport={() => {}} />
-          <div className="mentor-hero-actions" style={{ marginTop: 6 }}>
-            <button type="button" className="account-outline-btn" onClick={() => setEditing(true)}><Pencil size={14} /> ویرایش</button>
-            <button type="button" className="trade-danger-btn" style={{ padding: "8px 14px", borderRadius: 12, fontSize: 12 }} onClick={() => setConfirmDelete(true)}>
-              <Trash2 size={14} /> حذف
+          <div className="mentor-btn-group is-end">
+            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmDelete(true); }}>
+              <Trash2 {...BTN_SM} /> حذف نظر
+            </button>
+            <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setEditing(true)}>
+              <Pencil {...BTN_SM} /> ویرایش نظر
             </button>
           </div>
         </>
       ) : (
-        <>
-          <div className="mentor-star-input" role="radiogroup" aria-label="امتیاز">
-            {[1, 2, 3, 4, 5].map((i) => (
+        <form className="mentor-form" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          <MentorField label="امتیاز" error={ratingError}>
+            <div className="mentor-star-input" role="radiogroup" aria-label="امتیاز">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  role="radio"
+                  aria-checked={rating === i}
+                  aria-label={`${faNum(i)} ستاره`}
+                  className={i <= rating ? "on" : undefined}
+                  onClick={() => { setRating(i); setRatingError(null); }}
+                >
+                  <Star size={24} strokeWidth={1.75} fill={i <= rating ? "currentColor" : "none"} aria-hidden />
+                </button>
+              ))}
+            </div>
+          </MentorField>
+          <MentorField
+            label="نظر تو"
+            htmlFor="mentor-review-body"
+            optional
+            error={tooLong ? `نظر حداکثر ${faNum(REVIEW_MAX)} نویسه است` : null}
+          >
+            <textarea
+              id="mentor-review-body"
+              className="wsearch-newform-name trade-glass-field"
+              rows={3}
+              value={body}
+              maxLength={REVIEW_MAX + 50}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="مثلاً «برنامه‌ها دقیق و قابل اجرا بود»"
+              aria-invalid={tooLong}
+            />
+          </MentorField>
+          {error && !confirmDelete && <div className="form-inline-error" role="alert">{error}</div>}
+          <div className="mentor-form-actions" style={{ marginTop: 0 }}>
+            {myReview && (
               <button
-                key={i}
                 type="button"
-                role="radio"
-                aria-checked={rating === i}
-                aria-label={`${faNum(i)} ستاره`}
-                className={i <= rating ? "on" : undefined}
-                onClick={() => { setRating(i); setError(null); }}
+                className="account-outline-btn muted mentor-btn"
+                onClick={() => { setEditing(false); setError(null); setRatingError(null); setRating(myReview.rating); setBody(myReview.body ?? ""); }}
+                disabled={!!busy}
               >
-                <Star size={24} fill={i <= rating ? "currentColor" : "none"} />
+                انصراف
               </button>
-            ))}
-          </div>
-          <label className="exercise-form-label" htmlFor="mentor-review-body">متن (اختیاری)</label>
-          <textarea
-            id="mentor-review-body"
-            className="wsearch-newform-name trade-glass-field"
-            rows={3}
-            value={body}
-            maxLength={REVIEW_MAX + 50}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="تجربه‌ات از کار با این منتور"
-          />
-          {error && <div className="trade-form-error">{error}</div>}
-          <div className="trade-modal-actions">
-            {myReview && <button type="button" className="account-outline-btn" onClick={() => { setEditing(false); setError(null); setRating(myReview.rating); setBody(myReview.body ?? ""); }} disabled={!!busy}>انصراف</button>}
-            <button type="button" className="trade-primary-btn" onClick={save} disabled={!!busy}>
-              {busy === "save" ? <Loader2 size={15} className="trade-spin" /> : myReview ? "ذخیره‌ی تغییرات" : "ثبتِ نظر"}
+            )}
+            <button type="submit" className="trade-primary-btn mentor-btn" disabled={!!busy || tooLong}>
+              {busy === "save" ? <Spinner size={14} /> : myReview ? "ذخیره‌ی نظر" : "ثبت نظر"}
             </button>
           </div>
-        </>
+        </form>
       )}
+      {!editing && error && !confirmDelete && <div className="form-inline-error" role="alert">{error}</div>}
       {confirmDelete && (
         <MentorConfirmDialog
           message="نظرت حذف شود؟"
-          confirmLabel="حذف"
+          hint="امتیاز منتور بدون این نظر دوباره حساب می‌شود."
+          confirmLabel="حذف نظر"
           busy={busy === "delete"}
           error={error}
           onConfirm={remove}
           onCancel={() => { setConfirmDelete(false); setError(null); }}
         />
       )}
-    </AccountBlock>
+    </MentorSection>
   );
 }

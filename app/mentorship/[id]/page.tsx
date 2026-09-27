@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Ban, ChevronLeft, ChevronRight, ClipboardList, Eye, Loader2, LogOut, Plus, ShieldCheck } from "lucide-react";
+import { Ban, CalendarCheck, Check, ClipboardList, Dumbbell, Eye, Inbox, LogOut, Plus, ShieldCheck, X } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
+import { MentorEmpty, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
 import { MentorChat } from "@/components/MentorChat";
 import { MentorshipStatusBadge, ProgramStatusBadge } from "@/components/ProgramStatusBadge";
@@ -13,35 +13,47 @@ import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { ProgramRespondModal } from "@/components/ProgramRespondModal";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
-import { AccountBlock, AccountSaveBar } from "@/components/AccountUI";
-import { LoadingBlock } from "@/components/Spinner";
+import { AccountSaveBar } from "@/components/AccountUI";
+import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { getCustomOccurrences, IMPORTANCE_LABELS, type CustomOccurrence, type Importance } from "@/lib/storage";
 import type {
   MentorshipAction, MentorshipRow, MentorshipsResponse, PrivacyResponse, PrivacyScope, PrivacySettings, ProgramRow, ProgramsResponse,
 } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
+import { categoryLabel } from "@/components/MentorBadges";
 import { fmtDate, fmtDay, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
 
 type Role = "student" | "mentor";
 type Tab = "chat" | "programs" | "privacy";
+type Back = { href: string; label: string };
 
+const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
+const ROW = { size: 16, strokeWidth: 1.75, "aria-hidden": true } as const;
+const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
+
+const STUDENT_BACK: Back = { href: "/mentorship", label: "منتورهای من" };
+const MENTOR_BACK: Back = { href: "/mentor", label: "پنل منتور" };
+
+// سرِ صفحه (بازگشت + آواتار/نام/وضعیت) به نقشِ بیننده بستگی دارد که فقط
+// بعد از بارگذاریِ رابطه معلوم است؛ پس بدنه آن را بالا می‌فرستد.
 export default function MentorshipPage() {
+  const [head, setHead] = useState<{ back: Back | null; node: React.ReactNode } | null>(null);
   return (
-    <MentorPageShell back={null}>
-      <Relationship />
+    <MentorPageShell back={head?.back ?? null} head={head?.node}>
+      <Relationship onHead={setHead} />
     </MentorPageShell>
   );
 }
 
-function Relationship() {
+function Relationship({ onHead }: { onHead: (h: { back: Back | null; node: React.ReactNode } | null) => void }) {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [rel, setRel] = useState<{ row: MentorshipRow; role: Role } | null>(null);
   const [error, setError] = useState<{ msg: string; retry: boolean } | null>(null);
   const [tab, setTab] = useState<Tab>("chat");
-  const [confirm, setConfirm] = useState<"end" | "block" | null>(null);
+  const [confirm, setConfirm] = useState<"end" | "block" | "cancel" | null>(null);
   const { pendingKey, error: actionError, run, clearError } = useAsyncAction();
 
   // قرارداد یک GET تکیِ رابطه ندارد — دو لیستِ «شاگرد/منتور» خوانده می‌شود و
@@ -54,14 +66,14 @@ function Relationship() {
         fetch("/api/mentorships?role=student", { cache: "no-store" }),
         fetch("/api/mentorships?role=mentor", { cache: "no-store" }),
       ]);
-      if (!s.ok && !m.ok) { setError({ msg: await readApiError(s, "اطلاعاتِ رابطه بارگذاری نشد"), retry: s.status >= 500 }); return; }
+      if (!s.ok && !m.ok) { setError({ msg: await readApiError(s, "اطلاعات رابطه دریافت نشد؛ دوباره تلاش کن"), retry: s.status >= 500 }); return; }
       const sd: MentorshipsResponse | null = s.ok ? await s.json() : null;
       const md: MentorshipsResponse | null = m.ok ? await m.json() : null;
       const asStudent = sd?.mentorships.find((r) => r.id === id);
       const asMentor = md?.mentorships.find((r) => r.id === id);
       if (asStudent) setRel({ row: asStudent, role: "student" });
       else if (asMentor) setRel({ row: asMentor, role: "mentor" });
-      else setError({ msg: "این رابطه پیدا نشد یا به آن دسترسی نداری.", retry: false });
+      else setError({ msg: "این رابطه پیدا نشد یا به آن دسترسی نداری", retry: false });
     } catch {
       setError({ msg: NETWORK_ERROR, retry: true });
     }
@@ -73,6 +85,31 @@ function Relationship() {
     const t = new URLSearchParams(window.location.search).get("tab");
     if (t === "programs" || t === "privacy" || t === "chat") setTab(t);
   }, []);
+
+  // سرِ صفحه: آواتار ۴۸ + نام + نقش + چیپِ وضعیت
+  useEffect(() => {
+    if (!rel) { onHead(error ? { back: STUDENT_BACK, node: null } : null); return; }
+    const { row, role } = rel;
+    const name = publicUserName(row.counterpart);
+    onHead({
+      back: role === "mentor" ? MENTOR_BACK : STUDENT_BACK,
+      node: (
+        <div className="mentor-head-custom">
+          <MentorUserAvatar name={name} avatarUrl={row.counterpart.avatarUrl} size={48} />
+          <div className="mentor-rel-id">
+            <h1>{name}</h1>
+            <div className="mentor-rel-sub">
+              <span>{role === "student" ? "منتور تو" : "شاگرد تو"}</span>
+              <MentorshipStatusBadge status={row.status} />
+              {row.startedAt && <span>از {fmtDate(row.startedAt)}</span>}
+            </div>
+          </div>
+        </div>
+      ),
+    });
+  }, [rel, error, onHead]);
+
+  useEffect(() => () => onHead(null), [onHead]);
 
   function changeTab(t: Tab) {
     setTab(t);
@@ -91,25 +128,24 @@ function Relationship() {
     );
     if (!ok) return;
     setConfirm(null);
-    if (action === "block") { router.push("/mentorship"); return; }
+    if (action === "block" || action === "cancel") {
+      router.push(rel?.role === "mentor" ? MENTOR_BACK.href : STUDENT_BACK.href);
+      return;
+    }
     load();
   }
 
-  if (error) {
-    return (
-      <>
-        <Link href="/mentorship" prefetch className="trade-back-link"><ChevronRight size={15} /> منتورهای من</Link>
-        <MentorErrorState message={error.msg} onRetry={error.retry ? load : undefined} />
-        {!error.retry && <div className="mentor-more"><Link href="/mentorship" className="mentor-link">بازگشت به منتورهای من</Link></div>}
-      </>
-    );
-  }
-  if (!rel) return <><Link href="/mentorship" prefetch className="trade-back-link"><ChevronRight size={15} /> منتورهای من</Link><LoadingBlock /></>;
+  if (error) return <MentorErrorState message={error.msg} onRetry={error.retry ? load : undefined} />;
+  if (!rel) return <LoadingBlock />;
 
   const { row, role } = rel;
   const name = publicUserName(row.counterpart);
+  const isPending = row.status === "PENDING";
+  // کسی که درخواست به او رسیده همین‌جا پاسخ می‌دهد؛ فرستنده فقط می‌تواند لغو کند
+  const iMustAnswer = isPending && ((role === "student" && row.initiatedBy === "MENTOR") || (role === "mentor" && row.initiatedBy === "STUDENT"));
+  const iInitiated = isPending && !iMustAnswer;
   const tabs: { value: Tab; label: string }[] = [
-    { value: "chat", label: "گفتگو" },
+    { value: "chat", label: "گفت‌وگو" },
     { value: "programs", label: "برنامه‌ها" },
     ...(role === "student" ? [{ value: "privacy" as Tab, label: "دسترسی‌ها" }] : []),
   ];
@@ -117,64 +153,60 @@ function Relationship() {
 
   return (
     <>
-      {/* منتور از پنلِ منتور به این‌جا می‌رسد — برگشت باید به همان پنل باشد، نه «منتورهای من» */}
-      {role === "mentor"
-        ? <Link href="/mentor" prefetch className="trade-back-link"><ChevronRight size={15} /> پنلِ منتور</Link>
-        : <Link href="/mentorship" prefetch className="trade-back-link"><ChevronRight size={15} /> منتورهای من</Link>}
-      <div className="mentor-rel-head">
-        <MentorUserAvatar name={name} avatarUrl={row.counterpart.avatarUrl} size={48} />
-        <div className="mentor-rel-id">
-          <h1>{name}</h1>
-          <div className="mentor-rel-sub">
-            <span>{role === "student" ? "منتورِ تو" : "شاگردِ تو"}</span>
-            <MentorshipStatusBadge status={row.status} />
-            {row.startedAt && <span>از {fmtDate(row.startedAt)}</span>}
+      {iMustAnswer && (
+        <MentorSection
+          title={role === "student" ? "دعوت منتوری" : "درخواست منتوری"}
+          icon={<Inbox {...SECTION} />}
+          desc={role === "student" ? "پس از پذیرش، منتور فقط بخش‌هایی را می‌بیند که در دسترسی‌ها اجازه بدهی." : undefined}
+        >
+          <div className="mentor-form" style={{ gap: 12 }}>
+            {row.categories.length > 0 && (
+              <div className="mentor-chips">
+                {row.categories.map((c) => <span key={c} className="mentor-chip is-cat"><span>{categoryLabel(c)}</span></span>)}
+              </div>
+            )}
+            {row.message && <p className="mentor-quote">{row.message}</p>}
+            {actionError && !confirm && <div className="form-inline-error" role="alert" style={{ marginTop: 0 }}>{actionError}</div>}
+            <div className="mentor-btn-group is-end">
+              <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => act("reject")} disabled={!!pendingKey}>
+                {pendingKey === "reject" ? <Spinner size={14} /> : <><X {...BTN_SM} /> رد درخواست</>}
+              </button>
+              <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={() => act("accept")} disabled={!!pendingKey}>
+                {pendingKey === "accept" ? <Spinner size={14} /> : <><Check {...BTN_SM} /> پذیرفتن</>}
+              </button>
+            </div>
           </div>
-        </div>
-        {role === "student" ? (
-          <Link href={`/mentors/${row.counterpart.id}`} className="trade-ghost-btn" aria-label="پروفایلِ منتور">
-            پروفایل <ChevronLeft size={14} />
-          </Link>
-        ) : (
-          row.status === "ACTIVE" && (
-            <Link href={`/mentor/students/${row.counterpart.id}`} className="trade-ghost-btn">
-              وضعیتِ شاگرد <ChevronLeft size={14} />
-            </Link>
-          )
-        )}
-      </div>
-
-      {row.status === "PENDING" && (
-        <div className="mentor-note-box" style={{ marginTop: 0, marginBottom: 14 }}>
-          این رابطه هنوز پذیرفته نشده. پاسخ به درخواست از صفحه‌ی {role === "student" ? <Link href="/mentorship" className="mentor-link">منتورهای من</Link> : <Link href="/mentor" className="mentor-link">پنلِ منتور</Link>} انجام می‌شود.
-        </div>
+        </MentorSection>
       )}
 
       <div className="mentor-tabs">
         <SegmentedTabs options={tabs} active={activeTab} onChange={changeTab} />
       </div>
 
-      <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}>
-        {activeTab === "chat" && (
-          row.status === "ACTIVE" || row.status === "ENDED" ? (
-            <MentorChat mentorshipId={row.id} />
-          ) : (
-            <div className="trade-surface trade-empty-state"><p>گفت‌وگو بعد از پذیرفته‌شدنِ رابطه فعال می‌شود.</p></div>
-          )
-        )}
-        {activeTab === "programs" && <ProgramsTab mentorshipId={row.id} role={role} relActive={row.status === "ACTIVE"} />}
-        {activeTab === "privacy" && role === "student" && <PrivacyTab mentorshipId={row.id} mentorName={name} active={row.status === "ACTIVE"} />}
-      </motion.div>
+      {activeTab === "chat" && (
+        row.status === "ACTIVE" || row.status === "ENDED" ? (
+          <MentorChat mentorshipId={row.id} />
+        ) : (
+          <MentorEmpty>{isPending ? "گفت‌وگو پس از پذیرش درخواست باز می‌شود" : "این رابطه گفت‌وگو ندارد"}</MentorEmpty>
+        )
+      )}
+      {activeTab === "programs" && <ProgramsTab mentorshipId={row.id} role={role} relActive={row.status === "ACTIVE"} />}
+      {activeTab === "privacy" && role === "student" && <PrivacyTab mentorshipId={row.id} mentorName={name} active={row.status === "ACTIVE"} />}
 
-      {(row.status === "ACTIVE" || row.status === "PENDING" || row.status === "ENDED") && (
+      {(row.status === "ACTIVE" || isPending || row.status === "ENDED") && (
         <div className="mentor-danger-zone">
           {row.status === "ACTIVE" && (
-            <button type="button" className="account-outline-btn muted" onClick={() => { clearError(); setConfirm("end"); }}>
-              <LogOut size={14} /> پایانِ رابطه
+            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { clearError(); setConfirm("end"); }}>
+              <LogOut {...BTN_SM} /> پایان رابطه
             </button>
           )}
-          <button type="button" className="trade-danger-btn" style={{ padding: "8px 14px", borderRadius: 12, fontSize: 12 }} onClick={() => { clearError(); setConfirm("block"); }}>
-            <Ban size={14} /> مسدودکردن
+          {iInitiated && (
+            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { clearError(); setConfirm("cancel"); }}>
+              <X {...BTN_SM} /> لغو درخواست
+            </button>
+          )}
+          <button type="button" className="trade-danger-btn mentor-btn is-sm" onClick={() => { clearError(); setConfirm("block"); }}>
+            <Ban {...BTN_SM} /> مسدود کردن
           </button>
         </div>
       )}
@@ -182,11 +214,16 @@ function Relationship() {
       {confirm && (
         <MentorConfirmDialog
           message={
-            confirm === "end"
-              ? `رابطه با «${name}» پایان یابد؟ برنامه‌های در جریانِ این رابطه لغو و از روتینت برداشته می‌شوند. گفت‌وگو فقط‌خواندنی می‌ماند.`
-              : `«${name}» مسدود شود؟ رابطه قطع می‌شود، برنامه‌های در جریان لغو می‌شوند و دیگر نمی‌تواند به تو درخواست یا پیام بدهد.`
+            confirm === "end" ? `رابطه با ${name} پایان یابد؟`
+              : confirm === "cancel" ? `درخواست به ${name} لغو شود؟`
+              : `${name} مسدود شود؟`
           }
-          confirmLabel={confirm === "end" ? "پایانِ رابطه" : "مسدودکردن"}
+          hint={
+            confirm === "end" ? "برنامه‌های در جریان لغو می‌شوند؛ گفت‌وگو فقط‌خواندنی می‌ماند."
+              : confirm === "cancel" ? "بعداً می‌توانی دوباره درخواست بدهی."
+              : "رابطه قطع و برنامه‌های در جریان لغو می‌شوند؛ دیگر درخواست یا پیامی از او نمی‌رسد."
+          }
+          confirmLabel={confirm === "end" ? "پایان رابطه" : confirm === "cancel" ? "لغو درخواست" : "مسدود کردن"}
           busy={pendingKey === confirm}
           error={actionError}
           onConfirm={() => act(confirm)}
@@ -210,7 +247,7 @@ function ProgramsTab({ mentorshipId, role, relActive }: { mentorshipId: string; 
     setError(null);
     try {
       const res = await fetch(`/api/mentor-programs?role=${role}&mentorshipId=${encodeURIComponent(mentorshipId)}`, { cache: "no-store" });
-      if (!res.ok) { setError(await readApiError(res, "برنامه‌ها بارگذاری نشد")); return; }
+      if (!res.ok) { setError(await readApiError(res, "برنامه‌ها دریافت نشد؛ دوباره تلاش کن")); return; }
       const d: ProgramsResponse = await res.json();
       setPrograms(d.programs || []);
     } catch {
@@ -233,67 +270,67 @@ function ProgramsTab({ mentorshipId, role, relActive }: { mentorshipId: string; 
   }
 
   if (error) return <MentorErrorState message={error} onRetry={load} />;
-  if (!programs) return <LoadingBlock />;
 
   return (
     <>
-      {role === "mentor" && relActive && (
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-          <Link href={`/mentor/programs/new?mentorshipId=${encodeURIComponent(mentorshipId)}`} className="trade-title-add-btn">
-            <Plus size={14} /> برنامه‌ی جدید
-          </Link>
-        </div>
-      )}
-      {programs.length === 0 ? (
-        <div className="trade-surface trade-empty-state">
-          <ClipboardList size={30} />
-          <p>{role === "student" ? "هنوز برنامه‌ای از این منتور دریافت نکرده‌ای." : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای."}</p>
-        </div>
-      ) : (
-        <div className="account-card">
-          {programs.map((p, i) => (
-            <motion.div
-              key={p.id}
-              className="mentor-row-stack"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.035, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Link href={`/mentor-programs/${p.id}`} className="mentor-row-main">
-                <span className="account-row2-icon"><ClipboardList size={17} /></span>
-                <span className="account-row2-body">
-                  <span className="account-row2-label">{p.title}</span>
-                  <span className="account-row2-desc">
-                    {p.type === "WORKOUT" ? "تمرینی" : "روتین"}
-                    {p.version > 1 && ` · نسخه‌ی ${faNum(p.version)}`}
-                    {p.startDate && ` · از ${fmtDay(p.startDate)}`}
-                    {p.endDate && ` تا ${fmtDay(p.endDate)}`}
-                    {(p.status === "ACTIVE" || p.status === "COMPLETED") && ` · ${faNum(p.progress.rate)}٪ پایبندی`}
-                  </span>
-                </span>
-                <ProgramStatusBadge status={p.status} />
-                <ChevronLeft size={15} className="account-row2-chevron" />
-              </Link>
-              {role === "student" && p.status === "PENDING" && (
-                <>
-                  <div className="mentor-row-actions">
-                    <button type="button" className="trade-primary-btn" onClick={() => accept(p)} disabled={!!pendingKey}>
-                      {pendingKey === `accept:${p.id}` ? <Loader2 size={14} className="trade-spin" /> : "پذیرفتن"}
-                    </button>
-                    <button type="button" className="account-outline-btn" onClick={() => setRespond({ id: p.id, action: "request_changes" })} disabled={!!pendingKey}>
-                      درخواستِ تغییر
-                    </button>
-                    <button type="button" className="account-outline-btn muted" onClick={() => setRespond({ id: p.id, action: "reject" })} disabled={!!pendingKey}>
-                      رد
-                    </button>
-                  </div>
-                  {acceptFor === p.id && runError && <div className="trade-form-error" style={{ marginTop: 0 }}>{runError}</div>}
-                </>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      )}
+      <MentorSection
+        title="برنامه‌ها"
+        icon={<ClipboardList {...SECTION} />}
+        count={programs && programs.length ? faNum(programs.length) : undefined}
+        action={
+          role === "mentor" && relActive ? (
+            <Link href={`/mentor/programs/new?mentorshipId=${encodeURIComponent(mentorshipId)}`} className="mentor-text-btn">
+              <Plus {...BTN_SM} /> برنامه‌ی جدید
+            </Link>
+          ) : undefined
+        }
+        flush
+      >
+        {programs === null ? (
+          <LoadingBlock />
+        ) : programs.length === 0 ? (
+          <MentorEmpty>{role === "student" ? "هنوز برنامه‌ای از این منتور نرسیده است" : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای"}</MentorEmpty>
+        ) : (
+          programs.map((p) => {
+            const needsAnswer = role === "student" && p.status === "PENDING";
+            return (
+              <MentorRow
+                key={p.id}
+                href={`/mentor-programs/${p.id}`}
+                lead={p.type === "WORKOUT" ? <Dumbbell {...ROW} /> : <CalendarCheck {...ROW} />}
+                title={p.title}
+                sub={
+                  <>
+                    <span>{p.type === "WORKOUT" ? "تمرینی" : "روتین"}</span>
+                    {p.version > 1 && <span>نسخه‌ی {faNum(p.version)}</span>}
+                    {p.startDate && <span>{p.endDate ? `${fmtDay(p.startDate)} تا ${fmtDay(p.endDate)}` : `از ${fmtDay(p.startDate)}`}</span>}
+                    {(p.status === "ACTIVE" || p.status === "COMPLETED") && <span>{faNum(p.progress.rate)}٪ پایبندی</span>}
+                  </>
+                }
+                end={<ProgramStatusBadge status={p.status} />}
+                below={
+                  needsAnswer ? (
+                    <>
+                      {acceptFor === p.id && runError && <p className="mentor-field-error" role="alert">{runError}</p>}
+                      <div className="mentor-btn-group is-end">
+                        <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => setRespond({ id: p.id, action: "reject" })} disabled={!!pendingKey}>
+                          <X {...BTN_SM} /> رد
+                        </button>
+                        <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setRespond({ id: p.id, action: "request_changes" })} disabled={!!pendingKey}>
+                          درخواست تغییر
+                        </button>
+                        <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={() => accept(p)} disabled={!!pendingKey}>
+                          {pendingKey === `accept:${p.id}` ? <Spinner size={14} /> : <><Check {...BTN_SM} /> پذیرفتن</>}
+                        </button>
+                      </div>
+                    </>
+                  ) : undefined
+                }
+              />
+            );
+          })
+        )}
+      </MentorSection>
       {respond && (
         <ProgramRespondModal
           programId={respond.id}
@@ -315,11 +352,11 @@ function scopeKeyOf(o: { name: string; tag?: string }): string {
 }
 
 const DETAIL_TOGGLES: { key: keyof Omit<PrivacySettings, "shareAllPrograms" | "sharedPrograms">; title: string; desc: string }[] = [
-  { key: "showSchedule", title: "زمان‌بندی", desc: "منتور ببیند کدام روزها و ساعت‌ها مشغولی. خاموش باشد، هیچ‌چیز از روتینت دیده نمی‌شود." },
-  { key: "showProgramName", title: "نامِ برنامه", desc: "نامِ برنامه (برچسب) کنارِ هر بازه‌ی زمانی — مثلا «دانشگاه»." },
-  { key: "showTaskName", title: "نامِ تسک", desc: "عنوانِ خودِ کار. خاموش باشد، فقط «مشغول» دیده می‌شود." },
-  { key: "showTaskDetails", title: "جزئیاتِ تسک", desc: "میزانِ اهمیتِ هر کار." },
-  { key: "showProgress", title: "پیشرفت", desc: "این‌که هر کار در هر روز انجام شده یا نه." },
+  { key: "showSchedule", title: "زمان‌بندی", desc: "روزها و ساعت‌هایی که مشغولی؛ خاموش باشد، هیچ بخشی از روتین دیده نمی‌شود" },
+  { key: "showProgramName", title: "نام برنامه", desc: "برچسب هر بازه‌ی زمانی، مثلاً «دانشگاه»" },
+  { key: "showTaskName", title: "نام کار", desc: "عنوان هر کار؛ خاموش باشد، فقط «مشغول» دیده می‌شود" },
+  { key: "showTaskDetails", title: "جزئیات کار", desc: "میزان اهمیت هر کار" },
+  { key: "showProgress", title: "پیشرفت", desc: "انجام شدن یا نشدن هر کار در هر روز" },
 ];
 
 function PrivacyTab({ mentorshipId, mentorName, active }: { mentorshipId: string; mentorName: string; active: boolean }) {
@@ -335,7 +372,7 @@ function PrivacyTab({ mentorshipId, mentorName, active }: { mentorshipId: string
     setError(null);
     try {
       const res = await fetch(`/api/mentorships/${mentorshipId}/privacy`, { cache: "no-store" });
-      if (!res.ok) { setError(await readApiError(res, "تنظیماتِ دسترسی بارگذاری نشد")); return; }
+      if (!res.ok) { setError(await readApiError(res, "تنظیمات دسترسی دریافت نشد؛ دوباره تلاش کن")); return; }
       const d: PrivacyResponse = await res.json();
       setData(d);
       setDraft(d.privacy);
@@ -384,7 +421,7 @@ function PrivacyTab({ mentorshipId, mentorName, active }: { mentorshipId: string
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
-      if (!res.ok) { setSaveError(await readApiError(res, "ذخیره نشد")); return; }
+      if (!res.ok) { setSaveError(await readApiError(res, "دسترسی‌ها ذخیره نشد؛ دوباره تلاش کن")); return; }
       const d: { privacy: PrivacySettings } = await res.json();
       setData((prev) => (prev ? { ...prev, privacy: d.privacy } : prev));
       setDraft(d.privacy);
@@ -403,22 +440,19 @@ function PrivacyTab({ mentorshipId, mentorName, active }: { mentorshipId: string
 
   return (
     <>
-      <p className="mentor-muted" style={{ margin: "0 2px 12px" }}>
-        این تنظیمات فقط برای {mentorName} است و هر وقت بخواهی عوضش می‌کنی. چیزی که این‌جا اجازه ندهی اصلا از سرور برای منتور فرستاده نمی‌شود.
-        {!active && " (رابطه فعال نیست؛ تا وقتی فعال نشود منتور چیزی نمی‌بیند.)"}
-      </p>
-
-      <AccountBlock title="کدام برنامه‌ها دیده شوند" icon={<ShieldCheck size={15} />}>
+      <MentorSection
+        title="برنامه‌های قابل مشاهده"
+        icon={<ShieldCheck {...SECTION} />}
+        desc={`این تنظیمات فقط برای ${mentorName} است. آنچه اجازه ندهی از سرور برای منتور فرستاده نمی‌شود.${active ? "" : " تا رابطه فعال نشود، منتور چیزی نمی‌بیند."}`}
+      >
         <label className="mentor-check">
           <input type="checkbox" checked={allOn} onChange={(e) => patch({ shareAllPrograms: e.target.checked })} />
           <span className="mentor-check-label">
-            <b>انتخاب همه</b>
-            <div className="mentor-check-kind">برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شوند</div>
+            <b>همه‌ی برنامه‌ها</b>
+            <div className="mentor-check-kind">برنامه‌هایی که بعداً بسازی هم خودکار دیده می‌شوند</div>
           </span>
         </label>
-        {routineScopes.length === 0 && (
-          <div className="mentor-muted" style={{ padding: "10px 0" }}>هنوز برنامه‌ای در روتینت نداری.</div>
-        )}
+        {routineScopes.length === 0 && <MentorEmpty>هنوز برنامه‌ای در روتینت نیست</MentorEmpty>}
         {[...routineScopes, ...moduleScopes].map((s) => (
           <label key={s.key} className={`mentor-check${allOn ? " is-disabled" : ""}`}>
             <input type="checkbox" checked={scopeChecked(s.key)} disabled={allOn} onChange={() => toggleScope(s.key)} />
@@ -428,9 +462,9 @@ function PrivacyTab({ mentorshipId, mentorName, active }: { mentorshipId: string
             </span>
           </label>
         ))}
-      </AccountBlock>
+      </MentorSection>
 
-      <AccountBlock title="چه جزئیاتی دیده شود" icon={<Eye size={15} />}>
+      <MentorSection title="جزئیات قابل مشاهده" icon={<Eye {...SECTION} />}>
         {DETAIL_TOGGLES.map((t) => {
           const disabled = t.key !== "showSchedule" && !draft.showSchedule;
           return (
@@ -444,11 +478,13 @@ function PrivacyTab({ mentorshipId, mentorName, active }: { mentorshipId: string
           );
         })}
 
-        <div className="exercise-form-label">پیش‌نمایش</div>
-        <PrivacyPreview draft={draft} occs={occs} />
+        <div className="mentor-field" style={{ marginTop: 16 }}>
+          <span className="mentor-field-label">پیش‌نمایش</span>
+          <PrivacyPreview draft={draft} occs={occs} />
+        </div>
 
-        <AccountSaveBar onSave={save} saving={saving} saved={saved && !dirty} error={saveError} disabled={!dirty} />
-      </AccountBlock>
+        <AccountSaveBar onSave={save} saving={saving} saved={saved && !dirty} error={saveError} disabled={!dirty} label="ذخیره‌ی دسترسی‌ها" />
+      </MentorSection>
     </>
   );
 }
@@ -467,12 +503,11 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
 
   const actualParts = [ex.tag?.trim() || null, ex.name, ex.importance ? `اهمیت ${IMPORTANCE_LABELS[ex.importance]}` : null].filter((x): x is string => !!x);
 
-  let mentorLine: string;
+  let hiddenLine: string | null = null;
   let mentorParts: string[] | null = null;
-  let hidden = false;
-  if (!draft.showSchedule) { mentorLine = "هیچ زمان‌بندی‌ای دیده نمی‌شود"; hidden = true; }
-  else if (!sample && !visible(real!)) { mentorLine = "این برنامه برای منتور دیده نمی‌شود"; hidden = true; }
-  else if (sample && !draft.shareAllPrograms && draft.sharedPrograms.length === 0) { mentorLine = "هیچ برنامه‌ای انتخاب نشده — چیزی دیده نمی‌شود"; hidden = true; }
+  if (!draft.showSchedule) hiddenLine = "هیچ زمان‌بندی‌ای دیده نمی‌شود";
+  else if (!sample && !visible(real!)) hiddenLine = "این برنامه برای منتور دیده نمی‌شود";
+  else if (sample && !draft.shareAllPrograms && draft.sharedPrograms.length === 0) hiddenLine = "هیچ برنامه‌ای انتخاب نشده؛ چیزی دیده نمی‌شود";
   else {
     const hasTag = !!ex.tag?.trim();
     const program = draft.showProgramName && (hasTag || draft.showTaskName) ? (ex.tag?.trim() || ex.name) : null;
@@ -480,20 +515,23 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
     if (program) parts.push(program);
     parts.push(draft.showTaskName ? ex.name : "مشغول");
     if (draft.showTaskDetails && ex.importance) parts.push(`اهمیت ${IMPORTANCE_LABELS[ex.importance]}`);
-    if (draft.showProgress) parts.push("وضعیتِ انجام ✓");
+    if (draft.showProgress) parts.push("وضعیت انجام");
     mentorParts = parts;
-    mentorLine = "";
   }
 
   return (
     <div className="mentor-preview" aria-live="polite">
       <div className="mentor-preview-row">
-        <span className="mentor-preview-tag">واقعی{sample ? " (نمونه)" : ""}</span>
+        <span className="mentor-preview-tag">{sample ? "نمونه" : "برنامه‌ی تو"}</span>
         <span className="mentor-preview-line"><PreviewParts time={ex.time} parts={actualParts} /></span>
       </div>
       <div className="mentor-preview-row">
         <span className="mentor-preview-tag">منتور می‌بیند</span>
-        <span className={`mentor-preview-line${hidden ? "" : " is-mentor"}`} style={hidden ? { color: "var(--muted)" } : undefined}>{mentorParts ? <PreviewParts time={ex.time} parts={mentorParts} /> : mentorLine}</span>
+        {mentorParts ? (
+          <span className="mentor-preview-line is-mentor"><PreviewParts time={ex.time} parts={mentorParts} /></span>
+        ) : (
+          <span className="mentor-preview-line"><span className="mentor-muted">{hiddenLine}</span></span>
+        )}
       </div>
     </div>
   );

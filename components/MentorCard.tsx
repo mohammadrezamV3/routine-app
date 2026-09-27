@@ -17,6 +17,7 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
       <div className="mentor-card-head">
         <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
         <div className="mentor-card-id">
+          {mentor.routineRole && <div className="rp-card-eyebrow">{mentor.routineRole}</div>}
           <div className="mentor-card-name">{mentor.name}</div>
           {mentor.headline && <div className="mentor-card-headline">{mentor.headline}</div>}
         </div>

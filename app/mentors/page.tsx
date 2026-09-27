@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { Flame, Loader2, Search, UserSearch } from "lucide-react";
+import { Search, SearchX, Star, Users } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
+import { MentorEmpty, MentorEmptyState, MentorSectionTitle } from "@/components/MentorUI";
 import { MentorCard } from "@/components/MentorCard";
-import { LoadingBlock } from "@/components/Spinner";
+import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
@@ -17,14 +17,11 @@ const SORTS: { value: Sort; label: string }[] = [
   { value: "new", label: "تازه‌ترین" },
 ];
 
-// کشفِ منتور — جست‌وجو، فیلترِ دسته، مرتب‌سازی، و بخشِ «منتورهای محبوب» (که
+// کشفِ منتور: جست‌وجو، فیلترِ دسته، مرتب‌سازی، و بخشِ «منتورهای محبوب» (که
 // رتبه‌اش سمتِ سرور از چند سیگنال ساخته می‌شود، نه صرفا تعداد شاگرد).
 export default function MentorsDiscoveryPage() {
   return (
-    <MentorPageShell
-      title="منتورها"
-      titleAction={<Link href="/mentorship" className="trade-title-add-btn">منتورهای من</Link>}
-    >
+    <MentorPageShell title="کشف منتور">
       <Discovery />
     </MentorPageShell>
   );
@@ -62,7 +59,7 @@ function Discovery() {
       const res = await fetch(`/api/mentors?${params}`, { cache: "no-store" });
       if (id !== reqId.current) return;
       if (!res.ok) {
-        const msg = await readApiError(res, "لیستِ منتورها بارگذاری نشد");
+        const msg = await readApiError(res, "فهرست منتورها دریافت نشد؛ دوباره تلاش کن");
         if (p === 1) setError(msg); else setMoreError(msg);
         return;
       }
@@ -90,25 +87,22 @@ function Discovery() {
   useEffect(() => { loadPopular(); }, [loadPopular]);
 
   const filtered = !!q || !!category;
+  const clearFilters = () => { setQInput(""); setQ(""); setCategory(""); };
 
   return (
     <>
-      <p className="mentor-muted" style={{ margin: "0 0 10px" }}>
-        منتورها کاربرانِ مستقلِ آریون‌اند. نشانِ «تأییدشده» یعنی هویت یا مدرکشان توسطِ تیمِ آریون بررسی شده.
-      </p>
-
       <div className="mentor-filter">
         <div className="mentor-filter-row">
           <label className="mentor-search">
-            <Search size={15} />
+            <Search size={16} strokeWidth={1.75} aria-hidden />
             <input
               className="wsearch-newform-name trade-glass-field"
               type="search"
               value={qInput}
               maxLength={80}
               onChange={(e) => setQInput(e.target.value)}
-              placeholder="جست‌وجوی نام، تخصص یا عنوان…"
-              aria-label="جست‌وجوی منتور"
+              placeholder="مثلاً برنامه‌ریزی کنکور"
+              aria-label="جست‌وجوی نام، تخصص یا عنوان منتور"
             />
           </label>
           <select
@@ -120,10 +114,10 @@ function Discovery() {
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
-        <div className="trade-tag-row" role="group" aria-label="دسته">
-          <button type="button" className={`trade-tag-chip${category === "" ? " active" : ""}`} onClick={() => setCategory("")}>همه</button>
+        <div className="trade-tag-row" role="group" aria-label="حوزه">
+          <button type="button" className={`trade-tag-chip${category === "" ? " active" : ""}`} aria-pressed={category === ""} onClick={() => setCategory("")}>همه</button>
           {MENTOR_CATEGORIES.map((c) => (
-            <button key={c} type="button" className={`trade-tag-chip${category === c ? " active" : ""}`} onClick={() => setCategory(c)}>
+            <button key={c} type="button" className={`trade-tag-chip${category === c ? " active" : ""}`} aria-pressed={category === c} onClick={() => setCategory(c)}>
               {MENTOR_CATEGORY_META[c].label}
             </button>
           ))}
@@ -132,41 +126,42 @@ function Discovery() {
 
       {!filtered && popular && popular.length > 0 && (
         <>
-          <h2 className="mentor-section-title"><Flame size={16} /> منتورهای محبوب</h2>
+          <MentorSectionTitle icon={<Star size={15} strokeWidth={1.75} aria-hidden />}>منتورهای محبوب</MentorSectionTitle>
           <div className="mentor-popular-row">
             {popular.map((m) => <MentorCard key={m.userId} mentor={m} />)}
           </div>
         </>
       )}
 
-      <h2 className="mentor-section-title">
-        <UserSearch size={16} /> {filtered ? "نتایج" : "همه‌ی منتورها"}
-      </h2>
+      <MentorSectionTitle icon={<Users size={15} strokeWidth={1.75} aria-hidden />}>
+        {filtered ? "نتیجه‌ی جست‌وجو" : "همه‌ی منتورها"}
+      </MentorSectionTitle>
 
       {error ? (
         <MentorErrorState message={error} onRetry={() => load(1)} />
       ) : mentors === null ? (
         <LoadingBlock />
       ) : mentors.length === 0 ? (
-        <div className="trade-surface trade-empty-state">
-          <UserSearch size={30} />
-          <p>{filtered ? "منتوری با این مشخصات پیدا نشد. عبارت یا دسته را عوض کن." : "هنوز منتورِ منتشرشده‌ای وجود ندارد."}</p>
-          {filtered && (
-            <button type="button" className="account-outline-btn" onClick={() => { setQInput(""); setQ(""); setCategory(""); }}>
-              پاک‌کردنِ فیلترها
-            </button>
-          )}
-        </div>
+        filtered ? (
+          <>
+            <MentorEmpty icon={<SearchX size={16} strokeWidth={1.75} aria-hidden />}>منتوری با این فیلتر پیدا نشد</MentorEmpty>
+            <div className="mentor-more" style={{ marginTop: 0 }}>
+              <button type="button" className="mentor-text-btn" onClick={clearFilters}>پاک کردن فیلترها</button>
+            </div>
+          </>
+        ) : (
+          <MentorEmptyState icon={<Users size={24} strokeWidth={1.75} aria-hidden />} title="هنوز منتوری منتشر نشده است" />
+        )
       ) : (
         <>
           <div className="mentor-grid">
             {mentors.map((m) => <MentorCard key={m.userId} mentor={m} />)}
           </div>
-          {moreError && <div className="trade-form-error" style={{ textAlign: "center" }}>{moreError}</div>}
           {hasMore && (
-            <div className="mentor-more">
-              <button type="button" className="account-outline-btn" onClick={() => load(page + 1)} disabled={moreBusy}>
-                {moreBusy ? <Loader2 size={15} className="trade-spin" /> : moreError ? "تلاش دوباره" : "بیشتر"}
+            <div className="mentor-more" style={{ flexDirection: "column", alignItems: "center", gap: 8 }}>
+              {moreError && <p className="mentor-field-error" role="alert">{moreError}</p>}
+              <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => load(page + 1)} disabled={moreBusy}>
+                {moreBusy ? <Spinner size={14} /> : moreError ? "تلاش دوباره" : "منتورهای بیشتر"}
               </button>
             </div>
           )}

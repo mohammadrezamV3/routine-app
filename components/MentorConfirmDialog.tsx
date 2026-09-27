@@ -44,10 +44,10 @@ export function MentorConfirmDialog({
           {children}
           {error && <div className="trade-form-error">{error}</div>}
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn" onClick={onCancel} disabled={busy}>
+            <button type="button" className="mentor-btn account-outline-btn" onClick={onCancel} disabled={busy}>
               انصراف
             </button>
-            <button type="button" className={danger ? "trade-danger-btn" : "trade-primary-btn"} onClick={onConfirm} disabled={busy}>
+            <button type="button" className={`mentor-btn ${danger ? "trade-danger-btn" : "trade-primary-btn"}`} onClick={onConfirm} disabled={busy}>
               {busy ? <Spinner size={14} /> : confirmLabel}
             </button>
           </div>
