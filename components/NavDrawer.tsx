@@ -126,8 +126,8 @@ const LINKS: NavItem[] = [
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیرِ رودمپ‌ها. گروه فقط صفحه‌های سمتِ شاگرد را دارد؛
-  // «پنل منتور» (برای کسی که منتوری می‌کند) عمداً آیتمِ جدای بعدی است، نه
-  // عضوِ همین گروه. آیکونِ زیرمجموعه‌ها در داده هست ولی طبقِ درخواستِ قبلیِ
+  // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپِ پروفایل،
+  // زیرِ «پنل کاربری»، کنارِ بقیه‌ی پنل‌ها. آیکونِ زیرمجموعه‌ها در داده هست ولی طبقِ درخواستِ قبلیِ
   // کاربر زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
   {
     label: "منتورها", icon: "mentors", feature: "mentors",
@@ -136,7 +136,6 @@ const LINKS: NavItem[] = [
       { href: "/mentorship", label: "منتورهای من", icon: "mentorsMine" },
     ],
   },
-  { href: "/mentor", label: "پنل منتور", icon: "mentorPanel", feature: "mentors" },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
@@ -419,6 +418,15 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
                         </div>
+                        {features?.mentors === true && (
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); router.push("/mentor"); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.mentorPanel}</span>
+                            <span>پنل منتور</span>
+                          </div>
+                        )}
                         {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (
                           <div
                             className="notif-panel-item profile-menu-item"
