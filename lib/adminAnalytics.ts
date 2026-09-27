@@ -68,7 +68,11 @@ function previousRange(range: Range): Range {
 }
 
 function rangeCacheKey(prefix: string, range: Range, extra = ""): string {
-  return `${prefix}:${range.from.getTime()}:${range.to.getTime()}${extra ? ":" + extra : ""}`;
+  // بازه‌های پیش‌فرض (۷ روز/۳۰ روز/...) هر بار با «الان» ساخته می‌شن، پس
+  // from/to هر درخواست میلی‌ثانیه‌ای فرق داره و کلید قبلی هیچ‌وقت hit نمی‌شد —
+  // برای اون‌ها خود key بازه کافیه (TTL کوتاهه)؛ فقط custom با تاریخ دقیق.
+  const span = range.key === "custom" ? `${range.from.getTime()}:${range.to.getTime()}` : range.key;
+  return `${prefix}:${span}${extra ? ":" + extra : ""}`;
 }
 
 function pctChange(cur: number, prev: number): number | null {

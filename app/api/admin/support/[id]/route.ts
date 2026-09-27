@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { writeAuditLog } from "@/lib/adminAnalytics";
 
 // GET /api/admin/support/:id — جزئیاتِ یک تیکت (هر تیکتی، نه فقط تیکتِ خودِ ادمین).
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -37,5 +38,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const result = await prisma.supportTicket.updateMany({ where: { id: params.id }, data: { status: "CLOSED" } });
   if (!result.count) return NextResponse.json({ error: "تیکت پیدا نشد" }, { status: 404 });
+  await writeAuditLog(guard.userId, "support.close", "SupportTicket", params.id);
   return NextResponse.json({ ok: true });
 }

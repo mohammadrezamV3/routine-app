@@ -1,53 +1,54 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { RangePicker } from "@/components/admin/RangePicker";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
+import { useAdminData } from "@/components/admin/useAdminData";
 import { formatNumber } from "@/lib/adminFormat";
 
 type Step = { key: string; label: string; count: number };
 
 function FunnelInner() {
   const searchParams = useSearchParams();
-  const [steps, setSteps] = useState<Step[] | null>(null);
-
-  useEffect(() => {
-    const sp = new URLSearchParams(searchParams.toString());
-    fetch(`/api/admin/funnel?${sp.toString()}`).then((r) => r.json()).then((d) => setSteps(d.steps));
-  }, [searchParams]);
-
-  const maxCount = steps?.[0]?.count || 1;
+  const { data, error, loading, reload } = useAdminData<{ steps: Step[] }>(`/api/admin/funnel?${searchParams.toString()}`);
+  const steps = data?.steps ?? null;
+  const maxCount = steps && steps.length ? Math.max(1, ...steps.map((s) => s.count)) : 1;
 
   return (
     <section>
-      <div className="admin-chart-head" style={{ marginBottom: 18 }}>
-        <div />
+      <div className="admin-range-bar">
         <RangePicker />
       </div>
 
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">Funnel تبدیل کاربر (بر اساس کاربران ثبت‌نام‌کرده در این بازه)</span></div>
         {!steps ? (
-          <div className="admin-empty is-loading">در حال بارگذاری…</div>
-        ) : steps[0].count === 0 ? (
+          error ? <ErrorState message={error} onRetry={reload} /> : <LoadingState />
+        ) : steps.length === 0 || steps[0].count === 0 ? (
           <EmptyState message="در این بازه ثبت‌نام جدیدی نبوده" />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className={`admin-funnel${loading ? " admin-refreshing" : ""}`} aria-busy={loading}>
+            {error && <ErrorState message={error} onRetry={reload} />}
             {steps.map((s, i) => {
-              const prev = i > 0 ? steps[i - 1].count : s.count;
-              const convFromPrev = prev > 0 ? Math.round((s.count / prev) * 1000) / 10 : null;
-              const widthPercent = maxCount > 0 ? Math.max(4, (s.count / maxCount) * 100) : 0;
+              const prev = i > 0 ? steps[i - 1].count : 0;
+              const convFromPrev = i > 0 && prev > 0 ? Math.round((s.count / prev) * 1000) / 10 : null;
+              const widthPercent = s.count > 0 ? Math.max(2, (s.count / maxCount) * 100) : 0;
               return (
-                <div key={s.key}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 6 }}>
-                    <span style={{ color: "var(--adm-text)", fontWeight: 700 }}>{s.label}</span>
-                    <span style={{ color: "var(--adm-muted)", direction: "ltr" }}>
-                      {formatNumber(s.count)} {i > 0 && convFromPrev !== null && <span style={{ color: convFromPrev >= 50 ? "var(--adm-accent)" : "var(--adm-amber)" }}> ({convFromPrev}٪ از مرحله قبل)</span>}
+                <div key={s.key} className="admin-funnel-step">
+                  <div className="admin-funnel-row">
+                    <span className="admin-funnel-label">{s.label}</span>
+                    <span className="admin-funnel-meta">
+                      <b className="admin-ltr">{formatNumber(s.count)}</b>
+                      {convFromPrev !== null && (
+                        <span className={convFromPrev >= 50 ? "is-good" : "is-low"}>
+                          (<bdi>{convFromPrev}%</bdi> از مرحله قبل)
+                        </span>
+                      )}
                     </span>
                   </div>
-                  <div style={{ height: 26, borderRadius: 8, background: "rgba(255,255,255,.04)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${widthPercent}%`, background: "linear-gradient(90deg, rgba(0,168,107,.55), #00A86B)", borderRadius: 8, transition: "width .3s ease" }} />
+                  <div className="admin-funnel-track">
+                    <div className="admin-funnel-fill" style={{ width: `${widthPercent}%` }} />
                   </div>
                 </div>
               );
@@ -65,7 +66,7 @@ function FunnelInner() {
 
 export default function AdminFunnelPage() {
   return (
-    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
+    <Suspense fallback={<LoadingState />}>
       <FunnelInner />
     </Suspense>
   );

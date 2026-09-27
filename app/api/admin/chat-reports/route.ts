@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { TradeChatReportStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { writeAuditLog } from "@/lib/adminAnalytics";
 
-// صفِ بررسیِ گزارش‌های چت. فقط سوپریوزر.
+// صفِ بررسیِ گزارش‌های چت — دسترسیِ «chat».
 //
 // چرا خودِ متنِ پیام این‌جا برمی‌گردد (حتی وقتی حذف شده): ادمین باید ببیند
 // چه چیزی گزارش شده تا بتواند تصمیم بگیرد. حذفِ نرم دقیقاً برای همین است.
@@ -71,17 +72,23 @@ export async function PATCH(req: NextRequest) {
 
   const report = await prisma.tradeChatReport.findUnique({
     where: { id },
-    select: { id: true, messageId: true },
+    select: { id: true, messageId: true, status: true },
   });
   if (!report) return NextResponse.json({ error: "گزارش پیدا نشد" }, { status: 404 });
+  // گزارشِ بسته‌شده دوباره قابلِ تغییر نیست — وگرنه «رد» روی یک گزارشِ
+  // ACTIONED وضعیتش رو برخلافِ واقعیت (پیامی که واقعا حذف شده) عوض می‌کرد.
+  if (report.status !== "OPEN") {
+    return NextResponse.json({ error: "این گزارش قبلا بررسی شده" }, { status: 409 });
+  }
 
   const now = new Date();
   if (action === "delete") {
     // پیام برداشته می‌شود و **همه‌ی** گزارش‌های همان پیام بسته می‌شوند،
     // نه فقط این یکی — وگرنه ادمین باید یک پیام را چند بار بررسی کند.
     await prisma.$transaction([
-      prisma.tradeChatMessage.update({
-        where: { id: report.messageId },
+      // پیامی که قبلا حذف شده زمان/عاملِ حذفِ اصلی‌اش را نگه می‌دارد.
+      prisma.tradeChatMessage.updateMany({
+        where: { id: report.messageId, deletedAt: null },
         data: { deletedAt: now, deletedBy: guard.userId },
       }),
       prisma.tradeChatReport.updateMany({
@@ -96,5 +103,12 @@ export async function PATCH(req: NextRequest) {
     });
   }
 
+  await writeAuditLog(
+    guard.userId,
+    action === "delete" ? "chat.report_delete_message" : "chat.report_dismiss",
+    "TradeChatReport",
+    report.id,
+    { messageId: report.messageId },
+  );
   return NextResponse.json({ ok: true });
 }

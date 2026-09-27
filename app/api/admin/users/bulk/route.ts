@@ -9,7 +9,9 @@ const ACTIONS: Record<string, AdminPermission> = { block: "users.edit", unblock:
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const action = String(body?.action || "");
-  const ids: string[] = Array.isArray(body?.ids) ? body.ids.filter((x: unknown) => typeof x === "string").slice(0, 100) : [];
+  const ids: string[] = Array.isArray(body?.ids)
+    ? Array.from(new Set<string>(body.ids.filter((x: unknown): x is string => typeof x === "string" && x.length > 0))).slice(0, 100)
+    : [];
   if (!ACTIONS[action] || ids.length === 0) return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
 
   const guard = await requireAdmin(ACTIONS[action]);

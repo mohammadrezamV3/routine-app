@@ -18,10 +18,17 @@ export function KpiTile({
       className="admin-kpi-tile"
     >
       <span className="admin-kpi-label">{label}</span>
-      <span className="admin-kpi-value">{value}</span>
+      <span className="admin-kpi-value" dir="ltr">{value}</span>
       {deltaPercent !== undefined && (
-        <span className={`admin-kpi-delta ${deltaClass}`}>
-          {deltaPercent === null ? "نسبت به بازه قبل: —" : `${deltaPercent > 0 ? "▲" : deltaPercent < 0 ? "▼" : "–"} ${Math.abs(deltaPercent)}%`}
+        <span className={`admin-kpi-delta ${deltaClass}`} title="نسبت به بازه‌ی قبل">
+          {deltaPercent === null ? (
+            "نسبت به بازه قبل: —"
+          ) : (
+            <>
+              <span dir="ltr">{`${deltaPercent > 0 ? "▲" : deltaPercent < 0 ? "▼" : "–"} ${Math.abs(deltaPercent)}%`}</span>
+              <span className="admin-kpi-delta-sub">نسبت به بازه قبل</span>
+            </>
+          )}
         </span>
       )}
     </motion.div>
