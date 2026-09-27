@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   } catch (e) {
     return adminErrorResponse(e);
   }
-  if (review.status === status) return NextResponse.json({ error: "وضعیت همینه؛ تغییری لازم نیست" }, { status: 409 });
+  if (review.status === status) return NextResponse.json({ error: "وضعیت فعلی همین است؛ تغییری ثبت نشد" }, { status: 409 });
 
   const changed = await prisma.$transaction(async (tx) => {
     const r = await tx.mentorReview.updateMany({
@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
     return true;
   });
-  if (!changed) return NextResponse.json({ error: "وضعیت همزمان تغییر کرده؛ صفحه رو تازه کن" }, { status: 409 });
+  if (!changed) return NextResponse.json({ error: "وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود" }, { status: 409 });
 
   await recomputeMentorRating(review.mentorId);
   return NextResponse.json({ ok: true });

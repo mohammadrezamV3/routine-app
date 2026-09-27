@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
 
   const reason = typeof body.reason === "string" ? clampText(body.reason.trim(), 500) : "";
   if (status === "REJECTED" && !reason) {
-    return NextResponse.json({ error: "برای رد، نوشتنِ دلیل الزامیه" }, { status: 400 });
+    return NextResponse.json({ error: "دلیل رد الزامی است" }, { status: 400 });
   }
 
   const profile = await prisma.mentorProfile.findUnique({
@@ -105,24 +105,24 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
       return from;
     });
   } catch (e) {
-    if (e instanceof NoChange) return NextResponse.json({ error: "وضعیت همینه؛ تغییری لازم نیست" }, { status: 400 });
+    if (e instanceof NoChange) return NextResponse.json({ error: "وضعیت فعلی همین است؛ تغییری ثبت نشد" }, { status: 400 });
     if (e instanceof Conflict || (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) {
-      return NextResponse.json({ error: "وضعیت همزمان تغییر کرده؛ صفحه رو تازه کن" }, { status: 409 });
+      return NextResponse.json({ error: "وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود" }, { status: 409 });
     }
     throw e;
   }
 
   const subject = kind === "IDENTITY"
-    ? "احراز هویت"
+    ? "مدرک هویت"
     : `«${MENTOR_CATEGORY_META[category as keyof typeof MENTOR_CATEGORY_META].certLabel}»`;
   const text =
     status === "VERIFIED" ? `${subject} شما تأیید شد.`
-    : status === "REJECTED" ? `${subject} شما رد شد. دلیل: ${reason}`
-    : status === "PENDING" ? `${subject} شما دوباره در صف بررسی قرار گرفت.`
-    : `وضعیتِ ${subject} شما به «${VERIFICATION_LABELS[status]}» تغییر کرد؛ لطفا مدرک رو دوباره ارسال کن.`;
+    : status === "REJECTED" ? `${subject} شما رد شد؛ دلیل: ${reason}`
+    : status === "PENDING" ? `${subject} شما در صف بررسی ادمین‌های آریون قرار گرفت.`
+    : `وضعیت ${subject} شما به «${VERIFICATION_LABELS[status]}» تغییر کرد؛ بررسی دوباره پس از ارسال مدرک تازه انجام می‌شود.`;
   await notifyUser(profile.userId, {
     type: "verification.result",
-    title: kind === "IDENTITY" ? "نتیجه‌ی بررسی احراز هویت" : "نتیجه‌ی بررسی مدرک",
+    title: kind === "IDENTITY" ? "احراز هویت" : "مدرک تخصصی",
     body: text,
     url: "/mentor/profile",
   });
