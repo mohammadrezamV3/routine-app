@@ -93,6 +93,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const now = new Date();
   const hideReason = resolution || report.reason;
   let messageDeleted = false;
+  let suspendedNow = false as boolean;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -103,7 +104,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (r.count === 0) throw new Conflict();
 
       if (action === "hide_review") {
-        await tx.mentorReview.update({ where: { id: report.targetId }, data: { status: "HIDDEN", hiddenReason: clampText(hideReason, 500) } });
+        // فقط اگه هنوز نمایش داده می‌شه — نظرِ از قبل پنهان دلیلش رو نگه می‌داره
+        // و لاگِ تکراریِ «پنهان‌کردن» ثبت نمی‌شه
+        const h = await tx.mentorReview.updateMany({
+          where: { id: report.targetId, status: "VISIBLE" },
+          data: { status: "HIDDEN", hiddenReason: clampText(hideReason, 500) },
+        });
+        if (h.count === 0) reviewMentorId = null;
+      }
+      if (action === "hide_review" && reviewMentorId) {
         await tx.auditLog.create({
           data: {
             actorUserId: g.userId, action: "mentor.review_hide", targetType: "MentorReview", targetId: report.targetId,
@@ -114,10 +123,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const d = await tx.mentorMessage.deleteMany({ where: { id: report.targetId } });
         messageDeleted = d.count > 0;
       } else if (action === "suspend_mentor" && suspendProfile && !suspendProfile.suspendedAt) {
-        await tx.mentorProfile.update({
-          where: { id: suspendProfile.id },
+        // قفلِ خوش‌بینانه: اگه همزمان تعلیق شده، نه لاگِ تکراری نه اعلانِ دوباره
+        const sp = await tx.mentorProfile.updateMany({
+          where: { id: suspendProfile.id, suspendedAt: null },
           data: { suspendedAt: now, suspendedReason: clampText(resolution || report.reason, 500) },
         });
+        suspendedNow = sp.count > 0;
+      }
+      if (suspendedNow && suspendProfile) {
         await tx.auditLog.create({
           data: {
             actorUserId: g.userId, action: "mentor.suspend", targetType: "User", targetId: suspendProfile.userId,
@@ -155,7 +168,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   if (reviewMentorId) await recomputeMentorRating(reviewMentorId);
-  if (suspendProfile && !suspendProfile.suspendedAt) {
+  if (suspendedNow && suspendProfile) {
     await notifyUser(suspendProfile.userId, {
       type: "mentor.suspension",
       title: "منتوری شما تعلیق شد",

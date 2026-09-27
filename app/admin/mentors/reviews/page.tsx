@@ -27,7 +27,7 @@ const TABS: { key: Tab; label: string }[] = [
 
 function Stars({ n }: { n: number }) {
   return (
-    <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} aria-label={`${n} از ۵`}>
+    <span className="admin-stars" role="img" aria-label={`${n} از ۵`}>
       {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= n ? "currentColor" : "none"} strokeWidth={1.6} />)}
     </span>
   );
@@ -64,7 +64,7 @@ export default function AdminMentorReviewsPage() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">نظرات منتورها</div>
-          <div className="admin-section-hint" style={{ margin: 0 }}>
+          <div className="admin-section-hint">
             نظرِ پنهان‌شده نه در پروفایل دیده می‌شه نه در امتیازِ منتور حساب می‌شه.
           </div>
         </div>
@@ -75,20 +75,20 @@ export default function AdminMentorReviewsPage() {
       {!data ? (
         <div className={loading ? "admin-empty is-loading" : "admin-empty"}>
           {loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}
-          {!loading && failed && <button type="button" className="admin-btn" style={{ marginTop: 10 }} onClick={load}>تلاش دوباره</button>}
+          {!loading && failed && <button type="button" className="admin-btn" onClick={load}>تلاش دوباره</button>}
         </div>
       ) : rows.length === 0 ? (
         <EmptyState message="نظری در این دسته نیست" />
       ) : (
         <>
-          <div className="trade-list" style={{ opacity: loading ? 0.6 : 1 }}>
+          <div className={`trade-list admin-feed${loading ? " is-stale" : ""}`} aria-busy={loading}>
             {rows.map((r) => (
-              <div key={r.id} className="trade-row" style={{ cursor: "default", flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                  <span className="trade-row-sub">
+              <div key={r.id} className="trade-row admin-feed-row">
+                <div className="admin-feed-head">
+                  <span className="admin-feed-meta">
                     منتور:{" "}
                     {r.mentorProfileId
-                      ? <Link href={`/admin/mentors/${r.mentorProfileId}`} style={{ color: "var(--adm-accent)" }}>{displayName(r.mentor)}</Link>
+                      ? <Link href={`/admin/mentors/${r.mentorProfileId}`} className="admin-link">{displayName(r.mentor)}</Link>
                       : displayName(r.mentor)}
                     {" "}· نویسنده: {displayName(r.student)}
                   </span>
@@ -98,13 +98,13 @@ export default function AdminMentorReviewsPage() {
                   </span>
                 </div>
                 <Stars n={r.rating} />
-                <div className="trade-row-main" style={{ whiteSpace: "pre-wrap" }}>{r.body || <span className="admin-muted">بدون متن</span>}</div>
-                {r.status === "HIDDEN" && r.hiddenReason && <div className="trade-row-sub">دلیل پنهان‌شدن: {r.hiddenReason}</div>}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span className="trade-row-sub" style={{ direction: "ltr" }}>{formatDateTime(r.createdAt)}</span>
+                <div className="admin-feed-body">{r.body || <span className="admin-muted">بدون متن</span>}</div>
+                {r.status === "HIDDEN" && r.hiddenReason && <div className="admin-feed-meta">دلیل پنهان‌شدن: {r.hiddenReason}</div>}
+                <div className="admin-feed-foot">
+                  <span className="admin-feed-time">{formatDateTime(r.createdAt)}</span>
                   {r.status === "VISIBLE"
-                    ? <button type="button" className="admin-btn danger" onClick={() => setActing({ review: r, to: "HIDDEN" })}><EyeOff size={14} /> پنهان کردن</button>
-                    : <button type="button" className="admin-btn" onClick={() => setActing({ review: r, to: "VISIBLE" })}><RotateCcw size={14} /> بازگردانی</button>}
+                    ? <button type="button" className="admin-btn danger sm" onClick={() => setActing({ review: r, to: "HIDDEN" })}><EyeOff size={14} /> پنهان کردن</button>
+                    : <button type="button" className="admin-btn sm" onClick={() => setActing({ review: r, to: "VISIBLE" })}><RotateCcw size={14} /> بازگردانی</button>}
                 </div>
               </div>
             ))}
@@ -144,7 +144,7 @@ function ReviewActionModal({ review, to, onClose, onDone }: { review: Review; to
 
   return (
     <AdminModal title={hiding ? "پنهان کردن نظر" : "بازگردانی نظر"} eyebrow="تأیید اقدام" onClose={onClose}>
-      <div className="admin-modal-text" style={{ whiteSpace: "pre-wrap" }}>
+      <div className="admin-modal-text admin-feed-body">
         {review.body || "بدون متن"}
       </div>
       <label className="admin-field">

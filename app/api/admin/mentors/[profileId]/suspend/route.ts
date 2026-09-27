@@ -30,6 +30,9 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     return adminErrorResponse(e);
   }
 
+  // دلیلِ تعلیق به منتور نشون داده می‌شه — مثلِ «رد» در احراز، بدونِ دلیل پذیرفته نیست
+  if (suspend && !reason) return NextResponse.json({ error: "برای تعلیق، نوشتنِ دلیل الزامیه" }, { status: 400 });
+
   if (suspend === !!profile.suspendedAt) {
     return NextResponse.json({ error: suspend ? "این منتور از قبل تعلیقه" : "این منتور تعلیق نیست" }, { status: 409 });
   }

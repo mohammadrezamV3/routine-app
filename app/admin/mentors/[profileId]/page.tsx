@@ -11,6 +11,7 @@ import { AdminModal, ConfirmModal } from "@/components/admin/AdminModal";
 import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
+import { KpiGrid, KpiTile } from "@/components/admin/KpiTile";
 import { formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, isMentorCategory } from "@/lib/mentorCategories";
 
@@ -83,7 +84,7 @@ export default function AdminMentorDetailPage() {
     return (
       <div className="admin-empty">
         خطا در دریافت اطلاعات
-        <button type="button" className="admin-btn" style={{ marginTop: 10 }} onClick={() => { setState("loading"); load(); }}>تلاش دوباره</button>
+        <button type="button" className="admin-btn" onClick={() => { setState("loading"); load(); }}>تلاش دوباره</button>
       </div>
     );
   }
@@ -96,7 +97,7 @@ export default function AdminMentorDetailPage() {
 
   return (
     <section>
-      <button type="button" className="admin-btn" style={{ marginBottom: 16 }} onClick={() => router.back()}>
+      <button type="button" className="admin-btn admin-back-btn" onClick={() => router.back()}>
         <ArrowRight size={14} /> بازگشت
       </button>
 
@@ -112,7 +113,12 @@ export default function AdminMentorDetailPage() {
             {u.deletedAt ? <span className="admin-badge red">حساب حذف‌شده</span> : u.isBlocked ? <span className="admin-badge red">حساب مسدود</span> : null}
           </div>
           <div className="admin-user-hero-sub admin-ltr">{u.username ? `@${u.username}` : "—"}</div>
-          <button type="button" className="admin-id-chip" onClick={() => { navigator.clipboard?.writeText(p.id); toast("آیدی پروفایل کپی شد"); }}>
+          <button
+            type="button" className="admin-id-chip"
+            onClick={() => {
+              navigator.clipboard?.writeText(p.id).then(() => toast("آیدی پروفایل کپی شد"), () => toast("کپی ناموفق بود", "err"));
+            }}
+          >
             <Copy size={12} /> <span className="admin-ltr">{p.id}</span>
           </button>
         </div>
@@ -133,20 +139,25 @@ export default function AdminMentorDetailPage() {
             <InfoRow k="از" v={formatDateTime(p.suspendedAt)} />
             <InfoRow k="دلیل" v={p.suspendedReason} />
           </div>
-          <div className="admin-section-hint" style={{ margin: "10px 0 0" }}>
+          <div className="admin-section-hint is-after">
             تعلیق فقط منتوری رو می‌بنده. برای مسدودکردنِ کلِ حساب، از صفحه‌ی «حساب کاربری» اقدام کن.
           </div>
         </div>
       )}
 
-      <div className="admin-kpi-grid">
-        <Kpi label="شاگرد فعال" value={formatNumber(data.stats.activeStudents)} />
-        <Kpi label="کل شاگردها" value={formatNumber(data.stats.totalStudents)} />
-        <Kpi label="برنامه‌های ارسالی" value={formatNumber(data.stats.programs)} />
-        <Kpi label="برنامه‌های تکمیل‌شده" value={formatNumber(data.stats.completedPrograms)} />
-        <Kpi label="امتیاز" value={data.stats.ratingCount ? `${data.stats.ratingAvg.toFixed(1)} از ${formatNumber(data.stats.ratingCount)} نظر` : "—"} />
-        <Kpi label="نظرات پنهان" value={formatNumber(data.stats.hiddenReviews)} />
-      </div>
+      <KpiGrid>
+        <KpiTile index={0} label="شاگرد فعال" value={formatNumber(data.stats.activeStudents)} />
+        <KpiTile index={1} label="کل شاگردها" value={formatNumber(data.stats.totalStudents)} />
+        <KpiTile index={2} label="برنامه‌های ارسالی" value={formatNumber(data.stats.programs)} />
+        <KpiTile index={3} label="برنامه‌های تکمیل‌شده" value={formatNumber(data.stats.completedPrograms)} />
+        {/* مقدارِ KPI چپ‌چینِ لاتینه؛ متنِ فارسیِ «از N نظر» توی لیبل می‌ره تا به‌هم نریزه */}
+        <KpiTile
+          index={4}
+          label={data.stats.ratingCount ? `امتیاز (${formatNumber(data.stats.ratingCount)} نظر)` : "امتیاز"}
+          value={data.stats.ratingCount ? data.stats.ratingAvg.toFixed(1) : "—"}
+        />
+        <KpiTile index={5} label="نظرات پنهان" value={formatNumber(data.stats.hiddenReviews)} />
+      </KpiGrid>
 
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title"><UserRound size={15} className="admin-title-icon" />پروفایل منتوری</span></div>
@@ -159,7 +170,7 @@ export default function AdminMentorDetailPage() {
           <InfoRow k="منتور از" v={formatDateShort(p.createdAt)} />
           <InfoRow k="عضویت در اپ" v={formatDateShort(u.createdAt)} />
         </div>
-        {p.bio && <div className="admin-modal-text" style={{ whiteSpace: "pre-wrap", marginTop: 12, marginBottom: 0 }}>{p.bio}</div>}
+        {p.bio && <div className="admin-modal-text admin-mentor-bio">{p.bio}</div>}
       </div>
 
       <VerificationCard
@@ -197,7 +208,7 @@ export default function AdminMentorDetailPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head">
           <span className="admin-chart-title"><Flag size={15} className="admin-title-icon" />گزارش‌های باز علیه این کاربر</span>
-          {data.openReports.length > 0 && <Link href="/admin/mentors/reports" className="admin-btn">رسیدگی در صف گزارش‌ها</Link>}
+          {data.openReports.length > 0 && <Link href="/admin/mentors/reports" className="admin-btn sm">رسیدگی در صف گزارش‌ها</Link>}
         </div>
         {data.openReports.length === 0 ? <EmptyState message="گزارش بازی نیست" /> : (
           <div className="admin-table-wrap">
@@ -208,7 +219,7 @@ export default function AdminMentorDetailPage() {
                   <tr key={r.id}>
                     <td>{TARGET_LABELS[r.targetType] || r.targetType}</td>
                     <td>{r.reason}</td>
-                    <td className="admin-muted" style={{ whiteSpace: "normal" }}>{r.details || "—"}</td>
+                    <td className="admin-muted admin-cell-wrap">{r.details || "—"}</td>
                     <td className="admin-ltr">{formatDateTime(r.createdAt)}</td>
                   </tr>
                 ))}
@@ -235,7 +246,7 @@ export default function AdminMentorDetailPage() {
                         <span className={`admin-badge ${V_BADGE[e.toStatus]}`}>{VERIFICATION_LABELS[e.toStatus]}</span>
                       </span>
                     </td>
-                    <td className="admin-muted" style={{ whiteSpace: "normal" }}>{e.reason || "—"}</td>
+                    <td className="admin-muted admin-cell-wrap">{e.reason || "—"}</td>
                     <td>{e.byMentor ? "خود منتور" : e.actor ? displayName(e.actor) : "—"}</td>
                     <td className="admin-ltr">{formatDateTime(e.createdAt)}</td>
                   </tr>
@@ -263,12 +274,16 @@ export default function AdminMentorDetailPage() {
           message="پروفایل منتوری دوباره فعال می‌شه (اگه منتشرشده باشه، توی کشف منتورها دیده می‌شه)."
           onClose={() => setRestoreOpen(false)}
           onConfirm={async () => {
+            // روی خطا مودال باز می‌مونه تا ادمین بدونه اقدام انجام نشده
             try {
               await adminFetch(`/api/admin/mentors/${p.id}/suspend`, { method: "POST", json: { suspend: false } });
-              toast("تعلیق برداشته شد");
-              load();
-            } catch (e: any) { toast(e.message, "err"); }
+            } catch (e: any) {
+              toast(e.message, "err");
+              return;
+            }
+            toast("تعلیق برداشته شد");
             setRestoreOpen(false);
+            load();
           }}
         />
       )}
@@ -279,15 +294,11 @@ export default function AdminMentorDetailPage() {
 
 // ---------------------------------------------------------------- اجزا
 
-function Kpi({ label, value }: { label: string; value: string }) {
-  return <div className="admin-kpi-tile"><span className="admin-kpi-label">{label}</span><span className="admin-kpi-value" style={{ fontSize: 15 }}>{value}</span></div>;
-}
-
 function InfoRow({ k, v }: { k: string; v: string | null | undefined }) {
   return (
     <div className="admin-info-row">
       <span className="admin-muted">{k}</span>
-      <span style={{ textAlign: "left" }}>{v || "—"}</span>
+      <span className="admin-info-value">{v || "—"}</span>
     </div>
   );
 }
@@ -301,24 +312,28 @@ function VerificationCard({
   return (
     <div className="admin-chart-card">
       <div className="admin-chart-head">
-        <span className="admin-chart-title">
-          <ShieldCheck size={15} className="admin-title-icon" />{title}
-          <span className={`admin-badge ${V_BADGE[status]}`} style={{ marginInlineStart: 8 }}>{VERIFICATION_LABELS[status]}</span>
+        <span className="admin-chart-title admin-verify-title">
+          <span><ShieldCheck size={15} className="admin-title-icon" />{title}</span>
+          <span className={`admin-badge ${V_BADGE[status]}`}>{VERIFICATION_LABELS[status]}</span>
         </span>
         {onAction && (
           <div className="admin-head-actions">
             {status !== "VERIFIED" && (
-              <button type="button" className="admin-btn primary" disabled={docs.length === 0} onClick={() => onAction("VERIFIED")}>
+              <button
+                type="button" className="admin-btn primary sm" disabled={docs.length === 0}
+                title={docs.length === 0 ? "تا فایلی ارسال نشده، تأیید ممکن نیست" : undefined}
+                onClick={() => onAction("VERIFIED")}
+              >
                 <BadgeCheck size={14} /> تأیید
               </button>
             )}
-            <button type="button" className="admin-btn danger" onClick={() => onAction("REJECTED")}><XCircle size={14} /> رد</button>
-            <button type="button" className="admin-btn" onClick={() => onAction(status === "PENDING" ? "NOT_PROVIDED" : "PENDING")}>تغییر وضعیت</button>
+            <button type="button" className="admin-btn danger sm" onClick={() => onAction("REJECTED")}><XCircle size={14} /> رد</button>
+            <button type="button" className="admin-btn sm" onClick={() => onAction(status === "PENDING" ? "NOT_PROVIDED" : "PENDING")}>تغییر وضعیت</button>
           </div>
         )}
       </div>
       {(rejectReason || reviewedAt) && (
-        <div className="admin-info-grid" style={{ marginBottom: 10 }}>
+        <div className="admin-info-grid admin-verify-meta">
           {rejectReason && status === "REJECTED" && <InfoRow k="دلیل رد" v={rejectReason} />}
           {reviewedAt && <InfoRow k="آخرین بررسی" v={formatDateTime(reviewedAt)} />}
         </div>
@@ -330,7 +345,7 @@ function VerificationCard({
             <tbody>
               {docs.map((d) => (
                 <tr key={d.id}>
-                  <td style={{ whiteSpace: "normal", wordBreak: "break-all" }}>{d.fileName}</td>
+                  <td className="admin-cell-wrap">{d.fileName}</td>
                   <td>{d.mimeType === "application/pdf" ? "PDF" : "تصویر"}</td>
                   <td className="admin-ltr">{formatSize(d.sizeBytes)}</td>
                   <td className="admin-ltr">{formatDateTime(d.createdAt)}</td>
@@ -480,12 +495,12 @@ function DocumentViewer({ doc, onClose }: { doc: Doc; onClose: () => void }) {
         <div className="admin-empty is-loading">در حال بارگذاری فایل…</div>
       ) : isImage ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={doc.fileName} style={{ display: "block", maxWidth: "100%", maxHeight: "70vh", margin: "0 auto", borderRadius: 10 }} />
+        <img src={url} alt={doc.fileName} className="admin-doc-image" />
       ) : isPdf ? (
         <div className="admin-empty">
           <FileText size={22} strokeWidth={1.5} />
           <span>فایل PDF · {formatSize(doc.sizeBytes)}</span>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="admin-btn primary" style={{ marginTop: 10 }}>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="admin-btn primary">
             <ExternalLink size={14} /> باز کردن PDF در زبانه‌ی جدید
           </a>
         </div>

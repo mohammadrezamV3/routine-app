@@ -11,6 +11,7 @@ import { displayName } from "@/components/admin/UserAvatar";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
+import { PROGRAM_STATUS_LABELS } from "@/lib/mentorProgramState";
 
 type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null };
 type Target =
@@ -54,39 +55,42 @@ function availableActions(r: Report): Action[] {
 }
 
 function TargetSnippet({ t }: { t: Target }) {
-  if (!t.exists) return <div className="trade-row-sub">محتوای هدف دیگه وجود نداره (حذف شده).</div>;
-  if (t.kind === "USER") return <div className="trade-row-main">{t.user ? displayName(t.user) : "—"}</div>;
+  if (!t.exists) return <div className="admin-feed-meta">محتوای هدف دیگه وجود نداره (حذف شده).</div>;
+  if (t.kind === "USER") return <div className="admin-feed-body">{t.user ? displayName(t.user) : "—"}</div>;
   if (t.kind === "REVIEW") {
     return (
       <>
-        <div className="trade-row-sub">
+        <div className="admin-feed-meta">
           نظرِ {t.author ? displayName(t.author) : "—"} درباره‌ی {t.mentor ? displayName(t.mentor) : "—"}
           {t.status === "HIDDEN" && " · (پنهان)"}
         </div>
         {t.rating != null && (
-          <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} aria-label={`${t.rating} از ۵`}>
+          <span className="admin-stars" role="img" aria-label={`${t.rating} از ۵`}>
             {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= (t.rating || 0) ? "currentColor" : "none"} strokeWidth={1.6} />)}
           </span>
         )}
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap" }}>{t.body || <span className="admin-muted">بدون متن</span>}</div>
+        <div className="admin-feed-body">{t.body || <span className="admin-muted">بدون متن</span>}</div>
       </>
     );
   }
   if (t.kind === "MESSAGE") {
     return (
       <>
-        <div className="trade-row-sub">
+        <div className="admin-feed-meta">
           پیامِ {t.sender ? displayName(t.sender) : "—"}
-          {t.createdAt && <span style={{ direction: "ltr", display: "inline-block", marginInlineStart: 6 }}>{formatDateTime(t.createdAt)}</span>}
+          {t.createdAt && <> · <span className="admin-feed-time">{formatDateTime(t.createdAt)}</span></>}
         </div>
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap" }}>{t.body}</div>
+        <div className="admin-feed-body">{t.body || <span className="admin-muted">بدون متن</span>}</div>
       </>
     );
   }
   return (
     <>
-      <div className="trade-row-sub">برنامه‌ی {PROGRAM_TYPE[t.type || ""] || t.type} از {t.mentor ? displayName(t.mentor) : "—"} · {t.status}</div>
-      <div className="trade-row-main">{t.title}</div>
+      <div className="admin-feed-meta">
+        برنامه‌ی {PROGRAM_TYPE[t.type || ""] || t.type} از {t.mentor ? displayName(t.mentor) : "—"}
+        {t.status && ` · ${(PROGRAM_STATUS_LABELS as Record<string, string>)[t.status] || t.status}`}
+      </div>
+      <div className="admin-feed-body">{t.title || <span className="admin-muted">بدون عنوان</span>}</div>
     </>
   );
 }
@@ -123,7 +127,7 @@ export default function AdminMentorReportsPage() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">گزارش‌های منتورها</div>
-          <div className="admin-section-hint" style={{ margin: 0 }}>
+          <div className="admin-section-hint">
             رسیدگی با اقدام، بقیه‌ی گزارش‌های بازِ همون محتوا رو هم می‌بنده. برای مسدودکردنِ کلِ حساب، از روی نامِ کاربر وارد پنلش شو.
           </div>
         </div>
@@ -134,25 +138,25 @@ export default function AdminMentorReportsPage() {
       {!data ? (
         <div className={loading ? "admin-empty is-loading" : "admin-empty"}>
           {loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}
-          {!loading && failed && <button type="button" className="admin-btn" style={{ marginTop: 10 }} onClick={load}>تلاش دوباره</button>}
+          {!loading && failed && <button type="button" className="admin-btn" onClick={load}>تلاش دوباره</button>}
         </div>
       ) : rows.length === 0 ? (
         <EmptyState message="گزارشی در این دسته نیست" />
       ) : (
         <>
-          <div className="trade-list" style={{ opacity: loading ? 0.6 : 1 }}>
+          <div className={`trade-list admin-feed${loading ? " is-stale" : ""}`} aria-busy={loading}>
             {rows.map((r) => (
-              <div key={r.id} className="trade-row" style={{ cursor: "default", flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                  <span className="trade-row-sub">
+              <div key={r.id} className="trade-row admin-feed-row">
+                <div className="admin-feed-head">
+                  <span className="admin-feed-meta">
                     {TARGET_LABELS[r.targetType]} · گزارش‌دهنده: {displayName(r.reporter)}
                     {r.targetUser && (
                       <>
                         {" "}· صاحب محتوا:{" "}
                         {r.targetUser.mentorProfileId ? (
-                          <Link href={`/admin/mentors/${r.targetUser.mentorProfileId}`} style={{ color: "var(--adm-accent)" }}>{displayName(r.targetUser)}</Link>
+                          <Link href={`/admin/mentors/${r.targetUser.mentorProfileId}`} className="admin-link">{displayName(r.targetUser)}</Link>
                         ) : can("users.view") ? (
-                          <Link href={`/admin/users/${r.targetUser.id}`} style={{ color: "var(--adm-accent)" }}>{displayName(r.targetUser)}</Link>
+                          <Link href={`/admin/users/${r.targetUser.id}`} className="admin-link">{displayName(r.targetUser)}</Link>
                         ) : displayName(r.targetUser)}
                         {r.targetUser.mentorSuspended && " (منتوری تعلیق)"}
                       </>
@@ -161,23 +165,23 @@ export default function AdminMentorReportsPage() {
                   <span className={`admin-badge ${STATUS_BADGE[r.status]}`}>{TABS.find((t) => t.key === r.status)?.label}</span>
                 </div>
 
-                <div className="trade-row-sub">دلیل: {r.reason}{r.details ? ` — ${r.details}` : ""}</div>
-                <TargetSnippet t={r.target} />
+                <div className="admin-feed-body"><b>دلیل:</b> {r.reason}{r.details ? ` — ${r.details}` : ""}</div>
+                <div className="admin-feed-snippet"><TargetSnippet t={r.target} /></div>
 
                 {r.status !== "OPEN" && (
-                  <div className="trade-row-sub">
+                  <div className="admin-feed-meta">
                     {r.resolution ? `نتیجه: ${r.resolution}` : "بدون توضیح"}
                     {r.resolvedBy && ` · توسط ${displayName(r.resolvedBy)}`}
-                    {r.resolvedAt && <span style={{ direction: "ltr", display: "inline-block", marginInlineStart: 6 }}>{formatDateTime(r.resolvedAt)}</span>}
+                    {r.resolvedAt && <> · <span className="admin-feed-time">{formatDateTime(r.resolvedAt)}</span></>}
                   </div>
                 )}
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span className="trade-row-sub" style={{ direction: "ltr" }}>{formatDateTime(r.createdAt)}</span>
+                <div className="admin-feed-foot">
+                  <span className="admin-feed-time">{formatDateTime(r.createdAt)}</span>
                   {r.status === "OPEN" && (
                     <span className="admin-head-actions">
-                      <button type="button" className="admin-btn" onClick={() => setActing({ report: r, mode: "DISMISSED" })}><XCircle size={14} /> رد گزارش</button>
-                      <button type="button" className="admin-btn primary" onClick={() => setActing({ report: r, mode: "RESOLVED" })}><CheckCircle2 size={14} /> رسیدگی</button>
+                      <button type="button" className="admin-btn sm" onClick={() => setActing({ report: r, mode: "DISMISSED" })}><XCircle size={14} /> رد گزارش</button>
+                      <button type="button" className="admin-btn primary sm" onClick={() => setActing({ report: r, mode: "RESOLVED" })}><CheckCircle2 size={14} /> رسیدگی</button>
                     </span>
                   )}
                 </div>
