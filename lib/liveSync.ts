@@ -38,7 +38,11 @@
 // `*` با همه جوره.
 // ─────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef } from "react";
+// namespace import عمداً (نه `{ useEffect, useRef }`): این فایل از زنجیره‌ی
+// storage → notifPrefs به یک route handler هم می‌رسه (app/api/push/send-reminders
+// فقط DEFAULT_NOTIF_PREFS می‌خواد) و گاردِ RSCِ نکست import با نامِ هوک رو در
+// گرافِ سرور رد می‌کنه و build می‌شکست. هوک‌ها فقط سمتِ کلاینت صدا زده می‌شن.
+import * as React from "react";
 
 export const LIVE_DOMAINS = {
   daily: "daily",
@@ -66,6 +70,7 @@ export const ALL = "*";
 /** نوعِ رویدادهای سرور → دامنه‌ها (برای type هایی که keys ندارن) */
 const SERVER_EVENT_KEYS: Record<string, string[]> = {
   "notification.new": [LIVE_DOMAINS.notifications],
+  "notification.read": [LIVE_DOMAINS.notifications],
   "mentor.message": [LIVE_DOMAINS.mentorMessages, LIVE_DOMAINS.notifications],
   "mentor.mentorship": [LIVE_DOMAINS.mentorMentorship, LIVE_DOMAINS.notifications],
   "mentor.program": [LIVE_DOMAINS.mentorProgram, LIVE_DOMAINS.customOccurrences],
@@ -195,13 +200,13 @@ export function useLiveRefresh(
   cb: (changed: string[], meta: LiveMeta) => void,
   opts: { includeFocus?: boolean; enabled?: boolean; remoteOnly?: boolean } = {}
 ) {
-  const cbRef = useRef(cb);
+  const cbRef = React.useRef(cb);
   cbRef.current = cb;
   const keyStr = toArray(keys).join("|");
   const includeFocus = opts.includeFocus !== false;
   const enabled = opts.enabled !== false;
   const remoteOnly = opts.remoteOnly === true;
-  useEffect(() => {
+  React.useEffect(() => {
     if (!enabled) return;
     const list = keyStr.split("|");
     return subscribe(list, (changed, meta) => {
@@ -244,11 +249,11 @@ export function useVisiblePolling(
   intervalMs: number,
   opts: { realtimeIntervalMs?: number; enabled?: boolean } = {}
 ) {
-  const cbRef = useRef(cb);
+  const cbRef = React.useRef(cb);
   cbRef.current = cb;
   const enabled = opts.enabled !== false;
   const rtInterval = opts.realtimeIntervalMs ?? intervalMs * 6;
-  useEffect(() => {
+  React.useEffect(() => {
     if (!enabled) return;
     let last = Date.now();
     const id = setInterval(() => {
@@ -300,10 +305,33 @@ export function domainsForMutation(path: string): string[] {
   return [];
 }
 
+/** شناسه‌ی این تب — lib/realtime.ts (سرور) با همین، رویدادِ اکو رو علامت می‌زنه */
+export const LIVE_TAB_ID = tabId;
+
+function withTabHeader(input: RequestInfo | URL, init?: RequestInit): RequestInit | undefined {
+  try {
+    if (typeof input !== "string" && !(input instanceof URL)) return init;
+    const method = (init?.method || "GET").toUpperCase();
+    if (method === "GET" || method === "HEAD") return init;
+    const url = new URL(typeof input === "string" ? input : input.href, window.location.href);
+    if (url.origin !== window.location.origin || !url.pathname.startsWith("/api/")) return init;
+    const headers = new Headers(init?.headers);
+    if (!headers.has("x-arion-client")) headers.set("x-arion-client", tabId);
+    return { ...init, headers };
+  } catch {
+    return init;
+  }
+}
+
 function installFetchHook() {
   const orig = window.fetch;
   if (typeof orig !== "function" || (orig as any).__arionLive) return;
   const hooked = async function (input: RequestInfo | URL, init?: RequestInit) {
+    // شناسه‌ی همین تب روی نوشتن‌های /api (هدرِ x-arion-client) — سرور همونو
+    // توی `src`ِ رویدادِ WebSocket برمی‌گردونه تا این تب اکوی نوشتنِ خودش رو
+    // (که قبلاً optimistic اعمال کرده) دوباره نخونه. فقط برای ورودیِ رشته/URL
+    // (نه Request که هدرهاش immutableـه).
+    init = withTabHeader(input, init);
     const res = await orig.call(window, input, init);
     try {
       const method = (init?.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET")).toUpperCase();
@@ -339,12 +367,43 @@ function storageKeyToDomain(key: string): string | null {
 }
 
 function onServerEvent(e: Event) {
-  const detail = (e as CustomEvent).detail as { type?: string; keys?: string[] } | undefined;
+  const detail = (e as CustomEvent).detail as { type?: string; keys?: string[]; src?: string } | undefined;
   if (!detail?.type) return;
+  // اکوی نوشتنِ خودِ همین تب — قبلاً محلی (publishChange/optimistic) اعمال شده
+  if (detail.type === "data.changed" && detail.src === tabId) return;
   const keys = new Set<string>();
   if (Array.isArray(detail.keys)) for (const k of detail.keys) if (typeof k === "string" && k) keys.add(k);
   for (const k of SERVER_EVENT_KEYS[detail.type] ?? []) keys.add(k);
-  if (keys.size) invalidate(Array.from(keys));
+  let list = Array.from(keys);
+  if (detail.type === "data.changed") list = dedupeFromWriter(detail.src, list, "ws");
+  if (list.length) invalidate(list);
+}
+
+// ── یک نوشتن = یک بار دوباره‌خوانی ──
+// نوشتنِ تبِ A به تبِ B همین مرورگر از *دو* راه می‌رسه: BroadcastChannel
+// (فوری) و WebSocket (`data.changed` با src = شناسه‌ی تبِ A). هر دو باید
+// کار کنن (WS برای دستگاه‌های دیگه، BroadcastChannel وقتی WS وصل نیست)،
+// ولی دو باطل‌سازی پشتِ‌سرِ هم یعنی دو دور درخواستِ تکراری. هر خبری که از
+// یک راه رسیده چند ثانیه نگه داشته می‌شه؛ اگه جفتش (همون نویسنده، کلیدِ
+// جور، از راهِ *دیگه*) رسید، هر دو مصرف می‌شن و دومی نادیده گرفته می‌شه.
+// یک‌به‌یکه: دو نوشتنِ پشتِ‌سرهمِ همون کلید (تیک و برداشتنِ تیک) هر کدوم
+// جدا خبر داده می‌شن.
+const WRITER_DEDUPE_MS = 5000;
+type Via = "bc" | "ws";
+const recentFromWriter = new Map<string, { key: string; via: Via; at: number }[]>();
+function dedupeFromWriter(src: string | undefined, keys: string[], via: Via): string[] {
+  if (!src) return keys;
+  const now = Date.now();
+  const seen = (recentFromWriter.get(src) ?? []).filter((r) => now - r.at < WRITER_DEDUPE_MS);
+  const fresh: string[] = [];
+  for (const k of keys) {
+    const i = seen.findIndex((r) => r.via !== via && keyMatches(r.key, k));
+    if (i >= 0) seen.splice(i, 1); // جفتش قبلاً اعمال شده
+    else { fresh.push(k); seen.push({ key: k, via, at: now }); }
+  }
+  if (seen.length) recentFromWriter.set(src, seen);
+  else recentFromWriter.delete(src);
+  return fresh;
 }
 
 export function ensureStarted() {
@@ -359,7 +418,8 @@ export function ensureStarted() {
       channel.onmessage = (ev) => {
         const m = ev.data as { from?: string; keys?: string[] } | null;
         if (!m || m.from === tabId || !Array.isArray(m.keys)) return;
-        invalidate(m.keys);
+        const fresh = dedupeFromWriter(m.from, m.keys, "bc");
+        if (fresh.length) invalidate(fresh);
       };
     } catch { channel = null; }
   }
@@ -370,7 +430,10 @@ export function ensureStarted() {
       if (channel) return; // همون پیام از BroadcastChannel هم رسیده
       try {
         const m = JSON.parse(ev.newValue || "null");
-        if (m && m.from !== tabId && Array.isArray(m.keys)) invalidate(m.keys);
+        if (m && m.from !== tabId && Array.isArray(m.keys)) {
+          const fresh = dedupeFromWriter(m.from, m.keys, "bc");
+          if (fresh.length) invalidate(fresh);
+        }
       } catch {}
       return;
     }

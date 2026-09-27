@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { withLiveSync } from "@/lib/realtime";
 
 // بنرِ بالای پروفایل — دقیقا هم‌الگویِ /api/account/avatar: data URL توی
 // همون ردیفِ User. سقفش بزرگ‌تره چون تصویر پهنه (۱۰۲۴×۳۲۰)، ولی باز هم
@@ -17,7 +18,7 @@ export async function GET() {
   return NextResponse.json({ bannerUrl: user?.bannerUrl ?? null });
 }
 
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -39,7 +40,7 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true, bannerUrl: dataUrl });
 }
 
-export async function DELETE() {
+async function handleDELETE() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -47,3 +48,7 @@ export async function DELETE() {
   await prisma.user.update({ where: { id: userId }, data: { bannerUrl: null } });
   return NextResponse.json({ ok: true });
 }
+
+// حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
+export const PATCH = withLiveSync(["account"], handlePATCH);
+export const DELETE = withLiveSync(["account"], handleDELETE);

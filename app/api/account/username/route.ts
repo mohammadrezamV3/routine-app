@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isValidUsername } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { withLiveSync } from "@/lib/realtime";
 
 // PATCH /api/account/username  { username }  → تنظیم/تغییر یوزرنیم خود کاربر.
 // اصلی‌ترین کاربردش: کاربرهایی که با گوگل ثبت‌نام کردن اصلا یوزرنیم ندارن
 // (فرم ثبت‌نام معمولی می‌گیره، ورود با گوگل نه) — بدون یوزرنیم، هیچ‌وقت با
 // فیچر دوستان پیدا نمی‌شن. تطبیق بدون حساسیت به بزرگ/کوچکی حروف، هم‌راستا
 // با همون قاعده‌ای که موقع ورود (lib/auth.ts) و جستجوی دوست (api/friends) هست.
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -43,3 +44,6 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true, username });
 }
+
+// حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
+export const PATCH = withLiveSync(["account"], handlePATCH);

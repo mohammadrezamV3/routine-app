@@ -107,7 +107,13 @@ const nextConfig = {
   // instrumentation.ts رو فعال می‌کنه — اون‌جا کانکشن‌پولِ دیتابیس موقعِ بالا
   // آمدنِ سرور گرم می‌شه تا اولین بازدیدکننده‌ی بعد از هر ری‌استارت هزینه‌ی
   // ساختِ کانکشن رو ندهد. (در Next 15 پیش‌فرض شده؛ در 14 هنوز فلگ می‌خواد.)
-  experimental: { instrumentationHook: true },
+  //
+  // ws/pg (سرورِ WebSocketِ `/ws` و LISTENِ Postgres، lib/realtimeServer.ts)
+  // external می‌مونن: باندل‌شدنِ ws با webpack افزونه‌های اختیاریِ
+  // bufferutil/utf-8-validate رو خراب می‌کنه، و pg هم require‌های پویا داره.
+  // file-tracingِ خروجیِ standalone خودش node_modules/ws و pg رو کنارِ
+  // server.js کپی می‌کنه (بعد از build: ls .next/standalone/node_modules/{ws,pg}).
+  experimental: { instrumentationHook: true, serverComponentsExternalPackages: ["ws", "pg"] },
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { withLiveSync } from "@/lib/realtime";
 
 const GENDER_VALUES = new Set(["male", "female"]);
 
@@ -65,7 +66,7 @@ export async function GET() {
 // این‌جا نیستن (نیاز به فلوی تایید جدا دارن، مثل signup/forgot-password؛
 // بدون اون تاییدیه، اجازه‌ی تغییر مستقیم یعنی هرکسی با یه سشن سرقتی می‌تونه
 // شماره‌ی بازیابی حساب رو عوض کنه). یوزرنیم هم روت اختصاصی خودش رو داره.
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -153,3 +154,6 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+// حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
+export const PATCH = withLiveSync(["account"], handlePATCH);
