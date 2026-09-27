@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { ChevronLeft, Clock, Layers, Map, Plus } from "lucide-react";
+import { ChevronLeft, Clock, Layers, Map, Plus, Trash2 } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
 import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
+import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
 import { useLiveRefresh } from "@/lib/liveSync";
@@ -37,6 +38,9 @@ export default function RoadmapsHub() {
   const [roadmaps, setRoadmaps] = useState<RoadmapCard[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [wizard, setWizard] = useState<{ topic: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RoadmapCard | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (status !== "authenticated") { setLoaded(true); return; }
@@ -59,6 +63,28 @@ export default function RoadmapsHub() {
     const t = setInterval(load, 4000);
     return () => clearInterval(t);
   }, [anyBuilding, load]);
+
+  function openDeleteConfirm(e: React.MouseEvent, r: RoadmapCard) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleteError(null);
+    setDeleteTarget(r);
+  }
+
+  async function removeRoadmap() {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const res = await fetch(`/api/roadmaps/${deleteTarget.id}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) {
+      setDeleting(false);
+      setDeleteError(res ? "حذف نشد — دوباره امتحان کن" : "ارتباط با سرور برقرار نشد — اتصال را چک کن");
+      return;
+    }
+    setDeleting(false);
+    setDeleteTarget(null);
+    load();
+  }
 
   return (
     <section className="roadmaps-desktop rp-hub">
@@ -98,6 +124,14 @@ export default function RoadmapsHub() {
             <div className="rp-grid">
               {roadmaps.map((r) => (
                 <Link key={r.id} href={`/roadmaps/custom/${r.id}`} className="trade-surface rp-card">
+                  <button
+                    type="button"
+                    className="trade-icon-btn danger rp-card-delete"
+                    aria-label="حذف مسیر"
+                    onClick={(e) => openDeleteConfirm(e, r)}
+                  >
+                    <Trash2 size={15} />
+                  </button>
                   <div className="rp-card-eyebrow">{r.topic}</div>
                   <div className="rp-card-title">{r.title}</div>
                   {r.summary && <p className="rp-card-desc">{r.summary}</p>}
@@ -127,6 +161,17 @@ export default function RoadmapsHub() {
 
       {wizard && (
         <RoadmapWizard initialTopic={wizard.topic} onClose={() => setWizard(null)} onCreated={load} />
+      )}
+
+      {deleteTarget && (
+        <MentorConfirmDialog
+          message={`مسیرِ «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
+          confirmLabel="حذف مسیر"
+          busy={deleting}
+          error={deleteError}
+          onConfirm={removeRoadmap}
+          onCancel={() => { if (!deleting) setDeleteTarget(null); }}
+        />
       )}
     </section>
   );

@@ -8141,10 +8141,11 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
 @media (min-width:720px){ .rp-grid{ grid-template-columns:1fr 1fr; } }
 .rp-card{
-  display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
+  position:relative; display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
 }
 @media (hover:hover) and (pointer:fine){ .rp-card:hover{ border-color:var(--accent); } }
 .rp-card:active{ transform:scale(.99); }
+.rp-card-delete{ position:absolute; top:10px; left:10px; z-index:1; }
 .rp-card-eyebrow{ font-size:10.5px; font-weight:700; color:var(--accent); unicode-bidi:plaintext; }
 .rp-card-title{ margin-top:4px; font-size:15px; font-weight:800; line-height:1.7; }
 .rp-card-desc{
