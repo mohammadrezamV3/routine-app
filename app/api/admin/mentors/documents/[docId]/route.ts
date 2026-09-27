@@ -27,9 +27,9 @@ export async function GET(_req: NextRequest, { params }: { params: { docId: stri
     },
   });
   if (!doc) return NextResponse.json({ error: "فایل پیدا نشد" }, { status: 404 });
-  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تأیید می‌کنه)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
   try {
-    await loadTarget(g, doc.profile.userId, { destructive: true });
+    await loadTarget(g, doc.profile.userId, { destructive: !g.isSuperAdmin });
   } catch (e) {
     return adminErrorResponse(e);
   }
