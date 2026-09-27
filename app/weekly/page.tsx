@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
@@ -29,6 +29,7 @@ import {
   Importance,
 } from "@/lib/storage";
 import { getTodayStats } from "@/lib/routineStats";
+import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, timeToMinutes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { ProgramCard } from "@/components/ProgramCard";
@@ -189,6 +190,26 @@ export default function WeeklyPage() {
   useEffect(() => {
     getDaily(selectedIso).then(setSelectedDaily);
   }, [selectedIso]);
+
+  // لایه‌ی زنده (lib/liveSync.ts): هر تغییری در تیک‌ها یا برنامه‌ها — از همین
+  // صفحه، یه مودالِ دیگه، تبِ دیگه، سرور یا برگشت به تب — همون لحظه حلقه‌ی
+  // پیشرفت، لیستِ امروز و تایم‌لاین رو از داده‌ی تازه دوباره حساب می‌کنه.
+  const selectedIsoRef = useRef(selectedIso);
+  selectedIsoRef.current = selectedIso;
+  useLiveRefresh(["daily", "customOccurrences", "removedOccurrences", "wakeSleepTimes"], (changed) => {
+    const all = changed.includes("*");
+    const has = (k: string) => all || changed.some((c) => keyMatches(k, c));
+    if (has("customOccurrences") || has("removedOccurrences")) refresh();
+    else if (has("daily")) getTodayStats().then(setTodayStats);
+    if (has("daily")) {
+      const iso = selectedIsoRef.current;
+      getDaily(iso).then((d) => { if (selectedIsoRef.current === iso) setSelectedDaily(d); });
+      const start = new Date(now); start.setDate(now.getDate() - 7);
+      const end = new Date(now); end.setDate(now.getDate() + 7);
+      getDailyRange(isoLocal(start), isoLocal(end)).then(setWeekDaily);
+    }
+    if (has("wakeSleepTimes")) getWakeSleepTimes().then((v) => { if (v) setWakeSleep(v); });
+  });
 
   const opts = useMemo(
     () => ({ removedOccurrences: removedOcc, customOccurrences: customOcc }),
