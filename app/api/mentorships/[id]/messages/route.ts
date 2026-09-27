@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireMentorsUser, getMentorshipForUser, notFound, forbidden, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
+import { requireMentorsUser, getMentorshipForUser, isMentorSuspended, notFound, forbidden, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
@@ -59,6 +59,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
   if (m.status !== "ACTIVE") return conflict("این رابطه فعال نیست؛ امکان ارسال پیام نداری");
+  if (await isMentorSuspended(m.mentorId)) return forbidden("فعالیتِ این منتور موقتا متوقف شده");
 
   if (!(await checkRateLimit(`mentor-msg:${me}`, 30, 60 * 1000))) {
     return NextResponse.json({ error: "پیام‌ها خیلی پشت‌سرهم بود؛ چند لحظه صبر کن" }, { status: 429 });

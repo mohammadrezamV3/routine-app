@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
 // POST /api/mentorships
 //   { mentorId, message? }         → شاگرد به یک منتورِ قابل‌کشف درخواست می‌ده
 //   { studentUsername, message? }  → منتورِ فعال (غیرمعلق) یک کاربر رو دعوت می‌کنه
+const REREQUEST_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -84,14 +86,21 @@ export async function POST(req: Request) {
     return badRequest("منتور یا یوزرنیم شاگرد لازمه");
   }
 
-  if (await usersBlockEachOther(mentorId, studentId)) return forbidden(BLOCKED_MSG);
+  // برای دعوت با یوزرنیم، «بلاک» و «وجود نداره» یک پاسخ دارن تا نشه یوزرنیم‌ها یا
+  // «چه کسی من رو بلاک کرده» رو با این روت کاوید
+  const hidden = () => (initiatedBy === "MENTOR" ? NextResponse.json({ error: "کاربری پیدا نشد" }, { status: 404 }) : forbidden(BLOCKED_MSG));
+  if (await usersBlockEachOther(mentorId, studentId)) return hidden();
 
   const existing = await prisma.mentorship.findUnique({ where: { mentorId_studentId: { mentorId, studentId } } });
   let id: string;
   if (existing) {
     if (existing.status === "ACTIVE") return conflict("این رابطه همین الان فعاله");
     if (existing.status === "PENDING") return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");
-    if (existing.status === "BLOCKED") return forbidden(BLOCKED_MSG);
+    if (existing.status === "BLOCKED") return hidden();
+    // بعد از رد، همون طرف تا یک هفته نمی‌تونه دوباره درخواست بده (ضد مزاحمت)
+    if (existing.status === "REJECTED" && existing.initiatedBy === initiatedBy && Date.now() - existing.updatedAt.getTime() < REREQUEST_COOLDOWN_MS) {
+      return conflict("این درخواست به‌تازگی رد شده؛ بعدا دوباره امتحان کن");
+    }
     // REJECTED/ENDED → همون ردیف دوباره PENDING می‌شه و حریم خصوصی به
     // پیش‌فرض (هیچ برنامه‌ای مشترک نیست) برمی‌گرده؛ اجازه‌ی رابطه‌ی قبلی
     // نباید بی‌صدا به رابطه‌ی جدید منتقل بشه.

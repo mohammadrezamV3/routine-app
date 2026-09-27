@@ -56,6 +56,12 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     dateWhere = { date: { gte: r.from, lte: r.to } };
   }
 
+  // منتوری که شاگرد بلاکش کرده، دیگه لاگ/یادداشتِ اجرای شاگرد رو نمی‌بینه
+  if (p.mentorId === me) {
+    const rel = await prisma.mentorship.findUnique({ where: { id: p.mentorshipId }, select: { status: true } });
+    if (rel?.status === "BLOCKED") dateWhere = { id: "__none__" };
+  }
+
   const [items, logs, feedback] = await Promise.all([
     prisma.mentorProgramItem.findMany({ where: { programId: p.id }, orderBy: { order: "asc" } }),
     prisma.mentorProgramLog.findMany({ where: { programId: p.id, ...dateWhere }, orderBy: { date: "desc" }, take: MAX_LOGS }),

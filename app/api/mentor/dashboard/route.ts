@@ -59,7 +59,7 @@ export async function GET() {
     }),
     prisma.mentorProgram.findMany({ where: { mentorId: me, status: "PENDING" }, include: PROGRAM_WITH_USERS_INCLUDE, orderBy: { sentAt: "desc" }, take: 50 }),
     prisma.mentorProgramLog.findMany({
-      where: { program: { mentorId: me }, updatedAt: { gte: recentCutoff } },
+      where: { program: { mentorId: me, mentorship: { status: "ACTIVE" } }, updatedAt: { gte: recentCutoff } },
       orderBy: { updatedAt: "desc" },
       take: ACTIVITY_LIMIT,
       select: { programId: true, status: true, updatedAt: true, item: { select: { title: true } }, program: { select: { student: { select: PUBLIC_USER_SELECT } } } },
@@ -71,7 +71,8 @@ export async function GET() {
       select: { id: true, title: true, status: true, respondedAt: true, student: { select: PUBLIC_USER_SELECT } },
     }),
     prisma.mentorMessage.findMany({
-      where: { mentorship: { mentorId: me }, senderId: { not: me }, createdAt: { gte: recentCutoff } },
+      // بعد از بلاک/پایانِ رابطه، اسنیپتِ پیام‌ها و لاگ‌های شاگرد دیگه به منتور نشون داده نمی‌شه
+      where: { mentorship: { mentorId: me, status: "ACTIVE" }, senderId: { not: me }, createdAt: { gte: recentCutoff } },
       orderBy: { createdAt: "desc" },
       take: ACTIVITY_LIMIT,
       select: { mentorshipId: true, body: true, createdAt: true, sender: { select: PUBLIC_USER_SELECT } },

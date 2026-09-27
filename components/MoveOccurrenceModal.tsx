@@ -101,6 +101,7 @@ export function MoveOccurrenceModal({
       nextRemoved.add(occ.id + "|" + occ.jsDay);
     }
 
+    const mentorProgramId = scheduleOpts.customOccurrences.find((c) => c.id === occ.id)?.mentorProgramId;
     const newOcc: CustomOccurrence = {
       id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       name,
@@ -109,6 +110,8 @@ export function MoveOccurrenceModal({
       startDate: isoLocal(now),
       ...(occ.importance ? { importance: occ.importance } : {}),
       ...(occ.tag ? { tag: occ.tag } : {}),
+      // جابه‌جایی نباید پیوندِ آینه با برنامه‌ی منتور رو قطع کنه (حریم خصوصی/حذف خودکار)
+      ...(mentorProgramId ? { mentorProgramId } : {}),
     };
     nextCustom = [...nextCustom, newOcc];
 

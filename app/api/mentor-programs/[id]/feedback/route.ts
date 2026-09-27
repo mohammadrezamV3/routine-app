@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireMentorsUser, notFound, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
+import { requireMentorsUser, isMentorSuspended, notFound, forbidden, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
@@ -31,6 +31,7 @@ export async function POST(req: Request, { params }: Ctx) {
   if (p.status === "DRAFT") return conflict("برای پیش‌نویس نمی‌شه فیدبک فرستاد");
   // بعد از پایان/بلاکِ رابطه، منتور دیگه راهی برای رسیدن به شاگرد نداره
   if (p.mentorship.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
+  if (await isMentorSuspended(me)) return forbidden("حساب منتوری تو تعلیق شده");
 
   if (!(await checkRateLimit(`mentor-feedback:${me}`, 60, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد فیدبک‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });

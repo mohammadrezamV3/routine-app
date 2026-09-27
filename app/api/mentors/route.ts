@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser } from "@/lib/mentorGuard";
 import { clampQuery } from "@/lib/validate";
 import { isMentorCategory } from "@/lib/mentorCategories";
-import { rankByPopularity } from "@/lib/mentorRanking";
-import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, loadMentorStats, toMentorCard } from "@/lib/mentorServer";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, loadMentorStats, loadPopularCards, toMentorCard } from "@/lib/mentorServer";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
@@ -17,6 +17,9 @@ const POPULAR_CANDIDATES = 500;
 export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
+  if (!(await checkRateLimit(`mentors:discover:${g.userId}`, 60, 60_000))) {
+    return NextResponse.json({ error: "درخواست‌ها زیاده؛ کمی بعد دوباره امتحان کن" }, { status: 429 });
+  }
 
   const sp = req.nextUrl.searchParams;
   const q = clampQuery(sp.get("q"), 60);
@@ -48,29 +51,8 @@ export async function GET(req: NextRequest) {
   };
 
   if (sort === "popular") {
-    const candidates = await prisma.mentorProfile.findMany({
-      where,
-      include: MENTOR_CARD_INCLUDE,
-      orderBy: [{ lastActiveAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-      take: POPULAR_CANDIDATES,
-    });
-    const stats = await loadMentorStats(candidates.map((c) => c.userId));
-    const ranked = rankByPopularity(candidates, (c) => {
-      const s = stats.get(c.userId);
-      return {
-        ratingAvg: c.ratingAvg,
-        ratingCount: c.ratingCount,
-        activeStudents: s?.activeStudents ?? 0,
-        totalStudents: s?.totalStudents ?? 0,
-        completedPrograms: s?.completedPrograms ?? 0,
-        lastActiveAt: c.lastActiveAt,
-      };
-    });
-    const slice = ranked.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-    return NextResponse.json({
-      mentors: slice.map((p) => toMentorCard(p, stats.get(p.userId))),
-      hasMore: ranked.length > page * PAGE_SIZE,
-    });
+    const { cards, total } = await loadPopularCards(where, (page - 1) * PAGE_SIZE, PAGE_SIZE, POPULAR_CANDIDATES);
+    return NextResponse.json({ mentors: cards, hasMore: total > page * PAGE_SIZE });
   }
 
   const orderBy: Prisma.MentorProfileOrderByWithRelationInput[] =

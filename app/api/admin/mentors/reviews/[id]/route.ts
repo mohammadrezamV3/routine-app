@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { clampText } from "@/lib/validate";
 import { recomputeMentorRating } from "@/lib/mentorServer";
 
@@ -18,6 +19,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const review = await prisma.mentorReview.findUnique({ where: { id: params.id }, select: { id: true, mentorId: true, status: true } });
   if (!review) return NextResponse.json({ error: "نظر پیدا نشد" }, { status: 404 });
+  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  try {
+    await loadTarget(g, review.mentorId, { destructive: true });
+  } catch (e) {
+    return adminErrorResponse(e);
+  }
   if (review.status === status) return NextResponse.json({ error: "وضعیت همینه؛ تغییری لازم نیست" }, { status: 409 });
 
   const changed = await prisma.$transaction(async (tx) => {

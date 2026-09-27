@@ -41,7 +41,23 @@ export async function getMentorshipForUser(id: string, userId: string): Promise<
 /** رابطه‌ی ACTIVE بین این منتور و این شاگرد — پایه‌ی هر دسترسیِ منتور به داده‌ی شاگرد */
 export async function getActiveMentorshipAsMentor(mentorId: string, studentId: string): Promise<Mentorship | null> {
   if (typeof studentId !== "string" || !studentId || studentId.length > 64) return null;
-  return prisma.mentorship.findFirst({ where: { mentorId, studentId, status: "ACTIVE" } });
+  // منتورِ تعلیق‌شده و شاگردِ مسدود/حذف‌شده هم یعنی «دسترسی نیست» — تعلیق باید
+  // فوراً دسترسی به داده‌ی شاگردهای فعلی رو هم ببنده، نه فقط کشف و شاگردِ جدید.
+  return prisma.mentorship.findFirst({
+    where: {
+      mentorId,
+      studentId,
+      status: "ACTIVE",
+      student: { isBlocked: false, deletedAt: null },
+      mentor: { mentorProfile: { is: { suspendedAt: null } } },
+    },
+  });
+}
+
+/** منتورِ این رابطه تعلیق شده؟ (برای بستنِ چت/فیدبک/پذیرشِ برنامه) */
+export async function isMentorSuspended(mentorId: string): Promise<boolean> {
+  const p = await prisma.mentorProfile.findUnique({ where: { userId: mentorId }, select: { suspendedAt: true } });
+  return !p || !!p.suspendedAt;
 }
 
 export function roleIn(m: Pick<Mentorship, "mentorId" | "studentId">, userId: string): "MENTOR" | "STUDENT" | null {

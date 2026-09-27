@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireMentorsUser, getActiveMentorProfile, notFound, forbidden, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
+import { requireMentorsUser, getActiveMentorProfile, isMentorSuspended, notFound, forbidden, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { readJsonBody } from "@/lib/validate";
 import { canTransition, isProgramAction, visibleToStudent, PROGRAM_TRANSITIONS, type ProgramActor } from "@/lib/mentorProgramState";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
@@ -46,9 +47,16 @@ export async function POST(req: Request, { params }: Ctx) {
   if ((action === "send" || action === "accept" || action === "activate") && p.mentorship.status !== "ACTIVE") {
     return conflict("رابطه با این منتور/شاگرد دیگه فعال نیست");
   }
+  if ((action === "accept" || action === "activate") && (await isMentorSuspended(p.mentorId))) {
+    return forbidden("فعالیتِ این منتور موقتا متوقف شده");
+  }
   if (action === "send") {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
+    // هر ارسال یک اعلان/پوش برای شاگرد می‌سازه — سقف تا نشه با ساخت‌وارسالِ پشت‌سرهم اسپم کرد
+    if (!(await checkRateLimit(`mentor-program-send:${me}`, 20, 60 * 60 * 1000))) {
+      return NextResponse.json({ error: "تعداد ارسال برنامه زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    }
     const items = await prisma.mentorProgramItem.count({ where: { programId: p.id } });
     if (items === 0) return badRequest("برنامه حداقل یک آیتم لازم داره");
   }

@@ -48,6 +48,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const review = await prisma.mentorReview.findUnique({ where: { id: report.targetId }, select: { mentorId: true } });
     if (!review) return NextResponse.json({ error: "نظرِ گزارش‌شده دیگه وجود نداره" }, { status: 404 });
     reviewMentorId = review.mentorId;
+    try {
+      await loadTarget(g, review.mentorId, { destructive: true });
+    } catch (e) {
+      return adminErrorResponse(e);
+    }
   } else if (action === "delete_message") {
     if (report.targetType !== "MESSAGE") return NextResponse.json({ error: "این اقدام فقط برای گزارشِ پیام است" }, { status: 400 });
   } else if (action === "suspend_mentor") {

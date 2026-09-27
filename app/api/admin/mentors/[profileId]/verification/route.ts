@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma, VerificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { clampText } from "@/lib/validate";
 import { isMentorCategory, MENTOR_CATEGORY_META, VERIFICATION_LABELS } from "@/lib/mentorCategories";
 import { notifyUser } from "@/lib/inAppNotify";
@@ -45,6 +46,12 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     select: { id: true, userId: true, identityStatus: true },
   });
   if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
+  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  try {
+    await loadTarget(g, profile.userId, { destructive: true });
+  } catch (e) {
+    return adminErrorResponse(e);
+  }
 
   const now = new Date();
   let fromStatus: VerificationStatus;

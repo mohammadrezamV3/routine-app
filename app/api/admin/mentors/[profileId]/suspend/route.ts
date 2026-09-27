@@ -24,7 +24,8 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
   if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
 
   try {
-    await loadTarget(g, profile.userId, { destructive: suspend });
+    // همیشه destructive: خود-تعلیق‌برداری یا اقدام روی Owner/ادمینِ دیگه نباید ممکن باشه
+    await loadTarget(g, profile.userId, { destructive: true });
   } catch (e) {
     return adminErrorResponse(e);
   }

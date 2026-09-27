@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { ALLOWED_DOCUMENT_MIME } from "@/lib/mentorUpload";
 
 // GET /api/admin/mentors/documents/:docId — فایلِ مدرک برای بررسیِ ادمین.
@@ -26,6 +27,12 @@ export async function GET(_req: NextRequest, { params }: { params: { docId: stri
     },
   });
   if (!doc) return NextResponse.json({ error: "فایل پیدا نشد" }, { status: 404 });
+  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  try {
+    await loadTarget(g, doc.profile.userId, { destructive: true });
+  } catch (e) {
+    return adminErrorResponse(e);
+  }
 
   await prisma.auditLog.create({
     data: {

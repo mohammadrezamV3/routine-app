@@ -1,6 +1,7 @@
 import { Prisma, type MentorProgramStatus, type MentorProgram, type MentorFeedback } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { displayName } from "@/lib/inAppNotify";
+import { rankByPopularity } from "@/lib/mentorRanking";
 
 // کمک‌تابع‌های مشترکِ سمت سرورِ اکوسیستم منتور — شکلِ پاسخ‌های قرارداد
 // (docs/mentors.md) فقط همین‌جا ساخته می‌شه تا روت‌ها و پنلِ ادمین هر کدوم
@@ -399,4 +400,43 @@ export type ProgramCore = Pick<MentorProgram, "id" | "mentorId" | "studentId" | 
 /** کدِ خطای یکتا (P2002) از Prisma */
 export function isUniqueViolation(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+}
+
+/**
+ * رتبه‌بندیِ «محبوب» روی ستون‌های سبک (بدونِ user/avatarUrl که data URLِ تا
+ * ۴۰۰KB هست)، و فقط برای برشِ برگشتی کارتِ کامل لود می‌شه — وگرنه یک درخواست
+ * می‌تونست صدها آواتار رو هم‌زمان توی حافظه بکشه.
+ */
+export async function loadPopularCards(
+  where: Prisma.MentorProfileWhereInput,
+  offset: number,
+  limit: number,
+  maxCandidates = 500
+): Promise<{ cards: MentorCard[]; total: number }> {
+  const candidates = await prisma.mentorProfile.findMany({
+    where,
+    select: { id: true, userId: true, ratingAvg: true, ratingCount: true, lastActiveAt: true },
+    orderBy: [{ lastActiveAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+    take: maxCandidates,
+  });
+  const stats = await loadMentorStats(candidates.map((c) => c.userId));
+  const ranked = rankByPopularity(candidates, (c) => {
+    const s = stats.get(c.userId);
+    return {
+      ratingAvg: c.ratingAvg,
+      ratingCount: c.ratingCount,
+      activeStudents: s?.activeStudents ?? 0,
+      totalStudents: s?.totalStudents ?? 0,
+      completedPrograms: s?.completedPrograms ?? 0,
+      lastActiveAt: c.lastActiveAt,
+    };
+  });
+  const slice = ranked.slice(offset, offset + limit);
+  const full = await prisma.mentorProfile.findMany({ where: { id: { in: slice.map((s) => s.id) } }, include: MENTOR_CARD_INCLUDE });
+  const byId = new Map(full.map((p) => [p.id, p]));
+  const cards = slice.flatMap((s) => {
+    const p = byId.get(s.id);
+    return p ? [toMentorCard(p, stats.get(p.userId))] : [];
+  });
+  return { cards, total: ranked.length };
 }
