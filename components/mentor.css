@@ -153,7 +153,7 @@ select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:13
 
 /* ── چت ───────────────────────────────────────────────────── */
 .mentor-chat{ display:flex; flex-direction:column; }
-.mentor-chat .support-thread{ height:min(58vh, 560px); flex:none; margin-top:0; }
+.mentor-chat .support-thread{ height:max(260px, min(58vh, calc(100dvh - 350px), 560px)); flex:none; margin-top:0; }
 .mentor-chat-empty{ margin:auto; text-align:center; font-size:12px; color:var(--muted); line-height:1.9; }
 .mentor-msg-meta{ display:flex; align-items:center; gap:5px; margin-top:5px; font-size:9.5px; opacity:.75; }
 .mentor-msg-meta .mono{ direction:ltr; }
@@ -252,3 +252,11 @@ body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light
 /* لینکِ متنیِ بی‌قاب (برای «پنل منتور» و مشابه) */
 .mentor-link{ display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--accent); text-decoration:none; }
 @media (hover:hover){ .mentor-link:hover{ opacity:.8; } }
+
+/* مودال‌های منتور (پورتال به body) و صفحه‌های منتور بیرونِ .dash-scope‌اند، پس قانونِ سراسریِ
+   button:hover (رنگِ متن = اکسنت) روی دکمه‌ی پرِ اکسنت می‌نشست و متنش هنگامِ
+   هاور ناپدید می‌شد. فقط رنگِ متن برگردونده می‌شه؛ بک‌گراند دست نمی‌خوره. */
+@media (hover:hover){
+  .mentor-modal .trade-primary-btn:hover:not(:disabled),
+  .mentor-page .trade-primary-btn:hover:not(:disabled){ color:var(--bg); border-color:var(--accent); }
+}

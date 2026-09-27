@@ -110,6 +110,7 @@ export type MentorshipRow = {
   counterpart: PublicUser;
   unread: number;
   activePrograms: number;
+  blockedByMe: boolean;
 };
 export type MentorshipsResponse = { mentorships: MentorshipRow[] };
 

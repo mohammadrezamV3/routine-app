@@ -234,6 +234,8 @@ export type MentorshipRow = {
   counterpart: PublicUser;
   unread: number;
   activePrograms: number;
+  // فقط برای BLOCKED: خودِ بیننده بلاک کرده؟ (رفعِ مسدودی فقط برای همون)
+  blockedByMe: boolean;
 };
 
 /** ردیف‌های لیستِ رابطه از دیدِ viewer — شمارشِ خوانده‌نشده/برنامه‌ی فعال با کوئریِ گروهی */
@@ -262,6 +264,7 @@ export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId:
     counterpart: toPublicUser(r.mentorId === viewerId ? r.student : r.mentor),
     unread: unreadMap.get(r.id) ?? 0,
     activePrograms: activeMap.get(r.id) ?? 0,
+    blockedByMe: r.status === "BLOCKED" && r.blockedById === viewerId,
   }));
 }
 

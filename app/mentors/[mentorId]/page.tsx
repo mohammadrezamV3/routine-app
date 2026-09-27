@@ -324,7 +324,7 @@ function RequestModal({
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 440 }}>
+      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 440 }}>
         <div className="modal-head">
           <div className="modal-title">درخواستِ منتوری از {mentorName}</div>
           <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}><X size={16} /></button>

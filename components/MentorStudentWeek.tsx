@@ -72,7 +72,7 @@ export function MentorStudentWeek({
                   const imp = s.details?.importance as Importance | undefined;
                   return (
                     <li key={`${s.time}-${i}`} className="flex items-start gap-2.5 text-[12px] leading-6">
-                      <span className="mono w-[44px] shrink-0 text-dash-muted" dir="ltr">{toFaDigits(s.time)}</span>
+                      <span className="mono min-w-[44px] shrink-0 whitespace-nowrap text-dash-muted" dir="ltr">{toFaDigits(s.time).replace(/\s*[-–—]\s*/, " – ")}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block" style={{ color: s.title === "مشغول" && !privacy.showTaskName ? "var(--muted)" : "var(--text)" }}>{s.title}</span>
                         {(s.program || (imp && IMPORTANCE_LABELS[imp])) && (

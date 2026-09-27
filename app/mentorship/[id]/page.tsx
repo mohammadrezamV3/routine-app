@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Ban, ChevronLeft, ClipboardList, Eye, Loader2, LogOut, Plus, ShieldCheck } from "lucide-react";
+import { Ban, ChevronLeft, ChevronRight, ClipboardList, Eye, Loader2, LogOut, Plus, ShieldCheck } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
 import { MentorChat } from "@/components/MentorChat";
@@ -29,7 +29,7 @@ type Tab = "chat" | "programs" | "privacy";
 
 export default function MentorshipPage() {
   return (
-    <MentorPageShell back={{ href: "/mentorship", label: "منتورهای من" }}>
+    <MentorPageShell back={null}>
       <Relationship />
     </MentorPageShell>
   );
@@ -98,12 +98,13 @@ function Relationship() {
   if (error) {
     return (
       <>
+        <Link href="/mentorship" prefetch className="trade-back-link"><ChevronRight size={15} /> منتورهای من</Link>
         <MentorErrorState message={error.msg} onRetry={error.retry ? load : undefined} />
         {!error.retry && <div className="mentor-more"><Link href="/mentorship" className="mentor-link">بازگشت به منتورهای من</Link></div>}
       </>
     );
   }
-  if (!rel) return <LoadingBlock />;
+  if (!rel) return <><Link href="/mentorship" prefetch className="trade-back-link"><ChevronRight size={15} /> منتورهای من</Link><LoadingBlock /></>;
 
   const { row, role } = rel;
   const name = publicUserName(row.counterpart);
@@ -116,6 +117,10 @@ function Relationship() {
 
   return (
     <>
+      {/* منتور از پنلِ منتور به این‌جا می‌رسد — برگشت باید به همان پنل باشد، نه «منتورهای من» */}
+      {role === "mentor"
+        ? <Link href="/mentor" prefetch className="trade-back-link"><ChevronRight size={15} /> پنلِ منتور</Link>
+        : <Link href="/mentorship" prefetch className="trade-back-link"><ChevronRight size={15} /> منتورهای من</Link>}
       <div className="mentor-rel-head">
         <MentorUserAvatar name={name} avatarUrl={row.counterpart.avatarUrl} size={48} />
         <div className="mentor-rel-id">

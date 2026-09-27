@@ -593,7 +593,7 @@ function FeedbackBlock({
         sorted.map((f) => (
           <div key={f.id} className="mentor-feedback">
             <div className="mentor-feedback-head">
-              <span className="mono" dir="ltr">{fmtDateTime(f.createdAt)}</span>
+              <span>{fmtDateTime(f.createdAt)}</span>
               {f.itemTitle && <span className="mentor-feedback-ref">{f.logId ? "اجرای " : ""}«{f.itemTitle}»</span>}
               {!f.itemTitle && <span>کلِ برنامه</span>}
               {role === "STUDENT" && !f.readAt && <span className="mentor-feedback-new">تازه</span>}

@@ -31,7 +31,7 @@ export function MentorConfirmDialog({
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={() => !busy && onCancel()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open" role="alertdialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 380 }}>
+      <div className="modal-panel open mentor-modal" role="alertdialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 380 }}>
         <div className="modal-body" style={{ paddingTop: 4 }}>
           <div className="text-[13px] font-bold" style={{ color: "var(--text)", lineHeight: 1.9, textAlign: "center" }}>
             {message}

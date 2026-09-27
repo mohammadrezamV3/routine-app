@@ -254,7 +254,7 @@ function MentorshipHome() {
                     </Link>
                   )}
                   <MentorshipStatusBadge status={r.status} />
-                  {r.status === "BLOCKED" && (
+                  {r.status === "BLOCKED" && r.blockedByMe && (
                     <button type="button" className="trade-ghost-btn" onClick={() => act(r, "unblock")} disabled={!!pendingKey}>
                       {busy(`unblock:${r.id}`) ? <Loader2 size={13} className="trade-spin" /> : "رفعِ مسدودی"}
                     </button>
