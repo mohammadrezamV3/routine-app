@@ -7,7 +7,7 @@ import { Lock, Megaphone, Send, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { publicUserName, type PublicUser } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
-import { ConversationCipher, type Identity } from "@/lib/e2ee/client";
+import { broadcastCipher, type Identity } from "@/lib/e2ee/client";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorE2EEGate } from "./MentorE2EEGate";
@@ -18,13 +18,14 @@ import { SavedRepliesPicker } from "./MentorSavedReplies";
 const FIELD = "wsearch-newform-name trade-glass-field";
 const MAX_LEN = 2000;
 
-type Recipient = { mentorshipId: string; student: PublicUser; key: { version: number; publicKey: string } | null; labelIds: string[] };
-type RecipientsResponse = { recipients: Recipient[]; labels: { id: string; name: string }[] };
+type KeyRow = { version: number; publicKey: string };
+type Recipient = { mentorshipId: string; student: PublicUser; key: KeyRow | null; keys: KeyRow[]; labelIds: string[] };
+type RecipientsResponse = { myKeys: KeyRow[]; recipients: Recipient[]; labels: { id: string; name: string }[] };
 type SendResult = { sent: number; failed: { mentorshipId: string; code: string }[] };
 
 /**
  * «ارسال گروهی» در داشبوردِ منتور — یک متن برای چند شاگردِ فعال. متن روی همین
- * دستگاه برای *هر* گفت‌وگو جداگانه رمز می‌شود (کلیدِ همان جفت)؛ سرور فقط
+ * دستگاه برای *هر* گفت‌وگو جداگانه رمز می‌شود (برای همه‌ی دستگاه‌های دو طرف)؛ سرور فقط
  * پیام‌های رمزشده‌ی مستقل می‌گیرد. خودکفا و قابلِ حذف: فقط همین فایل + /api/mentor/broadcast.
  */
 export function MentorBroadcast({ activeCount }: { activeCount: number }) {
@@ -118,14 +119,8 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
       // برای هر گفت‌وگو جداگانه: کلیدِ همان جفت، IV و کلیدِ فرانکینگِ تازه
       const items = [];
       for (const r of chosen) {
-        const c = new ConversationCipher(identity, r.mentorshipId, {
-          mentorId: identity.userId,
-          studentId: r.student.id,
-          keys: {
-            [identity.userId]: [{ version: identity.version, publicKey: identity.publicKey, current: true }],
-            [r.student.id]: [{ version: r.key!.version, publicKey: r.key!.publicKey, current: true }],
-          },
-        });
+        // همه‌ی دستگاه‌های من و همان شاگرد (docs/mentor-e2ee.md)
+        const c = broadcastCipher(identity, r.mentorshipId, r.student.id, r.keys, data!.myKeys);
         const { frankingKey: _fk, ...enc } = await c.encrypt(body);
         items.push({ mentorshipId: r.mentorshipId, ...enc });
       }
@@ -169,13 +164,13 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
           <label key={r.mentorshipId} className={`mentor-check${r.key ? "" : " is-disabled"}`}>
             <input type="checkbox" disabled={!r.key || busy} checked={!!r.key && selected.has(r.mentorshipId)} onChange={(e) => toggle(r.mentorshipId, e.target.checked)} />
             <span className="mentor-check-label">{publicUserName(r.student)}</span>
-            {!r.key && <span className="mentor-check-kind">رمز گفت‌وگو ندارد</span>}
+            {!r.key && <span className="mentor-check-kind">هنوز وارد بخش منتور نشده</span>}
           </label>
         ))}
       </div>
       <p className="mentor-broadcast-summary">
         {faNum(chosen.length)} گیرنده
-        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد تا فعال‌سازی رمز گفت‌وگو پیام نمی‌گیرد` : ""}
+        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد هنوز وارد بخش منتور نشده و این پیام را نمی‌گیرد` : ""}
       </p>
 
       <SavedRepliesPicker onPick={(t) => { setText((d) => (d ? d + "\n" : "") + t); setTextErr(null); }} disabled={busy} />

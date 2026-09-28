@@ -1,48 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
+import { useEffect } from "react";
+import { MentorDashShell, MentorDashError } from "@/components/MentorDashKit";
 import { MentorProfileForm } from "@/components/MentorProfileForm";
 import { MentorProfileVerification } from "@/components/MentorProfileVerification";
+import { setMentorSelf, useMentorSelf } from "@/components/MentorPanelNav";
 import { LoadingBlock } from "@/components/Spinner";
-import type { MentorSelf } from "@/lib/mentorTypes";
 
 function MentorProfileContent() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<MentorSelf | null>(null);
-
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
-    const r = await mentorApi<{ profile: MentorSelf | null }>("/api/mentors/me");
-    if (!r.ok) { if (!silent) setError(r.error); setLoading(false); return; }
-    setProfile(r.data.profile);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const self = useMentorSelf();
+  const loading = self.status === "unknown" || (self.status === "loading" && !self.profile);
 
   // با #verification (از اطلاعیه‌ی داشبورد) مستقیم به بخش احراز می‌رود؛ بدون پیمایش نرم
   useEffect(() => {
     if (loading || typeof window === "undefined" || window.location.hash !== "#verification") return;
-    document.getElementById("verification")?.scrollIntoView({ block: "start" });
+    const t = setTimeout(() => document.getElementById("verification")?.scrollIntoView({ block: "start" }), 60);
+    return () => clearTimeout(t);
   }, [loading]);
 
   if (loading) return <LoadingBlock />;
-  if (error) return <MentorDashError message={error} onRetry={() => load()} />;
+  if (self.status === "error" && !self.profile) return <MentorDashError message={self.error || "پروفایل دریافت نشد؛ دوباره تلاش کن"} onRetry={() => self.reload()} />;
 
   return (
     <>
-      <MentorProfileForm profile={profile} onSaved={setProfile} />
-      <MentorProfileVerification profile={profile} onChanged={() => load(true)} />
+      <MentorProfileForm profile={self.profile} onSaved={setMentorSelf} />
+      <MentorProfileVerification profile={self.profile} onChanged={() => self.reload(true)} />
     </>
   );
 }
 
 export default function MentorProfilePage() {
+  const self = useMentorSelf();
+  // بدونِ پروفایل (مرحله‌ی شروع) بازگشت به پنل؛ با پروفایل این صفحه زیرِ «تنظیمات» است
+  const back = self.status === "ready" && !self.profile
+    ? { href: "/mentor", label: "پنل منتور" }
+    : { href: "/mentor/settings", label: "تنظیمات" };
   return (
-    <MentorDashShell title="پروفایل منتوری" back={{ href: "/mentor", label: "پنل منتور" }}>
+    <MentorDashShell title="پروفایل منتوری" back={back}>
       <MentorProfileContent />
     </MentorDashShell>
   );

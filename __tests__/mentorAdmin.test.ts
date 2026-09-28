@@ -52,7 +52,12 @@ async function mentorTarget(opts: { adminPermissions?: string[]; owner?: boolean
 }
 
 const act = {
-  verify: (t: Target) => verify(req("POST", "/x", { kind: "IDENTITY", status: "VERIFIED" }) as any, { params: { profileId: t.profileId } }),
+  // makeMentor هویت را تأییدشده می‌سازد (احرازِ اجباری)؛ برای سنجیدنِ خودِ اقدامِ تأیید،
+  // هدف پیش از هر بار به «ارسال نشده» برمی‌گردد
+  verify: async (t: Target) => {
+    await prisma.mentorProfile.update({ where: { id: t.profileId }, data: { identityStatus: "NOT_PROVIDED" } });
+    return verify(req("POST", "/x", { kind: "IDENTITY", status: "VERIFIED" }) as any, { params: { profileId: t.profileId } });
+  },
   suspend: (t: Target) => suspend(req("POST", "/x", { suspend: true, reason: "تست" }) as any, { params: { profileId: t.profileId } }),
   unsuspend: (t: Target) => suspend(req("POST", "/x", { suspend: false }) as any, { params: { profileId: t.profileId } }),
   doc: (t: Target) => adminDoc(req("GET", "/x") as any, { params: { docId: t.docId } }),

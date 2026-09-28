@@ -13,6 +13,7 @@ import { GET, POST, DELETE } from "@/app/api/admin/demo-data/route";
 import { DEMO_USER_WHERE } from "@/lib/demoData";
 import { as, j, makeUser, cleanupUsers } from "./helpers/mentorTestUtils";
 import { giveKey, openAs } from "./helpers/e2eeTestUtils";
+import { MESSAGE_SELECT, serializeMessage } from "@/lib/mentorChatServer";
 
 // ابزارِ داده‌ی آزمایشی: فقط Owner؛ ساختِ دوباره تکراری نمی‌سازه؛ حذف همه‌چیز
 // (از جمله ردیف‌های Owner که ابزار ساخته) رو برمی‌داره و بقیه‌ی داده‌ی Owner رو نه.
@@ -39,12 +40,12 @@ describe("داده‌ی آزمایشی", () => {
 
     const first = (await j(await POST())).status;
     expect(first.seeded).toBe(true);
-    expect(first.counts.mentors).toBe(8);
+    expect(first.counts.mentors).toBe(9);
     expect(first.counts.students).toBe(12);
     expect(first.ownerProfileCreated).toBe(true);
     const second = (await j(await POST())).status;
     expect(second.counts).toEqual(first.counts);
-    expect(await prisma.user.count({ where: DEMO_USER_WHERE })).toBe(20);
+    expect(await prisma.user.count({ where: DEMO_USER_WHERE })).toBe(21);
 
     // رتبه‌بندیِ شایستگی همون لحظه ساخته شده و متنوعه: سارا و امیر واجدِ «محبوب»،
     // کیان (نظرهای تأییدنشده) و پریسا (تازه) نه؛ امیر با شاگردهای بیشتر جلوتر از کیان
@@ -90,7 +91,7 @@ describe("داده‌ی آزمایشی", () => {
     await prisma.user.update({ where: { id: owner }, data: { isSuperAdmin: true } });
     as(owner);
     const res = await j(await POST());
-    expect(res.warnings.some((w: string) => w.includes("رمز گفت‌وگو"))).toBe(true);
+    expect(res.warnings.some((w: string) => w.includes("کلید رمزگذاری ندارد"))).toBe(true);
     expect(await prisma.mentorMessage.count({ where: { mentorship: { OR: [{ mentorId: owner }, { studentId: owner }] } } })).toBe(0);
     expect(await prisma.mentorMessage.count({ where: { legacyBody: { not: null }, sender: DEMO_USER_WHERE } })).toBe(0);
     const rep = await prisma.mentorReport.findFirst({ where: { targetType: "MESSAGE", reporter: DEMO_USER_WHERE } });
@@ -100,14 +101,16 @@ describe("داده‌ی آزمایشی", () => {
     await giveKey(owner);
     as(owner);
     await POST();
+    // پیام‌ها scheme 2: برای همه‌ی کلیدهای فعالِ Owner بسته‌بندی شده‌اند (همان شکلی که API می‌دهد)
     const rows = await prisma.mentorMessage.findMany({
       where: { mentorship: { OR: [{ mentorId: owner }, { studentId: owner }] } },
-      select: { mentorshipId: true, senderId: true, legacyBody: true, clientId: true, ciphertext: true, iv: true, senderKeyVersion: true, recipientKeyVersion: true, commitment: true },
+      select: { ...MESSAGE_SELECT, mentorshipId: true },
     });
     expect(rows.length).toBeGreaterThan(0);
     for (const r of rows) {
       expect(r.legacyBody).toBeNull();
-      const d: any = await openAs(owner, r.mentorshipId, { senderId: r.senderId, enc: { clientId: r.clientId!, ciphertext: r.ciphertext!, iv: r.iv!, senderKeyVersion: r.senderKeyVersion!, recipientKeyVersion: r.recipientKeyVersion!, commitment: r.commitment! } });
+      expect(r.scheme).toBe(2);
+      const d: any = await openAs(owner, r.mentorshipId, serializeMessage(r, owner));
       expect(d.committed).toBe(true);
       expect(d.text.length).toBeGreaterThan(0);
     }

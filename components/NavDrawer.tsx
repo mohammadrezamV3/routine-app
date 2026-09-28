@@ -68,7 +68,7 @@ export const ICONS: Record<string, JSX.Element> = {
   mentors: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17.2" cy="10" r="2.3" stroke="currentColor" strokeWidth="1.6"/><path d="M16.3 14.6c2.2-.2 3.9 1.1 4.7 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
   ),
-  // «انتخاب منتور» — یک نفر و ذره‌بین
+  // «پیدا کردن منتور» — یک نفر و ذره‌بین
   mentorsDiscover: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="9.5" cy="7.8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1.1-3.3 3.6-5 6.5-5 1.1 0 2.1.2 3 .7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17" cy="15.8" r="2.7" stroke="currentColor" strokeWidth="1.7"/><path d="m19 17.8 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -134,7 +134,7 @@ const LINKS: NavItem[] = [
   {
     label: "منتورها", icon: "mentors", feature: "mentors",
     children: [
-      { href: "/mentors", label: "انتخاب منتور", icon: "mentorsDiscover" },
+      { href: "/mentors", label: "پیدا کردن منتور", icon: "mentorsDiscover" },
       { href: "/mentorship", label: "منتورهای من", icon: "mentorsMine" },
     ],
   },

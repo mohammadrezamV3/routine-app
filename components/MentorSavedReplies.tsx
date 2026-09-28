@@ -1,5 +1,6 @@
 "use client";
 
+import { MentorList, MentorListItem } from "./MentorMotion";
 import { useCallback, useEffect, useState } from "react";
 import { Check, MessageSquareQuote, Pencil, Plus, Trash2, X } from "lucide-react";
 import { LoadingBlock, Spinner } from "./Spinner";
@@ -113,7 +114,6 @@ export function MentorSavedRepliesManager() {
     <>
       <MentorSection
         title="پاسخ‌های آماده" icon={ic(MessageSquareQuote, MI.section)} count={list.length ? fa(list.length) : undefined} flush
-        desc="در گفت‌وگو با یک کلیک در کادر پیام درج می‌شوند و پیش از ارسال قابل ویرایش‌اند"
         action={!adding && !full ? (
           <button type="button" className="mentor-text-btn" onClick={() => { setAdding(true); setEditing(null); }}>
             {ic(Plus, MI.btnSm)} پاسخ جدید
@@ -129,9 +129,11 @@ export function MentorSavedRepliesManager() {
           </div>
         )}
         {list.length === 0 && !adding && <MentorEmpty>هنوز پاسخ آماده‌ای ذخیره نکرده‌ای</MentorEmpty>}
+        <MentorList>
         {list.map((r) => (
+          <MentorListItem key={r.id}>{
           editing === r.id ? (
-            <div key={r.id} className="mentor-row is-stacked">
+            <div className="mentor-row is-stacked">
               <ReplyForm
                 initial={r}
                 onCancel={() => setEditing(null)}
@@ -140,7 +142,6 @@ export function MentorSavedRepliesManager() {
             </div>
           ) : (
             <MentorRow
-              key={r.id}
               title={r.title}
               sub={<span className="mentor-reply-preview">{r.body}</span>}
               end={
@@ -155,7 +156,9 @@ export function MentorSavedRepliesManager() {
               }
             />
           )
+          }</MentorListItem>
         ))}
+        </MentorList>
         {full && <MentorEmpty>به سقف {fa(MAX_REPLIES)} پاسخ رسیده‌ای؛ برای افزودن، یکی را حذف کن</MentorEmpty>}
       </MentorSection>
       {confirm && (

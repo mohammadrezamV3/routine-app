@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getMentorshipForUser, roleIn, notFound, forbidden, conflict, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
-import { MENTORSHIP_WITH_USERS_INCLUDE, PUBLIC_USER_SELECT, buildMentorshipRows } from "@/lib/mentorServer";
+import { MENTORSHIP_WITH_USERS_INCLUDE, PUBLIC_USER_SELECT, buildMentorshipRows, MENTOR_IDENTITY_REQUIRED_MSG } from "@/lib/mentorServer";
 import { removeProgramMirrors } from "@/lib/mentorProgramMirror";
 import { END_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability";
 import { countActiveStudents, readWelcomeMessage } from "@/lib/mentorManageServer";
+import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_STALE_MESSAGE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
@@ -55,6 +56,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
   let from: MentorshipStatus[];
   let data: Prisma.MentorshipUpdateManyMutationInput;
   let endReason: string | null = null;
+  // شاگردی که دعوتِ منتور را می‌پذیرد همان «شرایط منتورها»ی درخواستِ شاگرد را می‌پذیرد (lib/mentorTerms.ts)
+  let recordStudentTerms = false;
 
   switch (action) {
     case "accept":
@@ -63,14 +66,26 @@ export async function PATCH(req: Request, { params }: Ctx) {
       if (isInitiator) return forbidden("فقط طرف مقابل می‌تونه به درخواست پاسخ بده");
       if (action === "accept") {
         // منتورِ معلق شاگردِ جدید نمی‌پذیره — چه خودش قبول کنه، چه شاگرد دعوتش رو
-        const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true, maxActiveStudents: true } });
+        const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true, maxActiveStudents: true, identityStatus: true } });
         if (!mp) return conflict("این کاربر دیگه پروفایل منتوری نداره");
         if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب منتوری تو تعلیق شده" : "این منتور فعلا امکان پذیرش شاگرد نداره");
+        // احرازِ هویتِ منتور اجباریه (lib/mentorServer.ts → IDENTITY_VERIFIED_WHERE)
+        if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? MENTOR_IDENTITY_REQUIRED_MSG : "این منتور فعلا امکان پذیرش شاگرد نداره");
         // سقفِ ظرفیت فقط جلوی پذیرشِ *درخواستِ شاگرد* رو می‌گیره؛ دعوتِ خودِ منتور انتخابِ خودشه
         if (role === "MENTOR" && mp.maxActiveStudents != null && (await countActiveStudents(m.mentorId)) >= mp.maxActiveStudents) {
           return conflict("ظرفیت شاگردهایت تکمیل است؛ برای پذیرش، سقف ظرفیت را در تنظیمات بالا ببر");
         }
         data = { status: "ACTIVE", startedAt: now, endedAt: null, pausedAt: null, pauseReason: null, endReason: null, endedBy: null };
+        if (role === "STUDENT") {
+          const meRow = await prisma.user.findUnique({ where: { id: me }, select: { mentorStudentTermsVersion: true } });
+          const terms = decideMentorTerms("student", meRow?.mentorStudentTermsVersion, parsed.body?.acceptMentorTerms);
+          if (!terms.ok) {
+            const error = terms.message === MENTOR_TERMS_STALE_MESSAGE ? terms.message : "برای پذیرش دعوت، شرایط استفاده از بخش منتورها را بخوان و بپذیر";
+            return NextResponse.json({ error, code: MENTOR_TERMS_ERROR_CODE }, { status: 400 });
+          }
+          recordStudentTerms = terms.record;
+          data = { ...data, studentTermsVersion: MENTOR_TERMS_VERSION };
+        }
       } else {
         data = { status: "REJECTED", endedAt: now };
       }
@@ -105,7 +120,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
       break;
   }
 
-  const res = await prisma.mentorship.updateMany({ where: { id: m.id, status: { in: from } }, data });
+  const res = await prisma.$transaction(async (tx) => {
+    const r = await tx.mentorship.updateMany({ where: { id: m.id, status: { in: from } }, data });
+    if (r.count > 0 && recordStudentTerms) {
+      await tx.user.update({ where: { id: me }, data: { mentorStudentTermsAcceptedAt: now, mentorStudentTermsVersion: MENTOR_TERMS_VERSION } });
+    }
+    return r;
+  });
   if (res.count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
 
   if ((action === "end" || action === "block") && (m.status === "ACTIVE" || m.status === "PENDING")) {

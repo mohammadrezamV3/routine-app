@@ -8,6 +8,8 @@ import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorField, MentorNotice, MentorSection } from "./MentorUI";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, type MentorCategory } from "@/lib/mentorCategories";
 import type { MentorSelf } from "@/lib/mentorTypes";
+import { MENTOR_TERMS_REQUIRED_MESSAGE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
+import { MentorTermsAcceptance, mentorTermsPayload } from "./MentorTermsAcceptance";
 
 // همان سقف‌های سرور (app/api/mentors/me و lib/mentorValidate.ts)
 export const HEADLINE_MAX = 120;
@@ -34,6 +36,10 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   );
   const [routineRole, setRoutineRole] = useState(profile?.routineRole ?? "");
   const [published, setPublished] = useState(profile?.published ?? false);
+  // پذیرشِ نسخه‌ی جاریِ «شرایط منتوری» (lib/mentorTerms.ts)؛ بدونِ آن سرور ۴۰۰ می‌دهد
+  const needsTerms = profile?.mentorTermsVersion !== MENTOR_TERMS_VERSION;
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsErr, setTermsErr] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -76,7 +82,9 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
     if (published && categories.length === 0) errs.categories = "برای انتشار، حداقل یک حوزه انتخاب کن";
     if (hasRoutine && role.length > ROUTINE_ROLE_MAX) errs.role = `حداکثر ${fa(ROUTINE_ROLE_MAX)} نویسه`;
     setFieldErr(errs);
-    if (Object.keys(errs).length) { setError("چند مورد نیاز به اصلاح دارد"); return; }
+    const termsMissing = needsTerms && !termsAccepted;
+    setTermsErr(termsMissing ? MENTOR_TERMS_REQUIRED_MESSAGE.mentor : null);
+    if (Object.keys(errs).length || termsMissing) { setError(termsMissing && !Object.keys(errs).length ? null : "چند مورد نیاز به اصلاح دارد"); return; }
 
     // تخصصِ تایپ‌شده‌ای که هنوز «افزودن» نخورده هم ذخیره شود
     const pending = specInput.trim().replace(/\s+/g, " ");
@@ -93,10 +101,12 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
         categories,
         routineRole: hasRoutine ? role || null : null,
         published,
+        ...mentorTermsPayload(needsTerms && termsAccepted),
       },
     });
     setSaving(false);
     if (!r.ok) { setError(r.error); return; }
+    setTermsAccepted(false);
     setSpecialties(specs);
     setSpecInput("");
     setRoutineRole(r.data.profile.routineRole ?? "");
@@ -212,7 +222,9 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
             <div className="mentor-toggle-desc">
               {missing.length > 0 && !published
                 ? `برای انتشار، ${missing.join(" و ")} لازم است`
-                : "پروفایل منتشرشده در فهرست منتورها دیده می‌شود"}
+                : profile?.identityStatus === "VERIFIED"
+                  ? "پروفایل منتشرشده در فهرست منتورها دیده می‌شود"
+                  : "پس از تأیید مدرک شناسایی در فهرست منتورها دیده می‌شود"}
             </div>
           </div>
           <ToggleSwitch
@@ -222,8 +234,16 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
         </div>
       </MentorSection>
 
+      {needsTerms && (
+        <div className="mentor-terms-row">
+          <MentorTermsAcceptance
+            role="mentor" checked={termsAccepted} error={termsErr}
+            onChange={(v) => { setTermsAccepted(v); setTermsErr(null); touched(); }}
+          />
+        </div>
+      )}
       {error && <div className="form-inline-error" role="alert">{error}</div>}
-      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0, marginBottom: "var(--m-5)" }}>
+      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : isNew ? "ساخت پروفایل" : "ذخیره تغییرات"}
         </button>

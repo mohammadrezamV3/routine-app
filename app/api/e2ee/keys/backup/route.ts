@@ -3,56 +3,91 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, badRequest, notFound } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { isKeyBackupShape } from "@/lib/e2ee/core";
+import { KDF_SALT_BYTES, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS, isKeyBackupShape } from "@/lib/e2ee/core";
+import { b64ByteLength } from "@/lib/e2ee/encoding";
+import { keyChangedResponse } from "@/lib/e2ee/keyServer";
 
-// پشتیبانِ رمزشده‌ی کلیدِ خصوصی — فقط برای باز کردن روی دستگاهِ تازه.
-// سرور نمی‌تواند بازش کند؛ امنیتش در برابرِ حدسِ آفلاین = قدرتِ رمزِ گفت‌وگو +
-// PBKDF2 با ≥ ۶۰۰هزار دور. سقفِ دریافت جلوی جمع‌آوریِ خودکار با نشستِ دزدیده‌شده را
+// پشتیبانِ رمزشده‌ی کلیدِ SYNCED — فقط برای باز کردن روی دستگاهی که با رمزِ عبور وارد
+// شده. سرور نمی‌تواند بازش کند؛ امنیتش در برابرِ حدسِ آفلاین = قدرتِ رمزِ عبور + PBKDF2
+// (۶۰۰هزار دور، نمکِ اختصاصی). سقفِ دریافت جلوی جمع‌آوریِ خودکار با نشستِ دزدیده‌شده را
 // می‌گیرد (برای گرداننده‌ی سرور که خودِ جدول را دارد بی‌اثر است؛ docs/mentor-e2ee.md).
 
-const FETCH_LIMIT = 10;
-const FETCH_WINDOW_MS = 60 * 60 * 1000;
+const FETCH_LIMIT = 20;
+const WINDOW_MS = 60 * 60 * 1000;
 
-// GET /api/e2ee/keys/backup → { version, publicKey, backup }
+// GET /api/e2ee/keys/backup → { version, publicKey, backupKind, backup }
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
-  if (!(await checkRateLimit(`e2ee-backup-fetch:${me}`, FETCH_LIMIT, FETCH_WINDOW_MS))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها برای باز کردن رمز گفت‌وگو زیاد بوده؛ یک ساعت دیگر دوباره تلاش کن" }, { status: 429 });
+  if (!(await checkRateLimit(`e2ee-backup-fetch:${me}`, FETCH_LIMIT, WINDOW_MS))) {
+    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ یک ساعت دیگر دوباره تلاش کن" }, { status: 429 });
   }
   const k = await prisma.userE2EKey.findFirst({
-    where: { userId: me, retiredAt: null },
-    orderBy: { version: "desc" },
-    select: { version: true, publicKey: true, backupCiphertext: true, backupIv: true, backupSalt: true, backupIterations: true },
+    where: { userId: me, kind: "SYNCED", retiredAt: null },
+    select: { version: true, publicKey: true, backupKind: true, backupCiphertext: true, backupIv: true, backupSalt: true, backupIterations: true },
   });
   if (!k || !k.backupCiphertext || !k.backupIv || !k.backupSalt || !k.backupIterations) return notFound();
   return NextResponse.json({
     version: k.version,
     publicKey: k.publicKey,
+    backupKind: k.backupKind ?? "PASSCODE",
     backup: { kdf: "PBKDF2-SHA256", iterations: k.backupIterations, salt: k.backupSalt, iv: k.backupIv, ciphertext: k.backupCiphertext },
   });
 }
 
-// PUT /api/e2ee/keys/backup { version, backup } → تغییرِ رمزِ گفت‌وگو (همان کلید، بسته‌بندیِ تازه)
+// PUT /api/e2ee/keys/backup
+//   { version, backup, backupKind: "PASSWORD", kdf? } → بسته‌بندیِ دوباره‌ی همان کلید با KEKِ رمزِ عبور:
+//       انتقال از «رمز گفت‌وگو»ی قدیمی (kdf = نمکِ فعلی)، یا تغییرِ رمزِ عبور (kdf = نمکِ تازه، اتمی با پشتیبان)
+//   { version, convertToDevice: true, label } → حسابِ بی‌رمز: کلیدِ قدیمیِ «رمز گفت‌وگو» کلیدِ همین دستگاه می‌شود و پشتیبان پاک
 export async function PUT(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
-  if (!(await checkRateLimit(`e2ee-backup-put:${me}`, 5, FETCH_WINDOW_MS))) {
+  if (!(await checkRateLimit(`e2ee-backup-put:${me}`, 10, WINDOW_MS))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
   }
   const parsed = await readJsonBody(req, 8 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
   if (!Number.isInteger(b.version) || b.version < 1) return badRequest("نسخه‌ی کلید نامعتبر است");
-  if (!isKeyBackupShape(b.backup)) return badRequest("پشتیبان کلید نامعتبر است");
 
-  const r = await prisma.userE2EKey.updateMany({
-    where: { userId: me, version: b.version, retiredAt: null },
-    data: { backupCiphertext: b.backup.ciphertext, backupIv: b.backup.iv, backupSalt: b.backup.salt, backupIterations: b.backup.iterations },
+  if (b.convertToDevice === true) {
+    const label = typeof b.label === "string" ? b.label.trim().slice(0, 60) || null : null;
+    const r = await prisma.userE2EKey.updateMany({
+      where: { userId: me, version: b.version, kind: "SYNCED", retiredAt: null, backupKind: "PASSCODE" },
+      data: { kind: "DEVICE", activeSyncedFor: null, deviceLabel: label, lastSeenAt: new Date(), backupKind: null, backupCiphertext: null, backupIv: null, backupSalt: null, backupIterations: null },
+    });
+    if (r.count === 0) return keyChangedResponse();
+    await prisma.auditLog.create({ data: { actorUserId: me, action: "e2ee.legacy_to_device", targetType: "User", targetId: me, meta: { version: b.version } } }).catch(() => {});
+    return NextResponse.json({ ok: true });
+  }
+
+  if (b.backupKind !== "PASSWORD") return badRequest("نوع پشتیبان نامعتبر است");
+  if (!isKeyBackupShape(b.backup)) return badRequest("پشتیبان کلید نامعتبر است");
+  const newKdf = b.kdf as { salt?: unknown; iterations?: unknown } | undefined;
+  if (newKdf !== undefined) {
+    if (!newKdf || typeof newKdf.salt !== "string" || b64ByteLength(newKdf.salt) !== KDF_SALT_BYTES) return badRequest("نمک نامعتبر است");
+    if (!Number.isInteger(newKdf.iterations) || (newKdf.iterations as number) < PBKDF2_MIN_ITERATIONS || (newKdf.iterations as number) > PBKDF2_MAX_ITERATIONS) return badRequest("پارامتر KDF نامعتبر است");
+  }
+  const user = await prisma.user.findUnique({ where: { id: me }, select: { passwordHash: true } });
+  if (!user?.passwordHash) return badRequest("این حساب رمز عبور ندارد");
+
+  const ok = await prisma.$transaction(async (tx) => {
+    const cur = await tx.userE2EKdf.findUnique({ where: { userId: me } });
+    const salt = newKdf ? (newKdf.salt as string) : cur?.salt;
+    const iterations = newKdf ? (newKdf.iterations as number) : cur?.iterations;
+    if (!salt || b.backup.salt !== salt || b.backup.iterations !== iterations) return "BAD_KDF" as const;
+    const r = await tx.userE2EKey.updateMany({
+      where: { userId: me, version: b.version, kind: "SYNCED", retiredAt: null },
+      data: { backupKind: "PASSWORD", backupCiphertext: b.backup.ciphertext, backupIv: b.backup.iv, backupSalt: b.backup.salt, backupIterations: b.backup.iterations },
+    });
+    if (r.count === 0) return "CHANGED" as const;
+    if (newKdf) await tx.userE2EKdf.upsert({ where: { userId: me }, create: { userId: me, salt, iterations: iterations! }, update: { salt, iterations: iterations! } });
+    return "OK" as const;
   });
-  if (r.count === 0) return NextResponse.json({ error: "کلید این حساب تغییر کرده؛ صفحه را تازه کن", code: "KEY_CHANGED" }, { status: 409 });
-  await prisma.auditLog.create({ data: { actorUserId: me, action: "e2ee.passcode_change", targetType: "User", targetId: me, meta: { version: b.version } } }).catch(() => {});
+  if (ok === "BAD_KDF") return badRequest("پشتیبان با پارامترهای این حساب نمی‌خواند");
+  if (ok === "CHANGED") return keyChangedResponse();
+  await prisma.auditLog.create({ data: { actorUserId: me, action: newKdf ? "e2ee.password_rewrap" : "e2ee.passcode_migrate", targetType: "User", targetId: me, meta: { version: b.version } } }).catch(() => {});
   return NextResponse.json({ ok: true });
 }

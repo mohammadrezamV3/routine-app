@@ -36,6 +36,7 @@
 - `GET /api/mentors/me` → `{ profile: MentorSelf | null }`
   `MentorSelf = { id, userId, headline, bio, specialties[], categories[], published, acceptingStudents, identityStatus, identityRejectReason, suspendedAt, suspendedReason, ratingAvg, ratingCount, credentials: {category,status,rejectReason}[], documents: {id,kind,category,fileName,mimeType,sizeBytes,createdAt}[] }`
 - `PUT /api/mentors/me` بدنه `{ headline?, bio?, specialties?: string[], categories?: string[], published?, acceptingStudents? }` → `{ profile }`. ساخت در اولین بار. `published=true` فقط با حداقل یک دسته و bio. برای هر دسته‌ی انتخابی ردیفِ `MentorCredential` ساخته می‌شه (NOT_PROVIDED). وضعیتِ احراز *هرگز* از این روت نوشته نمی‌شه.
+- پذیرشِ شرایط: `PUT /api/mentors/me` و `POST /api/mentorships` (درخواستِ شاگرد) بدونِ پذیرشِ نسخه‌ی جاری → `400 { code: "MENTOR_TERMS_REQUIRED" }`؛ بدنه `acceptMentorTerms: MENTOR_TERMS_VERSION`. وضعیت: `GET /api/mentor-terms`. جزئیات: `docs/mentor-terms-notes.md`.
 - `POST /api/mentors/me/documents` (multipart: `file`, `kind`=IDENTITY|CERTIFICATE, `category` برای CERTIFICATE) → `{ document }`؛ وضعیتِ مربوط → PENDING + event. rate limit. اگه VERIFIED بود، ارسالِ جدید دوباره PENDING می‌کنه.
 - `GET /api/mentors/me/documents/[docId]` → فایل (فقط صاحبش). هدرها: `Content-Disposition: attachment`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`.
 - `DELETE /api/mentors/me/documents/[docId]` → فقط وقتی وضعیتِ مربوط VERIFIED نیست.

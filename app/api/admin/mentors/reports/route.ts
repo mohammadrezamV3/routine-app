@@ -3,6 +3,7 @@ import { MentorReportStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { openReportedText } from "@/lib/e2ee/reportServer";
+import { openReportMessage } from "@/lib/mentorConversationReport";
 
 // GET /api/admin/mentors/reports?status=OPEN|RESOLVED|DISMISSED&page=
 // خلاصه‌ی محتوای هدف سمت سرور ساخته می‌شه (متن نظر، عنوان برنامه، اسم عمومی
@@ -20,7 +21,10 @@ type Target =
   | { kind: "USER"; exists: boolean; user: PublicUser | null }
   | { kind: "REVIEW"; exists: boolean; rating: number | null; body: string | null; status: string | null; author: PublicUser | null; mentor: PublicUser | null }
   | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null; verified: boolean }
-  | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null };
+  | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null }
+  // «گزارش گفت‌وگو»: فقط پیام‌هایی که گزارش‌دهنده پیوست کرده و هر کدام جداگانه تأیید شده
+  | { kind: "CONVERSATION"; exists: boolean; mentor: PublicUser | null; student: PublicUser | null;
+      messages: { id: string; sender: PublicUser | null; text: string | null; createdAt: string; verified: boolean }[] };
 
 function cut(s: string | null | undefined, n = SNIPPET): string | null {
   if (!s) return null;
@@ -51,6 +55,8 @@ export async function GET(req: NextRequest) {
         reporterId: true, reportedText: true, reportedMessageAt: true, reportVerified: true,
         status: true, resolution: true, resolvedById: true, resolvedAt: true, createdAt: true,
         reporter: { select: PUBLIC_USER },
+        // متنِ پیام‌های پیوستِ «گزارش گفت‌وگو» فقط از خودِ گزارش (نه جدولِ پیام)
+        messages: { orderBy: { position: "asc" }, select: { messageId: true, senderId: true, text: true, messageAt: true, verified: true } },
       },
     }),
     prisma.mentorReport.count({ where: { status } }),
@@ -61,10 +67,11 @@ export async function GET(req: NextRequest) {
   const reviewIds = ids(rows, "REVIEW");
   const messageIds = ids(rows, "MESSAGE");
   const programIds = ids(rows, "PROGRAM");
+  const conversationIds = ids(rows, "CONVERSATION");
   const targetUserIds = Array.from(new Set(rows.map((r) => r.targetUserId).filter((x): x is string => !!x)));
   const resolverIds = Array.from(new Set(rows.map((r) => r.resolvedById).filter((x): x is string => !!x)));
 
-  const [users, reviews, messages, programs, resolvers] = await Promise.all([
+  const [users, reviews, messages, programs, resolvers, conversations] = await Promise.all([
     userIds.length || targetUserIds.length
       ? prisma.user.findMany({
           where: { id: { in: Array.from(new Set([...userIds, ...targetUserIds])) } },
@@ -93,6 +100,13 @@ export async function GET(req: NextRequest) {
     resolverIds.length
       ? prisma.user.findMany({ where: { id: { in: resolverIds } }, select: { id: true, name: true, lastName: true, username: true } })
       : [],
+    // فقط دو طرفِ رابطه — هیچ ستونِ محتوایی از پیام‌ها
+    conversationIds.length
+      ? prisma.mentorship.findMany({
+          where: { id: { in: conversationIds } },
+          select: { id: true, mentor: { select: PUBLIC_USER }, student: { select: PUBLIC_USER } },
+        })
+      : [],
   ]);
 
   const userBy = new Map(users.map((u) => [u.id, u]));
@@ -100,6 +114,7 @@ export async function GET(req: NextRequest) {
   const messageBy = new Map(messages.map((m) => [m.id, m]));
   const programBy = new Map(programs.map((p) => [p.id, p]));
   const resolverBy = new Map(resolvers.map((u) => [u.id, u]));
+  const conversationBy = new Map(conversations.map((c) => [c.id, c]));
   const pub = (u: (PublicUser & { mentorProfile?: unknown }) | null | undefined): PublicUser | null =>
     u ? { id: u.id, name: u.name, lastName: u.lastName, username: u.username, avatarUrl: u.avatarUrl } : null;
 
@@ -119,6 +134,20 @@ export async function GET(req: NextRequest) {
       return {
         kind: "MESSAGE", exists: !!m, body: cut(text, 2000), createdAt: r?.reportedMessageAt?.toISOString() ?? null,
         sender: pub(sender), verified: !!r?.reportVerified,
+      };
+    }
+    if (type === "CONVERSATION") {
+      const c = conversationBy.get(id);
+      const party = (uid: string) => (c?.mentor.id === uid ? pub(c.mentor) : c?.student.id === uid ? pub(c.student) : pub(userBy.get(uid)));
+      return {
+        kind: "CONVERSATION", exists: !!c, mentor: pub(c?.mentor), student: pub(c?.student),
+        messages: (r?.messages ?? []).map((x) => ({
+          id: x.messageId,
+          sender: party(x.senderId),
+          text: r ? openReportMessage(x.text, r.id, x.messageId) : null,
+          createdAt: x.messageAt.toISOString(),
+          verified: x.verified,
+        })),
       };
     }
     const p = programBy.get(id);

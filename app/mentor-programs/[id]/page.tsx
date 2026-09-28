@@ -15,6 +15,7 @@ import { ProgramStatusBadge } from "@/components/ProgramStatusBadge";
 import { ProgramRespondModal } from "@/components/ProgramRespondModal";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { MentorReportModal } from "@/components/MentorReportModal";
+import { MentorKebabMenu, type MentorMenuAction } from "@/components/MentorKebabMenu";
 import { MentorProgressWeek } from "@/components/MentorProgressWeek";
 import { MentorProgramTools } from "@/components/MentorProgramTools";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
@@ -31,7 +32,9 @@ const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 type Back = { href: string; label: string };
-type Head = { title: string; back: Back } | null;
+type Head = { title: string; back: Back; canReport: boolean; canCancel: boolean } | null;
+/** فرمانِ منوی سه‌نقطه‌ی سرِ صفحه به بدنه */
+type MenuCmd = { kind: "report" | "cancel"; n: number } | null;
 
 // ───────────────────────── تاریخِ محلی ─────────────────────────
 
@@ -51,17 +54,25 @@ function daysLabel(item: Item): string {
 export default function MentorProgramPage() {
   const [head, setHead] = useState<Head>(null);
   const [fallbackBack, setFallbackBack] = useState(false);
+  const [cmd, setCmd] = useState<MenuCmd>(null);
+  // اقدام‌های کم‌کاربرد/مخرب (گزارش، لغو) در منوی سه‌نقطه‌ی ردیفِ عنوان، نه دکمه‌ی آزاد پایینِ صفحه
+  const menu: MentorMenuAction[] = [
+    ...(head?.canReport ? [{ label: "گزارش برنامه", icon: <Flag {...BTN} />, onClick: () => setCmd((c) => ({ kind: "report" as const, n: (c?.n ?? 0) + 1 })) }] : []),
+    ...(head?.canCancel ? [{ label: "لغو برنامه", icon: <CircleSlash {...BTN} />, danger: true, onClick: () => setCmd((c) => ({ kind: "cancel" as const, n: (c?.n ?? 0) + 1 })) }] : []),
+  ];
   return (
     <MentorPageShell
       title={head?.title}
       back={head?.back ?? (fallbackBack ? { href: "/mentorship", label: "منتورهای من" } : null)}
+      titleAction={menu.length ? <MentorKebabMenu actions={menu} label="گزینه‌های برنامه" /> : undefined}
+      surface
     >
-      <ProgramView onHead={setHead} onFailed={setFallbackBack} />
+      <ProgramView onHead={setHead} onFailed={setFallbackBack} cmd={cmd} />
     </MentorPageShell>
   );
 }
 
-function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed: (failed: boolean) => void }) {
+function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onFailed: (failed: boolean) => void; cmd: MenuCmd }) {
   const { id } = useParams<{ id: string }>();
   const today = useMemo(() => isoLocal(new Date()), []);
   const [weekStart, setWeekStart] = useState(() => weekStartOf(isoLocal(new Date())));
@@ -136,9 +147,18 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
   const headTitle = data?.program.title;
   const headRel = data?.program.mentorshipId;
   const headName = data ? publicUserName(data.program.counterpart) : null;
+  const headStudent = data?.role === "STUDENT";
+  const headCanCancel = !!data && ["DRAFT", "PENDING", "ACCEPTED", "ACTIVE"].includes(data.program.status);
   useEffect(() => {
-    if (headTitle && headRel && headName) onHead({ title: headTitle, back: { href: `/mentorship/${headRel}`, label: headName } });
-  }, [headTitle, headRel, headName, onHead]);
+    if (headTitle && headRel && headName) {
+      onHead({ title: headTitle, back: { href: `/mentorship/${headRel}`, label: headName }, canReport: headStudent, canCancel: headCanCancel });
+    }
+  }, [headTitle, headRel, headName, headStudent, headCanCancel, onHead]);
+  useEffect(() => {
+    if (!cmd) return;
+    if (cmd.kind === "report") setReportOpen(true);
+    else setRespond("cancel");
+  }, [cmd]);
   useEffect(() => { onFailed(!!error && !data); }, [error, data, onFailed]);
   useEffect(() => () => { onHead(null); onFailed(false); }, [onHead, onFailed]);
 
@@ -170,7 +190,6 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
   const otherName = publicUserName(other);
   const isWorkout = program.type === "WORKOUT";
   const trackable = program.status === "ACTIVE" || program.status === "COMPLETED" || (!isStudent && program.status === "CANCELLED");
-  const canCancel = ["DRAFT", "PENDING", "ACCEPTED", "ACTIVE"].includes(program.status);
   const canActivate = program.status === "ACCEPTED" && (!program.startDate || program.startDate <= today);
   const sortedItems = [...items].sort((a, b) => a.order - b.order || (a.startTime ?? "").localeCompare(b.startTime ?? ""));
   const showProgress = program.status === "ACTIVE" || program.status === "COMPLETED";
@@ -362,20 +381,6 @@ function ProgramView({ onHead, onFailed }: { onHead: (h: Head) => void; onFailed
         onSent={(f) => { setData((d) => (d ? { ...d, feedback: [...d.feedback, f] } : d)); setFeedbackTarget(null); }}
       />
 
-      {(canCancel || isStudent) && (
-        <div className="mentor-danger-zone">
-          {isStudent && (
-            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => setReportOpen(true)}>
-              <Flag {...BTN_SM} /> گزارش برنامه
-            </button>
-          )}
-          {canCancel && (
-            <button type="button" className="trade-danger-btn mentor-btn is-sm" onClick={() => setRespond("cancel")} disabled={!!busy}>
-              <CircleSlash {...BTN_SM} /> لغو برنامه
-            </button>
-          )}
-        </div>
-      )}
 
       {respond && (
         <ProgramRespondModal

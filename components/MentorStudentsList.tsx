@@ -1,5 +1,6 @@
 "use client";
 
+import { MentorList, MentorListItem } from "./MentorMotion";
 import { useMemo, useState } from "react";
 import { CircleSlash, Search, SearchX, Users } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -94,15 +95,18 @@ export function MentorStudentsList({ data }: { data: StudentIndexResponse }) {
         </div>
       </div>
 
-      <MentorSection title="شاگردهای فعال" icon={ic(Users, MI.section)} count={fa(rows.length)} flush>
-        {rows.length === 0 ? (
-          <MentorEmpty icon={ic(SearchX, MI.row)}>شاگردی با این فیلتر پیدا نشد</MentorEmpty>
-        ) : rows.map((r) => {
+      <MentorSection
+        title="شاگردهای فعال" icon={ic(Users, MI.section)} count={fa(rows.length)} flush
+        action={data.capacity != null ? <span className="mentor-range">ظرفیت {fa(data.students.length)} از {fa(data.capacity)}</span> : undefined}
+      >
+        {rows.length === 0 && <MentorEmpty icon={ic(SearchX, MI.row)}>شاگردی با این فیلتر پیدا نشد</MentorEmpty>}
+        <MentorList>
+        {rows.map((r) => {
           const name = publicUserName(r.student);
           const labels = r.labelIds.map((id) => labelName.get(id)).filter(Boolean) as string[];
           return (
+            <MentorListItem key={r.mentorshipId}>
             <MentorRow
-              key={r.mentorshipId}
               href={`/mentor/students/${r.student.id}`}
               lead={<MentorUserAvatar avatarUrl={r.student.avatarUrl} name={name} size={36} />}
               title={name}
@@ -121,8 +125,10 @@ export function MentorStudentsList({ data }: { data: StudentIndexResponse }) {
                 </>
               ) : undefined}
             />
+            </MentorListItem>
           );
         })}
+        </MentorList>
       </MentorSection>
     </>
   );

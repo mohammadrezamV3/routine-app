@@ -6,6 +6,7 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
+import { ensureE2EEKeys } from "@/lib/e2ee/client";
 
 type Counts = { mentors: number; students: number; mentorships: number; programs: number; messages: number; reviews: number; reports: number };
 type Status = { seeded: boolean; seededAt: string | null; ownerProfileCreated: boolean; counts: Counts };
@@ -41,6 +42,8 @@ export default function AdminDemoDataPage() {
   async function run(kind: "seed" | "clear") {
     setBusy(kind);
     try {
+      // کلیدِ رمزگذاریِ خودِ Owner پیش از ساخت (تا گفت‌وگوهایش با کاربرانِ آزمایشی پُر شوند)
+      if (kind === "seed") await ensureE2EEKeys();
       const d = await adminFetch<{ status: Status; warnings?: string[] }>("/api/admin/demo-data", { method: kind === "seed" ? "POST" : "DELETE" });
       setStatus(d.status);
       toast(kind === "seed" ? "داده‌ی آزمایشی ساخته شد" : "داده‌ی آزمایشی حذف شد");
@@ -68,7 +71,7 @@ export default function AdminDemoDataPage() {
           <div className="admin-page-kicker">داده‌ی آزمایشی</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
             منتور، شاگرد، برنامه، پیام، نظر و گزارش نمونه برای تست بخش منتورها. حساب شما هم به‌عنوان شاگرد و منتور به این داده وصل می‌شود.
-            پیام‌ها رمزگذاری سرتاسری دارند: گفت‌وگوهای حساب شما فقط وقتی پیام نمونه می‌گیرند که پیش از ساخت، رمز گفت‌وگو را در یکی از گفت‌وگوهای منتوری فعال کرده باشید؛ گفت‌وگوی کاربران آزمایشی با هم برای هیچ‌کس خواندنی نیست.
+            پیام‌ها رمزگذاری سرتاسری دارند: گفت‌وگوهای حساب شما فقط وقتی پیام نمونه می‌گیرند که پیش از ساخت، دست‌کم یک بار با رمز عبور وارد شده باشید؛ گفت‌وگوی کاربران آزمایشی با هم برای هیچ‌کس خواندنی نیست.
           </div>
         </div>
         <div className="admin-head-actions">

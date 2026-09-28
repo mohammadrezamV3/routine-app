@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import {
-  Activity, AlertCircle, Ban, BadgeCheck, CalendarCheck, CalendarDays, Check, CircleSlash,
-  ClipboardList, Dumbbell, Eye, EyeOff, Hourglass, Inbox, MessageCircle, Pencil, Send, UserPlus, UserRound, Users, X, XCircle,
+  Activity, AlertCircle, Ban, CalendarCheck, CalendarDays, Check, CircleSlash,
+  ClipboardList, Dumbbell, Hourglass, Inbox, MessageCircle, Send, UserPlus, Users, X,
 } from "lucide-react";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { ProgramStatusBadge } from "./ProgramStatusBadge";
@@ -14,31 +14,21 @@ import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorField, MentorNotice, Ment
 import { MentorUserAvatar } from "./MentorUserAvatar";
 import { MentorAvailabilityQuick } from "./MentorAvailabilityQuick";
 import { MentorIntakeAnswers } from "./MentorIntakeAnswers";
-import { MentorDashTools } from "./MentorDashTools";
+import { MentorSetupSteps } from "./MentorDashOnboarding";
+import { MentorCollapse, MentorList, MentorListItem } from "./MentorMotion";
 import { MentorBroadcast } from "./MentorBroadcast";
 import { categoryLabel } from "./MentorBadges";
 import { fmtDate, fmtRelative, fmtWeekday } from "@/lib/mentorFormat";
 import { isValidUsername } from "@/lib/validate";
-import { VERIFICATION_LABELS } from "@/lib/mentorCategories";
 import { publicUserName } from "@/lib/mentorTypes";
 import type {
-  MentorDashboard, MentorSelf, MentorshipAction, MentorshipRow, MentorshipsResponse, VerificationStatus,
+  MentorDashboard, MentorSelf, MentorshipAction, MentorshipRow, MentorshipsResponse,
 } from "@/lib/mentorTypes";
 
 /** تعداد ردیف‌های «فعالیت اخیر» پیش از بازکردنِ کامل */
 const ACTIVITY_PREVIEW = 5;
 
 const ic = (Icon: typeof Users, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
-
-/** چیپ وضعیت احراز هویت (یک خط؛ PENDING هرگز جعبه/اطلاعیه نیست) */
-function IdentityChip({ status }: { status: VerificationStatus }) {
-  switch (status) {
-    case "PENDING": return <MentorChip tone="info" icon={ic(Hourglass, MI.chip)}>{VERIFICATION_LABELS.PENDING}</MentorChip>;
-    case "VERIFIED": return <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>{VERIFICATION_LABELS.VERIFIED}</MentorChip>;
-    case "REJECTED": return <MentorChip tone="danger" icon={ic(XCircle, MI.chip)}>{VERIFICATION_LABELS.REJECTED}</MentorChip>;
-    default: return <MentorChip tone="neutral" icon={ic(CircleSlash, MI.chip)}>{VERIFICATION_LABELS.NOT_PROVIDED}</MentorChip>;
-  }
-}
 
 /** داشبورد منتور: وضعیت‌های نیازمند اقدام، شاگردها، درخواست‌ها، برنامه‌ها. */
 export function MentorDashBoard({ self }: { self: MentorSelf }) {
@@ -92,42 +82,21 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       </MentorNotice>,
     );
   }
-  if (identity === "REJECTED") {
-    notices.push(
-      <MentorNotice
-        key="idrej" tone="danger" icon={ic(XCircle, MI.row)} title="مدرک شناسایی رد شد"
-        action={<Link href="/mentor/profile#verification" className="mentor-link">ارسال دوباره</Link>}
-      >
-        {self.identityRejectReason || "مدرک واضح‌تری بفرست"}
-      </MentorNotice>,
-    );
-  }
-  if (!published && !suspended) {
-    notices.push(
-      <MentorNotice
-        key="unpub" tone="warn" icon={ic(EyeOff, MI.row)} title="پروفایل منتشر نشده"
-        action={<Link href="/mentor/profile" className="mentor-link">تکمیل پروفایل</Link>}
-      >
-        شاگردها تا انتشار آن را نمی‌بینند
-      </MentorNotice>,
-    );
-  }
-  if (identity === "NOT_PROVIDED") {
-    notices.push(
-      <MentorNotice
-        key="idnone" tone="warn" icon={ic(AlertCircle, MI.row)} title="احراز هویت انجام نشده"
-        action={<Link href="/mentor/profile#verification" className="mentor-link">ارسال مدرک</Link>}
-      >
-        پس از تأیید، نشان «هویت تأییدشده» روی پروفایلت نمایش داده می‌شود
-      </MentorNotice>,
-    );
-  }
+  // احراز هویت اجباری است: تا تأیید و انتشار، مراحلِ فعال‌سازی بالای داشبورد می‌ماند
+  const setupDone = identity === "VERIFIED" && published;
 
   return (
     <>
-      {notices.slice(0, 2)}
+      {notices.length > 0 && <div className="mentor-notices">{notices}</div>}
 
-      <div className="mentor-stats" style={{ marginTop: 0, marginBottom: "var(--m-4)" }}>
+      {!setupDone && (
+        <MentorSetupSteps
+          hasProfile identity={identity} rejectReason={self.identityRejectReason}
+          published={published} suspended={suspended}
+        />
+      )}
+
+      <div className="mentor-stats mentor-dash-stats">
         <div className="mentor-stat"><b>{fa(dash.stats.students)}</b><span>{ic(Users, MI.chip)} کل شاگردها</span></div>
         <div className="mentor-stat"><b>{fa(dash.stats.activeStudents)}</b><span>{ic(Activity, MI.chip)} شاگرد فعال</span></div>
         <div className="mentor-stat"><b>{fa(dash.stats.pendingRequests)}</b><span>{ic(Inbox, MI.chip)} درخواست بی‌پاسخ</span></div>
@@ -256,41 +225,34 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       >
         {dash.recentActivity.length === 0 ? (
           <MentorEmpty>فعالیتی ثبت نشده است</MentorEmpty>
-        ) : (allActivity ? dash.recentActivity : dash.recentActivity.slice(0, ACTIVITY_PREVIEW)).map((a, i) => {
-          const lead = a.type === "message" ? ic(MessageCircle, MI.row) : a.type === "program" ? ic(ClipboardList, MI.row) : ic(CalendarCheck, MI.row);
-          // url فقط مسیر داخلی؛ هر چیز دیگری لینک نمی‌شود
-          const internal = typeof a.url === "string" && a.url.startsWith("/") && !a.url.startsWith("//");
-          return (
-            <MentorRow
-              key={i}
-              href={internal ? a.url : undefined}
-              lead={lead}
-              title={a.studentName}
-              sub={<><span>{a.text}</span><span>{a.day ? fmtWeekday(a.day) : fmtRelative(a.at)}</span></>}
-            />
-          );
-        })}
+        ) : (
+          <>
+            {dash.recentActivity.slice(0, ACTIVITY_PREVIEW).map((a, i) => <ActivityRow key={i} a={a} />)}
+            <MentorCollapse open={allActivity}>
+              {dash.recentActivity.slice(ACTIVITY_PREVIEW).map((a, i) => <ActivityRow key={i} a={a} />)}
+            </MentorCollapse>
+          </>
+        )}
       </MentorSection>
 
       <MentorDashInvite suspended={suspended} categories={self.categories} onSent={() => load(true)} />
 
-      <MentorDashTools />
 
-      <MentorSection
-        title="پروفایل" icon={ic(UserRound, MI.section)} flush
-        action={<Link href="/mentor/profile" className="mentor-link">{ic(Pencil, MI.btnSm)} ویرایش</Link>}
-      >
-        <MentorRow
-          title="نمایش در فهرست منتورها"
-          end={suspended
-            ? <MentorChip tone="danger" icon={ic(Ban, MI.chip)}>معلق</MentorChip>
-            : published
-              ? <MentorChip tone="accent" icon={ic(Eye, MI.chip)}>منتشرشده</MentorChip>
-              : <MentorChip tone="neutral" icon={ic(EyeOff, MI.chip)}>منتشرنشده</MentorChip>}
-        />
-        <MentorRow title="احراز هویت" end={<IdentityChip status={identity} />} />
-      </MentorSection>
     </>
+  );
+}
+
+/** یک ردیفِ «فعالیت اخیر»؛ url فقط مسیرِ داخلی لینک می‌شود */
+function ActivityRow({ a }: { a: MentorDashboard["recentActivity"][number] }) {
+  const lead = a.type === "message" ? ic(MessageCircle, MI.row) : a.type === "program" ? ic(ClipboardList, MI.row) : ic(CalendarCheck, MI.row);
+  const internal = typeof a.url === "string" && a.url.startsWith("/") && !a.url.startsWith("//");
+  return (
+    <MentorRow
+      href={internal ? a.url : undefined}
+      lead={lead}
+      title={a.studentName}
+      sub={<><span>{a.text}</span><span>{a.day ? fmtWeekday(a.day) : fmtRelative(a.at)}</span></>}
+    />
   );
 }
 
@@ -316,11 +278,12 @@ function MentorDashRequests({
     <MentorSection title="درخواست‌ها" icon={ic(Inbox, MI.section)} count={total ? fa(total) : undefined} flush>
       {total === 0 && <MentorEmpty>درخواست بی‌پاسخی نیست</MentorEmpty>}
 
+      <MentorList>
       {incoming.map((r) => {
         const name = publicUserName(r.counterpart);
         return (
+          <MentorListItem key={r.id}>
           <MentorRow
-            key={r.id}
             lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
             title={name}
             sub={
@@ -349,14 +312,15 @@ function MentorDashRequests({
               </>
             }
           />
+          </MentorListItem>
         );
       })}
 
       {sent.map((r) => {
         const name = publicUserName(r.counterpart);
         return (
+          <MentorListItem key={r.id}>
           <MentorRow
-            key={r.id}
             lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
             title={name}
             sub={<><span>{ic(Hourglass, MI.chip)} منتظر پاسخ شاگرد</span><span>دعوت {fmtRelative(r.createdAt)}</span></>}
@@ -366,8 +330,10 @@ function MentorDashRequests({
               </button>
             }
           />
+          </MentorListItem>
         );
       })}
+      </MentorList>
 
       {actionError && (
         <div style={{ padding: "0 var(--m-4) var(--m-4)" }}>
@@ -428,7 +394,7 @@ function MentorDashInvite({
             >
               <input
                 id="md-invite-user" type="text" className="wsearch-newform-name trade-glass-field mono" dir="ltr"
-                style={{ textAlign: "right" }} value={username} placeholder="username" autoComplete="off" maxLength={21}
+                style={{ textAlign: "right" }} value={username} placeholder="ali_rezaei" autoComplete="off" maxLength={21}
                 onChange={(e) => { setUsername(e.target.value); setUserErr(null); setError(null); setSent(false); }}
               />
             </MentorField>

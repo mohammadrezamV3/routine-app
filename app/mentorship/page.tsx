@@ -18,6 +18,8 @@ import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorF
 import { faNum } from "@/lib/jalali";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
 import { categoryLabel } from "@/components/MentorBadges";
+import { MentorList, MentorListItem, MentorSwap } from "@/components/MentorMotion";
+import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "@/components/MentorTermsAcceptance";
 
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 const ROW = { size: 16, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -25,7 +27,7 @@ const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorshipHomePage() {
   return (
-    <MentorPageShell title="منتورهای من">
+    <MentorPageShell title="منتورهای من" surface>
       <MentorshipHome />
     </MentorPageShell>
   );
@@ -41,6 +43,13 @@ function MentorshipHome() {
   const [confirmCancel, setConfirmCancel] = useState<MentorshipRow | null>(null);
   const { pendingKey, error: actionError, run, clearError } = useAsyncAction();
   const [actionFor, setActionFor] = useState<string | null>(null);
+  // «منتورها» و «دعوت‌ها» دو تبِ هم‌ردیف‌اند؛ دعوت‌ها بسته شروع می‌شود و فقط نشانِ شمارنده دارد
+  const [view, setView] = useState<"mentors" | "invites">("mentors");
+  const terms = useMentorTermsStatus();
+  const [termsChecked, setTermsChecked] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const [forceTerms, setForceTerms] = useState(false);
+  const needTerms = forceTerms || (!terms.loading && !terms.studentAccepted);
 
   const load = useCallback(async () => {
     setError(null);
@@ -73,13 +82,22 @@ function MentorshipHome() {
 
   async function act(row: MentorshipRow, action: MentorshipAction) {
     setActionFor(row.id);
-    const ok = await run(`${action}:${row.id}`, () =>
-      fetch(`/api/mentorships/${row.id}`, {
+    // پذیرشِ دعوتِ منتور = پذیرشِ «شرایط منتورها» (مثلِ درخواستِ خودِ شاگرد)
+    const withTerms = action === "accept" && row.initiatedBy === "MENTOR";
+    if (withTerms && needTerms && !termsChecked) { setTermsError("برای پذیرش دعوت، شرایط را بپذیر"); return; }
+    const ok = await run(`${action}:${row.id}`, async () => {
+      const res = await fetch(`/api/mentorships/${row.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      })
-    );
+        body: JSON.stringify({ action, ...(withTerms ? mentorTermsPayload(needTerms && termsChecked) : {}) }),
+      });
+      if (!res.ok && withTerms) {
+        const j = await res.clone().json().catch(() => null);
+        if (isMentorTermsError(j)) { setForceTerms(true); setTermsChecked(false); setTermsError(j?.error ?? null); }
+      }
+      return res;
+    });
+    if (ok && withTerms) { setForceTerms(false); terms.refresh(); }
     if (ok) {
       setConfirmCancel(null);
       setActionFor(null);
@@ -99,7 +117,7 @@ function MentorshipHome() {
         text="منتورها را بر اساس حوزه و امتیاز پیدا کن و درخواست بده."
         action={
           <Link href="/mentors" className="trade-primary-btn mentor-btn">
-            <Search size={15} strokeWidth={1.75} aria-hidden /> انتخاب منتور
+            <Search size={15} strokeWidth={1.75} aria-hidden /> پیدا کردن منتور
           </Link>
         }
       />
@@ -123,17 +141,40 @@ function MentorshipHome() {
 
   return (
     <>
-      {invites.length > 0 && (
-        <MentorSection
-          title="دعوت‌ها"
-          icon={<Inbox {...SECTION} />}
-          count={faNum(invites.length)}
-          desc="پس از پذیرش، منتور فقط بخش‌هایی را می‌بیند که در دسترسی‌ها اجازه بدهی."
-          flush
-        >
+      <div className="mentor-tabs">
+        <SegmentedTabs
+          options={[
+            { value: "mentors" as const, label: "منتورها" },
+            {
+              value: "invites" as const,
+              label: (
+                <span className="mentor-tab-label">
+                  دعوت‌ها
+                  {invites.length > 0 && <span className="mentor-tab-badge" aria-label={`${faNum(invites.length)} دعوت تازه`}>{faNum(invites.length)}</span>}
+                </span>
+              ),
+            },
+          ]}
+          active={view}
+          onChange={setView}
+        />
+      </div>
+      <MentorSwap swapKey={view}>
+      {view === "invites" ? (
+        <>
+      {invites.length === 0 ? (
+        <MentorEmpty>دعوتی نداری</MentorEmpty>
+      ) : (
+        <MentorSection title="دعوت‌ها" icon={<Inbox {...SECTION} />} count={faNum(invites.length)} flush>
+          {needTerms && (
+            <div className="mentor-invite-terms">
+              <MentorTermsAcceptance role="student" checked={termsChecked} onChange={(v) => { setTermsChecked(v); setTermsError(null); }} error={termsError} />
+            </div>
+          )}
+          <MentorList>
           {invites.map((r) => (
+            <MentorListItem key={r.id}>
             <MentorRow
-              key={r.id}
               href={`/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
               title={publicUserName(r.counterpart)}
@@ -146,16 +187,21 @@ function MentorshipHome() {
                     <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { clearError(); act(r, "reject"); }} disabled={!!pendingKey}>
                       {busy(`reject:${r.id}`) ? <Spinner size={14} /> : <><X {...BTN_SM} /> رد دعوت</>}
                     </button>
-                    <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={() => { clearError(); act(r, "accept"); }} disabled={!!pendingKey}>
+                    <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={() => { clearError(); act(r, "accept"); }} disabled={!!pendingKey || (needTerms && !termsChecked)}>
                       {busy(`accept:${r.id}`) ? <Spinner size={14} /> : <><Check {...BTN_SM} /> پذیرفتن</>}
                     </button>
                   </div>
                 </>
               }
             />
+            </MentorListItem>
           ))}
+          </MentorList>
         </MentorSection>
       )}
+        </>
+      ) : (
+        <>
 
       <MentorSection title="منتورهای فعال" icon={<Users {...SECTION} />} count={allActive.length ? faNum(allActive.length) : undefined} flush>
         {areas.length > 1 && (
@@ -291,6 +337,10 @@ function MentorshipHome() {
           ))}
         </MentorSection>
       )}
+
+        </>
+      )}
+      </MentorSwap>
 
       {confirmCancel && (
         <MentorConfirmDialog

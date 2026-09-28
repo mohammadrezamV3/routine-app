@@ -236,18 +236,28 @@ model User {
   supportTickets         SupportTicket[]
 
   // اکوسیستم منتور — پروفایلِ منتوری (اختیاری؛ داشتنش یعنی کاربر منتور هم هست)
-  mentorProfile           MentorProfile?
-  mentorshipsAsMentor     Mentorship[]        @relation("MentorshipMentor")
-  mentorshipsAsStudent    Mentorship[]        @relation("MentorshipStudent")
-  mentorProgramsAsMentor  MentorProgram[]     @relation("MentorProgramMentor")
-  mentorProgramsAsStudent MentorProgram[]     @relation("MentorProgramStudent")
-  mentorMessagesSent      MentorMessage[]
-  mentorReviewsGiven      MentorReview[]      @relation("MentorReviewStudent")
-  mentorReviewsReceived   MentorReview[]      @relation("MentorReviewMentor")
-  mentorReportsFiled      MentorReport[]      @relation("MentorReportReporter")
-  notifications           InAppNotification[]
+  mentorProfile                MentorProfile?
+  mentorshipsAsMentor          Mentorship[]        @relation("MentorshipMentor")
+  mentorshipsAsStudent         Mentorship[]        @relation("MentorshipStudent")
+  mentorProgramsAsMentor       MentorProgram[]     @relation("MentorProgramMentor")
+  mentorProgramsAsStudent      MentorProgram[]     @relation("MentorProgramStudent")
+  mentorMessagesSent           MentorMessage[]
+  mentorReviewsGiven           MentorReview[]      @relation("MentorReviewStudent")
+  mentorReviewsReceived        MentorReview[]      @relation("MentorReviewMentor")
+  mentorReportsFiled           MentorReport[]      @relation("MentorReportReporter")
+  notifications                InAppNotification[]
   // کلیدهای عمومیِ رمزگذاریِ سرتاسری (مهاجرت 20260927163000_mentor_e2ee)
-  e2eKeys                 UserE2EKey[]
+  e2eKeys                      UserE2EKey[]
+  // رمزگذاریِ خودکار (مهاجرت 20260928102000_e2ee_auto): نمکِ کلیدِ مشتق از رمزِ عبور و درخواستِ انتقالِ سابقه
+  e2eKdf                       UserE2EKdf?
+  e2eDeviceLinks               E2EDeviceLink[]
+  // منتورهای ذخیره‌شده برای تصمیمِ بعدی (مهاجرت 20260928100000_saved_mentors)
+  savedMentors                 SavedMentor[]       @relation("SavedMentorOwner")
+  savedByUsers                 SavedMentor[]       @relation("SavedMentorTarget")
+  // پذیرشِ «شرایط استفاده از بخش منتورها» به‌عنوانِ شاگرد (مهاجرت 20260928104000_mentor_terms_acceptance)
+  // — lib/mentorTerms.ts. نسخه‌ی کهنه = پذیرشِ دوباره هنگامِ درخواستِ بعدی
+  mentorStudentTermsAcceptedAt DateTime?
+  mentorStudentTermsVersion    String?
 
   @@index([market])
   @@index([gymPartnerId])
@@ -1839,6 +1849,11 @@ model MentorProfile {
   // ── رتبه‌بندیِ شایستگی (مهاجرت 20260927164000_mentor_ranking) — lib/mentorRankingStats.ts ──
   rankingStats MentorRankingStat[]
 
+  // ── پذیرشِ شرایطِ منتوری (مهاجرت 20260928104000_mentor_terms_acceptance) — lib/mentorTerms.ts ──
+  // بدونِ پذیرشِ نسخه‌ی جاری، PUT /api/mentors/me پروفایل نمی‌سازد/ذخیره نمی‌کند
+  acceptedMentorTermsAt DateTime?
+  mentorTermsVersion    String?
+
   @@index([published, suspendedAt])
 }
 
@@ -1847,22 +1862,22 @@ model MentorProfile {
 // خواندن با ensureFreshRankings کهنه‌اش رو تازه می‌کنه (بدونِ cron). فرمول و
 // دلیلِ هر وزن: docs/mentor-ranking.md. کلِ جدول از روی داده‌ی خام قابلِ بازسازیه.
 model MentorRankingStat {
-  id           String        @id @default(cuid())
-  profileId    String
-  profile      MentorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  category     String // "ALL" | کلیدِ lib/mentorCategories.ts
+  id              String        @id @default(cuid())
+  profileId       String
+  profile         MentorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  category        String // "ALL" | کلیدِ lib/mentorCategories.ts
   // امتیازِ شایستگی ۰..۱۰۰ — ترتیبِ «بهترین نتیجه»
-  score        Float         @default(0)
+  score           Float         @default(0)
   // امتیازِ نظرهای تأییدشده (بیزی، ۰..۱) — ترتیبِ «بالاترین امتیاز»
-  ratingScore  Float         @default(0)
+  ratingScore     Float         @default(0)
   // حداقلِ نمونه و اعتماد برای ورود به «منتورهای محبوب»
-  eligible     Boolean       @default(false)
+  eligible        Boolean       @default(false)
   // شاگردهای معتبرِ شمرده‌شده و نظرهای تأییدشده — tie-break و نمایشِ ادمین
-  sampleStudents  Int        @default(0)
-  verifiedReviews Int        @default(0)
+  sampleStudents  Int           @default(0)
+  verifiedReviews Int           @default(0)
   // جزئیاتِ هر مؤلفه برای توضیحِ ادمین (lib/mentorRanking.ts → MeritBreakdown)
-  breakdown    Json
-  computedAt   DateTime      @default(now())
+  breakdown       Json
+  computedAt      DateTime      @default(now())
 
   @@unique([profileId, category])
   @@index([category, score(sort: Desc)])
@@ -1974,18 +1989,24 @@ model Mentorship {
 
   // ── مدیریتِ شاگرد از سمتِ منتور (مهاجرت 20260927161000_mentor_availability) ──
   // پاسخِ شاگرد به سؤال‌های پذیرش — هر جواب یک ردیف (MentorIntakeAnswer)
-  intakeAnswers   MentorIntakeAnswer[]
+  intakeAnswers        MentorIntakeAnswer[]
   // توقفِ موقتِ رابطه توسطِ منتور (وضعیت ACTIVE می‌ماند)
-  pausedAt        DateTime?
-  pauseReason     String?
+  pausedAt             DateTime?
+  pauseReason          String?
   // دلیلِ پایان و این‌که کدام طرف پایان داد ("MENTOR" | "STUDENT")
-  endReason       String?
-  endedBy         String?
+  endReason            String?
+  endedBy              String?
   // برچسب‌های خصوصیِ منتور روی این شاگرد (idهای MentorStudentLabel)
-  mentorLabelIds  String[]               @default([])
-  mentorNotes     MentorStudentNote[]
+  mentorLabelIds       String[]               @default([])
+  mentorNotes          MentorStudentNote[]
   // هشدارهای پایبندیِ ثبت‌شده (مهاجرت 20260927162000_mentor_tools)
-  adherenceAlerts MentorAdherenceAlert[]
+  adherenceAlerts      MentorAdherenceAlert[]
+  // نسخه‌ی «شرایط منتورها» که شاگرد هنگامِ درخواستِ همین رابطه پذیرفته بود (مهاجرت 20260928104000_mentor_terms_acceptance)
+  studentTermsVersion  String?
+  // «پاک کردن سابقه‌ی گفت‌وگو» فقط برای خودِ هر طرف (مهاجرت 20260928101000_mentor_chat_history):
+  // پیام‌های تا این لحظه برای همان طرف دیگر برگردانده نمی‌شوند؛ نسخه‌ی طرفِ مقابل دست نمی‌خورد.
+  mentorClearedBefore  DateTime?
+  studentClearedBefore DateTime?
 
   @@unique([mentorId, studentId])
   @@index([studentId, status])
@@ -2258,6 +2279,14 @@ model MentorMessage {
   serverTag           String?
   // پیام‌هایی که با «ارسال گروهی» ساخته شده‌اند یک شناسه‌ی مشترک دارند
   broadcastId         String?
+  // ── چنددستگاهی (مهاجرت 20260928102000_e2ee_auto) ──
+  // scheme 1 = کلیدِ جفتیِ (نسخه‌ی منتور، نسخه‌ی شاگرد)؛ scheme 2 = کلیدِ محتوای تصادفی که
+  // برای *هر* کلیدِ فعالِ دو طرف جدا بسته‌بندی شده (MentorMessageKeyWrap). در scheme 2
+  // senderKeyVersion = کلیدی که بسته‌بندی‌ها را ساخته و keyFromId صاحبِ آن کلید است اگر
+  // با فرستنده فرق کند (بازرمزگذاریِ پیامِ قدیمی توسطِ طرفِ مقابل).
+  scheme              Int                    @default(1)
+  keyFromId           String?
+  wraps               MentorMessageKeyWrap[]
 
   @@unique([mentorshipId, clientId])
   @@index([mentorshipId, createdAt])
@@ -2285,8 +2314,68 @@ model UserE2EKey {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  // ── رمزگذاریِ خودکار (مهاجرت 20260928102000_e2ee_auto؛ docs/mentor-e2ee.md) ──
+  // SYNCED = یک کلید برای همه‌ی دستگاه‌ها، پشتیبانش با کلیدِ مشتق از رمزِ عبور (یا رمزِ
+  // گفت‌وگوی قدیمی) قفل است؛ DEVICE = کلیدِ یک دستگاه که هرگز از آن بیرون نمی‌رود.
+  kind            E2EKeyKind @default(SYNCED)
+  // "PASSWORD" | "PASSCODE" (قدیمی، یک بار با رمزِ گفت‌وگو باز و به PASSWORD منتقل می‌شود)
+  backupKind      String?
+  // = userId فقط برای کلیدِ SYNCEDِ فعال → یکتایی: هر کاربر حداکثر یک کلیدِ SYNCEDِ فعال
+  activeSyncedFor String?    @unique
+  deviceLabel     String?
+  lastSeenAt      DateTime?
+
   @@unique([userId, version])
   @@index([userId, retiredAt])
+}
+
+enum E2EKeyKind {
+  SYNCED
+  DEVICE
+}
+
+// نمکِ کلیدِ بسته‌بندیِ مشتق از رمزِ عبور (PBKDF2). سرور خودِ کلید را هرگز نمی‌بیند.
+model UserE2EKdf {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salt       String
+  iterations Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// کلیدِ محتوای یک پیامِ scheme 2، بسته‌بندی‌شده برای یک کلیدِ مشخصِ یکی از دو طرف.
+// viaVersion پر = انتقالِ سابقه: این بسته‌بندی را دستگاهِ دیگرِ *همین* کاربر با کلیدِ
+// viaVersionِ خودش ساخته (نه فرستنده).
+model MentorMessageKeyWrap {
+  id         String        @id @default(cuid())
+  messageId  String
+  message    MentorMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId     String
+  keyVersion Int
+  wrap       String
+  viaVersion Int?
+  createdAt  DateTime      @default(now())
+
+  @@unique([messageId, userId, keyVersion])
+  @@index([userId, keyVersion])
+}
+
+// «انتقال سابقه از دستگاه دیگر»: دستگاهِ تازه درخواست می‌دهد، دستگاهِ قدیمی پس از
+// تطبیقِ کدِ کوتاه تأیید می‌کند و کلیدهای محتوا را برای کلیدِ دستگاهِ تازه بسته‌بندی می‌کند.
+model E2EDeviceLink {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetVersion Int
+  // PENDING | DONE | DECLINED
+  status        String    @default("PENDING")
+  moved         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime
+  completedAt   DateTime?
+
+  @@index([userId, status])
 }
 
 enum MentorReviewStatus {
@@ -2319,6 +2408,8 @@ enum MentorReportTarget {
   REVIEW
   MESSAGE
   PROGRAM
+  // گزارشِ کلِ گفت‌وگو (targetId = mentorshipId)؛ پیام‌های پیوست در MentorReportMessage
+  CONVERSATION
 }
 
 enum MentorReportStatus {
@@ -2349,7 +2440,9 @@ model MentorReport {
   reportedText      String?
   reportedMessageAt DateTime?
   // true = متن با تعهدِ رمزنگاریِ فرستنده تأیید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
-  reportVerified    Boolean   @default(false)
+  reportVerified    Boolean               @default(false)
+  // پیام‌های پیوستِ گزارشِ گفت‌وگو (مهاجرت 20260928101000_mentor_chat_history)
+  messages          MentorReportMessage[]
 
   @@unique([reporterId, targetType, targetId])
   @@index([status, createdAt])
@@ -2370,4 +2463,38 @@ model InAppNotification {
 
   @@index([userId, createdAt])
   @@index([userId, readAt])
+}
+
+// منتورِ ذخیره‌شده (نشانک) — کاربر حداکثر ۱۰ منتور را برای تصمیمِ بعدی نگه می‌دارد.
+// سقف سمتِ سرور اعمال می‌شود (lib/savedMentors.ts). مهاجرت 20260928100000_saved_mentors
+model SavedMentor {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation("SavedMentorOwner", fields: [userId], references: [id], onDelete: Cascade)
+  mentorUserId String
+  mentor       User     @relation("SavedMentorTarget", fields: [mentorUserId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, mentorUserId])
+  @@index([userId, createdAt])
+  @@index([mentorUserId])
+}
+
+// یک پیامِ پیوستِ «گزارش گفت‌وگو» (مهاجرت 20260928101000_mentor_chat_history).
+// هر پیام جداگانه با همان فرانکینگِ گزارشِ تکی تأیید می‌شود؛ متن فقط همین‌جا و
+// رمزشده در حالِ سکون (MENTOR_DATA_KEY) نگه داشته می‌شود — ادمین هیچ پیامِ دیگری را نمی‌بیند.
+model MentorReportMessage {
+  id        String       @id @default(cuid())
+  reportId  String
+  report    MentorReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  messageId String
+  senderId  String
+  text      String
+  messageAt DateTime
+  // true = تعهدِ فرانکینگ تأیید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
+  verified  Boolean      @default(false)
+  position  Int
+
+  @@unique([reportId, messageId])
+  @@index([reportId, position])
 }

@@ -28,10 +28,16 @@ import {
   unwrapPrivateKey,
   verifyCommitment,
   wrapPrivateKey,
+  PASSWORD_KDF_ITERATIONS,
+  derivePasswordKek,
+  wrapPrivateKeyWithKek,
+  unwrapPrivateKeyWithKek,
 } from "@/lib/e2ee/core";
 import { fromB64, randomId, toB64 } from "@/lib/e2ee/encoding";
 import { openAtRest, sealAtRest, serverFrankingTag, verifyServerFrankingTag } from "@/lib/e2ee/server";
 import { GET as getMyKey, POST as postKey } from "@/app/api/e2ee/keys/route";
+import { POST as postDevice, DELETE as delDevice } from "@/app/api/e2ee/keys/device/route";
+import { GET as getKdf } from "@/app/api/e2ee/keys/kdf/route";
 import { GET as getBackup, PUT as putBackup } from "@/app/api/e2ee/keys/backup/route";
 import { GET as getPeerKey } from "@/app/api/e2ee/keys/peer/route";
 import { GET as getMessages, POST as postMessage } from "@/app/api/mentorships/[id]/messages/route";
@@ -45,7 +51,11 @@ import { POST as postFeedback } from "@/app/api/mentor-programs/[id]/feedback/ro
 import { GET as getProgram } from "@/app/api/mentor-programs/[id]/route";
 import { readIntakeAnswers, writeIntakeAnswers } from "@/lib/mentorManageServer";
 import { as, req, j, makeUser, makeMentor, cleanupUsers, connect, requestMentorship } from "./helpers/mentorTestUtils";
-import { encFor, giveKey, keyOf, openAs } from "./helpers/e2eeTestUtils";
+import { encFor, giveDeviceKey, giveKey, keyOf, openAs, testKey } from "./helpers/e2eeTestUtils";
+import { GET as getHistory, POST as postHistory } from "@/app/api/e2ee/history/route";
+import { POST as postLink } from "@/app/api/e2ee/link/route";
+import { POST as linkAction } from "@/app/api/e2ee/link/[id]/route";
+import { messageScope, rewrapForOwnKey } from "@/lib/e2ee/core";
 
 afterAll(async () => {
   await cleanupUsers();
@@ -191,51 +201,115 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
 
 // ───────────────────────── کلیدها (API) ─────────────────────────
 
-describe("کلیدِ هویت: راه‌اندازی، باز کردن، بازنشانی", () => {
-  it("سرور فقط کلیدِ عمومی و پشتیبانِ رمزشده می‌گیرد؛ بازنشانی پشتیبانِ قبلی را پاک می‌کند", async () => {
+describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال از رمزِ گفت‌وگو", () => {
+  it("SYNCED با KEKِ رمزِ عبور: سرور فقط کلیدِ عمومی و پشتیبانِ رمزشده؛ نمکِ حساب اجباری؛ جایگزینی پشتیبانِ قبلی را پاک می‌کند", async () => {
     const u = await makeUser();
+    await prisma.user.update({ where: { id: u }, data: { passwordHash: "$2a$12$abcdefghijklmnopqrstuv" } });
     as(u);
-    expect((await j(await getMyKey())).key).toBeNull();
+    expect((await j(await getMyKey(req("GET", "/api/e2ee/keys") as any))).keys).toEqual([]);
     expect((await getBackup()).status).toBe(404);
 
+    const kdf = await j(await getKdf());
+    expect(kdf).toMatchObject({ userId: u, iterations: PASSWORD_KDF_ITERATIONS });
+    expect((await j(await getKdf())).salt).toBe(kdf.salt); // پایدار
+    const pw = "رمز عبور حساب ۱۲۳";
+    const kek = await derivePasswordKek(pw, u, kdf.salt, kdf.iterations);
     const kp = await generateIdentityKeyPair();
-    const pass = "کتاب قرمز روی میز آبی";
-    const backup = await wrapPrivateKey(kp.privateKey, pass, { userId: u, version: 1, publicKey: kp.publicB64 }, PBKDF2_MIN_ITERATIONS);
-    // شکل‌های بد
-    expect((await postKey(req("POST", "/x", { publicKey: "xx", backup, expectedVersion: 0 }))).status).toBe(400);
-    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup: { ...backup, iterations: 1000 }, expectedVersion: 0 }))).status).toBe(400);
-    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, expectedVersion: 3 }))).status).toBe(409);
-
-    const r = await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, expectedVersion: 0 }));
-    expect(r.status).toBe(200);
-    expect((await j(r)).key).toMatchObject({ version: 1, publicKey: kp.publicB64 });
+    const backup = await wrapPrivateKeyWithKek(kp.privateKey, kek, { userId: u, version: 1, publicKey: kp.publicB64 }, kdf);
+    // شکل‌های بد / نمکِ دلخواه / نسخه‌ی نادرست
+    expect((await postKey(req("POST", "/x", { publicKey: "xx", backup, version: 1, replaceVersion: 0 }))).status).toBe(400);
+    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup: { ...backup, salt: toB64(new Uint8Array(16)) }, version: 1, replaceVersion: 0 }))).status).toBe(400);
+    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, version: 3, replaceVersion: 0 }))).status).toBe(409);
+    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, version: 1, replaceVersion: 0 }))).status).toBe(200);
     // دوباره «بارِ اول» → ۴۰۹ (دو دستگاه هم‌زمان)
-    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, expectedVersion: 0 }))).status).toBe(409);
+    expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, version: 2, replaceVersion: 0 }))).status).toBe(409);
 
-    const me = await j(await getMyKey());
-    expect(me).toMatchObject({ userId: u, key: { version: 1, hasBackup: true } });
+    const me = await j(await getMyKey(req("GET", "/api/e2ee/keys") as any));
+    expect(me.keys).toMatchObject([{ version: 1, kind: "SYNCED", active: true, hasBackup: true, backupKind: "PASSWORD" }]);
     expect(JSON.stringify(me)).not.toContain(backup.ciphertext);
 
-    // دستگاهِ تازه: پشتیبان → کلیدِ یکسان
+    // دستگاهِ تازه با همان رمز → همان کلید؛ رمزِ دیگر → نه
     const b = await j(await getBackup());
-    const k = await unwrapPrivateKey(b.backup, pass, { userId: u, version: b.version, publicKey: b.publicKey });
-    expect(k.type).toBe("private");
+    expect(b.backupKind).toBe("PASSWORD");
+    const k = await unwrapPrivateKeyWithKek(b.backup, await derivePasswordKek(pw, u, kdf.salt, kdf.iterations), { userId: u, version: 1, publicKey: kp.publicB64 });
+    expect(k.extractable).toBe(false);
+    await expect(unwrapPrivateKeyWithKek(b.backup, await derivePasswordKek("رمز دیگر", u, kdf.salt, kdf.iterations), { userId: u, version: 1, publicKey: kp.publicB64 })).rejects.toBeInstanceOf(E2EEDecryptError);
+    // KEK به کاربر گره خورده (همان رمز و نمک برای کاربرِ دیگر کلیدِ دیگری است)
+    await expect(unwrapPrivateKeyWithKek(b.backup, await derivePasswordKek(pw, "other", kdf.salt, kdf.iterations), { userId: u, version: 1, publicKey: kp.publicB64 })).rejects.toBeInstanceOf(E2EEDecryptError);
     const row = await prisma.userE2EKey.findFirstOrThrow({ where: { userId: u } });
-    expect(JSON.stringify(row)).not.toContain(pass);
+    expect(JSON.stringify(row)).not.toContain(pw);
 
-    // تغییرِ رمز: همان نسخه
-    const b2 = await wrapPrivateKey(await unwrapPrivateKey(b.backup, pass, { userId: u, version: 1, publicKey: kp.publicB64 }, true), "رمز تازه‌ی خیلی طولانی", { userId: u, version: 1, publicKey: kp.publicB64 }, PBKDF2_MIN_ITERATIONS);
-    expect((await putBackup(req("PUT", "/x", { version: 2, backup: b2 }))).status).toBe(409);
-    expect((await putBackup(req("PUT", "/x", { version: 1, backup: b2 }))).status).toBe(200);
+    // تغییرِ رمزِ عبور: همان نسخه، نمکِ تازه (اتمی با پشتیبان)
+    const key = await unwrapPrivateKeyWithKek(b.backup, kek, { userId: u, version: 1, publicKey: kp.publicB64 }, true);
+    const kdf2 = { salt: toB64(crypto.getRandomValues(new Uint8Array(16))), iterations: PASSWORD_KDF_ITERATIONS };
+    const kek2 = await derivePasswordKek("رمز تازه‌ی حساب", u, kdf2.salt, kdf2.iterations);
+    const b2 = await wrapPrivateKeyWithKek(key, kek2, { userId: u, version: 1, publicKey: kp.publicB64 }, kdf2);
+    expect((await putBackup(req("PUT", "/x", { version: 1, backup: b2, backupKind: "PASSWORD" }))).status).toBe(400); // نمک با حساب نمی‌خواند
+    expect((await putBackup(req("PUT", "/x", { version: 2, backup: b2, backupKind: "PASSWORD", kdf: kdf2 }))).status).toBe(409);
+    expect((await putBackup(req("PUT", "/x", { version: 1, backup: b2, backupKind: "PASSWORD", kdf: kdf2 }))).status).toBe(200);
+    expect((await j(await getKdf())).salt).toBe(kdf2.salt);
 
-    // بازنشانی
+    // بازیابیِ رمز با پیامک (رمزِ قبلی نامعلوم): کلیدِ SYNCEDِ تازه جایگزین می‌شود
     const kp2 = await generateIdentityKeyPair();
-    const nb = await wrapPrivateKey(kp2.privateKey, "رمز سوم برای کلید تازه", { userId: u, version: 2, publicKey: kp2.publicB64 }, PBKDF2_MIN_ITERATIONS);
-    expect((await postKey(req("POST", "/x", { publicKey: kp2.publicB64, backup: nb, expectedVersion: 1 }))).status).toBe(200);
+    const nb = await wrapPrivateKeyWithKek(kp2.privateKey, kek2, { userId: u, version: 2, publicKey: kp2.publicB64 }, kdf2);
+    expect((await postKey(req("POST", "/x", { publicKey: kp2.publicB64, backup: nb, version: 2, replaceVersion: 1 }))).status).toBe(200);
     const rows = await prisma.userE2EKey.findMany({ where: { userId: u }, orderBy: { version: "asc" } });
-    expect(rows.map((x) => [x.version, !!x.retiredAt, !!x.backupCiphertext])).toEqual([[1, true, false], [2, false, true]]);
+    expect(rows.map((x) => [x.version, !!x.retiredAt, !!x.backupCiphertext, x.activeSyncedFor])).toEqual([[1, true, false, null], [2, false, true, u]]);
     const audit = await prisma.auditLog.findMany({ where: { actorUserId: u }, select: { action: true } });
-    expect(audit.map((a) => a.action).sort()).toEqual(["e2ee.key_create", "e2ee.key_reset", "e2ee.passcode_change"]);
+    expect(audit.map((a) => a.action).sort()).toEqual(["e2ee.key_create", "e2ee.key_reset", "e2ee.password_rewrap"]);
+  }, 60_000);
+
+  it("حسابِ بی‌رمز (گوگل): KDF ندارد؛ کلیدِ هر دستگاه جدا؛ سقفِ دستگاه‌ها؛ حذفِ دستگاهِ خودم فقط", async () => {
+    const u = await makeUser();
+    await prisma.user.update({ where: { id: u }, data: { passwordHash: null } });
+    as(u);
+    expect((await getKdf()).status).toBe(404);
+    const pubs: string[] = [];
+    for (let v = 1; v <= 11; v++) {
+      const kp = await generateIdentityKeyPair();
+      pubs.push(kp.publicB64);
+      const r = await postDevice(req("POST", "/x", { publicKey: kp.publicB64, version: v, label: "Chrome · Android" }));
+      expect(r.status).toBe(v <= 10 ? 200 : 429); // سقفِ ساخت در ساعت
+      if (v === 10) break;
+    }
+    const act = await prisma.userE2EKey.count({ where: { userId: u, retiredAt: null } });
+    expect(act).toBe(10);
+    const me = await j(await getMyKey(req("GET", "/api/e2ee/keys?touch=3") as any));
+    expect(me.hasPassword).toBe(false);
+    expect(me.keys.every((k: any) => k.kind === "DEVICE")).toBe(true);
+    expect((await delDevice(req("DELETE", "/api/e2ee/keys/device?version=2") as any)).status).toBe(200);
+    expect((await delDevice(req("DELETE", "/api/e2ee/keys/device?version=2") as any)).status).toBe(404);
+    const other = await makeUser();
+    as(other);
+    expect((await delDevice(req("DELETE", "/api/e2ee/keys/device?version=3") as any)).status).toBe(404);
+  });
+
+  it("پشتیبانِ قدیمیِ «رمز گفت‌وگو»: یک بار باز، به PASSWORD منتقل؛ برای حسابِ بی‌رمز → کلیدِ دستگاه", async () => {
+    const u = await makeUser();
+    await prisma.user.update({ where: { id: u }, data: { passwordHash: "$2a$12$abcdefghijklmnopqrstuv" } });
+    const kp = await generateIdentityKeyPair();
+    const legacy = await wrapPrivateKey(kp.privateKey, "رمز گفت‌وگوی قدیمی من", { userId: u, version: 1, publicKey: kp.publicB64 }, PBKDF2_MIN_ITERATIONS);
+    await prisma.userE2EKey.create({
+      data: { userId: u, version: 1, kind: "SYNCED", activeSyncedFor: u, publicKey: kp.publicB64, backupKind: "PASSCODE", backupCiphertext: legacy.ciphertext, backupIv: legacy.iv, backupSalt: legacy.salt, backupIterations: legacy.iterations },
+    });
+    as(u);
+    const b = await j(await getBackup());
+    expect(b.backupKind).toBe("PASSCODE");
+    const key = await unwrapPrivateKey(b.backup, "رمز گفت‌وگوی قدیمی من", { userId: u, version: 1, publicKey: kp.publicB64 }, true);
+    const kdf = await j(await getKdf());
+    const kek = await derivePasswordKek("رمز حساب", u, kdf.salt, kdf.iterations);
+    const nb = await wrapPrivateKeyWithKek(key, kek, { userId: u, version: 1, publicKey: kp.publicB64 }, kdf);
+    expect((await putBackup(req("PUT", "/x", { version: 1, backup: nb, backupKind: "PASSWORD" }))).status).toBe(200);
+    expect((await j(await getBackup())).backupKind).toBe("PASSWORD");
+
+    const g = await makeUser();
+    await prisma.user.update({ where: { id: g }, data: { passwordHash: null } });
+    await prisma.userE2EKey.create({ data: { userId: g, version: 1, kind: "SYNCED", activeSyncedFor: g, publicKey: kp.publicB64, backupKind: "PASSCODE", backupCiphertext: legacy.ciphertext, backupIv: legacy.iv, backupSalt: legacy.salt, backupIterations: legacy.iterations } });
+    as(g);
+    expect((await putBackup(req("PUT", "/x", { version: 1, backup: nb, backupKind: "PASSWORD" }))).status).toBe(400);
+    expect((await putBackup(req("PUT", "/x", { version: 1, convertToDevice: true, label: "Safari · iOS" }))).status).toBe(200);
+    const row = await prisma.userE2EKey.findFirstOrThrow({ where: { userId: g } });
+    expect([row.kind, row.backupCiphertext, row.activeSyncedFor, row.retiredAt]).toEqual(["DEVICE", null, null, null]);
   }, 60_000);
 
   it("کلیدِ عمومیِ دیگران فقط برای منتورِ منتشرشده یا طرفِ یک رابطه", async () => {
@@ -308,7 +382,10 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
 
     as(s);
     // طرفِ مقابل کلید ندارد: کلاینت نمی‌تواند رمز کند؛ بسته‌ی دست‌ساز هم پذیرفته نمی‌شود
-    const fake = { clientId: randomId(), ciphertext: toB64(new Uint8Array(64)), iv: toB64(new Uint8Array(12)), commitment: toB64(new Uint8Array(32)), senderKeyVersion: 1, recipientKeyVersion: 1 };
+    const fakeFor = (u: string) => ({ v: 2, clientId: randomId(), ciphertext: toB64(new Uint8Array(64)), iv: toB64(new Uint8Array(12)), commitment: toB64(new Uint8Array(32)), from: { u, k: 1 }, wraps: [{ u, k: 1, w: toB64(new Uint8Array(60)) }] });
+    const fake = fakeFor(s);
+    // قالبِ قدیمیِ scheme 1 برای پیامِ تازه پذیرفته نمی‌شود
+    expect((await postMessage(req("POST", "/x", { clientId: randomId(), ciphertext: toB64(new Uint8Array(64)), iv: toB64(new Uint8Array(12)), commitment: toB64(new Uint8Array(32)), senderKeyVersion: 1, recipientKeyVersion: 1 }), P(ms))).status).toBe(400);
     const r0 = await postMessage(req("POST", "/x", fake), P(ms));
     expect(r0.status).toBe(409);
     expect((await j(r0)).code).toBe("PEER_NO_KEY");
@@ -340,7 +417,7 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
     const noKey = await makeUser();
     const ms2 = await connect(noKey, m);
     as(noKey);
-    const r2 = await postMessage(req("POST", "/x", { ...fake, clientId: randomId() }), P(ms2));
+    const r2 = await postMessage(req("POST", "/x", fakeFor(noKey)), P(ms2));
     expect((await j(r2)).code).toBe("NO_KEY");
   });
 
@@ -371,7 +448,8 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
     await giveKey(m2);
     as(s);
     const k2 = await keyOf(m2);
-    const moved = await postMessage(req("POST", "/x", { ...enc, recipientKeyVersion: k2.version }), P(ms2));
+    // بسته‌بندیِ منتورِ اول را به‌نامِ کلیدِ m2 جا می‌زنیم تا سرور (که محتوا را نمی‌بیند) بپذیرد
+    const moved = await postMessage(req("POST", "/x", { ...enc, wraps: enc.wraps.map((w: any) => (w.u === m ? { ...w, u: m2, k: k2.version } : w)) }), P(ms2));
     expect(moved.status).toBe(200);
     as(m2);
     const v = await j(await getMessages(req("GET", "/x"), P(ms2)));
@@ -469,11 +547,11 @@ describe("پیام‌های پیش از رمزگذاری", () => {
     await giveKey(m);
     await giveKey(s);
     // شاگرد پیامِ منتور را بازرمزگذاری می‌کند — با متنِ دیگر: رد
-    const forged = await encFor(ms, m, "متن عوض‌شده");
+    const forged = await encFor(ms, m, "متن عوض‌شده", randomId(), s);
     as(s);
     let r = await j(await postLegacy(req("POST", "/x", { items: [{ id: legacy.id, ...forged }] }), P(ms)));
     expect(r.migrated).toBe(0);
-    const real = await encFor(ms, m, "پیام قدیمی منتور");
+    const real = await encFor(ms, m, "پیام قدیمی منتور", randomId(), s);
     as(s);
     r = await j(await postLegacy(req("POST", "/x", { items: [{ id: legacy.id, ...real }] }), P(ms)));
     expect(r.migrated).toBe(1);
@@ -616,5 +694,97 @@ describe("دسترسی", () => {
     const pid = (await j(await requestMentorship(s, m))).mentorship.id;
     as(s);
     expect((await getConvKeys(req("GET", "/x"), P(pid))).status).toBe(403);
+  });
+});
+
+// ───────────────────────── چنددستگاهی ─────────────────────────
+
+describe("چنددستگاهی: بسته‌بندی برای همه‌ی دستگاه‌ها، انتقالِ سابقه", () => {
+  it("پیام برای هر کلیدِ فعالِ دو طرف؛ جا انداختنِ یک دستگاه یا کلیدِ اضافه → KEY_CHANGED؛ هر دستگاه جدا باز می‌کند؛ گزارش همچنان تأیید می‌شود", async () => {
+    const m = await makeMentor();
+    const s = await makeUser();
+    const ms = await connect(s, m);
+    const s1 = await giveKey(s);
+    const s2 = await giveDeviceKey(s); // دستگاهِ دوم (مثلا حسابِ گوگل روی گوشی)
+    await giveKey(m);
+
+    const { res, enc, frankingKey } = await sendEnc(m, ms, "برای هر دو دستگاه");
+    expect(res.status).toBe(200);
+    expect(enc.wraps.map((w) => `${w.u}:${w.k}`).sort()).toEqual([`${m}:1`, `${s}:${s1.version}`, `${s}:${s2.version}`].sort());
+    expect(await prisma.mentorMessageKeyWrap.count({ where: { message: { mentorshipId: ms } } })).toBe(3);
+
+    // بیننده فقط بسته‌بندی‌های خودش را می‌گیرد؛ هر دو دستگاه باز می‌کنند
+    as(s);
+    const v = await j(await getMessages(req("GET", "/x"), P(ms)));
+    expect(v.messages[0].enc.wraps.every((w: any) => w.u === s)).toBe(true);
+    for (const dev of [s1, s2]) {
+      const only = { ...v.messages[0], enc: { ...v.messages[0].enc, wraps: v.messages[0].enc.wraps.filter((w: any) => w.k === dev.version) } };
+      expect(((await openAs(s, ms, only)) as any).text).toBe("برای هر دو دستگاه");
+    }
+
+    // دستگاهِ سومِ شاگرد بعد از رمز شدن → بسته‌ی کهنه رد
+    const stale = await encFor(ms, m, "کهنه");
+    const s3 = await giveDeviceKey(s);
+    const { frankingKey: _f1, ...st } = stale;
+    as(m);
+    expect((await j(await postMessage(req("POST", "/x", st), P(ms)))).code).toBe("KEY_CHANGED");
+    // بسته‌بندیِ اضافه برای کلیدِ ناشناس / حذفِ یکی → رد
+    const fresh = await encFor(ms, m, "تازه");
+    const { frankingKey: _f2, ...fr } = fresh;
+    as(m);
+    expect((await j(await postMessage(req("POST", "/x", { ...fr, wraps: fr.wraps.slice(1) }), P(ms)))).code).toBe("KEY_CHANGED");
+    expect((await j(await postMessage(req("POST", "/x", { ...fr, wraps: [...fr.wraps, { u: m, k: 99, w: fr.wraps[0].w }] }), P(ms)))).code).toBe("KEY_CHANGED");
+    expect((await j(await postMessage(req("POST", "/x", { ...fr, from: { u: s, k: s1.version } }), P(ms)))).code).toBe("KEY_CHANGED");
+    expect((await postMessage(req("POST", "/x", fr), P(ms))).status).toBe(200);
+
+    // فرانکینگ دست‌نخورده: گزارشِ پیامِ scheme 2
+    const firstId = (await j(res)).message.id;
+    as(s);
+    const rep = await postReport(req("POST", "/x", { targetType: "MESSAGE", targetId: firstId, reason: "x", franking: { text: "برای هر دو دستگاه", frankingKey } }));
+    expect(rep.status).toBe(200);
+    expect((await prisma.mentorReport.findFirstOrThrow({ where: { reporterId: s } })).reportVerified).toBe(true);
+
+    // انتقالِ سابقه به دستگاهِ سوم: فقط با کلیدِ خودم، فقط پیام‌های گفت‌وگوی خودم
+    as(s);
+    const page = await j(await getHistory(req("GET", `/api/e2ee/history?from=${s1.version}&to=${s3.version}`) as any));
+    expect(page.items.length).toBe(1); // پیامِ «تازه» از قبل برای s3 بسته‌بندی شده
+    const it0 = page.items[0];
+    const pub = (r: { u: string; k: number }) => page.keys[r.u]?.find((x: any) => x.version === r.k)?.publicKey ?? null;
+    const w = await rewrapForOwnKey(it0.wraps, it0.from, { ref: { u: s, k: s1.version }, privateKey: s1.privateKey }, { ref: { u: s, k: s3.version }, publicKey: s3.publicB64 }, pub, messageScope(ms, it0.clientId));
+    expect(w).toMatchObject({ u: s, k: s3.version, via: s1.version });
+    // مقصدِ غیرفعال / via مالِ دیگری / پیامِ دیگری → نادیده
+    expect((await postHistory(req("POST", "/x", { target: 99, wraps: [{ messageId: it0.messageId, wrap: w }] }))).status).toBe(400);
+    const stranger = await makeUser();
+    const sk = await giveDeviceKey(stranger);
+    as(stranger);
+    expect((await j(await postHistory(req("POST", "/x", { target: sk.version, wraps: [{ messageId: it0.messageId, wrap: { ...w, u: stranger, k: sk.version } }] })))).added).toBe(0);
+    as(s);
+    expect((await j(await postHistory(req("POST", "/x", { target: s3.version, wraps: [{ messageId: it0.messageId, wrap: w }] })))).added).toBe(1);
+    expect((await j(await postHistory(req("POST", "/x", { target: s3.version, wraps: [{ messageId: it0.messageId, wrap: w }] })))).added).toBe(0);
+    // دستگاهِ سوم حالا پیامِ قدیمی را می‌خواند (از طریقِ via) و متن/تعهد همان است
+    const v2 = await j(await getMessages(req("GET", "/x"), P(ms)));
+    const old = v2.messages.find((x: any) => x.id === firstId);
+    const only3 = { ...old, enc: { ...old.enc, wraps: old.enc.wraps.filter((x: any) => x.k === s3.version) } };
+    expect((await openAs(s, ms, only3)) as any).toMatchObject({ text: "برای هر دو دستگاه", committed: true });
+    expect(testKey(s, s3.version)).toBeTruthy();
+  }, 60_000);
+
+  it("درخواستِ انتقالِ سابقه: فقط برای کلیدِ فعالِ خودم؛ done/decline فقط یک بار و فقط برای صاحبش", async () => {
+    const u = await makeUser();
+    const d1 = await giveKey(u);
+    as(u);
+    expect((await postLink(req("POST", "/x", { targetVersion: 42 }))).status).toBe(400);
+    const d2 = await giveDeviceKey(u);
+    const { id } = await j(await postLink(req("POST", "/x", { targetVersion: d2.version })));
+    const st = await j(await getMyKey(req("GET", "/api/e2ee/keys") as any));
+    expect(st.link).toMatchObject({ id, targetVersion: d2.version, status: "PENDING" });
+    const other = await makeUser();
+    as(other);
+    expect((await linkAction(req("POST", "/x", { action: "done" }), P(id))).status).toBe(404);
+    as(u);
+    expect((await linkAction(req("POST", "/x", { action: "done", moved: 3 }), P(id))).status).toBe(200);
+    expect((await linkAction(req("POST", "/x", { action: "decline" }), P(id))).status).toBe(404);
+    expect((await j(await getMyKey(req("GET", "/api/e2ee/keys") as any))).link).toMatchObject({ status: "DONE", moved: 3 });
+    void d1;
   });
 });

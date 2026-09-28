@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, notFound } from "@/lib/mentorGuard";
 import { MENTOR_CARD_INCLUDE, loadMentorStats, toMentorCard, usersBlockEachOther } from "@/lib/mentorServer";
 import { displayName } from "@/lib/inAppNotify";
+import { isMentorSaved } from "@/lib/savedMentors";
 
 const REVIEWS_LIMIT = 30;
 
@@ -38,13 +39,14 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
       });
 
   if (!isSelf) {
-    const discoverable = profile.published && !profile.suspendedAt;
+    // احرازِ هویت اجباریه: منتورِ تأییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
+    const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
     const related = !!myMentorship && myMentorship.status !== "BLOCKED";
     if (!discoverable && !related) return notFound();
     if (await usersBlockEachOther(me, mentorId)) return notFound();
   }
 
-  const [stats, reviews, myReviewRow] = await Promise.all([
+  const [stats, reviews, myReviewRow, saved] = await Promise.all([
     loadMentorStats([mentorId]),
     prisma.mentorReview.findMany({
       where: { mentorId, status: "VISIBLE" },
@@ -58,6 +60,7 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
           where: { mentorId_studentId: { mentorId, studentId: me } },
           select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true } } },
         }),
+    isSelf ? Promise.resolve(false) : isMentorSaved(me, mentorId),
   ]);
   const s = stats.get(mentorId);
 
@@ -81,5 +84,7 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
     myMentorship: myMentorship ? { id: myMentorship.id, status: myMentorship.status, initiatedBy: myMentorship.initiatedBy } : null,
     canReview,
     myReview: myReviewRow ? toReview(myReviewRow) : null,
+    // نشانکِ «ذخیره‌شده‌ها» (lib/savedMentors.ts)
+    saved,
   });
 }

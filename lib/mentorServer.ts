@@ -94,10 +94,18 @@ export async function blockedUserIds(viewerId: string): Promise<string[]> {
 
 // ───────────────────────── پروفایلِ منتور ─────────────────────────
 
-/** شرطِ «قابلِ دیدن در کشف»: منتشرشده، معلق‌نشده، صاحبش مسدود/حذف نشده */
+/**
+ * شرطِ «قابلِ دیدن در کشف»: منتشرشده، معلق‌نشده، صاحبش مسدود/حذف نشده، و
+ * هویتِ تأییدشده. احرازِ هویت برای هر منتور اجباریه (round 3): تا ادمین هویت
+ * رو تأیید نکنه، منتور نه در جستجو دیده می‌شه، نه درخواستِ شاگرد می‌گیره،
+ * نه دعوت می‌فرسته/می‌پذیره (IDENTITY_VERIFIED_WHERE در روت‌های رابطه).
+ */
+export const IDENTITY_VERIFIED_WHERE = { identityStatus: "VERIFIED" } as const satisfies Prisma.MentorProfileWhereInput;
+export const MENTOR_IDENTITY_REQUIRED_MSG = "تا تأیید هویت توسط ادمین‌های آریون، امکان پذیرش شاگرد نیست";
 export const DISCOVERABLE_PROFILE_WHERE: Prisma.MentorProfileWhereInput = {
   published: true,
   suspendedAt: null,
+  ...IDENTITY_VERIFIED_WHERE,
   user: { isBlocked: false, deletedAt: null },
 };
 
@@ -228,6 +236,9 @@ export async function loadMentorSelf(userId: string) {
     responseTimeHours: p.responseTimeHours,
     welcomeMessage: p.welcomeMessage,
     intakeQuestions: p.intakeQuestions,
+    // نسخه‌ی پذیرفته‌شده‌ی «شرایط منتورها» (lib/mentorTerms.ts) — فرم با مقایسه با نسخه‌ی جاری چک‌باکس را نشان می‌دهد
+    mentorTermsVersion: p.mentorTermsVersion,
+    acceptedMentorTermsAt: p.acceptedMentorTermsAt,
   };
 }
 
@@ -400,6 +411,7 @@ export type ProgramRow = {
   mentorshipId: string;
   counterpart: PublicUser;
   progress: ProgramProgress;
+  note?: string | null;
 };
 
 export function toProgramRow(p: ProgramWithUsers, viewerId: string, progress: ProgramProgress | undefined): ProgramRow {
@@ -416,6 +428,8 @@ export function toProgramRow(p: ProgramWithUsers, viewerId: string, progress: Pr
     mentorshipId: p.mentorshipId,
     counterpart: toPublicUser(p.mentorId === viewerId ? p.student : p.mentor),
     progress: progress ?? progressFromCounts(0, 0, 0),
+    // یادداشتِ منتور روی برنامه — در فهرستِ برنامه‌های صفحه‌ی رابطه کنارِ هر برنامه دیده می‌شود
+    note: p.note ?? null,
   };
 }
 

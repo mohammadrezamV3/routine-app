@@ -70,41 +70,37 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
 
   const cats = profile.categories.filter(isMentorCategory);
   return (
-    <div id="verification" style={{ scrollMarginTop: 80 }}>
-      <MentorSection
-        title={title} icon={icon}
-        desc="مدارک را فقط تو و ادمین‌های آریون می‌بینید؛ JPG، PNG، WebP یا PDF تا 5 مگابایت"
-      >
-        <MentorDocRow
-          title="مدرک شناسایی"
-          hint="کارت ملی یا گذرنامه"
-          icon={ic(IdCard, MI.row)}
-          status={profile.identityStatus}
-          rejectReason={profile.identityRejectReason}
-          target={{ kind: "IDENTITY", category: null }}
-          docs={profile.documents.filter((d) => d.kind === "IDENTITY")}
-          onChanged={onChanged}
-        />
-        {cats.length === 0 ? (
-          <MentorEmpty>برای ارسال مدرک تخصصی، یک حوزه انتخاب و ذخیره کن</MentorEmpty>
-        ) : cats.map((c) => {
-          const cred = profile.credentials.find((x) => x.category === c);
-          return (
-            <MentorDocRow
-              key={c}
-              title={MENTOR_CATEGORY_META[c].certLabel}
-              hint={MENTOR_CATEGORY_META[c].label}
-              icon={ic(Award, MI.row)}
-              status={cred?.status ?? "NOT_PROVIDED"}
-              rejectReason={cred?.rejectReason ?? null}
-              target={{ kind: "CERTIFICATE", category: c }}
-              docs={profile.documents.filter((d) => d.kind === "CERTIFICATE" && d.category === c)}
-              onChanged={onChanged}
-            />
-          );
-        })}
-      </MentorSection>
-    </div>
+    <MentorSection id="verification" title={title} icon={icon}>
+      <MentorDocRow
+        title="مدرک شناسایی"
+        hint="کارت ملی یا گذرنامه؛ برای نمایش در فهرست منتورها لازم است"
+        icon={ic(IdCard, MI.row)}
+        status={profile.identityStatus}
+        rejectReason={profile.identityRejectReason}
+        target={{ kind: "IDENTITY", category: null }}
+        docs={profile.documents.filter((d) => d.kind === "IDENTITY")}
+        onChanged={onChanged}
+      />
+      {cats.length === 0 ? (
+        <MentorEmpty>برای ارسال مدرک تخصصی، یک حوزه انتخاب و ذخیره کن</MentorEmpty>
+      ) : cats.map((c) => {
+        const cred = profile.credentials.find((x) => x.category === c);
+        return (
+          <MentorDocRow
+            key={c}
+            title={MENTOR_CATEGORY_META[c].certLabel}
+            hint={`${MENTOR_CATEGORY_META[c].label}؛ اختیاری`}
+            icon={ic(Award, MI.row)}
+            status={cred?.status ?? "NOT_PROVIDED"}
+            rejectReason={cred?.rejectReason ?? null}
+            target={{ kind: "CERTIFICATE", category: c }}
+            docs={profile.documents.filter((d) => d.kind === "CERTIFICATE" && d.category === c)}
+            onChanged={onChanged}
+          />
+        );
+      })}
+      <p className="mentor-field-hint mentor-doc-rules">JPG، PNG، WebP یا PDF تا ۵ مگابایت؛ فقط تو و ادمین‌های آریون فایل‌ها را می‌بینید</p>
+    </MentorSection>
   );
 }
 

@@ -124,7 +124,6 @@ function MentorsInner() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">منتورها</div>
-          {data && <div className="admin-section-hint" style={{ margin: 0 }}>{formatNumber(data.counts.all)} منتور</div>}
         </div>
       </div>
 

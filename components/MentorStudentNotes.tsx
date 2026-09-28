@@ -1,5 +1,6 @@
 "use client";
 
+import { MentorList, MentorListItem } from "./MentorMotion";
 import { useEffect, useRef, useState } from "react";
 import { NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { Spinner } from "./Spinner";
@@ -121,7 +122,6 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
   return (
     <MentorSection
       title="یادداشت‌های خصوصی" icon={ic(NotebookPen, MI.section)} count={notes.length ? fa(notes.length) : undefined}
-      desc="فقط خودت می‌بینی؛ روی دستگاه تو رمز می‌شود و شاگرد، آریون و ادمین‌ها به آن دسترسی ندارند"
     >
       <form onSubmit={add} noValidate className="mentor-form" style={{ gap: "var(--m-2)" }}>
         <textarea
@@ -141,8 +141,10 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
         <MentorEmpty>هنوز یادداشتی ننوشته‌ای</MentorEmpty>
       ) : (
         <div className="mentor-list mentor-notes">
+          <MentorList>
           {notes.map((n) => (
-            <div key={n.id} className="mentor-feedback">
+            <MentorListItem key={n.id}>
+            <div className="mentor-feedback">
               <div className="mentor-feedback-head">
                 <span>{fmtDateTime(n.createdAt)}</span>
                 {n.updatedAt && new Date(n.updatedAt).getTime() - new Date(n.createdAt).getTime() > 60_000 && <span>ویرایش‌شده</span>}
@@ -181,7 +183,9 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
                 </p>
               )}
             </div>
+            </MentorListItem>
           ))}
+          </MentorList>
         </div>
       )}
 

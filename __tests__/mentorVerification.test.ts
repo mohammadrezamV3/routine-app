@@ -9,6 +9,7 @@ vi.mock("next-auth", async (orig) => ({
 }));
 vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
 
+import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GET as getMe, PUT as putMe } from "@/app/api/mentors/me/route";
@@ -63,7 +64,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("PNG هویت → PENDING + event؛ PDF مدرک → credential PENDING + event؛ mime از محتوا", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const r = await upload(m, fileForm(pngBytes(200), "../../etc/passwd.pdf", "IDENTITY", undefined, "application/pdf"));
     expect(r.status).toBe(200);
     const doc = (await j(r)).document;
@@ -90,7 +91,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("HTML یا اجرایی (MZ) با اسمِ .png → ۴۱۵ و چیزی ذخیره نمی‌شود", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     expect((await upload(m, fileForm(htmlBytes(), "x.png", "IDENTITY", undefined, "image/png"))).status).toBe(415);
     expect((await upload(m, fileForm(exeBytes(), "x.png", "IDENTITY", undefined, "image/png"))).status).toBe(415);
     const prof = await profileOf(m);
@@ -99,13 +100,13 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("فایلِ بزرگ‌تر از ۵MB در فرم → ۴۱۳", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const big = pngBytes(5 * 1024 * 1024 + 1);
     expect((await upload(m, fileForm(big, "big.png", "IDENTITY"))).status).toBe(413);
   });
 
   it("بدنه‌ی استریم‌شده‌ی بزرگ بدونِ content-length → ۴۱۳ (سقف حینِ خواندن)", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     as(m);
     const chunk = new Uint8Array(1024 * 1024);
     let sent = 0;
@@ -130,7 +131,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("content-lengthِ اعلام‌شده‌ی بزرگ → ۴۱۳ بدونِ خواندن", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     as(m);
     const r = new NextRequest("http://localhost/api/mentors/me/documents", {
       method: "POST",
@@ -141,7 +142,7 @@ describe("آپلودِ مدرک", () => {
   });
 
   it("مدرکِ دسته‌ای که در پروفایل نیست → ۴۰۰؛ kind نامعتبر ۴۰۰؛ بدونِ فایل ۴۰۰", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY); // فقط FITNESS
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false }); // فقط FITNESS
     expect((await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "NUTRITION"))).status).toBe(400);
     expect((await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "HACKING"))).status).toBe(400);
     expect((await upload(m, fileForm(pngBytes(), "c.png", "PASSPORT"))).status).toBe(400);
@@ -153,7 +154,7 @@ describe("آپلودِ مدرک", () => {
 
 describe("بررسیِ ادمین", () => {
   it("تأیید → VERIFIED + event + اعلان + نشانِ تأیید روی کارت؛ مدرک هم", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(jpegBytes(), "id.jpg", "IDENTITY"));
     await upload(m, fileForm(pdfBytes(), "cert.pdf", "CERTIFICATE", "FITNESS"));
@@ -161,9 +162,9 @@ describe("بررسیِ ادمین", () => {
 
     const viewer = await makeUser();
     as(viewer);
-    let card = (await j(await mentorPage(req("GET", "/x"), { params: { mentorId: m } }))).mentor;
-    expect(card.identityVerified).toBe(false);
-    expect(card.certifications).toEqual([{ category: "FITNESS", verified: false }]);
+    // احرازِ هویت اجباری است: پیش از تأیید، پروفایلِ عمومی برای غریبه وجود ندارد
+    expect((await mentorPage(req("GET", "/x"), { params: { mentorId: m } })).status).toBe(404);
+    let card: any;
 
     const r = await adminVerify(admin, prof.id, { kind: "IDENTITY", status: "VERIFIED" });
     expect(r.status).toBe(200);
@@ -194,7 +195,7 @@ describe("بررسیِ ادمین", () => {
   });
 
   it("رد بدونِ دلیل ۴۰۰؛ با دلیل → دلیل در /api/mentors/me دیده می‌شود", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY"));
     await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "FITNESS"));
@@ -221,7 +222,7 @@ describe("بررسیِ ادمین", () => {
 
 describe("دانلودِ مدرک", () => {
   it("صاحب: هدرهای امن و بایت‌های درست؛ دیگران: روتِ صاحب ۴۰۴، روتِ ادمین ۴۰۱/۴۰۳", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const bytes = pngBytes(128);
     const doc = (await j(await upload(m, fileForm(bytes, "کارت ملی.png", "IDENTITY")))).document;
 
@@ -234,7 +235,7 @@ describe("دانلودِ مدرک", () => {
     expect(r.headers.get("content-type")).toBe("image/png");
     expect(new Uint8Array(await r.arrayBuffer())).toEqual(bytes);
 
-    const other = await makeMentor({}, FITNESS_ONLY);
+    const other = await makeMentor({}, FITNESS_ONLY, { identity: false });
     as(other);
     expect((await ownerDoc(req("GET", "/x"), { params: { docId: doc.id } })).status).toBe(404);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId: doc.id } })).status).toBe(404);
@@ -260,7 +261,7 @@ describe("دانلودِ مدرک", () => {
   });
 
   it("صاحب مدرکِ PENDING را حذف می‌کند → وضعیت NOT_PROVIDED", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const doc = (await j(await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY")))).document;
     as(m);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId: doc.id } })).status).toBe(200);
@@ -270,7 +271,7 @@ describe("دانلودِ مدرک", () => {
 
 describe("PUT /api/mentors/me — mass assignment", () => {
   it("identityStatus/ratingAvg/suspendedAt/userId از بدنه نوشته نمی‌شوند", async () => {
-    const m = await makeMentor({}, FITNESS_ONLY);
+    const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const victim = await makeUser();
     as(m);
     const r = await putMe(
@@ -306,9 +307,9 @@ describe("PUT /api/mentors/me — mass assignment", () => {
   it("انتشار بدونِ bio یا دسته ۴۰۰؛ دسته‌ی نامعتبر حذف می‌شود؛ ساختِ اولیه credential می‌سازد", async () => {
     const u = await makeUser();
     as(u);
-    expect((await putMe(req("PUT", "/x", { published: true, categories: ["FITNESS"] }))).status).toBe(400);
-    expect((await putMe(req("PUT", "/x", { published: true, bio: "b", categories: ["HACK"] }))).status).toBe(400);
-    const r = await putMe(req("PUT", "/x", { bio: "b", categories: ["NUTRITION", "HACK"] }));
+    expect((await putMe(req("PUT", "/x", { acceptMentorTerms: MENTOR_TERMS_VERSION, published: true, categories: ["FITNESS"] }))).status).toBe(400);
+    expect((await putMe(req("PUT", "/x", { acceptMentorTerms: MENTOR_TERMS_VERSION, published: true, bio: "b", categories: ["HACK"] }))).status).toBe(400);
+    const r = await putMe(req("PUT", "/x", { acceptMentorTerms: MENTOR_TERMS_VERSION, bio: "b", categories: ["NUTRITION", "HACK"] }));
     expect(r.status).toBe(200);
     const prof = (await j(r)).profile;
     expect(prof.categories).toEqual(["NUTRITION"]);
@@ -319,7 +320,7 @@ describe("PUT /api/mentors/me — mass assignment", () => {
   it("routineRole: فقط با دسته‌ی ROUTINE ذخیره می‌شود؛ بلند ۴۰۰؛ برداشتنِ ROUTINE پاکش می‌کند", async () => {
     const u = await makeUser();
     as(u);
-    let r = await putMe(req("PUT", "/x", { bio: "b", categories: ["ROUTINE"], routineRole: "  استاد   ریاضی " }));
+    let r = await putMe(req("PUT", "/x", { acceptMentorTerms: MENTOR_TERMS_VERSION, bio: "b", categories: ["ROUTINE"], routineRole: "  استاد   ریاضی " }));
     expect(r.status).toBe(200);
     expect((await j(r)).profile.routineRole).toBe("استاد ریاضی");
     expect((await putMe(req("PUT", "/x", { routineRole: "x".repeat(61) }))).status).toBe(400);

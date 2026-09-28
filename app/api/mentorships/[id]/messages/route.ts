@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { isUniqueViolation } from "@/lib/mentorServer";
 import { parseEncryptedMessage } from "@/lib/e2ee/server";
+import { clearedBeforeFor } from "@/lib/mentorChatHistory";
 import { MESSAGE_SELECT, checkSendKeys, encryptedMessageData, notifyNewMessage, purgeExpiredLegacyMessages, serializeMessage } from "@/lib/mentorChatServer";
 import { publishToUsers } from "@/lib/realtime";
 
@@ -34,8 +35,12 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   await purgeExpiredLegacyMessages(m.id);
 
+  // «پاک کردن سابقه» فقط برای همین کاربر (lib/mentorChatHistory.ts)
+  const cleared = clearedBeforeFor(m, me);
+  const createdAt = { ...(before ? { lt: before } : {}), ...(cleared ? { gt: cleared } : {}) };
+
   const rows = await prisma.mentorMessage.findMany({
-    where: { mentorshipId: m.id, ...(before ? { createdAt: { lt: before } } : {}) },
+    where: { mentorshipId: m.id, ...(before || cleared ? { createdAt } : {}) },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: PAGE_SIZE + 1,
     select: MESSAGE_SELECT,
@@ -52,7 +57,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   // پیامِ خوش‌آمد از تنظیماتِ منتور — جزوِ گفت‌وگوی رمزشده نیست و جدا برچسب می‌خورد
   let welcome: { body: string; at: Date } | null = null;
-  if (!before && m.startedAt) {
+  if (!before && m.startedAt && !cleared) {
     const p = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { welcomeMessage: true } });
     const body = p?.welcomeMessage?.trim();
     if (body) welcome = { body, at: m.startedAt };
@@ -65,6 +70,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     mentorId: m.mentorId,
     studentId: m.studentId,
     welcome,
+    clearedAt: cleared,
   });
 }
 

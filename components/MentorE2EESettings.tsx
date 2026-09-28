@@ -5,29 +5,14 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
-import {
-  WrongPasscodeError,
-  changePasscode,
-  forgetThisDevice,
-  passcodeProblem,
-  refreshIdentity,
-  resetIdentity,
-  type Identity,
-} from "@/lib/e2ee/client";
+import { forgetThisDevice, removeDevice, useE2EEIdentity, type Identity } from "@/lib/e2ee/client";
 import { LockBodyScroll } from "./LockBodyScroll";
-import { Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
-import { MentorField } from "./MentorUI";
-
-const FIELD = "wsearch-newform-name trade-glass-field";
-
-function errMsg(e: unknown, fallback: string): string {
-  return e instanceof Error && e.message ? e.message : fallback;
-}
 
 /**
- * جزئیات و مدیریتِ رمزگذاریِ سرتاسری: کدِ امنیتیِ همین گفت‌وگو (برای مقایسه با
- * طرفِ مقابل)، تغییرِ رمزِ گفت‌وگو، حذفِ کلید از این دستگاه، و ساختِ کلیدِ تازه.
+ * جزئیاتِ رمزگذاریِ سرتاسری: کدِ امنیتیِ همین گفت‌وگو (برای مقایسه با طرفِ مقابل)،
+ * دستگاه‌هایی که پیام‌ها برایشان رمز می‌شود، و حذفِ کلید از همین مرورگر.
+ * هیچ رمزی ساخته یا خواسته نمی‌شود (docs/mentor-e2ee.md).
  */
 export function MentorE2EESettings({
   identity, persistent, peerName, safetyCode, onClose,
@@ -38,36 +23,11 @@ export function MentorE2EESettings({
   safetyCode?: string | null;
   onClose: () => void;
 }) {
-  const [cur, setCur] = useState("");
-  const [np, setNp] = useState("");
-  const [nr, setNr] = useState("");
-  const [errs, setErrs] = useState<{ cur: string | null; np: string | null; nr: string | null }>({ cur: null, np: null, nr: null });
-  const [busy, setBusy] = useState<null | "change" | "forget" | "reset">(null);
+  const s = useE2EEIdentity();
+  const devices = s.status === "ready" ? s.devices : [];
+  const [busy, setBusy] = useState<null | "forget" | number>(null);
+  const [confirm, setConfirm] = useState<null | "forget" | { version: number; label: string }>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-  const [confirm, setConfirm] = useState<null | "forget" | "reset">(null);
-
-  async function submitChange(e: React.FormEvent) {
-    e.preventDefault();
-    if (busy) return;
-    setSaved(false);
-    setError(null);
-    const pErr = await passcodeProblem(np);
-    const next = { cur: cur ? null : "رمز فعلی را وارد کن", np: pErr, nr: !pErr && np !== nr ? "تکرار رمز با رمز یکی نیست" : null };
-    setErrs(next);
-    if (next.cur || next.np || next.nr) return;
-    setBusy("change");
-    try {
-      await changePasscode(identity, cur, np);
-      setCur(""); setNp(""); setNr("");
-      setSaved(true);
-    } catch (e2) {
-      if (e2 instanceof WrongPasscodeError) setErrs((x) => ({ ...x, cur: e2.message }));
-      else setError(errMsg(e2, "رمز تغییر نکرد؛ دوباره تلاش کن"));
-    } finally {
-      setBusy(null);
-    }
-  }
 
   async function doForget() {
     setBusy("forget");
@@ -79,35 +39,31 @@ export function MentorE2EESettings({
     }
   }
 
-  async function doReset() {
-    const pErr = await passcodeProblem(np);
-    if (pErr || np !== nr) {
-      setConfirm(null);
-      setErrs({ cur: null, np: pErr, nr: !pErr && np !== nr ? "تکرار رمز با رمز یکی نیست" : null });
-      return;
-    }
-    setBusy("reset");
+  async function doRemove(version: number) {
+    setBusy(version);
     setError(null);
     try {
-      await resetIdentity(identity.userId, identity.version, np);
-      onClose();
-    } catch (e2) {
-      setError(errMsg(e2, "کلید تازه ساخته نشد؛ دوباره تلاش کن"));
-      await refreshIdentity();
+      await removeDevice(version);
+      setConfirm(null);
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : "حذف نشد؛ دوباره تلاش کن");
     } finally {
       setBusy(null);
     }
   }
 
+  const labelOf = (d: (typeof devices)[number]) =>
+    d.version === identity.version ? "همین دستگاه" : d.kind === "SYNCED" ? "دستگاه‌هایی که با رمز عبور وارد می‌شوند" : d.deviceLabel || "دستگاه دیگر";
+
   if (typeof document === "undefined") return null;
   return createPortal(
     <>
       <LockBodyScroll />
-      <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
+      <div className="modal-overlay open" onClick={() => busy === null && onClose()} style={{ zIndex: 90 }} />
       <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label="رمزگذاری سرتاسری" style={{ zIndex: 91, maxWidth: 460 }}>
         <div className="modal-head">
           <div className="modal-title">رمزگذاری سرتاسری</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={!!busy}>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy !== null}>
             <X size={16} strokeWidth={1.75} />
           </button>
         </div>
@@ -118,45 +74,40 @@ export function MentorE2EESettings({
               <div className="mentor-field-label">کد امنیتی این گفت‌وگو</div>
               <p className="mentor-e2ee-code" dir="ltr">{faNum(safetyCode)}</p>
               <p className="mentor-field-hint">
-                اگر همین کد روی دستگاه {peerName || "طرف مقابل"} هم دیده می‌شود، پیام‌ها مستقیم بین شما دو نفر رمز شده‌اند. کد را حضوری یا از راه دیگری مقایسه کن.
+                اگر همین کد روی دستگاه {peerName || "طرف مقابل"} هم دیده می‌شود، پیام‌ها فقط برای دستگاه‌های شما دو نفر رمز شده‌اند. کد را حضوری یا از راه دیگری مقایسه کن.
               </p>
             </div>
           )}
 
-          <form className="mentor-form mentor-e2ee-block" onSubmit={submitChange}>
-            <div className="mentor-field-label">تغییر رمز گفت‌وگو</div>
-            <MentorField label="رمز فعلی" htmlFor="e2ee-cur" error={errs.cur}>
-              <input id="e2ee-cur" type="password" className={FIELD} autoComplete="current-password" value={cur} onChange={(e) => { setCur(e.target.value); setErrs((x) => ({ ...x, cur: null })); setSaved(false); }} />
-            </MentorField>
-            <div className="mentor-field-row">
-              <MentorField label="رمز تازه" htmlFor="e2ee-new" error={errs.np} hint="حداقل 10 نویسه؛ با رمز حساب آریون یکی نباشد">
-                <input id="e2ee-new" type="password" className={FIELD} autoComplete="new-password" value={np} onChange={(e) => { setNp(e.target.value); setErrs((x) => ({ ...x, np: null })); setSaved(false); }} />
-              </MentorField>
-              <MentorField label="تکرار رمز تازه" htmlFor="e2ee-new2" error={errs.nr}>
-                <input id="e2ee-new2" type="password" className={FIELD} autoComplete="new-password" value={nr} onChange={(e) => { setNr(e.target.value); setErrs((x) => ({ ...x, nr: null })); setSaved(false); }} />
-              </MentorField>
+          {devices.length > 0 && (
+            <div className="mentor-e2ee-block">
+              <div className="mentor-field-label">پیام‌های تو برای این دستگاه‌ها رمز می‌شوند</div>
+              <ul className="mentor-e2ee-devices">
+                {devices.map((d) => (
+                  <li key={d.version}>
+                    <span>{labelOf(d)}</span>
+                    {d.kind === "DEVICE" && d.version !== identity.version && (
+                      <button type="button" className="mentor-text-btn" disabled={busy !== null} onClick={() => setConfirm({ version: d.version, label: labelOf(d) })}>
+                        حذف
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-            {error && !confirm && <div className="form-inline-error" role="alert">{error}</div>}
-            <div className="mentor-form-actions">
-              <button type="submit" className="trade-primary-btn mentor-btn" disabled={!!busy}>
-                {busy === "change" ? <Spinner size={14} /> : saved ? "رمز تغییر کرد" : "تغییر رمز"}
-              </button>
-            </div>
-          </form>
+          )}
 
           <div className="mentor-e2ee-block">
             <p className="mentor-field-hint">
               {persistent
-                ? "کلید این حساب روی همین مرورگر نگه داشته شده و با خروج از حساب پاک می‌شود."
-                : "این مرورگر اجازه‌ی ذخیره‌ی کلید را نمی‌دهد؛ با بستن صفحه دوباره رمز گفت‌وگو لازم است."}
-              {" "}کلید تازه فقط وقتی لازم است که رمز را فراموش کرده باشی؛ پیام‌های قبلی با آن خوانده نمی‌شوند و برای ساختش رمز تازه‌ی بالا به کار می‌رود.
+                ? identity.kind === "SYNCED"
+                  ? "کلید این حساب با رمز عبورت محافظت می‌شود و روی هر دستگاهی که با رمز وارد شوی خودکار باز می‌شود."
+                  : "کلید این دستگاه فقط روی همین مرورگر است؛ با خروج از حساب پاک نمی‌شود تا سابقه‌ی گفت‌وگو این‌جا بماند."
+                : "این مرورگر اجازه‌ی ذخیره‌ی کلید را نمی‌دهد؛ با بستن صفحه کلید تازه‌ای ساخته می‌شود."}
             </p>
             <div className="mentor-btn-group">
-              <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => setConfirm("forget")} disabled={!!busy}>
+              <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => setConfirm("forget")} disabled={busy !== null}>
                 حذف از این دستگاه
-              </button>
-              <button type="button" className="trade-danger-btn mentor-btn is-sm" onClick={() => setConfirm("reset")} disabled={!!busy}>
-                ساخت کلید تازه
               </button>
             </div>
           </div>
@@ -165,23 +116,22 @@ export function MentorE2EESettings({
 
       {confirm === "forget" && (
         <MentorConfirmDialog
-          message="کلید از این دستگاه حذف شود؟"
-          hint="برای خواندن پیام‌ها روی این دستگاه دوباره رمز گفت‌وگو لازم است."
+          message="کلیدها از این دستگاه حذف شوند؟"
+          hint={identity.kind === "SYNCED" ? "با ورود دوباره با رمز عبور، همه‌چیز دوباره باز می‌شود." : "پیام‌هایی که فقط روی این دستگاه بودند دیگر این‌جا خوانده نمی‌شوند."}
           confirmLabel="حذف از دستگاه"
           busy={busy === "forget"}
           onConfirm={doForget}
           onCancel={() => setConfirm(null)}
         />
       )}
-      {confirm === "reset" && (
+      {confirm && confirm !== "forget" && (
         <MentorConfirmDialog
-          message="کلید تازه با رمز واردشده ساخته شود؟"
-          hint="پیام‌های قبلی این حساب دیگر روی هیچ دستگاهی خوانده نمی‌شوند."
-          confirmLabel="ساخت کلید تازه"
-          danger
-          busy={busy === "reset"}
+          message={`«${confirm.label}» حذف شود؟`}
+          hint="پیام‌های بعدی دیگر برای آن دستگاه رمز نمی‌شوند."
+          confirmLabel="حذف دستگاه"
+          busy={busy === confirm.version}
           error={error}
-          onConfirm={doReset}
+          onConfirm={() => doRemove(confirm.version)}
           onCancel={() => { setConfirm(null); setError(null); }}
         />
       )}

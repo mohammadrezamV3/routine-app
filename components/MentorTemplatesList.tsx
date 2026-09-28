@@ -1,5 +1,6 @@
 "use client";
 
+import { MentorCollapse, MentorList, MentorListItem } from "./MentorMotion";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarCheck, Check, ClipboardList, Dumbbell, LayoutTemplate, Pencil, Plus, Trash2, X } from "lucide-react";
@@ -63,14 +64,17 @@ export function MentorTemplatesList() {
   return (
     <>
       <MentorSection title="قالب‌های برنامه" icon={ic(LayoutTemplate, MI.section)} count={fa(list.length)} flush>
+        <MentorList>
         {list.map((t) => (
+          <MentorListItem key={t.id}>
           <TemplateRowView
-            key={t.id}
             t={t}
             onRenamed={(nt) => setList((xs) => (xs ?? []).map((x) => (x.id === nt.id ? nt : x)))}
             onDelete={() => { setDelError(null); setConfirm(t); }}
           />
+          </MentorListItem>
         ))}
+        </MentorList>
       </MentorSection>
       {confirm && (
         <MentorConfirmDialog
@@ -159,7 +163,7 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
           </form>
         ) : (
           <>
-            {mode === "items" && (
+            <MentorCollapse open={mode === "items"}>{(
               busy ? <Spinner size={14} /> : err ? <div className="form-inline-error" role="alert">{err}</div> : detail && (
                 <div>
                   {detail.items.map((it, i) => (
@@ -179,7 +183,7 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
                   {detail.note && <p className="mentor-quote">{detail.note}</p>}
                 </div>
               )
-            )}
+            )}</MentorCollapse>
             <div className="mentor-btn-group is-end">
               <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={toggleItems} aria-expanded={mode === "items"}>
                 {ic(ClipboardList, MI.btnSm)} {mode === "items" ? "بستن آیتم‌ها" : "نمایش آیتم‌ها"}

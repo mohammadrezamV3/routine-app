@@ -213,6 +213,9 @@ export default function SignupPage() {
     // (چرا: همان بازنویسیِ پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
     const session = await getSession();
     setLoading(false);
+    // کلیدِ رمزگذاریِ سرتاسریِ منتور از همان ابتدا، بی‌صدا (lib/e2ee/client.ts؛ رمز فقط روی دستگاه)
+    const newUserId = (session?.user as any)?.id;
+    if (newUserId) void import("@/lib/e2ee/client").then((m) => m.primeE2EEFromPassword(newUserId, password)).catch(() => {});
     // تنها جایی که پیشنهادِ نصبِ PWA مجاز است: بلافاصله بعد از ثبت‌نام.
     // (PwaProvider فقط با دیدنِ همین کلید بنر را نشان می‌دهد و بعدش
     // برای همیشه خاموش می‌شود — نگاه کن به components/PwaProvider.tsx.)

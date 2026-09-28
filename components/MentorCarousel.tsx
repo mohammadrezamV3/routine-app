@@ -2,10 +2,12 @@
 
 import "./mentor.css";
 import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { MentorCard } from "./MentorCard";
 import { MentorSectionTitle } from "./MentorUI";
+import { MentorStaggerItem } from "./MentorMotion";
 
 /** حداکثر کارت در هر ردیف؛ بقیه با «مشاهده همه» */
 export const CAROUSEL_LIMIT = 10;
@@ -39,13 +41,20 @@ export function MentorCarousel({
         {title}
       </MentorSectionTitle>
       {note && <p className="mentor-muted mentor-section-note">{note}</p>}
-      <div className="mentor-popular-row mentor-carousel-row" ref={rowRef}>
-        {shown.map((m) => <MentorCard key={m.userId} mentor={m} />)}
-        <button type="button" className="mentor-carousel-more" onClick={onViewAll}>
-          <span className="mentor-carousel-more-icon"><ArrowLeft size={18} strokeWidth={1.75} aria-hidden /></span>
-          مشاهده همه
-        </button>
-      </div>
+      {/* خودِ ردیف والدِ پله‌ها است (همان کارِ MentorStagger، با ref برای کشیدن) */}
+      <motion.div className="mentor-popular-row mentor-carousel-row" ref={rowRef} initial="hidden" animate="show" variants={{ hidden: {}, show: {} }}>
+        {shown.map((m, i) => (
+          <MentorStaggerItem key={m.userId} index={i} className="mentor-grid-item">
+            <MentorCard mentor={m} />
+          </MentorStaggerItem>
+        ))}
+        <MentorStaggerItem index={shown.length} className="mentor-grid-item">
+          <button type="button" className="mentor-carousel-more" onClick={onViewAll}>
+            <span className="mentor-carousel-more-icon"><ArrowLeft size={18} strokeWidth={1.75} aria-hidden /></span>
+            مشاهده همه
+          </button>
+        </MentorStaggerItem>
+      </motion.div>
     </div>
   );
 }

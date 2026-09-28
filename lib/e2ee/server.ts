@@ -2,7 +2,7 @@
 import nodeCrypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { b64ByteLength } from "./encoding";
-import { COMMITMENT_BYTES, GCM_TAG_BYTES, IV_BYTES, type EncryptedMessage } from "./core";
+import { COMMITMENT_BYTES, GCM_TAG_BYTES, IV_BYTES, MAX_ACTIVE_KEYS, WRAP_BYTES, type EncryptedMessageV2, type KeyWrap } from "./core";
 
 // کمک‌های سمتِ سرورِ رمزگذاری. سرور هیچ کلیدِ خصوصیِ کاربری ندارد؛ این فایل فقط:
 //   ۱) برچسبِ سرور روی تعهدِ فرانکینگ (HMAC با رازِ سرور) می‌سازد/تأیید می‌کند،
@@ -141,47 +141,97 @@ export function openAtRest(v: string | null | undefined, aad: (string | number)[
 export const CIPHERTEXT_B64_MAX = 12_000;
 const CLIENT_ID_RE = /^[A-Za-z0-9_-]{16,40}$/;
 
-export type EncryptedInput = EncryptedMessage;
+export type EncryptedInput = EncryptedMessageV2;
 
+const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const isVersion = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 1e6;
+
+/**
+ * فقط scheme 2 (چنددستگاهی) برای پیامِ تازه پذیرفته می‌شود. شکلِ هر بسته‌بندی چک
+ * می‌شود؛ این‌که بسته‌بندی‌ها دقیقا کلیدهای فعالِ دو طرف را پوشش دهند را
+ * checkWrapTargets (همین فایل) با دیتابیس می‌سنجد.
+ */
 export function parseEncryptedMessage(v: unknown): { ok: true; data: EncryptedInput } | { ok: false; error: string } {
   if (!v || typeof v !== "object") return { ok: false, error: "پیام رمزشده لازم است" };
   const b = v as Record<string, unknown>;
   if ("body" in b || "text" in b) return { ok: false, error: "متن ساده پذیرفته نمی‌شود؛ پیام باید روی دستگاه رمزگذاری شود" };
+  if (b.v !== 2) return { ok: false, error: "نسخه‌ی رمزگذاری پیام قدیمی است؛ صفحه را تازه کن" };
   if (typeof b.clientId !== "string" || !CLIENT_ID_RE.test(b.clientId)) return { ok: false, error: "شناسه‌ی پیام نامعتبر است" };
   if (typeof b.ciphertext !== "string" || b.ciphertext.length > CIPHERTEXT_B64_MAX) return { ok: false, error: "پیام رمزشده نامعتبر است" };
   const ctLen = b64ByteLength(b.ciphertext);
   if (ctLen === null || ctLen < GCM_TAG_BYTES + 16) return { ok: false, error: "پیام رمزشده نامعتبر است" };
   if (typeof b.iv !== "string" || b64ByteLength(b.iv) !== IV_BYTES) return { ok: false, error: "IV نامعتبر است" };
   if (typeof b.commitment !== "string" || b64ByteLength(b.commitment) !== COMMITMENT_BYTES) return { ok: false, error: "تعهد پیام نامعتبر است" };
-  const sv = b.senderKeyVersion;
-  const rv = b.recipientKeyVersion;
-  if (!Number.isInteger(sv) || !Number.isInteger(rv) || (sv as number) < 1 || (rv as number) < 1 || (sv as number) > 1e6 || (rv as number) > 1e6) {
-    return { ok: false, error: "نسخه‌ی کلید نامعتبر است" };
+  const from = b.from as Record<string, unknown> | null;
+  if (!from || typeof from !== "object" || typeof from.u !== "string" || !USER_ID_RE.test(from.u) || !isVersion(from.k)) {
+    return { ok: false, error: "کلید فرستنده نامعتبر است" };
   }
+  const wraps = parseWraps(b.wraps, 2 * MAX_ACTIVE_KEYS, false);
+  if (!wraps) return { ok: false, error: "بسته‌بندی کلید نامعتبر است" };
   return {
     ok: true,
-    data: {
-      clientId: b.clientId,
-      ciphertext: b.ciphertext,
-      iv: b.iv,
-      commitment: b.commitment,
-      senderKeyVersion: sv as number,
-      recipientKeyVersion: rv as number,
-    },
+    data: { v: 2, clientId: b.clientId, ciphertext: b.ciphertext, iv: b.iv, commitment: b.commitment, from: { u: from.u, k: from.k as number }, wraps },
   };
+}
+
+/** فهرستِ بسته‌بندی‌ها: شکلِ هرکدام + بی‌تکرار بودنِ (u, k). allowVia فقط برای انتقالِ سابقه */
+export function parseWraps(v: unknown, max: number, allowVia: boolean): KeyWrap[] | null {
+  if (!Array.isArray(v) || v.length === 0 || v.length > max) return null;
+  const seen = new Set<string>();
+  const out: KeyWrap[] = [];
+  for (const w of v) {
+    if (!w || typeof w !== "object") return null;
+    const x = w as Record<string, unknown>;
+    if (typeof x.u !== "string" || !USER_ID_RE.test(x.u) || !isVersion(x.k) || typeof x.w !== "string" || b64ByteLength(x.w) !== WRAP_BYTES) return null;
+    if (x.via !== undefined && (!allowVia || !isVersion(x.via))) return null;
+    const id = `${x.u}:${x.k}`;
+    if (seen.has(id)) return null;
+    seen.add(id);
+    out.push(x.via !== undefined ? { u: x.u, k: x.k as number, w: x.w, via: x.via as number } : { u: x.u, k: x.k as number, w: x.w });
+  }
+  return out;
 }
 
 // ───────────────────────── دفترچه‌ی کلیدِ عمومی ─────────────────────────
 
-export type PublicKeyRow = { version: number; publicKey: string; current: boolean; createdAt: Date };
+export type PublicKeyRow = { version: number; publicKey: string; current: boolean; kind: "SYNCED" | "DEVICE"; createdAt: Date };
+export type ActiveKey = { version: number; publicKey: string; kind: "SYNCED" | "DEVICE" };
 
-/** کلیدِ جاری (بازنشسته‌نشده) یک کاربر */
-export async function currentE2EKey(userId: string): Promise<{ version: number; publicKey: string } | null> {
-  return prisma.userE2EKey.findFirst({
-    where: { userId, retiredAt: null },
-    orderBy: { version: "desc" },
-    select: { version: true, publicKey: true },
+/** یکی از کلیدهای فعالِ کاربر (SYNCED ترجیح دارد) — فقط برای «کلید دارد یا نه» */
+export async function currentE2EKey(userId: string): Promise<ActiveKey | null> {
+  const rows = await activeKeysFor([userId]);
+  return rows[userId][0] ?? null;
+}
+
+/** همه‌ی کلیدهای فعالِ چند کاربر؛ SYNCED اول، بعد به ترتیبِ نسخه */
+export async function activeKeysFor(userIds: string[]): Promise<Record<string, ActiveKey[]>> {
+  const rows = await prisma.userE2EKey.findMany({
+    where: { userId: { in: userIds }, retiredAt: null },
+    orderBy: { version: "asc" },
+    select: { userId: true, version: true, publicKey: true, kind: true },
   });
+  const out: Record<string, ActiveKey[]> = Object.fromEntries(userIds.map((u) => [u, []]));
+  for (const r of rows) out[r.userId].push({ version: r.version, publicKey: r.publicKey, kind: r.kind });
+  for (const u of userIds) out[u].sort((a, b) => (a.kind === b.kind ? a.version - b.version : a.kind === "SYNCED" ? -1 : 1));
+  return out;
+}
+
+export type WrapCheck = "ok" | "NO_KEY" | "PEER_NO_KEY" | "KEY_CHANGED";
+
+/**
+ * بسته‌بندی‌های یک پیام باید *دقیقا* کلیدهای فعالِ همه‌ی participants را پوشش دهند
+ * (نه کمتر: دستگاهی جا نماند؛ نه بیشتر: کلیدِ ناشناس/بازنشسته) و from یکی از کلیدهای
+ * فعالِ fromUserId باشد. ناهمخوانی = KEY_CHANGED تا کلاینت کلیدها را تازه کند.
+ */
+export async function checkWrapTargets(input: Pick<EncryptedInput, "from" | "wraps">, fromUserId: string, participants: string[]): Promise<WrapCheck> {
+  const active = await activeKeysFor(participants);
+  if (!active[fromUserId]?.length) return "NO_KEY";
+  if (participants.some((u) => !active[u].length)) return "PEER_NO_KEY";
+  if (input.from.u !== fromUserId || !active[fromUserId].some((k) => k.version === input.from.k)) return "KEY_CHANGED";
+  const want = new Set(participants.flatMap((u) => active[u].map((k) => `${u}:${k.version}`)));
+  if (input.wraps.length !== want.size) return "KEY_CHANGED";
+  for (const w of input.wraps) if (w.via !== undefined || !want.has(`${w.u}:${w.k}`)) return "KEY_CHANGED";
+  return "ok";
 }
 
 /** همه‌ی نسخه‌های کلیدِ عمومیِ چند کاربر — نسخه‌ی قدیمیِ طرفِ مقابل برای خواندنِ پیام‌های قبل از بازنشانی‌اش لازم است */
@@ -189,9 +239,9 @@ export async function publicKeysFor(userIds: string[]): Promise<Record<string, P
   const rows = await prisma.userE2EKey.findMany({
     where: { userId: { in: userIds } },
     orderBy: { version: "asc" },
-    select: { userId: true, version: true, publicKey: true, retiredAt: true, createdAt: true },
+    select: { userId: true, version: true, publicKey: true, retiredAt: true, kind: true, createdAt: true },
   });
   const out: Record<string, PublicKeyRow[]> = Object.fromEntries(userIds.map((u) => [u, []]));
-  for (const r of rows) out[r.userId].push({ version: r.version, publicKey: r.publicKey, current: !r.retiredAt, createdAt: r.createdAt });
+  for (const r of rows) out[r.userId].push({ version: r.version, publicKey: r.publicKey, current: !r.retiredAt, kind: r.kind, createdAt: r.createdAt });
   return out;
 }

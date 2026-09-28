@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { sanitizeCategories } from "@/lib/mentorCategories";
 import { loadMentorSelf, isUniqueViolation } from "@/lib/mentorServer";
 import { validateRoutineRole } from "@/lib/mentorValidate";
+import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE } from "@/lib/mentorTerms";
 
 const HEADLINE_MAX = 120;
 const BIO_MAX = 2000;
@@ -38,6 +39,8 @@ export async function PUT(req: Request) {
     routineRole?: string | null;
     published?: boolean;
     acceptingStudents?: boolean;
+    acceptedMentorTermsAt?: Date;
+    mentorTermsVersion?: string;
   } = {};
 
   if (b.headline !== undefined) {
@@ -77,7 +80,26 @@ export async function PUT(req: Request) {
     data.acceptingStudents = b.acceptingStudents;
   }
 
-  const existing = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true, categories: true, bio: true, published: true } });
+  const existing = await prisma.mentorProfile.findUnique({
+    where: { userId },
+    select: { id: true, categories: true, bio: true, published: true, mentorTermsVersion: true },
+  });
+
+  // پذیرشِ شرایطِ منتوری (lib/mentorTerms.ts): ساختِ پروفایل و هر ذخیره‌ی بعدی فقط با
+  // نسخه‌ی جاری. استثنا: کنار کشیدن (فقط عدمِ انتشار/توقفِ پذیرشِ شاگرد) همیشه آزاد است
+  // تا منتوری که نسخه‌ی تازه را نمی‌پذیرد بتواند بی‌دردسر فعالیتش را متوقف کند.
+  const onlyWithdrawing =
+    !!existing &&
+    Object.keys(b).length > 0 &&
+    Object.keys(b).every((k) => (k === "published" || k === "acceptingStudents") && b[k] === false);
+  if (!onlyWithdrawing) {
+    const terms = decideMentorTerms("mentor", existing?.mentorTermsVersion, b.acceptMentorTerms);
+    if (!terms.ok) return NextResponse.json({ error: terms.message, code: MENTOR_TERMS_ERROR_CODE }, { status: 400 });
+    if (terms.record) {
+      data.acceptedMentorTermsAt = new Date();
+      data.mentorTermsVersion = b.acceptMentorTerms as string;
+    }
+  }
 
   // انتشار فقط با حداقل یک دسته و بیوگرافی — روی وضعیتِ *نهایی* (بعد از همین تغییر) سنجیده می‌شه
   const finalCategories = data.categories ?? existing?.categories ?? [];
