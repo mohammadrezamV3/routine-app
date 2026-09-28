@@ -6,6 +6,7 @@ import { effectiveCategories } from "@/lib/mentorCategories";
 import { progressHiddenPrograms, syncProgramProgress } from "@/lib/mentorProgress";
 import { computeAvailability, dayIso, isAway, type AvailabilityState, type IntakeAnswer } from "@/lib/mentorAvailability";
 import { WELCOME_VISIBLE_DAYS, availabilityToday, readIntakeAnswers } from "@/lib/mentorManageServer";
+import { loadReservedSeats } from "@/lib/mentorWaitlistServer";
 
 // کمک‌تابع‌های مشترکِ سمت سرورِ اکوسیستم منتور — شکلِ پاسخ‌های قرارداد
 // (docs/mentors.md) فقط همین‌جا ساخته می‌شه تا روت‌ها و پنلِ ادمین هر کدوم
@@ -139,18 +140,26 @@ export type MentorCard = {
   memberSince: string;
 };
 
-export type MentorStats = { activeStudents: number; totalStudents: number; completedPrograms: number };
+export type MentorStats = {
+  activeStudents: number;
+  totalStudents: number;
+  completedPrograms: number;
+  /** صندلی‌های رزروِ صفِ انتظار (lib/mentorWaitlistServer.ts) — فقط برای «پُر بودن»، نه رتبه‌بندی */
+  reservedSeats?: number;
+};
 
 /** آمارِ شاگرد/برنامه برای چند منتور، با سه کوئریِ گروهی (نه به‌ازای هر منتور) */
 export async function loadMentorStats(mentorIds: string[]): Promise<Map<string, MentorStats>> {
   const out = new Map<string, MentorStats>();
   for (const id of mentorIds) out.set(id, { activeStudents: 0, totalStudents: 0, completedPrograms: 0 });
   if (mentorIds.length === 0) return out;
-  const [active, total, completed] = await Promise.all([
+  const [active, total, completed, reserved] = await Promise.all([
     prisma.mentorship.groupBy({ by: ["mentorId"], where: { mentorId: { in: mentorIds }, status: "ACTIVE" }, _count: { _all: true } }),
     prisma.mentorship.groupBy({ by: ["mentorId"], where: { mentorId: { in: mentorIds }, startedAt: { not: null } }, _count: { _all: true } }),
     prisma.mentorProgram.groupBy({ by: ["mentorId"], where: { mentorId: { in: mentorIds }, status: "COMPLETED" }, _count: { _all: true } }),
+    loadReservedSeats(mentorIds),
   ]);
+  for (const [id, n] of Array.from(reserved)) out.get(id)!.reservedSeats = n;
   for (const r of active) out.get(r.mentorId)!.activeStudents = r._count._all;
   for (const r of total) out.get(r.mentorId)!.totalStudents = r._count._all;
   for (const r of completed) out.get(r.mentorId)!.completedPrograms = r._count._all;
@@ -183,12 +192,13 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
     totalStudents: stats?.totalStudents ?? 0,
     acceptingStudents: p.acceptingStudents,
     memberSince: p.createdAt.toISOString(),
-    ...cardAvailability(p, stats?.activeStudents ?? 0),
+    ...cardAvailability(p, (stats?.activeStudents ?? 0) + (stats?.reservedSeats ?? 0)),
   };
 }
 
-function cardAvailability(p: CardProfile, activeStudents: number): Pick<MentorCard, "availability" | "awayUntil" | "responseTimeHours"> {
-  const a = computeAvailability(p, activeStudents, availabilityToday());
+/** occupiedSeats = شاگردِ فعال + صندلیِ رزروِ صفِ انتظار */
+function cardAvailability(p: CardProfile, occupiedSeats: number): Pick<MentorCard, "availability" | "awayUntil" | "responseTimeHours"> {
+  const a = computeAvailability(p, occupiedSeats, availabilityToday());
   return { availability: a.state, awayUntil: a.awayUntil, responseTimeHours: p.responseTimeHours };
 }
 

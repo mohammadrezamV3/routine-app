@@ -13,16 +13,19 @@ import {
   validateResponseTime,
 } from "@/lib/mentorAvailability";
 import { AVAILABILITY_SELECT, availabilityOf, availabilityToday, countActiveStudents } from "@/lib/mentorManageServer";
+import { advanceWaitlist, countReservedSeats } from "@/lib/mentorWaitlistServer";
 
 const SETTINGS_SELECT = { ...AVAILABILITY_SELECT, welcomeMessage: true, intakeQuestions: true } as const;
 
 async function respond(userId: string) {
-  const [p, active] = await Promise.all([
+  const [p, active, reserved] = await Promise.all([
     prisma.mentorProfile.findUnique({ where: { userId }, select: SETTINGS_SELECT }),
     countActiveStudents(userId),
+    countReservedSeats(userId),
   ]);
   if (!p) return forbidden("اول پروفایل منتوری بساز");
-  const availability = availabilityOf(p, active);
+  // صندلی‌های رزروِ صفِ انتظار هم «پُر» حساب می‌شوند (lib/mentorWaitlistServer.ts)
+  const availability = availabilityOf(p, active + reserved);
   return NextResponse.json({
     settings: {
       acceptingStudents: p.acceptingStudents,
@@ -126,6 +129,8 @@ export async function PUT(req: Request) {
   if (Object.keys(data).length > 0) {
     await prisma.mentorProfile.update({ where: { userId }, data });
     touchMentorActivity(userId);
+    // ظرفیتِ بیشتر / پذیرشِ دوباره / پایانِ عدمِ حضور → نوبت به نفرهای صف می‌رسد
+    await advanceWaitlist(userId);
   }
   return respond(userId);
 }

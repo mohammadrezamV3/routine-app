@@ -10,6 +10,7 @@ import { END_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability";
 import { countActiveStudents, readWelcomeMessage } from "@/lib/mentorManageServer";
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_STALE_MESSAGE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { publishToUsers } from "@/lib/realtime";
+import { advanceWaitlist, countReservedSeats } from "@/lib/mentorWaitlistServer";
 
 type Ctx = { params: { id: string } };
 const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as const;
@@ -71,9 +72,18 @@ export async function PATCH(req: Request, { params }: Ctx) {
         if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب منتوری تو تعلیق شده" : "این منتور فعلا امکان پذیرش شاگرد نداره");
         // احرازِ هویتِ منتور اجباریه (lib/mentorServer.ts → IDENTITY_VERIFIED_WHERE)
         if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? MENTOR_IDENTITY_REQUIRED_MSG : "این منتور فعلا امکان پذیرش شاگرد نداره");
-        // سقفِ ظرفیت فقط جلوی پذیرشِ *درخواستِ شاگرد* رو می‌گیره؛ دعوتِ خودِ منتور انتخابِ خودشه
-        if (role === "MENTOR" && mp.maxActiveStudents != null && (await countActiveStudents(m.mentorId)) >= mp.maxActiveStudents) {
-          return conflict("ظرفیت شاگردهایت تکمیل است؛ برای پذیرش، سقف ظرفیت را در تنظیمات بالا ببر");
+        // سقفِ ظرفیت فقط جلوی پذیرشِ *درخواستِ شاگرد* رو می‌گیره؛ دعوتِ خودِ منتور انتخابِ خودشه.
+        // صندلیِ رزروِ صفِ انتظار (نوبتِ زنده یا درخواستِ دیگری که از صف اومده) هم پُر حساب می‌شه
+        // تا درخواستِ مستقیم از نفرِ صف جلو نزنه؛ درخواستِ خودِ همین رابطه از رزروها کم می‌شه
+        if (role === "MENTOR" && mp.maxActiveStudents != null) {
+          await advanceWaitlist(m.mentorId, now);
+          const [active, reserved] = await Promise.all([countActiveStudents(m.mentorId), countReservedSeats(m.mentorId, now, m.id)]);
+          if (active >= mp.maxActiveStudents) {
+            return conflict("ظرفیت شاگردهایت تکمیل است؛ برای پذیرش، سقف ظرفیت را در تنظیمات بالا ببر");
+          }
+          if (active + reserved >= mp.maxActiveStudents) {
+            return conflict("جای خالی برای نفر صف انتظارت نگه داشته شده؛ برای پذیرش این درخواست، سقف ظرفیت را بالا ببر");
+          }
         }
         data = { status: "ACTIVE", startedAt: now, endedAt: null, pausedAt: null, pauseReason: null, endReason: null, endedBy: null };
         if (role === "STUDENT") {
@@ -132,6 +142,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if ((action === "end" || action === "block") && (m.status === "ACTIVE" || m.status === "PENDING")) {
     await closeOpenPrograms(m.id, m.studentId);
   }
+  // صندلیِ آزادشده (یا رزروِ صفی که دیگه PENDING نیست) به نفرِ بعدیِ صفِ انتظار می‌رسه
+  if (action !== "accept" && action !== "unblock") await advanceWaitlist(m.mentorId, now);
   // هر دو طرف (و بقیه‌ی دستگاه‌های خودم) وضعیتِ تازه رو همون لحظه می‌بینن
   void publishToUsers([m.mentorId, m.studentId], { type: "mentor.mentorship", data: { id: m.id } });
 

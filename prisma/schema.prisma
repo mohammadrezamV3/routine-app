@@ -238,14 +238,17 @@ model User {
 
   // اکوسیستم منتور — پروفایلِ منتوری (اختیاری؛ داشتنش یعنی کاربر منتور هم هست)
   mentorProfile                MentorProfile?
-  mentorshipsAsMentor          Mentorship[]        @relation("MentorshipMentor")
-  mentorshipsAsStudent         Mentorship[]        @relation("MentorshipStudent")
-  mentorProgramsAsMentor       MentorProgram[]     @relation("MentorProgramMentor")
-  mentorProgramsAsStudent      MentorProgram[]     @relation("MentorProgramStudent")
+  mentorshipsAsMentor          Mentorship[]          @relation("MentorshipMentor")
+  mentorshipsAsStudent         Mentorship[]          @relation("MentorshipStudent")
+  mentorProgramsAsMentor       MentorProgram[]       @relation("MentorProgramMentor")
+  mentorProgramsAsStudent      MentorProgram[]       @relation("MentorProgramStudent")
   mentorMessagesSent           MentorMessage[]
-  mentorReviewsGiven           MentorReview[]      @relation("MentorReviewStudent")
-  mentorReviewsReceived        MentorReview[]      @relation("MentorReviewMentor")
-  mentorReportsFiled           MentorReport[]      @relation("MentorReportReporter")
+  mentorReviewsGiven           MentorReview[]        @relation("MentorReviewStudent")
+  // صفِ انتظارِ منتورِ پُر (مهاجرت 20260928140000_mentor_waitlist) — lib/mentorWaitlistServer.ts
+  mentorWaitlistAsMentor       MentorWaitlistEntry[] @relation("MentorWaitlistMentor")
+  mentorWaitlistAsStudent      MentorWaitlistEntry[] @relation("MentorWaitlistStudent")
+  mentorReviewsReceived        MentorReview[]        @relation("MentorReviewMentor")
+  mentorReportsFiled           MentorReport[]        @relation("MentorReportReporter")
   notifications                InAppNotification[]
   // کلیدهای عمومیِ رمزگذاریِ سرتاسری (مهاجرت 20260927163000_mentor_e2ee)
   e2eKeys                      UserE2EKey[]
@@ -253,8 +256,8 @@ model User {
   e2eKdf                       UserE2EKdf?
   e2eDeviceLinks               E2EDeviceLink[]
   // منتورهای ذخیره‌شده برای تصمیمِ بعدی (مهاجرت 20260928100000_saved_mentors)
-  savedMentors                 SavedMentor[]       @relation("SavedMentorOwner")
-  savedByUsers                 SavedMentor[]       @relation("SavedMentorTarget")
+  savedMentors                 SavedMentor[]         @relation("SavedMentorOwner")
+  savedByUsers                 SavedMentor[]         @relation("SavedMentorTarget")
   // پذیرشِ «شرایط استفاده از بخش منتورها» به‌عنوانِ شاگرد (مهاجرت 20260928104000_mentor_terms_acceptance)
   // — lib/mentorTerms.ts. نسخه‌ی کهنه = پذیرشِ دوباره هنگامِ درخواستِ بعدی
   mentorStudentTermsAcceptedAt DateTime?
@@ -837,8 +840,8 @@ model ExerciseLog {
   planId String?
   plan   ExercisePlan? @relation(fields: [planId], references: [id])
 
-  date           DateTime @db.Date
-  completed      Boolean  @default(false)
+  date           DateTime  @db.Date
+  completed      Boolean   @default(false)
   // اسمِ حرکت‌هایی که حینِ همین جلسه تیک خوردن — برای نمایشِ ضربدرِ حرکاتِ
   // تیک‌نخورده بعدِ «پایان تمرین» و محاسبه‌ی درصدِ پیشرفتِ امروز.
   completedItems Json?
@@ -1895,6 +1898,11 @@ model MentorProfile {
   acceptedMentorTermsAt DateTime?
   mentorTermsVersion    String?
 
+  // ── صفِ انتظار (مهاجرت 20260928140000_mentor_waitlist) — lib/mentorWaitlistServer.ts ──
+  // فقط شمارنده‌ی قفل: پیش‌بردنِ صف با update همین ردیف قفلِ ردیفی می‌گیرد تا دو
+  // درخواستِ هم‌زمان یک صندلیِ خالی را به دو نفر پیشنهاد ندهند (بدونِ raw SQL).
+  waitlistSeq Int @default(0)
+
   @@index([published, suspendedAt])
 }
 
@@ -2048,10 +2056,52 @@ model Mentorship {
   // پیام‌های تا این لحظه برای همان طرف دیگر برگردانده نمی‌شوند؛ نسخه‌ی طرفِ مقابل دست نمی‌خورد.
   mentorClearedBefore  DateTime?
   studentClearedBefore DateTime?
+  // درخواستی که از پذیرشِ نوبتِ صف ساخته شد (مهاجرت 20260928140000_mentor_waitlist)
+  waitlistEntries      MentorWaitlistEntry[]
 
   @@unique([mentorId, studentId])
   @@index([studentId, status])
   @@index([mentorId, status])
+}
+
+// ── صفِ انتظار برای منتورِ پُر (مهاجرت 20260928140000_mentor_waitlist) ──
+// وقتی ظرفیتِ شاگردِ فعالِ منتور پر است، کاربر به‌جای ردشدن وارد صف می‌شود.
+// با خالی‌شدنِ صندلی، نفرِ اولِ WAITING نوبت (OFFERED) می‌گیرد و تا offerExpiresAt
+// فرصت دارد درخواستِ عادی (با همان سؤال‌های پذیرش) بفرستد → ACCEPTED + mentorshipId.
+// نوبتِ زنده و درخواستِ PENDINGِ ساخته‌شده از صف، صندلی را برای همان نفر نگه می‌دارند.
+// هیچ متنِ آزادی این‌جا ذخیره نمی‌شود؛ رتبه‌بندی این جدول را نمی‌خواند.
+enum MentorWaitlistStatus {
+  WAITING
+  OFFERED
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model MentorWaitlistEntry {
+  id             String               @id @default(cuid())
+  mentorId       String
+  mentor         User                 @relation("MentorWaitlistMentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User                 @relation("MentorWaitlistStudent", fields: [userId], references: [id], onDelete: Cascade)
+  status         MentorWaitlistStatus @default(WAITING)
+  // ترتیبِ صف (FIFO) — با ورودِ دوباره بعد از خروج/انقضا از نو تنظیم می‌شود
+  joinedAt       DateTime             @default(now())
+  offeredAt      DateTime?
+  offerExpiresAt DateTime?
+  acceptedAt     DateTime?
+  // "USER" | "MENTOR" | "SYSTEM" — چه کسی/چه چیزی نوبت را بست (CANCELLED/EXPIRED)
+  closedBy       String?
+  closedAt       DateTime?
+  mentorshipId   String?
+  mentorship     Mentorship?          @relation(fields: [mentorshipId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([mentorId, userId])
+  @@index([mentorId, status, joinedAt])
+  @@index([status, offerExpiresAt])
+  @@index([userId, status])
 }
 
 // برچسبِ خصوصیِ منتور برای دسته‌بندیِ شاگردها (مثلا «کنکور ۱۴۰۶») — فقط خودِ منتور می‌بیند

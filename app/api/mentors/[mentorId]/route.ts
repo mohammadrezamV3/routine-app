@@ -4,6 +4,7 @@ import { requireMentorsUser, notFound } from "@/lib/mentorGuard";
 import { MENTOR_CARD_INCLUDE, loadMentorStats, toMentorCard, usersBlockEachOther } from "@/lib/mentorServer";
 import { displayName } from "@/lib/inAppNotify";
 import { isMentorSaved } from "@/lib/savedMentors";
+import { advanceWaitlist, countWaiting, loadMyWaitlist } from "@/lib/mentorWaitlistServer";
 
 const REVIEWS_LIMIT = 30;
 
@@ -25,10 +26,13 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   if (typeof mentorId !== "string" || !mentorId || mentorId.length > 64) return notFound();
 
   const isSelf = mentorId === me;
+  // صفِ انتظار روی همین مسیرِ خواندن جلو می‌رود (بدونِ کرانِ بیرونی) تا
+  // «ظرفیت تکمیل»/نوبتِ من به‌روز باشد؛ بدونِ صف فقط یک count ارزان است
+  await advanceWaitlist(mentorId);
   // سرعت: قبلا پنج مرحله‌ی پشتِ‌سرِهم به دیتابیس می‌رفت (پروفایل → رابطه →
   // بلاک → آمار/نظرات). حالا همه هم‌زمان؛ شرطِ دیده‌شدن بعدش سنجیده می‌شه و
   // اگه رد شد همون ۴۰۴ برمی‌گرده (داده‌ای به بیرون نمی‌ره).
-  const [profile, myMentorship, blocked, stats, reviews, myReviewRow, saved] = await Promise.all([
+  const [profile, myMentorship, blocked, stats, reviews, myReviewRow, saved, myWaitlist, waitlistCount] = await Promise.all([
     prisma.mentorProfile.findFirst({
       where: { userId: mentorId, user: { isBlocked: false, deletedAt: null } },
       include: { ...MENTOR_CARD_INCLUDE, user: { select: { ...MENTOR_CARD_INCLUDE.user.select, createdAt: true } } },
@@ -54,6 +58,8 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
           select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true } } },
         }),
     isSelf ? Promise.resolve(false) : isMentorSaved(me, mentorId),
+    isSelf ? Promise.resolve(null) : loadMyWaitlist(mentorId, me),
+    countWaiting(mentorId),
   ]);
   if (!profile) return notFound();
 
@@ -89,5 +95,8 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
     myReview: myReviewRow ? toReview(myReviewRow) : null,
     // نشانکِ «ذخیره‌شده‌ها» (lib/savedMentors.ts)
     saved,
+    // صفِ انتظار (lib/mentorWaitlistServer.ts): وضعیتِ من + تعدادِ منتظرها
+    waitlist: myWaitlist,
+    waitlistCount,
   });
 }

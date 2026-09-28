@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import { MentorStudentsList } from "@/components/MentorStudentsList";
+import { MentorWaitlistSection } from "@/components/MentorWaitlistSection";
 import { LoadingBlock } from "@/components/Spinner";
 import type { StudentIndexResponse } from "@/lib/mentorTypes";
 
@@ -21,7 +22,13 @@ export default function MentorStudentsPage() {
 
   return (
     <MentorDashShell title="شاگردها">
-      {error ? <MentorDashError message={error} onRetry={load} /> : !data ? <LoadingBlock /> : <MentorStudentsList data={data} />}
+      {error ? <MentorDashError message={error} onRetry={load} /> : !data ? <LoadingBlock /> : (
+        <>
+          <MentorStudentsList data={data} />
+          {/* صفِ انتظار (lib/mentorWaitlistServer.ts) — خالی باشد چیزی نمی‌آید */}
+          <MentorWaitlistSection />
+        </>
+      )}
     </MentorDashShell>
   );
 }
