@@ -236,7 +236,7 @@ export default function SignupPage() {
           <AuthBackButton />
           <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={TRIAL_COPY_FA} />
 
-          <div className="auth-field-grid" ref={nameRef}>
+          <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
             <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
               <input
                 id="firstName" type="text" className="wsearch-newform-name" value={firstName} placeholder={"نام"}
