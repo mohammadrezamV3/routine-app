@@ -24,29 +24,22 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   const mentorId = params.mentorId;
   if (typeof mentorId !== "string" || !mentorId || mentorId.length > 64) return notFound();
 
-  const profile = await prisma.mentorProfile.findFirst({
-    where: { userId: mentorId, user: { isBlocked: false, deletedAt: null } },
-    include: { ...MENTOR_CARD_INCLUDE, user: { select: { ...MENTOR_CARD_INCLUDE.user.select, createdAt: true } } },
-  });
-  if (!profile) return notFound();
-
   const isSelf = mentorId === me;
-  const myMentorship = isSelf
-    ? null
-    : await prisma.mentorship.findUnique({
-        where: { mentorId_studentId: { mentorId, studentId: me } },
-        select: { id: true, status: true, initiatedBy: true, startedAt: true },
-      });
-
-  if (!isSelf) {
-    // احرازِ هویت اجباریه: منتورِ تأییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
-    const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
-    const related = !!myMentorship && myMentorship.status !== "BLOCKED";
-    if (!discoverable && !related) return notFound();
-    if (await usersBlockEachOther(me, mentorId)) return notFound();
-  }
-
-  const [stats, reviews, myReviewRow, saved] = await Promise.all([
+  // سرعت: قبلا پنج مرحله‌ی پشتِ‌سرِهم به دیتابیس می‌رفت (پروفایل → رابطه →
+  // بلاک → آمار/نظرات). حالا همه هم‌زمان؛ شرطِ دیده‌شدن بعدش سنجیده می‌شه و
+  // اگه رد شد همون ۴۰۴ برمی‌گرده (داده‌ای به بیرون نمی‌ره).
+  const [profile, myMentorship, blocked, stats, reviews, myReviewRow, saved] = await Promise.all([
+    prisma.mentorProfile.findFirst({
+      where: { userId: mentorId, user: { isBlocked: false, deletedAt: null } },
+      include: { ...MENTOR_CARD_INCLUDE, user: { select: { ...MENTOR_CARD_INCLUDE.user.select, createdAt: true } } },
+    }),
+    isSelf
+      ? Promise.resolve(null)
+      : prisma.mentorship.findUnique({
+          where: { mentorId_studentId: { mentorId, studentId: me } },
+          select: { id: true, status: true, initiatedBy: true, startedAt: true },
+        }),
+    isSelf ? Promise.resolve(false) : usersBlockEachOther(me, mentorId),
     loadMentorStats([mentorId]),
     prisma.mentorReview.findMany({
       where: { mentorId, status: "VISIBLE" },
@@ -62,6 +55,16 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
         }),
     isSelf ? Promise.resolve(false) : isMentorSaved(me, mentorId),
   ]);
+  if (!profile) return notFound();
+
+  if (!isSelf) {
+    // احرازِ هویت اجباریه: منتورِ تأییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
+    const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
+    const related = !!myMentorship && myMentorship.status !== "BLOCKED";
+    if (!discoverable && !related) return notFound();
+    if (blocked) return notFound();
+  }
+
   const s = stats.get(mentorId);
 
   // نظر فقط از شاگردی که رابطه‌اش واقعاً شروع شده (ACTIVE یا ENDED بعد از فعال‌شدن)

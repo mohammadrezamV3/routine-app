@@ -9,6 +9,7 @@ import { fmtDate } from "@/lib/mentorFormat";
 import { MentorUserAvatar } from "./MentorUserAvatar";
 import { CertificateMark, RatingInline } from "./MentorBadges";
 import { MentorSaveButton } from "./MentorSaved";
+import { prefetchMentorProfile } from "@/lib/mentorProfileCache";
 
 const META_ICON = { size: 12, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -31,7 +32,15 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
         <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
         <div className="mentor-card-id">
           <div className="mentor-card-name-row">
-            <Link href={`/mentors/${mentor.userId}`} prefetch={false} className="mentor-card-name mentor-card-link" draggable={false}>
+            <Link
+              href={`/mentors/${mentor.userId}`}
+              prefetch={false}
+              className="mentor-card-name mentor-card-link"
+              draggable={false}
+              // داده‌ی پروفایل از همین لحظه‌ی لمس/هاور گرفته می‌شه (lib/mentorProfileCache.ts)
+              onPointerDown={() => prefetchMentorProfile(mentor.userId)}
+              onMouseEnter={() => prefetchMentorProfile(mentor.userId)}
+            >
               {mentor.name}
             </Link>
             <CertificateMark certifications={mentor.certifications} size={16} />

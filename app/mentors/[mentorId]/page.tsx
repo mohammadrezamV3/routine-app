@@ -24,6 +24,7 @@ import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorF
 import { faNum } from "@/lib/jalali";
 import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/mentorAvailability";
 import type { AvailabilityState } from "@/lib/mentorTypes";
+import { fetchMentorProfile } from "@/lib/mentorProfileCache";
 
 const MESSAGE_MAX = 500;
 const REVIEW_MAX = 1000;
@@ -51,7 +52,7 @@ function MentorProfile() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const res = await fetch(`/api/mentors/${mentorId}`, { cache: "no-store" });
+      const res = await fetchMentorProfile(mentorId);
       if (res.status === 404) { setError({ msg: "این منتور پیدا نشد یا پروفایلش منتشر نشده است", retry: false }); return; }
       if (res.status === 403) { setError({ msg: await readApiError(res, "اجازه‌ی دیدن این پروفایل را نداری"), retry: false }); return; }
       if (!res.ok) { setError({ msg: await readApiError(res, "پروفایل دریافت نشد؛ دوباره تلاش کن"), retry: true }); return; }
