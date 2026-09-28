@@ -117,7 +117,7 @@ function MentorProfile() {
             <div><dt><Users {...CHIP} /> شاگرد فعال</dt><dd>{faNum(mentor.activeStudents)}</dd></div>
             <div><dt><UserRound {...CHIP} /> کل شاگردها</dt><dd>{faNum(mentor.totalStudents)}</dd></div>
             <div><dt><ClipboardList {...CHIP} /> برنامه‌ی تمام‌شده</dt><dd>{faNum(mentor.completedPrograms)}</dd></div>
-            <div><dt><Activity {...CHIP} /> آخرین فعالیت</dt><dd>{fmtRelative(mentor.lastActiveAt)}</dd></div>
+            <div><dt><Activity {...CHIP} /> آخرین فعالیت</dt><dd className="is-text">{fmtRelative(mentor.lastActiveAt)}</dd></div>
           </dl>
 
           {/* عدمِ حضور فقط یک‌بار، در یک بلوکِ فشرده (تاریخِ بازگشت + پیام) */}
@@ -195,14 +195,14 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
           <span className="mentor-review-name">{review.student.name || "شاگرد"}</span>
           <RatingStars value={review.rating} />
           <span className="mentor-review-date">{fmtDate(review.createdAt)}</span>
-          {canReport && (
-            <button type="button" className="trade-icon-btn" style={{ marginInlineStart: "auto" }} onClick={onReport} aria-label="گزارش این نظر" title="گزارش این نظر">
-              <Flag {...BTN_SM} />
-            </button>
-          )}
         </div>
         {review.body && <p className="mentor-review-text">{review.body}</p>}
       </div>
+      {canReport && (
+        <button type="button" className="trade-icon-btn mentor-review-flag" onClick={onReport} aria-label="گزارش این نظر" title="گزارش این نظر">
+          <Flag {...BTN_SM} />
+        </button>
+      )}
     </div>
   );
 }

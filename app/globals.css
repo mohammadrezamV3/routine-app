@@ -4766,7 +4766,9 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
    واقعی سایت وصل شده؛ یعنی خود همین چند خط، کل پنل رو هم‌تم می‌کنه بدون
    نیاز به دست‌زدن به تک‌تک صفحه‌ها. */
 
-:root{
+/* روی body هم تعریف می‌شن: var() در :root با --bg تمِ شب حل می‌شد و تمِ روز
+   (که --bg رو روی body عوض می‌کنه) پنل رو تیره نگه می‌داشت */
+:root, body{
   --adm-bg:var(--bg);
   --adm-panel:rgba(255,255,255,.02);
   --adm-panel-2:rgba(255,255,255,.045);
@@ -7462,6 +7464,13 @@ body[data-theme="light"] .routine-ai-input{
 body[data-theme="light"] .routine-ai-action{
   background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
 }
+/* در تمِ روز قانونِ بالا (0,2,1) بر .is-send/.has-text (0,2,0) می‌چربید: دکمه‌ی ارسال
+   پر نمی‌شد و آیکونش (color:var(--bg)) روی زمینه‌ی روشن ناپیدا بود */
+body[data-theme="light"] .routine-ai-action.is-send,
+body[data-theme="light"] .routine-ai-action.has-text{
+  background:var(--accent); border-color:var(--accent);
+}
+body[data-theme="light"] .routine-ai-action.is-recording{ background:#E05252; border-color:#E05252; }
 @media (hover:hover){ .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); } }
 .routine-ai-action:active:not(:disabled){ transform:scale(.92); }
 .routine-ai-action:disabled{ opacity:.45; }

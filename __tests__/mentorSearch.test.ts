@@ -80,6 +80,8 @@ describe("فاصله و شباهت", () => {
     expect(tokenSimilarity("کنگور", "کنکور")).toBeGreaterThan(0.7);
     expect(tokenSimilarity("رژ", "رز")).toBe(0);
     expect(tokenSimilarity("کنکور", "تغذیه")).toBe(0);
+    // دو خطا با حرفِ اولِ متفاوت دیگر «غلطِ املایی» حساب نمی‌شود («کنکر» منتورِ «منتوری» را نمی‌آورد)
+    expect(tokenSimilarity("کنکوری", "منتوری")).toBe(0);
   });
 });
 

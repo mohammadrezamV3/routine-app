@@ -29,7 +29,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   // رمزگذاریِ سرتاسریِ گفت‌وگو — فقط رویداد، هرگز محتوا (agent D)
   "e2ee.key_create": "فعال‌سازی رمزگذاری گفت‌وگو",
   "e2ee.key_reset": "ساخت کلید تازه‌ی گفت‌وگو",
-  "e2ee.passcode_change": "تغییر رمز گفت‌وگو",
+  "e2ee.passcode_change": "تغییر کلید رمزگذاری گفت‌وگو",
   "mentor.broadcast": "ارسال گروهی منتور",
   "demo.seed": "ساخت داده‌ی آزمایشی",
   "demo.clear": "حذف داده‌ی آزمایشی",

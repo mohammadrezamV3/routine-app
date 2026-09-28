@@ -79,7 +79,7 @@ export const keyChanged = () =>
 export const peerNoKey = () =>
   NextResponse.json({ error: "طرف مقابل هنوز وارد بخش منتور نشده است", code: "PEER_NO_KEY" }, { status: 409 });
 export const senderNoKey = () =>
-  NextResponse.json({ error: "اول رمز گفت‌وگو را روی این دستگاه فعال کن", code: "NO_KEY" }, { status: 409 });
+  NextResponse.json({ error: "کلید رمزگذاری این دستگاه هنوز آماده نیست؛ صفحه را دوباره باز کن", code: "NO_KEY" }, { status: 409 });
 
 /**
  * بسته‌بندی‌های پیام باید دقیقا کلیدهای فعالِ *هر دو طرف* (همه‌ی دستگاه‌ها) را پوشش

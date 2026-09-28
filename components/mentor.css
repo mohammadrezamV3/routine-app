@@ -1230,3 +1230,35 @@ section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 }
 .mentor-history-empty{ display:flex; align-items:center; justify-content:center; gap:var(--m-2); padding:var(--m-4); }
 /* ============ پایانِ G · رابطه ============ */
+
+/* ============================================================
+   QA دورِ ۳ — اصلاحاتِ بررسیِ تصویری
+   ============================================================ */
+/* نظر: پرچمِ گزارش در انتهای ردیف، نه در خطِ جداگانه */
+.mentor-review-flag{ flex-shrink:0; align-self:flex-start; margin-top:-6px; margin-inline-end:-8px; }
+/* آمارِ سرِ پروفایل: مقدارِ متنی («چند دقیقه پیش») در یک خط */
+.mentor-hero-stats dd.is-text{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.75; }
+/* فرمِ پروفایل: فاصله‌ی اضافه بینِ کلیدِ انتشار و چک‌باکسِ شرایط */
+section.mentor-section.is-flat .mentor-toggle-row:last-child{ padding-bottom:0; }
+.mentor-terms-row .mentor-check{ padding-top:var(--m-1); }
+/* شاگردها: جست‌وجو و فیلتر در موبایل در یک ردیف (نه نیم‌ردیفِ تنها) */
+@media (max-width:480px){
+  .mentor-filter-row{ flex-wrap:nowrap; }
+  .mentor-filter-row .mentor-search{ flex:1 1 0; }
+  .mentor-filter-row select.wsearch-newform-name.mentor-sort{ flex:0 0 156px; min-width:0; }
+}
+/* ادمین/جزئیاتِ منتور: `.admin-onebox > .admin-chart-card{margin:0;padding:0}` فاصله‌ی بینِ بخش‌ها را صفر می‌کرد
+   و عنوانِ هر بخش به محتوای قبلی می‌چسبید */
+.admin-onebox > * + .admin-chart-card,
+.admin-onebox > * + .admin-card,
+.admin-onebox > * + .admin-kpi-grid{ margin-top:18px; padding-top:18px; }
+/* ردیفِ افقیِ منتورها با فقط یک کارت در موبایل: تمام‌عرض، نه ۸۲٪ و یک فضای خالی */
+@media (max-width:719px){ .mentor-popular-row:has(> :only-child){ grid-auto-columns:100%; } }
+/* آمارِ سرِ پروفایل در موبایل: ۲×۲ تا «۲۴ دقیقه پیش» بریده نشود */
+@media (max-width:420px){
+  .mentor-hero-stats{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .mentor-hero-stats > div + div{ border-inline-start:none; }
+  .mentor-hero-stats > div:nth-child(even){ border-inline-start:1px solid var(--surface-line); }
+  .mentor-hero-stats > div:nth-child(n+3){ border-top:1px solid var(--surface-line); }
+  .mentor-hero-stats > div{ padding:7px 4px; }
+}

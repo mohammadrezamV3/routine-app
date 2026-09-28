@@ -551,7 +551,7 @@ export async function unlockLegacyPasscode(passcode: string): Promise<void> {
   try {
     key = await unwrapPrivateKey(b.backup, passcode, ctx, true);
   } catch (e) {
-    if (e instanceof E2EEDecryptError) throw new WrongPasscodeError("رمز گفت‌وگو درست نیست");
+    if (e instanceof E2EEDecryptError) throw new WrongPasscodeError("این رمز درست نیست");
     throw e;
   }
   const kek = await getKek(userId);

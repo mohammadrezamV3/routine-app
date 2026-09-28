@@ -202,7 +202,8 @@ export function tokenSimilarity(q: string, d: string): number {
   const thr = typoThreshold(Math.min(ql, Math.max(dl, 3)));
   if (thr > 0) {
     const dist = damerauLevenshtein(q, d, thr);
-    if (dist <= thr) return 0.88 - 0.2 * (dist / thr);
+    // دو خطا یا بیشتر فقط وقتی حرفِ اول یکی است: «کنکوری» نباید «منتوری» را پیدا کند
+    if (dist <= thr && (dist < 2 || q[0] === d[0])) return 0.88 - 0.2 * (dist / thr);
     // پیشوندِ تقریبی: «کنکو» یا «بدنصاز» در برابرِ «کنکوری»/«بدنسازی»
     if (ql >= 4 && dl > ql) {
       const pd = damerauLevenshtein(q, Array.from(d).slice(0, ql).join(""), 1);

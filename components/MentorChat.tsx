@@ -541,6 +541,7 @@ function ChatBody({
   const tooLong = draft.trim().length > MAX_LEN;
   const hasText = !!draft.trim() && !tooLong;
   const empty = messages.length === 0 && pending.length === 0 && !welcome;
+  const welcomeDay = welcome ? isoLocal(new Date(welcome.at)) : null;
 
   return (
     <div className="mc-body">
@@ -561,6 +562,9 @@ function ChatBody({
             </div>
           )}
 
+          {welcome && !hasMore && welcomeDay && (
+            <div className="mc-day"><span>{dayLabel(welcomeDay)}</span></div>
+          )}
           {welcome && !hasMore && (
             <div className="mc-row is-peer is-last is-first">
               <div className="support-msg admin mc-bubble has-tail mc-welcome">
@@ -574,8 +578,10 @@ function ChatBody({
 
           {empty && <div className="mc-service"><span>هنوز پیامی نیست</span></div>}
 
-          {rows.map((r) => {
+          {rows.map((r, idx) => {
             if (r.kind === "day") {
+              // روزِ پیامِ خوش‌آمد بالای خودش آمده؛ جداکننده‌ی تکراری نمی‌خواهیم
+              if (idx === 0 && welcome && !hasMore && r.key === `d-${welcomeDay}`) return null;
               return <div key={r.key} className="mc-day"><span>{r.label}</span></div>;
             }
             const cls = `mc-row ${r.mine ? "is-mine" : "is-peer"}${r.first ? " is-first" : ""}${r.last ? " is-last" : ""}`;

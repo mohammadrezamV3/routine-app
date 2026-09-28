@@ -170,7 +170,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
       </div>
       <p className="mentor-broadcast-summary">
         {faNum(chosen.length)} گیرنده
-        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد تا فعال‌سازی رمز گفت‌وگو پیام نمی‌گیرد` : ""}
+        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد هنوز وارد بخش منتور نشده و این پیام را نمی‌گیرد` : ""}
       </p>
 
       <SavedRepliesPicker onPick={(t) => { setText((d) => (d ? d + "\n" : "") + t); setTextErr(null); }} disabled={busy} />

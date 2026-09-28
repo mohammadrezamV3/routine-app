@@ -170,7 +170,7 @@ function LegacyPasscode({ version }: { version: number }) {
   async function unlock(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
-    if (!pass) { setError("رمز گفت‌وگوی قبلی را وارد کن"); return; }
+    if (!pass) { setError("رمز قبلی پیام‌ها را وارد کن"); return; }
     setBusy(true);
     setError(null);
     try {
@@ -186,13 +186,13 @@ function LegacyPasscode({ version }: { version: number }) {
     <form className="mentor-e2ee-line mentor-e2ee-legacy" onSubmit={unlock}>
       <KeyRound {...ICON} aria-hidden />
       <span>
-        پیام‌های قبلی با رمز گفت‌وگویی که قبلا ساخته بودی قفل‌اند. یک بار واردش کن تا باز شوند؛ از این به بعد رمز جداگانه‌ای لازم نیست.
+        پیام‌های قبلی با رمزی که قبلا برای آن‌ها ساخته بودی قفل‌اند. یک بار واردش کن تا باز شوند؛ پس از آن رمز جداگانه‌ای لازم نیست.
         <span className="mentor-e2ee-legacy-row">
           <input
             type="password"
             className={FIELD}
             autoComplete="off"
-            aria-label="رمز گفت‌وگوی قبلی"
+            aria-label="رمز قبلی پیام‌ها"
             value={pass}
             onChange={(e) => { setPass(e.target.value); setError(null); }}
             aria-invalid={!!error}

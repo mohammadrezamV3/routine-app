@@ -390,7 +390,7 @@ function MentorDashInvite({
             >
               <input
                 id="md-invite-user" type="text" className="wsearch-newform-name trade-glass-field mono" dir="ltr"
-                style={{ textAlign: "right" }} value={username} placeholder="username" autoComplete="off" maxLength={21}
+                style={{ textAlign: "right" }} value={username} placeholder="ali_rezaei" autoComplete="off" maxLength={21}
                 onChange={(e) => { setUsername(e.target.value); setUserErr(null); setError(null); setSent(false); }}
               />
             </MentorField>
