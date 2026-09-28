@@ -114,6 +114,7 @@ export default function WeeklyPage() {
   // هفته‌ی جاری (شنبه..جمعه) رو نشون می‌ده، مستقل از این انتخاب.
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(() => isoLocal(now));
+  const [recenterKey, setRecenterKey] = useState(0);
   const [selectedDaily, setSelectedDaily] = useState<DailyRecord | null>(null);
   const [todayStats, setTodayStats] = useState<DayStats>({ completed: 0, total: 0, pct: 0 });
   const [importanceFilter, setImportanceFilter] = useState<"all" | Importance>("all");
@@ -492,6 +493,7 @@ export default function WeeklyPage() {
             <DashDateSelector
               activeIso={selectedIso}
               onSelect={setSelectedIso}
+              recenterKey={recenterKey}
               className="lg:order-2"
             />
 
@@ -506,7 +508,7 @@ export default function WeeklyPage() {
                 label="امروز"
                 icon={<Calendar size={15} />}
                 active={isSelectedToday}
-                onClick={() => setSelectedIso(isoLocal(now))}
+                onClick={() => { setSelectedIso(isoLocal(now)); setRecenterKey((k) => k + 1); }}
               />
               <DashFilterButton
                 label="فیلتر"

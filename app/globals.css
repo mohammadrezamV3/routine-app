@@ -6762,7 +6762,13 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
    بدونِ باکس/بوردر/گوشه، دقیقا هم‌شکلِ DashDateSelectorِ «روتین من».
    دسکتاپ (پایین‌تر): طبقِ درخواستِ صریح به رفتار/ظاهرِ قدیمی برمی‌گرده —
    باکسِ شیشه‌ای + دو فلشِ قبلی/بعدی، کشیدنِ آزاد خاموش. */
-.trade-cal-week-strip{ display:flex; align-items:center; gap:2px; min-width:0; }
+.trade-cal-week-strip{
+  display:flex; align-items:center; gap:2px; min-width:0;
+  /* قابِ دورِ نوار — طبقِ درخواستِ صریح روی موبایل هم برگشت. */
+  border-radius:18px; border:1px solid var(--surface-line);
+  background:rgba(var(--bg-rgb),.16);
+  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+}
 .trade-cal-week-days{
   display:flex; flex:1; min-width:0; gap:6px; padding:10px 8px;
   overflow-x:auto; overscroll-behavior-x:contain; overflow-anchor:none;
@@ -6783,12 +6789,7 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
 @media (hover:hover){ .trade-cal-week-arrow:hover{ color:var(--text); background:rgba(255,255,255,.05); } }
 @media (min-width:1024px){
   .trade-cal-week-arrow{ display:flex; }
-  .trade-cal-week-strip{
-    padding:2px 12px;
-    border-radius:18px; border:1px solid var(--surface-line);
-    background:rgba(var(--bg-rgb),.16);
-    backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
-  }
+  .trade-cal-week-strip{ padding:2px 12px; }
   /* کشیدنِ آزادِ ماوس/ویل روی دسکتاپ خاموش — فقط با فلش‌ها (پایین‌تر) یا
      کلیکِ روزِ فعال جابه‌جا می‌شود؛ lib/useDayStrip.ts هم useDragScroll رو
      همین عرض خاموش می‌کنه، این‌جا فقط ظاهر/overflow هماهنگ می‌شه. */
@@ -9296,4 +9297,22 @@ html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
   .manual-exercise-popup-wrap, .popup-backdrop, .trade-lightbox, .photo-lightbox{
     animation:popupBackdropIn .14s ease backwards;
   }
+}
+
+/* ردیفِ چهار باکسِ «روتین من» (DashQuickPanels) — همون ظاهرِ DashCard؛
+   اختصاصیت هم‌تراز با ریستِ سراسریِ button{} تا پدینگ/سایه‌ی شیشه‌ایش
+   روی این باکس‌ها ننشینه. */
+body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{
+  aspect-ratio:1/1; width:100%; padding:8px 4px; border-radius:18px; background:var(--box-bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  border:1px solid var(--surface-line); box-shadow:none;
+  color:var(--muted); transition:border-color .2s ease, color .2s ease;
+}
+body[data-theme] .dash-quick-tile.is-on{ border-color:var(--accent); color:var(--accent); }
+@media (hover:hover){ body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
+.dash-quick-tile-icon svg{ width:24px; height:24px; display:block; }
+.dash-quick-tile-label{ font-size:11px; font-weight:700; line-height:1.3; text-align:center; }
+@media (min-width:640px){
+  .dash-quick-tile-icon svg{ width:30px; height:30px; }
+  .dash-quick-tile-label{ font-size:13px; }
 }

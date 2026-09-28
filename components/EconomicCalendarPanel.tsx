@@ -218,7 +218,8 @@ export function EconomicCalendarPanel() {
   // lib/useDayStrip.ts)، بدونِ فلش، روزها نزدیکِ هر لبه تنبل اضافه می‌شوند.
   // دسکتاپ: طبقِ درخواستِ صریح، به رفتارِ قدیمی برمی‌گرده — کشیدنِ آزاد
   // خاموش و دو فلشِ قبلی/بعدی همون نوار رو پیج می‌کنن.
-  const { scrollRef: weekStripRef, days: dayStrip, pageBy: pageWeekStrip } = useDayStrip(isoLocal(date));
+  const [recenterKey, setRecenterKey] = useState(0);
+  const { scrollRef: weekStripRef, days: dayStrip, pageBy: pageWeekStrip } = useDayStrip(isoLocal(date), recenterKey);
 
   const outOfRange = !!range && (date < range.from || date > range.to);
 
@@ -291,7 +292,7 @@ export function EconomicCalendarPanel() {
           <button
             type="button"
             className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
-            onClick={() => pickDate(today)}
+            onClick={() => { pickDate(today); setRecenterKey((k) => k + 1); }}
           >
             <Calendar size={15} /> امروز
           </button>
