@@ -21,8 +21,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   return NextResponse.json({ mentorId: m.mentorId, studentId: m.studentId, keys });
 }
 
-// POST /api/mentorships/:id/messages/keys → به طرفِ مقابل اطلاع بده که برای
-// دریافتِ پیام رمزِ گفت‌وگو را فعال کند (بدونِ کلیدِ او، پیامی قابلِ ارسال نیست).
+// POST /api/mentorships/:id/messages/keys → به طرفِ مقابل اطلاع بده که پیام دارد. کلیدِ
+// رمزگذاری با اولین ورود/بازدیدش خودکار ساخته می‌شود (بدونِ کلیدِ او پیامی قابلِ ارسال نیست).
 // حداکثر یک اعلان در ۲۴ ساعت برای هر رابطه.
 export async function POST(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -47,8 +47,8 @@ export async function POST(_req: Request, { params }: Ctx) {
   const sender = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
   await notifyUser(peer, {
     type: "message.e2ee_setup",
-    title: "فعال‌سازی گفت‌وگوی رمزگذاری‌شده",
-    body: `${displayName(sender)} می‌خواهد به تو پیام بدهد؛ برای دریافت، رمز گفت‌وگو را فعال کن`,
+    title: "پیام منتوری",
+    body: `${displayName(sender)} می‌خواهد به تو پیام بدهد؛ برای دریافت، یک بار گفت‌وگو را باز کن`,
     url,
   });
   return NextResponse.json({ ok: true, sent: true });

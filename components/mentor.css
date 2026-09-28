@@ -10,8 +10,9 @@
    قانون‌ها (CLAUDE.md و brief):
    • به هیچ عنصری بک‌گراند اضافه نمی‌شود. هر <button> تازه صریحاً
      background:none می‌گیرد تا ریست سراسری button{} رویش ننشیند.
-   • حرکت نداریم: نه انیمیشن ورود، نه بالا آمدن در هاور، نه pulse، نه
-     scale در لحظه‌ی کلیک. فقط تغییر رنگ در هاور.
+   • حرکت (دورِ ۳): فقط از سیستمِ MentorMotion.tsx و بلوکِ «حرکت» انتهای
+     همین فایل — آرام، 160 تا 320ms، opacity + جابه‌جاییِ حداکثر 8px، فشارِ
+     دکمه scale(.97). بدونِ بالا آمدن در هاور، بدونِ pulse.
    • مقیاس فاصله: 4 / 8 / 12 / 16 / 24 / 32 (متغیرهای --m-1..--m-6).
    ============================================================ */
 
@@ -32,7 +33,8 @@ body[data-theme="light"]{ --m-warn:#9A6414; }
 .mentor-page .trade-head-row{ margin:0; }
 .mentor-head-custom{ display:flex; align-items:center; gap:var(--m-3); min-width:0; }
 
-/* بی‌حرکتی: کلاس‌های مشترک سایت در این بخش نه جابه‌جا می‌شوند نه scale */
+/* کلاس‌های مشترک سایت در هاور جابه‌جا نمی‌شوند (فقط رنگ)؛ فیدبکِ فشار در
+   بلوکِ «حرکت» انتهای فایل تعریف شده است */
 .mentor-page .trade-back-link svg,
 .mentor-page .rp-card-arrow,
 .mentor-page .account-row2-chevron{ transition:color .15s ease; }
@@ -42,18 +44,7 @@ body[data-theme="light"]{ --m-warn:#9A6414; }
   .mentor-page a.account-row2:hover .account-row2-chevron{ transform:none; }
 }
 .mentor-page .trade-surface,
-.mentor-page .rp-card,
-.mentor-page .trade-primary-btn,
-.mentor-page .trade-danger-btn,
-.mentor-page .account-outline-btn,
-.mentor-page .trade-icon-btn,
-.mentor-page .trade-ghost-btn{ transform:none; }
-.mentor-page .rp-card:active,
-.mentor-page .trade-primary-btn:active,
-.mentor-page .trade-danger-btn:active,
-.mentor-page .account-outline-btn:active,
-.mentor-page .trade-icon-btn:active,
-.mentor-page button:active{ transform:none; }
+.mentor-page .rp-card{ transform:none; }
 
 /* متن کمکی */
 .mentor-muted{ margin:0; color:var(--muted); font-size:12px; line-height:1.9; }
@@ -640,3 +631,602 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
    جداگانه گزارش شده است. */
 body[data-theme="light"] .mentor-page .ios-toggle.on{ background:var(--accent); border-color:var(--accent); }
 @media (hover:hover){ body[data-theme="light"] .mentor-page .ios-toggle.on:hover{ background:var(--accent); border-color:var(--accent); } }
+
+/* ── شرایط منتورها (agent J) — MentorPlatformNotice و MentorTermsAcceptance ── */
+/* خطِ ثابتِ «آریون فقط بستر است» — متنِ کم‌رنگ، بدونِ پس‌زمینه و قاب */
+.mentor-platform-notice{
+  margin:var(--m-4) 0 0; padding:0; background:none;
+  font-size:11.5px; line-height:1.9; color:var(--muted2); text-align:center;
+}
+.mentor-terms-link{ color:var(--accent); text-decoration:none; }
+.mentor-terms-link:hover{ text-decoration:underline; }
+.mentor-terms-accept .mentor-check{ border-bottom:none; align-items:flex-start; }
+.mentor-terms-accept .mentor-check input{ margin-top:3px; }
+.mentor-terms-accept .field-error-msg{ margin-top:0; margin-inline-start:calc(17px + var(--m-3)); }
+
+/* ============================================================
+   دورِ ۳ (agent I): حرکت، ظرفِ واحدِ صفحه، ناوبریِ پنلِ منتور
+   API: components/MentorMotion.tsx و سرِ components/MentorUI.tsx
+   ============================================================ */
+
+/* ── حرکت ─────────────────────────────────────────────────── */
+/* فشارِ دکمه: کوتاه و آرام؛ فقط transform (بدونِ reflow) */
+.mentor-page .mentor-btn,
+.mentor-page .trade-title-add-btn,
+.mentor-page .mentor-text-btn,
+.mentor-page .trade-icon-btn,
+.mentor-page .mentor-panel-tab,
+.m-sheet .mentor-btn,
+.m-sheet .trade-icon-btn,
+.m-press{
+  transition:transform .16s cubic-bezier(.22,1,.36,1), color .15s ease, border-color .15s ease, opacity .15s ease;
+}
+.mentor-page .mentor-btn:not(:disabled):active,
+.mentor-page .trade-title-add-btn:active,
+.mentor-page .mentor-text-btn:not(:disabled):active,
+.mentor-page .trade-icon-btn:not(:disabled):active,
+.m-sheet .mentor-btn:not(:disabled):active,
+.m-sheet .trade-icon-btn:not(:disabled):active,
+.m-press:active{ transform:scale(.97); }
+.mentor-page .mentor-panel-tab:active{ transform:scale(.96); }
+/* ردیفِ لینک: فقط کمی کم‌رنگ، جابه‌جا نمی‌شود (لیستِ لبه‌به‌لبه) */
+.mentor-page a.mentor-row{ transition:opacity .16s ease; }
+.mentor-page a.mentor-row:active{ opacity:.7; }
+
+/* ورودِ صفحه (template.tsx): ظرفِ بی‌اثر، فقط برای transform/opacity */
+.m-route{ min-width:0; }
+
+/* باز/بسته‌شدن: محتوا در حینِ تغییرِ ارتفاع بیرون نزند */
+.m-collapse{ overflow:hidden; }
+
+/* آیتمِ لیستِ متحرک: مرزِ ردیف‌ها مثلِ قبل، فقط آخرینِ لیست بی‌مرز */
+.mentor-li > .mentor-row{ border-bottom:1px solid var(--surface-line); }
+.mentor-li:last-child > .mentor-row{ border-bottom:none; }
+
+/* ── شیت/مودال (MentorSheet) ─────────────────────────────── */
+.m-sheet-wrap{
+  position:fixed; inset:0; z-index:90;
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.m-sheet-wrap.is-bottom{ align-items:flex-end; padding:0; }
+.m-sheet-backdrop{
+  position:absolute; inset:0; background:rgba(0,0,0,.55);
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+}
+/* سطح همان .modal-panel سایت است؛ جای‌گیری و حرکت را این‌جا framer می‌دهد */
+.modal-panel.m-sheet{
+  position:relative; inset:auto; top:auto; transform:none; animation:none;
+  opacity:1; pointer-events:auto; width:100%; max-width:420px; margin:0;
+  max-height:86vh; max-height:86dvh; outline:none; text-align:start;
+}
+.modal-panel.m-sheet.is-sm{ max-width:380px; }
+.modal-panel.m-sheet.is-lg{ max-width:560px; }
+.m-sheet-wrap.is-bottom .modal-panel.m-sheet{
+  max-width:none; border-radius:22px 22px 0 0; border-bottom:none;
+  padding:10px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.m-sheet-grip{
+  display:block; width:36px; height:4px; margin:0 auto 10px; border-radius:99px;
+  background:var(--line);
+}
+.m-sheet-head{ display:flex; align-items:center; justify-content:space-between; gap:var(--m-3); margin-bottom:var(--m-3); }
+.m-sheet-title{ margin:0; font-size:14px; font-weight:800; color:var(--text); }
+.m-sheet .mentor-form-actions{ margin-top:var(--m-4); }
+
+/* ── ظرفِ واحدِ صفحه (MentorPage) و بخشِ تخت ──────────────── */
+.mentor-surface{ padding:var(--m-4); margin-bottom:var(--m-4); }
+.mentor-surface > .mentor-tabs:first-child{ margin-top:0; }
+/* بخشِ تخت لبه‌به‌لبه‌ی ظرف است تا خطِ مو سرتاسری باشد */
+section.mentor-section.is-flat{
+  margin:0 calc(-1 * var(--m-4)); padding:var(--m-4);
+  border-top:1px solid var(--surface-line);
+}
+/* اول/آخرِ ظرف (مستقیم یا داخلِ یک فرم/wrapperِ اول/آخر) خط و فاصله‌ی اضافه ندارد */
+.mentor-surface > section.mentor-section.is-flat:first-child,
+.mentor-surface > :first-child > section.mentor-section.is-flat:first-child{ margin-top:calc(-1 * var(--m-4)); border-top:none; }
+.mentor-surface > section.mentor-section.is-flat:last-child,
+.mentor-surface > :last-child > section.mentor-section.is-flat:last-child{ margin-bottom:calc(-1 * var(--m-4)); }
+section.mentor-section.is-flat.flush{ padding:0 0 var(--m-1); }
+section.mentor-section.is-flat.flush > .mentor-section-head{ margin:0; padding:var(--m-4) var(--m-4) var(--m-1); }
+section.mentor-section.is-flat.flush .mentor-row{ padding-inline:var(--m-4); }
+section.mentor-section.is-flat.flush > .mentor-empty{ padding-inline:var(--m-4); }
+section.mentor-section.is-flat.flush > .mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
+/* بخشِ بی‌عنوان (مثلاً یک ردیفِ تنها) */
+section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(--m-3); }
+/* خالی/خطا داخلِ ظرف: بدونِ قابِ دوم */
+.mentor-surface .rp-empty.mentor-empty-flat{ border:none; background:none; box-shadow:none; padding-block:var(--m-5); }
+.mentor-surface .mentor-error{ padding:var(--m-5) var(--m-2); }
+/* ردیفِ اطلاعیه‌ها بالای ظرف: فاصله از بخشِ بعد */
+.mentor-surface > .mentor-notice + section.mentor-section.is-flat,
+.mentor-surface > .mentor-notices + section.mentor-section.is-flat{ margin-top:var(--m-4); }
+.mentor-notices{ display:flex; flex-direction:column; gap:var(--m-2); }
+
+/* ── ناوبریِ پنلِ منتور ───────────────────────────────────── */
+.mentor-panel-nav{ margin:0 0 var(--m-4); }
+.mentor-panel-tabs.auth-tabs{ margin:0; }
+.mentor-panel-tab.auth-tab{
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:9px 4px; font-size:12px; text-decoration:none; white-space:nowrap;
+}
+.mentor-panel-tab.auth-tab > svg, .mentor-panel-tab.auth-tab > span:not(.mentor-panel-ind){ position:relative; z-index:1; }
+.mentor-panel-tab.auth-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+/* نشانگرِ فعال همان قرصِ accentِ SegmentedTabs؛ بینِ صفحه‌ها می‌لغزد */
+.mentor-panel-ind{
+  position:absolute; inset:0; z-index:0; border-radius:999px;
+  background:var(--accent); box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
+}
+@media (max-width:560px){
+  .mentor-panel-tab.auth-tab{ flex-direction:column; gap:3px; padding:7px 2px 6px; font-size:10.5px; border-radius:16px; }
+  .mentor-panel-tabs.auth-tabs{ border-radius:20px; }
+  .mentor-panel-ind{ border-radius:16px; }
+}
+/* سرِ صفحه‌ی پنل: عنوانِ هر صفحه زیرِ نوار */
+.mentor-panel-page .trade-head-block{ margin-bottom:var(--m-3); }
+.mentor-panel-page .trade-back-link{ margin-bottom:var(--m-1); }
+
+/* ── وضعیت پذیرش (MentorAvailabilityQuick) ───────────────── */
+.mentor-avail{ display:flex; flex-direction:column; gap:var(--m-3); }
+.mentor-avail-tabs > .auth-tabs{ margin:0; }
+.mentor-avail-tabs.is-busy{ opacity:.7; pointer-events:none; transition:opacity .16s ease; }
+.mentor-avail-line{
+  display:flex; align-items:flex-start; gap:var(--m-2);
+  font-size:12.5px; line-height:1.9; color:var(--text);
+}
+.mentor-avail-line > svg{ flex-shrink:0; margin-top:4px; color:var(--accent); }
+.mentor-avail-line b{ font-weight:800; }
+.mentor-avail-line.is-warn > svg{ color:var(--m-warn); }
+.mentor-avail-away{ display:flex; flex-direction:column; gap:var(--m-2); }
+.mentor-avail-away .mentor-quote{ margin:0; }
+.mentor-avail-skeleton{ display:flex; justify-content:center; min-height:86px; align-items:center; }
+/* دکمه‌ی تاریخ داخلِ شیت: همان فیلدِ استاندارد، آیکون + متن */
+.mentor-date-btn{ display:flex; align-items:center; gap:var(--m-2); width:100%; text-align:start; cursor:pointer; }
+.mentor-date-btn.placeholder{ color:var(--muted); }
+/* تقویم روی شیت (z-index شیت 90) */
+.m-date-over .jdate-overlay{ z-index:96; }
+.m-date-over .jdate-popup{ z-index:97; }
+
+/* ── مراحلِ فعال‌سازی (MentorSetupSteps) ─────────────────── */
+.mentor-step-mark{
+  display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+  border-radius:50%; border:1px solid var(--surface-line); font-size:12px; font-weight:800; color:var(--muted);
+}
+.mentor-step-mark.is-done{ border-color:var(--accent); color:var(--accent); }
+.mentor-doc-rules{ padding:var(--m-2) 0 0; }
+#verification{ scroll-margin-top:80px; }
+.mentor-range{ font-size:11.5px; font-weight:600; color:var(--muted); white-space:nowrap; }
+.mentor-li > .mentor-item{ border-bottom:1px solid var(--surface-line); }
+.mentor-li:last-child > .mentor-item{ border-bottom:none; }
+.mentor-li > .mentor-feedback{ border-bottom:1px solid var(--surface-line); }
+.mentor-li:last-child > .mentor-feedback{ border-bottom:none; }
+
+/* ── ادمین: جزئیاتِ منتور در یک ظرف (/admin/mentors/[id]) ──────
+   کارت‌های داخلی قاب/بک‌گراندِ خودشان را از دست می‌دهند و با خطِ مو جدا می‌شوند */
+.admin-onebox > .admin-card,
+.admin-onebox > .admin-chart-card,
+.admin-onebox .admin-chart-card{
+  background:none; border:none; border-radius:0; box-shadow:none; padding:0; margin:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+.admin-onebox > * + *{ margin-top:18px; padding-top:18px; border-top:1px solid var(--adm-border); }
+.admin-onebox > .admin-kpi-grid{ margin-bottom:0; }
+.admin-onebox > .admin-user-hero{ margin-bottom:0; }
+@media (prefers-reduced-motion: reduce){ .m-sheet *, .mentor-panel-nav *{ transition:none !important; } }
+
+/* ============================================================
+   دورِ ۳ (agent F): جستجوی منتور، کارتِ فشرده، نشانِ مدرک،
+   ذخیره‌شده‌ها، پروفایلِ عمومی. بدونِ بک‌گراندِ تازه؛ تنها سطحِ
+   شناور (پاپ‌آوِرِ مدرک و پیامِ پایینِ صفحه) همان دستورِ پاپ‌آپ‌های
+   اپ است: surface-2 + surface-line + سایه (مثلِ .wa-tooltip).
+   ============================================================ */
+
+/* ── تب‌های نما (همه / ذخیره‌شده‌ها) ─────────────────────── */
+.mentor-page .mentor-tabs > .auth-tabs{ margin-top:0; }
+
+/* ── ناحیه‌ی فیلتر ─────────────────────────────────────────── */
+.mentor-filters{ display:flex; flex-direction:column; gap:10px; padding:var(--m-3); margin-bottom:var(--m-2); }
+.mentor-filters .auth-tabs{ margin:0; }
+/* در ستونِ فلکس، flex-basisِ 180pxِ جستجو ارتفاع می‌شد */
+.mentor-filters .mentor-search{ flex:0 0 auto; display:block; }
+.mentor-filters .auth-tab{ padding:7px 0; font-size:11.5px; }
+.mentor-search input.wsearch-newform-name{ padding-inline-end:36px; }
+.mentor-search .mentor-search-clear{
+  position:absolute; top:0; bottom:0; inset-inline-end:4px; margin:auto 0; height:30px; padding:6px;
+}
+.mentor-search .mentor-search-clear svg{ position:static; transform:none; color:inherit; pointer-events:none; }
+/* فیلدِ search مرورگر دکمه‌ی پاک‌کنِ خودش را هم دارد؛ یکی کافی است */
+.mentor-search input[type="search"]::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; display:none; }
+.mentor-filter-chips{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
+.mentor-toggle-chip.is-on{ color:var(--accent); border-color:rgba(var(--accent-rgb),.55); }
+.mentor-filter-more{ margin-inline-start:auto; color:var(--muted); font-size:11.5px; }
+.mentor-filter-more svg{ transition:transform .22s cubic-bezier(.22,1,.36,1); }
+.mentor-filter-more svg.is-open{ transform:rotate(180deg); }
+.mentor-filter-clear{ font-size:11.5px; }
+.mentor-filter-grid{ display:grid; grid-template-columns:1fr; gap:10px; padding-top:2px; }
+@media (min-width:760px){ .mentor-filter-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
+.mentor-filter-field{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.mentor-filter-label{ font-size:11px; font-weight:700; color:var(--muted); }
+@media (max-width:420px){ .mentor-filters .auth-tab{ font-size:11px; } }
+
+/* نتیجه‌ی قبلی تا رسیدنِ نتیجه‌ی تازه کم‌رنگ می‌ماند (بدونِ پرشِ اسپینر) */
+.mentor-results{ transition:opacity .2s ease; }
+.mentor-results.is-stale{ opacity:.5; pointer-events:none; }
+.mentor-empty-search{ display:flex; flex-direction:column; align-items:center; gap:var(--m-2); padding:var(--m-4) 0; }
+.mentor-more-col{ flex-direction:column; align-items:center; gap:var(--m-2); }
+.mentor-saved-full{ margin-top:var(--m-3); text-align:center; }
+.mentor-grid-item{ min-width:0; display:flex; }
+.mentor-grid-item > .mentor-card{ flex:1; }
+
+/* ── کارتِ فشرده ───────────────────────────────────────────── */
+.mentor-card.is-compact{
+  position:relative; flex-direction:row; align-items:flex-start; gap:var(--m-3);
+  padding:12px 14px; min-width:0;
+}
+.mentor-card.is-compact .mentor-card-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.mentor-card-title{ display:flex; align-items:center; gap:4px; min-width:0; }
+.mentor-card-title .mentor-card-name{ min-width:0; line-height:1.6; }
+.mentor-card-link{ color:var(--text); text-decoration:none; }
+/* لینکِ کشیده: کلِ کارت قابلِ کلیک، دکمه‌ها رویش */
+.mentor-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; }
+.mentor-card-link:focus-visible{ outline:none; }
+.mentor-card-link:focus-visible::after{ outline:2px solid var(--accent); outline-offset:2px; }
+.mentor-card.is-compact .mentor-card-headline{
+  margin:0; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -webkit-line-clamp:unset;
+}
+.mentor-card-meta{
+  display:flex; flex-wrap:wrap; align-items:center; gap:2px 12px; margin-top:1px;
+  font-size:11px; color:var(--muted); line-height:1.7;
+}
+.mentor-card-meta > span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+.mentor-card-closed{ color:var(--muted2); }
+.mentor-card-tags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.mentor-card-save{ position:relative; z-index:1; flex-shrink:0; margin:-4px 0 0 -6px; }
+.mentor-card .mentor-cert-mark{ position:relative; z-index:1; }
+@media (hover:hover) and (pointer:fine){ .mentor-card.is-compact:hover .mentor-card-link{ color:var(--accent); } }
+
+/* برچسبِ کوچکِ حوزه/تخصص */
+.mentor-tag{
+  display:inline-flex; align-items:center; padding:0 8px; border:1px solid var(--surface-line); border-radius:999px;
+  font-size:10.5px; font-weight:600; line-height:1.9; color:var(--muted); white-space:nowrap;
+}
+.mentor-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--m-3); }
+.mentor-tags .mentor-tag{ font-size:11px; padding:1px 9px; }
+
+/* امتیازِ یک‌خطی */
+.mentor-rating-inline{ display:inline-flex; align-items:center; gap:3px; color:var(--muted); white-space:nowrap; }
+.mentor-rating-inline svg{ color:var(--sun); flex-shrink:0; }
+.mentor-rating-inline b{ font-size:11.5px; font-weight:800; color:var(--text); }
+.mentor-rating-inline.is-none svg{ color:var(--muted2); }
+
+/* ── نشانِ مدرک + پاپ‌آوِر ─────────────────────────────────── */
+.mentor-cert-mark{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  padding:3px; margin:-3px 0; border:none; border-radius:8px; cursor:pointer; color:var(--accent);
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:opacity .15s ease, transform .16s cubic-bezier(.22,1,.36,1);
+}
+body[data-theme="light"] .mentor-cert-mark, body:not([data-theme="light"]) .mentor-cert-mark{ background:none; box-shadow:none; }
+.mentor-cert-mark:active{ transform:scale(.92); }
+.mentor-cert-mark:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+@media (hover:hover){ .mentor-cert-mark:hover{ opacity:.8; background:none; } }
+.mentor-pop{
+  position:fixed; z-index:140; width:min(260px, calc(100vw - 24px));
+  display:flex; flex-direction:column; gap:3px; padding:10px 12px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--surface-line); box-shadow:0 8px 24px rgba(0,0,0,.25);
+  font-size:12px; line-height:1.9; color:var(--text); text-align:start; direction:rtl;
+}
+.mentor-pop-title{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:800; color:var(--accent); }
+.mentor-pop-text{ color:var(--muted); }
+
+/* ── نشانک و پیامِ پایینِ صفحه ─────────────────────────────── */
+.mentor-save-btn.is-on{ color:var(--accent); }
+.mentor-save-icon{ display:inline-flex; }
+.mentor-toast-wrap{
+  position:fixed; inset-inline:0; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:150;
+  display:flex; justify-content:center; padding:0 16px; pointer-events:none;
+}
+.mentor-toast{
+  max-width:420px; padding:10px 14px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--surface-line); box-shadow:0 8px 24px rgba(0,0,0,.25);
+  font-size:12.5px; line-height:1.8; color:var(--text); text-align:center; direction:rtl;
+}
+
+/* ── پروفایلِ عمومی (داخلِ یک ظرفِ واحد) ─────────────────── */
+.mentor-profile .mentor-hero{ padding:0; margin-bottom:var(--m-4); }
+.mentor-profile .mentor-hero-top{ align-items:flex-start; }
+.mentor-hero-title{ display:flex; align-items:center; gap:6px; min-width:0; }
+.mentor-profile .mentor-hero-name{ line-height:1.5; }
+.mentor-hero-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:2px 14px; font-size:11.5px; color:var(--muted); line-height:1.8; }
+.mentor-hero-tools{ display:flex; align-items:center; gap:0; flex-shrink:0; margin-top:-6px; margin-inline-end:-8px; }
+.mentor-hero-stats{
+  display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); margin:var(--m-4) 0 0;
+  border:1px solid var(--surface-line); border-radius:12px;
+}
+.mentor-hero-stats > div{
+  display:flex; flex-direction:column-reverse; align-items:center; justify-content:flex-end; gap:1px;
+  padding:8px 4px; text-align:center; min-width:0;
+}
+.mentor-hero-stats > div + div{ border-inline-start:1px solid var(--surface-line); }
+.mentor-hero-stats dd{ margin:0; font-size:14px; font-weight:800; color:var(--text); line-height:1.5; max-width:100%; overflow-wrap:anywhere; }
+.mentor-hero-stats dt{ display:inline-flex; align-items:center; justify-content:center; gap:3px; font-size:10.5px; color:var(--muted); line-height:1.6; }
+.mentor-hero-stats dt svg{ flex-shrink:0; }
+@media (max-width:420px){ .mentor-hero-stats dt svg{ display:none; } }
+.mentor-away{
+  display:flex; align-items:flex-start; gap:10px; margin-top:var(--m-3); padding:10px 12px;
+  border:1px solid color-mix(in srgb, var(--m-info) 40%, transparent); border-radius:12px; color:var(--m-info);
+}
+.mentor-away > svg{ flex-shrink:0; margin-top:3px; }
+.mentor-away-body{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.mentor-away-title{ font-size:12.5px; font-weight:800; color:var(--text); line-height:1.8; }
+.mentor-away-text{ font-size:12px; color:var(--muted); line-height:1.9; word-break:break-word; }
+.mentor-hero-note{ display:flex; align-items:center; gap:5px; margin:var(--m-3) 0 0; font-size:11.5px; color:var(--muted); }
+.mentor-profile .mentor-bio + .mentor-tags{ margin-top:var(--m-3); }
+.mentor-profile section.mentor-section.is-flat > .mentor-tags:first-of-type{ margin-top:var(--m-2); }
+@media (prefers-reduced-motion: reduce){
+  .mentor-results, .mentor-filter-more svg, .mentor-cert-mark{ transition:none; }
+}
+
+/* ============================================================
+   G · صفحه‌ی گفت‌وگو (mc-*) — MentorChatScreen / MentorChat
+   ------------------------------------------------------------
+   الگوی پیام‌رسان: سرِ شناورِ شیشه‌ای، رشته‌ی لبه‌به‌لبه، نوارِ نوشتنِ
+   شناور. سطح‌ها همه از سایت‌اند: قرص‌ها همان سطحِ شیشه‌ای .app-topbar
+   (که در این صفحه پنهان است)، حباب‌ها همان .support-msg، ورودی و دکمه‌ی
+   ارسال همان .routine-ai-input / .routine-ai-action. خودِ صفحه بک‌گراند
+   ندارد؛ پس‌زمینه‌ی سایت پشتِ پیام‌ها دیده می‌شود.
+   قانون‌های دکمه با پیشوندِ «body .mc-screen» تا ریستِ سراسریِ
+   button{} و body[data-theme="light"] button{} رویشان ننشیند.
+   ============================================================ */
+html.mc-open .app-topbar,
+html.mc-open .app-topbar-statusbar-blur{ visibility:hidden; }
+html.mc-open, html.mc-open body{ overflow:hidden; overscroll-behavior:none; }
+
+.mc-screen{
+  position:fixed; inset-inline:0; top:0; z-index:45;
+  height:100vh; height:100dvh;
+  display:flex; flex-direction:column;
+  --mc-col:760px;
+  --mc-gutter:max(12px, calc((100% - var(--mc-col)) / 2));
+  --mc-head-h:calc(68px + env(safe-area-inset-top));
+}
+
+/* ── سر ─────────────────────────────────────────────────────── */
+.mc-head{
+  position:absolute; top:0; inset-inline:0; z-index:3;
+  display:flex; align-items:center; gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) var(--mc-gutter) 10px;
+  pointer-events:none;
+}
+.mc-head > *{ pointer-events:auto; }
+body .mc-screen .mc-pill{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  color:var(--text);
+  transition:border-color .2s ease, color .2s ease, transform .16s cubic-bezier(.22,1,.36,1);
+}
+body .mc-screen .mc-circle{
+  flex:0 0 auto; width:46px; height:46px; padding:0; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center; text-decoration:none;
+}
+@media (hover:hover){ body .mc-screen .mc-pill:hover{ border-color:rgba(var(--accent-rgb),.45); color:var(--text); background:var(--surface-glass); } }
+body .mc-screen .mc-pill:active{ transform:scale(.96); }
+body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.mc-title{
+  flex:0 1 auto; min-width:0; max-width:min(56%, 360px); margin-inline:auto;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:46px; padding:0 22px; border-radius:999px; text-decoration:none; line-height:1.35;
+}
+.mc-title.is-empty{ width:160px; }
+.mc-title b{ font-size:14px; font-weight:800; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mc-title span{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); white-space:nowrap; }
+.mc-head-end{ flex:0 0 auto; display:flex; align-items:center; gap:8px; }
+.mc-avatar{ display:inline-flex; width:46px; height:46px; align-items:center; justify-content:center; border-radius:50%; }
+.mc-avatar > *{ box-shadow:0 0 0 1px var(--surface-line); border-radius:50%; }
+
+/* ── بدنه ───────────────────────────────────────────────────── */
+.mc-main{ position:relative; flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow-y:auto; }
+/* فرم‌های گیتِ رمزگذاری و حالت‌های خالی/خطا: وسطِ ستون، زیرِ سر */
+.mc-main > :not(.mc-body){ width:min(100% - 24px, 520px); margin:calc(var(--mc-head-h) + 12px) auto 24px; }
+.mc-state{ display:flex; flex-direction:column; justify-content:center; min-height:40vh; }
+.mc-body{ position:absolute; inset:0; display:flex; flex-direction:column; }
+.mc-empty{ margin:auto; text-align:center; font-size:12.5px; color:var(--muted); line-height:1.9; }
+
+.mc-thread{
+  flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.mc-thread-inner{
+  display:flex; flex-direction:column; min-height:100%;
+  padding:calc(var(--mc-head-h) + 8px) var(--mc-gutter) calc(var(--mc-dock-h, 72px) + 12px);
+}
+.mc-thread-inner > .mc-service:first-child,
+.mc-thread-inner > .mc-older:first-child{ margin-top:auto; }
+.mc-older{ display:flex; justify-content:center; padding:6px 0 10px; }
+
+/* خطِ سرویس و جداکننده‌ی روز — قرصِ کوچکِ شیشه‌ای وسطِ رشته */
+.mc-service, .mc-day{ display:flex; justify-content:center; margin:10px 0; }
+.mc-service span, .mc-day span{
+  display:inline-flex; align-items:center; gap:6px; max-width:88%;
+  padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600; line-height:1.8; text-align:center;
+  color:var(--muted);
+  background:var(--surface-glass); border:1px solid var(--surface-line);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+}
+.mc-day{ position:sticky; top:calc(var(--mc-head-h) - 2px); z-index:1; pointer-events:none; }
+.mc-service span{ font-weight:500; }
+
+/* ── حباب ───────────────────────────────────────────────────── */
+.mc-row{ display:flex; flex-direction:column; margin-top:3px; }
+.mc-row.is-first{ margin-top:10px; }
+.mc-row.is-mine{ align-items:flex-start; }   /* RTL: سمتِ راست */
+.mc-row.is-peer{ align-items:flex-end; }     /* RTL: سمتِ چپ */
+.mc-screen .support-msg.mc-bubble{
+  position:relative; max-width:min(78%, 540px); margin:0;
+  padding:7px 12px 8px; border-radius:18px;
+  font-size:13.5px; line-height:1.75; white-space:pre-wrap; word-break:break-word;
+  cursor:default; -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:text; user-select:text;
+}
+/* گوشه‌های سمتِ فرستنده در یک گروه تیزتر؛ آخری دُم دارد */
+.mc-screen .support-msg.mc-bubble.mine{ border-radius:18px 6px 6px 18px; }
+.mc-screen .mc-row.is-first .support-msg.mc-bubble.mine{ border-top-right-radius:18px; }
+.mc-screen .mc-row.is-last .support-msg.mc-bubble.mine{ border-bottom-right-radius:4px; }
+.mc-screen .support-msg.mc-bubble.admin{ border-radius:6px 18px 18px 6px; }
+.mc-screen .mc-row.is-first .support-msg.mc-bubble.admin{ border-top-left-radius:18px; }
+.mc-screen .mc-row.is-last .support-msg.mc-bubble.admin{ border-bottom-left-radius:4px; }
+.mc-screen .mc-bubble.has-tail::after{
+  content:""; position:absolute; bottom:0; width:10px; height:16px;
+  background:inherit; pointer-events:none;
+}
+.mc-screen .mc-bubble.mine.has-tail::after{
+  right:-7px;
+  -webkit-mask:radial-gradient(16px 16px at 100% 0, transparent 15.5px, #000 16px);
+          mask:radial-gradient(16px 16px at 100% 0, transparent 15.5px, #000 16px);
+}
+.mc-screen .mc-bubble.admin.has-tail::after{
+  left:-7px;
+  -webkit-mask:radial-gradient(16px 16px at 0 0, transparent 15.5px, #000 16px);
+          mask:radial-gradient(16px 16px at 0 0, transparent 15.5px, #000 16px);
+}
+.mc-screen .support-msg.mc-bubble.admin{ box-shadow:0 1px 1px rgba(0,0,0,.12); }
+.mc-text{ unicode-bidi:plaintext; }
+/* جای ساعت/تیک در انتهای خطِ آخر (مثلِ پیام‌رسان‌ها) */
+.mc-spacer{ display:inline-block; width:44px; height:1px; }
+.mc-spacer.is-mine{ width:60px; }
+.mc-meta{
+  position:absolute; bottom:5px; left:10px;
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:10.5px; line-height:1; opacity:.72; direction:ltr; white-space:nowrap;
+}
+.mc-meta > span:not(.mc-time){ direction:rtl; }
+.mc-time{ font-variant-numeric:tabular-nums; }
+.mc-label{ display:block; font-size:10.5px; font-weight:700; opacity:.7; margin-bottom:2px; }
+.mc-screen .support-msg.mc-welcome{ border-style:dashed; }
+.mc-screen .support-msg.mc-bubble.is-failed{ opacity:.7; }
+.mc-fail-icon{ color:var(--m-danger); opacity:1; }
+.mc-fail-note{ font-size:11px; color:var(--m-danger); margin-top:3px; }
+@media (hover:hover){ .mc-screen .mc-bubble{ cursor:pointer; } }
+
+/* ── پایین: نوارِ نوشتن و اطلاعیه‌ها ───────────────────────── */
+.mc-dock{
+  position:absolute; bottom:0; inset-inline:0; z-index:2;
+  display:flex; flex-direction:column; gap:8px;
+  padding:8px var(--mc-gutter) calc(10px + env(safe-area-inset-bottom));
+  pointer-events:none;
+}
+.mc-dock > *{ pointer-events:auto; }
+.mc-composer{ display:flex; align-items:flex-end; gap:8px; }
+body .mc-screen .mc-composer .routine-ai-action{ width:46px; height:46px; flex:0 0 auto; }
+.mc-screen .routine-ai-input.mc-input{
+  flex:1 1 auto; min-height:46px; max-height:148px; padding:11px 18px;
+  border-radius:23px; font-size:14px; line-height:1.6; overflow-y:auto;
+  background:var(--surface-glass); border-color:var(--surface-line);
+}
+.mc-send-icon{ transform:scaleX(-1); }   /* RTL: پیکان به سمتِ چپ */
+body .mc-screen .mc-send:not(.is-send){ color:var(--muted); }
+body .mc-screen .mc-side-btn{ color:var(--muted); }
+body .mc-screen .mc-side-btn.is-on{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); }
+.mc-notice{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px;
+  margin:0; padding:10px 16px; border-radius:20px; text-align:center;
+  font-size:12px; line-height:1.8; color:var(--muted);
+  background:var(--surface-glass); border:1px solid var(--surface-line);
+  backdrop-filter:blur(18px) saturate(170%); -webkit-backdrop-filter:blur(18px) saturate(170%);
+}
+.mc-notice.is-warn{ color:var(--m-warn); border-color:color-mix(in srgb, var(--m-warn) 40%, transparent); }
+.mc-notice.is-error{ color:var(--m-danger); padding:6px 14px; }
+.mc-replies{
+  padding:10px 12px; border-radius:20px;
+  background:var(--surface-glass); border:1px solid var(--surface-line);
+  backdrop-filter:blur(18px) saturate(170%); -webkit-backdrop-filter:blur(18px) saturate(170%);
+}
+.mc-replies-list{ display:flex; flex-wrap:wrap; gap:8px; max-height:30vh; overflow-y:auto; }
+.mc-replies-loading{ display:flex; justify-content:center; padding:6px; }
+
+body .mc-screen .mc-jump{
+  position:absolute; bottom:calc(100% + 4px); left:var(--mc-gutter);
+  width:44px; height:44px; color:var(--text);
+}
+.mc-jump-count{
+  position:absolute; top:-6px; right:-4px; min-width:20px; height:20px; padding:0 5px;
+  border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
+  font-size:10.5px; font-weight:800; background:var(--accent); color:var(--bg);
+}
+.mc-toast{
+  align-self:center; padding:6px 14px; border-radius:999px; font-size:12px; color:var(--text);
+  background:var(--surface-glass); border:1px solid var(--surface-line);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+
+/* ── گزارشِ گفت‌وگو: انتخابِ پیام‌ها ─────────────────────────── */
+.mc-pick-head{ display:flex; align-items:center; gap:8px; }
+.mc-pick-head .mentor-field-label{ margin-inline-end:auto; }
+.mc-pick-list{ max-height:min(40vh, 320px); overflow-y:auto; border:1px solid var(--surface-line); border-radius:14px; padding:0 10px; }
+.mc-pick{ align-items:flex-start; padding:8px 0; }
+.mc-pick input{ margin-top:3px; }
+.mc-pick-meta{ display:flex; gap:8px; font-size:11px; font-weight:700; color:var(--muted); }
+.mc-pick-meta span{ font-weight:500; }
+.mc-pick.is-mine .mc-pick-meta{ color:var(--accent); }
+.mc-pick-text{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:12.5px; line-height:1.8; unicode-bidi:plaintext; }
+
+@media (max-width:480px){
+  .mc-screen{ --mc-head-h:calc(62px + env(safe-area-inset-top)); }
+  body .mc-screen .mc-circle, .mc-avatar{ width:42px; height:42px; }
+  .mc-title{ height:42px; padding:0 16px; max-width:52%; }
+  body .mc-screen .mc-composer .routine-ai-action{ width:44px; height:44px; }
+  .mc-screen .routine-ai-input.mc-input{ min-height:44px; padding:10px 16px; }
+  .mc-screen .support-msg.mc-bubble{ max-width:84%; }
+}
+@media (prefers-reduced-motion: reduce){ body .mc-screen .mc-pill:active{ transform:none; } }
+/* ============ پایانِ G · صفحه‌ی گفت‌وگو ============ */
+.mentor-terms-row{ padding-bottom:var(--m-3); }
+/* آمارِ داشبورد داخلِ ظرف: فاصله از بخشِ قبل/بعد */
+.mentor-dash-stats{ margin:0 0 var(--m-4); }
+section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
+
+/* ── H: رمزگذاریِ خودکار — خطِ «رمز گفت‌وگوی قبلی» و فهرستِ دستگاه‌ها (MentorE2EEGate / MentorE2EESettings) ── */
+.mentor-e2ee-legacy-row{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2, 8px); margin-top:var(--m-2, 8px); }
+.mentor-e2ee-legacy-row > input{ flex:1 1 160px; min-width:0; }
+.mentor-e2ee-legacy .mentor-field-error{ display:block; margin-top:4px; }
+.mentor-e2ee-devices{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.mentor-e2ee-devices > li{ display:flex; align-items:center; gap:var(--m-2, 8px); padding:8px 0; border-top:1px solid var(--surface-line); font-size:12.5px; }
+.mentor-e2ee-devices > li:first-child{ border-top:none; }
+.mentor-e2ee-devices > li > span{ flex:1 1 0; min-width:0; }
+
+/* ============================================================
+   G · رابطه، فهرستِ منتورها، سابقه‌ی گفت‌وگو
+   ============================================================ */
+/* نشانِ قرمزِ «دعوت‌ها» داخلِ تبِ SegmentedTabs */
+.mentor-tab-label{ display:inline-flex; align-items:center; gap:6px; }
+.mentor-tab-badge{
+  min-width:18px; height:18px; padding:0 5px; border-radius:999px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:10.5px; font-weight:800; line-height:1; color:#fff; background:var(--m-danger);
+}
+.mentor-invite-terms{ padding:var(--m-2) var(--m-4) 0; }
+.mentor-section.is-flat.flush .mentor-invite-terms{ padding-inline:0; }
+
+/* برنامه‌ی منتظرِ پاسخ: عنوان (لینک به جزئیات) + واقعیت‌ها + یادداشتِ منتور + سه دکمه */
+.mentor-decision-card{ display:flex; flex-direction:column; gap:var(--m-2); padding:var(--m-3) 0; border-bottom:1px solid var(--surface-line); }
+.mentor-li:last-child > .mentor-decision-card{ border-bottom:none; padding-bottom:0; }
+.mentor-li:first-child > .mentor-decision-card{ padding-top:0; }
+.mentor-decision-title{
+  display:flex; align-items:center; gap:var(--m-2); color:var(--text); text-decoration:none;
+  font-size:14px; font-weight:800; min-width:0;
+}
+.mentor-decision-title > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (hover:hover){ .mentor-decision-title:hover > span{ color:var(--accent); } }
+.mentor-decision .mentor-form-actions, .mentor-decision-card .mentor-form-actions{ margin-top:var(--m-1); }
+.mentor-note-box.mentor-program-note{ margin-top:0; }
+.mentor-row.is-stacked .mentor-program-note{ margin-inline-start:44px; }
+@media (max-width:480px){ .mentor-row.is-stacked .mentor-program-note{ margin-inline-start:0; } }
+
+/* سابقه‌ی گفت‌وگو (پنل کاربری) */
+.mentor-history-row{ padding-inline:var(--m-4); }
+.mentor-history-foot{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--m-2);
+  padding:var(--m-3) var(--m-4); border-top:1px solid var(--surface-line);
+}
+.mentor-history-empty{ display:flex; align-items:center; justify-content:center; gap:var(--m-2); padding:var(--m-4); }
+/* ============ پایانِ G · رابطه ============ */

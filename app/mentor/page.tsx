@@ -1,32 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
+import { MentorDashShell, MentorDashError } from "@/components/MentorDashKit";
 import { MentorDashOnboarding } from "@/components/MentorDashOnboarding";
 import { MentorDashBoard } from "@/components/MentorDashBoard";
+import { useMentorSelf } from "@/components/MentorPanelNav";
 import { LoadingBlock } from "@/components/Spinner";
-import type { MentorSelf } from "@/lib/mentorTypes";
 
 /**
- * /mentor — بدون پروفایل منتوری: معرفی کوتاه و ساخت پروفایل؛
- * با پروفایل: داشبورد منتور.
+ * /mentor — بدون پروفایل منتوری: مراحلِ شروع (ساخت پروفایل، احراز هویت،
+ * انتشار)؛ با پروفایل: داشبورد منتور. پروفایل از همان درخواستِ مشترکِ
+ * نوارِ پنل خوانده می‌شود (useMentorSelf).
  */
 function MentorHome() {
-  const [state, setState] = useState<{ loading: boolean; error: string | null; profile: MentorSelf | null }>({ loading: true, error: null, profile: null });
-
-  const load = useCallback(async () => {
-    setState((s) => ({ ...s, loading: true, error: null }));
-    const r = await mentorApi<{ profile: MentorSelf | null }>("/api/mentors/me");
-    if (!r.ok) { setState({ loading: false, error: r.error, profile: null }); return; }
-    setState({ loading: false, error: null, profile: r.data.profile });
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  if (state.loading) return <LoadingBlock />;
-  if (state.error) return <MentorDashError message={state.error} onRetry={load} />;
-  if (!state.profile) return <MentorDashOnboarding />;
-  return <MentorDashBoard self={state.profile} />;
+  const self = useMentorSelf();
+  if (self.status === "unknown" || (self.status === "loading" && !self.profile)) return <LoadingBlock />;
+  if (self.status === "error" && !self.profile) {
+    return <MentorDashError message={self.error || "پنل دریافت نشد؛ دوباره تلاش کن"} onRetry={() => self.reload()} />;
+  }
+  if (!self.profile) return <MentorDashOnboarding />;
+  return <MentorDashBoard self={self.profile} />;
 }
 
 export default function MentorPage() {

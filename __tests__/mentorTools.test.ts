@@ -9,6 +9,7 @@ vi.mock("next-auth", async (orig) => ({
 }));
 vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
 
+import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { prisma } from "@/lib/prisma";
 import { GET as listTemplates, POST as postTemplate } from "@/app/api/mentor/templates/route";
 import { GET as getTemplate, PATCH as patchTemplate, DELETE as deleteTemplate } from "@/app/api/mentor/templates/[id]/route";
@@ -258,7 +259,7 @@ describe("duplicate program", () => {
     const rel1 = await connect(s1, mentor);
     as(s2);
     const { POST: postMentorship } = await import("@/app/api/mentorships/route");
-    const rr = await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor, categories: ["ROUTINE"] }));
+    const rr = await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor, categories: ["ROUTINE"] }));
     const rel2 = (await j(rr)).mentorship.id;
     const { mentorshipAction } = await import("./helpers/mentorTestUtils");
     await mentorshipAction(mentor, rel2, "accept");

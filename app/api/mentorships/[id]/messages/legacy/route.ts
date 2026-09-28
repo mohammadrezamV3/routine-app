@@ -4,7 +4,7 @@ import { requireMentorsUser, getMentorshipForUser, notFound, forbidden, badReque
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { verifyCommitment } from "@/lib/e2ee/core";
-import { currentE2EKey, parseEncryptedMessage, serverFrankingTag } from "@/lib/e2ee/server";
+import { activeKeysFor, checkWrapTargets, parseEncryptedMessage, serverFrankingTag } from "@/lib/e2ee/server";
 
 type Ctx = { params: { id: string } };
 const MAX_ITEMS = 50;
@@ -14,7 +14,8 @@ const MAX_ITEMS = 50;
 // بازرمزگذاریِ پیام‌های متن‌ساده‌ی پیش از رمزگذاری، توسطِ کلاینتِ یکی از دو طرف.
 // سرور تعهدِ فرانکینگ را با *همان متنی که خودش دارد* چک می‌کند (پس کسی نمی‌تواند
 // متنِ دیگری را به نامِ فرستنده‌ی اصلی قابلِ‌گزارش کند) و در همان به‌روزرسانی
-// متنِ ساده را پاک می‌کند. متنِ رمزشده را سرور نمی‌تواند چک کند؛ کلاینتِ گیرنده
+// متنِ ساده را پاک می‌کند. بسته‌بندی‌ها را کلیدِ خودِ بازرمزکننده (from) می‌سازد و
+// باید همه‌ی کلیدهای فعالِ دو طرف را پوشش دهند. متنِ رمزشده را سرور نمی‌تواند چک کند؛ کلاینتِ گیرنده
 // هنگامِ خواندن تعهد را با متنِ رمزگشایی‌شده می‌سنجد و ناهمخوانی را «تأییدنشده» نشان می‌دهد.
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -32,8 +33,8 @@ export async function POST(req: Request, { params }: Ctx) {
   const items = parsed.body?.items;
   if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) return badRequest("فهرست پیام‌ها نامعتبر است");
 
-  const [mentorKey, studentKey] = await Promise.all([currentE2EKey(m.mentorId), currentE2EKey(m.studentId)]);
-  if (!mentorKey || !studentKey) return NextResponse.json({ error: "هر دو طرف باید رمز گفت‌وگو را فعال کرده باشند", code: "PEER_NO_KEY" }, { status: 409 });
+  const active = await activeKeysFor([m.mentorId, m.studentId]);
+  if (!active[m.mentorId].length || !active[m.studentId].length) return NextResponse.json({ error: "هر دو طرف باید کلید رمزگذاری داشته باشند", code: "PEER_NO_KEY" }, { status: 409 });
 
   let migrated = 0;
   for (const it of items) {
@@ -46,25 +47,33 @@ export async function POST(req: Request, { params }: Ctx) {
       select: { id: true, senderId: true, legacyBody: true, createdAt: true },
     });
     if (!row || row.legacyBody == null) continue;
-    const senderKey = row.senderId === m.mentorId ? mentorKey : studentKey;
-    const recipientKey = row.senderId === m.mentorId ? studentKey : mentorKey;
-    if (enc.data.senderKeyVersion !== senderKey.version || enc.data.recipientKeyVersion !== recipientKey.version) continue;
+    if ((await checkWrapTargets(enc.data, me, [m.mentorId, m.studentId])) !== "ok") continue;
     const ctx = { mentorshipId: m.id, senderId: row.senderId, clientId: enc.data.clientId };
     if (!(await verifyCommitment(frankingKey as string, enc.data.commitment, ctx, row.legacyBody))) continue;
 
-    const r = await prisma.mentorMessage
-      .updateMany({
-        where: { id: row.id, mentorshipId: m.id, legacyBody: { not: null } },
-        data: {
-          legacyBody: null,
-          clientId: enc.data.clientId,
-          ciphertext: enc.data.ciphertext,
-          iv: enc.data.iv,
-          senderKeyVersion: enc.data.senderKeyVersion,
-          recipientKeyVersion: enc.data.recipientKeyVersion,
-          commitment: enc.data.commitment,
-          serverTag: serverFrankingTag({ ...ctx, commitment: enc.data.commitment, createdAt: row.createdAt }),
-        },
+    const r = await prisma
+      .$transaction(async (tx) => {
+        const u = await tx.mentorMessage.updateMany({
+          where: { id: row.id, mentorshipId: m.id, legacyBody: { not: null } },
+          data: {
+            legacyBody: null,
+            scheme: 2,
+            clientId: enc.data.clientId,
+            ciphertext: enc.data.ciphertext,
+            iv: enc.data.iv,
+            senderKeyVersion: enc.data.from.k,
+            recipientKeyVersion: null,
+            keyFromId: me === row.senderId ? null : me,
+            commitment: enc.data.commitment,
+            serverTag: serverFrankingTag({ ...ctx, commitment: enc.data.commitment, createdAt: row.createdAt }),
+          },
+        });
+        if (u.count === 1) {
+          await tx.mentorMessageKeyWrap.createMany({
+            data: enc.data.wraps.map((w) => ({ messageId: row.id, userId: w.u, keyVersion: w.k, wrap: w.w })),
+          });
+        }
+        return u;
       })
       .catch(() => ({ count: 0 })); // clientIdِ تکراری → نادیده
     migrated += r.count;

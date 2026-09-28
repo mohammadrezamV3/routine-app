@@ -17,7 +17,8 @@ export function SegmentedTabs<T extends string>({
   active,
   onChange,
 }: {
-  options: { value: T; label: string }[];
+  // label معمولاً متن است؛ ReactNode فقط برای موردی مثلِ نشانِ شمارنده کنارِ متن
+  options: { value: T; label: React.ReactNode }[];
   active: T;
   onChange: (value: T) => void;
 }) {

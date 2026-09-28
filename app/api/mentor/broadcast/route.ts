@@ -6,12 +6,13 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { PUBLIC_USER_SELECT, isUniqueViolation, toPublicUser } from "@/lib/mentorServer";
 import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { randomId } from "@/lib/e2ee/encoding";
-import { currentE2EKey, parseEncryptedMessage } from "@/lib/e2ee/server";
+import { activeKeysFor, checkWrapTargets, parseEncryptedMessage } from "@/lib/e2ee/server";
 import { encryptedMessageData, notifyNewMessage } from "@/lib/mentorChatServer";
 
 // «ارسال گروهی»: منتور یک متن را برای چند شاگردِ فعال می‌فرستد. رمزگذاریِ سرتاسری
-// می‌ماند: کلاینتِ منتور همان متن را *جداگانه* برای هر گفت‌وگو (کلیدِ همان جفت،
-// IV و کلیدِ فرانکینگِ تازه) رمز می‌کند و سرور فقط N پیامِ رمزشده‌ی مستقل می‌گیرد.
+// می‌ماند: کلاینتِ منتور همان متن را *جداگانه* برای هر گفت‌وگو (CEK، IV و کلیدِ
+// فرانکینگِ تازه، بسته‌بندی برای همه‌ی دستگاه‌های منتور و همان شاگرد) رمز می‌کند و
+// سرور فقط N پیامِ رمزشده‌ی مستقل می‌گیرد.
 // هر پیامِ حاصل مثلِ پیامِ عادی قابلِ گزارش است. docs/mentor-e2ee.md
 
 const MAX_RECIPIENTS = 200;
@@ -26,26 +27,24 @@ export async function GET() {
     orderBy: { startedAt: "asc" },
     take: 500,
   });
-  const keys = rels.length
-    ? await prisma.userE2EKey.findMany({
-        where: { userId: { in: rels.map((r) => r.studentId) }, retiredAt: null },
-        select: { userId: true, version: true, publicKey: true },
-      })
-    : [];
-  const keyBy = new Map(keys.map((k) => [k.userId, { version: k.version, publicKey: k.publicKey }]));
+  // همه‌ی کلیدهای فعالِ هر شاگرد و خودِ منتور (پیام برای همه‌ی دستگاه‌ها بسته‌بندی می‌شود)
+  const active = await activeKeysFor([g.userId, ...rels.map((r) => r.studentId)]);
   const labels = await prisma.mentorStudentLabel.findMany({ where: { profileId: g.profile.id }, select: { id: true, name: true }, orderBy: { createdAt: "asc" } });
   return NextResponse.json({
+    myKeys: active[g.userId],
     recipients: rels.map((r) => ({
       mentorshipId: r.id,
       student: toPublicUser(r.student),
-      key: keyBy.get(r.studentId) ?? null,
+      // سازگاری: «کلید دارد یا نه» برای فهرست؛ keys = همه‌ی کلیدهای فعال برای رمز کردن
+      key: active[r.studentId][0] ?? null,
+      keys: active[r.studentId],
       labelIds: r.mentorLabelIds,
     })),
     labels,
   });
 }
 
-// POST /api/mentor/broadcast { items: [{ mentorshipId, clientId, ciphertext, iv, senderKeyVersion, recipientKeyVersion, commitment }] }
+// POST /api/mentor/broadcast { items: [{ mentorshipId, v: 2, clientId, ciphertext, iv, commitment, from, wraps }] }
 //   → { sent, failed: [{ mentorshipId, code }] } — هر مورد مستقل بررسی می‌شود
 export async function POST(req: Request) {
   const g = await requireMentorTools({ write: true });
@@ -61,8 +60,7 @@ export async function POST(req: Request) {
   if (!Array.isArray(items) || items.length === 0) return badRequest("حداقل یک گیرنده لازم است");
   if (items.length > MAX_RECIPIENTS) return badRequest(`حداکثر ${MAX_RECIPIENTS} گیرنده در هر ارسال`);
 
-  const myKey = await currentE2EKey(me);
-  if (!myKey) return NextResponse.json({ error: "اول رمز گفت‌وگو را روی این دستگاه فعال کن", code: "NO_KEY" }, { status: 409 });
+  if (!(await activeKeysFor([me]))[me].length) return NextResponse.json({ error: "کلید رمزگذاری این حساب هنوز ساخته نشده؛ صفحه را تازه کن", code: "NO_KEY" }, { status: 409 });
 
   const seen = new Set<string>();
   const failed: { mentorshipId: string; code: string }[] = [];
@@ -87,12 +85,8 @@ export async function POST(req: Request) {
       select: { id: true, mentorId: true, studentId: true },
     });
     if (!m) { failed.push({ mentorshipId, code: "NOT_FOUND" }); continue; }
-    const theirs = await currentE2EKey(m.studentId);
-    if (!theirs) { failed.push({ mentorshipId, code: "PEER_NO_KEY" }); continue; }
-    if (enc.data.senderKeyVersion !== myKey.version || enc.data.recipientKeyVersion !== theirs.version) {
-      failed.push({ mentorshipId, code: "KEY_CHANGED" });
-      continue;
-    }
+    const check = await checkWrapTargets(enc.data, me, [me, m.studentId]);
+    if (check !== "ok") { failed.push({ mentorshipId, code: check }); continue; }
     try {
       await prisma.mentorMessage.create({ data: encryptedMessageData(m, me, enc.data, now, broadcastId), select: { id: true } });
     } catch (e) {

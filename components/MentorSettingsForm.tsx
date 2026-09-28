@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Check, Inbox, MessageCircle, Plus, Trash2, UserPlus } from "lucide-react";
-import { ToggleSwitch } from "./ToggleSwitch";
+import { Check, Inbox, MessageCircle, Plus, Trash2, Users } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { JalaliDatePicker } from "./JalaliDatePicker";
 import { Spinner } from "./Spinner";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorField, MentorSection } from "./MentorUI";
-import { formatJalali, jalaliToIso, toJalali, type JalaliDate } from "@/lib/jalali";
 import {
-  AWAY_MESSAGE_MAX,
   CAPACITY_MAX,
   INTAKE_ANSWER_MAX,
   INTAKE_MAX_QUESTIONS,
@@ -28,36 +24,26 @@ const RT_OPTIONS: { value: RT; label: string }[] = [
   ...RESPONSE_TIME_OPTIONS.map((h) => ({ value: String(h) as RT, label: `${fa(h)} ساعت` })),
 ];
 
-function isoToJalali(iso: string | null | undefined): JalaliDate | null {
-  const m = iso ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
-  return m ? toJalali(+m[1], +m[2], +m[3]) : null;
-}
-
 function toEnDigits(v: string): string {
   return v.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 }
 
 /**
- * تنظیماتِ پذیرش و دسترس‌پذیریِ منتور — PUT /api/mentor/settings.
+ * تنظیماتِ ظرفیت، پاسخ‌گویی و سؤال‌های پذیرش — PUT /api/mentor/settings.
  * همه‌ی بخش‌ها با یک «ذخیره» ثبت می‌شوند؛ سرور همان سقف‌ها را دوباره می‌سنجد.
+ * پذیرش باز/بسته و عدم حضور فوری‌اند و در MentorAvailabilityQuick (بالای همین صفحه).
  */
 export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettingsResponse; onSaved: (d: MentorSettingsResponse) => void }) {
   const s0 = initial.settings;
-  const [accepting, setAccepting] = useState(s0.acceptingStudents);
   const [capacity, setCapacity] = useState(s0.maxActiveStudents != null ? fa(s0.maxActiveStudents) : "");
-  const [away, setAway] = useState(!!s0.awayUntil);
-  const [awayDate, setAwayDate] = useState<JalaliDate | null>(isoToJalali(s0.awayUntil));
-  const [awayMessage, setAwayMessage] = useState(s0.awayMessage ?? "");
-  const [pauseRequests, setPauseRequests] = useState(s0.awayPausesRequests);
   const [responseTime, setResponseTime] = useState<RT>((s0.responseTimeHours ? String(s0.responseTimeHours) : "0") as RT);
   const [welcome, setWelcome] = useState(s0.welcomeMessage ?? "");
   const [questions, setQuestions] = useState<string[]>(s0.intakeQuestions.length ? s0.intakeQuestions : []);
-  const [picker, setPicker] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErr, setFieldErr] = useState<{ capacity?: string; awayDate?: string; awayMessage?: string; welcome?: string; questions?: string }>({});
+  const [fieldErr, setFieldErr] = useState<{ capacity?: string; welcome?: string; questions?: string }>({});
 
   function touched() { setSaved(false); setError(null); }
 
@@ -68,9 +54,6 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
     const capText = toEnDigits(capacity).trim();
     const cap = capText ? Number(capText) : null;
     if (cap !== null && (!Number.isInteger(cap) || cap < 1 || cap > CAPACITY_MAX)) errs.capacity = `عددی بین 1 تا ${fa(CAPACITY_MAX)} بنویس`;
-    const awayIso = away && awayDate ? jalaliToIso(...awayDate) : null;
-    if (away && !awayIso) errs.awayDate = "تاریخ بازگشت را انتخاب کن";
-    if (awayMessage.trim().length > AWAY_MESSAGE_MAX) errs.awayMessage = `حداکثر ${fa(AWAY_MESSAGE_MAX)} نویسه`;
     if (welcome.trim().length > WELCOME_MAX) errs.welcome = `حداکثر ${fa(WELCOME_MAX)} نویسه`;
     const qs = questions.map((q) => q.replace(/\s+/g, " ").trim()).filter(Boolean);
     if (qs.some((q) => q.length > INTAKE_QUESTION_MAX)) errs.questions = `هر سؤال حداکثر ${fa(INTAKE_QUESTION_MAX)} نویسه است`;
@@ -82,11 +65,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
     const r = await mentorApi<MentorSettingsResponse>("/api/mentor/settings", {
       method: "PUT",
       body: {
-        acceptingStudents: accepting,
         maxActiveStudents: cap,
-        awayUntil: awayIso,
-        ...(awayIso ? { awayMessage: awayMessage.trim() || null } : {}),
-        awayPausesRequests: pauseRequests,
         responseTimeHours: responseTime === "0" ? null : Number(responseTime),
         welcomeMessage: welcome.trim() || null,
         intakeQuestions: qs,
@@ -104,69 +83,17 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
 
   return (
     <form onSubmit={save} noValidate>
-      <MentorSection title="پذیرش شاگرد" icon={ic(UserPlus, MI.section)}>
-        <div className="mentor-toggle-row">
-          <div className="mentor-toggle-text">
-            <div className="mentor-toggle-title">پذیرش شاگرد جدید</div>
-            <div className="mentor-toggle-desc">با خاموش کردن، شاگرد جدید درخواست نمی‌دهد؛ شاگردهای فعلی و دعوت‌های تو می‌مانند</div>
-          </div>
-          <ToggleSwitch checked={accepting} label="پذیرش شاگرد جدید" onChange={(v) => { setAccepting(v); touched(); }} />
-        </div>
-        <div className="mentor-form" style={{ paddingTop: "var(--m-3)" }}>
-          <MentorField
-            label="سقف شاگرد فعال" htmlFor="ms-capacity" optional error={fieldErr.capacity}
-            hint={`خالی یعنی بدون سقف؛ اکنون ${fa(initial.activeStudents)} شاگرد فعال داری${full ? " و ظرفیت تکمیل است" : ""}. دعوت‌های خودت در این سقف شمرده نمی‌شوند`}
-          >
-            <input
-              id="ms-capacity" type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" maxLength={4}
-              value={capacity} placeholder="مثلاً ۱۰"
-              onChange={(e) => { setCapacity(e.target.value); setFieldErr((x) => ({ ...x, capacity: undefined })); touched(); }}
-            />
-          </MentorField>
-        </div>
-      </MentorSection>
-
-      <MentorSection title="عدم حضور" icon={ic(CalendarDays, MI.section)}>
-        <div className="mentor-toggle-row">
-          <div className="mentor-toggle-text">
-            <div className="mentor-toggle-title">در دسترس نیستم</div>
-            <div className="mentor-toggle-desc">تاریخ بازگشت و پیامت روی پروفایل و صفحه‌ی رابطه به شاگردها نمایش داده می‌شود</div>
-          </div>
-          <ToggleSwitch
-            checked={away} label="در دسترس نیستم"
-            onChange={(v) => { setAway(v); setFieldErr((x) => ({ ...x, awayDate: undefined })); touched(); if (v && !awayDate) setPicker(true); }}
+      <MentorSection title="ظرفیت" icon={ic(Users, MI.section)}>
+        <MentorField
+          label="سقف شاگرد فعال" htmlFor="ms-capacity" optional error={fieldErr.capacity}
+          hint={`خالی یعنی بدون سقف؛ اکنون ${fa(initial.activeStudents)} شاگرد فعال داری${full ? " و ظرفیت تکمیل است" : ""}. دعوت‌های خودت شمرده نمی‌شوند`}
+        >
+          <input
+            id="ms-capacity" type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" maxLength={4}
+            value={capacity} placeholder="مثلاً ۱۰"
+            onChange={(e) => { setCapacity(e.target.value); setFieldErr((x) => ({ ...x, capacity: undefined })); touched(); }}
           />
-        </div>
-        {away && (
-          <div className="mentor-form" style={{ paddingTop: "var(--m-3)" }}>
-            <MentorField label="تاریخ بازگشت" error={fieldErr.awayDate} hint="از این روز دوباره در دسترس نمایش داده می‌شوی">
-              <div className={`wsearch-date-row${fieldErr.awayDate ? " field-error" : ""}`} style={{ marginTop: 0 }}>
-                <div className="time-field">
-                  <button type="button" className={`jdate-btn${awayDate ? "" : " placeholder"}`} onClick={() => setPicker(true)}>
-                    {awayDate ? formatJalali(awayDate) : "روز / ماه / سال"}
-                  </button>
-                </div>
-              </div>
-            </MentorField>
-            <MentorField
-              label="پیام برای شاگردها" htmlFor="ms-away-msg" optional error={fieldErr.awayMessage}
-              hint={`${fa(awayMessage.trim().length)} از ${fa(AWAY_MESSAGE_MAX)} نویسه`}
-            >
-              <textarea
-                id="ms-away-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={AWAY_MESSAGE_MAX + 20}
-                value={awayMessage} placeholder="مثلاً «در سفرم؛ پیام‌ها را پس از بازگشت جواب می‌دهم»"
-                onChange={(e) => { setAwayMessage(e.target.value); setFieldErr((x) => ({ ...x, awayMessage: undefined })); touched(); }}
-              />
-            </MentorField>
-            <div className="mentor-toggle-row" style={{ paddingTop: 0 }}>
-              <div className="mentor-toggle-text">
-                <div className="mentor-toggle-title">توقف درخواست‌های تازه</div>
-                <div className="mentor-toggle-desc">تا روز بازگشت، شاگرد جدید درخواست نمی‌دهد</div>
-              </div>
-              <ToggleSwitch checked={pauseRequests} label="توقف درخواست‌های تازه" onChange={(v) => { setPauseRequests(v); touched(); }} />
-            </div>
-          </div>
-        )}
+        </MentorField>
       </MentorSection>
 
       <MentorSection title="پاسخ‌گویی" icon={ic(MessageCircle, MI.section)}>
@@ -219,22 +146,15 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
         </div>
       </MentorSection>
 
+      <div className="mentor-settings-submit">
       {error && <div className="form-inline-error" role="alert">{error}</div>}
-      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0, marginBottom: "var(--m-4)" }}>
+      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : "ذخیره تغییرات"}
         </button>
       </div>
+      </div>
 
-      {picker && (
-        <JalaliDatePicker
-          initial={awayDate}
-          title="تاریخ بازگشت"
-          disablePast
-          onClose={() => { setPicker(false); if (!awayDate) setAway(false); }}
-          onPick={(v) => { setAwayDate(v); setPicker(false); setFieldErr((x) => ({ ...x, awayDate: undefined })); touched(); }}
-        />
-      )}
     </form>
   );
 }

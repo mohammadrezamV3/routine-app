@@ -1,15 +1,13 @@
 "use client";
 
 import "./mentor.css";
-import { useState } from "react";
-import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Program, ProgramTransitionAction } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
-import { LockBodyScroll } from "./LockBodyScroll";
 import { Spinner } from "./Spinner";
 import { MentorField } from "./MentorUI";
+import { MentorSheet } from "./MentorMotion";
 
 const NOTE_MAX = 1000;
 
@@ -73,6 +71,14 @@ export function ProgramRespondModal({
   const [busy, setBusy] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // بستن با انیمیشنِ شیت؛ والد پس از پایانِ آن باخبر می‌شود
+  const [open, setOpen] = useState(true);
+  const close = () => { if (!busy) setOpen(false); };
+  useEffect(() => {
+    if (open) return;
+    const t = setTimeout(onClose, 180);
+    return () => clearTimeout(t);
+  }, [open, onClose]);
 
   async function submit() {
     const n = note.trim();
@@ -96,18 +102,8 @@ export function ProgramRespondModal({
     }
   }
 
-  if (typeof document === "undefined") return null;
-  return createPortal(
-    <>
-      <LockBodyScroll />
-      <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label={copy.title} style={{ zIndex: 91, maxWidth: 440 }}>
-        <div className="modal-head">
-          <div className="modal-title">{copy.title}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}>
-            <X size={16} strokeWidth={1.75} />
-          </button>
-        </div>
+  return (
+    <MentorSheet open={open} onClose={close} title={copy.title} size="sm" dismissible={!busy}>
         <div className="mentor-form">
           <p className="mentor-muted">{copy.hint}</p>
           {copy.label && (
@@ -127,7 +123,7 @@ export function ProgramRespondModal({
         </div>
         {error && <div className="form-inline-error" role="alert">{error}</div>}
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
+          <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>انصراف</button>
           <button
             type="button"
             className={`${copy.danger ? "trade-danger-btn" : "trade-primary-btn"} mentor-btn`}
@@ -137,8 +133,6 @@ export function ProgramRespondModal({
             {busy ? <Spinner size={14} /> : copy.confirm}
           </button>
         </div>
-      </div>
-    </>,
-    document.body
+    </MentorSheet>
   );
 }

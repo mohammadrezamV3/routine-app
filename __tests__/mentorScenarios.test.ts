@@ -9,6 +9,7 @@ vi.mock("next-auth", async (orig) => ({
 }));
 vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
 
+import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { prisma } from "@/lib/prisma";
 import { GET as discover } from "@/app/api/mentors/route";
 import { GET as mentorPage } from "@/app/api/mentors/[mentorId]/route";
@@ -66,6 +67,8 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     const mentor = await makeUser({ username: `${tag}coach`.slice(0, 20), name: "مربی", lastName: "سناریو" });
     const student = await makeUser({ username: `${tag}st`.slice(0, 20), name: "شاگرد" });
     await makeMentorProfile(mentor, { headline: `مربی ${tag}`, bio: "بیو", categories: ["FITNESS"], published: true });
+    // احرازِ هویتِ منتور اجباری است؛ تأییدِ ادمین (مسیرِ خودش در mentorVerification.test.ts)
+    await prisma.mentorProfile.update({ where: { userId: mentor }, data: { identityStatus: "VERIFIED" } });
 
     // کشف با q
     as(student);
@@ -75,7 +78,7 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     expect(found.mentors[0].name).toBe("مربی سناریو");
 
     // درخواست
-    const r = await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor, message: "می‌خوام قوی بشم" }));
+    const r = await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor, message: "می‌خوام قوی بشم" }));
     expect(r.status).toBe(200);
     const msId = (await j(r)).mentorship.id;
     as(student);

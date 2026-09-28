@@ -19,7 +19,9 @@ type Target =
   | { kind: "USER"; exists: boolean; user: PublicUser | null }
   | { kind: "REVIEW"; exists: boolean; rating: number | null; body: string | null; status: string | null; author: PublicUser | null; mentor: PublicUser | null }
   | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null; verified: boolean }
-  | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null };
+  | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null }
+  | { kind: "CONVERSATION"; exists: boolean; mentor: PublicUser | null; student: PublicUser | null;
+      messages: { id: string; sender: PublicUser | null; text: string | null; createdAt: string; verified: boolean }[] };
 type ReportStatus = "OPEN" | "RESOLVED" | "DISMISSED";
 type Report = {
   id: string; targetType: Target["kind"]; targetId: string; reason: string; details: string | null;
@@ -45,7 +47,7 @@ const EMPTY_LABELS: Record<ReportStatus, string> = {
 };
 const STATUS_BADGE: Record<ReportStatus, "amber" | "green" | "gray"> = { OPEN: "amber", RESOLVED: "green", DISMISSED: "gray" };
 const STATUS_ICON: Record<ReportStatus, typeof Hourglass> = { OPEN: Hourglass, RESOLVED: CheckCircle2, DISMISSED: CircleSlash };
-const TARGET_LABELS: Record<Target["kind"], string> = { USER: "کاربر", REVIEW: "نظر", MESSAGE: "پیام چت", PROGRAM: "برنامه" };
+const TARGET_LABELS: Record<Target["kind"], string> = { USER: "کاربر", REVIEW: "نظر", MESSAGE: "پیام چت", PROGRAM: "برنامه", CONVERSATION: "گفت‌وگو" };
 const ACTION_LABELS: Record<Action, string> = {
   hide_review: "پنهان کردن نظر",
   delete_message: "حذف پیام",
@@ -75,7 +77,7 @@ function availableActions(r: Report): Action[] {
 function TargetSnippet({ t }: { t: Target }) {
   // پیامِ گفت‌وگو رمزگذاریِ سرتاسری دارد: متن فقط از خودِ گزارش می‌آید، پس حتی
   // پس از حذفِ پیام هم نمایش داده می‌شود
-  if (!t.exists && t.kind !== "MESSAGE") return <div className="trade-row-sub">محتوای گزارش‌شده حذف شده است</div>;
+  if (!t.exists && t.kind !== "MESSAGE" && t.kind !== "CONVERSATION") return <div className="trade-row-sub">محتوای گزارش‌شده حذف شده است</div>;
   if (t.kind === "USER") return <div className="trade-row-main">{t.user ? displayName(t.user) : "—"}</div>;
   if (t.kind === "REVIEW") {
     return (
@@ -106,6 +108,33 @@ function TargetSnippet({ t }: { t: Target }) {
           {t.verified
             ? "متن با تعهد رمزنگاری فرستنده تأیید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
             : "پیام پیش از رمزگذاری سرتاسری ارسال شده و تأیید رمزنگاری ندارد"}
+        </div>
+      </>
+    );
+  }
+  if (t.kind === "CONVERSATION") {
+    const allVerified = t.messages.every((m) => m.verified);
+    return (
+      <>
+        <div className="trade-row-sub">
+          گفت‌وگوی {t.mentor ? displayName(t.mentor) : "—"} (منتور) و {t.student ? displayName(t.student) : "—"} (شاگرد)؛ {formatNumber(t.messages.length)} پیام پیوست
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+          {t.messages.map((m) => (
+            <div key={m.id}>
+              <div className="trade-row-sub">
+                {m.sender ? displayName(m.sender) : "—"}
+                <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(m.createdAt)}</span>
+                {!m.verified && "؛ بدون تأیید رمزنگاری"}
+              </div>
+              <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{m.text || <span className="admin-muted">متن در دسترس نیست</span>}</div>
+            </div>
+          ))}
+        </div>
+        <div className="trade-row-sub">
+          {allVerified
+            ? "هر پیام با تعهد رمزنگاری فرستنده‌اش تأیید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
+            : "بعضی پیام‌ها پیش از رمزگذاری سرتاسری ارسال شده‌اند و تأیید رمزنگاری ندارند"}
         </div>
       </>
     );
@@ -155,9 +184,6 @@ export default function AdminMentorReportsPage() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">گزارش‌های منتورها</div>
-          <div className="admin-section-hint" style={{ margin: 0 }}>
-            رسیدگی با اقدام، بقیه‌ی گزارش‌های باز همان محتوا را هم می‌بندد
-          </div>
         </div>
       </div>
 

@@ -14,6 +14,8 @@ export type ProgramLogStatus = "COMPLETED" | "PARTIAL" | "MISSED";
 export type ProgramTransitionAction = "send" | "accept" | "reject" | "request_changes" | "activate" | "complete" | "cancel";
 export type MentorshipAction = "accept" | "reject" | "cancel" | "end" | "block" | "unblock";
 export type ReportTargetType = "USER" | "REVIEW" | "MESSAGE" | "PROGRAM";
+/** سابقه‌ی گفت‌وگو در پنل کاربری — GET /api/mentorships/chat-history */
+export type ChatHistoryResponse = { conversations: import("@/lib/mentorChatHistory").ChatHistoryRow[] };
 
 /** اطلاعاتِ عمومیِ کاربر — هرگز ایمیل/شماره */
 export type PublicUser = {
@@ -124,6 +126,8 @@ export type Review = {
 export type MyMentorship = { id: string; status: MentorshipStatus; initiatedBy: MentorshipInitiator };
 
 export type MentorsListResponse = { mentors: MentorCard[]; hasMore: boolean };
+/** GET /api/mentors/saved — ذخیره‌شده‌ها (تازه‌ترین اول)؛ max = سقفِ ذخیره */
+export type SavedMentorsResponse = { mentors: MentorCard[]; max: number };
 /** GET /api/mentors/popular — mentors: «منتورهای محبوب» (شایستگی)؛ newcomers: «منتورهای تازه» (جایگاهِ جدا) */
 export type MentorsPopularResponse = { mentors: MentorCard[]; newcomers?: MentorCard[] };
 export type MentorProfileResponse = {
@@ -132,6 +136,8 @@ export type MentorProfileResponse = {
   myMentorship: MyMentorship | null;
   canReview: boolean;
   myReview: Review | null;
+  /** این منتور در «ذخیره‌شده‌ها»ی بیننده است (PUT/DELETE /api/mentors/:id/saved) */
+  saved?: boolean;
 };
 
 export type MentorCredential = { category: string; status: VerificationStatus; rejectReason: string | null };
@@ -172,6 +178,9 @@ export type MentorSelf = {
   responseTimeHours?: number | null;
   welcomeMessage?: string | null;
   intakeQuestions?: string[];
+  /** نسخه‌ی پذیرفته‌شده‌ی شرایط منتوری؛ اگر با MENTOR_TERMS_VERSION یکی نباشد، ذخیره‌ی بعدی acceptMentorTerms لازم دارد */
+  mentorTermsVersion?: string | null;
+  acceptedMentorTermsAt?: string | null;
 };
 
 export type MentorshipRow = {
@@ -239,6 +248,8 @@ export type ProgramRow = {
   mentorshipId: string;
   counterpart: PublicUser;
   progress: ProgramProgress;
+  /** یادداشتِ منتور روی برنامه (فهرست‌ها؛ در جزئیات هم هست) */
+  note?: string | null;
 };
 export type ProgramsResponse = { programs: ProgramRow[] };
 
@@ -368,6 +379,8 @@ export type MessagesResponse = {
   studentId: string;
   /** پیامِ خوش‌آمد از تنظیماتِ منتور (رمزگذاریِ سرتاسری ندارد و جدا نمایش داده می‌شود) */
   welcome: { body: string; at: string } | null;
+  /** «پاک کردن سابقه» برای همین کاربر؛ پیام‌های تا این زمان برنمی‌گردند */
+  clearedAt?: string | null;
 };
 export type UnreadResponse = { total: number; byMentorship: Record<string, number> };
 

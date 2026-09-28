@@ -15,6 +15,7 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { Spinner } from "@/components/Spinner";
 import { MentorRankingBreakdown } from "@/components/admin/MentorRankingBreakdown";
+import "@/components/mentor.css";
 import { formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
 
@@ -137,6 +138,7 @@ export default function AdminMentorDetailPage() {
         <ArrowRight {...IS} aria-hidden /> بازگشت
       </button>
 
+      <div className="admin-chart-card admin-onebox">
       <div className="admin-card admin-user-hero">
         <UserAvatar user={u} size={58} />
         <div className="admin-user-hero-info">
@@ -298,6 +300,8 @@ export default function AdminMentorDetailPage() {
             </table>
           </div>
         )}
+      </div>
+
       </div>
 
       {verify && (

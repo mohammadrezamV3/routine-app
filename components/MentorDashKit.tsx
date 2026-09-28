@@ -6,14 +6,14 @@ import { AuthGate } from "./AuthGate";
 import { FeatureGate } from "./FeatureGate";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { MentorErrorState, MentorPageHead } from "./MentorPageShell";
-import { MentorEmpty, MentorNotice } from "./MentorUI";
+import { MentorEmpty, MentorNotice, MentorPage } from "./MentorUI";
 import { faNum } from "@/lib/jalali";
 
 /**
  * تکه‌های مشترک صفحه‌های سمت منتور (/mentor/**): پوسته با گیت ورود + فلگ
  * `mentors`، درخواست JSON با پیام خطای قابل‌نمایش، و حالت‌های خطا/خالی.
  * سرصفحه، خطا و اطلاعیه همان پایه‌های MentorPageShell/MentorUI هستند تا
- * سمت منتور و سمت شاگرد یک‌شکل باشند. بدون انیمیشن و بدون بک‌گراند تازه.
+ * سمت منتور و سمت شاگرد یک‌شکل باشند. بدون بک‌گراند تازه؛ حرکت از MentorMotion.
  */
 
 export type ApiResult<T> = { ok: true; data: T; status: number } | { ok: false; error: string; status: number };
@@ -64,34 +64,41 @@ export function formatBytes(n: number): string {
 }
 
 /**
- * پوسته‌ی همه‌ی صفحه‌های /mentor: بازگشت + عنوان + گیت‌ها. تا وقتی نشست
- * در حال بارگذاری است اسکلت نشان داده می‌شود (نه پیام اشتباه «وارد شوید»).
- * ظرفِ account-shell حفظ شده چون فرم‌های این بخش (AuthField) ظاهرشان را
- * از همان می‌گیرند.
+ * پوسته‌ی همه‌ی صفحه‌های /mentor: بازگشت + عنوان + گیت‌ها. ظرفِ عرض
+ * (account-shell، که فرم‌های AuthField ظاهرشان را از آن می‌گیرند) و نوارِ
+ * ناوبریِ پنل در app/mentor/layout.tsx هستند. تا وقتی نشست در حال بارگذاری
+ * است اسکلت نشان داده می‌شود (نه پیام اشتباه «وارد شوید»).
+ * محتوا داخلِ یک ظرفِ واحد (MentorPage) می‌نشیند؛ `surface={false}` برای
+ * صفحه‌ای که خودش چند ظرف لازم دارد. `hint` دیگر رندر نمی‌شود.
  */
 export function MentorDashShell({
-  title, hint, back, titleAction, children,
+  title, back, titleAction, surface = true, children,
 }: {
   title: string;
+  /** @deprecated زیرعنوانِ صفحه حذف شد؛ نادیده گرفته می‌شود */
   hint?: string;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;
+  surface?: boolean;
   children: React.ReactNode;
 }) {
   const { status } = useSession();
   return (
-    <section className="account-shell mentor-page" dir="rtl">
+    <div className="mentor-panel-page">
       <MentorPageHead
         title={title}
-        hint={hint}
         back={back}
         titleAction={status === "authenticated" ? titleAction : undefined}
       />
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش منتورها وارد شوید" />}
-      {status === "authenticated" && <FeatureGate feature="mentors">{children}</FeatureGate>}
-    </section>
+      {status === "authenticated" && (
+        <FeatureGate feature="mentors">
+          {surface ? <MentorPage>{children}</MentorPage> : children}
+        </FeatureGate>
+      )}
+    </div>
   );
 }
 

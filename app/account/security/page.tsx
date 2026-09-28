@@ -194,6 +194,8 @@ export default function SecurityPage() {
     if (newPassword !== confirmPassword) { setPwError("رمز جدید با تکرارش یکی نیست"); return; }
     setPwSaving(true);
     try {
+      // کلیدِ رمزگذاریِ سرتاسری با رمزِ تازه دوباره بسته‌بندی می‌شود (روی دستگاه؛ lib/e2ee/client.ts)
+      const commitE2EE = await import("@/lib/e2ee/client").then((m) => m.prepareE2EEPasswordChange(currentPassword, newPassword)).catch(() => null);
       const res = await fetch("/api/account/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -201,6 +203,7 @@ export default function SecurityPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setPwError(data.error || "خطایی پیش اومد"); return; }
+      if (commitE2EE) await commitE2EE().catch(() => {});
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
       setPwSuccess(true);
       setTimeout(() => setPwSuccess(false), 2500);

@@ -12,7 +12,11 @@ import {
   buildMentorshipRows,
   usersBlockEachOther,
   isUniqueViolation,
+  DISCOVERABLE_PROFILE_WHERE,
+  IDENTITY_VERIFIED_WHERE,
+  MENTOR_IDENTITY_REQUIRED_MSG,
 } from "@/lib/mentorServer";
+import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 
 const MESSAGE_MAX = 500;
 // پیامِ عمومی برای هر حالتِ «بلاک» — تا معلوم نشه دقیقاً کی کی رو بلاک کرده
@@ -60,12 +64,16 @@ export async function POST(req: Request) {
   let initiatedBy: "STUDENT" | "MENTOR";
   let mentorCategories: string[] = [];
   let intakeAnswers: IntakeAnswer[] | null = null;
+  // پذیرشِ «شرایط منتورها» از سمتِ شاگرد (lib/mentorTerms.ts) — فقط درخواستِ خودِ شاگرد
+  let studentTermsVersion: string | null = null;
+  let recordStudentTerms = false;
 
   if (b.mentorId !== undefined) {
     if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("منتور نامعتبره");
     if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
     const profile = await prisma.mentorProfile.findFirst({
-      where: { userId: b.mentorId, published: true, suspendedAt: null, user: { isBlocked: false, deletedAt: null } },
+      // همان شرطِ قابلِ کشف: منتشرشده، غیرمعلق، هویتِ تأییدشده (احراز اجباری)
+      where: { userId: b.mentorId, ...DISCOVERABLE_PROFILE_WHERE },
       select: { ...AVAILABILITY_SELECT, categories: true, intakeQuestions: true },
     });
     if (!profile) return notFound();
@@ -75,6 +83,11 @@ export async function POST(req: Request) {
     const ia = validateIntakeAnswers(profile.intakeQuestions, b.intakeAnswers);
     if (!ia.ok) return badRequest(ia.error);
     intakeAnswers = ia.data;
+    const meRow = await prisma.user.findUnique({ where: { id: me }, select: { mentorStudentTermsVersion: true } });
+    const terms = decideMentorTerms("student", meRow?.mentorStudentTermsVersion, b.acceptMentorTerms);
+    if (!terms.ok) return NextResponse.json({ error: terms.message, code: MENTOR_TERMS_ERROR_CODE }, { status: 400 });
+    recordStudentTerms = terms.record;
+    studentTermsVersion = MENTOR_TERMS_VERSION;
     mentorId = b.mentorId;
     studentId = me;
     initiatedBy = "STUDENT";
@@ -82,6 +95,8 @@ export async function POST(req: Request) {
   } else if (b.studentUsername !== undefined) {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
+    // احرازِ هویت برای منتور اجباریه — بدونِ تأیید، دعوتِ شاگرد هم ممکن نیست
+    if (mp.profile.identityStatus !== IDENTITY_VERIFIED_WHERE.identityStatus) return forbidden(MENTOR_IDENTITY_REQUIRED_MSG);
     const username = typeof b.studentUsername === "string" ? b.studentUsername.trim().replace(/^@/, "") : "";
     if (!isValidUsername(username)) return badRequest("یوزرنیم نامعتبره");
     // بدون حساسیت به بزرگ/کوچکی — هم‌راستا با ورود و جست‌وجوی دوستان
@@ -134,10 +149,11 @@ export async function POST(req: Request) {
         where: { id: existing.id, status: existing.status },
         data: {
           status: "PENDING", initiatedBy, message, categories, blockedById: null, endedAt: null, ...DEFAULT_PRIVACY,
-          pausedAt: null, pauseReason: null, endReason: null, endedBy: null,
+          pausedAt: null, pauseReason: null, endReason: null, endedBy: null, studentTermsVersion,
         },
       });
       if (res.count > 0) await writeIntakeAnswers(tx, existing.id, intakeAnswers);
+      if (res.count > 0 && recordStudentTerms) await recordStudentTermsAcceptance(tx, studentId);
       return res.count;
     });
     if (count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
@@ -145,8 +161,9 @@ export async function POST(req: Request) {
   } else {
     try {
       id = await prisma.$transaction(async (tx) => {
-        const created = await tx.mentorship.create({ data: { mentorId, studentId, initiatedBy, message, categories }, select: { id: true } });
+        const created = await tx.mentorship.create({ data: { mentorId, studentId, initiatedBy, message, categories, studentTermsVersion }, select: { id: true } });
         await writeIntakeAnswers(tx, created.id, intakeAnswers);
+        if (recordStudentTerms) await recordStudentTermsAcceptance(tx, studentId);
         return created.id;
       });
     } catch (e) {
@@ -170,4 +187,14 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ mentorship });
+}
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+/** ثبتِ پذیرشِ نسخه‌ی جاریِ شرایط روی کاربر — هم‌تراکنش با ساختِ درخواست */
+async function recordStudentTermsAcceptance(tx: Tx, userId: string): Promise<void> {
+  await tx.user.update({
+    where: { id: userId },
+    data: { mentorStudentTermsAcceptedAt: new Date(), mentorStudentTermsVersion: MENTOR_TERMS_VERSION },
+  });
 }

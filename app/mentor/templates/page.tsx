@@ -5,6 +5,7 @@ import { MentorDashShell } from "@/components/MentorDashKit";
 import { MentorTemplatesList } from "@/components/MentorTemplatesList";
 import { MentorSavedRepliesManager } from "@/components/MentorSavedReplies";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { MentorSwap } from "@/components/MentorMotion";
 
 type Tab = "programs" | "replies";
 
@@ -24,7 +25,7 @@ export default function MentorTemplatesPage() {
   }
 
   return (
-    <MentorDashShell title="قالب‌ها" back={{ href: "/mentor", label: "پنل منتور" }}>
+    <MentorDashShell title="قالب‌ها">
       <div className="mentor-tabs">
         <SegmentedTabs<Tab>
           active={tab}
@@ -35,7 +36,7 @@ export default function MentorTemplatesPage() {
           ]}
         />
       </div>
-      {tab === "programs" ? <MentorTemplatesList /> : <MentorSavedRepliesManager />}
+      <MentorSwap swapKey={tab}>{tab === "programs" ? <MentorTemplatesList /> : <MentorSavedRepliesManager />}</MentorSwap>
     </MentorDashShell>
   );
 }

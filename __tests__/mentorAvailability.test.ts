@@ -10,6 +10,7 @@ vi.mock("next-auth", async (orig) => ({
 }));
 vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
 
+import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { prisma } from "@/lib/prisma";
 import { GET as listMentorships, POST as postMentorship } from "@/app/api/mentorships/route";
 import { GET as discover } from "@/app/api/mentors/route";
@@ -202,9 +203,9 @@ describe("سؤال‌های پذیرش", () => {
     const s = await makeUser();
 
     as(s);
-    expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: m }))).status).toBe(400);
-    expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: m, intakeAnswers: ["کنکور", ""] }))).status).toBe(400);
-    const r = await postMentorship(req("POST", "/api/mentorships", { mentorId: m, intakeAnswers: ["کنکور", "۵ ساعت"] }));
+    expect((await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: m }))).status).toBe(400);
+    expect((await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: m, intakeAnswers: ["کنکور", ""] }))).status).toBe(400);
+    const r = await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: m, intakeAnswers: ["کنکور", "۵ ساعت"] }));
     expect(r.status).toBe(200);
     const id = (await j(r)).mentorship.id;
 
@@ -217,7 +218,7 @@ describe("سؤال‌های پذیرش", () => {
     await mentorshipAction(m, id, "reject");
     await prisma.mentorship.update({ where: { id }, data: { updatedAt: new Date(Date.now() - 8 * 86_400_000) } });
     as(s);
-    const again = await postMentorship(req("POST", "/api/mentorships", { mentorId: m, intakeAnswers: ["جدید"] }));
+    const again = await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: m, intakeAnswers: ["جدید"] }));
     expect(again.status).toBe(200);
     expect((await rowAs(m, "mentor", id)).intakeAnswers).toEqual([{ question: "سؤال تازه", answer: "جدید" }]);
   });

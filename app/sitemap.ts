@@ -26,6 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/faq"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: absoluteUrl("/terms"), lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: absoluteUrl("/terms/mentors"), lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   // lastModified مقاله‌ها از تاریخ واقعیِ خودشان می‌آید، نه `now` — تاریخِ

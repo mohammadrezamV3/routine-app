@@ -6,10 +6,10 @@ import { addDaysIso, dateFromIso, feedbackAad, recomputeMentorRating, todayIsoIn
 import { loadMirrorOccurrences, removeProgramMirrors, writeProgramMirror } from "@/lib/mentorProgramMirror";
 import { clearManageDemo, seedManageDemo } from "@/lib/demoDataManage";
 import { clearToolsDemo, parseToolsDemoState, seedToolsDemo, type ToolsDemoState } from "@/lib/demoDataTools";
-import { deriveChatKeys, encryptMessage, generateIdentityKeyPair, importPublicKey } from "@/lib/e2ee/core";
+import { encryptMessageV2, generateIdentityKeyPair } from "@/lib/e2ee/core";
 import { randomId } from "@/lib/e2ee/encoding";
-import { encryptedMessageData } from "@/lib/mentorChatServer";
-import { currentE2EKey, sealAtRest } from "@/lib/e2ee/server";
+import { encryptedMessageRows } from "@/lib/mentorChatServer";
+import { activeKeysFor, sealAtRest } from "@/lib/e2ee/server";
 import { sealReportedText } from "@/lib/e2ee/reportServer";
 import { syncProgramProgress } from "@/lib/mentorProgress";
 import { mirrorOccurrenceId } from "@/lib/mentorProgressCore";
@@ -281,6 +281,22 @@ MENTORS.push(
   }
 );
 
+// جستجوی منتور (agent F — lib/mentorSearch.ts): منتورِ تأییدشده‌ی کنکور با مدرکِ
+// تأییدشده (نشانِ مدرک کنارِ نام) تا جستجوی «کنکر»/«کنگور»/«konkur»/«آزمون سراسری»
+// نتیجه داشته باشد — نگار (کنکور) هویتش در صفِ بررسی است و دیگر در جستجو نمی‌آید.
+MENTORS.push({
+  key: "hamed", name: "حامد", lastName: "ملکی",
+  categories: ["ROUTINE"], routineRole: "مشاور کنکور",
+  headline: "برنامه‌ریزی کنکور انسانی و آزمون سراسری",
+  bio: "مشاور کنکور با هشت سال سابقه. برنامه‌ی هفتگی مطالعه و آزمون‌های آزمایشی را بر اساس تراز و ساعت آزاد شاگرد تنظیم می‌کنم.",
+  specialties: ["کنکور انسانی", "آزمون آزمایشی", "مدیریت زمان"],
+  identity: "VERIFIED", credentials: { ROUTINE: { status: "VERIFIED" } },
+  lastActiveDaysAgo: 0, profileAgeDays: 120,
+});
+
+// منتورهای ذخیره‌شده‌ی Owner (نشانک، تبِ «ذخیره‌شده‌ها» در /mentors)
+const OWNER_SAVED_MENTORS = ["sara", "parisa", "hamed"];
+
 const STUDENTS: Person[] = [
   { key: "ali", name: "علی", lastName: "محمدی" },
   { key: "zahra", name: "زهرا", lastName: "موسوی" },
@@ -513,20 +529,23 @@ class Seeder {
   }
 
   // ── رمزگذاریِ سرتاسریِ پیام‌های آزمایشی (docs/mentor-e2ee.md) ──
-  // کاربرِ آزمایشی کلیدِ واقعیِ P-256 می‌گیرد که همین‌جا ساخته و بعد از ساخت دور
-  // ریخته می‌شود (پشتیبان ندارد؛ کسی هم با این کاربرها وارد نمی‌شود). گفت‌وگوی
-  // دو کاربرِ آزمایشی برای هیچ‌کس — حتی Owner — خواندنی نیست، همان‌طور که باید.
-  // گفت‌وگو با Owner: اگر Owner کلید دارد، به کلیدِ عمومیِ او رمز می‌شود؛ وگرنه خالی می‌ماند.
-  demoKeys = new Map<string, { version: number; publicB64: string; privateKey: CryptoKey; publicKey: CryptoKey }>();
-  ownerKey: { userId: string; version: number; publicKey: CryptoKey } | null = null;
+  // کاربرِ آزمایشی کلیدِ واقعیِ P-256 (SYNCED، بی‌پشتیبان) می‌گیرد که همین‌جا ساخته و
+  // بعد از ساخت دور ریخته می‌شود؛ کسی با این کاربرها وارد نمی‌شود. گفت‌وگوی دو کاربرِ
+  // آزمایشی برای هیچ‌کس — حتی Owner — خواندنی نیست، همان‌طور که باید.
+  // گفت‌وگو با Owner: CEKِ هر پیام برای *همه‌ی* کلیدهای فعالِ Owner (هر دستگاه) و کلیدِ
+  // کاربرِ آزمایشی بسته‌بندی می‌شود؛ بسته‌بندی‌ها را همیشه کلیدِ کاربرِ آزمایشی می‌سازد
+  // (keyFromId)، چون کلیدِ خصوصیِ Owner روی سرور نیست. Owner از اولین ورودش خودکار کلید
+  // دارد؛ اگر هنوز نداشته باشد (هرگز وارد نشده)، این گفت‌وگوها خالی می‌مانند.
+  demoKeys = new Map<string, { version: number; publicB64: string; privateKey: CryptoKey }>();
+  ownerKey: { userId: string; keys: { version: number; publicKey: string }[] } | null = null;
   skippedOwnerThreads = 0;
 
   private async demoKey(userId: string) {
     let k = this.demoKeys.get(userId);
     if (!k) {
       const kp = await generateIdentityKeyPair();
-      await this.tx.userE2EKey.create({ data: { userId, version: 1, publicKey: kp.publicB64 } });
-      k = { version: 1, publicB64: kp.publicB64, privateKey: kp.privateKey, publicKey: kp.publicKey };
+      await this.tx.userE2EKey.create({ data: { userId, version: 1, kind: "SYNCED", activeSyncedFor: userId, publicKey: kp.publicB64 } });
+      k = { version: 1, publicB64: kp.publicB64, privateKey: kp.privateKey };
       this.demoKeys.set(userId, k);
     }
     return k;
@@ -547,30 +566,30 @@ class Seeder {
     const demoId = this.isDemo(rel.mentorId) ? rel.mentorId : rel.studentId;
     const otherId = demoId === rel.mentorId ? rel.studentId : rel.mentorId;
     const mine = await this.demoKey(demoId);
-    const other = ownerSide && otherId === ownerSide.userId ? ownerSide : await this.demoKey(otherId);
-    const mentorV = rel.mentorId === demoId ? mine.version : other.version;
-    const studentV = rel.studentId === demoId ? mine.version : other.version;
-    const keys = await deriveChatKeys(mine.privateKey, other.publicKey, {
-      mentorshipId: rel.id, mentorId: rel.mentorId, studentId: rel.studentId, mentorKeyVersion: mentorV, studentKeyVersion: studentV,
-    });
+    const otherKeys = ownerSide && otherId === ownerSide.userId ? ownerSide.keys : [await this.demoKey(otherId)].map((k) => ({ version: k.version, publicKey: k.publicB64 }));
+    const from = { ref: { u: demoId, k: mine.version }, privateKey: mine.privateKey };
+    const targets = [
+      { ref: { u: demoId, k: mine.version }, publicKey: mine.publicB64 },
+      ...otherKeys.map((k) => ({ ref: { u: otherId, k: k.version }, publicKey: k.publicKey })),
+    ];
 
     const n = lines.length;
     const out: { clientId: string; senderId: string; text: string }[] = [];
     const data: Prisma.MentorMessageCreateManyInput[] = [];
+    const wraps: Prisma.MentorMessageKeyWrapCreateManyInput[] = [];
     for (let i = 0; i < n; i++) {
       const [fromMentor, text] = lines[i];
       const senderId = fromMentor ? rel.mentorId : rel.studentId;
       const clientId = randomId();
-      const enc = await encryptMessage(fromMentor ? keys.fromMentor : keys.fromStudent, text, {
-        mentorshipId: rel.id, senderId, clientId,
-        senderKeyVersion: fromMentor ? mentorV : studentV,
-        recipientKeyVersion: fromMentor ? studentV : mentorV,
-      });
+      const { frankingKey: _fk, ...enc } = await encryptMessageV2(text, { mentorshipId: rel.id, senderId, clientId }, from, targets);
       const createdAt = this.ago(0, (n - i) * 47 + 30);
-      data.push({ ...encryptedMessageData(rel, senderId, enc, createdAt), readAt: i >= n - unreadTail ? null : this.ago(0, (n - i) * 47) });
+      const rows = encryptedMessageRows(rel, senderId, enc, createdAt, `demomsg${randomId(12).replace(/[^A-Za-z0-9]/g, "")}`);
+      data.push({ ...rows.message, readAt: i >= n - unreadTail ? null : this.ago(0, (n - i) * 47) });
+      wraps.push(...rows.wraps);
       out.push({ clientId, senderId, text });
     }
     await this.tx.mentorMessage.createMany({ data });
+    await this.tx.mentorMessageKeyWrap.createMany({ data: wraps });
     this.counts.messages += n;
     return out;
   }
@@ -696,8 +715,8 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   const ownerRelCats = ownerCats.filter((c) => c === "ROUTINE" || c === "FITNESS" || c === "NUTRITION");
 
   // کلیدِ رمزگذاریِ Owner (اگر فعال کرده) — گفت‌وگوهای او با کاربرانِ آزمایشی به همین کلید رمز می‌شوند
-  const ownerCur = await currentE2EKey(ownerId);
-  const ownerE2E = ownerCur ? { userId: ownerId, version: ownerCur.version, publicKey: await importPublicKey(ownerCur.publicKey) } : null;
+  const ownerActive = (await activeKeysFor([ownerId]))[ownerId];
+  const ownerE2E = ownerActive.length ? { userId: ownerId, keys: ownerActive.map((k) => ({ version: k.version, publicKey: k.publicKey })) } : null;
   let skippedOwnerThreads = 0;
 
   let tickPlan = new Map<string, Map<string, Record<string, boolean>>>();
@@ -865,6 +884,8 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       ], 2);
 
       await S.mentorship(id("amir"), ownerId, "PENDING", { initiatedBy: "MENTOR", categories: ["FITNESS"], message: "یک برنامه‌ی تمرینی سه‌روزه برات دارم؛ اگه قبول کنی می‌فرستم.", createdDaysAgo: 1 });
+      // نشانک‌های Owner — با حذفِ کاربرانِ آزمایشی cascade می‌شوند
+      await tx.savedMentor.createMany({ data: OWNER_SAVED_MENTORS.map((k) => ({ userId: ownerId, mentorUserId: id(k) })), skipDuplicates: true });
 
       // ── Owner به‌عنوانِ منتور ──
       if (!owner.mentorProfile) {
@@ -1025,7 +1046,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   });
 
   if (skippedOwnerThreads > 0) {
-    warnings.push("گفت‌وگوهای حساب شما با کاربران آزمایشی خالی ساخته شد؛ پیام‌ها رمزگذاری سرتاسری دارند و حساب شما هنوز رمز گفت‌وگو ندارد. پس از فعال‌سازی در یک گفت‌وگو، داده‌ی آزمایشی را دوباره بساز");
+    warnings.push("گفت‌وگوهای حساب شما با کاربران آزمایشی خالی ساخته شد؛ پیام‌ها رمزگذاری سرتاسری دارند و این حساب هنوز کلید رمزگذاری ندارد. یک بار بخش منتور را باز کن و داده‌ی آزمایشی را دوباره بساز");
   }
 
   const state: DemoState = { seededAt: now.toISOString(), ownerId, ownerProfileId, notificationIds, manageLabelIds, toolsDemo };

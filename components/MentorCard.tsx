@@ -2,52 +2,54 @@
 
 import "./mentor.css";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, CircleSlash, Users } from "lucide-react";
+import { CalendarDays, CircleSlash, Users } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { faNum } from "@/lib/jalali";
 import { availabilityShort } from "@/lib/mentorAvailability";
 import { MentorUserAvatar } from "./MentorUserAvatar";
-import { CategoryChip, RatingStars, VerificationBadges } from "./MentorBadges";
-import { MentorChip } from "./MentorUI";
+import { CertificateMark, MentorTag, RatingInline, categoryLabel } from "./MentorBadges";
+import { MentorSaveButton } from "./MentorSaved";
 
-// کارتِ یک منتور در لیستِ کشف — همان قابِ rp-card رودمپ‌ها (trade-surface).
-// هاور فقط رنگِ بوردر/نام را عوض می‌کند؛ حرکتی ندارد.
+const META_ICON = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
+
+/**
+ * کارتِ فشرده‌ی منتور در «جستجوی منتور»: آواتار، نام + نشانِ مدرک کنارِ نام،
+ * نقش/عنوان در یک خط، امتیاز و شاگردِ فعال در یک خطِ متا، و برچسب‌های کوچکِ حوزه.
+ * کلِ کارت با «لینکِ کشیده» (::after روی نام) قابلِ کلیک است؛ نشانِ مدرک و نشانک
+ * دکمه‌های مستقل‌اند (دکمه داخلِ <a> نمی‌نشیند).
+ */
 export function MentorCard({ mentor }: { mentor: MentorCardData }) {
-  // ظرفیت/عدم حضور یک چیپِ فشرده کنارِ بقیه‌ی چیپ‌هاست، نه یک خطِ متنیِ جدا
   const closed = mentor.availability && mentor.availability !== "OPEN"
     ? availabilityShort(mentor.availability, mentor.awayUntil)
     : !mentor.acceptingStudents ? "شاگرد جدید نمی‌پذیرد" : null;
-  const hasChips = !!closed || mentor.identityVerified || mentor.certifications.some((c) => c.verified) || mentor.categories.length > 0;
+  const line = [mentor.routineRole, mentor.headline].filter(Boolean).join(" · ");
   return (
-    <Link href={`/mentors/${mentor.userId}`} prefetch={false} className="trade-surface rp-card mentor-card">
-      <div className="mentor-card-head">
-        <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
-        <div className="mentor-card-id">
-          {mentor.routineRole && <div className="rp-card-eyebrow">{mentor.routineRole}</div>}
-          <div className="mentor-card-name">{mentor.name}</div>
-          {mentor.headline && <div className="mentor-card-headline">{mentor.headline}</div>}
+    <article className="trade-surface rp-card mentor-card is-compact">
+      <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
+      <div className="mentor-card-id">
+        <div className="mentor-card-title">
+          <Link href={`/mentors/${mentor.userId}`} prefetch={false} className="mentor-card-name mentor-card-link">
+            {mentor.name}
+          </Link>
+          <CertificateMark certifications={mentor.certifications} size={15} />
         </div>
-      </div>
-
-      {hasChips && (
-        <div className="mentor-chips">
+        {line && <div className="mentor-card-headline" title={line}>{line}</div>}
+        <div className="mentor-card-meta">
+          <RatingInline value={mentor.ratingAvg} count={mentor.ratingCount} />
+          <span><Users {...META_ICON} /> {faNum(mentor.activeStudents)} شاگرد فعال</span>
           {closed && (
-            <MentorChip tone={mentor.availability === "AWAY" ? "info" : "neutral"} icon={mentor.availability === "AWAY" ? <CalendarDays size={13} strokeWidth={1.75} aria-hidden /> : <CircleSlash size={13} strokeWidth={1.75} aria-hidden />}>
-              {closed}
-            </MentorChip>
+            <span className="mentor-card-closed">
+              {mentor.availability === "AWAY" ? <CalendarDays {...META_ICON} /> : <CircleSlash {...META_ICON} />} {closed}
+            </span>
           )}
-          <VerificationBadges identityVerified={mentor.identityVerified} certifications={mentor.certifications} />
-          {mentor.categories.map((c) => <CategoryChip key={c} category={c} />)}
         </div>
-      )}
-
-      <div className="rp-card-foot">
-        <RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} />
-        <span className="rp-card-meta" style={{ marginInlineStart: "auto" }}>
-          <span><Users size={13} strokeWidth={1.75} aria-hidden /> {faNum(mentor.activeStudents)} شاگرد فعال</span>
-        </span>
-        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" aria-hidden />
+        {mentor.categories.length > 0 && (
+          <div className="mentor-card-tags">
+            {mentor.categories.map((c) => <MentorTag key={c}>{categoryLabel(c)}</MentorTag>)}
+          </div>
+        )}
       </div>
-    </Link>
+      <MentorSaveButton mentor={mentor} className="mentor-card-save" />
+    </article>
   );
 }

@@ -7,16 +7,19 @@ import { useSession } from "next-auth/react";
 import { AuthGate } from "./AuthGate";
 import { FeatureGate } from "./FeatureGate";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { MentorPage, useMentorFlat } from "./MentorUI";
 
 /**
  * سرصفحه‌ی مشترک همه‌ی صفحه‌های منتور — همان مارک‌آپ TradePageShell:
  * لینک بازگشت، زیرش ردیفِ عنوان با اکشنِ عنوان در انتهای ردیف (سمت چپ)،
- * و یک خط توضیح اختیاری. MentorDashShell هم از همین استفاده می‌کند.
+ * MentorDashShell هم از همین استفاده می‌کند. زیرعنوان (`hint`) دیگر رندر
+ * نمی‌شود (قانونِ دورِ ۳: بدونِ زیرعنوان زیرِ عنوانِ صفحه).
  */
 export function MentorPageHead({
-  title, hint, back, titleAction, head,
+  title, back, titleAction, head,
 }: {
   title?: string;
+  /** @deprecated نادیده گرفته می‌شود */
   hint?: string;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;
@@ -37,7 +40,6 @@ export function MentorPageHead({
           </div>
         )
       )}
-      {hint && <p className="section-note">{hint}</p>}
     </div>
   );
 }
@@ -45,20 +47,23 @@ export function MentorPageHead({
 /**
  * پوسته‌ی صفحه‌های سمت شاگرد (/mentors، /mentorship، /mentor-programs).
  * تا وقتی نشست در حال بارگذاری است اسکلت نشان داده می‌شود (نه پیام اشتباهِ
- * «وارد شوید»)، بعد گیتِ قابلیت `mentors`. محتوا بدون انیمیشن ورود رندر
- * می‌شود. enforcement واقعی سمت سرور است (requireMentorsUser).
+ * «وارد شوید»)، بعد گیتِ قابلیت `mentors`. ورودِ صفحه را template.tsx
+ * (MentorRouteTransition) می‌دهد. `surface` کلِ محتوا را در یک ظرف (MentorPage)
+ * می‌گذارد. enforcement واقعی سمت سرور است (requireMentorsUser).
  */
 export function MentorPageShell({
   title,
-  hint,
   back,
   titleAction,
   head,
+  surface = false,
   children,
 }: {
   title?: string;
-  /** یک خط توضیح زیر عنوان */
+  /** @deprecated زیرعنوانِ صفحه حذف شد؛ نادیده گرفته می‌شود */
   hint?: string;
+  /** کلِ محتوا داخلِ یک ظرفِ واحد (بخش‌ها تخت می‌شوند) */
+  surface?: boolean;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;
   /** سرصفحه‌ی سفارشی (مثلا آواتار + نام) به‌جای عنوان ساده */
@@ -71,7 +76,6 @@ export function MentorPageShell({
     <section className="roadmaps-desktop mentor-page">
       <MentorPageHead
         title={title}
-        hint={hint}
         back={back}
         head={head}
         titleAction={status === "authenticated" ? titleAction : undefined}
@@ -79,7 +83,9 @@ export function MentorPageShell({
 
       {status === "loading" && <PanelSkeleton />}
       {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش منتورها وارد شوید" />}
-      {status === "authenticated" && <FeatureGate feature="mentors">{children}</FeatureGate>}
+      {status === "authenticated" && (
+        <FeatureGate feature="mentors">{surface ? <MentorPage>{children}</MentorPage> : children}</FeatureGate>
+      )}
     </section>
   );
 }
@@ -95,8 +101,9 @@ export function MentorErrorState({
   onRetry?: () => void;
   action?: React.ReactNode;
 }) {
+  const flat = useMentorFlat();
   return (
-    <div className="trade-surface mentor-error" role="alert">
+    <div className={flat ? "mentor-error" : "trade-surface mentor-error"} role="alert">
       <AlertTriangle size={24} strokeWidth={1.75} aria-hidden />
       <p>{message}</p>
       {(onRetry || action) && (

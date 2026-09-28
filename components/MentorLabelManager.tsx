@@ -1,5 +1,6 @@
 "use client";
 
+import { MentorList, MentorListItem } from "./MentorMotion";
 import { useState } from "react";
 import { Check, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { Spinner } from "./Spinner";
@@ -63,14 +64,14 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
   return (
     <MentorSection
       id="labels" title="برچسب شاگردها" icon={ic(Tag, MI.section)} count={labels.length ? fa(labels.length) : undefined}
-      desc="برای دسته‌بندی و فیلتر شاگردها؛ فقط خودت برچسب‌ها را می‌بینی"
     >
       {labels.length === 0 ? (
         <MentorEmpty>هنوز برچسبی نساخته‌ای</MentorEmpty>
       ) : (
         <div className="mentor-list">
-          {labels.map((l) => editing?.id === l.id ? (
-            <div key={l.id} className="mentor-row">
+          <MentorList>
+          {labels.map((l) => <MentorListItem key={l.id}>{editing?.id === l.id ? (
+            <div className="mentor-row">
               <input
                 type="text" className="wsearch-newform-name trade-glass-field" aria-label="نام برچسب" autoFocus
                 maxLength={LABEL_NAME_MAX + 10} value={editing.name}
@@ -85,7 +86,7 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
               </span>
             </div>
           ) : (
-            <div key={l.id} className="mentor-row">
+            <div className="mentor-row">
               <span className="mentor-row-body"><span className="mentor-row-title">{l.name}</span></span>
               <span className="mentor-row-end">
                 <button type="button" className="trade-icon-btn" aria-label={`تغییر نام ${l.name}`} onClick={() => { setError(null); setEditing({ id: l.id, name: l.name }); }}>
@@ -96,7 +97,8 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
                 </button>
               </span>
             </div>
-          ))}
+          )}</MentorListItem>)}
+          </MentorList>
         </div>
       )}
 

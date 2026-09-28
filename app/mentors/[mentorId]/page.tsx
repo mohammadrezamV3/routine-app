@@ -4,24 +4,25 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { createPortal } from "react-dom";
 import {
-  Activity, AlertCircle, Ban, Check, CircleSlash, ClipboardList, Flag, Hourglass, MessageCircle, MessageSquareText, Pencil, Send, Star,
-  Trash2, UserRound, Users, X,
+  Activity, AlertCircle, Ban, CalendarDays, Check, CircleSlash, ClipboardList, Clock, Flag, Hourglass, MessageCircle, MessageSquareText, Pencil,
+  Send, Star, Trash2, UserRound, Users, X,
 } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
-import { MentorChip, MentorEmpty, MentorField, MentorSection } from "@/components/MentorUI";
+import { MentorChip, MentorEmpty, MentorField, MentorPage, MentorSection } from "@/components/MentorUI";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
-import { CategoryChip, RatingStars, VerificationBadges, categoryLabel } from "@/components/MentorBadges";
+import { CertificateMark, MentorTag, RatingInline, RatingStars, categoryLabel } from "@/components/MentorBadges";
 import { MentorReportModal } from "@/components/MentorReportModal";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
-import { LockBodyScroll } from "@/components/LockBodyScroll";
+import { MentorSheet } from "@/components/MentorMotion";
+import { SavedMentorsProvider, MentorSaveButton } from "@/components/MentorSaved";
+import { MentorPlatformNotice } from "@/components/MentorPlatformNotice";
+import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "@/components/MentorTermsAcceptance";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import type { MentorProfileResponse, MyMentorship, Review, ReportTargetType } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
-import { MentorAvailabilityLine } from "@/components/MentorAvailabilityLine";
-import { INTAKE_ANSWER_MAX, availabilityShort } from "@/lib/mentorAvailability";
+import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/mentorAvailability";
 import type { AvailabilityState } from "@/lib/mentorTypes";
 
 const MESSAGE_MAX = 500;
@@ -33,7 +34,7 @@ const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorProfilePage() {
   return (
-    <MentorPageShell back={{ href: "/mentors", label: "انتخاب منتور" }}>
+    <MentorPageShell back={{ href: "/mentors", label: "جستجوی منتور" }}>
       <MentorProfile />
     </MentorPageShell>
   );
@@ -68,109 +69,120 @@ function MentorProfile() {
   const { mentor, reviews, myMentorship, canReview, myReview } = data;
   const isSelf = !!myId && myId === mentor.userId;
   const role = mentor.categories.includes("ROUTINE") && mentor.routineRole?.trim() ? mentor.routineRole.trim() : null;
-  const hasChips = mentor.identityVerified || mentor.certifications.some((c) => c.verified) || mentor.categories.length > 0;
+  const responseLabel = responseTimeLabel(mentor.responseTimeHours);
+  const hasAbout = !!mentor.bio || mentor.specialties.length > 0;
 
   return (
-    <>
-      <div className="trade-surface mentor-hero acc-block">
-        <div className="mentor-hero-top">
-          <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={48} />
-          <div className="mentor-hero-id">
-            {role && <div className="rp-card-eyebrow">{role}</div>}
-            <h1 className="mentor-hero-name">{mentor.name}</h1>
-            {mentor.headline && <p className="mentor-hero-headline">{mentor.headline}</p>}
-            <RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} />
-          </div>
-          {!isSelf && (
-            <button
-              type="button"
-              className="trade-icon-btn"
-              onClick={() => setReport({ type: "USER", id: mentor.userId })}
-              aria-label="گزارش این منتور"
-              title="گزارش این منتور"
-            >
-              <Flag size={16} strokeWidth={1.75} aria-hidden />
-            </button>
-          )}
-        </div>
-
-        {hasChips && (
-          <div className="mentor-chips" style={{ marginTop: 12 }}>
-            <VerificationBadges identityVerified={mentor.identityVerified} certifications={mentor.certifications} />
-            {mentor.categories.map((c) => <CategoryChip key={c} category={c} />)}
-          </div>
-        )}
-
-        <div className="mentor-stats">
-          <div className="mentor-stat"><b>{faNum(mentor.activeStudents)}</b><span><Users {...CHIP} /> شاگرد فعال</span></div>
-          <div className="mentor-stat"><b>{faNum(mentor.totalStudents)}</b><span><UserRound {...CHIP} /> کل شاگردها</span></div>
-          <div className="mentor-stat"><b>{faNum(mentor.completedPrograms)}</b><span><ClipboardList {...CHIP} /> برنامه‌ی تمام‌شده</span></div>
-          <div className="mentor-stat"><b>{fmtRelative(mentor.lastActiveAt)}</b><span><Activity {...CHIP} /> آخرین فعالیت</span></div>
-        </div>
-
-        <MentorAvailabilityLine
-          awayUntil={mentor.awayUntil}
-          awayMessage={mentor.awayMessage ?? null}
-          responseTimeHours={mentor.responseTimeHours}
-        />
-
-        {isSelf ? (
-          <div className="mentor-hero-actions">
-            <MentorChip tone="neutral" icon={<UserRound {...CHIP} />}>پروفایل خودت</MentorChip>
-          </div>
-        ) : (
-          <ConnectAction
-            mentorId={mentor.userId}
-            mentorName={mentor.name}
-            mentorCategories={mentor.categories}
-            accepting={mentor.acceptingStudents}
-            availability={mentor.availability ?? (mentor.acceptingStudents ? "OPEN" : "CLOSED")}
-            awayUntil={mentor.awayUntil ?? null}
-            intakeQuestions={mentor.intakeQuestions ?? []}
-            mine={myMentorship}
-            onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
-            onStale={load}
-          />
-        )}
-        {mentor.memberSince && <p className="mentor-muted" style={{ marginTop: 12 }}>منتور آریون از {fmtDate(mentor.memberSince)}</p>}
-      </div>
-
-      {(mentor.bio || mentor.specialties.length > 0) && (
-        <MentorSection title="درباره‌ی منتور" icon={<UserRound {...SECTION} />}>
-          <div className="mentor-form">
-            {mentor.bio && <p className="mentor-bio">{mentor.bio}</p>}
-            {mentor.specialties.length > 0 && (
-              <div className="mentor-field">
-                <span className="mentor-field-label">تخصص‌ها</span>
-                <div className="mentor-chips">
-                  {mentor.specialties.map((s) => <span key={s} className="mentor-chip is-cat"><span>{s}</span></span>)}
-                </div>
+    <SavedMentorsProvider initialSaved={isSelf ? undefined : { userId: mentor.userId, saved: !!data.saved }}>
+      <MentorPage className="mentor-profile">
+        {/* سر: هویت، اکشن‌های کوچک (نشانک، گزارش) در انتهای ردیف */}
+        <div className="mentor-hero">
+          <div className="mentor-hero-top">
+            <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={56} />
+            <div className="mentor-hero-id">
+              {role && <div className="rp-card-eyebrow">{role}</div>}
+              <div className="mentor-hero-title">
+                <h1 className="mentor-hero-name">{mentor.name}</h1>
+                <CertificateMark certifications={mentor.certifications} size={16} />
+              </div>
+              {mentor.headline && <p className="mentor-hero-headline">{mentor.headline}</p>}
+              <div className="mentor-hero-meta">
+                <RatingInline value={mentor.ratingAvg} count={mentor.ratingCount} withWord />
+                {mentor.memberSince && <span>تاریخ عضویت: {fmtDate(mentor.memberSince)}</span>}
+              </div>
+            </div>
+            {!isSelf && (
+              <div className="mentor-hero-tools">
+                <MentorSaveButton mentor={{ userId: mentor.userId, name: mentor.name }} />
+                <button
+                  type="button"
+                  className="trade-icon-btn mentor-report-flag"
+                  onClick={() => setReport({ type: "USER", id: mentor.userId })}
+                  aria-label="گزارش این منتور"
+                  title="گزارش این منتور"
+                >
+                  <Flag size={15} strokeWidth={1.75} aria-hidden />
+                </button>
               </div>
             )}
           </div>
-        </MentorSection>
-      )}
 
-      {!isSelf && (canReview || myReview) && (
-        <MyReviewBox mentorId={mentor.userId} myReview={myReview} onChanged={load} />
-      )}
+          {mentor.categories.length > 0 && (
+            <div className="mentor-tags">
+              {mentor.categories.map((c) => <MentorTag key={c}>{categoryLabel(c)}</MentorTag>)}
+            </div>
+          )}
 
-      <MentorSection
-        title="نظرها"
-        icon={<MessageSquareText {...SECTION} />}
-        count={reviews.length ? faNum(mentor.ratingCount || reviews.length) : undefined}
-      >
-        {reviews.length === 0 ? (
-          <MentorEmpty>هنوز نظری ثبت نشده است</MentorEmpty>
-        ) : (
-          reviews.map((r) => (
-            <ReviewRow key={r.id} review={r} canReport={!isSelf && r.id !== myReview?.id} onReport={() => setReport({ type: "REVIEW", id: r.id })} />
-          ))
+          <dl className="mentor-hero-stats">
+            <div><dt><Users {...CHIP} /> شاگرد فعال</dt><dd>{faNum(mentor.activeStudents)}</dd></div>
+            <div><dt><UserRound {...CHIP} /> کل شاگردها</dt><dd>{faNum(mentor.totalStudents)}</dd></div>
+            <div><dt><ClipboardList {...CHIP} /> برنامه‌ی تمام‌شده</dt><dd>{faNum(mentor.completedPrograms)}</dd></div>
+            <div><dt><Activity {...CHIP} /> آخرین فعالیت</dt><dd>{fmtRelative(mentor.lastActiveAt)}</dd></div>
+          </dl>
+
+          {/* عدمِ حضور فقط یک‌بار، در یک بلوکِ فشرده (تاریخِ بازگشت + پیام) */}
+          {mentor.awayUntil && (
+            <div className="mentor-away" role="note">
+              <CalendarDays size={16} strokeWidth={1.75} aria-hidden />
+              <div className="mentor-away-body">
+                <span className="mentor-away-title">در دسترس نیست تا {fmtDate(mentor.awayUntil)}</span>
+                {mentor.awayMessage && <span className="mentor-away-text">{mentor.awayMessage}</span>}
+              </div>
+            </div>
+          )}
+          {responseLabel && !mentor.awayUntil && (
+            <p className="mentor-hero-note"><Clock {...CHIP} /> {responseLabel}</p>
+          )}
+
+          {!isSelf && (
+            <ConnectAction
+              mentorId={mentor.userId}
+              mentorName={mentor.name}
+              mentorCategories={mentor.categories}
+              accepting={mentor.acceptingStudents}
+              availability={mentor.availability ?? (mentor.acceptingStudents ? "OPEN" : "CLOSED")}
+              awayUntil={mentor.awayUntil ?? null}
+              intakeQuestions={mentor.intakeQuestions ?? []}
+              mine={myMentorship}
+              onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
+              onStale={load}
+            />
+          )}
+        </div>
+
+        {hasAbout && (
+          <MentorSection title="درباره‌ی منتور" icon={<UserRound {...SECTION} />}>
+            {mentor.bio && <p className="mentor-bio">{mentor.bio}</p>}
+            {mentor.specialties.length > 0 && (
+              <div className="mentor-tags">
+                {mentor.specialties.map((s) => <MentorTag key={s}>{s}</MentorTag>)}
+              </div>
+            )}
+          </MentorSection>
         )}
-      </MentorSection>
 
+        {!isSelf && (canReview || myReview) && (
+          <MyReviewBox mentorId={mentor.userId} myReview={myReview} onChanged={load} />
+        )}
+
+        <MentorSection
+          title="نظرها"
+          icon={<MessageSquareText {...SECTION} />}
+          count={reviews.length ? faNum(mentor.ratingCount || reviews.length) : undefined}
+        >
+          {reviews.length === 0 ? (
+            <MentorEmpty>هنوز نظری ثبت نشده است</MentorEmpty>
+          ) : (
+            reviews.map((r) => (
+              <ReviewRow key={r.id} review={r} canReport={!isSelf && r.id !== myReview?.id} onReport={() => setReport({ type: "REVIEW", id: r.id })} />
+            ))
+          )}
+        </MentorSection>
+      </MentorPage>
+
+      <MentorPlatformNotice />
       {report && <MentorReportModal targetType={report.type} targetId={report.id} onClose={() => setReport(null)} />}
-    </>
+    </SavedMentorsProvider>
   );
 }
 
@@ -214,6 +226,12 @@ function ConnectAction({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  // پذیرشِ دعوتِ منتور هم پذیرشِ «شرایط منتورها» را لازم دارد (lib/mentorTerms.ts)
+  const invited = mine?.status === "PENDING" && mine.initiatedBy === "MENTOR";
+  const terms = useMentorTermsStatus();
+  const needTerms = invited && !terms.loading && !terms.studentAccepted;
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
 
   async function patch(action: "accept" | "reject" | "cancel") {
     if (!mine) return;
@@ -223,8 +241,14 @@ function ConnectAction({
       const res = await fetch(`/api/mentorships/${mine.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...(action === "accept" ? mentorTermsPayload(needTerms && termsAccepted) : {}) }),
       });
+      if (res.status === 400 && action === "accept") {
+        const j = await res.json().catch(() => null);
+        if (isMentorTermsError(j)) { setTermsAccepted(false); setTermsError(j.error); terms.refresh(); return; }
+        setError(typeof j?.error === "string" ? j.error : NETWORK_ERROR);
+        return;
+      }
       if (!res.ok) {
         setError(await readApiError(res));
         if (res.status === 409 || res.status === 404) onStale();
@@ -262,11 +286,22 @@ function ConnectAction({
     body = (
       <>
         <MentorChip tone="warn" icon={<AlertCircle {...CHIP} />} title="این منتور تو را به‌عنوان شاگرد دعوت کرده است">منتظر پاسخ تو</MentorChip>
+        {needTerms && (
+          <div style={{ width: "100%" }}>
+            <MentorTermsAcceptance
+              role="student"
+              checked={termsAccepted}
+              onChange={(v) => { setTermsAccepted(v); setTermsError(null); }}
+              error={termsError}
+              disabled={!!busy}
+            />
+          </div>
+        )}
         <div className="mentor-btn-group" style={{ width: "100%" }}>
           <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => patch("reject")} disabled={!!busy}>
             {busy === "reject" ? <Spinner size={14} /> : <><X {...BTN} /> رد دعوت</>}
           </button>
-          <button type="button" className="trade-primary-btn mentor-btn" onClick={() => patch("accept")} disabled={!!busy}>
+          <button type="button" className="trade-primary-btn mentor-btn" onClick={() => patch("accept")} disabled={!!busy || terms.loading || (needTerms && !termsAccepted)}>
             {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> پذیرفتن دعوت</>}
           </button>
         </div>
@@ -274,10 +309,13 @@ function ConnectAction({
     );
   } else if (mine?.status === "BLOCKED") {
     body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این منتور ممکن نیست</MentorChip>;
+  } else if (availability === "AWAY") {
+    // عدمِ حضور بالاتر یک‌بار در بلوکِ «در دسترس نیست تا …» آمده؛ این‌جا تکرار نمی‌شود
+    body = null;
   } else if (availability !== "OPEN") {
-    // بسته / ظرفیت تکمیل / در دسترس نیست — سرور هم همین را اعمال می‌کند
+    // بسته / ظرفیت تکمیل — سرور هم همین را اعمال می‌کند
     body = (
-      <MentorChip tone={availability === "AWAY" ? "info" : "neutral"} icon={availability === "AWAY" ? <Hourglass {...CHIP} /> : <CircleSlash {...CHIP} />}>
+      <MentorChip tone="neutral" icon={<CircleSlash {...CHIP} />}>
         {availabilityShort(availability, awayUntil)}
       </MentorChip>
     );
@@ -294,9 +332,10 @@ function ConnectAction({
   return (
     <>
       {error && !confirmCancel && <div className="form-inline-error" role="alert">{error}</div>}
-      <div className="mentor-hero-actions">{body}</div>
-      {requestOpen && (
+      {body && <div className="mentor-hero-actions">{body}</div>}
+      {(
         <RequestModal
+          open={requestOpen}
           mentorId={mentorId}
           mentorName={mentorName}
           mentorCategories={mentorCategories}
@@ -322,8 +361,9 @@ function ConnectAction({
 }
 
 function RequestModal({
-  mentorId, mentorName, mentorCategories, intakeQuestions, onClose, onDone, onStale,
+  open, mentorId, mentorName, mentorCategories, intakeQuestions, onClose, onDone, onStale,
 }: {
+  open: boolean;
   mentorId: string;
   mentorName: string;
   mentorCategories: string[];
@@ -343,9 +383,15 @@ function RequestModal({
   const [answerErrs, setAnswerErrs] = useState<(string | null)[]>([]);
   const len = message.trim().length;
   const tooLong = len > MESSAGE_MAX;
+  // پذیرشِ «شرایط استفاده از بخش منتورها» (lib/mentorTerms.ts) — فقط اگر نسخه‌ی جاری را نپذیرفته
+  const terms = useMentorTermsStatus();
+  const needTerms = !terms.loading && !terms.studentAccepted;
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
 
   async function submit() {
     if (mentorCategories.length > 0 && cats.length === 0) { setCatsError("حداقل یک حوزه انتخاب کن"); return; }
+    if (needTerms && !termsAccepted) { setTermsError("برای ارسال درخواست، شرایط را بپذیر"); return; }
     if (tooLong) return;
     const aErrs = intakeQuestions.map((_, i) => {
       const a = (answers[i] ?? "").trim();
@@ -366,8 +412,15 @@ function RequestModal({
           message: message.trim() || undefined,
           ...(mentorCategories.length ? { categories: cats } : {}),
           ...(intakeQuestions.length ? { intakeAnswers: answers.map((a) => a.trim()) } : {}),
+          ...mentorTermsPayload(needTerms && termsAccepted),
         }),
       });
+      if (res.status === 400) {
+        const j = await res.json().catch(() => null);
+        if (isMentorTermsError(j)) { setTermsAccepted(false); setTermsError(j.error); terms.refresh(); return; }
+        setError(typeof j?.error === "string" ? j.error : "درخواست ارسال نشد؛ دوباره تلاش کن");
+        return;
+      }
       // ۴۰۹: درخواستِ باز/رابطه‌ی فعال، یا پذیرشِ بسته/ظرفیتِ پر/عدمِ حضور — پیامِ سرور دقیق‌تر است
       if (res.status === 409) { setError(await readApiError(res, "با این منتور درخواست باز یا رابطه‌ی فعال داری")); onStale(); return; }
       if (!res.ok) { setError(await readApiError(res, "درخواست ارسال نشد؛ دوباره تلاش کن")); return; }
@@ -382,82 +435,79 @@ function RequestModal({
     }
   }
 
-  if (typeof document === "undefined") return null;
-  return createPortal(
-    <>
-      <LockBodyScroll />
-      <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label={`درخواست منتوری از ${mentorName}`} style={{ zIndex: 91, maxWidth: 440 }}>
-        <div className="modal-head">
-          <div className="modal-title">درخواست منتوری از {mentorName}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}>
-            <X size={16} strokeWidth={1.75} />
-          </button>
-        </div>
-        <div className="mentor-form">
-          <p className="mentor-muted">منتور تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.</p>
-          {mentorCategories.length > 1 && (
-            <MentorField label="حوزه‌ی همکاری" error={catsError}>
-              <div role="group" aria-label="حوزه‌ی همکاری">
-                {mentorCategories.map((c) => (
-                  <label key={c} className="mentor-check">
-                    <input
-                      type="checkbox"
-                      checked={cats.includes(c)}
-                      onChange={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
-                    />
-                    <span className="mentor-check-label">{categoryLabel(c)}</span>
-                  </label>
-                ))}
-              </div>
-            </MentorField>
-          )}
-          {intakeQuestions.map((q, i) => (
-            <MentorField key={i} label={q} htmlFor={`mentor-req-q${i}`} error={answerErrs[i]}>
-              <textarea
-                id={`mentor-req-q${i}`}
-                className="wsearch-newform-name trade-glass-field"
-                rows={2}
-                value={answers[i] ?? ""}
-                maxLength={INTAKE_ANSWER_MAX + 20}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setAnswers((xs) => xs.map((x, j) => (j === i ? v : x)));
-                  setAnswerErrs((xs) => xs.map((x, j) => (j === i ? null : x)));
-                  setError(null);
-                }}
-              />
-            </MentorField>
-          ))}
-          <MentorField
-            label="پیام"
-            htmlFor="mentor-req-msg"
-            optional
-            error={tooLong ? `پیام حداکثر ${faNum(MESSAGE_MAX)} نویسه است` : null}
-            hint={`${faNum(len)} از ${faNum(MESSAGE_MAX)} نویسه`}
-          >
+  return (
+    <MentorSheet open={open} onClose={onClose} title={`درخواست منتوری از ${mentorName}`} dismissible={!busy}>
+      <div className="mentor-form">
+        <p className="mentor-muted">منتور تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.</p>
+        {mentorCategories.length > 1 && (
+          <MentorField label="حوزه‌ی همکاری" error={catsError}>
+            <div role="group" aria-label="حوزه‌ی همکاری">
+              {mentorCategories.map((c) => (
+                <label key={c} className="mentor-check">
+                  <input
+                    type="checkbox"
+                    checked={cats.includes(c)}
+                    onChange={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
+                  />
+                  <span className="mentor-check-label">{categoryLabel(c)}</span>
+                </label>
+              ))}
+            </div>
+          </MentorField>
+        )}
+        {intakeQuestions.map((q, i) => (
+          <MentorField key={i} label={q} htmlFor={`mentor-req-q${i}`} error={answerErrs[i]}>
             <textarea
-              id="mentor-req-msg"
+              id={`mentor-req-q${i}`}
               className="wsearch-newform-name trade-glass-field"
-              rows={4}
-              value={message}
-              maxLength={MESSAGE_MAX + 50}
-              onChange={(e) => { setMessage(e.target.value); setError(null); }}
-              placeholder="مثلاً «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»"
-              aria-invalid={tooLong}
+              rows={2}
+              value={answers[i] ?? ""}
+              maxLength={INTAKE_ANSWER_MAX + 20}
+              onChange={(e) => {
+                const v = e.target.value;
+                setAnswers((xs) => xs.map((x, j) => (j === i ? v : x)));
+                setAnswerErrs((xs) => xs.map((x, j) => (j === i ? null : x)));
+                setError(null);
+              }}
             />
           </MentorField>
-        </div>
-        {error && <div className="form-inline-error" role="alert">{error}</div>}
-        <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
-          <button type="button" className="trade-primary-btn mentor-btn" onClick={submit} disabled={busy || tooLong}>
-            {busy ? <Spinner size={14} /> : "ارسال درخواست"}
-          </button>
-        </div>
+        ))}
+        <MentorField
+          label="پیام"
+          htmlFor="mentor-req-msg"
+          optional
+          error={tooLong ? `پیام حداکثر ${faNum(MESSAGE_MAX)} نویسه است` : null}
+          hint={`${faNum(len)} از ${faNum(MESSAGE_MAX)} نویسه`}
+        >
+          <textarea
+            id="mentor-req-msg"
+            className="wsearch-newform-name trade-glass-field"
+            rows={4}
+            value={message}
+            maxLength={MESSAGE_MAX + 50}
+            onChange={(e) => { setMessage(e.target.value); setError(null); }}
+            placeholder="مثلاً «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»"
+            aria-invalid={tooLong}
+          />
+        </MentorField>
+        {needTerms && (
+          <MentorTermsAcceptance
+            role="student"
+            checked={termsAccepted}
+            onChange={(v) => { setTermsAccepted(v); setTermsError(null); }}
+            error={termsError}
+            disabled={busy}
+          />
+        )}
       </div>
-    </>,
-    document.body
+      {error && <div className="form-inline-error" role="alert">{error}</div>}
+      <div className="trade-modal-actions">
+        <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
+        <button type="button" className="trade-primary-btn mentor-btn" onClick={submit} disabled={busy || tooLong || terms.loading}>
+          {busy ? <Spinner size={14} /> : "ارسال درخواست"}
+        </button>
+      </div>
+    </MentorSheet>
   );
 }
 

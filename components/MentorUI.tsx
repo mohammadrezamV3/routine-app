@@ -2,13 +2,34 @@
 
 import "./mentor.css";
 import Link from "next/link";
+import { createContext, useContext, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
+import { M_DUR, mT } from "./MentorMotion";
 
 /**
  * پایه‌های مشترک بخش منتورها (سمت شاگرد و سمت منتور). همه از کلاس‌های
  * موجود سایت ساخته شده‌اند (acc-block، rp-empty، trade-surface) به‌علاوه‌ی
- * چیدمان mentor.css. هیچ‌کدام حرکت یا بک‌گراند اضافه نمی‌کند.
+ * چیدمان mentor.css. بک‌گراندِ تازه اضافه نمی‌کنند.
  * مشخصات استفاده: scratchpad/design-spec.md
+ *
+ * ── «یک صفحه = یک ظرف» (دورِ ۳) ───────────────────────────────
+ *   <MentorPage> … </MentorPage>
+ *     یک سطحِ بیرونیِ واحد (trade-surface) برای کلِ محتوای صفحه. هر
+ *     MentorSection داخلش خودبه‌خود «تخت» می‌شود: بی‌قاب، فقط عنوان + خطِ
+ *     مو بالای هر بخش (بخشِ اول خط ندارد). flush هم کار می‌کند (ردیف‌ها
+ *     لبه‌به‌لبه). MentorEmptyState و MentorErrorState داخلِ آن قابِ دوم
+ *     نمی‌گیرند. هر محتوای دیگری (تب، فرم، اطلاعیه) پدینگِ 16 سطح را دارد.
+ *     ورودِ نرم (fade) دارد و بخش‌های داخلش با پله‌ی کوتاه ظاهر می‌شوند.
+ *   - سمتِ منتور: MentorDashShell خودش محتوا را در MentorPage می‌گذارد
+ *     (`surface={false}` برای خاموش‌کردن).
+ *   - سمتِ شاگرد: <MentorPageShell surface> همین کار را می‌کند؛ یا خودتان
+ *     <MentorPage> را دورِ بخشِ دلخواه بگذارید. گریدِ کارت‌ها (mentor-grid)
+ *     و شیت/مودال از این قانون مستثنا هستند؛ آن‌ها را بیرونِ MentorPage بگذارید.
+ *   - `useMentorFlat()` → true اگر داخلِ MentorPage هستید (برای قابِ سفارشی).
+ *   - `desc` در MentorSection و `hint` در شِل‌ها دیگر رندر نمی‌شوند (قانونِ
+ *     «بدونِ زیرعنوان»). راهنمای لازمِ فیلد فقط `MentorField hint`.
+ *   - حرکت: components/MentorMotion.tsx (API در سرِ همان فایل).
  */
 
 export type MentorTone = "neutral" | "accent" | "info" | "ok" | "warn" | "danger";
@@ -18,39 +39,99 @@ export const MI = { chip: 13, btnSm: 14, btn: 15, row: 16, section: 15, empty: 2
 /** strokeWidth استاندارد آیکون‌های lucide در این بخش */
 export const MI_STROKE = 1.75;
 
+/* ── ظرفِ صفحه ───────────────────────────────────────────────── */
+type FlatCtx = { flat: boolean; next: () => number };
+const MentorFlatContext = createContext<FlatCtx>({ flat: false, next: () => 0 });
+
+/** true داخلِ MentorPage (بخش‌ها تخت‌اند و قابِ دوم نمی‌گیرند) */
+export function useMentorFlat() {
+  return useContext(MentorFlatContext).flat;
+}
+
 /**
- * یک بخشِ صفحه: قاب acc-block با عنوانِ داخل قاب، شمارنده و یک اکشن
- * اختیاری در انتهای همان ردیف. `flush` برای وقتی‌ست که بدنه ردیف‌های
- * لبه‌به‌لبه (MentorRow) دارد.
+ * یک سطحِ بیرونی برای کلِ صفحه؛ بخش‌های داخل با عنوان + خطِ مو جدا می‌شوند.
+ * بخش‌هایی که در یک «دسته» mount می‌شوند (مثلاً پس از بارگذاری) با فاصله‌ی
+ * 40ms پشتِ هم ظاهر می‌شوند؛ سقف 8 پله.
+ */
+export function MentorPage({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) {
+  const batch = useRef({ n: 0, t: 0 });
+  const ctx = useRef<FlatCtx>({
+    flat: true,
+    next: () => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (now - batch.current.t > 120) batch.current.n = 0;
+      batch.current.t = now;
+      return batch.current.n++;
+    },
+  });
+  return (
+    <MentorFlatContext.Provider value={ctx.current}>
+      <motion.div
+        id={id}
+        className={`trade-surface mentor-surface${className ? ` ${className}` : ""}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={mT(M_DUR.base)}
+      >
+        {children}
+      </motion.div>
+    </MentorFlatContext.Provider>
+  );
+}
+
+/**
+ * یک بخشِ صفحه. داخلِ MentorPage: تخت (عنوان + خطِ مو، بی‌قاب). بیرونِ آن:
+ * قاب acc-block با عنوانِ داخل قاب. شمارنده و یک اکشن اختیاری در انتهای
+ * همان ردیفِ عنوان. `flush` برای وقتی‌ست که بدنه ردیف‌های لبه‌به‌لبه
+ * (MentorRow) دارد. `desc` دیگر رندر نمی‌شود (بدونِ زیرعنوان).
  */
 export function MentorSection({
-  title, icon, count, action, desc, flush = false, id, children,
+  title, icon, count, action, flush = false, id, children,
 }: {
   title?: string;
   icon?: React.ReactNode;
   count?: number | string;
   action?: React.ReactNode;
+  /** @deprecated زیرعنوانِ بخش حذف شد؛ نادیده گرفته می‌شود */
   desc?: string;
   flush?: boolean;
   id?: string;
   children: React.ReactNode;
 }) {
+  const { flat, next } = useContext(MentorFlatContext);
+  const [order] = useState(() => (flat ? next() : 0));
+  const head = (title || action) && (
+    <div className="mentor-section-head">
+      {title ? (
+        <h2 className="acc-block-title">
+          {icon}
+          {title}
+          {count !== undefined && <span className="mentor-count">{count}</span>}
+        </h2>
+      ) : <span />}
+      {action && <div className="mentor-section-action">{action}</div>}
+    </div>
+  );
+
+  if (flat) {
+    return (
+      <motion.section
+        className={`mentor-section is-flat${flush ? " flush" : ""}`}
+        id={id}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={mT(M_DUR.base, Math.min(order, 8) * 0.04)}
+      >
+        {head}
+        {children}
+      </motion.section>
+    );
+  }
+
   return (
     <section className="acc-block mentor-section" id={id}>
       <div className={`acc-block-body${flush ? " flush" : ""}`}>
-        {(title || action) && (
-          <div className="mentor-section-head">
-            {title ? (
-              <h2 className="acc-block-title">
-                {icon}
-                {title}
-                {count !== undefined && <span className="mentor-count">{count}</span>}
-              </h2>
-            ) : <span />}
-            {action && <div className="mentor-section-action">{action}</div>}
-          </div>
-        )}
-        {desc && <p className="acc-block-desc">{desc}</p>}
+        {head}
         {children}
       </div>
     </section>
@@ -197,8 +278,9 @@ export function MentorEmptyState({
   text?: string;
   action?: React.ReactNode;
 }) {
+  const flat = useMentorFlat();
   return (
-    <div className="trade-surface rp-empty">
+    <div className={flat ? "rp-empty mentor-empty-flat" : "trade-surface rp-empty"}>
       <span className="rp-empty-icon">{icon}</span>
       <h2>{title}</h2>
       {text && <p>{text}</p>}

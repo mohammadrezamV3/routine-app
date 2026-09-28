@@ -145,7 +145,6 @@ export default function NewMentorProgramPage() {
   return (
     <MentorDashShell
       title="برنامه‌ی جدید"
-      hint="برنامه به‌صورت پیش‌نویس ذخیره می‌شود و تا ارسال، شاگرد آن را نمی‌بیند"
       back={back}
     >
       {body}
@@ -156,9 +155,12 @@ export default function NewMentorProgramPage() {
 /** انتخابِ شاگرد وقتی صفحه بدونِ mentorshipId باز شده (مثلاً «ساخت برنامه» از صفحه‌ی قالب‌ها) */
 function StudentPicker({ rows, missing, onPick }: { rows: MentorshipRow[]; missing: boolean; onPick: (id: string) => void }) {
   return (
-    <MentorSection title="شاگرد" icon={ic(Users, MI.section)} count={rows.length ? fa(rows.length) : undefined} flush
-      desc={missing ? "رابطه‌ی فعالی با شاگرد انتخاب‌شده پیدا نشد؛ برنامه فقط برای شاگرد فعال ساخته می‌شود" : undefined}
-    >
+    <MentorSection title="شاگرد" icon={ic(Users, MI.section)} count={rows.length ? fa(rows.length) : undefined} flush>
+      {missing && (
+        <div className="form-inline-error" role="alert" style={{ margin: "0 var(--m-4) var(--m-2)" }}>
+          رابطه‌ی فعالی با شاگرد انتخاب‌شده پیدا نشد؛ برنامه فقط برای شاگرد فعال ساخته می‌شود
+        </div>
+      )}
       {rows.length === 0 ? (
         <MentorEmpty>شاگرد فعالی نداری</MentorEmpty>
       ) : rows.map((r) => {

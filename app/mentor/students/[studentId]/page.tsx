@@ -53,7 +53,6 @@ function PrivacySummary({ data }: { data: StudentView }) {
   return (
     <MentorSection
       title="آنچه می‌بینی" icon={ic(ShieldCheck, MI.section)}
-      desc="این تنظیمات دست شاگرد است؛ برنامه‌هایی که خودت فرستاده‌ای همیشه دیده می‌شوند"
     >
       <div className="mentor-form" style={{ gap: "var(--m-2)" }}>
         {visible.length > 0 && (
@@ -108,7 +107,6 @@ export default function MentorStudentPage() {
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const name = data ? publicUserName(data.student) : "شاگرد";
-  const hint = data?.since ? `شاگرد از ${fmtDate(data.since)}` : undefined;
   const titleAction = data ? (
     <button
       type="button" className="trade-title-add-btn"
@@ -139,7 +137,7 @@ export default function MentorStudentPage() {
             href={`/mentorship/${data.mentorshipId}`}
             lead={ic(MessageCircle, MI.row)}
             title="گفت‌وگو"
-            sub={<span>پیام‌ها و وضعیت رابطه با {name}</span>}
+            sub={<><span>پیام‌ها و وضعیت رابطه</span>{data.since && <span>شاگرد از {fmtDate(data.since)}</span>}</>}
           />
         </MentorSection>
 
@@ -257,7 +255,7 @@ export default function MentorStudentPage() {
   } else body = null;
 
   return (
-    <MentorDashShell title={name} hint={hint} back={{ href: "/mentor", label: "پنل منتور" }} titleAction={titleAction}>
+    <MentorDashShell title={name} back={{ href: "/mentor/students", label: "شاگردها" }} titleAction={titleAction}>
       {body}
     </MentorDashShell>
   );

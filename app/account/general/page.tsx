@@ -7,6 +7,7 @@ import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { MentorChatHistorySettings } from "@/components/MentorChatHistorySettings";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
 const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
@@ -66,6 +67,8 @@ export default function AccountSettingsPage() {
       <NotificationSettings index={1} />
       <RoutineSettings />
       <TradeSettings />
+      {/* سابقه‌ی گفت‌وگوی منتورها — پاک کردن فقط برای خودِ کاربر */}
+      <MentorChatHistorySettings index={4} />
     </section>
   );
 }

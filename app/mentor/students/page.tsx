@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MentorDashShell, MentorDashError, fa, mentorApi } from "@/components/MentorDashKit";
+import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
 import { MentorStudentsList } from "@/components/MentorStudentsList";
 import { LoadingBlock } from "@/components/Spinner";
 import type { StudentIndexResponse } from "@/lib/mentorTypes";
@@ -19,10 +19,8 @@ export default function MentorStudentsPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const hint = data && data.capacity != null ? `${fa(data.students.length)} از ${fa(data.capacity)} ظرفیت` : undefined;
-
   return (
-    <MentorDashShell title="شاگردها" hint={hint} back={{ href: "/mentor", label: "پنل منتور" }}>
+    <MentorDashShell title="شاگردها">
       {error ? <MentorDashError message={error} onRetry={load} /> : !data ? <LoadingBlock /> : <MentorStudentsList data={data} />}
     </MentorDashShell>
   );

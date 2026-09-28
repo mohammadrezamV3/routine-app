@@ -9,6 +9,7 @@ import { SegmentedTabs } from "./SegmentedTabs";
 import { NumberInput } from "./NumberInput";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
+import { MentorList, MentorListItem } from "./MentorMotion";
 import { Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
@@ -353,7 +354,6 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
             {ic(LayoutTemplate, MI.btnSm)} ذخیره به‌عنوان قالب
           </button>
         }
-        desc={initialProgram?.sentAt ? `این برنامه قبلاً ارسال شده؛ ارسال دوباره، نسخه‌ی ${fa(initialProgram.version + 1)} را برای شاگرد می‌فرستد` : undefined}
       >
         <div className="mentor-form">
           <MentorField
@@ -433,7 +433,6 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
         title={type === "WORKOUT" ? "حرکات" : "آیتم‌ها"}
         icon={type === "WORKOUT" ? ic(Dumbbell, MI.section) : ic(CalendarCheck, MI.section)}
         count={fa(items.length)}
-        desc={`حداکثر ${fa(MAX_ITEMS)} ${itemWord}؛ ترتیب با دکمه‌های بالا و پایین عوض می‌شود`}
       >
         {type === "WORKOUT" && (
           <datalist id="pe-exercise-names">
@@ -441,9 +440,11 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           </datalist>
         )}
         <div ref={listRef}>
+          <MentorList>
           {items.map((d, idx) => (
+            <MentorListItem key={d.key}>
             <MentorProgramEditorItem
-              key={d.key} draft={d} index={idx} count={items.length} type={type}
+              draft={d} index={idx} count={items.length} type={type}
               errors={itemErrors[d.key] || {}}
               onPatch={(p) => patchItem(d.key, p)}
               onMove={(dir) => move(idx, dir)}
@@ -453,7 +454,9 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
                 dirty();
               }}
             />
+            </MentorListItem>
           ))}
+          </MentorList>
         </div>
         {items.length === 0 && <MentorEmpty>هنوز {itemWord}ی اضافه نشده است</MentorEmpty>}
         {formErr.items && <p className="mentor-field-error" role="alert">{formErr.items}</p>}
@@ -464,6 +467,9 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
         </div>
       </MentorSection>
 
+      {initialProgram?.sentAt && (
+        <p className="mentor-field-hint">ارسال دوباره، نسخه‌ی {fa(initialProgram.version + 1)} را برای شاگرد می‌فرستد</p>
+      )}
       {error && <div className="form-inline-error" role="alert">{error}</div>}
       <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
         <button type="button" className="account-outline-btn mentor-btn" disabled={!!busy} onClick={saveDraft}>

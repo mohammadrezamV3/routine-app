@@ -76,9 +76,6 @@ export default function AdminMentorReviewsPage() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">نظرات منتورها</div>
-          <div className="admin-section-hint" style={{ margin: 0 }}>
-            نظر پنهان‌شده در پروفایل منتور نمایش داده نمی‌شود و در امتیاز او حساب نمی‌شود
-          </div>
         </div>
       </div>
 

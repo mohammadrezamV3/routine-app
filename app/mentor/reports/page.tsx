@@ -6,6 +6,7 @@ import { MentorDashBar, MentorDashError, MentorDashShell, fa, mentorApi, pct } f
 import { MI, MI_STROKE, MentorChip, MentorEmptyState, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { MentorSwap } from "@/components/MentorMotion";
 import { LoadingBlock } from "@/components/Spinner";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { exportCsvUrl, type WeeklyReport, type WeeklyStudentReport } from "@/lib/mentorToolsTypes";
@@ -46,7 +47,7 @@ export default function MentorReportsPage() {
     body = (
       <MentorSection
         title="شاگردها" icon={ic(ClipboardCheck, MI.section)} count={fa(shown.length)} flush
-        desc={`${fmtDate(first.from)} تا ${fmtDate(first.to)}؛ مرتب از کمترین درصد انجام`}
+        action={<span className="mentor-range">{fmtDate(first.from)} تا {fmtDate(first.to)}</span>}
       >
         {shown.map((s) => <StudentReportRow key={s.studentId} s={s} current={data.offset === 0} />)}
       </MentorSection>
@@ -54,7 +55,7 @@ export default function MentorReportsPage() {
   }
 
   return (
-    <MentorDashShell title="گزارش هفتگی" back={{ href: "/mentor", label: "پنل منتور" }}>
+    <MentorDashShell title="گزارش هفتگی">
       <div className="mentor-tabs">
         <SegmentedTabs<Week>
           active={week}
@@ -66,7 +67,7 @@ export default function MentorReportsPage() {
           ]}
         />
       </div>
-      {body}
+      <MentorSwap swapKey={loading ? "loading" : `w${week}`}>{body}</MentorSwap>
     </MentorDashShell>
   );
 }

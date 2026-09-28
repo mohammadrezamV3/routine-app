@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { todayIsoInTz, addDaysIso } from "@/lib/mentorServer";
+import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 
 // کمک‌تابع‌های مشترکِ تست‌های اکوسیستم منتور.
 //
@@ -191,26 +192,36 @@ export async function makeMentorProfile(
   body: Record<string, unknown> = { headline: "مربی", bio: "بیو", categories: ["ROUTINE", "FITNESS"], published: true }
 ): Promise<any> {
   as(userId);
-  const res = await putMentorMe(req("PUT", "/api/mentors/me", body));
+  // پذیرشِ شرایطِ منتوری در ساختِ پروفایل الزامی است (lib/mentorTerms.ts)؛ تست‌های خودِ پذیرش: mentorTerms.test.ts
+  const res = await putMentorMe(req("PUT", "/api/mentors/me", { acceptMentorTerms: MENTOR_TERMS_VERSION, ...body }));
   if (res.status !== 200) throw new Error(`makeMentorProfile ${res.status} ${JSON.stringify(await j(res))}`);
   return (await j(res)).profile;
 }
 
-/** کاربر + پروفایلِ منتوریِ منتشرشده */
-export async function makeMentor(opts: Parameters<typeof makeUser>[0] = {}, profile?: Record<string, unknown>): Promise<string> {
+/**
+ * کاربر + پروفایلِ منتوریِ منتشرشده با هویتِ تأییدشده — احرازِ هویت برای منتور
+ * اجباری است (DISCOVERABLE_PROFILE_WHERE)؛ تأیید در واقع کارِ ادمین است و این‌جا
+ * مستقیم نوشته می‌شود. `identity: false` پروفایلِ تأییدنشده می‌سازد.
+ */
+export async function makeMentor(
+  opts: Parameters<typeof makeUser>[0] = {},
+  profile?: Record<string, unknown>,
+  { identity = true }: { identity?: boolean } = {}
+): Promise<string> {
   const id = await makeUser(opts);
   await makeMentorProfile(id, profile);
+  if (identity) await prisma.mentorProfile.update({ where: { userId: id }, data: { identityStatus: "VERIFIED" } });
   return id;
 }
 
 export async function requestMentorship(studentId: string, mentorId: string, message?: string) {
   as(studentId);
-  return postMentorship(req("POST", "/api/mentorships", { mentorId, ...(message ? { message } : {}) }));
+  return postMentorship(req("POST", "/api/mentorships", { mentorId, acceptMentorTerms: MENTOR_TERMS_VERSION, ...(message ? { message } : {}) }));
 }
 
 export async function mentorshipAction(userId: string, id: string, action: string) {
   as(userId);
-  return patchMentorship(req("PATCH", `/api/mentorships/${id}`, { action }), { params: { id } });
+  return patchMentorship(req("PATCH", `/api/mentorships/${id}`, { action, ...(action === "accept" ? { acceptMentorTerms: MENTOR_TERMS_VERSION } : {}) }), { params: { id } });
 }
 
 /** درخواست + قبول → idِ رابطه‌ی ACTIVE */

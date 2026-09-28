@@ -9,6 +9,7 @@ vi.mock("next-auth", async (orig) => ({
 }));
 vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
 
+import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { GET as listMentorships, POST as postMentorship } from "@/app/api/mentorships/route";
 import { as, req, j, makeUser, makeMentor, cleanupUsers, mentorshipAction, createProgram, uniqueTag } from "./helpers/mentorTestUtils";
 
@@ -22,7 +23,7 @@ describe("حوزه‌ی رابطه (روتین / بدنسازی / تغذیه)", 
     const mentor = await makeMentor({}, { headline: "م", bio: "ب", categories: ["ROUTINE", "FITNESS"], published: true });
     const student = await makeUser();
     as(student);
-    const r = await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor, categories: ["ROUTINE"] }));
+    const r = await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor, categories: ["ROUTINE"] }));
     expect(r.status).toBe(200);
     const row = (await j(r)).mentorship;
     expect(row.categories).toEqual(["ROUTINE"]);
@@ -40,10 +41,10 @@ describe("حوزه‌ی رابطه (روتین / بدنسازی / تغذیه)", 
     const mentor = await makeMentor({}, { headline: "م", bio: "ب", categories: ["FITNESS"], published: true });
     const s1 = await makeUser();
     as(s1);
-    expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor, categories: ["ROUTINE"] }))).status).toBe(400);
-    expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor, categories: [] }))).status).toBe(400);
-    expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor, categories: "FITNESS" }))).status).toBe(400);
-    const ok = await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor }));
+    expect((await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor, categories: ["ROUTINE"] }))).status).toBe(400);
+    expect((await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor, categories: [] }))).status).toBe(400);
+    expect((await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor, categories: "FITNESS" }))).status).toBe(400);
+    const ok = await postMentorship(req("POST", "/api/mentorships", { acceptMentorTerms: MENTOR_TERMS_VERSION, mentorId: mentor }));
     expect(ok.status).toBe(200);
     expect((await j(ok)).mentorship.categories).toEqual(["FITNESS"]);
   });
