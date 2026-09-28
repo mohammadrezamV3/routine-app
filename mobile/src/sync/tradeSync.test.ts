@@ -105,9 +105,9 @@ describe("trade mapping", () => {
 
   it("tombstone ِ برچسب/حساب/معامله ارجاع‌ها رو محلی تمیز می‌کنه", async () => {
     const entryId = "mtr00000000000000000000004";
-    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", updatedAt: T0, deletedAt: null, dirty: 0 });
+    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", createdAt: T0, updatedAt: T0, deletedAt: null, dirty: 0 });
     await tradeDb.trades.put(localEntry({ id: entryId, tagIds: [TAG], dirty: 0, updatedAt: T0 }));
-    await tradeDb.notes.put({ id: "mnote000000000000000000001", title: "n", content: "", color: "#fff", pinned: false, accountId: ACC, entryId, tagIds: [TAG], updatedAt: T0, deletedAt: null, dirty: 0 });
+    await tradeDb.notes.put({ id: "mnote000000000000000000001", title: "n", content: "", color: "#fff", pinned: false, accountId: ACC, entryId, tagIds: [TAG], createdAt: T0, updatedAt: T0, deletedAt: null, dirty: 0 });
 
     await applyTombstone({ entity: "tradeTag", id: TAG, deleted: true, editedAt: T1, updatedAt: T1 });
     expect(await tradeDb.tags.get(TAG)).toBeUndefined();
@@ -121,7 +121,7 @@ describe("trade mapping", () => {
   });
 
   it("tombstone روی ردیفِ dirty و جدیدتر اعمال نمی‌شه", async () => {
-    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", updatedAt: T2, deletedAt: null, dirty: 1 });
+    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", createdAt: T2, updatedAt: T2, deletedAt: null, dirty: 1 });
     expect(await applyTombstone({ entity: "tradeTag", id: TAG, deleted: true, editedAt: T1, updatedAt: T1 })).toBe(false);
     expect(await tradeDb.tags.get(TAG)).toBeDefined();
   });
@@ -144,15 +144,15 @@ describe("trade channel", () => {
     const engine = new SyncEngine(ctx.api, ctx.kv, [tradeChannel]);
     await engine.init();
     const CL = "mcl0000000000000000000001";
-    await tradeDb.notes.put({ id: "mnote000000000000000000002", title: "n", content: "", color: "#fff", pinned: false, accountId: null, entryId: null, tagIds: [], updatedAt: T1, deletedAt: null, dirty: 1 });
+    await tradeDb.notes.put({ id: "mnote000000000000000000002", title: "n", content: "", color: "#fff", pinned: false, accountId: null, entryId: null, tagIds: [], createdAt: T1, updatedAt: T1, deletedAt: null, dirty: 1 });
     await tradeDb.trades.put(localEntry({ id: "mtr00000000000000000000005", dirty: 1 }));
-    await tradeDb.checklists.put({ id: CL, name: "c", color: "#fff", required: false, archived: false, order: 0, note: null, updatedAt: T0, deletedAt: null, dirty: 0 });
+    await tradeDb.checklists.put({ id: CL, name: "c", color: "#fff", required: false, archived: false, order: 0, note: null, createdAt: T0, updatedAt: T0, deletedAt: null, dirty: 0 });
     await tradeDb.checklistItems.bulkPut([
       { id: "mit00000000000000000000001", checklistId: CL, text: "یک", order: 0, checked: false, updatedAt: T0, deletedAt: null, dirty: 0 },
       { id: "mit00000000000000000000002", checklistId: CL, text: "دو", order: 1, checked: true, updatedAt: T1, deletedAt: null, dirty: 1 },
     ]);
     await tradeDb.accounts.put({ ...(await import("./tradeAdapter")).remoteAccount({ id: ACC, name: "a", broker: null, type: "REAL", currency: "USD", initialBalance: 100, leverage: null, color: "#fff", note: null, goalType: "PERCENT", goalValue: 10, archived: false, archivedAt: null, order: 0, tagIds: [], mtConnected: false, mtLastSyncAt: null, createdAt: T0, editedAt: T0, updatedAt: T0 }), deletedAt: T1, updatedAt: T1, dirty: 1 });
-    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", updatedAt: T1, deletedAt: null, dirty: 1 });
+    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", createdAt: T1, updatedAt: T1, deletedAt: null, dirty: 1 });
 
     await engine.sync();
     expect(engine.getState().error).toBeNull();
@@ -179,7 +179,7 @@ describe("trade channel", () => {
     });
     const engine = new SyncEngine(ctx.api, ctx.kv, [tradeChannel]);
     await engine.init();
-    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", updatedAt: T1, deletedAt: null, dirty: 1 });
+    await tradeDb.tags.put({ id: TAG, name: "t", color: "#fff", createdAt: T1, updatedAt: T1, deletedAt: null, dirty: 1 });
     await engine.sync();
     expect(engine.getState().lockedModules).toEqual(["TRADE"]);
     expect(engine.getState().rejectedCount).toBe(0);
@@ -195,7 +195,7 @@ describe("تعمیرِ idهای قدیمی", () => {
     const { tradeAdapter } = await import("./tradeAdapter");
     await tradeDb.accounts.put({ ...(await import("./tradeAdapter")).remoteAccount({ id: OLD, name: "a", broker: null, type: "REAL", currency: "USD", initialBalance: 1, leverage: null, color: "#fff", note: null, goalType: "PERCENT", goalValue: 1, archived: false, archivedAt: null, order: 0, tagIds: [], mtConnected: false, mtLastSyncAt: null, createdAt: T0, editedAt: T0, updatedAt: T0 }) });
     await tradeDb.trades.put(localEntry({ id: "mtr00000000000000000000009", accountId: OLD, dirty: 0 }));
-    await tradeDb.notes.put({ id: "mnote000000000000000000009", title: "n", content: "", color: "#fff", pinned: false, accountId: OLD, entryId: null, tagIds: [], updatedAt: T0, deletedAt: null, dirty: 0 });
+    await tradeDb.notes.put({ id: "mnote000000000000000000009", title: "n", content: "", color: "#fff", pinned: false, accountId: OLD, entryId: null, tagIds: [], createdAt: T0, updatedAt: T0, deletedAt: null, dirty: 0 });
     await tradeAdapter.prepare!();
     const accs = await tradeDb.accounts.toArray();
     expect(accs).toHaveLength(1);

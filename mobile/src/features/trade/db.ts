@@ -45,6 +45,8 @@ export interface TradeAccountRow extends SyncRow {
   /** فقط‌خواندنی از سرور: اتصالِ فعالِ متاتریدر روی همین حساب */
   mtConnected?: boolean;
   mtLastSyncAt?: string | null;
+  /** فقط‌خواندنی — سرور موقعِ ساخت می‌ده، push نمی‌شه (ترتیبِ لیستِ حساب‌ها) */
+  createdAt: string;
 }
 
 export interface TradeEntryRow extends SyncRow {
@@ -52,6 +54,8 @@ export interface TradeEntryRow extends SyncRow {
   symbol: string;
   direction: TradeDirection;
   timeframe: string | null;
+  /** فقط‌خواندنی — سرور موقعِ ساخت می‌ده، push نمی‌شه */
+  createdAt: string;
   openedAt: string; // UTC ISO
   closedAt: string | null; // UTC ISO
   volume: number;
@@ -106,6 +110,8 @@ export interface TradeChecklistRow extends SyncRow {
   archived: boolean;
   order: number;
   note: string | null;
+  /** فقط‌خواندنی — سرور موقعِ ساخت می‌ده، push نمی‌شه */
+  createdAt: string;
 }
 
 export interface TradeChecklistItemRow extends SyncRow {
@@ -123,11 +129,21 @@ export interface TradeNoteRow extends SyncRow {
   accountId: string | null;
   entryId: string | null;
   tagIds: string[];
+  /** فقط‌خواندنی — سرور موقعِ ساخت می‌ده، push نمی‌شه */
+  createdAt: string;
 }
 
 export interface TradeTagRow extends SyncRow {
   name: string;
   color: string;
+  /** فقط‌خواندنی — سرور موقعِ ساخت می‌ده، push نمی‌شه (ترتیبِ فهرستِ برچسب‌ها) */
+  createdAt: string;
+}
+
+/** پرچمِ محلیِ سرور-مدیریت (مثلِ tradeChecklistSeeded) — هیچ‌وقت sync نمی‌شه */
+export interface TradeMetaRow {
+  key: string;
+  value: boolean;
 }
 
 class ArionTradeDb extends Dexie {
@@ -137,6 +153,7 @@ class ArionTradeDb extends Dexie {
   checklistItems!: Table<TradeChecklistItemRow, string>;
   notes!: Table<TradeNoteRow, string>;
   tags!: Table<TradeTagRow, string>;
+  meta!: Table<TradeMetaRow, string>;
 
   constructor() {
     super("arion-trade");
@@ -151,6 +168,12 @@ class ArionTradeDb extends Dexie {
       notes: "id, accountId, entryId, dirty, updatedAt",
       tags: "id, name, dirty, updatedAt",
     });
+    // فقط افزودنِ یک جدولِ محلیِ جدید (پرچم‌های سرور-مدیریت که هیچ‌وقت sync
+    // نمی‌شن، مثلِ سیدِ چک‌لیستِ پیش‌فرض) — بقیه‌ی جدول‌ها دست‌نخورده.
+    this.version(2).stores({ meta: "key" });
+    // ایندکسِ checklistId روی trades — حذفِ یک چک‌لیست باید معاملاتِ ارجاع‌دهنده
+    // رو پیدا کنه (checklistId ← null) بدونِ اسکنِ کاملِ جدول.
+    this.version(3).stores({ trades: "id, accountId, status, openedAt, checklistId, dirty, updatedAt, [accountId+openedAt]" });
   }
 }
 

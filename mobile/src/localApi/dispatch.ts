@@ -68,7 +68,7 @@ export function cachedFallback(url: URL, req: Request): Promise<Response> {
 /** تازه‌سازیِ اجباریِ یک مسیرِ CACHED (مثلا /api/account در شروع/برگشت به اپ) */
 export async function refreshCached(path: string): Promise<void> {
   const url = new URL(path, "http://local");
-  const m = matchRoute("GET", url.pathname);
+  const m = matchRoute("GET", url.pathname, url.searchParams);
   if (!m || m.route.cls !== "CACHED" || !services().tokens.isLoggedIn()) return;
   try {
     await fetchAndStore(m.route, url, { method: "GET", headers: {}, body: null, signal: null });
@@ -81,7 +81,7 @@ export async function refreshCached(path: string): Promise<void> {
 
 export async function dispatch(input: RequestInfo | URL, init: RequestInit | undefined, url: URL): Promise<Response> {
   const method = methodOf(input, init);
-  const match = matchRoute(method, url.pathname);
+  const match = matchRoute(method, url.pathname, url.searchParams);
   const route = match?.route ?? null;
 
   if (route?.cls === "NA") return notAvailable();

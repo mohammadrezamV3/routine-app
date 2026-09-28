@@ -65,6 +65,19 @@ export function generatePrismaShim(schema) {
     "  type InputJsonValue = any;",
     "  type JsonObject = Record<string, any>;",
     "  type TransactionClient = any;",
+    // تایپ‌های عمومیِ هر مدل (UncheckedCreateInput/CreateInput/UncheckedUpdateInput/
+    // WhereInput/GetPayload<T>) — کدِ سرورِ وب که در باندلِ کلاینت هم import می‌شه
+    // (مثلا lib/tradeServer.ts) اینا رو فقط برای type-check لازم داره، نه واقعیِ
+    // runtime؛ `any` کافیه (قرارِ استفاده‌ی واقعی هیچ‌وقت به این‌جا نمی‌رسه).
+    ...models.flatMap((m) => [
+      `  type ${m}UncheckedCreateInput = any;`,
+      `  type ${m}CreateInput = any;`,
+      `  type ${m}UncheckedUpdateInput = any;`,
+      `  type ${m}UpdateInput = any;`,
+      `  type ${m}WhereInput = any;`,
+      `  type ${m}WhereUniqueInput = any;`,
+      `  type ${m}GetPayload<T> = any;`,
+    ]),
     "}",
     "",
     "// delegateها طوری تایپ شده‌ن که findMany آرایه برگردونه (کدِ سرورِ وب که",

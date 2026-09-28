@@ -22,6 +22,8 @@ import { start2fa } from "./handlers/auth";
 // فاز ۲ (بدنسازی/کالری) — تنبل
 const exerciseH = (name: keyof typeof import("./handlers/exerciseLocal") & string) => lazyHandler(() => import("./handlers/exerciseLocal"), name);
 const calorieH = (name: keyof typeof import("./handlers/calorie") & string) => lazyHandler(() => import("./handlers/calorie"), name);
+// فاز ۳ (ترید) — تنبل
+const tradeH = (name: keyof typeof import("./handlers/tradeLocal") & string) => lazyHandler(() => import("./handlers/tradeLocal"), name);
 
 export type EndpointClass = "LOCAL" | "CACHED" | "ONLINE" | "NA";
 
@@ -41,6 +43,13 @@ export type RouteDef = {
   barrier?: boolean;
   /** فعلا ONLINE؛ فازی که محلی/کش می‌شه */
   todo?: string;
+  /**
+   * طبقه‌بندی وابسته به query — مثلا DELETE /api/trade/accounts?mode=purge
+   * (ONLINE+barrier، معادلِ دقیقِ حذفِ واقعیِ وب) در برابرِ همون مسیر بدونِ
+   * mode=purge (LOCAL، یعنی toggle آرشیو). موردِ خاص‌تر (با query) باید قبل
+   * از موردِ عام‌تر در آرایه‌ی ROUTES بیاد — اولین تطابق برنده است.
+   */
+  query?: (params: URLSearchParams) => boolean;
 };
 
 const R = (pattern: string, methods: HttpMethod[] | "*", cls: EndpointClass, extra: Partial<RouteDef> = {}): RouteDef => ({
@@ -147,14 +156,36 @@ export const ROUTES: RouteDef[] = [
   R("/api/auth/forgot-password/request", "*", "ONLINE", { public: true }),
   R("/api/auth/forgot-password/verify", "*", "ONLINE", { public: true }),
 
+  // ─── LOCAL (فاز 3): ترید ─────────────────────────────────────────────
+  R("/api/trade/accounts", ["GET"], "LOCAL", { handler: tradeH("getAccounts"), module: "TRADE" }),
+  R("/api/trade/accounts", ["POST"], "LOCAL", { handler: tradeH("postAccount"), module: "TRADE" }),
+  R("/api/trade/accounts", ["PATCH"], "LOCAL", { handler: tradeH("patchAccount"), module: "TRADE" }),
+  // purge = حذفِ واقعی (cascade سمتِ سرور)؛ حذف نداره در قراردادِ سینک، پس
+  // محلی نمی‌شه — سدِ push/forward/pull، و tombstoneِ سرور (TradeSyncTombstone)
+  // ردیف‌های محلی رو در همون pull پاک می‌کنه. باید قبل از موردِ عامِ زیر بیاد.
+  R("/api/trade/accounts", ["DELETE"], "ONLINE", { query: (p) => p.get("mode") === "purge", barrier: true }),
+  // بدونِ mode=purge (یا mode=archive) → toggleِ آرشیوِ محلی
+  R("/api/trade/accounts", ["DELETE"], "LOCAL", { handler: tradeH("deleteAccount"), module: "TRADE" }),
+  R("/api/trade/entries", ["GET"], "LOCAL", { handler: tradeH("getEntries"), module: "TRADE" }),
+  R("/api/trade/entries", ["POST"], "LOCAL", { handler: tradeH("postEntry"), module: "TRADE" }),
+  R("/api/trade/entries", ["PATCH"], "LOCAL", { handler: tradeH("patchEntry"), module: "TRADE" }),
+  R("/api/trade/entries", ["DELETE"], "LOCAL", { handler: tradeH("deleteEntry"), module: "TRADE" }),
+  R("/api/trade/entries/:id", ["GET"], "LOCAL", { handler: tradeH("getEntryDetail"), module: "TRADE" }),
+  R("/api/trade/checklists", ["GET"], "LOCAL", { handler: tradeH("getChecklists"), module: "TRADE" }),
+  R("/api/trade/checklists", ["POST"], "LOCAL", { handler: tradeH("postChecklist"), module: "TRADE" }),
+  R("/api/trade/checklists", ["PATCH"], "LOCAL", { handler: tradeH("patchChecklist"), module: "TRADE" }),
+  R("/api/trade/checklists", ["DELETE"], "LOCAL", { handler: tradeH("deleteChecklist"), module: "TRADE" }),
+  R("/api/trade/checklists/:id/items", ["PATCH"], "LOCAL", { handler: tradeH("patchChecklistItems"), module: "TRADE" }),
+  R("/api/trade/notes", ["GET"], "LOCAL", { handler: tradeH("getNotes"), module: "TRADE" }),
+  R("/api/trade/notes", ["POST"], "LOCAL", { handler: tradeH("postNote"), module: "TRADE" }),
+  R("/api/trade/notes", ["PATCH"], "LOCAL", { handler: tradeH("patchNote"), module: "TRADE" }),
+  R("/api/trade/notes", ["DELETE"], "LOCAL", { handler: tradeH("deleteNote"), module: "TRADE" }),
+  R("/api/trade/tags", ["GET"], "LOCAL", { handler: tradeH("getTags"), module: "TRADE" }),
+  R("/api/trade/tags", ["POST"], "LOCAL", { handler: tradeH("postTag"), module: "TRADE" }),
+  R("/api/trade/tags", ["PATCH"], "LOCAL", { handler: tradeH("patchTag"), module: "TRADE" }),
+  R("/api/trade/tags", ["DELETE"], "LOCAL", { handler: tradeH("deleteTag"), module: "TRADE" }),
+
   // ─── TODO: فعلا ONLINE، در فازهای بعد LOCAL ────────────────────────
-  R("/api/trade/accounts", "*", "ONLINE", { todo: "phase3 LOCAL" }),
-  R("/api/trade/entries", "*", "ONLINE", { todo: "phase3 LOCAL" }),
-  R("/api/trade/entries/:id", "*", "ONLINE", { todo: "phase3 LOCAL" }),
-  R("/api/trade/checklists", "*", "ONLINE", { todo: "phase3 LOCAL" }),
-  R("/api/trade/checklists/:id/items", "*", "ONLINE", { todo: "phase3 LOCAL" }),
-  R("/api/trade/notes", "*", "ONLINE", { todo: "phase3 LOCAL" }),
-  R("/api/trade/tags", "*", "ONLINE", { todo: "phase3 LOCAL" }),
   R("/api/roadmaps/:id/progress", "*", "ONLINE", { todo: "phase4 LOCAL" }),
 
   // ─── NA ────────────────────────────────────────────────────────────
@@ -192,10 +223,11 @@ export function matchPattern(pattern: string, pathname: string): Record<string, 
   return params;
 }
 
-export function matchRoute(method: string, pathname: string): RouteMatch | null {
+export function matchRoute(method: string, pathname: string, search?: URLSearchParams): RouteMatch | null {
   const m = method.toUpperCase();
   for (const route of ROUTES) {
     if (route.methods !== "*" && !route.methods.includes(m as HttpMethod)) continue;
+    if (route.query && !route.query(search ?? new URLSearchParams())) continue;
     const params = matchPattern(route.pattern, pathname);
     if (params) return { route, params };
   }

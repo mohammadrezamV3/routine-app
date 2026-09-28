@@ -210,6 +210,44 @@ describe("localApi classification guard", () => {
     expect(ROUTES.filter((r) => /^\/api\/(exercise|calorie)\//.test(r.pattern) && r.todo)).toEqual([]);
   });
 
+  it("phase-3 trade handlers are LOCAL with the TRADE module gate; metatrader/economic-calendar stay CACHED, MT mutations/chat ONLINE", () => {
+    const cls = (m: string, p: string) => matchRoute(m, p)?.route;
+    const local: [string, string][] = [
+      ["GET", "/api/trade/accounts"], ["POST", "/api/trade/accounts"], ["PATCH", "/api/trade/accounts"], ["DELETE", "/api/trade/accounts"],
+      ["GET", "/api/trade/entries"], ["POST", "/api/trade/entries"], ["PATCH", "/api/trade/entries"], ["DELETE", "/api/trade/entries"],
+      ["GET", "/api/trade/entries/e1"],
+      ["GET", "/api/trade/checklists"], ["POST", "/api/trade/checklists"], ["PATCH", "/api/trade/checklists"], ["DELETE", "/api/trade/checklists"],
+      ["PATCH", "/api/trade/checklists/c1/items"],
+      ["GET", "/api/trade/notes"], ["POST", "/api/trade/notes"], ["PATCH", "/api/trade/notes"], ["DELETE", "/api/trade/notes"],
+      ["GET", "/api/trade/tags"], ["POST", "/api/trade/tags"], ["PATCH", "/api/trade/tags"], ["DELETE", "/api/trade/tags"],
+    ];
+    for (const [m, p] of local) {
+      const r = cls(m, p);
+      expect(r?.cls, `${m} ${p}`).toBe("LOCAL");
+      expect(r?.module, `${m} ${p}`).toBe("TRADE");
+      expect(r?.todo, `${m} ${p}`).toBeUndefined();
+    }
+    expect(ROUTES.filter((r) => /^\/api\/trade\//.test(r.pattern) && r.todo)).toEqual([]);
+    expect(cls("GET", "/api/trade/economic-calendar")?.cls).toBe("CACHED");
+    expect(cls("GET", "/api/trade/metatrader")?.cls).toBe("CACHED");
+    expect(cls("POST", "/api/trade/metatrader")?.cls).toBe("ONLINE");
+    expect(cls("DELETE", "/api/trade/metatrader")?.cls).toBe("ONLINE");
+    expect(cls("POST", "/api/trade/chat")?.cls).toBe("ONLINE");
+    expect(cls("GET", "/api/market/prices")?.cls).toBe("ONLINE");
+  });
+
+  it("DELETE /api/trade/accounts?mode=purge is ONLINE+barrier (real server cascade, no sync entity for it); without mode=purge stays LOCAL archive-toggle", () => {
+    const archiveMatch = matchRoute("DELETE", "/api/trade/accounts", new URLSearchParams());
+    expect(archiveMatch?.route.cls).toBe("LOCAL");
+    expect(archiveMatch?.route.module).toBe("TRADE");
+    const purgeMatch = matchRoute("DELETE", "/api/trade/accounts", new URLSearchParams("mode=purge"));
+    expect(purgeMatch?.route).toMatchObject({ cls: "ONLINE", barrier: true });
+    expect(purgeMatch?.route.handler).toBeUndefined();
+    // mode=archive (صریح) هم مثلِ بدونِ mode ← LOCAL
+    const archiveExplicit = matchRoute("DELETE", "/api/trade/accounts", new URLSearchParams("mode=archive"));
+    expect(archiveExplicit?.route.cls).toBe("LOCAL");
+  });
+
   it("reports the classification counts", () => {
     const c = classificationCounts();
     // eslint-disable-next-line no-console

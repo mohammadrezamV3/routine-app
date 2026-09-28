@@ -183,6 +183,7 @@ export function remoteAccount(r: TradeAccountRecord): TradeAccountRow {
     tagIds: r.tagIds ?? [],
     mtConnected: r.mtConnected,
     mtLastSyncAt: r.mtLastSyncAt,
+    createdAt: r.createdAt,
     updatedAt: r.editedAt,
     deletedAt: null,
     dirty: 0,
@@ -190,7 +191,7 @@ export function remoteAccount(r: TradeAccountRecord): TradeAccountRow {
 }
 
 export function remoteTag(r: TradeTagRecord): TradeTagRow {
-  return { id: r.id, name: r.name, color: r.color, updatedAt: r.editedAt, deletedAt: null, dirty: 0 };
+  return { id: r.id, name: r.name, color: r.color, createdAt: r.createdAt, updatedAt: r.editedAt, deletedAt: null, dirty: 0 };
 }
 
 export function remoteChecklist(r: TradeChecklistRecord): { row: TradeChecklistRow; items: TradeChecklistItemRow[] } {
@@ -203,6 +204,7 @@ export function remoteChecklist(r: TradeChecklistRecord): { row: TradeChecklistR
       archived: r.archived,
       order: r.order,
       note: r.note,
+      createdAt: r.createdAt,
       updatedAt: r.editedAt,
       deletedAt: null,
       dirty: 0,
@@ -227,6 +229,7 @@ export function remoteEntry(r: TradeEntryRecord, local?: TradeEntryRow): TradeEn
     symbol: r.symbol,
     direction: r.direction,
     timeframe: r.timeframe,
+    createdAt: r.createdAt,
     openedAt: r.openedAt,
     closedAt: r.closedAt,
     volume: r.volume,
@@ -300,6 +303,7 @@ export function remoteNote(r: TradeNoteRecord): TradeNoteRow {
     accountId: r.accountId,
     entryId: r.entryId,
     tagIds: r.tagIds ?? [],
+    createdAt: r.createdAt,
     updatedAt: r.editedAt,
     deletedAt: null,
     dirty: 0,
@@ -548,14 +552,26 @@ export const tradeAdapter: SyncAdapter = {
 
   async applyPull(raw) {
     const res = raw as TradeSyncPullResponse;
-    if (res.moduleLocked) return;
-    for (const r of res.tags ?? []) await applyTradeRecord("tag", r);
-    for (const r of res.accounts ?? []) await applyTradeRecord("account", r);
-    for (const r of res.checklists ?? []) await applyTradeRecord("checklist", r);
-    for (const r of res.entries ?? []) await applyTradeRecord("entry", r);
-    for (const r of res.notes ?? []) await applyTradeRecord("note", r);
-    for (const t of res.tombstones ?? []) await applyTombstone(t);
-    // تنظیماتِ ترید (TRADE_SYNC_SETTING_KEYS) هنوز جای محلی ندارن — نادیده
+    if (res.moduleLocked) return 0;
+    // خروجیِ عددی = تعدادِ ردیف‌هایی که واقعا عوض شدن (remountِ صفحه‌ی فعلی —
+    // SyncEngine.onRemoteApplied)؛ برگشتِ همون چیزی که خودمون push کردیم حساب نمی‌شه
+    // (applyTradeRecord/applyTombstone با LWW این رو تشخیص می‌دن).
+    let applied = 0;
+    const count = (ok: boolean) => void (ok && applied++);
+    for (const r of res.tags ?? []) count(await applyTradeRecord("tag", r));
+    for (const r of res.accounts ?? []) count(await applyTradeRecord("account", r));
+    for (const r of res.checklists ?? []) count(await applyTradeRecord("checklist", r));
+    for (const r of res.entries ?? []) count(await applyTradeRecord("entry", r));
+    for (const r of res.notes ?? []) count(await applyTradeRecord("note", r));
+    for (const t of res.tombstones ?? []) count(await applyTombstone(t));
+    // تصمیمِ عمدی: تنظیماتِ ترید (TRADE_SYNC_SETTING_KEYS/entity "tradeSetting")
+    // دیگه از این آداپتور سینک نمی‌شن — این کلیدها همه در MOBILE_SYNC_SETTING_KEYS
+    // هم هستن و از کانالِ عمومیِ settings (coreAdapter.ts ← db.settings ←
+    // /api/settings/:key محلی) سینک می‌شن، همون‌طور که هر UserSetting دیگه‌ای
+    // سینک می‌شه. سرور همچنان هر دو مسیر (setting و tradeSetting) رو قبول
+    // می‌کنه (lib/mobileTradeSyncStore.ts دست‌نخورده)، ولی این کلاینت فقط از
+    // یک مسیر (core) استفاده می‌کنه تا هر UserSetting دقیقا یک مسیرِ سینک داشته باشه.
+    return applied;
   },
 
   async markAllDirty() {
