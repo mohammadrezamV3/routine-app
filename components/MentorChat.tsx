@@ -30,7 +30,7 @@ import { MentorMenuAt, type MentorMenuAction } from "./MentorKebabMenu";
 import { mentorApi } from "./MentorDashKit";
 import { M_DUR, mT } from "./MentorMotion";
 
-const POLL_MS = 8000;
+const POLL_MS = 5000;
 const MAX_LEN = 2000;
 /** پیام‌های پشتِ‌هم از یک فرستنده با فاصله‌ی کمتر از این یک گروه‌اند (دُمِ حباب فقط روی آخری) */
 const GROUP_GAP_MS = 5 * 60 * 1000;

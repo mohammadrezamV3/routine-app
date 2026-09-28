@@ -6,6 +6,7 @@ import { clampText } from "@/lib/validate";
 import { sessionsAt } from "@/lib/forexSessions";
 import { computeR } from "@/lib/tradeSymbols";
 import { hashSecret, normalizeMtTrades } from "@/lib/metatrader";
+import { publishDataChanged } from "@/lib/realtime";
 
 // POST /api/mt/sync — اندپوینتی که EA هر چند دقیقه صدا می‌زند.
 //   Authorization: Bearer <token>
@@ -126,6 +127,9 @@ export async function POST(req: NextRequest) {
       ...(body?.currency ? { currency: clampText(String(body.currency), 8) } : {}),
     },
   });
+
+  // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنالِ بازِ کاربر (روی هر دستگاهی) همون لحظه
+  if (created > 0 || updated > 0) void publishDataChanged(link.userId, ["trade"]);
 
   return NextResponse.json({ ok: true, received: trades.length, created, updated });
 }

@@ -9,6 +9,7 @@ import { removeProgramMirrors } from "@/lib/mentorProgramMirror";
 import { END_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability";
 import { countActiveStudents, readWelcomeMessage } from "@/lib/mentorManageServer";
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_STALE_MESSAGE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as const;
@@ -131,6 +132,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if ((action === "end" || action === "block") && (m.status === "ACTIVE" || m.status === "PENDING")) {
     await closeOpenPrograms(m.id, m.studentId);
   }
+  // هر دو طرف (و بقیه‌ی دستگاه‌های خودم) وضعیتِ تازه رو همون لحظه می‌بینن
+  void publishToUsers([m.mentorId, m.studentId], { type: "mentor.mentorship", data: { id: m.id } });
 
   // پیامِ خوش‌آمدِ منتور (اگه تعریف شده) با اعلانِ شروعِ رابطه به شاگرد می‌رسه
   const welcome = action === "accept" && counterpartId === m.studentId ? await readWelcomeMessage(m.mentorId) : null;

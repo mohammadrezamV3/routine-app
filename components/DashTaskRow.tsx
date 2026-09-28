@@ -12,6 +12,9 @@ import { toEnDigits } from "@/lib/schedule";
 export type DashTaskItem = {
   id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean;
   isPast?: boolean; dayPast?: boolean; notStarted?: boolean; isFuture?: boolean;
+  /** «وقتش گذشته» و انجام نشده — روزش گذشته یا ساعتِ امروزش رد شده
+   * (lib/schedule.ts → isTaskTimePassed). منبعِ ✕ و لیبلِ وضعیت. */
+  missed?: boolean;
   /** ردیفِ سنتتیکِ «برنامه تمرینی امروز» — بجای چک‌باکس، دکمه‌ی «شروع»
    * دارد که با کلیک هم تیک می‌خورد هم به صفحه‌ی بدنسازی می‌برد. سه‌نقطه
    * (ویرایش/انتقال/حذف) برایش نیست چون یک occurrence واقعی نیست. */
@@ -190,7 +193,7 @@ export function DashTaskRow({
           <DashImportanceBadge importance={task.importance} />
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 flex-col items-end gap-0.5">
           {/* برنامه می‌تواند بی‌ساعت باشد («امروز ورزش دارم»). به‌جای یک جای
               خالیِ مبهم، صریح می‌گوییم بی‌ساعت است. */}
           {task.time ? (
@@ -200,10 +203,46 @@ export function DashTaskRow({
           ) : (
             <span className="shrink-0 text-[10.5px] text-dash-muted sm:text-[12px]">بدون ساعت</span>
           )}
+          {/* وضعیتِ برنامه، زیرِ ساعت و فقط متن (بی‌پس‌زمینه). ردیفِ ورزش
+              وضعیتش را روی خودِ دکمه‌اش می‌گوید، این‌جا تکرار نمی‌شود. */}
+          {!task.exercise && (task.done || task.missed) && (
+            <span
+              className="shrink-0 text-[9.5px] font-semibold leading-none sm:text-[11px]"
+              style={{ color: task.done ? "var(--accent)" : "#E05252" }}
+            >
+              {task.done ? "انجام دادی" : "وقتش گذشته"}
+            </span>
+          )}
         </div>
       </div>
 
-      {task.exercise && !task.done ? (
+      {task.exercise ? (
+        // دکمه‌ی ردیفِ ورزش وضعیتش را خودش می‌گوید: «انجام دادی» وقتی تمرینِ
+        // همان روز واقعاً «تمام» ثبت شده (ExerciseLog.completed)، «وقتش گذشته»
+        // وقتی روزش بی‌تمام‌شدن گذشته، و در غیرِ این صورت همان «شروع».
+        task.done ? (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
+            disabled={!editable || task.dayPast}
+            onClick={() => { if (!task.dayPast) onStart?.(task.id); }}
+            aria-label="تمرینِ این روز انجام شده"
+            className="flex shrink-0 items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-colors sm:px-3 sm:text-[12.5px]"
+            style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
+          >
+            انجام دادی
+          </motion.button>
+        ) : task.missed ? (
+          <button
+            type="button"
+            disabled
+            aria-label="روزِ این تمرین گذشته و انجام نشده"
+            className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:px-3 sm:text-[12.5px]"
+            style={{ background: "rgba(224,82,82,.14)", color: "#E05252" }}
+          >
+            وقتش گذشته
+          </button>
+        ) : (
         <motion.button
           type="button"
           whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
@@ -222,6 +261,7 @@ export function DashTaskRow({
           <Play className="h-3 w-3 sm:h-[13px] sm:w-[13px]" fill="currentColor" />
           شروع
         </motion.button>
+        )
       ) : (
       <motion.button
         type="button"
@@ -233,9 +273,9 @@ export function DashTaskRow({
           task.isFuture
             ? "این برنامه هنوز نرسیده — قابل تیک‌زدن نیست"
             : task.done
-            ? "علامت‌زدن به‌عنوان انجام‌نشده"
-            : task.dayPast
-            ? "این برنامه انجام نشده و روزش گذشته"
+            ? "انجام دادی — علامت‌زدن به‌عنوان انجام‌نشده"
+            : task.missed
+            ? "وقتش گذشته — علامت‌زدن به‌عنوان انجام‌شده"
             : "علامت‌زدن به‌عنوان انجام‌شده"
         }
         animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
@@ -243,13 +283,13 @@ export function DashTaskRow({
         className={cn(
           "relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
           (!editable || task.isFuture) && "cursor-not-allowed opacity-50",
-          task.done || (task.dayPast && !task.done) ? "text-white" : "text-transparent hover:border-white/45",
-          task.dayPast && !task.done && "task-check-missed"
+          task.done || task.missed ? "text-white" : "text-transparent hover:border-white/45",
+          !task.done && task.missed && "task-check-missed"
         )}
         style={
           task.done
             ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-            : task.dayPast
+            : task.missed
             ? { background: "#E05252", borderColor: "#E05252" }
             : { background: "transparent", borderColor: "var(--muted)" }
         }
@@ -266,7 +306,7 @@ export function DashTaskRow({
             >
               <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
             </motion.span>
-          ) : task.dayPast ? (
+          ) : task.missed ? (
             <motion.span
               key="missed"
               initial={{ scale: 0, rotate: 45, opacity: 0 }}

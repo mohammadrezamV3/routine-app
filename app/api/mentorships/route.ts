@@ -17,6 +17,7 @@ import {
   MENTOR_IDENTITY_REQUIRED_MSG,
 } from "@/lib/mentorServer";
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
+import { publishToUsers } from "@/lib/realtime";
 
 const MESSAGE_MAX = 500;
 // پیامِ عمومی برای هر حالتِ «بلاک» — تا معلوم نشه دقیقاً کی کی رو بلاک کرده
@@ -171,6 +172,8 @@ export async function POST(req: Request) {
       throw e;
     }
   }
+
+  void publishToUsers([mentorId, studentId], { type: "mentor.mentorship", data: { id } });
 
   const row = await prisma.mentorship.findUnique({ where: { id }, include: MENTORSHIP_WITH_USERS_INCLUDE });
   const [mentorship] = await buildMentorshipRows([row!], me);

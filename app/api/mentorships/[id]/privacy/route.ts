@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, notFound, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { listStudentScopes, sanitizeSharedPrograms, type PrivacySettings } from "@/lib/mentorPrivacy";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 
@@ -57,6 +58,13 @@ export async function PUT(req: Request, { params }: Ctx) {
 
   const res = await prisma.mentorship.updateMany({ where: { id: params.id, studentId: g.userId }, data });
   if (res.count === 0) return notFound();
-  const privacy = await prisma.mentorship.findFirst({ where: { id: params.id, studentId: g.userId }, select: PRIVACY_SELECT });
+  const row = await prisma.mentorship.findFirst({ where: { id: params.id, studentId: g.userId }, select: { ...PRIVACY_SELECT, mentorId: true } });
+  let privacy = null;
+  if (row) {
+    const { mentorId, ...rest } = row;
+    privacy = rest;
+    // منتور همون لحظه دسترسی‌های تازه رو می‌بینه (و بقیه‌ی دستگاه‌های شاگرد)
+    void publishToUsers([mentorId, g.userId], { type: "mentor.mentorship", data: { id: params.id } });
+  }
   return NextResponse.json({ privacy });
 }

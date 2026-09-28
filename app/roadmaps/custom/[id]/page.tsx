@@ -13,6 +13,8 @@ import { RoadmapStageCard, searchUrl } from "@/components/RoadmapStageCard";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { LoadingBlock } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
+import { useLiveRefresh } from "@/lib/liveSync";
 import { hoursLabel, levelLabel, type PlanStage, type RoadmapPlan } from "@/lib/roadmapPlan";
 
 type Detail = {
@@ -39,6 +41,8 @@ export default function RoadmapDetailPage() {
   const [busy, setBusy] = useState<string | null>(null); // "guide" | "stage-3"
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     fetch(`/api/roadmaps/${params.id}`)
@@ -55,6 +59,10 @@ export default function RoadmapDetailPage() {
   }, [params.id]);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: پیشرفت/ساختِ همین مسیر از تبِ دیگه یا برگشت به تب. نوشتن‌های همین
+  // صفحه نادیده گرفته می‌شن — تیک‌ها خودشون optimisticن و پژواکِ هر تیک وسطِ
+  // چند تیکِ پشت‌سرهم فقط پرش می‌ساخت.
+  useLiveRefresh("roadmaps", load, { remoteOnly: true });
 
   /**
    * تیک فوراً روی صفحه می‌نشیند و بعد ذخیره می‌شود — نه برعکس؛ اگر ذخیره
@@ -154,8 +162,21 @@ export default function RoadmapDetailPage() {
     );
   }
 
+  function openDeleteConfirm() {
+    setDeleteError(null);
+    setConfirmDelete(true);
+  }
+
   async function removeRoadmap() {
-    await fetch(`/api/roadmaps/${params.id}`, { method: "DELETE" });
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const res = await fetch(`/api/roadmaps/${params.id}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) {
+      setDeleting(false);
+      setDeleteError(res ? "حذف نشد — دوباره امتحان کن" : "ارتباط با سرور برقرار نشد — اتصال را چک کن");
+      return;
+    }
     router.push("/roadmaps");
   }
 
@@ -186,7 +207,7 @@ export default function RoadmapDetailPage() {
       <header className="trade-surface rp-hero">
         <div className="rp-hero-top">
           <span className="rp-eyebrow">مسیرِ یادگیری · {roadmap.topic}</span>
-          <button type="button" className="trade-icon-btn danger" aria-label="حذف مسیر" onClick={() => setConfirmDelete(true)}>
+          <button type="button" className="trade-icon-btn danger" aria-label="حذف مسیر" onClick={openDeleteConfirm}>
             <Trash2 size={16} />
           </button>
         </div>
@@ -232,13 +253,14 @@ export default function RoadmapDetailPage() {
       </header>
 
       {confirmDelete && (
-        <div className="rp-confirm">
-          <span>این مسیر و پیشرفتش حذف شود؟</span>
-          <div className="rp-confirm-actions">
-            <button type="button" className="account-outline-btn" onClick={() => setConfirmDelete(false)}>لغو</button>
-            <button type="button" className="trade-danger-btn" onClick={removeRoadmap}>حذف</button>
-          </div>
-        </div>
+        <MentorConfirmDialog
+          message={`مسیرِ «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
+          confirmLabel="حذف مسیر"
+          busy={deleting}
+          error={deleteError}
+          onConfirm={removeRoadmap}
+          onCancel={() => { if (!deleting) setConfirmDelete(false); }}
+        />
       )}
 
       {!!pending && (

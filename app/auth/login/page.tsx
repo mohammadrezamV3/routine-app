@@ -8,6 +8,7 @@ import Link from "next/link";
 import { User, Lock, ShieldCheck } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
+import { AuthShell } from "@/components/AuthShell";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
@@ -156,7 +157,7 @@ export default function LoginPage() {
   if (twoFactor) {
     return (
       <section className="auth-page">
-        <div className="auth-shell">
+        <AuthShell>
           <AuthTabs active="login" />
           <form onSubmit={submitOtp} className="auth-box">
             <AuthBackButton />
@@ -194,14 +195,14 @@ export default function LoginPage() {
               {"بازگشت"}
             </button>
           </form>
-        </div>
+        </AuthShell>
       </section>
     );
   }
 
   return (
     <section className="auth-page">
-      <div className="auth-shell">
+      <AuthShell>
         <AuthTabs active="login" />
 
         <form ref={formRef} onSubmit={submitPassword} className="auth-box">
@@ -255,7 +256,7 @@ export default function LoginPage() {
             {loading ? "در حال ورود…" : "ورود"}
           </button>
         </form>
-      </div>
+      </AuthShell>
     </section>
   );
 }

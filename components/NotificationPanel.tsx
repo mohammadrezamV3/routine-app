@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCustomOccurrences, getRemovedOccurrences, getDaily, getSetting, setSetting } from "@/lib/storage";
+import { useLiveRefresh } from "@/lib/liveSync";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { getNotifPrefs } from "@/lib/notifPrefs";
@@ -239,6 +240,15 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
     });
     return () => { cancelled = true; };
   }, []);
+
+  // پنلِ باز هم زنده‌ست: اعلانِ تازه (WebSocket/تب دیگه) همون لحظه به لیست میاد
+  useLiveRefresh(["notifications", "mentor"], () => {
+    loadPendingNotifications().then((res) => {
+      cachedItems = res;
+      setItems(res);
+      setHasMore(serverHasMore);
+    });
+  });
 
   // یه لیسنر سطح document به‌جای لایه‌ی overlay fixed — چون app-topbar
   // (والد این پنل) backdrop-filter داره و برای فرزندهای position:fixed یه

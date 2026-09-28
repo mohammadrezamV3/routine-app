@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
+import { withLiveSync } from "@/lib/realtime";
 
 // PATCH /api/trade/checklists/[id]/items  { itemId, checked } | { resetAll: true }
 //
@@ -12,7 +13,7 @@ import { requireModule } from "@/lib/moduleAccess";
 //
 // resetAll برای شروعِ یک اجرای تازه (بعدِ ثبتِ معامله) است — چک‌لیستِ همان
 // روزِ قبل نباید از قبل تیک‌خورده به‌نظر برسد.
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+async function handlePATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 
@@ -45,3 +46,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const PATCH = withLiveSync(["trade"], handlePATCH);

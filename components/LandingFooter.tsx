@@ -2,11 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Mail } from "lucide-react";
 import { useThemeTokens } from "@/components/PlanShowcase";
 import { EnamadBadge } from "@/components/EnamadBadge";
+import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
+import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
 
-// فوترِ صفحه‌ی لندینگ — عمداً مینیمال: بدونِ کارت و بدونِ بک‌گراند، فقط یک
-// خطِ جداکننده و همان توکن‌های رنگیِ بقیه‌ی لندینگ (useThemeTokens).
+// فوترِ صفحه‌ی لندینگ — بدونِ کارت و بدونِ بک‌گراند (طبق قانونِ پروژه: هیچ
+// عنصری خودسرانه بک‌گراند نمی‌گیرد)، فقط یک خطِ جداکننده و همان توکن‌های
+// رنگیِ بقیه‌ی لندینگ (useThemeTokens) — ولی حالا یک فوترِ واقعیِ چندستونه:
+// برند+توضیح، گروه‌های لینک، و یک ستونِ تماس/شبکه‌های اجتماعی (از همون
+// lib/brand.ts که صفحه‌ی «درباره ما» هم استفاده می‌کند — چیزِ جدیدی ساخته
+// نشده). روی دسکتاپ همه‌چیز راست‌چین (RTL) کنارِ هم می‌شینند، روی موبایل
+// دوستونه می‌شوند تا فهرستِ ۱۰تاییِ «امکانات» له نشود.
 //
 // همه‌ی لینک‌های فوترِ قبلی سرِ جایشان مانده‌اند: /about و /faq و /terms و
 // صفحه‌های فرودِ عمومی بدونِ این لینک‌ها برای کراولر یتیم‌اند (هیچ لینکِ
@@ -58,8 +66,8 @@ export function LandingFooter() {
 
   return (
     <footer className={`mt-12 border-t ${t.line} px-1 pb-8 pt-8 text-right`}>
-      <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-[230px]">
+      <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-start lg:justify-between lg:gap-12">
+        <div className="max-w-[240px] shrink-0">
           <Link href="/" aria-label="آریون — صفحه‌ی اصلی" className="inline-flex items-center gap-2.5">
             <span className="relative h-8 w-8 shrink-0" aria-hidden="true">
               {/* هر دو نسخه‌ی لوگو هم‌زمان‌اند و فقط opacity عوض می‌شود — مثلِ AuthBrandMark. */}
@@ -81,7 +89,7 @@ export function LandingFooter() {
           </p>
         </div>
 
-        <nav aria-label="صفحه‌های آریون" className="grid grid-cols-3 gap-6 sm:gap-9">
+        <nav aria-label="صفحه‌های آریون" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 sm:gap-x-9">
           {GROUPS.map((g) => (
             <div key={g.title}>
               <div className={`text-[12px] font-bold ${t.heading}`}>{g.title}</div>
@@ -96,6 +104,43 @@ export function LandingFooter() {
               </ul>
             </div>
           ))}
+
+          {/* ستونِ تماس/شبکه‌های اجتماعی — دقیقا همون دیتای واقعیِ
+              lib/brand.ts که صفحه‌ی «درباره ما» هم نشون می‌ده، لینکِ تازه‌ای
+              ساخته نشده. */}
+          <div>
+            <div className={`text-[12px] font-bold ${t.heading}`}>تماس با ما</div>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  className={`flex items-center justify-end gap-1.5 text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
+                  dir="ltr"
+                >
+                  <span dir="rtl">{SUPPORT_EMAIL}</span>
+                  <Mail size={13} className="shrink-0" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href={SOCIAL.telegram.url} target="_blank" rel="noopener noreferrer"
+                  className={`flex items-center justify-end gap-1.5 whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
+                >
+                  تلگرام
+                  <TelegramIcon size={13} className="shrink-0" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href={SOCIAL.instagram.url} target="_blank" rel="noopener noreferrer"
+                  className={`flex items-center justify-end gap-1.5 whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
+                >
+                  اینستاگرام
+                  <InstagramIcon size={13} className="shrink-0" />
+                </a>
+              </li>
+            </ul>
+          </div>
         </nav>
       </div>
 

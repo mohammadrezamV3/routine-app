@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -123,6 +124,9 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
     }
   }, [row.id, role]);
   useEffect(() => { loadPrograms(); }, [loadPrograms]);
+  // زنده: برنامه‌ی تازه/پاسخِ طرفِ مقابل همون لحظه
+  useLiveRefresh("mentor:program", () => { loadPrograms(); });
+  useVisiblePolling(() => { loadPrograms(); }, 30_000);
 
   async function answer(action: "accept" | "reject") {
     if (action === "accept" && needTerms && !termsChecked) { setTermsError("برای پذیرش، شرایط را بپذیر"); return; }

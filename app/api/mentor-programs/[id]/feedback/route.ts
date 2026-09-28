@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT, feedbackAad, toFeedbackRow } from "@/lib/mentorServer";
 import { sealAtRest } from "@/lib/e2ee/server";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const BODY_MAX = 2000;
@@ -64,6 +65,7 @@ export async function POST(req: Request, { params }: Ctx) {
     include: { item: { select: { title: true } } },
   });
   touchMentorActivity(me);
+  void publishToUsers([p.studentId, me], { type: "mentor.program", data: { id: p.id } });
 
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
   await notifyUser(p.studentId, {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLiveRefresh } from "@/lib/liveSync";
 import { useCallback, useEffect, useState } from "react";
 import type { MentorshipRow, MentorshipsResponse } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
@@ -40,6 +41,7 @@ export function useMentorshipRelation(id: string) {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+  useLiveRefresh("mentor:mentorship", () => { load(); });
 
   return { rel, error, reload: load };
 }

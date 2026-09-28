@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getSetting, setSetting } from "@/lib/storage";
+import { useLiveRefresh } from "@/lib/liveSync";
 import {
   DEFAULT_TICKER_SYMBOLS_IRAN,
   MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, tickerLabelFor, TICKER_SETTING_KEY,
@@ -37,6 +38,10 @@ export function MarketTicker() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // زنده: نمادها از تنظیماتِ ترید (یا تبِ دیگه) عوض شدن → نوار همون لحظه
+  useLiveRefresh(TICKER_SETTING_KEY, () => {
+    getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => { if (saved?.length) setSymbols(saved); });
+  }, { includeFocus: false });
 
   useEffect(() => {
     let cancelled = false;

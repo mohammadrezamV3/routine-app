@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
+import { withLiveSync } from "@/lib/realtime";
 
 // چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
 // نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
@@ -83,7 +84,7 @@ export async function GET() {
 }
 
 // POST { name, color?, required?, items?: string[], duplicateOf?: string }
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
 // آیتم‌ها یکجا جایگزین می‌شوند: ویرایشگر همیشه لیست نهایی را می‌فرستد و
 // این کار هم ترتیب و هم افزودن/حذف را در یک درخواست حل می‌کند. اسنپ‌شات
 // معاملات قبلی از این تغییر اثر نمی‌گیرد (متنشان جداگانه ذخیره شده).
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -175,7 +176,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 // DELETE ?id=...
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
@@ -185,3 +186,8 @@ export async function DELETE(req: NextRequest) {
   await prisma.tradeChecklist.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["trade"], handlePOST);
+export const PATCH = withLiveSync(["trade"], handlePATCH);
+export const DELETE = withLiveSync(["trade"], handleDELETE);

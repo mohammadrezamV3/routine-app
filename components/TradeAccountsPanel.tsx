@@ -16,6 +16,7 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { useLiveRefresh } from "@/lib/liveSync";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
 // برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
@@ -67,6 +68,8 @@ export function TradeAccountsPanel({
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
+  useLiveRefresh("trade", () => { load(true); });
 
   async function toggleArchive(a: TradeAccount) {
     const ok = await run(`archive:${a.id}`, () =>

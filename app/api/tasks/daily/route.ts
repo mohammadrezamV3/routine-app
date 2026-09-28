@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
 
 // سقف تعداد کلید «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
 const MAX_DAILY_TASK_KEYS = 500;
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/tasks/daily  { date, tasks, wake }
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -61,3 +62,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, id: entry.id });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["daily"], handlePOST);

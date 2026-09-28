@@ -15,6 +15,7 @@ import {
 } from "@/lib/routineAssistant";
 import { addDaysIso, jsDayOfIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
+import { publishDataChanged, clientTabId } from "@/lib/realtime";
 
 // دستیارِ «مدیرِ برنامه» — تنها نقطه‌ای که مدلِ زبانی اجازه دارد برنامه‌های
 // کاربر را عوض کند.
@@ -318,6 +319,8 @@ export async function POST(req: NextRequest) {
         update: { value: outcome.removed as any },
       });
     }
+    // برنامه‌ی باز روی بقیه‌ی دستگاه‌ها/تب‌های کاربر همون لحظه عوض می‌شه
+    void publishDataChanged(userId, [SETTING_KEYS.customOccurrences, SETTING_KEYS.removedOccurrences], clientTabId(req));
   }
 
   // متنِ نهایی از نتیجه‌ی *واقعی* ساخته می‌شود، نه از حرفِ مدل. اگر مدل

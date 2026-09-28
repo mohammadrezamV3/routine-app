@@ -9,6 +9,7 @@ import { DashCard } from "./DashCard";
 import { getImportantUpcoming, ImportantOccurrence } from "@/lib/routineStats";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
+import { useLiveRefresh } from "@/lib/liveSync";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 
 // برنامه‌های «خیلی زیاد»/«زیاد» همین هفته — واقعا از customOccurrences
@@ -29,6 +30,7 @@ export function DashReminderCard({ delay }: { delay?: number }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { getImportantUpcoming().then(setItems); }, []);
+  useLiveRefresh(["customOccurrences", "removedOccurrences"], () => { getImportantUpcoming().then(setItems); });
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {

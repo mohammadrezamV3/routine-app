@@ -7,6 +7,7 @@ import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCatego
 import { validateProgramInput } from "@/lib/mentorValidate";
 import { PROGRAM_WITH_USERS_INCLUDE, buildProgramRows, loadProgramWithUsers, serializeProgram } from "@/lib/mentorServer";
 import { activateDueForUser } from "@/lib/mentorSchedule";
+import { publishToUsers } from "@/lib/realtime";
 
 const STATUSES: MentorProgramStatus[] = ["DRAFT", "PENDING", "ACCEPTED", "REJECTED", "ACTIVE", "COMPLETED", "CANCELLED"];
 // سقفِ پیش‌نویس‌های هم‌زمانِ یک منتور — جلوی پرکردنِ دیتابیس با برنامه‌ی خالی
@@ -78,6 +79,8 @@ export async function POST(req: Request) {
     select: { id: true },
   });
   touchMentorActivity(me);
+  // پیش‌نویس فقط مالِ منتوره — بقیه‌ی دستگاه‌های خودش
+  void publishToUsers([me], { type: "mentor.program", data: { id: created.id } });
 
   // ساخته‌شده از قالب؟ فقط آمارِ استفاده‌ی قالبِ *خودِ* همین منتور بالا می‌رود
   if (typeof b.templateId === "string" && b.templateId.length > 0 && b.templateId.length <= 64) {

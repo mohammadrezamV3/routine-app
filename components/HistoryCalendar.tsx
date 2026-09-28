@@ -7,6 +7,7 @@ import {
 } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences, getOutingDates } from "@/lib/storage";
+import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { DayModal } from "@/components/DayModal";
 
@@ -41,11 +42,23 @@ export function HistoryCalendar({
     getOutingDates().then((arr) => setOutingDates(new Set(arr)));
   }
 
-  useEffect(() => {
+  const [version, setVersion] = useState(0);
+  function loadAll() {
     getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
     getCustomOccurrences().then(setCustomOcc);
     loadOutingDates();
-  }, []);
+  }
+  useEffect(loadAll, []);
+  // لایه‌ی زنده: تیک/برنامه/روزِ بیرون‌رفتن از هرجا عوض شد، تقویم همون لحظه
+  useLiveRefresh(["daily", "customOccurrences", "removedOccurrences", "outingDates"], (changed) => {
+    const all = changed.includes("*");
+    if (all || changed.some((c) => c === "customOccurrences" || c === "removedOccurrences")) {
+      getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
+      getCustomOccurrences().then(setCustomOcc);
+    }
+    if (all || changed.includes("outingDates")) loadOutingDates();
+    if (all || changed.some((c) => keyMatches("daily", c))) setVersion((v) => v + 1);
+  });
 
   const opts = useMemo(() => ({ removedOccurrences: removedOcc, customOccurrences: customOcc }), [removedOcc, customOcc]);
 
@@ -81,7 +94,7 @@ export function HistoryCalendar({
   useEffect(() => {
     loadMonth(calYear, calMonth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calYear, calMonth, removedOcc, customOcc]);
+  }, [calYear, calMonth, removedOcc, customOcc, version]);
 
   const monthLen = jalaliMonthLength(calMonth);
   const firstG = jalaliToGregorianApprox(calYear, calMonth, 1);

@@ -26,6 +26,7 @@ import { TradeCalendarPanel } from "./TradeCalendarPanel";
 import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { useLiveRefresh } from "@/lib/liveSync";
 
 // آیکون هر کارت آماری — فقط یک لمس بصری، بدون تغییر در منطق محاسبه‌ها
 const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
@@ -105,6 +106,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   }, [accountId]);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
+  useLiveRefresh("trade", () => { load(true); });
 
   const stats = useMemo(() => computeTradeStats(entries, account || undefined), [entries, account]);
 

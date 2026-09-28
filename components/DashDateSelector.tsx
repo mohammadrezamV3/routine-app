@@ -6,39 +6,22 @@ import { cn } from "@/lib/utils";
 
 export type DashDay = { iso: string; weekday: string; dateLabel: string };
 
-// بلور لبه، لایه‌لایه — هرچی به لبه نزدیک‌تر، هم بلور بیشتر هم عرض کمتر،
-// تا حس «رفته‌رفته تارتر شدن» بده، نه یک بلور یک‌دست ماسک‌شده.
-const EDGE_BLUR_LAYERS = [
-  { width: "34%", blur: 2 },
-  { width: "22%", blur: 5 },
-  { width: "12%", blur: 10 },
-];
-
-function EdgeBlur({ side, show }: { side: "left" | "right"; show: boolean }) {
-  const gradientDir = side === "right" ? "to left" : "to right";
-  return (
-    <div
-      className={cn(
-        "pointer-events-none absolute inset-y-0 w-10 transition-opacity duration-200 sm:w-14",
-        side === "right" ? "right-0" : "left-0",
-        show ? "opacity-100" : "opacity-0"
-      )}
-    >
-      {EDGE_BLUR_LAYERS.map((layer, i) => (
-        <div
-          key={i}
-          className={cn("absolute inset-y-0", side === "right" ? "right-0" : "left-0")}
-          style={{
-            width: layer.width,
-            backdropFilter: `blur(${layer.blur}px)`,
-            WebkitBackdropFilter: `blur(${layer.blur}px)`,
-            maskImage: `linear-gradient(${gradientDir}, black, transparent)`,
-            WebkitMaskImage: `linear-gradient(${gradientDir}, black, transparent)`,
-          }}
-        />
-      ))}
-    </div>
-  );
+// محوشدنِ لبه‌ها — با mask-image روی *خودِ* نوارِ اسکرول، نه لایه‌های
+// backdrop-filter روی آن.
+//
+// نسخه‌ی قبلی سه لایه‌ی مطلقِ backdrop-filter:blur(...) رویِ لبه‌ها می‌گذاشت.
+// backdrop-filter لبه‌ی لایه را با پیکسل‌های *بیرونِ* خودش (شفاف/تیره) قاطی
+// می‌کند و ماسکِ آن فقط افقی بود — روی کرومِ اندروید بالا/پایینِ هر لایه یک
+// لبه‌ی مستطیلیِ تیره (همان «سایه‌ی گوشه‌ها» در گزارشِ باگ) و کنارِ فلش‌ها یک
+// نوارِ تیره می‌ساخت؛ و چون هر فریمِ اسکرول سه بلورِ جدا بازرسم می‌شد، حینِ
+// کشیدن هم لرزش/پرپر داشت. ماسک روی خودِ محتوا همان «رفته‌رفته محوشدن» را
+// می‌دهد، بدونِ هیچ لایه‌ی اضافه یا بک‌گراندی.
+const EDGE_FADE = "28px";
+function edgeMask(fadeRight: boolean, fadeLeft: boolean): string | undefined {
+  if (!fadeRight && !fadeLeft) return undefined;
+  const l = fadeLeft ? `transparent 0, black ${EDGE_FADE}` : "black 0";
+  const r = fadeRight ? `black calc(100% - ${EDGE_FADE}), transparent 100%` : "black 100%";
+  return `linear-gradient(to right, ${l}, ${r})`;
 }
 
 // نوار انتخاب تاریخ — راست‌چین طبیعی صفحه (چون days از قبل به ترتیب
@@ -76,8 +59,23 @@ export function DashDateSelector({
   // روز فعال همیشه وسط نوار بمونه — هم موقع لود اولیه، هم هر بار که با
   // فلش/کلیک عوض می‌شه (از جمله موقعی که هفته با فلش عوض می‌شه ولی همون
   // ایزوی فعال توی هفته‌ی جدید نیست، پس این افکت روی activeIso و days هردو گوش می‌ده).
+  //
+  // باگِ «لرزیدنِ نوار»: قبلا با scrollIntoView بود. scrollIntoView *همه‌ی*
+  // اجدادِ قابل‌اسکرول را هم جابه‌جا می‌کند، از جمله خودِ صفحه (block:nearest)
+  // — روی کرومِ اندروید با نوارِ ابزارِ پویا و هدرِ fixed، هر بار که روز/هفته
+  // عوض می‌شد صفحه هم یک تکانِ عمودیِ کوچک می‌خورد، هم‌زمان با اسکرولِ نرمِ
+  // خودِ نوار. حالا فقط scrollLeftِ خودِ نوار عوض می‌شود، آن هم فقط وقتی
+  // واقعا سرریز دارد و روزِ فعال وسط نیست.
   useEffect(() => {
-    activeRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const el = scrollRef.current;
+    const pill = activeRef.current;
+    if (!el || !pill) return;
+    if (el.scrollWidth - el.clientWidth <= 1) return;
+    const er = el.getBoundingClientRect();
+    const pr = pill.getBoundingClientRect();
+    const delta = (pr.left + pr.width / 2) - (er.left + er.width / 2);
+    if (Math.abs(delta) < 1) return;
+    el.scrollBy({ left: delta, behavior: "smooth" });
   }, [activeIso, days]);
 
   useEffect(() => {
@@ -207,7 +205,14 @@ export function DashDateSelector({
           // است، گپ ثابت ۶ پیکسل می‌ماند، و هیچ‌جا جمع نمی‌شود.
           // `shrink-0` سرِ جایش است تا وقتی روزها واقعا از عرض بیشتر شدند
           // له نشوند و به‌جایش نوار اسکرول بخورد.
-          className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-3 py-2.5"
+          // موبایل: px-2 (به‌جای px-3) — روی ۳۶۰ پیکسل همین ۸ پیکسل فرقِ
+          // جاشدنِ پنج روز («چهارشنبه» ~۳۸px) بدونِ سرریز است.
+          // overscroll-x-contain: کشیدنِ نوار تا ته، صفحه را افقی نمی‌کشد.
+          className="no-scrollbar flex items-center gap-1.5 overflow-x-auto overscroll-x-contain px-2 py-2.5 sm:px-3"
+          style={{
+            maskImage: edgeMask(canScrollRight, canScrollLeft),
+            WebkitMaskImage: edgeMask(canScrollRight, canScrollLeft),
+          }}
         >
           {days.map((d) => {
             const active = d.iso === activeIso;
@@ -219,7 +224,7 @@ export function DashDateSelector({
                 type="button"
                 onClick={() => onSelect(d.iso)}
                 className={cn(
-                  "flex min-w-[54px] shrink-0 grow basis-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
+                  "flex min-w-min shrink-0 grow basis-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
                   active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
                 )}
                 style={
@@ -236,8 +241,6 @@ export function DashDateSelector({
             );
           })}
         </div>
-        <EdgeBlur side="right" show={canScrollRight} />
-        <EdgeBlur side="left" show={canScrollLeft} />
       </div>
 
       <button
