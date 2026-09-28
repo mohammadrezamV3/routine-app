@@ -4,6 +4,8 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { analyzeFoodPhoto } from "@/lib/aiClient";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
+import { AiFeatureKey } from "@prisma/client";
 
 const ALLOWED_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 // عکس base64 حدودا ۱.۳۳ برابر حجم باینریه؛ سقف ۸ مگابایت رشته یعنی
@@ -46,10 +48,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "سقف اسکن غذا در این ساعت پر شده — بعدا امتحان کن" }, { status: 429 });
   }
 
+  // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+  const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.FOOD_SCAN);
+  if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
+
   try {
     const result = await analyzeFoodPhoto(imageBase64, mediaType as "image/jpeg" | "image/png" | "image/webp", userId);
     return NextResponse.json({ ok: true, result });
   } catch (err: any) {
+    // تحلیلی به کاربر نرسید — سهمیه‌اش پس داده می‌شه
+    await quota.release();
     return NextResponse.json({ error: err.message || "خطا در تحلیل عکس" }, { status: 500 });
   }
 }

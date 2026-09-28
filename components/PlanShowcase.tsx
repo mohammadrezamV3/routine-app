@@ -6,6 +6,7 @@ import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
 import { ICONS } from "@/components/NavDrawer";
 import { useTheme } from "@/components/ThemeProvider";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
+import { TRIAL_COPY_FA } from "@/lib/trial";
 
 // دقیقا هم‌شکل خروجی upgradeOffer توی app/api/plans — پیش‌نمایش قیمت
 // «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغ واقعی همیشه
@@ -65,9 +66,9 @@ export const PLANS_IRAN: PlanCard[] = [
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
-    prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
-    originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
-    amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
+    prices: { "1": "175,000 تومان", "3": "459,000 تومان", "6": "919,000 تومان", "12": "1,838,000 تومان" },
+    originalPrices: { "3": "525,000 تومان", "6": "1,050,000 تومان", "12": "2,100,000 تومان" },
+    amounts: { "1": 1750000, "3": 4590000, "6": 9190000, "12": 18380000 },
     features: ["ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "روتین روزانه"],
   },
   {
@@ -359,9 +360,16 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
   return (
     <>
       {title && (
-        <div style={{ textAlign: "center", marginBottom: 18 }}>
+        <div style={{ textAlign: "center", marginBottom: mode === "landing" ? 8 : 18 }}>
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>{title}</h2>
         </div>
+      )}
+      {/* دوره‌ی آزمایشیِ حسابِ تازه (lib/trial.ts) — فقط لندینگ؛ صفحه‌ی اشتراک
+          همین متن رو توی یادداشتِ بالای خودش داره. متنِ ساده، بی‌بک‌گراند. */}
+      {mode === "landing" && (
+        <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
+          {TRIAL_COPY_FA}
+        </p>
       )}
 
       <div className={`grid gap-6 pt-5 ${PLANS_GRID_COLS} ${BREAKOUT}`}>

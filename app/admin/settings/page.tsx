@@ -7,9 +7,12 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { NumberInput } from "@/components/NumberInput";
+import { MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_FEATURE_LABELS_FA, TRIAL_DAYS, type TrialAiFeature, type TrialAiLimits } from "@/lib/trial";
 
 type Rate = { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number };
-type SettingsResp = { aiCostRate: Rate; defaultAiCostRate: Rate };
+type SettingsResp = { aiCostRate: Rate; defaultAiCostRate: Rate; trialAiLimits: TrialAiLimits; defaultTrialAiLimits: TrialAiLimits };
+type TrialDraft = Record<TrialAiFeature, string>;
+const toDraft = (l: TrialAiLimits) => Object.fromEntries(TRIAL_AI_FEATURES.map((f) => [f, String(l[f])])) as TrialDraft;
 type AuditRow = { id: string; action: string; targetType: string | null; targetId: string | null; createdAt: string; actor: { name: string | null; lastName: string | null; username: string | null } | null };
 
 const MAX_RATE = 100_000_000; // هم‌راستا با سقفِ PATCH /api/admin/settings
@@ -28,6 +31,9 @@ export default function AdminSettingsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [audit, setAudit] = useState<AuditRow[] | null>(null);
   const [auditError, setAuditError] = useState<string | null>(null);
+  const [trialDraft, setTrialDraft] = useState<TrialDraft | null>(null);
+  const [trialSaving, setTrialSaving] = useState(false);
+  const [trialError, setTrialError] = useState<string | null>(null);
   const [indexNowBusy, setIndexNowBusy] = useState(false);
   const [indexNowMsg, setIndexNowMsg] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
 
@@ -44,6 +50,7 @@ export default function AdminSettingsPage() {
         setSettings(d);
         setInputRate(String(d.aiCostRate.inputPer1kUsdMicros));
         setOutputRate(String(d.aiCostRate.outputPer1kUsdMicros));
+        setTrialDraft(toDraft(d.trialAiLimits));
       })
       .catch((e) => setSettingsError(e.message));
     loadAudit();
@@ -75,6 +82,34 @@ export default function AdminSettingsPage() {
       setFormError(e.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  const trialDirty = !!settings && !!trialDraft && TRIAL_AI_FEATURES.some((f) => trialDraft[f] !== String(settings.trialAiLimits[f]));
+
+  async function saveTrial() {
+    if (trialSaving || !settings || !trialDraft) return;
+    const limits = {} as TrialAiLimits;
+    for (const f of TRIAL_AI_FEATURES) {
+      const n = trialDraft[f] === "" ? NaN : Number(trialDraft[f]);
+      if (!Number.isInteger(n) || n < 0 || n > MAX_TRIAL_AI_LIMIT) {
+        setTrialError(`هر سقف باید عدد صحیحی بین 0 تا ${formatNumber(MAX_TRIAL_AI_LIMIT)} باشد`);
+        return;
+      }
+      limits[f] = n;
+    }
+    setTrialError(null);
+    setTrialSaving(true);
+    try {
+      const d = await adminFetch<{ trialAiLimits: TrialAiLimits }>("/api/admin/settings", { method: "PATCH", json: { trialAiLimits: limits } });
+      setSettings({ ...settings, trialAiLimits: d.trialAiLimits });
+      setTrialDraft(toDraft(d.trialAiLimits));
+      toast("سقف‌های AI دوره‌ی آزمایشی ذخیره شد");
+      loadAudit();
+    } catch (e: any) {
+      setTrialError(e.message);
+    } finally {
+      setTrialSaving(false);
     }
   }
 
@@ -137,6 +172,39 @@ export default function AdminSettingsPage() {
             <div className="admin-modal-actions">
               <button type="submit" className="admin-btn primary" disabled={saving || !dirty}>
                 {saving ? "در حال ذخیره…" : "ذخیره"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      <div className="admin-chart-card">
+        <div className="admin-chart-head"><span className="admin-chart-title">سقف AI دوره‌ی آزمایشی</span></div>
+        <div className="admin-section-hint admin-settings-hint">
+          هر حساب تازه {TRIAL_DAYS} روز به همه‌ی بخش‌ها دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (۰ یعنی بسته).
+          دستیار «نومو» جداگانه سه استفاده‌ی رایگان دارد.
+        </div>
+        {settingsError && !settings ? (
+          <EmptyState message={settingsError} />
+        ) : !settings || !trialDraft ? (
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); saveTrial(); }} noValidate>
+            <div className="admin-form-grid">
+              {TRIAL_AI_FEATURES.map((f) => (
+                <label key={f} className="admin-field">
+                  <span>{TRIAL_AI_FEATURE_LABELS_FA[f]} (پیش‌فرض {settings.defaultTrialAiLimits[f]})</span>
+                  <NumberInput
+                    className="admin-input admin-ltr" dir="ltr" maxLength={4} value={trialDraft[f]}
+                    onChange={(v) => setTrialDraft((d) => (d ? { ...d, [f]: v } : d))}
+                  />
+                </label>
+              ))}
+            </div>
+            {trialError && <div className="admin-form-error" role="alert">{trialError}</div>}
+            <div className="admin-modal-actions">
+              <button type="submit" className="admin-btn primary" disabled={trialSaving || !trialDirty}>
+                {trialSaving ? "در حال ذخیره…" : "ذخیره"}
               </button>
             </div>
           </form>

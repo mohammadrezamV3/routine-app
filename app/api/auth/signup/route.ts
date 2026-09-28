@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Market } from "@prisma/client";
-import { BASIC_MODULES } from "@/lib/modules";
+import { provisionTrialAccess } from "@/lib/trialAccess";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText } from "@/lib/validate";
 
@@ -93,15 +93,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // دوره آزمایشی: دسترسی موقت به ماژول‌های پایه بدون نیاز به پرداخت
-  await prisma.moduleAccess.createMany({
-    data: BASIC_MODULES.map((module) => ({
-      userId: user.id,
-      module,
-      active: true,
-      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // ۱۴ روز
-    })),
-  });
+  // دوره آزمایشی: یک هفته دسترسی به همه‌ی بخش‌ها (lib/trialAccess.ts — همون
+  // تابعی که ورود اول با گوگل هم صدا می‌زنه)
+  await provisionTrialAccess(user.id);
 
   // کد رفرال شخصی کاربر — از همون لحظه ثبت‌نام آماده است
   await prisma.referralCode.create({

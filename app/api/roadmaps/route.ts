@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
 import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey } from "@prisma/client";
+import { AiFeatureKey, ModuleKey } from "@prisma/client";
+import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { startRoadmapBuild, buildStatusOf } from "@/lib/roadmapBuilder";
 import { countRowProgress, parseHours, parseLevel } from "@/lib/roadmapPlan";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -78,6 +79,10 @@ async function handlePOST(req: NextRequest) {
   const weeklyHours = parseHours((body as any)?.weeklyHours);
   const bgRaw = String((body as any)?.background || "").trim();
   const background = bgRaw ? clampText(bgRaw, MAX_BACKGROUND) : undefined;
+
+  // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+  const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.ROADMAP_GENERATION);
+  if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
 
   // ساخت در پس‌زمینه: ردیف فورا ذخیره می‌شود و کاربر پشتِ صفحه‌ی ساخت نمی‌ماند
   // (lib/roadmapBuilder.ts). پیشرفت روی کارتِ همین رودمپ در لیست دیده می‌شود.

@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { AiFeatureKey } from "@prisma/client";
+import { getAppSetting } from "@/lib/appSettings";
+import {
+  TRIAL_AI_FEATURES, TRIAL_AI_LIMITS_SETTING_KEY, TRIAL_MS,
+  normalizeTrialAiLimits, type TrialAiFeature, type TrialAiLimits,
+} from "@/lib/trial";
 
 // سقف مصرف ماهانه‌ی هر فیچر AI به‌ازای هر پلن — عدد از پیش خود کاربر
 // (تصمیم محصولی، نه یه rate-limit فنی حدسی): پلن بدنسازی ۳ بار ساخت
@@ -17,45 +22,109 @@ function currentYearMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export type QuotaCheckResult = { ok: true } | { ok: false; limit: number; error: string };
+/**
+ * سقف‌های تریال: پیش‌فرض‌های lib/trial.ts، قابلِ تغییر از پنلِ ادمین
+ * (AppSetting با کلیدِ TRIAL_AI_LIMITS_SETTING_KEY).
+ */
+export async function getTrialAiLimits(): Promise<TrialAiLimits> {
+  return normalizeTrialAiLimits(await getAppSetting<unknown>(TRIAL_AI_LIMITS_SETTING_KEY, null));
+}
 
 /**
- * چک و مصرف سهمیه‌ی ماهانه‌ی یک فیچر AI برای یک کاربر — قبل از فراخوانی
- * واقعی AI صدا زده می‌شه (نه بعدش)، چون هدف کنترل هزینه‌ست: حتی اگه خود
- * AI بعدا fail کنه و به قالب ایستا fallback بشه، تلاش (و هزینه‌ش) انجام
- * شده. سوپریوزر و کاربر بدون پلن فعال شناخته‌شده (edge case — مثلا
- * ModuleAccess دستی ادمین بدون Subscription) رد می‌شن، بدون سقف — این
- * یه محدودیت محصولیه، نه مرز امنیتی (خود requireModule اون کارو می‌کنه).
+ * شمارنده‌ی تریال روی همان جدولِ AiMonthlyQuota می‌نشیند، با «ماه»ِ ثابتِ
+ * "trial" — یک دوره‌ی آزمایشی فقط یک بار پیش می‌آید، پس یک ردیف به‌ازای
+ * هر فیچر کافی است و کلیدِ یکتای (userId, feature, yearMonth) همان اتمی‌بودنِ
+ * upsert را این‌جا هم می‌دهد.
+ */
+const TRIAL_BUCKET = "trial";
+
+export type QuotaCheckResult =
+  | { ok: true; release: () => Promise<void> }
+  | { ok: false; limit: number; error: string; code: "monthly_limit" | "trial_ai_limit" };
+
+const NOOP_RELEASE = async () => {};
+
+/**
+ * چک و مصرف سهمیه‌ی یک فیچر AI برای یک کاربر — قبل از فراخوانی
+ * واقعی AI صدا زده می‌شه (نه بعدش)، چون هدف کنترل هزینه‌ست. اگه خود
+ * فراخوانی شکست خورد و کاربر هیچ خروجی‌ای نگرفت، روت می‌تونه با
+ * `release()` همون یک واحد رو پس بده (مهم برای سقف‌های کوچیکِ تریال).
+ *
+ *   • سوپریوزر → بدون سقف
+ *   • اشتراکِ فعال (ACTIVE/TRIAL و منقضی‌نشده) → سقفِ ماهانه‌ی پلن، اگه تعریف شده
+ *   • بدون اشتراک و حسابِ کمتر از TRIAL_DAYS روزه → سقفِ *کلِ* دوره‌ی آزمایشی
+ *   • بقیه (مثلا ModuleAccess دستیِ ادمین) → بدون سقف
+ *
+ * این یه محدودیت محصولیه، نه مرز امنیتی — دسترسی رو خودِ requireModule می‌سنجه.
  */
 export async function checkAndConsumeAiQuota(
   userId: string,
   isSuperAdmin: boolean,
   feature: AiFeatureKey
 ): Promise<QuotaCheckResult> {
-  if (isSuperAdmin) return { ok: true };
+  if (isSuperAdmin) return { ok: true, release: NOOP_RELEASE };
 
   const sub = await prisma.subscription.findFirst({
-    where: { userId, status: { in: ["ACTIVE", "TRIAL"] } },
+    where: { userId, status: { in: ["ACTIVE", "TRIAL"] }, currentPeriodEnd: { gt: new Date() } },
     orderBy: { createdAt: "desc" },
     select: { plan: { select: { key: true } } },
   });
-  const limit = sub ? AI_FEATURE_MONTHLY_LIMITS[sub.plan.key]?.[feature] : undefined;
-  if (limit === undefined) return { ok: true };
 
-  const yearMonth = currentYearMonth();
+  let limit: number | undefined;
+  let bucket: string;
+  let isTrial = false;
+  if (sub) {
+    limit = AI_FEATURE_MONTHLY_LIMITS[sub.plan.key]?.[feature];
+    bucket = currentYearMonth();
+  } else {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } });
+    isTrial = !!user && Date.now() - user.createdAt.getTime() < TRIAL_MS;
+    if (isTrial && (TRIAL_AI_FEATURES as string[]).includes(feature)) {
+      limit = (await getTrialAiLimits())[feature as TrialAiFeature];
+    }
+    bucket = TRIAL_BUCKET;
+  }
+  if (limit === undefined) return { ok: true, release: NOOP_RELEASE };
+
+  const denied = (): QuotaCheckResult =>
+    isTrial
+      ? {
+          ok: false,
+          limit: limit!,
+          code: "trial_ai_limit",
+          error:
+            limit! > 0
+              ? `سهمیه‌ی هوش مصنوعیِ دوره‌ی آزمایشی برای این بخش (${limit} بار) تموم شد. برای استفاده‌ی بیشتر، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.`
+              : "این امکانِ هوش مصنوعی توی دوره‌ی آزمایشی فعال نیست. برای استفاده، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.",
+        }
+      : {
+          ok: false,
+          limit: limit!,
+          code: "monthly_limit",
+          error: `این ماه سقف استفاده از این امکان (${limit} بار) رو پر کردی — اول ماه بعد دوباره فعال می‌شه.`,
+        };
+
+  if (limit <= 0) return denied();
+
   // upsert با increment توی یک عملیات اتمیک — از race شرط
   // خواندن-بعد-نوشتن جلوگیری می‌کنه؛ اگه از سقف رد شد، همون increment
   // اضافه رو جبران (decrement) می‌کنیم و رد می‌شیم.
   const quota = await prisma.aiMonthlyQuota.upsert({
-    where: { userId_feature_yearMonth: { userId, feature, yearMonth } },
-    create: { userId, feature, yearMonth, usedCount: 1, limitCount: limit },
+    where: { userId_feature_yearMonth: { userId, feature, yearMonth: bucket } },
+    create: { userId, feature, yearMonth: bucket, usedCount: 1, limitCount: limit },
     update: { usedCount: { increment: 1 }, limitCount: limit },
   });
 
+  const release = async () => {
+    await prisma.aiMonthlyQuota
+      .updateMany({ where: { id: quota.id, usedCount: { gt: 0 } }, data: { usedCount: { decrement: 1 } } })
+      .catch(() => {});
+  };
+
   if (quota.usedCount > limit) {
-    await prisma.aiMonthlyQuota.update({ where: { id: quota.id }, data: { usedCount: { decrement: 1 } } }).catch(() => {});
-    return { ok: false, limit, error: `این ماه سقف استفاده از این امکان (${limit} بار) رو پر کردی — اول ماه بعد دوباره فعال می‌شه.` };
+    await release();
+    return denied();
   }
 
-  return { ok: true };
+  return { ok: true, release };
 }

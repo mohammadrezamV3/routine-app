@@ -96,7 +96,7 @@ async function handlePOST(req: NextRequest) {
 
   const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.EXERCISE_PLAN_GENERATION);
   if (!quota.ok) {
-    return NextResponse.json({ error: quota.error }, { status: 429 });
+    return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
   }
 
   // برنامه‌ی قبلی (اگه بود) برای پیش‌روی منطقی (progressive overload) به AI داده
