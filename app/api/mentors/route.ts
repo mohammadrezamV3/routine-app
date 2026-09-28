@@ -11,7 +11,8 @@ import { RANK_SCOPE_ALL, loadRankedCards } from "@/lib/mentorRankingStats";
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
 
-// GET /api/mentors?q=&category=&sort=best|rating|new&page= → فهرستِ منتورها
+// GET /api/mentors?q=&category=&sort=best|rating|new&verified=1&accepting=1&page= → فهرستِ منتورها
+//   verified=1  فقط منتورهای با هویتِ تأییدشده؛ accepting=1 فقط کسانی که شاگردِ جدید می‌پذیرند
 //   best   «بهترین نتیجه» (پیش‌فرض): امتیازِ شایستگی — lib/mentorRanking.ts
 //   rating «بالاترین امتیاز»: فقط نظرهای تأییدشده، میانگینِ بیزی (نه میانگینِ خام)
 //   new    «تازه‌ترین»: زمانِ ساختِ پروفایل
@@ -31,6 +32,8 @@ export async function GET(req: NextRequest) {
   const sortRaw = sp.get("sort");
   // "popular" نامِ قدیمیِ همون best ـه
   const sort = sortRaw === "rating" || sortRaw === "new" ? sortRaw : "best";
+  const verifiedOnly = sp.get("verified") === "1";
+  const acceptingOnly = sp.get("accepting") === "1";
   const pageNum = Number(sp.get("page") || 1);
   const page = Number.isInteger(pageNum) && pageNum >= 1 ? Math.min(pageNum, MAX_PAGE) : 1;
 
@@ -41,6 +44,8 @@ export async function GET(req: NextRequest) {
     ...DISCOVERABLE_PROFILE_WHERE,
     ...(blocked.length ? { userId: { notIn: blocked } } : {}),
     ...(category ? { categories: { has: category } } : {}),
+    ...(verifiedOnly ? { identityStatus: "VERIFIED" as const } : {}),
+    ...(acceptingOnly ? { acceptingStudents: true } : {}),
     ...(q
       ? {
           OR: [
