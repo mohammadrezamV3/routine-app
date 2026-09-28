@@ -738,26 +738,21 @@
   .profile-btn svg{width:19px; height:19px; color:var(--muted); transition:color .2s ease;}
   @media (hover:hover){.profile-btn:hover svg{color:var(--accent);}}
 
+  /* بلورِ پرده ثابت است و فقط opacity فید می‌شود (نگاه کن به بلاکِ «پاپ‌آپ‌ها:
+     ورود/خروجِ نرم + پس‌زمینه‌ی تارِ یکسان» آخرِ فایل). در حالتِ بسته
+     visibility:hidden است تا لایه‌ی بلور اصلا رسم نشود — هزینه‌ی صفر. */
   .nav-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:45;
-    opacity:0; pointer-events:none; transition:opacity .25s ease, backdrop-filter .25s ease;
-    backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px);
-    will-change:backdrop-filter; transform:translateZ(0);
+    opacity:0; pointer-events:none; visibility:hidden;
+    transition:opacity .3s ease, visibility 0s linear .3s;
+    backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+    will-change:opacity; transform:translateZ(0);
   }
-  /* روی لمسی، *انیمیشن‌کردنِ* یک backdrop-filterِ تمام‌صفحه یعنی مرورگر
-     باید در هر فریمِ ۲۵۰ میلی‌ثانیه کلِ صفحه‌ی پشتِ پرده را دوباره
-     نمونه‌برداری و بلور کند — گران‌ترین کارِ ممکن، دقیقا در همان لحظه‌ای که
-     کشو هم دارد حرکت می‌کند. همان «منو با لگِ شدید باز می‌شود». پرده
-     می‌ماند، فقط تیره می‌شود بدونِ بلور. */
-  @media (pointer:coarse){
-    .nav-overlay{
-      transition:opacity .2s ease;
-      backdrop-filter:none; -webkit-backdrop-filter:none;
-      will-change:opacity;
-    }
-    .nav-overlay.open{ backdrop-filter:none; -webkit-backdrop-filter:none; }
-  }
-  .nav-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);}
+  /* قبلا روی لمسی بلورِ پرده کلا برداشته می‌شد چون خودِ backdrop-filter
+     انیمیت می‌شد (۰←۳px، بلورِ دوباره‌ی کلِ صفحه در هر فریم). حالا شعاعِ
+     بلور ثابت است و فقط opacity (روی کامپوزیتور) عوض می‌شود — پس دلیلی برای
+     برداشتنِ بلور روی لمسی نمانده و پرده همه‌جا همان حالتِ تار را دارد. */
+  .nav-overlay.open{opacity:1; pointer-events:auto; visibility:visible; transition:opacity .3s ease, visibility 0s;}
 
   .nav-drawer{
     position:fixed; top:14px; inset-inline-start:26px; width:74%; max-width:280px; z-index:50;
@@ -1292,8 +1287,12 @@
   .cal-return-btn svg{width:16px; height:16px; display:block;}
 
   /* day modal */
-  .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:55; opacity:0; pointer-events:none; transition:opacity .2s ease, backdrop-filter .2s ease;}
-  .modal-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);}
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:55; opacity:0; pointer-events:none; visibility:hidden;
+    backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+    transition:opacity var(--popup-out-dur) ease, visibility 0s linear var(--popup-out-dur);
+  }
+  .modal-overlay.open{opacity:1; pointer-events:auto; visibility:visible; transition:opacity var(--popup-out-dur) ease, visibility 0s;}
   .modal-panel{
     position:fixed; inset-inline-end:50%; top:50%; transform:translate(-50%,-46%) scale(.96); width:88%; max-width:420px;
     /* moبایل: vh معمولا نسبت‌به بزرگ‌ترین حالت ویوپورت (نوار آدرس مخفی)
@@ -2465,8 +2464,12 @@
   .wt-item[data-task-id]:active .wt-content, .wt-untimed-item[data-task-id]:active{transform:scale(.94);}
 
   /* program flip card modal */
-  .pcard-overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60; opacity:0; pointer-events:none; transition:opacity .22s ease, backdrop-filter .22s ease;}
-  .pcard-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
+  .pcard-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60; opacity:0; pointer-events:none; visibility:hidden;
+    backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+    transition:opacity var(--popup-out-dur) ease, visibility 0s linear var(--popup-out-dur);
+  }
+  .pcard-overlay.open{opacity:1; pointer-events:auto; visibility:visible; transition:opacity var(--popup-out-dur) ease, visibility 0s;}
   .pcard-stage{
     position:fixed; inset-inline-end:50%; top:50%; transform:translate(-50%,-50%) scale(.86); width:90%; max-width:420px;
     aspect-ratio:3/2; z-index:61; -webkit-perspective:1400px; perspective:1400px; opacity:0; pointer-events:none;
@@ -2699,9 +2702,11 @@
   body[data-theme="light"] .jdate-btn.trade-date-btn{ background:rgba(255,255,255,.35); }
   .jdate-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:70;
-    opacity:0; pointer-events:none; transition:opacity .2s ease;
+    opacity:0; pointer-events:none; visibility:hidden;
+    backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+    transition:opacity var(--popup-out-dur) ease, visibility 0s linear var(--popup-out-dur);
   }
-  .jdate-overlay.open{opacity:1; pointer-events:auto;}
+  .jdate-overlay.open{opacity:1; pointer-events:auto; visibility:visible; transition:opacity var(--popup-out-dur) ease, visibility 0s;}
   .jdate-popup{
     position:fixed; inset-inline-end:50%; top:50%; transform:translate(-50%,-46%) scale(.94); width:88%; max-width:300px; z-index:71;
     background:linear-gradient(180deg, rgba(9,10,11,.99), rgba(6,7,8,.995)); border:1px solid rgba(255,255,255,.07); border-radius:18px;
@@ -3030,13 +3035,15 @@
   .wsearch-confirm-btn svg, .wsearch-cancel-btn svg{width:18px; height:18px; display:block;}
   .wsearch-newform-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:57;
-    opacity:0; pointer-events:none; transition:opacity .25s ease, backdrop-filter .25s ease;
-    backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px);
+    opacity:0; pointer-events:none; visibility:hidden;
+    transition:opacity var(--popup-out-dur) ease, visibility 0s linear var(--popup-out-dur);
+    backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
   }
-  .wsearch-newform-overlay.open{opacity:1; pointer-events:auto; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);}
-  /* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه — بک‌گراند پشت پاپ‌آپ خیلی بیشتر بلور می‌شه */
-  .wsearch-newform-overlay.strong-blur.open{
-    backdrop-filter:blur(32px) saturate(140%); -webkit-backdrop-filter:blur(32px) saturate(140%);
+  .wsearch-newform-overlay.open{opacity:1; pointer-events:auto; visibility:visible; transition:opacity var(--popup-out-dur) ease, visibility 0s;}
+  /* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه — بک‌گراند پشت پاپ‌آپ خیلی بیشتر بلور می‌شه.
+     روی خودِ کلاس (نه فقط .open) تا بلور حینِ فید هم ثابت بماند. */
+  .wsearch-newform-overlay.strong-blur{
+    backdrop-filter:var(--popup-backdrop-filter-strong); -webkit-backdrop-filter:var(--popup-backdrop-filter-strong);
     background:rgba(0,0,0,.55);
   }
   .wsearch-newform{
@@ -4096,9 +4103,9 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
 .photo-lightbox{
   position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.86);
   display:flex; align-items:center; justify-content:center; padding:24px;
-  animation:lightboxIn .18s ease;
+  animation:popupBackdropIn var(--popup-in-dur) ease both;
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
 }
-@keyframes lightboxIn{ from{ opacity:0; } to{ opacity:1; } }
 .photo-lightbox-img{ max-width:92vw; max-height:82vh; object-fit:contain; border-radius:16px; display:block; }
 .photo-lightbox-close{
   position:absolute; top:22px; inset-inline-end:22px; width:38px; height:38px; border-radius:50%;
@@ -4515,7 +4522,7 @@ body[data-theme="light"] .exercise-rules-accept-btn, body:not([data-theme="light
 .exercise-catalog-popup-wrap{
   position:fixed; inset:0; z-index:56; display:flex; align-items:center; justify-content:center;
   padding:20px; background:rgba(0,0,0,.55);
-  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
 }
 .exercise-catalog-popup-panel{
   position:relative; width:100%; max-width:520px; max-height:82vh; max-height:82dvh;
@@ -4798,7 +4805,6 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   .add-program-glass .jdate-btn{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .add-program-glass .wsearch-add-time{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .dash-context-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
-  .wsearch-newform-overlay.strong-blur.open{ backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%); }
   .wsearch-newform{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .wsearch-newform:has(.add-program-glass){ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
   .calorie-glass-field{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
@@ -4921,7 +4927,7 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 .admin-content{ flex:1; padding:22px; max-width:1400px; width:100%; margin:0 auto; }
 
 /* --- Mobile drawer --- */
-.admin-mobile-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; }
+.admin-mobile-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter); }
 .admin-mobile-drawer{
   position:fixed; top:0; bottom:0; inset-inline-start:0; width:min(78vw, 300px); background:var(--adm-panel);
   backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
@@ -5592,7 +5598,6 @@ html[data-perf="low"] .nav-drawer-glass,
 html[data-perf="low"] .modal-panel,
 html[data-perf="low"] .wsearch-panel,
 html[data-perf="low"] .wsearch-newform,
-html[data-perf="low"] .wsearch-newform-overlay.strong-blur.open,
 html[data-perf="low"] .dash-context-menu,
 html[data-perf="low"] .exercise-catalog-popup-panel{
   backdrop-filter:blur(6px) !important;
@@ -5709,7 +5714,7 @@ html[data-perf="low"] .siri-orb *{
 /* انیمیشن «کاربر پریمیوم شد» — نگاه کن به components/PremiumUnlockCelebration.tsx */
 .premium-celebration-backdrop{
   position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
-  background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); padding:20px;
+  background:rgba(0,0,0,.55); backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter); padding:20px;
 }
 .premium-celebration-card{
   position:relative; max-width:340px; width:100%; background:var(--card-bg); border:1px solid var(--line);
@@ -5781,8 +5786,7 @@ html[data-perf="low"] .task-check-missed{ animation:none; }
    lib/useLockBodyScroll.ts روی NavDrawer) — یعنی هزینه‌شون یه بار باز شدنه،
    نه هزینه‌ی هر فریم اسکرول؛ پس برگردوندن بلور این‌ها لگ اسکرول موبایل
    (که این بلاک data-perf=low برای حلش ساخته شد) رو دوباره برنمی‌گردونه. */
-html[data-perf="low"] .nav-overlay{ backdrop-filter:blur(0px) !important; -webkit-backdrop-filter:blur(0px) !important; will-change:backdrop-filter !important; }
-html[data-perf="low"] .nav-overlay.open{ backdrop-filter:blur(3px) !important; -webkit-backdrop-filter:blur(3px) !important; }
+/* بلورِ پرده‌ی پشتِ پاپ‌آپ‌ها (از جمله .nav-overlay) در بلاکِ «پاپ‌آپ‌ها» آخرِ فایل برگردانده می‌شود. */
 html[data-perf="low"] .nav-drawer{ will-change:transform, opacity !important; }
 html[data-perf="low"] .nav-drawer-glass{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; will-change:transform !important; }
 html[data-perf="low"] .notif-panel{ backdrop-filter:blur(28px) saturate(180%) !important; -webkit-backdrop-filter:blur(28px) saturate(180%) !important; }
@@ -6155,8 +6159,8 @@ body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-to
 .trade-lightbox{
   position:fixed; inset:0; z-index:80; background:rgba(0,0,0,.85);
   display:flex; align-items:center; justify-content:center; padding:20px; cursor:zoom-out;
-  animation:tradeFadeIn .22s ease both;
-  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  animation:popupBackdropIn var(--popup-in-dur) ease both;
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
 }
 .trade-lightbox img{ max-width:100%; max-height:100%; border-radius:14px; }
 
@@ -9000,4 +9004,119 @@ body[data-theme] .app-topbar{
 body[data-theme] :is(.manual-day-exercises-box, .exercise-rules-box, .exercise-locked-box){
   background:var(--box-bg);
   backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+/* ============================================================
+   پاپ‌آپ‌ها: ورود/خروجِ نرم + پس‌زمینه‌ی تارِ یکسان
+   ------------------------------------------------------------
+   درخواستِ صریح: «همه‌ی پاپ‌آپ‌ها هنگامِ بالا آمدن/پایین رفتن خیلی نرم
+   حرکت کنند (و هنگامِ اعمال/ثبت هم)، بهینه» و «پس‌زمینه همیشه همان حالتِ
+   تار را داشته باشد، هیچ‌وقت کدر بودنش را برندارد».
+
+   ورود: همین‌جا با CSS (فقط opacity و translate — روی کامپوزیتور، بدونِ
+   layout). از خاصیتِ مستقلِ `translate` استفاده می‌شود نه `transform`، تا با
+   transformِ وسط‌چینیِ خودِ پنل‌ها (translate(-50%,-50%)) جمع شود و پاکش نکند.
+   fill-mode عمدا `backwards` است: بعد از پایانِ انیمیشن هیچ مقداری روی پنل
+   نمی‌ماند (نه transformِ اضافه، نه opacityِ قفل‌شده).
+
+   خروج: اکثرِ پاپ‌آپ‌ها با رندرِ شرطی ({open && <Modal/>}) unmount می‌شوند
+   و React فرصتِ انیمیشن نمی‌دهد. به‌جای دست‌زدن به ده‌ها والد،
+   components/PopupExitAnimator.tsx (lib/popupExit.ts) لحظه‌ی حذفِ یک
+   پاپ‌آپ از DOM، یک کپیِ ایستا و غیرتعاملی (data-popup-ghost) از همان را سرِ
+   جایش می‌گذارد و با Web Animations پایین می‌برد و محو می‌کند، بعد حذفش
+   می‌کند. پس «بستن»، «ثبت»، «تأیید» و «اعمال» همه یک خروجِ یکسان دارند.
+   پاپ‌آپی که خروجِ خودش را دارد (MentorSheet با framer) با `.m-sheet-wrap`
+   یا `data-popup-exit="self"` مستثناست.
+
+   پس‌زمینه: شعاعِ بلور ثابت است و فقط opacityِ پرده فید می‌شود (نه
+   انیمیت‌کردنِ backdrop-filter از ۰) — پس حینِ ورود/خروج هم تاری سرِ جایش
+   است. همه‌ی پرده‌ها یک توکن دارند و روی data-perf=low هم برداشته نمی‌شوند.
+   ============================================================ */
+:root{
+  --popup-ease-in:cubic-bezier(.22,1,.36,1);
+  --popup-ease-out:cubic-bezier(.4,0,.2,1);
+  --popup-in-dur:.34s;
+  --popup-out-dur:.26s;
+  --popup-backdrop-filter:blur(3px);
+  --popup-backdrop-filter-strong:blur(32px) saturate(140%);
+}
+/* روی لمسی شعاعِ پرده‌ی قوی نصف می‌شود (همان منطقِ بلاکِ (pointer:coarse)
+   بالاتر) — هنوز کاملا تار، فقط ارزان‌تر. */
+@media (pointer:coarse){
+  :root{ --popup-backdrop-filter-strong:blur(14px) saturate(140%); }
+}
+@keyframes popupBackdropIn{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes popupPanelIn{
+  from{ opacity:0; translate:0 22px; }
+  to{ opacity:1; translate:none; }
+}
+@keyframes popupMenuIn{
+  from{ opacity:0; translate:0 -6px; }
+  to{ opacity:1; translate:none; }
+}
+
+/* پرده‌ها — کلاسِ مشترکِ .popup-backdrop برای پاپ‌آپ‌های تازه (فقط بلور؛
+   رنگِ تیرگی را هر پاپ‌آپ خودش می‌دهد — این‌جا بک‌گراندی اضافه نمی‌شود) */
+.popup-backdrop{
+  position:fixed; inset:0;
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+}
+:is(.modal-overlay, .wsearch-newform-overlay, .pcard-overlay, .jdate-overlay).open,
+.manual-exercise-popup-wrap,
+.popup-backdrop{
+  animation:popupBackdropIn var(--popup-in-dur) ease backwards;
+}
+
+/* پنل‌هایی که ورودِ «بالا آمدن» نداشتند (فقط fade یا هیچ): */
+.modal-panel.modal-panel-notransform,
+.jdate-popup.open,
+.pcard-stage.open,
+.trade-drawer,
+.friend-profile-panel,
+.trade-econ-monthpicker,
+.manual-exercise-popup-wrap > .exercise-catalog-popup-panel,
+.popup-panel{
+  animation:popupPanelIn var(--popup-in-dur) var(--popup-ease-in) backwards;
+}
+.dash-context-menu{ animation:popupMenuIn .18s var(--popup-ease-in) backwards; }
+
+/* کپیِ خروجی: غیرتعاملی، و انیمیشن‌های CSSِ داخلش (مثلا ورودِ همین پنل)
+   دوباره پخش نشوند — روی حالتِ پایانی‌شان قفل می‌شوند. انیمیشنِ خروج با
+   Web Animations است و از این قانون اثر نمی‌گیرد. */
+[data-popup-ghost], [data-popup-ghost] *{
+  pointer-events:none !important;
+  transition:none !important;
+  animation-delay:-60s !important;
+  animation-play-state:paused !important;
+}
+
+/* تاریِ پرده هیچ‌وقت برداشته نمی‌شود — حتی روی دستگاه‌های لمسی
+   (html[data-perf="low"] *{backdrop-filter:none} بالاتر). هزینه‌اش فقط وقتی
+   پاپ‌آپ باز است پرداخت می‌شود (پرده‌ی بسته visibility:hidden است) و چون
+   شعاع ثابت است و فقط opacity فید می‌شود، در هر فریم چیزی دوباره بلور
+   نمی‌شود جز همان یک لایه. اختصاصیت (0,2,1) > (0,1,1)ِ قانونِ سراسری. */
+html[data-perf="low"] :is(
+  .modal-overlay, .wsearch-newform-overlay, .pcard-overlay, .jdate-overlay, .nav-overlay,
+  .m-sheet-backdrop, .exercise-catalog-popup-wrap, .premium-celebration-backdrop,
+  .trade-lightbox, .photo-lightbox, .admin-mobile-backdrop, .popup-backdrop
+){
+  backdrop-filter:var(--popup-backdrop-filter) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter) !important;
+}
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
+  backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+}
+
+@media (prefers-reduced-motion:reduce){
+  /* بدونِ جابه‌جایی — فقط یک فیدِ کوتاه تا ظاهرشدن ناگهانی نباشد */
+  .modal-panel.open:not(.m-sheet), .wsearch-newform.open,
+  .modal-panel.modal-panel-notransform, .jdate-popup.open, .pcard-stage.open,
+  .trade-drawer, .friend-profile-panel, .trade-econ-monthpicker,
+  .manual-exercise-popup-wrap > .exercise-catalog-popup-panel, .popup-panel,
+  .dash-context-menu, .notif-panel,
+  :is(.modal-overlay, .wsearch-newform-overlay, .pcard-overlay, .jdate-overlay).open,
+  .manual-exercise-popup-wrap, .popup-backdrop, .trade-lightbox, .photo-lightbox{
+    animation:popupBackdropIn .14s ease backwards;
+  }
 }
