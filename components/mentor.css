@@ -678,19 +678,24 @@ body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .
 .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:minmax(250px, 78%); }
 @media (min-width:720px){ .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:calc((100% - 2 * var(--m-3)) / 2.6); } }
 
-/* کارت: جمع‌وجور — سرِ کارت، و یک ردیفِ پایین (امتیاز · عضویت · شِورون) */
-.mentor-card-wrap{ position:relative; min-width:0; }
-.mentor-card-wrap > .mentor-card{ height:100%; padding:14px 15px; gap:12px; }
-.mentor-card-wrap .mentor-card-head{ padding-inline-end:26px; }
+/* کارت: جمع‌وجور — سرِ کارت (نام + مدال)، و یک ردیفِ پایین (امتیاز · عضویت · شِورون) */
+.mentor-card{ position:relative; min-width:0; padding:14px 15px; gap:12px; cursor:pointer; }
+.mentor-carousel-row > .mentor-card{ height:100%; }
+.mentor-card-name-row{ display:flex; align-items:center; gap:4px; min-width:0; }
+.mentor-card-name-row .mentor-card-name{ min-width:0; }
+/* لینکِ کشیده: کلِ کارت کلیک‌پذیر است */
+.mentor-card-link{ text-decoration:none; color:var(--text); }
+.mentor-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; z-index:1; }
+.mentor-card-link:focus-visible{ outline:none; }
+.mentor-card:has(.mentor-card-link:focus-visible){ outline:2px solid var(--accent); outline-offset:2px; }
 .mentor-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; min-width:0; }
 .mentor-card-since{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); white-space:nowrap; }
 .mentor-card-foot .rp-card-arrow{ margin-inline-start:auto; }
-.mentor-carousel-row .mentor-card-wrap{ height:100%; }
 
-/* مدالِ طلاییِ «مدرکِ تخصصیِ تأییدشده» — بالا-چپ، بی‌بک‌گراند */
-.mentor-medal{ position:absolute; top:10px; inset-inline-end:10px; z-index:2; }
+/* مدالِ طلاییِ «مدرکِ تخصصیِ تأییدشده» — درست کنارِ نام، بی‌بک‌گراند، بالای لینکِ کشیده */
+.mentor-medal{ position:relative; z-index:2; flex-shrink:0; display:flex; }
 .mentor-medal-btn{
-  display:flex; align-items:center; justify-content:center; padding:3px; border-radius:8px; border:none;
+  display:flex; align-items:center; justify-content:center; padding:2px; border-radius:6px; border:none;
   color:#D9A21B; cursor:pointer; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 body[data-theme="light"] .mentor-medal-btn, body:not([data-theme="light"]) .mentor-medal-btn{ background:none; box-shadow:none; border:none; }

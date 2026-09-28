@@ -14,36 +14,40 @@ import { RatingStars } from "./MentorBadges";
 // جزئیات: آواتار، نام، عنوانِ کاری، تاریخِ عضویت، امتیاز؛ شِورونِ ورود به
 // پروفایل پایینِ چپ. «هویت تأییدشده» روی کارت نمی‌آید (هر منتوری برای تدریس
 // باید احرازِ هویت شده باشد)؛ فقط اگر مدرکِ تخصصیِ تأییدشده دارد، یک مدالِ
-// طلایی بالا-چپ که با کلیک معنی‌اش را می‌گوید.
+// طلایی درست کنارِ نام که با کلیک معنی‌اش را می‌گوید.
 export function MentorCard({ mentor }: { mentor: MentorCardData }) {
   const certs = mentor.certifications.filter((c) => c.verified);
   const role = mentor.headline || mentor.routineRole;
+  // «لینکِ کشیده»: خودِ نام لینک است و با ::after کلِ کارت را می‌پوشاند؛ این‌طوری
+  // مدال (یک دکمه) می‌تواند درست کنارِ نام بنشیند بدونِ اینکه داخلِ <a> باشد.
   return (
-    <div className="mentor-card-wrap">
-      <Link href={`/mentors/${mentor.userId}`} prefetch={false} className="trade-surface rp-card mentor-card" draggable={false}>
-        <div className="mentor-card-head">
-          <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
-          <div className="mentor-card-id">
-            <div className="mentor-card-name">{mentor.name}</div>
-            {role && <div className="mentor-card-headline">{role}</div>}
+    <div className="trade-surface rp-card mentor-card">
+      <div className="mentor-card-head">
+        <MentorUserAvatar name={mentor.name} avatarUrl={mentor.avatarUrl} size={44} />
+        <div className="mentor-card-id">
+          <div className="mentor-card-name-row">
+            <Link href={`/mentors/${mentor.userId}`} prefetch={false} className="mentor-card-name mentor-card-link" draggable={false}>
+              {mentor.name}
+            </Link>
+            {certs.length > 0 && (
+              <CertMedal labels={certs.map((c) => (isMentorCategory(c.category) ? MENTOR_CATEGORY_META[c.category].certLabel : c.category))} />
+            )}
           </div>
+          {role && <div className="mentor-card-headline">{role}</div>}
         </div>
-        <div className="mentor-card-foot">
-          <RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} />
-          {mentor.memberSince && (
-            <span className="mentor-card-since"><CalendarDays size={12} strokeWidth={1.75} aria-hidden /> از {fmtDate(mentor.memberSince)}</span>
-          )}
-          <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" aria-hidden />
-        </div>
-      </Link>
-      {certs.length > 0 && (
-        <CertMedal labels={certs.map((c) => (isMentorCategory(c.category) ? MENTOR_CATEGORY_META[c.category].certLabel : c.category))} />
-      )}
+      </div>
+      <div className="mentor-card-foot">
+        <RatingStars value={mentor.ratingAvg} count={mentor.ratingCount} />
+        {mentor.memberSince && (
+          <span className="mentor-card-since"><CalendarDays size={12} strokeWidth={1.75} aria-hidden /> از {fmtDate(mentor.memberSince)}</span>
+        )}
+        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" aria-hidden />
+      </div>
     </div>
   );
 }
 
-// مدالِ طلایی — بیرونِ <Link> (دکمه داخلِ لینک مجاز نیست) و بی‌بک‌گراند؛
+// مدالِ طلایی — درست کنارِ نام، بیرونِ <Link> (دکمه داخلِ لینک مجاز نیست) و بی‌بک‌گراند؛
 // کلیک/لمس یک توضیحِ کوتاه باز می‌کند، کلیکِ بیرون یا Esc می‌بندد.
 function CertMedal({ labels }: { labels: string[] }) {
   // موقعیتِ ثابت (fixed) نسبت به خودِ مدال — ردیفِ افقیِ کارت‌ها overflow دارد
@@ -85,7 +89,7 @@ function CertMedal({ labels }: { labels: string[] }) {
         ref={btnRef}
         onClick={toggle}
       >
-        <Medal size={20} strokeWidth={1.9} aria-hidden />
+        <Medal size={17} strokeWidth={1.9} aria-hidden />
       </button>
       {pos && (
         <div className="mentor-medal-tip" role="tooltip" style={{ top: pos.top, left: pos.left }}>
