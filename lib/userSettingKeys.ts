@@ -42,6 +42,8 @@ export const SETTING_KEYS = {
   tradeChartSymbol: "tradeChartSymbol",
   tradeChartInterval: "tradeChartInterval",
   tradeChatRulesAccepted: "tradeChatRulesAccepted",
+  // رفتارِ برنامه‌ی تمرینی با روزِ جامانده («رد شدن»/«ماندن») + نشانگرِ پیشرفت — lib/exerciseProgression.ts
+  exerciseMissedDay: "exerciseMissedDay",
 } as const;
 
 /** شمارنده‌ی سرور-مدیریتِ استفاده از دستیارِ روتین (سهمیه‌ی رایگان) */

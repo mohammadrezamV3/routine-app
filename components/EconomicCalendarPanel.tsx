@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, BellRing, Calendar, ChevronLeft, ChevronRight, Filter, History, Search, X } from "lucide-react";
+import { useDayStrip } from "@/lib/useDayStrip";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { G_MONTHS } from "@/lib/gregorian";
 import { getSetting, setSetting } from "@/lib/storage";
@@ -33,9 +34,6 @@ function addDays(d: Date, n: number): Date {
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-function daysBetween(a: Date, b: Date): number {
-  return Math.round((startOfLocalDay(b).getTime() - startOfLocalDay(a).getTime()) / 86_400_000);
-}
 /** «سه‌شنبه ۱۷ شهریور» یا معادلِ میلادی‌اش — طبقِ calSystemِ انتخابیِ کاربر */
 function dayLabel(d: Date, calSystem: CalSystem): { weekday: string; date: string } {
   const weekday = FA_WEEKDAY[d.getDay()];
@@ -52,15 +50,6 @@ function fullDayLabel(d: Date, calSystem: CalSystem): string {
 const enMonthYearFmt = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
 const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(startOfLocalDay(new Date()), i - new Date().getDay())));
-
-/**
- * تعدادِ روزهای نوار دیگر ثابت نیست — باگِ گزارش‌شده: «توی دسکتاپ فقط
- * پنج روز نشون می‌ده» چون قبلا همیشه ۵ بود، حتی وقتی عرضِ واقعیِ نوار
- * (روی دسکتاپِ عریض) جای بیشتری داشت. حالا دقیقا همون الگوریتمِ
- * DashDateSelectorِ «روتین من» (اندازه‌گیریِ عرضِ واقعیِ نوار + عرضِ
- * رندرشده‌ی پیل‌ها) این‌جا هم پیاده شده — نگاه کن به computeDayWindow پایین‌تر.
- */
-const DEFAULT_DAY_WINDOW = 5;
 
 /**
  * تازه‌سازیِ بی‌صدا وقتی رویدادِ منتشرنشده‌ای روی همین صفحه هست.
@@ -225,75 +214,11 @@ export function EconomicCalendarPanel() {
   }, [load, date]);
 
   // ── نوارِ روزها ─────────────────────────────────────────────────────────
-  // یک پنجره‌ی لغزان که با دو فلشِ کنارش جلو/عقب می‌رود (نه یک نوارِ بلندِ
-  // اسکرول‌شونده) — تعدادِ روزها دیگر ثابت نیست، هرچقدر عرضِ واقعیِ نوار
-  // جا داشته باشد (دقیقا مثلِ DashDateSelectorِ «روتین من»).
-  const [windowOffset, setWindowOffset] = useState(0);
-  const [dayWindow, setDayWindow] = useState(DEFAULT_DAY_WINDOW);
-  const weekStripRef = useRef<HTMLDivElement>(null);
-  const dayStrip = useMemo(() => {
-    const center = addDays(today, windowOffset * dayWindow);
-    return Array.from({ length: dayWindow }, (_, i) => addDays(center, i - Math.floor(dayWindow / 2)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [windowOffset, dayWindow, today.getTime()]);
-
-  // همون الگوریتمِ DashDateSelector: عرضِ واقعیِ نوار رو اندازه می‌گیره و
-  // بسته‌به عرضِ رندرشده‌ی خودِ پیل‌ها (نه یه عددِ فرضی) می‌فهمه چندتا جا
-  // می‌شه — با تغییرِ سایزِ صفحه هم خودش دوباره حساب می‌کنه.
-  useEffect(() => {
-    const el = weekStripRef.current;
-    if (!el) return;
-    const compute = () => {
-      const w = el.clientWidth;
-      if (w <= 0) return;
-      const isSm = window.innerWidth >= 640;
-      // موبایل: همیشه دقیقا ۵ روز، مثل نوارِ «روتین من» — محاسبه‌ی داینامیک
-      // روی صفحه‌ی باریک ممکنه به ۳ برسه؛ اگه ۵تا جا نشه همین نوار با انگشت
-      // اسکرول می‌خوره. دسکتاپ دست‌نخورده: هرچقدر واقعا جا داره همون بمونه.
-      if (!isSm) {
-        setDayWindow(5);
-        return;
-      }
-      // باگ: پیل‌ها flex:1 دارن و فضای خالیِ نوار رو پر می‌کنن (grow)، پس
-      // عرضِ رندرشده‌ی خودِ پیل به تعدادِ فعلیِ روزها وابسته‌ست و این حلقه
-      // رو ناپایدار می‌کنه (کمتر روز ← پیلِ پهن‌تر ← تخمینِ باز هم کمتر →
-      // قفل‌شدن رویِ همون عددِ فعلی، نه حداکثرِ واقعیِ جاگیری). دقیقا همون
-      // چیزی که DashDateSelector قبلا برایش فیکس شد: به‌جای عرضِ خودِ پیل،
-      // عرضِ *محتوای* پیل (اسپن‌های داخلش) اندازه گرفته می‌شه — که مستقل از
-      // کش‌اومدنِ والدشه.
-      let pillWidth = 92;
-      el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
-        const cs = getComputedStyle(pill);
-        const padding = parseFloat(cs.paddingInlineStart || "0") + parseFloat(cs.paddingInlineEnd || "0");
-        let content = 0;
-        for (const child of Array.from(pill.children)) {
-          content = Math.max(content, child.getBoundingClientRect().width);
-        }
-        pillWidth = Math.max(pillWidth, Math.ceil(content + padding));
-      });
-      const gap = 6;
-      const n = Math.floor((w + gap) / (pillWidth + gap));
-      const odd = n % 2 === 0 ? n - 1 : n;
-      setDayWindow(Math.max(3, odd));
-    };
-    compute();
-    const ro = new ResizeObserver(compute);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // پنجره فقط تا جایی جلو/عقب می‌رود که هنوز با بازه‌ی داده‌ی موجود هم‌پوشانی
-  // داشته باشد — وگرنه کاربر وارد روزهایی می‌شد که *همیشه* خالی‌اند و از
-  // بیرون شبیهِ «لود نمی‌شه» دیده می‌شد.
-  function windowOverlapsRange(offset: number): boolean {
-    if (!range) return Math.abs(offset) <= 4;
-    const center = addDays(today, offset * dayWindow);
-    const first = addDays(center, -Math.floor(dayWindow / 2));
-    const last = addDays(center, dayWindow - 1 - Math.floor(dayWindow / 2));
-    return last >= range.from && first <= range.to;
-  }
-  const canGoBack = windowOverlapsRange(windowOffset - 1);
-  const canGoForward = windowOverlapsRange(windowOffset + 1);
+  // موبایل: نوارِ آزادِ قابل‌کشیدن با شتاب (مشترک با «روتین من» —
+  // lib/useDayStrip.ts)، بدونِ فلش، روزها نزدیکِ هر لبه تنبل اضافه می‌شوند.
+  // دسکتاپ: طبقِ درخواستِ صریح، به رفتارِ قدیمی برمی‌گرده — کشیدنِ آزاد
+  // خاموش و دو فلشِ قبلی/بعدی همون نوار رو پیج می‌کنن.
+  const { scrollRef: weekStripRef, days: dayStrip, pageBy: pageWeekStrip } = useDayStrip(isoLocal(date));
 
   const outOfRange = !!range && (date < range.from || date > range.to);
 
@@ -302,12 +227,9 @@ export function EconomicCalendarPanel() {
     setMonthPickerOpen(false);
   }
 
-  // پرشِ تاریخ از ماه‌شمار باید پنجره را هم با خودش ببرد، وگرنه روزِ
-  // انتخاب‌شده اصلا توی نوار دیده نمی‌شود.
+  // پرشِ تاریخ از ماه‌شمار: نوار خودش بازه را دورِ این روز باز و وسط‌چینش می‌کند.
   function jumpToDate(d: Date) {
-    const day = startOfLocalDay(d);
-    setDate(day);
-    setWindowOffset(Math.round(daysBetween(today, day) / dayWindow));
+    setDate(startOfLocalDay(d));
     setMonthPickerOpen(false);
   }
 
@@ -321,22 +243,27 @@ export function EconomicCalendarPanel() {
           DashFilterButton، همون الگو). */}
       <div className="trade-cal-header-row flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
         <div className="trade-cal-week-strip lg:order-2 lg:flex-1">
+          {/* فلشِ قبلی/بعدی فقط دسکتاپ دیده می‌شن (globals.css) — پیج‌کردنِ
+              همون نوارِ روزها، نه یک پنجره‌ی جدا. */}
           <button
-            type="button" className="trade-cal-week-arrow" aria-label="روزهای قبل"
-            onClick={() => setWindowOffset((v) => v - 1)} disabled={!canGoBack}
+            type="button"
+            aria-label="روزهای قبل"
+            className="trade-cal-week-arrow"
+            onClick={() => pageWeekStrip("prev")}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
-
           <div className="trade-cal-week-days" ref={weekStripRef}>
-            {dayStrip.map((d) => {
+            {dayStrip.map(({ date: d, iso }) => {
               const active = isSameDay(d, date);
               const { weekday, date: dateLabel } = dayLabel(d, calSystem);
               return (
                 <button
-                  key={isoLocal(d)}
+                  key={iso}
                   type="button"
+                  data-iso={iso}
                   data-day-pill
+                  draggable={false}
                   className={`trade-cal-day-pill${active ? " active" : ""}${!active && isSameDay(d, today) ? " today" : ""}`}
                   onClick={() => pickDate(d)}
                 >
@@ -346,12 +273,13 @@ export function EconomicCalendarPanel() {
               );
             })}
           </div>
-
           <button
-            type="button" className="trade-cal-week-arrow" aria-label="روزهای بعد"
-            onClick={() => setWindowOffset((v) => v + 1)} disabled={!canGoForward}
+            type="button"
+            aria-label="روزهای بعد"
+            className="trade-cal-week-arrow"
+            onClick={() => pageWeekStrip("next")}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
         </div>
 
@@ -363,7 +291,7 @@ export function EconomicCalendarPanel() {
           <button
             type="button"
             className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
-            onClick={() => { setWindowOffset(0); pickDate(today); }}
+            onClick={() => pickDate(today)}
           >
             <Calendar size={15} /> امروز
           </button>

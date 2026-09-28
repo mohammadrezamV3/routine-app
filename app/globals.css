@@ -363,7 +363,7 @@
     transition:border-color .2s ease, background .2s ease, transform .18s cubic-bezier(.34,1.56,.64,1);
   }
   .check.on{border-color:var(--accent); background:var(--accent); transform:scale(1.06);}
-  .check .c-check{width:11px; height:11px; opacity:0; transform:scale(.4) rotate(-20deg); transition:opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));}
+  .check .c-check{width:11px; height:11px; display:block; opacity:0; transform:scale(.4) rotate(-20deg); transition:opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));}
   .check.on .c-check{opacity:1; transform:scale(1) rotate(0deg);}
   .check.missed{border-color:#E05252; background:#E05252;}
   .check .c-miss{width:10px; height:10px; display:block;}
@@ -640,23 +640,80 @@
   .header-streak-clock-streak{ display:flex; align-items:center; gap:3px; color:var(--accent); font-weight:600; }
   .header-streak-clock-streak .streak-flame{ width:15px; height:15px; }
 
-  /* شعله‌ی استریک — هرچی عدد بالاتر بره، انیمیشنش خفن‌تر می‌شه: از یه فلیم
-     ساکن خاکستری (۰) تا فلیکر آروم (۱-۶)، گلوی نورانی (۷-۲۹)، فلیکر
-     چندرنگ (۳۰-۹۹) و در نهایت چرخش رنگ + پالس تمام‌عیار (۱۰۰+) */
+  /* شعله‌ی استریک — یه سطحِ بصریِ جدا برای هر مایلستون (lib/streakTier.ts:
+     ۱، ۳، ۷، ۳۰، ۶۰، ۹۰، ۱۸۰، ۳۶۵ روز؛ tier0 = بدون استریک، خاکستریِ ساکن).
+     هرچی سطح بالاتر بره: اندازه کمی بزرگ‌تر، رنگ از نارنجیِ کم‌رنگ به
+     نارنجی/قرمز/بنفش/آبی و در نهایت طلایی می‌ره، و خودِ انیمیشن (سرعتِ
+     فلیکر، شدتِ گلو، چرخشِ رنگ) قوی‌تر می‌شه — تا tier8 (۳۶۵+ روز) که علاوه
+     بر گلوی طلایی، چند ذره‌ی نورانیِ کوچیک دورش پالس می‌زنن.
+
+     اندازه: تویِ context باریک (هدر، یا هر جای دیگه که کامپوننت با
+     compact نشون داده می‌شه) اندازه‌ی svg همیشه ثابت می‌مونه — این دو
+     سلکتور (`.header-streak-clock-streak .streak-flame` بالاتر، و
+     `.streak-flame-compact .streak-flame` پایین‌تر) هم‌تخصیصِ سلکتورِ
+     `.streak-flame-tierN` هستن ولی بعدش تعریف شدن، پس رشدِ اندازه‌ی سطح
+     رو override می‌کنن — فقط رنگ/گلو/انیمیشن سطح باقی می‌مونه، نه اندازه. */
   .streak-flame-tier0{ color:var(--muted2); }
-  .streak-flame-tier1{ animation:flameFlicker1 1.8s ease-in-out infinite; }
+  .streak-flame-tier1{
+    width:13px; height:13px; color:#D98A4A;
+    animation:flameFlicker1 2.2s ease-in-out infinite;
+  }
   .streak-flame-tier2{
-    animation:flameFlicker2 1.1s ease-in-out infinite;
-    filter:drop-shadow(0 0 3px rgba(var(--accent-rgb),.7));
+    width:14px; height:14px; color:#E8862E;
+    animation:flameFlicker1 1.7s ease-in-out infinite;
+    filter:drop-shadow(0 0 2px rgba(232,134,46,.55));
   }
   .streak-flame-tier3{
-    animation:flameFlicker3 0.85s ease-in-out infinite, flameColor3 2.4s linear infinite;
-    filter:drop-shadow(0 0 5px rgba(var(--accent-rgb),.85));
+    width:15px; height:15px; color:#F2701A;
+    animation:flameFlicker2 1.15s ease-in-out infinite;
+    filter:drop-shadow(0 0 3px rgba(242,112,26,.7));
   }
   .streak-flame-tier4{
-    animation:flameFlicker4 0.6s ease-in-out infinite, flameColor4 1.6s linear infinite;
-    filter:drop-shadow(0 0 7px currentColor);
+    width:16px; height:16px; color:#FF6A00;
+    animation:flameFlicker3 0.9s ease-in-out infinite, flameColor4 2.6s linear infinite;
+    filter:drop-shadow(0 0 5px rgba(255,106,0,.8));
   }
+  .streak-flame-tier5{
+    width:17px; height:17px; color:#FF3B30;
+    animation:flameFlicker3 0.75s ease-in-out infinite, flameColor5 2.1s linear infinite;
+    filter:drop-shadow(0 0 6px rgba(255,59,48,.85));
+  }
+  .streak-flame-tier6{
+    width:18px; height:18px; color:#A855F7;
+    animation:flameFlicker4 0.65s ease-in-out infinite, flameColor6 1.9s linear infinite;
+    filter:drop-shadow(0 0 7px rgba(168,85,247,.85));
+  }
+  .streak-flame-tier7{
+    width:20px; height:20px; color:#5B7CFA;
+    animation:flameFlicker4 0.55s ease-in-out infinite, flameColor7 1.5s linear infinite;
+    filter:drop-shadow(0 0 8px currentColor);
+  }
+  .streak-flame-tier8{
+    width:22px; height:22px; color:#FFC400;
+    animation:flameFlicker4 0.5s ease-in-out infinite, flameColor8 1.4s linear infinite;
+    filter:drop-shadow(0 0 10px currentColor);
+    overflow:visible;
+  }
+  /* هدر هم اندازه‌ی سطح رو نشون می‌ده، ولی با سقفِ کوچیک‌تر که هدر نشکنه. */
+  .header-streak-clock-streak .streak-flame.streak-flame-tier0,
+  .streak-flame-compact .streak-flame.streak-flame-tier0{ width:13px; height:13px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier1,
+  .streak-flame-compact .streak-flame.streak-flame-tier1{ width:13px; height:13px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier2,
+  .streak-flame-compact .streak-flame.streak-flame-tier2{ width:14px; height:14px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier3,
+  .streak-flame-compact .streak-flame.streak-flame-tier3{ width:15px; height:15px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier4,
+  .streak-flame-compact .streak-flame.streak-flame-tier4{ width:16px; height:16px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier5,
+  .streak-flame-compact .streak-flame.streak-flame-tier5{ width:17px; height:17px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier6,
+  .streak-flame-compact .streak-flame.streak-flame-tier6{ width:18px; height:18px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier7,
+  .streak-flame-compact .streak-flame.streak-flame-tier7{ width:19px; height:19px; }
+  .header-streak-clock-streak .streak-flame.streak-flame-tier8,
+  .streak-flame-compact .streak-flame.streak-flame-tier8{ width:21px; height:21px; }
+
   @keyframes flameFlicker1{
     0%, 100%{ transform:scale(1); opacity:1; }
     50%{ transform:scale(1.08); opacity:.85; }
@@ -672,10 +729,6 @@
     50%{ transform:scale(0.94) rotate(3deg); }
     75%{ transform:scale(1.1) rotate(-2deg); }
   }
-  @keyframes flameColor3{
-    0%, 100%{ color:var(--accent); }
-    50%{ color:var(--secondary); }
-  }
   @keyframes flameFlicker4{
     0%, 100%{ transform:scale(1) rotate(0deg); }
     20%{ transform:scale(1.22) rotate(-6deg); }
@@ -684,11 +737,49 @@
     80%{ transform:scale(0.95) rotate(3deg); }
   }
   @keyframes flameColor4{
-    0%{ color:#FF6A00; }
-    25%{ color:#FFC400; }
-    50%{ color:#FF2D55; }
-    75%{ color:#A855F7; }
-    100%{ color:#FF6A00; }
+    0%, 100%{ color:#FF6A00; }
+    50%{ color:#FFC400; }
+  }
+  @keyframes flameColor5{
+    0%, 100%{ color:#FF3B30; }
+    50%{ color:#FF6A00; }
+  }
+  @keyframes flameColor6{
+    0%{ color:#A855F7; }
+    50%{ color:#FF3B30; }
+    100%{ color:#A855F7; }
+  }
+  @keyframes flameColor7{
+    0%{ color:#5B7CFA; }
+    50%{ color:#A855F7; }
+    100%{ color:#5B7CFA; }
+  }
+  @keyframes flameColor8{
+    0%{ color:#FFC400; }
+    25%{ color:#FF6A00; }
+    50%{ color:#A855F7; }
+    75%{ color:#5B7CFA; }
+    100%{ color:#FFC400; }
+  }
+
+  /* ذره‌های نورانیِ tier8 — فقط این سطح (۳۶۵+ روز) دورش پالس می‌زنن */
+  .streak-flame-particle{ opacity:0; transform-origin:center; }
+  .streak-flame-tier8 .streak-flame-particle-a{ animation:streakParticle 1.8s ease-in-out .1s infinite; }
+  .streak-flame-tier8 .streak-flame-particle-b{ animation:streakParticle 1.8s ease-in-out .6s infinite; }
+  .streak-flame-tier8 .streak-flame-particle-c{ animation:streakParticle 1.8s ease-in-out 1.1s infinite; }
+  @keyframes streakParticle{
+    0%{ opacity:0; transform:scale(.4) translateY(0); }
+    35%{ opacity:1; transform:scale(1) translateY(-1.5px); }
+    100%{ opacity:0; transform:scale(.5) translateY(-4px); }
+  }
+  /* حرکت‌کاهی: رنگ/اندازه/گلوی سطح می‌مونه، فقط فلیکر و چرخشِ رنگ و
+     ذره‌ها خاموش می‌شن — سطح استریک همچنان قابل‌تشخیصه، فقط ساکن */
+  @media (prefers-reduced-motion:reduce){
+    .streak-flame-tier1, .streak-flame-tier2, .streak-flame-tier3, .streak-flame-tier4,
+    .streak-flame-tier5, .streak-flame-tier6, .streak-flame-tier7, .streak-flame-tier8{
+      animation:none;
+    }
+    .streak-flame-particle{ animation:none; opacity:0; }
   }
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
@@ -1095,6 +1186,12 @@
   body[data-theme="light"] .trade-add-btn, body:not([data-theme="light"]) .trade-add-btn{
     background:none; box-shadow:none;
   }
+  /* حالتِ disabled (مثلاً «همگام‌سازی» در حالِ انتظار) هم نباید بک‌گراندِ
+     button:disabled:hoverِ سراسری را بگیرد. */
+  body[data-theme="light"] button.trade-add-btn:disabled:hover,
+  body:not([data-theme="light"]) button.trade-add-btn:disabled:hover{
+    background:none; box-shadow:none; border:none; color:var(--accent);
+  }
 
   /* آمارهای اضافی حالا همیشه دیده می‌شوند (بدونِ کشوی باز/بسته) — فاصله‌ی
      بالای گریدشان از خودِ سه آمارِ سرخط. */
@@ -1131,6 +1228,17 @@
   @media (prefers-reduced-motion:reduce){
     .trade-stats-handle svg{ animation:none; opacity:.8; }
     .trade-stats-collapse{ transition:none; }
+  }
+  /* دسکتاپ (درخواستِ صریح): «جزئیات و آمارِ حساب» از همان ابتدا کامل باز
+     است — بدون دستگیره و بدون کشو؛ هر کاشیِ آمار هم دقیقاً طرحِ باکس‌های
+     اصلیِ ترید (.trade-surface / .trade-hub-box) را دارد. */
+  @media (min-width:1024px){
+    .trade-desktop .trade-stats-handle{ display:none; }
+    .trade-desktop .trade-stats-collapse{ grid-template-rows:1fr; opacity:1; transition:none; }
+    .trade-desktop .trade-stat-tile{
+      border:1px solid var(--surface-line); border-radius:18px;
+      background:var(--box-bg); padding:14px 16px;
+    }
   }
 
   /* تقویم وقتی داخلِ همان باکس است: نه سطحِ جدا می‌گیرد نه حاشیه‌ی بالا */
@@ -4387,11 +4495,21 @@ body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:r
   box-shadow:0 12px 30px rgba(0,0,0,.35);
   display:flex; flex-direction:column;
 }
-.manual-meal-row-menu button{
+/* آیتم‌های منو (ویرایش/حذف) بی‌بک‌گراند می‌مانند. منو به body پورتال می‌شود
+   (بیرونِ .dash-scope)، پس ریستِ سراسریِ button{} (لیکوئید گلس: بک‌گراند،
+   بوردر، سایه، بلور — و نسخه‌ی تمِ روشن با body[data-theme="light"] button)
+   مستقیم رویشان می‌نشست. «html body» اسپسیفیسیتی را از همه‌ی آن قانون‌ها
+   (از جمله hover) بالاتر می‌برد. بازخوردِ هاور فقط با رنگِ متن است. */
+html body .manual-meal-row-menu button,
+html body .manual-meal-row-menu button:hover,
+html body .manual-meal-row-menu button:active{
   padding:8px 10px; border-radius:10px; text-align:start; font-size:12px; font-weight:600; color:var(--text);
+  background:transparent; border:1px solid transparent; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
 }
-@media (hover:hover){.manual-meal-row-menu button:hover{ background:rgba(255,255,255,.06); }}
+@media (hover:hover){html body .manual-meal-row-menu button:hover{ color:var(--accent); }}
 .manual-meal-row-menu-danger{ color:#E05252 !important; }
+@media (hover:hover){html body .manual-meal-row-menu button.manual-meal-row-menu-danger:hover{ opacity:.8; }}
 
 /* دکمه‌ی «ثبت» پایین نمای جزئیات روز — تموم حرکات اون روز رو تاییدی
    می‌کنه و برمی‌گردونه به لیست روزها؛ بدون بک‌گراند، فقط متن اکسنت */
@@ -4610,6 +4728,7 @@ body[data-theme="light"] .exercise-catalog-row{ background:rgba(255,255,255,.5);
   background:rgba(255,255,255,.03);
 }
 body[data-theme="light"] .exercise-photo-placeholder{ background:rgba(255,255,255,.6); }
+.exercise-photo-slot{ width:180px; height:180px; }
 
 /* عکسِ واقعیِ حرکت (وقتی ادمین از پنل گذاشته باشد) — دقیقا جای همان
    placeholder، با همان گوشه‌ها، تا چیدمانِ کارت جابه‌جا نشود. */
@@ -5671,6 +5790,11 @@ html[data-perf="low"] .streak-flame-tier1,
 html[data-perf="low"] .streak-flame-tier2,
 html[data-perf="low"] .streak-flame-tier3,
 html[data-perf="low"] .streak-flame-tier4,
+html[data-perf="low"] .streak-flame-tier5,
+html[data-perf="low"] .streak-flame-tier6,
+html[data-perf="low"] .streak-flame-tier7,
+html[data-perf="low"] .streak-flame-tier8,
+html[data-perf="low"] .streak-flame-particle,
 html[data-perf="low"] .wbox-blob,
 html[data-perf="low"] .wbox-glowblob,
 html[data-perf="low"] .ai-sparkle-twinkle,
@@ -5774,7 +5898,11 @@ html[data-perf="low"] .wbox-glowblob{ animation:none; }
 html[data-perf="low"] .streak-flame-tier1,
 html[data-perf="low"] .streak-flame-tier2,
 html[data-perf="low"] .streak-flame-tier3,
-html[data-perf="low"] .streak-flame-tier4{ animation-duration:3s; }
+html[data-perf="low"] .streak-flame-tier4,
+html[data-perf="low"] .streak-flame-tier5,
+html[data-perf="low"] .streak-flame-tier6,
+html[data-perf="low"] .streak-flame-tier7,
+html[data-perf="low"] .streak-flame-tier8{ animation-duration:3s; }
 html[data-perf="low"] .task-check-missed{ animation:none; }
 
 /* استثنا: منوهای شناور (نه هدر/نوار پایین/کارت‌های همیشه‌مرئی). بک‌گراند
@@ -6445,7 +6573,7 @@ body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-fi
   display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
   font-size:12.5px; font-weight:700; color:var(--accent);
   background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  padding:6px 2px;
+  padding:6px 2px; text-decoration:none;
 }
 @media (hover:hover){ .trade-title-add-btn:hover{ opacity:.78; } }
 .trade-title-add-btn:active{ transform:scale(.97); }
@@ -6630,33 +6758,42 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
    خودِ week-strip بود) حالا این‌جاست چون week-strip دیگر همیشه اولین
    فرزند نیست (روی دسکتاپ ترتیبِ بصری‌اش با order عوض می‌شود). */
 .trade-cal-header-row{ margin-top:14px; }
-/* طبقِ درخواستِ صریح، نوارِ روزها به همان باکسِ شیشه‌ایِ «روتین من»
-   برگشت — border+بک‌گراند+بلور، دقیقا هم‌شکلِ DashDateSelector. دو فلشِ
-   قبلی/بعدی هم مثلِ نوارِ روزِ «روتین من» کنارش نشسته‌اند. */
-.trade-cal-week-strip{
-  display:flex; align-items:center; gap:2px;
-  padding:10px 12px;
-  border-radius:18px; border:1px solid var(--surface-line);
-  background:rgba(var(--bg-rgb),.16);
-  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
-}
+/* نوارِ روزها: موبایل آزاد و قابل‌کشیدن با شتاب (lib/useDayStrip.ts) —
+   بدونِ باکس/بوردر/گوشه، دقیقا هم‌شکلِ DashDateSelectorِ «روتین من».
+   دسکتاپ (پایین‌تر): طبقِ درخواستِ صریح به رفتار/ظاهرِ قدیمی برمی‌گرده —
+   باکسِ شیشه‌ای + دو فلشِ قبلی/بعدی، کشیدنِ آزاد خاموش. */
+.trade-cal-week-strip{ display:flex; align-items:center; gap:2px; min-width:0; }
 .trade-cal-week-days{
-  display:flex; flex:1; min-width:0; gap:6px;
-  overflow-x:auto; scrollbar-width:none;
+  display:flex; flex:1; min-width:0; gap:6px; padding:10px 8px;
+  overflow-x:auto; overscroll-behavior-x:contain; overflow-anchor:none;
+  scrollbar-width:none; cursor:grab;
 }
+.trade-cal-week-days.is-dragging{ cursor:grabbing; user-select:none; }
 .trade-cal-week-days::-webkit-scrollbar{ width:0; height:0; display:none; }
-/* فلش‌های جابه‌جاییِ پنجره‌ی روزها — هم‌شکلِ فلش‌های DashDateSelector */
+/* فلش‌های جابه‌جاییِ نوار — فقط دسکتاپ (پایین‌تر display:flex می‌شن)،
+   هم‌شکلِ فلش‌های قدیمیِ DashDateSelector. */
 .trade-cal-week-arrow{
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  display:none; align-items:center; justify-content:center; flex-shrink:0;
   width:30px; height:30px; padding:0; border-radius:999px;
   color:var(--muted); background:none; border:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none; cursor:pointer;
-  transition:color .18s ease, background .18s ease;
+  cursor:pointer; transition:color .18s ease, background .18s ease;
 }
 body[data-theme="light"] .trade-cal-week-arrow,
 body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shadow:none; }
-@media (hover:hover){ .trade-cal-week-arrow:not(:disabled):hover{ color:var(--text); background:rgba(255,255,255,.05); } }
-.trade-cal-week-arrow:disabled{ opacity:.3; cursor:default; }
+@media (hover:hover){ .trade-cal-week-arrow:hover{ color:var(--text); background:rgba(255,255,255,.05); } }
+@media (min-width:1024px){
+  .trade-cal-week-arrow{ display:flex; }
+  .trade-cal-week-strip{
+    padding:2px 12px;
+    border-radius:18px; border:1px solid var(--surface-line);
+    background:rgba(var(--bg-rgb),.16);
+    backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+  }
+  /* کشیدنِ آزادِ ماوس/ویل روی دسکتاپ خاموش — فقط با فلش‌ها (پایین‌تر) یا
+     کلیکِ روزِ فعال جابه‌جا می‌شود؛ lib/useDayStrip.ts هم useDragScroll رو
+     همین عرض خاموش می‌کنه، این‌جا فقط ظاهر/overflow هماهنگ می‌شه. */
+  .trade-cal-week-days{ overflow-x:hidden; cursor:default; }
+}
 /* طبقِ درخواستِ صریح، اندازه‌ها *دقیقا* همان DashDateSelectorِ «روتین من»
    است (components/DashDateSelector.tsx) و نه یک پیکسل بزرگ‌تر:
    موبایل min-w 54 / padding 4 / radius 16 / gap 2، و از ۶۴۰px به بالا
@@ -6666,7 +6803,7 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
   /* هم‌قاعده‌ی نوارِ «روتین من»: هر روز سهمِ مساوی از عرضِ نوار می‌گیرد
      (grow) ولی زیرِ عرضِ محتوایش له نمی‌شود (shrink:0) — نه فاصله‌ی
      بیش‌ازحد بینِ روزها، نه جمع‌شدنشان وسطِ نوار. */
-  flex:1 0 0; scroll-snap-align:center; min-width:54px;
+  flex:0 0 auto; min-width:calc((100% - 24px) / 5);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   padding:4px; border-radius:16px; color:var(--muted);
   /* بدونِ border — پیل‌های روتین من هم ندارند و همان ۱پیکسلِ شفاف، پیل را
@@ -6692,6 +6829,20 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
 .trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
 .trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
 @media (hover:hover){ .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
+/* تمِ روشن: ریستِ سراسریِ body[data-theme="light"] button{} (tag+attr+tag)
+   اسپسیفیسیتیِ بیشتری از .trade-cal-day-pill دارد و به هر روز بک‌گراندِ
+   شیشه‌ای/بوردر/سایه می‌داد — باگ. روزها مثلِ تمِ تیره شفاف می‌مانند؛
+   حلقه‌ی «امروز» و پرشدگیِ روزِ فعال همان قبلی‌اند. */
+body[data-theme="light"] button.trade-cal-day-pill{ background:none; border:none; box-shadow:none; }
+body[data-theme="light"] button.trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
+body[data-theme="light"] button.trade-cal-day-pill.active{
+  background:var(--accent);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
+}
+@media (hover:hover){
+  body[data-theme="light"] button.trade-cal-day-pill:not(.active):hover{ background:none; border:none; color:var(--muted); }
+  body[data-theme="light"] button.trade-cal-day-pill:not(.active):not(.today):hover{ box-shadow:none; }
+}
 @media (min-width:640px){
   .trade-cal-day-pill{ min-width:92px; gap:4px; padding:8px 12px; }
   .trade-cal-day-pill-wd{ font-size:13px; }
@@ -7785,6 +7936,13 @@ body[data-theme="light"] .routine-ai-fab, body:not([data-theme="light"]) .routin
 }
 @media (min-width:768px){ .routine-ai-panel{ max-width:680px; } }
 body[data-theme="light"] .routine-ai-panel{ background:rgba(255,255,255,.16); }
+/* طبقِ درخواستِ صریح: مدیرِ برنامه روی دسکتاپ هم باید مثلِ موبایل «شیشه‌ای
+   کدر» باشه — شیشه‌ی ۲٪ پشتِ پرمحتوای دسکتاپ عملاً شفاف دیده می‌شد. */
+html:not([data-perf="low"]) body[data-theme] .routine-ai-panel{
+  background:color-mix(in srgb, var(--surface-2) 70%, transparent);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+}
 
 .routine-ai-list{
   flex:1 1 auto; min-height:140px; overflow-y:auto;
@@ -8535,16 +8693,27 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-hub, .rp-page{ padding-bottom:40px; }
 
 /* ── هاب ── */
-.rp-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
+/* باکسِ بیرونیِ مشترک: همه‌ی کارت‌های رودمپ زیرِ یک .trade-surface واحد. */
+.rp-grid-box{ margin-top:16px; padding:14px; }
+.rp-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
 @media (min-width:720px){ .rp-grid{ grid-template-columns:1fr 1fr; } }
 .rp-card{
   position:relative; display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
 }
 @media (hover:hover) and (pointer:fine){ .rp-card:hover{ border-color:var(--accent); } }
 .rp-card:active{ transform:scale(.99); }
-.rp-card-delete{ position:absolute; top:10px; left:10px; z-index:1; }
-.rp-card-eyebrow{ font-size:10.5px; font-weight:700; color:var(--accent); unicode-bidi:plaintext; }
-.rp-card-title{ margin-top:4px; font-size:15px; font-weight:800; line-height:1.7; }
+/* عنوان/زیرعنوان در یک ردیفِ flex کنارِ دکمه‌ی حذف‌اند (نه absolute روی
+   متن) تا هیچ‌وقت زیرِ آیکونِ سطل‌زباله نروند — چه فارسی چه انگلیسی. */
+.rp-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.rp-card-delete{ flex-shrink:0; margin:-6px -6px 0 0; }
+.rp-card-eyebrow{
+  flex:1; min-width:0; font-size:10.5px; font-weight:700; color:var(--accent);
+  unicode-bidi:plaintext; text-align:right;
+}
+.rp-card-title{
+  margin-top:4px; font-size:15px; font-weight:800; line-height:1.7;
+  unicode-bidi:plaintext; text-align:right;
+}
 .rp-card-desc{
   margin:5px 0 0; font-size:12px; line-height:1.95; color:var(--muted);
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
@@ -8847,7 +9016,7 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 
 /* ── فوترِ هشدارِ AI — فقط متنِ قرمز، یک خط (درخواستِ صریح) ── */
 .rp-disclaimer{
-  margin:20px 0 0; font-size:11px; line-height:1.6; color:#E05252; text-align:center;
+  margin:20px 0 0; font-size:11px; line-height:1.6; color:var(--text); text-align:right;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
@@ -9004,6 +9173,15 @@ body[data-theme] :is(.manual-day-exercises-box, .exercise-rules-box, .exercise-l
   background:var(--box-bg);
   backdrop-filter:none; -webkit-backdrop-filter:none;
 }
+
+/* دایره‌ی تیک/ضربدرِ DashTaskRow — پدینگِ ۸px۱۶pxِ ریستِ سراسریِ button{}
+   دایره‌ی ۲۰px رو پهن و آیکون رو از وسط کج می‌کرد. بک‌گراندش inline ست
+   می‌شه، پس این‌جا فقط پدینگ/مرز جعبه صفر می‌شه. */
+body[data-theme="light"] .task-check-btn, body:not([data-theme="light"]) .task-check-btn{
+  padding:0; box-sizing:border-box; min-width:0; line-height:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+.task-check-btn svg{ display:block; }
 
 /* ============================================================
    پاپ‌آپ‌ها: ورود/خروجِ نرم + پس‌زمینه‌ی تارِ یکسان

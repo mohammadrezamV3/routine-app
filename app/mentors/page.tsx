@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Bookmark, Medal, Check, ChevronDown, DoorOpen, Search, SearchX, Sparkles, Star, Users, X } from "lucide-react";
+import { ArrowRight, Bookmark, Search, SearchX, SlidersHorizontal, Sparkles, Star, Users, X } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorEmptyState, MentorSectionTitle } from "@/components/MentorUI";
 import { MentorCard } from "@/components/MentorCard";
@@ -10,7 +10,6 @@ import { MentorCarousel } from "@/components/MentorCarousel";
 import { SavedMentorsProvider, useSavedMentors } from "@/components/MentorSaved";
 import { MentorPlatformNotice } from "@/components/MentorPlatformNotice";
 import { MentorCollapse, MentorStagger, MentorStaggerItem, MentorSwap } from "@/components/MentorMotion";
-import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory, type MentorCategory } from "@/lib/mentorCategories";
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
@@ -25,7 +24,6 @@ import {
 const IC = { strokeWidth: 1.75, "aria-hidden": true } as const;
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
-const MORE_OPEN_KEY = "mentors:filters-more";
 
 const SORT_OPTIONS: { value: MentorSort; label: string }[] = [
   { value: "best", label: "بهترین نتیجه" },
@@ -57,10 +55,6 @@ export default function MentorsSearchPage() {
   );
 }
 
-function readMoreOpen(): boolean {
-  try { return window.localStorage.getItem(MORE_OPEN_KEY) !== "0"; } catch { return true; }
-}
-
 function Discovery() {
   const sp = useSearchParams();
   const router = useRouter();
@@ -68,7 +62,6 @@ function Discovery() {
   const filters = useMemo(() => filtersFromParams(sp, isMentorCategory), [sp]);
   const viewRaw = sp.get("view");
   const view: View = viewRaw === "saved" ? "saved" : viewRaw === "all" ? "all" : "rows";
-  const saved = useSavedMentors();
 
   const push = useCallback((next: MentorFilters, nextView: View = view) => {
     const p = filtersToParams(next);
@@ -100,49 +93,45 @@ function Discovery() {
     window.scrollTo({ top: 0 });
   };
   const showRows = view === "rows" && isDefaultView(filters);
-
-  const savedCount = saved?.ids.size ?? 0;
-  const viewTabs = [
-    { value: "rows" as const, label: "همه‌ی منتورها" },
-    { value: "saved" as const, label: savedCount ? `ذخیره‌شده‌ها (${faNum(savedCount)})` : "ذخیره‌شده‌ها" },
-  ];
+  const openSaved = () => { push(filters, "saved"); window.scrollTo({ top: 0 }); };
 
   return (
-    <>
-      <div className="mentor-tabs">
-        <SegmentedTabs options={viewTabs} active={view === "saved" ? "saved" : "rows"} onChange={(v) => push(filters, v)} />
-      </div>
-      <MentorSwap swapKey={view === "saved" ? "saved" : "all"}>
-        {view === "saved" ? (
-          <SavedView />
-        ) : (
-          <>
-            <FilterPanel
-              filters={filters}
-              qInput={qInput}
-              onQInput={setQInput}
-              onChange={setFilters}
-              onClear={clearAll}
-            />
-            <MentorSwap swapKey={showRows ? "rows" : "list"}>
-              {showRows ? (
-                <Rows
-                  onPopular={() => openAll({}, "all")}
-                  onNew={() => openAll({ sort: "new" })}
-                  onCategory={(c) => openAll({ category: c })}
-                />
-              ) : (
-                <Results filters={filters} allView={view === "all"} onClear={clearAll} onBack={backToRows} />
-              )}
-            </MentorSwap>
-          </>
-        )}
-      </MentorSwap>
-    </>
+    <MentorSwap swapKey={view === "saved" ? "saved" : "all"}>
+      {view === "saved" ? (
+        <SavedView onBack={backToRows} />
+      ) : (
+        <>
+          <FilterPanel
+            filters={filters}
+            qInput={qInput}
+            onQInput={setQInput}
+            onChange={setFilters}
+            onClear={clearAll}
+          />
+          <MentorSwap swapKey={showRows ? "rows" : "list"}>
+            {showRows ? (
+              <Rows
+                onPopular={() => openAll({}, "all")}
+                onNew={() => openAll({ sort: "new" })}
+                onCategory={(c) => openAll({ category: c })}
+                onSaved={openSaved}
+              />
+            ) : (
+              <Results filters={filters} allView={view === "all"} onClear={clearAll} onBack={backToRows} />
+            )}
+          </MentorSwap>
+        </>
+      )}
+    </MentorSwap>
   );
 }
 
-/** ناحیه‌ی فیلتر — همیشه پیدا: جستجو، حوزه، دو کلیدِ پرکاربرد؛ ترتیب/امتیاز/پاسخ در بخشِ «بیشتر» که باز شروع می‌شود */
+const CERT_OPTIONS = [{ value: "", label: "همه" }, { value: "1", label: "دارای مدرک" }];
+const OPEN_OPTIONS = [{ value: "", label: "همه" }, { value: "1", label: "پذیرش باز" }];
+
+/** ناحیه‌ی فیلتر — جستجوِ همیشه‌پیدا + دکمه‌ی فیلترها (چپِ جستجو در RTL)؛ بقیه‌ی
+ *  فیلترها (بخش/مدرک/پذیرش/ترتیب/امتیاز/پاسخ) داخلِ پنلِ جمع‌شونده، هرکدام یک
+ *  فیلدِ کشویی، با دکمه‌ی «اعمال» که همه را یک‌جا می‌فرستد */
 function FilterPanel({
   filters, qInput, onQInput, onChange, onClear,
 }: {
@@ -152,91 +141,88 @@ function FilterPanel({
   onChange: (patch: Partial<MentorFilters>) => void;
   onClear: () => void;
 }) {
-  const [moreOpen, setMoreOpen] = useState(true);
-  useEffect(() => { setMoreOpen(readMoreOpen()); }, []);
-  const toggleMore = () => {
-    setMoreOpen((o) => {
-      try { window.localStorage.setItem(MORE_OPEN_KEY, o ? "0" : "1"); } catch { /* حالتِ خصوصی */ }
-      return !o;
-    });
-  };
-  const moreCount = (filters.sort !== "best" ? 1 : 0) + (filters.minRating ? 1 : 0) + (filters.maxResponse ? 1 : 0);
-  const dirty = !!filters.q || !!qInput.trim() || activeFilterCount(filters) > 0 || filters.sort !== "best";
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(filters);
+  useEffect(() => { setDraft(filters); }, [filters]);
+
+  const activeCount = activeFilterCount(filters) + (filters.sort !== "best" ? 1 : 0);
+  const dirty = !!filters.q || !!qInput.trim() || activeCount > 0;
+
+  const applyDraft = () => { onChange(draft); setOpen(false); };
+  const clearAll = () => { setDraft(DEFAULT_FILTERS); onClear(); };
 
   return (
     <div className="trade-surface mentor-filters" role="search" aria-label="جستجو و فیلترِ منتورها">
-      <label className="mentor-search">
-        <Search size={16} {...IC} />
-        <input
-          className="wsearch-newform-name trade-glass-field"
-          type="search"
-          inputMode="search"
-          enterKeyHint="search"
-          value={qInput}
-          maxLength={SEARCH_QUERY_MAX + 20}
-          onChange={(e) => onQInput(e.target.value)}
-          placeholder="مثلاً کنکور، بدنسازی یا نام منتور"
-          aria-label="جستجوی نام، تخصص یا عنوانِ منتور"
-        />
-        {qInput && (
-          <button type="button" className="trade-icon-btn mentor-search-clear" onClick={() => onQInput("")} aria-label="پاک کردن جستجو">
-            <X size={14} {...IC} />
-          </button>
-        )}
-      </label>
-
-      <SegmentedTabs options={CATEGORY_OPTIONS} active={filters.category} onChange={(v) => onChange({ category: v })} />
-
-      <div className="mentor-filter-chips">
-        <ToggleChip on={filters.cert} icon={<Medal size={14} {...IC} />} onClick={() => onChange({ cert: !filters.cert })}>
-          دارای مدرک
-        </ToggleChip>
-        <ToggleChip on={filters.open} icon={<DoorOpen size={14} {...IC} />} onClick={() => onChange({ open: !filters.open })}>
-          پذیرش باز
-        </ToggleChip>
+      <div className="mentor-search-row">
+        <label className="mentor-search">
+          <Search size={16} {...IC} />
+          <input
+            className="wsearch-newform-name trade-glass-field"
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            value={qInput}
+            maxLength={SEARCH_QUERY_MAX + 20}
+            onChange={(e) => onQInput(e.target.value)}
+            placeholder="مثلاً کنکور، بدنسازی یا نام منتور"
+            aria-label="جستجوی نام، تخصص یا عنوانِ منتور"
+          />
+          {qInput && (
+            <button type="button" className="trade-icon-btn mentor-search-clear" onClick={() => onQInput("")} aria-label="پاک کردن جستجو">
+              <X size={14} {...IC} />
+            </button>
+          )}
+        </label>
         <button
           type="button"
-          className="mentor-text-btn mentor-filter-more"
-          aria-expanded={moreOpen}
-          aria-controls="mentor-filter-more"
-          onClick={toggleMore}
+          className={`account-outline-btn mentor-btn is-icon mentor-filter-toggle${activeCount ? " is-on" : ""}`}
+          aria-expanded={open}
+          aria-controls="mentor-filter-panel"
+          aria-label={activeCount ? `فیلترها (${faNum(activeCount)} فعال)` : "فیلترها"}
+          onClick={() => setOpen((o) => !o)}
         >
-          {!moreOpen && moreCount ? `فیلترها (${faNum(moreCount)})` : "فیلترها"}
-          <ChevronDown size={14} {...IC} className={moreOpen ? "is-open" : undefined} />
+          <SlidersHorizontal size={16} {...IC} />
+          {activeCount > 0 && <span className="mentor-filter-toggle-count">{faNum(activeCount)}</span>}
         </button>
-        {dirty && (
-          <button type="button" className="mentor-text-btn mentor-filter-clear" onClick={onClear}>
-            پاک کردن
-          </button>
-        )}
       </div>
 
-      <MentorCollapse open={moreOpen} id="mentor-filter-more">
+      <MentorCollapse open={open} id="mentor-filter-panel">
         <div className="mentor-filter-grid">
-          <div className="mentor-filter-field" role="group" aria-label="ترتیب">
-            <span className="mentor-filter-label" aria-hidden>ترتیب</span>
-            <SegmentedTabs options={SORT_OPTIONS} active={filters.sort} onChange={(v) => onChange({ sort: v })} />
-          </div>
-          <div className="mentor-filter-field" role="group" aria-label="حداقل امتیاز">
-            <span className="mentor-filter-label" aria-hidden>حداقل امتیاز</span>
-            <SegmentedTabs options={RATING_OPTIONS} active={String(filters.minRating)} onChange={(v) => onChange({ minRating: Number(v) })} />
-          </div>
-          <div className="mentor-filter-field" role="group" aria-label="زمان پاسخ">
-            <span className="mentor-filter-label" aria-hidden>زمان پاسخ</span>
-            <SegmentedTabs options={RESPONSE_OPTIONS} active={String(filters.maxResponse)} onChange={(v) => onChange({ maxResponse: Number(v) })} />
-          </div>
+          <SelectField label="بخش" value={draft.category} onChange={(v) => setDraft((d) => ({ ...d, category: v }))} options={CATEGORY_OPTIONS} />
+          <SelectField label="مدرک" value={draft.cert ? "1" : ""} onChange={(v) => setDraft((d) => ({ ...d, cert: v === "1" }))} options={CERT_OPTIONS} />
+          <SelectField label="پذیرش" value={draft.open ? "1" : ""} onChange={(v) => setDraft((d) => ({ ...d, open: v === "1" }))} options={OPEN_OPTIONS} />
+          <SelectField label="ترتیب" value={draft.sort} onChange={(v) => setDraft((d) => ({ ...d, sort: v as MentorSort }))} options={SORT_OPTIONS} />
+          <SelectField label="حداقل امتیاز" value={String(draft.minRating)} onChange={(v) => setDraft((d) => ({ ...d, minRating: Number(v) }))} options={RATING_OPTIONS} />
+          <SelectField label="زمان پاسخ" value={String(draft.maxResponse)} onChange={(v) => setDraft((d) => ({ ...d, maxResponse: Number(v) }))} options={RESPONSE_OPTIONS} />
+        </div>
+        <div className="mentor-filter-actions">
+          {dirty && (
+            <button type="button" className="mentor-text-btn" onClick={clearAll}>پاک کردن</button>
+          )}
+          <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={applyDraft}>اعمال</button>
         </div>
       </MentorCollapse>
     </div>
   );
 }
 
-function ToggleChip({ on, icon, onClick, children }: { on: boolean; icon: React.ReactNode; onClick: () => void; children: React.ReactNode }) {
+function SelectField({
+  label, value, onChange, options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
   return (
-    <button type="button" className={`account-outline-btn mentor-btn is-sm mentor-toggle-chip${on ? " is-on" : ""}`} aria-pressed={on} onClick={onClick}>
-      {on ? <Check size={14} {...IC} /> : icon}
-      {children}
-    </button>
+    <label className="mentor-filter-field">
+      <span className="mentor-filter-label">{label}</span>
+      <select className="wsearch-newform-name" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -344,8 +330,16 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
   );
 }
 
-/** نمای پیش‌فرض: ردیف‌های افقیِ محبوب، تازه و هر حوزه (MentorCarousel) */
-function Rows({ onPopular, onNew, onCategory }: { onPopular: () => void; onNew: () => void; onCategory: (c: MentorCategory) => void }) {
+/** نمای پیش‌فرض: ذخیره‌شده‌ها (اگر بود) اول، بعد ردیف‌های افقیِ محبوب، تازه و هر حوزه (MentorCarousel) */
+function Rows({
+  onPopular, onNew, onCategory, onSaved,
+}: {
+  onPopular: () => void;
+  onNew: () => void;
+  onCategory: (c: MentorCategory) => void;
+  onSaved: () => void;
+}) {
+  const saved = useSavedMentors();
   const [popular, setPopular] = useState<MentorCardData[] | null>(null);
   const [newcomers, setNewcomers] = useState<MentorCardData[]>([]);
   const [byCategory, setByCategory] = useState<Partial<Record<MentorCategory, MentorCardData[]>>>({});
@@ -383,6 +377,9 @@ function Rows({ onPopular, onNew, onCategory }: { onPopular: () => void; onNew: 
 
   return (
     <>
+      {!!saved?.cards?.length && (
+        <MentorCarousel title="منتورهای ذخیره‌شده" icon={<Bookmark size={15} {...IC} />} mentors={saved.cards} onViewAll={onSaved} />
+      )}
       {popular.length > 0 && (
         <MentorCarousel title="منتورهای محبوب" icon={<Star size={15} {...IC} />} mentors={popular} onViewAll={onPopular} />
       )}
@@ -396,26 +393,36 @@ function Rows({ onPopular, onNew, onCategory }: { onPopular: () => void; onNew: 
   );
 }
 
-function SavedView() {
+function SavedView({ onBack }: { onBack: () => void }) {
   const saved = useSavedMentors();
+  const back = (
+    <button type="button" className="mentor-text-btn mentor-list-back" onClick={onBack}>
+      <ArrowRight size={14} {...IC} /> بازگشت به ردیف‌ها
+    </button>
+  );
   if (!saved) return null;
   const { cards, max, error, reload } = saved;
-  if (error && !cards?.length) return <MentorErrorState message={error} onRetry={reload} />;
-  if (cards === null) return <LoadingBlock />;
-  if (cards.length === 0) {
-    return (
-      <MentorEmptyState
-        icon={<Bookmark size={24} {...IC} />}
-        title="هنوز منتوری ذخیره نکرده‌ای"
-        text="با نشانکِ روی کارتِ هر منتور، او را این‌جا برای تصمیمِ بعدی نگه دار"
-      />
-    );
-  }
   return (
     <>
-      <CardGrid mentors={cards} />
-      {cards.length >= max && (
-        <p className="mentor-muted mentor-saved-full">به سقفِ {faNum(max)} منتورِ ذخیره‌شده رسیده‌ای؛ برای ذخیره‌ی منتورِ دیگر، یکی را بردار</p>
+      {back}
+      <MentorSectionTitle icon={<Bookmark size={15} {...IC} />}>منتورهای ذخیره‌شده</MentorSectionTitle>
+      {error && !cards?.length ? (
+        <MentorErrorState message={error} onRetry={reload} />
+      ) : cards === null ? (
+        <LoadingBlock />
+      ) : cards.length === 0 ? (
+        <MentorEmptyState
+          icon={<Bookmark size={24} {...IC} />}
+          title="هنوز منتوری ذخیره نکرده‌ای"
+          text="با نشانکِ روی کارتِ هر منتور، او را این‌جا برای تصمیمِ بعدی نگه دار"
+        />
+      ) : (
+        <>
+          <CardGrid mentors={cards} />
+          {cards.length >= max && (
+            <p className="mentor-muted mentor-saved-full">به سقفِ {faNum(max)} منتورِ ذخیره‌شده رسیده‌ای؛ برای ذخیره‌ی منتورِ دیگر، یکی را بردار</p>
+          )}
+        </>
       )}
     </>
   );

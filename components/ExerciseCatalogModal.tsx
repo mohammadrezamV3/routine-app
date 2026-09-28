@@ -7,7 +7,6 @@ import { ImageOff, Star } from "lucide-react";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey, getExerciseDifficulty } from "@/lib/exerciseCatalog";
 import { mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
-import { MuscleDiagram } from "./MuscleDiagram";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const MUSCLE_LABEL: Record<MuscleKey, string> = {
@@ -206,7 +205,9 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                       <img src={photo} alt={selected.name} />
                     </div>
                   ) : (
-                    <div className="exercise-photo-placeholder" style={{ width: 120, height: 120 }}>
+                    // جای خالیِ عکس — دقیقا هم‌اندازه‌ی .exercise-photo تا با
+                    // اضافه‌شدنِ عکس از پنل ادمین چیدمانِ کارت جابه‌جا نشود.
+                    <div className="exercise-photo-placeholder exercise-photo-slot" role="img" aria-label="عکس این حرکت هنوز اضافه نشده">
                       <ImageOff size={32} />
                     </div>
                   )}
@@ -239,9 +240,6 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 <div className="tm-extra">
                   <div className="domain-sub exercise-detail-label">عضلات درگیر</div>
                   <div className="item-line">{selected.muscleGroup}</div>
-                  <div style={{ marginTop: 10 }}>
-                    <MuscleDiagram keys={selected.muscleKeys} />
-                  </div>
                 </div>
 
                 <div className="tm-extra">

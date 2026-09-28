@@ -115,11 +115,15 @@ export function DashTaskRow({
             className="dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
           >
             <div
-              onClick={() => { setMenuOpen(false); onEdit(task.id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
+              onClick={() => { if (task.isPast) return; setMenuOpen(false); onEdit(task.id); }}
+              aria-disabled={task.isPast}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-dash-text hover:bg-white/5"
+              )}
             >
               <Pencil size={13} className="shrink-0" />
-              ویرایش برنامه
+              ویرایش برنامه{task.isPast ? " (گذشته)" : ""}
             </div>
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onMove(task.id); }}
@@ -279,8 +283,8 @@ export function DashTaskRow({
       <motion.button
         type="button"
         whileTap={{ scale: 0.85, transition: { duration: 0.1 } }}
-        disabled={!editable || task.isFuture}
-        onClick={() => { if (!task.isFuture) onToggle(task.id); }}
+        disabled={!editable || task.isFuture || task.dayPast}
+        onClick={() => { if (!task.isFuture && !task.dayPast) onToggle(task.id); }}
         aria-pressed={task.done}
         aria-label={
           task.isFuture
@@ -294,8 +298,9 @@ export function DashTaskRow({
         animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
         transition={{ duration: 0.16, ease: "easeOut" }}
         className={cn(
-          "relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
+          "task-check-btn relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
           (!editable || task.isFuture) && "cursor-not-allowed opacity-50",
+          task.dayPast && "cursor-not-allowed",
           task.done || task.missed ? "text-white" : "text-transparent hover:border-white/45",
           !task.done && task.missed && "task-check-missed"
         )}

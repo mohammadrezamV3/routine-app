@@ -6,7 +6,7 @@
 import { startOfWeek } from "./schedule";
 import { isoLocal } from "./jalali";
 
-export type ExerciseLogEntry = { completed: boolean; completedItems: string[] };
+export type ExerciseLogEntry = { completed: boolean; completedItems: string[]; started?: boolean };
 export type ExerciseLogRange = Record<string, ExerciseLogEntry>;
 
 export async function fetchExerciseLogRange(planId: string, start: Date, end: Date): Promise<ExerciseLogRange> {

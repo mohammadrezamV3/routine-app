@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Calendar, History, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { isoLocal, faNum, toJalali, J_MONTHS } from "@/lib/jalali";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { isoLocal, faNum } from "@/lib/jalali";
 import { AuthGate } from "./AuthGate";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { DashDateSelector, DashDay } from "./DashDateSelector";
+import { DashDateSelector } from "./DashDateSelector";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
@@ -76,38 +75,16 @@ export function CaloriePanel() {
   const [loadStuck, setLoadStuck] = useState(false);
   const [needsAge, setNeedsAge] = useState(false);
 
-  // انتخاب روز — طبق طرح کاربر، بالای صفحه یه نوار روزهای هفته‌ست که
-  // مشخص می‌کنه داری کدوم روز رو می‌بینی/واردش می‌کنی؛ دقیقا هم‌الگوی
-  // انتخاب روز داشبورد بدنسازی (DashDateSelector + weekOffset/dayWindow).
-  const [weekOffset, setWeekOffset] = useState(0);
+  // انتخاب روز — طبق طرح کاربر، بالای صفحه یه نوار روزهاست که مشخص می‌کنه
+  // داری کدوم روز رو می‌بینی/واردش می‌کنی (DashDateSelector، نوارِ آزادِ
+  // قابل‌کشیدن؛ روزِ دورِ انتخاب‌شده از تقویم رو خودش باز و وسط‌چین می‌کنه).
   const [selectedIso, setSelectedIso] = useState(todayIso);
-  const [dayWindow, setDayWindow] = useState(5);
   const isSelectedToday = selectedIso === todayIso;
-
-  const dashDays: DashDay[] = useMemo(() => {
-    const center = new Date(now);
-    center.setDate(now.getDate() + weekOffset * dayWindow);
-    return Array.from({ length: dayWindow }, (_, i) => {
-      const d = new Date(center);
-      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
-      const iso = isoLocal(d);
-      const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
-      const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-      return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
-    });
-  }, [weekOffset, dayWindow]);
 
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
 
-  // انتخاب یه تاریخ دلخواه از تقویم — پنجره‌ی نوار روزها هم باید دور همون
-  // تاریخ وسط‌چین بشه، نه اینکه روز انتخاب‌شده بیرون پنجره‌ی فعلی بمونه
-  // (دقیقا هم‌منطق pickDate توی داشبورد بدنسازی).
   function pickDate(iso: string) {
     setSelectedIso(iso);
-    const [y, m, d] = iso.split("-").map(Number);
-    const picked = new Date(y, m - 1, d);
-    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
-    setWeekOffset(Math.round(diffDays / dayWindow));
     setHistoryPickerOpen(false);
   }
 
@@ -342,12 +319,8 @@ export function CaloriePanel() {
           <div className="dash-scope flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
               <DashDateSelector
-                days={dashDays}
                 activeIso={selectedIso}
                 onSelect={setSelectedIso}
-                onPrevWeek={() => setWeekOffset((v) => v - 1)}
-                onNextWeek={() => setWeekOffset((v) => v + 1)}
-                onVisibleCountChange={setDayWindow}
                 className="lg:order-2"
               />
               <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
@@ -361,7 +334,7 @@ export function CaloriePanel() {
                   label="امروز"
                   icon={<Calendar size={15} />}
                   active={isSelectedToday}
-                  onClick={() => { setWeekOffset(0); setSelectedIso(todayIso); }}
+                  onClick={() => setSelectedIso(todayIso)}
                 />
               </div>
             </div>

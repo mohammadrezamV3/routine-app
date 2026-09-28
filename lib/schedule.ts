@@ -83,6 +83,12 @@ export function timeEndMinutes(timeStr: string): number | null {
  * (مثلا ۲۳:۰۰ – ۰۱:۰۰) تا آخرِ امروز «گذشته» حساب نمی‌شود، و برنامه‌ی
  * بی‌ساعت فقط با تمام‌شدنِ روزش. ارقامِ فارسی/عربی با toEnDigits نرمال می‌شوند.
  */
+// ✕ «وقتش گذشته» فقط بعد از پایانِ خودِ روز — طبقِ درخواستِ صریح، برنامه‌ی
+// امروز تا آخرِ امروز ✕ نمی‌خوره حتی اگه ساعتش رد شده باشه.
+export function isDayOver(iso: string, now: Date): boolean {
+  return iso < isoLocal(now);
+}
+
 export function isTaskTimePassed(iso: string, time: string, now: Date): boolean {
   const today = isoLocal(now);
   if (iso < today) return true;

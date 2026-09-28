@@ -10,8 +10,8 @@ import {
   tasksForDate,
   timeStartMinutes,
   splitTimeRange,
+  isDayOver,
   startOfWeek,
-  isTaskTimePassed,
   toEnDigits,
   computeDayStats,
   DayStats,
@@ -43,10 +43,8 @@ import { DashFilterButton } from "@/components/DashFilterButton";
 import { DashFilterModal } from "@/components/DashFilterModal";
 import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
-import { DashReminderCard } from "@/components/DashReminderCard";
-import { DashMedicationCard } from "@/components/DashMedicationCard";
+import { DashQuickPanels } from "@/components/DashQuickPanels";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
-import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
 import { RoutineAiFab } from "@/components/RoutineAiFab";
 import { WeekPlanGrid, WeekPlanGridDay } from "@/components/WeekPlanGrid";
@@ -65,7 +63,7 @@ function isTaskPast(iso: string): boolean {
 
 // روزِ واقعا گذشته — برای قفلِ «شروع»ِ تمرین. ضربدرِ «وقتش گذشته»ی برنامه‌ها
 // دیگه از این نمیاد: طبقِ درخواستِ صریح، برنامه‌ی امروزی که ساعتش رد شده و
-// تیک نخورده هم همون لحظه ✕ می‌گیره (isTaskTimePassed در lib/schedule.ts) —
+// تیک نخورده فقط بعد از پایانِ روز ✕ می‌گیره (isDayOver در lib/schedule.ts) —
 // ولی همچنان قابل تیک‌زدنه، ✕ فقط وضعیته نه قفل.
 function isDayPast(iso: string): boolean {
   return iso < todayKey;
@@ -177,7 +175,11 @@ export default function WeeklyPage() {
     return () => { alive = false; };
   }, [exercisePlanId, selectedIso, exerciseLogKey]);
 
-  const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
+  const hasQuickPanels =
+    dashboardPrefs.showReminders ||
+    dashboardPrefs.showMedications ||
+    dashboardPrefs.showChart ||
+    dashboardPrefs.showFriends;
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -239,24 +241,6 @@ export default function WeeklyPage() {
     return new Date(y, m - 1, d);
   }, [selectedIso]);
 
-  // به‌جای یک هفته‌ی کامل شنبه-جمعه، یه پنجره‌ی روزهایی نشون می‌ده که
-  // همیشه روی «امروز» (یا مرکز پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
-  // تعدادش هم ثابت نیست، خود DashDateSelector بسته‌به عرض واقعی نوار
-  // اندازه‌گیری می‌کنه و با onVisibleCountChange گزارش می‌ده.
-  const [dayWindow, setDayWindow] = useState(5);
-  const dashDays = useMemo(() => {
-    const center = new Date(now);
-    center.setDate(now.getDate() + weekOffset * dayWindow);
-    return Array.from({ length: dayWindow }, (_, i) => {
-      const d = new Date(center);
-      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
-      const iso = isoLocal(d);
-      const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
-      const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-      return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
-    });
-  }, [weekOffset, dayWindow]);
-
   const allProgramNames = useMemo(() => {
     const set = new Set(customOcc.map((c) => c.name));
     return Array.from(set).sort((a, b) => a.localeCompare(b, "fa"));
@@ -301,7 +285,7 @@ export default function WeeklyPage() {
           importance: occ?.importance,
           tag: occ?.tag,
           done,
-          missed: !done && isTaskTimePassed(selectedIso, t.time, clock),
+          missed: !done && isDayOver(selectedIso, clock),
           isPast: isTaskPast(selectedIso),
           dayPast: isDayPast(selectedIso),
           notStarted: isTaskNotStarted(selectedIso, t.time),
@@ -346,18 +330,13 @@ export default function WeeklyPage() {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const dIso = isoLocal(d);
-      const doneMap = weekDaily[dIso]?.tasks ?? {};
-      const items = tasksForDate(d, opts).map((t) => {
-        const done = !!doneMap[t.id];
-        const missed = !done && isTaskTimePassed(dIso, t.time, clock);
-        const startTime = splitTimeRange(t.time).start;
-        return {
-          id: t.id,
-          label: t.name,
-          meta: startTime ? toEnDigits(startTime) : undefined,
-          state: done ? ("done" as const) : missed ? ("missed" as const) : undefined,
-        };
-      });
+      // طبقِ درخواستِ صریح: جلوی هر برنامه ساعتش (یا «بدون ساعت») و بدونِ
+      // تیک/ضربدر — وضعیتِ انجام فقط توی لیستِ برنامه‌های روز نشون داده می‌شه.
+      const items = tasksForDate(d, opts).map((t) => ({
+        id: t.id,
+        label: t.name,
+        meta: t.time ? toEnDigits(t.time) : "بدون ساعت",
+      }));
       return {
         key: dIso,
         dayName: WEEK_ORDER.find((o) => o.jsDay === d.getDay())!.name,
@@ -391,16 +370,10 @@ export default function WeeklyPage() {
     router.push("/exercise?tab=exercise");
   }
 
-  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — برخلاف کلیک روی
-  // خود نوار روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
-  // می‌تونه کاملا بیرون پنجره‌ی فعلی باشه؛ پس weekOffset رو هم طوری
-  // حساب می‌کنیم که پنجره‌ی نوار دور همین روز وسط‌چین بشه.
+  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — نوارِ روزها
+  // (DashDateSelector/useDayStrip) خودش بازه رو دورِ همین روز باز و وسط‌چینش می‌کنه.
   function pickDate(iso: string) {
     setSelectedIso(iso);
-    const [y, m, d] = iso.split("-").map(Number);
-    const picked = new Date(y, m - 1, d);
-    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
-    setWeekOffset(Math.round(diffDays / dayWindow));
   }
 
   async function toggleDashTask(id: string) {
@@ -409,7 +382,8 @@ export default function WeeklyPage() {
     // درخواستِ صریحِ کاربر، تیک‌زدنِ برنامه‌ی روزی که هنوز نرسیده یعنی
     // وانمود به انجام‌شدنِ کاری که اصلاً شروع نشده، پس این‌جا بلاک می‌شود.
     const task = dashTasks.find((t) => t.id === id);
-    if (task?.isFuture) return;
+    // برنامه‌ی روزهای گذشته دیگه قابلِ تغییر نیست (درخواستِ صریح).
+    if (task?.isFuture || isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
@@ -516,12 +490,8 @@ export default function WeeklyPage() {
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
             <DashDateSelector
-              days={dashDays}
               activeIso={selectedIso}
               onSelect={setSelectedIso}
-              onPrevWeek={() => setWeekOffset((v) => v - 1)}
-              onNextWeek={() => setWeekOffset((v) => v + 1)}
-              onVisibleCountChange={setDayWindow}
               className="lg:order-2"
             />
 
@@ -536,10 +506,7 @@ export default function WeeklyPage() {
                 label="امروز"
                 icon={<Calendar size={15} />}
                 active={isSelectedToday}
-                onClick={() => {
-                  setWeekOffset(0);
-                  setSelectedIso(isoLocal(now));
-                }}
+                onClick={() => setSelectedIso(isoLocal(now))}
               />
               <DashFilterButton
                 label="فیلتر"
@@ -550,16 +517,17 @@ export default function WeeklyPage() {
             </div>
           </div>
 
-          {/* دسکتاپ: سه ستون کنار هم — راست (پهن‌تر) برنامه‌های امروز از بالا
-              تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیر هم. موبایل/تبلت
+          {/* دسکتاپ: دو ستون کنار هم — راست (پهن‌تر) برنامه‌های امروز از بالا
+              تا پایین، چپ ردیفِ آیکونِ یادآوری/یادآوری‌دارو/آمار هفتگی/دوستان
+              (DashQuickPanels) با محتوای کارتِ انتخاب‌شده زیرش. موبایل/تبلت
               همچنان یک ستون عمودی (flex-col) می‌مونه. */}
-          {/* وقتی هر دو کارت ستون وسط از تنظیمات خاموش باشن، گرید باید
-              دوستونه بشه — وگرنه یک ستون خالی ۰.۸fr وسط صفحه باز می‌موند. */}
+          {/* وقتی هر چهار کارتِ ردیفِ آیکون از تنظیمات خاموش باشن، گرید باید
+              تک‌ستونه بشه — وگرنه یک ستون خالی ۱fr کنار صفحه باز می‌موند. */}
           <div
             className={
-              hasMiddleColumn
-                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
-                : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+              hasQuickPanels
+                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+                : "flex flex-col gap-4 sm:gap-6"
             }
           >
             {status === "unauthenticated" ? (
@@ -580,16 +548,7 @@ export default function WeeklyPage() {
               />
             )}
 
-            {/* ستون وسط: یادآوری‌های برنامه و یادآوری دارو، زیر هم. هر دو
-                از «تنظیمات» جدا‌جدا قابل خاموش‌شدن‌ن. */}
-            {hasMiddleColumn && (
-              <div className="dash-middle-col flex flex-col gap-4 sm:gap-6">
-                {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
-                {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
-              </div>
-            )}
-
-            <DashSidebar statsRefreshKey={statsRefreshKey} />
+            {hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />}
           </div>
 
           <WeekPlanGrid days={weekGridDays} onItemClick={(it) => openProgram(it.label)} />

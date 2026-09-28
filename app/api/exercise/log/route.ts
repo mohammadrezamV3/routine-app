@@ -18,10 +18,15 @@ export async function GET(req: NextRequest) {
   const log = await prisma.exerciseLog.findUnique({
     where: { userId_planId_date: { userId, planId, date } },
   });
-  return NextResponse.json({ completed: !!log?.completed, completedItems: (log?.completedItems as string[] | null) ?? [] });
+  return NextResponse.json({
+    completed: !!log?.completed,
+    completedItems: (log?.completedItems as string[] | null) ?? [],
+    started: !!log?.startedAt,
+  });
 }
 
 // POST /api/exercise/log { planId, date, completed, completedItems? }
+//   یا فقط { planId, date, started: true } — ثبتِ «شروع تمرین» بدونِ دست‌زدن به completed
 async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
@@ -36,6 +41,19 @@ async function handlePOST(req: NextRequest) {
   const date = parseIsoDate(parsed.body?.date);
   if (!planId || typeof planId !== "string" || !date) {
     return NextResponse.json({ error: "planId و تاریخ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
+  }
+
+  // فقط «شروع تمرین»: اولین لحظه‌ی شروع نگه داشته می‌شه و completed/آیتم‌ها
+  // دست نمی‌خورن (دوباره‌شروع‌کردنِ روزی که تمام شده نباید تمامش رو پاک کنه).
+  if (parsed.body?.started === true && completed === undefined) {
+    const now = new Date();
+    await prisma.exerciseLog.upsert({
+      where: { userId_planId_date: { userId, planId, date } },
+      create: { userId, planId, date, completed: false, startedAt: now },
+      update: {},
+    });
+    await prisma.exerciseLog.updateMany({ where: { userId, planId, date, startedAt: null }, data: { startedAt: now } });
+    return NextResponse.json({ ok: true });
   }
 
   // سقف تعداد/طول — این ستون Jsonه و بدون سقف هر آرایه‌ای عینا ذخیره می‌شد

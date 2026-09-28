@@ -31,7 +31,7 @@ function AccountsForMt() {
   if (!rows.length) {
     return (
       <div className="item-line empty" style={{ marginTop: 16 }}>
-        اول باید یک حساب معاملاتی بسازی —{" "}
+        ابتدا یک حساب معاملاتی بسازید —{" "}
         <Link href="/trade/journal" style={{ color: "var(--accent)" }}>رفتن به حساب‌ها</Link>
       </div>
     );

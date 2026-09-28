@@ -23,11 +23,12 @@ export async function GET(req: NextRequest) {
     where: { userId, planId, date: { gte: range.from, lte: range.to } },
   });
 
-  const byDate: Record<string, { completed: boolean; completedItems: string[] }> = {};
+  const byDate: Record<string, { completed: boolean; completedItems: string[]; started: boolean }> = {};
   for (const log of logs) {
     byDate[isoLocal(log.date)] = {
       completed: log.completed,
       completedItems: (log.completedItems as string[] | null) ?? [],
+      started: !!log.startedAt,
     };
   }
 
