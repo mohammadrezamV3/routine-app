@@ -9298,3 +9298,21 @@ html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
     animation:popupBackdropIn .14s ease backwards;
   }
 }
+
+/* ردیفِ چهار باکسِ «روتین من» (DashQuickPanels) — همون ظاهرِ DashCard؛
+   اختصاصیت هم‌تراز با ریستِ سراسریِ button{} تا پدینگ/سایه‌ی شیشه‌ایش
+   روی این باکس‌ها ننشینه. */
+body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{
+  aspect-ratio:1/1; width:100%; padding:8px 4px; border-radius:18px; background:var(--box-bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  border:1px solid var(--surface-line); box-shadow:none;
+  color:var(--muted); transition:border-color .2s ease, color .2s ease;
+}
+body[data-theme] .dash-quick-tile.is-on{ border-color:var(--accent); color:var(--accent); }
+@media (hover:hover){ body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
+.dash-quick-tile-icon svg{ width:24px; height:24px; display:block; }
+.dash-quick-tile-label{ font-size:11px; font-weight:700; line-height:1.3; text-align:center; }
+@media (min-width:640px){
+  .dash-quick-tile-icon svg{ width:30px; height:30px; }
+  .dash-quick-tile-label{ font-size:13px; }
+}

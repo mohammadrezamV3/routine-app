@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, Tablets, BarChart3, Users } from "lucide-react";
-import { SegmentedTabs } from "./SegmentedTabs";
 import { DashReminderCard } from "./DashReminderCard";
 import { DashMedicationCard } from "./DashMedicationCard";
 import { DashFriendsCard } from "./DashFriendsCard";
@@ -13,18 +12,16 @@ import { DashboardPrefs } from "@/lib/dashboardPrefs";
 type PanelKey = "reminders" | "medications" | "chart" | "friends";
 
 const PANEL_META: Record<PanelKey, { label: string; icon: React.ReactNode }> = {
-  reminders: { label: "یادآوری", icon: <Bell className="h-4 w-4" /> },
-  medications: { label: "دارو", icon: <Tablets className="h-4 w-4" /> },
-  chart: { label: "آمار هفتگی", icon: <BarChart3 className="h-4 w-4" /> },
-  friends: { label: "دوستان", icon: <Users className="h-4 w-4" /> },
+  reminders: { label: "یادآوری", icon: <Bell /> },
+  medications: { label: "دارو", icon: <Tablets /> },
+  chart: { label: "آمار هفتگی", icon: <BarChart3 /> },
+  friends: { label: "دوستان", icon: <Users /> },
 };
 
-// چهار کارتِ «یادآوری / یادآوری دارو / آمار هفتگی / دوستان» قبلا هرکدوم
-// جدا و زیر هم (یا توی دو ستون) چیده می‌شدن. اینجا هر چهارتا زیر یک ردیفِ
-// آیکون جمع می‌شن — با کلیک روی هر آیکون، همون کارت (بدون هیچ تغییری در
-// خودش، فقط wrap شده) زیر ردیف نشون داده می‌شه. یک‌بار در لحظه انتخاب
-// می‌شه؛ کلیک دوباره روی آیکونِ فعال چیزی رو نمی‌بنده (طبق رفتار
-// SegmentedTabs که تعویض به همون مقدار را نادیده می‌گیرد).
+// چهار کارتِ «یادآوری / یادآوری دارو / آمار هفتگی / دوستان» — طبقِ طرحِ
+// دستیِ کاربر: یک ردیفِ چهار باکسِ مربعیِ جدا (هرکدوم با آیکون و اسم، همون
+// ظاهرِ DashCard)، و زیرشون یک باکسِ بزرگ که محتوای بخشِ انتخاب‌شده رو با
+// انیمیشن نشون می‌ده. نه SegmentedTabs/تاگل.
 export function DashQuickPanels({
   prefs,
   statsRefreshKey,
@@ -48,19 +45,27 @@ export function DashQuickPanels({
 
   return (
     <div className="dash-quick-panels flex flex-col gap-4 sm:gap-6">
-      <SegmentedTabs
-        options={enabled.map((key) => ({
-          value: key,
-          label: (
-            <span className="flex items-center justify-center gap-1.5">
-              {PANEL_META[key].icon}
-              <span>{PANEL_META[key].label}</span>
-            </span>
-          ),
-        }))}
-        active={current}
-        onChange={setActive}
-      />
+      <div className="grid grid-cols-4 gap-2.5 sm:gap-4" role="tablist" aria-label="بخش‌های روتین">
+        {enabled.map((key) => {
+          const on = key === current;
+          return (
+            <motion.button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => setActive(key)}
+              whileTap={{ scale: 0.94 }}
+              animate={{ y: on ? -3 : 0 }}
+              transition={{ type: "spring", stiffness: 420, damping: 28 }}
+              className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
+            >
+              <span className="dash-quick-tile-icon">{PANEL_META[key].icon}</span>
+              <span className="dash-quick-tile-label">{PANEL_META[key].label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
