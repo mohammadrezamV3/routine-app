@@ -121,36 +121,40 @@ export default function RoadmapsHub() {
               </button>
             </div>
           ) : (
-            <div className="rp-grid">
-              {roadmaps.map((r) => (
-                <Link key={r.id} href={`/roadmaps/custom/${r.id}`} className="trade-surface rp-card">
-                  <button
-                    type="button"
-                    className="trade-icon-btn danger rp-card-delete"
-                    aria-label="حذف مسیر"
-                    onClick={(e) => openDeleteConfirm(e, r)}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                  <div className="rp-card-eyebrow">{r.topic}</div>
-                  <div className="rp-card-title">{r.title}</div>
-                  {r.summary && <p className="rp-card-desc">{r.summary}</p>}
+            <div className="trade-surface rp-grid-box">
+              <div className="rp-grid">
+                {roadmaps.map((r) => (
+                  <Link key={r.id} href={`/roadmaps/custom/${r.id}`} className="trade-surface rp-card">
+                    <div className="rp-card-head">
+                      <div className="rp-card-eyebrow">{r.topic}</div>
+                      <button
+                        type="button"
+                        className="trade-icon-btn danger rp-card-delete"
+                        aria-label="حذف مسیر"
+                        onClick={(e) => openDeleteConfirm(e, r)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                    <div className="rp-card-title">{r.title}</div>
+                    {r.summary && <p className="rp-card-desc">{r.summary}</p>}
 
-                  <div className="rp-card-meta">
-                    {r.totalDuration && <span><Clock size={12} /> {r.totalDuration}</span>}
-                    {r.stageCount > 0 && <span><Layers size={12} /> {faNum(r.stageCount)} مرحله</span>}
-                    {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
-                  </div>
+                    <div className="rp-card-meta">
+                      {r.totalDuration && <span><Clock size={12} /> {r.totalDuration}</span>}
+                      {r.stageCount > 0 && <span><Layers size={12} /> {faNum(r.stageCount)} مرحله</span>}
+                      {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
+                    </div>
 
-                  {r.build && r.build.status !== "ready" && <RoadmapBuildStatus build={r.build} compact />}
+                    {r.build && r.build.status !== "ready" && <RoadmapBuildStatus build={r.build} compact />}
 
-                  <div className="rp-card-foot">
-                    <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>
-                    <span className="rp-card-pct">{faNum(r.pct)}٪</span>
-                    <ChevronLeft size={16} className="rp-card-arrow" />
-                  </div>
-                </Link>
-              ))}
+                    <div className="rp-card-foot">
+                      <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>
+                      <span className="rp-card-pct">{faNum(r.pct)}٪</span>
+                      <ChevronLeft size={16} className="rp-card-arrow" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
           <RoadmapDisclaimer />
