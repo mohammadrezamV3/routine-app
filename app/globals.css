@@ -3909,7 +3909,8 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
      تفاوتش روی صفحه تقریبا نامرئی است، تفاوتش روی GPU نیست.
      will-change/translateZ هم برداشته می‌شوند: لایه‌ی کامپوزیتِ جدا فقط
      وقتی ارزش دارد که چیزی متحرک باشد، و این‌جا دیگر نیست. */
-  .aurora-blob{ filter:none; will-change:auto; transform:none; }
+  /* بلور به درخواستِ کاربر روی همه‌ی دستگاه‌ها می‌مونه؛ فقط حرکت متوقفه. */
+  .aurora-blob{ will-change:auto; transform:none; }
   .aurora-blob-wrap{ will-change:auto; }
 }
 
@@ -5643,7 +5644,6 @@ html[data-perf="low"] *{
    صفحه است. حذف نمی‌شوند (هنوز دیده می‌شوند) — فقط شعاع خیلی کم می‌شود و
    حرکتشان می‌ایستد. */
 html[data-perf="low"] .aurora-blob{
-  filter:blur(48px);
   animation:none;
   transform:none;
 }
@@ -8973,7 +8973,6 @@ html[data-perf="low"] .siri-orb::after{
 /* بلاب‌های aurora روی لمسی ثابت‌اند ولی هنوز blur(48px) روی سه لایه‌ی
    ۴۰ تا ۶۰vmax دارند — بزرگ‌ترین تکسچرِ GPU صفحه. گرادیانِ شعاعی خودش تا
    ۷۰٪ به شفاف می‌رسد، پس بدونِ blur هم همان لکه‌ی نورِ محو است. */
-html[data-perf-weak] .aurora-blob{ filter:none; }
 /* تغییرِ تم روی این ردیف بدونِ فیدِ ۰.۳ثانیه‌ایِ بک‌گراندِ کلِ صفحه —
    repaintِ تمام‌صفحه در ۱۸ فریمِ پشتِ‌سرهم روی GPUِ ضعیف لگِ دیدنی دارد. */
 html[data-perf-weak] body{ transition:none; }

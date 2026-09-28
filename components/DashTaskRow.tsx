@@ -250,10 +250,10 @@ export function DashTaskRow({
             type="button"
             disabled
             aria-label="روزِ این تمرین هنوز نرسیده"
-            className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold opacity-70 sm:px-3 sm:text-[12.5px]"
-            style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
+            className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:px-3 sm:text-[12.5px]"
+            style={{ background: "rgba(59,130,246,.14)", color: "#3B82F6" }}
           >
-            هنوز وقتش نرسیده
+            وقتش نرسیده
           </button>
         ) : (
         <motion.button
