@@ -1303,3 +1303,18 @@ body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .
 
 .mentor-list-back{ margin-top:var(--m-2); }
 .mentor-privacy-picker{ margin-bottom:var(--m-3); }
+
+/* ── درخواستِ کاربر: بخشِ منتورها ─────────────────────────────── */
+/* «مشاهده همه» تهِ هر ردیف: متن زیرِ آیکون، نه کنارش */
+.mentor-carousel-more{ flex-direction:column; gap:6px; }
+/* باکس‌های پشتِ ردیف‌ها و جستجو: شیشه‌ای/کدر به‌جای مشکیِ کامل */
+.mentor-page section.mentor-box.trade-surface,
+.mentor-page .mentor-filters.trade-surface{
+  background:rgba(var(--bg-rgb), .42);
+  backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
+}
+/* فیلدِ جستجو کاملا گرد */
+.mentor-filters .mentor-search input.wsearch-newform-name{ border-radius:999px; }
+/* دکمه‌ی فیلتر کمی بزرگ‌تر */
+.mentor-filters .mentor-filter-toggle{ gap:6px; padding:9px 15px; font-size:12.5px; }
+@media (min-width:640px){ .mentor-filters .mentor-filter-toggle{ padding:11px 19px; font-size:14px; } }
