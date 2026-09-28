@@ -589,7 +589,8 @@ export default function WeeklyPage() {
         </div>
       </section>
 
-      <section className="dash-breakout">
+      {/* div نه section: قانونِ سراسریِ section{border-top} زیرِ «برنامه هفتگی» خط می‌کشید. */}
+      <div className="dash-breakout">
         {cardName && (
           <ProgramCard
             name={cardName}
@@ -671,7 +672,7 @@ export default function WeeklyPage() {
             فرزندِ section است تا روی بقیه بنشیند بدون این‌که به z-index
             دستی نیاز داشته باشد. */}
         {assistantOn && <RoutineAiFab onChanged={refresh} />}
-      </section>
+      </div>
     </>
   );
 }

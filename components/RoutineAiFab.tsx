@@ -205,8 +205,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         type="button"
         className="routine-ai-fab"
         onClick={() => setOpen(true)}
-        aria-label="آری"
-        title="آری"
+        aria-label="نومو"
+        title="نومو"
       >
         <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>
@@ -224,12 +224,12 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
             style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight, minHeight: kbViewport.minHeight } : undefined}
             role="dialog"
             aria-modal="true"
-            aria-label="آری"
+            aria-label="نومو"
           >
             <div className="modal-head">
               <div className="modal-title routine-ai-title">
                 <SiriOrb size="26px" state={orbState} amplitude={simulated} />
-                آری
+                نومو
               </div>
               <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label="بستن">
                 <X size={16} />
@@ -266,7 +266,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                  دستیار بدونِ حساب نه: نه جایی برای شمردنِ سهمیه هست نه
                  برنامه‌ای روی سرور که بشود عوضش کرد. */
               <div className="routine-ai-exhausted">
-                <p>مدیرِ برنامه فقط با حسابِ کاربری کار می‌کند.</p>
+                <p>نومو فقط با حسابِ کاربری کار می‌کند.</p>
                 <Link href="/auth/login" className="trade-primary-btn" onClick={() => setOpen(false)}>
                   ورود / ثبت‌نام
                 </Link>

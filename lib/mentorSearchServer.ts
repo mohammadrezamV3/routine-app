@@ -124,7 +124,11 @@ export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfile
     const capped = pool.filter((x) => x.c.maxActiveStudents != null).map((x) => x.c.userId);
     if (capped.length) {
       const stats = await loadMentorStats(capped);
-      pool = pool.filter((x) => x.c.maxActiveStudents == null || (stats.get(x.c.userId)?.activeStudents ?? 0) < x.c.maxActiveStudents);
+      // صندلی‌های رزروِ صفِ انتظار هم پُر حساب می‌شوند (هم‌راستا با کارت)
+      pool = pool.filter((x) => {
+        const s = stats.get(x.c.userId);
+        return x.c.maxActiveStudents == null || (s?.activeStudents ?? 0) + (s?.reservedSeats ?? 0) < x.c.maxActiveStudents;
+      });
     }
   }
 

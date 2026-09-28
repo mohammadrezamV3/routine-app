@@ -1,5 +1,6 @@
 "use client";
 
+import { SpinnerCheck } from "@/components/SpinnerCheck";
 import { useEffect, useRef, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -30,6 +31,8 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // بعد از تأییدِ نشستِ واقعی، دایره‌ی لودینگ به تیک تبدیل می‌شه و بعد ناوبری.
+  const [success, setSuccess] = useState(false);
   // مرحله‌ی دوم ورود (فقط وقتی کاربر ورود دومرحله‌ای پیامکی رو روشن کرده)
   const [twoFactor, setTwoFactor] = useState<{ phoneHint: string } | null>(null);
   const [otpCode, setOtpCode] = useState("");
@@ -73,6 +76,9 @@ export default function LoginPage() {
     invalidateStorageCache();
     // تا لود بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
     setAuthHintCookie();
+    setSuccess(true);
+    router.prefetch("/weekly");
+    await new Promise((r) => setTimeout(r, 650)); // فرصتِ دیدنِ انیمیشنِ تیک
     router.push("/weekly");
     return true;
   }
@@ -183,8 +189,8 @@ export default function LoginPage() {
 
             {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-            <button type="submit" className="auth-full-btn" disabled={loading}>
-              {loading ? "در حال ورود…" : "تایید و ورود"}
+            <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success}>
+              {loading || success ? <SpinnerCheck done={success} /> : "تایید و ورود"}
             </button>
             <button
               type="button"
@@ -252,8 +258,8 @@ export default function LoginPage() {
 
           {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-          <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field>
-            {loading ? "در حال ورود…" : "ورود"}
+          <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success} data-anim-field>
+            {loading || success ? <SpinnerCheck done={success} /> : "ورود"}
           </button>
         </form>
       </AuthShell>

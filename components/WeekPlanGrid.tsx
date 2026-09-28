@@ -40,7 +40,8 @@ export function WeekPlanGrid({
   onItemClick?: (item: WeekPlanGridItem, day: WeekPlanGridDay) => void;
 }) {
   return (
-    <section>
+    // div نه section: قانونِ سراسریِ section{border-top} خطِ اضافه می‌کشید.
+    <div>
       <h1 className="mb-4 flex items-center justify-start gap-2 text-[20px] font-bold text-dash-text sm:mb-5 sm:text-[26px]">
         <CalendarDays className="h-[19px] w-[19px] text-dash-green sm:h-6 sm:w-6" />
         {title}
@@ -109,6 +110,6 @@ export function WeekPlanGrid({
           ))}
         </div>
       </motion.div>
-    </section>
+    </div>
   );
 }

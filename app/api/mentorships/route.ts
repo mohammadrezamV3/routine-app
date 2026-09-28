@@ -5,7 +5,8 @@ import { readJsonBody, isValidUsername } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { requestBlockedMessage, validateIntakeAnswers, type IntakeAnswer } from "@/lib/mentorAvailability";
-import { AVAILABILITY_SELECT, availabilityOf, countActiveStudents, writeIntakeAnswers } from "@/lib/mentorManageServer";
+import { AVAILABILITY_SELECT, availabilityOf, writeIntakeAnswers } from "@/lib/mentorManageServer";
+import { WaitlistOfferGoneError, advanceWaitlist, claimOffer, closeWaitingEntry, countOccupiedSeats, findLiveOffer } from "@/lib/mentorWaitlistServer";
 import {
   MENTORSHIP_WITH_USERS_INCLUDE,
   DEFAULT_PRIVACY,
@@ -20,6 +21,7 @@ import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from
 import { publishToUsers } from "@/lib/realtime";
 
 const MESSAGE_MAX = 500;
+const OFFER_GONE_MSG = "مهلت نوبتت همین الان تموم شد؛ دوباره وارد صف شو";
 // پیامِ عمومی برای هر حالتِ «بلاک» — تا معلوم نشه دقیقاً کی کی رو بلاک کرده
 const BLOCKED_MSG = "امکان ارسال درخواست به این کاربر وجود ندارد";
 
@@ -68,6 +70,9 @@ export async function POST(req: Request) {
   // پذیرشِ «شرایط منتورها» از سمتِ شاگرد (lib/mentorTerms.ts) — فقط درخواستِ خودِ شاگرد
   let studentTermsVersion: string | null = null;
   let recordStudentTerms = false;
+  // نوبتِ زنده‌ی صفِ انتظار (lib/mentorWaitlistServer.ts) — صندلیِ رزروِ همین شاگرد
+  let offer: { id: string } | null = null;
+  const now = new Date();
 
   if (b.mentorId !== undefined) {
     if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("مربی نامعتبره");
@@ -78,9 +83,19 @@ export async function POST(req: Request) {
       select: { ...AVAILABILITY_SELECT, categories: true, intakeQuestions: true },
     });
     if (!profile) return notFound();
-    // پذیرش/ظرفیت/عدمِ حضور — دعوتِ خودِ منتور (شاخه‌ی پایین) از این‌ها معافه
-    const availability = availabilityOf(profile, await countActiveStudents(b.mentorId));
-    if (availability.state !== "OPEN") return conflict(requestBlockedMessage(availability.state, availability.awayUntil));
+    // پذیرش/ظرفیت/عدمِ حضور — دعوتِ خودِ منتور (شاخه‌ی پایین) از این‌ها معافه.
+    // ظرفیت = شاگردِ فعال + صندلی‌های رزروِ صف؛ نوبتِ خودِ این شاگرد از رزروها کم می‌شه
+    await advanceWaitlist(b.mentorId, now);
+    offer = await findLiveOffer(b.mentorId, me, now);
+    const occupied = (await countOccupiedSeats(b.mentorId, now)) - (offer ? 1 : 0);
+    const availability = availabilityOf(profile, occupied);
+    if (availability.state !== "OPEN") {
+      // با ظرفیتِ پر، کد تا کلاینت «ورود به صف» را پیشنهاد بده
+      return NextResponse.json(
+        { error: requestBlockedMessage(availability.state, availability.awayUntil), ...(availability.state === "FULL" ? { code: "MENTOR_FULL" } : {}) },
+        { status: 409 }
+      );
+    }
     const ia = validateIntakeAnswers(profile.intakeQuestions, b.intakeAnswers);
     if (!ia.ok) return badRequest(ia.error);
     intakeAnswers = ia.data;
@@ -155,8 +170,13 @@ export async function POST(req: Request) {
       });
       if (res.count > 0) await writeIntakeAnswers(tx, existing.id, intakeAnswers);
       if (res.count > 0 && recordStudentTerms) await recordStudentTermsAcceptance(tx, studentId);
+      if (res.count > 0 && offer) await claimOffer(tx, offer.id, existing.id, now);
       return res.count;
+    }).catch((e) => {
+      if (e instanceof WaitlistOfferGoneError) return -1;
+      throw e;
     });
+    if (count === -1) return conflict(OFFER_GONE_MSG);
     if (count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
     id = existing.id;
   } else {
@@ -165,15 +185,19 @@ export async function POST(req: Request) {
         const created = await tx.mentorship.create({ data: { mentorId, studentId, initiatedBy, message, categories, studentTermsVersion }, select: { id: true } });
         await writeIntakeAnswers(tx, created.id, intakeAnswers);
         if (recordStudentTerms) await recordStudentTermsAcceptance(tx, studentId);
+        if (offer) await claimOffer(tx, offer.id, created.id, now);
         return created.id;
       });
     } catch (e) {
+      if (e instanceof WaitlistOfferGoneError) return conflict(OFFER_GONE_MSG);
       if (isUniqueViolation(e)) return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");
       throw e;
     }
   }
 
   void publishToUsers([mentorId, studentId], { type: "mentor.mentorship", data: { id } });
+  // درخواستِ مستقیم (بدونِ نوبت) یعنی دیگر لازم نیست در صف بماند
+  if (initiatedBy === "STUDENT" && !offer) await closeWaitingEntry(mentorId, studentId, now);
 
   const row = await prisma.mentorship.findUnique({ where: { id }, include: MENTORSHIP_WITH_USERS_INCLUDE });
   const [mentorship] = await buildMentorshipRows([row!], me);

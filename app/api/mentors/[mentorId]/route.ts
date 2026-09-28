@@ -4,6 +4,7 @@ import { requireMentorsUser, notFound } from "@/lib/mentorGuard";
 import { MENTOR_CARD_INCLUDE, loadMentorStats, toMentorCard, usersBlockEachOther } from "@/lib/mentorServer";
 import { displayName } from "@/lib/inAppNotify";
 import { isMentorSaved } from "@/lib/savedMentors";
+import { advanceWaitlist, countWaiting, loadMyWaitlist } from "@/lib/mentorWaitlistServer";
 
 const REVIEWS_LIMIT = 30;
 
@@ -24,29 +25,25 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   const mentorId = params.mentorId;
   if (typeof mentorId !== "string" || !mentorId || mentorId.length > 64) return notFound();
 
-  const profile = await prisma.mentorProfile.findFirst({
-    where: { userId: mentorId, user: { isBlocked: false, deletedAt: null } },
-    include: { ...MENTOR_CARD_INCLUDE, user: { select: { ...MENTOR_CARD_INCLUDE.user.select, createdAt: true } } },
-  });
-  if (!profile) return notFound();
-
   const isSelf = mentorId === me;
-  const myMentorship = isSelf
-    ? null
-    : await prisma.mentorship.findUnique({
-        where: { mentorId_studentId: { mentorId, studentId: me } },
-        select: { id: true, status: true, initiatedBy: true, startedAt: true },
-      });
-
-  if (!isSelf) {
-    // احرازِ هویت اجباریه: منتورِ تأییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
-    const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
-    const related = !!myMentorship && myMentorship.status !== "BLOCKED";
-    if (!discoverable && !related) return notFound();
-    if (await usersBlockEachOther(me, mentorId)) return notFound();
-  }
-
-  const [stats, reviews, myReviewRow, saved] = await Promise.all([
+  // صفِ انتظار روی همین مسیرِ خواندن جلو می‌رود (بدونِ کرانِ بیرونی) تا
+  // «ظرفیت تکمیل»/نوبتِ من به‌روز باشد؛ بدونِ صف فقط یک count ارزان است
+  await advanceWaitlist(mentorId);
+  // سرعت: قبلا پنج مرحله‌ی پشتِ‌سرِهم به دیتابیس می‌رفت (پروفایل → رابطه →
+  // بلاک → آمار/نظرات). حالا همه هم‌زمان؛ شرطِ دیده‌شدن بعدش سنجیده می‌شه و
+  // اگه رد شد همون ۴۰۴ برمی‌گرده (داده‌ای به بیرون نمی‌ره).
+  const [profile, myMentorship, blocked, stats, reviews, myReviewRow, saved, myWaitlist, waitlistCount] = await Promise.all([
+    prisma.mentorProfile.findFirst({
+      where: { userId: mentorId, user: { isBlocked: false, deletedAt: null } },
+      include: { ...MENTOR_CARD_INCLUDE, user: { select: { ...MENTOR_CARD_INCLUDE.user.select, createdAt: true } } },
+    }),
+    isSelf
+      ? Promise.resolve(null)
+      : prisma.mentorship.findUnique({
+          where: { mentorId_studentId: { mentorId, studentId: me } },
+          select: { id: true, status: true, initiatedBy: true, startedAt: true },
+        }),
+    isSelf ? Promise.resolve(false) : usersBlockEachOther(me, mentorId),
     loadMentorStats([mentorId]),
     prisma.mentorReview.findMany({
       where: { mentorId, status: "VISIBLE" },
@@ -61,7 +58,19 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
           select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true } } },
         }),
     isSelf ? Promise.resolve(false) : isMentorSaved(me, mentorId),
+    isSelf ? Promise.resolve(null) : loadMyWaitlist(mentorId, me),
+    countWaiting(mentorId),
   ]);
+  if (!profile) return notFound();
+
+  if (!isSelf) {
+    // احرازِ هویت اجباریه: منتورِ تأییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
+    const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
+    const related = !!myMentorship && myMentorship.status !== "BLOCKED";
+    if (!discoverable && !related) return notFound();
+    if (blocked) return notFound();
+  }
+
   const s = stats.get(mentorId);
 
   // نظر فقط از شاگردی که رابطه‌اش واقعاً شروع شده (ACTIVE یا ENDED بعد از فعال‌شدن)
@@ -86,5 +95,8 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
     myReview: myReviewRow ? toReview(myReviewRow) : null,
     // نشانکِ «ذخیره‌شده‌ها» (lib/savedMentors.ts)
     saved,
+    // صفِ انتظار (lib/mentorWaitlistServer.ts): وضعیتِ من + تعدادِ منتظرها
+    waitlist: myWaitlist,
+    waitlistCount,
   });
 }

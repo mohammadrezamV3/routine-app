@@ -1,5 +1,6 @@
 import { isPushConfigured } from "@/lib/webPush";
 import { pruneReminderLog, runDueReminders, runEconomicAlerts } from "@/lib/pushReminders";
+import { sweepWaitlists } from "@/lib/mentorWaitlistServer";
 
 // زمان‌بندِ داخلیِ یادآوری‌ها — از instrumentation.ts یک‌بار موقعِ بالا
 // آمدنِ هر پروسه‌ی سرور (next dev / next start / هر workerِ cluster.js) شروع
@@ -14,6 +15,10 @@ import { pruneReminderLog, runDueReminders, runEconomicAlerts } from "@/lib/push
 
 const TICK_MS = 30_000;
 const PRUNE_EVERY_MS = 60 * 60 * 1000;
+// صفِ انتظارِ منتورها (lib/mentorWaitlistServer.ts): انقضای نوبت‌ها و صندلی‌هایی
+// که بدونِ مسیرِ خواندن آزاد شده‌اند (حذفِ حساب، اقدامِ ادمین). مستقل از VAPID —
+// اعلانِ درون‌برنامه‌ای بدونِ پوش هم ارزش دارد. چند worker هم‌زمان امن است.
+const WAITLIST_EVERY_MS = 5 * 60 * 1000;
 
 export function startPushScheduler(): void {
   const g = globalThis as unknown as { __arionPushScheduler?: boolean };
@@ -29,6 +34,7 @@ export function startPushScheduler(): void {
 
   let running = false;
   let lastPrune = 0;
+  let lastWaitlist = 0;
   // هر worker کمی جابه‌جا تا همه دقیقا هم‌زمان به دیتابیس نخورن
   const jitterMs = 1000 + Math.floor(Math.random() * 1500);
 
@@ -36,8 +42,12 @@ export function startPushScheduler(): void {
     if (running) return; // تیکِ قبلی هنوز تموم نشده
     running = true;
     try {
-      if (!isPushConfigured()) return;
       const now = new Date();
+      if (now.getTime() - lastWaitlist > WAITLIST_EVERY_MS) {
+        lastWaitlist = now.getTime();
+        await sweepWaitlists(now).catch((err: any) => console.error(`[waitlist] sweep failed: ${err?.message || err}`));
+      }
+      if (!isPushConfigured()) return;
       await runDueReminders(now);
       await runEconomicAlerts(now);
       if (now.getTime() - lastPrune > PRUNE_EVERY_MS) {

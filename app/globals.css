@@ -1565,8 +1565,15 @@
     margin-bottom:18px;
   }
   /* آواتار کوچیک‌تر از قبل (۵۸ → ۴۴)، طبق درخواست صریح کاربر */
-  .account-hero-avatar-wrap{ flex-shrink:0; width:44px; height:44px; }
-  .account-hero-avatar-img{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
+  /* overflow:hidden + گردیِ کاملِ همون‌جا، به همون دلیلِ آواتارِ بزرگِ
+     صفحه‌ی پروفایل (profile-hero-avatar-wrap): پلیس‌هولدرِ AgentAvatar
+     سایزش رو با style اینلاین می‌ده، پس اگه یه‌جا این سایز با اندازه‌ی
+     wrap فرق کرد (حتی در آینده)، لو نمی‌ره بیرون. */
+  .account-hero-avatar-wrap{ flex-shrink:0; width:44px; height:44px; overflow:hidden; border-radius:50%; }
+  /* outline به‌جای border: باگِ «عکس کوچیک‌تر دیده می‌شه» — border وارد
+     content-box می‌شه و ناحیه‌ی واقعیِ object-fit:cover رو تنگ‌تر از ۴۴px
+     می‌کنه؛ outline فضایی از layout نمی‌گیره، عکس کاملِ ۴۴px رو پر می‌کنه. */
+  .account-hero-avatar-img{ width:44px; height:44px; border-radius:50%; object-fit:cover; outline:2px solid rgba(var(--accent-rgb),.4); outline-offset:-2px; display:block; }
   .account-hero-avatar-fallback{ width:44px; height:44px; }
   .account-hero-badge{
     display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
@@ -1712,6 +1719,16 @@
     position:absolute; bottom:-46px; inset-inline-start:20px; width:92px; height:92px;
     padding:0; border:none; background:none; box-shadow:none; cursor:pointer;
     backdrop-filter:none; -webkit-backdrop-filter:none;
+    /* باگِ گزارش‌شده («دایره‌ی سیاهِ لودینگ از باکس بیرون می‌زنه»): آواتارِ
+       پیش‌فرض (AgentAvatar، وقتی هنوز عکسی لود/تنظیم نشده) اندازه‌اش رو با
+       style اینلاینِ خودِ React (`size` prop) می‌ده که همیشه روی هر قانونِ
+       CSSِ عادی (even توی مدیاکوئری موبایل) اولویت داره؛ همون canvas همیشه
+       ۹۲px می‌مونه حتی وقتی موبایل wrap رو ۷۸px می‌کنه. overflow:hidden +
+       همون گردیِ دایره این‌جا یه محافظِ قطعیه: هرچی سایزش با wrap فرق کرد،
+       بازم داخلِ باکس کلیپ می‌شه، بیرون لو نمی‌ره. */
+    overflow:hidden; border-radius:50%;
+    /* حلقه‌ی بریدگی بیرونِ عکس (نه روش) تا عکس کاملِ ۹۲px دیده بشه. */
+    outline:6px solid var(--bg);
   }
   body[data-theme="light"] .profile-hero-avatar-wrap,
   body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
@@ -1725,10 +1742,19 @@
   .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint, .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
   @media (hover:hover){.profile-hero-avatar-wrap:hover .profile-hero-avatar-hint{ opacity:1; }}
   /* حلقه‌ی خالیِ دورِ دایره: یک بوردرِ ضخیم به رنگِ خودِ کارت، پس مثلِ
-     یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی. */
+     یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی.
+     باگِ گزارش‌شده («عکسی که آپلود می‌کنم کوچیک‌تر می‌شه»): `border` وارد
+     مدلِ باکس می‌شه و حتی با box-sizing:border-box، content-box (یعنی
+     ناحیه‌ای که object-fit:cover واقعا توش عکس رو می‌کشه) رو کوچیک‌تر از
+     ۹۲px می‌کنه (اینجا ۸۰px) — یعنی عکسِ واقعی کاربر همیشه از پلیس‌هولدرِ
+     AgentAvatar (که دقیقا ۹۲px پره) کوچیک‌تر دیده می‌شد. outline به‌جای
+     border باکس‌مدل رو دست نمی‌زنه (فضایی از layout نمی‌گیره)، پس عکس
+     کاملِ ۹۲px رو با همون سایزِ پلیس‌هولدر پر می‌کنه؛ outline-offset منفی
+     همون حلقه رو درست روی لبه‌ی بیرونیِ خودِ عکس می‌کشه (outline از
+     border-radius گردِ عنصر پیروی می‌کنه). */
   .profile-hero-avatar-img{
     width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
-    border:6px solid var(--bg); background:var(--surface-2);
+    background:var(--surface-2);
   }
   /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذفِ عکس. پدینگِ بالا همچنان
      باید از ۳۰پیکسلِ آویزانِ آواتار بیشتر باشد تا دکمه زیرِ عکس بیفتد. */
@@ -1953,7 +1979,12 @@
 
   @media (max-width:520px){
     .profile-hero-avatar-wrap{ width:78px; height:78px; bottom:-39px; inset-inline-start:16px; }
-    .profile-hero-avatar-img{ width:78px; height:78px; border-width:5px; }
+    /* !important لازمه: پلیس‌هولدرِ AgentAvatar سایزش رو با style اینلاینِ
+       React (۹۲px، ثابت روی همه‌ی breakpointها) می‌ده که رویِ قانونِ عادیِ
+       این مدیاکوئری اولویت داره — بدونِ !important این‌جا اثری نداشت و
+       همون دایره‌ی ۹۲پیکسلی از wrapِ ۷۸پیکسلیِ موبایل بیرون می‌زد. */
+    .profile-hero-avatar-img{ width:78px !important; height:78px !important; }
+    .profile-hero-avatar-wrap{ outline-width:5px; }
     .profile-hero-avatar-hint{ inset:5px; }
     .profile-hero-meta{ padding:48px 16px 12px; }
     .profile-banner-btn{ padding:6px; }
@@ -3896,6 +3927,21 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    جعبه‌ی یکسان می‌نشاند. */
 .auth-phone-send-btn{ width:100px; padding-inline-end:0; padding-inline-start:0; }
 .auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
+/* باگ: (۱) ریستِ سراسریِ body[data-theme] button (اسپسیفیسیتیِ بالاتر) به
+   «ارسال کد» بک‌گراندِ شیشه‌ای می‌داد؛ (۲) button:active{transform:scale(.96)}
+   جای translateY(-50%) رو می‌گرفت و دکمه‌ها با هر کلیک از جا می‌پریدن. هر دو
+   دکمه‌ی داخلِ فیلد (ارسال کد، نمایش/مخفیِ رمز) در همه‌ی حالت‌ها بی‌بک‌گراند
+   و با همون transform می‌مونن. */
+body[data-theme] .auth-phone-send-btn, body:not([data-theme]) .auth-phone-send-btn,
+body[data-theme] .auth-phone-send-btn:hover, body[data-theme] .auth-phone-send-btn:disabled,
+body[data-theme] .auth-phone-send-btn:disabled:hover, body[data-theme] .auth-phone-send-btn:active,
+body[data-theme] .auth-phone-send-btn:focus-visible,
+body[data-theme] .field-toggle-visibility-btn, body:not([data-theme]) .field-toggle-visibility-btn,
+body[data-theme] .field-toggle-visibility-btn:hover, body[data-theme] .field-toggle-visibility-btn:active,
+body[data-theme] .field-toggle-visibility-btn:focus-visible{
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transform:translateY(-50%);
+}
 
 /* فیلد کد تایید که زیر فیلد شماره ظاهر می‌شه — همون ورود ملایم بقیه‌ی
    فیلدهای فرم (staggerFieldsIn از data-anim-field استفاده می‌کنه)، بدون
@@ -4081,9 +4127,14 @@ body[data-theme="light"] .module-gate-cta, body:not([data-theme="light"]) .modul
 .whyus-marquee{ display:flex; flex-direction:column; gap:10px; }
 /* overflow:hidden روی خودِ ویوپورت، نه صفحه — پس هیچ‌وقت اسکرول افقیِ کلِ
    صفحه رو نمی‌شکنه، حتی وقتی ترکِ زیرش از عرضِ container بیرون می‌زنه. */
-.whyus-marquee-viewport{ overflow:hidden; width:100%; }
+/* direction:ltr روی ویوپورت: باگِ «سوراخِ بزرگِ خالی وسطِ چرا ما» — در RTL ترکِ
+   max-content از لبه‌ی راست لنگر می‌شد و translateX(-50%) نیمه‌ی راستِ ویوپورت
+   رو خالی می‌ذاشت. متنِ خودِ کارت‌ها دوباره rtl می‌شه. فاصله هم margin روی
+   کارت (نه gap) تا ۵۰٪ دقیقا روی مرزِ دو کپی بیفته (همون دلیلِ .ticker-track). */
+.whyus-marquee-viewport{ overflow:hidden; width:100%; direction:ltr; }
+.whyus-marquee-track > .whyus-card{ direction:rtl; margin-inline-end:10px; }
 .whyus-marquee-track{
-  display:flex; align-items:stretch; gap:10px; width:max-content;
+  display:flex; align-items:stretch; width:max-content;
   animation:whyus-marquee-scroll 1s linear infinite;
 }
 .whyus-marquee-track.is-reverse{ animation-direction:reverse; }
@@ -9316,14 +9367,26 @@ body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-
   width:54px; height:54px; padding:0; border-radius:16px; background:var(--box-bg);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
   border:1px solid var(--surface-line); box-shadow:none; overflow:hidden;
-  color:var(--muted); transition:border-color .2s ease, color .2s ease;
+  color:var(--muted);
+  transition:width .32s cubic-bezier(.22,1,.36,1), height .32s cubic-bezier(.22,1,.36,1), gap .32s cubic-bezier(.22,1,.36,1), border-color .2s ease, color .2s ease;
 }
 body[data-theme] .dash-quick-tile.is-on{ width:76px; height:76px; border-color:var(--accent); color:var(--accent); }
+body[data-theme] .dash-quick-tile:not(.is-on){ gap:0; }
 @media (hover:hover){ body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
 .dash-quick-tile-icon{ display:block; }
-.dash-quick-tile-icon svg{ width:22px; height:22px; display:block; }
+.dash-quick-tile-icon svg{ width:22px; height:22px; display:block; transition:width .32s cubic-bezier(.22,1,.36,1), height .32s cubic-bezier(.22,1,.36,1); }
 .dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:26px; height:26px; }
-.dash-quick-tile-label{ display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap; }
+/* اسم همیشه رندر می‌شه؛ ظاهر/محوشدنش فقط با max-height + opacity + کمی
+   بالا اومدن — بدونِ هیچ scale، پس هیچ‌وقت بزرگ‌نمایی نمی‌شه. */
+.dash-quick-tile-label{
+  display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap;
+  max-height:0; opacity:0; transform:translateY(5px);
+  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .14s ease, transform .32s cubic-bezier(.22,1,.36,1);
+}
+.dash-quick-tile.is-on .dash-quick-tile-label{
+  max-height:16px; opacity:1; transform:none;
+  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .22s ease .1s, transform .32s cubic-bezier(.22,1,.36,1) .04s;
+}
 @media (min-width:640px){
   body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{ width:62px; height:62px; }
   body[data-theme] .dash-quick-tile.is-on{ width:88px; height:88px; }
@@ -9343,3 +9406,30 @@ body:not([data-theme="light"]) select optgroup{ background-color:var(--surface-2
 body[data-theme="light"] select option,
 body[data-theme="light"] select optgroup{ background-color:var(--surface-2); color:var(--text); }
 body select option:disabled{ color:var(--muted2); }
+
+/* میله‌های «آمار هفتگی» (DashWeeklyChartCard): پرشدنِ نرم از پایین روی همه‌ی
+   دستگاه‌ها — فقط transform، بدونِ reflow. */
+.dash-bar-grow{
+  transform-origin:bottom;
+  animation:dashBarGrow .75s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes dashBarGrow{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
+
+/* خروج از حساب (lib/logout.ts): پرده‌ی تارِ فوری روی کلِ صفحه تا ریدایرکت —
+   فقط بلور (بدونِ رنگِ پس‌زمینه) و بلاکِ کلیک‌های دوباره. */
+html[data-logging-out] body{ pointer-events:none; }
+html[data-logging-out]::after{
+  content:""; position:fixed; inset:0; z-index:2147483647;
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+  animation:logoutVeil .2s ease-out both;
+}
+@keyframes logoutVeil{ from{ opacity:0; } to{ opacity:1; } }
+
+/* SpinnerCheck — تبدیلِ دایره‌ی لودینگ به تیک بعد از ورودِ موفق. */
+.spinner-check{ display:inline-block; vertical-align:middle; }
+.spinner-check-ring{ stroke-dasharray:63; stroke-dashoffset:63; transform:rotate(-90deg); transform-origin:center; animation:spinnerCheckDraw .35s cubic-bezier(.22,1,.36,1) forwards; }
+.spinner-check-mark{ stroke-dasharray:16; stroke-dashoffset:16; animation:spinnerCheckDraw .3s cubic-bezier(.22,1,.36,1) .25s forwards; }
+@keyframes spinnerCheckDraw{ to{ stroke-dashoffset:0; } }
+/* حینِ ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
+.auth-full-btn.is-busy > *{ vertical-align:middle; }
+.auth-full-btn.is-busy:disabled{ opacity:1; }

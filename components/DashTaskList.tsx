@@ -2,6 +2,7 @@
 
 import { ListChecks, Plus } from "lucide-react";
 import { DashCard } from "./DashCard";
+import { cn } from "@/lib/utils";
 import { DashTaskRow, DashTaskItem } from "./DashTaskRow";
 
 export function DashTaskList({
@@ -31,8 +32,9 @@ export function DashTaskList({
   className?: string;
   delay?: number;
 }) {
+  // حداقل ارتفاع: وقتی روز خالیه باکس جمع/کوچیک نشه.
   return (
-    <DashCard delay={delay} className={className}>
+    <DashCard delay={delay} className={cn("flex min-h-[240px] flex-col sm:min-h-[300px]", className)}>
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-[16px] font-bold text-dash-text sm:gap-2 sm:text-[22px]">
           <ListChecks className="h-[18px] w-[18px] text-dash-green sm:h-[22px] sm:w-[22px]" />
@@ -48,9 +50,9 @@ export function DashTaskList({
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-1">
+      <div className="mt-4 flex flex-1 flex-col gap-1">
         {tasks.length === 0 ? (
-          <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">برنامه‌ای برای این روز ثبت نشده</div>
+          <div className="flex flex-1 items-center justify-center py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">برنامه‌ای برای این روز ثبت نشده</div>
         ) : (
           tasks.map((t) => (
             <DashTaskRow

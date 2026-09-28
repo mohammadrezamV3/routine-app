@@ -139,7 +139,32 @@ export type MentorProfileResponse = {
   myReview: Review | null;
   /** این منتور در «ذخیره‌شده‌ها»ی بیننده است (PUT/DELETE /api/mentors/:id/saved) */
   saved?: boolean;
+  /** وضعیتِ بیننده در صفِ انتظارِ این منتور (null = در صف نیست) */
+  waitlist?: MyWaitlist | null;
+  /** تعدادِ کلِ منتظرها */
+  waitlistCount?: number;
 };
+
+// ───────────────────────── صفِ انتظار (lib/mentorWaitlist.ts) ─────────────────────────
+
+/** GET/POST /api/mentors/:id/waitlist → { waitlist: MyWaitlist | null } */
+export type MyWaitlist = {
+  status: "WAITING" | "OFFERED" | "EXPIRED";
+  /** فقط برای WAITING — «نفر N در صف» */
+  position: number | null;
+  waiting: number;
+  offerExpiresAt: string | null;
+};
+export type MentorWaitlistRow = {
+  id: string;
+  user: PublicUser;
+  status: "WAITING" | "OFFERED";
+  position: number | null;
+  joinedAt: string;
+  offerExpiresAt: string | null;
+};
+/** GET /api/mentor/waitlist */
+export type MentorWaitlistResponse = { entries: MentorWaitlistRow[]; capacity: number | null; reserved: number };
 
 export type MentorCredential = { category: string; status: VerificationStatus; rejectReason: string | null };
 export type MentorDocumentMeta = {

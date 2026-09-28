@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { getCsrfToken, signOut } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
 import { invalidateAccountCache } from "@/lib/accountCache";
 import { clearAuthHintCookie } from "@/lib/preload";
@@ -10,13 +10,42 @@ import { wipeOnLogout } from "@/lib/e2ee/keyStore";
  * `signOut` باطل شوند، وگرنه کاربرِ بعدی روی همان مرورگر داده‌ی کاربرِ قبلی
  * را برای یک لحظه می‌بیند.
  */
+let loggingOut = false;
+
 export function logoutAndRedirect() {
+  // باگِ «لگ/قفل و به‌هم‌ریختنِ بک‌گراند»: قبلا اول تا ۸۰۰ms منتظرِ پاک‌کردنِ
+  // کلیدها می‌موند، بعد signOut که کلِ اپ رو یک‌بار در حالتِ مهمان رندر
+  // می‌کرد (تم/داشبورد/انیمیشنِ خروجِ پاپ‌آپ‌ها) و تازه ریدایرکت می‌شد؛ کلیکِ
+  // دوباره هم یک خروجِ دیگه شروع می‌کرد. حالا: یک پرده‌ی تار فورا روی صفحه،
+  // پاک‌سازی و درخواستِ خروج هم‌زمان، و بعد مستقیم رفتن به «/» (بدونِ رندرِ
+  // میانیِ حالتِ مهمان).
+  if (loggingOut) return;
+  loggingOut = true;
+  document.documentElement.setAttribute("data-logging-out", "");
+
   invalidateStorageCache();
   invalidateAccountCache();
   clearAuthHintCookie();
   // رمزگذاریِ سرتاسریِ منتور: کلیدِ باز در حافظه، KEKِ رمزِ عبور و کلیدِ SYNCEDِ جاری
   // پاک می‌شوند (با ورودِ بعدی با رمز بی‌صدا برمی‌گردند)؛ کلیدِ این دستگاه و نسخه‌های
   // قدیمی می‌مانند چون جای دیگری ندارند (lib/e2ee/keyStore.ts). خطا مانعِ خروج نمی‌شود.
-  const timeout = new Promise<void>((r) => setTimeout(r, 800));
-  Promise.race([wipeOnLogout().catch(() => {}), timeout]).finally(() => signOut({ callbackUrl: "/" }));
+  const wipe = Promise.race([
+    wipeOnLogout().catch(() => {}),
+    new Promise<void>((r) => setTimeout(r, 800)),
+  ]);
+  const serverSignOut = (async () => {
+    const csrfToken = await getCsrfToken();
+    const res = await fetch("/api/auth/signout", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ csrfToken: csrfToken ?? "", callbackUrl: "/", json: "true" }),
+    });
+    if (!res.ok) throw new Error("signout failed");
+  })();
+
+  Promise.all([wipe, serverSignOut]).then(
+    () => window.location.replace("/"),
+    // مسیرِ دستی شکست خورد → همون مسیرِ استانداردِ next-auth
+    () => signOut({ callbackUrl: "/" })
+  );
 }

@@ -23,7 +23,9 @@ import type { MentorProfileResponse, MyMentorship, Review, ReportTargetType } fr
 import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
 import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/mentorAvailability";
-import type { AvailabilityState } from "@/lib/mentorTypes";
+import type { AvailabilityState, MyWaitlist } from "@/lib/mentorTypes";
+import { MentorWaitlistAction } from "@/components/MentorWaitlistAction";
+import { fetchMentorProfile } from "@/lib/mentorProfileCache";
 
 const MESSAGE_MAX = 500;
 const REVIEW_MAX = 1000;
@@ -51,7 +53,7 @@ function MentorProfile() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const res = await fetch(`/api/mentors/${mentorId}`, { cache: "no-store" });
+      const res = await fetchMentorProfile(mentorId);
       if (res.status === 404) { setError({ msg: "این مربی پیدا نشد یا پروفایلش منتشر نشده است", retry: false }); return; }
       if (res.status === 403) { setError({ msg: await readApiError(res, "اجازه‌ی دیدن این پروفایل را نداری"), retry: false }); return; }
       if (!res.ok) { setError({ msg: await readApiError(res, "پروفایل دریافت نشد؛ دوباره تلاش کن"), retry: true }); return; }
@@ -145,6 +147,9 @@ function MentorProfile() {
               intakeQuestions={mentor.intakeQuestions ?? []}
               mine={myMentorship}
               onChange={(m) => setData((d) => (d ? { ...d, myMentorship: m } : d))}
+              waitlist={data.waitlist ?? null}
+              waitlistCount={data.waitlistCount ?? 0}
+              onWaitlist={(w) => setData((d) => (d ? { ...d, waitlist: w } : d))}
               onStale={load}
             />
           )}
@@ -209,7 +214,7 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
 
 /** اکشنِ اتصال — حالتش از myMentorship می‌آید. خطا بالای دکمه‌ها. */
 function ConnectAction({
-  mentorId, mentorName, mentorCategories, accepting, availability, awayUntil, intakeQuestions, mine, onChange, onStale,
+  mentorId, mentorName, mentorCategories, accepting, availability, awayUntil, intakeQuestions, mine, onChange, waitlist, waitlistCount, onWaitlist, onStale,
 }: {
   mentorId: string;
   mentorName: string;
@@ -220,6 +225,10 @@ function ConnectAction({
   intakeQuestions: string[];
   mine: MyMentorship | null;
   onChange: (m: MyMentorship | null) => void;
+  /** صفِ انتظار (components/MentorWaitlistAction.tsx) */
+  waitlist: MyWaitlist | null;
+  waitlistCount: number;
+  onWaitlist: (w: MyWaitlist | null) => void;
   onStale: () => void;
 }) {
   const [requestOpen, setRequestOpen] = useState(false);
@@ -267,6 +276,7 @@ function ConnectAction({
   }
 
   let body: React.ReactNode;
+  let waitlistBody = false;
   if (mine?.status === "ACTIVE") {
     body = (
       <Link href={`/mentorship/${mine.id}`} className="trade-primary-btn mentor-btn">
@@ -312,8 +322,22 @@ function ConnectAction({
   } else if (availability === "AWAY") {
     // عدمِ حضور بالاتر یک‌بار در بلوکِ «در دسترس نیست تا …» آمده؛ این‌جا تکرار نمی‌شود
     body = null;
+  } else if (availability === "FULL" || waitlist?.status === "OFFERED") {
+    // ظرفیت تکمیل → صفِ انتظار؛ نوبتِ رسیده همان فرمِ درخواستِ عادی را باز می‌کند
+    waitlistBody = true;
+    body = (
+      <MentorWaitlistAction
+        mentorId={mentorId}
+        mentorName={mentorName}
+        waitlist={waitlist}
+        waitlistCount={waitlistCount}
+        onChange={onWaitlist}
+        onRequest={() => setRequestOpen(true)}
+        onStale={onStale}
+      />
+    );
   } else if (availability !== "OPEN") {
-    // بسته / ظرفیت تکمیل — سرور هم همین را اعمال می‌کند
+    // بسته — سرور هم همین را اعمال می‌کند
     body = (
       <MentorChip tone="neutral" icon={<CircleSlash {...CHIP} />}>
         {availabilityShort(availability, awayUntil)}
@@ -332,7 +356,8 @@ function ConnectAction({
   return (
     <>
       {error && !confirmCancel && <div className="form-inline-error" role="alert">{error}</div>}
-      {body && <div className="mentor-hero-actions">{body}</div>}
+      {/* MentorWaitlistAction خطا و ردیفِ دکمه‌هایش را خودش می‌چیند */}
+      {waitlistBody ? body : body && <div className="mentor-hero-actions">{body}</div>}
       {(
         <RequestModal
           open={requestOpen}

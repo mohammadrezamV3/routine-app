@@ -57,6 +57,16 @@
 - `GET /api/mentorships/[id]/privacy` (فقط شاگرد) → `{ privacy: PrivacySettings, scopes: {key,label,kind}[] }`
 - `PUT /api/mentorships/[id]/privacy` بدنه‌ی زیرمجموعه‌ای از `{ shareAllPrograms, sharedPrograms[], showSchedule, showProgramName, showTaskName, showTaskDetails, showProgress }` → `{ privacy }`
 
+### صفِ انتظار (منتورِ پُر) — `lib/mentorWaitlist.ts` + `lib/mentorWaitlistServer.ts`
+- مدل `MentorWaitlistEntry` (mentorId+userId یکتا؛ `WAITING → OFFERED → ACCEPTED | EXPIRED | CANCELLED`). هیچ متنِ آزادی ذخیره نمی‌شه؛ رتبه‌بندی این جدول رو نمی‌خونه.
+- «پُر بودن» = شاگردِ ACTIVE + **صندلیِ رزرو** (نوبتِ زنده + درخواستِ PENDINGی که از صف اومده) ≥ سقف — در کارتِ کشف، `POST /api/mentorships`، پذیرشِ درخواست توسطِ منتور و تنظیمات.
+- `GET /api/mentors/[mentorId]/waitlist` → `{ waitlist: { status: WAITING|OFFERED|EXPIRED, position, waiting, offerExpiresAt } | null }` (همین‌ها در `GET /api/mentors/[mentorId]` هم به‌صورتِ `waitlist` و `waitlistCount` میان).
+- `POST /api/mentors/[mentorId]/waitlist` بدنه `{ acceptMentorTerms? }` — فقط وقتی FULLـه (OPEN/CLOSED/AWAY → ۴۰۹)؛ همون گیت‌های درخواست (خود، بلاک، رابطه‌ی ACTIVE/PENDING، کول‌داونِ رد، پذیرشِ شرایط، rate limit). ورودِ دوباره = ته صف.
+- `DELETE /api/mentors/[mentorId]/waitlist` → خروج از صف / ردِ نوبت.
+- نوبت (`OFFERED`) ۴۸ ساعت اعتبار داره؛ پذیرشش همون `POST /api/mentorships` عادیه (با سؤال‌های پذیرش) که برای صاحبِ نوبت سقف رو باز می‌کنه و در همون تراکنش نوبت رو `ACCEPTED` می‌کنه. درخواستِ ۴۰۹ به‌خاطرِ پُر بودن `code: "MENTOR_FULL"` داره.
+- منتور: `GET /api/mentor/waitlist` → `{ entries: { id, user: PublicUser, status, position, joinedAt, offerExpiresAt }[], capacity, reserved }`؛ `DELETE /api/mentor/waitlist/[entryId]` (where `{id, mentorId}`) + اعلان به کاربر.
+- پیش‌بردن (`advanceWaitlist`) idempotent و ضدِ مسابقه‌ست (قفلِ ردیفیِ `MentorProfile.waitlistSeq` + `updateMany` روی وضعیت): بعد از رد/لغو/پایان/مسدودی، تغییرِ تنظیمات، روی مسیرهای خواندن، و هر ۵ دقیقه در `lib/pushScheduler.ts` (حذفِ حساب/اقدامِ ادمین). اعلان‌ها: `mentor.waitlist.offer|expired|removed`.
+
 ### دیدِ منتور
 - `GET /api/mentor/dashboard` → `{ profile: { published, suspendedAt, identityStatus } | null, stats: { students, activeStudents, pendingRequests, pendingPrograms, activePrograms }, requests: MentorshipRow[], pendingPrograms: ProgramRow[], recentActivity: { type: "log"|"program"|"message", at, studentName, text, url }[], completion: { studentId, name, avatarUrl, completed, partial, missed, rate }[] (۷ روزِ اخیر), attention: { studentId, name, avatarUrl, reason }[] }`
 - `GET /api/mentor/students/[studentId]?from=YYYY-MM-DD&to=YYYY-MM-DD` (حداکثر ۳۱ روز؛ پیش‌فرض ۷ روزِ اخیر) → ۴۰۴ اگه رابطه‌ی ACTIVE نباشه.

@@ -41,7 +41,9 @@ export default function AccountIndexPage() {
     getAvatarUrl().then(setAvatarUrl);
   }, []);
 
-  const fullName = data ? [data.name, data.lastName].filter(Boolean).join(" ") || "کاربر آریون" : "";
+  // /api/account خودش `name` رو «نام + نام خانوادگی» برمی‌گردونه؛ چسبوندنِ
+  // دوباره‌ی lastName فامیل رو دوبار نشون می‌داد.
+  const fullName = data ? data.name?.trim() || "کاربر آریون" : "";
   // /api/account فقط اشتراک واقعا فعال (ACTIVE/TRIAL منقضی‌نشده) رو برمی‌گردونه،
   // پس این‌جا دیگه لازم نیست وضعیت دوباره چک بشه — قبلا «آخرین ردیف ساخته‌شده»
   // می‌اومد و یه اشتراک منقضی هم «پریمیوم» نشون داده می‌شد.
