@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getWeekStats, WeekDayStat } from "@/lib/routineStats";
@@ -38,12 +37,14 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
                 <div key={s.iso} className="flex flex-1 flex-col items-center gap-1 sm:gap-1.5">
                   <span className={cn("text-[9px] font-semibold sm:text-[10px]", peak ? "text-dash-green" : "text-dash-muted")}>{s.pct}٪</span>
                   <div className="flex h-24 w-full items-end justify-center sm:h-28">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${Math.max(s.pct > 0 ? 4 : 1, s.pct)}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 + i * 0.05 }}
-                      className="w-2 rounded-full sm:w-2.5"
+                    {/* پرشدنِ نرم با CSS (scaleY، فقط کامپوزیت) نه framer — روی
+                        گوشیِ ضعیف MotionTuner انیمیشن‌های framer رو خاموش می‌کنه،
+                        ولی این میله‌ها باید همه‌جا مثل دسکتاپ پر بشن. */}
+                    <div
+                      className="dash-bar-grow w-2 rounded-full sm:w-2.5"
                       style={{
+                        height: `${Math.max(s.pct > 0 ? 4 : 1, s.pct)}%`,
+                        animationDelay: `${0.1 + i * 0.05}s`,
                         background: peak ? "var(--accent)" : "rgba(var(--accent-rgb),.45)",
                         boxShadow: peak ? "0 0 12px rgba(var(--accent-rgb),.6)" : "none",
                       }}

@@ -9374,3 +9374,11 @@ body:not([data-theme="light"]) select optgroup{ background-color:var(--surface-2
 body[data-theme="light"] select option,
 body[data-theme="light"] select optgroup{ background-color:var(--surface-2); color:var(--text); }
 body select option:disabled{ color:var(--muted2); }
+
+/* میله‌های «آمار هفتگی» (DashWeeklyChartCard): پرشدنِ نرم از پایین روی همه‌ی
+   دستگاه‌ها — فقط transform، بدونِ reflow. */
+.dash-bar-grow{
+  transform-origin:bottom;
+  animation:dashBarGrow .75s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes dashBarGrow{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
