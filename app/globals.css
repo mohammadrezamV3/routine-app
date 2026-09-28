@@ -6762,7 +6762,13 @@ body[data-theme="light"] .trade-cal-icon-btn, body:not([data-theme="light"]) .tr
    بدونِ باکس/بوردر/گوشه، دقیقا هم‌شکلِ DashDateSelectorِ «روتین من».
    دسکتاپ (پایین‌تر): طبقِ درخواستِ صریح به رفتار/ظاهرِ قدیمی برمی‌گرده —
    باکسِ شیشه‌ای + دو فلشِ قبلی/بعدی، کشیدنِ آزاد خاموش. */
-.trade-cal-week-strip{ display:flex; align-items:center; gap:2px; min-width:0; }
+.trade-cal-week-strip{
+  display:flex; align-items:center; gap:2px; min-width:0;
+  /* قابِ دورِ نوار — طبقِ درخواستِ صریح روی موبایل هم برگشت. */
+  border-radius:18px; border:1px solid var(--surface-line);
+  background:rgba(var(--bg-rgb),.16);
+  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+}
 .trade-cal-week-days{
   display:flex; flex:1; min-width:0; gap:6px; padding:10px 8px;
   overflow-x:auto; overscroll-behavior-x:contain; overflow-anchor:none;
@@ -6783,12 +6789,7 @@ body:not([data-theme="light"]) .trade-cal-week-arrow{ background:none; box-shado
 @media (hover:hover){ .trade-cal-week-arrow:hover{ color:var(--text); background:rgba(255,255,255,.05); } }
 @media (min-width:1024px){
   .trade-cal-week-arrow{ display:flex; }
-  .trade-cal-week-strip{
-    padding:2px 12px;
-    border-radius:18px; border:1px solid var(--surface-line);
-    background:rgba(var(--bg-rgb),.16);
-    backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
-  }
+  .trade-cal-week-strip{ padding:2px 12px; }
   /* کشیدنِ آزادِ ماوس/ویل روی دسکتاپ خاموش — فقط با فلش‌ها (پایین‌تر) یا
      کلیکِ روزِ فعال جابه‌جا می‌شود؛ lib/useDayStrip.ts هم useDragScroll رو
      همین عرض خاموش می‌کنه، این‌جا فقط ظاهر/overflow هماهنگ می‌شه. */

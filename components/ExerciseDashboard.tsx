@@ -40,6 +40,7 @@ export function ExerciseDashboard({
   onPlanChange: (plan: ExercisePlan) => void;
 }) {
   const [selectedIso, setSelectedIso] = useState(todayIso);
+  const [recenterKey, setRecenterKey] = useState(0);
 
   const [logs, setLogs] = useState<ExerciseLogRange>({});
   const [selectedLog, setSelectedLog] = useState<{ completed: boolean; completedItems: string[] } | null>(null);
@@ -216,6 +217,7 @@ export function ExerciseDashboard({
         <DashDateSelector
           activeIso={selectedIso}
           onSelect={setSelectedIso}
+          recenterKey={recenterKey}
           className="lg:order-2"
         />
 
@@ -230,7 +232,7 @@ export function ExerciseDashboard({
             label="امروز"
             icon={<Calendar size={15} />}
             active={isSelectedToday}
-            onClick={() => setSelectedIso(todayIso)}
+            onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
           />
         </div>
       </div>

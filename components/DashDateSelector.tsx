@@ -37,12 +37,15 @@ export function DashDateSelector({
   activeIso,
   onSelect,
   className,
+  recenterKey,
 }: {
   activeIso: string;
   onSelect: (iso: string) => void;
   className?: string;
+  /** عوض‌شدنش نوار رو روی روزِ فعال برمی‌گردونه (دکمه‌ی «امروز»). */
+  recenterKey?: number;
 }) {
-  const { scrollRef, days, pageBy, desktop } = useDayStrip(activeIso);
+  const { scrollRef, days, pageBy } = useDayStrip(activeIso, recenterKey);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
 
@@ -73,11 +76,11 @@ export function DashDateSelector({
     <div
       className={cn(
         "flex min-w-0 flex-1 items-center gap-1",
-        // دسکتاپ: باکسِ شیشه‌ای دقیقاً مثلِ رفتارِ قدیمیِ فلش‌دار؛ موبایل بدونِ تغییر.
-        desktop && "rounded-dash border border-dash-border backdrop-blur-xl",
+        // قابِ شیشه‌ایِ دورِ نوار — طبقِ درخواستِ صریح روی موبایل هم برگشت.
+        "rounded-dash border border-dash-border backdrop-blur-xl",
         className
       )}
-      style={desktop ? { background: "rgba(var(--bg-rgb), .16)" } : undefined}
+      style={{ background: "rgba(var(--bg-rgb), .16)" }}
     >
       {/* فلشِ «روزهای قبل» — فقط دسکتاپ (lg:flex)، هم‌شکلِ نسخه‌ی قدیم. */}
       <button

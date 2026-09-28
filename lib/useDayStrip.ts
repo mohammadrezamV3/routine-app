@@ -53,7 +53,12 @@ export function useDesktopDayStrip(): boolean {
   return desktop;
 }
 
-export function useDayStrip(activeIso: string) {
+/**
+ * `recenterKey`: هر بار عوض بشه، نوار دوباره روی روزِ فعال وسط‌چین می‌شه — برای
+ * دکمه‌ی «امروز» وقتی امروز از قبل انتخاب شده (activeIso عوض نمی‌شه) ولی کاربر
+ * نوار رو دور کشیده.
+ */
+export function useDayStrip(activeIso: string, recenterKey: number = 0) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => startOfLocalDay(new Date()), []);
   const [bounds, setBounds] = useState({ start: -HALF, end: HALF });
@@ -154,7 +159,7 @@ export function useDayStrip(activeIso: string) {
       el.scrollBy({ left: delta, behavior: "smooth" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIso]);
+  }, [activeIso, recenterKey]);
 
   const desktop = useDesktopDayStrip();
   // فقط موبایل/تبلتِ لمسی کشیدنِ آزادِ ماوس داره؛ دسکتاپ فقط با فلش پیج می‌شه.

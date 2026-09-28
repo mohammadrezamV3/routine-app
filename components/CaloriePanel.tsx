@@ -79,6 +79,7 @@ export function CaloriePanel() {
   // داری کدوم روز رو می‌بینی/واردش می‌کنی (DashDateSelector، نوارِ آزادِ
   // قابل‌کشیدن؛ روزِ دورِ انتخاب‌شده از تقویم رو خودش باز و وسط‌چین می‌کنه).
   const [selectedIso, setSelectedIso] = useState(todayIso);
+  const [recenterKey, setRecenterKey] = useState(0);
   const isSelectedToday = selectedIso === todayIso;
 
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
@@ -321,6 +322,7 @@ export function CaloriePanel() {
               <DashDateSelector
                 activeIso={selectedIso}
                 onSelect={setSelectedIso}
+                recenterKey={recenterKey}
                 className="lg:order-2"
               />
               <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
@@ -334,7 +336,7 @@ export function CaloriePanel() {
                   label="امروز"
                   icon={<Calendar size={15} />}
                   active={isSelectedToday}
-                  onClick={() => setSelectedIso(todayIso)}
+                  onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
                 />
               </div>
             </div>
