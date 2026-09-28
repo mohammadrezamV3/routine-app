@@ -1611,6 +1611,24 @@ model AuditLog {
   @@index([actorUserId, createdAt])
 }
 
+// اطلاعیه‌ی سراسریِ اپ — از پنل ادمین (/admin/announcements) نوشته می‌شه و توی
+// همون پنلِ زنگوله (NotificationPanel) به همه (حتی مهمان) نشون داده می‌شه.
+// متنِ ساده‌ست (بدون HTML). «خوانده‌شده» سمتِ کاربر در تنظیمِ readAnnouncements
+// نگه داشته می‌شه، نه جدولِ جدا — پس برای مهمان هم کار می‌کنه.
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  active      Boolean   @default(true)
+  // null یعنی بدون انقضا
+  expiresAt   DateTime?
+  createdById String? // ادمینی که ساخته (بدون FK — حذفِ ادمین اطلاعیه رو پاک نکنه)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active, createdAt])
+}
+
 // رخدادهای خطای واقعیِ سیستم (نه Fake) — از جاهایی که واقعاً catch می‌شن
 // نوشته می‌شه: گیت‌وی AI، اتصال دیتابیس، و مسیرهای بحرانیِ auth.
 model ErrorLog {
