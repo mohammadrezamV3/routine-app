@@ -83,7 +83,7 @@ export function WeekPlanGrid({
                     </div>
                   )}
                   <ol className="mt-2 flex flex-1 flex-col gap-1">
-                    {d.items.map((it, i) => (
+                    {d.items.map((it) => (
                       <li key={it.id}>
                         <button
                           type="button"
@@ -96,9 +96,7 @@ export function WeekPlanGrid({
                             <Check aria-label="انجام‌شده" className="mt-px h-3 w-3 shrink-0 text-dash-green" strokeWidth={3} />
                           ) : it.state === "missed" ? (
                             <X aria-label="انجام‌نشده" className="mt-px h-3 w-3 shrink-0" style={{ color: "#E05252" }} strokeWidth={3} />
-                          ) : (
-                            <span className="mono shrink-0 text-dash-muted">{i + 1}-</span>
-                          )}
+                          ) : null}
                           <span className="min-w-0 flex-1 truncate">{it.label}</span>
                           {it.meta && <bdi dir="ltr" className="mono shrink-0 text-dash-muted">{it.meta}</bdi>}
                         </button>
