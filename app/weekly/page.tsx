@@ -4,21 +4,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
-import { ICONS } from "@/components/NavDrawer";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
   tasksForDate,
   timeStartMinutes,
-  timeEndMinutes,
   splitTimeRange,
   isDayOver,
+  startOfWeek,
   toEnDigits,
   computeDayStats,
   DayStats,
   dayBeforeIso,
 } from "@/lib/schedule";
-import { dayFillFraction, positionTimedTasks } from "@/lib/weeklyTimeline";
 import {
   getCustomOccurrences,
   getRemovedOccurrences,
@@ -31,7 +29,7 @@ import {
 } from "@/lib/storage";
 import { getTodayStats } from "@/lib/routineStats";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
-import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, timeToMinutes, WakeSleepTimes } from "@/lib/wakeSleep";
+import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import { ProgramCard } from "@/components/ProgramCard";
 import { AddProgramForm } from "@/components/AddProgramForm";
@@ -49,6 +47,7 @@ import { DashQuickPanels } from "@/components/DashQuickPanels";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { AuthGate } from "@/components/AuthGate";
 import { RoutineAiFab } from "@/components/RoutineAiFab";
+import { WeekPlanGrid, WeekPlanGridDay } from "@/components/WeekPlanGrid";
 import { useFeature } from "@/lib/useFeatures";
 import { activeModulesOf, getAccount } from "@/lib/accountCache";
 
@@ -86,9 +85,6 @@ export default function WeeklyPage() {
   const assistantOn = useFeature("routineAssistant") === true;
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
-  const [openIdx, setOpenIdx] = useState<number | null>(
-    WEEK_ORDER.findIndex((o) => o.jsDay === now.getDay())
-  );
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string; mentorProgramId?: string }[]>([]);
   const router = useRouter();
@@ -114,8 +110,9 @@ export default function WeeklyPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // بخش داشبورد (ادغام‌شده با صفحه اصلی) — انتخاب تاریخ/هفته، برنامه‌های
-  // همون روز، و فیلترها. جدا از openIdx بالا که برای تایم‌لاین «کلی برنامه
-  // هفته» (کارت‌های شنبه..جمعه که پایین‌تر نمایش داده می‌شن) استفاده می‌شه.
+  // همون روز، و فیلترها. «برنامه هفتگی» پایینِ صفحه (WeekPlanGrid) همیشه
+  // هفته‌ی جاری (شنبه..جمعه) رو نشون می‌ده، مستقل از این انتخاب.
+  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(() => isoLocal(now));
   const [selectedDaily, setSelectedDaily] = useState<DailyRecord | null>(null);
   const [todayStats, setTodayStats] = useState<DayStats>({ completed: 0, total: 0, pct: 0 });
@@ -186,16 +183,6 @@ export default function WeeklyPage() {
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
-  const awakeStartMin = timeToMinutes(wake);
-  // ساعت خواب همیشه بعد نیمه‌شب نیست — کاربرهایی که مثلا ۲۳:۳۰ می‌خوابن هم
-  // هستن. قبلا همیشه ۲۴ساعت به ساعت خواب اضافه می‌شد (فرض «خواب همیشه بعد
-  // نیمه‌شبه»)، که برای این کاربرها بازه‌ی «بیداری» رو به‌جای ~۱۶ ساعت واقعی،
-  // غلط ~۴۰ ساعت حساب می‌کرد — همین باعث می‌شد برنامه‌های نزدیک ساعت خواب
-  // واقعی، خیلی دورتر از انتهای خط زمان (نزدیک وسط) جا بگیرن. الان فقط وقتی
-  // ساعت خواب از نظر عددی زودتر یا مساوی ساعت بیداریه (یعنی واقعا بعد
-  // نیمه‌شب روز بعده) ۲۴ ساعت اضافه می‌شه.
-  const rawSleepMin = timeToMinutes(sleep);
-  const awakeEndMin = rawSleepMin > awakeStartMin ? rawSleepMin : rawSleepMin + 24 * 60;
 
   async function refresh() {
     const [removed, custom] = await Promise.all([getRemovedOccurrences(), getCustomOccurrences()]);
@@ -331,6 +318,34 @@ export default function WeeklyPage() {
 
     return list;
   }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter, gymDays, exerciseDone, clock]);
+
+  // «برنامه هفتگی» پایینِ صفحه — دقیقا همون گریدِ هفت‌روزه‌ی برنامه‌ی هفتگیِ
+  // بخشِ ورزش (WeekPlanGrid)، با برنامه‌های واقعیِ هر روزِ هفته‌ی جاری. وضعیتِ
+  // هر برنامه از تیک‌های واقعیِ همون روز (weekDaily) میاد و فقط با آیکونِ
+  // جای شماره نشون داده می‌شه — طبقِ درخواستِ صریح، متنِ «انجام دادی»/«وقتش
+  // گذشته» زیرِ آیتم‌ها دیگه نمیاد.
+  const weekGridDays: WeekPlanGridDay[] = useMemo(() => {
+    const start = startOfWeek(now);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const dIso = isoLocal(d);
+      // طبقِ درخواستِ صریح: جلوی هر برنامه ساعتش (یا «بدون ساعت») و بدونِ
+      // تیک/ضربدر — وضعیتِ انجام فقط توی لیستِ برنامه‌های روز نشون داده می‌شه.
+      const items = tasksForDate(d, opts).map((t) => ({
+        id: t.id,
+        label: t.name,
+        meta: t.time ? toEnDigits(t.time) : "بدون ساعت",
+      }));
+      return {
+        key: dIso,
+        dayName: WEEK_ORDER.find((o) => o.jsDay === d.getDay())!.name,
+        isToday: dIso === todayKey,
+        subtitle: items.length ? `${faNum(items.length)} برنامه` : undefined,
+        items,
+      };
+    });
+  }, [opts, weekDaily, clock]);
 
   // شروعِ تمرین: هم همین‌جا (روتین من) تیک می‌خورد هم کاربر به صفحه‌ی
   // بدنسازی می‌رود تا واقعاً برنامه را ببیند. تپ‌استرایک/دابل‌کلیکِ خودِ
@@ -535,112 +550,12 @@ export default function WeeklyPage() {
 
             {hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />}
           </div>
+
+          <WeekPlanGrid days={weekGridDays} onItemClick={(it) => openProgram(it.label)} />
         </div>
       </section>
 
       <section className="dash-breakout">
-        <div className="weekly-align-end">
-          <div className="weekly-head-row" style={{ justifyContent: "flex-start" }}>
-            <span className="page-title-icon">{ICONS.weekly}</span>
-            <h1>برنامه هفتگی</h1>
-          </div>
-
-          <div className="weekly-glass">
-            <div className="weekly-glass-content">
-            {WEEK_ORDER.map((o, idx) => {
-              const d = new Date(now);
-              d.setDate(now.getDate() + (o.jsDay - now.getDay()));
-              const dIso = isoLocal(d);
-              const items = tasksForDate(d, opts);
-              const isToday = o.jsDay === now.getDay();
-              const isOpen = openIdx === idx;
-              const fillPct = Math.round(dayFillFraction(o.jsDay, WEEK_ORDER, now, awakeStartMin, awakeEndMin) * 1000) / 10;
-
-              const timedItems = items.filter((t) => timeStartMinutes(t.time) !== null);
-              const untimedItems = items.filter((t) => timeStartMinutes(t.time) === null);
-
-              const todayPos = WEEK_ORDER.findIndex((oo) => oo.jsDay === now.getDay());
-              const nowMinRaw = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-              let effTodayPos = todayPos, effNowMin = nowMinRaw;
-              if (nowMinRaw < 6 * 60) {
-                effTodayPos = (todayPos - 1 + WEEK_ORDER.length) % WEEK_ORDER.length;
-                effNowMin = nowMinRaw + 24 * 60;
-              }
-              const positioned = positionTimedTasks(timedItems, timeStartMinutes, timeEndMinutes, idx, effTodayPos, effNowMin, awakeStartMin, awakeEndMin);
-
-              return (
-                <div key={o.jsDay} className={`week-day${isOpen ? " open" : ""}`}>
-                  <div className="week-day-head" onClick={() => setOpenIdx(isOpen ? null : idx)}>
-                    <span className={`week-day-name${isToday ? " today" : ""}`}>{o.name}</span>
-                    <span className="week-day-chevron" />
-                  </div>
-                  {isOpen && (
-                      <div className="week-day-body">
-                        {items.length ? (
-                          <div className="week-timeline">
-                            <div className="week-timeline-track">
-                              <div className="wt-fill-track">
-                                <div className="wt-fill-green" style={{ ["--fill" as any]: fillPct + "%" }} />
-                              </div>
-
-                              <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "20px" }}>
-                                <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(wake)}</div></div>
-                                <div className="wt-content"><div className="wt-name">بیداری</div></div>
-                              </div>
-
-                              {positioned.map((p) => {
-                                const r = splitTimeRange(p.time);
-                                return (
-                                  <div
-                                    key={p.id}
-                                    className="wt-item wt-level-0"
-                                    style={{ ["--pos" as any]: `calc(20px + (100% - 40px) * ${p.pct})` }}
-                                    onClick={(e) => { e.stopPropagation(); openProgram(p.name); }}
-                                  >
-                                    <div className="wt-marker-col">
-                                      <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
-                                      <div className="wt-dot" />
-                                    </div>
-                                    <div className="wt-content">
-                                      <div className="wt-range"><bdi dir="ltr">{toEnDigits(r.full)}</bdi></div>
-                                      <div className="wt-name">{p.name}</div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-
-                              <div className="wt-item wt-endpoint" style={{ ["--pos" as any]: "calc(100% - 20px)" }}>
-                                <div className="wt-marker-col"><div className="wt-time-above">{toEnDigits(sleep)}</div></div>
-                                <div className="wt-content"><div className="wt-name">خواب</div></div>
-                              </div>
-                            </div>
-
-                            {!!untimedItems.length && (
-                              <div className="wt-untimed-row">
-                                {untimedItems.map((t) => {
-                                  return (
-                                  <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
-                                    {/* برنامه‌ی بی‌ساعت صریح «بدون ساعت» می‌گیرد. */}
-                                    <div className="wt-range">{t.time ? <bdi dir="ltr">{toEnDigits(t.time)}</bdi> : "بدون ساعت"}</div>
-                                    <div className="wt-name">{t.name}</div>
-                                  </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="week-day-empty">برنامه‌ای برای این روز ثبت نشده</div>
-                        )}
-                      </div>
-                    )}
-                </div>
-              );
-            })}
-            </div>
-          </div>
-        </div>
-
         {cardName && (
           <ProgramCard
             name={cardName}

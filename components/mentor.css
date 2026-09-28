@@ -691,7 +691,7 @@ body[data-theme="light"] .mentor-page .ios-toggle.on{ background:var(--accent); 
 .m-sheet-wrap.is-bottom{ align-items:flex-end; padding:0; }
 .m-sheet-backdrop{
   position:absolute; inset:0; background:rgba(0,0,0,.55);
-  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
 }
 /* سطح همان .modal-panel سایت است؛ جای‌گیری و حرکت را این‌جا framer می‌دهد */
 .modal-panel.m-sheet{

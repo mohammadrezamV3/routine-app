@@ -316,11 +316,11 @@ export function ExerciseTaskList({
           {isFutureDay ? (
             <div className="exercise-locked-box mt-5 shrink-0">
               <Lock size={14} />
-              وقتش نرسیده!
+              هنوز وقتش نرسیده
             </div>
           ) : ended && !active ? (
             // تمرینِ این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
-            // باکسِ وضعیتِ «وقتش نرسیده!»، فقط با متن/رنگِ خودش.
+            // باکسِ وضعیتِ «هنوز وقتش نرسیده»، فقط با متن/رنگِ خودش.
             <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
               <Check size={14} strokeWidth={3} />
               انجام دادی
