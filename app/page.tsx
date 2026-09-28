@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HomeClient } from "@/components/HomeClient";
-import { BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
-import { faqJsonLd } from "@/lib/seo";
+import { BRAND_FA, BRAND_TITLE } from "@/lib/brand";
+import { faqJsonLd, pageMetadata } from "@/lib/seo";
 import { FAQ_ITEMS } from "@/lib/landingFaq";
 
 // این فایل عمدا Server Component شده (نه "use client" مثل قبل) — فقط
@@ -9,18 +9,23 @@ import { FAQ_ITEMS } from "@/lib/landingFaq";
 // components/HomeClient.tsx بدون هیچ تغییری زندگی می‌کنه.
 // صفحه‌ی اصلی جاییه که جست‌وجوی برند («آریون»، «آریون اپ») باید بهش برسه،
 // پس عنوانش باید خود نام فارسی رو داشته باشه — نه فقط املای لاتین.
+// عنوان/توضیحِ صفحه‌ی اصلی عمدا با عبارت‌هایی نوشته شده که کاربر فارسی‌زبان
+// واقعا جست‌وجو می‌کند («روتین اپ»، «برنامه ریزی روزانه»، «برنامه بدنسازی»،
+// «کالری شمار»، «ژورنال ترید») — ولی همچنان با خودِ نامِ برند شروع می‌شود.
+const HOME_TITLE = `${BRAND_FA} | روتین اپ و برنامه ریزی روزانه، برنامه بدنسازی، کالری شمار و ژورنال ترید`;
+const HOME_DESC =
+  `${BRAND_FA}، روتین اپ فارسی با تقویم شمسی: برنامه ریزی روزانه و هفتگی، پیگیری عادت‌ها، ` +
+  `برنامه بدنسازی با هوش مصنوعی، کالری شمار و ژورنال ترید — همه در یک حساب. رایگان شروع کن.`;
+
 export const metadata: Metadata = {
-  title: {
-    // absolute یعنی الگوی «%s | Arion آریون» به این عنوان اضافه نشه؛ اسم
-    // برند از قبل داخلش هست و تکرارش فقط عنوان رو بلند و بریده می‌کنه.
-    absolute: BRAND_TITLE,
-  },
-  description: BRAND_DESC,
-  alternates: { canonical: "/" },
-  // images عمدا حذف شده تا app/opengraph-image.tsx (اختصاصیِ همین مسیر)
-  // به‌جای /og.png عمومی تزریق بشه.
-  openGraph: { ...OG_BASE, images: undefined, url: "/", title: BRAND_TITLE, description: BRAND_DESC },
-  twitter: { card: "summary_large_image", title: BRAND_TITLE, description: BRAND_DESC },
+  // absolute یعنی الگوی «%s | آریون» به این عنوان اضافه نشه؛ اسم برند از
+  // قبل داخلش هست و تکرارش فقط عنوان رو بلند و بریده می‌کنه.
+  ...pageMetadata({ title: HOME_TITLE, description: HOME_DESC, path: "/", ogTitle: BRAND_TITLE, ownOgImage: true }),
+  keywords: [
+    BRAND_FA, "Arion", "روتین اپ", "روتین اپ آریون", "برنامه ریزی روزانه", "اپ برنامه ریزی روزانه",
+    "برنامه روزانه", "برنامه هفتگی", "عادت ساز", "ژورنال ترید", "ژورنال معاملاتی", "برنامه بدنسازی",
+    "برنامه بدنسازی با هوش مصنوعی", "کالری شمار", "کالری شمار فارسی", "تقویم اقتصادی فارکس",
+  ],
 };
 
 export default function HomePage() {

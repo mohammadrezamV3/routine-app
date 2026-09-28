@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { Market } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { BASIC_MODULES } from "@/lib/modules";
+import { provisionTrialAccess } from "@/lib/trialAccess";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { isValidEmail } from "@/lib/validate";
@@ -14,17 +14,10 @@ import { createDeviceSession, isSessionLive, newSessionId } from "@/lib/deviceSe
 import { getAdminFlags } from "@/lib/adminFlag";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقا همون تدارک ثبت‌نام معمولی
-// (دوره آزمایشی ماژول‌های پایه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
+// (دوره آزمایشی یک‌هفته‌ای همه‌ی بخش‌ها + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
 // کاربر جدید مستقل از روش ورودش یکسان باشه.
 async function provisionNewUser(userId: string) {
-  await prisma.moduleAccess.createMany({
-    data: BASIC_MODULES.map((module) => ({
-      userId,
-      module,
-      active: true,
-      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // ۱۴ روز
-    })),
-  });
+  await provisionTrialAccess(userId);
   await prisma.referralCode.create({
     data: {
       userId,

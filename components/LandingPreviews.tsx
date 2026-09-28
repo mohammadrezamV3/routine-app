@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Bell, Check, Dumbbell, Filter, History, Calendar, Pencil, Percent, Plus, Repeat2, RotateCw,
-  Send, Sparkles, Timer, UtensilsCrossed, Wallet, ArrowUp, X,
+  Send, Timer, UtensilsCrossed, Wallet, ArrowUp, X,
 } from "lucide-react";
 import AIMessage from "@/components/smoothui/components/ai-message";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
@@ -252,22 +252,19 @@ export function PreviewCalorie() {
           ))}
         </div>
       </MockCard>
-      {/* نتیجه‌ی CalorieAiScanModal */}
-      <div className="lsc-scan-panel">
-        <div className="modal-head"><div className="modal-title">اسکن غذا با هوش مصنوعی</div></div>
+      {/* هدفِ روزانه — از lib/calorieCalc.ts (قد، وزن، سن، روزهای تمرین، هدف) */}
+      <div className="lsc-goal-panel">
+        <div className="modal-head"><div className="modal-title">هدفِ روزانه‌ی تو</div></div>
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text">
-            <Sparkles className="h-4 w-4 text-dash-green" /> چلو مرغ
-          </div>
           <div className="grid grid-cols-4 gap-2">
-            {[["کالری", 620], ["پروتئین (گرم)", 42], ["کربوهیدرات (گرم)", 78], ["چربی (گرم)", 14]].map(([l, v]) => (
+            {[["کالری", 2100], ["پروتئین (گرم)", 140], ["کربوهیدرات (گرم)", 220], ["چربی (گرم)", 70]].map(([l, v]) => (
               <div key={l} className="rounded-xl border border-dash-border bg-white/[0.02] px-1.5 py-2 text-center">
                 <div className="mono text-[13px] font-bold text-dash-text">{fa(v)}</div>
                 <div className="mt-0.5 text-[9px] text-dash-muted">{l}</div>
               </div>
             ))}
           </div>
-          <div className="text-[10.5px] text-dash-muted">وزن تخمینی: {fa(350)} گرم — این یک تخمین بصریه، نه اندازه‌گیری دقیق.</div>
+          <div className="text-[10.5px] text-dash-muted">بر اساسِ قد، وزن، سن، روزهای تمرین در هفته و هدفت (کاهش، حفظ یا افزایش وزن).</div>
         </div>
       </div>
       <CalorieMacrosCard entries={entries} target={{ proteinTargetG: 140, carbsTargetG: 220, fatTargetG: 70 }} />

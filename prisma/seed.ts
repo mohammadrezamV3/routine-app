@@ -41,7 +41,7 @@ const PLANS: {
     nameEn: "Plan Trader",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 1_500_000, // ۱۵۰,۰۰۰ تومان
+    priceMonthly: 1_750_000, // ۱۷۵,۰۰۰ تومان (migration 20260928150000_trade_plan_price_175k)
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE, ModuleKey.ROADMAP],
   },
   {

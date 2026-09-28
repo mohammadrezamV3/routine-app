@@ -56,7 +56,7 @@ export function pageMetadata({
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical },
+    alternates: pageAlternates(canonical),
     openGraph,
     twitter: {
       card: "summary_large_image",
@@ -64,6 +64,23 @@ export function pageMetadata({
       description,
       ...(ownOgImage ? {} : { images: ["/og.png"] }),
     },
+  };
+}
+
+/**
+ * `alternates` کاملِ یک صفحه‌ی عمومی: canonical + hreflang (fa-IR و
+ * x-default — سایت تک‌زبانه است، پس هر دو به همان آدرس اشاره می‌کنند) +
+ * فیدِ RSS. چرا فیدِ RSS هم این‌جاست: نکست `alternates` را بینِ layout و
+ * page ادغام نمی‌کند، جایگزین می‌کند؛ یعنی هر صفحه‌ای که canonical خودش را
+ * می‌داد، <link rel="alternate" type="application/rss+xml">ِ root layout را
+ * بی‌صدا از دست می‌داد.
+ */
+export function pageAlternates(path: string): NonNullable<Metadata["alternates"]> {
+  const canonical = path === "/" ? "/" : `/${path.replace(/^\/+/, "").replace(/\/+$/, "")}`;
+  return {
+    canonical,
+    languages: { "fa-IR": canonical, "x-default": canonical },
+    types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` },
   };
 }
 
@@ -181,7 +198,7 @@ export const FEATURE_LIST_FA = [
   "مدیریت کارهای روزمره و یادآوری",
   "ثبت و پیگیری خواب",
   "برنامه‌ی تمرینی بدنسازی با کمک هوش‌مصنوعی",
-  "کالری‌شمار و اسکن هوشمند غذا",
+  "کالری‌شمار فارسی با فهرست غذاهای ایرانی",
   "ژورنال معاملات ترید: چند حساب، آمار کامل، چک‌لیست ورود",
   "همگام‌سازی خودکار معاملات با متاتریدر",
   "تقویم اقتصادی و ساعت جلسه‌های بازار فارکس",

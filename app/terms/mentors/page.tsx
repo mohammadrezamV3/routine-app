@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { OG_BASE, SUPPORT_EMAIL } from "@/lib/brand";
+import { SUPPORT_EMAIL } from "@/lib/brand";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { MENTOR_TERMS_PATH, MENTOR_TERMS_UPDATED_LABEL } from "@/lib/mentorTerms";
 
-export const metadata: Metadata = {
-  title: { absolute: "شرایط استفاده از بخش مربی‌ها — آریون" },
+export const metadata: Metadata = pageMetadata({
+  title: "شرایط استفاده از بخش مربی‌ها — آریون",
   description:
     "نقش آریون به‌عنوان بستر ارتباط، استقلال و مسئولیت مربی‌ها، بررسی مدارک، سلامت، پرداخت‌ها، گزارش تخلف و حل اختلاف در بخش مربی‌ها.",
-  alternates: { canonical: MENTOR_TERMS_PATH },
-  openGraph: { ...OG_BASE, url: MENTOR_TERMS_PATH, title: "شرایط استفاده از بخش مربی‌ها" },
-};
+  path: MENTOR_TERMS_PATH,
+  ogTitle: "شرایط استفاده از بخش مربی‌ها",
+});
 
 // نسخه و تاریخ در lib/mentorTerms.ts است. تغییرِ ماهویِ هر بند = عوض‌کردنِ
 // MENTOR_TERMS_VERSION تا منتورها و شاگردها دوباره بپذیرند.
@@ -183,6 +184,7 @@ const ARTICLES: Article[] = [
 export default function MentorTermsPage() {
   return (
     <section>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "آریون", path: "/" }, { name: "قوانین و مقررات", path: "/terms" }, { name: "شرایط بخش مربی‌ها", path: MENTOR_TERMS_PATH }])) }} />
       <h1>شرایط استفاده از بخش مربی‌ها</h1>
       <div className="dateline" style={{ marginBottom: 6 }}>
         آخرین بازنگری: {MENTOR_TERMS_UPDATED_LABEL}

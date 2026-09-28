@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
 import { requireModule } from "@/lib/moduleAccess";
-import { ModuleKey } from "@prisma/client";
+import { AiFeatureKey, ModuleKey } from "@prisma/client";
+import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { buildStatusOf } from "@/lib/roadmapBuilder";
 import { generateRoadmapGuide, generateStageDetail, STAGE_REGEN_TIMEOUT_MS } from "@/lib/aiClient";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -76,6 +77,10 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
     plan,
   };
 
+  // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+  const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.ROADMAP_GENERATION);
+  if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
+
   try {
     if (target === "guide") {
       const guide = await generateRoadmapGuide(ctx, userId, STAGE_REGEN_TIMEOUT_MS);
@@ -94,6 +99,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ stage, stepProgress: progress });
   } catch (err: any) {
     console.error("roadmap regenerate failed", err);
+    await quota.release();
     return NextResponse.json({ error: err?.message || "ساخته نشد — دوباره امتحان کن" }, { status: 502 });
   }
 }

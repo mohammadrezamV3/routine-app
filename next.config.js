@@ -97,7 +97,41 @@ const NOINDEX_PATH_PREFIXES = [
   // اصلی (PlansSection mode="landing") هست.
   "/subscription",
   "/subscription/:path*",
+  // بخشِ مربی‌ها/شاگردی و آنالیز هفتگی کاملا پشتِ لاگین‌اند (API‌شون برای
+  // مهمان 401 می‌ده)، پس کراولر فقط یه پوسته‌ی خالیِ کلاینتی با عنوانِ
+  // عمومیِ سایت می‌دید — «soft 404»/محتوای تکراری که کیفیتِ کلِ سایت رو
+  // پیش گوگل پایین می‌آره. /terms/mentors (عمومی) با این‌ها match نمی‌شه.
+  "/mentor",
+  "/mentor/:path*",
+  "/mentors",
+  "/mentors/:path*",
+  "/mentorship",
+  "/mentorship/:path*",
+  "/mentor-programs/:path*",
+  "/analysis/:path*",
+  "/offline",
 ];
+
+// دامنه‌ی کانونیکال — همونی که lib/seo.ts (SITE_URL) برای canonical/sitemap
+// استفاده می‌کنه. نسخه‌ی دیگه‌ی همون دامنه (با/بدونِ www) با 301 به این
+// برمی‌گرده؛ قبلا https://www.arionapp.ir هم مستقیم 200 می‌داد، یعنی گوگل هر
+// صفحه رو روی دو هاست جدا (محتوای تکراری) می‌دید.
+function canonicalHostRedirects() {
+  let host = "arionapp.ir";
+  try {
+    const h = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir").host;
+    if (h && !/^(localhost|127\.|0\.0\.0\.0)/.test(h) && !h.includes(":")) host = h;
+  } catch {}
+  const alt = host.startsWith("www.") ? host.slice(4) : `www.${host}`;
+  return [
+    {
+      source: "/:path*",
+      has: [{ type: "host", value: alt }],
+      destination: `https://${host}/:path*`,
+      permanent: true,
+    },
+  ];
+}
 
 const nextConfig = {
   reactStrictMode: true,
@@ -132,6 +166,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      ...canonicalHostRedirects(),
       {
         source: "/report/weekly",
         destination: "/analysis/weekly",

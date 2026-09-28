@@ -1,6 +1,7 @@
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
-import { ModuleKey } from "@prisma/client";
+import { AiFeatureKey, ModuleKey } from "@prisma/client";
+import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -47,10 +48,15 @@ export async function POST(req: NextRequest) {
 
     const analysis = await computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin });
 
+    // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+    const quota = await checkAndConsumeAiQuota(userId, isSuperAdmin, AiFeatureKey.WEEKLY_COACH_REPORT);
+    if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
+
     let ai;
     try {
       ai = await generateAiCoach(analysis, userId);
     } catch (err: any) {
+      await quota.release();
       const msg: string = err?.message || "";
       if (msg.includes("ثانیه پاسخ نداد")) {
         return NextResponse.json({ error: "گیت‌وی هوش‌مصنوعی به‌موقع پاسخ نداد" }, { status: 504 });
@@ -58,6 +64,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg || "ساخت مربیِ AI شکست خورد" }, { status: 502 });
     }
     if (!ai) {
+      await quota.release();
       return NextResponse.json({ error: "مربیِ هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
     }
 
