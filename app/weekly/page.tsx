@@ -45,10 +45,8 @@ import { DashFilterButton } from "@/components/DashFilterButton";
 import { DashFilterModal } from "@/components/DashFilterModal";
 import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
-import { DashReminderCard } from "@/components/DashReminderCard";
-import { DashMedicationCard } from "@/components/DashMedicationCard";
+import { DashQuickPanels } from "@/components/DashQuickPanels";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
-import { DashSidebar } from "@/components/DashSidebar";
 import { AuthGate } from "@/components/AuthGate";
 import { RoutineAiFab } from "@/components/RoutineAiFab";
 import { useFeature } from "@/lib/useFeatures";
@@ -181,7 +179,11 @@ export default function WeeklyPage() {
     return () => { alive = false; };
   }, [exercisePlanId, selectedIso, exerciseLogKey]);
 
-  const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
+  const hasQuickPanels =
+    dashboardPrefs.showReminders ||
+    dashboardPrefs.showMedications ||
+    dashboardPrefs.showChart ||
+    dashboardPrefs.showFriends;
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -531,16 +533,17 @@ export default function WeeklyPage() {
             </div>
           </div>
 
-          {/* دسکتاپ: سه ستون کنار هم — راست (پهن‌تر) برنامه‌های امروز از بالا
-              تا پایین، وسط یادآوری‌ها، چپ دوستان+آمار زیر هم. موبایل/تبلت
+          {/* دسکتاپ: دو ستون کنار هم — راست (پهن‌تر) برنامه‌های امروز از بالا
+              تا پایین، چپ ردیفِ آیکونِ یادآوری/یادآوری‌دارو/آمار هفتگی/دوستان
+              (DashQuickPanels) با محتوای کارتِ انتخاب‌شده زیرش. موبایل/تبلت
               همچنان یک ستون عمودی (flex-col) می‌مونه. */}
-          {/* وقتی هر دو کارت ستون وسط از تنظیمات خاموش باشن، گرید باید
-              دوستونه بشه — وگرنه یک ستون خالی ۰.۸fr وسط صفحه باز می‌موند. */}
+          {/* وقتی هر چهار کارتِ ردیفِ آیکون از تنظیمات خاموش باشن، گرید باید
+              تک‌ستونه بشه — وگرنه یک ستون خالی ۱fr کنار صفحه باز می‌موند. */}
           <div
             className={
-              hasMiddleColumn
-                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
-                : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+              hasQuickPanels
+                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+                : "flex flex-col gap-4 sm:gap-6"
             }
           >
             {status === "unauthenticated" ? (
@@ -561,16 +564,7 @@ export default function WeeklyPage() {
               />
             )}
 
-            {/* ستون وسط: یادآوری‌های برنامه و یادآوری دارو، زیر هم. هر دو
-                از «تنظیمات» جدا‌جدا قابل خاموش‌شدن‌ن. */}
-            {hasMiddleColumn && (
-              <div className="dash-middle-col flex flex-col gap-4 sm:gap-6">
-                {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
-                {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
-              </div>
-            )}
-
-            <DashSidebar statsRefreshKey={statsRefreshKey} />
+            {hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />}
           </div>
         </div>
       </section>
