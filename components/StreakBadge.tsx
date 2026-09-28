@@ -3,8 +3,8 @@
 import { useMyStreak } from "@/lib/useMyStreak";
 import { StreakFlame } from "./StreakFlame";
 
-// شعله + عدد استریک خود کاربر — توی هدر استفاده می‌شه.
+// شعله + عدد استریک خود کاربر — توی هدر استفاده می‌شه، پس همیشه compact.
 export function StreakBadge({ className }: { className?: string }) {
   const streak = useMyStreak();
-  return <StreakFlame streak={streak} className={className} />;
+  return <StreakFlame streak={streak} className={className} compact />;
 }
