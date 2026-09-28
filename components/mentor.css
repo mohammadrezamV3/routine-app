@@ -933,7 +933,7 @@ body[data-theme="light"] .mentor-pop-title.is-gold{ color:#B7860B; }
   border:1px solid var(--surface-line); border-radius:12px;
 }
 .mentor-hero-stats > div{
-  display:flex; flex-direction:column-reverse; align-items:center; justify-content:flex-end; gap:1px;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:1px;
   padding:8px 4px; text-align:center; min-width:0;
 }
 .mentor-hero-stats > div + div{ border-inline-start:1px solid var(--surface-line); }
