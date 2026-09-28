@@ -640,3 +640,80 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
    جداگانه گزارش شده است. */
 body[data-theme="light"] .mentor-page .ios-toggle.on{ background:var(--accent); border-color:var(--accent); }
 @media (hover:hover){ body[data-theme="light"] .mentor-page .ios-toggle.on:hover{ background:var(--accent); border-color:var(--accent); } }
+
+/* ── کشف: «پیدا کردن منتور» (ردیف‌های افقی + فیلتر) ─────────────────── */
+/* دکمه‌ی فیلتر کنارِ جست‌وجو (سمتِ چپ در RTL) — همان account-outline-btn سایت */
+.mentor-filter-btn{ flex:0 0 auto; height:44px; padding:0 16px; }
+.mentor-filter-count{
+  display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px;
+  border-radius:999px; border:1px solid currentColor; font-size:10.5px; font-weight:800; line-height:1;
+}
+/* پنلِ فیلتر زیرِ ردیفِ جست‌وجو — همان قابِ trade-surface سایت */
+.mentor-filter-panel{ display:flex; flex-direction:column; gap:var(--m-4); padding:var(--m-4); border-radius:18px; }
+.mentor-filter-panel .mentor-toggle-row:first-child{ padding-top:0; }
+
+.mentor-carousel + .mentor-carousel .mentor-section-title{ margin-top:var(--m-5); }
+.mentor-carousel .mentor-section-title{ margin-bottom:var(--m-3); }
+/* کشیدن با ماوس: نشانگرِ دست، و در حینِ کشیدن اسنپ خاموش تا کشیدن روان باشد */
+@media (hover:hover) and (pointer:fine){ .mentor-carousel-row{ cursor:grab; } }
+.mentor-carousel-row.is-dragging{ cursor:grabbing; scroll-snap-type:none; user-select:none; }
+.mentor-carousel-row.is-dragging .mentor-card{ pointer-events:none; }
+.mentor-carousel-row .mentor-card{ height:100%; }
+
+/* خانه‌ی «مشاهده همه ←» تهِ هر ردیف — بی‌بک‌گراند، فقط بوردرِ خط‌چین */
+.mentor-carousel-more{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--m-2);
+  min-height:100%; padding:var(--m-4); border-radius:18px; border:1px dashed var(--line);
+  font-family:inherit; font-size:12.5px; font-weight:700; color:var(--accent); cursor:pointer;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:border-color .15s ease;
+}
+body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .mentor-carousel-more{ background:none; box-shadow:none; }
+@media (hover:hover){ .mentor-carousel-more:hover{ border-color:var(--accent); color:var(--accent); background:none; box-shadow:none; } }
+.mentor-carousel-more:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.mentor-carousel-more-icon{
+  display:flex; align-items:center; justify-content:center; width:38px; height:38px;
+  border-radius:999px; border:1px solid currentColor;
+}
+.mentor-popular-row.mentor-carousel-row{ grid-auto-columns:minmax(250px, 78%); }
+@media (min-width:720px){ .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:calc((100% - 2 * var(--m-3)) / 2.6); } }
+
+/* کارت: جمع‌وجور — سرِ کارت (نام + مدال)، و یک ردیفِ پایین (امتیاز · عضویت · شِورون) */
+.mentor-card{ position:relative; min-width:0; padding:14px 15px; gap:12px; cursor:pointer; }
+.mentor-carousel-row > .mentor-card{ height:100%; }
+.mentor-card-name-row{ display:flex; align-items:center; gap:4px; min-width:0; }
+.mentor-card-name-row .mentor-card-name{ min-width:0; }
+/* لینکِ کشیده: کلِ کارت کلیک‌پذیر است */
+.mentor-card-link{ text-decoration:none; color:var(--text); }
+.mentor-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; z-index:1; }
+.mentor-card-link:focus-visible{ outline:none; }
+.mentor-card:has(.mentor-card-link:focus-visible){ outline:2px solid var(--accent); outline-offset:2px; }
+.mentor-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; min-width:0; }
+.mentor-card-since{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); white-space:nowrap; }
+.mentor-card-foot .rp-card-arrow{ margin-inline-start:auto; }
+
+/* مدالِ طلاییِ «مدرکِ تخصصیِ تأییدشده» — درست کنارِ نام، بی‌بک‌گراند، بالای لینکِ کشیده */
+.mentor-medal{ position:relative; z-index:2; flex-shrink:0; display:flex; }
+.mentor-medal-btn{
+  display:flex; align-items:center; justify-content:center; padding:2px; border-radius:6px; border:none;
+  color:#D9A21B; cursor:pointer; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+body[data-theme="light"] .mentor-medal-btn, body:not([data-theme="light"]) .mentor-medal-btn{ background:none; box-shadow:none; border:none; }
+body[data-theme="light"] .mentor-medal-btn{ color:#B7860B; }
+@media (hover:hover){ .mentor-medal-btn:hover{ background:none; box-shadow:none; color:#E8B530; } }
+.mentor-medal-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+/* توضیحِ مدال — پاپ‌آپِ کوچک روی سطحِ پاپ‌آپ‌های سایت (--surface-2)؛ fixed تا
+   اسکرولِ افقیِ ردیف بُرشش ندهد (موقعیت از جاوااسکریپت) */
+.mentor-medal-tip{
+  position:fixed; z-index:60; width:max-content; max-width:min(220px, calc(100vw - 16px));
+  display:flex; flex-direction:column; gap:3px; padding:9px 11px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--surface-line); box-shadow:0 8px 24px rgba(0,0,0,.25);
+  font-size:11.5px; line-height:1.8; color:var(--muted); text-align:start;
+}
+.mentor-medal-tip b{ color:#D9A21B; font-size:12px; }
+body[data-theme="light"] .mentor-medal-tip b{ color:#B7860B; }
+
+.mentor-list-back{ margin-top:var(--m-2); }
+.mentor-more-tight{ margin-top:0; }
+.mentor-more-stack{ flex-direction:column; align-items:center; gap:var(--m-2); }
+.mentor-privacy-picker{ margin-bottom:var(--m-3); }

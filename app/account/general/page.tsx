@@ -1,98 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bell, Users, BarChart3, Tablets, Vibrate } from "lucide-react";
-import { AccountToggleRow } from "@/components/AccountRow";
-import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
-import { RoutineSettings } from "@/components/RoutineSettings";
-import { TradeSettings } from "@/components/TradeSettings";
-import { NotificationSettings } from "@/components/NotificationSettings";
-import { hapticsEnabled, hapticsSupported, setHapticsEnabled } from "@/lib/haptics";
-import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
+import { BarChart3, Bell, CalendarCheck2, CandlestickChart, GraduationCap, Vibrate } from "lucide-react";
+import { AccountRowLink } from "@/components/AccountRow";
+import { AccountPageHead } from "@/components/AccountUI";
 
-const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
-
-const DASHBOARD_PREFS: [keyof DashboardPrefs, string, string?][] = [
-  ["showReminders", "کارت «یادآوری‌ها»"],
-  ["showMedications", "کارت «یادآوری دارو»", "خاموش‌کردنش هم کارت رو مخفی می‌کنه هم اعلان نوبت‌های دارو رو قطع می‌کنه"],
-  ["showFriends", "کارت «دوستان»"],
-  ["showChart", "نمودارها"],
+// «تنظیمات» — طبقِ درخواستِ صریح هر بخش صفحه‌ی خودش را دارد: این‌جا فقط
+// فهرستِ بخش‌هاست و با کلیک روی هرکدام تازه به تنظیماتِ همان بخش می‌رسی.
+const SETTINGS_SECTIONS: { href: string; label: string; desc: string; icon: React.ReactNode }[] = [
+  { href: "/account/general/dashboard", label: "داشبورد", desc: "کارت‌های داشبورد", icon: <BarChart3 size={15} /> },
+  { href: "/account/general/notifications", label: "اعلان‌ها", desc: "یادآوری‌ها و نوتیفیکیشن‌ها", icon: <Bell size={15} /> },
+  { href: "/account/general/routine", label: "روتین", desc: "تنظیمات روتین", icon: <CalendarCheck2 size={15} /> },
+  { href: "/account/general/trade", label: "ترید", desc: "تقویم، آمارها و هشدار اخبار", icon: <CandlestickChart size={15} /> },
+  { href: "/account/general/haptics", label: "بازخورد لمسی", desc: "لرزش کوتاه هنگام لمس دکمه‌ها", icon: <Vibrate size={15} /> },
+  { href: "/account/general/mentors", label: "دسترسی منتورها", desc: "منتور چه بخشی از روتینت را ببیند", icon: <GraduationCap size={15} /> },
 ];
 
-// «تنظیمات» (نام قبلی: «عمومی»).
-//
-// دو تغییر ساختاری نسبت به قبل، طبق درخواست صریح کاربر:
-// ۱) بخش‌های بدنسازی/کالری/یادگیری از این‌جا حذف شدن — صفحه‌های تنظیماتشون
-//    عملا خالی بودن و فقط یک لینک به خود همون بخش داشتن.
-// ۲) روتین و ترید دیگه پشت یک باکس و یک ناوبری دیگه قایم نیستن؛ تنظیماتشون
-//    همین‌جا مستقیم رندر می‌شه و فقط یک تیتر می‌گه مال کدوم بخشه.
-// ۳) «قابل‌جست‌وجو بودن با یوزرنیم» به بخش امنیت منتقل شد (تنظیم حریم خصوصیه).
-// ۴) «اعلان‌ها» دیگر صفحه‌ی جدا نیست و همین‌جا یک بخش است.
-// ۵) روتین و ترید هرکدام *یک* بخش‌اند؛ بالای هر گزینه فقط اسمِ خودش.
 export default function AccountSettingsPage() {
-  const [prefs, setPrefs] = useState<DashboardPrefs>(DEFAULT_DASHBOARD_PREFS);
-
-  const [haptics, setHaptics] = useState(true);
-  const [hapticsAvailable, setHapticsAvailable] = useState(true);
-
-  useEffect(() => { getDashboardPrefs().then(setPrefs); }, []);
-  useEffect(() => {
-    setHaptics(hapticsEnabled());
-    setHapticsAvailable(hapticsSupported());
-  }, []);
-
-  function toggleHaptics(next: boolean) {
-    setHapticsEnabled(next);
-    setHaptics(next);
-    // روشن‌کردن با یک لرزشِ نمونه تأیید می‌شه تا کاربر حسش کنه
-    if (next) {
-      try { navigator.vibrate?.(12); } catch {}
-    }
-  }
-
-  function toggleDashboardPref(key: keyof DashboardPrefs, next: boolean) {
-    setPrefs((prev) => {
-      const updated = { ...prev, [key]: next };
-      saveDashboardPrefs(updated);
-      setCachedDashboardPrefs(updated);
-      window.dispatchEvent(new Event("dashboard-prefs-updated"));
-      return updated;
-    });
-  }
-
   return (
     <section>
-      <AccountPageHead title="تنظیمات" hint="تنظیمات کلی آریون و تنظیمات هر بخش" />
-
-      <AccountBlock title="نمایش کارت‌ها در داشبوردها" icon={<BarChart3 size={15} />} flush index={0}>
-        {DASHBOARD_PREFS.map(([key, label, desc], i) => (
-          <AccountToggleRow
-            key={key}
-            index={i}
-            icon={PREF_ICONS[i]}
-            label={label}
-            desc={desc}
-            checked={prefs[key]}
-            onChange={(v) => toggleDashboardPref(key, v)}
-          />
+      <AccountPageHead title="تنظیمات" />
+      <div className="account-card account-card-full">
+        {SETTINGS_SECTIONS.map((s, i) => (
+          <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
         ))}
-      </AccountBlock>
-
-      <AccountBlock title="بازخورد لمسی" icon={<Vibrate size={15} />} flush index={1}>
-        <AccountToggleRow
-          icon={<Vibrate size={16} />}
-          label="لرزش کوتاه هنگام لمس دکمه‌ها"
-          desc={hapticsAvailable ? "فقط روی همین دستگاه اعمال می‌شه" : "این دستگاه یا مرورگر از لرزش پشتیبانی نمی‌کنه"}
-          checked={haptics}
-          onChange={toggleHaptics}
-        />
-      </AccountBlock>
-
-      {/* هرکدام خودش یک بخشِ کامل (تیتر + قاب) است — این‌جا دیگر تیترِ
-          جداگانه‌ای بالای‌شان گذاشته نمی‌شود، وگرنه دو تیتر روی هم می‌افتاد. */}
-      <NotificationSettings index={2} />
-      <RoutineSettings />
-      <TradeSettings />
+      </div>
     </section>
   );
 }
