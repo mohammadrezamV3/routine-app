@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, BellRing, Calendar, Filter, History, Search, X } from "lucide-react";
+import { Bell, BellRing, Calendar, ChevronLeft, ChevronRight, Filter, History, Search, X } from "lucide-react";
 import { useDayStrip } from "@/lib/useDayStrip";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { G_MONTHS } from "@/lib/gregorian";
@@ -214,9 +214,11 @@ export function EconomicCalendarPanel() {
   }, [load, date]);
 
   // ── نوارِ روزها ─────────────────────────────────────────────────────────
-  // نوارِ آزادِ قابل‌کشیدن با شتاب (مشترک با «روتین من» — lib/useDayStrip.ts):
-  // بدونِ فلش و بدونِ پیج‌شدنِ چندروزه؛ روزها نزدیکِ هر لبه تنبل اضافه می‌شوند.
-  const { scrollRef: weekStripRef, days: dayStrip } = useDayStrip(isoLocal(date));
+  // موبایل: نوارِ آزادِ قابل‌کشیدن با شتاب (مشترک با «روتین من» —
+  // lib/useDayStrip.ts)، بدونِ فلش، روزها نزدیکِ هر لبه تنبل اضافه می‌شوند.
+  // دسکتاپ: طبقِ درخواستِ صریح، به رفتارِ قدیمی برمی‌گرده — کشیدنِ آزاد
+  // خاموش و دو فلشِ قبلی/بعدی همون نوار رو پیج می‌کنن.
+  const { scrollRef: weekStripRef, days: dayStrip, pageBy: pageWeekStrip } = useDayStrip(isoLocal(date));
 
   const outOfRange = !!range && (date < range.from || date > range.to);
 
@@ -241,6 +243,16 @@ export function EconomicCalendarPanel() {
           DashFilterButton، همون الگو). */}
       <div className="trade-cal-header-row flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
         <div className="trade-cal-week-strip lg:order-2 lg:flex-1">
+          {/* فلشِ قبلی/بعدی فقط دسکتاپ دیده می‌شن (globals.css) — پیج‌کردنِ
+              همون نوارِ روزها، نه یک پنجره‌ی جدا. */}
+          <button
+            type="button"
+            aria-label="روزهای قبل"
+            className="trade-cal-week-arrow"
+            onClick={() => pageWeekStrip("prev")}
+          >
+            <ChevronRight size={16} />
+          </button>
           <div className="trade-cal-week-days" ref={weekStripRef}>
             {dayStrip.map(({ date: d, iso }) => {
               const active = isSameDay(d, date);
@@ -261,6 +273,14 @@ export function EconomicCalendarPanel() {
               );
             })}
           </div>
+          <button
+            type="button"
+            aria-label="روزهای بعد"
+            className="trade-cal-week-arrow"
+            onClick={() => pageWeekStrip("next")}
+          >
+            <ChevronLeft size={16} />
+          </button>
         </div>
 
         {/* ── سه دکمه، دقیقاً به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}

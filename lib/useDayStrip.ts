@@ -27,6 +27,32 @@ function parseIso(iso: string): Date {
 
 export type StripDay = { date: Date; iso: string };
 
+// دسکتاپ باید مثل قبل از «کشیدنِ آزاد» پیج‌بشه (فلشِ قبلی/بعدی)، نه با
+// ماوس آزادانه کشیده بشه؛ موبایل همون کشیدنِ آزادِ فعلی رو نگه می‌داره.
+// «دسکتاپ» یعنی هم صفحه‌ی عریض (min-width:1024px) هم واقعاً ماوس/hover
+// داره (تبلتِ لمسیِ عریض رو دسکتاپ حساب نکنه).
+const DESKTOP_QUERY = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
+
+/**
+ * آیا نوار باید حالتِ دسکتاپِ صفحه‌بندی‌شده داشته باشه. مقدارِ اولیه همیشه
+ * `false` (SSR-safe) — سرور نمی‌دونه عرضِ صفحه‌ی کلاینت چقدره، پس تا قبل
+ * از mount مثلِ موبایل فرض می‌شه و بلافاصله بعدِ mount به مقدارِ واقعی
+ * سوییچ می‌کنه؛ این یعنی HTMLِ سرور و اولین رندرِ کلاینت دقیقاً یکی‌ان
+ * (بدونِ hydration mismatch)، فقط یک فریمِ بعد رفتار درست می‌شه.
+ */
+export function useDesktopDayStrip(): boolean {
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    setDesktop(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setDesktop(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return desktop;
+}
+
 export function useDayStrip(activeIso: string) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => startOfLocalDay(new Date()), []);
@@ -130,9 +156,21 @@ export function useDayStrip(activeIso: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIso]);
 
-  useDragScroll(scrollRef);
+  const desktop = useDesktopDayStrip();
+  // فقط موبایل/تبلتِ لمسی کشیدنِ آزادِ ماوس داره؛ دسکتاپ فقط با فلش پیج می‌شه.
+  useDragScroll(scrollRef, !desktop);
 
-  return { scrollRef, days, todayIso: isoLocal(today) };
+  /** پیج‌کردنِ نوار یک صفحه به قبل/بعد — دقیقاً همون رفتارِ قدیمیِ فلش‌های
+   * دسکتاپ، رویِ همون نوارِ پیوسته‌ی تنبل‌بارشونده (لبه‌ها هنگامِ پیج هم
+   * طبقِ همون checkEdges بالا خودکار گسترش پیدا می‌کنن). */
+  const pageBy = useCallback((dir: "prev" | "next") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = (el.clientWidth || 300) * 0.92;
+    el.scrollBy({ left: dir === "prev" ? amount : -amount, behavior: "smooth" });
+  }, []);
+
+  return { scrollRef, days, todayIso: isoLocal(today), pageBy, desktop };
 }
 
 /**
@@ -141,10 +179,10 @@ export function useDayStrip(activeIso: string) {
  * ماوس بیشتر از چند پیکسل جابه‌جا شد، کلیکِ بعدی (روی پیلِ روز) خنثی می‌شود.
  * جابه‌جایی نسبی است (نه startScroll - dx) تا اضافه‌شدنِ روز وسطِ کشیدن پرش نسازد.
  */
-export function useDragScroll(ref: React.RefObject<HTMLElement>) {
+export function useDragScroll(ref: React.RefObject<HTMLElement>, enabled: boolean = true) {
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || !enabled) return;
     let down = false;
     let moved = false;
     let startX = 0;
@@ -221,5 +259,5 @@ export function useDragScroll(ref: React.RefObject<HTMLElement>) {
       el.removeEventListener("wheel", onWheelOrTouch);
       el.removeEventListener("touchstart", onWheelOrTouch);
     };
-  }, [ref]);
+  }, [ref, enabled]);
 }
