@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { PlansSection, UpgradeOffer } from "@/components/PlanShowcase";
+import { PlansSection, UpgradeOffer, BREAKOUT } from "@/components/PlanShowcase";
 import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration";
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
@@ -56,7 +56,12 @@ export default function SubscriptionPage() {
   if (status !== "authenticated") {
     return (
       <section className="subscription-page">
-        <h1>اشتراک</h1>
+        {/* BREAKOUT: تیتر باید با کارت‌های پلن (که خودشون از ستونِ باریکِ
+            ۶۲۰px بیرون می‌زنن) هم‌لبه بمونه — بدونش تیتر توی همون ستونِ
+            باریک می‌موند و روی دسکتاپ نسبت به کارت‌های عریض‌تر زیرش،
+            راست‌چین به‌نظر نمی‌رسید (لبه‌ی راستش با لبه‌ی راستِ کارت‌ها
+            یکی نبود). */}
+        <h1 className={BREAKOUT}>اشتراک</h1>
         <AuthGate message="برای مشاهده‌ی پلن‌های اشتراک وارد شوید" />
       </section>
     );
@@ -64,7 +69,7 @@ export default function SubscriptionPage() {
 
   return (
     <section className="subscription-page">
-      <h1>اشتراک</h1>
+      <h1 className={BREAKOUT}>اشتراک</h1>
 
       {checkoutResult === "success" && (
         <div className="checkout-status-banner success">
