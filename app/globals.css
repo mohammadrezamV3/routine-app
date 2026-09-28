@@ -9412,3 +9412,12 @@ html[data-logging-out]::after{
   animation:logoutVeil .2s ease-out both;
 }
 @keyframes logoutVeil{ from{ opacity:0; } to{ opacity:1; } }
+
+/* SpinnerCheck — تبدیلِ دایره‌ی لودینگ به تیک بعد از ورودِ موفق. */
+.spinner-check{ display:inline-block; vertical-align:middle; }
+.spinner-check-ring{ stroke-dasharray:63; stroke-dashoffset:63; transform:rotate(-90deg); transform-origin:center; animation:spinnerCheckDraw .35s cubic-bezier(.22,1,.36,1) forwards; }
+.spinner-check-mark{ stroke-dasharray:16; stroke-dashoffset:16; animation:spinnerCheckDraw .3s cubic-bezier(.22,1,.36,1) .25s forwards; }
+@keyframes spinnerCheckDraw{ to{ stroke-dashoffset:0; } }
+/* حینِ ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
+.auth-full-btn.is-busy > *{ vertical-align:middle; }
+.auth-full-btn.is-busy:disabled{ opacity:1; }
