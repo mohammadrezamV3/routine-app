@@ -215,7 +215,7 @@ export function PreviewFitness() {
 /* ─── کالری ─── */
 export function PreviewCalorie() {
   const entries = [
-    { id: "1", customName: "املت", grams: 200, customCalories: 310, proteinG: 21, carbsG: 4, fatG: 23 },
+    { id: "1", customName: "جوجه‌کباب", grams: 200, customCalories: 330, proteinG: 52, carbsG: 2, fatG: 12 },
     { id: "2", customName: "چلو مرغ", grams: 350, customCalories: 620, proteinG: 42, carbsG: 78, fatG: 14 },
   ];
   return (

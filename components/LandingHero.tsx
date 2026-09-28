@@ -295,9 +295,9 @@ export function LandingHero() {
                   <UtensilsCrossed className="h-3.5 w-3.5 text-dash-green" /> کالری‌شمار
                 </div>
                 <div className="calorie-glass-field lh-cal-entry">
-                  <span className="truncate text-[10.5px] font-bold text-dash-text">املت</span>
+                  <span className="truncate text-[10.5px] font-bold text-dash-text">جوجه‌کباب</span>
                   <span className="mono rounded-lg px-1.5 py-0.5 text-[11px] font-extrabold" style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}>
-                    <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>۳۱۰
+                    <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>۳۳۰
                   </span>
                 </div>
               </div>
