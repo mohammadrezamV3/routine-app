@@ -3927,6 +3927,21 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    جعبه‌ی یکسان می‌نشاند. */
 .auth-phone-send-btn{ width:100px; padding-inline-end:0; padding-inline-start:0; }
 .auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
+/* باگ: (۱) ریستِ سراسریِ body[data-theme] button (اسپسیفیسیتیِ بالاتر) به
+   «ارسال کد» بک‌گراندِ شیشه‌ای می‌داد؛ (۲) button:active{transform:scale(.96)}
+   جای translateY(-50%) رو می‌گرفت و دکمه‌ها با هر کلیک از جا می‌پریدن. هر دو
+   دکمه‌ی داخلِ فیلد (ارسال کد، نمایش/مخفیِ رمز) در همه‌ی حالت‌ها بی‌بک‌گراند
+   و با همون transform می‌مونن. */
+body[data-theme] .auth-phone-send-btn, body:not([data-theme]) .auth-phone-send-btn,
+body[data-theme] .auth-phone-send-btn:hover, body[data-theme] .auth-phone-send-btn:disabled,
+body[data-theme] .auth-phone-send-btn:disabled:hover, body[data-theme] .auth-phone-send-btn:active,
+body[data-theme] .auth-phone-send-btn:focus-visible,
+body[data-theme] .field-toggle-visibility-btn, body:not([data-theme]) .field-toggle-visibility-btn,
+body[data-theme] .field-toggle-visibility-btn:hover, body[data-theme] .field-toggle-visibility-btn:active,
+body[data-theme] .field-toggle-visibility-btn:focus-visible{
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transform:translateY(-50%);
+}
 
 /* فیلد کد تایید که زیر فیلد شماره ظاهر می‌شه — همون ورود ملایم بقیه‌ی
    فیلدهای فرم (staggerFieldsIn از data-anim-field استفاده می‌کنه)، بدون
