@@ -26,10 +26,10 @@ export const MENTOR_TERMS_ERROR_CODE = "MENTOR_TERMS_REQUIRED";
 export type MentorTermsRole = "mentor" | "student";
 
 export const MENTOR_TERMS_REQUIRED_MESSAGE: Record<MentorTermsRole, string> = {
-  mentor: "برای ساخت یا ذخیره‌ی پروفایل منتوری، شرایط استفاده از بخش منتورها را بخوان و بپذیر",
-  student: "برای ارسال درخواست شاگردی، شرایط استفاده از بخش منتورها را بخوان و بپذیر",
+  mentor: "برای ساخت یا ذخیره‌ی پروفایل مربی‌گری، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر",
+  student: "برای ارسال درخواست شاگردی، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر",
 };
-export const MENTOR_TERMS_STALE_MESSAGE = "شرایط منتورها به‌روز شده است؛ صفحه را دوباره باز کن و نسخه‌ی جدید را بپذیر";
+export const MENTOR_TERMS_STALE_MESSAGE = "شرایط مربی‌ها به‌روز شده است؛ صفحه را دوباره باز کن و نسخه‌ی جدید را بپذیر";
 
 /** آیا نسخه‌ی ذخیره‌شده همان نسخه‌ی جاری است */
 export function hasCurrentMentorTerms(version: string | null | undefined): boolean {

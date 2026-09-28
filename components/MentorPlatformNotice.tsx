@@ -8,7 +8,7 @@ import { MENTOR_TERMS_PATH } from "@/lib/mentorTerms";
 export function MentorPlatformNotice({ className }: { className?: string }) {
   return (
     <p className={`mentor-platform-notice${className ? ` ${className}` : ""}`}>
-      آریون فقط بستر ارتباط است؛ منتورها مستقل‌اند و مسئولیت خدماتشان با خودشان است.{" "}
+      آریون فقط بستر ارتباط است؛ مربی‌ها مستقل‌اند و مسئولیت خدماتشان با خودشان است.{" "}
       <Link href={MENTOR_TERMS_PATH} className="mentor-terms-link">
         شرایط
       </Link>

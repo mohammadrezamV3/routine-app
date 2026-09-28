@@ -75,7 +75,7 @@ export default function AdminMentorReviewsPage() {
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">نظرات منتورها</div>
+          <div className="admin-page-kicker">نظرات مربی‌ها</div>
         </div>
       </div>
 

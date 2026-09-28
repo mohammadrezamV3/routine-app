@@ -40,11 +40,11 @@ const RESPONSE_OPTIONS = [{ value: "0", label: "همه" }, ...MAX_RESPONSE_OPTIO
 // محبوب، تازه و یک ردیف برای هر حوزه؛ «مشاهده همه»ی هر ردیف همان فهرست را
 // با فیلترِ متناظر (یا ?view=all برای همه‌ی منتورها) باز می‌کند.
 type View = "rows" | "all" | "saved";
-const categoryRowTitle = (c: MentorCategory) => `منتورهای ${MENTOR_CATEGORY_META[c].label}`;
+const categoryRowTitle = (c: MentorCategory) => `مربی‌های ${MENTOR_CATEGORY_META[c].label}`;
 
 export default function MentorsSearchPage() {
   return (
-    <MentorPageShell title="پیدا کردن منتور">
+    <MentorPageShell title="مربی‌ها">
       <Suspense fallback={<LoadingBlock />}>
         <SavedMentorsProvider>
           <Discovery />
@@ -149,7 +149,7 @@ function FilterPanel({
   const clearAll = () => { setDraft(DEFAULT_FILTERS); onClear(); };
 
   return (
-    <div className="trade-surface mentor-filters" role="search" aria-label="جستجو و فیلترِ منتورها">
+    <div className="trade-surface mentor-filters" role="search" aria-label="جستجو و فیلترِ مربی‌ها">
       <div className="mentor-search-row">
         <label className="mentor-search">
           <Search size={16} {...IC} />
@@ -161,8 +161,8 @@ function FilterPanel({
             value={qInput}
             maxLength={SEARCH_QUERY_MAX + 20}
             onChange={(e) => onQInput(e.target.value)}
-            placeholder="مثلاً کنکور، بدنسازی یا نام منتور"
-            aria-label="جستجوی نام، تخصص یا عنوانِ منتور"
+            placeholder="مثلاً کنکور، بدنسازی یا نام مربی"
+            aria-label="جستجوی نام، تخصص یا عنوانِ مربی"
           />
           {qInput && (
             <button type="button" className="trade-icon-btn mentor-search-clear" onClick={() => onQInput("")} aria-label="پاک کردن جستجو">
@@ -266,7 +266,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
       const res = await fetch(`/api/mentors?${params}`, { cache: "no-store" });
       if (id !== reqId.current) return;
       if (!res.ok) {
-        const msg = await readApiError(res, "فهرست منتورها دریافت نشد؛ دوباره تلاش کن");
+        const msg = await readApiError(res, "فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن");
         if (p === 1) setError(msg); else setMoreError(msg);
         return;
       }
@@ -298,7 +298,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
         icon={<Users size={15} {...IC} />}
         action={stale ? <Spinner size={14} /> : undefined}
       >
-        {defaultView && allView ? "همه‌ی منتورها" : "نتیجه‌ها"}
+        {defaultView && allView ? "همه‌ی مربی‌ها" : "نتیجه‌ها"}
       </MentorSectionTitle>
 
       {error ? (
@@ -309,11 +309,11 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
         <div className={`mentor-results${stale ? " is-stale" : ""}`} aria-busy={loading}>
           {mentors.length === 0 ? (
             defaultView ? (
-              <MentorEmptyState icon={<Users size={24} {...IC} />} title="هنوز منتوری منتشر نشده است" />
+              <MentorEmptyState icon={<Users size={24} {...IC} />} title="هنوز مربی‌ای منتشر نشده است" />
             ) : (
               <div className="mentor-empty-search">
                 <MentorEmpty icon={<SearchX size={16} {...IC} />}>
-                  {filters.q ? `منتوری برای «${filters.q}» پیدا نشد` : "منتوری با این فیلترها پیدا نشد"}
+                  {filters.q ? `مربی‌ای برای «${filters.q}» پیدا نشد` : "مربی‌ای با این فیلترها پیدا نشد"}
                 </MentorEmpty>
                 <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={onClear}>پاک کردن فیلترها</button>
               </div>
@@ -325,7 +325,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
                 <div className="mentor-more mentor-more-col">
                   {moreError && <p className="mentor-field-error" role="alert">{moreError}</p>}
                   <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => load(page + 1)} disabled={moreBusy}>
-                    {moreBusy ? <Spinner size={14} /> : moreError ? "تلاش دوباره" : "منتورهای بیشتر"}
+                    {moreBusy ? <Spinner size={14} /> : moreError ? "تلاش دوباره" : "مربی‌های بیشتر"}
                   </button>
                 </div>
               )}
@@ -375,24 +375,24 @@ function Rows({
   }, []);
   useEffect(load, [load]);
 
-  if (failed) return <MentorErrorState message="فهرست منتورها دریافت نشد؛ دوباره تلاش کن" onRetry={load} />;
+  if (failed) return <MentorErrorState message="فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن" onRetry={load} />;
   if (popular === null) return <LoadingBlock />;
 
   const categoryRows = MENTOR_CATEGORIES.filter((c) => (byCategory[c]?.length ?? 0) > 0);
   if (popular.length === 0 && newcomers.length === 0 && categoryRows.length === 0) {
-    return <MentorEmptyState icon={<Users size={24} {...IC} />} title="هنوز منتوری منتشر نشده است" />;
+    return <MentorEmptyState icon={<Users size={24} {...IC} />} title="هنوز مربی‌ای منتشر نشده است" />;
   }
 
   return (
     <>
       {!!saved?.cards?.length && (
-        <MentorCarousel title="منتورهای ذخیره‌شده" icon={<Bookmark size={15} {...IC} />} mentors={saved.cards} onViewAll={onSaved} />
+        <MentorCarousel title="مربی‌های ذخیره‌شده" icon={<Bookmark size={15} {...IC} />} mentors={saved.cards} onViewAll={onSaved} />
       )}
       {popular.length > 0 && (
-        <MentorCarousel title="منتورهای محبوب" icon={<Star size={15} {...IC} />} mentors={popular} onViewAll={onPopular} />
+        <MentorCarousel title="مربی‌های محبوب" icon={<Star size={15} {...IC} />} mentors={popular} onViewAll={onPopular} />
       )}
       {newcomers.length > 0 && (
-        <MentorCarousel title="منتورهای تازه" icon={<Sparkles size={15} {...IC} />} mentors={newcomers} onViewAll={onNew} />
+        <MentorCarousel title="مربی‌های تازه" icon={<Sparkles size={15} {...IC} />} mentors={newcomers} onViewAll={onNew} />
       )}
       {categoryRows.map((c) => (
         <MentorCarousel key={c} title={categoryRowTitle(c)} mentors={byCategory[c]!} onViewAll={() => onCategory(c)} />
@@ -414,7 +414,7 @@ function SavedView({ onBack }: { onBack: () => void }) {
     <>
       {back}
       <section className="trade-surface mentor-box">
-      <MentorSectionTitle icon={<Bookmark size={15} {...IC} />}>منتورهای ذخیره‌شده</MentorSectionTitle>
+      <MentorSectionTitle icon={<Bookmark size={15} {...IC} />}>مربی‌های ذخیره‌شده</MentorSectionTitle>
       {error && !cards?.length ? (
         <MentorErrorState message={error} onRetry={reload} />
       ) : cards === null ? (
@@ -422,14 +422,14 @@ function SavedView({ onBack }: { onBack: () => void }) {
       ) : cards.length === 0 ? (
         <MentorEmptyState
           icon={<Bookmark size={24} {...IC} />}
-          title="هنوز منتوری ذخیره نکرده‌ای"
-          text="با نشانکِ روی کارتِ هر منتور، او را این‌جا برای تصمیمِ بعدی نگه دار"
+          title="هنوز مربی‌ای ذخیره نکرده‌ای"
+          text="با نشانکِ روی کارتِ هر مربی، او را این‌جا برای تصمیمِ بعدی نگه دار"
         />
       ) : (
         <>
           <CardGrid mentors={cards} />
           {cards.length >= max && (
-            <p className="mentor-muted mentor-saved-full">به سقفِ {faNum(max)} منتورِ ذخیره‌شده رسیده‌ای؛ برای ذخیره‌ی منتورِ دیگر، یکی را بردار</p>
+            <p className="mentor-muted mentor-saved-full">به سقفِ {faNum(max)} مربیِ ذخیره‌شده رسیده‌ای؛ برای ذخیره‌ی مربیِ دیگر، یکی را بردار</p>
           )}
         </>
       )}

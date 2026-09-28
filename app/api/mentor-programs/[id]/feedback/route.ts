@@ -33,7 +33,7 @@ export async function POST(req: Request, { params }: Ctx) {
   if (p.status === "DRAFT") return conflict("برای پیش‌نویس نمی‌شه فیدبک فرستاد");
   // بعد از پایان/بلاکِ رابطه، منتور دیگه راهی برای رسیدن به شاگرد نداره
   if (p.mentorship.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
-  if (await isMentorSuspended(me)) return forbidden("حساب منتوری تو تعلیق شده");
+  if (await isMentorSuspended(me)) return forbidden("حساب مربی‌گری تو تعلیق شده");
 
   if (!(await checkRateLimit(`mentor-feedback:${me}`, 60, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد فیدبک‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
@@ -70,7 +70,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
   await notifyUser(p.studentId, {
     type: "program.feedback",
-    title: "فیدبک جدید از منتور",
+    title: "فیدبک جدید از مربی",
     // متنِ فیدبک در اعلان/پوش نمی‌آید (اعلان رمز نمی‌شود و پوش از سرویسِ بیرونی رد می‌شود)
     body: `${displayName(mentor)} درباره‌ی «${p.title}» فیدبک تازه‌ای نوشت`,
     url: `/mentor-programs/${p.id}`,

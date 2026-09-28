@@ -164,13 +164,13 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
           <label key={r.mentorshipId} className={`mentor-check${r.key ? "" : " is-disabled"}`}>
             <input type="checkbox" disabled={!r.key || busy} checked={!!r.key && selected.has(r.mentorshipId)} onChange={(e) => toggle(r.mentorshipId, e.target.checked)} />
             <span className="mentor-check-label">{publicUserName(r.student)}</span>
-            {!r.key && <span className="mentor-check-kind">هنوز وارد بخش منتور نشده</span>}
+            {!r.key && <span className="mentor-check-kind">هنوز وارد بخش مربی نشده</span>}
           </label>
         ))}
       </div>
       <p className="mentor-broadcast-summary">
         {faNum(chosen.length)} گیرنده
-        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد هنوز وارد بخش منتور نشده و این پیام را نمی‌گیرد` : ""}
+        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد هنوز وارد بخش مربی نشده و این پیام را نمی‌گیرد` : ""}
       </p>
 
       <SavedRepliesPicker onPick={(t) => { setText((d) => (d ? d + "\n" : "") + t); setTextErr(null); }} disabled={busy} />

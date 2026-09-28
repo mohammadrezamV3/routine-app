@@ -20,7 +20,7 @@ const REASONS: Record<ReportTargetType | "CONVERSATION", string[]> = {
 };
 
 const TITLES: Record<ReportTargetType, string> = {
-  USER: "گزارش منتور",
+  USER: "گزارش مربی",
   REVIEW: "گزارش نظر",
   MESSAGE: "گزارش پیام",
   PROGRAM: "گزارش برنامه",

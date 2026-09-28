@@ -77,7 +77,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   const notices: React.ReactNode[] = [];
   if (suspended) {
     notices.push(
-      <MentorNotice key="susp" tone="danger" icon={ic(Ban, MI.row)} title="حساب منتوری معلق است">
+      <MentorNotice key="susp" tone="danger" icon={ic(Ban, MI.row)} title="حساب مربی‌گری معلق است">
         {self.suspendedReason || "تا رفع تعلیق، شاگرد جدید و ارسال برنامه ممکن نیست"}
       </MentorNotice>,
     );

@@ -371,7 +371,7 @@ describe("weekly report and export", () => {
     expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]); // BOM برای اکسل
     const csv = new TextDecoder().decode(bytes);
     expect(csv).toContain("تاریخ,منبع,برنامه,آیتم");
-    expect(csv).toContain(`${dayOffset(-1)},برنامه‌ی منتور,برنامه تست,مطالعه,انجام شد`);
+    expect(csv).toContain(`${dayOffset(-1)},برنامه‌ی مربی,برنامه تست,مطالعه,انجام شد`);
     expect(csv.split("\r\n").filter((l) => l.includes("برنامه‌ی منتور"))).toHaveLength(6);
 
     expect((await getExport(req("GET", `/api/mentor/export?studentId=${hidden}`))).status).toBe(403);

@@ -76,7 +76,7 @@ export default function NewMentorProgramPage() {
   const row = rows?.find((m) => m.id === mentorshipId) ?? null;
   const back = row
     ? { href: `/mentor/students/${row.counterpart.id}`, label: publicUserName(row.counterpart) }
-    : { href: "/mentor", label: "پنل منتور" };
+    : { href: "/mentor", label: "پنل مربی" };
 
   let body: React.ReactNode;
   if (loadError) body = <MentorDashError message={loadError} onRetry={load} />;

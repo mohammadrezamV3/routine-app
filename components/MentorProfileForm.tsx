@@ -118,8 +118,8 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   return (
     <form onSubmit={save} noValidate>
       {profile?.suspendedAt && (
-        <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب منتوری معلق است">
-          {profile.suspendedReason || "تا رفع تعلیق، پروفایل در فهرست منتورها دیده نمی‌شود"}
+        <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب مربی‌گری معلق است">
+          {profile.suspendedReason || "تا رفع تعلیق، پروفایل در فهرست مربی‌ها دیده نمی‌شود"}
         </MentorNotice>
       )}
 
@@ -223,8 +223,8 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
               {missing.length > 0 && !published
                 ? `برای انتشار، ${missing.join(" و ")} لازم است`
                 : profile?.identityStatus === "VERIFIED"
-                  ? "پروفایل منتشرشده در فهرست منتورها دیده می‌شود"
-                  : "پس از تأیید مدرک شناسایی در فهرست منتورها دیده می‌شود"}
+                  ? "پروفایل منتشرشده در فهرست مربی‌ها دیده می‌شود"
+                  : "پس از تأیید مدرک شناسایی در فهرست مربی‌ها دیده می‌شود"}
             </div>
           </div>
           <ToggleSwitch

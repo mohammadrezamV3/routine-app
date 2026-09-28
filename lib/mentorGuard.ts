@@ -27,8 +27,8 @@ export async function getActiveMentorProfile(
   userId: string
 ): Promise<{ ok: true; profile: MentorProfile } | { ok: false; response: NextResponse }> {
   const profile = await prisma.mentorProfile.findUnique({ where: { userId } });
-  if (!profile) return { ok: false, response: forbidden("اول پروفایل منتوری بساز") };
-  if (profile.suspendedAt) return { ok: false, response: forbidden("حساب منتوری تو تعلیق شده") };
+  if (!profile) return { ok: false, response: forbidden("اول پروفایل مربی‌گری بساز") };
+  if (profile.suspendedAt) return { ok: false, response: forbidden("حساب مربی‌گری تو تعلیق شده") };
   return { ok: true, profile };
 }
 

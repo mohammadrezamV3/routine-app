@@ -21,7 +21,7 @@ async function respond(userId: string) {
     prisma.mentorProfile.findUnique({ where: { userId }, select: SETTINGS_SELECT }),
     countActiveStudents(userId),
   ]);
-  if (!p) return forbidden("اول پروفایل منتوری بساز");
+  if (!p) return forbidden("اول پروفایل مربی‌گری بساز");
   const availability = availabilityOf(p, active);
   return NextResponse.json({
     settings: {
@@ -61,7 +61,7 @@ export async function PUT(req: Request) {
   const userId = g.userId;
 
   const exists = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true } });
-  if (!exists) return forbidden("اول پروفایل منتوری بساز");
+  if (!exists) return forbidden("اول پروفایل مربی‌گری بساز");
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });

@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     suspendProfile = mentorUserId
       ? await prisma.mentorProfile.findUnique({ where: { userId: mentorUserId }, select: { id: true, userId: true, suspendedAt: true } })
       : null;
-    if (!suspendProfile) return NextResponse.json({ error: "صاحبِ این محتوا منتور نیست" }, { status: 400 });
+    if (!suspendProfile) return NextResponse.json({ error: "صاحبِ این محتوا مربی نیست" }, { status: 400 });
     try {
       await loadTarget(g, suspendProfile.userId, { destructive: true });
     } catch (e) {
@@ -171,8 +171,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (suspendedNow && suspendProfile) {
     await notifyUser(suspendProfile.userId, {
       type: "mentor.suspension",
-      title: "منتوری شما تعلیق شد",
-      body: "در پی بررسی یک گزارش، پروفایل منتوری شما تا اطلاع ثانوی از فهرست منتورها حذف شد.",
+      title: "مربی‌گری شما تعلیق شد",
+      body: "در پی بررسی یک گزارش، پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.",
       url: "/mentor/profile",
     });
   }

@@ -74,7 +74,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
       await tx.mentorCredential.updateMany({ where: { profileId: doc.profileId, category: doc.category ?? "" }, data: { status: "NOT_PROVIDED" } });
     }
     await tx.mentorVerificationEvent.create({
-      data: { profileId: doc.profileId, kind: doc.kind, category: doc.category, fromStatus: "PENDING", toStatus: "NOT_PROVIDED", reason: "حذف مدرک توسط منتور", actorUserId: g.userId },
+      data: { profileId: doc.profileId, kind: doc.kind, category: doc.category, fromStatus: "PENDING", toStatus: "NOT_PROVIDED", reason: "حذف مدرک توسط مربی", actorUserId: g.userId },
     });
   });
 

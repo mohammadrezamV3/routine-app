@@ -42,7 +42,7 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   if (p.status !== "ACTIVE") return conflict("یادداشت فقط برای برنامه‌ی در حال اجرا ثبت می‌شود");
-  if (p.mentorship.status !== "ACTIVE") return conflict("رابطه با این منتور دیگر فعال نیست");
+  if (p.mentorship.status !== "ACTIVE") return conflict("رابطه با این مربی دیگر فعال نیست");
 
   const date = parseIsoDate(b.date);
   if (!date) return badRequest("تاریخ معتبر نیست (YYYY-MM-DD)");

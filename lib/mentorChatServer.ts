@@ -77,7 +77,7 @@ export function serializeMessage(r: MessageRow, viewerId: string) {
 export const keyChanged = () =>
   NextResponse.json({ error: "کلید رمزگذاری یکی از دو طرف عوض شده؛ دوباره تلاش کن", code: "KEY_CHANGED" }, { status: 409 });
 export const peerNoKey = () =>
-  NextResponse.json({ error: "طرف مقابل هنوز وارد بخش منتور نشده است", code: "PEER_NO_KEY" }, { status: 409 });
+  NextResponse.json({ error: "طرف مقابل هنوز وارد بخش مربی نشده است", code: "PEER_NO_KEY" }, { status: 409 });
 export const senderNoKey = () =>
   NextResponse.json({ error: "کلید رمزگذاری این دستگاه هنوز آماده نیست؛ صفحه را دوباره باز کن", code: "NO_KEY" }, { status: 409 });
 

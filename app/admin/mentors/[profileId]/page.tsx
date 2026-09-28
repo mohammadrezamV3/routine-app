@@ -98,7 +98,7 @@ export default function AdminMentorDetailPage() {
       .then(async (r) => {
         if (r.status === 404 || r.status === 403) {
           const d = await r.json().catch(() => ({}));
-          setErrorMsg((d as { error?: string })?.error || (r.status === 404 ? "منتور پیدا نشد" : "دسترسی به این منتور مجاز نیست"));
+          setErrorMsg((d as { error?: string })?.error || (r.status === 404 ? "مربی پیدا نشد" : "دسترسی به این مربی مجاز نیست"));
           setState("blocked");
           return;
         }
@@ -110,11 +110,11 @@ export default function AdminMentorDetailPage() {
   }, [id]);
   useEffect(load, [load]);
 
-  if (state === "blocked") return <EmptyState message={errorMsg || "منتور پیدا نشد"} />;
+  if (state === "blocked") return <EmptyState message={errorMsg || "مربی پیدا نشد"} />;
   if (state === "error" && !data) {
     return (
       <div className="admin-empty">
-        <span>اطلاعات منتور دریافت نشد</span>
+        <span>اطلاعات مربی دریافت نشد</span>
         <button type="button" className="admin-btn" onClick={() => { setState("loading"); load(); }}>
           <RefreshCw {...IS} aria-hidden /> تلاش دوباره
         </button>
@@ -166,7 +166,7 @@ export default function AdminMentorDetailPage() {
           )}
           {!isSelf && (p.suspendedAt
             ? <button type="button" className="admin-btn" onClick={() => setRestoreOpen(true)}><RotateCcw {...IS} aria-hidden /> رفع تعلیق</button>
-            : <button type="button" className="admin-btn danger" onClick={() => setSuspendOpen(true)}><Ban {...IS} aria-hidden /> تعلیق منتوری</button>)}
+            : <button type="button" className="admin-btn danger" onClick={() => setSuspendOpen(true)}><Ban {...IS} aria-hidden /> تعلیق مربی‌گری</button>)}
         </div>
       </div>
 
@@ -182,7 +182,7 @@ export default function AdminMentorDetailPage() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title"><UserRound {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />پروفایل منتوری</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title"><UserRound {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />پروفایل مربی‌گری</span></div>
         <div className="admin-info-grid">
           <InfoRow k="عنوان" v={p.headline} />
           <div className="admin-info-row">
@@ -200,7 +200,7 @@ export default function AdminMentorDetailPage() {
           <InfoRow k="تخصص‌ها" v={p.specialties.join("، ") || null} />
           <InfoRow k="پذیرش شاگرد جدید" v={p.acceptingStudents ? "باز" : "بسته"} />
           <InfoRow k="آخرین فعالیت" v={p.lastActiveAt ? formatDateTime(p.lastActiveAt) : null} />
-          <InfoRow k="منتور از" v={formatDateShort(p.createdAt)} />
+          <InfoRow k="مربی از" v={formatDateShort(p.createdAt)} />
           <InfoRow k="عضویت در آریون" v={formatDateShort(u.createdAt)} />
         </div>
         {p.bio && <div className="admin-modal-text admin-mentor-bio">{p.bio}</div>}
@@ -292,7 +292,7 @@ export default function AdminMentorDetailPage() {
                       </span>
                     </td>
                     <td className="admin-muted admin-cell-wrap">{e.reason || "—"}</td>
-                    <td>{e.byMentor ? "خود منتور" : e.actor ? displayName(e.actor) : "—"}</td>
+                    <td>{e.byMentor ? "خود مربی" : e.actor ? displayName(e.actor) : "—"}</td>
                     <td className="admin-ltr">{formatDateTime(e.createdAt)}</td>
                   </tr>
                 ))}
@@ -317,8 +317,8 @@ export default function AdminMentorDetailPage() {
       )}
       {restoreOpen && (
         <ConfirmModal
-          title="رفع تعلیق منتوری" danger={false} confirmLabel="رفع تعلیق"
-          message="پروفایل منتوری دوباره فعال می‌شود و اگر منتشرشده باشد، در فهرست منتورها نمایش داده می‌شود."
+          title="رفع تعلیق مربی‌گری" danger={false} confirmLabel="رفع تعلیق"
+          message="پروفایل مربی‌گری دوباره فعال می‌شود و اگر منتشرشده باشد، در فهرست مربی‌ها نمایش داده می‌شود."
           onClose={() => setRestoreOpen(false)}
           onConfirm={async () => {
             // روی خطا مودال باز می‌مونه تا ادمین بدونه اقدام انجام نشده
@@ -450,7 +450,7 @@ function VerifyModal({ profileId, target, onClose, onDone }: { profileId: string
         method: "POST",
         json: { kind: target.kind, category: target.category || undefined, status, reason: reason.trim() || undefined },
       });
-      toast("وضعیت ثبت شد؛ اعلان برای منتور ارسال شد");
+      toast("وضعیت ثبت شد؛ اعلان برای مربی ارسال شد");
       onDone();
     } catch (e: any) {
       setError(e.message);
@@ -478,7 +478,7 @@ function VerifyModal({ profileId, target, onClose, onDone }: { profileId: string
           placeholder={needsReason ? "مثلاً تصویر مدرک خوانا نیست" : undefined}
           onChange={(e) => { setReason(e.target.value); setError(null); }}
         />
-        {needsReason && <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای منتور نمایش داده می‌شود</span>}
+        {needsReason && <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای مربی نمایش داده می‌شود</span>}
       </label>
       {error && <div className="admin-form-error">{error}</div>}
       <div className="admin-modal-actions">
@@ -506,7 +506,7 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
     setError(null);
     try {
       await adminFetch(`/api/admin/mentors/${profileId}/suspend`, { method: "POST", json: { suspend: true, reason: reason.trim() } });
-      toast("منتوری تعلیق شد");
+      toast("مربی‌گری تعلیق شد");
       onDone();
     } catch (e: any) {
       setError(e.message);
@@ -516,20 +516,20 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
   }
 
   return (
-    <AdminModal title="تعلیق منتوری" eyebrow="تأیید اقدام" onClose={onClose}>
+    <AdminModal title="تعلیق مربی‌گری" eyebrow="تأیید اقدام" onClose={onClose}>
       <div className="admin-modal-text">
-        پروفایل از فهرست منتورها حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.
+        پروفایل از فهرست مربی‌ها حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.
       </div>
       <label className="admin-field">
         <span>دلیل تعلیق</span>
         <textarea className="admin-input" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} autoFocus />
-        <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای منتور نمایش داده می‌شود</span>
+        <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای مربی نمایش داده می‌شود</span>
       </label>
       {error && <div className="admin-form-error">{error}</div>}
       <div className="admin-modal-actions">
         <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
         <button type="button" className="admin-btn danger" disabled={busy || !reason.trim()} onClick={submit} aria-busy={busy}>
-          {busy ? <Spinner size={14} /> : "تعلیق منتوری"}
+          {busy ? <Spinner size={14} /> : "تعلیق مربی‌گری"}
         </button>
       </div>
     </AdminModal>

@@ -193,7 +193,7 @@ export function MentorProgressWeek({
         noteEditable && inRange(selected) && selected <= today ? (
           <DayNoteEditor key={selected} programId={programId} date={selected} initial={selDay?.note ?? null} onSaved={onNoteSaved} />
         ) : selDay?.note ? (
-          <div className="mentor-note-box"><b>یادداشت تو برای منتور</b><div>{selDay.note}</div></div>
+          <div className="mentor-note-box"><b>یادداشت تو برای مربی</b><div>{selDay.note}</div></div>
         ) : null
       ) : !view.hidden && selDay?.note ? (
         <div className="mentor-note-box"><b>یادداشت شاگرد</b><div>{selDay.note}</div></div>
@@ -246,7 +246,7 @@ function DayNoteEditor({
 
   return (
     <div style={{ marginTop: 12 }}>
-      <MentorField label="یادداشت برای منتور" htmlFor={id} optional error={error}>
+      <MentorField label="یادداشت برای مربی" htmlFor={id} optional error={error}>
         <textarea
           id={id}
           className="wsearch-newform-name trade-glass-field"

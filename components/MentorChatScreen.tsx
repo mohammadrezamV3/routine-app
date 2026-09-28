@@ -68,7 +68,7 @@ export function MentorChatScreen({ id }: { id: string }) {
       animate={{ opacity: 1, x: 0, transition: mT(M_DUR.slow) }}
     >
       {status === "loading" && <div className="mc-state"><LoadingBlock /></div>}
-      {status === "unauthenticated" && <div className="mc-state"><AuthGate message="برای استفاده از بخش منتورها وارد شوید" /></div>}
+      {status === "unauthenticated" && <div className="mc-state"><AuthGate message="برای استفاده از بخش مربی‌ها وارد شوید" /></div>}
       {status === "authenticated" && (
         <FeatureGate feature="mentors">
           <ChatScreenBody id={id} />
@@ -117,7 +117,7 @@ function ChatScreenBody({ id }: { id: string }) {
     : rel.row.status === "ENDED" ? "رابطه پایان یافته"
     : rel.row.status === "PENDING" ? "در انتظار پاسخ"
     : rel.row.status === "ACTIVE" && rel.row.pausedAt ? "همکاری متوقف است"
-    : rel.role === "student" ? "منتور تو" : "شاگرد تو";
+    : rel.role === "student" ? "مربی تو" : "شاگرد تو";
 
   return (
     <>

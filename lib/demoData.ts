@@ -853,11 +853,11 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
             : []),
           {
             reporterId: id("elham"), targetType: "USER", targetId: id("maryam"), targetUserId: id("maryam"), reason: "رفتارِ نامناسب یا توهین‌آمیز", details: "پیام‌های خارج از برنامه می‌فرستاد.",
-            status: "RESOLVED", resolution: "پیام‌ها بررسی شد؛ به منتور تذکر داده شد.", resolvedById: ownerId, resolvedAt: S.ago(5), createdAt: S.ago(6),
+            status: "RESOLVED", resolution: "پیام‌ها بررسی شد؛ به مربی تذکر داده شد.", resolvedById: ownerId, resolvedAt: S.ago(5), createdAt: S.ago(6),
           },
           {
             reporterId: id("pouya"), targetType: "USER", targetId: id("amir"), targetUserId: id("amir"), reason: "سایر", details: "درخواستم رد شد.",
-            status: "DISMISSED", resolution: "رد درخواست حق منتوره؛ تخلفی نیست.", resolvedById: ownerId, resolvedAt: S.ago(8), createdAt: S.ago(9),
+            status: "DISMISSED", resolution: "رد درخواست حق مربیه؛ تخلفی نیست.", resolvedById: ownerId, resolvedAt: S.ago(8), createdAt: S.ago(9),
           },
         ],
       });
@@ -892,7 +892,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
         const p = await tx.mentorProfile.create({
           data: {
             userId: ownerId,
-            headline: "پروفایل منتوری آزمایشی",
+            headline: "پروفایل مربی‌گری آزمایشی",
             bio: "این پروفایل را ابزار داده‌ی آزمایشی ساخته و با حذف داده‌ی آزمایشی پاک می‌شود.",
             categories: ["ROUTINE", "FITNESS"],
             routineRole: "مشاور برنامه‌ریزی",
@@ -947,7 +947,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       const notes = await tx.inAppNotification.createManyAndReturn({
         data: [
           { userId: ownerId, type: "mentor.request", title: "درخواست شاگردی جدید", body: "حسین جعفری درخواست شاگردی فرستاده.", url: "/mentor", createdAt: S.ago(0, 20) },
-          { userId: ownerId, type: "mentor.invite", title: "دعوت منتور", body: "امیر رضایی شما را به‌عنوان شاگرد دعوت کرده.", url: "/mentorship", createdAt: S.ago(1) },
+          { userId: ownerId, type: "mentor.invite", title: "دعوت مربی", body: "امیر رضایی شما را به‌عنوان شاگرد دعوت کرده.", url: "/mentorship", createdAt: S.ago(1) },
           { userId: ownerId, type: "program.new", title: "برنامه‌ی جدید", body: "سارا احمدی «برنامه‌ی آمادگی آزمون آبان» را فرستاده.", url: `/mentor-programs/${ownerPending}`, createdAt: S.ago(0, 90) },
         ],
         select: { id: true },
@@ -1042,11 +1042,11 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
 
   // رتبه‌بندیِ شایستگی همین حالا از روی داده‌ی تازه (وگرنه تا TTL کهنه می‌موند)
   await recomputeMentorRankings().catch(() => {
-    warnings.push("رتبه‌بندی منتورها بازمحاسبه نشد");
+    warnings.push("رتبه‌بندی مربی‌ها بازمحاسبه نشد");
   });
 
   if (skippedOwnerThreads > 0) {
-    warnings.push("گفت‌وگوهای حساب شما با کاربران آزمایشی خالی ساخته شد؛ پیام‌ها رمزگذاری سرتاسری دارند و این حساب هنوز کلید رمزگذاری ندارد. یک بار بخش منتور را باز کن و داده‌ی آزمایشی را دوباره بساز");
+    warnings.push("گفت‌وگوهای حساب شما با کاربران آزمایشی خالی ساخته شد؛ پیام‌ها رمزگذاری سرتاسری دارند و این حساب هنوز کلید رمزگذاری ندارد. یک بار بخش مربی را باز کن و داده‌ی آزمایشی را دوباره بساز");
   }
 
   const state: DemoState = { seededAt: now.toISOString(), ownerId, ownerProfileId, notificationIds, manageLabelIds, toolsDemo };
