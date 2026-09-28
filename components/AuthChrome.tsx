@@ -29,7 +29,7 @@ export function AuthBackButton({ onClick }: { onClick?: () => void }) {
 /** نشان برند، داخل باکس — subtitle اختیاریه؛ هر سه صفحه‌ی auth (ورود/
  * ثبت‌نام/فراموشی رمز) ازش برای تایتل زیر لوگو استفاده می‌کنن تا محل
  * تایتل بینشون یکسان بمونه. */
-export function AuthBrandMark({ subtitle }: { subtitle?: string }) {
+export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: string }) {
   const { theme } = useTheme();
   return (
     <div className="auth-brand-mark-wrap">
@@ -48,6 +48,7 @@ export function AuthBrandMark({ subtitle }: { subtitle?: string }) {
         />
       </div>
       {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
+      {note && <p className="auth-brand-note">{note}</p>}
     </div>
   );
 }

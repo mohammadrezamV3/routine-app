@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { OG_BASE, SOCIAL, SUPPORT_EMAIL, BRAND_FA } from "@/lib/brand";
+import { SOCIAL, SUPPORT_EMAIL, BRAND_FA } from "@/lib/brand";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
-export const metadata: Metadata = {
-  title: { absolute: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش` },
+export const metadata: Metadata = pageMetadata({
+  title: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش`,
   description:
     `${BRAND_FA} چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
     `برنامه‌ی بدنسازی، کالری‌شماری و ژورنال ترید — همه در یک حساب کاربری.`,
-  alternates: { canonical: "/about" },
-  // images حذف شده تا opengraph-image.tsx اختصاصیِ /about به‌جای /og.png بیاد.
-  openGraph: { ...OG_BASE, images: undefined, url: "/about", title: `درباره ${BRAND_FA}` },
-};
+  path: "/about",
+  ogTitle: `درباره ${BRAND_FA}`,
+  ownOgImage: true,
+});
 
 // محتوای این صفحه عمدا واقعی و دقیقا منطبق بر کاری‌ست که اپ الان انجام
 // می‌دهد — بدون ادعای اثبات‌نشدنی «بهترین» یا آمار ساختگی. دلیل سئویی‌اش
@@ -73,6 +74,7 @@ export default function AboutPage() {
 
   return (
     <section>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: BRAND_FA, path: "/" }, { name: "درباره", path: "/about" }])) }} />
       <h1>{`درباره ${BRAND_FA}`}</h1>
       <div className="dateline" style={{ marginBottom: 18 }}>
         {`${BRAND_FA} — همه‌ی نظم زندگی‌ات، یک‌جا`}

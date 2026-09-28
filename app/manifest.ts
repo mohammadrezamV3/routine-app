@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: BRAND_FA,
     short_name: BRAND_FA,
     description:
-      "روتین روزانه و هفتگی، پیگیری عادت‌ها و کارها، برنامه‌ی بدنسازی و کالری‌شماری با AI، " +
+      "روتین روزانه و هفتگی، پیگیری عادت‌ها و کارها، برنامه‌ی بدنسازی با AI، کالری‌شماری، " +
       "ژورنال معاملات ترید و رودمپ یادگیری — همه در یک اپ فارسی.",
     start_url: "/",
     display: "standalone",

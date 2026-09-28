@@ -55,6 +55,17 @@ export default function robots(): MetadataRoute.Robots {
         // صفحه‌ی fallbackِ سرویس‌ورکر — محتوای واقعی نیست، فقط وقتی شبکه
         // نیست نشان داده می‌شود. `noindex` هم روی خودش هست.
         "/offline",
+        // پنل/فهرستِ مربی‌ها، شاگردی و آنالیز هفتگی: همه پشتِ لاگین (هم‌راستا
+        // با X-Robots-Tagِ next.config.js). `/terms/mentors` عمومی می‌مونه
+        // چون با `/terms` شروع می‌شه، نه `/mentor`.
+        "/mentor$",
+        "/mentor/",
+        "/mentors$",
+        "/mentors/",
+        "/mentorship$",
+        "/mentorship/",
+        "/mentor-programs/",
+        "/analysis/",
       ],
     },
   ];
@@ -64,5 +75,8 @@ export default function robots(): MetadataRoute.Robots {
     rules.push({ userAgent: agent, allow: "/", disallow });
   }
 
-  return { rules, host: SITE_URL, sitemap: `${SITE_URL}/sitemap.xml` };
+  // `Host:` عمدا دیگه نیست: دستورِ غیراستانداردِ یاندکس بود (خودش هم
+  // منسوخش کرده) و گزارشِ robots.txtِ سرچ‌کنسول اون رو «قانونِ ناشناخته»
+  // علامت می‌زد. دامنه‌ی اصلی با 301ِ www→apex و canonical مشخص می‌شه.
+  return { rules, sitemap: `${SITE_URL}/sitemap.xml` };
 }

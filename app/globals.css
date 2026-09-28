@@ -3990,6 +3990,10 @@ body[data-theme] .field-toggle-visibility-btn:focus-visible{
 .auth-brand-subtitle{
   margin-top:8px; font-size:15px; font-weight:700; color:var(--muted);
 }
+/* معرفیِ دوره‌ی آزمایشی زیرِ خوش‌آمد (فقط ثبت‌نام) — متنِ ساده، بدون بک‌گراند */
+.auth-brand-note{
+  margin-top:4px; font-size:12px; font-weight:500; line-height:1.8; color:var(--muted);
+}
 
 /* لینک فراموشی رمز عبور — زیر فیلد رمز، سمت چپ */
 .auth-forgot-link{

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { OG_BASE, SUPPORT_EMAIL } from "@/lib/brand";
+import { SUPPORT_EMAIL } from "@/lib/brand";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { MENTOR_TERMS_PATH } from "@/lib/mentorTerms";
 
-export const metadata: Metadata = {
-  title: { absolute: "قوانین و مقررات آریون" },
+export const metadata: Metadata = pageMetadata({
+  title: "قوانین و مقررات آریون",
   description:
     "شرایط و قوانین استفاده از آریون — حساب کاربری، اشتراک و پرداخت، انصراف و بازگشت وجه، حریم خصوصی، سلب مسئولیت پزشکی و مالی، و حل اختلاف.",
-  alternates: { canonical: "/terms" },
-  openGraph: { ...OG_BASE, url: "/terms", title: "قوانین و مقررات" },
-};
+  path: "/terms",
+  ogTitle: "قوانین و مقررات",
+});
 
 // تاریخِ آخرین بازنگری — با هر تغییرِ ماهویِ متن باید عوض شود (بند ۱۹-۲).
 const LAST_UPDATED = "مهر ۱۴۰۵";
@@ -241,6 +242,7 @@ const ARTICLES: Article[] = [
 export default function TermsPage() {
   return (
     <section>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "آریون", path: "/" }, { name: "قوانین و مقررات", path: "/terms" }])) }} />
       <h1>قوانین و مقررات</h1>
       <div className="dateline" style={{ marginBottom: 6 }}>
         آخرین بازنگری: {LAST_UPDATED}

@@ -24,6 +24,12 @@ function readLastUnit(): FoodUnit {
 // سریع‌تر زیر دکمه‌ی اصلی «افزودن» جا گرفته (نه بالای فرم، طبق درخواست
 // کاربر). درشت‌مغذی‌ها (پروتئین/کربوهیدرات/چربی) دیگه فقط وقتی غذا توی
 // کاتالوگ پیدا نشه نیستن — همیشه اختیاری در دسترسن، چه کاتالوگی چه دستی.
+
+// اسکنِ غذا فعلا قابلیتِ ارائه‌شده نیست: وقتی فلگِ calorieScan خاموشه
+// (پیش‌فرض)، تیزرِ بلورشده‌ی «به‌زودی» هم نشون داده نمی‌شه. کدش نگه داشته
+// شده تا اگه خواستیم دوباره فقط با همین ثابت برگرده.
+const SHOW_SCAN_COMING_SOON = false;
+
 export function CalorieAddEntryModal({
   date,
   mealTypes,
@@ -219,14 +225,18 @@ export function CalorieAddEntryModal({
               {saving ? <span className="wsearch-submit-spinner" /> : "افزودن"}
             </button>
 
+            {/* اسکن غذا با AI — روشن/خاموشش از پنل ادمین (فلگِ calorieScan).
+                خاموش (پیش‌فرض): هیچ اثری از اسکن دیده نمی‌شه — نه دکمه، نه
+                تیزرِ «به‌زودی»، نه جداکننده‌ی «یا» — چون این قابلیت فعلا
+                ارائه نمی‌شه. تیزرِ «به‌زودی» فقط با SHOW_SCAN_COMING_SOON. */}
+            {(scanOn || SHOW_SCAN_COMING_SOON) && (
             <div className="my-3.5 flex items-center gap-2.5 text-[10.5px] text-dash-muted">
               <span className="h-px flex-1" style={{ background: "var(--line)" }} />
               یا
               <span className="h-px flex-1" style={{ background: "var(--line)" }} />
             </div>
+            )}
 
-            {/* اسکن غذا با AI — روشن/خاموشش از پنل ادمین (فلگِ calorieScan).
-                خاموش: همون حالتِ «به‌زودی» با بلور؛ روشن: دکمه‌ی واقعی. */}
             {scanOn ? (
               <button
                 type="button"
@@ -237,7 +247,7 @@ export function CalorieAddEntryModal({
                 <Sparkles size={15} />
                 اسکن غذا با هوش مصنوعی
               </button>
-            ) : (
+            ) : SHOW_SCAN_COMING_SOON && (
             <>
             {/* فعلا غیرفعال — طبق همون الگوی ردیف‌های «به‌زودی» توی جدول
                 مقایسه‌ی پلن‌ها (PlanShowcase): خود محتوا با بلور پیش‌نمایش
