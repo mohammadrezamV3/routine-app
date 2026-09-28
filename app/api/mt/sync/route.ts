@@ -5,7 +5,9 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { sessionsAt } from "@/lib/forexSessions";
 import { computeR } from "@/lib/tradeSymbols";
-import { hashSecret, normalizeMtTrades } from "@/lib/metatrader";
+import {
+  hashSecret, mtTradeToEntryData, mtUpdateData, normalizeMtTrades, normalizeTzOffsetMs,
+} from "@/lib/metatrader";
 import { publishDataChanged } from "@/lib/realtime";
 
 // POST /api/mt/sync — اندپوینتی که EA هر چند دقیقه صدا می‌زند.
@@ -19,104 +21,126 @@ import { publishDataChanged } from "@/lib/realtime";
 // معاملات با کلید یکتای (accountId, externalId) upsert می‌شوند، پس اجرای
 // دوباره‌ی sync (که در EA کاملا عادی است) هیچ‌وقت معامله‌ی تکراری نمی‌سازد.
 
-const SYNC_LIMIT = 30;
+// ریت‌لیمیت روی *توکن* (یعنی هر حساب)، نه IP: کاربرانی که ده‌ها حساب روی
+// یک VPS دارند همه از یک IP می‌آیند و قبلا سقفِ ۳۰/دقیقه‌ی مشترکِ IP باعث
+// ۴۲۹ و جا ماندنِ کلِ دسته‌ها می‌شد. سقفِ IP فقط سپرِ حدسِ توکن است.
+const SYNC_LIMIT_PER_TOKEN = 60;
+const SYNC_LIMIT_PER_IP = 600;
 const SYNC_WINDOW_MS = 60_000;
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
-  if (!(await checkRateLimit(`mt-sync:${ip}`, SYNC_LIMIT, SYNC_WINDOW_MS))) {
+  if (!(await checkRateLimit(`mt-sync:${ip}`, SYNC_LIMIT_PER_IP, SYNC_WINDOW_MS))) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "")?.trim();
   if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const tokenHash = hashSecret(token);
 
   const link = await prisma.tradeMtLink.findUnique({
-    where: { tokenHash: hashSecret(token) },
+    where: { tokenHash },
     select: { id: true, userId: true, accountId: true, revokedAt: true, platform: true },
   });
   if (!link || link.revokedAt) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
-  // زمانِ معاملات در متاتریدر زمانِ *سرورِ بروکر* است نه UTC (اکثر بروکرها
-  // UTC+2/+3)، و Arion همه‌چیز را UTC ذخیره می‌کند. اکسپرت اختلافش را
-  // می‌فرستد تا همین‌جا تصحیح شود؛ اکسپرت‌های قدیمی این فیلد را ندارند و
-  // مثل قبل (بدون تصحیح) رفتار می‌کنند.
-  const tzRaw = Number(body?.tzOffsetMinutes);
-  const tzOffsetMs = Number.isFinite(tzRaw) && Math.abs(tzRaw) <= 14 * 60 ? tzRaw * 60_000 : 0;
-  const toUtc = (d: Date | null) => (d && tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
+  if (!(await checkRateLimit(`mt-sync-token:${link.id}`, SYNC_LIMIT_PER_TOKEN, SYNC_WINDOW_MS))) {
+    return NextResponse.json({ error: "too many requests" }, { status: 429 });
+  }
 
-  const trades = normalizeMtTrades(body?.trades);
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+  }
+  // زمانِ معاملات در متاتریدر زمانِ *سرورِ بروکر* است نه UTC؛ اکسپرت اختلافش
+  // را می‌فرستد (اکسپرت‌های قدیمی شاید نه → بدون تصحیح).
+  const tzOffsetMs = normalizeTzOffsetMs(body.tzOffsetMinutes);
+
+  const rawCount = Array.isArray(body.trades) ? body.trades.length : 0;
+  const trades = normalizeMtTrades(body.trades);
+  // اگر یک شناسه دو بار در همین درخواست آمد، آخری برنده است (نه دو upsertِ
+  // پشتِ‌سرهم روی یک ردیف)
+  const byId = new Map(trades.map((t) => [t.externalId, t]));
+
+  const existingRows = byId.size
+    ? await prisma.tradeEntry.findMany({
+        where: { accountId: link.accountId, externalId: { in: Array.from(byId.keys()) } },
+        select: { id: true, externalId: true, riskAmount: true, syncLocked: true },
+      })
+    : [];
+  const existing = new Map(existingRows.map((r) => [r.externalId!, r]));
 
   let created = 0;
   let updated = 0;
+  let failed = 0;
+  const toCreate: Prisma.TradeEntryCreateManyInput[] = [];
 
-  for (const t of trades) {
-    // «profit»ی که EA می‌فرستد (OrderProfit در MT4، DEAL_PROFIT در MT5) طبقِ
-    // خودِ داکیومنتِ متاتریدر فقط سودِ خامِ قیمتی‌ست و کمیسیون/سواپ رو شامل
-    // نمی‌شه — برخلافِ قراردادِ این جدول که pnl باید خالص و نهایی باشه (نگاه
-    // کن به کامنتِ فیلدِ pnl توی schema.prisma). قبلا همین‌جا مستقیم به‌عنوانِ
-    // خالص ذخیره می‌شد و باعث می‌شد سود/زیانِ نمایش‌داده‌شده با کمیسیون و سواپِ
-    // واقعیِ حساب نخونه. کمیسیون و سواپ همچنان جدا هم ذخیره می‌شن (فقط برای
-    // نمایش)، ولی دیگه از pnl کم نمی‌شن — چون همین‌جا یک‌بار برای همیشه توش
-    // جمع شدن.
-    const pnl = Math.round((t.profit + (t.commission ?? 0) + (t.swap ?? 0)) * 100) / 100;
-    const data = {
-      symbol: t.symbol,
-      direction: t.direction,
-      volume: t.volume,
-      volumeUnit: "LOT",
-      openedAt: toUtc(t.openTime)!,
-      closedAt: toUtc(t.closeTime),
-      status: (t.closed ? "CLOSED" : "OPEN") as "CLOSED" | "OPEN",
-      result: (pnl > 0 ? "PROFIT" : pnl < 0 ? "LOSS" : "BREAKEVEN") as "PROFIT" | "LOSS" | "BREAKEVEN",
-      pnl: t.closed ? pnl : 0,
-      entryPrice: t.openPrice,
-      exitPrice: t.closePrice,
-      stopLoss: t.stopLoss,
-      takeProfit: t.takeProfit,
-      commission: t.commission,
-      swap: t.swap,
-      sessions: sessionsAt(toUtc(t.openTime)!),
-      externalSource: link.platform,
-    };
+  for (const t of Array.from(byId.values())) {
+    const data = mtTradeToEntryData(t, tzOffsetMs, link.platform);
+    const row = existing.get(t.externalId);
 
-    // فیلدهای دستی کاربر (احساسات، چک‌لیست، برچسب، دلایل، عکس، یادداشت)
-    // عمدا در آپدیت دست زده نمی‌شوند — کاربر ممکن است روی یک معامله‌ی
-    // همگام‌شده تحلیل نوشته باشد و sync بعدی نباید پاکش کند.
-    const existing = await prisma.tradeEntry.findUnique({
-      where: { accountId_externalId: { accountId: link.accountId, externalId: t.externalId } },
-      select: { id: true, riskAmount: true, syncLocked: true },
-    });
-
-    // کاربر یک‌بار خودش جزئیاتِ این معامله را دستی ویرایش کرده — دیگر حتی
-    // فیلدهای اصلی (symbol/pnl/قیمت‌ها/...) هم با sync بازنویسی نشوند.
-    if (existing?.syncLocked) {
+    if (!row) {
+      toCreate.push({
+        ...data,
+        sessions: sessionsAt(data.openedAt),
+        userId: link.userId,
+        accountId: link.accountId,
+        externalId: t.externalId,
+        rMultiple: null,
+      });
       continue;
     }
 
-    if (existing) {
+    // کاربر یک‌بار خودش جزئیاتِ این معامله را دستی ویرایش کرده — دیگر حتی
+    // فیلدهای اصلی (symbol/pnl/قیمت‌ها/...) هم با sync بازنویسی نشوند.
+    // فیلدهای دستیِ کاربر (احساسات، چک‌لیست، برچسب، دلایل، عکس، یادداشت) هم
+    // اصلا در data نیستند، پس هیچ‌وقت دست نمی‌خورند.
+    if (row.syncLocked) continue;
+
+    const upd = mtUpdateData(data, t);
+    try {
       await prisma.tradeEntry.update({
-        where: { id: existing.id },
-        data: { ...data, rMultiple: computeR(data.pnl, existing.riskAmount) },
-      });
-      updated++;
-    } else {
-      await prisma.tradeEntry.create({
+        where: { id: row.id },
         data: {
-          ...data,
-          userId: link.userId,
-          accountId: link.accountId,
-          externalId: t.externalId,
-          rMultiple: null,
+          ...upd,
+          ...(upd.openedAt ? { sessions: sessionsAt(upd.openedAt) } : {}),
+          rMultiple: computeR(data.pnl, row.riskAmount),
         },
       });
-      created++;
+      updated++;
+    } catch (e) {
+      // خطای یک ردیف نباید کلِ دسته را ۵۰۰ کند — وگرنه EA کِرسرش را جلو
+      // نمی‌برد و همان دسته تا ابد دوباره شکست می‌خورد.
+      failed++;
+      console.error("[mt/sync] update failed", link.id, t.externalId, e);
     }
   }
 
-  const balance = typeof body?.balance === "number" && Number.isFinite(body.balance) ? body.balance : null;
-  const equity = typeof body?.equity === "number" && Number.isFinite(body.equity) ? body.equity : null;
+  if (toCreate.length) {
+    try {
+      // یک کوئری برای کلِ بک‌فیل — قبلا ۲ کوئری به‌ازای هر معامله بود و دسته‌ی
+      // ۳۰۰تایی از timeoutِ ۱۰ ثانیه‌ایِ WebRequest رد می‌شد.
+      const r = await prisma.tradeEntry.createMany({ data: toCreate, skipDuplicates: true });
+      created += r.count;
+    } catch (e) {
+      console.error("[mt/sync] createMany failed, falling back per row", link.id, e);
+      for (const row of toCreate) {
+        try {
+          await prisma.tradeEntry.create({ data: row });
+          created++;
+        } catch (err) {
+          failed++;
+          console.error("[mt/sync] create failed", link.id, row.externalId, err);
+        }
+      }
+    }
+  }
+
+  const skipped = rawCount - trades.length;
+  if (skipped > 0) console.warn(`[mt/sync] ${link.id}: ${skipped} invalid row(s) skipped`);
+
+  const balance = typeof body.balance === "number" && Number.isFinite(body.balance) ? body.balance : null;
+  const equity = typeof body.equity === "number" && Number.isFinite(body.equity) ? body.equity : null;
 
   await prisma.tradeMtLink.update({
     where: { id: link.id },
@@ -124,12 +148,12 @@ export async function POST(req: NextRequest) {
       lastSyncAt: new Date(),
       ...(balance !== null ? { balance } : {}),
       ...(equity !== null ? { equity } : {}),
-      ...(body?.currency ? { currency: clampText(String(body.currency), 8) } : {}),
+      ...(body.currency ? { currency: clampText(String(body.currency), 8) } : {}),
     },
   });
 
   // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنالِ بازِ کاربر (روی هر دستگاهی) همون لحظه
   if (created > 0 || updated > 0) void publishDataChanged(link.userId, ["trade"]);
 
-  return NextResponse.json({ ok: true, received: trades.length, created, updated });
+  return NextResponse.json({ ok: true, received: trades.length, created, updated, skipped, failed });
 }

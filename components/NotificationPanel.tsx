@@ -11,10 +11,14 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { fmtRelative } from "@/lib/mentorFormat";
 import { Spinner } from "./Spinner";
 import type { InAppNotification, NotificationsResponse } from "@/lib/mentorTypes";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import { ANNOUNCEMENT_READ_KEEP, type PublicAnnouncement } from "@/lib/announcements";
 
 type ServerNotif = { kind: "server"; id: string; title: string; body: string; url: string | null; readAt: string | null; createdAt: string };
+type AnnouncementNotif = { kind: "announcement"; id: string; title: string; body: string; createdAt: string; read: boolean };
 type NotifItem =
   | { kind: "info"; id: string; title: string; body: string }
+  | AnnouncementNotif
   | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string }
   | ServerNotif;
 
@@ -38,13 +42,31 @@ async function loadServerNotifications(before?: string): Promise<{ items: Server
   }
 }
 
+// اطلاعیه‌های سراسریِ ادمین (/admin/announcements) — عمومی، پس برای مهمان هم
+// میاد. «خوانده‌شده» مثلِ dismissedStaticNotifs در تنظیمِ کاربر (یا localStorage
+// مهمان) نگه داشته می‌شه. خطا → لیستِ خالی، بقیه‌ی پنل دست‌نخورده.
+async function loadAnnouncements(): Promise<PublicAnnouncement[]> {
+  try {
+    const res = await fetch("/api/announcements", { cache: "no-store" });
+    if (!res.ok) return [];
+    const d = await res.json();
+    return Array.isArray(d?.announcements) ? d.announcements : [];
+  } catch {
+    return [];
+  }
+}
+
+function announcementId(it: AnnouncementNotif): string {
+  return it.id.slice("ann:".length);
+}
+
 function serverId(it: ServerNotif): string {
   return it.id.slice("srv:".length);
 }
 
 /** تعدادِ «نخوانده»‌ها برای نقطه‌ی زنگوله — اعلانِ سرورِ خوانده‌شده حساب نمی‌شود */
 export function countUnreadNotifications(items: NotifItem[]): number {
-  return items.filter((i) => i.kind !== "server" || !i.readAt).length;
+  return items.filter((i) => (i.kind === "server" ? !i.readAt : i.kind === "announcement" ? !i.read : true)).length;
 }
 
 const EXERCISE_REMINDER_HOUR = 17;
@@ -102,10 +124,15 @@ async function loadExerciseReminder(): Promise<NotifItem | null> {
 // NavDrawer هم همین رو از قبل (موقع لود صفحه) صدا می‌زنه تا وقتی کاربر
 // واقعا زنگوله رو می‌زنه، پنل از کش آماده باز شه، نه از صفر.
 export async function loadPendingNotifications(): Promise<NotifItem[]> {
-  const [dismissed, prefs] = await Promise.all([
+  const [dismissed, prefs, readAnn, announcements] = await Promise.all([
     getSetting<string[]>("dismissedStaticNotifs", []),
     getNotifPrefs(),
+    getSetting<string[]>(SETTING_KEYS.readAnnouncements, []),
+    loadAnnouncements(),
   ]);
+  const annItems: AnnouncementNotif[] = announcements.map((a) => ({
+    kind: "announcement", id: `ann:${a.id}`, title: a.title, body: a.body, createdAt: a.createdAt, read: readAnn.includes(a.id),
+  }));
   const staticItems = STATIC_NOTIFS.filter((n) => !dismissed.includes(n.id));
   const items: NotifItem[] = [];
 
@@ -138,12 +165,14 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
 
   if (exerciseItem) items.push(exerciseItem);
 
-  // نخوانده‌های سرور اول، خوانده‌شده‌ها ته لیست
+  // اطلاعیه‌های نخوانده‌ی ادمین و نخوانده‌های سرور اول، خوانده‌شده‌ها ته لیست
   return [
+    ...annItems.filter((n) => !n.read),
     ...serverItems.filter((n) => !n.readAt),
     ...staticItems,
     ...items,
     ...serverItems.filter((n) => n.readAt),
+    ...annItems.filter((n) => n.read),
   ];
 }
 
@@ -167,7 +196,7 @@ export async function preloadNotifications(): Promise<NotifItem[]> {
 export function NotificationPanel({ onClose, anchor }: { onClose: () => void; anchor: { top: number; right: number } }) {
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
-  const [openStatic, setOpenStatic] = useState<Extract<NotifItem, { kind: "static" }> | null>(null);
+  const [openStatic, setOpenStatic] = useState<{ modalTitle: string; modalBody: string } | null>(null);
   const [hasMore, setHasMore] = useState(serverHasMore);
   const [moreBusy, setMoreBusy] = useState(false);
   const [markAllBusy, setMarkAllBusy] = useState(false);
@@ -269,6 +298,15 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [onClose]);
 
+  async function openAnnouncement(it: AnnouncementNotif) {
+    setOpenStatic({ modalTitle: it.title, modalBody: it.body });
+    if (it.read) return;
+    updateItems((prev) => prev.map((x) => (x.id === it.id && x.kind === "announcement" ? { ...x, read: true } : x)));
+    const id = announcementId(it);
+    const readIds = await getSetting<string[]>(SETTING_KEYS.readAnnouncements, []);
+    if (!readIds.includes(id)) await setSetting(SETTING_KEYS.readAnnouncements, [...readIds, id].slice(-ANNOUNCEMENT_READ_KEEP));
+  }
+
   async function openStaticNotif(it: Extract<NotifItem, { kind: "static" }>) {
     setOpenStatic(it);
     setItems((prev) => prev && prev.filter((x) => x.id !== it.id));
@@ -312,6 +350,20 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
                     {it.title}
                   </div>
                   {it.body && <div className="notif-panel-item-body">{it.body}</div>}
+                  <div className="notif-panel-item-body" style={{ fontSize: 10.5, opacity: 0.75 }}>{fmtRelative(it.createdAt)}</div>
+                </div>
+              ) : it.kind === "announcement" ? (
+                <div
+                  key={it.id}
+                  className="notif-panel-item"
+                  onClick={() => openAnnouncement(it)}
+                  style={{ cursor: "pointer", opacity: it.read ? 0.62 : 1 }}
+                >
+                  <div className="notif-panel-item-title">
+                    {!it.read && <span aria-label="نخوانده" style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
+                    {it.title}
+                  </div>
+                  <div className="notif-panel-item-body notif-panel-item-clamp">{it.body}</div>
                   <div className="notif-panel-item-body" style={{ fontSize: 10.5, opacity: 0.75 }}>{fmtRelative(it.createdAt)}</div>
                 </div>
               ) : it.kind === "static" ? (

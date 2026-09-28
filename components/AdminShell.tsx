@@ -9,7 +9,7 @@ import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
-  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical,
+  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical, Megaphone,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -82,6 +82,7 @@ const GROUPS: NavGroup[] = [
           { label: "گزارش‌ها", href: "/admin/mentors/reports" },
         ],
       },
+      { label: "اطلاعیه‌ها", icon: <Megaphone size={17} />, href: "/admin/announcements", perm: "content" },
       { label: "تقویم اقتصادی", icon: <CalendarClock size={17} />, href: "/admin/economic-calendar", perm: "content" },
       {
         label: "محصولات", icon: <Boxes size={17} />,

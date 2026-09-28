@@ -29,7 +29,7 @@ export function MentorCarousel({
   const shown = mentors.slice(0, CAROUSEL_LIMIT);
 
   return (
-    <div className="mentor-carousel" role="region" aria-label={title}>
+    <section className="trade-surface mentor-box mentor-carousel" aria-label={title}>
       <MentorSectionTitle
         icon={icon}
         action={
@@ -55,7 +55,7 @@ export function MentorCarousel({
           </button>
         </MentorStaggerItem>
       </motion.div>
-    </div>
+    </section>
   );
 }
 

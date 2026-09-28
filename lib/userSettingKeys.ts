@@ -31,6 +31,8 @@ export const SETTING_KEYS = {
   dashboardPrefs: "dashboardPrefs",
   notifPrefs: "notifPrefs",
   dismissedStaticNotifs: "dismissedStaticNotifs",
+  // idِ اطلاعیه‌های سراسریِ خوانده‌شده (Announcement) — پنلِ زنگوله
+  readAnnouncements: "readAnnouncements",
   bodyMetrics: "bodyMetrics",
   tradeTickerSymbols: "tradeTickerSymbols",
   tradeCalendarSystem: "tradeCalendarSystem",

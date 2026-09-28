@@ -66,16 +66,29 @@ export type MtTradeInput = {
   closed: boolean;
 };
 
+/** سقفِ ردیف در هر درخواست. EAها چانک‌های ≤۳۰۰تایی می‌فرستند؛ این فقط سپرِ سوءاستفاده‌ست. */
+export const MT_MAX_TRADES_PER_REQUEST = 1000;
+
 function num(v: unknown): number | null {
   if (v === null || v === undefined || v === "") return null;
-  const n = typeof v === "number" ? v : Number(v);
+  // رشته با ممیزِ «,» (ترمینالِ با locale اروپایی/اکسپرتِ دست‌ساز) هم قبول است
+  const n = typeof v === "number" ? v : Number(String(v).trim().replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 
+/** قیمت/حدضرر/حدسود: MQL «نداشتن» را با 0 نشان می‌دهد — 0 یعنی null، نه قیمتِ صفر */
+function price(v: unknown): number | null {
+  const n = num(v);
+  return n !== null && n > 0 ? n : null;
+}
+
 function parseTime(v: unknown): Date | null {
-  if (typeof v === "number") {
-    // ثانیه‌ی یونیکس (چیزی که MQL می‌دهد) — نه میلی‌ثانیه
-    const d = new Date(v * 1000);
+  // ثانیه‌ی یونیکس (چیزی که MQL می‌دهد) — نه میلی‌ثانیه. عددِ رشته‌ای هم همین.
+  // ۰ (OrderCloseTime() معامله‌ی باز در MT4) یعنی «ندارد»، نه ۱ ژانویه‌ی ۱۹۷۰.
+  const asNum = typeof v === "number" ? v : typeof v === "string" && /^\s*\d+\s*$/.test(v) ? Number(v) : null;
+  if (asNum !== null) {
+    if (!Number.isFinite(asNum) || asNum <= 0) return null;
+    const d = new Date(asNum * 1000);
     return isNaN(d.getTime()) ? null : d;
   }
   if (typeof v === "string" && v.trim()) {
@@ -85,56 +98,158 @@ function parseTime(v: unknown): Date | null {
   return null;
 }
 
-const SYMBOL_RE = /^[A-Z0-9][A-Z0-9._#-]{0,19}$/;
+/**
+ * نمادِ بروکر را تمیز می‌کند. قبلا یک regexِ سخت‌گیر (`[A-Z0-9._#-]`، حداکثر
+ * ۲۰) داشتیم که نمادهای کاملا رایجِ بروکرها مثل `EURUSD+`، `XAUUSD!`،
+ * `US30 Cash`، `BTC/USD`، `.US500` یا `[DJI30]` را رد می‌کرد — و هر معامله
+ * روی چنین نمادی *بی‌صدا* دور ریخته می‌شد (ریشه‌ی «فقط ۲ تا از ۱۰ معامله
+ * رسید»). حالا فقط کاراکترهای کنترلی حذف و طول محدود می‌شود.
+ */
+export function cleanMtSymbol(v: unknown): string {
+  return String(v ?? "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase()
+    .slice(0, 32);
+}
 
 /**
  * ردیف‌های خام EA را به شکل داخلی تبدیل می‌کند.
  * ردیف بدشکل بی‌صدا کنار گذاشته می‌شود، نه اینکه کل sync را بشکند — یک
- * نماد عجیب بروکر نباید باعث شود بقیه‌ی معاملات هم ثبت نشوند.
+ * نماد عجیب بروکر نباید باعث شود بقیه‌ی معاملات هم ثبت نشوند. فقط چیزهایی
+ * که بدونشان واقعا نمی‌شود ردیف ساخت (شناسه، نماد، زمانِ باز شدن) اجباری‌اند؛
+ * نبودِ SL/TP/قیمت/کمیسیون هیچ‌وقت باعثِ رد شدن نمی‌شود.
  */
 export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
   if (!Array.isArray(raw)) return [];
   const out: MtTradeInput[] = [];
-  for (const item of raw.slice(0, 500)) {
+  for (const item of raw.slice(0, MT_MAX_TRADES_PER_REQUEST)) {
     if (!item || typeof item !== "object") continue;
     const r = item as Record<string, unknown>;
 
-    const externalId = String(r.ticket ?? r.id ?? r.externalId ?? "").trim();
-    if (!externalId) continue;
+    const externalId = String(r.ticket ?? r.id ?? r.externalId ?? "").trim().slice(0, 40);
+    if (!externalId || externalId === "0") continue;
 
-    const symbol = String(r.symbol ?? "").trim().toUpperCase().slice(0, 20);
-    if (!SYMBOL_RE.test(symbol)) continue;
+    const symbol = cleanMtSymbol(r.symbol);
+    if (!symbol) continue;
 
     const typeRaw = String(r.type ?? r.direction ?? "").toUpperCase();
     // MQL هم رشته می‌دهد هم عدد نوع سفارش (۰ = buy، ۱ = sell)
     const direction: "BUY" | "SELL" =
       typeRaw.includes("SELL") || typeRaw === "1" ? "SELL" : "BUY";
 
-    const volume = num(r.volume ?? r.lots);
-    if (!volume || volume <= 0) continue;
+    // اکسپرت‌های قدیمی حجم را با %.2f می‌فرستادند؛ ۰٫۰۰۱ لات (کریپتو/میکرو)
+    // «0.00» می‌شد. معامله را به‌خاطرش دور نمی‌ریزیم — حجم ۰ ثبت می‌شود.
+    const volRaw = num(r.volume ?? r.lots);
+    const volume = volRaw !== null && volRaw > 0 ? volRaw : 0;
 
     const openTime = parseTime(r.openTime ?? r.open_time);
     if (!openTime) continue;
 
     const closeTime = parseTime(r.closeTime ?? r.close_time);
-    const closed = r.closed === true || (!!closeTime && num(r.closePrice ?? r.close_price) !== null);
+    const closePriceRaw = price(r.closePrice ?? r.close_price);
+    // «closed» صریح همیشه برنده است. قبلا MT4 برای معامله‌ی باز closeTime=0
+    // و closePrice=قیمتِ لحظه‌ای می‌فرستاد و این‌جا «بسته» حساب می‌شد.
+    const closed =
+      r.closed === true || r.closed === "true"
+        ? true
+        : r.closed === false || r.closed === "false"
+          ? false
+          : !!closeTime && closePriceRaw !== null;
 
     out.push({
-      externalId: externalId.slice(0, 40),
+      externalId,
       symbol,
       direction,
       volume,
-      openPrice: num(r.openPrice ?? r.open_price),
-      closePrice: num(r.closePrice ?? r.close_price),
-      stopLoss: num(r.stopLoss ?? r.sl),
-      takeProfit: num(r.takeProfit ?? r.tp),
+      openPrice: price(r.openPrice ?? r.open_price),
+      closePrice: closed ? closePriceRaw : null,
+      stopLoss: price(r.stopLoss ?? r.sl),
+      takeProfit: price(r.takeProfit ?? r.tp),
       profit: num(r.profit) ?? 0,
       commission: num(r.commission),
       swap: num(r.swap),
       openTime,
-      closeTime: closed ? closeTime : null,
+      // اکسپرتِ قدیمیِ MT5 برای معامله‌ی بسته closeTime نمی‌داد مگر همراهِ openTime
+      closeTime: closed ? closeTime ?? openTime : null,
       closed,
     });
   }
+  return out;
+}
+
+/**
+ * اختلافِ ساعتِ سرورِ بروکر با UTC (دقیقه) → میلی‌ثانیه. اکسپرتِ قدیمی آن را
+ * از TimeCurrent()−TimeGMT() می‌گیرد که به زمانِ *آخرین تیک* وابسته است و
+ * چند ثانیه/دقیقه عقب است (۱۱۹ به‌جای ۱۲۰) — به نزدیک‌ترین ۱۵ دقیقه گرد
+ * می‌شود. بیرون از ±۱۴ ساعت (بازارِ بسته/آخرِ هفته) یعنی نامعتبر → ۰.
+ */
+export function normalizeTzOffsetMs(raw: unknown): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || Math.abs(n) > 14 * 60) return 0;
+  return Math.round(n / 15) * 15 * 60_000;
+}
+
+export type MtTradeData = {
+  symbol: string;
+  direction: "BUY" | "SELL";
+  volume: number;
+  volumeUnit: string;
+  openedAt: Date;
+  closedAt: Date | null;
+  status: "CLOSED" | "OPEN";
+  result: "PROFIT" | "LOSS" | "BREAKEVEN";
+  pnl: number;
+  entryPrice: number | null;
+  exitPrice: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  commission: number | null;
+  swap: number | null;
+  externalSource: string;
+};
+
+/** ردیفِ نرمال‌شده → داده‌ی TradeEntry (بدونِ sessions که به lib سرور وابسته است). */
+export function mtTradeToEntryData(t: MtTradeInput, tzOffsetMs: number, platform: string): MtTradeData {
+  const toUtc = (d: Date | null) => (d && tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
+  // «profit»ی که EA می‌فرستد (OrderProfit در MT4، DEAL_PROFIT در MT5) طبقِ
+  // داکیومنتِ متاتریدر فقط سودِ خامِ قیمتی‌ست و کمیسیون/سواپ را شامل نمی‌شود؛
+  // pnlِ این جدول باید خالص باشد، پس یک‌بار همین‌جا جمع می‌شوند.
+  const pnl = Math.round((t.profit + (t.commission ?? 0) + (t.swap ?? 0)) * 100) / 100;
+  return {
+    symbol: t.symbol,
+    direction: t.direction,
+    volume: t.volume,
+    volumeUnit: "LOT",
+    openedAt: toUtc(t.openTime)!,
+    closedAt: toUtc(t.closeTime),
+    status: t.closed ? "CLOSED" : "OPEN",
+    result: pnl > 0 ? "PROFIT" : pnl < 0 ? "LOSS" : "BREAKEVEN",
+    pnl: t.closed ? pnl : 0,
+    entryPrice: t.openPrice,
+    exitPrice: t.closePrice,
+    stopLoss: t.stopLoss,
+    takeProfit: t.takeProfit,
+    commission: t.commission,
+    swap: t.swap,
+    externalSource: platform,
+  };
+}
+
+/**
+ * داده‌ی آپدیتِ یک معامله‌ی *موجود*. فیلدهای اختیاری که این بار نیامده‌اند
+ * (null) مقدارِ قبلی را پاک نمی‌کنند: اکسپرتِ قدیمیِ MT5 برای معامله‌ی بسته
+ * قیمتِ ورود/SL/TP نمی‌فرستاد و openTime را همان زمانِ بستن می‌گذاشت، و
+ * همین باعث می‌شد معامله‌ای که وقتِ باز بودن کامل ثبت شده بود بعد از بسته
+ * شدن ناقص شود. وقتی قیمتِ ورود نیامده، زمانِ ورودِ قبلی هم حفظ می‌شود.
+ */
+export function mtUpdateData(data: MtTradeData, t: MtTradeInput): Partial<MtTradeData> {
+  const out: Partial<MtTradeData> = { ...data };
+  for (const k of ["entryPrice", "exitPrice", "stopLoss", "takeProfit", "commission", "swap"] as const) {
+    if (out[k] === null) delete out[k];
+  }
+  if (out.volume === 0) delete out.volume;
+  if (t.openPrice === null) delete out.openedAt;
   return out;
 }

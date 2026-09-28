@@ -618,7 +618,11 @@
     border:1px solid var(--surface-line); border-radius:20px;
     box-shadow:0 12px 30px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.14); padding:10px; z-index:45;
     animation:notifPanelIn .16s ease both;
+    /* اسکرول‌پذیر می‌مونه ولی اسکرول‌بار (به‌خصوص نوارِ پهنِ ویندوز) دیده نمی‌شه */
+    scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain;
   }
+  .notif-panel::-webkit-scrollbar{ display:none; width:0; height:0; }
+  .notif-panel-item-clamp{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-line; }
   @keyframes notifPanelIn{ from{ opacity:0; transform:translateY(6px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
   .notif-panel-head{ font-size:12px; font-weight:700; color:var(--muted); padding:4px 6px 8px; }
   .notif-panel-list{ display:flex; flex-direction:column; gap:4px; }
@@ -6345,7 +6349,12 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
    می‌زنم نمی‌ره تو»). زیرِ همه‌ی محتوا می‌ماند، پس سه‌نقطه و برچسب‌ها
    همچنان کلیکِ خودشان را می‌گیرند. */
 .trade-account-hit{ position:absolute; inset:0; z-index:0; }
-.trade-account-top-row, .trade-account-main{ position:relative; z-index:1; }
+/* ردیف‌های رویی خودشان لینک نیستند؛ با z-index:1 بیشترِ سطحِ کارت (وسطِ
+   ردیف، سود/زیان، برچسب‌ها) را روی لینکِ کششی می‌پوشاندند و کلیک همان‌جا
+   می‌مرد. کلیک از خودِ ردیف‌ها رد می‌شود و فقط لینکِ نام و سه‌نقطه آن را می‌گیرند. */
+.trade-account-top-row, .trade-account-main{ position:relative; z-index:1; pointer-events:none; }
+.trade-account-top-row .trade-account-kebab-inline,
+.trade-account-top-row .trade-account-title-link{ pointer-events:auto; }
 /* سه‌نقطه باید *دقیقا* هم‌ترازِ خطِ نامِ حساب بشینه: ارتفاعِ دکمه و ارتفاعِ
    خطِ متن یکی می‌شود تا align-items:center روی هر دو یک نتیجه بدهد، و
    مارجینِ منفیِ قبلی (که فقط دکمه را از لبه‌ی کارت بیرون می‌زد) حذف شد. */
@@ -9299,20 +9308,38 @@ html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
   }
 }
 
-/* ردیفِ چهار باکسِ «روتین من» (DashQuickPanels) — همون ظاهرِ DashCard؛
+/* ردیفِ چهار باکسِ «روتین من» (DashQuickPanels) — باکس‌های کوچیکِ فقط‌آیکون
+   با ظاهرِ DashCard؛ انتخاب‌شده بزرگ‌تر می‌شه و اسمش زیرِ آیکون میاد.
    اختصاصیت هم‌تراز با ریستِ سراسریِ button{} تا پدینگ/سایه‌ی شیشه‌ایش
    روی این باکس‌ها ننشینه. */
 body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{
-  aspect-ratio:1/1; width:100%; padding:8px 4px; border-radius:18px; background:var(--box-bg);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-  border:1px solid var(--surface-line); box-shadow:none;
+  width:54px; height:54px; padding:0; border-radius:16px; background:var(--box-bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  border:1px solid var(--surface-line); box-shadow:none; overflow:hidden;
   color:var(--muted); transition:border-color .2s ease, color .2s ease;
 }
-body[data-theme] .dash-quick-tile.is-on{ border-color:var(--accent); color:var(--accent); }
+body[data-theme] .dash-quick-tile.is-on{ width:76px; height:76px; border-color:var(--accent); color:var(--accent); }
 @media (hover:hover){ body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
-.dash-quick-tile-icon svg{ width:24px; height:24px; display:block; }
-.dash-quick-tile-label{ font-size:11px; font-weight:700; line-height:1.3; text-align:center; }
+.dash-quick-tile-icon{ display:block; }
+.dash-quick-tile-icon svg{ width:22px; height:22px; display:block; }
+.dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:26px; height:26px; }
+.dash-quick-tile-label{ display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap; }
 @media (min-width:640px){
-  .dash-quick-tile-icon svg{ width:30px; height:30px; }
-  .dash-quick-tile-label{ font-size:13px; }
+  body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{ width:62px; height:62px; }
+  body[data-theme] .dash-quick-tile.is-on{ width:88px; height:88px; }
+  .dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:30px; height:30px; }
+  .dash-quick-tile-label{ font-size:12px; }
 }
+
+/* ── لیستِ کشوییِ بومیِ <select> (به‌خصوص ویندوز) ─────────────────────
+   لیستِ بازشده‌ی select را خودِ مرورگر می‌کشد و رنگش را از color-scheme و
+   رنگِ option می‌گیرد، نه از بک‌گراندِ نیمه‌شفافِ خودِ فیلد. بدونِ این:
+   در تم شب لیست روشن می‌آمد و در تم روز کلِ لیست سفید با متنِ نامرئی
+   می‌شد. اسکیم و رنگِ گزینه‌ها صریحاً به توکن‌های هر تم گره می‌خورد. */
+body:not([data-theme="light"]) select{ color-scheme:dark; }
+body[data-theme="light"] select{ color-scheme:light; }
+body:not([data-theme="light"]) select option,
+body:not([data-theme="light"]) select optgroup{ background-color:var(--surface-2); color:var(--text); }
+body[data-theme="light"] select option,
+body[data-theme="light"] select optgroup{ background-color:var(--surface-2); color:var(--text); }
+body select option:disabled{ color:var(--muted2); }

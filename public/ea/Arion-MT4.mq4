@@ -21,7 +21,7 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.10"
+#property version   "1.20"
 #property strict
 
 input string ArionUrl     = "https://arionapp.ir"; // آدرس سایت Arion
@@ -30,7 +30,13 @@ input int    SyncSeconds  = 60;                     // فاصله‌ی ارسا�
 
 // حداکثر تعداد معامله‌ی بسته‌شده در هر درخواست — تاریخچه‌ی طولانی توی چند
 // درخواستِ پشتِ‌سرهم چانک می‌شه، نه یک درخواستِ غول‌پیکرِ تک.
-#define MT_CHUNK_SIZE 300
+#define MT_CHUNK_SIZE 200
+// timeoutِ WebRequest (میلی‌ثانیه). ۱۰ ثانیه برای دسته‌ی بزرگِ بک‌فیل کم بود و
+// درخواست قطع می‌شد — یعنی آن دسته و همه‌ی بعدی‌ها هرگز نمی‌رسید.
+#define HTTP_TIMEOUT_MS 30000
+// هر سینکِ افزایشی این مقدار (ثانیه) به عقب هم نگاه می‌کند؛ ارسالِ تکراری
+// بی‌خطر است (سرور با شماره‌ی تیکت ضدتکرار است).
+#define CURSOR_OVERLAP 3600
 
 // دیگر لازم نباشد. شماره‌ی حساب کنارش ذخیره می‌شود تا توکنِ حسابِ دیگری
 // اشتباهی روی این حساب استفاده نشود.
@@ -39,13 +45,24 @@ datetime g_lastSync   = 0;
 string   g_status     = "در حال راه‌اندازی…";
 int      g_failCount  = 0;
 string   g_tokenFile  = "arion_token.txt";
+int      g_tzMinutes  = 0;
+bool     g_tzKnown    = false;
 
 // زمانِ close آخرین معامله‌ای که با موفقیت فرستاده شده. صفر یعنی «هنوز هیچ
 // بک‌فیلی انجام نشده» — یعنی دفعه‌ی اول کل تاریخچه‌ی حساب فرستاده می‌شود، نه
 // فقط چند تای آخر. بعد از اولین بک‌فیلِ کامل، هر سینکِ بعدی فقط معاملاتی که
 // از این زمان به بعد بسته شده‌اند را می‌فرستد — همان چیزی که سینک را سریع
 // نگه می‌دارد.
+//
+// کنارش تعدادِ کلِ تاریخچه در لحظه‌ی آخرین سینک هم نگه داشته می‌شود: MT4 فقط
+// همان بازه‌ای از تاریخچه را به اکسپرت نشان می‌دهد که در تبِ Account History
+// انتخاب شده (مثلا «ماه گذشته»)، و تاریخچه موقعِ باز شدنِ ترمینال هم کم‌کم
+// لود می‌شود. قبلا کِرسر همان اول روی آخرین معامله می‌پرید و هر چه بعدا
+// (قدیمی‌تر از کِرسر) ظاهر می‌شد هرگز فرستاده نمی‌شد — ریشه‌ی «فقط ۲ تا از
+// ۱۰ معامله رسید». حالا اگر تعدادِ کل بیش از معاملاتِ تازه زیاد شد، کلِ
+// تاریخچه دوباره فرستاده می‌شود.
 int      g_cursorTime  = 0;
+int      g_knownTotal  = 0;
 string   g_cursorFile  = "arion_cursor.txt";
 
 // تا وقتی وصل نشده‌ایم زود‌به‌زود تلاش می‌کنیم (نه با فاصله‌ی ارسالِ کامل)،
@@ -56,7 +73,7 @@ string   g_cursorFile  = "arion_cursor.txt";
 int OnInit()
   {
    g_token = LoadToken();
-   g_cursorTime = LoadCursor();
+   LoadCursor();
    // تلاشِ اول همین‌جا، ولی *شکستش پایان کار نیست* — تایمر باز هم تلاش
    // می‌کند. باگِ نسخه‌ی قبلی همین بود: اگر این یک تلاش شکست می‌خورد
    // (WebRequest هنوز اجازه نداشت، یا کاربر کد را بعدا می‌گذاشت) اکسپرت
@@ -132,21 +149,38 @@ void SaveToken(string token)
    FileClose(h);
   }
 
-int LoadCursor()
+// فرمت: «cursor|knownTotal|login». فایلِ نسخه‌ی قبل فقط cursor داشت →
+// knownTotal=0 → یک‌بار کلِ تاریخچه دوباره فرستاده می‌شود (عمدا).
+void LoadCursor()
   {
+   g_cursorTime = 0; g_knownTotal = 0;
    int h = FileOpen(g_cursorFile, FILE_READ|FILE_TXT);
-   if(h == INVALID_HANDLE) return(0);
+   if(h == INVALID_HANDLE) return;
    string s = FileReadString(h);
    FileClose(h);
-   return((int)StringToInteger(s));
+   string parts[];
+   if(StringSplit(s, '|', parts) < 3) return;
+   if(parts[2] != IntegerToString(AccountNumber())) return;
+   g_cursorTime = (int)StringToInteger(parts[0]);
+   g_knownTotal = (int)StringToInteger(parts[1]);
   }
 
-void SaveCursor(int t)
+void SaveCursor()
   {
    int h = FileOpen(g_cursorFile, FILE_WRITE|FILE_TXT);
    if(h == INVALID_HANDLE) return;
-   FileWriteString(h, IntegerToString(t));
+   FileWriteString(h, IntegerToString(g_cursorTime) + "|" + IntegerToString(g_knownTotal) +
+                      "|" + IntegerToString(AccountNumber()));
    FileClose(h);
+  }
+
+//+------------------------------------------------------------------+
+//| عدد → JSON. NaN/Inf در JSON معتبر نیست و قبلا کلِ دسته را ۴۰۰ می‌کرد. |
+//+------------------------------------------------------------------+
+string Num(double v, int digits)
+  {
+   if(!MathIsValidNumber(v)) return("null");
+   return(DoubleToString(v, digits));
   }
 
 //+------------------------------------------------------------------+
@@ -181,12 +215,14 @@ string HttpPost(string url, string headers, string body, int &status)
    if(len < 0) len = 0;
    ArrayResize(post, len); // بدون بایت پایانی صفر
    ResetLastError();
-   status = WebRequest("POST", url, headers, 10000, post, result, resultHeaders);
+   status = WebRequest("POST", url, headers, HTTP_TIMEOUT_MS, post, result, resultHeaders);
    if(status == -1)
      {
       int err = GetLastError();
-      g_status = "WebRequest اجازه ندارد (خطای " + IntegerToString(err) +
-                 ") — آدرس «" + ArionUrl + "» را در Tools → Options → Expert Advisors اضافه کنید";
+      if(err == 4060)
+         g_status = "WebRequest اجازه ندارد — آدرس «" + ArionUrl + "» را در Tools → Options → Expert Advisors اضافه کنید";
+      else
+         g_status = "ارتباط با سرور ناموفق (خطای " + IntegerToString(err) + ") — دوباره تلاش می‌شود";
       Print("Arion: ", g_status);
       return("");
      }
@@ -200,7 +236,12 @@ int BrokerTzOffsetMinutes()
   {
    // زمانِ معاملات در MT4 زمانِ *سرورِ بروکر* است، نه UTC. Arion همه‌چیز را
    // UTC ذخیره می‌کند، پس همین اختلاف را می‌فرستیم تا سرور تصحیح کند.
-   return((int)((TimeCurrent() - TimeGMT()) / 60));
+   // TimeCurrent زمانِ آخرین تیک است (چند ثانیه عقب؛ آخرِ هفته روزها عقب)،
+   // پس به نزدیک‌ترین ۱۵ دقیقه گرد می‌شود و مقدارِ نامعتبر جایگزینِ آخرین
+   // مقدارِ درست نمی‌شود.
+   int mins = (int)(MathRound((TimeCurrent() - TimeGMT()) / 900.0) * 15);
+   if(MathAbs(mins) <= 14 * 60) { g_tzMinutes = mins; g_tzKnown = true; }
+   return(g_tzMinutes);
   }
 
 //+------------------------------------------------------------------+
@@ -240,6 +281,7 @@ void Pair()
 
    g_token = token;
    SaveToken(token);
+   g_knownTotal = 0; // اتصالِ تازه → کلِ تاریخچه
    g_status = "اتصال برقرار شد";
    Print("Arion: اتصال برقرار شد — در حال گرفتنِ کل تاریخچه‌ی حساب…");
   }
@@ -249,10 +291,13 @@ void Pair()
 //+------------------------------------------------------------------+
 bool SendBatch(string tradesJson)
   {
-   string body = StringFormat(
-      "{\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"tzOffsetMinutes\":%d,\"trades\":[%s]}",
-      AccountBalance(), AccountEquity(), JsonEscape(AccountCurrency()),
-      BrokerTzOffsetMinutes(), tradesJson);
+   string body = "{\"balance\":" + Num(AccountBalance(), 2) +
+                 ",\"equity\":" + Num(AccountEquity(), 2) +
+                 ",\"currency\":\"" + JsonEscape(AccountCurrency()) + "\"" +
+                 ",\"eaVersion\":\"1.20\"";
+   int tz = BrokerTzOffsetMinutes();
+   if(g_tzKnown) body += ",\"tzOffsetMinutes\":" + IntegerToString(tz);
+   body += ",\"trades\":[" + tradesJson + "]}";
 
    int status;
    string res = HttpPost(ArionUrl + "/api/mt/sync",
@@ -274,12 +319,42 @@ bool SendBatch(string tradesJson)
    if(status != 200)
      {
       g_failCount++;
-      g_status = "ارسال ناموفق (کد " + IntegerToString(status) + ")";
+      g_status = (status == 429 ? "سرور موقتا شلوغ است (۴۲۹) — دوباره تلاش می‌شود"
+                                : "ارسال ناموفق (کد " + IntegerToString(status) + ")");
       Print("Arion: ", g_status, " ", res);
       return(false);
      }
 
+   int skipped = JsonInt(res, "skipped");
+   int failed  = JsonInt(res, "failed");
+   if(skipped > 0 || failed > 0)
+      Print("Arion: سرور ", skipped, " ردیفِ نامعتبر و ", failed, " ردیفِ ناموفق گزارش داد");
    g_failCount = 0;
+   return(true);
+  }
+
+//+------------------------------------------------------------------+
+//| فهرستی از رشته‌ها را در دسته‌های MT_CHUNK_SIZE تایی می‌فرستد.        |
+//+------------------------------------------------------------------+
+bool SendAll(string &items[])
+  {
+   int total = ArraySize(items);
+   if(total == 0) return(SendBatch(""));
+   int sent = 0;
+   while(sent < total)
+     {
+      int end = MathMin(sent + MT_CHUNK_SIZE, total);
+      string chunk = "";
+      for(int k = sent; k < end; k++)
+        {
+         if(k > sent) chunk += ",";
+         chunk += items[k];
+        }
+      // دسته‌ی ناموفق → توقف؛ کِرسر جلو نرفته، پس دفعه‌ی بعد تکرار می‌شود
+      if(!SendBatch(chunk)) return(false);
+      sent = end;
+      if(sent < total) Sleep(500); // زیرِ سقفِ نرخِ سرور می‌ماند
+     }
    return(true);
   }
 
@@ -289,57 +364,52 @@ bool SendBatch(string tradesJson)
 void Sync()
   {
    // معاملات باز — هر بار کامل فرستاده می‌شوند (سود/حجم/… هر لحظه عوض می‌شود)
-   string openTrades = "";
-   int openCount = 0;
+   string openItems[]; ArrayResize(openItems, 0);
    for(int i = 0; i < OrdersTotal(); i++)
      {
       if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
       if(OrderType() > OP_SELL) continue; // فقط خرید/فروش، نه سفارش‌های در انتظار
-      if(openCount > 0) openTrades += ",";
-      openTrades += TradeJson(false);
-      openCount++;
+      int n = ArraySize(openItems); ArrayResize(openItems, n + 1);
+      openItems[n] = TradeJson(false);
      }
-   if(!SendBatch(openTrades)) return;
+   if(!SendAll(openItems)) return;
 
-   // معاملاتِ بسته‌ی تازه — هرچه از کِرسرِ فعلی به بعد بسته شده. دفعه‌ی اول
-   // (کِرسر صفر) یعنی کلِ تاریخچه‌ی حساب، نه فقط چند تای آخر.
+   // معاملاتِ بسته. partial close در MT4 تیکتِ جدا می‌سازد، پس هر تیکت یک ردیف است.
    int total = OrdersHistoryTotal();
+   int newAll = 0;
+   for(int j = 0; j < total; j++)
+     {
+      if(!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
+      if((int)OrderCloseTime() > g_cursorTime) newAll++;
+     }
+   // اولین بار، یا تاریخچه‌ی قدیمی‌تر از کِرسر تازه ظاهر شده (لودِ دیرهنگام یا
+   // تغییرِ بازه‌ی تبِ Account History) → ارسالِ کامل
+   bool full = (g_knownTotal <= 0 || g_cursorTime == 0 || total - g_knownTotal > newAll);
+   int since = full ? 0 : g_cursorTime - CURSOR_OVERLAP;
+
    string batch[]; ArrayResize(batch, 0);
    int newCursor = g_cursorTime;
    for(int j = 0; j < total; j++)
      {
       if(!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
-      if(OrderType() > OP_SELL) continue;
       int ct = (int)OrderCloseTime();
-      if(ct <= g_cursorTime) continue;
+      if(ct > newCursor) newCursor = ct;
+      if(OrderType() > OP_SELL) continue;
+      if(!full && ct < since) continue;
       int n = ArraySize(batch);
       ArrayResize(batch, n + 1);
       batch[n] = TradeJson(true);
-      if(ct > newCursor) newCursor = ct;
      }
 
-   int nClosed = ArraySize(batch);
-   int sent = 0;
-   while(sent < nClosed)
-     {
-      int end = MathMin(sent + MT_CHUNK_SIZE, nClosed);
-      string chunk = "";
-      for(int k = sent; k < end; k++)
-        {
-         if(k > sent) chunk += ",";
-         chunk += batch[k];
-        }
-      // اگه یک دسته شکست بخورد، همین‌جا متوقف می‌شویم — چون کِرسر هنوز
-      // آپدیت نشده، دفعه‌ی بعد همین بازه دوباره (و امن، چون سمتِ سرور با
-      // شناسه‌ی یکتای هر تیکت ضدتکرار است) امتحان می‌شود.
-      if(!SendBatch(chunk)) return;
-      sent = end;
-      if(sent < nClosed) Sleep(250); // فشار روی سرور/محدودیتِ نرخ را کم نگه می‌دارد
-     }
+   if(ArraySize(batch) > 0 && !SendAll(batch)) return;
 
-   if(newCursor > g_cursorTime) { g_cursorTime = newCursor; SaveCursor(g_cursorTime); }
+   g_cursorTime = newCursor;
+   g_knownTotal = total;
+   SaveCursor();
    g_lastSync = TimeCurrent();
-   g_status = "ارسال شد: " + IntegerToString(openCount + sent) + " معامله";
+   g_status = "ارسال شد: " + IntegerToString(ArraySize(openItems)) + " باز، " +
+              IntegerToString(ArraySize(batch)) + " بسته" +
+              (full ? " (کلِ تاریخچه‌ی قابلِ دید — برای همه‌ی معاملات در تبِ Account History «All History» را انتخاب کنید)" : "");
   }
 
 //+------------------------------------------------------------------+
@@ -347,15 +417,23 @@ void Sync()
 //+------------------------------------------------------------------+
 string TradeJson(bool closed)
   {
-   return(StringFormat(
-      "{\"ticket\":\"%d\",\"symbol\":\"%s\",\"type\":\"%s\",\"volume\":%.2f,"
-      "\"openPrice\":%.5f,\"closePrice\":%.5f,\"stopLoss\":%.5f,\"takeProfit\":%.5f,"
-      "\"profit\":%.2f,\"commission\":%.2f,\"swap\":%.2f,"
-      "\"openTime\":%d,\"closeTime\":%d,\"closed\":%s}",
-      OrderTicket(), JsonEscape(OrderSymbol()), (OrderType() == OP_BUY ? "BUY" : "SELL"), OrderLots(),
-      OrderOpenPrice(), OrderClosePrice(), OrderStopLoss(), OrderTakeProfit(),
-      OrderProfit(), OrderCommission(), OrderSwap(),
-      (int)OrderOpenTime(), (int)OrderCloseTime(), (closed ? "true" : "false")));
+   string s = "{\"ticket\":\"" + IntegerToString(OrderTicket()) + "\"" +
+              ",\"symbol\":\"" + JsonEscape(OrderSymbol()) + "\"" +
+              ",\"type\":\"" + (OrderType() == OP_BUY ? "BUY" : "SELL") + "\"" +
+              ",\"volume\":" + Num(OrderLots(), 8) +
+              ",\"openPrice\":" + Num(OrderOpenPrice(), 8) +
+              ",\"stopLoss\":" + Num(OrderStopLoss(), 8) +
+              ",\"takeProfit\":" + Num(OrderTakeProfit(), 8) +
+              ",\"profit\":" + Num(OrderProfit(), 2) +
+              ",\"commission\":" + Num(OrderCommission(), 2) +
+              ",\"swap\":" + Num(OrderSwap(), 2) +
+              ",\"openTime\":" + IntegerToString((int)OrderOpenTime());
+   if(closed)
+      s += ",\"closePrice\":" + Num(OrderClosePrice(), 8) +
+           ",\"closeTime\":" + IntegerToString((int)OrderCloseTime()) + ",\"closed\":true}";
+   else
+      s += ",\"closed\":false}";
+   return(s);
   }
 
 //+------------------------------------------------------------------+
@@ -370,5 +448,12 @@ string JsonValue(string json, string key)
    int end = StringFind(json, "\"", start);
    if(end < 0) return("");
    return(StringSubstr(json, start, end - start));
+  }
+int JsonInt(string json, string key)
+  {
+   string needle = "\"" + key + "\":";
+   int start = StringFind(json, needle);
+   if(start < 0) return(0);
+   return((int)StringToInteger(StringSubstr(json, start + StringLen(needle), 12)));
   }
 //+------------------------------------------------------------------+
