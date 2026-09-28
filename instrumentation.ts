@@ -27,5 +27,16 @@ export async function register() {
     } catch (err: any) {
       console.error(`[realtime] failed to start: ${err?.message || err}`);
     }
+
+    // زمان‌بندِ داخلیِ یادآوری‌های Web Push (lib/pushScheduler.ts) — به هیچ
+    // crontabِ بیرونی وابسته نیست. موقعِ `next build` اجرا نمی‌شه.
+    if (process.env.NEXT_PHASE !== "phase-production-build") {
+      try {
+        const { startPushScheduler } = await import("@/lib/pushScheduler");
+        startPushScheduler();
+      } catch (err: any) {
+        console.error(`[push] scheduler failed to start: ${err?.message || err}`);
+      }
+    }
   }
 }

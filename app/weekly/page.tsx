@@ -44,6 +44,9 @@ import { DashFilterModal } from "@/components/DashFilterModal";
 import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
 import { DashQuickPanels } from "@/components/DashQuickPanels";
+import { DashReminderCard } from "@/components/DashReminderCard";
+import { DashMedicationCard } from "@/components/DashMedicationCard";
+import { DashSidebar } from "@/components/DashSidebar";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { AuthGate } from "@/components/AuthGate";
 import { RoutineAiFab } from "@/components/RoutineAiFab";
@@ -175,6 +178,19 @@ export default function WeeklyPage() {
       .catch(() => {});
     return () => { alive = false; };
   }, [exercisePlanId, selectedIso, exerciseLogKey]);
+
+  // دسکتاپ (lg+) همون چیدمانِ قدیمیِ سه‌ستونه رو می‌گیره (یادآوری/دارو
+  // ستونِ وسط، دوستان/آمار ستونِ چپ)؛ باکس‌های DashQuickPanels فقط برای
+  // موبایل/تبلت. با matchMedia فقط یکی رندر می‌شه تا فچ‌ها دوبار نشن.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
 
   const hasQuickPanels =
     dashboardPrefs.showReminders ||
@@ -527,7 +543,11 @@ export default function WeeklyPage() {
               تک‌ستونه بشه — وگرنه یک ستون خالی ۱fr کنار صفحه باز می‌موند. */}
           <div
             className={
-              hasQuickPanels
+              isDesktop
+                ? hasMiddleColumn
+                  ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
+                  : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+                : hasQuickPanels
                 ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
                 : "flex flex-col gap-4 sm:gap-6"
             }
@@ -550,7 +570,19 @@ export default function WeeklyPage() {
               />
             )}
 
-            {hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />}
+            {isDesktop ? (
+              <>
+                {hasMiddleColumn && (
+                  <div className="dash-middle-col flex flex-col gap-4 sm:gap-6">
+                    {dashboardPrefs.showReminders && <DashReminderCard delay={0.1} />}
+                    {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
+                  </div>
+                )}
+                <DashSidebar statsRefreshKey={statsRefreshKey} />
+              </>
+            ) : (
+              hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />
+            )}
           </div>
 
           <WeekPlanGrid days={weekGridDays} onItemClick={(it) => openProgram(it.label)} />

@@ -4,6 +4,17 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 
+/** IANA timezone معتبر یا null — ورودیِ کلاینته، پس هم طول هم خودِ Intl چکش می‌کنن */
+function validTimezone(tz: unknown): string | null {
+  if (typeof tz !== "string" || !tz || tz.length > 64 || !/^[A-Za-z0-9_+\-/]+$/.test(tz)) return null;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return tz;
+  } catch {
+    return null;
+  }
+}
+
 // POST /api/push/subscribe { endpoint, keys: { p256dh, auth } } — ثبت/به‌روزرسانی
 // سابسکریپشن Web Push این دستگاه برای کاربر واردشده. endpoint یکتاست (هر
 // دستگاه/مرورگر یه endpoint متفاوت از سرور Push خودش می‌گیره)، پس upsert
@@ -24,6 +35,24 @@ export async function POST(req: NextRequest) {
   const auth = body?.keys?.auth;
   if (typeof endpoint !== "string" || typeof p256dh !== "string" || typeof auth !== "string") {
     return NextResponse.json({ error: "اطلاعات سابسکریپشن ناقص است" }, { status: 400 });
+  }
+  if (endpoint.length > 2048 || !/^https:\/\//.test(endpoint) || p256dh.length > 256 || auth.length > 256) {
+    return NextResponse.json({ error: "اطلاعات سابسکریپشن نامعتبر است" }, { status: 400 });
+  }
+
+  // زمان‌بندِ سرور یادآوری‌ها رو به وقتِ User.timezone حساب می‌کنه؛ همون
+  // ساعتی که کاربر برنامه‌ش رو باهاش می‌بینه (ساعتِ دستگاهش) باید همین باشه،
+  // وگرنه برای کاربرِ خارج از تهران یادآوری ساعت‌ها جابه‌جا می‌رسید.
+  const timezone = validTimezone(body?.timezone);
+  if (timezone) {
+    await prisma.user.updateMany({ where: { id: userId, NOT: { timezone } }, data: { timezone } }).catch(() => {});
+  }
+
+  // سرویس‌ورکر روی pushsubscriptionchange endpointِ قبلی رو هم می‌فرسته —
+  // فقط اگه مالِ همین کاربر باشه پاک می‌شه (IDOR نه).
+  const previousEndpoint = body?.previousEndpoint;
+  if (typeof previousEndpoint === "string" && previousEndpoint !== endpoint) {
+    await prisma.pushSubscription.deleteMany({ where: { endpoint: previousEndpoint, userId } }).catch(() => {});
   }
 
   // این روت در production ۵۰۰ می‌داد و چون خطا هندل نمی‌شد، هیچ سرنخی هم
@@ -46,7 +75,7 @@ export async function POST(req: NextRequest) {
     if (err?.code === "P2002") {
       try {
         await prisma.pushSubscription.update({ where: { endpoint }, data: { userId, p256dh, auth } });
-        return NextResponse.json({ ok: true });
+        return NextResponse.json({ ok: true, userId });
       } catch (retryErr: any) {
         console.error(`[push/subscribe] retry after P2002 failed: ${retryErr?.code || ""} ${retryErr?.message || retryErr}`);
         return NextResponse.json({ error: "ثبت نوتیفیکیشن ناموفق بود" }, { status: 503 });
@@ -56,7 +85,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "ثبت نوتیفیکیشن ناموفق بود" }, { status: 503 });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, userId });
 }
 
 // DELETE /api/push/subscribe { endpoint } — غیرفعال‌کردن نوتیف روی این دستگاه.

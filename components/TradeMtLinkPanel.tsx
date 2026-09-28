@@ -112,6 +112,9 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
             </div>
           </div>
 
+          <div className="trade-mt-note" style={{ marginTop: 12 }}>
+            توجه: برای همگام‌سازی، هر بار باید هم متاتریدر (با اکسپرت روشن روی چارت) و هم سایت هر دو روشن باشند.
+          </div>
           <div className="trade-modal-actions">
             <button type="button" className="account-outline-btn" onClick={refresh} disabled={refreshing}>
               <RefreshCw size={14} className={refreshing ? "trade-spin" : undefined} /> بررسی اتصال
@@ -210,6 +213,9 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
             </li>
           </ol>
 
+          <div className="trade-mt-note" style={{ marginTop: 12 }}>
+            توجه: برای همگام‌سازی، هر بار باید هم متاتریدر (با اکسپرت روشن روی چارت) و هم سایت هر دو روشن باشند.
+          </div>
           <div className="trade-mt-note" style={{ marginTop: 14 }}>
             رمز حساب معاملاتی هیچ‌گاه درخواست یا ذخیره نمی‌شود. اکسپرت فقط اطلاعات معاملات را ارسال می‌کند
             و هیچ سفارشی باز یا بسته نمی‌کند.

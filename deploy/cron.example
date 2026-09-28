@@ -13,8 +13,10 @@
 # تهران بدونِ تغییرِ فصلی UTC+3:30 ثابته، پس معادلش ۵:۳۰ صبحِ UTC همون
 # روزه — خطِ دوم (کامنت‌شده) رو به‌جاش استفاده کن.
 
-# یادآوریِ برنامه/تمرین — هر ۵ دقیقه (نگاه کن به app/api/push/send-reminders)
-*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/push/send-reminders >/dev/null 2>&1
+# یادآوریِ برنامه/تمرین/دارو — دیگه لازم نیست: خودِ سرور هر ۳۰ ثانیه
+# (lib/pushScheduler.ts از instrumentation.ts) می‌فرسته. خطِ زیر فقط برای
+# سازگاری مونده و اضافه‌کردنش هم تکراری نمی‌فرسته (PushReminderLog).
+# */5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/push/send-reminders >/dev/null 2>&1
 
 # گزارشِ هفتگی — هر شنبه ساعت ۹ِ صبحِ تهران (نگاه کن به app/api/cron/weekly-report)
 0 9 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1
@@ -24,8 +26,9 @@
 # هشدارِ قبل از اخبارِ مهمِ اقتصادی — هر ۵ دقیقه.
 # خودِ روت تصمیم می‌گیره برای هر کاربر با فاصله‌ی دلخواهِ خودش (۱۵/۳۰/۶۰
 # دقیقه) هشدار بفرسته یا نه، و هر رویداد فقط یک‌بار هشدار می‌گیره.
-# (نگاه کن به app/api/cron/economic-alerts)
-*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-alerts >/dev/null 2>&1
+# (نگاه کن به app/api/cron/economic-alerts) — این هم حالا با زمان‌بندِ داخلی
+# (lib/pushScheduler.ts) هر ۳۰ ثانیه اجرا می‌شه؛ خطِ زیر دیگه لازم نیست.
+# */5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-alerts >/dev/null 2>&1
 
 # همگام‌سازیِ تقویم اقتصادی — اولویتِ منبع: ECONOMIC_CALENDAR_URL (override
 # دستی) → ECONOMIC_CALENDAR_API_KEY (JBlanked) → بدونِ کلید: TradingView

@@ -130,7 +130,12 @@ async function cacheFirst(request) {
   }
 }
 
-// ── Web Push (دست‌نخورده از نسخه‌ی قبل) ─────────────────────────────────
+// ── Web Push ────────────────────────────────────────────────────────────
+// هر یادآوری یک `deadline` (لحظه‌ی شروعِ برنامه، epoch ms) داره. سرور TTLِ
+// پوش رو هم تا همون لحظه می‌ذاره، ولی اگه پیامی به هر دلیل دیر رسید (دستگاه
+// تازه آنلاین شد) بعد از شروعِ برنامه دیگه نشون داده نمی‌شه — درخواستِ صریح:
+// «اگه نتونست بده، بعد از شروع برنامه دیگه بهش نوتیف نده».
+// `tag` همون کلیدِ یادآوریه تا نسخه‌ی تب‌باز و پوشِ سرور دوتا نشن.
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   let payload;
@@ -139,14 +144,42 @@ self.addEventListener("push", (event) => {
   } catch {
     payload = { title: "Arion", body: event.data.text() };
   }
+  if (typeof payload.deadline === "number" && Date.now() >= payload.deadline) return;
   const title = payload.title || "Arion";
+  const options = {
+    body: payload.body || "",
+    icon: "/images/logo-icon.png",
+    badge: "/images/logo-icon.png",
+    data: { url: payload.url || "/" },
+    timestamp: Date.now(),
+  };
+  if (payload.tag) options.tag = String(payload.tag);
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// مرورگر گاهی سابسکریپشن رو خودش عوض می‌کنه (انقضا/چرخشِ کلید). بدونِ این،
+// سرور تا وقتی کاربر دوباره اپ رو باز کنه به endpointِ مرده پوش می‌فرستاد و
+// هیچ یادآوری‌ای نمی‌رسید.
+self.addEventListener("pushsubscriptionchange", (event) => {
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: payload.body || "",
-      icon: "/images/logo-icon.png",
-      badge: "/images/logo-icon.png",
-      data: { url: payload.url || "/" },
-    })
+    (async () => {
+      const old = event.oldSubscription;
+      let sub = event.newSubscription;
+      const key = old && old.options && old.options.applicationServerKey;
+      if (!sub && key) {
+        sub = await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+      }
+      if (!sub) return;
+      const json = sub.toJSON();
+      let timezone;
+      try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch {}
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys, timezone, previousEndpoint: old ? old.endpoint : undefined }),
+      });
+    })().catch(() => {})
   );
 });
 
