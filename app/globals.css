@@ -4112,9 +4112,14 @@ body[data-theme="light"] .module-gate-cta, body:not([data-theme="light"]) .modul
 .whyus-marquee{ display:flex; flex-direction:column; gap:10px; }
 /* overflow:hidden روی خودِ ویوپورت، نه صفحه — پس هیچ‌وقت اسکرول افقیِ کلِ
    صفحه رو نمی‌شکنه، حتی وقتی ترکِ زیرش از عرضِ container بیرون می‌زنه. */
-.whyus-marquee-viewport{ overflow:hidden; width:100%; }
+/* direction:ltr روی ویوپورت: باگِ «سوراخِ بزرگِ خالی وسطِ چرا ما» — در RTL ترکِ
+   max-content از لبه‌ی راست لنگر می‌شد و translateX(-50%) نیمه‌ی راستِ ویوپورت
+   رو خالی می‌ذاشت. متنِ خودِ کارت‌ها دوباره rtl می‌شه. فاصله هم margin روی
+   کارت (نه gap) تا ۵۰٪ دقیقا روی مرزِ دو کپی بیفته (همون دلیلِ .ticker-track). */
+.whyus-marquee-viewport{ overflow:hidden; width:100%; direction:ltr; }
+.whyus-marquee-track > .whyus-card{ direction:rtl; margin-inline-end:10px; }
 .whyus-marquee-track{
-  display:flex; align-items:stretch; gap:10px; width:max-content;
+  display:flex; align-items:stretch; width:max-content;
   animation:whyus-marquee-scroll 1s linear infinite;
 }
 .whyus-marquee-track.is-reverse{ animation-direction:reverse; }
@@ -9382,3 +9387,13 @@ body select option:disabled{ color:var(--muted2); }
   animation:dashBarGrow .75s cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes dashBarGrow{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
+
+/* خروج از حساب (lib/logout.ts): پرده‌ی تارِ فوری روی کلِ صفحه تا ریدایرکت —
+   فقط بلور (بدونِ رنگِ پس‌زمینه) و بلاکِ کلیک‌های دوباره. */
+html[data-logging-out] body{ pointer-events:none; }
+html[data-logging-out]::after{
+  content:""; position:fixed; inset:0; z-index:2147483647;
+  backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter);
+  animation:logoutVeil .2s ease-out both;
+}
+@keyframes logoutVeil{ from{ opacity:0; } to{ opacity:1; } }

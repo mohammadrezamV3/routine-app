@@ -180,6 +180,8 @@ export function installPopupExitAnimator(): () => void {
 
   const observer = new MutationObserver((records) => {
     if (document.visibilityState === "hidden") return;
+    // حینِ خروج از حساب (lib/logout.ts) صفحه در حالِ ترکه — کپی/انیمیشن هدره.
+    if (document.documentElement.hasAttribute("data-logging-out")) return;
     const reduced = reducedMq.matches;
     // React هر فرزندِ یک Fragment (پرده، بعد پنل) را جدا حذف می‌کند؛ nextSiblingِ
     // رکوردِ پرده خودش پنلِ حذف‌شده است. با دنبال‌کردنِ این زنجیره تا اولین
