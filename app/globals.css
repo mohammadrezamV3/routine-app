@@ -3908,10 +3908,10 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    قبلی دقیقا سمتِ مخالفِ دکمه رو رزرو می‌کرد. اینجا صریح با
    [dir="ltr"] و اسپسیفیسیتیِ بالاتر، هم پدینگِ دکمه (چپ) هم پدینگِ
    آیکون (راست، وقتی AuthField آیکون داره) درست می‌شه. */
-.auth-phone-wrap .wsearch-newform-name{ padding-inline-start:112px; }
-.field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:112px; padding-inline-end:34px; }
+.auth-phone-wrap .wsearch-newform-name{ padding-inline-start:92px; text-align:right; }
+.field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:92px; padding-inline-end:34px; text-align:right; }
 .auth-phone-send-btn{
-  position:absolute; inset-inline-end:6px; top:50%; transform:translateY(-50%);
+  position:absolute; inset-inline-end:4px; top:50%; transform:translateY(-50%);
   display:flex; align-items:center; justify-content:center;
   padding:7px 14px; border-radius:999px; border:none;
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
@@ -3925,7 +3925,7 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    «در حال ارسال…»، «تغییر شماره». با min-width لبه‌ی چپ ثابت می‌ماند ولی
    پهنا عوض می‌شود و لبه‌ی راست تکان می‌خورد. عرضِ ثابت هر سه را در یک
    جعبه‌ی یکسان می‌نشاند. */
-.auth-phone-send-btn{ width:100px; padding-inline-end:0; padding-inline-start:0; }
+.auth-phone-send-btn{ width:80px; padding-inline-end:0; padding-inline-start:0; }
 .auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
 /* باگ: (۱) ریستِ سراسریِ body[data-theme] button (اسپسیفیسیتیِ بالاتر) به
    «ارسال کد» بک‌گراندِ شیشه‌ای می‌داد؛ (۲) button:active{transform:scale(.96)}
