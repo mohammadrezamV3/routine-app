@@ -396,7 +396,8 @@ export function filtersFromParams(sp: ParamReader, isCategory: (v: string) => bo
     category: isCategory(catRaw) ? catRaw : "",
     sort: sortRaw === "rating" || sortRaw === "new" ? sortRaw : "best",
     cert: sp.get("cert") === "1",
-    open: sp.get("open") === "1",
+    // «accepting=1» نامِ این فیلتر در نسخه‌ی ردیف‌های افقی (main) است
+    open: sp.get("open") === "1" || sp.get("accepting") === "1",
     minRating: (MIN_RATING_OPTIONS as readonly number[]).includes(rating) ? rating : 0,
     maxResponse: (MAX_RESPONSE_OPTIONS as readonly number[]).includes(resp) ? resp : 0,
   };

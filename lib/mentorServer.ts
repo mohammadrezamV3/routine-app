@@ -135,6 +135,8 @@ export type MentorCard = {
   availability: AvailabilityState;
   awayUntil: string | null;
   responseTimeHours: number | null;
+  /** زمانِ ساختِ پروفایلِ منتوری (ISO) — «عضویت» روی کارتِ کشف */
+  memberSince: string;
 };
 
 export type MentorStats = { activeStudents: number; totalStudents: number; completedPrograms: number };
@@ -180,6 +182,7 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
     activeStudents: stats?.activeStudents ?? 0,
     totalStudents: stats?.totalStudents ?? 0,
     acceptingStudents: p.acceptingStudents,
+    memberSince: p.createdAt.toISOString(),
     ...cardAvailability(p, stats?.activeStudents ?? 0),
   };
 }

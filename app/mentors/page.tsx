@@ -2,16 +2,17 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Award, Bookmark, Check, ChevronDown, DoorOpen, Search, SearchX, Sparkles, Star, Users, X } from "lucide-react";
+import { ArrowRight, Bookmark, Medal, Check, ChevronDown, DoorOpen, Search, SearchX, Sparkles, Star, Users, X } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorEmptyState, MentorSectionTitle } from "@/components/MentorUI";
 import { MentorCard } from "@/components/MentorCard";
+import { MentorCarousel } from "@/components/MentorCarousel";
 import { SavedMentorsProvider, useSavedMentors } from "@/components/MentorSaved";
 import { MentorPlatformNotice } from "@/components/MentorPlatformNotice";
 import { MentorCollapse, MentorStagger, MentorStaggerItem, MentorSwap } from "@/components/MentorMotion";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
-import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
+import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory, type MentorCategory } from "@/lib/mentorCategories";
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
@@ -35,12 +36,17 @@ const CATEGORY_OPTIONS = [{ value: "", label: "همه" }, ...MENTOR_CATEGORIES.m
 const RATING_OPTIONS = [{ value: "0", label: "همه" }, ...MIN_RATING_OPTIONS.map((r) => ({ value: String(r), label: `${faNum(r)} به بالا` }))];
 const RESPONSE_OPTIONS = [{ value: "0", label: "همه" }, ...MAX_RESPONSE_OPTIONS.map((h) => ({ value: String(h), label: `تا ${faNum(h)} ساعت` }))];
 
-// «جستجوی منتور»: جستجوی هوشمند (غلطِ املایی/هم‌معنی — lib/mentorSearch.ts)،
-// فیلترهای همیشه‌پیدا که در نشانیِ صفحه می‌نشینند (قابلِ اشتراک)، ویترینِ
-// «محبوب/تازه» فقط در نمای پیش‌فرض، و تبِ «ذخیره‌شده‌ها».
+// «پیدا کردن منتور»: جستجوی هوشمند (غلطِ املایی/هم‌معنی — lib/mentorSearch.ts)،
+// فیلترهای همیشه‌پیدا که در نشانیِ صفحه می‌نشینند (قابلِ اشتراک)، و تبِ
+// «ذخیره‌شده‌ها». در نمای پیش‌فرض (بی‌جستجو/فیلتر) ردیف‌های افقی می‌آیند:
+// محبوب، تازه و یک ردیف برای هر حوزه؛ «مشاهده همه»ی هر ردیف همان فهرست را
+// با فیلترِ متناظر (یا ?view=all برای همه‌ی منتورها) باز می‌کند.
+type View = "rows" | "all" | "saved";
+const categoryRowTitle = (c: MentorCategory) => `منتورهای ${MENTOR_CATEGORY_META[c].label}`;
+
 export default function MentorsSearchPage() {
   return (
-    <MentorPageShell title="جستجوی منتور">
+    <MentorPageShell title="پیدا کردن منتور">
       <Suspense fallback={<LoadingBlock />}>
         <SavedMentorsProvider>
           <Discovery />
@@ -60,12 +66,13 @@ function Discovery() {
   const router = useRouter();
   const pathname = usePathname();
   const filters = useMemo(() => filtersFromParams(sp, isMentorCategory), [sp]);
-  const view: "all" | "saved" = sp.get("view") === "saved" ? "saved" : "all";
+  const viewRaw = sp.get("view");
+  const view: View = viewRaw === "saved" ? "saved" : viewRaw === "all" ? "all" : "rows";
   const saved = useSavedMentors();
 
-  const push = useCallback((next: MentorFilters, nextView: "all" | "saved" = view) => {
+  const push = useCallback((next: MentorFilters, nextView: View = view) => {
     const p = filtersToParams(next);
-    if (nextView === "saved") p.set("view", "saved");
+    if (nextView !== "rows") p.set("view", nextView);
     const qs = p.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [router, pathname, view]);
@@ -86,19 +93,26 @@ function Discovery() {
   }, [qInput, filters.q, setFilters]);
 
   const clearAll = () => { lastQ.current = ""; setQInput(""); push(DEFAULT_FILTERS); };
+  // «بازگشت به ردیف‌ها»: همه‌ی فیلترها و ?view=all پاک
+  const backToRows = () => { lastQ.current = ""; setQInput(""); push(DEFAULT_FILTERS, "rows"); };
+  const openAll = (patch: Partial<MentorFilters>, nextView: View = "rows") => {
+    push({ ...DEFAULT_FILTERS, ...patch }, nextView);
+    window.scrollTo({ top: 0 });
+  };
+  const showRows = view === "rows" && isDefaultView(filters);
 
   const savedCount = saved?.ids.size ?? 0;
   const viewTabs = [
-    { value: "all" as const, label: "همه‌ی منتورها" },
+    { value: "rows" as const, label: "همه‌ی منتورها" },
     { value: "saved" as const, label: savedCount ? `ذخیره‌شده‌ها (${faNum(savedCount)})` : "ذخیره‌شده‌ها" },
   ];
 
   return (
     <>
       <div className="mentor-tabs">
-        <SegmentedTabs options={viewTabs} active={view} onChange={(v) => push(filters, v)} />
+        <SegmentedTabs options={viewTabs} active={view === "saved" ? "saved" : "rows"} onChange={(v) => push(filters, v)} />
       </div>
-      <MentorSwap swapKey={view}>
+      <MentorSwap swapKey={view === "saved" ? "saved" : "all"}>
         {view === "saved" ? (
           <SavedView />
         ) : (
@@ -110,7 +124,17 @@ function Discovery() {
               onChange={setFilters}
               onClear={clearAll}
             />
-            <Results filters={filters} onClear={clearAll} />
+            <MentorSwap swapKey={showRows ? "rows" : "list"}>
+              {showRows ? (
+                <Rows
+                  onPopular={() => openAll({}, "all")}
+                  onNew={() => openAll({ sort: "new" })}
+                  onCategory={(c) => openAll({ category: c })}
+                />
+              ) : (
+                <Results filters={filters} allView={view === "all"} onClear={clearAll} onBack={backToRows} />
+              )}
+            </MentorSwap>
           </>
         )}
       </MentorSwap>
@@ -164,7 +188,7 @@ function FilterPanel({
       <SegmentedTabs options={CATEGORY_OPTIONS} active={filters.category} onChange={(v) => onChange({ category: v })} />
 
       <div className="mentor-filter-chips">
-        <ToggleChip on={filters.cert} icon={<Award size={14} {...IC} />} onClick={() => onChange({ cert: !filters.cert })}>
+        <ToggleChip on={filters.cert} icon={<Medal size={14} {...IC} />} onClick={() => onChange({ cert: !filters.cert })}>
           دارای مدرک
         </ToggleChip>
         <ToggleChip on={filters.open} icon={<DoorOpen size={14} {...IC} />} onClick={() => onChange({ open: !filters.open })}>
@@ -228,7 +252,7 @@ function CardGrid({ mentors, from = 0 }: { mentors: MentorCardData[]; from?: num
   );
 }
 
-function Results({ filters, onClear }: { filters: MentorFilters; onClear: () => void }) {
+function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters; allView: boolean; onClear: () => void; onBack: () => void }) {
   const key = filtersToParams(filters).toString();
   const defaultView = isDefaultView(filters);
   const [mentors, setMentors] = useState<MentorCardData[] | null>(null);
@@ -270,44 +294,18 @@ function Results({ filters, onClear }: { filters: MentorFilters; onClear: () => 
 
   useEffect(() => { load(1); }, [load]);
 
-  const [popular, setPopular] = useState<MentorCardData[]>([]);
-  const [newcomers, setNewcomers] = useState<MentorCardData[]>([]);
-  const popularLoaded = useRef(false);
-  useEffect(() => {
-    if (!defaultView || popularLoaded.current) return;
-    popularLoaded.current = true;
-    fetch("/api/mentors/popular", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: MentorsPopularResponse | null) => { setPopular(d?.mentors ?? []); setNewcomers(d?.newcomers ?? []); })
-      .catch(() => undefined);
-  }, [defaultView]);
-
   const stale = loading && mentors !== null;
 
   return (
     <>
-      {defaultView && popular.length > 0 && (
-        <>
-          <MentorSectionTitle icon={<Star size={15} {...IC} />}>منتورهای محبوب</MentorSectionTitle>
-          <MentorStagger className="mentor-popular-row">
-            {popular.map((m, i) => <MentorStaggerItem key={m.userId} index={i}><MentorCard mentor={m} /></MentorStaggerItem>)}
-          </MentorStagger>
-        </>
-      )}
-      {defaultView && newcomers.length > 0 && (
-        <>
-          <MentorSectionTitle icon={<Sparkles size={15} {...IC} />}>منتورهای تازه</MentorSectionTitle>
-          <MentorStagger className="mentor-popular-row">
-            {newcomers.map((m, i) => <MentorStaggerItem key={m.userId} index={i}><MentorCard mentor={m} /></MentorStaggerItem>)}
-          </MentorStagger>
-        </>
-      )}
-
+      <button type="button" className="mentor-text-btn mentor-list-back" onClick={onBack}>
+        <ArrowRight size={14} {...IC} /> بازگشت به ردیف‌ها
+      </button>
       <MentorSectionTitle
         icon={<Users size={15} {...IC} />}
         action={stale ? <Spinner size={14} /> : undefined}
       >
-        {defaultView ? "همه‌ی منتورها" : "نتیجه‌ها"}
+        {defaultView && allView ? "همه‌ی منتورها" : "نتیجه‌ها"}
       </MentorSectionTitle>
 
       {error ? (
@@ -342,6 +340,58 @@ function Results({ filters, onClear }: { filters: MentorFilters; onClear: () => 
           )}
         </div>
       )}
+    </>
+  );
+}
+
+/** نمای پیش‌فرض: ردیف‌های افقیِ محبوب، تازه و هر حوزه (MentorCarousel) */
+function Rows({ onPopular, onNew, onCategory }: { onPopular: () => void; onNew: () => void; onCategory: (c: MentorCategory) => void }) {
+  const [popular, setPopular] = useState<MentorCardData[] | null>(null);
+  const [newcomers, setNewcomers] = useState<MentorCardData[]>([]);
+  const [byCategory, setByCategory] = useState<Partial<Record<MentorCategory, MentorCardData[]>>>({});
+  const [failed, setFailed] = useState(false);
+
+  const load = useCallback(() => {
+    setFailed(false);
+    setPopular(null);
+    const popularReq = fetch("/api/mentors/popular", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: MentorsPopularResponse) => {
+        setPopular(d.mentors ?? []);
+        setNewcomers(d.newcomers ?? []);
+      });
+    const catReqs = MENTOR_CATEGORIES.map((c) =>
+      fetch(`/api/mentors?cat=${c}&page=1`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d: MentorsListResponse) => setByCategory((prev) => ({ ...prev, [c]: d.mentors }))),
+    );
+    Promise.allSettled([popularReq, ...catReqs]).then((res) => {
+      // فقط وقتی هیچ ردیفی نیامد خطا؛ ردیفی که نیامد صرفاً پنهان می‌ماند
+      if (res.every((r) => r.status === "rejected")) setFailed(true);
+      setPopular((p) => p ?? []);
+    });
+  }, []);
+  useEffect(load, [load]);
+
+  if (failed) return <MentorErrorState message="فهرست منتورها دریافت نشد؛ دوباره تلاش کن" onRetry={load} />;
+  if (popular === null) return <LoadingBlock />;
+
+  const categoryRows = MENTOR_CATEGORIES.filter((c) => (byCategory[c]?.length ?? 0) > 0);
+  if (popular.length === 0 && newcomers.length === 0 && categoryRows.length === 0) {
+    return <MentorEmptyState icon={<Users size={24} {...IC} />} title="هنوز منتوری منتشر نشده است" />;
+  }
+
+  return (
+    <>
+      {popular.length > 0 && (
+        <MentorCarousel title="منتورهای محبوب" icon={<Star size={15} {...IC} />} mentors={popular} onViewAll={onPopular} />
+      )}
+      {newcomers.length > 0 && (
+        <MentorCarousel title="منتورهای تازه" icon={<Sparkles size={15} {...IC} />} mentors={newcomers} onViewAll={onNew} />
+      )}
+      {categoryRows.map((c) => (
+        <MentorCarousel key={c} title={categoryRowTitle(c)} mentors={byCategory[c]!} onViewAll={() => onCategory(c)} />
+      ))}
     </>
   );
 }

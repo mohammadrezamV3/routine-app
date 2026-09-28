@@ -15,10 +15,12 @@ import { AccountBackButton } from "./AccountBackButton";
  */
 
 /** سرصفحه‌ی هر زیرصفحه: بازگشت + عنوان + یک خط توضیح */
-export function AccountPageHead({ title, hint }: { title: string; hint?: string }) {
+export function AccountPageHead({
+  title, hint, backHref, backLabel,
+}: { title: string; hint?: string; backHref?: string; backLabel?: string }) {
   return (
     <div className="acc-head">
-      <AccountBackButton />
+      <AccountBackButton href={backHref} label={backLabel} />
       <h1>{title}</h1>
       {hint && <p className="acc-head-hint">{hint}</p>}
     </div>

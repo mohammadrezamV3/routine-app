@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  RELEVANCE_MIN, blendScore, buildSearchDoc, damerauLevenshtein, expandSynonyms, normalizeFa, parseQuery, relevance,
+  RELEVANCE_MIN, blendScore, filtersFromParams, filtersToParams, buildSearchDoc, damerauLevenshtein, expandSynonyms, normalizeFa, parseQuery, relevance,
   tokenSimilarity, tokenize, trigramSimilarity,
 } from "@/lib/mentorSearch";
 
@@ -140,5 +140,15 @@ describe("blendScore", () => {
     // منتورِ دقیقاً مرتبط با شایستگیِ صفر جلوی منتورِ کم‌ربط با شایستگیِ کامل
     expect(blendScore(1, 0)).toBeGreaterThan(blendScore(0.5, 100));
     expect(blendScore(0.9, 80)).toBeGreaterThan(blendScore(0.9, 20));
+  });
+});
+
+describe("filtersFromParams — نام‌های پارامترِ نسخه‌ی ردیف‌های افقی", () => {
+  const isCat = (v: string) => v === "FITNESS" || v === "ROUTINE" || v === "NUTRITION";
+  it("accepting=1 همان open=1 است و category همان cat", () => {
+    const f = filtersFromParams(new URLSearchParams("accepting=1&category=FITNESS"), isCat);
+    expect(f.open).toBe(true);
+    expect(f.category).toBe("FITNESS");
+    expect(filtersToParams(f).toString()).toBe("cat=FITNESS&open=1");
   });
 });

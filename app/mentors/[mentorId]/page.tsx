@@ -34,7 +34,7 @@ const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorProfilePage() {
   return (
-    <MentorPageShell back={{ href: "/mentors", label: "جستجوی منتور" }}>
+    <MentorPageShell back={{ href: "/mentors", label: "پیدا کردن منتور" }}>
       <MentorProfile />
     </MentorPageShell>
   );

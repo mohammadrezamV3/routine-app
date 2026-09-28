@@ -4,7 +4,7 @@ import "./mentor.css";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Award, Star } from "lucide-react";
+import { Medal, Star } from "lucide-react";
 import { MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
 import { faNum } from "@/lib/jalali";
 import { M_DUR, mT } from "./MentorMotion";
@@ -34,7 +34,7 @@ export function certificateSentence(categories: string[]): string {
 }
 
 /**
- * نشانِ مدرک کنارِ نام: یک آیکونِ کوچک (فقط وقتی مدرکِ تأییدشده‌ای هست).
+ * نشانِ مدرک کنارِ نام: مدالِ طلاییِ کوچک (فقط وقتی مدرکِ تأییدشده‌ای هست).
  * احرازِ هویت برای همه‌ی منتورها اجباری است، پس نشانِ «هویت» وجود ندارد.
  * لمس/کلیک یا هاور (ماوس) یک پاپ‌آوِرِ کوچک باز می‌کند که دقیقاً توضیح می‌دهد
  * چه تأیید شده. دسترس‌پذیر: دکمه‌ی واقعی با aria-expanded/aria-controls،
@@ -134,7 +134,7 @@ export function CertificateMark({
           if (!pinned.current) hoverTimer.current = setTimeout(() => setOpen(false), 120);
         }}
       >
-        <Award size={size} strokeWidth={1.75} aria-hidden />
+        <Medal size={size} strokeWidth={1.9} aria-hidden />
       </button>
       {typeof document !== "undefined" &&
         createPortal(
@@ -152,7 +152,7 @@ export function CertificateMark({
                 onPointerEnter={() => { if (hoverTimer.current) clearTimeout(hoverTimer.current); }}
                 onPointerLeave={(e) => { if (e.pointerType === "mouse" && !pinned.current) setOpen(false); }}
               >
-                <span className="mentor-pop-title"><Award size={13} strokeWidth={1.75} aria-hidden /> {label}</span>
+                <span className="mentor-pop-title is-gold"><Medal size={13} strokeWidth={1.9} aria-hidden /> {label}</span>
                 <span className="mentor-pop-text">{sentence}</span>
               </motion.div>
             )}

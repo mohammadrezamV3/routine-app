@@ -856,32 +856,19 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 .mentor-grid-item{ min-width:0; display:flex; }
 .mentor-grid-item > .mentor-card{ flex:1; }
 
-/* ── کارتِ فشرده ───────────────────────────────────────────── */
-.mentor-card.is-compact{
-  position:relative; flex-direction:row; align-items:flex-start; gap:var(--m-3);
-  padding:12px 14px; min-width:0;
-}
-.mentor-card.is-compact .mentor-card-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
-.mentor-card-title{ display:flex; align-items:center; gap:4px; min-width:0; }
-.mentor-card-title .mentor-card-name{ min-width:0; line-height:1.6; }
-.mentor-card-link{ color:var(--text); text-decoration:none; }
-/* لینکِ کشیده: کلِ کارت قابلِ کلیک، دکمه‌ها رویش */
-.mentor-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; }
-.mentor-card-link:focus-visible{ outline:none; }
-.mentor-card-link:focus-visible::after{ outline:2px solid var(--accent); outline-offset:2px; }
-.mentor-card.is-compact .mentor-card-headline{
+/* ── کارتِ فشرده: تکمیلِ چیدمانِ کارتِ main (پایین‌تر، «کارت: جمع‌وجور») ── */
+.mentor-card-id{ display:flex; flex-direction:column; gap:2px; }
+.mentor-card .mentor-card-name{ line-height:1.6; }
+.mentor-card .mentor-card-headline{
   margin:0; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -webkit-line-clamp:unset;
 }
-.mentor-card-meta{
-  display:flex; flex-wrap:wrap; align-items:center; gap:2px 12px; margin-top:1px;
-  font-size:11px; color:var(--muted); line-height:1.7;
-}
-.mentor-card-meta > span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
-.mentor-card-closed{ color:var(--muted2); }
-.mentor-card-tags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
-.mentor-card-save{ position:relative; z-index:1; flex-shrink:0; margin:-4px 0 0 -6px; }
-.mentor-card .mentor-cert-mark{ position:relative; z-index:1; }
-@media (hover:hover) and (pointer:fine){ .mentor-card.is-compact:hover .mentor-card-link{ color:var(--accent); } }
+/* پذیرشِ بسته/عدمِ حضور — یک خطِ کوچکِ کم‌رنگ، بی‌قاب */
+.mentor-card-closed{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted2); white-space:nowrap; }
+.mentor-card-foot .mentor-rating-inline{ font-size:11px; }
+/* نشانک و مدال بالای لینکِ کشیده (::after با z-index:1) */
+.mentor-card-save{ position:relative; z-index:2; flex-shrink:0; align-self:flex-start; margin:-4px 0 0 -6px; }
+.mentor-card .mentor-cert-mark{ position:relative; z-index:2; }
+@media (hover:hover) and (pointer:fine){ .mentor-card:hover .mentor-card-link{ color:var(--accent); } }
 
 /* برچسبِ کوچکِ حوزه/تخصص */
 .mentor-tag{
@@ -900,14 +887,16 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 /* ── نشانِ مدرک + پاپ‌آوِر ─────────────────────────────────── */
 .mentor-cert-mark{
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  padding:3px; margin:-3px 0; border:none; border-radius:8px; cursor:pointer; color:var(--accent);
+  padding:3px; margin:-3px 0; border:none; border-radius:8px; cursor:pointer; color:#D9A21B;
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:opacity .15s ease, transform .16s cubic-bezier(.22,1,.36,1);
 }
-body[data-theme="light"] .mentor-cert-mark, body:not([data-theme="light"]) .mentor-cert-mark{ background:none; box-shadow:none; }
+body[data-theme="light"] .mentor-cert-mark, body:not([data-theme="light"]) .mentor-cert-mark{ background:none; box-shadow:none; border:none; }
+/* مدالِ طلایی (رنگِ main) — در تمِ روشن تیره‌تر برای کنتراست */
+body[data-theme="light"] .mentor-cert-mark{ color:#B7860B; }
 .mentor-cert-mark:active{ transform:scale(.92); }
 .mentor-cert-mark:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
-@media (hover:hover){ .mentor-cert-mark:hover{ opacity:.8; background:none; } }
+@media (hover:hover){ .mentor-cert-mark:hover{ color:#E8B530; background:none; box-shadow:none; } }
 .mentor-pop{
   position:fixed; z-index:140; width:min(260px, calc(100vw - 24px));
   display:flex; flex-direction:column; gap:3px; padding:10px 12px; border-radius:12px;
@@ -916,6 +905,8 @@ body[data-theme="light"] .mentor-cert-mark, body:not([data-theme="light"]) .ment
 }
 .mentor-pop-title{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:800; color:var(--accent); }
 .mentor-pop-text{ color:var(--muted); }
+.mentor-pop-title.is-gold{ color:#D9A21B; }
+body[data-theme="light"] .mentor-pop-title.is-gold{ color:#B7860B; }
 
 /* ── نشانک و پیامِ پایینِ صفحه ─────────────────────────────── */
 .mentor-save-btn.is-on{ color:var(--accent); }
@@ -1262,3 +1253,47 @@ section.mentor-section.is-flat .mentor-toggle-row:last-child{ padding-bottom:0; 
   .mentor-hero-stats > div:nth-child(n+3){ border-top:1px solid var(--surface-line); }
   .mentor-hero-stats > div{ padding:7px 4px; }
 }
+
+/* ── کشف: «پیدا کردن منتور» (ردیف‌های افقی + فیلتر) ─────────────────── */
+.mentor-carousel + .mentor-carousel .mentor-section-title{ margin-top:var(--m-5); }
+.mentor-carousel .mentor-section-title{ margin-bottom:var(--m-3); }
+/* کشیدن با ماوس: نشانگرِ دست، و در حینِ کشیدن اسنپ خاموش تا کشیدن روان باشد */
+@media (hover:hover) and (pointer:fine){ .mentor-carousel-row{ cursor:grab; } }
+.mentor-carousel-row.is-dragging{ cursor:grabbing; scroll-snap-type:none; user-select:none; }
+.mentor-carousel-row.is-dragging .mentor-card{ pointer-events:none; }
+.mentor-carousel-row .mentor-card{ height:100%; }
+.mentor-grid-item > .mentor-carousel-more{ flex:1; }
+
+/* خانه‌ی «مشاهده همه ←» تهِ هر ردیف — بی‌بک‌گراند، فقط بوردرِ خط‌چین */
+.mentor-carousel-more{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--m-2);
+  min-height:100%; padding:var(--m-4); border-radius:18px; border:1px dashed var(--line);
+  font-family:inherit; font-size:12.5px; font-weight:700; color:var(--accent); cursor:pointer;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:border-color .15s ease;
+}
+body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .mentor-carousel-more{ background:none; box-shadow:none; }
+@media (hover:hover){ .mentor-carousel-more:hover{ border-color:var(--accent); color:var(--accent); background:none; box-shadow:none; } }
+.mentor-carousel-more:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.mentor-carousel-more-icon{
+  display:flex; align-items:center; justify-content:center; width:38px; height:38px;
+  border-radius:999px; border:1px solid currentColor;
+}
+.mentor-popular-row.mentor-carousel-row{ grid-auto-columns:minmax(250px, 78%); }
+@media (min-width:720px){ .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:calc((100% - 2 * var(--m-3)) / 2.6); } }
+
+/* کارت: جمع‌وجور — سرِ کارت (نام + مدال)، و یک ردیفِ پایین (امتیاز · عضویت · شِورون) */
+.mentor-card{ position:relative; min-width:0; padding:14px 15px; gap:12px; cursor:pointer; }
+.mentor-card-name-row{ display:flex; align-items:center; gap:4px; min-width:0; }
+.mentor-card-name-row .mentor-card-name{ min-width:0; }
+/* لینکِ کشیده: کلِ کارت کلیک‌پذیر است */
+.mentor-card-link{ text-decoration:none; color:var(--text); }
+.mentor-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; z-index:1; }
+.mentor-card-link:focus-visible{ outline:none; }
+.mentor-card:has(.mentor-card-link:focus-visible){ outline:2px solid var(--accent); outline-offset:2px; }
+.mentor-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; min-width:0; }
+.mentor-card-since{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); white-space:nowrap; }
+.mentor-card-foot .rp-card-arrow{ margin-inline-start:auto; }
+
+.mentor-list-back{ margin-top:var(--m-2); }
+.mentor-privacy-picker{ margin-bottom:var(--m-3); }

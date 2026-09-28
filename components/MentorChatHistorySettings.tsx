@@ -8,6 +8,7 @@ import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorUserAvatar } from "./MentorUserAvatar";
 import { MentorList, MentorListItem } from "./MentorMotion";
 import { Spinner } from "./Spinner";
+import { MentorEmpty } from "./MentorUI";
 import { useFeature } from "@/lib/useFeatures";
 import type { ChatHistoryResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
@@ -22,7 +23,7 @@ type Confirm = { kind: "one"; conv: Conv } | { kind: "all" };
  * پیام‌ها برای او دیگر نمایش داده نمی‌شوند و نسخه‌ی طرفِ مقابل دست نمی‌خورد
  * (lib/mentorChatHistory.ts). وقتی بخشِ منتورها خاموش است یا گفت‌وگویی نیست، نمایش داده نمی‌شود.
  */
-export function MentorChatHistorySettings({ index = 0 }: { index?: number }) {
+export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { index?: number; showEmpty?: boolean }) {
   const on = useFeature("mentors");
   const [list, setList] = useState<Conv[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -65,8 +66,9 @@ export function MentorChatHistorySettings({ index = 0 }: { index?: number }) {
     }
   }
 
-  if (!on) return null;
-  if (list !== null && list.length === 0 && !loadError) return null;
+  // در صفحه‌ی خودش (/account/general/chats) به‌جای صفحه‌ی خالی یک پیامِ کوتاه
+  if (!on) return showEmpty ? <MentorEmpty>بخش منتورها فعلاً در دسترس نیست</MentorEmpty> : null;
+  if (list !== null && list.length === 0 && !loadError) return showEmpty ? <MentorEmpty>هنوز گفت‌وگویی با منتور یا شاگردی نداری</MentorEmpty> : null;
 
   const withMessages = (list ?? []).filter((c) => c.messageCount > 0);
 

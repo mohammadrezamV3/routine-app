@@ -7,7 +7,7 @@ import { MENTOR_CARD_INCLUDE, buildMentorCards, dateFromIso, loadMentorStats, ty
 import { RANK_SCOPE_ALL, ensureFreshRankings, loadRankedCards, type RankScope } from "@/lib/mentorRankingStats";
 import { RELEVANCE_MIN, blendScore, buildSearchDoc, parseQuery, relevance, type MentorFilters } from "@/lib/mentorSearch";
 
-// اجرای جستجو/فیلترِ «جستجوی منتور» روی دیتابیس.
+// اجرای جستجو/فیلترِ «پیدا کردن منتور» روی دیتابیس.
 //
 //   • هر فیلتری که در SQL بیان‌شدنیه (حوزه، مدرک، پذیرش، امتیاز، زمانِ پاسخ)
 //     همون‌جا اعمال می‌شه (filterWhere).

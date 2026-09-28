@@ -113,7 +113,7 @@ function MentorshipHome() {
         text="منتورها را بر اساس حوزه و امتیاز پیدا کن و درخواست بده."
         action={
           <Link href="/mentors" className="trade-primary-btn mentor-btn">
-            <Search size={15} strokeWidth={1.75} aria-hidden /> جستجوی منتور
+            <Search size={15} strokeWidth={1.75} aria-hidden /> پیدا کردن منتور
           </Link>
         }
       />
