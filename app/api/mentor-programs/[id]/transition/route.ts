@@ -9,6 +9,7 @@ import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { isoDate, loadProgramWithUsers, serializeProgram, todayIsoForUser } from "@/lib/mentorServer";
 import { activateWithMirror, removeProgramMirrors } from "@/lib/mentorProgramMirror";
 import { fmtDate } from "@/lib/mentorFormat";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 1000;
@@ -114,6 +115,9 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   if (actor === "MENTOR") touchMentorActivity(me);
+  // هر دو طرف؛ فعال/تموم‌شدن آینه‌ی روتینِ شاگرد رو هم عوض می‌کنه (liveSync
+  // رویدادِ mentor.program رو به customOccurrences هم ترجمه می‌کنه)
+  void publishToUsers([p.mentorId, p.studentId], { type: "mentor.program", data: { id: p.id } });
 
   // اعلان به طرفِ مقابل
   const url = `/mentor-programs/${p.id}`;

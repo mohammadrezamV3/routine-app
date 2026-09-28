@@ -19,6 +19,7 @@ import {
 import { activateDuePrograms, ensureLegacyWorkoutMirror } from "@/lib/mentorProgramMirror";
 import { dayInTz, loadProgressView, syncProgramProgress } from "@/lib/mentorProgress";
 import { isoAddDays, weekStartIso } from "@/lib/mentorProgressCore";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const MAX_LOGS = 1000;
@@ -144,6 +145,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   });
   if (!ok) return conflict("این برنامه هم‌زمان تغییر کرد؛ دیگه پیش‌نویس نیست");
   touchMentorActivity(me);
+  void publishToUsers([me], { type: "mentor.program", data: { id: current.id } });
 
   const program = await loadProgramWithUsers(current.id);
   return NextResponse.json({ program: await serializeProgram(program!, me) });
@@ -162,5 +164,6 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     const exists = await prisma.mentorProgram.findFirst({ where: { id: params.id, mentorId: me }, select: { id: true } });
     return exists ? conflict("فقط پیش‌نویسی که هنوز ارسال نشده قابل حذفه") : notFound();
   }
+  void publishToUsers([me], { type: "mentor.program", data: { id: params.id } });
   return NextResponse.json({ ok: true });
 }

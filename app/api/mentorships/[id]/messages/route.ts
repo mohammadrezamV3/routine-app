@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { isUniqueViolation } from "@/lib/mentorServer";
 import { parseEncryptedMessage } from "@/lib/e2ee/server";
 import { MESSAGE_SELECT, checkSendKeys, encryptedMessageData, notifyNewMessage, purgeExpiredLegacyMessages, serializeMessage } from "@/lib/mentorChatServer";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const PAGE_SIZE = 50;
@@ -43,7 +44,11 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const page = rows.slice(0, PAGE_SIZE).reverse();
 
   // پیام‌های طرفِ مقابل با باز شدنِ گفت‌وگو خوانده‌شده حساب می‌شن
-  await prisma.mentorMessage.updateMany({ where: { mentorshipId: m.id, senderId: { not: me }, readAt: null }, data: { readAt: new Date() } });
+  const marked = await prisma.mentorMessage.updateMany({ where: { mentorshipId: m.id, senderId: { not: me }, readAt: null }, data: { readAt: new Date() } });
+  // رسیدِ خوانده‌شدن: تیکِ دوتاییِ فرستنده همون لحظه عوض می‌شه
+  if (marked.count > 0) {
+    void publishToUsers([m.mentorId === me ? m.studentId : m.mentorId], { type: "mentor.message", data: { mentorshipId: m.id, read: true } });
+  }
 
   // پیامِ خوش‌آمد از تنظیماتِ منتور — جزوِ گفت‌وگوی رمزشده نیست و جدا برچسب می‌خورد
   let welcome: { body: string; at: Date } | null = null;

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
+import { withLiveSync } from "@/lib/realtime";
 
 // یادداشت‌های ترید. جست‌وجو عمدا روی عنوان و متن با `contains` انجام
 // می‌شود (نه full-text index): حجم یادداشت‌های یک کاربر کوچک است و
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ notes: notes.map(serialize) });
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, note: serialize(note) });
 }
 
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -126,7 +127,7 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true, note: serialize(note) });
 }
 
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
@@ -134,3 +135,8 @@ export async function DELETE(req: NextRequest) {
   await prisma.tradeNote.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["trade"], handlePOST);
+export const PATCH = withLiveSync(["trade"], handlePATCH);
+export const DELETE = withLiveSync(["trade"], handleDELETE);

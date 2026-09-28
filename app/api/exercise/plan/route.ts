@@ -7,6 +7,7 @@ import { getExercisePlan, guessFallbackGoal, ExerciseLevel } from "@/lib/exercis
 import { generateExercisePlan } from "@/lib/aiClient";
 import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { FA_WEEKDAY } from "@/lib/jalali";
+import { withLiveSync } from "@/lib/realtime";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
@@ -36,7 +37,7 @@ export async function GET() {
   return NextResponse.json({ plan });
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -156,3 +157,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, feasible: true, plan, generatedByAi });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["exercise"], handlePOST);

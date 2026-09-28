@@ -74,6 +74,18 @@
     --surface-glass:rgba(31,35,38,.72);
     /* بردر سطح‌ها هم باید با رنگ جدید هماهنگ باشه، نه --line قدیمی */
     --surface-line:#2A2F33;
+    /* ── بک‌گراندِ واحدِ همه‌ی باکس‌ها/کارت‌ها ─────────────────────────
+       طبقِ درخواستِ صریح («یک بک‌گراندِ کلی برای همه‌ی باکس‌ها»): هر کارت/
+       باکس/پنل/مودال فقط از همین یک توکن رنگ می‌گیرد. مقدارش همان
+       --surface-1 است (سطحِ غالبِ موجود: DashCard، account-card،
+       trade-surface، acc-block-body) و عمدا *توپر* است تا به backdrop-filter
+       (که روی لمسی خاموش است) و به چیزی که پشتش می‌گذرد (بلاب‌های aurora)
+       وابسته نباشد — یعنی روی هر دستگاه و هر بار لود دقیقا یک رنگ.
+       مقدار literal است نه var(--surface-1): متغیری که در :root با var()
+       تعریف شود همان‌جا (با مقدارِ تمِ شب) حل می‌شود و بلاکِ تمِ روز را
+       نمی‌بیند. */
+    --box-bg:#171A1C;
+    --box-line:#2A2F33;
   }
   /* پالت رسمی تم روز (طبق درخواست صریح) — رنگ اصلی/کارت‌ها/متن‌ها/خطوط
      دقیقا از پالت ارسالی؛ --bg عمدا کمی نارنجی‌تر از مقدار خام پالت
@@ -103,6 +115,8 @@
     --surface-2:#FFFCF5;
     --surface-glass:rgba(255,252,245,.72);
     --surface-line:#EADCC6;
+    --box-bg:#FDF6EA;
+    --box-line:#EADCC6;
     --sun:#FFC94A;
     --moon:#7B4FE0;
     /* قهوه‌ای تیره — رنگ دوم روز، برای همون لحظه‌های «ویژه»؛ قبلا طلایی بود،
@@ -351,6 +365,11 @@
   .check.on{border-color:var(--accent); background:var(--accent); transform:scale(1.06);}
   .check .c-check{width:11px; height:11px; opacity:0; transform:scale(.4) rotate(-20deg); transition:opacity .2s ease, transform .32s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));}
   .check.on .c-check{opacity:1; transform:scale(1) rotate(0deg);}
+  .check.missed{border-color:#E05252; background:#E05252;}
+  .check .c-miss{width:10px; height:10px; display:block;}
+  .task-state{font-weight:600;}
+  .task-state.done{color:var(--accent);}
+  .task-state.missed{color:#E05252;}
   .task-name{font-size:14.5px;}
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
   .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px;}
@@ -608,6 +627,11 @@
   @media (hover:hover){body:not([data-theme="light"]) .notif-panel-item:hover{ background:rgba(255,255,255,.06); }}
   .notif-panel-item-title{ font-size:12px; font-weight:700; color:var(--text); }
   .notif-panel-item-body{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.6; }
+  /* پاپ‌آپ پروفایل (باز شده از آواتار هدر) — برخلاف پنل اعلان‌ها (که
+     می‌تونه صفحه‌بندی/آیتم زیاد داشته باشه و اسکرول لازمه)، این پنل
+     همیشه تعداد آیتم ثابت و کمی داره (پنل کاربری/پنل ادمین/اشتراک/خروج) —
+     نباید هیچ‌وقت اسکرول‌بار نشون بده؛ ارتفاعش با محتواش تعیین می‌شه. */
+  .profile-menu-panel{ max-height:none; overflow:hidden; }
 
   /* استریک — توی خود هدر، کنار دکمه‌ی زنگوله */
   .header-streak-clock{
@@ -1654,7 +1678,7 @@
   .acc-block-title svg{ color:var(--accent); }
   .acc-block-desc{ font-size:11.5px; color:var(--muted); line-height:1.8; margin:0 0 12px; }
   .acc-block-body{
-    border:1px solid var(--surface-line); border-radius:18px; background:var(--surface-1);
+    border:1px solid var(--surface-line); border-radius:18px; background:var(--box-bg);
     padding:16px;
   }
   /* حالتِ flush برای وقتی‌ست که بدنه خودش ردیف‌های لبه‌به‌لبه دارد
@@ -1866,7 +1890,7 @@
   /* ردیف نسل جدید — کارتی، آیکون در دایره‌ی نرم، هاور ظریف */
   .account-card{
     border:1px solid var(--surface-line); border-radius:18px; overflow:hidden;
-    background:var(--surface-1);
+    background:var(--box-bg);
   }
     .account-row2{
     position:relative; display:flex; align-items:center; gap:12px; padding:14px 15px;
@@ -2364,6 +2388,8 @@
     box-shadow:0 0 6px rgba(var(--accent-rgb),.45);
   }
   .wt-dot-done{background:var(--accent); color:#fff; box-shadow:0 0 8px rgba(var(--accent-rgb),.85), 0 0 16px rgba(var(--accent-rgb),.4);}
+  /* وقتش گذشته و تیک نخورده — همون ✕ قرمزِ DashTaskRow (task-check-missed) */
+  .wt-dot-missed{background:#E05252; border-color:#E05252; color:#fff; box-shadow:0 0 6px rgba(224,82,82,.55);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
   .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:3px; white-space:nowrap;}
@@ -2389,6 +2415,9 @@
     font-size:12.5px; color:var(--text); line-height:1.4;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-word;
   }
+  .wt-untimed-state{font-size:10px; font-weight:600; margin-top:3px; line-height:1.2;}
+  .wt-untimed-state.done{color:var(--accent);}
+  .wt-untimed-state.missed{color:#E05252;}
   .week-day-empty{color:var(--muted2); font-size:12px; padding:2px 0 14px;}
 
   /* بدنه‌ی روز باز — قبلا با framer-motion از height:0 به height:auto
@@ -2780,7 +2809,10 @@
      گرد کامل (پیل) و لیکوئید گلس واقعی، به‌جای بک‌گراند تخت پیش‌فرض؛ فقط
      همین بخش رو اسکوپ می‌کنه، بقیه‌ی جاهایی که از همین کلاس‌های پایه
      (day-pill, wsearch-newform-name, button) استفاده می‌کنن دست‌نخورده می‌مونن */
-  .bodybuilding-glass button{ border-radius:999px; }
+  /* پیلِ روزهای نوارِ تاریخ (DashDateSelector، data-day-pill) مستثناست: همون
+     کامپوننتِ «روتین من»ه و روزِ انتخاب‌شده‌ش باید دقیقاً همون rounded-2xl
+     (۱۶px) اون‌جا رو داشته باشه — قبلاً این قانون گردِ کاملش می‌کرد. */
+  .bodybuilding-glass button:not([data-day-pill]){ border-radius:999px; }
   .bodybuilding-glass .day-pill{
     border-radius:999px;
     backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
@@ -3719,7 +3751,15 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    می‌شه که متن زیر دکمه نره. بعد ارسال موفق، فیلد قفل می‌شه (readOnly) و
    دکمه به یه لینک «تغییر شماره» تبدیل می‌شه. */
 .auth-phone-wrap{ position:relative; }
-.auth-phone-wrap .wsearch-newform-name{ padding-inline-end:112px; }
+/* باگ: چون خودِ اینپوت dir="ltr" داره، «padding-inline-end» روی خودش
+   (نه روی زمینه‌ی RTL بیرونی) حساب می‌شه و می‌شه چپِ فیزیکی رو به‌جای
+   راست پر می‌کنه — درحالی‌که دکمه‌ی «ارسال کد» با inset-inline-end روی
+   زمینه‌ی RTLِ بیرونیِ auth-phone-wrap (چپِ فیزیکی) می‌شینه. یعنی پدینگِ
+   قبلی دقیقا سمتِ مخالفِ دکمه رو رزرو می‌کرد. اینجا صریح با
+   [dir="ltr"] و اسپسیفیسیتیِ بالاتر، هم پدینگِ دکمه (چپ) هم پدینگِ
+   آیکون (راست، وقتی AuthField آیکون داره) درست می‌شه. */
+.auth-phone-wrap .wsearch-newform-name{ padding-inline-start:112px; }
+.field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:112px; padding-inline-end:34px; }
 .auth-phone-send-btn{
   position:absolute; inset-inline-end:6px; top:50%; transform:translateY(-50%);
   display:flex; align-items:center; justify-content:center;
@@ -3843,9 +3883,8 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 }
 @media (prefers-reduced-motion: reduce){
   .aurora-blob{ animation:none; }
-  /* .whyus-track عمدا این‌جا نیست: نوار «چرا ما؟» بخش محتوایی اصلیه
-     (نه صرفا تزئینی مثل بلاب‌های پس‌زمینه)، طبق درخواست صریح باید همیشه
-     بچرخه، حتی وقتی سیستم‌عامل کاربر Reduce Motion/Low Power Mode روشنه. */
+  /* نوار مارکیِ «چرا ما؟» (.whyus-marquee-track) خودش جدا در قانونِ
+     prefers-reduced-motion بالاتر (کنارِ تعریفِ خودش) هندل می‌شه. */
 }
 /* filter:blur(120px) روی چند لایه‌ی همیشه-درحال-transform، روی GPU
    موبایل خیلی سنگینه (باعث داغ‌کردن/کندی گزارش‌شده می‌شه) — روی
@@ -3914,16 +3953,35 @@ body[data-theme="light"] .module-gate-cta, body:not([data-theme="light"]) .modul
   50%{ box-shadow:0 0 0 9px rgba(var(--accent-rgb),0); }
 }
 
-/* بخش «چرا ما؟» — نوار بی‌درز درحال‌عبور: لیست دوبار پشت‌سرهم چیده شده و
-   دقیقا نصف عرض ترک translate می‌شه، پس لحظه‌ی چرخش کاملا نامرئیه.
-   عمدا هاور/فوکوس رو نادیده می‌گیره — کاربر نباید هیچ کنترلی روی توقف/تندی
-   انیمیشن داشته باشه، همیشه با سرعت ثابت خودش می‌چرخه. */
-/* عمدا بدون اسکرول/چرخش — کاربر خواسته بود این بخش ثابت بمونه، یه گرید
-   ساده‌ی دوستونه (سه‌ستونه از sm به بالا) به‌جای مارکی قبلی. */
-.whyus-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
-.whyus-card{ width:auto; }
+/* بخش «چرا ما؟» — سه ردیفِ مارکیِ افقیِ بی‌درزِ درحال‌عبور (طبق درخواستِ
+   صریح): هر ردیف از useSeamlessMarquee (lib/useSeamlessMarquee.ts) میاد،
+   لیستش دوبار پشت‌سرهم چیده شده و دقیقا نصفِ عرضِ ترک translate می‌شه، پس
+   لحظه‌ی چرخش کاملا نامرئیه — همون هندسه‌ی .ticker-track (MarketTicker).
+   عمدا فقط transform (نه width/left) برای پرفورمنس روی موبایل/اندروید. */
+.whyus-marquee{ display:flex; flex-direction:column; gap:10px; }
+/* overflow:hidden روی خودِ ویوپورت، نه صفحه — پس هیچ‌وقت اسکرول افقیِ کلِ
+   صفحه رو نمی‌شکنه، حتی وقتی ترکِ زیرش از عرضِ container بیرون می‌زنه. */
+.whyus-marquee-viewport{ overflow:hidden; width:100%; }
+.whyus-marquee-track{
+  display:flex; align-items:stretch; gap:10px; width:max-content;
+  animation:whyus-marquee-scroll 1s linear infinite;
+}
+.whyus-marquee-track.is-reverse{ animation-direction:reverse; }
+@keyframes whyus-marquee-scroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+.whyus-marquee .whyus-card{ width:132px; }
 @media (min-width:640px){
-  .whyus-grid{ grid-template-columns:repeat(3, 1fr); gap:12px; }
+  .whyus-marquee .whyus-card{ width:168px; }
+}
+/* هاور فقط دسکتاپ واقعی (pointer:fine + hover:hover) رو متوقف می‌کنه —
+   روی موبایل/تاچ لمس، حرکت هیچ‌وقت با تپ‌کردنِ تصادفیِ روی کارت گیر نمی‌کنه. */
+@media (hover:hover) and (pointer:fine){
+  .whyus-marquee-viewport:hover .whyus-marquee-track{ animation-play-state:paused; }
+}
+@media (prefers-reduced-motion:reduce){
+  .whyus-marquee-track{ animation:none; }
 }
 
 /* لینک «جزئیات» توی کارت پلن‌ها — button ساده‌ای که فقط باید مثل یک متن
@@ -4563,6 +4621,8 @@ body[data-theme="light"] .exercise-photo-placeholder{ background:rgba(255,255,25
   color:#4C8DFF;
 }
 body[data-theme="light"] .exercise-locked-box{ background:rgba(255,255,255,.28); }
+.exercise-locked-box.exercise-state-done{ color:var(--accent); }
+.exercise-locked-box.exercise-state-missed{ color:#E05252; }
 
 /* خط جداکننده‌ی بین روزهای «برنامه هفتگی» — فقط دسکتاپ (lg+)، با فاصله
    از بالا/پایین سلول به‌جای بوردر تمام‌ارتفاع. */
@@ -4768,7 +4828,8 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
 
 :root{
   --adm-bg:var(--bg);
-  --adm-panel:rgba(255,255,255,.02);
+  /* کارت‌های پنل هم همان بک‌گراندِ واحدِ باکس‌ها (--box-bg) را می‌گیرند */
+  --adm-panel:var(--box-bg);
   --adm-panel-2:rgba(255,255,255,.045);
   --adm-border:var(--line);
   --adm-border-strong:rgba(255,255,255,.14);
@@ -4785,7 +4846,7 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   --adm-radius:18px;
 }
 body[data-theme="light"]{
-  --adm-panel:rgba(255,255,255,.42);
+  --adm-panel:var(--box-bg);
   --adm-panel-2:rgba(255,255,255,.6);
   --adm-border-strong:rgba(58,42,24,.14);
 }
@@ -5780,7 +5841,7 @@ html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
 /* سطح مشترک همه‌ی کارت‌های ترید — دقیقا همان دستور .rm-card */
 .trade-surface{
   border:1px solid var(--surface-line); border-radius:18px;
-  background:var(--surface-1);
+  background:var(--box-bg);
   transition:border-color .18s ease, background .18s ease, transform .18s ease;
 }
 
@@ -7894,8 +7955,14 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
 }
 .ai-message-action-agent{ --ai-message-slide:-6px; }
 .ai-message-action-user{ --ai-message-slide:6px; }
-/* گوی کنارِ پیام: هم‌ترازِ خطِ اولِ متنِ حباب (نه بالاتر از حباب). */
-.ai-message-avatar{ align-self:flex-start; margin-top:8px; }
+/* گوی کنارِ پیام، مثلِ آواتارِ هر چتی: پایینش هم‌ترازِ پایینِ حباب، درست کنارِ
+   گوشه‌ی تیزِ حباب (rounded-bl-md — همان گوشه‌ای که به گو نزدیک است).
+   قبلا بالا/خطِ اول چسبیده بود؛ روی پیامِ چندخطی گو بالا-چپ معلق می‌ماند و
+   گوشه‌ی تیزِ حباب پایین، یعنی از حباب «جدا» دیده می‌شد.
+   ستونِ کنارش = حباب + ردیفِ کنش‌ها (کپی) زیرش؛ آن ردیف همیشه mount است
+   (فقط opacity:0) پس ارتفاعش ثابت است: 26px (دکمه: padding 6×2 + آیکنِ 14)
+   + 4px (gap-1 ستون) = 30px فاصله‌ی پایینِ حباب تا پایینِ ستون. */
+.ai-message-avatar{ align-self:flex-end; margin-bottom:30px; }
 
 .ai-message-root:focus-within .ai-message-action{
   opacity:1; transform:translateX(0) scale(1);
@@ -8458,10 +8525,11 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
 @media (min-width:720px){ .rp-grid{ grid-template-columns:1fr 1fr; } }
 .rp-card{
-  display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
+  position:relative; display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
 }
 @media (hover:hover) and (pointer:fine){ .rp-card:hover{ border-color:var(--accent); } }
 .rp-card:active{ transform:scale(.99); }
+.rp-card-delete{ position:absolute; top:10px; left:10px; z-index:1; }
 .rp-card-eyebrow{ font-size:10.5px; font-weight:700; color:var(--accent); unicode-bidi:plaintext; }
 .rp-card-title{ margin-top:4px; font-size:15px; font-weight:800; line-height:1.7; }
 .rp-card-desc{
@@ -8554,12 +8622,6 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-next-title{ flex:1; min-width:0; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .rp-next svg{ flex-shrink:0; color:var(--accent); }
 
-.rp-confirm{
-  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
-  padding:14px 16px; border-radius:14px; margin-top:14px; font-size:12.5px; color:var(--text);
-  background:rgba(224,82,82,.08); border:1px solid rgba(224,82,82,.34);
-}
-.rp-confirm-actions{ display:flex; gap:9px; }
 .rp-notice{
   margin-top:14px; padding:10px 14px; border-radius:12px; font-size:12px; line-height:1.95;
   color:#E0A452; border:1px solid rgba(224,164,82,.35);
@@ -8831,4 +8893,102 @@ body[data-theme="light"] .rp-wiz-chip.on{ color:var(--accent); border-color:var(
 
 @media (prefers-reduced-motion:reduce){
   .rp-stage-body, .rp-wiz-phases li.now::before{ animation:none; }
+}
+
+/* ============================================================
+   بک‌گراندِ واحدِ باکس‌ها (--box-bg)
+   ------------------------------------------------------------
+   طبقِ درخواستِ صریح: «یک بک‌گراندِ کلی برای همه‌ی باکس‌ها». قبلا هر
+   کارت دستورِ خودش را داشت (سفیدِ ۲٪، سفیدِ ۱۶٪ در تمِ روز، surface-rgb با
+   آلفای ۵ تا ۵۵٪، surface-glass، surface-1، surface-2، card-bg، …) و چون
+   بیشترشان نیمه‌شفاف بودند، رنگِ نهایی‌شان به بلور (که روی لمسی خاموش است)
+   و به موقعیتِ لحظه‌ایِ بلاب‌های aurora پشتشان بستگی داشت — یک کارت روی
+   دسکتاپ و موبایل، یا در دو لودِ مختلف، دو رنگ دیده می‌شد.
+   حالا همه از یک توکنِ توپر (--box-bg، تعریف در :root و بلاکِ تمِ روز)
+   رنگ می‌گیرند. DashCard (bg-dash-card) از tailwind.config، و trade-surface/
+   account-card/acc-block-body مستقیم در قانونِ خودشان به همین توکن وصل‌اند.
+   این‌جا فقط باکس‌هایی جمع شده‌اند که رنگِ خودشان را داشتند.
+   اختصاصیت: `body[data-theme] :is(...)` = (0,2,1) — هم‌وزنِ اورراید‌های
+   `body[data-theme="light"] .x` و `html[data-perf="low"] .x` و چون بعدشان
+   آمده غالب است. هیچ‌کدام از این‌ها قانونِ hover/active با بک‌گراند ندارند،
+   پس بازخوردِ تعاملی‌ای از بین نمی‌رود. دکمه‌ها/عناصرِ ghost عمدا این‌جا
+   نیستند و شفاف می‌مانند.
+   ============================================================ */
+body[data-theme] :is(
+  .bg-dash-card, .weekly-glass, .checklist-glass, .glass-box, .auth-box, .fx-card,
+  .trade-day-card, .tv-surface, .tv-chart-box, .trade-chart-side, .trade-chat-panel,
+  .trade-cal-card, .modal-panel, .friend-profile-panel, .exercise-catalog-popup-panel,
+  .exercise-catalog-detail-card, .premium-celebration-card
+){
+  background:var(--box-bg);
+}
+/* بلورِ پشتِ یک سطحِ توپر هیچ اثرِ دیدنی‌ای ندارد ولی هزینه‌اش (نمونه‌برداری
+   و بلورِ دوباره‌ی پشت در هر فریمِ اسکرول) کامل پرداخت می‌شود. این کارت‌های
+   درون‌صفحه‌ای (نه پاپ‌آپ‌ها) روی لمسی از قبل بدونِ بلور بودند؛ حالا روی
+   دسکتاپ هم — بدونِ هیچ تفاوتِ بصری. */
+body[data-theme] :is(
+  .bg-dash-card, .weekly-glass, .checklist-glass, .glass-box, .auth-box, .fx-card,
+  .tv-surface, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card
+){
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+html[data-perf="low"] body[data-theme] .modal-panel{
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+}
+
+/* ============================================================
+   گویِ دستیار روی لمسی
+   ------------------------------------------------------------
+   قانونِ `html[data-perf="low"] .siri-orb *` فقط *فرزندانِ* واقعی را
+   می‌گیرد، نه ::before/::after — در حالی که چرخشِ همیشگیِ گو (`rotate`
+   روی --angle) دقیقا روی `.siri-orb::before` است. انیمیشنِ یک custom
+   property روی کامپوزیتور اجرا نمی‌شود: هر فریم یک style recalc + repaintِ
+   یک conic-gradientِ بلوردار روی main thread — اندازه‌گیری روی اندرویدِ
+   شبیه‌سازی‌شده: ~۶۰ recalc در ثانیه در حالتِ *بی‌کار*. همان قصدِ قانونِ
+   قبلی («روی دستگاهِ کم‌توان گو ثابت می‌ماند») حالا واقعا اعمال می‌شود. */
+html[data-perf="low"] .siri-orb::before,
+html[data-perf="low"] .siri-orb::after{
+  animation:none !important;
+}
+
+/* ============================================================
+   ردیفِ «ضعیف» (data-perf-weak) — lib/perfTier.ts
+   ------------------------------------------------------------
+   فقط گوشی‌های واقعا کم‌توان (≤۴ هسته یا ≤۴GB رم یا Save-Data). روی بقیه‌ی
+   لمسی‌ها هیچ‌چیز از این بلاک اعمال نمی‌شود.
+   ============================================================ */
+/* بلاب‌های aurora روی لمسی ثابت‌اند ولی هنوز blur(48px) روی سه لایه‌ی
+   ۴۰ تا ۶۰vmax دارند — بزرگ‌ترین تکسچرِ GPU صفحه. گرادیانِ شعاعی خودش تا
+   ۷۰٪ به شفاف می‌رسد، پس بدونِ blur هم همان لکه‌ی نورِ محو است. */
+html[data-perf-weak] .aurora-blob{ filter:none; }
+/* تغییرِ تم روی این ردیف بدونِ فیدِ ۰.۳ثانیه‌ایِ بک‌گراندِ کلِ صفحه —
+   repaintِ تمام‌صفحه در ۱۸ فریمِ پشتِ‌سرهم روی GPUِ ضعیف لگِ دیدنی دارد. */
+html[data-perf-weak] body{ transition:none; }
+
+/* ============================================================
+   هدر: یک رنگ، همیشه
+   ------------------------------------------------------------
+   گزارش: «رنگِ هدر هر بار لود یه چیزه». هدر شیشه‌ی ۷۲٪ + blur(22px) بود؛
+   رنگِ نهایی‌اش یعنی «هرچه آن لحظه پشتش است»: بلاب‌های aurora که روی
+   دسکتاپ ۲۶ تا ۴۰ ثانیه در حرکت‌اند (پس هر لود در یک فازِ دیگر)، محتوای
+   اسکرول‌شده، و این‌که بلور کِی و با کدام شعاع (۲۲ دسکتاپ / ۱۰ لمسی / صفر
+   روی data-perf=low با --surface-2) اعمال شود. حالا در همه‌ی ردیف‌ها همان
+   رنگِ توپرِ --surface-2 (همان رنگِ پایه‌ی شیشه در هر دو تم، پس جنسِ هدر
+   عوض نمی‌شود، فقط دیگر به پشتش وابسته نیست) و بلورِ بی‌اثر هم برداشته
+   می‌شود — یک لایه‌ی backdrop-filterِ ثابت کمتر در هر فریمِ اسکرول.
+   اختصاصیت (0,2,1) و آخرِ فایل: بر `.app-topbar`، اورراید‌های
+   `@media (pointer:coarse)` و `html[data-perf="low"] .app-topbar` غالب است.
+   ============================================================ */
+body[data-theme] .app-topbar{
+  background:var(--surface-2);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+/* ادامه‌ی بک‌گراندِ واحدِ باکس‌ها (--box-bg) — باکس‌های سطحِ صفحه‌ی ورزش که
+   هنوز شیشه‌ی نیمه‌شفافِ خودشان را داشتند (و بلورِ پشتشان روی سطحِ توپر
+   دیگر اثری ندارد). ردیف‌ها/کاشی‌های *داخلِ* یک کارت عمدا این‌جا نیستند تا
+   سلسله‌مراتبِ بصری (کارت ← ردیف) از بین نرود. */
+body[data-theme] :is(.manual-day-exercises-box, .exercise-rules-box, .exercise-locked-box){
+  background:var(--box-bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
 }

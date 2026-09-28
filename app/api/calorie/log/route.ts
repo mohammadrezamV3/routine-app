@@ -4,6 +4,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
 // POST /api/calorie/log  { date, customName, customCalories, grams, mealType }
 // customCalories اینجا کالری کل همون مقدار ثبت‌شده است (نه به‌ازای هر ۱۰۰ گرم) —
 // محاسبه‌اش سمت کلاینت انجام می‌شه تا از دوباره‌کاری منطق جلوگیری بشه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
 }
 
 // DELETE /api/calorie/log?id=...
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -79,3 +80,7 @@ export async function DELETE(req: NextRequest) {
   await prisma.foodLogEntry.deleteMany({ where: { id, userId } });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["calorie"], handlePOST);
+export const DELETE = withLiveSync(["calorie"], handleDELETE);

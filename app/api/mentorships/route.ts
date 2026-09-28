@@ -13,6 +13,7 @@ import {
   usersBlockEachOther,
   isUniqueViolation,
 } from "@/lib/mentorServer";
+import { publishToUsers } from "@/lib/realtime";
 
 const MESSAGE_MAX = 500;
 // پیامِ عمومی برای هر حالتِ «بلاک» — تا معلوم نشه دقیقاً کی کی رو بلاک کرده
@@ -154,6 +155,8 @@ export async function POST(req: Request) {
       throw e;
     }
   }
+
+  void publishToUsers([mentorId, studentId], { type: "mentor.mentorship", data: { id } });
 
   const row = await prisma.mentorship.findUnique({ where: { id }, include: MENTORSHIP_WITH_USERS_INCLUDE });
   const [mentorship] = await buildMentorshipRows([row!], me);

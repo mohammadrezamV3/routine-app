@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
 
 // GET /api/exercise/log?planId=...&date=2026-07-25
 export async function GET(req: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/exercise/log { planId, date, completed, completedItems? }
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -50,3 +51,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["exercise"], handlePOST);

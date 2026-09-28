@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getWeekStats, WeekDayStat } from "@/lib/routineStats";
+import { useLiveRefresh } from "@/lib/liveSync";
 import { BarChart3 } from "lucide-react";
 
 // نمودار میله‌ای آمار هفتگی — درصد واقعی هرروز (از DailyEntry.completedItems
@@ -13,6 +14,8 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
   const [stats, setStats] = useState<WeekDayStat[] | null>(null);
 
   useEffect(() => { getWeekStats().then(setStats); }, [refreshKey]);
+  // هر تیک/تغییرِ برنامه (از هرجا) همون لحظه نمودار رو از داده‌ی زنده حساب می‌کنه
+  useLiveRefresh(["daily", "customOccurrences", "removedOccurrences"], () => { getWeekStats().then(setStats); });
 
   const rows = stats ?? [];
   const maxPct = Math.max(1, ...rows.map((s) => s.pct));

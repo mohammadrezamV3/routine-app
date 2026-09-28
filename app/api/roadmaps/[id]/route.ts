@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { computePlanProgress, normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
 import { buildStatusOf } from "@/lib/roadmapBuilder";
+import { withLiveSync } from "@/lib/realtime";
 
 /**
  * یک مسیر با مرحله‌های نرمال‌شده و پیشرفتِ حساب‌شده‌ی سمتِ سرور.
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+async function handleDELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
   // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
@@ -61,3 +62,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!count) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const DELETE = withLiveSync(["roadmaps"], handleDELETE);

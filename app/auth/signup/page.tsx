@@ -6,9 +6,10 @@ import { signIn, getSession } from "next-auth/react";
 import { PWA_OFFER_EVENT, PWA_OFFER_KEY } from "@/components/PwaProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, AtSign, Lock } from "lucide-react";
+import { User, AtSign, Lock, Phone } from "lucide-react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
+import { AuthShell } from "@/components/AuthShell";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
@@ -224,7 +225,7 @@ export default function SignupPage() {
 
   return (
     <section className="auth-page">
-      <div className="auth-shell">
+      <AuthShell>
         <AuthTabs active="signup" />
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
@@ -282,10 +283,10 @@ export default function SignupPage() {
           </div>
 
           <div style={{ marginTop: 14 }} ref={phoneRef}>
-            <AuthField id="phone" label={"شماره همراه"} error={fieldErrors.phone}>
+            <AuthField id="phone" label={"شماره همراه"} error={fieldErrors.phone} icon={<Phone size={15} />}>
               <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
                 <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr" style={{ textAlign: "right" }}
+                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr"
                   placeholder="09123456789" readOnly={otpSent}
                   onChange={(e) => { const v = digitsOnly(e.target.value); setPhone(v); if (v) clearError("phone"); }}
                   onKeyDown={(e) => { if (e.key === "Enter" && !otpSent) { e.preventDefault(); requestOtp(); } }}
@@ -353,7 +354,7 @@ export default function SignupPage() {
             {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
           </button>
         </form>
-      </div>
+      </AuthShell>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Send, X } from "lucide-react";
@@ -62,16 +63,30 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   // با ست‌کردنِ minHeight هم از همون maxHeightِ واقعی (نه بیشتر)، پنل
   // هیچ‌وقت از فضای واقعا در دسترس بزرگ‌تر نمی‌شه — بدونِ هیچ تغییری در
   // ظاهر/چیدمانِ خودِ کارت (طبق درخواستِ صریح: فقط مقدار، نه دیزاین).
+  //
+  // باگِ «پنل زیرِ هدر می‌رود» (کرومِ اندروید): پنل وسطِ *کلِ* ویوپورت
+  // می‌نشست و تا ۸۸٪ِ ارتفاع قد می‌کشید؛ روی گوشی‌ای که نوارِ ابزارِ کروم
+  // باز است (ویوپورتِ ~۷۰۰پیکسلی) لبه‌ی بالایش به ~۴۰px می‌رسید، یعنی زیرِ
+  // قرصِ هدر (که تا 72px + safe-area پایین می‌آید). حالا ناحیه‌ی مجاز از
+  // *لبه‌ی پایینِ واقعیِ هدر* (اندازه‌گیری‌شده، نه عددِ ثابت) تا پایینِ
+  // visual viewport است و پنل وسطِ همان ناحیه می‌نشیند.
+  // useLayoutEffect (نه useEffect) تا اولین فریم هم با همین مقدارها پینت
+  // شود، نه یک فریم با وسط‌چینیِ CSSی و بعد پرش.
   const [kbViewport, setKbViewport] = useState<{ top: number; maxHeight: number; minHeight: number } | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) { setKbViewport(null); return; }
     const vv = typeof window !== "undefined" ? window.visualViewport : null;
     if (!vv) return;
     function update() {
       if (!vv) return;
-      const maxHeight = Math.min(vv.height * 0.88, 760);
+      const GAP = 10;
+      const header = document.querySelector<HTMLElement>(".app-topbar");
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const areaTop = Math.max(vv.offsetTop, headerBottom) + GAP;
+      const areaBottom = vv.offsetTop + vv.height - GAP;
+      const maxHeight = Math.max(0, Math.min(areaBottom - areaTop, 760));
       setKbViewport({
-        top: vv.offsetTop + vv.height / 2,
+        top: (areaTop + areaBottom) / 2,
         maxHeight,
         minHeight: Math.min(maxHeight, 620),
       });
@@ -196,7 +211,11 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>
 
-      {open && (
+      {/* پورتال به body — مثلِ بقیه‌ی مودال‌های اپ (TradeFormModal، …).
+          زیرِ <section>ِ صفحه، z-indexِ پنل/اوِرلِی در stacking contextِ
+          همان بخش حبس می‌شد و هدرِ fixed (z-index:40 در ریشه) رویش
+          می‌نشست؛ اوِرلِی هم هدر را تار/تیره نمی‌کرد. */}
+      {open && typeof document !== "undefined" && createPortal(
         <>
           <LockBodyScroll />
           <div className="modal-overlay open" onClick={() => setOpen(false)} />
@@ -289,7 +308,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
               </form>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </>
   );

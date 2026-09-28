@@ -4,6 +4,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { calcAge, calcDailyTargetKcal, splitMeals, CalorieGoal, Sex } from "@/lib/calorieCalc";
 import { clampText } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
 
 const VALID_GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 const VALID_SEX: Sex[] = ["male", "female"];
@@ -24,7 +25,7 @@ export async function GET() {
 // POST /api/calorie/target { goal, mealsPerDay, sex, ageYears?, heightCm, weightKg }
 // هدف روزانه رو با فرمول Mifflin-St Jeor حساب می‌کنه (نه هوش مصنوعی — این یک
 // محاسبه‌ی قطعی تغذیه‌ایه) و بین تعداد وعده‌های خواسته‌شده تقسیم می‌کنه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
 // کاربر خودش می‌تونه بچینه چند وعده داره و توی هر وعده چقدر کالری می‌خواد —
 // جایگزین تقسیم خودکار splitMeals می‌شه؛ کالری روزانه هم برابر جمع همین
 // وعده‌ها می‌شه تا نوار پیشرفت بالای صفحه با «سهم هر وعده» ناسازگار نباشه.
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -153,3 +154,7 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true, target });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["calorie"], handlePOST);
+export const PATCH = withLiveSync(["calorie"], handlePATCH);
