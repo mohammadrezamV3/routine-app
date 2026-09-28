@@ -6349,7 +6349,12 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
    می‌زنم نمی‌ره تو»). زیرِ همه‌ی محتوا می‌ماند، پس سه‌نقطه و برچسب‌ها
    همچنان کلیکِ خودشان را می‌گیرند. */
 .trade-account-hit{ position:absolute; inset:0; z-index:0; }
-.trade-account-top-row, .trade-account-main{ position:relative; z-index:1; }
+/* ردیف‌های رویی خودشان لینک نیستند؛ با z-index:1 بیشترِ سطحِ کارت (وسطِ
+   ردیف، سود/زیان، برچسب‌ها) را روی لینکِ کششی می‌پوشاندند و کلیک همان‌جا
+   می‌مرد. کلیک از خودِ ردیف‌ها رد می‌شود و فقط لینکِ نام و سه‌نقطه آن را می‌گیرند. */
+.trade-account-top-row, .trade-account-main{ position:relative; z-index:1; pointer-events:none; }
+.trade-account-top-row .trade-account-kebab-inline,
+.trade-account-top-row .trade-account-title-link{ pointer-events:auto; }
 /* سه‌نقطه باید *دقیقا* هم‌ترازِ خطِ نامِ حساب بشینه: ارتفاعِ دکمه و ارتفاعِ
    خطِ متن یکی می‌شود تا align-items:center روی هر دو یک نتیجه بدهد، و
    مارجینِ منفیِ قبلی (که فقط دکمه را از لبه‌ی کارت بیرون می‌زد) حذف شد. */
