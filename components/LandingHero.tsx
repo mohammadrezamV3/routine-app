@@ -1,0 +1,329 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft, Calendar, Filter, History, Lock, ShieldCheck, Sparkles, UtensilsCrossed, Hash, Percent, ArrowUp,
+} from "lucide-react";
+import { useThemeTokens } from "@/components/PlanShowcase";
+import { DashProgressCircle } from "@/components/DashProgressCircle";
+import { StreakFlame } from "@/components/StreakFlame";
+import SiriOrb from "@/components/smoothui/components/siri-orb";
+import {
+  INERT, MockDateStrip, MockFilterButton, MockMedicationCard, MockMentorCard, MockTaskList, type MockTask,
+} from "@/components/LandingMockups";
+import "./landing-hero.css";
+
+// ─── هیروی لندینگ (کاربرِ واردنشده) ────────────────────────────────────────
+// همه‌ی تصویرِ سمتِ چپ (گوشی + کارت‌های شناور) با JSX/CSS خالص ساخته شده —
+// نه اسکرین‌شات — و فقط یک پیش‌نمایشِ نمونه است، نه دیتای واقعی کاربر.
+// حلقه‌های انیمیشن فقط وقتی هیرو در دید است اجرا می‌شوند (IntersectionObserver)
+// و با prefers-reduced-motion کاملاً ساکن می‌مانند. هیچ Math.random/Date در
+// رندر نیست؛ حالتِ اولیه‌ی سرور و کلاینت یکی است (بدون hydration mismatch).
+
+const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+export function faNum(n: number | string) {
+  return String(n).replace(/\d/g, (d) => FA_DIGITS[Number(d)]);
+}
+
+const ROT_WORDS = ["روتین", "تمرین", "معامله", "یادگیری"];
+
+// «روتین من» (app/weekly) همون‌طور که روی گوشی دیده می‌شه — ردیف‌ها آینه‌ی
+// DashTaskRow ـن، ردیفِ آخر همون ردیفِ سنتتیکِ «برنامه تمرینی امروز» با دکمه‌ی
+// «شروع». چرخه فقط تیک‌خوردنِ پشت‌سرهمِ همین ردیف‌هاست.
+const PHONE_TASKS: MockTask[] = [
+  { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium" },
+  { name: "مطالعه‌ی کتاب", time: "13:30", importance: "high", tag: "یادگیری" },
+  { name: "پیاده‌روی عصر", time: "18:00" },
+  { name: "برنامه تمرینی امروز", exercise: true },
+];
+
+const SEO_LINKS = [
+  { href: "/routine", label: "برنامه‌ی روتین روزانه" },
+  { href: "/habit-tracker", label: "پیگیری عادت‌ها" },
+  { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی هوشمند" },
+  { href: "/trading-journal", label: "ژورنال معاملاتی" },
+  { href: "/calorie-counter", label: "کالری‌شمار" },
+  { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
+];
+
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export function LandingHero() {
+  const t = useThemeTokens();
+  const sectionRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(true);
+  const [word, setWord] = useState(0);
+  // شمارنده‌ی چرخه‌ی تیک‌ها: ۰..۵ تیک‌خوردن، ۶..۸ مکث روی «همه انجام شد»، بعد از نو.
+  const [step, setStep] = useState(2);
+  const [reduced, setReduced] = useState(false);
+  // گوِ «نومو» (SiriOrb) انیمیشنِ فریمری دارد؛ فقط بعد از mount و وقتی هیرو
+  // در دید است سوار می‌شود — بیرونِ دید یک دایره‌ی ساکنِ هم‌اندازه جایش است.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setReduced(prefersReducedMotion()); setMounted(true); }, []);
+
+  // حلقه‌ها فقط وقتی هیرو واقعاً دیده می‌شه
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.05 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView || reduced) return;
+    const id = setInterval(() => setWord((w) => (w + 1) % ROT_WORDS.length), 2600);
+    return () => clearInterval(id);
+  }, [inView, reduced]);
+
+  useEffect(() => {
+    if (!inView || reduced) return;
+    const id = setInterval(() => setStep((s) => (s + 1) % 8), 1150);
+    return () => clearInterval(id);
+  }, [inView, reduced]);
+
+  // پارالاکسِ نشانگر: فقط دسکتاپِ واقعی (hover+pointer:fine) و بدون حرکت‌کاهی.
+  // فقط دو متغیرِ CSS نوشته می‌شه؛ خودِ جابه‌جایی transform ـه.
+  useEffect(() => {
+    const sec = sectionRef.current;
+    const stage = stageRef.current;
+    if (!sec || !stage || !window.matchMedia) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches || prefersReducedMotion()) return;
+    let raf = 0;
+    let nx = 0, ny = 0;
+    const flush = () => {
+      raf = 0;
+      stage.style.setProperty("--px", nx.toFixed(3));
+      stage.style.setProperty("--py", ny.toFixed(3));
+    };
+    const onMove = (e: PointerEvent) => {
+      const r = sec.getBoundingClientRect();
+      nx = Math.max(-0.5, Math.min(0.5, (e.clientX - r.left) / r.width - 0.5));
+      ny = Math.max(-0.5, Math.min(0.5, (e.clientY - r.top) / r.height - 0.5));
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    const onLeave = () => { nx = 0; ny = 0; if (!raf) raf = requestAnimationFrame(flush); };
+    sec.addEventListener("pointermove", onMove, { passive: true });
+    sec.addEventListener("pointerleave", onLeave);
+    return () => {
+      sec.removeEventListener("pointermove", onMove);
+      sec.removeEventListener("pointerleave", onLeave);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const ticked = Math.min(step, PHONE_TASKS.length);
+  const tasks = PHONE_TASKS.map((t, i) => ({ ...t, done: i < ticked }));
+  const pct = Math.round((ticked / PHONE_TASKS.length) * 100);
+  const orbLive = mounted && inView;
+
+  return (
+    <section
+      id="sec-landing-hero"
+      ref={sectionRef}
+      className={`lh${inView ? "" : " is-paused"}`}
+      aria-labelledby="lh-title"
+    >
+      <div className="lh-aurora" aria-hidden="true">
+        <span className="lh-aurora-a" />
+        <span className="lh-aurora-b" />
+        <span className="lh-aurora-c" />
+      </div>
+
+      <div className="lh-grid">
+        {/* ── متن ── */}
+        <div className="lh-copy">
+          <span className="lh-eyebrow lh-rise" style={{ "--i": 0 } as React.CSSProperties}>
+            <span className="lh-eyebrow-dot" aria-hidden="true" />
+            روتین، سلامتی، ترید و یادگیری — فارسی و یک‌جا
+          </span>
+
+          {/* SEO: «روتین اپ» و «آریون» هر دو داخلِ خودِ h1 هستند (نه فقط متادیتا). */}
+          <h1 id="lh-title" className={`lh-title lh-rise ${t.heading}`} style={{ "--i": 1 } as React.CSSProperties}>
+            <span className="lh-title-kicker">
+              روتین اپ <span className="lh-brand">آریون</span>
+            </span>
+            <span className="lh-title-main">هر روز یک قدم جلوتر</span>
+            <span className="lh-title-main lh-title-rot">
+              در{" "}
+              <span className="lh-rot" aria-hidden="true">
+                {ROT_WORDS.map((w, i) => (
+                  <span
+                    key={w}
+                    className={`lh-rot-word${i === word ? " is-on" : ""}${i === (word + ROT_WORDS.length - 1) % ROT_WORDS.length ? " is-out" : ""}`}
+                  >
+                    {w}
+                  </span>
+                ))}
+              </span>
+              <span className="lh-sr">روتین، تمرین، معامله و یادگیری</span>
+            </span>
+          </h1>
+
+          <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
+            آریون یک روتین اپ فارسیه: روتین روزانه و هفتگی با یادآوری و استریک، آنالیز هفتگی،
+            برنامه‌ی بدنسازی و کالری‌شمار، ژورنال ترید با همگام‌سازی متاتریدر، رودمپ یادگیری و
+            مربی‌ها — همه یک‌جا، با دستیار «نومو» که زبون خودت رو می‌فهمه.
+          </p>
+
+          <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>
+            <Link
+              href="/auth/signup"
+              className={`lh-cta-primary inline-flex items-center gap-1.5 rounded-[20px] px-6 py-3.5 text-[14.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-8 sm:text-[15.5px] ${t.accentBg} ${t.accentShadow}`}
+            >
+              شروع رایگان <ArrowLeft size={17} className="lh-cta-arrow" />
+            </Link>
+            <Link
+              href="/auth/login"
+              className={`inline-flex items-center rounded-[20px] border ${t.line} ${t.secondaryBtnBg} px-6 py-3.5 text-[14.5px] font-bold ${t.heading} backdrop-blur-md transition active:scale-[0.97] sm:px-8 sm:text-[15.5px]`}
+            >
+              ورود
+            </Link>
+          </div>
+
+          <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
+            <li><ShieldCheck size={15} aria-hidden="true" /> اطلاعاتت امن و محرمانه</li>
+            <li><Lock size={14} aria-hidden="true" /> چتِ مربی رمزگذاری‌شده‌ی سرتاسری</li>
+            <li><Sparkles size={14} aria-hidden="true" /> دوره‌ی آزمایشی رایگان</li>
+          </ul>
+
+          {/* لینک‌های داخلی به صفحه‌های دسته — هم برای بازدیدکننده، هم انتقال اعتبار صفحه‌ی اصلی */}
+          <nav className="lh-links lh-rise" style={{ "--i": 5 } as React.CSSProperties} aria-label="بیشتر بخوانید">
+            <span className={`lh-links-label ${t.muted}`}>بیشتر بخوانید:</span>
+            {SEO_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="lh-link">{l.label}</Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* ── تصویر: گوشی + کارت‌های شناور — همه از روی خودِ اپ ── */}
+        <div className="lh-stage" ref={stageRef} aria-hidden="true" {...INERT}>
+          <div className="lh-stage-inner">
+            <div className="lh-halo" />
+
+            <div className="lh-layer lh-layer-phone" style={{ "--d": 10 } as React.CSSProperties}>
+              <div className="lh-phone">
+                <div className="lh-phone-screen">
+                  {/* بومِ ۳۶۰پیکسلی = عرضِ واقعیِ یک گوشی؛ کوچک‌نمایی با transform.
+                      پس کلاس‌های موبایلِ خودِ اپ همون اندازه‌ای رو دارن که روی گوشی. */}
+                  <div className="lh-canvas dash-scope text-dash-text">
+                    <div className="lh-ph-status">
+                      <span>۹:۴۱</span>
+                      <span className="lh-ph-notch" />
+                      <span className="lh-ph-sig"><i /><i /><i /></span>
+                    </div>
+
+                    <div className="lh-ph-top">
+                      <span className="lh-ph-top-actions">
+                        <span className="lh-ph-burger"><i /><i /><i /></span>
+                        <span className="lh-ph-streak"><StreakFlame streak={42} compact /></span>
+                      </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/logo-lockup-dark-theme.png" alt="" width={110} height={27} className="lh-ph-logo lh-ph-logo-dark" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/logo-lockup-light-theme.webp" alt="" width={110} height={27} className="lh-ph-logo lh-ph-logo-light" />
+                    </div>
+
+                    <div className="lh-ph-body">
+                      {/* DashHeader */}
+                      <div className="flex flex-row items-center justify-start gap-3 text-right">
+                        <div className="flex flex-col items-center gap-1">
+                          <DashProgressCircle value={pct} size={52} strokeWidth={4.5} />
+                          <span className="whitespace-nowrap text-[9px] text-dash-muted">پیشرفت امروز</span>
+                        </div>
+                        <div>
+                          <div className="text-[19px] font-bold text-dash-text">روتین من</div>
+                          <div className="mt-1 text-[11px] text-dash-muted">برنامه‌های روزانه خود را مدیریت و پیگیری کنید.</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2.5">
+                        <MockDateStrip />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MockFilterButton label="تاریخچه" icon={<History size={15} />} />
+                          <MockFilterButton label="امروز" icon={<Calendar size={15} />} active />
+                          <MockFilterButton label="فیلتر" icon={<Filter size={15} />} />
+                        </div>
+                      </div>
+
+                      <MockTaskList tasks={tasks} />
+
+                      <MockMedicationCard meds={[{ name: "ویتامین D", every: "هر 24 ساعت", times: "22:00", left: "12 روز مونده" }]} />
+                    </div>
+
+                    {/* گوِ «نومو» — همون جای routine-ai-fab روی صفحه‌ی روتین */}
+                    <span className="lh-ph-fab">
+                      {orbLive ? <SiriOrb size="52px" /> : <span className="lh-orb-still" />}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ژورنال ترید — کارتِ یک حساب (TradeAccountsPanel) */}
+            <div className="lh-layer lh-pos-trade" style={{ "--d": 34 } as React.CSSProperties}>
+              <div className="lh-float lh-card lh-card-trade" style={{ "--f": "0s" } as React.CSSProperties}>
+                <div className="lh-trade-name">
+                  <span className="trade-account-name">حساب پراپ</span>
+                  <span className="trade-account-dot" style={{ background: "#3E7BFA" }} />
+                </div>
+                <div className="lh-trade-bal mono" dir="ltr">
+                  10842$<span className="trade-account-pnl-pct">8.4%</span><ArrowUp size={13} />
+                </div>
+                <div className="lh-trade-facts">
+                  <span><Hash size={11} /> 24 معامله</span>
+                  <span><Percent size={11} /> 62% برد</span>
+                  <span className="lh-trade-mt">متاتریدر</span>
+                </div>
+              </div>
+            </div>
+
+            {/* کالری‌شمار — سرِ CalorieFoodPlanCard */}
+            <div className="lh-layer lh-pos-cal" style={{ "--d": 26 } as React.CSSProperties}>
+              <div className="lh-float lh-card lh-card-cal dash-scope" style={{ "--f": "-2.2s" } as React.CSSProperties}>
+                <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
+                  ۱۴۲۰<span className="mx-1 text-dash-muted">/</span>۲۱۰۰
+                  <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted">کالری</span>
+                </div>
+                <div className="lh-cal-bar"><i /></div>
+                <div className="mt-2.5 flex items-center gap-1.5 text-[11.5px] font-bold text-dash-text">
+                  <UtensilsCrossed className="h-3.5 w-3.5 text-dash-green" /> کالری‌شمار
+                </div>
+                <div className="calorie-glass-field lh-cal-entry">
+                  <span className="truncate text-[10.5px] font-bold text-dash-text">جوجه‌کباب</span>
+                  <span className="mono rounded-lg px-1.5 py-0.5 text-[11px] font-extrabold" style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}>
+                    <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>۳۳۰
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* نومو — پنلِ RoutineAiFab */}
+            <div className="lh-layer lh-pos-ai" style={{ "--d": 42 } as React.CSSProperties}>
+              <div className="lh-float lh-card lh-card-ai" style={{ "--f": "-4.1s" } as React.CSSProperties}>
+                <div className="routine-ai-title lh-ai-title">
+                  {orbLive ? <SiriOrb size="20px" /> : <span className="lh-orb-still lh-orb-sm" />}
+                  نومو
+                </div>
+                <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">فردا ساعت ۷ عصر باشگاه</div>
+                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعتِ ۱۹:۰۰ اضافه شد.</div>
+              </div>
+            </div>
+
+            {/* مربی — MentorCard + خطِ رمزگذاریِ گفت‌وگو */}
+            <div className="lh-layer lh-pos-mentor" style={{ "--d": 30 } as React.CSSProperties}>
+              <div className="lh-float lh-card-mentor" style={{ "--f": "-1.2s" } as React.CSSProperties}>
+                <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="۴٫۹" count="۳۸" since="فروردین ۱۴۰۴" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

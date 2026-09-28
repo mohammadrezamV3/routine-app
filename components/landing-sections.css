@@ -1,0 +1,303 @@
+/* بخش‌های لندینگ — همه‌چیز با پیشوند ls- تا با کلاس‌های سراسری تداخل نکنه.
+   رنگ‌ها فقط از توکن‌های تم (--accent, --text, --muted, --surface-line). */
+
+body{
+  --ls-card:rgba(255,255,255,.05);
+  --ls-card-hi:rgba(255,255,255,.08);
+  --ls-line:rgba(255,255,255,.10);
+  --ls-shadow:0 15px 45px rgba(0,0,0,.35);
+}
+body[data-theme="light"]{
+  --ls-card:rgba(255,255,255,.5);
+  --ls-card-hi:rgba(255,255,255,.75);
+  --ls-line:rgba(107,79,61,.14);
+  --ls-shadow:0 15px 45px rgba(107,79,61,.10);
+}
+
+.ls-head{ text-align:right; margin-bottom:18px; }
+body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title{
+  color:var(--text); font-size:clamp(20px,3.4vw,28px); line-height:1.4; margin:0;
+}
+.ls-title-accent{ color:var(--accent); }
+
+/* ───── Stats ───── */
+.ls-stats{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; overflow:hidden;
+  border-radius:24px; border:1px solid var(--ls-line); background:var(--ls-line);
+  box-shadow:var(--ls-shadow);
+}
+@media (min-width:768px){ .ls-stats{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+.ls-stat{ background:var(--bg); padding:22px 12px; text-align:center; position:relative; }
+.ls-stat::before{ content:""; position:absolute; inset:0; background:var(--ls-card); }
+.ls-stat > *{ position:relative; }
+.ls-stat-num{
+  font-size:clamp(24px,4.4vw,38px); font-weight:800; line-height:1.2; color:var(--accent);
+  font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+}
+/* متنِ غیرعددی (MT4·MT5) پهن‌تر از عدده و توی ستونِ باریک بریده می‌شد. */
+.ls-stat-text{ display:inline-block; max-width:100%; font-size:clamp(18px,2.6vw,28px); white-space:nowrap; }
+.ls-stat-label{ margin-top:6px; font-size:12px; line-height:1.7; color:var(--muted); }
+
+/* ───── How it works ───── */
+.ls-steps{ position:relative; display:grid; grid-template-columns:minmax(0,1fr); gap:26px; }
+.ls-step{ position:relative; z-index:1; display:flex; flex-direction:row; gap:16px; align-items:flex-start; text-align:right; }
+.ls-step-badge{
+  position:relative; flex:0 0 auto; width:56px; height:56px; border-radius:18px;
+  display:flex; align-items:center; justify-content:center; color:var(--accent);
+  background:var(--bg); border:1px solid rgba(var(--accent-rgb),.45);
+  box-shadow:0 0 0 6px var(--bg), 0 10px 28px rgba(var(--accent-rgb),.20);
+}
+.ls-step-n{
+  position:absolute; top:-8px; right:-8px; min-width:22px; height:22px; border-radius:11px; padding:0 5px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--accent); color:#fff; font-size:11.5px; font-weight:800;
+}
+.ls-step-title{ margin:2px 0 4px; font-size:16px; font-weight:800; color:var(--text); }
+.ls-step-body{ margin:0; font-size:13px; line-height:1.9; color:var(--muted); }
+/* موبایل: خط عمودی از مرکز بج‌ها (راست) */
+.ls-steps-line{
+  position:absolute; top:28px; bottom:28px; right:27px; width:2px; border-radius:2px;
+  background:var(--ls-line); overflow:hidden;
+}
+.ls-steps-line-fill{
+  display:block; width:100%; height:100%; transform-origin:top center;
+  background:linear-gradient(to bottom, var(--accent), rgba(var(--accent-rgb),.25));
+}
+@media (min-width:768px){
+  .ls-steps{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+  .ls-step{ flex-direction:column; align-items:center; text-align:center; gap:14px; }
+  .ls-step-title{ margin-top:0; }
+  .ls-steps-line{ top:27px; bottom:auto; height:2px; width:auto; right:16.66%; left:16.66%; }
+  .ls-steps-line-fill{
+    transform-origin:right center;
+    background:linear-gradient(to left, var(--accent), rgba(var(--accent-rgb),.25));
+  }
+}
+
+/* ───── Bento ───── */
+.ls-bento{ display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+@media (min-width:640px){ .ls-bento{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:1024px){
+  .ls-bento{ grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; }
+  .ls-b-e2ee{ grid-column:span 4; } .ls-b-pwa{ grid-column:span 2; }
+  .ls-b-streak{ grid-column:span 3; } .ls-b-friends{ grid-column:span 3; }
+  .ls-b-meta{ grid-column:span 3; } .ls-b-food{ grid-column:span 3; }
+}
+@media (min-width:640px) and (max-width:1023px){
+  .ls-b-e2ee{ grid-column:span 2; } .ls-b-streak{ grid-column:span 2; }
+}
+.ls-card{
+  position:relative; overflow:hidden; border-radius:24px; min-width:0;
+  border:1px solid var(--ls-line); background:var(--ls-card);
+  box-shadow:var(--ls-shadow); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  transition:border-color .3s ease, transform .3s ease;
+}
+.ls-card::after{
+  content:""; position:absolute; inset:auto -20% -40% auto; width:60%; height:70%; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(var(--accent-rgb),.14), transparent);
+}
+@media (hover:hover){ .ls-card:hover{ border-color:rgba(var(--accent-rgb),.45); } }
+.ls-card-inner{ position:relative; z-index:1; display:flex; flex-direction:column; gap:16px; height:100%; padding:22px; }
+.ls-card-text{ text-align:right; }
+.ls-card-ic{
+  display:inline-flex; width:38px; height:38px; align-items:center; justify-content:center; border-radius:12px;
+  background:rgba(var(--accent-rgb),.13); color:var(--accent); margin-bottom:12px;
+}
+.ls-card-title{ margin:0 0 6px; font-size:16px; font-weight:800; color:var(--text); }
+.ls-card-body{ margin:0; font-size:13px; line-height:1.9; color:var(--muted); }
+.ls-vis{ margin-top:auto; direction:ltr; }
+
+/* chat — MentorChat (lm-chat از landing-hero.css) */
+.ls-vis-chat{ direction:rtl; }
+
+/* phone — اعلانِ واقعیِ reminderPlan */
+.ls-vis-phone{ display:flex; justify-content:center; height:124px; overflow:hidden; }
+.ls-phone{
+  position:relative; width:128px; padding:30px 10px 0; border-radius:20px 20px 0 0;
+  border:1.5px solid var(--ls-line); border-bottom:none; background:var(--ls-card-hi);
+}
+.ls-phone-notch{ position:absolute; top:7px; left:50%; width:30px; height:5px; margin-left:-15px; border-radius:3px; background:var(--ls-line); }
+.ls-phone-row{ height:8px; border-radius:4px; background:var(--ls-line); margin-top:8px; }
+.ls-phone-row:first-of-type{ margin-top:44px; }
+.ls-w70{ width:70%; } .ls-w50{ width:50%; }
+.ls-toast{
+  position:absolute; top:16px; right:-26px; left:-26px; z-index:2; direction:rtl; text-align:right;
+  display:flex; align-items:flex-start; gap:7px; padding:7px 9px; border-radius:13px;
+  background:var(--surface-2); border:1px solid var(--surface-line);
+  box-shadow:0 10px 24px rgba(0,0,0,.28); font-size:9.5px; line-height:1.6; color:var(--muted);
+  animation:ls-toast 4.5s ease-in-out infinite;
+}
+body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); }
+.ls-toast-ic{ width:18px; height:18px; border-radius:5px; flex:none; margin-top:1px; }
+.ls-toast-tx{ display:flex; flex-direction:column; min-width:0; }
+.ls-toast-tx b{ font-size:10px; font-weight:800; color:var(--text); }
+@keyframes ls-toast{
+  0%,12%{ transform:translateY(-52px); opacity:0; }
+  22%,78%{ transform:translateY(0); opacity:1; }
+  90%,100%{ transform:translateY(-52px); opacity:0; }
+}
+
+/* streak — خودِ StreakFlame در هشت سطح */
+.ls-vis-streak{ direction:rtl; }
+.ls-vis-streak .lm-tiers{ grid-template-columns:repeat(8, minmax(0,1fr)); gap:4px; }
+.ls-vis-streak .lm-tier{ padding:8px 0 7px; background:transparent; }
+
+/* friends — DashFriendsCard */
+.ls-vis-friends{ direction:rtl; display:flex; flex-direction:column; gap:12px; }
+
+/* metatrader — TradeMtLinkPanel */
+.ls-vis-meta{ direction:rtl; display:flex; flex-direction:column; gap:10px; padding:12px 14px; border-radius:16px; border:1px solid var(--surface-line); }
+.ls-meta-head{ display:flex; align-items:center; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--muted); }
+.ls-meta-on{ display:inline-flex; align-items:center; gap:5px; color:var(--pnl-win); font-weight:800; }
+.ls-live{ width:7px; height:7px; border-radius:50%; background:var(--pnl-win); animation:ls-blink 1.8s ease-in-out infinite; }
+@keyframes ls-blink{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+.ls-meta-cells{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.ls-meta-cells .trade-detail-cell b{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* food — نتیجه‌ی CalorieAiScanModal */
+.ls-vis-food{ direction:rtl; display:flex; flex-direction:column; gap:10px; }
+.ls-food-grid{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; }
+
+/* ───── All features ───── */
+.ls-feat{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+@media (min-width:560px){ .ls-feat{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:960px){ .ls-feat{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; } }
+.ls-feat > li{ min-width:0; display:flex; }
+.ls-feat-item{
+  flex:1; min-width:0; display:flex; align-items:flex-start; gap:12px; padding:13px 15px; border-radius:18px;
+  border:1px solid var(--ls-line); background:var(--ls-card); text-decoration:none; color:var(--text);
+  transition:border-color .2s ease;
+}
+@media (hover:hover){ .ls-feat-item.is-link:hover{ border-color:rgba(var(--accent-rgb),.5); } }
+.ls-feat-ic{
+  flex:none; width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); background:rgba(var(--accent-rgb),.12);
+}
+.ls-feat-txt{ min-width:0; display:flex; flex-direction:column; gap:2px; text-align:right; }
+.ls-feat-title{ display:inline-flex; align-items:center; gap:5px; font-size:13.5px; font-weight:800; }
+.ls-feat-arrow{ color:var(--accent); transition:transform .2s ease; }
+@media (hover:hover){ .ls-feat-item.is-link:hover .ls-feat-arrow{ transform:translateX(-3px); } }
+.ls-feat-body{ font-size:12px; line-height:1.8; color:var(--muted); }
+
+/* ───── Why us ───── */
+.ls-why{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+@media (min-width:560px){ .ls-why{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:960px){ .ls-why{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.ls-why-item{
+  display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:20px; min-width:0;
+  border:1px solid var(--ls-line); background:var(--ls-card); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  transition:transform .25s ease, border-color .25s ease;
+}
+@media (hover:hover){ .ls-why-item:hover{ transform:translateY(-3px); border-color:var(--ls-line-hi, rgba(var(--accent-rgb),.4)); } }
+.ls-why-ic{
+  flex:none; width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  color:var(--c); background:color-mix(in srgb, var(--c) 14%, transparent);
+}
+.ls-why-txt{ min-width:0; text-align:right; }
+.ls-why-title{ font-size:14px; font-weight:800; color:var(--text); }
+.ls-why-body{ margin-top:2px; font-size:12px; line-height:1.8; color:var(--muted); }
+
+/* ───── Quote ───── */
+.ls-quote{
+  position:relative; margin:0; padding:34px 22px; text-align:center; overflow:hidden; border-radius:28px;
+  border:1px solid var(--ls-line); background:var(--ls-card); box-shadow:var(--ls-shadow);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+.ls-quote::before{
+  content:""; position:absolute; inset:-40% 25% auto; height:80%; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(var(--accent-rgb),.16), transparent);
+}
+.ls-quote-ic{ position:relative; color:var(--accent); margin-bottom:10px; }
+.ls-quote-body{ position:relative; min-height:96px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; transition:opacity .35s ease, transform .35s ease; }
+.ls-quote-body.is-out{ opacity:0; transform:translateY(6px); }
+.ls-quote-text{ margin:0; max-width:34em; font-size:clamp(15px,2.4vw,19px); font-weight:600; line-height:2; color:var(--text); }
+.ls-quote-by{ font-size:12.5px; font-weight:700; color:var(--muted); }
+
+/* ───── FAQ ───── */
+.ls-faq{ display:flex; flex-direction:column; gap:10px; max-width:820px; margin:0 auto; }
+.ls-faq-item{
+  border-radius:20px; border:1px solid var(--ls-line); background:var(--ls-card); overflow:hidden;
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); transition:border-color .25s ease;
+}
+.ls-faq-item.is-open{ border-color:rgba(var(--accent-rgb),.45); }
+.ls-faq-h{ margin:0; font-size:inherit; }
+/* خنثی‌سازی button{} سراسری (پدینگ/بک‌گراند شیشه‌ای) با اسپسیفیسیتی برابر */
+body[data-theme="light"] .ls-faq-btn, body:not([data-theme="light"]) .ls-faq-btn{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:16px 18px; border:none; border-radius:0; background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; text-align:right;
+  font-size:14px; font-weight:700; line-height:1.8; color:var(--text);
+}
+@media (hover:hover){
+  body[data-theme="light"] .ls-faq-btn:hover, body:not([data-theme="light"]) .ls-faq-btn:hover{
+    background:none; box-shadow:none; border:none; color:var(--accent);
+  }
+}
+body[data-theme="light"] .ls-faq-btn:active, body:not([data-theme="light"]) .ls-faq-btn:active{ transform:none; }
+.ls-faq-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+.ls-faq-chev{ flex:none; color:var(--accent); transition:transform .3s ease; }
+.is-open .ls-faq-chev{ transform:rotate(180deg); }
+.ls-faq-panel{ display:grid; grid-template-rows:0fr; visibility:hidden; transition:grid-template-rows .35s ease, visibility 0s linear .35s; }
+.is-open .ls-faq-panel{ grid-template-rows:1fr; visibility:visible; transition:grid-template-rows .35s ease, visibility 0s; }
+.ls-faq-panel-in{ overflow:hidden; min-height:0; }
+.ls-faq-panel-in p{ margin:0; padding:0 18px 18px; font-size:13px; line-height:2; color:var(--muted); }
+
+/* ───── Final CTA ───── */
+.ls-cta{
+  position:relative; overflow:hidden; isolation:isolate; text-align:center; padding:44px 20px;
+  border-radius:32px; border:1px solid rgba(var(--accent-rgb),.4);
+  background:var(--ls-card); box-shadow:0 20px 70px rgba(var(--accent-rgb),.18);
+}
+.ls-cta-glow{
+  position:absolute; z-index:-1; top:-45%; left:50%; width:min(720px,140%); aspect-ratio:1; margin-left:calc(min(720px,140%) / -2);
+  border-radius:50%; pointer-events:none; opacity:.55;
+  background:radial-gradient(closest-side, rgba(var(--accent-rgb),.55), transparent);
+  animation:ls-glow 7s ease-in-out infinite;
+}
+.ls-cta-glow-2{ top:auto; bottom:-70%; width:min(520px,110%); margin-left:calc(min(520px,110%) / -2); opacity:.3; animation-delay:-3.5s; }
+@keyframes ls-glow{ 0%,100%{ transform:scale(1); opacity:.5; } 50%{ transform:scale(1.12); opacity:.75; } }
+.ls-cta-in{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+.ls-cta-chip{
+  display:inline-flex; align-items:center; gap:6px; padding:5px 14px; border-radius:999px; font-size:11.5px; font-weight:700;
+  color:var(--accent); background:rgba(var(--accent-rgb),.12); border:1px solid rgba(var(--accent-rgb),.3);
+}
+body[data-theme="light"] h2.ls-cta-title, body:not([data-theme="light"]) h2.ls-cta-title{
+  margin:0; font-size:clamp(28px,6vw,48px); font-weight:800; line-height:1.3; color:var(--text);
+}
+.ls-cta-sub{ margin:0; font-size:14px; color:var(--muted); }
+.ls-cta-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:8px; }
+.ls-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 30px; border-radius:20px;
+  font-size:15px; font-weight:800; text-decoration:none; transition:transform .15s ease, filter .2s ease;
+}
+.ls-btn:active{ transform:scale(.97); }
+.ls-btn-primary{ color:#fff; background:var(--accent); box-shadow:0 12px 32px rgba(var(--accent-rgb),.4); }
+.ls-btn-primary:hover{ filter:brightness(1.07); }
+.ls-btn-ghost{ color:var(--text); border:1px solid var(--ls-line); background:var(--ls-card-hi); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+.ls-cta-note{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:var(--muted); }
+
+/* ───── Reduced motion: همه‌ی حلقه‌های بی‌پایان متوقف ───── */
+@media (prefers-reduced-motion:reduce){
+  .ls-toast, .ls-live, .ls-cta-glow{ animation:none; }
+  .ls-toast{ transform:none; opacity:1; }
+  .ls-feat-item, .ls-feat-arrow{ transition:none; }
+  .ls-quote-body, .ls-faq-panel, .ls-faq-chev, .ls-card, .ls-why-item{ transition:none; }
+}
+
+/* دسکتاپ: بخش‌های پایینی هم مثلِ هیرو/ویترین از ستونِ ۶۲۰پیکسلیِ .wrap
+   بیرون می‌زنن تا عرضِ صفحه یکدست باشه (FAQ عمداً باریک‌تر برای خوانایی). */
+@media (min-width:1024px){
+  #sec-landing-stats, #sec-landing-how, #sec-landing-bento, #sec-landing-allfeatures, #sec-landing-whyus, #sec-landing-trust, #sec-landing-cta{
+    --ls-w: min(1180px, calc(100vw - 64px));
+    width:var(--ls-w);
+    margin-inline:calc((100% - var(--ls-w)) / 2);
+  }
+  #faq{
+    --ls-w: min(820px, calc(100vw - 64px));
+    width:var(--ls-w);
+    margin-inline:calc((100% - var(--ls-w)) / 2);
+  }
+}
+
+/* بیرونِ دید: حلقه‌های بی‌پایانِ بنتو (شعله‌ها، اعلان، نشانِ زنده) متوقف */
+.ls-bento.is-paused *, .ls-bento.is-paused *::before{ animation-play-state:paused !important; }
