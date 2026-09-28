@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Award, Building2, ChevronRight, Flame, Gauge, Hash,
-  Inbox, Pencil, Percent, Plus, Scale, Sigma, Snowflake, TrendingDown,
+  Inbox, Pencil, Percent, Plus, RefreshCw, Scale, Sigma, Snowflake, TrendingDown,
   TrendingUp, Wallet, Zap,
 } from "lucide-react";
 import { faNum, isoLocal } from "@/lib/jalali";
@@ -50,6 +51,22 @@ const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
 // سه آماری که همیشه بالای باکس‌اند و توی لیست «بقیه‌ی آمارها» تکرار نمی‌شوند
 const HEADLINE_STATS: TradeStatKey[] = ["goalRing", "monthTotal", "winRate"];
 
+// «همگام‌سازی» با متاتریدر. ارتباط عمداً یک‌طرفه است (lib/metatrader.ts):
+// اکسپرت هر SyncSeconds ثانیه (پیش‌فرض ۶۰) خودش داده می‌فرستد و Arion هیچ
+// دستوری به ترمینال برنمی‌گرداند — پس سرور نمی‌تواند «بکشد». دکمه همان
+// چیزی را انجام می‌دهد که واقعاً ممکن است: داده‌ی ذخیره‌شده را دوباره
+// می‌خواند و تا رسیدنِ ارسالِ بعدیِ اکسپرت (lastSyncAt جدیدتر از لحظه‌ی
+// کلیک) منتظر می‌ماند. اگر در این بازه چیزی نرسید، صادقانه همین را می‌گوید.
+const MT_SYNC_WAIT_MS = 90_000;
+const MT_SYNC_POLL_MS = 5_000;
+
+type MtSyncState =
+  | { kind: "idle" }
+  | { kind: "waiting" }
+  | { kind: "done"; at: string }
+  | { kind: "stale"; lastSyncAt: string | null }
+  | { kind: "error"; message: string };
+
 /**
  * صفحه‌ی یک حساب («ژورنال‌نویسی»).
  *
@@ -77,6 +94,9 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   const [editingEntry, setEditingEntry] = useState<TradeEntryDetail | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const { error: actionError, run } = useAsyncAction();
+  const router = useRouter();
+  const [mtSync, setMtSync] = useState<MtSyncState>({ kind: "idle" });
+  const syncRun = useRef(0);
 
   useEffect(() => {
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem);
@@ -108,6 +128,50 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   useEffect(() => { load(); }, [load]);
   // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
   useLiveRefresh("trade", () => { load(true); });
+
+  // اگر کاربر وسطِ انتظار از صفحه رفت، حلقه‌ی poll دیگر state را دست نزند
+  useEffect(() => () => { syncRun.current++; }, []);
+
+  async function fetchMtLink(): Promise<{ connected: boolean; lastSyncAt: string | null } | null> {
+    const res = await fetch(`/api/trade/metatrader?accountId=${accountId}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("status");
+    const data = await res.json();
+    return data.link ? { connected: !!data.link.connected, lastSyncAt: data.link.lastSyncAt ?? null } : null;
+  }
+
+  async function syncWithMt() {
+    if (!account || mtSync.kind === "waiting") return;
+    const mtPage = `/trade/metatrader/${account.id}?from=account`;
+    if (!account.mtConnected) { router.push(mtPage); return; }
+
+    const runId = ++syncRun.current;
+    const startedAt = Date.now();
+    setMtSync({ kind: "waiting" });
+    try {
+      const first = await fetchMtLink();
+      if (runId !== syncRun.current) return;
+      if (!first?.connected) { setMtSync({ kind: "idle" }); router.push(mtPage); return; }
+      await load(true);
+
+      let last = first.lastSyncAt;
+      while (Date.now() - startedAt < MT_SYNC_WAIT_MS) {
+        await new Promise((r) => setTimeout(r, MT_SYNC_POLL_MS));
+        if (runId !== syncRun.current) return;
+        const link = await fetchMtLink();
+        if (runId !== syncRun.current) return;
+        if (!link?.connected) { setMtSync({ kind: "error", message: "اتصال متاتریدرِ این حساب قطع شده است." }); return; }
+        last = link.lastSyncAt;
+        if (last && new Date(last).getTime() >= startedAt) {
+          await load(true);
+          if (runId === syncRun.current) setMtSync({ kind: "done", at: last });
+          return;
+        }
+      }
+      setMtSync({ kind: "stale", lastSyncAt: last });
+    } catch {
+      if (runId === syncRun.current) setMtSync({ kind: "error", message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید." });
+    }
+  }
 
   const stats = useMemo(() => computeTradeStats(entries, account || undefined), [entries, account]);
 
@@ -161,6 +225,17 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label="ویرایش حساب">
             <Pencil size={14} />
           </button>
+          {!account.archived && (
+            <button
+              type="button"
+              className="trade-add-btn"
+              onClick={syncWithMt}
+              disabled={mtSync.kind === "waiting"}
+              title={account.mtConnected ? "دریافت آخرین معاملات از متاتریدر" : "اتصال این حساب به متاتریدر"}
+            >
+              <RefreshCw size={14} className={mtSync.kind === "waiting" ? "trade-spin" : undefined} /> همگام‌سازی
+            </button>
+          )}
         </div>
         <div className="trade-journal-idrow-balance">
           <span>بالانس اولیه</span>
@@ -176,6 +251,20 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       )}
 
       {actionError && <div className="trade-form-error">{actionError}</div>}
+
+      {mtSync.kind !== "idle" && (
+        <div className={mtSync.kind === "error" ? "trade-form-error" : "trade-mt-note"} role="status" style={{ marginTop: 10 }}>
+          {mtSync.kind === "waiting" && "در انتظار ارسالِ داده از اکسپرت متاتریدر… (حداکثر حدود یک و نیم دقیقه)"}
+          {mtSync.kind === "done" && `همگام‌سازی انجام شد — ${formatTradeDateTime(mtSync.at, calSystem)}`}
+          {mtSync.kind === "stale" && (
+            <>
+              در این فاصله داده‌ی تازه‌ای از متاتریدر نرسید. متاتریدر باید باز باشد و اکسپرت Arion روی چارت فعال باشد.
+              {" "}آخرین همگام‌سازی: {mtSync.lastSyncAt ? formatTradeDateTime(mtSync.lastSyncAt, calSystem) : "هنوز انجام نشده"}
+            </>
+          )}
+          {mtSync.kind === "error" && mtSync.message}
+        </div>
+      )}
 
       {/* ── باکسِ واحدِ دوبخشی: آمار (بالا) + تقویم (پایین) ────────────── */}
       <div className="trade-surface trade-journal-box">
