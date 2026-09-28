@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { HomeClient } from "@/components/HomeClient";
 import { BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
+import { faqJsonLd } from "@/lib/seo";
+import { FAQ_ITEMS } from "@/lib/landingFaq";
 
 // این فایل عمدا Server Component شده (نه "use client" مثل قبل) — فقط
 // برای اینکه بتونه metadata/JSON-LD صادر کنه؛ کل منطق/UI واقعی توی
@@ -24,5 +26,11 @@ export const metadata: Metadata = {
 export default function HomePage() {
   // Organization/WebSite/SoftwareApplication (با @id) از root layout
   // میان — تکرارِ همون بلوک اینجا فقط یه کپیِ عینا یکسان توی <head> بود.
-  return <HomeClient />;
+  // FAQPageِ سؤالاتِ متداولِ لندینگ — همون الگوی صفحه‌های فرود (داده‌ی ثابت).
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(FAQ_ITEMS)) }} />
+      <HomeClient />
+    </>
+  );
 }

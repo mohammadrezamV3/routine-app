@@ -34,6 +34,8 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   font-size:clamp(24px,4.4vw,38px); font-weight:800; line-height:1.2; color:var(--accent);
   font-variant-numeric:tabular-nums; letter-spacing:-.01em;
 }
+/* متنِ غیرعددی (MT4·MT5) پهن‌تر از عدده و توی ستونِ باریک بریده می‌شد. */
+.ls-stat-text{ display:inline-block; max-width:100%; font-size:clamp(18px,2.6vw,28px); white-space:nowrap; }
 .ls-stat-label{ margin-top:6px; font-size:12px; line-height:1.7; color:var(--muted); }
 
 /* ───── How it works ───── */
@@ -308,4 +310,19 @@ body[data-theme="light"] h2.ls-cta-title, body:not([data-theme="light"]) h2.ls-c
   .ls-trade{ opacity:1; }
   .ls-scan{ transform:translateY(40px); }
   .ls-quote-body, .ls-faq-panel, .ls-faq-chev, .ls-card, .ls-why-item{ transition:none; }
+}
+
+/* دسکتاپ: بخش‌های پایینی هم مثلِ هیرو/ویترین از ستونِ ۶۲۰پیکسلیِ .wrap
+   بیرون می‌زنن تا عرضِ صفحه یکدست باشه (FAQ عمداً باریک‌تر برای خوانایی). */
+@media (min-width:1024px){
+  #sec-landing-stats, #sec-landing-how, #sec-landing-bento, #sec-landing-whyus, #sec-landing-trust, #sec-landing-cta{
+    --ls-w: min(1180px, calc(100vw - 64px));
+    width:var(--ls-w);
+    margin-inline:calc((100% - var(--ls-w)) / 2);
+  }
+  #faq{
+    --ls-w: min(820px, calc(100vw - 64px));
+    width:var(--ls-w);
+    margin-inline:calc((100% - var(--ls-w)) / 2);
+  }
 }

@@ -9,6 +9,7 @@ import {
   Users, Sparkles, Trophy, RefreshCw, UserPlus, LayoutGrid, CalendarCheck,
 } from "lucide-react";
 import "@/components/landing-sections.css";
+import { FAQ_ITEMS } from "@/lib/landingFaq";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -90,7 +91,7 @@ export function LandingStats() {
         {STATS.map((s) => (
           <div key={s.label} className="ls-stat" role="listitem">
             <div className="ls-stat-num">
-              {s.to !== undefined ? <CountUp to={s.to} suffix={s.suffix} /> : <span dir="ltr">{s.text}</span>}
+              {s.to !== undefined ? <CountUp to={s.to} suffix={s.suffix} /> : <span dir="ltr" className="ls-stat-text">{s.text}</span>}
             </div>
             <div className="ls-stat-label">{s.label}</div>
           </div>
@@ -356,27 +357,6 @@ export function LandingTestimonialQuote() {
 }
 
 /* ───────────────────────── 6) FAQ ───────────────────────── */
-
-export const FAQ_ITEMS: { q: string; a: string }[] = [
-  { q: "آریون رایگانه؟", a: "بله. پلن پایه شامل روتین روزانه و هفتگی، پیگیری خواب و کارها برای همیشه رایگان است؛ بدون نیاز به کارت بانکی. بدون حساب هم می‌توانی به‌صورت مهمان شروع کنی." },
-  { q: "پلن پولی چه چیزی دارد؟", a: "پلن‌های پولی بخش‌های بدنسازی، شمارش کالری، ژورنال ترید، رودمپ هوشمند و تحلیل هوشمند را باز می‌کنند. ترکیب و قیمت هر پلن در بخش پلن‌ها همین صفحه آمده است." },
-  { q: "اطلاعاتم امن است؟", a: "رمز عبور با bcrypt ذخیره می‌شود و گفت‌وگوها و یادداشت‌های خصوصی مربی‌ها رمزگذاری سرتاسری دارند؛ سرور و ادمین‌ها متن آن‌ها را نمی‌بینند. اطلاعاتت را نمی‌فروشیم." },
-  { q: "روی گوشی نصب می‌شود (PWA)؟", a: "بله. آریون یک وب‌اپ پیش‌رونده است؛ از منوی مرورگر «افزودن به صفحه‌ی اصلی» را بزن تا مثل یک اپ کامل با آیکون خودش باز شود و یادآورها را هم بگیرد." },
-  { q: "متاتریدر چطور وصل می‌شود؟", a: "با یک کد اتصال و اکسپرت (EA) که روی خود حساب معاملاتی نصب می‌کنی. رمز حساب معاملاتی هرگز خواسته یا ذخیره نمی‌شود و معاملات بدون تکرار وارد ژورنال می‌شوند. متاتریدر ۴ و ۵ پشتیبانی می‌شود." },
-  { q: "مربی‌ها چطورند؟", a: "مربی‌ها برای ثبت‌نام باید احراز هویت و شرایط منتوری را بپذیرند. پیشرفت شاگرد از تیک‌های روتین خودش محاسبه می‌شود و رتبه‌ی مربی‌ها بر پایه‌ی شایستگی است، نه تبلیغات." },
-  { q: "«نومو» چیست؟", a: "نومو دستیار هوشمند اختصاصی آریون است که در چیدن برنامه و روتین کمکت می‌کند. نومو فقط برای کاربران دارای حساب کاربری فعال است." },
-  { q: "بدون اینترنت هم کار می‌کند؟", a: "آریون برای همگام‌سازی به اینترنت نیاز دارد. بدون اینترنت فقط صفحه‌ی آفلاین و بخش‌های ذخیره‌شده‌ی مرورگر در دسترس‌اند و کارهای تازه پس از اتصال دوباره ثبت می‌شوند." },
-];
-
-export const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ_ITEMS.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 
 export function LandingFAQ() {
   const [open, setOpen] = useState<number | null>(0);
