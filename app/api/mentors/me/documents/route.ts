@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   if (body === "too_large") return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
 
   const profile = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true, categories: true, identityStatus: true } });
-  if (!profile) return forbidden("اول پروفایل منتوری بساز");
+  if (!profile) return forbidden("اول پروفایل مربی‌گری بساز");
 
   let form: FormData;
   try {

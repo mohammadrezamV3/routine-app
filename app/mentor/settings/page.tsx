@@ -26,7 +26,7 @@ function MentorProfileLink() {
       <MentorRow
         href="/mentor/profile"
         lead={ic(UserRound, MI.row)}
-        title="پروفایل منتوری و مدارک"
+        title="پروفایل مربی‌گری و مدارک"
         sub={
           <>
             {id === "VERIFIED" ? <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>هویت تأییدشده</MentorChip>
@@ -67,7 +67,7 @@ function MentorSettings() {
       return (
         <MentorEmptyState
           icon={<UserRound size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
-          title="هنوز پروفایل منتوری نداری"
+          title="هنوز پروفایل مربی‌ای نداری"
           action={<Link href="/mentor/profile" className="trade-primary-btn mentor-btn">ساخت پروفایل</Link>}
         />
       );
@@ -88,7 +88,7 @@ function MentorSettings() {
 
 export default function MentorSettingsPage() {
   return (
-    <MentorDashShell title="تنظیمات منتوری">
+    <MentorDashShell title="تنظیمات مربی‌گری">
       <MentorSettings />
     </MentorDashShell>
   );

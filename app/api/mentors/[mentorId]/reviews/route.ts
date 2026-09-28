@@ -59,7 +59,7 @@ export async function POST(req: Request, { params }: Ctx) {
     where: { mentorId: params.mentorId, studentId: me, startedAt: { not: null }, status: { in: ["ACTIVE", "ENDED"] } },
     select: { id: true },
   });
-  if (!mentorship) return forbidden("فقط شاگردهای این منتور می‌تونن نظر بدن");
+  if (!mentorship) return forbidden("فقط شاگردهای این مربی می‌تونن نظر بدن");
 
   let review;
   try {
@@ -68,7 +68,7 @@ export async function POST(req: Request, { params }: Ctx) {
       select: REVIEW_SELECT,
     });
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("قبلا برای این منتور نظر ثبت کردی");
+    if (isUniqueViolation(e)) return conflict("قبلا برای این مربی نظر ثبت کردی");
     throw e;
   }
   await recomputeMentorRating(params.mentorId);

@@ -125,7 +125,7 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
     <p className="mentor-e2ee-line" role="status">
       <History {...ICON} aria-hidden />
       <span>
-        روی دستگاه دیگرت بخش منتور را باز کن و این کد را تأیید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
+        روی دستگاه دیگرت بخش مربی را باز کن و این کد را تأیید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
       </span>
       <button type="button" className="mentor-text-btn" onClick={() => cancelHistoryLink(link.id)}>لغو</button>
     </p>

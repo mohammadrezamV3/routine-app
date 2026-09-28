@@ -47,14 +47,14 @@ export async function POST(req: Request, { params }: Ctx) {
 
   // ارسال/پذیرش/فعال‌سازی فقط روی رابطه‌ی هنوز فعال
   if ((action === "send" || action === "accept" || action === "activate") && p.mentorship.status !== "ACTIVE") {
-    return conflict("رابطه با این منتور/شاگرد دیگه فعال نیست");
+    return conflict("رابطه با این مربی/شاگرد دیگه فعال نیست");
   }
   // همکاریِ متوقف‌شده: برنامه‌ی تازه نه ارسال می‌شود نه فعال
   if ((action === "send" || action === "activate") && p.mentorship.pausedAt) {
     return conflict("همکاری با این شاگرد متوقف است؛ اول آن را ادامه بده");
   }
   if ((action === "accept" || action === "activate") && (await isMentorSuspended(p.mentorId))) {
-    return forbidden("فعالیتِ این منتور موقتا متوقف شده");
+    return forbidden("فعالیتِ این مربی موقتا متوقف شده");
   }
   if (action === "send") {
     const mp = await getActiveMentorProfile(me);

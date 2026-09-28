@@ -10,7 +10,7 @@ const MAX_OFFSET = 12;
 export async function GET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;
-  if (g.profile.suspendedAt) return forbidden("حساب منتوری تو تعلیق شده");
+  if (g.profile.suspendedAt) return forbidden("حساب مربی‌گری تو تعلیق شده");
   const raw = Number(req.nextUrl.searchParams.get("offset") ?? 0);
   const offset = Number.isInteger(raw) && raw >= 0 && raw <= MAX_OFFSET ? raw : 0;
   return NextResponse.json(await buildWeeklyReport(g.userId, offset));

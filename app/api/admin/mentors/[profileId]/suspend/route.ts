@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     where: { id: params.profileId },
     select: { id: true, userId: true, suspendedAt: true },
   });
-  if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
 
   try {
     // همیشه destructive: خود-تعلیق‌برداری یا اقدام روی Owner/ادمینِ دیگه نباید ممکن باشه
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
   if (suspend && !reason) return NextResponse.json({ error: "برای تعلیق، نوشتنِ دلیل الزامیه" }, { status: 400 });
 
   if (suspend === !!profile.suspendedAt) {
-    return NextResponse.json({ error: suspend ? "این منتور از قبل تعلیقه" : "این منتور تعلیق نیست" }, { status: 409 });
+    return NextResponse.json({ error: suspend ? "این مربی از قبل تعلیقه" : "این مربی تعلیق نیست" }, { status: 409 });
   }
 
   await prisma.$transaction([
@@ -55,10 +55,10 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
 
   await notifyUser(profile.userId, {
     type: "mentor.suspension",
-    title: suspend ? "منتوری شما تعلیق شد" : "تعلیقِ منتوری برداشته شد",
+    title: suspend ? "مربی‌گری شما تعلیق شد" : "تعلیقِ مربی‌گری برداشته شد",
     body: suspend
-      ? `پروفایل منتوری شما تا اطلاع ثانوی از فهرست منتورها حذف شد.${reason ? ` دلیل: ${reason}` : ""}`
-      : "پروفایل منتوری‌ات دوباره فعاله.",
+      ? `پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.${reason ? ` دلیل: ${reason}` : ""}`
+      : "پروفایل مربی‌گری‌ات دوباره فعاله.",
     url: "/mentor/profile",
   });
 

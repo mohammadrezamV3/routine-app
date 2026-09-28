@@ -30,7 +30,7 @@ function withEzafe(s: string): string {
 export function certificateSentence(categories: string[]): string {
   const labels = categories.map(certLabel);
   const joined = labels.length <= 1 ? labels.join("") : `${labels.slice(0, -1).join("، ")} و ${labels[labels.length - 1]}`;
-  return `${withEzafe(joined)} این منتور توسط ادمین‌های آریون بررسی و تأیید شده است`;
+  return `${withEzafe(joined)} این مربی توسط ادمین‌های آریون بررسی و تأیید شده است`;
 }
 
 /**

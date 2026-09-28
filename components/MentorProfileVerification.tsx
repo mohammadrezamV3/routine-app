@@ -73,7 +73,7 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
     <MentorSection id="verification" title={title} icon={icon}>
       <MentorDocRow
         title="مدرک شناسایی"
-        hint="کارت ملی یا گذرنامه؛ برای نمایش در فهرست منتورها لازم است"
+        hint="کارت ملی یا گذرنامه؛ برای نمایش در فهرست مربی‌ها لازم است"
         icon={ic(IdCard, MI.row)}
         status={profile.identityStatus}
         rejectReason={profile.identityRejectReason}

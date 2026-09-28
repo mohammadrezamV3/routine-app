@@ -12,7 +12,7 @@ import { EXPORT_MAX_DAYS, buildProgressCsv } from "@/lib/mentorReports";
 export async function GET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;
-  if (g.profile.suspendedAt) return forbidden("حساب منتوری تو تعلیق شده");
+  if (g.profile.suspendedAt) return forbidden("حساب مربی‌گری تو تعلیق شده");
 
   const sp = req.nextUrl.searchParams;
   const studentId = sp.get("studentId");

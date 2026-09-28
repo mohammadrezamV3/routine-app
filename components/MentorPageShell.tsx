@@ -82,7 +82,7 @@ export function MentorPageShell({
       />
 
       {status === "loading" && <PanelSkeleton />}
-      {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش منتورها وارد شوید" />}
+      {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش مربی‌ها وارد شوید" />}
       {status === "authenticated" && (
         <FeatureGate feature="mentors">{surface ? <MentorPage>{children}</MentorPage> : children}</FeatureGate>
       )}

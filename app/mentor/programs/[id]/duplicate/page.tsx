@@ -51,7 +51,7 @@ export default function DuplicateMentorProgramPage() {
       mentorApi<MentorshipsResponse>("/api/mentorships?role=mentor"),
     ]);
     if (!p.ok) { setLoadError({ msg: p.error, final: p.status === 404 || p.status === 403 }); return; }
-    if (p.data.role !== "MENTOR") { setLoadError({ msg: "فقط منتور سازنده‌ی این برنامه می‌تواند آن را کپی کند", final: true }); return; }
+    if (p.data.role !== "MENTOR") { setLoadError({ msg: "فقط مربی سازنده‌ی این برنامه می‌تواند آن را کپی کند", final: true }); return; }
     if (!m.ok) { setLoadError({ msg: m.error, final: false }); return; }
     const program = p.data.program;
     const students = (m.data.mentorships || []).filter(
@@ -197,7 +197,7 @@ export default function DuplicateMentorProgramPage() {
   return (
     <MentorDashShell
       title="کپی برنامه"
-      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor", label: "پنل منتور" }}
+      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor", label: "پنل مربی" }}
     >
       {body}
     </MentorDashShell>

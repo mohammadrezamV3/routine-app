@@ -33,10 +33,10 @@ export default function MentorProfilePage() {
   const self = useMentorSelf();
   // بدونِ پروفایل (مرحله‌ی شروع) بازگشت به پنل؛ با پروفایل این صفحه زیرِ «تنظیمات» است
   const back = self.status === "ready" && !self.profile
-    ? { href: "/mentor", label: "پنل منتور" }
+    ? { href: "/mentor", label: "پنل مربی" }
     : { href: "/mentor/settings", label: "تنظیمات" };
   return (
-    <MentorDashShell title="پروفایل منتوری" back={back}>
+    <MentorDashShell title="پروفایل مربی‌گری" back={back}>
       <MentorProfileContent />
     </MentorDashShell>
   );

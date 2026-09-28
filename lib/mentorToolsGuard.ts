@@ -16,8 +16,8 @@ export async function requireMentorTools(opts: { write?: boolean } = {}): Promis
   const g = await requireMentorsUser();
   if (!g.ok) return g;
   const profile = await prisma.mentorProfile.findUnique({ where: { userId: g.userId } });
-  if (!profile) return { ok: false, response: forbidden("اول پروفایل منتوری بساز") };
-  if (opts.write && profile.suspendedAt) return { ok: false, response: forbidden("حساب منتوری تو تعلیق شده") };
+  if (!profile) return { ok: false, response: forbidden("اول پروفایل مربی‌گری بساز") };
+  if (opts.write && profile.suspendedAt) return { ok: false, response: forbidden("حساب مربی‌گری تو تعلیق شده") };
   return { ok: true, userId: g.userId, profile };
 }
 

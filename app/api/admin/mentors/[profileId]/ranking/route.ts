@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
   if (!g.ok) return g.response;
 
   const profile = await prisma.mentorProfile.findUnique({ where: { id: params.profileId }, select: { id: true, userId: true } });
-  if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
   try {
     await loadTarget(g, profile.userId);
   } catch (e) {

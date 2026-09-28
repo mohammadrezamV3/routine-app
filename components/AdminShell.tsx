@@ -74,10 +74,10 @@ const GROUPS: NavGroup[] = [
       { label: "تیکت‌های پشتیبانی", icon: <Headset size={17} />, href: "/admin/support", perm: "support" },
       { label: "گزارش‌های چت", icon: <Flag size={17} />, href: "/admin/chat-reports", perm: "chat" },
       {
-        label: "منتورها", icon: <GraduationCap size={17} />, perm: "mentors",
+        label: "مربی‌ها", icon: <GraduationCap size={17} />, perm: "mentors",
         children: [
           { label: "صف احراز هویت", href: "/admin/mentors?tab=pending", exact: true },
-          { label: "همه منتورها", href: "/admin/mentors?tab=all", exact: true },
+          { label: "همه مربی‌ها", href: "/admin/mentors?tab=all", exact: true },
           { label: "نظرات", href: "/admin/mentors/reviews" },
           { label: "گزارش‌ها", href: "/admin/mentors/reports" },
         ],

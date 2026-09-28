@@ -23,11 +23,11 @@ type Data = { mentors: MentorRow[]; total: number; pageSize: number; counts: { p
 
 type Tab = "pending" | "all" | "suspended";
 const TABS: Tab[] = ["pending", "all", "suspended"];
-const TAB_LABELS: Record<Tab, string> = { pending: "صف احراز هویت", all: "همه منتورها", suspended: "تعلیق‌شده" };
+const TAB_LABELS: Record<Tab, string> = { pending: "صف احراز هویت", all: "همه مربی‌ها", suspended: "تعلیق‌شده" };
 const EMPTY_LABELS: Record<Tab, string> = {
   pending: "مدرکی در صف بررسی نیست",
-  all: "منتوری پیدا نشد",
-  suspended: "منتور تعلیق‌شده‌ای نیست",
+  all: "مربی‌ای پیدا نشد",
+  suspended: "مربی تعلیق‌شده‌ای نیست",
 };
 
 const V_TONE: Record<VStatus, "green" | "red" | "amber" | "gray"> = { VERIFIED: "green", REJECTED: "red", PENDING: "amber", NOT_PROVIDED: "gray" };
@@ -123,7 +123,7 @@ function MentorsInner() {
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">منتورها</div>
+          <div className="admin-page-kicker">مربی‌ها</div>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ function MentorsInner() {
           <Search size={15} strokeWidth={1.75} aria-hidden />
           <input
             className="admin-input" placeholder="نام، یوزرنیم، عنوان یا آیدی" value={search}
-            aria-label="جست‌وجوی منتور"
+            aria-label="جست‌وجوی مربی"
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
@@ -145,19 +145,19 @@ function MentorsInner() {
           <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />
         ) : failed ? (
           <div className="admin-empty">
-            <span>فهرست منتورها دریافت نشد</span>
+            <span>فهرست مربی‌ها دریافت نشد</span>
             <button type="button" className="admin-btn" onClick={load}><RefreshCw size={14} strokeWidth={1.75} aria-hidden /> تلاش دوباره</button>
           </div>
         ) : null
       ) : rows.length === 0 ? (
-        <EmptyState message={q ? "منتوری با این جست‌وجو پیدا نشد" : EMPTY_LABELS[tab]} />
+        <EmptyState message={q ? "مربی‌ای با این جست‌وجو پیدا نشد" : EMPTY_LABELS[tab]} />
       ) : (
         <>
           <div className={`admin-table-wrap${loading ? " is-stale" : ""}`} aria-busy={loading}>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>منتور</th><th>دسته‌ها</th><th>هویت</th><th>مدارک تخصصی</th><th>وضعیت</th><th>امتیاز</th><th>شاگرد فعال</th><th>ثبت</th><th />
+                  <th>مربی</th><th>دسته‌ها</th><th>هویت</th><th>مدارک تخصصی</th><th>وضعیت</th><th>امتیاز</th><th>شاگرد فعال</th><th>ثبت</th><th />
                 </tr>
               </thead>
               <tbody>

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     where: { id: params.profileId },
     select: { id: true, userId: true, identityStatus: true },
   });
-  if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
   // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تأیید می‌کنه)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
   try {
     await loadTarget(g, profile.userId, { destructive: !g.isSuperAdmin });

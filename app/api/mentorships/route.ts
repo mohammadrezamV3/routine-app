@@ -70,7 +70,7 @@ export async function POST(req: Request) {
   let recordStudentTerms = false;
 
   if (b.mentorId !== undefined) {
-    if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("منتور نامعتبره");
+    if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("مربی نامعتبره");
     if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
     const profile = await prisma.mentorProfile.findFirst({
       // همان شرطِ قابلِ کشف: منتشرشده، غیرمعلق، هویتِ تأییدشده (احراز اجباری)
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     initiatedBy = "MENTOR";
     mentorCategories = mp.profile.categories;
   } else {
-    return badRequest("منتور یا یوزرنیم شاگرد لازمه");
+    return badRequest("مربی یا یوزرنیم شاگرد لازمه");
   }
 
   // حوزه‌های این رابطه (مثلا فقط «روتین») — باید زیرمجموعه‌ی دسته‌های منتور باشه؛
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
   } else {
     if (!Array.isArray(b.categories)) return badRequest("حوزه‌ها نامعتبره");
     categories = Array.from(new Set(b.categories.filter((c: unknown): c is string => typeof c === "string" && mentorCategories.includes(c))));
-    if (categories.length === 0 || categories.length !== new Set(b.categories).size) return badRequest("حداقل یک حوزه از حوزه‌های این منتور انتخاب کن");
+    if (categories.length === 0 || categories.length !== new Set(b.categories).size) return badRequest("حداقل یک حوزه از حوزه‌های این مربی انتخاب کن");
   }
 
   // برای دعوت با یوزرنیم، «بلاک» و «وجود نداره» یک پاسخ دارن تا نشه یوزرنیم‌ها یا
@@ -181,11 +181,11 @@ export async function POST(req: Request) {
   const sender = initiatedBy === "STUDENT" ? row!.student : row!.mentor;
   await notifyUser(initiatedBy === "STUDENT" ? mentorId : studentId, {
     type: "mentor.request",
-    title: initiatedBy === "STUDENT" ? "درخواست شاگردی جدید" : "دعوت به منتورشیپ",
+    title: initiatedBy === "STUDENT" ? "درخواست شاگردی جدید" : "دعوت به مربی‌گری",
     body:
       initiatedBy === "STUDENT"
         ? `${displayName(sender)} می‌خواد شاگردت بشه.`
-        : `${displayName(sender)} دعوتت کرده که منتورت باشه.`,
+        : `${displayName(sender)} دعوتت کرده که مربی‌ات باشه.`,
     url: initiatedBy === "STUDENT" ? "/mentor" : "/mentorship",
   });
 

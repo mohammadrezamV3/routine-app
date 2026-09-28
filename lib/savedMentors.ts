@@ -11,7 +11,7 @@ import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, buildM
 // • همه‌ی کوئری‌ها با userIdِ خودِ سشن (ضد IDOR).
 
 export const SAVED_MENTORS_MAX = 10;
-export const SAVED_LIMIT_MSG = `حداکثر ${faNum(SAVED_MENTORS_MAX)} منتور ذخیره می‌شود؛ برای ذخیره‌ی این منتور، یکی از ذخیره‌شده‌ها را بردار`;
+export const SAVED_LIMIT_MSG = `حداکثر ${faNum(SAVED_MENTORS_MAX)} مربی ذخیره می‌شود؛ برای ذخیره‌ی این مربی، یکی از ذخیره‌شده‌ها را بردار`;
 
 function visibleSavedWhere(userId: string, blocked: string[]): Prisma.SavedMentorWhereInput {
   return {

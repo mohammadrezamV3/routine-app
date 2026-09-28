@@ -51,12 +51,12 @@ const TARGET_LABELS: Record<Target["kind"], string> = { USER: "کاربر", REVI
 const ACTION_LABELS: Record<Action, string> = {
   hide_review: "پنهان کردن نظر",
   delete_message: "حذف پیام",
-  suspend_mentor: "تعلیق منتوری صاحب محتوا",
+  suspend_mentor: "تعلیق مربی‌گری صاحب محتوا",
 };
 const ACTION_DONE: Record<Action, string> = {
   hide_review: "نظر پنهان شد و گزارش بسته شد",
   delete_message: "پیام حذف شد و گزارش بسته شد",
-  suspend_mentor: "منتوری تعلیق شد و گزارش بسته شد",
+  suspend_mentor: "مربی‌گری تعلیق شد و گزارش بسته شد",
 };
 const PROGRAM_TYPE: Record<string, string> = { ROUTINE: "روتین", WORKOUT: "تمرینی" };
 const PROGRAM_STATUS: Record<string, string> = {
@@ -117,7 +117,7 @@ function TargetSnippet({ t }: { t: Target }) {
     return (
       <>
         <div className="trade-row-sub">
-          گفت‌وگوی {t.mentor ? displayName(t.mentor) : "—"} (منتور) و {t.student ? displayName(t.student) : "—"} (شاگرد)؛ {formatNumber(t.messages.length)} پیام پیوست
+          گفت‌وگوی {t.mentor ? displayName(t.mentor) : "—"} (مربی) و {t.student ? displayName(t.student) : "—"} (شاگرد)؛ {formatNumber(t.messages.length)} پیام پیوست
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
           {t.messages.map((m) => (
@@ -183,7 +183,7 @@ export default function AdminMentorReportsPage() {
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">گزارش‌های منتورها</div>
+          <div className="admin-page-kicker">گزارش‌های مربی‌ها</div>
         </div>
       </div>
 
@@ -223,7 +223,7 @@ export default function AdminMentorReportsPage() {
                       )}
                     </span>
                     <span className="admin-badge-row">
-                      {r.targetUser?.mentorSuspended && <span className="admin-badge red">منتوری تعلیق</span>}
+                      {r.targetUser?.mentorSuspended && <span className="admin-badge red">مربی‌گری تعلیق</span>}
                       <span className={`admin-badge ${STATUS_BADGE[r.status]}`}>
                         <StatusIcon size={13} strokeWidth={1.75} aria-hidden />{TABS.find((t) => t.key === r.status)?.label}
                       </span>

@@ -63,7 +63,7 @@ export default function MentorProgramPage() {
   return (
     <MentorPageShell
       title={head?.title}
-      back={head?.back ?? (fallbackBack ? { href: "/mentorship", label: "منتورهای من" } : null)}
+      back={head?.back ?? (fallbackBack ? { href: "/mentorship", label: "مربی‌های من" } : null)}
       titleAction={menu.length ? <MentorKebabMenu actions={menu} label="گزینه‌های برنامه" /> : undefined}
       surface
     >
@@ -222,14 +222,14 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
                 : <MentorChip tone="info" icon={<Clock {...CHIP} />}>{program.startDate ? `شروع از ${fmtDay(program.startDate)}` : "منتظر تاریخ شروع"}</MentorChip>
             )}
             {isStudent && program.status === "DRAFT" && program.changeRequestNote && (
-              <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>در حال اصلاح توسط منتور</MentorChip>
+              <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>در حال اصلاح توسط مربی</MentorChip>
             )}
           </div>
 
           <div className="mentor-row-sub">
             <span>
               <MentorUserAvatar name={otherName} avatarUrl={other.avatarUrl} size={20} />
-              {isStudent ? "منتور" : "شاگرد"}: {otherName}
+              {isStudent ? "مربی" : "شاگرد"}: {otherName}
             </span>
             {program.startDate && <span><CalendarDays {...CHIP} /> شروع {fmtDay(program.startDate)}</span>}
             {program.endDate && <span><CalendarDays {...CHIP} /> پایان {fmtDay(program.endDate)}</span>}
@@ -240,7 +240,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
 
           {mentorNote && (
             <div className="mentor-note-box" style={{ marginTop: 0 }}>
-              <b>یادداشت منتور</b>
+              <b>یادداشت مربی</b>
               <div>{mentorNote}</div>
             </div>
           )}

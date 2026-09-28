@@ -132,10 +132,10 @@ const LINKS: NavItem[] = [
   // زیرِ «پنل کاربری»، کنارِ بقیه‌ی پنل‌ها. آیکونِ زیرمجموعه‌ها در داده هست ولی طبقِ درخواستِ قبلیِ
   // کاربر زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
   {
-    label: "منتورها", icon: "mentors", feature: "mentors",
+    label: "مربی‌ها", icon: "mentors", feature: "mentors",
     children: [
-      { href: "/mentors", label: "پیدا کردن منتور", icon: "mentorsDiscover" },
-      { href: "/mentorship", label: "منتورهای من", icon: "mentorsMine" },
+      { href: "/mentors", label: "مربی‌ها", icon: "mentorsDiscover" },
+      { href: "/mentorship", label: "مربی‌های من", icon: "mentorsMine" },
     ],
   },
   {
@@ -441,7 +441,7 @@ export function NavDrawer() {
                             onClick={() => { setProfileMenuOpen(false); router.push("/mentor"); }}
                           >
                             <span className="nav-link-icon-svg">{ICONS.mentorPanel}</span>
-                            <span>پنل منتور</span>
+                            <span>پنل مربی</span>
                           </div>
                         )}
                         {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (

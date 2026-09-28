@@ -144,7 +144,7 @@ export function MentorRankingBreakdown({ profileId }: { profileId: string }) {
                   ))}
                 </tr>
                 <tr>
-                  <td>منتورهای محبوب</td>
+                  <td>مربی‌های محبوب</td>
                   <td />
                   {rows.map((r) => (
                     <td key={r.scope} style={{ whiteSpace: "normal" }}>

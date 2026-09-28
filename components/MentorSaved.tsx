@@ -134,7 +134,7 @@ export function MentorSaveButton({ mentor, size = 16, className }: { mentor: Men
   const ctx = useSavedMentors();
   if (!ctx) return null;
   const saved = ctx.isSaved(mentor.userId);
-  const name = "name" in mentor && mentor.name ? mentor.name : "این منتور";
+  const name = "name" in mentor && mentor.name ? mentor.name : "این مربی";
   return (
     <button
       type="button"

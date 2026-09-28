@@ -13,8 +13,8 @@ const SETTINGS_SECTIONS: { href: string; label: string; desc: string; icon: Reac
   { href: "/account/general/exercise", label: "بدنسازی", desc: "روزِ تمرینِ جامانده: رد شدن یا ماندن", icon: <Dumbbell size={15} /> },
   { href: "/account/general/trade", label: "ترید", desc: "تقویم، آمارها و هشدار اخبار", icon: <CandlestickChart size={15} /> },
   { href: "/account/general/haptics", label: "بازخورد لمسی", desc: "لرزش کوتاه هنگام لمس دکمه‌ها", icon: <Vibrate size={15} /> },
-  { href: "/account/general/mentors", label: "دسترسی منتورها", desc: "منتور چه بخشی از روتینت را ببیند", icon: <GraduationCap size={15} /> },
-  { href: "/account/general/chats", label: "سابقه‌ی گفت‌وگو", desc: "پاک کردن پیام‌های منتوری برای خودت", icon: <History size={15} /> },
+  { href: "/account/general/mentors", label: "دسترسی مربی‌ها", desc: "مربی چه بخشی از روتینت را ببیند", icon: <GraduationCap size={15} /> },
+  { href: "/account/general/chats", label: "سابقه‌ی گفت‌وگو", desc: "پاک کردن پیام‌های مربی‌ای برای خودت", icon: <History size={15} /> },
 ];
 
 export default function AccountSettingsPage() {

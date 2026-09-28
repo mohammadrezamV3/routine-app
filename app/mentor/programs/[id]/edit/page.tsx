@@ -43,7 +43,7 @@ export default function EditMentorProgramPage() {
   const student = data?.role === "MENTOR" ? data.program.counterpart ?? null : null;
   const back = student
     ? { href: `/mentor/students/${student.id}`, label: publicUserName(student) }
-    : { href: "/mentor", label: "پنل منتور" };
+    : { href: "/mentor", label: "پنل مربی" };
 
   let body: React.ReactNode;
   if (!id || state.loading) body = <LoadingBlock />;
@@ -53,7 +53,7 @@ export default function EditMentorProgramPage() {
   } else if (data.role !== "MENTOR") {
     body = (
       <MentorDashError
-        message="فقط منتور سازنده‌ی این برنامه می‌تواند آن را ویرایش کند"
+        message="فقط مربی سازنده‌ی این برنامه می‌تواند آن را ویرایش کند"
         action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn is-sm">مشاهده‌ی برنامه</Link>}
       />
     );

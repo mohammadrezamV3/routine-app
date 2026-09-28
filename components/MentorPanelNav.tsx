@@ -96,7 +96,7 @@ export function MentorPanelNav() {
   if (!show) return null;
 
   return (
-    <nav className="mentor-panel-nav" aria-label="پنل منتور">
+    <nav className="mentor-panel-nav" aria-label="پنل مربی">
       <div className="auth-tabs mentor-panel-tabs">
         {MENTOR_PANEL_TABS.map(({ href, label, Icon, match }) => {
           const on = match(pathname);
