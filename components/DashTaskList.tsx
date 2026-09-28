@@ -32,8 +32,8 @@ export function DashTaskList({
   className?: string;
   delay?: number;
 }) {
+  // حداقل ارتفاع: وقتی روز خالیه باکس جمع/کوچیک نشه.
   return (
-    {/* حداقل ارتفاع: وقتی روز خالیه باکس جمع/کوچیک نشه. */}
     <DashCard delay={delay} className={cn("flex min-h-[240px] flex-col sm:min-h-[300px]", className)}>
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-[16px] font-bold text-dash-text sm:gap-2 sm:text-[22px]">
