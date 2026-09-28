@@ -14,7 +14,7 @@ import { createDeviceSession, isSessionLive, newSessionId } from "@/lib/deviceSe
 import { getAdminFlags } from "@/lib/adminFlag";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقا همون تدارک ثبت‌نام معمولی
-// (دوره آزمایشی یک‌هفته‌ای همه‌ی بخش‌ها + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
+// (پایه‌ی همیشه‌رایگان + دوره آزمایشی ۳روزه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
 // کاربر جدید مستقل از روش ورودش یکسان باشه.
 async function provisionNewUser(userId: string) {
   await provisionTrialAccess(userId);

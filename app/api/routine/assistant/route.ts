@@ -2,6 +2,7 @@ import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getNomoFreeUses } from "@/lib/aiQuota";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readJsonBody } from "@/lib/validate";
@@ -11,7 +12,7 @@ import { SETTING_KEYS, ROUTINE_ASSISTANT_USES_KEY } from "@/lib/userSettingKeys"
 import { toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import {
   applyOps, describeSchedule, sortOccurrences, stripInventedTimes,
-  FREE_ASSISTANT_USES, DAY_NAME_FA, DEFAULT_AWAKE, type AwakeWindow,
+  DAY_NAME_FA, DEFAULT_AWAKE, type AwakeWindow,
 } from "@/lib/routineAssistant";
 import { addDaysIso, jsDayOfIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
@@ -49,6 +50,17 @@ async function hasActiveSubscription(userId: string): Promise<boolean> {
     select: { id: true },
   });
   return !!sub;
+}
+
+/**
+ * «نومو» مثلِ خودِ روتین کامل رایگان نیست:
+ *   • سوپریوزر یا اشتراکِ فعال → نامحدود
+ *   • بقیه → سهمیه‌ی مادام‌العمرِ پیام‌های رایگان (getNomoFreeUses، پیش‌فرض
+ *     FREE_ASSISTANT_USES = ۱۰، قابلِ تغییر از پنلِ ادمین)
+ */
+async function assistantAccess(userId: string, isSuperAdmin: boolean): Promise<{ unlimited: boolean; freeLimit: number }> {
+  if (isSuperAdmin || (await hasActiveSubscription(userId))) return { unlimited: true, freeLimit: 0 };
+  return { unlimited: false, freeLimit: await getNomoFreeUses() };
 }
 
 async function readUses(userId: string): Promise<number> {
@@ -158,9 +170,10 @@ function calendarTable(todayIso: string, days = 21): string {
 }
 
 export async function POST(req: NextRequest) {
-  // ROUTINE ماژولِ پایه است و همه دارندش؛ این نگهبان این‌جا برای دسترسی
+  // ROUTINE ماژولِ پایه و همیشه رایگان است؛ این نگهبان این‌جا برای دسترسی
   // نیست، برای همان سه کارِ دیگری است که می‌کند: ۴۰۱ برای مهمان، بلاکِ
-  // کاربرِ مسدودشده، و بیرون‌دادنِ userId/isSuperAdmin.
+  // کاربرِ مسدودشده، و بیرون‌دادنِ userId/isSuperAdmin. خودِ «نومو» جزوِ
+  // رایگان نیست — پایین‌تر با assistantAccess (سهمیه‌ی پیامِ رایگان) سنجیده می‌شود.
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
   { const off = await featureBlocked("routineAssistant", guard.userId); if (off) return off; }
@@ -190,19 +203,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ---------- سهمیه ----------
-  const unlimited = isSuperAdmin || (await hasActiveSubscription(userId));
+  // ---------- دسترسی و سهمیه ----------
+  const { unlimited, freeLimit } = await assistantAccess(userId, isSuperAdmin);
   let usesBefore = 0;
   if (!unlimited) {
     usesBefore = await readUses(userId);
-    if (usesBefore >= FREE_ASSISTANT_USES) {
+    if (usesBefore >= freeLimit) {
       return NextResponse.json(
         {
           error:
-            `سه استفاده‌ی رایگانِ نومو تمام شده. با فعال‌کردنِ اشتراک، ` +
+            `${freeLimit.toLocaleString("fa-IR")} پیامِ رایگانِ نومو تمام شده. با فعال‌کردنِ اشتراک، ` +
             `بدونِ محدودیت می‌توانی برنامه‌هایت را با گفت‌وگو بچینی.`,
           quotaExhausted: true,
-          quota: { unlimited: false, used: usesBefore, limit: FREE_ASSISTANT_USES, remaining: 0 },
+          quota: { unlimited: false, used: usesBefore, limit: freeLimit, remaining: 0 },
         },
         { status: 403 }
       );
@@ -253,8 +266,8 @@ export async function POST(req: NextRequest) {
   const quotaAfter = (used: number) => ({
     unlimited,
     used,
-    limit: unlimited ? null : FREE_ASSISTANT_USES,
-    remaining: unlimited ? null : Math.max(0, FREE_ASSISTANT_USES - used),
+    limit: unlimited ? null : freeLimit,
+    remaining: unlimited ? null : Math.max(0, freeLimit - used),
   });
 
   // ---------- خارج از موضوع ----------
@@ -350,12 +363,12 @@ export async function GET() {
   { const off = await featureBlocked("routineAssistant", guard.userId); if (off) return off; }
   const { userId, isSuperAdmin } = guard;
 
-  const unlimited = isSuperAdmin || (await hasActiveSubscription(userId));
+  const { unlimited, freeLimit } = await assistantAccess(userId, isSuperAdmin);
   const used = unlimited ? 0 : await readUses(userId);
   return NextResponse.json({
     unlimited,
     used,
-    limit: unlimited ? null : FREE_ASSISTANT_USES,
-    remaining: unlimited ? null : Math.max(0, FREE_ASSISTANT_USES - used),
+    limit: unlimited ? null : freeLimit,
+    remaining: unlimited ? null : Math.max(0, freeLimit - used),
   });
 }

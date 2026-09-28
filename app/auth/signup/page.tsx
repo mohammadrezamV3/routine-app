@@ -11,7 +11,7 @@ import { AuthTabs } from "@/components/AuthTabs";
 import { AuthField } from "@/components/AuthField";
 import { AuthShell } from "@/components/AuthShell";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
-import { TRIAL_COPY_FA } from "@/lib/trial";
+import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
@@ -234,7 +234,7 @@ export default function SignupPage() {
 
         <form ref={formRef} onSubmit={submit} className="auth-box">
           <AuthBackButton />
-          <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={TRIAL_COPY_FA} />
+          <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={`${TRIAL_COPY_FA}. ${FREE_ROUTINE_COPY_FA}`} />
 
           <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
             <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>

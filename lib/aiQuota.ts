@@ -2,9 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { AiFeatureKey } from "@prisma/client";
 import { getAppSetting } from "@/lib/appSettings";
 import {
-  TRIAL_AI_FEATURES, TRIAL_AI_LIMITS_SETTING_KEY, TRIAL_MS,
+  TRIAL_AI_FEATURES, TRIAL_AI_LIMITS_SETTING_KEY,
   normalizeTrialAiLimits, type TrialAiFeature, type TrialAiLimits,
 } from "@/lib/trial";
+import { isInTrial } from "@/lib/trialAccess";
+import { NOMO_FREE_USES_SETTING_KEY, normalizeNomoFreeUses } from "@/lib/routineAssistant";
 
 // سقف مصرف ماهانه‌ی هر فیچر AI به‌ازای هر پلن — عدد از پیش خود کاربر
 // (تصمیم محصولی، نه یه rate-limit فنی حدسی): پلن بدنسازی ۳ بار ساخت
@@ -28,6 +30,11 @@ function currentYearMonth(): string {
  */
 export async function getTrialAiLimits(): Promise<TrialAiLimits> {
   return normalizeTrialAiLimits(await getAppSetting<unknown>(TRIAL_AI_LIMITS_SETTING_KEY, null));
+}
+
+/** پیام‌های رایگانِ نومو برای کاربرِ بی‌اشتراک — پیش‌فرض FREE_ASSISTANT_USES، قابلِ تغییر از پنلِ ادمین */
+export async function getNomoFreeUses(): Promise<number> {
+  return normalizeNomoFreeUses(await getAppSetting<unknown>(NOMO_FREE_USES_SETTING_KEY, null));
 }
 
 /**
@@ -77,8 +84,7 @@ export async function checkAndConsumeAiQuota(
     limit = AI_FEATURE_MONTHLY_LIMITS[sub.plan.key]?.[feature];
     bucket = currentYearMonth();
   } else {
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } });
-    isTrial = !!user && Date.now() - user.createdAt.getTime() < TRIAL_MS;
+    isTrial = await isInTrial(userId, false);
     if (isTrial && (TRIAL_AI_FEATURES as string[]).includes(feature)) {
       limit = (await getTrialAiLimits())[feature as TrialAiFeature];
     }

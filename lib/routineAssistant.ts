@@ -27,8 +27,19 @@ export const MAX_OCCURRENCES = 200;
  * خروجیِ بی‌مهارِ مدل را می‌گیرد.
  */
 export const MAX_OPS_PER_MESSAGE = 40;
-/** تعدادِ استفاده‌ی رایگان برای کاربرِ بدونِ اشتراک */
-export const FREE_ASSISTANT_USES = 3;
+/**
+ * تعدادِ پیامِ رایگانِ نومو برای کاربرِ بدونِ اشتراک (مادام‌العمر؛ مشترک
+ * نامحدود است). فقط پیش‌فرض است — Owner از پنلِ ادمین (تنظیمات) عوضش می‌کند:
+ * AppSetting با کلیدِ NOMO_FREE_USES_SETTING_KEY، خواندن با getNomoFreeUses
+ * در lib/aiQuota.ts.
+ */
+export const FREE_ASSISTANT_USES = 10;
+export const NOMO_FREE_USES_SETTING_KEY = "nomo_free_uses";
+export const MAX_NOMO_FREE_USES = 1000;
+
+export function normalizeNomoFreeUses(raw: unknown): number {
+  return typeof raw === "number" && Number.isInteger(raw) && raw >= 0 && raw <= MAX_NOMO_FREE_USES ? raw : FREE_ASSISTANT_USES;
+}
 
 /**
  * برنامه لازم نیست ساعت داشته باشد.

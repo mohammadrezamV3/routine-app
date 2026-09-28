@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withBasicModules } from "@/lib/modules";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -54,7 +55,7 @@ export async function GET() {
   // جدول ModuleAccess چی می‌گه (که معمولا seed هم شده، ولی این تضمین اضافه‌ست)
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess;
+    : withBasicModules(user.moduleAccess); // پایه‌ها همیشه رایگان (lib/modules.ts)
 
   const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
 

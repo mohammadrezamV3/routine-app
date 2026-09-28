@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { PlansSection, UpgradeOffer, BREAKOUT } from "@/components/PlanShowcase";
 import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration";
-import { TRIAL_COPY_FA } from "@/lib/trial";
+import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
 
@@ -88,7 +88,7 @@ export default function SubscriptionPage() {
           ? "دسترسی نامحدود داری — نیازی به اشتراک نداری"
           : subscription
           ? `پلن فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`
-          : `هنوز پلن پولی فعالی نداری. هر حساب تازه: ${TRIAL_COPY_FA}؛ بعدش برای ادامه یکی از پلن‌ها رو انتخاب کن.`}
+          : `هنوز پلن پولی فعالی نداری. ${FREE_ROUTINE_COPY_FA} هر حساب تازه: ${TRIAL_COPY_FA}؛ بعدش برای ادامه یکی از پلن‌ها رو انتخاب کن.`}
       </div>
 
       {!loaded ? (

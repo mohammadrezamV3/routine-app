@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // دوره آزمایشی: یک هفته دسترسی به همه‌ی بخش‌ها (lib/trialAccess.ts — همون
+  // پایه‌ها همیشه رایگان + دوره آزمایشی ۳روزه‌ی بدنسازی/کالری/ترید (lib/trialAccess.ts — همون
   // تابعی که ورود اول با گوگل هم صدا می‌زنه)
   await provisionTrialAccess(user.id);
 

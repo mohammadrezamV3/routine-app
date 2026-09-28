@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withBasicModules } from "@/lib/modules";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -99,7 +100,7 @@ export async function GET(req: NextRequest) {
   // رو از دست می‌ده (چون ModuleGate از همین پاسخ تصمیم می‌گیره).
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess;
+    : withBasicModules(user.moduleAccess); // پایه‌ها همیشه رایگان (lib/modules.ts)
 
   const { avatarUrl, ...userRest } = user;
   return NextResponse.json({

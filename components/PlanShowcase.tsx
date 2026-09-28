@@ -6,7 +6,7 @@ import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
 import { ICONS } from "@/components/NavDrawer";
 import { useTheme } from "@/components/ThemeProvider";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
-import { TRIAL_COPY_FA } from "@/lib/trial";
+import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
 
 // دقیقا هم‌شکل خروجی upgradeOffer توی app/api/plans — پیش‌نمایش قیمت
 // «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغ واقعی همیشه
@@ -368,7 +368,7 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
           همین متن رو توی یادداشتِ بالای خودش داره. متنِ ساده، بی‌بک‌گراند. */}
       {mode === "landing" && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
-          {TRIAL_COPY_FA}
+          {FREE_ROUTINE_COPY_FA} هر حساب تازه: {TRIAL_COPY_FA}.
         </p>
       )}
 

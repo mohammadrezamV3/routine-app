@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isBasicModule } from "@/lib/modules";
 import { zibalVerify } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import type { Duration } from "@/lib/planPricing";
@@ -135,11 +136,13 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // دسترسی ماژول‌های پلن — همون قاعده‌ی ثبت‌نام (BASIC_MODULES): هر ماژول
-  // یک ردیف ModuleAccess با تاریخ انقضای پایان دوره‌ی اشتراک.
-  await prisma.moduleAccess.deleteMany({ where: { userId, module: { in: plan.modules.map((m) => m.module) } } });
+  // دسترسی ماژول‌های پلن: هر ماژولِ پولی یک ردیف ModuleAccess با تاریخ
+  // انقضای پایان دوره‌ی اشتراک. ماژول‌های پایه (BASIC_MODULES) دست نمی‌خورن —
+  // همیشه رایگان و بی‌انقضان؛ وگرنه با پایانِ اشتراک، روتین هم بسته می‌شد.
+  const paidModules = plan.modules.map((m) => m.module).filter((m) => !isBasicModule(m));
+  await prisma.moduleAccess.deleteMany({ where: { userId, module: { in: paidModules } } });
   await prisma.moduleAccess.createMany({
-    data: plan.modules.map((m) => ({ userId, module: m.module, active: true, expiresAt: currentPeriodEnd })),
+    data: paidModules.map((module) => ({ userId, module, active: true, expiresAt: currentPeriodEnd })),
   });
 
   // شرط «اولین پرداخت موفق» برای کد رفرال محقق شد — وضعیت REWARDED می‌شه.
