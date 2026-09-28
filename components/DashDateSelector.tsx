@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { J_MONTHS, faNum, toJalali } from "@/lib/jalali";
-import { WEEK_ORDER } from "@/lib/schedule";
-import { useDayStrip } from "@/lib/useDayStrip";
+import { WEEK_ORDER, addDaysIso } from "@/lib/schedule";
+import { useDayStrip, useDesktopDayStrip } from "@/lib/useDayStrip";
 
 // محوشدنِ لبه‌ها — با mask-image روی *خودِ* نوارِ اسکرول، نه لایه‌های
 // backdrop-filter روی آن (آن‌ها روی کرومِ اندروید لبه‌ی مستطیلیِ تیره و
@@ -33,18 +33,117 @@ function dayLabels(d: Date): { weekday: string; dateLabel: string } {
 // باکسِ شیشه‌ایِ دورِ نوار هم فقط دسکتاپ برمی‌گرده (موبایل هنوز بدونِ
 // باکسه، طبقِ طراحیِ فعلی). ترتیبِ DOM صعودی است و RTL خودش گذشته را
 // راست می‌برد.
-export function DashDateSelector({
-  activeIso,
-  onSelect,
-  className,
-  recenterKey,
-}: {
+type DashDateSelectorProps = {
   activeIso: string;
   onSelect: (iso: string) => void;
   className?: string;
   /** عوض‌شدنش نوار رو روی روزِ فعال برمی‌گردونه (دکمه‌ی «امروز»). */
   recenterKey?: number;
-}) {
+};
+
+export function DashDateSelector(props: DashDateSelectorProps) {
+  const desktop = useDesktopDayStrip();
+  return desktop ? <DesktopDateSelector {...props} /> : <MobileDateSelector {...props} />;
+}
+
+function parseLocalIso(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
+// دسکتاپ — کاملا مدلِ قدیمی: پنجره‌ی ثابتِ چندروزه که فقط روزهای *کامل*
+// رو نشون می‌ده (پیل‌ها grow می‌کنن و نوار رو پر می‌کنن، هیچ روزی نصفه زیرِ
+// لبه نمی‌ره). فلش‌ها کلِ پنجره رو یک صفحه جابه‌جا می‌کنن؛ بدونِ اسکرول/کشیدن.
+function DesktopDateSelector({ activeIso, onSelect, className, recenterKey }: DashDateSelectorProps) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [count, setCount] = useState(7);
+  const [anchor, setAnchor] = useState(activeIso);
+
+  // روزِ فعال اگه بیرونِ پنجره رفت (مثلا از «تاریخچه»)، پنجره دورش وسط‌چین می‌شه.
+  useEffect(() => {
+    setAnchor((a) => {
+      const half = Math.floor(count / 2);
+      const diff = Math.round((parseLocalIso(activeIso).getTime() - parseLocalIso(a).getTime()) / 86_400_000);
+      return Math.abs(diff) > half ? activeIso : a;
+    });
+  }, [activeIso, count]);
+  useEffect(() => { setAnchor(activeIso); }, [recenterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // هرچقدر عرض جا داره روزِ کامل (حداقل ۹۲px + گپ ۶px)، فرد و حداقل ۳.
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const compute = () => {
+      const usable = el.clientWidth - 24;
+      if (usable <= 0) return;
+      const n = Math.floor((usable + 6) / (92 + 6));
+      setCount(Math.max(3, n % 2 === 0 ? n - 1 : n));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const half = Math.floor(count / 2);
+  const days = Array.from({ length: count }, (_, i) => {
+    const iso = addDaysIso(anchor, i - half);
+    return { iso, date: parseLocalIso(iso) };
+  });
+
+  return (
+    <div
+      className={cn("flex min-w-0 flex-1 items-center gap-1 overflow-hidden rounded-dash border border-dash-border backdrop-blur-xl", className)}
+      style={{ background: "rgba(var(--bg-rgb), .16)" }}
+    >
+      <button
+        type="button"
+        aria-label="روزهای قبل"
+        onClick={() => setAnchor((a) => addDaysIso(a, -count))}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
+      >
+        <ChevronRight size={18} />
+      </button>
+      <div className="min-w-0 flex-1">
+        <div ref={stripRef} className="flex items-center gap-1.5 overflow-hidden px-3 py-2.5">
+          {days.map(({ date, iso }) => {
+            const active = iso === activeIso;
+            const { weekday, dateLabel } = dayLabels(date);
+            return (
+              <button
+                key={iso}
+                type="button"
+                onClick={() => onSelect(iso)}
+                className={cn(
+                  "flex min-w-0 grow basis-0 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-center transition",
+                  active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
+                )}
+                style={
+                  active
+                    ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
+                    : undefined
+                }
+              >
+                <span className={cn("whitespace-nowrap text-[13px] font-semibold", active ? "text-dash-bg" : "text-dash-text")}>{weekday}</span>
+                <span className={cn("whitespace-nowrap text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{dateLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <button
+        type="button"
+        aria-label="روزهای بعد"
+        onClick={() => setAnchor((a) => addDaysIso(a, count))}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
+      >
+        <ChevronLeft size={18} />
+      </button>
+    </div>
+  );
+}
+
+function MobileDateSelector({ activeIso, onSelect, className, recenterKey }: DashDateSelectorProps) {
   const { scrollRef, days, pageBy } = useDayStrip(activeIso, recenterKey);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
