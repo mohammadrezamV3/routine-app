@@ -678,11 +678,37 @@ body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .
 .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:minmax(250px, 78%); }
 @media (min-width:720px){ .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:calc((100% - 2 * var(--m-3)) / 2.6); } }
 
-/* کارت: نام + تیکِ مدرکِ تأییدشده؛ شِورون پایینِ چپ */
-.mentor-card-name-row{ display:flex; align-items:center; gap:5px; min-width:0; }
-.mentor-card-tick{ flex-shrink:0; color:var(--accent); }
-.mentor-card .rp-card-foot .rp-card-arrow{ margin-inline-start:auto; }
+/* کارت: جمع‌وجور — سرِ کارت، و یک ردیفِ پایین (امتیاز · عضویت · شِورون) */
+.mentor-card-wrap{ position:relative; min-width:0; }
+.mentor-card-wrap > .mentor-card{ height:100%; padding:14px 15px; gap:12px; }
+.mentor-card-wrap .mentor-card-head{ padding-inline-end:26px; }
+.mentor-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; min-width:0; }
+.mentor-card-since{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); white-space:nowrap; }
+.mentor-card-foot .rp-card-arrow{ margin-inline-start:auto; }
+.mentor-carousel-row .mentor-card-wrap{ height:100%; }
+
+/* مدالِ طلاییِ «مدرکِ تخصصیِ تأییدشده» — بالا-چپ، بی‌بک‌گراند */
+.mentor-medal{ position:absolute; top:10px; inset-inline-end:10px; z-index:2; }
+.mentor-medal-btn{
+  display:flex; align-items:center; justify-content:center; padding:3px; border-radius:8px; border:none;
+  color:#D9A21B; cursor:pointer; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+body[data-theme="light"] .mentor-medal-btn, body:not([data-theme="light"]) .mentor-medal-btn{ background:none; box-shadow:none; border:none; }
+body[data-theme="light"] .mentor-medal-btn{ color:#B7860B; }
+@media (hover:hover){ .mentor-medal-btn:hover{ background:none; box-shadow:none; color:#E8B530; } }
+.mentor-medal-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+/* توضیحِ مدال — پاپ‌آپِ کوچک روی سطحِ پاپ‌آپ‌های سایت (--surface-2)؛ fixed تا
+   اسکرولِ افقیِ ردیف بُرشش ندهد (موقعیت از جاوااسکریپت) */
+.mentor-medal-tip{
+  position:fixed; z-index:60; width:max-content; max-width:min(220px, calc(100vw - 16px));
+  display:flex; flex-direction:column; gap:3px; padding:9px 11px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--surface-line); box-shadow:0 8px 24px rgba(0,0,0,.25);
+  font-size:11.5px; line-height:1.8; color:var(--muted); text-align:start;
+}
+.mentor-medal-tip b{ color:#D9A21B; font-size:12px; }
+body[data-theme="light"] .mentor-medal-tip b{ color:#B7860B; }
 
 .mentor-list-back{ margin-top:var(--m-2); }
 .mentor-more-tight{ margin-top:0; }
 .mentor-more-stack{ flex-direction:column; align-items:center; gap:var(--m-2); }
+.mentor-privacy-picker{ margin-bottom:var(--m-3); }

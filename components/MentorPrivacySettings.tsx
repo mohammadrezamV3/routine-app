@@ -117,7 +117,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
       <MentorSection
         title="برنامه‌های قابل مشاهده"
         icon={<ShieldCheck {...SECTION} />}
-        desc={`این تنظیمات فقط برای ${mentorName} است. آنچه اجازه ندهی از سرور برای منتور فرستاده نمی‌شود.${active ? "" : " تا رابطه فعال نشود، منتور چیزی نمی‌بیند."}`}
+        desc={`فقط برای ${mentorName}؛ آنچه اجازه ندهی برایش فرستاده نمی‌شود.${active ? "" : " تا رابطه فعال نشود چیزی نمی‌بیند."}`}
       >
         <label className="mentor-check">
           <input type="checkbox" checked={allOn} onChange={(e) => patch({ shareAllPrograms: e.target.checked })} />

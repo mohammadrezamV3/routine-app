@@ -83,7 +83,7 @@ function Relationship({ onHead }: { onHead: (h: { back: Back | null; node: React
     const t = new URLSearchParams(window.location.search).get("tab");
     if (t === "programs" || t === "chat") setTab(t);
     // لینکِ قدیمیِ زبانه‌ی «دسترسی‌ها» → بخشِ دسترسیِ منتورها در تنظیماتِ پنلِ کاربری
-    else if (t === "privacy") router.replace(`/account/general?mentorship=${encodeURIComponent(id)}#mentor-privacy`);
+    else if (t === "privacy") router.replace(`/account/general/mentors?mentorship=${encodeURIComponent(id)}`);
   }, []);
 
   // سرِ صفحه: آواتار ۴۸ + نام + نقش + چیپِ وضعیت
@@ -195,7 +195,7 @@ function Relationship({ onHead }: { onHead: (h: { back: Back | null; node: React
       {role === "student" && (
         <p className="mentor-muted mentor-section-note">
           اینکه {name} چه بخشی از روتینت را ببیند، از{" "}
-          <Link href={`/account/general?mentorship=${encodeURIComponent(row.id)}#mentor-privacy`} className="mentor-link">تنظیمات پنل کاربری</Link>{" "}
+          <Link href={`/account/general/mentors?mentorship=${encodeURIComponent(row.id)}`} className="mentor-link">تنظیمات پنل کاربری</Link>{" "}
           تعیین می‌شود.
         </p>
       )}
