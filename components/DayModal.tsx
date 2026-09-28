@@ -126,9 +126,9 @@ export function DayModal({
                     <div className={`task-name${checked ? " done" : ""}`}>{t.name}</div>
                     <div className="task-time">
                       {t.time}
-                      {(checked || missed) && (
-                        <span className={`task-state${checked ? " done" : " missed"}`}>
-                          {t.time ? " · " : ""}{checked ? "انجام دادی" : "وقتش گذشته"}
+                      {missed && (
+                        <span className="task-state missed">
+                          {t.time ? " · " : ""}وقتش گذشته
                         </span>
                       )}
                     </div>

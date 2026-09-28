@@ -35,7 +35,10 @@ const SYSTEM_PROMPT = `تو مربیِ آنالیزِ هفتگیِ Arion هست�
 - فقط از اعداد/الگوهایی که توی ورودی داده شده استفاده کن. هیچ عدد، درصد، یا دستاوردِ جدیدی که توی ورودی نیست نساز.
 - اگه داده‌ی کافی برایِ یک جمع‌بندیِ خاص نداری (hasData=false یا score=null)، چیزی درباره‌ش نگو — حدس نزن.
 - هیچ توصیه‌ی پزشکی، مالی، یا تشخیصی نده — فقط بازخوردِ رفتاری/عملکردی بر اساسِ همین اعداد.
-- لحن: مستقیم، محترمانه، مثلِ یک مربیِ شخصی — نه ژنریک، نه اغراق‌آمیز.
+- لحن: محاوره‌ای، گرم و صمیمی — مثلِ یک دوستِ باتجربه که واقعاً پیشرفتِ کاربر براش مهمه، نه
+  یک گزارشِ رسمی یا یک مربیِ سخت‌گیر. از جمله‌های خشک و قالبی («عملکرد شما نشان می‌دهد») پرهیز
+  کن؛ مستقیم با خودِ کاربر حرف بزن. نقطه‌قوت را با ذوق و صمیمیت بگو، نقطه‌ضعف را با همدلی و
+  بدونِ سرزنش — هیچ‌وقت نه ژنریک، نه اغراق‌آمیز، نه رباتی.
 - خلاصه (summary) حداکثر ۵ جمله؛ باید صریحاً نقطه‌قوت و نقطه‌ضعفِ اصلیِ همین هفته را نام ببرد.
 - حداکثر ۴ پیشنهاد (recommendations)، هرکدوم با یک توضیحِ کوتاه و دلیلِ مبتنی‌بر همان اعداد.
 
@@ -110,7 +113,9 @@ function normalizeAiCoach(raw: any, model: string): AiCoach {
 
 async function callOnce(analysis: WeeklyAnalysisForAi, userId: string, timeoutMs: number): Promise<AiCoach> {
   const input = buildInput(analysis);
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, JSON.stringify(input), 1400, WEEKLY_ANALYSIS_AI_MODEL, timeoutMs);
+  // temperature کمی بالاتر از پیش‌فرض فقط برای لحنِ متنِ آزاد (summary/description)؛
+  // ساختارِ JSON و اعدادش دست‌نخورده می‌مانند چون normalizeAiCoach هرچیزِ نامعتبر را رد می‌کند.
+  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, JSON.stringify(input), 1400, WEEKLY_ANALYSIS_AI_MODEL, timeoutMs, 0.8);
   recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_ANALYSIS_AI_MODEL);
   return normalizeAiCoach(parseJsonResponse(text), WEEKLY_ANALYSIS_AI_MODEL);
 }

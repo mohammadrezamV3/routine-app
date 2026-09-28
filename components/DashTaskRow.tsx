@@ -204,13 +204,15 @@ export function DashTaskRow({
             <span className="shrink-0 text-[10.5px] text-dash-muted sm:text-[12px]">بدون ساعت</span>
           )}
           {/* وضعیتِ برنامه، زیرِ ساعت و فقط متن (بی‌پس‌زمینه). ردیفِ ورزش
-              وضعیتش را روی خودِ دکمه‌اش می‌گوید، این‌جا تکرار نمی‌شود. */}
-          {!task.exercise && (task.done || task.missed) && (
+              وضعیتش را روی خودِ دکمه‌اش می‌گوید، این‌جا تکرار نمی‌شود.
+              برای انجام‌شده‌ها دیگه زیرنویس ننمایش تا تکراری/اضافه نباشه؛
+              فقط «وقتش گذشته» (انجام‌نشده و زمانش گذشته) باقی می‌مونه. */}
+          {!task.exercise && task.missed && (
             <span
               className="shrink-0 text-[9.5px] font-semibold leading-none sm:text-[11px]"
-              style={{ color: task.done ? "var(--accent)" : "#E05252" }}
+              style={{ color: "#E05252" }}
             >
-              {task.done ? "انجام دادی" : "وقتش گذشته"}
+              وقتش گذشته
             </span>
           )}
         </div>
@@ -241,6 +243,17 @@ export function DashTaskRow({
             style={{ background: "rgba(224,82,82,.14)", color: "#E05252" }}
           >
             وقتش گذشته
+          </button>
+        ) : task.isFuture ? (
+          // روزِ آینده: هنوز قابل شروع نیست، پس «شروع» نشون داده نمی‌شه.
+          <button
+            type="button"
+            disabled
+            aria-label="روزِ این تمرین هنوز نرسیده"
+            className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold opacity-70 sm:px-3 sm:text-[12.5px]"
+            style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
+          >
+            هنوز وقتش نرسیده
           </button>
         ) : (
         <motion.button
