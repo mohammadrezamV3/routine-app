@@ -27,7 +27,7 @@ const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorshipHomePage() {
   return (
-    <MentorPageShell title="منتورهای من" surface>
+    <MentorPageShell title="مربی‌های من" surface>
       <MentorshipHome />
     </MentorPageShell>
   );
@@ -55,7 +55,7 @@ function MentorshipHome() {
     setError(null);
     try {
       const res = await fetch("/api/mentorships?role=student", { cache: "no-store" });
-      if (!res.ok) { setError(await readApiError(res, "فهرست منتورها دریافت نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, "فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن")); return; }
       const d: MentorshipsResponse = await res.json();
       setRows(d.mentorships || []);
     } catch {
@@ -113,11 +113,11 @@ function MentorshipHome() {
     return (
       <MentorEmptyState
         icon={<Users size={24} strokeWidth={1.75} aria-hidden />}
-        title="هنوز منتوری نداری"
-        text="منتورها را بر اساس حوزه و امتیاز پیدا کن و درخواست بده."
+        title="هنوز مربی‌ای نداری"
+        text="مربی‌ها را بر اساس حوزه و امتیاز پیدا کن و درخواست بده."
         action={
           <Link href="/mentors" className="trade-primary-btn mentor-btn">
-            <Search size={15} strokeWidth={1.75} aria-hidden /> پیدا کردن منتور
+            <Search size={15} strokeWidth={1.75} aria-hidden /> مربی‌ها
           </Link>
         }
       />
@@ -144,7 +144,7 @@ function MentorshipHome() {
       <div className="mentor-tabs">
         <SegmentedTabs
           options={[
-            { value: "mentors" as const, label: "منتورها" },
+            { value: "mentors" as const, label: "مربی‌ها" },
             {
               value: "invites" as const,
               label: (
@@ -203,7 +203,7 @@ function MentorshipHome() {
       ) : (
         <>
 
-      <MentorSection title="منتورهای فعال" icon={<Users {...SECTION} />} count={allActive.length ? faNum(allActive.length) : undefined} flush>
+      <MentorSection title="مربی‌های فعال" icon={<Users {...SECTION} />} count={allActive.length ? faNum(allActive.length) : undefined} flush>
         {areas.length > 1 && (
           <div className="mentor-section-filter">
             <SegmentedTabs
@@ -214,7 +214,7 @@ function MentorshipHome() {
           </div>
         )}
         {active.length === 0 ? (
-          <MentorEmpty>منتور فعالی نداری</MentorEmpty>
+          <MentorEmpty>مربی فعالی نداری</MentorEmpty>
         ) : (
           active.map((r) => (
             <MentorRow

@@ -23,7 +23,7 @@ async function respond(userId: string) {
     countActiveStudents(userId),
     countReservedSeats(userId),
   ]);
-  if (!p) return forbidden("اول پروفایل منتوری بساز");
+  if (!p) return forbidden("اول پروفایل مربی‌گری بساز");
   // صندلی‌های رزروِ صفِ انتظار هم «پُر» حساب می‌شوند (lib/mentorWaitlistServer.ts)
   const availability = availabilityOf(p, active + reserved);
   return NextResponse.json({
@@ -64,7 +64,7 @@ export async function PUT(req: Request) {
   const userId = g.userId;
 
   const exists = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true } });
-  if (!exists) return forbidden("اول پروفایل منتوری بساز");
+  if (!exists) return forbidden("اول پروفایل مربی‌گری بساز");
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });

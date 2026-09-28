@@ -371,7 +371,7 @@ export type ProgressCell = {
   setsDone: number | null;
   note: string | null;
 };
-export type ProgressDay = { date: string; cells: ProgressCell[]; /** یادداشتِ شاگرد برای منتور روی این روز */ note: string | null };
+export type ProgressDay = { date: string; cells: ProgressCell[]; /** یادداشتِ شاگرد برای مربی روی این روز */ note: string | null };
 export type ProgressView = {
   /** شاگرد «نمایش پیشرفت» را بسته؛ cells خالی‌اند ولی یادداشت‌های روز می‌مانند */
   hidden: boolean;

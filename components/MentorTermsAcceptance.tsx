@@ -19,8 +19,8 @@ import { MENTOR_TERMS_PATH, MENTOR_TERMS_VERSION, type MentorTermsRole } from "@
 // student.accepted نبود چک‌باکس را نشان بده و ارسال را تا تیک‌خوردن غیرفعال کن.
 
 const LABEL: Record<MentorTermsRole, [string, string]> = {
-  mentor: ["شرایط منتوری", "را خوانده‌ام و می‌پذیرم"],
-  student: ["شرایط استفاده از بخش منتورها", "را خوانده‌ام و می‌پذیرم"],
+  mentor: ["شرایط مربی‌گری", "را خوانده‌ام و می‌پذیرم"],
+  student: ["شرایط استفاده از بخش مربی‌ها", "را خوانده‌ام و می‌پذیرم"],
 };
 
 export function MentorTermsAcceptance({

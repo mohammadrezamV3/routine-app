@@ -12,7 +12,7 @@ type Counts = { mentors: number; students: number; mentorships: number; programs
 type Status = { seeded: boolean; seededAt: string | null; ownerProfileCreated: boolean; counts: Counts };
 
 const COUNT_LABELS: [keyof Counts, string][] = [
-  ["mentors", "منتور"],
+  ["mentors", "مربی"],
   ["students", "شاگرد"],
   ["mentorships", "رابطه"],
   ["programs", "برنامه"],
@@ -70,7 +70,7 @@ export default function AdminDemoDataPage() {
         <div>
           <div className="admin-page-kicker">داده‌ی آزمایشی</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
-            منتور، شاگرد، برنامه، پیام، نظر و گزارش نمونه برای تست بخش منتورها. حساب شما هم به‌عنوان شاگرد و منتور به این داده وصل می‌شود.
+            مربی، شاگرد، برنامه، پیام، نظر و گزارش نمونه برای تست بخش مربی‌ها. حساب شما هم به‌عنوان شاگرد و مربی به این داده وصل می‌شود.
             پیام‌ها رمزگذاری سرتاسری دارند: گفت‌وگوهای حساب شما فقط وقتی پیام نمونه می‌گیرند که پیش از ساخت، دست‌کم یک بار با رمز عبور وارد شده باشید؛ گفت‌وگوی کاربران آزمایشی با هم برای هیچ‌کس خواندنی نیست.
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function AdminDemoDataPage() {
               {status.seeded && (
                 <div className="admin-perm-hint">
                   کاربران آزمایشی با ایمیل demo+N@demo.arion.local و یوزرنیم demo_ ساخته شده‌اند و امکان ورود ندارند.
-                  {status.ownerProfileCreated ? " پروفایل منتوری شما هم با حذف داده پاک می‌شود." : ""}
+                  {status.ownerProfileCreated ? " پروفایل مربی‌گری شما هم با حذف داده پاک می‌شود." : ""}
                 </div>
               )}
             </div>

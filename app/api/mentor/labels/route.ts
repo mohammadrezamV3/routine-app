@@ -19,7 +19,7 @@ export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const profileId = await myProfileId(g.userId);
-  if (!profileId) return forbidden("اول پروفایل منتوری بساز");
+  if (!profileId) return forbidden("اول پروفایل مربی‌گری بساز");
   return NextResponse.json({ labels: await readLabels(profileId) });
 }
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const profileId = await myProfileId(g.userId);
-  if (!profileId) return forbidden("اول پروفایل منتوری بساز");
+  if (!profileId) return forbidden("اول پروفایل مربی‌گری بساز");
 
   const parsed = await readJsonBody(req, 4 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });

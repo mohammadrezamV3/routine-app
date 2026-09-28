@@ -330,7 +330,7 @@ export async function buildProgressCsv(mentorId: string, studentId: string, from
         if (!it.days.includes(js)) continue;
         const l = logMap.get(`${it.id}|${date}`);
         if (!l && date >= today) continue;
-        lines.push(csvLine([date, "برنامه‌ی منتور", p.title, it.title, l ? STATUS_FA[l.status] : "ثبت‌نشده", l?.setsDone ?? "", l?.note ?? ""]));
+        lines.push(csvLine([date, "برنامه‌ی مربی", p.title, it.title, l ? STATUS_FA[l.status] : "ثبت‌نشده", l?.setsDone ?? "", l?.note ?? ""]));
       }
     }
   }

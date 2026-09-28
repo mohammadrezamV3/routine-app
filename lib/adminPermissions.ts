@@ -38,7 +38,7 @@ export const PERMISSION_META: Record<AdminPermission, { label: string; hint: str
   discounts: { label: "کدهای تخفیف", hint: "ساخت/ویرایش/حذف کد تخفیف", group: "مالی" },
   support: { label: "پشتیبانی", hint: "پاسخ به تیکت‌ها", group: "پشتیبانی و محتوا" },
   chat: { label: "گزارش‌های چت", hint: "بررسی گزارش‌ها و حذف پیام", group: "پشتیبانی و محتوا" },
-  mentors: { label: "منتورها", hint: "احراز هویت و مدارک منتورها، نظرات و گزارش‌ها", group: "پشتیبانی و محتوا" },
+  mentors: { label: "مربی‌ها", hint: "احراز هویت و مدارک مربی‌ها، نظرات و گزارش‌ها", group: "پشتیبانی و محتوا" },
   content: { label: "محتوا", hint: "اطلاعیه‌ها، تقویم اقتصادی و عکس حرکات ورزشی", group: "پشتیبانی و محتوا" },
   ai_usage: { label: "مصرف AI", hint: "هزینه و مصرف توکن", group: "تحلیل و سیستم" },
   analytics: { label: "تحلیل‌ها", hint: "Retention، Funnel، Churn، Cohort و محصولات", group: "تحلیل و سیستم" },

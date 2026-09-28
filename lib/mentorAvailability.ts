@@ -78,11 +78,11 @@ export function availabilityShort(state: AvailabilityState, awayUntil: string | 
 /** پیامِ ردِ درخواستِ شاگرد (سمتِ سرور) */
 export function requestBlockedMessage(state: AvailabilityState, awayUntil: string | null): string {
   switch (state) {
-    case "CLOSED": return "این منتور فعلاً شاگرد جدید نمی‌پذیرد";
-    case "FULL": return "ظرفیت شاگردهای این منتور تکمیل است";
+    case "CLOSED": return "این مربی فعلاً شاگرد جدید نمی‌پذیرد";
+    case "FULL": return "ظرفیت شاگردهای این مربی تکمیل است";
     case "AWAY": return awayUntil
-      ? `این منتور تا ${fmtDate(awayUntil)} در دسترس نیست؛ پس از آن درخواست بده`
-      : "این منتور فعلاً در دسترس نیست";
+      ? `این مربی تا ${fmtDate(awayUntil)} در دسترس نیست؛ پس از آن درخواست بده`
+      : "این مربی فعلاً در دسترس نیست";
     default: return "";
   }
 }
@@ -125,7 +125,7 @@ export type IntakeAnswer = { question: string; answer: string };
  */
 export function validateIntakeAnswers(questions: string[], v: unknown): Result<IntakeAnswer[] | null> {
   if (questions.length === 0) return { ok: true, data: null };
-  if (!Array.isArray(v)) return { ok: false, error: "به سؤال‌های منتور جواب بده" };
+  if (!Array.isArray(v)) return { ok: false, error: "به سؤال‌های مربی جواب بده" };
   const out: IntakeAnswer[] = [];
   for (let i = 0; i < questions.length; i++) {
     const raw = v[i];

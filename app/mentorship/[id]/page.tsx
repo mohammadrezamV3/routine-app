@@ -54,7 +54,7 @@ export default function MentorshipPage() {
 
   const back = rel?.role === "mentor"
     ? { href: `/mentor/students/${rel.row.counterpart.id}`, label: publicUserName(rel.row.counterpart) }
-    : { href: "/mentorship", label: "منتورهای من" };
+    : { href: "/mentorship", label: "مربی‌های من" };
   const name = rel ? publicUserName(rel.row.counterpart) : "";
 
   const head = rel ? (
@@ -63,7 +63,7 @@ export default function MentorshipPage() {
       <div className="mentor-rel-id">
         <h1>{name}</h1>
         <div className="mentor-rel-sub">
-          <span>{rel.role === "student" ? "منتور تو" : "شاگرد تو"}</span>
+          <span>{rel.role === "student" ? "مربی تو" : "شاگرد تو"}</span>
           <MentorshipStatusBadge status={rel.row.status} />
           {rel.row.startedAt && <span>از {fmtDate(rel.row.startedAt)}</span>}
         </div>
@@ -195,7 +195,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
         <LoadingBlock />
       ) : others.length === 0 ? (
         <MentorEmpty>
-          {waiting.length ? "برنامه‌ی دیگری نیست" : role === "student" ? "هنوز برنامه‌ای از این منتور نرسیده است" : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای"}
+          {waiting.length ? "برنامه‌ی دیگری نیست" : role === "student" ? "هنوز برنامه‌ای از این مربی نرسیده است" : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای"}
         </MentorEmpty>
       ) : (
         <MentorList>
@@ -219,7 +219,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
   return (
     <>
       {iMustAnswer && (
-        <MentorSection title={role === "student" ? "دعوت منتوری" : "درخواست منتوری"} icon={<Inbox {...SECTION} />}>
+        <MentorSection title={role === "student" ? "دعوت مربی‌گری" : "درخواست مربی‌گری"} icon={<Inbox {...SECTION} />}>
           <div className="mentor-form mentor-decision">
             {row.categories.length > 0 && (
               <div className="mentor-chips">
@@ -331,7 +331,7 @@ function ProgramFacts({ p }: { p: ProgramRow }) {
 function MentorNote({ note, role }: { note: string; role: Role }) {
   return (
     <div className="mentor-note-box mentor-program-note">
-      <b>{role === "student" ? "یادداشت منتور" : "یادداشت تو برای شاگرد"}</b>
+      <b>{role === "student" ? "یادداشت مربی" : "یادداشت تو برای شاگرد"}</b>
       <div>{note.trim()}</div>
     </div>
   );

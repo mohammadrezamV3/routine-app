@@ -47,7 +47,7 @@ export async function POST(_req: Request, { params }: Ctx) {
   const sender = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
   await notifyUser(peer, {
     type: "message.e2ee_setup",
-    title: "پیام منتوری",
+    title: "پیام مربی‌گری",
     body: `${displayName(sender)} می‌خواهد به تو پیام بدهد؛ برای دریافت، یک بار گفت‌وگو را باز کن`,
     url,
   });

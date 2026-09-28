@@ -24,7 +24,7 @@ export async function GET() {
   const me = g.userId;
 
   const profile = await prisma.mentorProfile.findUnique({ where: { userId: me }, select: { id: true, suspendedAt: true, maxActiveStudents: true } });
-  if (!profile) return forbidden("اول پروفایل منتوری بساز");
+  if (!profile) return forbidden("اول پروفایل مربی‌گری بساز");
 
   const rels = await prisma.mentorship.findMany({
     where: { mentorId: me, status: "ACTIVE", student: { isBlocked: false, deletedAt: null } },

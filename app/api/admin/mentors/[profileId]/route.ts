@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
       },
     },
   });
-  if (!profile) return NextResponse.json({ error: "منتور پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
   // ادمینِ محدود جزئیات/تاریخچه‌ی احرازِ Owner (یا ادمینِ دیگه بدونِ admins.manage) رو نمی‌بینه
   try {
     await loadTarget(g, profile.userId);

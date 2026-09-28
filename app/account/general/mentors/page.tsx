@@ -8,7 +8,7 @@ import { MentorPrivacyAccountSection } from "@/components/MentorPrivacyAccountSe
 export default function MentorsSettingsPage() {
   return (
     <section>
-      <AccountPageHead title="دسترسی منتورها" hint="منتور فقط بخش‌هایی از روتینت را می‌بیند که این‌جا اجازه بدهی" backHref="/account/general" backLabel="تنظیمات" />
+      <AccountPageHead title="دسترسی مربی‌ها" hint="مربی فقط بخش‌هایی از روتینت را می‌بیند که این‌جا اجازه بدهی" backHref="/account/general" backLabel="تنظیمات" />
       <Suspense fallback={null}><MentorPrivacyAccountSection /></Suspense>
     </section>
   );

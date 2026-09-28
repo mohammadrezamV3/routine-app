@@ -68,10 +68,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
       if (action === "accept") {
         // منتورِ معلق شاگردِ جدید نمی‌پذیره — چه خودش قبول کنه، چه شاگرد دعوتش رو
         const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true, maxActiveStudents: true, identityStatus: true } });
-        if (!mp) return conflict("این کاربر دیگه پروفایل منتوری نداره");
-        if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب منتوری تو تعلیق شده" : "این منتور فعلا امکان پذیرش شاگرد نداره");
+        if (!mp) return conflict("این کاربر دیگه پروفایل مربی‌گری نداره");
+        if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب مربی‌گری تو تعلیق شده" : "این مربی فعلا امکان پذیرش شاگرد نداره");
         // احرازِ هویتِ منتور اجباریه (lib/mentorServer.ts → IDENTITY_VERIFIED_WHERE)
-        if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? MENTOR_IDENTITY_REQUIRED_MSG : "این منتور فعلا امکان پذیرش شاگرد نداره");
+        if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? MENTOR_IDENTITY_REQUIRED_MSG : "این مربی فعلا امکان پذیرش شاگرد نداره");
         // سقفِ ظرفیت فقط جلوی پذیرشِ *درخواستِ شاگرد* رو می‌گیره؛ دعوتِ خودِ منتور انتخابِ خودشه.
         // صندلیِ رزروِ صفِ انتظار (نوبتِ زنده یا درخواستِ دیگری که از صف اومده) هم پُر حساب می‌شه
         // تا درخواستِ مستقیم از نفرِ صف جلو نزنه؛ درخواستِ خودِ همین رابطه از رزروها کم می‌شه
@@ -90,7 +90,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
           const meRow = await prisma.user.findUnique({ where: { id: me }, select: { mentorStudentTermsVersion: true } });
           const terms = decideMentorTerms("student", meRow?.mentorStudentTermsVersion, parsed.body?.acceptMentorTerms);
           if (!terms.ok) {
-            const error = terms.message === MENTOR_TERMS_STALE_MESSAGE ? terms.message : "برای پذیرش دعوت، شرایط استفاده از بخش منتورها را بخوان و بپذیر";
+            const error = terms.message === MENTOR_TERMS_STALE_MESSAGE ? terms.message : "برای پذیرش دعوت، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر";
             return NextResponse.json({ error, code: MENTOR_TERMS_ERROR_CODE }, { status: 400 });
           }
           recordStudentTerms = terms.record;
@@ -167,7 +167,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
           : {
               type: "mentor.ended",
               title: "پایان رابطه",
-              body: endReason ? `${name} رابطه‌ی منتورشیپ رو تموم کرد؛ دلیل: ${endReason}` : `${name} رابطه‌ی منتورشیپ رو تموم کرد.`,
+              body: endReason ? `${name} رابطه‌ی مربی‌گری رو تموم کرد؛ دلیل: ${endReason}` : `${name} رابطه‌ی مربی‌گری رو تموم کرد.`,
               url,
             };
     await notifyUser(counterpartId, note);

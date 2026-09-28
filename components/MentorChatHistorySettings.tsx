@@ -67,8 +67,8 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
   }
 
   // در صفحه‌ی خودش (/account/general/chats) به‌جای صفحه‌ی خالی یک پیامِ کوتاه
-  if (!on) return showEmpty ? <MentorEmpty>بخش منتورها فعلاً در دسترس نیست</MentorEmpty> : null;
-  if (list !== null && list.length === 0 && !loadError) return showEmpty ? <MentorEmpty>هنوز گفت‌وگویی با منتور یا شاگردی نداری</MentorEmpty> : null;
+  if (!on) return showEmpty ? <MentorEmpty>بخش مربی‌ها فعلاً در دسترس نیست</MentorEmpty> : null;
+  if (list !== null && list.length === 0 && !loadError) return showEmpty ? <MentorEmpty>هنوز گفت‌وگویی با مربی یا شاگردی نداری</MentorEmpty> : null;
 
   const withMessages = (list ?? []).filter((c) => c.messageCount > 0);
 
@@ -93,7 +93,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
                     <span className="mentor-row-body">
                       <span className="mentor-row-title">{name}</span>
                       <span className="mentor-row-sub">
-                        <span>{c.role === "student" ? "منتور" : "شاگرد"}</span>
+                        <span>{c.role === "student" ? "مربی" : "شاگرد"}</span>
                         {c.messageCount > 0
                           ? <><span>{faNum(c.messageCount)} پیام</span>{c.lastMessageAt && <span>آخرین پیام {fmtRelative(c.lastMessageAt)}</span>}</>
                           : <span>{c.clearedAt ? `پاک‌شده در ${fmtDate(c.clearedAt)}` : "بدون پیام"}</span>}

@@ -180,7 +180,7 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
   let hiddenLine: string | null = null;
   let mentorParts: string[] | null = null;
   if (!draft.showSchedule) hiddenLine = "هیچ زمان‌بندی‌ای دیده نمی‌شود";
-  else if (!sample && !visible(real!)) hiddenLine = "این برنامه برای منتور دیده نمی‌شود";
+  else if (!sample && !visible(real!)) hiddenLine = "این برنامه برای مربی دیده نمی‌شود";
   else if (sample && !draft.shareAllPrograms && draft.sharedPrograms.length === 0) hiddenLine = "هیچ برنامه‌ای انتخاب نشده؛ چیزی دیده نمی‌شود";
   else {
     const hasTag = !!ex.tag?.trim();
@@ -200,7 +200,7 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
         <span className="mentor-preview-line"><PreviewParts time={ex.time} parts={actualParts} /></span>
       </div>
       <div className="mentor-preview-row">
-        <span className="mentor-preview-tag">منتور می‌بیند</span>
+        <span className="mentor-preview-tag">مربی می‌بیند</span>
         {mentorParts ? (
           <span className="mentor-preview-line is-mentor"><PreviewParts time={ex.time} parts={mentorParts} /></span>
         ) : (

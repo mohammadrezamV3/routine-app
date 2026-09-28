@@ -36,7 +36,7 @@ const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorProfilePage() {
   return (
-    <MentorPageShell back={{ href: "/mentors", label: "پیدا کردن منتور" }}>
+    <MentorPageShell back={{ href: "/mentors", label: "مربی‌ها" }}>
       <MentorProfile />
     </MentorPageShell>
   );
@@ -54,7 +54,7 @@ function MentorProfile() {
     setError(null);
     try {
       const res = await fetchMentorProfile(mentorId);
-      if (res.status === 404) { setError({ msg: "این منتور پیدا نشد یا پروفایلش منتشر نشده است", retry: false }); return; }
+      if (res.status === 404) { setError({ msg: "این مربی پیدا نشد یا پروفایلش منتشر نشده است", retry: false }); return; }
       if (res.status === 403) { setError({ msg: await readApiError(res, "اجازه‌ی دیدن این پروفایل را نداری"), retry: false }); return; }
       if (!res.ok) { setError({ msg: await readApiError(res, "پروفایل دریافت نشد؛ دوباره تلاش کن"), retry: true }); return; }
       setData(await res.json());
@@ -100,8 +100,8 @@ function MentorProfile() {
                   type="button"
                   className="trade-icon-btn mentor-report-flag"
                   onClick={() => setReport({ type: "USER", id: mentor.userId })}
-                  aria-label="گزارش این منتور"
-                  title="گزارش این منتور"
+                  aria-label="گزارش این مربی"
+                  title="گزارش این مربی"
                 >
                   <Flag size={15} strokeWidth={1.75} aria-hidden />
                 </button>
@@ -156,7 +156,7 @@ function MentorProfile() {
         </div>
 
         {hasAbout && (
-          <MentorSection title="درباره‌ی منتور" icon={<UserRound {...SECTION} />}>
+          <MentorSection title="درباره‌ی مربی" icon={<UserRound {...SECTION} />}>
             {mentor.bio && <p className="mentor-bio">{mentor.bio}</p>}
             {mentor.specialties.length > 0 && (
               <div className="mentor-tags">
@@ -286,7 +286,7 @@ function ConnectAction({
   } else if (mine?.status === "PENDING" && mine.initiatedBy === "STUDENT") {
     body = (
       <>
-        <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>منتظر پاسخ منتور</MentorChip>
+        <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>منتظر پاسخ مربی</MentorChip>
         <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmCancel(true); }} disabled={!!busy}>
           <X {...BTN_SM} /> لغو درخواست
         </button>
@@ -295,7 +295,7 @@ function ConnectAction({
   } else if (mine?.status === "PENDING" && mine.initiatedBy === "MENTOR") {
     body = (
       <>
-        <MentorChip tone="warn" icon={<AlertCircle {...CHIP} />} title="این منتور تو را به‌عنوان شاگرد دعوت کرده است">منتظر پاسخ تو</MentorChip>
+        <MentorChip tone="warn" icon={<AlertCircle {...CHIP} />} title="این مربی تو را به‌عنوان شاگرد دعوت کرده است">منتظر پاسخ تو</MentorChip>
         {needTerms && (
           <div style={{ width: "100%" }}>
             <MentorTermsAcceptance
@@ -318,7 +318,7 @@ function ConnectAction({
       </>
     );
   } else if (mine?.status === "BLOCKED") {
-    body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این منتور ممکن نیست</MentorChip>;
+    body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این مربی ممکن نیست</MentorChip>;
   } else if (availability === "AWAY") {
     // عدمِ حضور بالاتر یک‌بار در بلوکِ «در دسترس نیست تا …» آمده؛ این‌جا تکرار نمی‌شود
     body = null;
@@ -447,7 +447,7 @@ function RequestModal({
         return;
       }
       // ۴۰۹: درخواستِ باز/رابطه‌ی فعال، یا پذیرشِ بسته/ظرفیتِ پر/عدمِ حضور — پیامِ سرور دقیق‌تر است
-      if (res.status === 409) { setError(await readApiError(res, "با این منتور درخواست باز یا رابطه‌ی فعال داری")); onStale(); return; }
+      if (res.status === 409) { setError(await readApiError(res, "با این مربی درخواست باز یا رابطه‌ی فعال داری")); onStale(); return; }
       if (!res.ok) { setError(await readApiError(res, "درخواست ارسال نشد؛ دوباره تلاش کن")); return; }
       const d = await res.json().catch(() => null);
       const m = d?.mentorship;
@@ -461,9 +461,9 @@ function RequestModal({
   }
 
   return (
-    <MentorSheet open={open} onClose={onClose} title={`درخواست منتوری از ${mentorName}`} dismissible={!busy}>
+    <MentorSheet open={open} onClose={onClose} title={`درخواست مربی‌گری از ${mentorName}`} dismissible={!busy}>
       <div className="mentor-form">
-        <p className="mentor-muted">منتور تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.</p>
+        <p className="mentor-muted">مربی تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.</p>
         {mentorCategories.length > 1 && (
           <MentorField label="حوزه‌ی همکاری" error={catsError}>
             <div role="group" aria-label="حوزه‌ی همکاری">
@@ -565,7 +565,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, body: body.trim() || undefined }),
       });
-      if (res.status === 409) { setError("برای این منتور قبلاً نظر ثبت کرده‌ای"); onChanged(); return; }
+      if (res.status === 409) { setError("برای این مربی قبلاً نظر ثبت کرده‌ای"); onChanged(); return; }
       if (!res.ok) { setError(await readApiError(res, "نظر ثبت نشد؛ دوباره تلاش کن")); return; }
       setEditing(false);
       onChanged();
@@ -595,7 +595,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
     <MentorSection
       title={myReview ? "نظر تو" : "ثبت نظر"}
       icon={<Star {...SECTION} />}
-      desc={myReview ? undefined : "نظر پس از ثبت برای همه دیده می‌شود و در امتیاز منتور حساب می‌شود."}
+      desc={myReview ? undefined : "نظر پس از ثبت برای همه دیده می‌شود و در امتیاز مربی حساب می‌شود."}
     >
       {!editing && myReview ? (
         <>
@@ -667,7 +667,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
       {confirmDelete && (
         <MentorConfirmDialog
           message="نظرت حذف شود؟"
-          hint="امتیاز منتور بدون این نظر دوباره حساب می‌شود."
+          hint="امتیاز مربی بدون این نظر دوباره حساب می‌شود."
           confirmLabel="حذف نظر"
           busy={busy === "delete"}
           error={error}

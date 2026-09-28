@@ -182,7 +182,7 @@ function ChatBody({
   const cipher = useMemo(() => (keys ? new ConversationCipher(identity, mentorshipId, keys) : null), [identity, mentorshipId, keys]);
   const peerReady = !!cipher?.peerCurrent();
   const isMentor = keys?.mentorId === identity.userId;
-  const peerLabel = peerName || (isMentor ? "شاگرد" : "منتور");
+  const peerLabel = peerName || (isMentor ? "شاگرد" : "مربی");
 
   useEffect(() => {
     onReady?.(true);
@@ -705,7 +705,7 @@ function ChatBody({
           </div>
         ) : !peerReady ? (
           <div className="mc-notice">
-            <span>{peerLabel} هنوز وارد بخش منتور نشده؛ با اولین ورودش، ارسال پیام باز می‌شود</span>
+            <span>{peerLabel} هنوز وارد بخش مربی نشده؛ با اولین ورودش، ارسال پیام باز می‌شود</span>
             {nudge === "sent" ? (
               <span className="mentor-muted">به {peerLabel} اطلاع داده شد</span>
             ) : (

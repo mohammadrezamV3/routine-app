@@ -48,7 +48,7 @@ export function MentorSetupSteps({
     : identity === "REJECTED"
       ? rejectReason || "مدرک واضح‌تری بفرست"
       : identity === "PENDING"
-        ? "تا تأیید، در فهرست منتورها نمایش داده نمی‌شوی"
+        ? "تا تأیید، در فهرست مربی‌ها نمایش داده نمی‌شوی"
         : verified
           ? "هویتت تأیید شده است"
           : "کارت ملی یا گذرنامه؛ پیش از نمایش در فهرست لازم است";
@@ -60,7 +60,7 @@ export function MentorSetupSteps({
     ? "انتشار را در پروفایل روشن کن"
     : !verified
       ? "منتشر شده؛ پس از تأیید هویت در فهرست دیده می‌شوی"
-      : "در فهرست منتورها دیده می‌شوی";
+      : "در فهرست مربی‌ها دیده می‌شوی";
   const pubEnd = !hasProfile
     ? undefined
     : suspended
@@ -87,7 +87,7 @@ export function MentorSetupSteps({
       />
       <MentorRow
         lead={<StepMark n={3} done={published && verified && !suspended} />}
-        title="نمایش در فهرست منتورها"
+        title="نمایش در فهرست مربی‌ها"
         sub={<span>{hasProfile ? pubSub : "پس از تأیید هویت، شاگردها پیدایت می‌کنند و درخواست می‌دهند"}</span>}
         end={pubEnd}
       />
@@ -108,7 +108,7 @@ export function MentorDashOnboarding() {
         <MentorRow
           lead={ic(ClipboardList, MI.row)}
           title="مسئولیت برنامه‌ها"
-          sub={<span>آریون واسطه‌ی ارتباط است و مسئولیت محتوای برنامه با منتور است</span>}
+          sub={<span>آریون واسطه‌ی ارتباط است و مسئولیت محتوای برنامه با مربی است</span>}
         />
         <MentorRow
           lead={ic(ShieldCheck, MI.row)}

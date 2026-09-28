@@ -11,7 +11,7 @@ export async function GET() {
   if (!g.ok) return g.response;
   const me = g.userId;
   const profile = await prisma.mentorProfile.findUnique({ where: { userId: me }, select: { maxActiveStudents: true } });
-  if (!profile) return forbidden("اول پروفایل منتوری بساز");
+  if (!profile) return forbidden("اول پروفایل مربی‌گری بساز");
   await advanceWaitlist(me);
   const now = new Date();
   const [entries, reserved] = await Promise.all([loadMentorWaitlist(me, now), countReservedSeats(me, now)]);

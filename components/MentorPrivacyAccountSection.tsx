@@ -34,7 +34,7 @@ export function MentorPrivacyAccountSection() {
   }, [wanted]);
 
   if (!rows) return <LoadingBlock />;
-  if (rows.length === 0) return <MentorEmpty>هنوز منتوری نداری؛ بعد از شروعِ همکاری با یک منتور، دسترسی‌اش این‌جا تنظیم می‌شود</MentorEmpty>;
+  if (rows.length === 0) return <MentorEmpty>هنوز مربی‌ای نداری؛ بعد از شروعِ همکاری با یک مربی، دسترسی‌اش این‌جا تنظیم می‌شود</MentorEmpty>;
   const current = rows.find((m) => m.id === selected) ?? rows[0];
 
   return (
