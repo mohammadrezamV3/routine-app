@@ -3,9 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, Bell, Check, Flame, Lock, Pill, ShieldCheck, Sparkles, TrendingUp, BadgeCheck,
+  ArrowLeft, Calendar, Filter, History, Lock, ShieldCheck, Sparkles, UtensilsCrossed, Hash, Percent, ArrowUp,
 } from "lucide-react";
 import { useThemeTokens } from "@/components/PlanShowcase";
+import { DashProgressCircle } from "@/components/DashProgressCircle";
+import { StreakFlame } from "@/components/StreakFlame";
+import SiriOrb from "@/components/smoothui/components/siri-orb";
+import {
+  INERT, MockDateStrip, MockFilterButton, MockMedicationCard, MockMentorCard, MockTaskList, type MockTask,
+} from "@/components/LandingMockups";
 import "./landing-hero.css";
 
 // ─── هیروی لندینگ (کاربرِ واردنشده) ────────────────────────────────────────
@@ -22,26 +28,23 @@ export function faNum(n: number | string) {
 
 const ROT_WORDS = ["روتین", "تمرین", "معامله", "یادگیری"];
 
-const ROUTINE = [
-  { label: "مدیتیشن صبحگاهی", time: "۰۷:۰۰" },
-  { label: "۸ لیوان آب", time: "طول روز" },
-  { label: "تمرین سینه و پشت‌بازو", time: "۱۸:۳۰" },
-  { label: "مطالعه‌ی ۲۰ صفحه", time: "۲۲:۰۰" },
-  { label: "قرص ویتامین D", time: "۲۲:۳۰", pill: true },
+// «روتین من» (app/weekly) همون‌طور که روی گوشی دیده می‌شه — ردیف‌ها آینه‌ی
+// DashTaskRow ـن، ردیفِ آخر همون ردیفِ سنتتیکِ «برنامه تمرینی امروز» با دکمه‌ی
+// «شروع». چرخه فقط تیک‌خوردنِ پشت‌سرهمِ همین ردیف‌هاست.
+const PHONE_TASKS: MockTask[] = [
+  { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium" },
+  { name: "مطالعه‌ی کتاب", time: "13:30", importance: "high", tag: "یادگیری" },
+  { name: "پیاده‌روی عصر", time: "18:00" },
+  { name: "برنامه تمرینی امروز", exercise: true },
 ];
-
-const DAYS = [
-  { d: "ش", n: "۵" }, { d: "ی", n: "۶" }, { d: "د", n: "۷" }, { d: "س", n: "۸", on: true },
-  { d: "چ", n: "۹" }, { d: "پ", n: "۱۰" }, { d: "ج", n: "۱۱" },
-];
-
-const WEEK_BARS = [0.55, 0.8, 0.62, 0.92, 0.7, 0.86, 0.4];
 
 const SEO_LINKS = [
   { href: "/routine", label: "برنامه‌ی روتین روزانه" },
   { href: "/habit-tracker", label: "پیگیری عادت‌ها" },
   { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی هوشمند" },
   { href: "/trading-journal", label: "ژورنال معاملاتی" },
+  { href: "/calorie-counter", label: "کالری‌شمار" },
+  { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
 ];
 
 function prefersReducedMotion() {
@@ -55,10 +58,13 @@ export function LandingHero() {
   const [inView, setInView] = useState(true);
   const [word, setWord] = useState(0);
   // شمارنده‌ی چرخه‌ی تیک‌ها: ۰..۵ تیک‌خوردن، ۶..۸ مکث روی «همه انجام شد»، بعد از نو.
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(2);
   const [reduced, setReduced] = useState(false);
+  // گوِ «نومو» (SiriOrb) انیمیشنِ فریمری دارد؛ فقط بعد از mount و وقتی هیرو
+  // در دید است سوار می‌شود — بیرونِ دید یک دایره‌ی ساکنِ هم‌اندازه جایش است.
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setReduced(prefersReducedMotion()); }, []);
+  useEffect(() => { setReduced(prefersReducedMotion()); setMounted(true); }, []);
 
   // حلقه‌ها فقط وقتی هیرو واقعاً دیده می‌شه
   useEffect(() => {
@@ -77,7 +83,7 @@ export function LandingHero() {
 
   useEffect(() => {
     if (!inView || reduced) return;
-    const id = setInterval(() => setStep((s) => (s + 1) % 9), 1050);
+    const id = setInterval(() => setStep((s) => (s + 1) % 8), 1150);
     return () => clearInterval(id);
   }, [inView, reduced]);
 
@@ -111,10 +117,10 @@ export function LandingHero() {
     };
   }, []);
 
-  const ticked = Math.min(step, ROUTINE.length);
-  const pct = ticked / ROUTINE.length;
-  const R = 17;
-  const C = 2 * Math.PI * R;
+  const ticked = Math.min(step, PHONE_TASKS.length);
+  const tasks = PHONE_TASKS.map((t, i) => ({ ...t, done: i < ticked }));
+  const pct = Math.round((ticked / PHONE_TASKS.length) * 100);
+  const orbLive = mounted && inView;
 
   return (
     <section
@@ -160,9 +166,9 @@ export function LandingHero() {
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            آریون یک روتین اپ فارسیه: روتین روزانه و هفتگی بساز، عادت‌هات رو با استریک نگه دار،
-            و بدنسازی، کالری، ژورنال ترید و مسیر یادگیری‌ت رو هم همون‌جا داشته باش — با دستیار
-            هوشمندی که زبون خودت رو می‌فهمه.
+            آریون یک روتین اپ فارسیه: روتین روزانه و هفتگی با یادآوری و استریک، آنالیز هفتگی،
+            برنامه‌ی بدنسازی و کالری‌شمار، ژورنال ترید با همگام‌سازی متاتریدر، رودمپ یادگیری و
+            مربی‌ها — همه یک‌جا، با دستیار «نومو» که زبون خودت رو می‌فهمه.
           </p>
 
           <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>
@@ -195,147 +201,124 @@ export function LandingHero() {
           </nav>
         </div>
 
-        {/* ── تصویر: گوشی + کارت‌های شناور ── */}
-        <div className="lh-stage" ref={stageRef} aria-hidden="true">
+        {/* ── تصویر: گوشی + کارت‌های شناور — همه از روی خودِ اپ ── */}
+        <div className="lh-stage" ref={stageRef} aria-hidden="true" {...INERT}>
           <div className="lh-stage-inner">
             <div className="lh-halo" />
 
             <div className="lh-layer lh-layer-phone" style={{ "--d": 10 } as React.CSSProperties}>
               <div className="lh-phone">
                 <div className="lh-phone-screen">
-                  <div className="lh-ph-status">
-                    <span>۹:۴۱</span>
-                    <span className="lh-ph-notch" />
-                    <span className="lh-ph-sig"><i /><i /><i /></span>
-                  </div>
-
-                  <div className="lh-ph-head">
-                    <div>
-                      <div className="lh-ph-hello">امروز</div>
-                      <div className="lh-ph-date">سه‌شنبه، ۸ مهر</div>
+                  {/* بومِ ۳۶۰پیکسلی = عرضِ واقعیِ یک گوشی؛ کوچک‌نمایی با transform.
+                      پس کلاس‌های موبایلِ خودِ اپ همون اندازه‌ای رو دارن که روی گوشی. */}
+                  <div className="lh-canvas dash-scope text-dash-text">
+                    <div className="lh-ph-status">
+                      <span>۹:۴۱</span>
+                      <span className="lh-ph-notch" />
+                      <span className="lh-ph-sig"><i /><i /><i /></span>
                     </div>
-                    <span className="lh-ph-streak">
-                      <Flame size={14} className="lh-flame" />
-                      <b>{faNum(21)}</b> روز
+
+                    <div className="lh-ph-top">
+                      <span className="lh-ph-top-actions">
+                        <span className="lh-ph-burger"><i /><i /><i /></span>
+                        <span className="lh-ph-streak"><StreakFlame streak={42} compact /></span>
+                      </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/logo-lockup-dark-theme.png" alt="" width={110} height={27} className="lh-ph-logo lh-ph-logo-dark" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/logo-lockup-light-theme.webp" alt="" width={110} height={27} className="lh-ph-logo lh-ph-logo-light" />
+                    </div>
+
+                    <div className="lh-ph-body">
+                      {/* DashHeader */}
+                      <div className="flex flex-row items-center justify-start gap-3 text-right">
+                        <div className="flex flex-col items-center gap-1">
+                          <DashProgressCircle value={pct} size={52} strokeWidth={4.5} />
+                          <span className="whitespace-nowrap text-[9px] text-dash-muted">پیشرفت امروز</span>
+                        </div>
+                        <div>
+                          <div className="text-[19px] font-bold text-dash-text">روتین من</div>
+                          <div className="mt-1 text-[11px] text-dash-muted">برنامه‌های روزانه خود را مدیریت و پیگیری کنید.</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2.5">
+                        <MockDateStrip />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MockFilterButton label="تاریخچه" icon={<History size={15} />} />
+                          <MockFilterButton label="امروز" icon={<Calendar size={15} />} active />
+                          <MockFilterButton label="فیلتر" icon={<Filter size={15} />} />
+                        </div>
+                      </div>
+
+                      <MockTaskList tasks={tasks} />
+
+                      <MockMedicationCard meds={[{ name: "ویتامین D", every: "هر 24 ساعت", times: "22:00", left: "12 روز مونده" }]} />
+                    </div>
+
+                    {/* گوِ «نومو» — همون جای routine-ai-fab روی صفحه‌ی روتین */}
+                    <span className="lh-ph-fab">
+                      {orbLive ? <SiriOrb size="52px" /> : <span className="lh-orb-still" />}
                     </span>
                   </div>
-
-                  <div className="lh-ph-days">
-                    {DAYS.map((d) => (
-                      <span key={d.d} className={`lh-ph-day${d.on ? " on" : ""}`}>
-                        <small>{d.d}</small>
-                        <b>{d.n}</b>
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="lh-ph-sum">
-                    <svg viewBox="0 0 44 44" className="lh-ph-ring">
-                      <circle cx="22" cy="22" r={R} className="lh-ph-ring-bg" />
-                      <circle
-                        cx="22" cy="22" r={R} className="lh-ph-ring-fg"
-                        strokeDasharray={C} strokeDashoffset={C * (1 - pct)}
-                      />
-                    </svg>
-                    <div className="lh-ph-sum-txt">
-                      <b>{faNum(ticked)} از {faNum(ROUTINE.length)} انجام شد</b>
-                      <small>{ticked === ROUTINE.length ? "روزِ کامل! استریک حفظ شد" : "ادامه بده، داری عالی پیش میری"}</small>
-                    </div>
-                  </div>
-
-                  <ul className="lh-ph-list">
-                    {ROUTINE.map((it, i) => {
-                      const done = i < ticked;
-                      return (
-                        <li key={it.label} className={`lh-ph-item${done ? " done" : ""}`}>
-                          <span className="lh-ph-check"><Check size={11} strokeWidth={3} /></span>
-                          <span className="lh-ph-label">{it.label}</span>
-                          <span className="lh-ph-time">
-                            {it.pill ? <Pill size={10} /> : null}
-                            {it.time}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  <div className="lh-ph-week">
-                    <div className="lh-ph-week-head">
-                      <span>این هفته</span>
-                      <b>{faNum(82)}٪</b>
-                    </div>
-                    <div className="lh-ph-bars">
-                      {WEEK_BARS.map((h, i) => (
-                        <span key={i} className={`lh-ph-bar${i === 3 ? " on" : ""}`}>
-                          <i style={{ "--h": h, "--i": i } as React.CSSProperties} />
-                        </span>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* کارت ترید */}
+            {/* ژورنال ترید — کارتِ یک حساب (TradeAccountsPanel) */}
             <div className="lh-layer lh-pos-trade" style={{ "--d": 34 } as React.CSSProperties}>
-              <div className="lh-float lh-card" style={{ "--f": "0s" } as React.CSSProperties}>
-                <div className="lh-card-top">
-                  <span className="lh-ic lh-ic-win"><TrendingUp size={13} /></span>
-                  <span className="lh-card-title">ژورنال ترید</span>
+              <div className="lh-float lh-card lh-card-trade" style={{ "--f": "0s" } as React.CSSProperties}>
+                <div className="lh-trade-name">
+                  <span className="trade-account-name">حساب پراپ</span>
+                  <span className="trade-account-dot" style={{ background: "#3E7BFA" }} />
                 </div>
-                <div className="lh-pnl">+۲٫۴٪</div>
-                <svg viewBox="0 0 120 34" className="lh-spark" preserveAspectRatio="none">
-                  <path d="M0 28 L14 24 L26 26 L38 18 L52 20 L64 12 L78 15 L92 8 L106 10 L120 3" />
-                </svg>
-                <div className="lh-card-foot">
-                  <span className="lh-live" /> همگام با متاتریدر ۵
+                <div className="lh-trade-bal mono" dir="ltr">
+                  10842$<span className="trade-account-pnl-pct">8.4%</span><ArrowUp size={13} />
+                </div>
+                <div className="lh-trade-facts">
+                  <span><Hash size={11} /> 24 معامله</span>
+                  <span><Percent size={11} /> 62% برد</span>
+                  <span className="lh-trade-mt">متاتریدر</span>
                 </div>
               </div>
             </div>
 
-            {/* کارت کالری */}
+            {/* کالری‌شمار — سرِ CalorieFoodPlanCard */}
             <div className="lh-layer lh-pos-cal" style={{ "--d": 26 } as React.CSSProperties}>
-              <div className="lh-float lh-card lh-card-cal" style={{ "--f": "-2.2s" } as React.CSSProperties}>
-                <svg viewBox="0 0 48 48" className="lh-cal-ring">
-                  <circle cx="24" cy="24" r="19" className="lh-cal-bg" />
-                  <circle cx="24" cy="24" r="19" className="lh-cal-fg" pathLength={100} strokeDasharray="68 100" />
-                </svg>
-                <div>
-                  <div className="lh-card-title">کالری امروز</div>
-                  <div className="lh-cal-num">۱٬۴۲۰</div>
-                  <div className="lh-card-sub">از ۲٬۱۰۰</div>
+              <div className="lh-float lh-card lh-card-cal dash-scope" style={{ "--f": "-2.2s" } as React.CSSProperties}>
+                <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
+                  ۱۴۲۰<span className="mx-1 text-dash-muted">/</span>۲۱۰۰
+                  <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted">کالری</span>
+                </div>
+                <div className="lh-cal-bar"><i /></div>
+                <div className="mt-2.5 flex items-center gap-1.5 text-[11.5px] font-bold text-dash-text">
+                  <UtensilsCrossed className="h-3.5 w-3.5 text-dash-green" /> کالری‌شمار
+                </div>
+                <div className="calorie-glass-field lh-cal-entry">
+                  <span className="truncate text-[10.5px] font-bold text-dash-text">املت</span>
+                  <span className="mono rounded-lg px-1.5 py-0.5 text-[11px] font-extrabold" style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}>
+                    <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>۳۱۰
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* نومو */}
+            {/* نومو — پنلِ RoutineAiFab */}
             <div className="lh-layer lh-pos-ai" style={{ "--d": 42 } as React.CSSProperties}>
               <div className="lh-float lh-card lh-card-ai" style={{ "--f": "-4.1s" } as React.CSSProperties}>
-                <div className="lh-ai-user">فردا ساعت ۷ باشگاه رو برام بذار</div>
-                <div className="lh-ai-row">
-                  <span className="lh-ai-av"><Sparkles size={12} /></span>
-                  <div className="lh-ai-bot">
-                    <b>نومو</b>
-                    <span>به روتین فردا اضافه شد <Bell size={10} /> ۶:۴۵</span>
-                  </div>
+                <div className="routine-ai-title lh-ai-title">
+                  {orbLive ? <SiriOrb size="20px" /> : <span className="lh-orb-still lh-orb-sm" />}
+                  نومو
                 </div>
+                <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">فردا ساعت ۷ عصر باشگاه</div>
+                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعتِ ۱۹:۰۰ اضافه شد.</div>
               </div>
             </div>
 
-            {/* مربی */}
+            {/* مربی — MentorCard + خطِ رمزگذاریِ گفت‌وگو */}
             <div className="lh-layer lh-pos-mentor" style={{ "--d": 30 } as React.CSSProperties}>
-              <div className="lh-float lh-card lh-card-mentor" style={{ "--f": "-1.2s" } as React.CSSProperties}>
-                <div className="lh-card-top">
-                  <span className="lh-mentor-av">م</span>
-                  <div className="min-w-0">
-                    <div className="lh-card-title lh-mentor-name">مربی شما <BadgeCheck size={12} /></div>
-                    <div className="lh-card-sub"><Lock size={9} /> رمزگذاری سرتاسری</div>
-                  </div>
-                </div>
-                <div className="lh-mentor-prog">
-                  <span>پیشرفت هفته</span><b>{faNum(86)}٪</b>
-                </div>
-                <div className="lh-mentor-bar"><i /></div>
+              <div className="lh-float lh-card-mentor" style={{ "--f": "-1.2s" } as React.CSSProperties}>
+                <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="۴٫۹" count="۳۸" since="فروردین ۱۴۰۴" />
               </div>
             </div>
           </div>

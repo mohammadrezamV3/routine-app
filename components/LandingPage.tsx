@@ -8,6 +8,7 @@ import {
   LandingStats,
   LandingHowItWorks,
   LandingBento,
+  LandingFeatureGrid,
   LandingWhyUs,
   LandingTestimonialQuote,
   LandingFAQ,
@@ -29,6 +30,7 @@ export function LandingPage() {
       <LandingShowcase />
       <Sec id="sec-landing-how"><LandingHowItWorks /></Sec>
       <Sec id="sec-landing-bento"><LandingBento /></Sec>
+      <Sec id="sec-landing-allfeatures"><LandingFeatureGrid /></Sec>
       <Sec id="sec-landing-whyus"><LandingWhyUs /></Sec>
       <Sec id="sec-landing-trust"><LandingTestimonialQuote /></Sec>
       <Sec id="sec-landing-plans"><PlansSection mode="landing" /></Sec>
