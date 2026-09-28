@@ -1565,8 +1565,15 @@
     margin-bottom:18px;
   }
   /* آواتار کوچیک‌تر از قبل (۵۸ → ۴۴)، طبق درخواست صریح کاربر */
-  .account-hero-avatar-wrap{ flex-shrink:0; width:44px; height:44px; }
-  .account-hero-avatar-img{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(var(--accent-rgb),.4); display:block; }
+  /* overflow:hidden + گردیِ کاملِ همون‌جا، به همون دلیلِ آواتارِ بزرگِ
+     صفحه‌ی پروفایل (profile-hero-avatar-wrap): پلیس‌هولدرِ AgentAvatar
+     سایزش رو با style اینلاین می‌ده، پس اگه یه‌جا این سایز با اندازه‌ی
+     wrap فرق کرد (حتی در آینده)، لو نمی‌ره بیرون. */
+  .account-hero-avatar-wrap{ flex-shrink:0; width:44px; height:44px; overflow:hidden; border-radius:50%; }
+  /* outline به‌جای border: باگِ «عکس کوچیک‌تر دیده می‌شه» — border وارد
+     content-box می‌شه و ناحیه‌ی واقعیِ object-fit:cover رو تنگ‌تر از ۴۴px
+     می‌کنه؛ outline فضایی از layout نمی‌گیره، عکس کاملِ ۴۴px رو پر می‌کنه. */
+  .account-hero-avatar-img{ width:44px; height:44px; border-radius:50%; object-fit:cover; outline:2px solid rgba(var(--accent-rgb),.4); outline-offset:-2px; display:block; }
   .account-hero-avatar-fallback{ width:44px; height:44px; }
   .account-hero-badge{
     display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
@@ -1712,6 +1719,16 @@
     position:absolute; bottom:-46px; inset-inline-start:20px; width:92px; height:92px;
     padding:0; border:none; background:none; box-shadow:none; cursor:pointer;
     backdrop-filter:none; -webkit-backdrop-filter:none;
+    /* باگِ گزارش‌شده («دایره‌ی سیاهِ لودینگ از باکس بیرون می‌زنه»): آواتارِ
+       پیش‌فرض (AgentAvatar، وقتی هنوز عکسی لود/تنظیم نشده) اندازه‌اش رو با
+       style اینلاینِ خودِ React (`size` prop) می‌ده که همیشه روی هر قانونِ
+       CSSِ عادی (even توی مدیاکوئری موبایل) اولویت داره؛ همون canvas همیشه
+       ۹۲px می‌مونه حتی وقتی موبایل wrap رو ۷۸px می‌کنه. overflow:hidden +
+       همون گردیِ دایره این‌جا یه محافظِ قطعیه: هرچی سایزش با wrap فرق کرد،
+       بازم داخلِ باکس کلیپ می‌شه، بیرون لو نمی‌ره. */
+    overflow:hidden; border-radius:50%;
+    /* حلقه‌ی بریدگی بیرونِ عکس (نه روش) تا عکس کاملِ ۹۲px دیده بشه. */
+    outline:6px solid var(--bg);
   }
   body[data-theme="light"] .profile-hero-avatar-wrap,
   body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
@@ -1725,10 +1742,19 @@
   .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint, .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
   @media (hover:hover){.profile-hero-avatar-wrap:hover .profile-hero-avatar-hint{ opacity:1; }}
   /* حلقه‌ی خالیِ دورِ دایره: یک بوردرِ ضخیم به رنگِ خودِ کارت، پس مثلِ
-     یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی. */
+     یک بریدگی/فاصله دیده می‌شود نه یک قابِ رنگی.
+     باگِ گزارش‌شده («عکسی که آپلود می‌کنم کوچیک‌تر می‌شه»): `border` وارد
+     مدلِ باکس می‌شه و حتی با box-sizing:border-box، content-box (یعنی
+     ناحیه‌ای که object-fit:cover واقعا توش عکس رو می‌کشه) رو کوچیک‌تر از
+     ۹۲px می‌کنه (اینجا ۸۰px) — یعنی عکسِ واقعی کاربر همیشه از پلیس‌هولدرِ
+     AgentAvatar (که دقیقا ۹۲px پره) کوچیک‌تر دیده می‌شد. outline به‌جای
+     border باکس‌مدل رو دست نمی‌زنه (فضایی از layout نمی‌گیره)، پس عکس
+     کاملِ ۹۲px رو با همون سایزِ پلیس‌هولدر پر می‌کنه؛ outline-offset منفی
+     همون حلقه رو درست روی لبه‌ی بیرونیِ خودِ عکس می‌کشه (outline از
+     border-radius گردِ عنصر پیروی می‌کنه). */
   .profile-hero-avatar-img{
     width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
-    border:6px solid var(--bg); background:var(--surface-2);
+    background:var(--surface-2);
   }
   /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذفِ عکس. پدینگِ بالا همچنان
      باید از ۳۰پیکسلِ آویزانِ آواتار بیشتر باشد تا دکمه زیرِ عکس بیفتد. */
@@ -1953,7 +1979,12 @@
 
   @media (max-width:520px){
     .profile-hero-avatar-wrap{ width:78px; height:78px; bottom:-39px; inset-inline-start:16px; }
-    .profile-hero-avatar-img{ width:78px; height:78px; border-width:5px; }
+    /* !important لازمه: پلیس‌هولدرِ AgentAvatar سایزش رو با style اینلاینِ
+       React (۹۲px، ثابت روی همه‌ی breakpointها) می‌ده که رویِ قانونِ عادیِ
+       این مدیاکوئری اولویت داره — بدونِ !important این‌جا اثری نداشت و
+       همون دایره‌ی ۹۲پیکسلی از wrapِ ۷۸پیکسلیِ موبایل بیرون می‌زد. */
+    .profile-hero-avatar-img{ width:78px !important; height:78px !important; }
+    .profile-hero-avatar-wrap{ outline-width:5px; }
     .profile-hero-avatar-hint{ inset:5px; }
     .profile-hero-meta{ padding:48px 16px 12px; }
     .profile-banner-btn{ padding:6px; }
