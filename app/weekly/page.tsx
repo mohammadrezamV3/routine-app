@@ -551,7 +551,6 @@ export default function WeeklyPage() {
               const d = new Date(now);
               d.setDate(now.getDate() + (o.jsDay - now.getDay()));
               const dIso = isoLocal(d);
-              const dDoneTasks = weekDaily[dIso]?.tasks ?? {};
               const items = tasksForDate(d, opts);
               const isToday = o.jsDay === now.getDay();
               const isOpen = openIdx === idx;
@@ -591,8 +590,6 @@ export default function WeeklyPage() {
 
                               {positioned.map((p) => {
                                 const r = splitTimeRange(p.time);
-                                const done = !!dDoneTasks[p.id];
-                                const missed = !done && isDayOver(dIso, clock);
                                 return (
                                   <div
                                     key={p.id}
@@ -602,21 +599,7 @@ export default function WeeklyPage() {
                                   >
                                     <div className="wt-marker-col">
                                       <div className="wt-time-above">{toEnDigits(r.start || "")}</div>
-                                      <div
-                                        className={`wt-dot${done ? " wt-dot-done" : missed ? " wt-dot-missed" : ""}`}
-                                        aria-label={done ? "انجام دادی" : missed ? "وقتش گذشته" : undefined}
-                                      >
-                                        {done && (
-                                          <svg viewBox="0 0 24 24" fill="none">
-                                            <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                                          </svg>
-                                        )}
-                                        {missed && (
-                                          <svg viewBox="0 0 24 24" fill="none">
-                                            <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
-                                          </svg>
-                                        )}
-                                      </div>
+                                      <div className="wt-dot" />
                                     </div>
                                     <div className="wt-content">
                                       <div className="wt-range"><bdi dir="ltr">{toEnDigits(r.full)}</bdi></div>
@@ -635,19 +618,11 @@ export default function WeeklyPage() {
                             {!!untimedItems.length && (
                               <div className="wt-untimed-row">
                                 {untimedItems.map((t) => {
-                                  const uDone = !!dDoneTasks[t.id];
-                                  const uMissed = !uDone && isDayOver(dIso, clock);
                                   return (
                                   <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
-                                    {/* `time` می‌تواند کاملا خالی باشد (برنامه‌ی بی‌ساعت)؛
-                                        آن‌وقت این ردیف نباید یک کادرِ خالی نشان دهد. */}
-                                    {!!t.time && <div className="wt-range"><bdi dir="ltr">{toEnDigits(t.time)}</bdi></div>}
+                                    {/* برنامه‌ی بی‌ساعت صریح «بدون ساعت» می‌گیرد. */}
+                                    <div className="wt-range">{t.time ? <bdi dir="ltr">{toEnDigits(t.time)}</bdi> : "بدون ساعت"}</div>
                                     <div className="wt-name">{t.name}</div>
-                                    {(uDone || uMissed) && (
-                                      <div className={`wt-untimed-state${uDone ? " done" : " missed"}`}>
-                                        {uDone ? "✓ انجام دادی" : "✕ وقتش گذشته"}
-                                      </div>
-                                    )}
                                   </div>
                                   );
                                 })}
