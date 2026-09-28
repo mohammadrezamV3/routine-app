@@ -5,6 +5,7 @@ import { readJsonBody, parseIsoDate } from "@/lib/validate";
 import { visibleToStudent } from "@/lib/mentorProgramState";
 import { isoDate, dateIsoInTz, userTimezone } from "@/lib/mentorServer";
 import { windowFor } from "@/lib/mentorProgress";
+import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 500;
@@ -27,7 +28,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const p = await prisma.mentorProgram.findFirst({
     where: { id: params.id, studentId: me },
     select: {
-      id: true, status: true, sentAt: true, startDate: true, endDate: true, activatedAt: true, completedAt: true, cancelledAt: true,
+      id: true, mentorId: true, status: true, sentAt: true, startDate: true, endDate: true, activatedAt: true, completedAt: true, cancelledAt: true,
       mentorship: { select: { status: true } },
     },
   });
@@ -57,6 +58,7 @@ export async function POST(req: Request, { params }: Ctx) {
 
   if (!raw) {
     await prisma.mentorProgramDayNote.deleteMany({ where: { programId: p.id, date } });
+    void publishToUsers([p.mentorId, me], { type: "mentor.program", data: { id: p.id } });
     return NextResponse.json({ note: null });
   }
   const note = await prisma.mentorProgramDayNote.upsert({
@@ -65,5 +67,7 @@ export async function POST(req: Request, { params }: Ctx) {
     update: { body: raw },
     select: { date: true, body: true },
   });
+  // منتور و دستگاه‌های دیگه‌ی شاگرد همون لحظه یادداشت رو می‌بینن
+  void publishToUsers([p.mentorId, me], { type: "mentor.program", data: { id: p.id } });
   return NextResponse.json({ note: { date: isoDate(note.date), body: note.body } });
 }

@@ -24,6 +24,7 @@ import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { NumberInput } from "./NumberInput";
+import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -225,9 +226,22 @@ export function CaloriePanel() {
   }
 
   async function removeEntry(id: string) {
+    // optimistic: همون لحظه از لیست (و از جمعِ امروز/تاریخچه) حذف می‌شه؛
+    // اگه سرور رد کرد برمی‌گرده و پیام خطا نشون داده می‌شه.
+    const prevEntries = entries;
+    const prevHistory = historyEntries;
     setEntries((e) => e.filter((x) => x.id !== id));
-    await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" });
+    setHistoryEntries((h) => h.filter((x: { id?: string }) => x.id !== id));
+    const res = await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) {
+      setEntries(prevEntries);
+      setHistoryEntries(prevHistory);
+      reportLiveError("حذف نشد — دوباره امتحان کن");
+    }
   }
+
+  // زنده: افزودن/حذف/اسکن از هرجا (مودال، تبِ دیگه، سرور) یا برگشت به تب
+  useLiveRefresh("calorie", () => { loadTarget(); refreshAfterChange(); }, { enabled: status === "authenticated" });
 
   // بعد افزودن/حذف/اسکن، هم لیست روز انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
   // به‌روز بشن — چون نمودار/روند موفقیت/ریز درشت‌مغذی‌ها به هردو وابسته‌ن

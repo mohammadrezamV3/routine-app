@@ -7,6 +7,7 @@ import { startRoadmapBuild, buildStatusOf } from "@/lib/roadmapBuilder";
 import { countRowProgress, parseHours, parseLevel } from "@/lib/roadmapPlan";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
 
 // تولید حالا در پس‌زمینه است و خودِ POST فورا برمی‌گردد؛ این مقدار فقط برای
 // اطمینان باقی مانده. توضیحِ قبلی: تولید تا ۵۵ ثانیه طول می‌کشید — بدون این،
@@ -53,7 +54,7 @@ export async function GET() {
   return NextResponse.json({ roadmaps: list });
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
   // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
@@ -97,3 +98,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ id: created.id, building: true }, { status: 202 });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["roadmaps"], handlePOST);

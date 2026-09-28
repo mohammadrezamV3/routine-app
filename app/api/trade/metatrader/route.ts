@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import {
   MtPlatform, PAIRING_TTL_MS, generatePairingCode, hashSecret,
 } from "@/lib/metatrader";
+import { withLiveSync } from "@/lib/realtime";
 
 // مدیریت اتصال متاتریدر یک حساب، از سمت کاربر لاگین‌کرده.
 // (اندپوینت‌هایی که خود EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest) {
 // POST /api/trade/metatrader  { accountId, platform }
 // یک کد اتصال تازه می‌سازد. کد فقط همین یک‌بار برگردانده می‌شود؛ در
 // دیتابیس فقط هشش می‌ماند، پس اگر کاربر گمش کرد باید کد جدید بگیرد.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/trade/metatrader?accountId=... — ابطال اتصال
 // معاملات همگام‌شده دست‌نخورده می‌مانند؛ فقط EA دیگر اجازه‌ی ارسال ندارد.
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 
@@ -99,3 +100,7 @@ export async function DELETE(req: NextRequest) {
   });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["trade"], handlePOST);
+export const DELETE = withLiveSync(["trade"], handleDELETE);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Ban, CalendarCheck, Check, ClipboardList, Dumbbell, Eye, Inbox, LogOut, Plus, ShieldCheck, X } from "lucide-react";
@@ -81,6 +82,7 @@ function Relationship({ onHead }: { onHead: (h: { back: Back | null; node: React
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+  useLiveRefresh("mentor:mentorship", () => { load(); });
 
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get("tab");
@@ -259,6 +261,9 @@ function ProgramsTab({ mentorshipId, role, relActive }: { mentorshipId: string; 
   }, [mentorshipId, role]);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: برنامه‌ی تازه/پاسخِ طرفِ مقابل همون لحظه
+  useLiveRefresh("mentor:program", () => { load(); });
+  useVisiblePolling(() => { load(); }, 30_000);
 
   async function accept(p: ProgramRow) {
     setAcceptFor(p.id);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import { useParams, useRouter } from "next/navigation";
 import {
   CalendarCheck, ChevronLeft, ChevronRight, ClipboardList, Dumbbell, Eye, EyeOff, MessageCircle, MessageSquareText, ShieldCheck, UserRound,
@@ -105,6 +106,11 @@ export default function MentorStudentPage() {
   }, [studentId]);
 
   useEffect(() => { load(offset); }, [load, offset]);
+  // زنده: لاگ/پیشرفتِ تازه‌ی شاگرد (WebSocket/برگشت به تب) — هفته‌ی فعلی دوباره
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
+  useLiveRefresh("mentor", () => { load(offsetRef.current); });
+  useVisiblePolling(() => { load(offsetRef.current); }, 30_000);
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const name = data ? publicUserName(data.student) : "شاگرد";

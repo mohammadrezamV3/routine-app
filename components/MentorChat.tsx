@@ -23,7 +23,7 @@ import { MentorE2EEGate } from "./MentorE2EEGate";
 import { MentorE2EESettings } from "./MentorE2EESettings";
 import { SavedRepliesPicker } from "./MentorSavedReplies";
 
-const POLL_MS = 8000;
+const POLL_MS = 5000;
 const MAX_LEN = 2000;
 const META_ICON = { size: 13, strokeWidth: 1.75 } as const;
 

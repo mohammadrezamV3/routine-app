@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { withLiveSync } from "@/lib/realtime";
 
 // عکس پروفایل به‌جای آپلود فایل روی یه استوریج ابری (که هنوز راه‌اندازی
 // نشده)، به‌شکل data URL مستقیم توی همون فیلد avatarUrl ذخیره می‌شه — چون
@@ -18,7 +19,7 @@ export async function GET() {
   return NextResponse.json({ avatarUrl: user?.avatarUrl ?? null });
 }
 
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -40,7 +41,7 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true, avatarUrl: dataUrl });
 }
 
-export async function DELETE() {
+async function handleDELETE() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -48,3 +49,7 @@ export async function DELETE() {
   await prisma.user.update({ where: { id: userId }, data: { avatarUrl: null } });
   return NextResponse.json({ ok: true });
 }
+
+// حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
+export const PATCH = withLiveSync(["account"], handlePATCH);
+export const DELETE = withLiveSync(["account"], handleDELETE);

@@ -16,7 +16,7 @@ const config: Config = {
         // رنگ توپر سطح (globals.css) — نه شیشه‌ی ۲٪ که فقط با
         // backdrop-blur کارت به‌نظر می‌رسید و روی موبایل (که بلور برداشته
         // می‌شه) عملا نامرئی می‌شد.
-        "dash-card": "var(--surface-1)",
+        "dash-card": "var(--box-bg)",
         "dash-border": "var(--surface-line)",
         "dash-green": "var(--accent)",
         "dash-green-glow": "rgba(var(--accent-rgb),.25)",

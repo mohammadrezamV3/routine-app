@@ -4,6 +4,7 @@ import { requireFeature } from "@/lib/featureFlagsServer";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { computePlanProgress, normalizePlan, sanitizeStepProgress, taskKey } from "@/lib/roadmapPlan";
+import { withLiveSync } from "@/lib/realtime";
 
 /**
  * تیک‌زدن/برداشتنِ یک مرحله (`{n, done}`) یا یک کارِ داخلِ مرحله
@@ -12,7 +13,7 @@ import { computePlanProgress, normalizePlan, sanitizeStepProgress, taskKey } fro
  * درصد را همیشه سرور حساب می‌کند و هر درصدی که کلاینت بفرستد نادیده گرفته
  * می‌شود؛ کلیدِ مرحله‌ای که وجود ندارد هم دور ریخته می‌شود.
  */
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+async function handlePATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
   // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
@@ -56,3 +57,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     progress: computePlanProgress(plan.stages, cleaned),
   });
 }
+
+// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const PATCH = withLiveSync(["roadmaps"], handlePATCH);

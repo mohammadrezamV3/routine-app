@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import {
   Activity, AlertCircle, Ban, BadgeCheck, CalendarCheck, CalendarDays, Check, CircleSlash,
@@ -63,6 +64,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  // زنده: پیام/درخواست/لاگِ تازه‌ی شاگردها (WebSocket/تب دیگه/برگشت به تب)
+  useLiveRefresh("mentor", () => { load(true); });
+  useVisiblePolling(() => { load(true); }, 30_000);
 
   if (loading && !dash) return <LoadingBlock />;
   if (!dash) return <MentorDashError message={error || "داشبورد دریافت نشد؛ دوباره تلاش کن"} onRetry={() => load()} />;

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
+import { publishToUser } from "@/lib/realtime";
 
 // اعلانِ پایدارِ درون‌برنامه‌ای + پوشِ best-effort. هیچ‌وقت نباید خودِ اقدامِ
 // اصلی (قبول درخواست، ارسال پیام، …) رو به‌خاطرِ شکستِ اعلان fail کنه.
@@ -14,6 +15,8 @@ export async function notifyUser(userId: string, n: NotifyInput): Promise<void> 
     // ثبتِ اعلان نباید اقدامِ اصلی رو خراب کنه
   }
   sendPushToUser(userId, { title: n.title, body: n.body, url: n.url }).catch(() => {});
+  // زنگوله‌ی همه‌ی دستگاه‌های بازِ گیرنده همون لحظه تازه می‌شه (فقط نوع، نه متن)
+  void publishToUser(userId, { type: "notification.new", keys: ["notifications"] });
 }
 
 /** اسمِ نمایشیِ کاربر برای متنِ اعلان‌ها — هیچ‌وقت ایمیل/شماره نه */

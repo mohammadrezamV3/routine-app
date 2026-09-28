@@ -12,6 +12,7 @@ import { staggerFieldsIn } from "@/lib/uiAnim";
 import { ICONS } from "@/components/NavDrawer";
 import { useThemeTokens, PlansSection } from "@/components/PlanShowcase";
 import { LandingFooter } from "@/components/LandingFooter";
+import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
 
 const FEATURES = [
   {
@@ -347,22 +348,27 @@ function TodayProgressCard() {
   );
 }
 
-// عمدا ثابته، بدون هیچ اسکرول/چرخشی — نسخه‌ی قبلی یه مارکی بی‌پایان بود
-// (useSeamlessMarquee)؛ کاربر خواسته بود این بخش «یه‌جا ثابت وایسه»، پس
-// کارت‌ها با یه گرید ساده‌ی چندستونه (بدون تکرار/duplicate برای چرخش)
-// نشون داده می‌شن.
-function WhyUsSection() {
+// طبق درخواست صریح: به‌جای گریدِ ثابت، سه ردیفِ مارکیِ افقیِ بی‌درز و
+// بی‌پایان (روی همون useSeamlessMarquee که MarketTicker استفاده می‌کنه) —
+// ردیف‌ها جهتِ متناوب دارن (فرد راست‌به‌چپ، زوج برعکس) تا حسِ «نوار کرکره‌ای»
+// بده، نه یه خط تکراری. هر ردیف سه‌تا از ۹ آیتمِ WHY_US رو می‌گیره.
+function WhyUsMarqueeRow({ items, reverse }: { items: typeof WHY_US; reverse?: boolean }) {
   const t = useThemeTokens();
-  const items = WHY_US;
+  // pxPerSecond کم و minCount بالا: حتی روی صفحه‌ی خیلی عریض هم وسطِ چرخه
+  // فاصله‌ی خالی دیده نمی‌شه و سرعتِ حرکت مستقل از عرضِ واقعیِ رندرشده‌ست.
+  const { trackRef, track, durationSec } = useSeamlessMarquee(items, { minCount: 8, pxPerSecond: 18 });
 
   return (
-    <div>
-      <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{"چرا ما؟"}</h2>
-      <div className="whyus-grid mt-4">
-        {items.map((item, i) => {
+    <div className="whyus-marquee-viewport">
+      <div
+        ref={trackRef}
+        className={`whyus-marquee-track${reverse ? " is-reverse" : ""}`}
+        style={{ animationDuration: `${durationSec}s` }}
+      >
+        {track.map((item, i) => {
           const Icon = item.icon;
           return (
-            <div key={`${item.title}-${i}`} className={`whyus-card flex flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
+            <div key={`${item.title}-${i}`} className={`whyus-card flex shrink-0 flex-col items-center rounded-2xl border ${t.cardBorder} ${t.cardBg} p-3 text-center ${t.shadow} backdrop-blur-xl sm:p-4`}>
               <span className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11" style={{ background: `${item.color}1F`, color: item.color }}>
                 <Icon size={18} />
               </span>
@@ -371,6 +377,22 @@ function WhyUsSection() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function WhyUsSection() {
+  const t = useThemeTokens();
+  const rows = [WHY_US.slice(0, 3), WHY_US.slice(3, 6), WHY_US.slice(6, 9)];
+
+  return (
+    <div>
+      <h2 className={`text-right text-xl font-extrabold ${t.heading}`}>{"چرا ما؟"}</h2>
+      <div className="whyus-marquee mt-4">
+        {rows.map((row, i) => (
+          <WhyUsMarqueeRow key={i} items={row} reverse={i % 2 === 1} />
+        ))}
       </div>
     </div>
   );

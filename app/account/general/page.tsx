@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Users, BarChart3, Tablets } from "lucide-react";
+import { Bell, Users, BarChart3, Tablets, Vibrate } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { RoutineSettings } from "@/components/RoutineSettings";
 import { TradeSettings } from "@/components/TradeSettings";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { hapticsEnabled, hapticsSupported, setHapticsEnabled } from "@/lib/haptics";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
 
 const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
@@ -31,7 +32,23 @@ const DASHBOARD_PREFS: [keyof DashboardPrefs, string, string?][] = [
 export default function AccountSettingsPage() {
   const [prefs, setPrefs] = useState<DashboardPrefs>(DEFAULT_DASHBOARD_PREFS);
 
+  const [haptics, setHaptics] = useState(true);
+  const [hapticsAvailable, setHapticsAvailable] = useState(true);
+
   useEffect(() => { getDashboardPrefs().then(setPrefs); }, []);
+  useEffect(() => {
+    setHaptics(hapticsEnabled());
+    setHapticsAvailable(hapticsSupported());
+  }, []);
+
+  function toggleHaptics(next: boolean) {
+    setHapticsEnabled(next);
+    setHaptics(next);
+    // روشن‌کردن با یک لرزشِ نمونه تأیید می‌شه تا کاربر حسش کنه
+    if (next) {
+      try { navigator.vibrate?.(12); } catch {}
+    }
+  }
 
   function toggleDashboardPref(key: keyof DashboardPrefs, next: boolean) {
     setPrefs((prev) => {
@@ -61,9 +78,19 @@ export default function AccountSettingsPage() {
         ))}
       </AccountBlock>
 
+      <AccountBlock title="بازخورد لمسی" icon={<Vibrate size={15} />} flush index={1}>
+        <AccountToggleRow
+          icon={<Vibrate size={16} />}
+          label="لرزش کوتاه هنگام لمس دکمه‌ها"
+          desc={hapticsAvailable ? "فقط روی همین دستگاه اعمال می‌شه" : "این دستگاه یا مرورگر از لرزش پشتیبانی نمی‌کنه"}
+          checked={haptics}
+          onChange={toggleHaptics}
+        />
+      </AccountBlock>
+
       {/* هرکدام خودش یک بخشِ کامل (تیتر + قاب) است — این‌جا دیگر تیترِ
           جداگانه‌ای بالای‌شان گذاشته نمی‌شود، وگرنه دو تیتر روی هم می‌افتاد. */}
-      <NotificationSettings index={1} />
+      <NotificationSettings index={2} />
       <RoutineSettings />
       <TradeSettings />
     </section>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
+import { publishDataChanged } from "@/lib/realtime";
 import {
   generateEaToken, hashSecret, normalizePairingCode, tokenPrefixOf,
 } from "@/lib/metatrader";
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const link = await prisma.tradeMtLink.findUnique({
     where: { pairingHash: hashSecret(code) },
-    select: { id: true, pairingExpiresAt: true },
+    select: { id: true, userId: true, pairingExpiresAt: true },
   });
   // پیام خطا عمدا برای «کد اشتباه» و «کد منقضی» یکی است — تفکیکشان فقط
   // به حدس‌زننده اطلاعات می‌دهد.
@@ -54,6 +55,9 @@ export async function POST(req: NextRequest) {
       brokerName: body?.broker ? clampText(String(body.broker), 64) : null,
     },
   });
+
+  // صفحه‌ی «اتصال متاتریدر» که کاربر بازش گذاشته همون لحظه «وصل شد» رو ببینه
+  void publishDataChanged(link.userId, ["trade"]);
 
   return NextResponse.json({ ok: true, token });
 }

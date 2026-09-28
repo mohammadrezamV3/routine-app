@@ -7,6 +7,26 @@
 // اول مثل PDF لود می‌شه» — چون فقط HTML خام سرور می‌مونه، بدون تعامل).
 const isProd = process.env.NODE_ENV === "production";
 
+// WebSocketِ realtime (`/ws`، lib/realtimeServer.ts) روی همون origin سرو می‌شه.
+// طبقِ CSP3، `'self'` باید ws/wss همون host رو هم پوشش بده، ولی Safariهای
+// قدیمی‌تر این رو اجرا نمی‌کنن — پس hostِ سایت صریحاً با wss:// هم اضافه
+// می‌شه (نه `wss:` کلی، که اجازه‌ی وصل‌شدن به *هر* سروری رو می‌داد).
+// این هدرها موقعِ build ثابت می‌شن؛ اگه NEXTAUTH_URL/NEXT_PUBLIC_SITE_URL
+// اون لحظه در دسترس نباشن، دامنه‌ی اصلیِ پیش‌فرض (lib/siteUrl.ts) استفاده می‌شه.
+function realtimeConnectSources() {
+  const hosts = new Set(["arionapp.ir", "www.arionapp.ir"]);
+  for (const u of [process.env.NEXTAUTH_URL, process.env.NEXT_PUBLIC_SITE_URL]) {
+    try {
+      const h = new URL(u).host;
+      if (h && !/^(localhost|127\.|0\.0\.0\.0)/.test(h)) {
+        hosts.add(h);
+        hosts.add(h.startsWith("www.") ? h.slice(4) : `www.${h}`);
+      }
+    } catch {}
+  }
+  return Array.from(hosts).map((h) => `wss://${h}`).join(" ");
+}
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -34,7 +54,7 @@ const securityHeaders = [
       // components/TradingViewChart.tsx). پاسخ خوانده نمی‌شود — همان
       // میزبانی است که از قبل در `frame-src` مجاز بود، پس سطحِ دسترسیِ
       // تازه‌ای باز نمی‌شود.
-      "connect-src 'self' https://s.tradingview.com https://api.anthropic.com",
+      `connect-src 'self' ${realtimeConnectSources()} https://s.tradingview.com https://api.anthropic.com`,
       // چارتِ تریدینگ‌ویو. عمداً فقط `frame-src` باز شده و نه `script-src`:
       // ویجت را به‌شکلِ iframe جاسازی می‌کنیم، نه با اسکریپتِ رسمیِ `tv.js`.
       // تفاوت مهم است — `tv.js` باید داخلِ originِ خودمان اجرا شود و به
@@ -87,7 +107,13 @@ const nextConfig = {
   // instrumentation.ts رو فعال می‌کنه — اون‌جا کانکشن‌پولِ دیتابیس موقعِ بالا
   // آمدنِ سرور گرم می‌شه تا اولین بازدیدکننده‌ی بعد از هر ری‌استارت هزینه‌ی
   // ساختِ کانکشن رو ندهد. (در Next 15 پیش‌فرض شده؛ در 14 هنوز فلگ می‌خواد.)
-  experimental: { instrumentationHook: true },
+  //
+  // ws/pg (سرورِ WebSocketِ `/ws` و LISTENِ Postgres، lib/realtimeServer.ts)
+  // external می‌مونن: باندل‌شدنِ ws با webpack افزونه‌های اختیاریِ
+  // bufferutil/utf-8-validate رو خراب می‌کنه، و pg هم require‌های پویا داره.
+  // file-tracingِ خروجیِ standalone خودش node_modules/ws و pg رو کنارِ
+  // server.js کپی می‌کنه (بعد از build: ls .next/standalone/node_modules/{ws,pg}).
+  experimental: { instrumentationHook: true, serverComponentsExternalPackages: ["ws", "pg"] },
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {

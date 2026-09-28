@@ -76,6 +76,24 @@ export function timeEndMinutes(timeStr: string): number | null {
   return null;
 }
 
+/**
+ * «وقتش گذشته»ی یک برنامه در لحظه‌ی `now` — منبعِ واحدِ حالتِ ضربدر (✕) در
+ * همه‌ی لیست‌ها. روزِ گذشته همیشه گذشته است؛ برای امروز، پایانِ بازه (یا خودِ
+ * ساعت اگر تک‌ساعته باشد) باید رد شده باشد. بازه‌ای که از نیمه‌شب رد می‌شود
+ * (مثلا ۲۳:۰۰ – ۰۱:۰۰) تا آخرِ امروز «گذشته» حساب نمی‌شود، و برنامه‌ی
+ * بی‌ساعت فقط با تمام‌شدنِ روزش. ارقامِ فارسی/عربی با toEnDigits نرمال می‌شوند.
+ */
+export function isTaskTimePassed(iso: string, time: string, now: Date): boolean {
+  const today = isoLocal(now);
+  if (iso < today) return true;
+  if (iso > today) return false;
+  const start = timeStartMinutes(time);
+  if (start === null) return false;
+  let end = timeEndMinutes(time) ?? start;
+  if (end < start) end += 24 * 60;
+  return now.getHours() * 60 + now.getMinutes() >= end;
+}
+
 export function splitTimeRange(t: string): { start: string | null; full: string } {
   const parts = String(t).split(/[–—-]/);
   if (parts.length === 2 && /\d/.test(parts[0]) && /\d/.test(parts[1])) {
