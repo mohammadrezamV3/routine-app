@@ -12,7 +12,7 @@ import {
   timeStartMinutes,
   timeEndMinutes,
   splitTimeRange,
-  isTaskTimePassed,
+  isDayOver,
   toEnDigits,
   computeDayStats,
   DayStats,
@@ -64,7 +64,7 @@ function isTaskPast(iso: string): boolean {
 
 // روزِ واقعا گذشته — برای قفلِ «شروع»ِ تمرین. ضربدرِ «وقتش گذشته»ی برنامه‌ها
 // دیگه از این نمیاد: طبقِ درخواستِ صریح، برنامه‌ی امروزی که ساعتش رد شده و
-// تیک نخورده هم همون لحظه ✕ می‌گیره (isTaskTimePassed در lib/schedule.ts) —
+// تیک نخورده فقط بعد از پایانِ روز ✕ می‌گیره (isDayOver در lib/schedule.ts) —
 // ولی همچنان قابل تیک‌زدنه، ✕ فقط وضعیته نه قفل.
 function isDayPast(iso: string): boolean {
   return iso < todayKey;
@@ -298,7 +298,7 @@ export default function WeeklyPage() {
           importance: occ?.importance,
           tag: occ?.tag,
           done,
-          missed: !done && isTaskTimePassed(selectedIso, t.time, clock),
+          missed: !done && isDayOver(selectedIso, clock),
           isPast: isTaskPast(selectedIso),
           dayPast: isDayPast(selectedIso),
           notStarted: isTaskNotStarted(selectedIso, t.time),
@@ -367,7 +367,8 @@ export default function WeeklyPage() {
     // درخواستِ صریحِ کاربر، تیک‌زدنِ برنامه‌ی روزی که هنوز نرسیده یعنی
     // وانمود به انجام‌شدنِ کاری که اصلاً شروع نشده، پس این‌جا بلاک می‌شود.
     const task = dashTasks.find((t) => t.id === id);
-    if (task?.isFuture) return;
+    // برنامه‌ی روزهای گذشته دیگه قابلِ تغییر نیست (درخواستِ صریح).
+    if (task?.isFuture || isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
@@ -591,7 +592,7 @@ export default function WeeklyPage() {
                               {positioned.map((p) => {
                                 const r = splitTimeRange(p.time);
                                 const done = !!dDoneTasks[p.id];
-                                const missed = !done && isTaskTimePassed(dIso, p.time, clock);
+                                const missed = !done && isDayOver(dIso, clock);
                                 return (
                                   <div
                                     key={p.id}
@@ -635,7 +636,7 @@ export default function WeeklyPage() {
                               <div className="wt-untimed-row">
                                 {untimedItems.map((t) => {
                                   const uDone = !!dDoneTasks[t.id];
-                                  const uMissed = !uDone && isTaskTimePassed(dIso, t.time, clock);
+                                  const uMissed = !uDone && isDayOver(dIso, clock);
                                   return (
                                   <div key={t.id} className="wt-untimed-item" onClick={(e) => { e.stopPropagation(); openProgram(t.name); }}>
                                     {/* `time` می‌تواند کاملا خالی باشد (برنامه‌ی بی‌ساعت)؛

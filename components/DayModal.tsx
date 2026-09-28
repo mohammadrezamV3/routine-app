@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
-import { tasksForDate, ScheduleTask, isTaskTimePassed } from "@/lib/schedule";
+import { tasksForDate, ScheduleTask, isDayOver } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime as isWakeOnTimeShared, timeToMinutes } from "@/lib/wakeSleep";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -58,7 +58,7 @@ export function DayModal({
   const jd = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
   async function toggleTask(id: string) {
-    if (isFuture) return;
+    if (isFuture || isPast) return;
     const next = { ...daily!, tasks: { ...daily!.tasks, [id]: !daily!.tasks[id] } };
     setDailyState(next);
     await setDaily(iso, next);
@@ -103,13 +103,13 @@ export function DayModal({
               const checked = !!daily.tasks[t.id];
               // همون قاعده‌ی ✕ لیستِ «برنامه‌های امروز»: روزِ گذشته، یا امروز
               // و ساعتش رد شده، و تیک نخورده.
-              const missed = !checked && isTaskTimePassed(iso, t.time, new Date());
+              const missed = !checked && isDayOver(iso, new Date());
               return (
                 <div
                   key={t.id}
                   onClick={() => toggleTask(t.id)}
-                  className={`task${isFuture ? " disabled" : ""}`}
-                  aria-disabled={isFuture}
+                  className={`task${isFuture || isPast ? " disabled" : ""}`}
+                  aria-disabled={isFuture || isPast}
                 >
                   <div className={`check${checked ? " on" : missed ? " missed" : ""}`}>
                     {missed ? (
