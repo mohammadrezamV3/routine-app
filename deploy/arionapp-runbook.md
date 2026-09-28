@@ -108,9 +108,9 @@ crontab -e
 ```
 
 ```cron
-*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://arionapp.ir/api/push/send-reminders >/dev/null 2>&1
 30 5 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://arionapp.ir/api/cron/weekly-report >/dev/null 2>&1
-*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://arionapp.ir/api/cron/economic-alerts >/dev/null 2>&1
+# یادآوری‌ها (send-reminders) و هشدارِ اخبار (economic-alerts) دیگه کران نمی‌خوان —
+# خودِ سرور هر ۳۰ ثانیه می‌فرسته (lib/pushScheduler.ts).
 0 4 * * * cd /opt/routine-app && docker compose exec -T db pg_dump -U routine -Fc routine > ~/backups/arion-$(date +\%F).dump 2>/dev/null && find ~/backups -name 'arion-*.dump' -mtime +14 -delete
 ```
 

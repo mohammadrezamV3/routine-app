@@ -215,6 +215,7 @@ model User {
   exportRequests    ExportRequest[]
   sharedLinks       SharedProgressLink[]
   pushSubscriptions PushSubscription[]
+  pushReminderLogs  PushReminderLog[]
 
   // دوستان — درخواست‌های فرستاده‌شده/دریافت‌شده (یک ردیف Friendship به‌ازای هر جفت)
   friendRequestsSent     Friendship[]       @relation("FriendRequestsSent")
@@ -1543,6 +1544,25 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// رد «این یادآوری فرستاده شد» — یک ردیف به‌ازای هر (کاربر، یادآوری). کلیدِ
+// یکتای (userId, key) خودش قفلِ ضدتکراره: زمان‌بندِ داخلی (lib/pushScheduler.ts)
+// توی هر workerِ cluster.js جدا اجرا می‌شه و بعد از هر ری‌استارت هم از نو، پس
+// «ادعا» (INSERT) قبل از ارسال اتمیکه و فقط یکی برنده می‌شه. deadline همون
+// لحظه‌ی شروعِ برنامه/رویداده؛ ردیف‌های خیلی قدیمی‌تر از اون جارو می‌شن.
+model PushReminderLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  key      String
+  deadline DateTime
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, key])
+  @@index([deadline])
 }
 
 model UserSetting {
