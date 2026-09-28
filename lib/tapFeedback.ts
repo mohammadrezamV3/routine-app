@@ -72,9 +72,20 @@ document.addEventListener("pointerdown",function(e){
     if(canVibrate&&(!ua||ua.hasBeenActive))haptic();else pendingHaptic=true;
   }
 },{passive:true});
+// iOS: هپتیک (کلیکِ برنامه‌ایِ یک label/checkbox) دیگه توی pointerup نیست —
+// اونجا درست قبل از کلیکِ واقعیِ Safari اجرا می‌شد و گاهی کلیکِ لینک/باکس
+// (پشتیبانی، امنیت، حسابِ ترید) رو می‌خورد. حالا بعد از کلیکِ واقعی (فازِ
+// bubble روی document، بعد از هندلرهای React) اجرا می‌شه.
 document.addEventListener("pointerup",function(){
-  if(pendingHaptic){pendingHaptic=false;haptic();}
+  if(pendingHaptic&&!isIOS){pendingHaptic=false;haptic();}
 },{passive:true,capture:true});
+document.addEventListener("click",function(e){
+  if(!pendingHaptic)return;
+  pendingHaptic=false;
+  if(e.target===iosLabel||(iosLabel&&iosLabel.contains(e.target)))return;
+  haptic();
+});
+document.addEventListener("pointercancel",function(){pendingHaptic=false;},{passive:true});
 function release(){
   if(!cur)return;
   var el=cur;
