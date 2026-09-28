@@ -835,19 +835,16 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 .mentor-search .mentor-search-clear svg{ position:static; transform:none; color:inherit; pointer-events:none; }
 /* فیلدِ search مرورگر دکمه‌ی پاک‌کنِ خودش را هم دارد؛ یکی کافی است */
 .mentor-search input[type="search"]::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; display:none; }
-/* دکمه‌ی بازکردنِ پنلِ فیلترها: مربعیِ کنارِ فیلدِ جستجو */
-.mentor-filter-toggle{ position:relative; flex:0 0 auto; }
-.mentor-filter-toggle.is-on{ color:var(--accent); border-color:rgba(var(--accent-rgb),.55); }
-.mentor-filter-toggle-count{
-  position:absolute; top:-6px; inset-inline-end:-6px; min-width:16px; height:16px; padding:0 3px;
-  display:inline-flex; align-items:center; justify-content:center; border-radius:999px; border:1px solid var(--accent);
-  font-size:9.5px; font-weight:800; line-height:1; color:var(--accent);
-}
+/* دکمه‌ی «فیلتر» کنارِ فیلدِ جستجو: خودِ قرصِ .trade-cal-pill-btnِ تقویمِ اقتصادی
+   (ظاهر همان‌جا تعریف شده)؛ این‌جا فقط جایش در ردیف */
+.mentor-filter-toggle{ flex:0 0 auto; align-self:center; white-space:nowrap; cursor:pointer; font-family:inherit; }
 .mentor-filter-grid{ display:grid; grid-template-columns:1fr; gap:10px; padding-top:2px; }
 @media (min-width:520px){ .mentor-filter-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 @media (min-width:760px){ .mentor-filter-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 .mentor-filter-field{ display:flex; flex-direction:column; gap:5px; min-width:0; }
 .mentor-filter-label{ font-size:11px; font-weight:700; color:var(--muted); }
+/* مدرک/پذیرش: چک‌باکسِ استانداردِ سایت (.auth-checkbox) */
+.mentor-filter-checks{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2) var(--m-5); padding-top:var(--m-3); }
 .mentor-filter-actions{ display:flex; align-items:center; justify-content:flex-end; gap:var(--m-3); margin-top:var(--m-1); }
 
 /* نتیجه‌ی قبلی تا رسیدنِ نتیجه‌ی تازه کم‌رنگ می‌ماند (بدونِ پرشِ اسپینر) */
@@ -1258,7 +1255,10 @@ section.mentor-section.is-flat .mentor-toggle-row:last-child{ padding-bottom:0; 
 }
 
 /* ── کشف: «پیدا کردن منتور» (ردیف‌های افقی + فیلتر) ─────────────────── */
-.mentor-carousel + .mentor-carousel .mentor-section-title{ margin-top:var(--m-5); }
+/* هر بخش (ردیفِ افقی، نتیجه‌ها، ذخیره‌شده‌ها) داخلِ یک قابِ .trade-surface.
+   ریستِ سراسریِ section{padding:34px 0; border-top} نباید روی قاب بنشیند. */
+section.mentor-box{ padding:var(--m-4); margin:0 0 var(--m-4); border-top:1px solid var(--surface-line); min-width:0; }
+.mentor-box > .mentor-section-title{ margin-top:0; }
 .mentor-carousel .mentor-section-title{ margin-bottom:var(--m-3); }
 /* کشیدن با ماوس: نشانگرِ دست، و در حینِ کشیدن اسنپ خاموش تا کشیدن روان باشد */
 @media (hover:hover) and (pointer:fine){ .mentor-carousel-row{ cursor:grab; } }

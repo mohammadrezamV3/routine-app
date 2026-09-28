@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Bookmark, Search, SearchX, SlidersHorizontal, Sparkles, Star, Users, X } from "lucide-react";
+import { ArrowRight, Bookmark, Filter, Search, SearchX, Sparkles, Star, Users, X } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorEmptyState, MentorSectionTitle } from "@/components/MentorUI";
 import { MentorCard } from "@/components/MentorCard";
@@ -126,12 +126,9 @@ function Discovery() {
   );
 }
 
-const CERT_OPTIONS = [{ value: "", label: "همه" }, { value: "1", label: "دارای مدرک" }];
-const OPEN_OPTIONS = [{ value: "", label: "همه" }, { value: "1", label: "پذیرش باز" }];
-
-/** ناحیه‌ی فیلتر — جستجوِ همیشه‌پیدا + دکمه‌ی فیلترها (چپِ جستجو در RTL)؛ بقیه‌ی
- *  فیلترها (بخش/مدرک/پذیرش/ترتیب/امتیاز/پاسخ) داخلِ پنلِ جمع‌شونده، هرکدام یک
- *  فیلدِ کشویی، با دکمه‌ی «اعمال» که همه را یک‌جا می‌فرستد */
+/** ناحیه‌ی فیلتر — جستجوِ همیشه‌پیدا + دکمه‌ی «فیلتر» (همان قرصِ تقویمِ اقتصادی،
+ *  چپِ جستجو در RTL)؛ بقیه‌ی فیلترها داخلِ پنلِ جمع‌شونده: بخش/ترتیب/امتیاز/پاسخ
+ *  فیلدِ کشویی، مدرک/پذیرش چک‌باکس، با دکمه‌ی «اعمال» که همه را یک‌جا می‌فرستد */
 function FilterPanel({
   filters, qInput, onQInput, onChange, onClear,
 }: {
@@ -175,25 +172,25 @@ function FilterPanel({
         </label>
         <button
           type="button"
-          className={`account-outline-btn mentor-btn is-icon mentor-filter-toggle${activeCount ? " is-on" : ""}`}
+          className={`trade-cal-pill-btn mentor-filter-toggle${open || activeCount ? " on" : ""}`}
           aria-expanded={open}
           aria-controls="mentor-filter-panel"
-          aria-label={activeCount ? `فیلترها (${faNum(activeCount)} فعال)` : "فیلترها"}
           onClick={() => setOpen((o) => !o)}
         >
-          <SlidersHorizontal size={16} {...IC} />
-          {activeCount > 0 && <span className="mentor-filter-toggle-count">{faNum(activeCount)}</span>}
+          <Filter size={15} {...IC} /> فیلتر{activeCount ? ` (${faNum(activeCount)})` : ""}
         </button>
       </div>
 
       <MentorCollapse open={open} id="mentor-filter-panel">
         <div className="mentor-filter-grid">
           <SelectField label="بخش" value={draft.category} onChange={(v) => setDraft((d) => ({ ...d, category: v }))} options={CATEGORY_OPTIONS} />
-          <SelectField label="مدرک" value={draft.cert ? "1" : ""} onChange={(v) => setDraft((d) => ({ ...d, cert: v === "1" }))} options={CERT_OPTIONS} />
-          <SelectField label="پذیرش" value={draft.open ? "1" : ""} onChange={(v) => setDraft((d) => ({ ...d, open: v === "1" }))} options={OPEN_OPTIONS} />
           <SelectField label="ترتیب" value={draft.sort} onChange={(v) => setDraft((d) => ({ ...d, sort: v as MentorSort }))} options={SORT_OPTIONS} />
           <SelectField label="حداقل امتیاز" value={String(draft.minRating)} onChange={(v) => setDraft((d) => ({ ...d, minRating: Number(v) }))} options={RATING_OPTIONS} />
           <SelectField label="زمان پاسخ" value={String(draft.maxResponse)} onChange={(v) => setDraft((d) => ({ ...d, maxResponse: Number(v) }))} options={RESPONSE_OPTIONS} />
+        </div>
+        <div className="mentor-filter-checks">
+          <CheckField label="دارای مدرک" checked={draft.cert} onChange={(v) => setDraft((d) => ({ ...d, cert: v }))} />
+          <CheckField label="پذیرش باز" checked={draft.open} onChange={(v) => setDraft((d) => ({ ...d, open: v }))} />
         </div>
         <div className="mentor-filter-actions">
           {dirty && (
@@ -217,11 +214,20 @@ function SelectField({
   return (
     <label className="mentor-filter-field">
       <span className="mentor-filter-label">{label}</span>
-      <select className="wsearch-newform-name" value={value} onChange={(e) => onChange(e.target.value)}>
+      <select className="wsearch-newform-name trade-glass-field" value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
+    </label>
+  );
+}
+
+function CheckField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="auth-remember-label mentor-filter-check">
+      <input type="checkbox" className="auth-checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
     </label>
   );
 }
@@ -287,6 +293,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
       <button type="button" className="mentor-text-btn mentor-list-back" onClick={onBack}>
         <ArrowRight size={14} {...IC} /> بازگشت به ردیف‌ها
       </button>
+      <section className="trade-surface mentor-box">
       <MentorSectionTitle
         icon={<Users size={15} {...IC} />}
         action={stale ? <Spinner size={14} /> : undefined}
@@ -326,6 +333,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
           )}
         </div>
       )}
+      </section>
     </>
   );
 }
@@ -405,6 +413,7 @@ function SavedView({ onBack }: { onBack: () => void }) {
   return (
     <>
       {back}
+      <section className="trade-surface mentor-box">
       <MentorSectionTitle icon={<Bookmark size={15} {...IC} />}>منتورهای ذخیره‌شده</MentorSectionTitle>
       {error && !cards?.length ? (
         <MentorErrorState message={error} onRetry={reload} />
@@ -424,6 +433,7 @@ function SavedView({ onBack }: { onBack: () => void }) {
           )}
         </>
       )}
+      </section>
     </>
   );
 }
