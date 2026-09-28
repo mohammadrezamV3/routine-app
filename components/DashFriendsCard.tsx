@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, Loader2, Plus, Star, Trash2, Users, X } from "lucide-react";
 import { DashCard } from "./DashCard";
@@ -43,6 +43,32 @@ const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
 // کارت «دوستان» — واقعا به /api/friends وصله. جستجوی زنده (بدون دکمه‌ی
 // ارسال جدا) برای افزودن دوست جدید؛ درخواست‌های واردشده هم دیگه توی
 // اطلاعیه‌ها/یادآوری‌ها نیستن، همین‌جا (پاپ‌آپ دوستان) قابل قبول/ردن.
+// کشِ آخرین لیستِ دوستان (حافظه + localStorage) تا کارت همون اول با داده
+// رندر بشه و «در حال بارگذاری» نبینه؛ داده‌ی تازه پشتِ صحنه جایگزین می‌شه.
+const FRIENDS_CACHE_KEY = "friends-cache-v1";
+const memFriendsCache = new Map<string, Friend[]>();
+function readFriendsCache(key: string): Friend[] | null {
+  const mem = memFriendsCache.get(key);
+  if (mem) return mem;
+  try {
+    const raw = window.localStorage.getItem(`${FRIENDS_CACHE_KEY}:${key}`);
+    const list = raw ? (JSON.parse(raw) as Friend[]) : null;
+    if (Array.isArray(list)) { memFriendsCache.set(key, list); return list; }
+  } catch {}
+  return null;
+}
+function writeFriendsCache(key: string, list: Friend[] | null) {
+  try {
+    if (list) {
+      memFriendsCache.set(key, list);
+      window.localStorage.setItem(`${FRIENDS_CACHE_KEY}:${key}`, JSON.stringify(list));
+    } else {
+      memFriendsCache.delete(key);
+      window.localStorage.removeItem(`${FRIENDS_CACHE_KEY}:${key}`);
+    }
+  } catch {}
+}
+
 export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
   const { status } = useSession();
   const [friends, setFriends] = useState<Friend[] | null>(null);
@@ -62,6 +88,17 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const [viewingProfile, setViewingProfile] = useState<{ id: string; canStar: boolean } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const cacheKey = module ?? "routine";
+
+  // قبل از پینت: اگه کش داریم همون رو نشون بده (بدون لودینگ).
+  useLayoutEffect(() => {
+    const cached = readFriendsCache(cacheKey);
+    if (cached) setFriends((prev) => prev ?? cached);
+  }, [cacheKey]);
+  // هر لیستِ تازه از سرور کش می‌شه.
+  useEffect(() => {
+    if (friends && !authRequired) writeFriendsCache(cacheKey, friends);
+  }, [friends, authRequired, cacheKey]);
 
   async function loadFriends() {
     // داشبورد روتین (بدون module) داده‌اش از قبل داخل HTML آمده — همان
@@ -104,7 +141,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   // SessionProvider می‌خونه (نه یه فچ جدا).
   useEffect(() => {
     if (status === "loading") return;
-    if (status !== "authenticated") { setAuthRequired(true); return; }
+    if (status !== "authenticated") { writeFriendsCache(cacheKey, null); setFriends(null); setAuthRequired(true); return; }
     loadFriends();
     loadRequests();
   }, [status]);
