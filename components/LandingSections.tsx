@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
-  ArrowLeft, Bell, Bot, Camera, Check, ChevronDown, Flame, Quote,
+  ArrowLeft, Bell, Bot, Check, ChevronDown, Flame, Quote,
   ShieldCheck, TrendingUp, Headset, Lightbulb, Smartphone, BarChart3, Zap,
   Users, Sparkles, RefreshCw, UserPlus, LayoutGrid, CalendarCheck,
-  CalendarDays, Dumbbell, Apple, CandlestickChart, CalendarClock, Clock, Route, GraduationCap, Megaphone, SunMoon,
+  CalendarDays, Dumbbell, Apple, CandlestickChart, CalendarClock, Clock, Route, GraduationCap, Megaphone, SunMoon, Target,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
@@ -167,7 +167,7 @@ export function LandingHowItWorks() {
 
 /* ───────────────────────── 3) Bento ───────────────────────── */
 // هر تصویرِ کوچک یک برش از خودِ اپ است (MentorChat، اعلانِ پوشِ reminderPlan،
-// StreakFlame، DashFriendsCard، TradeMtLinkPanel، CalorieAiScanModal) — نه
+// StreakFlame، DashFriendsCard، TradeMtLinkPanel، CalorieMacrosCard) — نه
 // شکلِ نمادین. کلِ بخشِ تصویر aria-hidden و inert است.
 
 function VisE2EE() {
@@ -250,12 +250,12 @@ function VisFood() {
   return (
     <div className="ls-vis ls-vis-food dash-scope" aria-hidden="true" {...INERT}>
       <div className="flex items-center gap-1.5 text-[12px] font-bold text-dash-text">
-        <Sparkles className="h-4 w-4 text-dash-green" /> چلو مرغ
+        <Target className="h-4 w-4 text-dash-green" /> هدفِ روزانه‌ی تو
       </div>
       <div className="ls-food-grid">
         {[
-          { l: "کالری", v: "۶۲۰" }, { l: "پروتئین (گرم)", v: "۴۲" },
-          { l: "کربوهیدرات (گرم)", v: "۷۸" }, { l: "چربی (گرم)", v: "۱۴" },
+          { l: "کالری", v: "۲۱۰۰" }, { l: "پروتئین (گرم)", v: "۱۴۰" },
+          { l: "کربوهیدرات (گرم)", v: "۲۲۰" }, { l: "چربی (گرم)", v: "۷۰" },
         ].map((x) => (
           <div key={x.l} className="rounded-xl border border-dash-border bg-white/[0.02] px-2 py-1.5 text-center">
             <div className="mono text-[12px] font-bold text-dash-text">{x.v}</div>
@@ -273,7 +273,7 @@ const BENTO = [
   { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک با ۸ سطح", body: "از یک روز تا یک سال؛ هر سطح شعله‌ی خودش را دارد.", vis: VisStreak },
   { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "پیشرفتِ امروز و استریکِ دوستانت را کنار خودت ببین.", vis: VisFriends },
   { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "همگام‌سازی خودکار متاتریدر", body: "با اکسپرت و کدِ اتصال، معاملات بدونِ تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
-  { key: "food", cls: "ls-b-food", icon: Camera, title: "اسکن غذا با هوش مصنوعی", body: "عکس بگیر؛ کالری و درشت‌مغذی‌ها تخمین زده می‌شوند.", vis: VisFood },
+  { key: "food", cls: "ls-b-food", icon: Target, title: "هدفِ کالری و ماکروی شخصی", body: "از قد، وزن، سن، روزهای تمرین و هدفت، کالری و درشت‌مغذیِ روزانه‌ات حساب می‌شود.", vis: VisFood },
 ];
 
 export function LandingBento() {
@@ -316,7 +316,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }
   { icon: Bot, title: "دستیار «نومو»", body: "برنامه‌ات را با زبانِ خودت بساز، جابه‌جا کن یا پاک کن.", href: "/ai-planner" },
   { icon: BarChart3, title: "آنالیز هفتگی", body: "امتیاز، نمره، بینش و پیش‌بینیِ پایانِ هفته از داده‌ی خودت." },
   { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه‌ی AI یا دستی، شروعِ تمرین با کرنومتر و کاتالوگِ حرکات.", href: "/bodybuilding-program" },
-  { icon: Apple, title: "کالری‌شمار و اسکن غذا", body: "کالری و درشت‌مغذی‌ها، با تخمین از روی عکسِ غذا.", href: "/calorie-counter" },
+  { icon: Apple, title: "کالری‌شمار", body: "هدفِ کالری و درشت‌مغذیِ شخصی، ثبتِ وعده‌ها و نمودارِ هفتگی.", href: "/calorie-counter" },
   { icon: CandlestickChart, title: "ژورنال ترید", body: "حساب‌محور، با آمار، چک‌لیستِ ورود، یادداشت و برچسب.", href: "/trading-journal" },
   { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کدِ اتصال، بدونِ رمزِ حساب.", href: "/trading-journal" },
   { icon: CalendarClock, title: "تقویم اقتصادی", body: "Actual/Forecast/Previous، فیلترِ تأثیر و ارز و هشدارِ خبر.", href: "/economic-calendar" },
