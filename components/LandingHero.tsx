@@ -33,7 +33,7 @@ const ROT_WORDS = ["روتین", "تمرین", "معامله", "یادگیری"]
 // «شروع». چرخه فقط تیک‌خوردنِ پشت‌سرهمِ همین ردیف‌هاست.
 const PHONE_TASKS: MockTask[] = [
   { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium" },
-  { name: "مطالعه‌ی کتاب", time: "13:30", importance: "high", tag: "یادگیری" },
+  { name: "مطالعه", time: "13:30", importance: "high", tag: "یادگیری" },
   { name: "پیاده‌روی عصر", time: "18:00" },
   { name: "برنامه تمرینی امروز", exercise: true },
 ];
@@ -87,35 +87,81 @@ export function LandingHero() {
     return () => clearInterval(id);
   }, [inView, reduced]);
 
-  // پارالاکسِ نشانگر: فقط دسکتاپِ واقعی (hover+pointer:fine) و بدون حرکت‌کاهی.
-  // فقط دو متغیرِ CSS نوشته می‌شه؛ خودِ جابه‌جایی transform ـه.
+  // حرکتِ لایه‌ها (پارالاکسِ نشانگر + شناوریِ آرامِ کارت‌ها) — با JS، نه
+  // transition/animation ـِ CSS: هر فریم مقدارِ نهایی روی پیکسلِ کاملِ دستگاه
+  // گرد می‌شه (با حسابِ zoom ـِ صحنه و devicePixelRatio) و فقط وقتی عوض شده
+  // نوشته می‌شه. پس لایه هیچ‌وقت کامپوزیت/راسترِ جدا نمی‌شه و متن همیشه تیزه.
+  // پارالاکس فقط دسکتاپِ واقعی (hover+pointer:fine)؛ با حرکت‌کاهی هیچ‌کدوم.
   useEffect(() => {
     const sec = sectionRef.current;
     const stage = stageRef.current;
-    if (!sec || !stage || !window.matchMedia) return;
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches || prefersReducedMotion()) return;
+    if (!sec || !stage || reduced || !inView) return;
+    const layers = Array.from(stage.querySelectorAll<HTMLElement>(".lh-layer")).map((el) => ({
+      el,
+      d: Number(el.dataset.d || 0),
+      f: el.dataset.f !== undefined ? Number(el.dataset.f) : null,
+      tx: 0, ty: 0, bx: 0, by: 0,
+    }));
+    const parallax = !!window.matchMedia?.("(hover: hover) and (pointer: fine)").matches;
+    let k = 1;
+    let dpr = window.devicePixelRatio || 1;
+    // موقعیتِ پایه‌ی هر لایه (بدونِ جابه‌جاییِ فعلی) به پیکسلِ واقعی
+    const measure = () => {
+      dpr = window.devicePixelRatio || 1;
+      k = parseFloat(getComputedStyle(stage).getPropertyValue("--k")) || 1;
+      for (const L of layers) {
+        const r = L.el.getBoundingClientRect();
+        L.bx = r.left - L.tx * k;
+        L.by = r.top - L.ty * k;
+      }
+    };
+    // مقدارِ دلخواه (px ـِ داخلِ صحنه) → نزدیک‌ترین مقداری که لبه‌ی لایه رو
+    // روی پیکسلِ کاملِ دستگاه می‌نشونه
+    const snap = (base: number, v: number) => (Math.round((base + v * k) * dpr) / dpr - base) / k;
+    let tx = 0, ty = 0, cx = 0, cy = 0;
     let raf = 0;
-    let nx = 0, ny = 0;
-    const flush = () => {
-      raf = 0;
-      stage.style.setProperty("--px", nx.toFixed(3));
-      stage.style.setProperty("--py", ny.toFixed(3));
+    let t0 = 0;
+    const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      if (!t0) t0 = now;
+      const t = (now - t0) / 1000;
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      for (const L of layers) {
+        const fy = L.f === null ? 0 : -5 + 5 * Math.cos(((t + L.f) / 6.5) * Math.PI * 2);
+        const x = snap(L.bx, -cx * L.d);
+        const y = snap(L.by, -cy * L.d + fy);
+        if (Math.abs(x - L.tx) > 0.001 || Math.abs(y - L.ty) > 0.001) {
+          L.tx = x; L.ty = y;
+          L.el.style.translate = `${x.toFixed(3)}px ${y.toFixed(3)}px`;
+        }
+      }
     };
     const onMove = (e: PointerEvent) => {
       const r = sec.getBoundingClientRect();
-      nx = Math.max(-0.5, Math.min(0.5, (e.clientX - r.left) / r.width - 0.5));
-      ny = Math.max(-0.5, Math.min(0.5, (e.clientY - r.top) / r.height - 0.5));
-      if (!raf) raf = requestAnimationFrame(flush);
+      tx = Math.max(-0.5, Math.min(0.5, (e.clientX - r.left) / r.width - 0.5));
+      ty = Math.max(-0.5, Math.min(0.5, (e.clientY - r.top) / r.height - 0.5));
     };
-    const onLeave = () => { nx = 0; ny = 0; if (!raf) raf = requestAnimationFrame(flush); };
-    sec.addEventListener("pointermove", onMove, { passive: true });
-    sec.addEventListener("pointerleave", onLeave);
+    const onLeave = () => { tx = 0; ty = 0; };
+    // جابه‌جاییِ اسکرول موقعیتِ نسبیِ لایه‌ها به پیکسل رو عوض نمی‌کنه (اسکرول
+    // همیشه عددِ صحیحِ پیکسلِ دستگاهه)، ولی تغییرِ اندازه چرا
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(stage);
+    window.addEventListener("resize", measure);
+    measure();
+    if (parallax) {
+      sec.addEventListener("pointermove", onMove, { passive: true });
+      sec.addEventListener("pointerleave", onLeave);
+    }
+    raf = requestAnimationFrame(frame);
     return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
       sec.removeEventListener("pointermove", onMove);
       sec.removeEventListener("pointerleave", onLeave);
-      if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [reduced, inView]);
 
   const ticked = Math.min(step, PHONE_TASKS.length);
   const tasks = PHONE_TASKS.map((t, i) => ({ ...t, done: i < ticked }));
@@ -140,7 +186,7 @@ export function LandingHero() {
         <div className="lh-copy">
           <span className="lh-eyebrow lh-rise" style={{ "--i": 0 } as React.CSSProperties}>
             <span className="lh-eyebrow-dot" aria-hidden="true" />
-            روتین، سلامتی، ترید و یادگیری — فارسی و یک‌جا
+            روتین، تمرین، تغذیه، ترید و یادگیری — یک‌جا و فارسی
           </span>
 
           {/* SEO: «روتین اپ» و «آریون» هر دو داخلِ خودِ h1 هستند (نه فقط متادیتا). */}
@@ -166,9 +212,10 @@ export function LandingHero() {
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            آریون یک روتین اپ فارسیه: روتین روزانه و هفتگی با یادآوری و استریک، آنالیز هفتگی،
-            برنامه‌ی بدنسازی و کالری‌شمار، ژورنال ترید با همگام‌سازی متاتریدر، رودمپ یادگیری و
-            مربی‌ها — همه یک‌جا، با دستیار «نومو» که زبون خودت رو می‌فهمه.
+            هدف‌ها لای چند اپ و یادداشت پخش شده‌اند، عادتِ تازه بعد از چند روز فراموش می‌شود و
+            معامله‌ها بی‌مرور تکرار می‌شوند. آریون همه را یک‌جا جمع می‌کند: روتین با یادآوری و استریک،
+            تمرین و کالری، ژورنال ترید همگام با متاتریدر و رودمپ یادگیری — تا هر روز بدانی کجای مسیری
+            و قدمِ بعدی چیست.
           </p>
 
           <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>
@@ -176,7 +223,7 @@ export function LandingHero() {
               href="/auth/signup"
               className={`lh-cta-primary inline-flex items-center gap-1.5 rounded-[20px] px-6 py-3.5 text-[14.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-8 sm:text-[15.5px] ${t.accentBg} ${t.accentShadow}`}
             >
-              شروع رایگان <ArrowLeft size={17} className="lh-cta-arrow" />
+              رایگان شروع کن <ArrowLeft size={17} className="lh-cta-arrow" />
             </Link>
             <Link
               href="/auth/login"
@@ -187,9 +234,9 @@ export function LandingHero() {
           </div>
 
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
-            <li><ShieldCheck size={15} aria-hidden="true" /> اطلاعاتت امن و محرمانه</li>
-            <li><Lock size={14} aria-hidden="true" /> چتِ مربی رمزگذاری‌شده‌ی سرتاسری</li>
-            <li><Sparkles size={14} aria-hidden="true" /> دوره‌ی آزمایشی رایگان</li>
+            <li><Sparkles size={14} aria-hidden="true" /> ۷ روز دسترسیِ کامل به همه‌ی بخش‌ها</li>
+            <li><ShieldCheck size={15} aria-hidden="true" /> بدون کارت بانکی</li>
+            <li><Lock size={14} aria-hidden="true" /> گفت‌وگوی مربی با رمزگذاری سرتاسری</li>
           </ul>
 
           {/* لینک‌های داخلی به صفحه‌های دسته — هم برای بازدیدکننده، هم انتقال اعتبار صفحه‌ی اصلی */}
@@ -206,7 +253,7 @@ export function LandingHero() {
           <div className="lh-stage-inner">
             <div className="lh-halo" />
 
-            <div className="lh-layer lh-layer-phone" style={{ "--d": 10 } as React.CSSProperties}>
+            <div className="lh-layer lh-layer-phone" data-d="10">
               <div className="lh-phone">
                 <div className="lh-phone-screen">
                   {/* بومِ ۳۶۰پیکسلی = عرضِ واقعیِ یک گوشی؛ کوچک‌نمایی با transform.
@@ -266,8 +313,8 @@ export function LandingHero() {
             </div>
 
             {/* ژورنال ترید — کارتِ یک حساب (TradeAccountsPanel) */}
-            <div className="lh-layer lh-pos-trade" style={{ "--d": 34 } as React.CSSProperties}>
-              <div className="lh-float lh-card lh-card-trade" style={{ "--f": "0s" } as React.CSSProperties}>
+            <div className="lh-layer lh-pos-trade" data-d="34" data-f="0">
+              <div className="lh-float lh-card lh-card-trade">
                 <div className="lh-trade-name">
                   <span className="trade-account-name">حساب پراپ</span>
                   <span className="trade-account-dot" style={{ background: "#3E7BFA" }} />
@@ -284,8 +331,8 @@ export function LandingHero() {
             </div>
 
             {/* کالری‌شمار — سرِ CalorieFoodPlanCard */}
-            <div className="lh-layer lh-pos-cal" style={{ "--d": 26 } as React.CSSProperties}>
-              <div className="lh-float lh-card lh-card-cal dash-scope" style={{ "--f": "-2.2s" } as React.CSSProperties}>
+            <div className="lh-layer lh-pos-cal" data-d="26" data-f="-2.2">
+              <div className="lh-float lh-card lh-card-cal dash-scope">
                 <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
                   ۱۴۲۰<span className="mx-1 text-dash-muted">/</span>۲۱۰۰
                   <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted">کالری</span>
@@ -304,8 +351,8 @@ export function LandingHero() {
             </div>
 
             {/* نومو — پنلِ RoutineAiFab */}
-            <div className="lh-layer lh-pos-ai" style={{ "--d": 42 } as React.CSSProperties}>
-              <div className="lh-float lh-card lh-card-ai" style={{ "--f": "-4.1s" } as React.CSSProperties}>
+            <div className="lh-layer lh-pos-ai" data-d="42" data-f="-4.1">
+              <div className="lh-float lh-card lh-card-ai">
                 <div className="routine-ai-title lh-ai-title">
                   {orbLive ? <SiriOrb size="20px" /> : <span className="lh-orb-still lh-orb-sm" />}
                   نومو
@@ -316,8 +363,8 @@ export function LandingHero() {
             </div>
 
             {/* مربی — MentorCard + خطِ رمزگذاریِ گفت‌وگو */}
-            <div className="lh-layer lh-pos-mentor" style={{ "--d": 30 } as React.CSSProperties}>
-              <div className="lh-float lh-card-mentor" style={{ "--f": "-1.2s" } as React.CSSProperties}>
+            <div className="lh-layer lh-pos-mentor" data-d="30" data-f="-1.2">
+              <div className="lh-float lh-card-mentor">
                 <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="۴٫۹" count="۳۸" since="فروردین ۱۴۰۴" />
               </div>
             </div>

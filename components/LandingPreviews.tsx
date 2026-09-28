@@ -253,7 +253,7 @@ export function PreviewCalorie() {
         </div>
       </MockCard>
       {/* هدفِ روزانه — از lib/calorieCalc.ts (قد، وزن، سن، روزهای تمرین، هدف) */}
-      <div className="lsc-scan-panel">
+      <div className="lsc-goal-panel">
         <div className="modal-head"><div className="modal-title">هدفِ روزانه‌ی تو</div></div>
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-4 gap-2">

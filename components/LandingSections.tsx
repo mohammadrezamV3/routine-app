@@ -89,10 +89,15 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
 // تا پاسخِ /api/public/stats برسه همین نشون داده می‌شه.
 const USERS_FALLBACK = 1312;
 
+// هر عدد از خودِ کد شمرده شده، نه تخمین — اگر منبع عوض شد، این‌جا هم عوض شود:
+//  ۲۶۴ = FOOD_SEED.length (lib/foodSeed.ts، دیتابیسِ خوراکیِ کالری‌شمار)
+//  ۱۴۹ = EXERCISE_CATALOG.length (lib/exerciseCatalog.ts، هر حرکت با آموزش و عضلاتِ درگیر)
+//  ۹   = CALENDAR_CURRENCIES.length (lib/economicCalendar.ts)
+// (خودِ آرایه‌ها import نمی‌شوند تا کاتالوگِ سنگین واردِ باندلِ لندینگ نشود.)
 const STATS: { to?: number; suffix?: string; text?: string; label: string }[] = [
-  { to: 8, label: "بخش در یک اپ" },
-  { to: 365, label: "روز سطح استریک" },
-  { text: "MT4·MT5", label: "همگام با متاتریدر ۴ و ۵" },
+  { to: 264, label: "خوراکیِ ایرانی و جهانی در کالری‌شمار" },
+  { to: 149, label: "حرکت بدنسازی با آموزش و عضلاتِ درگیر" },
+  { to: 9, label: "ارزِ اصلی در تقویم اقتصادی" },
 ];
 
 export function LandingStats() {
@@ -127,9 +132,9 @@ export function LandingStats() {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const STEPS = [
-  { icon: UserPlus, title: "ثبت‌نام رایگان", body: "در چند ثانیه حساب بساز؛ بدون کارت بانکی و بدون تعهد." },
-  { icon: LayoutGrid, title: "بخش‌هایت را انتخاب کن", body: "روتین، ورزش، ترید، رودمپ… هرچه لازم داری را روشن کن یا با «نومو» برنامه‌ات را بچین." },
-  { icon: CalendarCheck, title: "هر روز تیک بزن", body: "کارهای امروز را انجام بده، استریک بساز و پیشرفتت را ببین." },
+  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. از همان لحظه یک هفته همه‌ی بخش‌ها برایت باز است." },
+  { icon: LayoutGrid, title: "برنامه‌ات را بچین", body: "کارهای تکراری، تمرین، هدف کالری یا حساب معاملاتی‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
+  { icon: CalendarCheck, title: "هر روز تیک بزن", body: "کارهای امروز را علامت بزن، استریک را نگه دار و آخر هفته ببین واقعاً چقدر جلو رفته‌ای." },
 ];
 
 export function LandingHowItWorks() {
@@ -268,12 +273,12 @@ function VisFood() {
 }
 
 const BENTO = [
-  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "خصوصی و رمزگذاری سرتاسری", body: "گفت‌وگو و یادداشتِ خصوصیِ مربی‌ها روی دستگاه رمز می‌شود؛ نه سرور و نه هیچ ادمینی متن پیام‌ها را نمی‌بیند.", vis: VisE2EE },
-  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "همه‌جا، مثل یک اپ", body: "روی گوشی نصب کن و یادآوری‌ها را با نوتیفیکیشن بگیر.", vis: VisPwa },
-  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک با ۸ سطح", body: "از یک روز تا یک سال؛ هر سطح شعله‌ی خودش را دارد.", vis: VisStreak },
-  { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "پیشرفتِ امروز و استریکِ دوستانت را کنار خودت ببین.", vis: VisFriends },
-  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "همگام‌سازی خودکار متاتریدر", body: "با اکسپرت و کدِ اتصال، معاملات بدونِ تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
-  { key: "food", cls: "ls-b-food", icon: Target, title: "هدفِ کالری و ماکروی شخصی", body: "از قد، وزن، سن، روزهای تمرین و هدفت، کالری و درشت‌مغذیِ روزانه‌ات حساب می‌شود.", vis: VisFood },
+  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "خصوصی، با رمزگذاری سرتاسری", body: "گفت‌وگو و یادداشت خصوصی مربی‌ها روی دستگاه خودت رمز می‌شود؛ نه سرور و نه هیچ ادمینی متن پیام‌ها را نمی‌بیند.", vis: VisE2EE },
+  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "همه‌جا، مثل یک اپ", body: "روی گوشی نصبش کن و یادآوری‌ها را سرِ وقت، با نوتیفیکیشن بگیر.", vis: VisPwa },
+  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک با ۸ سطح", body: "هر روزِ کامل شعله را بزرگ‌تر می‌کند؛ از روز اول تا یک سال پیوسته.", vis: VisStreak },
+  { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "وقتی دوستانت پیشرفتت را می‌بینند، ادامه‌دادن ساده‌تر می‌شود.", vis: VisFriends },
+  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "همگام‌سازی خودکار متاتریدر", body: "با اکسپرت و کد اتصال، معاملات بدون تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
+  { key: "food", cls: "ls-b-food", icon: Target, title: "هدف کالری و ماکروی شخصی", body: "از قد، وزن، سن، روزهای تمرین و هدفت، کالری و درشت‌مغذی روزانه‌ات محاسبه می‌شود.", vis: VisFood },
 ];
 
 export function LandingBento() {
@@ -281,7 +286,7 @@ export function LandingBento() {
   const inView = useInView(ref, { margin: "80px" });
   return (
     <div>
-      <SectionHead title="کوچک‌ترین جزئیات،" accent="با دقت طراحی شده" />
+      <SectionHead title="جزئیاتی که" accent="فرق را می‌سازند" />
       <div ref={ref} className={`ls-bento${inView ? "" : " is-paused"}`}>
         {BENTO.map((b, i) => {
           const Icon = b.icon;
@@ -311,22 +316,22 @@ export function LandingBento() {
 const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }[] = [
   { icon: CalendarCheck, title: "روتین روزانه", body: "برنامه‌های تکرارشونده با ساعت، تگ و اهمیت، و تیکِ هر روز.", href: "/routine" },
   { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه، و تقویمِ تاریخچه برای هر روزِ گذشته.", href: "/daily-planner" },
-  { icon: Flame, title: "پیگیری عادت و استریک", body: "۸ سطحِ استریک از ۱ تا ۳۶۵ روزِ کامل.", href: "/habit-tracker" },
-  { icon: Bell, title: "یادآوری و یادآوری دارو", body: "نوتیفیکیشنِ سرِ وقت برای برنامه‌ها و هر نوبتِ دارو." },
-  { icon: Bot, title: "دستیار «نومو»", body: "برنامه‌ات را با زبانِ خودت بساز، جابه‌جا کن یا پاک کن.", href: "/ai-planner" },
-  { icon: BarChart3, title: "آنالیز هفتگی", body: "امتیاز، نمره، بینش و پیش‌بینیِ پایانِ هفته از داده‌ی خودت." },
-  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه‌ی AI یا دستی، شروعِ تمرین با کرنومتر و کاتالوگِ حرکات.", href: "/bodybuilding-program" },
-  { icon: Apple, title: "کالری‌شمار", body: "هدفِ کالری و درشت‌مغذیِ شخصی، ثبتِ وعده‌ها و نمودارِ هفتگی.", href: "/calorie-counter" },
-  { icon: CandlestickChart, title: "ژورنال ترید", body: "حساب‌محور، با آمار، چک‌لیستِ ورود، یادداشت و برچسب.", href: "/trading-journal" },
-  { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کدِ اتصال، بدونِ رمزِ حساب.", href: "/trading-journal" },
-  { icon: CalendarClock, title: "تقویم اقتصادی", body: "Actual/Forecast/Previous، فیلترِ تأثیر و ارز و هشدارِ خبر.", href: "/economic-calendar" },
-  { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشنِ اصلی به وقتِ خودت، با ساعتِ تابستانیِ واقعی.", href: "/forex-sessions" },
-  { icon: Route, title: "رودمپ یادگیری", body: "مسیرِ مرحله‌به‌مرحله با هوش مصنوعی برای هر مهارتی.", href: "/learning-roadmap" },
-  { icon: GraduationCap, title: "مربی‌ها", body: "مربیِ احرازِ هویت‌شده، چتِ رمزگذاری‌شده و صفِ انتظار.", href: "/mentors" },
-  { icon: Users, title: "دوستان", body: "پیشرفت و استریکِ دوستانت در روتین، تمرین و کالری." },
+  { icon: Flame, title: "پیگیری عادت و استریک", body: "۸ سطح استریک، از ۱ تا ۳۶۵ روزِ کامل.", href: "/habit-tracker" },
+  { icon: Bell, title: "یادآوری و یادآوری دارو", body: "نوتیفیکیشن سرِ وقت برای برنامه‌ها و هر نوبت دارو." },
+  { icon: Bot, title: "دستیار «نومو»", body: "به فارسیِ معمولی بنویس؛ برنامه ساخته، جابه‌جا یا حذف می‌شود.", href: "/ai-planner" },
+  { icon: BarChart3, title: "آنالیز هفتگی", body: "امتیاز، نمره، بینش و پیش‌بینی پایان هفته از داده‌ی خودت." },
+  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه‌ی AI یا دستی، کرنومتر تمرین و کاتالوگ ۱۴۹ حرکت.", href: "/bodybuilding-program" },
+  { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکروی شخصی، ۲۶۴ خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
+  { icon: CandlestickChart, title: "ژورنال ترید", body: "حساب‌محور، با آمار، چک‌لیست ورود، یادداشت و برچسب.", href: "/trading-journal" },
+  { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال، بدون رمز حساب.", href: "/trading-journal" },
+  { icon: CalendarClock, title: "تقویم اقتصادی", body: "۹ ارز اصلی با Actual، Forecast و Previous، فیلتر تأثیر و هشدار خبر.", href: "/economic-calendar" },
+  { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
+  { icon: Route, title: "رودمپ یادگیری", body: "مسیر مرحله‌به‌مرحله با هوش مصنوعی، برای هر مهارتی.", href: "/learning-roadmap" },
+  { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، گفت‌وگوی رمزگذاری‌شده و صف انتظار.", href: "/mentors" },
+  { icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت در روتین، تمرین و کالری." },
   { icon: Megaphone, title: "اعلان‌ها و اطلاعیه‌ها", body: "اطلاعیه‌های آریون و اعلان‌هایت در یک پنل." },
-  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ پیش‌رونده؛ مثلِ یک اپ با آیکونِ خودش." },
-  { icon: SunMoon, title: "تمِ روشن و تیره", body: "هر دو تم، با همان ظاهرِ دقیق در همه‌ی بخش‌ها." },
+  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ پیش‌رونده؛ مثل یک اپ، با آیکون خودش." },
+  { icon: SunMoon, title: "تمِ روشن و تیره", body: "هر دو تم، با ظاهری یکدست در همه‌ی بخش‌ها." },
 ];
 
 export function LandingFeatureGrid() {
@@ -361,15 +366,15 @@ export function LandingFeatureGrid() {
 /* ───────────────────────── 4) Why us ───────────────────────── */
 
 const WHY_US = [
-  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعات تو محفوظ می‌مونه" },
-  { icon: TrendingUp, color: "#A855F7", title: "برنامه‌های شخصی", body: "متناسب با هدف‌ها و سبک زندگی تو" },
-  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "ما کنار توایم، هر زمان که نیاز داری" },
-  { icon: Lightbulb, color: "#F59E0B", title: "ابزارهای کاربردی", body: "همه‌چیز برای رشد در یک اپلیکیشن" },
-  { icon: Smartphone, color: "#EC4899", title: "همه‌جا در دسترس", body: "موبایل، تبلت یا دسکتاپ" },
-  { icon: BarChart3, color: "#06B6D4", title: "پیشرفت قابل‌مشاهده", body: "آمار و گزارش دقیق از مسیرت" },
-  { icon: Zap, color: "#F97316", title: "سریع و ساده", body: "بدون شلوغی، فقط چیزی که لازم داری" },
-  { icon: Users, color: "#14B8A6", title: "برای همه سبک‌ها", body: "از مبتدی تا حرفه‌ای" },
-  { icon: Sparkles, color: "#8B5CF6", title: "همیشه در حال بهتر شدن", body: "فیچرهای جدید مرتب اضافه می‌شن" },
+  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعاتت فروخته نمی‌شود و گفت‌وگوی مربی رمزگذاری سرتاسری دارد." },
+  { icon: TrendingUp, color: "#A855F7", title: "برنامه‌ی شخصی", body: "متناسب با هدف، بدن و سبک زندگی خودت." },
+  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را تیم آریون جواب می‌دهد، نه یک پاسخ خودکار." },
+  { icon: Lightbulb, color: "#F59E0B", title: "یک اپ به‌جای چند اپ", body: "روتین، تمرین، تغذیه، ترید و یادگیری کنار هم." },
+  { icon: Smartphone, color: "#EC4899", title: "همه‌جا همگام", body: "گوشی، تبلت یا کامپیوتر؛ هر تغییر همه‌جا دیده می‌شود." },
+  { icon: BarChart3, color: "#06B6D4", title: "پیشرفتی که دیده می‌شود", body: "آنالیز هفتگی نشان می‌دهد کجا جلو رفتی و کجا جا ماندی." },
+  { icon: Zap, color: "#F97316", title: "سریع و ساده", body: "بی‌شلوغی؛ فقط چیزی که لازم داری." },
+  { icon: Users, color: "#14B8A6", title: "برای هر سطحی", body: "چه تازه شروع کرده باشی، چه سال‌ها باشد که ادامه می‌دهی." },
+  { icon: Sparkles, color: "#8B5CF6", title: "همیشه در حال بهتر شدن", body: "قابلیت‌های تازه مرتب اضافه می‌شوند." },
 ];
 
 export function LandingWhyUs() {
@@ -396,19 +401,17 @@ export function LandingWhyUs() {
 
 /* ───────────────────────── 5) Quote ───────────────────────── */
 
+// فقط جمله‌هایی با گوینده‌ی مشخص و قابل‌استناد (یا ضرب‌المثلِ واقعیِ فارسی)
 const QUOTES = [
-  { text: "موفقیت مجموعه‌ای از انتخاب‌های کوچک و مهربانانه با خودته، روز از پی روز.", author: "برایان تریسی" },
-  { text: "هر قدم کوچیک هم یه قدمه؛ لازم نیست همیشه بزرگ باشه.", author: "ضرب‌المثل" },
-  { text: "به خودت زمان بده؛ رشد آروم هم رشده.", author: "ضرب‌المثل" },
-  { text: "امروز فقط کافیه یه‌کم بهتر از دیروز باشی.", author: "ضرب‌المثل" },
-  { text: "هر سفر بلندی، با یه قدم آروم شروع می‌شه.", author: "لائوتزو" },
-  { text: "نظم یعنی مهربونی با آینده‌ی خودت.", author: "ضرب‌المثل" },
-  { text: "عادت‌های کوچیک و ملایم، آروم‌آروم زندگی رو می‌سازن.", author: "جیمز کلییر" },
-  { text: "لازم نیست عجله کنی؛ فقط ادامه بده.", author: "ضرب‌المثل" },
-  { text: "هر روز یک فرصت تازه‌ست، بدون قضاوت دیروز.", author: "ضرب‌المثل" },
-  { text: "کیفیت روزهات، از جنس همون عادت‌های کوچیک و آرومته.", author: "جیمز کلییر" },
-  { text: "همیشه می‌شه دوباره شروع کرد، آروم و بدون از دست دادن امید.", author: "وینستون چرچیل" },
-  { text: "بهترین نسخه‌ی خودت، همونیه که با خودش مهربونه.", author: "ضرب‌المثل" },
+  { text: "ما همان چیزی هستیم که بارها و بارها انجامش می‌دهیم.", author: "ویل دورانت" },
+  { text: "به سطحِ هدف‌هایت بالا نمی‌روی؛ به سطحِ سیستم‌هایت سقوط می‌کنی.", author: "جیمز کلیر" },
+  { text: "سفرِ هزار فرسنگی با یک قدم آغاز می‌شود.", author: "لائوتزو" },
+  { text: "هر کاری که انجام می‌دهی، رأیی است به آدمی که می‌خواهی باشی.", author: "جیمز کلیر" },
+  { text: "قطره قطره جمع گردد، وانگهی دریا شود.", author: "ضرب‌المثل فارسی" },
+  { text: "انگیزه شروعت می‌کند؛ عادت ادامه‌ات می‌دهد.", author: "جیم رایون" },
+  { text: "کامیابی جمعِ تلاش‌های کوچکی است که روز به روز تکرار می‌شوند.", author: "رابرت کالیر" },
+  { text: "کار نیکو کردن از پُر کردن است.", author: "ضرب‌المثل فارسی" },
+  { text: "برنامه‌ها هیچ‌اند؛ برنامه‌ریزی همه‌چیز است.", author: "دوایت آیزنهاور" },
 ];
 
 export function LandingTestimonialQuote() {
@@ -496,12 +499,12 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Bot size={14} /> رایگان شروع کن، هر وقت خواستی ارتقا بده</span>
-          <h2 className="ls-cta-title">همین امروز شروع کن</h2>
-          <p className="ls-cta-sub">یک روتین ساده، یک تیک، یک روز بهتر.</p>
+          <span className="ls-cta-chip"><Sparkles size={14} /> ۷ روز، همه‌ی بخش‌ها، رایگان</span>
+          <h2 className="ls-cta-title">امروز، اولین تیک را بزن</h2>
+          <p className="ls-cta-sub">حساب بساز و یک هفته همه‌ی بخش‌ها را کامل امتحان کن؛ روتین پایه بعد از آن هم رایگان می‌ماند.</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              شروع رایگان <ArrowLeft size={16} />
+              رایگان شروع کن <ArrowLeft size={16} />
             </Link>
             <Link href="/auth/login" className="ls-btn ls-btn-ghost">ورود</Link>
           </div>
