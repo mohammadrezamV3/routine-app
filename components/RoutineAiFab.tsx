@@ -19,7 +19,7 @@ import {
 type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
-const GREETING = "سلام! چطور می‌تونم کمکت کنم؟";
+const GREETING = "سلام! من آری‌ام. چطور می‌تونم کمکت کنم؟";
 
 function newId() {
   return Math.random().toString(36).slice(2);
@@ -205,8 +205,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         type="button"
         className="routine-ai-fab"
         onClick={() => setOpen(true)}
-        aria-label="مدیر برنامه"
-        title="مدیر برنامه"
+        aria-label="آری"
+        title="آری"
       >
         <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>
@@ -224,12 +224,12 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
             style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight, minHeight: kbViewport.minHeight } : undefined}
             role="dialog"
             aria-modal="true"
-            aria-label="مدیر برنامه"
+            aria-label="آری"
           >
             <div className="modal-head">
               <div className="modal-title routine-ai-title">
                 <SiriOrb size="26px" state={orbState} amplitude={simulated} />
-                مدیر برنامه
+                آری
               </div>
               <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label="بستن">
                 <X size={16} />

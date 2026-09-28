@@ -122,6 +122,16 @@ export async function withAiBudget<T>(attempt: (timeoutMs: number) => Promise<T>
 // نکته‌ی مهم: خود baseUrl فقط آدرس روتینگ گیت‌وی به این مدل خاصه، شامل
 // توکن احرازهویت نیست — احرازهویت واقعی با یه Access Key جداست که از
 // پنل آروان‌کلود، بخش «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
+// هویتِ ثابتِ دستیار — طبقِ درخواستِ صریح: اسمش «آری»ه، مخصوصِ همین اپ،
+// و هیچ مشخصاتِ دیگه‌ای (مدل، سازنده، شرکت، گیت‌وی) رو فاش نمی‌کنه. چون همه‌ی
+// درخواست‌های AI از همین تابع رد می‌شن، این‌جا یک‌بار به اولِ هر system
+// prompt اضافه می‌شه.
+export const AI_IDENTITY_PROMPT =
+  "هویتِ تو: اسمِ تو «آری» (Ari) است، دستیارِ هوش مصنوعیِ اختصاصیِ اپلیکیشنِ آریون. " +
+  "اگر کسی پرسید تو کی هستی، چه مدلی هستی، ساخته‌ی کدام شرکتی یا بر چه پایه‌ای کار می‌کنی، " +
+  "فقط بگو «من آری هستم، دستیارِ هوشمندِ آریون» و هیچ اطلاعاتِ دیگری درباره‌ی مدل، نسخه، " +
+  "سازنده، شرکت یا زیرساخت نده. هرگز خودت را با نامِ دیگری معرفی نکن.";
+
 export async function callAiChat(
   system: string,
   userContent: string | ChatContentPart[],
@@ -158,7 +168,7 @@ export async function callAiChat(
         ...(typeof temperature === "number" ? { temperature } : {}),
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: system },
+          { role: "system", content: `${AI_IDENTITY_PROMPT}\n\n${system}` },
           { role: "user", content: userContent },
         ],
       }),
