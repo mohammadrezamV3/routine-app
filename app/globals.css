@@ -9367,14 +9367,26 @@ body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-
   width:54px; height:54px; padding:0; border-radius:16px; background:var(--box-bg);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
   border:1px solid var(--surface-line); box-shadow:none; overflow:hidden;
-  color:var(--muted); transition:border-color .2s ease, color .2s ease;
+  color:var(--muted);
+  transition:width .32s cubic-bezier(.22,1,.36,1), height .32s cubic-bezier(.22,1,.36,1), gap .32s cubic-bezier(.22,1,.36,1), border-color .2s ease, color .2s ease;
 }
 body[data-theme] .dash-quick-tile.is-on{ width:76px; height:76px; border-color:var(--accent); color:var(--accent); }
+body[data-theme] .dash-quick-tile:not(.is-on){ gap:0; }
 @media (hover:hover){ body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
 .dash-quick-tile-icon{ display:block; }
-.dash-quick-tile-icon svg{ width:22px; height:22px; display:block; }
+.dash-quick-tile-icon svg{ width:22px; height:22px; display:block; transition:width .32s cubic-bezier(.22,1,.36,1), height .32s cubic-bezier(.22,1,.36,1); }
 .dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:26px; height:26px; }
-.dash-quick-tile-label{ display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap; }
+/* اسم همیشه رندر می‌شه؛ ظاهر/محوشدنش فقط با max-height + opacity + کمی
+   بالا اومدن — بدونِ هیچ scale، پس هیچ‌وقت بزرگ‌نمایی نمی‌شه. */
+.dash-quick-tile-label{
+  display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap;
+  max-height:0; opacity:0; transform:translateY(5px);
+  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .14s ease, transform .32s cubic-bezier(.22,1,.36,1);
+}
+.dash-quick-tile.is-on .dash-quick-tile-label{
+  max-height:16px; opacity:1; transform:none;
+  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .22s ease .1s, transform .32s cubic-bezier(.22,1,.36,1) .04s;
+}
 @media (min-width:640px){
   body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{ width:62px; height:62px; }
   body[data-theme] .dash-quick-tile.is-on{ width:88px; height:88px; }

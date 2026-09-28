@@ -50,7 +50,9 @@ export function DashQuickPanels({
         {enabled.map((key) => {
           const on = key === current;
           return (
-            <motion.button
+            // دکمه‌ی ساده + ترنزیشنِ CSS (نه framer layout): layout روی بچه‌ها
+            // scale می‌انداخت و اسم موقعِ رفتن اول بزرگ می‌شد بعد محو.
+            <button
               key={key}
               type="button"
               role="tab"
@@ -58,27 +60,11 @@ export function DashQuickPanels({
               aria-label={PANEL_META[key].label}
               title={PANEL_META[key].label}
               onClick={() => setActive(key)}
-              whileTap={{ scale: 0.92 }}
-              layout
-              transition={{ type: "spring", stiffness: 420, damping: 30 }}
               className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
             >
-              <motion.span layout="position" className="dash-quick-tile-icon">{PANEL_META[key].icon}</motion.span>
-              <AnimatePresence initial={false}>
-                {on && (
-                  <motion.span
-                    key="label"
-                    className="dash-quick-tile-label"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    {PANEL_META[key].label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+              <span className="dash-quick-tile-icon">{PANEL_META[key].icon}</span>
+              <span className="dash-quick-tile-label" aria-hidden={!on}>{PANEL_META[key].label}</span>
+            </button>
           );
         })}
       </div>
