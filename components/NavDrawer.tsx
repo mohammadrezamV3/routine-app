@@ -408,7 +408,7 @@ export function NavDrawer() {
                   {profileMenuOpen && profileAnchor && createPortal(
                     <div
                       ref={profilePanelRef}
-                      className="notif-panel open"
+                      className="notif-panel profile-menu-panel open"
                       style={{ position: "fixed", top: profileAnchor.top, right: profileAnchor.right, left: "auto" }}
                     >
                       <div className="notif-panel-list">

@@ -9,6 +9,10 @@ import { Eye, EyeOff } from "lucide-react";
  * transition:d انیمیت می‌شدن، مردمک/مژه‌ها فید می‌شدن) — طبقِ درخواستِ
  * صریح («چشمک چشم» را با چیز خیلی ساده‌تری جایگزین کن) حالا فقط یک
  * آیکونِ ثابت (Eye/EyeOff) بدونِ هیچ انیمیشنی سوییچ می‌شه.
+ *
+ * نگاشتِ آیکون: وقتی رمز *نمایان*ه (visible)، آیکونِ چشمِ باز (Eye) نشون
+ * داده می‌شه — یعنی «الان قابل‌دیدنه»؛ وقتی *مخفی*ه، چشمِ بسته/خط‌خورده
+ * (EyeOff) — یعنی «الان مخفیه». قبلا برعکس بود (باگِ گزارش‌شده).
  */
 export function PasswordVisibilityToggle({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
   return (
@@ -20,7 +24,7 @@ export function PasswordVisibilityToggle({ visible, onToggle }: { visible: boole
       aria-pressed={visible}
       onClick={onToggle}
     >
-      {visible ? <EyeOff size={19} aria-hidden="true" /> : <Eye size={19} aria-hidden="true" />}
+      {visible ? <Eye size={19} aria-hidden="true" /> : <EyeOff size={19} aria-hidden="true" />}
     </button>
   );
 }

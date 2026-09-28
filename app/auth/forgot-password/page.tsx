@@ -3,20 +3,15 @@
 import { useEffect, useState } from "react";
 import { faNum } from "@/lib/jalali";
 import { useRouter } from "next/navigation";
-import { User, Lock } from "lucide-react";
+import { Phone, Lock } from "lucide-react";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { AuthField } from "@/components/AuthField";
+import { AuthShell } from "@/components/AuthShell";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { isValidIranPhone, isValidEmail, digitsOnly } from "@/lib/validate";
+import { isValidIranPhone, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 
 const RESEND_COOLDOWN_SECONDS = 120;
-
-// شناسه یک باکس واحده — هم شماره‌همراه هم ایمیل (اگه کاربر ثبت کرده باشه)
-// قبول می‌کنه؛ تشخیص نوعش سمت سرور هم دوباره انجام می‌شه (lib/validate).
-function isValidIdentifier(v: string): boolean {
-  return isValidIranPhone(v) || isValidEmail(v);
-}
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -56,8 +51,8 @@ export default function ForgotPasswordPage() {
   async function requestCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!identifier.trim() || !isValidIdentifier(identifier.trim())) {
-      setError("شماره همراه یا ایمیل معتبر نیست");
+    if (!identifier.trim() || !isValidIranPhone(identifier.trim())) {
+      setError("شماره همراه معتبر نیست");
       return;
     }
     setLoading(true);
@@ -113,7 +108,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <section className="auth-page">
-      <div className="auth-shell">
+      <AuthShell>
         <div className="auth-box">
           <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
           <AuthBrandMark subtitle={"فراموشی رمز عبور"} />
@@ -121,12 +116,12 @@ export default function ForgotPasswordPage() {
           {step === 1 && (
             <form onSubmit={requestCode} className="auth-step" key="step1">
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                {"شماره‌همراه یا ایمیلی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
+                {"شماره‌همراهی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
               </div>
-              <AuthField id="identifier" label={"شماره همراه یا ایمیل"} icon={<User size={15} />}>
+              <AuthField id="identifier" label={"شماره همراه"} icon={<Phone size={15} />}>
                 <input
-                  id="identifier" type="text" className="wsearch-newform-name" value={identifier} dir="ltr" style={{ textAlign: "right" }} placeholder="09123456789"
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  id="identifier" type="tel" inputMode="numeric" className="wsearch-newform-name" value={identifier} dir="ltr" placeholder="09123456789"
+                  onChange={(e) => setIdentifier(digitsOnly(e.target.value))}
                 />
               </AuthField>
               {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
@@ -200,7 +195,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
         </div>
-      </div>
+      </AuthShell>
     </section>
   );
 }

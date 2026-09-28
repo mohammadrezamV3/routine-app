@@ -627,6 +627,11 @@
   @media (hover:hover){body:not([data-theme="light"]) .notif-panel-item:hover{ background:rgba(255,255,255,.06); }}
   .notif-panel-item-title{ font-size:12px; font-weight:700; color:var(--text); }
   .notif-panel-item-body{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.6; }
+  /* پاپ‌آپ پروفایل (باز شده از آواتار هدر) — برخلاف پنل اعلان‌ها (که
+     می‌تونه صفحه‌بندی/آیتم زیاد داشته باشه و اسکرول لازمه)، این پنل
+     همیشه تعداد آیتم ثابت و کمی داره (پنل کاربری/پنل ادمین/اشتراک/خروج) —
+     نباید هیچ‌وقت اسکرول‌بار نشون بده؛ ارتفاعش با محتواش تعیین می‌شه. */
+  .profile-menu-panel{ max-height:none; overflow:hidden; }
 
   /* استریک — توی خود هدر، کنار دکمه‌ی زنگوله */
   .header-streak-clock{
@@ -3746,7 +3751,15 @@ body[data-theme="light"] .auth-resend-btn, body:not([data-theme="light"]) .auth-
    می‌شه که متن زیر دکمه نره. بعد ارسال موفق، فیلد قفل می‌شه (readOnly) و
    دکمه به یه لینک «تغییر شماره» تبدیل می‌شه. */
 .auth-phone-wrap{ position:relative; }
-.auth-phone-wrap .wsearch-newform-name{ padding-inline-end:112px; }
+/* باگ: چون خودِ اینپوت dir="ltr" داره، «padding-inline-end» روی خودش
+   (نه روی زمینه‌ی RTL بیرونی) حساب می‌شه و می‌شه چپِ فیزیکی رو به‌جای
+   راست پر می‌کنه — درحالی‌که دکمه‌ی «ارسال کد» با inset-inline-end روی
+   زمینه‌ی RTLِ بیرونیِ auth-phone-wrap (چپِ فیزیکی) می‌شینه. یعنی پدینگِ
+   قبلی دقیقا سمتِ مخالفِ دکمه رو رزرو می‌کرد. اینجا صریح با
+   [dir="ltr"] و اسپسیفیسیتیِ بالاتر، هم پدینگِ دکمه (چپ) هم پدینگِ
+   آیکون (راست، وقتی AuthField آیکون داره) درست می‌شه. */
+.auth-phone-wrap .wsearch-newform-name{ padding-inline-start:112px; }
+.field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:112px; padding-inline-end:34px; }
 .auth-phone-send-btn{
   position:absolute; inset-inline-end:6px; top:50%; transform:translateY(-50%);
   display:flex; align-items:center; justify-content:center;
