@@ -156,7 +156,7 @@ export default function AdminMentorDetailPage() {
               تعلیق از {formatDateShort(p.suspendedAt)}{p.suspendedReason ? `؛ دلیل: ${p.suspendedReason}` : ""}
             </div>
           )}
-          <button type="button" className="admin-id-chip" onClick={() => { navigator.clipboard?.writeText(p.id); toast("آیدی پروفایل کپی شد"); }}>
+          <button type="button" className="admin-id-chip" onClick={() => { navigator.clipboard?.writeText(p.id).then(() => toast("آیدی پروفایل کپی شد"), () => toast("کپی ناموفق بود", "err")); }}>
             <Copy size={12} strokeWidth={1.75} aria-hidden /> <span className="admin-ltr">{p.id}</span>
           </button>
         </div>
@@ -203,7 +203,7 @@ export default function AdminMentorDetailPage() {
           <InfoRow k="منتور از" v={formatDateShort(p.createdAt)} />
           <InfoRow k="عضویت در آریون" v={formatDateShort(u.createdAt)} />
         </div>
-        {p.bio && <div className="admin-modal-text" style={{ whiteSpace: "pre-wrap", marginTop: 12, marginBottom: 0 }}>{p.bio}</div>}
+        {p.bio && <div className="admin-modal-text admin-mentor-bio">{p.bio}</div>}
       </div>
 
       <div className="admin-chart-card">
@@ -261,7 +261,7 @@ export default function AdminMentorDetailPage() {
                   <tr key={r.id}>
                     <td>{TARGET_LABELS[r.targetType] || r.targetType}</td>
                     <td>{r.reason}</td>
-                    <td className="admin-muted" style={{ whiteSpace: "normal" }}>{r.details || "—"}</td>
+                    <td className="admin-muted admin-cell-wrap">{r.details || "—"}</td>
                     <td className="admin-ltr">{formatDateTime(r.createdAt)}</td>
                   </tr>
                 ))}
@@ -291,7 +291,7 @@ export default function AdminMentorDetailPage() {
                         <VBadge status={e.toStatus} />
                       </span>
                     </td>
-                    <td className="admin-muted" style={{ whiteSpace: "normal" }}>{e.reason || "—"}</td>
+                    <td className="admin-muted admin-cell-wrap">{e.reason || "—"}</td>
                     <td>{e.byMentor ? "خود منتور" : e.actor ? displayName(e.actor) : "—"}</td>
                     <td className="admin-ltr">{formatDateTime(e.createdAt)}</td>
                   </tr>
@@ -321,12 +321,16 @@ export default function AdminMentorDetailPage() {
           message="پروفایل منتوری دوباره فعال می‌شود و اگر منتشرشده باشد، در فهرست منتورها نمایش داده می‌شود."
           onClose={() => setRestoreOpen(false)}
           onConfirm={async () => {
+            // روی خطا مودال باز می‌مونه تا ادمین بدونه اقدام انجام نشده
             try {
               await adminFetch(`/api/admin/mentors/${p.id}/suspend`, { method: "POST", json: { suspend: false } });
-              toast("تعلیق برداشته شد");
-              load();
-            } catch (e: any) { toast(e.message, "err"); }
+            } catch (e: any) {
+              toast(e.message, "err");
+              return;
+            }
+            toast("تعلیق برداشته شد");
             setRestoreOpen(false);
+            load();
           }}
         />
       )}
@@ -351,7 +355,7 @@ function InfoRow({ k, v }: { k: string; v: string | null | undefined }) {
   return (
     <div className="admin-info-row">
       <span className="admin-muted">{k}</span>
-      <span style={{ textAlign: "left" }}>{v || "—"}</span>
+      <span className="admin-info-value">{v || "—"}</span>
     </div>
   );
 }
@@ -572,7 +576,7 @@ function DocumentViewer({ doc, onClose }: { doc: Doc; onClose: () => void }) {
         <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت فایل" />
       ) : isImage ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={doc.fileName} style={{ display: "block", maxWidth: "100%", maxHeight: "70vh", margin: "0 auto", borderRadius: 10 }} />
+        <img src={url} alt={doc.fileName} className="admin-doc-image" />
       ) : isPdf ? (
         <div className="admin-empty">
           <FileText size={24} strokeWidth={1.75} aria-hidden />

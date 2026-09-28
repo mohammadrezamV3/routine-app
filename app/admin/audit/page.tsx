@@ -17,11 +17,20 @@ export default function AdminAuditPage() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<{ entries: Entry[]; total: number; pageSize: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    // صفحه‌ی قبلی اگه دیرتر جواب بده نباید صفحه‌ی جدید رو بپوشونه
+    let cancelled = false;
     setLoading(true);
-    fetch(`/api/admin/audit-log?page=${page}`).then((r) => (r.ok ? r.json() : null)).then(setData).finally(() => setLoading(false));
-  }, [page]);
+    fetch(`/api/admin/audit-log?page=${page}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => { if (!cancelled) { setData(d); setFailed(false); } })
+      .catch(() => { if (!cancelled) setFailed(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [page, reload]);
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
@@ -30,23 +39,31 @@ export default function AdminAuditPage() {
       <div className="admin-page-head">
         <div>
           <div className="admin-page-kicker">لاگ فعالیت ادمین‌ها</div>
-          <div className="admin-section-hint" style={{ margin: 0 }}>همه‌ی اقدامات انجام‌شده در پنل — غیرقابل ویرایش و حذف.</div>
+          <div className="admin-section-hint admin-page-sub">همه‌ی اقدامات انجام‌شده در پنل — غیرقابل ویرایش و حذف.</div>
         </div>
       </div>
+      {failed && !loading && (
+        <div className="admin-empty">
+          <span>خطا در دریافت اطلاعات</span>
+          <button type="button" className="admin-btn sm" onClick={() => setReload((n) => n + 1)}>تلاش دوباره</button>
+        </div>
+      )}
       {!data ? (
-        <div className={loading ? "admin-empty is-loading" : "admin-empty"}>{loading ? "در حال بارگذاری…" : "خطا در دریافت اطلاعات"}</div>
-      ) : data.entries.length === 0 ? <EmptyState /> : (
+        !failed && <div className="admin-empty is-loading">در حال بارگذاری…</div>
+      ) : data.entries.length === 0 ? <EmptyState message="هنوز اقدامی ثبت نشده" /> : (
         <>
-          <div className="admin-table-wrap">
+          <div className={`admin-table-wrap${loading ? " is-refreshing" : ""}`} aria-busy={loading}>
             <table className="admin-table">
               <thead><tr><th>ادمین</th><th>اقدام</th><th>هدف</th><th>زمان</th></tr></thead>
               <tbody>
                 {data.entries.map((e) => (
                   <tr key={e.id}>
                     <td>
-                      <Link href={`/admin/users/${e.actorUserId}`} className="admin-user-cell-name">
-                        {e.actor ? [e.actor.name, e.actor.lastName].filter(Boolean).join(" ") || e.actor.username || "—" : "حذف‌شده"}
-                      </Link>
+                      {e.actor ? (
+                        <Link href={`/admin/users/${e.actorUserId}`} className="admin-user-cell-name">
+                          {[e.actor.name, e.actor.lastName].filter(Boolean).join(" ") || (e.actor.username ? `@${e.actor.username}` : "بدون نام")}
+                        </Link>
+                      ) : <span className="admin-muted">حساب حذف‌شده</span>}
                     </td>
                     <td>{auditLabel(e.action)}</td>
                     <td>

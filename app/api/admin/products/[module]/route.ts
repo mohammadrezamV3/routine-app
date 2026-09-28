@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { rangeFromSearchParams, getProductAnalytics } from "@/lib/adminAnalytics";
+import { parseAdminRange } from "@/lib/adminRangeParams";
+import { getProductAnalytics } from "@/lib/adminAnalytics";
 
 const VALID_MODULES: ModuleKey[] = [ModuleKey.ROUTINE, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.TRADE, ModuleKey.ROADMAP];
 
@@ -14,7 +15,9 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
     return NextResponse.json({ error: "ماژول نامعتبر است" }, { status: 400 });
   }
 
-  const range = rangeFromSearchParams(req.nextUrl.searchParams);
+  const parsed = parseAdminRange(req.nextUrl.searchParams);
+  if (!parsed.ok) return parsed.response;
+  const range = parsed.range;
   const analytics = await getProductAnalytics(moduleKey, range);
   return NextResponse.json({ analytics, range });
 }

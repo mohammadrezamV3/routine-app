@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { BadgeCheck, CircleSlash, Eye, Hourglass, RefreshCw, Search, XCircle } from "lucide-react";
@@ -63,11 +63,13 @@ function MentorsInner() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
-  function setParam(key: string, value: string | null) {
+  function setParam(key: string, value: string | null, replace = false) {
     const sp = new URLSearchParams(searchParams.toString());
     if (value === null || value === "") sp.delete(key); else sp.set(key, value);
     if (key !== "page") sp.delete("page");
-    router.push(`${pathname}?${sp.toString()}`);
+    const qs = sp.toString();
+    const href = qs ? `${pathname}?${qs}` : pathname;
+    if (replace) router.replace(href); else router.push(href);
   }
 
   useEffect(() => {
@@ -75,11 +77,26 @@ function MentorsInner() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // جست‌وجوی جدید → برگشت به صفحه‌ی ۱ (از طریقِ URL تا تب/صفحه قابل‌اشتراک بمونه)
+  // جست‌وجوی جدید → برگشت به صفحه‌ی ۱ (از طریقِ URL تا تب/صفحه قابل‌اشتراک بمونه).
+  // replace نه push: هر حرفِ تایپ‌شده نباید یه قدم به تاریخچه‌ی «بازگشت» اضافه کنه.
+  const pushedQ = useRef(q);
   useEffect(() => {
-    if (debounced.trim() !== q) setParam("q", debounced.trim() || null);
+    const next = debounced.trim();
+    if (next !== q) {
+      pushedQ.current = next;
+      setParam("q", next || null, true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
+
+  // q از بیرون عوض شد (لینکِ منوی کناری/دکمه‌ی بازگشت) → فیلدِ جست‌وجو هم همون بشه،
+  // وگرنه متنِ قدیمی توی فیلد می‌موند و لیست فیلترنشده بود
+  useEffect(() => {
+    if (q === pushedQ.current) return; // همون تغییری که خودمون از فیلد فرستادیم
+    pushedQ.current = q;
+    setSearch(q);
+    setDebounced(q);
+  }, [q]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -136,7 +153,7 @@ function MentorsInner() {
         <EmptyState message={q ? "منتوری با این جست‌وجو پیدا نشد" : EMPTY_LABELS[tab]} />
       ) : (
         <>
-          <div className="admin-table-wrap" style={{ opacity: loading ? 0.6 : 1 }}>
+          <div className={`admin-table-wrap${loading ? " is-stale" : ""}`} aria-busy={loading}>
             <table className="admin-table">
               <thead>
                 <tr>

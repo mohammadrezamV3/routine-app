@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { writeAuditLog } from "@/lib/adminAnalytics";
 import { clampText } from "@/lib/validate";
 
 // POST /api/admin/support/:id/messages — جوابِ ادمین روی هر تیکتی. تیکت
@@ -21,5 +22,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     prisma.supportMessage.create({ data: { ticketId: ticket.id, body: message, fromAdmin: true } }),
     prisma.supportTicket.update({ where: { id: ticket.id }, data: { status: "ANSWERED" } }),
   ]);
+  await writeAuditLog(guard.userId, "support.reply", "SupportTicket", ticket.id, { messageId: created.id });
   return NextResponse.json({ ok: true, message: { ...created, createdAt: created.createdAt.toISOString() } });
 }
