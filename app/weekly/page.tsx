@@ -116,7 +116,6 @@ export default function WeeklyPage() {
   // بخش داشبورد (ادغام‌شده با صفحه اصلی) — انتخاب تاریخ/هفته، برنامه‌های
   // همون روز، و فیلترها. جدا از openIdx بالا که برای تایم‌لاین «کلی برنامه
   // هفته» (کارت‌های شنبه..جمعه که پایین‌تر نمایش داده می‌شن) استفاده می‌شه.
-  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(() => isoLocal(now));
   const [selectedDaily, setSelectedDaily] = useState<DailyRecord | null>(null);
   const [todayStats, setTodayStats] = useState<DayStats>({ completed: 0, total: 0, pct: 0 });
@@ -255,24 +254,6 @@ export default function WeeklyPage() {
     return new Date(y, m - 1, d);
   }, [selectedIso]);
 
-  // به‌جای یک هفته‌ی کامل شنبه-جمعه، یه پنجره‌ی روزهایی نشون می‌ده که
-  // همیشه روی «امروز» (یا مرکز پنجره‌ی جابه‌جاشده با فلش‌ها) وسط‌چینه —
-  // تعدادش هم ثابت نیست، خود DashDateSelector بسته‌به عرض واقعی نوار
-  // اندازه‌گیری می‌کنه و با onVisibleCountChange گزارش می‌ده.
-  const [dayWindow, setDayWindow] = useState(5);
-  const dashDays = useMemo(() => {
-    const center = new Date(now);
-    center.setDate(now.getDate() + weekOffset * dayWindow);
-    return Array.from({ length: dayWindow }, (_, i) => {
-      const d = new Date(center);
-      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
-      const iso = isoLocal(d);
-      const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
-      const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-      return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
-    });
-  }, [weekOffset, dayWindow]);
-
   const allProgramNames = useMemo(() => {
     const set = new Set(customOcc.map((c) => c.name));
     return Array.from(set).sort((a, b) => a.localeCompare(b, "fa"));
@@ -374,16 +355,10 @@ export default function WeeklyPage() {
     router.push("/exercise?tab=exercise");
   }
 
-  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — برخلاف کلیک روی
-  // خود نوار روزها (که همیشه روزی از همون پنجره‌ی قابل‌مشاهده‌ست)، این روز
-  // می‌تونه کاملا بیرون پنجره‌ی فعلی باشه؛ پس weekOffset رو هم طوری
-  // حساب می‌کنیم که پنجره‌ی نوار دور همین روز وسط‌چین بشه.
+  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — نوارِ روزها
+  // (DashDateSelector/useDayStrip) خودش بازه رو دورِ همین روز باز و وسط‌چینش می‌کنه.
   function pickDate(iso: string) {
     setSelectedIso(iso);
-    const [y, m, d] = iso.split("-").map(Number);
-    const picked = new Date(y, m - 1, d);
-    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
-    setWeekOffset(Math.round(diffDays / dayWindow));
   }
 
   async function toggleDashTask(id: string) {
@@ -499,12 +474,8 @@ export default function WeeklyPage() {
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
             <DashDateSelector
-              days={dashDays}
               activeIso={selectedIso}
               onSelect={setSelectedIso}
-              onPrevWeek={() => setWeekOffset((v) => v - 1)}
-              onNextWeek={() => setWeekOffset((v) => v + 1)}
-              onVisibleCountChange={setDayWindow}
               className="lg:order-2"
             />
 
@@ -519,10 +490,7 @@ export default function WeeklyPage() {
                 label="امروز"
                 icon={<Calendar size={15} />}
                 active={isSelectedToday}
-                onClick={() => {
-                  setWeekOffset(0);
-                  setSelectedIso(isoLocal(now));
-                }}
+                onClick={() => setSelectedIso(isoLocal(now))}
               />
               <DashFilterButton
                 label="فیلتر"

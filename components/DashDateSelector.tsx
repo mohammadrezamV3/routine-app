@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-
-export type DashDay = { iso: string; weekday: string; dateLabel: string };
+import { J_MONTHS, faNum, toJalali } from "@/lib/jalali";
+import { WEEK_ORDER } from "@/lib/schedule";
+import { useDayStrip } from "@/lib/useDayStrip";
 
 // محوشدنِ لبه‌ها — با mask-image روی *خودِ* نوارِ اسکرول، نه لایه‌های
-// backdrop-filter روی آن.
-//
-// نسخه‌ی قبلی سه لایه‌ی مطلقِ backdrop-filter:blur(...) رویِ لبه‌ها می‌گذاشت.
-// backdrop-filter لبه‌ی لایه را با پیکسل‌های *بیرونِ* خودش (شفاف/تیره) قاطی
-// می‌کند و ماسکِ آن فقط افقی بود — روی کرومِ اندروید بالا/پایینِ هر لایه یک
-// لبه‌ی مستطیلیِ تیره (همان «سایه‌ی گوشه‌ها» در گزارشِ باگ) و کنارِ فلش‌ها یک
-// نوارِ تیره می‌ساخت؛ و چون هر فریمِ اسکرول سه بلورِ جدا بازرسم می‌شد، حینِ
-// کشیدن هم لرزش/پرپر داشت. ماسک روی خودِ محتوا همان «رفته‌رفته محوشدن» را
-// می‌دهد، بدونِ هیچ لایه‌ی اضافه یا بک‌گراندی.
+// backdrop-filter روی آن (آن‌ها روی کرومِ اندروید لبه‌ی مستطیلیِ تیره و
+// لرزش حینِ کشیدن می‌ساختند). ماسک روی خودِ محتوا همان «رفته‌رفته محوشدن»
+// را می‌دهد، بدونِ هیچ لایه‌ی اضافه یا بک‌گراندی.
 const EDGE_FADE = "28px";
 function edgeMask(fadeRight: boolean, fadeLeft: boolean): string | undefined {
   if (!fadeRight && !fadeLeft) return undefined;
@@ -24,59 +18,28 @@ function edgeMask(fadeRight: boolean, fadeLeft: boolean): string | undefined {
   return `linear-gradient(to right, ${l}, ${r})`;
 }
 
-// نوار انتخاب تاریخ — راست‌چین طبیعی صفحه (چون days از قبل به ترتیب
-// تاریخی صعودی ساخته می‌شه و چیدمان RTL خودش این ترتیب رو می‌ده). دیگه یک
-// هفته‌ی کامل نیست — یه پنجره‌ی داینامیک چندروزه که همیشه روی «امروز»
-// وسط‌چینه. فلش‌های قبلی/بعدی همون پنجره رو جابه‌جا می‌کنن، رو به بیرون (نه
-// سمت لیست)، و فقط توی دسکتاپ دیده می‌شن — توی موبایل با انگشت اسکرول
-// می‌شه (اسکرول‌بار خود مرورگر هم مخفیه، no-scrollbar).
+function dayLabels(d: Date): { weekday: string; dateLabel: string } {
+  const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
+  const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  return { weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
+}
+
+// نوار انتخاب تاریخ (روتین من / بدنسازی / کالری). دیگر پنجره‌ی چندروزه با
+// فلش نیست: نوارِ آزادِ قابل‌کشیدن با شتاب (لمس + ماوس)، بدونِ snap و
+// بدونِ باکس/بوردرِ دورش؛ روزها تنبل اضافه می‌شوند — نگاه کن به
+// lib/useDayStrip.ts. ترتیبِ DOM صعودی است و RTL خودش گذشته را راست می‌برد.
 export function DashDateSelector({
-  days,
   activeIso,
   onSelect,
-  onPrevWeek,
-  onNextWeek,
-  onVisibleCountChange,
   className,
 }: {
-  days: DashDay[];
   activeIso: string;
   onSelect: (iso: string) => void;
-  onPrevWeek: () => void;
-  onNextWeek: () => void;
-  onVisibleCountChange?: (count: number) => void;
   className?: string;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLButtonElement>(null);
-  // بلور لبه فقط وقتی نشون داده بشه که واقعا روزی رفته زیر لبه (اسکرول
-  // واقعی داره)، نه همیشه — وگرنه حتی روز کاملا دیده‌شده‌ی کنار دکمه‌ی
-  // قبلی/بعدی هم دائم تار به‌نظر می‌رسید. راست/چپ RTL بر اساس مدل
-  // استاندارد scrollLeft منفی (۰ تا -(max)) که مرورگرهای امروزی استفاده می‌کنن.
+  const { scrollRef, days } = useDayStrip(activeIso);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-
-  // روز فعال همیشه وسط نوار بمونه — هم موقع لود اولیه، هم هر بار که با
-  // فلش/کلیک عوض می‌شه (از جمله موقعی که هفته با فلش عوض می‌شه ولی همون
-  // ایزوی فعال توی هفته‌ی جدید نیست، پس این افکت روی activeIso و days هردو گوش می‌ده).
-  //
-  // باگِ «لرزیدنِ نوار»: قبلا با scrollIntoView بود. scrollIntoView *همه‌ی*
-  // اجدادِ قابل‌اسکرول را هم جابه‌جا می‌کند، از جمله خودِ صفحه (block:nearest)
-  // — روی کرومِ اندروید با نوارِ ابزارِ پویا و هدرِ fixed، هر بار که روز/هفته
-  // عوض می‌شد صفحه هم یک تکانِ عمودیِ کوچک می‌خورد، هم‌زمان با اسکرولِ نرمِ
-  // خودِ نوار. حالا فقط scrollLeftِ خودِ نوار عوض می‌شود، آن هم فقط وقتی
-  // واقعا سرریز دارد و روزِ فعال وسط نیست.
-  useEffect(() => {
-    const el = scrollRef.current;
-    const pill = activeRef.current;
-    if (!el || !pill) return;
-    if (el.scrollWidth - el.clientWidth <= 1) return;
-    const er = el.getBoundingClientRect();
-    const pr = pill.getBoundingClientRect();
-    const delta = (pr.left + pr.width / 2) - (er.left + er.width / 2);
-    if (Math.abs(delta) < 1) return;
-    el.scrollBy({ left: delta, behavior: "smooth" });
-  }, [activeIso, days]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -99,158 +62,50 @@ export function DashDateSelector({
       el.removeEventListener("scroll", update);
       ro.disconnect();
     };
-  }, [days]);
-
-  // به‌جای یک عدد ثابت، هرچقدر عرض واقعی نوار جا داره روز نشون می‌ده.
-  //
-  // نسخه‌ی قبلی عرض هر پیل رو ثابت ۶۲px (موبایل) فرض می‌کرد، ولی
-  // «چهارشنبه» + «۳۰ شهریور» روی یه گوشی ۳۹۰ پیکسلی حدود ۷۵px می‌شه، نه
-  // ۶۲. نتیجه این بود که تخمین بیشتر از واقعیت درمی‌اومد، پیل‌ها سرریز
-  // می‌کردن و عملا فقط سه روز دیده می‌شد.
-  //
-  // نکته‌ی مهم: از وقتی پیل‌ها فضای اضافه‌ی نوار رو پر می‌کنن (grow)، دیگه
-  // *نمی‌شه* عرضِ رندرشده‌ی خودِ پیل رو معیار گرفت — چون اون عرض به تعداد
-  // روزها وابسته‌ست و این حلقه رو ناپایدار می‌کنه (کمتر روز ← پیلِ پهن‌تر
-  // ← تخمینِ باز هم کمتر). به‌جاش عرضِ *محتوای* پیل اندازه گرفته می‌شه:
-  // اسپن‌های داخلش `whitespace-nowrap`ـن و توی یه فلکسِ ستونیِ
-  // items-center به اندازه‌ی متنِ خودشون عرض می‌گیرن، مستقل از این‌که
-  // والدشون چقدر کش اومده.
-  useEffect(() => {
-    if (!onVisibleCountChange) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const compute = () => {
-      const w = el.clientWidth;
-      if (w <= 0) return;
-      const isSm = window.innerWidth >= 640;
-      // موبایل: همیشه دقیقا ۵ روز — صفحه‌ی خیلی باریک (یا اسمِ روزِ بلند مثل
-      // «چهارشنبه») نباید باعث بشه محاسبه‌ی داینامیک عملا بره روی ۳. اگه ۵تا
-      // جا نشه، همون نوار (overflow-x-auto) با انگشت اسکرول می‌خوره — قبلا هم
-      // این رفتار برای همین بود. دسکتاپ دست‌نخورده می‌مونه: هرچقدر واقعا جا
-      // داره همون تعداد نشون داده می‌شه.
-      if (!isSm) {
-        onVisibleCountChange(5);
-        return;
-      }
-      let pillWidth = 92;
-      el.querySelectorAll<HTMLElement>("[data-day-pill]").forEach((pill) => {
-        const cs = getComputedStyle(pill);
-        const padding = parseFloat(cs.paddingInlineStart || "0") + parseFloat(cs.paddingInlineEnd || "0");
-        let content = 0;
-        for (const child of Array.from(pill.children)) {
-          content = Math.max(content, child.getBoundingClientRect().width);
-        }
-        pillWidth = Math.max(pillWidth, Math.ceil(content + padding));
-      });
-      const gap = 6;
-      // پدینگ افقی خود نوار (px-3) داخل clientWidth حساب شده، پس ازش کم می‌شه
-      const usable = w - 24;
-      const n = Math.floor((usable + gap) / (pillWidth + gap));
-      const odd = n % 2 === 0 ? n - 1 : n;
-      onVisibleCountChange(Math.max(3, odd));
-    };
-    compute();
-    const ro = new ResizeObserver(compute);
-    ro.observe(el);
-    return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days.length]);
-
-  // سوایپ با انگشت: کشیدن به راست → روزهای آینده، به چپ → روزهای گذشته
-  // (طبقِ گزارشِ باگ: قبلا برعکس بود — سوایپ‌راست می‌رفت به قدیم). فقط
-  // وقتی حرکت افقی واضحا از عمودی بیشتره عمل می‌کنه تا اسکرول عمودی
-  // صفحه رو نشکنه.
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  function onTouchStart(e: React.TouchEvent) {
-    const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY };
-  }
-  function onTouchEnd(e: React.TouchEvent) {
-    const start = touchStart.current;
-    touchStart.current = null;
-    if (!start) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    if (dx > 0) onNextWeek();
-    else onPrevWeek();
-  }
+  }, [scrollRef, days.length]);
 
   return (
-    <div
-      className={cn("flex flex-1 items-center gap-1 overflow-hidden rounded-dash border border-dash-border backdrop-blur-xl", className)}
-      style={{ background: "rgba(var(--bg-rgb), .16)" }}
-    >
-      <button
-        type="button"
-        aria-label="روزهای قبل"
-        onClick={onPrevWeek}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
+    <div className={cn("min-w-0 flex-1", className)}>
+      <div
+        ref={scrollRef}
+        // موبایل: هر پیل حداقل یک‌پنجمِ عرض (۵ روز در دید)، دسکتاپ ۹۲px.
+        // overscroll-x-contain: کشیدنِ نوار تا ته، صفحه را افقی نمی‌کشد.
+        className="no-scrollbar flex cursor-grab items-center gap-1.5 overflow-x-auto overscroll-x-contain px-2 py-2.5 sm:px-3 [&.is-dragging]:cursor-grabbing [&.is-dragging]:select-none"
+        style={{
+          overflowAnchor: "none",
+          maskImage: edgeMask(canScrollRight, canScrollLeft),
+          WebkitMaskImage: edgeMask(canScrollRight, canScrollLeft),
+        }}
       >
-        <ChevronRight size={18} />
-      </button>
-
-      <div className="relative min-w-0 flex-1">
-        <div
-          ref={scrollRef}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          // فضای اضافه‌ی نوار به *خودِ پیل‌ها* داده می‌شود، نه به فاصله‌ی
-          // بینشان. دو نسخه‌ی قبلی هر دو غلط بودند و دقیقا به دو شکلِ
-          // مخالف: `justify-between` تمامِ فضای اضافه را بینِ روزها پخش
-          // می‌کرد (روی صفحه‌ی باریک فاصله‌ی ~۶۰ پیکسلی)، و `safe center`
-          // همه را وسط جمع می‌کرد و دو طرفِ نوار خالی می‌ماند.
-          // با `grow basis-0` هر روز سهمِ مساوی از عرض می‌گیرد: نوار پر
-          // است، گپ ثابت ۶ پیکسل می‌ماند، و هیچ‌جا جمع نمی‌شود.
-          // `shrink-0` سرِ جایش است تا وقتی روزها واقعا از عرض بیشتر شدند
-          // له نشوند و به‌جایش نوار اسکرول بخورد.
-          // موبایل: px-2 (به‌جای px-3) — روی ۳۶۰ پیکسل همین ۸ پیکسل فرقِ
-          // جاشدنِ پنج روز («چهارشنبه» ~۳۸px) بدونِ سرریز است.
-          // overscroll-x-contain: کشیدنِ نوار تا ته، صفحه را افقی نمی‌کشد.
-          className="no-scrollbar flex items-center gap-1.5 overflow-x-auto overscroll-x-contain px-2 py-2.5 sm:px-3"
-          style={{
-            maskImage: edgeMask(canScrollRight, canScrollLeft),
-            WebkitMaskImage: edgeMask(canScrollRight, canScrollLeft),
-          }}
-        >
-          {days.map((d) => {
-            const active = d.iso === activeIso;
-            return (
-              <button
-                key={d.iso}
-                ref={active ? activeRef : undefined}
-                data-day-pill
-                type="button"
-                onClick={() => onSelect(d.iso)}
-                className={cn(
-                  "flex min-w-min shrink-0 grow basis-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
-                  active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
-                )}
-                style={
-                  active
-                    ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
-                    : undefined
-                }
-              >
-                <span className={cn("whitespace-nowrap text-[10px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
-                  {d.weekday}
-                </span>
-                <span className={cn("whitespace-nowrap text-[9px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{d.dateLabel}</span>
-              </button>
-            );
-          })}
-        </div>
+        {days.map(({ date, iso }) => {
+          const active = iso === activeIso;
+          const { weekday, dateLabel } = dayLabels(date);
+          return (
+            <button
+              key={iso}
+              data-iso={iso}
+              data-day-pill
+              type="button"
+              draggable={false}
+              onClick={() => onSelect(iso)}
+              className={cn(
+                "flex min-w-[calc((100%_-_24px)/5)] shrink-0 flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-center transition sm:min-w-[92px] sm:gap-1 sm:px-3 sm:py-2",
+                active ? "text-dash-bg" : "text-dash-muted hover:bg-white/5"
+              )}
+              style={
+                active
+                  ? { background: "var(--accent)", boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3)" }
+                  : undefined
+              }
+            >
+              <span className={cn("whitespace-nowrap text-[10px] font-semibold sm:text-[13px]", active ? "text-dash-bg" : "text-dash-text")}>
+                {weekday}
+              </span>
+              <span className={cn("whitespace-nowrap text-[9px] sm:text-[12px]", active ? "text-dash-bg/80" : "text-dash-muted")}>{dateLabel}</span>
+            </button>
+          );
+        })}
       </div>
-
-      <button
-        type="button"
-        aria-label="روزهای بعد"
-        onClick={onNextWeek}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
-      >
-        <ChevronLeft size={18} />
-      </button>
     </div>
   );
 }

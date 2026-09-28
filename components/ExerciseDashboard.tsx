@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, History } from "lucide-react";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
-import { WEEK_ORDER, startOfWeek } from "@/lib/schedule";
+import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal } from "@/lib/jalali";
+import { startOfWeek } from "@/lib/schedule";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import {
   fetchExerciseLogRange, sessionsThisWeekTotal, sessionsThisWeekDone,
   weekProgressPct, todayProgressPct, ExerciseLogRange,
 } from "@/lib/exerciseStats";
-import { DashDateSelector, DashDay } from "./DashDateSelector";
+import { DashDateSelector } from "./DashDateSelector";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { ExerciseStatsCard } from "./ExerciseStatsCard";
@@ -22,10 +22,15 @@ import { HistoryCalendar } from "./HistoryCalendar";
 import { ExerciseSubstitutePicker } from "./ExerciseSubstitutePicker";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { getSetting, setSetting } from "@/lib/storage";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import {
+  DEFAULT_MISSED_DAY_PREF, MissedDayPref, addDaysIso, effectiveDayName, logsNeededFrom,
+  normalizeMissedDayPref, planStartIsoOf, rebasedPref, weekdayOf,
+} from "@/lib/exerciseProgression";
 
 const now = new Date();
 const todayIso = isoLocal(now);
-const todayName = FA_WEEKDAY[now.getDay()];
 
 export function ExerciseDashboard({
   plan,
@@ -34,9 +39,7 @@ export function ExerciseDashboard({
   plan: ExercisePlan;
   onPlanChange: (plan: ExercisePlan) => void;
 }) {
-  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(todayIso);
-  const [dayWindow, setDayWindow] = useState(5);
 
   const [logs, setLogs] = useState<ExerciseLogRange>({});
   const [selectedLog, setSelectedLog] = useState<{ completed: boolean; completedItems: string[] } | null>(null);
@@ -56,6 +59,19 @@ export function ExerciseDashboard({
   const [sessionActive, setSessionActive] = useState(false);
   const dashboardPrefs = useDashboardPrefs();
 
+  // «رد شدن»/«ماندن» برای روزِ جامانده (تنظیمات › بدنسازی). پیش‌فرض همان
+  // رفتارِ قبلی (رد شدن) است.
+  const [missedPref, setMissedPref] = useState<MissedDayPref>(DEFAULT_MISSED_DAY_PREF);
+  const [prefKey, setPrefKey] = useState(0);
+  useLiveRefresh(SETTING_KEYS.exerciseMissedDay, () => setPrefKey((k) => k + 1));
+  useEffect(() => {
+    let alive = true;
+    getSetting<unknown>(SETTING_KEYS.exerciseMissedDay, null)
+      .then((v) => { if (alive) setMissedPref(normalizeMissedDayPref(v)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [prefKey]);
+
   const isSelectedToday = selectedIso === todayIso;
 
   const selectedDate = useMemo(() => {
@@ -64,32 +80,48 @@ export function ExerciseDashboard({
   }, [selectedIso]);
   const selectedDayName = FA_WEEKDAY[selectedDate.getDay()];
 
-  const dashDays: DashDay[] = useMemo(() => {
-    const center = new Date(now);
-    center.setDate(now.getDate() + weekOffset * dayWindow);
-    return Array.from({ length: dayWindow }, (_, i) => {
-      const d = new Date(center);
-      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
-      const iso = isoLocal(d);
-      const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
-      const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-      return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
-    });
-  }, [weekOffset, dayWindow]);
-
+  // نوارِ روزها خودش روزِ دور (از تقویمِ تاریخچه) را باز می‌کند و وسط می‌آورد.
   function pickDate(iso: string) {
     setSelectedIso(iso);
-    const [y, m, d] = iso.split("-").map(Number);
-    const picked = new Date(y, m - 1, d);
-    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
-    setWeekOffset(Math.round(diffDays / dayWindow));
   }
 
-  // ۹۰ روز گذشته کافیه برای «این‌هفته»
+  const planStartIso = planStartIsoOf(plan.createdAt, todayIso);
+  const planDays = useMemo(
+    () => new Set(plan.planData.filter((d) => d.items.length > 0).map((d) => d.day)),
+    [plan.planData]
+  );
+  // در حالتِ «ماندن» لاگ از شروعِ نشانگر لازم است (نشانگر هر ~۶۰ روز جلو
+  // کشیده می‌شود، پس این بازه کوتاه می‌ماند)؛ وگرنه ۹۰ روز برای «این‌هفته» کافیه.
+  const logsFrom = logsNeededFrom({ pref: missedPref, planId: plan.id, planDays, planStartIso, todayIso });
+  // نشانگر را فقط بعد از رسیدنِ *همین* بازه‌ی لاگ جلو می‌کشیم (وگرنه روزهای
+  // انجام‌شده «جامانده» حساب می‌شدند).
+  const [logsLoadedFor, setLogsLoadedFor] = useState<string | null>(null);
   useEffect(() => {
-    const start = new Date(now); start.setDate(start.getDate() - 90);
-    fetchExerciseLogRange(plan.id, start, now).then(setLogs);
-  }, [plan.id, refreshKey]);
+    let alive = true;
+    const key = `${plan.id}|${logsFrom}`;
+    let startIso = addDaysIso(todayIso, -90);
+    if (logsFrom && logsFrom < startIso) startIso = logsFrom < addDaysIso(todayIso, -399) ? addDaysIso(todayIso, -399) : logsFrom;
+    const [y, m, d] = startIso.split("-").map(Number);
+    fetchExerciseLogRange(plan.id, new Date(y, m - 1, d), now).then((l) => {
+      if (!alive) return;
+      setLogs(l);
+      setLogsLoadedFor(key);
+    });
+    return () => { alive = false; };
+  }, [plan.id, refreshKey, logsFrom]);
+
+  const progressCtx = useMemo(
+    () => ({ pref: missedPref, planId: plan.id, planDays, planStartIso, logs, todayIso }),
+    [missedPref, plan.id, planDays, planStartIso, logs]
+  );
+  // نشانگر را جلو می‌کشیم وقتی قدیمی شده یا مالِ پلنِ قبلی‌ست.
+  useEffect(() => {
+    if (logsLoadedFor !== `${plan.id}|${logsFrom}`) return;
+    const next = rebasedPref(progressCtx);
+    if (!next) return;
+    setMissedPref(next);
+    setSetting(SETTING_KEYS.exerciseMissedDay, next);
+  }, [progressCtx, logsLoadedFor, plan.id, logsFrom]);
 
   useEffect(() => {
     fetch(`/api/exercise/log?planId=${plan.id}&date=${selectedIso}`)
@@ -104,8 +136,13 @@ export function ExerciseDashboard({
     ),
     [plan.planData]
   );
-  const selectedDayPlan = plan.planData.find((d) => d.day === selectedDayName);
-  const todayPlanForStats = plan.planData.find((d) => d.day === todayName);
+  // روزِ هفته‌ای که تمرینش واقعاً امروز/روزِ انتخاب‌شده نشان داده می‌شود —
+  // در «رد شدن» همان روزِ تقویم، در «ماندن» ممکن است تمرینِ جامانده باشد.
+  const effectiveSelectedDay = effectiveDayName(progressCtx, selectedIso);
+  const effectiveTodayDay = effectiveDayName(progressCtx, todayIso);
+  const carriedFrom = effectiveSelectedDay !== selectedDayName && planDays.has(effectiveSelectedDay) ? effectiveSelectedDay : null;
+  const selectedDayPlan = plan.planData.find((d) => d.day === effectiveSelectedDay);
+  const todayPlanForStats = plan.planData.find((d) => d.day === effectiveTodayDay);
 
   const sessionsDone = sessionsThisWeekDone(logs, now);
   const sessionsTotal = sessionsThisWeekTotal(plan.gymDays);
@@ -122,13 +159,20 @@ export function ExerciseDashboard({
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const iso = isoLocal(d);
-      const name = FA_WEEKDAY[d.getDay()];
+      if (missedPref.mode === "stay") {
+        // «ماندن»: تمرینِ جامانده «وقتش گذشته» نمی‌شود، فردا دوباره می‌آید —
+        // فقط «انجام دادی» روی همان تمرینی که آن روز واقعاً نشان داده شد.
+        const eff = effectiveDayName(progressCtx, iso);
+        if (planDays.has(eff) && logs[iso]?.completed) out[eff] = "done";
+        continue;
+      }
+      const name = weekdayOf(iso);
       if (!plan.planData.some((p) => p.day === name)) continue;
       if (logs[iso]?.completed) out[name] = "done";
       else if (iso < todayIso) out[name] = "missed";
     }
     return out;
-  }, [logs, plan.planData]);
+  }, [logs, plan.planData, missedPref.mode, progressCtx, planDays]);
   const todayPct = todayProgressPct(todayPlanForStats?.items.length ?? 0, todayLog);
 
   // «این تجهیزات رو ندارم» — اول سه‌تا پیشنهاد آماده می‌گیریم (بدون سویچ
@@ -170,12 +214,8 @@ export function ExerciseDashboard({
     <div className="flex flex-col gap-4 sm:gap-6">
       <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
         <DashDateSelector
-          days={dashDays}
           activeIso={selectedIso}
           onSelect={setSelectedIso}
-          onPrevWeek={() => setWeekOffset((v) => v - 1)}
-          onNextWeek={() => setWeekOffset((v) => v + 1)}
-          onVisibleCountChange={setDayWindow}
           className="lg:order-2"
         />
 
@@ -190,7 +230,7 @@ export function ExerciseDashboard({
             label="امروز"
             icon={<Calendar size={15} />}
             active={isSelectedToday}
-            onClick={() => { setWeekOffset(0); setSelectedIso(todayIso); }}
+            onClick={() => setSelectedIso(todayIso)}
           />
         </div>
       </div>
@@ -219,13 +259,17 @@ export function ExerciseDashboard({
           dayPlan={selectedDayPlan}
           dateIso={selectedIso}
           editable={isSelectedToday}
-          title={isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینی ${selectedDayName}`}
+          title={
+            (isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینی ${selectedDayName}`) +
+            (carriedFrom ? ` (جامانده از ${carriedFrom})` : "")
+          }
           restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روز باشگاه برنامه نیست."}
           initialCompleted={!!selectedLog?.completed}
           initialCompletedItems={selectedLog?.completedItems ?? []}
           onSubstitute={openSubstitutePicker}
           substitutingItem={subbingItem}
           onSessionEnd={() => setRefreshKey((k) => k + 1)}
+          onStarted={() => setRefreshKey((k) => k + 1)}
           onAddProgram={() => setAddProgramOpen(true)}
           onActiveChange={setSessionActive}
           delay={0.05}
@@ -246,7 +290,7 @@ export function ExerciseDashboard({
         )}
       </div>
 
-      {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={todayName} dayStatus={weekDayStatus} />}
+      {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={effectiveTodayDay} dayStatus={weekDayStatus} />}
 
       {historyPickerOpen && (
         <>

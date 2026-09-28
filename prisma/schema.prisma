@@ -841,6 +841,9 @@ model ExerciseLog {
   // اسمِ حرکت‌هایی که حینِ همین جلسه تیک خوردن — برای نمایشِ ضربدرِ حرکاتِ
   // تیک‌نخورده بعدِ «پایان تمرین» و محاسبه‌ی درصدِ پیشرفتِ امروز.
   completedItems Json?
+  // لحظه‌ی اولین «شروع تمرین» برای همین روز. حالتِ «ماندن» (lib/exerciseProgression.ts)
+  // فقط روزی را «گذرانده» حساب می‌کند که شروع خورده باشد.
+  startedAt      DateTime?
   notes          String?
 
   createdAt DateTime @default(now())

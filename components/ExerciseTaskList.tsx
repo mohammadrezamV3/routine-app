@@ -45,6 +45,7 @@ export function ExerciseTaskList({
   onSessionEnd,
   onAddProgram,
   onActiveChange,
+  onStarted,
   delay,
 }: {
   planId: string;
@@ -60,6 +61,8 @@ export function ExerciseTaskList({
   onSessionEnd: () => void;
   onAddProgram: () => void;
   onActiveChange?: (active: boolean) => void;
+  /** «شروع تمرین» روی سرور ثبت شد — حالتِ «ماندن» با همین روز را گذرانده حساب می‌کند */
+  onStarted?: () => void;
   delay?: number;
 }) {
   const todayPlan = dayPlan;
@@ -116,6 +119,16 @@ export function ExerciseTaskList({
     setActive(true);
     setEnded(false);
     setElapsed(0);
+    // ثبتِ «شروع» — بدونِ این، حالتِ «ماندن» (lib/exerciseProgression.ts) همین
+    // تمرین را فردا دوباره می‌آورد. شکستش جلسه را نمی‌بندد؛ اولین تیک/پایان
+    // هم لاگ می‌سازد و لاگِ دارای پیشرفت «شروع‌شده» حساب می‌شود.
+    fetch("/api/exercise/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId, date: dateIso, started: true }),
+    })
+      .then((r) => { if (r.ok) onStarted?.(); })
+      .catch(() => {});
   }
 
   function handleStartClick() {
