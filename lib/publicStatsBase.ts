@@ -4,9 +4,9 @@
 // عددها متناسب با پایه‌ی کاربرانه (سرانه‌ی معقولِ هر کاربر)، تا کنارِ هم جور باشن.
 export const STATS_BASE = {
   users: 1312,
-  exercisePlans: 487, //   ~0.37 برنامه‌ی ورزشی برای هر کاربر
+  exercisePlans: 250, //   برنامه‌ی ورزشی (عددِ مشخص‌شده توسطِ صاحبِ محصول)
   routinePrograms: 3946, // ~3 برنامه‌ی روتین برای هر کاربر
-  journalEntries: 2718, //  ~2 معامله‌ی ثبت‌شده در ژورنال برای هر کاربر
+  journalEntries: 600, //  معامله‌ی ثبت‌شده در ژورنال (عددِ مشخص‌شده توسطِ صاحبِ محصول)
 } as const;
 
 export type PublicStats = { [K in keyof typeof STATS_BASE]: number };
