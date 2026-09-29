@@ -35,6 +35,14 @@ export const AUTH_HINT_COOKIE = "arion-auth";
 const PRELOAD_RANGE_BACK_DAYS = 90;
 const PRELOAD_RANGE_FWD_DAYS = 7;
 
+// سقفِ زمانیِ هر پیش‌درخواست + یک تلاشِ دوباره برای خطای گذرا (شبکه، تایم‌اوت،
+// ۵۰۲/۵۰۳/۵۰۴ ِ وسطِ ری‌استارتِ سرور). بدونِ این، یک درخواستِ آویزون همه‌ی
+// مصرف‌کننده‌های bootstrap (آواتار، استریک، تنظیمات، برنامه‌ها، یادآوری‌ها) رو
+// تا ابد روی «در حال بارگذاری» نگه می‌داشت — تا ریلودِ دستی. با null شدن،
+// هرکدوم به مسیرِ عادیِ خودشون (lib/storage.ts، با همین سیاست) برمی‌گردن.
+const PRELOAD_TIMEOUT_MS = 10_000;
+const PRELOAD_RETRY_DELAY_MS = 1_500;
+
 export const PRELOAD_BOOTSTRAP_KEY = "__bootstrap";
 
 /** id تگی که InlineBootstrap داده لود اولیه را داخلش می‌گذارد */
@@ -71,7 +79,9 @@ const ROUTE_PRELOADS: { prefix: string; urls: string[] }[] = [
 export const PRELOAD_SCRIPT = `(function(){try{
 if(document.cookie.indexOf("${AUTH_HINT_COOKIE}=1")===-1)return;
 var p=window.__arionPreload={};
-var g=function(u){return fetch(u,{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).catch(function(){return null})};
+var g=function(u,k){k=k||0;var c=window.AbortController?new AbortController():null,t=c?setTimeout(function(){c.abort()},${PRELOAD_TIMEOUT_MS}):0;
+return fetch(u,{credentials:"same-origin",signal:c?c.signal:void 0}).then(function(r){if(r.ok)return r.json();if(r.status>=502&&r.status<=504)throw 0;return null})
+.then(function(v){clearTimeout(t);return v},function(){clearTimeout(t);return k<1?new Promise(function(s){setTimeout(s,${PRELOAD_RETRY_DELAY_MS})}).then(function(){return g(u,k+1)}):null})};
 var iso=function(d){var m=d.getMonth()+1,y=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(y<10?"0":"")+y};
 var n=new Date(),a=new Date(n),b=new Date(n);
 a.setDate(a.getDate()-${PRELOAD_RANGE_BACK_DAYS});b.setDate(b.getDate()+${PRELOAD_RANGE_FWD_DAYS});
