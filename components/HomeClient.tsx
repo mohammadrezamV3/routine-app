@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LandingPage } from "@/components/LandingPage";
+import { resolveHomePath } from "@/lib/homePath";
 
 // تایم/استریک کاربر لاگین‌کرده دیگه این‌جا نیست — رفته توی هدر (سمت چپ
 // دکمه‌ی نوتیف، HeaderStreakClock)، چون از هر صفحه‌ای باید دیده بشه، نه فقط
@@ -18,8 +19,13 @@ export function HomeClient() {
   const { status } = useSession();
   const router = useRouter();
 
+  // مقصد: داشبورد اگه فلگش برای این کاربر روشنه (فعلا فقط ادمین‌ها)، وگرنه
+  // همون /weekly — lib/homePath.ts (با fallbackِ سریع به /weekly).
   useEffect(() => {
-    if (status === "authenticated") router.replace("/weekly");
+    if (status !== "authenticated") return;
+    let alive = true;
+    resolveHomePath().then((home) => { if (alive) router.replace(home); });
+    return () => { alive = false; };
   }, [status, router]);
 
   // مهم برای سرعت لود: این‌جا عمدا روی "loading" چیزی رو بلاک نمی‌کنیم.
