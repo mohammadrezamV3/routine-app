@@ -105,6 +105,32 @@ async function isLoggedIn(): Promise<boolean> {
 const getCache = new Map<string, { at: number; data: any }>();
 const inFlightGets = new Map<string, Promise<any>>();
 
+// سقفِ زمانیِ خواندن + تکرارِ خطای گذرا. قبلا درخواستی که جواب نمی‌گرفت (سرور وسطِ
+// ری‌استارت/دیپلوی، شبکه‌ی موبایلِ قطع‌ووصل) تا ابد در inFlightGets می‌موند و چون
+// دیدوپ می‌شد، تازه‌سازی‌های بعدی (focus/online/polling) هم پشتِ همون گیر می‌کردن —
+// صفحه تا ریلودِ دستی روی «در حال بارگذاری» می‌موند. ۴xx و ۵۰۰ تکرار نمی‌شن (قطعی‌ان).
+const READ_TIMEOUT_MS = 10_000;
+const READ_RETRY_DELAYS_MS = [1_500, 4_000];
+
+async function readJson(url: string): Promise<any | null> {
+  for (let attempt = 0; ; attempt++) {
+    const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS) : undefined;
+    let transient = false;
+    try {
+      const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+      if (res.ok) return await res.json();
+      transient = res.status >= 502 && res.status <= 504;
+    } catch {
+      transient = true;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!transient || attempt >= READ_RETRY_DELAYS_MS.length) return null;
+    await new Promise((r) => setTimeout(r, READ_RETRY_DELAYS_MS[attempt]));
+  }
+}
+
 /**
  * GET کش‌شده و دیدوپ‌شده. همه‌ی صداهای هم‌زمان روی یک URL یک درخواست واحد
  * رو به اشتراک می‌ذارن، و تا GET_TTL_MS بعدش از کش جواب می‌گیرن.
@@ -119,8 +145,7 @@ async function cachedGet<T>(url: string, pick: (json: any) => T, fallback: T): P
     // اگه اسکریپت inline layout این URL رو از قبل درخواست کرده، همون رو
     // برمی‌داریم — یعنی داده تقریبا یک رفت‌وبرگشت کامل زودتر آماده‌ست.
     const preloaded = takePreloaded(url);
-    pending = (preloaded ?? fetch(url)
-      .then((res) => (res.ok ? res.json() : null)))
+    pending = (preloaded ?? readJson(url))
       .then((json: any) => {
         if (json !== null) getCache.set(url, { at: Date.now(), data: json });
         return json;
@@ -298,8 +323,7 @@ function fetchRange(from: string, to: string): RangeEntry {
     from,
     to,
     at: Date.now(),
-    data: fetch(`/api/tasks/daily/range?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
-      .then((res) => (res.ok ? res.json() : null))
+    data: readJson(`/api/tasks/daily/range?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
       .then((json) => (json ? ((json.entries || {}) as Record<string, DailyRecord>) : null))
       .catch(() => null),
   };
