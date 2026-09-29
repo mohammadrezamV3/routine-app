@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
-import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
+import { useSession } from "next-auth/react";
+import { logoutAndRedirect } from "@/lib/logout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
@@ -270,7 +270,7 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
           <span className="admin-nav-icon"><Home size={17} /></span>
           <span className="admin-nav-label">بازگشت به اپ</span>
         </Link>
-        <button type="button" className="admin-nav-head admin-nav-logout" onClick={() => { clearAllLocalKeys().catch(() => {}); signOut({ callbackUrl: "/" }); }}>
+        <button type="button" className="admin-nav-head admin-nav-logout" onClick={logoutAndRedirect}>
           <span className="admin-nav-icon"><LogOut size={17} /></span>
           <span className="admin-nav-label">خروج</span>
         </button>

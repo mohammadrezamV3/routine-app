@@ -33,19 +33,36 @@ export function logoutAndRedirect() {
     wipeOnLogout().catch(() => {}),
     new Promise<void>((r) => setTimeout(r, 800)),
   ]);
+  // باگِ «موقعِ خروج صفحه گیر می‌کنه»: درخواستِ خروج هیچ سقفِ زمانی نداشت؛ روی
+  // شبکه‌ی کند/قطع، پرده‌ی تار (pointer-events:none) برای همیشه روی صفحه می‌موند.
+  // حالا هر مرحله سقف داره و در بدترین حالت پرده برداشته می‌شه تا کاربر گیر نکنه.
+  const ctrl = new AbortController();
+  const abortTimer = setTimeout(() => ctrl.abort(), 6000);
   const serverSignOut = (async () => {
     const csrfToken = await getCsrfToken();
     const res = await fetch("/api/auth/signout", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ csrfToken: csrfToken ?? "", callbackUrl: "/", json: "true" }),
+      signal: ctrl.signal,
+      credentials: "same-origin",
     });
     if (!res.ok) throw new Error("signout failed");
-  })();
+  })().finally(() => clearTimeout(abortTimer));
+
+  // تورِ ایمنی: اگه تا ۱۲ ثانیه هیچ ناوبری‌ای انجام نشد، قفلِ صفحه باز می‌شه
+  const unstick = setTimeout(() => {
+    loggingOut = false;
+    document.documentElement.removeAttribute("data-logging-out");
+  }, 12_000);
 
   Promise.all([wipe, serverSignOut]).then(
     () => window.location.replace("/"),
-    // مسیرِ دستی شکست خورد → همون مسیرِ استانداردِ next-auth
-    () => signOut({ callbackUrl: "/" })
+    // مسیرِ دستی شکست خورد → همون مسیرِ استانداردِ next-auth (که خودش ریدایرکت می‌کنه)
+    () => signOut({ callbackUrl: "/" }).catch(() => {
+      clearTimeout(unstick);
+      loggingOut = false;
+      document.documentElement.removeAttribute("data-logging-out");
+    })
   );
 }

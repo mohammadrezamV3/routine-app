@@ -11,7 +11,9 @@ import { isoLocal } from "./jalali";
 import { useLiveRefresh, useVisiblePolling } from "./liveSync";
 import type { DashboardData } from "./dashboardTypes";
 
-let cache: { key: string; data: DashboardData } | null = null;
+let cache: { key: string; data: DashboardData; at: number } | null = null;
+/** داده‌ی تازه‌تر از این، موقعِ mount دوباره گرفته نمی‌شه (مثلا همون که سرور رندر کرده) */
+const FRESH_MS = 30_000;
 let inflight: { key: string; p: Promise<DashboardData | null> } | null = null;
 
 function requestKey() {
@@ -27,22 +29,23 @@ function load(force = false): Promise<DashboardData | null> {
       if (r.status === 403 || r.status === 401) throw Object.assign(new Error("forbidden"), { status: r.status });
       return r.ok ? ((await r.json()) as DashboardData) : null;
     })
-    .then((d) => { if (d) cache = { key, data: d }; return d; })
+    .then((d) => { if (d) cache = { key, data: d, at: Date.now() }; return d; })
     .finally(() => { if (inflight?.p === p) inflight = null; });
   inflight = { key, p };
   return p;
 }
 
-/** شروعِ زودهنگامِ درخواست (قبل از mount) — از DashboardClient موقعِ import صدا زده می‌شه */
-export function prefetchDashboard() {
-  if (typeof window === "undefined") return;
-  load().catch(() => {});
+/** داده‌ای که سرور همراهِ HTML فرستاده (app/dashboard/page.tsx) — کش رو باهاش پر می‌کنه */
+function seed(initial: { key: string; data: DashboardData } | null | undefined) {
+  if (!initial) return;
+  const at = Date.parse(initial.data.generatedAt) || Date.now();
+  if (!cache || cache.at < at) cache = { key: initial.key, data: initial.data, at };
 }
 
 const LIVE_KEYS = ["exercise", "calorie", "trade", "roadmaps", "notifications", "mentor:mentorship", "mentor:messages", "account"];
 
-export function useDashboardData() {
-  const [data, setData] = useState<DashboardData | null>(cache?.data ?? null);
+export function useDashboardData(initial?: { key: string; data: DashboardData } | null) {
+  const [data, setData] = useState<DashboardData | null>(() => { seed(initial); return cache?.data ?? null; });
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "forbidden">(cache ? "ready" : "loading");
   const alive = useRef(true);
   // StrictMode (dev) افکت رو mount→unmount→mount می‌کنه؛ بدونِ ست‌کردنِ دوباره، همه‌ی پاسخ‌ها دور ریخته می‌شد
@@ -61,7 +64,12 @@ export function useDashboardData() {
       });
   }, []);
 
-  useEffect(() => { refresh(false); }, [refresh]);
+  // دادهِ هم‌روز و تازه (همون که سرور رندر کرد) دوباره گرفته نمی‌شه؛ اگه روزِ
+  // مرورگر با منطقه‌ی زمانیِ حساب فرق داشت یا داده کهنه بود، یک بار تازه می‌شه.
+  useEffect(() => {
+    if (cache && cache.key === requestKey() && Date.now() - cache.at < FRESH_MS) return;
+    refresh(false);
+  }, [refresh]);
 
   // تغییرِ هر ماژول (از همین تب یا دستگاهِ دیگه) → یک تازه‌سازیِ تجمیعی.
   // debounce: چند رویدادِ پشتِ‌سرهم (مثلا ثبتِ چند غذا) فقط یک درخواست.

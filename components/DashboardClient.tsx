@@ -14,10 +14,11 @@ import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { MotionConfig, motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
-import { FeatureGate } from "./FeatureGate";
-import { useFeature, useFeatures } from "@/lib/useFeatures";
-import { useDashboardData, prefetchDashboard } from "@/lib/useDashboardData";
+import { SuperAdminGate } from "./SuperAdminGate";
+import { useFeatures } from "@/lib/useFeatures";
+import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
+import type { DashboardData } from "@/lib/dashboardTypes";
 import { DashboardHero } from "./DashboardHero";
 import { DashboardToday } from "./DashboardToday";
 import { DashboardHeatmap } from "./DashboardHeatmap";
@@ -31,28 +32,25 @@ import { DashFriendsCard } from "./DashFriendsCard";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
-// درخواست همون لحظه‌ی لودِ باندلِ این صفحه شروع می‌شه، نه بعد از mount
-prefetchDashboard();
+export type DashboardGate = "guest" | "off" | "on";
 
-export function DashboardClient() {
-  const { status } = useSession();
-  if (status === "unauthenticated") {
+/**
+ * گیت سمتِ سرور تصمیم گرفته می‌شه (app/dashboard/page.tsx) و دادهِ اولیه هم
+ * همراهِ HTML میاد — دیگه نه منتظرِ /api/features می‌مونیم نه /api/dashboard.
+ * enforcement واقعی همچنان روی روتِ API هم هست (featureBlocked).
+ */
+export function DashboardClient({ gate, initial }: { gate: DashboardGate; initial: { key: string; data: DashboardData } | null }) {
+  if (gate === "guest") {
     return <section className="db-page"><AuthGate message="برای دیدنِ داشبورد وارد شوید" /></section>;
+  }
+  if (gate === "off") {
+    return <section className="db-page dash-scope"><SuperAdminGate forceLocked><DashboardShellSkeleton /></SuperAdminGate></section>;
   }
   return (
     <section className="db-page dash-scope">
-      {status === "authenticated" ? <GatedBody /> : <DashboardShellSkeleton />}
+      <DashboardBody initial={initial} />
     </section>
   );
-}
-
-// FeatureGate تا رسیدنِ فلگ‌ها چیزی رندر نمی‌کنه (صفحه‌ی خالی)؛ این‌جا به‌جاش
-// اسکلت نشون داده می‌شه و فقط حالتِ «خاموش» به خودِ FeatureGate سپرده می‌شه.
-function GatedBody() {
-  const on = useFeature("dashboard");
-  if (on === null) return <DashboardShellSkeleton />;
-  if (!on) return <FeatureGate feature="dashboard"><DashboardShellSkeleton /></FeatureGate>;
-  return <DashboardBody />;
 }
 
 /**
@@ -71,8 +69,8 @@ function bentoAreas(bottom: string[]) {
   return { ["--areas-lg" as any]: lg, ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
-function DashboardBody() {
-  const { data, status, refresh } = useDashboardData();
+function DashboardBody({ initial }: { initial: { key: string; data: DashboardData } | null }) {
+  const { data, status, refresh } = useDashboardData(initial);
   const routine = useDashboardRoutine();
   const flagFeatures = useFeatures();
   const { data: session } = useSession();

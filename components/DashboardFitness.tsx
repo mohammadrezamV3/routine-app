@@ -63,6 +63,20 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         })}
       </div>
 
+      {t.isGymDay && (t.items ?? []).length > 0 && (
+        <ul className="db-ex-items" aria-label="حرکت‌های امروز">
+          {t.items.map((it, i) => (
+            <motion.li key={it.name + i} className={it.done ? "is-done" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
+              <span className="db-ex-tick" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="m4.5 8.3 2.3 2.2 4.7-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+              <span className="db-ex-name">{it.name}</span>
+            </motion.li>
+          ))}
+          {t.itemCount > t.items.length && <li className="db-ex-more">+{faNum(t.itemCount - t.items.length)} حرکتِ دیگه</li>}
+        </ul>
+      )}
+
       <Link href="/exercise?tab=exercise" prefetch className={state === "todo" || state === "going" ? "trade-primary-btn db-fit-cta" : "account-outline-btn mentor-btn db-fit-cta"}>
         {state === "todo" || state === "going" ? <DashIcon name="dumbbell" className="dbi-live" /> : null}
         {cta}
