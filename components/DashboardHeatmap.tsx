@@ -228,7 +228,7 @@ export function DashboardHeatmap({
                 onMouseLeave={() => setHover(null)}
               >
                 {!selected || !monthReady(selected) ? (
-                  Array.from({ length: 35 }, (_, i) => <span key={i} className="db-mm-cell is-skel" />)
+                  Array.from({ length: 42 }, (_, i) => <span key={i} className="db-mm-cell is-skel" />)
                 ) : (
                   <>
                     {Array.from({ length: selected.lead }, (_, i) => <span key={`b${i}`} className="db-mm-cell is-blank" aria-hidden="true" />)}
@@ -245,6 +245,8 @@ export function DashboardHeatmap({
                         {faNum(c.jd)}
                       </span>
                     ))}
+                    {/* همیشه ۶ ردیف: ماهِ ۵ یا ۶ هفته‌ای ارتفاعِ کارت رو عوض نمی‌کنه و محتوای زیرش نمی‌پره */}
+                    {Array.from({ length: Math.max(0, 42 - selected.lead - selected.cells.length) }, (_, i) => <span key={`t${i}`} className="db-mm-cell is-blank" aria-hidden="true" />)}
                   </>
                 )}
               </motion.div>

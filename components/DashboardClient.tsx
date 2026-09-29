@@ -69,11 +69,17 @@ function bentoAreas(has: Set<Area>) {
   };
   const fitness = (["ex", "cal"] as Area[]).filter((a) => has.has(a));
   const bottom = (["mentor", "road", "inbox"] as Area[]).filter((a) => has.has(a));
+  // روی دسکتاپ «دوستان» کنارِ بقیه‌ی کارت‌های کوتاهِ پایین می‌شینه و لانچر ردیفِ کاملِ
+  // خودش رو داره — قبلا دوستان (کوتاه) کنارِ لانچر (بلند) یک فضای خالیِ بزرگ می‌ساخت.
+  const tail: string[] = [...bottom, "friends"];
+  const rows3: string[][] = [];
+  if (tail.length === 4) rows3.push([tail[0], tail[0], tail[1]], [tail[2], tail[3], tail[3]]);
+  else for (let i = 0; i < tail.length; i += 3) rows3.push(fit(tail.slice(i, i + 3), 3));
   const lg: string[] = [q(["today", "heat", "heat"])];
   if (fitness.length) lg.push(q(["today", ...fit(fitness, 2)]));
   if (has.has("trade")) lg.push(q(["trade", "trade", "market"]));
-  if (bottom.length) lg.push(q(fit(bottom, 3)));
-  lg.push(q(["friends", "launch", "launch"]));
+  rows3.forEach((r) => lg.push(q(r)));
+  lg.push(q(["launch", "launch", "launch"]));
 
   const md: string[] = [q(["heat", "heat"])];
   if (fitness.length === 2) md.push(q(["today", "ex"]), q(["today", "cal"]));

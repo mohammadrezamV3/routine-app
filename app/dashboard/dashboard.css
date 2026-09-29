@@ -281,7 +281,8 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
    بقیه کجان. ۴ ستون تا تبلت، ۸ ستون روی دسکتاپ. */
 .db-quick{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; margin:var(--db-gap) 0; }
 @media (min-width:640px){ .db-quick{ gap:10px; } }
-@media (min-width:1024px){ .db-quick{ grid-template-columns:repeat(8, minmax(0,1fr)); } }
+/* تعدادِ ستون = تعدادِ کارهای سریعِ قابلِ‌نمایش (فلگِ خاموش یک خانه‌ی خالی نمی‌ذاره) */
+@media (min-width:1024px){ .db-quick{ grid-template-columns:repeat(var(--qn, 8), minmax(0,1fr)); } }
 .db-quick > div{ min-width:0; }
 .db-quick-item{
   position:relative; display:flex; flex-direction:column; align-items:center; gap:8px;
@@ -313,7 +314,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 @media (min-width:1100px){ .db-bento{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); grid-template-areas:var(--areas-lg); } }
 .db-embed{ min-width:0; }
 /* کارتِ دوستان ارتفاعِ طبیعیِ خودش رو داره؛ کش‌اومدن تا ارتفاعِ لانچر یک کارتِ بلندِ خالی می‌ساخت */
-@media (min-width:720px){ .db-embed{ align-self:start; } }
+.db-embed > div{ height:100%; }
 
 /* ── امروز (خطِ زمانی) ────────────────────────────────────── */
 .db-tag{ font-size:10px; color:var(--muted); border:1px solid var(--box-line); border-radius:7px; padding:1px 6px; white-space:nowrap; max-width:90px; overflow:hidden; text-overflow:ellipsis; }
@@ -500,9 +501,10 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 /* بدنه: آمار + تقویمِ ماه — روی کارتِ عریض کنارِ هم */
 .db-heat-body{ display:flex; flex-direction:column; gap:16px; }
 @container (min-width:620px){
-  .db-heat-body{ flex-direction:row; align-items:flex-start; gap:26px; }
+  .db-heat-body{ flex-direction:row; align-items:flex-start; justify-content:center; gap:34px; }
   .db-heat-body .db-heat-stats{ flex:0 0 190px; grid-template-columns:1fr; gap:14px; padding-top:4px; }
-  .db-heat-body .db-mm{ flex:1; }
+  .db-heat-body .db-mm{ flex:0 1 480px; }
+  .db-heat-body .db-mm-head, .db-heat-body .db-mm-grid{ max-width:none; }
 }
 .db-mm{ min-width:0; }
 .db-mm-head, .db-mm-grid{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; max-width:460px; margin-inline:auto; }
@@ -722,7 +724,7 @@ body[data-theme="light"] .db-mm-cell.lv4{ color:#fff; }
   .db-launch-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
   .db-launch-grid .db-launch-item{ padding:10px; gap:9px; }
   .db-launch-grid .db-launch-text span, .db-launch-grid .db-launch-arrow{ display:none; }
-  .db-launch-grid .db-launch-text b{ font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .db-launch-grid .db-launch-text b{ font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
   .db-launch-grid .db-launch-icon{ width:30px; height:30px; border-radius:10px; }
 }
 .db-launch-item{

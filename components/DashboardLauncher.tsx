@@ -44,7 +44,7 @@ function visible(items: Item[], features: Partial<Record<FeatureKey, boolean>> |
 
 export function DashboardQuickActions({ features, modules }: { features: Partial<Record<FeatureKey, boolean>> | null; modules: Set<string> | null }) {
   return (
-    <motion.nav className="db-quick" aria-label="کارهای سریع" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.04, delayChildren: 0.2 } } }}>
+    <motion.nav className="db-quick" style={{ ["--qn" as any]: visible(QUICK, features).length }} aria-label="کارهای سریع" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.04, delayChildren: 0.2 } } }}>
       {visible(QUICK, features).map((q) => {
         const locked = !!q.module && modules !== null && !modules.has(q.module);
         return (
