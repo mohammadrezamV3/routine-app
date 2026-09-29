@@ -273,7 +273,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
               </div>
             ) : exhausted ? (
               <div className="routine-ai-exhausted">
-                <p>سه استفاده‌ی رایگان تمام شد.</p>
+                <p>پیام‌های رایگانِ نومو تمام شد.</p>
                 <Link href="/subscription" className="trade-primary-btn" onClick={() => setOpen(false)}>
                   دیدن اشتراک‌ها
                 </Link>

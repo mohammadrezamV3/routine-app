@@ -3,27 +3,29 @@ import type { AiFeatureKey } from "@prisma/client";
 // دوره‌ی آزمایشیِ حسابِ تازه — منبعِ واحدِ همه‌ی عددهای «تریال».
 //
 // تصمیمِ Owner: هر حسابِ تازه (ثبت‌نامِ معمولی و ورودِ اول با گوگل، هر دو)
-// لحظه‌ی ساخت یک هفته به *همه‌ی* بخش‌ها دسترسی می‌گیرد، ولی استفاده از
-// هوش مصنوعی در همین یک هفته سقفِ کم دارد. بعد از یک هفته ماژول‌های پولی
-// مثلِ هر ModuleAccess دیگری خودشان منقضی می‌شوند (requireModule/ModuleGate
-// همان expiresAt را می‌خوانند) — هیچ کرانی لازم نیست.
+// لحظه‌ی ساخت ۳ روز به بدنسازی، کالری‌شمار و ژورنال ترید (TRIAL_MODULES)
+// دسترسی می‌گیرد، با سقفِ کم برای هوش مصنوعی. رودمپ و تحلیل هوشمند
+// (AI_INSIGHT) عمداً در تریال نیستند. بعد از ۳ روز این ماژول‌ها مثلِ هر
+// ModuleAccess دیگری خودشان منقضی می‌شوند — هیچ کرانی لازم نیست.
+//
+// ماژول‌های پایه (BASIC_MODULES: روتین/خواب/کارها) همیشه رایگان‌اند و اصلاً
+// انقضا ندارند (lib/moduleAccess.ts)؛ فقط دستیارِ «نومو» کامل رایگان نیست:
+// اشتراکِ فعال → نامحدود، بی‌اشتراک → FREE_ASSISTANT_USES پیامِ رایگان (پیش‌فرض ۱۰).
 //
 // این فایل عمداً prisma (جز import type) وارد نمی‌کند تا متن/عددهایش سمتِ
 // کلاینت هم قابلِ استفاده باشد؛ بخشِ سرور در lib/trialAccess.ts و lib/aiQuota.ts است.
 
-/** طولِ دوره‌ی آزمایشیِ همه‌ی بخش‌ها (روز) */
-export const TRIAL_DAYS = 7;
+/** طولِ دوره‌ی آزمایشی (روز) */
+export const TRIAL_DAYS = 3;
 export const TRIAL_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
-/**
- * ماژول‌های پایه (BASIC_MODULES) پیش از این تغییر با انقضای ۱۴روزه ساخته
- * می‌شدند؛ همان رفتار دست‌نخورده می‌ماند (دادهٔ روتین/خواب/کارها اصلاً با
- * ModuleAccess گیت نمی‌شود — این انقضا فقط روی دستیارِ «نومو» اثر دارد).
- */
-export const BASIC_ACCESS_DAYS = 14;
+/** ماژول‌هایی که در دوره‌ی آزمایشی باز می‌شوند (رشته، تا فایل کلاینت‌پسند بماند) */
+export const TRIAL_MODULE_KEYS = ["EXERCISE", "CALORIE", "TRADE"] as const;
 
 /** متنِ واحدِ معرفیِ دوره‌ی آزمایشی در همه‌ی صفحه‌ها */
-export const TRIAL_COPY_FA = "یک هفته دسترسیِ کامل به همه‌ی بخش‌ها، با استفاده‌ی محدود از هوش مصنوعی";
+export const TRIAL_COPY_FA = "۳ روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی";
+/** متنِ واحدِ «روتینِ رایگان» کنارِ متنِ تریال */
+export const FREE_ROUTINE_COPY_FA = "«روتین من» برای همیشه رایگان است؛ دستیار هوشمند «نومو» ۱۰ پیام رایگان دارد و در پلن‌های پولی نامحدود است.";
 
 /**
  * سقفِ *کلِ* استفاده از هر فیچرِ AI در کلِ دوره‌ی آزمایشی (نه ماهانه/روزانه).
@@ -31,15 +33,13 @@ export const TRIAL_COPY_FA = "یک هفته دسترسیِ کامل به همه�
  * TRIAL_AI_LIMITS_SETTING_KEY؛ این‌ها فقط پیش‌فرض‌اند. عددِ ۰ یعنی آن فیچر
  * در تریال بسته است.
  *
- * دستیارِ «نومو» (ROUTINE_ASSISTANT) این‌جا نیست: برای هر کاربرِ بی‌اشتراک
- * (از جمله تریال) از قبل سقفِ مادام‌العمرِ FREE_ASSISTANT_USES
- * (lib/routineAssistant.ts، ۳ بار) دارد.
+ * دستیارِ «نومو» (ROUTINE_ASSISTANT) این‌جا نیست: هر کاربرِ بی‌اشتراک (تریال
+ * یا نه) سقفِ FREE_ASSISTANT_USES (lib/routineAssistant.ts، پیش‌فرض ۱۰) را دارد. رودمپ و
+ * آنالیزِ هفتگی هم نیستند چون اصلاً در تریال باز نمی‌شوند.
  */
 export const DEFAULT_TRIAL_AI_LIMITS = {
-  ROADMAP_GENERATION: 3, // ساختِ رودمپ + بازسازیِ راهنما/یک مرحله، روی هم
-  EXERCISE_PLAN_GENERATION: 2,
+  EXERCISE_PLAN_GENERATION: 1,
   FOOD_SCAN: 7,
-  WEEKLY_COACH_REPORT: 2, // مربیِ AI در آنالیزِ هفتگی
 } satisfies Partial<Record<AiFeatureKey, number>>;
 
 export type TrialAiFeature = keyof typeof DEFAULT_TRIAL_AI_LIMITS;
@@ -47,10 +47,8 @@ export type TrialAiLimits = Record<TrialAiFeature, number>;
 export const TRIAL_AI_FEATURES = Object.keys(DEFAULT_TRIAL_AI_LIMITS) as TrialAiFeature[];
 
 export const TRIAL_AI_FEATURE_LABELS_FA: Record<TrialAiFeature, string> = {
-  ROADMAP_GENERATION: "ساخت/بازسازی رودمپ",
   EXERCISE_PLAN_GENERATION: "ساخت برنامه‌ی تمرینی",
   FOOD_SCAN: "اسکن غذا",
-  WEEKLY_COACH_REPORT: "مربی AI آنالیز هفتگی",
 };
 
 export const TRIAL_AI_LIMITS_SETTING_KEY = "trial_ai_limits";

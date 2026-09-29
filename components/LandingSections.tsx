@@ -133,7 +133,7 @@ export function LandingStats() {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const STEPS = [
-  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. از همان لحظه یک هفته همه‌ی بخش‌ها برایت باز است." },
+  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. «روتین من» همیشه رایگان است و ۳ روز هم بدنسازی، کالری‌شمار و ژورنال ترید برایت باز است." },
   { icon: LayoutGrid, title: "برنامه‌ات را بچین", body: "کارهای تکراری، تمرین، هدف کالری یا حساب معاملاتی‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
   { icon: CalendarCheck, title: "هر روز تیک بزن", body: "کارهای امروز را علامت بزن، استریک را نگه دار و آخر هفته ببین واقعاً چقدر جلو رفته‌ای." },
 ];
@@ -647,9 +647,9 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> ۷ روز، همه‌ی بخش‌ها، رایگان</span>
+          <span className="ls-cta-chip"><Sparkles size={14} /> روتین رایگان، ۳ روز بقیه</span>
           <h2 className="ls-cta-title">امروز، اولین تیک را بزن</h2>
-          <p className="ls-cta-sub">حساب بساز و یک هفته همه‌ی بخش‌ها را کامل امتحان کن؛ روتین پایه بعد از آن هم رایگان می‌ماند.</p>
+          <p className="ls-cta-sub">«روتین من» برای همیشه رایگان است؛ حساب بساز و ۳ روز بدنسازی، کالری‌شمار و ژورنال ترید را هم با استفاده‌ی محدود از هوش مصنوعی امتحان کن.</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
               رایگان شروع کن <ArrowLeft size={16} />
