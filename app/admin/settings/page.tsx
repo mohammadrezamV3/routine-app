@@ -10,7 +10,7 @@ import { NumberInput } from "@/components/NumberInput";
 import { MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_FEATURE_LABELS_FA, TRIAL_DAYS, type TrialAiFeature, type TrialAiLimits } from "@/lib/trial";
 
 type Rate = { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number };
-type SettingsResp = { aiCostRate: Rate; defaultAiCostRate: Rate; trialAiLimits: TrialAiLimits; defaultTrialAiLimits: TrialAiLimits };
+type SettingsResp = { aiCostRate: Rate; defaultAiCostRate: Rate; trialAiLimits: TrialAiLimits; defaultTrialAiLimits: TrialAiLimits; nomoFreeUses: number; defaultNomoFreeUses: number };
 type TrialDraft = Record<TrialAiFeature, string>;
 const toDraft = (l: TrialAiLimits) => Object.fromEntries(TRIAL_AI_FEATURES.map((f) => [f, String(l[f])])) as TrialDraft;
 type AuditRow = { id: string; action: string; targetType: string | null; targetId: string | null; createdAt: string; actor: { name: string | null; lastName: string | null; username: string | null } | null };
@@ -34,6 +34,9 @@ export default function AdminSettingsPage() {
   const [trialDraft, setTrialDraft] = useState<TrialDraft | null>(null);
   const [trialSaving, setTrialSaving] = useState(false);
   const [trialError, setTrialError] = useState<string | null>(null);
+  const [nomoDraft, setNomoDraft] = useState("");
+  const [nomoSaving, setNomoSaving] = useState(false);
+  const [nomoError, setNomoError] = useState<string | null>(null);
   const [indexNowBusy, setIndexNowBusy] = useState(false);
   const [indexNowMsg, setIndexNowMsg] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
 
@@ -51,6 +54,7 @@ export default function AdminSettingsPage() {
         setInputRate(String(d.aiCostRate.inputPer1kUsdMicros));
         setOutputRate(String(d.aiCostRate.outputPer1kUsdMicros));
         setTrialDraft(toDraft(d.trialAiLimits));
+        setNomoDraft(String(d.nomoFreeUses));
       })
       .catch((e) => setSettingsError(e.message));
     loadAudit();
@@ -110,6 +114,30 @@ export default function AdminSettingsPage() {
       setTrialError(e.message);
     } finally {
       setTrialSaving(false);
+    }
+  }
+
+  const nomoDirty = !!settings && nomoDraft !== String(settings.nomoFreeUses);
+
+  async function saveNomo() {
+    if (nomoSaving || !settings) return;
+    const n = nomoDraft === "" ? NaN : Number(nomoDraft);
+    if (!Number.isInteger(n) || n < 0 || n > MAX_TRIAL_AI_LIMIT) {
+      setNomoError(`تعداد باید عدد صحیحی بین 0 تا ${formatNumber(MAX_TRIAL_AI_LIMIT)} باشد`);
+      return;
+    }
+    setNomoError(null);
+    setNomoSaving(true);
+    try {
+      const d = await adminFetch<{ nomoFreeUses: number }>("/api/admin/settings", { method: "PATCH", json: { nomoFreeUses: n } });
+      setSettings({ ...settings, nomoFreeUses: d.nomoFreeUses });
+      setNomoDraft(String(d.nomoFreeUses));
+      toast("پیام‌های رایگان نومو ذخیره شد");
+      loadAudit();
+    } catch (e: any) {
+      setNomoError(e.message);
+    } finally {
+      setNomoSaving(false);
     }
   }
 
@@ -181,8 +209,7 @@ export default function AdminSettingsPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">سقف AI دوره‌ی آزمایشی</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          هر حساب تازه {TRIAL_DAYS} روز به همه‌ی بخش‌ها دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (۰ یعنی بسته).
-          دستیار «نومو» جداگانه سه استفاده‌ی رایگان دارد.
+          هر حساب تازه {TRIAL_DAYS} روز به بدنسازی، کالری‌شمار و ژورنال ترید دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (۰ یعنی بسته).
         </div>
         {settingsError && !settings ? (
           <EmptyState message={settingsError} />
@@ -205,6 +232,33 @@ export default function AdminSettingsPage() {
             <div className="admin-modal-actions">
               <button type="submit" className="admin-btn primary" disabled={trialSaving || !trialDirty}>
                 {trialSaving ? "در حال ذخیره…" : "ذخیره"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      <div className="admin-chart-card">
+        <div className="admin-chart-head"><span className="admin-chart-title">پیام‌های رایگان نومو</span></div>
+        <div className="admin-section-hint admin-settings-hint">
+          تعداد کل پیام‌هایی که کاربر بدون اشتراک می‌تواند به دستیار «نومو» بدهد؛ مشترک‌ها نامحدودند.
+        </div>
+        {settingsError && !settings ? (
+          <EmptyState message={settingsError} />
+        ) : !settings ? (
+          <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); saveNomo(); }} noValidate>
+            <div className="admin-form-grid">
+              <label className="admin-field">
+                <span>پیام رایگان (پیش‌فرض {settings.defaultNomoFreeUses})</span>
+                <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={4} value={nomoDraft} onChange={setNomoDraft} />
+              </label>
+            </div>
+            {nomoError && <div className="admin-form-error" role="alert">{nomoError}</div>}
+            <div className="admin-modal-actions">
+              <button type="submit" className="admin-btn primary" disabled={nomoSaving || !nomoDirty}>
+                {nomoSaving ? "در حال ذخیره…" : "ذخیره"}
               </button>
             </div>
           </form>

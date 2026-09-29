@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getAiCostRate, setAiCostRate, setAppSetting, DEFAULT_AI_COST_RATE } from "@/lib/appSettings";
-import { getTrialAiLimits } from "@/lib/aiQuota";
+import { getNomoFreeUses, getTrialAiLimits } from "@/lib/aiQuota";
+import { FREE_ASSISTANT_USES, MAX_NOMO_FREE_USES, NOMO_FREE_USES_SETTING_KEY } from "@/lib/routineAssistant";
 import {
   DEFAULT_TRIAL_AI_LIMITS, MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_LIMITS_SETTING_KEY, type TrialAiLimits,
 } from "@/lib/trial";
@@ -11,10 +12,11 @@ export async function GET() {
   const guard = await requireAdmin("settings");
   if (!guard.ok) return guard.response;
 
-  const [aiCostRate, trialAiLimits] = await Promise.all([getAiCostRate(), getTrialAiLimits()]);
+  const [aiCostRate, trialAiLimits, nomoFreeUses] = await Promise.all([getAiCostRate(), getTrialAiLimits(), getNomoFreeUses()]);
   return NextResponse.json({
     aiCostRate, defaultAiCostRate: DEFAULT_AI_COST_RATE,
     trialAiLimits, defaultTrialAiLimits: DEFAULT_TRIAL_AI_LIMITS,
+    nomoFreeUses, defaultNomoFreeUses: FREE_ASSISTANT_USES,
   });
 }
 
@@ -26,6 +28,18 @@ export async function PATCH(req: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);
+
+  // { nomoFreeUses: n } — تعداد پیام رایگان نومو برای کاربر بی‌اشتراک
+  if (body && typeof body === "object" && "nomoFreeUses" in body) {
+    const v = (body as any).nomoFreeUses;
+    const n = v === null || v === undefined || (typeof v === "string" && !v.trim()) ? NaN : Number(v);
+    if (!Number.isInteger(n) || n < 0 || n > MAX_NOMO_FREE_USES) {
+      return NextResponse.json({ error: `تعداد باید عدد صحیحی بین 0 تا ${MAX_NOMO_FREE_USES} باشد` }, { status: 400 });
+    }
+    await setAppSetting(NOMO_FREE_USES_SETTING_KEY, n);
+    await writeAuditLog(guard.userId, "setting.nomo_free_uses", "AppSetting", NOMO_FREE_USES_SETTING_KEY, { value: n });
+    return NextResponse.json({ ok: true, nomoFreeUses: n });
+  }
 
   // { trialAiLimits: { FEATURE: n } } — سقفِ کلِ استفاده از هر فیچرِ AI در
   // دوره‌ی آزمایشیِ حسابِ تازه (lib/trial.ts). جدا از نرخ هزینه ذخیره می‌شه.
