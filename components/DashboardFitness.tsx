@@ -37,7 +37,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
   return (
     <div className="db-fit">
       <div className="db-fit-top">
-        <Ring value={t.isGymDay ? frac : ex.week.target ? ex.week.done / ex.week.target : 0} size={74} stroke={7} color="var(--secondary)" track="rgba(var(--secondary-rgb),.16)">
+        <Ring value={t.isGymDay ? frac : ex.week.target ? ex.week.done / ex.week.target : 0} size={74} stroke={7} grad={["var(--ring-2a)", "var(--ring-2b)"]}>
           {state === "done" ? <DashIcon name="trophy" className="dbi-live db-fit-trophy" /> : t.isGymDay ? <b className="db-fit-ring-num">{faNum(t.doneItems)}<small>/{faNum(t.itemCount)}</small></b> : <DashIcon name="bed" className="dbi-live db-fit-rest" />}
         </Ring>
         <div className="db-fit-info">
@@ -96,9 +96,9 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
   const left = Math.round(target.kcal - cal.today.kcal);
   const maxWeek = Math.max(target.kcal, ...cal.week.map((w) => w.kcal), 1);
   const macros = [
-    { key: "p", label: "پروتئین", val: cal.today.protein, target: target.protein, color: "var(--secondary)" },
-    { key: "c", label: "کربو", val: cal.today.carbs, target: target.carbs, color: "var(--sun)" },
-    { key: "f", label: "چربی", val: cal.today.fat, target: target.fat, color: "var(--accent-soft)" },
+    { key: "p", label: "پروتئین", val: cal.today.protein, target: target.protein, color: "linear-gradient(270deg, var(--ring-2a), var(--ring-2b))" },
+    { key: "c", label: "کربو", val: cal.today.carbs, target: target.carbs, color: "linear-gradient(270deg, var(--ring-3a), var(--ring-3b))" },
+    { key: "f", label: "چربی", val: cal.today.fat, target: target.fat, color: "linear-gradient(270deg, var(--ring-1a), var(--ring-1b))" },
   ];
   return (
     <div className="db-fit">
@@ -155,11 +155,11 @@ function Gauge({ value, over }: { value: number; over: boolean }) {
     <svg className="db-gauge" viewBox={`0 0 ${size} ${size * 0.78}`} width={size} aria-hidden="true">
       <defs>
         <linearGradient id="db-gauge-g" x1="0" x2="1">
-          <stop offset="0%" stopColor="var(--accent-soft)" />
-          <stop offset="100%" stopColor={over ? "var(--pnl-loss)" : "var(--sun)"} />
+          <stop offset="0%" style={{ stopColor: "var(--ring-3a)" }} />
+          <stop offset="100%" style={{ stopColor: over ? "var(--ring-over)" : "var(--ring-3b)" }} />
         </linearGradient>
       </defs>
-      <path d={d} fill="none" stroke="rgba(var(--accent-rgb),.14)" strokeWidth={stroke} strokeLinecap="round" />
+      <path d={d} fill="none" strokeWidth={stroke} strokeLinecap="round" style={{ stroke: "color-mix(in srgb, var(--ring-3a) 16%, transparent)" }} />
       <motion.path d={d} fill="none" stroke="url(#db-gauge-g)" strokeWidth={stroke} strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: Math.max(0.0001, value) }} transition={{ duration: 1.3, ease: D_EASE, delay: 0.2 }} />
     </svg>
   );

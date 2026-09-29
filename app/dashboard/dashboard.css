@@ -14,6 +14,23 @@
    ============================================================ */
 
 /* ── پوسته‌ی صفحه ─────────────────────────────────────────── */
+/* پالتِ هویتیِ ماژول‌ها برای حلقه‌ها/گیج‌ها — هر ماژول یک گرادیانِ دورنگ:
+   روتین زمرد→نعنایی، تمرین آبی→بنفش، کالری کهربایی→مرجانی. تمِ روز نسخه‌ی
+   عمیق‌ترِ همون‌ها رو داره تا روی زمینه‌ی کرمی کنتراست کافی داشته باشن. */
+.db-page, .db-cmd-root{
+  --ring-1a:#00C98D; --ring-1b:#7DF9CF;
+  --ring-2a:#3D7DFF; --ring-2b:#B06DFF;
+  --ring-3a:#FFB547; --ring-3b:#FF6F61;
+  --ring-over:#FF3D6E;
+  --tl-warn:#F0A94B;
+}
+body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
+  --ring-1a:#0A9A70; --ring-1b:#2ECB98;
+  --ring-2a:#2F64E6; --ring-2b:#8A4DEB;
+  --ring-3a:#EE920C; --ring-3b:#E5533E;
+  --ring-over:#D6204E;
+  --tl-warn:#C97A12;
+}
 .db-page{
   --db-gap:14px;
   --db-radius:22px;
@@ -218,8 +235,13 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-orbit{ position:relative; flex-shrink:0; }
 @media (max-width:639px){ .db-orbit{ transform:scale(.8); transform-origin:right center; margin-inline-end:-30px; margin-block:-16px; } }
 .db-orbit svg{ display:block; overflow:visible; }
-.db-orbit-arc{ filter:url(#db-orbit-glow); }
-html[data-perf="low"] .db-orbit-arc{ filter:none; }
+.db-orbit-arcs{ filter:url(#db-orbit-glow); }
+html[data-perf="low"] .db-orbit-arcs{ filter:none; }
+/* روی زمینه‌ی کرمیِ تمِ روز گلو هاله‌ی گِل‌آلود می‌سازه — فقط رنگِ تمیز */
+body[data-theme="light"] .db-orbit-arcs{ filter:none; }
+/* سرِ قوس: سایه‌ی نرم تا وقتی از روی ابتدای خودش رد می‌شه عمق داشته باشه */
+.db-arc-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
 .db-orbit-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .db-orbit-pct{ font-size:26px; font-weight:900; letter-spacing:-.02em; }
 .db-orbit-cap{ font-size:10.5px; color:var(--muted); font-weight:700; }
@@ -293,38 +315,126 @@ html[data-perf="low"] .db-orbit-arc{ filter:none; }
 .db-embed{ min-width:0; }
 .db-embed > div{ height:100%; }
 
-/* ── امروز ─────────────────────────────────────────────────── */
-.db-today-list{ list-style:none; display:flex; flex-direction:column; gap:2px; }
-.db-today-li{ display:flex; flex-direction:column; }
-.db-today-row{
-  display:flex; align-items:center; gap:11px; padding:9px 6px; border-radius:12px;
-  transition:opacity .25s ease;
-}
-.db-today-row.is-done .db-today-name{ color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(var(--accent-rgb),.6); }
-.db-today-row.is-due:not(.is-done) .db-today-time{ color:#E0A452; }
-.db-page .db-check{
-  width:24px; height:24px; flex-shrink:0; border-radius:8px;
-  border:2px solid var(--muted2); color:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-  transition:border-color .2s ease, background-color .2s ease, box-shadow .3s ease;
-}
-.db-page .db-check.is-on{ border-color:var(--accent); background:var(--accent); box-shadow:0 0 0 4px rgba(var(--accent-rgb),.16); }
-body[data-theme="light"] .db-page .db-check.is-on{ background:var(--accent); border-color:var(--accent); }
-.db-page .db-check svg{ width:16px; height:16px; }
-@media (hover:hover){ .db-page .db-check:hover{ border-color:var(--accent); } }
-.db-today-time{
-  font-family:var(--font-latin), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
-  min-width:40px; font-variant-numeric:tabular-nums;
-}
-.db-today-name{ flex:1; min-width:0; font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:color .2s ease; }
-a.db-today-name{ text-decoration:underline dotted rgba(var(--accent-rgb),.5); text-underline-offset:4px; }
-.db-imp{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.db-tag{ font-size:10px; color:var(--muted); border:1px solid var(--box-line); border-radius:7px; padding:1px 6px; white-space:nowrap; max-width:80px; overflow:hidden; text-overflow:ellipsis; }
+/* ── امروز (خطِ زمانی) ────────────────────────────────────── */
+.db-tag{ font-size:10px; color:var(--muted); border:1px solid var(--box-line); border-radius:7px; padding:1px 6px; white-space:nowrap; max-width:90px; overflow:hidden; text-overflow:ellipsis; }
 .db-today-more{ display:inline-block; font-size:11.5px; font-weight:700; color:var(--accent) !important; padding:2px 6px; }
-.db-now{ display:flex; align-items:center; gap:8px; margin:3px 0; }
-.db-now::before{ content:""; flex:1; height:1px; background:linear-gradient(270deg, var(--pnl-loss), transparent); order:2; }
-.db-now-dot{ width:8px; height:8px; border-radius:50%; background:var(--pnl-loss); box-shadow:0 0 0 3px rgba(var(--pnl-loss-rgb),.2); animation:db-live 2s ease-in-out infinite; }
-.db-now-label{ font-size:10px; font-weight:800; color:var(--pnl-loss); }
+
+/* خلاصه: عددِ بزرگ + نوارِ قطعه‌قطعه (هر قطعه یک برنامه) + «بعدی / الان» */
+.db-tl-summary{ display:flex; align-items:center; gap:14px; }
+.db-tl-score{ display:flex; align-items:baseline; gap:4px; flex-shrink:0; }
+.db-tl-score b{ font-size:34px; font-weight:900; letter-spacing:-.03em; line-height:1; color:var(--ring-1a); }
+.db-tl-score > span{ font-size:12px; font-weight:700; color:var(--muted); }
+.db-tl-sum-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:7px; }
+.db-tl-segs{ display:grid; grid-template-columns:repeat(var(--n), 1fr); gap:4px; height:8px; }
+.db-tl-segs i{ display:block; border-radius:99px; transform-origin:right; background:color-mix(in srgb, var(--ring-1a) 14%, transparent); }
+.db-tl-segs i.is-on{ background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); box-shadow:0 0 10px color-mix(in srgb, var(--ring-1a) 45%, transparent); }
+.db-tl-segs i.is-track{ grid-column:1 / -1; position:relative; overflow:hidden; }
+.db-tl-segs i.is-track b{ position:absolute; inset:0; transform-origin:right; border-radius:inherit; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
+.db-tl-sum-text{ font-size:11.5px; color:var(--muted); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.db-tl-sum-text b{ color:var(--text); font-weight:800; }
+
+/* ستون‌ها: ساعت | ریل+گره | کارت */
+.db-tl{ --tl-time:46px; --tl-rail:30px; --tl-gap:10px; --tl-node:26px; --tl-top:10px;
+  list-style:none; display:flex; flex-direction:column; }
+.db-tl-item{ position:relative; padding-bottom:10px; }
+.db-tl-row{ display:grid; grid-template-columns:var(--tl-time) var(--tl-rail) minmax(0,1fr); gap:0 var(--tl-gap); align-items:start; }
+.db-tl-skel{ display:grid; grid-template-columns:46px 30px 1fr; gap:10px; align-items:center; padding-bottom:12px; }
+
+/* ریل: از زیرِ گره تا بالای گرهِ بعدی — گذشته پُر و گرادیانی، آینده خط‌چین */
+.db-tl-item::before{
+  content:""; position:absolute; width:2px; border-radius:2px;
+  inset-inline-start:calc(var(--tl-time) + var(--tl-gap) + var(--tl-rail) / 2 - 1px);
+  top:calc(var(--tl-top) + var(--tl-node) + 4px); bottom:calc(-1 * var(--tl-top) + 4px);
+  background:repeating-linear-gradient(180deg, var(--box-line) 0 4px, transparent 4px 8px);
+}
+.db-tl-item.is-passed::before{ background:linear-gradient(180deg, var(--ring-1a), color-mix(in srgb, var(--ring-1b) 70%, transparent)); }
+.db-tl-item.is-last::before{ display:none; }
+.db-tl-item.is-now{ padding-bottom:0; }
+.db-tl-item.is-now::before{ top:0; bottom:0; background:linear-gradient(180deg, var(--ring-1b) 0 50%, transparent 50%); }
+.db-tl-item.is-tail::before{ display:none; }
+
+.db-tl-time{ display:flex; flex-direction:column; align-items:flex-end; padding-top:calc(var(--tl-top) + 3px); font-family:var(--font-latin), sans-serif; font-variant-numeric:tabular-nums; }
+.db-tl-time b{ font-size:12.5px; font-weight:800; color:var(--text); }
+.db-tl-time span{ font-size:10px; font-weight:600; color:var(--muted); }
+.db-tl-item.is-done .db-tl-time b{ color:var(--muted); }
+.db-tl-item.is-missed .db-tl-time b{ color:var(--tl-warn); }
+
+.db-tl-rail{ display:flex; justify-content:center; padding-top:var(--tl-top); }
+.db-page .db-tl-node{
+  position:relative; width:var(--tl-node); height:var(--tl-node); border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; color:#fff;
+  border:2px solid var(--muted2); border-width:2px;
+  transition:border-color .25s ease, box-shadow .3s ease, background-color .25s ease;
+}
+.db-page .db-tl-node svg{ width:15px; height:15px; position:relative; z-index:1; }
+@media (hover:hover){ .db-page .db-tl-node:hover{ border-color:var(--ring-1a); box-shadow:0 0 0 4px color-mix(in srgb, var(--ring-1a) 16%, transparent); } }
+.db-page .db-tl-item.is-done .db-tl-node{
+  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b));
+  box-shadow:0 0 14px color-mix(in srgb, var(--ring-1a) 55%, transparent);
+}
+body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)); }
+.db-page .db-tl-item.is-active .db-tl-node{ border-color:var(--ring-1a); animation:db-node-pulse 2s ease-in-out infinite; }
+.db-page .db-tl-item.is-next .db-tl-node{ border-color:var(--ring-2a); box-shadow:0 0 0 3px color-mix(in srgb, var(--ring-2a) 18%, transparent); }
+.db-page .db-tl-item.is-missed .db-tl-node{ border-color:var(--tl-warn); border-style:dashed; }
+@keyframes db-node-pulse{ 0%,100%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--ring-1a) 50%, transparent); } 50%{ box-shadow:0 0 0 7px color-mix(in srgb, var(--ring-1a) 0%, transparent); } }
+.db-tl-ripple{ position:absolute; inset:-2px; border-radius:50%; border:2px solid var(--ring-1b); pointer-events:none; }
+.db-tl-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+.db-tl-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--ring-1b); animation:db-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+.db-tl-spark i:nth-child(3n){ background:var(--ring-2b); }
+.db-tl-spark i:nth-child(3n+1){ background:var(--ring-3a); }
+
+/* کارت: فقط بوردر؛ «در جریان» بوردرِ نورانیِ گرادیانی می‌گیره */
+.db-tl-card{
+  position:relative; isolation:isolate; min-width:0;
+  display:flex; flex-direction:column; gap:5px; padding:9px 12px 10px; border-radius:14px;
+  border:1px solid var(--box-line);
+  transition:border-color .25s ease, transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease;
+}
+@media (hover:hover){ .db-tl-item:hover .db-tl-card{ transform:translateX(-3px); border-color:color-mix(in srgb, var(--ring-1a) 40%, var(--box-line)); } }
+.db-tl-item.is-next .db-tl-card{ border-color:color-mix(in srgb, var(--ring-2a) 50%, transparent); }
+.db-tl-item.is-missed .db-tl-card{ border-color:color-mix(in srgb, var(--tl-warn) 38%, transparent); }
+.db-tl-item.is-done .db-tl-card{ opacity:.62; }
+.db-tl-item.is-active .db-tl-card{ border-color:transparent; }
+.db-tl-item.is-active .db-tl-card::before{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.5px; z-index:-1; pointer-events:none;
+  background:conic-gradient(from var(--db-rot, 0deg), var(--ring-1a), var(--ring-2b), var(--ring-1b), var(--ring-1a));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  animation:db-rot 4s linear infinite;
+}
+.db-tl-card-top{ display:flex; align-items:center; gap:8px; min-width:0; }
+.db-tl-name{ flex:1; min-width:0; font-size:13.5px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a) 60%, transparent); text-underline-offset:4px; }
+.db-tl-item.is-done .db-tl-name{ text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 70%, transparent); color:var(--muted); }
+.db-tl-flag{ display:inline-flex; flex-shrink:0; }
+.db-tl-flag svg{ width:13px; height:13px; }
+.db-tl-flag.is-veryHigh{ color:var(--ring-over); }
+.db-tl-flag.is-high{ color:var(--tl-warn); }
+.db-tl-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.db-tl-state{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; color:var(--muted); }
+.db-tl-state i{ width:6px; height:6px; border-radius:50%; background:var(--muted2); }
+.db-tl-item.is-done .db-tl-state{ color:var(--ring-1a); }
+.db-tl-item.is-done .db-tl-state i{ background:var(--ring-1a); }
+.db-tl-item.is-active .db-tl-state{ color:var(--ring-1a); }
+.db-tl-item.is-active .db-tl-state i{ background:var(--ring-1a); animation:db-node-pulse 1.6s ease-in-out infinite; }
+.db-tl-item.is-next .db-tl-state{ color:var(--ring-2a); }
+.db-tl-item.is-next .db-tl-state i{ background:var(--ring-2a); }
+.db-tl-item.is-missed .db-tl-state{ color:var(--tl-warn); }
+.db-tl-item.is-missed .db-tl-state i{ background:var(--tl-warn); }
+.db-tl-in{ font-size:10.5px; font-weight:700; color:var(--text); }
+.db-tl-prog{ display:block; height:4px; border-radius:99px; overflow:hidden; background:color-mix(in srgb, var(--ring-1a) 14%, transparent); }
+.db-tl-prog i{ display:block; height:100%; border-radius:inherit; transform-origin:right; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
+
+/* نشانگرِ «الان» */
+.db-tl-now{ display:grid; grid-template-columns:var(--tl-time) var(--tl-rail) auto minmax(0,1fr); gap:0 var(--tl-gap); align-items:center; margin:2px 0 12px; }
+.db-tl-now-time{ justify-self:end; font-family:var(--font-latin), sans-serif; font-size:10.5px; font-weight:800; color:var(--pnl-loss); padding:1px 6px; border-radius:7px; border:1px solid rgba(var(--pnl-loss-rgb),.5); font-variant-numeric:tabular-nums; }
+.db-tl-now-dot{ justify-self:center; width:10px; height:10px; border-radius:50%; background:var(--pnl-loss); box-shadow:0 0 0 3px rgba(var(--pnl-loss-rgb),.22); animation:db-live 2s ease-in-out infinite; position:relative; z-index:1; }
+.db-tl-now-line{ grid-column:4; grid-row:1; height:1px; background:linear-gradient(270deg, var(--pnl-loss), transparent); }
+.db-tl-now-label{ grid-column:3; grid-row:1; font-size:10px; font-weight:900; color:var(--pnl-loss); }
 @keyframes db-live{ 50%{ box-shadow:0 0 0 6px rgba(var(--pnl-loss-rgb),0); } }
 
 .db-today-win{
@@ -346,12 +456,12 @@ a.db-today-name{ text-decoration:underline dotted rgba(var(--accent-rgb),.5); te
 .db-weekbars-row{ display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; height:96px; }
 .db-wbar{ display:flex; flex-direction:column; align-items:center; gap:5px; }
 .db-wbar-track{ position:relative; flex:1; width:100%; max-width:26px; border-radius:9px; background:rgba(var(--accent-rgb),.07); overflow:hidden; }
-.db-wbar-track i{ position:absolute; inset:0; transform-origin:bottom; border-radius:inherit; background:rgba(var(--accent-rgb),.55); }
-.db-wbar-track i.is-full{ background:var(--accent); }
+.db-wbar-track i{ position:absolute; inset:0; transform-origin:bottom; border-radius:inherit; background:linear-gradient(0deg, color-mix(in srgb, var(--ring-1a) 45%, transparent), color-mix(in srgb, var(--ring-1b) 60%, transparent)); }
+.db-wbar-track i.is-full{ background:linear-gradient(0deg, var(--ring-1a), var(--ring-1b)); box-shadow:0 0 12px color-mix(in srgb, var(--ring-1a) 35%, transparent); }
 .db-wbar.is-future .db-wbar-track{ background:transparent; border:1px dashed var(--box-line); }
 .db-wbar em{ font-style:normal; font-size:10px; color:var(--muted); font-weight:700; }
-.db-wbar.is-today em{ color:var(--accent); }
-.db-wbar.is-today .db-wbar-track{ outline:1.5px solid rgba(var(--accent-rgb),.6); outline-offset:2px; }
+.db-wbar.is-today em{ color:var(--ring-1a); }
+.db-wbar.is-today .db-wbar-track{ outline:1.5px solid color-mix(in srgb, var(--ring-1a) 60%, transparent); outline-offset:2px; }
 
 /* ── نقشه‌ی ثبات ───────────────────────────────────────────── */
 .db-heat-stats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
@@ -430,8 +540,8 @@ a.db-today-name{ text-decoration:underline dotted rgba(var(--accent-rgb),.5); te
 .db-kbar{ display:flex; flex-direction:column; align-items:center; gap:4px; }
 .db-kbar-track{ position:relative; flex:1; width:100%; max-width:22px; border-radius:7px; background:rgba(var(--accent-rgb),.06); overflow:hidden; }
 .db-kbar-track i{ position:absolute; inset:0; transform-origin:bottom; border-radius:inherit; background:rgba(var(--accent-rgb),.35); }
-.db-kbar-track i.is-ok{ background:var(--accent-soft); }
-.db-kbar-track i.is-over{ background:var(--pnl-loss); opacity:.8; }
+.db-kbar-track i.is-ok{ background:linear-gradient(0deg, var(--ring-3a), var(--ring-3b)); }
+.db-kbar-track i.is-over{ background:linear-gradient(0deg, var(--ring-3b), var(--ring-over)); }
 .db-kbar-target{ position:absolute; left:0; right:0; height:0; border-top:1.5px dashed var(--sun); opacity:.8; }
 .db-kbar em{ font-style:normal; font-size:9.5px; color:var(--muted); }
 .db-kbar.is-today em{ color:var(--text); font-weight:800; }

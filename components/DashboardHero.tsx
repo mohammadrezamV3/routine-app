@@ -14,7 +14,7 @@ import { getStreakTier } from "@/lib/streakTier";
 import type { DashboardData } from "@/lib/dashboardTypes";
 import type { TodayTask } from "@/lib/useDashboardRoutine";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
-import { CountUp, D_EASE, Skel } from "./DashboardKit";
+import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
 
 const PHASE_ICON: Record<DayPhase, DashIconName> = { dawn: "sunrise", day: "sun", dusk: "sunset", night: "moon" };
 
@@ -64,10 +64,10 @@ export function DashboardHero({
   const cal = data?.calorie;
   const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : ex?.week.target ? ex.week.done / ex.week.target : 0;
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
-  const rings: { key: string; label: string; value: number; display: string; color: string; show: boolean; href: string }[] = [
-    { key: "routine", label: "روتین", value: routine.stats.total ? routine.stats.completed / routine.stats.total : 0, display: routine.stats.total ? `${faNum(routine.stats.completed)}/${faNum(routine.stats.total)}` : "—", color: "var(--accent)", show: true, href: "/weekly" },
-    { key: "exercise", label: ex?.today.isGymDay ? "تمرینِ امروز" : "تمرینِ هفته", value: exVal, display: ex ? (ex.today.isGymDay ? (ex.today.done ? "تمام" : `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}`) : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", color: "var(--secondary)", show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
-    { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", color: "var(--sun)", show: !!cal?.target, href: "/exercise?tab=calorie" },
+  const rings: { key: string; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string }[] = [
+    { key: "routine", label: "روتین", value: routine.stats.total ? routine.stats.completed / routine.stats.total : 0, display: routine.stats.total ? `${faNum(routine.stats.completed)}/${faNum(routine.stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"] as [string, string], show: true, href: "/weekly" },
+    { key: "exercise", label: ex?.today.isGymDay ? "تمرینِ امروز" : "تمرینِ هفته", value: exVal, display: ex ? (ex.today.isGymDay ? (ex.today.done ? "تمام" : `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}`) : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"] as [string, string], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
+    { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: (calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"]) as [string, string], show: !!cal?.target, href: "/exercise?tab=calorie" },
   ];
   const shownRings = rings.filter((r) => r.show);
 
@@ -149,7 +149,7 @@ export function DashboardHero({
           {shownRings.map((r, i) => (
             <li key={r.key}>
               <Link href={r.href} prefetch>
-                <span className="db-orbit-dot" style={{ background: r.color }} />
+                <span className="db-orbit-dot" style={{ background: `linear-gradient(135deg, ${r.grad[0]}, ${r.grad[1]})`, boxShadow: `0 0 10px color-mix(in srgb, ${r.grad[1]} 55%, transparent)` }} />
                 <span className="db-orbit-label">{r.label}</span>
                 <motion.b initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 + i * 0.1 }}>{r.display}</motion.b>
               </Link>
@@ -168,39 +168,34 @@ function daysLeft(iso: string) {
 }
 
 // ── حلقه‌های هم‌مرکز ────────────────────────────────────────
-function OrbitRings({ rings, ready }: { rings: { key: string; value: number; color: string }[]; ready: boolean }) {
-  const size = 168, stroke = 12, gap = 5;
+// هر حلقه گرادیانِ دورانیِ خودش رو داره (GradientArc) + سرِ درخشان؛ رنگ‌ها از
+// توکن‌های --ring-* در dashboard.css (دو پالتِ جدا برای شب و روز).
+function OrbitRings({ rings, ready }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean }) {
+  const size = 176, stroke = 13, gap = 5;
   const main = rings[0];
   return (
     <div className="db-orbit" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} aria-hidden="true">
         <defs>
           <filter id="db-orbit-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3.2" result="b" />
+            <feGaussianBlur stdDeviation="3.4" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
-        {rings.map((r, i) => {
-          const rad = size / 2 - stroke / 2 - i * (stroke + gap);
-          return (
-            <g key={r.key} transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-              <circle cx={size / 2} cy={size / 2} r={rad} fill="none" stroke={r.color} strokeOpacity={0.14} strokeWidth={stroke} />
-              <motion.circle
-                cx={size / 2}
-                cy={size / 2}
-                r={rad}
-                fill="none"
-                stroke={r.color}
-                strokeWidth={stroke}
-                strokeLinecap="round"
-                className="db-orbit-arc"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: ready ? Math.max(0.0001, Math.min(1, r.value)) : 0 }}
-                transition={{ duration: 1.4, ease: D_EASE, delay: 0.25 + i * 0.14 }}
-              />
-            </g>
-          );
-        })}
+        <g className="db-orbit-arcs">
+          {rings.map((r, i) => (
+            <GradientArc
+              key={r.key}
+              c={size / 2}
+              r={size / 2 - stroke / 2 - i * (stroke + gap)}
+              stroke={stroke}
+              value={ready ? r.value : 0}
+              from={r.grad[0]}
+              to={r.grad[1]}
+              delay={0.25 + i * 0.14}
+            />
+          ))}
+        </g>
       </svg>
       <div className="db-orbit-center">
         {main && ready ? (
