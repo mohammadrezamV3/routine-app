@@ -35,6 +35,10 @@ export const ICONS: Record<string, JSX.Element> = {
   home: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20h3a1 1 0 0 0 1-1v-9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  // داشبورد — چیدمانِ بنتو (یک کاشیِ بلند + سه کاشی)
+  dashboard: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7.5" height="10" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="3.5" width="7.5" height="6" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="11.5" width="7.5" height="9" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="3.5" y="15.5" width="7.5" height="5" rx="2" stroke="currentColor" strokeWidth="1.7"/></svg>
+  ),
   weekly: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
@@ -125,6 +129,8 @@ function isGroup(item: NavItem): item is NavGroup {
 }
 
 const LINKS: NavItem[] = [
+  // داشبورد — نمای کلیِ همه‌ی بخش‌ها؛ پشتِ فلگِ `dashboard` (فعلا فقط ادمین‌ها)
+  { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیرِ رودمپ‌ها. گروه فقط صفحه‌های سمتِ شاگرد را دارد؛

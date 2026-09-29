@@ -15,6 +15,7 @@ import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle"
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
 import { toEnDigits } from "@/lib/schedule";
+import { resolveHomePath } from "@/lib/homePath";
 
 // ورود فقط با یوزرنیم/شماره + رمز عبوره — روش کد ایمیل از اینجا حذف شد
 // (تصمیم صریح کاربر: «ورود به پنل فقط با رمز عبور باشه نه کد ایمیل»).
@@ -77,9 +78,9 @@ export default function LoginPage() {
     // تا لود بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
     setAuthHintCookie();
     setSuccess(true);
-    router.prefetch("/weekly");
-    await new Promise((r) => setTimeout(r, 650)); // فرصتِ دیدنِ انیمیشنِ تیک
-    router.push("/weekly");
+    // مقصد (داشبورد یا روتین — lib/homePath.ts) هم‌زمان با انیمیشنِ تیک معلوم می‌شه
+    const [home] = await Promise.all([resolveHomePath(), new Promise((r) => setTimeout(r, 650))]);
+    router.push(home);
     return true;
   }
 

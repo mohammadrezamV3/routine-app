@@ -16,6 +16,7 @@ import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle"
 import { staggerFieldsIn } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
+import { resolveHomePath } from "@/lib/homePath";
 
 type FieldErrors = {
   phone?: string; name?: string; lastName?: string; username?: string;
@@ -224,7 +225,7 @@ export default function SignupPage() {
       localStorage.setItem(PWA_OFFER_KEY, "1");
       window.dispatchEvent(new Event(PWA_OFFER_EVENT));
     } catch { /* حالت ناشناس */ }
-    router.push((session?.user as any)?.id ? "/weekly" : "/auth/login");
+    router.push((session?.user as any)?.id ? await resolveHomePath() : "/auth/login");
   }
 
   return (

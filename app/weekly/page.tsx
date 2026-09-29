@@ -107,6 +107,16 @@ export default function WeeklyPage() {
     setCardName(name);
   }
   const [addProgramOpen, setAddProgramOpen] = useState(false);
+  // «برنامه‌ی جدید» از داشبورد/پالتِ فرمان با ‎/weekly?add=1‎ میاد: فرمِ افزودن
+  // مستقیم باز می‌شه و پارامتر از آدرس پاک می‌شه (رفرش دوباره بازش نکنه).
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("add") !== "1") return;
+    setAddProgramOpen(true);
+    sp.delete("add");
+    const q = sp.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (q ? `?${q}` : ""));
+  }, []);
   const [editTarget, setEditTarget] = useState<{ name: string; occ: Occ } | null>(null);
   const [moveTarget, setMoveTarget] = useState<{ name: string; occ: Occ } | null>(null);
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
