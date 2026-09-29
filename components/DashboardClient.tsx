@@ -11,6 +11,7 @@
 
 import "@/app/dashboard/dashboard.css";
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { MotionConfig, motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
@@ -26,9 +27,9 @@ import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardTrade } from "./DashboardTrade";
 import { DashboardMarket } from "./DashboardMarket";
 import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./DashboardSocial";
-import { DashboardLauncher, DashboardQuickActions } from "./DashboardLauncher";
+import { DashboardQuickActions } from "./DashboardLauncher";
+import { DashboardActionsProvider } from "./DashboardActions";
 import { DashboardCommand, useCommandHotkey } from "./DashboardCommand";
-import { DashFriendsCard } from "./DashFriendsCard";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
@@ -58,7 +59,7 @@ export function DashboardClient({ gate, initial }: { gate: DashboardGate; initia
  * می‌شه: کارتِ ماژولِ خریده‌نشده یا فلگِ خاموش اصلا رندر نمی‌شه و هیچ‌وقت یک
  * خانه‌ی خالی در چیدمان نمی‌ذاره.
  */
-type Area = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox" | "friends" | "launch";
+type Area = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox";
 function bentoAreas(has: Set<Area>) {
   const q = (row: string[]) => `"${row.join(" ")}"`;
   const fit = (list: string[], cols: number) => {
@@ -69,34 +70,30 @@ function bentoAreas(has: Set<Area>) {
   };
   const fitness = (["ex", "cal"] as Area[]).filter((a) => has.has(a));
   const bottom = (["mentor", "road", "inbox"] as Area[]).filter((a) => has.has(a));
-  // روی دسکتاپ «دوستان» کنارِ بقیه‌ی کارت‌های کوتاهِ پایین می‌شینه و لانچر ردیفِ کاملِ
-  // خودش رو داره — قبلا دوستان (کوتاه) کنارِ لانچر (بلند) یک فضای خالیِ بزرگ می‌ساخت.
-  const tail: string[] = [...bottom, "friends"];
-  const rows3: string[][] = [];
-  if (tail.length === 4) rows3.push([tail[0], tail[0], tail[1]], [tail[2], tail[3], tail[3]]);
-  else for (let i = 0; i < tail.length; i += 3) rows3.push(fit(tail.slice(i, i + 3), 3));
+  // «دوستان» و «همه‌ی بخش‌ها» به درخواستِ صریح از پایینِ داشبورد برداشته شدن؛
+  // آخرین ردیف همون کارت‌های کوتاهِ مربی/رودمپ/اعلان‌هاست.
   const lg: string[] = [q(["today", "heat", "heat"])];
   if (fitness.length) lg.push(q(["today", ...fit(fitness, 2)]));
   if (has.has("trade")) lg.push(q(["trade", "trade", "market"]));
-  rows3.forEach((r) => lg.push(q(r)));
-  lg.push(q(["launch", "launch", "launch"]));
+  if (bottom.length) lg.push(q(fit(bottom, 3)));
 
   const md: string[] = [q(["heat", "heat"])];
   if (fitness.length === 2) md.push(q(["today", "ex"]), q(["today", "cal"]));
   else if (fitness.length === 1) md.push(q(["today", fitness[0]]));
   else md.push(q(["today", "today"]));
   if (has.has("trade")) md.push(q(["trade", "trade"]), q(["market", "market"]));
-  const pairs: string[] = [...bottom, "friends"];
-  for (let i = 0; i < pairs.length; i += 2) md.push(q(pairs[i + 1] ? [pairs[i], pairs[i + 1]] : [pairs[i], pairs[i]]));
-  md.push(q(["launch", "launch"]));
+  for (let i = 0; i < bottom.length; i += 2) md.push(q(bottom[i + 1] ? [bottom[i], bottom[i + 1]] : [bottom[i], bottom[i]]));
 
-  const order: Area[] = ["today", "ex", "cal", "heat", "trade", "market", "mentor", "road", "inbox", "friends", "launch"];
+  const order: Area[] = ["today", "ex", "cal", "heat", "trade", "market", "mentor", "road", "inbox"];
   const sm = order.filter((a) => has.has(a)).map((a) => q([a])).join(" ");
   return { ["--areas-lg" as any]: lg.join(" "), ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
 function DashboardBody({ initial }: { initial: { key: string; data: DashboardData } | null }) {
   const { data, status, refresh } = useDashboardData(initial);
+  const router = useRouter();
+  const refreshNow = useCallback(() => refresh(true), [refresh]);
+  const goTo = useCallback((href: string) => router.push(href), [router]);
   const routine = useDashboardRoutine();
   const flagFeatures = useFeatures();
   const { data: session } = useSession();
@@ -114,7 +111,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const owns = (m: string) => !!modules && modules.has(m);
   const showMentors = features?.mentors !== false;
   const has = useMemo(() => {
-    const set = new Set<Area>(["today", "heat", "inbox", "friends", "launch"]);
+    const set = new Set<Area>(["today", "heat", "inbox"]);
     if (owns("EXERCISE")) set.add("ex");
     if (owns("CALORIE")) set.add("cal");
     if (owns("TRADE")) { set.add("trade"); set.add("market"); }
@@ -131,6 +128,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
 
   return (
     <MotionConfig reducedMotion="user">
+      <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
       <DashboardHero data={data} routine={routine} onOpenCommand={() => setCmdOpen(true)} />
       <DashboardQuickActions features={features} modules={modules} />
 
@@ -151,13 +149,10 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         {has.has("mentor") && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
         {has.has("road") && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} />}
         <DashboardInbox data={data} loading={loading} />
-        <motion.div className="db-embed" style={{ gridArea: "friends" }} variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}>
-          <DashFriendsCard />
-        </motion.div>
-        <DashboardLauncher features={features} modules={modules} isAdmin={isAdmin} />
       </motion.div>
 
       <DashboardCommand open={cmdOpen} onClose={() => setCmdOpen(false)} features={features} modules={modules} isAdmin={isAdmin} />
+      </DashboardActionsProvider>
     </MotionConfig>
   );
 }

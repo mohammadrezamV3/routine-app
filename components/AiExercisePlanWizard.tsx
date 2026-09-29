@@ -10,6 +10,7 @@ import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "
 import { focusNextOnEnter } from "@/lib/formNav";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { NumberInput } from "./NumberInput";
+import { SegmentedTabs } from "./SegmentedTabs";
 
 type Step = "hw" | "goal" | "gear" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, gear: 2, days: 3, description: 4, rules: 4 };
@@ -199,13 +200,13 @@ export function AiExercisePlanWizard({
           )}
 
           <label className="exercise-form-label" style={{ marginTop: 14 }}>کجا تمرین می‌کنی؟</label>
-          <div className="day-picker">
-            {EQUIPMENT_OPTIONS.map((eq) => (
-              <span key={eq} className={`day-pill${form.equipment === eq ? " on" : ""}`} onClick={() => patch({ equipment: eq })}>
-                {eq}
-              </span>
-            ))}
-          </div>
+          <SegmentedTabs
+            className="seg-flush"
+            ariaLabel="کجا تمرین می‌کنی؟"
+            options={EQUIPMENT_OPTIONS.map((eq) => ({ value: eq, label: eq }))}
+            active={form.equipment || null}
+            onChange={(eq) => patch({ equipment: eq })}
+          />
         </>
       )}
 
@@ -225,13 +226,13 @@ export function AiExercisePlanWizard({
           </div>
 
           <label className="exercise-form-label">سطح</label>
-          <div className="day-picker">
-            {(["beginner", "intermediate", "advanced"] as ExerciseLevel[]).map((l) => (
-              <span key={l} className={`day-pill${form.level === l ? " on" : ""}`} onClick={() => patch({ level: l })}>
-                {LEVEL_LABELS[l]}
-              </span>
-            ))}
-          </div>
+          <SegmentedTabs
+            className="seg-flush"
+            ariaLabel="سطح"
+            options={(["beginner", "intermediate", "advanced"] as ExerciseLevel[]).map((l) => ({ value: l, label: LEVEL_LABELS[l] }))}
+            active={form.level}
+            onChange={(l) => patch({ level: l })}
+          />
         </>
       )}
 

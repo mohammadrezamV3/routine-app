@@ -17,6 +17,7 @@ import { faNum } from "@/lib/jalali";
 import { sparkPath } from "@/lib/dashboardCompute";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { cn } from "@/lib/utils";
+import { useDashAction, type DashAction } from "./DashboardActions";
 
 export const D_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -294,12 +295,15 @@ export function Skel({ w = "100%", h = 12, r = 8, className }: { w?: number | st
 }
 
 /** حالتِ خالیِ یک کارت (مثلا «هنوز پلن تمرینی نداری») با یک دکمه */
-export function EmptyState({ icon, text, href, cta }: { icon: DashIconName; text: string; href?: string; cta?: string }) {
+export function EmptyState({ icon, text, href, cta, action }: { icon: DashIconName; text: string; href?: string; cta?: string; action?: DashAction }) {
+  const run = useDashAction();
   return (
     <div className="db-empty">
       <span className="db-empty-icon"><DashIcon name={icon} /></span>
       <p>{text}</p>
-      {href && cta && (
+      {cta && action && run ? (
+        <button type="button" onClick={() => run(action)} className="account-outline-btn mentor-btn is-sm db-empty-cta">{cta}</button>
+      ) : href && cta && (
         <Link href={href} prefetch className="account-outline-btn mentor-btn is-sm db-empty-cta">{cta}</Link>
       )}
     </div>

@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { FEATURE_KEYS, FEATURE_META, FEATURE_MODE_LABELS, FeatureFlags, FeatureKey, FeatureMode } from "@/lib/featureFlags";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { invalidateFeatures } from "@/lib/useFeatures";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
 
 const MODES: FeatureMode[] = ["on", "admins", "off"];
+const MODE_OPTIONS = MODES.map((m) => ({ value: m, label: FEATURE_MODE_LABELS[m] }));
 
 // روشن/خاموش‌کردنِ قابلیت‌های اپ بدونِ دیپلوی. هر تغییر فورا ذخیره می‌شه
 // (کشِ سمت سرور حداکثر ۶۰ ثانیه) و در لاگِ فعالیت ثبت می‌شه.
@@ -72,18 +74,14 @@ export default function AdminFeaturesPage() {
                   <div className="admin-perm-label">{FEATURE_META[k].label}</div>
                   <div className="admin-perm-hint">{FEATURE_META[k].hint}</div>
                 </div>
-                <div className="admin-tabs admin-feature-modes" role="radiogroup" aria-label={FEATURE_META[k].label}>
-                  {MODES.map((m) => (
-                    <button
-                      key={m} type="button" role="radio" aria-checked={flags[k] === m}
-                      disabled={saving.has(k)}
-                      className={`admin-tab${flags[k] === m ? " active" : ""}${m === "off" ? " is-off" : ""}`}
-                      onClick={() => change(k, m)}
-                    >
-                      {FEATURE_MODE_LABELS[m]}
-                    </button>
-                  ))}
-                </div>
+                <SegmentedTabs
+                  className="admin-seg admin-feature-modes"
+                  ariaLabel={FEATURE_META[k].label}
+                  options={MODE_OPTIONS}
+                  active={flags[k]}
+                  disabled={saving.has(k)}
+                  onChange={(m) => change(k, m)}
+                />
               </div>
             ))}
           </div>

@@ -1,6 +1,31 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useLayoutEffect } from "react";
+import { staggerFieldsIn } from "@/lib/uiAnim";
+
+/**
+ * ورود مرحله‌ای فیلدهای فرم auth — بدون «فلش».
+ *
+ * باگ: قبلا صفحه‌ها `staggerFieldsIn` رو داخل useEffect صدا می‌زدن، یعنی
+ * *بعد* از اولین paint. پس با هر سوییچ ورود↔ثبت‌نام اول کل فرم کامل دیده
+ * می‌شد، بعد anime.js فیلدها رو یک‌دفعه opacity:0 می‌کرد و دوباره یکی‌یکی
+ * می‌آورد (چشمک/پرش). این‌جا قبل از paint (useLayoutEffect) فیلدها inline
+ * مخفی می‌شن و بعد استگر شروع می‌شه. یک تایمر ایمنی هم هست که اگه به هر
+ * دلیلی انیمیشن اجرا نشد، فیلدی برای همیشه نامرئی نمونه.
+ */
+export function useAuthFieldsStagger(ref: React.RefObject<HTMLElement>) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fields = Array.from(el.querySelectorAll<HTMLElement>("[data-anim-field]"));
+    fields.forEach((f) => { f.style.opacity = "0"; });
+    staggerFieldsIn(el);
+    const safety = window.setTimeout(() => {
+      fields.forEach((f) => { if (f.style.opacity === "0") f.style.opacity = ""; });
+    }, 1500);
+    return () => window.clearTimeout(safety);
+  }, [ref]);
+}
 
 export const AuthField = forwardRef<
   HTMLDivElement,

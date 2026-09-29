@@ -1,18 +1,15 @@
 "use client";
 
 import { SpinnerCheck } from "@/components/SpinnerCheck";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Lock, ShieldCheck } from "lucide-react";
-import { AuthTabs } from "@/components/AuthTabs";
-import { AuthField } from "@/components/AuthField";
-import { AuthShell } from "@/components/AuthShell";
+import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { staggerFieldsIn } from "@/lib/uiAnim";
 import { setAuthHintCookie } from "@/lib/preload";
 import { toEnDigits } from "@/lib/schedule";
 import { resolveHomePath } from "@/lib/homePath";
@@ -42,7 +39,8 @@ export default function LoginPage() {
   const identifierRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { staggerFieldsIn(formRef.current); }, []);
+  // شل و تب‌ها در app/auth/layout.tsx (AuthFrame) پایدارن؛ این صفحه فقط خودِ فرم رو می‌سازه
+  useAuthFieldsStagger(formRef);
 
   function clearError(key: "identifier" | "password") {
     setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
@@ -163,107 +161,111 @@ export default function LoginPage() {
 
   if (twoFactor) {
     return (
-      <section className="auth-page">
-        <AuthShell>
-          <AuthTabs active="login" />
-          <form onSubmit={submitOtp} className="auth-box">
-            <AuthBackButton />
-            <AuthBrandMark subtitle={"ورود دومرحله‌ای"} />
+      <form onSubmit={submitOtp} className="auth-box">
+        <AuthBackButton />
+        <AuthBrandMark subtitle={"ورود دومرحله‌ای"} />
 
-            <div className="section-note" style={{ marginBottom: 12 }}>
-              {`یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`}
-            </div>
+        <div className="section-note" style={{ marginBottom: 12 }}>
+          {`یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`}
+        </div>
 
-            <AuthField id="otp" label={"کد پیامک‌شده"} icon={<ShieldCheck size={15} />}>
-              <input
-                id="otp"
-                type="text"
-                inputMode="numeric"
-                dir="ltr"
-                maxLength={6}
-                className="wsearch-newform-name"
-                placeholder="- - - - -"
-                value={otpCode}
-                onChange={(e) => setOtpCode(toEnDigits(e.target.value).replace(/\D/g, ""))}
-              />
-            </AuthField>
+        <AuthField id="otp" label={"کد پیامک‌شده"} icon={<ShieldCheck size={15} />}>
+          <input
+            id="otp"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            dir="ltr"
+            maxLength={6}
+            className="wsearch-newform-name"
+            placeholder="- - - - -"
+            value={otpCode}
+            onChange={(e) => setOtpCode(toEnDigits(e.target.value).replace(/\D/g, ""))}
+          />
+        </AuthField>
 
-            {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+        {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-            <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success}>
-              {loading || success ? <SpinnerCheck done={success} /> : "تایید و ورود"}
-            </button>
-            <button
-              type="button"
-              className="auth-forgot-link"
-              style={{ marginTop: 12, background: "none", display: "block", width: "100%" }}
-              onClick={() => { setTwoFactor(null); setError(null); }}
-            >
-              {"بازگشت"}
-            </button>
-          </form>
-        </AuthShell>
-      </section>
+        <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success}>
+          {loading || success ? <SpinnerCheck done={success} /> : "تایید و ورود"}
+        </button>
+        <button
+          type="button"
+          className="auth-forgot-link"
+          style={{ marginTop: 12, background: "none", display: "block", width: "100%" }}
+          onClick={() => { setTwoFactor(null); setError(null); }}
+        >
+          {"بازگشت"}
+        </button>
+      </form>
     );
   }
 
   return (
-    <section className="auth-page">
-      <AuthShell>
-        <AuthTabs active="login" />
+    <form ref={formRef} onSubmit={submitPassword} className="auth-box">
+      <AuthBackButton />
+      <AuthBrandMark subtitle={"ورود به پنل کاربری"} />
 
-        <form ref={formRef} onSubmit={submitPassword} className="auth-box">
-          <AuthBackButton />
-          <AuthBrandMark subtitle={"ورود به پنل کاربری"} />
+      <AuthField id="identifier" label={"یوزرنیم یا شماره همراه"} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
+        <input
+          id="identifier"
+          type="text"
+          name="username"
+          autoComplete="username"
+          // موبایل حرف اول یوزرنیم رو بزرگ نکنه (گزارش کاربر) و اصلاح خودکار نزنه
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className="wsearch-newform-name"
+          placeholder="09123456789"
+          value={identifier}
+          onChange={(e) => { setIdentifier(e.target.value); if (e.target.value.trim()) clearError("identifier"); }}
+        />
+      </AuthField>
 
-          <AuthField id="identifier" label={"یوزرنیم یا شماره همراه"} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
-            <input
-              id="identifier"
-              type="text"
-              className="wsearch-newform-name"
-              placeholder="09123456789"
-              value={identifier}
-              onChange={(e) => { setIdentifier(e.target.value); if (e.target.value.trim()) clearError("identifier"); }}
-            />
-          </AuthField>
+      <div style={{ marginTop: 14 }}>
+        <AuthField
+          id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
+          icon={<Lock size={15} />}
+          endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
+        >
+          <input
+            id="password"
+            type={passwordVisible ? "text" : "password"}
+            name="password"
+            autoComplete="current-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className="wsearch-newform-name"
+            placeholder={"رمز عبورت رو وارد کن"}
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
+          />
+        </AuthField>
+      </div>
 
-          <div style={{ marginTop: 14 }}>
-            <AuthField
-              id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
-              icon={<Lock size={15} />}
-              endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
-            >
-              <input
-                id="password"
-                type={passwordVisible ? "text" : "password"}
-                className="wsearch-newform-name"
-                placeholder={"رمز عبورت رو وارد کن"}
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
-              />
-            </AuthField>
-          </div>
+      <div className="auth-remember-row" data-anim-field>
+        <label className="auth-remember-label">
+          <input
+            type="checkbox"
+            className="auth-checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+          />
+          {"منو به‌یاد داشته باش"}
+        </label>
+        <Link href="/auth/forgot-password" className="auth-forgot-link">{"فراموشی رمز عبور؟"}</Link>
+      </div>
 
-          <div className="auth-remember-row" data-anim-field>
-            <label className="auth-remember-label">
-              <input
-                type="checkbox"
-                className="auth-checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              {"منو به‌یاد داشته باش"}
-            </label>
-            <Link href="/auth/forgot-password" className="auth-forgot-link">{"فراموشی رمز عبور؟"}</Link>
-          </div>
+      {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
-          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
-
-          <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success} data-anim-field>
-            {loading || success ? <SpinnerCheck done={success} /> : "ورود"}
-          </button>
-        </form>
-      </AuthShell>
-    </section>
+      <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success} data-anim-field>
+        {loading || success ? <SpinnerCheck done={success} /> : "ورود"}
+      </button>
+    </form>
   );
 }

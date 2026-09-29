@@ -15,6 +15,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import type { FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { D_EASE } from "./DashboardKit";
+import { useDashAction, type DashAction } from "./DashboardActions";
 
 export type CommandItem = {
   id: string;
@@ -27,14 +28,16 @@ export type CommandItem = {
   module?: string;
   feature?: FeatureKey;
   adminOnly?: boolean;
+  /** داخلِ داشبورد به‌جای ناوبری، پاپ‌آپِ همون بخش همین‌جا باز می‌شه */
+  action?: DashAction;
 };
 
 export const COMMANDS: CommandItem[] = [
   // کارهای سریع — مستقیم به فرم/تبِ مربوط
-  { id: "a-program", group: "کارِ سریع", label: "افزودن برنامه به روتین", hint: "روتین", href: "/weekly?add=1", icon: "plus", keywords: "برنامه جدید تسک کار add" },
+  { id: "a-program", group: "کارِ سریع", label: "افزودن برنامه به روتین", hint: "روتین", href: "/weekly?add=1", icon: "plus", keywords: "برنامه جدید تسک کار add", action: "program" },
   { id: "a-workout", group: "کارِ سریع", label: "شروعِ تمرینِ امروز", hint: "بدنسازی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "ورزش باشگاه workout gym", module: "EXERCISE" },
-  { id: "a-food", group: "کارِ سریع", label: "ثبتِ غذا", hint: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "کالری غذا وعده food", module: "CALORIE" },
-  { id: "a-trade", group: "کارِ سریع", label: "ثبتِ معامله", hint: "ژورنال", href: "/trade/journal", icon: "journal", keywords: "ترید معامله پوزیشن trade", module: "TRADE" },
+  { id: "a-food", group: "کارِ سریع", label: "ثبتِ غذا", hint: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "کالری غذا وعده food", module: "CALORIE", action: "food" },
+  { id: "a-trade", group: "کارِ سریع", label: "ثبتِ معامله", hint: "ژورنال", href: "/trade/journal", icon: "journal", keywords: "ترید معامله پوزیشن trade", module: "TRADE", action: "trade" },
   { id: "a-roadmap", group: "کارِ سریع", label: "ساختِ رودمپِ یادگیری با AI", hint: "رودمپ", href: "/roadmaps/new", icon: "spark", keywords: "یادگیری هوش مصنوعی roadmap", feature: "roadmaps" },
 
   { id: "p-weekly", group: "صفحه‌ها", label: "روتین و برنامه‌ی هفتگی", href: "/weekly", icon: "routine", keywords: "روتین هفتگی تقویم weekly" },
@@ -74,6 +77,7 @@ export function DashboardCommand({
   isAdmin: boolean;
 }) {
   const router = useRouter();
+  const run = useDashAction();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +119,10 @@ export function DashboardCommand({
 
   function go(c: CommandItem) {
     onClose();
+    // «ثبت»ها پاپ‌آپِ خودِ همون بخش رو همین‌جا باز می‌کنن (DashboardActions)؛
+    // آیتمِ قفل (ماژولِ پولیِ بی‌دسترسی) لینک می‌مونه تا مقصد گیت رو نشون بده.
+    const locked = !!c.module && modules !== null && !modules.has(c.module);
+    if (c.action && run && !locked) { run(c.action); return; }
     router.push(c.href);
   }
   function onKey(e: React.KeyboardEvent) {

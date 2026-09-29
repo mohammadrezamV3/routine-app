@@ -7,13 +7,10 @@ import { PWA_OFFER_EVENT, PWA_OFFER_KEY } from "@/components/PwaProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, AtSign, Lock, Phone } from "lucide-react";
-import { AuthTabs } from "@/components/AuthTabs";
-import { AuthField } from "@/components/AuthField";
-import { AuthShell } from "@/components/AuthShell";
+import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { staggerFieldsIn } from "@/lib/uiAnim";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 import { resolveHomePath } from "@/lib/homePath";
@@ -65,7 +62,8 @@ export default function SignupPage() {
   const otpRef = useRef<HTMLDivElement>(null);
   const agreedRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { staggerFieldsIn(formRef.current); }, []);
+  // شل و تب‌ها در app/auth/layout.tsx (AuthFrame) پایدارن؛ این صفحه فقط خودِ فرم رو می‌سازه
+  useAuthFieldsStagger(formRef);
 
   const [tier, setTier] = useState<Awaited<ReturnType<typeof passwordTier>> | null>(null);
   useEffect(() => {
@@ -229,137 +227,131 @@ export default function SignupPage() {
   }
 
   return (
-    <section className="auth-page">
-      <AuthShell>
-        <AuthTabs active="signup" />
+    <form ref={formRef} onSubmit={submit} className="auth-box">
+      <AuthBackButton />
+      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={`${TRIAL_COPY_FA}. ${FREE_ROUTINE_COPY_FA}`} />
 
-        <form ref={formRef} onSubmit={submit} className="auth-box">
-          <AuthBackButton />
-          <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={`${TRIAL_COPY_FA}. ${FREE_ROUTINE_COPY_FA}`} />
+      <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
+        <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
+          <input
+            id="firstName" type="text" autoComplete="given-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={firstName} placeholder={"نام"}
+            onChange={(e) => { setFirstName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
+          />
+        </AuthField>
+        <AuthField id="lastName" label={"نام خانوادگی"} error={fieldErrors.lastName} icon={<User size={15} />}>
+          <input
+            id="lastName" type="text" autoComplete="family-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={lastNameInput} placeholder={"نام خانوادگی"}
+            onChange={(e) => { setLastNameInput(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
+          />
+        </AuthField>
+      </div>
 
-          <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
-            <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
-              <input
-                id="firstName" type="text" className="wsearch-newform-name" value={firstName} placeholder={"نام"}
-                onChange={(e) => { setFirstName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
-              />
-            </AuthField>
-            <AuthField id="lastName" label={"نام خانوادگی"} error={fieldErrors.lastName} icon={<User size={15} />}>
-              <input
-                id="lastName" type="text" className="wsearch-newform-name" value={lastNameInput} placeholder={"نام خانوادگی"}
-                onChange={(e) => { setLastNameInput(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
-              />
-            </AuthField>
+      <div style={{ marginTop: 14 }}>
+        <AuthField id="username" label={"یوزرنیم"} error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
+          <input
+            id="username" type="text" name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder={"یوزرنیم خود را وارد کنید"}
+            onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
+          />
+        </AuthField>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <AuthField
+          id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
+          icon={<Lock size={15} />}
+          endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
+        >
+          <input
+            id="password" type={passwordVisible ? "text" : "password"} name="password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={password} placeholder={"حداقل 8 کاراکتر"}
+            onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
+          />
+        </AuthField>
+        {tier && (
+          <div className={`pw-strength pw-strength-${tier}`}>
+            <div className="pw-strength-bars">
+              {PASSWORD_TIER_ORDER.map((tv, i) => (
+                <div key={tv} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
+              ))}
+            </div>
+            <div className="pw-strength-label">
+              {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
+              {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
+            </div>
           </div>
+        )}
+      </div>
 
-          <div style={{ marginTop: 14 }}>
-            <AuthField id="username" label={"یوزرنیم"} error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
-              <input
-                id="username" type="text" className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder={"یوزرنیم خود را وارد کنید"}
-                onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
-              />
-            </AuthField>
-          </div>
-
-          <div style={{ marginTop: 14 }}>
-            <AuthField
-              id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
-              icon={<Lock size={15} />}
-              endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
+      <div style={{ marginTop: 14 }} ref={phoneRef}>
+        <AuthField id="phone" label={"شماره همراه"} error={fieldErrors.phone} icon={<Phone size={15} />}>
+          <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
+            <input
+              id="phone" type="tel" inputMode="numeric" autoComplete="tel-national" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={phone} dir="ltr"
+              placeholder="09123456789" readOnly={otpSent}
+              onChange={(e) => { const v = digitsOnly(e.target.value); setPhone(v); if (v) clearError("phone"); }}
+              onKeyDown={(e) => { if (e.key === "Enter" && !otpSent) { e.preventDefault(); requestOtp(); } }}
+            />
+            <button
+              type="button"
+              className="auth-phone-send-btn"
+              disabled={sendingCode || (otpSent && resendCooldown > 0)}
+              onClick={otpSent ? changePhone : requestOtp}
             >
-              <input
-                id="password" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={password} placeholder={"حداقل 8 کاراکتر"}
-                onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
-              />
-            </AuthField>
-            {tier && (
-              <div className={`pw-strength pw-strength-${tier}`}>
-                <div className="pw-strength-bars">
-                  {PASSWORD_TIER_ORDER.map((tv, i) => (
-                    <div key={tv} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
-                  ))}
-                </div>
-                <div className="pw-strength-label">
-                  {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
-                  {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
-                </div>
-              </div>
-            )}
+              {sendingCode ? "در حال ارسال…" : otpSent ? "تغییر شماره" : "ارسال کد"}
+            </button>
           </div>
+        </AuthField>
+      </div>
 
-          <div style={{ marginTop: 14 }} ref={phoneRef}>
-            <AuthField id="phone" label={"شماره همراه"} error={fieldErrors.phone} icon={<Phone size={15} />}>
-              <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
-                <input
-                  id="phone" type="tel" inputMode="numeric" className="wsearch-newform-name" value={phone} dir="ltr"
-                  placeholder="09123456789" readOnly={otpSent}
-                  onChange={(e) => { const v = digitsOnly(e.target.value); setPhone(v); if (v) clearError("phone"); }}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !otpSent) { e.preventDefault(); requestOtp(); } }}
-                />
-                <button
-                  type="button"
-                  className="auth-phone-send-btn"
-                  disabled={sendingCode || (otpSent && resendCooldown > 0)}
-                  onClick={otpSent ? changePhone : requestOtp}
-                >
-                  {sendingCode ? "در حال ارسال…" : otpSent ? "تغییر شماره" : "ارسال کد"}
-                </button>
-              </div>
-            </AuthField>
+      {otpSent && (
+        <div className="auth-otp-reveal" ref={otpRef}>
+          <div className="auth-otp-hint">
+            {`کدی که به ${phone.trim()} پیامک شد رو وارد کن.`}
           </div>
-
-          {otpSent && (
-            <div className="auth-otp-reveal" ref={otpRef}>
-              <div className="auth-otp-hint">
-                {`کدی که به ${phone.trim()} پیامک شد رو وارد کن.`}
-              </div>
-              <AuthField id="signupOtp" label={"کد 5 رقمی"} error={fieldErrors.otp}>
-                <input
-                  id="signupOtp" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
-                  onChange={(e) => { const v = digitsOnly(e.target.value); setOtpCode(v); if (v) clearError("otp"); }}
-                />
-              </AuthField>
-              <button
-                type="button"
-                className="auth-resend-btn"
-                disabled={resendCooldown > 0 || sendingCode}
-                onClick={requestOtp}
-              >
-                {resendCooldown > 0
-                  ? `ارسال مجدد کد ${faNum(resendCooldown)}`
-                  : "ارسال مجدد کد"}
-              </button>
-            </div>
-          )}
-
-          <div
-            className="task auth-terms-row"
-            style={{ marginTop: 16 }}
-            ref={agreedRef}
-            data-anim-field
-            onClick={() => { setAgreed((v) => !v); clearError("agreed"); }}
+          <AuthField id="signupOtp" label={"کد 5 رقمی"} error={fieldErrors.otp}>
+            <input
+              id="signupOtp" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
+              onChange={(e) => { const v = digitsOnly(e.target.value); setOtpCode(v); if (v) clearError("otp"); }}
+            />
+          </AuthField>
+          <button
+            type="button"
+            className="auth-resend-btn"
+            disabled={resendCooldown > 0 || sendingCode}
+            onClick={requestOtp}
           >
-            <div className={`check${agreed ? " on" : ""}`}>
-              <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div className="task-name">
-              <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-                {"قوانین و مقررات"}
-              </Link>
-              {" "}{"سایت را می‌پذیرم"}
-            </div>
-          </div>
-          {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}
-
-          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
-
-          <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field style={{ marginTop: 16 }}>
-            {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
+            {resendCooldown > 0
+              ? `ارسال مجدد کد ${faNum(resendCooldown)}`
+              : "ارسال مجدد کد"}
           </button>
-        </form>
-      </AuthShell>
-    </section>
+        </div>
+      )}
+
+      <div
+        className="task auth-terms-row"
+        style={{ marginTop: 16 }}
+        ref={agreedRef}
+        data-anim-field
+        onClick={() => { setAgreed((v) => !v); clearError("agreed"); }}
+      >
+        <div className={`check${agreed ? " on" : ""}`}>
+          <svg className="c-check" viewBox="0 0 24 24" fill="none">
+            <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div className="task-name">
+          <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
+            {"قوانین و مقررات"}
+          </Link>
+          {" "}{"سایت را می‌پذیرم"}
+        </div>
+      </div>
+      {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}
+
+      {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+
+      <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field style={{ marginTop: 16 }}>
+        {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
+      </button>
+    </form>
   );
 }

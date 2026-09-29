@@ -307,14 +307,13 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
   .db-quick-item:hover .db-quick-icon{ transform:scale(1.1) rotate(-4deg); }
 }
 .db-quick-item:active{ transform:scale(.96); }
+/* کارهای «ثبت» دکمه‌ان نه لینک (پاپ‌آپ باز می‌کنن) — باید عینا هم‌شکلِ لینک‌ها بمونن */
+.db-page button.db-quick-item{ width:100%; font:inherit; color:inherit; cursor:pointer; background:var(--box-bg); }
 
 /* ── بنتو ──────────────────────────────────────────────────── */
 .db-bento{ display:grid; gap:var(--db-gap); grid-template-columns:minmax(0,1fr); grid-template-areas:var(--areas-sm); }
 @media (min-width:720px){ .db-bento{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:var(--areas-md); } }
 @media (min-width:1100px){ .db-bento{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); grid-template-areas:var(--areas-lg); } }
-.db-embed{ min-width:0; }
-/* کارتِ دوستان ارتفاعِ طبیعیِ خودش رو داره؛ کش‌اومدن تا ارتفاعِ لانچر یک کارتِ بلندِ خالی می‌ساخت */
-.db-embed > div{ height:100%; }
 
 /* ── امروز (خطِ زمانی) ────────────────────────────────────── */
 .db-tag{ font-size:10px; color:var(--muted); border:1px solid var(--box-line); border-radius:7px; padding:1px 6px; white-space:nowrap; max-width:90px; overflow:hidden; text-overflow:ellipsis; }
@@ -719,29 +718,6 @@ body[data-theme="light"] .db-mm-cell.lv4{ color:#fff; }
 .db-note-body span{ font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-note-time{ font-size:10px; color:var(--muted); white-space:nowrap; }
 
-.db-launch-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:8px; }
-@media (max-width:639px){
-  .db-launch-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-  .db-launch-grid .db-launch-item{ padding:10px; gap:9px; }
-  .db-launch-grid .db-launch-text span, .db-launch-grid .db-launch-arrow{ display:none; }
-  .db-launch-grid .db-launch-text b{ font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
-  .db-launch-grid .db-launch-icon{ width:30px; height:30px; border-radius:10px; }
-}
-.db-launch-item{
-  display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:15px; border:1px solid var(--box-line);
-  transition:border-color .2s ease, transform .25s cubic-bezier(.22,1,.36,1);
-}
-@media (hover:hover){ .db-launch-item:hover{ border-color:rgba(var(--accent-rgb),.55); transform:translateY(-2px); } .db-launch-item:hover .db-launch-arrow{ transform:translateX(-3px); color:var(--accent); } }
-.db-launch-item:active{ transform:scale(.98); }
-.db-launch-item.is-locked{ opacity:.6; }
-.db-launch-icon{ width:34px; height:34px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--accent); border:1px solid rgba(var(--accent-rgb),.3); }
-.db-launch-icon svg{ width:18px; height:18px; }
-.db-launch-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
-.db-launch-text b{ font-size:12.5px; font-weight:800; }
-.db-launch-text span{ font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.db-launch-arrow{ width:15px; height:15px; color:var(--muted2); transition:transform .2s ease, color .2s ease; }
-.db-launch-lock svg{ width:14px; height:14px; color:var(--muted); }
-
 /* ── پالتِ فرمان ───────────────────────────────────────────── */
 .db-cmd-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:flex-start;
@@ -803,37 +779,37 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 .dbi.dbi-live .dbi-spin-q{ animation:none; }
 
 @media (hover:hover){
-  :is(.db-card, .db-quick-item, .db-launch-item, .dash-scope .db-cmd-item.is-active):hover .dbi .dbi-spin,
+  :is(.db-card, .db-quick-item, .dash-scope .db-cmd-item.is-active):hover .dbi .dbi-spin,
   .dash-scope .db-cmd-item.is-active .dbi .dbi-spin{ animation:dbi-spin 3s linear infinite; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-lift{ animation:dbi-lift .7s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-candle{ animation:dbi-candle .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-candle.dbi-d1{ animation-delay:.08s; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-candle.dbi-d2{ animation-delay:.16s; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-leaf{ animation:dbi-leaf .8s ease-in-out; transform-origin:0% 100%; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-check,
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-write,
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-line,
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-trail{ stroke-dasharray:1; animation:dbi-draw .7s ease forwards; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-zap{ animation:dbi-zap .5s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-hand{ animation:dbi-spin 1.2s cubic-bezier(.4,0,.2,1); transform-origin:50% 100%; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-nod{ animation:dbi-nod .6s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-flag{ animation:dbi-flag .7s ease-in-out 2; transform-origin:0% 100%; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-bar{ animation:dbi-candle .55s ease-in-out; transform-origin:50% 100%; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-bar.dbi-d1{ animation-delay:.08s; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-bar.dbi-d2{ animation-delay:.16s; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-spark,
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-twinkle{ animation:dbi-twinkle .8s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-pen{ animation:dbi-pen .8s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-link-a{ animation:dbi-link-a .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-link-b{ animation:dbi-link-b .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-ring{ animation:dbi-ring-once .8s ease-in-out; transform-origin:50% 10%; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-dot{ animation:dbi-dot .9s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-dot.dbi-d1{ animation-delay:.12s; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-dot.dbi-d2{ animation-delay:.24s; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-arrow{ animation:dbi-arrow .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-spin-q{ animation:dbi-quarter .45s cubic-bezier(.34,1.56,.64,1); }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-seek{ animation:dbi-seek .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item, .db-launch-item):hover .dbi .dbi-wave{ animation:dbi-lift .8s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-lift{ animation:dbi-lift .7s ease-in-out 2; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-candle{ animation:dbi-candle .6s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-candle.dbi-d1{ animation-delay:.08s; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-candle.dbi-d2{ animation-delay:.16s; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-leaf{ animation:dbi-leaf .8s ease-in-out; transform-origin:0% 100%; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-check,
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-write,
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-line,
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-trail{ stroke-dasharray:1; animation:dbi-draw .7s ease forwards; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-zap{ animation:dbi-zap .5s ease-in-out 2; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-hand{ animation:dbi-spin 1.2s cubic-bezier(.4,0,.2,1); transform-origin:50% 100%; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-nod{ animation:dbi-nod .6s ease-in-out 2; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-flag{ animation:dbi-flag .7s ease-in-out 2; transform-origin:0% 100%; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-bar{ animation:dbi-candle .55s ease-in-out; transform-origin:50% 100%; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-bar.dbi-d1{ animation-delay:.08s; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-bar.dbi-d2{ animation-delay:.16s; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-spark,
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-twinkle{ animation:dbi-twinkle .8s ease-in-out 2; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-pen{ animation:dbi-pen .8s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-link-a{ animation:dbi-link-a .6s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-link-b{ animation:dbi-link-b .6s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-ring{ animation:dbi-ring-once .8s ease-in-out; transform-origin:50% 10%; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-dot{ animation:dbi-dot .9s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-dot.dbi-d1{ animation-delay:.12s; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-dot.dbi-d2{ animation-delay:.24s; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-arrow{ animation:dbi-arrow .6s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-spin-q{ animation:dbi-quarter .45s cubic-bezier(.34,1.56,.64,1); }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-seek{ animation:dbi-seek .6s ease-in-out; }
+  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-wave{ animation:dbi-lift .8s ease-in-out; }
 }
 
 @keyframes dbi-spin{ to{ transform:rotate(360deg); } }

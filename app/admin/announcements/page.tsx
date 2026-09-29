@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime } from "@/lib/adminFormat";
@@ -140,17 +141,13 @@ export default function AdminAnnouncementsPage() {
             </label>
             <div className="admin-field">
               <span>وضعیت</span>
-              <div className="admin-tabs" role="radiogroup" aria-label="وضعیت" style={{ marginBottom: 0 }}>
-                {([true, false] as const).map((v) => (
-                  <button
-                    key={String(v)} type="button" role="radio" aria-checked={active === v}
-                    className={`admin-tab${active === v ? " active" : ""}${!v ? " is-off" : ""}`}
-                    onClick={() => setActive(v)}
-                  >
-                    {v ? "فعال" : "غیرفعال"}
-                  </button>
-                ))}
-              </div>
+              <SegmentedTabs
+                className="admin-seg"
+                ariaLabel="وضعیت"
+                options={[{ value: "on", label: "فعال" }, { value: "off", label: "غیرفعال" }]}
+                active={active ? "on" : "off"}
+                onChange={(v) => setActive(v === "on")}
+              />
             </div>
           </div>
           <label className="admin-field" style={{ marginTop: 12 }}>

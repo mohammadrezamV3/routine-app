@@ -10,6 +10,7 @@ import { FA_WEEKDAY_SHORT, faNum } from "@/lib/jalali";
 import type { DashCalorie, DashExercise } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, Meter, Ring, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
+import { useDashAction } from "./DashboardActions";
 
 // ── تمرین ───────────────────────────────────────────────────
 export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; loading: boolean }) {
@@ -100,6 +101,7 @@ export function DashboardCalorie({ cal, loading }: { cal: DashCalorie | null; lo
 }
 
 function CalorieBody({ cal }: { cal: DashCalorie }) {
+  const run = useDashAction();
   const target = cal.target!;
   const frac = target.kcal ? cal.today.kcal / target.kcal : 0;
   const over = frac > 1;
@@ -148,9 +150,15 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
         })}
       </div>
 
-      <Link href="/exercise?tab=calorie" prefetch className="account-outline-btn mentor-btn db-fit-cta">
-        <DashIcon name="plus" className="dbi-live" /> ثبتِ غذا
-      </Link>
+      {run ? (
+        <button type="button" onClick={() => run("food")} className="account-outline-btn mentor-btn db-fit-cta">
+          <DashIcon name="plus" className="dbi-live" /> ثبتِ غذا
+        </button>
+      ) : (
+        <Link href="/exercise?tab=calorie" prefetch className="account-outline-btn mentor-btn db-fit-cta">
+          <DashIcon name="plus" className="dbi-live" /> ثبتِ غذا
+        </Link>
+      )}
     </div>
   );
 }

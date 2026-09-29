@@ -392,11 +392,17 @@
     position:absolute; top:2px; inset-inline-start:2px; width:21px; height:21px; border-radius:50%;
     background:linear-gradient(180deg, #fff, #e6e6e6);
     box-shadow:0 2px 5px rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.15);
+    /* کشیدگیِ لحظه‌ی فشار هم با scaleX (نه width) — کل حرکتِ دستگیره فقط
+       transform ـه و روی compositor اجرا می‌شه، بدون reflow. مبدأ سمتِ
+       شروع (راست در RTL) تا خاموش به داخل کش بیاد؛ در حالت روشن مبدأ سمتِ
+       مقابله تا دستگیره از لبه‌ی ظرف بیرون نزنه. */
+    transform-origin:right center; will-change:transform;
     transition:transform .25s cubic-bezier(.34,1.56,.64,1);
   }
-  .ios-toggle.on .ios-toggle-knob{ transform:translateX(-19px); }
-  .ios-toggle:active .ios-toggle-knob{ width:24px; }
-  .ios-toggle.on:active .ios-toggle-knob{ transform:translateX(-22px); }
+  .ios-toggle.on .ios-toggle-knob{ transform:translateX(-19px); transform-origin:left center; }
+  .ios-toggle:active .ios-toggle-knob{ transform:scaleX(1.143); }
+  .ios-toggle.on:active .ios-toggle-knob{ transform:translateX(-19px) scaleX(1.143); }
+  @media (prefers-reduced-motion:reduce){ .ios-toggle-knob{ transition:none; } }
 
   .stat-toggle-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -3793,9 +3799,11 @@ body[data-theme="light"] .auth-box .jdate-btn{
   content:""; position:absolute; inset:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:center; background-size:12px;
-  animation:authCheckIn .18s ease both;
 }
-@keyframes authCheckIn{ from{ opacity:0; transform:scale(.4); } to{ opacity:1; transform:scale(1); } }
+/* قبلا این‌جا animation:authCheckIn (scale از .4) روی خودِ اینپوت بود؛ روی هم
+   با فید باکس و استگرِ فیلدها (useAuthFieldsStagger) هر اینپوت با هر سوییچِ
+   ورود↔ثبت‌نام «پاپ» می‌کرد — سه انیمیشنِ هم‌زمان، بخشی از همون حسِ باگیِ
+   لود. حالا فقط استگرِ فیلد و فیدِ باکس می‌مونن. */
 
 /* تب‌های ورود/ثبت‌نام بالای فرم — indicator با انیمیشن anime.js بین دو تب جابه‌جا می‌شه.
    بک‌گراندش عینا همون فرمول .auth-box (شیشه‌ای + بلور) رو تکرار می‌کنه، نه یه
@@ -3834,17 +3842,26 @@ body[data-theme="light"] .auth-tab, body:not([data-theme="light"]) .auth-tab{
 }
 .auth-tab.active{color:var(--bg);}
 @media (hover:hover){.auth-tab.active:hover{color:var(--bg);}}
+/* نشانگر فقط با transform جابه‌جا می‌شه (SegmentedTabs) — left/width دیگه
+   انیمیت نمی‌شن چون propِ layout ـن و هر فریم reflow می‌دادن. left:0 صریح
+   لازمه: بدونش توی RTL جای استاتیکِ این span سمت راست حساب می‌شد و
+   translateX (که از چپ اندازه گرفته می‌شه) جای اشتباه می‌برد. */
 .auth-tab-indicator{
-  position:absolute; top:4px; bottom:4px; z-index:0;
+  position:absolute; top:4px; bottom:4px; left:0; z-index:0;
   background:var(--accent); border-radius:999px;
   box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
-  transition:left .22s cubic-bezier(.22,1,.36,1), width .22s cubic-bezier(.22,1,.36,1);
+  transform-origin:0 50%; will-change:transform;
+  transition:transform .22s cubic-bezier(.22,1,.36,1), opacity .18s ease;
 }
+/* SegmentedTabs درست زیرِ یک لیبل (که خودش فاصله‌ی پایین داره) — بدون
+   margin-top پیش‌فرضِ ۱۶px صفحه‌ی ورود */
+.auth-tabs.seg-flush{ margin-top:0; }
 /* اولین جای‌گیری نشانگر (mount) نباید انیمیشن بخوره */
 .auth-tab-indicator.no-anim{ transition:none; }
 /* دستگاه رده پایین: نشانگر بی‌انیمیشن می‌پره سر جاش — یک reflow کمتر
    کامل به‌ازای هر تپ، که همون لگ گزارش‌شده‌ی سوییچ تب‌هاست. */
 html[data-perf="low"] .auth-tab-indicator{ transition:none; }
+@media (prefers-reduced-motion:reduce){ .auth-tab-indicator{ transition:none; } }
 
 /* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلا
    فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعا اعمال نمی‌شد */
@@ -4498,19 +4515,9 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .manual-plan-submit-btn:disabled{ opacity:.5 !important; }
 
-/* واحد ثانیه/دقیقه‌ی پاپ‌آپ افزودن حرکت زمان‌محور — شیشه‌ای و کروتر از
-   پیش‌فرض day-pill (که جاهای دیگه‌ی اپ، مثلا انتخاب روزهای هفته، هنوز
-   شکل خودش رو داره) */
-.manual-timer-unit-picker .day-pill{
-  border-radius:14px;
-  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
-}
-body:not([data-theme="light"]) .manual-timer-unit-picker .day-pill{ background:rgba(255,255,255,.03); border-color:var(--line); }
-.manual-timer-unit-picker .day-pill.on{ background:var(--accent-dim); border-color:var(--accent); }
-/* glow ::after رادیوس پایه (۱۰px) رو داشت، نه ۱۴px خود این pill — گوشه‌های
-   شدو از زیر گوشه‌ی گردتر پیل بیرون می‌زد، شبیه یه شدو چهارگوش پشت یه
-   دکمه‌ی گردتر. */
-.manual-timer-unit-picker .day-pill.on::after{ border-radius:14px; }
+/* واحد ثانیه/دقیقه‌ی پاپ‌آپ افزودن حرکت زمان‌محور — SegmentedTabs سایت
+   (نشانگرِ لغزنده)، کمی فشرده‌تر تا با فیلدِ «مدت زمان» کنارش هم‌ارتفاع بمونه */
+.manual-timer-unit-tabs .auth-tab{ padding:8px 0; font-size:12.5px; }
 
 /* آواتار پیش‌فرض پروفایل — کامپوننت agent-avatar از smoothui (پورت
    عینی منبع، AgentAvatar.tsx رو ببین): یه <canvas> که خودش گرید پیکسلی
@@ -4993,7 +5000,6 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
   .auth-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .auth-tabs{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .manual-exercise-picker-search{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
-  .manual-timer-unit-picker .day-pill{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }
   .manual-meal-row-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
   .exercise-catalog-popup-panel{ backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%); }
   .exercise-catalog-detail-card{ backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%); }
@@ -5430,7 +5436,14 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
 
 /* صفحه‌ی قابلیت‌ها — همون .admin-tab موجود؛ فقط چیدمان */
 .admin-feature-modes{ margin:0; flex-shrink:0; }
-.admin-feature-modes .admin-tab.is-off.active{ background:var(--adm-red-dim); border-color:rgba(224,82,82,.4); color:var(--adm-red); }
+/* سوییچ‌های تک‌انتخابیِ پنل (حالتِ قابلیت، وضعیتِ اطلاعیه) — همون
+   SegmentedTabs سایت با نشانگرِ لغزنده؛ فقط اندازه‌ی جمع‌وجورتر و عرضِ
+   هر گزینه به‌اندازه‌ی متنش. گزینه‌ی «خاموش/غیرفعال» وقتی انتخابه نشانگرِ
+   قرمز می‌گیره (جای .is-off.active قبلی). */
+.auth-tabs.admin-seg{ margin:0; align-self:flex-start; }
+.admin-seg .auth-tab{ flex:1 0 auto; padding:7px 14px; font-size:12px; }
+.admin-seg[data-active="off"] .auth-tab-indicator{ background:var(--adm-red); box-shadow:0 4px 14px rgba(224,82,82,.3); }
+.admin-seg .auth-tab:disabled{ opacity:.65; cursor:progress; }
 @media (max-width:700px){ .admin-feature-row{ flex-direction:column; align-items:stretch; } }
 .admin-quick-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:10px; margin-bottom:20px; }
 .admin-quick-link{ display:flex; align-items:center; gap:10px; padding:14px; text-decoration:none; color:var(--adm-text); font-size:13px; font-weight:700; transition:border-color .15s ease, color .15s ease; }
@@ -5576,7 +5589,6 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
 .admin-lookup .admin-search{ max-width:none; }
 .admin-found-user > .admin-badge{ margin-inline-start:auto; flex-shrink:0; }
 
-.admin-feature-modes .admin-tab:disabled{ opacity:.65; cursor:progress; }
 
 @media (max-width:520px){
   .admin-toolbar .admin-search{ flex:1 1 100%; max-width:none; min-width:0; }

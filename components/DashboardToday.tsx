@@ -135,7 +135,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
       {!ready ? (
         <div className="db-tl">{Array.from({ length: 4 }, (_, i) => <div key={i} className="db-tl-skel"><Skel w={40} h={12} /><Skel w={26} h={26} r={20} /><Skel w="60%" h={40} r={14} /></div>)}</div>
       ) : tasks.length === 0 ? (
-        <EmptyState icon="routine" text="امروز برنامه‌ای نداری. یه برنامه اضافه کن تا روزت شکل بگیره." href="/weekly?add=1" cta="افزودن برنامه" />
+        <EmptyState icon="routine" text="امروز برنامه‌ای نداری. یه برنامه اضافه کن تا روزت شکل بگیره." href="/weekly?add=1" cta="افزودن برنامه" action="program" />
       ) : (
         <ol className="db-tl">
           {visible.map((r, i) => {
