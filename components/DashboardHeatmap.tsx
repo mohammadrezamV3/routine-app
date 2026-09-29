@@ -13,13 +13,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FA_WEEKDAY, J_MONTHS, faNum } from "@/lib/jalali";
-import { getDailyRange, type DailyRecord } from "@/lib/storage";
+import { getDailyRangeStrict, type DailyRecord } from "@/lib/storage";
 import type { ScheduleOpts } from "@/lib/schedule";
 import { bestRun, buildMonth, heatLevel, jalaliOfIso, jalaliYearRange, type MonthCell, type MonthMap } from "@/lib/dashboardCompute";
 import { BentoCard, CardHead, CountUp, D_EASE, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
 const WEEK_HEAD = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+
+// داده‌ی سالِ کامل در سطحِ ماژول کش می‌شه (۱۰ دقیقه): کشِ خودِ lib/storage فقط
+// ۱۵ ثانیه‌ست و بدونِ این، هر بار برگشتن به داشبورد دوباره کلِ سال رو می‌گرفت.
+// تیک‌های ۹۰ روزِ اخیر همیشه از داده‌ی زنده‌ی روتین روش می‌شینن، پس کهنه‌بودنِ
+// این کش فقط روی روزهای قدیمی‌تره که عملا عوض نمی‌شن.
+const YEAR_TTL = 10 * 60_000;
+const yearCache = new Map<string, { at: number; data: Record<string, DailyRecord> }>();
 
 export function DashboardHeatmap({
   opts,
@@ -44,6 +51,13 @@ export function DashboardHeatmap({
     const [y] = jalaliOfIso(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
     return Math.min(y, ty);
   }, [memberSince, ty]);
+  // روزهای قبل از عضویت «بدونِ برنامه»‌ان (برنامه‌های قدیمیِ بدونِ startDate وگرنه قرمز می‌شدن)
+  const joinIso = useMemo(() => {
+    if (!memberSince) return undefined;
+    const d = new Date(memberSince);
+    if (Number.isNaN(d.getTime())) return undefined;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, [memberSince]);
 
   const [year, setYear] = useState(ty);
   const [month, setMonth] = useState(tm);
@@ -52,22 +66,48 @@ export function DashboardHeatmap({
   // تیک‌های کلِ سال — به‌ازای هر سالِ بازشده یک بار
   const [yearData, setYearData] = useState<Record<number, Record<string, DailyRecord>>>({});
   const [loadingYear, setLoadingYear] = useState<number | null>(null);
+  const [failedYear, setFailedYear] = useState<number | null>(null);
+  const [retry, setRetry] = useState(0);
+  // سالِ جاری فقط وقتی لازمه گرفته می‌شه: یا کاربر ماهی قدیمی‌تر از ۹۰ روزِ اخیر/سالِ
+  // دیگه رو باز کرد، یا صفحه آروم شد (idle) — نه روی مسیرِ لودِ اولیه.
+  const [wantYear, setWantYear] = useState(false);
+  useEffect(() => {
+    if (!ready || wantYear) return;
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    let idle: number | undefined;
+    const t = setTimeout(() => {
+      if (w.requestIdleCallback) idle = w.requestIdleCallback(() => setWantYear(true), { timeout: 4000 });
+      else setWantYear(true);
+    }, 1500);
+    return () => { clearTimeout(t); if (idle !== undefined) w.cancelIdleCallback?.(idle); };
+  }, [ready, wantYear]);
 
   // نوروز رسید (صفحه باز مونده) → سال/ماهِ جاری جلو می‌ره
   useEffect(() => { setYear(ty); setMonth(tm); }, [ty, tm]);
 
   useEffect(() => {
     if (!ready || yearData[year]) return;
+    if (year === ty && !wantYear) return;
     const range = jalaliYearRange(year, todayIso);
     if (!range) return;
+    const key = `${range.from}|${range.to}`;
+    const hit = yearCache.get(key);
+    if (hit && Date.now() - hit.at < YEAR_TTL) { setYearData((p) => ({ ...p, [year]: hit.data })); return; }
     let alive = true;
     setLoadingYear(year);
-    getDailyRange(range.from, range.to)
-      .then((m) => { if (alive) setYearData((p) => ({ ...p, [year]: m })); })
-      .catch(() => { if (alive) setYearData((p) => ({ ...p, [year]: {} })); })
+    setFailedYear((f) => (f === year ? null : f));
+    getDailyRangeStrict(range.from, range.to)
+      .then((m) => {
+        if (!alive) return;
+        // شکست → کش نمی‌شه و اسکلت + «تلاشِ دوباره» می‌مونه، نه ۰٪ِ قرمزِ گمراه‌کننده
+        if (m === null) { setFailedYear(year); return; }
+        yearCache.set(key, { at: Date.now(), data: m });
+        setYearData((p) => ({ ...p, [year]: m }));
+      })
+      .catch(() => { if (alive) setFailedYear(year); })
       .finally(() => { if (alive) setLoadingYear((y) => (y === year ? null : y)); });
     return () => { alive = false; };
-  }, [ready, year, todayIso, yearData]);
+  }, [ready, year, ty, wantYear, todayIso, yearData, retry]);
 
   const yearLoaded = !!yearData[year];
   // تیک‌های ۹۰ روزِ اخیر تازه‌ترن (شاملِ تیکِ همین الانِ کاربر)، پس روی داده‌ی سال می‌شینن
@@ -78,9 +118,9 @@ export function DashboardHeatmap({
     return Array.from({ length: 12 }, (_, i) => {
       const jm = i + 1;
       if (year === ty && jm > tm) return null;
-      return buildMonth(year, jm, todayIso, opts, merged);
+      return buildMonth(year, jm, todayIso, opts, merged, joinIso);
     });
-  }, [ready, year, ty, tm, todayIso, opts, merged]);
+  }, [ready, year, ty, tm, todayIso, opts, merged, joinIso]);
 
   const selected = months[month - 1];
   const best = useMemo(() => bestRun(months.flatMap((m) => m?.cells ?? [])), [months]);
@@ -94,12 +134,14 @@ export function DashboardHeatmap({
 
   function pickMonth(jm: number) {
     if (jm === month) return;
+    setWantYear(true);
     setDir(jm > month ? 1 : -1);
     setMonth(jm);
     setHover(null);
   }
   function pickYear(y: number) {
     if (y < minYear || y > ty) return;
+    setWantYear(true);
     setDir(y > year ? 1 : -1);
     setYear(y);
     setMonth(y === ty ? tm : 12);
@@ -139,7 +181,7 @@ export function DashboardHeatmap({
       />
 
       {/* انتخابگرِ ماه: ۱۲ خانه‌ی سال، هرکدوم رنگِ میانگینِ همون ماه */}
-      <div className="db-months" role="listbox" aria-label="انتخابِ ماه">
+      <div className="db-months" role="group" aria-label="انتخابِ ماه">
         {Array.from({ length: 12 }, (_, i) => {
           const jm = i + 1;
           const m = months[i];
@@ -150,9 +192,8 @@ export function DashboardHeatmap({
             <button
               key={jm}
               type="button"
-              role="option"
-              aria-selected={jm === month}
-              disabled={future}
+              aria-pressed={jm === month}
+              disabled={ready && future}
               className={`db-mtile lv${lv}${jm === month ? " is-on" : ""}${year === ty && jm === tm ? " is-now" : ""}`}
               onClick={() => pickMonth(jm)}
               title={ok && m?.avg !== null && m ? `${J_MONTHS[i]}: ${faNum(m.avg ?? 0)}٪` : J_MONTHS[i]}
@@ -213,7 +254,11 @@ export function DashboardHeatmap({
       </div>
 
       <div className="db-heat-foot">
-        <span className="db-heat-hover">{loadingYear === year && !yearLoaded ? "در حالِ آوردنِ تاریخچه‌ی سال…" : hoverLabel}</span>
+        <span className="db-heat-hover">
+          {failedYear === year && !yearLoaded ? (
+            <>تاریخچه‌ی سال نیومد. <button type="button" className="db-heat-retry" onClick={() => { setFailedYear(null); setRetry((r) => r + 1); }}>تلاشِ دوباره</button></>
+          ) : loadingYear === year && !yearLoaded ? "در حالِ آوردنِ تاریخچه‌ی سال…" : hoverLabel}
+        </span>
         <span className="db-heat-legend" aria-hidden="true">
           کم <i className="db-mm-dot lv0" /><i className="db-mm-dot lv1" /><i className="db-mm-dot lv2" /><i className="db-mm-dot lv3" /><i className="db-mm-dot lv4" /> کامل
         </span>

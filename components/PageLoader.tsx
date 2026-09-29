@@ -34,7 +34,6 @@ export function PageLoader() {
           <span className="pls-card pls-wide" />
         </div>
       </div>
-      <span className="sr-only">در حال بارگذاری</span>
     </div>
   );
 }

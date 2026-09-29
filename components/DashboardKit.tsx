@@ -233,7 +233,7 @@ export function Sparkline({ values, height = 72, tone = "auto", className }: { v
   useEffect(() => {
     const el = box.current;
     if (!el) return;
-    const set = () => setW(Math.round(el.getBoundingClientRect().width));
+    const set = () => setW(Math.floor(el.getBoundingClientRect().width));
     set();
     const ro = new ResizeObserver(set);
     ro.observe(el);

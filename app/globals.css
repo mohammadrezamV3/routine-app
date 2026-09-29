@@ -7724,7 +7724,9 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
 @media (prefers-reduced-motion:reduce){ .quarter-ring{ animation-duration:1.6s !important; } }
 
 /* ── انتقالِ نرمِ بینِ صفحه‌ها (components/RouteProgress.tsx + app/template.tsx) ── */
-.page-enter{ animation:page-enter .38s cubic-bezier(.22,1,.36,1) both; }
+/* فقط بعد از اولین ناوبریِ داخلی (RouteProgress، data-navigated): لودِ کاملِ اول بدونِ fade
+   تا LCP عقب نیفته. fill-mode backwards چون حالتِ پایانی همون استایلِ پایه‌ست. */
+html[data-navigated] .page-enter{ animation:page-enter .38s cubic-bezier(.22,1,.36,1) backwards; }
 @keyframes page-enter{ from{ opacity:0; } }
 /* صفحه‌ی فعلی همون لحظه‌ی کلیک کمی کم‌رنگ می‌شه — با تأخیرِ کوتاه تا ناوبری‌های
    آنی (از کش) چشمک نزنن */
@@ -7736,10 +7738,10 @@ html[data-route-loading] .wrap{ opacity:.55; transition-delay:.12s; }
   box-shadow:0 0 10px rgba(var(--accent-rgb),.7);
   transform-origin:right; transform:scaleX(0);
 }
-.route-progress.is-loading{ animation:rp-grow 9s cubic-bezier(.08,.9,.2,1) forwards; }
-.route-progress.is-done{ transform:scaleX(1); opacity:0; transition:transform .2s ease, opacity .3s ease .15s; }
+.route-progress.rpg-loading{ animation:rp-grow 9s cubic-bezier(.08,.9,.2,1) forwards; }
+.route-progress.rpg-done{ transform:scaleX(1); opacity:0; transition:transform .2s ease, opacity .3s ease .15s; }
 @keyframes rp-grow{ 0%{ transform:scaleX(0); } 10%{ transform:scaleX(.35); } 100%{ transform:scaleX(.92); } }
-@media (prefers-reduced-motion:reduce){ .page-enter{ animation:none; } }
+@media (prefers-reduced-motion:reduce){ html[data-navigated] .page-enter{ animation:none; } .route-progress.rpg-loading{ animation:none; transform:scaleX(.6); } }
 
 /* ── لودینگِ تمام‌صفحه (components/PageLoader.tsx) ─────────────────────── */
 .page-loader{

@@ -865,3 +865,6 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
   .db-page *:not(.quarter-ring), .db-page *::before, .db-page *::after, .db-cmd-root *:not(.quarter-ring){ animation:none !important; transition:none !important; }
 }
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
+
+/* «تلاشِ دوباره» ِ تاریخچه‌ی سالِ نقشه‌ی ثبات — لینک‌مانند، بی‌بک‌گراند */
+.db-page .db-heat-retry{ color:var(--ring-1a); font-weight:800; text-decoration:underline; text-underline-offset:3px; }

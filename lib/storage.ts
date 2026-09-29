@@ -426,12 +426,22 @@ export async function listDailyKeys(): Promise<Set<string>> {
  * (localStorage) از قبل سریع بود، فقط همون کلیدهای موجود رو می‌خونه.
  */
 export async function getDailyRange(fromIso: string, toIso: string): Promise<Record<string, DailyRecord>> {
+  return (await getDailyRangeStrict(fromIso, toIso)) ?? {};
+}
+
+/**
+ * همون getDailyRange، ولی شکستِ شبکه/سرور رو به‌صورتِ null برمی‌گردونه (نه {}) —
+ * برای جایی که «داده نیومد» باید از «هیچ روزی تیک نخورده» جدا باشه (نقشه‌ی
+ * ثباتِ سالانه: {} یعنی همه‌ی روزها ۰٪ِ قرمز، که گمراه‌کننده‌ست).
+ */
+export async function getDailyRangeStrict(fromIso: string, toIso: string): Promise<Record<string, DailyRecord> | null> {
   if (await isLoggedIn()) {
     const covering = findCoveringRange(fromIso, toIso) ?? fetchRange(fromIso, toIso);
     let data = await covering.data;
     // اگه بازه‌ی پوشاننده شکست خورد، خودمون مستقیم می‌گیریم (نه اینکه خالی برگردونیم)
     if (data === null) data = await fetchRange(fromIso, toIso).data;
-    const out = data === null ? {} : sliceRange(data, fromIso, toIso);
+    if (data === null) return null;
+    const out = sliceRange(data, fromIso, toIso);
     // نوشتن‌های در راه (optimistic) روی جوابِ سرور/کش می‌شینن
     pendingDaily.forEach((rec, k) => { if (k >= fromIso && k <= toIso) out[k] = rec; });
     return out;

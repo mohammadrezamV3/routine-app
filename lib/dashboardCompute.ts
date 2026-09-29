@@ -214,7 +214,8 @@ export type MonthMap = {
   tracked: number;
 };
 
-export function buildMonth(jy: number, jm: number, todayIso: string, opts: ScheduleOpts, daily: DailyMap): MonthMap {
+/** `startIso`: روزهای قبل از این (مثلا قبل از عضویت) «بدونِ برنامه» حساب می‌شن، نه ۰٪ِ قرمز */
+export function buildMonth(jy: number, jm: number, todayIso: string, opts: ScheduleOpts, daily: DailyMap, startIso?: string): MonthMap {
   const len = jalaliMonthDays(jy, jm);
   const cells: MonthCell[] = [];
   let lead = 0;
@@ -227,7 +228,7 @@ export function buildMonth(jy: number, jm: number, todayIso: string, opts: Sched
       lead = (new Date(y, m - 1, d).getDay() + 1) % 7; // شنبه = ۰
     }
     const future = iso > todayIso;
-    const pct = future ? null : dayPct(iso, opts, daily);
+    const pct = future || (startIso && iso < startIso) ? null : dayPct(iso, opts, daily);
     if (pct !== null) { sum += pct; tracked++; if (pct === 100) perfect++; }
     cells.push({ iso, jd, pct, future, today: iso === todayIso });
   }
