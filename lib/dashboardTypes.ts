@@ -26,6 +26,8 @@ export type DashExercise = {
     doneItems: number;
     started: boolean;
     done: boolean;
+    /** پیش‌نمایشِ حرکت‌های امروز (حداکثر ۶) با وضعیتِ تیکِ هرکدوم */
+    items: { name: string; done: boolean }[];
   };
   week: { done: number; target: number };
   streak: number;

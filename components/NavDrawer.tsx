@@ -11,17 +11,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import { invalidateStorageCache } from "@/lib/storage";
+import { useSession } from "next-auth/react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
-import { getAccount, activeModulesOf, invalidateAccountCache } from "@/lib/accountCache";
+import { getAccount, activeModulesOf } from "@/lib/accountCache";
 import { HeaderStreakClock } from "./HeaderStreakClock";
 import { AgentAvatar } from "./AgentAvatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 import { subscribeToPush } from "@/lib/pushClient";
-import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
-import { clearAllLocalKeys } from "@/lib/e2ee/keyStore";
+import { takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
+import { logoutAndRedirect } from "@/lib/logout";
 
 // این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
 // NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -469,7 +468,7 @@ export function NavDrawer() {
                         <div
                           className="notif-panel-item profile-menu-item"
                           style={{ color: "#E05252" }}
-                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); clearAllLocalKeys().catch(() => {}); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => { setProfileMenuOpen(false); logoutAndRedirect(); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
                           <span>خروج از حساب</span>

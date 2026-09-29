@@ -1,6 +1,6 @@
 "use client";
 
-// «نبضِ بازار» — جلسه‌های فارکس به‌صورتِ زنده (همون منطقِ DST-درستِ
+// «بازار و اخبارِ اقتصادی» — جلسه‌های فارکس به‌صورتِ زنده (همون منطقِ DST-درستِ
 // lib/forexSessions.ts که صفحه‌ی ساعت استفاده می‌کنه) + شمارشِ معکوسِ نزدیک‌ترین
 // خبرِ مهم و فهرستِ رویدادهای پیشِ‌رو از جدولِ تقویمِ خودمون (نه سرویسِ بیرونی).
 // فقط شمارنده ثانیه‌ای رندر می‌شه؛ بقیه‌ی کارت دقیقه‌ای.
@@ -12,7 +12,7 @@ import { faNum } from "@/lib/jalali";
 import { isForexOpen, sessionArcs, upcomingSession, SESSION_LABELS, SESSION_OVERLAPS } from "@/lib/forexSessions";
 import { durationParts } from "@/lib/dashboardCompute";
 import type { DashEvent } from "@/lib/dashboardTypes";
-import { BentoCard, CardHead, D_EASE, LockedState, Skel } from "./DashboardKit";
+import { BentoCard, CardHead, D_EASE, Skel } from "./DashboardKit";
 import { FlagCircle } from "./FlagCircle";
 
 const SESSION_FLAG = { SYDNEY: "AU", TOKYO: "JP", LONDON: "GB", NEWYORK: "US" } as const;
@@ -38,7 +38,7 @@ function hhmm(d: Date) {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-export function DashboardMarket({ events, loading, locked }: { events: DashEvent[] | null; loading: boolean; locked: boolean }) {
+export function DashboardMarket({ events, loading }: { events: DashEvent[] | null; loading: boolean }) {
   const now = useTick(30_000);
   const arcs = useMemo(() => (now ? sessionArcs(now) : []), [now]);
   const marketOpen = now ? isForexOpen(now) : true;
@@ -49,12 +49,9 @@ export function DashboardMarket({ events, loading, locked }: { events: DashEvent
   const nextEvent = upcoming.find((e) => now && new Date(e.occursAt).getTime() > now.getTime() && e.impact === "HIGH") ?? upcoming.find((e) => now && new Date(e.occursAt).getTime() > now.getTime());
 
   return (
-    <BentoCard area="market" className="db-market" label="نبضِ بازار">
-      <CardHead icon="globeClock" title="نبضِ بازار" href="/trade/clock" hrefLabel="ساعتِ فارکس" />
-      {locked ? (
-        <LockedState title="ابزارهای ترید" />
-      ) : (
-        <>
+    <BentoCard area="market" className="db-market" label="بازار و اخبارِ اقتصادی">
+      <CardHead icon="globeClock" title="بازار و اخبارِ اقتصادی" href="/trade/clock" hrefLabel="ساعتِ فارکس" />
+      <>
           <div className="db-sessions">
             {!now ? (
               <Skel w="100%" h={120} r={12} />
@@ -112,8 +109,7 @@ export function DashboardMarket({ events, loading, locked }: { events: DashEvent
               <p className="db-muted-line">در ۷ روزِ آینده خبرِ مهمی ثبت نشده</p>
             )}
           </div>
-        </>
-      )}
+      </>
     </BentoCard>
   );
 }

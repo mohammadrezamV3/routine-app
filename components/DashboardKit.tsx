@@ -11,7 +11,7 @@
 //     برای کسی که «کاهشِ حرکت» رو روشن کرده خاموش می‌شن.
 
 import Link from "next/link";
-import { ReactNode, useEffect, useId, useRef } from "react";
+import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform, type Variants } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { sparkPath } from "@/lib/dashboardCompute";
@@ -221,45 +221,54 @@ export function GradientArc({ c, r, stroke, value, from, to, delay = 0, trackOpa
 }
 
 // ── اسپارک‌لاین ─────────────────────────────────────────────
-export function Sparkline({ values, width = 280, height = 72, tone = "auto", className }: { values: number[]; width?: number; height?: number; tone?: "auto" | "accent" | "win" | "loss"; className?: string }) {
+// باگِ «یه تیکه‌ی خط می‌افته، یه تیکه نه»: قبلا SVG با preserveAspectRatio="none"
+// کش می‌اومد و خط vector-effect:non-scaling-stroke داشت؛ انیمیشنِ pathLength
+// طولِ dash رو بر حسبِ واحدِ مسیر می‌ساخت ولی non-scaling-stroke اون رو به
+// پیکسلِ صفحه می‌برد — پس فقط بخشی از خط کشیده می‌شد. حالا عرضِ واقعی با
+// ResizeObserver اندازه گرفته می‌شه و SVG دقیقا ۱:۱ رسم می‌شه (بدونِ کش‌آمدن).
+export function Sparkline({ values, height = 72, tone = "auto", className }: { values: number[]; width?: number; height?: number; tone?: "auto" | "accent" | "win" | "loss"; className?: string }) {
   const id = useId().replace(/:/g, "");
-  const p = sparkPath(values, width, height, 6);
-  if (!p) return <div className={cn("db-spark-empty", className)} style={{ height }} />;
+  const box = useRef<HTMLDivElement>(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const set = () => setW(Math.floor(el.getBoundingClientRect().width));
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const p = w > 0 ? sparkPath(values, w, height, 6) : null;
   const last = values[values.length - 1] ?? 0;
   const resolved = tone === "auto" ? (last >= (values[0] ?? 0) ? "win" : "loss") : tone;
   const color = resolved === "win" ? "var(--pnl-win)" : resolved === "loss" ? "var(--pnl-loss)" : "var(--accent)";
   return (
-    <svg className={cn("db-spark", className)} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ height }} aria-hidden="true">
-      <defs>
-        <linearGradient id={`sg${id}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity=".28" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {p.zeroY !== null && <line x1="0" x2={width} y1={p.zeroY} y2={p.zeroY} className="db-spark-zero" />}
-      <motion.path d={p.area} fill={`url(#sg${id})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }} />
-      <motion.path
-        d={p.line}
-        fill="none"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.3, ease: D_EASE }}
-      />
-      <motion.circle
-        cx={p.last.x}
-        cy={p.last.y}
-        r={3.4}
-        fill={color}
-        className="db-spark-dot"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 1.2, type: "spring", stiffness: 380, damping: 18 }}
-      />
-    </svg>
+    <div ref={box} className={cn("db-spark-box", className)} style={{ height }}>
+      {values.length < 2 ? (
+        <div className="db-spark-empty" style={{ height }} />
+      ) : p ? (
+        <svg className="db-spark" width={w} height={height} viewBox={`0 0 ${w} ${height}`} aria-hidden="true">
+          <defs>
+            <linearGradient id={`sg${id}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity=".28" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+            <clipPath id={`sc${id}`}>
+              <motion.rect x={0} y={-10} height={height + 20} initial={{ width: 0 }} animate={{ width: w + 10 }} transition={{ duration: 1.3, ease: D_EASE }} />
+            </clipPath>
+          </defs>
+          {p.zeroY !== null && <line x1="0" x2={w} y1={p.zeroY} y2={p.zeroY} className="db-spark-zero" />}
+          {/* خط و سایه‌ی زیرش با یک clipِ مشترک از چپ به راست ظاهر می‌شن — همیشه
+              هم‌گام و کامل، مستقل از طولِ مسیر */}
+          <g clipPath={`url(#sc${id})`}>
+            <path d={p.area} fill={`url(#sg${id})`} />
+            <path d={p.line} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <motion.circle cx={p.last.x} cy={p.last.y} r={3.4} fill={color} className="db-spark-dot" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.2, type: "spring", stiffness: 380, damping: 18 }} />
+        </svg>
+      ) : null}
+    </div>
   );
 }
 
@@ -293,17 +302,6 @@ export function EmptyState({ icon, text, href, cta }: { icon: DashIconName; text
       {href && cta && (
         <Link href={href} prefetch className="account-outline-btn mentor-btn is-sm db-empty-cta">{cta}</Link>
       )}
-    </div>
-  );
-}
-
-/** کارتِ قفل (ماژولِ پولی بدونِ دسترسی) — نشانه‌ست، enforcement سمتِ سرور/API */
-export function LockedState({ title, href = "/subscription" }: { title: string; href?: string }) {
-  return (
-    <div className="db-empty db-locked">
-      <span className="db-empty-icon"><DashIcon name="lock" /></span>
-      <p>{title} در پلنِ فعلیت فعال نیست</p>
-      <Link href={href} prefetch className="account-outline-btn mentor-btn is-sm db-empty-cta">مشاهده‌ی پلن‌ها</Link>
     </div>
   );
 }
