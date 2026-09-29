@@ -1,7 +1,7 @@
 // منطقِ خالصِ داشبورد (بدونِ React/fetch) — جدا شده تا هم تست‌پذیر باشه
 // هم کامپوننت‌ها فقط نمایش بدن. هیچ import سمت‌کلاینت/سروری این‌جا نیست.
 
-import { isoLocal } from "./jalali";
+import { isoLocal, jalaliToIso, toJalali } from "./jalali";
 import { tasksForDate, ScheduleOpts } from "./schedule";
 
 // ── سلام و «فازِ» روز ─────────────────────────────────────────
@@ -172,4 +172,98 @@ export function compactNumber(n: number): string {
 }
 function trim(v: number) {
   return (Math.round(v * 10) / 10).toString();
+}
+
+// ── نقشه‌ی ثبات: سالانه/ماهانه (تقویمِ شمسی) ──────────────────────────
+
+type DailyMap = Record<string, { tasks: Record<string, boolean> } | undefined>;
+
+/** سال/ماه/روزِ شمسیِ یک ISO محلی */
+export function jalaliOfIso(iso: string): [number, number, number] {
+  const [y, m, d] = iso.split("-").map(Number);
+  return toJalali(y, m, d);
+}
+
+/** طولِ واقعیِ ماهِ شمسی — اسفندِ سالِ کبیسه ۳۰ روزه‌ست (از روی تبدیلِ دقیق) */
+export function jalaliMonthDays(jy: number, jm: number): number {
+  if (jm <= 6) return 31;
+  if (jm <= 11) return 30;
+  return jalaliToIso(jy, 12, 30) ? 30 : 29;
+}
+
+/** درصدِ انجامِ یک روز؛ null یعنی اون روز برنامه‌ای نداشته */
+export function dayPct(iso: string, opts: ScheduleOpts, daily: DailyMap): number | null {
+  const [y, m, d] = iso.split("-").map(Number);
+  const expected = tasksForDate(new Date(y, m - 1, d), opts);
+  if (!expected.length) return null;
+  const rec = daily[iso];
+  const done = rec ? expected.filter((t) => rec.tasks[t.id]).length : 0;
+  return Math.round((done / expected.length) * 100);
+}
+
+export type MonthCell = { iso: string; jd: number; pct: number | null; future: boolean; today: boolean };
+export type MonthMap = {
+  jy: number;
+  jm: number;
+  /** خانه‌های خالیِ قبل از روزِ اول (هفته از شنبه) */
+  lead: number;
+  cells: MonthCell[];
+  /** میانگینِ روزهای برنامه‌دارِ گذشته؛ null یعنی هیچ روزِ برنامه‌داری نبوده */
+  avg: number | null;
+  perfect: number;
+  tracked: number;
+};
+
+export function buildMonth(jy: number, jm: number, todayIso: string, opts: ScheduleOpts, daily: DailyMap): MonthMap {
+  const len = jalaliMonthDays(jy, jm);
+  const cells: MonthCell[] = [];
+  let lead = 0;
+  let sum = 0, tracked = 0, perfect = 0;
+  for (let jd = 1; jd <= len; jd++) {
+    const iso = jalaliToIso(jy, jm, jd);
+    if (!iso) continue;
+    if (jd === 1) {
+      const [y, m, d] = iso.split("-").map(Number);
+      lead = (new Date(y, m - 1, d).getDay() + 1) % 7; // شنبه = ۰
+    }
+    const future = iso > todayIso;
+    const pct = future ? null : dayPct(iso, opts, daily);
+    if (pct !== null) { sum += pct; tracked++; if (pct === 100) perfect++; }
+    cells.push({ iso, jd, pct, future, today: iso === todayIso });
+  }
+  return { jy, jm, lead, cells, avg: tracked ? Math.round(sum / tracked) : null, perfect, tracked };
+}
+
+export type YearMonth = { jm: number; avg: number | null; perfect: number; future: boolean; current: boolean };
+
+/** خلاصه‌ی ۱۲ ماهِ یک سالِ شمسی — برای انتخابگرِ ماه (هر ماه یک خانه‌ی رنگی) */
+export function buildYear(jy: number, todayIso: string, opts: ScheduleOpts, daily: DailyMap): YearMonth[] {
+  const [ty, tm] = jalaliOfIso(todayIso);
+  return Array.from({ length: 12 }, (_, i) => {
+    const jm = i + 1;
+    const first = jalaliToIso(jy, jm, 1);
+    const future = !first || first > todayIso;
+    if (future) return { jm, avg: null, perfect: 0, future: true, current: false };
+    const m = buildMonth(jy, jm, todayIso, opts, daily);
+    return { jm, avg: m.avg, perfect: m.perfect, future: false, current: ty === jy && tm === jm };
+  });
+}
+
+/** طولانی‌ترین زنجیره‌ی روزهای کامل در یک فهرستِ مرتبِ روزها (روزِ بی‌برنامه زنجیره رو نمی‌شکنه) */
+export function bestRun(days: { pct: number | null; future?: boolean; today?: boolean }[]): number {
+  let best = 0, run = 0;
+  for (const c of days) {
+    if (c.future || c.pct === null) continue;
+    if (c.pct === 100) { run++; if (run > best) best = run; }
+    else if (!c.today) run = 0;
+  }
+  return best;
+}
+
+/** ISO اولین و آخرین روزِ یک سالِ شمسی (آخرین روز حداکثر تا امروز) */
+export function jalaliYearRange(jy: number, todayIso: string): { from: string; to: string } | null {
+  const from = jalaliToIso(jy, 1, 1);
+  const last = jalaliToIso(jy, 12, jalaliMonthDays(jy, 12));
+  if (!from || !last || from > todayIso) return null;
+  return { from, to: last < todayIso ? last : todayIso };
 }

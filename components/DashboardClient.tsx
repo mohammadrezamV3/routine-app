@@ -55,18 +55,38 @@ export function DashboardClient({ gate, initial }: { gate: DashboardGate; initia
 
 /**
  * grid-template-areas برای سه عرض — از روی کارت‌هایی که واقعا هستن ساخته
- * می‌شه تا کارتِ مخفی (فلگِ خاموش) هیچ‌وقت یک خانه‌ی خالی در چیدمان نذاره.
+ * می‌شه: کارتِ ماژولِ خریده‌نشده یا فلگِ خاموش اصلا رندر نمی‌شه و هیچ‌وقت یک
+ * خانه‌ی خالی در چیدمان نمی‌ذاره.
  */
-function bentoAreas(bottom: string[]) {
+type Area = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox" | "friends" | "launch";
+function bentoAreas(has: Set<Area>) {
   const q = (row: string[]) => `"${row.join(" ")}"`;
-  const lgBottom = bottom.length === 3 ? bottom : bottom.length === 2 ? [bottom[0], bottom[1], bottom[1]] : bottom.length === 1 ? [bottom[0], bottom[0], bottom[0]] : [];
-  const lg = [q(["today", "heat", "heat"]), q(["today", "ex", "cal"]), q(["trade", "trade", "market"]), ...(lgBottom.length ? [q(lgBottom)] : []), q(["friends", "launch", "launch"])].join(" ");
-  const pairs = [...bottom, "friends"];
-  const md: string[] = [q(["heat", "heat"]), q(["today", "ex"]), q(["today", "cal"]), q(["trade", "trade"]), q(["market", "market"])];
+  const fit = (list: string[], cols: number) => {
+    // یک ردیف با `cols` ستون؛ کارتِ آخر جای خالی رو پر می‌کنه
+    const row = list.slice(0, cols);
+    while (row.length < cols) row.push(row[row.length - 1]);
+    return row;
+  };
+  const fitness = (["ex", "cal"] as Area[]).filter((a) => has.has(a));
+  const bottom = (["mentor", "road", "inbox"] as Area[]).filter((a) => has.has(a));
+  const lg: string[] = [q(["today", "heat", "heat"])];
+  if (fitness.length) lg.push(q(["today", ...fit(fitness, 2)]));
+  if (has.has("trade")) lg.push(q(["trade", "trade", "market"]));
+  if (bottom.length) lg.push(q(fit(bottom, 3)));
+  lg.push(q(["friends", "launch", "launch"]));
+
+  const md: string[] = [q(["heat", "heat"])];
+  if (fitness.length === 2) md.push(q(["today", "ex"]), q(["today", "cal"]));
+  else if (fitness.length === 1) md.push(q(["today", fitness[0]]));
+  else md.push(q(["today", "today"]));
+  if (has.has("trade")) md.push(q(["trade", "trade"]), q(["market", "market"]));
+  const pairs: string[] = [...bottom, "friends"];
   for (let i = 0; i < pairs.length; i += 2) md.push(q(pairs[i + 1] ? [pairs[i], pairs[i + 1]] : [pairs[i], pairs[i]]));
   md.push(q(["launch", "launch"]));
-  const sm = ["today", "ex", "cal", "heat", "trade", "market", ...bottom, "friends", "launch"].map((a) => q([a])).join(" ");
-  return { ["--areas-lg" as any]: lg, ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
+
+  const order: Area[] = ["today", "ex", "cal", "heat", "trade", "market", "mentor", "road", "inbox", "friends", "launch"];
+  const sm = order.filter((a) => has.has(a)).map((a) => q([a])).join(" ");
+  return { ["--areas-lg" as any]: lg.join(" "), ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
 function DashboardBody({ initial }: { initial: { key: string; data: DashboardData } | null }) {
@@ -82,10 +102,22 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const modules = useMemo(() => (data ? new Set(data.modules) : null), [data]);
   const isAdmin = !!(data?.user.isAdmin ?? ((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin));
   const loading = !data && status === "loading";
-  const locked = (m: string) => !!modules && !modules.has(m);
+  // هر بخشِ ماژولِ پولی فقط با خریدِ همون بخش به داشبورد اضافه می‌شه (نه کارتِ
+  // قفل برای همه). بخش‌های چندبخشی (هیرو، کارهای سریع، همه‌ی بخش‌ها، جست‌وجو)
+  // می‌مونن ولی داده‌ی ماژولِ خریده‌نشده رو نمی‌گیرن (سرور براش null می‌ده).
+  const owns = (m: string) => !!modules && modules.has(m);
   const showMentors = features?.mentors !== false;
-  const showRoadmaps = features?.roadmaps === true;
-  const areas = useMemo(() => bentoAreas([...(showMentors ? ["mentor"] : []), ...(showRoadmaps ? ["road"] : []), "inbox"]), [showMentors, showRoadmaps]);
+  const has = useMemo(() => {
+    const set = new Set<Area>(["today", "heat", "inbox", "friends", "launch"]);
+    if (owns("EXERCISE")) set.add("ex");
+    if (owns("CALORIE")) set.add("cal");
+    if (owns("TRADE")) { set.add("trade"); set.add("market"); }
+    if (showMentors) set.add("mentor");
+    if (owns("ROADMAP") && features?.roadmaps === true) set.add("road");
+    return set;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modules, showMentors, features?.roadmaps]);
+  const areas = useMemo(() => bentoAreas(has), [has]);
 
   if (status === "forbidden" && !data) {
     return <div className="db-error"><DashIcon name="lock" /> این بخش موقتا غیرفعال است</div>;
@@ -105,13 +137,13 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
 
       <motion.div className="db-bento" style={areas} variants={V_GRID} initial="hidden" animate="show">
         <DashboardToday ready={routine.ready} tasks={routine.tasks} stats={routine.stats} week={routine.heat.length ? routine.heat[routine.heat.length - 1] : null} onToggle={routine.toggle} />
-        <DashboardHeatmap heat={routine.heat} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} />
-        <DashboardExercise ex={data?.exercise ?? null} loading={loading} locked={locked("EXERCISE")} />
-        <DashboardCalorie cal={data?.calorie ?? null} loading={loading} locked={locked("CALORIE")} />
-        <DashboardTrade trade={data?.trade ?? null} loading={loading} locked={locked("TRADE")} />
-        <DashboardMarket events={data?.calendar?.events ?? null} loading={loading} locked={locked("TRADE")} />
-        {showMentors && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
-        {showRoadmaps && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} locked={locked("ROADMAP")} />}
+        <DashboardHeatmap opts={routine.opts} daily={routine.daily} todayIso={routine.todayIso} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} memberSince={data?.user.memberSince} />
+        {has.has("ex") && <DashboardExercise ex={data?.exercise ?? null} loading={loading} />}
+        {has.has("cal") && <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />}
+        {has.has("trade") && <DashboardTrade trade={data?.trade ?? null} loading={loading} />}
+        {has.has("market") && <DashboardMarket events={data?.calendar?.events ?? null} loading={loading} />}
+        {has.has("mentor") && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
+        {has.has("road") && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} />}
         <DashboardInbox data={data} loading={loading} />
         <motion.div className="db-embed" style={{ gridArea: "friends" }} variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}>
           <DashFriendsCard />

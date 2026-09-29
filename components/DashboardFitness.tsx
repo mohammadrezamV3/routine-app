@@ -8,18 +8,16 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FA_WEEKDAY_SHORT, faNum } from "@/lib/jalali";
 import type { DashCalorie, DashExercise } from "@/lib/dashboardTypes";
-import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, LockedState, Meter, Ring, Skel } from "./DashboardKit";
+import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, Meter, Ring, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
 // ── تمرین ───────────────────────────────────────────────────
-export function DashboardExercise({ ex, loading, locked }: { ex: DashExercise | null; loading: boolean; locked: boolean }) {
+export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; loading: boolean }) {
   return (
     <BentoCard area="ex" className="db-ex" label="تمرین">
       <CardHead icon="dumbbell" title="تمرین" href="/exercise?tab=exercise" hrefLabel="برنامه" />
       {loading ? (
         <FitSkel />
-      ) : locked ? (
-        <LockedState title="برنامه‌ی تمرینی" />
       ) : !ex?.hasPlan ? (
         <EmptyState icon="dumbbell" text="هنوز برنامه‌ی تمرینی نداری — با هوش مصنوعی در یک دقیقه بساز." href="/exercise?tab=exercise" cta="ساختِ برنامه" />
       ) : (
@@ -86,14 +84,12 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
 }
 
 // ── کالری ───────────────────────────────────────────────────
-export function DashboardCalorie({ cal, loading, locked }: { cal: DashCalorie | null; loading: boolean; locked: boolean }) {
+export function DashboardCalorie({ cal, loading }: { cal: DashCalorie | null; loading: boolean }) {
   return (
     <BentoCard area="cal" className="db-cal" label="کالری">
       <CardHead icon="apple" title="کالری" href="/exercise?tab=calorie" hrefLabel="کالری‌شمار" />
       {loading ? (
         <FitSkel />
-      ) : locked ? (
-        <LockedState title="کالری‌شمار" />
       ) : !cal ? null : !cal.target ? (
         <EmptyState icon="target" text="هدفِ کالریت رو تعیین کن تا پیشرفتِ روزانه‌ت این‌جا بیاد." href="/exercise?tab=calorie" cta="تعیینِ هدف" />
       ) : (

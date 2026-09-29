@@ -118,5 +118,8 @@ export function useDashboardRoutine() {
     wakeSleep: wakeSleep ?? { wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP },
     hasWakeSleep: !!wakeSleep,
     toggle,
+    /** برای نقشه‌ی ثباتِ سالانه — برنامه + تیک‌های ۹۰ روزِ اخیر (با تیک‌های زنده‌ی امروز) */
+    opts,
+    daily,
   };
 }

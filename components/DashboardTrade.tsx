@@ -9,20 +9,18 @@ import { motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { cumulative, compactNumber } from "@/lib/dashboardCompute";
 import type { DashTrade } from "@/lib/dashboardTypes";
-import { BentoCard, CardHead, CountUp, EmptyState, LockedState, Meter, Skel, Sparkline } from "./DashboardKit";
+import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from "./DashboardKit";
 
 const CUR_SIGN: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
 const money = (n: number, cur: string) => `${n < 0 ? "−" : n > 0 ? "+" : ""}${CUR_SIGN[cur] ?? ""}${faNum(compactNumber(Math.abs(n)))}${CUR_SIGN[cur] ? "" : ` ${cur}`}`;
 const tone = (n: number) => (n > 0 ? "is-win" : n < 0 ? "is-loss" : "");
 
-export function DashboardTrade({ trade, loading, locked }: { trade: DashTrade | null; loading: boolean; locked: boolean }) {
+export function DashboardTrade({ trade, loading }: { trade: DashTrade | null; loading: boolean }) {
   return (
     <BentoCard area="trade" className="db-trade" label="ترید">
       <CardHead icon="candles" title="عملکردِ ترید" href="/trade/journal" hrefLabel="ژورنال" />
       {loading ? (
         <div className="db-trade-skel"><Skel w="45%" h={26} /><Skel w="100%" h={90} r={12} /><Skel w="100%" h={50} r={12} /></div>
-      ) : locked ? (
-        <LockedState title="ژورنالِ ترید" />
       ) : !trade ? null : trade.accountCount === 0 ? (
         <EmptyState icon="journal" text="اولین حسابِ معاملاتیت رو بساز تا آمار و منحنیِ سودت این‌جا زنده بشه." href="/trade/journal" cta="ساختِ حساب" />
       ) : (
