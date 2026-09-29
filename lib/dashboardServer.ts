@@ -10,13 +10,15 @@
 // «امروز» از کلاینت میاد (date + tz) تا با روتینِ مرورگر یکی باشه؛ روت
 // اعتبارسنجی و محدودش می‌کنه (±۲ روز از الان).
 
-import { ModuleKey, Prisma } from "@prisma/client";
+import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
 import { prisma } from "./prisma";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
 import { computeExerciseStreak, type ExerciseLogRange } from "./exerciseStats";
 import { computeTradeStats } from "./tradeAnalytics";
 import { countRowProgress } from "./roadmapPlan";
 import { ensureFreshCalendar } from "./economicCalendar";
+import { getAdminFlags } from "./adminFlag";
+import { resolveFeaturesFor } from "./featureFlagsServer";
 import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashTrade, DashboardData } from "./dashboardTypes";
 
 // ── تاریخ ────────────────────────────────────────────────────
@@ -65,7 +67,7 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
   if (!plan) {
     return {
       hasPlan: false, planId: null, gymDays: [],
-      today: { dayName, isGymDay: false, focus: null, itemCount: 0, doneItems: 0, started: false, done: false },
+      today: { dayName, isGymDay: false, focus: null, itemCount: 0, doneItems: 0, started: false, done: false, items: [] },
       week: { done: 0, target: 0 }, streak: 0,
       last14: last14Days.map((iso) => ({ iso, planned: false, done: false })),
     };
@@ -109,6 +111,10 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
       doneItems,
       started: todayStarted || doneItems > 0 || !!todayLog?.completed,
       done: !!todayLog?.completed,
+      items: (Array.isArray(todayDay?.items) ? todayDay!.items! : [])
+        .filter((n): n is string => typeof n === "string")
+        .slice(0, 6)
+        .map((name) => ({ name, done: !!todayLog?.completed || !!todayLog?.completedItems.includes(name) })),
     },
     week: { done: weekDone, target: gymDays.length },
     streak,
@@ -237,8 +243,11 @@ function round2(n: number) {
 
 // ── تقویمِ اقتصادی ───────────────────────────────────────────
 export async function buildCalendar(): Promise<{ events: DashEvent[] }> {
-  // تازه‌سازی حداکثر ۹۰۰ms منتظر می‌مونه — داشبورد نباید پشتِ یک فیدِ بیرونیِ کند گیر کنه
-  await Promise.race([ensureFreshCalendar(prisma).catch(() => {}), new Promise((r) => setTimeout(r, 900))]);
+  // تازه‌سازیِ تقویم پس‌زمینه‌ای‌ه و *منتظرش نمی‌مونیم*: قبلا تا ۹۰۰ms صبر می‌شد و
+  // نزدیکِ هر انتشارِ خبر (که sync هر چند ثانیه تکرار می‌شه) تقریبا *همه‌ی*
+  // درخواست‌های داشبورد همین ۹۰۰ms رو می‌خوردن — ریشه‌ی «دیر لود می‌شه». داشبورد
+  // نمای کلیه؛ داده‌ی تازه با پولینگِ بعدی میاد و صفحه‌ی تقویم پولینگِ تندِ خودش رو داره.
+  void ensureFreshCalendar(prisma).catch(() => {});
   const now = Date.now();
   const rows = await prisma.economicEvent.findMany({
     where: { occursAt: { gte: new Date(now - 90 * 60_000), lte: new Date(now + 7 * DAY) }, impact: { in: ["HIGH", "MEDIUM"] } },
@@ -326,4 +335,93 @@ export function activeModuleSet(isSuperAdmin: boolean, rows: { module: ModuleKey
   if (isSuperAdmin) return new Set(Object.values(ModuleKey));
   const now = Date.now();
   return new Set(rows.filter((r) => r.active && (!r.expiresAt || r.expiresAt.getTime() > now)).map((r) => r.module));
+}
+
+// ── کلِ داشبورد ──────────────────────────────────────────────
+/** «امروز»ِ یک منطقه‌ی زمانیِ IANA (مثلا Asia/Tehran) + اختلافش با UTC به دقیقه */
+export function dayInTimezone(timezone: string | null | undefined, at = new Date()): { date: string; tz: number } {
+  try {
+    const tzName = timezone || "Asia/Tehran";
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: tzName, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(at);
+    const g = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+    const asUtc = Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute"));
+    const tz = Math.round((asUtc - Math.floor(at.getTime() / 60000) * 60000) / 60000);
+    const date = `${g("year")}-${String(g("month")).padStart(2, "0")}-${String(g("day")).padStart(2, "0")}`;
+    return resolveDay(date, String(tz));
+  } catch {
+    return resolveDay(null, null);
+  }
+}
+
+/** کلیدِ درخواستِ کلاینت برای همین روز — باید دقیقا با lib/useDashboardData یکی باشه */
+export function dashboardKey(day: { date: string; tz: number }) {
+  return `/api/dashboard?date=${day.date}&tz=${day.tz}`;
+}
+
+/**
+ * همه‌ی بخش‌ها برای یک کاربر — مشترکِ روتِ API و رندرِ سمتِ سرورِ /dashboard.
+ * گیتِ فلگ و rate limit با صدازننده‌ست؛ این‌جا فقط مسدودبودن و دسترسیِ ماژول‌ها.
+ */
+export async function buildDashboard(userId: string, day: { date: string; tz: number }): Promise<DashboardData | "blocked" | "notfound"> {
+  const [user, flags, features] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isBlocked: true, name: true, lastName: true, username: true, avatarUrl: true, createdAt: true,
+        moduleAccess: { select: { module: true, active: true, expiresAt: true } },
+        subscriptions: {
+          where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
+          orderBy: { currentPeriodEnd: "desc" },
+          take: 1,
+          select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
+        },
+      },
+    }),
+    getAdminFlags(userId),
+    resolveFeaturesFor(userId),
+  ]);
+  if (!user) return "notfound";
+  if (user.isBlocked) return "blocked";
+
+  const isSuperAdmin = !!flags?.isSuperAdmin;
+  const ctx: Ctx = { userId, date: day.date, tz: day.tz };
+  const mods = activeModuleSet(isSuperAdmin, user.moduleAccess);
+  const has = (m: ModuleKey) => mods.has(m);
+  const errors: string[] = [];
+  const none = Promise.resolve(null);
+
+  const [exercise, calorie, trade, calendar, roadmaps, mentors, notifications, announcements] = await Promise.all([
+    has(ModuleKey.EXERCISE) ? safe("exercise", errors, () => buildExercise(ctx)) : none,
+    has(ModuleKey.CALORIE) ? safe("calorie", errors, () => buildCalorie(ctx)) : none,
+    has(ModuleKey.TRADE) ? safe("trade", errors, () => buildTrade(ctx)) : none,
+    has(ModuleKey.TRADE) ? safe("calendar", errors, () => buildCalendar()) : none,
+    has(ModuleKey.ROADMAP) && features.roadmaps ? safe("roadmaps", errors, () => buildRoadmaps(ctx)) : none,
+    features.mentors ? safe("mentors", errors, () => buildMentors(ctx)) : none,
+    safe("notifications", errors, () => buildNotifications(ctx)),
+    safe("announcements", errors, () => buildAnnouncements(ctx)),
+  ]);
+
+  const sub = user.subscriptions[0];
+  return {
+    generatedAt: new Date().toISOString(),
+    user: {
+      name: [user.name, user.lastName].filter(Boolean).join(" ") || user.username || "کاربر",
+      avatarUrl: user.avatarUrl ?? null,
+      isAdmin: !!flags?.isAdmin || isSuperAdmin,
+      isSuperAdmin,
+      memberSince: user.createdAt.toISOString(),
+    },
+    plan: sub ? { name: sub.plan.nameFa, key: sub.plan.key, status: sub.status as "ACTIVE" | "TRIAL", endsAt: sub.currentPeriodEnd.toISOString() } : null,
+    modules: Array.from(mods),
+    features,
+    exercise,
+    calorie,
+    trade,
+    calendar,
+    roadmaps,
+    mentors,
+    notifications: notifications ?? { unread: 0, latest: [] },
+    announcements: announcements ?? [],
+    errors,
+  };
 }

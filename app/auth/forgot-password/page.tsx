@@ -113,7 +113,7 @@ export default function ForgotPasswordPage() {
       {step === 1 && (
         <form onSubmit={requestCode} className="auth-step" key="step1">
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-            {"شماره‌همراهی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
+            {"شماره‌همراهی که باهاش ثبت‌نام کردی رو وارد کن، یه کد 5 رقمی برات ارسال می‌شه."}
           </div>
           <AuthField id="identifier" label={"شماره همراه"} icon={<Phone size={15} />}>
             <input
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
             {`کدی که به ${identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.`}
           </div>
-          <AuthField id="code" label={"کد ۵ رقمی"}>
+          <AuthField id="code" label={"کد 5 رقمی"}>
             <input
               id="code" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
               onChange={(e) => setCode(digitsOnly(e.target.value))}

@@ -17,7 +17,7 @@
 // باید بپذیرند. اصلاحِ املایی/ویرایشی نسخه را عوض نمی‌کند.
 
 export const MENTOR_TERMS_VERSION = "2026-09-28";
-export const MENTOR_TERMS_UPDATED_LABEL = "مهر ۱۴۰۵";
+export const MENTOR_TERMS_UPDATED_LABEL = "مهر 1405";
 export const MENTOR_TERMS_PATH = "/terms/mentors";
 
 /** کدِ ماشینیِ خطای ۴۰۰ — کلاینت با دیدنش چک‌باکسِ پذیرش را نشان می‌دهد */

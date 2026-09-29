@@ -139,7 +139,7 @@ export default function AdminExerciseMediaPage() {
       return;
     }
     if (file.size > MAX_RAW_BYTES) {
-      setError("فایل بیش از حد بزرگ است (حداکثر ۱۵ مگابایت)");
+      setError("فایل بیش از حد بزرگ است (حداکثر 15 مگابایت)");
       resetFile();
       return;
     }

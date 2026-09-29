@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            `${freeLimit.toLocaleString("fa-IR")} پیامِ رایگانِ نومو تمام شده. با فعال‌کردنِ اشتراک، ` +
+            `${freeLimit} پیامِ رایگانِ نومو تمام شده. با فعال‌کردنِ اشتراک، ` +
             `بدونِ محدودیت می‌توانی برنامه‌هایت را با گفت‌وگو بچینی.`,
           quotaExhausted: true,
           quota: { unlimited: false, used: usesBefore, limit: freeLimit, remaining: 0 },

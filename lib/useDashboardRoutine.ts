@@ -13,7 +13,11 @@ import { keyMatches, useLiveRefresh } from "./liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "./wakeSleep";
 import { buildHeatmap, HeatCell, streakFromHeatmap } from "./dashboardCompute";
 
-export const HEAT_WEEKS = 18;
+// ۱۳ هفته عمدا: شروعِ نقشه (شنبه‌ی ۱۲ هفته قبل) حداکثر ۹۰ روز عقب می‌ره، یعنی
+// کاملا داخلِ بازه‌ی روزانه‌ای که bootstrap همراهِ صفحه می‌فرسته (امروز−۹۰..+۷)
+// — پس هیچ درخواستِ جدایی برای نقشه زده نمی‌شه. ۱۸ هفته‌ی قبلی یک /range اضافه
+// روی مسیرِ لود می‌ساخت.
+export const HEAT_WEEKS = 13;
 
 export type TodayTask = {
   id: string;
@@ -45,7 +49,8 @@ export function useDashboardRoutine() {
   }, []);
   const loadRange = useCallback(() => {
     const now = new Date();
-    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - HEAT_WEEKS * 7 - 7);
+    const diffToSat = (now.getDay() + 1) % 7;
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToSat - (HEAT_WEEKS - 1) * 7);
     getDailyRange(isoLocal(from), isoLocal(now))
       .then((m) => { setDailyMap(m); setRangeLoaded(true); })
       .catch(() => setRangeLoaded(true));
@@ -113,6 +118,8 @@ export function useDashboardRoutine() {
     wakeSleep: wakeSleep ?? { wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP },
     hasWakeSleep: !!wakeSleep,
     toggle,
+    /** برای نقشه‌ی ثباتِ سالانه — برنامه + تیک‌های ۹۰ روزِ اخیر (با تیک‌های زنده‌ی امروز) */
     opts,
+    daily,
   };
 }

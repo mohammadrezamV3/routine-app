@@ -36,10 +36,10 @@ export const LEVEL_OPTIONS = [
 ] as const;
 
 export const HOURS_OPTIONS = [
-  { value: "3", label: "کمتر از ۵ ساعت", hours: 3 },
-  { value: "8", label: "۵ تا ۱۰ ساعت", hours: 8 },
-  { value: "15", label: "۱۰ تا ۲۰ ساعت", hours: 15 },
-  { value: "25", label: "بیشتر از ۲۰ ساعت", hours: 25 },
+  { value: "3", label: "کمتر از 5 ساعت", hours: 3 },
+  { value: "8", label: "5 تا 10 ساعت", hours: 8 },
+  { value: "15", label: "10 تا 20 ساعت", hours: 15 },
+  { value: "25", label: "بیشتر از 20 ساعت", hours: 25 },
 ] as const;
 
 export type LevelValue = (typeof LEVEL_OPTIONS)[number]["value"];
@@ -136,10 +136,16 @@ export type PlanIssue = { code: string; message: string };
 // غایب. normalize هر خروجی‌ای — و هر ردیفِ قدیمیِ دیتابیس — را به یک
 // شکلِ قابلِ رندر تبدیل می‌کند تا UI هیچ‌وقت optional-chain نزند.
 
+// ارقام در کلِ سایت انگلیسی‌اند — مدل گاهی فارسی می‌نویسه، و رودمپ‌های قدیمیِ
+// دیتابیس هم از همین normalize رد می‌شن، پس هر دو همین‌جا لاتین می‌شن.
+function latinDigits(s: string): string {
+  return s.replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+}
+
 function text(v: unknown, max: number = PLAN_LIMITS.maxTextLen): string {
   if (typeof v === "number") return String(v);
   if (typeof v !== "string") return "";
-  return v.replace(/\s+/g, " ").trim().slice(0, max);
+  return latinDigits(v.replace(/\s+/g, " ").trim()).slice(0, max);
 }
 
 function list(v: unknown, max: number = PLAN_LIMITS.maxListItems): string[] {
@@ -320,7 +326,7 @@ export function normalizePlan(raw: any): RoadmapPlan {
     summary: text(raw?.summary, 1_200),
     // متنِ راهنما تنها چیزی‌ست که نباید تک‌خطی شود — شکستِ خط بخشی از
     // معنایش است (تیترها و فهرست‌ها)، پس فقط trim و سقفِ طول.
-    guide: typeof raw?.guide === "string" ? raw.guide.trim().slice(0, PLAN_LIMITS.maxGuideChars) : "",
+    guide: typeof raw?.guide === "string" ? latinDigits(raw.guide.trim()).slice(0, PLAN_LIMITS.maxGuideChars) : "",
     totalDuration: text(raw?.totalDuration ?? raw?.total_duration, 60),
     tools: objects(raw?.tools, tool, PLAN_LIMITS.maxListItems * 2),
     meta: normalizeMeta(raw?.meta),
@@ -359,11 +365,11 @@ export function validateOutline(plan: RoadmapPlan): PlanIssue[] {
 /** جزئیاتِ یک مرحله: حداقلِ چیزی که یک مرحله را «قابلِ اجرا» می‌کند. */
 export function validateStageDetail(st: PlanStage): PlanIssue[] {
   const issues: PlanIssue[] = [];
-  if (st.topics.length < 2) issues.push({ code: "few_topics", message: "حداقل ۲ سرفصل (topics) لازم است." });
+  if (st.topics.length < 2) issues.push({ code: "few_topics", message: "حداقل 2 سرفصل (topics) لازم است." });
   if (st.topics.some((t) => !t.detail)) {
     issues.push({ code: "topic_no_detail", message: "هر سرفصل باید detail داشته باشد (توضیحِ کامل، نه فقط عنوان)." });
   }
-  if (st.tasks.length < 2) issues.push({ code: "few_tasks", message: "حداقل ۲ کارِ عملی (tasks) لازم است." });
+  if (st.tasks.length < 2) issues.push({ code: "few_tasks", message: "حداقل 2 کارِ عملی (tasks) لازم است." });
   if (!st.done.length) issues.push({ code: "no_checkpoint", message: "معیارِ اتمام (done) خالی است." });
   return issues;
 }

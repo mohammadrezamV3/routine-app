@@ -353,15 +353,15 @@ const ODD_DAYS = [0, 2, 4]; // یکشنبه، سه‌شنبه، پنجشنبه
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 const ROUTINE_ITEMS: ItemSpec[] = [
-  { title: "حل تمرین حسابان", details: "۲۰ تست از فصل مشتق، بعد تصحیح و علامت‌گذاری غلط‌ها", days: SAT_TO_WED, startTime: "16:00", durationMin: 90 },
+  { title: "حل تمرین حسابان", details: "20 تست از فصل مشتق، بعد تصحیح و علامت‌گذاری غلط‌ها", days: SAT_TO_WED, startTime: "16:00", durationMin: 90 },
   { title: "مرور جزوه‌ی هندسه", details: "فقط خلاصه‌ی قضیه‌ها؛ حل تمرین نه", days: [1, 3], startTime: "18:00", durationMin: 45 },
-  { title: "آزمون زمان‌دار", details: "۳۰ تست در ۴۵ دقیقه، بدون ماشین‌حساب", days: [4], startTime: "10:00", durationMin: 60 },
-  { title: "خواب قبل از ۲۳:۳۰", days: ALL_DAYS, startTime: "23:30" },
+  { title: "آزمون زمان‌دار", details: "30 تست در 45 دقیقه، بدون ماشین‌حساب", days: [4], startTime: "10:00", durationMin: 60 },
+  { title: "خواب قبل از 23:30", days: ALL_DAYS, startTime: "23:30" },
 ];
 
 const STUDY_ITEMS: ItemSpec[] = [
-  { title: "مطالعه‌ی زیست", details: "فصل ۳ و ۴؛ هر روز یک گفتار", days: SAT_TO_WED, startTime: "08:00", durationMin: 120 },
-  { title: "تست شیمی", details: "۴۰ تست با تحلیل", days: EVEN_DAYS, startTime: "15:00", durationMin: 75 },
+  { title: "مطالعه‌ی زیست", details: "فصل 3 و 4؛ هر روز یک گفتار", days: SAT_TO_WED, startTime: "08:00", durationMin: 120 },
+  { title: "تست شیمی", details: "40 تست با تحلیل", days: EVEN_DAYS, startTime: "15:00", durationMin: 75 },
   { title: "پیاده‌روی", days: ALL_DAYS, startTime: "19:00", durationMin: 30 },
 ];
 
@@ -371,7 +371,7 @@ const WORKOUT_A: ItemSpec[] = [
   { title: "بارفیکس", details: "اگه کامل نمی‌شه، با کش کمکی", days: EVEN_DAYS, sets: 3, reps: "6-8", restSec: 90 },
   { title: "ددلیفت رومانیایی", days: ODD_DAYS, sets: 3, reps: "10", weightKg: 50, restSec: 120 },
   { title: "پرس سرشانه دمبل", days: ODD_DAYS, sets: 3, reps: "10-12", weightKg: 12, restSec: 60 },
-  { title: "پلانک", details: "هر ست ۴۵ ثانیه", days: ODD_DAYS, sets: 3, restSec: 45 },
+  { title: "پلانک", details: "هر ست 45 ثانیه", days: ODD_DAYS, sets: 3, restSec: 45 },
 ];
 
 const WORKOUT_B: ItemSpec[] = [
@@ -740,7 +740,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       await S.program(saraAli, {
         type: "ROUTINE", title: "برنامه‌ی هفتگی ریاضی — مهر", status: "ACTIVE", startOffset: -18, endOffset: 12,
         description: "تمرکز روی مشتق و هندسه‌ی تحلیلی تا آزمون آبان.",
-        note: "اگه تست‌های مشتق زیر ۶۰ درصد شد، جمعه یک جلسه‌ی مرور اضافه کن و بهم خبر بده.",
+        note: "اگه تست‌های مشتق زیر 60 درصد شد، جمعه یک جلسه‌ی مرور اضافه کن و بهم خبر بده.",
         items: ROUTINE_ITEMS, logs: true,
         dayNotes: [{ offset: -2, body: "مدرسه کلاس جبرانی گذاشت؛ حل تمرین نصفه ماند." }],
         feedback: [{ body: "آزمون پنجشنبه خوب بود؛ سرعتت از هفته‌ی قبل بهتره.", read: true }, { body: "مرور هندسه دو بار جا افتاده، این هفته حتما انجامش بده.", read: false }],
@@ -759,8 +759,8 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
 
       const saraZahra = await S.mentorship(id("sara"), id("zahra"), "ACTIVE", { categories: ["ROUTINE"], startedDaysAgo: 12 });
       await S.program(saraZahra, {
-        type: "ROUTINE", title: "برنامه‌ی جبرانی فصل ۲", status: "PENDING", startOffset: 2, endOffset: 30,
-        note: "قبل از شروع، جزوه‌ی فصل ۲ رو کامل داشته باش.", items: ROUTINE_ITEMS.slice(0, 3),
+        type: "ROUTINE", title: "برنامه‌ی جبرانی فصل 2", status: "PENDING", startOffset: 2, endOffset: 30,
+        note: "قبل از شروع، جزوه‌ی فصل 2 رو کامل داشته باش.", items: ROUTINE_ITEMS.slice(0, 3),
       });
       await S.program(saraZahra, {
         type: "ROUTINE", title: "برنامه‌ی آزمون میان‌ترم", status: "DRAFT", version: 2, startOffset: 5, endOffset: 20,
@@ -772,7 +772,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
 
       const saraFatemeh = await S.mentorship(id("sara"), id("fatemeh"), "ENDED", { categories: ["ROUTINE"], startedDaysAgo: 90, endedDaysAgo: 20 });
       await S.program(saraFatemeh, { type: "ROUTINE", title: "آمادگی امتحان نهایی", status: "COMPLETED", startOffset: -80, endOffset: -25, items: ROUTINE_ITEMS.slice(0, 2), logs: true });
-      await S.review(saraFatemeh, 5, "نمره‌ی نهایی ریاضی‌ام از ۱۴ به ۱۸ رسید.");
+      await S.review(saraFatemeh, 5, "نمره‌ی نهایی ریاضی‌ام از 14 به 18 رسید.");
 
       // ── امیر (FITNESS + NUTRITION) ──
       const amirMohammad = await S.mentorship(id("amir"), id("mohammad"), "ACTIVE", { categories: ["FITNESS"], startedDaysAgo: 30 });
@@ -782,7 +782,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
         note: "وزنه‌ها رو فقط وقتی بالا ببر که همه‌ی ست‌ها رو با فرم درست کامل کردی.",
         items: WORKOUT_A, logs: true, withToday: true,
         dayNotes: [{ offset: -1, body: "زانو کمی درد داشت؛ اسکوات را سبک‌تر زدم." }],
-        feedback: [{ body: "اسکوات این هفته عالی بود؛ هفته‌ی بعد ۶۲٫۵ کیلو.", read: false }],
+        feedback: [{ body: "اسکوات این هفته عالی بود؛ هفته‌ی بعد 62.5 کیلو.", read: false }],
       });
       await S.program(amirMohammad, {
         type: "WORKOUT", title: "حجم — دوره‌ی دوم", status: "ACCEPTED", startOffset: 36, endOffset: 80,
@@ -805,7 +805,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       await S.program(amirAli, { type: "WORKOUT", title: "تمام‌بدن سه‌روزه", status: "CANCELLED", startOffset: -12, endOffset: 20, note: "به‌خاطر امتحانات لغو شد.", items: WORKOUT_A.slice(0, 3) });
 
       // ── نگار (ROUTINE، در صفِ احراز) ──
-      await S.mentorship(id("negar"), id("mohammad"), "PENDING", { categories: ["ROUTINE"], message: "کنکور تجربی ۱۴۰۶ دارم.", createdDaysAgo: 3 });
+      await S.mentorship(id("negar"), id("mohammad"), "PENDING", { categories: ["ROUTINE"], message: "کنکور تجربی 1406 دارم.", createdDaysAgo: 3 });
 
       // ── رضا (NUTRITION، معلق) ──
       const rezaNarges = await S.mentorship(id("reza"), id("narges"), "ACTIVE", { categories: ["NUTRITION"], startedDaysAgo: 25 });
@@ -878,7 +878,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       });
       await S.messages(saraOwner, [
         [true, "سلام، برنامه‌ی این هفته فعال شد."],
-        [false, "ممنون. ساعت ۱۶ برای حل تمرین مناسبه."],
+        [false, "ممنون. ساعت 16 برای حل تمرین مناسبه."],
         [true, "عالی. برنامه‌ی آزمون آبان رو هم فرستادم؛ نگاهش کن."],
         [true, "اگه سؤالی بود همین‌جا بپرس."],
       ], 2);
@@ -930,7 +930,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       if (pType) {
         await S.program(ownerPouya, {
           type: pType, title: "برنامه‌ی اصلاح‌شده", status: "DRAFT", version: 2, startOffset: 3, endOffset: 30,
-          changeRequestNote: "صبح‌ها کار می‌کنم؛ همه‌ی آیتم‌ها رو بعد از ساعت ۱۷ بذار.", items: pItems(pType).slice(0, 2),
+          changeRequestNote: "صبح‌ها کار می‌کنم؛ همه‌ی آیتم‌ها رو بعد از ساعت 17 بذار.", items: pItems(pType).slice(0, 2),
         });
         await S.program(ownerPouya, { type: pType, title: "برنامه‌ی هفته‌ی اول", status: "PENDING", startOffset: 1, endOffset: 7, note: "یک هفته‌ی آزمایشی.", items: pItems(pType).slice(0, 2) });
         await S.program(ownerPouya, { type: pType, title: "برنامه‌ی پیش‌نویس", status: "DRAFT", startOffset: 10, endOffset: 40, items: pItems(pType).slice(0, 1) });

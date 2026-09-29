@@ -191,7 +191,7 @@ export function AiExercisePlanWizard({
       {step === "gear" && (
         <>
           <label className="exercise-wizard-title">چندمین ماهته که تمرین می‌کنی؟</label>
-          <NumberInput className="wsearch-newform-name" placeholder="مثلا ۳" value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
+          <NumberInput className="wsearch-newform-name" placeholder="مثلا 3" value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
           {fieldErrors.trainingMonth && (
             <div className="field-error-msg field-error-msg-inline">
               <AlertCircle size={12} />

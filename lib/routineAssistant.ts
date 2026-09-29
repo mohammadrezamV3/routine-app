@@ -14,7 +14,7 @@
 // فقط تایپ — `lib/storage.ts` منطقِ سمتِ کلاینت (localStorage/fetch) دارد و
 // نباید داخلِ باندلِ سرور کشیده شود؛ `import type` تضمین می‌کند که نمی‌شود.
 import type { CustomOccurrence, Importance } from "./storage";
-import { addDaysIso, dayBeforeIso, jsDayOfIso, sameWeekIso, timeStartMinutes, toEnDigits, toFaDigits, WEEK_ORDER } from "./schedule";
+import { addDaysIso, dayBeforeIso, jsDayOfIso, sameWeekIso, timeStartMinutes, toEnDigits, WEEK_ORDER } from "./schedule";
 import { isoLocal, J_MONTHS, jalaliToIso, toJalali, faNum } from "./jalali";
 import { normalizeTimeToFa } from "./timeUtils";
 import { rangesOverlap } from "./conflict";
@@ -134,7 +134,7 @@ function isBlank(v: unknown): boolean {
   return v === undefined || v === null || v === "";
 }
 
-/** ساعتِ معتبر «HH:MM» با ارقامِ فارسی، یا null اگر ورودی بدشکل/خارج از بازه بود */
+/** ساعتِ معتبر «HH:MM» با ارقامِ انگلیسی، یا null اگر ورودی بدشکل/خارج از بازه بود */
 export function parseClock(v: unknown): { fa: string; min: number } | null {
   if (typeof v !== "string") return null;
   const en = toEnDigits(v).trim();
@@ -499,7 +499,7 @@ export function applyOps(
     if (isBlank(raw.start) && isBlank(raw.end)) return { kind: "keep" };
     if (isBlank(raw.start)) return { error: `ساعتِ شروعِ «${name}» را نفهمیدم.` };
     const start = parseClock(raw.start);
-    if (!start) return { error: `ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «۸:۳۰» بنویس.` };
+    if (!start) return { error: `ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «8:30» بنویس.` };
     const end = isBlank(raw.end) ? null : parseClock(raw.end);
     if (!isBlank(raw.end) && !end) return { error: `ساعتِ پایانِ «${name}» را نفهمیدم.` };
     if (end && end.min <= start.min) return { error: `ساعتِ پایانِ «${name}» باید بعد از ساعتِ شروع باشد.` };
@@ -594,7 +594,7 @@ export function applyOps(
       // ساعت *اختیاری* است. نبودش یعنی برنامه‌ی بی‌ساعت، نه ساعتِ حدسی.
       const hasStart = !isBlank(raw.start);
       const start = hasStart ? parseClock(raw.start) : null;
-      if (hasStart && !start) { problems.push(`ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «۸:۳۰» بنویس.`); continue; }
+      if (hasStart && !start) { problems.push(`ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «8:30» بنویس.`); continue; }
       const end = isBlank(raw.end) ? null : parseClock(raw.end);
       if (!isBlank(raw.end) && !end) { problems.push(`ساعتِ پایانِ «${name}» را نفهمیدم.`); continue; }
       if (start && end && end.min <= start.min) {
@@ -649,10 +649,10 @@ export function applyOps(
           }
           if (created > 0) {
             const everyLabel = everyRaw % 60 === 0
-              ? `${toFaDigits(String(everyRaw / 60))} ساعت`
-              : `${toFaDigits(String(everyRaw))} دقیقه`;
-            let msg = `«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toFaDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toFaDigits(String(created))} بار اضافه شد.`;
-            if (skipped > 0) msg += ` (${toFaDigits(String(skipped))} بار به‌خاطرِ تداخل با برنامه‌های دیگر رد شد)`;
+              ? `${toEnDigits(String(everyRaw / 60))} ساعت`
+              : `${toEnDigits(String(everyRaw))} دقیقه`;
+            let msg = `«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toEnDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toEnDigits(String(created))} بار اضافه شد.`;
+            if (skipped > 0) msg += ` (${toEnDigits(String(skipped))} بار به‌خاطرِ تداخل با برنامه‌های دیگر رد شد)`;
             applied.push(msg);
           } else if (!capped) {
             problems.push(`«${name}» ${where(t)} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`);
@@ -737,7 +737,7 @@ export function applyOps(
       if (sourceIso && !destIso) destIso = newJsDay === target.jsDay ? sourceIso : sameWeekIso(sourceIso, newJsDay);
 
       const newTime =
-        spec.kind === "clear" ? "" : spec.kind === "set" ? timeLabel(spec.start.fa, spec.end?.fa) : target.time;
+        spec.kind === "clear" ? "" : spec.kind === "set" ? timeLabel(spec.start.fa, spec.end?.fa) : toEnDigits(target.time ?? "");
       const newStart = spec.kind === "set" ? spec.start : null;
       const newEnd = spec.kind === "set" ? spec.end : null;
       const curStart = occStart(target);
@@ -789,8 +789,8 @@ export function applyOps(
       successor.set(target.id, next.id);
       if (op === "retime") {
         applied.push(spec.kind === "clear"
-          ? `ساعتِ «${target.name}» (${target.time}) برداشته شد.`
-          : `ساعتِ «${target.name}» از ${target.time || "بی‌ساعت"} به ${newTime} تغییر کرد.`);
+          ? `ساعتِ «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`
+          : `ساعتِ «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`);
       } else {
         applied.push(`«${target.name}» از ${DAY_NAME_FA[target.jsDay]} به ${DAY_NAME_FA[newJsDay]}${newTime ? ` ساعتِ ${newTime}` : ""} منتقل شد${newTime ? "" : " (همچنان بدونِ ساعت)"}.`);
       }
@@ -844,7 +844,7 @@ export function applyOps(
     if (op === "delete") {
       const target = resolve(raw.ref);
       if ("error" in target) { problems.push(target.error); continue; }
-      const whenLabel = target.time ? `${DAY_NAME_FA[target.jsDay]} ${target.time}` : DAY_NAME_FA[target.jsDay];
+      const whenLabel = target.time ? `${DAY_NAME_FA[target.jsDay]} ${toEnDigits(target.time)}` : DAY_NAME_FA[target.jsDay];
 
       if (!isBlank(raw.date)) {
         const iso = parseDateInput(raw.date, todayIso);

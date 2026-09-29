@@ -14,7 +14,7 @@ const ic = (Icon: typeof UserRound, size: number) => <Icon size={size} strokeWid
 function StepMark({ n, done }: { n: number; done: boolean }) {
   return (
     <span className={`mentor-step-mark${done ? " is-done" : ""}`} aria-hidden>
-      {done ? <Check size={14} strokeWidth={2} /> : n.toLocaleString("fa-IR")}
+      {done ? <Check size={14} strokeWidth={2} /> : String(n)}
     </span>
   );
 }

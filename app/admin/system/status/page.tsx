@@ -22,7 +22,7 @@ function formatUptime(sec: number): string {
 }
 
 function formatClock(d: Date): string {
-  return d.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return d.toLocaleTimeString("fa-IR-u-nu-latn", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export default function AdminSystemStatusPage() {
@@ -73,7 +73,7 @@ export default function AdminSystemStatusPage() {
       <div>
         <div className="admin-page-kicker">وضعیت سرورها و منابع</div>
         <div className="admin-section-hint">
-          {failed && status ? "آخرین تازه‌سازی ناموفق بود — داده‌ی زیر مربوط به " : "هر ۳۰ ثانیه خودکار تازه می‌شه — آخرین به‌روزرسانی "}
+          {failed && status ? "آخرین تازه‌سازی ناموفق بود — داده‌ی زیر مربوط به " : "هر 30 ثانیه خودکار تازه می‌شه — آخرین به‌روزرسانی "}
           <span className="admin-updated-at">{updatedAt ? formatClock(updatedAt) : "…"}</span>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function AdminSystemStatusPage() {
         <KpiTile label="Uptime" value={formatUptime(status.process.uptimeSeconds)} index={0} />
         <KpiTile label="حافظه مصرفی" value={`${formatNumber(status.process.memoryUsedMb)} MB`} index={1} />
         <KpiTile label="حافظه کل هاست" value={`${formatNumber(status.process.memoryTotalMb)} MB`} index={2} />
-        <KpiTile label="Load Average (۱ دقیقه)" value={status.process.loadAvg1m != null ? status.process.loadAvg1m.toFixed(2) : "—"} index={3} />
+        <KpiTile label="Load Average (1 دقیقه)" value={status.process.loadAvg1m != null ? status.process.loadAvg1m.toFixed(2) : "—"} index={3} />
         <KpiTile label="نسخه Node" value={status.process.nodeVersion} index={4} />
       </KpiGrid>
 

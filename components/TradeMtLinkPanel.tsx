@@ -154,7 +154,7 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
               </div>
               <div className="trade-mt-note">
                 این کد یک‌بارمصرف است و
-                {codeExpires ? ` تا ${formatTradeDateTime(codeExpires, calSystem)} ` : " تا ۱۵ دقیقه "}
+                {codeExpires ? ` تا ${formatTradeDateTime(codeExpires, calSystem)} ` : " تا 15 دقیقه "}
                 اعتبار دارد. در صورت انقضا، کد جدیدی بسازید.
               </div>
             </div>

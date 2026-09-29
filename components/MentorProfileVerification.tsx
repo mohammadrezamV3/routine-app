@@ -99,7 +99,7 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
           />
         );
       })}
-      <p className="mentor-field-hint mentor-doc-rules">JPG، PNG، WebP یا PDF تا ۵ مگابایت؛ فقط تو و ادمین‌های آریون فایل‌ها را می‌بینید</p>
+      <p className="mentor-field-hint mentor-doc-rules">JPG، PNG، WebP یا PDF تا 5 مگابایت؛ فقط تو و ادمین‌های آریون فایل‌ها را می‌بینید</p>
     </MentorSection>
   );
 }

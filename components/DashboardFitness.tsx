@@ -8,19 +8,17 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FA_WEEKDAY_SHORT, faNum } from "@/lib/jalali";
 import type { DashCalorie, DashExercise } from "@/lib/dashboardTypes";
-import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, LockedState, Meter, Ring, Skel } from "./DashboardKit";
+import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, Meter, Ring, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 import { useDashAction } from "./DashboardActions";
 
 // ── تمرین ───────────────────────────────────────────────────
-export function DashboardExercise({ ex, loading, locked }: { ex: DashExercise | null; loading: boolean; locked: boolean }) {
+export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; loading: boolean }) {
   return (
     <BentoCard area="ex" className="db-ex" label="تمرین">
       <CardHead icon="dumbbell" title="تمرین" href="/exercise?tab=exercise" hrefLabel="برنامه" />
       {loading ? (
         <FitSkel />
-      ) : locked ? (
-        <LockedState title="برنامه‌ی تمرینی" />
       ) : !ex?.hasPlan ? (
         <EmptyState icon="dumbbell" text="هنوز برنامه‌ی تمرینی نداری — با هوش مصنوعی در یک دقیقه بساز." href="/exercise?tab=exercise" cta="ساختِ برنامه" />
       ) : (
@@ -50,7 +48,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         </div>
       </div>
 
-      <div className="db-week-dots" aria-label="۱۴ روزِ اخیر">
+      <div className="db-week-dots" aria-label="14 روزِ اخیر">
         {ex.last14.map((d, i) => {
           const [y, m, dd] = d.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, dd).getDay()];
@@ -64,6 +62,20 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         })}
       </div>
 
+      {t.isGymDay && (t.items ?? []).length > 0 && (
+        <ul className="db-ex-items" aria-label="حرکت‌های امروز">
+          {t.items.map((it, i) => (
+            <motion.li key={it.name + i} className={it.done ? "is-done" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
+              <span className="db-ex-tick" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="m4.5 8.3 2.3 2.2 4.7-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+              <span className="db-ex-name">{it.name}</span>
+            </motion.li>
+          ))}
+          {t.itemCount > t.items.length && <li className="db-ex-more">+{faNum(t.itemCount - t.items.length)} حرکتِ دیگه</li>}
+        </ul>
+      )}
+
       <Link href="/exercise?tab=exercise" prefetch className={state === "todo" || state === "going" ? "trade-primary-btn db-fit-cta" : "account-outline-btn mentor-btn db-fit-cta"}>
         {state === "todo" || state === "going" ? <DashIcon name="dumbbell" className="dbi-live" /> : null}
         {cta}
@@ -73,14 +85,12 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
 }
 
 // ── کالری ───────────────────────────────────────────────────
-export function DashboardCalorie({ cal, loading, locked }: { cal: DashCalorie | null; loading: boolean; locked: boolean }) {
+export function DashboardCalorie({ cal, loading }: { cal: DashCalorie | null; loading: boolean }) {
   return (
     <BentoCard area="cal" className="db-cal" label="کالری">
       <CardHead icon="apple" title="کالری" href="/exercise?tab=calorie" hrefLabel="کالری‌شمار" />
       {loading ? (
         <FitSkel />
-      ) : locked ? (
-        <LockedState title="کالری‌شمار" />
       ) : !cal ? null : !cal.target ? (
         <EmptyState icon="target" text="هدفِ کالریت رو تعیین کن تا پیشرفتِ روزانه‌ت این‌جا بیاد." href="/exercise?tab=calorie" cta="تعیینِ هدف" />
       ) : (
@@ -122,7 +132,7 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
         ))}
       </div>
 
-      <div className="db-kbars" aria-label="۷ روزِ اخیر">
+      <div className="db-kbars" aria-label="7 روزِ اخیر">
         {cal.week.map((w, i) => {
           const [y, m, d] = w.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()];

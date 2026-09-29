@@ -196,14 +196,14 @@ export default function AccountProfilePage() {
     const uname = username.trim().replace(/^@/, "");
     if (name && !isValidPersianName(name)) { setSaveError("نام باید فقط با حروف فارسی نوشته شود"); return; }
     if (family && !isValidPersianName(family)) { setSaveError("نام خانوادگی باید فقط با حروف فارسی نوشته شود"); return; }
-    if (uname && !isValidUsername(uname)) { setSaveError("یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد"); return; }
+    if (uname && !isValidUsername(uname)) { setSaveError("یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد"); return; }
 
     const height = heightCm.trim() ? Number(heightCm) : undefined;
     const weight = weightKg.trim() ? Number(weightKg) : undefined;
     const age = ageYears.trim() ? Number(ageYears) : undefined;
-    if (height != null && (!Number.isFinite(height) || height < 100 || height > 250)) { setSaveError("قد باید بین ۱۰۰ تا ۲۵۰ سانتی‌متر باشه"); return; }
-    if (weight != null && (!Number.isFinite(weight) || weight < 20 || weight > 300)) { setSaveError("وزن باید بین ۲۰ تا ۳۰۰ کیلوگرم باشه"); return; }
-    if (age != null && (!Number.isFinite(age) || age < 10 || age > 100)) { setSaveError("سن باید بین ۱۰ تا ۱۰۰ سال باشه"); return; }
+    if (height != null && (!Number.isFinite(height) || height < 100 || height > 250)) { setSaveError("قد باید بین 100 تا 250 سانتی‌متر باشه"); return; }
+    if (weight != null && (!Number.isFinite(weight) || weight < 20 || weight > 300)) { setSaveError("وزن باید بین 20 تا 300 کیلوگرم باشه"); return; }
+    if (age != null && (!Number.isFinite(age) || age < 10 || age > 100)) { setSaveError("سن باید بین 10 تا 100 سال باشه"); return; }
 
     setSaving(true);
     try {

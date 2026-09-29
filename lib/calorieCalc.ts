@@ -108,16 +108,16 @@ const MEAL_SPLITS: Record<number, { key: string; label: string; ratio: number }[
     { key: "breakfast", label: "صبحانه", ratio: 0.22 },
     { key: "lunch", label: "ناهار", ratio: 0.26 },
     { key: "dinner", label: "شام", ratio: 0.26 },
-    { key: "snack1", label: "میان‌وعده ۱", ratio: 0.13 },
-    { key: "snack2", label: "میان‌وعده ۲", ratio: 0.13 },
+    { key: "snack1", label: "میان‌وعده 1", ratio: 0.13 },
+    { key: "snack2", label: "میان‌وعده 2", ratio: 0.13 },
   ],
   6: [
     { key: "breakfast", label: "صبحانه", ratio: 0.2 },
-    { key: "snack1", label: "میان‌وعده ۱", ratio: 0.1 },
+    { key: "snack1", label: "میان‌وعده 1", ratio: 0.1 },
     { key: "lunch", label: "ناهار", ratio: 0.25 },
-    { key: "snack2", label: "میان‌وعده ۲", ratio: 0.1 },
+    { key: "snack2", label: "میان‌وعده 2", ratio: 0.1 },
     { key: "dinner", label: "شام", ratio: 0.25 },
-    { key: "snack3", label: "میان‌وعده ۳", ratio: 0.1 },
+    { key: "snack3", label: "میان‌وعده 3", ratio: 0.1 },
   ],
 };
 

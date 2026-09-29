@@ -493,7 +493,7 @@ function tradeFactValue(
     case "commission": return e.commission === null ? null : faNum(e.commission);
     case "swap": return e.swap === null ? null : faNum(e.swap);
     case "session": return e.sessions.length ? e.sessions.map((s) => SESSION_LABELS[s]).join("، ") : null;
-    case "confidence": return e.confidence === null ? null : `${faNum(e.confidence)}/۱۰`;
+    case "confidence": return e.confidence === null ? null : `${faNum(e.confidence)}/10`;
     case "result": return RESULT_LABELS[e.result];
   }
 }

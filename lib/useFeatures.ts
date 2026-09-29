@@ -25,9 +25,29 @@ function load(): Promise<Map | null> {
 
 export function invalidateFeatures() { cached = null; }
 
+// هوک‌های mountشده (منو، داشبورد) باید نتیجه‌ی تازه‌سازی رو ببینن — وگرنه بعد از
+// ورودِ کلاینتی (بدونِ ریلود) منو همون فلگ‌های حالتِ مهمان رو نگه می‌داشت.
+const listeners = new Set<(m: Map) => void>();
+
+/** کش رو دور می‌ریزه، دوباره می‌گیره و به همه‌ی هوک‌های باز خبر می‌ده (بعد از ورود) */
+export function refreshFeatures(): Promise<Map | null> {
+  cached = null;
+  inflight = null;
+  return load().then((m) => {
+    if (m) listeners.forEach((fn) => fn(m));
+    return m;
+  });
+}
+
 export function useFeatures(): Map | null {
   const [v, setV] = useState<Map | null>(cached?.value ?? null);
-  useEffect(() => { let alive = true; load().then((m) => { if (alive && m) setV(m); }); return () => { alive = false; }; }, []);
+  useEffect(() => {
+    let alive = true;
+    load().then((m) => { if (alive && m) setV(m); });
+    const on = (m: Map) => { if (alive) setV(m); };
+    listeners.add(on);
+    return () => { alive = false; listeners.delete(on); };
+  }, []);
   return v;
 }
 

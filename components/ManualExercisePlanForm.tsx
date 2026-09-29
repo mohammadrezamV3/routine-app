@@ -10,7 +10,7 @@ import { computeDayFocus } from "@/lib/exerciseCatalogUtils";
 import { EXERCISE_CATALOG, ExerciseCatalogEntry, getExerciseDifficulty } from "@/lib/exerciseCatalog";
 import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
-import { toFaDigits } from "@/lib/schedule";
+import { toEnDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
@@ -42,8 +42,8 @@ function ManualQuantityPrompt({
 
   function confirm() {
     const formatted = timed
-      ? `${entry.name} ${toFaDigits(amount || "0")} ${unit}`
-      : `${entry.name} ${toFaDigits(sets || "1")}×${toFaDigits(reps || "1")}`;
+      ? `${entry.name} ${toEnDigits(amount || "0")} ${unit}`
+      : `${entry.name} ${toEnDigits(sets || "1")}×${toEnDigits(reps || "1")}`;
     onConfirm(formatted);
   }
 

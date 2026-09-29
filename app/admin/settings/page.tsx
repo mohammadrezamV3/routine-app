@@ -177,7 +177,7 @@ export default function AdminSettingsPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">نرخ تخمین هزینه AI</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          به میکرو-دلار به‌ازای هر ۱۰۰۰ توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini
+          به میکرو-دلار به‌ازای هر 1000 توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini
           {settings && <> (<span className="admin-ltr mono">{settings.defaultAiCostRate.inputPer1kUsdMicros}/{settings.defaultAiCostRate.outputPer1kUsdMicros}</span>)</>}.
         </div>
         {settingsError && !settings ? (
@@ -188,11 +188,11 @@ export default function AdminSettingsPage() {
           <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
             <div className="admin-form-grid">
               <label className="admin-field">
-                <span>نرخ ورودی (میکرو-دلار/۱۰۰۰ توکن)</span>
+                <span>نرخ ورودی (میکرو-دلار/1000 توکن)</span>
                 <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={9} value={inputRate} onChange={setInputRate} />
               </label>
               <label className="admin-field">
-                <span>نرخ خروجی (میکرو-دلار/۱۰۰۰ توکن)</span>
+                <span>نرخ خروجی (میکرو-دلار/1000 توکن)</span>
                 <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={9} value={outputRate} onChange={setOutputRate} />
               </label>
             </div>
@@ -209,7 +209,7 @@ export default function AdminSettingsPage() {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">سقف AI دوره‌ی آزمایشی</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          هر حساب تازه {TRIAL_DAYS} روز به بدنسازی، کالری‌شمار و ژورنال ترید دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (۰ یعنی بسته).
+          هر حساب تازه {TRIAL_DAYS} روز به بدنسازی، کالری‌شمار و ژورنال ترید دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (0 یعنی بسته).
         </div>
         {settingsError && !settings ? (
           <EmptyState message={settingsError} />

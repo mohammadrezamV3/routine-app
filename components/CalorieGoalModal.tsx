@@ -350,7 +350,7 @@ export function CalorieGoalModal({
                             <span className="manual-meal-row-divider" />
                             <NumberInput
                               className="manual-meal-row-input manual-meal-kcal-input mono"
-                              placeholder="۰"
+                              placeholder="0"
                               value={row.kcal}
                               onChange={(v) => updateMealDraftRow(row.key, { kcal: v })}
                             />
@@ -395,7 +395,7 @@ export function CalorieGoalModal({
                             </span>
                             <span className="manual-meal-row-divider" />
                             <span className="mono shrink-0 text-[12.5px] font-bold text-dash-text">
-                              {row.kcal ? faNum(row.kcal) : "۰"} <span className="text-[10px] font-semibold text-dash-muted">کالری</span>
+                              {row.kcal ? faNum(row.kcal) : "0"} <span className="text-[10px] font-semibold text-dash-muted">کالری</span>
                             </span>
                           </div>
                         )}

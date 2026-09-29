@@ -35,7 +35,7 @@ export function joinLocalInput(date: string, time: string): string {
   return `${date}T${(time || "00:00").slice(0, 5)}`;
 }
 
-/** «۸ شهریور ۱۴۰۵ — ۱۵:۴۹» با ارقام فارسی */
+/** «۸ شهریور ۱۴۰۵ — ۱۵:۴۹» با ارقام انگلیسی */
 export function formatTradeDateTime(iso: string, cal: CalSystem, withTime = true): string {
   const d = new Date(iso);
   const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();

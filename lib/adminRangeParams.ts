@@ -22,7 +22,7 @@ export function parseAdminRange(sp: URLSearchParams): { ok: true; range: Range }
   const to = new Date(`${toRaw}T23:59:59.999Z`);
   if (isNaN(from.getTime()) || isNaN(to.getTime())) return bad("بازه‌ی زمانی نامعتبر است");
   if (from > to) return bad("تاریخِ شروع باید قبل از تاریخِ پایان باشد");
-  if (to.getTime() - from.getTime() > MAX_SPAN_MS) return bad("بازه‌ی زمانی حداکثر ۵ سال می‌تواند باشد");
+  if (to.getTime() - from.getTime() > MAX_SPAN_MS) return bad("بازه‌ی زمانی حداکثر 5 سال می‌تواند باشد");
 
   return { ok: true, range: { from, to, key: "custom" } };
 }

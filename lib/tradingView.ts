@@ -46,11 +46,11 @@ export function tradingViewSymbol(code: string): string {
 
 /** تایم‌فریم‌های چارت — مقدارِ سمتِ راست همان چیزی است که تریدینگ‌ویو می‌خواهد */
 export const CHART_INTERVALS = [
-  { label: "۱ دقیقه", short: "1m", tv: "1" },
-  { label: "۵ دقیقه", short: "5m", tv: "5" },
-  { label: "۱۵ دقیقه", short: "15m", tv: "15" },
-  { label: "۱ ساعت", short: "1H", tv: "60" },
-  { label: "۴ ساعت", short: "4H", tv: "240" },
+  { label: "1 دقیقه", short: "1m", tv: "1" },
+  { label: "5 دقیقه", short: "5m", tv: "5" },
+  { label: "15 دقیقه", short: "15m", tv: "15" },
+  { label: "1 ساعت", short: "1H", tv: "60" },
+  { label: "4 ساعت", short: "4H", tv: "240" },
   { label: "روزانه", short: "1D", tv: "D" },
 ] as const;
 

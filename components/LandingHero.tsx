@@ -21,9 +21,9 @@ import "./landing-hero.css";
 // و با prefers-reduced-motion کاملاً ساکن می‌مانند. هیچ Math.random/Date در
 // رندر نیست؛ حالتِ اولیه‌ی سرور و کلاینت یکی است (بدون hydration mismatch).
 
-const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+// ارقام در کلِ سایت انگلیسی‌اند (مثلِ faNum ِ lib/jalali.ts)
 export function faNum(n: number | string) {
-  return String(n).replace(/\d/g, (d) => FA_DIGITS[Number(d)]);
+  return String(n);
 }
 
 const ROT_WORDS = ["روتین", "تمرین", "معامله", "یادگیری"];
@@ -235,7 +235,7 @@ export function LandingHero() {
 
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
             <li><Sparkles size={14} aria-hidden="true" /> «روتین من» همیشه رایگان</li>
-            <li><Sparkles size={14} aria-hidden="true" /> ۳ روز بدنسازی، کالری‌شمار و ژورنال ترید</li>
+            <li><Sparkles size={14} aria-hidden="true" /> 3 روز بدنسازی، کالری‌شمار و ژورنال ترید</li>
             <li><ShieldCheck size={15} aria-hidden="true" /> بدون کارت بانکی</li>
             <li><Lock size={14} aria-hidden="true" /> گفت‌وگوی مربی با رمزگذاری سرتاسری</li>
           </ul>
@@ -261,7 +261,7 @@ export function LandingHero() {
                       پس کلاس‌های موبایلِ خودِ اپ همون اندازه‌ای رو دارن که روی گوشی. */}
                   <div className="lh-canvas dash-scope text-dash-text">
                     <div className="lh-ph-status">
-                      <span>۹:۴۱</span>
+                      <span>9:41</span>
                       <span className="lh-ph-notch" />
                       <span className="lh-ph-sig"><i /><i /><i /></span>
                     </div>
@@ -335,7 +335,7 @@ export function LandingHero() {
             <div className="lh-layer lh-pos-cal" data-d="26" data-f="-2.2">
               <div className="lh-float lh-card lh-card-cal dash-scope">
                 <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
-                  ۱۴۲۰<span className="mx-1 text-dash-muted">/</span>۲۱۰۰
+                  1420<span className="mx-1 text-dash-muted">/</span>2100
                   <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted">کالری</span>
                 </div>
                 <div className="lh-cal-bar"><i /></div>
@@ -345,7 +345,7 @@ export function LandingHero() {
                 <div className="calorie-glass-field lh-cal-entry">
                   <span className="truncate text-[10.5px] font-bold text-dash-text">جوجه‌کباب</span>
                   <span className="mono rounded-lg px-1.5 py-0.5 text-[11px] font-extrabold" style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}>
-                    <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>۳۳۰
+                    <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>330
                   </span>
                 </div>
               </div>
@@ -358,15 +358,15 @@ export function LandingHero() {
                   {orbLive ? <SiriOrb size="20px" /> : <span className="lh-orb-still lh-orb-sm" />}
                   نومو
                 </div>
-                <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">فردا ساعت ۷ عصر باشگاه</div>
-                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعتِ ۱۹:۰۰ اضافه شد.</div>
+                <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">فردا ساعت 7 عصر باشگاه</div>
+                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعتِ 19:00 اضافه شد.</div>
               </div>
             </div>
 
             {/* مربی — MentorCard + خطِ رمزگذاریِ گفت‌وگو */}
             <div className="lh-layer lh-pos-mentor" data-d="30" data-f="-1.2">
               <div className="lh-float lh-card-mentor">
-                <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="۴٫۹" count="۳۸" since="فروردین ۱۴۰۴" />
+                <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="4.9" count="38" since="فروردین 1404" />
               </div>
             </div>
           </div>

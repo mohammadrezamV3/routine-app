@@ -45,13 +45,13 @@ export default function AdminRetentionPage() {
           ) : (
             <>
               <KpiGrid>
-                <KpiTile label="Retention روز ۱" value={formatRate(data.retention.d1)} index={0} />
-                <KpiTile label="Retention روز ۷" value={formatRate(data.retention.d7)} index={1} />
-                <KpiTile label="Retention روز ۳۰" value={formatRate(data.retention.d30)} index={2} />
-                <KpiTile label="حجم کوهورت (۶ ماه اخیر)" value={formatNumber(data.retention.cohortSize)} index={3} />
+                <KpiTile label="Retention روز 1" value={formatRate(data.retention.d1)} index={0} />
+                <KpiTile label="Retention روز 7" value={formatRate(data.retention.d7)} index={1} />
+                <KpiTile label="Retention روز 30" value={formatRate(data.retention.d30)} index={2} />
+                <KpiTile label="حجم کوهورت (6 ماه اخیر)" value={formatNumber(data.retention.cohortSize)} index={3} />
               </KpiGrid>
               <div className="admin-section-hint">
-                «Retained» یعنی کاربر حداقل یک‌بار بعد از روز N دوباره وارد شده — بر اساس لاگ ورودهای واقعی، محدود به کاربرانی که ثبت‌نامشون ظرف ۶ ماه اخیر بوده.
+                «Retained» یعنی کاربر حداقل یک‌بار بعد از روز N دوباره وارد شده — بر اساس لاگ ورودهای واقعی، محدود به کاربرانی که ثبت‌نامشون ظرف 6 ماه اخیر بوده.
               </div>
             </>
           )}

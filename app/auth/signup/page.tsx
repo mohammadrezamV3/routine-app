@@ -137,7 +137,7 @@ export default function SignupPage() {
     if (!lastName) errs.lastName = "نام خانوادگی را وارد کن";
     else if (!isValidPersianName(lastName)) errs.lastName = "نام خانوادگی باید فقط با حروف فارسی نوشته شود";
     if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
-    else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد";
+    else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد";
     if (!password) errs.password = "رمز عبور را وارد کن";
     else {
       const pwErr = await validatePassword(password, [username, firstName, lastNameInput, phone]);
@@ -262,7 +262,7 @@ export default function SignupPage() {
           endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
         >
           <input
-            id="password" type={passwordVisible ? "text" : "password"} name="password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={password} placeholder={"حداقل ۸ کاراکتر"}
+            id="password" type={passwordVisible ? "text" : "password"} name="password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={password} placeholder={"حداقل 8 کاراکتر"}
             onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
           />
         </AuthField>
@@ -307,7 +307,7 @@ export default function SignupPage() {
           <div className="auth-otp-hint">
             {`کدی که به ${phone.trim()} پیامک شد رو وارد کن.`}
           </div>
-          <AuthField id="signupOtp" label={"کد ۵ رقمی"} error={fieldErrors.otp}>
+          <AuthField id="signupOtp" label={"کد 5 رقمی"} error={fieldErrors.otp}>
             <input
               id="signupOtp" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
               onChange={(e) => { const v = digitsOnly(e.target.value); setOtpCode(v); if (v) clearError("otp"); }}

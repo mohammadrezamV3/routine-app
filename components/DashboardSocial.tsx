@@ -7,7 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import type { DashboardData, DashMentors, DashRoadmap } from "@/lib/dashboardTypes";
-import { BentoCard, CardHead, CountUp, EmptyState, LockedState, Meter, Skel } from "./DashboardKit";
+import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
 export function DashboardMentors({ m, loading }: { m: DashMentors | null; loading: boolean }) {
@@ -37,14 +37,12 @@ export function DashboardMentors({ m, loading }: { m: DashMentors | null; loadin
   );
 }
 
-export function DashboardRoadmaps({ r, loading, locked }: { r: { items: DashRoadmap[]; total: number } | null; loading: boolean; locked: boolean }) {
+export function DashboardRoadmaps({ r, loading }: { r: { items: DashRoadmap[]; total: number } | null; loading: boolean }) {
   return (
     <BentoCard area="road" className="db-road" label="رودمپ‌ها">
       <CardHead icon="roadmap" title="رودمپ‌های یادگیری" href="/roadmaps" hrefLabel="همه" />
       {loading ? (
         <Skel w="100%" h={90} r={12} />
-      ) : locked ? (
-        <LockedState title="رودمپِ یادگیری" />
       ) : !r ? null : r.items.length === 0 ? (
         <EmptyState icon="spark" text="هر مهارتی رو بگو، هوش مصنوعی قدم‌به‌قدم مسیرش رو می‌سازه." href="/roadmaps/new" cta="ساختِ رودمپ" />
       ) : (

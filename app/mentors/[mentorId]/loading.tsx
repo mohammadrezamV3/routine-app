@@ -1,7 +1,8 @@
-import { LoadingBlock } from "@/components/Spinner";
+import { PageLoader } from "@/components/PageLoader";
 
-// بازخوردِ فوری هنگامِ باز شدنِ صفحه (رندرِ سمتِ سرور روی اینترنتِ کند
-// چند لحظه طول می‌کشه و بدونِ این، تپ «باز نمی‌شه» حس می‌شد).
+// بازخوردِ فوری هنگامِ باز شدنِ صفحه: همون لحظه‌ی کلیک نشانِ برند با حلقه‌ی
+// چرخان و اسکلتِ صفحه میاد (نه یک دایره‌ی کوچک روی صفحه‌ی خالی)، تا رندرِ
+// سمتِ سرور تموم بشه.
 export default function Loading() {
-  return <LoadingBlock />;
+  return <PageLoader />;
 }

@@ -370,7 +370,7 @@ function AccessTab({ data, disabled, onSaved }: { data: Detail; disabled: boolea
       <div className="admin-chart-head">
         <span className="admin-chart-title"><KeyRound size={15} className="admin-title-icon" />دسترسی به ماژول‌ها</span>
         <div className="admin-head-actions">
-          <button type="button" className="admin-btn sm" disabled={disabled || busy} onClick={() => grantAll(30)}>همه — ۳۰ روز</button>
+          <button type="button" className="admin-btn sm" disabled={disabled || busy} onClick={() => grantAll(30)}>همه — 30 روز</button>
           <button type="button" className="admin-btn sm" disabled={disabled || busy} onClick={() => grantAll(null)}>همه — دائمی</button>
           <button type="button" className="admin-btn sm danger" disabled={disabled || busy} onClick={() => setRows((rs) => rs.map((r) => ({ ...r, active: false })))}>قطع همه</button>
         </div>

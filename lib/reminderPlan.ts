@@ -14,7 +14,7 @@
 // سرور — قبلا سرور با getHours() (یعنی UTC روی داکر) حساب می‌کرد و یادآوری
 // ۳:۳۰ ساعت جابه‌جا (یا اصلا) می‌رسید.
 
-import { tasksForDate, timeStartMinutes, toFaDigits } from "./schedule";
+import { tasksForDate, timeStartMinutes, toEnDigits } from "./schedule";
 import { addDaysIso, localIso, localMinuteOfDay, safeTimezone } from "./weeklyAnalysis/week";
 import { Medication, doseMinutesOfDay, isMedicationActiveOn, minutesToDoseTime } from "./medicationSchedule";
 
@@ -96,7 +96,7 @@ function processLocalDate(iso: string): Date {
 
 function minutesLeftText(deadline: number, nowMs: number): string {
   const n = Math.max(1, Math.ceil((deadline - nowMs) / 60_000));
-  return toFaDigits(String(n));
+  return toEnDigits(String(n));
 }
 
 /**
@@ -164,7 +164,7 @@ export function planMedicationReminders(opts: { tz: string; now: Date; meds: Med
           key: `med:${med.id}:${iso}:${doseMin}`, kind: "med", dateIso: iso, itemId: med.id,
           from: dose - MED_LEAD_MIN * 60_000, until: dose, deadline: dose,
           title: "یادآوری دارو",
-          body: `نوبتِ «${med.name}» ساعت ${toFaDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
+          body: `نوبتِ «${med.name}» ساعت ${toEnDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
           url: "/",
         });
       }

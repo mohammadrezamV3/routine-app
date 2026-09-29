@@ -23,6 +23,8 @@ import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
+import { RouteProgress } from "@/components/RouteProgress";
+import { Suspense } from "react";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
@@ -252,6 +254,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <RealtimeProvider />
               {/* ثبتِ سرویس‌ورکر (کشِ app shell) + پیشنهادِ نصبِ اپ */}
               <PwaProvider />
+              {/* Suspense: RouteProgress از useSearchParams استفاده می‌کنه و بدونِ مرز، رندرِ
+                  استاتیکِ همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
+              <Suspense fallback={null}><RouteProgress /></Suspense>
               <div className="wrap">{children}</div>
             </MotionTuner>
           </ThemeProvider>
