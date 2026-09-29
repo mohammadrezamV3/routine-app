@@ -21,9 +21,9 @@ import { STREAK_MILESTONES } from "@/lib/streakTier";
 
 export const INERT = { inert: "" } as object;
 
-const FA = "۰۱۲۳۴۵۶۷۸۹";
+// ارقام در کلِ سایت انگلیسی‌اند (مثلِ faNum ِ lib/jalali.ts)
 export function fa(n: number | string) {
-  return String(n).replace(/\d/g, (d) => FA[Number(d)]);
+  return String(n);
 }
 
 /* ───────────── DashImportanceBadge (نسخه‌ی موبایل) ───────────── */
@@ -195,8 +195,8 @@ export function MockMedicationCard({ meds }: { meds: { name: string; every: stri
 
 /** نوارِ انتخابِ روز (DashDateSelector موبایل) — پنج روز در دید */
 const STRIP = [
-  { w: "شنبه", d: "۴ مهر" }, { w: "یکشنبه", d: "۵ مهر" }, { w: "دوشنبه", d: "۶ مهر", on: true },
-  { w: "سه‌شنبه", d: "۷ مهر" }, { w: "چهارشنبه", d: "۸ مهر" },
+  { w: "شنبه", d: "4 مهر" }, { w: "یکشنبه", d: "5 مهر" }, { w: "دوشنبه", d: "6 مهر", on: true },
+  { w: "سه‌شنبه", d: "7 مهر" }, { w: "چهارشنبه", d: "8 مهر" },
 ];
 export function MockDateStrip() {
   return (
@@ -233,7 +233,7 @@ export function MockFilterButton({ label, icon, active }: { label: string; icon:
 }
 
 /* ───────────── استریک: هر هشت سطحِ واقعی ───────────── */
-const TIER_SHORT = ["شروع", "۳ روزه", "هفتگی", "ماهانه", "۶۰ روزه", "فصلی", "نیم‌ساله", "افسانه‌ای"];
+const TIER_SHORT = ["شروع", "3 روزه", "هفتگی", "ماهانه", "60 روزه", "فصلی", "نیم‌ساله", "افسانه‌ای"];
 export function MockStreakTiers({ labels = true }: { labels?: boolean }) {
   return (
     <div className="lm-tiers">

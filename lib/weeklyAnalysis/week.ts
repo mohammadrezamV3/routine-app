@@ -111,9 +111,9 @@ export function daysOfWeekIso(weekStartIso: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDaysIso(weekStartIso, i));
 }
 
-const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+// ارقام در کلِ سایت انگلیسی‌اند
 function faDigits(n: number): string {
-  return String(n).replace(/\d/g, (c) => FA_DIGITS[Number(c)]);
+  return String(n);
 }
 
 /** برچسبِ جلالیِ هفته: «۱ تا ۷ مهر» یا اگه دو ماه رو بگیره «۲۹ شهریور تا ۴ مهر». */

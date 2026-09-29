@@ -94,7 +94,7 @@ export function WeeklyAnalysisTrend({ trend }: { trend: TrendPoint[] }) {
   return (
     <DashCard className="wa-trend-card">
       <div className="wa-card-head">
-        <h2 className="wa-card-title"><LineChart size={16} className="wa-title-icon" />روند ۸ هفته‌ی اخیر</h2>
+        <h2 className="wa-card-title"><LineChart size={16} className="wa-title-icon" />روند 8 هفته‌ی اخیر</h2>
       </div>
 
       {availableDomains.length > 0 && (

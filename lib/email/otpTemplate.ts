@@ -24,7 +24,7 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
     "",
     code,
     "",
-    "این کد تا ۱۰ دقیقه‌ی دیگر معتبر است.",
+    "این کد تا 10 دقیقه‌ی دیگر معتبر است.",
     "اگر این درخواست از طرف شما نبوده، این پیام را نادیده بگیرید.",
   ].join("\n");
 
@@ -59,7 +59,7 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
             </tr>
             <tr>
               <td style="padding:0 28px 8px; text-align:center;">
-                <p style="margin:0; font-size:13px; color:#5b6660; direction:rtl; line-height:1.7;">این کد تا ۱۰ دقیقه‌ی دیگر معتبر است.</p>
+                <p style="margin:0; font-size:13px; color:#5b6660; direction:rtl; line-height:1.7;">این کد تا 10 دقیقه‌ی دیگر معتبر است.</p>
               </td>
             </tr>
             <tr>

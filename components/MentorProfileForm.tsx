@@ -131,7 +131,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
           <MentorField label="عنوان کوتاه" htmlFor="mp-headline" optional error={fieldErr.headline} hint={`حداکثر ${fa(HEADLINE_MAX)} نویسه`}>
             <input
               id="mp-headline" type="text" className="wsearch-newform-name trade-glass-field" maxLength={HEADLINE_MAX}
-              value={headline} placeholder="مثلاً مربی بدنسازی با ۸ سال سابقه"
+              value={headline} placeholder="مثلاً مربی بدنسازی با 8 سال سابقه"
               onChange={(e) => { setHeadline(e.target.value); setFieldErr((x) => ({ ...x, headline: undefined })); touched(); }}
             />
           </MentorField>

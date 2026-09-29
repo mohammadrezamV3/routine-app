@@ -37,7 +37,7 @@ const ROW_LINE: React.CSSProperties = { display: "flex", justifyContent: "space-
 
 function Stars({ n }: { n: number }) {
   return (
-    <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} role="img" aria-label={`${formatNumber(n)} از ۵`}>
+    <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} role="img" aria-label={`${formatNumber(n)} از 5`}>
       {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= n ? "currentColor" : "none"} strokeWidth={1.75} aria-hidden />)}
     </span>
   );

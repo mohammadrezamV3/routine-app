@@ -79,7 +79,7 @@ export function TradeDetailDrawer({
 
   const emotionRows: [string, string][] = entry
     ? [
-        ...row("میزان اطمینان", entry.confidence !== null ? `${faNum(entry.confidence)} از ۱۰` : null),
+        ...row("میزان اطمینان", entry.confidence !== null ? `${faNum(entry.confidence)} از 10` : null),
         ...row("حال قبل از معامله", entry.emotionBefore ? EMOTION_BEFORE_LABELS[entry.emotionBefore] : null),
         ...row("حال بعد از معامله", entry.emotionAfter ? EMOTION_AFTER_LABELS[entry.emotionAfter] : null),
         ...row("طبق پلن", entry.followedPlan !== null ? (entry.followedPlan ? "بله" : "خیر") : null),

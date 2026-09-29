@@ -106,7 +106,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
                 </ul>
               </>
             ) : (
-              <p className="db-muted-line">در ۷ روزِ آینده خبرِ مهمی ثبت نشده</p>
+              <p className="db-muted-line">در 7 روزِ آینده خبرِ مهمی ثبت نشده</p>
             )}
           </div>
       </>

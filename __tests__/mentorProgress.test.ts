@@ -292,7 +292,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     const id = await activeProgram(m, s, ms, { type: "WORKOUT", items: [{ title: "اسکوات", repeat: "WEEKLY", days: [wd], sets: 4, reps: "8" }] });
     const occs = (await readOccurrences(s)).filter((o) => o.mentorProgramId === id);
     expect(occs).toHaveLength(1);
-    expect(occs[0].name).toBe("اسکوات · ۴×۸");
+    expect(occs[0].name).toBe("اسکوات · 4×8");
     const itemId = occs[0].mentorItemId;
     expect(typeof itemId).toBe("string");
 

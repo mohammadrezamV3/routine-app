@@ -35,7 +35,7 @@ export function isValidPersianName(v: string): boolean {
  * برمی‌گردونه: null اگه معتبر بود، وگرنه پیام خطا برای نمایش به کاربر.
  */
 export async function validatePassword(v: string, userInputs: string[] = []): Promise<string | null> {
-  if (v.length < 8) return "رمز عبور باید حداقل ۸ کاراکتر باشد";
+  if (v.length < 8) return "رمز عبور باید حداقل 8 کاراکتر باشد";
   if (v.length > 128) return "رمز عبور خیلی طولانی است";
   return passwordTierError(await passwordTier(v, userInputs));
 }

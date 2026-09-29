@@ -108,7 +108,7 @@ export type ReflectionDto = { wentWell: string; improve: string; mood: number | 
 export type WeeklyAnalysis = {
   weekStart: string; // YYYY-MM-DD (شنبه)
   weekEnd: string; // YYYY-MM-DD (جمعه)
-  weekLabel: string; // مثلا «۱ تا ۷ مهر» (جلالی، ارقام فارسی مجازه فقط این‌جا)
+  weekLabel: string; // مثلا «۱ تا ۷ مهر» (جلالی)
   offset: number; // 0 = هفته‌ی جاری، -1 = قبلی، ...
   isCurrentWeek: boolean;
   daysElapsed: number; // هفته‌ی جاری: چند روز گذشته (1..7)، گذشته: 7

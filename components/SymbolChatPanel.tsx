@@ -261,7 +261,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
         <div className="trade-chat-restricted">
           {moderation.disabled
             ? "دسترسیِ تو به این گفت‌وگو توسط مدیریت غیرفعال شده است."
-            : `تا ${new Date(moderation.bannedUntil!).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" })} از ارسال پیام محروم شده‌ای.`}
+            : `تا ${new Date(moderation.bannedUntil!).toLocaleString("fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" })} از ارسال پیام محروم شده‌ای.`}
         </div>
       ) : (
         <>

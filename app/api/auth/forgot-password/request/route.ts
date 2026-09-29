@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   // شناسه‌ی موردنظر قبلا یه درخواست موفق داشته یا نه.
   const cooldownOk = await checkRateLimit(`fp-req-cooldown:${value}`, 1, 2 * 60 * 1000);
   if (!cooldownOk) {
-    return NextResponse.json({ error: "لطفا ۲ دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: "لطفا 2 دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
   }
 
   const user = await prisma.user.findFirst({ where: kind === "phone" ? { phone: value } : { email: value } });

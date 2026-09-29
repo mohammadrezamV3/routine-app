@@ -5,10 +5,10 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 const PRESETS: { key: string; label: string }[] = [
   { key: "today", label: "امروز" },
-  { key: "7d", label: "۷ روز" },
-  { key: "30d", label: "۳۰ روز" },
-  { key: "3m", label: "۳ ماه" },
-  { key: "12m", label: "۱۲ ماه" },
+  { key: "7d", label: "7 روز" },
+  { key: "30d", label: "30 روز" },
+  { key: "3m", label: "3 ماه" },
+  { key: "12m", label: "12 ماه" },
 ];
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

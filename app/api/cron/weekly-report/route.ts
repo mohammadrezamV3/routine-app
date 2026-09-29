@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       try {
         await sendPushToUser(user.id, {
           title: "آنالیز هفتگی‌ات آماده‌ست",
-          body: analysis.overall.score != null ? `امتیاز هفته‌ی گذشته‌ات: ${analysis.overall.score} از ۱۰۰` : "آنالیز هفته‌ی گذشته‌ات آماده‌ست.",
+          body: analysis.overall.score != null ? `امتیاز هفته‌ی گذشته‌ات: ${analysis.overall.score} از 100` : "آنالیز هفته‌ی گذشته‌ات آماده‌ست.",
           url: "/analysis/weekly?offset=-1",
         });
       } catch {

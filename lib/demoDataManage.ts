@@ -95,8 +95,8 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
   if (saraHossein) {
     await answers(tx, saraHossein.id, [
       [SARA_QUESTIONS[0], "یازدهم ریاضی"],
-      [SARA_QUESTIONS[1], "حدود ۸ ساعت؛ عصرها بعد از مدرسه"],
-      [SARA_QUESTIONS[2], "۱۳ از ۲۰ در آزمون مستمر مهر"],
+      [SARA_QUESTIONS[1], "حدود 8 ساعت؛ عصرها بعد از مدرسه"],
+      [SARA_QUESTIONS[2], "13 از 20 در آزمون مستمر مهر"],
     ]);
   }
   const ownerHossein = await rel(tx, ownerId, id("hossein"));
@@ -129,7 +129,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
   const ownerLabelIds: string[] = [];
   const labelId: Record<string, string> = {};
   if (ownerProfile) {
-    for (const name of ["کنکور ۱۴۰۶", "نیاز به پیگیری", "دانشجو"]) {
+    for (const name of ["کنکور 1406", "نیاز به پیگیری", "دانشجو"]) {
       const existing = await tx.mentorStudentLabel.findUnique({ where: { profileId_name: { profileId: ownerProfile.id, name } }, select: { id: true } });
       if (existing) { labelId[name] = existing.id; continue; }
       const l = await tx.mentorStudentLabel.create({ data: { profileId: ownerProfile.id, name }, select: { id: true } });
@@ -140,7 +140,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
 
   const ownerFatemeh = await rel(tx, ownerId, id("fatemeh"));
   if (ownerFatemeh) {
-    if (ownerProfile) await tx.mentorship.update({ where: { id: ownerFatemeh.id }, data: { mentorLabelIds: [labelId["کنکور ۱۴۰۶"]] } });
+    if (ownerProfile) await tx.mentorship.update({ where: { id: ownerFatemeh.id }, data: { mentorLabelIds: [labelId["کنکور 1406"]] } });
     await answers(tx, ownerFatemeh.id, [
       [OWNER_QUESTIONS[0], "برای کنکور تجربی برنامه‌ی مطالعه‌ی منظم می‌خواهم."],
       [OWNER_QUESTIONS[1], "حدود پنج ساعت."],
@@ -150,7 +150,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
     await tx.mentorStudentNote.createMany({
       data: [
         { mentorshipId: ownerFatemeh.id, mentorId: ownerId, body: "شیمی نقطه‌ضعف اصلی است؛ در برنامه‌ی بعد تست شیمی را به چهار روز برسان.", createdAt: ago(now, 6), updatedAt: ago(now, 6) },
-        { mentorshipId: ownerFatemeh.id, mentorId: ownerId, body: "آزمون آزمایشی ۲۰ مهر؛ هفته‌ی قبلش حجم مطالعه‌ی جدید را کم کن.", createdAt: ago(now, 1), updatedAt: ago(now, 1) },
+        { mentorshipId: ownerFatemeh.id, mentorId: ownerId, body: "آزمون آزمایشی 20 مهر؛ هفته‌ی قبلش حجم مطالعه‌ی جدید را کم کن.", createdAt: ago(now, 1), updatedAt: ago(now, 1) },
       ],
     });
   }
@@ -158,7 +158,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
   if (ownerPouya) {
     if (ownerProfile) await tx.mentorship.update({ where: { id: ownerPouya.id }, data: { mentorLabelIds: [labelId["نیاز به پیگیری"], labelId["دانشجو"]] } });
     await tx.mentorStudentNote.create({
-      data: { mentorshipId: ownerPouya.id, mentorId: ownerId, body: "صبح‌ها سر کار است؛ هر برنامه‌ای بعد از ساعت ۱۷ باشد.", createdAt: ago(now, 3), updatedAt: ago(now, 3) },
+      data: { mentorshipId: ownerPouya.id, mentorId: ownerId, body: "صبح‌ها سر کار است؛ هر برنامه‌ای بعد از ساعت 17 باشد.", createdAt: ago(now, 3), updatedAt: ago(now, 3) },
     });
   }
   // توقفِ موقت با دلیل

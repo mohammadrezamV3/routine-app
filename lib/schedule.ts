@@ -47,16 +47,10 @@ export function sameWeekIso(iso: string, jsDay: number): string {
   return addDaysIso(iso, ((jsDay + 1) % 7) - offsetFromSat);
 }
 
-const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-
 /** نامِ قدیمی که جاهای زیادی از آن import می‌کنند — پیاده‌سازی در
  *  `lib/validate.ts` است تا دو نسخه‌ی جدا از هم درنروند. */
 export function toEnDigits(s: string): string {
   return toEnglishDigits(s);
-}
-
-export function toFaDigits(s: string): string {
-  return String(s).replace(/[0-9]/g, (ch) => faDigits[+ch]);
 }
 
 export function timeStartMinutes(timeStr: string): number | null {

@@ -107,7 +107,7 @@ describe("generateRoadmapPlan — مسیرِ سالم", () => {
     expect(fetchMock).toHaveBeenCalledTimes(5);
     expect(plan.stages).toHaveLength(3);
     expect(plan.stages.every((s) => s.detailed)).toBe(true);
-    expect(plan.stages[0].topics[0].points).toContain("لایه‌ی ۳");
+    expect(plan.stages[0].topics[0].points).toContain("لایه‌ی 3");
     expect(plan.guide).toContain("مسیر در یک نگاه");
     expect(plan.meta.level).toBe("zero");
   });
@@ -133,7 +133,7 @@ describe("generateRoadmapPlan — مسیرِ سالم", () => {
     const msg = userOf(outlineCall[1]);
     expect(msg).toContain("گیتار");
     expect(msg).toContain("مشخص نکرده");
-    expect(msg).toContain("۱۰ تا ۲۰ ساعت");
+    expect(msg).toContain("10 تا 20 ساعت");
   });
 
   it("پیامِ هر مرحله فقط همان مرحله را می‌خواهد و کلِ مسیر را هم می‌بیند", async () => {

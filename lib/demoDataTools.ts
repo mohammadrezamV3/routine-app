@@ -47,9 +47,9 @@ export async function seedToolsDemo(c: {
   if (c.routineOk) {
     const study: TplItem[] = [
       { title: "مطالعه‌ی درس اصلی", details: "یک فصل؛ آخرش خلاصه‌ی یک‌صفحه‌ای", days: [6, 0, 1, 2, 3], startTime: "08:00", durationMin: 120 },
-      { title: "تست زمان‌دار", details: "۳۰ تست در ۴۵ دقیقه", days: [1, 3], startTime: "16:00", durationMin: 45 },
+      { title: "تست زمان‌دار", details: "30 تست در 45 دقیقه", days: [1, 3], startTime: "16:00", durationMin: 45 },
       { title: "مرور هفتگی", days: [4], startTime: "10:00", durationMin: 60 },
-      { title: "خواب قبل از ۲۳:۳۰", days: ALL, startTime: "23:30" },
+      { title: "خواب قبل از 23:30", days: ALL, startTime: "23:30" },
     ];
     templates.push(
       {
@@ -69,7 +69,7 @@ export async function seedToolsDemo(c: {
       { title: "اسکوات با هالتر", days: [6, 1, 3], sets: 4, reps: "8-10", weightKg: 50, restSec: 120 },
       { title: "پرس سینه", days: [6, 1, 3], sets: 4, reps: "8-12", weightKg: 40, restSec: 90 },
       { title: "زیربغل سیم‌کش", days: [6, 1, 3], sets: 3, reps: "10-12", restSec: 90 },
-      { title: "پلانک", details: "هر ست ۴۵ ثانیه", days: [6, 1, 3], sets: 3, restSec: 45 },
+      { title: "پلانک", details: "هر ست 45 ثانیه", days: [6, 1, 3], sets: 3, restSec: 45 },
     ];
     templates.push({
       profileId, name: "تمام‌بدن سه‌روزه‌ی مبتدی", type: "WORKOUT", title: "تمام‌بدن سه‌روزه",

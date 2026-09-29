@@ -217,7 +217,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const saved = await readOccurrences(currentUserId);
     expect(saved).toHaveLength(2);
     expect(saved.find((o) => o.name === "دویدن").jsDay).toBe(1);
-    expect(saved.find((o) => o.name === "دویدن").time).toBe("۱۹:۰۰ – ۲۰:۰۰");
+    expect(saved.find((o) => o.name === "دویدن").time).toBe("19:00 – 20:00");
   });
 
   it("«پر بودنِ» ساعت را می‌گوید، وقتِ آزاد پیشنهاد می‌دهد و چیزی نمی‌نویسد", async () => {
@@ -234,7 +234,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     expect(data.changed).toBe(false);
     expect(data.problems[0]).toContain("کلاس زبان");
     expect(data.problems[0]).toContain("پر است");
-    expect(data.problems[0]).toContain("۰۹:۳۰");
+    expect(data.problems[0]).toContain("09:30");
     // ادعای خوش‌بینانه‌ی مدل نباید نمایش داده شود
     expect(data.reply).not.toContain("حتما اضافه می‌کنم");
     expect(await readOccurrences(currentUserId)).toHaveLength(1);
@@ -254,7 +254,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const current = saved.filter((o: any) => !o.endDate);
     expect(current).toHaveLength(1);
     expect(current[0].jsDay).toBe(4);
-    expect(current[0].time).toBe("۰۸:۰۰ – ۰۹:۳۰");
+    expect(current[0].time).toBe("08:00 – 09:30");
     expect(saved.find((o: any) => o.id === "a").endDate).toBeTruthy();
     expect(data.reply).toContain("پنجشنبه");
   });
@@ -357,7 +357,7 @@ describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خ
 
     const data = await (await POST(post({ message: "شنبه ۸:۳۰ جلسه بگذار" }))).json();
     expect(data.changed).toBe(false);
-    expect(data.options.some((o: string) => o.includes("۰۹:۳۰"))).toBe(true);
+    expect(data.options.some((o: string) => o.includes("09:30"))).toBe(true);
   });
 
   it("تاریخچه‌ی بدشکل کرش نمی‌دهد و نادیده گرفته می‌شود", async () => {

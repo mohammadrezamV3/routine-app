@@ -44,7 +44,7 @@ export async function PUT(req: NextRequest) {
     if (body?.mood !== undefined && body?.mood !== null) {
       const n = Number(body.mood);
       if (!Number.isInteger(n) || n < 1 || n > 5) {
-        return NextResponse.json({ error: "mood باید عددی بینِ ۱ تا ۵ باشد" }, { status: 400 });
+        return NextResponse.json({ error: "mood باید عددی بینِ 1 تا 5 باشد" }, { status: 400 });
       }
       mood = n;
     }

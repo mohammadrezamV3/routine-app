@@ -21,7 +21,7 @@ describe("روز و تاریخ", () => {
     expect(parseDay("پنج‌شنبه")).toBe(4);
     expect(parseDay("يكشنبه")).toBe(0);
     expect(parseDay(5)).toBe(5);
-    expect(parseDay("۳")).toBe(3);
+    expect(parseDay("3")).toBe(3);
     expect(parseDay("هشتنبه")).toBeNull();
     expect(parseDay(7)).toBeNull();
   });
@@ -29,18 +29,18 @@ describe("روز و تاریخ", () => {
   it("تاریخِ میلادی، جلالی و امروز/فردا را تبدیل می‌کند", () => {
     expect(parseDateInput("2026-09-10", TODAY)).toBe("2026-09-10");
     expect(parseDateInput("1405/07/01", TODAY)).toBe("2026-09-23");
-    expect(parseDateInput("۱۴۰۵-۰۶-۱۴", TODAY)).toBe(TODAY);
+    expect(parseDateInput("1405-06-14", TODAY)).toBe(TODAY);
     expect(parseDateInput("امروز", TODAY)).toBe(TODAY);
     expect(parseDateInput("فردا", TODAY)).toBe("2026-09-06");
     expect(parseDateInput("2026-02-30", TODAY)).toBeNull();
-    expect(parseDateInput("1405/07/31", TODAY)).toBeNull(); // مهر ۳۰ روزه است
+    expect(parseDateInput("1405/07/31", TODAY)).toBeNull(); // مهر 30 روزه است
     expect(parseDateInput("یه روزی", TODAY)).toBeNull();
   });
 
   it("jalaliToIso با toJalali رفت‌وبرگشتِ دقیق دارد، حتی دورِ نوروز", () => {
     expect(jalaliToIso(1405, 1, 1)).toBe("2026-03-21");
     expect(jalaliToIso(1404, 12, 29)).toBe("2026-03-20");
-    expect(jalaliToIso(1403, 12, 30)).toBe("2025-03-20"); // ۱۴۰۳ کبیسه است
+    expect(jalaliToIso(1403, 12, 30)).toBe("2025-03-20"); // 1403 کبیسه است
     expect(jalaliToIso(1404, 12, 30)).toBeNull();
   });
 
@@ -116,7 +116,7 @@ describe("فقط یک روز از یک برنامه‌ی تکراری", () => {
     const moved = r.occurrences.find((o) => o.jsDay === 0)!;
     expect(moved.startDate).toBe("2026-09-06");
     expect(moved.endDate).toBe("2026-09-06");
-    expect(moved.time).toBe("۱۸:۰۰ – ۱۹:۰۰");
+    expect(moved.time).toBe("18:00 – 19:00");
     // شنبه‌های بعدی هنوز ورزش دارند
     expect(r.occurrences.some((o) => o.jsDay === 6 && o.startDate === "2026-09-06")).toBe(true);
   });
@@ -125,7 +125,7 @@ describe("فقط یک روز از یک برنامه‌ی تکراری", () => {
     const r = applyOps(BASE, [], [{ op: "retime", ref: 1, date: "2026-09-12", start: "20:00", end: "21:00" }], TODAY);
     expect(r.problems).toHaveLength(0);
     const single = r.occurrences.find((o) => o.startDate === "2026-09-12" && o.endDate === "2026-09-12")!;
-    expect(single.time).toBe("۲۰:۰۰ – ۲۱:۰۰");
+    expect(single.time).toBe("20:00 – 21:00");
     expect(r.occurrences.find((o) => o.id === "a")!.endDate).toBe("2026-09-11");
   });
 
@@ -174,7 +174,7 @@ describe("update و زنجیره‌ی عملیات", () => {
     const cur = live(r);
     expect(cur).toHaveLength(1);
     expect(cur[0].name).toBe("دویدن");
-    expect(cur[0].time).toBe("۰۷:۰۰ – ۰۸:۰۰");
+    expect(cur[0].time).toBe("07:00 – 08:00");
   });
 
   it("delete با from از همان تاریخ به بعد می‌بندد", () => {
@@ -185,13 +185,13 @@ describe("update و زنجیره‌ی عملیات", () => {
 
 describe("ساعتِ ساختگی", () => {
   it("نشانه‌های زمان را می‌شناسد", () => {
-    expect(mentionsTime("ساعت ۸ ورزش")).toBe(true);
+    expect(mentionsTime("ساعت 8 ورزش")).toBe(true);
     expect(mentionsTime("عصرها باشگاه")).toBe(true);
-    expect(mentionsTime("۸:۳۰ کلاس")).toBe(true);
-    expect(mentionsTime("از ۸ تا ۱۰ درس")).toBe(true);
+    expect(mentionsTime("8:30 کلاس")).toBe(true);
+    expect(mentionsTime("از 8 تا 10 درس")).toBe(true);
     expect(mentionsTime("هر روز ورزش")).toBe(false);
-    expect(mentionsTime("یه دوره‌ی ۳ ماهه ریاضی هفته‌ای ۲ جلسه")).toBe(false);
-    expect(mentionsTime("۳ تا ۵ روز در هفته")).toBe(false);
+    expect(mentionsTime("یه دوره‌ی 3 ماهه ریاضی هفته‌ای 2 جلسه")).toBe(false);
+    expect(mentionsTime("3 تا 5 روز در هفته")).toBe(false);
   });
 
   it("وقتی کاربر ساعتی نگفته، start/end مدل از add و move پاک می‌شود", () => {
@@ -205,7 +205,7 @@ describe("ساعتِ ساختگی", () => {
     expect(out[0].start).toBeUndefined();
     expect(out[1].start).toBeUndefined();
     expect(out[2].start).toBe("11:00");
-    expect(stripInventedTimes(ops, ["ورزش ساعت ۸"]).stripped).toBe(0);
+    expect(stripInventedTimes(ops, ["ورزش ساعت 8"]).stripped).toBe(0);
   });
 });
 

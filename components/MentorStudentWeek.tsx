@@ -4,7 +4,7 @@ import { CheckCircle2, EyeOff, Minus, XCircle } from "lucide-react";
 import { MI, MI_STROKE, MentorChip, MentorEmpty } from "./MentorUI";
 import { fmtWeekday } from "@/lib/mentorFormat";
 import { isoLocal } from "@/lib/jalali";
-import { toFaDigits } from "@/lib/schedule";
+import { toEnDigits } from "@/lib/schedule";
 import { IMPORTANCE_LABELS, type Importance } from "@/lib/storage";
 import type { MentorRoutineSlot } from "@/lib/mentorTypes";
 import type { StudentPrivacySummary } from "./MentorStudentTypes";
@@ -74,7 +74,7 @@ export function MentorStudentWeek({
                   const masked = s.title === "مشغول" && !privacy.showTaskName;
                   return (
                     <li key={`${s.time}-${i}`} className="flex items-start gap-2.5 text-[12px] leading-6">
-                      <span className="mono min-w-[44px] shrink-0 whitespace-nowrap text-dash-muted" dir="ltr">{toFaDigits(s.time).replace(/\s*[-–—]\s*/, " – ")}</span>
+                      <span className="mono min-w-[44px] shrink-0 whitespace-nowrap text-dash-muted" dir="ltr">{toEnDigits(s.time).replace(/\s*[-–—]\s*/, " – ")}</span>
                       <span className="min-w-0 flex-1">
                         <span className={`block ${masked ? "text-dash-muted" : "text-dash-text"}`}>{s.title}</span>
                         {(s.program || impLabel) && (

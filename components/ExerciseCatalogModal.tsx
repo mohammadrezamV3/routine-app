@@ -35,7 +35,7 @@ const MUSCLE_FILTERS: MuscleKey[] = [
 
 export function DifficultyStars({ level, className }: { level: number; className?: string }) {
   return (
-    <div className={`exercise-difficulty-stars${className ? ` ${className}` : ""}`} aria-label={`میزان سختی: ${level} از ۵`}>
+    <div className={`exercise-difficulty-stars${className ? ` ${className}` : ""}`} aria-label={`میزان سختی: ${level} از 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={13} fill={i <= level ? "currentColor" : "none"} className={i <= level ? "on" : ""} />
       ))}

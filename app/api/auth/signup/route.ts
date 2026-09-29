@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });
   }
   if (!isValidUsername(username)) {
-    return NextResponse.json({ error: "یوزرنیم باید ۳ تا ۲۰ کاراکتر و فقط شامل حروف انگلیسی/عدد/آندرلاین باشه" }, { status: 400 });
+    return NextResponse.json({ error: "یوزرنیم باید 3 تا 20 کاراکتر و فقط شامل حروف انگلیسی/عدد/آندرلاین باشه" }, { status: 400 });
   }
   const passwordError = await validatePassword(password, [username, name, lastName, phone]);
   if (passwordError) {

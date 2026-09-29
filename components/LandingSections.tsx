@@ -16,14 +16,13 @@ import { StreakFlame } from "@/components/StreakFlame";
 import { FRIENDS, INERT, MockMentorChat, MockStreakTiers } from "@/components/LandingMockups";
 import "@/components/landing-sections.css";
 import { FAQ_ITEMS } from "@/lib/landingFaq";
+import { STATS_BASE, type PublicStats } from "@/lib/publicStatsBase";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 function fa(n: number) {
-  // جداکننده‌ی هزارگان برای عددهای بزرگ (مثلِ تعدادِ کاربران)
-  const str = n >= 1000 ? n.toLocaleString("en-US") : String(n);
-  return str.replace(/\d/g, (d) => FA_DIGITS[Number(d)]).replace(/,/g, "٬");
+  // ارقامِ انگلیسی؛ جداکننده‌ی هزارگان برای عددهای بزرگ (مثلِ تعدادِ کاربران)
+  return n >= 1000 ? n.toLocaleString("en-US") : String(n);
 }
 
 function Reveal({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -61,6 +60,8 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
   // اگه حرکت مجازه، روی صفر می‌ره تا دیده‌شدن، بدون mismatch.
   const [val, setVal] = useState(to);
   const [armed, setArmed] = useState(false);
+  const cur = useRef(to);
+  cur.current = val;
 
   useEffect(() => {
     if (reduce) return;
@@ -68,14 +69,19 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
     setArmed(true);
   }, [reduce]);
 
+  // بی‌حرکت: عددِ تازه (پاسخِ /api/public/stats) مستقیم نشون داده می‌شه
+  useEffect(() => { if (reduce) setVal(to); }, [reduce, to]);
+
   useEffect(() => {
     if (!armed || !inView) return;
     let raf = 0;
+    // از همون عددِ فعلی (اگه پاسخِ API بعد از شمارش رسید، دوباره از صفر شروع نمی‌کنه)
+    const from = cur.current;
     const start = performance.now();
     const dur = 1400;
     const tick = (now: number) => {
       const p = Math.min(1, (now - start) / dur);
-      setVal(Math.round(to * (1 - Math.pow(1 - p, 3))));
+      setVal(Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -85,41 +91,40 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
   return <span ref={ref}>{fa(val)}{suffix}</span>;
 }
 
-// پایه‌ی شمارنده‌ی کاربران = همون USER_COUNT_BASE در lib/publicStats.ts (سرور)؛
-// تا پاسخِ /api/public/stats برسه همین نشون داده می‌شه.
-const USERS_FALLBACK = 1312;
-
-// هر عدد از خودِ کد شمرده شده، نه تخمین — اگر منبع عوض شد، این‌جا هم عوض شود:
-//  ۲۶۴ = FOOD_SEED.length (lib/foodSeed.ts، دیتابیسِ خوراکیِ کالری‌شمار)
-//  ۱۴۹ = EXERCISE_CATALOG.length (lib/exerciseCatalog.ts، هر حرکت با آموزش و عضلاتِ درگیر)
-//  ۹   = CALENDAR_CURRENCIES.length (lib/economicCalendar.ts)
-// (خودِ آرایه‌ها import نمی‌شوند تا کاتالوگِ سنگین واردِ باندلِ لندینگ نشود.)
-const STATS: { to?: number; suffix?: string; text?: string; label: string }[] = [
-  { to: 264, label: "خوراکیِ ایرانی و جهانی در کالری‌شمار" },
-  { to: 149, label: "حرکت بدنسازی با آموزش و عضلاتِ درگیر" },
-  { to: 9, label: "ارزِ اصلی در تقویم اقتصادی" },
+// عددها = واقعی + پایه (lib/publicStatsBase.ts)؛ تا پاسخِ /api/public/stats برسه خودِ
+// پایه‌ها نشون داده می‌شن.
+const STATS: { key: keyof PublicStats; label: string }[] = [
+  { key: "users", label: "کاربر" },
+  { key: "routinePrograms", label: "برنامه‌ی روتین" },
+  { key: "exercisePlans", label: "برنامه‌ی ورزشی" },
+  { key: "journalEntries", label: "معامله‌ی ثبت‌شده در ژورنال" },
 ];
 
 export function LandingStats() {
-  // تعدادِ کاربران: واقعی + پایه، از روتِ عمومیِ کش‌شده.
-  const [users, setUsers] = useState<number | null>(null);
+  const [stats, setStats] = useState<PublicStats>(STATS_BASE);
   useEffect(() => {
     let alive = true;
     fetch("/api/public/stats")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (alive && typeof d?.users === "number") setUsers(d.users); })
+      .then((d) => {
+        if (!alive || !d) return;
+        setStats((prev) => {
+          const next = { ...prev };
+          for (const { key } of STATS) if (typeof d[key] === "number") next[key] = d[key];
+          return next;
+        });
+      })
       .catch(() => {});
     return () => { alive = false; };
   }, []);
-  const items = [{ to: users ?? USERS_FALLBACK, suffix: "+", label: "کاربر" }, ...STATS];
 
   return (
     <Reveal>
       <div className="ls-stats" role="list">
-        {items.map((s) => (
-          <div key={s.label} className="ls-stat" role="listitem">
+        {STATS.map((s) => (
+          <div key={s.key} className="ls-stat" role="listitem">
             <div className="ls-stat-num">
-              {s.to !== undefined ? <CountUp to={s.to} suffix={s.suffix} /> : <span dir="ltr" className="ls-stat-text">{s.text}</span>}
+              <CountUp to={stats[s.key]} suffix="+" />
             </div>
             <div className="ls-stat-label">{s.label}</div>
           </div>
@@ -132,7 +137,7 @@ export function LandingStats() {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const STEPS = [
-  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. «روتین من» همیشه رایگان است و ۳ روز هم بدنسازی، کالری‌شمار و ژورنال ترید برایت باز است." },
+  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. «روتین من» همیشه رایگان است و 3 روز هم بدنسازی، کالری‌شمار و ژورنال ترید برایت باز است." },
   { icon: LayoutGrid, title: "برنامه‌ات را بچین", body: "کارهای تکراری، تمرین، هدف کالری یا حساب معاملاتی‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
   { icon: CalendarCheck, title: "هر روز تیک بزن", body: "کارهای امروز را علامت بزن، استریک را نگه دار و آخر هفته ببین واقعاً چقدر جلو رفته‌ای." },
 ];
@@ -197,7 +202,7 @@ function VisPwa() {
         <div className="ls-toast">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/logo-icon-dark-theme.png" alt="" width={18} height={18} className="ls-toast-ic" />
-          <span className="ls-toast-tx"><b>یادآوری برنامه</b>تا ۱۵ دقیقه دیگه وقت «پیاده‌روی عصر» می‌رسه.</span>
+          <span className="ls-toast-tx"><b>یادآوری برنامه</b>تا 15 دقیقه دیگه وقت «پیاده‌روی عصر» می‌رسه.</span>
         </div>
         <div className="ls-phone-row" /><div className="ls-phone-row ls-w70" /><div className="ls-phone-row ls-w50" />
       </div>
@@ -244,8 +249,8 @@ function VisMeta() {
       </div>
       <div className="ls-meta-cells">
         <div className="trade-detail-cell"><span>نسخه</span><b>MT5</b></div>
-        <div className="trade-detail-cell"><span>اکوئیتی</span><b className="mono">۱۰۸۴۲٫۵۰</b></div>
-        <div className="trade-detail-cell"><span>آخرین همگام‌سازی</span><b>امروز ۱۴:۰۵</b></div>
+        <div className="trade-detail-cell"><span>اکوئیتی</span><b className="mono">10842.50</b></div>
+        <div className="trade-detail-cell"><span>آخرین همگام‌سازی</span><b>امروز 14:05</b></div>
       </div>
     </div>
   );
@@ -259,8 +264,8 @@ function VisFood() {
       </div>
       <div className="ls-food-grid">
         {[
-          { l: "کالری", v: "۲۱۰۰" }, { l: "پروتئین (گرم)", v: "۱۴۰" },
-          { l: "کربوهیدرات (گرم)", v: "۲۲۰" }, { l: "چربی (گرم)", v: "۷۰" },
+          { l: "کالری", v: "2100" }, { l: "پروتئین (گرم)", v: "140" },
+          { l: "کربوهیدرات (گرم)", v: "220" }, { l: "چربی (گرم)", v: "70" },
         ].map((x) => (
           <div key={x.l} className="rounded-xl border border-dash-border bg-white/[0.02] px-2 py-1.5 text-center">
             <div className="mono text-[12px] font-bold text-dash-text">{x.v}</div>
@@ -275,7 +280,7 @@ function VisFood() {
 const BENTO = [
   { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "خصوصی، با رمزگذاری سرتاسری", body: "گفت‌وگو و یادداشت خصوصی مربی‌ها روی دستگاه خودت رمز می‌شود؛ نه سرور و نه هیچ ادمینی متن پیام‌ها را نمی‌بیند.", vis: VisE2EE },
   { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "همه‌جا، مثل یک اپ", body: "روی گوشی نصبش کن و یادآوری‌ها را سرِ وقت، با نوتیفیکیشن بگیر.", vis: VisPwa },
-  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک با ۸ سطح", body: "هر روزِ کامل شعله را بزرگ‌تر می‌کند؛ از روز اول تا یک سال پیوسته.", vis: VisStreak },
+  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک با 8 سطح", body: "هر روزِ کامل شعله را بزرگ‌تر می‌کند؛ از روز اول تا یک سال پیوسته.", vis: VisStreak },
   { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "وقتی دوستانت پیشرفتت را می‌بینند، ادامه‌دادن ساده‌تر می‌شود.", vis: VisFriends },
   { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "همگام‌سازی خودکار متاتریدر", body: "با اکسپرت و کد اتصال، معاملات بدون تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
   { key: "food", cls: "ls-b-food", icon: Target, title: "هدف کالری و ماکروی شخصی", body: "از قد، وزن، سن، روزهای تمرین و هدفت، کالری و درشت‌مغذی روزانه‌ات محاسبه می‌شود.", vis: VisFood },
@@ -316,15 +321,15 @@ export function LandingBento() {
 const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }[] = [
   { icon: CalendarCheck, title: "روتین روزانه", body: "برنامه‌های تکرارشونده با ساعت، تگ و اهمیت، و تیکِ هر روز.", href: "/routine" },
   { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه، و تقویمِ تاریخچه برای هر روزِ گذشته.", href: "/daily-planner" },
-  { icon: Flame, title: "پیگیری عادت و استریک", body: "۸ سطح استریک، از ۱ تا ۳۶۵ روزِ کامل.", href: "/habit-tracker" },
+  { icon: Flame, title: "پیگیری عادت و استریک", body: "8 سطح استریک، از 1 تا 365 روزِ کامل.", href: "/habit-tracker" },
   { icon: Bell, title: "یادآوری و یادآوری دارو", body: "نوتیفیکیشن سرِ وقت برای برنامه‌ها و هر نوبت دارو." },
   { icon: Bot, title: "دستیار «نومو»", body: "به فارسیِ معمولی بنویس؛ برنامه ساخته، جابه‌جا یا حذف می‌شود.", href: "/ai-planner" },
   { icon: BarChart3, title: "آنالیز هفتگی", body: "امتیاز، نمره، بینش و پیش‌بینی پایان هفته از داده‌ی خودت." },
-  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه‌ی AI یا دستی، کرنومتر تمرین و کاتالوگ ۱۴۹ حرکت.", href: "/bodybuilding-program" },
-  { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکروی شخصی، ۲۶۴ خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
+  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه‌ی AI یا دستی، کرنومتر تمرین و کاتالوگ 149 حرکت.", href: "/bodybuilding-program" },
+  { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکروی شخصی، 264 خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
   { icon: CandlestickChart, title: "ژورنال ترید", body: "حساب‌محور، با آمار، چک‌لیست ورود، یادداشت و برچسب.", href: "/trading-journal" },
   { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال، بدون رمز حساب.", href: "/trading-journal" },
-  { icon: CalendarClock, title: "تقویم اقتصادی", body: "۹ ارز اصلی با Actual، Forecast و Previous، فیلتر تأثیر و هشدار خبر.", href: "/economic-calendar" },
+  { icon: CalendarClock, title: "تقویم اقتصادی", body: "9 ارز اصلی با Actual، Forecast و Previous، فیلتر تأثیر و هشدار خبر.", href: "/economic-calendar" },
   { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
   { icon: Route, title: "رودمپ یادگیری", body: "مسیر مرحله‌به‌مرحله با هوش مصنوعی، برای هر مهارتی.", href: "/learning-roadmap" },
   { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، گفت‌وگوی رمزگذاری‌شده و صف انتظار.", href: "/mentors" },
@@ -499,9 +504,9 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> روتین رایگان، ۳ روز بقیه</span>
+          <span className="ls-cta-chip"><Sparkles size={14} /> روتین رایگان، 3 روز بقیه</span>
           <h2 className="ls-cta-title">امروز، اولین تیک را بزن</h2>
-          <p className="ls-cta-sub">«روتین من» برای همیشه رایگان است؛ حساب بساز و ۳ روز بدنسازی، کالری‌شمار و ژورنال ترید را هم با استفاده‌ی محدود از هوش مصنوعی امتحان کن.</p>
+          <p className="ls-cta-sub">«روتین من» برای همیشه رایگان است؛ حساب بساز و 3 روز بدنسازی، کالری‌شمار و ژورنال ترید را هم با استفاده‌ی محدود از هوش مصنوعی امتحان کن.</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
               رایگان شروع کن <ArrowLeft size={16} />

@@ -185,7 +185,7 @@ export function RatingInline({ value, count, withWord = false }: { value: number
     );
   }
   return (
-    <span className="mentor-rating-inline" aria-label={`امتیاز ${faNum(v.toFixed(1))} از ۵، ${faNum(count)} نظر`}>
+    <span className="mentor-rating-inline" aria-label={`امتیاز ${faNum(v.toFixed(1))} از 5، ${faNum(count)} نظر`}>
       <Star size={13} strokeWidth={1.75} fill="currentColor" aria-hidden />
       <b>{faNum(v.toFixed(1))}</b>
       <span>({faNum(count)}{withWord ? " نظر" : ""})</span>
@@ -199,7 +199,7 @@ export function RatingStars({ value, count }: { value: number; count?: number })
   const filled = Math.round(v);
   const none = count === 0 || v === 0;
   return (
-    <span className="mentor-stars" aria-label={none ? "بدون امتیاز" : `امتیاز ${faNum(v.toFixed(1))} از ۵`}>
+    <span className="mentor-stars" aria-label={none ? "بدون امتیاز" : `امتیاز ${faNum(v.toFixed(1))} از 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={13} strokeWidth={1.75} aria-hidden className={i <= filled && !none ? undefined : "is-empty"} fill={i <= filled && !none ? "currentColor" : "none"} />
       ))}

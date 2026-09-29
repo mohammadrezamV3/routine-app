@@ -33,7 +33,7 @@ function ChurnInner() {
             <KpiTile label="لغو اشتراک" value={formatNumber(data.churn.canceledInRange)} index={0} />
             <KpiTile label="منقضی‌شده در بازه" value={formatNumber(data.churn.expiredInRange)} index={1} />
             <KpiTile label="نرخ Churn" value={formatRate(data.churn.churnRatePercent)} index={2} />
-            <KpiTile label="در معرض ریزش (۷ روز آینده)" value={formatNumber(data.churn.atRiskCount)} index={3} />
+            <KpiTile label="در معرض ریزش (7 روز آینده)" value={formatNumber(data.churn.atRiskCount)} index={3} />
           </KpiGrid>
 
           <div className="admin-chart-card">

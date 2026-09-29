@@ -28,7 +28,7 @@ const BASE = [
 
 describe("parseClock", () => {
   it("ارقامِ فارسی و لاتین هر دو را می‌پذیرد", () => {
-    expect(parseClock("۸:۳۰")?.min).toBe(8 * 60 + 30);
+    expect(parseClock("8:30")?.min).toBe(8 * 60 + 30);
     expect(parseClock("08:30")?.min).toBe(8 * 60 + 30);
   });
   it("ساعتِ بدونِ دقیقه را ۰۰ می‌گیرد", () => {
@@ -54,8 +54,8 @@ describe("findConflict / suggestFreeSlot", () => {
   it("نزدیک‌ترین بازه‌ی آزادِ هم‌طول را پیشنهاد می‌دهد", () => {
     const slot = suggestFreeSlot(BASE, 6, 8 * 60, 9 * 60); // یک ساعته، روی کلاس زبان
     expect(slot).not.toBeNull();
-    expect(slot!.startFa).toBe("۰۹:۳۰");
-    expect(slot!.endFa).toBe("۱۰:۳۰");
+    expect(slot!.startFa).toBe("09:30");
+    expect(slot!.endFa).toBe("10:30");
   });
   it("اگر تا آخرِ روز جا نباشد null می‌دهد", () => {
     const full = [occ("x", "پر", 3, "۰۰:۰۰ – ۲۳:۵۹")];
@@ -69,7 +69,7 @@ describe("applyOps — افزودن", () => {
     expect(r.applied).toHaveLength(2);
     expect(r.problems).toHaveLength(0);
     expect(live(r).filter((o) => o.name === "دویدن")).toHaveLength(2);
-    expect(live(r).find((o) => o.name === "دویدن")!.time).toBe("۰۶:۰۰ – ۰۷:۰۰");
+    expect(live(r).find((o) => o.name === "دویدن")!.time).toBe("06:00 – 07:00");
     expect(live(r).find((o) => o.name === "دویدن")!.startDate).toBe(TODAY);
   });
 
@@ -79,7 +79,7 @@ describe("applyOps — افزودن", () => {
     expect(r.changed).toBe(false);
     expect(r.problems[0]).toContain("کلاس زبان");
     expect(r.problems[0]).toContain("پر است");
-    expect(r.problems[0]).toContain("۰۹:۳۰");
+    expect(r.problems[0]).toContain("09:30");
   });
 
   it("روزِ نامشخص، اسمِ خالی و ساعتِ بدشکل هرکدام پیامِ خودشان را دارند", () => {
@@ -118,10 +118,10 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
       { op: "add", name: "ترید", days: [4], start: "۰۸:۰۰", end: "۰۸:۰۵", repeatEveryMin: 60 },
     ], TODAY);
     const created = live(r).filter((o) => o.name === "ترید");
-    expect(created).toHaveLength(15); // ۰۸:۰۰ تا ۲۲:۰۰ هر ساعت (پیش‌فرضِ DEFAULT_AWAKE)
-    expect(created[0].time).toBe("۰۸:۰۰ – ۰۸:۰۵");
-    expect(created[created.length - 1].time).toBe("۲۲:۰۰ – ۲۲:۰۵");
-    expect(r.applied[0]).toContain("۱۵ بار اضافه شد");
+    expect(created).toHaveLength(15); // 08:00 تا 22:00 هر ساعت (پیش‌فرضِ DEFAULT_AWAKE)
+    expect(created[0].time).toBe("08:00 – 08:05");
+    expect(created[created.length - 1].time).toBe("22:00 – 22:05");
+    expect(r.applied[0]).toContain("15 بار اضافه شد");
     expect(r.problems).toHaveLength(0);
   });
 
@@ -130,7 +130,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
       { op: "add", name: "استراحتِ چشم", days: [4], repeatEveryMin: 120 },
     ], TODAY);
     const created = live(r).filter((o) => o.name === "استراحتِ چشم");
-    expect(created[0].time).toBe("۰۸:۰۰ – ۰۸:۰۵");
+    expect(created[0].time).toBe("08:00 – 08:05");
   });
 
   it("repeatUntil را به‌عنوانِ آخرین ساعتِ شروع رعایت می‌کند", () => {
@@ -139,7 +139,7 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     ], TODAY);
     const created = live(r).filter((o) => o.name === "کشش");
     expect(created.map((o) => o.time)).toEqual([
-      "۰۸:۰۰ – ۰۸:۱۰", "۰۸:۳۰ – ۰۸:۴۰", "۰۹:۰۰ – ۰۹:۱۰",
+      "08:00 – 08:10", "08:30 – 08:40", "09:00 – 09:10",
     ]);
   });
 
@@ -151,8 +151,8 @@ describe("applyOps — تکرارِ درون‌روزی (repeatEveryMin)", () =>
     ], TODAY);
     const created = live(r).filter((o) => o.name === "یادآوری");
     expect(created).toHaveLength(1);
-    expect(created[0].time).toBe("۱۰:۰۰ – ۱۰:۱۰");
-    expect(r.applied[0]).toContain("۲ بار به‌خاطرِ تداخل");
+    expect(created[0].time).toBe("10:00 – 10:10");
+    expect(r.applied[0]).toContain("2 بار به‌خاطرِ تداخل");
   });
 
   it("بازه‌ی تکرارِ خارج از محدوده را رد می‌کند و چیزی اضافه نمی‌کند", () => {
@@ -177,9 +177,9 @@ describe("applyOps — تغییرِ ساعت / جابه‌جایی / حذف", ()
     const r = applyOps(BASE, [], [{ op: "retime", ref: 1, start: "۱۰:۰۰", end: "۱۱:۰۰" }], TODAY);
     expect(r.problems).toHaveLength(0);
     const moved = live(r).find((o) => o.name === "کلاس زبان")!;
-    expect(moved.time).toBe("۱۰:۰۰ – ۱۱:۰۰");
+    expect(moved.time).toBe("10:00 – 11:00");
     expect(moved.id).not.toBe("a");
-    expect(r.applied[0]).toContain("۰۸:۰۰ – ۰۹:۳۰");
+    expect(r.applied[0]).toContain("08:00 – 09:30");
   });
 
   it("به روزِ دیگر منتقل می‌کند و ساعتِ قبلی را نگه می‌دارد", () => {
@@ -187,7 +187,7 @@ describe("applyOps — تغییرِ ساعت / جابه‌جایی / حذف", ()
     expect(r.problems).toHaveLength(0);
     const m = live(r).find((o) => o.name === "مطالعه")!;
     expect(m.jsDay).toBe(4);
-    expect(m.time).toBe("۲۰:۰۰ – ۲۱:۰۰");
+    expect(m.time).toBe("20:00 – 21:00");
     expect(r.applied[0]).toContain("پنجشنبه");
   });
 
@@ -245,7 +245,7 @@ describe("applyOps — ترکیبی و سقف", () => {
     ], TODAY);
     expect(r.problems).toHaveLength(0);
     expect(r.applied).toHaveLength(2);
-    expect(live(r).find((o) => o.name === "صبحانه")!.time).toBe("۰۸:۰۰ – ۰۹:۰۰");
+    expect(live(r).find((o) => o.name === "صبحانه")!.time).toBe("08:00 – 09:00");
   });
 
   it("ref بعد از حذف هم به برنامه‌ی درست اشاره می‌کند", () => {
@@ -340,14 +340,14 @@ describe("برنامه‌ی بدونِ ساعت", () => {
     const list = [{ id: "u", name: "ورزش", jsDay: 1, time: "", startDate: "2026-01-01" }];
     const r = applyOps(list, [], [{ op: "retime", ref: 1, start: "07:00", end: "08:00" }], TODAY);
     expect(r.problems).toHaveLength(0);
-    expect(live(r)[0].time).toBe("۰۷:۰۰ – ۰۸:۰۰");
+    expect(live(r)[0].time).toBe("07:00 – 08:00");
   });
 });
 
 describe("گزینه‌ها — هیچ بن‌بستی بدونِ راهِ ادامه", () => {
   it("تداخل، گزینه‌ی ثبت در وقتِ آزاد را پیشنهاد می‌دهد", () => {
     const r = applyOps(BASE, [], [{ op: "add", name: "جلسه", days: [6], start: "08:30", end: "09:00" }], TODAY);
-    expect(r.options.some((o) => o.includes("۰۹:۳۰"))).toBe(true);
+    expect(r.options.some((o) => o.includes("09:30"))).toBe(true);
     expect(r.options.some((o) => o.includes("روزِ دیگر"))).toBe(true);
   });
 

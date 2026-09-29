@@ -55,7 +55,7 @@ export function PreviewRoutine() {
         ]}
       />
       <MockMedicationCard meds={[
-        { name: "امگا ۳", every: "هر 12 ساعت", times: "09:00 · 21:00", left: "18 روز مونده" },
+        { name: "امگا 3", every: "هر 12 ساعت", times: "09:00 · 21:00", left: "18 روز مونده" },
       ]} />
       {/* اعلانِ پوشِ واقعی (lib/reminderPlan.ts) */}
       <div className="lsc-push">
@@ -63,7 +63,7 @@ export function PreviewRoutine() {
         <img src="/images/logo-icon-dark-theme.png" alt="" width={28} height={28} className="lsc-push-ic" />
         <div className="min-w-0">
           <b>یادآوری دارو</b>
-          <span>نوبتِ «امگا ۳» ساعت ۲۱:۰۰ — ۱۵ دقیقه‌ی دیگه.</span>
+          <span>نوبتِ «امگا 3» ساعت 21:00 — 15 دقیقه‌ی دیگه.</span>
         </div>
       </div>
     </Pv>
@@ -123,11 +123,11 @@ export function PreviewNumo({ live }: PreviewProps) {
         </div>
         <div className="routine-ai-list">
           <AIMessage from="user" className="routine-ai-row-user">
-            <p>شنبه‌ها و سه‌شنبه‌ها ساعت ۶ صبح پیاده‌روی</p>
+            <p>شنبه‌ها و سه‌شنبه‌ها ساعت 6 صبح پیاده‌روی</p>
           </AIMessage>
           <AIMessage from="assistant" avatar={orb("24px")} className="routine-ai-row-bot tone-ok">
-            <p>«پیاده‌روی» شنبه ساعتِ ۰۶:۰۰ اضافه شد.</p>
-            <p className="mt-1">«پیاده‌روی» سه‌شنبه ساعتِ ۰۶:۰۰ اضافه شد.</p>
+            <p>«پیاده‌روی» شنبه ساعتِ 06:00 اضافه شد.</p>
+            <p className="mt-1">«پیاده‌روی» سه‌شنبه ساعتِ 06:00 اضافه شد.</p>
           </AIMessage>
         </div>
         <div className="routine-ai-composer">
@@ -307,7 +307,7 @@ export function PreviewTrade() {
           <span className="trade-title-add-btn"><Pencil size={13} /> ویرایش</span>
         </div>
         <div className="trade-checklist-items">
-          {[["روند تایم بالاتر هم‌جهته", true], ["حد ضرر پشت ساختار", true], ["خبر مهم تا ۳۰ دقیقه‌ی بعد نیست", false]].map(([t, d]) => (
+          {[["روند تایم بالاتر هم‌جهته", true], ["حد ضرر پشت ساختار", true], ["خبر مهم تا 30 دقیقه‌ی بعد نیست", false]].map(([t, d]) => (
             <div key={t as string} className={`trade-check-row readonly${d ? " done" : ""}`}>
               <span className="trade-check-box" />
               <span>{t}</span>
@@ -403,21 +403,21 @@ export function PreviewRoadmap() {
         topic="گیتار"
         title="گیتار آکوستیک از صفر تا اولین آهنگ"
         desc="از گرفتن درستِ گیتار و آکوردهای پایه تا ریتم و نواختنِ یک آهنگ کامل."
-        duration="۱۰ هفته"
+        duration="10 هفته"
         stages={5}
         level="صفرِ مطلق"
         pct={40}
       />
       <ol className="lsc-stages">
-        <MockRoadmapStage n={1} title="آشنایی با ساز و آکوردهای پایه" duration="۲ هفته" done tasksDone={4} tasks={4} />
+        <MockRoadmapStage n={1} title="آشنایی با ساز و آکوردهای پایه" duration="2 هفته" done tasksDone={4} tasks={4} />
         <MockRoadmapStage
-          n={2} title="ریتم و الگوهای ضرب" duration="۲ هفته" tasksDone={1} tasks={3}
+          n={2} title="ریتم و الگوهای ضرب" duration="2 هفته" tasksDone={1} tasks={3}
           openTasks={[
-            { title: "الگوی ضربِ پایین-بالا با مترونوم روی ۷۰", checked: true },
+            { title: "الگوی ضربِ پایین-بالا با مترونوم روی 70", checked: true },
             { title: "تعویضِ روانِ آکوردهای G، C و D" },
           ]}
         />
-        <MockRoadmapStage n={3} title="اولین آهنگ کامل" duration="۳ هفته" tasksDone={0} tasks={4} />
+        <MockRoadmapStage n={3} title="اولین آهنگ کامل" duration="3 هفته" tasksDone={0} tasks={4} />
       </ol>
     </Pv>
   );
@@ -431,12 +431,12 @@ const WEEK = [
 export function PreviewMentor() {
   return (
     <Pv>
-      <MockMentorCard name="علی کاظمی" line="مربی بدنسازی · ۸ سال تجربه" rating="۴٫۸" count="۵۲" since="مهر ۱۴۰۳" />
+      <MockMentorCard name="علی کاظمی" line="مربی بدنسازی · 8 سال تجربه" rating="4.8" count="52" since="مهر 1403" />
       <MockCard>
         <MockMentorChat
           peer="علی کاظمی"
           msgs={[
-            { text: "این هفته چهار جلسه کامل بود، عالیه. از فردا وزنه‌ی پرس رو ۲٫۵ کیلو ببر بالا.", time: "18:42" },
+            { text: "این هفته چهار جلسه کامل بود، عالیه. از فردا وزنه‌ی پرس رو 2.5 کیلو ببر بالا.", time: "18:42" },
             { mine: true, text: "حتماً! دوشنبه جا موند، جبرانش کنم؟", time: "18:45" },
           ]}
         />

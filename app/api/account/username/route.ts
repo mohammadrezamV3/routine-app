@@ -25,7 +25,7 @@ async function handlePATCH(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const username = String(body?.username || "").trim();
   if (!isValidUsername(username)) {
-    return NextResponse.json({ error: "یوزرنیم باید ۳ تا ۲۰ کاراکتر انگلیسی/عدد/آندرلاین باشد" }, { status: 400 });
+    return NextResponse.json({ error: "یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد" }, { status: 400 });
   }
 
   const existing = await prisma.user.findFirst({

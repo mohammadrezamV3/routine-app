@@ -38,21 +38,21 @@ function TradeBody({ t }: { t: DashTrade }) {
     <div className="db-trade-body">
       <div className="db-trade-main">
         <div className="db-trade-hero">
-          <span className="db-stat-label">سود/زیانِ ۳۰ روزِ اخیر{t.currency === null ? ` (${cur})` : ""}</span>
+          <span className="db-stat-label">سود/زیانِ 30 روزِ اخیر{t.currency === null ? ` (${cur})` : ""}</span>
           <b className={`db-trade-pnl ${tone(t.month.pnl)}`}>
             <CountUp value={t.month.pnl} decimals={Math.abs(t.month.pnl) < 1000 ? 2 : 0} signed prefix={CUR_SIGN[cur] ?? ""} suffix={CUR_SIGN[cur] ? "" : ` ${cur}`} />
           </b>
           <span className="db-trade-sub">{faNum(t.month.count)} معامله‌ی بسته‌شده</span>
         </div>
         <div className="db-trade-chart">
-          {flat ? <div className="db-trade-flat">هنوز معامله‌ی بسته‌شده‌ای در ۳۰ روزِ اخیر نیست</div> : <Sparkline values={equity} height={96} />}
+          {flat ? <div className="db-trade-flat">هنوز معامله‌ی بسته‌شده‌ای در 30 روزِ اخیر نیست</div> : <Sparkline values={equity} height={96} />}
         </div>
       </div>
 
       <div className="db-trade-tiles">
         <Tile label="امروز" value={money(t.today.pnl, cur)} toneCls={tone(t.today.pnl)} sub={`${faNum(t.today.count)} معامله`} />
         <Tile label="این هفته" value={money(t.week.pnl, cur)} toneCls={tone(t.week.pnl)} sub={`${faNum(t.week.wins)} برد · ${faNum(t.week.losses)} باخت`} />
-        <Tile label="وین‌ریت" value={t.month.winRate === null ? "—" : `${faNum(t.month.winRate)}٪`} sub="۳۰ روز" ring={t.month.winRate === null ? undefined : t.month.winRate / 100} />
+        <Tile label="وین‌ریت" value={t.month.winRate === null ? "—" : `${faNum(t.month.winRate)}٪`} sub="30 روز" ring={t.month.winRate === null ? undefined : t.month.winRate / 100} />
         <Tile label="پرافیت فکتور" value={t.month.profitFactor === null ? "—" : faNum(t.month.profitFactor.toFixed(2))} toneCls={t.month.profitFactor === null ? "" : t.month.profitFactor >= 1 ? "is-win" : "is-loss"} sub={t.openTrades ? `${faNum(t.openTrades)} معامله‌ی باز` : "بدونِ معامله‌ی باز"} />
       </div>
 

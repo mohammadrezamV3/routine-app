@@ -47,7 +47,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         </div>
       </div>
 
-      <div className="db-week-dots" aria-label="۱۴ روزِ اخیر">
+      <div className="db-week-dots" aria-label="14 روزِ اخیر">
         {ex.last14.map((d, i) => {
           const [y, m, dd] = d.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, dd).getDay()];
@@ -130,7 +130,7 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
         ))}
       </div>
 
-      <div className="db-kbars" aria-label="۷ روزِ اخیر">
+      <div className="db-kbars" aria-label="7 روزِ اخیر">
         {cal.week.map((w, i) => {
           const [y, m, d] = w.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()];
