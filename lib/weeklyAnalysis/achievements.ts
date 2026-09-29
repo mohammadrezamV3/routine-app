@@ -30,7 +30,7 @@ export function buildAchievements(input: AchievementInput): Achievement[] {
   out.push({
     key: "all_days_active",
     title: "هفت روز فعال",
-    description: "هر ۷ روز هفته حداقل یک چیز ثبت کن.",
+    description: "هر 7 روز هفته حداقل یک چیز ثبت کن.",
     emoji: "📅",
     unlocked: input.activeDays >= 7,
     progress: prog(input.activeDays, 7),
@@ -38,8 +38,8 @@ export function buildAchievements(input: AchievementInput): Achievement[] {
   const streak = longestStreak(input.days.map((d) => (d.isFuture ? null : d.score)), 70);
   out.push({
     key: "streak_5",
-    title: "استریک ۵ روزه",
-    description: "۵ روز پشت‌سرهم امتیاز ۷۰ یا بیشتر.",
+    title: "استریک 5 روزه",
+    description: "5 روز پشت‌سرهم امتیاز 70 یا بیشتر.",
     emoji: "🔥",
     unlocked: streak >= 5,
     progress: prog(streak, 5),
@@ -54,7 +54,7 @@ export function buildAchievements(input: AchievementInput): Achievement[] {
   out.push({
     key: "grade_a",
     title: "نمره‌ی A",
-    description: "هفته رو با نمره‌ی A یا S تموم کن (امتیاز ۸۰+).",
+    description: "هفته رو با نمره‌ی A یا S تموم کن (امتیاز 80+).",
     emoji: "🏅",
     unlocked: input.grade === "A" || input.grade === "S",
     progress: prog(input.score ?? 0, 80),
@@ -76,7 +76,7 @@ export function buildAchievements(input: AchievementInput): Achievement[] {
   const sleep = dom.get("sleep");
   if (sleep) {
     const n = sleep.meta.days7h ?? 0;
-    out.push({ key: "sleep_7h_5days", title: "خواب کافی", description: "۵ شب حداقل ۷ ساعت بخواب.", emoji: "😴", unlocked: n >= 5, progress: prog(n, 5) });
+    out.push({ key: "sleep_7h_5days", title: "خواب کافی", description: "5 شب حداقل 7 ساعت بخواب.", emoji: "😴", unlocked: n >= 5, progress: prog(n, 5) });
   }
   const tasks = dom.get("tasks");
   if (tasks) {
@@ -105,7 +105,7 @@ export function buildAchievements(input: AchievementInput): Achievement[] {
   const nutrition = dom.get("nutrition");
   if (nutrition) {
     const n = nutrition.meta.onTargetDays ?? 0;
-    out.push({ key: "nutrition_on_target_5", title: "تغذیه‌ی دقیق", description: "۵ روز کالری‌ت رو نزدیک هدف (±۱۰٪) نگه دار.", emoji: "🥗", unlocked: n >= 5, progress: prog(n, 5) });
+    out.push({ key: "nutrition_on_target_5", title: "تغذیه‌ی دقیق", description: "5 روز کالری‌ت رو نزدیک هدف (±10٪) نگه دار.", emoji: "🥗", unlocked: n >= 5, progress: prog(n, 5) });
   }
   const trading = dom.get("trading");
   if (trading) {

@@ -21,15 +21,15 @@ const CODE_RE = /^[A-Z0-9_-]{3,32}$/;
 // POST /api/admin/discount-codes می‌گیره.
 function validate(code: string, percentOff: string, expiresAt: string, maxUses: string): string | null {
   const c = code.trim().toUpperCase();
-  if (!CODE_RE.test(c)) return "کد باید ۳ تا ۳۲ کاراکتر و فقط حروف انگلیسی، عدد، - و _ باشد";
+  if (!CODE_RE.test(c)) return "کد باید 3 تا 32 کاراکتر و فقط حروف انگلیسی، عدد، - و _ باشد";
   const p = Number(percentOff);
-  if (!percentOff || !Number.isInteger(p) || p < 1 || p > 100) return "درصد تخفیف باید عددی بین ۱ تا ۱۰۰ باشد";
+  if (!percentOff || !Number.isInteger(p) || p < 1 || p > 100) return "درصد تخفیف باید عددی بین 1 تا 100 باشد";
   if (expiresAt) {
     const t = new Date(expiresAt).getTime();
     if (isNaN(t)) return "تاریخ انقضا معتبر نیست";
     if (t <= Date.now()) return "تاریخ انقضا باید در آینده باشد";
   }
-  if (maxUses && (!Number.isInteger(Number(maxUses)) || Number(maxUses) < 1)) return "حداکثر مصرف باید عدد صحیح حداقل ۱ باشد";
+  if (maxUses && (!Number.isInteger(Number(maxUses)) || Number(maxUses) < 1)) return "حداکثر مصرف باید عدد صحیح حداقل 1 باشد";
   return null;
 }
 

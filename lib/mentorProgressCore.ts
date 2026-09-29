@@ -26,8 +26,11 @@ export type MirrorOccurrenceLike = { id: string; name?: string; mentorProgramId?
 
 export type DerivedCell = { date: string; itemId: string; state: "done" | "missed" | "upcoming"; doneOn: string | null };
 
-const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
-const fa = (s: string | number) => String(s).replace(/\d/g, (d) => FA_DIGITS[Number(d)]);
+// ارقام در کلِ سایت انگلیسی‌اند
+const fa = (s: string | number) => String(s);
+// کلیدِ مقایسه‌ی اسم: occurrenceهای قدیمی با ارقامِ فارسی ذخیره شده‌اند («اسکوات · ۴×۸»)
+// و باید با اسمِ تازه‌ی لاتین («اسکوات · 4×8») جور دربیان.
+const nameKey = (s: string) => s.trim().replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
 
 // ───────────────────────── تاریخ ─────────────────────────
 
@@ -89,7 +92,7 @@ export function buildOccurrenceItemMap(
   const ids = new Set(items.map((i) => i.id));
   const byName = new Map<string, string | null>();
   for (const it of items) {
-    for (const n of new Set([it.title.trim(), mirrorOccurrenceName(it, type).trim()])) {
+    for (const n of new Set([nameKey(it.title), nameKey(mirrorOccurrenceName(it, type))])) {
       // اسمِ تکراری بینِ دو آیتم مبهمه — هیچ‌کدوم رو اعتبار نمی‌ده
       byName.set(n, byName.has(n) && byName.get(n) !== it.id ? null : it.id);
     }
@@ -99,7 +102,7 @@ export function buildOccurrenceItemMap(
     if (!o || o.mentorProgramId !== programId || typeof o.id !== "string") continue;
     if (parseMirrorOccurrenceId(programId, o.id)) continue;
     const viaId = o.mentorItemId && ids.has(o.mentorItemId) ? o.mentorItemId : null;
-    const viaName = !viaId && typeof o.name === "string" ? byName.get(o.name.trim()) ?? null : null;
+    const viaName = !viaId && typeof o.name === "string" ? byName.get(nameKey(o.name)) ?? null : null;
     const itemId = viaId ?? viaName;
     if (itemId) extra.set(o.id, itemId);
   }

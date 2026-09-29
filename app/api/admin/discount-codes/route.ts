@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   const trimmedCode = typeof code === "string" ? code.trim().toUpperCase() : "";
   if (trimmedCode.length < 3 || trimmedCode.length > 32) {
-    return NextResponse.json({ error: "کد باید بین ۳ تا ۳۲ کاراکتر باشد" }, { status: 400 });
+    return NextResponse.json({ error: "کد باید بین 3 تا 32 کاراکتر باشد" }, { status: 400 });
   }
   // کاربر این کد رو دستی توی چک‌اوت تایپ می‌کنه — فاصله/کاراکتر فارسی یعنی
   // کدی که عملا هیچ‌وقت درست وارد نمی‌شه.
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
   const percent = Number(percentOff);
   if (!Number.isInteger(percent) || percent < 1 || percent > 100) {
-    return NextResponse.json({ error: "درصد تخفیف باید بین ۱ تا ۱۰۰ باشد" }, { status: 400 });
+    return NextResponse.json({ error: "درصد تخفیف باید بین 1 تا 100 باشد" }, { status: 400 });
   }
   let expiresAtDate: Date | null = null;
   if (expiresAt) {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   if (maxUsesPerUser !== null && maxUsesPerUser !== undefined && String(maxUsesPerUser) !== "") {
     maxUses = Number(maxUsesPerUser);
     if (!Number.isInteger(maxUses) || maxUses < 1) {
-      return NextResponse.json({ error: "حداکثر دفعات مصرف باید عدد صحیح حداقل ۱ باشد" }, { status: 400 });
+      return NextResponse.json({ error: "حداکثر دفعات مصرف باید عدد صحیح حداقل 1 باشد" }, { status: 400 });
     }
   }
 

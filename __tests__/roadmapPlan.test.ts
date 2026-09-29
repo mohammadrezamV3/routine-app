@@ -39,7 +39,7 @@ describe("normalizePlan", () => {
   it("خروجیِ سالم را دست‌نخورده نگه می‌دارد", () => {
     const p = normalizePlan(GOOD);
     expect(p.stages).toHaveLength(3);
-    expect(p.stages[0].topics[0].points).toEqual(["لایه‌ی ۳"]);
+    expect(p.stages[0].topics[0].points).toEqual(["لایه‌ی 3"]);
     expect(p.stages[0].detailed).toBe(true);
     expect(p.meta.level).toBe("zero");
     expect(validateOutline(p)).toEqual([]);

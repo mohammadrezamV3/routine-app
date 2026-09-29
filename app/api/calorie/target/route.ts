@@ -39,7 +39,7 @@ async function handlePOST(req: NextRequest) {
     return NextResponse.json({ error: "هدف کالری نامعتبر است" }, { status: 400 });
   }
   if (!mealsPerDay || mealsPerDay < 2 || mealsPerDay > 6) {
-    return NextResponse.json({ error: "تعداد وعده باید بین ۲ تا ۶ باشد" }, { status: 400 });
+    return NextResponse.json({ error: "تعداد وعده باید بین 2 تا 6 باشد" }, { status: 400 });
   }
   if (!sex || !VALID_SEX.includes(sex)) {
     return NextResponse.json({ error: "جنسیت نامعتبر است" }, { status: 400 });
@@ -123,7 +123,7 @@ async function handlePATCH(req: NextRequest) {
   }
 
   if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {
-    return NextResponse.json({ error: "بین ۱ تا ۸ وعده مجاز است" }, { status: 400 });
+    return NextResponse.json({ error: "بین 1 تا 8 وعده مجاز است" }, { status: 400 });
   }
   const cleaned: { key: string; label: string; kcal: number }[] = [];
   for (const m of mealBreakdown) {

@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "دسترسیِ تو به این گفت‌وگو توسط مدیریت غیرفعال شده است" }, { status: 403 });
     }
     if (state.bannedUntil) {
-      const until = new Date(state.bannedUntil).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" });
+      const until = new Date(state.bannedUntil).toLocaleString("fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" });
       return NextResponse.json({ error: `به‌دلیل تخلف تا ${until} از ارسال پیام محروم شده‌ای` }, { status: 403 });
     }
   }

@@ -87,7 +87,7 @@ export function MedicationForm({
 
     const days = Number(durationDays);
     if (!Number.isFinite(days) || days < 1 || days > MAX_DURATION_DAYS) {
-      setDurationError(`طول دوره باید بین ۱ تا ${MAX_DURATION_DAYS} روز باشه`);
+      setDurationError(`طول دوره باید بین 1 تا ${MAX_DURATION_DAYS} روز باشه`);
       return;
     }
 
@@ -160,7 +160,7 @@ export function MedicationForm({
                 className="wsearch-add-time"
                 value={durationDays}
                 onChange={(v) => { setDurationDays(v); setDurationError(null); }}
-                placeholder="۷"
+                placeholder="7"
               />
               {durationError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{durationError}</div>}
             </div>

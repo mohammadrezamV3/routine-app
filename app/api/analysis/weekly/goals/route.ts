@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (body?.target !== undefined && body?.target !== null) {
       const n = Number(body.target);
       if (!Number.isInteger(n) || n < 0 || n > 100) {
-        return NextResponse.json({ error: "target باید عددی بینِ ۰ تا ۱۰۰ باشد" }, { status: 400 });
+        return NextResponse.json({ error: "target باید عددی بینِ 0 تا 100 باشد" }, { status: 400 });
       }
       target = n;
     }

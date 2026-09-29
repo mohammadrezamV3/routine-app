@@ -35,7 +35,6 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   font-variant-numeric:tabular-nums; letter-spacing:-.01em;
 }
 /* متنِ غیرعددی (MT4·MT5) پهن‌تر از عدده و توی ستونِ باریک بریده می‌شد. */
-.ls-stat-text{ display:inline-block; max-width:100%; font-size:clamp(18px,2.6vw,28px); white-space:nowrap; }
 .ls-stat-label{ margin-top:6px; font-size:12px; line-height:1.7; color:var(--muted); }
 
 /* ───── How it works ───── */

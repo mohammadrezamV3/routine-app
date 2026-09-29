@@ -94,7 +94,7 @@ export const SESSION_OVERLAPS: { a: SessionKey; b: SessionKey; label: string }[]
   { a: "SYDNEY", b: "TOKYO", label: "سیدنی × توکیو" },
 ];
 
-/** ساعت فعلی یک شهر به شکل HH:MM (ارقام لاتین — نمایش‌دهنده خودش فارسی می‌کند) */
+/** ساعت فعلی یک شهر به شکل HH:MM (ارقام لاتین — نمایش هم با همین ارقام) */
 export function cityTime(date: Date, tz: string): string {
   const { minutes } = wallClockIn(date, tz);
   const h = Math.floor(minutes / 60);

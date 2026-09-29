@@ -87,7 +87,7 @@ function TargetSnippet({ t }: { t: Target }) {
           {t.status === "HIDDEN" && "؛ پنهان"}
         </div>
         {t.rating != null && (
-          <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} role="img" aria-label={`${formatNumber(t.rating)} از ۵`}>
+          <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} role="img" aria-label={`${formatNumber(t.rating)} از 5`}>
             {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= (t.rating || 0) ? "currentColor" : "none"} strokeWidth={1.75} aria-hidden />)}
           </span>
         )}

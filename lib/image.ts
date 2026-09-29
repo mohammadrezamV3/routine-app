@@ -12,7 +12,7 @@ export function compressImageToDataUrl(file: File, maxDim = 1600, quality = 0.82
       return;
     }
     if (file.size > MAX_SOURCE_BYTES) {
-      reject(new Error("حجم عکس نباید بیشتر از ۲ مگابایت باشد"));
+      reject(new Error("حجم عکس نباید بیشتر از 2 مگابایت باشد"));
       return;
     }
     const reader = new FileReader();

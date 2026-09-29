@@ -90,7 +90,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
         >
           <input
             id="ms-capacity" type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" maxLength={4}
-            value={capacity} placeholder="مثلاً ۱۰"
+            value={capacity} placeholder="مثلاً 10"
             onChange={(e) => { setCapacity(e.target.value); setFieldErr((x) => ({ ...x, capacity: undefined })); touched(); }}
           />
         </MentorField>

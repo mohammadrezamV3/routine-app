@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   // بالا (که فقط تعداد رو محدود می‌کنه)، این مطمئن می‌شه صدازدن مستقیم API
   // (دور زدن تایمر کلاینت) هم نمی‌تونه زودتر از ۲ دقیقه کد بعدی رو بگیره.
   if (!(await checkRateLimit(`signup-otp-cooldown:${phone}`, 1, 2 * 60 * 1000))) {
-    return NextResponse.json({ error: "لطفا ۲ دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: "لطفا 2 دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
   }
 
   const code = String(Math.floor(10000 + Math.random() * 90000)); // ۵ رقمی

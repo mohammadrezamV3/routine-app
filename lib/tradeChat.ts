@@ -76,7 +76,7 @@ export type ChatMessageDto = {
  */
 export const CHAT_MODERATION_ACTIONS = [
   { value: "WARNING", label: "اخطار" },
-  { value: "BAN_72H", label: "بن ۷۲ ساعته از چت" },
+  { value: "BAN_72H", label: "بن 72 ساعته از چت" },
   { value: "DISABLE_CHAT", label: "غیرفعال‌سازیِ دائمیِ چت" },
   { value: "ENABLE_CHAT", label: "رفعِ محدودیت (بن/غیرفعال‌سازی)" },
 ] as const;

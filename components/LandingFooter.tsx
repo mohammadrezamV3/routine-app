@@ -54,7 +54,7 @@ const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
 // سالِ شمسی از خودِ مرورگر/سرور — ثابتِ دستی هر نوروز کهنه می‌شد.
 function jalaliYear(): string {
   try {
-    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" }).format(new Date());
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian-nu-latn", { year: "numeric" }).format(new Date());
   } catch {
     return "";
   }

@@ -116,7 +116,7 @@ export function CalorieChartCard({
           <LineChart className="h-6 w-6 text-dash-muted" />
           <div className="text-[12px] font-bold text-dash-text sm:text-[13px]">نمودار هنوز آماده نیست</div>
           <div className="max-w-[260px] text-[10.5px] leading-relaxed text-dash-muted sm:text-[11.5px]">
-            برای نمایش نمودار حداقل به ۳ روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روز دیگه مونده.
+            برای نمایش نمودار حداقل به 3 روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روز دیگه مونده.
           </div>
         </div>
       ) : (

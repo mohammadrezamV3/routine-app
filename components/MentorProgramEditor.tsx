@@ -376,7 +376,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           <MentorField label="عنوان" htmlFor="pe-title" error={formErr.title}>
             <input
               id="pe-title" type="text" className="wsearch-newform-name trade-glass-field" maxLength={TITLE_MAX} value={title}
-              placeholder={type === "WORKOUT" ? "مثلاً برنامه‌ی حجم ۸ هفته‌ای" : "مثلاً روتین صبحگاهی"}
+              placeholder={type === "WORKOUT" ? "مثلاً برنامه‌ی حجم 8 هفته‌ای" : "مثلاً روتین صبحگاهی"}
               onChange={(e) => { setTitle(e.target.value); setFormErr((f) => ({ ...f, title: undefined })); dirty(); }}
             />
           </MentorField>
@@ -564,7 +564,7 @@ function MentorProgramEditorItem({
           <input
             id={id("title")} type="text" className="wsearch-newform-name trade-glass-field" maxLength={ITEM_TITLE_MAX} value={d.title}
             list={type === "WORKOUT" ? "pe-exercise-names" : undefined}
-            placeholder={type === "WORKOUT" ? "مثلاً اسکوات با هالتر" : "مثلاً پیاده‌روی ۳۰ دقیقه"}
+            placeholder={type === "WORKOUT" ? "مثلاً اسکوات با هالتر" : "مثلاً پیاده‌روی 30 دقیقه"}
             onChange={(e) => onPatch({ title: e.target.value })}
           />
         </MentorField>
@@ -633,7 +633,7 @@ function MentorProgramEditorItem({
         <MentorField label="جزئیات" htmlFor={id("details")} optional error={errors.details}>
           <textarea
             id={id("details")} className="wsearch-newform-name trade-glass-field" rows={2} maxLength={ITEM_DETAILS_MAX} value={d.details}
-            placeholder={type === "WORKOUT" ? "مثلاً تمپوی ۳-۱-۱، زانو هم‌راستای پنجه" : "مثلاً بعد از صبحانه"}
+            placeholder={type === "WORKOUT" ? "مثلاً تمپوی 3-1-1، زانو هم‌راستای پنجه" : "مثلاً بعد از صبحانه"}
             onChange={(e) => onPatch({ details: e.target.value })}
           />
         </MentorField>

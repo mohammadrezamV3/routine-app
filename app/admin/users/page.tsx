@@ -21,7 +21,7 @@ type UserRow = {
 
 const FILTERS = [
   { key: "all", label: "همه" },
-  { key: "new", label: "جدید (۷ روز)" },
+  { key: "new", label: "جدید (7 روز)" },
   { key: "active", label: "فعال" },
   { key: "inactive", label: "غیرفعال" },
   { key: "free", label: "رایگان" },

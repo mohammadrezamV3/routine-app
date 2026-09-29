@@ -173,7 +173,7 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
   const real = occs.find(visible) ?? occs[0];
   const sample = !real;
   const ex: { name: string; tag?: string; time: string; importance?: Importance } =
-    real ?? { name: "مطالعه‌ی فصل ۳", tag: "دانشگاه", time: "18:00 - 19:00", importance: "high" };
+    real ?? { name: "مطالعه‌ی فصل 3", tag: "دانشگاه", time: "18:00 - 19:00", importance: "high" };
 
   const actualParts = [ex.tag?.trim() || null, ex.name, ex.importance ? `اهمیت ${IMPORTANCE_LABELS[ex.importance]}` : null].filter((x): x is string => !!x);
 

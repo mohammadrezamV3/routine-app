@@ -108,7 +108,7 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
             <div className="mentor-inline-add">
               <input
                 id="ml-new" type="text" className="wsearch-newform-name trade-glass-field" maxLength={LABEL_NAME_MAX + 10}
-                value={name} placeholder="مثلاً کنکور ۱۴۰۶"
+                value={name} placeholder="مثلاً کنکور 1406"
                 onChange={(e) => { setName(e.target.value); setError(null); }}
               />
               <button type="submit" className="account-outline-btn mentor-btn" disabled={!name.trim() || !!busy}>

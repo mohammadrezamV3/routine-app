@@ -156,7 +156,7 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
       if (daily.tasks[t.id]) continue;
 
       if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
-        items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.` });
+        items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا 30 دقیقه دیگه وقت «${t.name}» می‌رسه.` });
       } else if (nowMinutes >= startMinutes) {
         items.push({ kind: "info", id: `now:${t.id}`, title: "یادآوری برنامه", body: `وقت «${t.name}» رسیده.` });
       }
