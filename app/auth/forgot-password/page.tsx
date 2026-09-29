@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Phone, Lock } from "lucide-react";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { AuthField } from "@/components/AuthField";
-import { AuthShell } from "@/components/AuthShell";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
@@ -107,95 +106,91 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <section className="auth-page">
-      <AuthShell>
-        <div className="auth-box">
-          <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
-          <AuthBrandMark subtitle={"فراموشی رمز عبور"} />
+    <div className="auth-box">
+      <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
+      <AuthBrandMark subtitle={"فراموشی رمز عبور"} />
 
-          {step === 1 && (
-            <form onSubmit={requestCode} className="auth-step" key="step1">
-              <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                {"شماره‌همراهی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
-              </div>
-              <AuthField id="identifier" label={"شماره همراه"} icon={<Phone size={15} />}>
-                <input
-                  id="identifier" type="tel" inputMode="numeric" className="wsearch-newform-name" value={identifier} dir="ltr" placeholder="09123456789"
-                  onChange={(e) => setIdentifier(digitsOnly(e.target.value))}
-                />
-              </AuthField>
-              {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
-              <button type="submit" className="auth-full-btn" disabled={loading}>
-                {loading ? "در حال ارسال…" : "ارسال کد"}
-              </button>
-            </form>
-          )}
+      {step === 1 && (
+        <form onSubmit={requestCode} className="auth-step" key="step1">
+          <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
+            {"شماره‌همراهی که باهاش ثبت‌نام کردی رو وارد کن، یه کد ۵ رقمی برات ارسال می‌شه."}
+          </div>
+          <AuthField id="identifier" label={"شماره همراه"} icon={<Phone size={15} />}>
+            <input
+              id="identifier" type="tel" inputMode="numeric" autoComplete="tel-national" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={identifier} dir="ltr" placeholder="09123456789"
+              onChange={(e) => setIdentifier(digitsOnly(e.target.value))}
+            />
+          </AuthField>
+          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+          <button type="submit" className="auth-full-btn" disabled={loading}>
+            {loading ? "در حال ارسال…" : "ارسال کد"}
+          </button>
+        </form>
+      )}
 
-          {step === 2 && (
-            <form onSubmit={verifyAndReset} className="auth-step" key="step2">
-              <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
-                {`کدی که به ${identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.`}
+      {step === 2 && (
+        <form onSubmit={verifyAndReset} className="auth-step" key="step2">
+          <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, marginBottom: 16, lineHeight: 1.8, textAlign: "center" }}>
+            {`کدی که به ${identifier} ارسال شد رو وارد کن، بعد رمز جدیدت رو انتخاب کن.`}
+          </div>
+          <AuthField id="code" label={"کد ۵ رقمی"}>
+            <input
+              id="code" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
+              onChange={(e) => setCode(digitsOnly(e.target.value))}
+            />
+          </AuthField>
+          <button
+            type="button"
+            className="auth-resend-btn"
+            disabled={resendCooldown > 0 || loading}
+            onClick={resendCode}
+          >
+            {resendCooldown > 0
+              ? `ارسال مجدد کد ${faNum(resendCooldown)}`
+              : "ارسال مجدد کد"}
+          </button>
+          <div style={{ marginTop: 14 }}>
+            <AuthField
+              id="newPassword" label={"رمز عبور جدید"}
+              icon={<Lock size={15} />}
+              endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
+            >
+              <input
+                id="newPassword" type={passwordVisible ? "text" : "password"} autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </AuthField>
+            {tier && (
+              <div className={`pw-strength pw-strength-${tier}`}>
+                <div className="pw-strength-bars">
+                  {PASSWORD_TIER_ORDER.map((tv, i) => (
+                    <div key={tv} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
+                  ))}
+                </div>
+                <div className="pw-strength-label">
+                  {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
+                  {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
+                </div>
               </div>
-              <AuthField id="code" label={"کد ۵ رقمی"}>
-                <input
-                  id="code" type="tel" inputMode="numeric" maxLength={5} className="wsearch-newform-name" value={code} dir="ltr" style={{ textAlign: "right" }}
-                  onChange={(e) => setCode(digitsOnly(e.target.value))}
-                />
-              </AuthField>
-              <button
-                type="button"
-                className="auth-resend-btn"
-                disabled={resendCooldown > 0 || loading}
-                onClick={resendCode}
-              >
-                {resendCooldown > 0
-                  ? `ارسال مجدد کد ${faNum(resendCooldown)}`
-                  : "ارسال مجدد کد"}
-              </button>
-              <div style={{ marginTop: 14 }}>
-                <AuthField
-                  id="newPassword" label={"رمز عبور جدید"}
-                  icon={<Lock size={15} />}
-                  endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
-                >
-                  <input
-                    id="newPassword" type={passwordVisible ? "text" : "password"} className="wsearch-newform-name" value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </AuthField>
-                {tier && (
-                  <div className={`pw-strength pw-strength-${tier}`}>
-                    <div className="pw-strength-bars">
-                      {PASSWORD_TIER_ORDER.map((tv, i) => (
-                        <div key={tv} className={`pw-strength-bar${i <= PASSWORD_TIER_ORDER.indexOf(tier) ? " filled" : ""}`} />
-                      ))}
-                    </div>
-                    <div className="pw-strength-label">
-                      {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
-                      {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
-                    </div>
-                  </div>
-                )}
-              </div>
-              {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
-              <button type="submit" className="auth-full-btn" disabled={loading}>
-                {loading ? "در حال ثبت…" : "تغییر رمز عبور"}
-              </button>
-            </form>
-          )}
+            )}
+          </div>
+          {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
+          <button type="submit" className="auth-full-btn" disabled={loading}>
+            {loading ? "در حال ثبت…" : "تغییر رمز عبور"}
+          </button>
+        </form>
+      )}
 
-          {step === 3 && (
-            <div className="auth-step" key="step3" style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 13, color: "var(--text)", marginTop: 10, lineHeight: 1.8 }}>
-                {"رمزت با موفقیت عوض شد. حالا می‌تونی با رمز جدید وارد بشی."}
-              </div>
-              <button type="button" className="auth-full-btn" onClick={() => router.push("/auth/login")}>
-                {"بازگشت به ورود"}
-              </button>
-            </div>
-          )}
+      {step === 3 && (
+        <div className="auth-step" key="step3" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "var(--text)", marginTop: 10, lineHeight: 1.8 }}>
+            {"رمزت با موفقیت عوض شد. حالا می‌تونی با رمز جدید وارد بشی."}
+          </div>
+          <button type="button" className="auth-full-btn" onClick={() => router.push("/auth/login")}>
+            {"بازگشت به ورود"}
+          </button>
         </div>
-      </AuthShell>
-    </section>
+      )}
+    </div>
   );
 }

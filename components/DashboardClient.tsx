@@ -11,6 +11,7 @@
 
 import "@/app/dashboard/dashboard.css";
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { MotionConfig, motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
@@ -25,9 +26,9 @@ import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardTrade } from "./DashboardTrade";
 import { DashboardMarket } from "./DashboardMarket";
 import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./DashboardSocial";
-import { DashboardLauncher, DashboardQuickActions } from "./DashboardLauncher";
+import { DashboardQuickActions } from "./DashboardLauncher";
+import { DashboardActionsProvider } from "./DashboardActions";
 import { DashboardCommand, useCommandHotkey } from "./DashboardCommand";
-import { DashFriendsCard } from "./DashFriendsCard";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
@@ -62,17 +63,18 @@ function GatedBody() {
 function bentoAreas(bottom: string[]) {
   const q = (row: string[]) => `"${row.join(" ")}"`;
   const lgBottom = bottom.length === 3 ? bottom : bottom.length === 2 ? [bottom[0], bottom[1], bottom[1]] : bottom.length === 1 ? [bottom[0], bottom[0], bottom[0]] : [];
-  const lg = [q(["today", "heat", "heat"]), q(["today", "ex", "cal"]), q(["trade", "trade", "market"]), ...(lgBottom.length ? [q(lgBottom)] : []), q(["friends", "launch", "launch"])].join(" ");
-  const pairs = [...bottom, "friends"];
+  const lg = [q(["today", "heat", "heat"]), q(["today", "ex", "cal"]), q(["trade", "trade", "market"]), ...(lgBottom.length ? [q(lgBottom)] : [])].join(" ");
   const md: string[] = [q(["heat", "heat"]), q(["today", "ex"]), q(["today", "cal"]), q(["trade", "trade"]), q(["market", "market"])];
-  for (let i = 0; i < pairs.length; i += 2) md.push(q(pairs[i + 1] ? [pairs[i], pairs[i + 1]] : [pairs[i], pairs[i]]));
-  md.push(q(["launch", "launch"]));
-  const sm = ["today", "ex", "cal", "heat", "trade", "market", ...bottom, "friends", "launch"].map((a) => q([a])).join(" ");
+  for (let i = 0; i < bottom.length; i += 2) md.push(q(bottom[i + 1] ? [bottom[i], bottom[i + 1]] : [bottom[i], bottom[i]]));
+  const sm = ["today", "ex", "cal", "heat", "trade", "market", ...bottom].map((a) => q([a])).join(" ");
   return { ["--areas-lg" as any]: lg, ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
 function DashboardBody() {
   const { data, status, refresh } = useDashboardData();
+  const router = useRouter();
+  const refreshNow = useCallback(() => refresh(true), [refresh]);
+  const goTo = useCallback((href: string) => router.push(href), [router]);
   const routine = useDashboardRoutine();
   const flagFeatures = useFeatures();
   const { data: session } = useSession();
@@ -87,6 +89,7 @@ function DashboardBody() {
   const locked = (m: string) => !!modules && !modules.has(m);
   const showMentors = features?.mentors !== false;
   const showRoadmaps = features?.roadmaps === true;
+  // «دوستان» و «همه‌ی بخش‌ها» به درخواستِ صریح از پایینِ داشبورد برداشته شدن
   const areas = useMemo(() => bentoAreas([...(showMentors ? ["mentor"] : []), ...(showRoadmaps ? ["road"] : []), "inbox"]), [showMentors, showRoadmaps]);
 
   if (status === "forbidden" && !data) {
@@ -95,6 +98,7 @@ function DashboardBody() {
 
   return (
     <MotionConfig reducedMotion="user">
+      <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
       <DashboardHero data={data} routine={routine} onOpenCommand={() => setCmdOpen(true)} />
       <DashboardQuickActions features={features} modules={modules} />
 
@@ -115,13 +119,10 @@ function DashboardBody() {
         {showMentors && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
         {showRoadmaps && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} locked={locked("ROADMAP")} />}
         <DashboardInbox data={data} loading={loading} />
-        <motion.div className="db-embed" style={{ gridArea: "friends" }} variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}>
-          <DashFriendsCard />
-        </motion.div>
-        <DashboardLauncher features={features} modules={modules} isAdmin={isAdmin} />
       </motion.div>
 
       <DashboardCommand open={cmdOpen} onClose={() => setCmdOpen(false)} features={features} modules={modules} isAdmin={isAdmin} />
+      </DashboardActionsProvider>
     </MotionConfig>
   );
 }

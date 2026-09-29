@@ -6,6 +6,7 @@ import { LandingHero } from "@/components/LandingHero";
 import { LandingShowcase } from "@/components/LandingShowcase";
 import {
   LandingStats,
+  LandingDashboard,
   LandingHowItWorks,
   LandingBento,
   LandingFeatureGrid,
@@ -27,6 +28,7 @@ export function LandingPage() {
     <>
       <LandingHero />
       <Sec id="sec-landing-stats"><LandingStats /></Sec>
+      <Sec id="sec-landing-dashboard"><LandingDashboard /></Sec>
       <LandingShowcase />
       <Sec id="sec-landing-how"><LandingHowItWorks /></Sec>
       <Sec id="sec-landing-bento"><LandingBento /></Sec>

@@ -14,6 +14,7 @@ import { toFaDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
+import { SegmentedTabs } from "./SegmentedTabs";
 
 // نوع ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکت خود حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
@@ -71,10 +72,13 @@ function ManualQuantityPrompt({
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">واحد</label>
-            <div className="day-picker manual-timer-unit-picker">
-              <span className={`day-pill${unit === "ثانیه" ? " on" : ""}`} onClick={() => setUnit("ثانیه")}>ثانیه</span>
-              <span className={`day-pill${unit === "دقیقه" ? " on" : ""}`} onClick={() => setUnit("دقیقه")}>دقیقه</span>
-            </div>
+            <SegmentedTabs
+              className="seg-flush manual-timer-unit-tabs"
+              ariaLabel="واحد"
+              options={[{ value: "ثانیه", label: "ثانیه" }, { value: "دقیقه", label: "دقیقه" }]}
+              active={unit}
+              onChange={setUnit}
+            />
           </div>
         </div>
       )}

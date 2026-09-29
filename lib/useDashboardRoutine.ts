@@ -113,5 +113,6 @@ export function useDashboardRoutine() {
     wakeSleep: wakeSleep ?? { wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP },
     hasWakeSleep: !!wakeSleep,
     toggle,
+    opts,
   };
 }

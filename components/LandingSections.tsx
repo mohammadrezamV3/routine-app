@@ -15,6 +15,7 @@ import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
 import { FRIENDS, INERT, MockMentorChat, MockStreakTiers } from "@/components/LandingMockups";
 import "@/components/landing-sections.css";
+import "@/components/landing-dashboard.css";
 import { FAQ_ITEMS } from "@/lib/landingFaq";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -170,6 +171,152 @@ export function LandingHowItWorks() {
   );
 }
 
+/* ───────────────────────── 2.5) Dashboard ───────────────────────── */
+// معرفیِ داشبورد (/dashboard) — ماکتِ ساده‌شده‌ی خودِ صفحه (حلقه‌های پیشرفت،
+// کارهای سریع، خطِ زمانیِ امروز، ترید) و یک پاپ‌آپِ «ثبتِ غذا» روی همون صفحه،
+// چون نکته‌ی اصلیش همینه: ثبت‌کردن بدونِ رفتن به صفحه‌ی دیگه. همه‌ی ادعاها با
+// کدِ DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
+
+const DASH_RINGS = [
+  { label: "روتین", v: 0.78, a: "#00C98D", b: "#7DF9CF" },
+  { label: "تمرین", v: 0.6, a: "#3D7DFF", b: "#B06DFF" },
+  { label: "کالری", v: 0.46, a: "#FFB547", b: "#FF6F61" },
+];
+
+const DASH_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
+  { icon: LayoutGrid, title: "همه‌چیز در یک نگاه", body: "روتینِ امروز، تمرین، کالری، ترید، تقویمِ اقتصادی، مربی‌ها و اعلان‌ها کنارِ هم؛ بخشی که فعال نداری جای خالی نمی‌گذارد." },
+  { icon: Zap, title: "ثبت بدون ترکِ صفحه", body: "برنامه‌ی جدید، غذا یا معامله را از همان‌جا ثبت کن؛ پاپ‌آپِ خودِ همان بخش باز می‌شود و داشبورد همان لحظه به‌روز می‌شود." },
+  { icon: RefreshCw, title: "زنده و هم‌گام", body: "تیکی که این‌جا می‌زنی همان لحظه در برنامه‌ی هفتگی، استریک و دستگاه‌های دیگرت دیده می‌شود." },
+  { icon: Sparkles, title: "دسترسیِ سریع با جست‌وجو", body: "با پالتِ فرمان (Ctrl/⌘ + K) به هر بخش یا کاری فقط با چند حرف برس." },
+];
+
+function DashRings() {
+  const reduce = useReducedMotion();
+  return (
+    <svg viewBox="0 0 120 120" className="ls-dash-rings" aria-hidden="true">
+      <defs>
+        {DASH_RINGS.map((r, i) => (
+          <linearGradient key={r.label} id={`ls-dash-g${i}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={r.a} /><stop offset="1" stopColor={r.b} />
+          </linearGradient>
+        ))}
+      </defs>
+      {DASH_RINGS.map((r, i) => {
+        const rad = 52 - i * 13;
+        return (
+          <g key={r.label} transform="rotate(-90 60 60)">
+            <circle cx="60" cy="60" r={rad} fill="none" stroke="currentColor" strokeOpacity=".08" strokeWidth="9" />
+            <motion.circle
+              cx="60" cy="60" r={rad} fill="none" stroke={`url(#ls-dash-g${i})`} strokeWidth="9" strokeLinecap="round"
+              initial={reduce ? false : { pathLength: 0 }}
+              whileInView={{ pathLength: r.v }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 1.3, delay: 0.25 + i * 0.15, ease: EASE }}
+              style={reduce ? { pathLength: r.v } : undefined}
+            />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function DashMock() {
+  return (
+    <div className="ls-dash-mock" aria-hidden="true" {...INERT}>
+      <div className="ls-dash-hero">
+        <div className="ls-dash-hello">
+          <span className="ls-dash-date">سه‌شنبه، ۸ مهر</span>
+          <b>صبح بخیر، سارا</b>
+          <span className="ls-dash-chip"><Flame size={12} /> ۲۳ روز استریک</span>
+          <ul className="ls-dash-legend">
+            {DASH_RINGS.map((r) => (
+              <li key={r.label}><i style={{ background: r.a }} />{r.label}<b>{fa(Math.round(r.v * 100))}٪</b></li>
+            ))}
+          </ul>
+        </div>
+        <DashRings />
+      </div>
+
+      <div className="ls-dash-quick">
+        {[
+          { l: "برنامه‌ی جدید", I: CalendarCheck, c: "var(--accent)" },
+          { l: "ثبتِ غذا", I: Apple, c: "#FFB547", on: true },
+          { l: "ثبتِ معامله", I: CandlestickChart, c: "#00C98D" },
+          { l: "شروعِ تمرین", I: Dumbbell, c: "#3D7DFF" },
+        ].map(({ l, I, c, on }) => (
+          <span key={l} className={`ls-dash-q${on ? " is-on" : ""}`} style={{ ["--c" as string]: c }}>
+            <span className="ls-dash-q-ic"><I size={15} /></span>{l}
+          </span>
+        ))}
+      </div>
+
+      <div className="ls-dash-row">
+        <div className="ls-dash-card">
+          <div className="ls-dash-card-h"><CalendarDays size={13} /> برنامه‌های امروز</div>
+          {[
+            { t: "۰۷:۰۰", n: "مدیتیشن صبحگاهی", d: true },
+            { t: "۱۱:۰۰", n: "جلسه‌ی کاری", d: true },
+            { t: "۲۱:۳۰", n: "مطالعه‌ی کتاب", d: false },
+          ].map((x) => (
+            <div key={x.n} className={`ls-dash-tl${x.d ? " is-done" : ""}`}>
+              <span className="mono">{x.t}</span>
+              <span className="ls-dash-tl-n">{x.n}</span>
+              <i>{x.d && <Check size={10} strokeWidth={3} />}</i>
+            </div>
+          ))}
+        </div>
+        <div className="ls-dash-card">
+          <div className="ls-dash-card-h"><TrendingUp size={13} /> عملکردِ ترید</div>
+          <div className="ls-dash-pnl mono" dir="ltr">+1,242$</div>
+          <svg viewBox="0 0 100 34" className="ls-dash-spark" preserveAspectRatio="none">
+            <path d="M0 28 L12 24 L22 26 L34 18 L46 20 L58 12 L70 14 L82 7 L100 4" fill="none" stroke="var(--pnl-win, #00C98D)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <div className="ls-dash-sub">نرخ برد {fa(62)}٪ · {fa(24)} معامله</div>
+        </div>
+      </div>
+
+      {/* پاپ‌آپِ «ثبتِ غذا» — روی خودِ داشبورد، نه صفحه‌ی جدید */}
+      <div className="ls-dash-pop">
+        <div className="ls-dash-pop-h"><Apple size={14} /> افزودن غذا</div>
+        <div className="ls-dash-pop-f">جوجه‌کباب <span className="mono">۲۰۰ گرم</span></div>
+        <div className="ls-dash-pop-btn">افزودن</div>
+      </div>
+    </div>
+  );
+}
+
+export function LandingDashboard() {
+  return (
+    <div>
+      <SectionHead title="داشبورد؛" accent="کلِ روزت در یک صفحه" />
+      <Reveal>
+        <p className="ls-dash-intro">
+          بعد از ورود، اولین چیزی که می‌بینی داشبورد است: پیشرفتِ امروزت در سه حلقه، کارهای بعدی روی خطِ زمان،
+          و خلاصه‌ی تمرین، کالری و ترید — بدون این‌که بینِ صفحه‌ها رفت‌وآمد کنی.
+        </p>
+      </Reveal>
+      <div className="ls-dash">
+        <Reveal className="ls-dash-stage"><DashMock /></Reveal>
+        <ul className="ls-dash-points">
+          {DASH_POINTS.map((p, i) => {
+            const Icon = p.icon;
+            return (
+              <Reveal key={p.title} delay={0.06 * i} className="ls-dash-point">
+                <span className="ls-dash-point-ic"><Icon size={17} /></span>
+                <span>
+                  <b>{p.title}</b>
+                  <span>{p.body}</span>
+                </span>
+              </Reveal>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 /* ───────────────────────── 3) Bento ───────────────────────── */
 // هر تصویرِ کوچک یک برش از خودِ اپ است (MentorChat، اعلانِ پوشِ reminderPlan،
 // StreakFlame، DashFriendsCard، TradeMtLinkPanel، CalorieMacrosCard) — نه
@@ -314,6 +461,7 @@ export function LandingBento() {
 // توضیحیِ اختصاصی هست، به همان لینک می‌دهد (لینکِ داخلی برای سئو).
 
 const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }[] = [
+  { icon: LayoutGrid, title: "داشبورد", body: "همه‌ی بخش‌ها در یک صفحه، با ثبتِ سریعِ برنامه، غذا و معامله بدونِ ترکِ صفحه." },
   { icon: CalendarCheck, title: "روتین روزانه", body: "برنامه‌های تکرارشونده با ساعت، تگ و اهمیت، و تیکِ هر روز.", href: "/routine" },
   { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه، و تقویمِ تاریخچه برای هر روزِ گذشته.", href: "/daily-planner" },
   { icon: Flame, title: "پیگیری عادت و استریک", body: "۸ سطح استریک، از ۱ تا ۳۶۵ روزِ کامل.", href: "/habit-tracker" },
