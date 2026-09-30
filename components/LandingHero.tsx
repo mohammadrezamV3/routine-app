@@ -44,7 +44,7 @@ const SEO_LINKS = [
   { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی هوشمند" },
   { href: "/trading-journal", label: "ژورنال معاملاتی" },
   { href: "/calorie-counter", label: "کالری‌شمار" },
-  { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
+  { href: "/ai-planner", label: "مدیر برنامه هوشمند" },
 ];
 
 function prefersReducedMotion() {
@@ -186,7 +186,7 @@ export function LandingHero() {
         <div className="lh-copy">
           <span className="lh-eyebrow lh-rise" style={{ "--i": 0 } as React.CSSProperties}>
             <span className="lh-eyebrow-dot" aria-hidden="true" />
-            روتین، تمرین، تغذیه، ترید و یادگیری — یک‌جا و فارسی
+            روتین، تمرین، ترید و یادگیری؛ همه در یک سیستم
           </span>
 
           {/* SEO: «روتین اپ» و «آریون» هر دو داخلِ خودِ h1 هستند (نه فقط متادیتا). */}
@@ -194,9 +194,11 @@ export function LandingHero() {
             <span className="lh-title-kicker">
               روتین اپ <span className="lh-brand">آریون</span>
             </span>
-            <span className="lh-title-main">هر روز یک قدم جلوتر</span>
+            {/* متنِ صاحبِ محصول «همه‌ی برنامه‌هات، یک‌جا» روی موبایل دوخطی می‌شد؛ این
+                نسخه دقیقا مثلِ تیترِ قبلی می‌شکنه (تک‌خط از 360px) */}
+            <span className="lh-title-main">همه‌ی برنامه‌ها، یک‌جا</span>
             <span className="lh-title-main lh-title-rot">
-              در{" "}
+              برای{" "}
               <span className="lh-rot" aria-hidden="true">
                 {ROT_WORDS.map((w, i) => (
                   <span
@@ -212,10 +214,8 @@ export function LandingHero() {
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            هدف‌ها لای چند اپ و یادداشت پخش شده‌اند، عادتِ تازه بعد از چند روز فراموش می‌شود و
-            معامله‌ها بی‌مرور تکرار می‌شوند. آریون همه را یک‌جا جمع می‌کند: روتین با یادآوری و استریک،
-            تمرین و کالری، ژورنال ترید همگام با متاتریدر و رودمپ یادگیری — تا هر روز بدانی کجای مسیری
-            و قدمِ بعدی چیست.
+            روتین روزانه‌ات را بساز، تمرینت را دنبال کن، کالری و معاملاتت را ثبت کن و مسیر
+            یادگیری‌ات را جلو ببر؛ همه در یک فضای فارسی و یک حساب کاربری.
           </p>
 
           <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>
@@ -257,7 +257,7 @@ export function LandingHero() {
             <div className="lh-layer lh-layer-phone" data-d="10">
               <div className="lh-phone">
                 <div className="lh-phone-screen">
-                  {/* بومِ ۳۶۰پیکسلی = عرضِ واقعیِ یک گوشی؛ کوچک‌نمایی با transform.
+                  {/* بومِ 360پیکسلی = عرضِ واقعیِ یک گوشی؛ کوچک‌نمایی با transform.
                       پس کلاس‌های موبایلِ خودِ اپ همون اندازه‌ای رو دارن که روی گوشی. */}
                   <div className="lh-canvas dash-scope text-dash-text">
                     <div className="lh-ph-status">

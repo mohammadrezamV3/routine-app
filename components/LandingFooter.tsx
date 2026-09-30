@@ -85,7 +85,7 @@ export function LandingFooter() {
             </span>
           </Link>
           <p className={`mt-3 text-[12px] leading-6 ${t.muted}`}>
-            روتین، بدنسازی، ترید و یادگیری — همه‌ی نظمِ زندگی‌ات یک‌جا.
+            روتین، بدنسازی، ترید و یادگیری؛ همه در یک سیستم.
           </p>
         </div>
 

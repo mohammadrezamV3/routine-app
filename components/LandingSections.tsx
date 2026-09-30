@@ -97,9 +97,9 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
 // پایه‌ها نشون داده می‌شن.
 const STATS: { key: keyof PublicStats; label: string }[] = [
   { key: "users", label: "کاربر" },
-  { key: "routinePrograms", label: "برنامه‌ی روتین" },
-  { key: "exercisePlans", label: "برنامه‌ی ورزشی" },
-  { key: "journalEntries", label: "معامله‌ی ثبت‌شده در ژورنال" },
+  { key: "routinePrograms", label: "برنامه روتین" },
+  { key: "exercisePlans", label: "برنامه ورزشی" },
+  { key: "journalEntries", label: "معامله ثبت‌شده" },
 ];
 
 export function LandingStats() {
@@ -139,16 +139,16 @@ export function LandingStats() {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const STEPS = [
-  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. «روتین من» 14 روز رایگان است و 3 روز هم بدنسازی، کالری‌شمار و ژورنال ترید برایت باز است." },
-  { icon: LayoutGrid, title: "برنامه‌ات را بچین", body: "کارهای تکراری، تمرین، هدف کالری یا حساب معاملاتی‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
-  { icon: CalendarCheck, title: "هر روز تیک بزن", body: "کارهای امروز را علامت بزن، استریک را نگه دار و آخر هفته ببین واقعاً چقدر جلو رفته‌ای." },
+  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه ثبت‌نام کن و وارد آریون شو؛ بدون کارت بانکی. «روتین من» 14 روز رایگان است." },
+  { icon: LayoutGrid, title: "برنامه‌ات را بساز", body: "روتین، تمرین، کالری، ترید یا مسیر یادگیری‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
+  { icon: CalendarCheck, title: "اجرا کن و پیشرفتت را ببین", body: "هر روز برنامه‌ات را اجرا کن و روند پیشرفتت را دنبال کن." },
 ];
 
 export function LandingHowItWorks() {
   const reduce = useReducedMotion();
   return (
     <div>
-      <SectionHead title="چطور" accent="کار می‌کند؟" />
+      <SectionHead title="در سه قدم" accent="شروع کن" />
       <div className="ls-steps">
         <div className="ls-steps-line" aria-hidden="true">
           <motion.span
@@ -190,10 +190,10 @@ const DASH_RINGS = [
 ];
 
 const DASH_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: LayoutGrid, title: "همه‌چیز در یک نگاه", body: "روتینِ امروز، تمرین، کالری، ترید، تقویمِ اقتصادی، مربی‌ها و اعلان‌ها کنارِ هم؛ بخشی که فعال نداری جای خالی نمی‌گذارد." },
-  { icon: Zap, title: "ثبت بدون ترکِ صفحه", body: "برنامه‌ی جدید، غذا یا معامله را از همان‌جا ثبت کن؛ پاپ‌آپِ خودِ همان بخش باز می‌شود و داشبورد همان لحظه به‌روز می‌شود." },
-  { icon: RefreshCw, title: "زنده و هم‌گام", body: "تیکی که این‌جا می‌زنی همان لحظه در برنامه‌ی هفتگی، استریک و دستگاه‌های دیگرت دیده می‌شود." },
-  { icon: Sparkles, title: "دسترسیِ سریع با جست‌وجو", body: "با پالتِ فرمان (Ctrl/⌘ + K) به هر بخش یا کاری فقط با چند حرف برس." },
+  { icon: LayoutGrid, title: "همه‌چیز در یک نگاه", body: "روتین امروز، تمرین، کالری، ترید، تقویم اقتصادی، مربی‌ها و اعلان‌ها کنار هم؛ بخشی که فعال نداری جای خالی نمی‌گذارد." },
+  { icon: Zap, title: "ثبت بدون ترکِ صفحه", body: "برنامه، غذا یا معامله را از همان‌جا ثبت کن؛ پاپ‌آپ همان بخش باز می‌شود و داشبورد همان لحظه به‌روز می‌شود." },
+  { icon: RefreshCw, title: "زنده و هم‌گام", body: "تیکی که این‌جا می‌زنی همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت دیده می‌شود." },
+  { icon: Sparkles, title: "دسترسی سریع با جست‌وجو", body: "با پالت فرمان (Ctrl/⌘ + K) با چند حرف به هر بخش یا کاری برس." },
 ];
 
 function DashRings() {
@@ -211,9 +211,9 @@ function DashMock() {
     <div className="ls-dash-mock" aria-hidden="true" {...INERT}>
       <div className="ls-dash-hero">
         <div className="ls-dash-hello">
-          <span className="ls-dash-date">سه‌شنبه، ۸ مهر</span>
+          <span className="ls-dash-date">سه‌شنبه، 8 مهر</span>
           <b>صبح بخیر، سارا</b>
-          <span className="ls-dash-chip"><Flame size={12} /> ۲۳ روز استریک</span>
+          <span className="ls-dash-chip"><Flame size={12} /> 23 روز استریک</span>
           <ul className="ls-dash-legend">
             {DASH_RINGS.map((r) => (
               <li key={r.label}><i style={{ background: r.a }} />{r.label}<b>{fa(Math.round(r.v * 100))}٪</b></li>
@@ -240,9 +240,9 @@ function DashMock() {
         <div className="ls-dash-card">
           <div className="ls-dash-card-h"><CalendarDays size={13} /> برنامه‌های امروز</div>
           {[
-            { t: "۰۷:۰۰", n: "مدیتیشن صبحگاهی", d: true },
-            { t: "۱۱:۰۰", n: "جلسه‌ی کاری", d: true },
-            { t: "۲۱:۳۰", n: "مطالعه‌ی کتاب", d: false },
+            { t: "07:00", n: "مدیتیشن صبحگاهی", d: true },
+            { t: "11:00", n: "جلسه‌ی کاری", d: true },
+            { t: "21:30", n: "مطالعه‌ی کتاب", d: false },
           ].map((x) => (
             <div key={x.n} className={`ls-dash-tl${x.d ? " is-done" : ""}`}>
               <span className="mono">{x.t}</span>
@@ -264,7 +264,7 @@ function DashMock() {
       {/* پاپ‌آپِ «ثبتِ غذا» — روی خودِ داشبورد، نه صفحه‌ی جدید */}
       <div className="ls-dash-pop">
         <div className="ls-dash-pop-h"><Apple size={14} /> افزودن غذا</div>
-        <div className="ls-dash-pop-f">جوجه‌کباب <span className="mono">۲۰۰ گرم</span></div>
+        <div className="ls-dash-pop-f">جوجه‌کباب <span className="mono">200 گرم</span></div>
         <div className="ls-dash-pop-btn">افزودن</div>
       </div>
     </div>
@@ -274,11 +274,11 @@ function DashMock() {
 export function LandingDashboard() {
   return (
     <div>
-      <SectionHead title="داشبورد؛" accent="کلِ روزت در یک صفحه" />
+      <SectionHead title="داشبورد؛" accent="کل روزت در یک نگاه" />
       <Reveal>
         <p className="ls-dash-intro">
-          بعد از ورود، اولین چیزی که می‌بینی داشبورد است: پیشرفتِ امروزت در سه حلقه، کارهای بعدی روی خطِ زمان،
-          و خلاصه‌ی تمرین، کالری و ترید — بدون این‌که بینِ صفحه‌ها رفت‌وآمد کنی.
+          برنامه‌های امروز، تمرین، کالری، ترید و میزان پیشرفتت را از یک صفحه دنبال کن؛
+          بدون جابه‌جایی بین چند اپ.
         </p>
       </Reveal>
       <div className="ls-dash">
@@ -405,12 +405,12 @@ function VisFood() {
 }
 
 const BENTO = [
-  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "خصوصی، با رمزگذاری سرتاسری", body: "گفت‌وگو و یادداشت خصوصی مربی‌ها روی دستگاه خودت رمز می‌شود؛ نه سرور و نه هیچ ادمینی متن پیام‌ها را نمی‌بیند.", vis: VisE2EE },
-  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "همه‌جا، مثل یک اپ", body: "روی گوشی نصبش کن و یادآوری‌ها را سرِ وقت، با نوتیفیکیشن بگیر.", vis: VisPwa },
-  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک با 8 سطح", body: "هر روزِ کامل شعله را بزرگ‌تر می‌کند؛ از روز اول تا یک سال پیوسته.", vis: VisStreak },
-  { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "وقتی دوستانت پیشرفتت را می‌بینند، ادامه‌دادن ساده‌تر می‌شود.", vis: VisFriends },
-  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "همگام‌سازی خودکار متاتریدر", body: "با اکسپرت و کد اتصال، معاملات بدون تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
-  { key: "food", cls: "ls-b-food", icon: Target, title: "هدف کالری و ماکروی شخصی", body: "از قد، وزن، سن، روزهای تمرین و هدفت، کالری و درشت‌مغذی روزانه‌ات محاسبه می‌شود.", vis: VisFood },
+  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "حریم خصوصی، از ابتدا", body: "گفت‌وگوهای مربی، پیام‌های گروهی و یادداشت‌های خصوصی مربی‌ها رمزگذاری سرتاسری دارند؛ سرور و ادمین‌ها متن آن‌ها را نمی‌بینند.", vis: VisE2EE },
+  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "همراهت، روی هر دستگاه", body: "آریون را روی گوشی نصب کن و یادآوری‌ها را سر وقت دریافت کن.", vis: VisPwa },
+  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک", body: "هر روز کامل شعله را بزرگ‌تر می‌کند؛ 8 سطح، از روز اول تا یک سال پیوسته.", vis: VisStreak },
+  { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت را ببین؛ ادامه دادن کنار هم ساده‌تر است.", vis: VisFriends },
+  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "معامله‌هایت، مستقیم وارد ژورنال", body: "با اتصال MetaTrader، معاملاتت بدون ثبت دستی و بدون تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
+  { key: "food", cls: "ls-b-food", icon: Target, title: "کالری و ماکرو، متناسب با تو", body: "هدف کالری و درشت‌مغذی‌هایت را بر اساس اطلاعات و هدف خودت مشخص کن و روند تغذیه‌ات را دنبال کن.", vis: VisFood },
 ];
 
 export function LandingBento() {
@@ -446,31 +446,31 @@ export function LandingBento() {
 // توضیحیِ اختصاصی هست، به همان لینک می‌دهد (لینکِ داخلی برای سئو).
 
 const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }[] = [
-  { icon: LayoutGrid, title: "داشبورد", body: "همه‌ی بخش‌ها در یک صفحه، با ثبتِ سریعِ برنامه، غذا و معامله بدونِ ترکِ صفحه." },
-  { icon: CalendarCheck, title: "روتین روزانه", body: "برنامه‌های تکرارشونده با ساعت، تگ و اهمیت، و تیکِ هر روز.", href: "/routine" },
-  { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه، و تقویمِ تاریخچه برای هر روزِ گذشته.", href: "/daily-planner" },
-  { icon: Flame, title: "پیگیری عادت و استریک", body: "8 سطح استریک، از 1 تا 365 روزِ کامل.", href: "/habit-tracker" },
-  { icon: Bell, title: "یادآوری و یادآوری دارو", body: "نوتیفیکیشن سرِ وقت برای برنامه‌ها و هر نوبت دارو." },
-  { icon: Bot, title: "دستیار «نومو»", body: "به فارسیِ معمولی بنویس؛ برنامه ساخته، جابه‌جا یا حذف می‌شود.", href: "/ai-planner" },
+  { icon: LayoutGrid, title: "داشبورد", body: "همه بخش‌ها در یک صفحه، با ثبت سریع برنامه، غذا و معامله." },
+  { icon: CalendarCheck, title: "روتین روزانه", body: "برنامه‌های تکرارشونده با ساعت، تگ و اهمیت، و تیک هر روز.", href: "/routine" },
+  { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه، و تقویم تاریخچه برای هر روز گذشته.", href: "/daily-planner" },
+  { icon: Flame, title: "پیگیری عادت و استریک", body: "8 سطح استریک، از 1 تا 365 روز کامل.", href: "/habit-tracker" },
+  { icon: Bell, title: "یادآوری و یادآوری دارو", body: "نوتیفیکیشن سر وقت برای برنامه‌ها و هر نوبت دارو." },
+  { icon: Bot, title: "مدیر برنامه هوشمند «نومو»", body: "نیازت را به زبان طبیعی بگو؛ برنامه ساخته، جابه‌جا یا اصلاح می‌شود.", href: "/ai-planner" },
   { icon: BarChart3, title: "آنالیز هفتگی", body: "امتیاز، نمره، بینش و پیش‌بینی پایان هفته از داده‌ی خودت." },
-  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه‌ی AI یا دستی، کرنومتر تمرین و کاتالوگ 149 حرکت.", href: "/bodybuilding-program" },
-  { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکروی شخصی، 264 خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
-  { icon: CandlestickChart, title: "ژورنال ترید", body: "حساب‌محور، با آمار، چک‌لیست ورود، یادداشت و برچسب.", href: "/trading-journal" },
+  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه AI یا دستی، کرنومتر تمرین و کاتالوگ 149 حرکت.", href: "/bodybuilding-program" },
+  { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکرو، 264 خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
+  { icon: CandlestickChart, title: "ژورنال ترید", body: "ژورنال هر حساب، با آمار، چک‌لیست ورود، یادداشت و برچسب.", href: "/trading-journal" },
   { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال، بدون رمز حساب.", href: "/trading-journal" },
   { icon: CalendarClock, title: "تقویم اقتصادی", body: "9 ارز اصلی با Actual، Forecast و Previous، فیلتر تاثیر و هشدار خبر.", href: "/economic-calendar" },
   { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
-  { icon: Route, title: "رودمپ یادگیری", body: "مسیر مرحله‌به‌مرحله با هوش مصنوعی، برای هر مهارتی.", href: "/learning-roadmap" },
-  { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، گفت‌وگوی رمزگذاری‌شده و صف انتظار.", href: "/mentors" },
+  { icon: Route, title: "رودمپ یادگیری", body: "مسیر یادگیری مرحله‌به‌مرحله با هوش مصنوعی، برای هر مهارتی.", href: "/learning-roadmap" },
+  { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، دریافت برنامه و گفت‌وگوی رمزگذاری‌شده.", href: "/mentors" },
   { icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت در روتین، تمرین و کالری." },
   { icon: Megaphone, title: "اعلان‌ها و اطلاعیه‌ها", body: "اطلاعیه‌های آریون و اعلان‌هایت در یک پنل." },
-  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ پیش‌رونده؛ مثل یک اپ، با آیکون خودش." },
-  { icon: SunMoon, title: "تمِ روشن و تیره", body: "هر دو تم، با ظاهری یکدست در همه‌ی بخش‌ها." },
+  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ PWA؛ مثل یک اپ، با آیکون خودش." },
+  { icon: SunMoon, title: "تمِ روشن و تیره", body: "هر دو تم، با ظاهری یکدست در همه بخش‌ها." },
 ];
 
 export function LandingFeatureGrid() {
   return (
     <div>
-      <SectionHead title="همه‌ی قابلیت‌ها،" accent="در یک نگاه" />
+      <SectionHead title="همه قابلیت‌ها،" accent="در یک نگاه" />
       <Reveal>
       <ul className="ls-feat">
         {FEATURES.map((f) => {
@@ -499,14 +499,14 @@ export function LandingFeatureGrid() {
 /* ───────────────────────── 4) Why us ───────────────────────── */
 
 const WHY_US = [
-  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "اطلاعاتت فروخته نمی‌شود و گفت‌وگوی مربی رمزگذاری سرتاسری دارد." },
-  { icon: TrendingUp, color: "#A855F7", title: "برنامه‌ی شخصی", body: "متناسب با هدف، بدن و سبک زندگی خودت." },
-  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را تیم آریون جواب می‌دهد، نه یک پاسخ خودکار." },
-  { icon: Lightbulb, color: "#F59E0B", title: "یک اپ به‌جای چند اپ", body: "روتین، تمرین، تغذیه، ترید و یادگیری کنار هم." },
-  { icon: Smartphone, color: "#EC4899", title: "همه‌جا همگام", body: "گوشی، تبلت یا کامپیوتر؛ هر تغییر همه‌جا دیده می‌شود." },
-  { icon: BarChart3, color: "#06B6D4", title: "پیشرفتی که دیده می‌شود", body: "آنالیز هفتگی نشان می‌دهد کجا جلو رفتی و کجا جا ماندی." },
-  { icon: Zap, color: "#F97316", title: "سریع و ساده", body: "بی‌شلوغی؛ فقط چیزی که لازم داری." },
-  { icon: Users, color: "#14B8A6", title: "برای هر سطحی", body: "چه تازه شروع کرده باشی، چه سال‌ها باشد که ادامه می‌دهی." },
+  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "رمز عبور با bcrypt ذخیره می‌شود، اطلاعاتت فروخته نمی‌شود و گفت‌وگوی مربی رمزگذاری سرتاسری دارد." },
+  { icon: TrendingUp, color: "#A855F7", title: "ساخته‌شده برای تو", body: "برنامه‌ها را با هدف، بدن و سبک زندگی خودت تنظیم کن." },
+  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را تیم آریون پاسخ می‌دهد، نه یک پاسخ خودکار." },
+  { icon: Lightbulb, color: "#F59E0B", title: "همه‌چیز در یک سیستم", body: "روتین، تمرین، تغذیه، ترید و یادگیری زیر یک حساب." },
+  { icon: Smartphone, color: "#EC4899", title: "همیشه در دسترس", body: "گوشی، تبلت یا کامپیوتر؛ هر تغییر همه‌جا همگام می‌شود." },
+  { icon: BarChart3, color: "#06B6D4", title: "پیشرفت قابل اندازه‌گیری", body: "آنالیز هفتگی نشان می‌دهد کجا جلو رفته‌ای و کجا عقب مانده‌ای." },
+  { icon: Zap, color: "#F97316", title: "ساده و منظم", body: "بدون شلوغی؛ فقط چیزی که لازم داری." },
+  { icon: Users, color: "#14B8A6", title: "فارسی و سازگار با زندگی تو", body: "رابط فارسی و راست‌چین، برای هر سبک زندگی و هر سطحی." },
   { icon: Sparkles, color: "#8B5CF6", title: "همیشه در حال بهتر شدن", body: "قابلیت‌های تازه مرتب اضافه می‌شوند." },
 ];
 
@@ -632,9 +632,9 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> 14 روز روتین رایگان</span>
-          <h2 className="ls-cta-title">امروز، اولین تیک را بزن</h2>
-          <p className="ls-cta-sub">«روتین من» 14 روز رایگان است و بعد ماهانه 99 هزار تومان؛ حساب بساز و 3 روز بدنسازی، کالری‌شمار و ژورنال ترید را هم با استفاده‌ی محدود از هوش مصنوعی امتحان کن.</p>
+          <span className="ls-cta-chip"><Sparkles size={14} /> 14 روز رایگان</span>
+          <h2 className="ls-cta-title">از امروز شروع کن</h2>
+          <p className="ls-cta-sub">برنامه‌ات را بساز، اجرا کن و پیشرفتت را در یک سیستم دنبال کن.</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
               رایگان شروع کن <ArrowLeft size={16} />

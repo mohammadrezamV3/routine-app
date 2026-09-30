@@ -6,7 +6,7 @@ import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
 import { ICONS } from "@/components/NavDrawer";
 import { useTheme } from "@/components/ThemeProvider";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
-import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
+import { TRIAL_COPY_FA } from "@/lib/trial";
 
 // دقیقا هم‌شکل خروجی upgradeOffer توی app/api/plans — پیش‌نمایش قیمت
 // «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغ واقعی همیشه
@@ -81,7 +81,7 @@ export const PLANS_IRAN: PlanCard[] = [
     // «تحلیل هوشمند» طبق درخواست صریح از فیچرهای پلن حذف شد (هنوز آماده
     // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، COMPARE_ROWS_IRAN
     // پایین همین فایل)؛ جایگزینش «مدیربرنامه هوشمند» است.
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "مدیربرنامه هوشمند — پرسش‌وپاسخ با هوش مصنوعی", "روتین روزانه"],
+    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "مدیر برنامه هوشمند (نومو) — ساخت و ویرایش برنامه با زبان طبیعی", "روتین روزانه"],
   },
 ];
 
@@ -101,7 +101,7 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "تقویم اقتصادی", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "اتصال متاتریدر", included: { basic: false, exercise: false, trade: true, max: true } },
   { label: "رودمپ", included: { basic: false, exercise: true, trade: true, max: true } },
-  { label: "مدیربرنامه هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: "مدیر برنامه هوشمند", included: { basic: false, exercise: false, trade: false, max: true } },
   { label: "اپلیکیشن موبایل", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "یکپارچه‌سازی با ساعت هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "آنالیز هفتگی هوش مصنوعی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
@@ -190,7 +190,7 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
     <div className={cardClass}>
       {p.highlight && (
         <span className={`absolute -top-2.5 right-5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold text-white ${t.secondaryBg}`}>
-          محبوب‌ترین
+          پیشنهادی
         </span>
       )}
       {/* طبقِ درخواستِ صریح: زیرِ تایتل دیگر متن «جزئیات» نوشته نمی‌شود —
@@ -292,7 +292,7 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
       ) : (
         <>
           {/* دکمه‌های انتخاب مدت — پیل تخت، انتخاب‌شده پر رنگ اصلی، بدون
-              نشان چک‌مارک. از راست: ۱ ماهه، ۳ ماهه، ۶ ماهه، ۱۲ ماهه.
+              نشان چک‌مارک. از راست: 1 ماهه، 3 ماهه، 6 ماهه، 12 ماهه.
               رنگ پس‌زمینه/متن عمدا inline style‌ه، نه کلاس Tailwind — چون
               قانون سراسری `button:hover` (globals.css) اسپسیفیسیتی‌ش از یه
               کلاس Tailwind تکی بیشتره و روی هاور/لمس، رنگ انتخاب‌شده رو با
@@ -349,7 +349,7 @@ const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim(
 
 // گرید پلن‌ها + جدول مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراک داخل
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
-export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
+export function PlansSection({ mode, currentPlanKey, title = "پلن مناسب خودت را انتخاب کن", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
   // توی صفحه‌ی اشتراک (mode="account") کارتِ پلنِ رایگان (اگه وجود داشته باشه) نشون داده نمی‌شه.
   // «روتین من» الان پولیه و این‌جا نشون داده می‌شه.
@@ -374,7 +374,7 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", up
           همین متن رو توی یادداشتِ بالای خودش داره. متنِ ساده، بی‌بک‌گراند. */}
       {mode === "landing" && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
-          {FREE_ROUTINE_COPY_FA} هر حساب تازه: {TRIAL_COPY_FA}.
+          از 14 روز رایگان شروع کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: {TRIAL_COPY_FA}. دستیار «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.
         </p>
       )}
 
