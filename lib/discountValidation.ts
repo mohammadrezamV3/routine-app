@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
+
+export { REFERRAL_DISCOUNT_PERCENT };
 
 // منطق اعتبارسنجی کد تخفیف — مشترک بین چک‌اوت واقعی
 // (app/api/subscription/checkout) و پیش‌نمایش «اعمال» توی همون صفحه
@@ -35,8 +38,3 @@ export async function resolveDiscountCode(rawCode: string, userId: string, planK
 
   return { ok: false, error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" };
 }
-
-// درصد تخفیف کد رفرال در چک‌اوت — پاداش «یک ماه رایگان برای هردو طرف»ی
-// خود سیستم رفرال (بعد از اولین پرداخت موفق دعوت‌شونده) جدا و هنوز سمت
-// این چک‌اوت پیاده نشده؛ اینجا فقط همون تخفیف لحظه‌ی خرید دعوت‌شونده‌ست.
-export const REFERRAL_DISCOUNT_PERCENT = 10;

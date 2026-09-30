@@ -1,28 +1,44 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { isoLocal } from "./jalali";
 import { tasksForDate } from "./schedule";
-import { getCustomOccurrences, getDailyRange, getRemovedOccurrences } from "./storage";
+import { getCustomOccurrences, getDaily, getDailyRange, getRemovedOccurrences } from "./storage";
 import { keyMatches, useLiveRefresh } from "./liveSync";
+
+export type MyStreak = {
+  /** روزهای پشت‌سرهمِ کامل تا دیروز + امروز اگه کامل شده (هم‌قاعده‌ی streakFromHeatmap ِ داشبورد) */
+  streak: number | null;
+  /** همه‌ی برنامه‌های امروز تیک خورده؟ (امروزِ بی‌برنامه = false) */
+  todayDone: boolean;
+  todayIso: string;
+  /**
+   * آخرین محاسبه از چی راه افتاد: «init» بارِ اول، «local» تیکِ همین تب، «remote»
+   * تب/دستگاهِ دیگه یا برگشت به تب. جشنِ استریک فقط روی «local» — کاربری که
+   * روی گوشی کامل کرده و بعد به تبِ دسکتاپ برمی‌گرده نباید وسطِ کار غافلگیر بشه.
+   */
+  cause: "init" | "local" | "remote";
+};
 
 // استریک روزهای پشت‌سرهم کامل — از HeaderStreakClock استخراج شده تا هم توی
 // هدر هم توی کارت دوستان قابل استفاده باشه، بدون تکرار منطق محاسبه.
-export function useMyStreak(): number | null {
-  const [streak, setStreak] = useState<number | null>(null);
+export function useMyStreak(): MyStreak {
+  const [state, setState] = useState<MyStreak>({ streak: null, todayDone: false, todayIso: "", cause: "init" });
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
 
   // دوباره‌خوانی با هر تغییرِ زنده (lib/liveSync.ts) — `version` محاسبه‌ی
   // استریک رو هم وقتی فقط تیک‌ها (نه برنامه‌ها) عوض شدن دوباره راه می‌ندازه.
   const [version, setVersion] = useState(0);
+  const causeRef = useRef<MyStreak["cause"]>("init");
   function loadOccurrences() {
     getRemovedOccurrences().then((arr) => setRemovedOcc(new Set(arr)));
     getCustomOccurrences().then(setCustomOcc);
   }
   useEffect(loadOccurrences, []);
-  useLiveRefresh(["daily", "customOccurrences", "removedOccurrences"], (changed) => {
+  useLiveRefresh(["daily", "customOccurrences", "removedOccurrences"], (changed, meta) => {
     const all = changed.includes("*");
+    causeRef.current = meta.remote ? "remote" : "local";
     if (all || changed.some((c) => c === "customOccurrences" || c === "removedOccurrences")) loadOccurrences();
     if (all || changed.some((c) => keyMatches("daily", c))) setVersion((v) => v + 1);
   });
@@ -33,11 +49,21 @@ export function useMyStreak(): number | null {
   );
 
   useEffect(() => {
+    let alive = true;
     async function computeStreak() {
+      const cause = causeRef.current;
       const now = new Date();
+      const todayIso = isoLocal(now);
       const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() - 1);
       const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 90);
-      const entries = await getDailyRange(isoLocal(rangeStart), isoLocal(rangeEnd));
+      // امروز جدا: getDaily تیکِ optimistic ِ همین لحظه (قبل از جوابِ سرور) رو می‌بینه
+      const [entries, todayRec] = await Promise.all([
+        getDailyRange(isoLocal(rangeStart), isoLocal(rangeEnd)),
+        getDaily(todayIso),
+      ]);
+
+      const todayExpected = tasksForDate(now, opts);
+      const todayDone = todayExpected.length > 0 && todayExpected.every((t) => todayRec?.tasks[t.id]);
 
       let s = 0;
       const cursor = new Date(now);
@@ -64,10 +90,13 @@ export function useMyStreak(): number | null {
           cursor.setDate(cursor.getDate() - 1);
         } else break;
       }
-      setStreak(s);
+      // مثلِ دوالینگو: امروز همون لحظه‌ای که کامل شد به استریک اضافه می‌شه (نه فردا)
+      if (todayDone) s++;
+      if (alive) setState({ streak: s, todayDone, todayIso, cause });
     }
     computeStreak();
+    return () => { alive = false; };
   }, [opts, version]);
 
-  return streak;
+  return state;
 }

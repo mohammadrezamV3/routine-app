@@ -275,6 +275,14 @@ export const DI = {
       <path className="dbi-wave" d="M9 14.5c1 .8 2 .8 3 0s2-.8 3 0" {...s} strokeWidth={1.5} />
     </svg>
   ),
+  share: (p: P) => (
+    <svg {...base} {...p}>
+      <circle cx="17.5" cy="5.8" r="2.4" {...s} />
+      <circle cx="6.5" cy="12" r="2.4" {...s} />
+      <circle cx="17.5" cy="18.2" r="2.4" {...s} />
+      <path d="M8.6 10.8 15.4 7M8.6 13.2l6.8 3.8" {...s} />
+    </svg>
+  ),
 } as const;
 
 export type DashIconName = keyof typeof DI;

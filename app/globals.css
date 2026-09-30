@@ -2291,6 +2291,7 @@
   .checkout-discount-apply-btn.remove{ background:none; color:#E05252; }
   @media (hover:hover){.checkout-discount-apply-btn.remove:hover:not(:disabled){ background:none; box-shadow:none; }}
   .checkout-discount-success{ margin-top:7px; font-size:11.5px; color:var(--accent); font-weight:600; }
+  .checkout-invite-hint{ margin-top:7px; font-size:11.5px; color:var(--muted); font-weight:600; }
 
   .checkout-gateway-row{ display:flex; gap:8px; }
   /* حالا <button>ه (قبلا یه <div> ثابت بود، چون فقط یه درگاه بود) — قانون
@@ -9512,3 +9513,104 @@ html[data-logging-out]::after{
 /* حینِ ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
 .auth-full-btn.is-busy > *{ vertical-align:middle; }
 .auth-full-btn.is-busy:disabled{ opacity:1; }
+
+/* ── جشنِ استریک (components/StreakCelebration.tsx) ─────────────────────
+   پرده‌ی تمام‌صفحه به سبکِ دوالینگو؛ شعله از هدر پرواز می‌کنه و این‌جا فرود
+   میاد. رنگِ هاله از پالتِ سطحِ استریک (--flame-rgb) میاد. */
+.streak-badge-hit{ display:inline-flex; align-items:center; cursor:pointer; border-radius:8px; outline-offset:3px; }
+.streak-badge-hit .streak-flame{ transition:opacity .2s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
+.streak-badge-hit.is-away .streak-flame{ animation:none; opacity:0; transform:scale(.4); }
+.streak-badge-hit.is-landing .streak-flame{ animation:streakLand .7s cubic-bezier(.34,1.56,.64,1); }
+@keyframes streakLand{
+  0%{ transform:scale(.4); opacity:.4; }
+  45%{ transform:scale(1.7); opacity:1; filter:drop-shadow(0 0 8px currentColor); }
+  100%{ transform:scale(1); }
+}
+
+.streak-cel-root{
+  position:fixed; inset:0; z-index:9500; display:flex; align-items:center; justify-content:center;
+  padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(60% 45% at 50% 34%, rgba(var(--flame-rgb),.22), transparent 70%),
+    rgba(var(--bg-rgb),.96);
+  overflow-y:auto; overscroll-behavior:contain;
+}
+.streak-cel-rays{
+  position:absolute; left:50%; top:30%; width:760px; height:760px; margin:-380px 0 0 -380px; pointer-events:none;
+  background:repeating-conic-gradient(from 0deg, rgba(var(--flame-rgb),.07) 0deg 9deg, transparent 9deg 22deg);
+  -webkit-mask:radial-gradient(circle, #000 18%, transparent 62%); mask:radial-gradient(circle, #000 18%, transparent 62%);
+  animation:streakRays 28s linear infinite;
+}
+@keyframes streakRays{ to{ transform:rotate(360deg); } }
+.streak-cel-col{ position:relative; width:100%; max-width:380px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+.streak-cel-flame-slot{ position:relative; flex-shrink:0; }
+.streak-cel-flame{ position:absolute; inset:0; transform-origin:50% 60%; will-change:transform; }
+
+.streak-bigflame{ display:block; overflow:visible; }
+.streak-bigflame-glow{ transform-origin:50% 60%; animation:streakGlow 1.6s ease-in-out infinite; }
+@keyframes streakGlow{ 0%,100%{ opacity:.75; transform:scale(1); } 50%{ opacity:1; transform:scale(1.08); } }
+.streak-bigflame-body{ transform-origin:50% 96%; animation:streakBreath 2.4s ease-in-out infinite; }
+@keyframes streakBreath{ 0%,100%{ transform:scale(1,1); } 50%{ transform:scale(1.03,.97); } }
+.streak-bigflame-embers circle{ opacity:0; transform-box:fill-box; transform-origin:center; animation-name:streakEmber; animation-timing-function:ease-out; animation-iteration-count:infinite; }
+@keyframes streakEmber{
+  0%{ opacity:0; transform:translate(0,0) scale(1); }
+  15%{ opacity:1; }
+  100%{ opacity:0; transform:translate(var(--ex, 6px),-170px) scale(.3); }
+}
+.streak-bigflame-embers circle:nth-child(odd){ --ex:-10px; }
+.streak-bigflame.is-still .streak-bigflame-glow,
+.streak-bigflame.is-still .streak-bigflame-body{ animation:none; }
+
+.streak-cel-burst{ position:absolute; left:50%; top:58%; width:0; height:0; pointer-events:none; }
+.streak-cel-burst i{
+  position:absolute; left:-5px; top:-5px; width:10px; height:10px; border-radius:50%;
+  background:rgb(var(--flame-rgb)); box-shadow:0 0 10px rgba(var(--flame-rgb),.9);
+  transform:rotate(var(--a)) translateY(0) scale(1); opacity:0;
+  animation:streakBurst .8s cubic-bezier(.2,.7,.3,1) forwards;
+}
+@keyframes streakBurst{
+  0%{ opacity:1; transform:rotate(var(--a)) translateY(0) scale(1); }
+  100%{ opacity:0; transform:rotate(var(--a)) translateY(-130px) scale(.2); }
+}
+
+.streak-cel-num{ position:relative; height:108px; margin-top:4px; display:flex; justify-content:center; overflow:visible; }
+.streak-cel-num b{
+  display:block; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:96px; line-height:108px; font-weight:900;
+  color:rgb(var(--flame-rgb)); text-shadow:0 6px 30px rgba(var(--flame-rgb),.45); letter-spacing:-2px;
+}
+.streak-cel-text{ margin-top:2px; }
+.streak-cel-title{ margin:0; font-size:22px; font-weight:900; color:var(--text); }
+.streak-cel-sub{ margin:8px auto 0; max-width:320px; font-size:13.5px; line-height:1.9; color:var(--muted); }
+
+.streak-cel-week{
+  margin-top:20px; width:100%; display:grid; grid-template-columns:repeat(7, 1fr); gap:6px;
+  padding:14px 12px 12px; border:1px solid var(--box-line, var(--line)); border-radius:18px;
+}
+.streak-cel-day{ display:flex; flex-direction:column; align-items:center; gap:7px; }
+.streak-cel-day-name{ font-size:12px; font-weight:700; color:var(--muted); }
+.streak-cel-day.is-today .streak-cel-day-name{ color:rgb(var(--flame-rgb)); }
+.streak-cel-day-dot{
+  width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+  border:2px solid var(--box-line, var(--line)); color:#fff; transition:background .3s ease, border-color .3s ease;
+}
+.streak-cel-day.is-today .streak-cel-day-dot{ border-color:rgba(var(--flame-rgb),.7); }
+.streak-cel-day-dot.is-done{ background:linear-gradient(180deg, rgba(var(--flame-rgb),.85), rgb(var(--flame-rgb))); border-color:transparent; box-shadow:0 0 12px rgba(var(--flame-rgb),.45); }
+.streak-cel-day-dot svg{ width:17px; height:17px; }
+.streak-cel-next{ grid-column:1 / -1; margin-top:6px; font-size:11.5px; font-weight:700; color:var(--muted); }
+
+.streak-cel-actions{ margin-top:22px; width:100%; display:flex; flex-direction:column; gap:10px; }
+.streak-cel-btn{ width:100%; min-height:46px; font-size:14px; }
+.streak-cel-invite{ margin:4px 0 0; font-size:12px; line-height:1.8; color:var(--muted); }
+.streak-cel-invite b{ color:var(--accent); font-family:var(--font-latin), sans-serif; letter-spacing:.5px; }
+.streak-cel-msg{ margin:0; font-size:12px; font-weight:700; color:var(--accent); }
+
+@media (max-height:640px){
+  .streak-cel-num{ height:84px; }
+  .streak-cel-num b{ font-size:74px; line-height:84px; }
+  .streak-cel-week{ margin-top:12px; }
+}
+@media (prefers-reduced-motion:reduce){
+  .streak-cel-rays, .streak-bigflame-glow, .streak-bigflame-body, .streak-badge-hit.is-landing .streak-flame{ animation:none; }
+  .streak-cel-burst{ display:none; }
+}
+html[data-perf-weak] .streak-cel-rays{ animation:none; }

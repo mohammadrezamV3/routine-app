@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { readInviteRef } from "@/lib/invite";
+import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
+import { faNum } from "@/lib/jalali";
 import { useSession } from "next-auth/react";
 import { XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -40,6 +43,10 @@ export default function CheckoutPage() {
     const sp = new URLSearchParams(window.location.search);
     setQuery({ planKey: sp.get("plan") || "", duration: (sp.get("duration") || "1") as Duration });
     if (sp.get("checkout") === "failed") setFailedReturn(true);
+    // کدِ دعوتِ دوستی که کاربر با لینکش اومده (lib/invite.ts) — فقط پیش‌پر می‌شه؛
+    // اعمال و اعتبارسنجی مثلِ هر کدِ دیگه با دکمه‌ی «اعمال» و سمتِ سرور.
+    const ref = readInviteRef();
+    if (ref) { setDiscountCode((c) => c || ref); setFromInvite(true); }
   }, []);
 
   const planKey = query?.planKey || "";
@@ -47,6 +54,7 @@ export default function CheckoutPage() {
   const plan = query ? findPlanCard(planKey) : undefined;
 
   const [discountCode, setDiscountCode] = useState("");
+  const [fromInvite, setFromInvite] = useState(false);
   const [discountResult, setDiscountResult] = useState<{ ok: true; percentOff: number } | { ok: false; error: string } | null>(null);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   // applyingDiscount (state) async/batch-ست و جلوی دابل‌کلیک سریع رو کامل
@@ -248,6 +256,7 @@ export default function CheckoutPage() {
             </button>
           </div>
         </div>
+        {fromInvite && !discountResult && <div className="checkout-invite-hint">کدِ دعوتِ دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
         {discountResult?.ok && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>

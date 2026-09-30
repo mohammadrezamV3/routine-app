@@ -30,6 +30,7 @@ import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./Dashboard
 import { DashboardQuickActions } from "./DashboardLauncher";
 import { DashboardActionsProvider } from "./DashboardActions";
 import { DashboardCommand, useCommandHotkey } from "./DashboardCommand";
+import { DashboardShare } from "./DashboardShare";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
@@ -98,6 +99,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const flagFeatures = useFeatures();
   const { data: session } = useSession();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const toggleCmd = useCallback((fn: (v: boolean) => boolean) => setCmdOpen(fn), []);
   useCommandHotkey(toggleCmd);
 
@@ -129,7 +131,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   return (
     <MotionConfig reducedMotion="user">
       <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
-      <DashboardHero data={data} routine={routine} onOpenCommand={() => setCmdOpen(true)} />
+      <DashboardHero data={data} routine={routine} onOpenCommand={() => setCmdOpen(true)} onShare={() => setShareOpen(true)} />
       <DashboardQuickActions features={features} modules={modules} />
 
       {status === "error" && !data && (
@@ -151,6 +153,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         <DashboardInbox data={data} loading={loading} />
       </motion.div>
 
+      <DashboardShare open={shareOpen} onClose={() => setShareOpen(false)} data={data} routine={routine} />
       <DashboardCommand open={cmdOpen} onClose={() => setCmdOpen(false)} features={features} modules={modules} isAdmin={isAdmin} />
       </DashboardActionsProvider>
     </MotionConfig>
