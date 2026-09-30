@@ -625,12 +625,6 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 /* ── QA round 2 ─────────────────────────────────────────────── */
 /* فیلترِ تک‌انتخابیِ داخلِ یک بخشِ flush (SegmentedTabs) */
 .mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
-/* سوییچِ روشن در تم روشن: قانونِ سراسریِ body[data-theme="light"] .ios-toggle
-   (اسپسیفیسیتیِ بالاتر) رنگِ accentِ .ios-toggle.on را می‌پوشاند و «روشن» و
-   «خاموش» یک‌رنگ دیده می‌شدند. فقط برای بخشِ منتور؛ رفعِ سراسری در globals.css
-   جداگانه گزارش شده است. */
-body[data-theme="light"] .mentor-page .ios-toggle.on{ background:var(--accent); border-color:var(--accent); }
-@media (hover:hover){ body[data-theme="light"] .mentor-page .ios-toggle.on:hover{ background:var(--accent); border-color:var(--accent); } }
 
 /* ── شرایط منتورها (agent J) — MentorPlatformNotice و MentorTermsAcceptance ── */
 /* خطِ ثابتِ «آریون فقط بستر است» — متنِ کم‌رنگ، بدونِ پس‌زمینه و قاب */

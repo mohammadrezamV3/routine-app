@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TickButton } from "./TickButton";
 import { CandlestickChart } from "lucide-react";
 import { MarketPicker } from "@/components/MarketPicker";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
@@ -166,7 +167,7 @@ export function TradeSettings() {
           className={`trade-toggle${alerts.enabled ? " on" : ""}`}
           onClick={() => patchAlerts({ enabled: !alerts.enabled })}
         >
-          <span className="trade-toggle-knob" />
+          <TickButton as="span" checked={alerts.enabled} size={22} />
           <span className="trade-toggle-label">{alerts.enabled ? "روشن" : "خاموش"}</span>
         </button>
 

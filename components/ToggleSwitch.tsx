@@ -1,7 +1,8 @@
 "use client";
 
-// سوییچ روشن/خاموش سبک iOS (لیکوئید گلس) — برای جاهایی که یک تنظیم
-// دودویی (نمایش/عدم‌نمایش) داره، به‌جای چک‌باکس مربعی معمولی اپ.
+import { TickButton } from "./TickButton";
+
+// گزینه‌ی روشن/خاموش — همون تیکِ واحدِ اپ (TickButton)، نه سوییچ.
 export function ToggleSwitch({
   checked,
   onChange,
@@ -13,17 +14,5 @@ export function ToggleSwitch({
   label?: string;
   disabled?: boolean;
 }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      className={`ios-toggle${checked ? " on" : ""}`}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="ios-toggle-knob" />
-    </button>
-  );
+  return <TickButton checked={checked} onToggle={() => onChange(!checked)} label={label} disabled={disabled} size={24} />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TickButton } from "./TickButton";
 import { Ban, Check, Eye, Plus, Tag, UserRound, X } from "lucide-react";
 import { ToggleSwitch } from "./ToggleSwitch";
 import { Spinner } from "./Spinner";
@@ -157,7 +158,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
             <div role="group" aria-label="حوزه‌ها">
               {MENTOR_CATEGORIES.map((c) => (
                 <label key={c} className="mentor-check">
-                  <input type="checkbox" checked={categories.includes(c)} onChange={(e) => toggleCategory(c, e.target.checked)} />
+                  <TickButton shape="square" size={22} checked={categories.includes(c)} onToggle={() => toggleCategory(c, !categories.includes(c))} />
                   <span className="mentor-check-label">{MENTOR_CATEGORY_META[c].label}</span>
                 </label>
               ))}

@@ -21,7 +21,7 @@ export function DashTaskList({
 }: {
   tasks: DashTaskItem[];
   editable: boolean;
-  onToggle: (id: string) => void;
+  onToggle: (id: string, itemId?: string) => void;
   onAddProgram: () => void;
   onOpenProgram: (name: string) => void;
   onEditTask: (id: string) => void;

@@ -31,6 +31,7 @@ import {
   Importance,
 } from "@/lib/storage";
 import { getTodayStats } from "@/lib/routineStats";
+import { checklistOf, isOccDone, itemKey, toggleTask } from "@/lib/routineChecklist";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
@@ -102,7 +103,7 @@ function WeeklyPageInner() {
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string; mentorProgramId?: string }[]>([]);
+  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string; mentorProgramId?: string; items?: { id: string; name: string }[] }[]>([]);
   const router = useRouter();
   const [cardName, setCardName] = useState<string | null>(null);
 
@@ -312,7 +313,8 @@ function WeeklyPageInner() {
     const list: DashTaskItem[] = tasksForDate(selectedDate, opts)
       .map((t) => {
         const occ = customOcc.find((c) => c.id === t.id);
-        const done = !!selectedDaily?.tasks[t.id];
+        const items = checklistOf(occ);
+        const done = isOccDone(selectedDaily?.tasks, t.id, items);
         return {
           id: t.id,
           name: t.name,
@@ -320,6 +322,7 @@ function WeeklyPageInner() {
           importance: occ?.importance,
           tag: occ?.tag,
           done,
+          ...(items.length ? { items: items.map((i) => ({ id: i.id, name: i.name, done: !!selectedDaily?.tasks[itemKey(t.id, i.id)] })) } : {}),
           missed: !done && isDayOver(selectedIso, clock),
           isPast: isTaskPast(selectedIso),
           dayPast: isDayPast(selectedIso),
@@ -411,7 +414,7 @@ function WeeklyPageInner() {
     setSelectedIso(iso);
   }
 
-  async function toggleDashTask(id: string) {
+  async function toggleDashTask(id: string, itemId?: string) {
     // روزِ گذشته برای جبرانِ عقب‌افتاده قابلِ تیک‌زدنه، و برنامه‌ای که هنوز
     // ساعتش نرسیده هم اگر زودتر انجامش داده — ولی روزِ *آینده* نه: طبقِ
     // درخواستِ صریحِ کاربر، تیک‌زدنِ برنامه‌ی روزی که هنوز نرسیده یعنی
@@ -420,7 +423,9 @@ function WeeklyPageInner() {
     // برنامه‌ی روزهای گذشته دیگه قابلِ تغییر نیست (درخواستِ صریح).
     if (task?.isFuture || isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
-    const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
+    // برنامه‌ی لیستی: آیتم یا «همه با هم»؛ کلیدِ برنامه = همه‌ی آیتم‌ها انجام شدن (lib/routineChecklist.ts)
+    const items = checklistOf(customOcc.find((c) => c.id === id));
+    const next: DailyRecord = { ...current, tasks: toggleTask(current.tasks, id, items, itemId) };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
     // همین‌جا از رویِ داده‌ی محلی حساب می‌شه، بدونِ صبر برایِ شبکه — درخواستِ

@@ -11,6 +11,9 @@ import { isoLocal } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { TickOption } from "./TickOption";
+import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
+import { checklistOf, type ChecklistItem } from "@/lib/routineChecklist";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -44,6 +47,10 @@ export function EditOccurrenceForm({
   ]);
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [tag, setTag] = useState(occ.tag ?? "");
+  // آیتم‌های برنامه‌ی لیستی — از خودِ occurrence ِ ذخیره‌شده (ویرایش نباید پاکشون کنه)
+  const origItems = checklistOf(scheduleOpts.customOccurrences.find((c) => c.id === occ.id));
+  const [isList, setIsList] = useState(origItems.length > 0);
+  const [items, setItems] = useState<ChecklistItem[]>(origItems);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   // پیامِ خطا داخلِ همین فرم، نه بنرِ بالای صفحه (درخواستِ صریحِ کاربر).
   const [formError, setFormError] = useState<string | null>(null);
@@ -158,6 +165,7 @@ export function EditOccurrenceForm({
         ...(orig?.endDate ? { endDate: orig.endDate } : {}),
       };
     };
+    const cleanItems = isList ? items.map((i) => ({ id: i.id, name: i.name.trim() })).filter((i) => i.name) : [];
     const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
       id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       name,
@@ -166,6 +174,7 @@ export function EditOccurrenceForm({
       ...datesFor(r.jsDay),
       importance,
       ...(trimmedTag ? { tag: trimmedTag } : {}),
+      ...(cleanItems.length ? { items: cleanItems } : {}),
       // آینه‌ی برنامه‌ی منتور باید بعد از ویرایش هم آینه بمونه — وگرنه به «برنامه‌ی
       // خودِ شاگرد» تبدیل می‌شه و ممکنه برای منتورِ دیگه‌ای قابل‌اشتراک بشه
       ...(orig?.mentorProgramId ? { mentorProgramId: orig.mentorProgramId } : {}),
@@ -190,6 +199,11 @@ export function EditOccurrenceForm({
             <div className="wsearch-newform-title accent">ویرایش «{name}»</div>
             <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
           </div>
+
+          <TickOption checked={isList} onChange={setIsList} className="mb-2">
+            این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+          </TickOption>
+          {isList && <div style={{ marginBottom: 14 }}><RoutineChecklistEditor items={items} onChange={setItems} /></div>}
 
           <label htmlFor="editOccTag">تگ (اختیاری)</label>
           <input

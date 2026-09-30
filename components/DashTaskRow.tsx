@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, MoreVertical, Pencil, Play, Trash2, CalendarClock, X } from "lucide-react";
+import { ChevronDown, MoreVertical, Pencil, Play, Trash2, CalendarClock } from "lucide-react";
+import { TickButton } from "./TickButton";
 import { cn } from "@/lib/utils";
 import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
@@ -19,6 +20,8 @@ export type DashTaskItem = {
    * دارد که با کلیک هم تیک می‌خورد هم به صفحه‌ی بدنسازی می‌برد. سه‌نقطه
    * (ویرایش/انتقال/حذف) برایش نیست چون یک occurrence واقعی نیست. */
   exercise?: boolean;
+  /** برنامه‌ی لیستی (lib/routineChecklist.ts): آیتم‌ها با وضعیتِ تیکِ همین روز */
+  items?: { id: string; name: string; done: boolean }[];
 };
 
 // بج اهمیت همیشه کنار اسم برنامه‌ست (نه زیرش). فقط کلیک روی خود متن اسم
@@ -38,7 +41,8 @@ export function DashTaskRow({
 }: {
   task: DashTaskItem;
   editable: boolean;
-  onToggle: (id: string) => void;
+  /** itemId = تیکِ یک آیتمِ برنامه‌ی لیستی؛ بدونش = کلِ برنامه (لیستی: همه با هم) */
+  onToggle: (id: string, itemId?: string) => void;
   onOpen: (name: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -47,6 +51,11 @@ export function DashTaskRow({
   onStart?: (id: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const items = task.items ?? [];
+  const isList = items.length > 0;
+  const doneCount = items.filter((i) => i.done).length;
+  const [expanded, setExpanded] = useState(false);
+  const canTick = editable && !task.isFuture && !task.dayPast;
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const btnWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -87,9 +96,8 @@ export function DashTaskRow({
   }, [menuOpen]);
 
   return (
-    <motion.div
-      className="flex items-center gap-2 rounded-2xl px-2.5 py-3 transition-colors hover:bg-white/[0.03] sm:gap-4 sm:px-3 sm:py-3.5"
-    >
+    <motion.div className="rounded-2xl transition-colors hover:bg-white/[0.03]">
+    <div className="flex items-center gap-2 px-2.5 py-3 sm:gap-4 sm:px-3 sm:py-3.5">
       {/* دکمه‌ی سه‌نقطه باید دقیقا هم‌ردیف خط متن اسم برنامه بشینه. قبلا
           یه <button> inline بود که ارتفاعش از line-height خودش می‌اومد و
           مرکز آیکون چند پیکسل بالاتر از مرکز متن می‌افتاد. حالا خودش یه
@@ -181,10 +189,24 @@ export function DashTaskRow({
           ) : (
             <button
               type="button"
-              onClick={() => onOpen(task.name)}
+              // برنامه‌ی لیستی: زدنِ اسم لیست رو باز/بسته می‌کنه (کارتِ برنامه از منو هم هست)
+              onClick={() => (isList ? setExpanded((v) => !v) : onOpen(task.name))}
+              aria-expanded={isList ? expanded : undefined}
               className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
             >
               {task.name}
+            </button>
+          )}
+          {isList && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-label={expanded ? "بستنِ لیست" : "بازکردنِ لیست"}
+              className="checklist-chip"
+            >
+              <span dir="ltr">{doneCount}/{items.length}</span>
+              <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", expanded && "rotate-180")} />
             </button>
           )}
           {task.tag && (
@@ -280,65 +302,59 @@ export function DashTaskRow({
         </motion.button>
         )
       ) : (
-      <motion.button
-        type="button"
-        whileTap={{ scale: 0.85, transition: { duration: 0.1 } }}
-        disabled={!editable || task.isFuture || task.dayPast}
-        onClick={() => { if (!task.isFuture && !task.dayPast) onToggle(task.id); }}
-        aria-pressed={task.done}
-        aria-label={
+      <TickButton
+        checked={task.done}
+        state={task.missed ? "missed" : "idle"}
+        size={24}
+        disabled={!canTick}
+        onToggle={() => onToggle(task.id)}
+        label={
           task.isFuture
             ? "این برنامه هنوز نرسیده — قابل تیک‌زدن نیست"
+            : isList
+            ? task.done ? "برداشتنِ تیکِ همه‌ی آیتم‌ها" : "تیک‌زدنِ همه‌ی آیتم‌ها"
             : task.done
             ? "انجام دادی — علامت‌زدن به‌عنوان انجام‌نشده"
             : task.missed
             ? "وقتش گذشته — علامت‌زدن به‌عنوان انجام‌شده"
             : "علامت‌زدن به‌عنوان انجام‌شده"
         }
-        animate={task.done ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-        transition={{ duration: 0.16, ease: "easeOut" }}
-        className={cn(
-          "task-check-btn relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-6 sm:w-6",
-          (!editable || task.isFuture) && "cursor-not-allowed opacity-50",
-          task.dayPast && "cursor-not-allowed",
-          task.done || task.missed ? "text-white" : "text-transparent hover:border-white/45",
-          !task.done && task.missed && "task-check-missed"
-        )}
-        style={
-          task.done
-            ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-            : task.missed
-            ? { background: "#E05252", borderColor: "#E05252" }
-            : { background: "transparent", borderColor: "var(--muted)" }
-        }
-      >
-        <AnimatePresence>
-          {task.done ? (
-            <motion.span
-              key="done"
-              initial={{ scale: 0, rotate: -45, opacity: 0 }}
-              animate={{ scale: 1, rotate: 0, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 650, damping: 26 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-            </motion.span>
-          ) : task.missed ? (
-            <motion.span
-              key="missed"
-              initial={{ scale: 0, rotate: 45, opacity: 0 }}
-              animate={{ scale: 1, rotate: 0, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 650, damping: 26 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-            </motion.span>
-          ) : null}
-        </AnimatePresence>
-      </motion.button>
+      />
       )}
+    </div>
+
+    {/* لیستِ آیتم‌ها — هرکدوم همون تیکِ داشبورد؛ تیکِ بالا (عنوان) همه رو با هم می‌زنه */}
+    <AnimatePresence initial={false}>
+      {isList && expanded && (
+        <motion.ul
+          key="items"
+          className="checklist-items"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {items.map((it, i) => (
+            <motion.li
+              key={it.id}
+              className={cn("checklist-item", it.done && "is-done")}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.04 * i, duration: 0.25 }}
+            >
+              <span className="checklist-item-name">{it.name}</span>
+              <TickButton
+                checked={it.done}
+                size={20}
+                disabled={!canTick}
+                onToggle={() => onToggle(task.id, it.id)}
+                label={`${it.done ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${it.name}`}
+              />
+            </motion.li>
+          ))}
+        </motion.ul>
+      )}
+    </AnimatePresence>
     </motion.div>
   );
 }

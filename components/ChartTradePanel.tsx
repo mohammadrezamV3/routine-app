@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { TickButton } from "./TickButton";
 import { ClipboardCheck, NotebookPen } from "lucide-react";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
@@ -118,10 +119,10 @@ export function ChartTradePanel({
             {checklist.items.map((item) => (
               <label key={item.id} className="trade-chart-check-row">
                 <span>{item.text}</span>
-                <input
-                  type="checkbox"
+                <TickButton
+                  size={22}
                   checked={!!checked[item.id]}
-                  onChange={(e) => setChecked((p) => ({ ...p, [item.id]: e.target.checked }))}
+                  onToggle={() => setChecked((p) => ({ ...p, [item.id]: !p[item.id] }))}
                 />
               </label>
             ))}

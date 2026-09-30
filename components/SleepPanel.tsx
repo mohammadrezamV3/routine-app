@@ -17,7 +17,7 @@ import { useLiveRefresh } from "@/lib/liveSync";
 import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import {
   SLEEP_GOAL_MAX, SLEEP_GOAL_MIN, SLEEP_MAX_MIN, SLEEP_MIN_MIN,
-  buildSleepTimes, clockOf, durationLabel, sleepMinutes, summarizeSleep,
+  buildSleepTimes, clockOf, durationLabel, sleepMinutes, summarizeSleep, timelineSpan,
   type SleepRecord,
 } from "@/lib/sleep";
 
@@ -46,7 +46,12 @@ function toneColor(t: "good" | "low" | "high"): string {
 }
 
 export function SleepPanel() {
-  const todayIso = useMemo(() => isoLocal(new Date()), []);
+  // امروز با گذشتنِ نیمه‌شب (صفحه‌ی باز) عوض می‌شه
+  const [todayIso, setTodayIso] = useState(() => isoLocal(new Date()));
+  useEffect(() => {
+    const t = setInterval(() => setTodayIso((p) => { const n = isoLocal(new Date()); return n === p ? p : n; }), 30_000);
+    return () => clearInterval(t);
+  }, []);
   const [entries, setEntries] = useState<SleepRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [target, setTarget] = useState<{ wake: string; sleep: string }>({ wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP });
@@ -63,10 +68,18 @@ export function SleepPanel() {
   const [range, setRange] = useState<"14" | "30">("14");
   const formRef = useRef<HTMLDivElement>(null);
   const prefilledFor = useRef<string | null>(null);
+  // کاربر فرم رو دست زده؟ (پیش‌فرض‌های دیررسیده نباید تایپش رو بپرونن)
+  const dirty = useRef(false);
+  const dateRef = useRef(date);
+  dateRef.current = date;
+  const busy = useRef(false);
+  const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     const from = isoLocal(addDays(new Date(), -(LOAD_DAYS - 1)));
     const list = await getSleepRange(from, isoLocal(new Date()));
+    if (seq !== loadSeq.current) return; // درخواستِ جدیدتری در راهه
     setEntries(list.filter((e) => sleepMinutes(e) > 0));
     setLoaded(true);
   }, []);
@@ -87,73 +100,84 @@ export function SleepPanel() {
   // فقط وقتی روز عوض می‌شه (یا بارِ اول که داده اومد) — تایپِ کاربر رو پاک نمی‌کنه.
   useEffect(() => {
     if (!loaded) return;
-    if (prefilledFor.current === date) return;
-    prefilledFor.current = date;
     const rec = byDate.get(date);
+    if (prefilledFor.current === date) {
+      // هدفِ کاربر دیرتر از داده رسید و شبِ بی‌رکورد دست‌نخورده‌ست: پیش‌فرض‌ها رو به‌روز کن
+      if (!rec && !dirty.current && (bed !== target.sleep || wake !== target.wake)) {
+        setBed(target.sleep); setWake(target.wake);
+      }
+      return;
+    }
+    prefilledFor.current = date;
+    dirty.current = false;
     setBed(rec ? clockOf(rec.sleptAt) : target.sleep);
     setWake(rec ? clockOf(rec.wokeAt) : target.wake);
     setQuality(rec?.quality ? String(rec.quality) : null);
     setNote(rec?.note ?? "");
     setErr(null); setPurchase(false); setOkMsg(false); setConfirmDel(false);
-  }, [loaded, date, byDate, target]);
-
-  // اگه تنظیمِ هدف دیرتر از داده رسید و کاربر هنوز رکورد نداره، پیش‌فرض‌ها رو به‌روز کن
-  useEffect(() => {
-    if (!loaded || byDate.has(date)) return;
-    prefilledFor.current = null;
-  }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loaded, date, byDate, target]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const times = useMemo(() => buildSleepTimes(date, bed, wake), [date, bed, wake]);
   const previewMin = times ? Math.round((times.wokeAt.getTime() - times.sleptAt.getTime()) / 60000) : null;
   const previewOk = previewMin != null && previewMin >= SLEEP_MIN_MIN && previewMin <= SLEEP_MAX_MIN;
   const existing = byDate.get(date);
 
+  const minDate = isoLocal(addDays(parseIso(todayIso), -(DAYS_BACK - 1)));
   const pickDate = (iso: string) => {
-    if (iso > todayIso) return;
+    if (iso > todayIso || iso < minDate || iso === date) return;
     prefilledFor.current = null;
     setDate(iso);
   };
   const shift = (n: number) => pickDate(isoLocal(addDays(parseIso(date), n)));
-  const minDate = isoLocal(addDays(new Date(), -(DAYS_BACK - 1)));
 
   async function onSave() {
+    if (busy.current) return;
     if (!times || !previewOk) { setErr("ساعت‌ها را درست وارد کن (خوابِ 30 دقیقه تا 20 ساعت)"); return; }
-    setSaving(true); setErr(null); setPurchase(false); setOkMsg(false);
+    busy.current = true;
+    const forDate = date;
+    setSaving(true); setErr(null); setPurchase(false); setOkMsg(false); setConfirmDel(false);
     try {
       await saveSleep({
-        date,
+        date: forDate,
         sleptAt: times.sleptAt.toISOString(),
         wokeAt: times.wokeAt.toISOString(),
         quality: quality ? Number(quality) : null,
         note: note.trim() ? note.trim().slice(0, 200) : null,
       });
-      setOkMsg(true);
+      // اگه وسطِ ذخیره روز عوض شده، پیامِ موفقیت/خطا مالِ روزِ دیگه‌ست
+      if (dateRef.current === forDate) { setOkMsg(true); dirty.current = false; }
       await load();
     } catch (e) {
-      if (e instanceof SleepSaveError && e.status === 403) setPurchase(true);
-      else setErr(e instanceof Error ? e.message : "ذخیره نشد");
-    } finally { setSaving(false); }
+      if (dateRef.current === forDate) {
+        if (e instanceof SleepSaveError && e.status === 403) setPurchase(true);
+        else setErr(e instanceof Error ? e.message : "ذخیره نشد");
+      }
+    } finally { busy.current = false; setSaving(false); }
   }
 
   async function onDelete() {
+    if (busy.current) return;
     if (!confirmDel) { setConfirmDel(true); return; }
-    setSaving(true); setErr(null);
+    busy.current = true;
+    const forDate = date;
+    setSaving(true); setErr(null); setPurchase(false); setOkMsg(false);
     try {
-      await deleteSleep(date);
-      prefilledFor.current = null;
-      setConfirmDel(false);
+      await deleteSleep(forDate);
+      if (dateRef.current === forDate) { prefilledFor.current = null; setConfirmDel(false); }
       await load();
     } catch (e) {
-      if (e instanceof SleepSaveError && e.status === 403) setPurchase(true);
-      else setErr(e instanceof Error ? e.message : "حذف نشد");
-    } finally { setSaving(false); }
+      if (dateRef.current === forDate) {
+        if (e instanceof SleepSaveError && e.status === 403) setPurchase(true);
+        else setErr(e instanceof Error ? e.message : "حذف نشد");
+      }
+    } finally { busy.current = false; setSaving(false); }
   }
 
   const n = Number(range);
-  const fromRange = isoLocal(addDays(new Date(), -(n - 1)));
+  const fromRange = isoLocal(addDays(parseIso(todayIso), -(n - 1)));
   const summary = useMemo(() => summarizeSleep(entries.filter((e) => e.date >= fromRange)), [entries, fromRange]);
 
-  const dateLabel = date === todayIso ? "امروز" : date === isoLocal(addDays(new Date(), -1)) ? "دیروز" : FA_WEEKDAY[parseIso(date).getDay()];
+  const dateLabel = date === todayIso ? "امروز" : date === isoLocal(addDays(parseIso(todayIso), -1)) ? "دیروز" : FA_WEEKDAY[parseIso(date).getDay()];
 
   return (
     <section className="sleep-page bodybuilding-glass">
@@ -178,11 +202,11 @@ export function SleepPanel() {
           <div className="sl-fields">
             <div className="sl-field">
               <label>ساعتِ خواب</label>
-              <TimeInput value={bed} onChange={setBed} className="wsearch-newform-name" />
+              <TimeInput value={bed} onChange={(v) => { dirty.current = true; setBed(v); }} className="wsearch-newform-name" />
             </div>
             <div className="sl-field">
               <label>ساعتِ بیداری</label>
-              <TimeInput value={wake} onChange={setWake} className="wsearch-newform-name" />
+              <TimeInput value={wake} onChange={(v) => { dirty.current = true; setWake(v); }} className="wsearch-newform-name" />
             </div>
           </div>
 
@@ -190,20 +214,23 @@ export function SleepPanel() {
             <span className="sl-sub">مدتِ خواب</span>
             <b>{previewOk && previewMin != null ? durationLabel(previewMin) : "—"}</b>
           </div>
+          {bed.length === 5 && wake.length === 5 && !previewOk && (
+            <div className="sl-sub">مدتِ خواب باید بینِ 30 دقیقه تا 20 ساعت باشد؛ ساعت‌ها را بررسی کن.</div>
+          )}
 
           <div className="sl-field">
             <label>کیفیتِ خواب (اختیاری)</label>
             <SegmentedTabs
               ariaLabel="کیفیتِ خواب"
-              active={quality}
-              onChange={(v) => setQuality(v === quality ? null : v)}
-              options={[1, 2, 3, 4, 5].map((q) => ({ value: String(q), label: String(q) }))}
+              active={quality ?? "0"}
+              onChange={(v) => { dirty.current = true; setQuality(v === "0" ? null : v); }}
+              options={[{ value: "0", label: "—" }, ...[1, 2, 3, 4, 5].map((q) => ({ value: String(q), label: String(q) }))]}
             />
           </div>
 
           <div className="sl-field full">
             <label>یادداشت (اختیاری)</label>
-            <textarea className="wsearch-newform-name" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="مثلا: دیر خوابیدم، قهوه‌ی عصر" />
+            <textarea className="wsearch-newform-name" maxLength={200} value={note} onChange={(e) => { dirty.current = true; setNote(e.target.value); }} placeholder="مثلا: دیر خوابیدم، قهوه‌ی عصر" />
             <div className="sl-count">{note.length}/200</div>
           </div>
 
@@ -360,9 +387,7 @@ function SleepChart({ byDate, todayIso, selected, onPick }: { byDate: Map<string
 
                 {d.rec && (() => {
                   const bedMin = new Date(d.rec.sleptAt).getHours() * 60 + new Date(d.rec.sleptAt).getMinutes();
-                  const s = (bedMin - AXIS_START + 1440) % 1440;
-                  const from = Math.min(s, AXIS_SPAN);
-                  const to = Math.min(s + min, AXIS_SPAN);
+                  const { from, to } = timelineSpan(bedMin, min, AXIS_START, AXIS_SPAN);
                   return (
                     <rect
                       x={cx - 5} y={tlTop + from * tlScale} width={10} height={Math.max(3, (to - from) * tlScale)} rx={5}

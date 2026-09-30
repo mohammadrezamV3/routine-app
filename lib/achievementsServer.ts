@@ -3,7 +3,6 @@
 // دیگه قفل نمی‌شه، و وقتی همه باز شدن User.goldenSince (نامِ طلایی) ست می‌شه.
 
 import { prisma } from "./prisma";
-import { isoLocal } from "./jalali";
 import { dayInTimezone } from "./dashboardServer";
 import { ACHIEVEMENTS, evaluateAchievements, type AchievementMetrics } from "./achievements";
 import { computeAchievementMetrics } from "./achievementsCompute";
@@ -23,6 +22,11 @@ export type AchievementsPayload = {
 // همون پیش‌فرض‌های lib/wakeSleep.ts (اون فایل storage ِ کلاینتی رو import می‌کنه)
 const DEFAULT_WAKE = "09:30";
 const DEFAULT_SLEEP = "01:30";
+
+/** ستونِ @db.Date نیمه‌شبِ UTC ـه — روزِ تقویمی با getterهای UTC (نه محلیِ سرور) */
+function dbDayIso(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
 function hhmmToMin(v: unknown, fallback: string): number {
   const s = typeof v === "string" && /^\d{1,2}:\d{2}$/.test(v) ? v : fallback;
@@ -65,12 +69,12 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
   const daily: Record<string, { tasks: Record<string, boolean>; wakeMin: number | null }> = {};
   for (const r of dailyRows) {
     const tasks = r.completedItems && typeof r.completedItems === "object" && !Array.isArray(r.completedItems) ? (r.completedItems as Record<string, boolean>) : {};
-    daily[isoLocal(r.date)] = { tasks, wakeMin: r.wakeUpAt ? minutesInTz(r.wakeUpAt, tz) : null };
+    daily[dbDayIso(r.date)] = { tasks, wakeMin: r.wakeUpAt ? minutesInTz(r.wakeUpAt, tz) : null };
   }
 
   const sleeps = sleepRows
-    .map((s) => ({ iso: isoLocal(s.date), durationMin: Math.round((s.wokeAt!.getTime() - s.sleptAt!.getTime()) / 60000), bedMin: minutesInTz(s.sleptAt!, tz) }))
-    .filter((s) => s.durationMin > 0 && s.durationMin < 24 * 60);
+    .map((s) => ({ iso: dbDayIso(s.date), durationMin: Math.round((s.wokeAt!.getTime() - s.sleptAt!.getTime()) / 60000), bedMin: minutesInTz(s.sleptAt!, tz) }))
+    .filter((s) => s.durationMin > 0 && s.durationMin <= 20 * 60); // همون سقفِ /api/sleep
 
   const metrics = computeAchievementMetrics({
     todayIso,

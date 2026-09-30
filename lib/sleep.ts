@@ -37,12 +37,27 @@ function hm(v: string): [number, number] | null {
  */
 export function buildSleepTimes(wakeDateIso: string, bed: string, wake: string): { sleptAt: Date; wokeAt: Date } | null {
   const b = hm(bed), w = hm(wake);
-  const [y, mo, d] = wakeDateIso.split("-").map(Number);
-  if (!b || !w || !y) return null;
+  const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(wakeDateIso);
+  if (!b || !w || !dm) return null;
+  const [y, mo, d] = [Number(dm[1]), Number(dm[2]), Number(dm[3])];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
   const wokeAt = new Date(y, mo - 1, d, w[0], w[1]);
   let sleptAt = new Date(y, mo - 1, d, b[0], b[1]);
   if (sleptAt >= wokeAt) sleptAt = new Date(y, mo - 1, d - 1, b[0], b[1]);
   return { sleptAt, wokeAt };
+}
+
+/**
+ * جای میله‌ی «خواب→بیداری» روی محورِ عمودیِ نمودار (دقیقه از axisStart).
+ * ساعتِ خوابِ بینِ 12:00 و axisStart (مثلا 18:00) «زودتر از شروعِ محور» حساب می‌شه،
+ * نه «دیرتر از پایانِ محور» — وگرنه خوابِ زودهنگام ته نمودار گم می‌شد.
+ */
+export function timelineSpan(bedMin: number, durMin: number, axisStart: number, axisSpan: number): { from: number; to: number } {
+  let s = (((bedMin - axisStart) % 1440) + 1440) % 1440;
+  if (s > 1440 - (1440 - axisSpan) / 2) s -= 1440;
+  const from = Math.min(Math.max(s, 0), axisSpan);
+  const to = Math.min(Math.max(s + durMin, 0), axisSpan);
+  return { from, to };
 }
 
 export function sleepMinutes(r: Pick<SleepRecord, "sleptAt" | "wokeAt">): number {

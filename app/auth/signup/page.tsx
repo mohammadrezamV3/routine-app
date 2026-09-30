@@ -14,6 +14,7 @@ import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle"
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 import { resolveHomePath } from "@/lib/homePath";
+import { TickButton } from "@/components/TickButton";
 
 type FieldErrors = {
   phone?: string; name?: string; lastName?: string; username?: string;
@@ -333,11 +334,7 @@ export default function SignupPage() {
         data-anim-field
         onClick={() => { setAgreed((v) => !v); clearError("agreed"); }}
       >
-        <div className={`check${agreed ? " on" : ""}`}>
-          <svg className="c-check" viewBox="0 0 24 24" fill="none">
-            <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <TickButton as="span" className="mt-0.5" size={22} shape="square" checked={agreed} />
         <div className="task-name">
           <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
             {"قوانین و مقررات"}

@@ -1,6 +1,7 @@
 "use client";
 
 import "./mentor.css";
+import { TickButton } from "./TickButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Lock, Megaphone, Send, X } from "lucide-react";
@@ -162,7 +163,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
           <MentorEmpty>شاگردی با این برچسب نیست</MentorEmpty>
         ) : visible.map((r) => (
           <label key={r.mentorshipId} className={`mentor-check${r.key ? "" : " is-disabled"}`}>
-            <input type="checkbox" disabled={!r.key || busy} checked={!!r.key && selected.has(r.mentorshipId)} onChange={(e) => toggle(r.mentorshipId, e.target.checked)} />
+            <TickButton shape="square" size={22} disabled={!r.key || busy} checked={!!r.key && selected.has(r.mentorshipId)} onToggle={() => toggle(r.mentorshipId, !selected.has(r.mentorshipId))} />
             <span className="mentor-check-label">{publicUserName(r.student)}</span>
             {!r.key && <span className="mentor-check-kind">هنوز وارد بخش مربی نشده</span>}
           </label>

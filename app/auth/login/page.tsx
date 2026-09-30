@@ -1,6 +1,7 @@
 "use client";
 
 import { SpinnerCheck } from "@/components/SpinnerCheck";
+import { TickButton } from "@/components/TickButton";
 import { useRef, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -250,12 +251,7 @@ export default function LoginPage() {
 
       <div className="auth-remember-row" data-anim-field>
         <label className="auth-remember-label">
-          <input
-            type="checkbox"
-            className="auth-checkbox"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
-          />
+          <TickButton shape="square" size={22} checked={remember} onToggle={() => setRemember((v) => !v)} />
           {"منو به‌یاد داشته باش"}
         </label>
         <Link href="/auth/forgot-password" className="auth-forgot-link">{"فراموشی رمز عبور؟"}</Link>

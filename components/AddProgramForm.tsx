@@ -13,6 +13,9 @@ import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences }
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { TickOption } from "./TickOption";
+import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
+import type { ChecklistItem } from "@/lib/routineChecklist";
 
 const now = new Date();
 
@@ -53,6 +56,10 @@ export function AddProgramForm({
   const [tag, setTag] = useState("");
   const [importance, setImportance] = useState<Importance>("medium");
   const [isPeriod, setIsPeriod] = useState(false);
+  // برنامه‌ی «لیستی»: چند آیتمِ جدا که تک‌تک تیک می‌خورن (lib/routineChecklist.ts)
+  const [isList, setIsList] = useState(false);
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [itemsError, setItemsError] = useState(false);
   // «فقط برای یک روز»: برنامه روی همان یک تاریخ ثبت می‌شود (startDate =
   // endDate) و هفته‌های بعد تکرار نمی‌شود. با «دوره» هم‌زمان نمی‌شود.
   const [isOnce, setIsOnce] = useState(false);
@@ -111,6 +118,10 @@ export function AddProgramForm({
     const nErr = !name.trim();
     setNameError(nErr);
     if (nErr) hasError = true;
+
+    const iErr = isList && !items.some((i) => i.name.trim());
+    setItemsError(iErr);
+    if (iErr) hasError = true;
 
     const rErrs: typeof rowErrors = {};
     rows.forEach((r, i) => {
@@ -217,6 +228,8 @@ export function AddProgramForm({
     // باید همون لحظه‌ای که واقعاً ذخیره شد توی بقیه‌ی اپ هم دیده بشه، نه
     // بعد از یک لودینگ ساختگی که فقط برای نمایش بود.
     const trimmedTag = tag.trim();
+    // همه‌ی روزهای این برنامه همون آیتم‌ها رو دارن (کلیدِ تیک با id ِ هر occurrence جداست)
+    const cleanItems = isList ? items.map((i) => ({ id: i.id, name: i.name.trim() })).filter((i) => i.name) : [];
     const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
       id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       name,
@@ -228,6 +241,7 @@ export function AddProgramForm({
       ...dates,
       importance,
       ...(trimmedTag ? { tag: trimmedTag } : {}),
+      ...(cleanItems.length ? { items: cleanItems } : {}),
     }));
     await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
     if (navigator.vibrate) navigator.vibrate(15);
@@ -270,13 +284,20 @@ export function AddProgramForm({
               </div>
               {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>اسم برنامه رو وارد کن</div>}
 
-              <label className="auth-remember-label" style={{ marginTop: 14 }}>
-                <input
-                  type="checkbox"
-                  className="auth-checkbox"
-                  checked={isOnce}
-                  onChange={(e) => {
-                    const on = e.target.checked;
+              <TickOption checked={isList} onChange={(on) => { setIsList(on); if (!on) setItemsError(false); }} className="mt-3.5">
+                این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+              </TickOption>
+              {isList && (
+                <>
+                  <RoutineChecklistEditor items={items} onChange={(v) => { setItems(v); if (v.some((i) => i.name.trim())) setItemsError(false); }} error={itemsError} />
+                  {itemsError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>حداقل یک آیتم به لیست اضافه کن</div>}
+                </>
+              )}
+
+              <TickOption
+                checked={isOnce}
+                className="mt-2"
+                onChange={(on) => {
                     setIsOnce(on);
                     if (on) {
                       // تک‌روزه یک ردیف ساعت دارد و روزش از تاریخ می‌آید
@@ -286,9 +307,9 @@ export function AddProgramForm({
                       setRowErrors({});
                     }
                   }}
-                />
+              >
                 فقط برای یک روز (تکرار نشه)
-              </label>
+              </TickOption>
 
               {isOnce && (
                 <div className="wsearch-date-row">
@@ -363,19 +384,17 @@ export function AddProgramForm({
                 </button>
               )}
 
-              <label className="auth-remember-label" style={{ marginTop: 16 }}>
-                <input
-                  type="checkbox"
-                  className="auth-checkbox"
-                  checked={isPeriod}
-                  onChange={(e) => {
-                    setIsPeriod(e.target.checked);
-                    if (e.target.checked) setIsOnce(false);
-                    else setPeriodError(null);
-                  }}
-                />
+              <TickOption
+                checked={isPeriod}
+                className="mt-4"
+                onChange={(on) => {
+                  setIsPeriod(on);
+                  if (on) setIsOnce(false);
+                  else setPeriodError(null);
+                }}
+              >
                 این یک دوره است
-              </label>
+              </TickOption>
 
               {isPeriod && (
                 <div className={`wsearch-date-row${periodError ? " field-error" : ""}`}>

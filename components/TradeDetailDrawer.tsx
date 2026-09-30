@@ -12,6 +12,7 @@ import {
   ENTRY_REASON_LABELS, EXIT_REASON_LABELS, RESULT_LABELS, STATUS_LABELS,
   TradeEntryDetail,
 } from "@/lib/tradeTypes";
+import { TickButton } from "./TickButton";
 
 // جزئیات کامل یک معامله. عمدا کشویی (نه صفحه‌ی جدا): کاربر معمولا چند
 // معامله را پشت‌سرهم مرور می‌کند و برگشتن به لیست نباید هربار یک ناوبری
@@ -153,7 +154,7 @@ export function TradeDetailDrawer({
                 <div className="trade-checklist-items">
                   {entry.checklistSnapshot.map((i, idx) => (
                     <div key={idx} className={`trade-check-row readonly${i.checked ? " done" : ""}`}>
-                      <span className="trade-check-box" />
+                      <TickButton as="span" size={20} checked={!!i.checked} />
                       <span>{i.text}</span>
                     </div>
                   ))}

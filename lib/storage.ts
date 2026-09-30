@@ -644,6 +644,12 @@ export type CustomOccurrence = {
   mentorProgramId?: string;
   /** آیتمِ همان برنامه‌ی منتور؛ ویرایش/جابه‌جایی باید نگهش دارد تا تیک به پیشرفتِ خودکارِ همان آیتم برسد */
   mentorItemId?: string;
+  /**
+   * برنامه‌ی «لیستی»: آیتم‌های زیرمجموعه که تک‌تک تیک می‌خورن (lib/routineChecklist.ts).
+   * تیکِ هر آیتم کلیدِ `${id}~${itemId}` در DailyRecord.tasks داره و کلیدِ خودِ
+   * برنامه همیشه = «همه‌ی آیتم‌ها انجام شدن».
+   */
+  items?: { id: string; name: string }[];
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {

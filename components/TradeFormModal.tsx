@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { TickButton } from "./TickButton";
 import { createPortal } from "react-dom";
 import { AlertTriangle, Camera, ChevronDown, Info, Loader2, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -353,7 +354,7 @@ export function TradeFormModal({
               <div>
                 <label className="exercise-form-label">وضعیت ریسک (break even)</label>
                 <button type="button" className={`trade-toggle${form.riskFree ? " on" : ""}`} onClick={() => patch({ riskFree: !form.riskFree })}>
-                  <span className="trade-toggle-knob" />
+                  <TickButton as="span" checked={form.riskFree} size={22} />
                   <span className="trade-toggle-label">معامله ریسک‌فری هست؟</span>
                 </button>
               </div>
@@ -502,7 +503,7 @@ export function TradeFormModal({
                       className={`trade-check-row${form.checklistState[i.id] ? " done" : ""}`}
                       onClick={() => patch({ checklistState: { ...form.checklistState, [i.id]: !form.checklistState[i.id] } })}
                     >
-                      <span className="trade-check-box" />
+                      <TickButton as="span" size={20} checked={!!form.checklistState[i.id]} />
                       <span>{i.text}</span>
                     </button>
                   ))}

@@ -23,7 +23,13 @@ export function SleepMiniCard() {
     setReady(true);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    // تبِ باز از دیشب: با برگشتن، «امروز» ِ تازه خونده می‌شه
+    const onVis = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [load]);
   useLiveRefresh(["sleep"], () => { load(); });
 
   if (!ready) return null;

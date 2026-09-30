@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { TickButton } from "@/components/TickButton";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -470,10 +471,10 @@ function RequestModal({
             <div role="group" aria-label="حوزه‌ی همکاری">
               {mentorCategories.map((c) => (
                 <label key={c} className="mentor-check">
-                  <input
-                    type="checkbox"
+                  <TickButton
+                    shape="square" size={22}
                     checked={cats.includes(c)}
-                    onChange={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
+                    onToggle={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
                   />
                   <span className="mentor-check-label">{categoryLabel(c)}</span>
                 </label>

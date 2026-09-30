@@ -1,6 +1,7 @@
 "use client";
 
 import "./mentor.css";
+import { TickButton } from "./TickButton";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MENTOR_TERMS_PATH, MENTOR_TERMS_VERSION, type MentorTermsRole } from "@/lib/mentorTerms";
@@ -40,13 +41,7 @@ export function MentorTermsAcceptance({
   return (
     <div className="mentor-terms-accept">
       <label className={`mentor-check${disabled ? " is-disabled" : ""}`}>
-        <input
-          type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.checked)}
-          aria-invalid={error ? true : undefined}
-        />
+        <TickButton shape="square" size={22} checked={checked} disabled={disabled} onToggle={() => onChange(!checked)} />
         <span className="mentor-check-label">
           <Link href={MENTOR_TERMS_PATH} target="_blank" rel="noopener" className="mentor-terms-link" onClick={(e) => e.stopPropagation()}>
             {link}

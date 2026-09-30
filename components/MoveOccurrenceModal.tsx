@@ -116,6 +116,8 @@ export function MoveOccurrenceModal({
       ...(mentorProgramId ? { mentorProgramId } : {}),
       // و پیوند با آیتمِ همان برنامه — تیکِ روزِ جدید به پیشرفتِ خودکارِ همان آیتم می‌رسد
       ...(mentorProgramId && mentorItemId ? { mentorItemId } : {}),
+      // برنامه‌ی لیستی با جابه‌جایی آیتم‌هاش رو از دست نمی‌ده
+      ...(mirrorOf?.items?.length ? { items: mirrorOf.items } : {}),
     };
     nextCustom = [...nextCustom, newOcc];
 

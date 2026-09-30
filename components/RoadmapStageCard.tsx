@@ -1,5 +1,6 @@
 "use client";
 
+import { TickButton } from "./TickButton";
 import {
   AlertTriangle, BookOpen, Check, ChevronDown, ExternalLink, Flag, Hammer, ListChecks,
   Loader2, Package, RefreshCw, Sparkles, Target, Wrench,
@@ -126,15 +127,7 @@ export function RoadmapStageCard({
                         const checked = !!progress[taskKey(stage.n, i)];
                         return (
                           <li key={i} className={checked ? "checked" : ""}>
-                            <button
-                              type="button"
-                              className="rp-check"
-                              onClick={() => onToggleTask(i)}
-                              aria-label={checked ? "برداشتنِ تیک" : "انجام شد"}
-                              aria-pressed={checked}
-                            >
-                              {checked && <Check size={12} />}
-                            </button>
+                            <TickButton size={22} checked={checked} onToggle={() => onToggleTask(i)} label={checked ? "برداشتنِ تیک" : "انجام شد"} />
                             <div className="rp-task-body">
                               <div className="rp-task-title">{t.title}</div>
                               {t.detail && <p>{t.detail}</p>}
