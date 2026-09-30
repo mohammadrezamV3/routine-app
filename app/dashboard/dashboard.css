@@ -853,42 +853,46 @@ html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-c
 /* ── اشتراکِ موفقیت (components/DashboardShare.tsx) — پورتال روی body ── */
 .db-share-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:center;
-  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.5);
+  padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
 }
 body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
 .db-share{
-  width:100%; max-width:860px; max-height:100%; display:flex; flex-direction:column; overflow:hidden;
-  border-radius:22px; background:var(--surface-2); border:1px solid var(--surface-line);
+  width:100%; max-width:900px; max-height:100%; display:flex; flex-direction:column; overflow:hidden;
+  border-radius:24px; background:var(--surface-2); border:1px solid var(--surface-line);
   box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
 }
-.db-share-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; border-bottom:1px solid var(--surface-line); }
-.db-share-head h2{ margin:0; font-size:15px; font-weight:900; color:var(--text); }
-.db-share-body{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:18px; padding:16px; overflow-y:auto; overscroll-behavior:contain; }
-.db-share-preview{ display:grid; place-items:center; align-self:start; border-radius:16px; border:1px solid var(--surface-line); overflow:hidden; }
-.db-share-preview.is-post{ aspect-ratio:1080/1350; }
-.db-share-preview.is-story{ aspect-ratio:1080/1920; max-height:70vh; justify-self:center; width:auto; height:70vh; }
+.db-share-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 20px; border-bottom:1px solid var(--surface-line); }
+.db-share-head h2{ margin:0; font-size:16px; font-weight:900; color:var(--text); }
+.db-share-body{
+  display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(0, 1fr); gap:28px; align-items:start;
+  padding:24px; overflow-y:auto; overscroll-behavior:contain;
+}
+.db-share-preview{
+  display:grid; place-items:center; width:100%; aspect-ratio:1080/1350; border-radius:18px;
+  border:1px solid var(--surface-line); overflow:hidden;
+}
 .db-share-preview img{ display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
-.db-share-preview img.is-dim{ opacity:.6; }
-.db-share-empty{ padding:24px; text-align:center; font-size:12.5px; line-height:1.9; color:var(--muted); }
-.db-share-side{ display:flex; flex-direction:column; gap:12px; min-width:0; }
-.db-share-label{ margin:4px 0 0; font-size:12px; font-weight:800; color:var(--muted); }
-.db-share-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; border:1px solid var(--surface-line); border-radius:14px; }
-.db-share-list li{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 12px; }
+.db-share-preview img.is-dim{ opacity:.65; }
+.db-share-empty{ padding:24px; text-align:center; font-size:13px; line-height:1.9; color:var(--muted); }
+.db-share-side{ display:flex; flex-direction:column; gap:20px; min-width:0; }
+.db-share-group{ display:flex; flex-direction:column; gap:8px; }
+.db-share-label{ margin:0; font-size:12px; font-weight:800; color:var(--muted); }
+.db-share-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; border:1px solid var(--surface-line); border-radius:16px; }
+.db-share-list li{ display:flex; align-items:center; gap:12px; padding:12px 14px; }
 .db-share-list li + li{ border-top:1px solid var(--surface-line); }
-.db-share-row-text{ display:flex; flex-direction:column; gap:1px; min-width:0; font-size:13px; font-weight:700; color:var(--text); }
-.db-share-row-text small{ font-size:11px; font-weight:600; color:var(--muted); }
-.db-share-invite{ margin:0; font-size:12px; line-height:1.9; color:var(--muted); }
+.db-share-dot{ width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.db-share-row-text{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; font-size:13.5px; font-weight:700; color:var(--text); }
+.db-share-row-text small{ font-size:11.5px; font-weight:600; color:var(--muted); }
+.db-share-actions{ display:flex; flex-direction:column; gap:10px; }
+.db-share-actions button{ width:100%; min-height:48px; font-size:14px; }
+.db-share-invite{ margin:0; font-size:12px; line-height:1.9; color:var(--muted); text-align:center; }
 .db-share-invite b{ color:var(--accent); font-family:var(--font-latin), sans-serif; letter-spacing:.5px; }
-.db-share-actions{ display:flex; flex-direction:column; gap:8px; }
-.db-share-actions button{ width:100%; min-height:42px; }
-.db-share-msg{ margin:0; font-size:12px; font-weight:700; color:var(--accent); word-break:break-all; }
-@media (max-width:700px){
+.db-share-msg{ margin:0; font-size:12px; font-weight:700; color:var(--accent); text-align:center; }
+@media (max-width:760px){
   .db-share-root{ align-items:flex-end; padding:0; }
-  .db-share{ border-radius:22px 22px 0 0; max-height:92vh; }
+  .db-share{ border-radius:24px 24px 0 0; max-height:94vh; }
   /* ستونِ فلکس (نه گرید): عرضِ درصدیِ پیش‌نمایش با aspect-ratio داخلِ ترکِ گرید
      دوری حل می‌شد و ردیف کوتاه‌تر از تصویر می‌موند (روی کنترل‌ها می‌افتاد) */
-  .db-share-body{ display:flex; flex-direction:column; }
-  .db-share-preview{ flex-shrink:0; align-self:center; }
-  .db-share-preview.is-post{ width:min(100%, 300px); }
-  .db-share-preview.is-story{ height:52vh; width:auto; }
+  .db-share-body{ display:flex; flex-direction:column; align-items:stretch; gap:20px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .db-share-preview{ flex-shrink:0; align-self:center; width:min(100%, 340px); }
 }

@@ -1,46 +1,45 @@
 "use client";
 
-// کارتِ اشتراکیِ «موفقیت» — یک تصویرِ PNG که کاربر با دوستاش به اشتراک می‌ذاره.
-// فقط بخش‌هایی که خودش روشن کرده کشیده می‌شن (مثلا کالری رو می‌تونه خاموش
-// کنه) و هیچ داده‌ای از دستگاه بیرون نمی‌ره مگر همین تصویر، وقتی خودش «اشتراک»
-// رو می‌زنه. پایینِ کارت کدِ دعوتِ کاربره: دوستش با اون روی اولین اشتراک
-// تخفیف می‌گیره — «بهونه»ی اشتراک‌گذاری (lib/invite.ts).
+// کارتِ اشتراکیِ «موفقیت» — یک تصویرِ PNG (۱۰۸۰×۱۳۵۰) که کاربر با دوستاش به
+// اشتراک می‌ذاره. هر کارت *یک* محتوا داره (حلقه‌ها یا نقشه‌ی ثبات یا استریک) تا
+// فضا شلوغ نشه؛ داخلِ حلقه‌ها تعدادِ روزهای استریک میاد. بالای کارت لوگوی هدر
+// (نشان + اسمِ برند)، آدرسِ سایت و — اگه کاربر بخواد — کدِ دعوتش؛ پایینِ کارت
+// هیچ لینکی نیست. هیچ داده‌ای از دستگاه بیرون نمی‌ره مگر همین تصویر، وقتی خودش
+// «اشتراک» رو می‌زنه.
 //
 // رنگ‌ها از توکن‌های تمِ فعلی خونده می‌شن (مثلِ WeeklyAnalysisShare) تا تصویر
 // هم‌رنگِ همون چیزی باشه که کاربر روی صفحه می‌بینه.
 
-import { BRAND_EN, BRAND_FA } from "./brand";
 import { faNum } from "./jalali";
 import { FLAME_BOX, FLAME_LAYERS, flamePalette, flamePath, layerFrame } from "./streakFlameShape";
 
-export type ShareFormat = "post" | "story";
-
 export type ShareRing = { label: string; value: number; display: string; colors: [string, string] };
 
+export type ShareMonthCell = { jd: number; level: number; today: boolean; future: boolean };
+
+/** محتوای اصلیِ کارت — هر کارت دقیقا *یکی* از این‌هاست (کاربر خودش انتخاب می‌کنه) */
+export type ShareBody =
+  | { kind: "rings"; streak: number; items: ShareRing[] }
+  | { kind: "month"; streak: number; title: string; lead: number; cells: ShareMonthCell[]; stats: { label: string; value: string }[] }
+  | { kind: "streak"; streak: number; label: string; week: { labels: string[]; done: boolean[]; todayIdx: number } };
+
 export type ShareCardInput = {
-  format: ShareFormat;
   title: string;
   subtitle?: string;
-  name?: string | null;
-  streak?: { days: number; label: string } | null;
-  /** ردیفِ ۷ روزِ این هفته (شنبه..جمعه) — true یعنی روزِ کامل */
-  week?: { labels: string[]; done: boolean[]; todayIdx: number } | null;
-  rings?: { centerPct: number; items: ShareRing[] } | null;
-  month?: {
-    title: string;
-    lead: number;
-    cells: { jd: number; level: number; today: boolean; future: boolean }[];
-    stats: { label: string; value: string }[];
-  } | null;
-  invite?: { code: string | null; url: string; percent: number } | null;
+  body: ShareBody;
+  /** کدِ دعوت — بالای کارت، کنارِ آدرسِ سایت (پایینِ کارت هیچ لینکی نیست) */
+  inviteCode?: string | null;
 };
 
-const W = 1080;
-const SIZE: Record<ShareFormat, number> = { post: 1350, story: 1920 };
+// یک قالبِ ثابت (۴:۵) — هم پست هم استوری/چت بدونِ برش نشونش می‌دن
+export const SHARE_W = 1080;
+export const SHARE_H = 1350;
+const W = SHARE_W;
+const H = SHARE_H;
 
 type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
-  text: string; muted: string; loss: string; heat: string; heatHi: string;
+  text: string; muted: string; loss: string; heat: string; heatHi: string; light: boolean;
 };
 
 function readPalette(): Palette {
@@ -60,6 +59,7 @@ function readPalette(): Palette {
     loss: v("--pnl-loss", "#E05252"),
     heat: ds?.getPropertyValue("--ring-1a").trim() || (light ? "#0A9A70" : "#00C98D"),
     heatHi: ds?.getPropertyValue("--ring-1b").trim() || (light ? "#2ECB98" : "#7DF9CF"),
+    light,
   };
 }
 
@@ -70,11 +70,22 @@ function fontStack(): string {
   return [latin, vazir, "sans-serif"].filter(Boolean).join(", ");
 }
 
-function rgba(hex: string, a: number): string {
-  const m = hex.trim().match(/^#?([0-9a-f]{6})$/i);
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+/** رنگِ هگز یا rgb() → rgba با شفافیتِ دلخواه (توکن‌های تم هر دو شکل رو دارن) */
+function rgba(color: string, a: number): string {
+  const c = color.trim();
+  const hex = c.match(/^#?([0-9a-f]{6})$/i);
+  if (hex) {
+    const n = parseInt(hex[1], 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  const short = c.match(/^#([0-9a-f]{3})$/i);
+  if (short) return rgba(`#${short[1].split("").map((x) => x + x).join("")}`, a);
+  const rgb = c.match(/^rgba?\(([^)]+)\)$/i);
+  if (rgb) {
+    const [r, g, b] = rgb[1].split(/[\s,/]+/).filter(Boolean);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  return c;
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -88,18 +99,20 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-/** شعله‌ی بزرگ (فریمِ اولِ همون شعله‌ی زنده) با مرکزِ پایه در (x, y) و عرضِ size */
-function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, days: number) {
+/** شعله‌ی بزرگ (یک فریمِ همون شعله‌ی زنده) با مرکزِ پایه در (x, y) و عرضِ size */
+function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, days: number, glow = true) {
   const pal = flamePalette(days);
   const s = size / FLAME_BOX.w;
   ctx.save();
   ctx.translate(x - FLAME_BOX.cx * s, y - FLAME_BOX.by * s);
   ctx.scale(s, s);
-  const glow = ctx.createRadialGradient(FLAME_BOX.cx, FLAME_BOX.by - 90, 10, FLAME_BOX.cx, FLAME_BOX.by - 90, 130);
-  glow.addColorStop(0, `rgba(${pal.glow},.45)`);
-  glow.addColorStop(1, `rgba(${pal.glow},0)`);
-  ctx.fillStyle = glow;
-  ctx.fillRect(-40, -20, FLAME_BOX.w + 80, FLAME_BOX.h + 40);
+  if (glow) {
+    const g = ctx.createRadialGradient(FLAME_BOX.cx, FLAME_BOX.by - 90, 10, FLAME_BOX.cx, FLAME_BOX.by - 90, 130);
+    g.addColorStop(0, `rgba(${pal.glow},.45)`);
+    g.addColorStop(1, `rgba(${pal.glow},0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(-40, -20, FLAME_BOX.w + 80, FLAME_BOX.h + 40);
+  }
   FLAME_LAYERS.forEach((l, li) => {
     const lb = FLAME_BOX.by - li * 6;
     const g = ctx.createLinearGradient(0, lb, 0, lb - l.base.h);
@@ -111,245 +124,270 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.restore();
 }
 
-type Section = { h: number; draw: (ctx: CanvasRenderingContext2D, w: number) => void };
+// لوگوی هدر (نشان + اسمِ برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تمِ فعلی
+const logoCache = new Map<string, Promise<HTMLImageElement | null>>();
+function loadLogo(light: boolean): Promise<HTMLImageElement | null> {
+  const src = light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png";
+  let hit = logoCache.get(src);
+  if (!hit) {
+    hit = new Promise((res) => {
+      const img = new Image();
+      img.onload = () => res(img);
+      img.onerror = () => { logoCache.delete(src); res(null); };
+      img.src = src;
+    });
+    logoCache.set(src, hit);
+  }
+  return hit;
+}
 
 export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvasElement> {
   const fonts = fontStack();
   const f = (weight: number, size: number) => `${weight} ${size}px ${fonts}`;
-  if (document.fonts) {
-    try {
-      await Promise.all([document.fonts.load(f(800, 56), "استریک روز"), document.fonts.load(f(600, 30), "Arion 0123")]);
-      await document.fonts.ready;
-    } catch { /* فونتِ جایگزین هم قابلِ قبوله */ }
-  }
-
-  const H = SIZE[input.format];
   const p = readPalette();
+  const [logo] = await Promise.all([
+    loadLogo(p.light),
+    (async () => {
+      if (!document.fonts) return;
+      try {
+        await Promise.all([document.fonts.load(f(800, 56), "استریک روز"), document.fonts.load(f(600, 30), "Arion 0123")]);
+        await document.fonts.ready;
+      } catch { /* فونتِ جایگزین هم قابلِ قبوله */ }
+    })(),
+  ]);
+
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
 
-  const text = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir: CanvasDirection = "rtl") => {
+  const text = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir: CanvasDirection = "rtl", maxW?: number) => {
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.direction = dir;
     ctx.textBaseline = "alphabetic";
-    ctx.fillText(s, x, y);
+    if (maxW) ctx.fillText(s, x, y, maxW);
+    else ctx.fillText(s, x, y);
   };
 
   // پس‌زمینه + هاله‌ی ملایم + قابِ کارت
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W / 2, H * 0.38, 40, W / 2, H * 0.38, 700);
-  glow.addColorStop(0, `rgba(${p.accentRgb},.2)`);
+  const glow = ctx.createRadialGradient(W / 2, H * 0.55, 40, W / 2, H * 0.55, 760);
+  glow.addColorStop(0, `rgba(${p.accentRgb},.16)`);
   glow.addColorStop(1, `rgba(${p.accentRgb},0)`);
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
-  roundRect(ctx, 60, 60, W - 120, H - 120, 44);
+  const CX = 48, CY = 48, CW = W - 96, CH = H - 96;
+  roundRect(ctx, CX, CY, CW, CH, 48);
   ctx.fillStyle = p.surface;
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 0.9;
   ctx.fill();
   ctx.globalAlpha = 1;
   ctx.lineWidth = 2;
   ctx.strokeStyle = p.line;
   ctx.stroke();
 
-  // سربرگ
-  const R = W - 120, L = 120;
-  text(input.name ? `${input.title} — ${input.name}` : input.title, R, 180, f(800, 54), p.text, "right");
-  if (input.subtitle) text(input.subtitle, R, 238, f(500, 32), p.muted, "right");
-  text(BRAND_EN, L, 180, f(800, 44), p.accent, "left", "ltr");
+  // ── سربرگ: لوگو + آدرس (چپ)، عنوان + تاریخ (راست) ──
+  const PAD = 104, R = W - PAD, L = PAD;
+  if (logo) {
+    const lh = 66, lw = (logo.naturalWidth / logo.naturalHeight) * lh;
+    ctx.drawImage(logo, L, 118, lw, lh);
+  } else {
+    text("ARION", L, 172, f(900, 52), p.accent, "left", "ltr");
+  }
+  const host = typeof window !== "undefined" ? window.location.host.replace(/^www\./, "") : "";
+  text(host, L, 232, f(600, 28), p.muted, "left", "ltr");
+  if (input.inviteCode) {
+    ctx.font = f(800, 26);
+    ctx.direction = "ltr";
+    const codeW = ctx.measureText(input.inviteCode).width;
+    ctx.direction = "rtl";
+    ctx.font = f(700, 24);
+    const labW = ctx.measureText("کدِ دعوت").width;
+    const pillW = codeW + labW + 56, pillY = 254;
+    roundRect(ctx, L, pillY, pillW, 46, 23);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = `rgba(${p.accentRgb},.55)`;
+    ctx.stroke();
+    text(input.inviteCode, L + 20, pillY + 32, f(800, 26), p.accent, "left", "ltr");
+    text("کدِ دعوت", L + pillW - 20, pillY + 31, f(700, 24), p.muted, "right");
+  }
+  // عنوان هیچ‌وقت روی لوگو نمی‌افته — عرضش سقف داره
+  text(input.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
+  if (input.subtitle) text(input.subtitle, R, 226, f(500, 30), p.muted, "right", "rtl", 520);
 
-  // ── بخش‌ها ──
-  const sections: Section[] = [];
+  // بدونِ کدِ دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
+  const top = input.inviteCode ? 334 : 276, bottom = CY + CH - 56;
+  ctx.strokeStyle = p.line;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(L, top);
+  ctx.lineTo(R, top);
+  ctx.stroke();
 
-  const streakBlock = (ctx2: CanvasRenderingContext2D, cx: number, top: number) => {
-    const s = input.streak!;
-    drawFlame(ctx2, cx, top + 210, 170, s.days);
-    text(faNum(s.days), cx, top + 330, f(900, 110), p.text, "center", "ltr");
-    text(s.label, cx, top + 385, f(700, 34), p.muted, "center");
-  };
-  const ringsBlock = (ctx2: CanvasRenderingContext2D, cx: number, top: number, legendBelow: boolean) => {
-    const rg = input.rings!;
-    const cy = top + 170, outer = 150, sw = 26, gap = 10;
-    rg.items.forEach((it, i) => {
+  const b = input.body;
+
+  // ── حلقه‌ها؛ وسطشون استریک ──
+  if (b.kind === "rings") {
+    const n = b.items.length;
+    const legendH = n ? 150 : 0;
+    const areaH = bottom - top - legendH;
+    const sw = n >= 3 ? 42 : n === 2 ? 50 : 58, gap = 16;
+    const outer = Math.min(300, areaH / 2 - 40);
+    const cx = W / 2, cy = top + areaH / 2 + 10;
+    b.items.forEach((it, i) => {
       const r = outer - sw / 2 - i * (sw + gap);
-      ctx2.lineCap = "round";
-      ctx2.lineWidth = sw;
-      ctx2.strokeStyle = rgba(it.colors[0], 0.16);
-      ctx2.beginPath();
-      ctx2.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx2.stroke();
+      ctx.lineCap = "round";
+      ctx.lineWidth = sw;
+      ctx.strokeStyle = rgba(it.colors[0], 0.15);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
       const v = Math.max(0, Math.min(1, it.value));
-      if (v > 0) {
-        const g = ctx2.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+      if (v > 0.001) {
+        ctx.save();
+        ctx.shadowColor = rgba(it.colors[1], 0.55);
+        ctx.shadowBlur = 24;
+        const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
         g.addColorStop(0, it.colors[0]);
         g.addColorStop(1, it.colors[1]);
-        ctx2.strokeStyle = g;
-        ctx2.beginPath();
-        ctx2.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * v);
-        ctx2.stroke();
+        ctx.strokeStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * v);
+        ctx.stroke();
+        ctx.restore();
       }
     });
-    const inner = outer - rg.items.length * (sw + gap);
-    const big = inner > 70;
-    text(`${faNum(Math.round(rg.centerPct))}%`, cx, cy + (big ? 16 : 12), f(900, big ? 54 : 38), p.text, "center", "ltr");
-    if (big) text("امروز", cx, cy + 54, f(600, 24), p.muted, "center");
-    if (legendBelow) {
-      const y0 = top + 370;
-      rg.items.forEach((it, i) => {
-        const y = y0 + i * 52;
-        ctx2.fillStyle = it.colors[1];
-        ctx2.beginPath();
-        ctx2.arc(cx + 190, y - 11, 10, 0, Math.PI * 2);
-        ctx2.fill();
-        text(it.label, cx + 165, y, f(700, 32), p.text, "right");
-        text(it.display, cx - 190, y, f(800, 32), p.text, "left", "ltr");
+    // مرکز: شعله + تعدادِ روزهای استریک
+    const inner = outer - n * (sw + gap);
+    const k = Math.max(0.55, Math.min(1, inner / 170));
+    drawFlame(ctx, cx, cy - 34 * k, 78 * k, b.streak, false);
+    text(faNum(b.streak), cx, cy + 62 * k, f(900, 92 * k), p.text, "center", "ltr");
+    text("روز استریک", cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
+
+    // لیجند: یک ستون برای هر حلقه
+    if (n) {
+      const ly = bottom - legendH + 20;
+      const colW = (R - L) / n;
+      b.items.forEach((it, i) => {
+        const x = R - colW * i - colW / 2; // راست‌به‌چپ
+        ctx.fillStyle = it.colors[1];
+        ctx.beginPath();
+        ctx.arc(x, ly + 12, 11, 0, Math.PI * 2);
+        ctx.fill();
+        text(it.label, x, ly + 70, f(700, 32), p.muted, "center");
+        text(it.display, x, ly + 122, f(900, 44), p.text, "center", "ltr");
       });
     }
-  };
-
-  if (input.rings && input.streak) {
-    // دو ستون: استریک راست، حلقه‌ها (با لیجندِ زیرشون) چپ
-    sections.push({
-      h: Math.max(410, 380 + input.rings.items.length * 52),
-      draw: (c, w) => {
-        streakBlock(c, w * 0.75, 0);
-        ringsBlock(c, w * 0.25, 0, true);
-      },
-    });
-  } else if (input.streak) {
-    sections.push({ h: 410, draw: (c, w) => streakBlock(c, w / 2, 0) });
-  } else if (input.rings) {
-    sections.push({ h: 380 + input.rings.items.length * 52, draw: (c, w) => ringsBlock(c, w / 2, 0, true) });
   }
 
-  if (input.week) {
-    const wk = input.week;
-    sections.push({
-      h: 150,
-      draw: (c, w) => {
-        const n = 7, cell = 92, span = w - 80;
-        const step = span / (n - 1);
-        const pal = flamePalette(input.streak?.days ?? 1);
-        for (let i = 0; i < n; i++) {
-          // هفته از شنبه، راست‌به‌چپ
-          const x = w - 40 - i * step;
-          text(wk.labels[i], x, 34, f(700, 30), i === wk.todayIdx ? p.text : p.muted, "center");
-          const cy = 100;
-          c.beginPath();
-          c.arc(x, cy, cell / 2 - 6, 0, Math.PI * 2);
-          if (wk.done[i]) {
-            const g = c.createLinearGradient(x, cy + 40, x, cy - 40);
-            g.addColorStop(0, pal.outer[1]);
-            g.addColorStop(1, pal.mid[0]);
-            c.fillStyle = g;
-            c.fill();
-            // تیک
-            c.strokeStyle = "#fff";
-            c.lineWidth = 7;
-            c.lineCap = "round";
-            c.lineJoin = "round";
-            c.beginPath();
-            c.moveTo(x - 14, cy + 1);
-            c.lineTo(x - 3, cy + 12);
-            c.lineTo(x + 16, cy - 10);
-            c.stroke();
-          } else {
-            c.fillStyle = rgba(p.muted.startsWith("#") ? p.muted : "#8A9099", 0.14);
-            c.fill();
-          }
-        }
-      },
+  // ── نقشه‌ی ثباتِ ماه ──
+  if (b.kind === "month") {
+    text(b.title, R, top + 78, f(900, 44), p.text, "right");
+    const rows = Math.ceil((b.lead + b.cells.length) / 7);
+    const statsH = 150;
+    const gridTop = top + 150;
+    const gap = 14;
+    const cell = Math.min(104, Math.floor((bottom - statsH - gridTop - 30 - (rows - 1) * gap) / rows));
+    const gridW = 7 * cell + 6 * gap;
+    const x0 = (W - gridW) / 2;
+    ["ش", "ی", "د", "س", "چ", "پ", "ج"].forEach((hd, i) =>
+      text(hd, x0 + gridW - i * (cell + gap) - cell / 2, gridTop - 20, f(700, 28), p.muted, "center")
+    );
+    const all: (ShareMonthCell | null)[] = [...Array(b.lead).fill(null), ...b.cells];
+    all.forEach((cl, idx) => {
+      if (!cl) return;
+      const col = idx % 7, row = Math.floor(idx / 7);
+      const x = x0 + gridW - (col + 1) * cell - col * gap;
+      const y = gridTop + row * (cell + gap);
+      roundRect(ctx, x, y, cell, cell, cell * 0.24);
+      const lv = cl.future ? -2 : cl.level;
+      if (lv === 4) {
+        const g = ctx.createLinearGradient(x, y, x + cell, y + cell);
+        g.addColorStop(0, p.heat);
+        g.addColorStop(1, p.heatHi);
+        ctx.fillStyle = g;
+      } else if (lv === 3) ctx.fillStyle = rgba(p.heat, 0.7);
+      else if (lv === 2) ctx.fillStyle = rgba(p.heat, 0.45);
+      else if (lv === 1) ctx.fillStyle = rgba(p.heat, 0.24);
+      else if (lv === 0) ctx.fillStyle = rgba(p.loss, 0.2);
+      else ctx.fillStyle = rgba(p.muted, lv === -2 ? 0.05 : 0.1);
+      ctx.fill();
+      if (cl.today) {
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = p.text;
+        ctx.stroke();
+      }
+      const fg = lv === 4 ? (p.light ? "#fff" : "#062a1e") : lv === 3 ? "#fff" : lv === 0 ? p.loss : p.muted;
+      text(faNum(cl.jd), x + cell / 2, y + cell / 2 + cell * 0.13, f(800, Math.round(cell * 0.34)), fg, "center", "ltr");
     });
-  }
 
-  if (input.month) {
-    const m = input.month;
-    const rows = Math.ceil((m.lead + m.cells.length) / 7);
-    const cell = 74, gap = 12;
-    sections.push({
-      h: 150 + rows * (cell + gap),
-      draw: (c, w) => {
-        text(m.title, w - 20, 44, f(800, 40), p.text, "right");
-        m.stats.forEach((s, i) => {
-          text(`${s.label}: ${s.value}`, 20 + i * 250, 44, f(600, 28), p.muted, "left");
-        });
-        const gridW = 7 * cell + 6 * gap;
-        const x0 = (w - gridW) / 2;
-        const heads = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
-        heads.forEach((hd, i) => text(hd, x0 + gridW - i * (cell + gap) - cell / 2, 110, f(700, 26), p.muted, "center"));
-        const all = [...Array(m.lead).fill(null), ...m.cells];
-        all.forEach((cl, idx) => {
-          if (!cl) return;
-          const col = idx % 7, row = Math.floor(idx / 7);
-          const x = x0 + gridW - (col + 1) * cell - col * gap;
-          const y = 134 + row * (cell + gap);
-          roundRect(c, x, y, cell, cell, 16);
-          const lv = cl.future ? -2 : cl.level;
-          if (lv === 4) {
-            const g = c.createLinearGradient(x, y, x + cell, y + cell);
-            g.addColorStop(0, p.heat);
-            g.addColorStop(1, p.heatHi);
-            c.fillStyle = g;
-          } else if (lv === 3) c.fillStyle = rgba(p.heat, 0.7);
-          else if (lv === 2) c.fillStyle = rgba(p.heat, 0.45);
-          else if (lv === 1) c.fillStyle = rgba(p.heat, 0.24);
-          else if (lv === 0) c.fillStyle = rgba(p.loss, 0.18);
-          else c.fillStyle = rgba(p.heat, 0.06);
-          c.fill();
-          if (cl.today) {
-            c.lineWidth = 4;
-            c.strokeStyle = p.text;
-            c.stroke();
-          }
-          text(faNum(cl.jd), x + cell / 2, y + cell / 2 + 10, f(700, 26), lv >= 3 ? "#fff" : p.muted, "center", "ltr");
-        });
-      },
+    // آمار: استریک (با شعله) + بقیه
+    const sy = bottom - statsH + 20;
+    const stats = [{ label: "روز استریک", value: faNum(b.streak), flame: true }, ...b.stats.map((s) => ({ ...s, flame: false }))];
+    const colW = (R - L) / stats.length;
+    stats.forEach((s, i) => {
+      const x = R - colW * i - colW / 2;
+      if (i > 0) {
+        ctx.strokeStyle = p.line;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + colW / 2, sy + 10);
+        ctx.lineTo(x + colW / 2, sy + 110);
+        ctx.stroke();
+      }
+      ctx.font = f(900, 52);
+      ctx.direction = "ltr";
+      const vw = ctx.measureText(s.value).width;
+      if (s.flame) {
+        drawFlame(ctx, x + vw / 2 + 26, sy + 62, 40, b.streak, false);
+        text(s.value, x - 18, sy + 62, f(900, 52), p.text, "center", "ltr");
+      } else {
+        text(s.value, x, sy + 62, f(900, 52), p.text, "center", "ltr");
+      }
+      text(s.label, x, sy + 108, f(700, 28), p.muted, "center");
     });
   }
 
-  // دعوت (پایین) یا فقط برند
-  const footH = input.invite ? 230 : 120;
-  const top = 290, bottom = H - 60 - footH - 20;
-  const avail = bottom - top;
-  const gapY = 50;
-  const total = sections.reduce((a, s) => a + s.h, 0) + gapY * Math.max(0, sections.length - 1);
-  const scale = total > avail ? avail / total : 1;
-  const innerW = W - 240;
-  let y = top + Math.max(0, (avail - total * scale) / 2);
-  for (const s of sections) {
-    ctx.save();
-    ctx.translate(120 + (innerW - innerW * scale) / 2, y);
-    ctx.scale(scale, scale);
-    s.draw(ctx, innerW);
-    ctx.restore();
-    y += (s.h + gapY) * scale;
-  }
-
-  if (input.invite) {
-    const fy = H - 60 - footH;
-    roundRect(ctx, 110, fy, W - 220, footH - 50, 30);
-    ctx.fillStyle = `rgba(${p.accentRgb},.12)`;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.setLineDash([10, 8]);
-    ctx.strokeStyle = `rgba(${p.accentRgb},.6)`;
-    ctx.stroke();
-    ctx.setLineDash([]);
-    const inv = input.invite;
-    if (inv.code) {
-      text(`با کدِ دعوتِ من ${faNum(inv.percent)}% تخفیف بگیر`, R - 20, fy + 70, f(800, 36), p.text, "right");
-      text(inv.code, L + 20, fy + 72, f(900, 44), p.accent, "left", "ltr");
-    } else {
-      text("تو هم روتینت رو بساز", R - 20, fy + 70, f(800, 36), p.text, "right");
+  // ── استریک (جشنِ استریک): شعله‌ی بزرگ + عدد + هفته ──
+  if (b.kind === "streak") {
+    const cx = W / 2;
+    drawFlame(ctx, cx, top + 420, 280, b.streak);
+    text(faNum(b.streak), cx, top + 600, f(900, 170), p.text, "center", "ltr");
+    text(b.label, cx, top + 665, f(700, 36), p.muted, "center");
+    const wk = b.week;
+    const pal = flamePalette(b.streak);
+    const span = R - L - 60, step = span / 6, wy = top + 790;
+    for (let i = 0; i < 7; i++) {
+      const x = R - 30 - i * step; // هفته از شنبه، راست‌به‌چپ
+      text(wk.labels[i], x, wy, f(700, 30), i === wk.todayIdx ? p.text : p.muted, "center");
+      const cy = wy + 70;
+      ctx.beginPath();
+      ctx.arc(x, cy, 38, 0, Math.PI * 2);
+      if (wk.done[i]) {
+        const g = ctx.createLinearGradient(x, cy + 38, x, cy - 38);
+        g.addColorStop(0, pal.outer[1]);
+        g.addColorStop(1, pal.mid[0]);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 7;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(x - 14, cy + 1);
+        ctx.lineTo(x - 3, cy + 12);
+        ctx.lineTo(x + 16, cy - 10);
+        ctx.stroke();
+      } else {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = p.line;
+        ctx.stroke();
+      }
     }
-    text(inv.url.replace(/^https?:\/\//, ""), W / 2, fy + 135, f(600, 28), p.muted, "center", "ltr");
-  } else {
-    text(BRAND_FA, W / 2, H - 110, f(600, 30), p.muted, "center");
   }
 
   return canvas;
@@ -392,8 +430,8 @@ export function downloadBlob(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-/** متنِ همراهِ تصویر — با لینک و کدِ دعوت، اگه کاربر روشنش گذاشته */
-export function shareText(lead: string, invite: ShareCardInput["invite"]): string {
+/** متنِ همراهِ تصویر — کدِ دعوت و آدرسِ سایت فقط این‌جا (نه روی خودِ تصویر) */
+export function shareText(lead: string, invite: { code: string | null; url: string; percent: number } | null): string {
   if (!invite) return lead;
   const offer = invite.code ? ` با کدِ دعوتِ من (${invite.code}) ${faNum(invite.percent)}% تخفیف بگیر:` : "";
   return `${lead}\nتو هم بیا روتینت رو بساز —${offer} ${invite.url}`;

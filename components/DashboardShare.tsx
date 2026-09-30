@@ -1,19 +1,20 @@
 "use client";
 
-// «اشتراکِ موفقیت» از داشبورد — کاربر خودش انتخاب می‌کنه چی توی تصویر بیاد
-// (استریک، حلقه‌های روز، نقشه‌ی ثباتِ ماه، اسمش، کدِ دعوت) و هرچی رو نخواد
-// دیده بشه (مثلا کالری) خاموش می‌کنه؛ پیش‌نمایش همون لحظه عوض می‌شه. انتخاب‌ها
-// فقط روی همین دستگاه یادآوری می‌شن (localStorage) و تصویر فقط وقتی از دستگاه
-// بیرون می‌ره که خودِ کاربر «اشتراک» یا «ذخیره» رو بزنه — هیچ‌چیز به سرور نمی‌ره.
+// «اشتراکِ موفقیت» از داشبورد. کاربر اول انتخاب می‌کنه *چی* رو به اشتراک بذاره
+// — حلقه‌های امروز یا نقشه‌ی ثباتِ ماه (هر بار فقط یکی، تا تصویر شلوغ نشه) —
+// و بعد هرچی رو نخواد دیده بشه خاموش می‌کنه (مثلا حلقه‌ی کالری، که پیش‌فرض
+// خاموشه). وسطِ حلقه‌ها تعدادِ روزهای استریک میاد. پیش‌نمایش همون لحظه عوض
+// می‌شه؛ انتخاب‌ها فقط روی همین دستگاه یادآوری می‌شن (localStorage) و تصویر فقط
+// با زدنِ «اشتراک‌گذاری» از دستگاه بیرون می‌ره — هیچ‌چیز به سرور نمی‌ره.
 //
-// «بهونه»ی دعوت: پایینِ کارت کدِ رفرالِ کاربره و دوستش با اون روی اولین
-// اشتراک تخفیف می‌گیره (lib/invite.ts).
+// «بهونه»ی دعوت: کدِ رفرالِ کاربر (اگه روشن باشه) بالای کارت، و متن و لینکِ
+// دعوت همراهِ پیامِ اشتراک (lib/invite.ts).
 
 import "@/app/dashboard/dashboard.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Copy, Download, Share2, X } from "lucide-react";
+import { Share2, X } from "lucide-react";
 import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
 import { buildMonth, heatLevel, jalaliOfIso } from "@/lib/dashboardCompute";
 import type { DashboardData } from "@/lib/dashboardTypes";
@@ -22,22 +23,25 @@ import type { DailyRecord } from "@/lib/storage";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useMyInvite } from "@/lib/invite";
 import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
-import { canvasToBlob, downloadBlob, renderShareCard, shareImage, shareText, type ShareCardInput, type ShareFormat } from "@/lib/shareCard";
-import { heroRings } from "./DashboardHero";
+import { canvasToBlob, renderShareCard, shareImage, shareText, type ShareCardInput } from "@/lib/shareCard";
+import { heroRings, type HeroRing } from "./DashboardHero";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { ToggleSwitch } from "./ToggleSwitch";
 import { Spinner } from "./Spinner";
 import { D_EASE } from "./DashboardKit";
 
-type Opts = { name: boolean; streak: boolean; routine: boolean; exercise: boolean; calorie: boolean; month: boolean; invite: boolean; format: ShareFormat };
+type Kind = "rings" | "month";
+type Opts = { kind: Kind; name: boolean; routine: boolean; exercise: boolean; calorie: boolean; invite: boolean };
 // کالری پیش‌فرض خاموشه — عددِ شخصی‌تریه که خیلی‌ها نمی‌خوان دیده بشه
-const DEFAULTS: Opts = { name: true, streak: true, routine: true, exercise: true, calorie: false, month: true, invite: true, format: "post" };
-const KEY = "arion:dashShare";
+const DEFAULTS: Opts = { kind: "rings", name: true, routine: true, exercise: true, calorie: false, invite: true };
+const KEY = "arion:dashShare:v2";
 
 function loadOpts(): Opts {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Opts>) } : DEFAULTS;
+    if (!raw) return DEFAULTS;
+    const v = { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Opts>) };
+    return v.kind === "rings" || v.kind === "month" ? v : { ...v, kind: DEFAULTS.kind };
   } catch {
     return DEFAULTS;
   }
@@ -49,6 +53,10 @@ function resolveColor(v: string): string {
   if (!m) return v;
   const el = document.querySelector(".db-page") ?? document.body;
   return getComputedStyle(el).getPropertyValue(m[1]).trim() || "#00C98D";
+}
+
+function isoOf(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function DashboardShare({
@@ -81,70 +89,84 @@ export function DashboardShare({
 
   const invite = useMyInvite();
   const rings = useMemo(() => heroRings(data, routine.stats), [data, routine.stats]);
-  const hasEx = rings.find((r) => r.key === "exercise")?.show ?? false;
-  const hasCal = rings.find((r) => r.key === "calorie")?.show ?? false;
+  const ringOf = (k: HeroRing["key"]) => rings.find((r) => r.key === k)!;
+  const streak = routine.streak ?? 0;
+  const firstName = data?.user.name?.split(" ")[0] || null;
   const [ty, tm] = jalaliOfIso(routine.todayIso);
 
   const joinIso = useMemo(() => {
     const d = data?.user.memberSince ? new Date(data.user.memberSince) : null;
-    if (!d || Number.isNaN(d.getTime())) return undefined;
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return d && !Number.isNaN(d.getTime()) ? isoOf(d) : undefined;
   }, [data?.user.memberSince]);
 
-  const input: ShareCardInput = useMemo(() => {
+  // ماهِ جاری فقط وقتی لازمه ساخته می‌شه (حالتِ نقشه)
+  const month = useMemo(
+    () => (opts.kind === "month" ? buildMonth(ty, tm, routine.todayIso, routine.opts, routine.daily, joinIso) : null),
+    [opts.kind, ty, tm, routine.todayIso, routine.opts, routine.daily, joinIso]
+  );
+
+  // مقدارِ نمایشیِ هر حلقه روی کارت — کالری با هدفش، نه فقط یه عددِ تنها
+  const cardRings = useMemo(() => {
+    const cal = data?.calorie;
+    return rings
+      .filter((r) => r.show && opts[r.key])
+      .map((r) => ({
+        label: r.label,
+        value: r.value,
+        display: r.key === "calorie" && cal?.target ? `${faNum(Math.round(cal.today.kcal))}/${faNum(Math.round(cal.target.kcal))}` : r.display,
+        colors: [resolveColor(r.grad[0]), resolveColor(r.grad[1])] as [string, string],
+      }));
+    // rings خودش data رو پوشش می‌ده؛ فقط کالری مستقیم خونده می‌شه
+  }, [rings, opts, data?.calorie]);
+
+  const input = useMemo<ShareCardInput | null>(() => {
     const [y, m, d] = routine.todayIso.split("-").map(Number);
-    const now = new Date(y, m - 1, d);
     const [jy, jm, jd] = toJalali(y, m, d);
-    const picked = rings.filter((r) => r.show && ((r.key === "routine" && opts.routine) || (r.key === "exercise" && opts.exercise) || (r.key === "calorie" && opts.calorie)));
-    const month = opts.month ? buildMonth(ty, tm, routine.todayIso, routine.opts, routine.daily, joinIso) : null;
-    const firstName = data?.user.name.split(" ")[0] || null;
-    return {
-      format: opts.format,
-      title: "امروزِ من",
-      subtitle: `${FA_WEEKDAY[now.getDay()]} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
-      name: opts.name ? firstName : null,
-      streak: opts.streak && routine.streak !== null ? { days: routine.streak, label: "روزِ پشتِ‌سرهم" } : null,
-      rings: picked.length
-        ? {
-            centerPct: Math.round(Math.min(1, picked[0].value) * 100),
-            items: picked.map((r) => ({ label: r.label, value: r.value, display: r.display, colors: [resolveColor(r.grad[0]), resolveColor(r.grad[1])] as [string, string] })),
-          }
-        : null,
-      month: month
-        ? {
-            title: `نقشه‌ی ثباتِ ${J_MONTHS[tm - 1]}`,
-            lead: month.lead,
-            cells: month.cells.map((c) => ({ jd: c.jd, level: heatLevel(c.pct), today: c.today, future: c.future })),
-            stats: [
-              { label: "میانگین", value: month.avg === null ? "—" : `${faNum(month.avg)}%` },
-              { label: "روزِ کامل", value: faNum(month.perfect) },
-            ],
-          }
-        : null,
-      invite: opts.invite && invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null,
+    const weekday = FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
+    const base = {
+      title: opts.name && firstName ? `امروزِ ${firstName}` : "امروزِ من",
+      subtitle: `${weekday} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
+      inviteCode: opts.invite ? invite?.code ?? null : null,
     };
-    // ring colors از DOM خونده می‌شن؛ فقط وقتی ورودی‌ها عوض بشن دوباره
-  }, [opts, rings, routine.todayIso, routine.opts, routine.daily, routine.streak, ty, tm, joinIso, data?.user.name, invite]);
+    if (opts.kind === "rings") {
+      if (!cardRings.length) return null;
+      return { ...base, body: { kind: "rings", streak, items: cardRings } };
+    }
+    if (!month) return null;
+    return {
+      ...base,
+      body: {
+        kind: "month",
+        streak,
+        title: `نقشه‌ی ثباتِ ${J_MONTHS[tm - 1]} ${faNum(ty)}`,
+        lead: month.lead,
+        cells: month.cells.map((c) => ({ jd: c.jd, level: heatLevel(c.pct), today: c.today, future: c.future })),
+        stats: [
+          { label: "روزِ کامل", value: faNum(month.perfect) },
+          { label: "میانگینِ ماه", value: month.avg === null ? "—" : `${faNum(month.avg)}%` },
+        ],
+      },
+    };
+  }, [opts.kind, opts.name, opts.invite, firstName, invite?.code, routine.todayIso, cardRings, month, streak, ty, tm]);
 
-  const empty = !input.streak && !input.rings && !input.month;
-
-  const [busy, setBusy] = useState<"share" | "save" | null>(null);
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // پیش‌نمایشِ زنده — کمی تأخیر تا چند تغییرِ پشتِ‌سرهم یک رندر بشن
+  // پیش‌نمایشِ زنده — کمی تأخیر تا چند تغییرِ پشتِ‌سرهم یک رندر بشن. blob ِ هر
+  // رندر با کلیدِ همون ورودی نگه داشته می‌شه تا «اشتراک» هیچ‌وقت تصویرِ کهنه نفرسته.
   const [preview, setPreview] = useState<string | null>(null);
   const previewRef = useRef<string | null>(null);
-  const blobRef = useRef<Blob | null>(null);
+  const blobRef = useRef<{ input: ShareCardInput; blob: Blob } | null>(null);
   const [rendering, setRendering] = useState(false);
   useEffect(() => {
-    if (!open || empty) return;
+    if (!open || !input) return;
     let alive = true;
     setRendering(true);
     const t = setTimeout(async () => {
       try {
         const blob = await canvasToBlob(await renderShareCard(input));
         if (!alive) return;
-        blobRef.current = blob;
+        blobRef.current = { input, blob };
         if (previewRef.current) URL.revokeObjectURL(previewRef.current);
         previewRef.current = URL.createObjectURL(blob);
         setPreview(previewRef.current);
@@ -153,12 +175,12 @@ export function DashboardShare({
       } finally {
         if (alive) setRendering(false);
       }
-    }, 160);
+    }, 140);
     return () => { alive = false; clearTimeout(t); };
-  }, [open, input, empty]);
+  }, [open, input]);
   useEffect(() => () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); }, []);
 
-  useEffect(() => { if (!open) setMsg(null); }, [open]);
+  useEffect(() => { if (!open) { setMsg(null); setBusy(false); } }, [open]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -166,59 +188,27 @@ export function DashboardShare({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  async function currentBlob() {
-    if (blobRef.current && !rendering) return blobRef.current;
-    return canvasToBlob(await renderShareCard(input));
-  }
-  const fileName = `arion-${routine.todayIso}.png`;
-  const lead = routine.streak ? `${faNum(routine.streak)} روزِ پشتِ‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
-
   async function doShare() {
-    if (busy || empty) return;
-    setBusy("share");
+    if (busy || !input) return;
+    setBusy(true);
     setMsg(null);
     try {
-      const res = await shareImage(await currentBlob(), fileName, "امروزِ من", shareText(lead, input.invite));
-      if (res === "downloaded") setMsg("مرورگرت اشتراکِ مستقیم نداره — تصویر ذخیره شد");
+      const cached = blobRef.current;
+      const blob = cached && cached.input === input ? cached.blob : await canvasToBlob(await renderShareCard(input));
+      const lead = streak ? `${faNum(streak)} روزِ پشتِ‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
+      const inv = invite && opts.invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
+      const res = await shareImage(blob, `arion-${routine.todayIso}.png`, "امروزِ من", shareText(lead, inv));
+      if (res === "downloaded") setMsg("تصویر ذخیره شد — حالا برای دوستات بفرستش");
     } catch {
       setMsg("ساختِ تصویر ممکن نشد");
     } finally {
-      setBusy(null);
-    }
-  }
-  async function doSave() {
-    if (busy || empty) return;
-    setBusy("save");
-    setMsg(null);
-    try {
-      downloadBlob(await currentBlob(), fileName);
-      setMsg("تصویر ذخیره شد");
-    } catch {
-      setMsg("ساختِ تصویر ممکن نشد");
-    } finally {
-      setBusy(null);
-    }
-  }
-  async function copyInvite() {
-    if (!invite) return;
-    const txt = shareText(lead, { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT });
-    try {
-      await navigator.clipboard.writeText(txt);
-      setMsg("متن و لینکِ دعوت کپی شد");
-    } catch {
-      setMsg(invite.url);
+      setBusy(false);
     }
   }
 
-  const rows: { k: keyof Opts; label: string; hint?: string; show: boolean }[] = [
-    { k: "name", label: "اسمم", show: !!data?.user.name },
-    { k: "streak", label: "استریک", hint: routine.streak !== null ? `${faNum(routine.streak)} روز` : undefined, show: true },
-    { k: "routine", label: "حلقه‌ی روتین", hint: rings[0].display, show: true },
-    { k: "exercise", label: "تمرین", hint: rings[1].display, show: hasEx },
-    { k: "calorie", label: "کالری", hint: rings[2].display, show: hasCal },
-    { k: "month", label: `نقشه‌ی ثباتِ ${J_MONTHS[tm - 1]}`, show: true },
-    { k: "invite", label: "کدِ دعوت", hint: `${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف برای دوستت`, show: true },
-  ];
+  const ringRows = (["routine", "exercise", "calorie"] as const)
+    .map((k) => ringOf(k))
+    .filter((r) => r.show);
 
   if (typeof document === "undefined") return null;
   return createPortal(
@@ -244,13 +234,13 @@ export function DashboardShare({
           >
             <div className="db-share-head">
               <h2>اشتراکِ موفقیت</h2>
-              <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={17} /></button>
+              <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={18} /></button>
             </div>
 
             <div className="db-share-body thin-scroll">
-              <div className={`db-share-preview is-${opts.format}`}>
-                {empty ? (
-                  <p className="db-share-empty">حداقل یکی از استریک، حلقه‌ها یا نقشه‌ی ثبات رو روشن کن</p>
+              <div className="db-share-preview">
+                {!input ? (
+                  <p className="db-share-empty">حداقل یکی از حلقه‌ها رو روشن کن</p>
                 ) : preview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={preview} alt="پیش‌نمایشِ تصویرِ اشتراکی" className={rendering ? "is-dim" : undefined} />
@@ -261,43 +251,61 @@ export function DashboardShare({
 
               <div className="db-share-side">
                 <SegmentedTabs
-                  ariaLabel="قالبِ تصویر"
-                  options={[{ value: "post", label: "پست" }, { value: "story", label: "استوری" }]}
-                  active={opts.format}
-                  onChange={(v) => set("format", v)}
+                  ariaLabel="چی رو به اشتراک بذاری"
+                  className="db-share-kind"
+                  options={[{ value: "rings", label: "حلقه‌های امروز" }, { value: "month", label: "نقشه‌ی ثبات" }]}
+                  active={opts.kind}
+                  onChange={(v) => set("kind", v)}
                 />
 
-                <p className="db-share-label">چی دیده بشه؟</p>
-                <ul className="db-share-list">
-                  {rows.filter((r) => r.show).map((r) => (
-                    <li key={r.k}>
-                      <span className="db-share-row-text">
-                        <span>{r.label}</span>
-                        {r.hint && <small>{r.hint}</small>}
-                      </span>
-                      <ToggleSwitch checked={opts[r.k] as boolean} onChange={(v) => set(r.k, v as never)} label={r.label} />
-                    </li>
-                  ))}
-                </ul>
+                {opts.kind === "rings" && (
+                  <div className="db-share-group">
+                    <p className="db-share-label">کدوم حلقه‌ها بیاد؟</p>
+                    <ul className="db-share-list">
+                      {ringRows.map((r) => (
+                        <li key={r.key}>
+                          <span className="db-share-dot" style={{ background: `linear-gradient(135deg, ${r.grad[0]}, ${r.grad[1]})` }} aria-hidden="true" />
+                          <span className="db-share-row-text">
+                            <span>{r.label}</span>
+                            <small dir="ltr">{r.display}</small>
+                          </span>
+                          <ToggleSwitch checked={opts[r.key]} onChange={(v) => set(r.key, v)} label={r.label} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-                <p className="db-share-invite">
-                  {invite?.code
-                    ? <>هر دوستی که با کدِ <b dir="ltr">{invite.code}</b> بیاد، روی اولین اشتراکش {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره. دوستات رو بیار و استریک‌هاتون رو با هم مقایسه کنید!</>
-                    : "دوستات رو بیار و استریک‌هاتون رو با هم مقایسه کنید!"}
-                </p>
+                <div className="db-share-group">
+                  <p className="db-share-label">روی تصویر</p>
+                  <ul className="db-share-list">
+                    {firstName && (
+                      <li>
+                        <span className="db-share-row-text"><span>اسمم</span><small>{firstName}</small></span>
+                        <ToggleSwitch checked={opts.name} onChange={(v) => set("name", v)} label="اسمم" />
+                      </li>
+                    )}
+                    <li>
+                      <span className="db-share-row-text">
+                        <span>کدِ دعوت</span>
+                        <small>{faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف برای دوستت</small>
+                      </span>
+                      <ToggleSwitch checked={opts.invite && !!invite?.code} onChange={(v) => set("invite", v)} label="کدِ دعوت" disabled={!invite?.code} />
+                    </li>
+                  </ul>
+                </div>
 
                 <div className="db-share-actions">
-                  <button type="button" className="trade-primary-btn" onClick={doShare} disabled={!!busy || empty}>
-                    {busy === "share" ? <Spinner size={14} /> : <><Share2 size={15} /> اشتراک‌گذاری</>}
+                  <button type="button" className="trade-primary-btn" onClick={doShare} disabled={busy || !input}>
+                    {busy ? <Spinner size={14} /> : <><Share2 size={16} /> اشتراک‌گذاری</>}
                   </button>
-                  <button type="button" className="account-outline-btn" onClick={doSave} disabled={!!busy || empty}>
-                    {busy === "save" ? <Spinner size={14} /> : <><Download size={15} /> ذخیره‌ی تصویر</>}
-                  </button>
-                  <button type="button" className="account-outline-btn" onClick={copyInvite} disabled={!invite}>
-                    <Copy size={15} /> کپیِ لینکِ دعوت
-                  </button>
+                  {msg && <p className="db-share-msg" role="status">{msg}</p>}
+                  <p className="db-share-invite">
+                    {invite?.code
+                      ? <>هر دوستی که با کدِ <b dir="ltr">{invite.code}</b> بیاد، روی اولین اشتراکش {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره.</>
+                      : "دوستات رو بیار و استریک‌هاتون رو با هم مقایسه کنید!"}
+                  </p>
                 </div>
-                {msg && <p className="db-share-msg" role="status">{msg}</p>}
               </div>
             </div>
           </motion.div>

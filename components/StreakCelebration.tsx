@@ -101,12 +101,10 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
     try {
       const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
       const canvas = await renderShareCard({
-        format: "post",
         title: "استریکِ من",
         subtitle: tier.name,
-        streak: { days: to, label: "روزِ پشتِ‌سرهم، همه‌ی برنامه‌ها کامل" },
-        week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx },
-        invite: inv,
+        body: { kind: "streak", streak: to, label: "روزِ پشتِ‌سرهم، همه‌ی برنامه‌ها کامل", week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
+        inviteCode: invite?.code ?? null,
       });
       const blob = await canvasToBlob(canvas);
       const res = await shareImage(blob, `arion-streak-${to}.png`, "استریکِ من", shareText(`${faNum(to)} روزِ پشتِ‌سرهم روتینم رو کامل کردم 🔥`, inv));
