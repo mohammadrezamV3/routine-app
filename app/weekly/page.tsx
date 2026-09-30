@@ -573,6 +573,8 @@ function WeeklyPageInner() {
                 onMoveTask={moveTaskFromDash}
                 onStartExercise={startExercise}
                 delay={0.05}
+                // دسکتاپ: دو ردیف ارتفاع می‌گیره (کنارِ ستون‌ها + کارتِ خوابِ زیرشون) تا بلندتر بشه
+                className="lg:row-span-2"
               />
             )}
 
@@ -584,9 +586,10 @@ function WeeklyPageInner() {
                     {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
                   </div>
                 )}
-                <div className="flex flex-col gap-4 sm:gap-6">
+                <DashSidebar statsRefreshKey={statsRefreshKey} />
+                {/* خواب زیرِ ستون‌های سمتِ چپ، هم‌عرضِ هر دوشون */}
+                <div className={hasMiddleColumn ? "lg:col-span-2" : ""}>
                   <SleepMiniCard />
-                  <DashSidebar statsRefreshKey={statsRefreshKey} />
                 </div>
               </>
             ) : (
