@@ -13,7 +13,8 @@
 import { faNum } from "./jalali";
 import { FLAME_BOX, FLAME_LAYERS, flamePalette, flamePath, layerFrame } from "./streakFlameShape";
 
-export type ShareRing = { label: string; value: number; display: string; colors: [string, string] };
+/** display=null یعنی کاربر عددِ این حلقه رو پنهان کرده — خودِ حلقه کشیده می‌شه، عددش نه */
+export type ShareRing = { label: string; value: number; display: string | null; colors: [string, string] };
 
 export type ShareMonthCell = { jd: number; level: number; today: boolean; future: boolean };
 
@@ -278,8 +279,12 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
         ctx.beginPath();
         ctx.arc(x, ly + 12, 11, 0, Math.PI * 2);
         ctx.fill();
-        text(it.label, x, ly + 70, f(700, 32), p.muted, "center");
-        text(it.display, x, ly + 122, f(900, 44), p.text, "center", "ltr");
+        if (it.display) {
+          text(it.label, x, ly + 70, f(700, 32), p.muted, "center");
+          text(it.display, x, ly + 122, f(900, 44), p.text, "center", "ltr");
+        } else {
+          text(it.label, x, ly + 84, f(800, 34), p.text, "center");
+        }
       });
     }
   }

@@ -2,8 +2,8 @@
 
 // «اشتراکِ موفقیت» از داشبورد. کاربر اول انتخاب می‌کنه *چی* رو به اشتراک بذاره
 // — حلقه‌های امروز یا نقشه‌ی ثباتِ ماه (هر بار فقط یکی، تا تصویر شلوغ نشه) —
-// و بعد هرچی رو نخواد دیده بشه خاموش می‌کنه (مثلا حلقه‌ی کالری، که پیش‌فرض
-// خاموشه). وسطِ حلقه‌ها تعدادِ روزهای استریک میاد. پیش‌نمایش همون لحظه عوض
+// و بعد هرچی رو نخواد دیده بشه خاموش می‌کنه — حلقه‌ها همیشه روی کارت می‌مونن و
+// سوییچ فقط عددِ زیرِ هر حلقه (مثلا کالری، که پیش‌فرض پنهانه) رو پنهان می‌کنه. وسطِ حلقه‌ها تعدادِ روزهای استریک میاد. پیش‌نمایش همون لحظه عوض
 // می‌شه؛ انتخاب‌ها فقط روی همین دستگاه یادآوری می‌شن (localStorage) و تصویر فقط
 // با زدنِ «اشتراک‌گذاری» از دستگاه بیرون می‌ره — هیچ‌چیز به سرور نمی‌ره.
 //
@@ -109,11 +109,12 @@ export function DashboardShare({
   const cardRings = useMemo(() => {
     const cal = data?.calorie;
     return rings
-      .filter((r) => r.show && opts[r.key])
+      // حلقه‌ها همیشه روی کارت می‌مونن؛ سوییچ فقط عددِ زیرِ هر حلقه رو پنهان می‌کنه
+      .filter((r) => r.show)
       .map((r) => ({
         label: r.label,
         value: r.value,
-        display: r.key === "calorie" && cal?.target ? `${faNum(Math.round(cal.today.kcal))}/${faNum(Math.round(cal.target.kcal))}` : r.display,
+        display: !opts[r.key] ? null : r.key === "calorie" && cal?.target ? `${faNum(Math.round(cal.today.kcal))}/${faNum(Math.round(cal.target.kcal))}` : r.display,
         colors: [resolveColor(r.grad[0]), resolveColor(r.grad[1])] as [string, string],
       }));
     // rings خودش data رو پوشش می‌ده؛ فقط کالری مستقیم خونده می‌شه
@@ -240,7 +241,7 @@ export function DashboardShare({
             <div className="db-share-body thin-scroll">
               <div className="db-share-preview">
                 {!input ? (
-                  <p className="db-share-empty">حداقل یکی از حلقه‌ها رو روشن کن</p>
+                  <p className="db-share-empty">هنوز حلقه‌ای برای امروز نیست</p>
                 ) : preview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={preview} alt="پیش‌نمایشِ تصویرِ اشتراکی" className={rendering ? "is-dim" : undefined} />
@@ -260,7 +261,7 @@ export function DashboardShare({
 
                 {opts.kind === "rings" && (
                   <div className="db-share-group">
-                    <p className="db-share-label">کدوم حلقه‌ها بیاد؟</p>
+                    <p className="db-share-label">عددِ زیرِ کدوم حلقه‌ها دیده بشه؟</p>
                     <ul className="db-share-list">
                       {ringRows.map((r) => (
                         <li key={r.key}>
@@ -269,7 +270,7 @@ export function DashboardShare({
                             <span>{r.label}</span>
                             <small dir="ltr">{r.display}</small>
                           </span>
-                          <ToggleSwitch checked={opts[r.key]} onChange={(v) => set(r.key, v)} label={r.label} />
+                          <ToggleSwitch checked={opts[r.key]} onChange={(v) => set(r.key, v)} label={`نمایشِ عددِ ${r.label}`} />
                         </li>
                       ))}
                     </ul>
