@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { BASIC_MODULES } from "@/lib/modules";
 import {
   ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_MODULE,
   type AnalysisDomain, type DayCell, type DomainResult, type TrendPoint, type WeeklyAnalysis,
@@ -27,8 +26,6 @@ async function activeDomains(userId: string, isSuperAdmin: boolean): Promise<Ana
   });
   const now = Date.now();
   const ok = new Set(rows.filter((r) => !r.expiresAt || r.expiresAt.getTime() > now).map((r) => String(r.module)));
-  // ماژول‌های پایه همیشه رایگان‌اند، مستقل از ردیف‌ها (lib/modules.ts)
-  for (const m of BASIC_MODULES) ok.add(String(m));
   return ANALYSIS_DOMAINS.filter((d) => ok.has(ANALYSIS_DOMAIN_MODULE[d]));
 }
 

@@ -2,8 +2,9 @@
 // چون هم آن روت استفاده‌اش می‌کند هم `components/InlineBootstrap.tsx` — و Next
 // اجازه نمی‌دهد یک فایل `route.ts` چیزی جز هندلرهای HTTP export کند.
 import { prisma } from "@/lib/prisma";
-import { computeDayStats, tasksForDate, ScheduleOpts } from "@/lib/schedule";
+import { computeDayStats, ScheduleOpts } from "@/lib/schedule";
 import { isoLocal } from "@/lib/jalali";
+import { computeRoutineStreak } from "@/lib/routineStreak";
 
 // آمار روتین *همه‌ی* دوست‌ها با تعداد ثابتی کوئری.
 //
@@ -117,19 +118,7 @@ type DailyMap = Record<string, { tasks: Record<string, boolean> }>;
  * برنامه‌های اون روز انجام شده».
  */
 function countStreak(entries: DailyMap, opts: ScheduleOpts, windowDays: number): { streak: number; hitEdge: boolean } {
-  let streak = 0;
-  const cursor = new Date();
-  cursor.setDate(cursor.getDate() - 1);
-  for (let i = 0; i < windowDays; i++) {
-    const key = isoLocal(cursor);
-    const expected = tasksForDate(new Date(cursor), opts);
-    if (expected.length === 0) { cursor.setDate(cursor.getDate() - 1); continue; }
-    const rec = entries[key];
-    if (!rec) return { streak, hitEdge: false };
-    const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-    if (doneCount === expected.length) { streak++; cursor.setDate(cursor.getDate() - 1); }
-    else return { streak, hitEdge: false };
-  }
-  return { streak, hitEdge: true };
+  // تعریفِ مشترک (lib/routineStreak.ts): امروزِ کامل همون لحظه حساب می‌شه
+  const { streak, hitEdge } = computeRoutineStreak(new Date(), opts, entries, windowDays);
+  return { streak, hitEdge };
 }
-

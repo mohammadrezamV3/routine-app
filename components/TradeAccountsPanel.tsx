@@ -430,7 +430,7 @@ function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAc
         <div className="item-line">
           با این کار تمام معاملات، عکس‌ها و آمار «{account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.
         </div>
-        <label className="exercise-form-label">برای تأیید، نام حساب را تایپ کن</label>
+        <label className="exercise-form-label">برای تایید، نام حساب را تایپ کن</label>
         <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>

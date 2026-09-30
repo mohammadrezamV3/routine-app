@@ -10,6 +10,7 @@ import { getSetting, setSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { pairLabel } from "@/lib/tradingView";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { GoldenName } from "@/components/GoldenName";
 
 // چتِ گروهیِ یک نماد. هر نماد اتاقِ خودش را دارد و پیام‌ها بینِ همه‌ی
 // کاربرانِ دارای ماژولِ ترید مشترک است.
@@ -207,7 +208,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                 <div className="trade-chat-meta">
                   {/* طبقِ درخواستِ صریح (مثلِ تلگرام): پیامِ خودت اسم نمی‌خواهد،
                       فقط پیامِ بقیه authorName دارد. */}
-                  {!m.mine && <span className="trade-chat-author">{m.authorName}</span>}
+                  {!m.mine && <span className="trade-chat-author"><GoldenName golden={m.authorGolden}>{m.authorName}</GoldenName></span>}
                   <span className="trade-chat-time mono">{timeLabel(m.createdAt)}</span>
                 </div>
                 <div className="trade-chat-bubble">

@@ -23,6 +23,7 @@ import type { DashboardData } from "@/lib/dashboardTypes";
 import { DashboardHero } from "./DashboardHero";
 import { DashboardToday } from "./DashboardToday";
 import { DashboardHeatmap } from "./DashboardHeatmap";
+import { DashboardRoutineLock } from "./DashboardRoutineLock";
 import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardTrade } from "./DashboardTrade";
 import { DashboardMarket } from "./DashboardMarket";
@@ -121,6 +122,9 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modules, showMentors, features?.roadmaps]);
   const areas = useMemo(() => bentoAreas(has), [has]);
+  // «روتین من» بعد از ۱۴ روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
+  // (modules=null) قفل نشون داده نمی‌شه که صفحه‌ی خریده‌شده یک لحظه قفل نپره.
+  const routineLocked = !!modules && !modules.has("ROUTINE");
 
   if (status === "forbidden" && !data) {
     return <div className="db-error"><DashIcon name="lock" /> این بخش موقتا غیرفعال است</div>;
@@ -129,7 +133,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   return (
     <MotionConfig reducedMotion="user">
       <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
-      <DashboardHero data={data} routine={routine} onOpenCommand={() => setCmdOpen(true)} />
+      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} onOpenCommand={() => setCmdOpen(true)} />
       <DashboardQuickActions features={features} modules={modules} />
 
       {status === "error" && !data && (
@@ -140,8 +144,17 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
       )}
 
       <motion.div className="db-bento" style={areas} variants={V_GRID} initial="hidden" animate="show">
-        <DashboardToday ready={routine.ready} tasks={routine.tasks} stats={routine.stats} week={routine.heat.length ? routine.heat[routine.heat.length - 1] : null} onToggle={routine.toggle} />
-        <DashboardHeatmap opts={routine.opts} daily={routine.daily} todayIso={routine.todayIso} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} memberSince={data?.user.memberSince} />
+        {routineLocked ? (
+          <>
+            <DashboardRoutineLock area="today" />
+            <DashboardRoutineLock area="heat" />
+          </>
+        ) : (
+          <>
+            <DashboardToday ready={routine.ready} tasks={routine.tasks} stats={routine.stats} week={routine.heat.length ? routine.heat[routine.heat.length - 1] : null} onToggle={routine.toggle} />
+            <DashboardHeatmap heat={routine.heat} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} memberSince={data?.user.memberSince} />
+          </>
+        )}
         {has.has("ex") && <DashboardExercise ex={data?.exercise ?? null} loading={loading} />}
         {has.has("cal") && <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />}
         {has.has("trade") && <DashboardTrade trade={data?.trade ?? null} loading={loading} />}

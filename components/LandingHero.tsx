@@ -234,7 +234,7 @@ export function LandingHero() {
           </div>
 
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
-            <li><Sparkles size={14} aria-hidden="true" /> «روتین من» همیشه رایگان</li>
+            <li><Sparkles size={14} aria-hidden="true" /> «روتین من» 14 روز رایگان</li>
             <li><Sparkles size={14} aria-hidden="true" /> 3 روز بدنسازی، کالری‌شمار و ژورنال ترید</li>
             <li><ShieldCheck size={15} aria-hidden="true" /> بدون کارت بانکی</li>
             <li><Lock size={14} aria-hidden="true" /> گفت‌وگوی مربی با رمزگذاری سرتاسری</li>

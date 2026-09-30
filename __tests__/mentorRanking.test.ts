@@ -112,11 +112,11 @@ describe("پایبندی", () => {
     expect(r.entries).toBe(20);
   });
 
-  it("ضدِ دست‌کاری: یک شاگردِ پرثبت بیش از یک رأی نمی‌گیرد", () => {
+  it("ضدِ دست‌کاری: یک شاگردِ پرثبت بیش از یک رای نمی‌گیرد", () => {
     const heavy = student({ adherence: { completed: 5000, partial: 0, missed: 0 } });
     const bad = Array.from({ length: 4 }, () => student({ adherence: { completed: 0, partial: 0, missed: 20 } }));
     const r = adherenceComponent([heavy, ...bad]);
-    // ۱ رأیِ ۱۰۰٪ + ۴ رأیِ ۰٪ + پیش‌فرض (۰٫۵ × ۳) = ۲٫۵ ÷ ۸
+    // ۱ رایِ ۱۰۰٪ + ۴ رایِ ۰٪ + پیش‌فرض (۰٫۵ × ۳) = ۲٫۵ ÷ ۸
     expect(r.value).toBeCloseTo(2.5 / 8);
   });
 
@@ -234,7 +234,7 @@ describe("سرعتِ پاسخ", () => {
     expect(responseScore(10_000)).toBe(responseScore(RANKING_RULES.responseCapHours));
   });
 
-  it("ضدِ دست‌کاری: هر شاگرد یک رأی (میانه‌ی خودش)", () => {
+  it("ضدِ دست‌کاری: هر شاگرد یک رای (میانه‌ی خودش)", () => {
     const spammy = student({ responseHours: Array(200).fill(0) });
     const slow = Array.from({ length: 4 }, () => student({ responseHours: [96] }));
     const r = responseComponent([spammy, ...slow]);
@@ -249,7 +249,7 @@ describe("سرعتِ پاسخ", () => {
   });
 });
 
-describe("نظرهای تأییدشده", () => {
+describe("نظرهای تاییدشده", () => {
   it("نظرِ بدونِ رابطه‌ی کافی یا بدونِ برنامه‌ی فعال‌شده شمرده نمی‌شود", () => {
     expect(isVerifiedReview(review())).toBe(true);
     expect(isVerifiedReview(review({ activeDays: RANKING_RULES.reviewMinActiveDays - 1 }))).toBe(false);
@@ -309,7 +309,7 @@ describe("ضریب‌ها", () => {
     expect(trustMultiplier({ identityVerified: false, certificateVerified: true })).toBeLessThan(trustMultiplier({ identityVerified: true, certificateVerified: false }));
   });
 
-  it("سلامت: گزارشِ تأییدشده سنگین‌تر از باز؛ سقف و کف", () => {
+  it("سلامت: گزارشِ تاییدشده سنگین‌تر از باز؛ سقف و کف", () => {
     const clean = { openReporters: 0, resolvedReporters: 0, recentSuspension: false };
     expect(integrityMultiplier(clean)).toBe(1);
     expect(integrityMultiplier({ ...clean, resolvedReporters: 1 })).toBeLessThan(integrityMultiplier({ ...clean, openReporters: 1 }));
@@ -370,7 +370,7 @@ describe("computeMerit — امتیازِ نهایی", () => {
     expect(unverifiedProven.ineligibleReasons).toContain("identity_unverified");
   });
 
-  it("گزارشِ تأییدشده و تعلیقِ اخیر امتیاز را پایین و از «محبوب» بیرون می‌برد", () => {
+  it("گزارشِ تاییدشده و تعلیقِ اخیر امتیاز را پایین و از «محبوب» بیرون می‌برد", () => {
     const clean = computeMerit({ ...NEUTRAL, students: goodStudents(), reviews: [] }, NOW);
     const reported = computeMerit({ ...NEUTRAL, integrity: { openReporters: 0, resolvedReporters: 2, recentSuspension: false }, students: goodStudents(), reviews: [] }, NOW);
     expect(reported.score).toBeLessThan(clean.score);

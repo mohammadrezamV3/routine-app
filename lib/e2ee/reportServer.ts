@@ -19,7 +19,7 @@ export function reportedTextAad(messageId: string, reporterId: string): string[]
 }
 
 /**
- * مدرکِ گزارشِ یک پیام — یا خطا. پیش‌فرض: resolveTargetOwner قبلا تأیید کرده
+ * مدرکِ گزارشِ یک پیام — یا خطا. پیش‌فرض: resolveTargetOwner قبلا تایید کرده
  * که پیام در گفت‌وگوی گزارش‌دهنده است و از طرفِ مقابل آمده.
  */
 export async function verifyMessageReport(
@@ -33,19 +33,19 @@ export async function verifyMessageReport(
   });
   if (!msg) return { ok: false, error: "پیام پیدا نشد" };
 
-  // پیامِ قدیمیِ پیش از رمزگذاری: متنش روی سرور هست؛ تأییدِ رمزنگاری ندارد
+  // پیامِ قدیمیِ پیش از رمزگذاری: متنش روی سرور هست؛ تاییدِ رمزنگاری ندارد
   if (msg.legacyBody != null) {
     return { ok: true, evidence: { reportedText: msg.legacyBody.slice(0, REPORTED_TEXT_MAX), reportedMessageAt: msg.createdAt, reportVerified: false } };
   }
 
   const f = franking as { text?: unknown; frankingKey?: unknown } | null | undefined;
   if (!f || typeof f.text !== "string" || typeof f.frankingKey !== "string" || f.text.length > REPORTED_TEXT_MAX * 2) {
-    return { ok: false, error: "برای گزارش پیام رمزگذاری‌شده، متن و کلید تأیید پیام لازم است" };
+    return { ok: false, error: "برای گزارش پیام رمزگذاری‌شده، متن و کلید تایید پیام لازم است" };
   }
-  if (!msg.clientId || !msg.commitment) return { ok: false, error: "این پیام قابل تأیید نیست" };
+  if (!msg.clientId || !msg.commitment) return { ok: false, error: "این پیام قابل تایید نیست" };
   const ctx = { mentorshipId: msg.mentorshipId, senderId: msg.senderId, clientId: msg.clientId };
   if (!verifyServerFrankingTag(msg.serverTag, { ...ctx, commitment: msg.commitment, createdAt: msg.createdAt })) {
-    return { ok: false, error: "این پیام قابل تأیید نیست" };
+    return { ok: false, error: "این پیام قابل تایید نیست" };
   }
   if (!(await verifyCommitment(f.frankingKey, msg.commitment, ctx, f.text))) {
     return { ok: false, error: "متن گزارش با پیام ثبت‌شده نمی‌خواند" };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { TickButton } from "./TickButton";
 import { ClipboardCheck, NotebookPen } from "lucide-react";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
@@ -70,7 +71,7 @@ export function ChartTradePanel({
   // عوض‌کردنِ چک‌لیست یعنی تیک‌های قبلی بی‌معنی‌اند
   useEffect(() => { setChecked({}); }, [checklistId]);
   // با عوض‌شدنِ نماد، تیک‌ها پاک می‌شوند — چک‌لیستِ EURUSD به XAUUSD
-  // ربطی ندارد و نگه‌داشتنِ تیک‌ها یک تأییدِ جعلی است.
+  // ربطی ندارد و نگه‌داشتنِ تیک‌ها یک تاییدِ جعلی است.
   useEffect(() => { setChecked({}); }, [symbol]);
 
   const doneCount = useMemo(
@@ -118,10 +119,10 @@ export function ChartTradePanel({
             {checklist.items.map((item) => (
               <label key={item.id} className="trade-chart-check-row">
                 <span>{item.text}</span>
-                <input
-                  type="checkbox"
+                <TickButton
+                  size={22}
                   checked={!!checked[item.id]}
-                  onChange={(e) => setChecked((p) => ({ ...p, [item.id]: e.target.checked }))}
+                  onToggle={() => setChecked((p) => ({ ...p, [item.id]: !p[item.id] }))}
                 />
               </label>
             ))}

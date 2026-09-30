@@ -1,7 +1,7 @@
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BASIC_MODULES } from "@/lib/modules";
-import { TRIAL_MODULE_KEYS, TRIAL_MS } from "@/lib/trial";
+import { ROUTINE_TRIAL_MS, TRIAL_MODULE_KEYS, TRIAL_MS } from "@/lib/trial";
 
 /** ماژول‌های دوره‌ی آزمایشی (بدنسازی/کالری/ترید) — رودمپ و AI_INSIGHT عمداً نیستند */
 export const TRIAL_MODULES: ModuleKey[] = TRIAL_MODULE_KEYS.map((k) => ModuleKey[k]);
@@ -11,16 +11,17 @@ export const TRIAL_MODULES: ModuleKey[] = TRIAL_MODULE_KEYS.map((k) => ModuleKey
  * (app/api/auth/signup) و ورودِ اول با گوگل (lib/auth.ts) هیچ‌وقت از هم
  * جدا نشوند.
  *
- *  • ماژول‌های پایه → بی‌انقضا (همیشه رایگان)
+ *  • ماژول‌های «روتین من» → ROUTINE_TRIAL_DAYS (۱۴) روز، بعد باید پلن خریده بشه
  *  • ماژول‌های تریال → TRIAL_DAYS روز، بعدش عادی منقضی می‌شوند
  *
  * سقفِ مصرفِ AI در همین دوره در lib/aiQuota.ts اعمال می‌شود.
  */
 export async function provisionTrialAccess(userId: string, now: Date = new Date()) {
   const trialUntil = new Date(now.getTime() + TRIAL_MS);
+  const routineUntil = new Date(now.getTime() + ROUTINE_TRIAL_MS);
   await prisma.moduleAccess.createMany({
     data: [
-      ...BASIC_MODULES.map((module) => ({ userId, module, active: true, expiresAt: null })),
+      ...BASIC_MODULES.map((module) => ({ userId, module, active: true, expiresAt: routineUntil })),
       ...TRIAL_MODULES.map((module) => ({ userId, module, active: true, expiresAt: trialUntil })),
     ],
     skipDuplicates: true,

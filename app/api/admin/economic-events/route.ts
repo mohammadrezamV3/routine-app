@@ -18,7 +18,7 @@ function parseBody(body: any): string | { title: string; country: string; curren
   if (!title) return "عنوان رویداد الزامی است";
   const currency = String(body.currency || "").trim().toUpperCase();
   if (!/^[A-Z]{3,8}$/.test(currency)) return "کد ارز نامعتبر است";
-  if (!IMPACTS.includes(body.impact)) return "سطح تأثیر نامعتبر است";
+  if (!IMPACTS.includes(body.impact)) return "سطح تاثیر نامعتبر است";
   const occursAt = new Date(String(body.occursAt || ""));
   if (isNaN(occursAt.getTime())) return "تاریخ و ساعت رویداد نامعتبر است";
   const country = String(body.country || "").trim().toUpperCase().slice(0, 2) || currency.slice(0, 2);

@@ -374,36 +374,6 @@
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
   .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px;}
 
-  /* سوییچ لیکوئید گلس سبک iOS — ترک شیشه‌ای تار با یه دسته‌ی گرد که
-     بین راست (خاموش) و چپ (روشن) اسلاید می‌شه، دقیقا مثل تاگل کنترل‌سنتر آیفون */
-  .ios-toggle{
-    position:relative; width:46px; height:27px; min-width:46px; border-radius:999px; padding:0; cursor:pointer;
-    border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
-    backdrop-filter:blur(14px) saturate(180%); -webkit-backdrop-filter:blur(14px) saturate(180%);
-    box-shadow:inset 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04);
-    transition:background .25s ease, border-color .25s ease, box-shadow .25s ease;
-  }
-  body[data-theme="light"] .ios-toggle{ background:rgba(0,0,0,.07); border-color:rgba(0,0,0,.08); }
-  @media (hover:hover){.ios-toggle:hover{ border-color:rgba(255,255,255,.14); color:inherit; background:rgba(255,255,255,.08); box-shadow:inset 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04); }}
-  @media (hover:hover){body[data-theme="light"] .ios-toggle:hover{ border-color:rgba(0,0,0,.08); background:rgba(0,0,0,.07); }}
-  .ios-toggle.on{ background:var(--accent); border-color:var(--accent); box-shadow:inset 0 1px 2px rgba(0,0,0,.15); }
-  @media (hover:hover){.ios-toggle.on:hover{ border-color:var(--accent); background:var(--accent); }}
-  .ios-toggle-knob{
-    position:absolute; top:2px; inset-inline-start:2px; width:21px; height:21px; border-radius:50%;
-    background:linear-gradient(180deg, #fff, #e6e6e6);
-    box-shadow:0 2px 5px rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.15);
-    /* کشیدگیِ لحظه‌ی فشار هم با scaleX (نه width) — کل حرکتِ دستگیره فقط
-       transform ـه و روی compositor اجرا می‌شه، بدون reflow. مبدأ سمتِ
-       شروع (راست در RTL) تا خاموش به داخل کش بیاد؛ در حالت روشن مبدأ سمتِ
-       مقابله تا دستگیره از لبه‌ی ظرف بیرون نزنه. */
-    transform-origin:right center; will-change:transform;
-    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
-  }
-  .ios-toggle.on .ios-toggle-knob{ transform:translateX(-19px); transform-origin:left center; }
-  .ios-toggle:active .ios-toggle-knob{ transform:scaleX(1.143); }
-  .ios-toggle.on:active .ios-toggle-knob{ transform:translateX(-19px) scaleX(1.143); }
-  @media (prefers-reduced-motion:reduce){ .ios-toggle-knob{ transition:none; } }
-
   .stat-toggle-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:11px 2px; border-bottom:1px solid var(--line);
@@ -647,6 +617,9 @@
   .header-streak-clock{
     display:flex; align-items:center; font-size:12.5px; color:var(--muted); white-space:nowrap;
   }
+  .header-streak-link{ text-decoration:none; background:transparent; border-radius:10px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .18s ease; }
+  .header-streak-link:active{ transform:scale(.94); }
+  .header-streak-link:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   .header-streak-clock-streak{ display:flex; align-items:center; gap:3px; color:var(--accent); font-weight:600; }
   .header-streak-clock-streak .streak-flame{ width:15px; height:15px; }
 
@@ -995,6 +968,7 @@
   }
   .trade-goal-ring-wrap{ position:relative; width:56px; height:56px; flex-shrink:0; }
   .trade-goal-ring{ width:100%; height:100%; }
+  .trade-goal-ring svg{ width:100%; height:100%; }
   .trade-goal-ring-fill{ transition:stroke-dashoffset .5s ease; }
   .trade-goal-ring-pct{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -3785,21 +3759,6 @@ body[data-theme="light"] .auth-box .jdate-btn{
 .wsearch-newform .auth-remember-label{ display:flex; }
 /* چک‌باکس دست‌ساز — appearance:none روی input خام، تیک با یه SVG محو-بزرگ‌شونده.
    کمی از سایز استاندارد ۱۹px بزرگ‌تر شد تا لمس راحت‌تری روی موبایل داشته باشه. */
-.auth-checkbox{
-  appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0;
-  width:22px; height:22px; border-radius:7px;
-  border:1.5px solid var(--line); background:rgba(var(--bg-rgb),.5);
-  cursor:pointer; position:relative;
-  transition:background .2s ease, border-color .2s ease, transform .12s ease;
-}
-@media (hover:hover){.auth-remember-label:hover .auth-checkbox{ border-color:var(--accent); }}
-.auth-checkbox:active{ transform:scale(.88); }
-.auth-checkbox:checked{ background:var(--accent); border-color:var(--accent); }
-.auth-checkbox:checked::after{
-  content:""; position:absolute; inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat; background-position:center; background-size:12px;
-}
 /* قبلا این‌جا animation:authCheckIn (scale از .4) روی خودِ اینپوت بود؛ روی هم
    با فید باکس و استگرِ فیلدها (useAuthFieldsStagger) هر اینپوت با هر سوییچِ
    ورود↔ثبت‌نام «پاپ» می‌کرد — سه انیمیشنِ هم‌زمان، بخشی از همون حسِ باگیِ
@@ -4120,6 +4079,18 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 }
 .module-gate-icon svg{ width:21px; height:21px; }
 .module-gate-msg{ font-size:13.5px; font-weight:700; color:var(--text); }
+.module-gate-sub{ font-size:12px; font-weight:600; color:var(--muted); }
+/* نوارِ «X روز از دوره‌ی رایگانِ روتین من مونده» — فقط حاشیه، بدونِ بک‌گراند */
+.routine-trial-strip{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  padding:9px 14px; border-radius:14px; border:1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  font-size:12.5px; font-weight:600; color:var(--text); background:transparent;
+}
+.routine-trial-strip b{ color:var(--accent); }
+.routine-trial-strip.is-urgent{ border-color:color-mix(in srgb, #f97316 60%, transparent); }
+.routine-trial-strip.is-urgent b{ color:#f97316; }
+.routine-trial-strip a{ font-weight:800; color:var(--accent); text-decoration:none; white-space:nowrap; }
+
 .module-gate-cta{
   margin-top:6px; padding:11px 26px; border-radius:999px; border:none; cursor:pointer;
   background:var(--accent); color:var(--bg); font-family:var(--font-vazir), var(--font-latin), sans-serif;
@@ -5373,7 +5344,6 @@ a.admin-btn{ text-decoration:none; }
   display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 12px; margin-bottom:12px;
   border:1px solid rgba(var(--adm-accent-rgb),.4); border-radius:14px; font-size:12.5px; font-weight:700; color:var(--adm-accent);
 }
-.admin-check{ width:16px; height:16px; accent-color:var(--adm-accent); cursor:pointer; }
 .admin-table tr.is-selected td{ color:var(--adm-accent); }
 .admin-ltr{ direction:ltr; text-align:right; }
 .admin-muted{ color:var(--adm-muted); }
@@ -6241,16 +6211,6 @@ select.wsearch-newform-name{ cursor:pointer; }
    دکمه (که باید فقط بوردر داشته باشه، نه بک‌گراند) توی تمِ روشن دوباره
    بک‌گراندِ شیشه‌ای می‌گرفت — همون باگِ تکراری. */
 body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-toggle{ background:none; box-shadow:none; }
-.trade-toggle-knob{
-  width:38px; height:21px; border-radius:999px; background:var(--line);
-  position:relative; flex-shrink:0; transition:background .22s ease;
-}
-.trade-toggle-knob::after{
-  content:""; position:absolute; top:3px; inset-inline-start:3px; width:15px; height:15px; border-radius:50%;
-  background:var(--muted); transition:transform .24s cubic-bezier(.22,1,.36,1), background .22s ease;
-}
-.trade-toggle.on .trade-toggle-knob{ background:var(--accent-dim); }
-.trade-toggle.on .trade-toggle-knob::after{ transform:translateX(-17px); background:var(--accent); }
 .trade-toggle-label{ font-size:11.5px; color:var(--muted); font-weight:500; line-height:1.7; }
 
 .trade-optional-head{
@@ -6296,15 +6256,6 @@ body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-to
    حالتِ done قاطی می‌شد) — فقط یک بک‌گراندِ خیلی کم‌رنگ، همون‌قدر که کاربر
    بفهمه روی همین ردیف/دکمه‌ست. */
 @media (hover:hover){ .trade-check-row:hover{ background:rgba(var(--surface-rgb),.12); border-radius:10px; } }
-.trade-check-box{
-  width:17px; height:17px; min-width:17px; border-radius:6px; border:1.5px solid var(--line);
-  position:relative; transition:border-color .18s ease, background .18s ease, transform .15s ease;
-}
-.trade-check-row.done .trade-check-box{ background:var(--accent); border-color:var(--accent); }
-.trade-check-row.done .trade-check-box::after{
-  content:""; position:absolute; inset:0; margin:auto; width:4px; height:8px;
-  border:solid var(--bg); border-width:0 2px 2px 0; transform:rotate(45deg) translate(-1px,-1px);
-}
 .trade-check-row.done{ color:var(--text); }
 .trade-check-row.readonly{ cursor:default; }
 
@@ -6606,7 +6557,7 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
    خودش (رزین یه لایه‌ی شیشه‌ای جدا) رو روی اینپوت می‌ذاشت — همون کپسولِ
    توی کپسول. اینجا با اضافه‌کردنِ `.wsearch-newform-name` به همون سه کلاس،
    اسپسیفیسیتی به (۰,۳,۲) می‌رسه که واقعاً برنده می‌شه (تستِ getComputedStyle
-   قبل/بعدِ این فیکس تأیید کرد). */
+   قبل/بعدِ این فیکس تایید کرد). */
 body .trade-search input.wsearch-newform-name.trade-glass-field,
 body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-field{
   border:none; background:none; box-shadow:none;
@@ -7740,7 +7691,7 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
    تا LCP عقب نیفته. fill-mode backwards چون حالتِ پایانی همون استایلِ پایه‌ست. */
 html[data-navigated] .page-enter{ animation:page-enter .38s cubic-bezier(.22,1,.36,1) backwards; }
 @keyframes page-enter{ from{ opacity:0; } }
-/* صفحه‌ی فعلی همون لحظه‌ی کلیک کمی کم‌رنگ می‌شه — با تأخیرِ کوتاه تا ناوبری‌های
+/* صفحه‌ی فعلی همون لحظه‌ی کلیک کمی کم‌رنگ می‌شه — با تاخیرِ کوتاه تا ناوبری‌های
    آنی (از کش) چشمک نزنن */
 .wrap{ transition:opacity .25s ease; }
 html[data-route-loading] .wrap{ opacity:.55; transition-delay:.12s; }
@@ -8908,10 +8859,7 @@ body[data-theme="light"] .wa-page button.wa-ghost{ background:none; box-shadow:n
 .rp-hero-text p{ margin:8px 0 0; font-size:12.5px; line-height:2.05; color:var(--muted); }
 
 .rp-ring{ position:relative; flex-shrink:0; width:74px; height:74px; }
-.rp-ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
-.rp-ring circle{ fill:none; stroke-width:5; }
-.rp-ring-track{ stroke:rgba(var(--surface-rgb),.24); }
-.rp-ring-fill{ stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .5s cubic-bezier(.22,1,.36,1); }
+.rp-ring .gring svg{ width:100%; height:100%; }
 .rp-ring-text{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.3; }
 .rp-ring-text b{ font-size:14px; font-weight:800; color:var(--text); }
 .rp-ring-text span{ font-size:10px; color:var(--muted); }
@@ -9341,7 +9289,7 @@ body[data-theme="light"] .task-check-btn, body:not([data-theme="light"]) .task-c
    components/PopupExitAnimator.tsx (lib/popupExit.ts) لحظه‌ی حذفِ یک
    پاپ‌آپ از DOM، یک کپیِ ایستا و غیرتعاملی (data-popup-ghost) از همان را سرِ
    جایش می‌گذارد و با Web Animations پایین می‌برد و محو می‌کند، بعد حذفش
-   می‌کند. پس «بستن»، «ثبت»، «تأیید» و «اعمال» همه یک خروجِ یکسان دارند.
+   می‌کند. پس «بستن»، «ثبت»، «تایید» و «اعمال» همه یک خروجِ یکسان دارند.
    پاپ‌آپی که خروجِ خودش را دارد (MentorSheet با framer) با `.m-sheet-wrap`
    یا `data-popup-exit="self"` مستثناست.
 
@@ -9512,3 +9460,116 @@ html[data-logging-out]::after{
 /* حینِ ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
 .auth-full-btn.is-busy > *{ vertical-align:middle; }
 .auth-full-btn.is-busy:disabled{ opacity:1; }
+
+/* ── حلقه‌ی پیشرفتِ مشترک (GradientRing) — همون پالتِ --ring-* داشبورد، سراسری ── */
+:root{
+  --ring-1a:#00C98D; --ring-1b:#7DF9CF;
+  --ring-2a:#3D7DFF; --ring-2b:#B06DFF;
+  --ring-3a:#FFB547; --ring-3b:#FF6F61;
+  --ring-over:#FF3D6E;
+}
+body[data-theme="light"]{
+  --ring-1a:#0A9A70; --ring-1b:#2ECB98;
+  --ring-2a:#2F64E6; --ring-2b:#8A4DEB;
+  --ring-3a:#EE920C; --ring-3b:#E5533E;
+  --ring-over:#D6204E;
+}
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+.gring svg{ display:block; }
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── نامِ طلایی (components/GoldenName.tsx) ─────────────────────────
+   دو طلای متفاوت (روشنِ لیمویی و عسلیِ گرم) که روی حروف جریان دارن + یک برقِ
+   کوتاه. فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+.golden-name{
+  --g1:#fff3b0; --g2:#f5c542; --g3:#d4891a; --g4:#ffe27a;
+  background-image:linear-gradient(100deg, var(--g3) 0%, var(--g2) 18%, var(--g1) 32%, var(--g2) 46%, var(--g3) 60%, var(--g4) 76%, var(--g3) 100%);
+  background-size:220% 100%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  filter:drop-shadow(0 0 6px rgba(245,197,66,.35));
+  animation:goldenFlow 4.5s linear infinite, goldenGlow 2.6s ease-in-out infinite;
+  font-weight:800;
+}
+body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; filter:drop-shadow(0 0 4px rgba(217,162,27,.3)); }
+@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:220% 50%; } }
+@keyframes goldenGlow{ 0%,100%{ filter:drop-shadow(0 0 4px rgba(245,197,66,.25)); } 50%{ filter:drop-shadow(0 0 10px rgba(245,197,66,.55)); } }
+@media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
+
+/* ── تیکِ واحدِ اپ (components/TickButton.tsx) — کپیِ .db-tl-node ِ داشبورد ──
+   عمدا بیرونِ .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالتِ تیک‌خورده
+   (همون گرادیانِ داشبورد)؛ حالتِ خالی کاملا شفافه و با ریستِ سراسریِ button{}
+   هم عوض نمی‌شه (background صریحا transparent). */
+.tick-btn{
+  --tick-size:26px;
+  position:relative; width:var(--tick-size); height:var(--tick-size); min-width:var(--tick-size); border-radius:50%; flex-shrink:0;
+  display:inline-flex; align-items:center; justify-content:center; padding:0; margin:0; color:#fff; cursor:pointer;
+  background:transparent; border:2px solid var(--muted2, var(--muted)); border-width:2px;
+  transition:border-color .25s ease, box-shadow .3s ease, background-color .25s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+@media (hover:hover){ .tick-btn:not(.is-disabled):not(.is-checked):hover{ border-color:var(--ring-1a); box-shadow:0 0 0 4px color-mix(in srgb, var(--ring-1a) 16%, transparent); } }
+.tick-btn.is-checked{
+  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b));
+  box-shadow:0 0 14px color-mix(in srgb, var(--ring-1a) 55%, transparent);
+}
+.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+.tick-btn.is-disabled.is-checked, .tick-btn.is-disabled.is-missed{ opacity:.75; }
+.tick-btn:focus-visible{ outline:2px solid var(--ring-1a); outline-offset:2px; }
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--ring-1b); pointer-events:none; }
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--ring-1b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+.tick-spark i:nth-child(3n){ background:var(--ring-2b); }
+.tick-spark i:nth-child(3n+1){ background:var(--ring-3a); }
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+@media (prefers-reduced-motion: reduce){ .tick-spark{ display:none; } }
+
+/* ── گزینه‌ی تیک‌خوردنی (components/TickOption.tsx) — بی‌بک‌گراند ── */
+.tick-option{
+  display:flex; align-items:center; gap:10px; width:100%; padding:6px 0; margin:0; border:none;
+  background:transparent; color:var(--text); font:inherit; font-size:13px; font-weight:600; text-align:start; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.tick-option:disabled{ cursor:not-allowed; opacity:.6; }
+.tick-option-text{ flex:1; min-width:0; }
+
+/* ── ویرایشگرِ آیتم‌های برنامه‌ی لیستی (components/RoutineChecklistEditor.tsx) ── */
+.checklist-editor{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.checklist-editor-row{ display:flex; align-items:center; gap:8px; }
+.checklist-editor-row input{ flex:1; min-width:0; margin:0; }
+.checklist-editor-num{ width:20px; flex-shrink:0; text-align:center; font-size:12px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; }
+.checklist-editor-add{ width:auto; flex-shrink:0; margin:0; }
+/* دکمه‌ی «حذف» ِ ردیف‌های ساعت flex:1 1 100% داره — این‌جا نباید فیلد رو له کنه */
+.checklist-editor-row .wsearch-newrow-remove-text{ order:0; flex:0 0 auto; width:auto; padding:0 2px; margin:0; }
+.checklist-editor-row input.wsearch-newform-name{ width:auto; flex:1 1 auto; min-width:0; }
+.checklist-editor-add:disabled{ opacity:.5; cursor:not-allowed; }
+.checklist-editor.field-error input{ border-color:#E05252; }
+
+/* ── برنامه‌ی لیستی در «روتین من» (DashTaskRow) ── */
+.checklist-chip{
+  display:inline-flex; align-items:center; gap:3px; flex-shrink:0; padding:2px 7px; border-radius:999px;
+  border:1px solid var(--box-line, rgba(255,255,255,.12)); background:transparent; color:var(--muted);
+  font-size:10.5px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer;
+}
+@media (min-width:640px){ .checklist-chip{ font-size:12px; padding:3px 9px; } }
+.checklist-items{ list-style:none; margin:0; padding:0 12px 10px; overflow:hidden; display:flex; flex-direction:column; gap:2px; }
+.checklist-item{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:7px 10px; margin-inline-start:26px; border-inline-start:2px solid color-mix(in srgb, var(--ring-1a) 30%, transparent);
+}
+.checklist-item-name{ font-size:12.5px; font-weight:600; color:var(--text); transition:color .25s ease, opacity .25s ease; }
+@media (min-width:640px){ .checklist-item-name{ font-size:14px; } }
+.checklist-item.is-done .checklist-item-name{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 60%, transparent); }
+/* آیتم‌های برنامه‌ی لیستی در پاپ‌آپِ روز (DayModal) */
+.day-task-items{ list-style:none; margin:-4px 0 6px; padding:0 40px 0 0; display:flex; flex-direction:column; gap:6px; }
+.day-task-items li{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600; }
+.day-task-items li.is-done span{ color:var(--muted); text-decoration:line-through; }

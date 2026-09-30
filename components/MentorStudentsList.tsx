@@ -10,6 +10,7 @@ import { MentorUserAvatar } from "./MentorUserAvatar";
 import { fmtDate, fmtRelative } from "@/lib/mentorFormat";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { StudentIndexResponse, StudentIndexRow } from "@/lib/mentorTypes";
+import { GoldenName } from "@/components/GoldenName";
 
 const ic = (Icon: typeof Users, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -109,7 +110,7 @@ export function MentorStudentsList({ data }: { data: StudentIndexResponse }) {
             <MentorRow
               href={`/mentor/students/${r.student.id}`}
               lead={<MentorUserAvatar avatarUrl={r.student.avatarUrl} name={name} size={36} />}
-              title={name}
+              title={<GoldenName golden={r.student.golden}>{name}</GoldenName>}
               sub={
                 <>
                   <span>{r.adherence === null ? "بدون ثبت در 7 روز" : `پایبندی ${pct(r.adherence)}`}</span>

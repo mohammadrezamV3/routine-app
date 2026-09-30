@@ -143,7 +143,7 @@ async function handlePATCH(req: NextRequest) {
 //
 // پیش‌فرض «آرشیو» است، نه حذف: تاریخچه‌ی معاملات ارزشمندترین دارایی این
 // ماژول است و پاک‌کردنش با یک کلیک برگشت‌ناپذیر خواهد بود. حذف کامل فقط
-// وقتی انجام می‌شود که کلاینت صریحا mode=purge بفرستد (پشت تأیید تایپی).
+// وقتی انجام می‌شود که کلاینت صریحا mode=purge بفرستد (پشت تایید تایپی).
 async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;

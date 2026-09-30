@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   } else if (b.program && typeof b.program === "object") {
     source = b.program;
   } else {
-    return badRequest("برنامه‌ی مبدأ لازم است");
+    return badRequest("برنامه‌ی مبدا لازم است");
   }
 
   const t = templateDataFromBody(source);

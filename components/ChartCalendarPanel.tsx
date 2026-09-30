@@ -71,7 +71,7 @@ export function ChartCalendarPanel() {
             className={`trade-ghost-btn${highOnly ? " active" : ""}`}
             onClick={() => setHighOnly((v) => !v)}
           >
-            فقط تأثیر بالا
+            فقط تاثیر بالا
           </button>
           <button type="button" className="trade-icon-btn" onClick={load} disabled={loading} aria-label="به‌روزرسانی">
             {loading ? <Loader2 size={14} className="trade-spin" /> : <RefreshCw size={14} />}

@@ -103,7 +103,11 @@ export type DashboardData = {
     isAdmin: boolean;
     isSuperAdmin: boolean;
     memberSince: string;
+    /** همه‌ی اچیومنت‌ها باز شده → نامِ طلایی (lib/achievementsServer.ts) */
+    golden: boolean;
   };
+  /** «روتین من»: در دوره‌ی ۱۴ روزه‌ی رایگان → روزهای باقی‌مونده؛ null = خریده/سوپریوزر/تموم‌شده */
+  routineTrial: { daysLeft: number } | null;
   plan: { name: string; key: string; status: "ACTIVE" | "TRIAL"; endsAt: string } | null;
   /** ماژول‌های فعال (سوپریوزر: همه) */
   modules: string[];

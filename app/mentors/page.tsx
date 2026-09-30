@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { TickButton } from "@/components/TickButton";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Bookmark, Filter, Search, SearchX, Sparkles, Star, Users, X } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
@@ -72,7 +73,7 @@ function Discovery() {
 
   const setFilters = useCallback((patch: Partial<MentorFilters>) => push({ ...filters, ...patch }), [push, filters]);
 
-  // جستجو با تأخیرِ کوتاه؛ متنِ فیلد محلی است و با نشانی (برگشت/جلو) هم‌گام می‌ماند
+  // جستجو با تاخیرِ کوتاه؛ متنِ فیلد محلی است و با نشانی (برگشت/جلو) هم‌گام می‌ماند
   const [qInput, setQInput] = useState(filters.q);
   const lastQ = useRef(filters.q);
   useEffect(() => {
@@ -226,7 +227,7 @@ function SelectField({
 function CheckField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="auth-remember-label mentor-filter-check">
-      <input type="checkbox" className="auth-checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <TickButton shape="square" size={22} checked={checked} onToggle={() => onChange(!checked)} />
       {label}
     </label>
   );

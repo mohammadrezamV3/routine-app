@@ -25,9 +25,9 @@
 export type EconomicImpact = "LOW" | "MEDIUM" | "HIGH";
 
 export const IMPACT_LABELS: Record<EconomicImpact, string> = {
-  HIGH: "تأثیر بالا",
-  MEDIUM: "تأثیر متوسط",
-  LOW: "تأثیر کم",
+  HIGH: "تاثیر بالا",
+  MEDIUM: "تاثیر متوسط",
+  LOW: "تاثیر کم",
 };
 
 export const IMPACT_COLORS: Record<EconomicImpact, string> = {
@@ -199,7 +199,7 @@ function buildDefaultCalendarUrl(fast: boolean | undefined): string {
 // ECMAScript نیست، فقط یک fallbackِ غیررسمیِ V8 است که با TZ سرور فرق
 // می‌کند). این‌جا صریحاً UTC فرض می‌شود.
 //
-// ⚠️ این فرض تأیید‌نشده است (مستندِ jblanked.com از پشتِ پراکسیِ این محیط
+// ⚠️ این فرض تایید‌نشده است (مستندِ jblanked.com از پشتِ پراکسیِ این محیط
 // در دسترس نبود) — بعدِ اولین sync واقعی، ساعتِ یک رویدادِ شناخته‌شده
 // (مثلاً NFP) را با MT5/سایتِ خودِ JBlanked مقایسه کن؛ اگر آفست داشت،
 // همین‌جا (`JBLANKED_DATE_RE`) باید یک offset ثابت اضافه شود.
@@ -318,7 +318,7 @@ function normalizeImpact(raw: string | null): EconomicImpact {
   return "LOW";
 }
 
-// JBlanked سطحِ تأثیر را در فیلدِ `Impact` («High»/«Medium»/«Low») می‌دهد؛
+// JBlanked سطحِ تاثیر را در فیلدِ `Impact` («High»/«Medium»/«Low») می‌دهد؛
 // «Importance» هم نگه داشته شده برایِ سازگاری با فیدهایِ عددیِ دیگر
 // (مثلِ Trading Economics که این ماژول قبلاً به آن وصل بود).
 const IMPACT_FIELD_KEYS = ["impact", "importance", "Impact", "Importance"];
@@ -385,7 +385,7 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 }
 
 // بدونِ سقفِ زمانی، یک فیدِ کندپاسخ یا فیلترشده (این دامنه از داخلِ ایران
-// گاهی با تأخیرِ خیلی زیاد/قطعیِ اتصال مواجه می‌شود) کل sync رو تا مدتِ
+// گاهی با تاخیرِ خیلی زیاد/قطعیِ اتصال مواجه می‌شود) کل sync رو تا مدتِ
 // نامعلومی معلق نگه می‌داشت — از بیرون دقیقاً شبیهِ «دیتا نمیاد» بود، چون
 // نه خطا می‌داد نه جواب. ۱۲ ثانیه برایِ یک فیدِ JSONِ سبک کافی‌ست.
 async function fetchOneFeed(

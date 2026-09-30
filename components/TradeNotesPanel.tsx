@@ -61,7 +61,7 @@ export function TradeNotesPanel({
     }
   }, [query, filterTags]);
 
-  // جست‌وجو با تأخیر — تا هر حرفی که تایپ می‌شود یک درخواست نفرستد
+  // جست‌وجو با تاخیر — تا هر حرفی که تایپ می‌شود یک درخواست نفرستد
   useEffect(() => {
     const t = setTimeout(load, query ? 300 : 0);
     return () => clearTimeout(t);

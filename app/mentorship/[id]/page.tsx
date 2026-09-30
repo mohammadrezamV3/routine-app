@@ -24,6 +24,7 @@ import { publicUserName } from "@/lib/mentorTypes";
 import { categoryLabel } from "@/components/MentorBadges";
 import { fmtDate, fmtDay, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
+import { GoldenName } from "@/components/GoldenName";
 
 type Role = "student" | "mentor";
 
@@ -61,7 +62,7 @@ export default function MentorshipPage() {
     <div className="mentor-head-custom">
       <MentorUserAvatar name={name} avatarUrl={rel.row.counterpart.avatarUrl} size={48} />
       <div className="mentor-rel-id">
-        <h1>{name}</h1>
+        <h1><GoldenName golden={rel.row.counterpart.golden}>{name}</GoldenName></h1>
         <div className="mentor-rel-sub">
           <span>{rel.role === "student" ? "مربی تو" : "شاگرد تو"}</span>
           <MentorshipStatusBadge status={rel.row.status} />

@@ -19,7 +19,7 @@ export default function HapticsSettingsPage() {
   function toggle(next: boolean) {
     setHapticsEnabled(next);
     setHaptics(next);
-    // روشن‌کردن با یک لرزشِ نمونه تأیید می‌شه تا کاربر حسش کنه
+    // روشن‌کردن با یک لرزشِ نمونه تایید می‌شه تا کاربر حسش کنه
     if (next) {
       try { navigator.vibrate?.(12); } catch {}
     }

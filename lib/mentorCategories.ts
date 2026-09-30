@@ -24,7 +24,7 @@ export function sanitizeCategories(v: unknown): MentorCategory[] {
 export const VERIFICATION_LABELS = {
   NOT_PROVIDED: "ارسال نشده",
   PENDING: "در صف بررسی ادمین‌های آریون",
-  VERIFIED: "تأییدشده",
+  VERIFIED: "تاییدشده",
   REJECTED: "رد شده",
 } as const;
 
@@ -32,7 +32,7 @@ export const VERIFICATION_LABELS = {
 export const VERIFICATION_SHORT: Record<keyof typeof VERIFICATION_LABELS, string> = {
   NOT_PROVIDED: "ارسال نشده",
   PENDING: "در صف بررسی",
-  VERIFIED: "تأییدشده",
+  VERIFIED: "تاییدشده",
   REJECTED: "رد شده",
 };
 

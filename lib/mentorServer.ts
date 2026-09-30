@@ -15,11 +15,14 @@ import { loadReservedSeats } from "@/lib/mentorWaitlistServer";
 // ───────────────────────── کاربرِ عمومی ─────────────────────────
 
 /** تنها فیلدهای کاربر که به طرفِ مقابل نشون داده می‌شه — هرگز ایمیل/شماره */
-export const PUBLIC_USER_SELECT = { id: true, name: true, lastName: true, username: true, avatarUrl: true } as const;
-export type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null };
+export const PUBLIC_USER_SELECT = { id: true, name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } as const;
+/** ورودیِ toPublicUser (ردیفِ prisma با PUBLIC_USER_SELECT) — goldenSince خام هرگز به کلاینت نمی‌رسه */
+export type PublicUserRow = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince?: Date | null };
+/** شکلِ خروجی: golden فقط یک بولینه (نامِ طلایی) */
+export type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; golden?: boolean };
 
-export function toPublicUser(u: PublicUser): PublicUser {
-  return { id: u.id, name: u.name, lastName: u.lastName, username: u.username, avatarUrl: u.avatarUrl };
+export function toPublicUser(u: PublicUserRow): PublicUser {
+  return { id: u.id, name: u.name, lastName: u.lastName, username: u.username, avatarUrl: u.avatarUrl, golden: !!u.goldenSince };
 }
 
 // ───────────────────────── تاریخ ─────────────────────────
@@ -97,12 +100,12 @@ export async function blockedUserIds(viewerId: string): Promise<string[]> {
 
 /**
  * شرطِ «قابلِ دیدن در کشف»: منتشرشده، معلق‌نشده، صاحبش مسدود/حذف نشده، و
- * هویتِ تأییدشده. احرازِ هویت برای هر منتور اجباریه (round 3): تا ادمین هویت
- * رو تأیید نکنه، منتور نه در جستجو دیده می‌شه، نه درخواستِ شاگرد می‌گیره،
+ * هویتِ تاییدشده. احرازِ هویت برای هر منتور اجباریه (round 3): تا ادمین هویت
+ * رو تایید نکنه، منتور نه در جستجو دیده می‌شه، نه درخواستِ شاگرد می‌گیره،
  * نه دعوت می‌فرسته/می‌پذیره (IDENTITY_VERIFIED_WHERE در روت‌های رابطه).
  */
 export const IDENTITY_VERIFIED_WHERE = { identityStatus: "VERIFIED" } as const satisfies Prisma.MentorProfileWhereInput;
-export const MENTOR_IDENTITY_REQUIRED_MSG = "تا تأیید هویت توسط ادمین‌های آریون، امکان پذیرش شاگرد نیست";
+export const MENTOR_IDENTITY_REQUIRED_MSG = "تا تایید هویت توسط ادمین‌های آریون، امکان پذیرش شاگرد نیست";
 export const DISCOVERABLE_PROFILE_WHERE: Prisma.MentorProfileWhereInput = {
   published: true,
   suspendedAt: null,
@@ -121,6 +124,7 @@ export type MentorCard = {
   userId: string;
   name: string;
   avatarUrl: string | null;
+  golden?: boolean;
   headline: string | null;
   categories: string[];
   // فقط وقتی categories شاملِ ROUTINE باشه، وگرنه null
@@ -172,7 +176,7 @@ export function publicRoutineRole(p: { categories: string[]; routineRole: string
 }
 
 export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): MentorCard {
-  // فقط مدرکِ دسته‌هایی که الان روی پروفایلن — مدرکِ دسته‌ی حذف‌شده نباید «تأییدشده» جلوه کنه
+  // فقط مدرکِ دسته‌هایی که الان روی پروفایلن — مدرکِ دسته‌ی حذف‌شده نباید «تاییدشده» جلوه کنه
   const certifications = p.categories.map((category) => ({
     category,
     verified: p.credentials.some((c) => c.category === category && c.status === "VERIFIED"),
@@ -181,6 +185,7 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
     userId: p.userId,
     name: displayName(p.user),
     avatarUrl: p.user.avatarUrl,
+    golden: !!p.user.goldenSince,
     headline: p.headline,
     categories: p.categories,
     routineRole: publicRoutineRole(p),

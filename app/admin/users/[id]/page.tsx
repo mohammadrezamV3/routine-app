@@ -278,8 +278,8 @@ function OverviewTab({ data }: { data: Detail }) {
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title"><UserRound size={15} className="admin-title-icon" />اطلاعات حساب</span></div>
         <div className="admin-info-grid">
-          <InfoRow k="ایمیل" ltr v={u.email} extra={u.email ? (u.emailVerifiedAt ? "تأییدشده" : "تأییدنشده") : undefined} />
-          <InfoRow k="شماره" ltr v={u.phone} extra={u.phone ? (u.phoneVerifiedAt ? "تأییدشده" : "تأییدنشده") : undefined} />
+          <InfoRow k="ایمیل" ltr v={u.email} extra={u.email ? (u.emailVerifiedAt ? "تاییدشده" : "تاییدنشده") : undefined} />
+          <InfoRow k="شماره" ltr v={u.phone} extra={u.phone ? (u.phoneVerifiedAt ? "تاییدشده" : "تاییدنشده") : undefined} />
           <InfoRow k="جنسیت" v={u.gender === "male" ? "مرد" : u.gender === "female" ? "زن" : null} />
           <InfoRow k="تاریخ تولد" v={u.birthDate ? formatDateShort(u.birthDate) : null} />
           <InfoRow k="زبان" v={u.locale} />

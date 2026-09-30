@@ -136,7 +136,7 @@ export function MentorStagger({
   );
 }
 
-/** یک پله داخلِ MentorStagger؛ `index` برای سقفِ تأخیر (پیش‌فرض ترتیبِ رندر نیست، پس بدهید) */
+/** یک پله داخلِ MentorStagger؛ `index` برای سقفِ تاخیر (پیش‌فرض ترتیبِ رندر نیست، پس بدهید) */
 export function MentorStaggerItem({
   as = "div", index = 0, className, children,
 }: {

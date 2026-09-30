@@ -77,7 +77,7 @@ async function statsForUserCalorie(userId: string) {
   return { completed, total, pct: Math.round((completed / total) * 100), streak };
 }
 
-// GET /api/friends?module=exercise|calorie → لیست دوستان تأییدشده + پیشرفت
+// GET /api/friends?module=exercise|calorie → لیست دوستان تاییدشده + پیشرفت
 // هرکدوم؛ exercise یعنی پیشرفت بدنسازی، calorie یعنی روزهای موفق کالری،
 // وگرنه پیشرفت روتین روزانه (پیش‌فرض، برای داشبورد اصلی).
 export async function GET(req: NextRequest) {
@@ -90,8 +90,8 @@ export async function GET(req: NextRequest) {
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
     include: {
-      requester: { select: { id: true, name: true, username: true, avatarUrl: true } },
-      addressee: { select: { id: true, name: true, username: true, avatarUrl: true } },
+      requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
+      addressee: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
     },
   });
 
@@ -118,6 +118,7 @@ export async function GET(req: NextRequest) {
         name: other.name || other.username || "کاربر",
         username: other.username,
         avatarUrl: other.avatarUrl,
+        golden: !!other.goldenSince,
         favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
         ...stats,
       };

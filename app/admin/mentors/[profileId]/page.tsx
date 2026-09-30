@@ -385,7 +385,7 @@ function VerificationRow({
           <div className="admin-head-actions">
             {status !== "VERIFIED" && docs.length > 0 && (
               <button type="button" className="admin-btn primary" onClick={() => onAction("VERIFIED")}>
-                <BadgeCheck {...IS} aria-hidden /> تأیید
+                <BadgeCheck {...IS} aria-hidden /> تایید
               </button>
             )}
             {(status !== "NOT_PROVIDED" || docs.length > 0) && (
@@ -516,7 +516,7 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
   }
 
   return (
-    <AdminModal title="تعلیق مربی‌گری" eyebrow="تأیید اقدام" onClose={onClose}>
+    <AdminModal title="تعلیق مربی‌گری" eyebrow="تایید اقدام" onClose={onClose}>
       <div className="admin-modal-text">
         پروفایل از فهرست مربی‌ها حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.
       </div>

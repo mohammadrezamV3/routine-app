@@ -189,7 +189,7 @@ function MentorDocRow({
     <MentorRow
       lead={icon}
       title={title}
-      sub={<span>{status === "VERIFIED" ? "مدرک تأییدشده حذف نمی‌شود؛ فایل تازه آن را به صف بررسی برمی‌گرداند" : hint}</span>}
+      sub={<span>{status === "VERIFIED" ? "مدرک تاییدشده حذف نمی‌شود؛ فایل تازه آن را به صف بررسی برمی‌گرداند" : hint}</span>}
       end={<StatusChip status={status} />}
       below={
         <>

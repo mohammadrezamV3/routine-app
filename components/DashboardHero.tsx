@@ -6,19 +6,21 @@
 // امروز به‌شکلِ نقطه روش هستن (پر = انجام‌شده).
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
-import { awakeProgress, dayPhase, minutesUntilSleep, PHASE_GREETING, type DayPhase } from "@/lib/dashboardCompute";
+import { awakeProgress, dayPhase, PHASE_GREETING, type DayPhase } from "@/lib/dashboardCompute";
 import { getStreakTier } from "@/lib/streakTier";
 import type { DashboardData } from "@/lib/dashboardTypes";
 import type { TodayTask } from "@/lib/useDashboardRoutine";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
+import { GoldenName } from "./GoldenName";
+import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
 
 const PHASE_ICON: Record<DayPhase, DashIconName> = { dawn: "sunrise", day: "sun", dusk: "sunset", night: "moon" };
 
-function useNow(stepMs = 30_000) {
+export function useNow(stepMs = 30_000) {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
     setNow(new Date());
@@ -28,14 +30,47 @@ function useNow(stepMs = 30_000) {
   return now;
 }
 
-function hhmm(d: Date) {
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+const two = (n: number) => String(n).padStart(2, "0");
+
+// ساعتِ زنده — interval ِ یک‌ثانیه‌ای فقط داخلِ همین کامپوننته تا کلِ هیرو هر ثانیه رندر نشه
+function LiveClock() {
+  const [t, setT] = useState<Date | null>(null);
+  useEffect(() => {
+    setT(new Date());
+    const id = setInterval(() => setT(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (!t) return <span className="db-ribbon-clock" dir="ltr" aria-hidden="true">--:--<span className="s">:--</span></span>;
+  return (
+    <span className="db-ribbon-clock" dir="ltr" role="timer" aria-label="ساعتِ فعلی">
+      {two(t.getHours())}<i>:</i>{two(t.getMinutes())}<i className="s">:</i><span className="s">{two(t.getSeconds())}</span>
+    </span>
+  );
+}
+
+// رنگِ خورشید/ماه از زرد (صبح) تا بنفش (شب) بر اساسِ پیشرفت
+const SUN_STOPS: [number, [number, number, number]][] = [
+  // شب = مهتابیِ آبیِ روشن روی سرمه‌ای، نه بنفش (نشانگر باید روی نوارِ تیره دیده بشه)
+  [0, [255, 211, 90]], [0.3, [255, 159, 67]], [0.52, [240, 112, 90]], [0.76, [120, 160, 230]], [1, [205, 222, 255]],
+];
+function sunColor(p: number) {
+  const x = Math.max(0, Math.min(1, p));
+  for (let i = 1; i < SUN_STOPS.length; i++) {
+    const [b, cb] = SUN_STOPS[i];
+    if (x <= b) {
+      const [a, ca] = SUN_STOPS[i - 1];
+      const k = (x - a) / (b - a || 1);
+      return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(",")})`;
+    }
+  }
+  return "rgb(205,222,255)";
 }
 
 export function DashboardHero({
   data,
   routine,
   onOpenCommand,
+  routineLocked = false,
 }: {
   data: DashboardData | null;
   routine: {
@@ -47,8 +82,28 @@ export function DashboardHero({
     hasWakeSleep: boolean;
   };
   onOpenCommand: () => void;
+  routineLocked?: boolean;
 }) {
   const now = useNow();
+  const heroRef = useRef<HTMLElement>(null);
+  // همان نورِ دنبال‌کننده‌ی موسِ BentoCard
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof window === "undefined") return;
+    if (!window.matchMedia("(hover:hover) and (pointer:fine)").matches) return;
+    let raf = 0;
+    const onMove = (e: PointerEvent) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        el.style.setProperty("--my", `${e.clientY - r.top}px`);
+      });
+    };
+    el.addEventListener("pointermove", onMove, { passive: true });
+    return () => { el.removeEventListener("pointermove", onMove); if (raf) cancelAnimationFrame(raf); };
+  }, []);
   const phase = now ? dayPhase(now) : "day";
   const firstName = data?.user.name.split(" ")[0] ?? "";
 
@@ -65,8 +120,8 @@ export function DashboardHero({
   const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : ex?.week.target ? ex.week.done / ex.week.target : 0;
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
   const rings: { key: string; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string }[] = [
-    { key: "routine", label: "روتین", value: routine.stats.total ? routine.stats.completed / routine.stats.total : 0, display: routine.stats.total ? `${faNum(routine.stats.completed)}/${faNum(routine.stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"] as [string, string], show: true, href: "/weekly" },
-    { key: "exercise", label: ex?.today.isGymDay ? "تمرینِ امروز" : "تمرینِ هفته", value: exVal, display: ex ? (ex.today.isGymDay ? (ex.today.done ? "تمام" : `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}`) : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"] as [string, string], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
+    { key: "routine", label: "روتین", value: routine.stats.total ? routine.stats.completed / routine.stats.total : 0, display: routine.stats.total ? `${faNum(routine.stats.completed)}/${faNum(routine.stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"] as [string, string], show: !routineLocked, href: "/weekly" },
+    { key: "exercise", label: ex?.today.isGymDay ? "تمرینِ امروز" : "تمرینِ هفته", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"] as [string, string], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
     { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: (calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"]) as [string, string], show: !!cal?.target, href: "/exercise?tab=calorie" },
   ];
   const shownRings = rings.filter((r) => r.show);
@@ -90,7 +145,7 @@ export function DashboardHero({
   const tier = getStreakTier(routine.streak);
 
   return (
-    <motion.section className="db-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: D_EASE }}>
+    <motion.section ref={heroRef as any} className="db-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: D_EASE }}>
       <div className="db-hero-main">
         <div className="db-hero-greet">
           <motion.span
@@ -105,11 +160,10 @@ export function DashboardHero({
           <div className="db-hero-titles">
             <h1 className="db-hero-title">
               {PHASE_GREETING[phase]}
-              {firstName ? <>، <span className="db-hero-name">{firstName}</span></> : null}
+              {firstName ? <>، <GoldenName golden={data?.user.golden}><span className="db-hero-name">{firstName}</span></GoldenName></> : null}
             </h1>
             <p className="db-hero-date">
               {dateLine || <Skel w={140} h={12} />}
-              {now && <span className="db-hero-clock" dir="ltr">{hhmm(now)}</span>}
             </p>
           </div>
         </div>
@@ -117,10 +171,22 @@ export function DashboardHero({
         <p className="db-hero-insight" aria-live="polite">{insight ?? <Skel w="70%" h={13} />}</p>
 
         <div className="db-hero-chips">
-          <Link href="/weekly" prefetch className={`db-chip db-chip-streak tier-${tier.tier}`} title={tier.name}>
+          <Link href="/streak" prefetch className={`db-chip db-chip-streak tier-${tier.tier}`} title={tier.name}>
             <DashIcon name="flame" className="dbi-live" />
             {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشتِ‌سرهم</>}
           </Link>
+          {data?.routineTrial && (
+            <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
+              <DashIcon name="routine" />
+              روتین من: <b>{faNum(data.routineTrial.daysLeft)}</b> روز رایگان مونده
+            </Link>
+          )}
+          {routineLocked && (
+            <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className="db-chip db-chip-trial is-urgent">
+              <DashIcon name="lock" />
+              خرید «روتین من»
+            </Link>
+          )}
           {data?.plan && (
             <Link href="/account/subscription" prefetch className="db-chip">
               <DashIcon name="card" />
@@ -217,9 +283,8 @@ function toMin(v: string) {
   return h * 60 + m;
 }
 
-function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date | null; tasks: TodayTask[]; wake: string; sleep: string; configured: boolean }) {
+export function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date | null; tasks: TodayTask[]; wake: string; sleep: string; configured: boolean }) {
   const p = now ? awakeProgress(now, wake, sleep) : null;
-  const left = now ? minutesUntilSleep(now, wake, sleep) : null;
   const w = toMin(wake);
   const span = ((toMin(sleep) <= w ? toMin(sleep) + 1440 : toMin(sleep)) - w) || 1440;
   const pos = (min: number) => {
@@ -228,14 +293,13 @@ function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date | null; 
     return Math.max(0, Math.min(1, (m - w) / span));
   };
   const dots = tasks.filter((t) => t.startMin !== null);
-  const leftLabel = left === null ? "" : left === 0 ? "وقتِ استراحته" : left < 60 ? `${faNum(left)} دقیقه تا پایانِ روزت` : `${faNum(Math.floor(left / 60))} ساعت${left % 60 ? ` و ${faNum(left % 60)} دقیقه` : ""} تا پایانِ روزت`;
 
   return (
     <div className="db-ribbon" aria-label="نوارِ روز">
       <div className="db-ribbon-head">
         <span className="db-ribbon-end"><DashIcon name="sunrise" /> <span dir="ltr">{wake}</span></span>
         <span className="db-ribbon-left">
-          {leftLabel}
+          <LiveClock />
           {!configured && <Link href="/weekly" prefetch className="db-ribbon-set">تنظیمِ ساعتِ خواب</Link>}
         </span>
         <span className="db-ribbon-end"><span dir="ltr">{sleep}</span> <DashIcon name="bed" /></span>
@@ -243,8 +307,8 @@ function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date | null; 
       <div className="db-ribbon-track">
         <motion.span
           className="db-ribbon-fill"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: p ?? 0 }}
+          initial={{ clipPath: "inset(0 0 0 100%)" }}
+          animate={{ clipPath: `inset(0 0 0 ${(1 - (p ?? 0)) * 100}%)` }}
           transition={{ duration: 1.6, ease: D_EASE, delay: 0.3 }}
         />
         {dots.map((t, i) => (
@@ -261,6 +325,7 @@ function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date | null; 
         {p !== null && (
           <motion.span
             className="db-ribbon-sun"
+            style={{ ["--sun-c" as any]: sunColor(p) }}
             initial={{ insetInlineStart: "0%", opacity: 0 }}
             animate={{ insetInlineStart: `${p * 100}%`, opacity: 1 }}
             transition={{ duration: 1.6, ease: D_EASE, delay: 0.3 }}

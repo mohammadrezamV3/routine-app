@@ -8,10 +8,10 @@ import { advanceWaitlist, countWaiting, loadMyWaitlist } from "@/lib/mentorWaitl
 
 const REVIEWS_LIMIT = 30;
 
-type ReviewRow = { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null } };
+type ReviewRow = { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince: Date | null } };
 
 function toReview(r: ReviewRow) {
-  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl } };
+  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince } };
 }
 
 // GET /api/mentors/:mentorId (mentorId = userIdِ منتور) → پروفایلِ عمومی + نظرات.
@@ -49,13 +49,13 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
       where: { mentorId, status: "VISIBLE" },
       orderBy: { createdAt: "desc" },
       take: REVIEWS_LIMIT,
-      select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true } } },
+      select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } } },
     }),
     isSelf
       ? Promise.resolve(null)
       : prisma.mentorReview.findUnique({
           where: { mentorId_studentId: { mentorId, studentId: me } },
-          select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true } } },
+          select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } } },
         }),
     isSelf ? Promise.resolve(false) : isMentorSaved(me, mentorId),
     isSelf ? Promise.resolve(null) : loadMyWaitlist(mentorId, me),
@@ -64,7 +64,7 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   if (!profile) return notFound();
 
   if (!isSelf) {
-    // احرازِ هویت اجباریه: منتورِ تأییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
+    // احرازِ هویت اجباریه: منتورِ تاییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
     const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
     const related = !!myMentorship && myMentorship.status !== "BLOCKED";
     if (!discoverable && !related) return notFound();

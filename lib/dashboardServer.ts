@@ -11,6 +11,7 @@
 // اعتبارسنجی و محدودش می‌کنه (±۲ روز از الان).
 
 import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
+import { ROUTINE_TRIAL_MS } from "./trial";
 import { prisma } from "./prisma";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
 import { computeExerciseStreak, type ExerciseLogRange } from "./exerciseStats";
@@ -88,7 +89,11 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
   }
   const todayDay = days.find((d) => d?.day === dayName);
   const todayLog = logs[date];
-  const doneItems = todayLog?.completedItems.length ?? 0;
+  const planItems = (Array.isArray(todayDay?.items) ? todayDay!.items! : []).filter((n): n is string => typeof n === "string");
+  // هر حرکت فقط وقتی «انجام‌شده»ست که واقعا تیک خورده باشه — «پایانِ تمرین»
+  // (completed) به‌تنهایی یعنی جلسه بسته شده، نه اینکه همه‌ی حرکت‌ها انجام شدن.
+  const doneSet = new Set(todayLog?.completedItems ?? []);
+  const doneItems = planItems.filter((n) => doneSet.has(n)).length;
 
   const diffToSat = (jsDayOf(date) + 1) % 7;
   let weekDone = 0;
@@ -107,14 +112,11 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
       dayName,
       isGymDay: gymDays.includes(dayName),
       focus: typeof todayDay?.focus === "string" && todayDay.focus.trim() ? todayDay.focus : null,
-      itemCount: Array.isArray(todayDay?.items) ? todayDay!.items!.length : 0,
+      itemCount: planItems.length,
       doneItems,
       started: todayStarted || doneItems > 0 || !!todayLog?.completed,
       done: !!todayLog?.completed,
-      items: (Array.isArray(todayDay?.items) ? todayDay!.items! : [])
-        .filter((n): n is string => typeof n === "string")
-        .slice(0, 6)
-        .map((name) => ({ name, done: !!todayLog?.completed || !!todayLog?.completedItems.includes(name) })),
+      items: planItems.slice(0, 6).map((name) => ({ name, done: doneSet.has(name) })),
     },
     week: { done: weekDone, target: gymDays.length },
     streak,
@@ -367,7 +369,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
     prisma.user.findUnique({
       where: { id: userId },
       select: {
-        isBlocked: true, name: true, lastName: true, username: true, avatarUrl: true, createdAt: true,
+        isBlocked: true, name: true, lastName: true, username: true, avatarUrl: true, createdAt: true, goldenSince: true,
         moduleAccess: { select: { module: true, active: true, expiresAt: true } },
         subscriptions: {
           where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
@@ -402,6 +404,12 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   ]);
 
   const sub = user.subscriptions[0];
+  // «روتین من» در دوره‌ی رایگان: ردیفِ ROUTINE با انقضا و بدونِ هیچ اشتراکِ فعال
+  const routineRow = user.moduleAccess.find((r) => r.module === ModuleKey.ROUTINE);
+  const routineMsLeft = routineRow?.active && routineRow.expiresAt ? routineRow.expiresAt.getTime() - Date.now() : 0;
+  const routineTrial = !isSuperAdmin && !sub && routineMsLeft > 0 && routineMsLeft <= ROUTINE_TRIAL_MS
+    ? { daysLeft: Math.ceil(routineMsLeft / 86_400_000) }
+    : null;
   return {
     generatedAt: new Date().toISOString(),
     user: {
@@ -410,7 +418,9 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
       isAdmin: !!flags?.isAdmin || isSuperAdmin,
       isSuperAdmin,
       memberSince: user.createdAt.toISOString(),
+      golden: !!user.goldenSince,
     },
+    routineTrial,
     plan: sub ? { name: sub.plan.nameFa, key: sub.plan.key, status: sub.status as "ACTIVE" | "TRIAL", endsAt: sub.currentPeriodEnd.toISOString() } : null,
     modules: Array.from(mods),
     features,

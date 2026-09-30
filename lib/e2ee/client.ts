@@ -62,7 +62,7 @@ import {
 //   • حسابِ گوگل (بی‌رمز) یا نشستی که از پیش از این تغییر باز مانده: کلیدِ DEVICEِ
 //     همین دستگاه. پیام‌ها برای همه‌ی کلیدهای فعالِ دو طرف بسته‌بندی می‌شوند، پس هر
 //     دستگاه از لحظه‌ی ساختِ کلیدش همه‌ی پیام‌های تازه را می‌خواند. سابقه‌ی قبلی با
-//     «انتقال سابقه از دستگاه دیگر» (تأیید با کدِ کوتاه روی دستگاهِ قدیمی) می‌آید.
+//     «انتقال سابقه از دستگاه دیگر» (تایید با کدِ کوتاه روی دستگاهِ قدیمی) می‌آید.
 //   • پشتیبانِ قدیمیِ «رمز گفت‌وگو»: یک بار رمزِ قدیمی خواسته و به روشِ تازه منتقل می‌شود.
 
 export type KeyKind = "SYNCED" | "DEVICE";
@@ -653,7 +653,7 @@ async function linkStateFor(userId: string, me: KeysResponse, identity: Identity
   if (!target) return null;
   const code = await linkCode(userId, l.targetVersion, target.publicKey, l.id);
   if (mine) return { role: "requester", id: l.id, code, status: l.status, moved: l.moved };
-  // تأییدکننده فقط دستگاهی است که کلیدِ دیگری (با سابقه) دارد
+  // تاییدکننده فقط دستگاهی است که کلیدِ دیگری (با سابقه) دارد
   if (l.status !== "PENDING" || !target.active || !identity.ring.some((r) => r.version !== l.targetVersion)) return null;
   return { role: "approver", id: l.id, code, targetVersion: l.targetVersion, deviceLabel: target.deviceLabel };
 }

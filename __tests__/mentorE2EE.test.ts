@@ -124,7 +124,7 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     await expect(decryptMessage(eveKeys.fromStudent, e, MCTX)).rejects.toBeInstanceOf(E2EEDecryptError);
   });
 
-  it("فرانکینگ: تعهد با متن/زمینه‌ی دیگر یا fkِ دیگر تأیید نمی‌شود", async () => {
+  it("فرانکینگ: تعهد با متن/زمینه‌ی دیگر یا fkِ دیگر تایید نمی‌شود", async () => {
     const fk = crypto.getRandomValues(new Uint8Array(32));
     const c = toB64(await computeCommitment(fk, MCTX, "متن اصلی"));
     expect(await verifyCommitment(toB64(fk), c, MCTX, "متن اصلی")).toBe(true);
@@ -459,8 +459,8 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
 
 // ───────────────────────── گزارش (فرانکینگ) ─────────────────────────
 
-describe("گزارشِ پیام: فقط همان یک پیامِ تأییدشده به ادمین می‌رسد", () => {
-  it("جعلِ متن/کلید رد؛ گزارشِ درست دقیقا یک متنِ تأییدشده (رمزشده در سکون) ذخیره می‌کند؛ ادمین پیام‌های دیگر را نمی‌بیند", async () => {
+describe("گزارشِ پیام: فقط همان یک پیامِ تاییدشده به ادمین می‌رسد", () => {
+  it("جعلِ متن/کلید رد؛ گزارشِ درست دقیقا یک متنِ تاییدشده (رمزشده در سکون) ذخیره می‌کند؛ ادمین پیام‌های دیگر را نمی‌بیند", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -485,7 +485,7 @@ describe("گزارشِ پیام: فقط همان یک پیامِ تأییدشد�
     expect((await report({ targetType: "MESSAGE", targetId: mineId, reason: "x", franking: { text: "پیام خصوصی شاگرد", frankingKey: mine.frankingKey } })).status).toBe(404);
     expect(await prisma.mentorReport.count({ where: { reporterId: s } })).toBe(0);
 
-    // دست‌کاریِ برچسبِ سرور در DB (مثلا کسی با دسترسیِ نوشتن) → قابلِ تأیید نیست
+    // دست‌کاریِ برچسبِ سرور در DB (مثلا کسی با دسترسیِ نوشتن) → قابلِ تایید نیست
     const orig = await prisma.mentorMessage.findUniqueOrThrow({ where: { id: badId }, select: { serverTag: true } });
     await prisma.mentorMessage.update({ where: { id: badId }, data: { serverTag: "n0:AAAA" } });
     expect((await report({ targetType: "MESSAGE", targetId: badId, reason: "آزار", franking: { text: "پیام آزارنده‌ی منتور", frankingKey: bad.frankingKey } })).status).toBe(400);
@@ -562,13 +562,13 @@ describe("پیام‌های پیش از رمزگذاری", () => {
     as(m);
     v = await j(await getMessages(req("GET", "/x"), P(ms)));
     expect(((await openAs(m, ms, v.messages[0])) as any)).toMatchObject({ text: "پیام قدیمی منتور", committed: true });
-    // حالا قابلِ گزارشِ تأییدشده است (کلیدِ فرانکینگ را فقط دو طرف دارند)
+    // حالا قابلِ گزارشِ تاییدشده است (کلیدِ فرانکینگ را فقط دو طرف دارند)
     as(s);
     const rep = await postReport(req("POST", "/x", { targetType: "MESSAGE", targetId: legacy.id, reason: "x", franking: { text: "پیام قدیمی منتور", frankingKey: real.frankingKey } }));
     expect(rep.status).toBe(200);
   });
 
-  it("گزارشِ پیامِ قدیمیِ هنوز بازرمزنشده: متنِ سرور، با برچسبِ «تأییدنشده»", async () => {
+  it("گزارشِ پیامِ قدیمیِ هنوز بازرمزنشده: متنِ سرور، با برچسبِ «تاییدنشده»", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -700,7 +700,7 @@ describe("دسترسی", () => {
 // ───────────────────────── چنددستگاهی ─────────────────────────
 
 describe("چنددستگاهی: بسته‌بندی برای همه‌ی دستگاه‌ها، انتقالِ سابقه", () => {
-  it("پیام برای هر کلیدِ فعالِ دو طرف؛ جا انداختنِ یک دستگاه یا کلیدِ اضافه → KEY_CHANGED؛ هر دستگاه جدا باز می‌کند؛ گزارش همچنان تأیید می‌شود", async () => {
+  it("پیام برای هر کلیدِ فعالِ دو طرف؛ جا انداختنِ یک دستگاه یا کلیدِ اضافه → KEY_CHANGED؛ هر دستگاه جدا باز می‌کند؛ گزارش همچنان تایید می‌شود", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);

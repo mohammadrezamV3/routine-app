@@ -173,7 +173,7 @@ function ReviewActionModal({ review, to, onClose, onDone }: { review: Review; to
   }
 
   return (
-    <AdminModal title={hiding ? "پنهان کردن نظر" : "بازگردانی نظر"} eyebrow="تأیید اقدام" onClose={onClose}>
+    <AdminModal title={hiding ? "پنهان کردن نظر" : "بازگردانی نظر"} eyebrow="تایید اقدام" onClose={onClose}>
       <div className="admin-modal-text" style={{ whiteSpace: "pre-wrap" }}>
         {review.body || <span className="admin-muted">بدون متن</span>}
       </div>

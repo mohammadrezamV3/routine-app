@@ -100,7 +100,7 @@
 
 ### نظر و گزارش
 - `POST /api/mentors/[mentorId]/reviews` بدنه `{ rating: 1..5, body? }` — فقط شاگردی با رابطه‌ای که `startedAt` داره (ACTIVE یا ENDED بعد از فعال‌شدن)؛ تکراری → ۴۰۹. `PUT` همون مسیر = ویرایشِ نظرِ خودم؛ `DELETE` = حذفِ نظرِ خودم. خلاصه‌ی امتیاز بعد از هر تغییر بازمحاسبه می‌شه.
-- `POST /api/mentor-reports` بدنه `{ targetType: USER|REVIEW|MESSAGE|PROGRAM, targetId, reason, details?, franking? }` — گزارش‌دهنده باید به هدف دسترسیِ مشروع داشته باشه؛ تکراری → ۴۰۹. برای `MESSAGE`، `franking = { text, frankingKey }` لازم است و سرور تعهدِ فرستنده را تأیید می‌کند (docs/mentor-e2ee.md).
+- `POST /api/mentor-reports` بدنه `{ targetType: USER|REVIEW|MESSAGE|PROGRAM, targetId, reason, details?, franking? }` — گزارش‌دهنده باید به هدف دسترسیِ مشروع داشته باشه؛ تکراری → ۴۰۹. برای `MESSAGE`، `franking = { text, frankingKey }` لازم است و سرور تعهدِ فرستنده را تایید می‌کند (docs/mentor-e2ee.md).
 
 ### اعلان‌ها
 - `GET /api/notifications?before=<ISO>` → `{ notifications: { id,type,title,body,url,readAt,createdAt }[], unread, hasMore }`
@@ -121,7 +121,7 @@
 - ادمین: `/admin/mentors` (صف احراز + همه)، `/admin/mentors/[profileId]`، `/admin/mentors/reviews`، `/admin/mentors/reports`
 
 ## رتبه‌بندی
-رتبه‌بندیِ شایستگی (نتیجه‌ی واقعیِ شاگردها، پایبندی، تکمیل، ماندگاری، سرعتِ پاسخ، نظرهای تأییدشده) — مدلِ کامل، وزن‌ها و قواعدِ ضدِ دست‌کاری: `docs/mentor-ranking.md`.
+رتبه‌بندیِ شایستگی (نتیجه‌ی واقعیِ شاگردها، پایبندی، تکمیل، ماندگاری، سرعتِ پاسخ، نظرهای تاییدشده) — مدلِ کامل، وزن‌ها و قواعدِ ضدِ دست‌کاری: `docs/mentor-ranking.md`.
 
 ## عمداً عقب‌افتاده (پیاده نشده)
 - چتِ لحظه‌ای با WebSocket — چت با polling کار می‌کنه.

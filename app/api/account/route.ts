@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { withBasicModules } from "@/lib/modules";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -35,6 +34,7 @@ export async function GET() {
       market: true,
       createdAt: true,
       isSuperAdmin: true,
+      goldenSince: true,
       referralCode: { select: { code: true } },
       moduleAccess: { select: { module: true, active: true, expiresAt: true } },
       // فقط اشتراک واقعا فعال — نه صرفا «آخرین ردیف ساخته‌شده». قبلا
@@ -55,11 +55,12 @@ export async function GET() {
   // جدول ModuleAccess چی می‌گه (که معمولا seed هم شده، ولی این تضمین اضافه‌ست)
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : withBasicModules(user.moduleAccess); // پایه‌ها همیشه رایگان (lib/modules.ts)
+    : user.moduleAccess; // «روتین من» هم مثلِ بقیه: تریالِ ۱۴روزه، بعد پلن (lib/modules.ts)
 
   const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
 
-  return NextResponse.json({ user: { ...user, firstName: user.name, name: fullName, moduleAccess } });
+  const { goldenSince, ...userRest } = user;
+  return NextResponse.json({ user: { ...userRest, golden: !!goldenSince, firstName: user.name, name: fullName, moduleAccess } });
 }
 
 // PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable?, sharePhone? }

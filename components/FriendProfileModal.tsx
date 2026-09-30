@@ -8,12 +8,14 @@ import { StreakFlame } from "./StreakFlame";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
+import { GoldenName } from "./GoldenName";
 
 type Profile = {
   id: string;
   name: string;
   username: string | null;
   avatarUrl: string | null;
+  golden?: boolean;
   bannerUrl: string | null;
   bio: string | null;
   phone: string | null;
@@ -36,7 +38,7 @@ export function FriendProfileModal({
   onBlocked,
 }: {
   userId: string;
-  /** دکمه‌ی استار فقط بینِ دوستانِ تأییدشده معنا دارد؛ بلاک همیشه ممکن است (مستقل از دوستی). */
+  /** دکمه‌ی استار فقط بینِ دوستانِ تاییدشده معنا دارد؛ بلاک همیشه ممکن است (مستقل از دوستی). */
   canStar?: boolean;
   onClose: () => void;
   onBlocked?: () => void;
@@ -148,7 +150,7 @@ export function FriendProfileModal({
                 <Star size={16} fill={profile.starredByMe ? "currentColor" : "none"} />
               </button>
 
-              <div className="friend-profile-banner-name">{profile.name}</div>
+              <div className="friend-profile-banner-name"><GoldenName golden={profile.golden}>{profile.name}</GoldenName></div>
 
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="friend-profile-avatar" />
