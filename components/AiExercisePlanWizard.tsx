@@ -11,6 +11,7 @@ import { focusNextOnEnter } from "@/lib/formNav";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { TickButton } from "./TickButton";
 
 type Step = "hw" | "goal" | "gear" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, gear: 2, days: 3, description: 4, rules: 4 };
@@ -249,9 +250,7 @@ export function AiExercisePlanWizard({
           />
 
           <div className="task" style={{ marginTop: 16, cursor: "pointer" }} onClick={() => patch({ hasLimitation: !form.hasLimitation })}>
-            <div className={`check${form.hasLimitation ? " on" : ""}`}>
-              <svg className="c-check" viewBox="0 0 24 24" fill="none"><path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
+            <TickButton as="span" className="mt-0.5" size={22} checked={form.hasLimitation} />
             <div className="task-name">محدودیت جسمی دارم</div>
           </div>
 

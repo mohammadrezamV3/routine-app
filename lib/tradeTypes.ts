@@ -122,7 +122,7 @@ export const CURRENCY_LABELS: Record<string, string> = {
 };
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: "$", EUR: "€", IRT: "تومان", IRR: "ریال", AED: "د.إ", TRY: "₺", GBP: "£", USDT: "₮",
+  USD: "$", EUR: "€", IRT: "تومان", IRR: "ریال", AED: "درهم", TRY: "₺", GBP: "£", USDT: "₮",
 };
 
 export function currencySymbol(code: string): string {

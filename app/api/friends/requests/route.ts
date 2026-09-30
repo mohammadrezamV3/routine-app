@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/friends/requests → درخواست‌های دوستی دریافت‌شده و هنوز تأییدنشده
+// GET /api/friends/requests → درخواست‌های دوستی دریافت‌شده و هنوز تاییدنشده
 export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -11,7 +11,7 @@ export async function GET() {
 
   const rows = await prisma.friendship.findMany({
     where: { addresseeId: userId, status: "PENDING" },
-    include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+    include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -22,6 +22,7 @@ export async function GET() {
       name: r.requester.name || r.requester.username || "کاربر",
       username: r.requester.username,
       avatarUrl: r.requester.avatarUrl,
+      golden: !!r.requester.goldenSince,
     })),
   });
 }

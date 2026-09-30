@@ -1,6 +1,7 @@
 "use client";
 
 import "./mentor.css";
+import { TickButton } from "./TickButton";
 import { useEffect, useMemo, useState } from "react";
 import type { ReportTargetType } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, fmtDateTime, readApiError } from "@/lib/mentorFormat";
@@ -183,7 +184,7 @@ const MAX_PICK = 50;
 /**
  * «گزارش گفت‌وگو»: کاربر پیام‌هایی را که برای ادمین پیوست می‌شوند خودش
  * انتخاب می‌کند (پیش‌فرض ۲۰ پیامِ آخر، حداکثر ۵۰). هر پیام با کلیدِ فرانکینگِ
- * خودش فرستاده و سمتِ سرور جداگانه تأیید می‌شود؛ پیام‌های انتخاب‌نشده
+ * خودش فرستاده و سمتِ سرور جداگانه تایید می‌شود؛ پیام‌های انتخاب‌نشده
  * رمزگذاری‌شده می‌مانند. POST /api/mentorships/:id/report
  */
 export function MentorConversationReportSheet({
@@ -291,7 +292,7 @@ export function MentorConversationReportSheet({
               <div className="mc-pick-list thin-scroll" role="group" aria-label="پیام‌های پیوست">
                 {list.map((c) => (
                   <label key={c.id} className={`mentor-check mc-pick${c.mine ? " is-mine" : ""}`}>
-                    <input type="checkbox" checked={picked.has(c.id)} onChange={() => toggle(c.id)} />
+                    <TickButton shape="square" size={22} checked={picked.has(c.id)} onToggle={() => toggle(c.id)} />
                     <span className="mentor-check-label">
                       <span className="mc-pick-meta">{c.mine ? "تو" : peerName}<span>{fmtDateTime(c.createdAt)}</span></span>
                       <span className="mc-pick-text" dir="auto">{c.text}</span>

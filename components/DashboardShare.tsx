@@ -64,6 +64,7 @@ export function DashboardShare({
   onClose,
   data,
   routine,
+  routineLocked = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -75,6 +76,8 @@ export function DashboardShare({
     daily: Record<string, DailyRecord>;
     todayIso: string;
   };
+  /** ماژولِ «روتین من» قفله → حلقه‌ی روتین نیست (هم‌رفتار با هیرو) */
+  routineLocked?: boolean;
 }) {
   useLockBodyScroll(open);
   const [opts, setOpts] = useState<Opts>(DEFAULTS);
@@ -88,7 +91,7 @@ export function DashboardShare({
   }
 
   const invite = useMyInvite();
-  const rings = useMemo(() => heroRings(data, routine.stats), [data, routine.stats]);
+  const rings = useMemo(() => heroRings(data, routine.stats, routineLocked), [data, routine.stats, routineLocked]);
   const ringOf = (k: HeroRing["key"]) => rings.find((r) => r.key === k)!;
   const streak = routine.streak ?? 0;
   const firstName = data?.user.name?.split(" ")[0] || null;

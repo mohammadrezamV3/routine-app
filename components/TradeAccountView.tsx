@@ -1,5 +1,6 @@
 "use client";
 
+import { GradientRing } from "./GradientRing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -281,17 +282,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
                 دایره سمتِ راست، و لیبل + مقدارِ هدف سمتِ چپش. */}
             <div className="trade-headline-goal">
               <div className="trade-goal-ring-wrap">
-                <svg viewBox="0 0 72 72" className="trade-goal-ring">
-                  <circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" strokeWidth="6" />
-                  <circle
-                    cx="36" cy="36" r="30" fill="none" strokeWidth="6" strokeLinecap="round"
-                    stroke="var(--pnl-win)"
-                    strokeDasharray={2 * Math.PI * 30}
-                    strokeDashoffset={2 * Math.PI * 30 * (1 - (inProfit ? (goal ?? 0) : 0))}
-                    transform="rotate(-90 36 36)"
-                    className="trade-goal-ring-fill"
-                  />
-                </svg>
+                <GradientRing value={inProfit ? (goal ?? 0) : 0} size={72} stroke={6} className="trade-goal-ring" />
                 <span className="trade-goal-ring-pct mono">
                   {faNum(Math.round((inProfit ? (goal ?? 0) : 0) * 100))}٪
                 </span>

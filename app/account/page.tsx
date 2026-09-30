@@ -11,7 +11,7 @@ import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
 import { ACCOUNT_SECTIONS } from "@/components/accountSections";
 
 type IndexUser = {
-  name: string | null; lastName: string | null; username: string | null;
+  golden?: boolean; name: string | null; lastName: string | null; username: string | null;
   subscriptions: { status: string; plan: { key: string; nameFa: string } }[];
 };
 
@@ -48,7 +48,7 @@ export default function AccountIndexPage() {
   // پس این‌جا دیگه لازم نیست وضعیت دوباره چک بشه — قبلا «آخرین ردیف ساخته‌شده»
   // می‌اومد و یه اشتراک منقضی هم «پریمیوم» نشون داده می‌شد.
   const sub = data?.subscriptions?.[0];
-  const isPremium = !!sub && sub.plan.key !== "basic";
+  const isPremium = !!sub;
 
   // همون توالیِ خروجِ سایدبارِ دسکتاپ (app/account/layout.tsx) — طبقِ
   // گزارشِ باگ، روی موبایل سایدبار دیده نمی‌شه و راهِ دیگه‌ای برای خروج از
@@ -58,7 +58,7 @@ export default function AccountIndexPage() {
     <section>
       {data && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub?.plan.nameFa ?? null} />
+          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub?.plan.nameFa ?? null} golden={data.golden} />
         </motion.div>
       )}
 

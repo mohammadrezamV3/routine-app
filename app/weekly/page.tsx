@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
+import { ModuleGate } from "@/components/ModuleGate";
+import { RoutineTrialBanner } from "@/components/RoutineTrialBanner";
+import { SleepMiniCard } from "@/components/SleepMiniCard";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -28,6 +31,7 @@ import {
   Importance,
 } from "@/lib/storage";
 import { getTodayStats } from "@/lib/routineStats";
+import { checklistOf, isOccDone, itemKey, toggleTask } from "@/lib/routineChecklist";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
@@ -84,12 +88,22 @@ function isTaskNotStarted(iso: string, time: string): boolean {
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
+// «روتین من» بعد از ۱۴ روز آزمایشی پلن می‌خواد — ModuleGate فقط UI ـه، نوشتن‌ها
+// سمتِ سرور هم با requireModule(ROUTINE) بسته‌ان (tasks/daily، settings).
 export default function WeeklyPage() {
+  return (
+    <ModuleGate module="ROUTINE">
+      <WeeklyPageInner />
+    </ModuleGate>
+  );
+}
+
+function WeeklyPageInner() {
   const assistantOn = useFeature("routineAssistant") === true;
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
-  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string; mentorProgramId?: string }[]>([]);
+  const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string; importance?: Importance; tag?: string; roadmapId?: string; mentorProgramId?: string; items?: { id: string; name: string }[] }[]>([]);
   const router = useRouter();
   const [cardName, setCardName] = useState<string | null>(null);
 
@@ -202,11 +216,6 @@ export default function WeeklyPage() {
   }, []);
   const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
 
-  const hasQuickPanels =
-    dashboardPrefs.showReminders ||
-    dashboardPrefs.showMedications ||
-    dashboardPrefs.showChart ||
-    dashboardPrefs.showFriends;
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -304,7 +313,8 @@ export default function WeeklyPage() {
     const list: DashTaskItem[] = tasksForDate(selectedDate, opts)
       .map((t) => {
         const occ = customOcc.find((c) => c.id === t.id);
-        const done = !!selectedDaily?.tasks[t.id];
+        const items = checklistOf(occ);
+        const done = isOccDone(selectedDaily?.tasks, t.id, items);
         return {
           id: t.id,
           name: t.name,
@@ -312,6 +322,7 @@ export default function WeeklyPage() {
           importance: occ?.importance,
           tag: occ?.tag,
           done,
+          ...(items.length ? { items: items.map((i) => ({ id: i.id, name: i.name, done: !!selectedDaily?.tasks[itemKey(t.id, i.id)] })) } : {}),
           missed: !done && isDayOver(selectedIso, clock),
           isPast: isTaskPast(selectedIso),
           dayPast: isDayPast(selectedIso),
@@ -403,7 +414,7 @@ export default function WeeklyPage() {
     setSelectedIso(iso);
   }
 
-  async function toggleDashTask(id: string) {
+  async function toggleDashTask(id: string, itemId?: string) {
     // روزِ گذشته برای جبرانِ عقب‌افتاده قابلِ تیک‌زدنه، و برنامه‌ای که هنوز
     // ساعتش نرسیده هم اگر زودتر انجامش داده — ولی روزِ *آینده* نه: طبقِ
     // درخواستِ صریحِ کاربر، تیک‌زدنِ برنامه‌ی روزی که هنوز نرسیده یعنی
@@ -412,7 +423,9 @@ export default function WeeklyPage() {
     // برنامه‌ی روزهای گذشته دیگه قابلِ تغییر نیست (درخواستِ صریح).
     if (task?.isFuture || isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
-    const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
+    // برنامه‌ی لیستی: آیتم یا «همه با هم»؛ کلیدِ برنامه = همه‌ی آیتم‌ها انجام شدن (lib/routineChecklist.ts)
+    const items = checklistOf(customOcc.find((c) => c.id === id));
+    const next: DailyRecord = { ...current, tasks: toggleTask(current.tasks, id, items, itemId) };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
     // همین‌جا از رویِ داده‌ی محلی حساب می‌شه، بدونِ صبر برایِ شبکه — درخواستِ
@@ -514,6 +527,7 @@ export default function WeeklyPage() {
       <section className="dash-breakout dash-scope pb-6 text-dash-text">
         <div className="flex flex-col gap-4 sm:gap-6">
           <DashHeader progress={todayStats.pct} />
+          <RoutineTrialBanner />
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
             <DashDateSelector
@@ -557,9 +571,8 @@ export default function WeeklyPage() {
                 ? hasMiddleColumn
                   ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
                   : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
-                : hasQuickPanels
-                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
-                : "flex flex-col gap-4 sm:gap-6"
+                : // ردیفِ دکمه‌ها همیشه هست (خواب خاموش‌شدنی نیست)
+                  "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
             }
           >
             {status === "unauthenticated" ? (
@@ -577,6 +590,8 @@ export default function WeeklyPage() {
                 onMoveTask={moveTaskFromDash}
                 onStartExercise={startExercise}
                 delay={0.05}
+                // دسکتاپ: دو ردیف ارتفاع می‌گیره (کنارِ ستون‌ها + کارتِ خوابِ زیرشون) تا بلندتر بشه
+                className="lg:row-span-2"
               />
             )}
 
@@ -589,9 +604,13 @@ export default function WeeklyPage() {
                   </div>
                 )}
                 <DashSidebar statsRefreshKey={statsRefreshKey} />
+                {/* خواب زیرِ ستون‌های سمتِ چپ، هم‌عرضِ هر دوشون */}
+                <div className={hasMiddleColumn ? "lg:col-span-2" : ""}>
+                  <SleepMiniCard />
+                </div>
               </>
             ) : (
-              hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />
+              <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />
             )}
           </div>
 

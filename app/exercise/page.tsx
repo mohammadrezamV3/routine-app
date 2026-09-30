@@ -35,7 +35,7 @@ export default function BodybuildingPage() {
     <section className="bodybuilding-glass exercise-dash-breakout">
       {/* قبلاً این صفحه هیچ عنوانی نداشت — با اینکه «بدنسازی» عنوانِ
           واقعیِ همین صفحه‌ست (هم در منو، هم در هاب ترید مشابهش). تب
-          فعلی (برنامه‌ی تمرینی/کالری‌شمار) روی همین عنوان تأثیری ندارد. */}
+          فعلی (برنامه‌ی تمرینی/کالری‌شمار) روی همین عنوان تاثیری ندارد. */}
       <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
         <span className="page-title-icon">{ICONS.exercise}</span>
         <h1>بدنسازی</h1>

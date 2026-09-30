@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { isoLocal } from "./jalali";
-import { tasksForDate } from "./schedule";
+import { computeRoutineStreak } from "./routineStreak";
 import { getCustomOccurrences, getDaily, getDailyRange, getRemovedOccurrences } from "./storage";
 import { keyMatches, useLiveRefresh } from "./liveSync";
 
 export type MyStreak = {
-  /** روزهای پشت‌سرهمِ کامل تا دیروز + امروز اگه کامل شده (هم‌قاعده‌ی streakFromHeatmap ِ داشبورد) */
+  /** روزهای پشت‌سرهمِ کامل (lib/routineStreak.ts — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه) */
   streak: number | null;
   /** همه‌ی برنامه‌های امروز تیک خورده؟ (امروزِ بی‌برنامه = false) */
   todayDone: boolean;
@@ -22,6 +22,8 @@ export type MyStreak = {
 
 // استریک روزهای پشت‌سرهم کامل — از HeaderStreakClock استخراج شده تا هم توی
 // هدر هم توی کارت دوستان قابل استفاده باشه، بدون تکرار منطق محاسبه.
+const STREAK_WINDOW = 90;
+
 export function useMyStreak(): MyStreak {
   const [state, setState] = useState<MyStreak>({ streak: null, todayDone: false, todayIso: "", cause: "init" });
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
@@ -50,51 +52,21 @@ export function useMyStreak(): MyStreak {
 
   useEffect(() => {
     let alive = true;
-    async function computeStreak() {
-      const cause = causeRef.current;
-      const now = new Date();
-      const todayIso = isoLocal(now);
-      const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() - 1);
-      const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 90);
-      // امروز جدا: getDaily تیکِ optimistic ِ همین لحظه (قبل از جوابِ سرور) رو می‌بینه
-      const [entries, todayRec] = await Promise.all([
-        getDailyRange(isoLocal(rangeStart), isoLocal(rangeEnd)),
-        getDaily(todayIso),
-      ]);
-
-      const todayExpected = tasksForDate(now, opts);
-      const todayDone = todayExpected.length > 0 && todayExpected.every((t) => todayRec?.tasks[t.id]);
-
-      let s = 0;
-      const cursor = new Date(now);
-      cursor.setDate(cursor.getDate() - 1);
-      for (let i = 0; i < 90; i++) {
-        const key = isoLocal(cursor);
-        const expected = tasksForDate(new Date(cursor), opts);
-        if (expected.length === 0) {
-          cursor.setDate(cursor.getDate() - 1);
-          continue;
-        }
-        const rec = entries[key];
-        if (!rec) break;
-        const doneCount = expected.filter((t) => rec.tasks[t.id]).length;
-        // ثبت زمان بیداری یه فیچر جدا و اختیاریه — قبلا شرط AND با
-        // تکمیل برنامه بود، یعنی هر روزی که کاربر دقیقا موقع هدفش بیدار
-        // نمی‌شد (که اکثر کاربرها اصلا این قابلیت رو فعال/دنبال نمی‌کنن)
-        // کل استریک صفر می‌شد، با اینکه ۱۰۰٪ برنامه‌ش رو انجام داده بود —
-        // یعنی استریک عملا همیشه صفر می‌موند (باگ گزارش‌شده). حالا استریک
-        // فقط یعنی «همه‌ی برنامه‌های اون روز انجام شده»، مستقل از وضعیت بیداری.
-        const fullDay = doneCount === expected.length;
-        if (fullDay) {
-          s++;
-          cursor.setDate(cursor.getDate() - 1);
-        } else break;
-      }
-      // مثلِ دوالینگو: امروز همون لحظه‌ای که کامل شد به استریک اضافه می‌شه (نه فردا)
-      if (todayDone) s++;
-      if (alive) setState({ streak: s, todayDone, todayIso, cause });
-    }
-    computeStreak();
+    const cause = causeRef.current;
+    // امروز هم خونده می‌شه: استریک همون لحظه‌ای که آخرین برنامه‌ی امروز تیک
+    // می‌خوره یکی بالا می‌ره (lib/routineStreak.ts — تعریفِ مشترک با داشبورد).
+    // امروز جدا هم با getDaily خونده می‌شه تا تیکِ optimistic ِ همین لحظه (قبل
+    // از جوابِ سرور) دیده بشه — همون تیکی که جشنِ استریک رو راه می‌ندازه.
+    const now = new Date();
+    const todayIso = isoLocal(now);
+    const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - STREAK_WINDOW);
+    Promise.all([getDailyRange(isoLocal(rangeStart), todayIso), getDaily(todayIso)])
+      .then(([entries, todayRec]) => {
+        if (!alive) return;
+        const r = computeRoutineStreak(now, opts, { ...entries, [todayIso]: todayRec }, STREAK_WINDOW);
+        setState({ streak: r.streak, todayDone: r.todayCounted, todayIso, cause });
+      })
+      .catch(() => {});
     return () => { alive = false; };
   }, [opts, version]);
 

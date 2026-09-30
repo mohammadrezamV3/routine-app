@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { TickButton } from "@/components/TickButton";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Download, Search, ShieldCheck, Ban, Trash2, RotateCcw, Eye } from "lucide-react";
@@ -220,7 +221,7 @@ function UsersInner() {
                   <thead>
                     <tr>
                       <th className="admin-check-col">
-                        <input type="checkbox" className="admin-check" checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(rows.map((u) => u.id)))} aria-label="انتخاب همه" />
+                        <TickButton shape="square" size={20} checked={allSelected} onToggle={() => setSelected(allSelected ? new Set() : new Set(rows.map((u) => u.id)))} label="انتخاب همه" />
                       </th>
                       <th>کاربر</th><th>ایمیل / شماره</th><th>پلن</th><th>وضعیت</th><th>ثبت‌نام</th><th>آخرین ورود</th><th aria-label="جزئیات" />
                     </tr>
@@ -229,9 +230,9 @@ function UsersInner() {
                     {rows.map((u) => (
                       <tr key={u.id} className={selected.has(u.id) ? "is-selected" : undefined}>
                         <td className="admin-check-col">
-                          <input
-                            type="checkbox" className="admin-check" checked={selected.has(u.id)} aria-label={`انتخاب ${displayName(u)}`}
-                            onChange={() => setSelected((s) => { const n = new Set(s); if (n.has(u.id)) n.delete(u.id); else n.add(u.id); return n; })}
+                          <TickButton
+                            shape="square" size={20} checked={selected.has(u.id)} label={`انتخاب ${displayName(u)}`}
+                            onToggle={() => setSelected((s) => { const n = new Set(s); if (n.has(u.id)) n.delete(u.id); else n.add(u.id); return n; })}
                           />
                         </td>
                         <td>

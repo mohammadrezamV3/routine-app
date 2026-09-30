@@ -32,11 +32,11 @@ const REVIEW_SELECT = {
   rating: true,
   body: true,
   createdAt: true,
-  student: { select: { name: true, lastName: true, username: true, avatarUrl: true } },
+  student: { select: { name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } },
 } as const;
 
-function toReview(r: { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null } }) {
-  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl } };
+function toReview(r: { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince: Date | null } }) {
+  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince } };
 }
 
 // POST /api/mentors/:mentorId/reviews → ثبتِ نظر (یکی به‌ازای هر شاگرد/منتور).

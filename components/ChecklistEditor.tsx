@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TickButton } from "./TickButton";
 import { Reorder } from "framer-motion";
 import { GripVertical, Loader2, Plus, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
@@ -87,7 +88,7 @@ export function ChecklistEditor({
 
         <label className="exercise-form-label">الزام تکمیل برای ورود طبق پلن</label>
         <button type="button" className={`trade-toggle${required ? " on" : ""}`} onClick={() => setRequired((v) => !v)}>
-          <span className="trade-toggle-knob" />
+          <TickButton as="span" checked={required} size={22} />
           <span className="trade-toggle-label">
             {required ? "تکمیل‌نکردنش فقط هشدار می‌دهد — جلوی ثبت معامله را نمی‌گیرد" : "بدون الزام"}
           </span>

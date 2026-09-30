@@ -12,7 +12,7 @@ const REASON_MAX = 200;
 const DETAILS_MAX = 2000;
 
 // POST /api/mentorships/:id/report { reason, details?, messages: [{ id, text, frankingKey }] }
-// «گزارش گفت‌وگو»: هر پیامِ پیوست جداگانه با فرانکینگ تأیید می‌شود
+// «گزارش گفت‌وگو»: هر پیامِ پیوست جداگانه با فرانکینگ تایید می‌شود
 // (lib/mentorConversationReport.ts). یکی نخواند = کلِ گزارش رد. ادمین فقط همین
 // پیام‌ها را می‌بیند؛ متنشان رمزشده در حالِ سکون در MentorReportMessage می‌ماند.
 export async function POST(req: Request, { params }: Ctx) {

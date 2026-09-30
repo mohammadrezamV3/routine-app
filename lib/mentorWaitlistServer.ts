@@ -4,7 +4,7 @@ import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { publishToUsers } from "@/lib/realtime";
 import { computeAvailability } from "@/lib/mentorAvailability";
 import { AVAILABILITY_SELECT, availabilityToday } from "@/lib/mentorManageServer";
-import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
+import { PUBLIC_USER_SELECT, toPublicUser } from "@/lib/mentorServer";
 import type { MentorWaitlistRow, MyWaitlist } from "@/lib/mentorTypes";
 import { WAITLIST_OFFER_BATCH, WAITLIST_OFFER_HOURS, offerDeadline, planOffers } from "@/lib/mentorWaitlist";
 import { faNum } from "@/lib/jalali";
@@ -301,7 +301,7 @@ export async function loadMentorWaitlist(mentorId: string, now: Date = new Date(
   let pos = 0;
   const mapped = rows.map((r) => ({
     id: r.id,
-    user: r.user,
+    user: toPublicUser(r.user),
     status: r.status as "WAITING" | "OFFERED",
     position: r.status === "WAITING" ? ++pos : null,
     joinedAt: r.joinedAt.toISOString(),

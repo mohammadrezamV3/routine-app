@@ -7,8 +7,9 @@ import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
+import { GoldenName } from "@/components/GoldenName";
 
-type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null };
+type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null; golden?: boolean };
 type DeviceSession = {
   id: string; provider: string | null; ip: string | null; userAgent: string | null;
   createdAt: string; lastSeenAt: string; current: boolean;
@@ -334,7 +335,7 @@ export default function SecurityPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
               {blocked.map((u) => (
                 <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontSize: 12.5, color: "var(--text)" }}>{u.name || u.username || "کاربر"}</span>
+                  <span style={{ fontSize: 12.5, color: "var(--text)" }}><GoldenName golden={u.golden}>{u.name || u.username || "کاربر"}</GoldenName></span>
                   <button
                     type="button"
                     className="account-outline-btn"

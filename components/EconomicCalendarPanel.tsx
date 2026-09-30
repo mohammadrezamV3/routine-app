@@ -331,7 +331,7 @@ export function EconomicCalendarPanel() {
             <Search size={14} />
           </div>
 
-          <label className="exercise-form-label">سطح تأثیر</label>
+          <label className="exercise-form-label">سطح تاثیر</label>
           <div className="trade-choice-grid">
             {IMPACT_ORDER.map((i) => (
               <button

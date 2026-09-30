@@ -242,7 +242,7 @@ const MENTORS: MentorSpec[] = [
     bio: "کارشناس تغذیه. کالری و درشت‌مغذی‌های روزانه را با هدف شاگرد تنظیم می‌کنم.",
     specialties: ["کاهش وزن", "رژیم پرپروتئین"],
     identity: "VERIFIED", credentials: { NUTRITION: { status: "VERIFIED" } },
-    suspendedReason: "سه گزارش تأییدشده درباره‌ی ارسال پیام تبلیغاتی به شاگردها.",
+    suspendedReason: "سه گزارش تاییدشده درباره‌ی ارسال پیام تبلیغاتی به شاگردها.",
     lastActiveDaysAgo: 9,
   },
   {
@@ -258,8 +258,8 @@ const MENTORS: MentorSpec[] = [
 ];
 
 // منتورهای اضافه برای رتبه‌بندیِ شایستگی (lib/mentorRanking.ts):
-//   پریسا — تأییدشده و تازه، بدونِ شاگرد → «منتورهای تازه»
-//   کیان — چهار نظرِ ۵ستاره از رابطه‌های چندروزه و بدونِ برنامه → نظرها تأیید نمی‌شن
+//   پریسا — تاییدشده و تازه، بدونِ شاگرد → «منتورهای تازه»
+//   کیان — چهار نظرِ ۵ستاره از رابطه‌های چندروزه و بدونِ برنامه → نظرها تایید نمی‌شن
 MENTORS.push(
   {
     key: "parisa", name: "پریسا", lastName: "مرادی",
@@ -281,8 +281,8 @@ MENTORS.push(
   }
 );
 
-// پیدا کردن منتور (agent F — lib/mentorSearch.ts): منتورِ تأییدشده‌ی کنکور با مدرکِ
-// تأییدشده (نشانِ مدرک کنارِ نام) تا جستجوی «کنکر»/«کنگور»/«konkur»/«آزمون سراسری»
+// پیدا کردن منتور (agent F — lib/mentorSearch.ts): منتورِ تاییدشده‌ی کنکور با مدرکِ
+// تاییدشده (نشانِ مدرک کنارِ نام) تا جستجوی «کنکر»/«کنگور»/«konkur»/«آزمون سراسری»
 // نتیجه داشته باشد — نگار (کنکور) هویتش در صفِ بررسی است و دیگر در جستجو نمی‌آید.
 MENTORS.push({
   key: "hamed", name: "حامد", lastName: "ملکی",
@@ -553,7 +553,7 @@ class Seeder {
 
   /**
    * پیام‌ها به‌ترتیبِ زمان؛ true = از طرفِ منتور. پیام‌های آخرِ «unreadTail» خوانده‌نشده می‌مونن.
-   * خروجی: متن و clientIdِ هر پیام (برای ساختِ گزارشِ تأییدشده).
+   * خروجی: متن و clientIdِ هر پیام (برای ساختِ گزارشِ تاییدشده).
    */
   async messages(rel: Rel, lines: [boolean, string][], unreadTail = 0): Promise<{ clientId: string; senderId: string; text: string }[]> {
     const ownerSide = this.ownerKey && (rel.mentorId === this.ownerKey.userId || rel.studentId === this.ownerKey.userId) ? this.ownerKey : null;
@@ -821,7 +821,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       await S.program(maryamZahra, { type: "ROUTINE", title: "روتین ترم بهار", status: "COMPLETED", startOffset: -65, endOffset: -18, items: STUDY_ITEMS, logs: true });
       await S.review(maryamZahra, 2, "شماره‌ی تلفنش رو بده تا بیرون از اپ هماهنگ کنیم.", "شامل اطلاعات تماس شخصی");
 
-      // ── رتبه‌بندیِ شایستگی: شاگردهای بیشترِ امیر و نظرهای تأییدنشده‌ی کیان ──
+      // ── رتبه‌بندیِ شایستگی: شاگردهای بیشترِ امیر و نظرهای تاییدنشده‌ی کیان ──
       const amirSina = await S.mentorship(id("amir"), id("sina"), "ACTIVE", { categories: ["FITNESS"], startedDaysAgo: 60 });
       await S.program(amirSina, { type: "WORKOUT", title: "آمادگی پایه", status: "COMPLETED", startOffset: -55, endOffset: -25, items: WORKOUT_B, logs: true });
       await S.program(amirSina, { type: "WORKOUT", title: "قدرت — دوره‌ی اول", status: "ACTIVE", startOffset: -20, endOffset: 30, items: WORKOUT_A, logs: true });
@@ -837,7 +837,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       }
 
       // ── گزارش‌ها ──
-      // گزارشِ پیام همان مدرکی را دارد که مسیرِ واقعی بعد از تأییدِ فرانکینگ ذخیره می‌کند
+      // گزارشِ پیام همان مدرکی را دارد که مسیرِ واقعی بعد از تاییدِ فرانکینگ ذخیره می‌کند
       const rezaLine = rezaLines.find((l) => l.senderId === id("reza"));
       const rezaMsg = rezaLine
         ? await tx.mentorMessage.findFirst({ where: { mentorshipId: rezaNarges.id, clientId: rezaLine.clientId }, select: { id: true, createdAt: true } })

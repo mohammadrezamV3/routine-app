@@ -45,7 +45,7 @@ export function visibleToStudent(p: { status: MentorProgramStatus; sentAt: Date 
 
 export const PROGRAM_STATUS_LABELS: Record<MentorProgramStatus, string> = {
   DRAFT: "پیش‌نویس",
-  PENDING: "در انتظار تأیید",
+  PENDING: "در انتظار تایید",
   ACCEPTED: "پذیرفته‌شده",
   REJECTED: "ردشده",
   ACTIVE: "فعال",

@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarCheck, Gauge, Sparkles, TrendingDown, TrendingUp, Waves } from "lucide-react";
 import type { WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
+import { GradientRing } from "./GradientRing";
 import { DashCard } from "./DashCard";
 import { CONFIDENCE_LABELS, DeltaBadge, useCountUp } from "./WeeklyAnalysisShared";
 
@@ -12,25 +13,11 @@ const STROKE = 11;
 // حلقه‌ی بزرگِ امتیازِ کل — همون الگوی DashProgressCircle (مسیرِ کم‌رنگ +
 // پرشدنِ نرم از صفر)، فقط بزرگ‌تر و با حرفِ رتبه وسطش.
 function ScoreRing({ score, grade }: { score: number | null; grade: string | null }) {
-  const reduce = useReducedMotion();
   const shown = useCountUp(score);
-  const r = (RING - STROKE) / 2;
-  const c = 2 * Math.PI * r;
   const pct = score === null ? 0 : Math.min(100, Math.max(0, score)) / 100;
-  const center = RING / 2;
   return (
     <div className="wa-hero-ring" style={{ width: RING, height: RING }}>
-      <svg viewBox={`0 0 ${RING} ${RING}`} width={RING} height={RING} className="-rotate-90 overflow-visible" aria-hidden="true">
-        <circle cx={center} cy={center} r={r} fill="none" stroke="rgba(var(--accent-rgb),.16)" strokeWidth={STROKE} />
-        <motion.circle
-          cx={center} cy={center} r={r} fill="none"
-          stroke="var(--accent)" strokeWidth={STROKE} strokeLinecap="round"
-          strokeDasharray={c}
-          initial={{ strokeDashoffset: reduce ? c * (1 - pct) : c }}
-          animate={{ strokeDashoffset: c * (1 - pct) }}
-          transition={{ duration: reduce ? 0 : 1.1, ease: "easeOut" }}
-        />
-      </svg>
+      <GradientRing value={pct} size={RING} stroke={STROKE} />
       <div className="wa-hero-ring-center">
         {grade ? (
           <motion.span

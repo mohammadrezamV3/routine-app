@@ -2,17 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Tablets, BarChart3, Users } from "lucide-react";
+import { Bell, Tablets, BarChart3, Users, Moon } from "lucide-react";
 import { DashReminderCard } from "./DashReminderCard";
 import { DashMedicationCard } from "./DashMedicationCard";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
+import { SleepMiniCard } from "./SleepMiniCard";
 import { DashboardPrefs } from "@/lib/dashboardPrefs";
 
-type PanelKey = "reminders" | "medications" | "chart" | "friends";
+type PanelKey = "reminders" | "sleep" | "medications" | "chart" | "friends";
 
 const PANEL_META: Record<PanelKey, { label: string; icon: React.ReactNode }> = {
   reminders: { label: "یادآوری", icon: <Bell /> },
+  sleep: { label: "خواب", icon: <Moon /> },
   medications: { label: "دارو", icon: <Tablets /> },
   chart: { label: "آمار هفتگی", icon: <BarChart3 /> },
   friends: { label: "دوستان", icon: <Users /> },
@@ -32,6 +34,8 @@ export function DashQuickPanels({
   const enabled = useMemo<PanelKey[]>(() => {
     const list: PanelKey[] = [];
     if (prefs.showReminders) list.push("reminders");
+    // خواب بخشی از «روتین من» ـه و همیشه توی ردیفِ دکمه‌ها هست (خاموش‌شدنی نیست)
+    list.push("sleep");
     if (prefs.showMedications) list.push("medications");
     if (prefs.showChart) list.push("chart");
     if (prefs.showFriends) list.push("friends");
@@ -78,6 +82,7 @@ export function DashQuickPanels({
           transition={{ duration: 0.22, ease: "easeOut" }}
         >
           {current === "reminders" && <DashReminderCard />}
+          {current === "sleep" && <SleepMiniCard />}
           {current === "medications" && <DashMedicationCard />}
           {current === "chart" && <DashWeeklyChartCard refreshKey={statsRefreshKey} />}
           {current === "friends" && <DashFriendsCard />}

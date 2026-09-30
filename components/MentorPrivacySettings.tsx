@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { TickButton } from "@/components/TickButton";
 import { Eye, ShieldCheck } from "lucide-react";
 import { MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorSection } from "@/components/MentorUI";
@@ -120,7 +121,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
         desc={`فقط برای ${mentorName}؛ آنچه اجازه ندهی برایش فرستاده نمی‌شود.${active ? "" : " تا رابطه فعال نشود چیزی نمی‌بیند."}`}
       >
         <label className="mentor-check">
-          <input type="checkbox" checked={allOn} onChange={(e) => patch({ shareAllPrograms: e.target.checked })} />
+          <TickButton shape="square" size={22} checked={allOn} onToggle={() => patch({ shareAllPrograms: !allOn })} />
           <span className="mentor-check-label">
             <b>همه‌ی برنامه‌ها</b>
             <div className="mentor-check-kind">برنامه‌هایی که بعداً بسازی هم خودکار دیده می‌شوند</div>
@@ -129,7 +130,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
         {routineScopes.length === 0 && <MentorEmpty>هنوز برنامه‌ای در روتینت نیست</MentorEmpty>}
         {[...routineScopes, ...moduleScopes].map((s) => (
           <label key={s.key} className={`mentor-check${allOn ? " is-disabled" : ""}`}>
-            <input type="checkbox" checked={scopeChecked(s.key)} disabled={allOn} onChange={() => toggleScope(s.key)} />
+            <TickButton shape="square" size={22} checked={scopeChecked(s.key)} disabled={allOn} onToggle={() => toggleScope(s.key)} />
             <span className="mentor-check-label">
               {s.label}
               <div className="mentor-check-kind">{s.kind === "module" ? "ماژول" : "برنامه‌ی روتین"}</div>

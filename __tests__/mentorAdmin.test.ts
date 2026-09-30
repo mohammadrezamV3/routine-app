@@ -52,7 +52,7 @@ async function mentorTarget(opts: { adminPermissions?: string[]; owner?: boolean
 }
 
 const act = {
-  // makeMentor هویت را تأییدشده می‌سازد (احرازِ اجباری)؛ برای سنجیدنِ خودِ اقدامِ تأیید،
+  // makeMentor هویت را تاییدشده می‌سازد (احرازِ اجباری)؛ برای سنجیدنِ خودِ اقدامِ تایید،
   // هدف پیش از هر بار به «ارسال نشده» برمی‌گردد
   verify: async (t: Target) => {
     await prisma.mentorProfile.update({ where: { id: t.profileId }, data: { identityStatus: "NOT_PROVIDED" } });
@@ -145,7 +145,7 @@ describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () =
     expect((await act.doc(other)).status).toBe(200);
   });
 
-  it("Owner روی ادمینِ محدود مجاز است؛ روی خودش تأیید/مدرک مجاز، تعلیق/پنهان‌کردن نه", async () => {
+  it("Owner روی ادمینِ محدود مجاز است؛ روی خودش تایید/مدرک مجاز، تعلیق/پنهان‌کردن نه", async () => {
     const limited = await mentorTarget({ adminPermissions: ["mentors"] });
     const owner = await mentorTarget({ owner: true });
     expect(await statusesAs(owner.userId, limited)).toEqual({ verify: 200, suspend: 200, unsuspend: 200, doc: 200, hide: 200 });

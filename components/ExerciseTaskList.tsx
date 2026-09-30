@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
+import { TickButton } from "./TickButton";
 import { Check, Dumbbell, Loader2, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
@@ -263,45 +264,7 @@ export function ExerciseTaskList({
                               شروع
                             </motion.button>
                           ) : (
-                            <motion.div
-                              aria-hidden
-                              animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                              transition={{ duration: 0.3, ease: "easeOut" }}
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
-                              style={
-                                isChecked
-                                  ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-                                  : showMiss
-                                  ? { background: "#E05252", borderColor: "#E05252" }
-                                  : { background: "transparent", borderColor: "var(--muted)" }
-                              }
-                            >
-                              <AnimatePresence mode="wait">
-                                {isChecked ? (
-                                  <motion.span
-                                    key="on"
-                                    initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                                    exit={{ scale: 0, opacity: 0 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                                    className="flex items-center justify-center text-white"
-                                  >
-                                    <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                                  </motion.span>
-                                ) : showMiss ? (
-                                  <motion.span
-                                    key="x"
-                                    initial={{ scale: 0, rotate: 45, opacity: 0 }}
-                                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                                    exit={{ scale: 0, opacity: 0 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                                    className="flex items-center justify-center text-white"
-                                  >
-                                    <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                                  </motion.span>
-                                ) : null}
-                              </AnimatePresence>
-                            </motion.div>
+                            <TickButton as="span" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
                           )}
                         </div>
                       </td>

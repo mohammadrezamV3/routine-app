@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getAccount, activeModulesOf } from "@/lib/accountCache";
+import { ROUTINE_PLAN_KEY, ROUTINE_PLAN_PRICE_TOMAN, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { faNum } from "@/lib/jalali";
 
-type GateModule = "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
+type GateModule = "ROUTINE" | "SLEEP" | "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
 
 /**
  * برای صفحاتی که به یک ماژول خاص از پلن نیاز دارن. اگه کاربر دسترسی نداشته
@@ -34,7 +36,7 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
     return () => { cancelled = true; };
   }, [status, module]);
 
-  if (allowed === false) return <GateDenied />;
+  if (allowed === false) return <GateDenied module={module} />;
 
   // چه سشن هنوز لودینگ/مهمونه، چه دسترسی تاییدشده، چه هنوز در حال چکه —
   // children رو بلافاصله مونت می‌کنیم (نه بعد از رسیدن جواب /api/account).
@@ -47,12 +49,17 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
   return <>{children}</>;
 }
 
-function GateDenied() {
+// «روتین من» (روتین/خواب) پیامِ خودش رو داره: دوره‌ی آزمایشی تموم شده + قیمتِ پلن
+const ROUTINE_GATE = new Set<GateModule>(["ROUTINE", "SLEEP"]);
+
+function GateDenied({ module }: { module: GateModule }) {
   const router = useRouter();
+  const routine = ROUTINE_GATE.has(module);
+  const target = routine ? `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1` : "/subscription";
   // این صفحه یک بن‌بست است: تنها کارِ ممکن زدنِ همان یک دکمه است. پس
   // مقصدش را همین حالا آماده می‌کنیم، نه لحظه‌ی ضربه — وگرنه ضربه یعنی
   // شروعِ دانلودِ صفحه از صفر و همان مکثِ گزارش‌شده («دیر می‌ره»).
-  useEffect(() => { router.prefetch("/subscription"); }, [router]);
+  useEffect(() => { router.prefetch(target); }, [router, target]);
   return (
     <div className="module-gate">
       <div className="module-gate-blur" aria-hidden="true">
@@ -69,13 +76,16 @@ function GateDenied() {
         <span className="module-gate-icon">
           <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" strokeWidth="1.7" /><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
         </span>
-        <div className="module-gate-msg">اشتراک این بخش رو نداری</div>
+        <div className="module-gate-msg">
+          {routine ? `دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگانِ «روتین من» تموم شد` : "اشتراک این بخش رو نداری"}
+        </div>
+        {routine && <div className="module-gate-sub">برای ادامه، پلن «روتین من» ماهانه {faNum(ROUTINE_PLAN_PRICE_TOMAN.toLocaleString("en-US"))} تومان</div>}
         <button
           type="button"
           className="module-gate-cta"
-          onClick={() => router.push("/subscription")}
+          onClick={() => router.push(target)}
         >
-          خرید اشتراک
+          {routine ? "خرید «روتین من»" : "خرید اشتراک"}
         </button>
       </div>
     </div>

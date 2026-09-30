@@ -43,7 +43,7 @@ export function MentorMenuAt({
       onClose();
     }
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    // تأخیر: همان کلیکی که منو را باز کرد نباید فوراً ببندد
+    // تاخیر: همان کلیکی که منو را باز کرد نباید فوراً ببندد
     const t = setTimeout(() => {
       document.addEventListener("mousedown", onDoc);
       document.addEventListener("touchstart", onDoc, { passive: true });

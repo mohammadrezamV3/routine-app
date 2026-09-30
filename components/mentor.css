@@ -489,7 +489,7 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 /* چیپ‌های تودرتو (VerificationBadges داخل یک ردیف چیپ دیگر) یک ردیف‌اند */
 .mentor-chips .mentor-chips{ display:contents; }
 
-/* ── پاپ‌آپ تأیید ─────────────────────────────────────────── */
+/* ── پاپ‌آپ تایید ─────────────────────────────────────────── */
 .mentor-dialog-msg{ margin:0; font-size:13px; font-weight:700; line-height:1.9; color:var(--text); text-align:center; }
 .mentor-dialog-hint{ margin:6px 0 0; font-size:12px; line-height:1.9; color:var(--muted); text-align:center; }
 
@@ -574,7 +574,7 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-state-note.is-block{ flex-direction:column; align-items:stretch; }
 .mentor-state-label{ display:inline-flex; align-items:center; gap:var(--m-1); font-size:11.5px; font-weight:700; color:var(--muted); }
 
-/* فیلدِ داخلِ پاپ‌آپِ تأیید (دلیلِ توقف/پایان) */
+/* فیلدِ داخلِ پاپ‌آپِ تایید (دلیلِ توقف/پایان) */
 .mentor-modal .mentor-field{ margin-top:var(--m-3); text-align:start; }
 
 /* ============================================================
@@ -594,7 +594,7 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-e2ee-line .mentor-text-btn{ padding:0 2px; font-size:11.5px; }
 .mentor-e2ee-line.is-warn{ color:var(--m-warn); }
 
-/* پیامی که خوانده نمی‌شود (کلیدِ قبلی/تأییدنشده) */
+/* پیامی که خوانده نمی‌شود (کلیدِ قبلی/تاییدنشده) */
 .mentor-msg-unreadable{ font-size:12px; font-style:italic; opacity:.75; }
 /* پیامِ خوش‌آمد از تنظیماتِ منتور — همان حبابِ پیام، با خطِ نقطه‌چین به‌جای پر */
 .support-msg.mentor-msg-welcome{ border-style:dashed; }
@@ -625,12 +625,6 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 /* ── QA round 2 ─────────────────────────────────────────────── */
 /* فیلترِ تک‌انتخابیِ داخلِ یک بخشِ flush (SegmentedTabs) */
 .mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
-/* سوییچِ روشن در تم روشن: قانونِ سراسریِ body[data-theme="light"] .ios-toggle
-   (اسپسیفیسیتیِ بالاتر) رنگِ accentِ .ios-toggle.on را می‌پوشاند و «روشن» و
-   «خاموش» یک‌رنگ دیده می‌شدند. فقط برای بخشِ منتور؛ رفعِ سراسری در globals.css
-   جداگانه گزارش شده است. */
-body[data-theme="light"] .mentor-page .ios-toggle.on{ background:var(--accent); border-color:var(--accent); }
-@media (hover:hover){ body[data-theme="light"] .mentor-page .ios-toggle.on:hover{ background:var(--accent); border-color:var(--accent); } }
 
 /* ── شرایط منتورها (agent J) — MentorPlatformNotice و MentorTermsAcceptance ── */
 /* خطِ ثابتِ «آریون فقط بستر است» — متنِ کم‌رنگ، بدونِ پس‌زمینه و قاب */

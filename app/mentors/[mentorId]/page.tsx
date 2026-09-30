@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { TickButton } from "@/components/TickButton";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -26,6 +27,7 @@ import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/m
 import type { AvailabilityState, MyWaitlist } from "@/lib/mentorTypes";
 import { MentorWaitlistAction } from "@/components/MentorWaitlistAction";
 import { fetchMentorProfile } from "@/lib/mentorProfileCache";
+import { GoldenName } from "@/components/GoldenName";
 
 const MESSAGE_MAX = 500;
 const REVIEW_MAX = 1000;
@@ -84,7 +86,7 @@ function MentorProfile() {
             <div className="mentor-hero-id">
               {role && <div className="rp-card-eyebrow">{role}</div>}
               <div className="mentor-hero-title">
-                <h1 className="mentor-hero-name">{mentor.name}</h1>
+                <h1 className="mentor-hero-name"><GoldenName golden={mentor.golden}>{mentor.name}</GoldenName></h1>
                 <CertificateMark certifications={mentor.certifications} size={16} />
               </div>
               {mentor.headline && <p className="mentor-hero-headline">{mentor.headline}</p>}
@@ -197,7 +199,7 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
       <MentorUserAvatar name={review.student.name} avatarUrl={review.student.avatarUrl} size={36} />
       <div className="mentor-review-body">
         <div className="mentor-review-head">
-          <span className="mentor-review-name">{review.student.name || "شاگرد"}</span>
+          <span className="mentor-review-name"><GoldenName golden={review.student.golden}>{review.student.name || "شاگرد"}</GoldenName></span>
           <RatingStars value={review.rating} />
           <span className="mentor-review-date">{fmtDate(review.createdAt)}</span>
         </div>
@@ -469,10 +471,10 @@ function RequestModal({
             <div role="group" aria-label="حوزه‌ی همکاری">
               {mentorCategories.map((c) => (
                 <label key={c} className="mentor-check">
-                  <input
-                    type="checkbox"
+                  <TickButton
+                    shape="square" size={22}
                     checked={cats.includes(c)}
-                    onChange={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
+                    onToggle={() => { setCats((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c])); setCatsError(null); }}
                   />
                   <span className="mentor-check-label">{categoryLabel(c)}</span>
                 </label>

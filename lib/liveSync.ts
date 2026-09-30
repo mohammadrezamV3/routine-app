@@ -63,6 +63,7 @@ export const LIVE_DOMAINS = {
   mentorMentorship: "mentor:mentorship",
   mentorProgram: "mentor:program",
   account: "account",
+  sleep: "sleep",
 } as const;
 
 export const ALL = "*";

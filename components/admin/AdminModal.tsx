@@ -39,7 +39,7 @@ export function AdminModal({
   );
 }
 
-// تأیید اقدام خطرناک — برای حذف دائمی باید عبارت تأیید تایپ بشه
+// تایید اقدام خطرناک — برای حذف دائمی باید عبارت تایید تایپ بشه
 export function ConfirmModal({
   title, message, confirmLabel, danger = true, typeToConfirm, onConfirm, onClose,
 }: {
@@ -51,11 +51,11 @@ export function ConfirmModal({
   const toast = useAdminToast();
   const blocked = !!typeToConfirm && typed.trim() !== typeToConfirm;
   return (
-    <AdminModal title={title} eyebrow="تأیید اقدام" onClose={onClose}>
+    <AdminModal title={title} eyebrow="تایید اقدام" onClose={onClose}>
       <div className="admin-modal-text">{message}</div>
       {typeToConfirm && (
         <label className="admin-field">
-          <span>برای تأیید، «{typeToConfirm}» رو تایپ کن</span>
+          <span>برای تایید، «{typeToConfirm}» رو تایپ کن</span>
           <input className="admin-input" value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus />
         </label>
       )}

@@ -7,9 +7,10 @@
 // ریل تا «الان» رنگی پر می‌شه و نشانگرِ «الان» بینِ گذشته و آینده می‌شینه.
 // تیک همون setDaily ِ lib/storage.ts ـه، پس همون لحظه در /weekly، هدر و استریک
 // دیده می‌شه. فقط امروز قابلِ تیکه (هم‌قانونِ /weekly). بک‌گراندِ تازه‌ای اضافه
-// نشده: کارت‌ها فقط بوردر دارن و تأکیدِ «بعدی/در جریان» نورِ روی بوردره.
+// نشده: کارت‌ها فقط بوردر دارن و تاکیدِ «بعدی/در جریان» نورِ روی بوردره.
 
 import Link from "next/link";
+import { TickButton } from "./TickButton";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
@@ -46,7 +47,7 @@ function hhmm(min: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready: boolean; tasks: TodayTask[]; stats: { completed: number; total: number; pct: number }; week: HeatCell[] | null; onToggle: (id: string) => void }) {
+export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready: boolean; tasks: TodayTask[]; stats: { completed: number; total: number; pct: number }; week: HeatCell[] | null; onToggle: (id: string, itemId?: string) => void }) {
   const [nowMin, setNowMin] = useState<number | null>(null);
   useEffect(() => {
     const f = () => { const d = new Date(); setNowMin(d.getHours() * 60 + d.getMinutes()); };
@@ -56,6 +57,9 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
   }, []);
   // آخرین تیکی که «انجام» شد — برای انفجارِ ذرات روی همون گره
   const [burst, setBurst] = useState<{ id: string; k: number } | null>(null);
+  // برنامه‌های لیستیِ بازشده (lib/routineChecklist.ts)
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const flip = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const rows = useMemo(() => {
     const nm = nowMin ?? -1;
@@ -180,7 +184,15 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
 
                   <div className="db-tl-card">
                     <div className="db-tl-card-top">
-                      {r.href ? <Link href={r.href} prefetch className="db-tl-name">{r.name}</Link> : <span className="db-tl-name">{r.name}</span>}
+                      {r.href ? <Link href={r.href} prefetch className="db-tl-name">{r.name}</Link> : r.items?.length ? (
+                        <button type="button" className="db-tl-name db-tl-name-btn" onClick={() => flip(r.id)} aria-expanded={open.has(r.id)}>{r.name}</button>
+                      ) : <span className="db-tl-name">{r.name}</span>}
+                      {!!r.items?.length && (
+                        <button type="button" className="checklist-chip" onClick={() => flip(r.id)} aria-expanded={open.has(r.id)} aria-label={open.has(r.id) ? "بستنِ لیست" : "بازکردنِ لیست"}>
+                          <span dir="ltr">{r.items.filter((i) => i.done).length}/{r.items.length}</span>
+                          <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: open.has(r.id) ? "rotate(180deg)" : undefined, transition: "transform .2s ease" }}><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </button>
+                      )}
                       {r.importance === "veryHigh" || r.importance === "high" ? (
                         <span className={`db-tl-flag is-${r.importance}`} title={r.importance === "veryHigh" ? "اهمیتِ خیلی زیاد" : "اهمیتِ زیاد"}>
                           <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 11V1.6M3 2h6l-1.4 2.2L9 6.4H3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -192,6 +204,18 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                       {r.state === "next" && nowMin !== null && r.startMin !== null && <span className="db-tl-in">{fmtIn(r.startMin - nowMin)}</span>}
                       {r.tag && <span className="db-tag">{r.tag}</span>}
                     </div>
+                    <AnimatePresence initial={false}>
+                      {!!r.items?.length && open.has(r.id) && (
+                        <motion.ul className="db-tl-items" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: D_EASE }}>
+                          {r.items.map((it) => (
+                            <li key={it.id} className={it.done ? "is-done" : ""}>
+                              <TickButton checked={it.done} size={20} onToggle={() => onToggle(r.id, it.id)} label={`${it.done ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${it.name}`} />
+                              <span>{it.name}</span>
+                            </li>
+                          ))}
+                        </motion.ul>
+                      )}
+                    </AnimatePresence>
                     {r.state === "active" && (
                       <span className="db-tl-prog" aria-label="زمانِ سپری‌شده">
                         <motion.i initial={{ scaleX: 0 }} animate={{ scaleX: Math.min(1, Math.max(0.03, r.progress)) }} transition={{ duration: 0.9, ease: D_EASE }} />

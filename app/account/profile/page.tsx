@@ -355,7 +355,7 @@ export default function AccountProfilePage() {
 
         <div className="acc-field-stack">
           {/* شماره همراه عمدا فقط‌خواندنی است: تغییرش یعنی تغییر شناسه‌ی ورود
-              و باید با تأیید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
+              و باید با تایید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
           <AuthField id="pf-phone" label="شماره همراه" icon={<Phone size={16} />}>
             <input id="pf-phone" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }} value={data.phone || "ثبت نشده"} readOnly disabled />
           </AuthField>

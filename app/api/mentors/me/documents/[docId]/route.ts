@@ -36,7 +36,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 }
 
 // DELETE /api/mentors/me/documents/:docId → فقط وقتی وضعیتِ مربوط VERIFIED نیست
-// (مدرکی که تأییدِ فعلی بهش تکیه داره نباید بی‌صدا پاک بشه).
+// (مدرکی که تاییدِ فعلی بهش تکیه داره نباید بی‌صدا پاک بشه).
 export async function DELETE(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -57,7 +57,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
             select: { status: true },
           })
         )?.status ?? "NOT_PROVIDED";
-  if (status === "VERIFIED") return conflict("مدرکِ تأییدشده قابل حذف نیست");
+  if (status === "VERIFIED") return conflict("مدرکِ تاییدشده قابل حذف نیست");
 
   await prisma.$transaction(async (tx) => {
     await tx.mentorDocument.delete({ where: { id: doc.id } });

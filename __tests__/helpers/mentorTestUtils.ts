@@ -199,9 +199,9 @@ export async function makeMentorProfile(
 }
 
 /**
- * کاربر + پروفایلِ منتوریِ منتشرشده با هویتِ تأییدشده — احرازِ هویت برای منتور
- * اجباری است (DISCOVERABLE_PROFILE_WHERE)؛ تأیید در واقع کارِ ادمین است و این‌جا
- * مستقیم نوشته می‌شود. `identity: false` پروفایلِ تأییدنشده می‌سازد.
+ * کاربر + پروفایلِ منتوریِ منتشرشده با هویتِ تاییدشده — احرازِ هویت برای منتور
+ * اجباری است (DISCOVERABLE_PROFILE_WHERE)؛ تایید در واقع کارِ ادمین است و این‌جا
+ * مستقیم نوشته می‌شود. `identity: false` پروفایلِ تاییدنشده می‌سازد.
  */
 export async function makeMentor(
   opts: Parameters<typeof makeUser>[0] = {},

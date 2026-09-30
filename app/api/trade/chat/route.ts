@@ -19,7 +19,7 @@ import {
 
 const MESSAGE_SELECT = {
   id: true, symbol: true, body: true, createdAt: true, userId: true,
-  user: { select: { name: true, username: true } },
+  user: { select: { name: true, username: true, goldenSince: true } },
 } as const;
 
 type MessageRow = Prisma.TradeChatMessageGetPayload<{ select: typeof MESSAGE_SELECT }>;
@@ -53,6 +53,7 @@ function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): C
     // نامِ نمایشی؛ اگر کاربر نام نگذاشته باشد یوزرنیم را نشان می‌دهیم.
     // ایمیل/شماره هیچ‌وقت در پاسخِ عمومی نمی‌آید.
     authorName: m.user.name?.trim() || m.user.username || "کاربر",
+    authorGolden: !!m.user.goldenSince,
     mine: m.userId === viewerId,
     reported: reportedIds.has(m.id),
   };

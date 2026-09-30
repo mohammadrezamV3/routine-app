@@ -12,6 +12,7 @@ import { useLiveRefresh } from "@/lib/liveSync";
 import { offerRemainingLabel, positionLabel } from "@/lib/mentorWaitlist";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorWaitlistResponse, MentorWaitlistRow } from "@/lib/mentorTypes";
+import { GoldenName } from "@/components/GoldenName";
 
 const ic = (Icon: typeof Hourglass, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -57,7 +58,7 @@ export function MentorWaitlistSection() {
               <MentorListItem key={e.id}>
                 <MentorRow
                   lead={<MentorUserAvatar avatarUrl={e.user.avatarUrl} name={name} size={36} />}
-                  title={name}
+                  title={<GoldenName golden={e.user.golden}>{name}</GoldenName>}
                   sub={
                     e.status === "OFFERED" && e.offerExpiresAt ? (
                       <span>نوبتش رسیده · {offerRemainingLabel(e.offerExpiresAt, new Date(), true)}</span>

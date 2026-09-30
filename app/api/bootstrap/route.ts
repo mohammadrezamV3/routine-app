@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { withBasicModules } from "@/lib/modules";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -19,7 +18,7 @@ import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
  *     به ۲۳۰ms می‌رفت. یعنی گلوگاه CPU/event loop نوده، نه Postgres.
  *   • ظرفیت اندازه‌گیری‌شده: بدون auth ~۱۲۶۴ req/s، با auth ~۷۶۰ req/s.
  *     یعنی هر درخواست حدود ۴۰٪ overhead اضافه فقط بابت
- *     getServerSession (رمزگشایی و تأیید JWT) می‌ده — و این هزینه ۱۲ بار
+ *     getServerSession (رمزگشایی و تایید JWT) می‌ده — و این هزینه ۱۲ بار
  *     در هر لود صفحه تکرار می‌شد.
  *
  * پس مسئله «کوئری کند» نبود، «تعداد درخواست» بود. این روت همون داده‌ها رو
@@ -59,7 +58,7 @@ export async function GET(req: NextRequest) {
         // lib/accountCache) می‌خونه و بدونشون «نام و نام خانوادگی» فقط نام
         // رو نشون می‌داد و تاریخ تولدِ ذخیره‌شده هیچ‌وقت پر نمی‌شد.
         lastName: true, birthDate: true, bio: true,
-        createdAt: true, isSuperAdmin: true, avatarUrl: true,
+        createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true,
         referralCode: { select: { code: true } },
         moduleAccess: { select: { module: true, active: true, expiresAt: true } },
         // فقط اشتراک واقعا فعال — عینا همون شرط /api/account. (قبلا
@@ -100,15 +99,15 @@ export async function GET(req: NextRequest) {
   // رو از دست می‌ده (چون ModuleGate از همین پاسخ تصمیم می‌گیره).
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : withBasicModules(user.moduleAccess); // پایه‌ها همیشه رایگان (lib/modules.ts)
+    : user.moduleAccess; // «روتین من» هم مثلِ بقیه: تریالِ ۱۴روزه، بعد پلن (lib/modules.ts)
 
-  const { avatarUrl, ...userRest } = user;
+  const { avatarUrl, goldenSince, ...userRest } = user;
   return NextResponse.json({
     settings,
     // شکل `user` عینا همونیه که /api/account می‌ده، تا lib/accountCache.ts
     // و ModuleGate بدون هیچ تغییری بتونن مصرفش کنن. سوپریوزر هم مثل اون‌جا
     // همه‌ی ماژول‌ها رو فعال می‌گیره — منطق دسترسی نباید بین دو مسیر فرق کنه.
-    account: { user: { ...userRest, moduleAccess } },
+    account: { user: { ...userRest, golden: !!goldenSince, moduleAccess } },
     avatarUrl: avatarUrl ?? null,
     dailyRange: range ? { from: fromRaw, to: toRaw, entries } : null,
   });

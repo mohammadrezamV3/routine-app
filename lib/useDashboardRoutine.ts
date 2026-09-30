@@ -11,7 +11,9 @@ import { computeDayStats, tasksForDate, timeStartMinutes, ScheduleOpts } from ".
 import { CustomOccurrence, DailyRecord, getCustomOccurrences, getDailyRange, getRemovedOccurrences, setDaily } from "./storage";
 import { keyMatches, useLiveRefresh } from "./liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "./wakeSleep";
-import { buildHeatmap, HeatCell, streakFromHeatmap } from "./dashboardCompute";
+import { buildHeatmap, HeatCell } from "./dashboardCompute";
+import { checklistOf, isOccDone, itemKey, toggleTask } from "./routineChecklist";
+import { computeRoutineStreak } from "./routineStreak";
 
 // ۱۳ هفته عمدا: شروعِ نقشه (شنبه‌ی ۱۲ هفته قبل) حداکثر ۹۰ روز عقب می‌ره، یعنی
 // کاملا داخلِ بازه‌ی روزانه‌ای که bootstrap همراهِ صفحه می‌فرسته (امروز−۹۰..+۷)
@@ -28,6 +30,8 @@ export type TodayTask = {
   importance?: CustomOccurrence["importance"];
   tag?: string;
   href?: string;
+  /** برنامه‌ی لیستی — آیتم‌ها با تیکِ امروز */
+  items?: { id: string; name: string; done: boolean }[];
 };
 
 export function useDashboardRoutine() {
@@ -82,12 +86,14 @@ export function useDashboardRoutine() {
     if (!custom) return [];
     return tasksForDate(today, opts).map((t) => {
       const occ = custom.find((c) => c.id === t.id);
+      const items = checklistOf(occ);
       return {
         id: t.id,
         name: t.name,
         time: t.time,
         startMin: timeStartMinutes(t.time),
-        done: !!todayRec?.tasks[t.id],
+        done: isOccDone(todayRec?.tasks, t.id, items),
+        ...(items.length ? { items: items.map((i) => ({ id: i.id, name: i.name, done: !!todayRec?.tasks[itemKey(t.id, i.id)] })) } : {}),
         importance: occ?.importance,
         tag: occ?.tag,
         href: occ?.roadmapId ? `/roadmaps/custom/${occ.roadmapId}` : occ?.mentorProgramId ? `/mentor-programs/${occ.mentorProgramId}` : undefined,
@@ -97,15 +103,17 @@ export function useDashboardRoutine() {
 
   const stats = useMemo(() => computeDayStats(today, opts, todayRec), [today, opts, todayRec]);
   const heat: HeatCell[][] = useMemo(() => (custom ? buildHeatmap(today, HEAT_WEEKS, opts, daily) : []), [custom, today, opts, daily]);
-  const streak = useMemo(() => (rangeLoaded && custom ? streakFromHeatmap(heat) : null), [rangeLoaded, custom, heat]);
+  // همون تعریفِ هدر (lib/routineStreak.ts) — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه
+  const streak = useMemo(() => (rangeLoaded && custom ? computeRoutineStreak(today, opts, daily, 90).streak : null), [rangeLoaded, custom, today, opts, daily]);
 
-  const toggle = useCallback(async (id: string) => {
+  const toggle = useCallback(async (id: string, itemId?: string) => {
     const cur = daily[todayIso] ?? { tasks: {}, wake: null };
-    const next: DailyRecord = { ...cur, tasks: { ...cur.tasks, [id]: !cur.tasks[id] } };
+    // برنامه‌ی لیستی: آیتم یا همه با هم (lib/routineChecklist.ts)
+    const next: DailyRecord = { ...cur, tasks: toggleTask(cur.tasks, id, checklistOf(custom?.find((c) => c.id === id)), itemId) };
     setDailyMap((m) => ({ ...m, [todayIso]: next }));
     pendingTicks.current++;
     try { await setDaily(todayIso, next); } finally { pendingTicks.current--; }
-  }, [daily, todayIso]);
+  }, [daily, todayIso, custom]);
 
   return {
     ready: custom !== null,

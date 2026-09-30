@@ -9,13 +9,14 @@ import { StreakFlame } from "./StreakFlame";
 import { AgentAvatar } from "./AgentAvatar";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { FriendProfileModal } from "./FriendProfileModal";
+import { GoldenName } from "./GoldenName";
 import { useSession } from "next-auth/react";
 import { getPreloadedBootstrap } from "@/lib/preload";
 
-type Friend = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; completed: number; total: number; pct: number; streak: number; favorite: boolean };
+type Friend = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
-type SearchUser = { id: string; name: string; username: string | null; avatarUrl: string | null; status: SearchStatus };
-type FriendRequest = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null };
+type SearchUser = { id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; status: SearchStatus };
+type FriendRequest = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean };
 
 // اگه دوست عکس پروفایل واقعی انتخاب نکرده باشه، دقیقا همون آواتار
 // پیکسلی پیش‌فرض خود کاربر (AgentAvatar) نشون داده می‌شه — نه یه چیز
@@ -248,7 +249,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                 <span className="hidden sm:inline-flex"><Avatar name={f.name} avatarUrl={f.avatarUrl} size={36} /></span>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <span className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{f.name}</span>
+                    <span className="text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]"><GoldenName golden={f.golden}>{f.name}</GoldenName></span>
                     <StreakFlame streak={f.streak} className="text-[10px] sm:text-[11px]" />
                   </div>
                   <div className="mt-0.5 text-[9.5px] text-dash-muted sm:text-[11.5px]">
@@ -333,7 +334,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                                   className="flex min-w-0 items-center gap-2.5 bg-transparent"
                                 >
                                   <Avatar name={u.name} avatarUrl={u.avatarUrl} size={32} />
-                                  <div className="truncate text-right text-[13px] font-semibold text-dash-text">{u.name}</div>
+                                  <div className="truncate text-right text-[13px] font-semibold text-dash-text"><GoldenName golden={u.golden}>{u.name}</GoldenName></div>
                                 </button>
                                 <button
                                   type="button"
@@ -361,7 +362,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                         <div key={r.friendshipId} className="flex items-center justify-between gap-3 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar name={r.name} avatarUrl={r.avatarUrl} size={32} />
-                            <div className="text-right text-[13px] font-semibold text-dash-text">{r.name}</div>
+                            <div className="text-right text-[13px] font-semibold text-dash-text"><GoldenName golden={r.golden}>{r.name}</GoldenName></div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -404,7 +405,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                               className="flex items-center gap-2.5 bg-transparent"
                             >
                               <Avatar name={f.name} avatarUrl={f.avatarUrl} size={32} />
-                              <div className="text-right text-[13px] font-semibold text-dash-text">{f.name}</div>
+                              <div className="text-right text-[13px] font-semibold text-dash-text"><GoldenName golden={f.golden}>{f.name}</GoldenName></div>
                             </button>
                             <div className="flex items-center gap-2.5">
                               <button

@@ -8,7 +8,7 @@ import { openReportMessage } from "@/lib/mentorConversationReport";
 // GET /api/admin/mentors/reports?status=OPEN|RESOLVED|DISMISSED&page=
 // خلاصه‌ی محتوای هدف سمت سرور ساخته می‌شه (متن نظر، عنوان برنامه، اسم عمومی
 // کاربر) — هرگز ایمیل/شماره. پیام‌های گفت‌وگو رمزگذاریِ سرتاسری دارند: ادمین فقط
-// متنِ *همان پیامِ گزارش‌شده* را می‌بیند که هنگامِ گزارش با تعهدِ فرانکینگ تأیید
+// متنِ *همان پیامِ گزارش‌شده* را می‌بیند که هنگامِ گزارش با تعهدِ فرانکینگ تایید
 // و در خودِ گزارش ذخیره شده (reportedText) — هرگز از جدولِ پیام خوانده نمی‌شود.
 
 const STATUSES: MentorReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
@@ -22,7 +22,7 @@ type Target =
   | { kind: "REVIEW"; exists: boolean; rating: number | null; body: string | null; status: string | null; author: PublicUser | null; mentor: PublicUser | null }
   | { kind: "MESSAGE"; exists: boolean; body: string | null; createdAt: string | null; sender: PublicUser | null; verified: boolean }
   | { kind: "PROGRAM"; exists: boolean; title: string | null; type: string | null; status: string | null; mentor: PublicUser | null }
-  // «گزارش گفت‌وگو»: فقط پیام‌هایی که گزارش‌دهنده پیوست کرده و هر کدام جداگانه تأیید شده
+  // «گزارش گفت‌وگو»: فقط پیام‌هایی که گزارش‌دهنده پیوست کرده و هر کدام جداگانه تایید شده
   | { kind: "CONVERSATION"; exists: boolean; mentor: PublicUser | null; student: PublicUser | null;
       messages: { id: string; sender: PublicUser | null; text: string | null; createdAt: string; verified: boolean }[] };
 

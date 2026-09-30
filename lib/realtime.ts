@@ -105,7 +105,7 @@ export function withLiveSync<A extends unknown[], R extends Request>(
   return async (req: R, ...rest: A) => {
     const res = await handler(req, ...rest);
     if (res.status >= 200 && res.status < 300 && !realtimeDisabled()) {
-      // بعد از ساختنِ پاسخ و بدونِ await — تأخیری به درخواست اضافه نمی‌شه
+      // بعد از ساختنِ پاسخ و بدونِ await — تاخیری به درخواست اضافه نمی‌شه
       void (async () => {
         try {
           const list = typeof keys === "function" ? keys(req, ...rest) : keys;

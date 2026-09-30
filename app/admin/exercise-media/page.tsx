@@ -253,7 +253,7 @@ export default function AdminExerciseMediaPage() {
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setName(""); setSuggestOpen(true); setActiveIdx(-1); }}
                   onFocus={() => setSuggestOpen(true)}
-                  // با تأخیر، تا کلیک روی یک پیشنهاد قبل از بسته‌شدنِ لیست ثبت بشه.
+                  // با تاخیر، تا کلیک روی یک پیشنهاد قبل از بسته‌شدنِ لیست ثبت بشه.
                   onBlur={() => setTimeout(() => setSuggestOpen(false), 120)}
                   onKeyDown={onQueryKey}
                   placeholder="اسم حرکت را بنویس و از لیست انتخاب کن…"

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { TickButton } from "./TickButton";
+import { checklistOf, isOccDone, itemKey, toggleTask as toggleChecklist } from "@/lib/routineChecklist";
 import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
 import { tasksForDate, ScheduleTask, isDayOver } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
@@ -57,9 +59,11 @@ export function DayModal({
   // نیست. ثبتِ «ساعت بیداری» هم برای روزِ آینده معنا ندارد و بسته می‌ماند.
   const jd = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
-  async function toggleTask(id: string) {
+  async function toggleTask(id: string, itemId?: string) {
     if (isFuture || isPast) return;
-    const next = { ...daily!, tasks: { ...daily!.tasks, [id]: !daily!.tasks[id] } };
+    // برنامه‌ی لیستی: آیتم یا همه با هم (lib/routineChecklist.ts)
+    const items = checklistOf(scheduleOpts?.customOccurrences?.find((c) => c.id === id));
+    const next = { ...daily!, tasks: toggleChecklist(daily!.tasks, id, items, itemId) };
     setDailyState(next);
     await setDaily(iso, next);
     onChanged();
@@ -100,30 +104,24 @@ export function DayModal({
         <div className="modal-body">
           {tasks.length ? (
             tasks.map((t) => {
-              const checked = !!daily.tasks[t.id];
+              const items = checklistOf(scheduleOpts?.customOccurrences?.find((c) => c.id === t.id));
+              const checked = isOccDone(daily.tasks, t.id, items);
               // همون قاعده‌ی ✕ لیستِ «برنامه‌های امروز»: روزِ گذشته، یا امروز
               // و ساعتش رد شده، و تیک نخورده.
               const missed = !checked && isDayOver(iso, new Date());
               return (
+                <Fragment key={t.id}>
                 <div
-                  key={t.id}
                   onClick={() => toggleTask(t.id)}
                   className={`task${isFuture || isPast ? " disabled" : ""}`}
                   aria-disabled={isFuture || isPast}
                 >
-                  <div className={`check${checked ? " on" : missed ? " missed" : ""}`}>
-                    {missed ? (
-                      <svg className="c-miss" viewBox="0 0 24 24" fill="none">
-                        <path d="M6 6l12 12M18 6L6 18" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
-                      </svg>
-                    ) : (
-                      <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                        <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </div>
+                  <TickButton as="span" checked={checked} state={missed ? "missed" : "idle"} size={24} disabled={isFuture || isPast} />
                   <div>
-                    <div className={`task-name${checked ? " done" : ""}`}>{t.name}</div>
+                    <div className={`task-name${checked ? " done" : ""}`}>
+                      {t.name}
+                      {items.length > 0 && <span className="task-time" dir="ltr"> {items.filter((i) => daily.tasks[itemKey(t.id, i.id)]).length}/{items.length}</span>}
+                    </div>
                     <div className="task-time">
                       {t.time}
                       {missed && (
@@ -134,6 +132,20 @@ export function DayModal({
                     </div>
                   </div>
                 </div>
+                {items.length > 0 && (
+                  <ul className="day-task-items">
+                    {items.map((it) => {
+                      const on = !!daily.tasks[itemKey(t.id, it.id)];
+                      return (
+                        <li key={it.id} className={on ? "is-done" : ""}>
+                          <TickButton checked={on} size={20} disabled={isFuture || isPast} onToggle={() => toggleTask(t.id, it.id)} label={`${on ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${it.name}`} />
+                          <span>{it.name}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                </Fragment>
               );
             })
           ) : (
@@ -141,11 +153,7 @@ export function DayModal({
           )}
 
           <div className="task" onClick={() => toggleOuting()}>
-            <div className={`check${isOuting ? " on" : ""}`}>
-              <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
+            <TickButton as="span" checked={isOuting} size={24} />
             <div className={`task-name${isOuting ? " done" : ""}`}>بیرون رفتن این روز</div>
           </div>
 

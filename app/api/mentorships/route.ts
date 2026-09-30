@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("مربی نامعتبره");
     if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
     const profile = await prisma.mentorProfile.findFirst({
-      // همان شرطِ قابلِ کشف: منتشرشده، غیرمعلق، هویتِ تأییدشده (احراز اجباری)
+      // همان شرطِ قابلِ کشف: منتشرشده، غیرمعلق، هویتِ تاییدشده (احراز اجباری)
       where: { userId: b.mentorId, ...DISCOVERABLE_PROFILE_WHERE },
       select: { ...AVAILABILITY_SELECT, categories: true, intakeQuestions: true },
     });
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
   } else if (b.studentUsername !== undefined) {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
-    // احرازِ هویت برای منتور اجباریه — بدونِ تأیید، دعوتِ شاگرد هم ممکن نیست
+    // احرازِ هویت برای منتور اجباریه — بدونِ تایید، دعوتِ شاگرد هم ممکن نیست
     if (mp.profile.identityStatus !== IDENTITY_VERIFIED_WHERE.identityStatus) return forbidden(MENTOR_IDENTITY_REQUIRED_MSG);
     const username = typeof b.studentUsername === "string" ? b.studentUsername.trim().replace(/^@/, "") : "";
     if (!isValidUsername(username)) return badRequest("یوزرنیم نامعتبره");

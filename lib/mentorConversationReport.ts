@@ -7,7 +7,7 @@ import { REPORTED_TEXT_MAX } from "@/lib/e2ee/reportServer";
 //
 // کلاینتِ گزارش‌دهنده پیام‌هایی را که انتخاب کرده (پیش‌فرض آخرین‌ها، حداکثر ۵۰)
 // با متن و کلیدِ فرانکینگِ هر کدام می‌فرستد. هر پیام *جداگانه* دقیقاً مثلِ گزارشِ
-// تکی تأیید می‌شود (docs/mentor-e2ee.md §۶): برچسبِ سرور روی تعهد + HMAC(fk, متن).
+// تکی تایید می‌شود (docs/mentor-e2ee.md §۶): برچسبِ سرور روی تعهد + HMAC(fk, متن).
 // کافی است یکی نخواند تا کلِ گزارش رد شود — گزارش‌دهنده نمی‌تواند متنی را که
 // فرستاده نشده، حتی لای پیام‌های واقعی، به کسی نسبت دهد.
 //
@@ -15,7 +15,7 @@ import { REPORTED_TEXT_MAX } from "@/lib/e2ee/reportServer";
 // او هر دو کلیدِ جهت‌دار را دارد و متنِ خودش را افشا می‌کند. تعهد همان‌قدر
 // محکم است، پس متنِ پیامِ خودش را هم نمی‌تواند عوض کند.
 // پیامِ قدیمیِ پیش از رمزگذاری: متن از خودِ سرور (legacyBody) برداشته می‌شود،
-// نه از کلاینت، و «تأییدنشده» علامت می‌خورد.
+// نه از کلاینت، و «تاییدنشده» علامت می‌خورد.
 
 export const CONVERSATION_REPORT_MAX = 50;
 
@@ -35,7 +35,7 @@ export function openReportMessage(v: string | null, reportId: string, messageId:
 }
 
 /**
- * پیام‌های پیوست را تأیید می‌کند. پیش‌فرض: روت قبلاً عضویتِ گزارش‌دهنده در
+ * پیام‌های پیوست را تایید می‌کند. پیش‌فرض: روت قبلاً عضویتِ گزارش‌دهنده در
  * این رابطه را چک کرده. `visibleAfter` = مهرِ «پاک‌شده تا»ی گزارش‌دهنده؛
  * پیامی که برای او پاک شده پذیرفته نمی‌شود.
  */
@@ -73,12 +73,12 @@ export async function verifyConversationMessages(
       continue;
     }
     if (typeof it.text !== "string" || typeof it.frankingKey !== "string" || it.text.length > REPORTED_TEXT_MAX * 2) {
-      return { ok: false, error: "متن و کلید تأیید هر پیام لازم است", messageId: it.id };
+      return { ok: false, error: "متن و کلید تایید هر پیام لازم است", messageId: it.id };
     }
-    if (!msg.clientId || !msg.commitment) return { ok: false, error: "این پیام قابل تأیید نیست", messageId: it.id };
+    if (!msg.clientId || !msg.commitment) return { ok: false, error: "این پیام قابل تایید نیست", messageId: it.id };
     const ctx = { mentorshipId: msg.mentorshipId, senderId: msg.senderId, clientId: msg.clientId };
     if (!verifyServerFrankingTag(msg.serverTag, { ...ctx, commitment: msg.commitment, createdAt: msg.createdAt })) {
-      return { ok: false, error: "این پیام قابل تأیید نیست", messageId: it.id };
+      return { ok: false, error: "این پیام قابل تایید نیست", messageId: it.id };
     }
     if (!(await verifyCommitment(it.frankingKey, msg.commitment, ctx, it.text))) {
       return { ok: false, error: "متن گزارش با پیام ثبت‌شده نمی‌خواند", messageId: it.id };

@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
         ],
       },
     },
-    select: { id: true, name: true, username: true, avatarUrl: true },
+    select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true },
     take: 12,
   });
   if (!users.length) return NextResponse.json({ users: [] });
@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
       id: u.id,
       name: u.name || u.username || "کاربر",
       username: u.username,
+      golden: !!u.goldenSince,
       status: statusFor(u.id),
     })),
   });

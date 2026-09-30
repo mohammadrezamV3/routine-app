@@ -153,7 +153,7 @@ describe("آپلودِ مدرک", () => {
 });
 
 describe("بررسیِ ادمین", () => {
-  it("تأیید → VERIFIED + event + اعلان + نشانِ تأیید روی کارت؛ مدرک هم", async () => {
+  it("تایید → VERIFIED + event + اعلان + نشانِ تایید روی کارت؛ مدرک هم", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(jpegBytes(), "id.jpg", "IDENTITY"));
@@ -162,7 +162,7 @@ describe("بررسیِ ادمین", () => {
 
     const viewer = await makeUser();
     as(viewer);
-    // احرازِ هویت اجباری است: پیش از تأیید، پروفایلِ عمومی برای غریبه وجود ندارد
+    // احرازِ هویت اجباری است: پیش از تایید، پروفایلِ عمومی برای غریبه وجود ندارد
     expect((await mentorPage(req("GET", "/x"), { params: { mentorId: m } })).status).toBe(404);
     let card: any;
 
@@ -184,7 +184,7 @@ describe("بررسیِ ادمین", () => {
     expect(card.identityVerified).toBe(true);
     expect(card.certifications).toEqual([{ category: "FITNESS", verified: true }]);
 
-    // مدرکِ تأییدشده قابلِ حذف نیست
+    // مدرکِ تاییدشده قابلِ حذف نیست
     const docId = (await prisma.mentorDocument.findFirst({ where: { profileId: prof.id, kind: "IDENTITY" } }))!.id;
     as(m);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId } })).status).toBe(409);

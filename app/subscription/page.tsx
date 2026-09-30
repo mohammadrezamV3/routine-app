@@ -32,7 +32,7 @@ export default function SubscriptionPage() {
   }, []);
 
   // پنل Owner › Funnel — یک بار به‌ازای هر بازدید واقعی این صفحه، بی‌صدا و
-  // بدون تأثیر روی تجربه‌ی کاربر (fire-and-forget)
+  // بدون تاثیر روی تجربه‌ی کاربر (fire-and-forget)
   useEffect(() => {
     if (status === "loading") return;
     fetch("/api/analytics/track", {

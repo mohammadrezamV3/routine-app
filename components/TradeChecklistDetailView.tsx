@@ -6,6 +6,7 @@ import { Pencil, NotebookPen } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { ChecklistEditor } from "./ChecklistEditor";
+import { TickButton } from "./TickButton";
 
 type Item = { id: string; text: string; order: number; checked: boolean };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -77,7 +78,7 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
               className={`trade-check-row${checkedState[i.id] ? " done" : ""}`}
               onClick={() => toggleItem(i.id)}
             >
-              <span className="trade-check-box" />
+              <TickButton as="span" size={20} checked={!!checkedState[i.id]} />
               <span>{i.text}</span>
             </button>
           ))}

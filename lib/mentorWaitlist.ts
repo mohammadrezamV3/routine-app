@@ -40,7 +40,7 @@ export function freeSeats(maxActive: number | null, active: number, reserved: nu
 
 export type AdvanceInput = {
   acceptingStudents: boolean;
-  /** منتور الان در کشف است (منتشر، غیرمعلق، هویتِ تأییدشده، حسابِ سالم) */
+  /** منتور الان در کشف است (منتشر، غیرمعلق، هویتِ تاییدشده، حسابِ سالم) */
   discoverable: boolean;
   /** عدمِ حضور با توقفِ درخواست‌ها */
   awayPaused: boolean;

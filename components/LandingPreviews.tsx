@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TickButton } from "./TickButton";
 import {
   Bell, Check, Dumbbell, Filter, History, Calendar, Pencil, Percent, Plus, Repeat2, RotateCw,
   Send, Timer, UtensilsCrossed, Wallet, ArrowUp, X,
@@ -309,7 +310,7 @@ export function PreviewTrade() {
         <div className="trade-checklist-items">
           {[["روند تایم بالاتر هم‌جهته", true], ["حد ضرر پشت ساختار", true], ["خبر مهم تا 30 دقیقه‌ی بعد نیست", false]].map(([t, d]) => (
             <div key={t as string} className={`trade-check-row readonly${d ? " done" : ""}`}>
-              <span className="trade-check-box" />
+              <TickButton as="span" checked={!!d} size={20} />
               <span>{t}</span>
             </div>
           ))}

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 // روشن/خاموش‌کردن ورود دومرحله‌ای پیامکی.
 //
-// شرط روشن‌کردن: شماره‌ی موبایل تأییدشده روی حساب. بدونش، روشن‌کردن ۲FA
+// شرط روشن‌کردن: شماره‌ی موبایل تاییدشده روی حساب. بدونش، روشن‌کردن ۲FA
 // یعنی قفل‌شدن کاربر بیرون حساب خودش — چون هیچ‌جا نمی‌شه کد فرستاد.
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "اول باید شماره موبایلت روی حساب ثبت بشه" }, { status: 400 });
     }
     if (!user.phoneVerifiedAt) {
-      return NextResponse.json({ error: "شماره موبایلت هنوز تأیید نشده — بدون شماره‌ی تأییدشده نمی‌شه کد فرستاد" }, { status: 400 });
+      return NextResponse.json({ error: "شماره موبایلت هنوز تایید نشده — بدون شماره‌ی تاییدشده نمی‌شه کد فرستاد" }, { status: 400 });
     }
   }
 

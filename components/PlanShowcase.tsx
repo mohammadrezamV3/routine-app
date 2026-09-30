@@ -29,7 +29,7 @@ export const DURATION_LABELS: Record<Duration, string> = { "1": "1 ماهه", "3
 
 export type PlanCard = {
   key: string; nameFa: string; highlight?: boolean; icon: JSX.Element;
-  free?: boolean; prices?: Record<Duration, string>;
+  free?: boolean; note?: string; prices?: Record<Duration, string>;
   // مبلغ خام هر مدت به کوچک‌ترین واحد ارز (ریال برای ایران، سنت برای
   // بین‌المللی) — دقیقا هم‌ارز همون رشته‌ی نمایشی prices، ولی برای
   // پرداخت واقعی (چک‌اوت) لازمه، چون parse رشته‌ی فرمت‌شده شکننده‌ست.
@@ -47,14 +47,16 @@ export type PlanCard = {
   features?: string[];
 };
 
-// ترتیب پلن‌ها: Base Plan (رایگان) اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
+// ترتیب پلن‌ها: «روتین من» اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
 export const PLANS_IRAN: PlanCard[] = [
   {
-    key: "basic", nameFa: "پلن پایه", free: true, icon: ICONS.weekly,
-    // قابلیت‌های نسخه‌ی رایگان هم مثل بقیه‌ی پلن‌ها روی خود کارت نوشته می‌شن
-    // (قبلا کارت رایگان هیچ لیستی نداشت و کاربر نمی‌فهمید اصلا چی می‌گیره).
-    // طبق درخواست صریح: «آمار و استریک» و «تقویم و تاریخچه‌ی روزها» دیگر
-    // این‌جا نوشته نمی‌شوند (فیچرهایی که تصمیم بود روی کارت برجسته نشوند).
+    key: "basic", nameFa: "روتین من", icon: ICONS.weekly,
+    // «روتین من» دیگه رایگانِ دائمی نیست: ۱۴ روز آزمایشی، بعد ماهانه 99 هزار تومان.
+    // مبلغ‌ها باید با lib/planPricing.ts یکی بمونن.
+    note: "14 روز رایگان",
+    prices: { "1": "99,000 تومان", "3": "260,000 تومان", "6": "520,000 تومان", "12": "1,040,000 تومان" },
+    originalPrices: { "3": "297,000 تومان", "6": "594,000 تومان", "12": "1,188,000 تومان" },
+    amounts: { "1": 990000, "3": 2600000, "6": 5200000, "12": 10400000 },
     features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو", "ثبت خواب و استریک"],
   },
   {
@@ -89,7 +91,7 @@ export type CompareRow = { label: string; included: Record<string, boolean>; upc
 export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "روتین روزانه", included: { basic: true, exercise: true, trade: true, max: true } },
   // طبق درخواست صریح: توی نسخه‌ی رایگان هم یادآوری دارو رایگانه — یک ردیف
-  // جدا (نه فقط بخشی از «روتین روزانه») که واضح نشون بده حتی پلن پایه هم
+  // جدا (نه فقط بخشی از «روتین روزانه») که واضح نشون بده حتی «روتین من» هم
   // این رو داره، در همه‌ی پلن‌ها همیشه فعاله.
   { label: "یادآوری دارو", included: { basic: true, exercise: true, trade: true, max: true } },
   { label: "برنامه بدنسازی", included: { basic: false, exercise: true, trade: false, max: true } },
@@ -209,6 +211,10 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
         </ul>
       ) : (
         <div className="flex-1" />
+      )}
+
+      {p.note && (
+        <div className={`mt-2 text-[11px] font-bold ${t.accentText}`}>{p.note}</div>
       )}
 
       {p.free ? (
@@ -345,8 +351,8 @@ const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim(
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
 export function PlansSection({ mode, currentPlanKey, title = "پلن‌ها", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
-  // توی صفحه‌ی اشتراک (mode="account") کارتِ پلنِ رایگان نشون داده نمی‌شه —
-  // هر کاربری از قبل همیشه پلنِ پایه رو داره، پس چیزی برای «خریدن»‌ش نیست.
+  // توی صفحه‌ی اشتراک (mode="account") کارتِ پلنِ رایگان (اگه وجود داشته باشه) نشون داده نمی‌شه.
+  // «روتین من» الان پولیه و این‌جا نشون داده می‌شه.
   // این فقط کارتِ خریدِ بالای صفحه رو مخفی می‌کنه، نه دیتای پلن: PLANS_IRAN
   // دست‌نخورده می‌مونه و جدولِ مقایسه‌ی پایین (tablePlans) هم‌چنان ستونِ
   // رایگان رو داره، چون خودِ جدول برای مقایسه‌ست، نه خرید.

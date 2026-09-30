@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isBasicModule } from "@/lib/modules";
 
 // نگهبان سمت سرور دسترسی ماژول‌ها. تا پیش از این، گیت‌کردن ماژول‌های
 // پولی فقط سمت کلاینت (کامپوننت ModuleGate) انجام می‌شد؛ ولی کلاینت رو
@@ -42,12 +41,6 @@ export async function requireModule(module: ModuleKey): Promise<ModuleGuardResul
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
   if (isSuperAdmin) {
     return { ok: true, userId, isSuperAdmin: true };
-  }
-
-  // ماژول‌های پایه (روتین/خواب/کارها) برای هر کاربرِ واردشده همیشه رایگان‌اند
-  // — مستقل از ردیفِ ModuleAccess (lib/modules.ts → BASIC_MODULES).
-  if (isBasicModule(module)) {
-    return { ok: true, userId, isSuperAdmin: false };
   }
 
   const access = await prisma.moduleAccess.findUnique({

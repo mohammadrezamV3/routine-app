@@ -6,6 +6,7 @@
 import { getSession } from "next-auth/react";
 import { takePreloaded, getPreloadedBootstrap, clearPreloadedBootstrap } from "./preload";
 import { BOOTSTRAP_SETTING_KEYS } from "./userSettingKeys";
+import type { SleepRecord } from "./sleep";
 import { ALL, broadcast, keyMatches, publishLocal, registerInvalidator, reportLiveError } from "./liveSync";
 
 const PREFIX = "panelMohammad:";
@@ -643,6 +644,12 @@ export type CustomOccurrence = {
   mentorProgramId?: string;
   /** آیتمِ همان برنامه‌ی منتور؛ ویرایش/جابه‌جایی باید نگهش دارد تا تیک به پیشرفتِ خودکارِ همان آیتم برسد */
   mentorItemId?: string;
+  /**
+   * برنامه‌ی «لیستی»: آیتم‌های زیرمجموعه که تک‌تک تیک می‌خورن (lib/routineChecklist.ts).
+   * تیکِ هر آیتم کلیدِ `${id}~${itemId}` در DailyRecord.tasks داره و کلیدِ خودِ
+   * برنامه همیشه = «همه‌ی آیتم‌ها انجام شدن».
+   */
+  items?: { id: string; name: string }[];
 };
 
 export async function getCustomOccurrences(): Promise<CustomOccurrence[]> {
@@ -679,4 +686,68 @@ export async function toggleOutingDate(iso: string): Promise<string[]> {
   const next = current.includes(iso) ? current.filter((d) => d !== iso) : [...current, iso];
   await setSetting("outingDates", next);
   return next;
+}
+
+// ---------- خواب (lib/sleep.ts) ----------
+// همون قراردادِ بقیه: مهمان → localStorage، کاربرِ واردشده → /api/sleep.
+// نوشتن بعد از پایانِ دوره‌ی رایگانِ «روتین من» ۴۰۳ می‌گیره — خطا بالا پرتاب
+// می‌شه تا UI پیامِ خرید رو نشون بده (نه اینکه بی‌صدا بلعیده بشه).
+
+export class SleepSaveError extends Error {
+  constructor(message: string, public status: number) { super(message); }
+}
+
+export async function getSleepRange(fromIso: string, toIso: string): Promise<SleepRecord[]> {
+  if (await isLoggedIn()) {
+    const res = await fetch(`/api/sleep?from=${fromIso}&to=${toIso}`, { cache: "no-store" }).catch(() => null);
+    if (!res?.ok) return [];
+    const json = await res.json().catch(() => null);
+    return Array.isArray(json?.entries) ? json.entries : [];
+  }
+  const out: SleepRecord[] = [];
+  if (typeof window === "undefined" || !hasLocalStorage()) return out;
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const k = window.localStorage.key(i);
+    if (!k || !k.startsWith(PREFIX + "sleep:")) continue;
+    const date = k.slice((PREFIX + "sleep:").length);
+    if (date < fromIso || date > toIso) continue;
+    try { out.push(JSON.parse(window.localStorage.getItem(k) || "null")); } catch {}
+  }
+  return out.filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export async function saveSleep(rec: SleepRecord): Promise<void> {
+  if (await isLoggedIn()) {
+    const res = await fetch("/api/sleep", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rec),
+    }).catch(() => null);
+    if (!res) throw new SleepSaveError("اتصال برقرار نشد — دوباره امتحان کن", 0);
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      throw new SleepSaveError(j?.error || "ذخیره نشد", res.status);
+    }
+    publishLocal("sleep");
+    return;
+  }
+  if (typeof window === "undefined" || !hasLocalStorage()) return;
+  try {
+    window.localStorage.setItem(PREFIX + "sleep:" + rec.date, JSON.stringify(rec));
+  } catch {
+    throw new SleepSaveError("حافظه‌ی مرورگر پر است — ذخیره نشد", 0);
+  }
+  publishLocal("sleep");
+}
+
+export async function deleteSleep(dateIso: string): Promise<void> {
+  if (await isLoggedIn()) {
+    const res = await fetch(`/api/sleep?date=${dateIso}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) throw new SleepSaveError("حذف نشد", res?.status ?? 0);
+    publishLocal("sleep");
+    return;
+  }
+  if (typeof window === "undefined" || !hasLocalStorage()) return;
+  window.localStorage.removeItem(PREFIX + "sleep:" + dateIso);
+  publishLocal("sleep");
 }

@@ -2,6 +2,7 @@
 
 import { Crown } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
+import { GoldenName } from "@/components/GoldenName";
 
 // کارت سرصفحه‌ی پنل کاربری (بالای /account).
 //
@@ -11,13 +12,14 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 // قبلا نشان اشتراک بلافاصله کنار آواتار بود (نه لبه‌ی چپ) و نام هم زیرش
 // می‌افتاد؛ حالا `account-hero-info` با flex:1 فاصله رو پر می‌کنه و نشان به چپ می‌ره.
 export function AccountHeroCard({
-  fullName, username, avatarUrl, isPremium, planNameFa,
+  fullName, username, avatarUrl, isPremium, planNameFa, golden,
 }: {
   fullName: string;
   username: string | null;
   avatarUrl: string | null;
   isPremium: boolean;
   planNameFa?: string | null;
+  golden?: boolean;
 }) {
   return (
     <div className="account-hero" dir="rtl">
@@ -30,12 +32,12 @@ export function AccountHeroCard({
       </div>
       <div className="account-hero-info">
         {/* اسم کامل نوشته می‌شه (بدون کوتاه‌شدن با «…») و اگه جا نشد به خط بعد می‌ره */}
-        <div className="account-hero-name">{fullName}</div>
+        <div className="account-hero-name"><GoldenName golden={golden}>{fullName}</GoldenName></div>
         {username && <div className="account-hero-username mono" dir="ltr">@{username}</div>}
       </div>
       <span className={`account-hero-badge${isPremium ? " premium" : ""}`}>
         <Crown size={12} />
-        {planNameFa || (isPremium ? "پریمیوم" : "پلن پایه")}
+        {planNameFa || (isPremium ? "پریمیوم" : "بدون پلن فعال")}
       </span>
     </div>
   );

@@ -67,7 +67,7 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     const mentor = await makeUser({ username: `${tag}coach`.slice(0, 20), name: "مربی", lastName: "سناریو" });
     const student = await makeUser({ username: `${tag}st`.slice(0, 20), name: "شاگرد" });
     await makeMentorProfile(mentor, { headline: `مربی ${tag}`, bio: "بیو", categories: ["FITNESS"], published: true });
-    // احرازِ هویتِ منتور اجباری است؛ تأییدِ ادمین (مسیرِ خودش در mentorVerification.test.ts)
+    // احرازِ هویتِ منتور اجباری است؛ تاییدِ ادمین (مسیرِ خودش در mentorVerification.test.ts)
     await prisma.mentorProfile.update({ where: { userId: mentor }, data: { identityStatus: "VERIFIED" } });
 
     // کشف با q
@@ -335,8 +335,8 @@ describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ
   });
 });
 
-describe("سناریو ۴ — تأییدِ مدرک توسطِ ادمین", () => {
-  it("مدرک تأیید → نشانِ تأیید روی کارتِ کشف؛ کاربرانِ عادی به فایل دسترسی ندارند", async () => {
+describe("سناریو ۴ — تاییدِ مدرک توسطِ ادمین", () => {
+  it("مدرک تایید → نشانِ تایید روی کارتِ کشف؛ کاربرانِ عادی به فایل دسترسی ندارند", async () => {
     const tag = uniqueTag();
     const mentor = await makeMentor({ username: `${tag}cert`.slice(0, 20) }, { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true });
     as(mentor);
