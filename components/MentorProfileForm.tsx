@@ -224,7 +224,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
                 ? `برای انتشار، ${missing.join(" و ")} لازم است`
                 : profile?.identityStatus === "VERIFIED"
                   ? "پروفایل منتشرشده در فهرست مربی‌ها دیده می‌شود"
-                  : "پس از تأیید مدرک شناسایی در فهرست مربی‌ها دیده می‌شود"}
+                  : "پس از تایید مدرک شناسایی در فهرست مربی‌ها دیده می‌شود"}
             </div>
           </div>
           <ToggleSwitch

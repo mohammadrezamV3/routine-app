@@ -78,7 +78,7 @@ export default function DuplicateMentorProgramPage() {
   function onStudentChange(v: string) {
     setMentorshipId(v);
     setError(null);
-    // همان شاگرد = دوره‌ی بعد؛ شاگردِ دیگر = از امروز (اگر مبدأ تاریخ داشت)
+    // همان شاگرد = دوره‌ی بعد؛ شاگردِ دیگر = از امروز (اگر مبدا تاریخ داشت)
     if (program && (program.startDate || duration != null)) {
       const today = isoLocal(new Date());
       setStart(isoToJalali(v === program.mentorshipId ? nextPeriodStart(program.endDate, today) : today));
@@ -108,7 +108,7 @@ export default function DuplicateMentorProgramPage() {
   else {
     body = (
       <>
-        <MentorSection title="برنامه‌ی مبدأ" icon={ic(Copy, MI.section)} flush>
+        <MentorSection title="برنامه‌ی مبدا" icon={ic(Copy, MI.section)} flush>
           <MentorRow
             title={program.title}
             sub={
@@ -147,7 +147,7 @@ export default function DuplicateMentorProgramPage() {
               label="تاریخ شروع" optional
               hint={range.startDate
                 ? range.endDate
-                  ? `پایان: ${fmtDate(range.endDate)} (همان ${fa((duration ?? 0) + 1)} روز برنامه‌ی مبدأ)؛ پس از پذیرش در روز شروع خودکار فعال می‌شود`
+                  ? `پایان: ${fmtDate(range.endDate)} (همان ${fa((duration ?? 0) + 1)} روز برنامه‌ی مبدا)؛ پس از پذیرش در روز شروع خودکار فعال می‌شود`
                   : "پس از پذیرش در روز شروع خودکار فعال می‌شود"
                 : "بدون تاریخ، برنامه از روز پذیرش شاگرد شروع می‌شود"}
             >
@@ -167,7 +167,7 @@ export default function DuplicateMentorProgramPage() {
 
             {target && target.id !== program.mentorshipId && (
               <p className="mentor-field-hint" style={{ margin: 0 }}>
-                آیتم‌ها، توضیح و یادداشت کپی می‌شود؛ اجرا، بازخورد و وضعیت برنامه‌ی مبدأ نه
+                آیتم‌ها، توضیح و یادداشت کپی می‌شود؛ اجرا، بازخورد و وضعیت برنامه‌ی مبدا نه
               </p>
             )}
 

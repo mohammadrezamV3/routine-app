@@ -209,7 +209,7 @@ export default function SignupPage() {
       router.push("/auth/login");
       return;
     }
-    // به خروجیِ signIn تنها اکتفا نکن — نشستِ واقعی را از سرور تأیید کن.
+    // به خروجیِ signIn تنها اکتفا نکن — نشستِ واقعی را از سرور تایید کن.
     // (چرا: همان بازنویسیِ پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
     const session = await getSession();
     setLoading(false);

@@ -183,7 +183,7 @@ function StudentPicker({ rows, missing, onPick }: { rows: MentorshipRow[]; missi
   );
 }
 
-/** ردیفِ «بر پایه‌ی …» پس از انتخابِ مبدأ، با امکانِ تغییر */
+/** ردیفِ «بر پایه‌ی …» پس از انتخابِ مبدا، با امکانِ تغییر */
 function LoadedRow({ loaded, onClear }: { loaded: Loaded; onClear: () => void }) {
   const p = loaded.prefill;
   return (
@@ -197,7 +197,7 @@ function LoadedRow({ loaded, onClear }: { loaded: Loaded; onClear: () => void })
           {p.endDate && <span>پایان {fmtDate(p.endDate)}</span>}
         </>
       }
-      end={<button type="button" className="mentor-text-btn" onClick={onClear}>تغییر مبدأ</button>}
+      end={<button type="button" className="mentor-text-btn" onClick={onClear}>تغییر مبدا</button>}
     />
   );
 }
@@ -295,7 +295,7 @@ function CopySource({
     if (!allowedTypes.includes(p.type)) { setPickError("نوع این برنامه خارج از حوزه‌ی همکاری با این شاگرد است"); return; }
     const today = isoLocal(new Date());
     const duration = rangeDuration(p.startDate, p.endDate);
-    // همان شاگرد = دوره‌ی بعد (روزِ بعد از پایانِ مبدأ)؛ شاگردِ دیگر = از امروز
+    // همان شاگرد = دوره‌ی بعد (روزِ بعد از پایانِ مبدا)؛ شاگردِ دیگر = از امروز
     const sameStudent = p.counterpart?.id === row.counterpart.id;
     const range = duration != null ? shiftedRange(duration, sameStudent ? nextPeriodStart(p.endDate, today) : today) : { startDate: null, endDate: null };
     onLoaded({

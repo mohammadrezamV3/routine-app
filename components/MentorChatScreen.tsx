@@ -18,6 +18,7 @@ import { useMentorshipActions } from "./MentorshipActions";
 import { useMentorshipRelation } from "./useMentorshipRelation";
 import { M_DUR, mT } from "./MentorMotion";
 import { publicUserName } from "@/lib/mentorTypes";
+import { GoldenName } from "@/components/GoldenName";
 
 const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -127,7 +128,7 @@ function ChatScreenBody({ id }: { id: string }) {
         </Link>
         {rel ? (
           <Link href={`/mentorship/${id}`} className="mc-pill mc-title" aria-label={`${name}؛ صفحه‌ی رابطه`}>
-            <b>{name}</b>
+            <b><GoldenName golden={rel?.row.counterpart.golden}>{name}</GoldenName></b>
             <span>
               {chatOpen && rel.row.status === "ACTIVE" && <Lock size={10} strokeWidth={2} aria-hidden />}
               {statusLine}

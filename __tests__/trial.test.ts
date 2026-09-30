@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  DEFAULT_TRIAL_AI_LIMITS, normalizeTrialAiLimits, TRIAL_AI_FEATURES, TRIAL_DAYS, TRIAL_MODULE_KEYS, TRIAL_MS,
+  DEFAULT_TRIAL_AI_LIMITS, normalizeTrialAiLimits, TRIAL_AI_FEATURES, ROUTINE_TRIAL_DAYS, ROUTINE_TRIAL_MS, TRIAL_DAYS, TRIAL_MODULE_KEYS, TRIAL_MS,
 } from "@/lib/trial";
-import { TRIAL_MODULES } from "@/lib/trialAccess";
-import { BASIC_MODULES, isBasicModule, withBasicModules } from "@/lib/modules";
+import { TRIAL_MODULES, provisionTrialAccess } from "@/lib/trialAccess";
+import { BASIC_MODULES, isBasicModule } from "@/lib/modules";
 import { findPlanPricing } from "@/lib/planPricing";
 
 describe("trial constants", () => {
@@ -36,21 +36,42 @@ describe("trial constants", () => {
   });
 });
 
-describe("basic modules are free forever", () => {
+const createMany = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/prisma", () => ({ prisma: { moduleAccess: { createMany } } }));
+
+describe("basic modules: 14-day trial, then paid", () => {
+  beforeEach(() => createMany.mockReset());
+
   it("never overlap with trial modules", () => {
     for (const m of TRIAL_MODULES) expect(isBasicModule(m)).toBe(false);
   });
 
-  it("withBasicModules forces basics active and non-expiring", () => {
-    const past = new Date(Date.now() - 1000);
-    const rows = withBasicModules([
-      { module: "ROUTINE", active: false, expiresAt: past },
-      { module: "TRADE", active: true, expiresAt: past },
-    ]);
+  it("routine trial is 14 days", () => {
+    expect(ROUTINE_TRIAL_DAYS).toBe(14);
+    expect(ROUTINE_TRIAL_MS).toBe(14 * 24 * 60 * 60 * 1000);
+  });
+
+  it("provisionTrialAccess gives basics now+14d and trial modules now+3d", async () => {
+    const now = new Date("2026-01-01T00:00:00Z");
+    await provisionTrialAccess("u1", now);
+    const { data } = createMany.mock.calls[0][0];
     for (const m of BASIC_MODULES) {
-      expect(rows.filter((r) => r.module === m)).toEqual([{ module: m, active: true, expiresAt: null }]);
+      const row = data.find((r: { module: string }) => r.module === m);
+      expect(row.active).toBe(true);
+      expect(row.expiresAt.getTime()).toBe(now.getTime() + ROUTINE_TRIAL_MS);
     }
-    expect(rows.find((r) => r.module === "TRADE")?.expiresAt).toBe(past);
+    for (const m of TRIAL_MODULES) {
+      const row = data.find((r: { module: string }) => r.module === m);
+      expect(row.expiresAt.getTime()).toBe(now.getTime() + TRIAL_MS);
+    }
+  });
+});
+
+describe("basic plan price", () => {
+  it("is 99,000 toman monthly and purchasable", () => {
+    const p = findPlanPricing("basic");
+    expect(p?.free).toBeUndefined();
+    expect(p?.amounts).toEqual({ "1": 990_000, "3": 2_600_000, "6": 5_200_000, "12": 10_400_000 });
   });
 });
 

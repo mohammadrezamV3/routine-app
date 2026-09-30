@@ -29,7 +29,7 @@ describe("mentorProgramState — ماشینِ حالت", () => {
     expect(canTransition("request_changes", "PENDING", "MENTOR")).toBeNull();
   });
 
-  it("وضعیتِ مبدأِ اشتباه رد می‌شود", () => {
+  it("وضعیتِ مبداِ اشتباه رد می‌شود", () => {
     expect(canTransition("send", "PENDING", "MENTOR")).toBeNull();
     expect(canTransition("send", "ACTIVE", "MENTOR")).toBeNull();
     expect(canTransition("accept", "DRAFT", "STUDENT")).toBeNull();

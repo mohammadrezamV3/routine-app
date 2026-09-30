@@ -30,7 +30,7 @@ const saved = async (viewer: string) => { as(viewer); return j(await listSaved()
 const search = async (viewer: string, qs: string) => { as(viewer); const r = await discover(req("GET", `/api/mentors?${qs}`)); expect(r.status).toBe(200); return (await j(r)).mentors.map((c: any) => c.userId) as string[]; };
 
 describe("احرازِ هویتِ اجباریِ منتور", () => {
-  it("منتورِ بدونِ هویتِ تأییدشده در جستجو و پروفایلِ عمومی دیده نمی‌شود", async () => {
+  it("منتورِ بدونِ هویتِ تاییدشده در جستجو و پروفایلِ عمومی دیده نمی‌شود", async () => {
     const tag = uniqueTag();
     const verified = await makeMentor({ username: `${tag}v`.slice(0, 20) });
     const pending = await makeMentor({ username: `${tag}p`.slice(0, 20) }, undefined, { identity: false });
@@ -42,7 +42,7 @@ describe("احرازِ هویتِ اجباریِ منتور", () => {
     expect((await mentorProfile(req("GET", `/api/mentors/${verified}`), { params: { mentorId: verified } })).status).toBe(200);
   });
 
-  it("درخواستِ شاگرد به منتورِ تأییدنشده ۴۰۴؛ دعوتِ منتورِ تأییدنشده ۴۰۳", async () => {
+  it("درخواستِ شاگرد به منتورِ تاییدنشده ۴۰۴؛ دعوتِ منتورِ تاییدنشده ۴۰۳", async () => {
     const m = await makeMentor({}, undefined, { identity: false });
     const s = await makeUser({ username: `st${uniqueTag()}`.slice(0, 20) });
     expect((await requestMentorship(s, m)).status).toBe(404);
@@ -109,7 +109,7 @@ describe("منتورهای ذخیره‌شده", () => {
     expect(list.mentors.map((c: any) => c.userId)).toEqual([m1]);
   });
 
-  it("ضدِ IDOR و ورودیِ نامعتبر: خودت ۴۰۰، ناموجود/تأییدنشده ۴۰۴، ناشناس ۴۰۱، ذخیره‌ی دیگران دیده نمی‌شود", async () => {
+  it("ضدِ IDOR و ورودیِ نامعتبر: خودت ۴۰۰، ناموجود/تاییدنشده ۴۰۴، ناشناس ۴۰۱، ذخیره‌ی دیگران دیده نمی‌شود", async () => {
     const me = await makeMentor();
     expect((await save(me, me)).status).toBe(400);
     expect((await save(me, "nonexistent-id")).status).toBe(404);
@@ -174,9 +174,9 @@ describe("جستجوی هوشمند و فیلترها (روت)", () => {
   });
 });
 
-// helper sanity: makeMentorProfile هنوز پروفایلِ تأییدنشده می‌سازد
+// helper sanity: makeMentorProfile هنوز پروفایلِ تاییدنشده می‌سازد
 describe("helper", () => {
-  it("makeMentorProfile هویت را تأیید نمی‌کند", async () => {
+  it("makeMentorProfile هویت را تایید نمی‌کند", async () => {
     const u = await makeUser();
     const p = await makeMentorProfile(u);
     expect(p.identityStatus).toBe("NOT_PROVIDED");

@@ -24,7 +24,7 @@ type Row = {
 const COMPONENT_LABELS: Record<MeritComponentKey, string> = {
   adherence: "پایبندی شاگردها به برنامه",
   completion: "تکمیل برنامه",
-  reviews: "نظرهای تأییدشده",
+  reviews: "نظرهای تاییدشده",
   retention: "ماندگاری 4 هفته‌ای",
   response: "سرعت پاسخ",
   renewal: "ادامه با برنامه‌ی بعدی",
@@ -40,9 +40,9 @@ const MULTIPLIER_LABELS: Record<keyof MeritBreakdown["multipliers"], string> = {
 
 const REASON_LABELS: Record<IneligibleReason, string> = {
   few_students: "کمتر از 3 شاگرد با نتیجه‌ی قابل اندازه‌گیری",
-  little_evidence: "کمتر از 20 ثبت اجرای برنامه و کمتر از 3 نظر تأییدشده",
-  identity_unverified: "هویت تأیید نشده",
-  integrity: "گزارش تأییدشده یا تعلیق اخیر",
+  little_evidence: "کمتر از 20 ثبت اجرای برنامه و کمتر از 3 نظر تاییدشده",
+  identity_unverified: "هویت تایید نشده",
+  integrity: "گزارش تاییدشده یا تعلیق اخیر",
 };
 
 const I = { size: 15, strokeWidth: 1.75 } as const;
@@ -167,7 +167,7 @@ export function MentorRankingBreakdown({ profileId }: { profileId: string }) {
             <Info k="ثبت اجرای برنامه (90 روز)" v={formatNumber(rows[0].breakdown.sample.adherenceEntries)} />
             <Info k="برنامه‌ی تمام‌شده / قضاوت‌شده" v={`${formatNumber(rows[0].breakdown.sample.programsCompleted)} / ${formatNumber(rows[0].breakdown.sample.programsJudged)}`} />
             <Info
-              k="نظر تأییدشده / کنارگذاشته"
+              k="نظر تاییدشده / کنارگذاشته"
               v={`${formatNumber(rows[0].breakdown.sample.verifiedReviews)} / ${formatNumber(rows[0].breakdown.sample.excludedReviews)}${rows[0].breakdown.sample.weightedRating !== null ? `؛ میانگین وزن‌دار ${rows[0].breakdown.sample.weightedRating.toFixed(2)}` : ""}`}
             />
             <Info k="میانه‌ی زمان پاسخ" v={rows[0].breakdown.sample.medianResponseHours === null ? "—" : `${rows[0].breakdown.sample.medianResponseHours} ساعت`} />

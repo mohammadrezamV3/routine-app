@@ -106,8 +106,8 @@ function TargetSnippet({ t }: { t: Target }) {
         <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">متن در دسترس نیست</span>}</div>
         <div className="trade-row-sub">
           {t.verified
-            ? "متن با تعهد رمزنگاری فرستنده تأیید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
-            : "پیام پیش از رمزگذاری سرتاسری ارسال شده و تأیید رمزنگاری ندارد"}
+            ? "متن با تعهد رمزنگاری فرستنده تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
+            : "پیام پیش از رمزگذاری سرتاسری ارسال شده و تایید رمزنگاری ندارد"}
         </div>
       </>
     );
@@ -125,7 +125,7 @@ function TargetSnippet({ t }: { t: Target }) {
               <div className="trade-row-sub">
                 {m.sender ? displayName(m.sender) : "—"}
                 <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(m.createdAt)}</span>
-                {!m.verified && "؛ بدون تأیید رمزنگاری"}
+                {!m.verified && "؛ بدون تایید رمزنگاری"}
               </div>
               <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{m.text || <span className="admin-muted">متن در دسترس نیست</span>}</div>
             </div>
@@ -133,8 +133,8 @@ function TargetSnippet({ t }: { t: Target }) {
         </div>
         <div className="trade-row-sub">
           {allVerified
-            ? "هر پیام با تعهد رمزنگاری فرستنده‌اش تأیید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
-            : "بعضی پیام‌ها پیش از رمزگذاری سرتاسری ارسال شده‌اند و تأیید رمزنگاری ندارند"}
+            ? "هر پیام با تعهد رمزنگاری فرستنده‌اش تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
+            : "بعضی پیام‌ها پیش از رمزگذاری سرتاسری ارسال شده‌اند و تایید رمزنگاری ندارند"}
         </div>
       </>
     );

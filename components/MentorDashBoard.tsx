@@ -24,6 +24,7 @@ import { publicUserName } from "@/lib/mentorTypes";
 import type {
   MentorDashboard, MentorSelf, MentorshipAction, MentorshipRow, MentorshipsResponse,
 } from "@/lib/mentorTypes";
+import { GoldenName } from "@/components/GoldenName";
 
 /** تعداد ردیف‌های «فعالیت اخیر» پیش از بازکردنِ کامل */
 const ACTIVITY_PREVIEW = 5;
@@ -82,7 +83,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       </MentorNotice>,
     );
   }
-  // احراز هویت اجباری است: تا تأیید و انتشار، مراحلِ فعال‌سازی بالای داشبورد می‌ماند
+  // احراز هویت اجباری است: تا تایید و انتشار، مراحلِ فعال‌سازی بالای داشبورد می‌ماند
   const setupDone = identity === "VERIFIED" && published;
 
   return (
@@ -112,7 +113,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
               key={a.studentId + a.reason}
               href={`/mentor/students/${a.studentId}`}
               lead={<MentorUserAvatar avatarUrl={a.avatarUrl} name={a.name} size={36} />}
-              title={a.name}
+              title={<GoldenName golden={a.golden}>{a.name}</GoldenName>}
               sub={<span>{a.reason}</span>}
             />
           ))}
@@ -136,7 +137,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
               key={r.id}
               href={`/mentor/students/${r.counterpart.id}`}
               lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
-              title={name}
+              title={<GoldenName golden={r.counterpart.golden}>{name}</GoldenName>}
               sub={
                 <>
                   {r.startedAt && <span>از {fmtDate(r.startedAt)}</span>}
@@ -171,7 +172,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
             title={p.title}
             sub={
               <>
-                <span>{publicUserName(p.counterpart)}</span>
+                <span><GoldenName golden={p.counterpart.golden}>{publicUserName(p.counterpart)}</GoldenName></span>
                 {p.sentAt && <span>ارسال {fmtRelative(p.sentAt)}</span>}
                 {p.version > 1 && <span>نسخه‌ی {fa(p.version)}</span>}
               </>
@@ -192,7 +193,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
             key={c.studentId}
             href={`/mentor/students/${c.studentId}`}
             lead={<MentorUserAvatar avatarUrl={c.avatarUrl} name={c.name} size={36} />}
-            title={c.name}
+            title={<GoldenName golden={c.golden}>{c.name}</GoldenName>}
             sub={c.completed + c.partial + c.missed === 0 ? (
               <span>در این 7 روز آیتم سررسیدی نداشت</span>
             ) : (
@@ -250,7 +251,7 @@ function ActivityRow({ a }: { a: MentorDashboard["recentActivity"][number] }) {
     <MentorRow
       href={internal ? a.url : undefined}
       lead={lead}
-      title={a.studentName}
+      title={<GoldenName golden={a.studentGolden}>{a.studentName}</GoldenName>}
       sub={<><span>{a.text}</span><span>{a.day ? fmtWeekday(a.day) : fmtRelative(a.at)}</span></>}
     />
   );
@@ -285,7 +286,7 @@ function MentorDashRequests({
           <MentorListItem key={r.id}>
           <MentorRow
             lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
-            title={name}
+            title={<GoldenName golden={r.counterpart.golden}>{name}</GoldenName>}
             sub={
               <>
                 <span>درخواست شاگردی</span>
@@ -322,7 +323,7 @@ function MentorDashRequests({
           <MentorListItem key={r.id}>
           <MentorRow
             lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
-            title={name}
+            title={<GoldenName golden={r.counterpart.golden}>{name}</GoldenName>}
             sub={<><span>{ic(Hourglass, MI.chip)} منتظر پاسخ شاگرد</span><span>دعوت {fmtRelative(r.createdAt)}</span></>}
             end={
               <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={!!busy} onClick={() => act(r.id, "cancel")}>

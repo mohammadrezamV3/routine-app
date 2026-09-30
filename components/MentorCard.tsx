@@ -10,6 +10,7 @@ import { MentorUserAvatar } from "./MentorUserAvatar";
 import { CertificateMark, RatingInline } from "./MentorBadges";
 import { MentorSaveButton } from "./MentorSaved";
 import { prefetchMentorProfile } from "@/lib/mentorProfileCache";
+import { GoldenName } from "@/components/GoldenName";
 
 const META_ICON = { size: 12, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -17,7 +18,7 @@ const META_ICON = { size: 12, strokeWidth: 1.75, "aria-hidden": true } as const;
  * کارتِ جمع‌وجورِ منتور در «پیدا کردن منتور» (ردیف‌های افقی و فهرست):
  * سرِ کارت آواتار، نام + مدالِ طلاییِ مدرک درست کنارِ نام، نقش/عنوان در یک خط،
  * و نشانک؛ اگر پذیرش بسته است یک خطِ کوتاهِ وضعیت؛ ردیفِ پایین امتیاز · عضویت · شِورون.
- * «هویت تأییدشده» روی کارت نمی‌آید (احرازِ هویت برای منتورشدن اجباری است).
+ * «هویت تاییدشده» روی کارت نمی‌آید (احرازِ هویت برای منتورشدن اجباری است).
  * کلِ کارت با «لینکِ کشیده» (::after روی نام) قابلِ کلیک است؛ مدال (CertificateMark،
  * لمس معنی‌اش را توضیح می‌دهد) و نشانک دکمه‌های مستقل‌اند و داخلِ <a> نمی‌نشینند.
  */
@@ -41,7 +42,7 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
               onPointerDown={() => prefetchMentorProfile(mentor.userId)}
               onMouseEnter={() => prefetchMentorProfile(mentor.userId)}
             >
-              {mentor.name}
+              <GoldenName golden={mentor.golden}>{mentor.name}</GoldenName>
             </Link>
             <CertificateMark certifications={mentor.certifications} size={16} />
           </div>

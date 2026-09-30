@@ -1,5 +1,6 @@
 "use client";
 
+import { GradientRing } from "@/components/GradientRing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -218,13 +219,7 @@ export default function RoadmapDetailPage() {
             {plan.summary && <p>{plan.summary}</p>}
           </div>
           <div className="rp-ring" aria-label={`${progress.pct} درصد`}>
-            <svg viewBox="0 0 64 64" aria-hidden>
-              <circle cx="32" cy="32" r={R} className="rp-ring-track" />
-              <circle
-                cx="32" cy="32" r={R} className="rp-ring-fill"
-                strokeDasharray={C} strokeDashoffset={C - (C * progress.pct) / 100}
-              />
-            </svg>
+            <GradientRing value={progress.pct / 100} size={74} stroke={5} />
             <div className="rp-ring-text">
               <b>{faNum(progress.pct)}٪</b>
               <span>{faNum(progress.done)}/{faNum(progress.total)}</span>

@@ -18,11 +18,11 @@ const PLANS: {
   // ---------------- ایران (تومان) ----------------
   {
     key: "basic",
-    nameFa: "پایه",
-    nameEn: "Basic",
+    nameFa: "روتین من",
+    nameEn: "My Routine",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 0, // رایگان
+    priceMonthly: 990_000, // ۹۹,۰۰۰ تومان — بعد از ۱۴ روز آزمایشی (migration 20260930120000_routine_paid_trial)
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS],
   },
   {
@@ -77,6 +77,8 @@ async function main() {
         priceMonthly: p.priceMonthly,
       },
       update: {
+        nameFa: p.nameFa,
+        nameEn: p.nameEn,
         priceMonthly: p.priceMonthly,
         currency: p.currency,
       },

@@ -41,6 +41,10 @@ export const ICONS: Record<string, JSX.Element> = {
   weekly: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
+  // خواب — هلال ماه
+  sleep: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   roadmaps: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 20 9 4l4 12 3-6 4 10" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
@@ -131,6 +135,7 @@ const LINKS: NavItem[] = [
   // داشبورد — نمای کلیِ همه‌ی بخش‌ها؛ پشتِ فلگِ `dashboard` (فعلا فقط ادمین‌ها)
   { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
   { href: "/weekly", label: "روتین", icon: "weekly" },
+  { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیرِ رودمپ‌ها. گروه فقط صفحه‌های سمتِ شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپِ پروفایل،

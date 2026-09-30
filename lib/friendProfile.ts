@@ -10,6 +10,7 @@ export type FriendProfile = {
   name: string;
   username: string | null;
   avatarUrl: string | null;
+  golden: boolean;
   bannerUrl: string | null;
   bio: string | null;
   /** فقط وقتی خودِ کاربر از تنظیمات › حریم خصوصی «sharePhone» را روشن کرده — وگرنه همیشه null. */
@@ -45,7 +46,7 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
   const [user, starsCount, starredByMe, roadmapsCompleted, plansCompleted, activeSub, liveStats] = await Promise.all([
     prisma.user.findUnique({
       where: { id: targetUserId },
-      select: { id: true, name: true, username: true, avatarUrl: true, bannerUrl: true, bio: true, bestStreak: true, phone: true, sharePhone: true },
+      select: { id: true, name: true, username: true, avatarUrl: true, bannerUrl: true, bio: true, bestStreak: true, phone: true, sharePhone: true, goldenSince: true },
     }),
     prisma.friendStar.count({ where: { receiverId: targetUserId } }),
     prisma.friendStar.findUnique({ where: { giverId_receiverId: { giverId: viewerId, receiverId: targetUserId } } }),
@@ -76,6 +77,7 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
     name: user.name || "کاربر",
     username: user.username,
     avatarUrl: user.avatarUrl,
+    golden: !!user.goldenSince,
     bannerUrl: user.bannerUrl,
     bio: user.bio,
     phone: user.sharePhone ? user.phone : null,

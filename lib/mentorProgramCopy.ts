@@ -34,7 +34,7 @@ export function rangeDuration(startIso: string | null | undefined, endIso: strin
 }
 
 /**
- * بازه‌ی برنامه‌ی کپی‌شده: شروعِ تازه + همان طولِ مبدأ. بدونِ شروعِ تازه،
+ * بازه‌ی برنامه‌ی کپی‌شده: شروعِ تازه + همان طولِ مبدا. بدونِ شروعِ تازه،
  * برنامه بی‌تاریخ می‌ماند (از روزِ پذیرش شروع می‌شود).
  */
 export function shiftedRange(durationDays: number | null, newStartIso: string | null): { startDate: string | null; endDate: string | null } {
@@ -44,7 +44,7 @@ export function shiftedRange(durationDays: number | null, newStartIso: string | 
 }
 
 /**
- * شروعِ پیش‌فرض برای «دوره‌ی بعد»: روزِ بعد از پایانِ برنامه‌ی مبدأ، ولی
+ * شروعِ پیش‌فرض برای «دوره‌ی بعد»: روزِ بعد از پایانِ برنامه‌ی مبدا، ولی
  * هرگز قبل از امروز.
  */
 export function nextPeriodStart(sourceEndIso: string | null | undefined, todayIso: string): string {

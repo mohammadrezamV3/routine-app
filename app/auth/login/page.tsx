@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // بعد از تأییدِ نشستِ واقعی، دایره‌ی لودینگ به تیک تبدیل می‌شه و بعد ناوبری.
+  // بعد از تاییدِ نشستِ واقعی، دایره‌ی لودینگ به تیک تبدیل می‌شه و بعد ناوبری.
   const [success, setSuccess] = useState(false);
   // مرحله‌ی دوم ورود (فقط وقتی کاربر ورود دومرحله‌ای پیامکی رو روشن کرده)
   const [twoFactor, setTwoFactor] = useState<{ phoneHint: string } | null>(null);

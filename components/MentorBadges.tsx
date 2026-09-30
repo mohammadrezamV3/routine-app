@@ -24,20 +24,20 @@ function withEzafe(s: string): string {
 }
 
 /**
- * جمله‌ی توضیحِ نشانِ مدرک — دقیقاً می‌گوید چه چیزی تأیید شده.
- * «مدرک مربیگری بدنسازی این منتور توسط ادمین‌های آریون بررسی و تأیید شده است»
+ * جمله‌ی توضیحِ نشانِ مدرک — دقیقاً می‌گوید چه چیزی تایید شده.
+ * «مدرک مربیگری بدنسازی این منتور توسط ادمین‌های آریون بررسی و تایید شده است»
  */
 export function certificateSentence(categories: string[]): string {
   const labels = categories.map(certLabel);
   const joined = labels.length <= 1 ? labels.join("") : `${labels.slice(0, -1).join("، ")} و ${labels[labels.length - 1]}`;
-  return `${withEzafe(joined)} این مربی توسط ادمین‌های آریون بررسی و تأیید شده است`;
+  return `${withEzafe(joined)} این مربی توسط ادمین‌های آریون بررسی و تایید شده است`;
 }
 
 /**
- * نشانِ مدرک کنارِ نام: مدالِ طلاییِ کوچک (فقط وقتی مدرکِ تأییدشده‌ای هست).
+ * نشانِ مدرک کنارِ نام: مدالِ طلاییِ کوچک (فقط وقتی مدرکِ تاییدشده‌ای هست).
  * احرازِ هویت برای همه‌ی منتورها اجباری است، پس نشانِ «هویت» وجود ندارد.
  * لمس/کلیک یا هاور (ماوس) یک پاپ‌آوِرِ کوچک باز می‌کند که دقیقاً توضیح می‌دهد
- * چه تأیید شده. دسترس‌پذیر: دکمه‌ی واقعی با aria-expanded/aria-controls،
+ * چه تایید شده. دسترس‌پذیر: دکمه‌ی واقعی با aria-expanded/aria-controls،
  * Escape فوکوس را به دکمه برمی‌گرداند، لمسِ بیرون و اسکرول می‌بندد.
  * پاپ‌آوِر به body پورتال می‌شود تا قابِ کارت (overflow) بریده‌اش نکند.
  */
@@ -104,7 +104,7 @@ export function CertificateMark({
 
   if (verified.length === 0) return null;
   const sentence = certificateSentence(verified);
-  const label = verified.length === 1 ? `${certLabel(verified[0])} تأییدشده` : "مدارک تأییدشده";
+  const label = verified.length === 1 ? `${certLabel(verified[0])} تاییدشده` : "مدارک تاییدشده";
 
   const hoverable = (e: React.PointerEvent) => e.pointerType === "mouse";
 

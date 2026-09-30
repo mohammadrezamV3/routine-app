@@ -130,7 +130,7 @@ model User {
   sharePhone       Boolean @default(false)
   // ورودِ دومرحله‌ای با پیامک — با روشن‌بودنش، بعد از رمزِ درست یک کدِ
   // یک‌بارمصرف به شماره‌ی همین حساب می‌ره و بدونِ اون کد نشستی صادر نمی‌شه.
-  // فقط وقتی می‌شه روشنش کرد که شماره‌ی تأییدشده روی حساب باشه.
+  // فقط وقتی می‌شه روشنش کرد که شماره‌ی تاییدشده روی حساب باشه.
   twoFactorEnabled Boolean @default(false)
 
   // سوپریوزر/ادمین — دسترسی نامحدود به همه ماژول‌ها بدون نیاز به اشتراک
@@ -167,6 +167,10 @@ model User {
   locale   String @default("fa") // fa | en
   timezone String @default("Asia/Tehran")
 
+  // «نامِ طلایی»: لحظه‌ای که همه‌ی اچیومنت‌های lib/achievements.ts باز شد (فقط
+  // سمتِ سرور ست می‌شه — lib/achievementsServer.ts). null = هنوز نه.
+  goldenSince DateTime?
+
   emailVerifiedAt DateTime?
   phoneVerifiedAt DateTime?
 
@@ -197,6 +201,7 @@ model User {
   // داده‌های ماژول‌ها
   dailyEntries        DailyEntry[]
   sleepEntries        SleepEntry[]
+  achievements        UserAchievement[]
   tasks               Task[]
   exercisePlans       ExercisePlan[]
   exerciseLogs        ExerciseLog[]
@@ -339,8 +344,8 @@ model PasswordResetOtp {
 // قدیمی برای چند ثبت‌نام).
 // کدِ یک‌بارمصرفِ ورودِ دومرحله‌ای — دقیقاً هم‌الگوی PasswordResetOtp (هش‌شده،
 // محدودِ چند تلاش، منقضی‌شونده). verifiedAt یعنی کد درست وارد شده و usedAt
-// یعنی همون تأییدیه واقعاً برای صدورِ نشست مصرف شده؛ همون جداسازی‌ای که
-// EmailLoginOtp هم داره، تا یک تأییدیه دو بار نشست صادر نکنه.
+// یعنی همون تاییدیه واقعاً برای صدورِ نشست مصرف شده؛ همون جداسازی‌ای که
+// EmailLoginOtp هم داره، تا یک تاییدیه دو بار نشست صادر نکنه.
 model TwoFactorOtp {
   id         String    @id @default(cuid())
   userId     String
@@ -768,11 +773,24 @@ model SleepEntry {
   targetWokeAt  DateTime?
 
   quality Int? // ۱ تا ۵، اختیاری، خودارزیابی کاربر
+  note    String? // یادداشتِ کوتاهِ اختیاری (خواب دیدم، بی‌خوابی، …)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
+  @@index([userId])
+}
+
+// اچیومنت‌های دائمی (کاتالوگ در lib/achievements.ts). یک بار که باز شد دیگه
+// قفل نمی‌شه — حتی اگه متریکش بعدا پایین بیاد (مثلا حذفِ برنامه‌ها).
+model UserAchievement {
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  @@id([userId, achievementId])
   @@index([userId])
 }
 
@@ -1810,7 +1828,7 @@ model SupportMessage {
 // ═════════════════════════════════════════════════════════════════════════
 // اکوسیستم منتور ↔ شاگرد
 //
-// آریون خودش مربی‌گری نمی‌کنه؛ فقط ابزارِ ارتباط، ساخت/تأیید/اجرای برنامه و
+// آریون خودش مربی‌گری نمی‌کنه؛ فقط ابزارِ ارتباط، ساخت/تایید/اجرای برنامه و
 // پایش رو بینِ منتورهای مستقل و شاگردها فراهم می‌کنه. نکات طراحی:
 //   - منتوربودن نقشِ جدا روی User نیست؛ داشتنِ MentorProfile یعنی منتور.
 //     (پس سیستمِ کاربر/احراز هویتِ موازی ساخته نشده.)
@@ -1917,11 +1935,11 @@ model MentorRankingStat {
   category        String // "ALL" | کلیدِ lib/mentorCategories.ts
   // امتیازِ شایستگی ۰..۱۰۰ — ترتیبِ «بهترین نتیجه»
   score           Float         @default(0)
-  // امتیازِ نظرهای تأییدشده (بیزی، ۰..۱) — ترتیبِ «بالاترین امتیاز»
+  // امتیازِ نظرهای تاییدشده (بیزی، ۰..۱) — ترتیبِ «بالاترین امتیاز»
   ratingScore     Float         @default(0)
   // حداقلِ نمونه و اعتماد برای ورود به «منتورهای محبوب»
   eligible        Boolean       @default(false)
-  // شاگردهای معتبرِ شمرده‌شده و نظرهای تأییدشده — tie-break و نمایشِ ادمین
+  // شاگردهای معتبرِ شمرده‌شده و نظرهای تاییدشده — tie-break و نمایشِ ادمین
   sampleStudents  Int           @default(0)
   verifiedReviews Int           @default(0)
   // جزئیاتِ هر مؤلفه برای توضیحِ ادمین (lib/mentorRanking.ts → MeritBreakdown)
@@ -1975,7 +1993,7 @@ model MentorDocument {
   @@index([profileId, kind])
 }
 
-// تاریخچه‌ی تصمیم‌های احراز — هر تغییرِ وضعیت (ارسال، تأیید، رد) یک ردیف
+// تاریخچه‌ی تصمیم‌های احراز — هر تغییرِ وضعیت (ارسال، تایید، رد) یک ردیف
 model MentorVerificationEvent {
   id          String             @id @default(cuid())
   profileId   String
@@ -2156,7 +2174,7 @@ model MentorProgramTemplate {
   title        String
   description  String?
   note         String?
-  // طولِ بازه‌ی برنامه‌ی مبدأ به روز (پایان − شروع)؛ با انتخابِ تاریخِ شروع، پایان از همین حساب می‌شود
+  // طولِ بازه‌ی برنامه‌ی مبدا به روز (پایان − شروع)؛ با انتخابِ تاریخِ شروع، پایان از همین حساب می‌شود
   durationDays Int?
   items        Json
   itemCount    Int               @default(0)
@@ -2453,7 +2471,7 @@ model MentorMessageKeyWrap {
 }
 
 // «انتقال سابقه از دستگاه دیگر»: دستگاهِ تازه درخواست می‌دهد، دستگاهِ قدیمی پس از
-// تطبیقِ کدِ کوتاه تأیید می‌کند و کلیدهای محتوا را برای کلیدِ دستگاهِ تازه بسته‌بندی می‌کند.
+// تطبیقِ کدِ کوتاه تایید می‌کند و کلیدهای محتوا را برای کلیدِ دستگاهِ تازه بسته‌بندی می‌کند.
 model E2EDeviceLink {
   id            String    @id @default(cuid())
   userId        String
@@ -2526,11 +2544,11 @@ model MentorReport {
   createdAt    DateTime           @default(now())
 
   // ── گزارشِ پیامِ رمزشده (مهاجرت 20260927163000_mentor_e2ee) ──
-  // متنِ *همان یک* پیامِ گزارش‌شده، فقط پس از تأییدِ تعهدِ فرانکینگ؛ رمزشده
+  // متنِ *همان یک* پیامِ گزارش‌شده، فقط پس از تاییدِ تعهدِ فرانکینگ؛ رمزشده
   // در حالِ سکون (MENTOR_DATA_KEY). ادمین جز همین متن هیچ پیامی را نمی‌بیند.
   reportedText      String?
   reportedMessageAt DateTime?
-  // true = متن با تعهدِ رمزنگاریِ فرستنده تأیید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
+  // true = متن با تعهدِ رمزنگاریِ فرستنده تایید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
   reportVerified    Boolean               @default(false)
   // پیام‌های پیوستِ گزارشِ گفت‌وگو (مهاجرت 20260928101000_mentor_chat_history)
   messages          MentorReportMessage[]
@@ -2572,7 +2590,7 @@ model SavedMentor {
 }
 
 // یک پیامِ پیوستِ «گزارش گفت‌وگو» (مهاجرت 20260928101000_mentor_chat_history).
-// هر پیام جداگانه با همان فرانکینگِ گزارشِ تکی تأیید می‌شود؛ متن فقط همین‌جا و
+// هر پیام جداگانه با همان فرانکینگِ گزارشِ تکی تایید می‌شود؛ متن فقط همین‌جا و
 // رمزشده در حالِ سکون (MENTOR_DATA_KEY) نگه داشته می‌شود — ادمین هیچ پیامِ دیگری را نمی‌بیند.
 model MentorReportMessage {
   id        String       @id @default(cuid())
@@ -2582,7 +2600,7 @@ model MentorReportMessage {
   senderId  String
   text      String
   messageAt DateTime
-  // true = تعهدِ فرانکینگ تأیید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
+  // true = تعهدِ فرانکینگ تایید شد؛ false = پیامِ قدیمیِ پیش از رمزگذاری
   verified  Boolean      @default(false)
   position  Int
 

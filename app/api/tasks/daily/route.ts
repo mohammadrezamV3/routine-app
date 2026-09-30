@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { ModuleKey } from "@prisma/client";
+import { requireModule } from "@/lib/moduleAccess";
 
 // سقف تعداد کلید «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
 const MAX_DAILY_TASK_KEYS = 500;
@@ -30,10 +32,12 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/tasks/daily  { date, tasks, wake }
+// تیک‌زدن = استفاده از «روتین من» → بعد از ۱۴ روز آزمایشی نیاز به پلن داره
+// (سمتِ سرور، نه فقط ModuleGate). خوندن آزاده تا تاریخچه گروگان نمونه.
 async function handlePOST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const guard = await requireModule(ModuleKey.ROUTINE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const parsed = await readJsonBody<{ date?: string; tasks?: Record<string, boolean>; wake?: string | null }>(req);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });

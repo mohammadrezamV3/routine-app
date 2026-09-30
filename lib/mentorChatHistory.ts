@@ -1,6 +1,6 @@
 import type { Mentorship } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { PUBLIC_USER_SELECT, type PublicUser } from "@/lib/mentorServer";
+import { PUBLIC_USER_SELECT, toPublicUser, type PublicUser } from "@/lib/mentorServer";
 
 // «سابقه‌ی گفت‌وگو» در پنل کاربری (مهاجرت 20260928101000_mentor_chat_history).
 //
@@ -73,7 +73,7 @@ export async function listChatHistory(userId: string): Promise<ChatHistoryRow[]>
       id: r.id,
       role,
       status: r.status,
-      counterpart: role === "mentor" ? r.student : r.mentor,
+      counterpart: toPublicUser(role === "mentor" ? r.student : r.mentor),
       messageCount: count,
       lastMessageAt: last?.createdAt.toISOString() ?? null,
       clearedAt: cleared?.toISOString() ?? null,

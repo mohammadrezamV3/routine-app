@@ -19,7 +19,7 @@ export const maxDuration = 60;
 
 // POST /api/calorie/scan  { imageBase64, mediaType }
 // فقط تحلیل می‌کنه و تخمین رو برمی‌گردونه — ثبت واقعی توی لاگ روزانه بعد
-// از تأیید/ویرایش کاربر، جداگانه با /api/calorie/log انجام می‌شه (همون
+// از تایید/ویرایش کاربر، جداگانه با /api/calorie/log انجام می‌شه (همون
 // الگوی «قبل از ذخیره‌ی نهایی، امکان بازبینی» که بقیه‌ی فیچرهای AI اپ دارن).
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.CALORIE);

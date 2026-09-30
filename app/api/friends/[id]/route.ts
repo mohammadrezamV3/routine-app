@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/friends/:id → رد‌کردن درخواست، لغو درخواست ارسالی، یا حذف یک دوستی تأییدشده
+// DELETE /api/friends/:id → رد‌کردن درخواست، لغو درخواست ارسالی، یا حذف یک دوستی تاییدشده
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;

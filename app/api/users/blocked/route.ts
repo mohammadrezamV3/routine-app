@@ -13,8 +13,8 @@ export async function GET() {
   const rows = await prisma.userBlock.findMany({
     where: { blockerId: userId },
     orderBy: { createdAt: "desc" },
-    select: { blocked: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+    select: { blocked: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } } },
   });
 
-  return NextResponse.json({ users: rows.map((r) => r.blocked) });
+  return NextResponse.json({ users: rows.map(({ blocked: { goldenSince, ...b } }) => ({ ...b, golden: !!goldenSince })) });
 }

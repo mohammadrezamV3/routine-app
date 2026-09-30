@@ -11,7 +11,8 @@ import { computeDayStats, tasksForDate, timeStartMinutes, ScheduleOpts } from ".
 import { CustomOccurrence, DailyRecord, getCustomOccurrences, getDailyRange, getRemovedOccurrences, setDaily } from "./storage";
 import { keyMatches, useLiveRefresh } from "./liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "./wakeSleep";
-import { buildHeatmap, HeatCell, streakFromHeatmap } from "./dashboardCompute";
+import { buildHeatmap, HeatCell } from "./dashboardCompute";
+import { computeRoutineStreak } from "./routineStreak";
 
 // ۱۳ هفته عمدا: شروعِ نقشه (شنبه‌ی ۱۲ هفته قبل) حداکثر ۹۰ روز عقب می‌ره، یعنی
 // کاملا داخلِ بازه‌ی روزانه‌ای که bootstrap همراهِ صفحه می‌فرسته (امروز−۹۰..+۷)
@@ -97,7 +98,8 @@ export function useDashboardRoutine() {
 
   const stats = useMemo(() => computeDayStats(today, opts, todayRec), [today, opts, todayRec]);
   const heat: HeatCell[][] = useMemo(() => (custom ? buildHeatmap(today, HEAT_WEEKS, opts, daily) : []), [custom, today, opts, daily]);
-  const streak = useMemo(() => (rangeLoaded && custom ? streakFromHeatmap(heat) : null), [rangeLoaded, custom, heat]);
+  // همون تعریفِ هدر (lib/routineStreak.ts) — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه
+  const streak = useMemo(() => (rangeLoaded && custom ? computeRoutineStreak(today, opts, daily, 90).streak : null), [rangeLoaded, custom, today, opts, daily]);
 
   const toggle = useCallback(async (id: string) => {
     const cur = daily[todayIso] ?? { tasks: {}, wake: null };

@@ -10,13 +10,13 @@ import { routineStatsForUsers } from "@/lib/friendStats";
  * داده لود اولیه را **داخل خود HTML** می‌فرستد، نه با یک درخواست جدا.
  *
  * چرا: حتی بعد از این‌که همه درخواست‌ها به یک `/api/bootstrap` جمع شدن، و
- * حتی وقتی تأخیر شبکه **صفر** بود، اولین بایت داده ۱۳۲ms بعد می‌رسید —
+ * حتی وقتی تاخیر شبکه **صفر** بود، اولین بایت داده ۱۳۲ms بعد می‌رسید —
  * چون مرورگر باید اول HTML را پارس کند، بعد اسکریپت inline را اجرا کند،
  * بعد یک رفت‌وبرگشت کامل دیگر برای داده بزند. آن رفت‌وبرگشت ذاتی نیست:
  * سرور همان لحظه‌ای که HTML را می‌سازد، دسترسی کامل به همان داده دارد.
  *
  * با inline کردن، داده صفحه دقیقا هم‌زمان با HTML می‌رسد — صفر رفت‌وبرگشت
- * اضافه، در هر تأخیر شبکه‌ای.
+ * اضافه، در هر تاخیر شبکه‌ای.
  *
  * برای مهمان‌ها هیچ کوئری‌ای نمی‌زند و هیچ چیزی رندر نمی‌کند.
  */
@@ -29,7 +29,7 @@ export async function InlineBootstrap() {
   if (!secret) return null;
 
   // getToken همان توکنی را می‌خواند که NextAuth ساخته و **امضا/رمزش را
-  // تأیید می‌کند** — این‌جا هم مثل هر روت دیگر، کوکی راهنما هیچ تصمیم
+  // تایید می‌کند** — این‌جا هم مثل هر روت دیگر، کوکی راهنما هیچ تصمیم
   // امنیتی‌ای نمی‌گیرد؛ فقط جلوی کار بی‌مورد برای مهمان را می‌گیرد.
   let userId: string | undefined;
   try {
@@ -60,7 +60,7 @@ export async function InlineBootstrap() {
         where: { id: userId },
         select: {
           email: true, username: true, phone: true, name: true, market: true,
-          createdAt: true, isSuperAdmin: true, avatarUrl: true,
+          createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true,
           referralCode: { select: { code: true } },
           moduleAccess: { select: { module: true, active: true, expiresAt: true } },
           subscriptions: {
@@ -98,13 +98,13 @@ export async function InlineBootstrap() {
       prisma.friendship.findMany({
         where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
         include: {
-          requester: { select: { id: true, name: true, username: true, avatarUrl: true } },
-          addressee: { select: { id: true, name: true, username: true, avatarUrl: true } },
+          requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
+          addressee: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
         },
       }),
       prisma.friendship.findMany({
         where: { addresseeId: userId, status: "PENDING" },
-        include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+        include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } } },
         orderBy: { createdAt: "desc" },
       }),
     ]);
@@ -122,16 +122,17 @@ export async function InlineBootstrap() {
           name: other.name || other.username || "کاربر",
           username: other.username,
           avatarUrl: other.avatarUrl,
+          golden: !!other.goldenSince,
           favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
           ...(stats.get(other.id) ?? EMPTY),
         };
       })
       .sort((a, b) => Number(b.favorite) - Number(a.favorite));
 
-    const { avatarUrl, ...userRest } = user;
+    const { avatarUrl, goldenSince, ...userRest } = user;
     payload = {
       settings,
-      account: { user: { ...userRest, moduleAccess } },
+      account: { user: { ...userRest, golden: !!goldenSince, moduleAccess } },
       avatarUrl: avatarUrl ?? null,
       dailyRange: { from: iso(from), to: iso(to), entries },
       friends,
@@ -141,6 +142,7 @@ export async function InlineBootstrap() {
         name: r.requester.name || r.requester.username || "کاربر",
         username: r.requester.username,
         avatarUrl: r.requester.avatarUrl,
+        golden: !!r.requester.goldenSince,
       })),
     };
   } catch {

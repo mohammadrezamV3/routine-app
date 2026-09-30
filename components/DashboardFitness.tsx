@@ -30,7 +30,8 @@ export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; lo
 
 function ExerciseBody({ ex }: { ex: DashExercise }) {
   const t = ex.today;
-  const frac = t.done ? 1 : t.itemCount ? t.doneItems / t.itemCount : 0;
+  // حلقه از حرکت‌های واقعا تیک‌خورده ساخته می‌شه، نه از «پایانِ تمرین»
+  const frac = t.itemCount ? t.doneItems / t.itemCount : t.done ? 1 : 0;
   const state = !t.isGymDay ? "rest" : t.done ? "done" : t.started ? "going" : "todo";
   const cta = { rest: "مشاهده‌ی برنامه", done: "مرورِ تمرین", going: "ادامه‌ی تمرین", todo: "شروعِ تمرین" }[state];
   return (
@@ -65,9 +66,13 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
       {t.isGymDay && (t.items ?? []).length > 0 && (
         <ul className="db-ex-items" aria-label="حرکت‌های امروز">
           {t.items.map((it, i) => (
-            <motion.li key={it.name + i} className={it.done ? "is-done" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
+            <motion.li key={it.name + i} className={it.done ? "is-done" : t.done ? "is-missed" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
               <span className="db-ex-tick" aria-hidden="true">
-                <svg viewBox="0 0 16 16"><path d="m4.5 8.3 2.3 2.2 4.7-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                {!it.done && t.done ? (
+                  <svg viewBox="0 0 16 16"><path d="m5 5 6 6M11 5l-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                ) : (
+                  <svg viewBox="0 0 16 16"><path d="m4.5 8.3 2.3 2.2 4.7-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                )}
               </span>
               <span className="db-ex-name">{it.name}</span>
             </motion.li>

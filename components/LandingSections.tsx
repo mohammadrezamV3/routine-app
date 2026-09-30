@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
+import { GradientArc } from "@/components/GradientRing";
 import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
 import { FRIENDS, INERT, MockMentorChat, MockStreakTiers } from "@/components/LandingMockups";
@@ -138,7 +139,7 @@ export function LandingStats() {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const STEPS = [
-  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. «روتین من» همیشه رایگان است و 3 روز هم بدنسازی، کالری‌شمار و ژورنال ترید برایت باز است." },
+  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه، بدون کارت بانکی. «روتین من» 14 روز رایگان است و 3 روز هم بدنسازی، کالری‌شمار و ژورنال ترید برایت باز است." },
   { icon: LayoutGrid, title: "برنامه‌ات را بچین", body: "کارهای تکراری، تمرین، هدف کالری یا حساب معاملاتی‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
   { icon: CalendarCheck, title: "هر روز تیک بزن", body: "کارهای امروز را علامت بزن، استریک را نگه دار و آخر هفته ببین واقعاً چقدر جلو رفته‌ای." },
 ];
@@ -183,9 +184,9 @@ export function LandingHowItWorks() {
 // کدِ DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
 
 const DASH_RINGS = [
-  { label: "روتین", v: 0.78, a: "#00C98D", b: "#7DF9CF" },
-  { label: "تمرین", v: 0.6, a: "#3D7DFF", b: "#B06DFF" },
-  { label: "کالری", v: 0.46, a: "#FFB547", b: "#FF6F61" },
+  { label: "روتین", v: 0.78, a: "var(--ring-1a)", b: "var(--ring-1b)" },
+  { label: "تمرین", v: 0.6, a: "var(--ring-2a)", b: "var(--ring-2b)" },
+  { label: "کالری", v: 0.46, a: "var(--ring-3a)", b: "var(--ring-3b)" },
 ];
 
 const DASH_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
@@ -196,32 +197,11 @@ const DASH_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
 ];
 
 function DashRings() {
-  const reduce = useReducedMotion();
   return (
-    <svg viewBox="0 0 120 120" className="ls-dash-rings" aria-hidden="true">
-      <defs>
-        {DASH_RINGS.map((r, i) => (
-          <linearGradient key={r.label} id={`ls-dash-g${i}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={r.a} /><stop offset="1" stopColor={r.b} />
-          </linearGradient>
-        ))}
-      </defs>
-      {DASH_RINGS.map((r, i) => {
-        const rad = 52 - i * 13;
-        return (
-          <g key={r.label} transform="rotate(-90 60 60)">
-            <circle cx="60" cy="60" r={rad} fill="none" stroke="currentColor" strokeOpacity=".08" strokeWidth="9" />
-            <motion.circle
-              cx="60" cy="60" r={rad} fill="none" stroke={`url(#ls-dash-g${i})`} strokeWidth="9" strokeLinecap="round"
-              initial={reduce ? false : { pathLength: 0 }}
-              whileInView={{ pathLength: r.v }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 1.3, delay: 0.25 + i * 0.15, ease: EASE }}
-              style={reduce ? { pathLength: r.v } : undefined}
-            />
-          </g>
-        );
-      })}
+    <svg viewBox="0 0 120 120" className="ls-dash-rings" aria-hidden="true" style={{ overflow: "visible" }}>
+      {DASH_RINGS.map((r, i) => (
+        <GradientArc key={r.label} c={60} r={52 - i * 13} stroke={9} value={r.v} from={r.a} to={r.b} delay={0.25 + i * 0.15} trackOpacity={8} />
+      ))}
     </svg>
   );
 }
@@ -477,7 +457,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }
   { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکروی شخصی، 264 خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
   { icon: CandlestickChart, title: "ژورنال ترید", body: "حساب‌محور، با آمار، چک‌لیست ورود، یادداشت و برچسب.", href: "/trading-journal" },
   { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال، بدون رمز حساب.", href: "/trading-journal" },
-  { icon: CalendarClock, title: "تقویم اقتصادی", body: "9 ارز اصلی با Actual، Forecast و Previous، فیلتر تأثیر و هشدار خبر.", href: "/economic-calendar" },
+  { icon: CalendarClock, title: "تقویم اقتصادی", body: "9 ارز اصلی با Actual، Forecast و Previous، فیلتر تاثیر و هشدار خبر.", href: "/economic-calendar" },
   { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
   { icon: Route, title: "رودمپ یادگیری", body: "مسیر مرحله‌به‌مرحله با هوش مصنوعی، برای هر مهارتی.", href: "/learning-roadmap" },
   { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، گفت‌وگوی رمزگذاری‌شده و صف انتظار.", href: "/mentors" },
@@ -559,7 +539,7 @@ const QUOTES = [
   { text: "ما همان چیزی هستیم که بارها و بارها انجامش می‌دهیم.", author: "ویل دورانت" },
   { text: "به سطحِ هدف‌هایت بالا نمی‌روی؛ به سطحِ سیستم‌هایت سقوط می‌کنی.", author: "جیمز کلیر" },
   { text: "سفرِ هزار فرسنگی با یک قدم آغاز می‌شود.", author: "لائوتزو" },
-  { text: "هر کاری که انجام می‌دهی، رأیی است به آدمی که می‌خواهی باشی.", author: "جیمز کلیر" },
+  { text: "هر کاری که انجام می‌دهی، رایی است به آدمی که می‌خواهی باشی.", author: "جیمز کلیر" },
   { text: "قطره قطره جمع گردد، وانگهی دریا شود.", author: "ضرب‌المثل فارسی" },
   { text: "انگیزه شروعت می‌کند؛ عادت ادامه‌ات می‌دهد.", author: "جیم رایون" },
   { text: "کامیابی جمعِ تلاش‌های کوچکی است که روز به روز تکرار می‌شوند.", author: "رابرت کالیر" },
@@ -652,9 +632,9 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> روتین رایگان، 3 روز بقیه</span>
+          <span className="ls-cta-chip"><Sparkles size={14} /> 14 روز روتین رایگان</span>
           <h2 className="ls-cta-title">امروز، اولین تیک را بزن</h2>
-          <p className="ls-cta-sub">«روتین من» برای همیشه رایگان است؛ حساب بساز و 3 روز بدنسازی، کالری‌شمار و ژورنال ترید را هم با استفاده‌ی محدود از هوش مصنوعی امتحان کن.</p>
+          <p className="ls-cta-sub">«روتین من» 14 روز رایگان است و بعد ماهانه 99 هزار تومان؛ حساب بساز و 3 روز بدنسازی، کالری‌شمار و ژورنال ترید را هم با استفاده‌ی محدود از هوش مصنوعی امتحان کن.</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
               رایگان شروع کن <ArrowLeft size={16} />

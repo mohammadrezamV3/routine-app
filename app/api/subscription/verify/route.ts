@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isBasicModule } from "@/lib/modules";
 import { zibalVerify } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import type { Duration } from "@/lib/planPricing";
@@ -136,13 +135,23 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // دسترسی ماژول‌های پلن: هر ماژولِ پولی یک ردیف ModuleAccess با تاریخ
-  // انقضای پایان دوره‌ی اشتراک. ماژول‌های پایه (BASIC_MODULES) دست نمی‌خورن —
-  // همیشه رایگان و بی‌انقضان؛ وگرنه با پایانِ اشتراک، روتین هم بسته می‌شد.
-  const paidModules = plan.modules.map((m) => m.module).filter((m) => !isBasicModule(m));
-  await prisma.moduleAccess.deleteMany({ where: { userId, module: { in: paidModules } } });
+  // دسترسی ماژول‌های پلن: هر ماژولِ پلن (از جمله «روتین من» — دیگه رایگان
+  // نیست) یک ردیف ModuleAccess با انقضای پایانِ دوره. اگه ردیفِ فعلی دیرتر
+  // منقضی می‌شد (مثلا از خریدِ پلنِ بلندتری) همون حفظ می‌شه — خریدِ پلنِ
+  // کوتاه‌تر هیچ‌وقت دسترسیِ باقی‌مونده رو کوتاه نمی‌کنه.
+  const planModules = plan.modules.map((m) => m.module);
+  const existing = await prisma.moduleAccess.findMany({
+    where: { userId, module: { in: planModules } },
+    select: { module: true, active: true, expiresAt: true },
+  });
+  const keepUntil = new Map(existing.filter((r) => r.active).map((r) => [r.module, r.expiresAt]));
+  await prisma.moduleAccess.deleteMany({ where: { userId, module: { in: planModules } } });
   await prisma.moduleAccess.createMany({
-    data: paidModules.map((module) => ({ userId, module, active: true, expiresAt: currentPeriodEnd })),
+    data: planModules.map((module) => {
+      const prev = keepUntil.get(module);
+      const expiresAt = prev === null ? null : prev && prev > currentPeriodEnd ? prev : currentPeriodEnd;
+      return { userId, module, active: true, expiresAt };
+    }),
   });
 
   // شرط «اولین پرداخت موفق» برای کد رفرال محقق شد — وضعیت REWARDED می‌شه.

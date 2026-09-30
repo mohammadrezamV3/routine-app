@@ -223,7 +223,7 @@ export default function AdminEconomicCalendarPage() {
               </select>
             </label>
             <label className="admin-field">
-              <span>سطح تأثیر</span>
+              <span>سطح تاثیر</span>
               <select className="admin-input" value={impact} onChange={(e) => setImpact(e.target.value as EconomicImpact)}>
                 {IMPACT_ORDER.map((i) => <option key={i} value={i}>{IMPACT_LABELS[i]}</option>)}
               </select>

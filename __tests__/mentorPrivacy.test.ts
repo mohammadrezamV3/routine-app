@@ -81,7 +81,7 @@ describe("نمای منتور — دسترسی", () => {
     const v = await viewJ(mA, student);
     expect(v.routine).toEqual({ scheduleHidden: false, slots: [] });
     expect(v.modules).toEqual({ exercise: null, calorie: null });
-    expect(Object.keys(v.student).sort()).toEqual(["avatarUrl", "id", "lastName", "name", "username"]);
+    expect(Object.keys(v.student).sort()).toEqual(["avatarUrl", "golden", "id", "lastName", "name", "username"]);
     expect(JSON.stringify(v)).not.toMatch(/@example\.com|passwordHash/);
   });
 });

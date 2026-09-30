@@ -179,7 +179,7 @@ export function TradeSettings() {
               options={MINUTES_BEFORE_OPTIONS.map((m) => ({ value: String(m), label: `${m} دقیقه` }))}
             />
 
-            <label className="exercise-form-label">برای کدام سطح تأثیر</label>
+            <label className="exercise-form-label">برای کدام سطح تاثیر</label>
             <div className="trade-choice-grid">
               {IMPACT_ORDER.map((i) => (
                 <button

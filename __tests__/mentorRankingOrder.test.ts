@@ -148,7 +148,7 @@ beforeAll(async () => {
     await program(r, { type: "WORKOUT", status: "ACTIVE", activatedDaysAgo: 30, logDays: 25, donePer10: 10 });
   }
 
-  // ── fresh: تأییدشده، پروفایلِ کامل، بدونِ شاگرد ──
+  // ── fresh: تاییدشده، پروفایلِ کامل، بدونِ شاگرد ──
   profiles.fresh = await makeProfile(ids.fresh, "fresh", { categories: ["FITNESS"], certs: ["FITNESS"], createdDaysAgo: 5 });
 
   // ── hybrid: روتینِ عالی، بدنسازیِ ضعیف ──
@@ -195,7 +195,7 @@ describe("رتبه‌بندیِ شایستگی — ترتیبِ واقعی", () 
     expect(await list("sort=best")).toEqual(await list("sort=best"));
   });
 
-  it("«بالاترین امتیاز» فقط از نظرهای تأییدشده: میانگینِ خامِ ۵ی hype جلو نمی‌زند", async () => {
+  it("«بالاترین امتیاز» فقط از نظرهای تاییدشده: میانگینِ خامِ ۵ی hype جلو نمی‌زند", async () => {
     const order = who(await list("sort=rating"));
     expect(order.indexOf("strong")).toBeLessThan(order.indexOf("hype"));
   });

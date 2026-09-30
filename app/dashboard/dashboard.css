@@ -47,7 +47,8 @@ body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
 }
 /* sectionِ سراسری (padding:34px + border-top) نباید به کارت‌های داخلی برسه */
 .db-page section{ border-top:none; }
-.db-page h1, .db-page h2{ margin:0; }
+.db-page h1, .db-page h2, .db-hero-scope h1{ margin:0; }
+.db-hero-scope a{ color:inherit; text-decoration:none; }
 .db-page a{ color:inherit; text-decoration:none; }
 
 .db-num{ font-variant-numeric:tabular-nums; }
@@ -150,7 +151,7 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 .db-error svg{ width:18px; height:18px; }
 
 /* ── هیرو ───────────────────────────────────────────────── */
-.db-page .db-hero{
+.db-page .db-hero, .db-hero-scope .db-hero{
   position:relative; isolation:isolate; overflow:hidden;
   display:grid; gap:18px; padding:20px 18px 18px;
   border-radius:26px; background:var(--box-bg); border:1px solid var(--box-line);
@@ -158,11 +159,11 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
   grid-template-areas:"main orbit" "ribbon ribbon";
 }
 @media (max-width:639px){
-  .db-page .db-hero{ grid-template-columns:1fr; grid-template-areas:"main" "orbit" "ribbon"; padding:18px 15px 16px; }
+  .db-page .db-hero, .db-hero-scope .db-hero{ grid-template-columns:1fr; grid-template-areas:"main" "orbit" "ribbon"; padding:18px 15px 16px; }
 }
-@media (min-width:1024px){ .db-page .db-hero{ padding:28px 30px 24px; gap:22px 34px; } }
+@media (min-width:1024px){ .db-page .db-hero, .db-hero-scope .db-hero{ padding:28px 30px 24px; gap:22px 34px; } }
 /* بوردرِ نورانیِ چرخان — فقط لبه (mask)، کند و آرام */
-.db-page .db-hero::before{
+.db-page .db-hero::before, .db-hero-scope .db-hero::before{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.2px; z-index:-1; pointer-events:none;
   background:conic-gradient(from var(--db-rot, 0deg), transparent 0 70%, rgba(var(--accent-rgb),.9) 82%, rgba(var(--secondary-rgb),.8) 90%, transparent 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -171,7 +172,19 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 }
 @property --db-rot{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
 @keyframes db-rot{ to{ --db-rot:360deg; } }
-html[data-perf-weak] .db-page .db-hero::before{ animation:none; opacity:.35; }
+html[data-perf-weak] .db-hero::before{ animation:none; opacity:.35; }
+/* همان نورِ دنبال‌کننده‌ی موسِ کارت‌های بنتو (BentoCard) — فقط روی بوردر */
+.db-page .db-hero::after, .db-hero-scope .db-hero::after{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; z-index:-1;
+  background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0; transition:opacity .3s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .db-page .db-hero:hover::after, .db-hero-scope .db-hero:hover::after{ opacity:1; }
+}
+html[data-perf="low"] .db-hero::after{ display:none; }
 
 .db-hero-main{ grid-area:main; display:flex; flex-direction:column; gap:14px; min-width:0; }
 .db-hero-greet{ display:flex; align-items:center; gap:13px; }
@@ -189,10 +202,6 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 @media (min-width:1024px){ .db-hero-title{ font-size:28px !important; } }
 .db-hero-name{ color:var(--accent); }
 .db-hero-date{ display:flex; align-items:center; gap:10px; margin-top:3px; font-size:12.5px; color:var(--muted); }
-.db-hero-clock{
-  font-family:var(--font-latin), sans-serif; font-weight:700; font-size:12px; color:var(--text);
-  padding:1px 8px; border-radius:8px; border:1px solid var(--box-line); font-variant-numeric:tabular-nums;
-}
 .db-hero-insight{ font-size:13.5px; line-height:1.9; color:var(--text); opacity:.92; }
 @media (min-width:1024px){ .db-hero-insight{ font-size:14.5px; } }
 
@@ -209,6 +218,9 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-chip-streak svg{ color:#FF8A3D; }
 .db-chip-streak.tier-0 svg{ color:var(--muted); }
 .db-chip-bell svg{ color:var(--secondary); }
+.db-chip-trial svg{ color:var(--accent); }
+.db-chip-trial.is-urgent{ border-color:color-mix(in srgb, #f97316 55%, transparent); }
+.db-chip-trial.is-urgent svg, .db-chip-trial.is-urgent b{ color:#f97316; }
 
 .db-page .db-cmd-trigger{
   display:flex; align-items:center; gap:10px; width:100%; max-width:520px; cursor:text;
@@ -256,13 +268,17 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-ribbon-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; color:var(--muted); margin-bottom:10px; }
 .db-ribbon-end{ display:inline-flex; align-items:center; gap:5px; font-weight:700; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-ribbon-end svg{ width:15px; height:15px; }
-.db-ribbon-left{ display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--text); text-align:center; }
+.db-ribbon-left{ display:inline-flex; flex-direction:column; align-items:center; gap:2px; font-weight:700; color:var(--text); text-align:center; }
+.db-ribbon-clock{ direction:ltr; font-family:var(--font-latin), sans-serif; font-size:17px; font-weight:800; letter-spacing:.04em; font-variant-numeric:tabular-nums; color:var(--text); line-height:1.2; }
+.db-ribbon-clock i{ font-style:normal; opacity:.4; margin-inline:1px; }
+.db-ribbon-clock .s{ font-size:13px; opacity:.55; }
 .db-ribbon-set{ color:var(--accent) !important; font-weight:700; }
 .db-ribbon-track{ position:relative; height:8px; border-radius:99px; background:rgba(var(--accent-rgb),.1); }
 .db-ribbon-fill{
-  position:absolute; inset:0; border-radius:inherit; transform-origin:right;
-  background:linear-gradient(270deg, rgba(var(--accent-rgb),.25), var(--accent) 85%, var(--sun));
+  position:absolute; inset:0; border-radius:inherit;
+  background:linear-gradient(270deg, #ffd35a 0%, #ff9f43 28%, #ff6b8b 55%, #8b5cf6 80%, #4c1d95 100%);
 }
+/* گرادیان روی کلِ عرضِ ترک ثابته؛ clip-path (نه scaleX) فقط بخشِ طی‌شده رو نشون می‌ده */
 .db-ribbon-dot{
   position:absolute; top:50%; width:10px; height:10px; margin-inline-start:-5px; margin-top:-5px; border-radius:50%;
   background:var(--box-bg); border:2px solid var(--muted2); z-index:1;
@@ -271,10 +287,10 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-ribbon-sun{ position:absolute; top:50%; width:0; height:0; z-index:2; }
 .db-ribbon-sun-core{
   position:absolute; width:18px; height:18px; left:-9px; top:-9px; border-radius:50%;
-  background:var(--sun); box-shadow:0 0 0 4px rgba(255,201,74,.22), 0 0 18px 4px rgba(255,201,74,.55);
+  background:var(--sun-c, var(--sun)); box-shadow:0 0 0 4px color-mix(in srgb, var(--sun-c, #ffc94a) 22%, transparent), 0 0 18px 4px color-mix(in srgb, var(--sun-c, #ffc94a) 55%, transparent);
   animation:db-sun-pulse 3.2s ease-in-out infinite;
 }
-@keyframes db-sun-pulse{ 50%{ box-shadow:0 0 0 7px rgba(255,201,74,.12), 0 0 26px 8px rgba(255,201,74,.45); } }
+@keyframes db-sun-pulse{ 50%{ box-shadow:0 0 0 7px color-mix(in srgb, var(--sun-c, #ffc94a) 12%, transparent), 0 0 26px 8px color-mix(in srgb, var(--sun-c, #ffc94a) 45%, transparent); } }
 
 /* ── کارهای سریع ───────────────────────────────────────────── */
 /* گرید، نه اسکرولِ افقی: روی موبایل کاشیِ چهارم نصفه بریده می‌شد و معلوم نبود
@@ -463,84 +479,39 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-wbar.is-today em{ color:var(--ring-1a); }
 .db-wbar.is-today .db-wbar-track{ outline:1.5px solid color-mix(in srgb, var(--ring-1a) 60%, transparent); outline-offset:2px; }
 
-/* ── نقشه‌ی ثبات (سالانه/ماهانه، شمسی) ───────────────────────── */
-.db-heat{ container-type:inline-size; }
-.db-heat-stats{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px 10px; align-content:start; }
-
-/* انتخابِ سال — دو فلش + عدد (دکمه‌ها بی‌بک‌گراند، فقط بوردر) */
-.db-yr{ display:inline-flex; align-items:center; gap:6px; }
-.db-page .db-yr-btn{
-  width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center;
-  border:1px solid var(--box-line); border-width:1px; color:var(--muted); transition:border-color .2s ease, color .2s ease;
+/* ── نقشه‌ی ثبات ───────────────────────────────────────────── */
+.db-heat-stats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+@media (max-width:420px){ .db-heat-stats{ grid-template-columns:repeat(2, 1fr); } }
+.db-heat-scroll{ overflow-x:auto; scrollbar-width:none; direction:rtl; container-type:inline-size; }
+.db-heat-scroll::-webkit-scrollbar{ display:none; }
+/* ستون‌ها کلِ عرض رو پر می‌کنن (نه فاصله‌های خالیِ بزرگ بینِ مربع‌های کوچیک در
+   کارتِ عریض): خانه‌ها عرضِ ستون رو می‌گیرن و ارتفاعشون ثابته. */
+.db-heat-grid{ --cell:16px; display:grid; grid-template-columns:18px repeat(var(--cols), minmax(12px, 1fr)); gap:0 5px; padding-top:16px; min-width:100%; }
+.db-heat-rows{ display:flex; flex-direction:column; gap:4px; margin-inline-end:4px; }
+.db-heat-rows span{ height:var(--cell,16px); font-size:9px; color:var(--muted); line-height:var(--cell,16px); }
+.db-heat-col{ position:relative; display:flex; flex-direction:column; gap:4px; min-width:0; }
+.db-heat-month{ position:absolute; top:-16px; inset-inline-start:0; font-size:9.5px; color:var(--muted); white-space:nowrap; font-weight:700; }
+.db-heat-cell{
+  display:block; width:100%; height:var(--cell,16px); border-radius:5px;
+  background:rgba(var(--accent-rgb),.06); cursor:pointer;
+  animation:db-cell-in .5s cubic-bezier(.22,1,.36,1) backwards; animation-delay:calc(var(--d, 0) * 18ms);
+  transition:transform .15s ease;
 }
-.db-page .db-yr-btn svg{ width:14px; height:14px; }
-@media (hover:hover){ .db-page .db-yr-btn:not(:disabled):hover{ border-color:var(--ring-1a); color:var(--ring-1a); } }
-.db-page .db-yr-btn:disabled{ opacity:.35; cursor:default; }
-.db-yr-num{ min-width:44px; text-align:center; font-size:14px; font-weight:900; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
-
-/* انتخابگرِ ماه: ۱۲ خانه (۶×۲ روی موبایل، یک ردیف روی کارتِ عریض) */
-.db-months{ display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:6px; }
-@container (min-width:620px){ .db-months{ grid-template-columns:repeat(12, minmax(0,1fr)); } }
-.db-page .db-mtile{
-  position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0;
-  padding:7px 2px 6px; border-radius:11px; border:1px solid var(--box-line); border-width:1px;
-  transition:border-color .2s ease, transform .2s cubic-bezier(.22,1,.36,1);
-}
-.db-mtile-name{ font-size:10px; font-weight:800; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.db-mtile-val{ font-size:10px; font-weight:700; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; min-height:14px; display:flex; align-items:center; }
-.db-mtile-bar{ display:block; width:70%; height:3px; border-radius:99px; overflow:hidden; background:color-mix(in srgb, var(--ring-1a) 12%, transparent); }
-.db-mtile-bar i{ display:block; height:100%; border-radius:inherit; transform-origin:right; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); transition:transform .6s cubic-bezier(.22,1,.36,1); }
-.db-page .db-mtile.lv3, .db-page .db-mtile.lv4{ border-color:color-mix(in srgb, var(--ring-1a) 45%, transparent); }
-.db-page .db-mtile.lv4 .db-mtile-val{ color:var(--ring-1a); }
-.db-page .db-mtile.lv-2{ opacity:.4; border-style:dashed; cursor:default; }
-.db-page .db-mtile.is-now .db-mtile-name{ color:var(--ring-1a); }
-.db-page .db-mtile.is-on{ border-color:var(--ring-1a); box-shadow:0 0 0 1px var(--ring-1a), 0 0 14px color-mix(in srgb, var(--ring-1a) 30%, transparent); }
-@media (hover:hover){ .db-page .db-mtile:not(:disabled):not(.is-on):hover{ border-color:color-mix(in srgb, var(--ring-1a) 60%, transparent); transform:translateY(-2px); } }
-
-/* بدنه: آمار + تقویمِ ماه — روی کارتِ عریض کنارِ هم */
-.db-heat-body{ display:flex; flex-direction:column; gap:16px; }
-@container (min-width:620px){
-  .db-heat-body{ flex-direction:row; align-items:flex-start; justify-content:center; gap:34px; }
-  .db-heat-body .db-heat-stats{ flex:0 0 190px; grid-template-columns:1fr; gap:14px; padding-top:4px; }
-  .db-heat-body .db-mm{ flex:0 1 480px; }
-  .db-heat-body .db-mm-head, .db-heat-body .db-mm-grid{ max-width:none; }
-}
-.db-mm{ min-width:0; }
-.db-mm-head, .db-mm-grid{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; max-width:460px; margin-inline:auto; }
-.db-mm-head{ margin-bottom:6px; }
-.db-mm-head span{ text-align:center; font-size:10.5px; font-weight:800; color:var(--muted); }
-.db-mm-stage{ position:relative; }
-.db-mm-cell{
-  aspect-ratio:1; border-radius:10px; display:flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; color:var(--text);
-  background:color-mix(in srgb, var(--ring-1a) 6%, transparent); cursor:pointer;
-  animation:db-cell-in .45s cubic-bezier(.22,1,.36,1) backwards; animation-delay:calc(var(--d, 0) * 12ms);
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-@keyframes db-cell-in{ from{ transform:scale(.4); opacity:0; } }
-.db-mm-cell.is-blank{ background:none; cursor:default; animation:none; }
-.db-mm-cell.is-skel{ cursor:default; animation:pl-shimmer-bg 1.2s ease-in-out infinite alternate; }
-@keyframes pl-shimmer-bg{ to{ opacity:.45; } }
-.db-mm-cell.lv-1{ color:var(--muted); background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--ring-1a) 7%, transparent) 0 3px, transparent 3px 7px); }
-.db-mm-cell.lv0{ background:rgba(var(--pnl-loss-rgb),.16); color:var(--pnl-loss); }
-.db-mm-cell.lv1{ background:color-mix(in srgb, var(--ring-1a) 24%, transparent); }
-.db-mm-cell.lv2{ background:color-mix(in srgb, var(--ring-1a) 45%, transparent); }
-.db-mm-cell.lv3{ background:color-mix(in srgb, var(--ring-1a) 70%, transparent); color:#fff; }
-.db-mm-cell.lv4{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)); color:#062a1e; box-shadow:0 0 12px color-mix(in srgb, var(--ring-1a) 35%, transparent); }
-body[data-theme="light"] .db-mm-cell.lv4{ color:#fff; }
-.db-mm-cell.lvf{ background:none; border:1px dashed var(--box-line); color:var(--muted2); cursor:default; }
-.db-mm-cell.is-today{ outline:2px solid var(--text); outline-offset:2px; }
-@media (hover:hover){ .db-mm-cell:not(.is-blank):not(.lvf):not(.is-skel):hover, .db-mm-cell.is-hover{ transform:scale(1.1); } }
-.db-mm-dot{ display:inline-block; width:11px; height:11px; border-radius:3px; }
-.db-mm-dot.lv0{ background:rgba(var(--pnl-loss-rgb),.3); }
-.db-mm-dot.lv1{ background:color-mix(in srgb, var(--ring-1a) 24%, transparent); }
-.db-mm-dot.lv2{ background:color-mix(in srgb, var(--ring-1a) 45%, transparent); }
-.db-mm-dot.lv3{ background:color-mix(in srgb, var(--ring-1a) 70%, transparent); }
-.db-mm-dot.lv4{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)); }
-
+@media (min-width:1100px){ .db-heat-grid{ --cell:18px; gap:0 6px; } }
+@keyframes db-cell-in{ from{ transform:scale(0); opacity:0; } }
+.db-heat-cell.lv-1{ background:repeating-linear-gradient(135deg, rgba(var(--accent-rgb),.05) 0 2px, transparent 2px 5px); }
+.db-heat-cell.lv0{ background:rgba(var(--pnl-loss-rgb),.16); }
+.db-heat-cell.lv1{ background:rgba(var(--accent-rgb),.28); }
+.db-heat-cell.lv2{ background:rgba(var(--accent-rgb),.5); }
+.db-heat-cell.lv3{ background:rgba(var(--accent-rgb),.74); }
+.db-heat-cell.lv4{ background:var(--accent); }
+.db-heat-cell.is-future{ background:transparent; border:1px dashed var(--box-line); cursor:default; }
+.db-heat-cell.is-today{ outline:2px solid var(--text); outline-offset:1px; }
+@media (hover:hover){ .db-heat-cell:not(.is-future):hover{ transform:scale(1.15); } }
 .db-heat-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
 .db-heat-hover{ font-weight:700; color:var(--text); min-height:1.6em; }
 .db-heat-legend{ display:inline-flex; align-items:center; gap:3px; }
+.db-heat-legend .db-heat-cell{ width:11px; height:11px; border-radius:3px; animation:none; cursor:default; }
 
 /* ── تمرین / کالری ─────────────────────────────────────────── */
 .db-fit{ display:flex; flex-direction:column; gap:14px; flex:1; }
@@ -575,6 +546,9 @@ body[data-theme="light"] .db-mm-cell.lv4{ color:#fff; }
 .db-ex-tick svg{ width:12px; height:12px; }
 .db-ex-items li.is-done .db-ex-tick{ border-color:transparent; background:linear-gradient(135deg, var(--ring-2a), var(--ring-2b)); color:#fff; }
 .db-ex-items li.is-done .db-ex-name{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-2a) 60%, transparent); }
+/* حرکتی که با «پایانِ تمرین» انجام‌نشده موند — ضربدرِ قرمز، هم‌معنی با صفحه‌ی بدنسازی */
+.db-ex-items li.is-missed .db-ex-tick{ border-color:color-mix(in srgb, #ef4444 55%, transparent); color:#ef4444; }
+.db-ex-items li.is-missed .db-ex-name{ color:var(--muted); }
 .db-ex-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-ex-more{ grid-column:1 / -1; color:var(--muted); font-size:10.5px !important; }
 .db-gauge-wrap{ position:relative; display:flex; justify-content:center; }
@@ -845,4 +819,7 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
 
 /* «تلاشِ دوباره» ِ تاریخچه‌ی سالِ نقشه‌ی ثبات — لینک‌مانند، بی‌بک‌گراند */
-.db-page .db-heat-retry{ color:var(--ring-1a); font-weight:800; text-decoration:underline; text-underline-offset:3px; }
+
+/* ── هیروی «روتین من» (components/RoutineHero.tsx) — همون .db-hero ─── */
+.rt-hero-orbit{ display:flex; align-items:center; justify-content:center; }
+.rt-hero-center{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }

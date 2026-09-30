@@ -27,7 +27,7 @@ afterAll(async () => {
 
 const PROFILE = { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true };
 
-/** منتورِ قابلِ درخواست: منتشرشده + هویتِ تأییدشده (احرازِ هویت برای کشف/درخواست اجباری است) */
+/** منتورِ قابلِ درخواست: منتشرشده + هویتِ تاییدشده (احرازِ هویت برای کشف/درخواست اجباری است) */
 async function verifiedMentor(): Promise<string> {
   const id = await makeMentor({}, PROFILE);
   await prisma.mentorProfile.update({ where: { userId: id }, data: { identityStatus: "VERIFIED" } });

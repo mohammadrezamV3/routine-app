@@ -23,6 +23,7 @@ import type { Feedback, Item, ProgramDetailResponse, ProgramTransitionAction } f
 import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDateTime, fmtDay, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { FA_WEEKDAY, faNum, isoLocal } from "@/lib/jalali";
+import { GoldenName } from "@/components/GoldenName";
 
 const FEEDBACK_MAX = 2000;
 
@@ -229,7 +230,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
           <div className="mentor-row-sub">
             <span>
               <MentorUserAvatar name={otherName} avatarUrl={other.avatarUrl} size={20} />
-              {isStudent ? "مربی" : "شاگرد"}: {otherName}
+              {isStudent ? "مربی" : "شاگرد"}: <GoldenName golden={other.golden}>{otherName}</GoldenName>
             </span>
             {program.startDate && <span><CalendarDays {...CHIP} /> شروع {fmtDay(program.startDate)}</span>}
             {program.endDate && <span><CalendarDays {...CHIP} /> پایان {fmtDay(program.endDate)}</span>}

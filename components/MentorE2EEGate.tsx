@@ -34,7 +34,7 @@ export { useE2EEReady } from "@/lib/e2ee/client";
  *   • خطای واقعی (شبکه/سرور) — با «تلاش دوباره»
  *   • پشتیبانِ قدیمیِ «رمز گفت‌وگو» — یک بارِ آخر، سپس هرگز
  *   • دستگاهی که سابقه‌ی قبلی را ندارد — یک جمله، و برای حسابِ بی‌رمز «انتقال سابقه»
- *   • تأییدِ انتقالِ سابقه روی دستگاهِ قدیمی (با کدِ کوتاه)
+ *   • تاییدِ انتقالِ سابقه روی دستگاهِ قدیمی (با کدِ کوتاه)
  */
 export type GateContext = "chat" | "notes";
 
@@ -106,7 +106,7 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
 }
 
 function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" }> }) {
-  // تا دستگاهِ قدیمی تأیید کند، وضعیت هر چند ثانیه تازه می‌شود
+  // تا دستگاهِ قدیمی تایید کند، وضعیت هر چند ثانیه تازه می‌شود
   useEffect(() => {
     if (link.status !== "PENDING") return;
     const t = setInterval(() => { if (document.visibilityState === "visible") refreshIdentity(); }, 5000);
@@ -125,7 +125,7 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
     <p className="mentor-e2ee-line" role="status">
       <History {...ICON} aria-hidden />
       <span>
-        روی دستگاه دیگرت بخش مربی را باز کن و این کد را تأیید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
+        روی دستگاه دیگرت بخش مربی را باز کن و این کد را تایید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
       </span>
       <button type="button" className="mentor-text-btn" onClick={() => cancelHistoryLink(link.id)}>لغو</button>
     </p>
@@ -139,8 +139,8 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
   return (
     <MentorConfirmDialog
       message="انتقال سابقه‌ی گفت‌وگو به دستگاه تازه"
-      hint={`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگر همین کد را آن‌جا می‌بینی تأیید کن.`}
-      confirmLabel={busy ? (moved ? `${faNum(moved)} مورد منتقل شد` : "در حال انتقال") : "تأیید و انتقال"}
+      hint={`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگر همین کد را آن‌جا می‌بینی تایید کن.`}
+      confirmLabel={busy ? (moved ? `${faNum(moved)} مورد منتقل شد` : "در حال انتقال") : "تایید و انتقال"}
       danger={false}
       busy={busy}
       error={error}

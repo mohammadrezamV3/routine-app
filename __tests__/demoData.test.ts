@@ -48,7 +48,7 @@ describe("داده‌ی آزمایشی", () => {
     expect(await prisma.user.count({ where: DEMO_USER_WHERE })).toBe(21);
 
     // رتبه‌بندیِ شایستگی همون لحظه ساخته شده و متنوعه: سارا و امیر واجدِ «محبوب»،
-    // کیان (نظرهای تأییدنشده) و پریسا (تازه) نه؛ امیر با شاگردهای بیشتر جلوتر از کیان
+    // کیان (نظرهای تاییدنشده) و پریسا (تازه) نه؛ امیر با شاگردهای بیشتر جلوتر از کیان
     const rank = async (username: string) =>
       prisma.mentorRankingStat.findFirst({ where: { category: "ALL", profile: { user: { username } } }, select: { score: true, eligible: true, verifiedReviews: true } });
     const [sara, amir, kian, parisa] = await Promise.all(["demo_sara", "demo_amir", "demo_kian", "demo_parisa"].map(rank));
@@ -85,7 +85,7 @@ describe("داده‌ی آزمایشی", () => {
 
   // رمزگذاریِ سرتاسری (agent D): هیچ پیامِ آزمایشی متنِ ساده ندارد؛ گفت‌وگوی Owner فقط
   // وقتی پیام می‌گیرد که Owner کلید داشته باشد و همان را با کلیدِ خودش باز می‌کند؛
-  // گزارشِ پیامِ آزمایشی متنِ تأییدشده (رمزشده در سکون) دارد.
+  // گزارشِ پیامِ آزمایشی متنِ تاییدشده (رمزشده در سکون) دارد.
   it("پیام‌های آزمایشی رمزگذاری‌شده‌اند؛ Owner بدونِ کلید گفت‌وگوی خالی، با کلید قابل‌خواندن", async () => {
     const owner = await makeUser();
     await prisma.user.update({ where: { id: owner }, data: { isSuperAdmin: true } });

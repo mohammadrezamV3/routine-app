@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     select: { id: true, userId: true, identityStatus: true },
   });
   if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
-  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تأیید می‌کنه)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
   try {
     await loadTarget(g, profile.userId, { destructive: !g.isSuperAdmin });
   } catch (e) {
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     ? "مدرک هویت"
     : `«${MENTOR_CATEGORY_META[category as keyof typeof MENTOR_CATEGORY_META].certLabel}»`;
   const text =
-    status === "VERIFIED" ? `${subject} شما تأیید شد.`
+    status === "VERIFIED" ? `${subject} شما تایید شد.`
     : status === "REJECTED" ? `${subject} شما رد شد؛ دلیل: ${reason}`
     : status === "PENDING" ? `${subject} شما در صف بررسی ادمین‌های آریون قرار گرفت.`
     : `وضعیت ${subject} شما به «${VERIFICATION_LABELS[status]}» تغییر کرد؛ بررسی دوباره پس از ارسال مدرک تازه انجام می‌شود.`;

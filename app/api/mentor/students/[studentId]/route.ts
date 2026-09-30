@@ -7,6 +7,7 @@ import { FA_WEEKDAY } from "@/lib/jalali";
 import {
   PROGRAM_WITH_USERS_INCLUDE,
   PUBLIC_USER_SELECT,
+  toPublicUser,
   addDaysIso,
   buildProgramRows,
   datesBetween,
@@ -154,7 +155,7 @@ export async function GET(req: NextRequest, { params }: { params: { studentId: s
   if (!student) return notFound();
 
   return NextResponse.json({
-    student,
+    student: toPublicUser(student),
     mentorshipId: m.id,
     since: m.startedAt,
     range: { from: fromIso, to: toIso },

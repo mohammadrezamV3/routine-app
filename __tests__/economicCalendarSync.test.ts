@@ -108,7 +108,7 @@ describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ JBlanked)", ()
     expect(e.occursAt.toISOString()).toBe("2026-09-16T12:30:00.000Z");
   });
 
-  it("Impactِ متنی («High»/«Medium») را به سطحِ تأثیر درست تبدیل می‌کند", () => {
+  it("Impactِ متنی («High»/«Medium») را به سطحِ تاثیر درست تبدیل می‌کند", () => {
     const [medium] = normalizeExternalEvents([{ ...jbRow("")[0], Impact: "Medium" }]);
     const [low] = normalizeExternalEvents([{ ...jbRow("")[0], Impact: "Low" }]);
     expect(medium.impact).toBe("MEDIUM");
@@ -156,7 +156,7 @@ describe("normalizeTradingViewEvents (منبعِ پیش‌فرضِ بدونِ ک
     expect(e.actual).toBe("3.2%");
   });
 
-  it("importance را به سطحِ تأثیر درست تبدیل می‌کند", () => {
+  it("importance را به سطحِ تاثیر درست تبدیل می‌کند", () => {
     const [low] = normalizeTradingViewEvents(tvPayload({ importance: -1 }));
     const [medium] = normalizeTradingViewEvents(tvPayload({ importance: 0 }));
     const [high] = normalizeTradingViewEvents(tvPayload({ importance: 1 }));

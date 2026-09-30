@@ -7,7 +7,7 @@
 // شکلِ کلی:
 //
 //   کیفیت (Q, ۰..۱) = میانگینِ وزن‌دارِ شش مؤلفه‌ی *هموارشده‌ی بیزی*
-//       پایبندیِ واقعیِ شاگردها ۳۰٪ · تکمیلِ برنامه ۲۰٪ · نظرهای تأییدشده ۲۰٪
+//       پایبندیِ واقعیِ شاگردها ۳۰٪ · تکمیلِ برنامه ۲۰٪ · نظرهای تاییدشده ۲۰٪
 //       ماندگاریِ ۴هفته‌ای ۱۵٪ · سرعتِ پاسخ ۱۰٪ · تمدید/ادامه ۵٪
 //   امتیاز = ۱۰۰ × Q × شواهد × اعتماد × سلامت × فعالیت
 //
@@ -16,7 +16,7 @@
 // هویت/مدرک *جریمه‌ی نبودن* رو برمی‌داره، ولی هیچ‌وقت امتیازِ رایگان نمی‌ده.
 //
 // ضدِ دست‌کاری (قاعده‌ها این‌جا، جمع‌آوری در lib/mentorRankingStats.ts):
-//   - سهمِ هر شاگرد سقف داره (وزنِ پایبندی ≤ ۱، حداکثر ۳ برنامه، یک رأیِ پاسخ،
+//   - سهمِ هر شاگرد سقف داره (وزنِ پایبندی ≤ ۱، حداکثر ۳ برنامه، یک رایِ پاسخ،
 //     یک نظر)؛ پس یک حسابِ پرکار نمی‌تونه نتیجه رو بسازه.
 //   - نظر فقط از شاگردِ واقعی: رابطه‌ی فعالِ حداقل REVIEW_MIN_ACTIVE_DAYS روز و
 //     حداقل یک برنامه‌ی فعال‌شده؛ وزن با میزانِ مشارکتِ واقعی؛ رگباری از حساب‌های
@@ -69,7 +69,7 @@ export const RANKING_RULES = {
   ratingPriorMean: 3.5,
   ratingPriorWeight: 4,
   reviewMinActiveDays: 14,
-  /** وزنِ پایه‌ی نظرِ تأییدشده؛ بقیه با مشارکت (ثبتِ اجرای برنامه) پر می‌شود */
+  /** وزنِ پایه‌ی نظرِ تاییدشده؛ بقیه با مشارکت (ثبتِ اجرای برنامه) پر می‌شود */
   reviewBaseWeight: 0.4,
   reviewFullEngagementEntries: 20,
   /** حسابِ «تازه» در لحظه‌ی نوشتنِ نظر */
@@ -156,14 +156,14 @@ export type ReviewSignal = {
 
 export type TrustSignals = {
   identityVerified: boolean;
-  /** مدرکِ تأییدشده برای همین دامنه (کلی: هر کدوم از دسته‌های فعلی) */
+  /** مدرکِ تاییدشده برای همین دامنه (کلی: هر کدوم از دسته‌های فعلی) */
   certificateVerified: boolean;
 };
 
 export type IntegritySignals = {
   /** گزارش‌گرانِ متمایزِ معتبر با گزارشِ OPEN علیهِ منتور */
   openReporters: number;
-  /** گزارش‌گرانِ متمایز با گزارشِ RESOLVED (تأییدشده توسطِ ادمین) در ۱۸۰ روزِ اخیر */
+  /** گزارش‌گرانِ متمایز با گزارشِ RESOLVED (تاییدشده توسطِ ادمین) در ۱۸۰ روزِ اخیر */
   resolvedReporters: number;
   /** تعلیق در ۱۸۰ روزِ اخیر (حتی اگه الان رفع شده) */
   recentSuspension: boolean;
@@ -177,7 +177,7 @@ export type MeritInputs = {
   lastActiveAt: Date | null;
   /**
    * زمان‌های پاسخ به درخواست‌کننده‌هایی که (هنوز) شاگرد نشدن — درخواستِ ردشده یا
-   * بی‌جواب. فقط در سرعتِ پاسخ اثر دارن (هر نفر یک رأی)، نه در شواهد/ماندگاری.
+   * بی‌جواب. فقط در سرعتِ پاسخ اثر دارن (هر نفر یک رای)، نه در شواهد/ماندگاری.
    */
   requestResponses?: number[][];
 };
@@ -196,7 +196,7 @@ export type ComponentResult = {
 /**
  * پایبندی: نرخِ اجرای هر شاگرد (PARTIAL نصف) از پیشرفتِ ثبت‌شده، وزن‌دار با
  * min(1, ثبت‌ها/۱۴) — شاگردی با ۲ ثبت سهمِ کمی داره و شاگردِ پرثبت بیش از یک
- * رأی نمی‌گیره.
+ * رای نمی‌گیره.
  */
 export function adherenceComponent(students: StudentSignals[]): ComponentResult & { entries: number } {
   let sw = 0;
@@ -301,7 +301,7 @@ export function responseScore(hours: number): number {
   return Math.pow(0.5, h / R.responseHalfLifeHours);
 }
 
-/** سرعتِ پاسخ: هر شاگرد یک رأی (میانه‌ی زمان‌های خودش)، بعد هموارسازی */
+/** سرعتِ پاسخ: هر شاگرد یک رای (میانه‌ی زمان‌های خودش)، بعد هموارسازی */
 export function responseComponent(students: StudentSignals[], requestResponses: number[][] = []): ComponentResult & { medianHours: number | null } {
   const perStudent: number[] = [];
   for (const hours of [...students.map((s) => s.responseHours), ...requestResponses]) {
@@ -364,7 +364,7 @@ export function requestResponseHours(
   return null;
 }
 
-/** نظرِ تأییدشده: رابطه‌ی فعالِ کافی + حداقل یک برنامه‌ی فعال‌شده */
+/** نظرِ تاییدشده: رابطه‌ی فعالِ کافی + حداقل یک برنامه‌ی فعال‌شده */
 export function isVerifiedReview(r: ReviewSignal): boolean {
   return r.activeDays >= R.reviewMinActiveDays && r.activatedPrograms >= 1 && r.rating >= 1 && r.rating <= 5;
 }
@@ -392,7 +392,7 @@ export function burstFactors(reviews: ReviewSignal[]): number[] {
   });
 }
 
-/** امتیازِ نظرها: میانگینِ بیزیِ وزن‌دار فقط از نظرهای تأییدشده، نرمال به ۰..۱ */
+/** امتیازِ نظرها: میانگینِ بیزیِ وزن‌دار فقط از نظرهای تاییدشده، نرمال به ۰..۱ */
 export function reviewComponent(reviews: ReviewSignal[]): ComponentResult & { verified: number; weightedAvg: number | null; excluded: number } {
   const verified = reviews.filter(isVerifiedReview);
   const burst = burstFactors(verified);
@@ -434,13 +434,13 @@ export function evidenceFactor(students: number): number {
   return 0.5 + 0.5 * (n / (n + R.evidenceHalfStudents));
 }
 
-/** اعتماد (≤ ۱): احراز نشده ۰٫۸۵؛ هویتِ تأییدشده ۰٫۹۵؛ هویت + مدرکِ همین حوزه ۱ */
+/** اعتماد (≤ ۱): احراز نشده ۰٫۸۵؛ هویتِ تاییدشده ۰٫۹۵؛ هویت + مدرکِ همین حوزه ۱ */
 export function trustMultiplier(t: TrustSignals): number {
   if (!t.identityVerified) return 0.85;
   return t.certificateVerified ? 1 : 0.95;
 }
 
-/** سلامت: هر گزارشِ تأییدشده −۰٫۱۵، هر گزارشِ باز −۰٫۰۵ (هر کدوم سقفِ ۳)، تعلیقِ اخیر −۰٫۲؛ کف ۰٫۴ */
+/** سلامت: هر گزارشِ تاییدشده −۰٫۱۵، هر گزارشِ باز −۰٫۰۵ (هر کدوم سقفِ ۳)، تعلیقِ اخیر −۰٫۲؛ کف ۰٫۴ */
 export function integrityMultiplier(i: IntegritySignals): number {
   const penalty =
     0.15 * Math.min(3, Math.max(0, i.resolvedReporters)) +

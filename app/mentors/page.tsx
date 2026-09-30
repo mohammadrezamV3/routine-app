@@ -72,7 +72,7 @@ function Discovery() {
 
   const setFilters = useCallback((patch: Partial<MentorFilters>) => push({ ...filters, ...patch }), [push, filters]);
 
-  // جستجو با تأخیرِ کوتاه؛ متنِ فیلد محلی است و با نشانی (برگشت/جلو) هم‌گام می‌ماند
+  // جستجو با تاخیرِ کوتاه؛ متنِ فیلد محلی است و با نشانی (برگشت/جلو) هم‌گام می‌ماند
   const [qInput, setQInput] = useState(filters.q);
   const lastQ = useRef(filters.q);
   useEffect(() => {

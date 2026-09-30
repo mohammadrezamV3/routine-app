@@ -5,6 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { readJsonBody } from "@/lib/validate";
 import { isUserSettingKey, MAX_SETTING_VALUE_BYTES } from "@/lib/userSettingKeys";
 import { withLiveSync } from "@/lib/realtime";
+import { ModuleKey } from "@prisma/client";
+import { requireModule } from "@/lib/moduleAccess";
+
+// کلیدهایی که خودِ «روتین من»ن — نوشتنشون بعد از ۱۴ روز آزمایشی پلن می‌خواد.
+const ROUTINE_KEYS = new Set(["customOccurrences", "removedOccurrences", "wakeSleepTimes"]);
 
 // این روت یک فروشگاه کلید/مقدار عمومی نیست — فقط کلیدهای شناخته‌شده‌ی
 // تنظیمات کاربر (lib/userSettingKeys.ts) از این‌جا رد می‌شن. دلیلش اون‌جا
@@ -32,6 +37,10 @@ async function handlePOST(req: NextRequest, { params }: { params: { key: string 
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isUserSettingKey(params.key)) return rejectUnknownKey(params.key);
+  if (ROUTINE_KEYS.has(params.key)) {
+    const guard = await requireModule(ModuleKey.ROUTINE);
+    if (!guard.ok) return guard.response;
+  }
 
   const parsed = await readJsonBody<{ value?: unknown }>(req, MAX_SETTING_VALUE_BYTES);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });

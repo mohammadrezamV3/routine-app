@@ -29,7 +29,7 @@ function MentorProfileLink() {
         title="پروفایل مربی‌گری و مدارک"
         sub={
           <>
-            {id === "VERIFIED" ? <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>هویت تأییدشده</MentorChip>
+            {id === "VERIFIED" ? <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>هویت تاییدشده</MentorChip>
               : id === "PENDING" ? <MentorChip tone="info" icon={ic(Hourglass, MI.chip)}>در صف بررسی</MentorChip>
               : id === "REJECTED" ? <MentorChip tone="danger" icon={ic(XCircle, MI.chip)}>مدرک رد شد</MentorChip>
               : <MentorChip tone="warn" icon={ic(CircleSlash, MI.chip)}>بدون احراز</MentorChip>}

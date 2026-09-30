@@ -70,7 +70,7 @@ export function ChartTradePanel({
   // عوض‌کردنِ چک‌لیست یعنی تیک‌های قبلی بی‌معنی‌اند
   useEffect(() => { setChecked({}); }, [checklistId]);
   // با عوض‌شدنِ نماد، تیک‌ها پاک می‌شوند — چک‌لیستِ EURUSD به XAUUSD
-  // ربطی ندارد و نگه‌داشتنِ تیک‌ها یک تأییدِ جعلی است.
+  // ربطی ندارد و نگه‌داشتنِ تیک‌ها یک تاییدِ جعلی است.
   useEffect(() => { setChecked({}); }, [symbol]);
 
   const doneCount = useMemo(

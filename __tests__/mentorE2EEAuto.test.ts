@@ -205,7 +205,7 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     expect(await readAll(P2, ms)).toEqual(["<old-key>", "تازه"]);
     expect(await readAll(P1, ms)).toEqual(["قدیمی", "تازه"]);
 
-    // انتقالِ سابقه: P2 درخواست می‌دهد، P1 همان کد را می‌بیند و تأیید می‌کند
+    // انتقالِ سابقه: P2 درخواست می‌دهد، P1 همان کد را می‌بیند و تایید می‌کند
     await P2.requestHistoryLink();
     const req = ready(P2).link;
     expect(req?.role).toBe("requester");

@@ -29,7 +29,7 @@ function identityChip(status: VerificationStatus) {
 }
 
 /**
- * مراحلِ فعال‌شدنِ منتور — احراز هویت اجباری است: تا تأییدِ مدرکِ شناسایی،
+ * مراحلِ فعال‌شدنِ منتور — احراز هویت اجباری است: تا تاییدِ مدرکِ شناسایی،
  * پروفایل در فهرست منتورها نمایش داده نمی‌شود و درخواستِ شاگرد پذیرفته
  * نمی‌شود (سرور همین را اعمال می‌کند). روی داشبورد تا کامل‌شدن دیده می‌شود.
  */
@@ -48,9 +48,9 @@ export function MentorSetupSteps({
     : identity === "REJECTED"
       ? rejectReason || "مدرک واضح‌تری بفرست"
       : identity === "PENDING"
-        ? "تا تأیید، در فهرست مربی‌ها نمایش داده نمی‌شوی"
+        ? "تا تایید، در فهرست مربی‌ها نمایش داده نمی‌شوی"
         : verified
-          ? "هویتت تأیید شده است"
+          ? "هویتت تایید شده است"
           : "کارت ملی یا گذرنامه؛ پیش از نمایش در فهرست لازم است";
   const idAction = hasProfile && (identity === "NOT_PROVIDED" || identity === "REJECTED")
     ? <Link href="/mentor/profile#verification" className="trade-primary-btn mentor-btn is-sm">{identity === "REJECTED" ? "ارسال دوباره" : "ارسال مدرک"}</Link>
@@ -59,7 +59,7 @@ export function MentorSetupSteps({
   const pubSub = !published
     ? "انتشار را در پروفایل روشن کن"
     : !verified
-      ? "منتشر شده؛ پس از تأیید هویت در فهرست دیده می‌شوی"
+      ? "منتشر شده؛ پس از تایید هویت در فهرست دیده می‌شوی"
       : "در فهرست مربی‌ها دیده می‌شوی";
   const pubEnd = !hasProfile
     ? undefined
@@ -68,7 +68,7 @@ export function MentorSetupSteps({
       : published
         ? (verified
           ? <MentorChip tone="accent" icon={ic(Eye, MI.chip)}>در فهرست</MentorChip>
-          : <MentorChip tone="info" icon={ic(Hourglass, MI.chip)}>منتظر تأیید هویت</MentorChip>)
+          : <MentorChip tone="info" icon={ic(Hourglass, MI.chip)}>منتظر تایید هویت</MentorChip>)
         : <Link href="/mentor/profile" className="account-outline-btn mentor-btn is-sm">{ic(EyeOff, MI.btnSm)} انتشار</Link>;
 
   return (
@@ -88,7 +88,7 @@ export function MentorSetupSteps({
       <MentorRow
         lead={<StepMark n={3} done={published && verified && !suspended} />}
         title="نمایش در فهرست مربی‌ها"
-        sub={<span>{hasProfile ? pubSub : "پس از تأیید هویت، شاگردها پیدایت می‌کنند و درخواست می‌دهند"}</span>}
+        sub={<span>{hasProfile ? pubSub : "پس از تایید هویت، شاگردها پیدایت می‌کنند و درخواست می‌دهند"}</span>}
         end={pubEnd}
       />
     </MentorSection>

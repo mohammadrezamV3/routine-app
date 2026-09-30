@@ -20,6 +20,7 @@ import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories"
 import { categoryLabel } from "@/components/MentorBadges";
 import { MentorList, MentorListItem, MentorSwap } from "@/components/MentorMotion";
 import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "@/components/MentorTermsAcceptance";
+import { GoldenName } from "@/components/GoldenName";
 
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 const ROW = { size: 16, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -177,7 +178,7 @@ function MentorshipHome() {
             <MentorRow
               href={`/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
-              title={publicUserName(r.counterpart)}
+              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={<>{catSpans(r)}<span>{fmtRelative(r.createdAt)}</span></>}
               below={
                 <>
@@ -221,7 +222,7 @@ function MentorshipHome() {
               key={r.id}
               href={`/mentorship/${r.id}`}
               lead={avatar(r)}
-              title={publicUserName(r.counterpart)}
+              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={
                 <>
                   {catSpans(r)}
@@ -247,7 +248,7 @@ function MentorshipHome() {
               key={r.id}
               href={`/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
-              title={publicUserName(r.counterpart)}
+              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={<>{catSpans(r)}<span>ارسال {fmtRelative(r.createdAt)}</span></>}
               end={<MentorshipStatusBadge status="PENDING" />}
               below={
@@ -293,7 +294,7 @@ function MentorshipHome() {
                 sub={
                   <>
                     <span>{p.type === "WORKOUT" ? "برنامه‌ی تمرینی" : "برنامه‌ی روتین"}</span>
-                    <span>{publicUserName(p.counterpart)}</span>
+                    <span><GoldenName golden={p.counterpart.golden}>{publicUserName(p.counterpart)}</GoldenName></span>
                     {p.status === "ACTIVE" && <span>{faNum(Math.round(p.progress.rate))}٪ پایبندی</span>}
                   </>
                 }
@@ -311,7 +312,7 @@ function MentorshipHome() {
               key={r.id}
               href={r.status === "ENDED" ? `/mentorship/${r.id}` : `/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
-              title={publicUserName(r.counterpart)}
+              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={
                 r.status === "ENDED" ? (
                   <>

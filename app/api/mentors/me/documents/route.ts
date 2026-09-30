@@ -10,7 +10,7 @@ const MAX_DOCUMENTS_PER_PROFILE = 20;
 
 // POST /api/mentors/me/documents (multipart: file, kind, category?)
 // ارسالِ مدرک → وضعیتِ مربوط PENDING + ردیفِ تاریخچه. حتی اگه قبلا VERIFIED
-// بوده، مدرکِ تازه دوباره باید بررسی بشه (وگرنه می‌شد بعد از تأیید، فایل رو عوض کرد).
+// بوده، مدرکِ تازه دوباره باید بررسی بشه (وگرنه می‌شد بعد از تایید، فایل رو عوض کرد).
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
