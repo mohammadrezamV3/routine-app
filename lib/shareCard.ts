@@ -35,12 +35,16 @@ export type ShareCardInput = {
 // یک قالبِ ثابت (۴:۵) — هم پست هم استوری/چت بدونِ برش نشونش می‌دن
 export const SHARE_W = 1080;
 export const SHARE_H = 1350;
+/** تراکمِ پیکسلِ خروجی */
+const SHARE_DPR = 2;
 const W = SHARE_W;
 const H = SHARE_H;
 
 type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
   text: string; muted: string; loss: string; heat: string; heatHi: string; light: boolean;
+  /** رنگ‌های نورِ پشتِ شیشه — همون پالتِ حلقه‌های داشبورد */
+  glowA: string; glowB: string; glowC: string;
 };
 
 function readPalette(): Palette {
@@ -61,6 +65,9 @@ function readPalette(): Palette {
     heat: ds?.getPropertyValue("--ring-1a").trim() || (light ? "#0A9A70" : "#00C98D"),
     heatHi: ds?.getPropertyValue("--ring-1b").trim() || (light ? "#2ECB98" : "#7DF9CF"),
     light,
+    glowA: cs.getPropertyValue("--ring-2a").trim() || (light ? "#2F64E6" : "#3D7DFF"),
+    glowB: cs.getPropertyValue("--ring-2b").trim() || (light ? "#8A4DEB" : "#B06DFF"),
+    glowC: cs.getPropertyValue("--ring-3a").trim() || (light ? "#EE920C" : "#FFB547"),
   };
 }
 
@@ -125,6 +132,85 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.restore();
 }
 
+// ── پس‌زمینه‌ی شیشه‌ای ─────────────────────────────────────────────
+// پشتِ کارت یک صحنه‌ی نورانی (چند هاله‌ی رنگیِ نرم + چند گویِ نورِ واضح‌تر)
+// کشیده می‌شه؛ خودِ کارت شیشه‌ی مات روی همون صحنه‌ست: نسخه‌ی خیلی تارِ صحنه
+// داخلِ قابِ کارت + لایه‌ی رنگِ شیری + درخششِ لبه‌ی بالا + حاشیه‌ی نوری. تاری با
+// کوچک‌کردنِ مرحله‌ای و بزرگ‌کردنِ دوباره ساخته می‌شه (نه ctx.filter) تا روی همه‌ی
+// مرورگرها — از جمله سافاریِ قدیمی — یکسان و نرم دربیاد.
+type Orb = { x: number; y: number; r: number; color: string; a: number; soft: boolean };
+
+function sceneOrbs(p: Palette): Orb[] {
+  const k = p.light ? 0.55 : 1;
+  return [
+    { x: 0.1, y: 0.08, r: 0.62, color: p.heat, a: 0.5 * k, soft: true },
+    { x: 0.95, y: 0.3, r: 0.55, color: p.glowA, a: 0.45 * k, soft: true },
+    { x: 0.08, y: 0.78, r: 0.5, color: p.glowC, a: 0.38 * k, soft: true },
+    { x: 0.9, y: 0.95, r: 0.55, color: p.glowB, a: 0.45 * k, soft: true },
+    // گوی‌های واضح‌تر — پشتِ شیشه تار و درخشان دیده می‌شن
+    { x: 0.82, y: 0.14, r: 0.16, color: p.heatHi, a: 0.95 * k, soft: false },
+    { x: 0.16, y: 0.5, r: 0.13, color: p.glowB, a: 0.85 * k, soft: false },
+    { x: 0.7, y: 0.74, r: 0.19, color: p.glowA, a: 0.8 * k, soft: false },
+    { x: 0.3, y: 0.97, r: 0.12, color: p.glowC, a: 0.9 * k, soft: false },
+  ];
+}
+
+function paintScene(c: CanvasRenderingContext2D, w: number, h: number, p: Palette) {
+  c.fillStyle = p.bg;
+  c.fillRect(0, 0, w, h);
+  const m = Math.max(w, h);
+  for (const o of sceneOrbs(p)) {
+    const x = o.x * w, y = o.y * h, r = o.r * m;
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    if (o.soft) {
+      g.addColorStop(0, rgba(o.color, o.a));
+      g.addColorStop(1, rgba(o.color, 0));
+    } else {
+      g.addColorStop(0, rgba(o.color, o.a));
+      g.addColorStop(0.72, rgba(o.color, o.a * 0.75));
+      g.addColorStop(1, rgba(o.color, 0));
+    }
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.fill();
+  }
+}
+
+/** نسخه‌ی تارِ صحنه: کوچک‌کردنِ نصف‌به‌نصف تا عرضِ `target` (بدونِ پله‌پله‌شدن) */
+function blurredScene(src: HTMLCanvasElement, target: number): HTMLCanvasElement {
+  let cur = src;
+  while (cur.width / 2 >= target) {
+    const nx = document.createElement("canvas");
+    nx.width = Math.max(1, Math.round(cur.width / 2));
+    nx.height = Math.max(1, Math.round(cur.height / 2));
+    const c = nx.getContext("2d")!;
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = "high";
+    c.drawImage(cur, 0, 0, nx.width, nx.height);
+    cur = nx;
+  }
+  return cur;
+}
+
+/** دانه‌ی خیلی ریزِ شیشه‌ی مات — یک کاشیِ کوچکِ تکرارشونده، با شفافیتِ کم */
+function grainPattern(c: CanvasRenderingContext2D, light: boolean): CanvasPattern | null {
+  const t = document.createElement("canvas");
+  t.width = t.height = 128;
+  const tc = t.getContext("2d");
+  if (!tc) return null;
+  const img = tc.createImageData(128, 128);
+  let seed = 7;
+  for (let i = 0; i < img.data.length; i += 4) {
+    seed = (seed * 16807) % 2147483647;
+    const v = seed % 255;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = light ? 0 : 255;
+    img.data[i + 3] = Math.round((v / 255) * (light ? 10 : 14));
+  }
+  tc.putImageData(img, 0, 0);
+  return c.createPattern(t, "repeat");
+}
+
 // لوگوی هدر (نشان + اسمِ برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تمِ فعلی
 const logoCache = new Map<string, Promise<HTMLImageElement | null>>();
 function loadLogo(light: boolean): Promise<HTMLImageElement | null> {
@@ -157,11 +243,16 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     })(),
   ]);
 
+  // خروجی با ۲ برابرِ تراکم (۲۱۶۰×۲۷۰۰) — روی صفحه‌های رتینا و بعد از فشرده‌سازیِ
+  // پیام‌رسان‌ها هم لبه‌ی متن و شیشه تیز می‌مونه. همه‌ی مختصات منطقی (۱۰۸۰×۱۳۵۰).
   const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = W * SHARE_DPR;
+  canvas.height = H * SHARE_DPR;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
+  ctx.scale(SHARE_DPR, SHARE_DPR);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 
   const text = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir: CanvasDirection = "rtl", maxW?: number) => {
     ctx.font = font;
@@ -173,23 +264,64 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     else ctx.fillText(s, x, y);
   };
 
-  // پس‌زمینه + هاله‌ی ملایم + قابِ کارت
+  // ── صحنه‌ی نورانیِ پشت + کارتِ شیشه‌ی مات ──
+  const scene = document.createElement("canvas");
+  scene.width = W;
+  scene.height = H;
+  const sc = scene.getContext("2d");
+  if (!sc) throw new Error("canvas");
+  paintScene(sc, W, H, p);
+  ctx.drawImage(scene, 0, 0, W, H);
+
+  const CX = 48, CY = 48, CW = W - 96, CH = H - 96, CR = 52;
+  // سایه‌ی نرمِ زیرِ شیشه
+  ctx.save();
+  roundRect(ctx, CX, CY, CW, CH, CR);
+  ctx.shadowColor = p.light ? "rgba(80,50,20,.22)" : "rgba(0,0,0,.55)";
+  ctx.shadowBlur = 60;
+  ctx.shadowOffsetY = 24;
   ctx.fillStyle = p.bg;
-  ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W / 2, H * 0.55, 40, W / 2, H * 0.55, 760);
-  glow.addColorStop(0, `rgba(${p.accentRgb},.16)`);
-  glow.addColorStop(1, `rgba(${p.accentRgb},0)`);
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
-  const CX = 48, CY = 48, CW = W - 96, CH = H - 96;
-  roundRect(ctx, CX, CY, CW, CH, 48);
-  ctx.fillStyle = p.surface;
-  ctx.globalAlpha = 0.9;
   ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = p.line;
+  ctx.restore();
+
+  ctx.save();
+  roundRect(ctx, CX, CY, CW, CH, CR);
+  ctx.clip();
+  // خودِ «ماتی»: صحنه‌ی خیلی تار شده داخلِ قاب
+  ctx.drawImage(blurredScene(scene, 34), 0, 0, W, H);
+  // رنگِ شیری/دودیِ شیشه
+  ctx.fillStyle = p.light ? "rgba(255,255,255,.5)" : rgba(p.bg, 0.44);
+  ctx.fillRect(CX, CY, CW, CH);
+  // درخششِ بالای شیشه (نور از بالا-چپ)
+  const sheen = ctx.createLinearGradient(CX, CY, CX + CW * 0.55, CY + CH * 0.45);
+  sheen.addColorStop(0, p.light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.12)");
+  sheen.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(CX, CY, CW, CH);
+  // دانه‌ی ریز
+  const grain = grainPattern(ctx, p.light);
+  if (grain) {
+    ctx.fillStyle = grain;
+    ctx.fillRect(CX, CY, CW, CH);
+  }
+  ctx.restore();
+
+  // حاشیه‌ی نوری: روشن بالا-چپ، محو پایین-راست + یه خطِ داخلیِ نازک
+  const edge = ctx.createLinearGradient(CX, CY, CX + CW, CY + CH);
+  edge.addColorStop(0, p.light ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.34)");
+  edge.addColorStop(0.5, p.light ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.08)");
+  edge.addColorStop(1, p.light ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.18)");
+  roundRect(ctx, CX + 1, CY + 1, CW - 2, CH - 2, CR - 1);
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = edge;
   ctx.stroke();
+  roundRect(ctx, CX + 4, CY + 4, CW - 8, CH - 8, CR - 4);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = p.light ? "rgba(0,0,0,.05)" : "rgba(0,0,0,.25)";
+  ctx.stroke();
+
+  // خط‌های داخلِ کارت روی شیشه — نیمه‌شفاف، نه رنگِ ثابتِ خطِ سطح‌ها
+  const hair = p.light ? "rgba(0,0,0,.09)" : "rgba(255,255,255,.12)";
 
   // ── سربرگ: لوگو + آدرس (چپ)، عنوان + تاریخ (راست) ──
   const PAD = 104, R = W - PAD, L = PAD;
@@ -222,7 +354,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
 
   // بدونِ کدِ دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
   const top = input.inviteCode ? 334 : 276, bottom = CY + CH - 56;
-  ctx.strokeStyle = p.line;
+  ctx.strokeStyle = hair;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(L, top);
@@ -337,7 +469,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     stats.forEach((s, i) => {
       const x = R - colW * i - colW / 2;
       if (i > 0) {
-        ctx.strokeStyle = p.line;
+        ctx.strokeStyle = hair;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x + colW / 2, sy + 10);
@@ -389,7 +521,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
         ctx.stroke();
       } else {
         ctx.lineWidth = 3;
-        ctx.strokeStyle = p.line;
+        ctx.strokeStyle = hair;
         ctx.stroke();
       }
     }
