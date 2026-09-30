@@ -133,9 +133,9 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
 }
 
 // ── پس‌زمینه‌ی شیشه‌ای ─────────────────────────────────────────────
-// پشتِ کارت یک صحنه‌ی نورانی (چند هاله‌ی رنگیِ نرم + چند گویِ نورِ واضح‌تر)
-// کشیده می‌شه؛ خودِ کارت شیشه‌ی مات روی همون صحنه‌ست: نسخه‌ی خیلی تارِ صحنه
-// داخلِ قابِ کارت + لایه‌ی رنگِ شیری + درخششِ لبه‌ی بالا + حاشیه‌ی نوری. تاری با
+// یک صحنه‌ی نورانی (چند هاله‌ی رنگیِ خیلی پخش) ساخته می‌شه و *فقط داخلِ قابِ
+// کارت* دیده می‌شه — بیرونِ کارت رنگِ ساده‌ی پس‌زمینه‌ست. داخلِ قاب: نسخه‌ی خیلی
+// تارِ صحنه + لایه‌ی رنگِ شیری + درخششِ لبه‌ی بالا + حاشیه‌ی نوری. تاری با
 // کوچک‌کردنِ مرحله‌ای و بزرگ‌کردنِ دوباره ساخته می‌شه (نه ctx.filter) تا روی همه‌ی
 // مرورگرها — از جمله سافاریِ قدیمی — یکسان و نرم دربیاد.
 type Orb = { x: number; y: number; r: number; color: string; a: number; soft: boolean };
@@ -143,15 +143,11 @@ type Orb = { x: number; y: number; r: number; color: string; a: number; soft: bo
 function sceneOrbs(p: Palette): Orb[] {
   const k = p.light ? 0.55 : 1;
   return [
-    { x: 0.1, y: 0.08, r: 0.62, color: p.heat, a: 0.5 * k, soft: true },
-    { x: 0.95, y: 0.3, r: 0.55, color: p.glowA, a: 0.45 * k, soft: true },
-    { x: 0.08, y: 0.78, r: 0.5, color: p.glowC, a: 0.38 * k, soft: true },
-    { x: 0.9, y: 0.95, r: 0.55, color: p.glowB, a: 0.45 * k, soft: true },
-    // گوی‌های واضح‌تر — پشتِ شیشه تار و درخشان دیده می‌شن
-    { x: 0.82, y: 0.14, r: 0.16, color: p.heatHi, a: 0.95 * k, soft: false },
-    { x: 0.16, y: 0.5, r: 0.13, color: p.glowB, a: 0.85 * k, soft: false },
-    { x: 0.7, y: 0.74, r: 0.19, color: p.glowA, a: 0.8 * k, soft: false },
-    { x: 0.3, y: 0.97, r: 0.12, color: p.glowC, a: 0.9 * k, soft: false },
+    { x: 0.12, y: 0.1, r: 0.7, color: p.heat, a: 0.6 * k, soft: true },
+    { x: 0.92, y: 0.32, r: 0.62, color: p.glowA, a: 0.55 * k, soft: true },
+    { x: 0.1, y: 0.8, r: 0.6, color: p.glowC, a: 0.45 * k, soft: true },
+    { x: 0.88, y: 0.92, r: 0.62, color: p.glowB, a: 0.55 * k, soft: true },
+    { x: 0.5, y: 0.52, r: 0.5, color: p.heatHi, a: 0.16 * k, soft: true },
   ];
 }
 
@@ -271,7 +267,9 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   const sc = scene.getContext("2d");
   if (!sc) throw new Error("canvas");
   paintScene(sc, W, H, p);
-  ctx.drawImage(scene, 0, 0, W, H);
+  // بیرونِ کارت ساده و بی‌رنگه — رنگ‌ها فقط داخلِ شیشه دیده می‌شن
+  ctx.fillStyle = p.bg;
+  ctx.fillRect(0, 0, W, H);
 
   const CX = 48, CY = 48, CW = W - 96, CH = H - 96, CR = 52;
   // سایه‌ی نرمِ زیرِ شیشه
@@ -288,7 +286,8 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   roundRect(ctx, CX, CY, CW, CH, CR);
   ctx.clip();
   // خودِ «ماتی»: صحنه‌ی خیلی تار شده داخلِ قاب
-  ctx.drawImage(blurredScene(scene, 34), 0, 0, W, H);
+  // خیلی تار (عرضِ ۱۷px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
+  ctx.drawImage(blurredScene(scene, 17), 0, 0, W, H);
   // رنگِ شیری/دودیِ شیشه
   ctx.fillStyle = p.light ? "rgba(255,255,255,.5)" : rgba(p.bg, 0.44);
   ctx.fillRect(CX, CY, CW, CH);
