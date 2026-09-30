@@ -50,7 +50,8 @@ function LiveClock() {
 
 // رنگِ خورشید/ماه از زرد (صبح) تا بنفش (شب) بر اساسِ پیشرفت
 const SUN_STOPS: [number, [number, number, number]][] = [
-  [0, [255, 211, 90]], [0.28, [255, 159, 67]], [0.55, [255, 107, 139]], [0.8, [139, 92, 246]], [1, [76, 29, 149]],
+  // شب = مهتابیِ آبیِ روشن روی سرمه‌ای، نه بنفش (نشانگر باید روی نوارِ تیره دیده بشه)
+  [0, [255, 211, 90]], [0.3, [255, 159, 67]], [0.52, [240, 112, 90]], [0.76, [120, 160, 230]], [1, [205, 222, 255]],
 ];
 function sunColor(p: number) {
   const x = Math.max(0, Math.min(1, p));
@@ -62,7 +63,7 @@ function sunColor(p: number) {
       return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(",")})`;
     }
   }
-  return "rgb(76,29,149)";
+  return "rgb(205,222,255)";
 }
 
 export function DashboardHero({

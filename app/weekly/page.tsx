@@ -211,11 +211,6 @@ function WeeklyPageInner() {
   }, []);
   const hasMiddleColumn = dashboardPrefs.showReminders || dashboardPrefs.showMedications;
 
-  const hasQuickPanels =
-    dashboardPrefs.showReminders ||
-    dashboardPrefs.showMedications ||
-    dashboardPrefs.showChart ||
-    dashboardPrefs.showFriends;
 
   const wake = wakeSleep?.wake || DEFAULT_WAKE;
   const sleep = wakeSleep?.sleep || DEFAULT_SLEEP;
@@ -516,7 +511,6 @@ function WeeklyPageInner() {
         <div className="flex flex-col gap-4 sm:gap-6">
           <RoutineHero />
           <RoutineTrialBanner />
-          <SleepMiniCard />
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
             <DashDateSelector
@@ -560,9 +554,8 @@ function WeeklyPageInner() {
                 ? hasMiddleColumn
                   ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
                   : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
-                : hasQuickPanels
-                ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
-                : "flex flex-col gap-4 sm:gap-6"
+                : // ردیفِ دکمه‌ها همیشه هست (خواب خاموش‌شدنی نیست)
+                  "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
             }
           >
             {status === "unauthenticated" ? (
@@ -591,10 +584,13 @@ function WeeklyPageInner() {
                     {dashboardPrefs.showMedications && <DashMedicationCard delay={0.14} />}
                   </div>
                 )}
-                <DashSidebar statsRefreshKey={statsRefreshKey} />
+                <div className="flex flex-col gap-4 sm:gap-6">
+                  <SleepMiniCard />
+                  <DashSidebar statsRefreshKey={statsRefreshKey} />
+                </div>
               </>
             ) : (
-              hasQuickPanels && <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />
+              <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />
             )}
           </div>
 

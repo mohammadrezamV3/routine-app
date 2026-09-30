@@ -276,7 +276,8 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-ribbon-track{ position:relative; height:8px; border-radius:99px; background:rgba(var(--accent-rgb),.1); }
 .db-ribbon-fill{
   position:absolute; inset:0; border-radius:inherit;
-  background:linear-gradient(270deg, #ffd35a 0%, #ff9f43 28%, #ff6b8b 55%, #8b5cf6 80%, #4c1d95 100%);
+  /* زردِ آفتابِ صبح → نارنجیِ عصر → سرخیِ غروب → آبیِ گرگ‌ومیش → سرمه‌ایِ شب */
+  background:linear-gradient(270deg, #ffd35a 0%, #ff9f43 30%, #f0705a 52%, #3f6fb5 76%, #1c2d5e 100%);
 }
 /* گرادیان روی کلِ عرضِ ترک ثابته؛ clip-path (نه scaleX) فقط بخشِ طی‌شده رو نشون می‌ده */
 .db-ribbon-dot{
@@ -295,7 +296,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 /* ── کارهای سریع ───────────────────────────────────────────── */
 /* گرید، نه اسکرولِ افقی: روی موبایل کاشیِ چهارم نصفه بریده می‌شد و معلوم نبود
    بقیه کجان. ۴ ستون تا تبلت، ۸ ستون روی دسکتاپ. */
-.db-quick{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; margin:var(--db-gap) 0; }
+.db-quick{ display:grid; grid-template-columns:repeat(var(--qc, 4), minmax(0,1fr)); gap:8px; margin:var(--db-gap) 0; }
 @media (min-width:640px){ .db-quick{ gap:10px; } }
 /* تعدادِ ستون = تعدادِ کارهای سریعِ قابلِ‌نمایش (فلگِ خاموش یک خانه‌ی خالی نمی‌ذاره) */
 @media (min-width:1024px){ .db-quick{ grid-template-columns:repeat(var(--qn, 8), minmax(0,1fr)); } }
@@ -822,4 +823,17 @@ html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-c
 
 /* ── هیروی «روتین من» (components/RoutineHero.tsx) — همون .db-hero ─── */
 .rt-hero-orbit{ display:flex; align-items:center; justify-content:center; }
+/* «روتین من» فشرده‌تر از هیروی داشبورده: بدونِ آیکونِ فاز و جمله‌ی خلاصه، حلقه‌ی
+   کوچک‌تر و روی موبایل هم حلقه کنارِ عنوان (نه زیرش) تا بالای صفحه کم جا بگیره. */
+.db-hero-scope .db-hero.rt-hero{ gap:12px 18px; padding:14px 16px 14px; border-radius:22px; grid-template-columns:1fr auto; grid-template-areas:"main orbit" "ribbon ribbon"; }
+@media (min-width:1024px){ .db-hero-scope .db-hero.rt-hero{ padding:16px 22px; gap:12px 24px; } }
+.rt-hero .db-hero-main{ gap:8px; justify-content:center; }
+.rt-hero .db-hero-title{ font-size:18px !important; }
+.rt-hero .rt-title-row{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.rt-hero .db-hero-date{ margin:0; }
+.rt-hero .db-hero-chips{ gap:6px; }
+.rt-hero .db-chip{ padding:4px 10px; font-size:11.5px; }
+.rt-hero .db-orbit-pct{ font-size:18px; }
+.rt-hero .db-ribbon-head{ margin-bottom:6px; }
+.rt-hero .db-ribbon-clock{ font-size:15px; }
 .rt-hero-center{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }
