@@ -47,8 +47,7 @@ body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
 }
 /* sectionِ سراسری (padding:34px + border-top) نباید به کارت‌های داخلی برسه */
 .db-page section{ border-top:none; }
-.db-page h1, .db-page h2, .db-hero-scope h1{ margin:0; }
-.db-hero-scope a{ color:inherit; text-decoration:none; }
+.db-page h1, .db-page h2{ margin:0; }
 .db-page a{ color:inherit; text-decoration:none; }
 
 .db-num{ font-variant-numeric:tabular-nums; }
@@ -151,7 +150,7 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 .db-error svg{ width:18px; height:18px; }
 
 /* ── هیرو ───────────────────────────────────────────────── */
-.db-page .db-hero, .db-hero-scope .db-hero{
+.db-page .db-hero{
   position:relative; isolation:isolate; overflow:hidden;
   display:grid; gap:18px; padding:20px 18px 18px;
   border-radius:26px; background:var(--box-bg); border:1px solid var(--box-line);
@@ -159,11 +158,11 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
   grid-template-areas:"main orbit" "ribbon ribbon";
 }
 @media (max-width:639px){
-  .db-page .db-hero, .db-hero-scope .db-hero{ grid-template-columns:1fr; grid-template-areas:"main" "orbit" "ribbon"; padding:18px 15px 16px; }
+  .db-page .db-hero{ grid-template-columns:1fr; grid-template-areas:"main" "orbit" "ribbon"; padding:18px 15px 16px; }
 }
-@media (min-width:1024px){ .db-page .db-hero, .db-hero-scope .db-hero{ padding:28px 30px 24px; gap:22px 34px; } }
+@media (min-width:1024px){ .db-page .db-hero{ padding:28px 30px 24px; gap:22px 34px; } }
 /* بوردرِ نورانیِ چرخان — فقط لبه (mask)، کند و آرام */
-.db-page .db-hero::before, .db-hero-scope .db-hero::before{
+.db-page .db-hero::before{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.2px; z-index:-1; pointer-events:none;
   background:conic-gradient(from var(--db-rot, 0deg), transparent 0 70%, rgba(var(--accent-rgb),.9) 82%, rgba(var(--secondary-rgb),.8) 90%, transparent 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -174,7 +173,7 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 @keyframes db-rot{ to{ --db-rot:360deg; } }
 html[data-perf-weak] .db-hero::before{ animation:none; opacity:.35; }
 /* همان نورِ دنبال‌کننده‌ی موسِ کارت‌های بنتو (BentoCard) — فقط روی بوردر */
-.db-page .db-hero::after, .db-hero-scope .db-hero::after{
+.db-page .db-hero::after{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; z-index:-1;
   background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -182,7 +181,7 @@ html[data-perf-weak] .db-hero::before{ animation:none; opacity:.35; }
   opacity:0; transition:opacity .3s ease;
 }
 @media (hover:hover) and (pointer:fine){
-  .db-page .db-hero:hover::after, .db-hero-scope .db-hero:hover::after{ opacity:1; }
+  .db-page .db-hero:hover::after{ opacity:1; }
 }
 html[data-perf="low"] .db-hero::after{ display:none; }
 
@@ -821,6 +820,3 @@ html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-c
 
 /* «تلاشِ دوباره» ِ تاریخچه‌ی سالِ نقشه‌ی ثبات — لینک‌مانند، بی‌بک‌گراند */
 
-/* ── هیروی «روتین من» (components/RoutineHero.tsx) — همون .db-hero ─── */
-.rt-hero-orbit{ display:flex; align-items:center; justify-content:center; }
-.rt-hero-center{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }

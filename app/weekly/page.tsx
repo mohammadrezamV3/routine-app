@@ -16,6 +16,8 @@ import {
   isDayOver,
   startOfWeek,
   toEnDigits,
+  computeDayStats,
+  DayStats,
   dayBeforeIso,
 } from "@/lib/schedule";
 import {
@@ -28,6 +30,7 @@ import {
   DailyRecord,
   Importance,
 } from "@/lib/storage";
+import { getTodayStats } from "@/lib/routineStats";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
@@ -37,7 +40,7 @@ import { EditOccurrenceForm } from "@/components/EditOccurrenceForm";
 import { MoveOccurrenceModal } from "@/components/MoveOccurrenceModal";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 import { HistoryCalendar } from "@/components/HistoryCalendar";
-import { RoutineHero } from "@/components/RoutineHero";
+import { DashHeader } from "@/components/DashHeader";
 import { DashDateSelector } from "@/components/DashDateSelector";
 import { DashFilterButton } from "@/components/DashFilterButton";
 import { DashFilterModal } from "@/components/DashFilterModal";
@@ -139,6 +142,7 @@ function WeeklyPageInner() {
   const [selectedIso, setSelectedIso] = useState(() => isoLocal(now));
   const [recenterKey, setRecenterKey] = useState(0);
   const [selectedDaily, setSelectedDaily] = useState<DailyRecord | null>(null);
+  const [todayStats, setTodayStats] = useState<DayStats>({ completed: 0, total: 0, pct: 0 });
   const [importanceFilter, setImportanceFilter] = useState<"all" | Importance>("all");
   // null = فیلتر برنامه فعال نیست (همه نشون داده می‌شن)
   const [programFilter, setProgramFilter] = useState<Set<string> | null>(null);
@@ -219,6 +223,7 @@ function WeeklyPageInner() {
     const [removed, custom] = await Promise.all([getRemovedOccurrences(), getCustomOccurrences()]);
     setRemovedOcc(new Set(removed));
     setCustomOcc(custom);
+    getTodayStats().then(setTodayStats);
   }
 
   useEffect(() => {
@@ -248,6 +253,7 @@ function WeeklyPageInner() {
     const all = changed.includes("*");
     const has = (k: string) => all || changed.some((c) => keyMatches(k, c));
     if (has("customOccurrences") || has("removedOccurrences")) refresh();
+    else if (has("daily")) getTodayStats().then(setTodayStats);
     if (has("daily")) {
       const iso = selectedIsoRef.current;
       getDaily(iso).then((d) => { if (selectedIsoRef.current === iso) setSelectedDaily(d); });
@@ -390,9 +396,12 @@ function WeeklyPageInner() {
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: true } };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
-    // حلقه‌ی هیرو (RoutineHero) خودش از lib/storage زنده به‌روز می‌شه
+    // حلقه‌ی روتین نباید منتظر رفت‌وبرگشتِ شبکه بمونه — همین‌جا، همون لحظه،
+    // از رویِ داده‌ی محلی حساب می‌شه؛ درخواست‌های زیر فقط برای هم‌خوانیِ نهایی‌ان.
+    if (selectedIso === todayKey) setTodayStats(computeDayStats(now, opts, next));
     setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
+    getTodayStats().then(setTodayStats);
     router.push("/exercise?tab=exercise");
   }
 
@@ -414,9 +423,12 @@ function WeeklyPageInner() {
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: !current.tasks[id] } };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
-    // حلقه‌ی هیرو (RoutineHero) همون لحظه از نوشتنِ optimistic ِ lib/storage به‌روز می‌شه
+    // همین‌جا از رویِ داده‌ی محلی حساب می‌شه، بدونِ صبر برایِ شبکه — درخواستِ
+    // زیر فقط برایِ هم‌خوانیِ نهایی با سرور می‌مونه، دیگه چیزی رو در جا نگه نمی‌داره.
+    if (selectedIso === todayKey) setTodayStats(computeDayStats(now, opts, next));
     setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
+    getTodayStats().then(setTodayStats);
   }
 
   function toggleProgramFilter(name: string) {
@@ -509,7 +521,7 @@ function WeeklyPageInner() {
     <>
       <section className="dash-breakout dash-scope pb-6 text-dash-text">
         <div className="flex flex-col gap-4 sm:gap-6">
-          <RoutineHero />
+          <DashHeader progress={todayStats.pct} />
           <RoutineTrialBanner />
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
